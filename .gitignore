@@ -1,0 +1,6 @@
+.asetup.save
+cmt
+x86_64-slc6-gcc48-opt/
+genConf/
+InstallArea/
+WorkArea/
