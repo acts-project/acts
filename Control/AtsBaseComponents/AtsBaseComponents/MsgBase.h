@@ -5,6 +5,9 @@
 #ifndef BASE_COMPINTERFACES_H
 #define BASE_COMPINTERFACES_H 1
 
+// needed only for GAUDI build
+#ifdef ATS_GAUDI_BUILD
+
 // STL includes
 #include <iosfwd>
 #include <string>
@@ -12,9 +15,8 @@
 // framework includes
 #include "GaudiKernel/IMessageSvc.h"
 #include "GaudiKernel/MsgStream.h"
-#include "GaudiKernel/Property.h"
 
-namespace Bc {
+namespace Ats {
     
     /** @class MsgBase 
     
@@ -41,10 +43,12 @@ namespace Bc {
         MsgBase& operator=( const MsgBase& rhs ) = delete;
     
         /** Constructor from MsgStream Service */
-        MsgBase (IMessageSvc* msgSvc, const std::string& name);
-          
+        MsgBase (IMessageSvc* msgSvc, const std::string& name) :
+          m_msg (msgSvc, name)
+        {}
+                  
         /** Destructor */
-        virtual ~MsgBase(); 
+        virtual ~MsgBase(){} 
           
           
         /** @brief Test the output level
@@ -99,5 +103,7 @@ namespace Bc {
     { return m_msg << lvl; }
 
 }
+
+#endif
 
 #endif 
