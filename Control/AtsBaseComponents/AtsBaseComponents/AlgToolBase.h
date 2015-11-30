@@ -3,7 +3,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #ifndef BASECOMPSINTERFACES_ALGTOOLBASE_H
-#define BASECOMPSINTERFACES_ALGTOOLBASE_H
+#define BASECOMPSINTERFACES_ALGTOOLBASE_H 1
 
 // Athena version
 #include "AthenaBaseComps/AthAlgTool.h"

@@ -3,7 +3,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #ifndef BASECOMPSINTERFACES_ALGORITHMBASE_H
-#define BASECOMPSINTERFACES_ALGORITHMBASE_H
+#define BASECOMPSINTERFACES_ALGORITHMBASE_H 1
 
 // Athena version
 #include "AthenaBaseComps/AthAlgorithm.h"

@@ -2,8 +2,8 @@
 // ServiceBase.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef BASECOMPSINTERFACES_SERVICEBASE_H
-#define BASECOMPSINTERFACES_SERVICEBASE_H
+#ifndef ATSBASECOMPONENTS_SERVICEBASE_H
+#define ATSBASECOMPONENTS_SERVICEBASE_H 1
 
 // Athena version
 #include "AthenaBaseComps/AthService.h"
