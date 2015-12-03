@@ -13,13 +13,13 @@
 #include "AtsBaseComponents/MsgMacros.h"
 
 namespace Ats {
-    
+
     /** @typedef ServiceBase from AthService */
     typedef AthService ServiceBase;
 }
 
 // GAUDI build
-#else 
+#else
 
 #include "GaudiKernel/Service.h"
 #include "AtsBaseComponents/MsgBase.h"
@@ -40,11 +40,11 @@ namespace Ats {
                
             /** Virtual Destructor */   
       	    virtual ~ServiceBase() {}
-    }
+    };
 }
 
 
-#endif
+#endif //ATS_GAUDI_BUILD
 
 
 #endif // BASECOMPSINTERFACES_SERVICEBASE_H
