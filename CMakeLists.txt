@@ -13,7 +13,7 @@ find_package(GaudiProject)
 #                  USE dep_project_1 version_1 [project_2 version_2 ...]
 #                  [DATA pkg1 [VERSION vers1] [pkg2 ...])
 gaudi_project(a-tracking-sw HEAD
-	      USE Gaudi v25r2 )
+	      USE Gaudi v26r4 )
 
 include_directories()
 

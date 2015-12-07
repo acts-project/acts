@@ -1,8 +1,13 @@
-cmt
+
 ._*
 !cmt/requirements
+cmt/*sh
+cmt/Make*
+cmt/install*
 InstallArea
 WorkArea
 genConf
 x86_64-slc6-gcc48-opt
 .*
+build*
+InstallArea
