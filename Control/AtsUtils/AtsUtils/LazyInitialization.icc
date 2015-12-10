@@ -1,0 +1,118 @@
+// STL include(s)
+#include <functional>
+
+namespace Ats
+{
+  /**
+   * @brief lazy initialization of raw pointer
+   *
+   * If the raw pointer contained in @c atomic is not yet set, it will be initialized. In this case,
+   * the call to this function is equivalent to:
+   *
+   * @code
+   * T* ptr = new T(std::forward<Args>(args)...);
+   * return ptr;
+   * @endcode
+   *
+   * @tparam Args variadic template parameter pack containing the types taken by a constructor for type @c T
+   *
+   * @return raw pointer to newly created object of type @c T
+   */
+  template<typename T,typename Mutex>
+  template<typename... Args>
+  T* LazyInit<T,Mutex>::init(std::atomic<T*>& atomic,Mutex& m,Args&&... args)
+  {
+    const auto& new_lambda = [](Args... args) -> T* {return new T(std::forward<Args>(args)...);};
+    return init(atomic,m,new_lambda,args...);
+  }
+  
+  /** @brief lazy initialization of raw pointer with result of a function call
+   *
+   * If the raw pointer contained in @c atomic is not yet set, it will be initialized with the return value of the
+   * given functor object. In this case, the call to this function is equivalent to:
+   *
+   * @code
+   * T* ptr = creator(std::forward<Args>(args)...);
+   * return ptr;
+   * @endcode
+   *
+   * @tparam Args variadic template parameter pack containing the types taken by the functor object @c creator
+   * @tparam FUNC functor object type compatible with <tt>std::function<T*(Args&&...)></tt>
+   *
+   * @return raw pointer of type T* as returned by the functor object @c creator (might be zero)
+   */
+  template<typename T,typename Mutex>
+  template<typename... Args,typename FUNC>
+  T* LazyInit<T,Mutex>::init(std::atomic<T*>& atomic,Mutex& m,const FUNC& creator,Args&&... args)
+  {
+    T* tmp = atomic.load(std::memory_order_acquire);
+    if(!tmp)
+    {
+      std::lock_guard<Mutex> lock(m);
+      tmp = atomic.load(std::memory_order_relaxed);
+      if(!tmp)
+      {
+	tmp = creator(std::forward<Args>(args)...);
+	atomic.store(tmp,std::memory_order_release);
+      } // if not initialized
+    } // end of DCLP
+
+    return tmp;
+  }
+
+  /** @brief lazy initialization of @c std::shared pointer with result of function call
+   *
+   * If the shared pointer is empty, it will be initialized. In this case, the call to this function is equivalent to:
+   *
+   * @code
+   * rShared.reset(new T(std::forward<Args>(args)...));
+   * return rShared;
+   * @endcode
+   *
+   * @tparam Args variadic template parameter pack containing the types taken by a constructor for type @c T
+   *
+   * @return shared pointer containing newly created object of type T
+   */
+  template<typename T,typename Mutex>
+  template<typename... Args>
+  std::shared_ptr<T>& LazyInit<T,Mutex>::init(std::shared_ptr<T>& rShared,Mutex& m,Args&&... args)
+  {
+    const auto& new_lambda = [](Args... args) -> T* {return new T(std::forward<Args>(args)...);};
+    return init(rShared,m,new_lambda,args...);
+  }
+  
+  /** @brief lazy initialization of @c std::shared pointer
+   *
+   * If the shared pointer is empty, it will be initialized with the return value of the
+   * given functor object. In this case, the call to this function is equivalent to:
+   *
+   * @code
+   * rShared.reset(creator(std::forward<Args>(args)...));
+   * return rShared;
+   * @endcode
+   *
+   * @tparam Args variadic template parameter pack containing the types taken by the functor object @c creator
+   * @tparam FUNC functor object type compatible with <tt>std::function<T*(Args&&...)></tt>
+   *
+   * @return shared pointer containing the object returned by the functor object @c creator (might be zero)
+   */
+  template<typename T,typename Mutex>
+  template<typename... Args,typename FUNC>
+  std::shared_ptr<T>& LazyInit<T,Mutex>::init(std::shared_ptr<T>& rShared,Mutex& m,const FUNC& creator,Args&&... args)
+  {
+    T* pInstance = rShared.get();
+    std::atomic_thread_fence(std::memory_order_acquire);
+    if(!pInstance)
+    {
+      std::lock_guard<Mutex> lock(m);
+      pInstance = rShared.get();
+      if(!pInstance)
+      {
+	std::atomic_thread_fence(std::memory_order_release);
+	rShared.reset(creator(std::forward<Args>(args)...));
+      } // if not initialized
+    } // end of DCLP
+
+    return rShared;
+  }
+}; // enf of namespace Ats
