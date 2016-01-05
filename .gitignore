@@ -11,3 +11,4 @@ sym_link_include_dirs.sh
 .project
 .cproject
 Tracking/.settings
+.asetup.save
