@@ -1,4 +1,6 @@
 cmt
+doc/html
+doc/latex
 ._*
 !cmt/requirements
 InstallArea
