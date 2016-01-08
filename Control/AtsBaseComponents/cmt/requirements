@@ -1,29 +1,13 @@
 package AtsBaseComponents
 
-author  Sebastien Binet <binet@cern.ch>
+manager Andreas Salzburger <Andreas.Salzburger@cern.ch>
 
-## For Athena policies: it has to be the first use statement
-use AtlasPolicy         AtlasPolicy-*
+use AtlasPolicy           AtlasPolicy-*
+use AthenaBaseComps       AthenaBaseComps-*        Control
 
-## For Gaudi tools, services and objects
-use GaudiInterface  GaudiInterface-*  External
+private
+macro DOXYGEN_IMAGE_PATH "../doc/images"
 
-use AtlasROOT       AtlasROOT-*       External
-
-use AthenaKernel    AthenaKernel-*    Control
-use StoreGate       StoreGate-*       Control
-use SGTools         SGTools-*         Control
-use CxxUtils        CxxUtils-*        Control
-
-# Add cmake compatibility (doesn't do anything on CMT side of things)
-apply_pattern cmake_add_command command="find_package(ROOT COMPONENTS Hist Tree)"
-
-branches AtsBaseComponents src
-
-library AtsBaseComponents *.cxx
-
-apply_pattern installed_library
-# apply_pattern declare_joboptions files="*.py"
-# apply_pattern declare_python_modules files="*.py"
-
-
+# Declare to cmake that this package acts as a metalibrary to ensure that its clients have access
+# to libraries and header files from packages that it depends on. Transparent to CMT.
+apply_pattern cmake_add_command command=metalibrary
