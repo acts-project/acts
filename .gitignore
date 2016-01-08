@@ -1,14 +1,28 @@
+<<<<<<< HEAD
 
 ._*
-!cmt/requirements
 cmt/*sh
 cmt/Make*
 cmt/install*
+=======
+# temporary Athena files
+# ======================
 InstallArea
 WorkArea
+cmt
 genConf
 x86_64-slc6-gcc48-opt
 x86_64-slc6-gcc49-opt
 .*
 build*
-InstallArea
+.asetup.save
+
+# do not ignore changes in the requirements file
+# as they are actually important
+!cmt/requirements
+
+# doxygen documentation
+# =====================
+doc/*
+!doc/doxygen.config
+
