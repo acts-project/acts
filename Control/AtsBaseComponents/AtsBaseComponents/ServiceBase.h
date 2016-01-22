@@ -11,6 +11,7 @@
 // Athena version
 #include "AthenaBaseComps/AthService.h"
 #include "AtsBaseComponents/MsgMacros.h"
+#include "AtsBaseComponents/BaseMacros.h"
 
 namespace Ats {
     
@@ -23,6 +24,7 @@ namespace Ats {
 
 #include "GaudiKernel/Service.h"
 #include "AtsBaseComponents/MsgBase.h"
+#include "AtsBaseComponents/BaseMacros.h"
 
 class ISvcLocator;
 

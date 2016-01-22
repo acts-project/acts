@@ -5,12 +5,15 @@
 #ifndef BASECOMPSINTERFACES_ALGORITHMBASE_H
 #define BASECOMPSINTERFACES_ALGORITHMBASE_H 1
 
+#include "AtsBaseComponents/BaseMacros.h"
+
 // ATLAS build
 #ifndef ATS_GAUDI_BUILD
 
 // Athena version
 #include "AthenaBaseComps/AthAlgorithm.h"
 #include "AtsBaseComponents/MsgMacros.h"
+#include "AtsBaseComponents/BaseMacros.h"
 
 
 namespace Ats {
@@ -22,6 +25,7 @@ namespace Ats {
 
 #include "GaudiKernel/Algorithm.h"
 #include "AtsBaseComponents/MsgBase.h"
+#include "AtsBaseComponents/BaseMacros.h"
 
 class ISvcLocator;
 
