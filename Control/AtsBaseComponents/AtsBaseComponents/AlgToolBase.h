@@ -2,8 +2,8 @@
 // AlgToolBase.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef BASECOMPSINTERFACES_ALGTOOLBASE_H
-#define BASECOMPSINTERFACES_ALGTOOLBASE_H 1
+#ifndef ATS_BASECOMPSINTERFACES_ALGTOOLBASE_H
+#define ATS_BASECOMPSINTERFACES_ALGTOOLBASE_H 1
 
 // ATLAS build
 #ifndef ATS_GAUDI_BUILD
@@ -11,6 +11,7 @@
 // Athena version
 #include "AthenaBaseComps/AthAlgTool.h"
 #include "AtsBaseComponents/MsgMacros.h"
+#include "AtsBaseComponents/BaseMacros.h"
 
 namespace Ats {
     typedef AthAlgTool AlgToolBase;
@@ -21,6 +22,7 @@ namespace Ats {
 
 #include "GaudiKernel/AlgTool.h"
 #include "AtsBaseComponents/MsgBase.h"
+#include "AtsBaseComponents/BaseMacros.h"
     
 namespace Ats {
     

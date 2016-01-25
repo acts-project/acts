@@ -16,6 +16,7 @@ additional external dependencies are kept at a minimum.
 # Gaudi build with CMake
 
 source init.sh
+(make clean) 
 make -j 8
-make install
+make install (to install library)
 
