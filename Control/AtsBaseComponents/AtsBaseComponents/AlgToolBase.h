@@ -38,9 +38,9 @@ namespace Ats {
                
             /** Virtual Destructor */   
       	    virtual ~AlgToolBase() {}
-    }
+    };
 }
     
-#endif // ATLAS-GAUDI-build    
+#endif // ATLAS-GAUDI-BUILD
 
 #endif // BASECOMPSINTERFACES_ALGTOOLBASE_H
