@@ -1,0 +1,939 @@
+2014-10-21  scott snyder  <snyder@bnl.gov>
+
+	* Tagging Identifier-00-09-32.
+	* Identifier/Range.h, src/Range.cxx: Use emplace_back instead of
+	fast_push_back.  Use C++11 move sematics instead of ad-hoc
+	implementation.  Fix coverity warning.
+	* Identifier/fast_push_back.h: (deleted)
+
+2014-10-03  Rolf Seuster
+
+	* Tagging Identifier-00-09-31.
+	* add dependency on AtlasCsxxPolicy
+
+2014-04-23  scott snyder  <snyder@bnl.gov>
+
+	* Tagging Identifier-00-09-30.
+	* Identifier/Range.h (get_value_index): Add array bounds check.
+
+2013-10-24  scott snyder  <snyder@bnl.gov>
+
+	* Tagging Identifier-00-09-29.
+	* src/Range.cxx (operator=): Fix coverity warning.
+
+2013-08-28  Rolf Seuster
+
+	* Tagging Identifier-00-09-28.
+	* add output operator to IdentifierHash, o.b.o. Niels
+
+2013-06-07  scott snyder  <snyder@bnl.gov>
+
+	* Tagging Identifier-00-09-27.
+	* More coverity warning fixes.
+
+2013-01-15 J Tseng <j.tseng1@physics.ox.ac.uk>
+	* tagging Identifier-00-09-26
+	* Coverity warning fixes.
+
+2013-03-21  John Chapman  <John.Chapman@cern.ch>
+	* tagging Identifier-00-09-25
+	* cmt/requirements - add use statement for GaudiKernel - required
+	for SLC6 builds (used in Identifier.h).
+
+2013-01-15 J Tseng <j.tseng1@physics.ox.ac.uk>
+	* add Identifier::set_literal for avoiding 32-bit shift
+	* tagging Identifier-00-09-24
+
+2012-08-29  scott snyder  <snyder@bnl.gov>
+
+	* Tagging Identifier-00-09-23.
+	* Identifier/IdentifierHash.h (IdentifierHash): Add value()
+	method, for the benefit of python.
+
+2012-07-06  scott snyder  <snyder@bnl.gov>
+
+	* Tagging Identifier-00-09-22.
+	* Let Range show() methods take a stream.
+
+2012-07-03  scott snyder  <snyder@bnl.gov>
+
+	* Tagging Identifier-00-09-21.
+	* Coverity warning fixes.
+
+2011-03-13  J Tseng
+	* revert to 00-09-18
+	* add HWIdentifier constructors
+	* tagging Identifier-00-09-20
+
+2011-03-13  J Tseng
+	* HWIdentifier subclasses Identifier32 rather than Identifier
+	* added methods to Identifier32 to look more like Identifier
+	* tagging Identifier-00-09-19
+
+2011-12-11  J Tseng
+	* correct constructor shift for id64 mode
+	* tagging Identifier-00-09-18
+
+2011-11-15  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-09-17
+	* cmt/requirements: removing absolete classes and tests.
+
+2011-03-28  scott snyder  <snyder@bnl.gov>
+
+	* tagging Identifier-00-09-09
+	* src/ExpandedIdentifier.cxx: Remove unused variable (fix gcc 4.6
+	warning).
+
+2010-12-01  scott snyder  <snyder@bnl.gov>
+
+	* tagging Identifier-00-09-07
+	* src/Range.cxx (parse): pos can get changed to npos in the loop
+	by parse_field.  Depending on what's in text[-1], this can lead to
+	a (nearly) infinite loop.  Protect against going off either end of
+	text.
+
+2010-08-19  scott snyder  <snyder@bnl.gov>
+
+	* tagging Identifier-00-09-06
+	* src/DefaultEngine.cxx: Coverity warning fixes.
+
+2010-04-19  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-09-05
+	* cmt/requirements: fix for cmt v1r21
+
+2010-01-10  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-09-04
+	* Identifier/Identifier.h (operator): add in warning for assignment
+	Keeping operator << to avoid errors
+
+2010-01-02  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-09-01
+	* Identifier/Identifier.h (class Identifier): adding in changes to
+	allow 64-bit migration. 
+
+2009-09-02  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-08-04
+	* Identifier/HWIdentifier.h (HWIdentifier::HWIdentifier): small
+	fix for id32 init
+
+2009-08-31  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-08-03
+	* Identifier/Identifier.h (Identifier::get_identifier32):
+	corrected spelling for get_identifier32
+
+2009-08-30  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-08-02
+	* src/Identifier32.cxx: removed set method
+
+2009-08-29  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-08-01
+	* Identifier/Identifier32.h (class Identifier32): new class
+	* Identifier/Identifier.h (class Identifier): add in use of
+	Identifier32 class as preparation for migration to 64 bit ids.
+
+2009-08-04  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-07-12
+	* src/Range.cxx (field::get_previous): use numeric_limits for
+	testing under/over flows.
+
+2009-04-08  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-07-11
+	* Identifier/ExpandedIdentifier.h: moved a few methods to inline
+
+2009-01-28  scott s snyder  <snyder@bnl.gov>
+
+	* tagging Identifier-00-07-10
+
+	* src/RangeEngine.cxx: Fix bugs:
+	  - m_reading_object was used uninitialized
+	  - When decending into the tree, enumeration fields
+	    aren't properly matched.
+
+	* Identifier/IdentifierMap.h: Fix compilation warnings.
+	* src/IdentifierMap.cxx: Fix compilation warnings.
+
+	* cmt/requirements: Use UnitTest_run pattern from TestTools.
+	* src/tfactory.cxx, src/tidentifier.cxx, src/trange.cxx: (deleted)
+	Moved to ...
+	*  test/tfactory_test.cxx, src/tidentifier_test.cxx,
+	src/trange_test.cxx: (new) ... here.
+	* share/tfactory_test.ref, share/tidentifier_test.ref,
+	share/trange_test.ref: (new)
+	* test/Identifier.xml: (new) Run regression tests in nightlies.
+
+2008-12-09  David Quarrie <David.Quarrie@cern.ch>
+
+	* tagging Identifier-00-07-09
+	* src/ExpandedIdentifier.cxx: Add gcc 4.3 support
+
+2008-01-18  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-07-08
+	* src/ExpandedIdentifier.cxx (add): use reserve
+
+2007-11-08  scott snyder  <snyder@bnl.gov>
+
+	* tagging Identifier-00-07-07
+	* Identifier/Range.h, src/Range.cxx: Performance improvements.
+	* Identifier/fast_push_back.h: (new) Copied here from DataModel to
+	avoid introducing a new dependency.
+
+2007-09-30  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-07-06
+	* src/Range.cxx (maximum): using references to access fields.
+
+2007-06-15  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-07-05
+	* doc/mainpage.h: added in mainpage
+
+2006-06-12  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-07-04
+	* cmt/requirements: removed excess switch that turned off
+	-pedantic on platforms other than Linux.
+	* src/Range.cxx (set): fixed warning
+
+2006-03-17  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-07-03
+	* Identifier/IdentifierMap.h (template): fixes for gcc344
+
+2005-05-10  RD Schaffer  <schaffer@mac-90143.lal.in2p3.fr>
+
+	* tagging Identifier-00-07-02
+
+	* Identifier/ObjectIdentifierMap.h (class ObjectIdentifierMap):
+	removing from the release. Brings in an unwanted dependency.
+
+2005-04-30  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-07-01
+
+	* Identifier/IdentifierDict.h: removed include of Identifier32
+	
+2005-04-29  RD Schaffer  <schaffer@mac-90143.lal.in2p3.fr>
+
+	* tagging Identifier-00-07-00
+
+	* Identifier/Identifier.h (class Identifier): remove
+	Identifier32.h and all dependencies
+
+2005-04-25  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+
+	* tagging Identifier-00-06-12
+
+	* src/trange.cxx: hid class A behind namespace. Same for tidentifier.cxx
+
+2004-12-12 Christian Arnault <arnault@lal.in2p3.fr>
+
+	* cmt/requirements: prepare _dependencies macros for gmake -j option
+
+2004-04-21  Fabienne Ledroit  <ledroit@lpsc.in2p3.fr>
+
+	* tagging Identifier-00-06-10
+	* Identifier/IdHelper.h: added public dictionaryVersion()
+	and protected setDictVersion methods.
+
+2004-04-14  Fabienne Ledroit  <ledroit@lpsc.in2p3.fr>
+
+	* tagging Identifier-00-06-09
+	* Identifier/IdHelper.h: added method setMessageSvc(IMessageSvc*) 
+
+2004-04-13  Fabienne Ledroit  <ledroit@lpsc.in2p3.fr>
+
+	* tagging Identifier-00-06-08
+	* Identifier/IdHelper.h: added 2 methods do_neighbours()
+	and set_do_neighbours(bool)
+
+2004-02-25  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-06-07
+
+	* removed selection file
+
+2004-02-25  Fabienne Ledroit  <ledroit@lpsc.in2p3.fr>
+
+	* tagging Identifier-00-06-06
+
+	* Identifier/selection.xml: added HWIdentifier 
+
+2004-02-24  Fabienne Ledroit  <ledroit@lpsc.in2p3.fr>
+
+	* tagging Identifier-00-06-05
+
+	* Identifier/HWIdentifier.h: added default constructor
+
+2004-02-24  Fabienne Ledroit  <ledroit@lpsc.in2p3.fr>
+
+	* tagging Identifier-00-06-04
+
+	* Identifier/HWIdentifier.h: added constructor from an int.
+
+2004-02-20  Fabienne Ledroit  <ledroit@lpsc.in2p3.fr>
+
+	* tagging Identifier-00-06-03
+	
+	* Identifier/IdHelper.h: added do_checks and set_do_checks methods
+
+2004-02-23  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-06-02
+
+	* Identifier/HWIdentifier.h (class HWIdentifier): add new class
+	HWIdentifier.
+
+2004-01-28  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-06-01
+
+	* src/Range.cxx (field): added init of m_mode.
+
+2003-11-26  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-06-00
+
+	* Identifier/IdentifierHash.h (class IdentifierHash): removed +,-
+	operators which were incorrectly implemented.
+
+2003-10-06  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-05-06
+
+	* Identifier/Range.h (class MultiRange ): added remove_range for
+	tiles
+
+2003-09-16  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-05-05
+
+	* Identifier/ExpandedIdentifier.h (class ExpandedIdentifier):
+	changed max_value to work for 32 bits.
+
+	* tagging Identifier-00-05-04
+
+	* Identifier/IdentifierDict.h: added Identifiable
+
+2003-09-05  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-05-03
+
+	* Identifier/Identifier.h (class Identifier): cleaned up .h file.
+
+2003-09-04  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* Identifier/IdentifierHash.h (class IdentifierHash): making
+	default hash invalid
+
+	* Identifier/Identifier.h (class Identifier): cleaned up doc
+
+2003-09-03  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-05-02
+
+	* Identifier/Range.h (class Range ): added optimization with
+	lookup table with indexes, and a check to see if enum can become
+	both_bounded.
+	Added faster cardinalityUpTo.
+	Inlined a few methods.
+	
+2003-08-11  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-05-01
+
+	* Identifier/Identifier.h (class Identifier): put back size_type
+
+	* tagging Identifier-00-05-00
+
+	* Identifier/Identifier.h (class Identifier): moving std::string
+	constuctor/cast. Adding set/getString.
+
+2003-08-08  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-04-01
+
+	* src/Identifier.cxx (Identifier): added address of variabel to be
+	written to.
+
+2003-08-06  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-04-00
+
+	* Identifier/Identifier.h (class Identifier): added explicit to
+	the constructor
+	* Identifier/Range.h (get_value_at): moved to inline
+	
+
+2003-08-05  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-03-00
+
+	* cmt/requirements: removed linkopts override to rather get them
+	from AtlasPolicy
+	removed lcgdict pattern - moving to another file.
+
+	* Identifier/Identifier.h (class Identifier): moved Identifier to
+	be just compact
+
+	* Identifier/IdContext.h (IdContext): moved methods to be inline
+
+2003-07-26  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-02-06
+
+	* cmt/requirements: added generation of the dictionary, including
+	global header file and selection file.
+
+	* Identifier/Identifier.h (class Identifier): added virtual
+	destructor to have virtual table for lcgdict/pool
+
+2003-06-03  Christian Arnault  <arnault@lal.in2p3.fr>
+
+	* Identifier/ExpandedIdentifier.h: 
+	* Identifier/Identifier.h: Suppress include CxxFeatures/config.h
+
+2003-05-26  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-02-04
+	
+	* cmt/requirements: moved to use pattern  installed_library
+
+2003-05-06  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-02-03
+
+	* Identifier/ExpandedIdentifier.h (class ExpandedIdentifier): set
+	element type to int. For event selector.
+
+2003-03-12  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-02-02
+
+	* Identifier/ExpandedIdentifier.h (class ExpandedIdentifier):
+	removed constructor from a set of numbers.
+
+2003-03-01  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-02-01
+
+	* Identifier/Identifier.h (class Identifier): added is_valid
+
+2003-02-28  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-02-00
+
+	* Identifier/Range.h (class Range ): modified field to allow
+	"jumps" to previous/next
+
+2003-02-17  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-01-07
+
+	* Identifier/ExpandedIdentifier.h (class ExpandedIdentifier):
+	removed constructor from Identifier.
+
+2003-02-13  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-01-06
+
+	* Identifier/Identifier32.h (class Identifier32): commented out
+	bitwise operators. They conflict with compiler intrinsic
+	operations.
+
+2003-02-07  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-01-05 for release 5.3.0
+
+	* Identifier/Identifier32.h (class Identifier32): made constructor
+	from unsigned to be explict.
+
+2003-01-28  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-01-04 for release 5.3.0
+
+	* removing .xml files
+	
+	* src/Range.cxx (get_next): added implementation for wrap around
+	
+
+2002-10-29  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-01-03 for release 5.0.0
+
+	* Identifier/Range.h (class Range ): added wraparound method to go
+	with get_previous and get_next for fields.
+
+2002-10-15  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-01-02 for release 4.4.0
+
+	* src/Range.cxx (match): allow match for an id which is shorter
+	than the range.
+
+	* cmt/requirements: removed full path to lib directory.
+
+	* src/Identifier.cxx (Identifier): fix for linux 7.2
+
+2002-10-01  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* src/Range.cxx (add): added check whether range already exists or
+	not.
+
+2002-09-27  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-01-01
+
+	* Identifier/Range.h (class MultiRange ): corrected typedef for
+	id_vec - failed on sun.
+
+2002-09-20  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-01-00 for release 4.3.0
+
+	* Identifier/IdHelper.h (class  IdHelper): introducing interface
+	for helper.
+
+	* Introduced ExpandedIdentifier, moved Identifier to include
+	Identifier32, modified classes to use Expanded instead of
+	Identifier. 
+
+2002-09-06  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-00-17 before important changes to
+	Identifier/Identifiable.
+
+2002-09-05  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* Identifier/IdentifierHash.h: added, for the moment, a typedef
+	for IdentifierHash.
+
+	* Identifier/Identifier32.h (class Identifier32): added new class
+
+	* Identifier/IdContext.h (class IdContext): added new class to
+	maintain the context of a compact identifier.
+
+	* Identifier/Range.h (class Range ): added == and != to both field
+	and Range.
+	(class Range ): added cardinalityUpTo for hash calculation to both
+	Range and MultiRange.
+	(class MultiRange ): added identifier_factory
+	(class MultiRange ): added cache for sorted list of identifiers.
+
+2002-05-21  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-00-16
+
+2002-05-02  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* cmt/requirements: added use of AtlasPolicy, (left in use of
+	CxxFeatures, needed for uses)
+	added dependency on lib for unit_test pattern.
+
+2002-04-30  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-00-15
+
+	* src/Range.cxx (class RangeParser ): fix for range specified
+	without max.
+
+2001-12-20  Christian Arnault  <carnault@lxplus029.cern.ch>
+
+	* src/Range.cxx: 
+	Suppression of ifdef HAVE_NEW_IOSTREAMS
+
+	* src/Identifier.cxx (show_vector): 
+	Permit visualisation of negative values
+
+	* src/Identifier.cxx:
+	Suppression of ifdef HAVE_NEW_IOSTREAMS
+
+----------------------------------------------------------------------------
+2001-12-12  Traudl Kozanecka  <Traudl Kozanecki@cern.ch>
+
+	* data/*.xml  /*.dtd
+	add new directory with IdDict xml and dtd data files from
+	AGDD/data version AGDD-00-00-99
+	
+	* cmt/.cvsignore added
+	
+----------------------------------------------------------------------------	
+2001-09-25  Christian Arnault  <carnault@lxplus034.cern.ch>
+
+	* cmt/requirements: Suppress the "$(bin)" addition to LD_LIBRARY_PATH
+
+2001-09-19  Christian Arnault  <carnault@lxplus045.cern.ch>
+
+	* cmt/requirements: Suppress the -O3 cppflags addition.
+
+2001-09-12  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-00-09 for release 2.1.0
+
+	* Identifier/ObjectIdentifierMap.h (class ObjectIdentifierMap):
+	removed printout.
+
+2001-08-23  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-00-07 for release 2.1.0
+	* cmt/requirements: fixed use AtlasPolicy
+
+2001-08-22  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-00-06 for release 2.1.0
+	This is based on Identifier-00-00-05, and so missing the latest
+	updates.
+
+	* cmt/requirements: fixed for 2.1.0
+
+2001-08-17  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* cmt/requirements: removed -O3
+
+2001-06-14  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-00-05 for release 1.3.7 NOTE: this tag
+	DOES NOT include the modifs by Christian from 2001-04-10. RD did
+	not know if they were sufficiently tested at the time of tagging.
+
+2001-06-06  Hong Ma   <hma@bnl.gov>
+
+	* Identifier/ObjectIdentifierMap.h: updated for gaudi 7 because
+          of ObjectContainerBase change.
+
+2001-06-01  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* Identifier/ObjectIdentifierMap.h: fixed Gaudi Kernel includes.
+
+2001-04-10  Christian Arnault  <carnault@atlas006.cern.ch> 1
+
+	* src/Range.cxx: 
+	Add Range::field::operator = (const field& other)
+	
+	Add Range::field::get_value_index (element_type value) : to compute the 
+	index for that value. This is only meaningful for both_bounded and enumerated modes.
+
+        Add Range::field::operator |= (const field& other) : combine by an OR operation
+	two fields. There are few cases where this operation is not strictly accurate
+	(when this is true the result is too large) :
+	
+	   o (low_bound  | high_bound) |
+	   o (high_bound | low_bound)  | when there is no overlap
+	       We have no way to specify the excluded region 
+
+	   o (any bound | enumerated) when enumeration is outside the bounds
+	       The result will be another xxx_bound constraint, possibly filling
+	       up the holes between individual enumerated values.
+	
+	
+        Add Range::field::get_bits ()
+
+	* Identifier\IdentifierMap.h (IdentifierMap): Add the 
+	IdentifierMap<T>::operator [] (const Identifier& id) method. 
+ 
+	* src\tfactory.cxx (main): Test enumeration. 
+ 
+	* src\tidentifier.cxx (action): Test the comparison between 2 
+	non-trivial iterators (ie. non simply end ()) 
+ 
+	* src\RangeEngine.cxx (move_forward): Account for enumerations. 
+ 
+	* src\IdentifierMap.cxx (operator ==): Now really compare the 
+	reached element. 
+ 
+	* Identifier\Range.h: Introducing new style for field 
+	specification from a list of enumerated values. 
+ 
+	suppression of field construction & setting from the OR of two 
+	fields. 
+ 
+	Addition of query methods for field and renaming to 
+	get_xxx. Possibility to get the set of enumerated values. 
+ 
+	Introduce a Range::field::clear () method : set it back to the 
+	unbounded state. 
+ 
+	Add a Range::add (const Range& subrange) to append a subrange. 
+	Add a Range::cardinality () method to compute the number of 
+	different identifiers that can be generated from a 
+	Range. (unbounded fields being counted for only one). 
+ 
+	* Identifier\Range.cxx: Introduce a new internal mechanism for 
+	parsing textual specifications for Ranges (-> RangeParser class) 
+ 
+	Fix std::string conversion for MultiRange. 
+ 
+2001-03-26  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging  Identifier-00-00-04 for release 1.3.2
+
+2001-02-23  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* Identifier/ObjectIdentifierMap.h (class ObjectIdentifierMap):
+	removed const for add.
+
+2001-02-22  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* Identifier/IdentifierMap.h (IdentifierMap): added clear from
+	Hong.
+
+2001-02-20  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* Identifier/ObjectIdentifierMap.h: written by Hong Ma. Added to
+	package, at least temporarily.
+
+2001-01-24  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* GNUmakefile.in (libIdentifier.so_SRC): added Identifiable.cxx to
+	implement the virtual destructor. Also fixed requirements.
+
+2001-01-23  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-00-03 for release 1.3.0
+
+2001-01-19  Christian Arnault  <carnault@atlas010.cern.ch>
+
+	* src/trange.cxx: (and other test pgms) select iostream or iostream.h
+
+	* Identifier/IdentifierMap.h (IdentifierMap): typo in 
+	IdentifierMap::show methods : suppress them (they are useless).
+
+	* src/Range.cxx / .h: Suppress the constructor from taking
+	two Identifiers since this is not correct.
+
+2001-01-19  Christian Arnault  <carnault@atlas50.cern.ch>
+
+	* src/Range.cxx: restore the normal std::string converter
+	(set): add std:: to min and max.
+	* add the test output files for Solaris	
+
+2001-01-18    <arnault@lal.in2p3.fr>
+
+	* Identifier\IdentifierMap.h (IdentifierMap): The IdentifierNode::add 
+	method is renamed IdentifierNode::insert.
+
+	* src\Range.cxx (add): The reduce method is made temporary dummy
+	since the reduction algorithm appeared to be unapplicable in some
+	cases. More studies are needed. The MultiRange constructor taking 
+	2 overlapping Ranges so as to make it a non-overlapping MultiRange 
+	is now a simple insertion of the two Ranges.
+
+2001-01-18  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* moving tag Identifier-00-00-02 back to version of 1 Jan 2001
+	because of problems found with head version.
+
+2001-01-17  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-00-02 for release 1.3.0
+
+2001-01-17    <arnault@lal.in2p3.fr>
+
+	* src\trange.cxx (action): test program for Ranges and MultiRanges
+
+	* Identifier\IdentifierMap.h (class IdentifierNode): 
+  	  o Convert the add method into insert to comply with std::map
+	  o Install the copy constructor and destructor for IdentifierNode
+	  o Install a valued tag that marks when a node is truely valued
+   	  o New scheme for iterators : 
+	       Iterator behaviours are handled by a set of specific Engines
+	
+	        DefaultEngine    for simple iteration
+	        RangeEngine      for iteration constrained by a Range
+	        MultiRangeEngine for iteration constrained by a MultiRange
+
+	  o Creation of DefaultEngine, RangeEngine, MultiRangeEngine source files that
+	    hold the specific iteration algorithms.
+
+2001-01-12    <arnault@lal.in2p3.fr>
+
+	* src\Range.cxx (identifier_factory): clean up warnings
+
+	* src\Identifier.cxx (match): typo (untyped variable fs)
+
+	* src\trange.cxx (main): Generate Identifiers, fill in an IdMap,
+	generate MultiRanges and do search with them onto the IdMap.
+
+	* Identifier\IdentifierMap.h (IdentifierMap): Start providing
+	tools for MultiRange iterators
+
+	* src\Range.cxx (MultiRange): Problems in the reduce algorithm.
+	Few typos. Documentation improved
+
+2001-01-11    <arnault@lal.in2p3.fr>
+
+	* src\Range.cxx: Finishing the reduction algorithm for converting
+	an overlapping MultiRange into a non-overlapping one. Additions:
+
+	MultiRange::reduce ()
+		convert a MultiRange object
+	
+	Range::field::field (const field& f1, const field& f2)
+		create a field from the union of two fields
+	
+	MultiRange (const Range& r, const Range& s)
+		create a non-overlapping MultiRange from two overlapping Ranges
+
+2001-01-08    <arnault@lal.in2p3.fr>
+
+	* src\Range.cxx (has_overlap): This method
+
+	* Identifier\Range.h (class Range): Install an enum "mode" to
+	describe the field mode (unbounded, low_bounded, high_bounded or
+	both_bounded).
+
+	* Range::field::overlaps_with : checks whether 2 fields overlap, using the
+	following logic
+
+
+	            a:b
+	
+	        U    L      H          B
+              +---+------+------+--------------+
+	    U | y |  y   |  y   |      y       |
+	      +---+------+------+--------------+
+	    L | y |  y   | c<=b |     c<=b     |
+	      +---+------+------+--------------+
+    c:d	    H | y | a<=d |  y   |     a<=d     |
+	      +---+------+------+--------------+
+	    B | y | a<=d | c<=b | c<=b || a<=d |
+              +---+------+------+--------------+
+	
+	* Range::overlaps_with: 
+	Checks whether 2 Ranges overlap.  Two Ranges
+	overlap when one of their corresponding fields overlaps.
+
+	* MultiRange::has_overlap:
+	Detects possible overlap on Ranges of a MultiRange.
+
+2000-12-22  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-00-02 for persistency tests
+
+2000-12-21    <arnault@lal.in2p3.fr>
+
+	* Identifier\IdentifierMap.h: 
+	* Identifier\IdentifierMap.icc: 
+	* src\IdentifierMap.cxx: 
+
+	Change template design to make it compliant with standard std::map
+
+	* src\tfactory.cxx: add std:: to string types
+
+2000-12-20    <arnault@lal.in2p3.fr>
+
+	* src\IdentifierMap.cxx (moveto): fixed bad termination of the
+	moveto (Identifier) when id not found.
+
+	* src\Range.cxx (build): fixed bad parsing for n/m pattern
+	confused with n:m
+
+2000-12-15    <arnault@lal.in2p3.fr>
+
+	* src\tidentifier.cxx: apply the clear method in the test
+	program
+
+	* Identifier\IdentifierMap.h .cxx (IdentifierMap): added the clear
+	method to recursively empty an IdentifierMap
+
+	Install new comments.
+
+2000-12-11  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* Identifier/IdentifierMap.h (class IdentifierNode): removed
+	"less" from map def.
+
+	* src/Identifier.cxx (set): changed char* to const char* for
+	sun. Same for Range.cxx.
+	(last_error_text): missing std::string
+
+2000-11-13  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* Identifier/IdentifierMap.icc (IdentifierMap): removed 'vit'
+	undeclared variable. Aded typename where necessary for hp.
+
+	* src/Identifier.cxx: moved includes of stdio, algorithm to .cxx,
+	added protection for include of iostream.
+	Same for Range and IdentifierMap.
+	Moving tags forward.
+	
+2000-11-09  Christian Arnault  <carnault@atlas006.cern.ch>
+
+	* src/Range.cxx: Updating the Range::operator std::string to
+	produce the right syntax ":" instead of "-" * src/tfactory.cxx
+	((/*int argc, char* argv[]*/) range specification should use the
+	new syntax (see previous)
+	* Added reference outputs for unit tests in ../test :
+	tidentifieri386_linux22.dat
+	tfactoryi386_linux22.dat
+
+2000-11-09  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* tagging Identifier-00-00-01 for release 1.2.1
+
+	* src/tfactory.cxx ((/*int argc, char* argv[]*/): same as below.
+
+	* src/tidentifier.cxx main((/*int argc, char* argv[] */):
+	commenting out unused variables to get rid of warnings.
+
+2000-11-09  Christian Arnault  <arnault@lal.in2p3.fr>
+
+	* cmt/requirements: Changed the unit_test pattern for managing
+	different variants of the test output file on different platforms.
+	The output file is now <tester>$(tag).dat
+
+2000-11-02  Christian Arnault  <carnault@atlas010.cern.ch>
+
+	* Identifier/Identifier.h (class Identifier): Replacement of "int"
+	by either "element_type" (for values) or "size_type" (for indices).
+
+	element_type and size_type are originally typedef'ed in
+	Identifier.h and propagated to Range and IdentifierMap.
+
+	In principle we should no longer have to use "int" for values or
+	indices.
+
+	The change have been propagated to
+
+	Identifier.cxx
+	Range.h
+	Range.cxx
+	IdentifierMap.h
+	IdentifierMap.cxx
+
+2000-11-02  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* Identifier/Identifiable.h: moved class from EventStructure
+	package.
+
+	* Identifier/Identifier.h (class Identifier): changed to use
+	"element_type", etc. for typedefs.
+
+2000-11-01  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* src/parse.cxx: added include for CxxFeatures/config.h
+	(class parser): problems on sun with:
+	const char* ptr = &(text.at(pos)); had to do in two steps.
+
+2000-10-24  RD Schaffer  <R.D.Schaffer@cern.ch>
+
+	* src/Range.cxx: Range::operator [] - removed check on index < 0 -
+	not possible for unsigned. Same for MultiRange::operator [].
+
+	* Identifier/IdentifierMap.h (class IdentifierNode): had to add
+	less<int> to map declaration for sun.
+
+	* src/Range.cxx (class MultiRangeParser): problems on sun with:
+	const char* ptr = &(text.at(pos)); had to do in two steps.
+

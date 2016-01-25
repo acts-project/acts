@@ -1,0 +1,133 @@
+2015-07-22  scott snyder  <snyder@bnl.gov>
+
+	* Tagging GeoPrimitives-00-00-33-05.
+	* GeoPrimitives/selection.xml: Fix duplicate selection.
+
+2015-04-02  scott snyder  <snyder@bnl.gov>
+
+	* Tagging GeoPrimitives-00-00-33-04.
+	* GeoPrimitives/selection.xml: Change readraw rule back to read.
+	(root6 doesn't implement readraw).
+
+2014-11-11 Andreas.Salzburger -at- cern.ch
+    * fix bug in GeoPrimitives helper
+    * GeoPrimitives-00-00-33-03
+
+2014-07-16 Robert.Langenberg -at- cern.ch
+    * merging Scott's dictionary addition and Anthony's index patch
+    * GeoPrimitives-00-00-33-02
+
+2014-07-16 Robert.Langenberg -at- cern.ch
+    * branch tag fixing indices in EigenTransformToCLHEP for 19.0.3.1
+    * GeoPrimitives-00-00-33-00
+
+2014-04-02 Riccardo Maria Bianchi <rbianchi@cern.ch>
+    * added inline statements (Ed patch)
+    * GeoPrimitives-00-00-32
+
+2014-04-02 Riccardo Maria Bianchi <rbianchi@cern.ch>
+    * added getRotationZ3D(angle)
+    * GeoPrimitives-00-00-31
+    
+2014-04-01 Riccardo Maria Bianchi <rbianchi@cern.ch>
+    * added Geometry methods and helpers
+    * GeoPrimitives-00-00-29
+
+2014-03-26 Robert Langenberg 
+    * applying scott's patch with more dict entries and for reading Hep3Vectors directly into Vector3D
+    * tagged GeoPrimitives-00-00-28
+
+2014-02-13 Robert Langenberg < robert.langenberg -at- cern.ch >
+    * adding #include <unistd.h> for correct memory allocation in 32bit builds
+    * tagged GeoPrimitives-00-00-25
+
+2014-01-30 Attila Krasznahorkay <Attila.Krasznahorkay@cern.ch>
+	* Making the package "compile" with RootCore. This meant
+	  conditionally disabling/hiding parts of the code in standalone
+	  compilation.
+	* Not trying to create a Reflex dictionary with RootCore for
+	  now, as I was running into some major issues with that.
+	* Removed the src/ directory to make the package a little cleaner.
+	* Tagging as GeoPrimitives-00-00-24
+
+2014-01-13 Robert Langenberg
+    * reflex patch for 32bit build
+    * tagged GeoPrimitives-00-00-23
+
+2014-01-10 Robert Langenberg
+    * added added Reflex patch, setRThetaPhi and vector-converters
+    * tagged GeoPrimitives-00-00-22
+
+2014-01-06 Robert Langenberg
+    * added Scott's reflex patch and setRThetaPhi
+    * tagged GeoPrimitives-00-00-21
+
+2013-12-05 Robert Langenberg
+    * added Amg::deltaPhi Amg::deltaR etc functions
+    * tagged GeoPrimitives-00-00-20
+
+2013-10-22 Robert Langenberg
+    * added additional constructors for Transform
+    * tagged GeoPrimitives-00-00-19
+
+2013-10-22 Niels van Eldik
+    * improve rounding in toString functions
+    * tagged GeoPrimitives-00-00-18
+
+2013-10-10 Robert Langenberg
+    * added define SymmetricMatrixHelpers
+    * tagged GeoPrimitives-00-00-17
+
+2013-09-27 Niels van Eldik
+    * add additional helper functions for Vector3D
+    * tagged GeoPrimitives-00-00-16
+
+2013-09-12 Niels van Eldik
+    * static -> inline to avoid compiler warnings
+    * tagged GeoPrimitives-00-00-15
+
+2013-08-28 Niels van Eldik
+    * add GeoPrimitivesHelpers.h
+    * tagged GeoPrimitives-00-00-14
+
+2013-08-15 Niels van Eldik
+    * add include of TwoVector
+    * tagged GeoPrimitives-00-00-13
+
+2013-08-14 Niels van Eldik
+    * add toString for Hep2Vector
+    * tagged GeoPrimitives-00-00-12
+
+2013-08-07 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+    * update transform converters
+    * tagged GeoPrimitives-00-00-10
+
+2013-07-12 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+    * update to the string converters
+    * tagged GeoPrimitives-00-00-09
+
+2013-07-11 Niels van Eldik
+    * limit range to 1e-6
+    * Tagged 00-00-08
+
+2013-07-10 Niels van Eldik
+    * increase precision for the rotation matrix
+    * Tagged 00-00-07
+
+2013-07-10 Niels van Eldik
+    * Fixed CLHEPtoEigenConverter.h
+    * add GeoPrimitivesToStringConverter
+    * Tagged 00-00-06
+    
+2013-06-27 Robert Langenberg < robert.langenberg -at- cern.ch >
+    * Fixed CLHEPtoEigenConverter.h
+    * Tagged 00-00-05
+    
+2013-06-26 Robert Langenberg < robert.langenberg -at- cern.ch >
+    * Added CLHEPtoEigenConverter.h
+    * Tagged 00-00-04
+
+2013-06-03 Robert Langenberg < robert.langenberg -at- cern.ch >
+    * Added Changelog
+    * Tagged 00-00-03
+    * Moved helper functions to EventPrimitives/AmgMatrixPlugin.h

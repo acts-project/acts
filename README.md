@@ -12,3 +12,11 @@ can be specified for detector technologies by simple extension.
 
 The library is attempted to build against Gaudi and Gaudi-Athena, while
 additional external dependencies are kept at a minimum.
+
+# Gaudi build with CMake
+
+source init.sh
+(make clean) 
+make -j 8
+make install (to install library)
+
