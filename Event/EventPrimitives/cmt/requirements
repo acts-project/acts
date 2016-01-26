@@ -1,0 +1,16 @@
+package EventPrimitives
+
+author Robert Langenberg <Robert.Langenberg@cern.ch>
+
+public
+use AtlasPolicy         AtlasPolicy-*
+use AtlasEigen	        AtlasEigen-*		     External
+use AtlasCLHEP	        AtlasCLHEP-*		     External
+
+macro_append reflex_dict_options_cppflags " -DEIGEN_DONT_VECTORIZE "
+
+# Add cmake support to declare this as a metalibrary in order to ensure client packages 
+# have access to the underlying libraries and headers. This is transparent from the CMT side
+apply_pattern cmake_add_command command=metalibrary
+
+private

@@ -104,6 +104,6 @@ namespace Ats {
 
 }
 
-#endif
+#endif //ATS_GAUDI_BUILD
 
-#endif 
+#endif //BASE_COMPINTERFACES_H

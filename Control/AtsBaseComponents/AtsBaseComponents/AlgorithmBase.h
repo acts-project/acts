@@ -42,9 +42,9 @@ namespace Ats {
                
             /** Virtual Destructor */   
       	    virtual ~AlgorithmBase() {}
-    }
+    };
 }
 
-#endif
+#endif //ATS_GAUDI_BUILD
 
 #endif // BASECOMPSINTERFACES_ALGORITHMBASE_H
