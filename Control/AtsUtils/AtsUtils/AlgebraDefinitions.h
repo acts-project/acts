@@ -1,6 +1,10 @@
 #ifndef ATS_ALGEBRADEFINITIONS_H
 #define ATS_ALGEBRADEFINITIONS_H
 
+#define EIGEN_MATRIXBASE_PLUGIN "EventPrimitives/AmgMatrixPlugin.h"
+#define EIGEN_MATRIX_PLUGIN "EventPrimitives/SymmetricMatrixHelpers.h"
+#define EIGEN_TRANSFORM_PLUGIN "EventPrimitives/AmgTransformPlugin.h"
+
 // external include(s)
 #include <Eigen/Dense>
 
