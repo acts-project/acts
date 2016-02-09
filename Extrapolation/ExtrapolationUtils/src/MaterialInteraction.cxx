@@ -1,0 +1,7 @@
+///////////////////////////////////////////////////////////////////
+// MaterialInteraction.cxx, ATS project
+///////////////////////////////////////////////////////////////////
+#include "ExtrapolationUtils/MaterialInteraction.h"
+
+//static particle masses
+Ats::ParticleMasses Ats::MaterialInteraction::s_particleMasses;

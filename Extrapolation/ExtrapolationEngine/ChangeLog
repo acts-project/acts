@@ -1,0 +1,164 @@
+2015-10-26 Noemi Calace <noemi.calace@cern.ch>
+        * Updating configuration of the AtlasExtrapolationEngine
+	* Making changes for propation to the endlayer
+        * tag ExtrapolationEngine-00-00-36
+
+2015-10-16 Sharka Todorova <sarka.todorova@cern.ch>
+           * first import of StepEngine
+	   * updates in ExtrapolationEngine/StaticNavigationEngine 
+           * tag ExtrapolationEngine-00-00-35
+
+2015-08-04 Shaun Roe
+	* fix coverity defects
+	24973 18/11/2014 (Medium) Logically dead code :/Tracking/TrkExtrapolation/ExtrapolationEngine/ExtrapolationEngine/ExtrapolationEngine.icc in function "initNavigation"
+	24977 18/11/2014 (Medium) Misuse of enum :/Tracking/TrkExtrapolation/ExtrapolationEngine/src/PropagationEngine.cxx in function "propagate"
+	* committed in head, not tagged: needs several other packages updated for compilation
+
+2015-07-29 Noemi Calace <noemi.calace@cern.ch>
+           * Found a bug in the initialization of the back extrapolation
+           * tag ExtrapolationEngine-00-00-34
+
+2015-07-27 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * evaluation of approach surface in layer loop
+           * tag ExtrapolationEngine-00-00-33
+
+2015-07-20 Noemi Calace <noemi.calace@cern.ch>
+           * setting the initial radial direction
+           * tag ExtrapolationEngine-00-00-32
+
+2015-07-14 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * introducing radialDirection concept
+           * tag ExtrapolationEngine-00-00-31
+
+2015-07-08 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * removed commented-out lines
+           * tag ExtrapolationEngine-00-00-30
+
+2015-07-07 Noemi Calace <noemi.calace@cern.ch>
+           * update ExtrapolationEngine interfaces
+           * tag ExtrapolationEngine-00-00-29
+
+2015-06-26 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * update to dEdl 
+           * tag ExtrapolationEngine-00-00-28
+
+2015-06-26 Noemi Calace < Noemi.Calace -at- cern.ch >
+           * compilation error fixed
+           * tag ExtrapolationEngine-00-00-27
+
+2015-06-25 Noemi Calace < Noemi.Calace -at- cern.ch >
+           * fix for straggling
+           * tag ExtrapolationEngine-00-00-26
+
+2015-06-16 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * move Extrapolation macros to interfaces
+           * fix for lead/end parameters
+           * tag ExtrapolationEngine-00-00-25
+
+2015-06-11 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * add straggling for energy loss
+           * make msc/eloss configurable
+           * tag ExtrapolationEngine-00-00-24
+
+2015-06-10 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * navigation backup when approach surface is missed
+           * fallback to layerSurface with material 
+           * tag ExtrapolationEngine-00-00-23
+
+2015-05-27 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+	   * exclude endLayer from propagation before asking for compatible Surfaces
+	   * tag ExtrapolationEngine-00-00-21 & ExtrapolationEngine-00-00-22
+	
+2015-05-19 Noemi Calace < Noemi.Calace -at- cern.ch >
+           * found a bug in the determination of endVolume and endLayer in the backward
+           * extrapolation initialization (check ExtrapolationEngine.icc)
+           * tag ExtrapolationEngine-00-00-20
+
+2015-03-16 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * change MaterialEfffectsEngine to have also addMaterial() 
+           * tag ExtrapolationEngine-00-00-19
+
+2015-02-19 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * first KalmanFitter alpha test version
+           * tag ExtrapolationEngine-00-00-18
+
+2015-02-18 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * updates to resolveLayerT technology
+           * tag ExtrapolationEngine-00-00-17
+
+2015-02-15 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * bugfix for pathlength check
+           * tag ExtrapolationEngine-00-00-16
+
+2015-02-09 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * small mods to initialization for restart()
+           * tag ExtrapolationEngine-00-00-15
+
+2015-01-27 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * make initialization consistent (lead=start, init = 0)
+           * tag ExtrapolationEngine-00-00-14
+
+2014-12-09 Noemi Calace < Noemi.Calace -at- cern.ch >
+           * updates in StaticNavigationEngine
+           * tag ExtrapolationEngine-00-00-13
+
+2014-12-04 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * fix double-counting of material
+           * tag ExtrapolationEngine-00-00-12
+
+2014-11-15 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * added AtlasExtrapolationEngine python support
+           * tag ExtrapolationEngine-00-00-11
+
+2014-11-13 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+	   * updates to first layer handling
+
+2014-11-12 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+	   * fix interface problem in IPropagationEngine
+
+2014-11-09 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * added doxygen support
+           * tag ExtrapolationEngine-00-00-10
+
+2014-11-07 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * typo & style
+           * tag ExtrapolationEngine-00-00-09
+
+2014-11-06 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * avoid risk of double deletes for clients
+           * tag ExtrapolationEngine-00-00-08
+
+2014-11-06 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * stop at destination layer introduced
+           * tag ExtrapolationEngine-00-00-07
+
+2014-11-05 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * first part backwards work, does not stop at destination layer
+           * tag ExtrapolationEngine-00-00-06
+
+2014-11-04 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * forward validated setup
+           * tag ExtrapolationEngine-00-00-05
+
+2014-10-15 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * undo fabs(pathCorrection)
+           * tag ExtrapolationEngine-00-00-04
+
+2014-10-07 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * fabs(pathCorrection)
+           * tag ExtrapolationEngine-00-00-03
+
+2014-10-03 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * added material collection to material effects engine
+           * tag ExtrapolationEngine-00-00-02
+
+2014-09-03 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * update the Extrapolation engine to Geometry changes
+           * tag ExtrapolationEngine-00-00-01
+
+2014-08-26 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * adding Propagation and Navigation engine
+           * tag ExtrapolationEngine-00-00-00
+
+2014-08-25 Andreas Salzburger < Andreas.Salzburger -at- cern.ch >
+           * initial import

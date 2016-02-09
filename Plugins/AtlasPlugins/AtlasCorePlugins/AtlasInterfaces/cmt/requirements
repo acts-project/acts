@@ -1,0 +1,11 @@
+package AtlasInterfaces
+
+manager Andreas Salzburger <Andreas.Salzburger@cern.ch>
+
+use AtlasPolicy           AtlasPolicy-*
+use AthenaBaseComps       AthenaBaseComps-*        Control
+
+private
+macro DOXYGEN_IMAGE_PATH "../doc/images"
+
+apply_pattern cmake_add_command command=metalibrary
