@@ -1,9 +1,3 @@
-Control/
-DetectorDescription/
-Event/
-Tracking/TrkDetDescr/
-Tracking/TrkEvent/
-
 ._*
 cmt/*.sh
 cmt/Make*
