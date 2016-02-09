@@ -1,4 +1,4 @@
-#ifndef ATS_ATLASPOLICY_H
+B1;3803;0c#ifndef ATS_ATLASPOLICY_H
 #define ATS_ATLASPOLICY_H 1
 
 // STL include(s)
@@ -8,14 +8,14 @@
 #include "ParameterSet/Parameter_traits.h"
 #include "ParametersBase/TrackParametersBase.h"
 // Trk
-#include "EventPrimitives/ParamDefs.h"
+#include "EventDataUtils/ParamDefs.h"
 #include "Surfaces/Surface.h"
 
 namespace Ats
 {
   struct ATLASPolicy
   {
-    typedef Trk::ParamDefs par_id_type;
+    typedef ParamDefs par_id_type;
     typedef double par_value_type;
     static constexpr unsigned int N {5};
   };
