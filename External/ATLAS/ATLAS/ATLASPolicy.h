@@ -1,4 +1,4 @@
-B1;3803;0c#ifndef ATS_ATLASPOLICY_H
+#ifndef ATS_ATLASPOLICY_H
 #define ATS_ATLASPOLICY_H 1
 
 // STL include(s)
