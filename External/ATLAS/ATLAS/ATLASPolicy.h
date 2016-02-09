@@ -5,11 +5,11 @@
 #include <cmath>
 
 // ATS include(s)
-#include "TrkParameterSet/Parameter_traits.h"
-#include "TrkParametersBase/TrackParametersBase.h"
+#include "ParameterSet/Parameter_traits.h"
+#include "ParametersBase/TrackParametersBase.h"
 // Trk
-#include "TrkEventPrimitives/ParamDefs.h"
-#include "TrkSurfaces/Surface.h"
+#include "EventPrimitives/ParamDefs.h"
+#include "Surfaces/Surface.h"
 
 namespace Ats
 {

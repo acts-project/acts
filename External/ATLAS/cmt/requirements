@@ -1,0 +1,9 @@
+package ATLAS
+
+author Christian Gumpert <Christian.Gumpert@cern.ch>
+
+public
+use AtlasPolicy          AtlasPolicy-*
+use ParameterSet         ParameterSet-*    EventData
+use Surfaces             Surfaces-*        Geometry
+use EventDataUtils	 EventDataUtils-*  EventData
