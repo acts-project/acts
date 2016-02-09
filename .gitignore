@@ -1,4 +1,5 @@
 ._*
+cmt
 cmt/*.sh
 cmt/Make*
 cmt/install*
