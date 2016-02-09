@@ -1,0 +1,37 @@
+package ExtrapolationEngine
+
+manager Andreas Salzburger <Andreas.Salzburger@cern.ch>
+author  Andreas Salzburger <Andreas.Salzburger@cern.ch>
+
+#################################################################
+# public use statements
+use AtlasPolicy            AtlasPolicy-*
+use GeoPrimitives          GeoPrimitives-*          DetectorDescription
+use GaudiInterface         GaudiInterface-*         External
+use CoreInterfaces      CoreInterfaces-*      Control
+use ExtrapolationInterfaces        ExtrapolationInterfaces-*        Tracking/TrkExtrapolation
+use ExtrapolationUtils             ExtrapolationUtils-*             Tracking/TrkExtrapolation
+use TrackParameters          TrackParameters-*          Tracking/TrkEvent
+use NeutralParameters   NeutralParameters-*   Tracking/TrkEvent
+use EventDataUtils     EventDataUtils-*     Tracking/TrkEvent
+use Volumes             Volumes-*             Tracking/Geometry
+use Surfaces            Surfaces-*            Tracking/Geometry
+use Geometry            Geometry-*            Tracking/Geometry
+use Material            Material-*            Tracking/Geometry
+use GeometryInterfaces  GeometryInterfaces-*  Tracking/Geometry
+use Material            Material-*            Tracking/Geometry
+
+#################################################################
+# private use statements
+private
+use GeometryUtils       GeometryUtils-*       Tracking/Geometry
+
+public
+library ExtrapolationEngine *.cxx components/*.cxx
+apply_pattern declare_python_modules files="*.py"
+apply_pattern component_library
+
+private
+#macro cppdebugflags '$(cppdebugflags_s)'
+#macro_remove componentshr_linkopts "-Wl,-s"
+macro DOXYGEN_IMAGE_PATH "../doc/images"
