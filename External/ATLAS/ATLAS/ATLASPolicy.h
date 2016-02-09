@@ -21,25 +21,25 @@ namespace Ats
   };
 
   template<>
-  struct parameter_traits<ATLASPolicy,Trk::loc1>
+  struct parameter_traits<ATLASPolicy,loc1>
   {
     typedef local_parameter parameter_type;
   };
 
   template<>
-  struct parameter_traits<ATLASPolicy,Trk::loc2>
+  struct parameter_traits<ATLASPolicy,loc2>
   {
     typedef local_parameter parameter_type;
   };
 
   template<>
-  struct parameter_traits<ATLASPolicy,Trk::theta>
+  struct parameter_traits<ATLASPolicy,theta>
   {
     typedef unbound_parameter parameter_type;
   };
 
   template<>
-  struct parameter_traits<ATLASPolicy,Trk::phi>
+  struct parameter_traits<ATLASPolicy,phi>
   {
     static constexpr double pMin(){return -M_PI;}
     static constexpr double pMax(){return M_PI;}
@@ -47,7 +47,7 @@ namespace Ats
   };
 
   template<>
-  struct parameter_traits<ATLASPolicy,Trk::qOverP>
+  struct parameter_traits<ATLASPolicy,qOverP>
   {
     typedef unbound_parameter parameter_type;
   };
@@ -60,7 +60,7 @@ namespace Ats
     static AtsVectorD<3> parameters2globalPosition(const ParVector_t& pars,const Surface& s)
     {
       AtsVectorD<3> globalPosition;
-      s.localToGlobal(AtsVectorD<2>(pars(Trk::loc1),pars(Trk::loc2)),globalPosition,globalPosition);
+      s.localToGlobal(AtsVectorD<2>(pars(loc1),pars(loc2)),globalPosition,globalPosition);
 
       return globalPosition;
     }
@@ -68,9 +68,9 @@ namespace Ats
     static AtsVectorD<3> parameters2globalMomentum(const ParVector_t& pars)
     {
       AtsVectorD<3> momentum;
-      double p = fabs(1/pars(Trk::qOverP));
-      double phi = pars(Trk::phi);
-      double theta = pars(Trk::theta);
+      double p = fabs(1/pars(qOverP));
+      double phi = pars(phi);
+      double theta = pars(theta);
       momentum << p * sin(theta) * cos(phi), p * sin(theta) * sin(phi), p * cos(theta);
 
       return momentum;
@@ -84,7 +84,7 @@ namespace Ats
       return parameters;
     }
 
-    static ParVector_t global2parameters(const AtsVectorD<3>& pos,const AtsVectorD<3>& mom,double charge,const Trk::Surface& s)
+    static ParVector_t global2parameters(const AtsVectorD<3>& pos,const AtsVectorD<3>& mom,double charge,const Surface& s)
     {
       AtsVectorD<2> localPosition;
       s.globalToLocal(pos,mom,localPosition);
