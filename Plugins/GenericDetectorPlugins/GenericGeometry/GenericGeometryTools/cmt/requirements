@@ -1,0 +1,34 @@
+package GenericGeometryTools
+
+manager Andreas Salzburger <Andreas.Salzburger@cern.ch>
+author  Andreas Salzburger <Andreas.Salzburger@cern.ch>
+
+#################################################################
+# public use statements
+use AtlasPolicy            AtlasPolicy-*
+use GaudiInterface         GaudiInterface-*          External
+use CoreInterfaces         CoreInterfaces-*          Core
+use Algebra                Algebra-*                 Core
+use GeometryInterfaces     GeometryInterfaces-*      Geometry
+use Volumes                Volumes-*                 Geometry
+use Detector               Detector-*                Geometry
+use Material               Material-*                Geometry
+use GeometryUtils          GeometryUtils-*           Geometry
+use GenericDetectorElement GenericDetectorElement-*  Plugins/GenericDetectorPlugins/GenericGeometry
+
+#################################################################
+# private use statements
+private
+use Surfaces            Surfaces-*                  Geometry
+
+public
+library GenericGeometryTools *.cxx components/*.cxx
+apply_pattern component_library
+
+private
+# uncomment this line if you do want to build the memory monitoring lines
+# apply_tag  use_trkdetdescr_memmon
+
+#macro cppdebugflags '$(cppdebugflags_s)'
+#macro_remove componentshr_linkopts "-Wl,-s"
+macro DOXYGEN_IMAGE_PATH "../doc/images"
