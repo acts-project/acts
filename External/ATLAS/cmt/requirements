@@ -7,3 +7,5 @@ use AtlasPolicy          AtlasPolicy-*
 use ParameterSet         ParameterSet-*    EventData
 use Surfaces             Surfaces-*        Geometry
 use EventDataUtils	 EventDataUtils-*  EventData
+
+apply_pattern cmake_add_command command=metalibrary

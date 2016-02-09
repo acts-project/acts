@@ -4,7 +4,6 @@ manager Andreas Salzburger <Andreas.Salzburger@cern.ch>
 
 use AtlasPolicy           AtlasPolicy-*
 use GaudiInterface        GaudiInterface-*   External
-use AtlasInterfaces-*     AtlasInterfaces-*  Plugins/AtlasPlugins/AtlasCorePlugins
 
 macro ATS_CORE_ALGORITHM_PLUGIN "AtlasInterfaces/AthenaInterfaces.h"
 macro ATS_CORE_SERVICE_PLUGIN "AtlasInterfaces/AthenaInterfaces.h"
