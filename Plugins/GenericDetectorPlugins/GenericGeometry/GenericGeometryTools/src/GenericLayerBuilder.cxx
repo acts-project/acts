@@ -344,8 +344,8 @@ StatusCode Agd::GenericLayerBuilder::constructLayers()
              double outerR      = 0.;
              for (size_t irb = 0; irb < layerModuleRadii.size()-1; ++irb){
                  // needed for boundary calculations
-                 double innerR      = layerModuleRadii[irb];
-                 double outerR      = layerModuleRadii[irb+1];
+                 innerR      = layerModuleRadii[irb];
+                 outerR      = layerModuleRadii[irb+1];
                  double innerHalfY  = layerModuleHalfY[irb];
                  double outerHalfY  = layerModuleHalfY[irb+1];
                  double boundaryR   = 0.5*(innerR+innerHalfY+outerR-outerHalfY);
@@ -363,12 +363,12 @@ StatusCode Agd::GenericLayerBuilder::constructLayers()
              Ats::BinUtility* nrBinUtility = new Ats::BinUtility(rBoundaries, Ats::open, Ats::binR);
              Ats::BinUtility* prBinUtility = new Ats::BinUtility(rBoundaries, Ats::open, Ats::binR);
              // now create the surface arrays
-             nSurfaceArray = new Ats::BinnedArrayArray< const Surface* >(nSurfaceArraysPosition ,nrBinUtility);
-             pSurfaceArray = new Ats::BinnedArrayArray< const Surface* >(pSurfaceArraysPosition ,prBinUtility);                         
+             nSurfaceArray = new Ats::BinnedArrayArray< const Ats::Surface* >(nSurfaceArraysPosition ,nrBinUtility);
+             pSurfaceArray = new Ats::BinnedArrayArray< const Ats::Surface* >(pSurfaceArraysPosition ,prBinUtility);                         
          }
          
          // create the share disc bounds
-         std::shared_ptr<const DiscBounds> dBounds(new RadialBounds(layerRmin-layerEnvelopeR,layerRmax+layerEnvelopeR]));
+         std::shared_ptr<const Ats::DiscBounds> dBounds(new Ats::RadialBounds(layerRmin-layerEnvelopeR,layerRmax+layerEnvelopeR));
          
          // layer thickness
          double layerThickness = layerZmax-layerZmin;
@@ -379,8 +379,20 @@ StatusCode Agd::GenericLayerBuilder::constructLayers()
          pLayerTransform->translation() = Ats::Vector3D(0.,0.,layerPosZ);
 
          // create the layers
-         Ats::LayerPtr nLayer = Ats::DiscLayer::create(std::shared_ptr<Ats::Transform3D>(nTransform), dBounds, nSurfaceArray, layerThickness, nullptr, nullptr, Ats::active);
-         Ats::LayerPtr pLayer = Ats::DiscLayer::create(std::shared_ptr<Ats::Transform3D>(pTransform), dBounds, pSurfaceArray, layerThickness, nullptr, nullptr, Ats::active);
+         Ats::LayerPtr nLayer = Ats::DiscLayer::create(std::shared_ptr<Ats::Transform3D>(nLayerTransform), 
+                                                       dBounds,
+                                                       nSurfaceArray,
+                                                       layerThickness,
+                                                       nullptr,
+                                                       nullptr,
+                                                       Ats::active);
+         Ats::LayerPtr pLayer = Ats::DiscLayer::create(std::shared_ptr<Ats::Transform3D>(pLayerTransform), 
+                                                       dBounds,
+                                                       pSurfaceArray,
+                                                       layerThickness,
+                                                       nullptr,
+                                                       nullptr,
+                                                       Ats::active);
          // push it into the layer vector
          m_nLayers->push_back(nLayer);
          m_pLayers->push_back(pLayer);
