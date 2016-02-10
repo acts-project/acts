@@ -295,5 +295,52 @@ namespace Ats
       first = second;
       BOOST_CHECK(first == second);
     }
+
+    /**
+     * @brief Unit test for projection matrices in ParameterSet
+     *
+     * Checks the correctness of the projection matrices from the full parameter space
+     * onto different parameter sub-spaces
+     *
+     * @sa ParameterSet::projector
+     */
+    BOOST_AUTO_TEST_CASE(parset_projection_tests)
+    {
+      AtsMatrixD<1,5> phi_proj;
+      phi_proj << 0,0,1,0,0;
+
+      AtsMatrixD<2,5> loc1_qop_proj;
+      loc1_qop_proj << 1,0,0,0,0,
+                       0,0,0,0,1;
+
+      AtsMatrixD<2,5> loc2_theta_proj;
+      loc2_theta_proj << 0,1,0,0,0,
+                         0,0,0,1,0;
+
+      AtsMatrixD<3,5> loc1_loc2_phi_proj;
+      loc1_loc2_phi_proj << 1,0,0,0,0,
+                            0,1,0,0,0,
+                            0,0,1,0,0;
+
+      AtsMatrixD<4,5> loc1_phi_theta_qop_proj;
+      loc1_phi_theta_qop_proj << 1,0,0,0,0,
+                                 0,0,1,0,0,
+                                 0,0,0,1,0,
+                                 0,0,0,0,1;
+
+      AtsMatrixD<5,5> loc1_loc2_phi_theta_qop_proj;
+      loc1_loc2_phi_theta_qop_proj << 1,0,0,0,0,
+                                      0,1,0,0,0,
+                                      0,0,1,0,0,
+                                      0,0,0,1,0,
+                                      0,0,0,0,1;
+
+      BOOST_CHECK((ParameterSet<ParPolicy,ParDefs::phi>::projector() == phi_proj));
+      BOOST_CHECK((ParameterSet<ParPolicy,ParDefs::loc1,ParDefs::qop>::projector() == loc1_qop_proj));
+      BOOST_CHECK((ParameterSet<ParPolicy,ParDefs::loc2,ParDefs::theta>::projector() == loc2_theta_proj));
+      BOOST_CHECK((ParameterSet<ParPolicy,ParDefs::loc1,ParDefs::loc2,ParDefs::phi>::projector() == loc1_loc2_phi_proj));
+      BOOST_CHECK((ParameterSet<ParPolicy,ParDefs::loc1,ParDefs::phi,ParDefs::theta,ParDefs::qop>::projector() == loc1_phi_theta_qop_proj));
+      BOOST_CHECK((ParameterSet<ParPolicy,ParDefs::loc1,ParDefs::loc2,ParDefs::phi,ParDefs::theta,ParDefs::qop>::projector() == loc1_loc2_phi_theta_qop_proj));
+    }
   } // end of namespace Test
 } // end of namespace Ats
