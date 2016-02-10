@@ -1,6 +1,7 @@
 ################################################################################
-# Package: ExtrapolationInterfaces
+# Package: Algebra
 ################################################################################
-#gaudi_subdir(ExtrapolationInterfaces v1r0)
+gaudi_subdir(Algebra v1r0)
 
-#gaudi_install_headers(ExtrapolationInterfaces)
+gaudi_install_headers(Algebra)
+
