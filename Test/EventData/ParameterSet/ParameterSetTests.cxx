@@ -56,8 +56,29 @@ BOOST_AUTO_TEST_CASE(are_sorted_helper_tests)
   BOOST_CHECK((are_sorted<false,false,int,-1,-4,-4,-7>::value));
 }
 
-BOOST_AUTO_TEST_CASE(Consistency_checks)
+/**
+ * @brief Unit test for Ats::anonymous_namespace{ParameterSet.h}::are_within helper
+ *
+ * The test checks for correct behavior in the following cases (always using @c int
+ * as value type):
+ * -# all values within (MIN,MAX)
+ * -# all values within [MIN,MAX)
+ * -# one value < MIN
+ * -# multiple values < MIN
+ * -# one value > MAX
+ * -# multiple values > Max
+ * -# one value == MAX
+ * -# contains values < MIN and >= MAX
+ */
+BOOST_AUTO_TEST_CASE(are_within_helper_tests)
 {
-  BOOST_CHECK((ParSet_t<ParDefs::loc1,ParDefs::loc2,ParDefs::theta>::size() == 3));
+  BOOST_CHECK((are_within<int,0,10,1,3,7,2>::value));
+  BOOST_CHECK((are_within<int,0,10,1,3,0,2>::value));
+  BOOST_CHECK((not are_within<int,0,10,-1,3,7,2>::value));
+  BOOST_CHECK((not are_within<int,0,10,-1,3,7,-2>::value));
+  BOOST_CHECK((not are_within<int,0,10,1,3,17,2>::value));
+  BOOST_CHECK((not are_within<int,0,10,1,3,17,12>::value));
+  BOOST_CHECK((not are_within<int,0,10,1,10>::value));
+  BOOST_CHECK((not are_within<int,0,10,1,-2,10,14>::value));
 }
 /// @endcond
