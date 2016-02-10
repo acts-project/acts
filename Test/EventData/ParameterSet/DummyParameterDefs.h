@@ -33,7 +33,7 @@ namespace Ats
   {
     static constexpr double pMin(){return 0;}
     static constexpr double pMax(){return M_PI;}
-    typedef cyclic_parameter<double,pMin,pMax> parameter_type;
+    typedef bound_parameter<double,pMin,pMax> parameter_type;
   };
 
   template<>
