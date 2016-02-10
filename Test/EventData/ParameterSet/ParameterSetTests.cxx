@@ -47,7 +47,7 @@ namespace Ats
      * -# test: ordered weakly descending, input: ordered weakly descending
      */
     BOOST_AUTO_TEST_CASE(are_sorted_helper_tests)
-        {
+    {
       // strictly ascending
       BOOST_CHECK((are_sorted<true,true,int,-1,3,4,12>::value));
       BOOST_CHECK((not are_sorted<true,true,int,-1,13,4>::value));
@@ -64,7 +64,7 @@ namespace Ats
       BOOST_CHECK((are_sorted<false,false,int,1,-3,-4,-12>::value));
       BOOST_CHECK((not are_sorted<false,false,int,-1,-13,-4>::value));
       BOOST_CHECK((are_sorted<false,false,int,-1,-4,-4,-7>::value));
-        }
+    }
 
     /**
      * @brief Unit test for Ats::anonymous_namespace{ParameterSet.h}::are_within helper
@@ -341,6 +341,50 @@ namespace Ats
       BOOST_CHECK((ParameterSet<ParPolicy,ParDefs::loc1,ParDefs::loc2,ParDefs::phi>::projector() == loc1_loc2_phi_proj));
       BOOST_CHECK((ParameterSet<ParPolicy,ParDefs::loc1,ParDefs::phi,ParDefs::theta,ParDefs::qop>::projector() == loc1_phi_theta_qop_proj));
       BOOST_CHECK((ParameterSet<ParPolicy,ParDefs::loc1,ParDefs::loc2,ParDefs::phi,ParDefs::theta,ParDefs::qop>::projector() == loc1_loc2_phi_theta_qop_proj));
+    }
+
+    /**
+     * @brief Unit test for residuals between different ParameterSet objects
+     *
+     * The result of the residual calculation between two ParameterSet objects is checked.
+     * A test of the automatic correction of stored parameter values for out-of-bounds/cyclic
+     * corrections is also implemented.
+     *
+     * @sa ParameterSet::residual, ParameterSet::getParameter
+     */
+    BOOST_AUTO_TEST_CASE(parset_residual_tests)
+    {
+      const double tol = 1e-5;
+
+      // check unbound parameter type
+      const double large_number = 12443534120;
+      const double small_number = -924342675;
+      const double normal_number = 1.234;
+      ParameterSet<ParPolicy,ParDefs::loc1,ParDefs::loc2,ParDefs::qop> unbound(nullptr,small_number,large_number,normal_number);
+      BOOST_CHECK(unbound.getParameter<ParDefs::loc1>() == small_number);
+      BOOST_CHECK(unbound.getParameter<ParDefs::loc2>() == large_number);
+      BOOST_CHECK(unbound.getParameter<ParDefs::qop>() == normal_number);
+
+      // check bound parameter type
+      ParameterSet<ParPolicy,ParDefs::theta> bound(nullptr,small_number);
+      BOOST_CHECK((bound.getParameter<ParDefs::theta>() == parameter_traits<ParPolicy,ParDefs::theta>::pMin()));
+      bound.setParameter<ParDefs::theta>(large_number);
+      BOOST_CHECK((bound.getParameter<ParDefs::theta>() == parameter_traits<ParPolicy,ParDefs::theta>::pMax()));
+      bound.setParameter<ParDefs::theta>(normal_number);
+      BOOST_CHECK((bound.getParameter<ParDefs::theta>() == normal_number));
+
+      // check cyclic parameter type
+      ParameterSet<ParPolicy,ParDefs::phi> cyclic(nullptr,small_number);
+      // calculate expected results
+      const double min = parameter_traits<ParPolicy,ParDefs::phi>::pMin();
+      const double max = parameter_traits<ParPolicy,ParDefs::phi>::pMax();
+      const double corrected_large = large_number - (max - min) * std::floor((large_number - min)/(max-min));
+      const double corrected_small = small_number - (max - min) * std::floor((small_number - min)/(max-min));
+      BOOST_CHECK((fabs(cyclic.getParameter<ParDefs::phi>() - corrected_small) < tol));
+      cyclic.setParameter<ParDefs::phi>(large_number);
+      BOOST_CHECK((fabs(cyclic.getParameter<ParDefs::phi>() - corrected_large) < tol));
+      cyclic.setParameter<ParDefs::phi>(normal_number);
+      BOOST_CHECK((fabs(cyclic.getParameter<ParDefs::phi>() - normal_number) < tol));
     }
   } // end of namespace Test
 } // end of namespace Ats
