@@ -24,6 +24,6 @@
 #define MSG_FATAL(x)    MSG_LVL_NOCHK(MSG::FATAL,x) 
 #define MSG_ALWAYS(x)   MSG_LVL_NOCHK(MSG::ALWAYS,x)
 
-#endif //ATS_GAUDI_BUILD
+#endif // ATS_CORE_MSG_PLUGIN
 
 #endif // ATS_CORE_MSGMACROS_H

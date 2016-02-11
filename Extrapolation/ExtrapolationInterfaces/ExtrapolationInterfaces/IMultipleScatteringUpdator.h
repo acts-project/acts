@@ -2,12 +2,12 @@
 // IMultipleScatteringUpdator.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef TRKEXINTERFACES_IMULTIPLESCATTERINGUPDATOR_H
-#define TRKEXINTERFACES_IMULTIPLESCATTERINGUPDATOR_H
+#ifndef ATS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H
+#define ATS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H 1
 
 // Gaudi
 #include "GaudiKernel/IAlgTool.h"
-// Trk
+// EventData module
 #include "EventDataUtils/ParticleHypothesis.h"
 
 namespace Ats {
@@ -48,7 +48,4 @@ namespace Ats {
 
 } // end of namespace
 
-
-#endif // TRKEXINTERFACES_IMULTIPLESCATTERINGUPDATOR_H
-
-
+#endif // ATS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H

@@ -3,15 +3,17 @@
 //  author Igor Gavrilenko     
 /////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RungeKuttaUtils_H
-#define RungeKuttaUtils_H
+#ifndef ATS_EXTRAPOLATIONUTILS_RUNGEKUTTAUTILS_H
+#define ATS_EXTRAPOLATIONUTILS_RUNGEKUTTAUTILS_H 1
 
-#include <vector>
-#include <map>
-#include "GaudiKernel/AlgTool.h"
+// EventData module
 #include "TrackParameters/TrackParameters.h"
 #include "NeutralParameters/NeutralParameters.h"
+// Geometry module
 #include "Surfaces/BoundaryCheck.h"
+// STD
+#include <vector>
+#include <map>
 
 namespace Ats {
 
@@ -20,18 +22,12 @@ namespace Ats {
   class PlaneSurface          ;
   class CylinderSurface       ;
   class StraightLineSurface   ;
-#ifndef ATS_GAUDI_BUILD
-  class PatternTrackParameters;
-#endif
+
   /**
   @class RungeKuttaUtils
-<<<<<<< HEAD:Tracking/TrkExtrapolation/TrkExUtils/TrkExUtils/RungeKuttaUtils.h
 
-  Trk::RungeKuttaUtils is set algorithms for track parameters transformation
-=======
-  
   Ats::RungeKuttaUtils is set algorithms for track parameters transformation
->>>>>>> origin/acts-packaging:Extrapolation/ExtrapolationUtils/ExtrapolationUtils/RungeKuttaUtils.h
+
   from local to global and global to local system coordinate and step
   estimation to surface.
 
@@ -109,105 +105,67 @@ namespace Ats {
       /////////////////////////////////////////////////////////////////////////////////
       // Step estimators to surfaces
       /////////////////////////////////////////////////////////////////////////////////
-      std::pair<double,int> stepEstimator 
-	(std::vector<std::pair<const Ats::Surface*,Ats::BoundaryCheck> >&,
-	 std::multimap<double,int>&,
-	 const double*,const double*,double,double,int Nv,bool&) const;
+      std::pair<double,int> stepEstimator(std::vector<std::pair<const Surface*,Ats::BoundaryCheck> >&,
+	                                      std::multimap<double,int>&,
+	                                      const double*,const double*,double,double,int Nv,bool&) const;
 
-      int fillDistancesMap
-	(std::vector<std::pair<const Ats::Surface*,Ats::BoundaryCheck> >&,
-	 std::multimap<double,int>&,
-	 const double*,double,const Ats::Surface*,double*) const;
+      int fillDistancesMap(std::vector<std::pair<const Surface*,Ats::BoundaryCheck> >&,
+	                       std::multimap<double,int>&,
+	                       const double*,double,const Surface*,double*) const;
       
       /////////////////////////////////////////////////////////////////////////////////
       // Transformations from local to global system coordinates 
-      // for Ats::TrackParameters and Ats::NeutralParameters 
+      // for TrackParameters and NeutralParameters 
       /////////////////////////////////////////////////////////////////////////////////
 
-      bool transformLocalToGlobal
-	(bool,const Ats::TrackParameters&        ,double*) const;
+      bool transformLocalToGlobal(bool,const TrackParameters&, double*) const;
 
-      bool transformLocalToGlobal
-	(bool,const Ats::NeutralParameters&       ,double*) const;
+      bool transformLocalToGlobal(bool,const NeutralParameters&, double*) const;
 
-      /////////////////////////////////////////////////////////////////////////////////
-      // Transformations from local to global system coordinates 
-      // for Ats::PatternTrackParameters
-      /////////////////////////////////////////////////////////////////////////////////
-#ifndef ATS_GAUDI_BUILD
-      bool transformLocalToGlobal
-	(bool,const Ats::PatternTrackParameters&        ,double*) const;
-#endif
       /////////////////////////////////////////////////////////////////////////////////
       // Transformations from local to global system coordinates
       // for different surfaces
       /////////////////////////////////////////////////////////////////////////////////
 
-      void transformDiscToGlobal        
-	(bool,const Ats::Surface*,const double*,double*) const;
-      void transformPlaneToGlobal       
-	(bool,const Ats::Surface*,const double*,double*) const;
-      void transformCylinderToGlobal    
-	(bool,const Ats::Surface*,const double*,double*) const;
-      void transformLineToGlobal
-	(bool,const Ats::Surface*,const double*,double*) const;
+      void transformDiscToGlobal(bool,const Surface*,const double*,double*) const;
+      void transformPlaneToGlobal(bool,const Surface*,const double*,double*) const;
+      void transformCylinderToGlobal(bool,const Surface*,const double*,double*) const;
+      void transformLineToGlobal(bool,const Surface*,const double*,double*) const;
 
       /////////////////////////////////////////////////////////////////////////////////
       // Transformations from global to local system coordinates
       /////////////////////////////////////////////////////////////////////////////////
 
-      void transformGlobalToLocal        (double*,double*) const;
-      void transformGlobalToLocal
-	 (const Ats::Surface*,bool,double*,double*,double*) const;
-      void transformGlobalToCone
-	(const Ats::Surface*,bool,double*,double*,double*) const;
-      void transformGlobalToDisc
-	(const Ats::Surface*,bool,double*,double*,double*) const;
-      void transformGlobalToPlane
-	(const Ats::Surface*,bool,double*,double*,double*) const;
-      void transformGlobalToCylinder
-  	(const Ats::Surface*,bool,double*,double*,double*) const;
-      void transformGlobalToLine
-	(const Ats::Surface*,bool,double*,double*,double*) const;
-
-     /////////////////////////////////////////////////////////////////////////////////
-
+      void transformGlobalToLocal(double*,double*) const;
+      void transformGlobalToLocal(const Surface*,bool,double*,double*,double*) const;
+      void transformGlobalToCone(const Surface*,bool,double*,double*,double*) const;
+      void transformGlobalToDisc(const Surface*,bool,double*,double*,double*) const;
+      void transformGlobalToPlane(const Surface*,bool,double*,double*,double*) const;
+      void transformGlobalToCylinder(const Surface*,bool,double*,double*,double*) const;
+      void transformGlobalToLine(const Surface*,bool,double*,double*,double*) const;
+    
       /////////////////////////////////////////////////////////////////////////////////
-      // Covariance matrix production for Ats::TrackParameters
+      // Covariance matrix production for TrackParameters
       /////////////////////////////////////////////////////////////////////////////////
-      
-      AtsSymMatrixD<5>*  newCovarianceMatrix
-	(double*,const AtsSymMatrixD<5>&) const;
+      AtsSymMatrixD<5>* newCovarianceMatrix(double*,const AtsSymMatrixD<5>&) const;
 
       /////////////////////////////////////////////////////////////////////////////////
       // Transformations from curvilinear to global system coordinates
       // covariance matrix only
       /////////////////////////////////////////////////////////////////////////////////
-
-      void transformCurvilinearToGlobal
-	(double* ,double*) const;
+      void transformCurvilinearToGlobal(double* ,double*) const;
 
       /////////////////////////////////////////////////////////////////////////////////
       // Transformations from global to curvilinear system coordinates
       // covariance matrix only
       /////////////////////////////////////////////////////////////////////////////////
-
-      void transformGlobalToCurvilinear
-	(bool,double*,double*,double*) const;
+      void transformGlobalToCurvilinear(bool,double*,double*,double*) const;
 
       /////////////////////////////////////////////////////////////////////////////////
       // Jacobian of transformations from curvilinear to local system coordinates
       /////////////////////////////////////////////////////////////////////////////////
-
-      void jacobianTransformCurvilinearToLocal
-	(const Ats::TrackParameters&,double*);
-#ifndef ATS_GAUDI_BUILD
-      void jacobianTransformCurvilinearToLocal
-	(const Ats::PatternTrackParameters&,double*); 
-#endif
-      void jacobianTransformCurvilinearToLocal
-	(double*,const Ats::Surface*,double*);
-   
+      void jacobianTransformCurvilinearToLocal(const TrackParameters&,double*);
+      void jacobianTransformCurvilinearToLocal(double*,const Surface*,double*);
       void jacobianTransformCurvilinearToDisc        (double*,double*) const;
       void jacobianTransformCurvilinearToPlane       (double*,double*) const;
       void jacobianTransformCurvilinearToCylinder    (double*,double*) const;
@@ -219,9 +177,8 @@ namespace Ats {
       // Private methods:
       /////////////////////////////////////////////////////////////////////////////////
 
-      bool transformLocalToGlobal(bool,const Ats::Surface*,const double*,double*) const;
+      bool transformLocalToGlobal(bool,const Surface*,const double*,double*) const;
     };
+} // end of namespace
 
-}
-
-#endif // RungeKuttaUtils_H
+#endif // ATS_EXTRAPOLATIONUTILS_RUNGEKUTTAUTILS_H

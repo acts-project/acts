@@ -2,21 +2,30 @@
 //  Header file for class RungeKuttaEngine, ATS project
 /////////////////////////////////////////////////////////////////////////////////
 
-#ifndef ATS_TRKEXRUNGEKUTTAENGINE_RUNGEKUTAENGINE_H
-#define ATS_TRKEXRUNGEKUTTAENGINE_RUNGEKUTAENGINE_H
+#ifndef ATS_RUNGEKUTTAENGINE_RUNGEKUTAENGINE_H
+#define ATS_RUNGEKUTTAENGINE_RUNGEKUTAENGINE_H 1
 
-// Ats
+// Gaudi
+#include "GaudiKernel/ServiceHandle.h"
+// Core module
 #include "CoreInterfaces/ServiceBase.h"
-// Trk
-#include "TrkExInterfaces/IPropagationEngine.h"
-#include "TrkExUtils/ExtrapolationCell.h"
-#include "TrkExUtils/RungeKuttaUtils.h"
+// Extrapolation module
+#include "ExtrapolationInterfaces/IPropagationEngine.h"
+#include "ExtrapolationInterfaces/ExtrapolationMacros.h"
+#include "ExtrapolationUtils/ExtrapolationCell.h"
+#include "ExtrapolationUtils/RungeKuttaUtils.h"
+// EventData module
 #include "EventDataUtils/PropDirection.h"
 #include "TrackParameters/TrackParameters.h"
 #include "NeutralParameters/NeutralParameters.h"
+// Geometry module
 #include "Surfaces/Surface.h"
-#include "TrkMagFieldUtils/MagneticFieldProperties.h"
-#include "TrkMagFieldInterfaces/IMagneticFieldSvc.h"
+#include "Surfaces/CylinderSurface.h"
+#include "Surfaces/ConeSurface.h"
+#include "Surfaces/BoundaryCheck.h"
+// MagneticField module
+#include "MagneticFieldUtils/MagneticFieldProperties.h"
+#include "MagneticFieldInterfaces/IMagneticFieldSvc.h"
 
 namespace Ats {
 
@@ -53,9 +62,9 @@ namespace Ats {
       
       
       PropagationCache() :
-       direction(Ats::alongMomentum),
+       direction(alongMomentum),
        boundaryCheck(true),
-       mFieldMode(Ats::FullField),
+       mFieldMode(FullField),
        returnCurvilinear(false),
        useJacobian(false),
        step(0.),
@@ -74,7 +83,7 @@ namespace Ats {
   /**
   @class RungeKuttaEngine
     
-    Ats::RungeKuttaEngine is algorithm for track parameters propagation through
+    RungeKuttaEngine is algorithm for track parameters propagation through
     magnetic field with or without jacobian of transformation. This algorithm
     contains three steps.
     
@@ -148,7 +157,7 @@ namespace Ats {
     @author Igor.Gavrilenko@cern.ch (adapted to ATS by Andreas.Salzburger -at- cern.ch)   
   */
 
-  class RungeKuttaEngine : public Ats::ServiceBase, virtual public IPropagationEngine {
+  class RungeKuttaEngine : public ServiceBase, virtual public IPropagationEngine {
       
     public:
       
@@ -225,14 +234,13 @@ namespace Ats {
       /////////////////////////////////////////////////////////////////////////////////
       // Private data members: 
       /////////////////////////////////////////////////////////////////////////////////
-      ServiceHandle<Ats::IMagneticFieldSvc>  m_fieldService;  //!< the field service 
+      ServiceHandle<IMagneticFieldSvc>  m_fieldService;  //!< the field service 
 
-      double m_dlt                                         ;  //!< accuracy parameter
-      double m_helixStep                                   ;  //!< max step whith helix model
-      double m_straightStep                                ;  //!< max step whith srtaight line model
-      double m_maxPathLength                               ;  //!< max overal path length 
-      bool   m_usegradient                                 ;  //!< use magnetif field gradient
-      
+      double m_dlt                                    ;  //!< accuracy parameter
+      double m_helixStep                              ;  //!< max step whith helix model
+      double m_straightStep                           ;  //!< max step whith srtaight line model
+      double m_maxPathLength                          ;  //!< max overal path length 
+      bool   m_usegradient                            ;  //!< use magnetif field gradient
       
    };
 
@@ -242,21 +250,19 @@ namespace Ats {
 
   inline void RungeKuttaEngine::getField(double* R,double* H) const
   {
-    return m_fieldService->getField(R,H);
+    m_fieldService->getField(R,H);
   }
 
   inline void RungeKuttaEngine::getFieldGradient(double* R,double* H,double* dH) const
   {
-    return m_fieldService->getField(R,H,dH);
+    m_fieldService->getField(R,H,dH);
   }
-
-
 
   ////////////////////////////////////////////////////////////////////////////////
   // Templated method
   ////////////////////////////////////////////////////////////////////////////////
-#include "TrkExRungeKuttaEngine/RungeKuttaEngine.icc"
+#include "RungeKuttaEngine/RungeKuttaEngine.icc"
   
 }
  
-#endif // ATS_TRKEXRUNGEKUTTAENGINE_RUNGEKUTAAENGINE_H
+#endif // ATS_RUNGEKUTTAENGINE_RUNGEKUTAENGINE_H

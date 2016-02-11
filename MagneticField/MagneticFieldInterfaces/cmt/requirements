@@ -1,0 +1,22 @@
+package MagneticFieldInterfaces
+author <Andreas.Salburger@cern.ch>
+
+#################################################################
+# public use statements
+#################################################################
+
+public
+use AtlasPolicy                 AtlasPolicy-*
+use GaudiInterface              GaudiInterface-*              External
+use MagFieldInterfaces          MagFieldInterfaces-*          MagneticField
+
+# Declare this package as a cmake metalibrary so that the libraries and header files from
+# package it depends on are available to its clients. Transparent to CMT
+apply_pattern cmake_add_command command=metalibrary
+
+#################################################################
+# private use statements
+#################################################################
+private
+
+end_private

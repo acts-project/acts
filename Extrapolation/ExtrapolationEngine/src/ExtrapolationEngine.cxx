@@ -4,8 +4,9 @@
 
 // STL
 #include <sstream>
-// Trk include
+// Extrapolation module
 #include "ExtrapolationEngine/ExtrapolationEngine.h"
+// Geometry module
 #include "GeometryUtils/GeometrySignature.h"
 
 DECLARE_COMPONENT(Ats::ExtrapolationEngine)

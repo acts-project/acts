@@ -2,11 +2,11 @@
 // TransportJacobian.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef TRKEXUTILS_TRANSPORTJACOBIAN_H
-#define TRKEXUTILS_TRANSPORTJACOBIAN_H
+#ifndef ATS_EXTRAPOLATIONUTILS_TRANSPORTJACOBIAN_H
+#define ATS_EXTRAPOLATIONUTILS_TRANSPORTJACOBIAN_H 1
 
 
-// CLHEP
+// Core module
 #include "Algebra/AlgebraDefinitions.h"
 
 class MsgStream;
@@ -61,4 +61,4 @@ namespace Ats {
   
 } // end of namespace
 
-#endif // TRKEXUTILS_TRANSPORTJACOBIAN_H
+#endif // ATS_EXTRAPOLATIONUTILS_TRANSPORTJACOBIAN_H

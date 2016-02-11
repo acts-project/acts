@@ -4,8 +4,9 @@
 
 // STL
 #include <sstream>
-// Trk include
+// Extrapolation module
 #include "ExtrapolationEngine/MaterialEffectsEngine.h"
+// Geometry module
 #include "Detector/Layer.h"
 #include "Material/SurfaceMaterial.h"
 
@@ -56,7 +57,7 @@ Ats::ExtrapolationCode Ats::MaterialEffectsEngine::handleMaterial(Ats::ExCellNeu
     const Ats::Layer*   mLayer   = eCell.leadLayer;
     // the Extrapolator made sure that the layer is the lead layer && the parameters are the lead parameters
     if (mSurface && mSurface->surfaceMaterial()){
-        EX_MSG_DEBUG( ++eCell.navigationStep, "layer",  mLayer->tddID().value(), "handleMaterial for neutral parameters called - collect material.");
+        EX_MSG_DEBUG( ++eCell.navigationStep, "layer",  mLayer->geoID().value(), "handleMaterial for neutral parameters called - collect material.");
         // path correction
         double pathCorrection = mSurface->pathCorrection(eCell.leadParameters->position(),dir*(eCell.leadParameters->momentum()));
         // the relative direction wrt with the layer
@@ -64,13 +65,13 @@ Ats::ExtrapolationCode Ats::MaterialEffectsEngine::handleMaterial(Ats::ExCellNeu
         // multiply by the pre-and post-update factor
         double mFactor = mSurface->surfaceMaterial()->factor(rlDir, matupstage);
         if (mFactor == 0.){
-            EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->tddID().value(), "material collection with "  << (matupstage > 0. ? "pre " : "post ")  << "factor 0.");
+            EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "material collection with "  << (matupstage > 0. ? "pre " : "post ")  << "factor 0.");
             // return the parameters untouched -
             return Ats::ExtrapolationCode::InProgress;
         }
         pathCorrection = mFactor*pathCorrection;
         // screen output
-        EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->tddID().value(), "material update with corr factor = " << pathCorrection);
+        EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "material update with corr factor = " << pathCorrection);
         // get the actual material bin
         const Ats::MaterialProperties* materialProperties = mSurface->surfaceMaterial()->material(eCell.leadParameters->position());
         // and let's check if there's acutally something to do
@@ -79,10 +80,10 @@ Ats::ExtrapolationCode Ats::MaterialEffectsEngine::handleMaterial(Ats::ExCellNeu
             double thicknessInX0          = materialProperties->thicknessInX0();
             // check if material filling was requested
             if (eCell.checkConfigurationMode(Ats::ExtrapolationMode::CollectMaterial)){
-                EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->tddID().value(), "collecting material of [t/X0] = " << thicknessInX0); 
+                EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "collecting material of [t/X0] = " << thicknessInX0); 
                 eCell.stepMaterial(*mSurface, eCell.leadLayer, eCell.leadParameters->position(), pathCorrection, materialProperties);
             } else {
-                EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->tddID().value(), "adding material of [t/X0] = " << thicknessInX0);
+                EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "adding material of [t/X0] = " << thicknessInX0);
                 eCell.addMaterial(pathCorrection, materialProperties);
             }
         }
@@ -103,7 +104,7 @@ Ats::ExtrapolationCode Ats::MaterialEffectsEngine::handleMaterial(Ats::ExCellCha
     const Ats::Layer*   mLayer   = eCell.leadLayer;
     // the Extrapolator made sure that the layer is the lead layer && the parameters are the lead parameters
     if (mSurface && mSurface->surfaceMaterial()){
-        EX_MSG_DEBUG( ++eCell.navigationStep, "layer",  mLayer->tddID().value(), "handleMaterial for charged parameters called.");
+        EX_MSG_DEBUG( ++eCell.navigationStep, "layer",  mLayer->geoID().value(), "handleMaterial for charged parameters called.");
         // update the track parameters
         eCell.leadParameters = updateTrackParameters(*eCell.leadParameters,eCell,dir,matupstage);
     }
@@ -130,13 +131,13 @@ const Ats::TrackParameters* Ats::MaterialEffectsEngine::updateTrackParameters(co
     // multiply by the pre-and post-update factor
     double mFactor = mSurface->surfaceMaterial()->factor(rlDir, matupstage);
     if (mFactor == 0.){
-        EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->tddID().value(), "material update with "  << (matupstage > 0. ? "pre " : "post ")  << "factor 0. No update done.");
+        EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "material update with "  << (matupstage > 0. ? "pre " : "post ")  << "factor 0. No update done.");
         // return the parameters untouched -
         return (&parameters);
     }
     pathCorrection = mFactor*pathCorrection;
     // screen output
-    EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->tddID().value(), "material update with corr factor = " << pathCorrection);
+    EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "material update with corr factor = " << pathCorrection);
     // get the actual material bin
     const Ats::MaterialProperties* materialProperties = mSurface->surfaceMaterial()->material(parameters.position());
     // and let's check if there's acutally something to do
@@ -185,26 +186,26 @@ const Ats::TrackParameters* Ats::MaterialEffectsEngine::updateTrackParameters(co
         }
         // check if material filling was requested
         if (eCell.checkConfigurationMode(Ats::ExtrapolationMode::CollectMaterial)){
-	        EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->tddID().value(), "collecting material of [t/X0] = " << thicknessInX0); 
+	        EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "collecting material of [t/X0] = " << thicknessInX0); 
 	        eCell.stepMaterial(*mSurface, mLayer, parameters.position(), pathCorrection, materialProperties);
         } else {
-	        EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->tddID().value(), "adding material of [t/X0] = " << thicknessInX0);
+	        EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "adding material of [t/X0] = " << thicknessInX0);
 	        eCell.addMaterial(pathCorrection, materialProperties);
         }
         // now either create new ones or update - only start parameters can not be updated
         if (eCell.leadParameters != eCell.startParameters ){
-            EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->tddID().value(), "material update on non-initial parameters.");
+            EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "material update on non-initial parameters.");
             // @TODO how to update parameters ?!?
             // parameters.updateParameters(uParameters,uCovariance);
         } else {
-            EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->tddID().value(), "material update on initial parameters, creating new ones.");
+            EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "material update on initial parameters, creating new ones.");
             // create new parameters
             const Ats::Surface& tSurface = parameters.associatedSurface();
-            const Ats::TrackParameters* tParameters = new Ats::BoundParameters(std::move(uCovariance),uParameters,parameters.charge(),tSurface);/*tSurface.createTrackParameters(uParameters[Trk::loc1],
-                                                                                     uParameters[Trk::loc2],
-                                                                                     uParameters[Trk::phi],
-                                                                                     uParameters[Trk::theta],
-                                                                                     uParameters[Trk::qOverP],
+            const Ats::TrackParameters* tParameters = new Ats::BoundParameters(std::move(uCovariance),uParameters,parameters.charge(),tSurface);/*tSurface.createTrackParameters(uParameters[loc1],
+                                                                                     uParameters[loc2],
+                                                                                     uParameters[phi],
+                                                                                     uParameters[theta],
+                                                                                     uParameters[qOverP],
                                                                                      uCovariance);*/
 	      // these are newly created
 	      return tParameters;

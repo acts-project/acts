@@ -1,5 +1,5 @@
-#ifndef TRKEXUTILS_MATERIALUPDATEMODE_H
-#define TRKEXUTILS_MATERIALUPDATEMODE_H
+#ifndef ATS_EXTRAPOLATIONUTILS_MATERIALUPDATEMODE_H
+#define ATS_EXTRAPOLATIONUTILS_MATERIALUPDATEMODE_H 1
 
 namespace Ats {
 
@@ -15,7 +15,6 @@ namespace Ats {
           addNoise    =  1,
           removeNoise = -1 
    };
-   
    
 }
 

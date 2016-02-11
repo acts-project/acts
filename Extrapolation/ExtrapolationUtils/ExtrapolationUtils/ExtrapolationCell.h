@@ -2,23 +2,24 @@
 // ExtrapolationCell.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef TRKEXUTILS_EXTRAPOLATIONCELL_H
-#define TRKEXUTILS_EXTRAPOLATIONCELL_H
+#ifndef ATS_EXTRAPOLATIONUTILS_EXTRAPOLATIONCELL_H
+#define ATS_EXTRAPOLATIONUTILS_EXTRAPOLATIONCELL_H 1
 
-#include "EventDataUtils/PropDirection.h"
-#include "EventDataUtils/ParticleHypothesis.h"
-#include "TrkMagFieldUtils/MagneticFieldProperties.h"
-#include "Material/MaterialProperties.h"
+// Extrapolation moudle
 #include "ExtrapolationUtils/MaterialUpdateMode.h"
 #include "ExtrapolationUtils/TransportJacobian.h"
+// EventData module
+#include "EventDataUtils/PropDirection.h"
+#include "EventDataUtils/ParticleHypothesis.h"
+// Geometry module
+#include "Material/MaterialProperties.h"
 #include "GeometryUtils/GeometrySignature.h"
-#ifndef ATS_GAUDI_BUILD
-#include "MaterialOnTrack/EnergyLoss.h"
-#endif
 #include "Surfaces/Surface.h"
+// MagneticFieldUtils
+#include "MagneticFieldUtils/MagneticFieldProperties.h"
 
-#ifndef TRKEXUTILS_CHECKPATHMACRO
-#define TRKEXUTILS_CHECKPATHMACRO
+#ifndef ATS_EXTRAPOLATIONUTILSS_CHECKPATHMACRO
+#define ATS_EXTRAPOLATIONUTILSS_CHECKPATHMACRO 1
 #define reachedLimit(current, limit, tolerance) ( limit > 0 && ((current<limit) ? (current-limit)*(current-limit)/(limit*limit) < tolerance*tolerance : true))
 #endif
 
@@ -33,6 +34,7 @@ namespace Ats {
     class ExtrapolationMode {
       
       public :
+      
        enum eMode {    
          Direct                        =  1,  // call propagator directly, no navigation 
          Destination                   =  2,  // try to hit the destination, if not other means to stop
@@ -244,9 +246,6 @@ namespace Ats {
             ExtrapolationConfig                     extrapolationConfiguration; //!< overall global configuration
 
             float                                   time;                   //!< timing info
-#ifndef ATS_GAUDI_BUILD
-            EnergyLoss*                             eLoss;                  //!< cumulated energy loss
-#endif
             float                                   zOaTrX;                 //!< z/A*rho*dInX0 (for average calculations)
             float                                   zX;                     //!< z*dInX0 (for average calculations)
 	    
@@ -288,12 +287,9 @@ namespace Ats {
             sensitiveCurvilinear(false),
             destinationCurvilinear(false),
             extrapolationConfiguration(econfig),
-#ifndef ATS_GAUDI_BUILD
-             eLoss(nullptr),
-#endif
             zOaTrX(0.),
             zX(0.)
-	  {}
+	     {}
 
           /** add a configuration mode */
           void addConfigurationMode(ExtrapolationMode::eMode em) {
@@ -410,9 +406,6 @@ namespace Ats {
         pathLength                  = 0.;
         materialX0                  = 0.;
         materialL0                  = 0.;
-#ifndef ATS_GAUDI_BUILD
-        if (eLoss) eLoss->set(0.,0.,0.,0.,0.,0.);
-#endif
         // clear the vector
         extrapolationSteps.clear();        
     }
@@ -425,9 +418,6 @@ namespace Ats {
       }
       // now do the cleanup - will delete the step content if eCode is failure
       emptyGarbageBin(ec);
-#ifndef ATS_GAUDI_BUILD
-      delete eLoss;
-#endif
     }
 
     template <class T> void ExtrapolationCell<T>::emptyGarbageBin(const ExtrapolationCode& ec) 
@@ -507,8 +497,8 @@ namespace Ats {
            // the overal material
            materialX0 += sfactor * mprop->thicknessInX0();
            materialL0 += sfactor * mprop->thicknessInL0();
-	   zOaTrX     += mprop->zOverAtimesRho()* sfactor * mprop->thicknessInX0();
-	   zX         += mprop->averageZ()* sfactor * mprop->thicknessInX0();
+	       zOaTrX     += mprop->zOverAtimesRho()* sfactor * mprop->thicknessInX0();
+	       zX         += mprop->averageZ()* sfactor * mprop->thicknessInX0();
        }
     }
     
@@ -521,8 +511,8 @@ namespace Ats {
            // the overal material
            materialX0 += step/mat->X0;
            materialL0 += step/mat->L0;
-	   zOaTrX     += mat->zOverAtimesRho()* step/mat->X0;
-	   zX         += mat->averageZ()* step/mat->X0;
+	       zOaTrX     += mat->zOverAtimesRho()* step/mat->X0;
+	       zX         += mat->averageZ()* step/mat->X0;
        }
     }
     

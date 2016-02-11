@@ -2,28 +2,28 @@
 // StaticEngine.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_TRKEXENINGE_STATICENGINE_H
-#define ATS_TRKEXENINGE_STATICENGINE_H
+#ifndef ATS_EXTRAPOLATIONENGING_STATICENGINE_H
+#define ATS_EXTRAPOLATIONENGING_STATICENGINE_H 1
 
-#ifndef TRKEXENINGE_OUTPUTHELPER 
-#define TRKEXENINGE_OUTPUTHELPER 
+#ifndef ATS_EXTRAPOLATIONENINGE_OUTPUTHELPER 
+#define ATS_EXTRAPOLATIONENINGE_OUTPUTHELPER 1
 #define OH_CHECKFOUND(object) ( object ? "found" : "not found")
 #endif
 
-// Ats
-#include "CoreInterfaces/ServiceBase.h"
 // Gaudi
 #include "GaudiKernel/ServiceHandle.h"
-// Trk
-#include "ExtrapolationInterfaces/IExtrapolationEngine.h"
+// Core module
+#include "CoreInterfaces/ServiceBase.h"
+// Extrapolation module
 #include "ExtrapolationInterfaces/ExtrapolationMacros.h"
-#include "ExtrapolationUtils/ExtrapolationCell.h"
-#include "TrackParameters/TrackParameters.h"
-#include "NeutralParameters/NeutralParameters.h"
-
+#include "ExtrapolationInterfaces/IExtrapolationEngine.h"
 #include "ExtrapolationInterfaces/IPropagationEngine.h"
 #include "ExtrapolationInterfaces/IMaterialEffectsEngine.h"
 #include "ExtrapolationInterfaces/INavigationEngine.h"
+#include "ExtrapolationUtils/ExtrapolationCell.h"
+// EventData module
+#include "TrackParameters/TrackParameters.h"
+#include "NeutralParameters/NeutralParameters.h"
 
 namespace Ats {
 
@@ -135,5 +135,5 @@ namespace Ats {
 //!< define the templated function    
 #include "StaticEngine.icc"  
 
-#endif // ATS_TRKEXINTERFACES_IStaticEngine_H
+#endif // ATS_EXTRAPOLATIONENGING_STATICENGINE_H
 

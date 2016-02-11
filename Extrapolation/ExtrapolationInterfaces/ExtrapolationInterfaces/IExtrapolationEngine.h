@@ -2,13 +2,14 @@
 // IExtrapolationEngine.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_TRKEXINTERFACES_IEXTRAPOLATIONENGINE_H
-#define ATS_TRKEXINTERFACES_IEXTRAPOLATIONENGINE_H
+#ifndef ATS_EXTRAPOLATIONINTERFACES_IEXTRAPOLATIONENGINE_H
+#define ATS_EXTRAPOLATIONINTERFACES_IEXTRAPOLATIONENGINE_H 1
 
 // Gaudi
 #include "GaudiKernel/IService.h"
-// Trk
+// Geometry module
 #include "GeometryUtils/GeometrySignature.h"
+// EventData module
 #include "ExtrapolationUtils/ExtrapolationCell.h"
 #include "TrackParameters/TrackParameters.h"
 #include "NeutralParameters/NeutralParameters.h"
@@ -59,8 +60,8 @@ namespace Ats {
     protected:
 
       //!< SCREEN output formatting  (SOP) - unify amongst extrapolation engines
-      std::string                                         m_sopPrefix;            //!< prefix for screen output
-      std::string                                         m_sopPostfix;           //!< prefix for screen output
+      std::string     m_sopPrefix;            //!< prefix for screen output
+      std::string     m_sopPostfix;           //!< prefix for screen output
 
   };
 

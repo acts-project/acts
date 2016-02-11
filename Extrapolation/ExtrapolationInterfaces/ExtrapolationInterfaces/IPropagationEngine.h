@@ -2,13 +2,14 @@
 // IPropagationEngine.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_TRKEXINTERFACES_IPROPAGATIONENGINE_H
-#define ATS_TRKEXINTERFACES_IPROPAGATIONENGINE_H
+#ifndef ATS_EXTRAPOLATIONINTERFACES_IPROPAGATIONENGINE_H
+#define ATS_EXTRAPOLATIONINTERFACES_IPROPAGATIONENGINE_H 1
 
 // Gaudi
 #include "GaudiKernel/IService.h"
-// Trk
+// Extrapolation module
 #include "ExtrapolationUtils/ExtrapolationCell.h"
+// EventData module
 #include "TrackParameters/TrackParameters.h"
 #include "NeutralParameters/NeutralParameters.h"
 
@@ -76,7 +77,6 @@ namespace Ats {
 
   };
 
-
 } // end of namespace
 
-#endif // ATS_TRKEXINTERFACES_INAVIGATIONENGINE_H
+#endif // ATS_EXTRAPOLATIONINTERFACES_IPROPAGATIONENGINE_H

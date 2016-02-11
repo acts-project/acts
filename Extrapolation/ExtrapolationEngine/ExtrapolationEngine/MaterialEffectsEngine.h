@@ -2,17 +2,18 @@
 // MaterialEffectsEngine.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_TRKEXINTERFACES_MATERIAKEFFECTSENGINE_H
-#define ATS_TRKEXINTERFACES_MATERIAKEFFECTSENGINE_H
+#ifndef ATS_EXTRAPOLATIONENGINE_MATERIAKEFFECTSENGINE_H
+#define ATS_EXTRAPOLATIONENGINE_MATERIAKEFFECTSENGINE_H 1
 
-// Ats
+// Core module
 #include "CoreInterfaces/ServiceBase.h"
-// Trk
+// Extrapolation module
 #include "ExtrapolationInterfaces/IMaterialEffectsEngine.h"
 #include "ExtrapolationInterfaces/ExtrapolationMacros.h"
 #include "ExtrapolationUtils/ExtrapolationCell.h"
 #include "ExtrapolationUtils/MaterialInteraction.h"
 #include "ExtrapolationUtils/MaterialUpdateMode.h"
+// EventData module
 #include "EventDataUtils/PropDirection.h"
 #include "TrackParameters/TrackParameters.h"
 #include "NeutralParameters/NeutralParameters.h"
@@ -76,5 +77,5 @@ namespace Ats {
 
 } // end of namespace
 
-#endif // ATS_TRKEXINTERFACES_MATERIAKEFFECTSENGINE_H
+#endif // ATS_EXTRAPOLATIONENGINE_MATERIAKEFFECTSENGINE_H
 

@@ -2,22 +2,24 @@
 // RungeKuttaEngine.cxx, ATS project
 /////////////////////////////////////////////////////////////////////////////////
 
+// Extrapolation module
+#include "RungeKuttaEngine/RungeKuttaEngine.h"
 #include "ExtrapolationInterfaces/ExtrapolationMacros.h"
-#include "TrkExRungeKuttaEngine/RungeKuttaEngine.h"
-#include "Surfaces/ConeSurface.h"
+#include "ExtrapolationUtils/TransportJacobian.h"
+// Geometry module
+#include "Surfaces/Surface.h"
 #include "Surfaces/DiscSurface.h"
 #include "Surfaces/PlaneSurface.h"
 #include "Surfaces/PerigeeSurface.h"
-#include "Surfaces/CylinderSurface.h"
 #include "Surfaces/StraightLineSurface.h"
-#include "TrkMagFieldUtils/MagneticFieldProperties.h"
-#include "ExtrapolationUtils/TransportJacobian.h"
+// MagneticField module
+#include "MagneticFieldUtils/MagneticFieldProperties.h"
 
 /////////////////////////////////////////////////////////////////////////////////
 // Constructor
 /////////////////////////////////////////////////////////////////////////////////
 Ats::RungeKuttaEngine::RungeKuttaEngine(const std::string& name, ISvcLocator* svc) :  
-  Ats::ServiceBase(name, svc),
+  ServiceBase(name, svc),
   m_fieldService("", name),
   m_dlt(0.000200),
   m_helixStep(1.), 
@@ -35,7 +37,7 @@ Ats::RungeKuttaEngine::RungeKuttaEngine(const std::string& name, ISvcLocator* sv
   declareProperty("MaxStraightLineStep", m_straightStep);
   declareProperty("MaxPathLength"      , m_maxPathLength);
   declareProperty("IncludeBgradients"  , m_usegradient );
-  declareProperty("MagFieldSvc"        , m_fieldService);
+  declareProperty("MagneticFieldSvc"   , m_fieldService);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -66,10 +68,10 @@ StatusCode Ats::RungeKuttaEngine::finalize()
 /////////////////////////////////////////////////////////////////////////////////
 // Main function for NeutralParameters propagation 
 /////////////////////////////////////////////////////////////////////////////////
-Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(Ats::ExCellNeutral& eCell,
-                                                        const Ats::Surface& sf,
-                                                        Ats::PropDirection pDir,
-                                                        const Ats::BoundaryCheck& bcheck,
+Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(ExCellNeutral& eCell,
+                                                        const Surface& sf,
+                                                        PropDirection pDir,
+                                                        const BoundaryCheck& bcheck,
                                                         bool returnCurvilinear) const
 { 
     EX_MSG_DEBUG(++eCell.navigationStep, "propagate", "neut", "propagation engine called with neutral parameters with propagation direction " << pDir );     
@@ -77,11 +79,11 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(Ats::ExCellNeutral& eCel
     bool finalPropagation = (eCell.endSurface == (&sf));
 
     // create the PropagationCache 
-    Ats::PropagationCache pCache;
+    PropagationCache pCache;
     
     // get the start parameters
-    const Ats::NeutralParameters* sParameters = eCell.leadParameters;
-    const Ats::NeutralParameters* nParameters = nullptr;
+    const NeutralParameters* sParameters = eCell.leadParameters;
+    const NeutralParameters* nParameters = nullptr;
 
     // if the desination surface is the start surface -> bail out and build parameters directly
     if (&sf == &(sParameters->associatedSurface())){ 
@@ -92,10 +94,10 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(Ats::ExCellNeutral& eCel
        // assign the lead and end parameters
        eCell.leadParameters = nParameters;
        // check if the propagation was called with directly, then lead parameters become end parameters
-       if (eCell.checkConfigurationMode(Ats::ExtrapolationMode::Direct)) 
+       if (eCell.checkConfigurationMode(ExtrapolationMode::Direct)) 
            eCell.endParameters = eCell.leadParameters;
        // return success or in progress
-       return (finalPropagation ? Ats::ExtrapolationCode::SuccessDestination : Ats::ExtrapolationCode::InProgress);
+       return (finalPropagation ? ExtrapolationCode::SuccessDestination : ExtrapolationCode::InProgress);
     }  
     // specify the parameters for the propagation    
     pCache.maxPathLength     = eCell.pathLimit < 0. ? m_maxPathLength : (eCell.pathLimit - eCell.pathLength);
@@ -107,26 +109,28 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(Ats::ExCellNeutral& eCel
     pCache.mcondition        = false;
 
     // the result through propagation
-    if (propagateRungeKuttaT<Ats::NeutralParameters>(eCell, pCache, *sParameters, sf)){
+    if (propagateRungeKuttaT<NeutralParameters>(eCell, pCache, *sParameters, sf)){
         EX_MSG_VERBOSE(eCell.navigationStep, "propagate", "neut", "propagation to surface was successful.");     
         // create the new parameters
         if (!pCache.returnCurvilinear){
             // new parameters bound to the surface  
-            nParameters = sf.createNeutralParameters(pCache.parameters[0],
-                                                     pCache.parameters[1],
-                                                     pCache.parameters[2],
-                                                     pCache.parameters[3],
-                                                     pCache.parameters[4],
-                                                     pCache.covariance);
+            nParameters = nullptr;
+                          //sf.createNeutralParameters(pCache.parameters[0],
+                          //                           pCache.parameters[1],
+                          //                           pCache.parameters[2],
+                          //                           pCache.parameters[3],
+                          //                           pCache.parameters[4],
+                          //                           pCache.covariance);
         } else {
             // new curvilinear parameters
-            Ats::Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);
-            nParameters = new Ats::NeutralCurvilinearParameters(gp,
-                                                                pCache.parameters[2],
-                                                                pCache.parameters[3],
-                                                                pCache.parameters[4],
-                                                                pCache.covariance);
-        }
+            Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);
+            nParameters = nullptr;
+                          // new Ats::NeutralCurvilinearParameters(gp,
+                          //                                       pCache.parameters[2],
+                          //                                       pCache.parameters[3],
+                          //                                       pCache.parameters[4],
+                          //                                       pCache.covariance);
+        }                 // 
     } 
     // only go on if the parameter creation worked 
     if (nParameters){        
@@ -135,7 +139,7 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(Ats::ExCellNeutral& eCel
         
         
         // fill the transport information - only if the propation direction is not 0 ('anyDirection')
-        if (pDir!=Ats::anyDirection){
+        if (pDir!=anyDirection){
            EX_MSG_VERBOSE(eCell.navigationStep,"propagate", "neut", "path length of " << pCache.step << " added to the extrapolation cell (limit = " << eCell.pathLimit << ")" );    
            eCell.stepTransport(sf,pCache.step);
         }
@@ -149,29 +153,29 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(Ats::ExCellNeutral& eCel
         if (eCell.pathLimitReached(m_dlt)){
             // screen output
             EX_MSG_VERBOSE(eCell.navigationStep,"propagate", "neut", "path limit of " << eCell.pathLimit << " reached. Stopping extrapolation."); 
-            return Ats::ExtrapolationCode::SuccessPathLimit;
+            return ExtrapolationCode::SuccessPathLimit;
         }  
                                                        
         // check if the propagation was called with directly, then lead parameters become end parameters
-        if (eCell.checkConfigurationMode(Ats::ExtrapolationMode::Direct)) 
+        if (eCell.checkConfigurationMode(ExtrapolationMode::Direct)) 
 	        eCell.endParameters = eCell.leadParameters;
 	    // return success for the final destination or in progress                                                                   
-        return (finalPropagation ? Ats::ExtrapolationCode::SuccessDestination : Ats::ExtrapolationCode::InProgress);
+        return (finalPropagation ? ExtrapolationCode::SuccessDestination : ExtrapolationCode::InProgress);
     } else {
         // give some screen output
         EX_MSG_VERBOSE(eCell.navigationStep,"propagate", "neut", "intersection with the surface did not succeed.");
     }                                                                     
    // return - recovered means that the leadParameters are the input ones 
-   return (finalPropagation ? Ats::ExtrapolationCode::FailureDestination : Ats::ExtrapolationCode::Recovered) ;
+   return (finalPropagation ? ExtrapolationCode::FailureDestination : ExtrapolationCode::Recovered) ;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 // Main function for TrackParameters propagation 
 /////////////////////////////////////////////////////////////////////////////////
-Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(Ats::ExCellCharged& eCell,
-                                                        const Ats::Surface& sf,
-                                                        Ats::PropDirection pDir,
-                                                        const Ats::BoundaryCheck& bcheck,
+Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(ExCellCharged& eCell,
+                                                        const Surface& sf,
+                                                        PropDirection pDir,
+                                                        const BoundaryCheck& bcheck,
                                                         bool returnCurvilinear) const
 {
     EX_MSG_DEBUG(++eCell.navigationStep, "propagate", "char", "propagation engine called with charged parameters with propagation direction " << pDir ); 
@@ -179,12 +183,11 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(Ats::ExCellCharged& eCel
     bool finalPropagation = (eCell.endSurface == (&sf));
     
     // the start and teh result
-    const Ats::TrackParameters* pParameters = nullptr;
-    const Ats::TrackParameters* sParameters = eCell.leadParameters;
-    
+    const TrackParameters* pParameters = nullptr;
+    const TrackParameters* sParameters = eCell.leadParameters;
     
     // build the propagation cache
-    Ats::PropagationCache pCache;
+    PropagationCache pCache;
     
     // if the desination surface is the start surface -> bail out and build parameters directly
     if (&sf == &(eCell.leadParameters->associatedSurface())) { 
@@ -196,10 +199,10 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(Ats::ExCellCharged& eCel
        // assign the lead and end parameters
        eCell.leadParameters = pParameters;
        // check if the propagation was called with directly, then lead parameters become end parameters
-       if (eCell.checkConfigurationMode(Ats::ExtrapolationMode::Direct)) 
+       if (eCell.checkConfigurationMode(ExtrapolationMode::Direct)) 
            eCell.endParameters = eCell.leadParameters;
        // return success or in progress
-       return (finalPropagation ? Ats::ExtrapolationCode::SuccessDestination : Ats::ExtrapolationCode::InProgress);
+       return (finalPropagation ? ExtrapolationCode::SuccessDestination : ExtrapolationCode::InProgress);
     }
 
     // and configure the propagation cache now
@@ -213,25 +216,27 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(Ats::ExCellCharged& eCel
     pCache.needgradient      = (pCache.useJacobian && m_usegradient ) ? true : false;
     
     // propagate with templated helper function
-    if (propagateRungeKuttaT<Ats::TrackParameters>(eCell, pCache, *sParameters, sf)){
+    if (propagateRungeKuttaT<TrackParameters>(eCell, pCache, *sParameters, sf)){
         EX_MSG_VERBOSE(eCell.navigationStep, "propagate", "char", "propagation to surface was successful.");     
         // create the new parameters
         if (!pCache.returnCurvilinear){
             // new parameters bound to the surface  
-            pParameters = sf.createTrackParameters(pCache.parameters[0],
-                                                   pCache.parameters[1],
-                                                   pCache.parameters[2],
-                                                   pCache.parameters[3],
-                                                   pCache.parameters[4],
-                                                   pCache.covariance);
+            pParameters = nullptr;
+                          //sf.createTrackParameters(pCache.parameters[0],
+                          //                         pCache.parameters[1],
+                          //                         pCache.parameters[2],
+                          //                         pCache.parameters[3],
+                          //                         pCache.parameters[4],
+                          //                         pCache.covariance);
         } else {
             // new curvilinear parameters
-            Ats::Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);
-            pParameters = new Ats::CurvilinearParameters(gp,
-                                                         pCache.parameters[2],
-                                                         pCache.parameters[3],
-                                                         pCache.parameters[4],
-                                                         pCache.covariance);
+            Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);
+            pParameters = nullptr;
+                          //new Ats::CurvilinearParameters(gp,
+                          //                               pCache.parameters[2],
+                          //                               pCache.parameters[3],
+                          //                               pCache.parameters[4],
+                          //                               pCache.covariance);
         }
     }
     
@@ -245,21 +250,21 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(Ats::ExCellCharged& eCel
        // assign the lead and end parameters
        eCell.leadParameters = pParameters;
        // check what to do with the path Length
-       if (eCell.checkConfigurationMode(Ats::ExtrapolationMode::StopWithPathLimit) || eCell.pathLength > 0){
+       if (eCell.checkConfigurationMode(ExtrapolationMode::StopWithPathLimit) || eCell.pathLength > 0){
            // add the new propagation length to the path length
            eCell.pathLength += pCache.step;
            // check if Limit reached
            if (eCell.pathLimitReached(m_dlt)){
                EX_MSG_VERBOSE(eCell.navigationStep, "propagate", "char", "path limit of " << eCell.pathLimit << " successfully reached -> stopping." ); 
-               return Ats::ExtrapolationCode::SuccessPathLimit;
+               return ExtrapolationCode::SuccessPathLimit;
            }
        }
        // check if the propagation was called with directly, then lead parameters become end parameters
-       if (eCell.checkConfigurationMode(Ats::ExtrapolationMode::Direct)) 
+       if (eCell.checkConfigurationMode(ExtrapolationMode::Direct)) 
            eCell.endParameters = eCell.leadParameters;
 	 
        // return Success only if it is the final propagation - the extrapolation engine knows that 
-       return (finalPropagation ? Ats::ExtrapolationCode::SuccessDestination : Ats::ExtrapolationCode::InProgress);
+       return (finalPropagation ? ExtrapolationCode::SuccessDestination : ExtrapolationCode::InProgress);
    }                                                                      
    // return - recovered means that the leadParameters are the input ones 
    return (finalPropagation ? Ats::ExtrapolationCode::FailureDestination : Ats::ExtrapolationCode::Recovered) ;
@@ -268,7 +273,7 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(Ats::ExCellCharged& eCel
 /////////////////////////////////////////////////////////////////////////////////
 // Runge Kutta main program for propagation with or without Jacobian
 /////////////////////////////////////////////////////////////////////////////////
-bool Ats::RungeKuttaEngine::propagateWithJacobian(int navigationStep, Ats::PropagationCache& pCache, int kind, double* Su) const
+bool Ats::RungeKuttaEngine::propagateWithJacobian(int navigationStep, PropagationCache& pCache, int kind, double* Su) const
 {
   
   EX_MSG_VERBOSE(navigationStep, "propagate", "<T> ", "propagateWithJacobian called with  internal surface type " << kind ); 
@@ -385,7 +390,7 @@ bool Ats::RungeKuttaEngine::propagateWithJacobian(int navigationStep, Ats::Propa
 // Runge Kutta trajectory model (units->mm,MeV,kGauss)
 // Uses Nystroem algorithm (See Handbook Net. Bur. ofStandards, procedure 25.5.20)
 /////////////////////////////////////////////////////////////////////////////////
-double Ats::RungeKuttaEngine::rungeKuttaStep(int navigationStep, Ats::PropagationCache& pCache, double S,  bool& InS) const
+double Ats::RungeKuttaEngine::rungeKuttaStep(int navigationStep, PropagationCache& pCache, double S,  bool& InS) const
 {
   
   EX_MSG_VERBOSE(navigationStep, "propagate", "<T> ", "rungeKuttaStep called"); 
@@ -587,7 +592,7 @@ double Ats::RungeKuttaEngine::rungeKuttaStep(int navigationStep, Ats::Propagatio
 //    f[ 9],f[10],f[11] - dHz/dx, dHz/dy and dHz/dz                           
 //                                                                                   
 /////////////////////////////////////////////////////////////////////////////////
-double Ats::RungeKuttaEngine::rungeKuttaStepWithGradient(int navigationStep, Ats::PropagationCache& pCache, double S, bool& InS) const
+double Ats::RungeKuttaEngine::rungeKuttaStepWithGradient(int navigationStep, PropagationCache& pCache, double S, bool& InS) const
 {
   
   EX_MSG_VERBOSE(navigationStep, "propagate", "<T> ", "rungeKuttaStepWithGradient called"); 
@@ -746,10 +751,10 @@ double Ats::RungeKuttaEngine::rungeKuttaStepWithGradient(int navigationStep, Ats
 /////////////////////////////////////////////////////////////////////////////////
 // Test new cross point
 /////////////////////////////////////////////////////////////////////////////////
-bool Ats::RungeKuttaEngine::newCrossPoint(const Ats::CylinderSurface& Su, const double* Ro, const double* P ) const
+bool Ats::RungeKuttaEngine::newCrossPoint(const CylinderSurface& Su, const double* Ro, const double* P ) const
 {
   const double pi = 3.1415927, pi2=2.*pi; 
-  const Ats::Transform3D& T = Su.transform();
+  const Transform3D& T = Su.transform();
   double Ax[3] = {T(0,0),T(1,0),T(2,0)};
   double Ay[3] = {T(0,1),T(1,1),T(2,1)};
 
@@ -777,7 +782,7 @@ bool Ats::RungeKuttaEngine::newCrossPoint(const Ats::CylinderSurface& Su, const 
 /////////////////////////////////////////////////////////////////////////////////
 // Straight line trajectory model 
 /////////////////////////////////////////////////////////////////////////////////
-double Ats::RungeKuttaEngine::straightLineStep(int navigationStep, Ats::PropagationCache& pCache, double  S) const
+double Ats::RungeKuttaEngine::straightLineStep(int navigationStep, PropagationCache& pCache, double  S) const
 {
     
   EX_MSG_VERBOSE(navigationStep, "propagate", "<T> ", "straightLineStep called"); 
@@ -802,7 +807,7 @@ double Ats::RungeKuttaEngine::straightLineStep(int navigationStep, Ats::Propagat
 /////////////////////////////////////////////////////////////////////////////////
 // Build new track parameters without propagation
 /////////////////////////////////////////////////////////////////////////////////
-const Ats::TrackParameters* Ats::RungeKuttaEngine::buildTrackParametersWithoutPropagation(const Ats::TrackParameters& tParameters,double* jacobian) const
+const Ats::TrackParameters* Ats::RungeKuttaEngine::buildTrackParametersWithoutPropagation(const TrackParameters& tParameters,double* jacobian) const
 {
   jacobian[0]=jacobian[6]=jacobian[12]=jacobian[18]=jacobian[20]=1.;
   jacobian[1]=jacobian[2]=jacobian[3]=jacobian[4]=jacobian[5]=jacobian[7]=jacobian[8]=jacobian[9]=jacobian[10]=jacobian[11]=jacobian[13]=jacobian[14]=jacobian[15]=jacobian[16]=jacobian[17]=jacobian[19]=0.;
@@ -812,7 +817,7 @@ const Ats::TrackParameters* Ats::RungeKuttaEngine::buildTrackParametersWithoutPr
 /////////////////////////////////////////////////////////////////////////////////
 // Build new neutral track parameters without propagation
 /////////////////////////////////////////////////////////////////////////////////
-const Ats::NeutralParameters* Ats::RungeKuttaEngine::buildNeutralParametersWithoutPropagation(const Ats::NeutralParameters& nParameters,double* jacobian) const
+const Ats::NeutralParameters* Ats::RungeKuttaEngine::buildNeutralParametersWithoutPropagation(const NeutralParameters& nParameters,double* jacobian) const
 {
   jacobian[0]=jacobian[6]=jacobian[12]=jacobian[18]=jacobian[20]=1.;
   jacobian[1]=jacobian[2]=jacobian[3]=jacobian[4]=jacobian[5]=jacobian[7]=jacobian[8]=jacobian[9]=jacobian[10]=jacobian[11]=jacobian[13]=jacobian[14]=jacobian[15]=jacobian[16]=jacobian[17]=jacobian[19]=0.;
@@ -822,11 +827,12 @@ const Ats::NeutralParameters* Ats::RungeKuttaEngine::buildNeutralParametersWitho
 /////////////////////////////////////////////////////////////////////////////////
 // Step estimator take into accout curvature
 /////////////////////////////////////////////////////////////////////////////////
-double Ats::RungeKuttaEngine::stepEstimatorWithCurvature(Ats::PropagationCache& pCache, int kind, double* Su, bool& Q) const
+double Ats::RungeKuttaEngine::stepEstimatorWithCurvature(PropagationCache& pCache, int kind, double* Su, bool& Q) const
 {
   // Straight step estimation
   //
-  Ats::RungeKuttaUtils utils;
+  RungeKuttaUtils utils;
+  
   double  Step = utils.stepEstimator(kind,Su,pCache.pVector,Q); if(!Q) return 0.; 
   double AStep = fabs(Step);
   if ( kind || AStep < m_straightStep || !pCache.mcondition ) return Step;
