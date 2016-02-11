@@ -1,8 +1,0 @@
-package Identifier 
- 
-author Andrea.Salzburger@cern.ch
- 
-use AtlasPolicy AtlasPolicy-*
- 
-private 
-apply_pattern cmake_add_command command=metalibrary

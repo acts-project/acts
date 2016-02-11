@@ -5,8 +5,6 @@
 #ifndef ATS_CORE_BASEMACROS_H
 #define ATS_CORE_BASEMACROS_H 1
 
-#include "MsgMacros.h"
-
 // these macros simplify/harmonize the retrieval ot TOOLS/SERVICES
 #define RETRIEVE_FATAL(handle)                                                                          \
         if (handle.empty()){                                                                            \

@@ -6,7 +6,7 @@
 #define AGD_GENERICDETECTORELEMENT_DETECTORELEMENT 1
 
 // Algebra and Identifier
-#include "Identifier/Identifier.h"
+#include "CoreIdentifier/Identifier.h"
 #include "Algebra/AlgebraDefinitions.h"
 // Geometry module
 #include "DetectorElementBase/DetectorElementBase.h"

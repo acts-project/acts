@@ -1,11 +1,11 @@
-package AtlasInterfaces
+package AtlasCorePlugins
 
 manager Andreas Salzburger <Andreas.Salzburger@cern.ch>
 
 use AtlasPolicy           AtlasPolicy-*
-use AthenaBaseComps       AthenaBaseComps-*        Control
+use AthenaBaseComps       AthenaBaseComps-*     Control
+use Identifier            Identifier-*          DetectorDescription
 
 private
-macro DOXYGEN_IMAGE_PATH "../doc/images"
 
 apply_pattern cmake_add_command command=metalibrary
