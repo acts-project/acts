@@ -5,6 +5,7 @@
 // STL include(s)
 #include <cmath>
 #include <memory>
+#include <random>
 
 // Boost include(s)
 #define BOOST_TEST_MODULE ParameterSet Tests
@@ -28,6 +29,188 @@ namespace Ats
    */
   namespace Test
   {
+    /// @cond
+    namespace
+    {
+      // tolerance used for floating point comparison in this translation unit
+      const double tol = 1e-6;
+
+      double get_cyclic_value(double value,double min,double max)
+      {
+        return value - (max - min) * std::floor((value - min)/(max - min));
+      }
+
+      double get_cyclic_difference(double a,double b,double min,double max)
+      {
+        const double period = max - min;
+        const double half_period = period/2;
+        a = get_cyclic_value(a,min,max);
+        b = get_cyclic_value(b,min,max);
+        double raw_diff = a - b;
+        double diff = (raw_diff > half_period) ? raw_diff - period : ((raw_diff < -half_period) ? period + raw_diff : raw_diff);
+        return diff;
+      }
+
+      void check_residuals_for_bound_parameters()
+      {
+        const double max = parameter_traits<ParPolicy,ParDefs::theta>::pMax();
+        const double min = parameter_traits<ParPolicy,ParDefs::theta>::pMin();
+        double theta_1 = 0.7*M_PI;
+        double theta_2 = 0.4*M_PI;
+        AtsVectorD<1> dTheta;
+        dTheta << (theta_1 - theta_2);
+
+        // both parameters inside bounds, difference is positive
+        ParameterSet<ParPolicy,ParDefs::theta> bound1(nullptr,theta_1);
+        ParameterSet<ParPolicy,ParDefs::theta> bound2(nullptr,theta_2);
+        BOOST_CHECK(bound1.residual(bound2).isApprox(dTheta,tol));
+
+        // both parameters inside bound, difference negative
+        dTheta << (theta_2 - theta_1);
+        BOOST_CHECK(bound2.residual(bound1).isApprox(dTheta,tol));
+
+        // one parameter above upper bound, difference positive
+        theta_1 = max + 1;
+        bound1.setParameter<ParDefs::theta>(theta_1);
+        dTheta << max - theta_2;
+        BOOST_CHECK(bound1.residual(bound2).isApprox(dTheta,tol));
+
+        // one parameter above upper bound, difference negative
+        dTheta << theta_2 - max;
+        BOOST_CHECK(bound2.residual(bound1).isApprox(dTheta,tol));
+
+        // one parameter below lower bound, difference positive
+        theta_1 = min - 1;
+        bound1.setParameter<ParDefs::theta>(theta_1);
+        dTheta << theta_2 - min;
+        BOOST_CHECK(bound2.residual(bound1).isApprox(dTheta,tol));
+
+        // one parameter below lower bound, difference negative
+        dTheta << min - theta_2;
+        BOOST_CHECK(bound1.residual(bound2).isApprox(dTheta,tol));
+
+        // both parameters outside bounds, both below
+        theta_1 = min - 1;
+        theta_2 = min - 2;
+        bound1.setParameter<ParDefs::theta>(theta_1);
+        bound2.setParameter<ParDefs::theta>(theta_2);
+        dTheta << 0;
+        BOOST_CHECK(bound1.residual(bound2).isApprox(dTheta,tol));
+
+        // both parameters outside bounds, both above
+        theta_1 = max + 1;
+        theta_2 = max + 2;
+        bound1.setParameter<ParDefs::theta>(theta_1);
+        bound2.setParameter<ParDefs::theta>(theta_2);
+        dTheta << 0;
+        BOOST_CHECK(bound1.residual(bound2).isApprox(dTheta,tol));
+
+        // both parameters outside bounds, one above, one below
+        theta_1 = max + 1;
+        theta_2 = min - 2;
+        bound1.setParameter<ParDefs::theta>(theta_1);
+        bound2.setParameter<ParDefs::theta>(theta_2);
+        dTheta << max - min;
+        BOOST_CHECK(bound1.residual(bound2).isApprox(dTheta,tol));
+        dTheta << min - max;
+        BOOST_CHECK(bound2.residual(bound1).isApprox(dTheta,tol));
+      }
+
+      void check_residuals_for_cyclic_parameters()
+      {
+        const double max = parameter_traits<ParPolicy,ParDefs::phi>::pMax();
+        const double min = parameter_traits<ParPolicy,ParDefs::phi>::pMin();
+
+
+        double phi_1 = 0.7*M_PI;
+        double phi_2 = 0.4*M_PI;
+        AtsVectorD<1> dPhi;
+        dPhi << (phi_1 - phi_2);
+
+        ParameterSet<ParPolicy,ParDefs::phi> cyclic1(nullptr,phi_1);
+        ParameterSet<ParPolicy,ParDefs::phi> cyclic2(nullptr,phi_2);
+
+        // no boundary crossing, difference is positive
+        BOOST_CHECK(cyclic1.residual(cyclic2).isApprox(dPhi,tol));
+
+        // no boundary crossing, difference is negative
+        BOOST_CHECK(cyclic2.residual(cyclic1).isApprox(-dPhi,tol));
+
+        // forward boundary crossing
+        phi_1 = -0.9 * M_PI;
+        cyclic1.setParameter<ParDefs::phi>(phi_1);
+        dPhi << get_cyclic_difference(phi_1,phi_2,min,max);
+        BOOST_CHECK(cyclic1.residual(cyclic2).isApprox(dPhi,tol));
+        BOOST_CHECK(cyclic2.residual(cyclic1).isApprox(-dPhi,tol));
+
+        // backward boundary crossing
+        phi_1 = 0.7*M_PI;
+        phi_2 = -0.9*M_PI;
+        cyclic1.setParameter<ParDefs::phi>(phi_1);
+        cyclic2.setParameter<ParDefs::phi>(phi_2);
+        dPhi << get_cyclic_difference(phi_1,phi_2,min,max);
+        BOOST_CHECK(cyclic1.residual(cyclic2).isApprox(dPhi,tol));
+        BOOST_CHECK(cyclic2.residual(cyclic1).isApprox(-dPhi,tol));
+      }
+
+      void random_residual_tests()
+      {
+        // random number generators
+        std::default_random_engine e;
+        std::uniform_real_distribution<float> uniform_dist(-1000, 300);
+
+        const double theta_max = parameter_traits<ParPolicy,ParDefs::theta>::pMax();
+        const double theta_min = parameter_traits<ParPolicy,ParDefs::theta>::pMin();
+        const double phi_max   = parameter_traits<ParPolicy,ParDefs::phi>::pMax();
+        const double phi_min   = parameter_traits<ParPolicy,ParDefs::phi>::pMin();
+
+        AtsVectorD<5> parValues_1;
+        AtsVectorD<5> parValues_2;
+        FullParameterSet<ParPolicy> parSet_1(nullptr,parValues_1);
+        FullParameterSet<ParPolicy> parSet_2(nullptr,parValues_2);
+        AtsVectorD<5> residual;
+        const unsigned int toys = 1000;
+        for(unsigned int i = 0; i < toys; ++i)
+        {
+          const double loc1_1  = uniform_dist(e);
+          const double loc2_1  = uniform_dist(e);
+          const double phi_1   = uniform_dist(e);
+          const double theta_1 = uniform_dist(e);
+          const double qop_1   = uniform_dist(e);
+          parValues_1 << loc1_1, loc2_1, phi_1, theta_1, qop_1;
+          parSet_1.setParameters(parValues_1);
+
+          const double loc1_2  = uniform_dist(e);
+          const double loc2_2  = uniform_dist(e);
+          const double phi_2   = uniform_dist(e);
+          const double theta_2 = uniform_dist(e);
+          const double qop_2   = uniform_dist(e);
+          parValues_2 << loc1_2, loc2_2, phi_2, theta_2, qop_2;
+          parSet_2.setParameters(parValues_2);
+
+          const double delta_loc1  = loc1_1 - loc1_2;
+          const double delta_loc2  = loc2_1 - loc2_2;
+          const double delta_phi   = phi_1 - phi_2;
+          // for theta make sure that the difference calculation considers the restricted value range
+          const double delta_theta = (theta_1 > theta_max ? theta_max : (theta_1 < theta_min ? theta_min : theta_1)) - (theta_2 > theta_max ? theta_max : (theta_2 < theta_min ? theta_min : theta_2));
+          const double delta_qop   = qop_1 - qop_2;
+          residual = parSet_1.residual(parSet_2);
+
+          // local parameters are unbound -> check for usual difference
+          if(fabs(residual(0) - delta_loc1) > tol) { BOOST_CHECK(false); break;}
+          if(fabs(residual(1) - delta_loc2) > tol) { BOOST_CHECK(false); break;}
+          // phi is a cyclic parameter -> check that (unsigned) difference is not larger than half period
+          // check that corrected(corrected(phi_2) + residual) == corrected(phi_1)
+          if(fabs(get_cyclic_value(get_cyclic_value(phi_2,phi_min,phi_max) + residual(2),phi_min,phi_max) - get_cyclic_value(phi_1,phi_min,phi_max)) > tol or fabs(residual(2)) > (phi_max - phi_min)/2) { BOOST_CHECK(false); break;}
+          // theta is bound -> check that (unsigned) difference is not larger then allowed range, check corrected difference
+          if(fabs(residual(3) - delta_theta) > tol or fabs(residual(3)) > (theta_max - theta_min)) { BOOST_CHECK(false); break;}
+          // qop is unbound -> check usual difference
+          if(fabs(residual(4) - delta_qop) > tol) { BOOST_CHECK(false); break;}
+        }
+      }
+    }
+    /// @endcond
+
     /**
      * @brief Unit test for Ats::anonymous_namespace{ParameterSet.h}::are_sorted helper
      *
@@ -354,8 +537,6 @@ namespace Ats
      */
     BOOST_AUTO_TEST_CASE(parset_residual_tests)
     {
-      const double tol = 1e-5;
-
       // check unbound parameter type
       const double large_number = 12443534120;
       const double small_number = -924342675;
@@ -378,13 +559,49 @@ namespace Ats
       // calculate expected results
       const double min = parameter_traits<ParPolicy,ParDefs::phi>::pMin();
       const double max = parameter_traits<ParPolicy,ParDefs::phi>::pMax();
-      const double corrected_large = large_number - (max - min) * std::floor((large_number - min)/(max-min));
-      const double corrected_small = small_number - (max - min) * std::floor((small_number - min)/(max-min));
+      const double corrected_large = get_cyclic_value(large_number,min,max);
+      const double corrected_small = get_cyclic_value(small_number,min,max);
       BOOST_CHECK((fabs(cyclic.getParameter<ParDefs::phi>() - corrected_small) < tol));
       cyclic.setParameter<ParDefs::phi>(large_number);
       BOOST_CHECK((fabs(cyclic.getParameter<ParDefs::phi>() - corrected_large) < tol));
       cyclic.setParameter<ParDefs::phi>(normal_number);
       BOOST_CHECK((fabs(cyclic.getParameter<ParDefs::phi>() - normal_number) < tol));
+
+      // check residual calculation
+
+      // input numbers
+      const double first_loc1 = 0.3;
+      const double first_phi = 0.9 * M_PI;
+      const double first_theta = 0.7 * M_PI;
+
+      const double second_loc1 = 2.7;
+      const double second_phi = -0.9 * M_PI;
+      const double second_theta = 0.35 * M_PI;
+
+      const double full_loc1 = -0.45;
+      const double full_loc2 = 12.3;
+      const double full_phi = -0.3*M_PI;
+      const double full_theta = 0.9 * M_PI;
+      const double full_qop = 0.0012;
+
+      // expected results for residual second wrt first
+      const double delta_loc1 = second_loc1 - first_loc1;
+      const double delta_phi = get_cyclic_value(second_phi - first_phi,min,max);
+      const double delta_theta = second_theta - first_theta;
+      AtsVectorD<3> residuals(delta_loc1,delta_phi,delta_theta);
+
+      ParameterSet<ParPolicy,ParDefs::loc1,ParDefs::phi,ParDefs::theta> first(nullptr,first_loc1,first_phi,first_theta);
+      ParameterSet<ParPolicy,ParDefs::loc1,ParDefs::phi,ParDefs::theta> second(nullptr,second_loc1,second_phi,second_theta);
+      BOOST_CHECK((residuals == second.residual(first)));
+
+      // some more checks for bound variables
+      check_residuals_for_bound_parameters();
+
+      // some more checks for cyclic variables
+      check_residuals_for_cyclic_parameters();
+
+      // inspecific residual tests with random numbers
+      random_residual_tests();
     }
   } // end of namespace Test
 } // end of namespace Ats
