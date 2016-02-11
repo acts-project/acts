@@ -1,23 +1,26 @@
 ################################################################################
 # Package: ExtrapolationUtils
 ################################################################################
-#gaudi_subdir(ExtrapolationUtils v1r0)
+gaudi_subdir(ExtrapolationUtils v1r0)
 
-#set Gaudi build flag
-#add_definitions(-DATS_GAUDI_BUILD)
 
-#gaudi_depends_on_subdirs(GaudiKernel
-#			 Tracking/TrkEvent/TrackParameters
-#			 Tracking/TrkEvent/NeutralParameters
-#			 Tracking/TrkEvent/EventDataUtils
-#			 Tracking/Geometry/Volumes
-#			 Tracking/Geometry/Geometry
-#			 Tracking/Geometry/Material
-#			 Tracking/Geometry/Surfaces)
+gaudi_depends_on_subdirs(GaudiKernel
+			 Core/Algebra
+			 EventData/EventDataUtils
+			 EventData/TrackParameters
+			 EventData/NeutralParameters
+			 Geometry/Surfaces
+			 Geometry/Material
+			 Geometry/Detector
+			 Geometry/GeometryUtils
+			 MagneticField/MagneticFieldUtils)
 
-#gaudi_add_library(ExtrapolationUtils
-		  #src/*.cxx
-#		  src/ExtrapolationCell.cxx src/MaterialInteraction.cxx src/TargetSurfaces.cxx src/TransportJacobian.cxx
-#		  PUBLIC_HEADERS ExtrapolationUtils
-#		  INCLUDE_DIRS GaudiKernel TrackParameters NeutralParameters EventDataUtils Volumes Geometry Material Surfaces EventDataUtils
-#		  LINK_LIBRARIES GaudiKernel TrackParameters NeutralParameters EventDataUtils Volumes Geometry Material Surfaces EventDataUtils)
+find_package(Eigen3 REQUIRED)
+
+SET( EIGEN3_HOME ${EIGEN_ROOT_DIR}/${EIGEN_INCLUDE_DIR} )
+
+gaudi_add_library(ExtrapolationUtils
+		  src/*.cxx
+		  PUBLIC_HEADERS ExtrapolationUtils
+		  INCLUDE_DIRS ${EIGEN3_HOME} GaudiKernel Algebra EventDataUtils TrackParameters NeutralParameters Surfaces Material Detector GeometryUtils MagneticFieldUtils
+		  LINK_LIBRARIES GaudiKernel EventDataUtils TrackParameters NeutralParameters Surfaces Material Detector GeometryUtils MagneticFieldUtils)
