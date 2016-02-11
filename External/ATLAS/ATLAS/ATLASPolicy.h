@@ -92,6 +92,11 @@ namespace Ats
       result << localPosition(0),localPosition(1),mom.phi(),mom.theta(),((fabs(charge) < 1e-4) ? 1. : charge) / mom.mag();
       return result;
     }
+
+    static double parameters2charge(const ParVector_t& pars)
+    {
+      return (pars(qOverP) > 0) ? 1. : -1.;
+    }
   };
 }  // end of namespace Ats
 #endif // ATS_ATLASPOLICY_H
