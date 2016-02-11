@@ -2,31 +2,29 @@
 // ExtrapolationEngine.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_TRKEXINTERFACES_EXTRAPOLATIONENGINE_H
-#define ATS_TRKEXINTERFACES_EXTRAPOLATIONENGINE_H
+#ifndef ATS_EXTRAPOLATIONENGINE_EXTRAPOLATIONENGINE_H
+#define ATS_EXTRAPOLATIONENGINE_EXTRAPOLATIONENGINE_H 1
 
-// ATS
-#include "CoreInterfaces/ServiceBase.h"
 // Gaudi
 #include "GaudiKernel/ServiceHandle.h"
-// Trk
-#include "GeometryInterfaces/ITrackingGeometrySvc.h"
+#include "GaudiKernel/GaudiException.h"
+// Core module
+#include "CoreInterfaces/ServiceBase.h"
+// Extrapolation module
 #include "ExtrapolationInterfaces/IExtrapolationEngine.h"
 #include "ExtrapolationInterfaces/ExtrapolationMacros.h"
+#include "ExtrapolationInterfaces/IPropagationEngine.h"
+#include "ExtrapolationInterfaces/INavigationEngine.h"
+// Geomtetry module
+#include "GeometryInterfaces/ITrackingGeometrySvc.h"
+// EventData module
 #include "ExtrapolationUtils/ExtrapolationCell.h"
 #include "TrackParameters/TrackParameters.h"
 #include "NeutralParameters/NeutralParameters.h"
-// throw GaudiExceptions where necessary
-#include "GaudiKernel/GaudiException.h"
-
-#include "ExtrapolationInterfaces/IPropagationEngine.h"
-#include "ExtrapolationInterfaces/INavigationEngine.h"
-
 
 namespace Ats {
   
   class TrackingGeometry;       
-
 
   /** @class ExtrapolationEngine 
       
@@ -42,7 +40,7 @@ namespace Ats {
       @author Andreas.Salzburger -at- cern.ch 
   */
 
-class ExtrapolationEngine : public Ats::ServiceBase, virtual public IExtrapolationEngine {
+class ExtrapolationEngine : public ServiceBase, virtual public IExtrapolationEngine {
       
       friend class NavigationInitTest;
       
@@ -129,5 +127,5 @@ class ExtrapolationEngine : public Ats::ServiceBase, virtual public IExtrapolati
 //!< define the templated function    
 #include "ExtrapolationEngine.icc"  
 
-#endif // TRKEXINTERFACES_IEXTRAPOLATIONENGINE_H
+#endif // ATS_EXTRAPOLATIONENGINE_EXTRAPOLATIONENGINE_H 
 

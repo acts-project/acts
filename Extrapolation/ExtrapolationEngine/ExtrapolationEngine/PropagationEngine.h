@@ -2,22 +2,22 @@
 // PropagationEngine.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_TRKEXENGINE_PROPAGATIONENGINE_H
-#define ATS_TRKEXENGINE_PROPAGATIONENGINE_H
+#ifndef ATS_EXTRAPOLATIONENGINE_PROPAGATIONENGINE_H
+#define ATS_EXTRAPOLATIONENGINE_PROPAGATIONENGINE_H 1
 
-// Ats
-#include "CoreInterfaces/ServiceBase.h"
 // Gaudi
 #include "GaudiKernel/ToolHandle.h"
-// Trk
+// Core module
+#include "CoreInterfaces/ServiceBase.h"
+// Extrapolation module
 #include "ExtrapolationInterfaces/IPropagationEngine.h"
 #include "ExtrapolationInterfaces/ExtrapolationMacros.h"
+#include "ExtrapolationInterfaces/IPropagator.h"
 #include "ExtrapolationUtils/ExtrapolationCell.h"
+// EventData module
 #include "EventDataUtils/PropDirection.h"
 #include "TrackParameters/TrackParameters.h"
 #include "NeutralParameters/NeutralParameters.h"
-
-#include "ExtrapolationInterfaces/IPropagator.h"
  
 namespace Ats {
   
@@ -31,7 +31,7 @@ namespace Ats {
 
       @author Andreas Salzburger -at - cern.ch
   */
-  class PropagationEngine : public Ats::ServiceBase, virtual public IPropagationEngine {
+  class PropagationEngine : public ServiceBase, virtual public IPropagationEngine {
 
     public:
 
@@ -66,8 +66,8 @@ namespace Ats {
 
     protected:
 
-      ToolHandle<IPropagator>             m_propagator;
-      double                              m_pathLimitTolerance;
+      ToolHandle<IPropagator>     m_propagator;             // handle to propagor
+      double                      m_pathLimitTolerance;     // path limit tolerance 
 
 
   };
@@ -75,5 +75,5 @@ namespace Ats {
 
 } // end of namespace
 
-#endif // ATS_TRKEXINTERFACES_PROPAGATIONENGINE_H
+#endif // ATS_EXTRAPOLATIONENGINE_PROPAGATIONENGINE_H
 

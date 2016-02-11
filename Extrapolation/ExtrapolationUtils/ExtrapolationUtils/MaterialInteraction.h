@@ -2,11 +2,14 @@
 // MaterialInteraction.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_DETECTOR_MATERIALINTERACTION_H
-#define ATS_DETECTOR_MATERIALINTERACTION_H
+#ifndef ATS_EXTRAPOLATIONUTILS_MATERIALINTERACTION_H
+#define ATS_EXTRAPOLATIONUTILS_MATERIALINTERACTION_H 1
 
+// Geometry module
 #include "Material/Material.h"
+// EventData module
 #include "EventDataUtils/ParticleHypothesis.h"
+// Core module
 #include "Algebra/AlgebraDefinitions.h"
 
 namespace Ats {
@@ -43,7 +46,6 @@ namespace Ats {
     static  ParticleMasses                 s_particleMasses;    //!< Struct of Particle masses
     
   };
- 
  
   /** dE/dl ionization energy loss per path unit */
   inline double Ats::MaterialInteraction::dEdl_ionization(double p, const Ats::Material* mat, Ats::ParticleHypothesis particle, double& sigma, double& kazL) const {

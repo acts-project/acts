@@ -2,14 +2,15 @@
 // IMaterialEffectsEngine.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_TRKEXINTERFACES_IMATERIAKEFFECTSENGINE_H
-#define ATS_TRKEXINTERFACES_IMATERIAKEFFECTSENGINE_H
+#ifndef ATS_EXTRAPOLATIONINTERFACES_IMATERIAKEFFECTSENGINE_H
+#define ATS_EXTRAPOLATIONINTERFACES_IMATERIAKEFFECTSENGINE_H 1
 
 // Gaudi
 #include "GaudiKernel/IService.h"
-// Trk
+// Extrapolation module
 #include "ExtrapolationUtils/ExtrapolationCell.h"
 #include "ExtrapolationUtils/MaterialUpdateMode.h"
+// EventData module
 #include "EventDataUtils/PropDirection.h"
 #include "TrackParameters/TrackParameters.h"
 #include "NeutralParameters/NeutralParameters.h"
@@ -61,5 +62,4 @@ namespace Ats {
 
 } // end of namespace
 
-#endif // ATS_TRKEXINTERFACES_IMATERIAKEFFECTSENGINE_H
-
+#endif // ATS_EXTRAPOLATIONINTERFACES_IMATERIAKEFFECTSENGINE_H

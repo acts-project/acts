@@ -4,10 +4,12 @@
 
 // STL
 #include <sstream>
-// Trk include
+// Extrapolation module
 #include "ExtrapolationEngine/PropagationEngine.h"
 #include "ExtrapolationInterfaces/IPropagator.h"
+// Geometry module
 #include "Surfaces/Surface.h"
+// EventData module
 #include "EventDataUtils/PropDirection.h"
 
 DECLARE_COMPONENT(Ats::PropagationEngine)
@@ -19,12 +21,12 @@ Ats::PropagationEngine::PropagationEngine(const std::string& name, ISvcLocator* 
   m_pathLimitTolerance(0.01)
 {
     // configure the Propagator
-    declareProperty("Propagator"                            , m_propagator);
+    declareProperty("Propagator"             , m_propagator);
     // steering of the screen outoput (SOP)
-    declareProperty("OutputPrefix"                          , m_sopPrefix);
-    declareProperty("OutputPostfix"                         , m_sopPostfix);
+    declareProperty("OutputPrefix"           , m_sopPrefix);
+    declareProperty("OutputPostfix"          , m_sopPostfix);
     // the path limit tolerance
-    declareProperty("PathLimitTolerance"                    , m_pathLimitTolerance);
+    declareProperty("PathLimitTolerance"     , m_pathLimitTolerance);
 }
 
 // destructor
@@ -66,8 +68,7 @@ Ats::ExtrapolationCode Ats::PropagationEngine::propagate(Ats::ExCellCharged& eCe
 
     Ats::TransportJacobian* tjac = 0;
    
-   
-   
+    // propagate using the IPropagator
     const Ats::TrackParameters* pParameters = m_propagator->propagate(*eCell.leadParameters, 
                                                                       sf,
                                                                       pDir,
@@ -76,9 +77,6 @@ Ats::ExtrapolationCode Ats::PropagationEngine::propagate(Ats::ExCellCharged& eCe
                                                                       tjac,
                                                                       propLength,
                                                                       returnCurvilinear);
-
-
-
 
     // set the return type according to how the propagation went
     if (pParameters){
@@ -146,7 +144,7 @@ Ats::ExtrapolationCode Ats::PropagationEngine::propagate(Ats::ExCellNeutral& eCe
             eCell.lastLeadParameters = eCell.leadParameters;
             // create new neutral curvilinear parameters at the path limit reached
             double pDiff = eCell.pathLimit - cPath;
-            Amg::Vector3D position = eCell.leadParameters->position()+pDiff*eCell.leadParameters->momentum().unit();
+            Vector3D position = eCell.leadParameters->position()+pDiff*eCell.leadParameters->momentum().unit();
             eCell.leadParameters = new Ats::NeutralCurvilinearParameters(nullptr,position,eCell.leadParameters->momentum());
             EX_MSG_VERBOSE(eCell.navigationStep,"propagate", "neut", "path limit of " << eCell.pathLimit << " reached. Stopping extrapolation.");
             return Ats::ExtrapolationCode::SuccessPathLimit;
@@ -159,7 +157,7 @@ Ats::ExtrapolationCode Ats::PropagationEngine::propagate(Ats::ExCellNeutral& eCe
             static_cast<Ats::NeutralParameters*>(new Ats::NeutralBoundParameters(nullptr,sfIntersection.position, eCell.leadParameters->momentum(),sf));
 
         // check if the propagation was called with directly, then lead parameters become end parameters
-        if (eCell.checkConfigurationMode(Trk::ExtrapolationMode::Direct))
+        if (eCell.checkConfigurationMode(ExtrapolationMode::Direct))
 	          eCell.endParameters = eCell.leadParameters;
 
 	      // return success for the final destination or in progress

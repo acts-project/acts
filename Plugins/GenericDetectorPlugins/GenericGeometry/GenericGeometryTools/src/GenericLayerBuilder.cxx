@@ -27,12 +27,15 @@ DECLARE_COMPONENT(Agd::GenericLayerBuilder)
 // constructor
 Agd::GenericLayerBuilder::GenericLayerBuilder(const std::string& t, const std::string& n, const IInterface* p) :
   Ats::AlgToolBase(t,n,p),
-  m_layerIdentification("GenericLayerBuilder"),
+  m_layerIdentification(n),
   m_nLayers(nullptr),
   m_cLayers(nullptr),    
   m_pLayers(nullptr)   
 {
     declareInterface<ILayerBuilder>(this);
+   
+    //  layer identificaiton
+    declareProperty("LayerIdentification",          m_layerIdentification);
    
     // the central layers 
     declareProperty("CentralLayerRadii",            m_centralLayerRadii);
@@ -56,7 +59,7 @@ Agd::GenericLayerBuilder::GenericLayerBuilder(const std::string& t, const std::s
     declareProperty("PosNegLayerModuleMaxHalfX",    m_posnegModuleMaxHalfX);
     declareProperty("PosNegLayerModuleHalfY",       m_posnegModuleHalfY);
     declareProperty("PosNegLayerModuleThickness",   m_posnegModuleThickness);
-
+    
 }
 
 // destructor

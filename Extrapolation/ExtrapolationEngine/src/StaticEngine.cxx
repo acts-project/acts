@@ -4,7 +4,7 @@
 
 // STL
 #include <sstream>
-// Trk include
+// Extrapolation module
 #include "ExtrapolationEngine/StaticEngine.h"
 
 DECLARE_COMPONENT(Ats::StaticEngine)

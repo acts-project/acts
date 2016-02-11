@@ -2,15 +2,16 @@
 // IPropagator.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_TRKEXINTERFACES_IPROPAGATOR_H
-#define ATS_TRKEXINTERFACES_IPROPAGATOR_H
+#ifndef ATS_EXTRAPOLATIONINTERFACES_IPROPAGATOR_H
+#define ATS_EXTRAPOLATIONINTERFACES_IPROPAGATOR_H 1
 
 // Gaudi
 #include "GaudiKernel/IAlgTool.h"
-// Trk
+// EventData module
 #include "EventDataUtils/PropDirection.h"
 #include "EventDataUtils/ParticleHypothesis.h"
 #include "TrackParameters/TrackParameters.h"
+// Geometry module
 #include "Surfaces/BoundaryCheck.h"
 
 // STL
@@ -55,4 +56,4 @@ namespace Ats {
 
 } // end of namespace
 
-#endif // TRKEXINTERFACES_PROPAGATOR_H
+#endif // ATS_EXTRAPOLATIONINTERFACES_IPROPAGATOR_H

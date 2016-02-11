@@ -2,8 +2,8 @@
 // RealQuadraticEquation.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef TRKEXUTILS_REALQUADRATICEQUATION_H
-#define TRKEXUTILS_REALQUADRATICEQUATION_H
+#ifndef ATS_EXTRAPOLATIONUTILS_REALQUADRATICEQUATION_H
+#define ATS_EXTRAPOLATIONUTILS_REALQUADRATICEQUATION_H 1
 
 #include <utility>
 #include <cmath>
@@ -56,5 +56,5 @@ namespace Ats {
 
 } // end of namespace
 
-#endif  //  TRKEXUTILS_REALQUADRATICEQUATION_H
+#endif  //  TRKEXUTILS_REALQUADRATICEQUATION_H 1
 

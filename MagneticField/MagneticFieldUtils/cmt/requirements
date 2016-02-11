@@ -1,0 +1,19 @@
+package MagneticFieldUtils
+
+author <Andreas.Salzburger@cern.ch>
+
+#################################################################
+# public use statements
+public
+use AtlasPolicy           AtlasPolicy-*
+use GaudiInterface        GaudiInterface-*           External  
+use Algebra               Algebra-*                  Core
+
+public
+library MagneticFieldUtils *.cxx 
+apply_pattern installed_library
+
+private
+
+macro DOXYGEN_IMAGE_PATH "../doc/images"
+macro DOXYGEN_INLINE_INHERITED_MEMB "YES"

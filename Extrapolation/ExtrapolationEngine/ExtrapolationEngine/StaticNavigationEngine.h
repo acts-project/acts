@@ -2,27 +2,26 @@
 // StaticNavigationEngine.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_TRKEXENGINE_STATICNAVIGATIONENGINE_H
-#define ATS_TRKEXENGINE_STATICNAVIGATIONENGINE_H
+#ifndef ATS_EXTRAPOLATIONENGINE_STATICNAVIGATIONENGINE_H
+#define ATS_EXTRAPOLATIONENGINE_STATICNAVIGATIONENGINE_H 1
 
-// Ats
-#include "CoreInterfaces/ServiceBase.h"
 // Gaudi
 #include "GaudiKernel/ToolHandle.h"
-// Trk
+#include "GaudiKernel/GaudiException.h"
+// Core moudle
+#include "CoreInterfaces/ServiceBase.h"
+// Extrapolation module
 #include "ExtrapolationInterfaces/INavigationEngine.h"
 #include "ExtrapolationInterfaces/ExtrapolationMacros.h"
-#include "GeometryInterfaces/ITrackingGeometrySvc.h"
 #include "ExtrapolationUtils/ExtrapolationCell.h"
-#include "TrackParameters/TrackParameters.h"
-#include "NeutralParameters/NeutralParameters.h"
-#include "Volumes/BoundarySurface.h"
-// throw GaudiExceptions where necessary
-#include "GaudiKernel/GaudiException.h"
-
 #include "ExtrapolationInterfaces/IPropagationEngine.h"
 #include "ExtrapolationInterfaces/IMaterialEffectsEngine.h"
+// Geometry module
 #include "GeometryInterfaces/ITrackingGeometrySvc.h"
+#include "Volumes/BoundarySurface.h"
+// EventData module
+#include "TrackParameters/TrackParameters.h"
+#include "NeutralParameters/NeutralParameters.h"
 
 namespace Ats {
 
@@ -35,7 +34,7 @@ namespace Ats {
 
       @author Andreas.Salzburger -at- cern.ch
     */
-  class StaticNavigationEngine : public Ats::ServiceBase, virtual public INavigationEngine {
+  class StaticNavigationEngine : public ServiceBase, virtual public INavigationEngine {
 
       public:
         /** Constructor */
@@ -111,5 +110,5 @@ inline const Ats::TrackingGeometry& StaticNavigationEngine::trackingGeometry() c
 //!< define the templated function
 #include "StaticNavigationEngine.icc"
 
-#endif // ATS_TRKEXENGINE_STATICNAVIGATIONENGINE_H
+#endif // ATS_EXTRAPOLATIONENGINE_STATICNAVIGATIONENGINE_H
 

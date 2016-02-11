@@ -14,16 +14,15 @@
 #define EX_MSG_FATAL(navstep, step, idx, x)   MSG_FATAL(    m_sopPrefix << std::setw(4) << navstep << m_sopPostfix << std::setw(12) << step << m_sopPostfix << std::setw(4) << idx << m_sopPostfix << x)
 #endif
 
-#ifndef TRKEXENINGE_OUTPUTHELPER 
+#ifndef EXENINGE_OUTPUTHELPER 
 #define TRKEXENINGE_OUTPUTHELPER 
 #define OH_CHECKFOUND(object) ( object ? "found" : "not found")
 #endif
 
-#ifndef TRKEXENGINE_EXCODECHECKS
+#ifndef EXENGINE_EXCODECHECKS
 #define TRKEXENGINE_EXCODECHECKS
 #define CHECK_ECODE_CONTINUE(ecell, ecode) if (!ecode.inProgress()) { EX_MSG_VERBOSE(ecell.navigationStep, "continue", "", ecode.toString() << " triggers cotinue."); return ecode; }
 #define CHECK_ECODE_SUCCESS_NODEST(ecell, ecode) if (ecode.isSuccessBeforeDestination()) { EX_MSG_VERBOSE(ecell.navigationStep, "return", "", ecode.toString() << " stops extrapolation sequence."); return ecode; }
 #define CHECK_ECODE_SUCCESS(ecell, ecode) if (ecode.isSuccess()) { EX_MSG_VERBOSE(ecell.navigationStep, "return", "", ecode.toString() << " stops extrapolation sequence."); return ecode; }
-
 #endif
 

@@ -5,26 +5,26 @@ author  Andreas Salzburger <Andreas.Salzburger@cern.ch>
 
 #################################################################
 # public use statements
-use AtlasPolicy            AtlasPolicy-*
-use GeoPrimitives          GeoPrimitives-*          DetectorDescription
-use GaudiInterface         GaudiInterface-*         External
-use CoreInterfaces      CoreInterfaces-*      Control
-use ExtrapolationInterfaces        ExtrapolationInterfaces-*        Tracking/TrkExtrapolation
-use ExtrapolationUtils             ExtrapolationUtils-*             Tracking/TrkExtrapolation
-use TrackParameters          TrackParameters-*          Tracking/TrkEvent
-use NeutralParameters   NeutralParameters-*   Tracking/TrkEvent
-use EventDataUtils     EventDataUtils-*     Tracking/TrkEvent
-use Volumes             Volumes-*             Tracking/Geometry
-use Surfaces            Surfaces-*            Tracking/Geometry
-use Geometry            Geometry-*            Tracking/Geometry
-use Material            Material-*            Tracking/Geometry
-use GeometryInterfaces  GeometryInterfaces-*  Tracking/Geometry
-use Material            Material-*            Tracking/Geometry
+use AtlasPolicy             AtlasPolicy-*
+use GaudiInterface          GaudiInterface-*            External
+use Algebra                 Algebra-*                   Core
+use CoreInterfaces          CoreInterfaces-*            Core
+use ExtrapolationInterfaces ExtrapolationInterfaces-*   Extrapolation
+use ExtrapolationUtils      ExtrapolationUtils-*        Extrapolation
+use TrackParameters         TrackParameters-*           EventData
+use NeutralParameters       NeutralParameters-*         EventData
+use EventDataUtils          EventDataUtils-*            EventData
+use Volumes                 Volumes-*                   Geometry
+use Surfaces                Surfaces-*                  Geometry
+use Detector                Detector-*                  Geometry
+use Material                Material-*                  Geometry
+use GeometryInterfaces      GeometryInterfaces-*        Geometry
+use Material                Material-*                  Geometry
 
 #################################################################
 # private use statements
 private
-use GeometryUtils       GeometryUtils-*       Tracking/Geometry
+use GeometryUtils           GeometryUtils-*             Geometry
 
 public
 library ExtrapolationEngine *.cxx components/*.cxx

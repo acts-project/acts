@@ -2,13 +2,13 @@
 // ExtrapolationEngine.icc, ATS project
 ///////////////////////////////////////////////////////////////////
 
+// Geometry module
 #include "Surfaces/Surface.h"
 #include "Volumes/BoundarySurface.h"
 #include "Detector/TrackingGeometry.h"
 #include "Detector/TrackingVolume.h"
 #include "Detector/Layer.h"
-#include "ExtrapolationInterfaces/IPropagationEngine.h"
-#include "ExtrapolationInterfaces/INavigationEngine.h"
+// STD
 #include <iostream>
 #include <iomanip>
 
@@ -79,7 +79,7 @@ template <class T> Ats::ExtrapolationCode Ats::ExtrapolationEngine::initNavigati
     // check layer association
     eCell.startLayer     = eCell.startLayer ? eCell.startLayer : eCell.startVolume->associatedLayer(eCell.leadParameters->position());
     if (eCell.startLayer)
-       EX_MSG_VERBOSE( eCell.navigationStep, "navigation", "", "start layer termined with index : " << eCell.startLayer->tddID());
+       EX_MSG_VERBOSE( eCell.navigationStep, "navigation", "", "start layer termined with index : " << eCell.startLayer->geoID());
     eCell.setRadialDirection();
     // ---------- END initialization -----------------------------------------------------------------------------------------
     if (sf){
@@ -88,10 +88,10 @@ template <class T> Ats::ExtrapolationCode Ats::ExtrapolationEngine::initNavigati
       // re-evaluate the radial direction if the end surface is given
       // should not happen in FATRAS extrapolation mode
       if ( !eCell.checkConfigurationMode(Ats::ExtrapolationMode::FATRAS) )
-          eCell.setRadialDirection();
-      // trying association via the layer : associated layer of material layer
-      eCell.endLayer  =  sf->associatedLayer();
-      eCell.endVolume = eCell.endLayer ? eCell.endLayer->enclosingTrackingVolume() : 0;
+           eCell.setRadialDirection();
+           // trying association via the layer : associated layer of material layer
+           eCell.endLayer  =  sf->associatedLayer();
+           eCell.endVolume = eCell.endLayer ? eCell.endLayer->enclosingTrackingVolume() : 0;
       // check if you found layer and volume
       if (!eCell.endVolume){
           EX_MSG_VERBOSE( eCell.navigationStep, "navigation", "", "end volume needs to be determinded by surface intersection." );
@@ -100,22 +100,22 @@ template <class T> Ats::ExtrapolationCode Ats::ExtrapolationEngine::initNavigati
           Ats::ExtrapolationCell<T> navCell(*eCell.leadParameters, dir);
           navCell.addConfigurationMode(Ats::ExtrapolationMode::Direct);
           // screen output
-          m_propagationEngine->propagate(navCell,*eCell.endSurface,Ats::anyDirection,false,eCell.navigationCurvilinear);
+          m_propagationEngine->propagate(navCell,*eCell.endSurface,Ats::anyDirection,false, eCell.navigationCurvilinear);
           // check for sucess to the destination
-//          CHECK_ECODE_SUCCESS_NODEST(navCell, eCode);
-          // screen output
-//          EX_MSG_VERBOSE (eCell.navigationStep, "navigation", "", "found endVolume and andLayer through propagation - return code : " << eCode.toString() );
+          // CHECK_ECODE_SUCCESS_NODEST(navCell, eCode); @TODO check what this is
+          // // screen output
+          // EX_MSG_VERBOSE (eCell.navigationStep, "navigation", "", "found endVolume and andLayer through propagation - return code : " << eCode.toString() );
           // take the lead parameters to find end volume and end layer
-	  eCell.endVolume = trackingGeometry().lowestTrackingVolume(navCell.endParameters->position());
-	  eCell.endLayer  = trackingGeometry().associatedLayer(navCell.endParameters->position());
-	  // memory cleanup
+	      // eCell.endVolume = trackingGeometry().lowestTrackingVolume(navCell.endParameters->position());
+	      // eCell.endLayer  = trackingGeometry().associatedLayer(navCell.endParameters->position());
+	      // memory cleanup
           delete navCell.endParameters;
       }
       // check the final end volume configuraiton - screen output
       if (eCell.endVolume)
           EX_MSG_VERBOSE( eCell.navigationStep, "navigation", "", "end volume termined as : " << eCell.endVolume->volumeName());
       if (eCell.endLayer)
-          EX_MSG_VERBOSE( eCell.navigationStep, "navigation", "", "end layer termined with index : " << eCell.endLayer->tddID());
+          EX_MSG_VERBOSE( eCell.navigationStep, "navigation", "", "end layer termined with index : " << eCell.endLayer->geoID());
     } else
         EX_MSG_VERBOSE( eCell.navigationStep, "navigation", "", "no destination surface nor end volume provided, extrapolaiton has to stop on other means." );
     // return the progress call

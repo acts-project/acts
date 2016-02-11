@@ -4,7 +4,7 @@
 
 // STL
 #include <sstream>
-// Trk include
+// Extrapolation module
 #include "ExtrapolationEngine/StaticNavigationEngine.h"
 
 DECLARE_COMPONENT(Ats::StaticNavigationEngine)
@@ -19,14 +19,14 @@ Ats::StaticNavigationEngine::StaticNavigationEngine(const std::string& name, ISv
   m_trackingGeometryName("TrackingGeometry")
 {
     // Services needed
-    declareProperty("TrackingGeometrySvc"                   , m_trackingGeometrySvc);
-    declareProperty("PropagationEngine"                     , m_propagationEngine);
-    declareProperty("MaterialEffectsEngine"                 , m_materialEffectsEngine);
+    declareProperty("TrackingGeometrySvc"    , m_trackingGeometrySvc);
+    declareProperty("PropagationEngine"      , m_propagationEngine);
+    declareProperty("MaterialEffectsEngine"  , m_materialEffectsEngine);
     // The TrackingGeometry
-    declareProperty("TrackingGeometry"                      , m_trackingGeometryName);
+    declareProperty("TrackingGeometry"       , m_trackingGeometryName);
     // steering of the screen outoput (SOP)
-    declareProperty("OutputPrefix"                          , m_sopPrefix);
-    declareProperty("OutputPostfix"                         , m_sopPostfix);
+    declareProperty("OutputPrefix"           , m_sopPrefix);
+    declareProperty("OutputPostfix"          , m_sopPostfix);
 }
 
 // destructor

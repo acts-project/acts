@@ -2,11 +2,14 @@
 // StaticNavigationEngine.icc, ATS project
 ///////////////////////////////////////////////////////////////////
 
+// Extrapolation module
 #include "ExtrapolationInterfaces/IPropagationEngine.h"
 #include "ExtrapolationInterfaces/IMaterialEffectsEngine.h"
+// Geometry module
 #include "Detector/TrackingVolume.h"
 #include "Detector/TrackingGeometry.h"
 #include "Volumes/BoundarySurface.h"
+// Core moudle
 #include "Algebra/AlgebraDefinitions.h"
 
 /** handle the failure - as configured */

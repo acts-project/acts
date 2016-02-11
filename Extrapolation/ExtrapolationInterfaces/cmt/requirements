@@ -5,19 +5,16 @@ manager Andreas Salzburger <Andreas.Salzburger@cern.ch>
 use AtlasPolicy           AtlasPolicy-*
 
 use GaudiInterface        GaudiInterface-*           External
-use GeoPrimitives         GeoPrimitives-*            DetectorDescription
-use xAODTracking          xAODTracking-*             Event/xAOD
-use CoreInterfaces     CoreInterfaces-*        Control
+use CoreInterfaces        CoreInterfaces-*           Core
 
-use EventDataUtils    EventDataUtils-*       Tracking/TrkEvent     
-use MaterialOnTrack    MaterialOnTrack-*       Tracking/TrkEvent     
-use TrackParameters         TrackParameters-*            Tracking/TrkEvent
-use ParametersBase     ParametersBase-*        Tracking/TrkEvent
-use NeutralParameters  NeutralParameters-*     Tracking/TrkEvent
-use ExtrapolationUtils            ExtrapolationUtils-*               Tracking/TrkExtrapolation
-use Surfaces           Surfaces-*              Tracking/Geometry
-use Volumes            Volumes-*               Tracking/Geometry
-use GeometryUtils      GeometryUtils-*         Tracking/Geometry
+use EventDataUtils        EventDataUtils-*           EventData     
+use TrackParameters       TrackParameters-*          EventData
+use ParametersBase        ParametersBase-*           EventData
+use NeutralParameters     NeutralParameters-*        EventData
+use Surfaces              Surfaces-*                 Geometry
+use Volumes               Volumes-*                  Geometry
+use GeometryUtils         GeometryUtils-*            Geometry
+use ExtrapolationUtils    ExtrapolationUtils-*       Extrapolation
 
 # Declare this package as a metalibrary for cmake so that its clients have
 # access to the libraries and header files of packages that this one depends on
