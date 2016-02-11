@@ -28,7 +28,7 @@ apply_pattern component_library
 
 private
 macro_append cppflags $(AtsCoreTool)
-macro_append cppflags $(AtsCoreIdentifier) 
+#macro_append cppflags $(AtsCoreIdentifier) 
 
 #macro cppdebugflags '$(cppdebugflags_s)'
 #macro_remove componentshr_linkopts "-Wl,-s"
