@@ -20,14 +20,15 @@ use GenericDetectorElement GenericDetectorElement-*  Plugins/GenericDetectorPlug
 # private use statements
 private
 use Surfaces            Surfaces-*                  Geometry
+use CoreIdentifier      CoreIdentifier-*            Core
 
 public
 library GenericGeometryTools *.cxx components/*.cxx
 apply_pattern component_library
 
 private
-# uncomment this line if you do want to build the memory monitoring lines
-# apply_tag  use_trkdetdescr_memmon
+macro_append cppflags $(AtsCoreTool)
+#macro_append cppflags $(AtsCoreIdentifier) 
 
 #macro cppdebugflags '$(cppdebugflags_s)'
 #macro_remove componentshr_linkopts "-Wl,-s"
