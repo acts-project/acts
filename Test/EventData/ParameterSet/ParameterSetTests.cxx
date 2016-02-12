@@ -559,13 +559,23 @@ namespace Ats
       // calculate expected results
       const double min = parameter_traits<ParPolicy,ParDefs::phi>::pMin();
       const double max = parameter_traits<ParPolicy,ParDefs::phi>::pMax();
-      const double corrected_large = get_cyclic_value(large_number,min,max);
-      const double corrected_small = get_cyclic_value(small_number,min,max);
-      BOOST_CHECK((fabs(cyclic.getParameter<ParDefs::phi>() - corrected_small) < tol));
+      // check that difference between original phi and stored phi is a multiple of the cyclic period
+      double multiple = (cyclic.getParameter<ParDefs::phi>() - small_number)/(max - min);
+      BOOST_CHECK(cyclic.getParameter<ParDefs::phi>() >= min);
+      BOOST_CHECK(cyclic.getParameter<ParDefs::phi>() < max);
+      BOOST_CHECK(fabs(multiple - std::floor(multiple + 0.5)) < tol);
+
       cyclic.setParameter<ParDefs::phi>(large_number);
-      BOOST_CHECK((fabs(cyclic.getParameter<ParDefs::phi>() - corrected_large) < tol));
+      multiple = (cyclic.getParameter<ParDefs::phi>() - large_number)/(max - min);
+      BOOST_CHECK(cyclic.getParameter<ParDefs::phi>() >= min);
+      BOOST_CHECK(cyclic.getParameter<ParDefs::phi>() < max);
+      BOOST_CHECK(fabs(multiple - std::floor(multiple + 0.5)) < tol);
+
       cyclic.setParameter<ParDefs::phi>(normal_number);
-      BOOST_CHECK((fabs(cyclic.getParameter<ParDefs::phi>() - normal_number) < tol));
+      multiple = (cyclic.getParameter<ParDefs::phi>() - normal_number)/(max - min);
+      BOOST_CHECK(cyclic.getParameter<ParDefs::phi>() >= min);
+      BOOST_CHECK(cyclic.getParameter<ParDefs::phi>() < max);
+      BOOST_CHECK(fabs(multiple - std::floor(multiple + 0.5)) < tol);
 
       // check residual calculation
 
@@ -586,7 +596,7 @@ namespace Ats
 
       // expected results for residual second wrt first
       const double delta_loc1 = second_loc1 - first_loc1;
-      const double delta_phi = get_cyclic_value(second_phi - first_phi,min,max);
+      const double delta_phi = get_cyclic_difference(second_phi,first_phi,min,max);
       const double delta_theta = second_theta - first_theta;
       AtsVectorD<3> residuals(delta_loc1,delta_phi,delta_theta);
 
