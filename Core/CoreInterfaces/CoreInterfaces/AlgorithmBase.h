@@ -5,15 +5,15 @@
 #ifndef ATS_CORE_ALGORITHMBASE_H
 #define ATS_CORE_ALGORITHMBASE_H 1
 
-#include "CoreInterfaces/BaseMacros.h"
-
-// Take the interface from another sourse
+// (a) Take the interface from another sourse
 #ifdef ATS_CORE_ALGORITHM_PLUGIN
 #include ATS_CORE_ALGORITHM_PLUGIN
 #else 
 
-#include "GaudiKernel/Algorithm.h"
+// (b) Define here
 #include "CoreInterfaces/MsgBase.h"
+#include "CoreInterfaces/MsgMacros.h"
+#include "GaudiKernel/Algorithm.h"
 
 class ISvcLocator;
 
@@ -34,5 +34,8 @@ namespace Ats {
 }
 
 #endif //ATS_CORE_ALGORITHM_PLUGIN
+
+// (c) used in both cases
+#include "CoreInterfaces/BaseMacros.h"
 
 #endif // ATS_CORE_ALGORITHMBASE_H

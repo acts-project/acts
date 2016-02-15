@@ -5,10 +5,6 @@
 #ifndef ATS_CORE_MSGMACROS_H
 #define ATS_CORE_MSGMACROS_H 1
 
-#ifdef ATS_CORE_MSG_PLUGIN
-#include ATS_CORE_MSG_PLUGIN
-#else 
-
 #include "CoreInterfaces/MsgBase.h"
 #define MSG_LVL_NOCHK(lvl, x)               \
         Ats::MsgBase::msg(lvl) << x << endmsg
@@ -23,7 +19,5 @@
 #define MSG_ERROR(x)    MSG_LVL_NOCHK(MSG::ERROR,x) 
 #define MSG_FATAL(x)    MSG_LVL_NOCHK(MSG::FATAL,x) 
 #define MSG_ALWAYS(x)   MSG_LVL_NOCHK(MSG::ALWAYS,x)
-
-#endif // ATS_CORE_MSG_PLUGIN
 
 #endif // ATS_CORE_MSGMACROS_H

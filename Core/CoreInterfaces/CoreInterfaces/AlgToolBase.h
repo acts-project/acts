@@ -5,14 +5,14 @@
 #ifndef ATS_CORE_ALGTOOLBASE_H
 #define ATS_CORE_ALGTOOLBASE_H 1
 
-#include "CoreInterfaces/BaseMacros.h"
-
-// Take the interface from another sourse
+// (a) Take the interface from another sourse
 #ifdef ATS_CORE_ALGTOOL_PLUGIN
 #include ATS_CORE_ALGTOOL_PLUGIN
 #else 
 
+// (b) Define here
 #include "CoreInterfaces/MsgBase.h"
+#include "CoreInterfaces/MsgMacros.h"
 #include "GaudiKernel/AlgTool.h"
     
 namespace Ats {
@@ -31,7 +31,10 @@ namespace Ats {
       	    virtual ~AlgToolBase() {}
     };
 }
-    
+
 #endif // ATS_CORE_ALGTOOL_PLUGIN
+
+// (c) use in both cases
+#include "CoreInterfaces/BaseMacros.h"
 
 #endif // ATS_CORE_ALGTOOLBASE_H

@@ -9,6 +9,10 @@ public
 use AtlasPolicy                 AtlasPolicy-*
 use GaudiInterface              GaudiInterface-*              External
 use MagFieldInterfaces          MagFieldInterfaces-*          MagneticField
+use AtlasMagneticFieldPlugins   AtlasMagneticFieldPlugins-*   Plugins/AtlasPlugins
+
+macro ATS_MAGNETICFIELDINTERFACE_PLUGIN='\"AtlasMagneticFieldPlugins/IAthenaMagneticFieldSvc.h\"'
+macro_append AtsMagneticFieldSvc=" -DATS_MAGNETICFIELDINTERFACE_PLUGIN=$(ATS_MAGNETICFIELDINTERFACE_PLUGIN) " 
 
 # Declare this package as a cmake metalibrary so that the libraries and header files from
 # package it depends on are available to its clients. Transparent to CMT
@@ -18,5 +22,8 @@ apply_pattern cmake_add_command command=metalibrary
 # private use statements
 #################################################################
 private
+
+macro_append cppflags $(AtsMagneticFieldSvc) 
+
 
 end_private

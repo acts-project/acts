@@ -1,6 +1,6 @@
 ################################################################################
-# Package: Identifier
+# Package: MagneticFieldInterfaces
 ################################################################################
-gaudi_subdir(Identifier v1r0)
+gaudi_subdir(MagneticFieldInterfaces v1r0)
 
-gaudi_install_headers(Identifier)
+gaudi_install_headers(MagneticFieldInterfaces)

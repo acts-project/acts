@@ -2,14 +2,25 @@ package CoreInterfaces
 
 manager Andreas Salzburger <Andreas.Salzburger@cern.ch>
 
+public
+
 use AtlasPolicy           AtlasPolicy-*
 use GaudiInterface        GaudiInterface-*   External
+use AtlasCorePlugins      AtlasCorePlugins-* Plugins/AtlasPlugins
 
-macro ATS_CORE_ALGORITHM_PLUGIN "AtlasInterfaces/AthenaInterfaces.h"
-macro ATS_CORE_SERVICE_PLUGIN "AtlasInterfaces/AthenaInterfaces.h"
-macro ATS_CORE_TOOL_PLUGIN "AtlasInterfaces/AthenaInterfaces.h"
-
+macro ATS_CORE_ALGORITHM_PLUGIN '\"AtlasCorePlugins/AthenaInterfaces.h\"'
+macro ATS_CORE_SERVICE_PLUGIN '\"AtlasCorePlugins/AthenaInterfaces.h\"'
+macro ATS_CORE_ALGTOOL_PLUGIN '\"AtlasCorePlugins/AthenaInterfaces.h\"'
+macro_append AtsCoreAlgorithm " -DATS_CORE_ALGORITHM_PLUGIN=$(ATS_CORE_ALGORITHM_PLUGIN) "
+macro_append AtsCoreService " -DATS_CORE_SERVICE_PLUGIN=$(ATS_CORE_SERVICE_PLUGIN) "
+macro_append AtsCoreTool " -DATS_CORE_ALGTOOL_PLUGIN=$(ATS_CORE_ALGTOOL_PLUGIN) "
+    
 private
+
+macro_append cppflags $(AtsCoreAlgorithm) 
+macro_append cppflags $(AtsCoreService) 
+macro_append cppflags $(AtsCoreTool)
+
 macro DOXYGEN_IMAGE_PATH "../doc/images"
 
 apply_pattern cmake_add_command command=metalibrary
