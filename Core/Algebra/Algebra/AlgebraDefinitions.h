@@ -1,7 +1,7 @@
 #ifndef ATS_ALGEBRADEFINITIONS_H
 #define ATS_ALGEBRADEFINITIONS_H
 
-// API addons 
+// API addons
 #define EIGEN_MATRIXBASE_PLUGIN "Algebra/MatrixBasePlugin.h"
 #define EIGEN_MATRIX_PLUGIN "Algebra/MatrixPlugin.h"
 #define EIGEN_TRANSFORM_PLUGIN "Algebra/TransformPlugin.h"
@@ -64,24 +64,24 @@ namespace Ats
 
   using AtsRowVectorXd = AtsRowVectorX<double>;
   using AtsRowVectorXf = AtsRowVectorX<float>;
-  
- 
+
+
   /** elment for code readability
       - please use these for access to the member variables if needed, e.g.
-          double z  = position[Ats::z];
-          double px = momentum[Ats::px];
+          double z  = position[Ats::eZ];
+          double px = momentum[Ats::ePX];
   */
   enum AxisDefs {
       // position access
-      x = 0,
-      y = 1,
-      z = 2,
+      eX = 0,
+      eY = 1,
+      eZ = 2,
       // momentum access
-      px = 0,
-      py = 1,
-      pz = 2
+      ePX = 0,
+      ePY = 1,
+      ePZ = 2
   };
-  
+
   typedef Eigen::Quaternion<double>                   Rotation3D;
   typedef Eigen::Translation<double, 3>               Translation3D;
   typedef Eigen::AngleAxisd                           AngleAxis3D;
@@ -89,7 +89,7 @@ namespace Ats
   typedef Eigen::Matrix<double, 3, 1>                 Vector3D;
   typedef Eigen::Matrix<double, 2, 1>                 Vector2D;
   typedef Eigen::Matrix<double, 3, 3>                 RotationMatrix3D;
-  
+
 
 }  // end of namespace Ats
 
