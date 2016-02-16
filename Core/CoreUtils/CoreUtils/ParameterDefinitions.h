@@ -24,7 +24,7 @@ namespace Ats
     ePHI    = 2, ///< phi direction of momentum in global frame
     eTHETA  = 3, ///< theta direction of momentum in global frame
     eQOP    = 4,  ///< charge/momentum for charged tracks, for neutral tracks it is 1/momentum
-    NGlobalPar
+    NGlobalPars
   };
 }  // end of namespace Ats
 
