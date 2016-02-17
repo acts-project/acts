@@ -45,6 +45,6 @@ namespace Ats
   }; 
 } // end of namespace Ats
 
-#include "AtsUtils/LazyInitialization.icc"
+#include "CoreUtils/LazyInitialization.icc"
 
 #endif // ATSUTILS_LAZYINITIALISATION
