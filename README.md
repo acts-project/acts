@@ -20,3 +20,14 @@ source init.sh
 make -j 8
 make install (to install library)
 
+
+# Athena build with cmt
+
+This is only possible with gcc >= 4.9
+
+e.g. asetup,devval,rel0,opt,here,runtime
+setupWorkArea
+cd WorkArea/cmt
+cmt br cmt config; cmt br gmake
+
+
