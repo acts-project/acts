@@ -11,12 +11,12 @@ class GenericDetectorConstruction(object):
         import AthenaCommon.Logging as log
         
         # lets build the python detector first -----------------------------------------------
-        from GenericDetectorTools.GenericDetectorDefs import DetectorModule
-        from GenericDetectorTools.GenericDetectorDefs import CylinderLayer
-        from GenericDetectorTools.GenericDetectorDefs import DiscRing
-        from GenericDetectorTools.GenericDetectorDefs import DiscLayer
-        from GenericDetectorTools.GenericDetectorDefs import BarrelVolume
-        from GenericDetectorTools.GenericDetectorDefs import EndcapVolume
+        from GenericGeometryTools.GenericDetectorDefs import DetectorModule
+        from GenericGeometryTools.GenericDetectorDefs import CylinderLayer
+        from GenericGeometryTools.GenericDetectorDefs import DiscRing
+        from GenericGeometryTools.GenericDetectorDefs import DiscLayer
+        from GenericGeometryTools.GenericDetectorDefs import BarrelVolume
+        from GenericGeometryTools.GenericDetectorDefs import EndcapVolume
         
         # the pixel module
         PixelModule = DetectorModule(None,8.4,32.0,0.15)
