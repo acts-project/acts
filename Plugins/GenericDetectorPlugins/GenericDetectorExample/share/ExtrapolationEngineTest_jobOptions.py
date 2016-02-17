@@ -76,7 +76,7 @@ svcMgr += ExtrapolationEninge
 #--------------------------------------------------------------
 
 # Add top algorithms to be run
-from TrkExUnitTests.TrkExUnitTestsConf import Ats__ExtrapolationEngineTest
+from ExtrapolationTest.ExtrapolationTestConf import Ats__ExtrapolationEngineTest
 ExtrapolationEngineTest = Ats__ExtrapolationEngineTest('ExtrapolationEngineTest')
 # how many tests you want per event 
 ExtrapolationEngineTest.NumberOfTestsPerEvent   = 100
