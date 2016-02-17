@@ -1,14 +1,15 @@
-#ifndef ATLASPLUGINS_ATLASINTERFACES_H
-#define ATLASPLUGINS_ATLASINTERFACES_H
+#ifndef ATLASPLUGINS_ATHENAINTERFACES_H
+#define ATLASPLUGINS_ATHENAINTERFACES_H 1
 
 // Athena version
 #include "AthenaBaseComps/AthAlgorithm.h"
 #include "AthenaBaseComps/AthAlgTool.h"
 #include "AthenaBaseComps/AthService.h"
+#include "AtlasCorePlugins/AthenaMessaging.h"
 
 namespace Ats {
     typedef AthAlgorithm AlgorithmBase;
-    typedef AthAlgTools  AlgToolBase;
+    typedef AthAlgTool   AlgToolBase;
     typedef AthService   ServiceBase;
 }
 

@@ -2,18 +2,20 @@ package GenericDetectorElement
 
 author <Andreas.Salzburger@cern.ch>
 
-use AtlasPolicy         AtlasPolicy-*
-use Identifier          Identifier-*            Core
-use Algebra             Algebra-*               Core
-use DetectorElementBase DetectorElementBase-*   Geometry
-
 public
+use AtlasPolicy             AtlasPolicy-*
+use CoreIdentifier          CoreIdentifier-*        Core
+use Algebra                 Algebra-*               Core
+use DetectorElementBase     DetectorElementBase-*   Geometry
+
 
 library GenericDetectorElement *.cxx
 apply_pattern installed_library
 
 private
 use Surfaces            Surfaces-*              Geometry 
+
+# macro_append cppflags $(AtsCoreIdentifier) 
 
 macro DOXYGEN_IMAGE_PATH "../doc/images"
 macro DOXYGEN_INLINE_INHERITED_MEMB "YES"

@@ -110,27 +110,26 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(ExCellNeutral& eCell,
 
     // the result through propagation
     if (propagateRungeKuttaT<NeutralParameters>(eCell, pCache, *sParameters, sf)){
+        // screen output
         EX_MSG_VERBOSE(eCell.navigationStep, "propagate", "neut", "propagation to surface was successful.");     
+        // create a new covariance matrix
+        std::unique_ptr<AtsSymMatrixD<5> > cov;
+        if(pCache.covariance)
+          cov.reset(new AtsSymMatrixD<5>(*pCache.covariance));
+        
         // create the new parameters
         if (!pCache.returnCurvilinear){
-            // new parameters bound to the surface  
-            nParameters = nullptr;
-                          //sf.createNeutralParameters(pCache.parameters[0],
-                          //                           pCache.parameters[1],
-                          //                           pCache.parameters[2],
-                          //                           pCache.parameters[3],
-                          //                           pCache.parameters[4],
-                          //                           pCache.covariance);
+          // new parameters bound to the surface
+          AtsVectorD<5> pars;
+          pars << pCache.parameters[0],pCache.parameters[1],pCache.parameters[2],pCache.parameters[3],pCache.parameters[4];
+          nParameters = new NeutralBoundParameters(std::move(cov),std::move(pars),sf);
         } else {
-            // new curvilinear parameters
-            Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);
-            nParameters = nullptr;
-                          // new Ats::NeutralCurvilinearParameters(gp,
-                          //                                       pCache.parameters[2],
-                          //                                       pCache.parameters[3],
-                          //                                       pCache.parameters[4],
-                          //                                       pCache.covariance);
-        }                 // 
+          // new curvilinear parameters
+          Ats::Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);
+          Ats::Vector3D mom(pCache.pVector[3],pCache.pVector[4],pCache.pVector[5]);
+          mom /= fabs(pCache.parameters[4]);
+          nParameters = new NeutralCurvilinearParameters(std::move(cov),gp,mom);
+        }
     } 
     // only go on if the parameter creation worked 
     if (nParameters){        
@@ -219,24 +218,24 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(ExCellCharged& eCell,
     if (propagateRungeKuttaT<TrackParameters>(eCell, pCache, *sParameters, sf)){
         EX_MSG_VERBOSE(eCell.navigationStep, "propagate", "char", "propagation to surface was successful.");     
         // create the new parameters
+        // create a new covariance matrix
+        std::unique_ptr<AtsSymMatrixD<5> > cov;
+        if(pCache.covariance)
+          cov.reset(new AtsSymMatrixD<5>(*pCache.covariance));
+        // get the charge @TODO fix with ATS-40
+        double charge = pCache.parameters[4] > 0. ? 1. : -1.;
+        // create the new parameters
         if (!pCache.returnCurvilinear){
-            // new parameters bound to the surface  
-            pParameters = nullptr;
-                          //sf.createTrackParameters(pCache.parameters[0],
-                          //                         pCache.parameters[1],
-                          //                         pCache.parameters[2],
-                          //                         pCache.parameters[3],
-                          //                         pCache.parameters[4],
-                          //                         pCache.covariance);
+          // new parameters bound to the surface
+          AtsVectorD<5> pars;
+          pars << pCache.parameters[0],pCache.parameters[1],pCache.parameters[2],pCache.parameters[3],pCache.parameters[4];
+          pParameters = new BoundParameters(std::move(cov),std::move(pars),charge,sf);
         } else {
-            // new curvilinear parameters
-            Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);
-            pParameters = nullptr;
-                          //new Ats::CurvilinearParameters(gp,
-                          //                               pCache.parameters[2],
-                          //                               pCache.parameters[3],
-                          //                               pCache.parameters[4],
-                          //                               pCache.covariance);
+          // new curvilinear parameters
+          Ats::Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);
+          Ats::Vector3D mom(pCache.pVector[3],pCache.pVector[4],pCache.pVector[5]);
+          mom /= fabs(pCache.parameters[4]);
+          pParameters = new CurvilinearParameters(std::move(cov),gp,mom,charge);
         }
     }
     

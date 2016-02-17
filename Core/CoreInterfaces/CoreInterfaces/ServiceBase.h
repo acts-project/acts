@@ -5,15 +5,15 @@
 #ifndef ATS_CORE_SERVICEBASE_H
 #define ATS_CORE_SERVICEBASE_H 1
 
-#include "CoreInterfaces/BaseMacros.h"
-
-// Take the interface from another sourse
+// (a) Take the interface from another sourse
 #ifdef ATS_CORE_SERVICE_PLUGIN
 #include ATS_CORE_SERVICE_PLUGIN
 #else 
 
+// (b) define here 
 #include "GaudiKernel/Service.h"
 #include "CoreInterfaces/MsgBase.h"
+#include "CoreInterfaces/MsgMacros.h"
 
 class ISvcLocator;
 
@@ -35,5 +35,8 @@ namespace Ats {
 }
 
 #endif //ATS_CORE_SERVICE_PLUGIN
+
+// (c) used in bose cases
+#include "CoreInterfaces/BaseMacros.h"
 
 #endif // ATS_CORE_SERVICEBASE_H

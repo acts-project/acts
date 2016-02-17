@@ -3,8 +3,6 @@
 ///////////////////////////////////////////////////////////////////
 // output stream macros to facilitate screen output and consistent checking
 
-#include "CoreInterfaces/MsgMacros.h" 
-
 #ifndef EXSCREENOUTPUTDEFS
 #define EXSCREENOUTPUTDEFS 1
 #define EX_MSG_INFO(navstep, step, idx, x)    MSG_INFO(     m_sopPrefix << std::setw(4) << navstep << m_sopPostfix << std::setw(12) << step << m_sopPostfix << std::setw(4) << idx << m_sopPostfix << x)
