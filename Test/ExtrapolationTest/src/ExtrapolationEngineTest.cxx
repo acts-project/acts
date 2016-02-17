@@ -1,9 +1,10 @@
 //////////////////////////////////////////////////////////////////
-// ExtrapolationEngineTest.cxx, (c) ATLAS Detector software
+// ExtrapolationEngineTest.cxx, ATS project
 ///////////////////////////////////////////////////////////////////
 
-// Amg includes
-#include "TrkExUnitTests/ExtrapolationEngineTest.h"
+// Test module
+#include "ExtrapolationTest/ExtrapolationEngineTest.h"
+// Geometry module
 #include "Surfaces/PerigeeSurface.h"
 // Gaudi
 #include "GaudiKernel/ITHistSvc.h"
@@ -33,8 +34,8 @@ Ats::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, I
  m_collectPassive(false),
  m_collectBoundary(false),
  m_collectMaterial(false),
+ m_robustSearch(false),
  m_backExtrapolation(false),
- m_roboustSearch(false),
  m_stepsPhi(1),
  m_currentPhiStep(0),
  m_etaScans(0),
@@ -91,7 +92,7 @@ Ats::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, I
     declareProperty("CollectPassive",           m_collectPassive);
     declareProperty("CollectBoundary",          m_collectBoundary);
     declareProperty("CollectMaterial",          m_collectMaterial);
-    declareProperty("RobustSearch",             m_roboustSearch);
+    declareProperty("RobustSearch",             m_robustSearch);
     // Mode for scanning in steps
     declareProperty("ScanMode",                 m_scanMode);
     declareProperty("EtaScans",                 m_etaScans);

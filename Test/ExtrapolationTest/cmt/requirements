@@ -1,0 +1,32 @@
+package ExtrapolationTest
+
+manager Andreas Salzburger <Andreas.Salzburger@cern.ch>
+author  Andreas Salzburger <Andreas.Salzburger@cern.ch>
+
+use AtlasPolicy             AtlasPolicy-*
+use GaudiInterface          GaudiInterface-*        	External
+use AtlasROOT               AtlasROOT-*             	External
+use CoreInterfaces          CoreInterfaces-*            Core
+use Algebra                 Algebra-*                   Core
+use ExtrapolationInterfaces ExtrapolationInterfaces-*   Extrapolation
+use ExtrapolationUtils      ExtrapolationUtils-*        Extrapolation
+use TrackParameters         TrackParameters-*           EventData
+use NeutralParameters       NeutralParameters-*         EventData
+use EventDataUtils          EventDataUtils-*            EventData
+use Detector                Detector-*                  Geometry
+
+private
+use Surfaces                Surfaces-*                  Geometry
+
+macro_append cppflags $(AtsCoreAlgorithm)
+macro_append cppflags $(AtsCoreParameterDefs)
+
+library ExtrapolationTest *.cxx components/*.cxx
+
+apply_pattern component_library
+apply_pattern declare_python_modules files="*.py"
+
+              
+private
+#macro cppdebugflags '$(cppdebugflags_s)'
+#macro_remove componentshr_linkopts "-Wl,-s"

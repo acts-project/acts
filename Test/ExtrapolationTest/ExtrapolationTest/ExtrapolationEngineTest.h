@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////
-// ExtrapolationEngineTest.h, (c) ATLAS Detector software
+// ExtrapolationEngineTest.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
 #ifndef ATAS_EXTRAPOLATIONTEST_EXTRAPOLATIONENGINETEST_H
@@ -82,7 +82,7 @@ namespace Ats {
        bool                                         m_collectPassive;
        bool                                         m_collectBoundary;
        bool                                         m_collectMaterial;
-       bool                                         m_roboustSearch;
+       bool                                         m_robustSearch;
        
        bool                                         m_backExtrapolation;
        

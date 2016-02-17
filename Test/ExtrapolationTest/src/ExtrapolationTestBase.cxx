@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// ExtrapolationTestBase.cxx, (c) ATLAS Detector software
+// ExtrapolationTestBase.cxx, ATS project
 //////////////////////////////////////////////////////////////////
 
-//TrkExUnitTests
-#include "TrkExUnitTests/ExtrapolationTestBase.h"
+// Test module
+#include "ExtrapolationTest/ExtrapolationTestBase.h"
 
 Ats::ExtrapolationTestBase::ExtrapolationTestBase(const std::string& name, ISvcLocator* pSvcLocator):
     AlgorithmBase(name,pSvcLocator),

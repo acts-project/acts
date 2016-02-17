@@ -26,7 +26,7 @@ template <class T> StatusCode Ats::ExtrapolationEngineTest::executeTestT(const T
     if (m_collectPassive)   ecc.addConfigurationMode(Ats::ExtrapolationMode::CollectPassive);
     if (m_collectBoundary)  ecc.addConfigurationMode(Ats::ExtrapolationMode::CollectBoundary);
     if (m_collectMaterial)  ecc.addConfigurationMode(Ats::ExtrapolationMode::CollectMaterial);
-    if (m_roboustSearch)    ecc.addConfigurationMode(Ats::ExtrapolationMode::RobustSearch);
+    if (m_robustSearch)    ecc.addConfigurationMode(Ats::ExtrapolationMode::RobustSearch);
     
     // force a stop in the extrapoaltion mode
     if (m_pathLimit > 0.) {
@@ -101,7 +101,7 @@ template <class T> StatusCode Ats::ExtrapolationEngineTest::executeTestT(const T
     return StatusCode::SUCCESS;
 }
 
-template <class T> StatusCode Ats::ExtrapolationEngineTest::fillStepInformationT(Ats::ExtrapolationCell<T>& ecc, int fwdBwd) 
+template <class T> StatusCode Ats::ExtrapolationEngineTest::fillStepInformationT(Ats::ExtrapolationCell<T>& ecc, int) 
 {
     //// loop over the collected information
     for (auto& es : ecc.extrapolationSteps){
