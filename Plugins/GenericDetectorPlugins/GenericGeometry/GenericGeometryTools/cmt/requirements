@@ -28,6 +28,8 @@ apply_pattern component_library
 
 private
 macro_append cppflags $(AtsCoreTool)
+macro_append cppflags $(AtsCoreParameterDefs)
+
 #macro_append cppflags $(AtsCoreIdentifier) 
 
 #macro cppdebugflags '$(cppdebugflags_s)'

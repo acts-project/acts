@@ -19,6 +19,7 @@ use MagneticFieldUtils    MagneticFieldUtils-*   MagneticField
 
 ################## private dependencies ##############################
 private
+macro_append cppflags $(AtsCoreParameterDefs)
 
 public
 library ExtrapolationUtils *.cxx

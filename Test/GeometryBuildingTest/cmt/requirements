@@ -17,6 +17,7 @@ apply_pattern declare_python_modules files="*.py"
 
 private
 macro_append cppflags $(AtsCoreAlgorithm) 
+macro_append cppflags $(AtsCoreParameterDefs)
 
 macro cppdebugflags '$(cppdebugflags_s)'
 macro_remove componentshr_linkopts "-Wl,-s"
