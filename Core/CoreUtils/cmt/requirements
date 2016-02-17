@@ -1,0 +1,14 @@
+package CoreUtils
+ 
+author Christian.Gumpert@cern.ch
+ 
+use AtlasPolicy         AtlasPolicy-*
+
+macro ATS_PARAMETER_DEFINITIONS_PLUGIN '\"CoreUtils/DefaultParameterDefinitions.h\"'
+macro_append AtsCoreParameterDefs " -DATS_PARAMETER_DEFINITIONS_PLUGIN=$(ATS_PARAMETER_DEFINITIONS_PLUGIN) "
+    
+private
+
+macro_append cppflags $(AtsCoreParameterDefs) 
+
+apply_pattern cmake_add_command command=metalibrary

@@ -1,6 +1,6 @@
 ################################################################################
-# Package: ATLAS
+# Package: MagneticFieldInterfaces
 ################################################################################
-gaudi_subdir(ATLAS v1r0)
+gaudi_subdir(MagneticFieldInterfaces v1r0)
 
-gaudi_install_headers(ATLAS)
+gaudi_install_headers(MagneticFieldInterfaces)
