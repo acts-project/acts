@@ -16,8 +16,11 @@ additional external dependencies are kept at a minimum.
 # Gaudi build with CMake
 
 `source init.sh`
+
 `(make clean)` 
+
 `make -j 8`
+
 `make install (to install library)`
 
 
@@ -28,8 +31,11 @@ This is only possible with gcc >= 4.9
 e.g. 
 
 `asetup,devval,rel0,opt,here,runtime`
+
 `setupWorkArea.py`
+
 `cd WorkArea/cmt`
+
 `cmt br cmt config; cmt br gmake`
 
 
