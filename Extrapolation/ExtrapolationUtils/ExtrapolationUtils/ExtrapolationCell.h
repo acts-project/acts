@@ -48,8 +48,9 @@ namespace Ats {
          CollectMaterial               = 10,  // collect all material on the way
          CollectJacobians              = 11,  // collect the transport jacobians
          CollectPathSteps              = 12,  // collect the single path steps
-         AvoidFallback                 = 13,  // don't fallback to propagation
-         FATRAS                        = 14   // force initial radialDirection to be outward
+         RobustSearch                  = 13,  // Search on trial and error (for debugging)
+         AvoidFallback                 = 14,  // don't fallback to propagation
+         FATRAS                        = 15   // force initial radialDirection to be outward
       };
       
     };

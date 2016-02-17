@@ -33,6 +33,20 @@ Ats::StaticNavigationEngine::StaticNavigationEngine(const std::string& name, ISv
 Ats::StaticNavigationEngine::~StaticNavigationEngine()
 {}
 
+
+/** Query the interfaces. */
+StatusCode Ats::StaticNavigationEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
+{
+  if ( IID_INavigationEngine == riid )
+    *ppvInterface = (INavigationEngine*)this;
+  else  {
+    // Interface is not directly available: try out a base class
+    return Service::queryInterface(riid, ppvInterface);
+  }
+  addRef();
+  return StatusCode::SUCCESS;
+}  
+
 // the interface method initialize
 StatusCode Ats::StaticNavigationEngine::initialize()
 {

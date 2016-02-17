@@ -14,7 +14,7 @@ use NeutralParameters     NeutralParameters-*    EventData
 use Surfaces              Surfaces-*             Geometry
 use Material              Material-*             Geometry 
 use Detector              Detector-*             Geometry
-use GeometryUtils	      GeometryUtils-*        Geometry
+use GeometryUtils	  GeometryUtils-*        Geometry
 use MagneticFieldUtils    MagneticFieldUtils-*   MagneticField
 
 ################## private dependencies ##############################

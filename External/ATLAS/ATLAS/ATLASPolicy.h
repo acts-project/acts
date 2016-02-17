@@ -69,8 +69,8 @@ namespace Ats
     {
       AtsVectorD<3> momentum;
       double p = fabs(1/pars(qOverP));
-      double phi = pars(phi);
-      double theta = pars(theta);
+      double phi = pars[Ats::phi];
+      double theta = pars[Ats::theta];
       momentum << p * sin(theta) * cos(phi), p * sin(theta) * sin(phi), p * cos(theta);
 
       return momentum;

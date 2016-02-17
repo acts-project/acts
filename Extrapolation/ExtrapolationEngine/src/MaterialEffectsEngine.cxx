@@ -32,6 +32,19 @@ Ats::MaterialEffectsEngine::MaterialEffectsEngine(const std::string& name, ISvcL
 Ats::MaterialEffectsEngine::~MaterialEffectsEngine()
 {}
 
+/** Query the interfaces. */
+StatusCode Ats::MaterialEffectsEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
+{
+  if ( IID_IMaterialEffectsEngine == riid )
+    *ppvInterface = (IMaterialEffectsEngine*)this;
+  else  {
+    // Interface is not directly available: try out a base class
+    return Service::queryInterface(riid, ppvInterface);
+  }
+  addRef();
+  return StatusCode::SUCCESS;
+}  
+
 // the interface method initialize
 StatusCode Ats::MaterialEffectsEngine::initialize()
 {

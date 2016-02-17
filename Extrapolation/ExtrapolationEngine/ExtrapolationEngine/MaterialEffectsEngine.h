@@ -47,6 +47,9 @@ namespace Ats {
       /** AlgTool finalize method */
       StatusCode finalize() final;
 
+      /** Query the interfaces **/
+      StatusCode queryInterface( const InterfaceID& riid, void** ppvInterface );
+
       /** charged extrapolation */
       ExtrapolationCode handleMaterial(ExCellCharged& ecCharged,
                                        PropDirection dir=alongMomentum,

@@ -14,7 +14,8 @@
 namespace Ats {
     class Surface;
     class PlanarBounds;
-    class DiscBounds;    
+    class DiscBounds;   
+    class SurfaceMaterial; 
 }
 
 // namespace for A generic detector
@@ -39,13 +40,15 @@ namespace Agd
          DetectorElement(const Identifier& identifier,
                         std::shared_ptr<Ats::Transform3D> transform, 
                         std::shared_ptr<const Ats::PlanarBounds> pBounds,
-                        double thickness);
+                        double thickness,
+                        std::shared_ptr<const Ats::SurfaceMaterial> material = nullptr);
 
         /** Constructor for single sided detector element - bound to a Plane Surface / Disc Surface */
         DetectorElement(const Identifier& identifier,
                         std::shared_ptr<Ats::Transform3D> transform, 
                         std::shared_ptr<const Ats::DiscBounds> dBounds,
-                        double thickness);
+                        double thickness,
+                        std::shared_ptr<const Ats::SurfaceMaterial> material = nullptr);
                                         
         /**  Destructor */
          ~DetectorElement();
@@ -88,6 +91,12 @@ namespace Agd
          In the case of silicon it returns the same as normal()*/
          const Ats::Vector3D& normal(const Identifier& id) const override;
          
+         /** Neighbours for fast access */
+         void registerNeighbours(std::vector<const Ats::DetectorElementBase*>& neighbours);
+
+         /** Neighbours for fast access */
+         const std::vector<const Ats::DetectorElementBase*>& neighbours() const override;
+         
        private: 
          // the element representation  
          Identifier                                          m_elementIdentifier;
@@ -104,6 +113,8 @@ namespace Agd
           
          std::shared_ptr<const Ats::PlanarBounds>            m_elementPlanarBounds;
          std::shared_ptr<const Ats::DiscBounds>              m_elementDiscBounds;   
+         
+        std::vector<const DetectorElementBase*>              m_neighbours;
          
            
         
@@ -134,6 +145,9 @@ namespace Agd
    
     inline const Ats::Vector3D& DetectorElement::normal(const Identifier&) const { return normal(); }
     
+    inline void DetectorElement::registerNeighbours(std::vector<const Ats::DetectorElementBase*>& neighbours) { m_neighbours = neighbours; }
+
+    inline const std::vector<const Ats::DetectorElementBase*>& DetectorElement::neighbours() const { return m_neighbours; }    
     
 }//end of ns
 

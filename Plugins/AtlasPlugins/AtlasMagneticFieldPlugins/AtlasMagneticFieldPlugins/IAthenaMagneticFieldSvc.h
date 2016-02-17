@@ -5,10 +5,8 @@
 #include "MagFieldInterfaces/IMagFieldSvc.h"
 
 namespace Ats {
-
    // typedef to the Ats used name
    typedef MagField::IMagFieldSvc IMagneticFieldSvc;
-
 }
 
 #endif

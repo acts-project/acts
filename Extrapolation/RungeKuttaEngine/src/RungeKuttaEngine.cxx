@@ -46,6 +46,21 @@ Ats::RungeKuttaEngine::RungeKuttaEngine(const std::string& name, ISvcLocator* sv
 Ats::RungeKuttaEngine::~RungeKuttaEngine(){}
 
 /////////////////////////////////////////////////////////////////////////////////
+// Query the interface
+/////////////////////////////////////////////////////////////////////////////////
+StatusCode Ats::RungeKuttaEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
+{
+  if ( IID_IPropagationEngine == riid )
+    *ppvInterface = (IPropagationEngine*)this;
+  else  {
+    // Interface is not directly available: try out a base class
+    return Service::queryInterface(riid, ppvInterface);
+  }
+  addRef();
+  return StatusCode::SUCCESS;
+}  
+
+/////////////////////////////////////////////////////////////////////////////////
 // initialize
 /////////////////////////////////////////////////////////////////////////////////
 StatusCode Ats::RungeKuttaEngine::initialize()
