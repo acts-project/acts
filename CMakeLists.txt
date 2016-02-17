@@ -17,3 +17,6 @@ gaudi_project(a-tracking-sw HEAD
 
 include_directories()
 
+
+add_definitions(-DATS_PARAMETER_DEFINITIONS_PLUGIN=\"CoreUtils/DefaultParameterDefinitions.h\")
+

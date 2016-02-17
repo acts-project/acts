@@ -9,7 +9,7 @@
 #include ATS_MAGNETICFIELDINTERFACE_PLUGIN
 #else 
 
-.// Framework includes
+// Framework includes
 #include "GaudiKernel/IInterface.h"
 
 /** Declaration of the interface ID ( interface id, major version, minor version) */

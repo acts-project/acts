@@ -14,9 +14,11 @@ gaudi_depends_on_subdirs(GaudiKernel
 			 MagneticField/MagneticFieldInterfaces
 			 MagneticField/MagneticFieldUtils)
 
+add_definitions(-DATS_PARAMETER_DEFINITIONS_PLUGIN=\"CoreUtils/DefaultParameterDefinitions.h\")
+
 gaudi_install_headers(RungeKuttaEngine)
 
 gaudi_add_module(RungeKuttaEngine
 		  src/*.cxx
-		  INCLUDE_DIRS GaudiKernel CoreInterfaces ExtrapolationInterfaces MagneticFieldInterfaces ExtrapolationUtils TrackParameters NeutralParameters EventDataUtils Surfaces MagneticFieldUtils
-		  LINK_LIBRARIES GaudiKernel ExtrapolationUtils TrackParameters NeutralParameters EventDataUtils Surfaces MagneticFieldUtils)
+		  INCLUDE_DIRS GaudiKernel CoreInterfaces ExtrapolationInterfaces ExtrapolationUtils TrackParameters NeutralParameters EventDataUtils Surfaces MagneticFieldInterfaces MagneticFieldUtils
+		  LINK_LIBRARIES GaudiKernel ExtrapolationUtils TrackParameters NeutralParameters Surfaces MagneticFieldUtils)

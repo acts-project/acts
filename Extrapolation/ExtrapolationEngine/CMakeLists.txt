@@ -15,12 +15,13 @@ gaudi_depends_on_subdirs(GaudiKernel
 			 Geometry/Surfaces
 			 Geometry/Detector
 			 Geometry/Material
-			 Geometry/GeometryInterfaces
-			 Geometry/Material)
+			 Geometry/GeometryInterfaces)
+
+add_definitions(-DATS_PARAMETER_DEFINITIONS_PLUGIN=\"CoreUtils/DefaultParameterDefinitions.h\")
 
 gaudi_install_headers(ExtrapolationEngine)
 
 gaudi_add_module(ExtrapolationEngine
 		  src/*.cxx
-		  INCLUDE_DIRS GaudiKernel CoreInterfaces ExtrapolationInterfaces ExtrapolationUtils TrackParameters NeutralParameters EventDataUtils Volumes Surfaces Material GeometryInterfaces
-		  LINK_LIBRARIES GaudiKernel ExtrapolationUtils TrackParameters NeutralParameters EventDataUtils Volumes Surfaces Material)
+		  INCLUDE_DIRS GaudiKernel CoreInterfaces ExtrapolationInterfaces ExtrapolationUtils TrackParameters NeutralParameters EventDataUtils Volumes Surfaces Detector Material GeometryInterfaces
+		  LINK_LIBRARIES GaudiKernel ExtrapolationUtils TrackParameters NeutralParameters Volumes Surfaces Detector Material)
