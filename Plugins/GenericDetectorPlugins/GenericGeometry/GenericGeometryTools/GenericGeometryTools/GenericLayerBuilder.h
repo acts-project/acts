@@ -64,36 +64,45 @@ namespace Agd {
         
         StatusCode constructLayers();
         
-        std::string                             m_layerIdentification;
-        
-        Ats::LayerVector*                       m_nLayers; //!< layers on negative side
-        Ats::LayerVector*                       m_cLayers; //!< layers on central side
-        Ats::LayerVector*                       m_pLayers; //!< layers on positive side
+        std::string                                         m_layerIdentification;
+                                                            
+        Ats::LayerVector*                                   m_nLayers; //!< layers on negative side
+        Ats::LayerVector*                                   m_cLayers; //!< layers on central side
+        Ats::LayerVector*                                   m_pLayers; //!< layers on positive side
 
         // the central layers 
-        std::vector<double>                     m_centralLayerRadii;
-        std::vector<double>                     m_centralLayerEnvelopeZ;
-        std::vector< std::vector<double> >      m_centralModulesPhi;
-        std::vector<double>                     m_centralModulesTiltPhi;        
-        std::vector<std::vector<double> >       m_centralModulesPositionZ;
-        std::vector<double>                     m_centralModulesStaggerZ;
-        std::vector<double>                     m_centralModuleHalfX;
-        std::vector<double>                     m_centralModuleHalfY;
-        std::vector<double>                     m_centralModuleThickness;
-        std::vector<const DetectorElement*>     m_centralModules;
+        std::vector<double>                                 m_centralLayerRadii;
+        std::vector<double>                                 m_centralLayerEnvelopeR;
+        std::vector<double>                                 m_centralLayerEnvelopeZ;
+        std::vector<double>                                 m_centralLayerMaterialConcentration;
+        std::vector< std::vector<double> >                  m_centralLayerMaterialProperties;
+        std::vector< std::vector<double> >                  m_centralModulesPositionPhi;
+        std::vector<double>                                 m_centralModulesTiltPhi;        
+        std::vector< std::vector<double> >                  m_centralModulesPositionZ;
+        std::vector<double>                                 m_centralModulesStaggerZ;
+        std::vector<double>                                 m_centralModuleHalfX;
+        std::vector<double>                                 m_centralModuleHalfY;
+        std::vector<double>                                 m_centralModuleThickness;
+        std::vector< std::vector<double> >                  m_centralModuleMaterial;
+        std::vector<double>                                 m_centralModuleFrontsideStereo;
+        std::vector<double>                                 m_centralModuleBacksideStereo;        
+        std::vector<double>                                 m_centralModuleBacksideGap;
+        std::vector<const DetectorElement*>                 m_centralModules;
         
         // the layers at p/e side 
-        std::vector<double>                     m_posnegLayerPositionsZ;
-        std::vector<double>                     m_posnegLayerEnvelopeR;
-        std::vector< std::vector<double> >      m_posnegModulesRadii;
-        std::vector<double>                     m_posnegModuleStaggerR;        
-        std::vector< std::vector<double> >      m_posnegModulesPhi;
-        std::vector< std::vector<double> >      m_posnegMoudleStaggerPhi;
-        std::vector< std::vector<double> >      m_posnegModuleMinHalfX;
-        std::vector< std::vector<double> >      m_posnegModuleMaxHalfX;
-        std::vector< std::vector<double> >      m_posnegModuleHalfY;
-        std::vector< std::vector<double> >      m_posnegModuleThickness;
-        std::vector<const DetectorElement*>     m_posnegModules;
+        std::vector<double>                                 m_posnegLayerPositionsZ;
+        std::vector<double>                                 m_posnegLayerEnvelopeR;
+        std::vector< std::vector<double> >                  m_posnegModulesRadii;
+        std::vector<double>                                 m_posnegModuleStaggerR;        
+        std::vector< std::vector<double>  >                 m_posnegModulesInPhi;             // used to fill the position-phi
+        std::vector< std::vector<double>  >                 m_posnegModulesPositionPhiStream; // used to fill the position-phi
+        std::vector< std::vector< std::vector<double> > >   m_posnegModulesPositionPhi; // this one is being filled by the two before
+        std::vector< std::vector<double> >                  m_posnegMoudleStaggerPhi;
+        std::vector< std::vector<double> >                  m_posnegModuleMinHalfX;
+        std::vector< std::vector<double> >                  m_posnegModuleMaxHalfX;
+        std::vector< std::vector<double> >                  m_posnegModuleHalfY;
+        std::vector< std::vector<double> >                  m_posnegModuleThickness;
+        std::vector<const DetectorElement*>                 m_posnegModules;
         
 
     };

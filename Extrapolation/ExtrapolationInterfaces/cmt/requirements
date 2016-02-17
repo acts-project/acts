@@ -21,6 +21,9 @@ use ExtrapolationUtils    ExtrapolationUtils-*       Extrapolation
 apply_pattern cmake_add_command command=metalibrary
 
 private
+macro_append cppflags $(AtsCoreParameterDefs)
+
+private
 macro DOXYGEN_IMAGE_PATH "../doc/images"
 #use AtlasReflex   AtlasReflex-*   External -no_auto_imports
 #apply_pattern lcgdict dict=ExtrapolationInterfaces selectionfile=selection.xml headerfiles="../ExtrapolationInterfaces/ExtrapolationInterfacesDict.h"

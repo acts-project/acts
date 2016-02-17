@@ -5,6 +5,7 @@ author <Andreas.Salzburger@cern.ch>
 public
 use AtlasPolicy             AtlasPolicy-*
 use CoreIdentifier          CoreIdentifier-*        Core
+use CoreUtils               CoreUtils-*             Core
 use Algebra                 Algebra-*               Core
 use DetectorElementBase     DetectorElementBase-*   Geometry
 
@@ -15,7 +16,9 @@ apply_pattern installed_library
 private
 use Surfaces            Surfaces-*              Geometry 
 
-# macro_append cppflags $(AtsCoreIdentifier) 
+macro_append cppflags $(AtsCoreParameterDefs)
+
+#macro_append cppflags $(AtsCoreIdentifier) 
 
 macro DOXYGEN_IMAGE_PATH "../doc/images"
 macro DOXYGEN_INLINE_INHERITED_MEMB "YES"

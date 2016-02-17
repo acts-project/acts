@@ -49,6 +49,9 @@ namespace Ats {
         /** AlgTool finalize method */
         StatusCode finalize() final;
 
+        /** Query the interfaces **/
+        StatusCode queryInterface( const InterfaceID& riid, void** ppvInterface );
+
         /** avoid method shaddowing */
         using INavigationEngine::resolveBoundary;
         using INavigationEngine::resolvePosition;
@@ -71,16 +74,15 @@ namespace Ats {
      private:
         /** resolve the boundary situation */
         template <class T> ExtrapolationCode resolveBoundaryT(ExtrapolationCell<T>& eCell,
-                                                             PropDirection dir=alongMomentum) const;
+                                                              PropDirection dir=alongMomentum) const;
 
         /** resolve position */
-        template <class T> ExtrapolationCode resolvePositionT(ExtrapolationCell<T>& eCell,
-							      PropDirection dir=alongMomentum,
+        template <class T> ExtrapolationCode resolvePositionT(ExtrapolationCell<T>& eCell, 
+                                                              PropDirection dir=alongMomentum,
                                                               bool noLoop=false) const;
 
         /** deal with the boundary Surface - called by resolveBoundary */
-        template <class T> ExtrapolationCode handleBoundaryT(ExtrapolationCell<T>& eCell,
-                                                             const BoundarySurface<TrackingVolume>& bSurfaceTV,
+        template <class T> ExtrapolationCode handleBoundaryT(ExtrapolationCell<T>& eCell, const BoundarySurface<TrackingVolume>& bSurfaceTV,
                                                              PropDirection dir=alongMomentum,
                                                              bool stepout=false) const;
 

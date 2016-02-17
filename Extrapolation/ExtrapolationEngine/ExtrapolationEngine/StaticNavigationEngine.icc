@@ -147,7 +147,10 @@ template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::handleBou
                 trackingGeometry().lowestTrackingVolume(Ats::Vector3D(eCell.leadParameters->position()+pDir*eCell.leadParameters->momentum().unit())) :
                 bSurfaceTV.attachedVolume(eCell.leadParameters->position(), eCell.leadParameters->momentum(), pDir);
         // check if we have no nextVolume : boundary rechaed @TODO it's not really a success
-        if (!nextVolume) return Ats::ExtrapolationCode::SuccessBoundaryReached;
+        if (!nextVolume) {
+            EX_MSG_VERBOSE(eCell.navigationStep, "navigation", "", "No next volume found attached to this TrackingVolume. End of known world ?"); 
+            return Ats::ExtrapolationCode::SuccessBoundaryReached;
+        }
         // check if it is a boundary reached case
         // - geometrySignature change and configuration to stop then triggers a Success 
         bool stopAtThisBoundary = eCell.checkConfigurationMode(Ats::ExtrapolationMode::StopAtBoundary) 

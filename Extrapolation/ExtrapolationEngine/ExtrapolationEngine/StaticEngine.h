@@ -70,6 +70,9 @@ namespace Ats {
         /** AlgTool finalize method */
         StatusCode finalize() final;
         
+        /** Query the interfaces **/
+        StatusCode queryInterface( const InterfaceID& riid, void** ppvInterface );
+        
         using IExtrapolationEngine::extrapolate;
         
         /** charged extrapolation - public interface */

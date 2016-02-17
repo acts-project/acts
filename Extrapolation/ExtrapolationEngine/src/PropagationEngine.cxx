@@ -33,11 +33,24 @@ Ats::PropagationEngine::PropagationEngine(const std::string& name, ISvcLocator* 
 Ats::PropagationEngine::~PropagationEngine()
 {}
 
+/** Query the interfaces. */
+StatusCode Ats::PropagationEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
+{
+  if ( IID_IPropagationEngine == riid )
+    *ppvInterface = (IPropagationEngine*)this;
+  else  {
+    // Interface is not directly available: try out a base class
+    return Service::queryInterface(riid, ppvInterface);
+  }
+  addRef();
+  return StatusCode::SUCCESS;
+}  
+
 // the interface method initialize
 StatusCode Ats::PropagationEngine::initialize()
 {
     MSG_DEBUG("initialize()" );
-    RETRIEVE_FATAL(m_propagator);
+    RETRIEVE_NONEMPTY_FATAL(m_propagator);
     return StatusCode::SUCCESS;
 }
 

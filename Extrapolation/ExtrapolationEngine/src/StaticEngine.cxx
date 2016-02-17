@@ -29,6 +29,19 @@ Ats::StaticEngine::StaticEngine(const std::string& name, ISvcLocator* svc) :
 Ats::StaticEngine::~StaticEngine()
 {}
 
+/** Query the interfaces. */
+StatusCode Ats::StaticEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
+{
+  if ( IID_IExtrapolationEngine == riid )
+    *ppvInterface = (IExtrapolationEngine*)this;
+  else  {
+    // Interface is not directly available: try out a base class
+    return Service::queryInterface(riid, ppvInterface);
+  }
+  addRef();
+  return StatusCode::SUCCESS;
+}  
+
 // the interface method initialize
 StatusCode Ats::StaticEngine::initialize()
 {

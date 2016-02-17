@@ -40,6 +40,19 @@ Ats::ExtrapolationEngine::ExtrapolationEngine(const std::string& name, ISvcLocat
 Ats::ExtrapolationEngine::~ExtrapolationEngine()
 {}
 
+/** Query the interfaces. */
+StatusCode Ats::ExtrapolationEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
+{
+  if ( IID_IExtrapolationEngine == riid )
+    *ppvInterface = (IExtrapolationEngine*)this;
+  else  {
+    // Interface is not directly available: try out a base class
+    return Service::queryInterface(riid, ppvInterface);
+  }
+  addRef();
+  return StatusCode::SUCCESS;
+}
+    
 // the interface method initialize
 StatusCode Ats::ExtrapolationEngine::initialize()
 {            

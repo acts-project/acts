@@ -272,7 +272,7 @@ template <class T> Ats::ExtrapolationCode Ats::StaticEngine::resolveLayerT(Ats::
            // now handle the material (full update when passing approach surface), return codes are:
            // - SuccessMaterialLimit : material limit reached, return back
            // - InProgress           : material update done or not (depending on the material description)
-//           eCode = m_materialEffectsEngine->handleMaterial(eCell,pDir,Ats::fullUpdate);
+           eCode = m_materialEffectsEngine->handleMaterial(eCell,pDir,Ats::fullUpdate);
            CHECK_ECODE_CONTINUE(eCell, eCode);
        }
     } else if (isStartLayer) {
@@ -286,7 +286,7 @@ template <class T> Ats::ExtrapolationCode Ats::StaticEngine::resolveLayerT(Ats::
            // now handle the material (post update on start layer), return codes are:
            // - SuccessMaterialLimit : material limit reached, return back
            // - InProgress           : material update done or not (depending on the material description)
-//           eCode = m_materialEffectsEngine->handleMaterial(eCell,pDir,Ats::postUpdate);
+           eCode = m_materialEffectsEngine->handleMaterial(eCell,pDir,Ats::postUpdate);
            CHECK_ECODE_CONTINUE(eCell, eCode);
            // let's reset the lead layer
            eCell.leadLayer = initialLayer;
@@ -302,11 +302,13 @@ template <class T> Ats::ExtrapolationCode Ats::StaticEngine::resolveLayerT(Ats::
                                                             *eCell.leadParameters,
                                                             pDir,
                                                             bcheck,
-                                                            !eCell.checkConfigurationMode(Ats::ExtrapolationMode::CollectSensitive),
+                                                            eCell.checkConfigurationMode(ExtrapolationMode::CollectSensitive),
+                                                            eCell.checkConfigurationMode(ExtrapolationMode::CollectPassive),
+                                                            eCell.checkConfigurationMode(ExtrapolationMode::RobustSearch),
                                                             (isStartLayer ? &(eCell.leadParameters->associatedSurface()) : eCell.leadLayerSurface),
                                                             (isDestinationLayer ? sf : 0) );
     // some screen output for the sub structure    
-    EX_MSG_VERBOSE(eCell.navigationStep, "layer", eCell.leadLayer->geoID().value(), "found " <<  ncSurfaces << " sub structrue surfaces to test."); 
+    EX_MSG_VERBOSE(eCell.navigationStep, "layer", eCell.leadLayer->geoID().value(), "found " <<  ncSurfaces << " sub structure surfaces to test."); 
     // check if you have to do something
     if (ncSurfaces){
         // now loop over the surfaces:
@@ -333,7 +335,7 @@ template <class T> Ats::ExtrapolationCode Ats::StaticEngine::resolveLayerT(Ats::
                     // now handle the material, return codes are:
                     // - SuccessMaterialLimit : material limit reached,return back
                     // - InProgress           : material update done or not (depending on the material description)
-//                    eCode = m_materialEffectsEngine->handleMaterial(eCell,pDir,Ats::fullUpdate);
+                    eCode = m_materialEffectsEngine->handleMaterial(eCell,pDir,Ats::fullUpdate);
                     CHECK_ECODE_CONTINUE(eCell, eCode);
                 }
             } 
@@ -367,7 +369,7 @@ template <class T> Ats::ExtrapolationCode Ats::StaticEngine::resolveLayerT(Ats::
             eCell.materialSurface = sf;
             // finally do the material update, but even as this is the final call
             //  - still check for SuccessMaterialLimit
-//            m_materialEffectsEngine->handleMaterial(eCell,pDir,Ats::preUpdate);
+            m_materialEffectsEngine->handleMaterial(eCell,pDir,Ats::preUpdate);
             // check if success was triggered through path limit reached on the way to the layer
             CHECK_ECODE_SUCCESS(eCell,eCode);
         }   

@@ -5,12 +5,12 @@
 // Core module
 #include "Algebra/AlgebraDefinitions.h"
 #include "Algebra/AlgebraHelper.h"
-#include "CoreInterfaces/MsgMacros.h"
 // Geometry module
 #include "GeometryUtils/BinUtility.h"
 #include "GeometryUtils/BinnedArray2D.h"
 #include "GeometryUtils/BinnedArray1D.h"
 #include "GeometryUtils/BinnedArrayArray.h"
+#include "GeometryUtils/ApproachDescriptor.h"
 #include "Detector/CylinderLayer.h"
 #include "Detector/DiscLayer.h"
 #include "Surfaces/RadialBounds.h"
@@ -18,6 +18,9 @@
 #include "Surfaces/PlanarBounds.h"
 #include "Surfaces/RectangleBounds.h"
 #include "Surfaces/TrapezoidBounds.h"
+#include "Material/Material.h"
+#include "Material/MaterialProperties.h"
+#include "Material/HomogeneousSurfaceMaterial.h"
 // A generic detector
 #include "GenericGeometryTools/GenericLayerBuilder.h"
 #include "GenericDetectorElement/DetectorElement.h"
@@ -35,30 +38,38 @@ Agd::GenericLayerBuilder::GenericLayerBuilder(const std::string& t, const std::s
     declareInterface<ILayerBuilder>(this);
    
     //  layer identificaiton
-    declareProperty("LayerIdentification",          m_layerIdentification);
+    declareProperty("LayerIdentification",                m_layerIdentification);
    
     // the central layers 
-    declareProperty("CentralLayerRadii",            m_centralLayerRadii);
-    declareProperty("CentralLayerEnvelopeZ",        m_centralLayerEnvelopeZ);
-    declareProperty("CentralLayerModulesPhi",       m_centralModulesPhi);
-    declareProperty("CentralLayerMoudlesTiltPhi",   m_centralModulesTiltPhi);        
-    declareProperty("CentralLayerModulesPositionZ", m_centralModulesPositionZ);
-    declareProperty("CentralLayerModuleStaggerZ",   m_centralModulesStaggerZ);
-    declareProperty("CentralLayerModuleHalfX",      m_centralModuleHalfX);
-    declareProperty("CentralLayerModuleHalfY",      m_centralModuleHalfY);
-    declareProperty("CentralLayerModuleThickness",  m_centralModuleThickness);
+    declareProperty("CentralLayerRadii",                  m_centralLayerRadii);
+    declareProperty("CentralLayerEnvelopeR",              m_centralLayerEnvelopeR);
+    declareProperty("CentralLayerEnvelopeZ",              m_centralLayerEnvelopeZ);
+    declareProperty("CentralLayerMaterialConcentration",  m_centralLayerMaterialConcentration);
+    declareProperty("CentralLayerMaterialProperties",     m_centralLayerMaterialProperties);    
+    declareProperty("CentralLayerModulesPositionPhi",     m_centralModulesPositionPhi);
+    declareProperty("CentralLayerMoudlesTiltPhi",         m_centralModulesTiltPhi);        
+    declareProperty("CentralLayerModulesPositionZ",       m_centralModulesPositionZ);
+    declareProperty("CentralLayerModuleStaggerZ",         m_centralModulesStaggerZ);
+    declareProperty("CentralLayerModulesHalfX",           m_centralModuleHalfX);
+    declareProperty("CentralLayerModulesHalfY",           m_centralModuleHalfY);
+    declareProperty("CentralLayerModulesThickness",       m_centralModuleThickness);
+    declareProperty("CentralLayerModulesMaterial",        m_centralModuleMaterial);    
+    declareProperty("CentralLayerModulesFrontsideStereo", m_centralModuleFrontsideStereo);
+    declareProperty("CentralLayerModulesBacksideStereo",  m_centralModuleBacksideStereo);
+    declareProperty("CentralLayerModulesBacksideGap",     m_centralModuleBacksideGap);
     
     // the layers at p/e side 
-    declareProperty("PosNegLayerPositionZ",         m_posnegLayerPositionsZ);
-    declareProperty("PosNegLayerEnvelopeR",         m_posnegLayerEnvelopeR);
-    declareProperty("PosNegLayerModuleRadii",       m_posnegModulesRadii);
-    declareProperty("PosNegLayerModuleStaggerR",    m_posnegModuleStaggerR);        
-    declareProperty("PosNegLayerModulesPhi",        m_posnegModulesPhi);
-    declareProperty("PosNegLayerModulesStaggerPhi", m_posnegMoudleStaggerPhi);
-    declareProperty("PosNegLayerModuleMinHalfX",    m_posnegModuleMinHalfX);
-    declareProperty("PosNegLayerModuleMaxHalfX",    m_posnegModuleMaxHalfX);
-    declareProperty("PosNegLayerModuleHalfY",       m_posnegModuleHalfY);
-    declareProperty("PosNegLayerModuleThickness",   m_posnegModuleThickness);
+    declareProperty("PosNegLayerPositionZ",               m_posnegLayerPositionsZ);
+    declareProperty("PosNegLayerEnvelopeR",               m_posnegLayerEnvelopeR);
+    declareProperty("PosNegLayerModulesRadii",            m_posnegModulesRadii);
+    declareProperty("PosNegLayerModuleStaggerR",          m_posnegModuleStaggerR); 
+    declareProperty("PosNegLayerModulesInPhi",            m_posnegModulesInPhi);       
+    declareProperty("PosNegLayerModulesPositionPhi",      m_posnegModulesPositionPhiStream);
+    declareProperty("PosNegLayerModulesStaggerPhi",       m_posnegMoudleStaggerPhi);
+    declareProperty("PosNegLayerModulesMinHalfX",         m_posnegModuleMinHalfX);
+    declareProperty("PosNegLayerModulesMaxHalfX",         m_posnegModuleMaxHalfX);
+    declareProperty("PosNegLayerModulesHalfY",            m_posnegModuleHalfY);
+    declareProperty("PosNegLayerModulesThickness",        m_posnegModuleThickness);
     
 }
 
@@ -70,7 +81,23 @@ Agd::GenericLayerBuilder::~GenericLayerBuilder()
 StatusCode Agd::GenericLayerBuilder::initialize()
 {
     MSG_DEBUG( "initialize()" );
-    return constructLayers();
+    
+    m_posnegModulesPositionPhi.reserve(m_posnegLayerPositionsZ.size());
+    for (size_t idisc = 0; idisc < m_posnegLayerPositionsZ.size(); ++idisc){
+         std::vector< std::vector< double > > discPhiPositions;
+         discPhiPositions.reserve(m_posnegModulesRadii[idisc].size());
+         size_t iphistream = 0;
+         for (size_t iring = 0; iring < m_posnegModulesRadii[idisc].size(); ++iring){
+             std::vector< double > ringPhiPositions;
+             size_t nphiModules = size_t(m_posnegModulesInPhi[idisc][iring]);
+             for (size_t iphi = 0; iphi < nphiModules; ++iphi, ++iphistream){
+                 ringPhiPositions.push_back(m_posnegModulesPositionPhiStream[idisc][iphistream]);
+             }
+             discPhiPositions.push_back(ringPhiPositions);    
+         }
+         m_posnegModulesPositionPhi.push_back(discPhiPositions);
+     }
+     return constructLayers();
 }
 
 //finalize
@@ -87,109 +114,241 @@ StatusCode Agd::GenericLayerBuilder::constructLayers()
     // -------------------------------- central layers -----------------------------------------------------------
     typedef std::pair<const Ats::Surface*, Ats::Vector3D> SurfacePosition;
     // the central layers
-    size_t numcLayers = m_centralLayerRadii.size();
-    if (numcLayers){
-        MSG_DEBUG("Configured to build " << numcLayers << " passive central layers.");
-        m_cLayers = new Ats::LayerVector;
-        m_cLayers->reserve(numcLayers);
-        // loop through
-        for (size_t icl = 0; icl < numcLayers; ++icl){
-            // layer R/Z
-            double layerR = m_centralLayerRadii[icl];
-            double halfZ  = 0.;
-            double minPhi = 10.;
-            double maxPhi = -10.;
-            // some screen output
-            MSG_VERBOSE("- build layer " << icl << " with radius = " << layerR);
-            // create the modules & surface array 
-            Ats::SurfaceArray* sArray = nullptr;
-            // surface vector 
-            std::vector<SurfacePosition> sVector;
-            // z/phi values for this layer
-            std::vector<double> zValues   = m_centralModulesPositionZ[icl];
-            std::vector<double> phiValues = m_centralModulesPhi[icl];
-            std::sort(phiValues.begin(),phiValues.end());
-            std::sort(zValues.begin(),zValues.end());
-            // envelope stagger & cover
-            double layerModleStaggerZ  = m_centralModulesStaggerZ.size() ? m_centralModulesStaggerZ[icl] : 0.;
-            double layerEnvelopeCoverZ = m_centralLayerEnvelopeZ.size() ? m_centralLayerEnvelopeZ[icl] : 0.;
-            double layerMinR = 10e10;
-            double layerMaxR = 0;
-            // module size & tilt
-            double modulePhiTilt   = m_centralModulesTiltPhi[icl]; 
-            double moduleHalfX     = m_centralModuleHalfX[icl];
-            double moduleHalfY     = m_centralModuleHalfY[icl];
-            double moduleThickness = m_centralModuleThickness[icl];
-            // create the shared module 
-            std::shared_ptr<const Ats::PlanarBounds> moduleBounds(new Ats::RectangleBounds(moduleHalfX,moduleHalfY));
-            // now create the modules and surfaces 
-            bool stagger = false;
-            // Identifier @TODO unique Identifier
-            size_t imodule = 0;
-            sVector.reserve(zValues.size()*phiValues.size());
-            // loop over z module and phi module position
-            for (auto& moduleZ : zValues){
-                // create the half length in z
-                halfZ = halfZ > moduleZ+moduleHalfY ? halfZ :  moduleZ+moduleHalfY;
-                // loop of phi values
-                for (auto& modulePhi : phiValues){
-                    // min/max phi
-                    takeSmallerBigger(minPhi, maxPhi, modulePhi);
-                    // count the modules
-                    ++imodule;
-                    // stagger the modules
-                    double mouldeR = layerR;
-                    mouldeR += stagger ? -0.5*layerModleStaggerZ : 0.5 * layerModleStaggerZ; stagger = !stagger;
-                    // the position of the module
-                    Ats::Vector3D moduleCenter(mouldeR*cos(modulePhi), mouldeR*sin(modulePhi), moduleZ);                     
-                    // normal vectorof the surface
-                    Ats::Vector3D moduleLocalZ(cos(modulePhi+modulePhiTilt),sin(modulePhi+modulePhiTilt), 0.);
-                    Ats::Vector3D moduleLocalY(0.,0.,1);
-                    Ats::Vector3D moduleLocalX(-sin(modulePhi+modulePhiTilt),cos(modulePhi+modulePhiTilt),0.);
-                    // create the RotationMatrix
-                    Ats::RotationMatrix3D moduleRotation;
-                    moduleRotation.col(0) = moduleLocalX;
-                    moduleRotation.col(1) = moduleLocalY;
-                    moduleRotation.col(2) = moduleLocalZ;
-                    // edge points 
-                    double moduleEdge1 = Ats::Vector3D(moduleCenter+moduleHalfX*moduleLocalX).perp();
-                    double moduleEdge2 = Ats::Vector3D(moduleCenter-moduleHalfX*moduleLocalX).perp();
-                    // layer min / max 
-                    takeSmallerBigger(layerMinR,layerMaxR, moduleEdge1);
-                    takeSmallerBigger(layerMinR,layerMaxR, moduleEdge2);
-                    // get the moduleTransform
-                    std::shared_ptr<Ats::Transform3D> moduleTransform(new Ats::Transform3D(Ats::getTransformFromRotTransl(moduleRotation,moduleCenter)));
-                    // create the generic detector element @TODO identifier service
-                    Identifier moduleIdentifier(imodule);
-                    // create the module 
-                    DetectorElement* module = new DetectorElement(moduleIdentifier, moduleTransform, moduleBounds, moduleThickness);
-                    // create the surface 
-                    sVector.push_back(SurfacePosition(&module->surface(),moduleCenter));
-                    // memory management - we need a detector store to hold them somewhere @TODO detector store facility
-                    m_centralModules.push_back(module);
-                }
-            }
-            // harmonize the phi boundaries 
-            double phiStep = (maxPhi-minPhi)/(phiValues.size()-1);
-            minPhi -= 0.5*phiStep;
-            maxPhi += 0.5*phiStep;
-            // layer thickness
-            double layerThickness = (layerMaxR-layerMinR);
-            // create the binUtility
-            Ats::BinUtility* moduleBinUtility = new Ats::BinUtility(phiValues.size(), minPhi, maxPhi, Ats::closed, Ats::binPhi);
-            (*moduleBinUtility) += Ats::BinUtility(zValues.size(), -halfZ, halfZ, Ats::open, Ats::binZ);
-            // create the surface array 
-            sArray = new Ats::BinnedArray2D< const Ats::Surface* >(sVector,moduleBinUtility);
-            // create the layer and push it back
-            std::shared_ptr<const Ats::CylinderBounds> cBounds(new Ats::CylinderBounds(layerR, halfZ+layerEnvelopeCoverZ));
-            // @TODO overlap descriptor
-                                                                                                                                                                  
-            // create the layer
-            Ats::LayerPtr cLayer = Ats::CylinderLayer::create(nullptr, cBounds, sArray, layerThickness, nullptr, nullptr, Ats::active);
-            // push it into the layer vector
-            m_cLayers->push_back(cLayer);
-        }
-    }
+   size_t numcLayers = m_centralLayerRadii.size();
+   if (numcLayers){
+       MSG_DEBUG("Configured to build " << numcLayers << " active central layers.");
+       m_cLayers = new Ats::LayerVector;
+       m_cLayers->reserve(numcLayers);
+       // loop through
+       for (size_t icl = 0; icl < numcLayers; ++icl){
+           // layer R/Z
+           double layerR = m_centralLayerRadii[icl];
+           double halfZ  = 0.;
+           double minPhi = 10.;
+           double maxPhi = -10.;
+           // some screen output
+           MSG_VERBOSE("- build layer " << icl << " with radius = " << layerR);
+           // create the modules & surface array 
+           Ats::SurfaceArray* sArray = nullptr;
+           // surface vector 
+           std::vector<SurfacePosition> sVector;
+           // z/phi values for this layer
+           std::vector<double> zValues   = m_centralModulesPositionZ[icl];
+           std::vector<double> phiValues = m_centralModulesPositionPhi[icl];
+           std::sort(phiValues.begin(),phiValues.end());
+           std::sort(zValues.begin(),zValues.end());
+           // envelope stagger & cover
+           double layerModleStaggerZ  = m_centralModulesStaggerZ.size() ? m_centralModulesStaggerZ[icl] : 0.;
+           double layerEnvelopeCoverZ = m_centralLayerEnvelopeZ.size() ? m_centralLayerEnvelopeZ[icl] : 0.;
+           double layerMinR = 10e10;
+           double layerMaxR = 0;
+           // module size & tilt
+           double modulePhiTilt   = m_centralModulesTiltPhi[icl]; 
+           double moduleHalfX     = m_centralModuleHalfX[icl];
+           double moduleHalfY     = m_centralModuleHalfY[icl];
+           double moduleThickness = m_centralModuleThickness[icl];
+           // create the shared module 
+           std::shared_ptr<const Ats::PlanarBounds> moduleBounds(new Ats::RectangleBounds(moduleHalfX,moduleHalfY));
+           // now create the modules and surfaces 
+           bool stagger = false;
+           // Identifier @TODO unique Identifier
+           size_t imodule = 0;
+           sVector.reserve(zValues.size()*phiValues.size());
+           // temporary cache for neighbor setting
+           std::vector< std::vector < DetectorElement* > > neighbourCache;
+           std::vector< std::vector < DetectorElement* > > neighbourCacheBackside;    
+           // create the Module material from input
+           std::shared_ptr<const Ats::SurfaceMaterial> moduleMaterialPtr = nullptr;
+           if (m_centralModuleMaterial.size()){
+               // get the sensor material - it has to be vectors of 5
+               double x0  = m_centralModuleMaterial[icl][0];
+               double l0  = m_centralModuleMaterial[icl][1];
+               double a   = m_centralModuleMaterial[icl][2];
+               double z   = m_centralModuleMaterial[icl][3];
+               double rho = m_centralModuleMaterial[icl][4];
+               // the moduel moaterial from input 
+               Ats::Material moduleMaterial(x0,l0,a,z,rho);
+               Ats::MaterialProperties moduleMaterialProperties(moduleMaterial,moduleThickness);
+               moduleMaterialPtr = std::shared_ptr<const Ats::SurfaceMaterial>(new Ats::HomogeneousSurfaceMaterial(moduleMaterialProperties));   
+           }
+           // loop over z module and phi module position
+           for (auto& moduleZ : zValues){
+               // create the phi neighbours
+               std::vector< DetectorElement*> neighbourCachePhi; 
+               std::vector< DetectorElement*> neighbourCachePhiBackside; 
+               neighbourCachePhi.reserve(phiValues.size());
+               neighbourCachePhiBackside.reserve(phiValues.size());
+               // create the half length in z
+               halfZ = halfZ > moduleZ+moduleHalfY ? halfZ :  moduleZ+moduleHalfY;
+               // loop of phi values
+               for (auto& modulePhi : phiValues){
+                   // min/max phi
+                   takeSmallerBigger(minPhi, maxPhi, modulePhi);
+
+                   // stagger the modules
+                   double moduleR = layerR;
+                   moduleR += stagger ? -0.5*layerModleStaggerZ : 0.5 * layerModleStaggerZ; stagger = !stagger;
+                   // the position of the module
+                   Ats::Vector3D moduleCenter(moduleR*cos(modulePhi), moduleR*sin(modulePhi), moduleZ);  
+                   // normal vectorof the surface
+                   Ats::Vector3D moduleLocalZ(cos(modulePhi+modulePhiTilt),sin(modulePhi+modulePhiTilt), 0.);
+                   Ats::Vector3D moduleLocalY(0.,0.,1);
+                   Ats::Vector3D moduleLocalX(-sin(modulePhi+modulePhiTilt),cos(modulePhi+modulePhiTilt),0.);
+                   // create the RotationMatrix
+                   Ats::RotationMatrix3D moduleRotation;
+                   moduleRotation.col(0) = moduleLocalX;
+                   moduleRotation.col(1) = moduleLocalY;
+                   moduleRotation.col(2) = moduleLocalZ;
+                   // edge points 
+                   double moduleEdge1 = Ats::Vector3D(moduleCenter+moduleHalfX*moduleLocalX).perp();
+                   double moduleEdge2 = Ats::Vector3D(moduleCenter-moduleHalfX*moduleLocalX).perp();
+                   // layer min / max 
+                   takeSmallerBigger(layerMinR,layerMaxR, moduleEdge1);
+                   takeSmallerBigger(layerMinR,layerMaxR, moduleEdge2);
+                   // get the moduleTransform
+                   std::shared_ptr<Ats::Transform3D> moduleTransform(new Ats::Transform3D(Ats::getTransformFromRotTransl(moduleRotation,moduleCenter)));
+                   // stereo angle applied
+                   if (m_centralModuleFrontsideStereo.size() && m_centralModuleFrontsideStereo[icl] != 0.){
+                       // twist by the stereo angle
+                       double stereo = m_centralModuleFrontsideStereo[icl];
+                       (*moduleTransform.get()) *= Ats::AngleAxis3D(-stereo, Ats::Vector3D::UnitZ());
+                   }
+                   // create the generic detector element @TODO identifier service
+                   // count the modules
+                   ++imodule;
+                   Identifier moduleIdentifier = Identifier(Identifier::value_type(imodule));
+                   // create the module 
+                   DetectorElement* module = new DetectorElement(moduleIdentifier, moduleTransform, moduleBounds, moduleThickness, moduleMaterialPtr);
+                   // register the module to the cache module
+                   neighbourCachePhi.push_back(module);
+                   // create the surface 
+                   sVector.push_back(SurfacePosition(&module->surface(),moduleCenter));
+                   // memory management - we need a detector store to hold them somewhere @TODO detector store facility
+                   m_centralModules.push_back(module);
+                   // and the backside one (if configured to do so)
+                   if (m_centralModuleBacksideGap.size()){
+                       // ncrease the counter @TODO switch to identifier service
+                       ++imodule;
+                       // create the module identifier
+                       moduleIdentifier = Identifier(Identifier::value_type(imodule));
+                       moduleCenter = moduleCenter + m_centralModuleBacksideGap[icl]*moduleLocalZ;                  
+                       moduleTransform = std::shared_ptr<Ats::Transform3D>(new Ats::Transform3D(Ats::getTransformFromRotTransl(moduleRotation,moduleCenter)));
+                       // apply the stereo
+                       if (m_centralModuleBacksideStereo.size()){
+                           // twist by the stereo angle
+                           double stereo = m_centralModuleBacksideStereo[icl];
+                           (*moduleTransform.get()) *= Ats::AngleAxis3D(-stereo, Ats::Vector3D::UnitZ());
+                       }
+                       // everything is set for the next module
+                       DetectorElement* bsmodule = new DetectorElement(moduleIdentifier, moduleTransform, moduleBounds, moduleThickness, moduleMaterialPtr);
+                       // register the module to the cache module
+                       neighbourCachePhiBackside.push_back(bsmodule);
+                       // memory management - we need a detector store to hold them somewhere @TODO detector store facility
+                       m_centralModules.push_back(bsmodule);
+                   }
+               }
+               // register the phi vector to the module cache
+               neighbourCache.push_back(neighbourCachePhi);
+               if (neighbourCachePhiBackside.size()) 
+                   neighbourCacheBackside.push_back(neighbourCachePhiBackside);
+
+           }
+           // create the neighbor Cache
+           MSG_VERBOSE("Filling the neighbour cache for the overlap descriptor.");
+           // --- interlude --- fill the neighbour cache
+           // number of z modules
+           size_t zModules = neighbourCache.size();
+           for (size_t iz = 0; iz < zModules; ++iz){
+               // number of phi modules
+               size_t phiModules = neighbourCache[iz].size();
+               // the previous z and next z
+               int pz = (int(iz) > 0) ? iz-1 : -1;
+               int nz = (int(iz) < int(zModules-1)) ? iz+1 : -1; 
+               // now loop over the phi values
+               for (size_t iphi = 0; iphi < phiModules; ++iphi){
+                   // create the neighbours
+                   std::vector<const Ats::DetectorElementBase*> neighbours;
+                   // closed for phi
+                   size_t nphi = (iphi < (phiModules-1)) ? iphi+1 : 0;
+                   size_t pphi = (iphi > 0) ? iphi-1 : phiModules-1;
+                   // fill neighbours
+                   // get the current z with next in phi
+                   neighbours.push_back(neighbourCache[iz][pphi]);
+                   neighbours.push_back(neighbourCache[iz][nphi]);
+                   // get the z neighbours
+                   if (pz > 0){
+                       neighbours.push_back(neighbourCache[pz][pphi]);
+                       neighbours.push_back(neighbourCache[pz][iphi]);
+                       neighbours.push_back(neighbourCache[pz][nphi]);
+                   }
+                   if (nz > 0){
+                       neighbours.push_back(neighbourCache[nz][pphi]);
+                       neighbours.push_back(neighbourCache[nz][iphi]);
+                       neighbours.push_back(neighbourCache[nz][nphi]);
+                   }                    
+                   // fill backside neighbours if created
+                   if (neighbourCacheBackside.size()){
+                       neighbours.push_back(neighbourCacheBackside[iz][pphi]);
+                       neighbours.push_back(neighbourCacheBackside[iz][iphi]); 
+                       neighbours.push_back(neighbourCacheBackside[iz][nphi]);
+                       // get the z neighbours
+                       if (pz > 0){
+                           neighbours.push_back(neighbourCacheBackside[pz][pphi]);
+                           neighbours.push_back(neighbourCacheBackside[pz][iphi]);
+                           neighbours.push_back(neighbourCacheBackside[pz][nphi]);
+                       }
+                       if (nz > 0){
+                           neighbours.push_back(neighbourCacheBackside[nz][pphi]);
+                           neighbours.push_back(neighbourCacheBackside[nz][iphi]);
+                           neighbours.push_back(neighbourCacheBackside[nz][nphi]);
+                       } 
+                   }
+                   // now register it to the volume
+                   if (neighbourCache[iz][iphi]) neighbourCache[iz][iphi]->registerNeighbours(neighbours);                    
+               }
+           }
+
+           // harmonize the phi boundaries 
+           double phiStep = (maxPhi-minPhi)/(phiValues.size()-1);
+           minPhi -= 0.5*phiStep;
+           maxPhi += 0.5*phiStep;
+           // layer thickness
+           double layerThickness = (layerMaxR-layerMinR);
+           MSG_VERBOSE("-        with z min/max = " << -halfZ << " / " << halfZ);
+           MSG_VERBOSE("-        with R min/max = " << layerMinR << " / " << layerMaxR);
+           MSG_VERBOSE("- and number of modules = " << sVector.size() << " ( " << phiValues.size() << " x " << zValues.size() << ")");
+
+           // create the binUtility
+           Ats::BinUtility* moduleBinUtility = new Ats::BinUtility(phiValues.size(), minPhi, maxPhi, Ats::closed, Ats::binPhi);
+           (*moduleBinUtility) += Ats::BinUtility(zValues.size(), -halfZ, halfZ, Ats::open, Ats::binZ);
+           // create the surface array 
+           sArray = new Ats::BinnedArray2D< const Ats::Surface* >(sVector,moduleBinUtility);
+           // create the layer and push it back
+           std::shared_ptr<const Ats::CylinderBounds> cBounds(new Ats::CylinderBounds(layerR, halfZ+layerEnvelopeCoverZ));
+           // create the layer
+           Ats::LayerPtr cLayer = Ats::CylinderLayer::create(nullptr, cBounds, sArray, layerThickness, nullptr, nullptr, Ats::active);
+           // the layer is built le't see if it needs material
+           if (m_centralLayerMaterialProperties.size()){
+               // get the material from configuration
+               double lMaterialThickness = m_centralLayerMaterialProperties[icl][0];
+               double lMaterialX0        = m_centralLayerMaterialProperties[icl][1];
+               double lMaterialL0        = m_centralLayerMaterialProperties[icl][2];
+               double lMaterialA         = m_centralLayerMaterialProperties[icl][3];
+               double lMaterialZ         = m_centralLayerMaterialProperties[icl][4];
+               double lMaterialRho       = m_centralLayerMaterialProperties[icl][5];
+               Ats::MaterialProperties layerMaterialProperties(lMaterialThickness,lMaterialX0,lMaterialL0,lMaterialA,lMaterialZ,lMaterialRho);
+               std::shared_ptr<const Ats::SurfaceMaterial> layerMaterialPtr(new Ats::HomogeneousSurfaceMaterial(layerMaterialProperties));   
+               // get the approach descriptor - at this stage we know that the approachDescriptor exists
+               auto approachSurfaces = cLayer->approachDescriptor()->containedSurfaces();
+               if (m_centralLayerMaterialConcentration[icl] > 0)
+                   approachSurfaces[1]->setSurfaceMaterial(layerMaterialPtr);
+               else 
+                   approachSurfaces[0]->setSurfaceMaterial(layerMaterialPtr);
+           }
+           // push it into the layer vector
+           m_cLayers->push_back(cLayer);
+       }
+   }
     
     // -------------------------------- endcap type layers -----------------------------------------------------------
     // pos/neg layers
@@ -212,14 +371,14 @@ StatusCode Agd::GenericLayerBuilder::constructLayers()
          double layerRmin                          = 10e10;
          double layerRmax                          = 0.;
          // module positioning update
-         std::vector<double> layerModuleRadii      = m_posnegModulesRadii[ipnl];
-         std::vector<double> layerModulePhi        = m_posnegModulesPhi[ipnl];
-         std::vector<double> layerModulePhiStagger = m_posnegMoudleStaggerPhi[ipnl];
+         auto layerModuleRadii                     = m_posnegModulesRadii[ipnl];
+         auto layerModulePositionsPhi              = m_posnegModulesPositionPhi[ipnl];
+         auto layerModulePhiStagger                = m_posnegMoudleStaggerPhi[ipnl];
          // module description
-         std::vector<double> layerModuleMinHalfX   = m_posnegModuleMinHalfX[ipnl];
-         std::vector<double> layerModuleMaxHalfX   = m_posnegModuleMaxHalfX[ipnl];
-         std::vector<double> layerModuleHalfY      = m_posnegModuleHalfY[ipnl];
-         std::vector<double> layerModuleThickness  = m_posnegModuleThickness[ipnl];
+         auto layerModuleMinHalfX                  = m_posnegModuleMinHalfX[ipnl];
+         auto layerModuleMaxHalfX                  = m_posnegModuleMaxHalfX[ipnl];
+         auto layerModuleHalfY                     = m_posnegModuleHalfY[ipnl];
+         auto layerModuleThickness                 = m_posnegModuleThickness[ipnl];
 
          // prepare for the r binning
          std::vector< Ats::SurfaceArray* > pRadialSurfaceArrays;
@@ -265,8 +424,10 @@ StatusCode Agd::GenericLayerBuilder::constructLayers()
              // create the
              std::vector< SurfacePosition> nsVector;
              std::vector< SurfacePosition> psVector;
+             // the phi module of this ring
+             auto ringModulePositionsPhi = layerModulePositionsPhi[ipnR];
              // now loo over phi
-             for (auto& modulePhi : layerModulePhi){
+             for (auto& modulePhi : ringModulePositionsPhi){
                  // bigger smaller trick on phi
                  takeSmallerBigger(minPhi,maxPhi,modulePhi);
                  // update the module z position
@@ -301,8 +462,8 @@ StatusCode Agd::GenericLayerBuilder::constructLayers()
                  std::shared_ptr<Ats::Transform3D> nModuleTransform(new Ats::Transform3D(Ats::getTransformFromRotTransl(nModuleRotation,nModuleCenter)));
                  std::shared_ptr<Ats::Transform3D> pModuleTransform(new Ats::Transform3D(Ats::getTransformFromRotTransl(pModuleRotation,pModuleCenter)));
                  // create the modules identifier @TODO Idenfier service 
-                 Identifier nModuleIdentifier(2*imodule);
-                 Identifier pModuleIdentifier(2*imodule+1);
+                 Identifier nModuleIdentifier = Identifier(Identifier::value_type(2*imodule));
+                 Identifier pModuleIdentifier = Identifier(Identifier::value_type(2*imodule+1));
                  // create the module 
                  DetectorElement* nmodule = new DetectorElement(nModuleIdentifier, nModuleTransform, moduleBounds, moduleThickness);
                  DetectorElement* pmodule = new DetectorElement(pModuleIdentifier, pModuleTransform, moduleBounds, moduleThickness);
@@ -316,13 +477,13 @@ StatusCode Agd::GenericLayerBuilder::constructLayers()
                  psVector.push_back(SurfacePosition(&pmodule->surface(), pModuleCenter));                    
              } 
              // create the phi binned array
-             double phiStep = (maxPhi-minPhi)/(layerModulePhi.size()-1);
+             double phiStep = (maxPhi-minPhi)/(ringModulePositionsPhi.size()-1);
              minPhi -= 0.5*phiStep;
              maxPhi += 0.5*phiStep;
              
              // BinUtilities
-             Ats::BinUtility* nphiBinUtility = new Ats::BinUtility(layerModulePhi.size(),minPhi,maxPhi,Ats::closed,Ats::binPhi);
-             Ats::BinUtility* pphiBinUtility = new Ats::BinUtility(layerModulePhi.size(),minPhi,maxPhi,Ats::closed,Ats::binPhi);
+             Ats::BinUtility* nphiBinUtility = new Ats::BinUtility(ringModulePositionsPhi.size(),minPhi,maxPhi,Ats::closed,Ats::binPhi);
+             Ats::BinUtility* pphiBinUtility = new Ats::BinUtility(ringModulePositionsPhi.size(),minPhi,maxPhi,Ats::closed,Ats::binPhi);
              nRadialSurfaceArrays.push_back( new Ats::BinnedArray1D<const Ats::Surface* >(nsVector, nphiBinUtility)  );
              pRadialSurfaceArrays.push_back( new Ats::BinnedArray1D<const Ats::Surface* >(psVector, pphiBinUtility)  );
              
