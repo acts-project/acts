@@ -179,23 +179,23 @@ const Ats::TrackParameters* Ats::MaterialEffectsEngine::updateTrackParameters(co
             sigmaP *= thickness*pathCorrection;
             // calcuate the new momentum
             double newP = sqrt((E+dE)*(E+dE)-m*m);
-            uParameters[Ats::qOverP] = parameters.charge()/newP;
+            uParameters[Ats::eQOP] = parameters.charge()/newP;
             double sigmaDeltaE = thickness*pathCorrection*sigmaP;
             double sigmaQoverP = sigmaDeltaE/std::pow(beta*p,2);
             // update the covariance if needed
             if (uCovariance)
-    	       (*uCovariance)(Ats::qOverP, Ats::qOverP) += sign*sigmaQoverP*sigmaQoverP;
+    	       (*uCovariance)(Ats::eQOP, Ats::eQOP) += sign*sigmaQoverP*sigmaQoverP;
 	}
         // (B) - update the covariance if needed
         if (uCovariance && m_mscCorrection){
 	        /** multiple scattering as function of dInX0 */
 	        double sigmaMS = m_interactionFormulae.sigmaMS(thicknessInX0*pathCorrection, p, beta);    
-	        double sinTheta = sin(parameters.parameters()[Ats::theta]);
+	        double sinTheta = sin(parameters.parameters()[Ats::eTHETA]);
 	        double sigmaDeltaPhiSq = sigmaMS*sigmaMS/(sinTheta*sinTheta);
 	        double sigmaDeltaThetaSq = sigmaMS*sigmaMS;
 	        // add or remove @TODO implement check for covariance matrix -> 0
-	        (*uCovariance)(Ats::phi,Ats::phi)      += sign*sigmaDeltaPhiSq;
-	        (*uCovariance)(Ats::theta, Ats::theta) += sign*sigmaDeltaThetaSq;
+	        (*uCovariance)(Ats::ePHI,Ats::ePHI)      += sign*sigmaDeltaPhiSq;
+	        (*uCovariance)(Ats::eTHETA,Ats::eTHETA)  += sign*sigmaDeltaThetaSq;
         }
         // check if material filling was requested
         if (eCell.checkConfigurationMode(Ats::ExtrapolationMode::CollectMaterial)){
@@ -214,12 +214,7 @@ const Ats::TrackParameters* Ats::MaterialEffectsEngine::updateTrackParameters(co
             EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "material update on initial parameters, creating new ones.");
             // create new parameters
             const Ats::Surface& tSurface = parameters.associatedSurface();
-            const Ats::TrackParameters* tParameters = new Ats::BoundParameters(std::move(uCovariance),uParameters,parameters.charge(),tSurface);/*tSurface.createTrackParameters(uParameters[loc1],
-                                                                                     uParameters[loc2],
-                                                                                     uParameters[phi],
-                                                                                     uParameters[theta],
-                                                                                     uParameters[qOverP],
-                                                                                     uCovariance);*/
+            const Ats::TrackParameters* tParameters = new Ats::BoundParameters(std::move(uCovariance),uParameters,tSurface);
 	      // these are newly created
 	      return tParameters;
         }

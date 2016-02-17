@@ -2,6 +2,8 @@
 // RungeKuttaEngine.cxx, ATS project
 /////////////////////////////////////////////////////////////////////////////////
 
+// Event module
+#include "EventDataUtils/CoordinateTransformations.h"
 // Extrapolation module
 #include "RungeKuttaEngine/RungeKuttaEngine.h"
 #include "ExtrapolationInterfaces/ExtrapolationMacros.h"
@@ -237,23 +239,21 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(ExCellCharged& eCell,
         std::unique_ptr<AtsSymMatrixD<5> > cov;
         if(pCache.covariance)
           cov.reset(new AtsSymMatrixD<5>(*pCache.covariance));
-        // get the charge @TODO fix with ATS-40
-        double charge = pCache.parameters[4] > 0. ? 1. : -1.;
+        // create the parameter vector
+        AtsVectorD<5> pars;
+        pars << pCache.parameters[0],pCache.parameters[1],pCache.parameters[2],pCache.parameters[3],pCache.parameters[4];
         // create the new parameters
         if (!pCache.returnCurvilinear){
           // new parameters bound to the surface
-          AtsVectorD<5> pars;
-          pars << pCache.parameters[0],pCache.parameters[1],pCache.parameters[2],pCache.parameters[3],pCache.parameters[4];
-          pParameters = new BoundParameters(std::move(cov),std::move(pars),charge,sf);
+          pParameters = new BoundParameters(std::move(cov),std::move(pars),sf);
         } else {
+          // get the charge
+          double charge = pCache.parameters[4] > 0. ? 1. : -1.;
           // new curvilinear parameters
-          Ats::Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);
-          Ats::Vector3D mom(pCache.pVector[3],pCache.pVector[4],pCache.pVector[5]);
-          mom /= fabs(pCache.parameters[4]);
-          pParameters = new CurvilinearParameters(std::move(cov),gp,mom,charge);
+          Ats::Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);       
+          pParameters = new CurvilinearParameters(std::move(cov),gp,coordinate_transformation::parameters2globalMomentum(pars),charge);
         }
     }
-    
     // set the return type according to how the propagation went
     if (pParameters){
        // @!TODO fill the jacobian
