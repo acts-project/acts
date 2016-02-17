@@ -30,7 +30,7 @@ This is only possible with gcc >= 4.9
 
 e.g. 
 
-`asetup,devval,rel0,opt,here,runtime`
+`asetup devval,rel0,opt,here,runtime`
 
 `setupWorkArea.py`
 
