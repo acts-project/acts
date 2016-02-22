@@ -31,4 +31,4 @@ gitlab-runner register -n -u https://gitlab.cern.ch/ci -r JcQLxS39oaAEsUU3ERwq -
 
 # set some environment variables
 echo "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase" >> /home/gitlab-runner/.bashrc
-echo "alias setupATLAS=\"source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh\"" >> /home/gitlab-runner/.bashrc
+echo 'alias setupATLAS="source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh"' >> /home/gitlab-runner/.bashrc
