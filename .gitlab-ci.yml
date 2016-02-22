@@ -1,7 +1,6 @@
 cmt-build:
   tags:
     - ATS
-    - AFS
     - CVMFS
   stage: build
   script:
@@ -15,7 +14,6 @@ cmt-build:
 cmake-build:
   tags:
     - ATS
-    - AFS
   stage: build
   script:
     - source init.sh
