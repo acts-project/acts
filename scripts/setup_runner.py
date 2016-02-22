@@ -6,6 +6,9 @@
 # The shell profile needs to be configured according to
 # http://clouddocs.web.cern.ch/clouddocs/tutorial/create_your_openstack_profile.html
 
+import os
+import tempfile
+import shutil
 import sys
 import argparse
 import logging
@@ -32,17 +35,31 @@ def main():
     parser.add_argument('-v','--debug',action="store_true",help="switch logging into DEBUG mode")
     parser.add_argument('--token',metavar='TOKEN',required=True,help='token of GitLab project the runner should be associated to')
     parser.add_argument('--url',metavar='URL',default='https://gitlab.cern.ch/ci',help='URL of GitLab instance where the GitLab project is hosted')
-    parser.add_argument('--user-data',metavar='USER_DATA',dest='user_data',help='user data file supplied to cloud-init')
 
     # Parse and handle initial arguments
     args = parser.parse_args()
     if args.debug:
         logger.setLevel(logging.DEBUG)
     logger.debug("parsed input values: " + str(args))
-    openstack_cmd = "openstack server create --key-name {0} --flavor {1} --image {2} {3}".format(args.key,args.flavor,args.image,args.hostname)
-    if args.user_data:
-        openstack_cmd += " --user-data {0}".format(args.user_data)
-        
+
+    # make temporary copy of user data file
+    temp_dir = tempfile.gettempdir()
+    temp_file = os.path.join(temp_dir,'tmp_install_software.sh')
+    shutil.copy2('install_software.sh',temp_file)
+    # append command to create GitLab runner with correct arguments
+    tags = ','.join(args.tags)
+    gitlab_cmd = "gitlab-runner register -n -u {0} -r {1} --name {2} --executor shell --tag-list {3}".format(args.url,args.token,args.name,tags)
+    logger.debug("Using following command to register GitLab runner:\n{0}".format(gitlab_cmd))
+    try:
+        append_cmd = "echo '{0}' >> {1}".format(gitlab_cmd,temp_file)
+        logger.debug("Calling '{0}'".format(append_cmd))
+        output = subprocess.check_output(append_cmd,shell=True)
+    except subprocess.CalledProcessError:
+        logger.warning("Executing '{0}' failed".format(append_cmd))
+        sys.exit(1)
+
+    # create openstack VM
+    openstack_cmd = "openstack server create --key-name {0} --flavor {1} --image {2} --user-data {3} {4}".format(args.key,args.flavor,args.image,temp_file,args.hostname)        
     try:
         logger.debug("Calling '{0}'".format(openstack_cmd))
         output = subprocess.check_output(openstack_cmd,shell=True)
