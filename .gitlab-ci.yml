@@ -5,8 +5,8 @@ cmt-build:
     - CVMFS
   script:
     - shopt -s expand_aliases
-    - setupATLAS && echo $?
-    - asetup devval,rel0,opt,here,runtime && echo $?
+    - setupATLAS && echo "... done"
+    - asetup devval,rel0,opt,here,runtime && echo "... done"
     - setupWorkArea.py
     - cd WorkArea/cmt
     - cmt br cmt config; cmt br gmake
