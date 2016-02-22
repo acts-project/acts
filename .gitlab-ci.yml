@@ -1,0 +1,20 @@
+cmt-build:
+  tags:
+    - ATS
+    - AFS
+    - CVMFS
+  script:
+    - shopt -s expand_aliases
+    - setupATLAS && echo $?
+    - asetup devval,rel0,opt,here,runtime && echo $?
+    - setupWorkArea.py
+    - cd WorkArea/cmt
+    - cmt br cmt config; cmt br gmake
+  
+cmake-build:
+  tags:
+    - ATS
+    - AFS
+  script:
+    - source init.sh
+    - make
