@@ -3,6 +3,7 @@ cmt-build:
     - ATS
     - AFS
     - CVMFS
+  stage: build
   script:
     - shopt -s expand_aliases
     - setupATLAS && echo "... done"
@@ -15,6 +16,7 @@ cmake-build:
   tags:
     - ATS
     - AFS
+  stage: build
   script:
     - source init.sh
     - make
