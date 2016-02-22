@@ -65,6 +65,9 @@ def main():
         output = subprocess.check_output(openstack_cmd,shell=True)
     except subprocess.CalledProcessError:
         logger.warning("Executing '{0}' failed".format(openstack_cmd))
+
+    # remove temporary user data file
+    os.system('rm {0}'.format(temp_file))
     
 if __name__ == '__main__':
     main()
