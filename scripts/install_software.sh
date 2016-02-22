@@ -27,6 +27,9 @@ yum install -y gcc-c++-4.4.7-16.el6.x86_64
 yum-config-manager --add-repo http://linuxsoft.cern.ch/mirror/packages.gitlab.com/runner/gitlab-ci-multi-runner/el/6/x86_64/
 yum install -y --nogpgcheck gitlab-ci-multi-runner
 
+# set some missing links
+ln -s /lib64/libuuid.so.1.3.0 /usr/lib64/libuuid.so
+
 # set some environment variables
 echo "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase" >> /home/gitlab-runner/.bashrc
 echo 'alias setupATLAS="source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh"' >> /home/gitlab-runner/.bashrc
