@@ -18,6 +18,9 @@ cmake-build:
   script:
     - source init.sh
     - make
+  artifacts:
+    paths:
+      - build.*
 
 unit-tests:
   tags:
