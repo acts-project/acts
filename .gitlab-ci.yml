@@ -18,3 +18,12 @@ cmake-build:
   script:
     - source init.sh
     - make
+
+unit-tests:
+  tags:
+    - ATS
+  stage: test
+  script:
+    - source init.sh
+    - make test
+    
