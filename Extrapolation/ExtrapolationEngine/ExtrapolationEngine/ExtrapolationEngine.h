@@ -64,12 +64,12 @@ class ExtrapolationEngine : public ServiceBase, virtual public IExtrapolationEng
         
         /** charged extrapolation - public interface */
         ExtrapolationCode extrapolate(ExCellCharged& ecCharged,
-                                      const Surface* sf = 0,
+                                      const Surface* sf = nullptr,
                                       const BoundaryCheck& bcheck = true) const final;
 
         /** neutral extrapolation - public interface */
         ExtrapolationCode extrapolate(ExCellNeutral& ecNeutral,
-                                      const Surface* sf = 0,
+                                      const Surface* sf = nullptr,
                                       const BoundaryCheck& bcheck = true) const final;
                          
                          
@@ -79,13 +79,13 @@ class ExtrapolationEngine : public ServiceBase, virtual public IExtrapolationEng
      private:
         /** main loop extrapolation method */
         template <class T> ExtrapolationCode extrapolateT(ExtrapolationCell<T>& eCell,
-                                                          const Surface* sf = 0,
+                                                          const Surface* sf = nullptr,
                                                           PropDirection dir=alongMomentum,
                                                           const BoundaryCheck& bcheck = true) const;
             
         /** initialization method */                                      
         template <class T>  ExtrapolationCode initNavigation(ExtrapolationCell<T>& eCell,
-                                                             const Surface* sf = 0,
+                                                             const Surface* sf = nullptr,
                                                              PropDirection dir=alongMomentum) const throw (GaudiException);
                 
                 
