@@ -8,3 +8,9 @@ export CMAKE_PREFIX_PATH=$GAUDI:ATS/cmake
 
 export CMTPROJECTPATH=/afs/cern.ch/exp/fcc/sw/0.5/
 source /afs/cern.ch/sw/lcg/contrib/gcc/4.9.3/x86_64-slc6/setup.sh
+
+# add DD4hep
+export inithere=$PWD
+cd  /afs/cern.ch/exp/fcc/sw/0.5/DD4hep/20152711/x86_64-slc6-gcc49-opt
+source bin/thisdd4hep.sh
+cd $inithere

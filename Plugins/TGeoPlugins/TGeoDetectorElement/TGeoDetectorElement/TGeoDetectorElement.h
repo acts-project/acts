@@ -29,45 +29,45 @@ namespace Ats {
                             TGeoShape* tGeoDetElement, std::shared_ptr<const Ats::Transform3D> motherTransform = nullptr);
         
         /**  Destructor */
-        ~TGeoDetectorElement();
+        virtual ~TGeoDetectorElement();
         
         /** Identifier */
-        Identifier identify() const override;
+        virtual Identifier identify() const override;
         
         /**Return local to global transform*/
-        const Ats::Transform3D& transform() const override;
+        virtual const Ats::Transform3D& transform() const override;
         
         /**Return local to global transform associated with this identifier*/
-        const Ats::Transform3D& transform(const Identifier& id) const override;
+        virtual const Ats::Transform3D& transform(const Identifier& id) const override;
         
         /**Return surface associated with this detector element*/
-        const Ats::Surface& surface () const override;
+        virtual const Ats::Surface& surface () const override;
         
         /**Return surface associated with this identifier, which should come from the */
-        const Ats::Surface& surface (const Identifier& identifier) const override;
+        virtual const Ats::Surface& surface (const Identifier& identifier) const override;
         
         /** Returns the full list of all detection surfaces associated to this detector element */
-        const std::vector< std::shared_ptr<const Ats::Surface> >& surfaces() const override;
+        virtual const std::vector< std::shared_ptr<const Ats::Surface> >& surfaces() const override;
         
         /**Return the boundaries of the element*/
-        const Ats::SurfaceBounds& bounds() const override;
+        virtual const Ats::SurfaceBounds& bounds() const override;
         
         /**Return the boundaries of the surface associated with this identifier */
-        const Ats::SurfaceBounds& bounds(const Identifier& id) const override;
+        virtual const Ats::SurfaceBounds& bounds(const Identifier& id) const override;
         
         /**Return the center of the element*/
-        const Ats::Vector3D& center() const override;
+        virtual const Ats::Vector3D& center() const override;
         
         /**Return the center of the surface associated with this identifier
          In the case of silicon it returns the same as center()*/
-        const Ats::Vector3D& center(const Identifier& identifier) const override;
+        virtual const Ats::Vector3D& center(const Identifier& identifier) const override;
         
         /**Return the normal of the element*/
-        const Ats::Vector3D& normal() const override;
+        virtual const Ats::Vector3D& normal() const override;
         
         /**Return the normal of the surface associated with this identifier
          In the case of silicon it returns the same as normal()*/
-        const Ats::Vector3D& normal(const Identifier& id) const override;
+        virtual const Ats::Vector3D& normal(const Identifier& id) const override;
 
         
     private:
