@@ -13,29 +13,5 @@ can be specified for detector technologies by simple extension.
 The library is attempted to build against Gaudi and Gaudi-Athena, while
 additional external dependencies are kept at a minimum.
 
-# Gaudi build with CMake
-
-`source init.sh`
-
-`(make clean)` 
-
-`make -j 8`
-
-`make install (to install library)`
-
-
-# Athena build with cmt
-
-This is only possible with gcc >= 4.9
-
-e.g. 
-
-`asetup devval,rel0,opt,here,runtime`
-
-`setupWorkArea.py`
-
-`cd WorkArea/cmt`
-
-`cmt br cmt config; cmt br gmake`
-
+Please visit out Wiki for more information.
 
