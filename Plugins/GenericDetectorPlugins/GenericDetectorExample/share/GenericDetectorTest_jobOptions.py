@@ -29,10 +29,21 @@ GenericDetector = GenericDetectorConstruction(name='GenericDetector', outputLeve
 from AthenaCommon.AlgSequence import AlgSequence
 job = AlgSequence()
 
+from AthenaCommon.AppMgr import ToolSvc
+
+# configure the json dumper
+from JsonWriters.JsonWritersConf import Ats__GeometryJsonWriter
+JsonDumper = Ats__GeometryJsonWriter('GenericGeometrySonDumper')
+ToolSvc += JsonDumper
+
+# add the json dumper
+TrackingGeometrySvc = GenericDetector.trackingGeometrySvc()
+TrackingGeometrySvc.GeometryProcessors = [ JsonDumper ]
+ 
 # Run the GeometryBuildingTestTest
 from GeometryBuildingTest.GeometryBuildingTestConf import Ats__TrackingGeometryTest
 TrackingGeometryTest = Ats__TrackingGeometryTest('GenericDetectorTest')
-TrackingGeometryTest.TrackingGeometrySvc = GenericDetector.trackingGeometrySvc()
+TrackingGeometryTest.TrackingGeometrySvc = TrackingGeometrySvc
 job += TrackingGeometryTest
 
 # Number of events to be processed (default is until the end of

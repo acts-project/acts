@@ -102,17 +102,7 @@ namespace Ats {
       double stepEstimatorToCylinder        (double*,const double*,bool&) const;
       double stepEstimatorToStraightLine    (double*,const double*,bool&) const;
 
-      /////////////////////////////////////////////////////////////////////////////////
-      // Step estimators to surfaces
-      /////////////////////////////////////////////////////////////////////////////////
-      std::pair<double,int> stepEstimator(std::vector<std::pair<const Surface*,Ats::BoundaryCheck> >&,
-	                                      std::multimap<double,int>&,
-	                                      const double*,const double*,double,double,int Nv,bool&) const;
 
-      int fillDistancesMap(std::vector<std::pair<const Surface*,Ats::BoundaryCheck> >&,
-	                       std::multimap<double,int>&,
-	                       const double*,double,const Surface*,double*) const;
-      
       /////////////////////////////////////////////////////////////////////////////////
       // Transformations from local to global system coordinates 
       // for TrackParameters and NeutralParameters 

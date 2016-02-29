@@ -33,7 +33,7 @@ class DetectorModule(object):
 """ Cylinder Layer definition """
 class CylinderLayer(object):
     """docstring for CylinderLayer"""
-    def __init__(self, module, radius, numPhi, numZ, tiltPhi, overlapZ, staggerZ, envelopeCoverZ ):
+    def __init__(self, module, radius, numPhi, numZ, tiltPhi, overlapZ, staggerZ, envelopeCoverZ, frontSideStereo = 0., backSideStereo = 0., backSideGap = 0. ):
         super(CylinderLayer, self).__init__()
         self.__radius__   =   radius 
         self.__module__   =   module 
@@ -43,6 +43,9 @@ class CylinderLayer(object):
         self.__overlapZ__ =   overlapZ
         self.__staggerZ__ =   staggerZ
         self.__eCoverZ__  =   envelopeCoverZ
+        self.__fsideS__   =   frontSideStereo
+        self.__bsideS__   =   backSideStereo
+        self.__bsideGap__ =   backSideGap
         
     def radius(self):
         return self.__radius__
@@ -65,7 +68,7 @@ class CylinderLayer(object):
         
     def modulePositionsZ(self) :
         zPositions  = []
-        firstToLast = (self.__numZ__-1)*(self.__module__.halfY()-self.__overlapZ__)
+        firstToLast = (self.__numZ__-1)*(2*self.__module__.halfY()-self.__overlapZ__)
         zStep = firstToLast/(self.__numZ__-1)
         for iz in xrange(self.__numZ__) :
             zPositions += [ -0.5*firstToLast + iz*zStep ]
@@ -82,7 +85,16 @@ class CylinderLayer(object):
         
     def enevlopeCoverZ(self) :
         return self.__eCoverZ__
+        
+    def frontSideStereo(self) :
+        return self.__fsideS__ 
 
+    def backSideStereo(self) :
+        return self.__bsideS__  
+        
+    def backSideGap(self) :
+        return self.__bsideGap__ 
+        
                         
 """ Disc Ring Definition """            
 class DiscRing(object):
@@ -200,7 +212,11 @@ class BarrelVolume(object):
         self.__layerModuleHalfX__           = []
         self.__layerModuleHalfY__           = []
         self.__layerModuleThickness__       = []
-        for layer in self.__barrelLayers__ :
+        self.__layerModuleFrontSideS__      = []
+        self.__layerModuleBackSideS__       = []
+        self.__layerModuleBackSideGap__     = []
+        
+        for layer in self.__barrelLayers__ :            
             self.__layerRadii__               += [ layer.radius() ]
             self.__layerEnvelopeZ__           += [ layer.enevlopeCoverZ() ]
             self.__layerModulesPositionsPhi__ += [ layer.modulePositionsPhi() ]
@@ -210,12 +226,25 @@ class BarrelVolume(object):
             self.__layerModuleHalfX__         += [ layer.module().maxHalfX() ]
             self.__layerModuleHalfY__         += [ layer.module().halfY() ]
             self.__layerModuleThickness__     += [ layer.module().thickness() ]
+            self.__layerModuleFrontSideS__    += [ layer.frontSideStereo() ]
+            self.__layerModuleBackSideS__     += [ layer.backSideStereo() ]
+            self.__layerModuleBackSideGap__   += [ layer.backSideGap() ]
+            
             
     def layerRadii( self ): 
         return self.__layerRadii__            
 
     def layerEnvelopesZ( self ): 
-        return self.__layerEnvelopeZ__        
+        return self.__layerEnvelopeZ__  
+
+    def layerModulesFrontSideStereo( self ) :        
+        return self.__layerModuleFrontSideS__  
+
+    def layerModulesBackSideStereo( self ) :
+        return self.__layerModuleBackSideS__  
+
+    def layerModulesBackSideGap( self ) :
+        return self.__layerModuleBackSideGap__     
 
     def layerModulesPositionPhi( self ) :
         return self.__layerModulesPositionsPhi__       
@@ -237,6 +266,7 @@ class BarrelVolume(object):
 
     def layerModulesThickness( self ) :
         return self.__layerModuleThickness__  
+               
 
 """ Endcap type Volume definition """
 class EndcapVolume(object):

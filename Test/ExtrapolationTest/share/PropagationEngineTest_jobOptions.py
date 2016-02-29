@@ -31,13 +31,15 @@ from AthenaCommon.AlgSequence import AlgSequence
 job = AlgSequence()
 
 from AthenaCommon.AppMgr import ServiceMgr as svcMgr
+from AthenaCommon.AppMgr import ToolSvc
 
 from IOVDbSvc.CondDB import conddb
 conddb.setGlobalTag('OFLCOND-SIM-00-00-00')
 
-# import the GenericDetector
-from GenericDetector import GenericDetectorConstruction
-GenericDetector = GenericDetectorConstruction(name='GenericDetector', outputLevel=VERBOSE)
+
+from JsonWriters.JsonWritersConf import Ats__ParametersJsonWriter as ParametersWriter
+JsonParmatersWriter = ParametersWriter('JsonParmatersWriter')
+ToolSvc += JsonParmatersWriter
 
 #--------------------------------------------------------------
 # Event related parameters
@@ -47,8 +49,6 @@ GenericDetector = GenericDetectorConstruction(name='GenericDetector', outputLeve
 # input, or -1, however, since we have no input, a limit needs
 # to be set explicitly, here, choose 10)
 theApp.EvtMax           = 1
-ExToolOutputLevel       = INFO #VERBOSE # INFO #
-ExAlgorithmOutputLevel  = INFO #VERBOSE #
 
 from AthenaCommon.AppMgr import ServiceMgr
 # output level
@@ -67,53 +67,46 @@ from MagFieldServices import SetupField
 from IOVDbSvc.CondDB import conddb
 conddb.addOverride('/GLOBAL/BField/Map','BFieldMap-FullAsym-09-solTil3')
 
-from JsonWriters.JsonWritersConf import Ats__ParametersJsonWriter as ParametersWriter
-JsonParmatersWriter = ParametersWriter('JsonParmatersWriter')
-ToolSvc += JsonParmatersWriter
+from AthenaCommon.CfgGetter import getService
+MagFieldSvc =  getService('AtlasFieldSvc')
 
-from GenericExtrapolationEngine import GenericExtrapolationEngine
-ExtrapolationEninge = GenericExtrapolationEngine(name='Extrapolation', nameprefix='Generic', ToolOutputLevel=ExToolOutputLevel, TrackingGeometrySvc=GenericDetector.trackingGeometrySvc())
-svcMgr += ExtrapolationEninge
+from RungeKuttaEngine.RungeKuttaEngineConf import Ats__RungeKuttaEngine
+RungeKutteEngine = Ats__RungeKuttaEngine(name='RungeKuttaEngine')
+RungeKutteEngine.MagneticFieldSvc = MagFieldSvc
+ServiceMgr += RungeKutteEngine
 
 #--------------------------------------------------------------
 # Algorithm setup
 #--------------------------------------------------------------
 
 # Add top algorithms to be run
-from ExtrapolationTest.ExtrapolationTestConf import Ats__ExtrapolationEngineTest
-ExtrapolationEngineTest = Ats__ExtrapolationEngineTest('ExtrapolationEngineTest')
-# how many tests you want per event 
-ExtrapolationEngineTest.NumberOfTestsPerEvent   = 10000
-# parameters mode: 0 - neutral tracks, 1 - charged particles 
-ExtrapolationEngineTest.ParametersMode          = 1
-# do the full test backwards as well            
-ExtrapolationEngineTest.BackExtrapolation       = False
-# Smear the production vertex - standard primary vertex paramters
-ExtrapolationEngineTest.SmearOrigin             = False   
-ExtrapolationEngineTest.SimgaOriginD0           = 0.015 
-ExtrapolationEngineTest.SimgaOriginZ0           = 55.6
-# pT range for testing                        
-ExtrapolationEngineTest.PtMin                   = 100
-ExtrapolationEngineTest.PtMax                   = 10000
-# The test range in Eta                      
-ExtrapolationEngineTest.EtaMin                  = -0.05
-ExtrapolationEngineTest.EtaMax                  =  0.05
-# Configure how you wanna run                  
-ExtrapolationEngineTest.CollectSensitive        = True
-ExtrapolationEngineTest.CollectPassive          = True
-ExtrapolationEngineTest.CollectBoundary         = True
-ExtrapolationEngineTest.CollectMaterial         = True
-ExtrapolationEngineTest.SensitiveCurvilinear    = False
-ExtrapolationEngineTest.RobustSearch            = False
-# the path limit to test                        
-ExtrapolationEngineTest.PathLimit               = -1.
+from ExtrapolationTest.ExtrapolationTestConf import Ats__PropagationEngineTest
+PropagationEngineTest = Ats__PropagationEngineTest('PropagationEngineTest')
 # give it the engine
-ExtrapolationEngineTest.ExtrapolationEngine     = ExtrapolationEninge
+PropagationEngineTest.PropagationEngine       = RungeKutteEngine
 # the json writer
-ExtrapolationEngineTest.ParametersProcessor     = JsonParmatersWriter
+PropagationEngineTest.ParametersProcessor     = JsonParmatersWriter
+# how many tests you want per event 
+PropagationEngineTest.NumberOfTestsPerEvent   = 100
+# the surface test
+PropagationEngineTest.DestinationRadii        = [ 30., 50., 100., 250., 300., 400., 500., 600., 700., 1000. ]
+# parameters mode: 0 - neutral tracks, 1 - charged particles 
+PropagationEngineTest.ParametersMode          = 1
+# do the full test backwards as well            
+PropagationEngineTest.EmulatePlaneSurfaces    = True
+PropagationEngineTest.ReturnCurvilinear       = False
+PropagationEngineTest.BackPropagation         = False
+# pT range for testing                        
+PropagationEngineTest.PtMin                   = 500
+PropagationEngineTest.PtMax                   = 5000
+# The test range in Eta                      
+PropagationEngineTest.EtaMin                  = -2.5
+PropagationEngineTest.EtaMax                  =  2.5
+# Configure how you wanna run                  
+PropagationEngineTest.PathLimit               = -1.
 # output formatting
-ExtrapolationEngineTest.OutputLevel             = ExAlgorithmOutputLevel
-job += ExtrapolationEngineTest   # 1 alg, named 'ExtrapolationEngineTest'
+PropagationEngineTest.OutputLevel             = INFO
+job += PropagationEngineTest   # 1 alg, named 'PropagationEngineTest'
 
 
 #################################################################
@@ -139,7 +132,7 @@ if not hasattr(ServiceMgr, 'THistSvc'):
        from GaudiSvc.GaudiSvcConf import THistSvc
        ServiceMgr += THistSvc()
 # add the G4 validation output stream
-ServiceMgr.THistSvc.Output += [ "val DATAFILE='ExtrapolationEngineTest.root' TYPE='ROOT' OPT='RECREATE'" ]
+ServiceMgr.THistSvc.Output += [ "val DATAFILE='PropagationEngineTest.root' TYPE='ROOT' OPT='RECREATE'" ]
 
 #==============================================================
 #

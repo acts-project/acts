@@ -21,6 +21,7 @@ namespace Ats {
 
   class TransportJacobian;
   class Surface;
+  class MagneticFieldProperties;
 
   /** Interface ID for IPropagators*/
   static const InterfaceID IID_IPropagator("IPropagator", 1, 0);

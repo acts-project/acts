@@ -19,7 +19,7 @@ namespace Ats {
 }
 
 // namespace for A generic detector
-namespace Agd
+namespace Ats
 {
     
     /** @class DetectorElement

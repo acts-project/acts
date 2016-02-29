@@ -94,7 +94,7 @@ void Ats::RungeKuttaUtils::transformGlobalToLocal(const Ats::Surface* su,bool us
 void Ats::RungeKuttaUtils::transformGlobalToPlane(const Ats::Surface* su,bool useJac,double* P,double* par,double* Jac) const 
 {  
   const Ats::Transform3D&  T = su->transform();  
-
+  
   double Ax[3] = {T(0,0),T(1,0),T(2,0)};
   double Ay[3] = {T(0,1),T(1,1),T(2,1)};
 
@@ -536,104 +536,6 @@ double Ats::RungeKuttaUtils::stepEstimatorToCone(double* S,const double* P,bool&
   }
 
   S[8]= 1.; return Smin;
-}
-
-/////////////////////////////////////////////////////////////////////////////////
-// Step estimation to surfaces
-//
-// Input iformation
-//
-// SU    - input vector surfaces and conditions for boundary check
-// DN    - is work map
-// Pinp  - array of track parameters in global system coordinates before some step
-// Pout  - array of track parameters in global system coordinates before some step
-// W     - trajectory total pass for Pinp position
-// So    - max. step for straight line propagation model
-// Nv    - surface number in vector SU  which we don't need to use
-//
-// Output information
-//
-// pair(step to surface,surface number from vector SU)
-// next  - condition to use Pout for next step
-/////////////////////////////////////////////////////////////////////////////////
-std::pair<double,int> Ats::RungeKuttaUtils::stepEstimator(std::vector<std::pair<const Ats::Surface*,Ats::BoundaryCheck> >& SU,
-                                                          std::multimap<double,int>& DN,
-                                                          const double* Pinp,const double* Pout,double W,double So,int Nv,bool& next) const
-{
-  W             = fabs(W)                                          ;
-  next          = false                                            ;
-  int N         = -1                                               ;
-  double D [3]  = {Pout[0]-Pinp[0],Pout[1]-Pinp[1],Pout[2]-Pinp[2]};
-  double Smax   = sqrt(D[0]*D[0]+D[1]*D[1]+D[2]*D[2])              ;
-  double Sign   = D[0]*Pinp[3]+D[1]*Pinp[4]+D[2]*Pinp[5]           ;
-
-  Ats::Vector3D pos( Pinp[0]  , Pinp[1]  , Pinp[2]  );
-  Ats::Vector3D dir( D[0]/Smax, D[1]/Smax, D[2]/Smax);
-
-  double Smin = 2.*Smax;
-
-  std::list<std::pair<double,int> > LD;
-  std::multimap<double,int>::iterator i = DN.begin(),ie = DN.end();
-
-  for(; i!=ie; ++i) {
-
-    if((*i).first > W+Smin) break;
-
-    int j = (*i).second;
-    Ats::Intersection sIntersection = SU[j].first->straightLineIntersection(pos,dir,true,SU[j].second);
-    LD.push_back(std::make_pair(sIntersection.pathLength+W,j));
-
-    if(!sIntersection.valid) continue;
-    // @TODO implement with straightLineIntersection
-    //for(int i=0; i!=n; ++i) {
-    //  double s; i == 0 ? s=ds.first() : s=ds.second();
-    //  if(s < 0. || s > Smin || (j==Nv && s < So)) continue;
-    //  Smin = s; N = j;
-    //}
-  }
-
-  if(!LD.empty()) {
-
-    DN.erase(DN.begin(),i);
-    std::list<std::pair<double,int> >::iterator l = LD.begin(), le = LD.end();
-    for(; l!=le; ++l) DN.insert((*l));
-  }
-
-  if(N < 0) {next = true; return std::make_pair(0.,-1);}
-
-  double Sm = Smin;
-
-  if(Sign < 0.) Sm = -Sm;
-  if(Smin < So || (Smax-Smin)  > 2.*So) return std::make_pair(Sm,N);
-
-  Ats::Vector3D  posn(Pout[0],Pout[1],Pout[2]);
-  Ats::Vector3D  dirn(Pout[3],Pout[4],Pout[5]);
-
-  Ats::Intersection sIntersection = SU[N].first->straightLineIntersection(posn,dirn,true,SU[N].second);
-  if (!sIntersection.valid) return std::make_pair(Sm,N);
-
-  Sm = 10000.;
-
-// @TODO implement with straightLineIntersection
-// 
-//    for(int i=0; i!=n; ++i) {
-//
-//    double sa,s; i == 0 ? s = ds.first() : s = ds.second(); sa = fabs(s);
-//
-//    if(s*Sign < 0.) {
-//      //if(sa < So    ) {next = true; return std::make_pair(s,N);}
-//      next = true; return std::make_pair(s,N);
-//    }
-//    else if(sa < Sm ) {
-//      Sm = s; next = true;
-//    }
-//    /*
-//    else if(sa < fabs(Sm) && Smin >= Smax) {
-//      Sm = s; next = true;
-//    }
-//    */
-//  }
-  return std::make_pair(Sm,N);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -1176,54 +1078,4 @@ void Ats::RungeKuttaUtils::jacobianTransformCurvilinearToStraightLine(double* P,
   Jac[ 6] =(A[0]*Av[0]+A[1]*Av[1]+A[2]*Av[2])+s2*d; // dL1/dL1
   Jac[ 7] = s3*d;                                   // dL1/dPhi
   Jac[ 8] = s4*d;                                   // dL1/dThe
-}
-
-/////////////////////////////////////////////////////////////////////////////////
-// Fill distances map (initial map<distance,N of SU> preparation
-// Output
-// Step[0] - min negative step
-// Step[1] - min positive step
-// Step[2] - max distance
-// int     - vector SU element number with initial surface
-/////////////////////////////////////////////////////////////////////////////////
-int Ats::RungeKuttaUtils::fillDistancesMap(std::vector<std::pair<const Ats::Surface*,Ats::BoundaryCheck> >& SU,
-                                           std::multimap<double,int>& DN,
-                                           const double* Pinp,double W,const Ats::Surface* So,double* Step) const 
-{
-  int Ns = -1;
-  DN.erase(DN.begin(),DN.end()); 
-  
-  Ats::Vector3D pos(Pinp[0],Pinp[1],Pinp[2]);
-  Ats::Vector3D dir(Pinp[3],Pinp[4],Pinp[5]);
-
-  Step[0] = -1.e+20;
-  Step[1] =  1.e+20;
-  Step[2] =      0.;
-
-  int N = SU.size(); W=fabs(W);
-
-  for(int i=0; i!=N; ++i ) {
-    
-    const Ats::Surface* s = SU[i].first; if(!s) continue; if(s==So) Ns = i;
-    // straight line intersection
-    Ats::Intersection sIntersection = s->straightLineIntersection(pos,dir,true,SU[i].second);
-    double dist = sIntersection.pathLength;
-    DN.insert(std::make_pair(dist+W,i));
-
-    if(dist > Step[2]) Step[2] = dist;
-
-    // @TODO implement with straightLineIntersection
-    //
-    // int  n = ds.numberOfSolutions(); if(!n) continue;
-    // for(int i=0; i!=n; ++i) {
-    // 
-    //   double st; i == 0 ? st=ds.first() : st=ds.second();
-    // 
-    //   if(s==So && fabs(st)<=.001) continue;
-    // 
-    //   if(st < 0.) {if(st > Step[0]) Step[0] = st;}
-    //   else        {if(st < Step[1]) Step[1] = st;}
-    // }
-  }
-  return Ns;
 }

@@ -1,16 +1,15 @@
 //////////////////////////////////////////////////////////////////
-// ExtrapolationEngineTest.h, ATS project
+// PropagationEngineTest.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATAS_EXTRAPOLATIONTEST_EXTRAPOLATIONENGINETEST_H
-#define ATAS_EXTRAPOLATIONTEST_EXTRAPOLATIONENGINETEST_H
+#ifndef ATAS_EXTRAPOLATIONTEST_PROPAGATIONENGINETEST_H
+#define ATAS_EXTRAPOLATIONTEST_PROPAGATIONENGINETEST_H 1
 
 // Athena & Gaudi includes
 #include "GaudiKernel/ServiceHandle.h"
 #include "GaudiKernel/ToolHandle.h"
 // Extrapolation module
-#include "ExtrapolationInterfaces/IExtrapolationEngine.h"
-#include "ExtrapolationUtils/ExtrapolationCell.h"
+#include "ExtrapolationInterfaces/IPropagationEngine.h"
 // Test modules
 #include "ExtrapolationTest/ExtrapolationTestBase.h"
 #include "TestInterfaces/IParametersBaseProcessor.h"
@@ -22,19 +21,19 @@ class TTree;
 
 namespace Ats {
                  
-    /** @class ExtrapolationEngineTest
+    /** @class PropagationEngineTest
                
         Test Algorithm to run test extrapolations with the new IExtrapolationEngine           
                
         @author Andreas.Salzburger@cern.ch, Noemi.Calace@cern.ch       
       */
       
-   class ExtrapolationEngineTest : public ExtrapolationTestBase  {
+   class PropagationEngineTest : public ExtrapolationTestBase  {
      
      public:
 
        /** Standard Athena-Algorithm Constructor */
-       ExtrapolationEngineTest(const std::string& name, ISvcLocator* pSvcLocator);
+       PropagationEngineTest(const std::string& name, ISvcLocator* pSvcLocator);
         
        /* finalize */
        StatusCode finalize();
@@ -50,62 +49,32 @@ namespace Ats {
        
      private:
          
-       template <class T> StatusCode executeTestT(const T& startParameters); 
-         
-       template <class T> StatusCode fillStepInformationT(ExtrapolationCell<T>& eCell, int fwbw);
-         
+       template <class T> const T* executeTestT(const T& startParameters, const Surface& sf); 
+                  
        /** retrieve it */
-       ServiceHandle<IExtrapolationEngine>          m_extrapolationEngine;     
+       ServiceHandle<IPropagationEngine>            m_propagationEngine;  
        
        /** output writer */
-       ToolHandle<IParametersBaseProcessor>         m_parametersProcessor;
-       bool                                         m_processSensitive;
-       bool                                         m_processPassive;
-       
+       ToolHandle<IParametersBaseProcessor>         m_parametersProcessor;   
+              
        bool                                         m_parametersMode; // 0 - neutral, 1 - charged, 2 - multi
-       int                                          m_particleHypothesis;
      
-       bool                                         m_smearProductionVertex;
-       bool                                         m_smearFlatOriginT;
-       bool                                         m_smearFlatOriginZ;
-       double                                       m_sigmaOriginT;
-       double                                       m_sigmaOriginZ;
-       double                                       m_d0Min;
-       double                                       m_d0Max;
-       double                                       m_z0Min;
-       double                                       m_z0Max;
+       std::vector<double>                          m_destinationRadii;
+       std::vector<Surface*>                        m_destinationSurfaces;
+       bool                                         m_emulatePlaneSurfaces;
      
        double                                       m_etaMin;
        double                                       m_etaMax;
        double                                       m_phiMin;
-       double                                       m_phiMax; 
-       
+       double                                       m_phiMax;        
        double                                       m_ptMin;
-       double                                       m_ptMax;
-       
+       double                                       m_ptMax;       
        double                                       m_pathLimit;
+              
+       bool                                         m_backPropagation;
+       bool                                         m_returnCurvilinear;
        
-       bool                                         m_collectSensitive;
-       bool                                         m_collectPassive;
-       bool                                         m_collectBoundary;
-       bool                                         m_collectMaterial;
-
-       bool                                         m_sensitiveCurvilinear;
-
-       bool                                         m_robustSearch;
-       
-       bool                                         m_backExtrapolation;
-       
-       /** scanning parameters */
-       int                                          m_stepsPhi;
-       int                                          m_currentPhiStep;
-       std::vector< float >                         m_etaScans;
-       double                                       m_currentEta;
-       std::vector< float >                         m_phiScans;
-       double                                       m_currentPhi;
-       bool                                         m_splitCharge;
-
-       //!< the tree       
+       //!< the tree              
        std::string                                  m_treeName;
        std::string                                  m_treeFolder;  
        std::string                                  m_treeDescription;
@@ -147,21 +116,11 @@ namespace Ats {
        float                                        m_backP;                                                    
        float                                        m_backPt; 
        
-       std::vector<TString>                         m_parameterNames;                                                  
-       std::vector< std::vector< float >* >         m_pPositionX;
-       std::vector< std::vector< float >* >         m_pPositionY;
-       std::vector< std::vector< float >* >         m_pPositionZ;
-       std::vector< std::vector< float >* >         m_pPositionR;
-       std::vector< std::vector< float >* >         m_pPhi;
-       std::vector< std::vector< float >* >         m_pTheta;                                                
-       std::vector< std::vector< float >* >         m_pEta;                                                    
-       std::vector< std::vector< float >* >         m_pP;                                              
-       std::vector< std::vector< float >* >         m_pPt;
 
    };
 } // end of namespace
 
 // include the templated function
-#include "ExtrapolationEngineTest.icc"
+#include "PropagationEngineTest.icc"
 
 #endif

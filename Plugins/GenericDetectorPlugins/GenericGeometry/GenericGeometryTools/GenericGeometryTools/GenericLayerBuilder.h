@@ -13,21 +13,21 @@
 // Gaudi & Athena
 #include "GaudiKernel/ToolHandle.h"
 
-#ifndef AGD_LAYERARRAYCREATOR_TAKESMALLERBIGGER
-#define AGD_LAYERARRAYCREATOR_TAKESMALLERBIGGER
+#ifndef ATS_LAYERARRAYCREATOR_TAKESMALLERBIGGER
+#define ATS_LAYERARRAYCREATOR_TAKESMALLERBIGGER
 #define takeSmaller(current,test) current = current < test ? current : test
 #define takeBigger(current,test)  current = current > test ? current : test
 #define takeSmallerBigger(cSmallest, cBiggest, test) takeSmaller(cSmallest, test); takeBigger(cBiggest, test)
 #endif
 
-namespace Agd {
+namespace Ats {
     
     class DetectorElement;
     
     /** @class GenericLayerBuilder
      
-     The GenericLayerBuilder is able to build cylinder & disc layers with given detector
-     setups
+     The GenericLayerBuilder is able to build cylinder & disc layers from python input.
+     This is ment for the simple detector examples.
      
      @author julia.hrdinka@cern.ch, Noemi.Calace@cern.ch, Andreas.Salzburger@cern.ch
      */
@@ -49,13 +49,13 @@ namespace Agd {
         StatusCode finalize() override;
         
         /** LayerBuilder interface method - returning the layers at negative side */
-        const Ats::LayerVector* negativeLayers() const override; 
+        const LayerVector* negativeLayers() const override; 
       
         /** LayerBuilder interface method - returning the central layers */
-        const Ats::LayerVector* centralLayers() const override; 
+        const LayerVector* centralLayers() const override; 
       
         /** LayerBuilder interface method - returning the layers at negative side */
-        const Ats::LayerVector* positiveLayers() const override;         
+        const LayerVector* positiveLayers() const override;         
         
         /**ILayerBuilder method*/
         const std::string& identification() const override { return m_layerIdentification; }
@@ -64,11 +64,13 @@ namespace Agd {
         
         StatusCode constructLayers();
         
+        void moduleRadialExtend(const DetectorElement&, double thickness, double halfX, double halfY, double& rmin, double& rmax);
+        
         std::string                                         m_layerIdentification;
                                                             
-        Ats::LayerVector*                                   m_nLayers; //!< layers on negative side
-        Ats::LayerVector*                                   m_cLayers; //!< layers on central side
-        Ats::LayerVector*                                   m_pLayers; //!< layers on positive side
+        LayerVector*                                        m_nLayers; //!< layers on negative side
+        LayerVector*                                        m_cLayers; //!< layers on central side
+        LayerVector*                                        m_pLayers; //!< layers on positive side
 
         // the central layers 
         std::vector<double>                                 m_centralLayerRadii;
@@ -92,26 +94,36 @@ namespace Agd {
         // the layers at p/e side 
         std::vector<double>                                 m_posnegLayerPositionsZ;
         std::vector<double>                                 m_posnegLayerEnvelopeR;
+        std::vector<double>                                 m_posnegLayerMaterialConcentration;
+        std::vector< std::vector<double> >                  m_posnegLayerMaterialProperties;
         std::vector< std::vector<double> >                  m_posnegModulesRadii;
         std::vector<double>                                 m_posnegModuleStaggerR;        
-        std::vector< std::vector<double>  >                 m_posnegModulesInPhi;             // used to fill the position-phi
-        std::vector< std::vector<double>  >                 m_posnegModulesPositionPhiStream; // used to fill the position-phi
-        std::vector< std::vector< std::vector<double> > >   m_posnegModulesPositionPhi; // this one is being filled by the two before
+        std::vector< std::vector<double>  >                 m_posnegModulesInPhi;               // used to fill the position-phi
+        std::vector< std::vector<double>  >                 m_posnegModulesPositionPhiStream;   // used to fill the position-phi
+        std::vector< std::vector< std::vector<double> > >   m_posnegModulesPositionPhi;         // this one is being filled by the two before
         std::vector< std::vector<double> >                  m_posnegMoudleStaggerPhi;
+        std::vector< std::vector< std::vector<double> > >   m_posnegModuleMinHalfXStream;       // for differently sized modules per ring
         std::vector< std::vector<double> >                  m_posnegModuleMinHalfX;
+        std::vector< std::vector< std::vector<double> > >   m_posnegModuleMaxHalfXStream;       // for differently sized modules per ring
         std::vector< std::vector<double> >                  m_posnegModuleMaxHalfX;
+        std::vector< std::vector< std::vector<double> > >   m_posnegModuleMalfYStream;           // for differently sized modules per ring
         std::vector< std::vector<double> >                  m_posnegModuleHalfY;
+        std::vector< std::vector< std::vector<double> > >   m_posnegModuleThicknessStream;       // for differently thick modules per ring
         std::vector< std::vector<double> >                  m_posnegModuleThickness;
-        std::vector<const DetectorElement*>                 m_posnegModules;
-        
+        std::vector< std::vector< std::vector<double> > >   m_posnegModuleMaterialStream;        // for differently thick modules per ring   
+        std::vector< std::vector<double> >                  m_posnegModuleFrontsideStereo;
+        std::vector< std::vector<double> >                  m_posnegModuleBacksideStereo;        
+        std::vector< std::vector<double> >                  m_posnegModuleBacksideGap;             
+        std::vector< std::vector<double> >                  m_posnegModuleMaterial;
+        std::vector<const DetectorElement*>                 m_posnegModules;       
 
     };
     
-    inline const Ats::LayerVector* GenericLayerBuilder::positiveLayers() const { return m_pLayers; }
+    inline const LayerVector* GenericLayerBuilder::positiveLayers() const { return m_pLayers; }
 
-    inline const Ats::LayerVector* GenericLayerBuilder::negativeLayers() const { return m_nLayers; }
+    inline const LayerVector* GenericLayerBuilder::negativeLayers() const { return m_nLayers; }
     
-    inline const Ats::LayerVector* GenericLayerBuilder::centralLayers() const { return m_cLayers; }
+    inline const LayerVector* GenericLayerBuilder::centralLayers() const { return m_cLayers; }
     
 } // end of namespace
 

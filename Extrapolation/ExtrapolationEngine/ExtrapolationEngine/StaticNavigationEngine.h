@@ -82,7 +82,8 @@ namespace Ats {
                                                               bool noLoop=false) const;
 
         /** deal with the boundary Surface - called by resolveBoundary */
-        template <class T> ExtrapolationCode handleBoundaryT(ExtrapolationCell<T>& eCell, const BoundarySurface<TrackingVolume>& bSurfaceTV,
+        template <class T> ExtrapolationCode handleBoundaryT(ExtrapolationCell<T>& eCell,
+                                                             const BoundarySurface<TrackingVolume>& bSurfaceTV,
                                                              PropDirection dir=alongMomentum,
                                                              bool stepout=false) const;
 

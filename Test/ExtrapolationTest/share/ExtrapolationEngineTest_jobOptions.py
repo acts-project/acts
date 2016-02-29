@@ -46,7 +46,7 @@ GenericDetector = GenericDetectorConstruction(name='GenericDetector', outputLeve
 # Number of events to be processed (default is until the end of
 # input, or -1, however, since we have no input, a limit needs
 # to be set explicitly, here, choose 10)
-theApp.EvtMax           = 1
+theApp.EvtMax           = 10
 ExToolOutputLevel       = INFO #VERBOSE # INFO #
 ExAlgorithmOutputLevel  = INFO #VERBOSE #
 
@@ -85,7 +85,7 @@ ExtrapolationEngineTest = Ats__ExtrapolationEngineTest('ExtrapolationEngineTest'
 # how many tests you want per event 
 ExtrapolationEngineTest.NumberOfTestsPerEvent   = 10000
 # parameters mode: 0 - neutral tracks, 1 - charged particles 
-ExtrapolationEngineTest.ParametersMode          = 1
+ExtrapolationEngineTest.ParametersMode          = 0
 # do the full test backwards as well            
 ExtrapolationEngineTest.BackExtrapolation       = False
 # Smear the production vertex - standard primary vertex paramters
@@ -93,17 +93,16 @@ ExtrapolationEngineTest.SmearOrigin             = False
 ExtrapolationEngineTest.SimgaOriginD0           = 0.015 
 ExtrapolationEngineTest.SimgaOriginZ0           = 55.6
 # pT range for testing                        
-ExtrapolationEngineTest.PtMin                   = 100
-ExtrapolationEngineTest.PtMax                   = 10000
+ExtrapolationEngineTest.PtMin                   = 1000
+ExtrapolationEngineTest.PtMax                   = 100000
 # The test range in Eta                      
-ExtrapolationEngineTest.EtaMin                  = -0.05
-ExtrapolationEngineTest.EtaMax                  =  0.05
+ExtrapolationEngineTest.EtaMin                  = -2.5
+ExtrapolationEngineTest.EtaMax                  =  2.5
 # Configure how you wanna run                  
 ExtrapolationEngineTest.CollectSensitive        = True
 ExtrapolationEngineTest.CollectPassive          = True
 ExtrapolationEngineTest.CollectBoundary         = True
 ExtrapolationEngineTest.CollectMaterial         = True
-ExtrapolationEngineTest.SensitiveCurvilinear    = False
 ExtrapolationEngineTest.RobustSearch            = False
 # the path limit to test                        
 ExtrapolationEngineTest.PathLimit               = -1.
