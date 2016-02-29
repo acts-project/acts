@@ -25,20 +25,9 @@ class GenericExtrapolationEngine( ExEngine ):
         MagneticFieldSvc =  getService('AtlasFieldSvc')
         
         # PropagationEngine
-        if True :
-            from TrkExRungeKuttaPropagator.TrkExRungeKuttaPropagatorConf import Ats__RungeKuttaPropagator
-            RkPropagator = Ats__RungeKuttaPropagator('RkPropagator')
-            RkPropagator.MagFieldSvc = MagneticFieldSvc
-            ToolSvc += RkPropagator
- 
-            from ExtrapolationEngine.ExtrapolationEngineConf import Ats__PropagationEngine
-            StaticPropagator = Ats__PropagationEngine(name = nameprefix+'StaticPropagation')
-  
-            StaticPropagator.Propagator = RkPropagator      
-        else :
-            from RungeKuttaEngine.RungeKuttaEngineConf import Ats__RungeKuttaEngine
-            StaticPropagator = Ats__RungeKuttaEngine(name = nameprefix+'StaticPropagation')
-            StaticPropagator.MagneticFieldSvc         = MagneticFieldSvc        
+        from RungeKuttaEngine.RungeKuttaEngineConf import Ats__RungeKuttaEngine
+        StaticPropagator = Ats__RungeKuttaEngine(name = nameprefix+'StaticPropagation')
+        StaticPropagator.MagneticFieldSvc         = MagneticFieldSvc        
         
         # configure output formatting               
         StaticPropagator.OutputPrefix             = '[SP] - '

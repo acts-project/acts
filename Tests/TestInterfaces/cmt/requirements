@@ -4,8 +4,7 @@ manager Andreas Salzburger <Andreas.Salzburger@cern.ch>
 
 use AtlasPolicy           AtlasPolicy-*
 use GaudiInterface        GaudiInterface-*           External
-use ParametersBase        ParametersBase-*            EventData
-
+use ParametersBase        ParametersBase-*           EventData
 
 private
 macro_append cppflags $(AtsCoreParameterDefs)

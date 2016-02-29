@@ -22,7 +22,7 @@ DetFlags.Calo_setOff()
 DetFlags.Muon_setOff()
 
 # import the GenericDetector
-from GenericDetector import GenericDetectorConstruction
+from GenericDetectorV1 import GenericDetectorConstruction
 GenericDetector = GenericDetectorConstruction(name='GenericDetector', outputLevel=VERBOSE)
 
 # Full job is a list of algorithms

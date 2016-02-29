@@ -15,7 +15,7 @@ use TrackParameters         TrackParameters-*           EventData
 use NeutralParameters       NeutralParameters-*         EventData
 use EventDataUtils          EventDataUtils-*            EventData
 use Detector                Detector-*                  Geometry
-use TestInterfaces          TestInterfaces-*            Test
+use TestInterfaces          TestInterfaces-*            Tests
 
 private
 use Surfaces                Surfaces-*                  Geometry

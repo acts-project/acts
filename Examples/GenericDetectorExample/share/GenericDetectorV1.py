@@ -21,12 +21,12 @@ class GenericDetectorConstruction(object):
         # the pixel module
         PixelModule = DetectorModule(None,8.4,32.0,0.15)
         # the first layer
-        PixelLayer0 = CylinderLayer(PixelModule, 33., 24, 13, 0.25, 1., 0.5, 2.)
-        PixelLayer1 = CylinderLayer(PixelModule, 55., 40, 13, 0.25, 1., 0.5, 2.)
-        PixelLayer2 = CylinderLayer(PixelModule, 88., 60, 13, 0.25, 1., 0.5, 2.)
-        PixelLayer3 = CylinderLayer(PixelModule, 120., 76, 13, 0.25, 1., 0.5, 2.)
-        PixelLayer4 = CylinderLayer(PixelModule, 160., 100, 13, 0.25, 1., 0.5, 2.)
-        PixelLayer5 = CylinderLayer(PixelModule, 210., 120, 13, 0.25, 1., 0.5, 2.)
+        PixelLayer0 = CylinderLayer(PixelModule, 33., 24, 13, 0.2, 2., 0.5, 2.)
+        PixelLayer1 = CylinderLayer(PixelModule, 55., 40, 13, 0.2, 2., 0.5, 2.)
+        PixelLayer2 = CylinderLayer(PixelModule, 88., 60, 13, 0.2, 2., 0.5, 2.)
+        PixelLayer3 = CylinderLayer(PixelModule, 120., 72, 13, 0.2, 2., 0.5, 2.)
+        PixelLayer4 = CylinderLayer(PixelModule, 150., 84, 13, 0.2, 2., 0.5, 2.)
+        PixelLayer5 = CylinderLayer(PixelModule, 180., 100, 13, 0.2, 2., 0.5, 2.)
         
         # define the pixel barrel volume
         PixelBarrel = BarrelVolume( [ PixelLayer0, PixelLayer1, PixelLayer2, PixelLayer3, PixelLayer4, PixelLayer5 ] ) 
@@ -42,19 +42,6 @@ class GenericDetectorConstruction(object):
         PixelDisc3  = DiscLayer( [ PixelRing0, PixelRing1, PixelRing2 ], 700., 0., 5.,)
         # define the pixel endcap volume
         PixelEndcap = EndcapVolume( [ PixelDisc0, PixelDisc1, PixelDisc2, PixelDisc3 ] )
-
-        # the short strip module
-        SStripModule = DetectorModule(None,48.,64.0,0.2)
-        
-        # module, radius, numPhi, numZ, tiltPhi, overlapZ, staggerZ, envelopeCoverZ, frontSideStereo = 0., backSideStereo = 0., backSideGap = 0. ):
-        # the first layer
-        SStripLayer0 = CylinderLayer(SStripModule, 280,  24, 14, -0.2, 2., 3.5, 2.,-0.02, 0.02, 1.8)
-        SStripLayer1 = CylinderLayer(SStripModule, 380., 40, 14, -0.2, 2., 3.5, 2.,-0.02, 0.02, 1.8)
-        SStripLayer2 = CylinderLayer(SStripModule, 520,  60, 14, -0.2, 2., 3.5, 2.,-0.02, 0.02, 1.8)
-        SStripLayer3 = CylinderLayer(SStripModule, 700., 72, 14, -0.2, 2., 3.5, 2.,-0.02, 0.02, 1.8)
-
-        # define the pixel barrel volume
-        SStripBarrel = BarrelVolume( [ SStripLayer0, SStripLayer1, SStripLayer2, SStripLayer3 ] ) 
 
         # -------------------------------------------------------------------------------------
         # 
@@ -98,7 +85,6 @@ class GenericDetectorConstruction(object):
         BeamPipeBuilder.CentralLayerMaterialA       = [ 9.012 ]
         BeamPipeBuilder.CentralLayerMaterialZ       = [ 4. ]
         BeamPipeBuilder.CentralLayerMaterialRho     = [ 1.848e-3 ]
-        
         # output
         BeamPipeBuilder.OutputLevel = outputLevel
         ToolSvc += BeamPipeBuilder
@@ -158,46 +144,10 @@ class GenericDetectorConstruction(object):
         PixelVolumeBuilder.VolumeToBeamPipe               =  False  
         ToolSvc += PixelVolumeBuilder
 
-        # The short stip detector
-        # # a Pixel layer builder
-        SStripLayerBuilder = GenericLayerBuilder('SStripLayerBuilder')
-        # the ID
-        SStripLayerBuilder.LayerIdentification                  = 'SStrip'
-        # define the pixel barrel                               
-        SStripLayerBuilder.CentralLayerRadii                    = SStripBarrel.layerRadii()             
-        SStripLayerBuilder.CentralLayerEnvelopeZ                = SStripBarrel.layerEnvelopesZ()        
-        SStripLayerBuilder.CentralLayerModulesPositionPhi       = SStripBarrel.layerModulesPositionPhi()        
-        SStripLayerBuilder.CentralLayerMoudlesTiltPhi           = SStripBarrel.layerModulesTiltPhi()    
-        SStripLayerBuilder.CentralLayerModulesPositionZ         = SStripBarrel.layerModulesPositionZ() 
-        SStripLayerBuilder.CentralLayerModuleStaggerZ           = SStripBarrel.layerModulesStaggerZ()   
-        SStripLayerBuilder.CentralLayerModulesHalfX             = SStripBarrel.layerModulesHalfX()       
-        SStripLayerBuilder.CentralLayerModulesHalfY             = SStripBarrel.layerModulesHalfY()      
-        SStripLayerBuilder.CentralLayerModulesThickness         = SStripBarrel.layerModulesThickness()
-        SStripLayerBuilder.CentralLayerModulesFrontsideStereo   = SStripBarrel.layerModulesFrontSideStereo()
-        SStripLayerBuilder.CentralLayerModulesBacksideStereo    = SStripBarrel.layerModulesBackSideStereo()
-        SStripLayerBuilder.CentralLayerModulesBacksideGap       = SStripBarrel.layerModulesBackSideGap()
-                
-        # Output steering
-        SStripLayerBuilder.OutputLevel = outputLevel
-        # pixel layer builder is defined
-        ToolSvc += SStripLayerBuilder
-        
-        # Build the Pixel Volume
-        SStripVolumeBuilder = VolumeBuilder("SStrip")
-        # set the volume name
-        SStripVolumeBuilder.VolumeName                     = 'SStrip'
-        # build the volume
-        SStripVolumeBuilder.CylinderVolumeHelper           =  CylinderVolumeHelper   
-        SStripVolumeBuilder.LayerBuilder                   =  SStripLayerBuilder           
-        SStripVolumeBuilder.LayerArrayCreator              =  LayerArrayCreator        
-        SStripVolumeBuilder.LayerEnvelope                  =  1.    
-        SStripVolumeBuilder.VolumeToBeamPipe               =  False  
-        ToolSvc += SStripVolumeBuilder
-
         # Build the TrackingGeometry
         GenericGeometryBuilder = GeometryBuilder('GenericGeometry')
         GenericGeometryBuilder.BeamPipeBuilder        = BeamPipeVolumeBuilder
-        GenericGeometryBuilder.TrackingVolumeBuilders = [ PixelVolumeBuilder, SStripVolumeBuilder ]
+        GenericGeometryBuilder.TrackingVolumeBuilders = [ PixelVolumeBuilder ]
         GenericGeometryBuilder.TrackingVolumeHelper   = CylinderVolumeHelper
         GenericGeometryBuilder.OutputLevel            = outputLevel
         ToolSvc += GenericGeometryBuilder
