@@ -11,7 +11,7 @@ use AtlasPolicy           AtlasPolicy-*
 use GaudiInterface        GaudiInterface-*        External
 use CoreInterfaces        CoreInterfaces-*        Core
 use GeometryInterfaces    GeometryInterfaces-*    Geometry
-use TestInterfaces        TestInterfaces-*        Test
+use TestInterfaces        TestInterfaces-*        Tests
 use ParametersBase        ParametersBase-*        EventData
 
 #################################################################
