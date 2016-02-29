@@ -96,8 +96,8 @@ ExtrapolationEngineTest.SimgaOriginZ0           = 55.6
 ExtrapolationEngineTest.PtMin                   = 100
 ExtrapolationEngineTest.PtMax                   = 10000
 # The test range in Eta                      
-ExtrapolationEngineTest.EtaMin                  = -0.05
-ExtrapolationEngineTest.EtaMax                  =  0.05
+ExtrapolationEngineTest.EtaMin                  = -0.5
+ExtrapolationEngineTest.EtaMax                  =  0.5
 # Configure how you wanna run                  
 ExtrapolationEngineTest.CollectSensitive        = True
 ExtrapolationEngineTest.CollectPassive          = True
