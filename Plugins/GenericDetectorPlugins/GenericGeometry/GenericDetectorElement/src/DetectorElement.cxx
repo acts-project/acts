@@ -2,7 +2,7 @@
 // DetectorElement.cxx, ATS project, Generic Detector plugin
 ///////////////////////////////////////////////////////////////////
 
-// Agd module
+// Ats module
 #include "GenericDetectorElement/DetectorElement.h"
 // Geometry module
 #include "Surfaces/PlanarBounds.h"
@@ -11,7 +11,7 @@
 #include "Surfaces/DiscSurface.h"
 
 /** Constructor for single sided detector element - bound to a Plane Suface */
-Agd::DetectorElement::DetectorElement(const Identifier& identifier,
+Ats::DetectorElement::DetectorElement(const Identifier& identifier,
                                       std::shared_ptr<Ats::Transform3D> transform, 
                                       std::shared_ptr<const Ats::PlanarBounds> pBounds,
                                       double thickness,
@@ -32,7 +32,7 @@ Agd::DetectorElement::DetectorElement(const Identifier& identifier,
 }
 
 /** Constructor for single sided detector element - bound to a Plane Suface */
-Agd::DetectorElement::DetectorElement(const Identifier& identifier,
+Ats::DetectorElement::DetectorElement(const Identifier& identifier,
                                    std::shared_ptr<Ats::Transform3D> transform, 
                                    std::shared_ptr<const Ats::DiscBounds> dBounds,
                                    double thickness,
@@ -53,5 +53,5 @@ Agd::DetectorElement::DetectorElement(const Identifier& identifier,
 }
 
 /**  Destructor */
-Agd::DetectorElement::~DetectorElement()
+Ats::DetectorElement::~DetectorElement()
 {}

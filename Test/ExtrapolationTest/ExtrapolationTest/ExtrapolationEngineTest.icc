@@ -16,16 +16,22 @@ template <class T> StatusCode Ats::ExtrapolationEngineTest::executeTestT(const T
     m_startPositionY = startParameters.position().y();
     m_startPositionZ = startParameters.position().z();
     m_startPositionR = startParameters.position().perp();
-  
+    
+    // use the pocessor if needed
+    if (!m_parametersProcessor.empty() && m_parametersProcessor->process(startParameters).isFailure())
+        MSG_WARNING("Event Processing did not work with the parameter processor!");  
+
     // setup the extrapolation how you'd like it
     Ats::ExtrapolationCell<T> ecc(startParameters);
     ecc.setParticleHypothesis((Ats::ParticleHypothesis)m_particleHypothesis);
-    //ecc.addConfigurationMode(Ats::ExtrapolationMode::StopAtBoundary);
+    ecc.addConfigurationMode(Ats::ExtrapolationMode::StopAtBoundary);
     ecc.addConfigurationMode(Ats::ExtrapolationMode::FATRAS);	
     if (m_collectSensitive) ecc.addConfigurationMode(Ats::ExtrapolationMode::CollectSensitive);
     if (m_collectPassive)   ecc.addConfigurationMode(Ats::ExtrapolationMode::CollectPassive);
     if (m_collectBoundary)  ecc.addConfigurationMode(Ats::ExtrapolationMode::CollectBoundary);
     if (m_collectMaterial)  ecc.addConfigurationMode(Ats::ExtrapolationMode::CollectMaterial);
+    if (m_sensitiveCurvilinear) ecc.sensitiveCurvilinear = true;
+        
     if (m_robustSearch)    ecc.addConfigurationMode(Ats::ExtrapolationMode::RobustSearch);
     
     // force a stop in the extrapoaltion mode
@@ -103,11 +109,19 @@ template <class T> StatusCode Ats::ExtrapolationEngineTest::executeTestT(const T
 
 template <class T> StatusCode Ats::ExtrapolationEngineTest::fillStepInformationT(Ats::ExtrapolationCell<T>& ecc, int) 
 {
-    //// loop over the collected information
+    
+    std::vector< const TrackParametersBase* > processParameters;
+    // reserve the right size
+    processParameters.reserve(ecc.extrapolationSteps.size());
+    // loop over the collected information
     for (auto& es : ecc.extrapolationSteps){
        // continue if we have parameters
        const T* parameters = es.parameters;
        if (parameters){
+           // push back the parameters into the vector
+           if ((m_processSensitive && parameters->associatedSurface().isActive()) || 
+               (m_processPassive && parameters->associatedSurface().isFree()))
+               processParameters.push_back(parameters);
            // there are parameters assigned, so they need to be either 
            // sensitive -> ip = 0
            // passive   -> ip = 1
@@ -131,5 +145,9 @@ template <class T> StatusCode Ats::ExtrapolationEngineTest::fillStepInformationT
     
         }
     }
+    // use the pocessor if needed
+    if (!m_parametersProcessor.empty() && m_parametersProcessor->process(processParameters).isFailure())
+        MSG_WARNING("Event Processing did not work with the parameter processor!");
+    // return SUCCESS
     return StatusCode::SUCCESS;
 }    

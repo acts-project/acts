@@ -12,6 +12,9 @@
 Ats::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, ISvcLocator* pSvcLocator) :
  Ats::ExtrapolationTestBase(name, pSvcLocator),
  m_extrapolationEngine("",name),
+ m_parametersProcessor(""),
+ m_processSensitive(true),
+ m_processPassive(true), 
  m_parametersMode(1),
  m_particleHypothesis(2),
  m_smearProductionVertex(false),
@@ -34,7 +37,8 @@ Ats::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, I
  m_collectPassive(false),
  m_collectBoundary(false),
  m_collectMaterial(false),
- m_robustSearch(false),
+ m_sensitiveCurvilinear(false),
+ m_robustSearch(false), 
  m_backExtrapolation(false),
  m_stepsPhi(1),
  m_currentPhiStep(0),
@@ -82,6 +86,10 @@ Ats::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, I
 {
     // the extrapolation engine
     declareProperty("ExtrapolationEngine",      m_extrapolationEngine);
+    // the Parameter Base
+    declareProperty("ParametersProcessor",      m_parametersProcessor);
+    declareProperty("ProcessSensitive",         m_processSensitive);
+    declareProperty("ProcessPassive",           m_processPassive);
     // charged / neutral & other stuff
     declareProperty("ParametersMode",           m_parametersMode);
     declareProperty("ParticleHypothesis",       m_particleHypothesis);
@@ -92,6 +100,7 @@ Ats::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, I
     declareProperty("CollectPassive",           m_collectPassive);
     declareProperty("CollectBoundary",          m_collectBoundary);
     declareProperty("CollectMaterial",          m_collectMaterial);
+    declareProperty("SensitiveCurvilinear",     m_sensitiveCurvilinear);
     declareProperty("RobustSearch",             m_robustSearch);
     // Mode for scanning in steps
     declareProperty("ScanMode",                 m_scanMode);
@@ -148,12 +157,11 @@ StatusCode Ats::ExtrapolationEngineTest::finalize() {
 StatusCode Ats::ExtrapolationEngineTest::initializeTest() 
 {
     
-    if (m_extrapolationEngine.retrieve().isFailure()){
-        MSG_FATAL("Could not retrieve ExtrapolationEngine.");
-        return StatusCode::FAILURE;
-    } else 
-        MSG_INFO("Successfully retrieved ExtrapolationEngine.");
-    // success return
+    // Extrapolation engine
+    RETRIEVE_FATAL(m_extrapolationEngine);
+    // Writer
+    RETRIEVE_NONEMPTY_FATAL(m_parametersProcessor);
+    // success 
     return StatusCode::SUCCESS;    
 }
 
@@ -247,6 +255,10 @@ StatusCode Ats::ExtrapolationEngineTest::runTest()
 {
   MSG_VERBOSE("Running the ExtrapolationEngineTest Test in parameters mode : " << m_parametersMode);
   
+  if (!m_parametersProcessor.empty() &&  m_parametersProcessor->initProcessor().isFailure() )
+      MSG_WARNING("Problem initializing the Processor");
+
+      
   // ----------------- creation of the surfaces & track parameters -------------
   for (size_t it = 0; it < ExtrapolationTestBase::m_numTests; ++it ){
       // verbose output
@@ -299,20 +311,21 @@ StatusCode Ats::ExtrapolationEngineTest::runTest()
             // preps
       std::unique_ptr<AtsSymMatrixD<5> > cov;
       AtsVectorD<5> pars; pars << d0, z0, phi, theta, q/p;
+      
+      MSG_VERBOSE("Building parameters from Perigee with (" << d0 << ", " << z0 << ", " << phi << ", " << theta << ", " << q/p);
+      
       Ats::PerigeeSurface pSurface(Vector3D(0.,0.,0.));
       if (m_parametersMode == 0 ){
           // create the neutral parameters
-          NeutralCurvilinearParameters startParameters(std::move(cov), Vector3D(0.,0.,0.), Vector3D(p*cos(phi)*sin(theta),p*sin(phi)*sin(theta),p*cos(theta)));
-          //NeutralBoundParameters startParameters(std::move(cov),std::move(pars),pSurface);
+          NeutralBoundParameters startParameters(std::move(cov),std::move(pars),pSurface);
+          // Screen output
           if (executeTestT<Ats::NeutralParameters>(startParameters).isFailure())
               MSG_WARNING("Test with neutral parameters did not succeed.");
           else
               m_tree->Fill();
       } else {
           // create the charged parameters
-          double charge = q/p > 0. ? 1. : -1.;
-          //BoundParameters startParameters(std::move(cov),std::move(pars),charge,pSurface);
-          CurvilinearParameters startParameters(std::move(cov), Vector3D(0.,0.,0.), Vector3D(p*cos(phi)*sin(theta),p*sin(phi)*sin(theta),p*cos(theta)),charge);
+          BoundParameters startParameters(std::move(cov),std::move(pars),pSurface);
           if (executeTestT<Ats::TrackParameters>(startParameters).isFailure())
               MSG_WARNING("Test with neutral parameters did not succeed.");
           else

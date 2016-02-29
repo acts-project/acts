@@ -10,10 +10,12 @@ use CoreInterfaces          CoreInterfaces-*            Core
 use Algebra                 Algebra-*                   Core
 use ExtrapolationInterfaces ExtrapolationInterfaces-*   Extrapolation
 use ExtrapolationUtils      ExtrapolationUtils-*        Extrapolation
+use ParametersBase          ParametersBase-*            EventData
 use TrackParameters         TrackParameters-*           EventData
 use NeutralParameters       NeutralParameters-*         EventData
 use EventDataUtils          EventDataUtils-*            EventData
 use Detector                Detector-*                  Geometry
+use TestInterfaces          TestInterfaces-*            Test
 
 private
 use Surfaces                Surfaces-*                  Geometry

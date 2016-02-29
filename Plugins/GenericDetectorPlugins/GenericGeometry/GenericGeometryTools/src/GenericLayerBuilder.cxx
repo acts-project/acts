@@ -25,10 +25,10 @@
 #include "GenericGeometryTools/GenericLayerBuilder.h"
 #include "GenericDetectorElement/DetectorElement.h"
 
-DECLARE_COMPONENT(Agd::GenericLayerBuilder)
+DECLARE_COMPONENT(Ats::GenericLayerBuilder)
 
 // constructor
-Agd::GenericLayerBuilder::GenericLayerBuilder(const std::string& t, const std::string& n, const IInterface* p) :
+Ats::GenericLayerBuilder::GenericLayerBuilder(const std::string& t, const std::string& n, const IInterface* p) :
   Ats::AlgToolBase(t,n,p),
   m_layerIdentification(n),
   m_nLayers(nullptr),
@@ -61,6 +61,8 @@ Agd::GenericLayerBuilder::GenericLayerBuilder(const std::string& t, const std::s
     // the layers at p/e side 
     declareProperty("PosNegLayerPositionZ",               m_posnegLayerPositionsZ);
     declareProperty("PosNegLayerEnvelopeR",               m_posnegLayerEnvelopeR);
+    declareProperty("PosNeglLayerMaterialConcentration",  m_posnegLayerMaterialConcentration);
+    declareProperty("PosNeglLayerMaterialProperties",     m_posnegLayerMaterialProperties);    
     declareProperty("PosNegLayerModulesRadii",            m_posnegModulesRadii);
     declareProperty("PosNegLayerModuleStaggerR",          m_posnegModuleStaggerR); 
     declareProperty("PosNegLayerModulesInPhi",            m_posnegModulesInPhi);       
@@ -74,11 +76,11 @@ Agd::GenericLayerBuilder::GenericLayerBuilder(const std::string& t, const std::s
 }
 
 // destructor
-Agd::GenericLayerBuilder::~GenericLayerBuilder()
+Ats::GenericLayerBuilder::~GenericLayerBuilder()
 {}
 
 // initialize
-StatusCode Agd::GenericLayerBuilder::initialize()
+StatusCode Ats::GenericLayerBuilder::initialize()
 {
     MSG_DEBUG( "initialize()" );
     
@@ -101,14 +103,14 @@ StatusCode Agd::GenericLayerBuilder::initialize()
 }
 
 //finalize
-StatusCode Agd::GenericLayerBuilder::finalize()
+StatusCode Ats::GenericLayerBuilder::finalize()
 {
     MSG_DEBUG( "finalize()" );
     return StatusCode::SUCCESS;
 }
 
 
-StatusCode Agd::GenericLayerBuilder::constructLayers() 
+StatusCode Ats::GenericLayerBuilder::constructLayers() 
 {
     
     // -------------------------------- central layers -----------------------------------------------------------
@@ -199,12 +201,6 @@ StatusCode Agd::GenericLayerBuilder::constructLayers()
                    moduleRotation.col(0) = moduleLocalX;
                    moduleRotation.col(1) = moduleLocalY;
                    moduleRotation.col(2) = moduleLocalZ;
-                   // edge points 
-                   double moduleEdge1 = Ats::Vector3D(moduleCenter+moduleHalfX*moduleLocalX).perp();
-                   double moduleEdge2 = Ats::Vector3D(moduleCenter-moduleHalfX*moduleLocalX).perp();
-                   // layer min / max 
-                   takeSmallerBigger(layerMinR,layerMaxR, moduleEdge1);
-                   takeSmallerBigger(layerMinR,layerMaxR, moduleEdge2);
                    // get the moduleTransform
                    std::shared_ptr<Ats::Transform3D> moduleTransform(new Ats::Transform3D(Ats::getTransformFromRotTransl(moduleRotation,moduleCenter)));
                    // stereo angle applied
@@ -213,12 +209,13 @@ StatusCode Agd::GenericLayerBuilder::constructLayers()
                        double stereo = m_centralModuleFrontsideStereo[icl];
                        (*moduleTransform.get()) *= Ats::AngleAxis3D(-stereo, Ats::Vector3D::UnitZ());
                    }
-                   // create the generic detector element @TODO identifier service
                    // count the modules
                    ++imodule;
                    Identifier moduleIdentifier = Identifier(Identifier::value_type(imodule));
                    // create the module 
                    DetectorElement* module = new DetectorElement(moduleIdentifier, moduleTransform, moduleBounds, moduleThickness, moduleMaterialPtr);
+                   // radial extend
+                   moduleRadialExtend(*module,moduleThickness,moduleHalfX,moduleHalfY,layerMinR,layerMaxR);
                    // register the module to the cache module
                    neighbourCachePhi.push_back(module);
                    // create the surface 
@@ -236,11 +233,13 @@ StatusCode Agd::GenericLayerBuilder::constructLayers()
                        // apply the stereo
                        if (m_centralModuleBacksideStereo.size()){
                            // twist by the stereo angle
-                           double stereo = m_centralModuleBacksideStereo[icl];
-                           (*moduleTransform.get()) *= Ats::AngleAxis3D(-stereo, Ats::Vector3D::UnitZ());
+                           double stereoBackSide = m_centralModuleBacksideStereo[icl];
+                           (*moduleTransform.get()) *= Ats::AngleAxis3D(-stereoBackSide, Ats::Vector3D::UnitZ());
                        }
                        // everything is set for the next module
                        DetectorElement* bsmodule = new DetectorElement(moduleIdentifier, moduleTransform, moduleBounds, moduleThickness, moduleMaterialPtr);
+                       // radial extend
+                       moduleRadialExtend(*bsmodule,moduleThickness,moduleHalfX,moduleHalfY,layerMinR,layerMaxR);
                        // register the module to the cache module
                        neighbourCachePhiBackside.push_back(bsmodule);
                        // memory management - we need a detector store to hold them somewhere @TODO detector store facility
@@ -536,6 +535,7 @@ StatusCode Agd::GenericLayerBuilder::constructLayers()
          
          // layer thickness
          double layerThickness = layerZmax-layerZmin;
+         
          // create the layer transforms
          Ats::Transform3D* nLayerTransform = new Ats::Transform3D(Ats::Transform3D::Identity());
          nLayerTransform->translation() = Ats::Vector3D(0.,0.,-layerPosZ);
@@ -566,3 +566,35 @@ StatusCode Agd::GenericLayerBuilder::constructLayers()
     // everything was successful - let's return back
     return StatusCode::SUCCESS;
 }
+
+void Ats::GenericLayerBuilder::moduleRadialExtend(const DetectorElement& detElement, double thickness, double halfX, double halfY, double& rmin, double& rmax){
+    
+    // brute force method to find the radial extends for the layer construction
+    
+    Vector3D localX = detElement.transform().rotation().col(0);
+    Vector3D localY = detElement.transform().rotation().col(1);
+    Vector3D localZ = detElement.transform().rotation().col(2);
+    // center
+    Vector3D center = detElement.transform().translation();
+    
+    // construct the edges 
+    Vector3D edge000 = center-0.5*thickness*localZ-halfX*localX-halfY*localY;
+    Vector3D edge001 = center-0.5*thickness*localZ-halfX*localX+halfY*localY;
+    Vector3D edge010 = center-0.5*thickness*localZ+halfX*localX-halfY*localY;
+    Vector3D edge011 = center-0.5*thickness*localZ+halfX*localX+halfY*localY;
+    Vector3D edge100 = center+0.5*thickness*localZ-halfX*localX-halfY*localY;
+    Vector3D edge101 = center+0.5*thickness*localZ-halfX*localX+halfY*localY;
+    Vector3D edge110 = center+0.5*thickness*localZ+halfX*localX-halfY*localY;
+    Vector3D edge111 = center+0.5*thickness*localZ+halfX*localX+halfY*localY;
+    // layer min / max 
+    takeSmallerBigger(rmin,rmax,edge000.perp());
+    takeSmallerBigger(rmin,rmax,edge001.perp());
+    takeSmallerBigger(rmin,rmax,edge010.perp());
+    takeSmallerBigger(rmin,rmax,edge011.perp());
+    takeSmallerBigger(rmin,rmax,edge100.perp());
+    takeSmallerBigger(rmin,rmax,edge101.perp());
+    takeSmallerBigger(rmin,rmax,edge110.perp());
+    takeSmallerBigger(rmin,rmax,edge111.perp());
+}
+
+

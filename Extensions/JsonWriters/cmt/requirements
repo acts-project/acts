@@ -1,0 +1,36 @@
+package JsonWriters
+
+manager Edward Moyse <Edward.Moyse@cern.ch>
+author  Edward Moyse <Edward.Moyse@cern.ch>
+author  Andreas Salzburger <Andreas.Salzburger@cern.ch>
+
+
+#################################################################
+# public use statements
+use AtlasPolicy           AtlasPolicy-*
+use GaudiInterface        GaudiInterface-*        External
+use CoreInterfaces        CoreInterfaces-*        Core
+use GeometryInterfaces    GeometryInterfaces-*    Geometry
+use TestInterfaces        TestInterfaces-*        Test
+use ParametersBase        ParametersBase-*        EventData
+
+#################################################################
+# private use statements
+private
+use AtlasBoost            AtlasBoost-*            External
+use Algebra               Algebra-*               Core
+use Surfaces              Surfaces-*              Geometry
+use Volumes               Volumes-*               Geometry
+use Detector              Detector-*              Geometry
+
+public
+library JsonWriters *.cxx components/*.cxx
+apply_pattern component_library
+
+private
+macro_append cppflags $(AtsCoreTool)              
+macro_append cppflags $(AtsCoreParameterDefs)
+
+#macro cppdebugflags '$(cppdebugflags_s)'
+#macro_remove componentshr_linkopts "-Wl,-s"
+macro DOXYGEN_IMAGE_PATH "../doc/images"

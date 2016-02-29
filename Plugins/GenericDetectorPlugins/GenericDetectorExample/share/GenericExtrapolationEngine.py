@@ -19,19 +19,30 @@ class GenericExtrapolationEngine( ExEngine ):
        
         # AthenaCommon
         from AthenaCommon.AppMgr import ServiceMgr as svcMgr
+        from AthenaCommon.AppMgr import ToolSvc
         
-        # Get the MagneticFieldSvc
-        from MagFieldServices.MagFieldServicesConf import MagField__AtlasFieldSvc
-        MagneticFieldSvc = MagField__AtlasFieldSvc()
-        svcMgr += MagneticFieldSvc
+        from AthenaCommon.CfgGetter import getService
+        MagneticFieldSvc =  getService('AtlasFieldSvc')
         
         # PropagationEngine
-        from RungeKuttaEngine.RungeKuttaEngineConf import Ats__RungeKuttaEngine
-        StaticPropagator = Ats__RungeKuttaEngine(name = nameprefix+'StaticPropagation')
+        if True :
+            from TrkExRungeKuttaPropagator.TrkExRungeKuttaPropagatorConf import Ats__RungeKuttaPropagator
+            RkPropagator = Ats__RungeKuttaPropagator('RkPropagator')
+            RkPropagator.MagFieldSvc = MagneticFieldSvc
+            ToolSvc += RkPropagator
+ 
+            from ExtrapolationEngine.ExtrapolationEngineConf import Ats__PropagationEngine
+            StaticPropagator = Ats__PropagationEngine(name = nameprefix+'StaticPropagation')
+  
+            StaticPropagator.Propagator = RkPropagator      
+        else :
+            from RungeKuttaEngine.RungeKuttaEngineConf import Ats__RungeKuttaEngine
+            StaticPropagator = Ats__RungeKuttaEngine(name = nameprefix+'StaticPropagation')
+            StaticPropagator.MagneticFieldSvc         = MagneticFieldSvc        
+        
         # configure output formatting               
         StaticPropagator.OutputPrefix             = '[SP] - '
         StaticPropagator.OutputPostfix            = ' - '
-        StaticPropagator.MagneticFieldSvc         = MagneticFieldSvc
         if ToolOutputLevel : 
             StaticPropagator.OutputLevel          = ToolOutputLevel
         # add to tool service
