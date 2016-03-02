@@ -4,11 +4,9 @@
 gaudi_subdir(DD4hepGeometryUtils v1r0)
 
 gaudi_depends_on_subdirs(Core/Algebra
-			 Core/CoreInterfaces
-			 Geometry/Volumes
-			 Geometry/Surfaces)
-
-#add_definitions(-DATS_PARAMETER_DEFINITIONS_PLUGIN=\"CoreUtils/DefaultParameterDefinitions.h\")
+                         Core/CoreInterfaces
+                         Geometry/Volumes
+                         Geometry/Surfaces)
 
 add_definitions(-std=c++14)
 

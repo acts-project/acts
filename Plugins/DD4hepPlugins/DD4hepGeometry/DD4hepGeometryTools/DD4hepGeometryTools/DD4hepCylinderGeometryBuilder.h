@@ -5,7 +5,10 @@
 #ifndef ATS_DD4HEPGEOMETRYTOOLS_DD4HEPCYLINDERGEOMETRYBUILDER_H
 #define ATS_DD4HEPGEOMETRYTOOLS_DD4HEPCYLINDERGEOMETRYBUILDER_H 1
 
-//DD4hepPlugin
+// Gaudi
+#include "GaudiKernel/ServiceHandle.h"
+#include "GaudiKernel/ToolHandle.h"
+// DD4hepPlugin
 #include "DD4hepGeometryInterfaces/IDD4hepGeometrySvc.h"
 #include "DD4hepGeometryInterfaces/IDD4hepLayerHelper.h"
 // Core module
@@ -17,8 +20,6 @@
 #include "Detector/Layer.h"
 // DD4hep
 #include "DD4hep/Detector.h"
-#include "GaudiKernel/ServiceHandle.h"
-#include "GaudiKernel/ToolHandle.h"
 
 namespace Ats {
     class TrackingGeometry;
@@ -27,9 +28,10 @@ namespace Add4hep {
     
     /** @ class DD4hepCylinderGeometryBuilder
      
+    This class receives the DD4hep geometry from the given implementation of the IDD4hepGeomtrySvc, walks through the subvolumes and initiates their translation into the tracking geometry.
+        It returns the world tracking geometry element.
      
-     
-     @author julia.hrdinka@cern.ch
+     @author julia.hrdinka@cern.ch, andreas.salzburger@cern.ch
      */
     
     
@@ -52,13 +54,17 @@ namespace Add4hep {
         Ats::TrackingGeometry* trackingGeometry() const override;
         
     private:
-        
+        /** Handle to the service providing the DD4hep geometry */
         ServiceHandle<IDD4hepGeometrySvc>           m_DD4hepGeometrySvc;
+        /** Handle yo the volume building tool */
         ToolHandle<Ats::ITrackingVolumeBuilder>     m_volumeBuilder;
-        ToolHandle<IDD4hepLayerHelper>              m_DD4hepLayerHelper;
+        /** Handle to the tool helping to build the tracking volumes */
         ToolHandle<Ats::ITrackingVolumeHelper>      m_trackingVolumeHelper;
+        /** Handle to the tool helping to build the tracking layers */
+        ToolHandle<IDD4hepLayerHelper>              m_DD4hepLayerHelper;
+        
         
     };
 }
 
-#endif //#ifndef ATS_ATS_DD4HEPGEOMETRYTOOLS_DD4HEPCYLINDERGEOMETRYBUILDER_H
+#endif //#ifndef ATS_DD4HEPGEOMETRYTOOLS_DD4HEPCYLINDERGEOMETRYBUILDER_H

@@ -26,7 +26,7 @@ namespace Add4hep {
     
     /** @ class DD4hepLayerHelper
         
-     The DD4hepLayerHelper translates Layers with its containing modules (if given) into Layers from the TrackingGeometry and Surfaces.
+     The DD4hepLayerHelper translates Layers with its containing modules (if given) from the DD4hep geometry into Layers and Surfaces from TrackingGeometry.
      
      @author julia.hrdinka@cern.ch
     */
@@ -78,7 +78,6 @@ namespace Add4hep {
        Ats::LayerVector*                                m_centralLayers;
        /**possible layers of the positive end cap*/
        Ats::LayerVector*                                m_positiveLayers;
-       DD4hepGeometryHelper*                            m_dd4hepGeometryHelper;
        
        
     };

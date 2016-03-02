@@ -20,10 +20,9 @@ namespace Add4hep {
     
     /** @class IDD4hepGeometrySvc
         
-        Interface for the service providing the DD4hep volume/geometry to the DD4hepLayerBuilder
+        Interface for the service providing the DD4hep geometry.
      
         @author julia.hrdinka@cern.ch
-        @TODO differntiate between service providing the geometry and service going through the volumes, instantiating the layerbuilders for different subvolumes
      
      */
     

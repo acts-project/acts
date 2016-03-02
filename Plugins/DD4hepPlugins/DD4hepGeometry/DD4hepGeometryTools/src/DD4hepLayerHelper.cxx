@@ -1,6 +1,9 @@
 #include "DD4hepGeometryTools/DD4hepLayerHelper.h"
 //DD4hepPlugin
 #include "DD4hepGeometryUtils/DD4hepGeometryHelper.h"
+#include "DD4hepDetectorElement/IDetExtension.h"
+#include "DD4hepDetectorElement/DetSensComponent.h"
+#include "DD4hepDetectorElement/DD4hepDetElement.h"
 // Core module
 #include "CoreInterfaces/MsgBase.h"
 // Geometry module
@@ -11,10 +14,6 @@
 #include "Surfaces/TrapezoidBounds.h"
 #include "Detector/CylinderLayer.h"
 #include "Detector/DiscLayer.h"
-//Det
-#include "DD4hepDetectorElement/IDetExtension.h"
-#include "DD4hepDetectorElement/DetSensComponent.h"
-#include "DD4hepDetectorElement/DD4hepDetElement.h"
 
 DECLARE_COMPONENT(Add4hep::DD4hepLayerHelper)
 
@@ -33,25 +32,25 @@ const Ats::LayerTriple* Add4hep::DD4hepLayerHelper::createLayerTriple(DD4hep::Ge
 
 StatusCode Add4hep::DD4hepLayerHelper::constructLayers(DD4hep::Geometry::DetElement& detElement)
 {
-    MSG_INFO("TYPE:" << detElement.type());
     if(detElement.type()=="compound") {
-        MSG_INFO( "compound0" );
+        MSG_DEBUG( "Detector element type: compound" );
         //create tracking volume of compound type
         const DD4hep::Geometry::DetElement::Children& compoundChildren = detElement.children();
-        MSG_INFO("Detelement");
         for(auto& compoundChild : compoundChildren) {
-            MSG_INFO( "compoundchild" );
             DD4hep::Geometry::DetElement compoundDetElement = compoundChild.second;
             //extract the transformation
             std::shared_ptr<Ats::Transform3D> transform = Add4hep::DD4hepGeometryHelper::extractTransform(compoundDetElement);
+            //distinguish between TGeoConeSeg used as a cylinder (barrel) and as a disc (end caps)
             Add4hep::IDetExtension* detExtension = compoundDetElement.extension<Add4hep::IDetExtension>();
+            //create disc layers in case of a disc volume, otherwise create cylindrical layers
             detExtension->type()==Add4hep::ExtensionType::DiscVolume ? createDiscLayers(compoundDetElement, transform) : createCylinderLayers(compoundDetElement,transform);
         } //compoundchildren
     } //compoundtype
     else {
-        MSG_INFO( "support tube" );
+        MSG_DEBUG( "Detector element type: supporting structure" );
         //support structure
         std::shared_ptr<Ats::Transform3D> transform(Add4hep::DD4hepGeometryHelper::extractTransform(detElement));
+        //create cylindrical layers
         createCylinderLayers(detElement,transform);
     }
     return StatusCode::SUCCESS;
@@ -62,14 +61,16 @@ Add4hep::DD4hepLayerHelper::~DD4hepLayerHelper()
 
 StatusCode Add4hep::DD4hepLayerHelper::createCylinderLayers(DD4hep::Geometry::DetElement& motherDetElement, std::shared_ptr<const Ats::Transform3D> motherTransform) const
 {
-    MSG_INFO("Create CylinderLayer");
-    //go through layers
+    //get possible layers
     const  DD4hep::Geometry::DetElement::Children& children = motherDetElement.children();
+    //check if volume has layers
     if (children.empty()) {
         MSG_DEBUG("Empty volume - without layers");
         return StatusCode::SUCCESS;
     }
+    //go through layers
     for (auto& child : children) {
+        //get the detector element of the layer
         DD4hep::Geometry::DetElement detElement = child.second;
         //get the placement and orientation in respect to its mother
         std::shared_ptr<Ats::Transform3D> transform = Add4hep::DD4hepGeometryHelper::extractTransform(detElement);
@@ -87,35 +88,33 @@ StatusCode Add4hep::DD4hepLayerHelper::createCylinderLayers(DD4hep::Geometry::De
         double zPos  = transform->translation().z();
         auto cylinderBounds = std::make_shared<const Ats::CylinderBounds>(0.5*(tube->GetRmin1()+tube->GetRmax1()),halfZ);
         double thickness = fabs(tube->GetRmax2()-tube->GetRmin1());
-        MSG_INFO("LayerThickness: " << thickness << " rmin: " << tube->GetRmin1() << " rmax: " << tube->GetRmax1());
         //if necessary receive the modules contained by the layer and create the layer, otherwise create an empty layer
         const DD4hep::Geometry::DetElement::Children& layerChildren = detElement.children();
-        if (layerChildren.empty()) {m_centralLayers->push_back(Ats::CylinderLayer::create(transform,cylinderBounds,nullptr,thickness,nullptr,nullptr,Ats::passive));
-            MSG_INFO("Created CylinderLayer with bounds: R: " << 0.5*(tube->GetRmin1()+tube->GetRmax1()) << " halfZ: " << halfZ << " at position: " << zPos );
+        if (layerChildren.empty()) {
+            m_centralLayers->push_back(Ats::CylinderLayer::create(transform,cylinderBounds,nullptr,thickness,nullptr,nullptr,Ats::passive));
+            MSG_DEBUG("Created empty (without surfaces) CylinderLayer with radius: " << 0.5*(tube->GetRmin1()+tube->GetRmax1()) << " , half length in Z: " << halfZ << " and thickness " << thickness << " at Z position: " << zPos );
         }
         else {
-            MSG_INFO("before CylinderBinnedArray");
+            //create surfaces binned in phi and z
             Add4hep::SurfaceArray* surfaceArray = createCylinderBinnedSurfaceArray(detElement,transform,zPos-halfZ,zPos+halfZ);
-            MSG_INFO("afterCylinderBinnedArray");
             m_centralLayers->push_back(Ats::CylinderLayer::create(transform,cylinderBounds,surfaceArray,thickness,nullptr,nullptr,Ats::active));
-            MSG_INFO("CreateCylinderLayers end1");
+            MSG_DEBUG("Created CylinderLayer (with surfaces) with radius: " << 0.5*(tube->GetRmin1()+tube->GetRmax1()) << " , half length in Z: " << halfZ << " and thickness " << thickness << " at Z position: " << zPos );
         }
     } //for children
-    MSG_INFO("CreateCylinderLayers end2");
     return StatusCode::SUCCESS;
 }
 
 StatusCode Add4hep::DD4hepLayerHelper::createDiscLayers(DD4hep::Geometry::DetElement& motherDetElement, std::shared_ptr<const Ats::Transform3D> motherTransform) const
 {
-    MSG_INFO("Create DiscLayer");
-    //go through layers
+    //get possible layers
     const  DD4hep::Geometry::DetElement::Children& children = motherDetElement.children();
-    //if there are no layers, return empty vector
+    //check if volume has layers
     if (children.empty()) {
         MSG_DEBUG("Empty volume - without layers");
         return StatusCode::SUCCESS;
     }
     for (auto& child : children) {
+        //get the detector element of the layer
         DD4hep::Geometry::DetElement detElement = child.second;
         //get the placement and orientation in respect to its mother
         std::shared_ptr<Ats::Transform3D> transform = Add4hep::DD4hepGeometryHelper::extractTransform(detElement);
@@ -133,12 +132,15 @@ StatusCode Add4hep::DD4hepLayerHelper::createDiscLayers(DD4hep::Geometry::DetEle
         double thickness = 2.*disc->GetDz();
         //if necessary receive the modules contained by the layer and create the layer, otherwise create empty layer
         const DD4hep::Geometry::DetElement::Children& layerChildren = detElement.children();
-        if (layerChildren.empty()) {(transform->translation().z()<0.) ? m_negativeLayers->push_back(Ats::DiscLayer::create(transform,discBounds,nullptr,thickness,nullptr,nullptr,Ats::passive)) : m_positiveLayers->push_back(Ats::DiscLayer::create(transform,discBounds,nullptr,thickness,nullptr,nullptr,Ats::passive));
-            MSG_INFO("Created CylinderLayer with bounds: R: " << 0.5*(disc->GetRmin1()+disc->GetRmax1()) << " thickness: " << thickness);
+        if (layerChildren.empty()) {
+            (transform->translation().z()<0.) ? m_negativeLayers->push_back(Ats::DiscLayer::create(transform,discBounds,nullptr,thickness,nullptr,nullptr,Ats::passive)) : m_positiveLayers->push_back(Ats::DiscLayer::create(transform,discBounds,nullptr,thickness,nullptr,nullptr,Ats::passive));
+            MSG_DEBUG("Created empty (withour surfaces) DiscLayer with bounds radius: " << 0.5*(disc->GetRmin1()+disc->GetRmax1()) << " and thickness: " << thickness);
         }
         else {
+            //create surfaces binned in phi and r
             Add4hep::SurfaceArray* surfaceArray = createDiscBinnedSurfaceArray(detElement,transform);
             (transform->translation().z()<0.) ? m_negativeLayers->push_back(Ats::DiscLayer::create(transform,discBounds,surfaceArray,thickness,nullptr,nullptr,Ats::active)) : m_positiveLayers->push_back(Ats::DiscLayer::create(transform,discBounds,surfaceArray,thickness,nullptr,nullptr,Ats::active));
+            MSG_DEBUG("Created DiscLayer (with surfaces) with bounds radius: " << 0.5*(disc->GetRmin1()+disc->GetRmax1()) << " and thickness: " << thickness);
         }
     } //for children
     return StatusCode::SUCCESS;
@@ -147,7 +149,6 @@ StatusCode Add4hep::DD4hepLayerHelper::createDiscLayers(DD4hep::Geometry::DetEle
 //Surface arrays for cylindrical layers (e.g. end caps) binned in z and phi
 Add4hep::SurfaceArray* Add4hep::DD4hepLayerHelper::createCylinderBinnedSurfaceArray(DD4hep::Geometry::DetElement& motherDetElement, std::shared_ptr<const Ats::Transform3D> motherTransform, double Zmin, double Zmax) const
 {
-    MSG_INFO("createCylinderBinnedSurfaceArray");
     //get the surface vector
     Add4hep::SurfaceVector surfaces;
     createSurfaceVector(motherDetElement,motherTransform,surfaces);
@@ -198,7 +199,6 @@ Add4hep::SurfaceArray* Add4hep::DD4hepLayerHelper::createCylinderBinnedSurfaceAr
 //Surface arrays for disc layers (e.g. end caps) binned in r and phi
 Add4hep::SurfaceArray* Add4hep::DD4hepLayerHelper::createDiscBinnedSurfaceArray(DD4hep::Geometry::DetElement& motherDetElement, std::shared_ptr<const Ats::Transform3D> motherTransform) const
 {
-    MSG_INFO("createDiscBinnedSurfaceArray");
     //get the surface vector
     Add4hep::SurfaceVector surfaces;
     createSurfaceVector(motherDetElement,motherTransform, surfaces);
@@ -249,9 +249,7 @@ Add4hep::SurfaceArray* Add4hep::DD4hepLayerHelper::createDiscBinnedSurfaceArray(
 
 StatusCode Add4hep::DD4hepLayerHelper::createSurfaceVector(DD4hep::Geometry::DetElement& motherDetElement, std::shared_ptr<const Ats::Transform3D> motherTransform, Add4hep::SurfaceVector& surfaces) const
 {
-    MSG_INFO("createSurfaceVector");
     //access the modules of this layer
-    MSG_INFO("before children");
     const DD4hep::Geometry::DetElement::Children& children = motherDetElement.children();
     for (auto& child : children) {
         DD4hep::Geometry::DetElement detElement = child.second;
@@ -269,7 +267,6 @@ StatusCode Add4hep::DD4hepLayerHelper::createSurfaceVector(DD4hep::Geometry::Det
         const Ats::Surface* surf = &dd4hepDetElement->surface();
         surfaces.push_back(surf);
     }
-    MSG_INFO("surfaces size:" << surfaces.size());
     
     return StatusCode::SUCCESS;
 }

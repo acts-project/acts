@@ -12,15 +12,15 @@ DECLARE_COMPONENT(Add4hep::DD4hepCylinderGeometryBuilder)
 Add4hep::DD4hepCylinderGeometryBuilder::DD4hepCylinderGeometryBuilder(const std::string& t,const std::string& n,const IInterface* p) :
 Ats::AlgToolBase(t,n,p),
 m_DD4hepGeometrySvc("", name),
-m_volumeBuilder(nullptr),
-m_DD4hepLayerHelper(nullptr),
-m_trackingVolumeHelper(nullptr)
+m_volumeBuilder(),
+m_trackingVolumeHelper(),
+m_DD4hepLayerHelper()
 {
     declareInterface<ITrackingGeometryBuilder>(this);
     declareProperty("DD4hepGeometrySvc", m_DD4hepGeometrySvc);
     declareProperty("CylinderVolumeBuilder", m_volumeBuilder);
-    declareProperty("DD4hepLayerHelper", m_DD4hepLayerHelper);
     declareProperty("CylinderVolumeHelper", m_trackingVolumeHelper);
+    declareProperty("DD4hepLayerHelper", m_DD4hepLayerHelper);
 }
 
 
