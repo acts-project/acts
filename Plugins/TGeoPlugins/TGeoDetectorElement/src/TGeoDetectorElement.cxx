@@ -7,11 +7,12 @@
 #include "TGeoBBox.h"
 #include "TGeoTrd2.h"
 
-Ats::TGeoDetectorElement::TGeoDetectorElement(const Identifier& identifier,
+Atgeo::TGeoDetectorElement::TGeoDetectorElement(const Identifier& identifier,
                 TGeoShape* tGeoDetElement, std::shared_ptr<const Ats::Transform3D> motherTransform) :
 Ats::DetectorElementBase(),
 m_detElement(tGeoDetElement),
-m_identifier(identifier)
+m_identifier(identifier),
+m_neighbours()
 {
     //get the placement and orientation in respect to its mother
     const Double_t* rotation    = (m_detElement->GetTransform()->GetRotationMatrix());
@@ -37,28 +38,28 @@ m_identifier(identifier)
     }
 }
 
-Ats::TGeoDetectorElement::~TGeoDetectorElement()
+Atgeo::TGeoDetectorElement::~TGeoDetectorElement()
 {}
 
-const Ats::Vector3D& Ats::TGeoDetectorElement::center() const
+const Ats::Vector3D& Atgeo::TGeoDetectorElement::center() const
 {
     if (!m_center) m_center = std::make_shared<const Ats::Vector3D>(m_transform->translation());
     return (*m_center);
 }
 
-const Ats::Vector3D& Ats::TGeoDetectorElement::center(const Identifier&) const
+const Ats::Vector3D& Atgeo::TGeoDetectorElement::center(const Identifier&) const
 {
     if (!m_center) m_center = std::make_shared<const Ats::Vector3D>(m_transform->translation());
     return (*m_center);
 }
 
-const Ats::Vector3D& Ats::TGeoDetectorElement::normal() const
+const Ats::Vector3D& Atgeo::TGeoDetectorElement::normal() const
 {
     if (!m_normal) m_normal = std::make_shared<const Ats::Vector3D>(Ats::Vector3D(m_transform->rotation().col(2)));
     return(*m_normal);
 }
 
-const Ats::Vector3D& Ats::TGeoDetectorElement::normal(const Identifier&) const
+const Ats::Vector3D& Atgeo::TGeoDetectorElement::normal(const Identifier&) const
 {
     if (!m_normal) m_normal = std::make_shared<const Ats::Vector3D>(Ats::Vector3D(m_transform->rotation().col(2)));
     return(*m_normal);

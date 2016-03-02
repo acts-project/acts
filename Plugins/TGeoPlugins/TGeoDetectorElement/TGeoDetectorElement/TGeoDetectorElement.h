@@ -10,7 +10,7 @@
 //Root
 #include "TGeoManager.h"
 
-namespace Ats {
+namespace Atgeo {
     
     /** @class TGeoDetectorElement
      
@@ -35,39 +35,41 @@ namespace Ats {
         virtual Identifier identify() const override;
         
         /**Return local to global transform*/
-        virtual const Ats::Transform3D& transform() const override;
+        const Ats::Transform3D& transform() const override;
         
         /**Return local to global transform associated with this identifier*/
-        virtual const Ats::Transform3D& transform(const Identifier& id) const override;
+        const Ats::Transform3D& transform(const Identifier& id) const override;
         
         /**Return surface associated with this detector element*/
-        virtual const Ats::Surface& surface () const override;
+        const Ats::Surface& surface () const override;
         
         /**Return surface associated with this identifier, which should come from the */
-        virtual const Ats::Surface& surface (const Identifier& identifier) const override;
+        const Ats::Surface& surface (const Identifier& identifier) const override;
         
         /** Returns the full list of all detection surfaces associated to this detector element */
-        virtual const std::vector< std::shared_ptr<const Ats::Surface> >& surfaces() const override;
+        const std::vector< std::shared_ptr<const Ats::Surface> >& surfaces() const override;
         
         /**Return the boundaries of the element*/
-        virtual const Ats::SurfaceBounds& bounds() const override;
+        const Ats::SurfaceBounds& bounds() const override;
         
         /**Return the boundaries of the surface associated with this identifier */
-        virtual const Ats::SurfaceBounds& bounds(const Identifier& id) const override;
+        const Ats::SurfaceBounds& bounds(const Identifier& id) const override;
         
         /**Return the center of the element*/
-        virtual const Ats::Vector3D& center() const override;
+        const Ats::Vector3D& center() const override;
         
         /**Return the center of the surface associated with this identifier
          In the case of silicon it returns the same as center()*/
-        virtual const Ats::Vector3D& center(const Identifier& identifier) const override;
+        const Ats::Vector3D& center(const Identifier& identifier) const override;
         
         /**Return the normal of the element*/
-        virtual const Ats::Vector3D& normal() const override;
+        const Ats::Vector3D& normal() const override;
         
         /**Return the normal of the surface associated with this identifier
          In the case of silicon it returns the same as normal()*/
-        virtual const Ats::Vector3D& normal(const Identifier& id) const override;
+        const Ats::Vector3D& normal(const Identifier& id) const override;
+        /** Neighbours for fast access */
+        const std::vector<const Ats::DetectorElementBase*>& neighbours() const override;
 
         
     private:
@@ -88,24 +90,27 @@ namespace Ats {
         std::shared_ptr<const Ats::Surface>                 m_surface;
         /**possible contained surfaces*/
         std::vector<std::shared_ptr<const Ats::Surface>>    m_surfaces;
+        /**neigbour detector elements*/
+        std::vector<const Ats::DetectorElementBase*>        m_neighbours;
     };
 }
 
-inline Identifier Ats::TGeoDetectorElement::identify() const {return m_identifier;}
+inline Identifier Atgeo::TGeoDetectorElement::identify() const {return m_identifier;}
 
-inline const Ats::Transform3D& Ats::TGeoDetectorElement::transform() const {return (*m_transform);}
+inline const Ats::Transform3D& Atgeo::TGeoDetectorElement::transform() const {return (*m_transform);}
 
-inline const Ats::Transform3D& Ats::TGeoDetectorElement::transform(const Identifier&) const {return (*m_transform);}
+inline const Ats::Transform3D& Atgeo::TGeoDetectorElement::transform(const Identifier&) const {return (*m_transform);}
 
-inline const Ats::Surface& Ats::TGeoDetectorElement::surface() const {return (*m_surface);}
+inline const Ats::Surface& Atgeo::TGeoDetectorElement::surface() const {return (*m_surface);}
 
-inline const Ats::Surface& Ats::TGeoDetectorElement::surface(const Identifier&) const {return (*m_surface);}
+inline const Ats::Surface& Atgeo::TGeoDetectorElement::surface(const Identifier&) const {return (*m_surface);}
 
-inline const std::vector< std::shared_ptr<const Ats::Surface> >& Ats::TGeoDetectorElement::surfaces() const {return (m_surfaces);}
+inline const std::vector< std::shared_ptr<const Ats::Surface> >& Atgeo::TGeoDetectorElement::surfaces() const {return (m_surfaces);}
 
-inline const Ats::SurfaceBounds& Ats::TGeoDetectorElement::bounds() const{return (*m_bounds);}
+inline const Ats::SurfaceBounds& Atgeo::TGeoDetectorElement::bounds() const{return (*m_bounds);}
 
-inline const Ats::SurfaceBounds& Ats::TGeoDetectorElement::bounds(const Identifier&) const {return (*m_bounds);}
+inline const Ats::SurfaceBounds& Atgeo::TGeoDetectorElement::bounds(const Identifier&) const {return (*m_bounds);}
 
+inline const std::vector<const Ats::DetectorElementBase*>& Atgeo::TGeoDetectorElement::neighbours() const { return m_neighbours; }
 
 #endif
