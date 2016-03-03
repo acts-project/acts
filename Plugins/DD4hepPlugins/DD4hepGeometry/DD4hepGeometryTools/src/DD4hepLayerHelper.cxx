@@ -22,7 +22,9 @@ Ats::AlgToolBase(t,n,p),
 m_negativeLayers(nullptr),
 m_centralLayers(nullptr),
 m_positiveLayers(nullptr)
-{}
+{
+    declareInterface<IDD4hepLayerHelper>(this);
+}
 
 const Ats::LayerTriple* Add4hep::DD4hepLayerHelper::createLayerTriple(DD4hep::Geometry::DetElement& motherDetElement)
 {

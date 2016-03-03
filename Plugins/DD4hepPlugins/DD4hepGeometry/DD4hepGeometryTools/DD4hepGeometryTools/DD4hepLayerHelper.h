@@ -13,8 +13,6 @@
 // Geometry module
 #include "Detector/TrackingVolume.h"
 #include "GeometryUtils/BinnedArray.h"
-// Gaudi & Athena
-#include "GaudiKernel/ToolHandle.h"
 // DD4hep
 #include "DD4hep/Detector.h"
 
