@@ -35,7 +35,7 @@ namespace Add4hep {
      */
     
     
-    class DD4hepCylinderGeometryBuilder : public Ats::AlgToolBase, virtual public Ats::ITrackingGeometryBuilder {
+  class DD4hepCylinderGeometryBuilder :  public Ats::AlgToolBase {
         
     public:
         /** Constructor */

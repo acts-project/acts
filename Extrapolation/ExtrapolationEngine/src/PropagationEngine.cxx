@@ -12,7 +12,7 @@
 // EventData module
 #include "EventDataUtils/PropDirection.h"
 
-DECLARE_COMPONENT(Ats::PropagationEngine)
+DECLARE_SERVICE_FACTORY(Ats::PropagationEngine)
 
 // constructor
 Ats::PropagationEngine::PropagationEngine(const std::string& name, ISvcLocator* svc):

@@ -29,11 +29,11 @@ namespace Add4hep {
     
     public:
         /** constructor */
-        DD4hepGeometryHelper();
-        
+        DD4hepGeometryHelper()
+	{}  
         /** destructor */
-        ~DD4hepGeometryHelper();
-        
+        ~DD4hepGeometryHelper()
+        {}
         /**helper method to extract the transformation matrix from a DD4hep DetElement*/
         static std::shared_ptr<Ats::Transform3D> extractTransform(DD4hep::Geometry::DetElement& detElement);
         /**helper method to extract the volume boundaries of a cylindrical volume*/

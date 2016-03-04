@@ -7,7 +7,7 @@
 // Extrapolation module
 #include "ExtrapolationEngine/StaticEngine.h"
 
-DECLARE_COMPONENT(Ats::StaticEngine)
+DECLARE_SERVICE_FACTORY(Ats::StaticEngine)
 
 // constructor
 Ats::StaticEngine::StaticEngine(const std::string& name, ISvcLocator* svc) :

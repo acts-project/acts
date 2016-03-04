@@ -9,7 +9,7 @@
 // Geometry module
 #include "GeometryUtils/GeometrySignature.h"
 
-DECLARE_COMPONENT(Ats::ExtrapolationEngine)
+DECLARE_SERVICE_FACTORY(Ats::ExtrapolationEngine)
 
 // constructor
 Ats::ExtrapolationEngine::ExtrapolationEngine(const std::string& name, ISvcLocator* svc)

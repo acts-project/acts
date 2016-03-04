@@ -10,7 +10,7 @@
 #include "Detector/Layer.h"
 #include "Material/SurfaceMaterial.h"
 
-DECLARE_COMPONENT(Ats::MaterialEffectsEngine)
+DECLARE_SERVICE_FACTORY(Ats::MaterialEffectsEngine)
 
 // constructor
 Ats::MaterialEffectsEngine::MaterialEffectsEngine(const std::string& name, ISvcLocator* svc):
