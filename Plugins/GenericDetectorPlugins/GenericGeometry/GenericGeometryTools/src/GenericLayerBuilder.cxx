@@ -25,7 +25,7 @@
 #include "GenericGeometryTools/GenericLayerBuilder.h"
 #include "GenericDetectorElement/DetectorElement.h"
 
-DECLARE_COMPONENT(Agd::GenericLayerBuilder)
+DECLARE_TOOL_FACTORY(Agd::GenericLayerBuilder)
 
 // constructor
 Agd::GenericLayerBuilder::GenericLayerBuilder(const std::string& t, const std::string& n, const IInterface* p) :

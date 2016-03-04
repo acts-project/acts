@@ -15,7 +15,7 @@
 #include "Detector/CylinderLayer.h"
 #include "Detector/DiscLayer.h"
 
-DECLARE_COMPONENT(Add4hep::DD4hepLayerHelper)
+DECLARE_TOOL_FACTORY(Add4hep::DD4hepLayerHelper)
 
 Add4hep::DD4hepLayerHelper::DD4hepLayerHelper(const std::string& t, const std::string& n, const IInterface* p) :
 Ats::AlgToolBase(t,n,p),
@@ -60,6 +60,20 @@ StatusCode Add4hep::DD4hepLayerHelper::constructLayers(DD4hep::Geometry::DetElem
 
 Add4hep::DD4hepLayerHelper::~DD4hepLayerHelper()
 {}
+
+StatusCode Add4hep::DD4hepLayerHelper::initialize()
+{
+    // screen output in debug mode
+    MSG_DEBUG( "finalize()" );
+    return StatusCode::SUCCESS;
+}
+
+StatusCode Add4hep::DD4hepLayerHelper::finalize()
+{
+    // screen output in debug mode
+    MSG_DEBUG( "finalize()" );
+    return StatusCode::SUCCESS;
+}
 
 StatusCode Add4hep::DD4hepLayerHelper::createCylinderLayers(DD4hep::Geometry::DetElement& motherDetElement, std::shared_ptr<const Ats::Transform3D> motherTransform) const
 {

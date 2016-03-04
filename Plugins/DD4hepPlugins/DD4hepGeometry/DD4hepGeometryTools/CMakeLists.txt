@@ -22,6 +22,6 @@ SET( EIGEN3_HOME ${EIGEN_ROOT_DIR}/${EIGEN_INCLUDE_DIR} )
 gaudi_install_headers(DD4hepGeometryTools)
 
 gaudi_add_module(DD4hepGeometryTools
-                 src/*.cxx
+                 src/*.cxx 
                  INCLUDE_DIRS GaudiKernel ROOT DD4hep ${EIGEN3_HOME} CoreInterfaces Algebra  GeometryInterfaces Detector DD4hepGeometryInterfaces DD4hepGeometryUtils DD4hepDetectorElement
                  LINK_LIBRARIES GaudiKernel ROOT DD4hep Detector DD4hepGeometryUtils DD4hepDetectorElement)

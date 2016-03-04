@@ -35,7 +35,7 @@ namespace Add4hep {
      */
     
     
-  class DD4hepCylinderGeometryBuilder :  public Ats::AlgToolBase {
+    class DD4hepCylinderGeometryBuilder :  public Ats::AlgToolBase, virtual public Ats::ITrackingGeometryBuilder {
         
     public:
         /** Constructor */
@@ -59,7 +59,7 @@ namespace Add4hep {
         /** Handle yo the volume building tool */
         ToolHandle<Ats::ITrackingVolumeBuilder>     m_volumeBuilder;
         /** Handle to the tool helping to build the tracking volumes */
-        ToolHandle<Ats::ITrackingVolumeHelper>      m_trackingVolumeHelper;
+        ToolHandle<Ats::ITrackingVolumeHelper>      m_volumeHelper;
         /** Handle to the tool helping to build the tracking layers */
         ToolHandle<IDD4hepLayerHelper>              m_DD4hepLayerHelper;
         

@@ -7,19 +7,19 @@
 // Core module
 #include "CoreInterfaces/MsgBase.h"
 
-DECLARE_COMPONENT(Add4hep::DD4hepCylinderGeometryBuilder)
+DECLARE_TOOL_FACTORY(Add4hep::DD4hepCylinderGeometryBuilder)
 
-Add4hep::DD4hepCylinderGeometryBuilder::DD4hepCylinderGeometryBuilder(const std::string& t,const std::string& n,const IInterface* p) :
-Ats::AlgToolBase(t,n,p),
+Add4hep::DD4hepCylinderGeometryBuilder::DD4hepCylinderGeometryBuilder(const std::string& t,const std::string& name,const IInterface* p) :
+Ats::AlgToolBase(t,name,p),
 m_DD4hepGeometrySvc("", name),
-m_volumeBuilder(),
-m_trackingVolumeHelper(),
-m_DD4hepLayerHelper()
+m_volumeBuilder("Ats::CylinderVolumeBuilder"),
+m_volumeHelper("Ats::CylinderVolumeHelper"),
+m_DD4hepLayerHelper("Add4hepDD4hepLayerHelper")
 {
     declareInterface<ITrackingGeometryBuilder>(this);
     declareProperty("DD4hepGeometrySvc", m_DD4hepGeometrySvc);
-    declareProperty("CylinderVolumeBuilder", m_volumeBuilder);
-    declareProperty("CylinderVolumeHelper", m_trackingVolumeHelper);
+    declareProperty("VolumeBuilder", m_volumeBuilder);
+    declareProperty("VolumeHelper", m_volumeHelper);
     declareProperty("DD4hepLayerHelper", m_DD4hepLayerHelper);
 }
 
@@ -79,7 +79,7 @@ Ats::TrackingGeometry* Add4hep::DD4hepCylinderGeometryBuilder::trackingGeometry(
     // if you have a highest volume, stuff it into a TrackingGeometry
     if (highestVolume) {
         // see if the beampipe needs to be wrapped
-        if (beamPipeVolume) highestVolume = m_trackingVolumeHelper->createContainerTrackingVolume({beamPipeVolume,highestVolume});
+        if (beamPipeVolume) highestVolume = m_volumeHelper->createContainerTrackingVolume({beamPipeVolume,highestVolume});
         
         // create the TrackingGeometry
         trackingGeometry = new Ats::TrackingGeometry(highestVolume);

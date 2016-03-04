@@ -30,7 +30,7 @@ namespace Add4hep {
     public:
         /** constructor */
         DD4hepGeometryHelper()
-	{}  
+	    {}
         /** destructor */
         ~DD4hepGeometryHelper()
         {}
