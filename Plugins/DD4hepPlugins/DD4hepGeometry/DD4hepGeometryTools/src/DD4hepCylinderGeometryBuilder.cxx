@@ -4,6 +4,7 @@
 #include "Detector/TrackingVolume.h"
 // DD4hepPlugin
 #include "DD4hepGeometryUtils/DD4hepGeometryHelper.h"
+#include "DD4hepGeometryUtils/DD4hepLayerHelper.h"
 // Core module
 #include "CoreInterfaces/MsgBase.h"
 
@@ -14,18 +15,19 @@ Ats::AlgToolBase(t,name,p),
 m_DD4hepGeometrySvc("", name),
 m_volumeBuilder("Ats::CylinderVolumeBuilder"),
 m_volumeHelper("Ats::CylinderVolumeHelper"),
-m_DD4hepLayerHelper("Add4hepDD4hepLayerHelper")
+m_layerHelper(new Add4hep::DD4hepLayerHelper())
 {
     declareInterface<ITrackingGeometryBuilder>(this);
     declareProperty("DD4hepGeometrySvc", m_DD4hepGeometrySvc);
     declareProperty("VolumeBuilder", m_volumeBuilder);
     declareProperty("VolumeHelper", m_volumeHelper);
-    declareProperty("DD4hepLayerHelper", m_DD4hepLayerHelper);
 }
 
 
 Add4hep::DD4hepCylinderGeometryBuilder::~DD4hepCylinderGeometryBuilder()
-{}
+{
+    delete m_layerHelper;
+}
 
 StatusCode Add4hep::DD4hepCylinderGeometryBuilder::initialize()
 {
@@ -73,7 +75,7 @@ Ats::TrackingGeometry* Add4hep::DD4hepCylinderGeometryBuilder::trackingGeometry(
         }
         else {
         // assign a new highest volume (and potentially wrap around the given highest volume so far)
-         highestVolume = m_volumeBuilder->trackingVolume(highestVolume,nullptr,m_DD4hepLayerHelper->createLayerTriple(detElement));
+            highestVolume = m_volumeBuilder->trackingVolume(highestVolume,nullptr,m_layerHelper->createLayerTriple(detElement));
         }
     }
     // if you have a highest volume, stuff it into a TrackingGeometry

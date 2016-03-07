@@ -9,8 +9,7 @@ gaudi_depends_on_subdirs(GaudiKernel
                          Geometry/GeometryInterfaces
                          Geometry/Detector
                          Plugins/DD4hepPlugins/DD4hepGeometry/DD4hepGeometryInterfaces
-                         Plugins/DD4hepPlugins/DD4hepGeometry/DD4hepGeometryUtils
-                         Plugins/DD4hepPlugins/DD4hepGeometry/DD4hepDetectorElement)
+                         Plugins/DD4hepPlugins/DD4hepGeometry/DD4hepGeometryUtils)
 
 add_definitions(-std=c++14)
 
@@ -23,5 +22,5 @@ gaudi_install_headers(DD4hepGeometryTools)
 
 gaudi_add_module(DD4hepGeometryTools
                  src/*.cxx 
-                 INCLUDE_DIRS GaudiKernel ROOT DD4hep ${EIGEN3_HOME} CoreInterfaces Algebra  GeometryInterfaces Detector DD4hepGeometryInterfaces DD4hepGeometryUtils DD4hepDetectorElement
-                 LINK_LIBRARIES GaudiKernel ROOT DD4hep Detector DD4hepGeometryUtils DD4hepDetectorElement)
+                 INCLUDE_DIRS GaudiKernel ROOT DD4hep ${EIGEN3_HOME} CoreInterfaces Algebra  GeometryInterfaces Detector DD4hepGeometryInterfaces DD4hepGeometryUtils 
+                 LINK_LIBRARIES GaudiKernel ROOT DD4hep Detector DD4hepGeometryUtils)

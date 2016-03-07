@@ -10,7 +10,6 @@
 #include "GaudiKernel/ToolHandle.h"
 // DD4hepPlugin
 #include "DD4hepGeometryInterfaces/IDD4hepGeometrySvc.h"
-#include "DD4hepGeometryInterfaces/IDD4hepLayerHelper.h"
 // Core module
 #include "CoreInterfaces/AlgToolBase.h"
 // Geometry module
@@ -25,6 +24,8 @@ namespace Ats {
     class TrackingGeometry;
 }
 namespace Add4hep {
+    
+    class DD4hepLayerHelper;
     
     /** @ class DD4hepCylinderGeometryBuilder
      
@@ -60,9 +61,8 @@ namespace Add4hep {
         ToolHandle<Ats::ITrackingVolumeBuilder>     m_volumeBuilder;
         /** Handle to the tool helping to build the tracking volumes */
         ToolHandle<Ats::ITrackingVolumeHelper>      m_volumeHelper;
-        /** Handle to the tool helping to build the tracking layers */
-        ToolHandle<IDD4hepLayerHelper>              m_DD4hepLayerHelper;
-        
+        /** Helper class to build layers */
+        DD4hepLayerHelper*                          m_layerHelper;
         
     };
 }
