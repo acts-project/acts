@@ -2,7 +2,7 @@
 //DD4hepPlugin
 #include "DD4hepGeometryUtils/DD4hepGeometryHelper.h"
 #include "DD4hepDetectorElement/IDetExtension.h"
-#include "DD4hepDetectorElement/DetSensComponent.h"
+#include "DD4hepDetectorElement/DetExtension.h"
 #include "DD4hepDetectorElement/DD4hepDetElement.h"
 // Core module
 #include "CoreInterfaces/MsgBase.h"
@@ -45,7 +45,7 @@ StatusCode Add4hep::DD4hepLayerHelper::constructLayers(DD4hep::Geometry::DetElem
             //distinguish between TGeoConeSeg used as a cylinder (barrel) and as a disc (end caps)
             Add4hep::IDetExtension* detExtension = compoundDetElement.extension<Add4hep::IDetExtension>();
             //create disc layers in case of a disc volume, otherwise create cylindrical layers
-            detExtension->type()==Add4hep::ExtensionType::DiscVolume ? createDiscLayers(compoundDetElement, transform) : createCylinderLayers(compoundDetElement,transform);
+            detExtension->shape()==Add4hep::ShapeType::Disc ? createDiscLayers(compoundDetElement, transform) : createCylinderLayers(compoundDetElement,transform);
         } //compoundchildren
     } //compoundtype
     else {
@@ -273,9 +273,8 @@ StatusCode Add4hep::DD4hepLayerHelper::createSurfaceVector(DD4hep::Geometry::Det
         //extract segmentation //change later
         if(detElement.volume().isSensitive()) {
             Add4hep::IDetExtension* detExtension = detElement.extension<Add4hep::IDetExtension>();
-            Add4hep::DetSensComponent* sensDet = dynamic_cast<Add4hep::DetSensComponent*>(detExtension);
-            if (sensDet) segmentation = sensDet->segmentation();
-            else MSG_FATAL( "Detector element extension is not declared as 'DetSensComponent', can not access segmentation" );
+            segmentation = sensDet->detExtension();
+            if (!segmentation) MSG_FATAL( "Detector element is sensitive but Segmentation was not handed over in geometry constructor, can not access segmentation" );
         }
         else MSG_FATAL( "Detector element is not declared sensitive, can not access segmentation" );
         Add4hep::DD4hepDetElement* dd4hepDetElement = new Add4hep::DD4hepDetElement(detElement,segmentation,motherTransform);
