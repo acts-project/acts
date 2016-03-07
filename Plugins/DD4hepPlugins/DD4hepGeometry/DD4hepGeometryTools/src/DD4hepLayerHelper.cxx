@@ -273,7 +273,7 @@ StatusCode Add4hep::DD4hepLayerHelper::createSurfaceVector(DD4hep::Geometry::Det
         //extract segmentation //change later
         if(detElement.volume().isSensitive()) {
             Add4hep::IDetExtension* detExtension = detElement.extension<Add4hep::IDetExtension>();
-            segmentation = sensDet->detExtension();
+            segmentation = detExtension->segmentation();
             if (!segmentation) MSG_FATAL( "Detector element is sensitive but Segmentation was not handed over in geometry constructor, can not access segmentation" );
         }
         else MSG_FATAL( "Detector element is not declared sensitive, can not access segmentation" );
