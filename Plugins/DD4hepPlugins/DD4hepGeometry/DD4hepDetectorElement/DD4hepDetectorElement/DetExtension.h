@@ -25,20 +25,23 @@ namespace Add4hep {
     public:
         /* constructor **/
         DetExtension();
+        /* copy constructor **/
+        DetExtension(const DetExtension&, const DD4hep::Geometry::DetElement&)
+        {}
         /* virtual destructor **/
         virtual ~DetExtension();
         /* possibility to hand over shape of a volume **/
-        void setShape(ShapeType shape);
+        void setShape(ShapeType shape) override;
         /* access shape **/
         ShapeType shape() const override;
         /* method to hand over the DD4hep segmentation **/
-        void setSegmentation(const DD4hep::Geometry::Segmentation& segmentation);
+        void setSegmentation(const DD4hep::Geometry::Segmentation segmentation) override;
         /* access segmentation **/
-        const DD4hep::Geometry::Segmentation segmentation() const;
+        const DD4hep::Geometry::Segmentation segmentation() const override;
 
     private:
         
-        DD4hep::Geometry::Segmentation* m_segmentation;  //!< segmentation of a sensitive detector module
+        DD4hep::Geometry::Segmentation  m_segmentation;  //!< segmentation of a sensitive detector module
         ShapeType                       m_shape;         //!< shape of a volume
     };
 }
@@ -51,12 +54,12 @@ inline Add4hep::ShapeType Add4hep::DetExtension::shape() const {
     return m_shape;
 }
 
-inline void Add4hep::DetExtension::setSegmentation(const DD4hep::Geometry::Segmentation& segmentation) {
-    *m_segmentation = segmentation;
+inline void Add4hep::DetExtension::setSegmentation(const DD4hep::Geometry::Segmentation segmentation) {
+    m_segmentation = segmentation;
 }
 
 inline const DD4hep::Geometry::Segmentation Add4hep::DetExtension::segmentation() const {
-    return *m_segmentation;
+    return m_segmentation;
 }
 
 #endif //ATS_DD4HEPDETECTORELEMENT_DETEXTENSION_H

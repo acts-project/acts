@@ -41,7 +41,7 @@ namespace Add4hep {
         /* possibility to hand over shape of a volume **/
         virtual ShapeType shape() const = 0;
         /* method to hand over the DD4hep segmentation **/
-        virtual void setSegmentation(const DD4hep::Geometry::Segmentation& segmentation) = 0;
+        virtual void setSegmentation(const DD4hep::Geometry::Segmentation segmentation) = 0;
         /* access segmentation **/
         virtual const DD4hep::Geometry::Segmentation segmentation() const = 0;
         
