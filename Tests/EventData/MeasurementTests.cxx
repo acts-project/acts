@@ -18,7 +18,10 @@ namespace Ats
     template<ParID_t... params>
     using Measurement_t = Measurement<unsigned long int,params...>;
 
-    BOOST_AUTO_TEST_CASE(measurement_initialisation)
+    /**
+     * @brief Unit test for creation of Measurement object
+     */
+    BOOST_AUTO_TEST_CASE(measurement_initialization)
     {
       CylinderSurface cylinder(3,10);
       AtsSymMatrixD<2> cov;
