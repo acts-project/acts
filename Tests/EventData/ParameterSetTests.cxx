@@ -10,7 +10,6 @@
 // Boost include(s)
 #define BOOST_TEST_MODULE ParameterSet Tests
 #include <boost/test/included/unit_test.hpp>
-#include <boost/variant.hpp>
 
 // ATS include(s)
 #include "ParameterSet/ParameterSet.h"
@@ -190,7 +189,6 @@ namespace Ats
 
           const double delta_loc1  = loc1_1 - loc1_2;
           const double delta_loc2  = loc2_1 - loc2_2;
-          const double delta_phi   = phi_1 - phi_2;
           // for theta make sure that the difference calculation considers the restricted value range
           const double delta_theta = (theta_1 > theta_max ? theta_max : (theta_1 < theta_min ? theta_min : theta_1)) - (theta_2 > theta_max ? theta_max : (theta_2 < theta_min ? theta_min : theta_2));
           const double delta_qop   = qop_1 - qop_2;
@@ -587,12 +585,6 @@ namespace Ats
       const double second_loc1 = 2.7;
       const double second_phi = -0.9 * M_PI;
       const double second_theta = 0.35 * M_PI;
-
-      const double full_loc1 = -0.45;
-      const double full_loc2 = 12.3;
-      const double full_phi = -0.3*M_PI;
-      const double full_theta = 0.9 * M_PI;
-      const double full_qop = 0.0012;
 
       // expected results for residual second wrt first
       const double delta_loc1 = second_loc1 - first_loc1;
