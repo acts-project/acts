@@ -17,6 +17,7 @@ m_volumeBuilder("Ats::CylinderVolumeBuilder"),
 m_volumeHelper("Ats::CylinderVolumeHelper"),
 m_layerHelper(new Add4hep::DD4hepLayerHelper())
 {
+  MSG_INFO("DD4HEPCYLINDERGEOMETRYBUILDER CONSTRZCTOR");
     declareInterface<ITrackingGeometryBuilder>(this);
     declareProperty("DD4hepGeometrySvc", m_DD4hepGeometrySvc);
     declareProperty("VolumeBuilder", m_volumeBuilder);
@@ -32,7 +33,7 @@ Add4hep::DD4hepCylinderGeometryBuilder::~DD4hepCylinderGeometryBuilder()
 StatusCode Add4hep::DD4hepCylinderGeometryBuilder::initialize()
 {
     // screen output in debug mode
-    MSG_DEBUG( "initialize()" );
+    MSG_INFO( "initialize()" );
     //retrieve the Service providing the DD4hep geometry
     RETRIEVE_FATAL(m_DD4hepGeometrySvc);
     return StatusCode::SUCCESS;
