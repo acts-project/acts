@@ -2,7 +2,7 @@
 #Package: test
 ##########################################################
 
-gaudi_subdir(test v1r0)
+gaudi_subdir(PyTest v1r0)
 
 gaudi_depends_on_subdirs(GaudiKernel)
 

@@ -3,6 +3,8 @@
 ################################################################################
 gaudi_subdir(GenericGeometryTools v1r0)
 
+gaudi_install_python_modules()
+
 gaudi_depends_on_subdirs(GaudiKernel
 			 Core/Algebra
 			 Core/CoreInterfaces

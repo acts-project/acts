@@ -1,7 +1,7 @@
 class GenericDetectorConstructionGaudi(object):
     """docstring for GenericDetector"""
     def __init__(self, name, outputLevel):
-        super(GenericDetectorConstruction, self).__init__()
+        super(GenericDetectorConstructionGaudi, self).__init__()
         self.__name__ = name
         self.__tgsvc__ = None
         

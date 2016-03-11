@@ -16,6 +16,8 @@
 #include <unistd.h>
 #endif
 
+DECLARE_COMPONENT(Ats::TrackingGeometryTest)
+
 Ats::TrackingGeometryTest::TrackingGeometryTest(const std::string& name, ISvcLocator* pSvcLocator) :
  Ats::AlgorithmBase(name, pSvcLocator),
 #ifdef TRKDETDESCR_MEMUSAGE   
