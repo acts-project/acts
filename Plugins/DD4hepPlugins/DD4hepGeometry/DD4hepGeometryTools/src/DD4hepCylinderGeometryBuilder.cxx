@@ -20,8 +20,6 @@ m_layerHelper(new Add4hep::DD4hepLayerHelper())
   MSG_INFO("DD4HEPCYLINDERGEOMETRYBUILDER CONSTRZCTOR");
     declareInterface<ITrackingGeometryBuilder>(this);
     declareProperty("DD4hepGeometrySvc", m_DD4hepGeometrySvc);
-    declareProperty("VolumeBuilder", m_volumeBuilder);
-    declareProperty("VolumeHelper", m_volumeHelper);
 }
 
 
