@@ -25,7 +25,7 @@
 #include "GenericGeometryTools/GenericLayerBuilder.h"
 #include "GenericDetectorElement/DetectorElement.h"
 
-DECLARE_COMPONENT(Agd::GenericLayerBuilder)
+DECLARE_TOOL_FACTORY(Agd::GenericLayerBuilder)
 
 // constructor
 Agd::GenericLayerBuilder::GenericLayerBuilder(const std::string& t, const std::string& n, const IInterface* p) :
@@ -81,6 +81,11 @@ Agd::GenericLayerBuilder::~GenericLayerBuilder()
 StatusCode Agd::GenericLayerBuilder::initialize()
 {
     MSG_DEBUG( "initialize()" );
+    StatusCode sc = Ats::AlgToolBase::initialize();
+    if(!sc.isSuccess()){
+        MSG_FATAL("Could not initialize Tool");
+        return StatusCode::FAILURE;
+    }
     
     m_posnegModulesPositionPhi.reserve(m_posnegLayerPositionsZ.size());
     for (size_t idisc = 0; idisc < m_posnegLayerPositionsZ.size(); ++idisc){
