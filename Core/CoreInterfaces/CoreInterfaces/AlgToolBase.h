@@ -26,8 +26,12 @@ namespace Ats {
                 ::AlgTool(type, name, parent),
                 MsgBase(msgSvc(), name)
             {}
-               
-            /** Virtual Destructor */   
+        
+            virtual StatusCode initialize() override
+            {
+                return ::AlgTool::initialize();
+            }
+            /** Virtual Destructor */
       	    virtual ~AlgToolBase() {}
     };
 }
