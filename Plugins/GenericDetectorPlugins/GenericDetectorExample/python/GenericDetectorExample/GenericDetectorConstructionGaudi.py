@@ -84,6 +84,7 @@ class GenericDetectorConstructionGaudi(object):
         BeamPipeVolumeBuilder.LayerArrayCreator    = LayerArrayCreator
         BeamPipeVolumeBuilder.LayerEnvelope        = 1.
         BeamPipeVolumeBuilder.OutputLevel          = outputLevel
+        print BeamPipeVolumeBuilder
         #
         from GenericGeometryTools.GenericGeometryToolsConf import Agd__GenericLayerBuilder as GenericLayerBuilder
         # # a Pixel layer builder
