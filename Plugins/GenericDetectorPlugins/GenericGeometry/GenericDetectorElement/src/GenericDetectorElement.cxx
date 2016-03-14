@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// DetectorElement.cxx, ATS project, Generic Detector plugin
+// GenericDetectorElement.cxx, ATS project, Generic Detector plugin
 ///////////////////////////////////////////////////////////////////
 
 // Ats module
-#include "GenericDetectorElement/DetectorElement.h"
+#include "GenericDetectorElement/GenericDetectorElement.h"
 // Geometry module
 #include "Surfaces/PlanarBounds.h"
 #include "Surfaces/PlaneSurface.h"
@@ -11,12 +11,12 @@
 #include "Surfaces/DiscSurface.h"
 
 /** Constructor for single sided detector element - bound to a Plane Suface */
-Ats::DetectorElement::DetectorElement(const Identifier& identifier,
+Ats::GenericDetectorElement::GenericDetectorElement(const Identifier& identifier,
                                       std::shared_ptr<Ats::Transform3D> transform, 
                                       std::shared_ptr<const Ats::PlanarBounds> pBounds,
                                       double thickness,
                                       std::shared_ptr<const Ats::SurfaceMaterial> material) :
-    Ats::DetectorElementBase(),                                  
+    DetectorElementBase(),                                  
     m_elementIdentifier(identifier),
     m_elementTransform(transform),
     m_elementBounds(pBounds.get()),
@@ -31,13 +31,13 @@ Ats::DetectorElement::DetectorElement(const Identifier& identifier,
     m_elementSurface->setSurfaceMaterial(material);    
 }
 
-/** Constructor for single sided detector element - bound to a Plane Suface */
-Ats::DetectorElement::DetectorElement(const Identifier& identifier,
+/** Constructor for single sided detector element - bound to a Disc Suface */
+Ats::GenericDetectorElement::GenericDetectorElement(const Identifier& identifier,
                                    std::shared_ptr<Ats::Transform3D> transform, 
                                    std::shared_ptr<const Ats::DiscBounds> dBounds,
                                    double thickness,
                                    std::shared_ptr<const Ats::SurfaceMaterial> material) :
-    Ats::DetectorElementBase(),                                  
+    DetectorElementBase(),                                  
     m_elementIdentifier(identifier),
     m_elementTransform(transform),
     m_elementBounds(dBounds.get()),
@@ -53,5 +53,5 @@ Ats::DetectorElement::DetectorElement(const Identifier& identifier,
 }
 
 /**  Destructor */
-Ats::DetectorElement::~DetectorElement()
+Ats::GenericDetectorElement::~GenericDetectorElement()
 {}

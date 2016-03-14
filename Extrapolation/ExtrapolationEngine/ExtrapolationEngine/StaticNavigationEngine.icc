@@ -29,7 +29,7 @@ template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::resolveBo
     // remember them for the slow acces 
     std::map< const BoundarySurface<TrackingVolume>*, bool > bSurfacesTried;
     
-    for (auto& boundaryCandidate : boundaryIntersections){
+    for (auto& boundaryCandidate : boundaryIntersections){                 
         // the surface of the 
         const BoundarySurface<TrackingVolume>* bSurfaceTV = boundaryCandidate.object;
         // skip if it's the last boundary surface

@@ -36,7 +36,7 @@ from IOVDbSvc.CondDB import conddb
 conddb.setGlobalTag('OFLCOND-SIM-00-00-00')
 
 # import the GenericDetector
-from GenericDetectorV1 import GenericDetectorConstruction
+from GenericDetectorV2 import GenericDetectorConstruction
 GenericDetector = GenericDetectorConstruction(name='GenericDetector', outputLevel=VERBOSE)
 
 #--------------------------------------------------------------
@@ -93,11 +93,11 @@ ExtrapolationEngineTest.SmearOrigin             = False
 ExtrapolationEngineTest.SimgaOriginD0           = 0.015 
 ExtrapolationEngineTest.SimgaOriginZ0           = 55.6
 # pT range for testing                        
-ExtrapolationEngineTest.PtMin                   = 100
+ExtrapolationEngineTest.PtMin                   = 1000
 ExtrapolationEngineTest.PtMax                   = 10000
 # The test range in Eta                      
-ExtrapolationEngineTest.EtaMin                  = -0.5
-ExtrapolationEngineTest.EtaMax                  =  0.5
+ExtrapolationEngineTest.EtaMin                  = -3.5
+ExtrapolationEngineTest.EtaMax                  =  3.5
 # Configure how you wanna run                  
 ExtrapolationEngineTest.CollectSensitive        = True
 ExtrapolationEngineTest.CollectPassive          = True

@@ -157,6 +157,28 @@ namespace Ats {
        std::vector< std::vector< float >* >         m_pEta;                                                    
        std::vector< std::vector< float >* >         m_pP;                                              
        std::vector< std::vector< float >* >         m_pPt;
+       
+       //<! Material section 
+       float                                        m_materialThicknessInX0;
+       float                                        m_materialThicknessInL0;
+       float                                        m_materialThicknessZARho;
+       
+       float                                        m_materialThicknessInX0Sensitive;
+       float                                        m_materialThicknessInX0Passive;
+       float                                        m_materialThicknessInX0Boundary;
+       
+       std::vector< float >*                        m_materialThicknessInX0Accumulated;
+       std::vector< float >*                        m_materialThicknessInX0Steps;
+       std::vector< float >*                        m_materialThicknessInL0Steps;
+       std::vector< float >*                        m_materialPositionX;
+       std::vector< float >*                        m_materialPositionY;
+       std::vector< float >*                        m_materialPositionZ;
+       std::vector< float >*                        m_materialPositionR;
+       std::vector< float >*                        m_materialPositionP;
+       std::vector< float >*                        m_materialPositionPt;
+       std::vector< float >*                        m_materialScaling;
+       
+       
 
    };
 } // end of namespace

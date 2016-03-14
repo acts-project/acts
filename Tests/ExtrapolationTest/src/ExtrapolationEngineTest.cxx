@@ -151,6 +151,17 @@ StatusCode Ats::ExtrapolationEngineTest::finalize() {
         delete m_pP[ip];
         delete m_pPt[ip];
     }  
+    delete m_materialThicknessInX0Accumulated;
+    delete m_materialThicknessInX0Steps;
+    delete m_materialThicknessInL0Steps;
+    delete m_materialPositionX;
+    delete m_materialPositionY;
+    delete m_materialPositionZ;
+    delete m_materialPositionR;
+    delete m_materialPositionP;
+    delete m_materialPositionPt;
+    delete m_materialScaling;
+    
     return StatusCode::SUCCESS;
 }
 
@@ -237,6 +248,36 @@ StatusCode Ats::ExtrapolationEngineTest::bookTree()
         m_tree->Branch(m_parameterNames[ip]+"Pt",         m_pPt[ip]       );
     }
     
+    // collect the material, you need branches for this
+    if (m_collectMaterial){
+        m_materialThicknessInX0Accumulated = new std::vector<float>;
+        m_materialThicknessInX0Steps       = new std::vector<float>;
+        m_materialThicknessInL0Steps       = new std::vector<float>;     
+        m_materialPositionX                = new std::vector<float>;
+        m_materialPositionY                = new std::vector<float>;
+        m_materialPositionZ                = new std::vector<float>;
+        m_materialPositionR                = new std::vector<float>;
+        m_materialPositionP                = new std::vector<float>;
+        m_materialPositionPt               = new std::vector<float>;
+        m_materialScaling                  = new std::vector<float>;   
+        m_tree->Branch("MaterialThicknessInX0",                &m_materialThicknessInX0);
+        m_tree->Branch("MaterialThicknessInL0",                &m_materialThicknessInL0);
+        m_tree->Branch("MaterialThicknessZARho",               &m_materialThicknessZARho);
+        m_tree->Branch("MaterialThicknessSensitiveInX0",       &m_materialThicknessInX0Sensitive);
+        m_tree->Branch("MaterialThicknessPassiveInX0",         &m_materialThicknessInX0Passive  );
+        m_tree->Branch("MaterialThicknessBoundaryInX0",        &m_materialThicknessInX0Boundary );
+        m_tree->Branch("MaterialThicknessAccumulatedX0",       m_materialThicknessInX0Accumulated );
+        m_tree->Branch("MaterialThicknessStepsInX0",           m_materialThicknessInX0Steps);
+        m_tree->Branch("MaterialThicknessStepsInL0",           m_materialThicknessInL0Steps);
+        m_tree->Branch("MaterialPosX",                         m_materialPositionX);
+        m_tree->Branch("MaterialPosY",                         m_materialPositionY);
+        m_tree->Branch("MaterialPosZ",                         m_materialPositionZ);
+        m_tree->Branch("MaterialPosR",                         m_materialPositionR);
+        m_tree->Branch("MaterialPosP",                         m_materialPositionP);
+        m_tree->Branch("MaterialPosPt",                        m_materialPositionPt);       
+        m_tree->Branch("MaterialScaling",                      m_materialScaling);
+    }
+    
     // now register the Tree
     ITHistSvc* tHistSvc = 0;
     if (service("THistSvc",tHistSvc).isFailure()) {
@@ -294,7 +335,29 @@ StatusCode Ats::ExtrapolationEngineTest::runTest()
           m_pEta[ip]->clear();
           m_pP[ip]->clear();
           m_pPt[ip]->clear();            
-      }                
+      }  
+      
+      // material collection
+      m_materialThicknessInX0                 = 0.;
+      m_materialThicknessInL0                 = 0.;
+      m_materialThicknessZARho                = 0.;
+      m_materialThicknessInX0Sensitive        = 0.;
+      m_materialThicknessInX0Passive          = 0.;
+      m_materialThicknessInX0Boundary         = 0.;
+      
+      if (m_collectMaterial){
+          m_materialThicknessInX0Accumulated->clear();
+          m_materialThicknessInX0Steps->clear();
+          m_materialThicknessInX0Steps->clear();
+          m_materialPositionX->clear();
+          m_materialPositionY->clear();
+          m_materialPositionZ->clear();
+          m_materialPositionR->clear();
+          m_materialPositionP->clear();
+          m_materialPositionPt->clear();
+          m_materialScaling->clear();
+      }
+                    
           
       Vector3D momentum(p*sin(theta)*cos(phi), p*sin(theta)*sin(phi), p*cos(theta));        
       // create the start parameters

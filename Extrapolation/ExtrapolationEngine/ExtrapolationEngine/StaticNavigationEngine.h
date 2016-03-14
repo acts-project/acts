@@ -57,16 +57,16 @@ namespace Ats {
         using INavigationEngine::resolvePosition;
 
         /** resolve the boundary situation - for charged particles */
-        ExtrapolationCode resolveBoundary(Ats::ExCellCharged& eCell, PropDirection dir=alongMomentum) const final;                                                                                          
+        ExtrapolationCode resolveBoundary(ExCellCharged& eCell, PropDirection dir=alongMomentum) const final;                                                                                          
 
         /** resolve the boundary situation - for neutral particles */
-        ExtrapolationCode resolveBoundary(Ats::ExCellNeutral& eCelll, PropDirection dir=alongMomentum) const final;
+        ExtrapolationCode resolveBoundary(ExCellNeutral& eCelll, PropDirection dir=alongMomentum) const final;
 
         /** resolve the boundary situation - for charged particles */
-        ExtrapolationCode resolvePosition(Ats::ExCellCharged& eCell, PropDirection dir=alongMomentum, bool noLoop=false) const final;          
+        ExtrapolationCode resolvePosition(ExCellCharged& eCell, PropDirection dir=alongMomentum, bool noLoop=false) const final;          
 
         /** resolve the boundary situation - for neutral particles */
-        ExtrapolationCode resolvePosition(Ats::ExCellNeutral& eCelll, PropDirection dir=alongMomentum, bool noLoop=false) const final;
+        ExtrapolationCode resolvePosition(ExCellNeutral& eCelll, PropDirection dir=alongMomentum, bool noLoop=false) const final;
 
         /** acces to tracking geometry */
         const TrackingGeometry& trackingGeometry() const throw (GaudiException);
