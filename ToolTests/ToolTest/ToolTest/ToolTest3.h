@@ -1,27 +1,26 @@
 ///////////////////////////////////////////////////////////////////
-// ToolTest2.h, ATS project
+// ToolTest3.h, ATS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_GEOMETRYTOOLS_TOOLTEST2_H
-#define ATS_GEOMETRYTOOLS_TOOLTEST2_H 1
+#ifndef ATS_GEOMETRYTOOLS_TOOLTEST3_H
+#define ATS_GEOMETRYTOOLS_TOOLTEST3_H 1
 
 // Core module
 #include "CoreInterfaces/AlgToolBase.h"
 // Geoemtry module
-#include "ToolTestInterfaces/IToolTest2.h"
+#include "ToolTestInterfaces/IToolTest3.h"
 // Gaudi & Athena
 #include "GaudiKernel/ToolHandle.h"
 
-#include "ToolTestInterfaces/IToolTest3.h"
     
-class ToolTest2 : public Ats::AlgToolBase, virtual public IToolTest2 {
+class ToolTest3 : public Ats::AlgToolBase, virtual public IToolTest3 {
         
     public:
         /** constructor */
-        ToolTest2(const std::string&, const std::string&, const IInterface*);
+        ToolTest3(const std::string&, const std::string&, const IInterface*);
         
         /** destructor */
-        virtual ~ToolTest2();
+        virtual ~ToolTest3();
         
         /** AlgTool initilaize method */
         virtual StatusCode initialize() override;
@@ -29,13 +28,13 @@ class ToolTest2 : public Ats::AlgToolBase, virtual public IToolTest2 {
         /** AlgTool finalize method*/
         virtual StatusCode finalize() override;
         
-        virtual StatusCode toolTest2() const override;
+        virtual StatusCode toolTest3() const override;
 
     private:
         
-      ToolHandle<IToolTest3>    m_toolTest3;
+                
 
 };
 
 
-#endif // ATS_GEOMETRYTOOLS_TOOLTEST2_H
+#endif // ATS_GEOMETRYTOOLS_TOOLTEST3_H

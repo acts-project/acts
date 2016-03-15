@@ -7,8 +7,12 @@
 from Gaudi.Configuration import *
 from Configurables import ApplicationMgr
 
+from ToolTest.ToolTestConf import ToolTest3
+Tool3 = ToolTest3("Tool3")
+
 from ToolTest.ToolTestConf import ToolTest2
 Tool2 = ToolTest2("Tool2")
+Tool2.ToolTest3 = Tool3
 
 from ToolTest.ToolTestConf import ToolTest
 Tool1 = ToolTest("Tool1")
