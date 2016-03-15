@@ -22,16 +22,16 @@ The tracking geometry (Geometry) supports the following different geometyr types
 - dense    : a dense volume description, especially made for the STEP propagator (TrkExSTEP_Propagator)
 - detached : a mixed setup of freely based volumes, especially made fort the STEP propagator
 
-One single master engine (Ats::ExtrapolationEngine) steers the dataflow and the navigation through the high level tracking volumes,
+One single master engine (Acts::ExtrapolationEngine) steers the dataflow and the navigation through the high level tracking volumes,
 calling the optimised sub engine for the different tracking volumes. The type of the tracking volume is provided by the node itself via an enumaration object.
 
-The extrapolation, navigation and eventually needed material or jacobian collection is done using a cache object (Ats::ExtrapolationCell) which is handed over from engine to engine.
+The extrapolation, navigation and eventually needed material or jacobian collection is done using a cache object (Acts::ExtrapolationCell) which is handed over from engine to engine.
 
 
 The ExtrapolationCell
 ---------------------
 
-The key object of the extrapolation engine is the Ats::ExtrapolationCell class, which is used to start, configure and steer the extrapolation process.
+The key object of the extrapolation engine is the Acts::ExtrapolationCell class, which is used to start, configure and steer the extrapolation process.
 This class is a templated object and can be used with charged (TrackParameters) and neutral (NeutralParameters) parameters.
 The ExtrapolationEngine itself thus supports the exact same interface for charged and neutral parameters.
 
@@ -42,7 +42,7 @@ The ExtrapolationCode
 ---------------------
 
 The main return class of the ExtrapolationEngine package is a ExtrapolationCode class, which carries the current status of the extrapoaltion.
-During the extrapolation process, the code forwarded between the different components is usually Ats::ExtrapolationCode::InProgress,
+During the extrapolation process, the code forwarded between the different components is usually Acts::ExtrapolationCode::InProgress,
 while success and failure codes are used to indicate different destination parameters or eventual failures during the extrapolation progress.
 
 

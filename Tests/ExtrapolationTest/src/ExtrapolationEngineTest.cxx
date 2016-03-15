@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////
-// ExtrapolationEngineTest.cxx, ATS project
+// ExtrapolationEngineTest.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 // Test module
@@ -9,8 +9,8 @@
 // Gaudi
 #include "GaudiKernel/ITHistSvc.h"
 
-Ats::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, ISvcLocator* pSvcLocator) :
- Ats::ExtrapolationTestBase(name, pSvcLocator),
+Acts::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, ISvcLocator* pSvcLocator) :
+ Acts::ExtrapolationTestBase(name, pSvcLocator),
  m_extrapolationEngine("",name),
  m_parametersProcessor(""),
  m_processSensitive(true),
@@ -136,7 +136,7 @@ Ats::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, I
     declareProperty("TreeDescription",          m_treeDescription);   
 }
 
-StatusCode Ats::ExtrapolationEngineTest::finalize() {
+StatusCode Acts::ExtrapolationEngineTest::finalize() {
 
     // memory clean up
     for (size_t ip = 0; ip < m_parameterNames.size(); ++ip){
@@ -151,10 +151,21 @@ StatusCode Ats::ExtrapolationEngineTest::finalize() {
         delete m_pP[ip];
         delete m_pPt[ip];
     }  
+    delete m_materialThicknessInX0Accumulated;
+    delete m_materialThicknessInX0Steps;
+    delete m_materialThicknessInL0Steps;
+    delete m_materialPositionX;
+    delete m_materialPositionY;
+    delete m_materialPositionZ;
+    delete m_materialPositionR;
+    delete m_materialPositionP;
+    delete m_materialPositionPt;
+    delete m_materialScaling;
+    
     return StatusCode::SUCCESS;
 }
 
-StatusCode Ats::ExtrapolationEngineTest::initializeTest() 
+StatusCode Acts::ExtrapolationEngineTest::initializeTest() 
 {
     
     // Extrapolation engine
@@ -165,7 +176,7 @@ StatusCode Ats::ExtrapolationEngineTest::initializeTest()
     return StatusCode::SUCCESS;    
 }
 
-StatusCode Ats::ExtrapolationEngineTest::bookTree()
+StatusCode Acts::ExtrapolationEngineTest::bookTree()
 {
     MSG_VERBOSE("Booking the Extrapolation test Tree.");
     
@@ -237,6 +248,36 @@ StatusCode Ats::ExtrapolationEngineTest::bookTree()
         m_tree->Branch(m_parameterNames[ip]+"Pt",         m_pPt[ip]       );
     }
     
+    // collect the material, you need branches for this
+    if (m_collectMaterial){
+        m_materialThicknessInX0Accumulated = new std::vector<float>;
+        m_materialThicknessInX0Steps       = new std::vector<float>;
+        m_materialThicknessInL0Steps       = new std::vector<float>;     
+        m_materialPositionX                = new std::vector<float>;
+        m_materialPositionY                = new std::vector<float>;
+        m_materialPositionZ                = new std::vector<float>;
+        m_materialPositionR                = new std::vector<float>;
+        m_materialPositionP                = new std::vector<float>;
+        m_materialPositionPt               = new std::vector<float>;
+        m_materialScaling                  = new std::vector<float>;   
+        m_tree->Branch("MaterialThicknessInX0",                &m_materialThicknessInX0);
+        m_tree->Branch("MaterialThicknessInL0",                &m_materialThicknessInL0);
+        m_tree->Branch("MaterialThicknessZARho",               &m_materialThicknessZARho);
+        m_tree->Branch("MaterialThicknessSensitiveInX0",       &m_materialThicknessInX0Sensitive);
+        m_tree->Branch("MaterialThicknessPassiveInX0",         &m_materialThicknessInX0Passive  );
+        m_tree->Branch("MaterialThicknessBoundaryInX0",        &m_materialThicknessInX0Boundary );
+        m_tree->Branch("MaterialThicknessAccumulatedX0",       m_materialThicknessInX0Accumulated );
+        m_tree->Branch("MaterialThicknessStepsInX0",           m_materialThicknessInX0Steps);
+        m_tree->Branch("MaterialThicknessStepsInL0",           m_materialThicknessInL0Steps);
+        m_tree->Branch("MaterialPosX",                         m_materialPositionX);
+        m_tree->Branch("MaterialPosY",                         m_materialPositionY);
+        m_tree->Branch("MaterialPosZ",                         m_materialPositionZ);
+        m_tree->Branch("MaterialPosR",                         m_materialPositionR);
+        m_tree->Branch("MaterialPosP",                         m_materialPositionP);
+        m_tree->Branch("MaterialPosPt",                        m_materialPositionPt);       
+        m_tree->Branch("MaterialScaling",                      m_materialScaling);
+    }
+    
     // now register the Tree
     ITHistSvc* tHistSvc = 0;
     if (service("THistSvc",tHistSvc).isFailure()) {
@@ -251,7 +292,7 @@ StatusCode Ats::ExtrapolationEngineTest::bookTree()
     
 }
 
-StatusCode Ats::ExtrapolationEngineTest::runTest()
+StatusCode Acts::ExtrapolationEngineTest::runTest()
 {
   MSG_VERBOSE("Running the ExtrapolationEngineTest Test in parameters mode : " << m_parametersMode);
   
@@ -264,12 +305,12 @@ StatusCode Ats::ExtrapolationEngineTest::runTest()
       // verbose output
       MSG_DEBUG("===> starting test " << it << " <<===");
       // create the curvilinear parameters
-      double eta   = (m_scanMode) ? m_currentEta : m_etaMin + (m_etaMax-m_etaMin)*Ats::ExtrapolationTestBase::m_flatDist->shoot();
+      double eta   = (m_scanMode) ? m_currentEta : m_etaMin + (m_etaMax-m_etaMin)*Acts::ExtrapolationTestBase::m_flatDist->shoot();
       double theta = 2.*atan(exp(-eta));
-      double phi   = (m_scanMode) ? m_currentPhi : m_phiMin + (m_phiMax-m_phiMin)*Ats::ExtrapolationTestBase::m_flatDist->shoot();
-      double pt    = m_ptMin  + (m_ptMax - m_ptMin)*Ats::ExtrapolationTestBase::m_flatDist->shoot(); 
+      double phi   = (m_scanMode) ? m_currentPhi : m_phiMin + (m_phiMax-m_phiMin)*Acts::ExtrapolationTestBase::m_flatDist->shoot();
+      double pt    = m_ptMin  + (m_ptMax - m_ptMin)*Acts::ExtrapolationTestBase::m_flatDist->shoot(); 
       double p     = pt/sin(theta);
-      double q     = m_splitCharge ? m_charge*-1. : (m_parametersMode ? (Ats::ExtrapolationTestBase::m_flatDist->shoot() > 0.5 ? 1. : -1) : 1.);      // charge or neutral
+      double q     = m_splitCharge ? m_charge*-1. : (m_parametersMode ? (Acts::ExtrapolationTestBase::m_flatDist->shoot() > 0.5 ? 1. : -1) : 1.);      // charge or neutral
 
       // initializa the validation variables
       m_endSuccessful= 0;    
@@ -294,12 +335,34 @@ StatusCode Ats::ExtrapolationEngineTest::runTest()
           m_pEta[ip]->clear();
           m_pP[ip]->clear();
           m_pPt[ip]->clear();            
-      }                
+      }  
+      
+      // material collection
+      m_materialThicknessInX0                 = 0.;
+      m_materialThicknessInL0                 = 0.;
+      m_materialThicknessZARho                = 0.;
+      m_materialThicknessInX0Sensitive        = 0.;
+      m_materialThicknessInX0Passive          = 0.;
+      m_materialThicknessInX0Boundary         = 0.;
+      
+      if (m_collectMaterial){
+          m_materialThicknessInX0Accumulated->clear();
+          m_materialThicknessInX0Steps->clear();
+          m_materialThicknessInX0Steps->clear();
+          m_materialPositionX->clear();
+          m_materialPositionY->clear();
+          m_materialPositionZ->clear();
+          m_materialPositionR->clear();
+          m_materialPositionP->clear();
+          m_materialPositionPt->clear();
+          m_materialScaling->clear();
+      }
+                    
           
       Vector3D momentum(p*sin(theta)*cos(phi), p*sin(theta)*sin(phi), p*cos(theta));        
       // create the start parameters
-      double d0 = m_smearProductionVertex ? (m_smearFlatOriginT ? (m_d0Min + (m_d0Max-m_d0Min)*Ats::ExtrapolationTestBase::m_flatDist->shoot()) : Ats::ExtrapolationTestBase::m_gaussDist->shoot()*m_sigmaOriginT) : 0.;
-      double z0 = m_smearProductionVertex ? (m_smearFlatOriginZ ? (m_z0Min + (m_z0Max-m_z0Min)*Ats::ExtrapolationTestBase::m_flatDist->shoot()) : Ats::ExtrapolationTestBase::m_gaussDist->shoot()*m_sigmaOriginZ) : 0.;
+      double d0 = m_smearProductionVertex ? (m_smearFlatOriginT ? (m_d0Min + (m_d0Max-m_d0Min)*Acts::ExtrapolationTestBase::m_flatDist->shoot()) : Acts::ExtrapolationTestBase::m_gaussDist->shoot()*m_sigmaOriginT) : 0.;
+      double z0 = m_smearProductionVertex ? (m_smearFlatOriginZ ? (m_z0Min + (m_z0Max-m_z0Min)*Acts::ExtrapolationTestBase::m_flatDist->shoot()) : Acts::ExtrapolationTestBase::m_gaussDist->shoot()*m_sigmaOriginZ) : 0.;
 
       m_startPhi       = phi;  
       m_startEta       = eta;
@@ -309,24 +372,24 @@ StatusCode Ats::ExtrapolationEngineTest::runTest()
       m_charge         = q;
       
             // preps
-      std::unique_ptr<AtsSymMatrixD<5> > cov;
-      AtsVectorD<5> pars; pars << d0, z0, phi, theta, q/p;
+      std::unique_ptr<ActsSymMatrixD<5> > cov;
+      ActsVectorD<5> pars; pars << d0, z0, phi, theta, q/p;
       
       MSG_VERBOSE("Building parameters from Perigee with (" << d0 << ", " << z0 << ", " << phi << ", " << theta << ", " << q/p);
       
-      Ats::PerigeeSurface pSurface(Vector3D(0.,0.,0.));
+      Acts::PerigeeSurface pSurface(Vector3D(0.,0.,0.));
       if (m_parametersMode == 0 ){
           // create the neutral parameters
           NeutralBoundParameters startParameters(std::move(cov),std::move(pars),pSurface);
           // Screen output
-          if (executeTestT<Ats::NeutralParameters>(startParameters).isFailure())
+          if (executeTestT<Acts::NeutralParameters>(startParameters).isFailure())
               MSG_WARNING("Test with neutral parameters did not succeed.");
           else
               m_tree->Fill();
       } else {
           // create the charged parameters
           BoundParameters startParameters(std::move(cov),std::move(pars),pSurface);
-          if (executeTestT<Ats::TrackParameters>(startParameters).isFailure())
+          if (executeTestT<Acts::TrackParameters>(startParameters).isFailure())
               MSG_WARNING("Test with neutral parameters did not succeed.");
           else
               m_tree->Fill();

@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////
-// RealQuadraticEquation.h, ATS project
+// RealQuadraticEquation.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_EXTRAPOLATIONUTILS_REALQUADRATICEQUATION_H
-#define ATS_EXTRAPOLATIONUTILS_REALQUADRATICEQUATION_H 1
+#ifndef ACTS_EXTRAPOLATIONUTILS_REALQUADRATICEQUATION_H
+#define ACTS_EXTRAPOLATIONUTILS_REALQUADRATICEQUATION_H 1
 
 #include <utility>
 #include <cmath>
 
-namespace Ats {
+namespace Acts {
   /** @enum RQESolutionType
     */ 
       

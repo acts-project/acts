@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////
-// ExtrapolationTestBase.h, ATS project
+// ExtrapolationTestBase.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 #ifndef TRKDETDESCRUNITTESTS_ExtrapolationTestBase_H
@@ -10,7 +10,7 @@
 // Core module
 #include "CoreInterfaces/AlgorithmBase.h"
 
-namespace Ats {
+namespace Acts {
  
         
     /** @class ExtrapolationTestBase

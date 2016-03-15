@@ -7,7 +7,7 @@
 #include "AthenaBaseComps/AthService.h"
 #include "AtlasCorePlugins/AthenaMessaging.h"
 
-namespace Ats {
+namespace Acts {
     typedef AthAlgorithm AlgorithmBase;
     typedef AthAlgTool   AlgToolBase;
     typedef AthService   ServiceBase;

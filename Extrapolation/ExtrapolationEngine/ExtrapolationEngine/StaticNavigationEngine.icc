@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////
-// StaticNavigationEngine.icc, ATS project
+// StaticNavigationEngine.icc, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 // Extrapolation module
@@ -13,8 +13,8 @@
 #include "Algebra/AlgebraDefinitions.h"
 
 /** handle the failure - as configured */
-template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::resolveBoundaryT(Ats::ExtrapolationCell<T>& eCell,
-                                                                                        Ats::PropDirection pDir) const 
+template <class T> Acts::ExtrapolationCode Acts::StaticNavigationEngine::resolveBoundaryT(Acts::ExtrapolationCell<T>& eCell,
+                                                                                        Acts::PropDirection pDir) const 
 {   
     EX_MSG_DEBUG(++eCell.navigationStep, "navigation", "", "resolve boundary situation leaving '"<< eCell.leadVolume->volumeName() 
                 << (int(pDir) > 0 ? "' along momentum." : "' opposite momentum.") );
@@ -29,7 +29,7 @@ template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::resolveBo
     // remember them for the slow acces 
     std::map< const BoundarySurface<TrackingVolume>*, bool > bSurfacesTried;
     
-    for (auto& boundaryCandidate : boundaryIntersections){
+    for (auto& boundaryCandidate : boundaryIntersections){                 
         // the surface of the 
         const BoundarySurface<TrackingVolume>* bSurfaceTV = boundaryCandidate.object;
         // skip if it's the last boundary surface
@@ -117,9 +117,9 @@ template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::resolveBo
 }  
 
 /** handle the failure - as configured */
-template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::handleBoundaryT(Ats::ExtrapolationCell<T>& eCell,
-                                                                                       const Ats::BoundarySurface<Ats::TrackingVolume>& bSurfaceTV,
-                                                                                       Ats::PropDirection pDir,
+template <class T> Acts::ExtrapolationCode Acts::StaticNavigationEngine::handleBoundaryT(Acts::ExtrapolationCell<T>& eCell,
+                                                                                       const Acts::BoundarySurface<Acts::TrackingVolume>& bSurfaceTV,
+                                                                                       Acts::PropDirection pDir,
                                                                                        bool stepout) const 
 {
     // get the bondary surface and compare with last one to prevent loops
@@ -200,8 +200,8 @@ template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::handleBou
 
 
 /** handle the failure - as configured */
-template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::resolvePositionT(Ats::ExtrapolationCell<T>& eCell,
-                                                                                        Ats::PropDirection pDir,
+template <class T> Acts::ExtrapolationCode Acts::StaticNavigationEngine::resolvePositionT(Acts::ExtrapolationCell<T>& eCell,
+                                                                                        Acts::PropDirection pDir,
                                                                                         bool /*noLoop*/ ) const 
 {   
     EX_MSG_DEBUG(++eCell.navigationStep, "navigation", "", "resolve position '"<< eCell.leadParameters->position() 

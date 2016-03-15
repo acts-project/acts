@@ -28,8 +28,8 @@ library JsonWriters *.cxx components/*.cxx
 apply_pattern component_library
 
 private
-macro_append cppflags $(AtsCoreTool)              
-macro_append cppflags $(AtsCoreParameterDefs)
+macro_append cppflags $(ActsCoreTool)              
+macro_append cppflags $(ActsCoreParameterDefs)
 
 #macro cppdebugflags '$(cppdebugflags_s)'
 #macro_remove componentshr_linkopts "-Wl,-s"

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////
-// GeometryJsonWriter.cxx, ATS project
+// GeometryJsonWriter.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 // Core module
@@ -17,8 +17,8 @@
 #include <sstream>
 
 // constructor
-Ats::GeometryJsonWriter::GeometryJsonWriter(const std::string& t, const std::string& n, const IInterface* p) : 
-  Ats::AlgToolBase(t,n,p),
+Acts::GeometryJsonWriter::GeometryJsonWriter(const std::string& t, const std::string& n, const IInterface* p) : 
+  Acts::AlgToolBase(t,n,p),
   m_outputFileName("TrackingGeometry.json"),
   m_outputPrecision(6),
   m_firstLayerWritten(false),
@@ -28,7 +28,7 @@ Ats::GeometryJsonWriter::GeometryJsonWriter(const std::string& t, const std::str
   m_onlyWriteVolumes(false)
 {
     
-    declareInterface<Ats::IGeometryProcessor>(this);
+    declareInterface<Acts::IGeometryProcessor>(this);
     
     declareProperty("OutputFileName",  m_outputFileName);
     declareProperty("OutputPrecision", m_outputPrecision);
@@ -44,11 +44,11 @@ Ats::GeometryJsonWriter::GeometryJsonWriter(const std::string& t, const std::str
 }
 
 // destructor
-Ats::GeometryJsonWriter::~GeometryJsonWriter()
+Acts::GeometryJsonWriter::~GeometryJsonWriter()
 {}
 
 
-StatusCode Ats::GeometryJsonWriter::initialize()
+StatusCode Acts::GeometryJsonWriter::initialize()
 {
     // open the file for writing
     m_outputFile.open(m_outputFileName.c_str());
@@ -58,7 +58,7 @@ StatusCode Ats::GeometryJsonWriter::initialize()
     return StatusCode::SUCCESS;    
 }
 
-StatusCode Ats::GeometryJsonWriter::finalize()
+StatusCode Acts::GeometryJsonWriter::finalize()
 {
     // close the file
     m_outputFile.close();
@@ -67,11 +67,11 @@ StatusCode Ats::GeometryJsonWriter::finalize()
 }
 
 
-StatusCode Ats::GeometryJsonWriter::process(const Ats::TrackingGeometry& tgeo) {
+StatusCode Acts::GeometryJsonWriter::process(const Acts::TrackingGeometry& tgeo) {
   
   MSG_VERBOSE("Start processing the TrackingGeometry recursively");
   // retrieve the highest tracking volume
-  const Ats::TrackingVolume* worldVolume = tgeo.highestTrackingVolume();  
+  const Acts::TrackingVolume* worldVolume = tgeo.highestTrackingVolume();  
   if (worldVolume){
       MSG_VERBOSE("TrackingVolume '" << worldVolume->volumeName() << "' retrieved as highest level node.");
       return process(*worldVolume, 0);
@@ -82,7 +82,7 @@ StatusCode Ats::GeometryJsonWriter::process(const Ats::TrackingGeometry& tgeo) {
 }
 
 // Processor Action to work on TrackingVolumes
-StatusCode Ats::GeometryJsonWriter::process(const Ats::TrackingVolume& tvol, size_t level) {
+StatusCode Acts::GeometryJsonWriter::process(const Acts::TrackingVolume& tvol, size_t level) {
   std::stringstream displayBuffer;
   for (size_t il = 0; il < level; ++il) displayBuffer << " ";
   MSG_VERBOSE(displayBuffer.str() << "TrackingVolume '" << tvol.volumeName() << "'");
@@ -99,21 +99,21 @@ StatusCode Ats::GeometryJsonWriter::process(const Ats::TrackingVolume& tvol, siz
 }
 
 // Processor Action to work on Layers 
-StatusCode Ats::GeometryJsonWriter::process(const Ats::Layer&, size_t) 
+StatusCode Acts::GeometryJsonWriter::process(const Acts::Layer&, size_t) 
 {
     // return SUCCESS
     return StatusCode::SUCCESS;
 }
 
 // Processor Action to work on Layers 
-StatusCode Ats::GeometryJsonWriter::process(const Ats::Surface&, size_t) 
+StatusCode Acts::GeometryJsonWriter::process(const Acts::Surface&, size_t) 
 {
     // return SUCCESS
     return StatusCode::SUCCESS;
 }
 
 // Processor Action to work on TrackingVolumes
-StatusCode Ats::GeometryJsonWriter::processNodeUncertain(const Ats::TrackingVolume& tvol, std::stringstream& stream, bool& hasMeaningfulContent,size_t level) {
+StatusCode Acts::GeometryJsonWriter::processNodeUncertain(const Acts::TrackingVolume& tvol, std::stringstream& stream, bool& hasMeaningfulContent,size_t level) {
   std::stringstream displayBuffer;
   for (size_t il = 0; il < level; ++il) displayBuffer << " ";
   MSG_VERBOSE(displayBuffer.str() << "processNodeUncertain: TrackingVolume '" << tvol.volumeName() << "'");
@@ -126,7 +126,7 @@ StatusCode Ats::GeometryJsonWriter::processNodeUncertain(const Ats::TrackingVolu
   bool firstcontent=true;
 
   // Process the contained layers if they exist
-  const Ats::LayerArray* layerArray = tvol.confinedLayers();
+  const Acts::LayerArray* layerArray = tvol.confinedLayers();
   if (layerArray) {
     // display output
     auto& layers = layerArray->arrayObjects();
@@ -221,7 +221,7 @@ StatusCode Ats::GeometryJsonWriter::processNodeUncertain(const Ats::TrackingVolu
   return StatusCode::SUCCESS; 
 }
 
-void Ats::GeometryJsonWriter::dumpVolumeDetails(std::stringstream& stream, const Ats::TrackingVolume& tvol) const {
+void Acts::GeometryJsonWriter::dumpVolumeDetails(std::stringstream& stream, const Acts::TrackingVolume& tvol) const {
   dumpVolumeBounds(stream, tvol.volumeBounds());
   double cx = tvol.center().x();
   double cy = tvol.center().y();
@@ -234,8 +234,8 @@ void Ats::GeometryJsonWriter::dumpVolumeDetails(std::stringstream& stream, const
   stream << ", \"Coords\": [ [" << cx << "," << cy << "," << cz << "],[" << e0 << "," << e1 << "," << e2 << "] ] ";
 }
 
-void Ats::GeometryJsonWriter::dumpVolumeBounds(std::stringstream& stream, const Ats::VolumeBounds& volumeBounds) const {
-  const Ats::CylinderVolumeBounds* cvb = dynamic_cast<const Ats::CylinderVolumeBounds*>(&volumeBounds);
+void Acts::GeometryJsonWriter::dumpVolumeBounds(std::stringstream& stream, const Acts::VolumeBounds& volumeBounds) const {
+  const Acts::CylinderVolumeBounds* cvb = dynamic_cast<const Acts::CylinderVolumeBounds*>(&volumeBounds);
   if (cvb){
     stream << "\"Shape\" : \"CYL\",";
     stream << "\"Bounds\" : [" <<  cvb->innerRadius () << "," << cvb->outerRadius () <<"," << cvb->mediumRadius ()<<"," 
@@ -245,7 +245,7 @@ void Ats::GeometryJsonWriter::dumpVolumeBounds(std::stringstream& stream, const 
 }
 
 
-StatusCode Ats::GeometryJsonWriter::processNodeUncertain(const Ats::Layer& lay, std::stringstream& stream, bool& hasMeangingfulContent, size_t level)
+StatusCode Acts::GeometryJsonWriter::processNodeUncertain(const Acts::Layer& lay, std::stringstream& stream, bool& hasMeangingfulContent, size_t level)
 {    
     std::stringstream displayBuffer;
     for (size_t il = 0; il < level; ++il) displayBuffer << " ";
@@ -256,11 +256,11 @@ StatusCode Ats::GeometryJsonWriter::processNodeUncertain(const Ats::Layer& lay, 
         size_t nSurfaces = lay.surfaceArray()->arrayObjects().size();
         // the layer has a surface Array - go for it
         // get the dimensions
-        const Ats::Surface* referenceSurface = lay.surfaceArray()->arrayObjects()[0];
+        const Acts::Surface* referenceSurface = lay.surfaceArray()->arrayObjects()[0];
         // the reference Surface exists
         if (referenceSurface){
             // dynamic_cast to RectangleBounds
-            const Ats::RectangleBounds* rBounds = dynamic_cast<const Ats::RectangleBounds*>(&(referenceSurface->bounds()));
+            const Acts::RectangleBounds* rBounds = dynamic_cast<const Acts::RectangleBounds*>(&(referenceSurface->bounds()));
             // we have rBounds - go on for the moment
             if (rBounds){
                 hasMeangingfulContent = true;
@@ -290,7 +290,7 @@ StatusCode Ats::GeometryJsonWriter::processNodeUncertain(const Ats::Layer& lay, 
                 }
                 stream << " ]   }";
             }
-            const Ats::TrapezoidBounds* tBounds = dynamic_cast<const Ats::TrapezoidBounds*>(&(referenceSurface->bounds()));
+            const Acts::TrapezoidBounds* tBounds = dynamic_cast<const Acts::TrapezoidBounds*>(&(referenceSurface->bounds()));
             if (tBounds){
               hasMeangingfulContent = true;
               // the layer is defined

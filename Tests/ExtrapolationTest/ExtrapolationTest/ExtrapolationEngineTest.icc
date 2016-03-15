@@ -9,7 +9,7 @@
 #include "EventDataUtils/ParticleHypothesis.h"
 #include "Detector/Layer.h"
 
-template <class T> StatusCode Ats::ExtrapolationEngineTest::executeTestT(const T& startParameters)
+template <class T> StatusCode Acts::ExtrapolationEngineTest::executeTestT(const T& startParameters)
 {
   
     m_startPositionX = startParameters.position().x();
@@ -22,27 +22,27 @@ template <class T> StatusCode Ats::ExtrapolationEngineTest::executeTestT(const T
         MSG_WARNING("Event Processing did not work with the parameter processor!");  
 
     // setup the extrapolation how you'd like it
-    Ats::ExtrapolationCell<T> ecc(startParameters);
-    ecc.setParticleHypothesis((Ats::ParticleHypothesis)m_particleHypothesis);
-    ecc.addConfigurationMode(Ats::ExtrapolationMode::StopAtBoundary);
-    ecc.addConfigurationMode(Ats::ExtrapolationMode::FATRAS);	
-    if (m_collectSensitive) ecc.addConfigurationMode(Ats::ExtrapolationMode::CollectSensitive);
-    if (m_collectPassive)   ecc.addConfigurationMode(Ats::ExtrapolationMode::CollectPassive);
-    if (m_collectBoundary)  ecc.addConfigurationMode(Ats::ExtrapolationMode::CollectBoundary);
-    if (m_collectMaterial)  ecc.addConfigurationMode(Ats::ExtrapolationMode::CollectMaterial);
+    Acts::ExtrapolationCell<T> ecc(startParameters);
+    ecc.setParticleHypothesis((Acts::ParticleHypothesis)m_particleHypothesis);
+    ecc.addConfigurationMode(Acts::ExtrapolationMode::StopAtBoundary);
+    ecc.addConfigurationMode(Acts::ExtrapolationMode::FATRAS);	
+    if (m_collectSensitive) ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectSensitive);
+    if (m_collectPassive)   ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectPassive);
+    if (m_collectBoundary)  ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectBoundary);
+    if (m_collectMaterial)  ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectMaterial);
     if (m_sensitiveCurvilinear) ecc.sensitiveCurvilinear = true;
         
-    if (m_robustSearch)    ecc.addConfigurationMode(Ats::ExtrapolationMode::RobustSearch);
+    if (m_robustSearch)    ecc.addConfigurationMode(Acts::ExtrapolationMode::RobustSearch);
     
     // force a stop in the extrapoaltion mode
     if (m_pathLimit > 0.) {
         ecc.pathLimit = m_pathLimit;
-        ecc.addConfigurationMode(Ats::ExtrapolationMode::StopWithPathLimit);
+        ecc.addConfigurationMode(Acts::ExtrapolationMode::StopWithPathLimit);
     }
     // screen output
     MSG_DEBUG("===> forward extrapolation - collecting information <<===");
     // call the extrapolation engine
-    Ats::ExtrapolationCode eCode = m_extrapolationEngine->extrapolate(ecc);
+    Acts::ExtrapolationCode eCode = m_extrapolationEngine->extrapolate(ecc);
     // save the success code
     m_endSuccessful= int(eCode.code);
     // end the parameters if there
@@ -69,7 +69,7 @@ template <class T> StatusCode Ats::ExtrapolationEngineTest::executeTestT(const T
             // screen output
             MSG_DEBUG("===> backward extrapolation - collecting information <<===");
             // call the extrapolation engine
-            Ats::ExtrapolationCode eCodeBwd = m_extrapolationEngine->extrapolate(ecc,&startParameters.associatedSurface());
+            Acts::ExtrapolationCode eCodeBwd = m_extrapolationEngine->extrapolate(ecc,&startParameters.associatedSurface());
             // safe the success code
             m_backSuccessful= int(eCodeBwd.code);
             // end the parameters if there
@@ -107,7 +107,7 @@ template <class T> StatusCode Ats::ExtrapolationEngineTest::executeTestT(const T
     return StatusCode::SUCCESS;
 }
 
-template <class T> StatusCode Ats::ExtrapolationEngineTest::fillStepInformationT(Ats::ExtrapolationCell<T>& ecc, int) 
+template <class T> StatusCode Acts::ExtrapolationEngineTest::fillStepInformationT(Acts::ExtrapolationCell<T>& ecc, int fwdBwd) 
 {
     
     std::vector< const TrackParametersBase* > processParameters;
@@ -127,9 +127,9 @@ template <class T> StatusCode Ats::ExtrapolationEngineTest::fillStepInformationT
            // passive   -> ip = 1
            // boundary  -> ip = 2
            unsigned int ip = 0;
-           if (es.stepConfiguration.checkMode(Ats::ExtrapolationMode::CollectPassive)){
+           if (es.stepConfiguration.checkMode(Acts::ExtrapolationMode::CollectPassive)){
                ip = 1;
-           } else if (es.stepConfiguration.checkMode(Ats::ExtrapolationMode::CollectBoundary)){
+           } else if (es.stepConfiguration.checkMode(Acts::ExtrapolationMode::CollectBoundary)){
                ip = 2;
            }   
            // fill the parameters    
@@ -144,7 +144,37 @@ template <class T> StatusCode Ats::ExtrapolationEngineTest::fillStepInformationT
            m_pPt[ip]->push_back(parameters->momentum().perp());
     
         }
+        
+        // collect the material if configured to do so - only forward direction for the moment
+        // @TODO ultimate material test - collect forward backword and add up at 0
+        if (m_collectMaterial && es.material && fwdBwd > 0){
+            // VERBOSE output
+            MSG_VERBOSE("Crossing material with scaling " << es.materialScaling);
+            MSG_VERBOSE("         material information  " << *es.material);
+            // thickness in X0 and L0
+            float tInX0 = es.material->thicknessInX0()*es.materialScaling;
+            float tInL0 = es.material->thicknessInL0()*es.materialScaling;
+            float tzarho = es.material->zOverAtimesRhoTimesD()*es.materialScaling;
+            // the overall material
+            m_materialThicknessInX0              += tInX0;
+            m_materialThicknessInL0              += tInL0;
+            m_materialThicknessZARho             += tzarho;
+            // the stepwise material
+            m_materialThicknessInX0Accumulated->push_back(m_materialThicknessInX0);
+            m_materialThicknessInX0Steps->push_back(tInX0);
+            m_materialThicknessInX0Steps->push_back(tInL0);
+            m_materialPositionX->push_back(es.materialPosition.x());
+            m_materialPositionY->push_back(es.materialPosition.y());
+            m_materialPositionZ->push_back(es.materialPosition.z());
+            m_materialPositionR->push_back(es.materialPosition.perp()); 
+            m_materialPositionP->push_back(parameters->momentum().mag()); 
+            m_materialPositionPt->push_back(parameters->momentum().perp()); 
+            m_materialScaling->push_back(es.materialScaling);
+        }
+        
     }
+    
+    
     // use the pocessor if needed
     if (!m_parametersProcessor.empty() && m_parametersProcessor->process(processParameters).isFailure())
         MSG_WARNING("Event Processing did not work with the parameter processor!");

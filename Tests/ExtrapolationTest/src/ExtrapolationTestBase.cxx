@@ -1,11 +1,11 @@
 ///////////////////////////////////////////////////////////////////
-// ExtrapolationTestBase.cxx, ATS project
+// ExtrapolationTestBase.cxx, ACTS project
 //////////////////////////////////////////////////////////////////
 
 // Test module
 #include "ExtrapolationTest/ExtrapolationTestBase.h"
 
-Ats::ExtrapolationTestBase::ExtrapolationTestBase(const std::string& name, ISvcLocator* pSvcLocator):
+Acts::ExtrapolationTestBase::ExtrapolationTestBase(const std::string& name, ISvcLocator* pSvcLocator):
     AlgorithmBase(name,pSvcLocator),
     m_gaussDist(0),
     m_flatDist(0),
@@ -16,14 +16,14 @@ Ats::ExtrapolationTestBase::ExtrapolationTestBase(const std::string& name, ISvcL
   declareProperty("EnableScanMode",          m_scanMode);
 }
 
-Ats::ExtrapolationTestBase::~ExtrapolationTestBase()
+Acts::ExtrapolationTestBase::~ExtrapolationTestBase()
 {
     delete m_gaussDist;
     delete m_flatDist;
     delete m_landauDist;
 }
 
-StatusCode Ats::ExtrapolationTestBase::initialize()
+StatusCode Acts::ExtrapolationTestBase::initialize()
 {
     MSG_INFO( "Creating random number services, call bookTree() and initializeTest()" );
 
@@ -45,19 +45,19 @@ StatusCode Ats::ExtrapolationTestBase::initialize()
     return StatusCode::SUCCESS;
 }
  
-StatusCode Ats::ExtrapolationTestBase::execute()
+StatusCode Acts::ExtrapolationTestBase::execute()
 {
   return runTest();
 }
 
-StatusCode Ats::ExtrapolationTestBase::finalize()
+StatusCode Acts::ExtrapolationTestBase::finalize()
 {
 
    MSG_INFO( "finalize()" );
    return StatusCode::SUCCESS;
 }
 
-StatusCode Ats::ExtrapolationTestBase::bookTree() { return StatusCode::SUCCESS; }
+StatusCode Acts::ExtrapolationTestBase::bookTree() { return StatusCode::SUCCESS; }
 
-StatusCode Ats::ExtrapolationTestBase::initializeTest() { return StatusCode::SUCCESS; }
+StatusCode Acts::ExtrapolationTestBase::initializeTest() { return StatusCode::SUCCESS; }
 

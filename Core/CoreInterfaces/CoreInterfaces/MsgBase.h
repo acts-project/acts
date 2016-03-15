@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// MsgBase.h, ATS project
+// MsgBase.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_CORE_MSGBASE
-#define ATS_CORE_MSGBASE 1
+#ifndef ACTS_CORE_MSGBASE
+#define ACTS_CORE_MSGBASE 1
 
 // STL includes
 #include <iosfwd>
@@ -13,7 +13,7 @@
 #include "GaudiKernel/IMessageSvc.h"
 #include "GaudiKernel/MsgStream.h"
 
-namespace Ats {
+namespace Acts {
     
     /** @class MsgBase 
     
@@ -101,4 +101,4 @@ namespace Ats {
 
 }
 
-#endif //ATS_CORE_MSGBASE
+#endif //ACTS_CORE_MSGBASE

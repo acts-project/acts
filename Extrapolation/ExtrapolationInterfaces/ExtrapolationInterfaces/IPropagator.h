@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// IPropagator.h, ATS project
+// IPropagator.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_EXTRAPOLATIONINTERFACES_IPROPAGATOR_H
-#define ATS_EXTRAPOLATIONINTERFACES_IPROPAGATOR_H 1
+#ifndef ACTS_EXTRAPOLATIONINTERFACES_IPROPAGATOR_H
+#define ACTS_EXTRAPOLATIONINTERFACES_IPROPAGATOR_H 1
 
 // Gaudi
 #include "GaudiKernel/IAlgTool.h"
@@ -17,7 +17,7 @@
 // STL
 #include <utility>
 
-namespace Ats {
+namespace Acts {
 
   class TransportJacobian;
   class Surface;
@@ -57,4 +57,4 @@ namespace Ats {
 
 } // end of namespace
 
-#endif // ATS_EXTRAPOLATIONINTERFACES_IPROPAGATOR_H
+#endif // ACTS_EXTRAPOLATIONINTERFACES_IPROPAGATOR_H

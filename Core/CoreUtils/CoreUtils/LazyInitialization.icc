@@ -1,7 +1,7 @@
 // STL include(s)
 #include <functional>
 
-namespace Ats
+namespace Acts
 {
   /**
    * @brief lazy initialization of raw pointer
@@ -115,4 +115,4 @@ namespace Ats
 
     return rShared;
   }
-}; // enf of namespace Ats
+}; // enf of namespace Acts

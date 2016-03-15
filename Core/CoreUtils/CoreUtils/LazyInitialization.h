@@ -6,7 +6,7 @@
 #include <atomic>
 #include <memory>
 
-namespace Ats
+namespace Acts
 {
   /**
    * @struct LazyInit
@@ -43,7 +43,7 @@ namespace Ats
     template<typename... Args,typename FUNC>
     static std::shared_ptr<T>& init(std::shared_ptr<T>& rShared,Mutex& m,const FUNC& creator,Args&&... args);
   }; 
-} // end of namespace Ats
+} // end of namespace Acts
 
 #include "CoreUtils/LazyInitialization.icc"
 

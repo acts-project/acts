@@ -1,9 +1,9 @@
 //////////////////////////////////////////////////////////////////
-// TrackingGeometryTest.h, ATS project
+// TrackingGeometryTest.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_EXAMPLES_TRACKINGGEOMETRYTEST_H
-#define ATS_EXAMPLES_TRACKINGGEOMETRYTEST_H
+#ifndef ACTS_EXAMPLES_TRACKINGGEOMETRYTEST_H
+#define ACTS_EXAMPLES_TRACKINGGEOMETRYTEST_H
 
 // Core
 #include "CoreInterfaces/AlgorithmBase.h"
@@ -17,7 +17,7 @@
 #include "TrkDetDescrUtils/MemoryLogger.h"
 #endif
 
-namespace Ats {
+namespace Acts {
      
     class IGeometryProcessor;
     class TrackingGeometry;

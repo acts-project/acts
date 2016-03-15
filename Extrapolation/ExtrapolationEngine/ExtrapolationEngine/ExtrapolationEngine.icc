@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////
-// ExtrapolationEngine.icc, ATS project
+// ExtrapolationEngine.icc, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
@@ -12,24 +12,24 @@
 #include <iostream>
 #include <iomanip>
 
-template <class T> Ats::ExtrapolationCode Ats::ExtrapolationEngine::extrapolateT(Ats::ExtrapolationCell<T>& eCell,
-                                                                                 const Ats::Surface* sf,
-                                                                                 Ats::PropDirection dir,
-                                                                                 const Ats::BoundaryCheck& bcheck) const
+template <class T> Acts::ExtrapolationCode Acts::ExtrapolationEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
+                                                                                 const Acts::Surface* sf,
+                                                                                 Acts::PropDirection dir,
+                                                                                 const Acts::BoundaryCheck& bcheck) const
 {
 
     EX_MSG_DEBUG(eCell.navigationStep, "extrapolate", "", "starting extrapolation sequence.");
     // initialize the navigation
-    Ats::ExtrapolationCode eCode = initNavigation<T>(eCell,sf,dir);
+    Acts::ExtrapolationCode eCode = initNavigation<T>(eCell,sf,dir);
     EX_MSG_VERBOSE(eCell.navigationStep, "extrapolate", "", "initialize navigation with return code : " << eCode.toString() );
     // main loop over volumes 
-    while (eCell.leadVolume && eCode == Ats::ExtrapolationCode::InProgress ){
+    while (eCell.leadVolume && eCode == Acts::ExtrapolationCode::InProgress ){
         // give output that you are in the master volume loop
         EX_MSG_VERBOSE(eCell.navigationStep, "extrapolate", "loop", "processing volume : " << eCell.leadVolume->volumeName() );
         // get the appropriate IExtrapolationEngine
-        Ats::GeometryType geoType = eCell.leadVolume->geometrySignature()>2 ? Ats::Dense : Ats::Static;
-        const Ats::IExtrapolationEngine* iee = m_eeAccessor[geoType];
-        eCode = iee ? iee->extrapolate(eCell, sf, bcheck) : Ats::ExtrapolationCode::FailureConfiguration;
+        Acts::GeometryType geoType = eCell.leadVolume->geometrySignature()>2 ? Acts::Dense : Acts::Static;
+        const Acts::IExtrapolationEngine* iee = m_eeAccessor[geoType];
+        eCode = iee ? iee->extrapolate(eCell, sf, bcheck) : Acts::ExtrapolationCode::FailureConfiguration;
         // give a message about what you have
         EX_MSG_VERBOSE(eCell.navigationStep, "extrapolate", "", "returned from volume with return code : " << eCode.toString() <<
    	  " and geoType:"<< geoType );
@@ -42,9 +42,9 @@ template <class T> Ats::ExtrapolationCode Ats::ExtrapolationEngine::extrapolateT
 }
                                                           
                                                           
-template <class T> Ats::ExtrapolationCode Ats::ExtrapolationEngine::initNavigation(Ats::ExtrapolationCell<T>& eCell,
-                                                                                   const Ats::Surface* sf,
-                                                                                   Ats::PropDirection dir) const throw (GaudiException)
+template <class T> Acts::ExtrapolationCode Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
+                                                                                   const Acts::Surface* sf,
+                                                                                   Acts::PropDirection dir) const throw (GaudiException)
 {
     // initialize the Navigation stream ----------------------------------------------------------------------------------------
     //
@@ -57,7 +57,7 @@ template <class T> Ats::ExtrapolationCode Ats::ExtrapolationEngine::initNavigati
     if (!m_trackingGeometry && updateTrackingGeometry().isFailure()){
 	    EX_MSG_WARNING(eCell.navigationStep, "navigation", "", "could not retrieve geometry. Stopping.");
         // configuration error
-        return Ats::ExtrapolationCode::FailureConfiguration;
+        return Acts::ExtrapolationCode::FailureConfiguration;
     } else
       EX_MSG_VERBOSE(eCell.navigationStep, "navigation", "", "geometry ready to use.");
     // ---------- START initialization -----------------------------------------------------------------------------------------
@@ -66,14 +66,14 @@ template <class T> Ats::ExtrapolationCode Ats::ExtrapolationEngine::initNavigati
     eCell.startVolume = eCell.startVolume ? eCell.startVolume : ( eCell.startLayer ? eCell.startLayer->enclosingTrackingVolume() : 0  );
     // check if you are at the volume boundary
     if (!eCell.startVolume ||  m_trackingGeometry->atVolumeBoundary(eCell.startParameters->position(),eCell.startVolume,0.001)  ) {
-      Ats::ExtrapolationCode eVol = m_navigationEngine->resolvePosition(eCell,dir,true);  
+      Acts::ExtrapolationCode eVol = m_navigationEngine->resolvePosition(eCell,dir,true);  
       if (!eVol.isSuccessOrRecovered() && !eVol.inProgress()) return eVol; 
       eCell.startVolume = eCell.leadVolume;
     } else {
       eCell.leadVolume = eCell.startVolume;
     }
     // bail out of the start volume can not be resolved
-    if (!eCell.startVolume) return Ats::ExtrapolationCode::FailureNavigation;
+    if (!eCell.startVolume) return Acts::ExtrapolationCode::FailureNavigation;
     // screen output
     EX_MSG_VERBOSE( eCell.navigationStep, "navigation", "", "start volume termined as : " << eCell.startVolume->volumeName() );
     // check layer association
@@ -87,7 +87,7 @@ template <class T> Ats::ExtrapolationCode Ats::ExtrapolationEngine::initNavigati
       eCell.endSurface = sf;
       // re-evaluate the radial direction if the end surface is given
       // should not happen in FATRAS extrapolation mode
-      if ( !eCell.checkConfigurationMode(Ats::ExtrapolationMode::FATRAS) )
+      if ( !eCell.checkConfigurationMode(Acts::ExtrapolationMode::FATRAS) )
            eCell.setRadialDirection();
            // trying association via the layer : associated layer of material layer
            eCell.endLayer  =  sf->associatedLayer();
@@ -97,10 +97,10 @@ template <class T> Ats::ExtrapolationCode Ats::ExtrapolationEngine::initNavigati
           EX_MSG_VERBOSE( eCell.navigationStep, "navigation", "", "end volume needs to be determinded by surface intersection." );
           // use a propagation to find the endVolume and endLayer
           // - @TODO can be opmisied (straiht line for high momentum - use directly )
-          Ats::ExtrapolationCell<T> navCell(*eCell.leadParameters, dir);
-          navCell.addConfigurationMode(Ats::ExtrapolationMode::Direct);
+          Acts::ExtrapolationCell<T> navCell(*eCell.leadParameters, dir);
+          navCell.addConfigurationMode(Acts::ExtrapolationMode::Direct);
           // screen output
-          m_propagationEngine->propagate(navCell,*eCell.endSurface,Ats::anyDirection,false, eCell.navigationCurvilinear);
+          m_propagationEngine->propagate(navCell,*eCell.endSurface,Acts::anyDirection,false, eCell.navigationCurvilinear);
           // check for sucess to the destination
           // CHECK_ECODE_SUCCESS_NODEST(navCell, eCode); @TODO check what this is
           // // screen output
@@ -119,7 +119,7 @@ template <class T> Ats::ExtrapolationCode Ats::ExtrapolationEngine::initNavigati
     } else
         EX_MSG_VERBOSE( eCell.navigationStep, "navigation", "", "no destination surface nor end volume provided, extrapolaiton has to stop on other means." );
     // return the progress call
-    return Ats::ExtrapolationCode::InProgress;                                                              
+    return Acts::ExtrapolationCode::InProgress;                                                              
 }
 
 

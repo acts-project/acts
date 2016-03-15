@@ -1,4 +1,4 @@
-template <class T> bool Ats::RungeKuttaEngine::propagateRungeKuttaT(ExtrapolationCell<T>& eCell,
+template <class T> bool Acts::RungeKuttaEngine::propagateRungeKuttaT(ExtrapolationCell<T>& eCell,
                                                                     PropagationCache& pCache,
                                                                     const T& parametersT,
                                                                     const Surface& dSurface) const 

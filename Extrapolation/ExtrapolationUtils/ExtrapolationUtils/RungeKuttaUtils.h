@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////////////
-//  Header file for class  RungeKuttaUtils, ATS project
+//  Header file for class  RungeKuttaUtils, ACTS project
 //  author Igor Gavrilenko     
 /////////////////////////////////////////////////////////////////////////////////
 
-#ifndef ATS_EXTRAPOLATIONUTILS_RUNGEKUTTAUTILS_H
-#define ATS_EXTRAPOLATIONUTILS_RUNGEKUTTAUTILS_H 1
+#ifndef ACTS_EXTRAPOLATIONUTILS_RUNGEKUTTAUTILS_H
+#define ACTS_EXTRAPOLATIONUTILS_RUNGEKUTTAUTILS_H 1
 
 // EventData module
 #include "TrackParameters/TrackParameters.h"
@@ -15,7 +15,7 @@
 #include <vector>
 #include <map>
 
-namespace Ats {
+namespace Acts {
 
   class ConeSurface           ;
   class DiscSurface           ;
@@ -26,7 +26,7 @@ namespace Ats {
   /**
   @class RungeKuttaUtils
 
-  Ats::RungeKuttaUtils is set algorithms for track parameters transformation
+  Acts::RungeKuttaUtils is set algorithms for track parameters transformation
 
   from local to global and global to local system coordinate and step
   estimation to surface.
@@ -137,7 +137,7 @@ namespace Ats {
       /////////////////////////////////////////////////////////////////////////////////
       // Covariance matrix production for TrackParameters
       /////////////////////////////////////////////////////////////////////////////////
-      AtsSymMatrixD<5>* newCovarianceMatrix(double*,const AtsSymMatrixD<5>&) const;
+      ActsSymMatrixD<5>* newCovarianceMatrix(double*,const ActsSymMatrixD<5>&) const;
 
       /////////////////////////////////////////////////////////////////////////////////
       // Transformations from curvilinear to global system coordinates
@@ -171,4 +171,4 @@ namespace Ats {
     };
 } // end of namespace
 
-#endif // ATS_EXTRAPOLATIONUTILS_RUNGEKUTTAUTILS_H
+#endif // ACTS_EXTRAPOLATIONUTILS_RUNGEKUTTAUTILS_H

@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// IParametersBaseProcessor.h, ATS project
+// IParametersBaseProcessor.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_TESTINTERFACES_IPARAMETERSBASEPROCESSOR_H
-#define ATS_TESTINTERFACES_IPARAMETERSBASEPROCESSOR_H 1
+#ifndef ACTS_TESTINTERFACES_IPARAMETERSBASEPROCESSOR_H
+#define ACTS_TESTINTERFACES_IPARAMETERSBASEPROCESSOR_H 1
 
 // EventData module
 #include "ParametersBase/TrackParametersBase.h"
@@ -12,7 +12,7 @@
 //STL
 #include <string>
 
-namespace Ats {
+namespace Acts {
 
   /** Interface ID for IParametersBaseProcessors*/  
   static const InterfaceID IID_IParametersBaseProcessor("IParametersBaseProcessor", 1, 0);
@@ -45,4 +45,4 @@ namespace Ats {
 
 } // end of namespace
 
-#endif // ATS_TESTINTERFACES_IPARAMETERSBASEPROCESSOR_H
+#endif // ACTS_TESTINTERFACES_IPARAMETERSBASEPROCESSOR_H

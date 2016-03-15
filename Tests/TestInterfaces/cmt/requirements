@@ -7,7 +7,7 @@ use GaudiInterface        GaudiInterface-*           External
 use ParametersBase        ParametersBase-*           EventData
 
 private
-macro_append cppflags $(AtsCoreParameterDefs)
+macro_append cppflags $(ActsCoreParameterDefs)
 
 
 private

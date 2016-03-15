@@ -1,7 +1,7 @@
 #include "GaudiKernel/DeclareFactoryEntries.h"
 #include "RungeKuttaEngine/RungeKuttaEngine.h"
 
-using namespace Ats;
+using namespace Acts;
 
 DECLARE_SERVICE_FACTORY( RungeKuttaEngine )
 

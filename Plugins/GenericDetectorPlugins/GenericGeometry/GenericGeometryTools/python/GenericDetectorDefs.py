@@ -1,15 +1,47 @@
 import math
 
+""" Material definition """
+class Material(object):
+
+    """docstring for Material: simply five numbers """
+    def __init__(self, name, x0, l0, A, Z, rho) :
+        self.__name__ = name
+        self.__pars__ = [ x0, l0, A, Z, rho ]
+
+    def name(self) :
+        return self.__name__
+        
+    def properties(self) :
+        return self.__pars__
+        
+""" Material definition """
+class MaterialProperties(object):
+
+    """docstring for MaterialProperties: material with thickness and concentration """
+    def __init__(self, material, thickness, concentration = None) :
+        self.__material__ = material
+        self.__pars__     = [ thickness ]
+        self.__pars__    += material.properties()
+        self.__conc__     = concentration
+
+    def properties(self) :
+        return self.__pars__
+
+    def concentration(self) :
+        return self.__conc__
+
+
 """ Detector Module definition """
 class DetectorModule(object):
     
     """docstring for DetectorModule: defines a simple detector moduel for generic detetors"""
-    def __init__(self, minHalfX, maxHalfX, halfY, thickness):
+    def __init__(self, minHalfX, maxHalfX, halfY, thickness, material = None):
         super(DetectorModule, self).__init__()
         self.__minHalfX__  = minHalfX
         self.__maxHalfX__  = maxHalfX
         self.__halfY__     = halfY
         self.__thickness__ = thickness
+        self.__material__  = material
 
     """return methods"""
     def minHalfX(self):
@@ -29,23 +61,28 @@ class DetectorModule(object):
     """return methods"""
     def thickness(self):
         return self.__thickness__
+        
+    """return the module material"""
+    def material(self):
+        return self.__material__
 
 """ Cylinder Layer definition """
 class CylinderLayer(object):
     """docstring for CylinderLayer"""
-    def __init__(self, module, radius, numPhi, numZ, tiltPhi, overlapZ, staggerZ, envelopeCoverZ, frontSideStereo = 0., backSideStereo = 0., backSideGap = 0. ):
+    def __init__(self, module, radius, numPhi, numZ, tiltPhi, overlapZ, staggerZ, envelopeCoverZ, material, frontSideStereo = 0., backSideStereo = 0., backSideGap = 0. ):
         super(CylinderLayer, self).__init__()
-        self.__radius__   =   radius 
-        self.__module__   =   module 
-        self.__numPhi__   =   numPhi 
-        self.__numZ__     =   numZ 
-        self.__tiltPhi__  =   tiltPhi 
-        self.__overlapZ__ =   overlapZ
-        self.__staggerZ__ =   staggerZ
-        self.__eCoverZ__  =   envelopeCoverZ
-        self.__fsideS__   =   frontSideStereo
-        self.__bsideS__   =   backSideStereo
-        self.__bsideGap__ =   backSideGap
+        self.__radius__   =  radius 
+        self.__module__   =  module 
+        self.__numPhi__   =  numPhi 
+        self.__numZ__     =  numZ 
+        self.__tiltPhi__  =  tiltPhi 
+        self.__overlapZ__ =  overlapZ
+        self.__staggerZ__ =  staggerZ
+        self.__eCoverZ__  =  envelopeCoverZ
+        self.__fsideS__   =  frontSideStereo
+        self.__bsideS__   =  backSideStereo
+        self.__bsideGap__ =  backSideGap
+        self.__material__ =  material
         
     def radius(self):
         return self.__radius__
@@ -85,6 +122,9 @@ class CylinderLayer(object):
         
     def enevlopeCoverZ(self) :
         return self.__eCoverZ__
+        
+    def material(self) :
+        return self.__material__    
         
     def frontSideStereo(self) :
         return self.__fsideS__ 
@@ -130,12 +170,14 @@ class DiscRing(object):
 class DiscLayer(object):
     
     """docstring for DiscLayer"""
-    def __init__(self, rings, zPosition, rStagger, rEnvelope):
+    def __init__(self, rings, zPosition, rStagger, rEnvelope, material):
         super(DiscLayer, self).__init__()
         self.__zPosition__       = zPosition
         self.__rStagger__        = rStagger
         self.__rEnvelope__       = rEnvelope
         self.__rings__           = rings
+        self.__material__        = material
+        
         # the ring components
         self.__rRadii__           = []
         self.__rPhiModules__      = []
@@ -145,6 +187,7 @@ class DiscLayer(object):
         self.__maxHalfLengtshX__  = []
         self.__halfLengtshX__     = []
         self.__moduleThickness__  = []
+        self.__moduleMaterial__   = []
         
         for ring in self.__rings__ :
             self.__rRadii__          += [ ring.radius() ]
@@ -153,7 +196,12 @@ class DiscLayer(object):
             self.__minHalfLengtshX__ += [ ring.module().minHalfX() ]
             self.__maxHalfLengtshX__ += [ ring.module().maxHalfX() ]
             self.__halfLengtshX__    += [ ring.module().halfY() ]
-            self.__moduleThickness__ += [ ring.module().thickness( )]
+            self.__moduleThickness__ += [ ring.module().thickness() ]
+            
+            # needed for declareproperty
+            for mprop in ring.module().material().properties() :            
+                self.__moduleMaterial__  += [ mprop ]
+                
             # needed for declareproperty
             for phi in ring.modulePositionsPhi() :
                 self.__rPhisPositions__  += [ phi ]
@@ -167,6 +215,9 @@ class DiscLayer(object):
 
     def rEnvelope(self) :
         return self.__rEnvelope__
+        
+    def material(self) :
+        return self.__material__            
 
     def rings(self) :
         return self.__rings__
@@ -195,6 +246,9 @@ class DiscLayer(object):
     def ringModulesThickness(self):
         return self.__moduleThickness__  
         
+    def ringModulesMaterial(self):
+        return self.__moduleMaterial__  
+        
         
 """ Barrel type Volume definition """
 class BarrelVolume(object):    
@@ -205,6 +259,8 @@ class BarrelVolume(object):
         # process
         self.__layerRadii__                 = []
         self.__layerEnvelopeZ__             = []
+        self.__layerMaterialProperties__    = []
+        self.__layerMaterialConcentration__ = []
         self.__layerModulesPositionsPhi__   = []
         self.__layerMoudlesTiltPhi__        = []
         self.__layerModulesPositionZ__      = []
@@ -212,23 +268,27 @@ class BarrelVolume(object):
         self.__layerModuleHalfX__           = []
         self.__layerModuleHalfY__           = []
         self.__layerModuleThickness__       = []
+        self.__layerModuleMaterial__        = []
         self.__layerModuleFrontSideS__      = []
         self.__layerModuleBackSideS__       = []
         self.__layerModuleBackSideGap__     = []
         
         for layer in self.__barrelLayers__ :            
-            self.__layerRadii__               += [ layer.radius() ]
-            self.__layerEnvelopeZ__           += [ layer.enevlopeCoverZ() ]
-            self.__layerModulesPositionsPhi__ += [ layer.modulePositionsPhi() ]
-            self.__layerMoudlesTiltPhi__      += [ layer.tiltPhi() ]
-            self.__layerModulesPositionZ__    += [ layer.modulePositionsZ() ]
-            self.__layerModuleStaggerZ__      += [ layer.staggerZ() ]
-            self.__layerModuleHalfX__         += [ layer.module().maxHalfX() ]
-            self.__layerModuleHalfY__         += [ layer.module().halfY() ]
-            self.__layerModuleThickness__     += [ layer.module().thickness() ]
-            self.__layerModuleFrontSideS__    += [ layer.frontSideStereo() ]
-            self.__layerModuleBackSideS__     += [ layer.backSideStereo() ]
-            self.__layerModuleBackSideGap__   += [ layer.backSideGap() ]
+            self.__layerRadii__                 += [ layer.radius() ]
+            self.__layerMaterialProperties__    += [ layer.material().properties() ]
+            self.__layerMaterialConcentration__ += [ layer.material().concentration() ]
+            self.__layerEnvelopeZ__             += [ layer.enevlopeCoverZ() ]
+            self.__layerModulesPositionsPhi__   += [ layer.modulePositionsPhi() ]
+            self.__layerMoudlesTiltPhi__        += [ layer.tiltPhi() ]
+            self.__layerModulesPositionZ__      += [ layer.modulePositionsZ() ]
+            self.__layerModuleStaggerZ__        += [ layer.staggerZ() ]
+            self.__layerModuleHalfX__           += [ layer.module().maxHalfX() ]
+            self.__layerModuleHalfY__           += [ layer.module().halfY() ]
+            self.__layerModuleThickness__       += [ layer.module().thickness() ]
+            self.__layerModuleMaterial__        += [ layer.module().material().properties() ]
+            self.__layerModuleFrontSideS__      += [ layer.frontSideStereo() ]
+            self.__layerModuleBackSideS__       += [ layer.backSideStereo() ]
+            self.__layerModuleBackSideGap__     += [ layer.backSideGap() ]
             
             
     def layerRadii( self ): 
@@ -236,7 +296,13 @@ class BarrelVolume(object):
 
     def layerEnvelopesZ( self ): 
         return self.__layerEnvelopeZ__  
-
+        
+    def layerMaterialProperties( self ): 
+        return self.__layerMaterialProperties__  
+        
+    def layerMaterialConcentration( self ): 
+        return self.__layerMaterialConcentration__  
+        
     def layerModulesFrontSideStereo( self ) :        
         return self.__layerModuleFrontSideS__  
 
@@ -266,6 +332,9 @@ class BarrelVolume(object):
 
     def layerModulesThickness( self ) :
         return self.__layerModuleThickness__  
+        
+    def layerModulesMaterial( self ) :
+        return self.__layerModuleMaterial__    
                
 
 """ Endcap type Volume definition """
@@ -277,6 +346,8 @@ class EndcapVolume(object):
         # process
         self.__layerPositionsZ__            = []
         self.__layerEnvelopesR__            = []
+        self.__layerMaterialProperties__    = []
+        self.__layerMaterialConcentration__ = []
         self.__layerModulesRadii__          = []
         self.__layerModulesStaggerR__       = []
         self.__layerModulesInPhi__          = []
@@ -286,25 +357,36 @@ class EndcapVolume(object):
         self.__layerModulesMaxHalfX__       = []
         self.__layerModulesHalfY__          = []
         self.__layerModulesThickness__      = []
+        self.__layerModuleMaterial__        = []
+        
         for layer in self.__discLayers__ :
-            self.__layerPositionsZ__          += [ layer.zPosition() ]
-            self.__layerEnvelopesR__          += [ layer.rEnvelope() ]
-            self.__layerModulesRadii__        += [ layer.ringRadii() ]
-            self.__layerModulesStaggerR__     += [ layer.rStagger()  ]
-            self.__layerModulesInPhi__        += [ layer.ringPhiModules() ]
-            self.__layerModulesPhiPositions__ += [ layer.ringModulesPhiPositions() ]
-            self.__layerModulesStaggerPhi__   += [ layer.ringModulesPhiStagger() ]
-            self.__layerModulesMinHalfX__     += [ layer.ringModulesMinHalfX() ]
-            self.__layerModulesMaxHalfX__     += [ layer.ringModulesMaxHalfX() ]
-            self.__layerModulesHalfY__        += [ layer.ringModulesHalfY() ]
-            self.__layerModulesThickness__    += [ layer.ringModulesThickness() ]
+            self.__layerPositionsZ__            += [ layer.zPosition() ]
+            self.__layerEnvelopesR__            += [ layer.rEnvelope() ]
+            self.__layerMaterialProperties__    += [ layer.material().properties() ]
+            self.__layerMaterialConcentration__ += [ layer.material().concentration() ]
+            self.__layerModulesRadii__          += [ layer.ringRadii() ]
+            self.__layerModulesStaggerR__       += [ layer.rStagger()  ]
+            self.__layerModulesInPhi__          += [ layer.ringPhiModules() ]
+            self.__layerModulesPhiPositions__   += [ layer.ringModulesPhiPositions() ]
+            self.__layerModulesStaggerPhi__     += [ layer.ringModulesPhiStagger() ]
+            self.__layerModulesMinHalfX__       += [ layer.ringModulesMinHalfX() ]
+            self.__layerModulesMaxHalfX__       += [ layer.ringModulesMaxHalfX() ]
+            self.__layerModulesHalfY__          += [ layer.ringModulesHalfY() ]
+            self.__layerModulesThickness__      += [ layer.ringModulesThickness() ]
+            self.__layerModuleMaterial__        += [ layer.ringModulesMaterial() ]
         
     def layerPositionsZ(self):                 
         return self.__layerPositionsZ__
     
     def layerEnvelopesR(self):
-        return self.__layerEnvelopesR__        
-    
+        return self.__layerEnvelopesR__ 
+        
+    def layerMaterialProperties( self ): 
+        return self.__layerMaterialProperties__  
+        
+    def layerMaterialConcentration( self ): 
+        return self.__layerMaterialConcentration__  
+
     def layerModulesRadii(self): 
         return self.__layerModulesRadii__              
     
@@ -331,5 +413,8 @@ class EndcapVolume(object):
            
     def layerModulesThickness(self):
         return self.__layerModulesThickness__
+        
+    def layerModulesMaterial( self ) :
+        return self.__layerModuleMaterial__    
         
            

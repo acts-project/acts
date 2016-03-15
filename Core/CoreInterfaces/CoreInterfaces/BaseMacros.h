@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// BaseMacros.h, ATS project
+// BaseMacros.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_CORE_BASEMACROS_H
-#define ATS_CORE_BASEMACROS_H 1
+#ifndef ACTS_CORE_BASEMACROS_H
+#define ACTS_CORE_BASEMACROS_H 1
 
 // these macros simplify/harmonize the retrieval ot TOOLS/SERVICES
 #define RETRIEVE_FATAL(handle)                                                                          \

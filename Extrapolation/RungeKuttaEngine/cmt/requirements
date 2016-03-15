@@ -20,9 +20,9 @@ use MagneticFieldInterfaces     MagneticFieldInterfaces-*   MagneticField
 #################################################################
 # private use statements
 private
-macro_append cppflags $(AtsCoreService) 
-macro_append cppflags $(AtsCoreParameterDefs)
-macro_append cppflags $(AtsMagneticFieldSvc) 
+macro_append cppflags $(ActsCoreService) 
+macro_append cppflags $(ActsCoreParameterDefs)
+macro_append cppflags $(ActsMagneticFieldSvc) 
 
 
 public

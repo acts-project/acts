@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// MaterialEffectsEngine.h, ATS project
+// MaterialEffectsEngine.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_EXTRAPOLATIONENGINE_MATERIAKEFFECTSENGINE_H
-#define ATS_EXTRAPOLATIONENGINE_MATERIAKEFFECTSENGINE_H 1
+#ifndef ACTS_EXTRAPOLATIONENGINE_MATERIAKEFFECTSENGINE_H
+#define ACTS_EXTRAPOLATIONENGINE_MATERIAKEFFECTSENGINE_H 1
 
 // Core module
 #include "CoreInterfaces/ServiceBase.h"
@@ -18,7 +18,7 @@
 #include "TrackParameters/TrackParameters.h"
 #include "NeutralParameters/NeutralParameters.h"
  
-namespace Ats {
+namespace Acts {
   
   class Layer;
 
@@ -32,7 +32,7 @@ namespace Ats {
 
       @author Andreas Salzburger -at - cern.ch
   */
-  class MaterialEffectsEngine : public Ats::ServiceBase, virtual public IMaterialEffectsEngine {
+  class MaterialEffectsEngine : public Acts::ServiceBase, virtual public IMaterialEffectsEngine {
     public:
 
       /** Constructor */
@@ -65,10 +65,10 @@ namespace Ats {
         it either manipulates or creates new parameters
         @TODO check for memory handling
         */
-      const TrackParameters* updateTrackParameters(const Ats::TrackParameters& parameters,
-                                                   Ats::ExCellCharged& eCell,
-                                                   Ats::PropDirection dir,
-                                                   Ats::MaterialUpdateStage matupstage) const; 
+      const TrackParameters* updateTrackParameters(const Acts::TrackParameters& parameters,
+                                                   Acts::ExCellCharged& eCell,
+                                                   Acts::PropDirection dir,
+                                                   Acts::MaterialUpdateStage matupstage) const; 
         
       MaterialInteraction                          m_interactionFormulae;     //!< the formulas concentrated
       ParticleMasses                               m_particleMasses;          //!< struct of Particle masses
@@ -80,5 +80,5 @@ namespace Ats {
 
 } // end of namespace
 
-#endif // ATS_EXTRAPOLATIONENGINE_MATERIAKEFFECTSENGINE_H
+#endif // ACTS_EXTRAPOLATIONENGINE_MATERIAKEFFECTSENGINE_H
 

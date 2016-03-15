@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// StaticNavigationEngine.h, ATS project
+// StaticNavigationEngine.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_EXTRAPOLATIONENGINE_STATICNAVIGATIONENGINE_H
-#define ATS_EXTRAPOLATIONENGINE_STATICNAVIGATIONENGINE_H 1
+#ifndef ACTS_EXTRAPOLATIONENGINE_STATICNAVIGATIONENGINE_H
+#define ACTS_EXTRAPOLATIONENGINE_STATICNAVIGATIONENGINE_H 1
 
 // Gaudi
 #include "GaudiKernel/ToolHandle.h"
@@ -23,7 +23,7 @@
 #include "TrackParameters/TrackParameters.h"
 #include "NeutralParameters/NeutralParameters.h"
 
-namespace Ats {
+namespace Acts {
 
   class TrackingGeometry;
 
@@ -57,16 +57,16 @@ namespace Ats {
         using INavigationEngine::resolvePosition;
 
         /** resolve the boundary situation - for charged particles */
-        ExtrapolationCode resolveBoundary(Ats::ExCellCharged& eCell, PropDirection dir=alongMomentum) const final;                                                                                          
+        ExtrapolationCode resolveBoundary(ExCellCharged& eCell, PropDirection dir=alongMomentum) const final;                                                                                          
 
         /** resolve the boundary situation - for neutral particles */
-        ExtrapolationCode resolveBoundary(Ats::ExCellNeutral& eCelll, PropDirection dir=alongMomentum) const final;
+        ExtrapolationCode resolveBoundary(ExCellNeutral& eCelll, PropDirection dir=alongMomentum) const final;
 
         /** resolve the boundary situation - for charged particles */
-        ExtrapolationCode resolvePosition(Ats::ExCellCharged& eCell, PropDirection dir=alongMomentum, bool noLoop=false) const final;          
+        ExtrapolationCode resolvePosition(ExCellCharged& eCell, PropDirection dir=alongMomentum, bool noLoop=false) const final;          
 
         /** resolve the boundary situation - for neutral particles */
-        ExtrapolationCode resolvePosition(Ats::ExCellNeutral& eCelll, PropDirection dir=alongMomentum, bool noLoop=false) const final;
+        ExtrapolationCode resolvePosition(ExCellNeutral& eCelll, PropDirection dir=alongMomentum, bool noLoop=false) const final;
 
         /** acces to tracking geometry */
         const TrackingGeometry& trackingGeometry() const throw (GaudiException);
@@ -100,7 +100,7 @@ namespace Ats {
 
     };
 
-inline const Ats::TrackingGeometry& StaticNavigationEngine::trackingGeometry() const throw (GaudiException) {
+inline const Acts::TrackingGeometry& StaticNavigationEngine::trackingGeometry() const throw (GaudiException) {
     if (!m_trackingGeometry && updateTrackingGeometry().isFailure()){
         EX_MSG_FATAL("", "updateGeo", "", "Could not load TrackingGeometry with name '" << m_trackingGeometryName << "'. Aborting." );
         throw GaudiException("StaticNavigationEngine", "Problem with TrackingGeometry loading.", StatusCode::FAILURE);
@@ -113,5 +113,5 @@ inline const Ats::TrackingGeometry& StaticNavigationEngine::trackingGeometry() c
 //!< define the templated function
 #include "StaticNavigationEngine.icc"
 
-#endif // ATS_EXTRAPOLATIONENGINE_STATICNAVIGATIONENGINE_H
+#endif // ACTS_EXTRAPOLATIONENGINE_STATICNAVIGATIONENGINE_H
 

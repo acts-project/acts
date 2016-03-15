@@ -2,7 +2,7 @@
 #include "ExtrapolationTest/ExtrapolationEngineTest.h"
 #include "ExtrapolationTest/PropagationEngineTest.h"
 
-using namespace Ats;
+using namespace Acts;
 
 DECLARE_ALGORITHM_FACTORY( ExtrapolationEngineTest )
 DECLARE_ALGORITHM_FACTORY( PropagationEngineTest )

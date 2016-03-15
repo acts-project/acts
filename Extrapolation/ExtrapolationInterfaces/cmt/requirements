@@ -21,7 +21,7 @@ use ExtrapolationUtils    ExtrapolationUtils-*       Extrapolation
 apply_pattern cmake_add_command command=metalibrary
 
 private
-macro_append cppflags $(AtsCoreParameterDefs)
+macro_append cppflags $(ActsCoreParameterDefs)
 
 private
 macro DOXYGEN_IMAGE_PATH "../doc/images"

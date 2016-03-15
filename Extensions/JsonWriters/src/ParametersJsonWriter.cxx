@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////
-// ParametersJsonWriter.cxx, ATS project
+// ParametersJsonWriter.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 // Core module
@@ -13,8 +13,8 @@
 #include <boost/lexical_cast.hpp>
 
 // constructor
-Ats::ParametersJsonWriter::ParametersJsonWriter(const std::string& t, const std::string& n, const IInterface* p) : 
-  Ats::AlgToolBase(t,n,p),
+Acts::ParametersJsonWriter::ParametersJsonWriter(const std::string& t, const std::string& n, const IInterface* p) : 
+  Acts::AlgToolBase(t,n,p),
   m_outputFileBase("EventDump_"),
   m_outputType("xAOD::Type::TrackParticle"),
   m_outputName("InDetTrackParticles"),
@@ -25,7 +25,7 @@ Ats::ParametersJsonWriter::ParametersJsonWriter(const std::string& t, const std:
   m_trackNumber(0)
 
 {
-    declareInterface<Ats::IParametersBaseProcessor>(this);
+    declareInterface<Acts::IParametersBaseProcessor>(this);
     
     declareProperty("OutputFileBase",  m_outputFileBase);
     declareProperty("OutputType",      m_outputType);
@@ -38,21 +38,21 @@ Ats::ParametersJsonWriter::ParametersJsonWriter(const std::string& t, const std:
 }  
 
 // destructor
-Ats::ParametersJsonWriter::~ParametersJsonWriter()
+Acts::ParametersJsonWriter::~ParametersJsonWriter()
 {}
 
 
-StatusCode Ats::ParametersJsonWriter::initialize()
+StatusCode Acts::ParametersJsonWriter::initialize()
 {
     return openFile();    
 }
 
-StatusCode Ats::ParametersJsonWriter::finalize()
+StatusCode Acts::ParametersJsonWriter::finalize()
 {
     return closeFile();
 }
 
-StatusCode Ats::ParametersJsonWriter::process(const TrackParametersBase& tpBase) 
+StatusCode Acts::ParametersJsonWriter::process(const TrackParametersBase& tpBase) 
 {
 
     std::string trackObject = m_outputObject;
@@ -72,7 +72,7 @@ StatusCode Ats::ParametersJsonWriter::process(const TrackParametersBase& tpBase)
     return StatusCode::SUCCESS;    
 }
 
-StatusCode Ats::ParametersJsonWriter::process(const std::vector<const TrackParametersBase*>& pBaseVector) {
+StatusCode Acts::ParametersJsonWriter::process(const std::vector<const TrackParametersBase*>& pBaseVector) {
     
     // prepare
     m_outputFile << "\"pos\": [";
@@ -89,7 +89,7 @@ StatusCode Ats::ParametersJsonWriter::process(const std::vector<const TrackParam
     
 }
 
-StatusCode Ats::ParametersJsonWriter::initProcessor() 
+StatusCode Acts::ParametersJsonWriter::initProcessor() 
 {
     if (closeFile().isFailure())
         MSG_WARNING("Problem with file opening.");
@@ -102,7 +102,7 @@ StatusCode Ats::ParametersJsonWriter::initProcessor()
 }
 
 
-StatusCode Ats::ParametersJsonWriter::openFile() {
+StatusCode Acts::ParametersJsonWriter::openFile() {
     // open the file for writing
     std::string outputFileNameEvent = m_outputFileBase;
     outputFileNameEvent += boost::lexical_cast<std::string>(m_eventNumber);
@@ -119,7 +119,7 @@ StatusCode Ats::ParametersJsonWriter::openFile() {
     return StatusCode::SUCCESS;    
 }
 
-StatusCode Ats::ParametersJsonWriter::closeFile() 
+StatusCode Acts::ParametersJsonWriter::closeFile() 
 {
     
     // close the json format

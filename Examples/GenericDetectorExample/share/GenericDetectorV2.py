@@ -28,15 +28,16 @@ class GenericDetectorConstruction(object):
         
         SupportPropertiesA  = MaterialProperties(SupportMaterial, 1.,  1.)
         SupportPropertiesB  = MaterialProperties(SupportMaterial, 1., -1.)
+        SupportPropertiesC  = MaterialProperties(SupportMaterial, 1., 0.)
         
         
         # the pixel modules
-        PixelModuleSmall = DetectorModule(None,8.4,32.0,0.15, Silicon)
+        PixelModuleSmall = DetectorModule(None,8.4,32.0,0.125, Silicon)
         PixelModuleBig   = DetectorModule(None,12.2,32.0,0.15, Silicon)
-        
+                
         # the first layer
-        PixelLayer0 = CylinderLayer(PixelModuleSmall, 29., 15, 13, 0.18, 2., 0.5, 2., SupportPropertiesA)
-        PixelLayer1 = CylinderLayer(PixelModuleSmall, 55., 24, 13, 0.18, 2., 0.5, 2., SupportPropertiesA)
+        PixelLayer0 = CylinderLayer(PixelModuleSmall, 29., 15, 13, 0.2, 2., 0.5, 2., SupportPropertiesA)
+        PixelLayer1 = CylinderLayer(PixelModuleSmall, 55., 24, 13, 0.2, 2., 0.5, 2., SupportPropertiesA)
         PixelLayer2 = CylinderLayer(PixelModuleSmall, 88., 40, 13, 0.2, 2., 0.5, 2., SupportPropertiesA)
         PixelLayer3 = CylinderLayer(PixelModuleSmall, 120., 62, 13, 0.2, 2., 0.5, 2., SupportPropertiesB)
         PixelLayer4 = CylinderLayer(PixelModuleBig, 160., 48, 13, 0.2, 2., 0.5, 2., SupportPropertiesB)
@@ -56,6 +57,21 @@ class GenericDetectorConstruction(object):
         PixelDisc3  = DiscLayer( [ PixelRing0, PixelRing1, PixelRing2 ], 780., 3., 5., SupportPropertiesA)
         # define the pixel endcap volume
         PixelEndcap = EndcapVolume( [ PixelDisc0, PixelDisc1, PixelDisc2, PixelDisc3 ] )
+        
+        
+        # the strip modules 
+        StripModuleSmall = DetectorModule(None,16.4,50.5,0.200, Silicon)
+        StrupModuleLong  = DetectorModule(None,16.4,50.5,0.200, Silicon)
+        
+        StripLayer0 = CylinderLayer(StripModuleSmall, 250., 60, 13, -0.2, 5., 5., 2., SupportPropertiesC, -0.02, 0.02, 1.5)
+        StripLayer1 = CylinderLayer(StripModuleSmall, 350., 72, 13, -0.2, 5., 5., 2., SupportPropertiesC, -0.02, 0.02, 1.5)
+        StripLayer2 = CylinderLayer(StrupModuleLong, 500., 88, 13, -0.2, 5., 5., 2., SupportPropertiesC, -0.02, 0.02, 1.5)
+        StripLayer3 = CylinderLayer(StrupModuleLong, 700., 110, 13, -0.2, 5., 5., 2., SupportPropertiesC, -0.02, 0.02, 1.5)
+        StripLayer4 = CylinderLayer(StrupModuleLong, 900, 120, 13, -0.2, 5., 5., 2., SupportPropertiesC, -0.02, 0.02, 1.5)
+
+        # define the pixel barrel volume
+        StripBarrel = BarrelVolume( [ StripLayer0, StripLayer1, StripLayer2, StripLayer3, StripLayer4 ] ) 
+
 
         # -------------------------------------------------------------------------------------
         # 
@@ -110,11 +126,14 @@ class GenericDetectorConstruction(object):
         BeamPipeVolumeBuilder.CylinderVolumeHelper = CylinderVolumeHelper   
         BeamPipeVolumeBuilder.LayerBuilder         = BeamPipeBuilder
         BeamPipeVolumeBuilder.LayerArrayCreator    = LayerArrayCreator        
-        BeamPipeVolumeBuilder.LayerEnvelope        = 1.   
+        BeamPipeVolumeBuilder.LayerEnvelopeR       = 1.
+        BeamPipeVolumeBuilder.LayerEnvelopeZ       = 1.
         BeamPipeVolumeBuilder.OutputLevel          = outputLevel  
         ToolSvc += BeamPipeVolumeBuilder 
         #  
         from GenericGeometryTools.GenericGeometryToolsConf import Acts__GenericLayerBuilder as GenericLayerBuilder
+        
+        
         # # a Pixel layer builder
         PixelLayerBuilder = GenericLayerBuilder('PixelLayerBuilder')
         # the ID
@@ -162,14 +181,53 @@ class GenericDetectorConstruction(object):
         PixelVolumeBuilder.CylinderVolumeHelper           =  CylinderVolumeHelper   
         PixelVolumeBuilder.LayerBuilder                   =  PixelLayerBuilder           
         PixelVolumeBuilder.LayerArrayCreator              =  LayerArrayCreator        
-        PixelVolumeBuilder.LayerEnvelope                  =  1.    
+        PixelVolumeBuilder.LayerEnvelopeR                 =  1.    
+        PixelVolumeBuilder.LayerEnvelopeZ                 =  10.    
         PixelVolumeBuilder.VolumeToBeamPipe               =  False  
         ToolSvc += PixelVolumeBuilder
+
+
+        StripLayerBuilder = GenericLayerBuilder('StripLayerBuilder')
+        # the ID
+        StripLayerBuilder.LayerIdentification               = 'Strip'
+        # define the pixel barrel                            
+        StripLayerBuilder.CentralLayerRadii                 = StripBarrel.layerRadii()
+        StripLayerBuilder.CentralLayerEnvelopeZ             = StripBarrel.layerEnvelopesZ()        
+        StripLayerBuilder.CentralLayerMaterialConcentration = StripBarrel.layerMaterialConcentration()        
+        StripLayerBuilder.CentralLayerMaterialProperties    = StripBarrel.layerMaterialProperties()        
+        StripLayerBuilder.CentralLayerModulesPositionPhi    = StripBarrel.layerModulesPositionPhi()        
+        StripLayerBuilder.CentralLayerMoudlesTiltPhi        = StripBarrel.layerModulesTiltPhi()    
+        StripLayerBuilder.CentralLayerModulesPositionZ      = StripBarrel.layerModulesPositionZ() 
+        StripLayerBuilder.CentralLayerModuleStaggerZ        = StripBarrel.layerModulesStaggerZ()   
+        StripLayerBuilder.CentralLayerModulesHalfX          = StripBarrel.layerModulesHalfX()       
+        StripLayerBuilder.CentralLayerModulesHalfY          = StripBarrel.layerModulesHalfY()      
+        StripLayerBuilder.CentralLayerModulesThickness      = StripBarrel.layerModulesThickness()  
+        StripLayerBuilder.CentralLayerModulesMaterial       = StripBarrel.layerModulesMaterial()  
+         
+        
+        # Output steering
+        StripLayerBuilder.OutputLevel = outputLevel
+        # pixel layer builder is defined
+        ToolSvc += StripLayerBuilder
+
+        # Build the Strip Volume
+        StripVolumeBuilder = VolumeBuilder("StripVolume")
+        # set the volume name
+        StripVolumeBuilder.VolumeName                     = 'Strip'
+        # build the volume
+        StripVolumeBuilder.CylinderVolumeHelper           =  CylinderVolumeHelper   
+        StripVolumeBuilder.LayerBuilder                   =  StripLayerBuilder           
+        StripVolumeBuilder.LayerArrayCreator              =  LayerArrayCreator        
+        StripVolumeBuilder.LayerEnvelopeR                 =  1.    
+        StripVolumeBuilder.LayerEnvelopeZ                 =  10.    
+        StripVolumeBuilder.VolumeToBeamPipe               =  False  
+        ToolSvc += StripVolumeBuilder                                                    
+                                                            
 
         # Build the TrackingGeometry
         GenericGeometryBuilder = GeometryBuilder('GenericGeometry')
         GenericGeometryBuilder.BeamPipeBuilder        = BeamPipeVolumeBuilder
-        GenericGeometryBuilder.TrackingVolumeBuilders = [ PixelVolumeBuilder ]
+        GenericGeometryBuilder.TrackingVolumeBuilders = [ PixelVolumeBuilder, StripVolumeBuilder  ]
         GenericGeometryBuilder.TrackingVolumeHelper   = CylinderVolumeHelper
         GenericGeometryBuilder.OutputLevel            = outputLevel
         ToolSvc += GenericGeometryBuilder

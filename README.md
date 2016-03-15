@@ -1,4 +1,4 @@
-# A Tracking Software (ATS) Project
+# A Common Tracking Software (ACTS) Project
 
 This library is based on the track reconstruction software developed by the 
 [ATLAS Collaboration](http://cern.ch/atlas).

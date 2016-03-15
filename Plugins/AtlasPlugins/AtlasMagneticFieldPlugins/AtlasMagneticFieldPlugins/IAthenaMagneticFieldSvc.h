@@ -4,7 +4,7 @@
 // forward to Athena magnetic field svc
 #include "MagFieldInterfaces/IMagFieldSvc.h"
 
-namespace Ats {
+namespace Acts {
    // typedef to the Ats used name
    typedef MagField::IMagFieldSvc IMagneticFieldSvc;
 }

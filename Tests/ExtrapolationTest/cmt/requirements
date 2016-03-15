@@ -20,8 +20,8 @@ use TestInterfaces          TestInterfaces-*            Tests
 private
 use Surfaces                Surfaces-*                  Geometry
 
-macro_append cppflags $(AtsCoreAlgorithm)
-macro_append cppflags $(AtsCoreParameterDefs)
+macro_append cppflags $(ActsCoreAlgorithm)
+macro_append cppflags $(ActsCoreParameterDefs)
 
 library ExtrapolationTest *.cxx components/*.cxx
 

@@ -3,7 +3,7 @@
 #include "JsonWriters/ParametersJsonWriter.h"
 
 
-using namespace Ats;
+using namespace Acts;
 
 DECLARE_TOOL_FACTORY( GeometryJsonWriter )
 DECLARE_TOOL_FACTORY( ParametersJsonWriter )

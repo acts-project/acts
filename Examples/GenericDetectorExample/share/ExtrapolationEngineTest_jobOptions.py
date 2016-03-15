@@ -36,7 +36,7 @@ from IOVDbSvc.CondDB import conddb
 conddb.setGlobalTag('OFLCOND-SIM-00-00-00')
 
 # import the GenericDetector
-from GenericDetectorV1 import GenericDetectorConstruction
+from GenericDetectorV2 import GenericDetectorConstruction
 GenericDetector = GenericDetectorConstruction(name='GenericDetector', outputLevel=VERBOSE)
 
 #--------------------------------------------------------------
@@ -67,7 +67,7 @@ from MagFieldServices import SetupField
 from IOVDbSvc.CondDB import conddb
 conddb.addOverride('/GLOBAL/BField/Map','BFieldMap-FullAsym-09-solTil3')
 
-from JsonWriters.JsonWritersConf import Ats__ParametersJsonWriter as ParametersWriter
+from JsonWriters.JsonWritersConf import Acts__ParametersJsonWriter as ParametersWriter
 JsonParmatersWriter = ParametersWriter('JsonParmatersWriter')
 ToolSvc += JsonParmatersWriter
 
@@ -80,8 +80,8 @@ svcMgr += ExtrapolationEninge
 #--------------------------------------------------------------
 
 # Add top algorithms to be run
-from ExtrapolationTest.ExtrapolationTestConf import Ats__ExtrapolationEngineTest
-ExtrapolationEngineTest = Ats__ExtrapolationEngineTest('ExtrapolationEngineTest')
+from ExtrapolationTest.ExtrapolationTestConf import Acts__ExtrapolationEngineTest
+ExtrapolationEngineTest = Acts__ExtrapolationEngineTest('ExtrapolationEngineTest')
 # how many tests you want per event 
 ExtrapolationEngineTest.NumberOfTestsPerEvent   = 10000
 # parameters mode: 0 - neutral tracks, 1 - charged particles 
@@ -93,11 +93,11 @@ ExtrapolationEngineTest.SmearOrigin             = False
 ExtrapolationEngineTest.SimgaOriginD0           = 0.015 
 ExtrapolationEngineTest.SimgaOriginZ0           = 55.6
 # pT range for testing                        
-ExtrapolationEngineTest.PtMin                   = 100
+ExtrapolationEngineTest.PtMin                   = 1000
 ExtrapolationEngineTest.PtMax                   = 10000
 # The test range in Eta                      
-ExtrapolationEngineTest.EtaMin                  = -0.5
-ExtrapolationEngineTest.EtaMax                  =  0.5
+ExtrapolationEngineTest.EtaMin                  = -3.5
+ExtrapolationEngineTest.EtaMax                  =  3.5
 # Configure how you wanna run                  
 ExtrapolationEngineTest.CollectSensitive        = True
 ExtrapolationEngineTest.CollectPassive          = True

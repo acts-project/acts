@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////
-// StaticEngine.cxx, ATS project
+// StaticEngine.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 // STL
@@ -7,11 +7,11 @@
 // Extrapolation module
 #include "ExtrapolationEngine/StaticEngine.h"
 
-DECLARE_COMPONENT(Ats::StaticEngine)
+DECLARE_COMPONENT(Acts::StaticEngine)
 
 // constructor
-Ats::StaticEngine::StaticEngine(const std::string& name, ISvcLocator* svc) :
-  Ats::ServiceBase(name, svc),
+Acts::StaticEngine::StaticEngine(const std::string& name, ISvcLocator* svc) :
+  Acts::ServiceBase(name, svc),
   m_propagationEngine("", name),          
   m_navigationEngine("", name),    
   m_materialEffectsEngine("", name)
@@ -26,11 +26,11 @@ Ats::StaticEngine::StaticEngine(const std::string& name, ISvcLocator* svc) :
 }
 
 // destructor
-Ats::StaticEngine::~StaticEngine()
+Acts::StaticEngine::~StaticEngine()
 {}
 
 /** Query the interfaces. */
-StatusCode Ats::StaticEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
+StatusCode Acts::StaticEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
 {
   if ( IID_IExtrapolationEngine == riid )
     *ppvInterface = (IExtrapolationEngine*)this;
@@ -43,7 +43,7 @@ StatusCode Ats::StaticEngine::queryInterface(const InterfaceID& riid, void** ppv
 }  
 
 // the interface method initialize
-StatusCode Ats::StaticEngine::initialize()
+StatusCode Acts::StaticEngine::initialize()
 {
     MSG_DEBUG("initialize()" );
     // retrieve the propagation servcie - crucial, abort when it can not be retrieved
@@ -57,21 +57,21 @@ StatusCode Ats::StaticEngine::initialize()
 }    
 
 // the interface method finalize
-StatusCode Ats::StaticEngine::finalize()
+StatusCode Acts::StaticEngine::finalize()
 {    
     MSG_DEBUG("finalize()" );
     return StatusCode::SUCCESS;
 }
 
 /** charged extrapolation */
-Ats::ExtrapolationCode Ats::StaticEngine::extrapolate(ExCellCharged& ecCharged,
+Acts::ExtrapolationCode Acts::StaticEngine::extrapolate(ExCellCharged& ecCharged,
                                                       const Surface* sf,
                                                       const BoundaryCheck& bcheck) const
 { return extrapolateT<TrackParameters>(ecCharged,sf,ecCharged.propDirection,bcheck); }
 
 
 /** neutral extrapolation */
-Ats::ExtrapolationCode Ats::StaticEngine::extrapolate(ExCellNeutral& ecNeutral,
+Acts::ExtrapolationCode Acts::StaticEngine::extrapolate(ExCellNeutral& ecNeutral,
                                                       const Surface* sf,
                                                       const BoundaryCheck& bcheck) const
 { return extrapolateT<NeutralParameters>(ecNeutral,sf,ecNeutral.propDirection,bcheck); }

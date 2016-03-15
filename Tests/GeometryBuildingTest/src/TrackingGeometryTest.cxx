@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////
-// TrackingGeometryTest.cxx, ATS project
+// TrackingGeometryTest.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 // Examples module
@@ -16,8 +16,8 @@
 #include <unistd.h>
 #endif
 
-Ats::TrackingGeometryTest::TrackingGeometryTest(const std::string& name, ISvcLocator* pSvcLocator) :
- Ats::AlgorithmBase(name, pSvcLocator),
+Acts::TrackingGeometryTest::TrackingGeometryTest(const std::string& name, ISvcLocator* pSvcLocator) :
+ Acts::AlgorithmBase(name, pSvcLocator),
 #ifdef TRKDETDESCR_MEMUSAGE   
    m_memoryLogger(),
 #endif
@@ -33,7 +33,7 @@ Ats::TrackingGeometryTest::TrackingGeometryTest(const std::string& name, ISvcLoc
      declareProperty("TrackingGeometryProcessors"   , m_trackingGeometryProcessors);     
  }
 
-StatusCode Ats::TrackingGeometryTest::initialize() 
+StatusCode Acts::TrackingGeometryTest::initialize() 
 {
     #ifdef TRKDETDESCR_MEMUSAGE   
         m_memoryLogger.refresh(getpid());
@@ -57,7 +57,7 @@ StatusCode Ats::TrackingGeometryTest::initialize()
     return StatusCode::SUCCESS;
 }
 
-StatusCode Ats::TrackingGeometryTest::finalize() 
+StatusCode Acts::TrackingGeometryTest::finalize() 
 {
     
     #ifdef TRKDETDESCR_MEMUSAGE   
@@ -69,7 +69,7 @@ StatusCode Ats::TrackingGeometryTest::finalize()
     return StatusCode::SUCCESS;
 }
 
-StatusCode Ats::TrackingGeometryTest::execute()
+StatusCode Acts::TrackingGeometryTest::execute()
 {
     MSG_VERBOSE("Running the TrackingGeometryTest");
     
