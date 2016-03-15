@@ -112,7 +112,6 @@ namespace Acts {
        TTree*                                       m_tree;
        TRandom                                      m_tRandom;        
                                                     
-                                                    
        float                                        m_startPositionX;
        float                                        m_startPositionY;
        float                                        m_startPositionZ;
@@ -177,7 +176,6 @@ namespace Acts {
        std::vector< float >*                        m_materialPositionP;
        std::vector< float >*                        m_materialPositionPt;
        std::vector< float >*                        m_materialScaling;
-       
        
 
    };

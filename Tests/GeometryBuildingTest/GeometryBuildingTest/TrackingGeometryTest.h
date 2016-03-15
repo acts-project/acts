@@ -13,10 +13,6 @@
 // Trk includes
 #include "GeometryInterfaces/ITrackingGeometrySvc.h"
 
-#ifdef TRKDETDESCR_MEMUSAGE
-#include "TrkDetDescrUtils/MemoryLogger.h"
-#endif
-
 namespace Acts {
      
     class IGeometryProcessor;
@@ -47,9 +43,6 @@ namespace Acts {
               
        
      private:
-#ifdef TRKDETDESCR_MEMUSAGE
-       MemoryLogger                            m_memoryLogger;               //!< little memory logger to check the used memory
-#endif                                              
        bool                                         m_executed;                   //!< Make sure it only runs once 
                                                     
        ServiceHandle<ITrackingGeometrySvc>          m_trackingGeometrySvc;        //!< Service handle for retrieving the TrackingGeometry

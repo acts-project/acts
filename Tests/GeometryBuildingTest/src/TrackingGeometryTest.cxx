@@ -11,16 +11,8 @@
 #include "Detector/TrackingVolume.h"
 #include "Detector/Layer.h"
 
-// monitor memory usage
-#ifdef TRKDETDESCR_MEMUSAGE   
-#include <unistd.h>
-#endif
-
 Acts::TrackingGeometryTest::TrackingGeometryTest(const std::string& name, ISvcLocator* pSvcLocator) :
  Acts::AlgorithmBase(name, pSvcLocator),
-#ifdef TRKDETDESCR_MEMUSAGE   
-   m_memoryLogger(),
-#endif
    m_executed(false),
    m_trackingGeometrySvc("TrackingGeometrySvc","AtlasTrackingGeometrySvc"),
    m_trackingGeometry(0),
@@ -35,37 +27,17 @@ Acts::TrackingGeometryTest::TrackingGeometryTest(const std::string& name, ISvcLo
 
 StatusCode Acts::TrackingGeometryTest::initialize() 
 {
-    #ifdef TRKDETDESCR_MEMUSAGE   
-        m_memoryLogger.refresh(getpid());
-        MSG_INFO( "[ memory usage ] Memory monitoring activated through TRKDETDESCR_MEMUSAGE " );
-        MSG_INFO( "[ memory usage ] initialize (start) : "                                     ); 
-        MSG_INFO( m_memoryLogger );
-    #endif   
-
     RETRIEVE_FATAL(m_trackingGeometrySvc);
     m_trackingGeometryName = m_trackingGeometrySvc->trackingGeometryName();
     
     // The Processors -------------------------------------------------------------
     RETRIEVE_NONEMPTY_FATAL( m_trackingGeometryProcessors );
     
-    #ifdef TRKDETDESCR_MEMUSAGE   
-        m_memoryLogger.refresh(getpid());
-        MSG_INFO( "[ memory usage ] initialize (end) : " ); 
-        MSG_INFO( m_memoryLogger );
-    #endif  
-    
     return StatusCode::SUCCESS;
 }
 
 StatusCode Acts::TrackingGeometryTest::finalize() 
-{
-    
-    #ifdef TRKDETDESCR_MEMUSAGE   
-        m_memoryLogger.refresh(getpid());
-        MSG_INFO( "[ memory usage ] finalize (end) : " ); 
-        MSG_INFO( m_memoryLogger );
-    #endif  
-    
+{ 
     return StatusCode::SUCCESS;
 }
 
