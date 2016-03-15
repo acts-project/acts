@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// MagneticFieldProperties.h, ATS project
+// MagneticFieldProperties.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_MAGNETICFIELDUTILS_MAGNETICFIELDPROPERTIES_H
-#define ATS_MAGNETICFIELDUTILS_MAGNETICFIELDPROPERTIES_H 1
+#ifndef ACTS_MAGNETICFIELDUTILS_MAGNETICFIELDPROPERTIES_H
+#define ACTS_MAGNETICFIELDUTILS_MAGNETICFIELDPROPERTIES_H 1
 
 // Gaudi
 #include "GaudiKernel/MsgStream.h"
@@ -15,7 +15,7 @@
 // STD
 #include <iostream>
 
-namespace Ats {
+namespace Acts {
 
   /** 
    @class MagneticFieldProperties
@@ -28,7 +28,7 @@ namespace Ats {
       
     public:
       /**Constructor for magnetic field mode - full field is default */
-      MagneticFieldProperties(MagneticFieldMode mode=Ats::FullField);
+      MagneticFieldProperties(MagneticFieldMode mode=Acts::FullField);
 
       /**Constructor for magnetic field mode */
       MagneticFieldProperties(const Vector3D& field);
@@ -62,8 +62,8 @@ namespace Ats {
   inline MagneticFieldMode MagneticFieldProperties::magneticFieldMode() const { return m_magneticFieldMode; }  
   
   inline const Vector3D& MagneticFieldProperties::magneticField() const throw (GaudiException) { 
-      if ( m_magneticFieldMode != Ats::ConstantField ) 
-          throw GaudiException("Ats::MagneticFieldProperties", "You can only ask for a field value if you have a constant field!", StatusCode::FAILURE);
+      if ( m_magneticFieldMode != Acts::ConstantField ) 
+          throw GaudiException("Acts::MagneticFieldProperties", "You can only ask for a field value if you have a constant field!", StatusCode::FAILURE);
       return m_magneticField;
   }
 

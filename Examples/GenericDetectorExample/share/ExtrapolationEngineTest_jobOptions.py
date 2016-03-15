@@ -67,7 +67,7 @@ from MagFieldServices import SetupField
 from IOVDbSvc.CondDB import conddb
 conddb.addOverride('/GLOBAL/BField/Map','BFieldMap-FullAsym-09-solTil3')
 
-from JsonWriters.JsonWritersConf import Ats__ParametersJsonWriter as ParametersWriter
+from JsonWriters.JsonWritersConf import Acts__ParametersJsonWriter as ParametersWriter
 JsonParmatersWriter = ParametersWriter('JsonParmatersWriter')
 ToolSvc += JsonParmatersWriter
 
@@ -80,8 +80,8 @@ svcMgr += ExtrapolationEninge
 #--------------------------------------------------------------
 
 # Add top algorithms to be run
-from ExtrapolationTest.ExtrapolationTestConf import Ats__ExtrapolationEngineTest
-ExtrapolationEngineTest = Ats__ExtrapolationEngineTest('ExtrapolationEngineTest')
+from ExtrapolationTest.ExtrapolationTestConf import Acts__ExtrapolationEngineTest
+ExtrapolationEngineTest = Acts__ExtrapolationEngineTest('ExtrapolationEngineTest')
 # how many tests you want per event 
 ExtrapolationEngineTest.NumberOfTestsPerEvent   = 10000
 # parameters mode: 0 - neutral tracks, 1 - charged particles 

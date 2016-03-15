@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// LayerArrayCreator.h, ATS project
+// LayerArrayCreator.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_GENERICGEOMETRYTOOLS_GENERICLAYERBUILDER_H
-#define ATS_GENERICGEOMETRYTOOLS_GENERICLAYERBUILDER_H 1
+#ifndef ACTS_GENERICGEOMETRYTOOLS_GENERICLAYERBUILDER_H
+#define ACTS_GENERICGEOMETRYTOOLS_GENERICLAYERBUILDER_H 1
 
 // Core module
 #include "CoreInterfaces/AlgToolBase.h"
@@ -13,14 +13,14 @@
 // Gaudi & Athena
 #include "GaudiKernel/ToolHandle.h"
 
-#ifndef ATS_LAYERARRAYCREATOR_TAKESMALLERBIGGER
-#define ATS_LAYERARRAYCREATOR_TAKESMALLERBIGGER
+#ifndef ACTS_LAYERARRAYCREATOR_TAKESMALLERBIGGER
+#define ACTS_LAYERARRAYCREATOR_TAKESMALLERBIGGER
 #define takeSmaller(current,test) current = current < test ? current : test
 #define takeBigger(current,test)  current = current > test ? current : test
 #define takeSmallerBigger(cSmallest, cBiggest, test) takeSmaller(cSmallest, test); takeBigger(cBiggest, test)
 #endif
 
-namespace Ats {
+namespace Acts {
     
     class GenericDetectorElement;
     
@@ -132,4 +132,4 @@ namespace Ats {
     
 } // end of namespace
 
-#endif //ATS_GEOMETRYTOOLS_GENERICLAYERBUILDER_H
+#endif //ACTS_GEOMETRYTOOLS_GENERICLAYERBUILDER_H

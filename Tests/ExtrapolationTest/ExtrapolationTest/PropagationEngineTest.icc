@@ -10,7 +10,7 @@
 #include "EventDataUtils/ParticleHypothesis.h"
 #include "Detector/Layer.h"
 
-template <class T> const T* Ats::PropagationEngineTest::executeTestT(const T& startParameters, const Surface& surface)
+template <class T> const T* Acts::PropagationEngineTest::executeTestT(const T& startParameters, const Surface& surface)
 {
   
     m_startPositionX = startParameters.position().x();
@@ -36,18 +36,18 @@ template <class T> const T* Ats::PropagationEngineTest::executeTestT(const T& st
         double modulePhi = cIntersection.phi();
         double modulePhiTilt = 0.2;
         // shift the module a little bit 
-        Ats::Vector3D moduleCenter = cIntersection + Vector3D(1.,1.,1.);
+        Acts::Vector3D moduleCenter = cIntersection + Vector3D(1.,1.,1.);
         // normal vectorof the surface
-        Ats::Vector3D moduleLocalZ(cos(modulePhi+modulePhiTilt),sin(modulePhi+modulePhiTilt), 0.);
-        Ats::Vector3D moduleLocalY(0.,0.,1);
-        Ats::Vector3D moduleLocalX(-sin(modulePhi+modulePhiTilt),cos(modulePhi+modulePhiTilt),0.);
+        Acts::Vector3D moduleLocalZ(cos(modulePhi+modulePhiTilt),sin(modulePhi+modulePhiTilt), 0.);
+        Acts::Vector3D moduleLocalY(0.,0.,1);
+        Acts::Vector3D moduleLocalX(-sin(modulePhi+modulePhiTilt),cos(modulePhi+modulePhiTilt),0.);
         // create the RotationMatrix
-        Ats::RotationMatrix3D moduleRotation;
+        Acts::RotationMatrix3D moduleRotation;
         moduleRotation.col(0) = moduleLocalX;
         moduleRotation.col(1) = moduleLocalY;
         moduleRotation.col(2) = moduleLocalZ;
         // get the moduleTransform
-        std::shared_ptr<Ats::Transform3D> moduleTransform(new Ats::Transform3D(Ats::getTransformFromRotTransl(moduleRotation,moduleCenter)));
+        std::shared_ptr<Acts::Transform3D> moduleTransform(new Acts::Transform3D(Acts::getTransformFromRotTransl(moduleRotation,moduleCenter)));
         
         // now you can delete the leadParameters
         delete eCell.leadParameters;

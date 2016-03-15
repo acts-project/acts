@@ -14,7 +14,7 @@ gaudi_depends_on_subdirs(GaudiKernel
 			 MagneticField/MagneticFieldInterfaces
 			 MagneticField/MagneticFieldUtils)
 
-add_definitions(-DATS_PARAMETER_DEFINITIONS_PLUGIN=\"CoreUtils/DefaultParameterDefinitions.h\")
+add_definitions(-DACTS_PARAMETER_DEFINITIONS_PLUGIN=\"CoreUtils/DefaultParameterDefinitions.h\")
 
 gaudi_install_headers(RungeKuttaEngine)
 

@@ -32,8 +32,8 @@ job = AlgSequence()
 from AthenaCommon.AppMgr import ToolSvc
 
 # configure the json dumper
-from JsonWriters.JsonWritersConf import Ats__GeometryJsonWriter
-JsonDumper = Ats__GeometryJsonWriter('GenericGeometrySonDumper')
+from JsonWriters.JsonWritersConf import Acts__GeometryJsonWriter
+JsonDumper = Acts__GeometryJsonWriter('GenericGeometrySonDumper')
 ToolSvc += JsonDumper
 
 # add the json dumper
@@ -41,8 +41,8 @@ TrackingGeometrySvc = GenericDetector.trackingGeometrySvc()
 TrackingGeometrySvc.GeometryProcessors = [ JsonDumper ]
  
 # Run the GeometryBuildingTestTest
-from GeometryBuildingTest.GeometryBuildingTestConf import Ats__TrackingGeometryTest
-TrackingGeometryTest = Ats__TrackingGeometryTest('GenericDetectorTest')
+from GeometryBuildingTest.GeometryBuildingTestConf import Acts__TrackingGeometryTest
+TrackingGeometryTest = Acts__TrackingGeometryTest('GenericDetectorTest')
 TrackingGeometryTest.TrackingGeometrySvc = TrackingGeometrySvc
 job += TrackingGeometryTest
 

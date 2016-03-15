@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////
-// ExtrapolationEngineTest.h, ATS project
+// ExtrapolationEngineTest.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 #ifndef ATAS_EXTRAPOLATIONTEST_EXTRAPOLATIONENGINETEST_H
@@ -20,7 +20,7 @@
 
 class TTree;
 
-namespace Ats {
+namespace Acts {
                  
     /** @class ExtrapolationEngineTest
                

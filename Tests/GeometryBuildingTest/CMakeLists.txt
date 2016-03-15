@@ -8,7 +8,7 @@ gaudi_depends_on_subdirs(GaudiKernel
 			 Geometry/GeometryInterfaces
 			 Geometry/Detector)
 
-add_definitions(-DATS_PARAMETER_DEFINITIONS_PLUGIN=\"CoreUtils/DefaultParameterDefinitions.h\")
+add_definitions(-DACTS_PARAMETER_DEFINITIONS_PLUGIN=\"CoreUtils/DefaultParameterDefinitions.h\")
 
 gaudi_install_headers(GeometryBuildingTest)
 

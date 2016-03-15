@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////////
-// RungeKuttaEngine.cxx, ATS project
+// RungeKuttaEngine.cxx, ACTS project
 /////////////////////////////////////////////////////////////////////////////////
 
 // Event module
@@ -20,7 +20,7 @@
 /////////////////////////////////////////////////////////////////////////////////
 // Constructor
 /////////////////////////////////////////////////////////////////////////////////
-Ats::RungeKuttaEngine::RungeKuttaEngine(const std::string& name, ISvcLocator* svc) :  
+Acts::RungeKuttaEngine::RungeKuttaEngine(const std::string& name, ISvcLocator* svc) :  
   ServiceBase(name, svc),
   m_fieldService("", name),
   m_dlt(0.000200),
@@ -45,12 +45,12 @@ Ats::RungeKuttaEngine::RungeKuttaEngine(const std::string& name, ISvcLocator* sv
 /////////////////////////////////////////////////////////////////////////////////
 // Destructor
 /////////////////////////////////////////////////////////////////////////////////
-Ats::RungeKuttaEngine::~RungeKuttaEngine(){}
+Acts::RungeKuttaEngine::~RungeKuttaEngine(){}
 
 /////////////////////////////////////////////////////////////////////////////////
 // Query the interface
 /////////////////////////////////////////////////////////////////////////////////
-StatusCode Ats::RungeKuttaEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
+StatusCode Acts::RungeKuttaEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
 {
   if ( IID_IPropagationEngine == riid )
     *ppvInterface = (IPropagationEngine*)this;
@@ -65,7 +65,7 @@ StatusCode Ats::RungeKuttaEngine::queryInterface(const InterfaceID& riid, void**
 /////////////////////////////////////////////////////////////////////////////////
 // initialize
 /////////////////////////////////////////////////////////////////////////////////
-StatusCode Ats::RungeKuttaEngine::initialize()
+StatusCode Acts::RungeKuttaEngine::initialize()
 {
   MSG_DEBUG("initialize()");
   // retrieve the tracking geometry servcie - crucial, abort when it can not be retrieved
@@ -76,7 +76,7 @@ StatusCode Ats::RungeKuttaEngine::initialize()
 /////////////////////////////////////////////////////////////////////////////////
 // finalize
 /////////////////////////////////////////////////////////////////////////////////
-StatusCode Ats::RungeKuttaEngine::finalize()
+StatusCode Acts::RungeKuttaEngine::finalize()
 {
   MSG_DEBUG("finalize()");
   return StatusCode::SUCCESS;
@@ -85,7 +85,7 @@ StatusCode Ats::RungeKuttaEngine::finalize()
 /////////////////////////////////////////////////////////////////////////////////
 // Main function for NeutralParameters propagation 
 /////////////////////////////////////////////////////////////////////////////////
-Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(ExCellNeutral& eCell,
+Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellNeutral& eCell,
                                                         const Surface& sf,
                                                         PropDirection pDir,
                                                         const BoundaryCheck& bcheck,
@@ -130,20 +130,20 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(ExCellNeutral& eCell,
         // screen output
         EX_MSG_VERBOSE(eCell.navigationStep, "propagate", "neut", "propagation to surface was successful.");     
         // create a new covariance matrix
-        std::unique_ptr<AtsSymMatrixD<5> > cov;
+        std::unique_ptr<ActsSymMatrixD<5> > cov;
         if(pCache.covariance)
-          cov.reset(new AtsSymMatrixD<5>(*pCache.covariance));
+          cov.reset(new ActsSymMatrixD<5>(*pCache.covariance));
         
         // create the new parameters
         if (!pCache.returnCurvilinear){
           // new parameters bound to the surface
-          AtsVectorD<5> pars;
+          ActsVectorD<5> pars;
           pars << pCache.parameters[0],pCache.parameters[1],pCache.parameters[2],pCache.parameters[3],pCache.parameters[4];
           nParameters = new NeutralBoundParameters(std::move(cov),std::move(pars),sf);
         } else {
           // new curvilinear parameters
-          Ats::Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);
-          Ats::Vector3D mom(pCache.pVector[3],pCache.pVector[4],pCache.pVector[5]);
+          Acts::Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);
+          Acts::Vector3D mom(pCache.pVector[3],pCache.pVector[4],pCache.pVector[5]);
           mom /= fabs(pCache.parameters[4]);
           nParameters = new NeutralCurvilinearParameters(std::move(cov),gp,mom);
         }
@@ -151,7 +151,7 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(ExCellNeutral& eCell,
     // only go on if the parameter creation worked 
     if (nParameters){        
         // @!TODO fill the jacobian
-        // if (eCell.checkConfigurationMode(Ats::ExtrapolationMode::CollectJacobians)){ doSomething; }
+        // if (eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectJacobians)){ doSomething; }
         
         
         // fill the transport information - only if the propation direction is not 0 ('anyDirection')
@@ -188,7 +188,7 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(ExCellNeutral& eCell,
 /////////////////////////////////////////////////////////////////////////////////
 // Main function for TrackParameters propagation 
 /////////////////////////////////////////////////////////////////////////////////
-Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(ExCellCharged& eCell,
+Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellCharged& eCell,
                                                         const Surface& sf,
                                                         PropDirection pDir,
                                                         const BoundaryCheck& bcheck,
@@ -236,11 +236,11 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(ExCellCharged& eCell,
         EX_MSG_VERBOSE(eCell.navigationStep, "propagate", "char", "propagation to surface was successful.");     
         // create the new parameters
         // create a new covariance matrix
-        std::unique_ptr<AtsSymMatrixD<5> > cov;
+        std::unique_ptr<ActsSymMatrixD<5> > cov;
         if(pCache.covariance)
-          cov.reset(new AtsSymMatrixD<5>(*pCache.covariance));
+          cov.reset(new ActsSymMatrixD<5>(*pCache.covariance));
         // create the parameter vector
-        AtsVectorD<5> pars;
+        ActsVectorD<5> pars;
         pars << pCache.parameters[0],pCache.parameters[1],pCache.parameters[2],pCache.parameters[3],pCache.parameters[4];
         // create the new parameters
         if (!pCache.returnCurvilinear){
@@ -250,14 +250,14 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(ExCellCharged& eCell,
           // get the charge
           double charge = pCache.parameters[4] > 0. ? 1. : -1.;
           // new curvilinear parameters
-          Ats::Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);       
+          Acts::Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);       
           pParameters = new CurvilinearParameters(std::move(cov),gp,coordinate_transformation::parameters2globalMomentum(pars),charge);
         }
     }
     // set the return type according to how the propagation went
     if (pParameters){
        // @!TODO fill the jacobian
-        // if (eCell.checkConfigurationMode(Ats::ExtrapolationMode::CollectJacobians)){ doSomething; }
+        // if (eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectJacobians)){ doSomething; }
         
        // cache the last lead parameters, useful in case a navigation error occured
        eCell.lastLeadParameters = eCell.leadParameters;
@@ -281,13 +281,13 @@ Ats::ExtrapolationCode Ats::RungeKuttaEngine::propagate(ExCellCharged& eCell,
        return (finalPropagation ? ExtrapolationCode::SuccessDestination : ExtrapolationCode::InProgress);
    }                                                                      
    // return - recovered means that the leadParameters are the input ones 
-   return (finalPropagation ? Ats::ExtrapolationCode::FailureDestination : Ats::ExtrapolationCode::Recovered) ;
+   return (finalPropagation ? Acts::ExtrapolationCode::FailureDestination : Acts::ExtrapolationCode::Recovered) ;
 }
                                               
 /////////////////////////////////////////////////////////////////////////////////
 // Runge Kutta main program for propagation with or without Jacobian
 /////////////////////////////////////////////////////////////////////////////////
-bool Ats::RungeKuttaEngine::propagateWithJacobian(int navigationStep, PropagationCache& pCache, int kind, double* Su) const
+bool Acts::RungeKuttaEngine::propagateWithJacobian(int navigationStep, PropagationCache& pCache, int kind, double* Su) const
 {
   
   EX_MSG_VERBOSE(navigationStep, "propagate", "<T> ", "propagateWithJacobian called with  internal surface type " << kind ); 
@@ -303,7 +303,7 @@ bool Ats::RungeKuttaEngine::propagateWithJacobian(int navigationStep, Propagatio
 
   // Step estimation until surface
   //
-  Ats::RungeKuttaUtils utils;
+  Acts::RungeKuttaUtils utils;
   bool Q; double S, step = utils.stepEstimator(kind,Su,pCache.pVector,Q); if(!Q) return false; 
 
   bool dir = true;
@@ -404,7 +404,7 @@ bool Ats::RungeKuttaEngine::propagateWithJacobian(int navigationStep, Propagatio
 // Runge Kutta trajectory model (units->mm,MeV,kGauss)
 // Uses Nystroem algorithm (See Handbook Net. Bur. ofStandards, procedure 25.5.20)
 /////////////////////////////////////////////////////////////////////////////////
-double Ats::RungeKuttaEngine::rungeKuttaStep(int navigationStep, PropagationCache& pCache, double S,  bool& InS) const
+double Acts::RungeKuttaEngine::rungeKuttaStep(int navigationStep, PropagationCache& pCache, double S,  bool& InS) const
 {
   
   EX_MSG_VERBOSE(navigationStep, "propagate", "<T> ", "rungeKuttaStep called"); 
@@ -606,7 +606,7 @@ double Ats::RungeKuttaEngine::rungeKuttaStep(int navigationStep, PropagationCach
 //    f[ 9],f[10],f[11] - dHz/dx, dHz/dy and dHz/dz                           
 //                                                                                   
 /////////////////////////////////////////////////////////////////////////////////
-double Ats::RungeKuttaEngine::rungeKuttaStepWithGradient(int navigationStep, PropagationCache& pCache, double S, bool& InS) const
+double Acts::RungeKuttaEngine::rungeKuttaStepWithGradient(int navigationStep, PropagationCache& pCache, double S, bool& InS) const
 {
   
   EX_MSG_VERBOSE(navigationStep, "propagate", "<T> ", "rungeKuttaStepWithGradient called"); 
@@ -765,7 +765,7 @@ double Ats::RungeKuttaEngine::rungeKuttaStepWithGradient(int navigationStep, Pro
 /////////////////////////////////////////////////////////////////////////////////
 // Test new cross point
 /////////////////////////////////////////////////////////////////////////////////
-bool Ats::RungeKuttaEngine::newCrossPoint(const CylinderSurface& Su, const double* Ro, const double* P ) const
+bool Acts::RungeKuttaEngine::newCrossPoint(const CylinderSurface& Su, const double* Ro, const double* P ) const
 {
   const double pi = 3.1415927, pi2=2.*pi; 
   const Transform3D& T = Su.transform();
@@ -796,7 +796,7 @@ bool Ats::RungeKuttaEngine::newCrossPoint(const CylinderSurface& Su, const doubl
 /////////////////////////////////////////////////////////////////////////////////
 // Straight line trajectory model 
 /////////////////////////////////////////////////////////////////////////////////
-double Ats::RungeKuttaEngine::straightLineStep(int navigationStep, PropagationCache& pCache, double  S) const
+double Acts::RungeKuttaEngine::straightLineStep(int navigationStep, PropagationCache& pCache, double  S) const
 {
     
   EX_MSG_VERBOSE(navigationStep, "propagate", "<T> ", "straightLineStep called"); 
@@ -821,7 +821,7 @@ double Ats::RungeKuttaEngine::straightLineStep(int navigationStep, PropagationCa
 /////////////////////////////////////////////////////////////////////////////////
 // Build new track parameters without propagation
 /////////////////////////////////////////////////////////////////////////////////
-const Ats::TrackParameters* Ats::RungeKuttaEngine::buildTrackParametersWithoutPropagation(const TrackParameters& tParameters,double* jacobian) const
+const Acts::TrackParameters* Acts::RungeKuttaEngine::buildTrackParametersWithoutPropagation(const TrackParameters& tParameters,double* jacobian) const
 {
   jacobian[0]=jacobian[6]=jacobian[12]=jacobian[18]=jacobian[20]=1.;
   jacobian[1]=jacobian[2]=jacobian[3]=jacobian[4]=jacobian[5]=jacobian[7]=jacobian[8]=jacobian[9]=jacobian[10]=jacobian[11]=jacobian[13]=jacobian[14]=jacobian[15]=jacobian[16]=jacobian[17]=jacobian[19]=0.;
@@ -831,7 +831,7 @@ const Ats::TrackParameters* Ats::RungeKuttaEngine::buildTrackParametersWithoutPr
 /////////////////////////////////////////////////////////////////////////////////
 // Build new neutral track parameters without propagation
 /////////////////////////////////////////////////////////////////////////////////
-const Ats::NeutralParameters* Ats::RungeKuttaEngine::buildNeutralParametersWithoutPropagation(const NeutralParameters& nParameters,double* jacobian) const
+const Acts::NeutralParameters* Acts::RungeKuttaEngine::buildNeutralParametersWithoutPropagation(const NeutralParameters& nParameters,double* jacobian) const
 {
   jacobian[0]=jacobian[6]=jacobian[12]=jacobian[18]=jacobian[20]=1.;
   jacobian[1]=jacobian[2]=jacobian[3]=jacobian[4]=jacobian[5]=jacobian[7]=jacobian[8]=jacobian[9]=jacobian[10]=jacobian[11]=jacobian[13]=jacobian[14]=jacobian[15]=jacobian[16]=jacobian[17]=jacobian[19]=0.;
@@ -841,7 +841,7 @@ const Ats::NeutralParameters* Ats::RungeKuttaEngine::buildNeutralParametersWitho
 /////////////////////////////////////////////////////////////////////////////////
 // Step estimator take into accout curvature
 /////////////////////////////////////////////////////////////////////////////////
-double Ats::RungeKuttaEngine::stepEstimatorWithCurvature(PropagationCache& pCache, int kind, double* Su, bool& Q) const
+double Acts::RungeKuttaEngine::stepEstimatorWithCurvature(PropagationCache& pCache, int kind, double* Su, bool& Q) const
 {
   // Straight step estimation
   //

@@ -16,9 +16,9 @@ apply_pattern installed_library
 private
 use Surfaces            Surfaces-*              Geometry 
 
-macro_append cppflags $(AtsCoreParameterDefs)
+macro_append cppflags $(ActsCoreParameterDefs)
 
-#macro_append cppflags $(AtsCoreIdentifier) 
+#macro_append cppflags $(ActsCoreIdentifier) 
 
 macro DOXYGEN_IMAGE_PATH "../doc/images"
 macro DOXYGEN_INLINE_INHERITED_MEMB "YES"

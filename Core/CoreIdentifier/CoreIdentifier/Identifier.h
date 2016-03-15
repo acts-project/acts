@@ -1,13 +1,13 @@
 ///////////////////////////////////////////////////////////////////
-// Identifier.h, ATS project
+// Identifier.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_CORE_IDENTIFIER_H
-#define ATS_CORE_IDENTIFIER_H 1
+#ifndef ACTS_CORE_IDENTIFIER_H
+#define ACTS_CORE_IDENTIFIER_H 1
 
 
-#ifdef ATS_CORE_IDENTIFIER_PLUGIN
-#include ATS_CORE_IDENTIFIER_PLUGIN
+#ifdef ACTS_CORE_IDENTIFIER_PLUGIN
+#include ACTS_CORE_IDENTIFIER_PLUGIN
 #else
 
 #define IDENTIFIER_TYPE unsigned long long
@@ -18,7 +18,7 @@
 /** @class Identifier 
 
     minimum implementation of an Identifier,
-    please use the ATS_CORE_IDENTIFIER_PLUGING in to use instead if
+    please use the ACTS_CORE_IDENTIFIER_PLUGING in to use instead if
     another type of Identifier is needed
 
     @author Andreas.Salzburger -at cern.ch ( based on ATLAS Identifier by R.D. Shaffer)
@@ -194,6 +194,6 @@ inline bool  Identifier::is_valid () const
     return (!(max_value == m_id));
 }
 
-#endif // ATS_CORE_IDENTIFIER_PLUGIN
+#endif // ACTS_CORE_IDENTIFIER_PLUGIN
 
-#endif // ATS_CORE_IDENTIFIER_H
+#endif // ACTS_CORE_IDENTIFIER_H

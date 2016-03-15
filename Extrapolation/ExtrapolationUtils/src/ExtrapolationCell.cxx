@@ -4,7 +4,7 @@
 
 #include "ExtrapolationUtils/ExtrapolationCell.h"
 
-std::vector<std::string> Ats::ExtrapolationCode::s_ecodeNames = { "Unset",                  
+std::vector<std::string> Acts::ExtrapolationCode::s_ecodeNames = { "Unset",                  
                                                                   "InProgress",
                                                                   "SuccessDestination",     
                                                                   "SuccessBoundaryReached", 

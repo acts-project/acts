@@ -37,7 +37,7 @@ from IOVDbSvc.CondDB import conddb
 conddb.setGlobalTag('OFLCOND-SIM-00-00-00')
 
 
-from JsonWriters.JsonWritersConf import Ats__ParametersJsonWriter as ParametersWriter
+from JsonWriters.JsonWritersConf import Acts__ParametersJsonWriter as ParametersWriter
 JsonParmatersWriter = ParametersWriter('JsonParmatersWriter')
 ToolSvc += JsonParmatersWriter
 
@@ -70,8 +70,8 @@ conddb.addOverride('/GLOBAL/BField/Map','BFieldMap-FullAsym-09-solTil3')
 from AthenaCommon.CfgGetter import getService
 MagFieldSvc =  getService('AtlasFieldSvc')
 
-from RungeKuttaEngine.RungeKuttaEngineConf import Ats__RungeKuttaEngine
-RungeKutteEngine = Ats__RungeKuttaEngine(name='RungeKuttaEngine')
+from RungeKuttaEngine.RungeKuttaEngineConf import Acts__RungeKuttaEngine
+RungeKutteEngine = Acts__RungeKuttaEngine(name='RungeKuttaEngine')
 RungeKutteEngine.MagneticFieldSvc = MagFieldSvc
 ServiceMgr += RungeKutteEngine
 
@@ -80,8 +80,8 @@ ServiceMgr += RungeKutteEngine
 #--------------------------------------------------------------
 
 # Add top algorithms to be run
-from ExtrapolationTest.ExtrapolationTestConf import Ats__PropagationEngineTest
-PropagationEngineTest = Ats__PropagationEngineTest('PropagationEngineTest')
+from ExtrapolationTest.ExtrapolationTestConf import Acts__PropagationEngineTest
+PropagationEngineTest = Acts__PropagationEngineTest('PropagationEngineTest')
 # give it the engine
 PropagationEngineTest.PropagationEngine       = RungeKutteEngine
 # the json writer

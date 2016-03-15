@@ -62,12 +62,12 @@ class GenericDetectorConstruction(object):
         # Builder setup for the layers 
         #
         # build the beam pipe
-        from GeometryTools.GeometryToolsConf import Ats__PassiveLayerBuilder as LayerBuilder
-        from GeometryTools.GeometryToolsConf import Ats__CylinderVolumeBuilder as VolumeBuilder
-        from GeometryTools.GeometryToolsConf import Ats__CylinderVolumeHelper as VolumeHelper
-        from GeometryTools.GeometryToolsConf import Ats__CylinderGeometryBuilder as GeometryBuilder
-        from GeometryTools.GeometryToolsConf import Ats__TrackingVolumeArrayCreator as TrackingVolumeArrayCreator
-        from GeometryTools.GeometryToolsConf import Ats__LayerArrayCreator as LayerArrayCreator
+        from GeometryTools.GeometryToolsConf import Acts__PassiveLayerBuilder as LayerBuilder
+        from GeometryTools.GeometryToolsConf import Acts__CylinderVolumeBuilder as VolumeBuilder
+        from GeometryTools.GeometryToolsConf import Acts__CylinderVolumeHelper as VolumeHelper
+        from GeometryTools.GeometryToolsConf import Acts__CylinderGeometryBuilder as GeometryBuilder
+        from GeometryTools.GeometryToolsConf import Acts__TrackingVolumeArrayCreator as TrackingVolumeArrayCreator
+        from GeometryTools.GeometryToolsConf import Acts__LayerArrayCreator as LayerArrayCreator
 
         # Layer Array Creator
         LayerArrayCreator = LayerArrayCreator('LayerArrayCreator')
@@ -114,7 +114,7 @@ class GenericDetectorConstruction(object):
         BeamPipeVolumeBuilder.OutputLevel          = outputLevel  
         ToolSvc += BeamPipeVolumeBuilder 
         #  
-        from GenericGeometryTools.GenericGeometryToolsConf import Ats__GenericLayerBuilder as GenericLayerBuilder
+        from GenericGeometryTools.GenericGeometryToolsConf import Acts__GenericLayerBuilder as GenericLayerBuilder
         # # a Pixel layer builder
         PixelLayerBuilder = GenericLayerBuilder('PixelLayerBuilder')
         # the ID
@@ -175,8 +175,8 @@ class GenericDetectorConstruction(object):
         ToolSvc += GenericGeometryBuilder
 
         # Establish the TrackingGeometrySvc
-        from GeometryServices.GeometryServicesConf import Ats__TrackingGeometrySvc
-        GenericTrackingGeometrySvc = Ats__TrackingGeometrySvc('GenericTrackingGeometrySvc')
+        from GeometryServices.GeometryServicesConf import Acts__TrackingGeometrySvc
+        GenericTrackingGeometrySvc = Acts__TrackingGeometrySvc('GenericTrackingGeometrySvc')
         GenericTrackingGeometrySvc.GeometryBuilder = GenericGeometryBuilder
         GenericTrackingGeometrySvc.TrackingGeometryName = 'GenericTrackingGeometry'
         GenericTrackingGeometrySvc.GeometryProcessors = []

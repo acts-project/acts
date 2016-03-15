@@ -2,7 +2,7 @@
 // Examples module
 #include "GeometryBuildingTest/TrackingGeometryTest.h"
 
-using namespace Ats;
+using namespace Acts;
 
 DECLARE_ALGORITHM_FACTORY( TrackingGeometryTest )
 

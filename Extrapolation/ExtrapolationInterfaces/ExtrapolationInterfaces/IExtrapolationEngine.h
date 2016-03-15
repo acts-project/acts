@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// IExtrapolationEngine.h, ATS project
+// IExtrapolationEngine.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_EXTRAPOLATIONINTERFACES_IEXTRAPOLATIONENGINE_H
-#define ATS_EXTRAPOLATIONINTERFACES_IEXTRAPOLATIONENGINE_H 1
+#ifndef ACTS_EXTRAPOLATIONINTERFACES_IEXTRAPOLATIONENGINE_H
+#define ACTS_EXTRAPOLATIONINTERFACES_IEXTRAPOLATIONENGINE_H 1
 
 // Gaudi
 #include "GaudiKernel/IService.h"
@@ -14,7 +14,7 @@
 #include "TrackParameters/TrackParameters.h"
 #include "NeutralParameters/NeutralParameters.h"
  
-namespace Ats {
+namespace Acts {
   
   static const InterfaceID IID_IExtrapolationEngine("IExtrapolationEngine", 1, 0);
 
@@ -68,5 +68,5 @@ namespace Ats {
 
 } // end of namespace
 
-#endif // ATS_TRKEXINTERFACES_IEXTRAPOLATIONENGINE_H
+#endif // ACTS_TRKEXINTERFACES_IEXTRAPOLATIONENGINE_H
 

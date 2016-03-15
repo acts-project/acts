@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// PropagationEngine.h, ATS project
+// PropagationEngine.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_EXTRAPOLATIONENGINE_PROPAGATIONENGINE_H
-#define ATS_EXTRAPOLATIONENGINE_PROPAGATIONENGINE_H 1
+#ifndef ACTS_EXTRAPOLATIONENGINE_PROPAGATIONENGINE_H
+#define ACTS_EXTRAPOLATIONENGINE_PROPAGATIONENGINE_H 1
 
 // Gaudi
 #include "GaudiKernel/ToolHandle.h"
@@ -19,7 +19,7 @@
 #include "TrackParameters/TrackParameters.h"
 #include "NeutralParameters/NeutralParameters.h"
  
-namespace Ats {
+namespace Acts {
   
   class Surface;
 
@@ -78,5 +78,5 @@ namespace Ats {
 
 } // end of namespace
 
-#endif // ATS_EXTRAPOLATIONENGINE_PROPAGATIONENGINE_H
+#endif // ACTS_EXTRAPOLATIONENGINE_PROPAGATIONENGINE_H
 

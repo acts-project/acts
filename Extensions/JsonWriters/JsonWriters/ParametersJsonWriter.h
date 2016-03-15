@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// GeometryJsonWriter.h, ATS project
+// GeometryJsonWriter.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_JSONWRITERS_PARAMETERSBASEJSONEVENTWRITER_H
-#define ATS_JSONWRITERS_PARAMETERSBASEJSONEVENTWRITER_H 1
+#ifndef ACTS_JSONWRITERS_PARAMETERSBASEJSONEVENTWRITER_H
+#define ACTS_JSONWRITERS_PARAMETERSBASEJSONEVENTWRITER_H 1
 
 // Core module
 #include "CoreInterfaces/AlgToolBase.h"
@@ -17,7 +17,7 @@
 #include <fstream>
 
 
-namespace Ats {
+namespace Acts {
 
     class TrackingVolume;
     class Layer;
@@ -73,5 +73,5 @@ namespace Ats {
     };
 }
 
-#endif // ATS_JSONWRITERS_PARAMETERSBASEJSONEVENTWRITER_H
+#endif // ACTS_JSONWRITERS_PARAMETERSBASEJSONEVENTWRITER_H
 

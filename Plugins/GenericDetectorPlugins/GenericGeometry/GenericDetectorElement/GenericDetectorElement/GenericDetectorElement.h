@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////
-// GenericDetectorElement.h, ATS project, Generic Detector plugin
+// GenericDetectorElement.h, ACTS project, Generic Detector plugin
 ///////////////////////////////////////////////////////////////////
 
 #ifndef AGD_GENERICDETECTORELEMENT_GENERICDETECTORELEMENT
@@ -11,7 +11,7 @@
 // Geometry module
 #include "DetectorElementBase/DetectorElementBase.h"
 
-namespace Ats {
+namespace Acts {
 
     class Surface;
     class PlanarBounds;

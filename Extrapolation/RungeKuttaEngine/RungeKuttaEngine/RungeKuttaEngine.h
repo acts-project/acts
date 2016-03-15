@@ -1,9 +1,9 @@
 /////////////////////////////////////////////////////////////////////////////////
-//  Header file for class RungeKuttaEngine, ATS project
+//  Header file for class RungeKuttaEngine, ACTS project
 /////////////////////////////////////////////////////////////////////////////////
 
-#ifndef ATS_RUNGEKUTTAENGINE_RUNGEKUTAENGINE_H
-#define ATS_RUNGEKUTTAENGINE_RUNGEKUTAENGINE_H 1
+#ifndef ACTS_RUNGEKUTTAENGINE_RUNGEKUTAENGINE_H
+#define ACTS_RUNGEKUTTAENGINE_RUNGEKUTAENGINE_H 1
 
 // Gaudi
 #include "GaudiKernel/ServiceHandle.h"
@@ -27,7 +27,7 @@
 #include "MagneticFieldUtils/MagneticFieldProperties.h"
 #include "MagneticFieldInterfaces/IMagneticFieldSvc.h"
 
-namespace Ats {
+namespace Acts {
 
   /**
     @struct PropagationCache 
@@ -57,7 +57,7 @@ namespace Ats {
       double                    pVector[64];
       // result
       double                    parameters[5] = {0.,0.,0.,0.,0.};
-      AtsSymMatrixD<5>*          covariance; 
+      ActsSymMatrixD<5>*          covariance; 
       double                    jacobian[25];
       
       
@@ -268,4 +268,4 @@ namespace Ats {
   
 }
  
-#endif // ATS_RUNGEKUTTAENGINE_RUNGEKUTAENGINE_H
+#endif // ACTS_RUNGEKUTTAENGINE_RUNGEKUTAENGINE_H

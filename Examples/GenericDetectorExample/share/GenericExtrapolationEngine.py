@@ -1,7 +1,7 @@
 ######################################################
 # GenericExtrapoliationEngine module
 #
-# it inherits from Ats__Extrapolator and uses
+# it inherits from Acts__Extrapolator and uses
 # the AtlasTrackingGeometrySvc
 #
 ######################################################
@@ -10,7 +10,7 @@
 from AthenaCommon.Include import Include, IncludeError, include
 
 # import the ExtrapolationEngine configurable
-from ExtrapolationEngine.ExtrapolationEngineConf import Ats__ExtrapolationEngine as ExEngine
+from ExtrapolationEngine.ExtrapolationEngineConf import Acts__ExtrapolationEngine as ExEngine
 
 # define the class
 class GenericExtrapolationEngine( ExEngine ):
@@ -25,8 +25,8 @@ class GenericExtrapolationEngine( ExEngine ):
         MagneticFieldSvc =  getService('AtlasFieldSvc')
         
         # PropagationEngine
-        from RungeKuttaEngine.RungeKuttaEngineConf import Ats__RungeKuttaEngine
-        StaticPropagator = Ats__RungeKuttaEngine(name = nameprefix+'StaticPropagation')
+        from RungeKuttaEngine.RungeKuttaEngineConf import Acts__RungeKuttaEngine
+        StaticPropagator = Acts__RungeKuttaEngine(name = nameprefix+'StaticPropagation')
         StaticPropagator.MagneticFieldSvc         = MagneticFieldSvc        
         
         # configure output formatting               
@@ -38,8 +38,8 @@ class GenericExtrapolationEngine( ExEngine ):
         svcMgr += StaticPropagator
         
         # load the material effects engine
-        from ExtrapolationEngine.ExtrapolationEngineConf import Ats__MaterialEffectsEngine
-        MaterialEffectsEngine = Ats__MaterialEffectsEngine(name = nameprefix+'MaterialEffects')
+        from ExtrapolationEngine.ExtrapolationEngineConf import Acts__MaterialEffectsEngine
+        MaterialEffectsEngine = Acts__MaterialEffectsEngine(name = nameprefix+'MaterialEffects')
         # configure output formatting               
         MaterialEffectsEngine.OutputPrefix        = '[ME] - '
         MaterialEffectsEngine.OutputPostfix       = ' - '
@@ -49,8 +49,8 @@ class GenericExtrapolationEngine( ExEngine ):
         svcMgr += MaterialEffectsEngine
         
         # load the static navigation engine
-        from ExtrapolationEngine.ExtrapolationEngineConf import Ats__StaticNavigationEngine
-        StaticNavigator = Ats__StaticNavigationEngine(name = nameprefix+'StaticNavigation')
+        from ExtrapolationEngine.ExtrapolationEngineConf import Acts__StaticNavigationEngine
+        StaticNavigator = Acts__StaticNavigationEngine(name = nameprefix+'StaticNavigation')
         # give the tools it needs 
         StaticNavigator.PropagationEngine        = StaticPropagator
         StaticNavigator.MaterialEffectsEngine    = MaterialEffectsEngine
@@ -66,8 +66,8 @@ class GenericExtrapolationEngine( ExEngine ):
         
         
         # load the Static ExtrapolationEngine
-        from ExtrapolationEngine.ExtrapolationEngineConf import Ats__StaticEngine
-        StaticExtrapolator = Ats__StaticEngine(name = nameprefix+'StaticExtrapolation')
+        from ExtrapolationEngine.ExtrapolationEngineConf import Acts__StaticEngine
+        StaticExtrapolator = Acts__StaticEngine(name = nameprefix+'StaticExtrapolation')
         # give the tools it needs 
         StaticExtrapolator.PropagationEngine        = StaticPropagator
         StaticExtrapolator.MaterialEffectsEngine    = MaterialEffectsEngine

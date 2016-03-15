@@ -1,13 +1,13 @@
 ///////////////////////////////////////////////////////////////////
-// AlgorithmBase.h, ATS project
+// AlgorithmBase.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_CORE_ALGORITHMBASE_H
-#define ATS_CORE_ALGORITHMBASE_H 1
+#ifndef ACTS_CORE_ALGORITHMBASE_H
+#define ACTS_CORE_ALGORITHMBASE_H 1
 
 // (a) Take the interface from another sourse
-#ifdef ATS_CORE_ALGORITHM_PLUGIN
-#include ATS_CORE_ALGORITHM_PLUGIN
+#ifdef ACTS_CORE_ALGORITHM_PLUGIN
+#include ACTS_CORE_ALGORITHM_PLUGIN
 #else 
 
 // (b) Define here
@@ -17,7 +17,7 @@
 
 class ISvcLocator;
 
-namespace Ats {
+namespace Acts {
     
     /**  @class AlgorithmBase
          simply extend the Service class with a MsgBase */
@@ -33,9 +33,9 @@ namespace Ats {
     };
 }
 
-#endif //ATS_CORE_ALGORITHM_PLUGIN
+#endif //ACTS_CORE_ALGORITHM_PLUGIN
 
 // (c) used in both cases
 #include "CoreInterfaces/BaseMacros.h"
 
-#endif // ATS_CORE_ALGORITHMBASE_H
+#endif // ACTS_CORE_ALGORITHMBASE_H

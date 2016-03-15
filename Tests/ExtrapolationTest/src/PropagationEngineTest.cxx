@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////
-// PropagationEngineTest.cxx, ATS project
+// PropagationEngineTest.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 // Test module
@@ -11,8 +11,8 @@
 // Gaudi
 #include "GaudiKernel/ITHistSvc.h"
 
-Ats::PropagationEngineTest::PropagationEngineTest(const std::string& name, ISvcLocator* pSvcLocator) :
- Ats::ExtrapolationTestBase(name, pSvcLocator),
+Acts::PropagationEngineTest::PropagationEngineTest(const std::string& name, ISvcLocator* pSvcLocator) :
+ Acts::ExtrapolationTestBase(name, pSvcLocator),
  m_propagationEngine("",name),
  m_parametersMode(1),
  m_emulatePlaneSurfaces(false),
@@ -92,14 +92,14 @@ Ats::PropagationEngineTest::PropagationEngineTest(const std::string& name, ISvcL
     declareProperty("TreeDescription",          m_treeDescription);   
 }
 
-StatusCode Ats::PropagationEngineTest::finalize() 
+StatusCode Acts::PropagationEngineTest::finalize() 
 {
     for (auto& surface : m_destinationSurfaces)
         delete surface;
     return StatusCode::SUCCESS;
 }
 
-StatusCode Ats::PropagationEngineTest::initializeTest() 
+StatusCode Acts::PropagationEngineTest::initializeTest() 
 {   
     // Extrapolation engine
     RETRIEVE_FATAL(m_propagationEngine);
@@ -112,7 +112,7 @@ StatusCode Ats::PropagationEngineTest::initializeTest()
     return StatusCode::SUCCESS;    
 }
 
-StatusCode Ats::PropagationEngineTest::bookTree()
+StatusCode Acts::PropagationEngineTest::bookTree()
 {
     MSG_VERBOSE("Booking the Extrapolation test Tree.");
     
@@ -170,7 +170,7 @@ StatusCode Ats::PropagationEngineTest::bookTree()
     
 }
 
-StatusCode Ats::PropagationEngineTest::runTest()
+StatusCode Acts::PropagationEngineTest::runTest()
 {
   MSG_VERBOSE("Running the PropagationEngineTest Test in parameters mode : " << m_parametersMode);
        
@@ -183,12 +183,12 @@ StatusCode Ats::PropagationEngineTest::runTest()
       // verbose output
       MSG_DEBUG("===> starting test " << it << " <<===");
       // create the curvilinear parameters
-      double eta   = m_etaMin + (m_etaMax-m_etaMin)*Ats::ExtrapolationTestBase::m_flatDist->shoot();
+      double eta   = m_etaMin + (m_etaMax-m_etaMin)*Acts::ExtrapolationTestBase::m_flatDist->shoot();
       double theta = 2.*atan(exp(-eta));
-      double phi   = m_phiMin + (m_phiMax-m_phiMin)*Ats::ExtrapolationTestBase::m_flatDist->shoot();
-      double pt    = m_ptMin  + (m_ptMax - m_ptMin)*Ats::ExtrapolationTestBase::m_flatDist->shoot(); 
+      double phi   = m_phiMin + (m_phiMax-m_phiMin)*Acts::ExtrapolationTestBase::m_flatDist->shoot();
+      double pt    = m_ptMin  + (m_ptMax - m_ptMin)*Acts::ExtrapolationTestBase::m_flatDist->shoot(); 
       double p     = pt/sin(theta);
-      double q     = m_parametersMode ? (Ats::ExtrapolationTestBase::m_flatDist->shoot() > 0.5 ? 1. : -1) : 1.;      // charge or neutral
+      double q     = m_parametersMode ? (Acts::ExtrapolationTestBase::m_flatDist->shoot() > 0.5 ? 1. : -1) : 1.;      // charge or neutral
 
       // initializa the validation variables
       m_endSuccessful= 0;    
@@ -212,9 +212,9 @@ StatusCode Ats::PropagationEngineTest::runTest()
       m_charge         = q;
       
        // preps
-      std::unique_ptr<AtsSymMatrixD<5> > cov;
-      AtsVectorD<5> pars; pars << 0., 0., phi, theta, q/p;
-      Ats::PerigeeSurface pSurface(Vector3D(0.,0.,0.));
+      std::unique_ptr<ActsSymMatrixD<5> > cov;
+      ActsVectorD<5> pars; pars << 0., 0., phi, theta, q/p;
+      Acts::PerigeeSurface pSurface(Vector3D(0.,0.,0.));
       
       std::vector<const TrackParametersBase*> processParameters;
       
@@ -227,7 +227,7 @@ StatusCode Ats::PropagationEngineTest::runTest()
           
           // go through the destination surfaces
           for (auto& surface : m_destinationSurfaces){
-              const NeutralParameters* destinationParameters = executeTestT<Ats::NeutralParameters>(startParameters, *surface);
+              const NeutralParameters* destinationParameters = executeTestT<Acts::NeutralParameters>(startParameters, *surface);
               if (destinationParameters)
                   processParameters.push_back(destinationParameters);   
           }     

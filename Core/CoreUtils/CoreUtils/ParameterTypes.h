@@ -1,11 +1,11 @@
-#ifndef ATS_PARAMETERTYPES_H
-#define ATS_PARAMETERTYPES_H 1
+#ifndef ACTS_PARAMETERTYPES_H
+#define ACTS_PARAMETERTYPES_H 1
 
 // STL include(s)
 #include <algorithm>
 #include <cmath>
 
-namespace Ats
+namespace Acts
 {
   /**
    * @brief type for parameters with unrestricted value range
@@ -139,6 +139,6 @@ namespace Ats
    */
 //  template<typename ParameterPolicy,typename ParameterPolicy::par_id_type parID>
 //  struct parameter_traits;
-}  // end of namespace Ats
+}  // end of namespace Acts
 
-#endif // ATS_PARAMETERTYPES
+#endif // ACTS_PARAMETERTYPES

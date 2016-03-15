@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////
-// GenericLayerBuilder.cxx, ATS project
+// GenericLayerBuilder.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 // Core module
@@ -25,10 +25,10 @@
 #include "GenericGeometryTools/GenericLayerBuilder.h"
 #include "GenericDetectorElement/GenericDetectorElement.h"
 
-DECLARE_COMPONENT(Ats::GenericLayerBuilder)
+DECLARE_COMPONENT(Acts::GenericLayerBuilder)
 
 // constructor
-Ats::GenericLayerBuilder::GenericLayerBuilder(const std::string& t, const std::string& n, const IInterface* p) :
+Acts::GenericLayerBuilder::GenericLayerBuilder(const std::string& t, const std::string& n, const IInterface* p) :
   AlgToolBase(t,n,p),
   m_layerIdentification(n),
   m_nLayers(nullptr),
@@ -88,11 +88,11 @@ Ats::GenericLayerBuilder::GenericLayerBuilder(const std::string& t, const std::s
 }
 
 // destructor
-Ats::GenericLayerBuilder::~GenericLayerBuilder()
+Acts::GenericLayerBuilder::~GenericLayerBuilder()
 {}
 
 // initialize
-StatusCode Ats::GenericLayerBuilder::initialize()
+StatusCode Acts::GenericLayerBuilder::initialize()
 {
     MSG_DEBUG( "initialize()" );
     
@@ -137,14 +137,14 @@ StatusCode Ats::GenericLayerBuilder::initialize()
 }
 
 //finalize
-StatusCode Ats::GenericLayerBuilder::finalize()
+StatusCode Acts::GenericLayerBuilder::finalize()
 {
     MSG_DEBUG( "finalize()" );
     return StatusCode::SUCCESS;
 }
 
 
-StatusCode Ats::GenericLayerBuilder::constructLayers() 
+StatusCode Acts::GenericLayerBuilder::constructLayers() 
 {
     
    // -------------------------------- central layers -----------------------------------------------------------
@@ -801,7 +801,7 @@ StatusCode Ats::GenericLayerBuilder::constructLayers()
     return StatusCode::SUCCESS;
 }
 
-void Ats::GenericLayerBuilder::moduleExtend(const Ats::GenericDetectorElement& detElement,
+void Acts::GenericLayerBuilder::moduleExtend(const Acts::GenericDetectorElement& detElement,
                                             double thickness, 
                                             double minHalfX, double maxHalfX, double halfY,
                                             double& rmin, double& rmax, 

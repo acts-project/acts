@@ -1,16 +1,16 @@
 ///////////////////////////////////////////////////////////////////
-// MsgMacros.h, ATS project
+// MsgMacros.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_CORE_MSGMACROS_H
-#define ATS_CORE_MSGMACROS_H 1
+#ifndef ACTS_CORE_MSGMACROS_H
+#define ACTS_CORE_MSGMACROS_H 1
 
 #include "CoreInterfaces/MsgBase.h"
 #define MSG_LVL_NOCHK(lvl, x)               \
-        Ats::MsgBase::msg(lvl) << x << endmsg
+        Acts::MsgBase::msg(lvl) << x << endmsg
 
 #define MSG_LVL_CHK(lvl, x)                 \
-        if (Ats::MsgBase::msgLvl(lvl)) Ats::MsgBase::msg(lvl) << x << endmsg
+        if (Acts::MsgBase::msgLvl(lvl)) Acts::MsgBase::msg(lvl) << x << endmsg
 
 #define MSG_VERBOSE(x)  MSG_LVL_CHK(MSG::VERBOSE,x)
 #define MSG_DEBUG(x)    MSG_LVL_CHK(MSG::DEBUG,x)
@@ -20,4 +20,4 @@
 #define MSG_FATAL(x)    MSG_LVL_NOCHK(MSG::FATAL,x) 
 #define MSG_ALWAYS(x)   MSG_LVL_NOCHK(MSG::ALWAYS,x)
 
-#endif // ATS_CORE_MSGMACROS_H
+#endif // ACTS_CORE_MSGMACROS_H

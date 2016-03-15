@@ -11,7 +11,7 @@
 #define BOOST_TEST_MODULE ParameterSet Tests
 #include <boost/test/included/unit_test.hpp>
 
-// ATS include(s)
+// ACTS include(s)
 #include "ParameterSet/ParameterSet.h"
 #include "Algebra/AlgebraDefinitions.h"
 
@@ -21,7 +21,7 @@
 /**
  * @brief Ats namespace
  */
-namespace Ats
+namespace Acts
 {
   /**
    * @brief Namespace for ATS unit tests
@@ -56,7 +56,7 @@ namespace Ats
         const double min = par_type_t<ParID_t::eTHETA>::min;
         double theta_1 = 0.7*M_PI;
         double theta_2 = 0.4*M_PI;
-        AtsVectorD<1> dTheta;
+        ActsVectorD<1> dTheta;
         dTheta << (theta_1 - theta_2);
 
         // both parameters inside bounds, difference is positive
@@ -123,7 +123,7 @@ namespace Ats
 
         double phi_1 = 0.7*M_PI;
         double phi_2 = 0.4*M_PI;
-        AtsVectorD<1> dPhi;
+        ActsVectorD<1> dPhi;
         dPhi << (phi_1 - phi_2);
 
         ParameterSet<ParID_t::ePHI> cyclic1(nullptr,phi_1);
@@ -163,11 +163,11 @@ namespace Ats
         const double phi_max   = par_type_t<ParID_t::ePHI>::max;
         const double phi_min   = par_type_t<ParID_t::ePHI>::min;
 
-        AtsVectorD<5> parValues_1;
-        AtsVectorD<5> parValues_2;
+        ActsVectorD<5> parValues_1;
+        ActsVectorD<5> parValues_2;
         FullParameterSet parSet_1(nullptr,parValues_1);
         FullParameterSet parSet_2(nullptr,parValues_2);
-        AtsVectorD<5> residual;
+        ActsVectorD<5> residual;
         const unsigned int toys = 1000;
         for(unsigned int i = 0; i < toys; ++i)
         {
@@ -210,7 +210,7 @@ namespace Ats
     /// @endcond
 
     /**
-     * @brief Unit test for Ats::anonymous_namespace{ParameterSet.h}::are_sorted helper
+     * @brief Unit test for Acts::anonymous_namespace{ParameterSet.h}::are_sorted helper
      *
      * The test checks for correct behavior in the following cases (always using @c int
      * as value type):
@@ -248,7 +248,7 @@ namespace Ats
     }
 
     /**
-     * @brief Unit test for Ats::anonymous_namespace{ParameterSet.h}::are_within helper
+     * @brief Unit test for Acts::anonymous_namespace{ParameterSet.h}::are_within helper
      *
      * The test checks for correct behavior in the following cases (always using @c int
      * as value type):
@@ -291,17 +291,17 @@ namespace Ats
       BOOST_CHECK((ParameterSet<ParID_t::eLOC_1,ParID_t::eLOC_2>::size() == 2));
 
       // covariance matrix
-      AtsSymMatrixD<3> cov;
+      ActsSymMatrixD<3> cov;
       cov<< 1,0,0,
           0,1.2,0.2,
           0,0.2,0.7;
-      std::unique_ptr<AtsSymMatrixD<3> > pCovMatrix = std::make_unique<AtsSymMatrixD<3> >(cov);
+      std::unique_ptr<ActsSymMatrixD<3> > pCovMatrix = std::make_unique<ActsSymMatrixD<3> >(cov);
 
       // parameter values
       double loc1 = 0.5;
       double loc2 = -0.2;
       double phi  = 0.3*M_PI;  // this should be within [-M_PI,M_PI) to avoid failed tests due to angle range corrections
-      AtsVectorD<3> parValues(loc1,loc2,phi);
+      ActsVectorD<3> parValues(loc1,loc2,phi);
 
       // parameter set with covariance matrix
       ParameterSet<ParID_t::eLOC_1,ParID_t::eLOC_2,ParID_t::ePHI> parSet_with_cov(std::move(pCovMatrix),loc1,loc2,phi);
@@ -331,7 +331,7 @@ namespace Ats
       BOOST_CHECK(parSet_without_cov.getParameters() == parSet_with_cov.getParameters());
 
       // set new covariance matrix
-      parSet_without_cov.setCovariance(std::make_unique<AtsSymMatrixD<3> >(cov));
+      parSet_without_cov.setCovariance(std::make_unique<ActsSymMatrixD<3> >(cov));
 
       BOOST_CHECK(parSet_without_cov.getCovariance() != 0);
       BOOST_CHECK(*parSet_without_cov.getCovariance() == cov);
@@ -362,17 +362,17 @@ namespace Ats
     BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests)
     {
       // covariance matrix
-      AtsSymMatrixD<3> cov;
+      ActsSymMatrixD<3> cov;
       cov<< 1,0,0,
           0,1.2,0.2,
           0,0.2,0.7;
-      std::unique_ptr<AtsSymMatrixD<3> > pCovMatrix = std::make_unique<AtsSymMatrixD<3> >(cov);
+      std::unique_ptr<ActsSymMatrixD<3> > pCovMatrix = std::make_unique<ActsSymMatrixD<3> >(cov);
 
       // parameter values
       double loc1 = 0.5;
       double loc2 = -0.2;
       double phi  = 0.3*M_PI;  // this should be within [-M_PI,M_PI) to avoid failed tests due to angle range corrections
-      AtsVectorD<3> first_parValues(loc1,loc2,phi);
+      ActsVectorD<3> first_parValues(loc1,loc2,phi);
 
       // parameter set with covariance matrix
       ParameterSet<ParID_t::eLOC_1,ParID_t::eLOC_2,ParID_t::ePHI> first(std::move(pCovMatrix),loc1,loc2,phi);
@@ -423,11 +423,11 @@ namespace Ats
     BOOST_AUTO_TEST_CASE(parset_comparison_tests)
     {
       // covariance matrix
-      AtsSymMatrixD<3> cov;
+      ActsSymMatrixD<3> cov;
       cov<< 1,0,0,
           0,1.2,0.2,
           0,0.2,0.7;
-      std::unique_ptr<AtsSymMatrixD<3> > pCovMatrix = std::make_unique<AtsSymMatrixD<3> >(cov);
+      std::unique_ptr<ActsSymMatrixD<3> > pCovMatrix = std::make_unique<ActsSymMatrixD<3> >(cov);
 
       // parameter values
       double loc1 = 0.5;
@@ -465,13 +465,13 @@ namespace Ats
       BOOST_CHECK(first == second);
 
       // check that comparison fails for unequal covariance matrices
-      second.setCovariance(std::make_unique<AtsSymMatrixD<3> >(cov));
+      second.setCovariance(std::make_unique<ActsSymMatrixD<3> >(cov));
       BOOST_CHECK(first != second);
       first = second;
       BOOST_CHECK(first == second);
 
       cov(0,0) = 2 * cov(0,0);
-      second.setCovariance(std::make_unique<AtsSymMatrixD<3> >(cov));
+      second.setCovariance(std::make_unique<ActsSymMatrixD<3> >(cov));
       BOOST_CHECK(first != second);
       first = second;
       BOOST_CHECK(first == second);
@@ -487,29 +487,29 @@ namespace Ats
      */
     BOOST_AUTO_TEST_CASE(parset_projection_tests)
     {
-      AtsMatrixD<1,5> phi_proj;
+      ActsMatrixD<1,5> phi_proj;
       phi_proj << 0,0,1,0,0;
 
-      AtsMatrixD<2,5> loc1_qop_proj;
+      ActsMatrixD<2,5> loc1_qop_proj;
       loc1_qop_proj << 1,0,0,0,0,
                        0,0,0,0,1;
 
-      AtsMatrixD<2,5> loc2_theta_proj;
+      ActsMatrixD<2,5> loc2_theta_proj;
       loc2_theta_proj << 0,1,0,0,0,
                          0,0,0,1,0;
 
-      AtsMatrixD<3,5> loc1_loc2_phi_proj;
+      ActsMatrixD<3,5> loc1_loc2_phi_proj;
       loc1_loc2_phi_proj << 1,0,0,0,0,
                             0,1,0,0,0,
                             0,0,1,0,0;
 
-      AtsMatrixD<4,5> loc1_phi_theta_qop_proj;
+      ActsMatrixD<4,5> loc1_phi_theta_qop_proj;
       loc1_phi_theta_qop_proj << 1,0,0,0,0,
                                  0,0,1,0,0,
                                  0,0,0,1,0,
                                  0,0,0,0,1;
 
-      AtsMatrixD<5,5> loc1_loc2_phi_theta_qop_proj;
+      ActsMatrixD<5,5> loc1_loc2_phi_theta_qop_proj;
       loc1_loc2_phi_theta_qop_proj << 1,0,0,0,0,
                                       0,1,0,0,0,
                                       0,0,1,0,0,
@@ -590,7 +590,7 @@ namespace Ats
       const double delta_loc1 = second_loc1 - first_loc1;
       const double delta_phi = get_cyclic_difference(second_phi,first_phi,min,max);
       const double delta_theta = second_theta - first_theta;
-      AtsVectorD<3> residuals(delta_loc1,delta_phi,delta_theta);
+      ActsVectorD<3> residuals(delta_loc1,delta_phi,delta_theta);
 
       ParameterSet<ParID_t::eLOC_1,ParID_t::ePHI,ParID_t::eTHETA> first(nullptr,first_loc1,first_phi,first_theta);
       ParameterSet<ParID_t::eLOC_1,ParID_t::ePHI,ParID_t::eTHETA> second(nullptr,second_loc1,second_phi,second_theta);
@@ -606,4 +606,4 @@ namespace Ats
       random_residual_tests();
     }
   } // end of namespace Test
-} // end of namespace Ats
+} // end of namespace Acts
