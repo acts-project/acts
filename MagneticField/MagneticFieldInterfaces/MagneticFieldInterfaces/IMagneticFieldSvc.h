@@ -1,12 +1,12 @@
 ///////////////////////////////////////////////////////////////////
-// IMagneticFieldSvc.h, ATS project
+// IMagneticFieldSvc.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_MAGNETICFIELDINTERFACES_IMAGFIELDSVC_H
-#define ATS_MAGNETICFIELDINTERFACES_IMAGFIELDSVC_H 1
+#ifndef ACTS_MAGNETICFIELDINTERFACES_IMAGFIELDSVC_H
+#define ACTS_MAGNETICFIELDINTERFACES_IMAGFIELDSVC_H 1
 
-#ifdef ATS_MAGNETICFIELDINTERFACE_PLUGIN
-#include ATS_MAGNETICFIELDINTERFACE_PLUGIN
+#ifdef ACTS_MAGNETICFIELDINTERFACE_PLUGIN
+#include ACTS_MAGNETICFIELDINTERFACE_PLUGIN
 #else 
 
 // Framework includes
@@ -15,7 +15,7 @@
 /** Declaration of the interface ID ( interface id, major version, minor version) */
 static const InterfaceID IID_IMagneticFieldSvc("IMagneticFieldSvc", 1, 0);
 
-namespace Ats {
+namespace Acts {
 
 /** @ class IMagneticFieldSvc
 
@@ -47,6 +47,6 @@ namespace Ats {
     };
 }
 
-#endif // ATS_MAGNETICFIELDINTERFACE_PLUGIN
+#endif // ACTS_MAGNETICFIELDINTERFACE_PLUGIN
 
-#endif //> ! ATS_MAGNETICFIELDINTERFACES_IMAGFIELDSVC_H
+#endif //> ! ACTS_MAGNETICFIELDINTERFACES_IMAGFIELDSVC_H

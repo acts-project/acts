@@ -2,7 +2,7 @@
 
 #include "GenericGeometryTools/GenericLayerBuilder.h"
 
-using namespace Agd;
+using namespace Acts;
 
 DECLARE_TOOL_FACTORY( GenericLayerBuilder )
 

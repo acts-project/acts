@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////////
-// RungeKuttaUtils.cxx , ATS project
+// RungeKuttaUtils.cxx , ACTS project
 // author Igor Gavrilenko
 ///////////////////////////////////////////////////////////////////
 
@@ -18,11 +18,11 @@
 // for charged track parameters
 /////////////////////////////////////////////////////////////////////////////////
 
-bool Ats::RungeKuttaUtils::transformLocalToGlobal(bool useJac,const Ats::TrackParameters& Tp,double* P) const 
+bool Acts::RungeKuttaUtils::transformLocalToGlobal(bool useJac,const Acts::TrackParameters& Tp,double* P) const 
 {
-  const Ats::TrackParameters* pTp  = &Tp; if(!pTp) return false;
+  const Acts::TrackParameters* pTp  = &Tp; if(!pTp) return false;
 
-  const AtsVectorD<5> Vp = Tp.parameters();
+  const ActsVectorD<5> Vp = Tp.parameters();
   double p[5]; p[0]=Vp[0]; p[1]=Vp[1]; p[2]=Vp[2]; p[3]=Vp[3]; p[4]=Vp[4];
 
   return transformLocalToGlobal(useJac,&Tp.associatedSurface(),p,P);
@@ -33,11 +33,11 @@ bool Ats::RungeKuttaUtils::transformLocalToGlobal(bool useJac,const Ats::TrackPa
 // for neutral track parameters
 /////////////////////////////////////////////////////////////////////////////////
 
-bool Ats::RungeKuttaUtils::transformLocalToGlobal(bool useJac,const Ats::NeutralParameters& Tp,double* P) const 
+bool Acts::RungeKuttaUtils::transformLocalToGlobal(bool useJac,const Acts::NeutralParameters& Tp,double* P) const 
 {
-  const Ats::NeutralParameters* pTp = &Tp; if(!pTp) return false;
+  const Acts::NeutralParameters* pTp = &Tp; if(!pTp) return false;
 
-  const AtsVectorD<5> Vp = Tp.parameters();
+  const ActsVectorD<5> Vp = Tp.parameters();
   double p[5]; p[0]=Vp[0]; p[1]=Vp[1]; p[2]=Vp[2]; p[3]=Vp[3]; p[4]=Vp[4];
 
   return transformLocalToGlobal(useJac,&Tp.associatedSurface(),p,P);
@@ -47,14 +47,14 @@ bool Ats::RungeKuttaUtils::transformLocalToGlobal(bool useJac,const Ats::Neutral
 // Common transformation from global to local system coordinates for all surfaces
 /////////////////////////////////////////////////////////////////////////////////
 
-void Ats::RungeKuttaUtils::transformGlobalToLocal(double* P,double* par) const 
+void Acts::RungeKuttaUtils::transformGlobalToLocal(double* P,double* par) const 
 {
   par[2]  = atan2(P[4],P[3]);
   par[3]  = acos (P[5]);
   par[4]  = P[6];
 }
 
-void Ats::RungeKuttaUtils::transformGlobalToLocal(const Ats::Surface* su,bool useJac, double* P,double* par,double* Jac) const 
+void Acts::RungeKuttaUtils::transformGlobalToLocal(const Acts::Surface* su,bool useJac, double* P,double* par,double* Jac) const 
 {
   par[2]  = atan2(P[4],P[3]);
   par[3]  = acos (P[5]);
@@ -62,11 +62,11 @@ void Ats::RungeKuttaUtils::transformGlobalToLocal(const Ats::Surface* su,bool us
 
   unsigned int ty = su->type();
 
-  if     (ty == Ats::Surface::Plane   ) transformGlobalToPlane   (su,useJac,P,par,Jac); 
-  else if(ty == Ats::Surface::Line    ) transformGlobalToLine    (su,useJac,P,par,Jac);
-  else if(ty == Ats::Surface::Cylinder) transformGlobalToCylinder(su,useJac,P,par,Jac);
-  else if(ty == Ats::Surface::Perigee ) transformGlobalToLine    (su,useJac,P,par,Jac);
-  else if(ty == Ats::Surface::Disc    ) transformGlobalToDisc    (su,useJac,P,par,Jac);
+  if     (ty == Acts::Surface::Plane   ) transformGlobalToPlane   (su,useJac,P,par,Jac); 
+  else if(ty == Acts::Surface::Line    ) transformGlobalToLine    (su,useJac,P,par,Jac);
+  else if(ty == Acts::Surface::Cylinder) transformGlobalToCylinder(su,useJac,P,par,Jac);
+  else if(ty == Acts::Surface::Perigee ) transformGlobalToLine    (su,useJac,P,par,Jac);
+  else if(ty == Acts::Surface::Disc    ) transformGlobalToDisc    (su,useJac,P,par,Jac);
   else                                  transformGlobalToCone    (su,useJac,P,par,Jac);
 
   if(!useJac) return;
@@ -91,10 +91,10 @@ void Ats::RungeKuttaUtils::transformGlobalToLocal(const Ats::Surface* su,bool us
 /////////////////////////////////////////////////////////////////////////////////
 // Global position transformation to local Plane system coordinate
 /////////////////////////////////////////////////////////////////////////////////
-void Ats::RungeKuttaUtils::transformGlobalToPlane(const Ats::Surface* su,bool useJac,double* P,double* par,double* Jac) const 
+void Acts::RungeKuttaUtils::transformGlobalToPlane(const Acts::Surface* su,bool useJac,double* P,double* par,double* Jac) const 
 {  
-  const Ats::Transform3D&  T = su->transform();  
-
+  const Acts::Transform3D&  T = su->transform();  
+  
   double Ax[3] = {T(0,0),T(1,0),T(2,0)};
   double Ay[3] = {T(0,1),T(1,1),T(2,1)};
 
@@ -146,9 +146,9 @@ void Ats::RungeKuttaUtils::transformGlobalToPlane(const Ats::Surface* su,bool us
 /////////////////////////////////////////////////////////////////////////////////
 // Global position transformation to local Disc system coordinate
 /////////////////////////////////////////////////////////////////////////////////
-void Ats::RungeKuttaUtils::transformGlobalToDisc(const Ats::Surface* su,bool useJac,double* P,double* par,double* Jac) const 
+void Acts::RungeKuttaUtils::transformGlobalToDisc(const Acts::Surface* su,bool useJac,double* P,double* par,double* Jac) const 
 {
-  const Ats::Transform3D&  T = su->transform();  
+  const Acts::Transform3D&  T = su->transform();  
 
   double Ax[3] = {T(0,0),T(1,0),T(2,0)};
   double Ay[3] = {T(0,1),T(1,1),T(2,1)};
@@ -213,17 +213,17 @@ void Ats::RungeKuttaUtils::transformGlobalToDisc(const Ats::Surface* su,bool use
 // Global position transformation to local Cylinder system coordinate
 /////////////////////////////////////////////////////////////////////////////////
 
-void Ats::RungeKuttaUtils::transformGlobalToCylinder
-(const Ats::Surface* su,bool useJac,double* P,double* par,double* Jac) const 
+void Acts::RungeKuttaUtils::transformGlobalToCylinder
+(const Acts::Surface* su,bool useJac,double* P,double* par,double* Jac) const 
 {
 
-  const Ats::Transform3D&  T = su->transform();  
+  const Acts::Transform3D&  T = su->transform();  
  
   double Ax[3] = {T(0,0),T(1,0),T(2,0)};
   double Ay[3] = {T(0,1),T(1,1),T(2,1)};
   double Az[3] = {T(0,2),T(1,2),T(2,2)};
 
-  double R     = static_cast<const Ats::CylinderSurface*>(su)->bounds().r();
+  double R     = static_cast<const Acts::CylinderSurface*>(su)->bounds().r();
 
   double x  = P[0]-T(0,3);
   double y  = P[1]-T(1,3);
@@ -282,9 +282,9 @@ void Ats::RungeKuttaUtils::transformGlobalToCylinder
 /////////////////////////////////////////////////////////////////////////////////
 // Global position transformation to local Straight line  system coordinate
 /////////////////////////////////////////////////////////////////////////////////
-void Ats::RungeKuttaUtils::transformGlobalToLine(const Ats::Surface* su,bool useJac,double* P,double* par,double* Jac) const 
+void Acts::RungeKuttaUtils::transformGlobalToLine(const Acts::Surface* su,bool useJac,double* P,double* par,double* Jac) const 
 {
-  const Ats::Transform3D&  T = su->transform();  
+  const Acts::Transform3D&  T = su->transform();  
   
   double A[3] = {T(0,2),T(1,2),T(2,2)};
 
@@ -345,10 +345,10 @@ void Ats::RungeKuttaUtils::transformGlobalToLine(const Ats::Surface* su,bool use
 /////////////////////////////////////////////////////////////////////////////////
 // Global position transformation to local Cone  system coordinate
 /////////////////////////////////////////////////////////////////////////////////
-void Ats::RungeKuttaUtils::transformGlobalToCone(const Ats::Surface* su,bool useJac,double* P,double* par,double* Jac) const 
+void Acts::RungeKuttaUtils::transformGlobalToCone(const Acts::Surface* su,bool useJac,double* P,double* par,double* Jac) const 
 {
 
-  const Ats::Transform3D&  T = su->transform();  
+  const Acts::Transform3D&  T = su->transform();  
 
   double Ax[3] = {T(0,0),T(1,0),T(2,0)};
   double Ay[3] = {T(0,1),T(1,1),T(2,1)};
@@ -359,7 +359,7 @@ void Ats::RungeKuttaUtils::transformGlobalToCone(const Ats::Surface* su,bool use
   double z  = P[2]-T(2,3);
   double RC = x*Ax[0]+y*Ax[1]+z*Ax[2];
   double RS = x*Ay[0]+y*Ay[1]+z*Ay[2];
-  double tA = static_cast<const Ats::ConeSurface*>(su)->bounds().tanAlpha();
+  double tA = static_cast<const Acts::ConeSurface*>(su)->bounds().tanAlpha();
   par[1]    = x*Az[0]+y*Az[1]+z*Az[2]; 
   par[0]    = atan2(RS,RC)*(par[1]*tA);
 
@@ -381,7 +381,7 @@ void Ats::RungeKuttaUtils::transformGlobalToCone(const Ats::Surface* su,bool use
 // Main program for step estimation to surfaces
 /////////////////////////////////////////////////////////////////////////////////
 
-double Ats::RungeKuttaUtils::stepEstimator
+double Acts::RungeKuttaUtils::stepEstimator
 (int kind,double* Su,const double* P,bool& Q) const
 {
   if(kind==1) return stepEstimatorToPlane       (Su,P,Q);
@@ -395,7 +395,7 @@ double Ats::RungeKuttaUtils::stepEstimator
 // Step estimation to Plane
 /////////////////////////////////////////////////////////////////////////////////
 
-double Ats::RungeKuttaUtils::stepEstimatorToPlane 
+double Acts::RungeKuttaUtils::stepEstimatorToPlane 
 (double* S,const double* P,bool& Q) const
 {
   const double* r = &P[0];          // Start coordinate
@@ -409,7 +409,7 @@ double Ats::RungeKuttaUtils::stepEstimatorToPlane
 /////////////////////////////////////////////////////////////////////////////////
 // Step estimation to Cylinder
 /////////////////////////////////////////////////////////////////////////////////
-double Ats::RungeKuttaUtils::stepEstimatorToCylinder(double* S,const double* P,bool& Q) const 
+double Acts::RungeKuttaUtils::stepEstimatorToCylinder(double* S,const double* P,bool& Q) const 
 {
   const double* r = &P[0];          // Start coordinate
   const double* a = &P[3];          // Start direction
@@ -463,7 +463,7 @@ double Ats::RungeKuttaUtils::stepEstimatorToCylinder(double* S,const double* P,b
 /////////////////////////////////////////////////////////////////////////////////
 // Step estimation to Straight Line
 /////////////////////////////////////////////////////////////////////////////////
-double Ats::RungeKuttaUtils::stepEstimatorToStraightLine(double* S,const double* P,bool& Q) const
+double Acts::RungeKuttaUtils::stepEstimatorToStraightLine(double* S,const double* P,bool& Q) const
 {
   const double* r = &P[0];          // Start coordinate
   const double* a = &P[3];          // Start direction
@@ -479,7 +479,7 @@ double Ats::RungeKuttaUtils::stepEstimatorToStraightLine(double* S,const double*
 /////////////////////////////////////////////////////////////////////////////////
 // Step estimation to Cone
 /////////////////////////////////////////////////////////////////////////////////
-double Ats::RungeKuttaUtils::stepEstimatorToCone(double* S,const double* P,bool& Q) const 
+double Acts::RungeKuttaUtils::stepEstimatorToCone(double* S,const double* P,bool& Q) const 
 {
   const double* r = &P[0];          // Start coordinate
   const double* a = &P[3];          // Start direction
@@ -539,108 +539,10 @@ double Ats::RungeKuttaUtils::stepEstimatorToCone(double* S,const double* P,bool&
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-// Step estimation to surfaces
-//
-// Input iformation
-//
-// SU    - input vector surfaces and conditions for boundary check
-// DN    - is work map
-// Pinp  - array of track parameters in global system coordinates before some step
-// Pout  - array of track parameters in global system coordinates before some step
-// W     - trajectory total pass for Pinp position
-// So    - max. step for straight line propagation model
-// Nv    - surface number in vector SU  which we don't need to use
-//
-// Output information
-//
-// pair(step to surface,surface number from vector SU)
-// next  - condition to use Pout for next step
-/////////////////////////////////////////////////////////////////////////////////
-std::pair<double,int> Ats::RungeKuttaUtils::stepEstimator(std::vector<std::pair<const Ats::Surface*,Ats::BoundaryCheck> >& SU,
-                                                          std::multimap<double,int>& DN,
-                                                          const double* Pinp,const double* Pout,double W,double So,int Nv,bool& next) const
-{
-  W             = fabs(W)                                          ;
-  next          = false                                            ;
-  int N         = -1                                               ;
-  double D [3]  = {Pout[0]-Pinp[0],Pout[1]-Pinp[1],Pout[2]-Pinp[2]};
-  double Smax   = sqrt(D[0]*D[0]+D[1]*D[1]+D[2]*D[2])              ;
-  double Sign   = D[0]*Pinp[3]+D[1]*Pinp[4]+D[2]*Pinp[5]           ;
-
-  Ats::Vector3D pos( Pinp[0]  , Pinp[1]  , Pinp[2]  );
-  Ats::Vector3D dir( D[0]/Smax, D[1]/Smax, D[2]/Smax);
-
-  double Smin = 2.*Smax;
-
-  std::list<std::pair<double,int> > LD;
-  std::multimap<double,int>::iterator i = DN.begin(),ie = DN.end();
-
-  for(; i!=ie; ++i) {
-
-    if((*i).first > W+Smin) break;
-
-    int j = (*i).second;
-    Ats::Intersection sIntersection = SU[j].first->straightLineIntersection(pos,dir,true,SU[j].second);
-    LD.push_back(std::make_pair(sIntersection.pathLength+W,j));
-
-    if(!sIntersection.valid) continue;
-    // @TODO implement with straightLineIntersection
-    //for(int i=0; i!=n; ++i) {
-    //  double s; i == 0 ? s=ds.first() : s=ds.second();
-    //  if(s < 0. || s > Smin || (j==Nv && s < So)) continue;
-    //  Smin = s; N = j;
-    //}
-  }
-
-  if(!LD.empty()) {
-
-    DN.erase(DN.begin(),i);
-    std::list<std::pair<double,int> >::iterator l = LD.begin(), le = LD.end();
-    for(; l!=le; ++l) DN.insert((*l));
-  }
-
-  if(N < 0) {next = true; return std::make_pair(0.,-1);}
-
-  double Sm = Smin;
-
-  if(Sign < 0.) Sm = -Sm;
-  if(Smin < So || (Smax-Smin)  > 2.*So) return std::make_pair(Sm,N);
-
-  Ats::Vector3D  posn(Pout[0],Pout[1],Pout[2]);
-  Ats::Vector3D  dirn(Pout[3],Pout[4],Pout[5]);
-
-  Ats::Intersection sIntersection = SU[N].first->straightLineIntersection(posn,dirn,true,SU[N].second);
-  if (!sIntersection.valid) return std::make_pair(Sm,N);
-
-  Sm = 10000.;
-
-// @TODO implement with straightLineIntersection
-// 
-//    for(int i=0; i!=n; ++i) {
-//
-//    double sa,s; i == 0 ? s = ds.first() : s = ds.second(); sa = fabs(s);
-//
-//    if(s*Sign < 0.) {
-//      //if(sa < So    ) {next = true; return std::make_pair(s,N);}
-//      next = true; return std::make_pair(s,N);
-//    }
-//    else if(sa < Sm ) {
-//      Sm = s; next = true;
-//    }
-//    /*
-//    else if(sa < fabs(Sm) && Smin >= Smax) {
-//      Sm = s; next = true;
-//    }
-//    */
-//  }
-  return std::make_pair(Sm,N);
-}
-
-/////////////////////////////////////////////////////////////////////////////////
 // New covariance matrix calculation from old matrix and jacobian
 /////////////////////////////////////////////////////////////////////////////////
 
-Ats::AtsSymMatrixD<5>* Ats::RungeKuttaUtils::newCovarianceMatrix(double* J,const Ats::AtsSymMatrixD<5>& M) const 
+Acts::ActsSymMatrixD<5>* Acts::RungeKuttaUtils::newCovarianceMatrix(double* J,const Acts::ActsSymMatrixD<5>& M) const 
 {
   double V[15]={M(0,0),
 		M(1,0),M(1,1),
@@ -648,8 +550,8 @@ Ats::AtsSymMatrixD<5>* Ats::RungeKuttaUtils::newCovarianceMatrix(double* J,const
 		M(3,0),M(3,1),M(3,2),M(3,3),
 		M(4,0),M(4,1),M(4,2),M(4,3),M(4,4)};
 
-  AtsSymMatrixD<5>* nM = new AtsSymMatrixD<5>;
-  AtsSymMatrixD<5>& m = (*nM);
+  ActsSymMatrixD<5>* nM = new ActsSymMatrixD<5>;
+  ActsSymMatrixD<5>& m = (*nM);
 
   double a11 = (J[ 0]*V[ 0]+J[ 1]*V[ 1]+J[ 2]*V[ 3])+(J[ 3]*V[ 6]+J[ 4]*V[10]);
   double a12 = (J[ 0]*V[ 1]+J[ 1]*V[ 2]+J[ 2]*V[ 4])+(J[ 3]*V[ 7]+J[ 4]*V[11]);
@@ -716,9 +618,9 @@ Ats::AtsSymMatrixD<5>* Ats::RungeKuttaUtils::newCovarianceMatrix(double* J,const
 /////////////////////////////////////////////////////////////////////////////////
 // Plane local position transformation to global system coordinate
 /////////////////////////////////////////////////////////////////////////////////
-void Ats::RungeKuttaUtils::transformPlaneToGlobal(bool useJac,const Ats::Surface* Su,const double* p,double* P) const 
+void Acts::RungeKuttaUtils::transformPlaneToGlobal(bool useJac,const Acts::Surface* Su,const double* p,double* P) const 
 {
-  const Ats::Transform3D& T = Su->transform();
+  const Acts::Transform3D& T = Su->transform();
   double Ax[3] = {T(0,0),T(1,0),T(2,0)};
   double Ay[3] = {T(0,1),T(1,1),T(2,1)};
 
@@ -739,9 +641,9 @@ void Ats::RungeKuttaUtils::transformPlaneToGlobal(bool useJac,const Ats::Surface
 /////////////////////////////////////////////////////////////////////////////////
 // Disc local position transformation to global system coordinate
 /////////////////////////////////////////////////////////////////////////////////
-void Ats::RungeKuttaUtils::transformDiscToGlobal(bool useJac,const Ats::Surface* Su,const double* p, double* P) const 
+void Acts::RungeKuttaUtils::transformDiscToGlobal(bool useJac,const Acts::Surface* Su,const double* p, double* P) const 
 {
-  const Ats::Transform3D& T = Su->transform();
+  const Acts::Transform3D& T = Su->transform();
   double Ax[3] = {T(0,0),T(1,0),T(2,0)};
   double Ay[3] = {T(0,1),T(1,1),T(2,1)};
   double Sf,Cf; sincos(p[1],&Sf,&Cf);
@@ -764,14 +666,14 @@ void Ats::RungeKuttaUtils::transformDiscToGlobal(bool useJac,const Ats::Surface*
 /////////////////////////////////////////////////////////////////////////////////
 // Cylinder local position transformation to global system coordinate
 /////////////////////////////////////////////////////////////////////////////////
-void Ats::RungeKuttaUtils::transformCylinderToGlobal(bool useJac,const Ats::Surface* Su,const double* p,double* P) const 
+void Acts::RungeKuttaUtils::transformCylinderToGlobal(bool useJac,const Acts::Surface* Su,const double* p,double* P) const 
 {
-  const Ats::Transform3D& T = Su->transform();
+  const Acts::Transform3D& T = Su->transform();
   double Ax[3] = {T(0,0),T(1,0),T(2,0)};
   double Ay[3] = {T(0,1),T(1,1),T(2,1)};
   double Az[3] = {T(0,2),T(1,2),T(2,2)};
 
-  double  R = static_cast<const Ats::CylinderSurface*>(Su)->bounds().r();
+  double  R = static_cast<const Acts::CylinderSurface*>(Su)->bounds().r();
 
   double fr = p[0]/R;
   double Sf,Cf; sincos(fr,&Sf,&Cf);
@@ -791,9 +693,9 @@ void Ats::RungeKuttaUtils::transformCylinderToGlobal(bool useJac,const Ats::Surf
 /////////////////////////////////////////////////////////////////////////////////
 // Straight line local position transformation to global system coordinate
 /////////////////////////////////////////////////////////////////////////////////
-void Ats::RungeKuttaUtils::transformLineToGlobal(bool useJac,const Ats::Surface* Su,const double* p,double* P) const
+void Acts::RungeKuttaUtils::transformLineToGlobal(bool useJac,const Acts::Surface* Su,const double* p,double* P) const
 {
-  const Ats::Transform3D& T = Su->transform();
+  const Acts::Transform3D& T = Su->transform();
   double A[3] = {T(0,2),T(1,2),T(2,2)};
 
   double Bx = A[1]*P[5]-A[2]*P[4];
@@ -823,7 +725,7 @@ void Ats::RungeKuttaUtils::transformLineToGlobal(bool useJac,const Ats::Surface*
 /////////////////////////////////////////////////////////////////////////////////
 // Tramsform from local to global for all track parameters
 /////////////////////////////////////////////////////////////////////////////////
-bool Ats::RungeKuttaUtils::transformLocalToGlobal(bool useJac,const Ats::Surface* su,const double* p,double* P) const
+bool Acts::RungeKuttaUtils::transformLocalToGlobal(bool useJac,const Acts::Surface* su,const double* p,double* P) const
 {
   if(!su) return false;
 
@@ -851,18 +753,18 @@ bool Ats::RungeKuttaUtils::transformLocalToGlobal(bool useJac,const Ats::Surface
   }
 
   unsigned int ty = su->type();
-  if(ty == Ats::Surface::Plane   ) {transformPlaneToGlobal   (useJac,su,p,P); return true;}
-  if(ty == Ats::Surface::Line    ) {transformLineToGlobal    (useJac,su,p,P); return true;}
-  if(ty == Ats::Surface::Cylinder) {transformCylinderToGlobal(useJac,su,p,P); return true;}
-  if(ty == Ats::Surface::Perigee ) {transformLineToGlobal    (useJac,su,p,P); return true;}
-  if(ty == Ats::Surface::Disc    ) {transformDiscToGlobal    (useJac,su,p,P); return true;}
+  if(ty == Acts::Surface::Plane   ) {transformPlaneToGlobal   (useJac,su,p,P); return true;}
+  if(ty == Acts::Surface::Line    ) {transformLineToGlobal    (useJac,su,p,P); return true;}
+  if(ty == Acts::Surface::Cylinder) {transformCylinderToGlobal(useJac,su,p,P); return true;}
+  if(ty == Acts::Surface::Perigee ) {transformLineToGlobal    (useJac,su,p,P); return true;}
+  if(ty == Acts::Surface::Disc    ) {transformDiscToGlobal    (useJac,su,p,P); return true;}
   return false; 
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 // Global position transformation to curvilinear system coordinate
 /////////////////////////////////////////////////////////////////////////////////
-void Ats::RungeKuttaUtils::transformGlobalToCurvilinear(bool useJac,double* P,double* par,double* Jac) const 
+void Acts::RungeKuttaUtils::transformGlobalToCurvilinear(bool useJac,double* P,double* par,double* Jac) const 
 {
   par[0] = 0.;
   par[1] = 0.;
@@ -929,7 +831,7 @@ void Ats::RungeKuttaUtils::transformGlobalToCurvilinear(bool useJac,double* P,do
 /////////////////////////////////////////////////////////////////////////////////
 // Curvilinear covariance transformation to global system coordinate
 /////////////////////////////////////////////////////////////////////////////////
-void Ats::RungeKuttaUtils::transformCurvilinearToGlobal(double* p, double* P) const 
+void Acts::RungeKuttaUtils::transformCurvilinearToGlobal(double* p, double* P) const 
 {
   double Sf,Cf,Ce,Se; sincos(p[2],&Sf,&Cf);  sincos(p[3],&Se,&Ce);
 
@@ -951,11 +853,11 @@ void Ats::RungeKuttaUtils::transformCurvilinearToGlobal(double* p, double* P) co
 
 /////////////////////////////////////////////////////////////////////////////////
 // Jacobian of transformations from curvilinear to local system coordinates
-// for  Ats::TrackParameters
+// for  Acts::TrackParameters
 /////////////////////////////////////////////////////////////////////////////////
-void Ats::RungeKuttaUtils::jacobianTransformCurvilinearToLocal(const Ats::TrackParameters& Tp,double* Jac)
+void Acts::RungeKuttaUtils::jacobianTransformCurvilinearToLocal(const Acts::TrackParameters& Tp,double* Jac)
 {
-  const AtsVectorD<5>& Vp = Tp.parameters();
+  const ActsVectorD<5>& Vp = Tp.parameters();
   double P[23];
   P[0] = Vp[0];
   P[1] = Vp[1];
@@ -967,7 +869,7 @@ void Ats::RungeKuttaUtils::jacobianTransformCurvilinearToLocal(const Ats::TrackP
 /////////////////////////////////////////////////////////////////////////////////
 // Jacobian of transformations from curvilinear to local system coordinates
 /////////////////////////////////////////////////////////////////////////////////
-void Ats::RungeKuttaUtils::jacobianTransformCurvilinearToLocal(double* P, const Ats::Surface* su,double* Jac)
+void Acts::RungeKuttaUtils::jacobianTransformCurvilinearToLocal(double* P, const Acts::Surface* su,double* Jac)
 {
   // Common for all surfaces terms of jacobian
   //
@@ -985,7 +887,7 @@ void Ats::RungeKuttaUtils::jacobianTransformCurvilinearToLocal(double* P, const 
   Jac[19] = 0.;   // dThe/dCM
   Jac[20] = 1.;   // dCM /dCM
 
-  const Ats::Transform3D& T = su->transform();
+  const Acts::Transform3D& T = su->transform();
 
   double Sf,Cf,Ce,Se; sincos(P[2],&Sf,&Cf);  sincos(P[3],&Se,&Ce);
 
@@ -999,14 +901,14 @@ void Ats::RungeKuttaUtils::jacobianTransformCurvilinearToLocal(double* P, const 
   unsigned int ty = su->type();
 
 
-  if(ty == Ats::Surface::Plane   )  {jacobianTransformCurvilinearToPlane       (P,Jac); return;}
-  if(ty == Ats::Surface::Line    )  {jacobianTransformCurvilinearToStraightLine(P,Jac); return;}
-  if(ty == Ats::Surface::Cylinder)  {
-    P[22] = static_cast<const Ats::CylinderSurface*>(su)->bounds().r(); 
+  if(ty == Acts::Surface::Plane   )  {jacobianTransformCurvilinearToPlane       (P,Jac); return;}
+  if(ty == Acts::Surface::Line    )  {jacobianTransformCurvilinearToStraightLine(P,Jac); return;}
+  if(ty == Acts::Surface::Cylinder)  {
+    P[22] = static_cast<const Acts::CylinderSurface*>(su)->bounds().r(); 
                                      jacobianTransformCurvilinearToCylinder    (P,Jac); return;
   }
-  if(ty == Ats::Surface::Perigee )  {jacobianTransformCurvilinearToStraightLine(P,Jac); return;}
-  if(ty == Ats::Surface::Disc    )  {jacobianTransformCurvilinearToDisc        (P,Jac); return;}
+  if(ty == Acts::Surface::Perigee )  {jacobianTransformCurvilinearToStraightLine(P,Jac); return;}
+  if(ty == Acts::Surface::Disc    )  {jacobianTransformCurvilinearToDisc        (P,Jac); return;}
   Jac[0] = Jac[3] = 1.;
   Jac[1] = Jac[2] = 0.;
 }
@@ -1014,7 +916,7 @@ void Ats::RungeKuttaUtils::jacobianTransformCurvilinearToLocal(double* P, const 
 /////////////////////////////////////////////////////////////////////////////////
 // Jacobian of transformations from curvilinear to Plane system coordinates
 /////////////////////////////////////////////////////////////////////////////////
-void Ats::RungeKuttaUtils::jacobianTransformCurvilinearToPlane(double* P,double* Jac) const 
+void Acts::RungeKuttaUtils::jacobianTransformCurvilinearToPlane(double* P,double* Jac) const 
 {
   double* At = &P[ 4];
   double* Au = &P[ 7];
@@ -1045,7 +947,7 @@ void Ats::RungeKuttaUtils::jacobianTransformCurvilinearToPlane(double* P,double*
 /////////////////////////////////////////////////////////////////////////////////
 // Jacobian of transformations from curvilinear to Disc system coordinates
 /////////////////////////////////////////////////////////////////////////////////
-void Ats::RungeKuttaUtils::jacobianTransformCurvilinearToDisc(double* P,double* Jac) const 
+void Acts::RungeKuttaUtils::jacobianTransformCurvilinearToDisc(double* P,double* Jac) const 
 {
   double* p  = &P[ 0];
   double* At = &P[ 4];
@@ -1091,7 +993,7 @@ void Ats::RungeKuttaUtils::jacobianTransformCurvilinearToDisc(double* P,double* 
 /////////////////////////////////////////////////////////////////////////////////
 // Jacobian of transformations from curvilinear to Cylinder system coordinates
 /////////////////////////////////////////////////////////////////////////////////
-void Ats::RungeKuttaUtils::jacobianTransformCurvilinearToCylinder(double* P,double* Jac) const 
+void Acts::RungeKuttaUtils::jacobianTransformCurvilinearToCylinder(double* P,double* Jac) const 
 {
   double* p  = &P[ 0];
   double* At = &P[ 4];
@@ -1142,7 +1044,7 @@ void Ats::RungeKuttaUtils::jacobianTransformCurvilinearToCylinder(double* P,doub
 /////////////////////////////////////////////////////////////////////////////////
 // Jacobian of transformations from curvilinear to Straight Line Ssystem coordinates
 /////////////////////////////////////////////////////////////////////////////////
-void Ats::RungeKuttaUtils::jacobianTransformCurvilinearToStraightLine(double* P,double* Jac) const 
+void Acts::RungeKuttaUtils::jacobianTransformCurvilinearToStraightLine(double* P,double* Jac) const 
 {
   double* p  = &P[ 0];
   double* At = &P[ 4];
@@ -1176,54 +1078,4 @@ void Ats::RungeKuttaUtils::jacobianTransformCurvilinearToStraightLine(double* P,
   Jac[ 6] =(A[0]*Av[0]+A[1]*Av[1]+A[2]*Av[2])+s2*d; // dL1/dL1
   Jac[ 7] = s3*d;                                   // dL1/dPhi
   Jac[ 8] = s4*d;                                   // dL1/dThe
-}
-
-/////////////////////////////////////////////////////////////////////////////////
-// Fill distances map (initial map<distance,N of SU> preparation
-// Output
-// Step[0] - min negative step
-// Step[1] - min positive step
-// Step[2] - max distance
-// int     - vector SU element number with initial surface
-/////////////////////////////////////////////////////////////////////////////////
-int Ats::RungeKuttaUtils::fillDistancesMap(std::vector<std::pair<const Ats::Surface*,Ats::BoundaryCheck> >& SU,
-                                           std::multimap<double,int>& DN,
-                                           const double* Pinp,double W,const Ats::Surface* So,double* Step) const 
-{
-  int Ns = -1;
-  DN.erase(DN.begin(),DN.end()); 
-  
-  Ats::Vector3D pos(Pinp[0],Pinp[1],Pinp[2]);
-  Ats::Vector3D dir(Pinp[3],Pinp[4],Pinp[5]);
-
-  Step[0] = -1.e+20;
-  Step[1] =  1.e+20;
-  Step[2] =      0.;
-
-  int N = SU.size(); W=fabs(W);
-
-  for(int i=0; i!=N; ++i ) {
-    
-    const Ats::Surface* s = SU[i].first; if(!s) continue; if(s==So) Ns = i;
-    // straight line intersection
-    Ats::Intersection sIntersection = s->straightLineIntersection(pos,dir,true,SU[i].second);
-    double dist = sIntersection.pathLength;
-    DN.insert(std::make_pair(dist+W,i));
-
-    if(dist > Step[2]) Step[2] = dist;
-
-    // @TODO implement with straightLineIntersection
-    //
-    // int  n = ds.numberOfSolutions(); if(!n) continue;
-    // for(int i=0; i!=n; ++i) {
-    // 
-    //   double st; i == 0 ? st=ds.first() : st=ds.second();
-    // 
-    //   if(s==So && fabs(st)<=.001) continue;
-    // 
-    //   if(st < 0.) {if(st > Step[0]) Step[0] = st;}
-    //   else        {if(st < Step[1]) Step[1] = st;}
-    // }
-  }
-  return Ns;
 }

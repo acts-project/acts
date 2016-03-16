@@ -1,11 +1,11 @@
 ///////////////////////////////////////////////////////////////////
-// MagneticFieldMode.h, ATS project
+// MagneticFieldMode.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_MAGNETICFIELDUTILS_MAGNETICFIELDMODE_H
-#define ATS_MAGNETICFIELDUTILS_MAGNETICFIELDMODE_H 1
+#ifndef ACTS_MAGNETICFIELDUTILS_MAGNETICFIELDMODE_H
+#define ACTS_MAGNETICFIELDUTILS_MAGNETICFIELDMODE_H 1
 
-namespace Ats {
+namespace Acts {
 
       /** @enum MagneticFieldMode
 
@@ -20,4 +20,4 @@ namespace Ats {
                                 };
       
 } // end of namespace
-#endif // ATS_MAGNETICFIELDUTILS_MAGNETICFIELDMODE_H
+#endif // ACTS_MAGNETICFIELDUTILS_MAGNETICFIELDMODE_H

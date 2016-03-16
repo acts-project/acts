@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// LayerArrayCreator.h, ATS project
+// LayerArrayCreator.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_GEOMETRYTOOLS_GENERICLAYERBUILDER_H
-#define ATS_GEOMETRYTOOLS_GENERICLAYERBUILDER_H 1
+#ifndef ACTS_GENERICGEOMETRYTOOLS_GENERICLAYERBUILDER_H
+#define ACTS_GENERICGEOMETRYTOOLS_GENERICLAYERBUILDER_H 1
 
 // Core module
 #include "CoreInterfaces/AlgToolBase.h"
@@ -13,27 +13,27 @@
 // Gaudi & Athena
 #include "GaudiKernel/ToolHandle.h"
 
-#ifndef AGD_LAYERARRAYCREATOR_TAKESMALLERBIGGER
-#define AGD_LAYERARRAYCREATOR_TAKESMALLERBIGGER
+#ifndef ACTS_LAYERARRAYCREATOR_TAKESMALLERBIGGER
+#define ACTS_LAYERARRAYCREATOR_TAKESMALLERBIGGER
 #define takeSmaller(current,test) current = current < test ? current : test
 #define takeBigger(current,test)  current = current > test ? current : test
 #define takeSmallerBigger(cSmallest, cBiggest, test) takeSmaller(cSmallest, test); takeBigger(cBiggest, test)
 #endif
 
-namespace Agd {
+namespace Acts {
     
-    class DetectorElement;
+    class GenericDetectorElement;
     
     /** @class GenericLayerBuilder
      
-     The GenericLayerBuilder is able to build cylinder & disc layers with given detector
-     setups
+     The GenericLayerBuilder is able to build cylinder & disc layers from python input.
+     This is ment for the simple detector examples.
      
      @author julia.hrdinka@cern.ch, Noemi.Calace@cern.ch, Andreas.Salzburger@cern.ch
      */
 
     
-    class GenericLayerBuilder : public Ats::AlgToolBase, public Ats::ILayerBuilder {
+    class GenericLayerBuilder : public AlgToolBase, public ILayerBuilder {
         
     public:
         /** constructor */
@@ -49,13 +49,13 @@ namespace Agd {
         StatusCode finalize() override;
         
         /** LayerBuilder interface method - returning the layers at negative side */
-        const Ats::LayerVector* negativeLayers() const override; 
+        const LayerVector* negativeLayers() const override; 
       
         /** LayerBuilder interface method - returning the central layers */
-        const Ats::LayerVector* centralLayers() const override; 
+        const LayerVector* centralLayers() const override; 
       
         /** LayerBuilder interface method - returning the layers at negative side */
-        const Ats::LayerVector* positiveLayers() const override;         
+        const LayerVector* positiveLayers() const override;         
         
         /**ILayerBuilder method*/
         const std::string& identification() const override { return m_layerIdentification; }
@@ -64,11 +64,19 @@ namespace Agd {
         
         StatusCode constructLayers();
         
+        void moduleExtend(const GenericDetectorElement&, 
+                          double thickness, double minHalfX, double maxHalfX, double halfY,
+                          double& rmin, double& rmax,
+                          double& zmin, double& zmax);
+        
         std::string                                         m_layerIdentification;
                                                             
-        Ats::LayerVector*                                   m_nLayers; //!< layers on negative side
-        Ats::LayerVector*                                   m_cLayers; //!< layers on central side
-        Ats::LayerVector*                                   m_pLayers; //!< layers on positive side
+        LayerVector*                                        m_nLayers; //!< layers on negative side
+        LayerVector*                                        m_cLayers; //!< layers on central side
+        LayerVector*                                        m_pLayers; //!< layers on positive side
+
+        // a single paramater for the approach surface envelope
+        double                                              m_approachSurfaceEnvelope;
 
         // the central layers 
         std::vector<double>                                 m_centralLayerRadii;
@@ -76,10 +84,10 @@ namespace Agd {
         std::vector<double>                                 m_centralLayerEnvelopeZ;
         std::vector<double>                                 m_centralLayerMaterialConcentration;
         std::vector< std::vector<double> >                  m_centralLayerMaterialProperties;
-        std::vector< std::vector<double> >                  m_centralModulesPositionPhi;
-        std::vector<double>                                 m_centralModulesTiltPhi;        
-        std::vector< std::vector<double> >                  m_centralModulesPositionZ;
-        std::vector<double>                                 m_centralModulesStaggerZ;
+        std::vector< std::vector<double> >                  m_centralModulePositionPhi;
+        std::vector<double>                                 m_centralModuleTiltPhi;        
+        std::vector< std::vector<double> >                  m_centralModulePositionZ;
+        std::vector<double>                                 m_centralModuleStaggerZ;
         std::vector<double>                                 m_centralModuleHalfX;
         std::vector<double>                                 m_centralModuleHalfY;
         std::vector<double>                                 m_centralModuleThickness;
@@ -87,32 +95,41 @@ namespace Agd {
         std::vector<double>                                 m_centralModuleFrontsideStereo;
         std::vector<double>                                 m_centralModuleBacksideStereo;        
         std::vector<double>                                 m_centralModuleBacksideGap;
-        std::vector<const DetectorElement*>                 m_centralModules;
+        std::vector<const GenericDetectorElement*>          m_centralModule;                   //!< acts as detector store
+        ToolHandle<ILayerBuilder>                           m_centralPassiveLayerBuilder;
         
         // the layers at p/e side 
         std::vector<double>                                 m_posnegLayerPositionsZ;
         std::vector<double>                                 m_posnegLayerEnvelopeR;
-        std::vector< std::vector<double> >                  m_posnegModulesRadii;
+        std::vector<double>                                 m_posnegLayerMaterialConcentration;
+        std::vector< std::vector<double> >                  m_posnegLayerMaterialProperties;
+        std::vector< std::vector<double> >                  m_posnegModuleRadii;
         std::vector<double>                                 m_posnegModuleStaggerR;        
-        std::vector< std::vector<double>  >                 m_posnegModulesInPhi;             // used to fill the position-phi
-        std::vector< std::vector<double>  >                 m_posnegModulesPositionPhiStream; // used to fill the position-phi
-        std::vector< std::vector< std::vector<double> > >   m_posnegModulesPositionPhi; // this one is being filled by the two before
+        std::vector< std::vector<double>  >                 m_posnegModuleInPhi;               //!< used to fill the position-phi
+        std::vector< std::vector<double>  >                 m_posnegModulePositionPhiStream;   //!< used to fill the position-phi
+        std::vector< std::vector< std::vector<double> > >   m_posnegModulePositionPhi;         //!< this one is being filled by the two before
         std::vector< std::vector<double> >                  m_posnegMoudleStaggerPhi;
         std::vector< std::vector<double> >                  m_posnegModuleMinHalfX;
         std::vector< std::vector<double> >                  m_posnegModuleMaxHalfX;
         std::vector< std::vector<double> >                  m_posnegModuleHalfY;
         std::vector< std::vector<double> >                  m_posnegModuleThickness;
-        std::vector<const DetectorElement*>                 m_posnegModules;
-        
+        std::vector< std::vector<double> >                  m_posnegModuleMaterialStream;
+        std::vector< std::vector< std::vector<double> > >   m_posnegModuleMaterial;
+        std::vector< std::vector<double> >                  m_posnegModuleFrontsideStereo;
+        std::vector< std::vector<double> >                  m_posnegModuleBacksideStereo;        
+        std::vector< std::vector<double> >                  m_posnegModuleBacksideGap;             
+        std::vector<const GenericDetectorElement*>          m_posnegModule;                     //!< acts as detector store
+        ToolHandle<ILayerBuilder>                           m_posnegPassiveLayerBuilder;
+
 
     };
     
-    inline const Ats::LayerVector* GenericLayerBuilder::positiveLayers() const { return m_pLayers; }
+    inline const LayerVector* GenericLayerBuilder::positiveLayers() const { return m_pLayers; }
 
-    inline const Ats::LayerVector* GenericLayerBuilder::negativeLayers() const { return m_nLayers; }
+    inline const LayerVector* GenericLayerBuilder::negativeLayers() const { return m_nLayers; }
     
-    inline const Ats::LayerVector* GenericLayerBuilder::centralLayers() const { return m_cLayers; }
+    inline const LayerVector* GenericLayerBuilder::centralLayers() const { return m_cLayers; }
     
 } // end of namespace
 
-#endif //ATS_GEOMETRYTOOLS_GENERICLAYERBUILDER_H
+#endif //ACTS_GEOMETRYTOOLS_GENERICLAYERBUILDER_H

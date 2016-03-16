@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////
-// EventPrimitivesToStringConverter.h, ATS project
+// EventPrimitivesToStringConverter.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 #ifndef EVENTPRIMITIVESTOSTRINGCONVERTER_H_
@@ -10,7 +10,7 @@
 #include <iomanip>
 #include <string>
 
-namespace Ats {
+namespace Acts {
 
   /** EventPrimitvesToStringConverter
 
@@ -35,7 +35,7 @@ namespace Ats {
        return val;
      }
 
-     inline std::string toString( const AtsMatrixXd& matrix, int precision = 4, std::string offset="" ){
+     inline std::string toString( const ActsMatrixXd& matrix, int precision = 4, std::string offset="" ){
          std::ostringstream sout;
 
          sout << std::setiosflags(std::ios::fixed) << std::setprecision(precision);
@@ -67,15 +67,15 @@ namespace Ats {
      }
 
      
-    inline std::string toString( const Ats::Translation3D& translation, int precision = 4 ){
-      Ats::Vector3D trans;
+    inline std::string toString( const Acts::Translation3D& translation, int precision = 4 ){
+      Acts::Vector3D trans;
       trans[0] = translation.x();
       trans[1] = translation.y();
       trans[2] = translation.z();
       return toString( trans, precision );
     }
      
-    inline std::string toString( const Ats::Transform3D& transform, int precision = 4, std::string offset="" ){
+    inline std::string toString( const Acts::Transform3D& transform, int precision = 4, std::string offset="" ){
       std::ostringstream sout;
       sout << "Translation : " << toString( transform.translation(), precision ) << std::endl;
       std::string rotationOffset = offset + "              ";

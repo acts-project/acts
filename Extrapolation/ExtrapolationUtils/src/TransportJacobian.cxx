@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////
-//   Implementation file for class Ats::TransportJacobian
+//   Implementation file for class Acts::TransportJacobian
 ///////////////////////////////////////////////////////////////////
-// ATS project
+// ACTS project
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 // Version 1.0 08/03/2007 I.Gavrilenko
@@ -17,8 +17,8 @@
 // Constructors
 ///////////////////////////////////////////////////////////////////
 
-Ats::TransportJacobian::TransportJacobian(const double* J) : 
-  AtsMatrixD<5,5>()
+Acts::TransportJacobian::TransportJacobian(const double* J) : 
+  ActsMatrixD<5,5>()
 {
   (*this)(0,0)=J[ 0]; (*this)(0,1)=J[ 1]; (*this)(0,2)=J[ 2]; (*this)(0,3)=J[ 3];
   (*this)(0,4)=J[ 4];
@@ -32,7 +32,7 @@ Ats::TransportJacobian::TransportJacobian(const double* J) :
   (*this)(4,4)=J[24];
 }
 
-Ats::TransportJacobian::TransportJacobian(const AtsMatrixD<5,5>& J) : AtsMatrixD<5,5>(J)
+Acts::TransportJacobian::TransportJacobian(const ActsMatrixD<5,5>& J) : ActsMatrixD<5,5>(J)
 {
 }
 
@@ -40,7 +40,7 @@ Ats::TransportJacobian::TransportJacobian(const AtsMatrixD<5,5>& J) : AtsMatrixD
 // Dumps event information into the MsgStream
 ///////////////////////////////////////////////////////////////////
 
-MsgStream& Ats::operator << (MsgStream& sl, const Ats::TransportJacobian& J)
+MsgStream& Acts::operator << (MsgStream& sl, const Acts::TransportJacobian& J)
 {
   sl<<"|-------------|-------------|-------------|-------------|-------------|-------------|"
     <<std::endl;
@@ -94,7 +94,7 @@ MsgStream& Ats::operator << (MsgStream& sl, const Ats::TransportJacobian& J)
 // Dumps relevant information into the ostream
 ///////////////////////////////////////////////////////////////////
 
-std::ostream& Ats::operator << (std::ostream& sl, const Ats::TransportJacobian& J)
+std::ostream& Acts::operator << (std::ostream& sl, const Acts::TransportJacobian& J)
 {  
   sl<<"|-------------|-------------|-------------|-------------|-------------|-------------|"
     <<std::endl;

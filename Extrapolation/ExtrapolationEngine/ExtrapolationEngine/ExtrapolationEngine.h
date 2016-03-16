@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// ExtrapolationEngine.h, ATS project
+// ExtrapolationEngine.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_EXTRAPOLATIONENGINE_EXTRAPOLATIONENGINE_H
-#define ATS_EXTRAPOLATIONENGINE_EXTRAPOLATIONENGINE_H 1
+#ifndef ACTS_EXTRAPOLATIONENGINE_EXTRAPOLATIONENGINE_H
+#define ACTS_EXTRAPOLATIONENGINE_EXTRAPOLATIONENGINE_H 1
 
 // Gaudi
 #include "GaudiKernel/ServiceHandle.h"
@@ -22,7 +22,7 @@
 #include "TrackParameters/TrackParameters.h"
 #include "NeutralParameters/NeutralParameters.h"
 
-namespace Ats {
+namespace Acts {
   
   class TrackingGeometry;       
 
@@ -64,12 +64,12 @@ class ExtrapolationEngine : public ServiceBase, virtual public IExtrapolationEng
         
         /** charged extrapolation - public interface */
         ExtrapolationCode extrapolate(ExCellCharged& ecCharged,
-                                      const Surface* sf = 0,
+                                      const Surface* sf = nullptr,
                                       const BoundaryCheck& bcheck = true) const final;
 
         /** neutral extrapolation - public interface */
         ExtrapolationCode extrapolate(ExCellNeutral& ecNeutral,
-                                      const Surface* sf = 0,
+                                      const Surface* sf = nullptr,
                                       const BoundaryCheck& bcheck = true) const final;
                          
                          
@@ -79,13 +79,13 @@ class ExtrapolationEngine : public ServiceBase, virtual public IExtrapolationEng
      private:
         /** main loop extrapolation method */
         template <class T> ExtrapolationCode extrapolateT(ExtrapolationCell<T>& eCell,
-                                                          const Surface* sf = 0,
+                                                          const Surface* sf = nullptr,
                                                           PropDirection dir=alongMomentum,
                                                           const BoundaryCheck& bcheck = true) const;
             
         /** initialization method */                                      
         template <class T>  ExtrapolationCode initNavigation(ExtrapolationCell<T>& eCell,
-                                                             const Surface* sf = 0,
+                                                             const Surface* sf = nullptr,
                                                              PropDirection dir=alongMomentum) const throw (GaudiException);
                 
                 
@@ -112,10 +112,10 @@ class ExtrapolationEngine : public ServiceBase, virtual public IExtrapolationEng
     };
 
   inline GeometryType  ExtrapolationEngine::geometryType() const 
-      { return Ats::Master; }
+      { return Acts::Master; }
 
 
-  inline const Ats::TrackingGeometry& ExtrapolationEngine::trackingGeometry() const throw (GaudiException) {
+  inline const Acts::TrackingGeometry& ExtrapolationEngine::trackingGeometry() const throw (GaudiException) {
       if (!m_trackingGeometry && updateTrackingGeometry().isFailure()){
           EX_MSG_FATAL("", "updateGeo", "", "Could not load TrackingGeometry with name '" << m_trackingGeometryName << "'. Aborting." );
           throw GaudiException("ExtrapolationEngine", "Problem with TrackingGeometry loading.", StatusCode::FAILURE);
@@ -130,5 +130,5 @@ class ExtrapolationEngine : public ServiceBase, virtual public IExtrapolationEng
 //!< define the templated function    
 #include "ExtrapolationEngine.icc"  
 
-#endif // ATS_EXTRAPOLATIONENGINE_EXTRAPOLATIONENGINE_H 
+#endif // ACTS_EXTRAPOLATIONENGINE_EXTRAPOLATIONENGINE_H 
 

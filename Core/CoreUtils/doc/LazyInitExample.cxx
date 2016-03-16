@@ -15,14 +15,14 @@ public:
   // Option 1: create new integer object and set it to 3
   int* getInt1() const
   {
-    return Ats::LazyInit<int>::init(pInt,m,3);
+    return Acts::LazyInit<int>::init(pInt,m,3);
   }
 
   // Option 2: set member variable to pointer returned by some other function
   int* getInt2() const
   {
     const std::function<int*(int)>& f = [](int i) -> int* {return someFunction(i);};
-    return Ats::LazyInit<int>::init(pInt,m,f,4);
+    return Acts::LazyInit<int>::init(pInt,m,f,4);
   }
   
 private:

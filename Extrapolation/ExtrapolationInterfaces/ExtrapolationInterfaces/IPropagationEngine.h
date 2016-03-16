@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// IPropagationEngine.h, ATS project
+// IPropagationEngine.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_EXTRAPOLATIONINTERFACES_IPROPAGATIONENGINE_H
-#define ATS_EXTRAPOLATIONINTERFACES_IPROPAGATIONENGINE_H 1
+#ifndef ACTS_EXTRAPOLATIONINTERFACES_IPROPAGATIONENGINE_H
+#define ACTS_EXTRAPOLATIONINTERFACES_IPROPAGATIONENGINE_H 1
 
 // Gaudi
 #include "GaudiKernel/IService.h"
@@ -13,7 +13,7 @@
 #include "TrackParameters/TrackParameters.h"
 #include "NeutralParameters/NeutralParameters.h"
 
-namespace Ats {
+namespace Acts {
   
   static const InterfaceID IID_IPropagationEngine("IPropagationEngine", 1, 0);
 
@@ -79,4 +79,4 @@ namespace Ats {
 
 } // end of namespace
 
-#endif // ATS_EXTRAPOLATIONINTERFACES_IPROPAGATIONENGINE_H
+#endif // ACTS_EXTRAPOLATIONINTERFACES_IPROPAGATIONENGINE_H

@@ -1,13 +1,13 @@
 ///////////////////////////////////////////////////////////////////
-// AlgToolBase.h, ATS project
+// AlgToolBase.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_CORE_ALGTOOLBASE_H
-#define ATS_CORE_ALGTOOLBASE_H 1
+#ifndef ACTS_CORE_ALGTOOLBASE_H
+#define ACTS_CORE_ALGTOOLBASE_H 1
 
 // (a) Take the interface from another sourse
-#ifdef ATS_CORE_ALGTOOL_PLUGIN
-#include ATS_CORE_ALGTOOL_PLUGIN
+#ifdef ACTS_CORE_ALGTOOL_PLUGIN
+#include ACTS_CORE_ALGTOOL_PLUGIN
 #else 
 
 // (b) Define here
@@ -15,7 +15,7 @@
 #include "CoreInterfaces/MsgMacros.h"
 #include "GaudiKernel/AlgTool.h"
     
-namespace Ats {
+namespace Acts {
     
     /**  @class AlgToolBase
          simply extend the AlgTool class with a MsgBase */
@@ -36,9 +36,9 @@ namespace Ats {
     };
 }
 
-#endif // ATS_CORE_ALGTOOL_PLUGIN
+#endif // ACTS_CORE_ALGTOOL_PLUGIN
 
 // (c) use in both cases
 #include "CoreInterfaces/BaseMacros.h"
 
-#endif // ATS_CORE_ALGTOOLBASE_H
+#endif // ACTS_CORE_ALGTOOLBASE_H

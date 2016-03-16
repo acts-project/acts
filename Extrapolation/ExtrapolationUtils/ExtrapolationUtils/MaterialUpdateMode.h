@@ -1,7 +1,7 @@
-#ifndef ATS_EXTRAPOLATIONUTILS_MATERIALUPDATEMODE_H
-#define ATS_EXTRAPOLATIONUTILS_MATERIALUPDATEMODE_H 1
+#ifndef ACTS_EXTRAPOLATIONUTILS_MATERIALUPDATEMODE_H
+#define ACTS_EXTRAPOLATIONUTILS_MATERIALUPDATEMODE_H 1
 
-namespace Ats {
+namespace Acts {
 
    /** This is a steering enum to force the material update 
        it can be:

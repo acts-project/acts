@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// INavigationEngine.h, ATS project
+// INavigationEngine.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_EXTRAPOLATIONINTERFACES_INAVIGATIONENGINE_H
-#define ATS_EXTRAPOLATIONINTERFACES_INAVIGATIONENGINE_H
+#ifndef ACTS_EXTRAPOLATIONINTERFACES_INAVIGATIONENGINE_H
+#define ACTS_EXTRAPOLATIONINTERFACES_INAVIGATIONENGINE_H
 
 // Gaudi
 #include "GaudiKernel/IService.h"
@@ -13,7 +13,7 @@
 #include "TrackParameters/TrackParameters.h"
 #include "NeutralParameters/NeutralParameters.h"
  
-namespace Ats {
+namespace Acts {
 
   class TrackingGeometry;
 
@@ -66,5 +66,5 @@ namespace Ats {
 
 } // end of namespace
 
-#endif // ATS_EXTRAPOLATIONINTERFACES_INAVIGATIONENGINE_H
+#endif // ACTS_EXTRAPOLATIONINTERFACES_INAVIGATIONENGINE_H
 

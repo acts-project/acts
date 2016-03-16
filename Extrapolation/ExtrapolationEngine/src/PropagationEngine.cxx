@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////
-// PropagationEngine.cxx, ATS project
+// PropagationEngine.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 // STL
@@ -12,11 +12,11 @@
 // EventData module
 #include "EventDataUtils/PropDirection.h"
 
-DECLARE_COMPONENT(Ats::PropagationEngine)
+DECLARE_COMPONENT(Acts::PropagationEngine)
 
 // constructor
-Ats::PropagationEngine::PropagationEngine(const std::string& name, ISvcLocator* svc):
-  Ats::ServiceBase(name, svc),
+Acts::PropagationEngine::PropagationEngine(const std::string& name, ISvcLocator* svc):
+  Acts::ServiceBase(name, svc),
   m_propagator(""),
   m_pathLimitTolerance(0.01)
 {
@@ -30,11 +30,11 @@ Ats::PropagationEngine::PropagationEngine(const std::string& name, ISvcLocator* 
 }
 
 // destructor
-Ats::PropagationEngine::~PropagationEngine()
+Acts::PropagationEngine::~PropagationEngine()
 {}
 
 /** Query the interfaces. */
-StatusCode Ats::PropagationEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
+StatusCode Acts::PropagationEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
 {
   if ( IID_IPropagationEngine == riid )
     *ppvInterface = (IPropagationEngine*)this;
@@ -47,7 +47,7 @@ StatusCode Ats::PropagationEngine::queryInterface(const InterfaceID& riid, void*
 }  
 
 // the interface method initialize
-StatusCode Ats::PropagationEngine::initialize()
+StatusCode Acts::PropagationEngine::initialize()
 {
     MSG_DEBUG("initialize()" );
     RETRIEVE_NONEMPTY_FATAL(m_propagator);
@@ -55,23 +55,23 @@ StatusCode Ats::PropagationEngine::initialize()
 }
 
 // the interface method finalize
-StatusCode Ats::PropagationEngine::finalize()
+StatusCode Acts::PropagationEngine::finalize()
 {    
     MSG_DEBUG("finalize()" );
     return StatusCode::SUCCESS;
 }
 
 /** propagation method for charged particles */
-Ats::ExtrapolationCode Ats::PropagationEngine::propagate(Ats::ExCellCharged& eCell,
-                                                         const Ats::Surface& sf,
-                                                         Ats::PropDirection pDir,
-                                                         const Ats::BoundaryCheck& bcheck,
+Acts::ExtrapolationCode Acts::PropagationEngine::propagate(Acts::ExCellCharged& eCell,
+                                                         const Acts::Surface& sf,
+                                                         Acts::PropDirection pDir,
+                                                         const Acts::BoundaryCheck& bcheck,
                                                          bool returnCurvilinear) const
 {
     EX_MSG_DEBUG(++eCell.navigationStep, "propagate", "char", "propagation engine called with charged parameters with propagation direction " << pDir );
 
     double propLength = -1.;
-    if (eCell.checkConfigurationMode(Ats::ExtrapolationMode::StopWithPathLimit)){
+    if (eCell.checkConfigurationMode(Acts::ExtrapolationMode::StopWithPathLimit)){
         // the path limit
         propLength = eCell.pathLimit > 0 ? (eCell.pathLimit-eCell.pathLength) : eCell.pathLimit;
         EX_MSG_VERBOSE(eCell.navigationStep, "propagate", "char", "available step length for this propagation " << propLength );
@@ -79,10 +79,10 @@ Ats::ExtrapolationCode Ats::PropagationEngine::propagate(Ats::ExCellCharged& eCe
     // it is the final propagation if it is the endSurface
     bool finalPropagation = (eCell.endSurface == (&sf));
 
-    Ats::TransportJacobian* tjac = 0;
+    Acts::TransportJacobian* tjac = 0;
    
     // propagate using the IPropagator
-    const Ats::TrackParameters* pParameters = m_propagator->propagate(*eCell.leadParameters, 
+    const Acts::TrackParameters* pParameters = m_propagator->propagate(*eCell.leadParameters, 
                                                                       sf,
                                                                       pDir,
                                                                       bcheck,
@@ -98,31 +98,31 @@ Ats::ExtrapolationCode Ats::PropagationEngine::propagate(Ats::ExCellCharged& eCe
        // assign the lead and end parameters
        eCell.leadParameters = pParameters;
        // check what to do with the path Length
-       if (eCell.checkConfigurationMode(Ats::ExtrapolationMode::StopWithPathLimit) || propLength > 0){
+       if (eCell.checkConfigurationMode(Acts::ExtrapolationMode::StopWithPathLimit) || propLength > 0){
            // add the new propagation length to the path length
            eCell.pathLength += propLength;
            // check if Limit reached
            if (eCell.pathLimitReached(m_pathLimitTolerance)){
                EX_MSG_VERBOSE(eCell.navigationStep, "propagate", "char", "path limit of " << eCell.pathLimit << " successfully reached -> stopping." ); 
-               return Ats::ExtrapolationCode::SuccessPathLimit;
+               return Acts::ExtrapolationCode::SuccessPathLimit;
            }
        }
        // check if the propagation was called with directly, then lead parameters become end parameters
-       if (eCell.checkConfigurationMode(Ats::ExtrapolationMode::Direct)) 
+       if (eCell.checkConfigurationMode(Acts::ExtrapolationMode::Direct)) 
            eCell.endParameters = eCell.leadParameters;
 	 
        // return Success only if it is the final propagation - the extrapolation engine knows that 
-       return (finalPropagation ? Ats::ExtrapolationCode::SuccessDestination : Ats::ExtrapolationCode::InProgress);
+       return (finalPropagation ? Acts::ExtrapolationCode::SuccessDestination : Acts::ExtrapolationCode::InProgress);
     }                                                                      
     // return - recovered means that the leadParameters are the input ones 
-    return (finalPropagation ? Ats::ExtrapolationCode::FailureDestination : Ats::ExtrapolationCode::Recovered) ;
+    return (finalPropagation ? Acts::ExtrapolationCode::FailureDestination : Acts::ExtrapolationCode::Recovered) ;
 }
 
 /** propagation method for neutral particles */
-Ats::ExtrapolationCode Ats::PropagationEngine::propagate(Ats::ExCellNeutral& eCell,
-                                                         const Ats::Surface& sf,
-                                                         Ats::PropDirection pDir,
-                                                         const Ats::BoundaryCheck& bcheck,
+Acts::ExtrapolationCode Acts::PropagationEngine::propagate(Acts::ExCellNeutral& eCell,
+                                                         const Acts::Surface& sf,
+                                                         Acts::PropDirection pDir,
+                                                         const Acts::BoundaryCheck& bcheck,
                                                          bool returnCurvilinear) const
 {
     EX_MSG_DEBUG(++eCell.navigationStep, "propagate", "neut", "propagation engine called with neutral parameters with propagation direction " << pDir );
@@ -135,7 +135,7 @@ Ats::ExtrapolationCode Ats::PropagationEngine::propagate(Ats::ExCellNeutral& eCe
     // it is the final propagation if it is the endSurface
     bool finalPropagation = (eCell.endSurface == (&sf));
     // intersect the surface
-    Ats::Intersection sfIntersection = (pDir!=Ats::anyDirection) ? sf.straightLineIntersection(eCell.leadParameters->position(),
+    Acts::Intersection sfIntersection = (pDir!=Acts::anyDirection) ? sf.straightLineIntersection(eCell.leadParameters->position(),
                                                                                                pDir*eCell.leadParameters->momentum().unit(),
                                                                                                true,
                                                                                                bcheck) :
@@ -146,7 +146,7 @@ Ats::ExtrapolationCode Ats::PropagationEngine::propagate(Ats::ExCellNeutral& eCe
     // we have a valid intersection
     if (sfIntersection.valid){
         // fill the transport information - only if the propation direction is not 0 ('anyDirection')
-        if (pDir!=Ats::anyDirection){
+        if (pDir!=Acts::anyDirection){
            double pLength = (sfIntersection.position-eCell.leadParameters->position()).mag(); 
            EX_MSG_VERBOSE(eCell.navigationStep,"propagate", "neut", "path length of " << pLength << " added to the extrapolation cell (limit = " << eCell.pathLimit << ")" );    
            eCell.stepTransport(sf,pLength);
@@ -158,28 +158,28 @@ Ats::ExtrapolationCode Ats::PropagationEngine::propagate(Ats::ExCellNeutral& eCe
             // create new neutral curvilinear parameters at the path limit reached
             double pDiff = eCell.pathLimit - cPath;
             Vector3D position = eCell.leadParameters->position()+pDiff*eCell.leadParameters->momentum().unit();
-            eCell.leadParameters = new Ats::NeutralCurvilinearParameters(nullptr,position,eCell.leadParameters->momentum());
+            eCell.leadParameters = new Acts::NeutralCurvilinearParameters(nullptr,position,eCell.leadParameters->momentum());
             EX_MSG_VERBOSE(eCell.navigationStep,"propagate", "neut", "path limit of " << eCell.pathLimit << " reached. Stopping extrapolation.");
-            return Ats::ExtrapolationCode::SuccessPathLimit;
+            return Acts::ExtrapolationCode::SuccessPathLimit;
         }
 		// cache the last lead parameters
 		eCell.lastLeadParameters = eCell.leadParameters;
         // now exchange the lead parameters
         // create the new curvilinear paramters at the surface intersection -> if so, trigger the success
-        eCell.leadParameters = returnCurvilinear ? static_cast<Ats::NeutralParameters*>(new Ats::NeutralCurvilinearParameters(nullptr,sfIntersection.position, eCell.leadParameters->momentum())):
-            static_cast<Ats::NeutralParameters*>(new Ats::NeutralBoundParameters(nullptr,sfIntersection.position, eCell.leadParameters->momentum(),sf));
+        eCell.leadParameters = returnCurvilinear ? static_cast<Acts::NeutralParameters*>(new Acts::NeutralCurvilinearParameters(nullptr,sfIntersection.position, eCell.leadParameters->momentum())):
+            static_cast<Acts::NeutralParameters*>(new Acts::NeutralBoundParameters(nullptr,sfIntersection.position, eCell.leadParameters->momentum(),sf));
 
         // check if the propagation was called with directly, then lead parameters become end parameters
         if (eCell.checkConfigurationMode(ExtrapolationMode::Direct))
 	          eCell.endParameters = eCell.leadParameters;
 
 	      // return success for the final destination or in progress
-        return (finalPropagation ? Ats::ExtrapolationCode::SuccessDestination : Ats::ExtrapolationCode::InProgress);
+        return (finalPropagation ? Acts::ExtrapolationCode::SuccessDestination : Acts::ExtrapolationCode::InProgress);
 
     } else {
         // give some screen output
         EX_MSG_VERBOSE(eCell.navigationStep,"propagate", "neut", "intersection with the surface did not succeed.");
     }                                                                     
    // return - recovered means that the leadParameters are the input ones 
-   return (finalPropagation ? Ats::ExtrapolationCode::FailureDestination : Ats::ExtrapolationCode::Recovered) ;
+   return (finalPropagation ? Acts::ExtrapolationCode::FailureDestination : Acts::ExtrapolationCode::Recovered) ;
 }

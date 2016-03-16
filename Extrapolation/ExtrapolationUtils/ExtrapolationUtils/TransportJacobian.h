@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// TransportJacobian.h, ATS project
+// TransportJacobian.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_EXTRAPOLATIONUTILS_TRANSPORTJACOBIAN_H
-#define ATS_EXTRAPOLATIONUTILS_TRANSPORTJACOBIAN_H 1
+#ifndef ACTS_EXTRAPOLATIONUTILS_TRANSPORTJACOBIAN_H
+#define ACTS_EXTRAPOLATIONUTILS_TRANSPORTJACOBIAN_H 1
 
 
 // Core module
@@ -11,7 +11,7 @@
 
 class MsgStream;
 
-namespace Ats {
+namespace Acts {
 
 /** @class TransportJacobian
   
@@ -38,13 +38,13 @@ namespace Ats {
   
   */
 
-  class TransportJacobian : public AtsMatrixD<5,5>
+  class TransportJacobian : public ActsMatrixD<5,5>
     {
     public:
     
       /** Constructor */
       TransportJacobian(const double*   );
-      TransportJacobian(const AtsMatrixD<5,5>&);
+      TransportJacobian(const ActsMatrixD<5,5>&);
       
       /** Destructor */
       ~TransportJacobian(){};
@@ -61,4 +61,4 @@ namespace Ats {
   
 } // end of namespace
 
-#endif // ATS_EXTRAPOLATIONUTILS_TRANSPORTJACOBIAN_H
+#endif // ACTS_EXTRAPOLATIONUTILS_TRANSPORTJACOBIAN_H

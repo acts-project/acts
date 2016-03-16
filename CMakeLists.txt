@@ -7,6 +7,8 @@ find_package(GaudiProject)
 
 #---------------------------------------------------------------
 
+add_definitions(-DACTS_PARAMETER_DEFINITIONS_PLUGIN=\"CoreUtils/DefaultParameterDefinitions.h\")
+
 # Declare project name and version
 # Syntax:
 #    gaudi_project(this_project this_version
@@ -15,8 +17,6 @@ find_package(GaudiProject)
 gaudi_project(a-tracking-sw HEAD
 	      USE Gaudi v26r4 )
 
-include_directories()
+#include_directories()
 
-
-add_definitions(-DATS_PARAMETER_DEFINITIONS_PLUGIN=\"CoreUtils/DefaultParameterDefinitions.h\")
-
+enable_testing()

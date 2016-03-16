@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////
-// ExtrapolationEngine.cxx, ATS project
+// ExtrapolationEngine.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 // STL
@@ -9,11 +9,11 @@
 // Geometry module
 #include "GeometryUtils/GeometrySignature.h"
 
-DECLARE_COMPONENT(Ats::ExtrapolationEngine)
+DECLARE_COMPONENT(Acts::ExtrapolationEngine)
 
 // constructor
-Ats::ExtrapolationEngine::ExtrapolationEngine(const std::string& name, ISvcLocator* svc)
-: Ats::ServiceBase(name, svc),
+Acts::ExtrapolationEngine::ExtrapolationEngine(const std::string& name, ISvcLocator* svc)
+: Acts::ServiceBase(name, svc),
   m_trackingGeometry(nullptr),
   m_trackingGeometrySvc("TrackingGeometrySvc", name),
   m_trackingGeometryName("TrackingGeometry"),
@@ -37,11 +37,11 @@ Ats::ExtrapolationEngine::ExtrapolationEngine(const std::string& name, ISvcLocat
 }
 
 // destructor
-Ats::ExtrapolationEngine::~ExtrapolationEngine()
+Acts::ExtrapolationEngine::~ExtrapolationEngine()
 {}
 
 /** Query the interfaces. */
-StatusCode Ats::ExtrapolationEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
+StatusCode Acts::ExtrapolationEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
 {
   if ( IID_IExtrapolationEngine == riid )
     *ppvInterface = (IExtrapolationEngine*)this;
@@ -54,7 +54,7 @@ StatusCode Ats::ExtrapolationEngine::queryInterface(const InterfaceID& riid, voi
 }
     
 // the interface method initialize
-StatusCode Ats::ExtrapolationEngine::initialize()
+StatusCode Acts::ExtrapolationEngine::initialize()
 {            
     MSG_DEBUG("initialize()");
     // retrieve the tracking geometry servcie - crucial, abort when it can not be retrieved
@@ -63,7 +63,7 @@ StatusCode Ats::ExtrapolationEngine::initialize()
     // retriveve the extrapolation engines - crucial, abort when they can not be retrieved
     RETRIEVE_FATAL(m_extrapolationEngines);
     EX_MSG_DEBUG( "", "initialize", "", "Successfully retrieved " << m_extrapolationEngines.size() << " ExtrapolationEngines. Ordering them now." );
-    m_eeAccessor = std::vector<const Ats::IExtrapolationEngine*>(int(Ats::NumberOfGeometryTypes), (const Ats::IExtrapolationEngine*)nullptr);
+    m_eeAccessor = std::vector<const Acts::IExtrapolationEngine*>(int(Acts::NumberOfGeometryTypes), (const Acts::IExtrapolationEngine*)nullptr);
     for (auto& ee : m_extrapolationEngines){
         EX_MSG_DEBUG( "", "initialize", "", "Registering " << ee->name() << " - for GeometryType : "  << ee->geometryType() );
         m_eeAccessor[ee->geometryType()] = (&*ee);
@@ -77,27 +77,27 @@ StatusCode Ats::ExtrapolationEngine::initialize()
 }    
 
 // the interface method finalize
-StatusCode Ats::ExtrapolationEngine::finalize()
+StatusCode Acts::ExtrapolationEngine::finalize()
 {    
     MSG_DEBUG("finalize()");
     return StatusCode::SUCCESS;
 }
 
 /** charged extrapolation */
-Ats::ExtrapolationCode Ats::ExtrapolationEngine::extrapolate(ExCellCharged& ecCharged,
+Acts::ExtrapolationCode Acts::ExtrapolationEngine::extrapolate(ExCellCharged& ecCharged,
                                                         const Surface* sf,
                                                         const BoundaryCheck& bcheck) const
 { return extrapolateT<TrackParameters>(ecCharged,sf,ecCharged.propDirection,bcheck); }
 
 
 /** neutral extrapolation */
-Ats::ExtrapolationCode Ats::ExtrapolationEngine::extrapolate(ExCellNeutral& ecNeutral,
+Acts::ExtrapolationCode Acts::ExtrapolationEngine::extrapolate(ExCellNeutral& ecNeutral,
                                                         const Surface* sf,
                                                         const BoundaryCheck& bcheck) const
 { return extrapolateT<NeutralParameters>(ecNeutral,sf,ecNeutral.propDirection,bcheck); }
                                            
 
-StatusCode Ats::ExtrapolationEngine::updateTrackingGeometry() const {
+StatusCode Acts::ExtrapolationEngine::updateTrackingGeometry() const {
     // retrieve the TrackingGeometry from the particular TrackingGeometrySvc
     m_trackingGeometry = m_trackingGeometrySvc->trackingGeometry();
     if (!m_trackingGeometry) {

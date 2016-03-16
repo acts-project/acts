@@ -17,6 +17,6 @@ the extrapolation/propagation process.
 */
 
 /**
-\namespace Ats
+\namespace Acts
 A namespace to enclose the new Track class, and related tools.
 */

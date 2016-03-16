@@ -1,16 +1,16 @@
 ///////////////////////////////////////////////////////////////////
-// IMultipleScatteringUpdator.h, ATS project
+// IMultipleScatteringUpdator.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H
-#define ATS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H 1
+#ifndef ACTS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H
+#define ACTS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H 1
 
 // Gaudi
 #include "GaudiKernel/IAlgTool.h"
 // EventData module
 #include "EventDataUtils/ParticleHypothesis.h"
 
-namespace Ats {
+namespace Acts {
 
   class MaterialProperties;
   
@@ -48,4 +48,4 @@ namespace Ats {
 
 } // end of namespace
 
-#endif // ATS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H
+#endif // ACTS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H

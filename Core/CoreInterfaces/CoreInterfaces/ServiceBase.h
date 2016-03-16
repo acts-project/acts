@@ -1,13 +1,13 @@
 ///////////////////////////////////////////////////////////////////
-// ServiceBase.h, ATS project
+// ServiceBase.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_CORE_SERVICEBASE_H
-#define ATS_CORE_SERVICEBASE_H 1
+#ifndef ACTS_CORE_SERVICEBASE_H
+#define ACTS_CORE_SERVICEBASE_H 1
 
 // (a) Take the interface from another sourse
-#ifdef ATS_CORE_SERVICE_PLUGIN
-#include ATS_CORE_SERVICE_PLUGIN
+#ifdef ACTS_CORE_SERVICE_PLUGIN
+#include ACTS_CORE_SERVICE_PLUGIN
 #else 
 
 // (b) define here 
@@ -17,7 +17,7 @@
 
 class ISvcLocator;
 
-namespace Ats {
+namespace Acts {
     
     /**  @class ServiceBase
          simply extend the Service class with a MsgBase */
@@ -39,9 +39,9 @@ namespace Ats {
     };
 }
 
-#endif //ATS_CORE_SERVICE_PLUGIN
+#endif //ACTS_CORE_SERVICE_PLUGIN
 
 // (c) used in bose cases
 #include "CoreInterfaces/BaseMacros.h"
 
-#endif // ATS_CORE_SERVICEBASE_H
+#endif // ACTS_CORE_SERVICEBASE_H
