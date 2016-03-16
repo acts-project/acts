@@ -68,7 +68,7 @@ Agd::GenericLayerBuilder::GenericLayerBuilder(const std::string& t, const std::s
     declareProperty("PosNegLayerModulesStaggerPhi",       m_posnegMoudleStaggerPhi);
     declareProperty("PosNegLayerModulesMinHalfX",         m_posnegModuleMinHalfX);
     declareProperty("PosNegLayerModulesMaxHalfX",         m_posnegModuleMaxHalfX);
-    declareProperty("PosNegLayerModulesHalfY",            m_posnegModuleHalfY);
+    declareProperty("PosNegL ayerModulesHalfY",            m_posnegModuleHalfY);
     declareProperty("PosNegLayerModulesThickness",        m_posnegModuleThickness);
     
 }
@@ -81,11 +81,8 @@ Agd::GenericLayerBuilder::~GenericLayerBuilder()
 StatusCode Agd::GenericLayerBuilder::initialize()
 {
     MSG_DEBUG( "initialize()" );
-    StatusCode sc = Ats::AlgToolBase::initialize();
-    if(!sc.isSuccess()){
-        MSG_FATAL("Could not initialize Tool");
-        return StatusCode::FAILURE;
-    }
+    //Tool needs to be initialized
+    if (!AlgToolBase::initialize()) return StatusCode::FAILURE;
     
     m_posnegModulesPositionPhi.reserve(m_posnegLayerPositionsZ.size());
     for (size_t idisc = 0; idisc < m_posnegLayerPositionsZ.size(); ++idisc){

@@ -118,7 +118,7 @@ class GenericDetectorConstructionGaudi(object):
         # pixel layer builder is defined
         
         # Build the Pixel Volume
-        PixelVolumeBuilder = VolumeBuilder("PixelVome")
+        PixelVolumeBuilder = VolumeBuilder('PixelVolumeBuilder')
         # set the volume name
         PixelVolumeBuilder.VolumeName                     = 'Pixel'
         # build the volume
@@ -127,6 +127,7 @@ class GenericDetectorConstructionGaudi(object):
         PixelVolumeBuilder.LayerArrayCreator              =  LayerArrayCreator
         PixelVolumeBuilder.LayerEnvelope                  =  1.
         PixelVolumeBuilder.VolumeToBeamPipe               =  False
+        PixelVolumeBuilder.OutputLevel                    = outputLevel
         
         # Build the TrackingGeometry
         GenericGeometryBuilder = GeometryBuilder('GenericGeometry')
@@ -140,6 +141,7 @@ class GenericDetectorConstructionGaudi(object):
         GenericTrackingGeometrySvc = Ats__TrackingGeometrySvc('GenericTrackingGeometrySvc')
         GenericTrackingGeometrySvc.GeometryBuilder = GenericGeometryBuilder
         GenericTrackingGeometrySvc.TrackingGeometryName = 'GenericTrackingGeometry'
+        GenericTrackingGeometrySvc.OutputLevel            = outputLevel
         GenericTrackingGeometrySvc.GeometryProcessors = []
         
         self.__tgsvc__ = GenericTrackingGeometrySvc
