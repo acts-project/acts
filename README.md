@@ -1,3 +1,5 @@
+[![Build Status](http://ats-jenkins-1:8080/job/ATS-CI-tests/badge/icon)](http://ats-jenkins-1:8080/job/ATS-CI-tests)
+
 # A Common Tracking Software (ACTS) Project
 
 This library is based on the track reconstruction software developed by the 
