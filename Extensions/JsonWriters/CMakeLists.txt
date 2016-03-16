@@ -1,7 +1,7 @@
 ################################################################################
-# Package: JsonWriter
+# Package: JsonWriters
 ################################################################################
-gaudi_subdir(JsonWriter v1r0)
+gaudi_subdir(JsonWriters v1r0)
 
 gaudi_depends_on_subdirs(GaudiKernel
                          Core/CoreInterfaces
@@ -19,9 +19,9 @@ find_package(Eigen3 REQUIRED)
 
 SET( EIGEN3_HOME ${EIGEN_ROOT_DIR}/${EIGEN_INCLUDE_DIR} )
 
-gaudi_install_headers(JsonWriter)
+gaudi_install_headers(JsonWriters)
 
-gaudi_add_module(JsonWriter
+gaudi_add_module(JsonWriters
                  src/*.cxx
                  INCLUDE_DIRS GaudiKernel ${EIGEN3_HOME} CoreInterfaces Algebra TestInterfaces ParametersBase Surfaces Volumes Detector
                  LINK_LIBRARIES GaudiKernel Surfaces Volumes Detector)
