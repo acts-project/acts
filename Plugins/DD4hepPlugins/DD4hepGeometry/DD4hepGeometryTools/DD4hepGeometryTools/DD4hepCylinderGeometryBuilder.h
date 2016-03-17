@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// DD4hepCylinderGeometryBuilder.h, ATS project
+// DD4hepCylinderGeometryBuilder.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_DD4HEPGEOMETRYTOOLS_DD4HEPCYLINDERGEOMETRYBUILDER_H
-#define ATS_DD4HEPGEOMETRYTOOLS_DD4HEPCYLINDERGEOMETRYBUILDER_H 1
+#ifndef ACTS_DD4HEPGEOMETRYTOOLS_DD4HEPCYLINDERGEOMETRYBUILDER_H
+#define ACTS_DD4HEPGEOMETRYTOOLS_DD4HEPCYLINDERGEOMETRYBUILDER_H 1
 
 // Gaudi
 #include "GaudiKernel/ServiceHandle.h"
@@ -20,10 +20,10 @@
 // DD4hep
 #include "DD4hep/Detector.h"
 
-namespace Ats {
+namespace Acts {
     class TrackingGeometry;
 }
-namespace Add4hep {
+namespace Acts {
     
     class DD4hepLayerHelper;
     
@@ -36,7 +36,7 @@ namespace Add4hep {
      */
     
     
-    class DD4hepCylinderGeometryBuilder :  public Ats::AlgToolBase, virtual public Ats::ITrackingGeometryBuilder {
+    class DD4hepCylinderGeometryBuilder :  public Acts::AlgToolBase, virtual public Acts::ITrackingGeometryBuilder {
         
     public:
         /** Constructor */
@@ -52,19 +52,19 @@ namespace Add4hep {
         StatusCode finalize() override;
         
         /** TrackingGeometry Interface method */
-        Ats::TrackingGeometry* trackingGeometry() const override;
+        Acts::TrackingGeometry* trackingGeometry() const override;
         
     private:
         /** Handle to the service providing the DD4hep geometry */
         ServiceHandle<IDD4hepGeometrySvc>           m_DD4hepGeometrySvc;
         /** Handle yo the volume building tool */
-        ToolHandle<Ats::ITrackingVolumeBuilder>     m_volumeBuilder;
+        ToolHandle<Acts::ITrackingVolumeBuilder>     m_volumeBuilder;
         /** Handle to the tool helping to build the tracking volumes */
-        ToolHandle<Ats::ITrackingVolumeHelper>      m_volumeHelper;
+        ToolHandle<Acts::ITrackingVolumeHelper>      m_volumeHelper;
         /** Helper class to build layers */
         DD4hepLayerHelper*                          m_layerHelper;
         
     };
 }
 
-#endif //#ifndef ATS_DD4HEPGEOMETRYTOOLS_DD4HEPCYLINDERGEOMETRYBUILDER_H
+#endif //#ifndef ACTS_DD4HEPGEOMETRYTOOLS_DD4HEPCYLINDERGEOMETRYBUILDER_H

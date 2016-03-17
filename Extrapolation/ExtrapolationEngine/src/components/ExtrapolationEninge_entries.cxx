@@ -5,7 +5,7 @@
 #include "ExtrapolationEngine/MaterialEffectsEngine.h"
 #include "ExtrapolationEngine/PropagationEngine.h"
 
-using namespace Ats;
+using namespace Acts;
 
 DECLARE_SERVICE_FACTORY( ExtrapolationEngine )
 DECLARE_SERVICE_FACTORY( MaterialEffectsEngine )

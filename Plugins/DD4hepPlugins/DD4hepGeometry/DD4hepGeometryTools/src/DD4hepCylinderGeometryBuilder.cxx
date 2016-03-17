@@ -8,14 +8,14 @@
 // Core module
 #include "CoreInterfaces/MsgBase.h"
 
-DECLARE_TOOL_FACTORY(Add4hep::DD4hepCylinderGeometryBuilder)
+DECLARE_TOOL_FACTORY(Acts::DD4hepCylinderGeometryBuilder)
 
-Add4hep::DD4hepCylinderGeometryBuilder::DD4hepCylinderGeometryBuilder(const std::string& t,const std::string& name,const IInterface* p) :
-Ats::AlgToolBase(t,name,p),
+Acts::DD4hepCylinderGeometryBuilder::DD4hepCylinderGeometryBuilder(const std::string& t,const std::string& name,const IInterface* p) :
+Acts::AlgToolBase(t,name,p),
 m_DD4hepGeometrySvc("", name),
-m_volumeBuilder("Ats::CylinderVolumeBuilder"),
-m_volumeHelper("Ats::CylinderVolumeHelper"),
-m_layerHelper(new Add4hep::DD4hepLayerHelper())
+m_volumeBuilder("Acts::CylinderVolumeBuilder"),
+m_volumeHelper("Acts::CylinderVolumeHelper"),
+m_layerHelper(new Acts::DD4hepLayerHelper())
 {
   MSG_INFO("DD4HEPCYLINDERGEOMETRYBUILDER CONSTRZCTOR");
     declareInterface<ITrackingGeometryBuilder>(this);
@@ -23,12 +23,12 @@ m_layerHelper(new Add4hep::DD4hepLayerHelper())
 }
 
 
-Add4hep::DD4hepCylinderGeometryBuilder::~DD4hepCylinderGeometryBuilder()
+Acts::DD4hepCylinderGeometryBuilder::~DD4hepCylinderGeometryBuilder()
 {
     delete m_layerHelper;
 }
 
-StatusCode Add4hep::DD4hepCylinderGeometryBuilder::initialize()
+StatusCode Acts::DD4hepCylinderGeometryBuilder::initialize()
 {
     // screen output in debug mode
     MSG_INFO( "initialize()" );
@@ -37,19 +37,19 @@ StatusCode Add4hep::DD4hepCylinderGeometryBuilder::initialize()
     return StatusCode::SUCCESS;
 }
 
-StatusCode Add4hep::DD4hepCylinderGeometryBuilder::finalize()
+StatusCode Acts::DD4hepCylinderGeometryBuilder::finalize()
 {
     // screen output in debug mode
     MSG_DEBUG( "finalize()" );
     return StatusCode::SUCCESS;
 }
 
-Ats::TrackingGeometry* Add4hep::DD4hepCylinderGeometryBuilder::trackingGeometry() const
+Acts::TrackingGeometry* Acts::DD4hepCylinderGeometryBuilder::trackingGeometry() const
 {
     // the return geometry -- and the highest volume
-    Ats::TrackingGeometry* trackingGeometry = nullptr;
-    Ats::TrackingVolumePtr    highestVolume = nullptr;
-    Ats::TrackingVolumePtr beamPipeVolume   = nullptr;
+    Acts::TrackingGeometry* trackingGeometry = nullptr;
+    Acts::TrackingVolumePtr    highestVolume = nullptr;
+    Acts::TrackingVolumePtr beamPipeVolume   = nullptr;
     
     // get the DD4hep world detector element
     DD4hep::Geometry::DetElement detWorld = m_DD4hepGeometrySvc->worldDetElement();
@@ -70,7 +70,7 @@ Ats::TrackingGeometry* Add4hep::DD4hepCylinderGeometryBuilder::trackingGeometry(
             //extract material
             DD4hep::Geometry::Material mat = detElement.volume().material();
             //create the tracking volume
-            beamPipeVolume = Ats::TrackingVolume::create(Add4hep::DD4hepGeometryHelper::extractTransform(detElement),Add4hep::DD4hepGeometryHelper::extractVolumeBounds(detElement),Ats::Material(mat.radLength(),mat.intLength(),mat.A(),mat.Z(),mat.density()),nullptr,nullptr,nullptr,nullptr,"BeamTube");
+            beamPipeVolume = Acts::TrackingVolume::create(Acts::DD4hepGeometryHelper::extractTransform(detElement),Acts::DD4hepGeometryHelper::extractVolumeBounds(detElement),Acts::Material(mat.radLength(),mat.intLength(),mat.A(),mat.Z(),mat.density()),nullptr,nullptr,nullptr,nullptr,"BeamTube");
         }
         else {
         // assign a new highest volume (and potentially wrap around the given highest volume so far)
@@ -83,7 +83,7 @@ Ats::TrackingGeometry* Add4hep::DD4hepCylinderGeometryBuilder::trackingGeometry(
         if (beamPipeVolume) highestVolume = m_volumeHelper->createContainerTrackingVolume({beamPipeVolume,highestVolume});
         
         // create the TrackingGeometry
-        trackingGeometry = new Ats::TrackingGeometry(highestVolume);
+        trackingGeometry = new Acts::TrackingGeometry(highestVolume);
     }
     // return the geometry to the service
     return trackingGeometry;

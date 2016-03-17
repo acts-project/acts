@@ -13,8 +13,8 @@ according to a straight line, in case of an homogenous magnetic field, a helical
 Common transformations with the STEP_Propagator can be found in the ExtrapolationUtils package.
 
 The tool implements two abstract interfaces:
-- under Ats::IPropagator it provides propagation of EDM Ats::TrackParameters
-- under Ats::IPatternParametersPropagator it provides propagation of parameters for internal use, the Ats::PatternTrackParameters
+- under Acts::IPropagator it provides propagation of EDM Acts::TrackParameters
+- under Acts::IPatternParametersPropagator it provides propagation of parameters for internal use, the Acts::PatternTrackParameters
 
 @section TrkExRkComments Comments
 

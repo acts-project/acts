@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////
-// StaticNavigationEngine.cxx, ATS project
+// StaticNavigationEngine.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 // STL
@@ -7,11 +7,12 @@
 // Extrapolation module
 #include "ExtrapolationEngine/StaticNavigationEngine.h"
 
-DECLARE_SERVICE_FACTORY(Ats::StaticNavigationEngine)
+
+DECLARE_SERVICE_FACTORY(Acts::StaticNavigationEngine)
 
 // constructor
-Ats::StaticNavigationEngine::StaticNavigationEngine(const std::string& name, ISvcLocator* svc) :
-  Ats::ServiceBase(name, svc),
+Acts::StaticNavigationEngine::StaticNavigationEngine(const std::string& name, ISvcLocator* svc) :
+  Acts::ServiceBase(name, svc),
   m_propagationEngine("", name),
   m_materialEffectsEngine("", name),
   m_trackingGeometrySvc("", name),
@@ -30,12 +31,12 @@ Ats::StaticNavigationEngine::StaticNavigationEngine(const std::string& name, ISv
 }
 
 // destructor
-Ats::StaticNavigationEngine::~StaticNavigationEngine()
+Acts::StaticNavigationEngine::~StaticNavigationEngine()
 {}
 
 
 /** Query the interfaces. */
-StatusCode Ats::StaticNavigationEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
+StatusCode Acts::StaticNavigationEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
 {
   if ( IID_INavigationEngine == riid )
     *ppvInterface = (INavigationEngine*)this;
@@ -48,7 +49,7 @@ StatusCode Ats::StaticNavigationEngine::queryInterface(const InterfaceID& riid, 
 }  
 
 // the interface method initialize
-StatusCode Ats::StaticNavigationEngine::initialize()
+StatusCode Acts::StaticNavigationEngine::initialize()
 {
     MSG_DEBUG("initialize()" );
     // retrieve the tracking geometry servcie - crucial, abort when it can not be retrieved
@@ -63,29 +64,29 @@ StatusCode Ats::StaticNavigationEngine::initialize()
 }
 
 // the interface method finalize
-StatusCode Ats::StaticNavigationEngine::finalize()
+StatusCode Acts::StaticNavigationEngine::finalize()
 {    
     MSG_DEBUG("finalize()" );
     return StatusCode::SUCCESS;
 }
 
 /** charged situation */
-Ats::ExtrapolationCode Ats::StaticNavigationEngine::resolveBoundary(Ats::ExCellCharged& ecCharged, PropDirection dir) const
-{ return resolveBoundaryT<Ats::TrackParameters>(ecCharged,dir); }
+Acts::ExtrapolationCode Acts::StaticNavigationEngine::resolveBoundary(Acts::ExCellCharged& ecCharged, PropDirection dir) const
+{ return resolveBoundaryT<Acts::TrackParameters>(ecCharged,dir); }
 
 /** charged situation */
-Ats::ExtrapolationCode Ats::StaticNavigationEngine::resolveBoundary(Ats::ExCellNeutral& ecNeutral, PropDirection dir) const
-{ return resolveBoundaryT<Ats::NeutralParameters>(ecNeutral,dir); }
+Acts::ExtrapolationCode Acts::StaticNavigationEngine::resolveBoundary(Acts::ExCellNeutral& ecNeutral, PropDirection dir) const
+{ return resolveBoundaryT<Acts::NeutralParameters>(ecNeutral,dir); }
 
 /** charged  */
-Ats::ExtrapolationCode Ats::StaticNavigationEngine::resolvePosition(Ats::ExCellCharged& ecCharged, PropDirection dir, bool noLoop) const
-{ return resolvePositionT<Ats::TrackParameters>(ecCharged,dir,noLoop); }
+Acts::ExtrapolationCode Acts::StaticNavigationEngine::resolvePosition(Acts::ExCellCharged& ecCharged, PropDirection dir, bool noLoop) const
+{ return resolvePositionT<Acts::TrackParameters>(ecCharged,dir,noLoop); }
 
 /** neutral */
-Ats::ExtrapolationCode Ats::StaticNavigationEngine::resolvePosition(Ats::ExCellNeutral& ecNeutral, PropDirection dir, bool noLoop) const
-{ return resolvePositionT<Ats::NeutralParameters>(ecNeutral,dir,noLoop); }
+Acts::ExtrapolationCode Acts::StaticNavigationEngine::resolvePosition(Acts::ExCellNeutral& ecNeutral, PropDirection dir, bool noLoop) const
+{ return resolvePositionT<Acts::NeutralParameters>(ecNeutral,dir,noLoop); }
 
-StatusCode Ats::StaticNavigationEngine::updateTrackingGeometry() const {
+StatusCode Acts::StaticNavigationEngine::updateTrackingGeometry() const {
     // retrieve the TrackingGeometry from the particular TrackingGeometrySvc
     m_trackingGeometry = m_trackingGeometrySvc->trackingGeometry();
     if (!m_trackingGeometry) {

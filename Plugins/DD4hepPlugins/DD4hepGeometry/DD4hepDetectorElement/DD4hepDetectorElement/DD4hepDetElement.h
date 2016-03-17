@@ -1,16 +1,16 @@
 ///////////////////////////////////////////////////////////////////
-// DD4hepDetElement.h, ATS project, DD4hepDetector plugin
+// DD4hepDetElement.h, ACTS project, DD4hepDetector plugin
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_DD4HEPDETECTORELEMENT_DD4HEPDETELEMENT_H
-#define ATS_DD4HEPDETECTORELEMENT_DD4HEPDETELEMENT_H 1
+#ifndef ACTS_DD4HEPDETECTORELEMENT_DD4HEPDETELEMENT_H
+#define ACTS_DD4HEPDETECTORELEMENT_DD4HEPDETELEMENT_H 1
 
 //TGeoDetectorElement
 #include "TGeoDetectorElement/TGeoDetectorElement.h"
 //DD4hep
 #include "DD4hep/Detector.h"
 
-namespace Add4hep {
+namespace Acts {
     
     /** @class DD4hepDetElement
      
@@ -21,12 +21,12 @@ namespace Add4hep {
      
      */
     
-    class DD4hepDetElement : public Atgeo::TGeoDetectorElement {
+    class DD4hepDetElement : public TGeoDetectorElement {
         
     public:
         
         /** Constructor */
-        DD4hepDetElement(const DD4hep::Geometry::DetElement& detElement, const DD4hep::Geometry::Segmentation& segmentation, std::shared_ptr<const Ats::Transform3D> motherTransform=nullptr);
+        DD4hepDetElement(const DD4hep::Geometry::DetElement& detElement, const DD4hep::Geometry::Segmentation& segmentation, std::shared_ptr<const Acts::Transform3D> motherTransform=nullptr);
         /** Desctructor */
         virtual ~DD4hepDetElement();
         
@@ -40,4 +40,4 @@ namespace Add4hep {
 }
 
 
-#endif //ATS_DD4HEPDETECTORELEMENT_DD4HEPDETELEMENT_H
+#endif //ACTS_DD4HEPDETECTORELEMENT_DD4HEPDETELEMENT_H

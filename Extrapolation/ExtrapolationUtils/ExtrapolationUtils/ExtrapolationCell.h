@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// ExtrapolationCell.h, ATS project
+// ExtrapolationCell.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_EXTRAPOLATIONUTILS_EXTRAPOLATIONCELL_H
-#define ATS_EXTRAPOLATIONUTILS_EXTRAPOLATIONCELL_H 1
+#ifndef ACTS_EXTRAPOLATIONUTILS_EXTRAPOLATIONCELL_H
+#define ACTS_EXTRAPOLATIONUTILS_EXTRAPOLATIONCELL_H 1
 
 // Extrapolation moudle
 #include "ExtrapolationUtils/MaterialUpdateMode.h"
@@ -11,6 +11,7 @@
 // EventData module
 #include "EventDataUtils/PropDirection.h"
 #include "EventDataUtils/ParticleHypothesis.h"
+#include "EventDataUtils/ParticleProperties.h"
 // Geometry module
 #include "Material/MaterialProperties.h"
 #include "GeometryUtils/GeometrySignature.h"
@@ -18,12 +19,12 @@
 // MagneticFieldUtils
 #include "MagneticFieldUtils/MagneticFieldProperties.h"
 
-#ifndef ATS_EXTRAPOLATIONUTILSS_CHECKPATHMACRO
-#define ATS_EXTRAPOLATIONUTILSS_CHECKPATHMACRO 1
+#ifndef ACTS_EXTRAPOLATIONUTILSS_CHECKPATHMACRO
+#define ACTS_EXTRAPOLATIONUTILSS_CHECKPATHMACRO 1
 #define reachedLimit(current, limit, tolerance) ( limit > 0 && ((current<limit) ? (current-limit)*(current-limit)/(limit*limit) < tolerance*tolerance : true))
 #endif
 
-namespace Ats {
+namespace Acts {
     
     class MaterialProperties;
     class TrackingVolume;
@@ -167,7 +168,7 @@ namespace Ats {
         const Layer*                layer;                  //!< the associatedLayer() or materialLayer() of the surface
         ExtrapolationConfig         stepConfiguration;      //!< sensitive, passive, boundary to name the parameters
         const MaterialProperties*   material;               //!< the associated material 
-        Vector3D               materialPosition;       //!< position from where the material is taken   
+        Vector3D                    materialPosition;       //!< position from where the material is taken   
         double                      materialScaling;        //!< scale factor for the material as calculated
         const TransportJacobian*    transportJacobian;      //!< the transport jacobian from the last step
         double                      pathLength;             //!< the path length from the last step
@@ -243,8 +244,10 @@ namespace Ats {
             bool                                    destinationCurvilinear; //!< return curvilinear parameters even on destination
 
             std::vector< ExtrapolationStep<T> >     extrapolationSteps;     //!< parameters on sensitive detector elements
-                
+                                
             ExtrapolationConfig                     extrapolationConfiguration; //!< overall global configuration
+
+            std::vector< InteractionVertex >        interactionVertices;    //!< interaction vertices  
 
             float                                   time;                   //!< timing info
             float                                   zOaTrX;                 //!< z/A*rho*dInX0 (for average calculations)
@@ -271,7 +274,7 @@ namespace Ats {
             lastLeadParameters(&sParameters),
             propDirection(pDir),
             radialDirection(1),
-            nextGeometrySignature(Ats::Unsigned),
+            nextGeometrySignature(Acts::Unsigned),
             navigationStep(0),
             pathLength(0.),
             pathLimit(-1),
@@ -281,9 +284,9 @@ namespace Ats {
             materialL0(0.),
             materialLimitL0(-1.),
             materialProcess(0),
-            pHypothesis(Ats::pion),
-            mFieldMode(Ats::MagneticFieldProperties(Ats::FullField)),
-            materialUpdateMode(Ats::addNoise),
+            pHypothesis(Acts::pion),
+            mFieldMode(Acts::MagneticFieldProperties(Acts::FullField)),
+            materialUpdateMode(Acts::addNoise),
             navigationCurvilinear(true),
             sensitiveCurvilinear(false),
             destinationCurvilinear(false),
@@ -334,13 +337,13 @@ namespace Ats {
 
           /** the materialLimitReached */
           bool pathLimitReached(double tolerance=0.001) const { 
-	      return (checkConfigurationMode(Ats::ExtrapolationMode::StopWithPathLimit) && reachedLimit(pathLength,pathLimit,tolerance) );
+	      return (checkConfigurationMode(Acts::ExtrapolationMode::StopWithPathLimit) && reachedLimit(pathLength,pathLimit,tolerance) );
           }
           
           /** the materialLimitReached */
           bool materialLimitReached(double tolerance=0.001) const { 
-	      return ( (checkConfigurationMode(Ats::ExtrapolationMode::StopWithMaterialLimitX0) && reachedLimit(materialX0,materialLimitX0,tolerance) ) ||
-	  	       (checkConfigurationMode(Ats::ExtrapolationMode::StopWithMaterialLimitL0) && reachedLimit(materialL0,materialLimitL0,tolerance) ) );
+	      return ( (checkConfigurationMode(Acts::ExtrapolationMode::StopWithMaterialLimitX0) && reachedLimit(materialX0,materialLimitX0,tolerance) ) ||
+	  	       (checkConfigurationMode(Acts::ExtrapolationMode::StopWithMaterialLimitL0) && reachedLimit(materialL0,materialLimitL0,tolerance) ) );
           }
           
           /** prepare destination as new start point - optimised for Kalman filtering */
@@ -436,7 +439,7 @@ namespace Ats {
       }
     }
     
-    template <class T>  void ExtrapolationCell<T>::stepParameters(const T* parameters, Ats::ExtrapolationMode::eMode fillMode)
+    template <class T>  void ExtrapolationCell<T>::stepParameters(const T* parameters, Acts::ExtrapolationMode::eMode fillMode)
     {  
        // this is the garbage bin collection
        if (!checkConfigurationMode(fillMode)){
@@ -476,11 +479,11 @@ namespace Ats {
            extrapolationSteps[extrapolationSteps.size()-1].surface    = cssf;
            // set the the transport information 
            extrapolationSteps[extrapolationSteps.size()-1].transportJacobian = tjac;
-           extrapolationSteps[extrapolationSteps.size()-1].stepConfiguration.addMode(Ats::ExtrapolationMode::CollectJacobians);
+           extrapolationSteps[extrapolationSteps.size()-1].stepConfiguration.addMode(Acts::ExtrapolationMode::CollectJacobians);
            // fill the step path length
            if (pLength > 0.){
                extrapolationSteps[extrapolationSteps.size()-1].pathLength = pLength;
-               extrapolationSteps[extrapolationSteps.size()-1].stepConfiguration.addMode(Ats::ExtrapolationMode::CollectPathSteps);
+               extrapolationSteps[extrapolationSteps.size()-1].stepConfiguration.addMode(Acts::ExtrapolationMode::CollectPathSteps);
            }
        } else {
            // let's just fill the pathLength information
@@ -541,7 +544,7 @@ namespace Ats {
        if (mprop){
            // record the step information
            extrapolationSteps[extrapolationSteps.size()-1].material = mprop;
-           extrapolationSteps[extrapolationSteps.size()-1].stepConfiguration.addMode(Ats::ExtrapolationMode::CollectMaterial);
+           extrapolationSteps[extrapolationSteps.size()-1].stepConfiguration.addMode(Acts::ExtrapolationMode::CollectMaterial);
            extrapolationSteps[extrapolationSteps.size()-1].materialPosition = mposition;
            extrapolationSteps[extrapolationSteps.size()-1].materialScaling  = sfactor;
        }

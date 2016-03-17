@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// IMaterialEffectsEngine.h, ATS project
+// IMaterialEffectsEngine.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_EXTRAPOLATIONINTERFACES_IMATERIAKEFFECTSENGINE_H
-#define ATS_EXTRAPOLATIONINTERFACES_IMATERIAKEFFECTSENGINE_H 1
+#ifndef ACTS_EXTRAPOLATIONINTERFACES_IMATERIAKEFFECTSENGINE_H
+#define ACTS_EXTRAPOLATIONINTERFACES_IMATERIAKEFFECTSENGINE_H 1
 
 // Gaudi
 #include "GaudiKernel/IService.h"
@@ -15,7 +15,7 @@
 #include "TrackParameters/TrackParameters.h"
 #include "NeutralParameters/NeutralParameters.h"
 
-namespace Ats {
+namespace Acts {
   
   static const InterfaceID IID_IMaterialEffectsEngine("IMaterialEffectsEngine", 1, 0);
 
@@ -62,4 +62,4 @@ namespace Ats {
 
 } // end of namespace
 
-#endif // ATS_EXTRAPOLATIONINTERFACES_IMATERIAKEFFECTSENGINE_H
+#endif // ACTS_EXTRAPOLATIONINTERFACES_IMATERIAKEFFECTSENGINE_H

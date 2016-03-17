@@ -1,10 +1,10 @@
 #include "DD4hepDetectorElement/DetExtension.h"
 
-Add4hep::DetExtension::DetExtension() :
-Add4hep::IDetExtension(),
-m_shape(Add4hep::ShapeType::None),
-m_segmentation(nullptr)
+Acts::DetExtension::DetExtension() :
+Acts::IDetExtension(),
+m_segmentation(nullptr),
+m_shape(Acts::ShapeType::None)
 {}
 
-Add4hep::DetExtension::~DetExtension()
+Acts::DetExtension::~DetExtension()
 {}

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////
-// StaticNavigationEngine.icc, ATS project
+// StaticNavigationEngine.icc, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 // Extrapolation module
@@ -13,13 +13,13 @@
 #include "Algebra/AlgebraDefinitions.h"
 
 /** handle the failure - as configured */
-template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::resolveBoundaryT(Ats::ExtrapolationCell<T>& eCell,
-                                                                                        Ats::PropDirection pDir) const 
+template <class T> Acts::ExtrapolationCode Acts::StaticNavigationEngine::resolveBoundaryT(Acts::ExtrapolationCell<T>& eCell,
+                                                                                        Acts::PropDirection pDir) const 
 {   
     EX_MSG_DEBUG(++eCell.navigationStep, "navigation", "", "resolve boundary situation leaving '"<< eCell.leadVolume->volumeName() 
                 << (int(pDir) > 0 ? "' along momentum." : "' opposite momentum.") );
     // initialize the extrapolation code to progress
-    Ats::ExtrapolationCode eCode = Ats::ExtrapolationCode::InProgress;
+    ExtrapolationCode eCode = ExtrapolationCode::InProgress;
     // [1] ------------------------ fast boundary access : take straight line estimates as navigation guide --------------
     auto boundaryIntersections = eCell.leadVolume->boundarySurfacesOrdered(*eCell.leadParameters,
                                                                            pDir,
@@ -27,11 +27,11 @@ template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::resolveBo
     EX_MSG_VERBOSE(eCell.navigationStep, "navigation", "", "found " << boundaryIntersections.size() << " boundary surfaces to try"
                    << ( eCell.onLastBoundary() ? " - starting from last boundary." : "." ) );
     // remember them for the slow acces 
-    std::map< const Ats::BoundarySurface<Ats::TrackingVolume>*, bool > bSurfacesTried;
+    std::map< const BoundarySurface<TrackingVolume>*, bool > bSurfacesTried;
     
-    for (auto& boundaryCandidate : boundaryIntersections){
+    for (auto& boundaryCandidate : boundaryIntersections){                 
         // the surface of the 
-        const Ats::BoundarySurface<Ats::TrackingVolume>* bSurfaceTV = boundaryCandidate.object;
+        const BoundarySurface<TrackingVolume>* bSurfaceTV = boundaryCandidate.object;
         // skip if it's the last boundary surface
         if ( eCell.onLastBoundary() && &bSurfaceTV->surfaceRepresentation() == eCell.lastBoundarySurface ) continue;
         // check this boudnary, possible return codes are:
@@ -89,7 +89,7 @@ template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::resolveBo
     EX_MSG_VERBOSE(eCell.navigationStep, "navigation", "", "slow boundary navigation did not succeeed - trying step-out-of-volume approach now");
     for (auto& boundaryCandidate : boundaryIntersections){
         // the surface of the 
-        const Ats::BoundarySurface<Ats::TrackingVolume>* bSurfaceTV = boundaryCandidate.object;
+        const BoundarySurface<TrackingVolume>* bSurfaceTV = boundaryCandidate.object;
         // check this boudnary, possible return codes are:
         // - SuccessPathLimit     : propagation to boundary caused PathLimit to be fail @TODO implement protection againg far of tries
         // - SuccessMaterialLimit : boundary was reached and material update on boundary reached limit
@@ -113,22 +113,22 @@ template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::resolveBo
     // return it back
     EX_MSG_DEBUG(eCell.navigationStep, "navigation", "", "could not resolve the boundary situation. Exiting.");
     
-    return Ats::ExtrapolationCode::FailureNavigation;                                                                                 
+    return ExtrapolationCode::FailureNavigation;                                                                                 
 }  
 
 /** handle the failure - as configured */
-template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::handleBoundaryT(Ats::ExtrapolationCell<T>& eCell,
-                                                                                       const Ats::BoundarySurface<Ats::TrackingVolume>& bSurfaceTV,
-                                                                                       Ats::PropDirection pDir,
+template <class T> Acts::ExtrapolationCode Acts::StaticNavigationEngine::handleBoundaryT(Acts::ExtrapolationCell<T>& eCell,
+                                                                                       const Acts::BoundarySurface<Acts::TrackingVolume>& bSurfaceTV,
+                                                                                       Acts::PropDirection pDir,
                                                                                        bool stepout) const 
 {
     // get the bondary surface and compare with last one to prevent loops
-    const Ats::Surface& bSurface = bSurfaceTV.surfaceRepresentation(); 
+    const Surface& bSurface = bSurfaceTV.surfaceRepresentation(); 
     // propagate the parameters to the boundary (force boundaryCheck to true in case it is not a step-out trial), possible return codes :
     // - SuccessPathLimit : pathLimit reached during propagation
     // - InProgress       : boundary reached
     // - Recovered        : boundary not reached
-    Ats::ExtrapolationCode eCode = m_propagationEngine->propagate(eCell,bSurface,pDir,!stepout,eCell.destinationCurvilinear);
+    ExtrapolationCode eCode = m_propagationEngine->propagate(eCell,bSurface,pDir,!stepout,eCell.destinationCurvilinear);
     CHECK_ECODE_SUCCESS(eCell, eCode);
     EX_MSG_VERBOSE(eCell.navigationStep, "navigation", "handleBoundaryT", "propagation with eCode " << eCode.toString());
     // check for progress 
@@ -139,41 +139,41 @@ template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::handleBou
             EX_MSG_VERBOSE(eCell.navigationStep, "navigation", "handleBoundaryT", "radial compatbility check failed, radial direction is: " << eCell.radialDirection);
             // it's not jump back to the last valid lead parameters and return Unset as a trigger
 	        eCell.leadParameters = eCell.lastLeadParameters;
-	        return Ats::ExtrapolationCode::Unset;
+	        return ExtrapolationCode::Unset;
         }
         EX_MSG_VERBOSE(eCell.navigationStep, "navigation", "", "parameters on boundary surface created, moving to next volume."); 
         // get the nextVolume - modify the position in case you have a step out trial, take attachment otherwise
-        const Ats::TrackingVolume* nextVolume = stepout ?
-                trackingGeometry().lowestTrackingVolume(Ats::Vector3D(eCell.leadParameters->position()+pDir*eCell.leadParameters->momentum().unit())) :
+        const TrackingVolume* nextVolume = stepout ?
+                trackingGeometry().lowestTrackingVolume(Vector3D(eCell.leadParameters->position()+pDir*eCell.leadParameters->momentum().unit())) :
                 bSurfaceTV.attachedVolume(eCell.leadParameters->position(), eCell.leadParameters->momentum(), pDir);
         // check if we have no nextVolume : boundary rechaed @TODO it's not really a success
         if (!nextVolume) {
             EX_MSG_VERBOSE(eCell.navigationStep, "navigation", "", "No next volume found attached to this TrackingVolume. End of known world ?"); 
-            return Ats::ExtrapolationCode::SuccessBoundaryReached;
+            return ExtrapolationCode::SuccessBoundaryReached;
         }
         // check if it is a boundary reached case
         // - geometrySignature change and configuration to stop then triggers a Success 
-        bool stopAtThisBoundary = eCell.checkConfigurationMode(Ats::ExtrapolationMode::StopAtBoundary) 
+        bool stopAtThisBoundary = eCell.checkConfigurationMode(ExtrapolationMode::StopAtBoundary) 
                                   && (nextVolume->geometrySignature() != eCell.leadVolume->geometrySignature());        
         // fill the boundary into the cache if successfully hit boundary surface
         // - only cache if those are not the final parameters caused by a StopAtBoundary
         if (!stopAtThisBoundary)
-            eCell.stepParameters(eCell.leadParameters, Ats::ExtrapolationMode::CollectBoundary);
+            eCell.stepParameters(eCell.leadParameters, ExtrapolationMode::CollectBoundary);
         // loop protection - relaxed for the cases where you start from the boundary
         if (eCell.leadVolume == nextVolume ) {
             // the start parameters where on the boundary already give a relaxed return code
-            if (&bSurface == eCell.lastBoundarySurface) return Ats::ExtrapolationCode::Unset;
+            if (&bSurface == eCell.lastBoundarySurface) return ExtrapolationCode::Unset;
             // give some screen output as of why this happens
             EX_MSG_VERBOSE(eCell.navigationStep, "navigation", "", "loop detected while trying to leave TrackingVolume '" << nextVolume->volumeName() << ".");
             // return a loop failure, parameter deletion will be done by cache
-            return Ats::ExtrapolationCode::FailureLoop;
+            return ExtrapolationCode::FailureLoop;
         }
         // update the with the information of the layer material - will change the leadParameters
         if (bSurface.surfaceMaterial()) {
             // now handle the material, possible return codes: 
             // - InProgress            : material update performed or not (depending on material)
             // - SuccessMaterialLimit  : material limit reached & configured to stop there
-            eCode = m_materialEffectsEngine->handleMaterial(eCell,pDir,Ats::fullUpdate);
+            eCode = m_materialEffectsEngine->handleMaterial(eCell,pDir,fullUpdate);
             CHECK_ECODE_SUCCESS(eCell, eCode);
         }
         // break if configured to break at volume boundary and signature change
@@ -182,7 +182,7 @@ template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::handleBou
 	        eCell.nextGeometrySignature = nextVolume->geometrySignature();
             // return the boundary reached : the navigation resolved already    
             eCell.leadVolume                      = nextVolume;    
-            return Ats::ExtrapolationCode::SuccessBoundaryReached;
+            return ExtrapolationCode::SuccessBoundaryReached;
         } 
         // remember the last boundary surface for loop protection
         eCell.lastBoundarySurface             = &bSurface;
@@ -191,17 +191,17 @@ template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::handleBou
         eCell.leadVolume                      = nextVolume;    
         eCell.leadLayer                       = 0;
         // we have bParameters -> break the loop over boundaryIntersections
-        return  Ats::ExtrapolationCode::InProgress;
+        return  ExtrapolationCode::InProgress;
      }
 
      // you need to keep on trying 
-     return Ats::ExtrapolationCode::Unset;
+     return ExtrapolationCode::Unset;
  }
 
 
 /** handle the failure - as configured */
-template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::resolvePositionT(Ats::ExtrapolationCell<T>& eCell,
-                                                                                        Ats::PropDirection pDir,
+template <class T> Acts::ExtrapolationCode Acts::StaticNavigationEngine::resolvePositionT(Acts::ExtrapolationCell<T>& eCell,
+                                                                                        Acts::PropDirection pDir,
                                                                                         bool /*noLoop*/ ) const 
 {   
     EX_MSG_DEBUG(++eCell.navigationStep, "navigation", "", "resolve position '"<< eCell.leadParameters->position() 
@@ -210,20 +210,20 @@ template <class T> Ats::ExtrapolationCode Ats::StaticNavigationEngine::resolvePo
     // noLoop= True is used when we have exit from leadVolume 
 
     if (!eCell.leadVolume) eCell.leadVolume = trackingGeometry().lowestStaticTrackingVolume(eCell.leadParameters->position());
-    if (!eCell.leadVolume) return Ats::ExtrapolationCode::FailureNavigation;
-    const Ats::TrackingVolume* nextVol=0;
+    if (!eCell.leadVolume) return ExtrapolationCode::FailureNavigation;
+    const TrackingVolume* nextVol=0;
     if ( trackingGeometry().atVolumeBoundary(eCell.leadParameters->position(),
                                              eCell.leadParameters->momentum(), 
                                              eCell.leadVolume,
-                                             nextVol, pDir, 0.01) ) {          // set tolerance globally 
+                                             nextVol, pDir, 0.01) ) {          //!< @TODO set tolerance globally 
   
-       //if (noLoop && nextVol==eCell.leadVolume) return Ats::ExtrapolationCode::FailureLoop;  
+       //if (noLoop && nextVol==eCell.leadVolume) return ExtrapolationCode::FailureLoop;  
 
        if (nextVol) {
          eCell.leadVolume = nextVol;
-         return Ats::ExtrapolationCode::InProgress;
-       } else return Ats::ExtrapolationCode::FailureNavigation;
+         return ExtrapolationCode::InProgress;
+       } else return ExtrapolationCode::FailureNavigation;
     }
 
-    return Ats::ExtrapolationCode::InProgress;
+    return ExtrapolationCode::InProgress;
 }

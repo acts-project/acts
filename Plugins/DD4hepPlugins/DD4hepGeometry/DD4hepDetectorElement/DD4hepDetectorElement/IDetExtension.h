@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// IDetExtension.h, ATS project, DD4hepDetector plugin
+// IDetExtension.h, ACTS project, DD4hepDetector plugin
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_DD4HEPDETECTORELEMENT_IDETEXTENSION_H
-#define ATS_DD4HEPDETECTORELEMENT_IDETEXTENSION_H 1
+#ifndef ACTS_DD4HEPDETECTORELEMENT_IDETEXTENSION_H
+#define ACTS_DD4HEPDETECTORELEMENT_IDETEXTENSION_H 1
 
 namespace DD4hep {
     namespace Geometry {
@@ -12,7 +12,7 @@ namespace DD4hep {
     }
 }
 
-namespace Add4hep {
+namespace Acts {
     
     /** @class IDetExtension
      
@@ -53,4 +53,4 @@ namespace Add4hep {
     };
 }
 
-#endif //ATS_DD4HEPDETECTORELEMENT_DET_IDETEXTENSION_H
+#endif //ACTS_DD4HEPDETECTORELEMENT_DET_IDETEXTENSION_H

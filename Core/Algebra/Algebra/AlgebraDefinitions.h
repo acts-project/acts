@@ -1,5 +1,5 @@
-#ifndef ATS_ALGEBRADEFINITIONS_H
-#define ATS_ALGEBRADEFINITIONS_H
+#ifndef ACTS_ALGEBRADEFINITIONS_H
+#define ACTS_ALGEBRADEFINITIONS_H
 
 // API addons
 #define EIGEN_MATRIXBASE_PLUGIN "Algebra/MatrixBasePlugin.h"
@@ -9,67 +9,67 @@
 // external include(s)
 #include <Eigen/Dense>
 
-namespace Ats
+namespace Acts
 {
   template<typename T, unsigned int rows, unsigned int cols>
-  using AtsMatrix = Eigen::Matrix<T,rows,cols>;
+  using ActsMatrix = Eigen::Matrix<T,rows,cols>;
 
   template<unsigned int rows, unsigned int cols>
-  using AtsMatrixD = AtsMatrix<double,rows,cols>;
+  using ActsMatrixD = ActsMatrix<double,rows,cols>;
 
   template<unsigned int rows, unsigned int cols>
-  using AtsMatrixF = AtsMatrix<float,rows,cols>;
+  using ActsMatrixF = ActsMatrix<float,rows,cols>;
 
   template<typename T, unsigned int rows>
-  using AtsSymMatrix = Eigen::Matrix<T,rows,rows>;
+  using ActsSymMatrix = Eigen::Matrix<T,rows,rows>;
 
   template<unsigned int rows>
-  using AtsSymMatrixD = AtsSymMatrix<double,rows>;
+  using ActsSymMatrixD = ActsSymMatrix<double,rows>;
 
   template<unsigned int rows>
-  using AtsSymMatrixF = AtsSymMatrix<float,rows>;
+  using ActsSymMatrixF = ActsSymMatrix<float,rows>;
 
   template<typename T, unsigned int rows>
-  using AtsVector = Eigen::Matrix<T,rows,1>;
+  using ActsVector = Eigen::Matrix<T,rows,1>;
 
   template<unsigned int rows>
-  using AtsVectorD = AtsVector<double,rows>;
+  using ActsVectorD = ActsVector<double,rows>;
 
   template<unsigned int rows>
-  using AtsVectorF = AtsVector<float,rows>;
+  using ActsVectorF = ActsVector<float,rows>;
 
   template<typename T, unsigned int cols>
-  using AtsRowVector = Eigen::Matrix<T,1,cols>;
+  using ActsRowVector = Eigen::Matrix<T,1,cols>;
 
   template<unsigned int cols>
-  using AtsRowVectorD = AtsRowVector<double,cols>;
+  using ActsRowVectorD = ActsRowVector<double,cols>;
 
   template<unsigned int cols>
-  using AtsRowVectorF = AtsRowVector<float,cols>;
+  using ActsRowVectorF = ActsRowVector<float,cols>;
 
   template<typename T>
-  using AtsMatrixX = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+  using ActsMatrixX = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
-  using AtsMatrixXd = AtsMatrixX<double>;
-  using AtsMatrixXf = AtsMatrixX<float>;
-
-  template<typename T>
-  using AtsVectorX = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-
-  using AtsVectorXd = AtsVectorX<double>;
-  using AtsVectorXf = AtsVectorX<float>;
+  using ActsMatrixXd = ActsMatrixX<double>;
+  using ActsMatrixXf = ActsMatrixX<float>;
 
   template<typename T>
-  using AtsRowVectorX = Eigen::Matrix<T, 1, Eigen::Dynamic>;
+  using ActsVectorX = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 
-  using AtsRowVectorXd = AtsRowVectorX<double>;
-  using AtsRowVectorXf = AtsRowVectorX<float>;
+  using ActsVectorXd = ActsVectorX<double>;
+  using ActsVectorXf = ActsVectorX<float>;
+
+  template<typename T>
+  using ActsRowVectorX = Eigen::Matrix<T, 1, Eigen::Dynamic>;
+
+  using ActsRowVectorXd = ActsRowVectorX<double>;
+  using ActsRowVectorXf = ActsRowVectorX<float>;
 
 
   /** elment for code readability
       - please use these for access to the member variables if needed, e.g.
-          double z  = position[Ats::eZ];
-          double px = momentum[Ats::ePX];
+          double z  = position[Acts::eZ];
+          double px = momentum[Acts::ePX];
   */
   enum AxisDefs {
       // position access
@@ -91,6 +91,6 @@ namespace Ats
   typedef Eigen::Matrix<double, 3, 3>                 RotationMatrix3D;
 
 
-}  // end of namespace Ats
+}  // end of namespace Acts
 
 #endif

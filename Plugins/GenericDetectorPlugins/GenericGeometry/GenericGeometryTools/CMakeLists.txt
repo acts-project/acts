@@ -3,6 +3,8 @@
 ################################################################################
 gaudi_subdir(GenericGeometryTools v1r0)
 
+gaudi_install_python_modules()
+
 gaudi_depends_on_subdirs(GaudiKernel
 			 Core/Algebra
 			 Core/CoreInterfaces
@@ -13,7 +15,7 @@ gaudi_depends_on_subdirs(GaudiKernel
 			 Geometry/GeometryUtils
 			 Plugins/GenericDetectorPlugins/GenericGeometry/GenericDetectorElement)
 
-add_definitions(-DATS_PARAMETER_DEFINITIONS_PLUGIN=\"CoreUtils/DefaultParameterDefinitions.h\")
+add_definitions(-DACTS_PARAMETER_DEFINITIONS_PLUGIN=\"CoreUtils/DefaultParameterDefinitions.h\")
 
 find_package(Eigen3 REQUIRED)
 

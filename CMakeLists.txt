@@ -7,7 +7,7 @@ find_package(GaudiProject)
 
 #---------------------------------------------------------------
 
-add_definitions(-DATS_PARAMETER_DEFINITIONS_PLUGIN=\"CoreUtils/DefaultParameterDefinitions.h\")
+add_definitions(-DACTS_PARAMETER_DEFINITIONS_PLUGIN=\"CoreUtils/DefaultParameterDefinitions.h\")
 
 # Declare project name and version
 # Syntax:

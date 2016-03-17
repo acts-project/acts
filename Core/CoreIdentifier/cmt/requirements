@@ -5,11 +5,11 @@ author Andrea.Salzburger@cern.ch
 use AtlasPolicy         AtlasPolicy-*
 use AtlasCorePlugins    AtlasCorePlugins-* Plugins/AtlasPlugins
 
-macro ATS_CORE_IDENTIFIER_PLUGIN '\"AtlasCorePlugins/AtlasIdentifier.h\"'
-macro_append AtsCoreIdentifier " -DATS_CORE_IDENTIFIER_PLUGIN=$(ATS_CORE_IDENTIFIER_PLUGIN) "
+macro ACTS_CORE_IDENTIFIER_PLUGIN '\"AtlasCorePlugins/AtlasIdentifier.h\"'
+macro_append ActsCoreIdentifier " -DACTS_CORE_IDENTIFIER_PLUGIN=$(ACTS_CORE_IDENTIFIER_PLUGIN) "
     
 private
 
-macro_append cppflags $(AtsCoreIdentifier) 
+macro_append cppflags $(ActsCoreIdentifier) 
 
 apply_pattern cmake_add_command command=metalibrary

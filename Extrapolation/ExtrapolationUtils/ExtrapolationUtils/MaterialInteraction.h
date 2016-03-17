@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// MaterialInteraction.h, ATS project
+// MaterialInteraction.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_EXTRAPOLATIONUTILS_MATERIALINTERACTION_H
-#define ATS_EXTRAPOLATIONUTILS_MATERIALINTERACTION_H 1
+#ifndef ACTS_EXTRAPOLATIONUTILS_MATERIALINTERACTION_H
+#define ACTS_EXTRAPOLATIONUTILS_MATERIALINTERACTION_H 1
 
 // Geometry module
 #include "Material/Material.h"
@@ -12,7 +12,7 @@
 // Core module
 #include "Algebra/AlgebraDefinitions.h"
 
-namespace Ats {
+namespace Acts {
 
    /** @class MaterialInteraction 
    
@@ -33,7 +33,7 @@ namespace Ats {
     /** dE/dl ionization energy loss per path unit */
     double dEdl_ionization(double p, const Material* mat, ParticleHypothesis particle, double& sigma, double& kazL) const;   
     /** ionization energy loss from PDG */
-    double PDG_energyLoss_ionization(double p, const Ats::Material* mat, Ats::ParticleHypothesis particle, double& sigma, double& kazL, double path) const;
+    double PDG_energyLoss_ionization(double p, const Acts::Material* mat, Acts::ParticleHypothesis particle, double& sigma, double& kazL, double path) const;
 
     /** dE/dl radiation energy loss per path unit */
     double dEdl_radiation(double p, const Material* mat, ParticleHypothesis particle, double& sigma) const;    
@@ -48,7 +48,7 @@ namespace Ats {
   };
  
   /** dE/dl ionization energy loss per path unit */
-  inline double Ats::MaterialInteraction::dEdl_ionization(double p, const Ats::Material* mat, Ats::ParticleHypothesis particle, double& sigma, double& kazL) const {
+  inline double Acts::MaterialInteraction::dEdl_ionization(double p, const Acts::Material* mat, Acts::ParticleHypothesis particle, double& sigma, double& kazL) const {
   
     //
     // calculate mean ionization that is pathlentgh INDEPENDENT 
@@ -70,7 +70,7 @@ namespace Ats {
     
     // kinetic variables
     // and the electron mass in MeV
-    double me    = s_particleMasses.mass[Ats::electron];
+    double me    = s_particleMasses.mass[Acts::electron];
     double m     = s_particleMasses.mass[particle];
     double mfrac = me/m;
     double E     = sqrt(p*p+m*m);
@@ -88,7 +88,7 @@ namespace Ats {
     kazL = 0.;
   
     double MOP = 0.;
-    if (particle == Ats::electron){
+    if (particle == Acts::electron){
       // for electrons use slightly different BetheBloch adaption
       // see Stampfer, et al, "Track Fitting With Energy Loss", Comp. Pyhs. Comm. 79 (1994), 157-164
       Ionization = -kaz*(2.*log(2.*me/I)+3.*log(gamma) - 1.95);
@@ -120,13 +120,13 @@ namespace Ats {
   }
 
   /** dE/dl radiation energy loss per path unit */
-  inline double Ats::MaterialInteraction::dEdl_radiation(double p, const Ats::Material* mat, Ats::ParticleHypothesis particle, double& sigma) const{
+  inline double Acts::MaterialInteraction::dEdl_radiation(double p, const Acts::Material* mat, Acts::ParticleHypothesis particle, double& sigma) const{
     sigma = 0.;
     if ( mat->x0()==0. ) return 0.;    
 
     // preparation of kinetic constants
     double m     = s_particleMasses.mass[particle];
-    double me    = s_particleMasses.mass[Ats::electron];
+    double me    = s_particleMasses.mass[Acts::electron];
     double mfrac = me/m;
     double E     = sqrt(p*p+m*m);
 
@@ -138,7 +138,7 @@ namespace Ats {
     //Add e+e- pair production and photonuclear effect for muons at energies above 8 GeV
     //    Radiation gives mean Eloss including the long tail from 'catastrophic' Eloss 
     //    sigma the rms of steep exponential
-    if ((particle == Ats::muon) && (E > 8000.)) {
+    if ((particle == Acts::muon) && (E > 8000.)) {
       if (E < 1.e6) {
     	      Radiation += 0.5345 - 6.803e-5*E - 2.278e-11*E*E + 9.899e-18*E*E*E; //E below 1 TeV
           sigma     += (0.1828 -3.966e-3*sqrt(E) + 2.151e-5*E ); // idem
@@ -154,7 +154,7 @@ namespace Ats {
   }
 
   /** multiple scattering as function of dInX0 */
-  inline  double Ats::MaterialInteraction::sigmaMS(double dInX0, double p, double beta) const{
+  inline  double Acts::MaterialInteraction::sigmaMS(double dInX0, double p, double beta) const{
 
     if ( dInX0==0. || p==0. || beta==0.) return 0.;
     
@@ -165,13 +165,13 @@ namespace Ats {
 
   /** Ionization energy loss from the PDG */ 
   /** PDG formula 32.11 for MOP value from http://http://pdg.lbl.gov/2014/reviews/rpp2014-rev-passage-particles-matter.pdf */
-  inline double Ats::MaterialInteraction::PDG_energyLoss_ionization(double p, const Ats::Material* mat, Ats::ParticleHypothesis particle, double& sigma, double& kazL, double path) const {
+  inline double Acts::MaterialInteraction::PDG_energyLoss_ionization(double p, const Acts::Material* mat, Acts::ParticleHypothesis particle, double& sigma, double& kazL, double path) const {
     // kinetic variables
     // and the electron mass in MeV
 	 
     double m     = s_particleMasses.mass[particle];
     double E     = sqrt(p*p+m*m);
-    double me    = s_particleMasses.mass[Ats::electron];
+    double me    = s_particleMasses.mass[Acts::electron];
     double beta  = p/E;
     double gamma = E/m;
     

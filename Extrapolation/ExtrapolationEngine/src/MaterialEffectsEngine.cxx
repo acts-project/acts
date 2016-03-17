@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////
-// MaterialEffectsEngine.cxx, ATS project
+// MaterialEffectsEngine.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 // STL
@@ -10,11 +10,12 @@
 #include "Detector/Layer.h"
 #include "Material/SurfaceMaterial.h"
 
-DECLARE_SERVICE_FACTORY(Ats::MaterialEffectsEngine)
+
+DECLARE_COMPONENT(Acts::MaterialEffectsEngine)
 
 // constructor
-Ats::MaterialEffectsEngine::MaterialEffectsEngine(const std::string& name, ISvcLocator* svc):
-  Ats::ServiceBase(name, svc),
+Acts::MaterialEffectsEngine::MaterialEffectsEngine(const std::string& name, ISvcLocator* svc):
+  Acts::ServiceBase(name, svc),
   m_eLossCorrection(true),
   m_eLossMpv(true),
   m_mscCorrection(true)
@@ -29,11 +30,11 @@ Ats::MaterialEffectsEngine::MaterialEffectsEngine(const std::string& name, ISvcL
 }
 
 // destructor
-Ats::MaterialEffectsEngine::~MaterialEffectsEngine()
+Acts::MaterialEffectsEngine::~MaterialEffectsEngine()
 {}
 
 /** Query the interfaces. */
-StatusCode Ats::MaterialEffectsEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
+StatusCode Acts::MaterialEffectsEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
 {
   if ( IID_IMaterialEffectsEngine == riid )
     *ppvInterface = (IMaterialEffectsEngine*)this;
@@ -46,53 +47,53 @@ StatusCode Ats::MaterialEffectsEngine::queryInterface(const InterfaceID& riid, v
 }  
 
 // the interface method initialize
-StatusCode Ats::MaterialEffectsEngine::initialize()
+StatusCode Acts::MaterialEffectsEngine::initialize()
 {
     MSG_DEBUG("initialize()" );
     return StatusCode::SUCCESS;
 }
 
 // the interface method finalize
-StatusCode Ats::MaterialEffectsEngine::finalize()
+StatusCode Acts::MaterialEffectsEngine::finalize()
 {    
     MSG_DEBUG("finalize()" );
     return StatusCode::SUCCESS;
 }
 
 /** neutral extrapolation - just collect material */
-Ats::ExtrapolationCode Ats::MaterialEffectsEngine::handleMaterial(Ats::ExCellNeutral& eCell,
-                                                                  Ats::PropDirection dir,
-                                                                  Ats::MaterialUpdateStage matupstage) const
+Acts::ExtrapolationCode Acts::MaterialEffectsEngine::handleMaterial(Acts::ExCellNeutral& eCell,
+                                                                  Acts::PropDirection dir,
+                                                                  Acts::MaterialUpdateStage matupstage) const
 {
 
     // for readability
-    const Ats::Surface* mSurface = eCell.materialSurface;
-    const Ats::Layer*   mLayer   = eCell.leadLayer;
+    const Acts::Surface* mSurface = eCell.materialSurface;
+    const Acts::Layer*   mLayer   = eCell.leadLayer;
     // the Extrapolator made sure that the layer is the lead layer && the parameters are the lead parameters
     if (mSurface && mSurface->surfaceMaterial()){
         EX_MSG_DEBUG( ++eCell.navigationStep, "layer",  mLayer->geoID().value(), "handleMaterial for neutral parameters called - collect material.");
         // path correction
         double pathCorrection = mSurface->pathCorrection(eCell.leadParameters->position(),dir*(eCell.leadParameters->momentum()));
         // the relative direction wrt with the layer
-        Ats::PropDirection rlDir = (pathCorrection > 0. ? Ats::alongMomentum : Ats::oppositeMomentum);
+        Acts::PropDirection rlDir = (pathCorrection > 0. ? Acts::alongMomentum : Acts::oppositeMomentum);
         // multiply by the pre-and post-update factor
         double mFactor = mSurface->surfaceMaterial()->factor(rlDir, matupstage);
         if (mFactor == 0.){
             EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "material collection with "  << (matupstage > 0. ? "pre " : "post ")  << "factor 0.");
             // return the parameters untouched -
-            return Ats::ExtrapolationCode::InProgress;
+            return Acts::ExtrapolationCode::InProgress;
         }
         pathCorrection = mFactor*pathCorrection;
         // screen output
         EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "material update with corr factor = " << pathCorrection);
         // get the actual material bin
-        const Ats::MaterialProperties* materialProperties = mSurface->surfaceMaterial()->material(eCell.leadParameters->position());
+        const Acts::MaterialProperties* materialProperties = mSurface->surfaceMaterial()->material(eCell.leadParameters->position());
         // and let's check if there's acutally something to do
         if (materialProperties){
             // thickness in X0
             double thicknessInX0          = materialProperties->thicknessInX0();
             // check if material filling was requested
-            if (eCell.checkConfigurationMode(Ats::ExtrapolationMode::CollectMaterial)){
+            if (eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectMaterial)){
                 EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "collecting material of [t/X0] = " << thicknessInX0); 
                 eCell.stepMaterial(*mSurface, eCell.leadLayer, eCell.leadParameters->position(), pathCorrection, materialProperties);
             } else {
@@ -102,19 +103,19 @@ Ats::ExtrapolationCode Ats::MaterialEffectsEngine::handleMaterial(Ats::ExCellNeu
         }
     }
     // only in case of post update it should not return InProgress
-    return Ats::ExtrapolationCode::InProgress;
+    return Acts::ExtrapolationCode::InProgress;
 }
 
 
 /** charged extrapolation */
-Ats::ExtrapolationCode Ats::MaterialEffectsEngine::handleMaterial(Ats::ExCellCharged& eCell,
-                                                                  Ats::PropDirection dir,
-                                                                  Ats::MaterialUpdateStage matupstage) const
+Acts::ExtrapolationCode Acts::MaterialEffectsEngine::handleMaterial(Acts::ExCellCharged& eCell,
+                                                                  Acts::PropDirection dir,
+                                                                  Acts::MaterialUpdateStage matupstage) const
 {
 
     // the material surface
-    const Ats::Surface* mSurface = eCell.materialSurface;
-    const Ats::Layer*   mLayer   = eCell.leadLayer;
+    const Acts::Surface* mSurface = eCell.materialSurface;
+    const Acts::Layer*   mLayer   = eCell.leadLayer;
     // the Extrapolator made sure that the layer is the lead layer && the parameters are the lead parameters
     if (mSurface && mSurface->surfaceMaterial()){
         EX_MSG_DEBUG( ++eCell.navigationStep, "layer",  mLayer->geoID().value(), "handleMaterial for charged parameters called.");
@@ -122,25 +123,25 @@ Ats::ExtrapolationCode Ats::MaterialEffectsEngine::handleMaterial(Ats::ExCellCha
         eCell.leadParameters = updateTrackParameters(*eCell.leadParameters,eCell,dir,matupstage);
     }
     // only in case of post update it should not return InProgress
-    return Ats::ExtrapolationCode::InProgress;
+    return Acts::ExtrapolationCode::InProgress;
 }
 
 /** charged extrapolation */
-const Ats::TrackParameters* Ats::MaterialEffectsEngine::updateTrackParameters(const Ats::TrackParameters& parameters,
-                                                                              Ats::ExCellCharged& eCell,
-                                                                              Ats::PropDirection dir,
-                                                                              Ats::MaterialUpdateStage matupstage) const 
+const Acts::TrackParameters* Acts::MaterialEffectsEngine::updateTrackParameters(const Acts::TrackParameters& parameters,
+                                                                              Acts::ExCellCharged& eCell,
+                                                                              Acts::PropDirection dir,
+                                                                              Acts::MaterialUpdateStage matupstage) const 
 {
     // the material surface & it's material
-    const Ats::Surface* mSurface = eCell.materialSurface;
-    const Ats::Layer*   mLayer   = eCell.leadLayer;
+    const Acts::Surface* mSurface = eCell.materialSurface;
+    const Acts::Layer*   mLayer   = eCell.leadLayer;
     // return if you have nothing to do
     if (!mSurface || !mSurface->surfaceMaterial()) return (&parameters);
 
     // path correction
     double pathCorrection = mSurface->pathCorrection(parameters.position(),dir*(parameters.momentum()));
     // the relative direction wrt with the layer
-    Ats::PropDirection rlDir = (pathCorrection > 0. ? Ats::alongMomentum : Ats::oppositeMomentum);
+    Acts::PropDirection rlDir = (pathCorrection > 0. ? Acts::alongMomentum : Acts::oppositeMomentum);
     // multiply by the pre-and post-update factor
     double mFactor = mSurface->surfaceMaterial()->factor(rlDir, matupstage);
     if (mFactor == 0.){
@@ -152,16 +153,16 @@ const Ats::TrackParameters* Ats::MaterialEffectsEngine::updateTrackParameters(co
     // screen output
     EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "material update with corr factor = " << pathCorrection);
     // get the actual material bin
-    const Ats::MaterialProperties* materialProperties = mSurface->surfaceMaterial()->material(parameters.position());
+    const Acts::MaterialProperties* materialProperties = mSurface->surfaceMaterial()->material(parameters.position());
     // and let's check if there's acutally something to do
-    if (materialProperties && ( m_eLossCorrection || m_mscCorrection || eCell.checkConfigurationMode(Ats::ExtrapolationMode::CollectMaterial)) ){
+    if (materialProperties && ( m_eLossCorrection || m_mscCorrection || eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectMaterial)) ){
         // and add them
         int sign = int(eCell.materialUpdateMode);
         // a simple cross-check if the parameters are the initial ones
-        AtsVectorD<5>      uParameters = parameters.parameters();
-        std::unique_ptr<AtsSymMatrixD<5> >  uCovariance = parameters.covariance() ? std::make_unique<AtsSymMatrixD<5> >(*parameters.covariance()) : nullptr;
+        ActsVectorD<5>      uParameters = parameters.parameters();
+        std::unique_ptr<ActsSymMatrixD<5> >  uCovariance = parameters.covariance() ? std::make_unique<ActsSymMatrixD<5> >(*parameters.covariance()) : nullptr;
         // get the material itself & its parameters
-        const Ats::Material& material = materialProperties->material();
+        const Acts::Material& material = materialProperties->material();
         double thicknessInX0          = materialProperties->thicknessInX0();
         double thickness              = materialProperties->thickness();
         // calculate energy loss and multiple scattering
@@ -179,26 +180,26 @@ const Ats::TrackParameters* Ats::MaterialEffectsEngine::updateTrackParameters(co
             sigmaP *= thickness*pathCorrection;
             // calcuate the new momentum
             double newP = sqrt((E+dE)*(E+dE)-m*m);
-            uParameters[Ats::eQOP] = parameters.charge()/newP;
+            uParameters[Acts::eQOP] = parameters.charge()/newP;
             double sigmaDeltaE = thickness*pathCorrection*sigmaP;
             double sigmaQoverP = sigmaDeltaE/std::pow(beta*p,2);
             // update the covariance if needed
             if (uCovariance)
-    	       (*uCovariance)(Ats::eQOP, Ats::eQOP) += sign*sigmaQoverP*sigmaQoverP;
+    	       (*uCovariance)(Acts::eQOP, Acts::eQOP) += sign*sigmaQoverP*sigmaQoverP;
 	}
         // (B) - update the covariance if needed
         if (uCovariance && m_mscCorrection){
 	        /** multiple scattering as function of dInX0 */
 	        double sigmaMS = m_interactionFormulae.sigmaMS(thicknessInX0*pathCorrection, p, beta);    
-	        double sinTheta = sin(parameters.parameters()[Ats::eTHETA]);
+	        double sinTheta = sin(parameters.parameters()[Acts::eTHETA]);
 	        double sigmaDeltaPhiSq = sigmaMS*sigmaMS/(sinTheta*sinTheta);
 	        double sigmaDeltaThetaSq = sigmaMS*sigmaMS;
 	        // add or remove @TODO implement check for covariance matrix -> 0
-	        (*uCovariance)(Ats::ePHI,Ats::ePHI)      += sign*sigmaDeltaPhiSq;
-	        (*uCovariance)(Ats::eTHETA,Ats::eTHETA)  += sign*sigmaDeltaThetaSq;
+	        (*uCovariance)(Acts::ePHI,Acts::ePHI)      += sign*sigmaDeltaPhiSq;
+	        (*uCovariance)(Acts::eTHETA,Acts::eTHETA)  += sign*sigmaDeltaThetaSq;
         }
         // check if material filling was requested
-        if (eCell.checkConfigurationMode(Ats::ExtrapolationMode::CollectMaterial)){
+        if (eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectMaterial)){
 	        EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "collecting material of [t/X0] = " << thicknessInX0); 
 	        eCell.stepMaterial(*mSurface, mLayer, parameters.position(), pathCorrection, materialProperties);
         } else {
@@ -213,8 +214,8 @@ const Ats::TrackParameters* Ats::MaterialEffectsEngine::updateTrackParameters(co
         } else {
             EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "material update on initial parameters, creating new ones.");
             // create new parameters
-            const Ats::Surface& tSurface = parameters.associatedSurface();
-            const Ats::TrackParameters* tParameters = new Ats::BoundParameters(std::move(uCovariance),uParameters,tSurface);
+            const Acts::Surface& tSurface = parameters.associatedSurface();
+            const Acts::TrackParameters* tParameters = new Acts::BoundParameters(std::move(uCovariance),uParameters,tSurface);
 	      // these are newly created
 	      return tParameters;
         }

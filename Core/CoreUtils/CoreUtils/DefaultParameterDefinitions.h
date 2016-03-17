@@ -1,13 +1,13 @@
-#ifndef ATS_DEFAULTPARAMETERDEFINITIONS_H
-#define ATS_DEFAULTPARAMETERDEFINITIONS_H 1
+#ifndef ACTS_DEFAULTPARAMETERDEFINITIONS_H
+#define ACTS_DEFAULTPARAMETERDEFINITIONS_H 1
 
 // STL include(s)
 #include <cmath>
 
-// ATS include(s)
+// ACTS includes
 #include "CoreUtils/ParameterTypes.h"
 
-namespace Ats
+namespace Acts
 {
   enum ParDef : unsigned int
   {
@@ -69,6 +69,6 @@ namespace Ats
   {
     typedef unbound_parameter type;
   };
-}  // end of namespace Ats
+}  // end of namespace Acts
 
-#endif // ATS_DEFAULTPARAMETERDEFINITIONS_H
+#endif // ACTS_DEFAULTPARAMETERDEFINITIONS_H

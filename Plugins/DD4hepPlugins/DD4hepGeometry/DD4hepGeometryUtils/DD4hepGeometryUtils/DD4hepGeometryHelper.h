@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// DD4hepGeometryHelper.h, ATS project
+// DD4hepGeometryHelper.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_DD4HEPGEOMETRYTOOLS_DD4HEPGEOMETRYHELPER_H
-#define ATS_DD4HEPGEOMETRYTOOLS_DD4HEPGEOMETRYHELPER_H
+#ifndef ACTS_DD4HEPGEOMETRYTOOLS_DD4HEPGEOMETRYHELPER_H
+#define ACTS_DD4HEPGEOMETRYTOOLS_DD4HEPGEOMETRYHELPER_H
 
 // Core module
 #include "Algebra/AlgebraDefinitions.h"
@@ -16,11 +16,11 @@
 
 class MsgStream;
 
-namespace Add4hep {
+namespace Acts {
     
     /** @ class DD4hepGeometryHelper
      
-     Provides helper function to translate the DD4hep geometry into the ATS Tracking Geometry.
+     Provides helper function to translate the DD4hep geometry into the ACTS Tracking Geometry.
      
      @author julia.hrdinka@cern.ch
      */
@@ -35,10 +35,10 @@ namespace Add4hep {
         ~DD4hepGeometryHelper()
         {}
         /**helper method to extract the transformation matrix from a DD4hep DetElement*/
-        static std::shared_ptr<Ats::Transform3D> extractTransform(DD4hep::Geometry::DetElement& detElement);
+        static std::shared_ptr<Acts::Transform3D> extractTransform(DD4hep::Geometry::DetElement& detElement);
         /**helper method to extract the volume boundaries of a cylindrical volume*/
-        static std::shared_ptr<const Ats::VolumeBounds> extractVolumeBounds(DD4hep::Geometry::DetElement& detElement);
+        static std::shared_ptr<const Acts::VolumeBounds> extractVolumeBounds(DD4hep::Geometry::DetElement& detElement);
     };
 }
 
-#endif //ATS_DD4HEPGEOMETRYTOOLS_DD4HEPGEOMETRYHELPER_H
+#endif //ACTS_DD4HEPGEOMETRYTOOLS_DD4HEPGEOMETRYHELPER_H

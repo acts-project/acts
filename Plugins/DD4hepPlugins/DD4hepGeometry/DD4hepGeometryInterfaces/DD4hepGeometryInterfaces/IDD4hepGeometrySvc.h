@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// LayerArrayCreator.h, ATS project
+// LayerArrayCreator.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_DD4HEPGEOMETRYINTERFACES_IDD4HEPGEOMETRYSVC_H
-#define ATS_DD4HEPGEOMETRYINTERFACES_IDD4HEPGEOMETRYSVC_H 1
+#ifndef ACTS_DD4HEPGEOMETRYINTERFACES_IDD4HEPGEOMETRYSVC_H
+#define ACTS_DD4HEPGEOMETRYINTERFACES_IDD4HEPGEOMETRYSVC_H 1
 
 // Gaudi
 #include "GaudiKernel/IService.h" 
@@ -14,7 +14,7 @@ namespace DD4hep {
     }
 }
 
-namespace Add4hep {
+namespace Acts {
     
     static const InterfaceID IID_IDD4hepGeometrySvc("IDD4hepGeometrySvc", 1, 0);
     
@@ -41,4 +41,4 @@ namespace Add4hep {
     };
 }
 
-#endif //ATS_DD4HEPGEOMETRYINTERFACES_IDD4HEPGEOMETRYSVC_H
+#endif //ACTS_DD4HEPGEOMETRYINTERFACES_IDD4HEPGEOMETRYSVC_H

@@ -1,12 +1,12 @@
 ///////////////////////////////////////////////////////////////////
-// StaticEngine.h, ATS project
+// StaticEngine.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATS_EXTRAPOLATIONENGING_STATICENGINE_H
-#define ATS_EXTRAPOLATIONENGING_STATICENGINE_H 1
+#ifndef ACTS_EXTRAPOLATIONENGING_STATICENGINE_H
+#define ACTS_EXTRAPOLATIONENGING_STATICENGINE_H 1
 
-#ifndef ATS_EXTRAPOLATIONENINGE_OUTPUTHELPER 
-#define ATS_EXTRAPOLATIONENINGE_OUTPUTHELPER 1
+#ifndef ACTS_EXTRAPOLATIONENINGE_OUTPUTHELPER 
+#define ACTS_EXTRAPOLATIONENINGE_OUTPUTHELPER 1
 #define OH_CHECKFOUND(object) ( object ? "found" : "not found")
 #endif
 
@@ -25,7 +25,7 @@
 #include "TrackParameters/TrackParameters.h"
 #include "NeutralParameters/NeutralParameters.h"
 
-namespace Ats {
+namespace Acts {
 
     
   /** @class StaticEngine
@@ -41,7 +41,7 @@ namespace Ats {
     @author Andreas.Salzburger -at- cern.ch
   
   */
-  class StaticEngine : public Ats::ServiceBase, virtual public IExtrapolationEngine {
+  class StaticEngine : public Acts::ServiceBase, virtual public IExtrapolationEngine {
 
       public:
           
@@ -110,7 +110,7 @@ namespace Ats {
 
         /** main sub structure layer handling */                                                  
         template <class T> ExtrapolationCode resolveLayerT(ExtrapolationCell<T>& eCell,
-                                                           const Ats::Surface* sf,
+                                                           const Acts::Surface* sf,
                                                            PropDirection dir=alongMomentum,
                                                            const BoundaryCheck& bcheck = true,
                                                            bool hasSubStructure = false,
@@ -130,7 +130,7 @@ namespace Ats {
     };
 
   inline GeometryType StaticEngine::geometryType() const 
-      { return Ats::Static; }
+      { return Acts::Static; }
 
 
 } // end of namespace
@@ -138,5 +138,5 @@ namespace Ats {
 //!< define the templated function    
 #include "StaticEngine.icc"  
 
-#endif // ATS_EXTRAPOLATIONENGING_STATICENGINE_H
+#endif // ACTS_EXTRAPOLATIONENGING_STATICENGINE_H
 
