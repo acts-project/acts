@@ -7,7 +7,7 @@
 // Extrapolation module
 #include "ExtrapolationEngine/StaticNavigationEngine.h"
 
-DEDECLARE_SERVICE_FACTORY(Acts::StaticNavigationEngine)
+DECLARE_SERVICE_FACTORY(Acts::StaticNavigationEngine)
 
 // constructor
 Acts::StaticNavigationEngine::StaticNavigationEngine(const std::string& name, ISvcLocator* svc) :
