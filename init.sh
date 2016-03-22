@@ -3,6 +3,7 @@ export EIGEN=/afs/cern.ch/sw/lcg/releases/eigen/3.2.7-292e1/x86_64-slc6-gcc49-op
 export GAUDI=/afs/cern.ch/sw/Gaudi/releases/GAUDI/GAUDI_v26r4/cmake
 
 source /afs/cern.ch/lhcb/software/releases/LBSCRIPTS/LBSCRIPTS_v8r4p3/InstallArea/scripts/LbLogin.sh --cmtconfig x86_64-slc6-gcc49-opt
+#source /afs/cern.ch/sw/lcg/views/LCG_83/x86_64-slc6-gcc49-opt/setup.sh
 
 export CMAKE_PREFIX_PATH=$GAUDI:ATS/cmake
 
