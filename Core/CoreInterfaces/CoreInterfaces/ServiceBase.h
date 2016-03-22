@@ -28,7 +28,12 @@ namespace Acts {
                 ::Service(name, pSvcLocator),
                 MsgBase(msgSvc(), name)
             {}
-               
+        
+        virtual StatusCode initialize() override
+        {
+            return ::Service::initialize();
+        }
+        
             /** Virtual Destructor */   
       	    virtual ~ServiceBase() {}
     };

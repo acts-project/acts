@@ -25,7 +25,7 @@
 #include "GenericGeometryTools/GenericLayerBuilder.h"
 #include "GenericDetectorElement/GenericDetectorElement.h"
 
-DECLARE_COMPONENT(Acts::GenericLayerBuilder)
+DECLARE_TOOL_FACTORY(Acts::GenericLayerBuilder)
 
 // constructor
 Acts::GenericLayerBuilder::GenericLayerBuilder(const std::string& t, const std::string& n, const IInterface* p) :
@@ -95,6 +95,8 @@ Acts::GenericLayerBuilder::~GenericLayerBuilder()
 StatusCode Acts::GenericLayerBuilder::initialize()
 {
     MSG_DEBUG( "initialize()" );
+    //Tool needs to be initialized
+    if (!AlgToolBase::initialize()) return StatusCode::FAILURE;
     
     // retrieve the passive layer builders if there
     RETRIEVE_NONEMPTY_FATAL(m_centralPassiveLayerBuilder);

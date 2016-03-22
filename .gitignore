@@ -24,3 +24,6 @@ build*
 # =====================
 doc/*
 !doc/doxygen.config
+
+#json output
+*.json

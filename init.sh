@@ -1,10 +1,19 @@
 export ATS=$PWD
 export EIGEN=/afs/cern.ch/sw/lcg/releases/eigen/3.2.7-292e1/x86_64-slc6-gcc49-opt/logs
-export GAUDI=/afs/cern.ch/sw/Gaudi/releases/GAUDI/GAUDI_v26r4/cmake
-
-source /afs/cern.ch/lhcb/software/releases/LBSCRIPTS/LBSCRIPTS_v8r4p3/InstallArea/scripts/LbLogin.sh --cmtconfig x86_64-slc6-gcc49-opt
-
-export CMAKE_PREFIX_PATH=$GAUDI:ATS/cmake
-
-export CMTPROJECTPATH=/afs/cern.ch/exp/fcc/sw/0.5/
+# CMTCONFIG to define platform + build-type (opt vs dbg)
+export CMTCONFIG=x86_64-slc6-gcc49-opt
+# CMTPROJECTPATH as additional search path for heptools
+export CMTPROJECTPATH=/afs/cern.ch/sw/Gaudi/releases:/afs/cern.ch/sw/lcg/releases:/afs/cern.ch/sw/lcg/app/releases
+# set up the compiler
 source /afs/cern.ch/sw/lcg/contrib/gcc/4.9.3/x86_64-slc6/setup.sh
+
+# should you need anything in addition to Eigen and Gaudi, you can set up the LCG stack with this:
+# NOTE that there is a bug in the setup script that prevents it to work with zsh.
+# source /afs/cern.ch/sw/lcg/views/LCG_83/x86_64-slc6-gcc49-opt/setup.sh
+
+# Either you use the cmake dir from LHCb which has all the package configs for heptools:
+# export CMAKE_PREFIX_PATH=$ATS/cmake:/afs/cern.ch/lhcb/software/releases/LBSCRIPTS/LBSCRIPTS_v8r5p7/LbUtils/cmake:$CMAKE_PREFIX_PATH
+# Or you explicitly set the prefix path for the Gaudi version you are using (has to be synchronised with the main CMakeLists.txt):
+export CMAKE_PREFIX_PATH=$ATS/cmake:/afs/cern.ch/sw/Gaudi/releases/GAUDI/GAUDI_v27r0/cmake:$CMAKE_PREFIX_PATH
+
+# export CMTPROJECTPATH=/afs/cern.ch/exp/fcc/sw/0.5/

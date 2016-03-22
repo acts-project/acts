@@ -12,6 +12,8 @@
 #include <sstream>
 #include <boost/lexical_cast.hpp>
 
+DECLARE_TOOL_FACTORY(Acts::ParametersJsonWriter)
+
 // constructor
 Acts::ParametersJsonWriter::ParametersJsonWriter(const std::string& t, const std::string& n, const IInterface* p) : 
   Acts::AlgToolBase(t,n,p),
@@ -44,6 +46,8 @@ Acts::ParametersJsonWriter::~ParametersJsonWriter()
 
 StatusCode Acts::ParametersJsonWriter::initialize()
 {
+    //Tool needs to be initialized
+    if (!AlgToolBase::initialize()) return StatusCode::FAILURE;
     return openFile();    
 }
 
