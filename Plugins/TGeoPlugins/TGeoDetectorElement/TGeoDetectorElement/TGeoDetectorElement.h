@@ -27,7 +27,7 @@ namespace Acts {
     public:
         /** Constructor  */
         TGeoDetectorElement(const Identifier& identifier,
-                            TGeoShape* tGeoDetElement, std::shared_ptr<const Acts::Transform3D> motherTransform = nullptr);
+                            TGeoNode* tGeoDetElement, std::shared_ptr<const Acts::Transform3D> motherTransform = nullptr);
         
         /**  Destructor */
         virtual ~TGeoDetectorElement();
@@ -79,7 +79,7 @@ namespace Acts {
     private:
         
         /**DD4hep detector element*/
-        TGeoShape*                                          m_detElement;
+        TGeoNode*                                            m_detElement;
         /**Transformation of the detector element*/
         std::shared_ptr<Acts::Transform3D>                   m_transform;
         /**Center position of the detector element*/
@@ -87,7 +87,7 @@ namespace Acts {
         /**Normal vector to the detector element*/
         mutable std::shared_ptr<const Acts::Vector3D>        m_normal;
         /**Identifier of the detector element*/
-        const Identifier                                    m_identifier;
+        const Identifier                                     m_identifier;
         /**Boundaries of the detector element*/
         std::shared_ptr<const Acts::SurfaceBounds>           m_bounds;
         /**Corresponding Surface*/

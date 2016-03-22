@@ -7,27 +7,29 @@
 #include "TGeoBBox.h"
 #include "TGeoTrd2.h"
 
+#include <iostream>
+
 
 Acts::TGeoDetectorElement::TGeoDetectorElement(const Identifier& identifier,
-                TGeoShape* tGeoDetElement, std::shared_ptr<const Acts::Transform3D> motherTransform) :
+                TGeoNode* tGeoDetElement, std::shared_ptr<const Acts::Transform3D> motherTransform) :
 Acts::DetectorElementBase(),
 m_detElement(tGeoDetElement),
 m_identifier(identifier),
 m_neighbours()
 {
     //get the placement and orientation in respect to its mother
-    const Double_t* rotation    = (m_detElement->GetTransform()->GetRotationMatrix());
-    const Double_t* translation = (m_detElement->GetTransform()->GetTranslation());
+    const Double_t* rotation    = (m_detElement->GetMatrix()->GetRotationMatrix());
+    const Double_t* translation = (m_detElement->GetMatrix()->GetTranslation());
     auto transform = std::make_shared<Acts::Transform3D>(Acts::Vector3D(rotation[0],rotation[3],rotation[6]),Acts::Vector3D(rotation[1],rotation[4],rotation[7]),Acts::Vector3D(rotation[2],rotation[5],rotation[8]), Acts::Vector3D(translation[0],translation[1], translation[2]));
     //now calculate the global transformation
     if (motherTransform) (*transform) = (*motherTransform)*(*transform);
     m_transform  = transform;
     //currently only surfaces with rectangular or trapezoidal shape implemented
-    TGeoBBox* box       = dynamic_cast<TGeoBBox*>(tGeoDetElement);
-    TGeoTrd2* trapezoid = dynamic_cast<TGeoTrd2*>(tGeoDetElement);
+    TGeoBBox* box       = dynamic_cast<TGeoBBox*>(m_detElement->GetVolume()->GetShape());
+    TGeoTrd2* trapezoid = dynamic_cast<TGeoTrd2*>(m_detElement->GetVolume()->GetShape());
     if (trapezoid) {
         //extract the surface bounds
-        auto trapezoidBounds = std::make_shared<const Acts::TrapezoidBounds>(trapezoid->GetDx1(),trapezoid->GetDx2(),trapezoid->GetDz());
+        auto trapezoidBounds = std::make_shared<const Acts::TrapezoidBounds>(trapezoid->GetDx1(),trapezoid->GetDx2(),trapezoid->GetDy1());
         m_bounds = trapezoidBounds;
         m_surface = std::make_shared<const Acts::PlaneSurface>(transform,trapezoidBounds);
     }

@@ -56,13 +56,13 @@ namespace Acts {
         
     private:
         /** Handle to the service providing the DD4hep geometry */
-        ServiceHandle<IDD4hepGeometrySvc>           m_DD4hepGeometrySvc;
+        ServiceHandle<IDD4hepGeometrySvc>            m_DD4hepGeometrySvc;
         /** Handle yo the volume building tool */
         ToolHandle<Acts::ITrackingVolumeBuilder>     m_volumeBuilder;
         /** Handle to the tool helping to build the tracking volumes */
         ToolHandle<Acts::ITrackingVolumeHelper>      m_volumeHelper;
         /** Helper class to build layers */
-        DD4hepLayerHelper*                          m_layerHelper;
+        DD4hepLayerHelper*                           m_layerHelper;
         
     };
 }

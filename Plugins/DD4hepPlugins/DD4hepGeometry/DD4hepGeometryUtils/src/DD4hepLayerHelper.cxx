@@ -17,11 +17,15 @@
 #include "Surfaces/TrapezoidBounds.h"
 #include "Detector/CylinderLayer.h"
 #include "Detector/DiscLayer.h"
+#include "Volumes/Volume.h"
 
 Acts::DD4hepLayerHelper::DD4hepLayerHelper() :
 m_negativeLayers(nullptr),
 m_centralLayers(nullptr),
-m_positiveLayers(nullptr)
+m_positiveLayers(nullptr),
+m_barrelVolume(nullptr),
+m_nEndcapVolume(nullptr),
+m_pEndcapVolume(nullptr)
 {}
 
 Acts::DD4hepLayerHelper::~DD4hepLayerHelper()
@@ -29,14 +33,28 @@ Acts::DD4hepLayerHelper::~DD4hepLayerHelper()
 
 const Acts::LayerTriple* Acts::DD4hepLayerHelper::createLayerTriple(DD4hep::Geometry::DetElement& motherDetElement)
 {
+    m_negativeLayers  = nullptr;
+    m_centralLayers   = nullptr;
+    m_positiveLayers  = nullptr;
+    m_barrelVolume    = nullptr;
+    m_nEndcapVolume   = nullptr;
+    m_pEndcapVolume   = nullptr;
     constructLayers(motherDetElement);
+    if (m_negativeLayers->empty()){
+       m_negativeLayers = nullptr;
+    }
+    if (m_centralLayers->empty()) {
+        m_centralLayers  = nullptr;
+    }
+    if (m_positiveLayers->empty()) {
+        m_positiveLayers = nullptr;
+    }
     return (new Acts::LayerTriple(m_negativeLayers,m_centralLayers,m_positiveLayers));
 }
 
 void Acts::DD4hepLayerHelper::constructLayers(DD4hep::Geometry::DetElement& detElement)
 {
     if(detElement.type()=="compound") {
-        //MSG_DEBUG( "Detector element type: compound" );
         //create tracking volume of compound type
         const DD4hep::Geometry::DetElement::Children& compoundChildren = detElement.children();
         for(auto& compoundChild : compoundChildren) {
@@ -46,11 +64,11 @@ void Acts::DD4hepLayerHelper::constructLayers(DD4hep::Geometry::DetElement& detE
             //distinguish between TGeoConeSeg used as a cylinder (barrel) and as a disc (end caps)
             Acts::IDetExtension* detExtension = compoundDetElement.extension<Acts::IDetExtension>();
             //create disc layers in case of a disc volume, otherwise create cylindrical layers
-            detExtension->shape()==Acts::ShapeType::Disc ? createDiscLayers(compoundDetElement, transform) : createCylinderLayers(compoundDetElement,transform);
+            (detExtension->shape()==Acts::ShapeType::Disc) ? createDiscLayers(compoundDetElement,transform)
+                : createCylinderLayers(compoundDetElement, transform);
         } //compoundchildren
     } //compoundtype
     else {
-        //MSG_DEBUG( "Detector element type: supporting structure" );
         //support structure
         std::shared_ptr<Acts::Transform3D> transform(Acts::DD4hepGeometryHelper::extractTransform(detElement));
         //create cylindrical layers
@@ -58,87 +76,82 @@ void Acts::DD4hepLayerHelper::constructLayers(DD4hep::Geometry::DetElement& detE
     }
 }
 
-void Acts::DD4hepLayerHelper::createCylinderLayers(DD4hep::Geometry::DetElement& motherDetElement, std::shared_ptr<const Acts::Transform3D> motherTransform) const
+void Acts::DD4hepLayerHelper::createCylinderLayers(DD4hep::Geometry::DetElement& motherDetElement, std::shared_ptr<Acts::Transform3D> motherTransform)
 {
+    m_barrelVolume = std::make_shared<const Volume>(motherTransform,Acts::DD4hepGeometryHelper::extractVolumeBounds(motherDetElement));
     //get possible layers
     const  DD4hep::Geometry::DetElement::Children& children = motherDetElement.children();
     //check if volume has layers
-    if (children.empty()) {
-        //MSG_DEBUG("Empty volume - without layers");
-       // return StatusCode::SUCCESS;
-    }
-    //go through layers
-    for (auto& child : children) {
-        //get the detector element of the layer
-        DD4hep::Geometry::DetElement detElement = child.second;
-        //get the placement and orientation in respect to its mother
-        std::shared_ptr<Acts::Transform3D> transform = Acts::DD4hepGeometryHelper::extractTransform(detElement);
-        //make the transformation global
-        (*transform) = (*motherTransform)*(*transform);
-        //get the shape of the layer
-        TGeoShape* geoShape = detElement.placement().ptr()->GetVolume()->GetShape();
-        TGeoConeSeg* tube = dynamic_cast<TGeoConeSeg*>(geoShape);
-        if (!tube) {
-            throw GaudiException( "Cylinder layer has wrong shape - needs to be TGeoConeSeg!", "FATAL", StatusCode::FAILURE );
-        }
-        //extract the boundaries
-        double halfZ = tube->GetDz();
-        double zPos  = transform->translation().z();
-        auto cylinderBounds = std::make_shared<const Acts::CylinderBounds>(0.5*(tube->GetRmin1()+tube->GetRmax1()),halfZ);
-        double thickness = fabs(tube->GetRmax2()-tube->GetRmin1());
-        //if necessary receive the modules contained by the layer and create the layer, otherwise create an empty layer
-        const DD4hep::Geometry::DetElement::Children& layerChildren = detElement.children();
-        if (layerChildren.empty()) {
-            m_centralLayers->push_back(Acts::CylinderLayer::create(transform,cylinderBounds,nullptr,thickness,nullptr,nullptr,Acts::passive));
-            //MSG_DEBUG("Created empty (without surfaces) CylinderLayer with radius: " << 0.5*(tube->GetRmin1()+tube->GetRmax1()) << " , half length in Z: " << halfZ << " and thickness " << thickness << " at Z position: " << zPos );
-        }
-        else {
-            //create surfaces binned in phi and z
-            Acts::SurfaceArray* surfaceArray = createCylinderBinnedSurfaceArray(detElement,transform,zPos-halfZ,zPos+halfZ);
-            m_centralLayers->push_back(Acts::CylinderLayer::create(transform,cylinderBounds,surfaceArray,thickness,nullptr,nullptr,Acts::active));
-            //MSG_DEBUG("Created CylinderLayer (with surfaces) with radius: " << 0.5*(tube->GetRmin1()+tube->GetRmax1()) << " , half length in Z: " << halfZ << " and thickness " << thickness << " at Z position: " << zPos );
-        }
-    } //for children
+    if (children.empty()) m_centralLayers = nullptr;
+    else {
+        m_centralLayers = new Acts::LayerVector();
+        //go through layers
+        for (auto& child : children) {
+            //get the detector element of the layer
+            DD4hep::Geometry::DetElement detElement = child.second;
+            //get the placement and orientation in respect to its mother
+            std::shared_ptr<Acts::Transform3D> transform = Acts::DD4hepGeometryHelper::extractTransform(detElement);
+            //make the transformation global
+            (*transform) = (*motherTransform)*(*transform);
+            //get the shape of the layer
+            TGeoShape* geoShape = detElement.placement().ptr()->GetVolume()->GetShape();
+            TGeoConeSeg* tube = dynamic_cast<TGeoConeSeg*>(geoShape);
+            if (!tube) {
+                throw GaudiException( "Cylinder layer has wrong shape - needs to be TGeoConeSeg!", "FATAL", StatusCode::FAILURE );
+            }
+            //extract the boundaries
+            double halfZ = tube->GetDz();
+            double zPos  = transform->translation().z();
+            auto cylinderBounds = std::make_shared<const Acts::CylinderBounds>(0.5*(tube->GetRmin1()+tube->GetRmax1()),halfZ);
+            double thickness = fabs(tube->GetRmax2()-tube->GetRmin1());
+            //if necessary receive the modules contained by the layer and create the layer, otherwise create an empty layer
+            const DD4hep::Geometry::DetElement::Children& layerChildren = detElement.children();
+            if (layerChildren.empty()) m_centralLayers->push_back(Acts::CylinderLayer::create(transform,cylinderBounds,nullptr,thickness,nullptr,nullptr,Acts::passive));
+            else {
+                //create surfaces binned in phi and z
+                Acts::SurfaceArray* surfaceArray = createCylinderBinnedSurfaceArray(detElement,transform,zPos-halfZ,zPos+halfZ);
+                m_centralLayers->push_back(Acts::CylinderLayer::create(transform,cylinderBounds,surfaceArray,thickness,nullptr,nullptr,Acts::active));
+            }
+        } //for children
+    } //volume has layers
 }
 
-void Acts::DD4hepLayerHelper::createDiscLayers(DD4hep::Geometry::DetElement& motherDetElement, std::shared_ptr<const Acts::Transform3D> motherTransform) const
+void Acts::DD4hepLayerHelper::createDiscLayers(DD4hep::Geometry::DetElement& motherDetElement, std::shared_ptr< Acts::Transform3D> motherTransform)
 {
+    (motherTransform->translation().z()<0.) ? (m_nEndcapVolume = std::make_shared<const Volume>(motherTransform,Acts::DD4hepGeometryHelper::extractVolumeBounds(motherDetElement))) : (m_pEndcapVolume = std::make_shared<const Volume>(motherTransform,Acts::DD4hepGeometryHelper::extractVolumeBounds(motherDetElement)));
+    if (!m_negativeLayers) m_negativeLayers = new Acts::LayerVector;
+    if (!m_positiveLayers) m_positiveLayers = new Acts::LayerVector;
     //get possible layers
     const  DD4hep::Geometry::DetElement::Children& children = motherDetElement.children();
     //check if volume has layers
-    if (children.empty()) {
-        //MSG_DEBUG("Empty volume - without layers");
-       // return StatusCode::SUCCESS;
-    }
-    for (auto& child : children) {
-        //get the detector element of the layer
-        DD4hep::Geometry::DetElement detElement = child.second;
-        //get the placement and orientation in respect to its mother
-        std::shared_ptr<Acts::Transform3D> transform = Acts::DD4hepGeometryHelper::extractTransform(detElement);
-        //make the transformation global
-        (*transform) = (*motherTransform)*(*transform);
-        //get the shape of the layer
-        TGeoShape* geoShape = detElement.placement().ptr()->GetVolume()->GetShape();
-        TGeoConeSeg* disc = dynamic_cast<TGeoConeSeg*>(geoShape);
-        if (!disc) {
-            throw GaudiException( "Cylinder layer has wrong shape - needs to be TGeoConeSeg!", "FATAL", StatusCode::FAILURE  );
-        }
-        //extract the boundaries
-        auto discBounds  = std::make_shared<const Acts::RadialBounds>(disc->GetRmin1(),disc->GetRmax1());
-        double thickness = 2.*disc->GetDz();
-        //if necessary receive the modules contained by the layer and create the layer, otherwise create empty layer
-        const DD4hep::Geometry::DetElement::Children& layerChildren = detElement.children();
-        if (layerChildren.empty()) {
-            (transform->translation().z()<0.) ? m_negativeLayers->push_back(Acts::DiscLayer::create(transform,discBounds,nullptr,thickness,nullptr,nullptr,Acts::passive)) : m_positiveLayers->push_back(Acts::DiscLayer::create(transform,discBounds,nullptr,thickness,nullptr,nullptr,Acts::passive));
-            //MSG_DEBUG("Created empty (withour surfaces) DiscLayer with bounds radius: " << 0.5*(disc->GetRmin1()+disc->GetRmax1()) << " and thickness: " << thickness);
-        }
-        else {
-            //create surfaces binned in phi and r
-            Acts::SurfaceArray* surfaceArray = createDiscBinnedSurfaceArray(detElement,transform);
-            (transform->translation().z()<0.) ? m_negativeLayers->push_back(Acts::DiscLayer::create(transform,discBounds,surfaceArray,thickness,nullptr,nullptr,Acts::active)) : m_positiveLayers->push_back(Acts::DiscLayer::create(transform,discBounds,surfaceArray,thickness,nullptr,nullptr,Acts::active));
-            //MSG_DEBUG("Created DiscLayer (with surfaces) with bounds radius: " << 0.5*(disc->GetRmin1()+disc->GetRmax1()) << " and thickness: " << thickness);
-        }
-    } //for children
+    if (children.empty()) (motherTransform->translation().z()<0.) ? m_negativeLayers = nullptr : m_positiveLayers = nullptr;
+    else {
+        for (auto& child : children) {
+            //get the detector element of the layer
+            DD4hep::Geometry::DetElement detElement = child.second;
+            //get the placement and orientation in respect to its mother
+            std::shared_ptr<Acts::Transform3D> transform = Acts::DD4hepGeometryHelper::extractTransform(detElement);
+            //make the transformation global
+            (*transform) = (*motherTransform)*(*transform);
+            //get the shape of the layer
+            TGeoShape* geoShape = detElement.placement().ptr()->GetVolume()->GetShape();
+            TGeoConeSeg* disc = dynamic_cast<TGeoConeSeg*>(geoShape);
+            if (!disc) {
+                throw GaudiException( "Cylinder layer has wrong shape - needs to be TGeoConeSeg!", "FATAL", StatusCode::FAILURE  );
+            }
+            //extract the boundaries
+            auto discBounds  = std::make_shared<const Acts::RadialBounds>(disc->GetRmin1(),disc->GetRmax1());
+            double thickness = 2.*disc->GetDz();
+            //if necessary receive the modules contained by the layer and create the layer, otherwise create empty layer
+            const DD4hep::Geometry::DetElement::Children& layerChildren = detElement.children();
+            if (layerChildren.empty()) (motherTransform->translation().z()<0.) ? m_negativeLayers->push_back(Acts::DiscLayer::create(transform,discBounds,nullptr,thickness,nullptr,nullptr,Acts::passive)) : m_positiveLayers->push_back(Acts::DiscLayer::create(transform,discBounds,nullptr,thickness,nullptr,nullptr,Acts::passive));
+            else {
+                //create surfaces binned in phi and r
+                Acts::SurfaceArray* surfaceArray = createDiscBinnedSurfaceArray(detElement,transform);
+                (motherTransform->translation().z()<0.) ? m_negativeLayers->push_back(Acts::DiscLayer::create(transform,discBounds,surfaceArray,thickness,nullptr,nullptr,Acts::active)) : m_positiveLayers->push_back(Acts::DiscLayer::create(transform,discBounds,surfaceArray,thickness,nullptr,nullptr,Acts::active));
+            }
+        } //for children
+    } //volume has layers
 }
 
 //Surface arrays for cylindrical layers (e.g. end caps) binned in z and phi
@@ -185,6 +198,7 @@ Acts::SurfaceArray* Acts::DD4hepLayerHelper::createCylinderBinnedSurfaceArray(DD
                      );
     size_t binsZ = keys_dedupZ.size();
     //create the 2D bin utility
+
     Acts::BinUtility* binUtility = new Acts::BinUtility(binsPhi,minPhiCorrected,maxPhiCorrected,Acts::closed,Acts::binPhi);
     (*binUtility) += Acts::BinUtility(binsZ,Zmin,Zmax,Acts::open,Acts::binZ);
     //create the binned array of surfaces

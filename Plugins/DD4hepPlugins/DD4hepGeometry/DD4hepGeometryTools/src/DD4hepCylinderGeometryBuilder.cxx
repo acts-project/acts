@@ -17,7 +17,6 @@ m_volumeBuilder("Acts::CylinderVolumeBuilder"),
 m_volumeHelper("Acts::CylinderVolumeHelper"),
 m_layerHelper(new Acts::DD4hepLayerHelper())
 {
-  MSG_INFO("DD4HEPCYLINDERGEOMETRYBUILDER CONSTRZCTOR");
     declareInterface<ITrackingGeometryBuilder>(this);
     declareProperty("DD4hepGeometrySvc", m_DD4hepGeometrySvc);
 }
@@ -31,9 +30,13 @@ Acts::DD4hepCylinderGeometryBuilder::~DD4hepCylinderGeometryBuilder()
 StatusCode Acts::DD4hepCylinderGeometryBuilder::initialize()
 {
     // screen output in debug mode
-    MSG_INFO( "initialize()" );
+    MSG_DEBUG( "initialize()" );
     //retrieve the Service providing the DD4hep geometry
     RETRIEVE_FATAL(m_DD4hepGeometrySvc);
+    //retrieve the VolumeBuilder
+    RETRIEVE_FATAL(m_volumeBuilder);
+    //retrieve the VolumeHelper
+    RETRIEVE_FATAL(m_volumeHelper);
     return StatusCode::SUCCESS;
 }
 
@@ -57,7 +60,7 @@ Acts::TrackingGeometry* Acts::DD4hepCylinderGeometryBuilder::trackingGeometry() 
     std::vector<DD4hep::Geometry::DetElement> detElements;
     const DD4hep::Geometry::DetElement::Children& children = detWorld.children();
     for (auto& detElement : children) detElements.push_back(detElement.second);
-    //sort by id to build detector from bottom to top - new convention
+    //sort by id to build detector from bottom to top
     sort(detElements.begin(),detElements.end(),
          [](const DD4hep::Geometry::DetElement& a,
             const DD4hep::Geometry::DetElement& b) {
@@ -74,7 +77,8 @@ Acts::TrackingGeometry* Acts::DD4hepCylinderGeometryBuilder::trackingGeometry() 
         }
         else {
         // assign a new highest volume (and potentially wrap around the given highest volume so far)
-            highestVolume = m_volumeBuilder->trackingVolume(highestVolume,nullptr,m_layerHelper->createLayerTriple(detElement));
+            const LayerTriple* layerTriple = m_layerHelper->createLayerTriple(detElement);
+            highestVolume = m_volumeBuilder->trackingVolume(highestVolume,Acts::DD4hepGeometryHelper::extractVolumeBounds(detElement),layerTriple,m_layerHelper->volumeTriple());
         }
     }
     // if you have a highest volume, stuff it into a TrackingGeometry
