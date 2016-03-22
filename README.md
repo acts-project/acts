@@ -16,5 +16,5 @@ The library is attempted to build against Gaudi and Gaudi-Athena, while
 additional external dependencies are kept at a minimum.
 
 
-Please visit our [Wiki](https://gitlab.cern.ch/ats/a-tracking-sw/wikis/home) for more information.
+Please visit our [Wiki](https://gitlab.cern.ch/acts/a-common-tracking-sw/wikis/home) for more information.
 
