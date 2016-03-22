@@ -46,7 +46,6 @@ StatusCode Acts::TrackingGeometryTest::finalize()
 StatusCode Acts::TrackingGeometryTest::execute()
 {
     MSG_VERBOSE("Running the TrackingGeometryTest");
-    
     // ------------------------------- get the trackingGeometry at first place
     if (!m_trackingGeometry) {
         m_trackingGeometry = m_trackingGeometrySvc->trackingGeometry();

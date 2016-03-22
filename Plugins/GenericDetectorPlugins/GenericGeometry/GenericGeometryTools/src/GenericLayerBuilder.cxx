@@ -781,13 +781,13 @@ StatusCode Acts::GenericLayerBuilder::constructLayers()
              } else {
                  // approach surface material
                  // get the approach descriptor - at this stage we know that the approachDescriptor exists
-                 auto nApproachSurfaces = pLayer->approachDescriptor()->containedSurfaces();
+                 auto nApproachSurfaces = nLayer->approachDescriptor()->containedSurfaces();
                  auto pApproachSurfaces = pLayer->approachDescriptor()->containedSurfaces();
                  if (m_posnegLayerMaterialConcentration[ipnl] > 0.){
-                     nApproachSurfaces[1]->setSurfaceMaterial(layerMaterialPtr);
+                     nApproachSurfaces[0]->setSurfaceMaterial(layerMaterialPtr);
                      pApproachSurfaces[1]->setSurfaceMaterial(layerMaterialPtr);
                  } else {
-                     nApproachSurfaces[0]->setSurfaceMaterial(layerMaterialPtr);
+                     nApproachSurfaces[1]->setSurfaceMaterial(layerMaterialPtr);
                      pApproachSurfaces[0]->setSurfaceMaterial(layerMaterialPtr);
                  }
              }
