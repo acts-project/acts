@@ -9,7 +9,7 @@
 // Geometry module
 #include "GeometryUtils/GeometrySignature.h"
 
-DECLARE_COMPONENT(Acts::ExtrapolationEngine)
+DECLARE_SERVICE_FACTORY(Acts::ExtrapolationEngine)
 
 // constructor
 Acts::ExtrapolationEngine::ExtrapolationEngine(const std::string& name, ISvcLocator* svc)
@@ -57,6 +57,8 @@ StatusCode Acts::ExtrapolationEngine::queryInterface(const InterfaceID& riid, vo
 StatusCode Acts::ExtrapolationEngine::initialize()
 {            
     MSG_DEBUG("initialize()");
+    //Service needs to be initialized
+    if (!ServiceBase::initialize()) return StatusCode::FAILURE;
     // retrieve the tracking geometry servcie - crucial, abort when it can not be retrieved
     RETRIEVE_FATAL(m_trackingGeometrySvc);
     m_trackingGeometryName = m_trackingGeometrySvc->trackingGeometryName();    
