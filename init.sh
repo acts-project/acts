@@ -9,7 +9,7 @@ source /afs/cern.ch/sw/lcg/contrib/gcc/4.9.3/x86_64-slc6/setup.sh
 
 # should you need anything in addition to Eigen and Gaudi, you can set up the LCG stack with this:
 # NOTE that there is a bug in the setup script that prevents it to work with zsh.
-# source /afs/cern.ch/sw/lcg/views/LCG_83/x86_64-slc6-gcc49-opt/setup.sh
+source /afs/cern.ch/sw/lcg/views/LCG_83/x86_64-slc6-gcc49-opt/setup.sh
 
 # Either you use the cmake dir from LHCb which has all the package configs for heptools:
 # export CMAKE_PREFIX_PATH=$ATS/cmake:/afs/cern.ch/lhcb/software/releases/LBSCRIPTS/LBSCRIPTS_v8r5p7/LbUtils/cmake:$CMAKE_PREFIX_PATH

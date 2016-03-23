@@ -71,7 +71,7 @@ StatusCode Acts::RungeKuttaEngine::initialize()
   MSG_DEBUG("initialize()");
   //Service needs to be initialized
   if (!ServiceBase::initialize()) return StatusCode::FAILURE;
-  // retrieve the tracking geometry servcie - crucial, abort when it can not be retrieved
+  // retrieve the tracking magnetic field - crucial, abort when it can not be retrieved
   RETRIEVE_FATAL(m_fieldService);
   return StatusCode::SUCCESS;
 }

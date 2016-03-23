@@ -6,6 +6,7 @@ Acts::ConstMagneticFieldSvc::ConstMagneticFieldSvc(const std::string& name, ISvc
 Acts::ServiceBase(name,svc),
 m_magField(0.)
 {
+    MSG_INFO("ConstMagneticFieldSvc Constructor");
     declareProperty("MagneticFieldValue",m_magField);
 }
 
@@ -14,7 +15,7 @@ Acts::ConstMagneticFieldSvc::~ConstMagneticFieldSvc()
 
 StatusCode Acts::ConstMagneticFieldSvc::initialize()
 {
-    MSG_DEBUG("initilaize()");
+    MSG_INFO("initilaize() ConstMagneticFieldSvc");
     //Service needs to be initialized
     if (!ServiceBase::initialize()) return StatusCode::FAILURE;
     return StatusCode::SUCCESS;
@@ -39,11 +40,17 @@ StatusCode Acts::ConstMagneticFieldSvc::queryInterface(const InterfaceID& riid, 
 }
 
 void Acts::ConstMagneticFieldSvc::getField(const double *, double* bxyz,double *deriv) {
-    for (int i=0; i<3; i++) bxyz[i]  = m_magField;
-    for (int i=0; i<9; i++) deriv[i] = 0.;
+    //return on every point the same field value
+    if (bxyz) for (int i=0; i<3; i++) bxyz[i]  = m_magField;
+    else MSG_ERROR("Can not fill magnetic field, magnetic field pointer is nullptr");
+    //if derivatives are asked return them
+    if (deriv) for (int i=0; i<9; i++) deriv[i] = 0.;
 }
 
 void Acts::ConstMagneticFieldSvc::getFieldZR(const double *, double* bxyz,double *deriv) {
-    for (int i=0; i<3; i++) bxyz[i]  = m_magField;
-    for (int i=0; i<9; i++) deriv[i] = 0.;
+    //return on every point the same field value
+    if (bxyz) for (int i=0; i<3; i++) bxyz[i]  = m_magField;
+    else MSG_ERROR("Can not fill magnetic field, magnetic field pointer is nullptr");
+    //if derivatives are asked return them
+    if (deriv) for (int i=0; i<9; i++) deriv[i] = 0.;
 }
