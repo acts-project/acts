@@ -9,6 +9,8 @@
 // Gaudi
 #include "GaudiKernel/ITHistSvc.h"
 
+DECLARE_COMPONENT(Acts::ExtrapolationEngineTest)
+
 Acts::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, ISvcLocator* pSvcLocator) :
  Acts::ExtrapolationTestBase(name, pSvcLocator),
  m_extrapolationEngine("",name),
@@ -83,6 +85,7 @@ Acts::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, 
  m_backEta(0),
  m_backP(0),
  m_backPt(0)
+// m_histogramSvc("",name)
 {
     // the extrapolation engine
     declareProperty("ExtrapolationEngine",      m_extrapolationEngine);
@@ -133,7 +136,7 @@ Acts::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, 
     declareProperty("NumTestsPerEvent",         m_numTests=100);
     declareProperty("TreeName",                 m_treeName);
     declareProperty("TreeFolder",               m_treeFolder);
-    declareProperty("TreeDescription",          m_treeDescription);   
+    declareProperty("TreeDescription",          m_treeDescription);
 }
 
 StatusCode Acts::ExtrapolationEngineTest::finalize() {
@@ -167,9 +170,10 @@ StatusCode Acts::ExtrapolationEngineTest::finalize() {
 
 StatusCode Acts::ExtrapolationEngineTest::initializeTest() 
 {
-    
+    MSG_INFO("initialize ExtrapolationEngineTest0");
     // Extrapolation engine
     RETRIEVE_FATAL(m_extrapolationEngine);
+    MSG_INFO("initialize ExtrapolationEngineTest1");
     // Writer
     RETRIEVE_NONEMPTY_FATAL(m_parametersProcessor);
     // success 
@@ -287,7 +291,7 @@ StatusCode Acts::ExtrapolationEngineTest::bookTree()
     if (tHistSvc && ((tHistSvc->regTree(m_treeFolder+m_treeName, m_tree)).isFailure()) ) {
         MSG_ERROR( "initialize() Could not register the validation Tree -> Switching Tree output off !" );
         delete m_tree; m_tree = 0;
-    }    
+    }
     return StatusCode::SUCCESS;
     
 }
