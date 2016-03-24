@@ -18,6 +18,7 @@ gaudi_depends_on_subdirs(GaudiKernel
 			 Geometry/GeometryInterfaces)
 
 add_definitions(-DACTS_PARAMETER_DEFINITIONS_PLUGIN=\"CoreUtils/DefaultParameterDefinitions.h\")
+add_definitions(-DACTS_GAUDI)
 
 gaudi_install_headers(ExtrapolationEngine)
 

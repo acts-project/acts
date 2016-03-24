@@ -22,7 +22,7 @@ Acts::ExtrapolationEngine::ExtrapolationEngine(const std::string& name, ISvcLoca
 #else
   m_exServices(),
 #endif
-  m_propagationEngine("", name),    
+  m_propagationEngine("", name),
   m_navigationEngine("", name),
   m_forceSearchInit(false)
 {

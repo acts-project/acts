@@ -12,6 +12,8 @@ find_package(Eigen3 REQUIRED)
 SET( EIGEN3_HOME ${EIGEN_ROOT_DIR}/${EIGEN_INCLUDE_DIR} )
 find_package(ROOT COMPONENTS Geom)
 
+add_definitions(-DACTS_GAUDI)
+
 gaudi_add_library(TGeoDetectorElement
                   src/*.cxx
                   PUBLIC_HEADERS TGeoDetectorElement

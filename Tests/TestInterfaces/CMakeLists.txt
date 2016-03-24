@@ -4,3 +4,5 @@
 gaudi_subdir(TestInterfaces v1r0)
 
 gaudi_install_headers(TestInterfaces)
+
+add_definitions(-DACTS_GAUDI)

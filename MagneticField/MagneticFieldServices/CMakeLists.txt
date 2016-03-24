@@ -6,6 +6,7 @@ gaudi_subdir(MagneticFieldServices v1r0)
 gaudi_depends_on_subdirs(GaudiKernel
                          Core/CoreInterfaces
                          MagneticField/MagneticFieldInterfaces)
+add_definitions(-DACTS_GAUDI)
 
 gaudi_install_headers(MagneticFieldServices)
 

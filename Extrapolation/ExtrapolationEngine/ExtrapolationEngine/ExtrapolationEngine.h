@@ -107,7 +107,7 @@ class ExtrapolationEngine : public ServiceBase, virtual public IExtrapolationEng
 #else
         // list of tools to test
         typedef std::vector<std::string> ServiceList; //rm
-        ServiceList                                          m_exServices; //rm
+        ServiceList                                         m_exServices; //rm
 #endif
         ServiceHandle<IPropagationEngine>                   m_propagationEngine;         //!< the used propagation engine for navigation initialization
         std::vector<const IExtrapolationEngine*>            m_eeAccessor;                //!< the extrapolation engines for 

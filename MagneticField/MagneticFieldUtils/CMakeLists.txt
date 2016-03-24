@@ -9,6 +9,8 @@ gaudi_depends_on_subdirs(Core/Algebra)
 find_package(Boost)
 find_package(Eigen3 REQUIRED)
 
+add_definitions(-DACTS_GAUDI)
+
 SET( EIGEN3_HOME ${EIGEN_ROOT_DIR}/${EIGEN_INCLUDE_DIR} )
 
 gaudi_add_library(MagneticFieldUtils
