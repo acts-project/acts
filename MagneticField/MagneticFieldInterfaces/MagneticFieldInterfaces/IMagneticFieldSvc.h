@@ -27,8 +27,6 @@ namespace Acts {
     // Public methods:
     ///////////////////////////////////////////////////////////////////
     public:
-        /** constructor */
-        IMagneticFieldSvc();
 
         /** Retrieve interface ID */
         static const InterfaceID& interfaceID() { return IID_IMagneticFieldSvc;}
@@ -36,13 +34,13 @@ namespace Acts {
         /** get B field value at given position */
         /** xyz[3] is in mm, bxyz[3] is in kT */
         /** if deriv[9] is given, field derivatives are returned in kT/mm */
-        virtual void getField(const double *xyz, double *bxyz, double *deriv = 0) = 0;
+        virtual void getField(const double *xyz, double *bxyz, double *deriv = nullptr) = 0;
 
         /** get B field value on the z-r plane at given position */
         /** works only inside the solenoid; otherwise calls getField() above */
         /** xyz[3] is in mm, bxyz[3] is in kT */
         /** if deriv[9] is given, field derivatives are returned in kT/mm */
-        virtual void getFieldZR(const double *xyz, double *bxyz, double *deriv = 0) = 0;
+        virtual void getFieldZR(const double *xyz, double *bxyz, double *deriv = nullptr) = 0;
 
     };
 }

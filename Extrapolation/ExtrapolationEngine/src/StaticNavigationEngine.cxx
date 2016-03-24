@@ -52,6 +52,8 @@ StatusCode Acts::StaticNavigationEngine::queryInterface(const InterfaceID& riid,
 StatusCode Acts::StaticNavigationEngine::initialize()
 {
     MSG_DEBUG("initialize()" );
+    //Service needs to be initialized
+    if (!ServiceBase::initialize()) return StatusCode::FAILURE;
     // retrieve the tracking geometry servcie - crucial, abort when it can not be retrieved
     RETRIEVE_FATAL(m_trackingGeometrySvc);
     m_trackingGeometryName = m_trackingGeometrySvc->trackingGeometryName();

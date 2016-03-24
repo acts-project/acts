@@ -17,6 +17,7 @@
 // MagneticField module
 #include "MagneticFieldUtils/MagneticFieldProperties.h"
 
+DECLARE_SERVICE_FACTORY(Acts::RungeKuttaEngine)
 /////////////////////////////////////////////////////////////////////////////////
 // Constructor
 /////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +69,9 @@ StatusCode Acts::RungeKuttaEngine::queryInterface(const InterfaceID& riid, void*
 StatusCode Acts::RungeKuttaEngine::initialize()
 {
   MSG_DEBUG("initialize()");
-  // retrieve the tracking geometry servcie - crucial, abort when it can not be retrieved
+  //Service needs to be initialized
+  if (!ServiceBase::initialize()) return StatusCode::FAILURE;
+  // retrieve the tracking magnetic field - crucial, abort when it can not be retrieved
   RETRIEVE_FATAL(m_fieldService);
   return StatusCode::SUCCESS;
 }

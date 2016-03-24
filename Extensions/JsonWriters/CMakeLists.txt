@@ -14,6 +14,7 @@ gaudi_depends_on_subdirs(GaudiKernel
                          Geometry/Detector)
 
 add_definitions(-DACTS_PARAMETER_DEFINITIONS_PLUGIN=\"CoreUtils/DefaultParameterDefinitions.h\")
+add_definitions(-DACTS_GAUDI)
 
 find_package(Eigen3 REQUIRED)
 

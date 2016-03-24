@@ -11,6 +11,8 @@
 // Gaudi
 #include "GaudiKernel/ITHistSvc.h"
 
+DECLARE_COMPONENT(Acts::PropagationEngineTest)
+
 Acts::PropagationEngineTest::PropagationEngineTest(const std::string& name, ISvcLocator* pSvcLocator) :
  Acts::ExtrapolationTestBase(name, pSvcLocator),
  m_propagationEngine("",name),

@@ -51,6 +51,8 @@ StatusCode Acts::PropagationEngine::queryInterface(const InterfaceID& riid, void
 StatusCode Acts::PropagationEngine::initialize()
 {
     MSG_DEBUG("initialize()" );
+    //Service needs to be initialized
+    if (!ServiceBase::initialize()) return StatusCode::FAILURE;
     RETRIEVE_NONEMPTY_FATAL(m_propagator);
     return StatusCode::SUCCESS;
 }
