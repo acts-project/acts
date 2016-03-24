@@ -17,17 +17,23 @@ Acts::ExtrapolationEngine::ExtrapolationEngine(const std::string& name, ISvcLoca
   m_trackingGeometry(nullptr),
   m_trackingGeometrySvc("TrackingGeometrySvc", name),
   m_trackingGeometryName("TrackingGeometry"),
-//bug  m_extrapolationEngines(name),
+#ifndef ACTS_GAUDI
+  m_extrapolationEngines(name),
+#else
   m_exServices(),
+#endif
   m_propagationEngine("", name),    
   m_navigationEngine("", name),
   m_forceSearchInit(false)
 {
     // Geometry retrieval
     declareProperty("TrackingGeometrySvc"                   , m_trackingGeometrySvc);
-    // Extrapolation Engine retrieval 
-//bug    declareProperty("ExtrapolationEngines"                  , m_extrapolationEngines);
+    // Extrapolation Engine retrieval
+#ifndef ACTS_GAUDI
+    declareProperty("ExtrapolationEngines"                  , m_extrapolationEngines);
+#else
     declareProperty("ExtrapolationEngines"                  , m_exServices);
+#endif
     // The Tools needed
     declareProperty("PropagationEngine"                     , m_propagationEngine);
     declareProperty("NavigationEngine"                      , m_navigationEngine);
@@ -65,20 +71,25 @@ StatusCode Acts::ExtrapolationEngine::initialize()
     RETRIEVE_FATAL(m_trackingGeometrySvc);
     m_trackingGeometryName = m_trackingGeometrySvc->trackingGeometryName();    
     // retriveve the extrapolation engines - crucial, abort when they can not be retrieved
-    //bug RETRIEVE_FATAL(m_extrapolationEngines);
-    //bug EX_MSG_DEBUG( "", "initialize", "", "Successfully retrieved " << m_extrapolationEngines.size() << " ExtrapolationEngines. Ordering them now." );
+#ifndef ACTS_GAUDI
+    RETRIEVE_FATAL(m_extrapolationEngines);
+    EX_MSG_DEBUG( "", "initialize", "", "Successfully retrieved " << m_extrapolationEngines.size() << " ExtrapolationEngines. Ordering them now." );
+#endif
     MSG_DEBUG("Handed");
     m_eeAccessor = std::vector<const Acts::IExtrapolationEngine*>(int(Acts::NumberOfGeometryTypes), (const Acts::IExtrapolationEngine*)nullptr);
+#ifdef ACTS_GAUDI
     for (auto& it : m_exServices){
         ServiceHandle<IExtrapolationEngine> ee(it,this->name());
         if (ee.retrieve().isFailure()) MSG_FATAL("Could not retrieve service: " << it);
         EX_MSG_DEBUG( "", "initialize", "", "Registering " << ee->name() << " - for GeometryType : "  << ee->geometryType() );
         m_eeAccessor[ee->geometryType()] = (&*ee);
     }
-  /*  for (auto& ee : m_extrapolationEngines){
+#else
+    for (auto& ee : m_extrapolationEngines){
         EX_MSG_DEBUG( "", "initialize", "", "Registering " << ee->name() << " - for GeometryType : "  << ee->geometryType() );
         m_eeAccessor[ee->geometryType()] = (&*ee);
-    }*/
+    }
+#endif
     // retrive a propagation engine for initialization - crucial, abort when they can not be retrieved
     RETRIEVE_FATAL(m_propagationEngine);
     // retrieve a navigation engine - crucial, abort when they can not be retrieved

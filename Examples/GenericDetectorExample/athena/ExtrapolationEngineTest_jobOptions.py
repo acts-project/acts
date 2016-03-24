@@ -5,39 +5,77 @@
 #==============================================================
 
 #--------------------------------------------------------------
-# Gaudi default Application Configuration options
+# ATLAS default Application Configuration options
 #--------------------------------------------------------------
 
-from Gaudi.Configuration import *
-from Configurables import ApplicationMgr, THistSvc
+# Use McEventSelector so we can run with AthenaMP
+import AthenaCommon.AtlasUnixGeneratorJob
 
 #--------------------------------------------------------------
 # Private Application Configuration options
 #--------------------------------------------------------------
 
-ExToolOutputLevel       = VERBOSE #VERBOSE # INFO #
-ExAlgorithmOutputLevel  = VERBOSE #VERBOSE #
+
 #--------------------------------------------------------------
 # Geometry section
 #--------------------------------------------------------------
 
+from AthenaCommon.DetFlags import DetFlags
+DetFlags.ID_setOff()
+DetFlags.TRT_setOff()
+DetFlags.Calo_setOff()
+DetFlags.Muon_setOff()
+
+# Full job is a list of algorithms
+from AthenaCommon.AlgSequence import AlgSequence
+job = AlgSequence()
+
+from AthenaCommon.AppMgr import ServiceMgr as svcMgr
+
+from IOVDbSvc.CondDB import conddb
+conddb.setGlobalTag('OFLCOND-SIM-00-00-00')
+
 # import the GenericDetector
-from GenericDetectorV2Gaudi import GenericDetectorConstructionGaudi
-GenericDetector = GenericDetectorConstructionGaudi(name='GenericDetector', outputLevel=VERBOSE)
+from GenericDetectorExample.GenericDetectorV2 import GenericDetectorConstruction
+GenericDetector = GenericDetectorConstruction(name='GenericDetector', outputLevel=VERBOSE, Atlas = True)
+
+#--------------------------------------------------------------
+# Event related parameters
+#--------------------------------------------------------------
+
+# Number of events to be processed (default is until the end of
+# input, or -1, however, since we have no input, a limit needs
+# to be set explicitly, here, choose 10)
+theApp.EvtMax           = 1
+ExToolOutputLevel       = INFO #VERBOSE # INFO #
+ExAlgorithmOutputLevel  = INFO #VERBOSE #
+
+from AthenaCommon.AppMgr import ServiceMgr
+# output level
+ServiceMgr.MessageSvc.OutputLevel  = INFO
+# increase the number of letter reserved to the alg/tool name from 18 to 30
+ServiceMgr.MessageSvc.Format       = "% F%50W%S%7W%R%T %0W%M"
+# to change the default limit on number of message
+ServiceMgr.MessageSvc.defaultLimit = 9999999  # all messages
 
 #--------------------------------------------------------------
 # Tool setup
 #--------------------------------------------------------------
 
+# the magnetic field
+from MagFieldServices import SetupField
+from IOVDbSvc.CondDB import conddb
+conddb.addOverride('/GLOBAL/BField/Map','BFieldMap-FullAsym-09-solTil3')
+
 from JsonWriters.JsonWritersConf import Acts__ParametersJsonWriter as ParametersWriter
 JsonParmatersWriter = ParametersWriter('JsonParmatersWriter')
+ToolSvc += JsonParmatersWriter
 
-#from ExtrapolationEngine.ExtrapolationEngineConf import Acts__ExtrapolationEngine as ExEngine
-#GenericExtrapolationEngine = ExEngine('GenericExtrapolationEngine')
-
-from GenericExtrapolationEngineGaudi import GenericExtrapolationEngineGaudi
-GenericExtrapolationEngine = GenericExtrapolationEngineGaudi(name='ExtrapolationEngine', nameprefix='Generic', ToolOutputLevel=ExToolOutputLevel, TrackingGeometrySvc=GenericDetector.trackingGeometrySvc())
-ExtrapolationEngine = GenericExtrapolationEngine.extrapolationEngine()
+from GenericDetectorExample.GenericExtrapolationEngine import GenExEngine
+print GenExEngine.__dict__
+ExEngine = GenExEngine(name='ExtrapolationEngine', nameprefix='Generic', ToolOutputLevel=ExToolOutputLevel, TrackingGeometrySvc=GenericDetector.trackingGeometrySvc(), Atlas = True)
+ExtrapolationEngine = ExEngine.extrapolationEngine()
+svcMgr += ExtrapolationEngine
 
 #--------------------------------------------------------------
 # Algorithm setup
@@ -77,21 +115,33 @@ ExtrapolationEngineTest.ExtrapolationEngine     = ExtrapolationEngine
 ExtrapolationEngineTest.ParametersProcessor     = JsonParmatersWriter
 # output formatting
 ExtrapolationEngineTest.OutputLevel             = ExAlgorithmOutputLevel
+job += ExtrapolationEngineTest   # 1 alg, named 'ExtrapolationEngineTest'
 
 
 #################################################################
+theApp.Dlls += [ 'RootHistCnv' ]
+theApp.HistogramPersistency = 'ROOT'
 
-THistSvc=THistSvc('THistSvc')
-THistSvc.Output = ["val DATAFILE='ExtrapolationEngineTest.root' TYPE='ROOT' OPT='RECREATE'"]
-THistSvc.OutputLevel = INFO
+# --- load AuditorSvc
+from AthenaCommon.ConfigurableDb import getConfigurable
+# --- write out summary of the memory usage
+#   | number of events to be skip to detect memory leak
+#   | 20 is default. May need to be made larger for complete jobs.
+ServiceMgr.AuditorSvc += getConfigurable('ChronoAuditor')()
+# --- write out a short message upon entering or leaving each algorithm
+#
+theApp.AuditAlgorithms = True
+theApp.AuditServices   = True
+# 
+# --- Display detailed size and timing statistics for writing and reading
+ServiceMgr.AthenaPoolCnvSvc.UseDetailChronoStat = True
 
-ExternalServices = GenericExtrapolationEngine.containedServices()
-ExternalServices += [THistSvc]
 
-ApplicationMgr(EvtSel='NONE',
-               EvtMax=1,
-               ExtSvc=ExternalServices,
-               TopAlg=[ExtrapolationEngineTest])
+if not hasattr(ServiceMgr, 'THistSvc'):
+       from GaudiSvc.GaudiSvcConf import THistSvc
+       ServiceMgr += THistSvc()
+# add the G4 validation output stream
+ServiceMgr.THistSvc.Output += [ "val DATAFILE='ExtrapolationEngineTest.root' TYPE='ROOT' OPT='RECREATE'" ]
 
 #==============================================================
 #

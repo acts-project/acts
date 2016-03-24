@@ -4,3 +4,5 @@
 gaudi_subdir(GenericDetectorExample v1r0)
 
 gaudi_install_python_modules()
+
+add_definitions(-DACTS_GAUDI)

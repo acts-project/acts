@@ -1,21 +1,33 @@
-class GenericDetectorConstructionGaudi(object):
+class GenericDetectorConstruction(object):
     """docstring for GenericDetector"""
-    def __init__(self, name, outputLevel):
-        super(GenericDetectorConstructionGaudi, self).__init__()
+    def __init__(self, name, outputLevel, Atlas = False):
+        super(GenericDetectorConstruction, self).__init__()
         self.__name__ = name
         self.__tgsvc__ = None
         
+        if Atlas:
+          # ToolSvc and ServiceMgr
+          from AthenaCommon.AppMgr import ToolSvc
+          from AthenaCommon.AppMgr import ServiceMgr as svcMgr
+          import AthenaCommon.Logging as log
         # lets build the python detector first -----------------------------------------------
-
-        from GenericDetectorDefs import Material
-        from GenericDetectorDefs import MaterialProperties
-        from GenericDetectorDefs import DetectorModule
-        from GenericDetectorDefs import CylinderLayer
-        from GenericDetectorDefs import DiscRing
-        from GenericDetectorDefs import DiscLayer
-        from GenericDetectorDefs import BarrelVolume
-        from GenericDetectorDefs import EndcapVolume
-        
+          from GenericGeometryTools.GenericDetectorDefs import Material
+          from GenericGeometryTools.GenericDetectorDefs import MaterialProperties
+          from GenericGeometryTools.GenericDetectorDefs import DetectorModule
+          from GenericGeometryTools.GenericDetectorDefs import CylinderLayer
+          from GenericGeometryTools.GenericDetectorDefs import DiscRing
+          from GenericGeometryTools.GenericDetectorDefs import DiscLayer
+          from GenericGeometryTools.GenericDetectorDefs import BarrelVolume
+          from GenericGeometryTools.GenericDetectorDefs import EndcapVolume
+        else:
+          from GenericDetectorDefs import Material
+          from GenericDetectorDefs import MaterialProperties
+          from GenericDetectorDefs import DetectorModule
+          from GenericDetectorDefs import CylinderLayer
+          from GenericDetectorDefs import DiscRing
+          from GenericDetectorDefs import DiscLayer
+          from GenericDetectorDefs import BarrelVolume
+          from GenericDetectorDefs import EndcapVolume
         
         # Silicon Material
         Silicon             = Material('Silicon', 95.7, 465.2, 28.03,14.,2.32e-3)
@@ -83,16 +95,20 @@ class GenericDetectorConstructionGaudi(object):
         # Layer Array Creator
         LayerArrayCreator = LayerArrayCreator('LayerArrayCreator')
         LayerArrayCreator.OutputLevel = outputLevel
+        if Atlas:
+          ToolSvc += LayerArrayCreator
         # Tracking Volume Array Creator
         TrackingVolumeArrayCreator = TrackingVolumeArrayCreator('TrackingVolumeArrayCreator')
         TrackingVolumeArrayCreator.OutputLevel = outputLevel
-
+        if Atlas:
+          ToolSvc += TrackingVolumeArrayCreator
         # The Cylinder Volume Helper
         CylinderVolumeHelper = VolumeHelper('CylinderVolumeHelper')
         CylinderVolumeHelper.LayerArrayCreator = LayerArrayCreator
         CylinderVolumeHelper.TrackingVolumeArrayCreator = TrackingVolumeArrayCreator
         CylinderVolumeHelper.OutputLevel = outputLevel
-
+        if Atlas:
+          ToolSvc += CylinderVolumeHelper
 
         BeamPipeBuilder = LayerBuilder('BeamPipeBuilder')
         # the identification 
@@ -108,6 +124,8 @@ class GenericDetectorConstructionGaudi(object):
         BeamPipeBuilder.CentralLayerMaterialRho     = [ 1.848e-3 ]
         # output
         BeamPipeBuilder.OutputLevel = outputLevel
+        if Atlas:
+          ToolSvc += BeamPipeBuilder
 
         BeamPipeVolumeBuilder = VolumeBuilder('BeamPipeVolumeBuilder')
         # set the volume nome
@@ -118,8 +136,10 @@ class GenericDetectorConstructionGaudi(object):
         BeamPipeVolumeBuilder.LayerArrayCreator    = LayerArrayCreator        
         BeamPipeVolumeBuilder.LayerEnvelopeR       = 1.
         BeamPipeVolumeBuilder.LayerEnvelopeZ       = 1.
-        BeamPipeVolumeBuilder.OutputLevel          = outputLevel  
-        #  
+        BeamPipeVolumeBuilder.OutputLevel          = outputLevel
+        if Atlas:
+          ToolSvc += BeamPipeVolumeBuilder
+        #
         from GenericGeometryTools.GenericGeometryToolsConf import Acts__GenericLayerBuilder as GenericLayerBuilder
         
         
@@ -159,8 +179,8 @@ class GenericDetectorConstructionGaudi(object):
         
         # Output steering
         PixelLayerBuilder.OutputLevel = outputLevel
-        # pixel layer builder is defined
-
+        if Atlas:
+          ToolSvc += PixelLayerBuilder
         # Build the Pixel Volume
         PixelVolumeBuilder = VolumeBuilder("PixelVome")
         # set the volume name
@@ -172,6 +192,8 @@ class GenericDetectorConstructionGaudi(object):
         PixelVolumeBuilder.LayerEnvelopeR                 =  1.    
         PixelVolumeBuilder.LayerEnvelopeZ                 =  10.    
         PixelVolumeBuilder.VolumeToBeamPipe               =  False
+        if Atlas:
+          ToolSvc += PixelVolumeBuilder
 
         StripLayerBuilder = GenericLayerBuilder('StripLayerBuilder')
         # the ID
@@ -188,13 +210,12 @@ class GenericDetectorConstructionGaudi(object):
         StripLayerBuilder.CentralLayerModulesHalfX          = StripBarrel.layerModulesHalfX()       
         StripLayerBuilder.CentralLayerModulesHalfY          = StripBarrel.layerModulesHalfY()      
         StripLayerBuilder.CentralLayerModulesThickness      = StripBarrel.layerModulesThickness()  
-        StripLayerBuilder.CentralLayerModulesMaterial       = StripBarrel.layerModulesMaterial()  
-         
-        
+        StripLayerBuilder.CentralLayerModulesMaterial       = StripBarrel.layerModulesMaterial()
         # Output steering
         StripLayerBuilder.OutputLevel = outputLevel
-        # pixel layer builder is defined
 
+        if Atlas:
+          ToolSvc += StripLayerBuilder
         # Build the Strip Volume
         StripVolumeBuilder = VolumeBuilder("StripVolume")
         # set the volume name
@@ -205,8 +226,9 @@ class GenericDetectorConstructionGaudi(object):
         StripVolumeBuilder.LayerArrayCreator              =  LayerArrayCreator        
         StripVolumeBuilder.LayerEnvelopeR                 =  1.    
         StripVolumeBuilder.LayerEnvelopeZ                 =  10.    
-        StripVolumeBuilder.VolumeToBeamPipe               =  False
-                                                            
+        StripVolumeBuilder.VolumeToBeamPipe               =  False  
+        if Atlas:
+          ToolSvc += StripVolumeBuilder
 
         # Build the TrackingGeometry
         GenericGeometryBuilder = GeometryBuilder('GenericGeometry')
@@ -214,6 +236,8 @@ class GenericDetectorConstructionGaudi(object):
         GenericGeometryBuilder.TrackingVolumeBuilders = [ PixelVolumeBuilder, StripVolumeBuilder  ]
         GenericGeometryBuilder.TrackingVolumeHelper   = CylinderVolumeHelper
         GenericGeometryBuilder.OutputLevel            = outputLevel
+        if Atlas:
+          ToolSvc += GenericGeometryBuilder
 
         # Establish the TrackingGeometrySvc
         from GeometryServices.GeometryServicesConf import Acts__TrackingGeometrySvc
@@ -222,6 +246,9 @@ class GenericDetectorConstructionGaudi(object):
         GenericTrackingGeometrySvc.TrackingGeometryName = 'GenericTrackingGeometry'
         GenericTrackingGeometrySvc.GeometryProcessors = []
 
+        if Atlas:
+          svcMgr += GenericTrackingGeometrySvc
+        
         self.__tgsvc__ = GenericTrackingGeometrySvc
     
     def trackingGeometrySvc(self):

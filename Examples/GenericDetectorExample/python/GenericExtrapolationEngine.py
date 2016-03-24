@@ -1,34 +1,51 @@
 ######################################################
 # GenericExtrapoliationEngine module
 #
-# it inherits from Acts__Extrapolator and uses
+# it inherits from Acts__Extrapolator and uses - currently not
 # the AtlasTrackingGeometrySvc
 #
 ######################################################
 
-# import the ExtrapolationEngine configurable
-from ExtrapolationEngine.ExtrapolationEngineConf import Acts__ExtrapolationEngine as ExEngine
 
+# import the ExtrapolationEngine configurable
+#from ExtrapolationEngine.ExtrapolationEngineConf import Acts__ExtrapolationEngine as ExEngine
+
+### Inheritance currently not possible########################################
+#class GenericExtrapolationEngine(ExEngine):
+##############################################################################
 # define the class
-class GenericExtrapolationEngineGaudi():
+class GenExEngine(object):
     # constructor
-    def __init__(self,name = 'Extrapolation', nameprefix = 'Atlas', ToolOutputLevel = None, TrackingGeometrySvc = None):
+    def __init__(self,name = 'Extrapolation', nameprefix = 'Atlas', ToolOutputLevel = None, TrackingGeometrySvc = None, Atlas = False):
+        super(GenExEngine, self).__init__()
+        self.__name__ = name
+        if Atlas:
+          # AthenaCommon
+          from AthenaCommon.Include import Include, IncludeError, include
+          from AthenaCommon.AppMgr import ServiceMgr as svcMgr
+          from AthenaCommon.AppMgr import ToolSvc
         
-        #MagneticFieldSvc
-        from MagneticFieldServices.MagneticFieldServicesConf import Acts__ConstMagneticFieldSvc
-        MagneticFieldSvc = Acts__ConstMagneticFieldSvc('MagneticFieldSvc')
-        MagneticFieldSvc.MagneticFieldValue = 0.006
+          from AthenaCommon.CfgGetter import getService
+          MagneticFieldSvc =  getService('AtlasFieldSvc')
+
+        else:
+          #MagneticFieldSvc
+          from MagneticFieldServices.MagneticFieldServicesConf import Acts__ConstMagneticFieldSvc
+          MagneticFieldSvc = Acts__ConstMagneticFieldSvc('MagneticFieldSvc')
+          MagneticFieldSvc.MagneticFieldValue = 0.006
         
         # PropagationEngine
         from RungeKuttaEngine.RungeKuttaEngineConf import Acts__RungeKuttaEngine
         StaticPropagator = Acts__RungeKuttaEngine(name = nameprefix+'StaticPropagation')
-        StaticPropagator.MagneticFieldSvc         = MagneticFieldSvc
+        StaticPropagator.MagneticFieldSvc         = MagneticFieldSvc        
+        
         # configure output formatting               
         StaticPropagator.OutputPrefix             = '[SP] - '
         StaticPropagator.OutputPostfix            = ' - '
         if ToolOutputLevel : 
             StaticPropagator.OutputLevel          = ToolOutputLevel
-        
+        if Atlas:
+            svcMgr += StaticPropagator
         # load the material effects engine
         from ExtrapolationEngine.ExtrapolationEngineConf import Acts__MaterialEffectsEngine
         MaterialEffectsEngine = Acts__MaterialEffectsEngine(name = nameprefix+'MaterialEffects')
@@ -37,7 +54,8 @@ class GenericExtrapolationEngineGaudi():
         MaterialEffectsEngine.OutputPostfix       = ' - '
         if ToolOutputLevel : 
             MaterialEffectsEngine.OutputLevel     = ToolOutputLevel
-        
+        if Atlas:
+            svcMgr += MaterialEffectsEngine
         # load the static navigation engine
         from ExtrapolationEngine.ExtrapolationEngineConf import Acts__StaticNavigationEngine
         StaticNavigator = Acts__StaticNavigationEngine(name = nameprefix+'StaticNavigation')
@@ -51,8 +69,8 @@ class GenericExtrapolationEngineGaudi():
         StaticNavigator.OutputPostfix            = ' - '
         if ToolOutputLevel : 
             StaticNavigator.OutputLevel          = ToolOutputLevel
-        
-        
+        if Atlas:
+            svcMgr += StaticNavigator
         # load the Static ExtrapolationEngine
         from ExtrapolationEngine.ExtrapolationEngineConf import Acts__StaticEngine
         StaticExtrapolator = Acts__StaticEngine(name = nameprefix+'StaticExtrapolation')
@@ -65,7 +83,23 @@ class GenericExtrapolationEngineGaudi():
         StaticExtrapolator.OutputPostfix            = ' - '
         if ToolOutputLevel : 
             StaticExtrapolator.OutputLevel              = ToolOutputLevel
-       
+        if Atlas:
+            svcMgr += StaticExtrapolator
+    ### Inheritance currently not possible########################################
+        # call the base class constructor
+        #  ExEngine.__init__(self, name=nameprefix+'Extrapolation',\
+        #                    ExtrapolationEngines   = [ StaticExtrapolator ], \
+        #                    PropagationEngine      = StaticPropagator, \
+        #                    NavigationEngine       = StaticNavigator, \
+        #                    TrackingGeometrySvc    = TrackingGeometrySvc, \
+        #                    OutputPrefix           = '[ME] - ', \
+        #                    OutputPostfix          = ' - ')
+        # set the output level
+        #  if ToolOutputLevel :
+        #    self.OutputLevel = ToolOutputLevel
+
+    ##############################################################################
+        from ExtrapolationEngine.ExtrapolationEngineConf import Acts__ExtrapolationEngine as ExEngine
         GenericExtrapolationEngine = ExEngine('GenericExtrapolationEngine')
         GenericExtrapolationEngine.TrackingGeometrySvc = TrackingGeometrySvc
         GenericExtrapolationEngine.ExtrapolationEngines   = [ StaticExtrapolator ]
@@ -76,27 +110,18 @@ class GenericExtrapolationEngineGaudi():
         # set the output level
         if ToolOutputLevel :
             GenericExtrapolationEngine.OutputLevel = ToolOutputLevel
-           
+        if Atlas:
+            svcMgr+=GenericExtrapolationEngine
         self.__gexen__ = GenericExtrapolationEngine
-         
-        # call the base class constructor
-        #   ExEngine.__init__(self, name=nameprefix+'Extrapolation',\
-        #                  ExtrapolationEngines   = [ StaticExtrapolator ], \
-        #                  PropagationEngine      = StaticPropagator, \
-        #                  NavigationEngine       = StaticNavigator, \
-        #                  TrackingGeometrySvc    = TrackingGeometrySvc, \
-        #                  OutputPrefix           = '[ME] - ', \
-        #                  OutputPostfix          = ' - ')
-        # set the output level
-        if ToolOutputLevel :
-            self.OutputLevel = ToolOutputLevel
 
         self.__services__= [ TrackingGeometrySvc, MagneticFieldSvc, StaticPropagator, MaterialEffectsEngine, StaticNavigator, StaticExtrapolator, GenericExtrapolationEngine ]
 
-        print self.__services__
-    
     def containedServices(self):
         return self.__services__
-
+    
     def extrapolationEngine(self):
         return self.__gexen__
+    ##############################################################################
+
+
+
