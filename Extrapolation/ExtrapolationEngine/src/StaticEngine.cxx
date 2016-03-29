@@ -7,7 +7,7 @@
 // Extrapolation module
 #include "ExtrapolationEngine/StaticEngine.h"
 
-DECLARE_COMPONENT(Acts::StaticEngine)
+DECLARE_SERVICE_FACTORY(Acts::StaticEngine)
 
 // constructor
 Acts::StaticEngine::StaticEngine(const std::string& name, ISvcLocator* svc) :
@@ -46,6 +46,8 @@ StatusCode Acts::StaticEngine::queryInterface(const InterfaceID& riid, void** pp
 StatusCode Acts::StaticEngine::initialize()
 {
     MSG_DEBUG("initialize()" );
+    //Service needs to be initialized
+    if (!ServiceBase::initialize()) return StatusCode::FAILURE;
     // retrieve the propagation servcie - crucial, abort when it can not be retrieved
     RETRIEVE_FATAL(m_propagationEngine);
     // retrieve the navigation service   - crucial, abort when it can not be retrieved

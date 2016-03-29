@@ -18,6 +18,7 @@
 #include "TString.h"
 #include "TRandom.h"
 
+
 class TTree;
 
 namespace Acts {
@@ -176,7 +177,6 @@ namespace Acts {
        std::vector< float >*                        m_materialPositionP;
        std::vector< float >*                        m_materialPositionPt;
        std::vector< float >*                        m_materialScaling;
-       
 
    };
 } // end of namespace

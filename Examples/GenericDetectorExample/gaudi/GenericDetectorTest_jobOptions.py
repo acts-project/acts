@@ -8,15 +8,15 @@ from Gaudi.Configuration import *
 from Configurables import ApplicationMgr
 
 # import the GenericDetector
-from GenericDetectorV2Gaudi import GenericDetectorConstructionGaudi
-GenericDetectorGaudi = GenericDetectorConstructionGaudi(name='GenericDetectorGaudi', outputLevel=VERBOSE)
+from GenericDetectorV2 import GenericDetectorConstruction
+GenericDetector = GenericDetectorConstruction(name='GenericDetector', outputLevel=VERBOSE)
 
 # configure the json dumper
 from JsonWriters.JsonWritersConf import Acts__GeometryJsonWriter
 JsonDumper = Acts__GeometryJsonWriter('GenericGeometrySonDumper')
 
 # add the json dumper
-TrackingGeometrySvc = GenericDetectorGaudi.trackingGeometrySvc()
+TrackingGeometrySvc = GenericDetector.trackingGeometrySvc()
 TrackingGeometrySvc.GeometryProcessors = [ JsonDumper ]
 
 # Run the GeometryBuildingTestTest
