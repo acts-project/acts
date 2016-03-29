@@ -120,7 +120,6 @@ class GenericDetectorConstruction(object):
         # and some parameters
         BeamPipeVolumeBuilder.CylinderVolumeHelper = CylinderVolumeHelper   
         BeamPipeVolumeBuilder.LayerBuilder         = BeamPipeBuilder
-        BeamPipeVolumeBuilder.LayerArrayCreator    = LayerArrayCreator        
         BeamPipeVolumeBuilder.LayerEnvelopeZ       = 1.
         BeamPipeVolumeBuilder.OutputLevel          = outputLevel
         if Atlas:
@@ -172,8 +171,7 @@ class GenericDetectorConstruction(object):
         PixelVolumeBuilder.VolumeName                     = 'Pixel'
         # build the volume
         PixelVolumeBuilder.CylinderVolumeHelper           =  CylinderVolumeHelper   
-        PixelVolumeBuilder.LayerBuilder                   =  PixelLayerBuilder           
-        PixelVolumeBuilder.LayerArrayCreator              =  LayerArrayCreator        
+        PixelVolumeBuilder.LayerBuilder                   =  PixelLayerBuilder
         PixelVolumeBuilder.LayerEnvelopeZ                  =  1.
         PixelVolumeBuilder.VolumeToBeamPipe               =  False
         if Atlas:
