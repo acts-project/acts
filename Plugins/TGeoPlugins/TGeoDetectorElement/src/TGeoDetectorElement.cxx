@@ -31,13 +31,13 @@ m_neighbours()
         //extract the surface bounds
         auto trapezoidBounds = std::make_shared<const Acts::TrapezoidBounds>(trapezoid->GetDx1(),trapezoid->GetDx2(),trapezoid->GetDy1());
         m_bounds = trapezoidBounds;
-        m_surface = std::make_shared<const Acts::PlaneSurface>(transform,trapezoidBounds);
+        m_surface = std::make_shared<const Acts::PlaneSurface>(*this,m_identifier);
     }
     else {
         //extract the surface bounds
         auto rectangleBounds = std::make_shared<const Acts::RectangleBounds>(box->GetDX(),box->GetDY());
         m_bounds = rectangleBounds;
-        m_surface = std::make_shared<const Acts::PlaneSurface>(transform,rectangleBounds);
+        m_surface = std::make_shared<const Acts::PlaneSurface>(*this,m_identifier);
     }
 }
 
