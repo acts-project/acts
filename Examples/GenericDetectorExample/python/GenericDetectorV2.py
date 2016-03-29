@@ -133,7 +133,6 @@ class GenericDetectorConstruction(object):
         # and some parameters
         BeamPipeVolumeBuilder.CylinderVolumeHelper = CylinderVolumeHelper   
         BeamPipeVolumeBuilder.LayerBuilder         = BeamPipeBuilder
-        BeamPipeVolumeBuilder.LayerArrayCreator    = LayerArrayCreator        
         BeamPipeVolumeBuilder.LayerEnvelopeR       = 1.
         BeamPipeVolumeBuilder.LayerEnvelopeZ       = 1.
         BeamPipeVolumeBuilder.OutputLevel          = outputLevel
@@ -187,8 +186,7 @@ class GenericDetectorConstruction(object):
         PixelVolumeBuilder.VolumeName                     = 'Pixel'
         # build the volume
         PixelVolumeBuilder.CylinderVolumeHelper           =  CylinderVolumeHelper   
-        PixelVolumeBuilder.LayerBuilder                   =  PixelLayerBuilder           
-        PixelVolumeBuilder.LayerArrayCreator              =  LayerArrayCreator        
+        PixelVolumeBuilder.LayerBuilder                   =  PixelLayerBuilder
         PixelVolumeBuilder.LayerEnvelopeR                 =  1.    
         PixelVolumeBuilder.LayerEnvelopeZ                 =  10.    
         PixelVolumeBuilder.VolumeToBeamPipe               =  False
@@ -222,8 +220,7 @@ class GenericDetectorConstruction(object):
         StripVolumeBuilder.VolumeName                     = 'Strip'
         # build the volume
         StripVolumeBuilder.CylinderVolumeHelper           =  CylinderVolumeHelper   
-        StripVolumeBuilder.LayerBuilder                   =  StripLayerBuilder           
-        StripVolumeBuilder.LayerArrayCreator              =  LayerArrayCreator        
+        StripVolumeBuilder.LayerBuilder                   =  StripLayerBuilder
         StripVolumeBuilder.LayerEnvelopeR                 =  1.    
         StripVolumeBuilder.LayerEnvelopeZ                 =  10.    
         StripVolumeBuilder.VolumeToBeamPipe               =  False  
