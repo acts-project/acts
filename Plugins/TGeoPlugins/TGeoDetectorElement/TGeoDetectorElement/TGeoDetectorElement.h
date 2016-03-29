@@ -9,7 +9,7 @@
 #include "DetectorElementBase/DetectorElementBase.h"
 //Root
 #include "TGeoManager.h"
-
+#include<iostream>
 
 namespace Acts {
     
@@ -105,7 +105,9 @@ inline const Acts::Transform3D& Acts::TGeoDetectorElement::transform() const {re
 
 inline const Acts::Transform3D& Acts::TGeoDetectorElement::transform(const Identifier&) const {return (*m_transform);}
 
-inline const Acts::Surface& Acts::TGeoDetectorElement::surface() const {return (*m_surface);}
+inline const Acts::Surface& Acts::TGeoDetectorElement::surface() const {
+    if (!m_surface) std::cout << "ERROR no Surface!!"<< std::endl;
+    return (*m_surface);}
 
 inline const Acts::Surface& Acts::TGeoDetectorElement::surface(const Identifier&) const {return (*m_surface);}
 

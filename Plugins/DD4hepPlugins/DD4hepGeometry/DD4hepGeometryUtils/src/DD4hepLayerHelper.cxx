@@ -272,8 +272,7 @@ void Acts::DD4hepLayerHelper::createSurfaceVector(DD4hep::Geometry::DetElement& 
         else throw GaudiException("Detector element is not declared sensitive, can not access segmentation", "FATAL", StatusCode::FAILURE  );
         Acts::DD4hepDetElement* dd4hepDetElement = new Acts::DD4hepDetElement(detElement,segmentation,motherTransform);
         //add surface to surface vector
-        const Acts::Surface* surf = &dd4hepDetElement->surface();
-        surfaces.push_back(surf);
+        surfaces.push_back(&(dd4hepDetElement->surface()));
     }
 }
 
