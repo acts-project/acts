@@ -4,6 +4,10 @@
 #include "Surfaces/TrapezoidBounds.h"
 #include "Surfaces/RectangleBounds.h"
 
+#include "Material/Material.h"
+#include "Material/MaterialProperties.h"
+#include "Material/HomogeneousSurfaceMaterial.h"
+
 #include "TGeoBBox.h"
 #include "TGeoTrd2.h"
 
@@ -27,17 +31,23 @@ m_neighbours()
     //currently only surfaces with rectangular or trapezoidal shape implemented
     TGeoBBox* box       = dynamic_cast<TGeoBBox*>(m_detElement->GetVolume()->GetShape());
     TGeoTrd2* trapezoid = dynamic_cast<TGeoTrd2*>(m_detElement->GetVolume()->GetShape());
+    TGeoMaterial* mat = m_detElement->GetVolume()->GetMaterial();
+    Material moduleMaterial (mat->GetRadLen(),mat->GetIntLen(),mat->GetA(),mat->GetZ(),mat->GetDensity());
     if (trapezoid) {
         //extract the surface bounds
         auto trapezoidBounds = std::make_shared<const Acts::TrapezoidBounds>(trapezoid->GetDx1(),trapezoid->GetDx2(),trapezoid->GetDy1());
         m_bounds = trapezoidBounds;
         m_surface = std::make_shared<const Acts::PlaneSurface>(*this,m_identifier);
+        MaterialProperties moduleMaterialProperties(moduleMaterial,trapezoid->GetDz());
+        m_surface->setSurfaceMaterial(std::shared_ptr<const SurfaceMaterial>(new HomogeneousSurfaceMaterial(moduleMaterialProperties)));
     }
     else {
         //extract the surface bounds
         auto rectangleBounds = std::make_shared<const Acts::RectangleBounds>(box->GetDX(),box->GetDY());
         m_bounds = rectangleBounds;
         m_surface = std::make_shared<const Acts::PlaneSurface>(*this,m_identifier);
+        MaterialProperties moduleMaterialProperties(moduleMaterial,box->GetDZ());
+        m_surface->setSurfaceMaterial(std::shared_ptr<const SurfaceMaterial>(new HomogeneousSurfaceMaterial(moduleMaterialProperties)));
     }
 }
 
