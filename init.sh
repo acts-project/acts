@@ -27,3 +27,5 @@ cd $inithere
 
 # export CMTPROJECTPATH=/afs/cern.ch/exp/fcc/sw/0.5/
 
+#needed for detector building in DD4hep
+export LD_LIBRARY_PATH=$ATS/build.x86_64-slc6-gcc49-opt/lib:$LD_LIBRARY_PATH
