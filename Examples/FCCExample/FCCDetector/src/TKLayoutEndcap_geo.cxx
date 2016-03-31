@@ -107,4 +107,4 @@ static Ref_t create_element(LCDD& lcdd, xml_h xml, SensitiveDetector sens)
     return cylinderVolume;
 }
 
-DECLARE_DETELEMENT(ACTS_Endcap, create_element)
+DECLARE_DETELEMENT(ACTS_TKLayoutEndcap, create_element)

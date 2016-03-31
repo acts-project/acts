@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lccdd xmlns:compact="http://www.lcsim.org/schemas/compact/1.0"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xs:noNamespaceSchemaLocation="http://www.lcsim.org/schemas/compact/1.0/compact.xsd">
+    
+    <includes>
+        <gdmlFile  ref="elements.xml"/>
+        <gdmlFile  ref="materials.xml"/>
+    </includes>
+    
+    <info name="FCCTracker"
+        title="A test tracker in FCC dimensions"
+        author="julia.hrdinka@cern.ch"
+        url="none"
+        status="development"
+        version="$Id:??$">
+        <comment>First demonstration tracker in FCC dimensions, containing simple silicon modules, without any substructure or support material. The example contains three hierarchies, a pixel tracker, a short strip and a long strip tracker.</comment>
+    </info>
+    
+    <define>
+        <!--World-->
+        <constant name="world_size" value="30*m"/>
+        <constant name="world_x" value="world_size"/>
+        <constant name="world_y" value="world_size"/>
+        <constant name="world_z" value="world_size"/>
+        <!-------------------------------------------------------->
+        <!--Envelope0-->
+        <constant name="Env0_rmin"          value="2.1*cm"/>
+        <constant name="Env0_rmax"          value="93.75*cm"/>
+        <constant name="Env0_dz"            value="300.*cm"/>
+        <!--Barrel0-->
+        <constant name="B0_rmin"            value="2.1*cm"/>
+        <constant name="B0_rmax"            value="93.75*cm"/>
+        <constant name="B0_dz"              value="187.5*cm"/>
+        <constant name="B0_zpos"            value="0.*cm"/>
+        <constant name="B0_M_repeatZ"       value="30"/>
+        <constant name="B0_L_dz"            value="186.5*cm"/>
+        <!--Layer0-->
+        <constant name="B0_L0_rmin"         value="3.85*cm"/>
+        <constant name="B0_L0_rmax"         value="8.85*cm"/>
+        <constant name="B0_L0_M_repeatPhi"  value="40"/>
+        <!--Layer1-->
+        <constant name="B0_L1_rmin"         value="27.85*cm"/>
+        <constant name="B0_L1_rmax"         value="31.85*cm"/>
+        <constant name="B0_L1_M_repeatPhi"  value="100"/>
+        <!--Layer2-->
+        <constant name="B0_L2_rmin"         value="50.85*cm"/>
+        <constant name="B0_L2_rmax"         value="55.85*cm"/>
+        <constant name="B0_L2_M_repeatPhi"  value="150"/>
+        <!--Layer3-->
+        <constant name="B0_L3_rmin"         value="74.85*cm"/>
+        <constant name="B0_L3_rmax"         value="79.85*cm"/>
+        <constant name="B0_L3_M_repeatPhi"  value="300"/>
+        <!--Module-->
+        <constant name="B_M_width"          value="12.0*mm"/>
+        <constant name="B_M_length"         value="31.*mm"/>
+        <constant name="B_M_thickness"      value="0.1375*mm"/>
+        <constant name="B_M_offsetZ"        value="60.*mm"/>
+        <constant name="B_M_offsetR"        value="0.3*mm"/>
+        <!--EndCap0-->
+        <constant name="E0_rmin"            value="2.1*cm"/>
+        <constant name="E0_rmax"            value="93.75*cm"/>
+        <constant name="E0_dz"              value="56.25*cm"/>
+        <constant name="pE0_zpos"           value="243.75*cm"/>
+        <constant name="nE0_zpos"           value="-243.75*cm"/>
+        <!--Layer0-->
+        <constant name="E0_L_dz"            value="6.*cm"/>
+        <constant name="E0_L0_pos"          value="-43.35*cm"/>
+        <constant name="E0_L1_pos"          value="-18.45"/>
+        <constant name="E0_L2_pos"          value="18.45"/>
+        <constant name="E0_L3_pos"          value="43.35*cm"/>
+        <!--Module-->
+        <constant name="E_M0_pos"           value="0.*mm"/>
+        <constant name="E_M0_X1"            value="40.*mm"/>
+        <constant name="E_M0_X2"            value="45.*mm"/>
+        <constant name="E0_L0_M0_r"         value="24.1*cm"/>
+        <constant name="E_M_length"         value="22.*cm"/>
+        <constant name="E_M_thickness"      value="0.1375"/>
+        <constant name="E0_L_modulesInPhi"  value="50"/>
+        
+        <constant name="E_M1_pos"           value="-0.275*mm"/>
+        <constant name="E_M1_X1"            value="45.*mm"/>
+        <constant name="E_M1_X2"            value="50.*mm"/>
+        <constant name="E0_L0_M1_r"         value="57.85*cm"/>
+        
+        <constant name="E_M2_pos"           value="0.*mm"/>
+        <constant name="E_M2_X1"            value="80.*mm"/>
+        <constant name="E_M2_X2"            value="100.*mm"/>
+        <constant name="E0_L0_M2_r"         value="101.85*cm"/>
+        
+        <constant name="E_M3_pos"           value="-0.275*mm"/>
+        <constant name="E_M3_X1"            value="100.*mm"/>
+        <constant name="E_M3_X2"            value="143.*mm"/>
+        <constant name="E0_L0_M3_r"         value="130.25*cm"/>
+        
+        <constant name="E_M4_pos"           value="0.*mm"/>
+        <constant name="E_M4_X1"            value="143.*mm"/>
+        <constant name="E_M4_X2"            value="180.*mm"/>
+        <constant name="E0_L0_M4_r"         value="150.25*cm"/>
+        
+        <constant name="E_M5_pos"           value="-0.275*mm"/>
+        <constant name="E_M5_X1"            value="180.*mm"/>
+        <constant name="E_M5_X2"            value="200.*mm"/>
+        <constant name="E0_L0_M5_r"         value="180.625*cm"/>
+        
+        <constant name="E_M6_pos"           value="0.*mm"/>
+        <constant name="E_M6_X1"            value="200.*mm"/>
+        <constant name="E_M6_X2"            value="230.*mm"/>
+        <constant name="E0_L0_M6_r"         value="211.*cm"/>
+        
+        <!-------------------------------------------------------->
+        <!--Envelope1-->
+        <constant name="Env1_rmin"          value="2.1*cm"/>
+        <constant name="Env1_rmax"          value="156.25*cm"/>
+        <constant name="Env1_dz"            value="500.*cm"/>
+        <!--Barrel1-->
+        <constant name="B1_rmin"            value="93.7*cm"/>
+        <constant name="B1_rmax"            value="156.25*cm"/>
+        <constant name="B1_dz"              value="300.*cm"/>
+        <constant name="B1_zpos"            value="0.*cm"/>
+        <constant name="B1_M_repeatZ"       value="23"/>
+        <constant name="B1_L_dz"            value="288.5*cm"/>
+        <!--Layer0-->
+        <constant name="B1_L0_rmin"         value="98.25*cm"/>
+        <constant name="B1_L0_rmax"         value="107.25*cm"/>
+        <constant name="B1_L0_M_repeatPhi"  value="130"/>
+        <!--Layer1-->
+        <constant name="B1_L1_rmin"         value="113.25*cm"/>
+        <constant name="B1_L1_rmax"         value="124.25*cm"/>
+        <constant name="B1_L1_M_repeatPhi"  value="150"/>
+        <!--Layer2-->
+        <constant name="B1_L2_rmin"         value="128.25*cm"/>
+        <constant name="B1_L2_rmax"         value="137.25*cm"/>
+        <constant name="B1_L2_M_repeatPhi"  value="180"/>
+        <!--Layer3-->
+        <constant name="B1_L3_rmin"         value="144.25*cm"/>
+        <constant name="B1_L3_rmax"         value="153.25*cm"/>
+        <constant name="B1_L3_M_repeatPhi"  value="200"/>
+        <!--Module-->
+        <constant name="B1_M_width"          value="30.0*mm"/>
+        <constant name="B1_M_length"         value="60.4*mm"/>
+        <constant name="B1_M_thickness"      value="0.1375*mm"/>
+        <constant name="B1_M_offsetZ"        value="120.*mm"/>
+        <constant name="B1_M_offsetR"        value="0.3*mm"/>
+        <!--EndCap0-->
+        <constant name="E1_rmin"            value="2.1*cm"/>
+        <constant name="E1_rmax"            value="156.25*cm"/>
+        <constant name="E1_dz"              value="93.75*cm"/>
+        <constant name="nE1_zpos"           value="-406.25*cm"/>
+        <constant name="pE1_zpos"           value="406.25*cm"/>
+        <!--Layer0-->
+        <constant name="E1_L_dz"            value="10.*cm"/>
+        <constant name="E1_L0_pos"          value="62.25*cm"/>
+        <constant name="E1_L1_pos"          value="20.75*cm"/>
+        <constant name="E1_L2_pos"          value="-20.75*cm"/>
+        <constant name="E1_L3_pos"          value="-62.25*cm"/>
+        <!-------------------------------------------------------->
+        <!--Envelope2-->
+        <constant name="Env2_rmin"          value="2.1*cm"/>
+        <constant name="Env2_rmax"          value="250*cm"/>
+        <constant name="Env2_dz"            value="800.*cm"/>
+        <!--Barrel2-->
+        <constant name="B2_rmin"            value="156.25*cm"/>
+        <constant name="B2_rmax"            value="250.*cm"/>
+        <constant name="B2_dz"              value="500.*cm"/>
+        <constant name="B2_zpos"            value="0.*cm"/>
+        <constant name="B2_M_repeatZ"       value="24"/>
+        <constant name="B2_L_dz"            value="492.*cm"/>
+        <!--Layer0-->
+        <constant name="B2_L0_rmin"         value="158.*cm"/>
+        <constant name="B2_L0_rmax"         value="167.*cm"/>
+        <constant name="B2_L0_M_repeatPhi"  value="120"/>
+        <!--Layer1-->
+        <constant name="B2_L1_rmin"         value="181.*cm"/>
+        <constant name="B2_L1_rmax"         value="190.*cm"/>
+        <constant name="B2_L1_M_repeatPhi"  value="150"/>
+        <!--Layer2-->
+        <constant name="B2_L2_rmin"         value="204.*cm"/>
+        <constant name="B2_L2_rmax"         value="213.*cm"/>
+        <constant name="B2_L2_M_repeatPhi"  value="180"/>
+        <!--Layer3-->
+        <constant name="B2_L3_rmin"         value="227.*cm"/>
+        <constant name="B2_L3_rmax"         value="236.*cm"/>
+        <constant name="B2_L3_M_repeatPhi"  value="200"/>
+        <!--Module-->
+        <constant name="B2_M_width"          value="50.0*mm"/>
+        <constant name="B2_M_length"         value="100.4*mm"/>
+        <constant name="B2_M_thickness"      value="0.1375*mm"/>
+        <constant name="B2_M_offsetZ"        value="200.*mm"/>
+        <constant name="B2_M_offsetR"        value="0.3*mm"/>
+        <!--EndCap2-->
+        <constant name="E2_rmin"            value="2.1*cm"/>
+        <constant name="E2_rmax"            value="250.*cm"/>
+        <constant name="E2_dz"              value="150.*cm"/>
+        <constant name="nE2_zpos"           value="-650.*cm"/>
+        <constant name="pE2_zpos"           value="650.*cm"/>
+        <!--Layer2-->
+        <constant name="E2_L_dz"            value="10.*cm"/>
+        <constant name="E2_L0_pos"          value="96.*cm"/>
+        <constant name="E2_L1_pos"          value="32.*cm"/>
+        <constant name="E2_L2_pos"          value="-32.*cm"/>
+        <constant name="E2_L3_pos"          value="-96.*cm"/>
+        
+</define>
+
+    <display>
+        <vis name="violet" r="0.4" g="0." b="0.4" alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
+        <vis name="red" r="0.6" g="0." b="0." alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
+        <vis name="orange" r="0.65" g="0.35" b="0." alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
+        <vis name="lightblue" r="0." g="0." b="0.5" alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
+        <vis name="lightred" r="0.5" g="0." b="0." alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
+        <vis name="lightgreen" r="0." g="0.5" b="0." alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
+        <vis name="BlueVisTrans" alpha="0.1" r="0.0" g="0.0" b="1.0" showDaughters="true" visible="false"/>
+    </display>
+
+    <readouts>
+        <readout name="B0_Readout">
+            <segmentation type="CartesianGridXY" grid_size_x="0.05*mm" grid_size_y="0.05*mm"/>
+            <id>system:3,layer:3,module:15,x:32:-16,y:-16</id>
+        </readout>
+    </readouts>
+
+
+    <include ref="FCCTrackerPixel.xml"/>
+    <include ref="FCCTrackerShortStrip.xml"/>
+    <include ref="FCCTrackerLongStrip.xml"/>
+
+    <detectors>
+        <detector id="1" name="FCCTrackerPixel" type="DD4hep_SubdetectorAssembly" vis="BlueVisTrans">
+            <shape name="EnvelopeShape1" type="Tube" rmin="Env0_rmin" rmax="Env0_rmax" dz="Env0_dz" material="Air"/>
+            <composite name="Barrel0"/>
+            <composite name="nEndCap0"/>
+            <composite name="pEndCap0"/>
+        </detector>
+        <detector id="2" name="FCCTrackerShortStrip" type="DD4hep_SubdetectorAssembly" vis="BlueVisTrans">
+            <shape name="EnvelopeShape2" type="Tube" rmin="Env1_rmin" rmax="Env1_rmax" dz="Env1_dz" material="Air"/>
+            <composite name="Barrel1"/>
+            <composite name="nEndCap1"/>
+            <composite name="pEndCap1"/>
+        </detector>
+        <detector id="3" name="FCCTrackerLongStrip" type="DD4hep_SubdetectorAssembly" vis="BlueVisTrans">
+            <shape name="EnvelopeShape3" type="Tube" rmin="Env2_rmin" rmax="Env2_rmax" dz="Env2_dz" material="Air"/>
+            <composite name="Barrel2"/>
+            <composite name="nEndCap2"/>
+            <composite name="pEndCap2"/>
+        </detector>
+    </detectors>
+</lccdd>
