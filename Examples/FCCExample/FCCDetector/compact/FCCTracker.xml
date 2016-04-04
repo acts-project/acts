@@ -207,9 +207,8 @@
         <vis name="violet" r="0.4" g="0." b="0.4" alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
         <vis name="red" r="0.6" g="0." b="0." alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
         <vis name="orange" r="0.65" g="0.35" b="0." alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
-        <vis name="lightblue" r="0." g="0." b="0.5" alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
-        <vis name="lightred" r="0.5" g="0." b="0." alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
-        <vis name="lightgreen" r="0." g="0.5" b="0." alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
+        <vis name="blue" r="0." g="0." b="0.5" alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
+        <vis name="green" r="0." g="0.5" b="0." alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
         <vis name="BlueVisTrans" alpha="0.1" r="0.0" g="0.0" b="1.0" showDaughters="true" visible="false"/>
     </display>
 
@@ -222,8 +221,8 @@
 
 
     <include ref="FCCTrackerPixel.xml"/>
-    <include ref="FCCTrackerShortStrip.xml"/>
-    <include ref="FCCTrackerLongStrip.xml"/>
+ <!--   <include ref="FCCTrackerShortStrip.xml"/>
+    <include ref="FCCTrackerLongStrip.xml"/>-->
 
     <detectors>
         <detector id="1" name="FCCTrackerPixel" type="DD4hep_SubdetectorAssembly" vis="BlueVisTrans">
@@ -232,7 +231,7 @@
             <composite name="nEndCap0"/>
             <composite name="pEndCap0"/>
         </detector>
-        <detector id="2" name="FCCTrackerShortStrip" type="DD4hep_SubdetectorAssembly" vis="BlueVisTrans">
+ <!--       <detector id="2" name="FCCTrackerShortStrip" type="DD4hep_SubdetectorAssembly" vis="BlueVisTrans">
             <shape name="EnvelopeShape2" type="Tube" rmin="Env1_rmin" rmax="Env1_rmax" dz="Env1_dz" material="Air"/>
             <composite name="Barrel1"/>
             <composite name="nEndCap1"/>
@@ -243,6 +242,6 @@
             <composite name="Barrel2"/>
             <composite name="nEndCap2"/>
             <composite name="pEndCap2"/>
-        </detector>
+        </detector>-->
     </detectors>
 </lccdd>

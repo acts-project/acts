@@ -54,6 +54,8 @@ static Ref_t create_element(LCDD& lcdd, xml_h xml, SensitiveDetector sens)
             double dz   = x_slice.z();
             double dr   = x_slice.dr();
             size_t module_num = 0;
+            //Create the module volume
+            Volume mod_vol("module",Box(x_module.length(),x_module.width(),x_module.thickness()),lcdd.material(x_module.materialStr()));
             //Place the Modules in z
             for (int k=-zrepeat;k<=zrepeat;k++)
             {
@@ -62,8 +64,6 @@ static Ref_t create_element(LCDD& lcdd, xml_h xml, SensitiveDetector sens)
                 if (k%2 == 0) r+=dr;
                 //Place the modules in phi
                 for (int i=0; i<repeat; ++i) {
-                    //Creat the module volume
-                    Volume mod_vol("module",Box(x_module.length(),x_module.width(),x_module.thickness()),lcdd.material(x_module.materialStr()));
                     //Visualization
                     mod_vol.setVisAttributes(lcdd, x_module.visStr());
                     double phi = deltaphi/dd4hep::rad * i;
@@ -99,10 +99,8 @@ static Ref_t create_element(LCDD& lcdd, xml_h xml, SensitiveDetector sens)
         ++layer_num;
     }
     //Place Volume
-    Position endcap_translation(0.,0.,x_det_dim.z());
-    Transform3D endcap_transform(endcap_translation);
     Volume mother_vol = lcdd.pickMotherVolume(cylinderVolume);
-    PlacedVolume placedTube = mother_vol.placeVolume(tube_vol, endcap_transform);
+    PlacedVolume placedTube = mother_vol.placeVolume(tube_vol);
     placedTube.addPhysVolID("system",cylinderVolume.id());
     cylinderVolume.setPlacement(placedTube);
     
