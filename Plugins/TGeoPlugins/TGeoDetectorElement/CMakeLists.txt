@@ -18,5 +18,5 @@ add_definitions(-DACTS_GAUDI)
 gaudi_add_library(TGeoDetectorElement
                   src/*.cxx
                   PUBLIC_HEADERS TGeoDetectorElement
-                  INCLUDE_DIRS ${EIGEN3_HOME} ROOT DetectorElementBase CoreIdentifier Surfaces Material
+                  INCLUDE_DIRS ${EIGEN3_HOME} ROOT DetectorElementBase CoreIdentifier Surfaces Material Algebra
                   LINK_LIBRARIES ROOT Surfaces Material)
