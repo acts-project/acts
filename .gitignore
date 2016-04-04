@@ -27,3 +27,5 @@ doc/*
 
 #json output
 *.json
+#root output
+*.root
