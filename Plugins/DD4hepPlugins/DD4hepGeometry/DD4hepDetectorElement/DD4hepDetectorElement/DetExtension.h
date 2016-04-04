@@ -46,16 +46,16 @@ namespace Acts {
     };
 }
 
-inline void Acts::DetExtension::setShape(Acts::ShapeType shape) {
-    m_shape = shape;
+inline void Acts::DetExtension::setShape(Acts::ShapeType type) {
+    m_shape = type;
 }
 
 inline Acts::ShapeType Acts::DetExtension::shape() const {
     return m_shape;
 }
 
-inline void Acts::DetExtension::setSegmentation(const DD4hep::Geometry::Segmentation segmentation) {
-    m_segmentation = segmentation;
+inline void Acts::DetExtension::setSegmentation(const DD4hep::Geometry::Segmentation seg) {
+    m_segmentation = seg;
 }
 
 inline const DD4hep::Geometry::Segmentation Acts::DetExtension::segmentation() const {
