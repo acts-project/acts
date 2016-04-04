@@ -46,20 +46,19 @@ static Ref_t create_element(LCDD& lcdd, xml_h xml, SensitiveDetector sens)
         layer_vol.setVisAttributes(lcdd, x_layer.visStr());
         //go trough possible modules
         if(x_layer.hasChild(_U(module))){
-            for (xml_coll_t i(x_layer,_U(module)); i; i++) {
+          for (xml_coll_t i(x_layer,_U(module)); i; i++) {
                 xml_comp_t x_module = i;
             int repeat = x_module.repeat();
             double deltaphi = 2.*M_PI/repeat;
             double radius   = x_module.radius();
             double slicedz  = x_module.dz();
-            
+              //Create the module volume
+              Volume mod_vol("module", Trapezoid(x_module.x1(),x_module.x2(), x_module.thickness(), x_module.thickness(),x_module.length()), lcdd.material(x_module.materialStr()));
             size_t module_num = 0;
             //Place the Modules
             for (int k=0;k < repeat;k++)
             {
                 string zname = _toString(k,"z%d");
-                //Create the module volume
-                Volume mod_vol("module", Trapezoid(x_module.x1(),x_module.x2(), x_module.thickness(), x_module.thickness(),x_module.length()), lcdd.material(x_module.materialStr()));//changed
                 //Visualization
                 mod_vol.setVisAttributes(lcdd, x_module.visStr());
                 double phi = deltaphi/dd4hep::rad * k;
@@ -85,17 +84,17 @@ static Ref_t create_element(LCDD& lcdd, xml_h xml, SensitiveDetector sens)
                 ++module_num;
             }
             ++module_num_num;
+          }
         }
-        }
+        double layerZpos = x_layer.z();
+        if (x_det_dim.z() < 0.) layerZpos = -x_layer.z();
         //Placed Layer Volume
-        Position layer_pos(0.,0.,x_layer.z());
+        Position layer_pos(0.,0.,layerZpos);
         PlacedVolume placedLayer = tube_vol.placeVolume(layer_vol, layer_pos);
         placedLayer.addPhysVolID("layer",layer_num);
         lay_det.setPlacement(placedLayer);
         ++layer_num;
     }
-
-    
     //Place Volume
     Position endcap_translation(0.,0.,x_det_dim.z());
     Transform3D endcap_transform(endcap_translation);

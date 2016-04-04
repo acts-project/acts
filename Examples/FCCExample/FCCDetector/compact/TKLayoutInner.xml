@@ -42,232 +42,232 @@
     <!--negEndCap-->
     <detector id="101" name="nEndCap0" type="ACTS_TKLayoutEndcap" readout="B0_Readout">
         <dimensions rmin="E0_rmin" rmax="E0_rmax" dz="E0_dz" z="nE0_zpos" vis="invisible"/>
-        <layer id="0" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L0_pos" material="Carbon" vis="invisible">
-            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+        <layer id="0" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L0_pos" material="Air" vis="EndcapLayerVis">
+            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-        </layer>
-        <layer id="1" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L1_pos" material="Carbon" vis="invisible">
-            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
         </layer>
-        <layer id="2" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L2_pos" material="Carbon" vis="invisible">
-            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+        <layer id="1" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L1_pos" material="Air" vis="EndcapLayerVis">
+            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-        </layer>
-        <layer id="3" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L3_pos" material="Carbon" vis="invisible">
-            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
         </layer>
-        <layer id="4" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L4_pos" material="Carbon" vis="invisible">
-            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+        <layer id="2" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L2_pos" material="Air" vis="EndcapLayerVis">
+            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-        </layer>
-        <layer id="5" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L5_pos" material="Carbon" vis="invisible">
-            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
         </layer>
-        <layer id="6" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L6_pos" material="Carbon" vis="invisible">
-            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+        <layer id="3" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L3_pos" material="Air" vis="EndcapLayerVis">
+            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
         </layer>
-        <layer id="7" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L7_pos" material="Carbon" vis="invisible">
-            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+        <layer id="4" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L4_pos" material="Air" vis="EndcapLayerVis">
+            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+        </layer>
+        <layer id="5" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L5_pos" material="Air" vis="EndcapLayerVis">
+            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+        </layer>
+        <layer id="6" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L6_pos" material="Air" vis="EndcapLayerVis">
+            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+        </layer>
+        <layer id="7" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L7_pos" material="Air" vis="EndcapLayerVis">
+            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
         </layer>
     </detector>
     <!--posEndCap-->
-    <detector id="102" name="pEndCap0" type="ACTS_Endcap" readout="B0_Readout">
+    <detector id="102" name="pEndCap0" type="ACTS_TKLayoutEndcap" readout="B0_Readout">
         <dimensions rmin="E0_rmin" rmax="E0_rmax" dz="E0_dz" z="pE0_zpos" vis="invisible"/>
-        <layer id="0" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L0_pos" material="Carbon" vis="invisible">
-            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+        <layer id="0" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L0_pos" material="Air" vis="EndcapLayerVis">
+            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-        </layer>
-        <layer id="1" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L1_pos" material="Carbon" vis="invisible">
-            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
         </layer>
-        <layer id="2" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L2_pos" material="Carbon" vis="invisible">
-            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+        <layer id="1" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L1_pos" material="Air" vis="EndcapLayerVis">
+            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-        </layer>
-        <layer id="3" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L3_pos" material="Carbon" vis="invisible">
-            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
         </layer>
-        <layer id="4" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L4_pos" material="Carbon" vis="invisible">
-            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+        <layer id="2" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L2_pos" material="Air" vis="EndcapLayerVis">
+            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-        </layer>
-        <layer id="5" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L5_pos" material="Carbon" vis="invisible">
-            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
-            </module>
-            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
         </layer>
-        <layer id="6" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L6_pos" material="Carbon" vis="invisible">
-            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+        <layer id="3" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L3_pos" material="Air" vis="EndcapLayerVis">
+            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
         </layer>
-        <layer id="7" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L7_pos" material="Carbon" vis="invisible">
-            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+        <layer id="4" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L4_pos" material="Air" vis="EndcapLayerVis">
+            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
-            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Carbon" vis="orange" sensitive="true">
+            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+        </layer>
+        <layer id="5" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L5_pos" material="Air" vis="EndcapLayerVis">
+            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+        </layer>
+        <layer id="6" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L6_pos" material="Air" vis="EndcapLayerVis">
+            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+        </layer>
+        <layer id="7" inner_r="E0_L_rmin" outer_r="E0_L_rmax" dz="E0_L_dz" z="E0_L7_pos" material="Air" vis="EndcapLayerVis">
+            <module name ="TrMod0" radius="E0_M0_r" dz="E_M0_pos" x1="E_M0_X1" x2="E_M0_X2" length="E_M0_length" thickness="E_M_thickness" repeat="E0_M0_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod1" radius="E0_M1_r" dz="E_M1_pos" x1="E_M1_X1" x2="E_M1_X2" length="E_M1_length" thickness="E_M_thickness" repeat="E0_M1_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod2" radius="E0_M2_r" dz="E_M2_pos" x1="E_M2_X1" x2="E_M2_X2" length="E_M2_length" thickness="E_M_thickness" repeat="E0_M2_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod3" radius="E0_M3_r" dz="E_M3_pos" x1="E_M3_X1" x2="E_M3_X2" length="E_M3_length" thickness="E_M_thickness" repeat="E0_M3_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod4" radius="E0_M4_r" dz="E_M4_pos" x1="E_M4_X1" x2="E_M4_X2" length="E_M4_length" thickness="E_M_thickness" repeat="E0_M4_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
+            </module>
+            <module name ="TrMod5" radius="E0_M5_r" dz="E_M5_pos" x1="E_M5_X1" x2="E_M5_X2" length="E_M5_length" thickness="E_M_thickness" repeat="E0_M5_modulesInPhi" material="Silicon" vis="orange" sensitive="true">
             </module>
         </layer>
     </detector>
