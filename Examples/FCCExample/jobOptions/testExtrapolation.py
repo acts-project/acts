@@ -16,7 +16,7 @@ ExAlgorithmOutputLevel  = VERBOSE #VERBOSE #
 
 from FCCService.FCCServiceConf import Acts__DD4hepGeometrySvc
 DD4hepGeometrySvc            = Acts__DD4hepGeometrySvc("DD4hepGeometrySvc", OutputLevel = VERBOSE)
-DD4hepGeometrySvc.Detector   = ["file:Examples/FCCExample/FCCDetector/compact/FCCTracker.xml"]
+DD4hepGeometrySvc.Detector   = ["file:Examples/FCCExample/FCCDetector/compact/TKLayoutTracker.xml"]
 
 from DD4hepGeometryTools.DD4hepGeometryToolsConf import Acts__DD4hepCylinderGeometryBuilder
 DD4hepGeometryBuilder                   = Acts__DD4hepCylinderGeometryBuilder('DD4hepGeometryBuilder')
@@ -48,7 +48,7 @@ ExtrapolationEngine.OutputLevel = ExToolOutputLevel
 from ExtrapolationTest.ExtrapolationTestConf import Acts__ExtrapolationEngineTest
 ExtrapolationEngineTest = Acts__ExtrapolationEngineTest('ExtrapolationEngineTest')
 # how many tests you want per event
-ExtrapolationEngineTest.NumberOfTestsPerEvent   = 100000
+ExtrapolationEngineTest.NumberOfTestsPerEvent   = 10000
 # parameters mode: 0 - neutral tracks, 1 - charged particles
 ExtrapolationEngineTest.ParametersMode          = 1
 # do the full test backwards as well
@@ -61,15 +61,15 @@ ExtrapolationEngineTest.SimgaOriginZ0           = 55.6
 ExtrapolationEngineTest.PtMin                   = 1000
 ExtrapolationEngineTest.PtMax                   = 10000
 # The test range in Eta
-ExtrapolationEngineTest.EtaMin                  = -3.5
-ExtrapolationEngineTest.EtaMax                  =  3.5
+ExtrapolationEngineTest.EtaMin                  =  0
+ExtrapolationEngineTest.EtaMax                  =  5.
 # Configure how you wanna run
 ExtrapolationEngineTest.CollectSensitive        = True
 ExtrapolationEngineTest.CollectPassive          = True
 ExtrapolationEngineTest.CollectBoundary         = True
 ExtrapolationEngineTest.CollectMaterial         = True
 ExtrapolationEngineTest.SensitiveCurvilinear    = False
-ExtrapolationEngineTest.RobustSearch            = False
+ExtrapolationEngineTest.RobustSearch            = True
 # the path limit to test
 ExtrapolationEngineTest.PathLimit               = -1.
 # give it the engine
