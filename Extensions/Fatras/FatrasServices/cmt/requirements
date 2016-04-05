@@ -13,7 +13,6 @@ use NeutralParameters       NeutralParameters-*         EventData
 use EventDataUtils          EventDataUtils-*            EventData
 use Detector                Detector-*                  Geometry
 use Material                Material-*                  Geometry
-use Material                Material-*                  Geometry
 use FatrasInterfaces        FatrasInterfaces-*          Extensions/Fatras
 
 #################################################################

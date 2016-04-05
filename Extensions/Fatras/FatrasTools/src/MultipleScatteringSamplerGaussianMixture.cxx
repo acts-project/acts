@@ -11,7 +11,7 @@
 // EventData module
 #include "EventDataUtils/ParticleProperties.h"
 
-DECLARE_COMPONENT(Acts::MultipleScatteringSamplerGaussianMixture)
+DECLARE_TOOL_FACTORY(Acts::MultipleScatteringSamplerGaussianMixture)
 
 // static particle masses
 Acts::ParticleMasses Acts::MultipleScatteringSamplerGaussianMixture::s_particleMasses;

@@ -11,7 +11,7 @@
 
 #include "EventDataUtils/ParticleProperties.h"
 
-DECLARE_COMPONENT(Acts::HadronicInteractionParametricSampler)
+DECLARE_TOOL_FACTORY(Acts::HadronicInteractionParametricSampler)
 
 //static particle masses
 Acts::ParticleMasses Acts::HadronicInteractionParametricSampler::s_particleMasses;
@@ -21,7 +21,7 @@ Acts::PdgToParticleHypothesis Acts::HadronicInteractionParametricSampler::s_pdgT
 
 // constructor
 Acts::HadronicInteractionParametricSampler::HadronicInteractionParametricSampler(const std::string& t, const std::string& n, const IInterface* p) :
-  AthAlgTool(t,n,p),
+  AlgToolBase(t,n,p),
   m_rndGenSvc("AtlasRandomNumberSvc", n),
   m_processCode(121),
   m_minimumHadOutEnergy(200.*Gaudi::Units::MeV),

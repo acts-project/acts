@@ -15,7 +15,7 @@
 
 #include <math.h>
 
-DECLARE_COMPONENT(Acts::FatrasMaterialEffectsEngine)
+DECLARE_SERVICE_FACTORY(Acts::FatrasMaterialEffectsEngine)
 
 // constructor
 Acts::FatrasMaterialEffectsEngine::FatrasMaterialEffectsEngine(const std::string& name, ISvcLocator* svc):

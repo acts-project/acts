@@ -11,7 +11,7 @@
 
 #include "EventDataUtils/ParticleProperties.h"
 
-DECLARE_COMPONENT(Acts::PhotonConversionSampler)
+DECLARE_TOOL_FACTORY(Acts::PhotonConversionSampler)
 
 // statics doubles 
 double  Acts::PhotonConversionSampler::s_alpha         = 1./137.;
@@ -162,7 +162,7 @@ Acts::Vector3D Acts::PhotonConversionSampler::childDirection(const Acts::Vector3
     
     theta *= (r1 < 0.25 ) ? u : u*s_oneOverThree; // 9./(9.+27) = 0.25
 
-     ATH_MSG_VERBOSE( "[ conv ] Simulated angle to photon    = " << theta << "." );
+     MSG_VERBOSE( "[ conv ] Simulated angle to photon    = " << theta << "." );
 
     // more complex but "more true"
     Acts::Vector3D newDirection(gammaMom.unit());

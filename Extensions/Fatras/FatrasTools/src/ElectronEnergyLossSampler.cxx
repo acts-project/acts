@@ -12,7 +12,7 @@
 // EventData module
 #include "EventDataUtils/ParticleProperties.h"
 
-DECLARE_COMPONENT(Acts::ElectronEnergyLossSampler)
+DECLARE_TOOL_FACTORY(Acts::ElectronEnergyLossSampler)
 
 // static partilce masses
 Acts::ParticleMasses Acts::ElectronEnergyLossSampler::s_particleMasses;
