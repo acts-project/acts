@@ -7,6 +7,7 @@
 // Extrapolation module
 #include "ExtrapolationEngine/StaticNavigationEngine.h"
 
+
 DECLARE_SERVICE_FACTORY(Acts::StaticNavigationEngine)
 
 // constructor

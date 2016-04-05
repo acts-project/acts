@@ -12,6 +12,7 @@
 // EventData module
 #include "EventDataUtils/PropDirection.h"
 
+
 DECLARE_SERVICE_FACTORY(Acts::PropagationEngine)
 
 // constructor

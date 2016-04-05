@@ -6,7 +6,6 @@ Acts::ConstMagneticFieldSvc::ConstMagneticFieldSvc(const std::string& name, ISvc
 Acts::ServiceBase(name,svc),
 m_magField(0.)
 {
-    MSG_INFO("ConstMagneticFieldSvc Constructor");
     declareProperty("MagneticFieldValue",m_magField);
 }
 

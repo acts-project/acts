@@ -15,7 +15,7 @@ add_definitions(-DACTS_GAUDI)
 #    gaudi_project(this_project this_version
 #                  USE dep_project_1 version_1 [project_2 version_2 ...]
 #                  [DATA pkg1 [VERSION vers1] [pkg2 ...])
-gaudi_project(a-tracking-sw HEAD
+gaudi_project(ACTS HEAD
 	      USE Gaudi v26r4 )
 
 #include_directories()
