@@ -9,7 +9,7 @@ from Configurables import ApplicationMgr
 
 from FCCService.FCCServiceConf import Acts__DD4hepGeometrySvc
 DD4hepGeometrySvc            = Acts__DD4hepGeometrySvc("DD4hepGeometrySvc", OutputLevel = VERBOSE)
-DD4hepGeometrySvc.Detector   = ["file:Examples/FCCExample/FCCDetector/compact/TKLayoutTracker.xml"]
+DD4hepGeometrySvc.Detector   = ["file:Examples/FCCExample/FCCDetector/compact/FCCTracker.xml"]
 
 # configure the json dumper
 from JsonWriters.JsonWritersConf import Acts__GeometryJsonWriter
