@@ -58,7 +58,7 @@ static Ref_t create_element(LCDD& lcdd, xml_h xml, SensitiveDetector sens)
             for (int k=0;k < repeat;k++)
             {
                 double slicedz  = x_module.dz();
-                if (k%2 == 0) slicedz+=10.*x_module.thickness();
+                if (k%2 == 0) slicedz-=10.*x_module.thickness();
                 string zname = _toString(k,"z%d");
                 //Visualization
                 mod_vol.setVisAttributes(lcdd, x_module.visStr());
@@ -67,7 +67,6 @@ static Ref_t create_element(LCDD& lcdd, xml_h xml, SensitiveDetector sens)
                 Position trans(radius*cos(phi),
                                radius*sin(phi),
                                slicedz);
-                std::cout << "TRANS: " << trans << std::endl;
                 //Create the module DetElement
                 DetElement mod_det(lay_det,module_name,repeat*module_num_num+module_num);
                 //Set Sensitive Volmes sensitive
