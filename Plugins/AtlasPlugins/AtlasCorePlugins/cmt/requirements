@@ -3,9 +3,19 @@ package AtlasCorePlugins
 manager Andreas Salzburger <Andreas.Salzburger@cern.ch>
 
 use AtlasPolicy           AtlasPolicy-*
+use GaudiInterface        GaudiInterface-*      External
+use AtlasCLHEP            AtlasCLHEP-*          External
+use CoreInterfaces        CoreInterfaces-*      Core
 use AthenaBaseComps       AthenaBaseComps-*     Control
+use AthenaKernel	  AthenaKernel-*	Control
 use Identifier            Identifier-*          DetectorDescription
 
+
+public
+library AtlasCorePlugins *.cxx components/*.cxx
+apply_pattern component_library
+
 private
+macro_append cppflags $(ActsCoreService) 
 
 apply_pattern cmake_add_command command=metalibrary

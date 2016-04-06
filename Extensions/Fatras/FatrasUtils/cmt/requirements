@@ -1,0 +1,20 @@
+package FatrasUtils
+
+manager Noemi Calace <Noemi.Calace@cern.ch>
+
+use AtlasPolicy          AtlasPolicy-* 
+ 
+################## private dependencies ##############################
+private
+use GaudiInterface        GaudiInterface-*   External
+
+public
+apply_pattern installed_library
+library FatrasUtils *.cxx
+
+private
+#macro cppdebugflags '$(cppdebugflags_s)'
+#macro_remove componentshr_linkopts "-Wl,-s"
+
+macro DOXYGEN_IMAGE_PATH "../doc/images"
+macro DOXYGEN_INLINE_INHERITED_MEMB "YES"
