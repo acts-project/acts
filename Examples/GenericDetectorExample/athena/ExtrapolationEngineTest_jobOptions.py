@@ -105,6 +105,7 @@ ExtrapolationEngineTest.CollectSensitive        = True
 ExtrapolationEngineTest.CollectPassive          = True
 ExtrapolationEngineTest.CollectBoundary         = True
 ExtrapolationEngineTest.CollectMaterial         = True
+ExtrapolationEngineTest.CollectJacobians        = True
 ExtrapolationEngineTest.SensitiveCurvilinear    = False
 ExtrapolationEngineTest.RobustSearch            = False
 # the path limit to test                        
