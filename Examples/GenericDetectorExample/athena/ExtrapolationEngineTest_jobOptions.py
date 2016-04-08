@@ -36,8 +36,8 @@ from IOVDbSvc.CondDB import conddb
 conddb.setGlobalTag('OFLCOND-SIM-00-00-00')
 
 # import the GenericDetector
-from GenericDetectorV1 import GenericDetectorConstruction
-GenericDetector = GenericDetectorConstruction(name='GenericDetector', outputLevel=VERBOSE)
+from GenericDetectorExample.GenericDetectorV2 import GenericDetectorConstruction
+GenericDetector = GenericDetectorConstruction(name='GenericDetector', outputLevel=VERBOSE, Atlas = True)
 
 #--------------------------------------------------------------
 # Event related parameters
@@ -71,9 +71,11 @@ from JsonWriters.JsonWritersConf import Acts__ParametersJsonWriter as Parameters
 JsonParmatersWriter = ParametersWriter('JsonParmatersWriter')
 ToolSvc += JsonParmatersWriter
 
-from GenericExtrapolationEngine import GenericExtrapolationEngine
-ExtrapolationEninge = GenericExtrapolationEngine(name='Extrapolation', nameprefix='Generic', ToolOutputLevel=ExToolOutputLevel, TrackingGeometrySvc=GenericDetector.trackingGeometrySvc())
-svcMgr += ExtrapolationEninge
+from GenericDetectorExample.GenericExtrapolationEngine import GenExEngine
+print GenExEngine.__dict__
+ExEngine = GenExEngine(name='ExtrapolationEngine', nameprefix='Generic', ToolOutputLevel=ExToolOutputLevel, TrackingGeometrySvc=GenericDetector.trackingGeometrySvc(), Atlas = True)
+ExtrapolationEngine = ExEngine.extrapolationEngine()
+svcMgr += ExtrapolationEngine
 
 #--------------------------------------------------------------
 # Algorithm setup
@@ -103,12 +105,13 @@ ExtrapolationEngineTest.CollectSensitive        = True
 ExtrapolationEngineTest.CollectPassive          = True
 ExtrapolationEngineTest.CollectBoundary         = True
 ExtrapolationEngineTest.CollectMaterial         = True
+ExtrapolationEngineTest.CollectJacobians        = True
 ExtrapolationEngineTest.SensitiveCurvilinear    = False
 ExtrapolationEngineTest.RobustSearch            = False
 # the path limit to test                        
 ExtrapolationEngineTest.PathLimit               = -1.
 # give it the engine
-ExtrapolationEngineTest.ExtrapolationEngine     = ExtrapolationEninge
+ExtrapolationEngineTest.ExtrapolationEngine     = ExtrapolationEngine
 # the json writer
 ExtrapolationEngineTest.ParametersProcessor     = JsonParmatersWriter
 # output formatting

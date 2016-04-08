@@ -16,6 +16,8 @@
 // output stream
 #include <sstream>
 
+DECLARE_TOOL_FACTORY(Acts::GeometryJsonWriter)
+
 // constructor
 Acts::GeometryJsonWriter::GeometryJsonWriter(const std::string& t, const std::string& n, const IInterface* p) : 
   Acts::AlgToolBase(t,n,p),
@@ -50,6 +52,8 @@ Acts::GeometryJsonWriter::~GeometryJsonWriter()
 
 StatusCode Acts::GeometryJsonWriter::initialize()
 {
+    //Tool needs to be initialized
+    if (!AlgToolBase::initialize()) return StatusCode::FAILURE;
     // open the file for writing
     m_outputFile.open(m_outputFileName.c_str());
     m_outputFile << std::setiosflags(std::ios::fixed);

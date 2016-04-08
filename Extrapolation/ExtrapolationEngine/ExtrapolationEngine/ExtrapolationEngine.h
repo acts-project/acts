@@ -36,6 +36,8 @@ namespace Acts {
       Providing a destination surface is optional, if no destination surface is given the extrapolation 
       process can be stopped by other directives, e.g. stopping at a certain path limit, material limit
       or with a change of detector signature.
+   
+      @TODO Julia: currently using work arround to use ToolHandleArray because there is a bug in Gaudi. After update of Gaudi version go back to old usage -> currently marked with //bug
   
       @author Andreas.Salzburger -at- cern.ch 
   */
@@ -100,7 +102,13 @@ class ExtrapolationEngine : public ServiceBase, virtual public IExtrapolationEng
         std::string                                         m_trackingGeometryName;      //!< Name of the TrackingGeometry as given in Detector Store
         
         //!< the tool handle array for static / dense / detached
+#ifndef ACTS_GAUDI
         ServiceHandleArray<IExtrapolationEngine>            m_extrapolationEngines;      //!< the extrapolation engines for retrieval
+#else
+        // list of tools to test
+        typedef std::vector<std::string> ServiceList; //rm
+        ServiceList                                         m_exServices; //rm
+#endif
         ServiceHandle<IPropagationEngine>                   m_propagationEngine;         //!< the used propagation engine for navigation initialization
         std::vector<const IExtrapolationEngine*>            m_eeAccessor;                //!< the extrapolation engines for 
 

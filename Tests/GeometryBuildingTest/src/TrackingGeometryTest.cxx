@@ -11,6 +11,8 @@
 #include "Detector/TrackingVolume.h"
 #include "Detector/Layer.h"
 
+DECLARE_COMPONENT(Acts::TrackingGeometryTest)
+
 Acts::TrackingGeometryTest::TrackingGeometryTest(const std::string& name, ISvcLocator* pSvcLocator) :
  Acts::AlgorithmBase(name, pSvcLocator),
    m_executed(false),

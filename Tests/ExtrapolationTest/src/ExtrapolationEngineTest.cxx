@@ -9,12 +9,14 @@
 // Gaudi
 #include "GaudiKernel/ITHistSvc.h"
 
+DECLARE_COMPONENT(Acts::ExtrapolationEngineTest)
+
 Acts::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, ISvcLocator* pSvcLocator) :
  Acts::ExtrapolationTestBase(name, pSvcLocator),
  m_extrapolationEngine("",name),
  m_parametersProcessor(""),
  m_processSensitive(true),
- m_processPassive(true), 
+ m_processPassive(true),
  m_parametersMode(1),
  m_particleHypothesis(2),
  m_smearProductionVertex(false),
@@ -37,6 +39,7 @@ Acts::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, 
  m_collectPassive(false),
  m_collectBoundary(false),
  m_collectMaterial(false),
+ m_collectJacobians(false),
  m_sensitiveCurvilinear(false),
  m_searchMode(0), 
  m_backExtrapolation(false),
@@ -50,7 +53,7 @@ Acts::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, 
  m_writeTree(true),
  m_treeName("ExtrapolationEngineTest"),
  m_treeFolder("/val/"),
- m_treeDescription("ExtrapolationEngine test setup"),  
+ m_treeDescription("ExtrapolationEngine test setup"),
  m_tree(0),
  m_tRandom(0),
  m_startPositionX(0),
@@ -61,7 +64,7 @@ Acts::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, 
  m_startTheta(0),
  m_startEta(0),
  m_startP(0),
- m_startPt(0),  
+ m_startPt(0),
  m_charge(-1.0),
  m_endSuccessful(0),
  m_endPositionX(0),
@@ -108,12 +111,13 @@ Acts::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, 
     declareProperty("ParametersMode",           m_parametersMode);
     declareProperty("ParticleHypothesis",       m_particleHypothesis);
     declareProperty("BackExtrapolation",        m_backExtrapolation);
-    // configuration 
-    declareProperty("PathLimit",                m_pathLimit);    
+    // configuration
+    declareProperty("PathLimit",                m_pathLimit);
     declareProperty("CollectSensitive",         m_collectSensitive);
     declareProperty("CollectPassive",           m_collectPassive);
     declareProperty("CollectBoundary",          m_collectBoundary);
     declareProperty("CollectMaterial",          m_collectMaterial);
+    declareProperty("CollectJacobians",         m_collectJacobians);
     declareProperty("SensitiveCurvilinear",     m_sensitiveCurvilinear);
     declareProperty("SearchMode",               m_searchMode);
     // Mode for scanning in steps
@@ -140,7 +144,7 @@ Acts::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, 
     // phi min / max values
     declareProperty("PhiMin",                   m_phiMin);
     declareProperty("PhiMax",                   m_phiMax);
-    // pt min / max values 
+    // pt min / max values
     declareProperty("PtMin",                    m_ptMin);
     declareProperty("PtMax",                    m_ptMax);
     // the properties
@@ -148,7 +152,7 @@ Acts::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, 
     declareProperty("WriteValidationTree",      m_writeTree);    
     declareProperty("TreeName",                 m_treeName);
     declareProperty("TreeFolder",               m_treeFolder);
-    declareProperty("TreeDescription",          m_treeDescription);   
+    declareProperty("TreeDescription",          m_treeDescription);
 }
 
 StatusCode Acts::ExtrapolationEngineTest::finalize() {
@@ -188,15 +192,16 @@ StatusCode Acts::ExtrapolationEngineTest::finalize() {
     return StatusCode::SUCCESS;
 }
 
-StatusCode Acts::ExtrapolationEngineTest::initializeTest() 
+StatusCode Acts::ExtrapolationEngineTest::initializeTest()
 {
-    
+    MSG_INFO("initialize ExtrapolationEngineTest0");
     // Extrapolation engine
     RETRIEVE_FATAL(m_extrapolationEngine);
+    MSG_INFO("initialize ExtrapolationEngineTest1");
     // Writer
     RETRIEVE_NONEMPTY_FATAL(m_parametersProcessor);
-    // success 
-    return StatusCode::SUCCESS;    
+    // success
+    return StatusCode::SUCCESS;
 }
 
 StatusCode Acts::ExtrapolationEngineTest::bookTree()
@@ -323,17 +328,17 @@ StatusCode Acts::ExtrapolationEngineTest::bookTree()
         }   
     } 
     return StatusCode::SUCCESS;
-    
+
 }
 
 StatusCode Acts::ExtrapolationEngineTest::runTest()
 {
   MSG_VERBOSE("Running the ExtrapolationEngineTest Test in parameters mode : " << m_parametersMode);
-  
+
   if (!m_parametersProcessor.empty() &&  m_parametersProcessor->initProcessor().isFailure() )
       MSG_WARNING("Problem initializing the Processor");
 
-      
+
   // ----------------- creation of the surfaces & track parameters -------------
   for (size_t it = 0; it < ExtrapolationTestBase::m_numTests; ++it ){
       // verbose output
@@ -342,12 +347,12 @@ StatusCode Acts::ExtrapolationEngineTest::runTest()
       double eta   = (m_scanMode) ? m_currentEta : m_etaMin + (m_etaMax-m_etaMin)*Acts::ExtrapolationTestBase::m_flatDist->shoot();
       double theta = 2.*atan(exp(-eta));
       double phi   = (m_scanMode) ? m_currentPhi : m_phiMin + (m_phiMax-m_phiMin)*Acts::ExtrapolationTestBase::m_flatDist->shoot();
-      double pt    = m_ptMin  + (m_ptMax - m_ptMin)*Acts::ExtrapolationTestBase::m_flatDist->shoot(); 
+      double pt    = m_ptMin  + (m_ptMax - m_ptMin)*Acts::ExtrapolationTestBase::m_flatDist->shoot();
       double p     = pt/sin(theta);
       double q     = m_splitCharge ? m_charge*-1. : (m_parametersMode ? (Acts::ExtrapolationTestBase::m_flatDist->shoot() > 0.5 ? 1. : -1) : 1.);      // charge or neutral
 
       // initializa the validation variables
-      m_endSuccessful= 0;    
+      m_endSuccessful= 0;
       m_endPositionX = 0.;
       m_endPositionY = 0.;
       m_endPositionZ = 0.;
@@ -400,23 +405,24 @@ StatusCode Acts::ExtrapolationEngineTest::runTest()
       }              
           
       Vector3D momentum(p*sin(theta)*cos(phi), p*sin(theta)*sin(phi), p*cos(theta));        
+
       // create the start parameters
       double d0 = m_smearProductionVertex ? (m_smearFlatOriginT ? (m_d0Min + (m_d0Max-m_d0Min)*Acts::ExtrapolationTestBase::m_flatDist->shoot()) : Acts::ExtrapolationTestBase::m_gaussDist->shoot()*m_sigmaOriginT) : 0.;
       double z0 = m_smearProductionVertex ? (m_smearFlatOriginZ ? (m_z0Min + (m_z0Max-m_z0Min)*Acts::ExtrapolationTestBase::m_flatDist->shoot()) : Acts::ExtrapolationTestBase::m_gaussDist->shoot()*m_sigmaOriginZ) : 0.;
 
-      m_startPhi       = phi;  
+      m_startPhi       = phi;
       m_startEta       = eta;
-      m_startTheta     = theta;   
+      m_startTheta     = theta;
       m_startPt        = pt;
       m_startP         = p;
       m_charge         = q;
-      
+
             // preps
       std::unique_ptr<ActsSymMatrixD<5> > cov;
       ActsVectorD<5> pars; pars << d0, z0, phi, theta, q/p;
-      
+
       MSG_VERBOSE("Building parameters from Perigee with (" << d0 << ", " << z0 << ", " << phi << ", " << theta << ", " << q/p);
-      
+
       Acts::PerigeeSurface pSurface(Vector3D(0.,0.,0.));
       if (m_parametersMode == 0 ){
           // create the neutral parameters
@@ -434,8 +440,8 @@ StatusCode Acts::ExtrapolationEngineTest::runTest()
           else if (m_writeTree)
               m_tree->Fill();
       }
-  
+
   } // loop over tests
-  return StatusCode::SUCCESS;      
+  return StatusCode::SUCCESS;
 }
-  
+

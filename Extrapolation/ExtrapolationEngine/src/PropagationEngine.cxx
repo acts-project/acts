@@ -12,7 +12,8 @@
 // EventData module
 #include "EventDataUtils/PropDirection.h"
 
-DECLARE_COMPONENT(Acts::PropagationEngine)
+
+DECLARE_SERVICE_FACTORY(Acts::PropagationEngine)
 
 // constructor
 Acts::PropagationEngine::PropagationEngine(const std::string& name, ISvcLocator* svc):
@@ -50,6 +51,8 @@ StatusCode Acts::PropagationEngine::queryInterface(const InterfaceID& riid, void
 StatusCode Acts::PropagationEngine::initialize()
 {
     MSG_DEBUG("initialize()" );
+    //Service needs to be initialized
+    if (!ServiceBase::initialize()) return StatusCode::FAILURE;
     RETRIEVE_NONEMPTY_FATAL(m_propagator);
     return StatusCode::SUCCESS;
 }

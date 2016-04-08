@@ -10,7 +10,8 @@
 #include "Detector/Layer.h"
 #include "Material/SurfaceMaterial.h"
 
-DECLARE_COMPONENT(Acts::MaterialEffectsEngine)
+
+DECLARE_SERVICE_FACTORY(Acts::MaterialEffectsEngine)
 
 // constructor
 Acts::MaterialEffectsEngine::MaterialEffectsEngine(const std::string& name, ISvcLocator* svc):
@@ -49,6 +50,8 @@ StatusCode Acts::MaterialEffectsEngine::queryInterface(const InterfaceID& riid, 
 StatusCode Acts::MaterialEffectsEngine::initialize()
 {
     MSG_DEBUG("initialize()" );
+    //Service needs to be initialized
+    if (!ServiceBase::initialize()) return StatusCode::FAILURE;
     return StatusCode::SUCCESS;
 }
 

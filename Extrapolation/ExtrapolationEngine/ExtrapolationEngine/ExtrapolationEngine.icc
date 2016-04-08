@@ -22,7 +22,7 @@ template <class T> Acts::ExtrapolationCode Acts::ExtrapolationEngine::extrapolat
     // initialize the navigation
     Acts::ExtrapolationCode eCode = initNavigation<T>(eCell,sf,dir);
     EX_MSG_VERBOSE(eCell.navigationStep, "extrapolate", "", "initialize navigation with return code : " << eCode.toString() );
-    // main loop over volumes 
+    // main loop over volumes
     while (eCell.leadVolume && eCode == Acts::ExtrapolationCode::InProgress ){
         // give output that you are in the master volume loop
         EX_MSG_VERBOSE(eCell.navigationStep, "extrapolate", "loop", "processing volume : " << eCell.leadVolume->volumeName() );
@@ -40,8 +40,8 @@ template <class T> Acts::ExtrapolationCode Acts::ExtrapolationEngine::extrapolat
     // return the code
     return eCode;
 }
-                                                          
-                                                          
+
+
 template <class T> Acts::ExtrapolationCode Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
                                                                                    const Acts::Surface* sf,
                                                                                    Acts::PropDirection dir) const throw (GaudiException)
@@ -66,8 +66,8 @@ template <class T> Acts::ExtrapolationCode Acts::ExtrapolationEngine::initNaviga
     eCell.startVolume = eCell.startVolume ? eCell.startVolume : ( eCell.startLayer ? eCell.startLayer->enclosingTrackingVolume() : 0  );
     // check if you are at the volume boundary
     if (!eCell.startVolume ||  m_trackingGeometry->atVolumeBoundary(eCell.startParameters->position(),eCell.startVolume,0.001)  ) {
-      Acts::ExtrapolationCode eVol = m_navigationEngine->resolvePosition(eCell,dir,true);  
-      if (!eVol.isSuccessOrRecovered() && !eVol.inProgress()) return eVol; 
+      Acts::ExtrapolationCode eVol = m_navigationEngine->resolvePosition(eCell,dir,true);
+      if (!eVol.isSuccessOrRecovered() && !eVol.inProgress()) return eVol;
       eCell.startVolume = eCell.leadVolume;
     } else {
       eCell.leadVolume = eCell.startVolume;
@@ -100,15 +100,16 @@ template <class T> Acts::ExtrapolationCode Acts::ExtrapolationEngine::initNaviga
           Acts::ExtrapolationCell<T> navCell(*eCell.leadParameters, dir);
           navCell.addConfigurationMode(Acts::ExtrapolationMode::Direct);
           // screen output
-          m_propagationEngine->propagate(navCell,*eCell.endSurface,Acts::anyDirection,false, eCell.navigationCurvilinear);
+          Acts::ExtrapolationCode eCode = m_propagationEngine->propagate(navCell,*eCell.endSurface,Acts::anyDirection,false, eCell.navigationCurvilinear);
           // check for sucess to the destination
-          // CHECK_ECODE_SUCCESS_NODEST(navCell, eCode); @TODO check what this is
-          // // screen output
-          // EX_MSG_VERBOSE (eCell.navigationStep, "navigation", "", "found endVolume and andLayer through propagation - return code : " << eCode.toString() );
-          // take the lead parameters to find end volume and end layer
-	      // eCell.endVolume = trackingGeometry().lowestTrackingVolume(navCell.endParameters->position());
-	      // eCell.endLayer  = trackingGeometry().associatedLayer(navCell.endParameters->position());
-	      // memory cleanup
+          //@TODO check what this is
+           CHECK_ECODE_SUCCESS_NODEST(navCell, eCode);
+           // screen output
+           EX_MSG_VERBOSE (eCell.navigationStep, "navigation", "", "found endVolume and andLayer through propagation - return code : " << eCode.toString() );
+           // take the lead parameters to find end volume and end layer
+           eCell.endVolume = trackingGeometry().lowestTrackingVolume(navCell.endParameters->position());
+           eCell.endLayer  = trackingGeometry().associatedLayer(navCell.endParameters->position());
+           // memory cleanup
           delete navCell.endParameters;
       }
       // check the final end volume configuraiton - screen output
@@ -119,7 +120,7 @@ template <class T> Acts::ExtrapolationCode Acts::ExtrapolationEngine::initNaviga
     } else
         EX_MSG_VERBOSE( eCell.navigationStep, "navigation", "", "no destination surface nor end volume provided, extrapolaiton has to stop on other means." );
     // return the progress call
-    return Acts::ExtrapolationCode::InProgress;                                                              
+    return Acts::ExtrapolationCode::InProgress;
 }
 
 

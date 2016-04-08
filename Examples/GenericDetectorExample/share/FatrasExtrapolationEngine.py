@@ -1,5 +1,5 @@
 ######################################################
-# GenericExtrapoliationEngine module
+# FatrasExtrapolationEngine module
 #
 # it inherits from Acts__Extrapolator and uses
 # the AtlasTrackingGeometrySvc
@@ -13,9 +13,9 @@ from AthenaCommon.Include import Include, IncludeError, include
 from ExtrapolationEngine.ExtrapolationEngineConf import Acts__ExtrapolationEngine as ExEngine
 
 # define the class
-class GenericExtrapolationEngine( ExEngine ):
+class FatrasExtrapolationEngine( ExEngine ):
     # constructor
-    def __init__(self,name = 'Extrapolation', nameprefix = 'Atlas', ToolOutputLevel = None, TrackingGeometrySvc = None):
+    def __init__(self,name = 'Extrapolation', nameprefix = 'Fatras', ToolOutputLevel = None, TrackingGeometrySvc = None):
        
         # AthenaCommon
         from AthenaCommon.AppMgr import ServiceMgr as svcMgr
@@ -37,15 +37,9 @@ class GenericExtrapolationEngine( ExEngine ):
         # add to tool service
         svcMgr += StaticPropagator
         
-        # load the material effects engine
-        from ExtrapolationEngine.ExtrapolationEngineConf import Acts__MaterialEffectsEngine
-        MaterialEffectsEngine = Acts__MaterialEffectsEngine(name = nameprefix+'MaterialEffects')
-        # configure output formatting               
-        MaterialEffectsEngine.OutputPrefix        = '[ME] - '
-        MaterialEffectsEngine.OutputPostfix       = ' - '
-        if ToolOutputLevel : 
-            MaterialEffectsEngine.OutputLevel     = ToolOutputLevel
-        # add to tool service
+        # load the FATRAS material effects engine
+        from FatrasMaterialEffectsEngine import FatrasMaterialEffectsEngine
+        MaterialEffectsEngine = FatrasMaterialEffectsEngine(name='MaterialEffects', nameprefix='Fatras', ToolOutputLevel=ToolOutputLevel)
         svcMgr += MaterialEffectsEngine
         
         # load the static navigation engine

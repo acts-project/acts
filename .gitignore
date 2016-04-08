@@ -24,3 +24,9 @@ build*
 # =====================
 doc/*
 !doc/doxygen.config
+
+#json output
+*.json
+#root output
+*.root
+*.pyc

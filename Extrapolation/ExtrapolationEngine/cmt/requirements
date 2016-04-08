@@ -17,7 +17,6 @@ use EventDataUtils          EventDataUtils-*            EventData
 use Volumes                 Volumes-*                   Geometry
 use Surfaces                Surfaces-*                  Geometry
 use Detector                Detector-*                  Geometry
-use Material                Material-*                  Geometry
 use GeometryInterfaces      GeometryInterfaces-*        Geometry
 use Material                Material-*                  Geometry
 
@@ -25,6 +24,7 @@ use Material                Material-*                  Geometry
 # private use statements
 private
 use GeometryUtils           GeometryUtils-*             Geometry
+use Material                Material-*                  Geometry
 
 public
 library ExtrapolationEngine *.cxx components/*.cxx

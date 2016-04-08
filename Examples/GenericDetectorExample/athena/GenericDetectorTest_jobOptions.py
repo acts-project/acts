@@ -22,8 +22,8 @@ DetFlags.Calo_setOff()
 DetFlags.Muon_setOff()
 
 # import the GenericDetector
-from GenericDetectorV1 import GenericDetectorConstruction
-GenericDetector = GenericDetectorConstruction(name='GenericDetector', outputLevel=VERBOSE)
+from GenericDetectorExample.GenericDetectorV2 import GenericDetectorConstruction
+GenericDetector = GenericDetectorConstruction(name='GenericDetector', outputLevel=VERBOSE, Atlas = True)
 
 # Full job is a list of algorithms
 from AthenaCommon.AlgSequence import AlgSequence
