@@ -23,12 +23,13 @@ namespace Acts {
   class Surface;
   class MagneticFieldProperties;
 
-  /** Interface ID for IPropagators*/
+  /** Interface ID for IPropagator*/
   static const InterfaceID IID_IPropagator("IPropagator", 1, 0);
 
   /** @class IPropagator
 
-      Interface class IPropagators
+      Interface class IPropagator for simple factory type propagator
+  
       It inherits from IAlgTool.
 
     */

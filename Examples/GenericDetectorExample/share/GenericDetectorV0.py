@@ -21,14 +21,11 @@ class GenericDetectorConstruction(object):
         from GenericGeometryTools.GenericDetectorDefs import BarrelVolume
         from GenericGeometryTools.GenericDetectorDefs import EndcapVolume
         
-        
         # Silicon Material
         Silicon             = Material('Silicon', 95.7, 465.2, 28.03,14.,2.32e-3)
         SupportMaterial     = Material('Support', 95.7, 465.2, 28.03,14.,2.32e-3)
         
         SupportPropertiesA  = MaterialProperties(SupportMaterial, 1.,  1.)
-        SupportPropertiesB  = MaterialProperties(SupportMaterial, 1., -1.)
-        
         
         # the pixel modules
         PixelModuleSmall = DetectorModule(None,8.4,32.0,0.15, Silicon)
@@ -38,24 +35,18 @@ class GenericDetectorConstruction(object):
         PixelLayer0 = CylinderLayer(PixelModuleSmall, 29., 15, 13, 0.18, 2., 0.5, 2., SupportPropertiesA)
         PixelLayer1 = CylinderLayer(PixelModuleSmall, 55., 24, 13, 0.18, 2., 0.5, 2., SupportPropertiesA)
         PixelLayer2 = CylinderLayer(PixelModuleSmall, 88., 40, 13, 0.2, 2., 0.5, 2., SupportPropertiesA)
-        PixelLayer3 = CylinderLayer(PixelModuleSmall, 120., 62, 13, 0.2, 2., 0.5, 2., SupportPropertiesB)
-        PixelLayer4 = CylinderLayer(PixelModuleBig, 160., 48, 13, 0.2, 2., 0.5, 2., SupportPropertiesB)
-        PixelLayer5 = CylinderLayer(PixelModuleBig, 200., 68, 13, 0.2, 2., 0.5, 2., SupportPropertiesB)
         
         # define the pixel barrel volume
-        PixelBarrel = BarrelVolume( [ PixelLayer0, PixelLayer1, PixelLayer2, PixelLayer3, PixelLayer4, PixelLayer5 ] ) 
+        PixelBarrel = BarrelVolume( [ PixelLayer0, PixelLayer1, PixelLayer2 ] ) 
 
         # lets build some endcap disks
         PixelRing0   = DiscRing(PixelModuleSmall, 65., 24, 0.5)
-        PixelRing1   = DiscRing(PixelModuleSmall, 120., 48, 0.5)
-        PixelRing2   = DiscRing(PixelModuleSmall, 180, 78, 0.5)
         
-        PixelDisc0  = DiscLayer( [ PixelRing0, PixelRing1, PixelRing2 ], 500., 3., 5., SupportPropertiesA)
-        PixelDisc1  = DiscLayer( [ PixelRing0, PixelRing1, PixelRing2 ], 580., 3., 5., SupportPropertiesA)
-        PixelDisc2  = DiscLayer( [ PixelRing0, PixelRing1, PixelRing2 ], 650., 3., 5., SupportPropertiesA)
-        PixelDisc3  = DiscLayer( [ PixelRing0, PixelRing1, PixelRing2 ], 780., 3., 5., SupportPropertiesA)
+        PixelDisc0  = DiscLayer( [ PixelRing0 ], 500., 3., 5., SupportPropertiesA)
+        PixelDisc1  = DiscLayer( [ PixelRing0 ], 580., 3., 5., SupportPropertiesA)
+        PixelDisc2  = DiscLayer( [ PixelRing0 ], 650., 3., 5., SupportPropertiesA)
         # define the pixel endcap volume
-        PixelEndcap = EndcapVolume( [ PixelDisc0, PixelDisc1, PixelDisc2, PixelDisc3 ] )
+        PixelEndcap = EndcapVolume( [ PixelDisc0, PixelDisc1, PixelDisc2 ] )
 
         # -------------------------------------------------------------------------------------
         # 

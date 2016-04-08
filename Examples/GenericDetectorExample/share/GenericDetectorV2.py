@@ -21,7 +21,6 @@ class GenericDetectorConstruction(object):
         from GenericGeometryTools.GenericDetectorDefs import BarrelVolume
         from GenericGeometryTools.GenericDetectorDefs import EndcapVolume
         
-        
         # Silicon Material
         Silicon             = Material('Silicon', 95.7, 465.2, 28.03,14.,2.32e-3)
         SupportMaterial     = Material('Support', 95.7, 465.2, 28.03,14.,2.32e-3)
@@ -29,7 +28,6 @@ class GenericDetectorConstruction(object):
         SupportPropertiesA  = MaterialProperties(SupportMaterial, 1.,  1.)
         SupportPropertiesB  = MaterialProperties(SupportMaterial, 1., -1.)
         SupportPropertiesC  = MaterialProperties(SupportMaterial, 1., 0.)
-        
         
         # the pixel modules
         PixelModuleSmall = DetectorModule(None,8.4,32.0,0.125, Silicon)
@@ -77,14 +75,25 @@ class GenericDetectorConstruction(object):
         # 
         # Builder setup for the layers 
         #
-        # build the beam pipe
+        # import the tools
+        from GeometryTools.GeometryToolsConf import Acts__LayerCreator as LayerCreator
         from GeometryTools.GeometryToolsConf import Acts__PassiveLayerBuilder as LayerBuilder
         from GeometryTools.GeometryToolsConf import Acts__CylinderVolumeBuilder as VolumeBuilder
         from GeometryTools.GeometryToolsConf import Acts__CylinderVolumeHelper as VolumeHelper
         from GeometryTools.GeometryToolsConf import Acts__CylinderGeometryBuilder as GeometryBuilder
         from GeometryTools.GeometryToolsConf import Acts__TrackingVolumeArrayCreator as TrackingVolumeArrayCreator
         from GeometryTools.GeometryToolsConf import Acts__LayerArrayCreator as LayerArrayCreator
+        from GeometryTools.GeometryToolsConf import Acts__SurfaceArrayCreator as SurfaceArrayCreator
 
+        # Surface Array Creator
+        SurfaceArrayCreator = SurfaceArrayCreator('SurfaceArrayCreator')
+        SurfaceArrayCreator.OutputLevel = outputLevel
+        ToolSvc += SurfaceArrayCreator
+        # Layer Creator
+        LayerCreator = LayerCreator('LayerCreator')
+        LayerCreator.SurfaceArrayCreator = SurfaceArrayCreator
+        LayerCreator.OutputLevel = outputLevel
+        ToolSvc += LayerCreator
         # Layer Array Creator
         LayerArrayCreator = LayerArrayCreator('LayerArrayCreator')
         LayerArrayCreator.OutputLevel = outputLevel
@@ -101,7 +110,6 @@ class GenericDetectorConstruction(object):
         CylinderVolumeHelper.OutputLevel = outputLevel
         # done, define it
         ToolSvc += CylinderVolumeHelper
-
 
         BeamPipeBuilder = LayerBuilder('BeamPipeBuilder')
         # the identification 
@@ -133,9 +141,10 @@ class GenericDetectorConstruction(object):
         #  
         from GenericGeometryTools.GenericGeometryToolsConf import Acts__GenericLayerBuilder as GenericLayerBuilder
         
-        
         # # a Pixel layer builder
         PixelLayerBuilder = GenericLayerBuilder('PixelLayerBuilder')
+        # the layer creator
+        PixelLayerBuilder.LayerCreator                      = LayerCreator
         # the ID
         PixelLayerBuilder.LayerIdentification               = 'Pixel'
         # define the pixel barrel                            
@@ -176,20 +185,21 @@ class GenericDetectorConstruction(object):
         # Build the Pixel Volume
         PixelVolumeBuilder = VolumeBuilder("PixelVome")
         # set the volume name
-        PixelVolumeBuilder.VolumeName                     = 'Pixel'
-        # build the volume
-        PixelVolumeBuilder.CylinderVolumeHelper           =  CylinderVolumeHelper   
-        PixelVolumeBuilder.LayerBuilder                   =  PixelLayerBuilder           
-        PixelVolumeBuilder.LayerArrayCreator              =  LayerArrayCreator        
-        PixelVolumeBuilder.LayerEnvelopeR                 =  1.    
-        PixelVolumeBuilder.LayerEnvelopeZ                 =  10.    
-        PixelVolumeBuilder.VolumeToBeamPipe               =  False  
+        PixelVolumeBuilder.VolumeName                       = 'Pixel'
+        # build the volume                                  
+        PixelVolumeBuilder.CylinderVolumeHelper             =  CylinderVolumeHelper   
+        PixelVolumeBuilder.LayerBuilder                     =  PixelLayerBuilder           
+        PixelVolumeBuilder.LayerArrayCreator                =  LayerArrayCreator        
+        PixelVolumeBuilder.LayerEnvelopeR                   =  1.    
+        PixelVolumeBuilder.LayerEnvelopeZ                   =  10.    
+        PixelVolumeBuilder.VolumeToBeamPipe                 =  False  
         ToolSvc += PixelVolumeBuilder
-
 
         StripLayerBuilder = GenericLayerBuilder('StripLayerBuilder')
         # the ID
         StripLayerBuilder.LayerIdentification               = 'Strip'
+        # the layer creator
+        StripLayerBuilder.LayerCreator                      = LayerCreator
         # define the pixel barrel                            
         StripLayerBuilder.CentralLayerRadii                 = StripBarrel.layerRadii()
         StripLayerBuilder.CentralLayerEnvelopeZ             = StripBarrel.layerEnvelopesZ()        
@@ -203,7 +213,6 @@ class GenericDetectorConstruction(object):
         StripLayerBuilder.CentralLayerModulesHalfY          = StripBarrel.layerModulesHalfY()      
         StripLayerBuilder.CentralLayerModulesThickness      = StripBarrel.layerModulesThickness()  
         StripLayerBuilder.CentralLayerModulesMaterial       = StripBarrel.layerModulesMaterial()  
-         
         
         # Output steering
         StripLayerBuilder.OutputLevel = outputLevel
@@ -222,7 +231,6 @@ class GenericDetectorConstruction(object):
         StripVolumeBuilder.LayerEnvelopeZ                 =  10.    
         StripVolumeBuilder.VolumeToBeamPipe               =  False  
         ToolSvc += StripVolumeBuilder                                                    
-                                                            
 
         # Build the TrackingGeometry
         GenericGeometryBuilder = GeometryBuilder('GenericGeometry')

@@ -92,7 +92,7 @@ namespace Acts {
 
        bool                                         m_sensitiveCurvilinear;
 
-       bool                                         m_robustSearch;
+       int                                          m_searchMode;
        
        bool                                         m_backExtrapolation;
        
@@ -104,8 +104,9 @@ namespace Acts {
        std::vector< float >                         m_phiScans;
        double                                       m_currentPhi;
        bool                                         m_splitCharge;
-
+       
        //!< the tree       
+       bool                                         m_writeTree;
        std::string                                  m_treeName;
        std::string                                  m_treeFolder;  
        std::string                                  m_treeDescription;
@@ -156,6 +157,10 @@ namespace Acts {
        std::vector< std::vector< float >* >         m_pEta;                                                    
        std::vector< std::vector< float >* >         m_pP;                                              
        std::vector< std::vector< float >* >         m_pPt;
+       
+       std::vector< float >*                        m_sensitiveLocalType;
+       std::vector< float >*                        m_sensitiveLocal0;
+       std::vector< float >*                        m_sensitiveLocal1;
        
        //<! Material section 
        float                                        m_materialThicknessInX0;

@@ -31,8 +31,7 @@ template <class T> StatusCode Acts::ExtrapolationEngineTest::executeTestT(const 
     if (m_collectBoundary)  ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectBoundary);
     if (m_collectMaterial)  ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectMaterial);
     if (m_sensitiveCurvilinear) ecc.sensitiveCurvilinear = true;
-        
-    if (m_robustSearch)    ecc.addConfigurationMode(Acts::ExtrapolationMode::RobustSearch);
+    ecc.searchMode = m_searchMode; 
     
     // force a stop in the extrapoaltion mode
     if (m_pathLimit > 0.) {
@@ -117,7 +116,7 @@ template <class T> StatusCode Acts::ExtrapolationEngineTest::fillStepInformation
     for (auto& es : ecc.extrapolationSteps){
        // continue if we have parameters
        const T* parameters = es.parameters;
-       if (parameters){
+       if (parameters && m_writeTree){
            // push back the parameters into the vector
            if ((m_processSensitive && parameters->associatedSurface().isActive()) || 
                (m_processPassive && parameters->associatedSurface().isFree()))
@@ -142,12 +141,17 @@ template <class T> StatusCode Acts::ExtrapolationEngineTest::fillStepInformation
            m_pEta[ip]->push_back(parameters->momentum().theta()); 
            m_pP[ip]->push_back(parameters->momentum().mag());
            m_pPt[ip]->push_back(parameters->momentum().perp());
-    
+           
+            if (es.stepConfiguration.checkMode(Acts::ExtrapolationMode::CollectSensitive)){
+                m_sensitiveLocalType->push_back(float(parameters->associatedSurface().type()));
+                m_sensitiveLocal0->push_back(parameters->parameters()[0]);
+                m_sensitiveLocal1->push_back(parameters->parameters()[1]);
+            }
         }
         
         // collect the material if configured to do so - only forward direction for the moment
         // @TODO ultimate material test - collect forward backword and add up at 0
-        if (m_collectMaterial && es.material && fwdBwd > 0){
+        if (m_collectMaterial && es.material && fwdBwd > 0 && m_writeTree){
             // VERBOSE output
             MSG_VERBOSE("Crossing material with scaling " << es.materialScaling);
             MSG_VERBOSE("         material information  " << *es.material);
