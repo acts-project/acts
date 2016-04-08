@@ -6,7 +6,8 @@ set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR})
 
 find_package (Eigen3 REQUIRED)
 
-add_definitions ( -std=c++14 )
+add_definitions (-std=c++14)
+add_definitions (-DACTS_PARAMETER_DEFINITIONS_PLUGIN=\"Core/DefaultParameterDefinitions.h\")
 include_directories ( ${PROJECT_SOURCE_DIR}/include ${EIGEN3_INCLUDE_DIR} )
 
 file (GLOB src_files "src/*/*.cxx")
