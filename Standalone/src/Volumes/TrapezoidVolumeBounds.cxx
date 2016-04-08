@@ -8,9 +8,6 @@
 #include "Surfaces/PlaneSurface.h"
 #include "Surfaces/TrapezoidBounds.h"
 #include "Surfaces/RectangleBounds.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
-#include "GaudiKernel/SystemOfUnits.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>
@@ -27,11 +24,11 @@ Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex, double maxha
 {
 
   m_boundValues[bv_minHalfX] = minhalex;
-  m_boundValues[bv_maxHalfX] = maxhalex; 
+  m_boundValues[bv_maxHalfX] = maxhalex;
   m_boundValues[bv_halfY]    = haley;
   m_boundValues[bv_halfZ]    = halez;
   m_boundValues[bv_alpha]    = atan((m_boundValues[bv_maxHalfX]-m_boundValues[bv_minHalfX])/2/m_boundValues[bv_halfY]) + 0.5*M_PI;
-  m_boundValues[bv_beta]     = m_boundValues[bv_alpha]; 
+  m_boundValues[bv_beta]     = m_boundValues[bv_alpha];
 
 }
 
@@ -43,7 +40,7 @@ Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex, double haley
   m_boundValues[bv_halfY]    = haley;
   m_boundValues[bv_halfZ]    = halez;
   m_boundValues[bv_alpha]    = alpha;
-  m_boundValues[bv_beta]     = beta; 
+  m_boundValues[bv_beta]     = beta;
   // now calculate the remaining max half X
   double gamma = (alpha > beta) ? (alpha - 0.5*M_PI) : (beta - 0.5*M_PI);
   m_boundValues[bv_maxHalfX] = minhalex + (2.*haley)*tan(gamma);
@@ -66,28 +63,28 @@ Acts::TrapezoidVolumeBounds& Acts::TrapezoidVolumeBounds::operator=(const Acts::
 
 const std::vector<const Acts::Surface*>* Acts::TrapezoidVolumeBounds::decomposeToSurfaces(std::shared_ptr<Acts::Transform3D> transformPtr) const
 {
-    std::vector<const Acts::Surface*>* retsf = new std::vector<const Acts::Surface*>;  
+    std::vector<const Acts::Surface*>* retsf = new std::vector<const Acts::Surface*>;
     Acts::Transform3D transform   = ( transformPtr == nullptr) ? Acts::Transform3D::Identity() : (*transformPtr.get());
-    Acts::Transform3D* tTransform = nullptr; 
+    Acts::Transform3D* tTransform = nullptr;
     // face surfaces xy
     Acts::RotationMatrix3D trapezoidRotation(transform.rotation());
     Acts::Vector3D  trapezoidX(trapezoidRotation.col(0));
     Acts::Vector3D  trapezoidY(trapezoidRotation.col(1));
     Acts::Vector3D  trapezoidZ(trapezoidRotation.col(2));
     Acts::Vector3D  trapezoidCenter(transform.translation());
-    
+
     //   (1) - at negative local z
     std::shared_ptr<const PlanarBounds> xytBounds(faceXYTrapezoidBounds());
-    tTransform = new Acts::Transform3D(transform*Acts::AngleAxis3D(180*Gaudi::Units::deg, Acts::Vector3D(0.,1.,0.))
+    tTransform = new Acts::Transform3D(transform*Acts::AngleAxis3D(M_PI, Acts::Vector3D(0.,1.,0.))
 							                                     *Acts::Translation3D(Acts::Vector3D(0.,0.,halflengthZ())));
-      
-    retsf->push_back(new Acts::PlaneSurface(std::shared_ptr<Acts::Transform3D>(tTransform),xytBounds));    
+
+    retsf->push_back(new Acts::PlaneSurface(std::shared_ptr<Acts::Transform3D>(tTransform),xytBounds));
     //   (2) - at positive local z
     tTransform = new Acts::Transform3D(transform*Acts::Translation3D(Acts::Vector3D(0.,0.,halflengthZ())));
-    retsf->push_back(new Acts::PlaneSurface(std::shared_ptr<Acts::Transform3D>(tTransform),xytBounds));    
+    retsf->push_back(new Acts::PlaneSurface(std::shared_ptr<Acts::Transform3D>(tTransform),xytBounds));
     // face surfaces yz
     // transmute cyclical
-    //   (3) - at point A, attached to alpha opening angle 
+    //   (3) - at point A, attached to alpha opening angle
     Acts::Vector3D A(minHalflengthX(), halflengthY(), trapezoidCenter.z());
     Acts::RotationMatrix3D alphaZRotation = (s_idRotation * Acts::AngleAxis3D (alpha() - 0.5*M_PI, Acts::Vector3D(0.,0.,1.))).toRotationMatrix();
     //CLHEP::HepRotation  alphaRotation(alphaZRotation*trapezoidRotation);
@@ -101,7 +98,7 @@ const std::vector<const Acts::Surface*>* Acts::TrapezoidVolumeBounds::decomposeT
     Acts::Vector3D faceAlphaPosition = transform*faceAlphaPosition0;
     tTransform = new Acts::Transform3D((trapezoidRotation*faceAlphaRotation) * Acts::Translation3D(faceAlphaPosition));
     retsf->push_back(new Acts::PlaneSurface(std::shared_ptr<Acts::Transform3D>(tTransform),faceAlphaBounds));
-    //   (4) - at point B, attached to beta opening angle 
+    //   (4) - at point B, attached to beta opening angle
     Acts::Vector3D B(minHalflengthX(), -halflengthY(), trapezoidCenter.z());
     Acts::RotationMatrix3D betaZRotation = (s_idRotation * Acts::AngleAxis3D (-(beta() - 0.5*M_PI),Acts::Vector3D(0.,0.,1.))).toRotationMatrix();
     //CLHEP::HepRotation  betaRotation(betaZRotation*trapezoidRotation);
@@ -116,19 +113,19 @@ const std::vector<const Acts::Surface*>* Acts::TrapezoidVolumeBounds::decomposeT
     tTransform = new Acts::Transform3D(trapezoidRotation*faceBetaRotation * Acts::Translation3D(faceBetaPosition));
     retsf->push_back(new Acts::PlaneSurface(std::shared_ptr<Acts::Transform3D>(tTransform),faceBetaBounds));
     // face surfaces zx
-    //   (5) - at negative local x 
-    tTransform = new Acts::Transform3D( transform * Acts::AngleAxis3D(180.*Gaudi::Units::deg, Acts::Vector3D(1.,0.,0.))
+    //   (5) - at negative local x
+    tTransform = new Acts::Transform3D( transform * Acts::AngleAxis3D(M_PI, Acts::Vector3D(1.,0.,0.))
 								*Acts::Translation3D(Acts::Vector3D(0.,halflengthY(),0.))
-								*Acts::AngleAxis3D(-90*Gaudi::Units::deg, Acts::Vector3D(0.,1.,0.))*Acts::AngleAxis3D(-90.*Gaudi::Units::deg, Acts::Vector3D(1.,0.,0.))  );  
+								*Acts::AngleAxis3D(-0.5 * M_PI, Acts::Vector3D(0.,1.,0.))*Acts::AngleAxis3D(-0.5 * M_PI, Acts::Vector3D(1.,0.,0.))  );
     retsf->push_back(new Acts::PlaneSurface(std::shared_ptr<Acts::Transform3D>(tTransform), faceZXRectangleBoundsBottom()));
     //   (6) - at positive local x
     tTransform = new Acts::Transform3D( transform *Acts::Translation3D(Acts::Vector3D(0.,halflengthY(), 0.))
-								*Acts::AngleAxis3D(-90*Gaudi::Units::deg, Acts::Vector3D(0.,1.,0.))*Acts::AngleAxis3D(-90.*Gaudi::Units::deg, Acts::Vector3D(1.,0.,0.))  );
-    retsf->push_back(new Acts::PlaneSurface(std::shared_ptr<Acts::Transform3D>(tTransform), faceZXRectangleBoundsTop())); 
+								*Acts::AngleAxis3D(-0.5 * M_PI, Acts::Vector3D(0.,1.,0.))*Acts::AngleAxis3D(-0.5 * M_PI, Acts::Vector3D(1.,0.,0.))  );
+    retsf->push_back(new Acts::PlaneSurface(std::shared_ptr<Acts::Transform3D>(tTransform), faceZXRectangleBoundsTop()));
 
     return retsf;
 }
-    
+
 // faces in xy
 Acts::TrapezoidBounds* Acts::TrapezoidVolumeBounds::faceXYTrapezoidBounds() const
 {
@@ -152,7 +149,7 @@ Acts::RectangleBounds* Acts::TrapezoidVolumeBounds::faceZXRectangleBoundsBottom(
 
 Acts::RectangleBounds* Acts::TrapezoidVolumeBounds::faceZXRectangleBoundsTop() const
 {
-    //double delta = (m_boundValues[bv_alpha] < m_boundValues[bv_beta]) ? m_boundValues[bv_alpha] - M_PI/2. : m_boundValues[bv_beta] - M_PI/2.;     
+    //double delta = (m_boundValues[bv_alpha] < m_boundValues[bv_beta]) ? m_boundValues[bv_alpha] - M_PI/2. : m_boundValues[bv_beta] - M_PI/2.;
     // return new Acts::RectangleBounds(m_boundValues[bv_halfZ], 0.5*(m_boundValues[bv_minHalfX]+m_boundValues[bv_minHalfX]+2.*m_boundValues[bv_halfY]/cos(delta)));
     return new Acts::RectangleBounds(m_boundValues[bv_halfZ], m_boundValues[bv_maxHalfX]);
 }
@@ -163,18 +160,13 @@ bool Acts::TrapezoidVolumeBounds::inside(const Acts::Vector3D& pos, double tol) 
     if (fabs(pos.y()) > m_boundValues[bv_halfY] + tol) return false;
     Acts::TrapezoidBounds* faceXYBounds = faceXYTrapezoidBounds();
     Acts::Vector2D locp(pos.x(), pos.y());
-    bool inside(faceXYBounds->inside(locp, BoundaryCheck(true, true, tol, tol)) ); 
+    bool inside(faceXYBounds->inside(locp, BoundaryCheck(true, true, tol, tol)) );
     delete faceXYBounds;
     return inside;
 }
 
 // ostream operator overload
-MsgStream& Acts::TrapezoidVolumeBounds::dump( MsgStream& sl ) const
-{
-    return dumpT<MsgStream>(sl);
-}
-
-std::ostream& Acts::TrapezoidVolumeBounds::dump( std::ostream& sl ) const 
+std::ostream& Acts::TrapezoidVolumeBounds::dump( std::ostream& sl ) const
 {
     return dumpT<std::ostream>(sl);
 }

@@ -17,8 +17,6 @@
 #include "Surfaces/DiscSurface.h"
 #include "Surfaces/RadialBounds.h"
 #include "Surfaces/EllipseBounds.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
 // STD/STL
 #include <iostream>
 #include <cmath>
@@ -83,7 +81,7 @@ const std::vector<const Acts::Surface*>* Acts::CombinedVolumeBounds::decomposeTo
 
     // get surfaces for first boundaries
     Acts::Transform3D transf = ( transformPtr == nullptr) ? Acts::Transform3D::Identity() : (*transformPtr.get());
-    
+
     std::shared_ptr<Acts::Transform3D> firstTransform(new Acts::Transform3D(transf*m_first->transform()));
     const std::vector<const Acts::Surface*>* firstSurfaces = m_first->volumeBounds().decomposeToSurfaces(firstTransform);
 
@@ -95,8 +93,8 @@ const std::vector<const Acts::Surface*>* Acts::CombinedVolumeBounds::decomposeTo
 
 
     std::vector<unsigned int> subtrSecond;
-        
-    // loop over surfaces; convert disc surface to a plane surface using elliptic bounds 
+
+    // loop over surfaces; convert disc surface to a plane surface using elliptic bounds
     for (unsigned int out=0; out < firstSurfaces->size(); out++) {
         //
         const SubtractedPlaneSurface* splo = dynamic_cast<const SubtractedPlaneSurface*> ((*firstSurfaces)[out]);
@@ -111,12 +109,12 @@ const std::vector<const Acts::Surface*>* Acts::CombinedVolumeBounds::decomposeTo
         else if (cylVol && clo && out==3 ) m_boundsOrientation[out] = false;
         else if (spbVol && out==0 ) m_boundsOrientation[out] = false;
         else m_boundsOrientation[out] = true;
-      
-        Acts::Volume* secondSub = createSubtractedVolume((*firstSurfaces)[out]->transform().inverse()*transf, m_second);     
+
+        Acts::Volume* secondSub = createSubtractedVolume((*firstSurfaces)[out]->transform().inverse()*transf, m_second);
 
         if ( sclo || splo ) {
             bool shared = false;
-            std::shared_ptr<Acts::AreaExcluder> vEx; 
+            std::shared_ptr<Acts::AreaExcluder> vEx;
             if (splo) {
                 vEx = splo->subtractedVolume();
                 shared   = splo->shared();
@@ -128,7 +126,7 @@ const std::vector<const Acts::Surface*>* Acts::CombinedVolumeBounds::decomposeTo
             //vEx.addRef();
             const Acts::VolumeExcluder* volExcl = dynamic_cast<const Acts::VolumeExcluder*> (vEx.get());
             if (!volExcl) throw std::logic_error("Not a VolumeExcluder");
-       
+
             Acts::Volume* firstSub = new Acts::Volume(*volExcl->volume());
 
             Acts::Volume* comb_sub = 0;
@@ -140,9 +138,9 @@ const std::vector<const Acts::Surface*>* Acts::CombinedVolumeBounds::decomposeTo
             bool new_shared = shared;
             if (m_intersection) new_shared = true;
             if (splo) retsf->push_back(new Acts::SubtractedPlaneSurface(*splo,volEx,new_shared));
-            if (sclo) retsf->push_back(new Acts::SubtractedCylinderSurface(*sclo,volEx,new_shared));       
+            if (sclo) retsf->push_back(new Acts::SubtractedCylinderSurface(*sclo,volEx,new_shared));
 
-        } 
+        }
         else if (plo || clo || dlo) {
             Acts::VolumeExcluder* volEx = new Acts::VolumeExcluder(secondSub);
             if (plo) retsf->push_back(new Acts::SubtractedPlaneSurface(*plo,volEx,m_intersection));
@@ -150,7 +148,7 @@ const std::vector<const Acts::Surface*>* Acts::CombinedVolumeBounds::decomposeTo
             if (dlo) {
                 const RadialBounds* db = dynamic_cast<const RadialBounds*> (&(dlo->bounds()));
                 if (!db) throw std::logic_error("Not RadialBounds");
-          
+
                 EllipseBounds* eb = new EllipseBounds(db->rMin(),db->rMin(),db->rMax(),db->rMax(),db->halfPhiSector());
                 plo = new PlaneSurface(std::shared_ptr<Acts::Transform3D>(new Acts::Transform3D(dlo->transform())),eb);
                 retsf->push_back(new Acts::SubtractedPlaneSurface(*plo,volEx,m_intersection));
@@ -166,7 +164,7 @@ const std::vector<const Acts::Surface*>* Acts::CombinedVolumeBounds::decomposeTo
     spbVol = dynamic_cast<const Acts::SimplePolygonBrepVolumeBounds*> (&(m_second->volumeBounds()));
     comVol = dynamic_cast<const Acts::CombinedVolumeBounds*> (&(m_second->volumeBounds()));
     subVol = dynamic_cast<const Acts::SubtractedVolumeBounds*> (&(m_second->volumeBounds()));
-    unsigned int nOut = firstSurfaces->size(); 
+    unsigned int nOut = firstSurfaces->size();
 
     for (unsigned int in=0; in< secondSurfaces->size(); in++) {
         //
@@ -186,7 +184,7 @@ const std::vector<const Acts::Surface*>* Acts::CombinedVolumeBounds::decomposeTo
         Acts::Volume* firstSub = createSubtractedVolume((*secondSurfaces)[in]->transform().inverse()*transf, m_first);
         if ( scli || spli ) {
             bool shared = false;
-            std::shared_ptr<Acts::AreaExcluder> vEx; 
+            std::shared_ptr<Acts::AreaExcluder> vEx;
             if (spli) {
                 vEx = spli->subtractedVolume();
                 shared   = spli->shared();
@@ -199,7 +197,7 @@ const std::vector<const Acts::Surface*>* Acts::CombinedVolumeBounds::decomposeTo
             const Acts::VolumeExcluder* volExcl = dynamic_cast<const Acts::VolumeExcluder*> (vEx.get());
             if (!volExcl) throw std::logic_error("Not a VolumeExcluder");
             Acts::Volume* secondSub = new Acts::Volume(*volExcl->volume());
- 
+
             Acts::Volume* comb_sub = 0;
             if (!shared && !m_intersection) comb_sub = new Acts::Volume(nullptr,new Acts::CombinedVolumeBounds(firstSub,secondSub,m_intersection));
             if (!shared &&  m_intersection) comb_sub = new Acts::Volume(nullptr,new Acts::SubtractedVolumeBounds(firstSub,secondSub));
@@ -209,11 +207,11 @@ const std::vector<const Acts::Surface*>* Acts::CombinedVolumeBounds::decomposeTo
             bool new_shared = shared;
             if (m_intersection) new_shared = true;
             if (spli) retsf->push_back(new Acts::SubtractedPlaneSurface(*spli,volEx,new_shared));
-            if (scli) retsf->push_back(new Acts::SubtractedCylinderSurface(*scli,volEx,new_shared));       
+            if (scli) retsf->push_back(new Acts::SubtractedCylinderSurface(*scli,volEx,new_shared));
 
-        } 
+        }
         else if (pli || cli || dli) {
-            Acts::VolumeExcluder* volEx = new Acts::VolumeExcluder(firstSub);        
+            Acts::VolumeExcluder* volEx = new Acts::VolumeExcluder(firstSub);
             if (pli) retsf->push_back(new Acts::SubtractedPlaneSurface(*pli,volEx,m_intersection));
             if (cli) retsf->push_back(new Acts::SubtractedCylinderSurface(*cli,volEx,m_intersection));
             if (dli) {
@@ -229,8 +227,8 @@ const std::vector<const Acts::Surface*>* Acts::CombinedVolumeBounds::decomposeTo
         else {
             throw std::runtime_error("Unhandled surface in CombinedVolumeBounds::decomposeToSurfaces.");
         }
-    } 
-        
+    }
+
     for (size_t i=0; i < firstSurfaces->size(); i++)
         delete (*firstSurfaces)[i];
     for (size_t i=0; i < secondSurfaces->size(); i++)
@@ -243,28 +241,15 @@ const std::vector<const Acts::Surface*>* Acts::CombinedVolumeBounds::decomposeTo
 }
 
 // ostream operator overload
-
-MsgStream& Acts::CombinedVolumeBounds::dump( MsgStream& sl ) const
+std::ostream& Acts::CombinedVolumeBounds::dump( std::ostream& sl ) const
 {
     std::stringstream temp_sl;
     temp_sl << std::setiosflags(std::ios::fixed);
     temp_sl << std::setprecision(7);
     temp_sl << "Acts::CombinedVolumeBounds: first,second ";
     sl << temp_sl.str();
-    m_first->volumeBounds().dump(sl);  
-    m_second->volumeBounds().dump(sl);  
-    return sl;
-}
-
-std::ostream& Acts::CombinedVolumeBounds::dump( std::ostream& sl ) const 
-{
-    std::stringstream temp_sl;
-    temp_sl << std::setiosflags(std::ios::fixed);
-    temp_sl << std::setprecision(7);
-    temp_sl << "Acts::CombinedVolumeBounds: first,second ";
-    sl << temp_sl.str();
-    m_first->volumeBounds().dump(sl);  
-    m_second->volumeBounds().dump(sl);  
+    m_first->volumeBounds().dump(sl);
+    m_second->volumeBounds().dump(sl);
     return sl;
 }
 
@@ -274,7 +259,7 @@ Acts::Volume* Acts::CombinedVolumeBounds::createSubtractedVolume(const Acts::Tra
   if (!subtrVol) return subVol;
 
   subVol = new Acts::Volume( *subtrVol, transf );
-  
+
   return subVol;
 }
 

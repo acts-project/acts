@@ -5,8 +5,6 @@
 // Geometry module
 #include "Volumes/Volume.h"
 #include "Volumes/VolumeBounds.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
 // STD/STL
 #include <iostream>
 
@@ -25,7 +23,7 @@ Acts::Volume::Volume(Acts::Transform3D* htrans, const Acts::VolumeBounds* volbou
   m_center(nullptr),
   m_volumeBounds( std::shared_ptr<const Acts::VolumeBounds>(volbounds))
 {}
-        
+
 // constructor with shared arguments Transform3D
 Acts::Volume::Volume(std::shared_ptr<Acts::Transform3D> htrans, std::shared_ptr<const Acts::VolumeBounds> volbounds) :
   GeometryObject(),
@@ -52,14 +50,14 @@ Acts::Volume::Volume(const Acts::Volume& vol, const Acts::Transform3D& shift) :
 
 // destructor
 Acts::Volume::~Volume()
-{ 
+{
   delete m_center;
 }
 
-// The binning position method 
+// The binning position method
 Acts::Vector3D Acts::Volume::binningPosition(Acts::BinningValue bValue) const {
-    // for most of the binning types it is actually the center, 
-    // just for R-binning types the 
+    // for most of the binning types it is actually the center,
+    // just for R-binning types the
     if (bValue == Acts::binR || bValue == Acts::binRPhi){
         // the binning Position for R-type may have an offset
         return (center()+m_volumeBounds->binningOffset(bValue));
@@ -80,10 +78,10 @@ Acts::Volume& Acts::Volume::operator=(const Acts::Volume& vol)
   }
   return *this;
 }
- 
-Acts::Volume* Acts::Volume::clone() const 
-{ return new Acts::Volume(*this); }    
-    
+
+Acts::Volume* Acts::Volume::clone() const
+{ return new Acts::Volume(*this); }
+
 bool Acts::Volume::inside(const Acts::Vector3D& gp, double tol) const
 {
     if (!m_transform) return (volumeBounds()).inside(gp, tol);
@@ -91,16 +89,10 @@ bool Acts::Volume::inside(const Acts::Vector3D& gp, double tol) const
     return (volumeBounds()).inside(posInVolFrame, tol);
 }
 
-/**Overload of << operator for both, MsgStream and std::ostream for debug output*/ 
-MsgStream& Acts::operator << ( MsgStream& sl, const Acts::Volume& vol)
-{ 
-  sl << "Voluem with " << vol.volumeBounds() << endreq; 
+/**Overload of << operator for std::ostream for debug output*/
+std::ostream& Acts::operator << ( std::ostream& sl, const Acts::Volume& vol)
+{
+  sl << "Voluem with " << vol.volumeBounds() << std::endl;
   return sl;
 }
-
-std::ostream& Acts::operator << ( std::ostream& sl, const Acts::Volume& vol)
-{ 
-  sl << "Voluem with " << vol.volumeBounds() << std::endl; 
-  return sl;
-}   
 

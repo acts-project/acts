@@ -5,10 +5,12 @@
 #ifndef ACTS_SURFACES_BOUNDARYCHECK_H
 #define ACTS_SURFACES_BOUNDARYCHECK_H 1
 
+// STL include(s)
+#include <cmath>
+
 // Core module
 #include "Core/ParameterDefinitions.h"
 #include "Core/AlgebraDefinitions.h"
-// EventData module
 
 namespace Acts {
 

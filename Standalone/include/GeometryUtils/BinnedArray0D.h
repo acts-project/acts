@@ -18,7 +18,7 @@ namespace Acts {
 
    BinnedArray0D - BinnedArray flavour with just one entry,
    allows to have the same structure for just one single
-   contained object. 
+   contained object.
 
    @author Andreas.Salzburger@cern.ch
    */
@@ -27,12 +27,12 @@ namespace Acts {
 
     public:
      /**Default Constructor - needed for inherited classes */
-     BinnedArray0D() throw (GaudiException) :
+     BinnedArray0D():
        BinnedArray<T>()
      {}
 
      /**Constructor  from oneobject  */
-     BinnedArray0D(T obj) throw (GaudiException) :
+     BinnedArray0D(T obj):
        BinnedArray<T>(),
        m_object(obj)
      {
@@ -40,7 +40,7 @@ namespace Acts {
      }
 
      /**Copy Constructor - copies only pointers !*/
-     BinnedArray0D(const BinnedArray0D& barr) throw (GaudiException):
+     BinnedArray0D(const BinnedArray0D& barr):
        BinnedArray<T>(barr),
        m_object(barr.m_object)
       {}
@@ -53,7 +53,7 @@ namespace Acts {
        }
         return *this;
      }
-      
+
      /** Implizit Constructor */
      BinnedArray0D* clone() const final
      { return new BinnedArray0D(*this); }
@@ -74,7 +74,7 @@ namespace Acts {
      const BinUtility* binUtility() const { return nullptr; }
 
     private:
-     T          m_object;       //!< the single contained object     
+     T          m_object;       //!< the single contained object
 
   };
 

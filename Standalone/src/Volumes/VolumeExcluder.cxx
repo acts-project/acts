@@ -3,8 +3,6 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Volumes/VolumeExcluder.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
 
 // Default constructor
 Acts::VolumeExcluder::VolumeExcluder() :
@@ -24,7 +22,7 @@ Acts::VolumeExcluder::VolumeExcluder(const VolumeExcluder& ex)
 
 // destructor
 Acts::VolumeExcluder::~VolumeExcluder()
-{  
+{
   delete m_vol;
 }
 
@@ -38,6 +36,6 @@ Acts::VolumeExcluder& Acts::VolumeExcluder::operator=(const VolumeExcluder &vol)
   return *this;
 }
 
-Acts::VolumeExcluder* Acts::VolumeExcluder::clone() const 
-{ return new Acts::VolumeExcluder(*this); }    
-    
+Acts::VolumeExcluder* Acts::VolumeExcluder::clone() const
+{ return new Acts::VolumeExcluder(*this); }
+

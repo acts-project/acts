@@ -4,14 +4,12 @@
 
 #ifndef ACTS_VOLUMES_DOUBLETRAPEZOIDVOLUMESBOUNDS_H
 #define ACTS_VOLUMES_DOUBLETRAPEZOIDVOLUMESBOUNDS_H 1
-    
+
 // Geometry module
 #include "Volumes/VolumeBounds.h"
 #include "GeometryUtils/PrecisionDefinition.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
-
-class MsgStream;
+#include "Core/AlgebraDefinitions.h"
 
 namespace Acts {
 
@@ -19,39 +17,39 @@ namespace Acts {
   class RectangleBounds;
   class TrapezoidBounds;
   class DiamondBounds;
-   
+
   /**
    @class DoubleTrapezoidVolumeBounds
-    
+
    Bounds for a double trapezoidal shaped Volume, the decomposeToSurfaces method creates a
    vector of 8 surfaces:
-      
+
     BoundarySurfaceFace [index]:
-        
-        - negativeFaceXY     [0] : Diamond Acts::PlaneSurface, 
+
+        - negativeFaceXY     [0] : Diamond Acts::PlaneSurface,
                                    parallel to \f$ xy \f$ plane at negative \f$ z \f$
-        - positiveFaceXY     [1] : Diamond Acts::PlaneSurface, 
+        - positiveFaceXY     [1] : Diamond Acts::PlaneSurface,
                                    parallel to \f$ xy \f$ plane at positive \f$ z \f$
-        - trapezoidFaceAlpha1 [2] : Rectangular  Acts::PlaneSurface, 
+        - trapezoidFaceAlpha1 [2] : Rectangular  Acts::PlaneSurface,
                                    attached to [0] and [1] at negative \f$ x \f$ (associated to alpha1)
-        - trapezoidFaceBeta1  [3] : Rectangular  Acts::PlaneSurface, 
+        - trapezoidFaceBeta1  [3] : Rectangular  Acts::PlaneSurface,
                                    attached to [0] and [1] at positive \f$ x \f$ (associated to beta1)
-        - trapezoidFaceAlpha2 [5] : Rectangular  Acts::PlaneSurface, 
+        - trapezoidFaceAlpha2 [5] : Rectangular  Acts::PlaneSurface,
                                    attached to [0] and [1] at negative \f$ x \f$ (associated to alpha2)
-        - trapezoidFaceBeta2  [6] : Rectangular  Acts::PlaneSurface, 
+        - trapezoidFaceBeta2  [6] : Rectangular  Acts::PlaneSurface,
                                    attached to [0] and [1] at positive \f$ x \f$ (associated to beta2)
-        - negativeFaceZX     [4] : Rectangular  Acts::PlaneSurface, 
+        - negativeFaceZX     [4] : Rectangular  Acts::PlaneSurface,
                                    parallel to \f$ zx \f$ plane at negative \f$ y \f$
         - positiveFaceZX     [5] : Rectangular  Acts::PlaneSurface,
                                    parallel to \f$ zx \f$ plane at positive \f$ y \f$
-    
-    @image html DoubleTrapezoidVolumeBounds_decomp.gif  
-        
-    @author Andreas.Salzburger@cern.ch , Sarka.Todorova@cern.ch 
+
+    @image html DoubleTrapezoidVolumeBounds_decomp.gif
+
+    @author Andreas.Salzburger@cern.ch , Sarka.Todorova@cern.ch
     */
-    
+
  class DoubleTrapezoidVolumeBounds : public VolumeBounds {
-  
+
   public:
     /** @enum BoundValues for readability */
     enum BoundValues {
@@ -60,89 +58,86 @@ namespace Acts {
         bv_maxHalfX    = 2,
         bv_halfY1      = 3,
         bv_halfY2      = 4,
-        bv_halfZ       = 5,   
+        bv_halfZ       = 5,
         bv_alpha1      = 6,
         bv_alpha2      = 7,
-        bv_length      = 8   
+        bv_length      = 8
     };
-      
+
     /**Default Constructor*/
     DoubleTrapezoidVolumeBounds();
-      
+
     /**Constructor - the double trapezoid boundaries (symmetric trapezoid/diamond) */
     DoubleTrapezoidVolumeBounds(double minhlenghtx, double medhlengthx, double maxhlengthx, double hlenghty1, double hlenghty2, double hlengthz);
-    
+
     /**Copy Constructor */
     DoubleTrapezoidVolumeBounds(const DoubleTrapezoidVolumeBounds& bobo);
-    
+
     /**Destructor */
     virtual ~DoubleTrapezoidVolumeBounds();
-    
+
     /**Assignment operator*/
     DoubleTrapezoidVolumeBounds& operator=(const DoubleTrapezoidVolumeBounds& bobo);
-    
+
     /**Virtual constructor */
     DoubleTrapezoidVolumeBounds* clone() const override;
-    
-    /**This method checks if position in the 3D volume frame is inside the cylinder*/     
+
+    /**This method checks if position in the 3D volume frame is inside the cylinder*/
     bool inside(const Vector3D& , double tol=0.) const override;
-         
+
     /** Method to decompose the Bounds into Surfaces */
     const std::vector<const Acts::Surface*>* decomposeToSurfaces(std::shared_ptr<Transform3D> transformPtr) const override;
-                                            
+
     /**This method returns the X halflength at minimal Y*/
     double minHalflengthX() const;
-    
+
     /**This method returns the (maximal) halflength in local x*/
     double medHalflengthX() const;
-    
+
     /**This method returns the X halflength at maximal Y (local coordinates)*/
-    double maxHalflengthX() const;    
-    
+    double maxHalflengthX() const;
+
     /**This method returns the halflength1 in local y*/
-    double halflengthY1() const;    
-    
+    double halflengthY1() const;
+
     /**This method returns the halflength2 in local y*/
-    double halflengthY2() const;    
-    
+    double halflengthY2() const;
+
     /**This method returns the halflength in local z*/
-    double halflengthZ() const;    
-    
+    double halflengthZ() const;
+
     /**This method returns the opening angle in point A (negative local x)*/
     double alpha1() const;
-        
+
     /**This method returns the opening angle in point A' (negative local x)*/
-    double alpha2() const;    
-    
-    /** Output Method for MsgStream*/
-    MsgStream& dump(MsgStream& sl) const override;
-    
+    double alpha2() const;
+
     /** Output Method for std::ostream */
     std::ostream& dump(std::ostream& sl) const override;
 
-  private:    
+  private:
     template <class T> T& dumpT(T& dT) const;
-      
-      
+
+
     /** This method returns the associated DoubleTrapezoidBounds of the face PlaneSurface parallel to local xy plane */
     DiamondBounds* faceXYDiamondBounds() const;
-    
+
     /** This method returns the associated RecantleBounds of the face PlaneSurface attached to alpha (negative local x)*/
     RectangleBounds* faceAlpha1RectangleBounds() const;
     RectangleBounds* faceAlpha2RectangleBounds() const;
-    
+
     /** This method returns the associated RecantleBounds of the face PlaneSurface attached to beta (positive local x)*/
-    RectangleBounds* faceBeta1RectangleBounds() const;    
-    RectangleBounds* faceBeta2RectangleBounds() const;    
-    
+    RectangleBounds* faceBeta1RectangleBounds() const;
+    RectangleBounds* faceBeta2RectangleBounds() const;
+
     /** This method returns the associated RecantleBounds of the face PlaneSurface parallel to local zx plane, negative local y */
     RectangleBounds* faceZXRectangleBoundsBottom() const;
-    
+
     /** This method returns the associated RecantleBounds of the face PlaneSurface parallel to local zx plane, positive local y */
     RectangleBounds* faceZXRectangleBoundsTop() const;
 
     std::vector<TDD_real_t>  m_boundValues;
- 
+
  };
 
  inline DoubleTrapezoidVolumeBounds* DoubleTrapezoidVolumeBounds::clone() const
@@ -152,7 +147,7 @@ namespace Acts {
 
  inline double DoubleTrapezoidVolumeBounds::medHalflengthX() const { return m_boundValues[bv_medHalfX]; }
 
- inline double DoubleTrapezoidVolumeBounds::maxHalflengthX() const { return m_boundValues[bv_maxHalfX ]; } 
+ inline double DoubleTrapezoidVolumeBounds::maxHalflengthX() const { return m_boundValues[bv_maxHalfX ]; }
 
  inline double DoubleTrapezoidVolumeBounds::halflengthY1() const { return m_boundValues[bv_halfY1]; }
 
@@ -164,13 +159,13 @@ namespace Acts {
 
  inline double DoubleTrapezoidVolumeBounds::alpha2() const { return m_boundValues[bv_alpha2]; }
 
- template <class T> T& DoubleTrapezoidVolumeBounds::dumpT(T& dT) const 
+ template <class T> T& DoubleTrapezoidVolumeBounds::dumpT(T& dT) const
  {
      dT << std::setiosflags(std::ios::fixed);
      dT << std::setprecision(7);
      dT << "Acts::DoubleTrapezoidVolumeBounds: (minhalfX, medhalfX, maxhalfX, halfY1, halfY2, halfZ) = ";
      dT << "(" << m_boundValues[bv_minHalfX] << ", " << m_boundValues[bv_medHalfX] << ", " << m_boundValues[bv_maxHalfX];
-     dT << ", " << m_boundValues[bv_halfY1] <<", " << m_boundValues[bv_halfY2] << ", " << m_boundValues[bv_halfZ] << ")";  
+     dT << ", " << m_boundValues[bv_halfY1] <<", " << m_boundValues[bv_halfY2] << ", " << m_boundValues[bv_halfZ] << ")";
      return dT;
  }
 

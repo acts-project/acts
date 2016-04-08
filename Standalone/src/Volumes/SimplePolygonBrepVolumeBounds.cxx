@@ -2,7 +2,7 @@
 // SimplePolygonBrepVolumeBounds.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module                                                                                                             
+// Geometry module
 #include "Volumes/SimplePolygonBrepVolumeBounds.h"
 #include "Volumes/Volume.h"
 #include "Volumes/PrismVolumeBounds.h"
@@ -12,9 +12,6 @@
 #include "Surfaces/PlaneSurface.h"
 #include "Surfaces/RectangleBounds.h"
 #include "Surfaces/SubtractedPlaneSurface.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
-#include "GaudiKernel/SystemOfUnits.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>
@@ -40,12 +37,12 @@ Acts::SimplePolygonBrepVolumeBounds::SimplePolygonBrepVolumeBounds(std::vector<s
  m_ordering(-1),
  m_combinedVolume(0),
  m_envelope(0)
-{  
+{
   m_xyVtx.resize(xyVtx.size());
   double xmin = xyVtx[0].first; double xmax = xyVtx[0].first;
   double ymin = xyVtx[0].second; double ymax = xyVtx[0].second;
   for (unsigned int i=0;i<xyVtx.size();i++)  {
-    m_xyVtx[i]=xyVtx[i]; 
+    m_xyVtx[i]=xyVtx[i];
     if ( xyVtx[i].first<xmin ) xmin = xyVtx[i].first;
     if ( xyVtx[i].first>xmax ) xmax = xyVtx[i].first;
     if ( xyVtx[i].second<ymin ) ymin = xyVtx[i].second;
@@ -57,7 +54,7 @@ Acts::SimplePolygonBrepVolumeBounds::SimplePolygonBrepVolumeBounds(std::vector<s
   m_halfY = fmax(fabs(ymax),fabs(ymin));
   Acts::Transform3D transXY( Acts::Translation3D(Acts::Vector3D(0.5*(xmin+xmax), 0., 0.))*Acts::Translation3D(Acts::Vector3D(0.,0.5*(ymin+ymax),0.)));
   m_envelope = new Acts::Volume(new Acts::Transform3D(transXY),new Acts::CuboidVolumeBounds(ehalfX,ehalfY,m_halfZ));
-  
+
   processSubVols();
 }
 
@@ -69,12 +66,12 @@ Acts::SimplePolygonBrepVolumeBounds::SimplePolygonBrepVolumeBounds(std::vector<s
  m_ordering(-1),
  m_combinedVolume(0),
  m_envelope(0)
-{  
+{
   m_xyVtx.resize(xyVtx.size());
   double xmin = xyVtx[0].first; double xmax = xyVtx[0].first;
   double ymin = xyVtx[0].second; double ymax = xyVtx[0].second;
   for (unsigned int i=0;i<xyVtx.size();i++)  {
-    m_xyVtx[i]=xyVtx[i]; 
+    m_xyVtx[i]=xyVtx[i];
     if ( xyVtx[i].first<xmin ) xmin = xyVtx[i].first;
     if ( xyVtx[i].first>xmax ) xmax = xyVtx[i].first;
     if ( xyVtx[i].second<ymin ) ymin = xyVtx[i].second;
@@ -86,7 +83,7 @@ Acts::SimplePolygonBrepVolumeBounds::SimplePolygonBrepVolumeBounds(std::vector<s
   m_halfY = fmax(fabs(ymax),fabs(ymin));
   Acts::Transform3D transXY( Acts::Translation3D(Acts::Vector3D(0.5*(xmin+xmax),0.,0.))*Acts::Translation3D(Acts::Vector3D(0.,0.5*(ymin+ymax),0.)));
   m_envelope = new Acts::Volume(new Acts::Transform3D(transXY),new Acts::CuboidVolumeBounds(ehalfX,ehalfY,m_halfZ));
-  
+
   processSubVols();
 }
 
@@ -100,7 +97,7 @@ Acts::SimplePolygonBrepVolumeBounds::SimplePolygonBrepVolumeBounds(const Acts::S
   m_envelope(trabo.m_envelope->clone())
 {
   m_xyVtx.resize(trabo.m_xyVtx.size());
-  for (unsigned int i=0;i<m_xyVtx.size();i++)  m_xyVtx[i]=trabo.m_xyVtx[i]; 
+  for (unsigned int i=0;i<m_xyVtx.size();i++)  m_xyVtx[i]=trabo.m_xyVtx[i];
 }
 
 Acts::SimplePolygonBrepVolumeBounds::~SimplePolygonBrepVolumeBounds()
@@ -116,7 +113,7 @@ Acts::SimplePolygonBrepVolumeBounds& Acts::SimplePolygonBrepVolumeBounds::operat
     m_halfY         = trabo.m_halfY;
     m_halfZ         = trabo.m_halfZ;
     m_xyVtx.resize(trabo.m_xyVtx.size());
-    for (unsigned int i=0;i<m_xyVtx.size();i++)  m_xyVtx[i]=trabo.m_xyVtx[i]; 
+    for (unsigned int i=0;i<m_xyVtx.size();i++)  m_xyVtx[i]=trabo.m_xyVtx[i];
     delete m_combinedVolume;
     delete m_envelope;
     m_combinedVolume = trabo.m_combinedVolume->clone();
@@ -127,12 +124,12 @@ Acts::SimplePolygonBrepVolumeBounds& Acts::SimplePolygonBrepVolumeBounds::operat
 
 const std::vector<const Acts::Surface*>* Acts::SimplePolygonBrepVolumeBounds::decomposeToSurfaces(std::shared_ptr<Acts::Transform3D> transformPtr) const
 {
-  std::vector<const Acts::Surface*>* retsf = new std::vector<const Acts::Surface*>;  
+  std::vector<const Acts::Surface*>* retsf = new std::vector<const Acts::Surface*>;
   // the transform
   Acts::Transform3D transform   = ( transformPtr == nullptr) ? Acts::Transform3D::Identity() : (*transformPtr.get());
-  Acts::Transform3D* tTransform = 0;      
-      
-  // face surfaces xy     
+  Acts::Transform3D* tTransform = 0;
+
+  // face surfaces xy
   //  (1) - at negative local z
   tTransform = new Acts::Transform3D(transform*Acts::Translation3D(Acts::Vector3D(0.,0.,-m_halfZ)));
   Acts::PlaneSurface xymPlane(std::shared_ptr<Acts::Transform3D>(tTransform), new Acts::RectangleBounds(m_halfX,m_halfY) );
@@ -143,26 +140,26 @@ const std::vector<const Acts::Surface*>* Acts::SimplePolygonBrepVolumeBounds::de
   Acts::PlaneSurface xyPlane(std::shared_ptr<Acts::Transform3D>(tTransform),new Acts::RectangleBounds(m_halfX,m_halfY));
   volExcl = new Acts::VolumeExcluder(new Acts::Volume(*m_combinedVolume,Acts::Transform3D(Acts::Translation3D(Acts::Vector3D(0.,0.,m_halfZ)))));
   retsf->push_back(new Acts::SubtractedPlaneSurface(xyPlane,volExcl,true) );
-  // loop over xy vertices 
+  // loop over xy vertices
   //  (3)
   for (unsigned int iv = 0 ; iv < m_xyVtx.size(); iv++) {
     if (iv!=m_xyVtx.size()-1) retsf->push_back(sideSurf(transform,iv,iv+1));
-    else retsf->push_back(sideSurf(transform,iv,0));  
+    else retsf->push_back(sideSurf(transform,iv,0));
   }
-     
+
   return retsf;
 }
-    
+
 // faces in xy
 Acts::PlaneSurface* Acts::SimplePolygonBrepVolumeBounds::sideSurf(Acts::Transform3D transform,unsigned int iv1,unsigned int iv2) const
 {
   Acts::PlaneSurface* plane=0;
-   
+
   double xdif = m_xyVtx[iv2].first  - m_xyVtx[iv1].first;
   double ydif = m_xyVtx[iv2].second - m_xyVtx[iv1].second;
   double xsize = sqrt( xdif*xdif + ydif*ydif );
- 
-  double ori = m_ordering > 0 ? -1. : 1.; 
+
+  double ori = m_ordering > 0 ? -1. : 1.;
 
   Acts::Vector3D pos(0.5*(m_xyVtx[iv1].first+m_xyVtx[iv2].first), 0.5*(m_xyVtx[iv1].second+m_xyVtx[iv2].second),0.);
   double phi = ori*ydif < 0 ? M_PI/2 : -M_PI/2;
@@ -172,15 +169,15 @@ Acts::PlaneSurface* Acts::SimplePolygonBrepVolumeBounds::sideSurf(Acts::Transfor
     if (xdif<0) phi += M_PI;
   }
 
-  Acts::Transform3D* tTransform = new Acts::Transform3D(transform*Acts::Translation3D(pos)*Acts::AngleAxis3D(phi, Acts::Vector3D(0.,0.,1.))*Acts::AngleAxis3D(-ori*90*Gaudi::Units::deg, Acts::Vector3D(1.,0.,0.)));
-  plane = new Acts::PlaneSurface(std::shared_ptr<Acts::Transform3D>(tTransform),new Acts::RectangleBounds(0.5*xsize,m_halfZ)); 
+  Acts::Transform3D* tTransform = new Acts::Transform3D(transform*Acts::Translation3D(pos)*Acts::AngleAxis3D(phi, Acts::Vector3D(0.,0.,1.))*Acts::AngleAxis3D(-ori*90*M_PI/180, Acts::Vector3D(1.,0.,0.)));
+  plane = new Acts::PlaneSurface(std::shared_ptr<Acts::Transform3D>(tTransform),new Acts::RectangleBounds(0.5*xsize,m_halfZ));
 
   return plane;
 }
 
 bool Acts::SimplePolygonBrepVolumeBounds::inside(const Acts::Vector3D& pos, double tol) const
 {
-  return ( m_combinedVolume->inside(pos,tol) ); 
+  return ( m_combinedVolume->inside(pos,tol) );
 }
 
 void Acts::SimplePolygonBrepVolumeBounds::processSubVols() const
@@ -189,31 +186,26 @@ void Acts::SimplePolygonBrepVolumeBounds::processSubVols() const
   Acts::Volume* cVol = 0;
 #ifdef TRKDETDESCR_USEFLOATPRECISON
 #define double float
-#endif   
+#endif
   std::vector<std::pair<double,double> > triangles = TriangulatePolygonCheck(m_xyVtx); //@TODO change argument to const vector<pair< > >
   std::vector<std::pair<double,double> > vertices;
 #ifdef TRKDETDESCR_USEFLOATPRECISON
 #undef double
-#endif 
+#endif
   for  (unsigned int i=0; i<triangles.size(); i=i+3 ) {
     vertices.push_back( triangles[i] );
     vertices.push_back( triangles[i+1] );
     vertices.push_back( triangles[i+2] );
     Acts::Volume* newVol = new Acts::Volume(0,new Acts::PrismVolumeBounds(vertices,m_halfZ));
     if (cVol) cVol = new Acts::Volume(0,new Acts::CombinedVolumeBounds(cVol,newVol,false));
-    else cVol = newVol; 
+    else cVol = newVol;
     vertices.clear();
-  } 
-  m_combinedVolume = cVol;                
+  }
+  m_combinedVolume = cVol;
 }
 
 // ostream operator overload
-MsgStream& Acts::SimplePolygonBrepVolumeBounds::dump( MsgStream& sl ) const
-{
-    return dumpT<MsgStream>(sl);
-}
-
-std::ostream& Acts::SimplePolygonBrepVolumeBounds::dump( std::ostream& sl ) const 
+std::ostream& Acts::SimplePolygonBrepVolumeBounds::dump( std::ostream& sl ) const
 {
     return dumpT<std::ostream>(sl);
 }
@@ -226,20 +218,20 @@ std::ostream& Acts::SimplePolygonBrepVolumeBounds::dump( std::ostream& sl ) cons
 
 
 bool Acts::SimplePolygonBrepVolumeBounds::Xor(bool x, bool y) const
-// XOR: Arguments are negated to ensure that they are 0/1. Then the bitwise Xor operator may 
-// apply.	
+// XOR: Arguments are negated to ensure that they are 0/1. Then the bitwise Xor operator may
+// apply.
 {
 	return	!x ^ !y;
 }
 
-bool Acts::SimplePolygonBrepVolumeBounds::Left(std::pair<TDD_real_t, TDD_real_t> a, std::pair<TDD_real_t, TDD_real_t> b, std::pair<TDD_real_t, TDD_real_t> c) const 
+bool Acts::SimplePolygonBrepVolumeBounds::Left(std::pair<TDD_real_t, TDD_real_t> a, std::pair<TDD_real_t, TDD_real_t> b, std::pair<TDD_real_t, TDD_real_t> c) const
 // Returns true iff c is strictly to the left of the directed line through a to b.
 {
 	double CrossZ = (b.first-a.first)*(c.second-a.second) - (c.first-a.first)*(b.second-a.second);
 	if (m_ordering==1) return (CrossZ >= 0.);
 	if (m_ordering==0) return (CrossZ < 0.);
 	return false;
-	
+
 }
 
 
@@ -252,7 +244,7 @@ bool Acts::SimplePolygonBrepVolumeBounds::Intersect(std::pair<TDD_real_t, TDD_re
 
 
 bool Acts::SimplePolygonBrepVolumeBounds::InCone(int i, int j, std::vector<std::pair<TDD_real_t, TDD_real_t> > inputVertices) const
-// 	Returns true iff the diagonal (i,j) is internal to the polygon in 
+// 	Returns true iff the diagonal (i,j) is internal to the polygon in
 //  the neighborhood of the i endpoint.
 {
 	int	iPlus1  = (i + 1)       % inputVertices.size();
@@ -271,7 +263,7 @@ bool Acts::SimplePolygonBrepVolumeBounds::InCone(int i, int j, std::vector<std::
 }
 
 bool Acts::SimplePolygonBrepVolumeBounds::Diagonalie(int  i , int j  ,std::vector<std::pair<TDD_real_t, TDD_real_t> > inputVertices) const {
-// Returns TRUE iff (v_i, v_j) is a proper internal *or* external diagonal of this polygon, 
+// Returns TRUE iff (v_i, v_j) is a proper internal *or* external diagonal of this polygon,
 // *ignoring edges incident to v_i and v_j*.
 
 	/* For each edge (k,k+1) of P */
@@ -297,11 +289,11 @@ bool Acts::SimplePolygonBrepVolumeBounds::Diagonal(int i, int j, std::vector<std
   return InCone(i,j, inputVertices) && Diagonalie(i,j, inputVertices);
 }
 
-  
+
 std::vector<std::pair<TDD_real_t, TDD_real_t> > Acts::SimplePolygonBrepVolumeBounds::TriangulatePolygon(const std::vector<std::pair<TDD_real_t, TDD_real_t> >& Vertices ) const
 {
 // Subtracting ears method
-// 
+//
 // One way to triangulate a simple polygon is by using the assertion that any simple polygon without holes
 //  has at least two so called 'ears'. An ear is a triangle with two sides on the edge of the polygon and the
 //  other one completely inside it. The algorithm then consists of finding such an ear, removing it from the
@@ -313,8 +305,8 @@ std::vector<std::pair<TDD_real_t, TDD_real_t> > Acts::SimplePolygonBrepVolumeBou
   std::vector<std::pair<TDD_real_t, TDD_real_t> > outTriangles;
   std::vector<std::pair<TDD_real_t, TDD_real_t> > inputVertices;
   for (int i=0; i<NSize;i++) inputVertices.push_back((Vertices)[i]);
-  
-//for (int i; i<NSize;i++) std::cout<<"MW input vertices: "<<inputVertices[i].first<<" "<<inputVertices[i].second<<std::endl;	
+
+//for (int i; i<NSize;i++) std::cout<<"MW input vertices: "<<inputVertices[i].first<<" "<<inputVertices[i].second<<std::endl;
 // Triangulates this polygon and saves triangle edges in TriPoly.
 // Triangles are stored CCW, with each set of 3 consecutive points in TriPoly
 // representing 1 triangle.
@@ -322,7 +314,7 @@ std::vector<std::pair<TDD_real_t, TDD_real_t> > Acts::SimplePolygonBrepVolumeBou
 
   if (NSize < 4) return  inputVertices;
 
-  
+
 // Start triangulating
   int VerticesLeft = NSize;
   while (VerticesLeft > 3) {
@@ -332,13 +324,13 @@ std::vector<std::pair<TDD_real_t, TDD_real_t> > Acts::SimplePolygonBrepVolumeBou
 
       int iPlus1 = i+1;        if (iPlus1 == VerticesLeft) iPlus1 = 0;
       int iPlus2 = (iPlus1+1); if (iPlus2 == VerticesLeft) iPlus2 = 0;
-			
+
       if (Diagonal(i, iPlus2, inputVertices)) {
-	
+
 	outTriangles.push_back(inputVertices[i]);
 	outTriangles.push_back(inputVertices[iPlus1]);
 	outTriangles.push_back(inputVertices[iPlus2]);
-	
+
 	inputVertices.erase(inputVertices.begin()+iPlus1);
 	VerticesLeft--;
 	bCornerCut = true;
@@ -347,23 +339,23 @@ std::vector<std::pair<TDD_real_t, TDD_real_t> > Acts::SimplePolygonBrepVolumeBou
 
     }
     if (!bCornerCut) {		// Error - bad poly
-      //std::cout<<"MW 	Error - bad poly"<<std::endl;	
+      //std::cout<<"MW 	Error - bad poly"<<std::endl;
       std::vector<std::pair<TDD_real_t, TDD_real_t> > out;
       return out;
     }
   }
-  
+
   if (VerticesLeft == 3){
     outTriangles.push_back(inputVertices[0]);
     outTriangles.push_back(inputVertices[1]);
     outTriangles.push_back(inputVertices[2]);
     inputVertices.erase(inputVertices.begin()+1);
-    VerticesLeft--;		
-  }		
+    VerticesLeft--;
+  }
 
   return outTriangles;
 
-} 
+}
 
 std::vector<std::pair<TDD_real_t, TDD_real_t> > Acts::SimplePolygonBrepVolumeBounds::TriangulatePolygonCheck(const std::vector<std::pair<TDD_real_t, TDD_real_t> >& Vertices ) const
 {
@@ -371,13 +363,13 @@ std::vector<std::pair<TDD_real_t, TDD_real_t> > Acts::SimplePolygonBrepVolumeBou
 // m_ordering   = -1    not set
 // m_ordering   =  1    anticlockwise
 // m_ordering   =  0    clockwise
-	
-	if (m_ordering == -1) m_ordering = 1; 
+
+	if (m_ordering == -1) m_ordering = 1;
         std::vector<std::pair<double,double> > outTriangles = TriangulatePolygon( Vertices );
 	if (outTriangles.size() == 0 ) {
 	      m_ordering = -m_ordering+1;
 	      outTriangles = TriangulatePolygon( Vertices );
-	}	
-	
+	}
+
 	return outTriangles;
-} 
+}

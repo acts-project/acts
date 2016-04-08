@@ -10,16 +10,13 @@
 #include "Volumes/BoundarySurfaceFace.h"
 #include "GeometryUtils/BinnedArray.h"
 #include "GeometryUtils/BinnedArray0D.h"
-// EventData module
-#include "EventDataUtils/PropDirection.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
+#include "Core/AlgebraDefinitions.h"
+#include "Core/PropDirection.h"
 
 
 namespace Acts {
- 
+
   class Surface;
 
   /**
@@ -28,17 +25,17 @@ namespace Acts {
    Description of a BoundarySurface for volumes in the Tracking geometry.
    It extends the Surface description to make a surface being a boundary of a
    Acts::AbstractVolume & Acts::TrackingVolume.
-    
+
    To avoid dynamic_cast operations the BoundarySurface class is realized as a templated class,
    with the Volume type as the template argument.
-   
+
    A Acts::BoundarySurface can have an inside Volume and an outside Volume, resp.
    a Acts::BinnedArray for inside or outside direction.
-  
+
    Inside and outside are by this referring to the normal vector definition of the Surface,
    and not necessarily corresponding to the Volume inside/outside definition.
-    
-   The GeometryBuilder as defined in the GeometryTools Package is declared 
+
+   The GeometryBuilder as defined in the GeometryTools Package is declared
    to be friend, so that it can glue Volumes together by sharing the same
    Boundary Surface.
 
@@ -84,12 +81,12 @@ namespace Acts {
        m_outsideVolume(nullptr),
        m_insideVolumeArray(insideArray),
        m_outsideVolumeArray(outsideArray)
-     {}         
-       
-     /** Get the next Volume depending on GlobalPosition, GlobalMomentum, dir on the TrackParameters and the requested direction 
+     {}
+
+     /** Get the next Volume depending on GlobalPosition, GlobalMomentum, dir on the TrackParameters and the requested direction
          - the position, momentum are assumed to be on surface  */
      virtual const T* attachedVolume(const Vector3D& pos, const Vector3D& mom, PropDirection dir) const;
-                                               
+
      /** templated onBoundary method */
      template <class P> bool onBoundary(const P& pars) const
      { return surfaceRepresentation().onSurface(pars); }
@@ -99,9 +96,6 @@ namespace Acts {
 
      /**Virtual Destructor*/
      virtual ~BoundarySurface(){}
-
-     /** output debug information */
-     void debugInfo(MsgStream& msg) const;
 
    protected:
      /** attach a Volume to this BoundarySurface - will always be done as an 0D array
@@ -128,7 +122,7 @@ namespace Acts {
       if (inout == insideVolume) m_insideVolumeArray = volumes;
       else m_outsideVolumeArray = volumes;
   }
-  
+
   template <class T> const T* BoundarySurface<T>::attachedVolume(const Vector3D& pos, const Vector3D& mom, PropDirection dir) const
   {
 
@@ -140,13 +134,6 @@ namespace Acts {
         attVolume = m_insideVolumeArray ? m_insideVolumeArray->object(pos).get() : m_insideVolume;
    return attVolume;
   }
-
-  template <class T> inline void BoundarySurface<T>::debugInfo(MsgStream& msg) const
-  {
-     msg << "BoundarySurface debug information: " <<  std::endl;
-     msg << "     -> pointer to insideVolumeArray    = " << m_insideVolumeArray.get()   << std::endl;
-     msg << "     -> pointer to outsideVolumeArray   = " << m_outsideVolumeArray.get()  << endreq;
-  }                         
 } // end of namespace Acts
 
 #endif // ACTS_VOLUMES_BOUNDARYSURFACE_H

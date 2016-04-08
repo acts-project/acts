@@ -13,9 +13,6 @@
 #include "Surfaces/CylinderSurface.h"
 #include "Surfaces/DiscSurface.h"
 #include "Surfaces/PlaneSurface.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
-#include "GaudiKernel/SystemOfUnits.h"
 // STD/STL
 #include <iostream>
 
@@ -58,7 +55,7 @@ Acts::AbstractVolume& Acts::AbstractVolume::operator=(const Acts::AbstractVolume
   }
 	return *this;
 }
-    
+
 const std::vector< std::shared_ptr<const Acts::BoundarySurface<Acts::AbstractVolume> > >&  Acts::AbstractVolume::boundarySurfaces() const
 { return (*m_boundarySurfaces); }
 
@@ -70,16 +67,16 @@ void Acts::AbstractVolume::createBoundarySurfaces()
   // transform Surfaces To BoundarySurfaces
   const std::vector<const Acts::Surface*>* surfaces = Acts::Volume::volumeBounds().decomposeToSurfaces(m_transform);
   std::vector<const Acts::Surface*>::const_iterator surfIter = surfaces->begin();
-  
+
   // counter to flip the inner/outer position for Cylinders
   int sfCounter = 0;
   int sfNumber  = surfaces->size();
-  
+
   for ( ; surfIter != surfaces->end(); ++surfIter){
       sfCounter++;
       const Acts::PlaneSurface*      psf = dynamic_cast<const Acts::PlaneSurface*>(*surfIter);
       if (psf){ m_boundarySurfaces->push_back(std::shared_ptr<const Acts::BoundarySurface<Acts::AbstractVolume> >
-                  (new Acts::BoundaryPlaneSurface<Acts::AbstractVolume>(this, 0, *psf)));    
+                  (new Acts::BoundaryPlaneSurface<Acts::AbstractVolume>(this, 0, *psf)));
         delete psf; continue;
       }
       const Acts::DiscSurface*       dsf = dynamic_cast<const Acts::DiscSurface*>(*surfIter);
@@ -96,6 +93,6 @@ void Acts::AbstractVolume::createBoundarySurfaces()
         delete csf; continue;
       }
    }
-  
+
    delete surfaces;
 }

@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <utility>
+#include <cmath>
 
 namespace Acts {
 
