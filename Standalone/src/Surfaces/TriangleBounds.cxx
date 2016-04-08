@@ -3,15 +3,13 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Surfaces/TriangleBounds.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>
 
 // default constructor
 Acts::TriangleBounds::TriangleBounds() :
-    Acts::PlanarBounds(),    
+    Acts::PlanarBounds(),
     m_boundValues(TriangleBounds::bv_length,0.)
 {}
 
@@ -85,11 +83,11 @@ double Acts::TriangleBounds::minDistance(const Acts::Vector2D& pos ) const
 {
   const int Np = 3;
 
-  double X [3] = { m_boundValues[TriangleBounds::bv_x1] , 
-                   m_boundValues[TriangleBounds::bv_x2] , 
+  double X [3] = { m_boundValues[TriangleBounds::bv_x1] ,
+                   m_boundValues[TriangleBounds::bv_x2] ,
                    m_boundValues[TriangleBounds::bv_x3] };
-  double Y [3] = { m_boundValues[TriangleBounds::bv_y1] , 
-                   m_boundValues[TriangleBounds::bv_y2] , 
+  double Y [3] = { m_boundValues[TriangleBounds::bv_y1] ,
+                   m_boundValues[TriangleBounds::bv_y2] ,
                    m_boundValues[TriangleBounds::bv_y3] };
 
   double dm = 1.e+20;
@@ -126,18 +124,6 @@ double Acts::TriangleBounds::minDistance(const Acts::Vector2D& pos ) const
 }
 
 // ostream operator overload
-MsgStream& Acts::TriangleBounds::dump( MsgStream& sl ) const
-{
-    sl << std::setiosflags(std::ios::fixed);
-    sl << std::setprecision(7);
-    sl << "Acts::TriangleBounds:  generating vertices (X, Y) " << '\n';
-    sl <<  "(" << m_boundValues[TriangleBounds::bv_x1] << " , " << m_boundValues[TriangleBounds::bv_y1] << ") " << '\n';
-    sl <<  "(" << m_boundValues[TriangleBounds::bv_x2] << " , " << m_boundValues[TriangleBounds::bv_y2] << ") " << '\n';
-    sl <<  "(" << m_boundValues[TriangleBounds::bv_x3] << " , " << m_boundValues[TriangleBounds::bv_y3] << ") ";
-    sl << std::setprecision(-1);
-    return sl;
-}
-
 std::ostream& Acts::TriangleBounds::dump( std::ostream& sl ) const
 {
     sl << std::setiosflags(std::ios::fixed);

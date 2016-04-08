@@ -5,8 +5,6 @@
 // Geometry module
 #include "Surfaces/ConeSurface.h"
 #include "Surfaces/RealQuadraticEquation.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>
@@ -73,10 +71,10 @@ Acts::ConeSurface::~ConeSurface()
 // return the binning position for ordering in the BinnedArray
 Acts::Vector3D Acts::ConeSurface::binningPosition(Acts::BinningValue bValue) const {
     // special binning type for R-type methods
-    if (bValue == Acts::binR || bValue == Acts::binRPhi ) 
+    if (bValue == Acts::binR || bValue == Acts::binRPhi )
         return Acts::Vector3D(center().x()+bounds().r(),center().y(),center().z());
     // give the center as default for all of these binning types
-    // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta 
+    // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
     return Acts::Surface::binningPosition(bValue);
 }
 
@@ -159,7 +157,7 @@ Acts::Intersection Acts::ConeSurface::intersectionEstimate(const Acts::Vector3D&
 {
      // transform to a frame with the cone along z, with the tip at 0
      Acts::Vector3D tpos1 = transform().inverse()*pos;
-     Acts::Vector3D tdir  = transform().inverse().linear()*dir;     
+     Acts::Vector3D tdir  = transform().inverse().linear()*dir;
      // see the header for the formula derivation
      double
        tan2Alpha = bounds().tanAlpha() *
@@ -174,17 +172,17 @@ Acts::Intersection Acts::ConeSurface::intersectionEstimate(const Acts::Vector3D&
            tpos1.y()*tpos1.y() -
            tan2Alpha*tpos1.z()*tpos1.z();
      if (A == 0.) A += 1e-16; // avoid div by zero
-    
+
      // use Andreas' quad solver, much more stable than what I wrote
      Acts::RealQuadraticEquation solns(A,B,C);
-   
+
      Acts::Vector3D solution (0.,0.,0.);
      double path  = 0.;
      bool isValid = false;
      if (solns.solutions != Acts::none) {
        double t1 = solns.first;
        Acts::Vector3D soln1Loc(tpos1 + t1 * dir);
-       isValid = forceDir ? ( t1 > 0. ) : true; 
+       isValid = forceDir ? ( t1 > 0. ) : true;
        // there's only one solution
        if (solns.solutions == Acts::one){
            solution = soln1Loc;
@@ -196,25 +194,25 @@ Acts::Intersection Acts::ConeSurface::intersectionEstimate(const Acts::Vector3D&
            if (t1*t2 > 0. || !forceDir) {
                if (t1*t1 < t2*t2) {
                    solution = soln1Loc;
-                   path = t1; 
+                   path = t1;
                } else {
                    solution = soln2Loc;
-                   path = t2; 
+                   path = t2;
               }
            } else {
                if  (t1 > 0.) {
                    solution = soln1Loc;
-                   path = t1; 
+                   path = t1;
                 } else {
                   solution = soln2Loc;
-                  path = t2; 
+                  path = t2;
              }
           }
        }
      }
     solution = transform()*solution;
-    
-    isValid = bchk ? (isValid && isOnSurface(solution,bchk)) : isValid;  
+
+    isValid = bchk ? (isValid && isOnSurface(solution,bchk)) : isValid;
     return Acts::Intersection(solution,path,isValid);
 }
 
@@ -229,6 +227,6 @@ double Acts::ConeSurface::pathCorrection(const Acts::Vector3D& pos, const Acts::
     			sgn*bounds().sinAlpha());
     if (applyTransform) normalC = transform()*normalC;
     // back in global frame
-    double cAlpha = normalC.dot(mom.unit());            
+    double cAlpha = normalC.dot(mom.unit());
     return fabs(1./cAlpha);
 }

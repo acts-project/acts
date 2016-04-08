@@ -6,13 +6,11 @@
 #define ACTS_SURFACES_CYLINDERBOUNDS_H 1
 
 // Geometry module
-#include "CoreUtils/ParameterDefinitions.h"
+#include "Core/ParameterDefinitions.h"
 #include "Surfaces/SurfaceBounds.h"
 #include "GeometryUtils/PrecisionDefinition.h"
 // EventData module
-#include "Algebra/AlgebraDefinitions.h"
-
-class MsgStream;
+#include "Core/AlgebraDefinitions.h"
 
 namespace Acts {
 
@@ -112,9 +110,6 @@ namespace Acts {
 
       /** This method returns the halflengthZ*/
       double halflengthZ() const;
-
-      /** Output Method for MsgStream*/
-      virtual MsgStream& dump(MsgStream& sl) const override;
 
       /** Output Method for std::ostream */
       virtual std::ostream& dump(std::ostream& sl) const override;

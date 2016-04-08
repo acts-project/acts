@@ -3,8 +3,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Surfaces/PerigeeSurface.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
+
 // STD/STL
 #include <iostream>
 #include <iomanip>
@@ -125,17 +124,6 @@ const Acts::RotationMatrix3D Acts::PerigeeSurface::measurementFrame(const Acts::
     mFrame.col(2) = measDepth;
     // return the rotation matrix
     return mFrame;
-}
-
-// overload of ostream operator
-MsgStream& Acts::PerigeeSurface::dump( MsgStream& sl ) const
-{
-    sl << std::setiosflags(std::ios::fixed);
-    sl << std::setprecision(7);
-    sl << "Acts::PerigeeSurface:" << std::endl;
-    sl << "     Center position  (x, y, z) = (" << center().x() << ", " << center().y() << ", " << center().z() << ")";
-    sl << std::setprecision(-1);
-    return sl;
 }
 
 // overload of ostream operator

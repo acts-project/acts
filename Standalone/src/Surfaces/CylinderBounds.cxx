@@ -4,8 +4,6 @@
 
 //Trk
 #include "Surfaces/CylinderBounds.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>
@@ -97,17 +95,6 @@ double Acts::CylinderBounds::minDistance(const Acts::Vector2D& pos ) const
 
 
 // ostream operator overload
-MsgStream& Acts::CylinderBounds::dump( MsgStream& sl ) const
-{
-    sl << std::setiosflags(std::ios::fixed);
-    sl << std::setprecision(7);
-    sl << "Acts::CylinderBounds: (radius, averagePhi, halfPhiSector, halflengthInZ) = ";
-    sl << "(" << this->r() << ", " << this->averagePhi() << ", ";
-    sl << this->halfPhiSector() << ", " << this->halflengthZ() << ")";
-    sl << std::setprecision(-1);
-    return sl;
-}
-
 std::ostream& Acts::CylinderBounds::dump( std::ostream& sl ) const
 {
     sl << std::setiosflags(std::ios::fixed);

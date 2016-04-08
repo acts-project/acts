@@ -5,17 +5,13 @@
 #ifndef ACTS_GEOMETRYUTILS_BINUTILITY_H
 #define ACTS_GEOMETRYUTILS_BINUTILITY_H 1
 
-// Gaudi
-#include "GaudiKernel/GaudiException.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 // Geometry module
 #include "GeometryUtils/BinningData.h"
 #include "GeometryUtils/BinningType.h"
 // ATS
 #include <vector>
-
-class MsgStream;
 
 namespace Acts {
 
@@ -29,9 +25,9 @@ namespace Acts {
         
     @author Andreas.Salzburger@cern.ch 
   */
-   
+
    class BinUtility {
-        
+
       public:
        /** Constructor for equidistant */
         BinUtility() :
@@ -41,7 +37,7 @@ namespace Acts {
          {
            m_binningData.reserve(3);
          }
-      
+
        /** Constructor from BinningData directly */
         BinUtility(const BinningData& bData, std::shared_ptr<Transform3D> tForm=nullptr) :
          m_binningData(),
@@ -51,7 +47,7 @@ namespace Acts {
            m_binningData.reserve(3);
            m_binningData.push_back(bData);
          }
-      
+
         /** Constructor for equidistant  */
         BinUtility(size_t bins, float min, float max, BinningOption opt = open, BinningValue value = binX, std::shared_ptr<Transform3D> tForm=nullptr) :
           m_binningData(),
@@ -81,14 +77,14 @@ namespace Acts {
             m_binningData.reserve(3);
             m_binningData.push_back(BinningData(open,phiRef,bValues));
         }
-        
+
         /** Copy constructor */
         BinUtility(const BinUtility& sbu ) :
          m_binningData(sbu.m_binningData),
          m_transform(sbu.m_transform),
          m_itransform(sbu.m_transform ? new Transform3D(sbu.m_transform->inverse()) : nullptr)
        {}
-        
+
         /** Assignment operator Constructor */
         BinUtility& operator=(const BinUtility& sbu ){
             if ( this != &sbu ){
@@ -98,36 +94,36 @@ namespace Acts {
             }
             return (*this);
         }
-        
+
         /** Operator++ to make multidimensional BinUtility */
-        BinUtility& operator+= ( const BinUtility& gbu) throw (GaudiException) {
-            const std::vector<BinningData>& bData = gbu.binningData(); 
-            if (m_binningData.size() + bData.size() > 3) 
-                throw GaudiException("BinUtility does not support dim > 3", "FATAL", StatusCode::FAILURE);
+        BinUtility& operator+= ( const BinUtility& gbu) throw (std::string) {
+            const std::vector<BinningData>& bData = gbu.binningData();
+            if (m_binningData.size() + bData.size() > 3)
+                throw "BinUtility does not support dim > 3";
             m_binningData.insert(m_binningData.end(), bData.begin(), bData.end());
             return (*this);
         }
-        
+
         /** Virtual Destructor */
         virtual ~BinUtility(){}
-          
+
         /** Implizit Constructor */
         virtual BinUtility* clone() const { return new BinUtility(*this); }
-        
+
         /** return the binning data */
         const std::vector<BinningData>& binningData() const { return m_binningData; }
           
         /** Bin from a 3D vector (already in binning frame) - optionally the itransform is applied */
-        size_t bin(const Vector3D& position, size_t ba=0) const throw (GaudiException)
+        size_t bin(const Vector3D& position, size_t ba=0) const throw (std::string)
         {
           if (ba >= m_binningData.size()) 
-                throw GaudiException("BinUtility", "dimension out of bounds", StatusCode::FAILURE); 
+                throw "dimension out of bounds"; 
           size_t bEval = m_itransform ? m_binningData[ba].searchGlobal((*m_itransform)*position) : m_binningData[ba].searchGlobal(position);          
           return ( bEval > bins(ba)-1 ? bins(ba)-1 : bEval );     //!< @TODO ST additional protection : DEBUG source
         }
         
         /** Bin neighbour range */
-        std::vector<size_t> neighbourRange(const Vector3D& position, size_t ba=0) const throw (GaudiException)
+        std::vector<size_t> neighbourRange(const Vector3D& position, size_t ba=0) const 
         {
             std::vector<size_t> neighbourRange;
             size_t cbin  = bin(position,ba);
@@ -140,40 +136,40 @@ namespace Acts {
         }    
         
         /** Bin from a 3D vector (already in binning frame) */
-        size_t entry(const Vector3D& position, size_t ba=0) const throw (GaudiException)
+        size_t entry(const Vector3D& position, size_t ba=0) const throw (std::string)
         { if (ba >= m_binningData.size()) 
-                throw GaudiException("BinUtility", "dimension out of bounds", StatusCode::FAILURE); 
+	    throw "dimension out of bounds"; 
           return (m_itransform ?  m_binningData[ba].entry((*m_itransform)*position) : m_binningData[ba].entry(position));
         }       
         
         /** Bin from a 3D vector (already in binning frame) */
-        size_t next(const Vector3D& position, const Vector3D& direction, size_t ba=0) const throw (GaudiException)
+        size_t next(const Vector3D& position, const Vector3D& direction, size_t ba=0) const throw (std::string)
         { if (ba >= m_binningData.size()) 
-                throw GaudiException("BinUtility", "dimension out of bounds", StatusCode::FAILURE); 
+                throw "dimension out of bounds"; 
           return (m_itransform ? m_binningData[ba].next((*m_itransform)*position, (m_itransform->linear())*direction) : m_binningData[ba].next(position, direction));
         }       
 
         /** Return the oder direciton for fast interlinking */
-        int nextDirection(const Vector3D& position, const Vector3D& direction, size_t ba=0) const throw (GaudiException)  {
-             if (ba >= m_binningData.size()) 
-                    throw GaudiException("BinUtility", "dimension out of bounds", StatusCode::FAILURE); 
+        int nextDirection(const Vector3D& position, const Vector3D& direction, size_t ba=0) const throw (std::string)  {
+             if (ba >= m_binningData.size())
+                    throw "dimension out of bounds";
               return m_binningData[ba].nextDirection(position, direction);
-        }    
+        }
 
         /** Distance estimate to next bin  */
-	    std::pair<size_t,float> distanceToNext(const Vector3D& position, const Vector3D& direction, size_t ba=0) const throw (GaudiException)
+        std::pair<size_t,float> distanceToNext(const Vector3D& position, const Vector3D& direction, size_t ba=0) const throw (std::string)
         { if (ba >= m_binningData.size()) 
-                throw GaudiException("BinUtility", "dimension out of bounds", StatusCode::FAILURE); 
+                throw "dimension out of bounds"; 
           return (m_itransform ?  m_binningData[ba].distanceToNext((*m_itransform)*position, (m_itransform->linear())*direction) : m_binningData[ba].distanceToNext(position, direction));
         }       
                 
         /** Bin from a 2D vector (following local parameters defintitions) - no optional transform applied 
             - USE WITH CARE !!
               You need to check if your local position is actually in the binning frame of the BinUtility */
-        size_t bin(const Vector2D& lposition, size_t ba=0) const throw (GaudiException) 
+        size_t bin(const Vector2D& lposition, size_t ba=0) const throw (std::string) 
         {    
             if (ba >= m_binningData.size()) 
-                    throw GaudiException("BinUtility", "dimension out of bounds", StatusCode::FAILURE); 
+                    throw "dimension out of bounds"; 
               return m_binningData[ba].searchLocal(lposition);
         }
         
@@ -195,63 +191,41 @@ namespace Acts {
               if ( !(*bdIter).inside(lposition)) return false;
             return true;
         }
-        
+
         /** First bin maximal value */
         size_t dimensions() const {
 	        return m_binningData.size();
         }
-        
+
         /** First bin maximal value */
         size_t max(size_t ba=0) const {
-	        if (ba >= m_binningData.size()) return 0; 
+	        if (ba >= m_binningData.size()) return 0;
 	        return (m_binningData[ba].bins()-1);
         }
-        
+
         /** Number of bins */
         size_t bins(size_t ba=0) const {
-	        if (ba >= m_binningData.size()) return 0; 
+	        if (ba >= m_binningData.size()) return 0;
 	        return (m_binningData[ba].bins());
         }
 
         /** The type/value of the binning */
-        BinningValue binningValue(size_t ba=0) const throw (GaudiException) {
-            if (ba >= m_binningData.size()) 
-                throw GaudiException("BinUtility", "dimension out of bounds", StatusCode::FAILURE); 
+        BinningValue binningValue(size_t ba=0) const throw (std::string) {
+            if (ba >= m_binningData.size())
+                throw "dimension out of bounds";
             return (m_binningData[ba].binvalue);
          }
- 
+
         /** bin->BinningValue navigation : pos=+-1. edges/ 0. bin center */
         float binPosition( size_t bin, float pos, size_t ba=0 ) const {
-            if (ba >= m_binningData.size()) 
-                throw GaudiException("BinUtility", "dimension out of bounds", StatusCode::FAILURE); 
+            if (ba >= m_binningData.size())
+                throw "dimension out of bounds";
             return (m_binningData[ba].binPosition( bin, pos ));
 	}
 
         /** Clear the data. */
         void clear() { m_binningData.clear(); }
-                  
-        /** Output Method for MsgStream, to be overloaded by child classes */
-        MsgStream& dump(MsgStream& sl) const {
-           sl << "BinUtility for " << m_binningData.size() << "- dimensional array:" << endreq;
-           std::vector<BinningData>::const_iterator bdIter = m_binningData.begin();
-           for (size_t ibd = 0 ; bdIter != m_binningData.end(); ++bdIter, ++ibd ){
-               sl << "dimension     : " << ibd                                          << endreq;
-               sl << " - type       : " << size_t((*bdIter).type)                       << endreq;
-               sl << " - option     : " << size_t((*bdIter).option)                     << endreq;
-               sl << " - value      : " << size_t((*bdIter).binvalue)                   << endreq;
-               sl << " - bins       : " << (*bdIter).bins()                             << endreq;
-               sl << " - min/max    : " << (*bdIter).min << " / " << (*bdIter).max      << endreq;
-               if ((*bdIter).type == equidistant)
-               sl << " - step       : " << (*bdIter).step                               << endreq;
-               sl << " - boundaries : | ";
-               std::vector<float>::const_iterator bIter = (*bdIter).boundaries().begin();
-               for ( ; bIter != (*bdIter).boundaries().end(); ++bIter )
-                   sl << (*bIter) << " | ";
-               sl << endreq;
-           }
-           return sl;
-       }
-       
+
        /** Output Method for std::ostream, to be overloaded by child classes */
        std::ostream& dump(std::ostream& sl) const {
             sl << "BinUtility for " << m_binningData.size() << "- dimensional array:" << std::endl;
@@ -281,8 +255,7 @@ namespace Acts {
             
   };    
 
-/**Overload of << operator for both, MsgStream and std::ostream for debug output*/ 
-MsgStream& operator << ( MsgStream& sl, const BinUtility& bgen); 
+/**Overload of << operator for std::ostream for debug output*/
 std::ostream& operator << ( std::ostream& sl, const BinUtility& bgen);
 
 } // end of namespace Acts

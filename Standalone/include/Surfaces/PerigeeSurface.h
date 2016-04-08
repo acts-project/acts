@@ -11,9 +11,7 @@
 // EventData module
 #include "GeometryUtils/GeometryStatics.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
-
-class MsgStream;
+#include "Core/AlgebraDefinitions.h"
 
 namespace Acts {
 
@@ -126,8 +124,6 @@ namespace Acts {
       /** Return properly formatted class name for screen output */
       virtual std::string name() const override { return "Acts::PerigeeSurface"; }
 
-      /** Output Method for MsgStream*/
-      virtual MsgStream& dump(MsgStream& sl) const override;
       /** Output Method for std::ostream*/
       virtual std::ostream& dump(std::ostream& sl) const override;
 

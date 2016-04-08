@@ -3,8 +3,6 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Surfaces/EllipseBounds.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>
@@ -25,9 +23,9 @@ Acts::EllipseBounds::EllipseBounds(double minradX, double minradY, double maxrad
     m_boundValues[EllipseBounds::bv_rMaxY]         = maxradY;
     m_boundValues[EllipseBounds::bv_averagePhi]    = 0.;
     m_boundValues[EllipseBounds::bv_halfPhiSector] = hphisec;
-    if (m_boundValues[EllipseBounds::bv_rMinX] > m_boundValues[EllipseBounds::bv_rMaxX]) 
+    if (m_boundValues[EllipseBounds::bv_rMinX] > m_boundValues[EllipseBounds::bv_rMaxX])
         swap(m_boundValues[EllipseBounds::bv_rMinX], m_boundValues[EllipseBounds::bv_rMaxX]);
-    if (m_boundValues[EllipseBounds::bv_rMinY] > m_boundValues[EllipseBounds::bv_rMaxY]) 
+    if (m_boundValues[EllipseBounds::bv_rMinY] > m_boundValues[EllipseBounds::bv_rMaxY])
         swap(m_boundValues[EllipseBounds::bv_rMinY], m_boundValues[EllipseBounds::bv_rMaxY]);
 }
 
@@ -42,9 +40,9 @@ Acts::EllipseBounds::EllipseBounds(double minradX, double minradY, double maxrad
     m_boundValues[EllipseBounds::bv_rMaxY]         = maxradY;
     m_boundValues[EllipseBounds::bv_averagePhi]    = avephi;
     m_boundValues[EllipseBounds::bv_halfPhiSector] = hphisec;
-    if (m_boundValues[EllipseBounds::bv_rMinX] > m_boundValues[EllipseBounds::bv_rMaxX]) 
+    if (m_boundValues[EllipseBounds::bv_rMinX] > m_boundValues[EllipseBounds::bv_rMaxX])
         swap(m_boundValues[EllipseBounds::bv_rMinX], m_boundValues[EllipseBounds::bv_rMaxX]);
-    if (m_boundValues[EllipseBounds::bv_rMinY] > m_boundValues[EllipseBounds::bv_rMaxY]) 
+    if (m_boundValues[EllipseBounds::bv_rMinY] > m_boundValues[EllipseBounds::bv_rMaxY])
         swap(m_boundValues[EllipseBounds::bv_rMinY], m_boundValues[EllipseBounds::bv_rMaxY]);
 }
 
@@ -79,7 +77,7 @@ bool Acts::EllipseBounds::operator==(const Acts::SurfaceBounds& sbo) const
 }
 
 // For ellipse bound this is only approximation which is valid
-// only if m_boundValues[EllipseBounds::bv_rMinX] ~= m_boundValues[EllipseBounds::bv_rMinY] 
+// only if m_boundValues[EllipseBounds::bv_rMinX] ~= m_boundValues[EllipseBounds::bv_rMinY]
 // and m_boundValues[EllipseBounds::bv_rMaxX] ~= m_boundValues[EllipseBounds::bv_rMaxY]
 //
 double Acts::EllipseBounds::minDistance(const Acts::Vector2D& pos ) const
@@ -137,17 +135,6 @@ double Acts::EllipseBounds::minDistance(const Acts::Vector2D& pos ) const
 }
 
 // ostream operator overload
-
-MsgStream& Acts::EllipseBounds::dump( MsgStream& sl ) const
-{
-    sl << std::setiosflags(std::ios::fixed);
-    sl << std::setprecision(7);
-    sl << "Acts::EllipseBounds:  (innerRadiusX, innerRadiusY, outerRadiusX, outerRadiusY, averagePhi, hPhiSector) = " ;
-    sl << "(" << this->rMinX() << ", " << this->rMinY() << ", " << this->rMaxX() << ", " << this->rMaxY() << ", " << this->averagePhi() << ", "<< this->halfPhiSector() << ")";
-    sl << std::setprecision(-1);
-    return sl;
-}
-
 std::ostream& Acts::EllipseBounds::dump( std::ostream& sl ) const
 {
     sl << std::setiosflags(std::ios::fixed);

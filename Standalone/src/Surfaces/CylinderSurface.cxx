@@ -5,8 +5,6 @@
 // Trk
 #include "Surfaces/CylinderSurface.h"
 #include "Surfaces/RealQuadraticEquation.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>

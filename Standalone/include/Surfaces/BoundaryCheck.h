@@ -6,8 +6,8 @@
 #define ACTS_SURFACES_BOUNDARYCHECK_H 1
 
 // Core module
-#include "CoreUtils/ParameterDefinitions.h"
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/ParameterDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 // EventData module
 
 namespace Acts {

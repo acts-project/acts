@@ -3,8 +3,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Surfaces/Surface.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
+
 // STD/STL
 #include <iostream>
 #include <iomanip>
@@ -149,7 +148,7 @@ bool Acts::Surface::isOnSurface(const Acts::Vector3D& glopo, const BoundaryCheck
     bool g2L = globalToLocal(glopo,Acts::Vector3D::UnitX(),lpos);
     if (g2L) {
         // no boundary check, then return true
-        if (!bchk) return true; 
+        if (!bchk) return true;
         // return what ever the bounds tell you
         return bounds().inside(lpos,bchk);
     }
@@ -175,27 +174,7 @@ unsigned int Acts::Surface::numberOfFreeInstantiations()
     return s_numberOfFreeInstantiations;
 }
 
-// overload dump for MsgStream operator
-MsgStream& Acts::Surface::dump( MsgStream& sl ) const
-{
-    sl << std::setiosflags(std::ios::fixed);
-    sl << std::setprecision(4);
-    sl << name() << std::endl;
-    sl << "     Center position  (x, y, z) = (" << center().x() << ", " << center().y() << ", " << center().z() << ")" << std::endl;
-    Acts::RotationMatrix3D rot(transform().rotation());
-    Acts::Vector3D  rotX(rot.col(0));
-    Acts::Vector3D  rotY(rot.col(1));
-    Acts::Vector3D  rotZ(rot.col(2));
-    sl << std::setprecision(6);
-    sl << "     Rotation:             colX = (" << rotX(0) << ", " << rotX(1) << ", " << rotX(2) << ")" << std::endl;
-    sl << "                           colY = (" << rotY(0) << ", " << rotY(1) << ", " << rotY(2) << ")" << std::endl;
-    sl << "                           colZ = (" << rotZ(0) << ", " << rotZ(1) << ", " << rotZ(2) << ")" << std::endl;
-    sl << "     Bounds  : " << bounds();
-    sl << std::setprecision(-1);
-    return sl;
-}
-
-// overload dump for MsgStream operator
+// overload dump for stream operator
 std::ostream& Acts::Surface::dump( std::ostream& sl ) const
 {
     sl << std::setiosflags(std::ios::fixed);
@@ -215,10 +194,7 @@ std::ostream& Acts::Surface::dump( std::ostream& sl ) const
     return sl;
 }
 
-/**Overload of << operator for both, MsgStream and std::ostream for debug output*/
-MsgStream& Acts::operator << ( MsgStream& sl, const Acts::Surface& sf)
-{ return sf.dump(sl); }
-
+/**Overload of << operator for std::ostream for debug output*/
 std::ostream& Acts::operator << ( std::ostream& sl, const Acts::Surface& sf)
 { return sf.dump(sl); }
 

@@ -3,8 +3,6 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Surfaces/RectangleBounds.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>
@@ -62,15 +60,6 @@ double Acts::RectangleBounds::minDistance(const Acts::Vector2D& pos ) const
 }
 
 // ostream operator overload
-MsgStream& Acts::RectangleBounds::dump( MsgStream& sl ) const
-{
-    sl << std::setiosflags(std::ios::fixed);
-    sl << std::setprecision(7);
-    sl << "Acts::RectangleBounds:  (halflenghtX, halflengthY) = " << "(" << m_boundValues[RectangleBounds::bv_halfX] << ", " << m_boundValues[RectangleBounds::bv_halfY] << ")";
-    sl << std::setprecision(-1);
-    return sl;
-}
-
 std::ostream& Acts::RectangleBounds::dump( std::ostream& sl ) const
 {
     sl << std::setiosflags(std::ios::fixed);

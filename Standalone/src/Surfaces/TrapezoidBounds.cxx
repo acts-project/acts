@@ -3,8 +3,6 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Surfaces/TrapezoidBounds.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>
@@ -28,7 +26,7 @@ Acts::TrapezoidBounds::TrapezoidBounds(double minhalex, double maxhalex, double 
     m_boundValues[TrapezoidBounds::bv_minHalfX] = fabs(minhalex);
     m_boundValues[TrapezoidBounds::bv_maxHalfX] = fabs(maxhalex);
     m_boundValues[TrapezoidBounds::bv_halfY]   = fabs(haley);
-    if (m_boundValues[TrapezoidBounds::bv_minHalfX] > m_boundValues[TrapezoidBounds::bv_maxHalfX]) 
+    if (m_boundValues[TrapezoidBounds::bv_minHalfX] > m_boundValues[TrapezoidBounds::bv_maxHalfX])
         swap(m_boundValues[TrapezoidBounds::bv_minHalfX], m_boundValues[TrapezoidBounds::bv_maxHalfX]);
 
 }
@@ -41,7 +39,7 @@ Acts::TrapezoidBounds::TrapezoidBounds(double minhalex, double haley, double alp
     m_beta(beta)
 {
     double gamma = (alpha > beta) ? (alpha - 0.5*M_PI) : (beta - 0.5*M_PI);
-    // now fill them 
+    // now fill them
     m_boundValues[TrapezoidBounds::bv_minHalfX] = fabs(minhalex);
     m_boundValues[TrapezoidBounds::bv_maxHalfX] = minhalex + (2.*m_boundValues[TrapezoidBounds::bv_halfY])*tan(gamma);
     m_boundValues[TrapezoidBounds::bv_halfY]   = fabs(haley);
@@ -112,7 +110,7 @@ bool Acts::TrapezoidBounds::insideExclude(const Acts::Vector2D& locpo,
                                          double tol1,
                                          double tol2) const
 {
-    
+
     //line a
     bool alphaBiggerBeta(m_alpha > m_beta);
     double ka   =  alphaBiggerBeta ? tan(M_PI - m_alpha) : tan(m_alpha);
@@ -149,12 +147,12 @@ double Acts::TrapezoidBounds::minDistance(const Acts::Vector2D& pos ) const
   else if (m_beta !=0. ) {
     xr =  m_boundValues[TrapezoidBounds::bv_minHalfX]+2.*tan(m_beta )*m_boundValues[TrapezoidBounds::bv_halfY];
   }
-  double X [4] = { -m_boundValues[TrapezoidBounds::bv_minHalfX], 
+  double X [4] = { -m_boundValues[TrapezoidBounds::bv_minHalfX],
                     xl,
-                    xr, 
+                    xr,
                     m_boundValues[TrapezoidBounds::bv_minHalfX]};
-  double Y [4] = {  -m_boundValues[TrapezoidBounds::bv_halfY], 
-                    m_boundValues[TrapezoidBounds::bv_halfY], 
+  double Y [4] = {  -m_boundValues[TrapezoidBounds::bv_halfY],
+                    m_boundValues[TrapezoidBounds::bv_halfY],
                     m_boundValues[TrapezoidBounds::bv_halfY],
                     -m_boundValues[TrapezoidBounds::bv_halfY]};
 
@@ -192,25 +190,13 @@ double Acts::TrapezoidBounds::minDistance(const Acts::Vector2D& pos ) const
 }
 
 // ostream operator overload
-MsgStream& Acts::TrapezoidBounds::dump( MsgStream& sl ) const
-{
-    sl << std::setiosflags(std::ios::fixed);
-    sl << std::setprecision(7);
-    sl << "Acts::TrapezoidBounds:  (minHlenghtX, maxHlengthX, hlengthY) = " << "(" 
-        << m_boundValues[TrapezoidBounds::bv_minHalfX] << ", " 
-        << m_boundValues[TrapezoidBounds::bv_maxHalfX] << ", " 
-        << m_boundValues[TrapezoidBounds::bv_halfY] << ")";
-    sl << std::setprecision(-1);
-    return sl;
-}
-
 std::ostream& Acts::TrapezoidBounds::dump( std::ostream& sl ) const
 {
     sl << std::setiosflags(std::ios::fixed);
     sl << std::setprecision(7);
-    sl << "Acts::TrapezoidBounds:  (minHlenghtX, maxHlengthX, hlengthY) = " << "(" 
-        << m_boundValues[TrapezoidBounds::bv_minHalfX] << ", " 
-        << m_boundValues[TrapezoidBounds::bv_maxHalfX] << ", " 
+    sl << "Acts::TrapezoidBounds:  (minHlenghtX, maxHlengthX, hlengthY) = " << "("
+        << m_boundValues[TrapezoidBounds::bv_minHalfX] << ", "
+        << m_boundValues[TrapezoidBounds::bv_maxHalfX] << ", "
         << m_boundValues[TrapezoidBounds::bv_halfY] << ")";
     sl << std::setprecision(-1);
     return sl;

@@ -10,10 +10,8 @@
 #include "Surfaces/CylinderBounds.h"
 #include "Surfaces/NoBounds.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
-#include "CoreIdentifier/Identifier.h"
-
-class MsgStream;
+#include "Core/AlgebraDefinitions.h"
+#include "Core/Identifier.h"
 
 namespace Acts {
 

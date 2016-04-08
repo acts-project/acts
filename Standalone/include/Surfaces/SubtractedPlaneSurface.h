@@ -9,19 +9,18 @@
 #include "Surfaces/PlaneSurface.h"
 #include "GeometryUtils/AreaExcluder.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 
-class MsgStream;
 class Identifier;
 
 namespace Acts {
-  
+
   /**
    @class SubtractedPlaneSurface
-    
+
    Class for a planar subtracted/shared surface in the ATLAS detector.
-   It owns its surface bounds and subtracted volume. 
-    
+   It owns its surface bounds and subtracted volume.
+
    @author Sarka.Todorova@cern.ch
    */
 
@@ -29,22 +28,22 @@ namespace Acts {
     public:
       /** Default Constructor - needed for persistency*/
       SubtractedPlaneSurface();
-        
+
       /** Copy Constructor*/
       SubtractedPlaneSurface(const SubtractedPlaneSurface& psf);
-      
+
       /** Copy Constructor with shift*/
       SubtractedPlaneSurface(const SubtractedPlaneSurface& psf, const Transform3D& transf);
-      
-      /** Constructor */      
+
+      /** Constructor */
       SubtractedPlaneSurface(const PlaneSurface& ps , AreaExcluder* vol, bool shared);
-            
+
       /**Destructor*/
-      virtual ~SubtractedPlaneSurface();  
-      
+      virtual ~SubtractedPlaneSurface();
+
       /**Assignment operator*/
       SubtractedPlaneSurface& operator=(const SubtractedPlaneSurface& psf);
-      
+
       /**Equality operator*/
       bool operator==(const Surface& sf) const;
 
@@ -52,23 +51,23 @@ namespace Acts {
       bool shared() const;
 
       /**This method calls the inside() method of the Bounds*/
-      bool insideBounds(const Vector2D& locpos,  const BoundaryCheck& bchk=true) const;       
+      bool insideBounds(const Vector2D& locpos,  const BoundaryCheck& bchk=true) const;
 
       /**This method allows access to the subtracted part*/
-      std::shared_ptr<AreaExcluder>  subtractedVolume() const; 
-            
+      std::shared_ptr<AreaExcluder>  subtractedVolume() const;
+
       /** Return properly formatted class name for screen output */
       std::string name() const { return "Acts::SubtractedPlaneSurface"; }
-      
+
     protected:
-      std::shared_ptr<AreaExcluder>          m_subtrVol; 
-      bool                                   m_shared;  
+      std::shared_ptr<AreaExcluder>          m_subtrVol;
+      bool                                   m_shared;
     };
- 
+
   inline bool SubtractedPlaneSurface::insideBounds(const Vector2D& locpos,  const BoundaryCheck& bchk) const
   {
     // no subtracted volume exists
-    if (!m_subtrVol.get()) return (this->bounds().inside(locpos,bchk)); 
+    if (!m_subtrVol.get()) return (this->bounds().inside(locpos,bchk));
     // subtracted volume exists, needs to be checked
     Vector3D gp(locpos.x(),locpos.y(),0.);
     if (m_shared) return (this->bounds().inside(locpos,bchk) && m_subtrVol->inside(gp,0.) );
@@ -76,13 +75,13 @@ namespace Acts {
     return in;
   }
 
-  inline bool SubtractedPlaneSurface::shared() const { return m_shared;} 
+  inline bool SubtractedPlaneSurface::shared() const { return m_shared;}
 
-  inline std::shared_ptr<AreaExcluder> SubtractedPlaneSurface::subtractedVolume() const 
+  inline std::shared_ptr<AreaExcluder> SubtractedPlaneSurface::subtractedVolume() const
   {
     return m_subtrVol;
   }
-    
+
 } // end of namespace
 
 #endif // TRKGEOMETRYSURFACES_SUBTRACTEDPLANESURFACE_H

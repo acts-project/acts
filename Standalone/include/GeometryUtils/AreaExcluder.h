@@ -6,34 +6,32 @@
 #define ACTS_GEOMETRYUTILS_AREAEXCLUDER_H 1
 
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
-
-class MsgStream;
+#include "Core/AlgebraDefinitions.h"
 
 namespace Acts {
 
 /** @class AreaExcluder
-    Pure abstract base class          
+    Pure abstract base class
 
-    @author sarka.todorova@cern.ch 
+    @author sarka.todorova@cern.ch
   */
-   
+
    class AreaExcluder {
-        
+
       public:
         /** Default constructor */
         AreaExcluder(){}
-        
+
         /** Virtual Destructor */
         virtual ~AreaExcluder(){}
-        
+
         /** Implizit Constructor */
         virtual AreaExcluder* clone() const = 0;
-          
+
         /** First bin from global position */
         virtual bool inside(const Vector3D& gp, double tol=0.) const = 0;
 
-   };      
+   };
 
 } // end of namespace Acts
 

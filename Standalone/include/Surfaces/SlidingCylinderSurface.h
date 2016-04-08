@@ -6,13 +6,12 @@
 #define ACTS_SURFACES_SLIDINGCYLINDERSURFACE_H 1
 
 // Geometry module
-#include "CoreUtils/ParameterDefinitions.h"
+#include "Core/ParameterDefinitions.h"
 #include "Surfaces/CylinderSurface.h"
 #include "GeometryUtils/BinUtility.h"
 // EventData module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 
-class MsgStream;
 class Identifier;
 
 namespace Acts {

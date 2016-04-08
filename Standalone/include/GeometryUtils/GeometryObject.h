@@ -9,7 +9,7 @@
 #include "GeometryUtils/GeometryID.h"
 #include "GeometryUtils/BinningType.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 
 
 namespace Acts {

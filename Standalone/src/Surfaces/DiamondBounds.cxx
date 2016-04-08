@@ -3,8 +3,6 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Surfaces/DiamondBounds.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>
@@ -26,14 +24,14 @@ Acts::DiamondBounds::DiamondBounds(double minhalex, double medhalex, double maxh
     m_alpha2(0.)
 {
   m_boundValues[DiamondBounds::bv_minHalfX] = minhalex;
-  m_boundValues[DiamondBounds::bv_medHalfX] = medhalex; 
-  m_boundValues[DiamondBounds::bv_maxHalfX] = maxhalex; 
-  m_boundValues[DiamondBounds::bv_halfY1]   = haley1; 
-  m_boundValues[DiamondBounds::bv_halfY2]   = haley2; 
-  if (minhalex > maxhalex) 
+  m_boundValues[DiamondBounds::bv_medHalfX] = medhalex;
+  m_boundValues[DiamondBounds::bv_maxHalfX] = maxhalex;
+  m_boundValues[DiamondBounds::bv_halfY1]   = haley1;
+  m_boundValues[DiamondBounds::bv_halfY2]   = haley2;
+  if (minhalex > maxhalex)
       swap(m_boundValues[DiamondBounds::bv_minHalfX], m_boundValues[DiamondBounds::bv_maxHalfX]);
   initCache();
-  
+
 }
 
 // copy constructor
@@ -157,30 +155,15 @@ double Acts::DiamondBounds::minDistance(const Acts::Vector2D& pos ) const
 }
 
 // ostream operator overload
-
-MsgStream& Acts::DiamondBounds::dump( MsgStream& sl ) const
-{
-    sl << std::setiosflags(std::ios::fixed);
-    sl << std::setprecision(7);
-    sl << "Acts::DiamondBounds:  (minHlenghtX, medHlengthX, maxHlengthX, hlengthY1, hlengthY2 ) = ";
-    sl << "(" << m_boundValues[DiamondBounds::bv_minHalfX] << ", " 
-        << m_boundValues[DiamondBounds::bv_medHalfX] <<", " 
-        << m_boundValues[DiamondBounds::bv_maxHalfX] << ", " 
-        << m_boundValues[DiamondBounds::bv_halfY1] << ", " 
-        << m_boundValues[DiamondBounds::bv_halfY2] << ")";
-    sl << std::setprecision(-1);
-    return sl;
-}
-
 std::ostream& Acts::DiamondBounds::dump( std::ostream& sl ) const
 {
     sl << std::setiosflags(std::ios::fixed);
     sl << std::setprecision(7);
     sl << "Acts::DiamondBounds:  (minHlenghtX, medHlengthX, maxHlengthX, hlengthY1, hlengthY2 ) = ";
-    sl << "(" << m_boundValues[DiamondBounds::bv_minHalfX] << ", " 
-        << m_boundValues[DiamondBounds::bv_medHalfX] <<", " 
-        << m_boundValues[DiamondBounds::bv_maxHalfX] << ", " 
-        << m_boundValues[DiamondBounds::bv_halfY1] << ", " 
+    sl << "(" << m_boundValues[DiamondBounds::bv_minHalfX] << ", "
+        << m_boundValues[DiamondBounds::bv_medHalfX] <<", "
+        << m_boundValues[DiamondBounds::bv_maxHalfX] << ", "
+        << m_boundValues[DiamondBounds::bv_halfY1] << ", "
         << m_boundValues[DiamondBounds::bv_halfY2] << ")";
     sl << std::setprecision(-1);
     return sl;

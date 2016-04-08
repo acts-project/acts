@@ -5,15 +5,14 @@
 #ifndef ACTS_SURFACESCONEBOUNDS_H
 #define ACTS_SURFACESCONEBOUNDS_H
 
+#include<cfloat>
+
 // Trk
 #include "Surfaces/SurfaceBounds.h"
 #include "GeometryUtils/PrecisionDefinition.h"
 // Amg
-#include "Algebra/AlgebraDefinitions.h"
-#include<cfloat>
-#include "CoreUtils/ParameterDefinitions.h"
-
-class MsgStream;
+#include "Core/AlgebraDefinitions.h"
+#include "Core/ParameterDefinitions.h"
 
 namespace Acts {
 
@@ -119,8 +118,6 @@ namespace Acts {
 	 cone) */
       double halfPhiSector() const;
 
-      /** Output Method for MsgStream*/
-      virtual MsgStream& dump(MsgStream& sl) const override;
       /** Output Method for std::ostream */
       virtual std::ostream& dump(std::ostream& sl) const override;
 

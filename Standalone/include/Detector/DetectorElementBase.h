@@ -11,18 +11,18 @@
 #else
 
 // Algebra and Identifier
-#include "CoreIdentifier/Identifier.h"
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/Identifier.h"
+#include "Core/AlgebraDefinitions.h"
 #include <memory>
 
 namespace Acts
 {
-    
+
     class Surface;
     class SurfaceBounds;
-    
+
     /** @class DetectorElementBase
-     
+
      This is the base class for all tracking detector elements
      with read-out relevant information.
      
@@ -35,19 +35,19 @@ namespace Acts
      the navigation.
      
      @author Andreas.Salzburger@cern.ch
-     
+
      */
-    
+
     class DetectorElementBase {
-        
+
       public:
-        
+
         /** Constructor */
         DetectorElementBase(){}
-        
+
         /** virtual Destructor */
         virtual ~DetectorElementBase(){}
-        
+
         /** Identifier */
         virtual Identifier identify() const = 0;
         
@@ -63,7 +63,7 @@ namespace Acts
         /**Return surface associated with this identifier,
             this is for detector elements that are made up by multiple surfaces */
         virtual const Surface& surface (const Identifier& id) const = 0;
-        
+
         /** Returns the full list of all detection surfaces associated to this detector element */
         virtual const std::vector< std::shared_ptr<const Surface> >& surfaces() const = 0;
         
@@ -133,7 +133,6 @@ namespace Acts
     
     
 }//end of ns
-
 #endif
 
 #endif // ACTS_GEOMETRY_DETELEMENT_PLUGIN

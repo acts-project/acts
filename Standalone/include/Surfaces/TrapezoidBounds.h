@@ -9,12 +9,10 @@
 #include "Surfaces/PlanarBounds.h"
 #include "GeometryUtils/PrecisionDefinition.h"
 // EventData module
-#include "CoreUtils/ParameterDefinitions.h"
+#include "Core/ParameterDefinitions.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 #include <math.h>
-
-class MsgStream;
 
 namespace Acts {
 
@@ -142,9 +140,6 @@ namespace Acts {
       
       /** Return the vertices - or, the points of the extremas */
       virtual const std::vector< Vector2D > vertices() const override;
-
-      /** Output Method for MsgStream*/
-      virtual MsgStream& dump(MsgStream& sl) const override;
 
       /** Output Method for std::ostream */
       virtual std::ostream& dump(std::ostream& sl) const override;

@@ -6,13 +6,12 @@
 #include "Surfaces/DiscSurface.h"
 #include "Surfaces/RadialBounds.h"
 #include "Surfaces/DiscTrapezoidalBounds.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
+
 // STD/STL
 #include <iostream>
 #include <iomanip>
 //Amg
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 
 Acts::NoBounds Acts::DiscSurface::s_boundless;
 
@@ -58,13 +57,13 @@ Acts::DiscSurface::DiscSurface(std::shared_ptr<Acts:: Transform3D> htrans, const
   m_bounds(dbounds),
   m_referencePoint(nullptr)
 {}
-        
+
 // construct a disc with given bounds
 Acts::DiscSurface::DiscSurface(std::shared_ptr<Acts:: Transform3D> htrans, const Acts::DiscTrapezoidalBounds* dbounds) :
   Acts::Surface(htrans),
   m_bounds(dbounds)
 {}
-        
+
 // construct a disc with given bounds
 Acts::DiscSurface::DiscSurface(std::shared_ptr<Acts:: Transform3D> htrans, std::shared_ptr<const Acts::DiscBounds> dbounds) :
   Acts::Surface(htrans),
@@ -109,7 +108,7 @@ bool Acts::DiscSurface::operator==(const Acts::Surface& sf) const
 }
 
 void Acts::DiscSurface::localToGlobal(const Acts::Vector2D& locpos, const Acts::Vector3D&, Acts::Vector3D& glopos) const
-{ 
+{
   // create the position in the local 3d frame
   Acts::Vector3D loc3Dframe(locpos[Acts::eLOC_R]*cos(locpos[Acts::eLOC_PHI]),
 			   locpos[Acts::eLOC_R]*sin(locpos[Acts::eLOC_PHI]),
@@ -137,17 +136,17 @@ const Acts::Vector2D Acts::DiscSurface::localPolarToLocalCartesian(const Acts::V
     Acts::Vector2D cartCenter = localPolarToCartesian(polarCenter);
     Acts::Vector2D cartPos = localPolarToCartesian(locpol);
     Acts::Vector2D Pos = cartPos - cartCenter;
-    
+
     Acts::Vector2D locPos(Pos[Acts::eLOC_X]*sin(phi) - Pos[Acts::eLOC_Y]*cos(phi),
-			 Pos[Acts::eLOC_Y]*sin(phi) + Pos[Acts::eLOC_X]*cos(phi)); 
-    
-    return Acts::Vector2D(locPos[Acts::eLOC_X], locPos[Acts::eLOC_Y]); 
+			 Pos[Acts::eLOC_Y]*sin(phi) + Pos[Acts::eLOC_X]*cos(phi));
+
+    return Acts::Vector2D(locPos[Acts::eLOC_X], locPos[Acts::eLOC_Y]);
   }
-  return Acts::Vector2D(locpol[Acts::eLOC_R]*cos(locpol[Acts::eLOC_PHI]),locpol[Acts::eLOC_R]*sin(locpol[Acts::eLOC_PHI])); 
+  return Acts::Vector2D(locpol[Acts::eLOC_R]*cos(locpol[Acts::eLOC_PHI]),locpol[Acts::eLOC_R]*sin(locpol[Acts::eLOC_PHI]));
 }
 
 /** local<->global transformation in case of polar local coordinates */
-const Acts::Vector3D Acts::DiscSurface::localCartesianToGlobal(const Acts::Vector2D& locpos) const 
+const Acts::Vector3D Acts::DiscSurface::localCartesianToGlobal(const Acts::Vector2D& locpos) const
 {
   Acts::Vector3D loc3Dframe(locpos[Acts::eLOC_X], locpos[Acts::eLOC_Y], 0.);
   return Acts::Vector3D(transform()*loc3Dframe);

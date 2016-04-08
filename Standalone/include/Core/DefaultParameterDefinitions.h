@@ -5,7 +5,7 @@
 #include <cmath>
 
 // ACTS includes
-#include "CoreUtils/ParameterTypes.h"
+#include "Core/ParameterTypes.h"
 
 namespace Acts
 {

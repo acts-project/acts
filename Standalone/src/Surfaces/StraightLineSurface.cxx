@@ -6,9 +6,7 @@
 #include "Surfaces/StraightLineSurface.h"
 #include "Surfaces/CylinderBounds.h"
 // Core module
-#include "CoreIdentifier/Identifier.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
+#include "Core/Identifier.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>

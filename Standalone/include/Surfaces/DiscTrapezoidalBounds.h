@@ -9,13 +9,11 @@
 #include "Surfaces/DiscBounds.h"
 #include "GeometryUtils/PrecisionDefinition.h"
 // EventData module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 // STD/STL
 #include <math.h>
 #include <cmath>
-#include "CoreUtils/ParameterDefinitions.h"
-
-class MsgStream;
+#include "Core/ParameterDefinitions.h"
 
 namespace Acts {
 
@@ -115,9 +113,6 @@ namespace Acts {
 
     /** This method returns the halflength in Y (this is Rmax -Rmin)*/
     double halflengthY() const;
-
-    /** Output Method for MsgStream*/
-    virtual MsgStream& dump(MsgStream& sl) const override;
 
     /** Output Method for std::ostream */
     virtual std::ostream& dump(std::ostream& sl) const override;

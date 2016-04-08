@@ -9,11 +9,10 @@
 #include "Surfaces/CylinderSurface.h"
 #include "GeometryUtils/AreaExcluder.h"
 // EventData module
-#include "CoreUtils/ParameterDefinitions.h"
+#include "Core/ParameterDefinitions.h"
 // Geometry & Math
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 
-class MsgStream;
 class Identifier;
 
 namespace Acts {
@@ -21,8 +20,8 @@ namespace Acts {
   /**
    @class SubtractedCylinderSurface
    Class for a cylinder subtracted/shared surface in the ATLAS detector.
-   It owns its surface bounds and subtracted volume. 
-    
+   It owns its surface bounds and subtracted volume.
+
    @author Sarka.Todorova@cern.ch
    */
 
@@ -30,40 +29,40 @@ namespace Acts {
     public:
       /** Default Constructor - needed for persistency*/
       SubtractedCylinderSurface();
-      
+
       /** Copy Constructor*/
       SubtractedCylinderSurface(const SubtractedCylinderSurface& psf);
-      
+
       /** Copy Constructor with shift*/
       SubtractedCylinderSurface(const SubtractedCylinderSurface& psf, const Transform3D& transf);
-      
-      /** Constructor */      
+
+      /** Constructor */
       SubtractedCylinderSurface(const CylinderSurface& cs, AreaExcluder* vol, bool shared);
-      
+
       /**Destructor*/
       virtual ~SubtractedCylinderSurface();
-      
+
       /**Assignment operator*/
       SubtractedCylinderSurface& operator=(const SubtractedCylinderSurface& psf);
-      
+
       /**Equality operator*/
       bool operator==(const Surface& sf) const;
 
       /** This method indicates the subtraction mode */
       bool shared() const;
-                      
+
       /**This method calls the inside() method of the Bounds*/
-      bool insideBounds(const Vector2D& locpos, const BoundaryCheck& bchk=true) const;       
+      bool insideBounds(const Vector2D& locpos, const BoundaryCheck& bchk=true) const;
 
       /**This method allows access to the subtracted part*/
       std::shared_ptr<AreaExcluder> subtractedVolume() const;
-      
+
       /** Return properly formatted class name for screen output */
       std::string name() const { return "Acts::SubtractedCylinderSurface"; }
-      
+
     protected:
-      std::shared_ptr<AreaExcluder>           m_subtrVol;  
-      bool                                    m_shared;  
+      std::shared_ptr<AreaExcluder>           m_subtrVol;
+      bool                                    m_shared;
     };
 
   inline bool SubtractedCylinderSurface::insideBounds(const Vector2D& locpos, const BoundaryCheck& bchk) const
@@ -84,11 +83,11 @@ namespace Acts {
 
   inline bool SubtractedCylinderSurface::shared() const { return m_shared;}
 
-  inline std::shared_ptr< AreaExcluder> SubtractedCylinderSurface::subtractedVolume() const 
-  { 
-    return m_subtrVol; 
+  inline std::shared_ptr< AreaExcluder> SubtractedCylinderSurface::subtractedVolume() const
+  {
+    return m_subtrVol;
   }
-    
+
 } // end of namespace
 
 #endif // ACTS_SURFACES_SUBTRACTEDCYLINDERSURFACE_H

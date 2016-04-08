@@ -3,8 +3,6 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Surfaces/RadialBounds.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>
@@ -19,10 +17,10 @@ Acts::RadialBounds::RadialBounds(double minrad, double maxrad, double hphisec) :
   m_boundValues(RadialBounds::bv_length, 0.)
 {
     m_boundValues[RadialBounds::bv_rMin]          = minrad;
-    m_boundValues[RadialBounds::bv_rMax]          = maxrad;    
-    m_boundValues[RadialBounds::bv_averagePhi]    = 0.;    
-    m_boundValues[RadialBounds::bv_halfPhiSector] = hphisec;    
-    if (m_boundValues[RadialBounds::bv_rMin] >  m_boundValues[RadialBounds::bv_rMax]) 
+    m_boundValues[RadialBounds::bv_rMax]          = maxrad;
+    m_boundValues[RadialBounds::bv_averagePhi]    = 0.;
+    m_boundValues[RadialBounds::bv_halfPhiSector] = hphisec;
+    if (m_boundValues[RadialBounds::bv_rMin] >  m_boundValues[RadialBounds::bv_rMax])
         swap(m_boundValues[RadialBounds::bv_rMin],  m_boundValues[RadialBounds::bv_rMax]);
 }
 
@@ -31,10 +29,10 @@ Acts::RadialBounds::RadialBounds(double minrad, double maxrad, double avephi, do
   m_boundValues(RadialBounds::bv_length, 0.)
 {
     m_boundValues[RadialBounds::bv_rMin]          = minrad;
-    m_boundValues[RadialBounds::bv_rMax]          = maxrad;    
-    m_boundValues[RadialBounds::bv_averagePhi]    = avephi;    
-    m_boundValues[RadialBounds::bv_halfPhiSector] = hphisec;    
-    if (m_boundValues[RadialBounds::bv_rMin] >  m_boundValues[RadialBounds::bv_rMax]) 
+    m_boundValues[RadialBounds::bv_rMax]          = maxrad;
+    m_boundValues[RadialBounds::bv_averagePhi]    = avephi;
+    m_boundValues[RadialBounds::bv_halfPhiSector] = hphisec;
+    if (m_boundValues[RadialBounds::bv_rMin] >  m_boundValues[RadialBounds::bv_rMax])
         swap(m_boundValues[RadialBounds::bv_rMin],  m_boundValues[RadialBounds::bv_rMax]);
 }
 
@@ -97,16 +95,6 @@ double Acts::RadialBounds::minDistance(const Acts::Vector2D& pos ) const
 }
 
 // ostream operator overload
-MsgStream& Acts::RadialBounds::dump( MsgStream& sl ) const
-{
-    sl << std::setiosflags(std::ios::fixed);
-    sl << std::setprecision(7);
-    sl << "Acts::RadialBounds:  (innerRadius, outerRadius, averagePhi, hPhiSector) = ";
-    sl << "(" << this->rMin() << ", " << this->rMax() << ", " << this->averagePhi() << ", "<< this->halfPhiSector() << ")";
-    sl << std::setprecision(-1);
-    return sl;
-}
-
 std::ostream& Acts::RadialBounds::dump( std::ostream& sl ) const
 {
     sl << std::setiosflags(std::ios::fixed);

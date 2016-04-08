@@ -5,18 +5,16 @@
 #ifndef ACTS_GEOMETRYUTILS_GEOMETRYID_H
 #define ACTS_GEOMETRYUTILS_GEOMETRYID_H 1
 
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
 // STD/STL
 #include <iostream>
 
 namespace Acts {
 
-  typedef uint64_t geo_id_value; 
+  typedef uint64_t geo_id_value;
 
-  /** @class GeometryID 
+  /** @class GeometryID
 
-      Identifier for Geometry nodes - packing the 
+      Identifier for Geometry nodes - packing the
       - (Sensitive) Surfaces    - uses IdentiferHash
       - (Approach)  Surfaces    - uses simple counting through confinedLayers() or confinedArbitraryLayers()
       - (Layer)     Surfaces    - uses simple counting through approachSurfaces()
@@ -27,7 +25,7 @@ namespace Acts {
 
   class GeometryID {
     public:
-      /** constructor from a ready-made value */    
+      /** constructor from a ready-made value */
       GeometryID(geo_id_value id_value = 0) :
         m_value(id_value)
       {}
@@ -38,34 +36,33 @@ namespace Acts {
       {}
 
       /** Assignement operator */
-      GeometryID& operator=(const GeometryID& tddID)  
+      GeometryID& operator=(const GeometryID& tddID)
       {
          if (&tddID != this){
              m_value = tddID.m_value;
-         }   
-         return (*this);    
-      }    
+         }
+         return (*this);
+      }
 
-      /** return the value */     
+      /** return the value */
       geo_id_value value() const;
-          
-    private:      
+
+    private:
       geo_id_value m_value;
 
   };
 
   inline geo_id_value GeometryID::value() const { return m_value; }
- 
-  /** Overload of operator< | <= | > | >=  for the usage in a map */ 
+
+  /** Overload of operator< | <= | > | >=  for the usage in a map */
   bool operator< ( const GeometryID& one, const GeometryID& two );
   bool operator<=( const GeometryID& one, const GeometryID& two );
   bool operator> ( const GeometryID& one, const GeometryID& two );
   bool operator>=( const GeometryID& one, const GeometryID& two );
 
-  /**Overload of << operator for both, MsgStream and std::ostream for debug output*/ 
-  MsgStream& operator<<( MsgStream& sl, const GeometryID& tddID);
+  /**Overload of << operator for std::ostream for debug output*/
   std::ostream& operator<<( std::ostream& sl, const GeometryID& tddID);
-  
+
 }
 
 #endif // ACTS_GEOMETRYUTILS_GEOMETRYID_H

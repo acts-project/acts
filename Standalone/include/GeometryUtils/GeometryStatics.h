@@ -5,7 +5,7 @@
 #ifndef ACTS_GEOMETYRUTILS_GEOMETRYSTATICS_H
 #define ACTS_GEOMETYRUTILS_GEOMETRYSTATICS_H 1
 
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 
 /** Define statics for Geometry in Tracking
  */

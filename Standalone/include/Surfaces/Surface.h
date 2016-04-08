@@ -13,13 +13,11 @@
 #include "GeometryUtils/Intersection.h"
 #include "GeometryUtils/BinnedArray.h"
 #include "GeometryUtils/BinningType.h"
-#include "DetectorElementBase/DetectorElementBase.h"
+#include "Detector/DetectorElementBase.h"
 // Event Mmdule
-#include "Algebra/AlgebraDefinitions.h"
-#include "CoreIdentifier/Identifier.h"
-#include "CoreUtils/ParameterDefinitions.h"
-
-class MsgStream;
+#include "Core/AlgebraDefinitions.h"
+#include "Core/Identifier.h"
+#include "Core/ParameterDefinitions.h"
 
 namespace Acts {
 
@@ -186,9 +184,6 @@ namespace Acts {
       /** set material layer */
       const SurfaceMaterial* surfaceMaterial() const;
 
-      /** Output Method for MsgStream, to be overloaded by child classes */
-      virtual MsgStream& dump(MsgStream& sl) const;
-
       /** Output Method for std::ostream, to be overloaded by child classes */
       virtual std::ostream& dump(std::ostream& sl) const;
 
@@ -212,8 +207,8 @@ namespace Acts {
       std::shared_ptr<Transform3D>                      m_transform;  //!< Transform3D w.r.t to global frame
       mutable Vector3D*                                 m_center;     //!< center position of the surface
       mutable Vector3D*                                 m_normal;     //!< normal vector of the surface
-                                                     
-      /** Pointer to the a DetectorElementBase */        
+
+      /** Pointer to the a DetectorElementBase */
       const DetectorElementBase*                        m_associatedDetElement;
       Identifier                                        m_associatedDetElementId;
 
@@ -330,8 +325,6 @@ namespace Acts {
   inline void Surface::associateLayer(const Layer& lay) const
   { m_associatedLayer = (&lay); }
 
-/** Overload of << operator for both, MsgStream and std::ostream for debug output*/
-MsgStream& operator << ( MsgStream& sl, const Surface& sf);
 std::ostream& operator << ( std::ostream& sl, const Surface& sf);
 
 /** Surfaces are not constructed by shared_ptr factories as they are EDM objects,

@@ -6,13 +6,11 @@
 #define ACTS_SURFACES_CYLINDERSURFACE_H 1
 
 // Geometry module
-#include "CoreUtils/ParameterDefinitions.h"
+#include "Core/ParameterDefinitions.h"
 #include "Surfaces/Surface.h"
 #include "Surfaces/CylinderBounds.h"
 // Event module
-#include "Algebra/AlgebraDefinitions.h"
-
-class MsgStream;
+#include "Core/AlgebraDefinitions.h"
 
 namespace Acts {
 

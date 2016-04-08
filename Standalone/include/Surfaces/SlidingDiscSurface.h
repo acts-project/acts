@@ -11,9 +11,7 @@
 #include "Surfaces/NoBounds.h"
 #include "GeometryUtils/BinUtility.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
-
-class MsgStream;
+#include "Core/AlgebraDefinitions.h"
 
 namespace Acts {
 

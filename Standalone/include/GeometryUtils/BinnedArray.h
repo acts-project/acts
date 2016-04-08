@@ -7,14 +7,10 @@
 
 // Geometry module
 #include "GeometryUtils/BinUtility.h"
-// GaudiKernel
-#include "GaudiKernel/GaudiException.h"
 // Core moudle
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 // STL
 #include <vector>
-
-class MsgStream;
 
 namespace Acts {
 
@@ -24,7 +20,7 @@ namespace Acts {
    - there is only one restriction:
      T must be of pointer type in order to be initialized withh nullptr
      and to allow for nulpptr return type
-    
+
    @author Andreas.Salzburger@cern.ch
    */
 
@@ -32,13 +28,13 @@ namespace Acts {
 
     public:
       /** Default Constructor - needed for inherited classes */
-      BinnedArray() throw (GaudiException) {}
+      BinnedArray() {}
 
       /** Default Constructor - needed for inherited classes */
-      BinnedArray(const BinnedArray<T>& ba) throw (GaudiException) :
+      BinnedArray(const BinnedArray<T>& ba) :
         m_arrayObjects(ba.m_arrayObjects)
       {}
-      
+
       /**Virtual Destructor*/
       virtual ~BinnedArray(){}
 
@@ -59,7 +55,7 @@ namespace Acts {
 
       /** Return the BinUtility*/
       virtual const BinUtility* binUtility() const = 0;
-    
+
     protected:
       std::vector< T >    m_arrayObjects;
 

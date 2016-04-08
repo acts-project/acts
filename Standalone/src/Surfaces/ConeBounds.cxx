@@ -4,8 +4,6 @@
 
 // Geometry module
 #include "Surfaces/ConeBounds.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>
@@ -139,21 +137,6 @@ double Acts::ConeBounds::minDistance(const Acts::Vector2D& pos) const
 }
 
 // ostream operator overload
-MsgStream& Acts::ConeBounds::dump( MsgStream& sl ) const
-{
-    sl << std::setiosflags(std::ios::fixed);
-    sl << std::setprecision(7);
-    sl << "Acts::ConeBounds: (tanAlpha, minZ, maxZ, averagePhi, halfPhiSector) = ";
-    sl << "(" <<
-      this->tanAlpha() << ", " <<
-      this->minZ() << ", " <<
-      this->maxZ() << ", " <<
-      this->averagePhi() << ", " <<
-      this->halfPhiSector() << ")";
-    sl << std::setprecision(-1);
-    return sl;
-}
-
 std::ostream& Acts::ConeBounds::dump( std::ostream& sl ) const
 {
     sl << std::setiosflags(std::ios::fixed);
