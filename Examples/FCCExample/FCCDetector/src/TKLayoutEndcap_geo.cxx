@@ -51,13 +51,14 @@ static Ref_t create_element(LCDD& lcdd, xml_h xml, SensitiveDetector sens)
             int repeat = x_module.repeat();
             double deltaphi = 2.*M_PI/repeat;
             double radius   = x_module.radius();
-            double slicedz  = x_module.dz();
               //Create the module volume
               Volume mod_vol("module", Trapezoid(x_module.x1(),x_module.x2(), x_module.thickness(), x_module.thickness(),x_module.length()), lcdd.material(x_module.materialStr()));
             size_t module_num = 0;
             //Place the Modules
             for (int k=0;k < repeat;k++)
             {
+                double slicedz  = x_module.dz();
+                if (k%2 == 0) slicedz-=10.*x_module.thickness();
                 string zname = _toString(k,"z%d");
                 //Visualization
                 mod_vol.setVisAttributes(lcdd, x_module.visStr());
@@ -77,7 +78,7 @@ static Ref_t create_element(LCDD& lcdd, xml_h xml, SensitiveDetector sens)
                     mod_det.addExtension<Acts::IDetExtension>(detSensComponent);
                 }
                 //Place Module Box Volumes in layer
-                PlacedVolume placedmodule = layer_vol.placeVolume(mod_vol,Transform3D(RotationX(0.5*M_PI)*RotationY(phi+0.5*M_PI)*RotationZ(0.1*M_PI),trans)); //RotationX(0.5*M_PI)*RotationY(phi+0.5*M_PI)*RotationZ(0.1*M_PI),trans)
+                PlacedVolume placedmodule = layer_vol.placeVolume(mod_vol,Transform3D(RotationX(0.5*M_PI)*RotationY(phi+0.5*M_PI),trans)); //RotationX(0.5*M_PI)*RotationY(phi+0.5*M_PI)*RotationZ(0.1*M_PI),trans)
                 placedmodule.addPhysVolID("module", repeat*module_num_num+module_num);
                 //assign module DetElement to the placed module volume
                 mod_det.setPlacement(placedmodule);

@@ -92,64 +92,64 @@
         <constant name="B0_L0_M_length"         value="12.0*mm"/>
         <constant name="B0_L0_M_thickness"      value="0.1*mm"/>
         <constant name="B0_L0_M_offsetZ"        value="21.*mm"/>
-        <constant name="B0_L0_M_offsetRZ"       value="0.3*mm"/>
-        <constant name="B0_L0_M_offsetR"        value="1.*mm"/>
+        <constant name="B0_L0_M_offsetRZ"       value="3.*mm"/> <!--old smaller-->
+        <constant name="B0_L0_M_offsetR"        value="3.*mm"/>
         
         <constant name="B0_L1_M_width"          value="13.*mm"/> <!--sensor size is smaller-->
         <constant name="B0_L1_M_length"         value="25.0*mm"/>
         <constant name="B0_L1_M_thickness"      value="0.1*mm"/>
         <constant name="B0_L1_M_offsetZ"        value="46.*mm"/>
-        <constant name="B0_L1_M_offsetRZ"       value="0.3*mm"/>
-        <constant name="B0_L1_M_offsetR"        value="1.3*mm"/>
+        <constant name="B0_L1_M_offsetRZ"       value="3.*mm"/>
+        <constant name="B0_L1_M_offsetR"        value="3.*mm"/>
         
         <constant name="B0_L2_M_width"          value="27.*mm"/>
         <constant name="B0_L2_M_length"         value="25.0*mm"/>
         <constant name="B0_L2_M_thickness"      value="0.1*mm"/>
         <constant name="B0_L2_M_offsetZ"        value="46.*mm"/>
-        <constant name="B0_L2_M_offsetRZ"       value="0.3*mm"/>
-        <constant name="B0_L2_M_offsetR"        value="2.0*mm"/>
+        <constant name="B0_L2_M_offsetRZ"       value="3.*mm"/>
+        <constant name="B0_L2_M_offsetR"        value="3.0*mm"/>
         
         <constant name="B0_L3_M_width"          value="30.*mm"/>
         <constant name="B0_L3_M_length"         value="25.0*mm"/>
         <constant name="B0_L3_M_thickness"      value="0.1*mm"/>
         <constant name="B0_L3_M_offsetZ"        value="46.*mm"/>
-        <constant name="B0_L3_M_offsetRZ"       value="0.3*mm"/>
-        <constant name="B0_L3_M_offsetR"        value="2.0*mm"/>
+        <constant name="B0_L3_M_offsetRZ"       value="3.*mm"/>
+        <constant name="B0_L3_M_offsetR"        value="3.0*mm"/>
         
         <constant name="B0_L4_M_width"          value="30.*mm"/>
         <constant name="B0_L4_M_length"         value="25.0*mm"/>
         <constant name="B0_L4_M_thickness"      value="0.1*mm"/>
         <constant name="B0_L4_M_offsetZ"        value="46.*mm"/>
-        <constant name="B0_L4_M_offsetRZ"       value="0.3*mm"/>
-        <constant name="B0_L4_M_offsetR"        value="2.0*mm"/>
+        <constant name="B0_L4_M_offsetRZ"       value="3.*mm"/>
+        <constant name="B0_L4_M_offsetR"        value="3.0*mm"/>
         
         <constant name="B0_L5_M_width"          value="30.*mm"/>
         <constant name="B0_L5_M_length"         value="25.0*mm"/>
         <constant name="B0_L5_M_thickness"      value="0.1*mm"/>
         <constant name="B0_L5_M_offsetZ"        value="46.*mm"/>
-        <constant name="B0_L5_M_offsetRZ"       value="0.3*mm"/>
-        <constant name="B0_L5_M_offsetR"        value="2.0*mm"/>
+        <constant name="B0_L5_M_offsetRZ"       value="3.*mm"/>
+        <constant name="B0_L5_M_offsetR"        value="3.0*mm"/>
         
         <constant name="B0_L6_M_width"          value="30.*mm"/>
         <constant name="B0_L6_M_length"         value="25.0*mm"/>
         <constant name="B0_L6_M_thickness"      value="0.1*mm"/>
         <constant name="B0_L6_M_offsetZ"        value="46.*mm"/>
-        <constant name="B0_L6_M_offsetRZ"       value="0.3*mm"/>
-        <constant name="B0_L6_M_offsetR"        value="2.0*mm"/>
+        <constant name="B0_L6_M_offsetRZ"       value="3.*mm"/>
+        <constant name="B0_L6_M_offsetR"        value="3.0*mm"/>
         
         <constant name="B0_L7_M_width"          value="35.*mm"/>
         <constant name="B0_L7_M_length"         value="25.0*mm"/>
         <constant name="B0_L7_M_thickness"      value="0.1*mm"/>
         <constant name="B0_L7_M_offsetZ"        value="46.*mm"/>
-        <constant name="B0_L7_M_offsetRZ"       value="0.3*mm"/>
-        <constant name="B0_L7_M_offsetR"        value="2.0*mm"/>
+        <constant name="B0_L7_M_offsetRZ"       value="3.*mm"/>
+        <constant name="B0_L7_M_offsetR"        value="3.0*mm"/>
         
         <constant name="B0_L8_M_width"          value="35.*mm"/>
         <constant name="B0_L8_M_length"         value="25.0*mm"/>
         <constant name="B0_L8_M_thickness"      value="0.1*mm"/>
         <constant name="B0_L8_M_offsetZ"        value="46.*mm"/>
-        <constant name="B0_L8_M_offsetRZ"       value="0.3*mm"/>
-        <constant name="B0_L8_M_offsetR"        value="2.0*mm"/>
+        <constant name="B0_L8_M_offsetRZ"       value="3.*mm"/>
+        <constant name="B0_L8_M_offsetR"        value="3.0*mm"/>
         <!--EndCap0-->
         <constant name="E0_rmin"            value="21.*mm"/>
         <constant name="E0_rmax"            value="700.*mm"/>
@@ -179,37 +179,37 @@
         <constant name="E0_M0_modulesInPhi"  value="12"/>
         <!--Ring1-->
         <constant name="E0_M1_r"             value="150.25*mm"/>
-        <constant name="E_M1_pos"            value="-0.275*mm"/>
-        <constant name="E_M1_X1"             value="30.*mm"/>
-        <constant name="E_M1_X2"             value="60.15*mm"/>
+        <constant name="E_M1_pos"            value="1.*mm"/>
+        <constant name="E_M1_X1"             value="25.*mm"/>
+        <constant name="E_M1_X2"             value="35*mm"/>
         <constant name="E_M1_length"         value="50.25*mm"/>
         <constant name="E0_M1_modulesInPhi"  value="20"/>
         <!--Ring2-->
         <constant name="E0_M2_r"             value="249.05*mm"/>
         <constant name="E_M2_pos"            value="0.*mm"/>
-        <constant name="E_M2_X1"             value="59.82*mm"/>
-        <constant name="E_M2_X2"             value="90.15*mm"/>
+        <constant name="E_M2_X1"             value="25.*mm"/>
+        <constant name="E_M2_X2"             value="35.*mm"/>
         <constant name="E_M2_length"         value="51.45*mm"/>
         <constant name="E0_M2_modulesInPhi"  value="32"/>
         <!--Ring3-->
         <constant name="E0_M3_r"             value="350.6*mm"/>
-        <constant name="E_M3_pos"            value="-0.275*mm"/>
-        <constant name="E_M3_X1"             value="90.15*mm"/>
-        <constant name="E_M3_X2"             value="120.21*mm"/>
+        <constant name="E_M3_pos"            value="1.*mm"/>
+        <constant name="E_M3_X1"             value="25.*mm"/>
+        <constant name="E_M3_X2"             value="35.*mm"/>
         <constant name="E_M3_length"         value="50.1*mm"/>
         <constant name="E0_M3_modulesInPhi"  value="44"/>
         <!--Ring4-->
         <constant name="E0_M4_r"             value="445.4*mm"/>
         <constant name="E_M4_pos"            value="0.*mm"/>
-        <constant name="E_M4_X1"             value="118.62*mm"/>
-        <constant name="E_M4_X2"             value="150.2*mm"/>
+        <constant name="E_M4_X1"             value="25.*mm"/>
+        <constant name="E_M4_X2"             value="35.*mm"/>
         <constant name="E_M4_length"         value="52.5*mm"/>
         <constant name="E0_M4_modulesInPhi"  value="52"/>
         <!--Ring5-->
         <constant name="E0_M5_r"             value="535.35*mm"/>
-        <constant name="E_M5_pos"            value="0.*mm"/>
-        <constant name="E_M5_X1"             value="150.21*mm"/>
-        <constant name="E_M5_X2"             value="180.09*mm"/>
+        <constant name="E_M5_pos"            value="1.*mm"/>
+        <constant name="E_M5_X1"             value="25.*mm"/>
+        <constant name="E_M5_X2"             value="35.*mm"/>
         <constant name="E_M5_length"         value="34.65*mm"/>
         <constant name="E0_M5_modulesInPhi"  value="64"/>
         <!-------------------------------------------------------->
@@ -275,57 +275,57 @@
         <constant name="B1_L0_M_length"         value="28.0*mm"/>
         <constant name="B1_L0_M_thickness"      value="0.1*mm"/>
         <constant name="B1_L0_M_offsetZ"        value="50.*mm"/>
-        <constant name="B1_L0_M_offsetRZ"       value="0.3*mm"/>
-        <constant name="B1_L0_M_offsetR"        value="1.5*mm"/>
+        <constant name="B1_L0_M_offsetRZ"       value="3.*mm"/>
+        <constant name="B1_L0_M_offsetR"        value="4.*mm"/>
         
         <constant name="B1_L1_M_width"          value="55.*mm"/>
         <constant name="B1_L1_M_length"         value="28.0*mm"/>
         <constant name="B1_L1_M_thickness"      value="0.1*mm"/>
         <constant name="B1_L1_M_offsetZ"        value="50.*mm"/>
-        <constant name="B1_L1_M_offsetRZ"       value="0.3*mm"/>
-        <constant name="B1_L1_M_offsetR"        value="2.*mm"/>
+        <constant name="B1_L1_M_offsetRZ"       value="3.*mm"/>
+        <constant name="B1_L1_M_offsetR"        value="4.*mm"/>
         
         <constant name="B1_L2_M_width"          value="55.*mm"/>
         <constant name="B1_L2_M_length"         value="28.0*mm"/>
         <constant name="B1_L2_M_thickness"      value="0.1*mm"/>
         <constant name="B1_L2_M_offsetZ"        value="50.*mm"/>
-        <constant name="B1_L2_M_offsetRZ"       value="0.3*mm"/>
-        <constant name="B1_L2_M_offsetR"        value="2.*mm"/>
+        <constant name="B1_L2_M_offsetRZ"       value="3.*mm"/>
+        <constant name="B1_L2_M_offsetR"        value="4.*mm"/>
         
         <constant name="B1_L3_M_width"          value="55.*mm"/>
         <constant name="B1_L3_M_length"         value="28.0*mm"/>
         <constant name="B1_L3_M_thickness"      value="0.1*mm"/>
         <constant name="B1_L3_M_offsetZ"        value="50.*mm"/>
-        <constant name="B1_L3_M_offsetRZ"       value="0.3*mm"/>
-        <constant name="B1_L3_M_offsetR"        value="2.*mm"/>
+        <constant name="B1_L3_M_offsetRZ"       value="3.*mm"/>
+        <constant name="B1_L3_M_offsetR"        value="4.*mm"/>
         
         <constant name="B1_L4_M_width"          value="55.*mm"/>
         <constant name="B1_L4_M_length"         value="28.0*mm"/>
         <constant name="B1_L4_M_thickness"      value="0.1*mm"/>
         <constant name="B1_L4_M_offsetZ"        value="50.*mm"/>
-        <constant name="B1_L4_M_offsetRZ"       value="0.3*mm"/>
-        <constant name="B1_L4_M_offsetR"        value="2.*mm"/>
+        <constant name="B1_L4_M_offsetRZ"       value="3.*mm"/>
+        <constant name="B1_L4_M_offsetR"        value="4.*mm"/>
         
         <constant name="B1_L5_M_width"          value="55.*mm"/>
         <constant name="B1_L5_M_length"         value="28.0*mm"/>
         <constant name="B1_L5_M_thickness"      value="0.1*mm"/>
         <constant name="B1_L5_M_offsetZ"        value="50.*mm"/>
-        <constant name="B1_L5_M_offsetRZ"       value="0.3*mm"/>
-        <constant name="B1_L5_M_offsetR"        value="2.*mm"/>
+        <constant name="B1_L5_M_offsetRZ"       value="3.*mm"/>
+        <constant name="B1_L5_M_offsetR"        value="4.*mm"/>
         
         <constant name="B1_L6_M_width"          value="55.*mm"/>
         <constant name="B1_L6_M_length"         value="28.0*mm"/>
         <constant name="B1_L6_M_thickness"      value="0.1*mm"/>
         <constant name="B1_L6_M_offsetZ"        value="50.*mm"/>
-        <constant name="B1_L6_M_offsetRZ"       value="0.3*mm"/>
-        <constant name="B1_L6_M_offsetR"        value="2.*mm"/>
+        <constant name="B1_L6_M_offsetRZ"       value="3.*mm"/>
+        <constant name="B1_L6_M_offsetR"        value="4.*mm"/>
         
         <constant name="B1_L7_M_width"          value="55.*mm"/>
         <constant name="B1_L7_M_length"         value="28.0*mm"/>
         <constant name="B1_L7_M_thickness"      value="0.1*mm"/>
         <constant name="B1_L7_M_offsetZ"        value="50.*mm"/>
-        <constant name="B1_L7_M_offsetRZ"       value="0.3*mm"/>
-        <constant name="B1_L7_M_offsetR"        value="2.*mm"/>
+        <constant name="B1_L7_M_offsetRZ"       value="3.*mm"/>
+        <constant name="B1_L7_M_offsetR"        value="4.*mm"/>
         
         <!--EndCap1-->
         <constant name="E1_rmin"            value="21.*mm"/>
@@ -371,149 +371,149 @@
         <constant name="E1_M0_modulesInPhi"   value="12"/>
         <!--Ring1-->
         <constant name="E1_M1_r"              value="150.15*mm"/>
-        <constant name="E1_M1_pos"            value="-0.275*mm"/>
-        <constant name="E1_M1_X1"             value="30.*mm"/>
-        <constant name="E1_M1_X2"             value="60.15*mm"/>
+        <constant name="E1_M1_pos"            value="1.*mm"/>
+        <constant name="E1_M1_X1"             value="20.*mm"/>
+        <constant name="E1_M1_X2"             value="35.*mm"/>
         <constant name="E1_M1_length"         value="50.25*mm"/>
         <constant name="E1_M1_modulesInPhi"   value="20"/>
         <!--Ring2-->
         <constant name="E1_M2_r"             value="250.3*mm"/>
         <constant name="E1_M2_pos"            value="0.*mm"/>
-        <constant name="E1_M2_X1"             value="35.82*mm"/>
-        <constant name="E1_M2_X2"             value="55.15*mm"/>
+        <constant name="E1_M2_X1"             value="20.*mm"/>
+        <constant name="E1_M2_X2"             value="30.*mm"/>
         <constant name="E1_M2_length"         value="51.35*mm"/>
         <constant name="E1_M2_modulesInPhi"  value="32"/>
         <!--Ring3-->
         <constant name="E1_M3_r"              value="351.55*mm"/>
-        <constant name="E1_M3_pos"            value="-0.275*mm"/>
-        <constant name="E1_M3_X1"             value="40.15*mm"/>
-        <constant name="E1_M3_X2"             value="60.21*mm"/>
+        <constant name="E1_M3_pos"            value="1.*mm"/>
+        <constant name="E1_M3_X1"             value="25.*mm"/>
+        <constant name="E1_M3_X2"             value="35.*mm"/>
         <constant name="E1_M3_length"         value="50.05*mm"/>
         <constant name="E1_M3_modulesInPhi"   value="44"/>
         <!--Ring4-->
         <constant name="E1_M4_r"              value="451.75*mm"/>
         <constant name="E1_M4_pos"            value="0.*mm"/>
-        <constant name="E1_M4_X1"             value="50.62*mm"/>
-        <constant name="E1_M4_X2"             value="70.2*mm"/>
+        <constant name="E1_M4_X1"             value="25.*mm"/>
+        <constant name="E1_M4_X2"             value="35.*mm"/>
         <constant name="E1_M4_length"         value="52.35*mm"/>
         <constant name="E1_M4_modulesInPhi"   value="52"/>
         <!--Ring5-->
         <constant name="E1_M5_r"              value="553.6*mm"/>
-        <constant name="E1_M5_pos"            value="-0.275*mm"/>
-        <constant name="E1_M5_X1"             value="60.21*mm"/>
-        <constant name="E1_M5_X2"             value="80.09*mm"/>
+        <constant name="E1_M5_pos"            value="1.*mm"/>
+        <constant name="E1_M5_X1"             value="25.*mm"/>
+        <constant name="E1_M5_X2"             value="35.*mm"/>
         <constant name="E1_M5_length"         value="50.3*mm"/>
         <constant name="E1_M5_modulesInPhi"   value="64"/>
         <!--Ring6-->
         <constant name="E1_M6_r"              value="657.9*mm"/>
         <constant name="E1_M6_pos"            value="0.*mm"/>
-        <constant name="E1_M6_X1"             value="75.*mm"/>
-        <constant name="E1_M6_X2"             value="90.*mm"/>
+        <constant name="E1_M6_X1"             value="40.*mm"/>
+        <constant name="E1_M6_X2"             value="50.*mm"/>
         <constant name="E1_M6_length"         value="57.7*mm"/>
         <constant name="E1_M6_modulesInPhi"   value="48"/>
         <!--Ring7-->
         <constant name="E1_M7_r"              value="773.3*mm"/>
-        <constant name="E1_M7_pos"            value="0.*mm"/>
-        <constant name="E1_M7_X1"             value="75.*mm"/>
-        <constant name="E1_M7_X2"             value="90.*mm"/>
+        <constant name="E1_M7_pos"            value="1.*mm"/>
+        <constant name="E1_M7_X1"             value="60.*mm"/>
+        <constant name="E1_M7_X2"             value="70.*mm"/>
         <constant name="E1_M7_length"         value="57.7*mm"/>
         <constant name="E1_M7_modulesInPhi"   value="52"/>
         <!--Ring8-->
         <constant name="E1_M8_r"              value="884.6*mm"/>
         <constant name="E1_M8_pos"            value="0.*mm"/>
-        <constant name="E1_M8_X1"             value="75.*mm"/>
-        <constant name="E1_M8_X2"             value="90.*mm"/>
+        <constant name="E1_M8_X1"             value="60.*mm"/>
+        <constant name="E1_M8_X2"             value="70.*mm"/>
         <constant name="E1_M8_length"         value="57.7*mm"/>
         <constant name="E1_M8_modulesInPhi"   value="60"/>
         <!--Ring9-->
         <constant name="E1_M9_r"              value="1000.1*mm"/>
-        <constant name="E1_M9_pos"            value="0.*mm"/>
-        <constant name="E1_M9_X1"             value="75.*mm"/>
-        <constant name="E1_M9_X2"             value="90.*mm"/>
+        <constant name="E1_M9_pos"            value="1.*mm"/>
+        <constant name="E1_M9_X1"             value="60.*mm"/>
+        <constant name="E1_M9_X2"             value="70.*mm"/>
         <constant name="E1_M9_length"         value="57.7*mm"/>
         <constant name="E1_M9_modulesInPhi"   value="68"/>
         <!--Ring10-->
         <constant name="E1_M10_r"              value="1110.5*mm"/>
         <constant name="E1_M10_pos"            value="0.*mm"/>
-        <constant name="E1_M10_X1"             value="75.*mm"/>
-        <constant name="E1_M10_X2"             value="90.*mm"/>
+        <constant name="E1_M10_X1"             value="60.*mm"/>
+        <constant name="E1_M10_X2"             value="70.*mm"/>
         <constant name="E1_M10_length"         value="57.7*mm"/>
         <constant name="E1_M10_modulesInPhi"   value="76"/>
         <!--Ring11-->
         <constant name="E1_M11_r"              value="1226.1*mm"/>
-        <constant name="E1_M11_pos"            value="0.*mm"/>
-        <constant name="E1_M11_X1"             value="75.*mm"/>
-        <constant name="E1_M11_X2"             value="90.*mm"/>
+        <constant name="E1_M11_pos"            value="1.*mm"/>
+        <constant name="E1_M11_X1"             value="60.*mm"/>
+        <constant name="E1_M11_X2"             value="70.*mm"/>
         <constant name="E1_M11_length"         value="57.7*mm"/>
         <constant name="E1_M11_modulesInPhi"   value="80"/>
         <!--Ring12-->
         <constant name="E1_M12_r"              value="1335.5*mm"/>
         <constant name="E1_M12_pos"            value="0.*mm"/>
-        <constant name="E1_M12_X1"             value="75.*mm"/>
-        <constant name="E1_M12_X2"             value="90.*mm"/>
+        <constant name="E1_M12_X1"             value="50.*mm"/>
+        <constant name="E1_M12_X2"             value="60.*mm"/>
         <constant name="E1_M12_length"         value="57.7*mm"/>
         <constant name="E1_M12_modulesInPhi"   value="88"/>
         <!--Ring13-->
         <constant name="E1_M13_r"              value="1451.3*mm"/>
-        <constant name="E1_M13_pos"            value="0.*mm"/>
-        <constant name="E1_M13_X1"             value="75.*mm"/>
-        <constant name="E1_M13_X2"             value="90.*mm"/>
+        <constant name="E1_M13_pos"            value="1.*mm"/>
+        <constant name="E1_M13_X1"             value="50.*mm"/>
+        <constant name="E1_M13_X2"             value="60.*mm"/>
         <constant name="E1_M13_length"         value="57.7*mm"/>
         <constant name="E1_M13_modulesInPhi"   value="96"/>
         <!--Ring14-->
         <constant name="E1_M14_r"              value="1559.8*mm"/>
         <constant name="E1_M14_pos"            value="0.*mm"/>
-        <constant name="E1_M14_X1"             value="75.*mm"/>
-        <constant name="E1_M14_X2"             value="90.*mm"/>
+        <constant name="E1_M14_X1"             value="50.*mm"/>
+        <constant name="E1_M14_X2"             value="60.*mm"/>
         <constant name="E1_M14_length"         value="57.7*mm"/>
         <constant name="E1_M14_modulesInPhi"   value="100"/>
         <!--Ring15-->
         <constant name="E1_M15_r"              value="1675.7*mm"/>
-        <constant name="E1_M15_pos"            value="0.*mm"/>
-        <constant name="E1_M15_X1"             value="75.*mm"/>
-        <constant name="E1_M15_X2"             value="90.*mm"/>
+        <constant name="E1_M15_pos"            value="1.*mm"/>
+        <constant name="E1_M15_X1"             value="50.*mm"/>
+        <constant name="E1_M15_X2"             value="60.*mm"/>
         <constant name="E1_M15_length"         value="57.7*mm"/>
         <constant name="E1_M15_modulesInPhi"   value="108"/>
         <!--Ring16-->
         <constant name="E1_M16_r"              value="1783.2*mm"/>
         <constant name="E1_M16_pos"            value="0.*mm"/>
-        <constant name="E1_M16_X1"             value="75.*mm"/>
-        <constant name="E1_M16_X2"             value="90.*mm"/>
+        <constant name="E1_M16_X1"             value="50.*mm"/>
+        <constant name="E1_M16_X2"             value="60.*mm"/>
         <constant name="E1_M16_length"         value="57.7*mm"/>
         <constant name="E1_M16_modulesInPhi"   value="116"/>
         <!--Ring17-->
         <constant name="E1_M17_r"              value="1899.2*mm"/>
-        <constant name="E1_M17_pos"            value="0.*mm"/>
-        <constant name="E1_M17_X1"             value="75.*mm"/>
-        <constant name="E1_M17_X2"             value="90.*mm"/>
+        <constant name="E1_M17_pos"            value="1.*mm"/>
+        <constant name="E1_M17_X1"             value="50.*mm"/>
+        <constant name="E1_M17_X2"             value="60.*mm"/>
         <constant name="E1_M17_length"         value="57.7*mm"/>
         <constant name="E1_M17_modulesInPhi"   value="124"/>
         <!--Ring18-->
         <constant name="E1_M18_r"              value="2005.7*mm"/>
         <constant name="E1_M18_pos"            value="0.*mm"/>
-        <constant name="E1_M18_X1"             value="75.*mm"/>
-        <constant name="E1_M18_X2"             value="90.*mm"/>
+        <constant name="E1_M18_X1"             value="50.*mm"/>
+        <constant name="E1_M18_X2"             value="60.*mm"/>
         <constant name="E1_M18_length"         value="57.7*mm"/>
         <constant name="E1_M18_modulesInPhi"   value="128"/>
         <!--Ring19-->
         <constant name="E1_M19_r"              value="2118.9*mm"/>
-        <constant name="E1_M19_pos"            value="0.*mm"/>
-        <constant name="E1_M19_X1"             value="75.*mm"/>
-        <constant name="E1_M19_X2"             value="90.*mm"/>
+        <constant name="E1_M19_pos"            value="1.*mm"/>
+        <constant name="E1_M19_X1"             value="50.*mm"/>
+        <constant name="E1_M19_X2"             value="60.*mm"/>
         <constant name="E1_M19_length"         value="57.7*mm"/>
         <constant name="E1_M19_modulesInPhi"   value="136"/>
         <!--Ring20-->
         <constant name="E1_M20_r"              value="2227.5*mm"/>
         <constant name="E1_M20_pos"            value="0.*mm"/>
-        <constant name="E1_M20_X1"             value="75.*mm"/>
-        <constant name="E1_M20_X2"             value="90.*mm"/>
+        <constant name="E1_M20_X1"             value="50.*mm"/>
+        <constant name="E1_M20_X2"             value="60.*mm"/>
         <constant name="E1_M20_length"         value="57.7*mm"/>
         <constant name="E1_M20_modulesInPhi"   value="144"/>
         <!--Ring21-->
         <constant name="E1_M21_r"              value="2326.1*mm"/>
-        <constant name="E1_M21_pos"            value="0.*mm"/>
-        <constant name="E1_M21_X1"             value="75.*mm"/>
-        <constant name="E1_M21_X2"             value="90.*mm"/>
+        <constant name="E1_M21_pos"            value="1.*mm"/>
+        <constant name="E1_M21_X1"             value="50.*mm"/>
+        <constant name="E1_M21_X2"             value="60.*mm"/>
         <constant name="E1_M21_length"         value="40.*mm"/>
         <constant name="E1_M21_modulesInPhi"   value="152"/>
         <!------------------------------------------------------->
@@ -593,7 +593,7 @@
         <vis name="BlueVisTrans" alpha="0.1" r="0.0" g="0.0" b="1.0" showDaughters="true" visible="false"/>
         <vis name="BarrelVis" alpha="1" r="1.0" g="0.0" b="0.0" showDaughters="true" visible="false"/>
         <vis name="EndCapVis" alpha="1" r="0.0" g="0.0" b="1.0" showDaughters="true" visible="false"/>
-        <vis name="BarrelLayerVis" alpha="1" r="0.0" g="1.0" b="0.0" showDaughters="true" visible="false"/>
+        <vis name="BarrelLayerVis" alpha="1" r="0.0" g="1.0" b="0.0" showDaughters="true" visible="true"/>
         <vis name="EndcapLayerVis" alpha="1" r="1.0" g="0.0" b="1.0" showDaughters="true" visible="false"/>
     </display>
 
@@ -609,7 +609,7 @@
     <include ref="TKLayoutOuter.xml"/>
 
     <detectors>
-        <detector id="1" name="TKTrackerInner" type="DD4hep_SubdetectorAssembly" vis="BlueVisTrans">
+       <detector id="1" name="TKTrackerInner" type="DD4hep_SubdetectorAssembly" vis="BlueVisTrans">
             <shape name="EnvelopeShape" type="Tube" rmin="Env0_rmin" rmax="Env0_rmax" dz="Env0_dz" material="Air"/>
             <composite name="Barrel0"/>
             <composite name="nEndCap0"/>

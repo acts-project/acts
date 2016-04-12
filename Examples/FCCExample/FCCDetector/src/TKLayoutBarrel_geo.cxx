@@ -62,11 +62,11 @@ static Ref_t create_element(LCDD& lcdd, xml_h xml, SensitiveDetector sens)
             {
                 double r = (l_rmax+l_rmin)*0.5;
                 string zname = _toString(k,"z%d");
-                if (k%2 == 0) r+=offsetrz;
+                if (k%2 == 0) r-=offsetrz;
                 //Place the modules in phi
                 for (int i=0; i<repeat; ++i) {
                     double radius = r;
-                    if (i%2 == 0) radius+=dr;
+                    if (i%2 == 0) radius-=dr;
                     //Visualization
                     mod_vol.setVisAttributes(lcdd, x_module.visStr());
                     double phi = deltaphi/dd4hep::rad * i;
