@@ -7,6 +7,7 @@
 
 // STL include(s)
 #include <vector>
+#include <string>
 
 namespace Acts {
 

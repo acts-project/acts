@@ -5,7 +5,7 @@
 #ifndef ACTS_GEOMETRYUTILS_GEOMETRYOBJECTSORTER_H
 #define ACTS_GEOMETRYUTILS_GEOMETRYOBJECTSORTER_H 1
 
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 
 namespace Acts {
   /** @class GeometryObjectSorter

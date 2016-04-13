@@ -3,8 +3,8 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "GeometryTools/CylinderVolumeBuilder.h"
-#include "GeometryInterfaces/ITrackingVolumeHelper.h"
+#include "Tools/CylinderVolumeBuilder.h"
+#include "Tools/ITrackingVolumeHelper.h"
 #include "Detector/TrackingVolume.h"
 #include "Detector/CylinderLayer.h"
 #include "Detector/DiscLayer.h"
@@ -12,82 +12,31 @@
 #include "Surfaces/CylinderBounds.h"
 #include "Surfaces/RadialBounds.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
-// Gaudi
-#include "GaudiKernel/SystemOfUnits.h"
-
-
-DECLARE_TOOL_FACTORY(Acts::CylinderVolumeBuilder)
+#include "Core/AlgebraDefinitions.h"
 
 // constructor
-Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(const std::string& t, const std::string& n, const IInterface* p)
-: Acts::AlgToolBase(t,n,p),
-  m_trackingVolumeHelper("Acts::CylinderVolumeHelper"),
-  m_volumeName(n),
+Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(const std::string& name):
+  Acts::ITrackingVolumeBuilder(),
+  m_trackingVolumeHelper(),  
+  m_volumeName(name),
   m_volumeDimension(),
-  m_volumeMaterialProperties(),
-  m_volumeMaterial(),
+  m_volumeMaterialProperties({10e10,10e10,0., 0., 0.}),
+  m_volumeMaterial(m_volumeMaterialProperties.at(0),
+		   m_volumeMaterialProperties.at(1),
+		   m_volumeMaterialProperties.at(2),
+		   m_volumeMaterialProperties.at(3),
+		   m_volumeMaterialProperties.at(4)),
   m_volumeToBeamPipe(false),
-  m_layerBuilder(""),
-//bug  m_layerBuilder(this),
-  m_layerEnvelopeR(1.*Gaudi::Units::mm),
-  m_layerEnvelopeZ(1.*Gaudi::Units::mm),
+  m_layerBuilder(),
+  m_layerEnvelopeR(1.),
+  m_layerEnvelopeZ(1.),
   m_volumeSignature(1)
 {
-    declareInterface<ITrackingVolumeBuilder>(this);
-    declareProperty("CylinderVolumeHelper",         m_trackingVolumeHelper);
-    // Helper Tool
-    // Volume properties
-    declareProperty("VolumeName",                    m_volumeName);
-    declareProperty("VolumeDimension",               m_volumeDimension);
-    declareProperty("VolumeMaterialProperties",      m_volumeMaterialProperties);
-    declareProperty("VolumeToBeamPipe",              m_volumeToBeamPipe);
-    // Layer definitions
-    declareProperty("LayerBuilder",                  m_layerBuilder);
-    declareProperty("LayerEnvelopeR",                m_layerEnvelopeR);
-    declareProperty("LayerEnvelopeZ",                m_layerEnvelopeZ);
-    // the volume signature
-    declareProperty("GeometrySignature",             m_volumeSignature);
 }    
 
 // destructor
 Acts::CylinderVolumeBuilder::~CylinderVolumeBuilder()
 {}
-
-// initialize
-StatusCode Acts::CylinderVolumeBuilder::initialize()
-{
-    MSG_DEBUG( "initialize()" );
-    
-    //Tool needs to be initialized
-    if (!AlgToolBase::initialize()) return StatusCode::FAILURE;
-    // retrieve the tracking volume creator
-    RETRIEVE_FATAL(m_trackingVolumeHelper);
-    //check if volume has layers
-
-    RETRIEVE_NONEMPTY_FATAL(m_layerBuilder);
-    // if no world materials are declared, take default ones - set vacuum 
-    if (m_volumeMaterialProperties.size() < 5) 
-        m_volumeMaterialProperties = std::vector<double>{10e10,10e10,0., 0., 0.};
-
-    // set up the material
-    m_volumeMaterial = Material(m_volumeMaterialProperties.at(0),
-				                m_volumeMaterialProperties.at(1),
-				                m_volumeMaterialProperties.at(2),
-				                m_volumeMaterialProperties.at(3),
-				                m_volumeMaterialProperties.at(4));
-    
-    // return SUCCESS at this stage
-    return StatusCode::SUCCESS;
-}
-
-// finalize
-StatusCode Acts::CylinderVolumeBuilder::finalize()
-{
-    MSG_DEBUG( "finalize()" );
-    return StatusCode::SUCCESS;
-}
-
 
 std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr insideVolume,
                                                                                         VolumeBoundsPtr outsideBounds,
@@ -144,7 +93,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
     int layerConfiguration = 0;
     if (nLayerSetup) {
         // negative layers are present 
-        MSG_DEBUG("Negative layers are present with r(min,max) / z(min,max) = " << nLayerSetup.rBoundaries << " / " << nLayerSetup.zBoundaries );
+        // MSG_DEBUG("Negative layers are present with r(min,max) / z(min,max) = " << nLayerSetup.rBoundaries << " / " << nLayerSetup.zBoundaries );
         takeSmaller(layerRmin,nLayerSetup.rBoundaries.first);
         takeBigger(layerRmax,nLayerSetup.rBoundaries.second);
         takeBigger(layerZmax,fabs(nLayerSetup.zBoundaries.first));
@@ -153,7 +102,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
     }
     if (cLayerSetup) {
         // central layers are present
-        MSG_DEBUG("Central  layers are present with r(min,max) / z(min,max) = " << cLayerSetup.rBoundaries << " / " << cLayerSetup.zBoundaries << " layerRmin: " << layerRmin << " layerEnvelopeR: " << m_layerEnvelopeR);
+        // MSG_DEBUG("Central  layers are present with r(min,max) / z(min,max) = " << cLayerSetup.rBoundaries << " / " << cLayerSetup.zBoundaries << " layerRmin: " << layerRmin << " layerEnvelopeR: " << m_layerEnvelopeR);
         takeSmaller(layerRmin,cLayerSetup.rBoundaries.first);
         takeBigger(layerRmax,cLayerSetup.rBoundaries.second);
         takeBigger(layerZmax,fabs(cLayerSetup.zBoundaries.first));
@@ -163,7 +112,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
     }
     if (pLayerSetup) {
         // positive layers are present 
-        MSG_DEBUG("Positive layers are present with r(min,max) / z(min,max) = " << pLayerSetup.rBoundaries << " / " << pLayerSetup.zBoundaries << " layerRmin: " << layerRmin << " layerEnvelopeR: " << m_layerEnvelopeR);
+        // MSG_DEBUG("Positive layers are present with r(min,max) / z(min,max) = " << pLayerSetup.rBoundaries << " / " << pLayerSetup.zBoundaries << " layerRmin: " << layerRmin << " layerEnvelopeR: " << m_layerEnvelopeR);
         takeSmaller(layerRmin,pLayerSetup.rBoundaries.first);
         takeBigger(layerRmax,pLayerSetup.rBoundaries.second);
         takeBigger(layerZmax,pLayerSetup.zBoundaries.second);
@@ -172,10 +121,10 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
     }
     
     if (layerConfiguration) {
-        MSG_DEBUG("Layer configuration estimated as " << layerConfiguration << " with r(min,max) / z(min,max) = " <<
-                                                         layerRmin << ", " << layerRmax << " / 0., " << layerZmax);
-    } else 
-        MSG_DEBUG("No layers present in this setup." );
+        // MSG_DEBUG("Layer configuration estimated as " << layerConfiguration << " with r(min,max) / z(min,max) = " <<
+        //                                                  layerRmin << ", " << layerRmax << " / 0., " << layerZmax);
+    } // else 
+      //   MSG_DEBUG("No layers present in this setup." );
     
     // the inside volume dimensions ------------------------------------------------------------------
     double insideVolumeRmin = 0.;
@@ -191,10 +140,10 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
            insideVolumeRmin = icvBounds->innerRadius();
            insideVolumeRmax = icvBounds->outerRadius();
            insideVolumeZmax = insideVolume->center().z()+icvBounds->halflengthZ();
-           MSG_VERBOSE("Inner CylinderVolumeBounds provided from external builder, rMin/rMax/zMax = " << insideVolumeRmin << ", " << insideVolumeRmax << ", " << insideVolumeZmax);
+           // MSG_VERBOSE("Inner CylinderVolumeBounds provided from external builder, rMin/rMax/zMax = " << insideVolumeRmin << ", " << insideVolumeRmax << ", " << insideVolumeZmax);
        } else {
            // we need to bail out, the given volume is not cylindrical
-           MSG_ERROR("Given volume to wrap was not cylindrical. Bailing out.");
+           // MSG_ERROR("Given volume to wrap was not cylindrical. Bailing out.");
            // cleanup teh memory 
            delete negativeLayers; delete centralLayers; delete positiveLayers;
            // return a null pointer, upstream builder will have to understand this
@@ -212,17 +161,17 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
              volumeRmin  = ocvBounds->innerRadius();
              volumeRmax  = ocvBounds->outerRadius();
              volumeZmax = ocvBounds->halflengthZ();
-             MSG_VERBOSE("Outer CylinderVolumeBounds provided from external builder, rMin/rMax/zMax = " << volumeRmin << ", " << volumeRmax << ", " << volumeZmax);
+             // MSG_VERBOSE("Outer CylinderVolumeBounds provided from external builder, rMin/rMax/zMax = " << volumeRmin << ", " << volumeRmax << ", " << volumeZmax);
           } else {
-             MSG_ERROR("Non-cylindrical bounds given to the CylinderVolumeBuilder. Bailing out.");
-             // cleanup the memory
+             // MSG_ERROR("Non-cylindrical bounds given to the CylinderVolumeBuilder. Bailing out.");
+             // cleanup teh memory 
              delete negativeLayers; delete centralLayers; delete positiveLayers;
              // return a null pointer, upstream builder will have to understand this
              return nullptr;
          }
          // check if the outside bounds cover all the layers 
          if (layerConfiguration && (volumeRmin > layerRmin || volumeRmax < layerRmax || volumeZmax < layerZmax)){
-             MSG_ERROR("Given layer dimensions do not fit inside the provided volume bounds. Bailing out." << " volumeRmin: " << volumeRmin << " volumeRmax: " << volumeRmax << " layerRmin: " << layerRmin << " layerRmax: " << layerRmax << " volumeZmax: " << volumeZmax << " layerZmax: " << layerZmax);
+             // MSG_ERROR("Given layer dimensions do not fit inside the provided volume bounds. Bailing out." << " volumeRmin: " << volumeRmin << " volumeRmax: " << volumeRmax << " layerRmin: " << layerRmin << " layerRmax: " << layerRmax << " volumeZmax: " << volumeZmax << " layerZmax: " << layerZmax);
              // cleanup teh memory 
              delete negativeLayers; delete centralLayers; delete positiveLayers;
              // return a null pointer, upstream builder will have to understand this
@@ -234,7 +183,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
         volumeRmin  = m_volumeDimension[0];
         volumeRmax  = m_volumeDimension[1];
         volumeZmax  = m_volumeDimension[2];
-        MSG_VERBOSE("Outer CylinderVolumeBounds provided by configuration, rMin/rMax/zMax = " << volumeRmin << ", " << volumeRmax << ", " << volumeZmax);
+        // MSG_VERBOSE("Outer CylinderVolumeBounds provided by configuration, rMin/rMax/zMax = " << volumeRmin << ", " << volumeRmax << ", " << volumeZmax);
         
     } else {
         // outside dimensions will have to be determined by the layer dimensions
@@ -242,7 +191,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
         volumeRmax = layerRmax + m_layerEnvelopeR;
         volumeZmax = layerZmax + m_layerEnvelopeZ;
         // from setup 
-        MSG_VERBOSE("Outer CylinderVolumeBounds estimated from layer setup, rMin/rMax/zMax = " << volumeRmin << ", " << volumeRmax << ", " << volumeZmax);
+        // MSG_VERBOSE("Outer CylinderVolumeBounds estimated from layer setup, rMin/rMax/zMax = " << volumeRmin << ", " << volumeRmax << ", " << volumeZmax);
     }
     
     // -------------------- analyse the layer setups -------------------------------------------------- 
@@ -262,7 +211,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
     //check if layers are present
     if (layerConfiguration){
         // screen output
-        MSG_DEBUG("Building Volume from layer configuration.");
+        // MSG_DEBUG("Building Volume from layer configuration.");
         // barrel configuration
         double barrelRmin = 0.;
         double barrelRmax = 0.;
@@ -282,9 +231,9 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
                 barrelRmin = barrelBounds->innerRadius();
                 barrelRmax = barrelBounds->outerRadius();
                 barrelZmax = barrelVolume->center().z() + barrelBounds->halflengthZ();
-                MSG_VERBOSE("Outer Barrel bounds provided by configuration, rMin/rMax/zMax = " << barrelRmin << ", " << barrelRmax << ", " << barrelZmax);
+                // MSG_VERBOSE("Outer Barrel bounds provided by configuration, rMin/rMax/zMax = " << barrelRmin << ", " << barrelRmax << ", " << barrelZmax);
             }
-            else MSG_ERROR("No Barrel volume given for current hierarchy!");
+            // else MSG_ERROR("No Barrel volume given for current hierarchy!");
             //check if end cap volumes are provided
             if (endcapVolume) {
                 const CylinderVolumeBounds* endcapBounds = dynamic_cast<const CylinderVolumeBounds*>(&(endcapVolume->volumeBounds()));
@@ -292,7 +241,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
                 endcapRmax = endcapBounds->outerRadius();
                 endcapZmin = fabs(endcapVolume->center().z())-endcapBounds->halflengthZ();
                 endcapZmax = fabs(endcapVolume->center().z())+endcapBounds->halflengthZ();
-                MSG_VERBOSE("Outer Endcap bounds provided by configuration, rMin/rMax/zMin/zMax = " << endcapRmin << ", " << endcapRmax << ", " << endcapZmin << ", " << endcapZmax);
+                // MSG_VERBOSE("Outer Endcap bounds provided by configuration, rMin/rMax/zMin/zMax = " << endcapRmin << ", " << endcapRmax << ", " << endcapZmin << ", " << endcapZmax);
             }
             //now set the wrapping condition
             // wrapping condition can only be set if there's an inside volume
@@ -306,7 +255,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
             if (insideVolume){
                 if (insideVolumeRmax > volumeRmax || insideVolumeZmax > volumeZmax) {
                     // we need to bail out, the given volume does not fit around the other
-                    MSG_ERROR("Given layer dimensions do not fit around the provided inside volume. Bailing out." << "insideVolumeRmax: " << insideVolumeRmax << " layerRmin: " << layerRmin);
+                    //MSG_ERROR("Given layer dimensions do not fit around the provided inside volume. Bailing out." << "insideVolumeRmax: " << insideVolumeRmax << " layerRmin: " << layerRmin);
                     // cleanup teh memory
                     delete negativeLayers; delete centralLayers; delete positiveLayers;
                     // return a null pointer, upstream builder will have to understand this
@@ -435,7 +384,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
 
     } else if (outsideBounds){
         // screen output
-        MSG_DEBUG("Building Volume without layer configuration.");
+        // MSG_DEBUG("Building Volume without layer configuration.");
         if (insideVolume && outsideBounds){
             // the barrel is created
             barrel = m_trackingVolumeHelper->createTrackingVolume({},
@@ -466,8 +415,8 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
         } else
             volume = TrackingVolume::create(nullptr, outsideBounds, m_volumeMaterial);
         
-    } else
-        MSG_ERROR("Neither layer configuration nor volume bounds given. Bailing out.");
+    } // else 
+      //   MSG_ERROR("Neither layer configuration nor volume bounds given. Bailing out.");
     
     // sign the volume
     volume->sign(GeometrySignature(m_volumeSignature));

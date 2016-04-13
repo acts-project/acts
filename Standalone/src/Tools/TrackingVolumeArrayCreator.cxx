@@ -3,48 +3,19 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "GeometryTools/TrackingVolumeArrayCreator.h"
+#include "Tools/TrackingVolumeArrayCreator.h"
 #include "GeometryUtils/BinUtility.h"
 #include "GeometryUtils/BinnedArray1D.h"
 #include "GeometryUtils/GeometryObjectSorter.h"
 #include "Detector/TrackingVolume.h"
 #include "Volumes/VolumeBounds.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 
-
-DECLARE_TOOL_FACTORY(Acts::TrackingVolumeArrayCreator)
-
-// constructor
-Acts::TrackingVolumeArrayCreator::TrackingVolumeArrayCreator(const std::string& t, const std::string& n, const IInterface* p)
-: Acts::AlgToolBase(t,n,p)
-{
-    declareInterface<ITrackingVolumeArrayCreator>(this);
-}
-
-// destructor
-Acts::TrackingVolumeArrayCreator::~TrackingVolumeArrayCreator()
-{}
-
-
-// the interface methods
-StatusCode Acts::TrackingVolumeArrayCreator::initialize()
-{
-    MSG_DEBUG( "initialize() Acts::TrackingVolumeArrayCreator" );
-    //Tool needs to be initialized
-    if (!AlgToolBase::initialize()) return StatusCode::FAILURE;
-    return StatusCode::SUCCESS;
-}    
-
-StatusCode Acts::TrackingVolumeArrayCreator::finalize()
-{
-    MSG_DEBUG( "finalize()" );
-    return StatusCode::SUCCESS;
-}
 
 std::shared_ptr<const Acts::TrackingVolumeArray> Acts::TrackingVolumeArrayCreator::trackingVolumeArray(const TrackingVolumeVector& tVolumes, BinningValue bValue) const 
 {
-    MSG_VERBOSE("Create VolumeArray of "<< tVolumes.size() << " TrackingVolumes with binning in : " << binningValueNames[bValue] );
+    // MSG_VERBOSE("Create VolumeArray of "<< tVolumes.size() << " TrackingVolumes with binning in : " << binningValueNames[bValue] );
     // let's copy and sort 
     TrackingVolumeVector volumes(tVolumes);
     // sort it accordingly to the binning value

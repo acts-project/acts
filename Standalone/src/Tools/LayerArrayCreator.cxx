@@ -3,7 +3,7 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "GeometryTools/LayerArrayCreator.h"
+#include "Tools/LayerArrayCreator.h"
 #include "GeometryUtils/BinnedArray1D.h"
 #include "GeometryUtils/BinUtility.h"
 #include "GeometryUtils/GeometryStatics.h"
@@ -18,37 +18,8 @@
 #include "Surfaces/TrapezoidBounds.h"
 #include "Surfaces/RectangleBounds.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
-#include "Algebra/StringConverters.h"
-
-
-DECLARE_TOOL_FACTORY(Acts::LayerArrayCreator)
-
-// constructor
-Acts::LayerArrayCreator::LayerArrayCreator(const std::string& t, const std::string& n, const IInterface* p)
-: Acts::AlgToolBase(t,n,p)
-{
-    declareInterface<ILayerArrayCreator>(this);    
-}
-
-// destructor
-Acts::LayerArrayCreator::~LayerArrayCreator()
-{}
-
-// the interface methods
-StatusCode Acts::LayerArrayCreator::initialize()
-{
-    MSG_INFO( "initialize()" );
-    //Tool needs to be initialized
-    if (!AlgToolBase::initialize()) return StatusCode::FAILURE;
-    return StatusCode::SUCCESS;
-}    
-
-StatusCode Acts::LayerArrayCreator::finalize()
-{    
-    MSG_DEBUG( "finalize()" );    
-    return StatusCode::SUCCESS;
-}
+#include "Core/AlgebraDefinitions.h"
+#include "Core/StringConverters.h"
 
 Acts::LayerArray* Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
                                                       double min, double max, 
@@ -56,10 +27,10 @@ Acts::LayerArray* Acts::LayerArrayCreator::layerArray(const LayerVector& layersI
                                                       BinningValue bValue) const 
 {
       
-   MSG_VERBOSE( "Build LayerArray with "     << layersInput.size() << " layers at input." );
-   MSG_VERBOSE( "       min/max provided : " << min << " / " << max );
-   MSG_VERBOSE( "       binning type     : " << bType );
-   MSG_VERBOSE( "       binning value    : " << bValue );
+   // MSG_VERBOSE( "Build LayerArray with "     << layersInput.size() << " layers at input." );
+   // MSG_VERBOSE( "       min/max provided : " << min << " / " << max );
+   // MSG_VERBOSE( "       binning type     : " << bType );
+   // MSG_VERBOSE( "       binning value    : " << bValue );
     
    // create a local copy of the layer vector
    LayerVector layers(layersInput);
@@ -83,12 +54,12 @@ Acts::LayerArray* Acts::LayerArrayCreator::layerArray(const LayerVector& layersI
         {
             // loop over layers and put them in
             for (auto& layIter : layers ) {
-                MSG_VERBOSE( "equidistant : registering a Layer at binning position : " << toString(layIter->binningPosition(bValue)) );
+                // MSG_VERBOSE( "equidistant : registering a Layer at binning position : " << toString(layIter->binningPosition(bValue)) );
                 layerOrderVector.push_back( LayerOrderPosition(layIter, layIter->binningPosition(bValue) ));
             }        
             // create the binUitlity
             binUtility = new BinUtility(layers.size(), min, max, open, bValue);
-            MSG_VERBOSE( "equidistant : created a BinUtility as " << *binUtility );
+            // MSG_VERBOSE( "equidistant : created a BinUtility as " << *binUtility );
         } break;     
     
         // arbitrary binning
@@ -118,11 +89,11 @@ Acts::LayerArray* Acts::LayerArrayCreator::layerArray(const LayerVector& layersI
                     navLayer = NavigationLayer::create(navLayerSurface);
                     // push the navigation layer in
                     layerOrderVector.push_back(LayerOrderPosition(navLayer, navLayer->binningPosition(bValue)));
-                    MSG_VERBOSE( "arbitrary : creating a  NavigationLayer at " << toString(navLayerSurface->binningPosition(bValue)) );
+                    // MSG_VERBOSE( "arbitrary : creating a  NavigationLayer at " << toString(navLayerSurface->binningPosition(bValue)) );
                 }
                 // push the original layer in
                 layerOrderVector.push_back(LayerOrderPosition(layIter, layIter->binningPosition(bValue) ));
-                MSG_VERBOSE( "arbitrary : registering MaterialLayer at  " <<  toString(layIter->binningPosition(bValue)));
+                // MSG_VERBOSE( "arbitrary : registering MaterialLayer at  " <<  toString(layIter->binningPosition(bValue)));
                 // remember the last
                 lastLayer = layIter;
             }
@@ -136,15 +107,15 @@ Acts::LayerArray* Acts::LayerArrayCreator::layerArray(const LayerVector& layersI
                 navLayer = NavigationLayer::create(navLayerSurface);
                 // push the navigation layer in
                 layerOrderVector.push_back(LayerOrderPosition(navLayer, navLayer->binningPosition(bValue)));
-                MSG_VERBOSE( "arbitrary : creating a  NavigationLayer at " << toString(navLayerSurface->binningPosition(bValue)) );
+                // MSG_VERBOSE( "arbitrary : creating a  NavigationLayer at " << toString(navLayerSurface->binningPosition(bValue)) );
             }
             // now close the boundaries
             boundaries.push_back(max);
             // some screen output
-            MSG_VERBOSE( layerOrderVector.size() << " Layers (material + navigation) built. " );
+            // MSG_VERBOSE( layerOrderVector.size() << " Layers (material + navigation) built. " );
             // create the BinUtility
             binUtility = new BinUtility(boundaries, open, bValue);
-            MSG_VERBOSE( "arbitrary : created a BinUtility as " << *binUtility );
+            // MSG_VERBOSE( "arbitrary : created a BinUtility as " << *binUtility );
 
         } break;
         // default return nullptr
@@ -180,7 +151,7 @@ Acts::Surface* Acts::LayerArrayCreator::createNavigationSurface(const Layer& lay
         } break;
         // do nothing for the default
         default : {
-            MSG_WARNING("Not yet implemented.");
+            // MSG_WARNING("Not yet implemented.");
         }
     }
     // navigation surface 

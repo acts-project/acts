@@ -5,16 +5,15 @@
 #ifndef ACTS_GEOMETRYINTERFACES_ITRACKINGVOLUMEARRAYCREATOR_H
 #define ACTS_GEOMETRYINTERFACES_ITRACKINGVOLUMEARRAYCREATOR_H 1
 
-// Gaudi
-#include "GaudiKernel/IAlgTool.h"
 // Geometry module
 #include "GeometryUtils/BinnedArray.h"
 #include "GeometryUtils/BinningType.h"
 // STL
 #include <vector>
+#include <memory>
 
-namespace Acts {
-
+namespace Acts
+{
   /** forward declarations*/
   class TrackingVolume;
   typedef std::shared_ptr< const TrackingVolume > TrackingVolumePtr;
@@ -22,9 +21,6 @@ namespace Acts {
   /** @typedef TrackingVolumeArray */
   typedef BinnedArray< TrackingVolumePtr > TrackingVolumeArray;
   typedef std::vector< TrackingVolumePtr > TrackingVolumeVector;
-  
-  /** Interface ID for ITrackingVolumeArrayCreator*/  
-  static const InterfaceID IID_ITrackingVolumeArrayCreator("ITrackingVolumeArrayCreator", 1, 0);
   
   /** @class ITrackingVolumeArrayCreator
     
@@ -41,21 +37,15 @@ namespace Acts {
 
     @author Andreas.Salzburger@cern.ch
     */
-  class ITrackingVolumeArrayCreator : virtual public IAlgTool {
-    
+  class ITrackingVolumeArrayCreator
+  {  
     public:
       /**Virtual destructor*/
-      virtual ~ITrackingVolumeArrayCreator(){}
-      
-//       DeclareInterfaceID(ITrackingVolumeArrayCreator, 1, 0);
-      /** AlgTool and IAlgTool interface methods */
-      static const InterfaceID& interfaceID() { return IID_ITrackingVolumeArrayCreator; }
+    virtual ~ITrackingVolumeArrayCreator() = default;
 
-      /** TrackingVolumeArrayCreator interface method - creates array depending on the binning type */
-      virtual std::shared_ptr<const TrackingVolumeArray> trackingVolumeArray(const TrackingVolumeVector& vols, BinningValue bVal) const = 0; 
-      
+    /** TrackingVolumeArrayCreator interface method - creates array depending on the binning type */
+    virtual std::shared_ptr<const TrackingVolumeArray> trackingVolumeArray(const TrackingVolumeVector& vols, BinningValue bVal) const = 0;      
   };
-
 } // end of namespace
 
 #endif

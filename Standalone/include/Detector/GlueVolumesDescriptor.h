@@ -8,8 +8,6 @@
 // Geometry module
 #include "Volumes/BoundarySurfaceFace.h"
 #include "GeometryUtils/BinnedArray.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
 // STL
 #include <map>
 #include <vector>
@@ -62,8 +60,7 @@ namespace Acts {
   inline const std::vector<BoundarySurfaceFace>& GlueVolumesDescriptor::glueFaces() const
   { return m_glueFaces; }
 
-  /**Overload of << operator for both, MsgStream and std::ostream for debug output*/ 
-  MsgStream& operator<<( MsgStream& sl, const GlueVolumesDescriptor& mprop);
+  /**Overload of << operator for std::ostream for debug output*/ 
   std::ostream& operator<<( std::ostream& sl, const GlueVolumesDescriptor& mprop);
 
 }

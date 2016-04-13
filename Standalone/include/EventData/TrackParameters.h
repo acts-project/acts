@@ -1,10 +1,10 @@
 #ifndef ACTS_TRACKPARAMETERS_H
 #define ACTS_TRACKPARAMETERS_H 1
 
-#include "ParametersBase/SingleCurvilinearTrackParameters.h"
-#include "ParametersBase/SingleBoundTrackParameters.h"
-#include "ParametersBase/SingleTrackParameters.h"
-#include "ParametersBase/ChargePolicy.h"
+#include "EventData/SingleCurvilinearTrackParameters.h"
+#include "EventData/SingleBoundTrackParameters.h"
+#include "EventData/SingleTrackParameters.h"
+#include "EventData/ChargePolicy.h"
 
 namespace Acts
 {

@@ -6,12 +6,10 @@
 #define ACTS_MATERIAL_HOMOGENOUSLAYERMATERIAL_H
 
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 // Geometry module
 #include "Material/SurfaceMaterial.h"
 #include "Material/MaterialProperties.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
 // STD/STL
 #include <vector>
 
@@ -67,9 +65,6 @@ namespace Acts {
       /** Update the BinUtility if necessary - passing ownership of the utility class*/
       void updateBinning(BinUtility*) const override { }
           
-      /** Output Method for MsgStream, to be overloaded by child classes */
-      MsgStream& dump(MsgStream& sl) const override;
-      
       /** Output Method for std::ostream, to be overloaded by child classes */
       std::ostream& dump(std::ostream& sl) const override;      
 

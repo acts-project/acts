@@ -48,17 +48,6 @@ Acts::HomogeneousSurfaceMaterial& Acts::HomogeneousSurfaceMaterial::operator*=(d
    return (*this);
 }
 
-MsgStream& Acts::HomogeneousSurfaceMaterial::dump( MsgStream& sl) const
-{
-  sl << "Acts::HomogeneousSurfaceMaterial : " << std::endl;
-  if (m_fullMaterial) {
-       sl << "   - fullMaterial         : " << *m_fullMaterial << std::endl;
-  }
-  sl << "   - split factor         : " << m_splitFactor << std::endl;
-
-  return sl;
-}
-
 std::ostream& Acts::HomogeneousSurfaceMaterial::dump( std::ostream& sl) const
 {
   sl << "Acts::HomogeneousSurfaceMaterial : " << std::endl;

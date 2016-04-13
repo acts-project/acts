@@ -6,15 +6,14 @@
 #define ACTS_MATERIAL_SURFACEMATERIAL_H
 
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 // Geometry module
 #include "Material/MaterialProperties.h"
 // EventData module
-#include "EventDataUtils/PropDirection.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
+#include "Core/PropDirection.h"
 // STD/STL
 #include <vector>
+#include <memory>
 
 namespace Acts {
 
@@ -90,9 +89,6 @@ namespace Acts {
       /** Update the BinUtility if necessary - passing ownership of the utility class*/
       virtual void updateBinning(BinUtility* bu) const = 0;
 
-      /** Output Method for MsgStream, to be overloaded by child classes */
-      virtual MsgStream& dump(MsgStream& sl) const = 0;
-      
       /** Output Method for std::ostream, to be overloaded by child classes */
       virtual std::ostream& dump(std::ostream& sl) const = 0;
                                             
@@ -108,9 +104,7 @@ inline double SurfaceMaterial::factor(PropDirection pDir, MaterialUpdateStage mS
     return ( pDir*mStage > 0 ? m_splitFactor : 1.-m_splitFactor ); 
 }   
 
-//**Overload of << operator for both, MsgStream and std::ostream for debug output*/ 
-MsgStream& operator<<( MsgStream& sl, const SurfaceMaterial& sm);
-
+//**Overload of << operator for std::ostream for debug output*/
 std::ostream& operator<<( std::ostream& sl, const SurfaceMaterial& sm);
     
 } // end of namespace

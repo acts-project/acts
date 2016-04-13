@@ -3,7 +3,7 @@
 
 //ACTS includes
 #include "Surfaces/Surface.h"
-#include "ParametersBase/SingleTrackParameters.h"
+#include "EventData/SingleTrackParameters.h"
 
 namespace Acts
 {

@@ -11,8 +11,6 @@
 //STL
 #include <vector>
 
-class MsgStream;
-
 namespace Acts {
 
 /** @class BinnedArray1D
@@ -26,13 +24,13 @@ namespace Acts {
 
     public:
      /**Default Constructor - needed for inherited classes */
-     BinnedArray1D() throw (GaudiException):
+     BinnedArray1D():
        BinnedArray<T>(),
        m_binUtility(0)
      {}
 
      /** Constructor with std::vector< pair < object, position> > and a  BinUtility to sort the objects into the bin */
-     BinnedArray1D(const std::vector< std::pair< T, Vector3D > >& tclassvector, BinUtility* bingen) throw (GaudiException) :
+    BinnedArray1D(const std::vector< std::pair< T, Vector3D > >& tclassvector, BinUtility* bingen) throw (std::string) :
        BinnedArray<T>(),
        m_binUtility(bingen)
      {
@@ -47,13 +45,13 @@ namespace Acts {
             if (bingen->inside(currentGlobal))
                BinnedArray<T>::m_arrayObjects[bingen->bin(currentGlobal,0)] = ((tclassvector)[ivec]).first;
             else 
-               throw GaudiException("BinnedArray1D constructor", "Object outside bounds", StatusCode::FAILURE );  
+               throw "Object outside bounds";  
           }
        }
      }
 
      /**Copy Constructor - copies only pointers !*/
-     BinnedArray1D(const BinnedArray1D& barr) throw (GaudiException) :
+    BinnedArray1D(const BinnedArray1D& barr) throw (std::string) :
        BinnedArray<T>(barr),
        m_binUtility(nullptr)
      {
@@ -61,7 +59,7 @@ namespace Acts {
          if (barr.m_binUtility)
              m_binUtility = barr.m_binUtility->clone();
         else 
-           throw GaudiException("BinnedArray1D constructor", "No BinUtility provided", StatusCode::FAILURE );  
+           throw "No BinUtility provided";  
      }
       
      /**Assignment operator*/

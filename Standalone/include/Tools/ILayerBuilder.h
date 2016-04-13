@@ -5,11 +5,10 @@
 #ifndef ACTS_GEOMETRYINTERFACES_ILAYERBUILDER_H
 #define ACTS_GEOMETRYINTERFACES_ILAYERBUILDER_H 1
 
-// Gaudi
-#include "GaudiKernel/IAlgTool.h"
 // STL
 #include <vector>
 #include <string>
+#include <memory>
 
 namespace Acts {
 
@@ -17,9 +16,6 @@ namespace Acts {
   typedef std::shared_ptr<const Layer> LayerPtr;
   typedef std::vector< LayerPtr > LayerVector;
 
-  /** Interface ID for ILayerBuilders*/  
-  static const InterfaceID IID_ILayerBuilder("ILayerBuilder", 1, 0);
-  
   /** @class ILayerBuilder
   
     Interface class for ILayerBuilders in a typical 
@@ -28,14 +24,11 @@ namespace Acts {
       
     @author Andreas.Salzburger@cern.ch
     */
-  class ILayerBuilder : virtual public IAlgTool {
-    
+  class ILayerBuilder
+  { 
     public:
       /**Virtual destructor*/
       virtual ~ILayerBuilder(){}
-//       DeclareInterfaceID(ILayerBuilder, 1, 0);
-      /** AlgTool and IAlgTool interface methods */
-      static const InterfaceID& interfaceID() { return IID_ILayerBuilder; }
 
       /** LayerBuilder interface method - returning the layers at negative side */
       virtual const LayerVector* negativeLayers() const = 0; 

@@ -7,9 +7,9 @@
 
 // Geometry module
 #include "GeometryUtils/GeometrySignature.h"
-#include "EventDataUtils/PropDirection.h"
+#include "Core/PropDirection.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 // STL
 #include <map>
 #include <memory>

@@ -5,7 +5,7 @@
 #ifndef ACTS_ALGEBRA_ALGEBRAHELPER_H
 #define ACTS_ALGEBRA_ALGEBRAHELPER_H
 
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 #include "cmath"
 #include <vector>
 #include <set>

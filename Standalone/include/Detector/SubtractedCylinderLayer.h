@@ -9,7 +9,7 @@
 #include "Detector/Layer.h"
 #include "Surfaces/SubtractedCylinderSurface.h"
 // Amg
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 
 namespace Acts {
 

@@ -2,8 +2,6 @@
 // TrackingVolume.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Gaudi Kernel
-#include "GaudiKernel/MsgStream.h"
 // Geometry module
 #include "Detector/TrackingVolume.h"
 #include "Detector/GlueVolumesDescriptor.h"
@@ -425,13 +423,13 @@ const Acts::GlueVolumesDescriptor& Acts::TrackingVolume::glueVolumesDescriptor()
     return (*m_glueVolumeDescriptor);
 }
 
-void Acts::TrackingVolume::synchronizeLayers(MsgStream& msgstream, double envelope) const {
+void Acts::TrackingVolume::synchronizeLayers(double envelope) const {
 
   // case a : Layers exist
-  msgstream << MSG::VERBOSE << "  -> synchronizing Layer dimensions of TrackingVolume '" << volumeName() << "'." << endreq;     
+  // msgstream << MSG::VERBOSE << "  -> synchronizing Layer dimensions of TrackingVolume '" << volumeName() << "'." << endreq;     
     
   if (m_confinedLayers){
-    msgstream << MSG::VERBOSE << "  ---> working on " << m_confinedLayers->arrayObjects().size() << " (material+navigation) layers." << endreq;
+    // msgstream << MSG::VERBOSE << "  ---> working on " << m_confinedLayers->arrayObjects().size() << " (material+navigation) layers." << endreq;
     for (auto& clayIter : m_confinedLayers->arrayObjects())
         if (clayIter){
           // @TODO implement syncrhonize layer     
@@ -439,15 +437,15 @@ void Acts::TrackingVolume::synchronizeLayers(MsgStream& msgstream, double envelo
           //      clayIter->resizeAndRepositionLayer(volumeBounds(),center(),envelope);
           //  else 
           //      clayIter->resizeLayer(volumeBounds(),envelope);
-        }  else
-            msgstream << MSG::WARNING << "  ---> found 0 pointer to layer, indicates problem." << endreq;
+        }  // else
+            // msgstream << MSG::WARNING << "  ---> found 0 pointer to layer, indicates problem." << endreq;
   }
 
   // case b : container volume -> step down
   if (m_confinedVolumes){
-    msgstream << MSG::VERBOSE << "  ---> no confined layers, working on " << m_confinedVolumes->arrayObjects().size() << " confined volumes." << endreq;
+    // msgstream << MSG::VERBOSE << "  ---> no confined layers, working on " << m_confinedVolumes->arrayObjects().size() << " confined volumes." << endreq;
     for (auto& cVolumesIter : m_confinedVolumes->arrayObjects())
-        cVolumesIter->synchronizeLayers(msgstream, envelope);
+        cVolumesIter->synchronizeLayers(envelope);
   }
    
 }
@@ -489,12 +487,4 @@ void Acts::TrackingVolume::interlinkLayers() {
    //       std::cout << "TrackingVolume::interlinkLayers10" << std::endl;
       }
   }
-}
-
-void  Acts::TrackingVolume::screenDump(MsgStream& msg) const
-{
-  msg << "TrackingVolume : " << volumeName() << std::endl;
-  msg << '\t' << '\t' << "# position (x,y,z) : " << center().x() << ", " << center().y() << ", " << center().z() << std::endl;
-  msg << '\t' << '\t' << "# bounds           : " << volumeBounds()     << endreq;
-
 }

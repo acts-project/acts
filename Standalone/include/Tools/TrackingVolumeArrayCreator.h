@@ -6,10 +6,9 @@
 #define ACTS_GEOMETRYTOOLS_TRACKINGVOLUMEARRAYCREATOR_H
 
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
-#include "CoreInterfaces/AlgToolBase.h"
+#include "Core/AlgebraDefinitions.h"
 // Geometry module
-#include "GeometryInterfaces/ITrackingVolumeArrayCreator.h"
+#include "Tools/ITrackingVolumeArrayCreator.h"
 #include "GeometryUtils/BinnedArray.h"
 // STL
 #include <algorithm>
@@ -36,30 +35,18 @@ namespace Acts {
       @author Andreas.Salzburger@cern.ch   
      */
 
-    class TrackingVolumeArrayCreator : public AlgToolBase,
-                               virtual public ITrackingVolumeArrayCreator {
+    class TrackingVolumeArrayCreator : public ITrackingVolumeArrayCreator {
 
       public:
         /** Constructor */
-        TrackingVolumeArrayCreator(const std::string&,const std::string&,const IInterface*);
+      TrackingVolumeArrayCreator() = default;
 
-        /** Destructor */
-        virtual ~TrackingVolumeArrayCreator();
+      /** Destructor */
+      virtual ~TrackingVolumeArrayCreator() = default;
 
-        /** AlgTool and IAlgTool interface methods */
-        static const InterfaceID& interfaceID() { return IID_ITrackingVolumeArrayCreator; }
-
-        /** AlgTool initialize method */
-        virtual StatusCode initialize() override;
-
-        /** AlgTool finalize method */
-        virtual StatusCode finalize() override;
-        
-        /** create a tracking volume array */
-        std::shared_ptr<const TrackingVolumeArray> trackingVolumeArray(const TrackingVolumeVector& vols, BinningValue bVal) const; 
-        
+      /** create a tracking volume array */
+      std::shared_ptr<const TrackingVolumeArray> trackingVolumeArray(const TrackingVolumeVector& vols, BinningValue bVal) const;  
     };
-
 }
 
 #endif

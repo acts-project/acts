@@ -1,10 +1,10 @@
 #ifndef ACTS_NEUTRALPARAMETERS_H
 #define ACTS_NEUTRALPARAMETERS_H 1
 
-#include "ParametersBase/SingleTrackParameters.h"
-#include "ParametersBase/SingleCurvilinearTrackParameters.h"
-#include "ParametersBase/SingleBoundTrackParameters.h"
-#include "ParametersBase/ChargePolicy.h"
+#include "EventData/SingleTrackParameters.h"
+#include "EventData/SingleCurvilinearTrackParameters.h"
+#include "EventData/SingleBoundTrackParameters.h"
+#include "EventData/ChargePolicy.h"
 
 namespace Acts
 {

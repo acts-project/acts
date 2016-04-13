@@ -5,7 +5,7 @@
 #ifndef ACTS_DETECTOR_DETACHEDTRACKINGVOLUME_H
 #define ACTS_DETECTOR_DETACHEDTRACKINGVOLUME_H 1
 
-class MsgStream;
+#include <memory>
 
 // Geometry module
 #include "Detector/Layer.h"
@@ -13,7 +13,7 @@ class MsgStream;
 #include "Surfaces/Surface.h"
 #include "GeometryUtils/GeometrySignature.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 
 namespace Acts {
     

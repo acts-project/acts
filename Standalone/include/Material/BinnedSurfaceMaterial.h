@@ -10,9 +10,7 @@
 #include "Material/MaterialProperties.h"
 #include "GeometryUtils/BinUtility.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
+#include "Core/AlgebraDefinitions.h"
 
 namespace Acts {
 
@@ -91,9 +89,6 @@ namespace Acts {
       /** Access the single bin */
       const MaterialProperties* material(size_t bin0, size_t bin1 ) const override;
             
-      /** Output Method for MsgStream, to be overloaded by child classes */
-      MsgStream& dump(MsgStream& sl) const override;
-      
       /** Output Method for std::ostream, to be overloaded by child classes */
       std::ostream& dump(std::ostream& sl) const override;      
 

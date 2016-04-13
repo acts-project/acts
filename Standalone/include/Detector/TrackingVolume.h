@@ -6,7 +6,7 @@
 #define ACTS_DETECTOR_TRACKINGVOLUME_H 1
 
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 // Geometry module
 #include "Surfaces/Surface.h"
 #include "Surfaces/BoundaryCheck.h"
@@ -18,11 +18,9 @@
 #include "GeometryUtils/BinnedArray.h"
 #include "GeometryUtils/GeometrySignature.h"
 // EventData module
-#include "EventDataUtils/PropDirection.h"
+#include "Core/PropDirection.h"
 //STL
 #include <string>
-
-class MsgStream;
 
 namespace Acts {
 
@@ -223,9 +221,6 @@ namespace Acts {
       /** add Material */
       void addMaterial( const Material& mat, float fact=1. ) const;
       
-      /** dump to screen */
-      void screenDump(MsgStream& msg) const;
-
     protected:
       /** Default constructor */
       TrackingVolume();    
@@ -259,7 +254,7 @@ namespace Acts {
             
       /** method to synchronize the layers with potentially updated volume bounds:
           - adapts the layer dimensions to the new volumebounds + envelope */
-      void synchronizeLayers(MsgStream& msgstream, double envelope = 1.) const;
+      void synchronizeLayers(double envelope = 1.) const;
       
       /** interlink the layers in this TrackingVolume */
       void interlinkLayers();

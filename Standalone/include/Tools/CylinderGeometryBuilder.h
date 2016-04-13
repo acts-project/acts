@@ -5,25 +5,25 @@
 #ifndef ACTS_GEOMETRYTOOLS_TRACKINGGEOMETRYBUILDER_H
 #define ACTS_GEOMETRYTOOLS_TRACKINGGEOMETRYBUILDER_H 1
 
-// Core module
-#include "CoreInterfaces/AlgToolBase.h"
-#include "Algebra/AlgebraDefinitions.h"
-// Geometry module
-#include "GeometryInterfaces/ITrackingGeometryBuilder.h"
-#include "GeometryInterfaces/ITrackingVolumeBuilder.h"
-#include "GeometryInterfaces/ITrackingVolumeHelper.h"
-// Gaudi
-#include "GaudiKernel/ToolHandle.h"
+// STL include(s)
+#include <memory>
+#include <list>
+
+// ATS include(s)
+#include "Core/AlgebraDefinitions.h"
+#include "Tools/ITrackingGeometryBuilder.h"
+#include "Tools/ITrackingVolumeBuilder.h"
+#include "Tools/ITrackingVolumeHelper.h"
 
 #ifdef ACTS_GEOMETRY_MEMUSAGE   
 #include "GeometryUtils/MemoryLogger.h"
 #endif  
 
-namespace Acts {
+namespace Acts
+{
+  class TrackingGeometry;
 
-    class TrackingGeometry;
-
-    /** @class GeometryBuilder
+  /** @class GeometryBuilder
 
       The Acts::TrackingGeometry Builder for volumes that wrap around another
 
@@ -33,44 +33,45 @@ namespace Acts {
       @TODO Julia: currently using work arround to use ToolHandleArray and private Tools because there is a bug in Gaudi. After update of Gaudi version go back to old usage -> currently marked with //bug
 
       @author Andreas.Salzburger@cern.ch   
-     */
+  */
 
-    class CylinderGeometryBuilder : public AlgToolBase, virtual public ITrackingGeometryBuilder {
-
-      public:
-        /** Constructor */
-        CylinderGeometryBuilder(const std::string&,const std::string&,const IInterface*);
+  class CylinderGeometryBuilder : public ITrackingGeometryBuilder
+  {
+  public:
+    /** Constructor */
+    CylinderGeometryBuilder();
         
-        /** Destructor */
-        virtual ~CylinderGeometryBuilder();
+    /** Destructor */
+    virtual ~CylinderGeometryBuilder() = default;
 
-        /** AlgTool initialize method */
-        virtual StatusCode initialize() override;
-        
-        /** AlgTool finalize method */
-        virtual StatusCode finalize() override;
-        
-        /** TrackingGeometry Interface method */
-        TrackingGeometry* trackingGeometry() const override;
+    /** TrackingGeometry Interface method */
+    virtual std::unique_ptr<TrackingGeometry> trackingGeometry() const override;
 
-      private:
+    void setBeamPipeBuilder(std::shared_ptr<ITrackingVolumeBuilder> beamPipe)
+    {
+      m_beamPipeBuilder = std::move(beamPipe);
+    }
+
+    void setVolumeBuilders(std::list<std::shared_ptr<ITrackingVolumeBuilder> > builders)
+    {
+      m_trackingVolumeBuilders = std::move(builders);
+    }
+
+    void setTrackingVolumeHelper(std::shared_ptr<ITrackingVolumeHelper> helper)
+    {
+      m_trackingVolumeHelper = std::move(helper);
+    }
+
+  private:
 
 #ifdef ACTS_GEOMETRY_MEMUSAGE         
-        MemoryLogger                              m_memoryLogger;           //!< in case the memory is logged
+    MemoryLogger                              m_memoryLogger;           //!< in case the memory is logged
 #endif                                            
-        // -------------------------- Tools for geometry building ------------------------------------------------------ //
-        ToolHandle<ITrackingVolumeBuilder>        m_beamPipeBuilder;        //!< a special builder for the beam pipe (for post-insertion)
-#ifndef ACTS_GAUDI
-        ToolHandleArray<ITrackingVolumeBuilder>   m_trackingVolumeBuilders; //!< the sub detector TrackingVolume builder
-#else
-        // list of tools to test
-        typedef std::vector<std::string> ToolList;
-        ToolList m_buildingTools;
-#endif
-        ToolHandle<ITrackingVolumeHelper>         m_trackingVolumeHelper;   //!< used for creating a container
-
-    };
-
+    // -------------------------- Tools for geometry building ------------------------------------------------------ //
+    std::shared_ptr<ITrackingVolumeBuilder>               m_beamPipeBuilder;        //!< a special builder for the beam pipe (for post-insertion)
+    std::list<std::shared_ptr<ITrackingVolumeBuilder> >   m_trackingVolumeBuilders; //!< the sub detector TrackingVolume builder
+    std::shared_ptr<ITrackingVolumeHelper>                m_trackingVolumeHelper;   //!< used for creating a container
+  };
 } // end of namespace
 
 #endif // ACTS_GEOMETRYTOOLS_TRACKINGGEOMETRYBUILDER_H

@@ -11,9 +11,9 @@ class MsgStream;
 #include "Detector/Layer.h"
 #include "GeometryUtils/BinnedArray.h"
 // EventData module
-#include "EventDataUtils/PropDirection.h"
+#include "Core/PropDirection.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 
 namespace Acts {
     

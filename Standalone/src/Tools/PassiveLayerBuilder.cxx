@@ -3,9 +3,9 @@
 ///////////////////////////////////////////////////////////////////
 
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 // Geometry module
-#include "GeometryTools/PassiveLayerBuilder.h"
+#include "Tools/PassiveLayerBuilder.h"
 #include "Detector/CylinderLayer.h"
 #include "Detector/DiscLayer.h"
 #include "Surfaces/CylinderBounds.h"
@@ -14,75 +14,29 @@
 #include "Material/MaterialProperties.h"
 
 
-DECLARE_TOOL_FACTORY(Acts::PassiveLayerBuilder)
-
 // constructor
-Acts::PassiveLayerBuilder::PassiveLayerBuilder(const std::string& t, const std::string& n, const IInterface* p) :
-  Acts::AlgToolBase(t,n,p),
+Acts::PassiveLayerBuilder::PassiveLayerBuilder() :
+  m_constructionFlag(false),
   m_layerIdentification("PassiveLayerBuilder"),   
   m_nLayers(nullptr),
   m_cLayers(nullptr),    
   m_pLayers(nullptr)
 {
-    declareInterface<ILayerBuilder>(this);   
-    // read in the layer specs from jobOptions
-    // the central layers 
-    declareProperty("CentralLayerRadii",          m_centralLayerRadii);
-    declareProperty("CentralLayerHalflengthZ",    m_centralLayerHalflengthZ);
-    declareProperty("CentralLayerThickness",      m_centralLayerThickness);
-    declareProperty("CentralLayerMaterialX0",     m_centralLayerMaterialX0);
-    declareProperty("CentralLayerMaterialL0",     m_centralLayerMaterialL0);
-    declareProperty("CentralLayerMaterialA",      m_centralLayerMaterialA);
-    declareProperty("CentralLayerMaterialZ",      m_centralLayerMaterialZ);
-    declareProperty("CentralLayerMaterialRho",    m_centralLayerMaterialRho);
-    // the layers at p/n side 
-    declareProperty("PosnegLayerPositionZ",       m_posnegLayerPositionZ);
-    declareProperty("PosnegLayerRmin",            m_posnegLayerRmin);
-    declareProperty("PosnegLayerRmax",            m_posnegLayerRmax);
-    declareProperty("PosnegLayerThickness",       m_posnegLayerThickness);
-    declareProperty("PosnegLayerMaterialX0",      m_posnegLayerMaterialX0);
-    declareProperty("PosnegLayerMaterialL0",      m_posnegLayerMaterialL0);
-    declareProperty("PosnegLayerMaterialA",       m_posnegLayerMaterialA);
-    declareProperty("PosnegLayerMaterialZ",       m_posnegLayerMaterialZ);
-    declareProperty("PosnegLayerMaterialRho",     m_posnegLayerMaterialRho);
-    // layer identification given by job options
-    declareProperty("LayerIdentification",        m_layerIdentification);
 }
 
-// destructor
-Acts::PassiveLayerBuilder::~PassiveLayerBuilder()
-{}
-
-// initialize
-StatusCode Acts::PassiveLayerBuilder::initialize()
-{
-    MSG_DEBUG( "initialize()" );
-    //Tool needs to be initialized
-    if (!AlgToolBase::initialize()) return StatusCode::FAILURE;
-    return constructLayers();
-}
-
-//finalize
-StatusCode Acts::PassiveLayerBuilder::finalize()
-{
-    MSG_DEBUG( "finalize()" );
-    return StatusCode::SUCCESS;
-}
-
-
-StatusCode Acts::PassiveLayerBuilder::constructLayers() 
+bool Acts::PassiveLayerBuilder::constructLayers() const
 {
     
     // the central layers
     size_t numcLayers = m_centralLayerRadii.size();
     if (numcLayers){
-        MSG_DEBUG("Configured to build " << numcLayers << " passive central layers.");
+        // MSG_DEBUG("Configured to build " << numcLayers << " passive central layers.");
         m_cLayers = new Acts::LayerVector;
         m_cLayers->reserve(numcLayers);
         // loop through
         for (size_t icl = 0; icl < numcLayers; ++icl){
             // some screen output
-            MSG_VERBOSE("- build layer " << icl << " with radius = " << m_centralLayerRadii[icl] << " and halfZ = " << m_centralLayerHalflengthZ[icl]);
+            // MSG_VERBOSE("- build layer " << icl << " with radius = " << m_centralLayerRadii[icl] << " and halfZ = " << m_centralLayerHalflengthZ[icl]);
             // create the layer and push it back
             std::shared_ptr<const CylinderBounds> cBounds(new CylinderBounds(m_centralLayerRadii[icl],m_centralLayerHalflengthZ[icl]));
             // create the layer
@@ -109,7 +63,7 @@ StatusCode Acts::PassiveLayerBuilder::constructLayers()
     // pos/neg layers
     size_t numpnLayers = m_posnegLayerPositionZ.size();
     if (numpnLayers){
-        MSG_DEBUG("Configured to build 2 * " << numpnLayers << " passive positive/negative side layers.");
+        // MSG_DEBUG("Configured to build 2 * " << numpnLayers << " passive positive/negative side layers.");
         m_pLayers = new Acts::LayerVector;
         m_pLayers->reserve(numpnLayers);
         m_nLayers = new Acts::LayerVector;
@@ -117,8 +71,8 @@ StatusCode Acts::PassiveLayerBuilder::constructLayers()
         // loop through
         for (size_t ipnl = 0; ipnl < numpnLayers; ++ipnl){
             // some screen output
-            MSG_VERBOSE("- build layers " << (2*ipnl) << " and "<<  (2*ipnl)+1 << " at +/- z = " << m_posnegLayerPositionZ[ipnl] 
-                                          << " and rMin/rMax = " << m_posnegLayerRmin[ipnl] << " / " << m_posnegLayerRmax[ipnl]);
+            // MSG_VERBOSE("- build layers " << (2*ipnl) << " and "<<  (2*ipnl)+1 << " at +/- z = " << m_posnegLayerPositionZ[ipnl] 
+            //                               << " and rMin/rMax = " << m_posnegLayerRmin[ipnl] << " / " << m_posnegLayerRmax[ipnl]);
             // create the share disc bounds
             std::shared_ptr<const DiscBounds> dBounds(new RadialBounds(m_posnegLayerRmin[ipnl], m_posnegLayerRmax[ipnl]));
             // create the layer transforms
@@ -149,5 +103,7 @@ StatusCode Acts::PassiveLayerBuilder::constructLayers()
             m_pLayers->push_back(pLayer);
         }
     }
-    return StatusCode::SUCCESS;
+
+    m_constructionFlag = true;
+    return true;
 }

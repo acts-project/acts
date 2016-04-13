@@ -6,7 +6,7 @@
 #define ACTS_GEOMETRYUTILS_APPROACHDESCRIPTOR_H 1
 
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 // Gometry module
 #include "GeometryUtils/Intersection.h"
 

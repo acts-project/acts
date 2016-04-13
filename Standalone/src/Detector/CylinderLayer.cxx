@@ -13,7 +13,7 @@
 #include "Surfaces/CylinderBounds.h"
 #include "GeometryUtils/BinUtility.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 
         
 Acts::CylinderLayer::CylinderLayer(std::shared_ptr<Acts::Transform3D> transform,

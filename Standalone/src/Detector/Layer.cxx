@@ -8,7 +8,7 @@
 #include "Material/SurfaceMaterial.h"
 #include "GeometryUtils/BinUtility.h"
 #include "GeometryUtils/ApproachDescriptor.h"
-#include "TrackParameters/TrackParameters.h"
+#include "EventData/TrackParameters.h"
 
 Acts::Layer::Layer() :
   m_nextLayers( NextLayers(nullptr,nullptr) ),

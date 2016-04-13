@@ -5,9 +5,9 @@
 #ifndef ACTS_GEOMETRYINTERFACES_ITRACKINGVOLUMEBUILDER_H
 #define ACTS_GEOMETRYINTERFACES_ITRACKINGVOLUMEBUILDER_H 1
 
-// Gaudi
-#include "GaudiKernel/IAlgTool.h"
 #include <tuple>
+#include <memory>
+#include <vector>
 
 namespace Acts {
 
@@ -22,9 +22,6 @@ namespace Acts {
     typedef std::tuple< VolumePtr, VolumePtr, VolumePtr> VolumeTriple;
       
   
-  /** Interface ID for ITrackingVolumeBuilders*/  
-  static const InterfaceID IID_ITrackingVolumeBuilder("ITrackingVolumeBuilder", 1, 0);
-  
   /** @class ITrackingVolumeBuilder
   
      Interface class ITrackingVolumeBuilders & inherits from IAlgTool
@@ -37,23 +34,18 @@ namespace Acts {
   
      @author Andreas.Salzburger@cern.ch
     */
-  class ITrackingVolumeBuilder : virtual public IAlgTool {
+  class ITrackingVolumeBuilder
+  {
     
-    public:
-      /**Virtual destructor*/
-      virtual ~ITrackingVolumeBuilder(){}
-      
-//       DeclareInterfaceID(ITrackingVolumeBuilder, 1, 0);
-      /** AlgTool and IAlgTool interface methods */
-      static const InterfaceID& interfaceID() { return IID_ITrackingVolumeBuilder; }
+  public:
+    /**Virtual destructor*/
+    virtual ~ITrackingVolumeBuilder() = default;
 
-      /** TrackingVolumeBuilder interface method - returns the volumes of Volumes */
-      virtual TrackingVolumePtr trackingVolume(TrackingVolumePtr insideVolume = nullptr,
-                                               VolumeBoundsPtr outsideBounds = nullptr,
-                                               const LayerTriple* layerTriple = nullptr,
-                                               const VolumeTriple* volumeTriple = nullptr) const = 0;
-      
-                       
+    /** TrackingVolumeBuilder interface method - returns the volumes of Volumes */
+    virtual TrackingVolumePtr trackingVolume(TrackingVolumePtr insideVolume = nullptr,
+					     VolumeBoundsPtr outsideBounds = nullptr,
+					     const LayerTriple* layerTriple = nullptr,
+					     const VolumeTriple* volumeTriple = nullptr) const = 0;                       
   };
 
 } // end of namespace

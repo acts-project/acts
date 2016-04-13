@@ -5,9 +5,9 @@
 // Geometry module
 #include "Detector/ConeLayer.h"
 #include "Surfaces/ConeBounds.h"
-#include "TrackParameters/TrackParameters.h"
+#include "EventData/TrackParameters.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
                 
 Acts::ConeLayer::ConeLayer(std::shared_ptr<Acts::Transform3D> transform,
                           std::shared_ptr<const Acts::ConeBounds> cbounds,

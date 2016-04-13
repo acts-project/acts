@@ -3,7 +3,7 @@
 
 // ACTS includes
 #include "Surfaces/Surface.h"
-#include "CoreUtils/ParameterDefinitions.h"
+#include "Core/ParameterDefinitions.h"
 
 #ifdef ACTS_COORDINATE_TRANSFORM_PLUGIN
 

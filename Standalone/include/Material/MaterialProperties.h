@@ -7,8 +7,6 @@
 
 // Geometry module
 #include "Material/Material.h"
-// Gaudi
-#include "GaudiKernel/MsgStream.h"
 // STD/STL
 #include <iostream>
 
@@ -165,8 +163,7 @@ namespace Acts {
   inline float MaterialProperties::dEdX() const
     { return m_material.dEdX; }
 
-  /**Overload of << operator for both, MsgStream and std::ostream for debug output*/ 
-  MsgStream& operator<<( MsgStream& sl, const MaterialProperties& mprop);
+  /**Overload of << operator for std::ostream for debug output*/ 
   std::ostream& operator<<( std::ostream& sl, const MaterialProperties& mprop);
 
   /** Useful typedefs */

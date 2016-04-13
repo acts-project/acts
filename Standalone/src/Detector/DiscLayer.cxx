@@ -14,7 +14,7 @@
 #include "Surfaces/RadialBounds.h"
 #include "GeometryUtils/BinUtility.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 
 Acts::DiscLayer::DiscLayer(std::shared_ptr<Acts::Transform3D> transform,
                           std::shared_ptr<const Acts::DiscBounds> dbounds,

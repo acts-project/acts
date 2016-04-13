@@ -5,10 +5,8 @@
 #ifndef ACTS_DETECTOR_LAYER_H
 #define ACTS_DETECTOR_LAYER_H 1
 
-class MsgStream;
-
 // Core moudle
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 // Geometry module
 #include "GeometryUtils/GeometryObject.h"
 #include "GeometryUtils/ApproachDescriptor.h"
@@ -17,8 +15,8 @@ class MsgStream;
 #include "GeometryUtils/Intersection.h"
 #include "Volumes/AbstractVolume.h"
 // EventData module
-#include "TrackParameters/TrackParameters.h"
-#include "NeutralParameters/NeutralParameters.h"
+#include "EventData/TrackParameters.h"
+#include "EventData/NeutralParameters.h"
 
 namespace Acts {
   

@@ -13,10 +13,9 @@
 #endif
 
 // Core module
-#include "CoreInterfaces/AlgToolBase.h"
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 // Geometry module
-#include "GeometryInterfaces/ILayerArrayCreator.h"
+#include "Tools/ILayerArrayCreator.h"
 // STL
 #include <algorithm>
 
@@ -38,23 +37,14 @@ namespace Acts {
       @author Andreas.Salzburger@cern.ch   
      */
 
-    class LayerArrayCreator : public AlgToolBase, virtual public ILayerArrayCreator {
+    class LayerArrayCreator : public ILayerArrayCreator {
 
       public:
         /** Constructor */
-        LayerArrayCreator(const std::string&,const std::string&,const IInterface*);
+        LayerArrayCreator() = default;
         
         /** Destructor */
-        virtual ~LayerArrayCreator();
-
-        /** AlgTool and IAlgTool interface methods */
-        static const InterfaceID& interfaceID() { return IID_ILayerArrayCreator; }
-
-        /** AlgTool initialize method */
-        virtual StatusCode initialize() override;
-        
-        /** AlgTool finalize method */
-        virtual StatusCode finalize() override;
+        virtual ~LayerArrayCreator() = default;
 
         /** LayerArraycreator interface method 
            - we assume the layer thickness to be used together with the binning value */

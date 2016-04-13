@@ -9,7 +9,7 @@
 #include "Detector/PlaneLayer.h"
 #include "Surfaces/SubtractedPlaneSurface.h"
 // Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "Core/AlgebraDefinitions.h"
 
 namespace Acts {
 

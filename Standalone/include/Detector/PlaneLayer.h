@@ -11,7 +11,7 @@ class MsgStream;
 #include "Detector/Layer.h"
 #include "Surfaces/PlaneSurface.h"
 // Core module
-#include "EventDataUtils/PropDirection.h"
+#include "Core/PropDirection.h"
 // STL sorting
 #include <algorithm>
 
