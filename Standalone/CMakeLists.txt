@@ -41,3 +41,5 @@ endforeach()
 install (FILES ${FILES_TO_DEPLOY} DESTINATION ACTS)
 install (DIRECTORY ${DIRS_TO_DEPLOY} DESTINATION ACTS)
 install (TARGETS ACTSCore DESTINATION lib)
+
+add_subdirectory (bin)
