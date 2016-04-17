@@ -54,12 +54,6 @@ std::string Acts::GlueVolumesDescriptor::screenOutput() const
 }
 
 
-MsgStream& Acts::operator << ( MsgStream& sl, const Acts::GlueVolumesDescriptor& gvd)
-{
-    sl << gvd.screenOutput();
-    return sl;
-}
-
 std::ostream& Acts::operator << ( std::ostream& sl, const GlueVolumesDescriptor& gvd)
 { 
    sl << gvd.screenOutput();

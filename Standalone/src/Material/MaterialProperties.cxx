@@ -103,25 +103,6 @@ void Acts::MaterialProperties::setDeDx(float dEdX) const
     m_material.dEdX = dEdX;
 }
 
-MsgStream& Acts::operator << ( MsgStream& sl, const Acts::MaterialProperties& mprop)
-{
-    sl << "Acts::MaterialProperties: "                                                 << std::endl;
-    sl << "   - thickness/X0                          = " << mprop.thicknessInX0()    << std::endl; 
-    sl << "   - thickness                       [mm]  = " << mprop.thickness()        << std::endl;
-    sl << "   - radiation length X0             [mm]  = " << mprop.x0()               << std::endl;
-    sl << "   - nuclear interaction length L0   [mm]  = " << mprop.l0()               << std::endl;
-    sl << "   - average material Z/A*rho [gram/mm^3]  = " << mprop.zOverAtimesRho()   << std::endl;
-    /*  interface not finalized
-    if (mprop.material().composition){
-        sl << "   - material composition from " << mprop.material().composition->size() << " elements " << std::endl;
-        sl << "       listing them (prob. ordereded ) : " << std::endl;
-        for ( auto& eIter : (*mprop.material().composition) )
-            sl << "         -> Z : " << eIter.element() << "( fraction : "  <<  eIter.fraction() << " )" << std::endl;
-    }
-    */
-    return sl;
-}
-
 std::ostream& Acts::operator << ( std::ostream& sl, const MaterialProperties& mprop)
 { 
     sl << "Acts::MaterialProperties: "                                                 << std::endl;

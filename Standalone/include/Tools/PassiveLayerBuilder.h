@@ -27,7 +27,7 @@ namespace Acts {
     PassiveLayerBuilder();
         
     /** destructor */
-    virtual ~PassiveLayerBuilder();
+    virtual ~PassiveLayerBuilder() = default;
         
     /** LayerBuilder interface method - returning the layers at negative side */
     const LayerVector* negativeLayers() const override; 
