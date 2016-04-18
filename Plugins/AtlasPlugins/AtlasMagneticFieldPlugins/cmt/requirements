@@ -1,9 +1,0 @@
-package AtlasMagneticFieldPlugins
-
-manager Andreas Salzburger <Andreas.Salzburger@cern.ch>
-
-use AtlasPolicy           AtlasPolicy-*
-use MagFieldInterfaces    MagFieldInterfaces-*  MagneticField
-
-private
-apply_pattern cmake_add_command command=metalibrary
