@@ -23,7 +23,7 @@ include_directories (${PROJECT_SOURCE_DIR}/include)
 
 # specify compile flags
 add_definitions (-std=c++14)
-add_definitions (-DACTS_PARAMETER_DEFINITIONS_PLUGIN=\"Core/DefaultParameterDefinitions.h\")
+add_definitions (-DACTS_PARAMETER_DEFINITIONS_PLUGIN=\"ACTS/Utilities/detail/DefaultParameterDefinitions.h\")
 
 # get list of all source files
 file (GLOB src_files "src/*/*.cxx")
@@ -31,23 +31,13 @@ add_library(ACTSCore SHARED ${src_files})
 
 add_subdirectory (bin)
 
-file(GLOB DEPLOY_FILES_AND_DIRS "${PROJECT_SOURCE_DIR}/include/*")
-foreach(ITEM ${DEPLOY_FILES_AND_DIRS})
-  IF( IS_DIRECTORY "${ITEM}" )
-    LIST( APPEND DIRS_TO_DEPLOY "${ITEM}" )
-  ELSE()
-    LIST( APPEND FILES_TO_DEPLOY "${ITEM}" )
-  ENDIF()
-endforeach()
-
 install (TARGETS ACTSCore EXPORT ACTSTargets
 	 LIBRARY DESTINATION lib
 	 ARCHIVE DESTINATION lib
 	 RUNTIME DESTINATION bin
-	 INCLUDES DESTINATION ACTS)
+	 INCLUDES DESTINATION include)
 
-install (FILES ${FILES_TO_DEPLOY} DESTINATION ACTS)
-install (DIRECTORY ${DIRS_TO_DEPLOY} DESTINATION ACTS)
+install (DIRECTORY include/ACTS DESTINATION include)
 
 include(GenerateExportHeader)
 generate_export_header (ACTSCore)
