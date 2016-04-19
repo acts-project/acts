@@ -30,6 +30,7 @@ file (GLOB src_files "src/*/*.cxx")
 add_library(ACTSCore SHARED ${src_files})
 
 add_subdirectory (bin)
+add_subdirectory (doc)
 
 install (TARGETS ACTSCore EXPORT ACTSTargets
 	 LIBRARY DESTINATION lib
