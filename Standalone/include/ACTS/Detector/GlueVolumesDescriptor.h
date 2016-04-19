@@ -6,8 +6,8 @@
 #define ACTS_DETECTOR_GLUEVOLUMESDESCRIPTOR_H 1
 
 // Geometry module
-#include "Volumes/BoundarySurfaceFace.h"
-#include "GeometryUtils/BinnedArray.h"
+#include "ACTS/Volumes/BoundarySurfaceFace.h"
+#include "ACTS/GeometryUtils/BinnedArray.h"
 // STL
 #include <map>
 #include <vector>

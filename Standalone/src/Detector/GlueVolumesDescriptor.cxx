@@ -3,8 +3,8 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "Detector/GlueVolumesDescriptor.h"
-#include "Detector/TrackingVolume.h"
+#include "ACTS/Detector/GlueVolumesDescriptor.h"
+#include "ACTS/Detector/TrackingVolume.h"
 
 Acts::GlueVolumesDescriptor::GlueVolumesDescriptor(const std::map<BoundarySurfaceFace, std::shared_ptr<const TrackingVolumeArray> >& gvs) :
  m_glueVolumes(gvs)

@@ -2,9 +2,9 @@
 #define ACTS_ALGEBRADEFINITIONS_H
 
 // API addons
-#define EIGEN_MATRIXBASE_PLUGIN "Core/Algebra/MatrixBasePlugin.h"
-#define EIGEN_MATRIX_PLUGIN "Core/Algebra/MatrixPlugin.h"
-#define EIGEN_TRANSFORM_PLUGIN "Core/Algebra/TransformPlugin.h"
+#define EIGEN_MATRIXBASE_PLUGIN "ACTS/Utilities/detail/MatrixBasePlugin.h"
+#define EIGEN_MATRIX_PLUGIN "ACTS/Utilities/detail/MatrixPlugin.h"
+#define EIGEN_TRANSFORM_PLUGIN "ACTS/Utilities/detail/TransformPlugin.h"
 
 // external include(s)
 #include <Eigen/Dense>

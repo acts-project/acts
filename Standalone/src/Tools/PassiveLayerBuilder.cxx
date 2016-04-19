@@ -3,15 +3,15 @@
 ///////////////////////////////////////////////////////////////////
 
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
-#include "Tools/PassiveLayerBuilder.h"
-#include "Detector/CylinderLayer.h"
-#include "Detector/DiscLayer.h"
-#include "Surfaces/CylinderBounds.h"
-#include "Surfaces/RadialBounds.h"
-#include "Material/HomogeneousSurfaceMaterial.h"
-#include "Material/MaterialProperties.h"
+#include "ACTS/Tools/PassiveLayerBuilder.h"
+#include "ACTS/Layers/CylinderLayer.h"
+#include "ACTS/Layers/DiscLayer.h"
+#include "ACTS/Surfaces/CylinderBounds.h"
+#include "ACTS/Surfaces/RadialBounds.h"
+#include "ACTS/Material/HomogeneousSurfaceMaterial.h"
+#include "ACTS/Material/MaterialProperties.h"
 
 
 // constructor

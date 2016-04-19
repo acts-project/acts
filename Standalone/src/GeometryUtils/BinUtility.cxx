@@ -4,7 +4,7 @@
 ///////////////////////////////////////////////////////////////////
 
 //Trk
-#include "GeometryUtils/BinUtility.h"
+#include "ACTS/GeometryUtils/BinUtility.h"
 
 // STD/STL
 #include <iostream>

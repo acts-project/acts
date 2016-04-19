@@ -2,7 +2,7 @@
 // EllipseBounds.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "Surfaces/EllipseBounds.h"
+#include "ACTS/Surfaces/EllipseBounds.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>

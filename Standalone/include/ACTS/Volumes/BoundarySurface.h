@@ -6,13 +6,13 @@
 #define ACTS_VOLUMES_BOUNDARYSURFACE_H
 
 // Geometry module
-#include "Volumes/Volume.h"
-#include "Volumes/BoundarySurfaceFace.h"
-#include "GeometryUtils/BinnedArray.h"
-#include "GeometryUtils/BinnedArray0D.h"
+#include "ACTS/Volumes/Volume.h"
+#include "ACTS/Volumes/BoundarySurfaceFace.h"
+#include "ACTS/GeometryUtils/BinnedArray.h"
+#include "ACTS/GeometryUtils/BinnedArray0D.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
-#include "Core/PropDirection.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/PropDirection.h"
 
 
 namespace Acts {

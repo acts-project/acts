@@ -2,8 +2,8 @@
 #define ACTS_COORDINATETRANSFORMATIONS_H 1
 
 // ACTS includes
-#include "Surfaces/Surface.h"
-#include "Core/ParameterDefinitions.h"
+#include "ACTS/Surface.h"
+#include "ACTS/Utilities/ParameterDefinitions.h"
 
 #ifdef ACTS_COORDINATE_TRANSFORM_PLUGIN
 

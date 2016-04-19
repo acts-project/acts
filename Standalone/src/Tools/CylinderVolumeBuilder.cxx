@@ -3,16 +3,16 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "Tools/CylinderVolumeBuilder.h"
-#include "Tools/ITrackingVolumeHelper.h"
-#include "Detector/TrackingVolume.h"
-#include "Detector/CylinderLayer.h"
-#include "Detector/DiscLayer.h"
-#include "Volumes/CylinderVolumeBounds.h"
-#include "Surfaces/CylinderBounds.h"
-#include "Surfaces/RadialBounds.h"
+#include "ACTS/Tools/CylinderVolumeBuilder.h"
+#include "ACTS/Tools/ITrackingVolumeHelper.h"
+#include "ACTS/Detector/TrackingVolume.h"
+#include "ACTS/Layers/CylinderLayer.h"
+#include "ACTS/Layers/DiscLayer.h"
+#include "ACTS/Volumes/CylinderVolumeBounds.h"
+#include "ACTS/Surfaces/CylinderBounds.h"
+#include "ACTS/Surfaces/RadialBounds.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 // constructor
 Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(const std::string& name):

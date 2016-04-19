@@ -3,8 +3,8 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "Volumes/Volume.h"
-#include "Volumes/VolumeBounds.h"
+#include "ACTS/Volumes/Volume.h"
+#include "ACTS/Volumes/VolumeBounds.h"
 // STD/STL
 #include <iostream>
 

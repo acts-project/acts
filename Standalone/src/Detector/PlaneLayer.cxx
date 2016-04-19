@@ -3,12 +3,12 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "Detector/PlaneLayer.h"
-#include "Detector/GenericApproachDescriptor.h"
-#include "EventData/TrackParameters.h"
+#include "ACTS/Layers/PlaneLayer.h"
+#include "ACTS/Detector/GenericApproachDescriptor.h"
+#include "ACTS/TrackParameters.h"
 // CLHEP
-#include "Core/AlgebraDefinitions.h"
-#include "Core/AlgebraHelper.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraHelper.h"
   
 Acts::PlaneLayer::PlaneLayer(std::shared_ptr<Acts::Transform3D> transform,
                             std::shared_ptr<const Acts::PlanarBounds>& pbounds,

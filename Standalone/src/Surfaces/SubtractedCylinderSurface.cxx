@@ -2,7 +2,7 @@
 // SubtractedCylinderSurface.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "Surfaces/SubtractedCylinderSurface.h"
+#include "ACTS/Surfaces/SubtractedCylinderSurface.h"
 
 // default constructor
 Acts::SubtractedCylinderSurface::SubtractedCylinderSurface() :

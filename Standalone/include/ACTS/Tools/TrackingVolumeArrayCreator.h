@@ -6,10 +6,10 @@
 #define ACTS_GEOMETRYTOOLS_TRACKINGVOLUMEARRAYCREATOR_H
 
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
-#include "Tools/ITrackingVolumeArrayCreator.h"
-#include "GeometryUtils/BinnedArray.h"
+#include "ACTS/Tools/ITrackingVolumeArrayCreator.h"
+#include "ACTS/GeometryUtils/BinnedArray.h"
 // STL
 #include <algorithm>
 

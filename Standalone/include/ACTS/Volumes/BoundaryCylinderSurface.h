@@ -6,10 +6,10 @@
 #define ACTS_VOLUMES_BOUNDARYCYLIMDERSURFACE_H 1
 
 // Geometry module
-#include "Surfaces/CylinderSurface.h"
-#include "Volumes/BoundarySurface.h"
+#include "ACTS/Surfaces/CylinderSurface.h"
+#include "ACTS/Volumes/BoundarySurface.h"
 // EventData module
-#include "Core/PropDirection.h"
+#include "ACTS/Utilities/PropDirection.h"
 
 namespace Acts {
 

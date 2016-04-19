@@ -6,12 +6,12 @@
 #define ACTS_SURFACE_SDISCSURFACE_H 1
 
 // Geometry module
-#include "Surfaces/Surface.h"
-#include "Surfaces/DiscBounds.h"
-#include "Surfaces/NoBounds.h"
+#include "ACTS/Surface.h"
+#include "ACTS/Surfaces/DiscBounds.h"
+#include "ACTS/Surfaces/NoBounds.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
-#include "Core/Identifier.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Identifier.h"
 
 namespace Acts {
 

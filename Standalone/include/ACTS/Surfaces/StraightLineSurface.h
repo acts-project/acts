@@ -6,12 +6,12 @@
 #define ACTS_SURFACESSTRAIGHTLINESURFACE_H
 
 // Geometry module
-#include "Surfaces/Surface.h"
-#include "Surfaces/CylinderBounds.h"
-#include "Surfaces/NoBounds.h"
+#include "ACTS/Surface.h"
+#include "ACTS/Surfaces/CylinderBounds.h"
+#include "ACTS/Surfaces/NoBounds.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
-#include "Core/Identifier.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Identifier.h"
 
 namespace Acts {
 

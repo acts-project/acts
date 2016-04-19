@@ -3,16 +3,16 @@
 ///////////////////////////////////////////////////////////////////
 
 // eometry module
-#include "Surfaces/PlaneSurface.h"
-#include "Surfaces/PlanarBounds.h"
-#include "Surfaces/RectangleBounds.h"
-#include "Surfaces/TriangleBounds.h"
-#include "Surfaces/TrapezoidBounds.h"
-#include "Surfaces/DiamondBounds.h"
-#include "Surfaces/EllipseBounds.h"
-#include "Surfaces/NoBounds.h"
+#include "ACTS/Surfaces/PlaneSurface.h"
+#include "ACTS/Surfaces/PlanarBounds.h"
+#include "ACTS/Surfaces/RectangleBounds.h"
+#include "ACTS/Surfaces/TriangleBounds.h"
+#include "ACTS/Surfaces/TrapezoidBounds.h"
+#include "ACTS/Surfaces/DiamondBounds.h"
+#include "ACTS/Surfaces/EllipseBounds.h"
+#include "ACTS/Surfaces/NoBounds.h"
 // Core module
-#include "Core/Identifier.h"
+#include "ACTS/Utilities/Identifier.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>

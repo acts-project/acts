@@ -2,7 +2,7 @@
 // DiamondBounds.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "Surfaces/DiamondBounds.h"
+#include "ACTS/Surfaces/DiamondBounds.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>

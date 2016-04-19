@@ -6,10 +6,10 @@
 #define ACTS_VOLUMES_COMBINEDVOLUMEBOUNDS_H 1
 
 // Geometry module
-#include "Volumes/VolumeBounds.h"
-#include "Volumes/Volume.h"
+#include "ACTS/Volumes/VolumeBounds.h"
+#include "ACTS/Volumes/Volume.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

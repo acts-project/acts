@@ -6,9 +6,9 @@
 #define ACTS_GEOMETRYINTERFACES_ITRACKINGVOLUMEHELPERH 1
 
 // Geometry module
-#include "GeometryUtils/BinningType.h"
+#include "ACTS/GeometryUtils/BinningType.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 //STL
 #include <string>
 #include <vector>

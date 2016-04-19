@@ -3,10 +3,10 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "Volumes/DoubleTrapezoidVolumeBounds.h"
-#include "Surfaces/PlaneSurface.h"
-#include "Surfaces/DiamondBounds.h"
-#include "Surfaces/RectangleBounds.h"
+#include "ACTS/Volumes/DoubleTrapezoidVolumeBounds.h"
+#include "ACTS/Surfaces/PlaneSurface.h"
+#include "ACTS/Surfaces/DiamondBounds.h"
+#include "ACTS/Surfaces/RectangleBounds.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>

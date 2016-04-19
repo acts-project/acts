@@ -6,7 +6,7 @@
 #define ACTS_SURFACESDISCBOUNDS_H
 
 // Trk included
-#include "Surfaces/SurfaceBounds.h"
+#include "ACTS/Surfaces/SurfaceBounds.h"
 
 namespace Acts {
 

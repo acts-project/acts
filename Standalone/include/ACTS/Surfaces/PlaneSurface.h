@@ -6,12 +6,12 @@
 #define ACTS_SURFACES_PLANESURFACE_H 1
 
 // Geometry module
-#include "Surfaces/Surface.h"
-#include "Surfaces/PlanarBounds.h"
-#include "Surfaces/NoBounds.h"
+#include "ACTS/Surface.h"
+#include "ACTS/Surfaces/PlanarBounds.h"
+#include "ACTS/Surfaces/NoBounds.h"
 // Core Module
-#include "Core/AlgebraDefinitions.h"
-#include "Core/Identifier.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Identifier.h"
 
 namespace Acts {
 

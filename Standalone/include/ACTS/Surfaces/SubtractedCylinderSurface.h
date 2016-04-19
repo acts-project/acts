@@ -6,12 +6,12 @@
 #define ACTS_SURFACES_SUBTRACTEDCYLINDERSURFACE_H 1
 
 // Geometry module
-#include "Surfaces/CylinderSurface.h"
-#include "GeometryUtils/AreaExcluder.h"
+#include "ACTS/Surfaces/CylinderSurface.h"
+#include "ACTS/GeometryUtils/AreaExcluder.h"
 // EventData module
-#include "Core/ParameterDefinitions.h"
+#include "ACTS/Utilities/ParameterDefinitions.h"
 // Geometry & Math
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 class Identifier;
 

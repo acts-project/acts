@@ -6,11 +6,11 @@
 #define ACTS_MATERIAL_SURFACEMATERIAL_H
 
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
-#include "Material/MaterialProperties.h"
+#include "ACTS/Material/MaterialProperties.h"
 // EventData module
-#include "Core/PropDirection.h"
+#include "ACTS/Utilities/PropDirection.h"
 // STD/STL
 #include <vector>
 #include <memory>

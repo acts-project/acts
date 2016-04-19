@@ -2,7 +2,7 @@
 // SubtractedPlaneSurface.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "Surfaces/SubtractedPlaneSurface.h"
+#include "ACTS/Surfaces/SubtractedPlaneSurface.h"
 
 // default constructor
 Acts::SubtractedPlaneSurface::SubtractedPlaneSurface() :

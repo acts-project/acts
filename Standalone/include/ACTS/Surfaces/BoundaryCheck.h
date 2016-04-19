@@ -9,8 +9,8 @@
 #include <cmath>
 
 // Core module
-#include "Core/ParameterDefinitions.h"
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/ParameterDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

@@ -3,15 +3,15 @@
 ///////////////////////////////////////////////////////////////////
 
 // Trk
-#include "Surfaces/DiscSurface.h"
-#include "Surfaces/RadialBounds.h"
-#include "Surfaces/DiscTrapezoidalBounds.h"
+#include "ACTS/Surfaces/DiscSurface.h"
+#include "ACTS/Surfaces/RadialBounds.h"
+#include "ACTS/Surfaces/DiscTrapezoidalBounds.h"
 
 // STD/STL
 #include <iostream>
 #include <iomanip>
 //Amg
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 Acts::NoBounds Acts::DiscSurface::s_boundless;
 

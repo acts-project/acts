@@ -6,10 +6,10 @@
 #define ACTS_GEOMETRYUTILS_GEOMETRYOBJECT_H
 
 // Geometry module
-#include "GeometryUtils/GeometryID.h"
-#include "GeometryUtils/BinningType.h"
+#include "ACTS/GeometryUtils/GeometryID.h"
+#include "ACTS/GeometryUtils/BinningType.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 
 namespace Acts {

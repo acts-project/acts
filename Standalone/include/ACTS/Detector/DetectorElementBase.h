@@ -11,8 +11,8 @@
 #else
 
 // Algebra and Identifier
-#include "Core/Identifier.h"
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Identifier.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 #include <memory>
 
 namespace Acts

@@ -7,8 +7,8 @@
 #include <utility>
 
 // ACTS includes
-#include "Core/AlgebraDefinitions.h"
-#include "Core/ParameterDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/ParameterDefinitions.h"
 
 namespace Acts
 {
@@ -427,6 +427,6 @@ namespace Acts
   };
 } // end of namespace Acts
 
-#include "EventData/ParameterSet.icc"
+#include "ACTS/EventData/detail/ParameterSet.icc"
 
 #endif // ACTS_PARAMETERSET_H

@@ -5,7 +5,7 @@
 #ifndef EVENTPRIMITIVESTOSTRINGCONVERTER_H_
 #define EVENTPRIMITIVESTOSTRINGCONVERTER_H_
 
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 #include <iostream>
 #include <iomanip>
 #include <string>

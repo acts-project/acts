@@ -2,8 +2,8 @@
 // HomogeneousSurfaceMaterial.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "Material/HomogeneousSurfaceMaterial.h"
-#include "Material/MaterialProperties.h"
+#include "ACTS/Material/HomogeneousSurfaceMaterial.h"
+#include "ACTS/Material/MaterialProperties.h"
 
 Acts::HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial() :
   Acts::SurfaceMaterial(),

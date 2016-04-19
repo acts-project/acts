@@ -8,11 +8,11 @@
 #include<cfloat>
 
 // Trk
-#include "Surfaces/SurfaceBounds.h"
-#include "GeometryUtils/PrecisionDefinition.h"
+#include "ACTS/Surfaces/SurfaceBounds.h"
+#include "ACTS/GeometryUtils/PrecisionDefinition.h"
 // Amg
-#include "Core/AlgebraDefinitions.h"
-#include "Core/ParameterDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/ParameterDefinitions.h"
 
 namespace Acts {
 

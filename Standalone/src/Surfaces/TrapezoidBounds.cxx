@@ -2,7 +2,7 @@
 // TrapezoidBounds.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "Surfaces/TrapezoidBounds.h"
+#include "ACTS/Surfaces/TrapezoidBounds.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>

@@ -6,8 +6,8 @@
 #define ACTS_GEOMETRYINTERFACES_ITRACKINGVOLUMEARRAYCREATOR_H 1
 
 // Geometry module
-#include "GeometryUtils/BinnedArray.h"
-#include "GeometryUtils/BinningType.h"
+#include "ACTS/GeometryUtils/BinnedArray.h"
+#include "ACTS/GeometryUtils/BinningType.h"
 // STL
 #include <vector>
 #include <memory>

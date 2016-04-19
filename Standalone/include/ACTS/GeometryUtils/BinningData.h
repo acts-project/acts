@@ -5,9 +5,9 @@
 #define ACTS_GEOMETRYUTILS_BINNINGDATA_H 1
 
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
-#include "GeometryUtils/BinningType.h"
+#include "ACTS/GeometryUtils/BinningType.h"
 
 #include <vector>
 #include <utility>

@@ -6,10 +6,10 @@
 #define ACTS_SURFACES_INVALIDBOUNDS_H
 
 // Geometry module
-#include "Core/ParameterDefinitions.h"
-#include "Surfaces/SurfaceBounds.h"
+#include "ACTS/Utilities/ParameterDefinitions.h"
+#include "ACTS/Surfaces/SurfaceBounds.h"
 // EventData module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

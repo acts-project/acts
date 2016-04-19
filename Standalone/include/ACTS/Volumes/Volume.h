@@ -8,10 +8,10 @@
 #include <memory>
 
 // Geometry module
-#include "GeometryUtils/GeometryStatics.h"
-#include "GeometryUtils/GeometryObject.h"
+#include "ACTS/GeometryUtils/GeometryStatics.h"
+#include "ACTS/GeometryUtils/GeometryObject.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

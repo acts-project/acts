@@ -2,7 +2,7 @@
 // SubtractedPlaneLayer.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "Detector/SubtractedPlaneLayer.h"
+#include "ACTS/Layers/SubtractedPlaneLayer.h"
 
 Acts::SubtractedPlaneLayer::SubtractedPlaneLayer(const SubtractedPlaneSurface* subtrPlaneSurf,
                                                 double thickness,

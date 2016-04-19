@@ -13,10 +13,10 @@
 #endif
 
 // Geometry module
-#include "Tools/ITrackingVolumeHelper.h"
-#include "Volumes/BoundarySurfaceFace.h"
-#include "Tools/ILayerArrayCreator.h"
-#include "Tools/ITrackingVolumeArrayCreator.h"
+#include "ACTS/Tools/ITrackingVolumeHelper.h"
+#include "ACTS/Volumes/BoundarySurfaceFace.h"
+#include "ACTS/Tools/ILayerArrayCreator.h"
+#include "ACTS/Tools/ITrackingVolumeArrayCreator.h"
 // STL
 #include <string>
 #include <vector>

@@ -6,10 +6,10 @@
 #define ACTS_VOLUMES_ABSTRACTVOLUME_H
 
 // Geometry module
-#include "Volumes/Volume.h"
-#include "Volumes/BoundarySurface.h"
+#include "ACTS/Volumes/Volume.h"
+#include "ACTS/Volumes/BoundarySurface.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 // STD/STL
 #include <vector>
 

@@ -6,7 +6,7 @@
 #define ACTS_DETECTOR_GENERICAPPROPACHDESCRIPTOR_H 1
 
 // Geometry module
-#include "GeometryUtils/ApproachDescriptor.h"
+#include "ACTS/GeometryUtils/ApproachDescriptor.h"
 
 namespace Acts {
   

@@ -6,7 +6,7 @@
 #define ACTS_GEOMETRYUTILS_AREAEXCLUDER_H 1
 
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

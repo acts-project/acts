@@ -6,10 +6,10 @@
 #define TRKGEOMETRYSURFACES_SUBTRACTEDPLANESURFACE_H
 
 // Geometry module
-#include "Surfaces/PlaneSurface.h"
-#include "GeometryUtils/AreaExcluder.h"
+#include "ACTS/Surfaces/PlaneSurface.h"
+#include "ACTS/GeometryUtils/AreaExcluder.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 class Identifier;
 

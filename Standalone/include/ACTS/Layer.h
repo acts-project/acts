@@ -6,17 +6,17 @@
 #define ACTS_DETECTOR_LAYER_H 1
 
 // Core moudle
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
-#include "GeometryUtils/GeometryObject.h"
-#include "GeometryUtils/ApproachDescriptor.h"
-#include "GeometryUtils/OverlapDescriptor.h"
-#include "GeometryUtils/BinnedArray.h"
-#include "GeometryUtils/Intersection.h"
-#include "Volumes/AbstractVolume.h"
+#include "ACTS/GeometryUtils/GeometryObject.h"
+#include "ACTS/GeometryUtils/ApproachDescriptor.h"
+#include "ACTS/GeometryUtils/OverlapDescriptor.h"
+#include "ACTS/GeometryUtils/BinnedArray.h"
+#include "ACTS/GeometryUtils/Intersection.h"
+#include "ACTS/Volumes/AbstractVolume.h"
 // EventData module
-#include "EventData/TrackParameters.h"
-#include "EventData/NeutralParameters.h"
+#include "ACTS/TrackParameters.h"
+#include "ACTS/NeutralParameters.h"
 
 namespace Acts {
   

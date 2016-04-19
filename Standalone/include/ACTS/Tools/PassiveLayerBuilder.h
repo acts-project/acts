@@ -6,8 +6,8 @@
 #define ACTS_GEOMETRYTOOLS_PASSIVELAYERBUILDER_H 1
 
 // Geoemtry module
-#include "Tools/ILayerBuilder.h"
-#include "Detector/Layer.h"
+#include "ACTS/Tools/ILayerBuilder.h"
+#include "ACTS/Layer.h"
 
 namespace Acts {
     

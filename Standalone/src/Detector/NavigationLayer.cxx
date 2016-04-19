@@ -3,8 +3,8 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "Detector/NavigationLayer.h"
-#include "Surfaces/Surface.h"
+#include "ACTS/Layers/NavigationLayer.h"
+#include "ACTS/Surface.h"
 
 // constructor with arguments
 Acts::NavigationLayer::NavigationLayer(Acts::Surface* surfaceRepresentation, double thickness):

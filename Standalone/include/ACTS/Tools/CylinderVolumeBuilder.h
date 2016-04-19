@@ -6,11 +6,11 @@
 #define ACTS_GEOMETRYTOOLS_CYLINDERVOLUMEBUILDER_H 1
 
 // Geometry module
-#include "Tools/ITrackingVolumeBuilder.h"
-#include "Material/Material.h"
-#include "Tools/ITrackingVolumeHelper.h"
-#include "Tools/ILayerBuilder.h"
-#include "GeometryUtils/BinningType.h"
+#include "ACTS/Tools/ITrackingVolumeBuilder.h"
+#include "ACTS/Material/Material.h"
+#include "ACTS/Tools/ITrackingVolumeHelper.h"
+#include "ACTS/Tools/ILayerBuilder.h"
+#include "ACTS/GeometryUtils/BinningType.h"
 
 #ifndef ATAS_GEOMETRYTOOLS_TAKESMALLERBIGGER
 #define ATAS_GEOMETRYTOOLS_TAKESMALLERBIGGER

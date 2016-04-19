@@ -3,13 +3,13 @@
 #include <iostream>
 
 // ACTS include(s)
-#include "Tools/CylinderGeometryBuilder.h"
-#include "Tools/CylinderVolumeBuilder.h"
-#include "Tools/CylinderVolumeHelper.h"
-#include "Tools/TrackingVolumeArrayCreator.h"
-#include "Tools/LayerArrayCreator.h"
-#include "Tools/PassiveLayerBuilder.h"
-#include "Detector/TrackingGeometry.h"
+#include "ACTS/Tools/CylinderGeometryBuilder.h"
+#include "ACTS/Tools/CylinderVolumeBuilder.h"
+#include "ACTS/Tools/CylinderVolumeHelper.h"
+#include "ACTS/Tools/TrackingVolumeArrayCreator.h"
+#include "ACTS/Tools/LayerArrayCreator.h"
+#include "ACTS/Tools/PassiveLayerBuilder.h"
+#include "ACTS/TrackingGeometry.h"
 
 int main()
 {

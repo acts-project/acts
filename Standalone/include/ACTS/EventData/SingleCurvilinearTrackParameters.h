@@ -5,8 +5,8 @@
 #include <memory>
 
 // ACTS includes
-#include "EventData/SingleTrackParameters.h"
-#include "Surfaces/PlaneSurface.h"
+#include "ACTS/EventData/SingleTrackParameters.h"
+#include "ACTS/Surfaces/PlaneSurface.h"
 
 namespace Acts
 {

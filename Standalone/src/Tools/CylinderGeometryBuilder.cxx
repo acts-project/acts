@@ -3,14 +3,14 @@
 ///////////////////////////////////////////////////////////////////
 
 // Core include
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
-#include "Tools/CylinderGeometryBuilder.h"
-#include "Tools/ITrackingVolumeBuilder.h"
-#include "Tools/ITrackingVolumeHelper.h"
-#include "Detector/TrackingGeometry.h"
-#include "Detector/TrackingVolume.h"
-#include "Volumes/CylinderVolumeBounds.h"
+#include "ACTS/Tools/CylinderGeometryBuilder.h"
+#include "ACTS/Tools/ITrackingVolumeBuilder.h"
+#include "ACTS/Tools/ITrackingVolumeHelper.h"
+#include "ACTS/TrackingGeometry.h"
+#include "ACTS/Detector/TrackingVolume.h"
+#include "ACTS/Volumes/CylinderVolumeBounds.h"
 
 // STD/STL
 #ifdef ACTS_GEOMETRY_MEMUSAGE                            

@@ -6,10 +6,10 @@
 #define ACTS_VOLUMES_VOLUMEEXCLUDER_H 1
 
 // Geometry module
-#include "GeometryUtils/AreaExcluder.h"
-#include "Volumes/Volume.h"
+#include "ACTS/GeometryUtils/AreaExcluder.h"
+#include "ACTS/Volumes/Volume.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

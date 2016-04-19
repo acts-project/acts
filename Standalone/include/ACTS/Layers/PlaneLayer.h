@@ -8,10 +8,10 @@
 class MsgStream;
 
 // Geomety module
-#include "Detector/Layer.h"
-#include "Surfaces/PlaneSurface.h"
+#include "ACTS/Layer.h"
+#include "ACTS/Surfaces/PlaneSurface.h"
 // Core module
-#include "Core/PropDirection.h"
+#include "ACTS/Utilities/PropDirection.h"
 // STL sorting
 #include <algorithm>
 

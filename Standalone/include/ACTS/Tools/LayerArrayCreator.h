@@ -13,9 +13,9 @@
 #endif
 
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
-#include "Tools/ILayerArrayCreator.h"
+#include "ACTS/Tools/ILayerArrayCreator.h"
 // STL
 #include <algorithm>
 

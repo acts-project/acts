@@ -2,7 +2,7 @@
 // TriangleBounds.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "Surfaces/TriangleBounds.h"
+#include "ACTS/Surfaces/TriangleBounds.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>

@@ -1,4 +1,4 @@
-#include "EventData/NeutralParameters.h"
+#include "ACTS/NeutralParameters.h"
 
 namespace Acts
 {

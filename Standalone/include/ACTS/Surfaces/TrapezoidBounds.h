@@ -6,12 +6,12 @@
 #define ACTS_SURFACES_TRAPEZOIDBOUNDS_H 1
 
 // Geometry module
-#include "Surfaces/PlanarBounds.h"
-#include "GeometryUtils/PrecisionDefinition.h"
+#include "ACTS/Surfaces/PlanarBounds.h"
+#include "ACTS/GeometryUtils/PrecisionDefinition.h"
 // EventData module
-#include "Core/ParameterDefinitions.h"
+#include "ACTS/Utilities/ParameterDefinitions.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 #include <math.h>
 
 namespace Acts {

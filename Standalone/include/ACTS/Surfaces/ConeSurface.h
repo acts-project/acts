@@ -6,11 +6,11 @@
 #define ACTS_SURFACES_CONESURFACE_H 1
 
 // Geometry module
-#include "Core/ParameterDefinitions.h"
-#include "Surfaces/Surface.h"
-#include "Surfaces/ConeBounds.h"
+#include "ACTS/Utilities/ParameterDefinitions.h"
+#include "ACTS/Surface.h"
+#include "ACTS/Surfaces/ConeBounds.h"
 // EventData module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

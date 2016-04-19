@@ -5,9 +5,9 @@
 #include <type_traits>
 
 // ACTS includes
-#include "Core/AlgebraDefinitions.h"
-#include "EventData/TrackParametersBase.h"
-#include "EventData/CoordinateTransformations.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/EventData/TrackParametersBase.h"
+#include "ACTS/EventData/detail/CoordinateTransformations.h"
 
 namespace Acts
 {

@@ -2,7 +2,7 @@
 // Surface.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "Surfaces/Surface.h"
+#include "ACTS/Surface.h"
 
 // STD/STL
 #include <iostream>

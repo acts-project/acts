@@ -6,11 +6,11 @@
 #define ACTS_SURFACESNOBOUNDS_H
 
 // Geometry module
-#include "Surfaces/SurfaceBounds.h"
+#include "ACTS/Surfaces/SurfaceBounds.h"
 // EventData module
-#include "Core/ParameterDefinitions.h"
+#include "ACTS/Utilities/ParameterDefinitions.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

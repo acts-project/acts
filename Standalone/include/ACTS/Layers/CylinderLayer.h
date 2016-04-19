@@ -8,13 +8,13 @@
 class MsgStream;
 
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
-#include "Detector/Layer.h"
-#include "Surfaces/CylinderSurface.h"
-#include "GeometryUtils/BinnedArray.h"
+#include "ACTS/Layer.h"
+#include "ACTS/Surfaces/CylinderSurface.h"
+#include "ACTS/GeometryUtils/BinnedArray.h"
 // EventData module
-#include "Core/PropDirection.h"
+#include "ACTS/Utilities/PropDirection.h"
 // STL sorting
 #include <algorithm>
 

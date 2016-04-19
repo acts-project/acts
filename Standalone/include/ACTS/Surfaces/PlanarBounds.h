@@ -6,7 +6,7 @@
 #define ACTS_SURFACES_PLANARBOUNDS_H 1
 
 // Geometry module
-#include "Surfaces/SurfaceBounds.h"
+#include "ACTS/Surfaces/SurfaceBounds.h"
 
 namespace Acts {
 

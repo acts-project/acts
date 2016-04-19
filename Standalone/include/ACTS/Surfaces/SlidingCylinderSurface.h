@@ -6,11 +6,11 @@
 #define ACTS_SURFACES_SLIDINGCYLINDERSURFACE_H 1
 
 // Geometry module
-#include "Core/ParameterDefinitions.h"
-#include "Surfaces/CylinderSurface.h"
-#include "GeometryUtils/BinUtility.h"
+#include "ACTS/Utilities/ParameterDefinitions.h"
+#include "ACTS/Surfaces/CylinderSurface.h"
+#include "ACTS/GeometryUtils/BinUtility.h"
 // EventData module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 class Identifier;
 

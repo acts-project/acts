@@ -3,11 +3,11 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "Volumes/PrismVolumeBounds.h"
-#include "Volumes/Volume.h"
-#include "Surfaces/PlaneSurface.h"
-#include "Surfaces/RectangleBounds.h"
-#include "Surfaces/TriangleBounds.h"
+#include "ACTS/Volumes/PrismVolumeBounds.h"
+#include "ACTS/Volumes/Volume.h"
+#include "ACTS/Surfaces/PlaneSurface.h"
+#include "ACTS/Surfaces/RectangleBounds.h"
+#include "ACTS/Surfaces/TriangleBounds.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>

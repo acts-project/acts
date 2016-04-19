@@ -3,8 +3,8 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "Surfaces/SlidingCylinderSurface.h"
-#include "Surfaces/CylinderBounds.h"
+#include "ACTS/Surfaces/SlidingCylinderSurface.h"
+#include "ACTS/Surfaces/CylinderBounds.h"
 
 // default constructor
 Acts::SlidingCylinderSurface::SlidingCylinderSurface() :

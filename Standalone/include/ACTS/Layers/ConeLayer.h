@@ -8,10 +8,10 @@
 class MsgStream;
 
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
-#include "Detector/Layer.h"
-#include "Surfaces/ConeSurface.h"
+#include "ACTS/Layer.h"
+#include "ACTS/Surfaces/ConeSurface.h"
 // STL sorting
 #include <algorithm>
 

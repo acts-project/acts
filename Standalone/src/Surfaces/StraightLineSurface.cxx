@@ -3,10 +3,10 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "Surfaces/StraightLineSurface.h"
-#include "Surfaces/CylinderBounds.h"
+#include "ACTS/Surfaces/StraightLineSurface.h"
+#include "ACTS/Surfaces/CylinderBounds.h"
 // Core module
-#include "Core/Identifier.h"
+#include "ACTS/Utilities/Identifier.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>

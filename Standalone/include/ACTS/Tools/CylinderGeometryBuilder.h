@@ -10,13 +10,13 @@
 #include <list>
 
 // ATS include(s)
-#include "Core/AlgebraDefinitions.h"
-#include "Tools/ITrackingGeometryBuilder.h"
-#include "Tools/ITrackingVolumeBuilder.h"
-#include "Tools/ITrackingVolumeHelper.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Tools/ITrackingGeometryBuilder.h"
+#include "ACTS/Tools/ITrackingVolumeBuilder.h"
+#include "ACTS/Tools/ITrackingVolumeHelper.h"
 
 #ifdef ACTS_GEOMETRY_MEMUSAGE   
-#include "GeometryUtils/MemoryLogger.h"
+#include "ACTS/GeometryUtils/MemoryLogger.h"
 #endif  
 
 namespace Acts

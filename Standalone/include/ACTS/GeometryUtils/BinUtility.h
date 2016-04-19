@@ -6,10 +6,10 @@
 #define ACTS_GEOMETRYUTILS_BINUTILITY_H 1
 
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
-#include "GeometryUtils/BinningData.h"
-#include "GeometryUtils/BinningType.h"
+#include "ACTS/GeometryUtils/BinningData.h"
+#include "ACTS/GeometryUtils/BinningType.h"
 // ATS
 #include <vector>
 

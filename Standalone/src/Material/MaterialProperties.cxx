@@ -2,7 +2,7 @@
 // MaterialProperties.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "Material/MaterialProperties.h"
+#include "ACTS/Material/MaterialProperties.h"
 #include <climits>
 
 Acts::MaterialProperties::MaterialProperties():

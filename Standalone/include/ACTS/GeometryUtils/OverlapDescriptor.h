@@ -6,9 +6,9 @@
 #define ACTS_DETECTOR_IOVERLAPDESCRIPTOR_H
 
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 // Gometry module
-#include "GeometryUtils/Intersection.h"
+#include "ACTS/GeometryUtils/Intersection.h"
 
 namespace Acts {
 

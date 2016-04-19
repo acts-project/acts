@@ -6,10 +6,10 @@
 #define ACTS_VOLUMES_CYLINDERVOLUMESBOUNDS_H 1
 
 // Geometry module
-#include "Volumes/VolumeBounds.h"
-#include "GeometryUtils/PrecisionDefinition.h"
+#include "ACTS/Volumes/VolumeBounds.h"
+#include "ACTS/GeometryUtils/PrecisionDefinition.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

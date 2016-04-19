@@ -8,12 +8,12 @@
 #include <memory>
 
 // Geometry module
-#include "Detector/Layer.h"
-#include "Detector/PlaneLayer.h"
-#include "Surfaces/Surface.h"
-#include "GeometryUtils/GeometrySignature.h"
+#include "ACTS/Layer.h"
+#include "ACTS/Layers/PlaneLayer.h"
+#include "ACTS/Surface.h"
+#include "ACTS/GeometryUtils/GeometrySignature.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
     

@@ -6,7 +6,7 @@
 #define ACTS_MATERIAL_MATERIALPROPERTIES_H
 
 // Geometry module
-#include "Material/Material.h"
+#include "ACTS/Material/Material.h"
 // STD/STL
 #include <iostream>
 

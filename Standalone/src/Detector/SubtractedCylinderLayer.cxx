@@ -2,7 +2,7 @@
 // SubtractedCylinderLayer.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "Detector/SubtractedCylinderLayer.h"
+#include "ACTS/Layers/SubtractedCylinderLayer.h"
 
 Acts::SubtractedCylinderLayer::SubtractedCylinderLayer(const Acts::SubtractedCylinderSurface* subCyl,
 						                              double thickness,

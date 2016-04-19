@@ -6,12 +6,12 @@
 #define ACTS_SURFACES_SUBTRACTEDDISCSURFACE_H 1
 
 // Geometry module
-#include "Surfaces/DiscSurface.h"
-#include "GeometryUtils/AreaExcluder.h"
+#include "ACTS/Surfaces/DiscSurface.h"
+#include "ACTS/GeometryUtils/AreaExcluder.h"
 // EventData module
-#include "Core/ParameterDefinitions.h"
+#include "ACTS/Utilities/ParameterDefinitions.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

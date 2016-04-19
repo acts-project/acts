@@ -3,12 +3,12 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "Detector/Layer.h"
-#include "Surfaces/Surface.h"
-#include "Material/SurfaceMaterial.h"
-#include "GeometryUtils/BinUtility.h"
-#include "GeometryUtils/ApproachDescriptor.h"
-#include "EventData/TrackParameters.h"
+#include "ACTS/Layer.h"
+#include "ACTS/Surface.h"
+#include "ACTS/Material/SurfaceMaterial.h"
+#include "ACTS/GeometryUtils/BinUtility.h"
+#include "ACTS/GeometryUtils/ApproachDescriptor.h"
+#include "ACTS/TrackParameters.h"
 
 Acts::Layer::Layer() :
   m_nextLayers( NextLayers(nullptr,nullptr) ),

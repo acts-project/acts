@@ -3,11 +3,11 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "Detector/TrackingGeometry.h"
-#include "Detector/TrackingVolume.h"
-#include "Detector/DetachedTrackingVolume.h"
-#include "Detector/Layer.h"
-#include "Surfaces/PerigeeSurface.h"
+#include "ACTS/TrackingGeometry.h"
+#include "ACTS/Detector/TrackingVolume.h"
+#include "ACTS/Detector/DetachedTrackingVolume.h"
+#include "ACTS/Layer.h"
+#include "ACTS/Surfaces/PerigeeSurface.h"
 
 Acts::TrackingGeometry::TrackingGeometry(TrackingVolumePtr highestVolume)
 : m_world(highestVolume),

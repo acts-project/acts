@@ -6,18 +6,18 @@
 #define ACTS_SURFACES_SURFACE_H 1
 
 // Geometry module
-#include "Surfaces/BoundaryCheck.h"
-#include "Surfaces/SurfaceBounds.h"
-#include "GeometryUtils/GeometryObject.h"
-#include "GeometryUtils/GeometryStatics.h"
-#include "GeometryUtils/Intersection.h"
-#include "GeometryUtils/BinnedArray.h"
-#include "GeometryUtils/BinningType.h"
-#include "Detector/DetectorElementBase.h"
+#include "ACTS/Surfaces/BoundaryCheck.h"
+#include "ACTS/Surfaces/SurfaceBounds.h"
+#include "ACTS/GeometryUtils/GeometryObject.h"
+#include "ACTS/GeometryUtils/GeometryStatics.h"
+#include "ACTS/GeometryUtils/Intersection.h"
+#include "ACTS/GeometryUtils/BinnedArray.h"
+#include "ACTS/GeometryUtils/BinningType.h"
+#include "ACTS/Detector/DetectorElementBase.h"
 // Event Mmdule
-#include "Core/AlgebraDefinitions.h"
-#include "Core/Identifier.h"
-#include "Core/ParameterDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Identifier.h"
+#include "ACTS/Utilities/ParameterDefinitions.h"
 
 namespace Acts {
 

@@ -2,7 +2,7 @@
 // RectangleBounds.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "Surfaces/RectangleBounds.h"
+#include "ACTS/Surfaces/RectangleBounds.h"
 // STD/STL
 #include <iostream>
 #include <iomanip>

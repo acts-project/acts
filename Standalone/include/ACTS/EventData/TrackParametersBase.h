@@ -5,10 +5,10 @@
 #include <type_traits>
 
 // ACTS includes
-#include "Core/AlgebraDefinitions.h"
-#include "Core/ParameterDefinitions.h"
-#include "EventData/ParameterSet.h"
-#include "EventData/ChargePolicy.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/ParameterDefinitions.h"
+#include "ACTS/EventData/ParameterSet.h"
+#include "ACTS/EventData/ChargePolicy.h"
 
 namespace Acts
 {

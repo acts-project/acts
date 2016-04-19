@@ -3,38 +3,38 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "Tools/LayerArrayCreator.h"
-#include "GeometryUtils/BinnedArray1D.h"
-#include "GeometryUtils/BinUtility.h"
-#include "GeometryUtils/GeometryStatics.h"
-#include "GeometryUtils/GeometryObjectSorter.h"
-#include "Detector/Layer.h"
-#include "Detector/NavigationLayer.h"
-#include "Surfaces/CylinderSurface.h"
-#include "Surfaces/DiscSurface.h"
-#include "Surfaces/DiscBounds.h"
-#include "Surfaces/PlaneSurface.h"
-#include "Surfaces/SurfaceBounds.h"
-#include "Surfaces/TrapezoidBounds.h"
-#include "Surfaces/RectangleBounds.h"
+#include "ACTS/Tools/LayerArrayCreator.h"
+#include "ACTS/GeometryUtils/BinnedArray1D.h"
+#include "ACTS/GeometryUtils/BinUtility.h"
+#include "ACTS/GeometryUtils/GeometryStatics.h"
+#include "ACTS/GeometryUtils/GeometryObjectSorter.h"
+#include "ACTS/Layer.h"
+#include "ACTS/Layers/NavigationLayer.h"
+#include "ACTS/Surfaces/CylinderSurface.h"
+#include "ACTS/Surfaces/DiscSurface.h"
+#include "ACTS/Surfaces/DiscBounds.h"
+#include "ACTS/Surfaces/PlaneSurface.h"
+#include "ACTS/Surfaces/SurfaceBounds.h"
+#include "ACTS/Surfaces/TrapezoidBounds.h"
+#include "ACTS/Surfaces/RectangleBounds.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
-#include "Core/StringConverters.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Tools/StringConverters.h"
 
 Acts::LayerArray* Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
                                                       double min, double max, 
                                                       BinningType bType,
                                                       BinningValue bValue) const 
 {
-      
+
    // MSG_VERBOSE( "Build LayerArray with "     << layersInput.size() << " layers at input." );
    // MSG_VERBOSE( "       min/max provided : " << min << " / " << max );
    // MSG_VERBOSE( "       binning type     : " << bType );
    // MSG_VERBOSE( "       binning value    : " << bValue );
-    
+
    // create a local copy of the layer vector
    LayerVector layers(layersInput);
-   
+
    // sort it accordingly to the binning value
    GeometryObjectSorterT< std::shared_ptr<const Layer> > layerSorter(bValue);
    std::sort(layers.begin(),layers.end(),layerSorter);
@@ -45,10 +45,10 @@ Acts::LayerArray* Acts::LayerArrayCreator::layerArray(const LayerVector& layersI
    LayerArray*                    layerArray = nullptr;
    BinUtility*                    binUtility = nullptr;
    std::vector< LayerOrderPosition >   layerOrderVector;
-   
-   // switch the binning type     
+
+   // switch the binning type
    switch (bType) {
-        
+
         // equidistant binning - no navigation layers built - only equdistant layers
         case equidistant :
         {
@@ -56,12 +56,12 @@ Acts::LayerArray* Acts::LayerArrayCreator::layerArray(const LayerVector& layersI
             for (auto& layIter : layers ) {
                 // MSG_VERBOSE( "equidistant : registering a Layer at binning position : " << toString(layIter->binningPosition(bValue)) );
                 layerOrderVector.push_back( LayerOrderPosition(layIter, layIter->binningPosition(bValue) ));
-            }        
+            }
             // create the binUitlity
             binUtility = new BinUtility(layers.size(), min, max, open, bValue);
             // MSG_VERBOSE( "equidistant : created a BinUtility as " << *binUtility );
-        } break;     
-    
+        } break;
+
         // arbitrary binning
         case arbitrary :
         {
@@ -120,19 +120,19 @@ Acts::LayerArray* Acts::LayerArrayCreator::layerArray(const LayerVector& layersI
         } break;
         // default return nullptr
         default : { return nullptr; }
-        
+
     }
     // create the BinnedArray
-    layerArray = new BinnedArray1D< std::shared_ptr< const Layer> >(layerOrderVector, binUtility);     
+    layerArray = new BinnedArray1D< std::shared_ptr< const Layer> >(layerOrderVector, binUtility);
     // return what we have here
     return layerArray;
-    
+
 }
 
-Acts::Surface* Acts::LayerArrayCreator::createNavigationSurface(const Layer& layer, BinningValue bValue, double offset) const 
+Acts::Surface* Acts::LayerArrayCreator::createNavigationSurface(const Layer& layer, BinningValue bValue, double offset) const
 {
-    // surface reference 
-    const Surface& layerSurface = layer.surfaceRepresentation(); 
+    // surface reference
+    const Surface& layerSurface = layer.surfaceRepresentation();
     // translation to be applied
     Vector3D translation(0.,0.,0.);
     // switching he binnig values
@@ -140,12 +140,12 @@ Acts::Surface* Acts::LayerArrayCreator::createNavigationSurface(const Layer& lay
         // case x
         case binX : { translation = Vector3D(offset, 0., 0.);} break;
         // case y
-        case binY : { translation = Vector3D(0., offset, 0.);} break; 
+        case binY : { translation = Vector3D(0., offset, 0.);} break;
         // case z
         case binZ : { translation = Vector3D(0., 0., offset); } break;
         // case R
-        case binR : { 
-            // binning in R and cylinder surface means something different 
+        case binR : {
+            // binning in R and cylinder surface means something different
             if ( layerSurface.type() == Surface::Cylinder ) break;
             translation = Vector3D(offset, 0., 0.);
         } break;
@@ -154,7 +154,7 @@ Acts::Surface* Acts::LayerArrayCreator::createNavigationSurface(const Layer& lay
             // MSG_WARNING("Not yet implemented.");
         }
     }
-    // navigation surface 
+    // navigation surface
     Surface* navigationSurface = nullptr;
     // for everything else than a cylinder it's a copy with shift
     if (layerSurface.type() != Surface::Cylinder) {
@@ -165,11 +165,11 @@ Acts::Surface* Acts::LayerArrayCreator::createNavigationSurface(const Layer& lay
         // delete the shift again
         delete shift;
     } else {
-       // get the bounds 
+       // get the bounds
        const CylinderBounds* cBounds = dynamic_cast<const CylinderBounds*>(&(layerSurface.bounds()));
        double navigationR = cBounds->r()+offset;
        double halflengthZ = cBounds->halflengthZ();
-       // new navigation layer       
+       // new navigation layer
        navigationSurface = new CylinderSurface(layerSurface.cachedTransform(), navigationR, halflengthZ);
     }
     return navigationSurface;

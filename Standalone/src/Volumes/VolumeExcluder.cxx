@@ -2,7 +2,7 @@
 // VolumeExcluder.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "Volumes/VolumeExcluder.h"
+#include "ACTS/Volumes/VolumeExcluder.h"
 
 // Default constructor
 Acts::VolumeExcluder::VolumeExcluder() :

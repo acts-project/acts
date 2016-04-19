@@ -2,7 +2,7 @@
 // GeometryIDCalculator.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "GeometryUtils/GeometryID.h"
+#include "ACTS/GeometryUtils/GeometryID.h"
 
 bool Acts::operator< ( const Acts::GeometryID& one, const Acts::GeometryID& two )
 { return (one.value() < two.value());  }

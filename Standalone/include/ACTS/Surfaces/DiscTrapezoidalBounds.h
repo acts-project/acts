@@ -6,14 +6,14 @@
 #define ACTS_SURFACES_DISCTRAPEZOIDALBOUNDS_H
 
 // Geometry module
-#include "Surfaces/DiscBounds.h"
-#include "GeometryUtils/PrecisionDefinition.h"
+#include "ACTS/Surfaces/DiscBounds.h"
+#include "ACTS/GeometryUtils/PrecisionDefinition.h"
 // EventData module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 // STD/STL
 #include <math.h>
 #include <cmath>
-#include "Core/ParameterDefinitions.h"
+#include "ACTS/Utilities/ParameterDefinitions.h"
 
 namespace Acts {
 

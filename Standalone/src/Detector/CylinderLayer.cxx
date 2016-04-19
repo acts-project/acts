@@ -3,17 +3,17 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "Detector/CylinderLayer.h"
-#include "Detector/GenericApproachDescriptor.h"
-#include "Detector/GenericOverlapDescriptor.h"
-#include "Material/SurfaceMaterial.h"
-#include "Volumes/AbstractVolume.h"
-#include "Volumes/CylinderVolumeBounds.h"
-#include "Volumes/BoundarySurfaceFace.h"
-#include "Surfaces/CylinderBounds.h"
-#include "GeometryUtils/BinUtility.h"
+#include "ACTS/Layers/CylinderLayer.h"
+#include "ACTS/Detector/GenericApproachDescriptor.h"
+#include "ACTS/Detector/GenericOverlapDescriptor.h"
+#include "ACTS/Material/SurfaceMaterial.h"
+#include "ACTS/Volumes/AbstractVolume.h"
+#include "ACTS/Volumes/CylinderVolumeBounds.h"
+#include "ACTS/Volumes/BoundarySurfaceFace.h"
+#include "ACTS/Surfaces/CylinderBounds.h"
+#include "ACTS/GeometryUtils/BinUtility.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
         
 Acts::CylinderLayer::CylinderLayer(std::shared_ptr<Acts::Transform3D> transform,

@@ -10,9 +10,9 @@
 #include <iomanip>
 
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
-#include "Surfaces/BoundaryCheck.h"
+#include "ACTS/Surfaces/BoundaryCheck.h"
 
 namespace Acts {
 

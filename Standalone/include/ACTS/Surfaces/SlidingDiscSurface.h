@@ -6,12 +6,12 @@
 #define ACTS_SURFACES_SLIDINGDISCSURFACE_H 1
 
 // Geometry module
-#include "Surfaces/DiscSurface.h"
-#include "Surfaces/SurfaceBounds.h"
-#include "Surfaces/NoBounds.h"
-#include "GeometryUtils/BinUtility.h"
+#include "ACTS/Surfaces/DiscSurface.h"
+#include "ACTS/Surfaces/SurfaceBounds.h"
+#include "ACTS/Surfaces/NoBounds.h"
+#include "ACTS/GeometryUtils/BinUtility.h"
 // Core module
-#include "Core/AlgebraDefinitions.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 
