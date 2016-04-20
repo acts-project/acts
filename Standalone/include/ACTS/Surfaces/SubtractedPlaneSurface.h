@@ -7,7 +7,7 @@
 
 // Geometry module
 #include "ACTS/Surfaces/PlaneSurface.h"
-#include "ACTS/GeometryUtils/AreaExcluder.h"
+#include "ACTS/Utilities/AreaExcluder.h"
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 

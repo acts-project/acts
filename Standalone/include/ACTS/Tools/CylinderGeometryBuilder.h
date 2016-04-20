@@ -16,7 +16,7 @@
 #include "ACTS/Tools/ITrackingVolumeHelper.h"
 
 #ifdef ACTS_GEOMETRY_MEMUSAGE   
-#include "ACTS/GeometryUtils/MemoryLogger.h"
+#include "ACTS/Utilities/MemoryLogger.h"
 #endif  
 
 namespace Acts

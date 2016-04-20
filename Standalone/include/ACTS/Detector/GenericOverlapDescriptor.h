@@ -8,8 +8,8 @@
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
-#include "ACTS/GeometryUtils/OverlapDescriptor.h"
-#include "ACTS/GeometryUtils/Intersection.h"
+#include "ACTS/Utilities/OverlapDescriptor.h"
+#include "ACTS/Utilities/Intersection.h"
 
 namespace Acts {
 

@@ -6,7 +6,7 @@
 #define ACTS_DETECTOR_TRACKINGGEOMETRY_H
 
 // Geometry module
-#include "ACTS/GeometryUtils/GeometrySignature.h"
+#include "ACTS/Utilities/GeometrySignature.h"
 #include "ACTS/Utilities/PropDirection.h"
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"

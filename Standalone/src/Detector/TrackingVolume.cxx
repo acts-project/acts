@@ -22,7 +22,7 @@
 #include "ACTS/Surfaces/PlaneSurface.h"
 #include "ACTS/Surfaces/SubtractedCylinderSurface.h"
 #include "ACTS/Surfaces/SubtractedPlaneSurface.h"
-#include "ACTS/GeometryUtils/BinUtility.h"
+#include "ACTS/Utilities/BinUtility.h"
 
 // default constructor
 Acts::TrackingVolume::TrackingVolume() :

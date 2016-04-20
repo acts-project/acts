@@ -8,7 +8,7 @@
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 // Gometry module
-#include "ACTS/GeometryUtils/Intersection.h"
+#include "ACTS/Utilities/Intersection.h"
 
 namespace Acts {
 

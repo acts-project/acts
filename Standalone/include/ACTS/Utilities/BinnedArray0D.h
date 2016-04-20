@@ -6,7 +6,7 @@
 #define ACTS_GEOMETRYUTILS_BINNEDARRAY0D_H 1
 
 // Geometry module
-#include "ACTS/GeometryUtils/BinUtility.h"
+#include "ACTS/Utilities/BinUtility.h"
 // STL
 #include <vector>
 

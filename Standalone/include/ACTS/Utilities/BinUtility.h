@@ -8,8 +8,8 @@
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
-#include "ACTS/GeometryUtils/BinningData.h"
-#include "ACTS/GeometryUtils/BinningType.h"
+#include "ACTS/Utilities/BinningData.h"
+#include "ACTS/Utilities/BinningType.h"
 // ATS
 #include <vector>
 

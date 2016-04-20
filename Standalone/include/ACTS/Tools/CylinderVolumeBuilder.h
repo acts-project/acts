@@ -10,7 +10,7 @@
 #include "ACTS/Material/Material.h"
 #include "ACTS/Tools/ITrackingVolumeHelper.h"
 #include "ACTS/Tools/ILayerBuilder.h"
-#include "ACTS/GeometryUtils/BinningType.h"
+#include "ACTS/Utilities/BinningType.h"
 
 #ifndef ATAS_GEOMETRYTOOLS_TAKESMALLERBIGGER
 #define ATAS_GEOMETRYTOOLS_TAKESMALLERBIGGER

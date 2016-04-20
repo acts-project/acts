@@ -11,7 +11,7 @@
 #include <memory>
 
 // Geometry module
-#include "ACTS/GeometryUtils/BinningType.h"
+#include "ACTS/Utilities/BinningType.h"
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 

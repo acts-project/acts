@@ -7,7 +7,7 @@
 
 // Geometry module
 #include "ACTS/Volumes/BoundarySurfaceFace.h"
-#include "ACTS/GeometryUtils/BinnedArray.h"
+#include "ACTS/Utilities/BinnedArray.h"
 // STL
 #include <map>
 #include <vector>

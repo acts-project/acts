@@ -8,11 +8,11 @@
 // Core moudle
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
-#include "ACTS/GeometryUtils/GeometryObject.h"
-#include "ACTS/GeometryUtils/ApproachDescriptor.h"
-#include "ACTS/GeometryUtils/OverlapDescriptor.h"
-#include "ACTS/GeometryUtils/BinnedArray.h"
-#include "ACTS/GeometryUtils/Intersection.h"
+#include "ACTS/Utilities/GeometryObject.h"
+#include "ACTS/Utilities/ApproachDescriptor.h"
+#include "ACTS/Utilities/OverlapDescriptor.h"
+#include "ACTS/Utilities/BinnedArray.h"
+#include "ACTS/Utilities/Intersection.h"
 #include "ACTS/Volumes/AbstractVolume.h"
 // EventData module
 #include "ACTS/EventData/TrackParameters.h"

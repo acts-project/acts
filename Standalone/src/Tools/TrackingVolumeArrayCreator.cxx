@@ -4,9 +4,9 @@
 
 // Geometry module
 #include "ACTS/Tools/TrackingVolumeArrayCreator.h"
-#include "ACTS/GeometryUtils/BinUtility.h"
-#include "ACTS/GeometryUtils/BinnedArray1D.h"
-#include "ACTS/GeometryUtils/GeometryObjectSorter.h"
+#include "ACTS/Utilities/BinUtility.h"
+#include "ACTS/Utilities/BinnedArray1D.h"
+#include "ACTS/Utilities/GeometryObjectSorter.h"
 #include "ACTS/Detector/TrackingVolume.h"
 #include "ACTS/Volumes/VolumeBounds.h"
 // Core module

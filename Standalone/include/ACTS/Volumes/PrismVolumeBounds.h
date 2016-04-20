@@ -7,7 +7,7 @@
 
 // Geometry module
 #include "ACTS/Volumes/VolumeBounds.h"
-#include "ACTS/GeometryUtils/PrecisionDefinition.h"
+#include "ACTS/Utilities/PrecisionDefinition.h"
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 

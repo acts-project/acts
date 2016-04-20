@@ -4,10 +4,10 @@
 
 // Geometry module
 #include "ACTS/Tools/LayerArrayCreator.h"
-#include "ACTS/GeometryUtils/BinnedArray1D.h"
-#include "ACTS/GeometryUtils/BinUtility.h"
-#include "ACTS/GeometryUtils/GeometryStatics.h"
-#include "ACTS/GeometryUtils/GeometryObjectSorter.h"
+#include "ACTS/Utilities/BinnedArray1D.h"
+#include "ACTS/Utilities/BinUtility.h"
+#include "ACTS/Utilities/GeometryStatics.h"
+#include "ACTS/Utilities/GeometryObjectSorter.h"
 #include "ACTS/Layers/Layer.h"
 #include "ACTS/Layers/NavigationLayer.h"
 #include "ACTS/Surfaces/CylinderSurface.h"

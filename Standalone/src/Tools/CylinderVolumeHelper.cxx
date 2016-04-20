@@ -18,7 +18,7 @@
 #include "ACTS/Material/Material.h"
 #include "ACTS/Material/BinnedSurfaceMaterial.h"
 #include "ACTS/Detector/GlueVolumesDescriptor.h"
-#include "ACTS/GeometryUtils/BinUtility.h"
+#include "ACTS/Utilities/BinUtility.h"
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 #include "ACTS/Tools/StringConverters.h"

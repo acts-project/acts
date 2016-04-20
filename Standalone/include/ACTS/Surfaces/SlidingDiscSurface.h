@@ -9,7 +9,7 @@
 #include "ACTS/Surfaces/DiscSurface.h"
 #include "ACTS/Surfaces/SurfaceBounds.h"
 #include "ACTS/Surfaces/NoBounds.h"
-#include "ACTS/GeometryUtils/BinUtility.h"
+#include "ACTS/Utilities/BinUtility.h"
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 

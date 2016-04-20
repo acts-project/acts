@@ -8,11 +8,11 @@
 // Geometry module
 #include "ACTS/Surfaces/BoundaryCheck.h"
 #include "ACTS/Surfaces/SurfaceBounds.h"
-#include "ACTS/GeometryUtils/GeometryObject.h"
-#include "ACTS/GeometryUtils/GeometryStatics.h"
-#include "ACTS/GeometryUtils/Intersection.h"
-#include "ACTS/GeometryUtils/BinnedArray.h"
-#include "ACTS/GeometryUtils/BinningType.h"
+#include "ACTS/Utilities/GeometryObject.h"
+#include "ACTS/Utilities/GeometryStatics.h"
+#include "ACTS/Utilities/Intersection.h"
+#include "ACTS/Utilities/BinnedArray.h"
+#include "ACTS/Utilities/BinningType.h"
 #include "ACTS/Detector/DetectorElementBase.h"
 // Event Mmdule
 #include "ACTS/Utilities/AlgebraDefinitions.h"

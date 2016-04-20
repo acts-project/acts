@@ -6,8 +6,8 @@
 #include "ACTS/Layers/Layer.h"
 #include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Material/SurfaceMaterial.h"
-#include "ACTS/GeometryUtils/BinUtility.h"
-#include "ACTS/GeometryUtils/ApproachDescriptor.h"
+#include "ACTS/Utilities/BinUtility.h"
+#include "ACTS/Utilities/ApproachDescriptor.h"
 #include "ACTS/EventData/TrackParameters.h"
 
 Acts::Layer::Layer() :

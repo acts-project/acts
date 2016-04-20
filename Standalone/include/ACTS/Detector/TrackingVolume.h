@@ -15,8 +15,8 @@
 #include "ACTS/Volumes/BoundarySurface.h"
 #include "ACTS/Layers/Layer.h"
 #include "ACTS/Material/Material.h"
-#include "ACTS/GeometryUtils/BinnedArray.h"
-#include "ACTS/GeometryUtils/GeometrySignature.h"
+#include "ACTS/Utilities/BinnedArray.h"
+#include "ACTS/Utilities/GeometrySignature.h"
 // EventData module
 #include "ACTS/Utilities/PropDirection.h"
 //STL

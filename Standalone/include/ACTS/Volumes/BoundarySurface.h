@@ -8,8 +8,8 @@
 // Geometry module
 #include "ACTS/Volumes/Volume.h"
 #include "ACTS/Volumes/BoundarySurfaceFace.h"
-#include "ACTS/GeometryUtils/BinnedArray.h"
-#include "ACTS/GeometryUtils/BinnedArray0D.h"
+#include "ACTS/Utilities/BinnedArray.h"
+#include "ACTS/Utilities/BinnedArray0D.h"
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 #include "ACTS/Utilities/PropDirection.h"

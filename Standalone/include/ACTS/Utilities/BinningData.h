@@ -7,7 +7,7 @@
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
-#include "ACTS/GeometryUtils/BinningType.h"
+#include "ACTS/Utilities/BinningType.h"
 
 #include <vector>
 #include <utility>

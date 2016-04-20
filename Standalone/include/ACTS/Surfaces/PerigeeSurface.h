@@ -9,7 +9,7 @@
 #include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/NoBounds.h"
 // EventData module
-#include "ACTS/GeometryUtils/GeometryStatics.h"
+#include "ACTS/Utilities/GeometryStatics.h"
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 

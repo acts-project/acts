@@ -7,7 +7,7 @@
 
 // Geometry module
 #include "ACTS/Surfaces/DiscBounds.h"
-#include "ACTS/GeometryUtils/PrecisionDefinition.h"
+#include "ACTS/Utilities/PrecisionDefinition.h"
 // EventData modle
 #include "ACTS/Utilities/ParameterDefinitions.h"
 // Core module

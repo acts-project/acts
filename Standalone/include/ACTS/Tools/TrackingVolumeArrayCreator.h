@@ -9,7 +9,7 @@
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
 #include "ACTS/Tools/ITrackingVolumeArrayCreator.h"
-#include "ACTS/GeometryUtils/BinnedArray.h"
+#include "ACTS/Utilities/BinnedArray.h"
 // STL
 #include <algorithm>
 

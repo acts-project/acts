@@ -7,7 +7,7 @@
 
 // Geometry module
 #include "ACTS/Surfaces/DiscSurface.h"
-#include "ACTS/GeometryUtils/AreaExcluder.h"
+#include "ACTS/Utilities/AreaExcluder.h"
 // EventData module
 #include "ACTS/Utilities/ParameterDefinitions.h"
 // Core module

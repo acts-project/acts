@@ -12,7 +12,7 @@
 #include "ACTS/Volumes/BoundarySurfaceFace.h"
 #include "ACTS/Surfaces/DiscBounds.h"
 #include "ACTS/Surfaces/RadialBounds.h"
-#include "ACTS/GeometryUtils/BinUtility.h"
+#include "ACTS/Utilities/BinUtility.h"
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 

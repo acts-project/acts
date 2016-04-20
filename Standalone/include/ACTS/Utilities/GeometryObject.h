@@ -6,8 +6,8 @@
 #define ACTS_GEOMETRYUTILS_GEOMETRYOBJECT_H
 
 // Geometry module
-#include "ACTS/GeometryUtils/GeometryID.h"
-#include "ACTS/GeometryUtils/BinningType.h"
+#include "ACTS/Utilities/GeometryID.h"
+#include "ACTS/Utilities/BinningType.h"
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 

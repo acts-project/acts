@@ -4,7 +4,7 @@
 
 // Geometry module
 #include "ACTS/Volumes/TrapezoidVolumeBounds.h"
-#include "ACTS/GeometryUtils/GeometryStatics.h"
+#include "ACTS/Utilities/GeometryStatics.h"
 #include "ACTS/Surfaces/PlaneSurface.h"
 #include "ACTS/Surfaces/TrapezoidBounds.h"
 #include "ACTS/Surfaces/RectangleBounds.h"

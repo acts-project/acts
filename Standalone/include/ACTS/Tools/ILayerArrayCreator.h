@@ -6,8 +6,8 @@
 #define ACTS_GEOMETRYINTERFACES_ILAYERARRAYCREATOR_H 1
 
 // Geometry module
-#include "ACTS/GeometryUtils/BinnedArray.h"
-#include "ACTS/GeometryUtils/BinningType.h"
+#include "ACTS/Utilities/BinnedArray.h"
+#include "ACTS/Utilities/BinningType.h"
 // STL
 #include <vector>
 #include <memory>
@@ -39,16 +39,14 @@ namespace Acts
     virtual ~ILayerArrayCreator() = default;
       
       /** LayerArraycreator interface method */
-      virtual LayerArray* layerArray(const LayerVector& layers, 
-                                     double min,
-                                     double max,
-                                     BinningType btype = arbitrary,
-                                     BinningValue bv   = binX) const = 0; 
+      virtual const LayerArray* layerArray(const LayerVector& layers, 
+                                           double min,
+                                           double max,
+                                           BinningType btype = arbitrary,
+                                           BinningValue bv   = binX) const = 0; 
    
   };
 } // end of namespace
 
 
 #endif // ACTS_GEOMETRYINTERFACES_ILAYERARRAYCREATOR_H
-
-

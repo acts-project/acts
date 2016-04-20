@@ -11,7 +11,7 @@
 #include "ACTS/Volumes/CylinderVolumeBounds.h"
 #include "ACTS/Volumes/BoundarySurfaceFace.h"
 #include "ACTS/Surfaces/CylinderBounds.h"
-#include "ACTS/GeometryUtils/BinUtility.h"
+#include "ACTS/Utilities/BinUtility.h"
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 

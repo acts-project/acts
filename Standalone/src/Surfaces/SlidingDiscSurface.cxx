@@ -5,7 +5,7 @@
 // Geometry module
 #include "ACTS/Surfaces/SlidingDiscSurface.h"
 #include "ACTS/Surfaces/DiscBounds.h"
-#include "ACTS/GeometryUtils/PrecisionDefinition.h"
+#include "ACTS/Utilities/PrecisionDefinition.h"
 
 // default constructor
 Acts::SlidingDiscSurface::SlidingDiscSurface() :
