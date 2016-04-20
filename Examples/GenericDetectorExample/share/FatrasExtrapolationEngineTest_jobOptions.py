@@ -36,7 +36,7 @@ from IOVDbSvc.CondDB import conddb
 conddb.setGlobalTag('OFLCOND-SIM-00-00-00')
 
 # import the GenericDetector
-from GenericDetectorV2 import GenericDetectorConstruction
+from GenericDetectorV1 import GenericDetectorConstruction
 GenericDetector = GenericDetectorConstruction(name='GenericDetector', outputLevel=VERBOSE)
 
 #--------------------------------------------------------------

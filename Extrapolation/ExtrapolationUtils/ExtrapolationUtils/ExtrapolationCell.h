@@ -49,9 +49,8 @@ namespace Acts {
          CollectMaterial               = 10,  // collect all material on the way
          CollectJacobians              = 11,  // collect the transport jacobians
          CollectPathSteps              = 12,  // collect the single path steps
-         RobustSearch                  = 13,  // Search on trial and error (for debugging)
-         AvoidFallback                 = 14,  // don't fallback to propagation
-         FATRAS                        = 15   // force initial radialDirection to be outward
+         AvoidFallback                 = 13,  // don't fallback to propagation
+         FATRAS                        = 14   // force initial radialDirection to be outward
       };
       
     };
@@ -242,6 +241,7 @@ namespace Acts {
             bool                                    navigationCurvilinear;  //!< stay in curvilinear parameters where possible, default : true
             bool                                    sensitiveCurvilinear;   //!< stay in curvilinear parameters even on the destination surface
             bool                                    destinationCurvilinear; //!< return curvilinear parameters even on destination
+            int                                     searchMode;             //!< the tupe of search being performed
 
             std::vector< ExtrapolationStep<T> >     extrapolationSteps;     //!< parameters on sensitive detector elements
                                 
@@ -290,6 +290,7 @@ namespace Acts {
             navigationCurvilinear(true),
             sensitiveCurvilinear(false),
             destinationCurvilinear(false),
+            searchMode(0),
             extrapolationConfiguration(econfig),
             zOaTrX(0.),
             zX(0.)

@@ -7,22 +7,20 @@
 
 // Core module
 #include "CoreInterfaces/AlgToolBase.h"
+#include "Algebra/AlgebraDefinitions.h"
 // Geoemtry module
 #include "GeometryInterfaces/ILayerBuilder.h"
 #include "Detector/Layer.h"
 // Gaudi & Athena
 #include "GaudiKernel/ToolHandle.h"
 
-#ifndef ACTS_LAYERARRAYCREATOR_TAKESMALLERBIGGER
-#define ACTS_LAYERARRAYCREATOR_TAKESMALLERBIGGER
-#define takeSmaller(current,test) current = current < test ? current : test
-#define takeBigger(current,test)  current = current > test ? current : test
-#define takeSmallerBigger(cSmallest, cBiggest, test) takeSmaller(cSmallest, test); takeBigger(cBiggest, test)
-#endif
-
 namespace Acts {
     
-    class GenericDetectorElement;
+    class ILayerCreator;
+    class Surface;
+    class DetecorElementBase;
+    typedef std::pair<const Surface*, Vector3D> SurfacePosition;
+    
     
     /** @class GenericLayerBuilder
      
@@ -64,12 +62,9 @@ namespace Acts {
         
         StatusCode constructLayers();
         
-        void moduleExtend(const GenericDetectorElement&, 
-                          double thickness, double minHalfX, double maxHalfX, double halfY,
-                          double& rmin, double& rmax,
-                          double& zmin, double& zmax);
-        
         std::string                                         m_layerIdentification;
+        
+        ToolHandle<ILayerCreator>                           m_layerCreator;
                                                             
         LayerVector*                                        m_nLayers; //!< layers on negative side
         LayerVector*                                        m_cLayers; //!< layers on central side
@@ -78,6 +73,8 @@ namespace Acts {
         // a single paramater for the approach surface envelope
         double                                              m_approachSurfaceEnvelope;
 
+        int                                                 m_centralLayerBinPhimultiplier;
+        int                                                 m_centralLayerBinZmultiplier;
         // the central layers 
         std::vector<double>                                 m_centralLayerRadii;
         std::vector<double>                                 m_centralLayerEnvelopeR;
@@ -95,10 +92,12 @@ namespace Acts {
         std::vector<double>                                 m_centralModuleFrontsideStereo;
         std::vector<double>                                 m_centralModuleBacksideStereo;        
         std::vector<double>                                 m_centralModuleBacksideGap;
-        std::vector<const GenericDetectorElement*>          m_centralModule;                   //!< acts as detector store
+        std::vector<const DetectorElementBase*>             m_centralModule;                   //!< acts as detector store
         ToolHandle<ILayerBuilder>                           m_centralPassiveLayerBuilder;
         
         // the layers at p/e side 
+        int                                                 m_posnegLayerBinRmultiplier;
+        int                                                 m_posnegLayerBinPhimultiplier;
         std::vector<double>                                 m_posnegLayerPositionsZ;
         std::vector<double>                                 m_posnegLayerEnvelopeR;
         std::vector<double>                                 m_posnegLayerMaterialConcentration;
@@ -118,9 +117,8 @@ namespace Acts {
         std::vector< std::vector<double> >                  m_posnegModuleFrontsideStereo;
         std::vector< std::vector<double> >                  m_posnegModuleBacksideStereo;        
         std::vector< std::vector<double> >                  m_posnegModuleBacksideGap;             
-        std::vector<const GenericDetectorElement*>          m_posnegModule;                     //!< acts as detector store
+        std::vector<const DetectorElementBase*>             m_posnegModule;                     //!< acts as detector store
         ToolHandle<ILayerBuilder>                           m_posnegPassiveLayerBuilder;
-
 
     };
     

@@ -138,11 +138,11 @@ Acts::ExtrapolationCode Acts::PropagationEngine::propagate(Acts::ExCellNeutral& 
     // it is the final propagation if it is the endSurface
     bool finalPropagation = (eCell.endSurface == (&sf));
     // intersect the surface
-    Acts::Intersection sfIntersection = (pDir!=Acts::anyDirection) ? sf.straightLineIntersection(eCell.leadParameters->position(),
+    Acts::Intersection sfIntersection = (pDir!=Acts::anyDirection) ? sf.intersectionEstimate(eCell.leadParameters->position(),
                                                                                                pDir*eCell.leadParameters->momentum().unit(),
                                                                                                true,
                                                                                                bcheck) :
-                                                                   sf.straightLineIntersection(eCell.leadParameters->position(),
+                                                                   sf.intersectionEstimate(eCell.leadParameters->position(),
                                                                                                eCell.leadParameters->momentum().unit(),
                                                                                                false,
                                                                                                bcheck);

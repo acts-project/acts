@@ -68,14 +68,25 @@ class GenericDetectorConstruction(object):
         # 
         # Builder setup for the layers 
         #
-        # build the beam pipe
+        # import the tools
+        from GeometryTools.GeometryToolsConf import Acts__LayerCreator as LayerCreator
         from GeometryTools.GeometryToolsConf import Acts__PassiveLayerBuilder as LayerBuilder
         from GeometryTools.GeometryToolsConf import Acts__CylinderVolumeBuilder as VolumeBuilder
         from GeometryTools.GeometryToolsConf import Acts__CylinderVolumeHelper as VolumeHelper
         from GeometryTools.GeometryToolsConf import Acts__CylinderGeometryBuilder as GeometryBuilder
         from GeometryTools.GeometryToolsConf import Acts__TrackingVolumeArrayCreator as TrackingVolumeArrayCreator
         from GeometryTools.GeometryToolsConf import Acts__LayerArrayCreator as LayerArrayCreator
+        from GeometryTools.GeometryToolsConf import Acts__SurfaceArrayCreator as SurfaceArrayCreator
 
+        # Surface Array Creator
+        SurfaceArrayCreator = SurfaceArrayCreator('SurfaceArrayCreator')
+        SurfaceArrayCreator.OutputLevel = outputLevel
+        ToolSvc += SurfaceArrayCreator
+        # Layer Creator
+        LayerCreator = LayerCreator('LayerCreator')
+        LayerCreator.SurfaceArrayCreator = SurfaceArrayCreator
+        LayerCreator.OutputLevel = outputLevel
+        ToolSvc += LayerCreator
         # Layer Array Creator
         LayerArrayCreator = LayerArrayCreator('LayerArrayCreator')
         LayerArrayCreator.OutputLevel = outputLevel
@@ -120,14 +131,17 @@ class GenericDetectorConstruction(object):
         # and some parameters
         BeamPipeVolumeBuilder.CylinderVolumeHelper = CylinderVolumeHelper   
         BeamPipeVolumeBuilder.LayerBuilder         = BeamPipeBuilder
+        BeamPipeVolumeBuilder.LayerArrayCreator    = LayerArrayCreator        
+        BeamPipeVolumeBuilder.LayerEnvelopeR       = 1.
         BeamPipeVolumeBuilder.LayerEnvelopeZ       = 1.
-        BeamPipeVolumeBuilder.OutputLevel          = outputLevel
-        if Atlas:
-          ToolSvc += BeamPipeVolumeBuilder
-        #
+        BeamPipeVolumeBuilder.OutputLevel          = outputLevel  
+        ToolSvc += BeamPipeVolumeBuilder 
+        #  
         from GenericGeometryTools.GenericGeometryToolsConf import Acts__GenericLayerBuilder as GenericLayerBuilder
         # # a Pixel layer builder
         PixelLayerBuilder = GenericLayerBuilder('PixelLayerBuilder')
+        # the layer creator
+        PixelLayerBuilder.LayerCreator                      = LayerCreator
         # the ID
         PixelLayerBuilder.LayerIdentification               = 'Pixel'
         # define the pixel barrel                            
@@ -171,11 +185,13 @@ class GenericDetectorConstruction(object):
         PixelVolumeBuilder.VolumeName                     = 'Pixel'
         # build the volume
         PixelVolumeBuilder.CylinderVolumeHelper           =  CylinderVolumeHelper   
-        PixelVolumeBuilder.LayerBuilder                   =  PixelLayerBuilder
-        PixelVolumeBuilder.LayerEnvelopeZ                  =  1.
-        PixelVolumeBuilder.VolumeToBeamPipe               =  False
-        if Atlas:
-          ToolSvc += PixelVolumeBuilder
+        PixelVolumeBuilder.LayerBuilder                   =  PixelLayerBuilder           
+        PixelVolumeBuilder.LayerArrayCreator              =  LayerArrayCreator        
+        PixelVolumeBuilder.LayerEnvelopeR                 =  1.    
+        PixelVolumeBuilder.LayerEnvelopeZ                 =  10.   
+        PixelVolumeBuilder.VolumeToBeamPipe               =  False  
+        ToolSvc += PixelVolumeBuilder
+
         # Build the TrackingGeometry
         GenericGeometryBuilder = GeometryBuilder('GenericGeometry')
         GenericGeometryBuilder.BeamPipeBuilder        = BeamPipeVolumeBuilder

@@ -55,3 +55,4 @@ Acts::GenericDetectorElement::GenericDetectorElement(const Identifier& identifie
 /**  Destructor */
 Acts::GenericDetectorElement::~GenericDetectorElement()
 {}
+

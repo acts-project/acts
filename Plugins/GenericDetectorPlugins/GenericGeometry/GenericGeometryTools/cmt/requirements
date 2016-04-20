@@ -14,6 +14,7 @@ use Volumes                Volumes-*                 Geometry
 use Detector               Detector-*                Geometry
 use Material               Material-*                Geometry
 use GeometryUtils          GeometryUtils-*           Geometry
+use DetectorElementBase    DetectorElementBase-*     Geometry
 use GenericDetectorElement GenericDetectorElement-*  Plugins/GenericDetectorPlugins/GenericGeometry
 
 #################################################################

@@ -69,12 +69,9 @@ namespace Acts {
         /**Return the normal of the surface associated with this identifier
          In the case of silicon it returns the same as normal()*/
         virtual const Acts::Vector3D& normal(const Identifier& id) const override;
-
-        /** Neighbours for fast access */
-        virtual const std::vector<const DetectorElementBase*>& neighbours() const override;
         
-        /** Neighbours for fast access */
-        void registerNeighbours(std::vector<const DetectorElementBase*>& neighbours);
+        /** Returns the thickness of the module */
+        virtual double thickness() const override;
         
     private:
         
@@ -90,12 +87,13 @@ namespace Acts {
         const Identifier                                     m_identifier;
         /**Boundaries of the detector element*/
         std::shared_ptr<const Acts::SurfaceBounds>           m_bounds;
+        /** Thickness of this detector element*/
+        double                                               m_thickness; //@TODO implement thickness from TGeoMode
         /**Corresponding Surface*/
         std::shared_ptr<const Acts::Surface>                 m_surface;
         /**possible contained surfaces*/
         std::vector<std::shared_ptr<const Acts::Surface>>    m_surfaces;
-        /**neighbours*/
-        std::vector<const DetectorElementBase*>              m_neighbours;
+
     };
 }
 
@@ -117,8 +115,7 @@ inline const Acts::SurfaceBounds& Acts::TGeoDetectorElement::bounds() const{retu
 
 inline const Acts::SurfaceBounds& Acts::TGeoDetectorElement::bounds(const Identifier&) const {return (*m_bounds);}
 
-inline void Acts::TGeoDetectorElement::registerNeighbours(std::vector<const Acts::DetectorElementBase*>& neighbours) { m_neighbours = neighbours; }
+inline double Acts::TGeoDetectorElement::thickness() const { return m_thickness; }
 
-inline const std::vector<const Acts::DetectorElementBase*>& Acts::TGeoDetectorElement::neighbours() const { return m_neighbours; }
 
 #endif

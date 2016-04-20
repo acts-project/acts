@@ -16,9 +16,9 @@
 #include <iomanip>
 
 template <class T> Acts::ExtrapolationCode Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
-                                                                          const Acts::Surface* sf,
-                                                                          Acts::PropDirection pDir,
-                                                                          const Acts::BoundaryCheck& bcheck) const
+                                                                           const Acts::Surface* sf,
+                                                                           Acts::PropDirection pDir,
+                                                                           const Acts::BoundaryCheck& bcheck) const
 {
     Acts::ExtrapolationCode eCode = Acts::ExtrapolationCode::InProgress;
     // ---- [0] check the direct propagation exit
@@ -151,7 +151,7 @@ template <class T> Acts::ExtrapolationCode Acts::StaticEngine::initNavigationT(A
           return Acts::ExtrapolationCode::InProgress;
         } else {
             // make a straight line intersection
-            Acts::Intersection sfI = sf->straightLineIntersection(eCell.leadParameters->position(), pDir*eCell.leadParameters->momentum(), true);
+            Acts::Intersection sfI = sf->intersectionEstimate(eCell.leadParameters->position(), pDir*eCell.leadParameters->momentum(), true);
             // use this to find endVolume and endLayer
             eCell.endLayer  = eCell.leadVolume->associatedLayer(sfI.position);
             // if you have a surface you need to require an end layer for the validation, otherwise you need to do a fallbac
@@ -184,7 +184,7 @@ template <class T> Acts::ExtrapolationCode Acts::StaticEngine::handleLayerT(Acts
     //      - sensitive surface which should be tried to hit
     //      - material sub structure to be resolved (independent of sensitive surface)
     // - (b) layer is start layer (can not be if there was a volume switch)
-    bool isStartLayer       = eCell.initialVolume() && eCell.leadLayer->onLayer(*eCell.leadParameters); 
+    bool isStartLayer  = eCell.initialVolume() && eCell.leadLayer->onLayer(*eCell.leadParameters); 
     // - (c) layer is destination layer 
     //      - final propagation to the layer and update if necessary
     bool isDestinationLayer = (sf && eCell.leadLayer == eCell.endLayer);
@@ -216,7 +216,7 @@ template <class T> Acts::ExtrapolationCode Acts::StaticEngine::handleLayerT(Acts
         // return possbilities:
         // - InProgress            : material update performed or not (depending on material)
         // - SuccessMaterialLimit  : material limit reached & configured to stop there
- //       eCode = m_materialEffectsEngine->handleMaterial(eCell,pDir,Acts::fullUpdate);
+        eCode = m_materialEffectsEngine->handleMaterial(eCell,pDir,Acts::fullUpdate);
         CHECK_ECODE_CONTINUE(eCell, eCode);
         // record the passive parameters
         eCell.stepParameters(eCell.leadParameters, Acts::ExtrapolationMode::CollectPassive);
@@ -298,28 +298,34 @@ template <class T> Acts::ExtrapolationCode Acts::StaticEngine::resolveLayerT(Act
     // this will give you the compatible surfaces of the layer : provided start and destination surface are excluded
     // - surfaces without material are only provided if they are active and CollectSensitive is configured
     // - surfaces with material are provided in order to make the necessary material update
-    size_t ncSurfaces = eCell.leadLayer->compatibleSurfaces(cSurfaces,
-                                                            *eCell.leadParameters,
-                                                            pDir,
-                                                            bcheck,
-                                                            eCell.checkConfigurationMode(ExtrapolationMode::CollectSensitive),
-                                                            eCell.checkConfigurationMode(ExtrapolationMode::CollectPassive),
-                                                            eCell.checkConfigurationMode(ExtrapolationMode::RobustSearch),
-                                                            (isStartLayer ? &(eCell.leadParameters->associatedSurface()) : eCell.leadLayerSurface),
-                                                            (isDestinationLayer ? sf : 0) );
+    bool orderedSurfaces = eCell.leadLayer->compatibleSurfaces(cSurfaces,
+                                                               *eCell.leadParameters,
+                                                               pDir,
+                                                               bcheck,
+                                                               eCell.checkConfigurationMode(ExtrapolationMode::CollectSensitive),
+                                                               eCell.checkConfigurationMode(ExtrapolationMode::CollectPassive),
+                                                               eCell.searchMode,
+                                                               (isStartLayer ? &(eCell.leadParameters->associatedSurface()) : eCell.leadLayerSurface),
+                                                               (isDestinationLayer ? sf : 0) );
+    // how many test surfaces do we have                                                            
+    size_t ncSurfaces = cSurfaces.size();                                                          
     // some screen output for the sub structure    
     EX_MSG_VERBOSE(eCell.navigationStep, "layer", eCell.leadLayer->geoID().value(), "found " <<  ncSurfaces << " sub structure surfaces to test."); 
     // check if you have to do something
     if (ncSurfaces){
+        // if the search mode returns unordered surfaces :
+        // - it needs to cache the initial lead parameters
+        // - ATTENTION this invalidates the correct material estimate
+        const T* dbgLeadParameters = eCell.leadParameters;
         // now loop over the surfaces:
         // the surfaces will be sorted
         for (auto& csf : cSurfaces ) {
-	    EX_MSG_VERBOSE(eCell.navigationStep, "layer", eCell.leadLayer->geoID().value(), "trying candidate surfaces with straight line path length " << csf.intersection.pathLength); 
+	        EX_MSG_VERBOSE(eCell.navigationStep, "layer", eCell.leadLayer->geoID().value(), "trying candidate surfaces with straight line path length " << csf.intersection.pathLength); 
             // propagate to the compatible surface, return types are 
             // - InProgress       : propagation to compatible surface worked
             // - Recovered        : propagation to compatible surface did not work, leadParameters stay the same
             // - SuccessPathLimit : propagation to compatible surface reached the path limit
-            eCode =  m_propagationEngine->propagate(eCell,*(csf.object),pDir,true,eCell.sensitiveCurvilinear);
+            eCode =  m_propagationEngine->propagate(eCell,*(csf.object),pDir,bcheck,eCell.sensitiveCurvilinear);
             CHECK_ECODE_SUCCESS_NODEST(eCell,eCode);
             // check if the propagation was successful 
             if (eCode.inProgress()){
@@ -338,7 +344,12 @@ template <class T> Acts::ExtrapolationCode Acts::StaticEngine::resolveLayerT(Act
                     eCode = m_materialEffectsEngine->handleMaterial(eCell,pDir,Acts::fullUpdate);
                     CHECK_ECODE_CONTINUE(eCell, eCode);
                 }
-            } 
+                // if the search mode returns unordered surfaces :
+                // - ATTENTION this invalidates the correct material estimate
+                if (!orderedSurfaces) 
+                    eCell.leadParameters = dbgLeadParameters;
+            }
+             
        } // loop over test surfaces done
     } // there are compatible surfaces          
 

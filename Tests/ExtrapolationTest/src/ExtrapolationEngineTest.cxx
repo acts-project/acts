@@ -41,7 +41,7 @@ Acts::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, 
  m_collectMaterial(false),
  m_collectJacobians(false),
  m_sensitiveCurvilinear(false),
- m_robustSearch(false),
+ m_searchMode(0), 
  m_backExtrapolation(false),
  m_stepsPhi(1),
  m_currentPhiStep(0),
@@ -50,6 +50,7 @@ Acts::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, 
  m_phiScans(0),
  m_currentPhi(0.),
  m_splitCharge(false),
+ m_writeTree(true),
  m_treeName("ExtrapolationEngineTest"),
  m_treeFolder("/val/"),
  m_treeDescription("ExtrapolationEngine test setup"),
@@ -85,8 +86,20 @@ Acts::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, 
  m_backTheta(0),
  m_backEta(0),
  m_backP(0),
- m_backPt(0)
-// m_histogramSvc("",name)
+ m_backPt(0),
+ m_sensitiveLocalType(nullptr),
+ m_sensitiveLocal0(nullptr),
+ m_sensitiveLocal1(nullptr),
+ m_materialThicknessInX0Accumulated(nullptr),
+ m_materialThicknessInX0Steps(nullptr),
+ m_materialThicknessInL0Steps(nullptr),
+ m_materialPositionX(nullptr),
+ m_materialPositionY(nullptr),
+ m_materialPositionZ(nullptr),
+ m_materialPositionR(nullptr),
+ m_materialPositionP(nullptr),
+ m_materialPositionPt(nullptr),
+ m_materialScaling(nullptr)
 {
     // the extrapolation engine
     declareProperty("ExtrapolationEngine",      m_extrapolationEngine);
@@ -106,7 +119,7 @@ Acts::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, 
     declareProperty("CollectMaterial",          m_collectMaterial);
     declareProperty("CollectJacobians",         m_collectJacobians);
     declareProperty("SensitiveCurvilinear",     m_sensitiveCurvilinear);
-    declareProperty("RobustSearch",             m_robustSearch);
+    declareProperty("SearchMode",               m_searchMode);
     // Mode for scanning in steps
     declareProperty("ScanMode",                 m_scanMode);
     declareProperty("EtaScans",                 m_etaScans);
@@ -136,6 +149,7 @@ Acts::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, 
     declareProperty("PtMax",                    m_ptMax);
     // the properties
     declareProperty("NumTestsPerEvent",         m_numTests=100);
+    declareProperty("WriteValidationTree",      m_writeTree);    
     declareProperty("TreeName",                 m_treeName);
     declareProperty("TreeFolder",               m_treeFolder);
     declareProperty("TreeDescription",          m_treeDescription);
@@ -143,30 +157,38 @@ Acts::ExtrapolationEngineTest::ExtrapolationEngineTest(const std::string& name, 
 
 StatusCode Acts::ExtrapolationEngineTest::finalize() {
 
-    // memory clean up
-    for (size_t ip = 0; ip < m_parameterNames.size(); ++ip){
-        // create
-        delete m_pPositionX[ip];
-        delete m_pPositionY[ip];
-        delete m_pPositionZ[ip];
-        delete m_pPositionR[ip];
-        delete m_pPhi[ip];
-        delete m_pTheta[ip];
-        delete m_pEta[ip];
-        delete m_pP[ip];
-        delete m_pPt[ip];
+    if (m_writeTree){
+        // memory clean up
+        for (size_t ip = 0; ip < m_parameterNames.size(); ++ip){
+            // create
+            delete m_pPositionX[ip];
+            delete m_pPositionY[ip];
+            delete m_pPositionZ[ip];
+            delete m_pPositionR[ip];
+            delete m_pPhi[ip];
+            delete m_pTheta[ip];
+            delete m_pEta[ip];
+            delete m_pP[ip];
+            delete m_pPt[ip];
+        }  
+        if (m_collectSensitive){
+            delete m_sensitiveLocalType;
+            delete m_sensitiveLocal0;
+            delete m_sensitiveLocal1;
+        }
+        if (m_collectMaterial){
+            delete m_materialThicknessInX0Accumulated;
+            delete m_materialThicknessInX0Steps;
+            delete m_materialThicknessInL0Steps;
+            delete m_materialPositionX;
+            delete m_materialPositionY;
+            delete m_materialPositionZ;
+            delete m_materialPositionR;
+            delete m_materialPositionP;
+            delete m_materialPositionPt;
+            delete m_materialScaling;
+        }
     }
-    delete m_materialThicknessInX0Accumulated;
-    delete m_materialThicknessInX0Steps;
-    delete m_materialThicknessInL0Steps;
-    delete m_materialPositionX;
-    delete m_materialPositionY;
-    delete m_materialPositionZ;
-    delete m_materialPositionR;
-    delete m_materialPositionP;
-    delete m_materialPositionPt;
-    delete m_materialScaling;
-
     return StatusCode::SUCCESS;
 }
 
@@ -185,115 +207,126 @@ StatusCode Acts::ExtrapolationEngineTest::initializeTest()
 StatusCode Acts::ExtrapolationEngineTest::bookTree()
 {
     MSG_VERBOSE("Booking the Extrapolation test Tree.");
-
-    // ------------------------------> OUTPUT NTUPLE (geometry validation)
-    m_tree = new TTree(m_treeName.c_str(), m_treeDescription.c_str());
-    // add the Branches
-    m_tree->Branch("StartPosX",     &m_startPositionX);
-    m_tree->Branch("StartPosY",     &m_startPositionY);
-    m_tree->Branch("StartPosZ",     &m_startPositionZ);
-    m_tree->Branch("StartPosR",     &m_startPositionR);
-    m_tree->Branch("StartPhi",      &m_startPhi);
-    m_tree->Branch("StartEta",      &m_startEta);
-    m_tree->Branch("StartTheta",    &m_startTheta);
-    m_tree->Branch("StartP",        &m_startP);
-    m_tree->Branch("StartPt",       &m_startPt);
-    if (m_parametersMode) m_tree->Branch("StartCharge",   &m_charge);
-
-    m_tree->Branch("EndSuccessful", &m_endSuccessful);
-    m_tree->Branch("EndPosX",       &m_endPositionX);
-    m_tree->Branch("EndPosY",       &m_endPositionY);
-    m_tree->Branch("EndPosZ",       &m_endPositionZ);
-    m_tree->Branch("EndPosR",       &m_endPositionR);
-    m_tree->Branch("EndPhi",        &m_endPhi);
-    m_tree->Branch("EndEta",        &m_endEta);
-    m_tree->Branch("EndTheta",      &m_endTheta);
-    m_tree->Branch("EndP",          &m_endP);
-    m_tree->Branch("EndPt",         &m_endPt);
-    // also add the path length
-    m_tree->Branch("EndPathLength", &m_endPathLength);
-
-    if (m_backExtrapolation){
-        m_tree->Branch("BackSuccessful", &m_backSuccessful);
-        m_tree->Branch("BackPosX",       &m_backPositionX);
-        m_tree->Branch("BackPosY",       &m_backPositionY);
-        m_tree->Branch("BackPosZ",       &m_backPositionZ);
-        m_tree->Branch("BackPosR",       &m_backPositionR);
-        m_tree->Branch("BackPhi",        &m_backPhi);
-        m_tree->Branch("BackEta",        &m_backEta);
-        m_tree->Branch("BackTheta",      &m_backTheta);
-        m_tree->Branch("BackP",          &m_backP);
-        m_tree->Branch("BackPt",         &m_backPt);
-    }
-
-    // this fixes the parameters to order
-    m_parameterNames.push_back("Sensitive");
-    m_parameterNames.push_back("Passive");
-    m_parameterNames.push_back("Boundary");
-    for (size_t ip = 0; ip < m_parameterNames.size(); ++ip){
-        // create
-        m_pPositionX.push_back( new std::vector<float> );
-        m_pPositionY.push_back( new std::vector<float> );
-        m_pPositionZ.push_back( new std::vector<float> );
-        m_pPositionR.push_back( new std::vector<float> );
-        m_pPhi.push_back( new std::vector<float> );
-        m_pTheta.push_back( new std::vector<float> );
-        m_pEta.push_back( new std::vector<float> );
-        m_pP.push_back( new std::vector<float> );
-        m_pPt.push_back( new std::vector<float> );
-
-        // define the branches
-        m_tree->Branch(m_parameterNames[ip]+"PosX",       m_pPositionX[ip]);
-        m_tree->Branch(m_parameterNames[ip]+"PosY",       m_pPositionY[ip]);
-        m_tree->Branch(m_parameterNames[ip]+"PosZ",       m_pPositionZ[ip]);
-        m_tree->Branch(m_parameterNames[ip]+"PosR",       m_pPositionR[ip]);
-        m_tree->Branch(m_parameterNames[ip]+"Phi",        m_pPhi[ip]      );
-        m_tree->Branch(m_parameterNames[ip]+"Eta",        m_pTheta[ip]    );
-        m_tree->Branch(m_parameterNames[ip]+"Theta",      m_pEta[ip]      );
-        m_tree->Branch(m_parameterNames[ip]+"P",          m_pP[ip]        );
-        m_tree->Branch(m_parameterNames[ip]+"Pt",         m_pPt[ip]       );
-    }
-
-    // collect the material, you need branches for this
-    if (m_collectMaterial){
-        m_materialThicknessInX0Accumulated = new std::vector<float>;
-        m_materialThicknessInX0Steps       = new std::vector<float>;
-        m_materialThicknessInL0Steps       = new std::vector<float>;
-        m_materialPositionX                = new std::vector<float>;
-        m_materialPositionY                = new std::vector<float>;
-        m_materialPositionZ                = new std::vector<float>;
-        m_materialPositionR                = new std::vector<float>;
-        m_materialPositionP                = new std::vector<float>;
-        m_materialPositionPt               = new std::vector<float>;
-        m_materialScaling                  = new std::vector<float>;
-        m_tree->Branch("MaterialThicknessInX0",                &m_materialThicknessInX0);
-        m_tree->Branch("MaterialThicknessInL0",                &m_materialThicknessInL0);
-        m_tree->Branch("MaterialThicknessZARho",               &m_materialThicknessZARho);
-        m_tree->Branch("MaterialThicknessSensitiveInX0",       &m_materialThicknessInX0Sensitive);
-        m_tree->Branch("MaterialThicknessPassiveInX0",         &m_materialThicknessInX0Passive  );
-        m_tree->Branch("MaterialThicknessBoundaryInX0",        &m_materialThicknessInX0Boundary );
-        m_tree->Branch("MaterialThicknessAccumulatedX0",       m_materialThicknessInX0Accumulated );
-        m_tree->Branch("MaterialThicknessStepsInX0",           m_materialThicknessInX0Steps);
-        m_tree->Branch("MaterialThicknessStepsInL0",           m_materialThicknessInL0Steps);
-        m_tree->Branch("MaterialPosX",                         m_materialPositionX);
-        m_tree->Branch("MaterialPosY",                         m_materialPositionY);
-        m_tree->Branch("MaterialPosZ",                         m_materialPositionZ);
-        m_tree->Branch("MaterialPosR",                         m_materialPositionR);
-        m_tree->Branch("MaterialPosP",                         m_materialPositionP);
-        m_tree->Branch("MaterialPosPt",                        m_materialPositionPt);
-        m_tree->Branch("MaterialScaling",                      m_materialScaling);
-    }
-
-    // now register the Tree
-    ITHistSvc* tHistSvc = 0;
-    if (service("THistSvc",tHistSvc).isFailure()) {
-      MSG_ERROR( "initialize() Could not find Hist Service  -> Switching Tree output off !" );
-        delete m_tree; m_tree = 0;
-    }
-    if (tHistSvc && ((tHistSvc->regTree(m_treeFolder+m_treeName, m_tree)).isFailure()) ) {
-        MSG_ERROR( "initialize() Could not register the validation Tree -> Switching Tree output off !" );
-        delete m_tree; m_tree = 0;
-    }
+    
+    if (m_writeTree){
+        // ------------------------------> OUTPUT NTUPLE (geometry validation)
+        m_tree = new TTree(m_treeName.c_str(), m_treeDescription.c_str());
+        // add the Branches
+        m_tree->Branch("StartPosX",     &m_startPositionX);
+        m_tree->Branch("StartPosY",     &m_startPositionY);
+        m_tree->Branch("StartPosZ",     &m_startPositionZ);
+        m_tree->Branch("StartPosR",     &m_startPositionR);
+        m_tree->Branch("StartPhi",      &m_startPhi);
+        m_tree->Branch("StartEta",      &m_startEta);
+        m_tree->Branch("StartTheta",    &m_startTheta);
+        m_tree->Branch("StartP",        &m_startP);
+        m_tree->Branch("StartPt",       &m_startPt);
+        if (m_parametersMode) m_tree->Branch("StartCharge",   &m_charge);
+        
+        m_tree->Branch("EndSuccessful", &m_endSuccessful);
+        m_tree->Branch("EndPosX",       &m_endPositionX);
+        m_tree->Branch("EndPosY",       &m_endPositionY);
+        m_tree->Branch("EndPosZ",       &m_endPositionZ);
+        m_tree->Branch("EndPosR",       &m_endPositionR);
+        m_tree->Branch("EndPhi",        &m_endPhi);
+        m_tree->Branch("EndEta",        &m_endEta);
+        m_tree->Branch("EndTheta",      &m_endTheta);
+        m_tree->Branch("EndP",          &m_endP);
+        m_tree->Branch("EndPt",         &m_endPt);
+        // also add the path length
+        m_tree->Branch("EndPathLength", &m_endPathLength);
+        
+        if (m_backExtrapolation){
+            m_tree->Branch("BackSuccessful", &m_backSuccessful);
+            m_tree->Branch("BackPosX",       &m_backPositionX);
+            m_tree->Branch("BackPosY",       &m_backPositionY);
+            m_tree->Branch("BackPosZ",       &m_backPositionZ);
+            m_tree->Branch("BackPosR",       &m_backPositionR);
+            m_tree->Branch("BackPhi",        &m_backPhi);
+            m_tree->Branch("BackEta",        &m_backEta);
+            m_tree->Branch("BackTheta",      &m_backTheta);
+            m_tree->Branch("BackP",          &m_backP);
+            m_tree->Branch("BackPt",         &m_backPt);
+        }
+        
+        // this fixes the parameters to order
+        m_parameterNames.push_back("Sensitive");
+        m_parameterNames.push_back("Passive");
+        m_parameterNames.push_back("Boundary");
+        for (size_t ip = 0; ip < m_parameterNames.size(); ++ip){
+            // create
+            m_pPositionX.push_back( new std::vector<float> );
+            m_pPositionY.push_back( new std::vector<float> );
+            m_pPositionZ.push_back( new std::vector<float> );
+            m_pPositionR.push_back( new std::vector<float> );
+            m_pPhi.push_back( new std::vector<float> );      
+            m_pTheta.push_back( new std::vector<float> );
+            m_pEta.push_back( new std::vector<float> );
+            m_pP.push_back( new std::vector<float> );
+            m_pPt.push_back( new std::vector<float> );
+	    
+            // define the branches    
+            m_tree->Branch(m_parameterNames[ip]+"PosX",       m_pPositionX[ip]);
+            m_tree->Branch(m_parameterNames[ip]+"PosY",       m_pPositionY[ip]);
+            m_tree->Branch(m_parameterNames[ip]+"PosZ",       m_pPositionZ[ip]);
+            m_tree->Branch(m_parameterNames[ip]+"PosR",       m_pPositionR[ip]);
+            m_tree->Branch(m_parameterNames[ip]+"Phi",        m_pPhi[ip]      );
+            m_tree->Branch(m_parameterNames[ip]+"Eta",        m_pTheta[ip]    );
+            m_tree->Branch(m_parameterNames[ip]+"Theta",      m_pEta[ip]      );
+            m_tree->Branch(m_parameterNames[ip]+"P",          m_pP[ip]        );
+            m_tree->Branch(m_parameterNames[ip]+"Pt",         m_pPt[ip]       );
+        }
+        
+        if (m_collectSensitive){
+             m_sensitiveLocalType              = new std::vector<float>;
+             m_sensitiveLocal0                 = new std::vector<float>;
+             m_sensitiveLocal1                 = new std::vector<float>;
+             m_tree->Branch("SensitiveType",   m_sensitiveLocalType);
+             m_tree->Branch("SensitiveLoc0",   m_sensitiveLocal0);
+             m_tree->Branch("SensitiveLoc1",   m_sensitiveLocal1);
+        }
+        
+        // collect the material, you need branches for this
+        if (m_collectMaterial){
+            m_materialThicknessInX0Accumulated = new std::vector<float>;
+            m_materialThicknessInX0Steps       = new std::vector<float>;
+            m_materialThicknessInL0Steps       = new std::vector<float>;     
+            m_materialPositionX                = new std::vector<float>;
+            m_materialPositionY                = new std::vector<float>;
+            m_materialPositionZ                = new std::vector<float>;
+            m_materialPositionR                = new std::vector<float>;
+            m_materialPositionP                = new std::vector<float>;
+            m_materialPositionPt               = new std::vector<float>;
+            m_materialScaling                  = new std::vector<float>;   
+            m_tree->Branch("MaterialThicknessInX0",                &m_materialThicknessInX0);
+            m_tree->Branch("MaterialThicknessInL0",                &m_materialThicknessInL0);
+            m_tree->Branch("MaterialThicknessZARho",               &m_materialThicknessZARho);
+            m_tree->Branch("MaterialThicknessSensitiveInX0",       &m_materialThicknessInX0Sensitive);
+            m_tree->Branch("MaterialThicknessPassiveInX0",         &m_materialThicknessInX0Passive  );
+            m_tree->Branch("MaterialThicknessBoundaryInX0",        &m_materialThicknessInX0Boundary );
+            m_tree->Branch("MaterialThicknessAccumulatedX0",       m_materialThicknessInX0Accumulated );
+            m_tree->Branch("MaterialThicknessStepsInX0",           m_materialThicknessInX0Steps);
+            m_tree->Branch("MaterialThicknessStepsInL0",           m_materialThicknessInL0Steps);
+            m_tree->Branch("MaterialPosX",                         m_materialPositionX);
+            m_tree->Branch("MaterialPosY",                         m_materialPositionY);
+            m_tree->Branch("MaterialPosZ",                         m_materialPositionZ);
+            m_tree->Branch("MaterialPosR",                         m_materialPositionR);
+            m_tree->Branch("MaterialPosP",                         m_materialPositionP);
+            m_tree->Branch("MaterialPosPt",                        m_materialPositionPt);       
+            m_tree->Branch("MaterialScaling",                      m_materialScaling);
+        }
+        
+        // now register the Tree
+        ITHistSvc* tHistSvc = 0;
+        if (service("THistSvc",tHistSvc).isFailure()) {
+          MSG_ERROR( "initialize() Could not find Hist Service  -> Switching Tree output off !" );
+            delete m_tree; m_tree = 0;
+        }
+        if (tHistSvc && ((tHistSvc->regTree(m_treeFolder+m_treeName, m_tree)).isFailure()) ) {
+            MSG_ERROR( "initialize() Could not register the validation Tree -> Switching Tree output off !" );
+            delete m_tree; m_tree = 0;
+        }   
+    } 
     return StatusCode::SUCCESS;
 
 }
@@ -329,43 +362,50 @@ StatusCode Acts::ExtrapolationEngineTest::runTest()
       m_endTheta     = 0.;
       m_endP         = 0.;
       m_endPt        = 0.;
+      
+      if (m_writeTree){
+        for (size_t ip = 0; ip < m_parameterNames.size(); ++ip){
+            // clear
+            m_pPositionX[ip]->clear();
+            m_pPositionY[ip]->clear();
+            m_pPositionZ[ip]->clear();
+            m_pPositionR[ip]->clear();
+            m_pPhi[ip]->clear();    
+            m_pTheta[ip]->clear();
+            m_pEta[ip]->clear();
+            m_pP[ip]->clear();
+            m_pPt[ip]->clear();            
+        }  
+        
+        if (m_collectSensitive){
+            m_sensitiveLocalType->clear();
+            m_sensitiveLocal0->clear();
+            m_sensitiveLocal1->clear();
+        }
+        
+        // material collection
+        m_materialThicknessInX0                 = 0.;
+        m_materialThicknessInL0                 = 0.;
+        m_materialThicknessZARho                = 0.;
+        m_materialThicknessInX0Sensitive        = 0.;
+        m_materialThicknessInX0Passive          = 0.;
+        m_materialThicknessInX0Boundary         = 0.;
+        if (m_collectMaterial){
+            m_materialThicknessInX0Accumulated->clear();
+            m_materialThicknessInX0Steps->clear();
+            m_materialThicknessInX0Steps->clear();
+            m_materialPositionX->clear();
+            m_materialPositionY->clear();
+            m_materialPositionZ->clear();
+            m_materialPositionR->clear();
+            m_materialPositionP->clear();
+            m_materialPositionPt->clear();
+            m_materialScaling->clear();
+        }
+      }              
+          
+      Vector3D momentum(p*sin(theta)*cos(phi), p*sin(theta)*sin(phi), p*cos(theta));        
 
-      for (size_t ip = 0; ip < m_parameterNames.size(); ++ip){
-          // clear
-          m_pPositionX[ip]->clear();
-          m_pPositionY[ip]->clear();
-          m_pPositionZ[ip]->clear();
-          m_pPositionR[ip]->clear();
-          m_pPhi[ip]->clear();
-          m_pTheta[ip]->clear();
-          m_pEta[ip]->clear();
-          m_pP[ip]->clear();
-          m_pPt[ip]->clear();
-      }
-
-      // material collection
-      m_materialThicknessInX0                 = 0.;
-      m_materialThicknessInL0                 = 0.;
-      m_materialThicknessZARho                = 0.;
-      m_materialThicknessInX0Sensitive        = 0.;
-      m_materialThicknessInX0Passive          = 0.;
-      m_materialThicknessInX0Boundary         = 0.;
-
-      if (m_collectMaterial){
-          m_materialThicknessInX0Accumulated->clear();
-          m_materialThicknessInX0Steps->clear();
-          m_materialThicknessInX0Steps->clear();
-          m_materialPositionX->clear();
-          m_materialPositionY->clear();
-          m_materialPositionZ->clear();
-          m_materialPositionR->clear();
-          m_materialPositionP->clear();
-          m_materialPositionPt->clear();
-          m_materialScaling->clear();
-      }
-
-
-      Vector3D momentum(p*sin(theta)*cos(phi), p*sin(theta)*sin(phi), p*cos(theta));
       // create the start parameters
       double d0 = m_smearProductionVertex ? (m_smearFlatOriginT ? (m_d0Min + (m_d0Max-m_d0Min)*Acts::ExtrapolationTestBase::m_flatDist->shoot()) : Acts::ExtrapolationTestBase::m_gaussDist->shoot()*m_sigmaOriginT) : 0.;
       double z0 = m_smearProductionVertex ? (m_smearFlatOriginZ ? (m_z0Min + (m_z0Max-m_z0Min)*Acts::ExtrapolationTestBase::m_flatDist->shoot()) : Acts::ExtrapolationTestBase::m_gaussDist->shoot()*m_sigmaOriginZ) : 0.;
@@ -390,14 +430,14 @@ StatusCode Acts::ExtrapolationEngineTest::runTest()
           // Screen output
           if (executeTestT<Acts::NeutralParameters>(startParameters).isFailure())
               MSG_WARNING("Test with neutral parameters did not succeed.");
-          else
+          else if (m_writeTree)
               m_tree->Fill();
       } else {
           // create the charged parameters
           BoundParameters startParameters(std::move(cov),std::move(pars),pSurface);
           if (executeTestT<Acts::TrackParameters>(startParameters).isFailure())
               MSG_WARNING("Test with neutral parameters did not succeed.");
-          else
+          else if (m_writeTree)
               m_tree->Fill();
       }
 

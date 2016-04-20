@@ -26,7 +26,7 @@ namespace Acts {
   /** @class PropagationEngine
 
       Wrapper around the IPropagator interface,
-      the neutral propagation is solved by using the surface::straightLineIntersection
+      the neutral propagation is solved by using the surface::intersectionEstimate
       mehtod.
 
       @author Andreas Salzburger -at - cern.ch
