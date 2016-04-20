@@ -8,12 +8,12 @@
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
-#include "ACTS/Surface.h"
+#include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/BoundaryCheck.h"
 #include "ACTS/Volumes/Volume.h"
 //#include "ACTS/Volumes/AbstractVolume.h"
 #include "ACTS/Volumes/BoundarySurface.h"
-#include "ACTS/Layer.h"
+#include "ACTS/Layers/Layer.h"
 #include "ACTS/Material/Material.h"
 #include "ACTS/GeometryUtils/BinnedArray.h"
 #include "ACTS/GeometryUtils/GeometrySignature.h"

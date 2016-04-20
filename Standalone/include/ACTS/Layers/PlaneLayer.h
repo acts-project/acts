@@ -8,7 +8,7 @@
 class MsgStream;
 
 // Geomety module
-#include "ACTS/Layer.h"
+#include "ACTS/Layers/Layer.h"
 #include "ACTS/Surfaces/PlaneSurface.h"
 // Core module
 #include "ACTS/Utilities/PropDirection.h"

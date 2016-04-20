@@ -8,7 +8,7 @@
 #include "ACTS/Volumes/VolumeExcluder.h"
 #include "ACTS/Volumes/CylinderVolumeBounds.h"
 #include "ACTS/Volumes/SimplePolygonBrepVolumeBounds.h"
-#include "ACTS/Surface.h"
+#include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/PlaneSurface.h"
 #include "ACTS/Surfaces/SubtractedPlaneSurface.h"
 #include "ACTS/Surfaces/CylinderSurface.h"

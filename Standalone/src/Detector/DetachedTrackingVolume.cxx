@@ -5,7 +5,7 @@
 // Geometry module
 #include "ACTS/Detector/DetachedTrackingVolume.h"
 #include "ACTS/Detector/TrackingVolume.h"
-#include "ACTS/Layer.h"
+#include "ACTS/Layers/Layer.h"
 
 Acts::DetachedTrackingVolume::DetachedTrackingVolume() :
   m_name("undefined"),

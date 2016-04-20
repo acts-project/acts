@@ -9,7 +9,7 @@
 #include "ACTS/Volumes/BoundaryCylinderSurface.h"
 #include "ACTS/Volumes/BoundaryDiscSurface.h"
 #include "ACTS/Volumes/BoundaryPlaneSurface.h"
-#include "ACTS/Surface.h"
+#include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/CylinderSurface.h"
 #include "ACTS/Surfaces/DiscSurface.h"
 #include "ACTS/Surfaces/PlaneSurface.h"

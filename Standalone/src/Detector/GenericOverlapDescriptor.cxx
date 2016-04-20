@@ -5,7 +5,7 @@
 // Geometry module
 #include "ACTS/Detector/GenericOverlapDescriptor.h"
 #include "ACTS/Detector/DetectorElementBase.h"
-#include "ACTS/Surface.h"
+#include "ACTS/Surfaces/Surface.h"
 
 bool Acts::GenericOverlapDescriptor::reachableSurfaces(std::vector<const Surface*>& cSurfaces, 
                                                       const Surface& sf,

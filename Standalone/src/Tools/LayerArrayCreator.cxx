@@ -8,7 +8,7 @@
 #include "ACTS/GeometryUtils/BinUtility.h"
 #include "ACTS/GeometryUtils/GeometryStatics.h"
 #include "ACTS/GeometryUtils/GeometryObjectSorter.h"
-#include "ACTS/Layer.h"
+#include "ACTS/Layers/Layer.h"
 #include "ACTS/Layers/NavigationLayer.h"
 #include "ACTS/Surfaces/CylinderSurface.h"
 #include "ACTS/Surfaces/DiscSurface.h"

@@ -6,7 +6,7 @@
 #define ACTS_SURFACESSTRAIGHTLINESURFACE_H
 
 // Geometry module
-#include "ACTS/Surface.h"
+#include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/CylinderBounds.h"
 #include "ACTS/Surfaces/NoBounds.h"
 // Core module

@@ -5,7 +5,7 @@
 // Geometry module
 #include "ACTS/Layers/PlaneLayer.h"
 #include "ACTS/Detector/GenericApproachDescriptor.h"
-#include "ACTS/TrackParameters.h"
+#include "ACTS/EventData/TrackParameters.h"
 // CLHEP
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 #include "ACTS/Utilities/AlgebraHelper.h"

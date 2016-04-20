@@ -10,7 +10,7 @@ class MsgStream;
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 // Geometry module
-#include "ACTS/Layer.h"
+#include "ACTS/Layers/Layer.h"
 #include "ACTS/Surfaces/ConeSurface.h"
 // STL sorting
 #include <algorithm>

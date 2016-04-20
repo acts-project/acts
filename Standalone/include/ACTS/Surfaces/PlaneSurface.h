@@ -6,7 +6,7 @@
 #define ACTS_SURFACES_PLANESURFACE_H 1
 
 // Geometry module
-#include "ACTS/Surface.h"
+#include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/PlanarBounds.h"
 #include "ACTS/Surfaces/NoBounds.h"
 // Core Module

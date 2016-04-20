@@ -2,7 +2,7 @@
 #define ACTS_SINGLEBOUNDTRACKPARAMETERS_H 1
 
 //ACTS includes
-#include "ACTS/Surface.h"
+#include "ACTS/Surfaces/Surface.h"
 #include "ACTS/EventData/SingleTrackParameters.h"
 
 namespace Acts

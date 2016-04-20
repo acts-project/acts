@@ -4,7 +4,7 @@
 
 // Geometry module
 #include "ACTS/Volumes/CuboidVolumeBounds.h"
-#include "ACTS/Surface.h"
+#include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/PlaneSurface.h"
 #include "ACTS/Surfaces/RectangleBounds.h"
 // STD/STL

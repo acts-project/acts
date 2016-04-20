@@ -6,7 +6,7 @@
 #define ACTS_DETECTOR_SUBTRACTEDCYLINDERLAYER_H
 
 // Trk
-#include "ACTS/Layer.h"
+#include "ACTS/Layers/Layer.h"
 #include "ACTS/Surfaces/SubtractedCylinderSurface.h"
 // Amg
 #include "ACTS/Utilities/AlgebraDefinitions.h"

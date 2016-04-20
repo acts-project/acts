@@ -7,7 +7,7 @@
 
 // Geometry module
 #include "ACTS/Utilities/ParameterDefinitions.h"
-#include "ACTS/Surface.h"
+#include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/CylinderBounds.h"
 // Event module
 #include "ACTS/Utilities/AlgebraDefinitions.h"

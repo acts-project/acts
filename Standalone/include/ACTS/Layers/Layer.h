@@ -15,8 +15,8 @@
 #include "ACTS/GeometryUtils/Intersection.h"
 #include "ACTS/Volumes/AbstractVolume.h"
 // EventData module
-#include "ACTS/TrackParameters.h"
-#include "ACTS/NeutralParameters.h"
+#include "ACTS/EventData/TrackParameters.h"
+#include "ACTS/EventData/NeutralParameters.h"
 
 namespace Acts {
   

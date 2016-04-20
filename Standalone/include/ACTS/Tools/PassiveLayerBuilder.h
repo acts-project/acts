@@ -7,7 +7,7 @@
 
 // Geoemtry module
 #include "ACTS/Tools/ILayerBuilder.h"
-#include "ACTS/Layer.h"
+#include "ACTS/Layers/Layer.h"
 
 namespace Acts {
     

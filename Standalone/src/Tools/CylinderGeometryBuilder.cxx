@@ -8,7 +8,7 @@
 #include "ACTS/Tools/CylinderGeometryBuilder.h"
 #include "ACTS/Tools/ITrackingVolumeBuilder.h"
 #include "ACTS/Tools/ITrackingVolumeHelper.h"
-#include "ACTS/TrackingGeometry.h"
+#include "ACTS/Detector/TrackingGeometry.h"
 #include "ACTS/Detector/TrackingVolume.h"
 #include "ACTS/Volumes/CylinderVolumeBounds.h"
 

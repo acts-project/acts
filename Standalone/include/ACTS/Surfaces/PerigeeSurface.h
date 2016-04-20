@@ -6,7 +6,7 @@
 #define ACTS_SURFACES_PERIGEESURFACE_H 1
 
 // Geometry  module
-#include "ACTS/Surface.h"
+#include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/NoBounds.h"
 // EventData module
 #include "ACTS/GeometryUtils/GeometryStatics.h"

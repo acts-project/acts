@@ -9,7 +9,7 @@
 #include "ACTS/Tools/TrackingVolumeArrayCreator.h"
 #include "ACTS/Tools/LayerArrayCreator.h"
 #include "ACTS/Tools/PassiveLayerBuilder.h"
-#include "ACTS/TrackingGeometry.h"
+#include "ACTS/Detector/TrackingGeometry.h"
 
 int main()
 {

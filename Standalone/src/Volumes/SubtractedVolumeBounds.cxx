@@ -7,7 +7,7 @@
 #include "ACTS/Volumes/CombinedVolumeBounds.h"
 #include "ACTS/Volumes/VolumeExcluder.h"
 #include "ACTS/Volumes/SimplePolygonBrepVolumeBounds.h"
-#include "ACTS/Surface.h"
+#include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/PlaneSurface.h"
 #include "ACTS/Surfaces/CylinderSurface.h"
 #include "ACTS/Surfaces/DiscSurface.h"

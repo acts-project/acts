@@ -8,7 +8,7 @@
 class MsgStream;
 
 // Geometry module
-#include "ACTS/Layer.h"
+#include "ACTS/Layers/Layer.h"
 #include "ACTS/GeometryUtils/BinnedArray.h"
 // EventData module
 #include "ACTS/Utilities/PropDirection.h"

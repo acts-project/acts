@@ -8,9 +8,9 @@
 #include <memory>
 
 // Geometry module
-#include "ACTS/Layer.h"
+#include "ACTS/Layers/Layer.h"
 #include "ACTS/Layers/PlaneLayer.h"
-#include "ACTS/Surface.h"
+#include "ACTS/Surfaces/Surface.h"
 #include "ACTS/GeometryUtils/GeometrySignature.h"
 // Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"

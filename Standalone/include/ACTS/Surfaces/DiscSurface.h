@@ -6,7 +6,7 @@
 #define ACTS_SURFACE_SDISCSURFACE_H 1
 
 // Geometry module
-#include "ACTS/Surface.h"
+#include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/DiscBounds.h"
 #include "ACTS/Surfaces/NoBounds.h"
 // Core module
