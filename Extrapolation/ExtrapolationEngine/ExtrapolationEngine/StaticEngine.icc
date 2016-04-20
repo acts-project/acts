@@ -184,7 +184,7 @@ template <class T> Acts::ExtrapolationCode Acts::StaticEngine::handleLayerT(Acts
     //      - sensitive surface which should be tried to hit
     //      - material sub structure to be resolved (independent of sensitive surface)
     // - (b) layer is start layer (can not be if there was a volume switch)
-    bool isStartLayer  ¯= eCell.initialVolume() && eCell.leadLayer->onLayer(*eCell.leadParameters); 
+    bool isStartLayer  = eCell.initialVolume() && eCell.leadLayer->onLayer(*eCell.leadParameters); 
     // - (c) layer is destination layer 
     //      - final propagation to the layer and update if necessary
     bool isDestinationLayer = (sf && eCell.leadLayer == eCell.endLayer);
