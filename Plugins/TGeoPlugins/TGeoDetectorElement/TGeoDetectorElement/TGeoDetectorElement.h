@@ -69,12 +69,6 @@ namespace Acts {
         /**Return the normal of the surface associated with this identifier
          In the case of silicon it returns the same as normal()*/
         virtual const Acts::Vector3D& normal(const Identifier& id) const override;
-
-        /** Neighbours for fast access */
-        virtual const std::vector<const DetectorElementBase*>& neighbours() const override;
-        
-        /** Neighbours for fast access */
-        void registerNeighbours(std::vector<const DetectorElementBase*>& neighbours);
         
     private:
         
@@ -94,8 +88,7 @@ namespace Acts {
         std::shared_ptr<const Acts::Surface>                 m_surface;
         /**possible contained surfaces*/
         std::vector<std::shared_ptr<const Acts::Surface>>    m_surfaces;
-        /**neighbours*/
-        std::vector<const DetectorElementBase*>              m_neighbours;
+
     };
 }
 
@@ -116,9 +109,5 @@ inline const std::vector< std::shared_ptr<const Acts::Surface> >& Acts::TGeoDete
 inline const Acts::SurfaceBounds& Acts::TGeoDetectorElement::bounds() const{return (*m_bounds);}
 
 inline const Acts::SurfaceBounds& Acts::TGeoDetectorElement::bounds(const Identifier&) const {return (*m_bounds);}
-
-inline void Acts::TGeoDetectorElement::registerNeighbours(std::vector<const Acts::DetectorElementBase*>& neighbours) { m_neighbours = neighbours; }
-
-inline const std::vector<const Acts::DetectorElementBase*>& Acts::TGeoDetectorElement::neighbours() const { return m_neighbours; }
 
 #endif

@@ -1,5 +1,5 @@
 #include "TGeoDetectorElement/TGeoDetectorElement.h"
-//ATS
+// ACTS
 #include "Surfaces/PlaneSurface.h"
 #include "Surfaces/TrapezoidBounds.h"
 #include "Surfaces/RectangleBounds.h"
@@ -20,8 +20,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(const Identifier& identifier,
                 TGeoNode* tGeoDetElement, std::shared_ptr<const Acts::Transform3D> motherTransform) :
 Acts::DetectorElementBase(),
 m_detElement(tGeoDetElement),
-m_identifier(identifier),
-m_neighbours()
+m_identifier(identifier)
 {
     //get the placement and orientation in respect to its mother
     const Double_t* rotation    = (m_detElement->GetMatrix()->GetRotationMatrix());
