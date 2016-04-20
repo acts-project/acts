@@ -70,6 +70,9 @@ namespace Acts {
          In the case of silicon it returns the same as normal()*/
         virtual const Acts::Vector3D& normal(const Identifier& id) const override;
         
+        /** Returns the thickness of the module */
+        virtual double thickness() const override;
+        
     private:
         
         /**DD4hep detector element*/
@@ -84,6 +87,8 @@ namespace Acts {
         const Identifier                                     m_identifier;
         /**Boundaries of the detector element*/
         std::shared_ptr<const Acts::SurfaceBounds>           m_bounds;
+        /** Thickness of this detector element*/
+        double                                               m_thickness; //@TODO implement thickness from TGeoMode
         /**Corresponding Surface*/
         std::shared_ptr<const Acts::Surface>                 m_surface;
         /**possible contained surfaces*/
@@ -109,5 +114,8 @@ inline const std::vector< std::shared_ptr<const Acts::Surface> >& Acts::TGeoDete
 inline const Acts::SurfaceBounds& Acts::TGeoDetectorElement::bounds() const{return (*m_bounds);}
 
 inline const Acts::SurfaceBounds& Acts::TGeoDetectorElement::bounds(const Identifier&) const {return (*m_bounds);}
+
+inline double Acts::TGeoDetectorElement::thickness() const { return m_thickness; }
+
 
 #endif
