@@ -6,5 +6,5 @@ if(DOXYGEN_FOUND)
   			${CMAKE_CURRENT_BINARY_DIR}/doxygen.config
 			WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 			COMMENT "Generating API documentation with Doxygen" VERBATIM)
-  install (DIRECTORY html latex DESTINATION doc)
+  install (DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html ${CMAKE_CURRENT_BINARY_DIR}/latex DESTINATION doc)
 endif(DOXYGEN_FOUND)
