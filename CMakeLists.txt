@@ -1,23 +1,26 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.5)
+cmake_minimum_required (VERSION 2.6)
+project (ACTS)
 
-#---------------------------------------------------------------
-# Load macros and functions for Gaudi-based projects
+# set the current version of ACTS
+set (ACTS_VERSION 0.0.1)
 
-find_package(GaudiProject)
+# default installation direction
+set (CMAKE_INSTALL_PREFIX "/opt/ACTS/${ACTS_VERSION}" CACHE STRING "installation directory")
 
-#---------------------------------------------------------------
+# specify compile flags
+add_definitions (-std=c++14)
+add_definitions (-DACTS_PARAMETER_DEFINITIONS_PLUGIN=\"ACTS/Utilities/detail/DefaultParameterDefinitions.h\")
 
-add_definitions(-DACTS_PARAMETER_DEFINITIONS_PLUGIN=\"CoreUtils/DefaultParameterDefinitions.h\")
-add_definitions(-DACTS_GAUDI)
+add_subdirectory (Core)
+add_subdirectory (doc)
 
-# Declare project name and version
-# Syntax:
-#    gaudi_project(this_project this_version
-#                  USE dep_project_1 version_1 [project_2 version_2 ...]
-#                  [DATA pkg1 [VERSION vers1] [pkg2 ...])
-gaudi_project(ACTS HEAD
-	      USE Gaudi v26r4 )
+include(GenerateExportHeader)
+generate_export_header (ACTSCore)
+set_property (TARGET ACTSCore PROPERTY VERSION ${ACTS_VERSION})
 
-#include_directories()
+set(ConfigPackageLocation lib/cmake/ACTS)
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file ("${ConfigPackageLocation}/ACTSConfigVersion.cmake" VERSION ${ACTS_VERSION} COMPATIBILITY AnyNewerVersion)
+configure_file(cmake/ACTSConfig.cmake "${CMAKE_INSTALL_PREFIX}/${ConfigPackageLocation}/ACTSConfig.cmake" COPYONLY)
+install(EXPORT ACTSTargets FILE ACTSTargets.cmake DESTINATION ${ConfigPackageLocation})
 
-enable_testing()

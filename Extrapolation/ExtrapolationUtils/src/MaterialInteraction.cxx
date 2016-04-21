@@ -1,7 +1,0 @@
-///////////////////////////////////////////////////////////////////
-// MaterialInteraction.cxx, ACTS project
-///////////////////////////////////////////////////////////////////
-#include "ExtrapolationUtils/MaterialInteraction.h"
-
-//static particle masses
-Acts::ParticleMasses Acts::MaterialInteraction::s_particleMasses;
