@@ -8,14 +8,12 @@
 
 // boost include(s)
 #include <boost/mpl/vector.hpp>
+#include <boost/variant.hpp>
 
 // ACTS includes
-#include "CoreUtils/ParameterDefinitions.h"
-#include "ParameterSet/ParameterSet.h"
-#include "TrackParameters/TrackParameters.h"
-
-// boost include(s)
-#include <boost/variant.hpp>
+#include "ACTS/Utilities/ParameterDefinitions.h"
+#include "ACTS/EventData/ParameterSet.h"
+#include "ACTS/EventData/TrackParameters.h"
 
 namespace Acts
 {
@@ -31,8 +29,9 @@ namespace Acts
    * This class describes the measurement of track parameters at a certain Surface in the
    * TrackingGeometry.
    *
-   * @test The behaviour of this class is tested in the following unit test:
+   * @test The behavior of this class is tested in the following unit test:
    *       - \link Acts::Test::BOOST_AUTO_TEST_CASE(measurement_initialization) initialization\endlink
+   *
    * @tparam Identifier identification object for this measurement
    * @tparam params     parameter pack containing the measured parameters
    */
@@ -63,13 +62,14 @@ namespace Acts
      *            if it is stored in a container and this gets relocated).
      *
      * @param surface surface at which the measurement took place
+     * @param id identification object for this measurement
      * @param cov covariance matrix of the measurement.
      * @param head,values consistent number of parameter values of the measurement
      */
     template<typename ... Tail>
     Measurement(const Surface& surface,
                 const Identifier& id,
-                CovMatrix_t&& cov,
+                CovMatrix_t cov,
                 typename std::enable_if<sizeof...(Tail) + 1 == sizeof...(params),ParValue_t>::type head,
                 Tail... values):
       m_oParameters(std::make_unique<CovMatrix_t>(std::move(cov)),head,values...),
