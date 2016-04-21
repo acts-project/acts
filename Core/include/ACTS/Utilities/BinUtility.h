@@ -10,8 +10,9 @@
 // Geometry module
 #include "ACTS/Utilities/BinningData.h"
 #include "ACTS/Utilities/BinningType.h"
-// ATS
+// STL
 #include <vector>
+#include <memory>
 
 namespace Acts {
 
