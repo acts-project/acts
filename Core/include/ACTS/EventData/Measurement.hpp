@@ -14,10 +14,6 @@
 #include <utility>
 #include <memory>
 
-// boost include(s)
-#include <boost/mpl/vector.hpp>
-#include <boost/variant.hpp>
-
 // ACTS includes
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
 #include "ACTS/EventData/ParameterSet.hpp"
@@ -27,15 +23,14 @@ namespace Acts
 {
   // forward declarations
   class Surface;
-}
 
-namespace Acts
-{
   /**
    * @brief base class for Measurements
    *
    * This class describes the measurement of track parameters at a certain Surface in the
    * TrackingGeometry.
+   *
+   * @note Identifier must be copy-constructible, move-constructible, copy-assignable and move-assignable.
    *
    * @test The behavior of this class is tested in the following unit test:
    *       - \link Acts::Test::BOOST_AUTO_TEST_CASE(measurement_initialization) initialization\endlink
@@ -46,6 +41,11 @@ namespace Acts
   template<typename Identifier,ParID_t... params>
   class Measurement
   {
+    // check type conditions
+    static_assert(not std::is_copy_constructible<Identifier>::value,"'Identifier' must be copy-constructible");
+    static_assert(not std::is_move_constructible<Identifier>::value,"'Identifier' must be move-constructible");
+    static_assert(not std::is_copy_assignable<Identifier>::value,"'Identifier' must be copy-assignable");
+    static_assert(not std::is_move_assignable<Identifier>::value,"'Identifier' must be move-assignable");
   private:
     // private typedef's
     typedef ParameterSet<params...>    ParSet_t;   ///< type of the underlying ParameterSet object
@@ -59,10 +59,8 @@ namespace Acts
      *
      * Interface class for all possible measurements.
      *
-     * @note The given ParameterSet object is copied while only a reference to the given surface is stored.
-     *       The user must ensure that the lifetime of the @c Surface object surpasses the lifetime of this Measurement
-     *       object.<br />
-     *       The covariance matrix object is moved into this Measurement object and should not be used afterwards.<br />
+     * @note Only a reference to the given surface is stored. The user must ensure that the lifetime of the @c Surface
+     *       object surpasses the lifetime of this Measurement object.<br />
      *       The given parameter values are interpreted as values to the parameters as defined in the class template
      *       argument @c params.
      *
@@ -84,7 +82,6 @@ namespace Acts
       m_pSurface(&surface),
       m_oIdentifier(id)
     {}
-
 
     /**
      * @brief virtual destructor
@@ -161,8 +158,6 @@ namespace Acts
 
     /**
      * @brief access covariance matrix of the measured parameter values
-     *
-     * @pre The stored ParameterSet object must have a valid pointer to covariance matrix assigned.
      *
      * @return covariance matrix of the measurement
      */
@@ -244,7 +239,7 @@ namespace Acts
      *
      * @return @c true if parameter sets and associated surfaces compare equal, otherwise @c false
      */
-    virtual bool operator==(const Measurement<Identifier,params...>& rhs) const
+    virtual bool operator==(const Measurement<Identifier,params...>& rhs) const = 0
     {
       return ((m_oParameters == rhs.m_oParameters) &&
               (*m_pSurface == *rhs.m_pSurface) &&
@@ -268,135 +263,12 @@ namespace Acts
     const Surface* m_pSurface;      ///< surface at which the measurement took place
     Identifier     m_oIdentifier;   ///< identifier for this measurement
   };
+} // end of namespace Acts
 
-  /// @cond DEV
-  namespace detail
-  {
-    /**
-     * @brief generate boost::variant type for all possible Measurement's
-     */
-    template<typename ID>
-    struct fittable_type_generator;
+#include "ACTS/EventData/detail/fittable_type_generator.hpp"
 
-    /// @cond
-    template<typename ID>
-    struct fittable_type_generator
-    {
-      template<ParID_t... params>
-      using Meas_t = Measurement<ID,params...>;
-
-      template<typename... T>
-      struct container
-      {};
-
-      template<typename T,typename U>
-      struct add_prepended;
-
-      template<ParID_t first,typename... others>
-      struct add_prepended<Meas_t<first>,container<others...> >
-      {
-        typedef container<typename add_prepended<Meas_t<first>,others>::type...,others...> type;
-      };
-
-      template<ParID_t first,ParID_t... others>
-      struct add_prepended<Meas_t<first>,Meas_t<others...> >
-      {
-        typedef Meas_t<first,others...> type;
-      };
-
-      template<ParID_t... first>
-      struct add_prepended<Meas_t<first...>,boost::mpl::na>
-      {
-        typedef Meas_t<first...> type;
-      };
-
-      template<typename T,typename C>
-      struct add_to_container;
-
-      template<typename T,typename... others>
-      struct add_to_container<T,container<others...> >
-      {
-        typedef container<T,others...> type;
-      };
-
-      template<typename T>
-      struct generator_impl;
-
-      template<ParID_t first,ParID_t... others>
-      struct generator_impl<container<Meas_t<first>, Meas_t<others...> > >
-      {
-        typedef container<Meas_t<first>,Meas_t<others...>,Meas_t<first,others...> > type;
-      };
-
-      template<ParID_t first,typename next,typename... others>
-      struct generator_impl<container<Meas_t<first>, next, others...> >
-      {
-        typedef typename generator_impl<container<next, others...> >::type others_combined;
-        typedef typename add_prepended<Meas_t<first>,others_combined>::type prepended;
-        typedef typename add_to_container<Meas_t<first>,prepended>::type type;
-      };
-
-      template<ParID_t v,typename C>
-      struct add_to_value_container;
-
-      template<ParID_t v,ParID_t... others>
-      struct add_to_value_container<v,std::integer_sequence<ParID_t,others...> >
-      {
-        typedef std::integer_sequence<ParID_t,others...,v> type;
-      };
-
-      template<typename T,unsigned int N>
-      struct tparam_generator
-      {
-        typedef typename add_to_value_container<static_cast<ParID_t>(N),typename tparam_generator<T,N-1>::type>::type type;
-      };
-
-      template<typename T>
-      struct tparam_generator<T,0>
-      {
-        typedef std::integer_sequence<T,static_cast<T>(0)> type;
-      };
-
-      template<typename T>
-      struct converter;
-
-      template<ParID_t... values>
-      struct converter<std::integer_sequence<ParID_t,values...> >
-      {
-        typedef container<Meas_t<values>...> type;
-      };
-
-      template<typename... types>
-      struct to_boost_vector;
-
-      template<typename first,typename... rest>
-      struct to_boost_vector<first,rest...>
-      {
-        typedef typename boost::mpl::push_front<typename to_boost_vector<rest...>::type,first>::type type;
-      };
-
-      template<typename last>
-      struct to_boost_vector<last>
-      {
-        typedef boost::mpl::vector<last> type;
-      };
-
-      template<typename... MeasTypes>
-      struct converter<container<MeasTypes...> >
-      {
-
-        typedef typename boost::make_variant_over<typename to_boost_vector<MeasTypes...>::type>::type type;
-      };
-
-      typedef typename tparam_generator<ParID_t,Acts::NGlobalPars-1>::type par_list;
-      typedef typename converter<par_list>::type meas_list;
-      typedef typename generator_impl<meas_list>::type permutations;
-      typedef typename converter<permutations>::type type;
-    };
-    /// @endcond
-  } // end of namespace details
-  /// @endcond
-
+namespace Acts
+{
   /**
    * @brief general type for any possible Measurement
    */
