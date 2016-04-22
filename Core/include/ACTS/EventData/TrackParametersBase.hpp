@@ -28,7 +28,7 @@ namespace Acts
    *
    * @brief base class for track parameters
    *
-   * The base class for neutral and charged track parameters. The position and the
+   * This is a base class for neutral and charged track parameters. The position and the
    * momentum are both given in the global coordinate system. The track parameters
    * and their uncertainty are defined in local reference frame which depends on
    * the associated surface of the track parameters.
