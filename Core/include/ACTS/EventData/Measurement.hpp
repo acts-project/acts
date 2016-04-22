@@ -18,6 +18,7 @@
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
 #include "ACTS/EventData/ParameterSet.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
+#include "ACTS/EventData/detail/fittable_type_generator.hpp"
 
 namespace Acts
 {
@@ -239,7 +240,7 @@ namespace Acts
      *
      * @return @c true if parameter sets and associated surfaces compare equal, otherwise @c false
      */
-    virtual bool operator==(const Measurement<Identifier,params...>& rhs) const = 0
+    virtual bool operator==(const Measurement<Identifier,params...>& rhs) const
     {
       return ((m_oParameters == rhs.m_oParameters) &&
               (*m_pSurface == *rhs.m_pSurface) &&
@@ -263,12 +264,7 @@ namespace Acts
     const Surface* m_pSurface;      ///< surface at which the measurement took place
     Identifier     m_oIdentifier;   ///< identifier for this measurement
   };
-} // end of namespace Acts
 
-#include "ACTS/EventData/detail/fittable_type_generator.hpp"
-
-namespace Acts
-{
   /**
    * @brief general type for any possible Measurement
    */
