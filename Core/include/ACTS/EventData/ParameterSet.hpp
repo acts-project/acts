@@ -253,7 +253,7 @@ namespace Acts
      *
      * @note The ownership of the covariance matrix is @b not transferred with this call.
      *
-     * @return raw pointer to covariance matrix (can be zero)
+     * @return raw pointer to covariance matrix (can be a nullptr)
      */
     const CovMatrix_t* getCovariance() const
     {
