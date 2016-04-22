@@ -7,9 +7,16 @@ set (ACTS_VERSION 0.0.1)
 # default installation direction
 set (CMAKE_INSTALL_PREFIX "/opt/ACTS/${ACTS_VERSION}" CACHE STRING "installation directory")
 
+# default parameter definitions
+set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.h" CACHE STRING "default track parameter definition")
+
+# default message macros
+set (ACTS_MSG_MACROS_PLUGIN "ACTS/Utilities/detail/DefaultMsgMacros.h" CACHE STRING "default message macros")
+
 # specify compile flags
 add_definitions (-std=c++14)
-add_definitions (-DACTS_PARAMETER_DEFINITIONS_PLUGIN=\"ACTS/Utilities/detail/DefaultParameterDefinitions.h\")
+add_definitions (-DACTS_PARAMETER_DEFINITIONS_PLUGIN=\"${ACTS_PARAMETER_DEFINITIONS_PLUGIN}\")
+add_definitions (-DACTS_MSG_MACROS_PLUGIN=\"${ACTS_MSG_MACROS_PLUGIN}\")
 
 add_subdirectory (Core)
 add_subdirectory (doc)
