@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // STL include(s)
-#include <iostream>
 #include <iomanip>
 
 // ACTS include(s)
@@ -15,14 +14,19 @@
 
 namespace Acts
 {
-  std::ostream& TrackParametersBase::dump(std::ostream& sl) const
+  std::ostream& TrackParametersBase::print(std::ostream& sl) const
   {
-    sl << std::setiosflags(std::ios::fixed);
-    sl << std::setprecision(7);
+    // set stream output format
+    auto old_precision = sl.precision(7);
+    auto old_flags = sl.setf(std::ios::fixed);
+
     sl << " * TrackParameters:" << std::endl;
     sl << parameters() << std::endl;
     sl << " * charge: " << charge() << std::endl;
-    sl << " * covariance matrix = " << covariance() << std::endl;
+    if(covariance())
+      sl << " * covariance matrix = " << *covariance() << std::endl;
+    else
+      sl << " * covariance matrix = " << covariance() << std::endl;
     sl << " * corresponding global parameters:" << std::endl;
     sl << " *    position  (x,  y,  z ) = ("
        << position().x() << ", "
@@ -32,13 +36,11 @@ namespace Acts
        << momentum().x() << ", "
        << momentum().y() << ", "
        << momentum().z() << ")" << std::endl;
-    sl << std::setprecision(-1);
+
+    // reset stream format
+    sl.precision(old_precision);
+    sl.setf(old_flags);
 
     return sl;
-  }
-
-  std::ostream& operator<<(std::ostream& sl,const TrackParametersBase& p)
-  {
-    return p.dump(sl);
   }
 } // end of namespace Acts

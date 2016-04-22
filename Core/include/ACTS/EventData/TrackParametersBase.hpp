@@ -10,7 +10,7 @@
 #define ACTS_PARAMETERSBASE_H 1
 
 // STL include(s)
-#include <type_traits>
+#include <ostream>
 
 #include "ACTS/Utilities/Definitions.hpp"
 // ACTS includes
@@ -20,54 +20,85 @@
 
 namespace Acts
 {
+  // forward declarations
   class Surface;
 
   /**
-     @class ParametersBase
-
-     The base class for neutral and charged Track parameters.
-     It represents the free state of a trajectory, represented by
-     the track parameters.
-     The position and the momentum are both given in the tracking
-     reference frame.
-
-     @tparam DIM number of track parameters (usually 5)
-     @tparam T   charge of track (either <tt>Charged</tt> or <tt>Neutral</tt>)
-
-  */
-
+   * @class ParametersBase
+   *
+   * @brief base class for track parameters
+   *
+   * The base class for neutral and charged track parameters. The position and the
+   * momentum are both given in the global coordinate system. The track parameters
+   * and their uncertainty are defined in local reference frame which depends on
+   * the associated surface of the track parameters.
+   */
   class TrackParametersBase
   {
   public:
-    typedef ActsVector<ParValue_t,Acts::NGlobalPars> ParVector_t;
-    typedef ActsSymMatrix<ParValue_t,Acts::NGlobalPars> CovMatrix_t;
+    // public typedef's
+    typedef ActsVector<ParValue_t,Acts::NGlobalPars>     ParVector_t;  ///< vector type for stored track parameters
+    typedef ActsSymMatrix<ParValue_t,Acts::NGlobalPars>  CovMatrix_t;  ///< type of covariance matrix
 
-    /** virtual destructor */
+    /**
+     * @brief virtual default destructor to allow for inheritance
+     */
     virtual ~TrackParametersBase() = default;
 
+    /**
+     * @brief virtual constructor
+     */
     virtual TrackParametersBase* clone() const = 0;
 
-    //** equality operator */
+    /**
+     * @brief equality operator
+     */
     virtual bool operator==(const TrackParametersBase& rhs) const = 0;
 
-    //** inequality operator */
+    /**
+     * @brief inequality operator
+     *
+     * @return `not (*this == rhs)`
+     */
     bool operator!=(const TrackParametersBase& rhs) const
     {
       return !(*this == rhs);
     }
 
-    /** Access method for the position */
+    /**
+     * @brief access position in global coordinate system
+     *
+     * @return 3D vector with global position
+     */
     virtual ActsVectorD<3> position() const = 0;
 
-    /** Access method for the momentum */
+    /**
+     * @brief access momentum in global coordinate system
+     *
+     * @return 3D vector with global momentum
+     */
     virtual ActsVectorD<3> momentum() const = 0;
 
-    /** Access method for the parameters */
+    /**
+     * @brief access track parameters
+     *
+     * @return Eigen vector of dimension Acts::NGlobalPars with values of the track parameters
+     *         (in the order as defined by the ParID_t enumeration)
+     */
     ParVector_t parameters() const
     {
       return getParameterSet().getParameters();
     }
 
+    /**
+     * @brief access track parameter
+     *
+     * @tparam par identifier of track parameter which is to be retrieved
+     *
+     * @return value of the requested track parameter
+     *
+     * @sa ParameterSet::get
+     */
     template<ParID_t par>
     ParValue_t get() const
     {
@@ -80,33 +111,80 @@ namespace Acts
       return getParameterSet().template uncertainty<par>();
     }
 
-    /** Access method for the covariance matrix - returns 0 if no covariance matrix is given */
+    /**
+     * @brief access covariance matrix of track parameters
+     *
+     * @note The ownership of the covariance matrix is @b not transferred with this call.
+     *
+     * @return raw pointer to covariance matrix (can be a nullptr)
+     *
+     * @sa ParameterSet::getCovariance
+     */
     const CovMatrix_t* covariance() const
     {
       return getParameterSet().getCovariance();
     }
 
-    /** Access method for transverse momentum */
-    double pT() const {return momentum().perp();}
+    /**
+     * @brief convenience method to retrieve transverse momentum
+     */
+    double pT() const
+    {
+      return momentum().perp();
+    }
 
-    /** Access method for pseudorapidity - from momentum */
-    double eta() const {return momentum().eta();}
+    /**
+     * @brief convenience method to retrieve pseudorapidity
+     */
+    double eta() const
+    {
+      return momentum().eta();
+    }
 
-    /** Dumps relevant information about the track parameters into the ostream */
-    std::ostream& dump(std::ostream& out) const;
-
-    /** Returns charge of concrete type (i.e. must be implemented in inheriting classes) */
+    /**
+     * @brief retrieve electric charge
+     *
+     * @return value of electric charge
+     */
     virtual double charge() const = 0;
 
+    /**
+     * @brief access associated surface defining the coordinate system for track
+     *        parameters and their covariance
+     *
+     * @return associated surface
+     */
     virtual const Surface& associatedSurface() const = 0;
 
+    /**
+     * @brief output stream operator
+     *
+     * Prints information about this object to the output stream using the virtual
+     * TrackParameters::print method.
+     *
+     * @return modified output stream object
+     */
+    friend std::ostream& operator<<(std::ostream& out,const TrackParametersBase& tp)
+    {
+      tp.print(out);
+      return out;
+    }
+
   protected:
-    virtual FullParameterSet& getParameterSet() = 0;
+    /**
+     * @brief access to the internally stored ParameterSet
+     *
+     * @return ParameterSet object holding parameter values and their covariance matrix
+     */
     virtual const FullParameterSet& getParameterSet() const = 0;
+
+    /**
+     * @brief print information to output stream
+     *
+     * @return modified output stream object
+     */
+    virtual std::ostream& print(std::ostream& out) const;
   };
-
-  std::ostream& operator<<(std::ostream& sl,const TrackParametersBase& tp);
-
 } // end of namespace Acts
 
 #endif // ACTS_PARAMETERSBASE_h
