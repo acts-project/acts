@@ -1,5 +1,5 @@
-#ifndef FITTABLE_TYPE_GENERATOR_H
-#define FITTABLE_TYPE_GENERATOR_H 1
+#ifndef ACTS_FITTABLE_TYPE_GENERATOR_H
+#define ACTS_FITTABLE_TYPE_GENERATOR_H 1
 
 // boost include(s)
 #include <boost/mpl/vector.hpp>
@@ -14,7 +14,7 @@ namespace Acts
   template<typename Identifier,ParID_t... params>
   class Measurement;
 
-  /// @cond DEV
+  /// @cond detail
   namespace detail
   {
     /**
@@ -140,4 +140,4 @@ namespace Acts
   /// @endcond
 }  // end of namespace Acts
 
-#endif // FITTABLE_TYPE_GENERATOR_H
+#endif // ACTS_FITTABLE_TYPE_GENERATOR_H
