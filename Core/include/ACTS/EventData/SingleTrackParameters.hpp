@@ -19,9 +19,26 @@
 
 namespace Acts
 {
+  /**
+   * @class SingleTrackParameters
+   *
+   * @brief base class for a single set of track parameters
+   *
+   * This class implements the interface for charged/neutral track parameters for the case that it
+   * represents a single set of track parameters (opposed to a list of different sets of track
+   * parameters as used by e.g. GSF or multi-track fitters).
+   *
+   * The track parameters and their uncertainty are defined in local reference frame which depends on
+   * the associated surface of the track parameters.
+   *
+   * @tparam ChargePolicy type for distinguishing charged and neutral tracks/particles
+   *         (must be either ChargedPolicy or NeutralPolicy)
+   */
   template<class ChargePolicy>
   class SingleTrackParameters : public TrackParametersBase
   {
+    static_assert(std::is_same<ChargePolicy,ChargedPolicy>::value or std::is_same<ChargePolicy,NeutralPolicy>::value,
+                  "ChargePolicy must either be 'Acts::ChargedPolicy' or 'Acts::NeutralPolicy");
   public:
     // public typedef's
     typedef typename TrackParametersBase::ParVector_t  ParVector_t;  ///< vector type for stored track parameters
