@@ -29,6 +29,11 @@ namespace Acts
     typedef std::unique_ptr<CovMatrix_t>               CovPtr_t;     ///< type for unique pointer to covariance matrix
 
     /**
+     * @brief default virtual destructor
+     */
+    virtual ~SingleTrackParameters() = default;
+
+    /**
      * @brief virtual constructor
      */
     virtual SingleTrackParameters<ChargePolicy>* clone() const override = 0;
@@ -122,11 +127,6 @@ namespace Acts
      * @brief default move constructor
      */
     SingleTrackParameters(SingleTrackParameters<ChargePolicy>&& copy) = default;
-
-    /**
-     * @brief default virtual destructor
-     */
-    virtual ~SingleTrackParameters() = default;
 
     /**
      * @brief copy assignment operator
