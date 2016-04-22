@@ -28,8 +28,8 @@ namespace Acts
                                const Surface& surface):
       SingleTrackParameters<ChargePolicy>(std::move(cov),
                                           parValues,
-                                          coordinate_transformation::parameters2globalPosition(parValues,surface),
-                                          coordinate_transformation::parameters2globalMomentum(parValues)),
+                                          detail::coordinate_transformation::parameters2globalPosition(parValues,surface),
+                                          detail::coordinate_transformation::parameters2globalMomentum(parValues)),
       m_pSurface(surface.isFree() ? surface.clone() : &surface)
     {}
 
@@ -40,7 +40,7 @@ namespace Acts
                                double dCharge,
                                const Surface& surface):
       SingleTrackParameters<ChargePolicy>(std::move(cov),
-                                          coordinate_transformation::global2parameters(position,momentum,dCharge,surface),
+                                          detail::coordinate_transformation::global2parameters(position,momentum,dCharge,surface),
                                           position,
                                           momentum),
       m_pSurface(surface.isFree() ? surface.clone() : &surface)
@@ -52,8 +52,8 @@ namespace Acts
                                const Surface& surface):
       SingleTrackParameters<ChargePolicy>(std::move(cov),
                                           parValues,
-                                          coordinate_transformation::parameters2globalPosition(parValues,surface),
-                                          coordinate_transformation::parameters2globalMomentum(parValues)),
+                                          detail::coordinate_transformation::parameters2globalPosition(parValues,surface),
+                                          detail::coordinate_transformation::parameters2globalMomentum(parValues)),
       m_pSurface(surface.isFree() ? surface.clone() : &surface)
     {}
 
@@ -63,7 +63,7 @@ namespace Acts
                                const ActsVectorD<3>& momentum,
                                const Surface& surface):
           SingleTrackParameters<ChargePolicy>(std::move(cov),
-                                              coordinate_transformation::global2parameters(position,momentum,0,surface),
+                                              detail::coordinate_transformation::global2parameters(position,momentum,0,surface),
                                               position,
                                               momentum),
           m_pSurface(surface.isFree() ? surface.clone() : &surface)

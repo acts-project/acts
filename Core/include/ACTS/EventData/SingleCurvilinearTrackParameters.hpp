@@ -30,7 +30,7 @@ namespace Acts
                                      const ActsVectorD<3>& momentum,
                                      double dCharge):
       SingleTrackParameters<ChargePolicy>(std::move(cov),
-                                          coordinate_transformation::global2curvilinear(position,momentum,dCharge),
+                                          detail::coordinate_transformation::global2curvilinear(position,momentum,dCharge),
                                           position,
                                           momentum)
     {}
@@ -40,7 +40,7 @@ namespace Acts
                                      const ActsVectorD<3>& position,
                                      const ActsVectorD<3>& momentum):
       SingleTrackParameters<ChargePolicy>(std::move(cov),
-                                          coordinate_transformation::global2curvilinear(position,momentum,0),
+                                          detail::coordinate_transformation::global2curvilinear(position,momentum,0),
                                           position,
                                           momentum)
     {}
