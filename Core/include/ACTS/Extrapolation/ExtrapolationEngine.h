@@ -42,7 +42,7 @@ namespace Acts {
       @author Andreas.Salzburger -at- cern.ch 
   */
 
-class ExtrapolationEngine : public ServiceBase, virtual public IExtrapolationEngine {
+  class ExtrapolationEngine : public ServiceBase, virtual public IExtrapolationEngine {
       
       friend class NavigationInitTest;
       

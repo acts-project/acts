@@ -5,8 +5,6 @@
 #ifndef ACTS_EXTRAPOLATIONINTERFACES_IPROPAGATIONENGINE_H
 #define ACTS_EXTRAPOLATIONINTERFACES_IPROPAGATIONENGINE_H 1
 
-// Gaudi
-#include "GaudiKernel/IService.h"
 // Extrapolation module
 #include "ExtrapolationUtils/ExtrapolationCell.h"
 // EventData module
@@ -15,8 +13,6 @@
 
 namespace Acts {
   
-  static const InterfaceID IID_IPropagationEngine("IPropagationEngine", 1, 0);
-
   typedef ExtrapolationCell<TrackParameters>   ExCellCharged;
   typedef ExtrapolationCell<NeutralParameters> ExCellNeutral;
 
@@ -34,15 +30,12 @@ namespace Acts {
       @author Andreas Salzburger -at - cern.ch
   */
 
-  class IPropagationEngine : virtual public IService {
+  class IPropagationEngine {
 
     public:
 
       /** Virtual destructor */
       virtual ~IPropagationEngine(){}
-
-      /** AlgTool interface methods */
-      static const InterfaceID& interfaceID() { return IID_IPropagationEngine; }
 
       /** resolve the boundary situation - for charged particles
           Possible return codes :

@@ -5,7 +5,6 @@
 #ifndef ACTS_DETELEMENTBASE_DETELEMENTBASE_H
 #define ACTS_DETELEMENTBASE_DETELEMENTBASE_H 1
 
-
 #ifdef ACTS_GEOMETRY_DETELEMENT_PLUGIN
 #include ACTS_GEOMETRY_DETELEMENT_PLUGIN
 #else
@@ -19,16 +18,13 @@ namespace Acts
 {
 
     class Surface;
-    class SurfaceBounds;
 
     /** @class DetectorElementBase
 
      This is the base class for all tracking detector elements
      with read-out relevant information.
      
-     It is extended in the Inner Detector and Muon System.
-    
-     If a DetectorElement has a backside element (or even a triple setup) 
+     If a DetectorElement has a second element (or even a triple setup) 
      that would naturally fall into the same bin, one can register that as a binmember.
     
      DetectorElements close by can be registered as neighbours as this will help
@@ -50,42 +46,21 @@ namespace Acts
 
         /** Identifier */
         virtual Identifier identify() const = 0;
-        
-        /** Return local to global transform*/
-        virtual const Transform3D& transform() const = 0;
-        
-        /** Return local to global transform associated with this identifier */
-        virtual const Transform3D& transform(const Identifier& id) const = 0;
-        
-        /** Return surface associated with this detector element*/
-        virtual const Surface& surface () const = 0;
-        
-        /**Return surface associated with this identifier,
-            this is for detector elements that are made up by multiple surfaces */
-        virtual const Surface& surface (const Identifier& id) const = 0;
+                
+        /** Return local to global transform (optionally associated with an identifier) */
+        virtual const Transform3D& transform(const Identifier& identifier = Identifier()) const = 0;
+                
+        /**Return the surface associated with this detector element (optionally associated with an identifier) */
+        virtual const Surface& surface(const Identifier& identifier = Identifier()) const = 0;
 
         /** Returns the full list of all detection surfaces associated to this detector element */
         virtual const std::vector< std::shared_ptr<const Surface> >& surfaces() const = 0;
+                
+        /** Return the center of the element (optionally associated with an identifier) */
+        virtual const Vector3D& center(const Identifier& identifier = Identifier()) const = 0;
         
-        /** Return the boundaries of the element */
-        virtual const SurfaceBounds& bounds() const = 0;
-        
-        /** Return the boundaries of the surface associated with this identifier */
-        virtual const SurfaceBounds& bounds(const Identifier& id) const = 0;
-        
-        /** Return the center of the element */
-        virtual const Vector3D& center() const = 0;
-        
-        /** Return the center of the surface associated with this identifier
-         In the case of silicon it returns the same as center()*/
-        virtual const Vector3D& center(const Identifier& id) const = 0;
-        
-        /** Return the normal of the element*/
-        virtual const Vector3D& normal() const = 0;
-        
-        /** Return the normal of the surface associated with this identifier
-         In the case of silicon it returns the same as normal()*/
-        virtual const Vector3D& normal(const Identifier& id) const = 0;
+        /** Return the normal of the element (optionally associated with an identifier) */
+        virtual const Vector3D& normal(const Identifier& identifier = Identifier()) const = 0;
         
         /** Returns the thickness of the module */
         virtual double thickness() const = 0;

@@ -5,8 +5,7 @@
 #ifndef ACTS_EXTRAPOLATIONINTERFACES_IEXTRAPOLATIONENGINE_H
 #define ACTS_EXTRAPOLATIONINTERFACES_IEXTRAPOLATIONENGINE_H 1
 
-// Gaudi
-#include "GaudiKernel/IService.h"
+
 // Geometry module
 #include "GeometryUtils/GeometrySignature.h"
 // EventData module
@@ -16,8 +15,6 @@
  
 namespace Acts {
   
-  static const InterfaceID IID_IExtrapolationEngine("IExtrapolationEngine", 1, 0);
-
   typedef ExtrapolationCell<TrackParameters>   ExCellCharged;
   typedef ExtrapolationCell<NeutralParameters> ExCellNeutral;
 
@@ -33,14 +30,11 @@ namespace Acts {
       @author Andreas Salzburger -at - cern.ch
   */
 
-  class IExtrapolationEngine : virtual public IService {
+  class IExtrapolationEngine {
      public:
 
        /** Virtual destructor */
        virtual ~IExtrapolationEngine(){}
-
-       /** AlgTool interface methods */
-       static const InterfaceID& interfaceID() { return IID_IExtrapolationEngine; }
 
        /** charged extrapolation */
        virtual ExtrapolationCode extrapolate(ExCellCharged& ecCharged,
@@ -69,4 +63,3 @@ namespace Acts {
 } // end of namespace
 
 #endif // ACTS_TRKEXINTERFACES_IEXTRAPOLATIONENGINE_H
-

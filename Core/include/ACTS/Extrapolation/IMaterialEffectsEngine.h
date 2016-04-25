@@ -5,8 +5,6 @@
 #ifndef ACTS_EXTRAPOLATIONINTERFACES_IMATERIAKEFFECTSENGINE_H
 #define ACTS_EXTRAPOLATIONINTERFACES_IMATERIAKEFFECTSENGINE_H 1
 
-// Gaudi
-#include "GaudiKernel/IService.h"
 // Extrapolation module
 #include "ExtrapolationUtils/ExtrapolationCell.h"
 #include "ExtrapolationUtils/MaterialUpdateMode.h"
@@ -17,11 +15,8 @@
 
 namespace Acts {
   
-  static const InterfaceID IID_IMaterialEffectsEngine("IMaterialEffectsEngine", 1, 0);
-
   typedef ExtrapolationCell<TrackParameters>   ExCellCharged;
   typedef ExtrapolationCell<NeutralParameters> ExCellNeutral;
-
 
   /** @class IMaterialEffectsEngine
 
@@ -33,7 +28,7 @@ namespace Acts {
 
       @author Andreas Salzburger -at - cern.ch
   */
-  class IMaterialEffectsEngine : virtual public IService {
+  class IMaterialEffectsEngine {
      public:
 
        /** Virtual destructor */

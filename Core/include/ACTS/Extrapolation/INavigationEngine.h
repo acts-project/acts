@@ -5,8 +5,6 @@
 #ifndef ACTS_EXTRAPOLATIONINTERFACES_INAVIGATIONENGINE_H
 #define ACTS_EXTRAPOLATIONINTERFACES_INAVIGATIONENGINE_H
 
-// Gaudi
-#include "GaudiKernel/IService.h"
 // Extrapolation module
 #include "ExtrapolationUtils/ExtrapolationCell.h"
 // EventData module
@@ -16,8 +14,6 @@
 namespace Acts {
 
   class TrackingGeometry;
-
-  static const InterfaceID IID_INavigationEngine("INavigationEngine", 1, 0);
 
   typedef ExtrapolationCell<TrackParameters>   ExCellCharged;
   typedef ExtrapolationCell<NeutralParameters> ExCellNeutral;
@@ -37,9 +33,6 @@ namespace Acts {
 
       /** Virtual destructor */
       virtual ~INavigationEngine(){}
-
-      /** AlgTool interface methods */
-      static const InterfaceID& interfaceID() { return IID_INavigationEngine; }
 
       /** resolve the boundary situation - for charged particles */
       virtual ExtrapolationCode resolveBoundary(ExCellCharged& ecCell, PropDirection dir=alongMomentum) const = 0;
