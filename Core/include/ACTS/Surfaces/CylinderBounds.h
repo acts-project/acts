@@ -6,10 +6,9 @@
 #define ACTS_SURFACES_CYLINDERBOUNDS_H 1
 
 // Geometry module
-#include "ACTS/Utilities/ParameterDefinitions.h"
 #include "ACTS/Surfaces/SurfaceBounds.h"
+#include "ACTS/Utilities/ParameterDefinitions.h"
 #include "ACTS/Utilities/PrecisionDefinition.h"
-// EventData module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {

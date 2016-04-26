@@ -5,12 +5,9 @@
 #ifndef ACTS_SURFACES_PERIGEESURFACE_H
 #define ACTS_SURFACES_PERIGEESURFACE_H 1
 
-// Geometry  module
 #include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/NoBounds.h"
-// EventData module
 #include "ACTS/Utilities/GeometryStatics.h"
-// Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {

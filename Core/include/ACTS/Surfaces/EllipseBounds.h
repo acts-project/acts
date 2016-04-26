@@ -5,12 +5,9 @@
 #ifndef ACTS_SURFACES_ELLIPSEBOUNDS_H
 #define ACTS_SURFACES_ELLIPSEBOUNDS_H 1
 
-// Geometry module
 #include "ACTS/Surfaces/PlanarBounds.h"
 #include "ACTS/Utilities/PrecisionDefinition.h"
-// EventData module
 #include "ACTS/Utilities/ParameterDefinitions.h"
-// Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 // std
 #include <math.h>

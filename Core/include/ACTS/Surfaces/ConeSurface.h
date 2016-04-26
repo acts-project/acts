@@ -5,12 +5,10 @@
 #ifndef ACTS_SURFACES_CONESURFACE_H
 #define ACTS_SURFACES_CONESURFACE_H 1
 
-// Geometry module
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 #include "ACTS/Utilities/ParameterDefinitions.h"
 #include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/ConeBounds.h"
-// EventData module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

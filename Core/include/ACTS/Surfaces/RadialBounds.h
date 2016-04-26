@@ -5,12 +5,9 @@
 #ifndef ACTS_SURFACES_RADIALBOUNDS_H
 #define ACTS_SURFACES_RADIALBOUNDS_H 1
 
-// Geometry module
 #include "ACTS/Surfaces/DiscBounds.h"
 #include "ACTS/Utilities/PrecisionDefinition.h"
-// EventData modle
 #include "ACTS/Utilities/ParameterDefinitions.h"
-// Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 // STD/STL
 #include <math.h>

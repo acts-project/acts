@@ -7,10 +7,8 @@
 
 #include<cfloat>
 
-// Trk
 #include "ACTS/Surfaces/SurfaceBounds.h"
 #include "ACTS/Utilities/PrecisionDefinition.h"
-// Amg
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 #include "ACTS/Utilities/ParameterDefinitions.h"
 

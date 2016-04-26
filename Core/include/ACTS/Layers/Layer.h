@@ -5,16 +5,13 @@
 #ifndef ACTS_DETECTOR_LAYER_H
 #define ACTS_DETECTOR_LAYER_H 1
 
-// Core moudle
 #include "ACTS/Utilities/AlgebraDefinitions.h"
-// Geometry module
 #include "ACTS/Utilities/GeometryObject.h"
 #include "ACTS/Utilities/ApproachDescriptor.h"
 #include "ACTS/Utilities/OverlapDescriptor.h"
 #include "ACTS/Utilities/BinnedArray.h"
 #include "ACTS/Utilities/Intersection.h"
 #include "ACTS/Volumes/AbstractVolume.h"
-// EventData module
 #include "ACTS/EventData/TrackParameters.h"
 #include "ACTS/EventData/NeutralParameters.h"
 

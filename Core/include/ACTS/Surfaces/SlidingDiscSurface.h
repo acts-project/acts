@@ -10,7 +10,6 @@
 #include "ACTS/Surfaces/SurfaceBounds.h"
 #include "ACTS/Surfaces/NoBounds.h"
 #include "ACTS/Utilities/BinUtility.h"
-// Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {

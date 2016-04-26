@@ -5,16 +5,14 @@
 #ifndef ACTS_SURFACES_SURFACE_H
 #define ACTS_SURFACES_SURFACE_H 1
 
-// Geometry module
 #include "ACTS/Surfaces/BoundaryCheck.h"
 #include "ACTS/Surfaces/SurfaceBounds.h"
+#include "ACTS/Detector/DetectorElementBase.h"
 #include "ACTS/Utilities/GeometryObject.h"
 #include "ACTS/Utilities/GeometryStatics.h"
 #include "ACTS/Utilities/Intersection.h"
 #include "ACTS/Utilities/BinnedArray.h"
 #include "ACTS/Utilities/BinningType.h"
-#include "ACTS/Detector/DetectorElementBase.h"
-// Event Mmdule
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 #include "ACTS/Utilities/Identifier.h"
 #include "ACTS/Utilities/ParameterDefinitions.h"

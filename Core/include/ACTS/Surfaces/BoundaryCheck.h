@@ -5,10 +5,8 @@
 #ifndef ACTS_SURFACES_BOUNDARYCHECK_H
 #define ACTS_SURFACES_BOUNDARYCHECK_H 1
 
-// STL include(s)
 #include <cmath>
 
-// Core module
 #include "ACTS/Utilities/ParameterDefinitions.h"
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 

@@ -5,11 +5,9 @@
 #ifndef ACTS_SURFACESSTRAIGHTLINESURFACE_H
 #define ACTS_SURFACESSTRAIGHTLINESURFACE_H
 
-// Geometry module
 #include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/CylinderBounds.h"
 #include "ACTS/Surfaces/NoBounds.h"
-// Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 #include "ACTS/Utilities/Identifier.h"
 

@@ -5,11 +5,9 @@
 #ifndef ACTS_SURFACES_PLANESURFACE_H
 #define ACTS_SURFACES_PLANESURFACE_H 1
 
-// Geometry module
 #include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/PlanarBounds.h"
 #include "ACTS/Surfaces/NoBounds.h"
-// Core Module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 #include "ACTS/Utilities/Identifier.h"
 
