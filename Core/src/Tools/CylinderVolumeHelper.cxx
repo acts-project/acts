@@ -21,8 +21,6 @@
 #include "ACTS/Material/BinnedSurfaceMaterial.h"
 #include "ACTS/Detector/GlueVolumesDescriptor.h"
 #include "ACTS/Utilities/BinUtility.h"
-// Core module
-#include "ACTS/Utilities/Definitions.h"
 
 // constructor
 Acts::CylinderVolumeHelper::CylinderVolumeHelper()

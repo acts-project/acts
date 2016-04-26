@@ -5,13 +5,10 @@
 #ifndef ACTS_DETECTOR_TRACKINGGEOMETRY_H
 #define ACTS_DETECTOR_TRACKINGGEOMETRY_H
 
-// Geometry module
 #include "ACTS/Utilities/GeometrySignature.h"
 #include "ACTS/Utilities/Definitions.h"
-// Core module
 #include <map>
 #include <memory>
-#include "ACTS/Utilities/Definitions.h"
 
 namespace Acts {
  

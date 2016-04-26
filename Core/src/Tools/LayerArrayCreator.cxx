@@ -19,8 +19,6 @@
 #include "ACTS/Surfaces/SurfaceBounds.h"
 #include "ACTS/Surfaces/TrapezoidBounds.h"
 #include "ACTS/Surfaces/RectangleBounds.h"
-// Core module
-#include "ACTS/Utilities/Definitions.h"
 
 Acts::LayerArray* Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
                                                       double min, double max, 

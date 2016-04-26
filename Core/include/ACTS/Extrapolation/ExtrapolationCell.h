@@ -12,7 +12,7 @@
 #include "ACTS/EventData/ParticleProperties.h"
 #include "ACTS/Material/MaterialProperties.h"
 #include "ACTS/Utilities/GeometrySignature.h"
-#include "ACTS/Utilities/PropDirection.h"
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Surfaces/Surface.h"
 #include "ACTS/MagneticField/MagneticFieldProperties.h"
 

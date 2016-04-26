@@ -12,7 +12,6 @@
 // STD/STL
 #include <vector>
 #include <memory>
-#include "ACTS/Utilities/Definitions.h"
 
 namespace Acts {
 

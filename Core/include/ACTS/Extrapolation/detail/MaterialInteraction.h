@@ -7,7 +7,7 @@
 
 #include "ACTS/Material/Material.h"
 #include "ACTS/EventData/ParticleHypothesis.h"
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 
 namespace Acts {
 

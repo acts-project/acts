@@ -6,7 +6,7 @@
 #define ACTS_EVENTDATAUTILS_PARTICLEPROPERTIES_H 1
 
 #include "ACTS/EventData/ParticleHypothesis.h"
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 
 namespace Acts {
     

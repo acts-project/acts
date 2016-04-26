@@ -6,7 +6,7 @@
 #define ACTS_MAGNETICFIELDUTILS_MAGNETICFIELDPROPERTIES_H 1
 
 #include "ACTS/MagneticField/MagneticFieldMode.h"
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 #include <iostream>
 
 namespace Acts {

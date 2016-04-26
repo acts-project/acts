@@ -5,7 +5,7 @@
 #ifndef ACTS_EXTRAPOLATIONUTILS_TRANSPORTJACOBIAN_H
 #define ACTS_EXTRAPOLATIONUTILS_TRANSPORTJACOBIAN_H 1
 
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 
 namespace Acts {
 

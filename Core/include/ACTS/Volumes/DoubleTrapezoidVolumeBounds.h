@@ -5,11 +5,8 @@
 #ifndef ACTS_VOLUMES_DOUBLETRAPEZOIDVOLUMESBOUNDS_H
 #define ACTS_VOLUMES_DOUBLETRAPEZOIDVOLUMESBOUNDS_H 1
 
-// Geometry module
 #include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Volumes/VolumeBounds.h"
-#include "ACTS/Utilities/Definitions.h"
-// Core module
 
 namespace Acts {
 
