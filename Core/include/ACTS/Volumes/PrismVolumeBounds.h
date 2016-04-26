@@ -5,11 +5,8 @@
 #ifndef ACTS_VOLUMES_PRISMVOLUMEBOUNDS_H
 #define ACTS_VOLUMES_PRISMVOLUMEBOUNDS_H 1
 
-// Geometry module
 #include "ACTS/Volumes/VolumeBounds.h"
-#include "ACTS/Utilities/PrecisionDefinition.h"
-// Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 
 namespace Acts {
 

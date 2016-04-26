@@ -4,13 +4,14 @@
 
 // Geometry module
 #include "ACTS/Tools/TrackingVolumeArrayCreator.h"
+
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Utilities/BinUtility.h"
 #include "ACTS/Utilities/BinnedArray1D.h"
 #include "ACTS/Utilities/GeometryObjectSorter.h"
 #include "ACTS/Detector/TrackingVolume.h"
 #include "ACTS/Volumes/VolumeBounds.h"
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 
 std::shared_ptr<const Acts::TrackingVolumeArray> Acts::TrackingVolumeArrayCreator::trackingVolumeArray(const TrackingVolumeVector& tVolumes, BinningValue bValue) const 

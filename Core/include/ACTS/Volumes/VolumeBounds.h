@@ -10,10 +10,10 @@
 #include <iomanip>
 #include <memory>
 
+#include "ACTS/Utilities/Definitions.h"
 // Geometry module
 #include "ACTS/Utilities/BinningType.h"
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

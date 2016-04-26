@@ -3,9 +3,9 @@
 ///////////////////////////////////////////////////////////////////
 
 // Core include
-#include "ACTS/Utilities/AlgebraDefinitions.h"
-// Geometry module
 #include "ACTS/Tools/CylinderGeometryBuilder.h"
+
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Tools/ITrackingVolumeBuilder.h"
 #include "ACTS/Tools/ITrackingVolumeHelper.h"
 #include "ACTS/Detector/TrackingGeometry.h"

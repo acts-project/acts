@@ -5,13 +5,9 @@
 #ifndef ACTS_VOLUMES_BOUNDARYPLANESURFACE_H
 #define ACTS_VOLUMES_BOUNDARYPLANESURFACE_H 1
 
-// Geometry module
 #include "ACTS/Surfaces/PlaneSurface.h"
 #include "ACTS/Volumes/BoundarySurface.h"
-// EventData module
-#include "ACTS/Utilities/PropDirection.h"
-// Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 
 namespace Acts {
 

@@ -4,6 +4,8 @@
 
 // Geometry module
 #include "ACTS/Tools/CylinderVolumeBuilder.h"
+
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Tools/ITrackingVolumeHelper.h"
 #include "ACTS/Detector/TrackingVolume.h"
 #include "ACTS/Layers/CylinderLayer.h"
@@ -12,7 +14,6 @@
 #include "ACTS/Surfaces/CylinderBounds.h"
 #include "ACTS/Surfaces/RadialBounds.h"
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 // constructor
 Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(const std::string& name):

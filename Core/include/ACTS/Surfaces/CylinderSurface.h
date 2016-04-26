@@ -5,10 +5,9 @@
 #ifndef ACTS_SURFACES_CYLINDERSURFACE_H
 #define ACTS_SURFACES_CYLINDERSURFACE_H 1
 
-#include "ACTS/Utilities/AlgebraDefinitions.h"
-#include "ACTS/Utilities/ParameterDefinitions.h"
 #include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/CylinderBounds.h"
+#include "ACTS/Utilities/Definitions.h"
 
 namespace Acts {
 

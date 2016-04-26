@@ -5,14 +5,11 @@
 #ifndef ACTS_VOLUMES_BOUNDARYSURFACE_H
 #define ACTS_VOLUMES_BOUNDARYSURFACE_H
 
-// Geometry module
 #include "ACTS/Volumes/Volume.h"
 #include "ACTS/Volumes/BoundarySurfaceFace.h"
 #include "ACTS/Utilities/BinnedArray.h"
 #include "ACTS/Utilities/BinnedArray0D.h"
-// Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
-#include "ACTS/Utilities/PropDirection.h"
+#include "ACTS/Utilities/Definitions.h"
 
 
 namespace Acts {

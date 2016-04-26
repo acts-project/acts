@@ -3,9 +3,9 @@
 ///////////////////////////////////////////////////////////////////
 
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
-// Geometry module
 #include "ACTS/Tools/PassiveLayerBuilder.h"
+
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Layers/CylinderLayer.h"
 #include "ACTS/Layers/DiscLayer.h"
 #include "ACTS/Surfaces/CylinderBounds.h"

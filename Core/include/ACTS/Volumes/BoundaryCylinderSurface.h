@@ -9,7 +9,7 @@
 #include "ACTS/Surfaces/CylinderSurface.h"
 #include "ACTS/Volumes/BoundarySurface.h"
 // EventData module
-#include "ACTS/Utilities/PropDirection.h"
+#include "ACTS/Utilities/Definitions.h"
 
 namespace Acts {
 

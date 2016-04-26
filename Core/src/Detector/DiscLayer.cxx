@@ -4,6 +4,8 @@
 
 // Geometry module
 #include "ACTS/Layers/DiscLayer.h"
+
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Detector/GenericApproachDescriptor.h"
 #include "ACTS/Detector/GenericOverlapDescriptor.h"
 #include "ACTS/Material/SurfaceMaterial.h"
@@ -14,7 +16,6 @@
 #include "ACTS/Surfaces/RadialBounds.h"
 #include "ACTS/Utilities/BinUtility.h"
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 Acts::DiscLayer::DiscLayer(std::shared_ptr<Acts::Transform3D> transform,
                           std::shared_ptr<const Acts::DiscBounds> dbounds,

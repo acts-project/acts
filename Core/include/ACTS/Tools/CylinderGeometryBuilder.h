@@ -9,8 +9,8 @@
 #include <memory>
 #include <list>
 
+#include "ACTS/Utilities/Definitions.h"
 // ATS include(s)
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 #include "ACTS/Tools/ITrackingGeometryBuilder.h"
 #include "ACTS/Tools/ITrackingVolumeBuilder.h"
 #include "ACTS/Tools/ITrackingVolumeHelper.h"

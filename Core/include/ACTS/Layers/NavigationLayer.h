@@ -10,10 +10,7 @@ class MsgStream;
 // Geometry module
 #include "ACTS/Layers/Layer.h"
 #include "ACTS/Utilities/BinnedArray.h"
-// EventData module
-#include "ACTS/Utilities/PropDirection.h"
-// Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 
 namespace Acts {
     

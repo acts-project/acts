@@ -7,13 +7,13 @@
 
 #include <memory>
 
+#include "ACTS/Utilities/Definitions.h"
 // Geometry module
 #include "ACTS/Layers/Layer.h"
 #include "ACTS/Layers/PlaneLayer.h"
 #include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Utilities/GeometrySignature.h"
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
     
