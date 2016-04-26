@@ -20,17 +20,11 @@ namespace Acts {
     
     typedef std::pair< TrackingVolumePtr, Vector3D>   TrackingVolumeOrderPosition;
     
-    
-    //typedef std::pair< TrackingVolumePtr, const Transform3D*>  TrackingVolumeNavOrder;
-
-
     /** @class TrackingVolumeArrayCreator
 
       The TrackingVolumeArrayCreator is a simple Tool that helps to construct
       binned arrays of TrackingVolumes for both, confinement in another volume 
       and navigation issues.
-
-      @TODO Julia: make private tools private again after Gaudi update (bug in Gaudi), marked with //b
      
       @author Andreas.Salzburger@cern.ch   
      */

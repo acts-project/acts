@@ -16,7 +16,7 @@
 // Constructor
 /////////////////////////////////////////////////////////////////////////////////
 Acts::RungeKuttaEngine::RungeKuttaEngine(const Acts::RungeKuttaEngine::Config& rkConfig) :
-  m_rkConfig()
+  m_config()
 {
   setConfiguration(rkConfig);
 }
@@ -35,7 +35,7 @@ void Acts::RungeKuttaEngine::setConfiguration(const Acts::RungeKuttaEngine::Conf
   IPropagationEngine::m_sopPrefix  = rkConfig.prefix;
   IPropagationEngine::m_sopPostfix = rkConfig.postfix;
   // copy the configuration 
-  m_rkConfig = rkConfig;
+  m_config = rkConfig;
 } 
 
 
@@ -74,7 +74,7 @@ Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellNeutral& eCell,
        return (finalPropagation ? ExtrapolationCode::SuccessDestination : ExtrapolationCode::InProgress);
     }
     // specify the parameters for the propagation
-    pCache.maxPathLength     = eCell.pathLimit < 0. ? m_rkConfig.maxPathLength : (eCell.pathLimit - eCell.pathLength);
+    pCache.maxPathLength     = eCell.pathLimit < 0. ? m_config.maxPathLength : (eCell.pathLimit - eCell.pathLength);
     pCache.direction         = double(pDir);
     pCache.boundaryCheck     = bcheck;
     pCache.returnCurvilinear = returnCurvilinear;
@@ -122,7 +122,7 @@ Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellNeutral& eCell,
         eCell.leadParameters = nParameters;
 
         // now check if it is valid it's further away than the pathLimit
-        if (eCell.pathLimitReached(m_rkConfig.dlt)){
+        if (eCell.pathLimitReached(m_config.dlt)){
             // screen output
             EX_MSG_VERBOSE(eCell.navigationStep,"propagate", "neut", "path limit of " << eCell.pathLimit << " reached. Stopping extrapolation.");
             return ExtrapolationCode::SuccessPathLimit;
@@ -178,14 +178,14 @@ Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellCharged& eCell,
     }
 
     // and configure the propagation cache now
-    pCache.maxPathLength     = eCell.pathLimit < 0. ? m_rkConfig.maxPathLength : (eCell.pathLimit - eCell.pathLength);
+    pCache.maxPathLength     = eCell.pathLimit < 0. ? m_config.maxPathLength : (eCell.pathLimit - eCell.pathLength);
     pCache.direction         = double(pDir);
     pCache.boundaryCheck     = bcheck;
     pCache.returnCurvilinear = returnCurvilinear;
     pCache.useJacobian       = eCell.leadParameters->covariance();
     pCache.mFieldMode        = eCell.mFieldMode;
     pCache.mcondition        = (eCell.mFieldMode.magneticFieldMode() != 0 ) ? true : false;
-    pCache.needgradient      = (pCache.useJacobian && m_rkConfig.usegradient ) ? true : false;
+    pCache.needgradient      = (pCache.useJacobian && m_config.usegradient ) ? true : false;
 
     // propagate with templated helper function
     if (propagateRungeKuttaT<TrackParameters>(eCell, pCache, *sParameters, sf)){
@@ -227,7 +227,7 @@ Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellCharged& eCell,
            // add the new propagation length to the path length
            eCell.pathLength += pCache.step;
            // check if Limit reached
-           if (eCell.pathLimitReached(m_rkConfig.dlt)){
+           if (eCell.pathLimitReached(m_config.dlt)){
                EX_MSG_VERBOSE(eCell.navigationStep, "propagate", "char", "path limit of " << eCell.pathLimit << " successfully reached -> stopping." );
                return ExtrapolationCode::SuccessPathLimit;
            }
@@ -281,7 +281,7 @@ bool Acts::RungeKuttaEngine::propagateWithJacobian(int navigationStep, Propagati
   pCache.newfield = true;
 
   // whie loop over the steps
-  while (fabs(step) > m_rkConfig.straightStep) {
+  while (fabs(step) > m_config.straightStep) {
 
     // maximum number of steps
     if (++niter > 10000) {
@@ -373,7 +373,7 @@ double Acts::RungeKuttaEngine::rungeKuttaStep(int navigationStep, PropagationCac
   double* A    =          &(pCache.pVector[ 3]);            // Directions
   double* sA   =          &(pCache.pVector[42]);
   double  Pi   =  149.89626*pCache.pVector[6];            // Invert mometum/2.
-  double  dltm = m_rkConfig.dlt*.03      ;
+  double  dltm = m_config.dlt*.03      ;
 
   double f0[3],f[3];
 
@@ -381,7 +381,7 @@ double Acts::RungeKuttaEngine::rungeKuttaStep(int navigationStep, PropagationCac
   if (pCache.newfield) getField(R,f0);
   else { f0[0]=pCache.field[0]; f0[1]=pCache.field[1]; f0[2]=pCache.field[2];}
 
-  bool Helix = false; if (fabs(S) < m_rkConfig.helixStep) Helix = true;
+  bool Helix = false; if (fabs(S) < m_config.helixStep) Helix = true;
 
   while(S != 0.) {
 
@@ -435,7 +435,7 @@ double Acts::RungeKuttaEngine::rungeKuttaStep(int navigationStep, PropagationCac
     // Test approximation quality on give step and possible step reduction
     //
     double EST = fabs((A1+A6)-(A3+A4))+fabs((B1+B6)-(B3+B4))+fabs((C1+C6)-(C3+C4));
-    if(EST>m_rkConfig.dlt) {S*=.5; dltm = 0.; continue;} EST<dltm ? InS = true : InS = false;
+    if(EST>m_config.dlt) {S*=.5; dltm = 0.; continue;} EST<dltm ? InS = true : InS = false;
 
     // Parameters calculation
     //
@@ -574,7 +574,7 @@ double Acts::RungeKuttaEngine::rungeKuttaStepWithGradient(int navigationStep, Pr
   double* A    =          &(pCache.pVector[ 3]);           // Directions
   double* sA   =          &(pCache.pVector[42]);
   double  Pi   =  149.89626*pCache.pVector[6];           // Invert mometum/2.
-  double  dltm = m_rkConfig.dlt*.03      ;
+  double  dltm = m_config.dlt*.03      ;
 
   double f0[3],f1[3],f2[3],g0[9],g1[9],g2[9],H0[12],H1[12],H2[12];
   getFieldGradient(R,f0,g0);
@@ -626,7 +626,7 @@ double Acts::RungeKuttaEngine::rungeKuttaStepWithGradient(int navigationStep, Pr
     // Test approximation quality on give step and possible step reduction
     //
     double EST = fabs((A1+A6)-(A3+A4))+fabs((B1+B6)-(B3+B4))+fabs((C1+C6)-(C3+C4));
-    if(EST>m_rkConfig.dlt) {S*=.5; dltm = 0.; continue;} EST<dltm ? InS = true : InS = false;
+    if(EST>m_config.dlt) {S*=.5; dltm = 0.; continue;} EST<dltm ? InS = true : InS = false;
 
     // Parameters calculation
     //
@@ -807,7 +807,7 @@ double Acts::RungeKuttaEngine::stepEstimatorWithCurvature(PropagationCache& pCac
 
   double  Step = utils.stepEstimator(kind,Su,pCache.pVector,Q); if(!Q) return 0.;
   double AStep = fabs(Step);
-  if ( kind || AStep < m_rkConfig.straightStep || !pCache.mcondition ) return Step;
+  if ( kind || AStep < m_config.straightStep || !pCache.mcondition ) return Step;
 
   const double* SA = &(pCache.pVector[42]); // Start direction
   double S = .5*Step;

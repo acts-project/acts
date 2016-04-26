@@ -9,15 +9,10 @@
 #include <memory>
 #include <list>
 
-// ATS include(s)
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 #include "ACTS/Tools/ITrackingGeometryBuilder.h"
 #include "ACTS/Tools/ITrackingVolumeBuilder.h"
 #include "ACTS/Tools/ITrackingVolumeHelper.h"
-
-#ifdef ACTS_GEOMETRY_MEMUSAGE   
-#include "ACTS/Utilities/MemoryLogger.h"
-#endif  
 
 namespace Acts
 {
@@ -30,48 +25,51 @@ namespace Acts
       It retrieves ITrackingVolumeBuilders as configured and builds one
       detector around the other one.
 
-      @TODO Julia: currently using work arround to use ToolHandleArray and private Tools because there is a bug in Gaudi. After update of Gaudi version go back to old usage -> currently marked with //bug
-
       @author Andreas.Salzburger@cern.ch   
   */
 
   class CylinderGeometryBuilder : public ITrackingGeometryBuilder
   {
-  public:
-    /** Constructor */
-    CylinderGeometryBuilder();
+    public:
+      /** @struct Config
+        Configuration for the CylinderVolumeBuilder */
+      struct Config {  
+    
+        std::shared_ptr<ITrackingVolumeBuilder>              beamPipeBuilder;        //!< a special builder for the beam pipe (for post-insertion)
+        std::list<std::shared_ptr<ITrackingVolumeBuilder> >  trackingVolumeBuilders; //!< the sub detector TrackingVolume builder
+        std::shared_ptr<ITrackingVolumeHelper>               trackingVolumeHelper;   //!< used for creating a container
+    
+        Config() :
+          beamPipeBuilder(nullptr),       
+          trackingVolumeBuilders(),
+          trackingVolumeHelper(nullptr)  
+        {}
+      };        
         
-    /** Destructor */
-    virtual ~CylinderGeometryBuilder() = default;
+      /** Constructor */
+      CylinderGeometryBuilder(const Config& cgbConfig);
+          
+      /** Destructor */
+      virtual ~CylinderGeometryBuilder() = default;
+    
+      /** TrackingGeometry Interface method */
+      virtual std::unique_ptr<TrackingGeometry> trackingGeometry() const override;
+      
+      /** Set configuration method */
+      void setConfiguration(const Config& cgbConfig);
+   
+      /** Get configuration method */
+      Config getConfiguration() const;   
+      
+    protected: 
+      /** Configuration member */    
+      Config    m_config;     
 
-    /** TrackingGeometry Interface method */
-    virtual std::unique_ptr<TrackingGeometry> trackingGeometry() const override;
-
-    void setBeamPipeBuilder(std::shared_ptr<ITrackingVolumeBuilder> beamPipe)
-    {
-      m_beamPipeBuilder = std::move(beamPipe);
-    }
-
-    void setVolumeBuilders(std::list<std::shared_ptr<ITrackingVolumeBuilder> > builders)
-    {
-      m_trackingVolumeBuilders = std::move(builders);
-    }
-
-    void setTrackingVolumeHelper(std::shared_ptr<ITrackingVolumeHelper> helper)
-    {
-      m_trackingVolumeHelper = std::move(helper);
-    }
-
-  private:
-
-#ifdef ACTS_GEOMETRY_MEMUSAGE         
-    MemoryLogger                              m_memoryLogger;           //!< in case the memory is logged
-#endif                                            
-    // -------------------------- Tools for geometry building ------------------------------------------------------ //
-    std::shared_ptr<ITrackingVolumeBuilder>               m_beamPipeBuilder;        //!< a special builder for the beam pipe (for post-insertion)
-    std::list<std::shared_ptr<ITrackingVolumeBuilder> >   m_trackingVolumeBuilders; //!< the sub detector TrackingVolume builder
-    std::shared_ptr<ITrackingVolumeHelper>                m_trackingVolumeHelper;   //!< used for creating a container
   };
+  
+  inline CylinderGeometryBuilder::Config CylinderGeometryBuilder::getConfiguration() const 
+      { return m_config; }
+  
 } // end of namespace
 
 #endif // ACTS_GEOMETRYTOOLS_TRACKINGGEOMETRYBUILDER_H

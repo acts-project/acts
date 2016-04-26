@@ -9,7 +9,7 @@
 
 // constructor
 Acts::StaticEngine::StaticEngine(const Acts::StaticEngine::Config& seConfig) :
-  m_seConfig()
+  m_config()
 {
   setConfiguration(seConfig);
 }
@@ -24,7 +24,7 @@ void Acts::StaticEngine::setConfiguration(const Acts::StaticEngine::Config& seCo
   IExtrapolationEngine::m_sopPrefix  = seConfig.prefix;
   IExtrapolationEngine::m_sopPostfix = seConfig.postfix;
   // copy the configuration 
-  m_seConfig = seConfig;
+  m_config = seConfig;
 }   
 
 // charged extrapolation /

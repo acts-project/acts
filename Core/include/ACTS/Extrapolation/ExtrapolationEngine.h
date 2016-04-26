@@ -42,12 +42,12 @@ namespace Acts {
         */
         struct Config {
             
-            std::shared_ptr<const TrackingGeometry>                     trackingGeometry;      //!< the tracking geometry used by the navigator
-            std::vector< std::shared_ptr<const IExtrapolationEngine> >  extrapolationEngines;  //!< the extrapolation engines for different geometry layouts
-            std::shared_ptr<const IPropagationEngine>                   propagationEngine;     //!< the used propagation engine for navigation initialization
-            std::shared_ptr<const INavigationEngine>                    navigationEngine;      //!< access to tracking geometry (unique?)
-            std::string                                                 prefix;                //!< output prefix
-            std::string                                                 postfix;               //!< output postfix
+            std::shared_ptr<const TrackingGeometry>               trackingGeometry;      //!< the tracking geometry used by the navigator
+            std::vector< std::shared_ptr<IExtrapolationEngine> >  extrapolationEngines;  //!< the extrapolation engines for different geometry layouts
+            std::shared_ptr<IPropagationEngine>                   propagationEngine;     //!< the used propagation engine for navigation initialization
+            std::shared_ptr<INavigationEngine>                    navigationEngine;      //!< access to tracking geometry (unique?)
+            std::string                                           prefix;                //!< output prefix
+            std::string                                           postfix;               //!< output postfix
             
             Config() :
               trackingGeometry(nullptr),
@@ -84,14 +84,14 @@ namespace Acts {
             GeometryType geometryType() const final;                           
                                
             /** Set configuration method */
-            void setConfiguration(const Config& meConfig);
+            void setConfiguration(const Config& eeConfig);
       
             /** Get configuration method */
             Config getConfiguration() const;                                 
                                
         protected:
             /** ExtrapolationEngine config object */
-            Config m_eeConfig;
+            Config m_config;
              
         private:
             /** main extrapolation method, templated to chared/neutral */
@@ -110,7 +110,7 @@ namespace Acts {
     inline GeometryType  ExtrapolationEngine::geometryType() const  { return Acts::Master; }
     
     /** Return the configuration object */    
-    inline ExtrapolationEngine::Config ExtrapolationEngine::getConfiguration() const { return m_eeConfig; }
+    inline ExtrapolationEngine::Config ExtrapolationEngine::getConfiguration() const { return m_config; }
 
 } // end of namespace
 

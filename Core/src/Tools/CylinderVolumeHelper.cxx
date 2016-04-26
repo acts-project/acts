@@ -19,18 +19,23 @@
 #include "ACTS/Material/BinnedSurfaceMaterial.h"
 #include "ACTS/Detector/GlueVolumesDescriptor.h"
 #include "ACTS/Utilities/BinUtility.h"
-// Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 #include "ACTS/Tools/StringConverters.h"
 
 // constructor
-Acts::CylinderVolumeHelper::CylinderVolumeHelper()
+Acts::CylinderVolumeHelper::CylinderVolumeHelper(const Acts::CylinderVolumeHelper::Config& cvhConfig)
   : Acts::ITrackingVolumeHelper(),
-  m_layerArrayCreator(),
-  m_trackingVolumeArrayCreator(),
-  m_passiveLayerPhiBins(1),
-  m_passiveLayerRzBins(100)
-{}
+    m_config()
+{
+    setConfiguration(cvhConfig);
+}
+
+// configuration
+void Acts::CylinderVolumeHelper::setConfiguration(const Acts::CylinderVolumeHelper::Config& cvhConfig) {
+  // @TODO check consistency    
+  // copy the configuration 
+  m_config = cvhConfig;
+} 
 
 std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createTrackingVolume(const LayerVector& layers,
                                                                                            const Material& matprop,
@@ -93,8 +98,8 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createTr
         // MSG_VERBOSE("Filling the layers into an appropriate layer array - with binningValue = " << bValue);
         // create the Layer Array
         layerArray = (bValue == binR) ?
-            m_layerArrayCreator->layerArray(layers, rMin, rMax, bType, bValue) :
-            m_layerArrayCreator->layerArray(layers, zMin, zMax, bType, bValue);
+            m_config.layerArrayCreator->layerArray(layers, rMin, rMax, bType, bValue) :
+            m_config.layerArrayCreator->layerArray(layers, zMin, zMax, bType, bValue);
 
     } // layers are created and done
 
@@ -117,11 +122,11 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createTr
 
 
 std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createTrackingVolume(const LayerVector& layers,
-                                                                                           const Material& matprop,
-                                                                                           double rMin, double rMax,
-                                                                                           double zMin, double zMax,
-                                                                                           const std::string& volumeName,
-                                                                                           BinningType bType) const
+                                                                                             const Material& matprop,
+                                                                                             double rMin, double rMax,
+                                                                                             double zMin, double zMax,
+                                                                                             const std::string& volumeName,
+                                                                                             BinningType bType) const
 {
     // that's what is needed
     CylinderVolumeBounds* cBounds     = nullptr;
@@ -158,11 +163,11 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createTr
 
 
 std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createGapTrackingVolume(const Material& matprop,
-                                                                                               double rMin, double rMax,
-                                                                                               double zMin, double zMax,
-                                                                                               unsigned int materialLayers,
-                                                                                               bool cylinder,
-                                                                                               const std::string& volumeName) const
+                                                                                                double rMin, double rMax,
+                                                                                                double zMin, double zMax,
+                                                                                                unsigned int materialLayers,
+                                                                                                bool cylinder,
+                                                                                                const std::string& volumeName) const
 {
 
     // screen output
@@ -189,12 +194,12 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createGa
 
 
 std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createGapTrackingVolume(const Material& matprop,
-                                                                                              double rMin, double rMax,
-                                                                                              double zMin, double zMax,
-                                                                                              const std::vector<double>& layerPositions,
-                                                                                              bool cylinder,
-                                                                                              const std::string& volumeName,
-                                                                                              BinningType bType) const
+                                                                                                double rMin, double rMax,
+                                                                                                double zMin, double zMax,
+                                                                                                const std::vector<double>& layerPositions,
+                                                                                                bool cylinder,
+                                                                                                const std::string& volumeName,
+                                                                                                BinningType bType) const
 {
 
     // screen output
@@ -217,9 +222,9 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createGa
             layers.push_back(createCylinderLayer(0.5*(zMinLayer+zMaxLayer),
                                                  (*layerPropIter),
                                                  fabs(0.5*(zMaxLayer-zMinLayer)),
-                                                 m_passiveLayerThickness,
-                                                 m_passiveLayerPhiBins,
-                                                 m_passiveLayerRzBins) );
+                                                 m_config.passiveLayerThickness,
+                                                 m_config.passiveLayerPhiBins,
+                                                 m_config.passiveLayerRzBins) );
 
         } else {
             // take the envelopes into account
@@ -229,9 +234,9 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createGa
             layers.push_back(createDiscLayer((*layerPropIter),
                                              rMinLayer,
                                              rMaxLayer,
-                                             m_passiveLayerThickness,
-                                             m_passiveLayerPhiBins,
-                                             m_passiveLayerRzBins) );
+                                             m_config.passiveLayerThickness,
+                                             m_config.passiveLayerPhiBins,
+                                             m_config.passiveLayerRzBins) );
 
         }
     }
@@ -331,7 +336,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createCo
     //       virtual std::shared_ptr<const TrackingVolumeArray> trackingVolumeArray(const TrackingVolumeVector& vols, BinningValue bVal) const = 0;
 
     std::shared_ptr<const TrackingVolumeArray> volumeArray = (rCase) ?
-    m_trackingVolumeArrayCreator->trackingVolumeArray(volumes, binR) : m_trackingVolumeArrayCreator->trackingVolumeArray(volumes, binZ);
+    m_config.trackingVolumeArrayCreator->trackingVolumeArray(volumes, binR) : m_config.trackingVolumeArrayCreator->trackingVolumeArray(volumes, binZ);
     if (volumeArray == nullptr) {
         // MSG_WARNING( "Creation of TrackingVolume array did not succeed - returning 0 " );
         delete topVolumeBounds;
@@ -567,28 +572,28 @@ bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(std::shared_ptr<const T
         if (glueVolumesNegativeFace.size()) {
             // create the outside volume array
             std::shared_ptr<const TrackingVolumeArray> glueVolumesNegativeFaceArray =
-            m_trackingVolumeArrayCreator->trackingVolumeArray(glueVolumesNegativeFace, binR);
+            m_config.trackingVolumeArrayCreator->trackingVolumeArray(glueVolumesNegativeFace, binR);
             // register the glue voluems
             glueDescr.registerGlueVolumes(negativeFaceXY,glueVolumesNegativeFaceArray);
         }
         if (glueVolumesPositiveFace.size()) {
             // create the outside volume array
             std::shared_ptr<const TrackingVolumeArray> glueVolumesPositiveFaceArray =
-            m_trackingVolumeArrayCreator->trackingVolumeArray(glueVolumesPositiveFace, binR);
+            m_config.trackingVolumeArrayCreator->trackingVolumeArray(glueVolumesPositiveFace, binR);
             // register the glue voluems
             glueDescr.registerGlueVolumes(positiveFaceXY,glueVolumesPositiveFaceArray);
         }
         if (glueVolumesInnerTube.size()){
             // create the outside volume array
             std::shared_ptr<const TrackingVolumeArray> glueVolumesInnerTubeArray =
-            m_trackingVolumeArrayCreator->trackingVolumeArray(glueVolumesInnerTube, binZ);
+            m_config.trackingVolumeArrayCreator->trackingVolumeArray(glueVolumesInnerTube, binZ);
             // register the glue voluems
             glueDescr.registerGlueVolumes(tubeInnerCover,glueVolumesInnerTubeArray);
         }
         if (glueVolumesOuterTube.size()){
             // create the outside volume array
             std::shared_ptr<const TrackingVolumeArray> glueVolumesOuterTubeArray =
-            m_trackingVolumeArrayCreator->trackingVolumeArray(glueVolumesOuterTube, binZ);
+            m_config.trackingVolumeArrayCreator->trackingVolumeArray(glueVolumesOuterTube, binZ);
             // register the glue voluems
             glueDescr.registerGlueVolumes(tubeOuterCover,glueVolumesOuterTubeArray);
         }
@@ -683,7 +688,7 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(std::shared_ptr<const Track
         // create the BoundarySurface as shared pointer
         auto nBoundarySurface = std::shared_ptr<const BoundarySurface<TrackingVolume> >(boundarySurface);
 
-        //m_trackingVolumeGluer->glueTrackingVolumes(gvDescriptorOne.glueVolumes(faceOne),
+        //m_config.trackingVolumeGluer->glueTrackingVolumes(gvDescriptorOne.glueVolumes(faceOne),
         //faceOne,
         //gvDescriptorTwo.glueVolumes(faceTwo),
         //faceTwo,

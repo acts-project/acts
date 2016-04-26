@@ -34,12 +34,12 @@ namespace Acts {
         */
         struct Config {
             
-            std::shared_ptr<const IPropagationEngine>       propagationEngine;     //!< the used propagation engine
-            std::shared_ptr<const IMaterialEffectsEngine>   materialEffectsEngine; //!< the material effects updated
-            const TrackingGeometry*                         trackingGeometry;      //!< the tracking geometry used by the navigator
+            std::shared_ptr<IPropagationEngine>       propagationEngine;     //!< the used propagation engine
+            std::shared_ptr<IMaterialEffectsEngine>   materialEffectsEngine; //!< the material effects updated
+            std::shared_ptr<const TrackingGeometry>   trackingGeometry;      //!< the tracking geometry used by the navigator
             
-            std::string                                     prefix;                //!< output prefix
-            std::string                                     postfix;               //!< output postfix
+            std::string                               prefix;                //!< output prefix
+            std::string                               postfix;               //!< output postfix
             
             Config() :
               trackingGeometry(nullptr),
@@ -81,7 +81,7 @@ namespace Acts {
 
     protected:
         /** the configuration member of the static navigation engine */                                                     
-        Config  m_snConfig; 
+        Config  m_config; 
         
     private:
         /** resolve the boundary situation */
@@ -102,7 +102,7 @@ namespace Acts {
     };
     
     /** Return the configuration object */    
-    inline StaticNavigationEngine::Config StaticNavigationEngine::getConfiguration() const { return m_snConfig; }
+    inline StaticNavigationEngine::Config StaticNavigationEngine::getConfiguration() const { return m_config; }
 
 } // end of namespace
 
