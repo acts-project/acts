@@ -7,8 +7,8 @@
 
 #include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/NoBounds.h"
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Utilities/GeometryStatics.h"
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

@@ -7,7 +7,7 @@
 #include "ACTS/Detector/TrackingVolume.h"
 #include "ACTS/Detector/TrackingGeometry.h"
 #include "ACTS/Volumes/BoundarySurface.h"
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 
 /** handle the failure - as configured */
 template <class T> Acts::ExtrapolationCode Acts::StaticNavigationEngine::resolveBoundaryT(Acts::ExtrapolationCell<T>& eCell,

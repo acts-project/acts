@@ -6,9 +6,9 @@
 #define ACTS_SURFACES_SUBTRACTEDCYLINDERSURFACE_H 1
 
 #include "ACTS/Surfaces/CylinderSurface.h"
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Utilities/AreaExcluder.h"
 #include "ACTS/Utilities/ParameterDefinitions.h"
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 class Identifier;
 

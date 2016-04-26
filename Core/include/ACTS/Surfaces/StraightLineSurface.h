@@ -8,7 +8,7 @@
 #include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/CylinderBounds.h"
 #include "ACTS/Surfaces/NoBounds.h"
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Utilities/Identifier.h"
 
 namespace Acts {

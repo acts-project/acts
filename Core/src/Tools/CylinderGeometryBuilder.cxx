@@ -2,7 +2,6 @@
 // CylinderGeometryBuilder.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 #include "ACTS/Tools/CylinderGeometryBuilder.h"
 #include "ACTS/Tools/ITrackingVolumeBuilder.h"
 #include "ACTS/Tools/ITrackingVolumeHelper.h"

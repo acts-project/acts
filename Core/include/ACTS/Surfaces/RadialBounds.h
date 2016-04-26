@@ -6,10 +6,8 @@
 #define ACTS_SURFACES_RADIALBOUNDS_H 1
 
 #include "ACTS/Surfaces/DiscBounds.h"
-#include "ACTS/Utilities/PrecisionDefinition.h"
 #include "ACTS/Utilities/ParameterDefinitions.h"
-#include "ACTS/Utilities/AlgebraDefinitions.h"
-// STD/STL
+#include "ACTS/Utilities/Definitions.h"
 #include <math.h>
 #include <cmath>
 

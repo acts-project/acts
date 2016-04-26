@@ -4,8 +4,8 @@
 // STL include(s)
 #include <type_traits>
 
+#include "ACTS/Utilities/Definitions.h"
 // ACTS includes
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 #include "ACTS/Utilities/ParameterDefinitions.h"
 #include "ACTS/EventData/ParameterSet.h"
 #include "ACTS/EventData/ChargePolicy.h"

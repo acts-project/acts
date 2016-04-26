@@ -5,13 +5,9 @@
 #ifndef ACTS_VOLUMES_BOUNDARYSUBTRACTEDPLANESURFACE_H
 #define ACTS_VOLUMES_BOUNDARYSUBTRACTEDPLANESURFACE_H 1
 
-// Geometry module
 #include "ACTS/Surfaces/SubtractedPlaneSurface.h"
 #include "ACTS/Volumes/BoundarySurface.h"
-// EventData module
-#include "ACTS/Utilities/PropDirection.h"
-// Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 
 namespace Acts {
 

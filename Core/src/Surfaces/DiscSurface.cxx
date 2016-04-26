@@ -11,7 +11,8 @@
 #include <iostream>
 #include <iomanip>
 //Amg
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+
+#include "ACTS/Utilities/Definitions.h"
 
 Acts::NoBounds Acts::DiscSurface::s_boundless;
 

@@ -5,13 +5,9 @@
 #ifndef ACTS_VOLUMES_BOUNDARYDISCSURFACE_H
 #define ACTS_VOLUMES_BOUNDARYDISCSURFACE_H 1
 
-// Geometry module
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Surfaces/DiscSurface.h"
 #include "ACTS/Volumes/BoundarySurface.h"
-// EventData module
-#include "ACTS/Utilities/PropDirection.h"
-// Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

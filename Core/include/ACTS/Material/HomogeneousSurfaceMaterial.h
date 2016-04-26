@@ -6,12 +6,11 @@
 #define ACTS_MATERIAL_HOMOGENOUSLAYERMATERIAL_H
 
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
-// Geometry module
 #include "ACTS/Material/SurfaceMaterial.h"
 #include "ACTS/Material/MaterialProperties.h"
 // STD/STL
 #include <vector>
+#include "ACTS/Utilities/Definitions.h"
 
 namespace Acts {
 

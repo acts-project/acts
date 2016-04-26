@@ -11,7 +11,7 @@ class MsgStream;
 #include "ACTS/Layers/Layer.h"
 #include "ACTS/Surfaces/PlaneSurface.h"
 // Core module
-#include "ACTS/Utilities/PropDirection.h"
+#include "ACTS/Utilities/Definitions.h"
 // STL sorting
 #include <algorithm>
 

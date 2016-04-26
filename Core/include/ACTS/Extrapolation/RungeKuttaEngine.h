@@ -11,7 +11,7 @@
 #include "ACTS/Extrapolation/detail/RungeKuttaUtils.h"
 #include "ACTS/EventData/TrackParameters.h"
 #include "ACTS/EventData/NeutralParameters.h"
-#include "ACTS/Utilities/PropDirection.h"
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/CylinderSurface.h"
 #include "ACTS/Surfaces/ConeSurface.h"

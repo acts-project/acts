@@ -6,9 +6,8 @@
 #define ACTS_SURFACES_DISCTRAPEZOIDALBOUNDS_H
 
 #include "ACTS/Surfaces/DiscBounds.h"
-#include "ACTS/Utilities/PrecisionDefinition.h"
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 #include "ACTS/Utilities/ParameterDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 #include <math.h>
 #include <cmath>
 

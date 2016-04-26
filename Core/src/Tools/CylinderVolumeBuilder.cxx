@@ -2,7 +2,6 @@
 // CylinderVolumeBuilder.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module
 #include "ACTS/Tools/CylinderVolumeBuilder.h"
 #include "ACTS/Tools/ITrackingVolumeHelper.h"
 #include "ACTS/Detector/TrackingVolume.h"
@@ -11,8 +10,8 @@
 #include "ACTS/Volumes/CylinderVolumeBounds.h"
 #include "ACTS/Surfaces/CylinderBounds.h"
 #include "ACTS/Surfaces/RadialBounds.h"
-// Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
+#include "ACTS/Utilities/MsgMacros.h"
 
 // constructor
 Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(const Acts::CylinderVolumeBuilder::Config& cvbConfig):
@@ -227,8 +226,8 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
                 barrelRmax = barrelBounds->outerRadius();
                 barrelZmax = barrelVolume->center().z() + barrelBounds->halflengthZ();
                 // MSG_VERBOSE("Outer Barrel bounds provided by configuration, rMin/rMax/zMax = " << barrelRmin << ", " << barrelRmax << ", " << barrelZmax);
-            }
-            // else // MSG_ERROR("No Barrel volume given for current hierarchy!");
+            } else 
+                // MSG_ERROR("No Barrel volume given for current hierarchy!");
             //check if end cap volumes are provided
             if (endcapVolume) {
                 const CylinderVolumeBounds* endcapBounds = dynamic_cast<const CylinderVolumeBounds*>(&(endcapVolume->volumeBounds()));

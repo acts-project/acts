@@ -6,10 +6,7 @@
 #define ACTS_SURFACES_ELLIPSEBOUNDS_H 1
 
 #include "ACTS/Surfaces/PlanarBounds.h"
-#include "ACTS/Utilities/PrecisionDefinition.h"
-#include "ACTS/Utilities/ParameterDefinitions.h"
-#include "ACTS/Utilities/AlgebraDefinitions.h"
-// std
+#include "ACTS/Utilities/Definitions.h"
 #include <math.h>
 #include <stdlib.h>
 

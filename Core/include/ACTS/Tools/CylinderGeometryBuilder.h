@@ -9,7 +9,7 @@
 #include <memory>
 #include <list>
 
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Tools/ITrackingGeometryBuilder.h"
 #include "ACTS/Tools/ITrackingVolumeBuilder.h"
 #include "ACTS/Tools/ITrackingVolumeHelper.h"
@@ -63,7 +63,7 @@ namespace Acts
       
     protected: 
       /** Configuration member */    
-      Config    m_config;     
+      Config  m_config;     
 
   };
   

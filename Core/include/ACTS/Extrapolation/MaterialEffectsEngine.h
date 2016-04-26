@@ -12,7 +12,7 @@
 #include "ACTS/Extrapolation/detail/MaterialInteraction.h"
 #include "ACTS/EventData/TrackParameters.h"
 #include "ACTS/EventData/NeutralParameters.h"
-#include "ACTS/Utilities/PropDirection.h"
+#include "ACTS/Utilities/Definitions.h"
  
 namespace Acts {
   

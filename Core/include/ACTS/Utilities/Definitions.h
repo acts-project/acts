@@ -9,8 +9,46 @@
 // external include(s)
 #include <Eigen/Dense>
 
+#ifdef TRKDETDESCR_USEFLOATPRECISON
+typedef float TDD_real_t;
+#else
+typedef double TDD_real_t;
+#endif
+
+#define TDD_max_bound_value 10e10
+
 namespace Acts
 {
+  /** Tolerance for being on Surface */
+  static const double s_onSurfaceTolerance = 10e-5;
+
+  /** @enum PropDirection
+    PropDirection, enum for direction of the propagation.
+
+     @author Andreas.Salzburger@cern.ch
+    */
+  enum PropDirection {alongMomentum    = 1,
+    oppositeMomentum =-1,
+    anyDirection     = 0,
+    mappingMode      = 2};
+
+  /** @enum SearDirection
+   Simple enum for searching Surfaces
+   */
+  enum SearchDirection {outside=1,
+    inside=-1,
+    bothway=0,
+    undefinedDirection=0};
+
+  /** This is a steering enum to tell which material update stage:
+     - preUpdate  : when reaching a layer before layer is resolved
+     - fullUpdate : just pass through the layer
+     - postUpdate : when leaving the layer
+   */
+  enum MaterialUpdateStage {preUpdate   = -1,
+    fullUpdate  =  0,
+    postUpdate  =  1};
+
   template<typename T, unsigned int rows, unsigned int cols>
   using ActsMatrix = Eigen::Matrix<T,rows,cols>;
 

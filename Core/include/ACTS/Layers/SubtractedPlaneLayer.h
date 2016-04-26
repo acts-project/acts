@@ -6,10 +6,10 @@
 #define ACTS_DETECTOR_SUBTRACTEDPLANELAYER_H
 
 // Geometry module
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Layers/PlaneLayer.h"
 #include "ACTS/Surfaces/SubtractedPlaneSurface.h"
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

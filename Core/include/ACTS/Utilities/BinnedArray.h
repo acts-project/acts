@@ -8,9 +8,8 @@
 // Geometry module
 #include "ACTS/Utilities/BinUtility.h"
 // Core moudle
-#include "ACTS/Utilities/AlgebraDefinitions.h"
-// STL
 #include <vector>
+#include "Definitions.h"
 
 namespace Acts {
 

@@ -7,7 +7,7 @@
 
 #include "ACTS/Extrapolation/ExtrapolationCell.h"
 #include "ACTS/Extrapolation/MaterialUpdateMode.h"
-#include "ACTS/Utilities/PropDirection.h"
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/EventData/TrackParameters.h"
 #include "ACTS/EventData/NeutralParameters.h"
 

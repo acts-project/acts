@@ -6,19 +6,15 @@
 #define ACTS_DETECTOR_TRACKINGVOLUME_H 1
 
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
-// Geometry module
 #include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/BoundaryCheck.h"
 #include "ACTS/Volumes/Volume.h"
-//#include "ACTS/Volumes/AbstractVolume.h"
 #include "ACTS/Volumes/BoundarySurface.h"
 #include "ACTS/Layers/Layer.h"
 #include "ACTS/Material/Material.h"
 #include "ACTS/Utilities/BinnedArray.h"
 #include "ACTS/Utilities/GeometrySignature.h"
-// EventData module
-#include "ACTS/Utilities/PropDirection.h"
+#include "ACTS/Utilities/Definitions.h"
 //STL
 #include <string>
 

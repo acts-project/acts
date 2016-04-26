@@ -9,9 +9,8 @@
 #include "ACTS/Volumes/Volume.h"
 #include "ACTS/Volumes/BoundarySurface.h"
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
-// STD/STL
 #include <vector>
+#include "ACTS/Utilities/Definitions.h"
 
 namespace Acts {
 

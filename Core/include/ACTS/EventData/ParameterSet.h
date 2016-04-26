@@ -6,8 +6,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "ACTS/Utilities/Definitions.h"
 // ACTS includes
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 #include "ACTS/Utilities/ParameterDefinitions.h"
 
 namespace Acts

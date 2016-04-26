@@ -5,13 +5,9 @@
 #ifndef ACTS_VOLUMES_BOUNDARYSUBTRACTEDCYLIMDERSURFACE_H
 #define ACTS_VOLUMES_BOUNDARYSUBTRACTEDCYLIMDERSURFACE_H 1
 
-// Geometry module
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Surfaces/SubtractedCylinderSurface.h"
 #include "ACTS/Volumes/BoundarySurface.h"
-// EventData module
-#include "ACTS/Utilities/PropDirection.h"
-// Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

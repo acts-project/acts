@@ -5,11 +5,8 @@
 #ifndef ACTS_VOLUMES_BEVELLEDCYLINDERVOLUMESBOUNDS_H
 #define ACTS_VOLUMES_BEVELLEDCYLINDERVOLUMESBOUNDS_H
 
-// Geometry module
 #include "ACTS/Volumes/VolumeBounds.h"
-#include "ACTS/Utilities/PrecisionDefinition.h"
-// Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 
 namespace Acts {
 
