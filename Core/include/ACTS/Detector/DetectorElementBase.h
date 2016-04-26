@@ -18,6 +18,7 @@ namespace Acts
 {
 
     class Surface;
+    class SurfaceBounds;
 
     /** @class DetectorElementBase
 
@@ -50,8 +51,11 @@ namespace Acts
         /** Return local to global transform (optionally associated with an identifier) */
         virtual const Transform3D& transform(const Identifier& identifier = Identifier()) const = 0;
                 
-        /**Return the surface associated with this detector element (optionally associated with an identifier) */
+        /** Return the surface associated with this detector element (optionally associated with an identifier) */
         virtual const Surface& surface(const Identifier& identifier = Identifier()) const = 0;
+        
+        /** Return the surface bounds (optionally with an associated detector element) */
+        virtual const SurfaceBounds& bounds(const Identifier& identifier = Identifier()) const = 0;
 
         /** Returns the full list of all detection surfaces associated to this detector element */
         virtual const std::vector< std::shared_ptr<const Surface> >& surfaces() const = 0;

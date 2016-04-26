@@ -5,11 +5,9 @@
 #ifndef ACTS_EXTRAPOLATIONINTERFACES_INAVIGATIONENGINE_H
 #define ACTS_EXTRAPOLATIONINTERFACES_INAVIGATIONENGINE_H
 
-// Extrapolation module
-#include "ExtrapolationUtils/ExtrapolationCell.h"
-// EventData module
-#include "TrackParameters/TrackParameters.h"
-#include "NeutralParameters/NeutralParameters.h"
+#include "ACTS/Extrapolation/ExtrapolationCell.h"
+#include "ACTS/EventData/TrackParameters.h"
+#include "ACTS/EventData/NeutralParameters.h"
  
 namespace Acts {
 
@@ -27,7 +25,7 @@ namespace Acts {
       @author Andreas Salzburger -at - cern.ch
   */
 
-  class INavigationEngine : virtual public IService {
+  class INavigationEngine {
 
     public:
 

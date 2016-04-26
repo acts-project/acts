@@ -5,11 +5,9 @@
 #ifndef ACTS_SURFACE_SDISCSURFACE_H
 #define ACTS_SURFACE_SDISCSURFACE_H 1
 
-// Geometry module
 #include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Surfaces/DiscBounds.h"
 #include "ACTS/Surfaces/NoBounds.h"
-// Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 #include "ACTS/Utilities/Identifier.h"
 

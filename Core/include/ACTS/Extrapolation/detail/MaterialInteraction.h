@@ -5,12 +5,9 @@
 #ifndef ACTS_EXTRAPOLATIONUTILS_MATERIALINTERACTION_H
 #define ACTS_EXTRAPOLATIONUTILS_MATERIALINTERACTION_H 1
 
-// Geometry module
-#include "Material/Material.h"
-// EventData module
-#include "EventDataUtils/ParticleHypothesis.h"
-// Core module
-#include "Algebra/AlgebraDefinitions.h"
+#include "ACTS/Material/Material.h"
+#include "ACTS/EventData/ParticleHypothesis.h"
+#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

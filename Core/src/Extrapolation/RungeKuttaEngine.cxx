@@ -2,45 +2,23 @@
 // RungeKuttaEngine.cxx, ACTS project
 /////////////////////////////////////////////////////////////////////////////////
 
-// Event module
-#include "EventDataUtils/CoordinateTransformations.h"
-// Extrapolation module
-#include "RungeKuttaEngine/RungeKuttaEngine.h"
-#include "ExtrapolationInterfaces/ExtrapolationMacros.h"
-#include "ExtrapolationUtils/TransportJacobian.h"
-// Geometry module
-#include "Surfaces/Surface.h"
-#include "Surfaces/DiscSurface.h"
-#include "Surfaces/PlaneSurface.h"
-#include "Surfaces/PerigeeSurface.h"
-#include "Surfaces/StraightLineSurface.h"
-// MagneticField module
-#include "MagneticFieldUtils/MagneticFieldProperties.h"
+#include "ACTS/Extrapolation/RungeKuttaEngine.h"
+#include "ACTS/EventData/TransportJacobian.h"
+#include "ACTS/EventData/detail/CoordinateTransformations.h"
+#include "ACTS/Surfaces/Surface.h"
+#include "ACTS/Surfaces/DiscSurface.h"
+#include "ACTS/Surfaces/PlaneSurface.h"
+#include "ACTS/Surfaces/PerigeeSurface.h"
+#include "ACTS/Surfaces/StraightLineSurface.h"
+#include "ACTS/MagneticField/MagneticFieldProperties.h"
 
-DECLARE_SERVICE_FACTORY(Acts::RungeKuttaEngine)
 /////////////////////////////////////////////////////////////////////////////////
 // Constructor
 /////////////////////////////////////////////////////////////////////////////////
-Acts::RungeKuttaEngine::RungeKuttaEngine(const std::string& name, ISvcLocator* svc) :
-  ServiceBase(name, svc),
-  m_fieldService("", name),
-  m_dlt(0.000200),
-  m_helixStep(1.),
-  m_straightStep(.01),
-  m_maxPathLength(25000.),
-  m_usegradient(false)
-
+Acts::RungeKuttaEngine::RungeKuttaEngine(const Acts::RungeKuttaEngine::Config& rkConfig) :
+  m_rkConfig()
 {
-  // steering of the screen outoput (SOP)
-  declareProperty("OutputPrefix"       , m_sopPrefix);
-  declareProperty("OutputPostfix"      , m_sopPostfix);
-  // property declaration
-  declareProperty("AccuracyParameter"  , m_dlt          );
-  declareProperty("MaxHelixStep"       , m_helixStep    );
-  declareProperty("MaxStraightLineStep", m_straightStep);
-  declareProperty("MaxPathLength"      , m_maxPathLength);
-  declareProperty("IncludeBgradients"  , m_usegradient );
-  declareProperty("MagneticFieldSvc"   , m_fieldService);
+  setConfiguration(rkConfig);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -48,51 +26,27 @@ Acts::RungeKuttaEngine::RungeKuttaEngine(const std::string& name, ISvcLocator* s
 /////////////////////////////////////////////////////////////////////////////////
 Acts::RungeKuttaEngine::~RungeKuttaEngine(){}
 
-/////////////////////////////////////////////////////////////////////////////////
-// Query the interface
-/////////////////////////////////////////////////////////////////////////////////
-StatusCode Acts::RungeKuttaEngine::queryInterface(const InterfaceID& riid, void** ppvInterface)
-{
-  if ( IID_IPropagationEngine == riid )
-    *ppvInterface = (IPropagationEngine*)this;
-  else  {
-    // Interface is not directly available: try out a base class
-    return Service::queryInterface(riid, ppvInterface);
-  }
-  addRef();
-  return StatusCode::SUCCESS;
-}
 
 /////////////////////////////////////////////////////////////////////////////////
-// initialize
+// Configuration
 /////////////////////////////////////////////////////////////////////////////////
-StatusCode Acts::RungeKuttaEngine::initialize()
-{
-  MSG_DEBUG("initialize()");
-  //Service needs to be initialized
-  if (!ServiceBase::initialize()) return StatusCode::FAILURE;
-  // retrieve the tracking magnetic field - crucial, abort when it can not be retrieved
-  RETRIEVE_FATAL(m_fieldService);
-  return StatusCode::SUCCESS;
-}
+void Acts::RungeKuttaEngine::setConfiguration(const Acts::RungeKuttaEngine::Config& rkConfig) {
+  // steering of the screen outoput (SOP)
+  IPropagationEngine::m_sopPrefix  = rkConfig.prefix;
+  IPropagationEngine::m_sopPostfix = rkConfig.postfix;
+  // copy the configuration 
+  m_rkConfig = rkConfig;
+} 
 
-/////////////////////////////////////////////////////////////////////////////////
-// finalize
-/////////////////////////////////////////////////////////////////////////////////
-StatusCode Acts::RungeKuttaEngine::finalize()
-{
-  MSG_DEBUG("finalize()");
-  return StatusCode::SUCCESS;
-}
 
 /////////////////////////////////////////////////////////////////////////////////
 // Main function for NeutralParameters propagation
 /////////////////////////////////////////////////////////////////////////////////
 Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellNeutral& eCell,
-                                                        const Surface& sf,
-                                                        PropDirection pDir,
-                                                        const BoundaryCheck& bcheck,
-                                                        bool returnCurvilinear) const
+                                                          const Surface& sf,
+                                                          PropDirection pDir,
+                                                          const BoundaryCheck& bcheck,
+                                                          bool returnCurvilinear) const
 {
     EX_MSG_DEBUG(++eCell.navigationStep, "propagate", "neut", "propagation engine called with neutral parameters with propagation direction " << pDir );
     // it is the final propagation if it is the endSurface
@@ -120,7 +74,7 @@ Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellNeutral& eCell,
        return (finalPropagation ? ExtrapolationCode::SuccessDestination : ExtrapolationCode::InProgress);
     }
     // specify the parameters for the propagation
-    pCache.maxPathLength     = eCell.pathLimit < 0. ? m_maxPathLength : (eCell.pathLimit - eCell.pathLength);
+    pCache.maxPathLength     = eCell.pathLimit < 0. ? m_rkConfig.maxPathLength : (eCell.pathLimit - eCell.pathLength);
     pCache.direction         = double(pDir);
     pCache.boundaryCheck     = bcheck;
     pCache.returnCurvilinear = returnCurvilinear;
@@ -168,7 +122,7 @@ Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellNeutral& eCell,
         eCell.leadParameters = nParameters;
 
         // now check if it is valid it's further away than the pathLimit
-        if (eCell.pathLimitReached(m_dlt)){
+        if (eCell.pathLimitReached(m_rkConfig.dlt)){
             // screen output
             EX_MSG_VERBOSE(eCell.navigationStep,"propagate", "neut", "path limit of " << eCell.pathLimit << " reached. Stopping extrapolation.");
             return ExtrapolationCode::SuccessPathLimit;
@@ -224,14 +178,14 @@ Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellCharged& eCell,
     }
 
     // and configure the propagation cache now
-    pCache.maxPathLength     = eCell.pathLimit < 0. ? m_maxPathLength : (eCell.pathLimit - eCell.pathLength);
+    pCache.maxPathLength     = eCell.pathLimit < 0. ? m_rkConfig.maxPathLength : (eCell.pathLimit - eCell.pathLength);
     pCache.direction         = double(pDir);
     pCache.boundaryCheck     = bcheck;
     pCache.returnCurvilinear = returnCurvilinear;
     pCache.useJacobian       = eCell.leadParameters->covariance();
     pCache.mFieldMode        = eCell.mFieldMode;
     pCache.mcondition        = (eCell.mFieldMode.magneticFieldMode() != 0 ) ? true : false;
-    pCache.needgradient      = (pCache.useJacobian && m_usegradient ) ? true : false;
+    pCache.needgradient      = (pCache.useJacobian && m_rkConfig.usegradient ) ? true : false;
 
     // propagate with templated helper function
     if (propagateRungeKuttaT<TrackParameters>(eCell, pCache, *sParameters, sf)){
@@ -273,7 +227,7 @@ Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellCharged& eCell,
            // add the new propagation length to the path length
            eCell.pathLength += pCache.step;
            // check if Limit reached
-           if (eCell.pathLimitReached(m_dlt)){
+           if (eCell.pathLimitReached(m_rkConfig.dlt)){
                EX_MSG_VERBOSE(eCell.navigationStep, "propagate", "char", "path limit of " << eCell.pathLimit << " successfully reached -> stopping." );
                return ExtrapolationCode::SuccessPathLimit;
            }
@@ -327,7 +281,7 @@ bool Acts::RungeKuttaEngine::propagateWithJacobian(int navigationStep, Propagati
   pCache.newfield = true;
 
   // whie loop over the steps
-  while (fabs(step) > m_straightStep) {
+  while (fabs(step) > m_rkConfig.straightStep) {
 
     // maximum number of steps
     if (++niter > 10000) {
@@ -387,7 +341,6 @@ bool Acts::RungeKuttaEngine::propagateWithJacobian(int navigationStep, Propagati
   EX_MSG_VERBOSE(navigationStep, "propagate", "<T> ", "numerical integration is done." );
 
   // Output track parameteres
-  //
   pCache.step += step;
 
   if (fabs(step) < .001) return true;
@@ -420,7 +373,7 @@ double Acts::RungeKuttaEngine::rungeKuttaStep(int navigationStep, PropagationCac
   double* A    =          &(pCache.pVector[ 3]);            // Directions
   double* sA   =          &(pCache.pVector[42]);
   double  Pi   =  149.89626*pCache.pVector[6];            // Invert mometum/2.
-  double  dltm = m_dlt*.03      ;
+  double  dltm = m_rkConfig.dlt*.03      ;
 
   double f0[3],f[3];
 
@@ -428,7 +381,7 @@ double Acts::RungeKuttaEngine::rungeKuttaStep(int navigationStep, PropagationCac
   if (pCache.newfield) getField(R,f0);
   else { f0[0]=pCache.field[0]; f0[1]=pCache.field[1]; f0[2]=pCache.field[2];}
 
-  bool Helix = false; if (fabs(S) < m_helixStep) Helix = true;
+  bool Helix = false; if (fabs(S) < m_rkConfig.helixStep) Helix = true;
 
   while(S != 0.) {
 
@@ -482,7 +435,7 @@ double Acts::RungeKuttaEngine::rungeKuttaStep(int navigationStep, PropagationCac
     // Test approximation quality on give step and possible step reduction
     //
     double EST = fabs((A1+A6)-(A3+A4))+fabs((B1+B6)-(B3+B4))+fabs((C1+C6)-(C3+C4));
-    if(EST>m_dlt) {S*=.5; dltm = 0.; continue;} EST<dltm ? InS = true : InS = false;
+    if(EST>m_rkConfig.dlt) {S*=.5; dltm = 0.; continue;} EST<dltm ? InS = true : InS = false;
 
     // Parameters calculation
     //
@@ -621,7 +574,7 @@ double Acts::RungeKuttaEngine::rungeKuttaStepWithGradient(int navigationStep, Pr
   double* A    =          &(pCache.pVector[ 3]);           // Directions
   double* sA   =          &(pCache.pVector[42]);
   double  Pi   =  149.89626*pCache.pVector[6];           // Invert mometum/2.
-  double  dltm = m_dlt*.03      ;
+  double  dltm = m_rkConfig.dlt*.03      ;
 
   double f0[3],f1[3],f2[3],g0[9],g1[9],g2[9],H0[12],H1[12],H2[12];
   getFieldGradient(R,f0,g0);
@@ -673,7 +626,7 @@ double Acts::RungeKuttaEngine::rungeKuttaStepWithGradient(int navigationStep, Pr
     // Test approximation quality on give step and possible step reduction
     //
     double EST = fabs((A1+A6)-(A3+A4))+fabs((B1+B6)-(B3+B4))+fabs((C1+C6)-(C3+C4));
-    if(EST>m_dlt) {S*=.5; dltm = 0.; continue;} EST<dltm ? InS = true : InS = false;
+    if(EST>m_rkConfig.dlt) {S*=.5; dltm = 0.; continue;} EST<dltm ? InS = true : InS = false;
 
     // Parameters calculation
     //
@@ -854,7 +807,7 @@ double Acts::RungeKuttaEngine::stepEstimatorWithCurvature(PropagationCache& pCac
 
   double  Step = utils.stepEstimator(kind,Su,pCache.pVector,Q); if(!Q) return 0.;
   double AStep = fabs(Step);
-  if ( kind || AStep < m_straightStep || !pCache.mcondition ) return Step;
+  if ( kind || AStep < m_rkConfig.straightStep || !pCache.mcondition ) return Step;
 
   const double* SA = &(pCache.pVector[42]); // Start direction
   double S = .5*Step;

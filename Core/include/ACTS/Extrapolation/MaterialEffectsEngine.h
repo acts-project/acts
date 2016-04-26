@@ -2,21 +2,17 @@
 // MaterialEffectsEngine.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_EXTRAPOLATIONENGINE_MATERIAKEFFECTSENGINE_H
-#define ACTS_EXTRAPOLATIONENGINE_MATERIAKEFFECTSENGINE_H 1
+#ifndef ACTS_EXTRAPOLATIONENGINE_MATERIALEFFECTSENGINE_H
+#define ACTS_EXTRAPOLATIONENGINE_MATERIALEFFECTSENGINE_H 1
 
-// Core module
-#include "CoreInterfaces/ServiceBase.h"
-// Extrapolation module
-#include "ExtrapolationInterfaces/IMaterialEffectsEngine.h"
-#include "ExtrapolationInterfaces/ExtrapolationMacros.h"
-#include "ExtrapolationUtils/ExtrapolationCell.h"
-#include "ExtrapolationUtils/MaterialInteraction.h"
-#include "ExtrapolationUtils/MaterialUpdateMode.h"
-// EventData module
-#include "EventDataUtils/PropDirection.h"
-#include "TrackParameters/TrackParameters.h"
-#include "NeutralParameters/NeutralParameters.h"
+#include "ACTS/Extrapolation/IMaterialEffectsEngine.h"
+#include "ACTS/Extrapolation/ExtrapolationCell.h"
+#include "ACTS/Extrapolation/MaterialUpdateMode.h"
+#include "ACTS/Extrapolation/detail/ExtrapolationMacros.h"
+#include "ACTS/Extrapolation/detail/MaterialInteraction.h"
+#include "ACTS/EventData/TrackParameters.h"
+#include "ACTS/EventData/NeutralParameters.h"
+#include "ACTS/Utilities/PropDirection.h"
  
 namespace Acts {
   
@@ -32,23 +28,35 @@ namespace Acts {
 
       @author Andreas Salzburger -at - cern.ch
   */
-  class MaterialEffectsEngine : public Acts::ServiceBase, virtual public IMaterialEffectsEngine {
+  class MaterialEffectsEngine : virtual public IMaterialEffectsEngine {
+
     public:
+      /** @struct Config 
+          Configuration struct for the MaterialEffectsEngine
+        */
+      struct Config {
+          
+          bool          eLossCorrection;         //!< apply the energy loss correction
+          bool          eLossMpv;                //!< apply the energy loss correction as most probable value
+          bool          mscCorrection;           //!< apply the multiple (coulomb) scattering correction
+          std::string   prefix;                  //!< screen output prefix
+          std::string   postfix;                 //!< screen output postfix
+          
+          Config() :
+            eLossCorrection(true),
+            eLossMpv(true),        
+            mscCorrection(true),
+            prefix("[ME] - "),
+            postfix(" - ") 
+         {}         
+          
+      };        
 
       /** Constructor */
-      MaterialEffectsEngine(const std::string& name, ISvcLocator* svc);
+      MaterialEffectsEngine(const Config& meConfig);
 
       /** Destructor */
       ~MaterialEffectsEngine();
-
-      /** AlgTool initialize method */
-      StatusCode initialize() final;
-
-      /** AlgTool finalize method */
-      StatusCode finalize() final;
-
-      /** Query the interfaces **/
-      StatusCode queryInterface( const InterfaceID& riid, void** ppvInterface );
 
       /** charged extrapolation */
       ExtrapolationCode handleMaterial(ExCellCharged& ecCharged,
@@ -59,8 +67,18 @@ namespace Acts {
       ExtrapolationCode handleMaterial(ExCellNeutral& ecNeutral,
                                        PropDirection dir=alongMomentum,
                                        MaterialUpdateStage matupstage=fullUpdate) const final;
+                                       
+                                       
+      /** Set configuration method */
+      void setConfiguration(const Config& meConfig);
+      
+      /** Get configuration method */
+      Config getConfiguration() const;                                      
 
     protected:
+      Config                 m_meConfig;                //!< configuration struct
+     
+    private:
       /** charged extrapolation - depending on the MaterialUpdateStage -
         it either manipulates or creates new parameters
         @TODO check for memory handling
@@ -70,14 +88,15 @@ namespace Acts {
                                                    Acts::PropDirection dir,
                                                    Acts::MaterialUpdateStage matupstage) const; 
         
-      MaterialInteraction                          m_interactionFormulae;     //!< the formulas concentrated
-      ParticleMasses                               m_particleMasses;          //!< struct of Particle masses
-      bool                                         m_eLossCorrection;         //!< apply the energy loss correction
-      bool                                         m_eLossMpv;                //!< apply the energy loss correction as most probable value
-      bool                                         m_mscCorrection;           //!< apply the multiple (coulomb) scattering correction
+      MaterialInteraction    m_interactionFormulae;     //!< the formulas concentrated
+      ParticleMasses         m_particleMasses;          //!< struct of Particle masses
+
 
   };
-
+  
+  /** Return the configuration object */    
+  inline MaterialEffectsEngine::Config MaterialEffectsEngine::getConfiguration() const { return m_meConfig; }
+  
 } // end of namespace
 
 #endif // ACTS_EXTRAPOLATIONENGINE_MATERIAKEFFECTSENGINE_H

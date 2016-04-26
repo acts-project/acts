@@ -5,138 +5,117 @@
 #ifndef ACTS_EXTRAPOLATIONENGINE_EXTRAPOLATIONENGINE_H
 #define ACTS_EXTRAPOLATIONENGINE_EXTRAPOLATIONENGINE_H 1
 
-// Gaudi
-#include "GaudiKernel/ServiceHandle.h"
-#include "GaudiKernel/GaudiException.h"
-// Core module
-#include "CoreInterfaces/ServiceBase.h"
-// Extrapolation module
-#include "ExtrapolationInterfaces/IExtrapolationEngine.h"
-#include "ExtrapolationInterfaces/ExtrapolationMacros.h"
-#include "ExtrapolationInterfaces/IPropagationEngine.h"
-#include "ExtrapolationInterfaces/INavigationEngine.h"
-// Geomtetry module
-#include "GeometryInterfaces/ITrackingGeometrySvc.h"
-// EventData module
-#include "ExtrapolationUtils/ExtrapolationCell.h"
-#include "TrackParameters/TrackParameters.h"
-#include "NeutralParameters/NeutralParameters.h"
+#include "ACTS/Extrapolation/ExtrapolationCell.h"
+#include "ACTS/Extrapolation/detail/ExtrapolationMacros.h"
+#include "ACTS/Extrapolation/IExtrapolationEngine.h"
+#include "ACTS/Extrapolation/IPropagationEngine.h"
+#include "ACTS/Extrapolation/INavigationEngine.h"
+#include "ACTS/EventData/TrackParameters.h"
+#include "ACTS/EventData/NeutralParameters.h"
 
 namespace Acts {
   
-  class TrackingGeometry;       
-
-  /** @class ExtrapolationEngine 
-      
-      Master extrapolation engine for extrapolation through the TrackingGeometry,
-      it delegates the extrapolation to optimised engines, handing over the ExtrapolationCell
-      as internal cache.
-  
-      There are identical interfaces for charged and neutral track parameters.
-      Providing a destination surface is optional, if no destination surface is given the extrapolation 
-      process can be stopped by other directives, e.g. stopping at a certain path limit, material limit
-      or with a change of detector signature.
-   
-      @TODO Julia: currently using work arround to use ToolHandleArray because there is a bug in Gaudi. After update of Gaudi version go back to old usage -> currently marked with //bug
-  
-      @author Andreas.Salzburger -at- cern.ch 
-  */
-
-  class ExtrapolationEngine : public ServiceBase, virtual public IExtrapolationEngine {
-      
-      friend class NavigationInitTest;
-      
-      public:
-        /** Constructor */
-        ExtrapolationEngine(const std::string& name, ISvcLocator* svc);
-        
-        /** Destructor */
-        ~ExtrapolationEngine();
-
-        /** AlgTool initialize method */
-        StatusCode initialize() final;
-        
-        /** AlgTool finalize method */
-        StatusCode finalize() final;
-        
-        /** Query the interfaces **/
-        StatusCode queryInterface( const InterfaceID& riid, void** ppvInterface );
-        
-        using IExtrapolationEngine::extrapolate;
-        
-        /** charged extrapolation - public interface */
-        ExtrapolationCode extrapolate(ExCellCharged& ecCharged,
-                                      const Surface* sf = nullptr,
-                                      const BoundaryCheck& bcheck = true) const final;
-
-        /** neutral extrapolation - public interface */
-        ExtrapolationCode extrapolate(ExCellNeutral& ecNeutral,
-                                      const Surface* sf = nullptr,
-                                      const BoundaryCheck& bcheck = true) const final;
-                         
-                         
-        /** define for which GeometrySignature this extrapolator is valid - this is GLOBAL */
-        GeometryType geometryType() const final;                           
-                         
-     private:
-        /** main loop extrapolation method */
-        template <class T> ExtrapolationCode extrapolateT(ExtrapolationCell<T>& eCell,
-                                                          const Surface* sf = nullptr,
-                                                          PropDirection dir=alongMomentum,
-                                                          const BoundaryCheck& bcheck = true) const;
-            
-        /** initialization method */                                      
-        template <class T>  ExtrapolationCode initNavigation(ExtrapolationCell<T>& eCell,
-                                                             const Surface* sf = nullptr,
-                                                             PropDirection dir=alongMomentum) const throw (GaudiException);
-                
-                
-        //!< retrieve TrackingGeometry
-        StatusCode  updateTrackingGeometry() const; 
-
-        //!< return and retrieve
-        const TrackingGeometry& trackingGeometry() const throw (GaudiException);
-
-        mutable const TrackingGeometry*                     m_trackingGeometry;          //!< the tracking geometry owned by the navigator
-        ServiceHandle<ITrackingGeometrySvc>                 m_trackingGeometrySvc;       //!< ServiceHandle to the TrackingGeometrySvc
-        std::string                                         m_trackingGeometryName;      //!< Name of the TrackingGeometry as given in Detector Store
-        
-        //!< the tool handle array for static / dense / detached
-#ifndef ACTS_GAUDI
-        ServiceHandleArray<IExtrapolationEngine>            m_extrapolationEngines;      //!< the extrapolation engines for retrieval
-#else
-        // list of tools to test
-        typedef std::vector<std::string> ServiceList; //rm
-        ServiceList                                         m_exServices; //rm
-#endif
-        ServiceHandle<IPropagationEngine>                   m_propagationEngine;         //!< the used propagation engine for navigation initialization
-        std::vector<const IExtrapolationEngine*>            m_eeAccessor;                //!< the extrapolation engines for 
-
-        ServiceHandle<INavigationEngine>                    m_navigationEngine;          //!< access to tracking geometry (unique?)
-
-        //!< forces a global search for the initialization, allows to switch TrackingGeometries in one job
-        bool                                                m_forceSearchInit; 
+    class TrackingGeometry;  
+    class Surface;
+    class BoundaryCheck;     
     
+    /** @class ExtrapolationEngine 
+        
+        Master extrapolation engine for extrapolation through the TrackingGeometry,
+        it delegates the extrapolation to optimised engines, handing over the ExtrapolationCell
+        as internal cache.
+    
+        There are identical interfaces for charged and neutral track parameters.
+        Providing a destination surface is optional, if no destination surface is given the extrapolation 
+        process can be stopped by other directives, e.g. stopping at a certain path limit, material limit
+        or with a change of detector signature.
+       
+        @author Andreas.Salzburger -at- cern.ch 
+    */
+    class ExtrapolationEngine : virtual public IExtrapolationEngine {
+    
+        /** @struct Config
+        
+            Configuration struct to be used for this ExtrapolationEngine.
+            This has to be prepared by the framework/main and can be either given to the ExtrapolationEngine at construction or
+            with the setConfig method.
+        */
+        struct Config {
+            
+            std::shared_ptr<const TrackingGeometry>                     trackingGeometry;      //!< the tracking geometry used by the navigator
+            std::vector< std::shared_ptr<const IExtrapolationEngine> >  extrapolationEngines;  //!< the extrapolation engines for different geometry layouts
+            std::shared_ptr<const IPropagationEngine>                   propagationEngine;     //!< the used propagation engine for navigation initialization
+            std::shared_ptr<const INavigationEngine>                    navigationEngine;      //!< access to tracking geometry (unique?)
+            std::string                                                 prefix;                //!< output prefix
+            std::string                                                 postfix;               //!< output postfix
+            
+            Config() :
+              trackingGeometry(nullptr),
+              extrapolationEngines(),
+              propagationEngine(nullptr),
+              navigationEngine(nullptr),
+              prefix("[ME] - "),
+              postfix(" - ")
+            {}             
+            
+        };    
+          
+        public:
+            /** Constructor */
+            ExtrapolationEngine(const Config& eeConfig);
+            
+            /** Destructor */
+            ~ExtrapolationEngine();
+            
+            using IExtrapolationEngine::extrapolate;
+            
+            /** charged extrapolation - public interface */
+            ExtrapolationCode extrapolate(ExCellCharged& ecCharged,
+                                          const Surface* sf = nullptr,
+                                          const BoundaryCheck& bcheck = true) const final;
+            
+            /** neutral extrapolation - public interface */
+            ExtrapolationCode extrapolate(ExCellNeutral& ecNeutral,
+                                          const Surface* sf = nullptr,
+                                          const BoundaryCheck& bcheck = true) const final;
+                             
+                             
+            /** define for which GeometrySignature this extrapolator is valid - this is GLOBAL */
+            GeometryType geometryType() const final;                           
+                               
+            /** Set configuration method */
+            void setConfiguration(const Config& meConfig);
+      
+            /** Get configuration method */
+            Config getConfiguration() const;                                 
+                               
+        protected:
+            /** ExtrapolationEngine config object */
+            Config m_eeConfig;
+             
+        private:
+            /** main extrapolation method, templated to chared/neutral */
+            template <class T> ExtrapolationCode extrapolateT(ExtrapolationCell<T>& eCell,
+                                                              const Surface* sf = nullptr,
+                                                              PropDirection dir=alongMomentum,
+                                                              const BoundaryCheck& bcheck = true) const;
+                
+            /** initialization of mavigation method */                                      
+            template <class T>  ExtrapolationCode initNavigation(ExtrapolationCell<T>& eCell,
+                                                                 const Surface* sf = nullptr,
+                                                                 PropDirection dir=alongMomentum) const;
     };
-
-  inline GeometryType  ExtrapolationEngine::geometryType() const 
-      { return Acts::Master; }
-
-
-  inline const Acts::TrackingGeometry& ExtrapolationEngine::trackingGeometry() const throw (GaudiException) {
-      if (!m_trackingGeometry && updateTrackingGeometry().isFailure()){
-          EX_MSG_FATAL("", "updateGeo", "", "Could not load TrackingGeometry with name '" << m_trackingGeometryName << "'. Aborting." );
-          throw GaudiException("ExtrapolationEngine", "Problem with TrackingGeometry loading.", StatusCode::FAILURE);
-      }
-      return (*m_trackingGeometry);
-  }
-   
-   
+    
+    /** Return the geometry type, it's the master */
+    inline GeometryType  ExtrapolationEngine::geometryType() const  { return Acts::Master; }
+    
+    /** Return the configuration object */    
+    inline ExtrapolationEngine::Config ExtrapolationEngine::getConfiguration() const { return m_eeConfig; }
 
 } // end of namespace
 
 //!< define the templated function    
-#include "ExtrapolationEngine.icc"  
+#include "ACTS/Extrapolation/detail/ExtrapolationEngine.icc"  
 
 #endif // ACTS_EXTRAPOLATIONENGINE_EXTRAPOLATIONENGINE_H 
 

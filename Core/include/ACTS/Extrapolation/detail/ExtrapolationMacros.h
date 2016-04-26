@@ -5,11 +5,11 @@
 
 #ifndef EXSCREENOUTPUTDEFS
 #define EXSCREENOUTPUTDEFS 1
-#define EX_MSG_INFO(navstep, step, idx, x)    MSG_INFO(     m_sopPrefix << std::setw(4) << navstep << m_sopPostfix << std::setw(12) << step << m_sopPostfix << std::setw(4) << idx << m_sopPostfix << x)
-#define EX_MSG_DEBUG(navstep, step, idx, x)   MSG_DEBUG(    m_sopPrefix << std::setw(4) << navstep << m_sopPostfix << std::setw(12) << step << m_sopPostfix << std::setw(4) << idx << m_sopPostfix << x)
-#define EX_MSG_VERBOSE(navstep, step, idx, x) MSG_VERBOSE(  m_sopPrefix << std::setw(4) << navstep << m_sopPostfix << std::setw(12) << step << m_sopPostfix << std::setw(4) << idx << m_sopPostfix << x)
-#define EX_MSG_WARNING(navstep, step, idx, x) MSG_WARNING(  m_sopPrefix << std::setw(4) << navstep << m_sopPostfix << std::setw(12) << step << m_sopPostfix << std::setw(4) << idx << m_sopPostfix << x)
-#define EX_MSG_FATAL(navstep, step, idx, x)   MSG_FATAL(    m_sopPrefix << std::setw(4) << navstep << m_sopPostfix << std::setw(12) << step << m_sopPostfix << std::setw(4) << idx << m_sopPostfix << x)
+#define EX_MSG_INFO(navstep, step, idx, x)   //MSG_INFO(     m_sopPrefix << std::setw(4) << navstep << m_sopPostfix << std::setw(12) << step << m_sopPostfix << std::setw(4) << idx << m_sopPostfix << x)
+#define EX_MSG_DEBUG(navstep, step, idx, x)  //MSG_DEBUG(    m_sopPrefix << std::setw(4) << navstep << m_sopPostfix << std::setw(12) << step << m_sopPostfix << std::setw(4) << idx << m_sopPostfix << x)
+#define EX_MSG_VERBOSE(navstep, step, idx, x)//MSG_VERBOSE(  m_sopPrefix << std::setw(4) << navstep << m_sopPostfix << std::setw(12) << step << m_sopPostfix << std::setw(4) << idx << m_sopPostfix << x)
+#define EX_MSG_WARNING(navstep, step, idx, x)//MSG_WARNING(  m_sopPrefix << std::setw(4) << navstep << m_sopPostfix << std::setw(12) << step << m_sopPostfix << std::setw(4) << idx << m_sopPostfix << x)
+#define EX_MSG_FATAL(navstep, step, idx, x)  //MSG_FATAL(    m_sopPrefix << std::setw(4) << navstep << m_sopPostfix << std::setw(12) << step << m_sopPostfix << std::setw(4) << idx << m_sopPostfix << x)
 #endif
 
 #ifndef EXENINGE_OUTPUTHELPER 

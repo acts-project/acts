@@ -5,13 +5,11 @@
 #ifndef ACTS_EXTRAPOLATIONINTERFACES_IMATERIAKEFFECTSENGINE_H
 #define ACTS_EXTRAPOLATIONINTERFACES_IMATERIAKEFFECTSENGINE_H 1
 
-// Extrapolation module
-#include "ExtrapolationUtils/ExtrapolationCell.h"
-#include "ExtrapolationUtils/MaterialUpdateMode.h"
-// EventData module
-#include "EventDataUtils/PropDirection.h"
-#include "TrackParameters/TrackParameters.h"
-#include "NeutralParameters/NeutralParameters.h"
+#include "ACTS/Extrapolation/ExtrapolationCell.h"
+#include "ACTS/Extrapolation/MaterialUpdateMode.h"
+#include "ACTS/Utilities/PropDirection.h"
+#include "ACTS/EventData/TrackParameters.h"
+#include "ACTS/EventData/NeutralParameters.h"
 
 namespace Acts {
   
@@ -33,9 +31,6 @@ namespace Acts {
 
        /** Virtual destructor */
        virtual ~IMaterialEffectsEngine(){}
-
-       /** AlgTool interface methods */
-       static const InterfaceID& interfaceID() { return IID_IMaterialEffectsEngine; }
 
        /** charged extrapolation */
        virtual ExtrapolationCode handleMaterial(ExCellCharged& ecCharged,

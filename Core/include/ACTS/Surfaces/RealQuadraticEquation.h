@@ -2,8 +2,8 @@
 // RealQuadraticEquation.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef TRKEXUTILS_REALQUADRATICEQUATION_H
-#define TRKEXUTILS_REALQUADRATICEQUATION_H
+#ifndef ACTS_SURFACES_REALQUADRATICEQUATION_H
+#define ACTS_SURFACES_REALQUADRATICEQUATION_H
 
 #include <utility>
 #include <cmath>
@@ -56,5 +56,5 @@ namespace Acts {
 
 } // end of namespace
 
-#endif  //  TRKEXUTILS_REALQUADRATICEQUATION_H
+#endif  //  ACTS_SURFACES_REALQUADRATICEQUATION_H
 

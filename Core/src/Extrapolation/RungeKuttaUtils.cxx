@@ -1,17 +1,14 @@
 /////////////////////////////////////////////////////////////////////////////////
 // RungeKuttaUtils.cxx , ACTS project
-// author Igor Gavrilenko
 ///////////////////////////////////////////////////////////////////
 
-// Extrapolation module
-#include "ExtrapolationUtils/RungeKuttaUtils.h"
-// Geometry module
-#include "Surfaces/ConeSurface.h"
-#include "Surfaces/DiscSurface.h"
-#include "Surfaces/PlaneSurface.h"
-#include "Surfaces/PerigeeSurface.h"
-#include "Surfaces/CylinderSurface.h"
-#include "Surfaces/StraightLineSurface.h"
+#include "ACTS/Extrapolation/detail/RungeKuttaUtils.h"
+#include "ACTS/Surfaces/ConeSurface.h"
+#include "ACTS/Surfaces/DiscSurface.h"
+#include "ACTS/Surfaces/PlaneSurface.h"
+#include "ACTS/Surfaces/PerigeeSurface.h"
+#include "ACTS/Surfaces/CylinderSurface.h"
+#include "ACTS/Surfaces/StraightLineSurface.h"
 
 /////////////////////////////////////////////////////////////////////////////////
 // Common transformation from local to global system coordinates for all surfaces

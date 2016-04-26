@@ -5,37 +5,25 @@
 #ifndef ACTS_RUNGEKUTTAENGINE_RUNGEKUTAENGINE_H
 #define ACTS_RUNGEKUTTAENGINE_RUNGEKUTAENGINE_H 1
 
-// Gaudi
-#include "GaudiKernel/ServiceHandle.h"
-// Core module
-#include "CoreInterfaces/ServiceBase.h"
-// Extrapolation module
-#include "ExtrapolationInterfaces/IPropagationEngine.h"
-#include "ExtrapolationInterfaces/ExtrapolationMacros.h"
-#include "ExtrapolationUtils/ExtrapolationCell.h"
-#include "ExtrapolationUtils/RungeKuttaUtils.h"
-// EventData module
-#include "EventDataUtils/PropDirection.h"
-#include "TrackParameters/TrackParameters.h"
-#include "NeutralParameters/NeutralParameters.h"
-// Geometry module
-#include "Surfaces/Surface.h"
-#include "Surfaces/CylinderSurface.h"
-#include "Surfaces/ConeSurface.h"
-#include "Surfaces/BoundaryCheck.h"
-// MagneticField module
-#include "MagneticFieldUtils/MagneticFieldProperties.h"
-#include "MagneticFieldInterfaces/IMagneticFieldSvc.h"
+#include "ACTS/Extrapolation/IPropagationEngine.h"
+#include "ACTS/Extrapolation/ExtrapolationCell.h"
+#include "ACTS/Extrapolation/detail/ExtrapolationMacros.h"
+#include "ACTS/Extrapolation/detail/RungeKuttaUtils.h"
+#include "ACTS/EventData/TrackParameters.h"
+#include "ACTS/EventData/NeutralParameters.h"
+#include "ACTS/Utilities/PropDirection.h"
+#include "ACTS/Surfaces/Surface.h"
+#include "ACTS/Surfaces/CylinderSurface.h"
+#include "ACTS/Surfaces/ConeSurface.h"
+#include "ACTS/Surfaces/BoundaryCheck.h"
+#include "ACTS/MagneticField/IMagneticFieldSvc.h"
+#include "ACTS/MagneticField/MagneticFieldProperties.h"
 
 namespace Acts {
 
   /**
     @struct PropagationCache 
-    
      Helper struct to allow state-less propagation.
-    
-    @author Andreas.Salzburger -at- cern.ch 
-    
     */
     
   struct PropagationCache { 
@@ -57,7 +45,7 @@ namespace Acts {
       double                    pVector[64];
       // result
       double                    parameters[5] = {0.,0.,0.,0.,0.};
-      ActsSymMatrixD<5>*          covariance; 
+      ActsSymMatrixD<5>*        covariance; 
       double                    jacobian[25];
       
       
@@ -157,23 +145,43 @@ namespace Acts {
     @author Igor.Gavrilenko@cern.ch (adapted to ATS by Andreas.Salzburger -at- cern.ch)   
   */
 
-  class RungeKuttaEngine : public ServiceBase, virtual public IPropagationEngine {
+  class RungeKuttaEngine : virtual public IPropagationEngine {
       
     public:
+        
+      /** @struct Config
+          Configuration struct for the RungeKuttaEngine
+        
+          @TODO explain parametr meanings (input from Igor needed)
+        */
+      struct Config {
+    
+        std::shared_ptr<const IMagneticFieldSvc>   fieldService  ;  //!< the field service 
+        double                                     dlt           ;  //!< accuracy parameter
+        double                                     helixStep     ;  //!< max step whith helix model
+        double                                     straightStep  ;  //!< max step whith srtaight line model
+        double                                     maxPathLength ;  //!< max overal path length 
+        bool                                       usegradient   ;  //!< use magnetif field gradient
+        std::string                                prefix        ;  //!< screen output prefix
+        std::string                                postfix       ;  //!< screen output postfix
+    
+        Config() :
+          fieldService(nullptr),
+          dlt(0.000200),           
+          helixStep(1.),     
+          straightStep(0.01),  
+          maxPathLength(25000.),
+          usegradient(false),
+          prefix("[RK] - "),
+          postfix(" - ")
+         {}
+           
+      };    
       
       /** Constructor */
-      RungeKuttaEngine(const std::string& name, ISvcLocator* svc);
+      RungeKuttaEngine(const Config& rkConfig);
 
       virtual ~RungeKuttaEngine();
-
-      /** Destructor */
-      StatusCode initialize() final;
-
-      /** AlgTool finalize method */
-      StatusCode finalize() final;
-      
-      /** Query the interfaces **/
-      StatusCode queryInterface( const InterfaceID& riid, void** ppvInterface );
 
       /** resolve the boundary situation - for charged particles */
       ExtrapolationCode propagate(ExCellCharged& ecCell,
@@ -189,6 +197,14 @@ namespace Acts {
                                   const BoundaryCheck& bcheck = true,
                                   bool returnCurvilinear = true) const final;
                                   
+      /** Set configuration method */
+      void setConfiguration(const Config& meConfig);
+      
+      /** Get configuration method */
+      Config getConfiguration() const;                                    
+    
+    protected:
+      Config    m_rkConfig;  //!< configuration class
       
     private:
       /** Templated RungeKutta propagation method - charged/neutral */
@@ -234,16 +250,7 @@ namespace Acts {
       void getField        (double*,double*        ) const;
       void getFieldGradient(double*,double*,double*) const;
       
-      /////////////////////////////////////////////////////////////////////////////////
-      // Private data members: 
-      /////////////////////////////////////////////////////////////////////////////////
-      ServiceHandle<IMagneticFieldSvc>  m_fieldService;  //!< the field service 
 
-      double m_dlt                                    ;  //!< accuracy parameter
-      double m_helixStep                              ;  //!< max step whith helix model
-      double m_straightStep                           ;  //!< max step whith srtaight line model
-      double m_maxPathLength                          ;  //!< max overal path length 
-      bool   m_usegradient                            ;  //!< use magnetif field gradient
       
    };
 
@@ -253,18 +260,21 @@ namespace Acts {
 
   inline void RungeKuttaEngine::getField(double* R,double* H) const
   {
-    m_fieldService->getField(R,H);
+    m_rkConfig.fieldService->getField(R,H);
   }
 
   inline void RungeKuttaEngine::getFieldGradient(double* R,double* H,double* dH) const
   {
-    m_fieldService->getField(R,H,dH);
+    m_rkConfig.fieldService->getField(R,H,dH);
   }
+
+  /** Return the configuration object */    
+  inline RungeKuttaEngine::Config RungeKuttaEngine::getConfiguration() const { return m_rkConfig; }
 
   ////////////////////////////////////////////////////////////////////////////////
   // Templated method
   ////////////////////////////////////////////////////////////////////////////////
-#include "RungeKuttaEngine/RungeKuttaEngine.icc"
+#include "ACTS/Extrapolation/detail/RungeKuttaEngine.icc"
   
 }
  

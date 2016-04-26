@@ -8,9 +8,7 @@
 // Geometry module
 #include "ACTS/Surfaces/PlanarBounds.h"
 #include "ACTS/Utilities/PrecisionDefinition.h"
-// EventData module
 #include "ACTS/Utilities/ParameterDefinitions.h"
-// Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 
 #include <math.h>

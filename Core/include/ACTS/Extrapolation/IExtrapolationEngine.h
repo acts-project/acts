@@ -5,18 +5,18 @@
 #ifndef ACTS_EXTRAPOLATIONINTERFACES_IEXTRAPOLATIONENGINE_H
 #define ACTS_EXTRAPOLATIONINTERFACES_IEXTRAPOLATIONENGINE_H 1
 
-
-// Geometry module
-#include "GeometryUtils/GeometrySignature.h"
-// EventData module
-#include "ExtrapolationUtils/ExtrapolationCell.h"
-#include "TrackParameters/TrackParameters.h"
-#include "NeutralParameters/NeutralParameters.h"
+#include "ACTS/Utilities/GeometrySignature.h"
+#include "ACTS/EventData/TrackParameters.h"
+#include "ACTS/EventData/NeutralParameters.h"
+#include "ACTS/Extrapolation/ExtrapolationCell.h"
  
 namespace Acts {
   
   typedef ExtrapolationCell<TrackParameters>   ExCellCharged;
   typedef ExtrapolationCell<NeutralParameters> ExCellNeutral;
+  
+  class Surface;
+  class BoundaryCheck;
 
   /** @class IExtrapolationEngine
 
@@ -52,7 +52,6 @@ namespace Acts {
       virtual GeometryType geometryType() const = 0;
 
     protected:
-
       //!< SCREEN output formatting  (SOP) - unify amongst extrapolation engines
       std::string     m_sopPrefix;            //!< prefix for screen output
       std::string     m_sopPostfix;           //!< prefix for screen output

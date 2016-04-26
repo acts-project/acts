@@ -5,10 +5,8 @@
 #ifndef ACTS_SURFACES_RECTANGLEBOUNDS_H
 #define ACTS_SURFACES_RECTANGLEBOUNDS_H 1
 
-// Geometry module
 #include "ACTS/Surfaces/PlanarBounds.h"
 #include "ACTS/Utilities/PrecisionDefinition.h"
-// Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {

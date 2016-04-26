@@ -10,20 +10,14 @@
 #define OH_CHECKFOUND(object) ( object ? "found" : "not found")
 #endif
 
-// Gaudi
-#include "GaudiKernel/ServiceHandle.h"
-// Core module
-#include "CoreInterfaces/ServiceBase.h"
-// Extrapolation module
-#include "ExtrapolationInterfaces/ExtrapolationMacros.h"
-#include "ExtrapolationInterfaces/IExtrapolationEngine.h"
-#include "ExtrapolationInterfaces/IPropagationEngine.h"
-#include "ExtrapolationInterfaces/IMaterialEffectsEngine.h"
-#include "ExtrapolationInterfaces/INavigationEngine.h"
-#include "ExtrapolationUtils/ExtrapolationCell.h"
-// EventData module
-#include "TrackParameters/TrackParameters.h"
-#include "NeutralParameters/NeutralParameters.h"
+#include "ACTS/Extrapolation/IExtrapolationEngine.h"
+#include "ACTS/Extrapolation/IPropagationEngine.h"
+#include "ACTS/Extrapolation/IMaterialEffectsEngine.h"
+#include "ACTS/Extrapolation/INavigationEngine.h"
+#include "ACTS/Extrapolation/ExtrapolationCell.h"
+#include "ACTS/Extrapolation/detail/ExtrapolationMacros.h"
+#include "ACTS/EventData/TrackParameters.h"
+#include "ACTS/EventData/NeutralParameters.h"
 
 namespace Acts {
 
@@ -41,7 +35,7 @@ namespace Acts {
     @author Andreas.Salzburger -at- cern.ch
   
   */
-  class StaticEngine : public Acts::ServiceBase, virtual public IExtrapolationEngine {
+  class StaticEngine : virtual public IExtrapolationEngine {
 
       public:
           
@@ -58,20 +52,34 @@ namespace Acts {
           UndefinedLayer            = 5
         };          
         
+        /** @struct Config 
+            Configuration struct of the StaticEngine,
+            holds the helper engines that can be configured
+          */
+        struct Config {
+            
+            std::shared_ptr<const IPropagationEngine>     propagationEngine;        //!< the used propagation engine
+            std::shared_ptr<const INavigationEngine>      navigationEngine;         //!< the navigation engine to resolve the boundary
+            std::shared_ptr<const IMaterialEffectsEngine> materialEffectsEngine;    //!< the material effects updated  
+            
+            std::string                                   prefix;                //!< output prefix
+            std::string                                   postfix;               //!< output postfix
+            
+            Config() :
+              propagationEngine(nullptr),
+              navigationEngine(nullptr),
+              materialEffectsEngine(nullptr),
+              prefix("[SE] - "),
+              postfix(" - ")
+            {}     
+            
+        };
+        
         /** Constructor */
-        StaticEngine(const std::string& name, ISvcLocator* svc);
+        StaticEngine(const Config& seConfig);
         
         /** Destructor */
         ~StaticEngine();
-
-        /** AlgTool initialize method */
-        StatusCode initialize() final;
-        
-        /** AlgTool finalize method */
-        StatusCode finalize() final;
-        
-        /** Query the interfaces **/
-        StatusCode queryInterface( const InterfaceID& riid, void** ppvInterface );
         
         using IExtrapolationEngine::extrapolate;
         
@@ -88,6 +96,16 @@ namespace Acts {
                          
         /** define for which GeometrySignature this extrapolator is valid - this is GLOBAL */
         GeometryType geometryType() const final;                             
+
+        /** Set configuration method */
+        void setConfiguration(const Config& meConfig);
+      
+        /** Get configuration method */
+        Config getConfiguration() const;  
+        
+    protected:
+        /** Configuration struct */
+        Config m_seConfig;        
                          
      private:
         /** main loop extrapolation method */
@@ -123,20 +141,22 @@ namespace Acts {
                                                            PropDirection dir=alongMomentum,
                                                            const BoundaryCheck& bcheck = true) const;
                                                            
-        ServiceHandle<IPropagationEngine>      m_propagationEngine;        //!< the used propagation engine
-        ServiceHandle<INavigationEngine>       m_navigationEngine;         //!< the navigation engine to resolve the boundary
-        ServiceHandle<IMaterialEffectsEngine>  m_materialEffectsEngine;    //!< the material effects updated
             
     };
 
+  /** Return the geomtry type */
   inline GeometryType StaticEngine::geometryType() const 
       { return Acts::Static; }
+  
+  /** Return the configuration object */    
+  inline StaticEngine::Config StaticEngine::getConfiguration() const { return m_seConfig; }
+  
 
 
 } // end of namespace
 
 //!< define the templated function    
-#include "StaticEngine.icc"  
+#include "ACTS/Extrapolation/detail/StaticEngine.icc"  
 
 #endif // ACTS_EXTRAPOLATIONENGING_STATICENGINE_H
 

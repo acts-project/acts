@@ -6,18 +6,15 @@
 #define ACTS_EXTRAPOLATIONUTILS_EXTRAPOLATIONCELL_H 1
 
 // Extrapolation moudle
-#include "ExtrapolationUtils/MaterialUpdateMode.h"
-#include "ExtrapolationUtils/TransportJacobian.h"
-// EventData module
-#include "EventDataUtils/PropDirection.h"
-#include "EventDataUtils/ParticleHypothesis.h"
-#include "EventDataUtils/ParticleProperties.h"
-// Geometry module
-#include "Material/MaterialProperties.h"
-#include "GeometryUtils/GeometrySignature.h"
-#include "Surfaces/Surface.h"
-// MagneticFieldUtils
-#include "MagneticFieldUtils/MagneticFieldProperties.h"
+#include "ACTS/Extrapolation/MaterialUpdateMode.h"
+#include "ACTS/EventData/TransportJacobian.h"
+#include "ACTS/EventData/ParticleHypothesis.h"
+#include "ACTS/EventData/ParticleProperties.h"
+#include "ACTS/Material/MaterialProperties.h"
+#include "ACTS/Utilities/GeometrySignature.h"
+#include "ACTS/Utilities/PropDirection.h"
+#include "ACTS/Surfaces/Surface.h"
+#include "ACTS/MagneticField/MagneticFieldProperties.h"
 
 #ifndef ACTS_EXTRAPOLATIONUTILSS_CHECKPATHMACRO
 #define ACTS_EXTRAPOLATIONUTILSS_CHECKPATHMACRO 1
@@ -26,7 +23,6 @@
 
 namespace Acts {
     
-    class MaterialProperties;
     class TrackingVolume;
     class Layer;
     

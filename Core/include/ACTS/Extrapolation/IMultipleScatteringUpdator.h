@@ -5,8 +5,7 @@
 #ifndef ACTS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H
 #define ACTS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H 1
 
-// EventData module
-#include "EventDataUtils/ParticleHypothesis.h"
+#include "ACTS/EventData/ParticleHypothesis.h"
 
 namespace Acts {
 

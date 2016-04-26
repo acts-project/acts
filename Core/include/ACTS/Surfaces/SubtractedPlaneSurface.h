@@ -2,13 +2,11 @@
 // SubtractedPlaneSurface.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef TRKGEOMETRYSURFACES_SUBTRACTEDPLANESURFACE_H
-#define TRKGEOMETRYSURFACES_SUBTRACTEDPLANESURFACE_H
+#ifndef ACTS_SURFACES_SUBTRACTEDPLANESURFACE_H
+#define ACTS_SURFACES_SUBTRACTEDPLANESURFACE_H
 
-// Geometry module
 #include "ACTS/Surfaces/PlaneSurface.h"
 #include "ACTS/Utilities/AreaExcluder.h"
-// Core module
 #include "ACTS/Utilities/AlgebraDefinitions.h"
 
 class Identifier;

@@ -1,16 +1,13 @@
 /////////////////////////////////////////////////////////////////////////////////
-//  Header file for class  RungeKuttaUtils, ACTS project
-//  author Igor Gavrilenko     
+//  RungeKuttaUtils.h, ACTS project
 /////////////////////////////////////////////////////////////////////////////////
 
 #ifndef ACTS_EXTRAPOLATIONUTILS_RUNGEKUTTAUTILS_H
 #define ACTS_EXTRAPOLATIONUTILS_RUNGEKUTTAUTILS_H 1
 
-// EventData module
-#include "TrackParameters/TrackParameters.h"
-#include "NeutralParameters/NeutralParameters.h"
-// Geometry module
-#include "Surfaces/BoundaryCheck.h"
+#include "ACTS/EventData/TrackParameters.h"
+#include "ACTS/EventData/NeutralParameters.h"
+#include "ACTS/Surfaces/BoundaryCheck.h"
 // STD
 #include <vector>
 #include <map>

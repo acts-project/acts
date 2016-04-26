@@ -1,17 +1,10 @@
 ///////////////////////////////////////////////////////////////////
-//   Implementation file for class Acts::TransportJacobian
-///////////////////////////////////////////////////////////////////
-// ACTS project
-///////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
-// Version 1.0 08/03/2007 I.Gavrilenko
-///////////////////////////////////////////////////////////////////
+// TransportJacobian.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 #include <iostream>
 #include <iomanip>
-#include "GaudiKernel/MsgStream.h"
-#include "ExtrapolationUtils/TransportJacobian.h"
+#include "ACTS/EventData/TransportJacobian.h"
 
 ///////////////////////////////////////////////////////////////////
 // Constructors
@@ -32,63 +25,9 @@ Acts::TransportJacobian::TransportJacobian(const double* J) :
   (*this)(4,4)=J[24];
 }
 
-Acts::TransportJacobian::TransportJacobian(const ActsMatrixD<5,5>& J) : ActsMatrixD<5,5>(J)
-{
-}
-
-///////////////////////////////////////////////////////////////////
-// Dumps event information into the MsgStream
-///////////////////////////////////////////////////////////////////
-
-MsgStream& Acts::operator << (MsgStream& sl, const Acts::TransportJacobian& J)
-{
-  sl<<"|-------------|-------------|-------------|-------------|-------------|-------------|"
-    <<std::endl;
-  sl<<"| Jacobian(A) | Old   /dL1  |       /dL2  |      /dPhi  |      /dThe  |       /dCM  |"
-    <<std::endl;
-  sl<<"|-------------|-------------|-------------|-------------|-------------|-------------|"
-    <<std::endl;
-  
- sl<<"|  New  dL1 / |"
-   <<std::setw(12)<<std::setprecision(5)<<J(0,0)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(0,1)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(0,2)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(0,3)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(0,4)<<" |"
-   <<std::endl;
- sl<<"|       dL2 / |"
-   <<std::setw(12)<<std::setprecision(5)<<J(1,0)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(1,1)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(1,2)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(1,3)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(1,4)<<" |"
-   <<std::endl;
- sl<<"|       dPhi/ |"
-   <<std::setw(12)<<std::setprecision(5)<<J(2,0)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(2,1)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(2,2)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(2,3)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(2,4)<<" |"
-   <<std::endl;
- sl<<"|       dThe/ |"
-   <<std::setw(12)<<std::setprecision(5)<<J(3,0)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(3,1)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(3,2)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(3,3)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(3,4)<<" |"
-   <<std::endl;
- sl<<"|       dCM / |"
-
-   <<std::setw(12)<<std::setprecision(5)<<J(4,0)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(4,1)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(4,2)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(4,3)<<" |"
-   <<std::setw(12)<<std::setprecision(5)<<J(4,4)<<" |"
-   <<std::endl;
-  sl<<"|-------------|-------------|-------------|-------------|-------------|-------------|"
-    <<std::endl;
-  return sl;
-}
+Acts::TransportJacobian::TransportJacobian(const ActsMatrixD<5,5>& J) : 
+  ActsMatrixD<5,5>(J)
+{}
 
 ///////////////////////////////////////////////////////////////////
 // Dumps relevant information into the ostream

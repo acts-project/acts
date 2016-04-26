@@ -5,23 +5,14 @@
 #ifndef ACTS_EXTRAPOLATIONENGINE_STATICNAVIGATIONENGINE_H
 #define ACTS_EXTRAPOLATIONENGINE_STATICNAVIGATIONENGINE_H 1
 
-// Gaudi
-#include "GaudiKernel/ToolHandle.h"
-#include "GaudiKernel/GaudiException.h"
-// Core moudle
-#include "CoreInterfaces/ServiceBase.h"
-// Extrapolation module
-#include "ExtrapolationInterfaces/INavigationEngine.h"
-#include "ExtrapolationInterfaces/ExtrapolationMacros.h"
-#include "ExtrapolationUtils/ExtrapolationCell.h"
-#include "ExtrapolationInterfaces/IPropagationEngine.h"
-#include "ExtrapolationInterfaces/IMaterialEffectsEngine.h"
-// Geometry module
-#include "GeometryInterfaces/ITrackingGeometrySvc.h"
-#include "Volumes/BoundarySurface.h"
-// EventData module
-#include "TrackParameters/TrackParameters.h"
-#include "NeutralParameters/NeutralParameters.h"
+#include "ACTS/Extrapolation/INavigationEngine.h"
+#include "ACTS/Extrapolation/ExtrapolationCell.h"
+#include "ACTS/Extrapolation/IMaterialEffectsEngine.h"
+#include "ACTS/Extrapolation/IPropagationEngine.h"
+#include "ACTS/Extrapolation/detail/ExtrapolationMacros.h"
+#include "ACTS/Volumes/BoundarySurface.h"
+#include "ACTS/EventData/TrackParameters.h"
+#include "ACTS/EventData/NeutralParameters.h"
 
 namespace Acts {
 
@@ -34,23 +25,37 @@ namespace Acts {
 
       @author Andreas.Salzburger -at- cern.ch
     */
-  class StaticNavigationEngine : public ServiceBase, virtual public INavigationEngine {
+  class StaticNavigationEngine : virtual public INavigationEngine {
 
       public:
+
+        /** @struct Config 
+            configuration struct for the StaticNavigationEngine
+        */
+        struct Config {
+            
+            std::shared_ptr<const IPropagationEngine>       propagationEngine;     //!< the used propagation engine
+            std::shared_ptr<const IMaterialEffectsEngine>   materialEffectsEngine; //!< the material effects updated
+            const TrackingGeometry*                         trackingGeometry;      //!< the tracking geometry used by the navigator
+            
+            std::string                                     prefix;                //!< output prefix
+            std::string                                     postfix;               //!< output postfix
+            
+            Config() :
+              trackingGeometry(nullptr),
+              propagationEngine(nullptr),
+              materialEffectsEngine(nullptr),
+              prefix("[SN] - "),
+              postfix(" - ")
+            {}             
+            
+        };
+
         /** Constructor */
-        StaticNavigationEngine(const std::string& name, ISvcLocator* svc);
+        StaticNavigationEngine(const Config& snConfig);
 
         /** Destructor */
         ~StaticNavigationEngine();
-
-        /** AlgTool initialize method */
-        StatusCode initialize() final;
-
-        /** AlgTool finalize method */
-        StatusCode finalize() final;
-
-        /** Query the interfaces **/
-        StatusCode queryInterface( const InterfaceID& riid, void** ppvInterface );
 
         /** avoid method shaddowing */
         using INavigationEngine::resolveBoundary;
@@ -67,11 +72,18 @@ namespace Acts {
 
         /** resolve the boundary situation - for neutral particles */
         ExtrapolationCode resolvePosition(ExCellNeutral& eCelll, PropDirection dir=alongMomentum, bool noLoop=false) const final;
+        
+        /** Set configuration method */
+        void setConfiguration(const Config& meConfig);
+      
+        /** Get configuration method */
+        Config getConfiguration() const;
 
-        /** acces to tracking geometry */
-        const TrackingGeometry& trackingGeometry() const throw (GaudiException);
-
-     private:
+    protected:
+        /** the configuration member of the static navigation engine */                                                     
+        Config  m_snConfig; 
+        
+    private:
         /** resolve the boundary situation */
         template <class T> ExtrapolationCode resolveBoundaryT(ExtrapolationCell<T>& eCell,
                                                               PropDirection dir=alongMomentum) const;
@@ -87,31 +99,15 @@ namespace Acts {
                                                              PropDirection dir=alongMomentum,
                                                              bool stepout=false) const;
 
-
-        //!< retrieve TrackingGeometry
-        StatusCode  updateTrackingGeometry() const;
-
-        ServiceHandle<IPropagationEngine>                    m_propagationEngine;        //!< the used propagation engine
-        ServiceHandle<IMaterialEffectsEngine>                m_materialEffectsEngine;    //!< the material effects updated
-
-        ServiceHandle<ITrackingGeometrySvc>                  m_trackingGeometrySvc;       //!< ToolHandle to the TrackingGeometrySvc
-        mutable const TrackingGeometry*                      m_trackingGeometry;          //!< the tracking geometry owned by the navigator
-        std::string                                          m_trackingGeometryName;      //!< Name of the TrackingGeometry as given in Detector Store
-
     };
-
-inline const Acts::TrackingGeometry& StaticNavigationEngine::trackingGeometry() const throw (GaudiException) {
-    if (!m_trackingGeometry && updateTrackingGeometry().isFailure()){
-        EX_MSG_FATAL("", "updateGeo", "", "Could not load TrackingGeometry with name '" << m_trackingGeometryName << "'. Aborting." );
-        throw GaudiException("StaticNavigationEngine", "Problem with TrackingGeometry loading.", StatusCode::FAILURE);
-    }
-    return (*m_trackingGeometry);
-}
+    
+    /** Return the configuration object */    
+    inline StaticNavigationEngine::Config StaticNavigationEngine::getConfiguration() const { return m_snConfig; }
 
 } // end of namespace
 
 //!< define the templated function
-#include "StaticNavigationEngine.icc"
+#include "ACTS/Extrapolation/detail/StaticNavigationEngine.icc"
 
 #endif // ACTS_EXTRAPOLATIONENGINE_STATICNAVIGATIONENGINE_H
 
