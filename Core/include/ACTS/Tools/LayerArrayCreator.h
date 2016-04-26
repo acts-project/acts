@@ -13,7 +13,7 @@
 #endif
 
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 // Geometry module
 #include "ACTS/Tools/ILayerArrayCreator.h"
 // STL

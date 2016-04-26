@@ -4,6 +4,8 @@
 
 //Geometry module
 #include "ACTS/Tools/CylinderVolumeHelper.h"
+
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Tools/ILayerArrayCreator.h"
 #include "ACTS/Tools/ITrackingVolumeArrayCreator.h"
 #include "ACTS/Surfaces/CylinderBounds.h"
@@ -20,8 +22,7 @@
 #include "ACTS/Detector/GlueVolumesDescriptor.h"
 #include "ACTS/Utilities/BinUtility.h"
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
-#include "ACTS/Tools/StringConverters.h"
+#include "ACTS/Utilities/Definitions.h"
 
 // constructor
 Acts::CylinderVolumeHelper::CylinderVolumeHelper()

@@ -5,7 +5,8 @@
 #ifndef ACTS_DETECTOR_LAYER_H
 #define ACTS_DETECTOR_LAYER_H 1
 
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+// Core module
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Utilities/GeometryObject.h"
 #include "ACTS/Utilities/ApproachDescriptor.h"
 #include "ACTS/Utilities/OverlapDescriptor.h"

@@ -4,6 +4,8 @@
 
 // Geometry module
 #include "ACTS/Layers/CylinderLayer.h"
+
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Detector/GenericApproachDescriptor.h"
 #include "ACTS/Detector/GenericOverlapDescriptor.h"
 #include "ACTS/Material/SurfaceMaterial.h"
@@ -13,7 +15,6 @@
 #include "ACTS/Surfaces/CylinderBounds.h"
 #include "ACTS/Utilities/BinUtility.h"
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 
         
 Acts::CylinderLayer::CylinderLayer(std::shared_ptr<Acts::Transform3D> transform,

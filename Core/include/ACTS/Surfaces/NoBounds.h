@@ -5,9 +5,8 @@
 #ifndef ACTS_SURFACESNOBOUNDS_H
 #define ACTS_SURFACESNOBOUNDS_H
 
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Surfaces/SurfaceBounds.h"
-#include "ACTS/Utilities/ParameterDefinitions.h"
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

@@ -5,7 +5,7 @@
 #ifndef ACTS_GEOMETRYUTILS_INTERSECTION_H
 #define ACTS_GEOMETRYUTILS_INTERSECTION_H 1
 
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "Definitions.h"
 
 namespace Acts {
        

@@ -4,6 +4,8 @@
 
 // Geometry module
 #include "ACTS/Tools/LayerArrayCreator.h"
+
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Utilities/BinnedArray1D.h"
 #include "ACTS/Utilities/BinUtility.h"
 #include "ACTS/Utilities/GeometryStatics.h"
@@ -18,8 +20,7 @@
 #include "ACTS/Surfaces/TrapezoidBounds.h"
 #include "ACTS/Surfaces/RectangleBounds.h"
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
-#include "ACTS/Tools/StringConverters.h"
+#include "ACTS/Utilities/Definitions.h"
 
 Acts::LayerArray* Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
                                                       double min, double max, 

@@ -7,8 +7,8 @@
 
 #include <cmath>
 
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Utilities/ParameterDefinitions.h"
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

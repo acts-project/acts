@@ -11,7 +11,7 @@
 
 // Algebra and Identifier
 #include "ACTS/Utilities/Identifier.h"
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 #include <memory>
 
 namespace Acts

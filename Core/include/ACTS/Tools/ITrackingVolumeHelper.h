@@ -8,11 +8,10 @@
 // Geometry module
 #include "ACTS/Utilities/BinningType.h"
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
-//STL
 #include <string>
 #include <vector>
 #include <memory>
+#include "ACTS/Utilities/Definitions.h"
 
 namespace Acts {
 

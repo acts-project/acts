@@ -6,11 +6,11 @@
 #define ACTS_MATERIAL_BINNEDSURFACEMATERIAL_H 1
 
 // Geometry module
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Material/SurfaceMaterial.h"
 #include "ACTS/Material/MaterialProperties.h"
 #include "ACTS/Utilities/BinUtility.h"
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

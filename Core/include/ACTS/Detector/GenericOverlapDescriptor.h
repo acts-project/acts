@@ -6,8 +6,7 @@
 #define ACTS_DETECTOR_GENERICOVERLAPDESCRIPTOR_H 1
 
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
-// Geometry module
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Utilities/OverlapDescriptor.h"
 #include "ACTS/Utilities/Intersection.h"
 

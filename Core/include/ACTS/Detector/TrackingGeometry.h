@@ -7,12 +7,11 @@
 
 // Geometry module
 #include "ACTS/Utilities/GeometrySignature.h"
-#include "ACTS/Utilities/PropDirection.h"
+#include "ACTS/Utilities/Definitions.h"
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
-// STL
 #include <map>
 #include <memory>
+#include "ACTS/Utilities/Definitions.h"
 
 namespace Acts {
  

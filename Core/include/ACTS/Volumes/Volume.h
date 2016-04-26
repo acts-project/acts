@@ -7,11 +7,11 @@
 // STL include(s)
 #include <memory>
 
+#include "ACTS/Utilities/Definitions.h"
 // Geometry module
 #include "ACTS/Utilities/GeometryStatics.h"
 #include "ACTS/Utilities/GeometryObject.h"
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
 
 namespace Acts {
 

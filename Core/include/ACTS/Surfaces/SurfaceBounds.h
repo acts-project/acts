@@ -9,7 +9,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Surfaces/BoundaryCheck.h"
 
 namespace Acts {

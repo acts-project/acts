@@ -7,7 +7,7 @@
 
 #include "ACTS/Surfaces/PlaneSurface.h"
 #include "ACTS/Utilities/AreaExcluder.h"
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 
 class Identifier;
 
