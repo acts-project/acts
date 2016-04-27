@@ -22,168 +22,80 @@ namespace Acts {
     
   class PassiveLayerBuilder : public ILayerBuilder {
         
-  public:
-    /** constructor */
-    PassiveLayerBuilder();
+    public:
+      /** @struct Config 
+          Configuration struct for the passive layer builder */
+      struct Config {
+          
+          std::string          layerIdentification;
+              
+          std::vector<double>  centralLayerRadii;
+          std::vector<double>  centralLayerHalflengthZ;
+          std::vector<double>  centralLayerThickness;
+          std::vector<double>  centralLayerMaterialX0;
+          std::vector<double>  centralLayerMaterialL0;
+          std::vector<double>  centralLayerMaterialA;
+          std::vector<double>  centralLayerMaterialZ;
+          std::vector<double>  centralLayerMaterialRho;
+          
+          // the layers at p/e side 
+          std::vector<double>  posnegLayerPositionZ;
+          std::vector<double>  posnegLayerRmin;
+          std::vector<double>  posnegLayerRmax;
+          std::vector<double>  posnegLayerThickness;
+          std::vector<double>  posnegLayerMaterialX0;
+          std::vector<double>  posnegLayerMaterialL0;
+          std::vector<double>  posnegLayerMaterialA;
+          std::vector<double>  posnegLayerMaterialZ;
+          std::vector<double>  posnegLayerMaterialRho;
+      };
         
-    /** destructor */
-    virtual ~PassiveLayerBuilder() = default;
+      /** constructor */
+      PassiveLayerBuilder(const Config& plConfig);
+          
+      /** destructor */
+      virtual ~PassiveLayerBuilder() = default;
+          
+      /** LayerBuilder interface method - returning the layers at negative side */
+      const LayerVector* negativeLayers() const override; 
         
-    /** LayerBuilder interface method - returning the layers at negative side */
-    const LayerVector* negativeLayers() const override; 
+      /** LayerBuilder interface method - returning the central layers */
+      const LayerVector* centralLayers() const override; 
+        
+      /** LayerBuilder interface method - returning the layers at negative side */
+      const LayerVector* positiveLayers() const override;         
+          
+      /**ILayerBuilder method*/
+      const std::string& identification() const override { return m_config.layerIdentification; }
+
+      /** Set configuration method */
+      void setConfiguration(const Config& meConfig);
+
+      /** Get configuration method */
+      Config getConfiguration() const;        
       
-    /** LayerBuilder interface method - returning the central layers */
-    const LayerVector* centralLayers() const override; 
-      
-    /** LayerBuilder interface method - returning the layers at negative side */
-    const LayerVector* positiveLayers() const override;         
+    protected:
+        Config                               m_config; //!< configuration 
+
+    private:
         
-    /**ILayerBuilder method*/
-    const std::string& identification() const override { return m_layerIdentification; }
-
-    void setCentralLayerRadii(std::vector<double> radii)
-    {
-      m_centralLayerRadii = std::move(radii);
-      m_constructionFlag = false;
-    }
-
-    void setCentralLayerHalfLengthZ(std::vector<double> halfZ)
-    {
-      m_centralLayerHalflengthZ = std::move(halfZ);
-      m_constructionFlag = false;
-    }
+      bool constructLayers() const;
       
-    void setCentralLayerThickness(std::vector<double> thickness)
-    {
-      m_centralLayerThickness = std::move(thickness);
-      m_constructionFlag = false;
-    }
-
-    void setCentralLayerMaterialX0(std::vector<double> materialX0)
-    {
-      m_centralLayerMaterialX0 = std::move(materialX0);
-      m_constructionFlag = false;
-    }
-
-    void setCentralLayerMaterialL0(std::vector<double> materialL0)
-    {
-      m_centralLayerMaterialL0 = std::move(materialL0);
-      m_constructionFlag = false;
-    }
-
-    void setCentralLayerMaterialA(std::vector<double> materialA)
-    {
-      m_centralLayerMaterialA = std::move(materialA);
-      m_constructionFlag = false;
-    }
-
-    void setCentralLayerMaterialZ(std::vector<double> materialZ)
-    {
-      m_centralLayerMaterialZ = std::move(materialZ);
-      m_constructionFlag = false;
-    }
-
-    void setCentralLayerMaterialRho(std::vector<double> materialRho)
-    {
-      m_centralLayerMaterialRho = std::move(materialRho);
-      m_constructionFlag = false;
-    }
-
-    void setPosnegLayerPositionZ(std::vector<double> positionZ)
-    {
-      m_posnegLayerPositionZ = std::move(positionZ);
-      m_constructionFlag = false;
-    }
-
-    void setPosnegLayerRmin(std::vector<double> rMin)
-    {
-      m_posnegLayerRmin = std::move(rMin);
-      m_constructionFlag = false;
-    }
+      mutable LayerVector*                    m_nLayers; //!< layers on negative side
+      mutable LayerVector*                    m_cLayers; //!< layers on central side
+      mutable LayerVector*                    m_pLayers; //!< layers on positive side
       
-    void setPosnegLayerRmax(std::vector<double> rMax)
-    {
-      m_posnegLayerRmax = std::move(rMax);
-      m_constructionFlag = false;
-    }
-      
-    void setPosnegLayerThickness(std::vector<double> thickness)
-    {
-      m_posnegLayerThickness = std::move(thickness);
-      m_constructionFlag = false;
-    }
-
-    void setPosnegLayerMaterialX0(std::vector<double> materialX0)
-    {
-      m_posnegLayerMaterialX0 = std::move(materialX0);
-      m_constructionFlag = false;
-    }
-
-    void setPosnegLayerMaterialL0(std::vector<double> materialL0)
-    {
-      m_posnegLayerMaterialL0 = std::move(materialL0);
-      m_constructionFlag = false;
-    }
-
-    void setPosnegLayerMaterialA(std::vector<double> materialA)
-    {
-      m_posnegLayerMaterialA = std::move(materialA);
-      m_constructionFlag = false;
-    }
-
-    void setPosnegLayerMaterialZ(std::vector<double> materialZ)
-    {
-      m_posnegLayerMaterialZ = std::move(materialZ);
-      m_constructionFlag = false;
-    }
-
-    void setPosnegLayerMaterialRho(std::vector<double> materialRho)
-    {
-      m_posnegLayerMaterialRho = std::move(materialRho);
-      m_constructionFlag = false;
-    }
-
-  private:
-        
-    bool constructLayers() const;
-
-    mutable bool                                    m_constructionFlag;
-    std::string                             m_layerIdentification;
-        
-    mutable LayerVector*                            m_nLayers; //!< layers on negative side
-    mutable LayerVector*                            m_cLayers; //!< layers on central side
-    mutable LayerVector*                            m_pLayers; //!< layers on positive side
-
-    // the central layers 
-    std::vector<double>                     m_centralLayerRadii;
-    std::vector<double>                     m_centralLayerHalflengthZ;
-    std::vector<double>                     m_centralLayerThickness;
-    std::vector<double>                     m_centralLayerMaterialX0;
-    std::vector<double>                     m_centralLayerMaterialL0;
-    std::vector<double>                     m_centralLayerMaterialA;
-    std::vector<double>                     m_centralLayerMaterialZ;
-    std::vector<double>                     m_centralLayerMaterialRho;
-
-    // the layers at p/e side 
-    std::vector<double>                     m_posnegLayerPositionZ;
-    std::vector<double>                     m_posnegLayerRmin;
-    std::vector<double>                     m_posnegLayerRmax;
-    std::vector<double>                     m_posnegLayerThickness;
-    std::vector<double>                     m_posnegLayerMaterialX0;
-    std::vector<double>                     m_posnegLayerMaterialL0;
-    std::vector<double>                     m_posnegLayerMaterialA;
-    std::vector<double>                     m_posnegLayerMaterialZ;
-    std::vector<double>                     m_posnegLayerMaterialRho;
-        
-
+      mutable bool                            m_constructionFlag; //!< indicator if the layer construction has been done already
 
   };
-    
-  inline const Acts::LayerVector* PassiveLayerBuilder::positiveLayers() const { if(not m_constructionFlag) constructLayers(); return m_pLayers; }
 
-  inline const Acts::LayerVector* Acts::PassiveLayerBuilder::negativeLayers() const { if(not m_constructionFlag) constructLayers(); return m_nLayers; }
+  inline PassiveLayerBuilder::Config PassiveLayerBuilder::getConfiguration() const { return m_config; }
     
-  inline const Acts::LayerVector* Acts::PassiveLayerBuilder::centralLayers() const { if(not m_constructionFlag) constructLayers(); return m_cLayers; }
+  inline const LayerVector* PassiveLayerBuilder::positiveLayers() const { if(not m_constructionFlag) constructLayers(); return m_pLayers; }
+
+  inline const LayerVector* PassiveLayerBuilder::negativeLayers() const { if(not m_constructionFlag) constructLayers(); return m_nLayers; }
+    
+  inline const LayerVector* PassiveLayerBuilder::centralLayers() const { if(not m_constructionFlag) constructLayers(); return m_cLayers; }
     
 } //end of namespace
 

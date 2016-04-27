@@ -57,98 +57,57 @@ namespace Acts {
    
       To receive the tracking volume it is possible to also hand over a triple of layers, which is a C++ tuple of three pointers to layer vectors (defined in the ITrackingVolumeBuilder). This functionality is needed for a possible translation of an geometry existing in another format. The first entry represents the layers of the negative endcap, the second the layers of the barrel and the third the layers of the positive endcap. If the one of these pointers is a nullptr no layers will be created for this volume
       Another functionality needed to translate an already existing geometry is to hand over a volume triple, which is a triple of shared pointers of volumes (defined in the ITrackingVolumeBuilder). The first entry contains the negative endcap volume, the second the barrel volume and the third one the positive endcap volume. This volumes are then used to get the internal boundaries of the current hierarchy.
-    
-      @TODO Julia: make private tools private again after Gaudi update (bug in Gaudi), marked with //b
-   
+       
       @author Andreas.Salzburger@cern.ch   
   */
   
-  class CylinderVolumeBuilder : public ITrackingVolumeBuilder
-  {
-
-  public:
-    /** Constructor */
-    CylinderVolumeBuilder(const std::string& name);
+  class CylinderVolumeBuilder : public ITrackingVolumeBuilder{
+    public:
+      /** @struct Config 
+          Configuration struct for this CylinderVolumeBuilder */
+        struct Config {
+            std::shared_ptr<ITrackingVolumeHelper>  trackingVolumeHelper;       //!< the tracking volume creator for container volume creation
+            std::string                             volumeName;                  //!< the name of the volume to be created
+            std::vector< double >                   volumeDimension;             //!< The dimensions of the manually created world
+            std::vector< double >                   volumeMaterialProperties;    //!< The material properties of the created world
+            Material                                volumeMaterial;              //!< the world material  
+            bool                                    volumeToBeamPipe;            //!< build the volume to the beam pipe
+            std::shared_ptr<ILayerBuilder>          layerBuilder;                //!< needed to build layers within the volume
+            double                                  layerEnvelopeR;              //!< the envelope covering the potential layers
+            double                                  layerEnvelopeZ;              //!< the envelope covering the potential layers
+            int                                     volumeSignature;             //!< the volume signature 
+        };   
+        
+        /** Constructor */
+        CylinderVolumeBuilder(const Config& cvbConfig);
+          
+        /** Destructor */
+        virtual ~CylinderVolumeBuilder();
+          
+        /** CylinderVolumeBuilder interface method - returns the volumes of Volumes */
+        TrackingVolumePtr trackingVolume(TrackingVolumePtr insideVolume = nullptr,
+        				                 VolumeBoundsPtr outsideBounds  = nullptr,
+        				                 const LayerTriple* layerTriple  = nullptr,
+        				                 const VolumeTriple* volumeTriple = nullptr) const override;
+                               
+       /** Set configuration method */
+       void setConfiguration(const Config& cvbConfig);
       
-    /** Destructor */
-    virtual ~CylinderVolumeBuilder();
+       /** Get configuration method */
+       Config getConfiguration() const;            
+    
+    protected:
+        /** Configuration struct */
+        Config m_config;                                   
       
-    /** CylinderVolumeBuilder interface method - returns the volumes of Volumes */
-    TrackingVolumePtr trackingVolume(TrackingVolumePtr insideVolume = nullptr,
-				     VolumeBoundsPtr outsideBounds  = nullptr,
-				     const LayerTriple* layerTriple  = nullptr,
-				     const VolumeTriple* volumeTriple = nullptr) const override;
-
-    void setVolumeHelper(std::shared_ptr<ITrackingVolumeHelper> volumeHelper)
-    {
-      m_trackingVolumeHelper = std::move(volumeHelper);
-    }
-    
-    void setVolumeName(std::string name)
-    {
-      m_volumeName = std::move(name);
-    }
-
-    void setVolumeDimensions(std::vector<double> dim)
-    {
-      m_volumeDimension = std::move(dim);
-    }
-
-    void setVolumeMaterial(std::vector<double> matProperties)
-    {
-      m_volumeMaterialProperties = std::move(matProperties);
-      m_volumeMaterial = Material(m_volumeMaterialProperties.at(0),
-				  m_volumeMaterialProperties.at(1),
-				  m_volumeMaterialProperties.at(2),
-				  m_volumeMaterialProperties.at(3),
-				  m_volumeMaterialProperties.at(4));
-    }
-
-    void setVolumeToBeamPipe(bool flag)
-    {
-      m_volumeToBeamPipe = flag;
-    }
-    
-    void setLayerBuilder(std::shared_ptr<ILayerBuilder> layerBuilder)
-    {
-      m_layerBuilder = std::move(layerBuilder);
-    }
-    
-    void setLayerEnvelopeR(double r)
-    {
-      m_layerEnvelopeR = r;
-    }
-    
-    void setLayerEnvelopeZ(double z)
-    {
-      m_layerEnvelopeZ = z;
-    }
-    
-    void setVolumeSignature(int sig)
-    {
-      m_volumeSignature = sig;
-    }
-    
-  private:
-    /** analyse the layer setup */        
-    LayerSetup analyzeLayerSetup(const LayerVector* lVector) const;   
-
-    std::shared_ptr<ITrackingVolumeHelper>     m_trackingVolumeHelper;       //!< the tracking volume creator for container volume creation
-
-    std::string                            m_volumeName;                  //!< the name of the volume to be created
-     
-    std::vector< double >                  m_volumeDimension;             //!< The dimensions of the manually created world
-    std::vector< double >                  m_volumeMaterialProperties;    //!< The material properties of the created world
-    Material                               m_volumeMaterial;              //!< the world material  
-    bool                                   m_volumeToBeamPipe;            //!< build the volume to the beam pipe
-
-    std::shared_ptr<ILayerBuilder>              m_layerBuilder;                //!< needed to build layers within the volume
-    double                                 m_layerEnvelopeR;              //!< the envelope covering the potential layers
-    double                                 m_layerEnvelopeZ;              //!< the envelope covering the potential layers
-      
-    int                                    m_volumeSignature;             //!< the volume signature
+    private:
+        /** analyse the layer setup */        
+        LayerSetup analyzeLayerSetup(const LayerVector* lVector) const;   
 
   };
+  
+  /** Return the configuration object */    
+  inline CylinderVolumeBuilder::Config CylinderVolumeBuilder::getConfiguration() const { return m_config; }
 
 } // end of namespace
 

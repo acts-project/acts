@@ -27,8 +27,8 @@ template <class T> Acts::ExtrapolationCode Acts::ExtrapolationEngine::extrapolat
         // get the appropriate IExtrapolationEngine
         GeometryType geoType = eCell.leadVolume->geometrySignature() > 2 ? Dense : Static;
         
-        std::shared_ptr<const IExtrapolationEngine> iee = (m_eeConfig.extrapolationEngines.size() > eCell.leadVolume->geometrySignature()) ? 
-                                                           m_eeConfig.extrapolationEngines[geoType] : nullptr;
+        std::shared_ptr<const IExtrapolationEngine> iee = (m_config.extrapolationEngines.size() > eCell.leadVolume->geometrySignature()) ? 
+                                                           m_config.extrapolationEngines[geoType] : nullptr;
         eCode = iee ? iee->extrapolate(eCell, sf, bcheck) : ExtrapolationCode::FailureConfiguration;
         // give a message about what you have
         EX_MSG_VERBOSE(eCell.navigationStep, "extrapolate", "", "returned from volume with return code : " << eCode.toString() << " and geoType:"<< geoType );
@@ -53,7 +53,7 @@ template <class T> Acts::ExtrapolationCode Acts::ExtrapolationEngine::initNaviga
     // initialization of the navigation requires that leadParameters to be the startParameters
     eCell.leadParameters = eCell.startParameters;
     // now check the tracking geometry and retrieve it if not existing
-    if (!m_eeConfig.trackingGeometry){
+    if (!m_config.trackingGeometry){
 	    EX_MSG_WARNING(eCell.navigationStep, "navigation", "", "could not retrieve geometry. Stopping.");
         // configuration error
         return ExtrapolationCode::FailureConfiguration;
@@ -65,8 +65,8 @@ template <class T> Acts::ExtrapolationCode Acts::ExtrapolationEngine::initNaviga
     eCell.startVolume = eCell.startVolume ? eCell.startVolume : ( eCell.startLayer ? eCell.startLayer->enclosingTrackingVolume() : nullptr );
     // check if you are at the volume boundary 
     //!< @TODO do not use hard coded number of atVolumeBoundary, check with ST
-    if (!eCell.startVolume ||  m_eeConfig.trackingGeometry->atVolumeBoundary(eCell.startParameters->position(),eCell.startVolume,0.001)  ) {
-      ExtrapolationCode ecVol = m_eeConfig.navigationEngine->resolvePosition(eCell,dir,true);
+    if (!eCell.startVolume ||  m_config.trackingGeometry->atVolumeBoundary(eCell.startParameters->position(),eCell.startVolume,0.001)  ) {
+      ExtrapolationCode ecVol = m_config.navigationEngine->resolvePosition(eCell,dir,true);
       if (!ecVol.isSuccessOrRecovered() && !ecVol.inProgress()) 
           return ecVol;
       // the volume is found and assigned as start volume
@@ -105,15 +105,15 @@ template <class T> Acts::ExtrapolationCode Acts::ExtrapolationEngine::initNaviga
           ExtrapolationCell<T> navCell(*eCell.leadParameters, dir);
           navCell.addConfigurationMode(ExtrapolationMode::Direct);
           // screen output
-          ExtrapolationCode eCode = m_eeConfig.propagationEngine->propagate(navCell,*eCell.endSurface,anyDirection,false, eCell.navigationCurvilinear);
+          ExtrapolationCode eCode = m_config.propagationEngine->propagate(navCell,*eCell.endSurface,anyDirection,false, eCell.navigationCurvilinear);
           // check for sucess to the destination
           //@TODO check what this is
            CHECK_ECODE_SUCCESS_NODEST(navCell, eCode);
            // screen output
            EX_MSG_VERBOSE (eCell.navigationStep, "navigation", "", "found endVolume and andLayer through propagation - return code : " << eCode.toString() );
            // take the lead parameters to find end volume and end layer
-           eCell.endVolume = m_eeConfig.trackingGeometry->lowestTrackingVolume(navCell.endParameters->position());
-           eCell.endLayer  = m_eeConfig.trackingGeometry->associatedLayer(navCell.endParameters->position());
+           eCell.endVolume = m_config.trackingGeometry->lowestTrackingVolume(navCell.endParameters->position());
+           eCell.endLayer  = m_config.trackingGeometry->associatedLayer(navCell.endParameters->position());
            // memory cleanup
           delete navCell.endParameters;
       }

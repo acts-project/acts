@@ -11,7 +11,7 @@
 
 // constructor
 Acts::MaterialEffectsEngine::MaterialEffectsEngine(const MaterialEffectsEngine::Config& meConfig):
-  m_meConfig()
+  m_config()
 {
   setConfiguration(meConfig);
     // steering of the screen outoput (SOP)
@@ -29,7 +29,7 @@ void Acts::MaterialEffectsEngine::setConfiguration(const Acts::MaterialEffectsEn
   IMaterialEffectsEngine::m_sopPrefix  = meConfig.prefix;
   IMaterialEffectsEngine::m_sopPostfix = meConfig.postfix;
   // copy the configuration 
-  m_meConfig = meConfig;
+  m_config = meConfig;
 }     
 
 // neutral extrapolation - just collect material /
@@ -127,7 +127,7 @@ const Acts::TrackParameters* Acts::MaterialEffectsEngine::updateTrackParameters(
     // get the actual material bin
     const MaterialProperties* materialProperties = mSurface->surfaceMaterial()->material(parameters.position());
     // and let's check if there's acutally something to do
-    if (materialProperties && ( m_meConfig.eLossCorrection || m_meConfig.mscCorrection || eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial)) ){
+    if (materialProperties && ( m_config.eLossCorrection || m_config.mscCorrection || eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial)) ){
         // and add them
         int sign = int(eCell.materialUpdateMode);
         // a simple cross-check if the parameters are the initial ones
@@ -143,7 +143,7 @@ const Acts::TrackParameters* Acts::MaterialEffectsEngine::updateTrackParameters(
         double E      = sqrt(p*p+m*m);
         double beta   = p/E;
         // (A) - energy loss correction
-        if (m_meConfig.eLossCorrection){
+        if (m_config.eLossCorrection){
             double sigmaP = 0.;
             double kazl   = 0.;
             /** dE/dl ionization energy loss per path unit */
@@ -160,7 +160,7 @@ const Acts::TrackParameters* Acts::MaterialEffectsEngine::updateTrackParameters(
     	       (*uCovariance)(eQOP, eQOP) += sign*sigmaQoverP*sigmaQoverP;
 	}
         // (B) - update the covariance if needed
-        if (uCovariance && m_meConfig.mscCorrection){
+        if (uCovariance && m_config.mscCorrection){
 	        /** multiple scattering as function of dInX0 */
 	        double sigmaMS = m_interactionFormulae.sigmaMS(thicknessInX0*pathCorrection, p, beta);    
 	        double sinTheta = sin(parameters.parameters()[eTHETA]);

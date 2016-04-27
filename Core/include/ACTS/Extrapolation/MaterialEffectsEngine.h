@@ -35,7 +35,6 @@ namespace Acts {
           Configuration struct for the MaterialEffectsEngine
         */
       struct Config {
-          
           bool          eLossCorrection;         //!< apply the energy loss correction
           bool          eLossMpv;                //!< apply the energy loss correction as most probable value
           bool          mscCorrection;           //!< apply the multiple (coulomb) scattering correction
@@ -76,7 +75,7 @@ namespace Acts {
       Config getConfiguration() const;                                      
 
     protected:
-      Config                 m_meConfig;                //!< configuration struct
+      Config                 m_config;                //!< configuration struct
      
     private:
       /** charged extrapolation - depending on the MaterialUpdateStage -
@@ -95,7 +94,7 @@ namespace Acts {
   };
   
   /** Return the configuration object */    
-  inline MaterialEffectsEngine::Config MaterialEffectsEngine::getConfiguration() const { return m_meConfig; }
+  inline MaterialEffectsEngine::Config MaterialEffectsEngine::getConfiguration() const { return m_config; }
   
 } // end of namespace
 

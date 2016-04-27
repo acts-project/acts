@@ -125,7 +125,7 @@ template <class T> Acts::ExtrapolationCode Acts::StaticNavigationEngine::handleB
     // - SuccessPathLimit : pathLimit reached during propagation
     // - InProgress       : boundary reached
     // - Recovered        : boundary not reached
-    ExtrapolationCode eCode = m_snConfig.propagationEngine->propagate(eCell,bSurface,pDir,!stepout,eCell.destinationCurvilinear);
+    ExtrapolationCode eCode = m_config.propagationEngine->propagate(eCell,bSurface,pDir,!stepout,eCell.destinationCurvilinear);
     CHECK_ECODE_SUCCESS(eCell, eCode);
     EX_MSG_VERBOSE(eCell.navigationStep, "navigation", "handleBoundaryT", "propagation with eCode " << eCode.toString());
     // check for progress 
@@ -141,7 +141,7 @@ template <class T> Acts::ExtrapolationCode Acts::StaticNavigationEngine::handleB
         EX_MSG_VERBOSE(eCell.navigationStep, "navigation", "", "parameters on boundary surface created, moving to next volume."); 
         // get the nextVolume - modify the position in case you have a step out trial, take attachment otherwise
         const TrackingVolume* nextVolume = stepout ?
-                m_snConfig.trackingGeometry->lowestTrackingVolume(Vector3D(eCell.leadParameters->position()+pDir*eCell.leadParameters->momentum().unit())) :
+                m_config.trackingGeometry->lowestTrackingVolume(Vector3D(eCell.leadParameters->position()+pDir*eCell.leadParameters->momentum().unit())) :
                 bSurfaceTV.attachedVolume(eCell.leadParameters->position(), eCell.leadParameters->momentum(), pDir);
         // check if we have no nextVolume : boundary rechaed @TODO it's not really a success
         if (!nextVolume) {
@@ -170,7 +170,7 @@ template <class T> Acts::ExtrapolationCode Acts::StaticNavigationEngine::handleB
             // now handle the material, possible return codes: 
             // - InProgress            : material update performed or not (depending on material)
             // - SuccessMaterialLimit  : material limit reached & configured to stop there
-            eCode = m_snConfig.materialEffectsEngine->handleMaterial(eCell,pDir,fullUpdate);
+            eCode = m_config.materialEffectsEngine->handleMaterial(eCell,pDir,fullUpdate);
             CHECK_ECODE_SUCCESS(eCell, eCode);
         }
         // break if configured to break at volume boundary and signature change
@@ -206,10 +206,10 @@ template <class T> Acts::ExtrapolationCode Acts::StaticNavigationEngine::resolve
 
     // noLoop= True is used when we have exit from leadVolume 
 
-    if (!eCell.leadVolume) eCell.leadVolume = m_snConfig.trackingGeometry->lowestStaticTrackingVolume(eCell.leadParameters->position());
+    if (!eCell.leadVolume) eCell.leadVolume = m_config.trackingGeometry->lowestStaticTrackingVolume(eCell.leadParameters->position());
     if (!eCell.leadVolume) return ExtrapolationCode::FailureNavigation;
     const TrackingVolume* nextVol=0;
-    if ( m_snConfig.trackingGeometry->atVolumeBoundary(eCell.leadParameters->position(),
+    if ( m_config.trackingGeometry->atVolumeBoundary(eCell.leadParameters->position(),
                                              eCell.leadParameters->momentum(), 
                                              eCell.leadVolume,
                                              nextVol, pDir, 0.01) ) {          //!< @TODO set tolerance globally 

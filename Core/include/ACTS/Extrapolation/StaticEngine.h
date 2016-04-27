@@ -58,12 +58,12 @@ namespace Acts {
           */
         struct Config {
             
-            std::shared_ptr<const IPropagationEngine>     propagationEngine;        //!< the used propagation engine
-            std::shared_ptr<const INavigationEngine>      navigationEngine;         //!< the navigation engine to resolve the boundary
-            std::shared_ptr<const IMaterialEffectsEngine> materialEffectsEngine;    //!< the material effects updated  
+            std::shared_ptr<IPropagationEngine>     propagationEngine;        //!< the used propagation engine
+            std::shared_ptr<INavigationEngine>      navigationEngine;         //!< the navigation engine to resolve the boundary
+            std::shared_ptr<IMaterialEffectsEngine> materialEffectsEngine;    //!< the material effects updated  
             
-            std::string                                   prefix;                //!< output prefix
-            std::string                                   postfix;               //!< output postfix
+            std::string                             prefix;                //!< output prefix
+            std::string                             postfix;               //!< output postfix
             
             Config() :
               propagationEngine(nullptr),
@@ -105,7 +105,7 @@ namespace Acts {
         
     protected:
         /** Configuration struct */
-        Config m_seConfig;        
+        Config m_config;        
                          
      private:
         /** main loop extrapolation method */
@@ -149,7 +149,7 @@ namespace Acts {
       { return Acts::Static; }
   
   /** Return the configuration object */    
-  inline StaticEngine::Config StaticEngine::getConfiguration() const { return m_seConfig; }
+  inline StaticEngine::Config StaticEngine::getConfiguration() const { return m_config; }
   
 
 

@@ -156,14 +156,14 @@ namespace Acts {
         */
       struct Config {
     
-        std::shared_ptr<const IMagneticFieldSvc>   fieldService  ;  //!< the field service 
-        double                                     dlt           ;  //!< accuracy parameter
-        double                                     helixStep     ;  //!< max step whith helix model
-        double                                     straightStep  ;  //!< max step whith srtaight line model
-        double                                     maxPathLength ;  //!< max overal path length 
-        bool                                       usegradient   ;  //!< use magnetif field gradient
-        std::string                                prefix        ;  //!< screen output prefix
-        std::string                                postfix       ;  //!< screen output postfix
+        std::shared_ptr<IMagneticFieldSvc>   fieldService  ;  //!< the field service 
+        double                               dlt           ;  //!< accuracy parameter
+        double                               helixStep     ;  //!< max step whith helix model
+        double                               straightStep  ;  //!< max step whith srtaight line model
+        double                               maxPathLength ;  //!< max overal path length 
+        bool                                 usegradient   ;  //!< use magnetif field gradient
+        std::string                          prefix        ;  //!< screen output prefix
+        std::string                          postfix       ;  //!< screen output postfix
     
         Config() :
           fieldService(nullptr),
@@ -204,7 +204,7 @@ namespace Acts {
       Config getConfiguration() const;                                    
     
     protected:
-      Config    m_rkConfig;  //!< configuration class
+      Config    m_config;  //!< configuration class
       
     private:
       /** Templated RungeKutta propagation method - charged/neutral */
@@ -260,16 +260,16 @@ namespace Acts {
 
   inline void RungeKuttaEngine::getField(double* R,double* H) const
   {
-    m_rkConfig.fieldService->getField(R,H);
+    m_config.fieldService->getField(R,H);
   }
 
   inline void RungeKuttaEngine::getFieldGradient(double* R,double* H,double* dH) const
   {
-    m_rkConfig.fieldService->getField(R,H,dH);
+    m_config.fieldService->getField(R,H,dH);
   }
 
   /** Return the configuration object */    
-  inline RungeKuttaEngine::Config RungeKuttaEngine::getConfiguration() const { return m_rkConfig; }
+  inline RungeKuttaEngine::Config RungeKuttaEngine::getConfiguration() const { return m_config; }
 
   ////////////////////////////////////////////////////////////////////////////////
   // Templated method

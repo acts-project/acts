@@ -34,17 +34,33 @@ namespace Acts
      
       The concrete implementation for cylindrical TrackingVolume
       objects of the ITrackingVolumeCreator interface
-     
-      @TODO Julia: make private tools private again after Gaudi update (bug in Gaudi), marked with //b
-     
+          
       @author Andreas.Salzburger@cern.ch
   */
     
   class CylinderVolumeHelper : public ITrackingVolumeHelper
   {    
   public:
+    /** @struct Config 
+      Configuration struct for this CylinderVolumeHelper */
+    struct Config {  
+      std::shared_ptr<ILayerArrayCreator>          layerArrayCreator;           //!< A Tool for coherent LayerArray creation
+      std::shared_ptr<ITrackingVolumeArrayCreator> trackingVolumeArrayCreator;  //!< Helper Tool to create TrackingVolume Arrays
+      double                                       passiveLayerThickness;       //!< thickness of passive layers
+      int                                          passiveLayerPhiBins;         //!< bins in phi for the passive layer
+      int                                          passiveLayerRzBins;          //!< bins in r/z for the passive layer    
+
+      Config() :
+        layerArrayCreator(nullptr),       
+        trackingVolumeArrayCreator(nullptr),
+        passiveLayerThickness(1),
+        passiveLayerPhiBins(1),
+        passiveLayerRzBins(100)
+        {}
+    };
+      
     /** Constructor */
-    CylinderVolumeHelper();
+    CylinderVolumeHelper(const Config& cvhConfig);
         
     /** Destructor */
     virtual ~CylinderVolumeHelper() = default;
@@ -86,30 +102,15 @@ namespace Acts
     /** Create a container volumes from sub volumes, input volumes are ordered in R or Z by convention */
     TrackingVolumePtr createContainerTrackingVolume(const TrackingVolumeVector& volumes) const;
 
-    void setLayerArrayCreator(std::shared_ptr<ILayerArrayCreator> layerCreator)
-    {
-      m_layerArrayCreator = std::move(layerCreator);
-    }
+    /** Set configuration method */
+    void setConfiguration(const Config& cvbConfig);
+   
+    /** Get configuration method */
+    Config getConfiguration() const;   
 
-    void setVolumeArrayCreator(std::shared_ptr<ITrackingVolumeArrayCreator> volumeCreator)
-    {
-      m_trackingVolumeArrayCreator = std::move(volumeCreator);
-    }
-
-    void setPassiveLayerThickness(double thickness)
-    {
-      m_passiveLayerThickness = thickness;
-    }
-
-    void setPassiveLayerPhiBins(unsigned int bins)
-    {
-      m_passiveLayerPhiBins = bins;
-    }
-
-    void setPassiveLayerRZBins(unsigned int bins)
-    {
-      m_passiveLayerRzBins = bins;
-    }
+  protected:
+    /** Configuration object */
+    Config m_config;  
         
   private:
     /** Private method - it estimates the CylinderBounds and Translation of layers,
@@ -159,18 +160,12 @@ namespace Acts
 			     int binsPhi,
 			     int binsR) const;
         
-    std::shared_ptr<ILayerArrayCreator>          m_layerArrayCreator;           //!< A Tool for coherent LayerArray creation
-    std::shared_ptr<ITrackingVolumeArrayCreator> m_trackingVolumeArrayCreator;  //!< Helper Tool to create TrackingVolume Arrays
-        
-    double                                  m_passiveLayerThickness;  //!< thickness of passive layers
-    int                                     m_passiveLayerPhiBins;    //!< bins in phi for the passive layer
-    int                                     m_passiveLayerRzBins;     //!< bins in r/z for the passive layer        
+      
   };
+  
+  /** Return the configuration object */    
+  inline CylinderVolumeHelper::Config CylinderVolumeHelper::getConfiguration() const { return m_config; }
 }
 
 #endif
-
-
-
-
 

@@ -6,7 +6,7 @@
 
 // constructor
 Acts::ExtrapolationEngine::ExtrapolationEngine(const Acts::ExtrapolationEngine::Config& eeConfig) :
-  m_eeConfig()
+  m_config()
 {
   setConfiguration(eeConfig);
 }
@@ -21,7 +21,7 @@ void Acts::ExtrapolationEngine::setConfiguration(const Acts::ExtrapolationEngine
   IExtrapolationEngine::m_sopPrefix  = eeConfig.prefix;
   IExtrapolationEngine::m_sopPostfix = eeConfig.postfix;
   // copy the configuration 
-  m_eeConfig = eeConfig;
+  m_config = eeConfig;
 } 
 
 /** charged extrapolation */
