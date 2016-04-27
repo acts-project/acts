@@ -27,7 +27,7 @@ set_property (TARGET ACTSCore PROPERTY VERSION ${ACTS_VERSION})
 
 set(ConfigPackageLocation lib/cmake/ACTS)
 include(CMakePackageConfigHelpers)
-write_basic_package_version_file ("${ConfigPackageLocation}/ACTSConfigVersion.cmake" VERSION ${ACTS_VERSION} COMPATIBILITY AnyNewerVersion)
+write_basic_package_version_file ("${CMAKE_INSTALL_PREFIX}/${ConfigPackageLocation}/ACTSConfigVersion.cmake" VERSION ${ACTS_VERSION} COMPATIBILITY AnyNewerVersion)
 configure_file(cmake/ACTSConfig.cmake "${CMAKE_INSTALL_PREFIX}/${ConfigPackageLocation}/ACTSConfig.cmake" COPYONLY)
 install(EXPORT ACTSTargets FILE ACTSTargets.cmake DESTINATION ${ConfigPackageLocation})
 
