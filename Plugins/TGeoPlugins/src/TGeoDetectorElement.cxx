@@ -1,4 +1,4 @@
-#include "ACTS/Plugins/DD4hepConverters/TGeoDetectorElement.h"
+#include "ACTS/Plugins/DD4hepPlugins/TGeoDetectorElement.h"
 // ACTS
 #include "ACTS/Surfaces/PlaneSurface.h"
 #include "ACTS/Surfaces/TrapezoidBounds.h"
@@ -11,7 +11,7 @@
 #include "TGeoBBox.h"
 #include "TGeoTrd2.h"
 
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 
 #include <iostream>
 
@@ -61,26 +61,11 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(const Identifier& identifier,
 Acts::TGeoDetectorElement::~TGeoDetectorElement()
 {}
 
-const Acts::Vector3D& Acts::TGeoDetectorElement::center() const
-{
-    if (!m_center) m_center = std::make_shared<const Acts::Vector3D>(m_transform->translation());
-    return (*m_center);
-}
-
-
 const Acts::Vector3D& Acts::TGeoDetectorElement::center(const Identifier&) const
 {
     if (!m_center) m_center = std::make_shared<const Acts::Vector3D>(m_transform->translation());
     return (*m_center);
 }
-
-
-const Acts::Vector3D& Acts::TGeoDetectorElement::normal() const
-{
-    if (!m_normal) m_normal = std::make_shared<const Acts::Vector3D>(Acts::Vector3D(m_transform->rotation().col(2)));
-    return(*m_normal);
-}
-
 
 const Acts::Vector3D& Acts::TGeoDetectorElement::normal(const Identifier&) const
 {
