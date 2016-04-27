@@ -1,17 +1,24 @@
-#include "ACTS/Plugins/DD4hepConverters/DD4hepCylinderGeometryBuilder.h"
+#include "ACTS/Plugins/DD4hepPlugins/DD4hepCylinderGeometryBuilder.h"
 // Geometry module
 #include "ACTS/Detector/TrackingGeometry.h"
 #include "ACTS/Detector/TrackingVolume.h"
 // DD4hepPlugin
-#include "ACTS/Plugins/DD4hepConverters/DD4hepGeometryHelper.h"
-#include "ACTS/Plugins/DD4hepConverters/DD4hepLayerHelper.h"
+#include "ACTS/Plugins/DD4hepPlugins/DD4hepGeometryHelper.h"
+#include "ACTS/Plugins/DD4hepPlugins/DD4hepLayerHelper.h"
 
-Acts::DD4hepCylinderGeometryBuilder::DD4hepCylinderGeometryBuilder() :
-m_DD4hepGeometrySvc(nullptr),
-m_volumeBuilder(nullptr),
-m_volumeHelper(nullptr),
+Acts::DD4hepCylinderGeometryBuilder::DD4hepCylinderGeometryBuilder(const Config& dgbConfig) :
 m_layerHelper(new Acts::DD4hepLayerHelper())
-{}
+{
+    setConfiguration(dgbConfig);
+}
+
+// configuration
+void Acts::DD4hepCylinderGeometryBuilder::setConfiguration(const Acts::DD4hepCylinderGeometryBuilder::Config& dgbConfig)
+{
+    // @TODO check consistency
+    // copy the configuration
+    m_config = dgbConfig;
+}
 
 Acts::DD4hepCylinderGeometryBuilder::~DD4hepCylinderGeometryBuilder()
 {
@@ -26,7 +33,7 @@ std::unique_ptr<Acts::TrackingGeometry> Acts::DD4hepCylinderGeometryBuilder::tra
     Acts::TrackingVolumePtr beamPipeVolume   = nullptr;
     
     // get the DD4hep world detector element
-    DD4hep::Geometry::DetElement detWorld = m_DD4hepGeometrySvc->worldDetElement();
+    DD4hep::Geometry::DetElement detWorld = m_config.DD4hepGeometrySvc->worldDetElement();
     // get the sub detectors
     std::vector<DD4hep::Geometry::DetElement> detElements;
     const DD4hep::Geometry::DetElement::Children& children = detWorld.children();
@@ -49,13 +56,13 @@ std::unique_ptr<Acts::TrackingGeometry> Acts::DD4hepCylinderGeometryBuilder::tra
         else {
         // assign a new highest volume (and potentially wrap around the given highest volume so far)
             const LayerTriple* layerTriple = m_layerHelper->createLayerTriple(detElement);
-            highestVolume = m_volumeBuilder->trackingVolume(highestVolume,Acts::DD4hepGeometryHelper::extractVolumeBounds(detElement),layerTriple,m_layerHelper->volumeTriple());
+            highestVolume = m_config.volumeBuilder->trackingVolume(highestVolume,Acts::DD4hepGeometryHelper::extractVolumeBounds(detElement),layerTriple,m_layerHelper->volumeTriple());
         }
     }
     // if you have a highest volume, stuff it into a TrackingGeometry
     if (highestVolume) {
         // see if the beampipe needs to be wrapped
-        if (beamPipeVolume) highestVolume = m_volumeHelper->createContainerTrackingVolume({beamPipeVolume,highestVolume});
+        if (beamPipeVolume) highestVolume = m_config.volumeHelper->createContainerTrackingVolume({beamPipeVolume,highestVolume});
         
         // create the TrackingGeometry
         trackingGeometry = std::make_unique<Acts::TrackingGeometry>(highestVolume);

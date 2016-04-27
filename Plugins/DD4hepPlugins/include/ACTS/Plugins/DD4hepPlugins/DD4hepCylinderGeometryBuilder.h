@@ -6,7 +6,7 @@
 #define ACTS_DD4HEPGEOMETRYTOOLS_DD4HEPCYLINDERGEOMETRYBUILDER_H 1
 
 // DD4hepPlugin
-#include "ACTS/Plugins/DD4hepConverters/IDD4hepGeometrySvc.h"
+#include "ACTS/Plugins/DD4hepPlugins/IDD4hepGeometrySvc.h"
 // Geometry module
 #include "ACTS/Tools/ITrackingGeometryBuilder.h"
 #include "ACTS/Tools/ITrackingVolumeBuilder.h"
@@ -35,39 +35,46 @@ namespace Acts {
     class DD4hepCylinderGeometryBuilder : virtual public Acts::ITrackingGeometryBuilder {
         
     public:
+        /** @struct Config
+         Configuration for the DD4hepCylinderGeometryBuilder */
+        struct Config {
+        
+            std::shared_ptr<ITrackingVolumeBuilder>     volumeBuilder; //!< building the contained sub detectors
+            std::shared_ptr<ITrackingVolumeHelper>      volumeHelper; //!< helper tool needed for volume building
+            std::shared_ptr<IDD4hepGeometrySvc>         DD4hepGeometrySvc; //!< service providing the DD4hep geometry
+            
+            Config() :
+                volumeBuilder(nullptr),
+                volumeHelper(nullptr),
+                DD4hepGeometrySvc(nullptr)
+            {}
+        };
+        
         /** Constructor */
-        DD4hepCylinderGeometryBuilder();
+        DD4hepCylinderGeometryBuilder(const Config& dgbConfig);
         
         /** Destructor */
         virtual ~DD4hepCylinderGeometryBuilder();
         
-        /** setting the builders and helpers */
-        void setVolumeBuilder(std::shared_ptr<Acts::ITrackingVolumeBuilder> volumeBuilder) {
-            m_volumeBuilder = std::move(volumeBuilder);
-        }
+        /** setting the builders and helpers with the configuration object*/
+        void setConfiguration(const Config& dgbConfig);
         
-        void setVolumeHelper(std::shared_ptr<Acts::ITrackingVolumeHelper> volumeHelper) {
-            m_volumeHelper = std::move(volumeHelper);
-        }
-        
-        void setDD4hepGeometrySvc(std::shared_ptr<Acts::IDD4hepGeometrySvc> DD4hepGeometrySvc) {
-            m_DD4hepGeometrySvc = DD4hepGeometrySvc;
-        }
+        /** get the configuration object */
+        Config getConfiguration() const;
         
         /** TrackingGeometry Interface method */
         std::unique_ptr<TrackingGeometry> trackingGeometry() const override;
         
     private:
-        /** Shared pointer to the service providing the DD4hep geometry */
-        std::shared_ptr<IDD4hepGeometrySvc>               m_DD4hepGeometrySvc;
-        /** Shared pointer yo the volume building tool */
-        std::shared_ptr<Acts::ITrackingVolumeBuilder>     m_volumeBuilder;
-        /** Shared pointer to the tool helping to build the tracking volumes */
-        std::shared_ptr<Acts::ITrackingVolumeHelper>      m_volumeHelper;
+        /** configuration object */
+        Config                                            m_config;
         /** Shared pointer class to build layers */
         DD4hepLayerHelper*                                m_layerHelper;
         
     };
+    
+    inline DD4hepCylinderGeometryBuilder::Config DD4hepCylinderGeometryBuilder::getConfiguration() const
+    { return m_config; }
 } //end of namespace
 
 #endif //#ifndef ACTS_DD4HEPGEOMETRYTOOLS_DD4HEPCYLINDERGEOMETRYBUILDER_H

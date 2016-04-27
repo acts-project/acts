@@ -1,4 +1,4 @@
-#include "ACTS/Plugins/DD4hepConverters/DetExtension.h"
+#include "ACTS/Plugins/DD4hepPlugins/DetExtension.h"
 
 Acts::DetExtension::DetExtension() :
 Acts::IDetExtension(),

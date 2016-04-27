@@ -1,9 +1,9 @@
-#include "ACTS/Plugins/DD4hepConverters/DD4hepLayerHelper.h"
+#include "ACTS/Plugins/DD4hepPlugins/DD4hepLayerHelper.h"
 //DD4hepPlugin
-#include "ACTS/Plugins/DD4hepConverters/DD4hepGeometryHelper.h"
-#include "ACTS/Plugins/DD4hepConverters/IDetExtension.h"
-#include "ACTS/Plugins/DD4hepConverters/DetExtension.h"
-#include "ACTS/Plugins/DD4hepConverters/DD4hepDetElement.h"
+#include "ACTS/Plugins/DD4hepPlugins/DD4hepGeometryHelper.h"
+#include "ACTS/Plugins/DD4hepPlugins/IDetExtension.h"
+#include "ACTS/Plugins/DD4hepPlugins/DetExtension.h"
+#include "ACTS/Plugins/DD4hepPlugins/DD4hepDetElement.h"
 // Geometry module
 #include "ACTS/Surfaces/Surface.h"
 #include "ACTS/Utilities/BinnedArray2D.h"

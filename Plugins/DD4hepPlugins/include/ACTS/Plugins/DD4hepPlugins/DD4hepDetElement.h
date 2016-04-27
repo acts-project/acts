@@ -6,7 +6,7 @@
 #define ACTS_DD4HEPDETECTORELEMENT_DD4HEPDETELEMENT_H 1
 
 //TGeoDetectorElement
-#include "ACTS/Plugins/DD4hepConverters/TGeoDetectorElement.h"
+#include "ACTS/Plugins/TGeoPlugins/TGeoDetectorElement.h"
 //DD4hep
 #include "DD4hep/Detector.h"
 

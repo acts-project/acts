@@ -7,7 +7,7 @@
 
 #include <memory>
 //Algebra
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 //DD4hep
 #include "DD4hep/Detector.h"
 

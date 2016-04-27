@@ -1,4 +1,4 @@
-#include "ACTS/Plugins/DD4hepConverters/Module.h"
+#include "ACTS/Plugins/DD4hepPlugins/Module.h"
 
 Acts::Module::Module(const DD4hep::Geometry::DetElement& mod, std::vector<std::shared_ptr<const Acts::Transform3D>> placements) :
     m_mod(mod),

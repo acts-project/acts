@@ -6,7 +6,7 @@
 #define ACTS_DD4HEPGEOMETRYTOOLS_DD4HEPLAYERHELPER_H 1
 
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 // Geometry module
 #include "ACTS/Detector/TrackingVolume.h"
 #include "ACTS/Utilities/BinnedArray.h"

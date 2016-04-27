@@ -5,10 +5,10 @@
 #ifndef ACTS_DD4HEPDETECTORELEMENT_DETEXTENSION_H
 #define ACTS_DD4HEPDETECTORELEMENT_DETEXTENSION_H 1
 
-#include "ACTS/Plugins/DD4hepConverters/IDetExtension.h"
+#include "ACTS/Plugins/DD4hepPlugins/IDetExtension.h"
 //DD4hep
 #include "DD4hep/Detector.h"
-#include "ACTS/Plugins/DD4hepConverters/Module.h"
+#include "ACTS/Plugins/DD4hepPlugins/Module.h"
 
 
 namespace Acts {

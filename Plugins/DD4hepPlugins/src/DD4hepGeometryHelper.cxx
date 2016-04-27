@@ -1,4 +1,4 @@
-#include "ACTS/Plugins/DD4hepConverters/DD4hepGeometryHelper.h"
+#include "ACTS/Plugins/DD4hepPlugins/DD4hepGeometryHelper.h"
 // Geometry Module
 #include "ACTS/Volumes/CylinderVolumeBounds.h"
 // Root TGeo

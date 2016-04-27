@@ -6,7 +6,7 @@
 #define ACTS_DD4HEPDETECTORELEMENT_IDETEXTENSION_H 1
 
 //Algebra
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 
 namespace DD4hep {
     namespace Geometry {

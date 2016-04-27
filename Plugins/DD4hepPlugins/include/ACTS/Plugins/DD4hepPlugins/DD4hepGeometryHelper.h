@@ -6,7 +6,7 @@
 #define ACTS_DD4HEPGEOMETRYTOOLS_DD4HEPGEOMETRYHELPER_H
 
 // Core module
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.h"
 // Geometry Module
 #include "ACTS/Volumes/VolumeBounds.h"
 // DD4hep
