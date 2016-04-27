@@ -35,7 +35,11 @@ Acts::ExtrapolationCode Acts::StaticNavigationEngine::resolveBoundary(Acts::ExCe
 Acts::ExtrapolationCode Acts::StaticNavigationEngine::resolveBoundary(Acts::ExCellNeutral& ecNeutral, PropDirection dir) const
 { return resolveBoundaryT<Acts::NeutralParameters>(ecNeutral,dir); }
 
-// chared situation
+// charged situation
 Acts::ExtrapolationCode Acts::StaticNavigationEngine::resolvePosition(Acts::ExCellCharged& ecCharged, PropDirection dir, bool noLoop) const
 { return resolvePositionT<Acts::TrackParameters>(ecCharged,dir,noLoop); }
+
+// neutral situation
+Acts::ExtrapolationCode Acts::StaticNavigationEngine::resolvePosition(Acts::ExCellNeutral& ecNeutral, PropDirection dir, bool noLoop) const
+{ return resolvePositionT<Acts::NeutralParameters>(ecNeutral,dir,noLoop); }
 
