@@ -13,10 +13,8 @@ set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDe
 # default message macros
 set (ACTS_MSG_MACROS_PLUGIN "ACTS/Utilities/detail/DefaultMsgMacros.h" CACHE STRING "default message macros")
 
-# specify compile flags
-add_definitions (-std=c++14)
-add_definitions (-DACTS_PARAMETER_DEFINITIONS_PLUGIN=\"${ACTS_PARAMETER_DEFINITIONS_PLUGIN}\")
-add_definitions (-DACTS_MSG_MACROS_PLUGIN=\"${ACTS_MSG_MACROS_PLUGIN}\")
+# set location of cmake configuration files
+set(ConfigPackageLocation lib/cmake/ACTS)
 
 add_subdirectory (Core)
 add_subdirectory (doc)
@@ -25,7 +23,6 @@ include(GenerateExportHeader)
 generate_export_header (ACTSCore)
 set_property (TARGET ACTSCore PROPERTY VERSION ${ACTS_VERSION})
 
-set(ConfigPackageLocation lib/cmake/ACTS)
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file ("${CMAKE_INSTALL_PREFIX}/${ConfigPackageLocation}/ACTSConfigVersion.cmake" VERSION ${ACTS_VERSION} COMPATIBILITY AnyNewerVersion)
 configure_file(cmake/ACTSConfig.cmake "${CMAKE_INSTALL_PREFIX}/${ConfigPackageLocation}/ACTSConfig.cmake" COPYONLY)
