@@ -1,4 +1,4 @@
-#include "ACTS/Plugins/DD4hepPlugins/TGeoDetectorElement.h"
+#include "ACTS/Plugins/TGeoPlugins/TGeoDetectorElement.h"
 // ACTS
 #include "ACTS/Surfaces/PlaneSurface.h"
 #include "ACTS/Surfaces/TrapezoidBounds.h"
