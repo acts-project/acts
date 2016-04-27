@@ -3,13 +3,13 @@
 ///////////////////////////////////////////////////////////////////
 
 // Core module
-#include "ACTS/Utilities/AlgebraHelper.h"
+#include "ACTS/Utilities/Helpers.h"
 // Geometry module
-#include "ACTS/Tools/ILayerCreator.h"
+#include "ACTS/Tools/LayerCreator.h"
 #include "ACTS/Utilities/BinUtility.h"
 #include "ACTS/Utilities/BinnedArray2D.h"
 #include "ACTS/Utilities/BinnedArray1D.h"
-#include "ACTS/Utilities/BinnedArrayArray.h"
+#include "ACTS/Utilities/BinnedArray.h"
 #include "ACTS/Utilities/ApproachDescriptor.h"
 #include "ACTS/Detector/DetectorElementBase.h"
 #include "ACTS/Layers/CylinderLayer.h"
@@ -26,64 +26,64 @@
 #include "ACTS/Plugins/GenericDetectorPlugins/GenericLayerBuilder.h"
 #include "ACTS/Plugins/GenericDetectorPlugins/GenericDetectorElement.h"
 
-
-DECLARE_TOOL_FACTORY(Acts::GenericLayerBuilder)
-
 // constructor
-Acts::GenericLayerBuilder::GenericLayerBuilder(const std::string& t, const std::string& n, const IInterface* p) :
-  AlgToolBase(t,n,p),
-  m_layerIdentification(n),
-  m_layerCreator(""),
+Acts::GenericLayerBuilder::GenericLayerBuilder(const Acts::GenericLayerBuilder::Config& glbConfig) :
   m_nLayers(nullptr),
   m_cLayers(nullptr),    
-  m_pLayers(nullptr),
-  m_approachSurfaceEnvelope(0.5),
-  m_centralLayerBinPhimultiplier(1),
-  m_centralLayerBinZmultiplier(1),
-  m_centralPassiveLayerBuilder(""),
-  m_posnegLayerBinRmultiplier(1),  
-  m_posnegLayerBinPhimultiplier(1),
-  m_posnegPassiveLayerBuilder("")
+  m_pLayers(nullptr)
 {
+    setConfiguration(glbConfig);
+    //@TODO make checks if needed parameters are set and if vectors have all same size - waiting for message stream
+    
+    
     //MSG_DEBUG( "initialize()" );
     //Tool needs to be initialized
     //   if (!AlgToolBase::initialize()) return StatusCode::FAILURE;
     
     // convert the stream into ordered lists - no checking for dimensions
-    m_posnegModulePositionPhi.reserve(m_posnegLayerPositionsZ.size());
-    m_posnegModuleMaterial.reserve(m_posnegLayerPositionsZ.size());
-    for (size_t idisc = 0; idisc < m_posnegLayerPositionsZ.size(); ++idisc){
+    m_config.posnegModulePositionPhi.reserve(m_config.posnegLayerPositionsZ.size());
+    m_config.posnegModuleMaterial.reserve(m_config.posnegLayerPositionsZ.size());
+    for (size_t idisc = 0; idisc < m_config.posnegLayerPositionsZ.size(); ++idisc){
         // that's for the phi positions
         std::vector< std::vector< double > > discPhiPositions;
-        discPhiPositions.reserve(m_posnegModuleRadii[idisc].size());
+        discPhiPositions.reserve(m_config.posnegModuleRadii[idisc].size());
         // that's for the module material
         std::vector < std::vector< double > > discModuleMaterial;
-        discModuleMaterial.reserve(m_posnegModuleRadii[idisc].size());
+        discModuleMaterial.reserve(m_config.posnegModuleRadii[idisc].size());
         size_t iphistream = 0;
         size_t imstream   = 0;
-        for (size_t iring = 0; iring < m_posnegModuleRadii[idisc].size(); ++iring){
+        for (size_t iring = 0; iring < m_config.posnegModuleRadii[idisc].size(); ++iring){
             // resolve the phi positions
             std::vector< double > ringPhiPositions;
-            size_t nphiModules = size_t(m_posnegModuleInPhi[idisc][iring]);
+            size_t nphiModules = size_t(m_config.posnegModuleInPhi[idisc][iring]);
             for (size_t iphi = 0; iphi < nphiModules; ++iphi, ++iphistream){
-                ringPhiPositions.push_back(m_posnegModulePositionPhiStream[idisc][iphistream]);
+                ringPhiPositions.push_back(m_config.posnegModulePositionPhiStream[idisc][iphistream]);
             }
             discPhiPositions.push_back(ringPhiPositions);
             
-            if (m_posnegModuleMaterialStream.size()){
+            if (m_config.posnegModuleMaterialStream.size()){
                 // resolve the material
                 std::vector< double > ringModuleMaterial;
                 for (size_t im = 0; im < 5; ++im, ++imstream)
-                    ringModuleMaterial.push_back(m_posnegModuleMaterialStream[idisc][imstream]);
+                    ringModuleMaterial.push_back(m_config.posnegModuleMaterialStream[idisc][imstream]);
                 discModuleMaterial.push_back(ringModuleMaterial);
             }
         }
-        m_posnegModulePositionPhi.push_back(discPhiPositions);
+        m_config.posnegModulePositionPhi.push_back(discPhiPositions);
         if (discModuleMaterial.size())
-            m_posnegModuleMaterial.push_back(discModuleMaterial);
+            m_config.posnegModuleMaterial.push_back(discModuleMaterial);
     }
-    return constructLayers();
+    constructLayers();
 }
+
+// configuration
+void Acts::GenericLayerBuilder::setConfiguration(const Acts::GenericLayerBuilder::Config& glbConfig)
+{
+    // @TODO check consistency
+    // copy the configuration
+    m_config = glbConfig;
+} 
+
 
 // destructor
 Acts::GenericLayerBuilder::~GenericLayerBuilder()
@@ -94,7 +94,7 @@ void Acts::GenericLayerBuilder::constructLayers()
     
    // -------------------------------- central layers -----------------------------------------------------------
    // the central layers
-   size_t numcLayers = m_centralLayerRadii.size();
+   size_t numcLayers = m_config.centralLayerRadii.size();
    if (numcLayers){
        //MSG_DEBUG("Configured to build " << numcLayers << " active central layers.");
        m_cLayers = new LayerVector;
@@ -102,24 +102,24 @@ void Acts::GenericLayerBuilder::constructLayers()
        // loop through
        for (size_t icl = 0; icl < numcLayers; ++icl){
            // layer R/Z
-           double layerR      = m_centralLayerRadii[icl];
+           double layerR      = m_config.centralLayerRadii[icl];
            // some screen output
            //MSG_VERBOSE("Build layer " << icl << " with target radius = " << layerR);
            // surface vector 
            std::vector<const Surface*> sVector;
            // z/phi values for this layer
-           std::vector<double> zValues   = m_centralModulePositionZ[icl];
-           std::vector<double> phiValues = m_centralModulePositionPhi[icl];
+           std::vector<double> zValues   = m_config.centralModulePositionZ[icl];
+           std::vector<double> phiValues = m_config.centralModulePositionPhi[icl];
            std::sort(phiValues.begin(),phiValues.end());
            std::sort(zValues.begin(),zValues.end());
            // envelope stagger & cover
-           double layerModuleStaggerZ = m_centralModuleStaggerZ.size() ? m_centralModuleStaggerZ[icl] : 0.;
-           double layerEnvelopeCoverZ = m_centralLayerEnvelopeZ.size() ? m_centralLayerEnvelopeZ[icl] : 0.;
+           double layerModuleStaggerZ = m_config.centralModuleStaggerZ.size() ? m_config.centralModuleStaggerZ[icl] : 0.;
+           double layerEnvelopeCoverZ = m_config.centralLayerEnvelopeZ.size() ? m_config.centralLayerEnvelopeZ[icl] : 0.;
            // module size & tilt
-           double modulePhiTilt   = m_centralModuleTiltPhi[icl]; 
-           double moduleHalfX     = m_centralModuleHalfX[icl];
-           double moduleHalfY     = m_centralModuleHalfY[icl];
-           double moduleThickness = m_centralModuleThickness[icl];
+           double modulePhiTilt   = m_config.centralModuleTiltPhi[icl];
+           double moduleHalfX     = m_config.centralModuleHalfX[icl];
+           double moduleHalfY     = m_config.centralModuleHalfY[icl];
+           double moduleThickness = m_config.centralModuleThickness[icl];
            // create the shared module 
            std::shared_ptr<const PlanarBounds> moduleBounds(new RectangleBounds(moduleHalfX,moduleHalfY));
            // now create the modules and surfaces 
@@ -129,13 +129,13 @@ void Acts::GenericLayerBuilder::constructLayers()
            sVector.reserve(zValues.size()*phiValues.size());
            // create the Module material from input
            std::shared_ptr<const SurfaceMaterial> moduleMaterialPtr = nullptr;
-           if (m_centralModuleMaterial.size()){
+           if (m_config.centralModuleMaterial.size()){
                // get the sensor material - it has to be vectors of 5
-               double x0  = m_centralModuleMaterial[icl][0];
-               double l0  = m_centralModuleMaterial[icl][1];
-               double a   = m_centralModuleMaterial[icl][2];
-               double z   = m_centralModuleMaterial[icl][3];
-               double rho = m_centralModuleMaterial[icl][4];
+               double x0  = m_config.centralModuleMaterial[icl][0];
+               double l0  = m_config.centralModuleMaterial[icl][1];
+               double a   = m_config.centralModuleMaterial[icl][2];
+               double z   = m_config.centralModuleMaterial[icl][3];
+               double rho = m_config.centralModuleMaterial[icl][4];
                // the moduel moaterial from input 
                Material moduleMaterial(x0,l0,a,z,rho);
                MaterialProperties moduleMaterialProperties(moduleMaterial,moduleThickness);
@@ -163,9 +163,9 @@ void Acts::GenericLayerBuilder::constructLayers()
                    // get the moduleTransform
                    std::shared_ptr<Transform3D> moduleTransform(new Transform3D(getTransformFromRotTransl(moduleRotation,moduleCenter)));
                    // stereo angle applied
-                   if (m_centralModuleFrontsideStereo.size() && m_centralModuleFrontsideStereo[icl] != 0.){
+                   if (m_config.centralModuleFrontsideStereo.size() && m_config.centralModuleFrontsideStereo[icl] != 0.){
                        // twist by the stereo angle
-                       double stereo = m_centralModuleFrontsideStereo[icl];
+                       double stereo = m_config.centralModuleFrontsideStereo[icl];
                        (*moduleTransform.get()) *= AngleAxis3D(-stereo, Vector3D::UnitZ());
                    }
                    // count the modules
@@ -178,17 +178,17 @@ void Acts::GenericLayerBuilder::constructLayers()
                    // memory management - we need a detector store to hold them somewhere @TODO detector store facility
                    m_centralModule.push_back(module);
                    // and the backside one (if configured to do so)
-                   if (m_centralModuleBacksideGap.size()){
+                   if (m_config.centralModuleBacksideGap.size()){
                        // ncrease the counter @TODO switch to identifier service
                        ++imodule;
                        // create the module identifier
                        moduleIdentifier = Identifier(Identifier::value_type(imodule));
-                       moduleCenter = moduleCenter + m_centralModuleBacksideGap[icl]*moduleLocalZ;                  
+                       moduleCenter = moduleCenter + m_config.centralModuleBacksideGap[icl]*moduleLocalZ;
                        moduleTransform = std::shared_ptr<Transform3D>(new Transform3D(getTransformFromRotTransl(moduleRotation,moduleCenter)));
                        // apply the stereo
-                       if (m_centralModuleBacksideStereo.size()){
+                       if (m_config.centralModuleBacksideStereo.size()){
                            // twist by the stereo angle
-                           double stereoBackSide = m_centralModuleBacksideStereo[icl];
+                           double stereoBackSide = m_config.centralModuleBacksideStereo[icl];
                            (*moduleTransform.get()) *= AngleAxis3D(-stereoBackSide, Vector3D::UnitZ());
                        }
                        // everything is set for the next module
@@ -204,25 +204,25 @@ void Acts::GenericLayerBuilder::constructLayers()
                }
            }
            
-           size_t phiBins = m_centralLayerBinPhimultiplier*phiValues.size();
-           size_t zBins   = m_centralLayerBinZmultiplier*zValues.size();
+           size_t phiBins = m_config.centralLayerBinPhimultiplier*phiValues.size();
+           size_t zBins   = m_config.centralLayerBinZmultiplier*zValues.size();
            
            // create the surface array - it will also fill the accesible binmember chache if avalable
-           LayerPtr cLayer = m_layerCreator->cylinderLayer(sVector, m_approachSurfaceEnvelope, layerEnvelopeCoverZ, phiBins, zBins);               
+           LayerPtr cLayer = m_config.layerCreator->cylinderLayer(sVector, m_config.approachSurfaceEnvelope, layerEnvelopeCoverZ, phiBins, zBins);
                       
            // the layer is built le't see if it needs material
-           if (m_centralLayerMaterialProperties.size()){
+           if (m_config.centralLayerMaterialProperties.size()){
                // get the material from configuration
-               double lMaterialThickness = m_centralLayerMaterialProperties[icl][0];
-               double lMaterialX0        = m_centralLayerMaterialProperties[icl][1];
-               double lMaterialL0        = m_centralLayerMaterialProperties[icl][2];
-               double lMaterialA         = m_centralLayerMaterialProperties[icl][3];
-               double lMaterialZ         = m_centralLayerMaterialProperties[icl][4];
-               double lMaterialRho       = m_centralLayerMaterialProperties[icl][5];
+               double lMaterialThickness = m_config.centralLayerMaterialProperties[icl][0];
+               double lMaterialX0        = m_config.centralLayerMaterialProperties[icl][1];
+               double lMaterialL0        = m_config.centralLayerMaterialProperties[icl][2];
+               double lMaterialA         = m_config.centralLayerMaterialProperties[icl][3];
+               double lMaterialZ         = m_config.centralLayerMaterialProperties[icl][4];
+               double lMaterialRho       = m_config.centralLayerMaterialProperties[icl][5];
                MaterialProperties layerMaterialProperties(lMaterialThickness,lMaterialX0,lMaterialL0,lMaterialA,lMaterialZ,lMaterialRho);
                std::shared_ptr<const SurfaceMaterial> layerMaterialPtr(new HomogeneousSurfaceMaterial(layerMaterialProperties));   
                // central material
-               if (m_centralLayerMaterialConcentration[icl] == 0.){
+               if (m_config.centralLayerMaterialConcentration[icl] == 0.){
                    // the layer surface is the material surface
                    //MSG_VERBOSE("- and material at central surface at radius =  " << cLayer->surfaceRepresentation().bounds().r() );
                    cLayer->surfaceRepresentation().setSurfaceMaterial(layerMaterialPtr);
@@ -230,7 +230,7 @@ void Acts::GenericLayerBuilder::constructLayers()
                    // approach surface material
                    // get the approach descriptor - at this stage we know that the approachDescriptor exists
                    auto approachSurfaces = cLayer->approachDescriptor()->containedSurfaces();
-                   if (m_centralLayerMaterialConcentration[icl] > 0){
+                   if (m_config.centralLayerMaterialConcentration[icl] > 0){
                        approachSurfaces[1]->setSurfaceMaterial(layerMaterialPtr);
                        //MSG_VERBOSE("- and material at outer approach surfaceat radius =  " << approachSurfaces[1]->bounds().r() );
                    }
@@ -247,7 +247,7 @@ void Acts::GenericLayerBuilder::constructLayers()
     
     // -------------------------------- endcap type layers -----------------------------------------------------------
     // pos/neg layers
-    size_t numpnLayers = m_posnegLayerPositionsZ.size();
+    size_t numpnLayers = m_config.posnegLayerPositionsZ.size();
     if (numpnLayers){
       //MSG_DEBUG("Configured to build 2 * " << numpnLayers << " passive positive/negative side layers.");
       m_pLayers = new LayerVector;
@@ -260,21 +260,21 @@ void Acts::GenericLayerBuilder::constructLayers()
          // some screen output
          //MSG_VERBOSE("- build layers " << (2*ipnl) << " and "<<  (2*ipnl)+1 << " at +/- z = " << m_posnegLayerPositionsZ[ipnl]);
          // layer position update
-         double layerPosZ                          = m_posnegLayerPositionsZ[ipnl];
-         double layerEnvelopeR                     = m_posnegLayerEnvelopeR[ipnl];
-         double layerStaggerR                      = m_posnegModuleStaggerR[ipnl];
+         double layerPosZ                          = m_config.posnegLayerPositionsZ[ipnl];
+         double layerEnvelopeR                     = m_config.posnegLayerEnvelopeR[ipnl];
+         double layerStaggerR                      = m_config.posnegModuleStaggerR[ipnl];
          size_t layerBinsR                         = 0;
          size_t layerBinsPhi                       = 0;
              
          // module positioning update
-         auto layerModuleRadii                     = m_posnegModuleRadii[ipnl];
-         auto layerModulePositionsPhi              = m_posnegModulePositionPhi[ipnl];
-         auto layerModulePhiStagger                = m_posnegMoudleStaggerPhi[ipnl];
+         auto layerModuleRadii                     = m_config.posnegModuleRadii[ipnl];
+         auto layerModulePositionsPhi              = m_config.posnegModulePositionPhi[ipnl];
+         auto layerModulePhiStagger                = m_config.posnegMoudleStaggerPhi[ipnl];
          // module description
-         auto layerModuleMinHalfX                  = m_posnegModuleMinHalfX[ipnl];
-         auto layerModuleMaxHalfX                  = m_posnegModuleMaxHalfX[ipnl];
-         auto layerModuleHalfY                     = m_posnegModuleHalfY[ipnl];
-         auto layerModuleThickness                 = m_posnegModuleThickness[ipnl];
+         auto layerModuleMinHalfX                  = m_config.posnegModuleMinHalfX[ipnl];
+         auto layerModuleMaxHalfX                  = m_config.posnegModuleMaxHalfX[ipnl];
+         auto layerModuleHalfY                     = m_config.posnegModuleHalfY[ipnl];
+         auto layerModuleThickness                 = m_config.posnegModuleThickness[ipnl];
 
          // prepare for the r binning
          std::vector< const Surface* > nsVector;
@@ -305,13 +305,13 @@ void Acts::GenericLayerBuilder::constructLayers()
              //MSG_VERBOSE("Ring - " << ipnR << " - Checking for sensor material to be built for sensors");
              // create the Module material from input
              std::shared_ptr<const SurfaceMaterial> moduleMaterialPtr = nullptr;
-             if (m_posnegModuleMaterial.size()){
+             if (m_config.posnegModuleMaterial.size()){
                  // get the sensor material - it has to be vectors of 5
-                 double x0  = m_posnegModuleMaterial[ipnl][ipnR][0];
-                 double l0  = m_posnegModuleMaterial[ipnl][ipnR][1];
-                 double a   = m_posnegModuleMaterial[ipnl][ipnR][2];
-                 double z   = m_posnegModuleMaterial[ipnl][ipnR][3];
-                 double rho = m_posnegModuleMaterial[ipnl][ipnR][4];
+                 double x0  = m_config.posnegModuleMaterial[ipnl][ipnR][0];
+                 double l0  = m_config.posnegModuleMaterial[ipnl][ipnR][1];
+                 double a   = m_config.posnegModuleMaterial[ipnl][ipnR][2];
+                 double z   = m_config.posnegModuleMaterial[ipnl][ipnR][3];
+                 double rho = m_config.posnegModuleMaterial[ipnl][ipnR][4];
                  // the moduel moaterial from input 
                  Material moduleMaterial(x0,l0,a,z,rho);
                  MaterialProperties moduleMaterialProperties(moduleMaterial,moduleThickness);
@@ -374,20 +374,20 @@ void Acts::GenericLayerBuilder::constructLayers()
                  m_posnegModule.push_back(pmodule);
 
                  // and the backside one (if configured to do so)
-                 if (m_posnegModuleBacksideGap.size()){
+                 if (m_config.posnegModuleBacksideGap.size()){
                      // ncrease the counter @TODO switch to identifier service
                      nModuleIdentifier = Identifier(Identifier::value_type(++imodule));
                      pModuleIdentifier = Identifier(Identifier::value_type(++imodule));
                      // the new centers
-                     nModuleCenter = nModuleCenter + m_posnegModuleBacksideGap[ipnl][ipnR]*nModuleLocalZ;                  
-                     pModuleCenter = pModuleCenter + m_posnegModuleBacksideGap[ipnl][ipnR]*pModuleLocalZ;                  
+                     nModuleCenter = nModuleCenter + m_config.posnegModuleBacksideGap[ipnl][ipnR]*nModuleLocalZ;                  
+                     pModuleCenter = pModuleCenter + m_config.posnegModuleBacksideGap[ipnl][ipnR]*pModuleLocalZ;                  
                      // the new transforms
                      nModuleTransform = std::shared_ptr<Transform3D>(new Transform3D(getTransformFromRotTransl(nModuleRotation,nModuleCenter)));
                      pModuleTransform = std::shared_ptr<Transform3D>(new Transform3D(getTransformFromRotTransl(pModuleRotation,pModuleCenter)));
                      // apply the stereo
-                     if (m_posnegModuleBacksideStereo.size()){
+                     if (m_config.posnegModuleBacksideStereo.size()){
                          // twist by the stereo angle
-                         double stereoBackSide = m_posnegModuleBacksideStereo[ipnl][ipnR];
+                         double stereoBackSide = m_config.posnegModuleBacksideStereo[ipnl][ipnR];
                          (*nModuleTransform.get()) *= AngleAxis3D(-stereoBackSide, Vector3D::UnitZ());
                          (*pModuleTransform.get()) *= AngleAxis3D(-stereoBackSide, Vector3D::UnitZ());
                          
@@ -422,12 +422,12 @@ void Acts::GenericLayerBuilder::constructLayers()
          }
          
          // estimate teh layerBinsR 
-         layerBinsR = layerModuleRadii.size() > 1 ? layerModuleRadii.size()*m_posnegLayerBinRmultiplier : 1;
-         layerBinsPhi *= m_posnegLayerBinPhimultiplier;
+         layerBinsR = layerModuleRadii.size() > 1 ? layerModuleRadii.size()*m_config.posnegLayerBinRmultiplier : 1;
+         layerBinsPhi *= m_config.posnegLayerBinPhimultiplier;
          
          // create teh surface arrays 
-         LayerPtr nLayer = m_layerCreator->discLayer(nsVector, layerEnvelopeR, layerEnvelopeR, m_approachSurfaceEnvelope, layerBinsR, layerBinsPhi);
-         LayerPtr pLayer = m_layerCreator->discLayer(psVector, layerEnvelopeR, layerEnvelopeR, m_approachSurfaceEnvelope, layerBinsR, layerBinsPhi);
+         LayerPtr nLayer = m_config.layerCreator->discLayer(nsVector, layerEnvelopeR, layerEnvelopeR, m_config.approachSurfaceEnvelope, layerBinsR, layerBinsPhi);
+         LayerPtr pLayer = m_config.layerCreator->discLayer(psVector, layerEnvelopeR, layerEnvelopeR, m_config.approachSurfaceEnvelope, layerBinsR, layerBinsPhi);
 
          // create the layer transforms
          Transform3D* nLayerTransform = new Transform3D(Transform3D::Identity());
@@ -436,19 +436,19 @@ void Acts::GenericLayerBuilder::constructLayers()
          pLayerTransform->translation() = Vector3D(0.,0.,layerPosZ);
 
          // the layer is built le't see if it needs material
-         if (m_posnegLayerMaterialProperties.size()){
+         if (m_config.posnegLayerMaterialProperties.size()){
              // get the material from configuration
-             double lMaterialThickness = m_posnegLayerMaterialProperties[ipnl][0];
-             double lMaterialX0        = m_posnegLayerMaterialProperties[ipnl][1];
-             double lMaterialL0        = m_posnegLayerMaterialProperties[ipnl][2];
-             double lMaterialA         = m_posnegLayerMaterialProperties[ipnl][3];
-             double lMaterialZ         = m_posnegLayerMaterialProperties[ipnl][4];
-             double lMaterialRho       = m_posnegLayerMaterialProperties[ipnl][5];
+             double lMaterialThickness = m_config.posnegLayerMaterialProperties[ipnl][0];
+             double lMaterialX0        = m_config.posnegLayerMaterialProperties[ipnl][1];
+             double lMaterialL0        = m_config.posnegLayerMaterialProperties[ipnl][2];
+             double lMaterialA         = m_config.posnegLayerMaterialProperties[ipnl][3];
+             double lMaterialZ         = m_config.posnegLayerMaterialProperties[ipnl][4];
+             double lMaterialRho       = m_config.posnegLayerMaterialProperties[ipnl][5];
              MaterialProperties layerMaterialProperties(lMaterialThickness,lMaterialX0,lMaterialL0,lMaterialA,lMaterialZ,lMaterialRho);
              std::shared_ptr<const SurfaceMaterial> layerMaterialPtr(new HomogeneousSurfaceMaterial(layerMaterialProperties));   
              
              // central material
-             if (m_posnegLayerMaterialConcentration[ipnl] == 0.){
+             if (m_config.posnegLayerMaterialConcentration[ipnl] == 0.){
                  // assign the surface material - the layer surface is the material surface
                  nLayer->surfaceRepresentation().setSurfaceMaterial(layerMaterialPtr);
                  pLayer->surfaceRepresentation().setSurfaceMaterial(layerMaterialPtr);
@@ -457,7 +457,7 @@ void Acts::GenericLayerBuilder::constructLayers()
                  // get the approach descriptor - at this stage we know that the approachDescriptor exists
                  auto nApproachSurfaces = nLayer->approachDescriptor()->containedSurfaces();
                  auto pApproachSurfaces = pLayer->approachDescriptor()->containedSurfaces();
-                 if (m_posnegLayerMaterialConcentration[ipnl] > 0.){
+                 if (m_config.posnegLayerMaterialConcentration[ipnl] > 0.){
                      nApproachSurfaces[0]->setSurfaceMaterial(layerMaterialPtr);
                      pApproachSurfaces[1]->setSurfaceMaterial(layerMaterialPtr);
                  } else {

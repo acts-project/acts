@@ -3,12 +3,12 @@
 ///////////////////////////////////////////////////////////////////
 
 // Acts module
-#include "GenericDetectorElement/GenericDetectorElement.h"
+#include "ACTS/Plugins/GenericDetectorPlugins/GenericDetectorElement.h"
 // Geometry module
-#include "Surfaces/PlanarBounds.h"
-#include "Surfaces/PlaneSurface.h"
-#include "Surfaces/DiscBounds.h"
-#include "Surfaces/DiscSurface.h"
+#include "ACTS/Surfaces/PlanarBounds.h"
+#include "ACTS/Surfaces/PlaneSurface.h"
+#include "ACTS/Surfaces/DiscBounds.h"
+#include "ACTS/Surfaces/DiscSurface.h"
 
 /** Constructor for single sided detector element - bound to a Plane Suface */
 Acts::GenericDetectorElement::GenericDetectorElement(const Identifier& identifier,

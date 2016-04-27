@@ -6,10 +6,10 @@
 #define AGD_GENERICDETECTORELEMENT_GENERICDETECTORELEMENT 1
 
 // Algebra and Identifier
-#include "CoreIdentifier/Identifier.h"
-#include "Algebra/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Identifier.h"
+#include "ACTS/Utilities/Definitions.h"
 // Geometry module
-#include "Detector/DetectorElementBase.h"
+#include "ACTS/Detector/DetectorElementBase.h"
 
 namespace Acts {
 
@@ -51,40 +51,25 @@ namespace Acts {
         /** Identifier */
         Identifier identify() const override;
         
-        /** Return local to global transform*/
-        const Transform3D& transform() const override;
-        
         /** Return local to global transform associated with this identifier*/
-        const Transform3D& transform(const Identifier& id) const override;
-        
-        /** Return surface associated with this detector element*/
-        const Surface& surface () const override;
+        const Transform3D& transform(const Identifier& identifier = Identifier()) const override;
         
         /** Return surface associated with this identifier, which should come from the */
-        const Surface& surface (const Identifier& identifier) const override;
+        const Surface& surface (const Identifier& identifier = Identifier()) const override;
         
         /** Returns the full list of all detection surfaces associated to this detector element */
         const std::vector< std::shared_ptr<const Surface> >& surfaces() const override;
         
-        /** Return the boundaries of the element*/
-        const SurfaceBounds& bounds() const override;
-        
         /** Return the boundaries of the surface associated with this identifier */
-        const SurfaceBounds& bounds(const Identifier& id) const override;
-        
-        /** Return the center of the element*/
-        const Vector3D& center() const override;
+        const SurfaceBounds& bounds(const Identifier& identifier = Identifier()) const override;
         
         /** Return the center of the surface associated with this identifier
          In the case of silicon it returns the same as center()*/
-        const Vector3D& center(const Identifier& identifier) const override;
-        
-        /** Return the normal of the element*/
-        const Vector3D& normal() const override;
+        const Vector3D& center(const Identifier& identifier = Identifier()) const override;
         
         /** Return the normal of the surface associated with this identifier
          In the case of silicon it returns the same as normal()*/
-        const Vector3D& normal(const Identifier& id) const override;
+        const Vector3D& normal(const Identifier& identifier = Identifier()) const override;
          
         /** The maximal thickness of the detector element outside the surface dimension */
         double thickness() const override;
@@ -111,26 +96,16 @@ namespace Acts {
     };
     
     inline Identifier GenericDetectorElement::identify() const { return m_elementIdentifier; }
-    
-    inline const Transform3D& GenericDetectorElement::transform() const { return (*m_elementTransform.get()); }
    
-    inline const Transform3D& GenericDetectorElement::transform(const Identifier& ) const { return transform(); }
-    
-    inline const Surface& GenericDetectorElement::surface () const { return (*m_elementSurface.get()); }
+    inline const Transform3D& GenericDetectorElement::transform(const Identifier&) const { return transform(); }
    
     inline const Surface& GenericDetectorElement::surface (const Identifier& ) const { return surface(); }
    
     inline const std::vector< std::shared_ptr<const Surface> >& GenericDetectorElement::surfaces() const { return m_elementSurfaces; }
-    
-    inline const SurfaceBounds& GenericDetectorElement::bounds() const { return (*m_elementBounds); }
    
     inline const SurfaceBounds& GenericDetectorElement::bounds(const Identifier& ) const { return bounds(); }
-    
-    inline const Vector3D& GenericDetectorElement::center() const { return m_elementCenter; }
    
     inline const Vector3D& GenericDetectorElement::center(const Identifier& ) const { return center(); }
-   
-    inline const Vector3D& GenericDetectorElement::normal() const { return m_elementNormal; }
    
     inline const Vector3D& GenericDetectorElement::normal(const Identifier&) const { return normal(); }
 
