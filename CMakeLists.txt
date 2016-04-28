@@ -18,6 +18,7 @@ set(ConfigPackageLocation lib/cmake/ACTS)
 
 add_subdirectory (Core)
 add_subdirectory (doc)
+add_subdirectory (Plugins)
 
 include(GenerateExportHeader)
 generate_export_header (ACTSCore)

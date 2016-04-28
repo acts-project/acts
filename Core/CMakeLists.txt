@@ -5,6 +5,9 @@ if (NOT DEFINED EIGEN_INCLUDE_DIR)
   set it using 'cmake <path/to/ACTS> -DEIGEN_INCLUDE_DIR=path/to/Eigen")
 endif()
 
+# we need boost
+find_package(Boost)
+
 # get list of all source files
 file (GLOB src_files "src/*/*.cxx")
 
@@ -13,6 +16,7 @@ add_library(ACTSCore SHARED ${src_files})
 
 # setup include directories
 target_include_directories(ACTSCore PUBLIC ${EIGEN_INCLUDE_DIR})
+target_include_directories(ACTSCore PUBLIC ${BOOST_INCLUDE_DIR})
 target_include_directories(ACTSCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
 
 # set compiler flags
@@ -22,7 +26,7 @@ target_compile_definitions(ACTSCore PUBLIC -DACTS_MSG_MACROS_PLUGIN="${ACTS_MSG_
 
 # set installation directories
 install (TARGETS ACTSCore EXPORT ACTSTargets
-	 LIBRARY DESTINATION lib #INCLUDES DESTINATION include ${EIGEN_INCLUDE_DIR}
+	 LIBRARY DESTINATION lib
 	 RUNTIME DESTINATION bin)
 
 install (DIRECTORY include/ACTS DESTINATION include)
