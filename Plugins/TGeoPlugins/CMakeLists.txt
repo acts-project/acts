@@ -1,5 +1,5 @@
 # we need root
-find_package(ROOT)
+find_package(ROOT COMPONENTS Geom)
 
 # get list of all source files
 file(GLOB src_files "src/*.cxx")
@@ -13,6 +13,7 @@ target_include_directories(ACTSTGeoPlugin PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRE
 
 # setup linker dependencies
 target_link_libraries(ACTSTGeoPlugin PUBLIC ACTSCore)
+target_link_libraries(ACTSTGeoPlugin PUBLIC Geom)
 
 # set installation directories
 install(TARGETS ACTSTGeoPlugin EXPORT ACTSTargets
