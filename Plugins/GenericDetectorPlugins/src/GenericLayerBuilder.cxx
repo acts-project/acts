@@ -27,12 +27,12 @@
 #include "ACTS/Plugins/GenericDetectorPlugins/GenericDetectorElement.h"
 
 // constructor
-Acts::GenericLayerBuilder::GenericLayerBuilder(const Acts::GenericLayerBuilder::Config& glbConfig) :
+Acts::GenericLayerBuilder::GenericLayerBuilder(const Acts::GenericLayerBuilder::Config glbConfig) :
   m_nLayers(nullptr),
   m_cLayers(nullptr),    
   m_pLayers(nullptr)
 {
-    setConfiguration(glbConfig);
+    setConfiguration(std::move(glbConfig));
     //@TODO make checks if needed parameters are set and if vectors have all same size - waiting for message stream
     
     
@@ -77,11 +77,11 @@ Acts::GenericLayerBuilder::GenericLayerBuilder(const Acts::GenericLayerBuilder::
 }
 
 // configuration
-void Acts::GenericLayerBuilder::setConfiguration(const Acts::GenericLayerBuilder::Config& glbConfig)
+void Acts::GenericLayerBuilder::setConfiguration(const Acts::GenericLayerBuilder::Config glbConfig)
 {
     // @TODO check consistency
     // copy the configuration
-    m_config = glbConfig;
+    m_config = std::move(glbConfig);
 } 
 
 

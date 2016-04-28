@@ -51,7 +51,7 @@ namespace Acts {
         /* access segmentation **/
         virtual const DD4hep::Geometry::Segmentation segmentation() const = 0;
         /* possibility to hand over supporting structure of a layer*/
-        virtual void setSupportStructure(const DD4hep::Geometry::DetElement& support) = 0;
+        virtual void setSupportStructure(const DD4hep::Geometry::DetElement support) = 0;
         /* access supporting structure */
         virtual const DD4hep::Geometry::DetElement& supportStructure() const = 0;
         /* possibility to set contained sensitive DetectorModules by a layer*/

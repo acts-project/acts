@@ -42,7 +42,7 @@ namespace Acts {
         /* access segmentation **/
         const DD4hep::Geometry::Segmentation segmentation() const override;
         /* possibility to hand over supporting structure of a layer*/
-        void setSupportStructure(const DD4hep::Geometry::DetElement& support) override;
+        void setSupportStructure(const DD4hep::Geometry::DetElement support) override;
         /* access supporting structure */
         const DD4hep::Geometry::DetElement& supportStructure() const override;
         /* possibility to set contained sensitive DetectorModules by a layer*/
@@ -60,7 +60,7 @@ namespace Acts {
 }
 
 inline void Acts::DetExtension::setShape(Acts::ShapeType type) {
-    m_shape = type;
+    m_shape = std::move(type);
 }
 
 inline Acts::ShapeType Acts::DetExtension::shape() const {
@@ -68,15 +68,15 @@ inline Acts::ShapeType Acts::DetExtension::shape() const {
 }
 
 inline void Acts::DetExtension::setSegmentation(const DD4hep::Geometry::Segmentation seg) {
-    m_segmentation = seg;
+    m_segmentation = std::move(seg);
 }
 
 inline const DD4hep::Geometry::Segmentation Acts::DetExtension::segmentation() const {
     return m_segmentation;
 }
 
-inline void Acts::DetExtension::setSupportStructure(const DD4hep::Geometry::DetElement& support) {
-    m_supportStructure = support;
+inline void Acts::DetExtension::setSupportStructure(const DD4hep::Geometry::DetElement support) {
+    m_supportStructure = std::move(support);
 }
 
 inline const DD4hep::Geometry::DetElement& Acts::DetExtension::supportStructure() const {
@@ -84,7 +84,7 @@ inline const DD4hep::Geometry::DetElement& Acts::DetExtension::supportStructure(
 }
 
 inline void Acts::DetExtension::setModules(std::vector<Acts::Module> mod) {
-    m_modules = mod;
+    m_modules = std::move(mod);
 }
 
 inline std::vector<Acts::Module> Acts::DetExtension::modules() const {

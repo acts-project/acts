@@ -26,7 +26,7 @@ namespace Acts {
     public:
         
         /** Constructor */
-        DD4hepDetElement(const DD4hep::Geometry::DetElement& detElement, const DD4hep::Geometry::Segmentation& segmentation, std::shared_ptr<const Acts::Transform3D> motherTransform=nullptr);
+        DD4hepDetElement(const DD4hep::Geometry::DetElement detElement, const DD4hep::Geometry::Segmentation segmentation, std::shared_ptr<const Acts::Transform3D> motherTransform=nullptr);
         /** Desctructor */
         virtual ~DD4hepDetElement();
         

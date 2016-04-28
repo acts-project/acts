@@ -51,13 +51,13 @@ namespace Acts {
         };
         
         /** Constructor */
-        DD4hepCylinderGeometryBuilder(const Config& dgbConfig);
+        DD4hepCylinderGeometryBuilder(const Config dgbConfig);
         
         /** Destructor */
         virtual ~DD4hepCylinderGeometryBuilder();
         
         /** setting the builders and helpers with the configuration object*/
-        void setConfiguration(const Config& dgbConfig);
+        void setConfiguration(const Config dgbConfig);
         
         /** get the configuration object */
         Config getConfiguration() const;

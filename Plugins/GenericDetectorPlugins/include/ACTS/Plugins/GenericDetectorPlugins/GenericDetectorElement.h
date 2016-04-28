@@ -32,14 +32,14 @@ namespace Acts {
       public:
         
          /** Constructor for single sided detector element - bound to a Plane Surface  */
-         GenericDetectorElement(const Identifier& identifier,
+         GenericDetectorElement(const Identifier identifier,
                                 std::shared_ptr<Transform3D> transform, 
                                 std::shared_ptr<const PlanarBounds> pBounds,
                                 double thickness,
                                 std::shared_ptr<const SurfaceMaterial> material = nullptr);
 
         /** Constructor for single sided detector element - bound to a Plane Surface / Disc Surface */
-        GenericDetectorElement(const Identifier& identifier,
+        GenericDetectorElement(const Identifier identifier,
                                std::shared_ptr<Transform3D> transform, 
                                std::shared_ptr<const DiscBounds> dBounds,
                                double thickness,

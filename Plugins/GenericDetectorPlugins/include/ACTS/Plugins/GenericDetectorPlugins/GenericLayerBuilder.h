@@ -104,7 +104,7 @@ namespace Acts {
             
         };
         /** constructor */
-        GenericLayerBuilder(const Acts::GenericLayerBuilder::Config& glbConfig);
+        GenericLayerBuilder(const Acts::GenericLayerBuilder::Config glbConfig);
         
         /** destructor */
         ~GenericLayerBuilder();
@@ -122,7 +122,7 @@ namespace Acts {
         const std::string& identification() const override { return m_config.layerIdentification; }
         
         /** set the configuration object */
-        void setConfiguration(const Config& glbConfig);
+        void setConfiguration(const Config glbConfig);
         /** get the configuration object */
         Config getConfiguration() const;
 

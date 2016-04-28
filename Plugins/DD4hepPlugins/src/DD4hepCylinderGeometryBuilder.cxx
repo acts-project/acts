@@ -6,18 +6,18 @@
 #include "ACTS/Plugins/DD4hepPlugins/DD4hepGeometryHelper.h"
 #include "ACTS/Plugins/DD4hepPlugins/DD4hepLayerHelper.h"
 
-Acts::DD4hepCylinderGeometryBuilder::DD4hepCylinderGeometryBuilder(const Config& dgbConfig) :
+Acts::DD4hepCylinderGeometryBuilder::DD4hepCylinderGeometryBuilder(const Config dgbConfig) :
 m_layerHelper(new Acts::DD4hepLayerHelper())
 {
-    setConfiguration(dgbConfig);
+    setConfiguration(std::move(dgbConfig));
 }
 
 // configuration
-void Acts::DD4hepCylinderGeometryBuilder::setConfiguration(const Acts::DD4hepCylinderGeometryBuilder::Config& dgbConfig)
+void Acts::DD4hepCylinderGeometryBuilder::setConfiguration(const Acts::DD4hepCylinderGeometryBuilder::Config dgbConfig)
 {
     // @TODO check consistency
     // copy the configuration
-    m_config = dgbConfig;
+    m_config = std::move(dgbConfig);
 }
 
 Acts::DD4hepCylinderGeometryBuilder::~DD4hepCylinderGeometryBuilder()
