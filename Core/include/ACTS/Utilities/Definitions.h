@@ -1,5 +1,5 @@
-#ifndef ACTS_ALGEBRADEFINITIONS_H
-#define ACTS_ALGEBRADEFINITIONS_H
+#ifndef ACTS_Definitions_H
+#define ACTS_Definitions_H
 
 // API addons
 #define EIGEN_MATRIXBASE_PLUGIN "ACTS/Utilities/detail/MatrixBasePlugin.h"
