@@ -10,6 +10,10 @@
 #include "ACTS/Surfaces/CylinderSurface.h"
 #include "ACTS/Surfaces/StraightLineSurface.h"
 
+#ifndef __USE_GNU
+void sincos(double x, double* s, double* c) { (*s)=std::sin(x); (*c)=std::cos(x); }
+#endif
+
 /////////////////////////////////////////////////////////////////////////////////
 // Common transformation from local to global system coordinates for all surfaces
 // for charged track parameters
