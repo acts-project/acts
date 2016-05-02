@@ -20,16 +20,18 @@ namespace Acts {
     class ParticleProperties {
       public :
           /** constructor */ 
-          ParticleProperties(const Vector3D& momentum, int pID) :
+          ParticleProperties(const Vector3D& momentum, int pID, unsigned int barcode) :
             m_momentum(momentum),
-            m_pID(pID)
-            {}
+            m_pID(pID),
+            m_barcode(barcode)
+           {}
         
            /** constructor */ 
            ParticleProperties(const ParticleProperties& pProperties) :
              m_momentum(pProperties.m_momentum),
-             m_pID(pProperties.m_pID)
-             {}
+             m_pID(pProperties.m_pID),
+             m_barcode(pProperties.m_barcode)
+           {}
         
           /** destructor */
           ~ParticleProperties()
@@ -40,7 +42,8 @@ namespace Acts {
           {
               if (this != &pProperties){
                   m_momentum = pProperties.m_momentum;
-                  m_pID = pProperties.m_pID;
+                  m_pID      = pProperties.m_pID;
+                  m_barcode  = pProperties.m_barcode; 
               }
               return (*this);      
           }        
@@ -50,10 +53,14 @@ namespace Acts {
           
           /** return the particle ID */
           int particleID() const { return m_pID; } 
+          
+          /** return the particle barcode */
+          unsigned int barcode() const { return m_barcode; }
 
       private: 
-          Vector3D  m_momentum;
-          int       m_pID;
+          Vector3D          m_momentum;
+          int               m_pID;
+          unsigned int      m_barcode;
       };
       
       

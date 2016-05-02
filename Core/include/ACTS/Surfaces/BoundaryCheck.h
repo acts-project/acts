@@ -5,10 +5,11 @@
 #ifndef ACTS_SURFACES_BOUNDARYCHECK_H
 #define ACTS_SURFACES_BOUNDARYCHECK_H 1
 
-#include <cmath>
-
 #include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Utilities/ParameterDefinitions.h"
+// STD
+#include <cmath>
+#include <vector>
 
 namespace Acts {
 

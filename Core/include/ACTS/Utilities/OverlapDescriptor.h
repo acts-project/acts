@@ -7,7 +7,9 @@
 
 // Core module
 #include "ACTS/Utilities/Intersection.h"
-#include "Definitions.h"
+#include "ACTS/Utilities/Definitions.h"
+// STD
+#include <vector>
 
 namespace Acts {
 

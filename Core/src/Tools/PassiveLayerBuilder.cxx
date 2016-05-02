@@ -22,6 +22,13 @@ Acts::PassiveLayerBuilder::PassiveLayerBuilder(const PassiveLayerBuilder::Config
     setConfiguration(plConfig);
 }
 
+// configuration method
+void Acts::PassiveLayerBuilder::setConfiguration(const PassiveLayerBuilder::Config& plConfig)
+{
+    //!< @TODO add configuration check
+    m_config = plConfig;
+}
+
 bool Acts::PassiveLayerBuilder::constructLayers() const
 {
     

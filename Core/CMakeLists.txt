@@ -20,7 +20,7 @@ target_include_directories(ACTSCore PUBLIC ${BOOST_INCLUDE_DIR})
 target_include_directories(ACTSCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
 
 # set compiler flags
-target_compile_options(ACTSCore PUBLIC -std=c++14)
+target_compile_options(ACTSCore PUBLIC -std=c++1y)
 target_compile_definitions(ACTSCore PUBLIC -DACTS_PARAMETER_DEFINITIONS_PLUGIN="${ACTS_PARAMETER_DEFINITIONS_PLUGIN}")
 target_compile_definitions(ACTSCore PUBLIC -DACTS_MSG_MACROS_PLUGIN="${ACTS_MSG_MACROS_PLUGIN}")
 

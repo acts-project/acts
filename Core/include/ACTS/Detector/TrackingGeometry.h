@@ -7,7 +7,9 @@
 
 #include "ACTS/Utilities/GeometrySignature.h"
 #include "ACTS/Utilities/Definitions.h"
+// STD
 #include <map>
+#include <vector>
 #include <memory>
 
 namespace Acts {
