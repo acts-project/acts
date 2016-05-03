@@ -5,8 +5,12 @@
 #ifndef ACTS_EVENTUTILS_PARTICLEDEFINITIONS_H
 #define ACTS_EVENTUTILS_PARTICLEDEFINITIONS_H
 
+
+// ACTS
+#include "ACTS/Utilities/Definitions.h"
 // STL
 #include <vector>
+
 
 // define the particle hypotheses
 #define PARTICLETYPES 11

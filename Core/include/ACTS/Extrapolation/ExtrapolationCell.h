@@ -9,7 +9,7 @@
 #include "ACTS/Extrapolation/MaterialUpdateMode.h"
 #include "ACTS/EventData/TransportJacobian.h"
 #include "ACTS/EventData/ParticleDefinitions.h"
-#include "ACTS/EventData/ParticleProperties.h"
+#include "ACTS/EventData/ParticleDefinitions.h"
 #include "ACTS/Material/MaterialProperties.h"
 #include "ACTS/Utilities/GeometrySignature.h"
 #include "ACTS/Utilities/Definitions.h"
