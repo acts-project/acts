@@ -34,6 +34,9 @@ set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDe
 # default message macros
 set (ACTS_MSG_MACROS_PLUGIN "ACTS/Utilities/detail/DefaultMsgMacros.hpp" CACHE FILEPATH "default message macros")
 
+# finding boost on lxplus does not work with standard boost-cmake look up
+set(Boost_NO_BOOST_CMAKE ON CACHE BOOL "disable boost-cmake find mechanism")
+
 # delegate
 add_subdirectory (Core)
 add_subdirectory (doc)
