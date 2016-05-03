@@ -71,7 +71,7 @@ namespace Acts {
             std::vector< std::vector<double>  >                 posnegModuleInPhi;               //!< used to fill the position-phi
             std::vector< std::vector<double>  >                 posnegModulePositionPhiStream;   //!< used to fill the position-phi
             std::vector< std::vector< std::vector<double> > >   posnegModulePositionPhi;         //!< this one is being filled by the two before
-            std::vector< std::vector<double> >                  posnegMoudleStaggerPhi;
+            std::vector< std::vector<double> >                  posnegModuleStaggerPhi;
             std::vector< std::vector<double> >                  posnegModuleMinHalfX;
             std::vector< std::vector<double> >                  posnegModuleMaxHalfX;
             std::vector< std::vector<double> >                  posnegModuleHalfY;
