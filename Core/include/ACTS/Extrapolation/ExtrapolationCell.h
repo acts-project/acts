@@ -9,7 +9,6 @@
 #include "ACTS/Extrapolation/MaterialUpdateMode.h"
 #include "ACTS/EventData/TransportJacobian.h"
 #include "ACTS/EventData/ParticleDefinitions.h"
-#include "ACTS/EventData/ParticleDefinitions.h"
 #include "ACTS/Material/MaterialProperties.h"
 #include "ACTS/Utilities/GeometrySignature.h"
 #include "ACTS/Utilities/Definitions.h"
@@ -229,7 +228,7 @@ namespace Acts {
             double                                  materialLimitX0;        //!< given material limit in X0
             double                                  materialL0;             //!< collected material so far in units of L0
             double                                  materialLimitL0;        //!< given material limit in L0
-            int                                     materialProcess;        //!< the material process to be generated
+            process_type                            materialProcess;        //!< the material process to be generated
                                                                               
             ParticleType                            particleType;            //!< what particle hypothesis to be used, default : pion
             MagneticFieldProperties                 mFieldMode;             //!< what magnetic field mode to be used, default : fullField

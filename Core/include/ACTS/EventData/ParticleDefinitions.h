@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////
-// ParticleType.h, ACTS project
+// ParticleDefinitions.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 #ifndef ACTS_EVENTUTILS_PARTICLEDEFINITIONS_H
@@ -11,6 +11,9 @@
 // STL
 #include <vector>
 
+// barcodes
+typedef unsigned long barcode_type;
+typedef int           process_type;
 
 // define the particle hypotheses
 #define PARTICLETYPES 11
@@ -115,7 +118,7 @@ namespace Acts {
   class ParticleProperties {
     public :
         /** constructor */ 
-        ParticleProperties(const Vector3D& momentum, int pID, unsigned int barcode=0) :
+        ParticleProperties(const Vector3D& momentum, int pID, barcode_type barcode=0) :
           m_momentum(momentum),
           m_pID(pID),
           m_barcode(barcode)
@@ -150,12 +153,12 @@ namespace Acts {
         int particleID() const { return m_pID; } 
         
         /** return the particle barcode */
-        unsigned int barcode() const { return m_barcode; }
+        barcode_type barcode() const { return m_barcode; }
   
     private: 
         Vector3D          m_momentum;
         int               m_pID;
-        unsigned int      m_barcode;
+        barcode_type      m_barcode;
     };
   
   
