@@ -6,7 +6,7 @@
 #define ACTS_EXTRAPOLATIONUTILS_MATERIALINTERACTION_H 1
 
 #include "ACTS/Material/Material.h"
-#include "ACTS/EventData/ParticleHypothesis.h"
+#include "ACTS/EventData/ParticleDefinitions.h"
 #include "ACTS/Utilities/Definitions.h"
 
 namespace Acts {
@@ -28,12 +28,12 @@ namespace Acts {
     ~MaterialInteraction() {}
     
     /** dE/dl ionization energy loss per path unit */
-    double dEdl_ionization(double p, const Material* mat, ParticleHypothesis particle, double& sigma, double& kazL) const;   
+    double dEdl_ionization(double p, const Material* mat, ParticleType particle, double& sigma, double& kazL) const;   
     /** ionization energy loss from PDG */
-    double PDG_energyLoss_ionization(double p, const Acts::Material* mat, Acts::ParticleHypothesis particle, double& sigma, double& kazL, double path) const;
+    double PDG_energyLoss_ionization(double p, const Acts::Material* mat, Acts::ParticleType particle, double& sigma, double& kazL, double path) const;
 
     /** dE/dl radiation energy loss per path unit */
-    double dEdl_radiation(double p, const Material* mat, ParticleHypothesis particle, double& sigma) const;    
+    double dEdl_radiation(double p, const Material* mat, ParticleType particle, double& sigma) const;    
   
     /** multiple scattering as function of dInX0 */
     double sigmaMS(double dInX0, double p, double beta) const;    
@@ -45,7 +45,7 @@ namespace Acts {
   };
  
   /** dE/dl ionization energy loss per path unit */
-  inline double Acts::MaterialInteraction::dEdl_ionization(double p, const Acts::Material* mat, Acts::ParticleHypothesis particle, double& sigma, double& kazL) const {
+  inline double Acts::MaterialInteraction::dEdl_ionization(double p, const Acts::Material* mat, Acts::ParticleType particle, double& sigma, double& kazL) const {
   
     //
     // calculate mean ionization that is pathlentgh INDEPENDENT 
@@ -117,7 +117,7 @@ namespace Acts {
   }
 
   /** dE/dl radiation energy loss per path unit */
-  inline double Acts::MaterialInteraction::dEdl_radiation(double p, const Acts::Material* mat, Acts::ParticleHypothesis particle, double& sigma) const{
+  inline double Acts::MaterialInteraction::dEdl_radiation(double p, const Acts::Material* mat, Acts::ParticleType particle, double& sigma) const{
     sigma = 0.;
     if ( mat->x0()==0. ) return 0.;    
 
@@ -162,7 +162,7 @@ namespace Acts {
 
   /** Ionization energy loss from the PDG */ 
   /** PDG formula 32.11 for MOP value from http://http://pdg.lbl.gov/2014/reviews/rpp2014-rev-passage-particles-matter.pdf */
-  inline double Acts::MaterialInteraction::PDG_energyLoss_ionization(double p, const Acts::Material* mat, Acts::ParticleHypothesis particle, double& sigma, double& kazL, double path) const {
+  inline double Acts::MaterialInteraction::PDG_energyLoss_ionization(double p, const Acts::Material* mat, Acts::ParticleType particle, double& sigma, double& kazL, double path) const {
     // kinetic variables
     // and the electron mass in MeV
 	 

@@ -5,7 +5,7 @@
 #ifndef ACTS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H
 #define ACTS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H 1
 
-#include "ACTS/EventData/ParticleHypothesis.h"
+#include "ACTS/EventData/ParticleDefinitions.h"
 
 namespace Acts {
 
@@ -27,7 +27,7 @@ namespace Acts {
       virtual double sigmaSquare(const MaterialProperties& mat,
                                  double p,
                                  double pathcorrection,
-                                 ParticleHypothesis particle=pion,
+                                 ParticleType particle=pion,
                                  double deltaE=0.) const = 0;  
   };
 

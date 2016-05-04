@@ -8,8 +8,8 @@
 // Extrapolation moudle
 #include "ACTS/Extrapolation/MaterialUpdateMode.h"
 #include "ACTS/EventData/TransportJacobian.h"
-#include "ACTS/EventData/ParticleHypothesis.h"
-#include "ACTS/EventData/ParticleProperties.h"
+#include "ACTS/EventData/ParticleDefinitions.h"
+#include "ACTS/EventData/ParticleDefinitions.h"
 #include "ACTS/Material/MaterialProperties.h"
 #include "ACTS/Utilities/GeometrySignature.h"
 #include "ACTS/Utilities/Definitions.h"
@@ -231,7 +231,7 @@ namespace Acts {
             double                                  materialLimitL0;        //!< given material limit in L0
             int                                     materialProcess;        //!< the material process to be generated
                                                                               
-            ParticleHypothesis                      pHypothesis;            //!< what particle hypothesis to be used, default : pion
+            ParticleType                            particleType;            //!< what particle hypothesis to be used, default : pion
             MagneticFieldProperties                 mFieldMode;             //!< what magnetic field mode to be used, default : fullField
             MaterialUpdateMode                      materialUpdateMode;     //!< how to deal with the material effect, default: addNoise
             bool                                    navigationCurvilinear;  //!< stay in curvilinear parameters where possible, default : true
@@ -280,7 +280,7 @@ namespace Acts {
             materialL0(0.),
             materialLimitL0(-1.),
             materialProcess(0),
-            pHypothesis(Acts::pion),
+            particleType(Acts::pion),
             mFieldMode(Acts::MagneticFieldProperties(Acts::FullField)),
             materialUpdateMode(Acts::addNoise),
             navigationCurvilinear(true),
@@ -352,9 +352,9 @@ namespace Acts {
           /** memory cleanup */
           void emptyGarbageBin(const ExtrapolationCode& ec);
 
-	      /** set ParticleHypothesis */
-	      void setParticleHypothesis(const ParticleHypothesis& hypo) {
-	        pHypothesis = hypo;
+	      /** set ParticleType */
+	      void setParticleType(const ParticleType& hypo) {
+	        particleType = hypo;
 	      }
 
 	      /** estimate the radial direction of the extrapolation cell */
