@@ -3,15 +3,11 @@ template <class T> bool Acts::RungeKuttaEngine::propagateRungeKuttaT(Extrapolati
                                                                      const T& parametersT,
                                                                      const Surface& dSurface) const 
 {
-  
-
-  // the runge kutta utils 
-  RungeKuttaUtils utils;
 
   EX_MSG_VERBOSE(eCell.navigationStep, "propagate", "<T> ", "propagateRungeKuttaT called.");             
   
   // bail out if you can't transform into global frame 
-  if (!utils.transformLocalToGlobal(pCache.useJacobian,parametersT,pCache.pVector)) return false;
+  if (!m_rkUtils.transformLocalToGlobal(pCache.useJacobian,parametersT,pCache.pVector)) return false;
 
   // get the surface transform 
   const Transform3D& sTransform = dSurface.transform();  
@@ -84,7 +80,7 @@ template <class T> bool Acts::RungeKuttaEngine::propagateRungeKuttaT(Extrapolati
   bool uJ = pCache.useJacobian; if (pCache.returnCurvilinear) uJ = false;
 
   // create the return track parameters from Global to Local
-  utils.transformGlobalToLocal(&dSurface,uJ,pCache.pVector,pCache.parameters,pCache.jacobian);
+  m_rkUtils.transformGlobalToLocal(&dSurface,uJ,pCache.pVector,pCache.parameters,pCache.jacobian);
 
   if (pCache.boundaryCheck) {
       // create a local position and check for inside
@@ -94,14 +90,14 @@ template <class T> bool Acts::RungeKuttaEngine::propagateRungeKuttaT(Extrapolati
 
   // Transformation to curvilinear presentation
   if (pCache.returnCurvilinear)  
-      utils.transformGlobalToCurvilinear(pCache.useJacobian,
+      m_rkUtils.transformGlobalToCurvilinear(pCache.useJacobian,
                                          pCache.pVector,
                                          pCache.parameters,
                                          pCache.jacobian);
 
   if (pCache.useJacobian){
       // create a new covariance matrix using the utils 
-      pCache.covariance = utils.newCovarianceMatrix(pCache.jacobian,*parametersT.covariance());
+      pCache.covariance = m_rkUtils.newCovarianceMatrix(pCache.jacobian,*parametersT.covariance());
       auto& cov = (*pCache.covariance);
       // check for positive finite elements
       if (cov(0,0)<=0. || cov(1,1)<=0. || cov(2,2)<=0. || cov(3,3)<=0. || cov(4,4)<=0.) {

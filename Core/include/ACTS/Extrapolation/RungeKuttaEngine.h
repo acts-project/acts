@@ -201,7 +201,9 @@ namespace Acts {
       Config getConfiguration() const;                                    
     
     protected:
-      Config    m_config;  //!< configuration class
+      Config            m_config;  //!< configuration class
+      
+      RungeKuttaUtils   m_rkUtils; //!< RungeKuttaUtils class
       
     private:
       /** Templated RungeKutta propagation method - charged/neutral */
