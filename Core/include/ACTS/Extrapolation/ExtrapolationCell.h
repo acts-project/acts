@@ -228,7 +228,7 @@ namespace Acts {
             double                                  materialL0;             //!< collected material so far in units of L0
             double                                  materialLimitL0;        //!< given material limit in L0
             
-            process_type                            particleProcess;        //!< the material process to be generated
+            process_type                            interactionProcess;        //!< the material process to be generated
             ParticleType                            particleType;           //!< what particle hypothesis to be used, default : pion
             MaterialUpdateMode                      materialUpdateMode;     //!< how to deal with the material effect, default: addNoise
             bool                                    navigationCurvilinear;  //!< stay in curvilinear parameters where possible, default : true
@@ -276,7 +276,7 @@ namespace Acts {
             materialLimitX0(-1.),
             materialL0(0.),
             materialLimitL0(-1.),
-            particleProcess(0),
+            interactionProcess(0),
             particleType(Acts::pion),
             materialUpdateMode(Acts::addNoise),
             navigationCurvilinear(true),
