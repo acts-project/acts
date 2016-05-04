@@ -82,7 +82,7 @@ namespace Acts {
       virtual double minDistance(const Vector2D& pos) const override;
 
       /**This method returns the coordinates of vertices */
-      const std::vector< Vector2D > vertices() const;
+      const std::vector< Vector2D > vertices() const override;
 
       /**This method returns the maximal extension on the local plane, i.e. @f$s\sqrt{h_{\phi}^2 + h_{\eta}^2}\f$*/
       virtual double r() const override;

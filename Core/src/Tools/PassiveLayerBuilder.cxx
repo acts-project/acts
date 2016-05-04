@@ -14,10 +14,10 @@
 // constructor
 Acts::PassiveLayerBuilder::PassiveLayerBuilder(const PassiveLayerBuilder::Config& plConfig) :
   m_config(),
-  m_constructionFlag(false),
   m_nLayers(nullptr),
   m_cLayers(nullptr),    
-  m_pLayers(nullptr)
+  m_pLayers(nullptr),
+  m_constructionFlag(false)
 {
     setConfiguration(plConfig);
 }

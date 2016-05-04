@@ -46,7 +46,7 @@ namespace Acts {
       { return LayerPtr(new ConeLayer(cla, shift)); }  
       
       /** Clone with a shift - only cloning that is allowed */
-      LayerPtr cloneWithShift(const Transform3D& shift) const 
+      LayerPtr cloneWithShift(const Transform3D& shift) const override
       { return ConeLayer::create(*this,shift); }
       
       /** Copy constructor of ConeLayer - forbidden */

@@ -50,10 +50,10 @@ namespace Acts {
       HomogeneousSurfaceMaterial& operator*=(double scale) override;
 
       /**Return method for full material description of the Layer - local coordinates*/
-      virtual const MaterialProperties* material(const Vector2D& lp) const;
+      virtual const MaterialProperties* material(const Vector2D& lp) const override;
       
       /**Return method for full material description of the Layer - global coordinates*/
-      virtual const MaterialProperties* material(const Vector3D& gp) const;
+      virtual const MaterialProperties* material(const Vector3D& gp) const override;
 
       /**Direct access via bins to the MaterialProperties */
       virtual const MaterialProperties* material(size_t ib0, size_t ib1) const override;

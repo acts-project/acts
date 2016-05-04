@@ -42,9 +42,9 @@ namespace Acts {
             std::string                               postfix;               //!< output postfix
             
             Config() :
-              trackingGeometry(nullptr),
               propagationEngine(nullptr),
               materialEffectsEngine(nullptr),
+              trackingGeometry(nullptr),
               prefix("[SN] - "),
               postfix(" - ")
             {}             

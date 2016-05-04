@@ -56,7 +56,7 @@ namespace Acts {
     DiscTrapezoidalBounds& operator=(const DiscTrapezoidalBounds& disctrbo);
 
     /** Equality operator*/
-    bool operator==(const SurfaceBounds& sbo) const;
+    bool operator==(const SurfaceBounds& sbo) const override;
 
     /** Virtual constructor*/
     virtual DiscTrapezoidalBounds* clone() const override;

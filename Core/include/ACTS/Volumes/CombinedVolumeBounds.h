@@ -55,7 +55,7 @@ namespace Acts {
     bool inside(const Vector3D&, double tol=0.) const override;
 
     /** Method to decompose the Bounds into boundarySurfaces */
-    const std::vector<const Acts::Surface*>* decomposeToSurfaces(std::shared_ptr<Transform3D>transformPtr) const;
+    const std::vector<const Acts::Surface*>* decomposeToSurfaces(std::shared_ptr<Transform3D>transformPtr) const override;
 
     /**This method returns the first VolumeBounds*/
     Volume* first() const;
