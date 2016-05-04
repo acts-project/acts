@@ -231,7 +231,7 @@ namespace Acts {
             double                                  materialLimitL0;        //!< given material limit in L0
             int                                     materialProcess;        //!< the material process to be generated
                                                                               
-            ParticleType                      pHypothesis;            //!< what particle hypothesis to be used, default : pion
+            ParticleType                            pHypothesis;            //!< what particle hypothesis to be used, default : pion
             MagneticFieldProperties                 mFieldMode;             //!< what magnetic field mode to be used, default : fullField
             MaterialUpdateMode                      materialUpdateMode;     //!< how to deal with the material effect, default: addNoise
             bool                                    navigationCurvilinear;  //!< stay in curvilinear parameters where possible, default : true

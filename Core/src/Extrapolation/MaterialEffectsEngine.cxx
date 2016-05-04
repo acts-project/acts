@@ -139,7 +139,7 @@ const Acts::TrackParameters* Acts::MaterialEffectsEngine::updateTrackParameters(
         double thickness              = materialProperties->thickness();
         // calculate energy loss and multiple scattering
         double p      = parameters.momentum().mag();
-        double m      = m_particleMasses.mass[eCell.pHypothesis];
+        double m      = m_particleMasses.mass[eCell.particleType];
         double E      = sqrt(p*p+m*m);
         double beta   = p/E;
         // (A) - energy loss correction
@@ -147,7 +147,7 @@ const Acts::TrackParameters* Acts::MaterialEffectsEngine::updateTrackParameters(
             double sigmaP = 0.;
             double kazl   = 0.;
             /** dE/dl ionization energy loss per path unit */
-            double dEdl = sign*dir*m_interactionFormulae.dEdl_ionization(p, &material, eCell.pHypothesis, sigmaP, kazl);
+            double dEdl = sign*dir*m_interactionFormulae.dEdl_ionization(p, &material, eCell.particleType, sigmaP, kazl);
             double dE   = thickness*pathCorrection*dEdl;
             sigmaP *= thickness*pathCorrection;
             // calcuate the new momentum
