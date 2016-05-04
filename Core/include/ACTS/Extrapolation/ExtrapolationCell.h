@@ -13,7 +13,6 @@
 #include "ACTS/Utilities/GeometrySignature.h"
 #include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Surfaces/Surface.h"
-#include "ACTS/MagneticField/MagneticFieldProperties.h"
 
 #ifndef ACTS_EXTRAPOLATIONUTILSS_CHECKPATHMACRO
 #define ACTS_EXTRAPOLATIONUTILSS_CHECKPATHMACRO 1
@@ -228,10 +227,9 @@ namespace Acts {
             double                                  materialLimitX0;        //!< given material limit in X0
             double                                  materialL0;             //!< collected material so far in units of L0
             double                                  materialLimitL0;        //!< given material limit in L0
-            process_type                            materialProcess;        //!< the material process to be generated
-                                                                              
-            ParticleType                            particleType;            //!< what particle hypothesis to be used, default : pion
-            MagneticFieldProperties                 mFieldMode;             //!< what magnetic field mode to be used, default : fullField
+            
+            process_type                            particleProcess;        //!< the material process to be generated
+            ParticleType                            particleType;           //!< what particle hypothesis to be used, default : pion
             MaterialUpdateMode                      materialUpdateMode;     //!< how to deal with the material effect, default: addNoise
             bool                                    navigationCurvilinear;  //!< stay in curvilinear parameters where possible, default : true
             bool                                    sensitiveCurvilinear;   //!< stay in curvilinear parameters even on the destination surface
@@ -278,9 +276,8 @@ namespace Acts {
             materialLimitX0(-1.),
             materialL0(0.),
             materialLimitL0(-1.),
-            materialProcess(0),
+            particleProcess(0),
             particleType(Acts::pion),
-            mFieldMode(Acts::MagneticFieldProperties(Acts::FullField)),
             materialUpdateMode(Acts::addNoise),
             navigationCurvilinear(true),
             sensitiveCurvilinear(false),

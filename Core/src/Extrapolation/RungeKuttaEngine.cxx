@@ -10,7 +10,6 @@
 #include "ACTS/Surfaces/PlaneSurface.h"
 #include "ACTS/Surfaces/PerigeeSurface.h"
 #include "ACTS/Surfaces/StraightLineSurface.h"
-#include "ACTS/MagneticField/MagneticFieldProperties.h"
 
 /////////////////////////////////////////////////////////////////////////////////
 // Constructor
@@ -183,8 +182,7 @@ Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellCharged& eCell,
     pCache.boundaryCheck     = bcheck;
     pCache.returnCurvilinear = returnCurvilinear;
     pCache.useJacobian       = eCell.leadParameters->covariance();
-    pCache.mFieldMode        = eCell.mFieldMode;
-    pCache.mcondition        = (eCell.mFieldMode.magneticFieldMode() != 0 ) ? true : false;
+    pCache.mcondition        = true;
     pCache.needgradient      = (pCache.useJacobian && m_config.usegradient ) ? true : false;
 
     // propagate with templated helper function
