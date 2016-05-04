@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////
-// ParticleType.h, ACTS project
+// ParticleDefinitions.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 #ifndef ACTS_EVENTUTILS_PARTICLEDEFINITIONS_H
@@ -11,6 +11,10 @@
 // STL
 #include <vector>
 
+// barcodes
+typedef unsigned long barcode_type;
+typedef int           process_type;
+typedef int           pdg_type;
 
 // define the particle hypotheses
 #define PARTICLETYPES 11
@@ -18,8 +22,9 @@
 namespace Acts {
 
   /** @enum ParticleType
-   Enumeration for Particle hypothesis respecting the
-   interaction with material
+   
+   Enumeration for Particle type respecting
+   the interaction with the material
 
    @author Andreas.Salzburger@cern.ch
    */
@@ -115,7 +120,7 @@ namespace Acts {
   class ParticleProperties {
     public :
         /** constructor */ 
-        ParticleProperties(const Vector3D& momentum, int pID, unsigned int barcode=0) :
+        ParticleProperties(const Vector3D& momentum, pdg_type pID, barcode_type barcode=0) :
           m_momentum(momentum),
           m_pID(pID),
           m_barcode(barcode)
@@ -147,27 +152,28 @@ namespace Acts {
         const Vector3D& momentum() const { return m_momentum; }       
         
         /** return the particle ID */
-        int particleID() const { return m_pID; } 
+        pdg_type particleID() const { return m_pID; } 
         
         /** return the particle barcode */
-        unsigned int barcode() const { return m_barcode; }
+        barcode_type barcode() const { return m_barcode; }
   
     private: 
         Vector3D          m_momentum;
-        int               m_pID;
-        unsigned int      m_barcode;
+        pdg_type          m_pID;
+        barcode_type      m_barcode;
     };
   
   
-  /** @class InteractionVertex 
+  /** @class ProcessVertex 
   
-      interaction vertex class for the fast track simulation
+      process vertex class for the fast track simulation
   
       @author Andreas.Salzburger -at- cern.ch */
-  class InteractionVertex {
+    
+  class ProcessVertex {
       public :
           /** constructor */ 
-          InteractionVertex(const Vector3D& pVertex, double pTime, int pType, const std::vector<ParticleProperties>& pOutgoing) :
+          ProcessVertex(const Vector3D& pVertex, double pTime, process_type pType, const std::vector<ParticleProperties>& pOutgoing) :
             m_vertex(pVertex),
             m_time(pTime),
             m_type(pType),
@@ -175,7 +181,7 @@ namespace Acts {
           {}
               
           /** destructor */
-          ~InteractionVertex(){}
+          ~ProcessVertex(){}
 
           /** Add a particle */
           void addOutgoing(const ParticleProperties& pProperties);
@@ -187,7 +193,7 @@ namespace Acts {
           double interactionTime() const { return m_time; }
 
           /** Return the type of production */
-          double interactionType() const { return m_type; }
+          process_type processType() const { return m_type; }
           
           /** Return the outgoing properties */
           const std::vector<ParticleProperties>& outgoingParticles() const { return m_outgoing;  }
@@ -195,12 +201,11 @@ namespace Acts {
       private:
           Vector3D                                m_vertex;
           double                                  m_time;
-          int                                     m_type;
-          std::vector<ParticleProperties>         m_outgoing;
-      
+          process_type                            m_type;
+          std::vector<ParticleProperties>         m_outgoing;      
   };
   
-  inline void InteractionVertex::addOutgoing(const ParticleProperties& pProperties) { m_outgoing.push_back(pProperties); }    
+  inline void ProcessVertex::addOutgoing(const ParticleProperties& pProperties) { m_outgoing.push_back(pProperties); }    
    
 }
 

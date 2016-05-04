@@ -17,7 +17,6 @@
 #include "ACTS/Surfaces/ConeSurface.h"
 #include "ACTS/Surfaces/BoundaryCheck.h"
 #include "ACTS/MagneticField/IMagneticFieldSvc.h"
-#include "ACTS/MagneticField/MagneticFieldProperties.h"
 
 namespace Acts {
 
@@ -31,7 +30,6 @@ namespace Acts {
       // configuration
       double                    direction;
       BoundaryCheck             boundaryCheck;
-      MagneticFieldProperties   mFieldMode;
       bool                      returnCurvilinear;
       bool                      useJacobian;
       double                    step;
@@ -52,7 +50,6 @@ namespace Acts {
       PropagationCache() :
        direction(alongMomentum),
        boundaryCheck(true),
-       mFieldMode(FullField),
        returnCurvilinear(false),
        useJacobian(false),
        step(0.),
@@ -204,7 +201,9 @@ namespace Acts {
       Config getConfiguration() const;                                    
     
     protected:
-      Config    m_config;  //!< configuration class
+      Config            m_config;  //!< configuration class
+      
+      RungeKuttaUtils   m_rkUtils; //!< RungeKuttaUtils class
       
     private:
       /** Templated RungeKutta propagation method - charged/neutral */
@@ -249,8 +248,6 @@ namespace Acts {
       // get the field - with the fast option 
       void getField        (double*,double*        ) const;
       void getFieldGradient(double*,double*,double*) const;
-      
-
       
    };
 

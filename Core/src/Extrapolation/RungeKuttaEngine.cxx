@@ -10,13 +10,13 @@
 #include "ACTS/Surfaces/PlaneSurface.h"
 #include "ACTS/Surfaces/PerigeeSurface.h"
 #include "ACTS/Surfaces/StraightLineSurface.h"
-#include "ACTS/MagneticField/MagneticFieldProperties.h"
 
 /////////////////////////////////////////////////////////////////////////////////
 // Constructor
 /////////////////////////////////////////////////////////////////////////////////
 Acts::RungeKuttaEngine::RungeKuttaEngine(const Acts::RungeKuttaEngine::Config& rkConfig) :
-  m_config()
+  m_config(),
+  m_rkUtils()
 {
   setConfiguration(rkConfig);
 }
@@ -183,8 +183,7 @@ Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellCharged& eCell,
     pCache.boundaryCheck     = bcheck;
     pCache.returnCurvilinear = returnCurvilinear;
     pCache.useJacobian       = eCell.leadParameters->covariance();
-    pCache.mFieldMode        = eCell.mFieldMode;
-    pCache.mcondition        = (eCell.mFieldMode.magneticFieldMode() != 0 ) ? true : false;
+    pCache.mcondition        = true;
     pCache.needgradient      = (pCache.useJacobian && m_config.usegradient ) ? true : false;
 
     // propagate with templated helper function
@@ -261,9 +260,7 @@ bool Acts::RungeKuttaEngine::propagateWithJacobian(int navigationStep, Propagati
   if (pCache.mcondition && fabs(pCache.pVector[6]) > .1) return false;
 
   // Step estimation until surface
-  //
-  Acts::RungeKuttaUtils utils;
-  bool Q; double S, step = utils.stepEstimator(kind,Su,pCache.pVector,Q); if(!Q) return false;
+  bool Q; double S, step = m_rkUtils.stepEstimator(kind,Su,pCache.pVector,Q); if(!Q) return false;
 
   bool dir = true;
   if (pCache.mcondition && pCache.direction && pCache.direction*step < 0.)  {
@@ -802,10 +799,7 @@ const Acts::NeutralParameters* Acts::RungeKuttaEngine::buildNeutralParametersWit
 double Acts::RungeKuttaEngine::stepEstimatorWithCurvature(PropagationCache& pCache, int kind, double* Su, bool& Q) const
 {
   // Straight step estimation
-  //
-  RungeKuttaUtils utils;
-
-  double  Step = utils.stepEstimator(kind,Su,pCache.pVector,Q); if(!Q) return 0.;
+  double  Step = m_rkUtils.stepEstimator(kind,Su,pCache.pVector,Q); if(!Q) return 0.;
   double AStep = fabs(Step);
   if ( kind || AStep < m_config.straightStep || !pCache.mcondition ) return Step;
 
@@ -818,7 +812,7 @@ double Acts::RungeKuttaEngine::stepEstimatorWithCurvature(PropagationCache& pCac
   double As    = 1./sqrt(Ax*Ax+Ay*Ay+Az*Az);
 
   double PN[6] = {pCache.pVector[0],pCache.pVector[1],pCache.pVector[2],Ax*As,Ay*As,Az*As};
-  double StepN = utils.stepEstimator(kind,Su,PN,Q); if(!Q) {Q = true; return Step;}
+  double StepN = m_rkUtils.stepEstimator(kind,Su,PN,Q); if(!Q) {Q = true; return Step;}
   if(fabs(StepN) < AStep) return StepN; return Step;
 }
 

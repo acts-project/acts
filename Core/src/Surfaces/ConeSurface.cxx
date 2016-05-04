@@ -10,7 +10,6 @@
 #include <iomanip>
 #include <assert.h>
 
-
 // default constructor
 Acts::ConeSurface::ConeSurface() :
   Acts::Surface(),

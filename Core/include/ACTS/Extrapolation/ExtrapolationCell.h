@@ -9,12 +9,10 @@
 #include "ACTS/Extrapolation/MaterialUpdateMode.h"
 #include "ACTS/EventData/TransportJacobian.h"
 #include "ACTS/EventData/ParticleDefinitions.h"
-#include "ACTS/EventData/ParticleDefinitions.h"
 #include "ACTS/Material/MaterialProperties.h"
 #include "ACTS/Utilities/GeometrySignature.h"
 #include "ACTS/Utilities/Definitions.h"
 #include "ACTS/Surfaces/Surface.h"
-#include "ACTS/MagneticField/MagneticFieldProperties.h"
 
 #ifndef ACTS_EXTRAPOLATIONUTILSS_CHECKPATHMACRO
 #define ACTS_EXTRAPOLATIONUTILSS_CHECKPATHMACRO 1
@@ -229,10 +227,9 @@ namespace Acts {
             double                                  materialLimitX0;        //!< given material limit in X0
             double                                  materialL0;             //!< collected material so far in units of L0
             double                                  materialLimitL0;        //!< given material limit in L0
-            int                                     materialProcess;        //!< the material process to be generated
-                                                                              
-            ParticleType                            particleType;            //!< what particle hypothesis to be used, default : pion
-            MagneticFieldProperties                 mFieldMode;             //!< what magnetic field mode to be used, default : fullField
+            
+            process_type                            interactionProcess;        //!< the material process to be generated
+            ParticleType                            particleType;           //!< what particle hypothesis to be used, default : pion
             MaterialUpdateMode                      materialUpdateMode;     //!< how to deal with the material effect, default: addNoise
             bool                                    navigationCurvilinear;  //!< stay in curvilinear parameters where possible, default : true
             bool                                    sensitiveCurvilinear;   //!< stay in curvilinear parameters even on the destination surface
@@ -243,7 +240,7 @@ namespace Acts {
                                 
             ExtrapolationConfig                     extrapolationConfiguration; //!< overall global configuration
 
-            std::vector< InteractionVertex >        interactionVertices;    //!< interaction vertices  
+            std::vector< ProcessVertex >        interactionVertices;    //!< interaction vertices  
 
             float                                   time;                   //!< timing info
             float                                   zOaTrX;                 //!< z/A*rho*dInX0 (for average calculations)
@@ -279,9 +276,8 @@ namespace Acts {
             materialLimitX0(-1.),
             materialL0(0.),
             materialLimitL0(-1.),
-            materialProcess(0),
+            interactionProcess(0),
             particleType(Acts::pion),
-            mFieldMode(Acts::MagneticFieldProperties(Acts::FullField)),
             materialUpdateMode(Acts::addNoise),
             navigationCurvilinear(true),
             sensitiveCurvilinear(false),
