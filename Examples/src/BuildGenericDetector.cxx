@@ -1,49 +1,51 @@
-#include <memory>
-
+// ACTS include(s)
+#include "ACTS/Examples/BuildGenericDetector.h"
 #include "ACTS/Detector/TrackingGeometry.h"
 #include "ACTS/Material/Material.h"
 #include "ACTS/Tools/LayerCreator.h"
-#include "ACTS/Tools/LayerBuilder.h"
-#include "ACTS/Tools/VolumeBuilder.h"
-#include "ACTS/Tools/VolumeHelper.h"
-#include "ACTS/Tools/GeometryBuilder.h"
+#include "ACTS/Tools/PassiveLayerBuilder.h"
+#include "ACTS/Tools/CylinderVolumeBuilder.h"
+#include "ACTS/Tools/CylinderVolumeHelper.h"
+#include "ACTS/Tools/CylinderGeometryBuilder.h"
 #include "ACTS/Tools/TrackingVolumeArrayCreator.h"
 #include "ACTS/Tools/LayerArrayCreator.h"
 #include "ACTS/Tools/SurfaceArrayCreator.h"
 #include "ACTS/Tools/CylinderVolumeHelper.h"
 
-std::unique_ptr<const Acts::TrackingGeometry> trackingGeometry() const {
-    
+namespace Acts
+{
+  std::unique_ptr<const Acts::TrackingGeometry> trackingGeometry()
+  {  
     // configure the layer creator with the surface array creator
     Acts::LayerCreator::Config lcConfig;
-    lcConfig.surfaceArrayCreator = td::make_shared<Acts::SurfaceArrayCreator>();
-    auto LayerCreator = sta::make_shared<Acts::LayerCreator>(lcConfig);
+    lcConfig.surfaceArrayCreator = std::make_shared<Acts::SurfaceArrayCreator>();
+    auto LayerCreator = std::make_shared<Acts::LayerCreator>(lcConfig);
     
     // configure the cylinder volume helper
-    Acts::CylinderVolumeHelper cvhConfig;
+    Acts::CylinderVolumeHelper::Config cvhConfig;
     cvhConfig.layerArrayCreator             = std::make_shared<Acts::LayerArrayCreator>();
-    cvhConfig.trackingVolumeArrayCreator    = std::make_shared<Acts::trackingVolumeArrayCreator>();
+    cvhConfig.trackingVolumeArrayCreator    = std::make_shared<Acts::TrackingVolumeArrayCreator>();
     auto CylinderVolumeHelper = std::make_shared<Acts::CylinderVolumeHelper>(cvhConfig);
     //-------------------------------------------------------------------------------------
     //beam pipe
     //-------------------------------------------------------------------------------------
     // configure the beam pipe layer builder
     Acts::PassiveLayerBuilder::Config bplConfig;
-    bplConfig.LayerIdentification           = "BeamPipe";
-    bplConfig.centralLayerRadii             = std::vector(1,21.);
-    bplConfig.centralLayerHalflengthZ       = std::vector(1.,200.);
-    bplConfig.centralLayerThickness         = std::vector(1.,0.8);
-    bplConfig.centralLayerMaterialX0        = std::vector(1,352.8);
-    bplConfig.centralLayerMaterialL0        = std::vector(1,407.);
-    bplConfig.centralLayerMaterialA         = std::vector(1,9.012);
-    bplConfig.centralLayerMaterialZ         = std::vector(1,4.);
-    bplConfig.CentralLayerMaterialRho       = std::vector(1,1.848e-3);
+    bplConfig.layerIdentification           = "BeamPipe";
+    bplConfig.centralLayerRadii             = std::vector<double>(1,21.);
+    bplConfig.centralLayerHalflengthZ       = std::vector<double>(1,200.);
+    bplConfig.centralLayerThickness         = std::vector<double>(1,0.8);
+    bplConfig.centralLayerMaterialX0        = std::vector<double>(1,352.8);
+    bplConfig.centralLayerMaterialL0        = std::vector<double>(1,407.);
+    bplConfig.centralLayerMaterialA         = std::vector<double>(1,9.012);
+    bplConfig.centralLayerMaterialZ         = std::vector<double>(1,4.);
+    bplConfig.centralLayerMaterialRho       = std::vector<double>(1,1.848e-3);
     auto BeamPipeBuilder = std::make_shared<Acts::PassiveLayerBuilder>(bplConfig);
     
     // create the volume for the beam pipe
     Acts::CylinderVolumeBuilder::Config bpvConfig;
-    bpvConfig.TrackingVolumeHelper          = CylinderVolumeHelper;
-    bpvConfig.volumeName                    = BeamPipeBuilder.identifictaion();
+    bpvConfig.trackingVolumeHelper          = CylinderVolumeHelper;
+    bpvConfig.volumeName                    = BeamPipeBuilder.identification();
     bpvConfig.layerEnvelopeR                = 1.;
     bpvConfig.layerEnvelopeZ                = 1.;
     auto BeamPipeVolumeBuilder = std::make_shared<Acts::CylinderVolumeBuilder>(bpvConfig);
@@ -82,12 +84,12 @@ std::unique_ptr<const Acts::TrackingGeometry> trackingGeometry() const {
     std::vector<double> pcLayerModulesTiltPhi(pcTiltPhi, pcTiltPhi+sizeof(tiltPhi)/sizeof(double));
     std::vector<double> pcLayerModulesPositionPhi;
     for (int i=0; i<pcLayers;i++) {
-        std::vector<double> positionsPhi;
-        double phiStep = 2.*M_PI/pcNumPhi[i];
-        for (int j=0; j<pcNumPhi[i]; j++) {
-            positionsPhi.push_back(-M_PI+j*phiStep);
-        }
-        pcLayerModulesPositionPhi.push_back(positionsPhi);
+      std::vector<double> positionsPhi;
+      double phiStep = 2.*M_PI/pcNumPhi[i];
+      for (int j=0; j<pcNumPhi[i]; j++) {
+	positionsPhi.push_back(-M_PI+j*phiStep);
+      }
+      pcLayerModulesPositionPhi.push_back(positionsPhi);
     }
     
     //z properties centrallayers
@@ -97,13 +99,13 @@ std::unique_ptr<const Acts::TrackingGeometry> trackingGeometry() const {
     
     std::vector<double> pcLayerModulesPositionZ;
     for (int i=0; i<pcLayers; i++) {
-        std::vector<double> positionsZ;
-        double firstToLast = (pcNumZ[i]-1)*(2.*pcModuleHalfY[i]-pcOverlapZ[i]);
-        double zStep = firstToLast/(pcNumZ[i]-1);
-        for (int j=0; j<pcNumZ[i]; j++) {
-            positionsZ.push_back(-0.5*firstToLast + j*zStep);
-        }
-        pcLayerModulesPositionZ.push_back(positionsZ);
+      std::vector<double> positionsZ;
+      double firstToLast = (pcNumZ[i]-1)*(2.*pcModuleHalfY[i]-pcOverlapZ[i]);
+      double zStep = firstToLast/(pcNumZ[i]-1);
+      for (int j=0; j<pcNumZ[i]; j++) {
+	positionsZ.push_back(-0.5*firstToLast + j*zStep);
+      }
+      pcLayerModulesPositionZ.push_back(positionsZ);
     }
     
     std::vector<double> pcLayerModulesStaggerZ(pcLayers,0.5);
@@ -134,12 +136,12 @@ std::unique_ptr<const Acts::TrackingGeometry> trackingGeometry() const {
     std::vector<double> ppnLayerModulesInPhi(ppnNumPhi,ppnNumPhi + sizeof(ppnNumPhi)/sizeof(double));
     std::vector<double> ppnLayerModulesPositionPhi;
     for (int i=0; i<ppnLayers;i++) {
-        std::vector<double> positionsPhi;
-        double phiStep = 2.*M_PI/ppnNumPhi[i];
-        for (int j=0; j<ppnNumPhi[i]; j++) {
-            positionsPhi.push_back(-M_PI+j*phiStep);
-        }
-        ppnLayerModulesPositionPhi.push_back(positionsPhi);
+      std::vector<double> positionsPhi;
+      double phiStep = 2.*M_PI/ppnNumPhi[i];
+      for (int j=0; j<ppnNumPhi[i]; j++) {
+	positionsPhi.push_back(-M_PI+j*phiStep);
+      }
+      ppnLayerModulesPositionPhi.push_back(positionsPhi);
     }
     std::vector<double> ppnLayerModulesStaggerPhi(ppnLayers,0.5);
     
@@ -214,6 +216,6 @@ std::unique_ptr<const Acts::TrackingGeometry> trackingGeometry() const {
     
     return CylinderGeometryBuilder->trackingGeometry();
 
-}
-
+  }
+} // end of namespace Acts
 
