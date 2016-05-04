@@ -50,7 +50,7 @@ namespace Acts {
        { return LayerPtr(new DiscLayer(cla,shift)); }                                                 
 
        /** Clone with a shift - only cloning that is allowed */
-       LayerPtr cloneWithShift(const Transform3D& shift) const 
+       LayerPtr cloneWithShift(const Transform3D& shift) const override
        { return DiscLayer::create(*this,shift); }
 
        /** Copy constructor of DiscLayer - forbidden */

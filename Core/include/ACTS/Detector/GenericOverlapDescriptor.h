@@ -33,7 +33,7 @@ namespace Acts {
         virtual ~GenericOverlapDescriptor(){}
         
         /**Pseudo-constructor*/
-        GenericOverlapDescriptor* clone() const { return new GenericOverlapDescriptor(); }
+        GenericOverlapDescriptor* clone() const override { return new GenericOverlapDescriptor(); }
     
         /** get the compatible surfaces 
             - return : a boolean indicating if an actual intersection had been tried

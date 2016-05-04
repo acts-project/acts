@@ -38,7 +38,7 @@ namespace Acts {
         { return LayerPtr(new SubtractedPlaneLayer(pla,tr)); }
             
         /** Clone with shift - the only allowed way to clone */
-        LayerPtr cloneWithShift(const Transform3D& shift) const
+        LayerPtr cloneWithShift(const Transform3D& shift) const override
         { return SubtractedPlaneLayer::create(*this,shift); }      
                            
         /** Copy constructor of SubtractedPlaneLayer - is forbidden */

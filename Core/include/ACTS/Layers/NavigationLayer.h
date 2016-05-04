@@ -37,7 +37,7 @@ namespace Acts {
         { return LayerPtr(new NavigationLayer(sRepresentation, thickness)); }
 
         /** Clone with a shift - only cloning that is allowed */
-        LayerPtr cloneWithShift(const Transform3D& shift) const; 
+        LayerPtr cloneWithShift(const Transform3D& shift) const override;
 
         /** Destructor*/
         virtual ~NavigationLayer();
@@ -52,7 +52,7 @@ namespace Acts {
         NavigationLayer& operator=(const NavigationLayer&) = delete;
                     
         /** Transforms the layer into a Surface representation for extrapolation */
-        const Surface& surfaceRepresentation() const;
+        const Surface& surfaceRepresentation() const override;
         
         /** isOnLayer() method, using isOnSurface() with Layer specific tolerance */
         bool isOnLayer(const Vector3D& gp, const BoundaryCheck& bcheck = BoundaryCheck(true)) const override;

@@ -36,7 +36,7 @@ namespace Acts {
         { return LayerPtr(new SubtractedCylinderLayer(cla,tr));}          
                               
         /** Clone with shift - the only allowed way to clone */
-        LayerPtr cloneWithShift(const Transform3D& shift) const
+        LayerPtr cloneWithShift(const Transform3D& shift) const override
         { return SubtractedCylinderLayer::create(*this,shift); }                   
                               
         /** Copy constructor - forbidden */

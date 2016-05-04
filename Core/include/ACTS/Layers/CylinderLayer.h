@@ -48,7 +48,7 @@ class ApproachDescriptor;
       { return LayerPtr(new CylinderLayer(cla, shift)); }                                                           
       
       /** Clone with a shift - only cloning that is allowed */
-      LayerPtr cloneWithShift(const Transform3D& shift) const 
+      LayerPtr cloneWithShift(const Transform3D& shift) const override
       { return CylinderLayer::create(*this,shift); }
       
       /** Copy constructor - forbidden, create a new one if you need */

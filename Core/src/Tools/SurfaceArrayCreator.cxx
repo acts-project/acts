@@ -222,8 +222,8 @@ void Acts::SurfaceArrayCreator::completeBinning(const std::vector<const Surface*
     sVector.reserve(bins0*bins1);
     for (auto& outer : binSystem)
         for (auto& inner : outer){
-            size_t bin0 = binUtility.bin(inner.first.second,0);
-            size_t bin1 = binUtility.bin(inner.first.second,1);
+            //size_t bin0 = binUtility.bin(inner.first.second,0);
+            //size_t bin1 = binUtility.bin(inner.first.second,1);
             //MSG_VERBOSE("- bin [ " << bin0 << " x " << bin1 << " ] holds surface " << inner.first.first);
             sVector.push_back(SurfacePosition(inner.first.first,inner.first.second));
        }
