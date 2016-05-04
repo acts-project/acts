@@ -240,7 +240,7 @@ namespace Acts {
                                 
             ExtrapolationConfig                     extrapolationConfiguration; //!< overall global configuration
 
-            std::vector< InteractionVertex >        interactionVertices;    //!< interaction vertices  
+            std::vector< ProcessVertex >        interactionVertices;    //!< interaction vertices  
 
             float                                   time;                   //!< timing info
             float                                   zOaTrX;                 //!< z/A*rho*dInX0 (for average calculations)
