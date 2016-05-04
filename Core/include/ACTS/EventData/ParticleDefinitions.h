@@ -115,7 +115,7 @@ namespace Acts {
   class ParticleProperties {
     public :
         /** constructor */ 
-        ParticleProperties(const Vector3D& momentum, int pID, unsigned int barcode) :
+        ParticleProperties(const Vector3D& momentum, int pID, unsigned int barcode=0) :
           m_momentum(momentum),
           m_pID(pID),
           m_barcode(barcode)
