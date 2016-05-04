@@ -273,7 +273,7 @@ void Acts::GenericLayerBuilder::constructLayers()
          auto layerModuleRadii                     = m_config.posnegModuleRadii.at(ipnl);
          auto layerModulePositionsPhi              = m_config.posnegModulePositionPhi.at(ipnl);
          auto layerModulePhiStagger                = m_config.posnegModuleStaggerPhi.at(ipnl);
-          
+
          // module description
          auto layerModuleMinHalfX                  = m_config.posnegModuleMinHalfX.at(ipnl);
          auto layerModuleMaxHalfX                  = m_config.posnegModuleMaxHalfX.at(ipnl);

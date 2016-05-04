@@ -7,11 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// DD4hepLayerHelper.h, ACTS project
+// DD4hepGeometryHelper.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_DD4HEPGEOMETRYTOOLS_DD4HEPLAYERHELPER_H
-#define ACTS_DD4HEPGEOMETRYTOOLS_DD4HEPLAYERHELPER_H 1
+#ifndef ACTS_DD4HEPGEOMETRYTOOLS_DD4HEPGEOMETRYHELPER_H
+#define ACTS_DD4HEPGEOMETRYTOOLS_DD4HEPGEOMETRYHELPER_H
 
 // Core module
 #include "ACTS/Utilities/Definitions.hpp"
@@ -25,24 +25,16 @@
 // DD4hep
 #include "DD4hep/Detector.hpp"
 
-namespace Acts {
-    class Surface;
-    class Volume;
-}
 
 namespace Acts {
     
     /** @ class DD4hepGeometryHelper
      
-     The DD4hepGeometryHelper allows to create the subvolumes in the tracking geometry of a barrel or barrel-endcap hierarchy given from DD4hep. If present it creates a volume triple <nEndcap,Barrel,pEndcap> and if present its corresponing layers with possibly containing Modules and/or support structure also as a triple. The triples contain pointers to the particular members, which are set to zero if a certain member is not present.
-
+     Provides helper function to translate the DD4hep geometry into the ACTS Tracking Geometry.
      @TODO find replacement for Gaudi exeption and message stream
      
      */
-    
-    typedef std::vector<const Acts::Surface*>                        SurfaceVector;
-    typedef Acts::BinnedArray<const Acts::Surface*>                   SurfaceArray;
-    
+
    class DD4hepGeometryHelper  {
        
    public:
@@ -75,8 +67,6 @@ namespace Acts {
        static bool sortFloatPairs(std::pair<float,float> ap, std::pair<float,float> bp);
        
     };
-    
-} //end of namespace Acts
-
+}
 
 #endif //ACTS_DD4HEPGEOMETRYTOOLS_DD4HEPGEOMETRYHELPER_H

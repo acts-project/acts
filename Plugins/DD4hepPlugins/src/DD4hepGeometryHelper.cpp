@@ -1,3 +1,4 @@
+
 // This file is part of the ACTS project.
 //
 // Copyright (C) 2016 ACTS project team
@@ -5,6 +6,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 
 #include "ACTS/Plugins/DD4hepPlugins/DD4hepGeometryHelper.hpp"
 // Geometry Module
@@ -16,7 +18,6 @@
 #include "ACTS/Plugins/DD4hepPlugins/DetExtension.hpp"
 #include "ACTS/Plugins/DD4hepPlugins/DD4hepDetElement.hpp"
 // Geometry module
-<<<<<<< HEAD:Plugins/DD4hepPlugins/src/DD4hepGeometryHelper.cpp
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/BinnedArray2D.hpp"
 #include "ACTS/Surfaces/CylinderBounds.hpp"
@@ -31,20 +32,7 @@ Acts::DD4hepGeometryHelper::DD4hepGeometryHelper()
 
 Acts::DD4hepGeometryHelper::~DD4hepGeometryHelper()
 {}
->>>>>>> 0d2410d... moved generic detector example to standalone:Plugins/DD4hepPlugins/src/DD4hepGeometryHelper.cxx
 
-=======
-#include "ACTS/Surfaces/Surface.h"
-#include "ACTS/Utilities/BinnedArray2D.h"
-#include "ACTS/Surfaces/CylinderBounds.h"
-#include "ACTS/Surfaces/RadialBounds.h"
-#include "ACTS/Surfaces/TrapezoidBounds.h"
-#include "ACTS/Volumes/CylinderVolumeBounds.h"
-#include "ACTS/Layers/CylinderLayer.h"
-#include "ACTS/Layers/DiscLayer.h"
-#include "ACTS/Volumes/Volume.h"
-
->>>>>>> d4246c1... preparation for material mapping:Plugins/DD4hepPlugins/src/DD4hepGeometryHelper.cxx
 std::shared_ptr<Acts::Transform3D> Acts::DD4hepGeometryHelper::extractTransform(DD4hep::Geometry::DetElement& detElement)
 {
     //get the placement and orientation in respect to its mother
