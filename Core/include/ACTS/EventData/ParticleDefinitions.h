@@ -28,18 +28,18 @@ namespace Acts {
 
    @author Andreas.Salzburger@cern.ch
    */
-   enum ParticleType { nonInteracting     = 0,
-                       geantino           = 0,
-                       electron           = 1,
-                       muon               = 2,                            
-                       pion               = 3,                             
-                       kaon               = 4,
-                       proton             = 5,
-                       photon             = 6,     // for Fatras usage
-                       neutron            = 7,     // for Fatras usage 
-                       pi0                = 8,     // for Fatras usage 
-                       k0                 = 9,     // for Fatras usage 
-                       nonInteractingMuon = 10,    // For material collection
+   enum ParticleType { nonInteracting     = 0,     //!< for non-interacting extrapolation
+                       geantino           = 0,     //!< for non-interacting extrapolation
+                       electron           = 1,     //!< reconstruction + fatras : type as electron hypothesis  
+                       muon               = 2,     //!< reconstruction + fatras : type as muon hypothesis                              
+                       pion               = 3,     //!< reconstruction + fatras : type as pion hypothesis                              
+                       kaon               = 4,     //!< reconstruction + fatras : type as kaon hypothesis  
+                       proton             = 5,     //!< reconstruction + fatras : type as proton hypothesis  
+                       photon             = 6,     //!< for fatras usage
+                       neutron            = 7,     //!< for fatras usage 
+                       pi0                = 8,     //!< for fatras usage 
+                       k0                 = 9,     //!< for fatras usage 
+                       nonInteractingMuon = 10,    //!< for material collection @TODO check if this is still needed
                        noHypothesis       = 99,
                        undefined          = 99};
   
@@ -79,37 +79,138 @@ namespace Acts {
       }
       
    };
+  
+  
+   /** Static method : convert to ParticleType from pdg */
+   static ParticleType convertToParticleType(pdg_type pdg, bool& stable, bool& exiting, double charge) {
    
-  /** @struct ParticleSwitcher
-   Simple struct to translate an integer in the ParticleType type
-     
-   @author Andreas.Salzburger@cern.ch
-   */
-    
-   struct ParticleSwitcher {
-      /** the vector of masses */
-      std::vector<ParticleType> particle;   
+       int pdgCode = abs(pdg);
    
-      /**Default constructor*/
-      ParticleSwitcher()
-        {
-         particle.reserve(PARTICLETYPES);
-
-         particle.push_back(Acts::nonInteracting); 
-         particle.push_back(Acts::electron);
-         particle.push_back(Acts::muon);           
-         particle.push_back(Acts::pion);              
-         particle.push_back(Acts::kaon);           
-         particle.push_back(Acts::proton);         
-         particle.push_back(Acts::photon);         
-         particle.push_back(Acts::neutron);         
-         particle.push_back(Acts::pi0);         
-         particle.push_back(Acts::k0);         
-         particle.push_back(Acts::nonInteractingMuon);           
-        }
-      
-   };
-    
+       stable       = false;
+       exiting      = false;
+   
+       ParticleType particleType;
+   
+     // try to follow number of appearance 
+       switch (pdgCode)
+       {
+       // leptons
+           case 11: // e+/e-
+           particleType = electron;
+           stable       = true;
+           exiting      = false;
+           break;
+           case 13: // mu+/mu-
+           particleType = muon;
+           stable       = false;
+           exiting      = false;
+           break;
+           case 12: // e neutrino
+           case 14: // mu neutrino
+           case 16: // tau neutrino
+           particleType = nonInteracting;
+           stable       = true;
+           exiting      = true;
+           break;
+           case 22: // gamma
+           particleType = photon;
+           stable       = true;
+           exiting      = false;
+           break; 
+           case 211: // pi+/pi-
+           particleType = pion;
+           stable       = false;
+           exiting      = false;
+           break;
+           case 111: // pi0
+           particleType = pi0;              
+           stable       = false;
+           exiting      = false;
+           break;
+           case 2212: // proton
+           particleType = proton;
+           stable       = true;
+           exiting      = false;
+           break;
+           case 2112: // neutron               
+           particleType = neutron;
+           stable       = true;
+           exiting      = true;
+           break;
+           case 321: // K
+           particleType = kaon;
+           stable       = false;
+           exiting      = false;
+           break;
+           case 130: // K_long
+           particleType = k0;
+           stable       = false;
+           exiting      = false;
+           break;
+           case 310: // K_short
+           particleType = k0;
+           stable       = false;
+           exiting      = false;
+           break;
+           default: // treat mesons as pions
+           particleType = charge != 0. ? pion : pi0 ;                               
+           stable       = false;
+           exiting      = false;
+       }
+   
+       // and all baryons as proton hypo
+       if (pdgCode > 999 && pdgCode!=2112 )
+       {
+           particleType = charge != 0. ? proton : neutron ;
+           stable       = false;
+           exiting      = false;
+       }
+   
+     // ignore SUSY particles for now
+       if (pdgCode > 1000000)
+       {
+           particleType = nonInteracting;
+           stable       = true;
+           exiting      = true;
+       }
+   
+       return particleType;
+   }
+   
+   
+   /** Static method : convert to pdg from ParticleType */
+   static int convertToPdg(ParticleType particleHypo, double charge, bool dist) 
+   {
+   
+       int pdg = 0;
+   
+       switch (particleHypo) {
+           // the electron case
+           case electron   :  {  pdg = 11; pdg *= charge > 0. ? -1 : 1;   } return pdg;  
+           // the muon case
+           case muon       :  {  pdg = 13; pdg *= charge > 0. ? -1 : 1;   } return pdg;  
+           // the kaon case
+           case kaon       :  {  pdg = 321; pdg *= charge > 0. ? 1 : -1;  } return pdg;
+           // the proton case
+           case proton     :  {  pdg = 2212; pdg *= charge > 0. ? 1 : -1; 
+                if (charge*charge < 0.0001)
+                    pdg = dist ? 2112 : -2112; } return pdg;
+           // the photon case
+           case photon     :  { pdg = 22; } return pdg;
+           // the neutron case
+           case neutron     :  { pdg = 2112; } return pdg;
+           // the neutral pion case
+           case pi0         :  { pdg = 111; } return pdg;
+           // the neutral kaon case
+           case k0          :  { pdg = dist ? 130 : 310;                      } return pdg;
+           // the pion case - is the default
+           default              :  {  pdg = 211; pdg *= charge > 0. ? 1 : -1; 
+               if (charge*charge < 0.0001)
+                   pdg = 111; };  
+           }
+          return pdg;
+   }
+       
   /** @class ParticleProperties 
   
       very simplistic class for particle properties,
@@ -120,16 +221,25 @@ namespace Acts {
   class ParticleProperties {
     public :
         /** constructor */ 
-        ParticleProperties(const Vector3D& momentum, pdg_type pID, barcode_type barcode=0) :
+        ParticleProperties(const Vector3D& momentum, double mass = 0., double charge = 0., pdg_type pID = 0., barcode_type barcode=0) :
           m_momentum(momentum),
-          m_pID(pID),
+          m_mass(mass),
+          m_charge(charge),
+          m_pdgID(pID),
+          m_particleType(pion),
           m_barcode(barcode)
-         {}
+         {
+             bool exiting, stable;
+             m_particleType = convertToParticleType(pID, exiting, stable, charge);
+         }
       
          /** constructor */ 
          ParticleProperties(const ParticleProperties& pProperties) :
            m_momentum(pProperties.m_momentum),
-           m_pID(pProperties.m_pID),
+           m_mass(pProperties.m_mass),
+           m_charge(pProperties.m_charge),
+           m_pdgID(pProperties.m_pdgID),
+           m_particleType(pProperties.m_particleType),
            m_barcode(pProperties.m_barcode)
          {}
       
@@ -141,25 +251,40 @@ namespace Acts {
         ParticleProperties& operator=(const ParticleProperties& pProperties) 
         {
             if (this != &pProperties){
-                m_momentum = pProperties.m_momentum;
-                m_pID      = pProperties.m_pID;
-                m_barcode  = pProperties.m_barcode; 
+                m_momentum     = pProperties.m_momentum;
+                m_mass         = pProperties.m_mass;
+                m_charge       = pProperties.m_charge;
+                m_pdgID        = pProperties.m_pdgID;
+                m_particleType = pProperties.m_particleType;
+                m_barcode      = pProperties.m_barcode; 
             }
             return (*this);      
         }        
   
         /** return the momentum */
         const Vector3D& momentum() const { return m_momentum; }       
+
+        /** return the mass */
+        double mass() const { return m_mass; }
+
+        /** return the charge */
+        double charge() const { return m_charge; }
         
         /** return the particle ID */
-        pdg_type particleID() const { return m_pID; } 
+        pdg_type pdgID() const { return m_pdgID; }
+
+        /** return the particle type */
+        ParticleType particleType() const { return m_particleType; }
         
         /** return the particle barcode */
         barcode_type barcode() const { return m_barcode; }
   
     private: 
         Vector3D          m_momentum;
-        pdg_type          m_pID;
+        double            m_mass;
+        double            m_charge;
+        pdg_type          m_pdgID;
+        ParticleType      m_particleType;
         barcode_type      m_barcode;
     };
   
