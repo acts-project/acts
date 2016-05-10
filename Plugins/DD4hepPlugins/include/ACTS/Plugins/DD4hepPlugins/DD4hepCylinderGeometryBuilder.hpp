@@ -27,8 +27,7 @@ namespace Acts {
     class TrackingGeometry;
 }
 namespace Acts {
-    
-    class DD4hepLayerHelper;
+
     
     /** @ class DD4hepCylinderGeometryBuilder
      
@@ -75,8 +74,6 @@ namespace Acts {
     private:
         /** configuration object */
         Config                                            m_config;
-        /** Shared pointer class to build layers */
-        DD4hepLayerHelper*                                m_layerHelper;
         
     };
     

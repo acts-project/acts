@@ -35,6 +35,16 @@ namespace Acts {
     public:
         /* constructor **/
         DetExtension();
+        /* constructor for sensitive detector element **/
+        DetExtension(const DD4hep::Geometry::Segmentation segmentation);
+        /* constructor for volume with shape **/
+        DetExtension(ShapeType shape);
+        /* constructor for layer with support structure **/
+        DetExtension(const DD4hep::Geometry::DetElement support);
+        /* constructor for layer with modules **/
+        DetExtension(std::vector<Module> mod);
+        /* constructor for layer with support structure and modules **/
+        DetExtension(const DD4hep::Geometry::DetElement support, std::vector<Module> mod);
         /* copy constructor **/
         DetExtension(const DetExtension&, const DD4hep::Geometry::DetElement&)
         {}
@@ -53,7 +63,7 @@ namespace Acts {
         /* access supporting structure */
         const DD4hep::Geometry::DetElement& supportStructure() const override;
         /* possibility to set contained sensitive DetectorModules by a layer*/
-        void setModules(std::vector<Module>) override;
+        void setModules(std::vector<Module> mod) override;
         /* access modules */
         std::vector<Module> modules() const override;
 

@@ -12,11 +12,14 @@
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Material/Material.hpp"
 // DD4hepPlugin
+<<<<<<< HEAD:Plugins/DD4hepPlugins/src/DD4hepCylinderGeometryBuilder.cpp
 #include "ACTS/Plugins/DD4hepPlugins/DD4hepGeometryHelper.hpp"
 #include "ACTS/Plugins/DD4hepPlugins/DD4hepLayerHelper.hpp"
+=======
+#include "ACTS/Plugins/DD4hepPlugins/DD4hepGeometryHelper.h"
+>>>>>>> d4246c1... preparation for material mapping:Plugins/DD4hepPlugins/src/DD4hepCylinderGeometryBuilder.cxx
 
-Acts::DD4hepCylinderGeometryBuilder::DD4hepCylinderGeometryBuilder(const Config dgbConfig) :
-m_layerHelper(new Acts::DD4hepLayerHelper())
+Acts::DD4hepCylinderGeometryBuilder::DD4hepCylinderGeometryBuilder(const Config dgbConfig)
 {
     setConfiguration(std::move(dgbConfig));
 }
@@ -30,9 +33,7 @@ void Acts::DD4hepCylinderGeometryBuilder::setConfiguration(const Acts::DD4hepCyl
 }
 
 Acts::DD4hepCylinderGeometryBuilder::~DD4hepCylinderGeometryBuilder()
-{
-    delete m_layerHelper;
-}
+{}
 
 std::unique_ptr<Acts::TrackingGeometry> Acts::DD4hepCylinderGeometryBuilder::trackingGeometry() const
 {
@@ -64,8 +65,10 @@ std::unique_ptr<Acts::TrackingGeometry> Acts::DD4hepCylinderGeometryBuilder::tra
         }
         else {
         // assign a new highest volume (and potentially wrap around the given highest volume so far)
-            const LayerTriple* layerTriple = m_layerHelper->createLayerTriple(detElement);
-            highestVolume = m_config.volumeBuilder->trackingVolume(highestVolume,Acts::DD4hepGeometryHelper::extractVolumeBounds(detElement),layerTriple,m_layerHelper->volumeTriple());
+            LayerTriple layerTriple;
+            VolumeTriple volumeTriple;
+            Acts::DD4hepGeometryHelper::createSubVolumes(detElement, layerTriple, volumeTriple);
+            highestVolume = m_config.volumeBuilder->trackingVolume(highestVolume,Acts::DD4hepGeometryHelper::extractVolumeBounds(detElement),new LayerTriple(layerTriple),new VolumeTriple(volumeTriple));
         }
     }
     // if you have a highest volume, stuff it into a TrackingGeometry
