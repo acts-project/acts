@@ -1,0 +1,16 @@
+# - Config file for the ACTS package
+
+# - Define exported version
+set(ACTS_VERSION "@PROJECT_VERSION@")
+
+# - Init CMakePackageConfigHelpers
+@PACKAGE_INIT@
+
+# - Create relocatable paths
+# NOTE: Do not strictly need paths as all usage requirements are encoded in
+# the imported targets created later.
+set_and_check(ACTS_INCLUDE_DIR "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
+
+# - Include the targets file to create the imported targets that a client can
+# link to (libraries) or execute (programs)
+include("${CMAKE_CURRENT_LIST_DIR}/ACTSTargets.cmake")

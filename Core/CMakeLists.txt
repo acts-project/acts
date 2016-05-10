@@ -26,12 +26,12 @@ target_compile_definitions(ACTSCore PUBLIC -DACTS_MSG_MACROS_PLUGIN="${ACTS_MSG_
 
 # set installation directories
 install (TARGETS ACTSCore EXPORT ACTSTargets
-	 LIBRARY DESTINATION lib
-	 RUNTIME DESTINATION bin)
+	 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 install (DIRECTORY include/ACTS DESTINATION include)
 
 # hack to fix INTERFACE_COMPILE_DEFINITIONS
 add_custom_target (fix python ${PROJECT_SOURCE_DIR}/cmake/fix-cmake-target-file.py ACTSTargets.cmake
-		       WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${ConfigPackageLocation} VERBATIM)
+		       WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/cmake/ACTS VERBATIM)
 install(CODE "execute_process(COMMAND \"${CMAKE_COMMAND}\" --build \"${CMAKE_BINARY_DIR}\" --target fix)")

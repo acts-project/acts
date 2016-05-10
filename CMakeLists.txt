@@ -1,8 +1,11 @@
 cmake_minimum_required (VERSION 2.6)
 project (ACTS)
 
+# Use GNU-style hierarchy for installing build products
+include(GNUInstallDirs)
+
 # set the current version of ACTS
-set (ACTS_VERSION 0.0.1)
+set (ACTS_VERSION 0.1.0)
 
 # default installation direction
 set (CMAKE_INSTALL_PREFIX "/opt/ACTS/${ACTS_VERSION}" CACHE STRING "installation directory")
@@ -20,12 +23,6 @@ add_subdirectory (Core)
 add_subdirectory (doc)
 add_subdirectory (Plugins)
 
-include(GenerateExportHeader)
-generate_export_header (ACTSCore)
-set_property (TARGET ACTSCore PROPERTY VERSION ${ACTS_VERSION})
-
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file ("${CMAKE_INSTALL_PREFIX}/${ConfigPackageLocation}/ACTSConfigVersion.cmake" VERSION ${ACTS_VERSION} COMPATIBILITY AnyNewerVersion)
-configure_file(cmake/ACTSConfig.cmake "${CMAKE_INSTALL_PREFIX}/${ConfigPackageLocation}/ACTSConfig.cmake" COPYONLY)
-install(EXPORT ACTSTargets FILE ACTSTargets.cmake DESTINATION ${ConfigPackageLocation})
+# add CMake infrastructure
+include(cmake/ACTSCreateConfig.cmake)
 
