@@ -9,15 +9,10 @@
 #include "ACTS/Surfaces/CylinderBounds.h"
 #include "ACTS/Surfaces/RadialBounds.h"
 #include "ACTS/Surfaces/TrapezoidBounds.h"
+#include "ACTS/Volumes/CylinderVolumeBounds.h"
 #include "ACTS/Layers/CylinderLayer.h"
 #include "ACTS/Layers/DiscLayer.h"
 #include "ACTS/Volumes/Volume.h"
-
-Acts::DD4hepGeometryHelper::DD4hepGeometryHelper()
-{}
-
-Acts::DD4hepGeometryHelper::~DD4hepGeometryHelper()
-{}
 
 std::shared_ptr<Acts::Transform3D> Acts::DD4hepGeometryHelper::extractTransform(DD4hep::Geometry::DetElement& detElement)
 {
@@ -46,11 +41,11 @@ void Acts::DD4hepGeometryHelper::createSubVolumes(DD4hep::Geometry::DetElement& 
     // the positive endcap volume of the current hierarchy
     VolumePtr pEndcapVolume = nullptr;
     // possible layers of the negative end cap
-    Acts::LayerVector negativeLayers = nullptr;
+    Acts::LayerVector negativeLayers;
     // possible layers of the central barrel
-    Acts::LayerVector centralLayers  = nullptr;
+    Acts::LayerVector centralLayers;
     // possible layers of the positive end cap
-    Acts::LayerVector positiveLayers = nullptr;
+    Acts::LayerVector positiveLayers;
     
     if(detElement.type()=="compound") {
         //create tracking volume of compound type
@@ -65,7 +60,7 @@ void Acts::DD4hepGeometryHelper::createSubVolumes(DD4hep::Geometry::DetElement& 
             if (detExtension->shape()==Acts::ShapeType::Disc) {
                 if (transform->translation().z()<0.) {
                     nEndcapVolume = std::make_shared<const Volume>(transform,extractVolumeBounds(compoundDetElement));
-                    createLayers(compoundDetElement, negativeLayers, transform);
+                    createDiscLayers(compoundDetElement, negativeLayers, transform);
                 }
                 else {
                     pEndcapVolume = std::make_shared<const Volume>(transform,extractVolumeBounds(compoundDetElement));
@@ -74,7 +69,7 @@ void Acts::DD4hepGeometryHelper::createSubVolumes(DD4hep::Geometry::DetElement& 
             }
             else {
                 barrelVolume = std::make_shared<const Volume>(transform,extractVolumeBounds(compoundDetElement));
-                createDiscLayers(compoundDetElement, centralLayers, transform);
+                createCylinderLayers(compoundDetElement, centralLayers, transform);
             }
         } //compoundchildren
     } //compoundtype
@@ -87,7 +82,7 @@ void Acts::DD4hepGeometryHelper::createSubVolumes(DD4hep::Geometry::DetElement& 
     
     volumeTriple    = VolumeTriple(std::move(nEndcapVolume), std::move(barrelVolume),std::move(pEndcapVolume));
     //set the triples
-    layerTriple     = LayerTriple(new Acts::LayerVector(negativeLayers)),new Acts::LayerVector(centralLayers), new Acts::LayerVector(positiveLayers));
+    layerTriple     = LayerTriple(new Acts::LayerVector(negativeLayers),new Acts::LayerVector(centralLayers), new Acts::LayerVector(positiveLayers));
 }
 
 void Acts::DD4hepGeometryHelper::createCylinderLayers(DD4hep::Geometry::DetElement& motherDetElement, Acts::LayerVector& centralLayers, std::shared_ptr<Acts::Transform3D> motherTransform)
@@ -116,11 +111,11 @@ void Acts::DD4hepGeometryHelper::createCylinderLayers(DD4hep::Geometry::DetEleme
             //if necessary receive the modules contained by the layer and create the layer, otherwise create an empty layer
             Acts::IDetExtension* detExtension = detElement.extension<Acts::IDetExtension>();
             std::vector<Module> modules(detExtension->modules());
-            if (modules.empty()) centralLayers->push_back(Acts::CylinderLayer::create(transform,cylinderBounds,nullptr,thickness,nullptr,nullptr,Acts::passive))
+            if (modules.empty()) centralLayers.push_back(Acts::CylinderLayer::create(transform,cylinderBounds,nullptr,thickness,nullptr,nullptr,Acts::passive));
             else {
                 //create surfaces binned in phi and z
                 Acts::SurfaceArray* surfaceArray = createSurfaceArray(modules, binZ, motherTransform);
-                centralLayers->push_back(Acts::CylinderLayer::create(transform,cylinderBounds,surfaceArray,thickness,nullptr,nullptr,Acts::active));
+                centralLayers.push_back(Acts::CylinderLayer::create(transform,cylinderBounds,surfaceArray,thickness,nullptr,nullptr,Acts::active));
             }
         } //for children
     } //volume has layers
@@ -149,20 +144,21 @@ void Acts::DD4hepGeometryHelper::createDiscLayers(DD4hep::Geometry::DetElement& 
             //if necessary receive the modules contained by the layer and create the layer, otherwise create empty layer
             Acts::IDetExtension* detExtension = detElement.extension<Acts::IDetExtension>();
             std::vector<Module> modules(detExtension->modules());
-            if (modules.empty()) layers->push_back(Acts::DiscLayer::create(transform,discBounds,nullptr,thickness,nullptr,nullptr,Acts::passive));
+            if (modules.empty()) layers.push_back(Acts::DiscLayer::create(transform,discBounds,nullptr,thickness,nullptr,nullptr,Acts::passive));
             else {
                 //create surfaces binned in phi and r
-                Acts::SurfaceArray* surfaceArray = createSurfaceArray(modules, binR, motherTransform)
-                layers->push_back(Acts::DiscLayer::create(transform,discBounds,surfaceArray,thickness,nullptr,nullptr,Acts::active));
+                Acts::SurfaceArray* surfaceArray = createSurfaceArray(modules, binR, motherTransform);
+                layers.push_back(Acts::DiscLayer::create(transform,discBounds,surfaceArray,thickness,nullptr,nullptr,Acts::active));
             }
         } //for children
     } //volume has layers
 }
 
-Acts::SurfaceArray* Acts::DD4hepGeometryHelper::createSurfaceArray(std::vector<Module>& modules, Acts::BinningValue lValue, std::shared_ptr<const Acts::Transform3D> motherTransform) const
+Acts::SurfaceArray* Acts::DD4hepGeometryHelper::createSurfaceArray(std::vector<Module>& modules, Acts::BinningValue lValue, std::shared_ptr<const Acts::Transform3D> motherTransform)
 {
+    std::vector<const Acts::Surface*> surfaces;
     for (auto& module : modules) {
-        DD4hep::Geometry::DetElement& module.module();
+        DD4hep::Geometry::DetElement detElement(module.module());
         //make here the material mapping
         DD4hep::Geometry::Segmentation segmentation;
         //extract segmentation //change later
@@ -183,7 +179,7 @@ Acts::SurfaceArray* Acts::DD4hepGeometryHelper::createSurfaceArray(std::vector<M
 }
 
 //creating a surface array binned in phi and a longitudinal direction which can either be z or r
-Acts::SurfaceArray* Acts::DD4hepGeometryHelper::binnedSurfaceArray2DPhiL(const std::vector<const Acts::Surface*>& surfaces, Acts::BinningValue lValue) const
+Acts::SurfaceArray* Acts::DD4hepGeometryHelper::binnedSurfaceArray2DPhiL(const std::vector<const Acts::Surface*> surfaces, Acts::BinningValue lValue)
 {
     if (surfaces.empty()) throw "Active layer has no surfaces";
     //boundaries in r, first value minimum radius and second value maximum radius of the current cylinder layer
@@ -239,7 +235,7 @@ Acts::SurfaceArray* Acts::DD4hepGeometryHelper::binnedSurfaceArray2DPhiL(const s
     return (new Acts::BinnedArray2D<const Acts::Surface*>(posSurfaces,binUtility));
 }
 
-std::vector<float> Acts::DD4hepGeometryHelper::createBinValues(std::vector<std::pair<float,float>> old) const
+std::vector<float> Acts::DD4hepGeometryHelper::createBinValues(std::vector<std::pair<float,float>> old)
 {
     sort(old.begin(),old.end(),sortFloatPairs);
     std::vector<float> newlValues;

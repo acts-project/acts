@@ -38,10 +38,10 @@ namespace Acts {
        
    public:
        /** constructor */
-       DD4hepGeometryHelper();
+       DD4hepGeometryHelper() = default;
        
        /** destructor */
-       ~DD4hepGeometryHelper();
+       ~DD4hepGeometryHelper() = default;
        
        /**helper method to extract the transformation matrix from a DD4hep DetElement*/
        static std::shared_ptr<Acts::Transform3D> extractTransform(DD4hep::Geometry::DetElement& detElement);
@@ -49,19 +49,19 @@ namespace Acts {
        static std::shared_ptr<const Acts::VolumeBounds> extractVolumeBounds(DD4hep::Geometry::DetElement& detElement);
        /** Creates a triple of volumes a possible barrel-endcap configuration and of all the three possible Layer types of the given volume detector element*/
        /** constructs all subvolumes contained by this volume (motherDetELement) with its layers and modules, if present */
-       void createSubVolumes(DD4hep::Geometry::DetElement& motherDetElement, LayerTriple& layerTriple, VolumeTriple& volumeTriple);
+       static void createSubVolumes(DD4hep::Geometry::DetElement& motherDetElement, LayerTriple& layerTriple, VolumeTriple& volumeTriple);
        
    private:
        /**creates the cylindrical shaped layers*/
-       void createCylinderLayers(DD4hep::Geometry::DetElement& motherDetElement, Acts::LayerVector& centralLayers, std::shared_ptr<Acts::Transform3D> motherTransform = nullptr);
+       static void createCylinderLayers(DD4hep::Geometry::DetElement& motherDetElement, Acts::LayerVector& centralLayers, std::shared_ptr<Acts::Transform3D> motherTransform = nullptr);
        /**creates disc shaped layers*/
-       void createDiscLayers(DD4hep::Geometry::DetElement& motherDetElement, Acts::LayerVector& layers, std::shared_ptr< Acts::Transform3D> motherTransform = nullptr);
+       static void createDiscLayers(DD4hep::Geometry::DetElement& motherDetElement, Acts::LayerVector& layers, std::shared_ptr< Acts::Transform3D> motherTransform = nullptr);
        /**creates a binned array of Acts::Surfaces out of vector of DD4hep detector modules*/
-       createSurfaceArray(std::vector<Module>& modules, Acts::BinningValue lValue, std::shared_ptr<const Acts::Transform3D> motherTransform = nullptr) const
+       static Acts::SurfaceArray* createSurfaceArray(std::vector<Module>& modules, Acts::BinningValue lValue, std::shared_ptr<const Acts::Transform3D> motherTransform = nullptr);
        /**creating a surface array binned in phi and a longitudinal direction which can either be z or r*/
-       binnedSurfaceArray2DPhiL(const std::vector<const Acts::Surface*>& surfaces, Acts::BinningValue lValue) const
+       static Acts::SurfaceArray* binnedSurfaceArray2DPhiL(const std::vector<const Acts::Surface*> surfaces, Acts::BinningValue lValue);
        /**helper method to get the bin values for a binned array out of overlapping modules*/
-       std::vector<float> createBinValues(std::vector<std::pair<float,float>> old) const;
+       static std::vector<float> createBinValues(std::vector<std::pair<float,float>> old);
         /**helper method to sort pairs of doubles*/
        static bool sortFloatPairs(std::pair<float,float> ap, std::pair<float,float> bp);
        

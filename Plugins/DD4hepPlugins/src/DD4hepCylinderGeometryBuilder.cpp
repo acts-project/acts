@@ -12,12 +12,8 @@
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Material/Material.hpp"
 // DD4hepPlugin
-<<<<<<< HEAD:Plugins/DD4hepPlugins/src/DD4hepCylinderGeometryBuilder.cpp
 #include "ACTS/Plugins/DD4hepPlugins/DD4hepGeometryHelper.hpp"
-#include "ACTS/Plugins/DD4hepPlugins/DD4hepLayerHelper.hpp"
-=======
-#include "ACTS/Plugins/DD4hepPlugins/DD4hepGeometryHelper.h"
->>>>>>> d4246c1... preparation for material mapping:Plugins/DD4hepPlugins/src/DD4hepCylinderGeometryBuilder.cxx
+
 
 Acts::DD4hepCylinderGeometryBuilder::DD4hepCylinderGeometryBuilder(const Config dgbConfig)
 {
