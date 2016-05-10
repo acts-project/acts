@@ -1,6 +1,6 @@
 *~*
 ._*
-cmt
+#cmt
 cmt/*.sh
 cmt/Make*
 cmt/install*
