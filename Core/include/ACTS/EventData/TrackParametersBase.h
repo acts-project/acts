@@ -67,6 +67,12 @@ namespace Acts
       return getParameterSet().template getParameter<par>();
     }
 
+    template<ParID_t par>
+    ParValue_t uncertainty() const
+    {
+      return getParameterSet().template uncertainty<par>();
+    }
+
     /** Access method for the covariance matrix - returns 0 if no covariance matrix is given */
     const CovMatrix_t* covariance() const
     {

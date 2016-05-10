@@ -164,6 +164,21 @@ namespace Acts
     }
 
     /**
+     * @brief retrieve stored uncertainty for given parameter
+     *
+     * @tparam parameter identifier for the parameter to be retrieved
+     * @remark @c parameter must be part of the template parameter pack @c params. Otherwise a compile-time
+     *         error is generated.
+     *
+     * @return uncertainty \f$\sigma \ge 0\f$ for given parameter
+     */
+    template<ParID_t parameter>
+    ParValue_t uncertainty() const
+    {
+      return m_oParameters.template uncertainty<parameter>();
+    }
+
+    /**
      * @brief number of measured parameters
      *
      * @return number of measured parameters

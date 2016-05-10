@@ -479,6 +479,20 @@ namespace Acts
     return m_pCovariance.get();
   }
 
+  // uncertainty getter
+  template<ParID_t ... params>
+  template<ParID_t parameter>
+  ParValue_t ParameterSet<params...>::uncertainty() const
+  {
+    if(m_pCovariance)
+    {
+      const unsigned int iPos = get_position<ParID_t, parameter, params...>::value;
+      return sqrt((*m_pCovariance)(iPos,iPos));
+    }
+    else
+      return -1.;
+  }
+
   // covariance setter
   template<ParID_t ... params>
   void ParameterSet<params...>::setCovariance(Cov_uptr cov)
