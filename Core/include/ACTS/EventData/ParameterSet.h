@@ -283,6 +283,19 @@ namespace Acts
     const CovMatrix_t* getCovariance() const;
 
     /**
+     * @brief access uncertainty for individual parameter
+     *
+     * @tparam parameter identifier for the parameter to be retrieved
+     * @remark @c parameter must be part of the template parameter pack @c params. Otherwise a compile-time
+     *         error is generated.
+     *
+     * @return uncertainty \f$\sigma \ge 0\f$ of given parameter, a negative value is returned if no
+     *         covariance matrix is set
+     */
+    template<ParID_t parameter>
+    ParValue_t uncertainty() const;
+
+    /**
      * @brief update covariance matrix
      *
      * @note No validation of the given covariance matrix is performed.
