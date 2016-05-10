@@ -101,7 +101,7 @@ namespace Acts {
       
     private:
         /** analyse the layer setup */        
-        LayerSetup analyzeLayerSetup(const LayerVector* lVector) const;   
+        LayerSetup analyzeLayerSetup(const LayerVector lVector) const;   
 
   };
   

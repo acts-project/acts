@@ -57,13 +57,13 @@ namespace Acts {
       virtual ~PassiveLayerBuilder() = default;
           
       /** LayerBuilder interface method - returning the layers at negative side */
-      const LayerVector* negativeLayers() const override; 
+      const LayerVector negativeLayers() const override;
         
       /** LayerBuilder interface method - returning the central layers */
-      const LayerVector* centralLayers() const override; 
+      const LayerVector centralLayers() const override;
         
       /** LayerBuilder interface method - returning the layers at negative side */
-      const LayerVector* positiveLayers() const override;         
+      const LayerVector positiveLayers() const override;         
           
       /**ILayerBuilder method*/
       const std::string& identification() const override { return m_config.layerIdentification; }
@@ -81,9 +81,9 @@ namespace Acts {
         
       bool constructLayers() const;
       
-      mutable LayerVector*                    m_nLayers; //!< layers on negative side
-      mutable LayerVector*                    m_cLayers; //!< layers on central side
-      mutable LayerVector*                    m_pLayers; //!< layers on positive side
+      mutable LayerVector                    m_nLayers; //!< layers on negative side
+      mutable LayerVector                    m_cLayers; //!< layers on central side
+      mutable LayerVector                    m_pLayers; //!< layers on positive side
       
       mutable bool                            m_constructionFlag; //!< indicator if the layer construction has been done already
 
@@ -91,11 +91,11 @@ namespace Acts {
 
   inline PassiveLayerBuilder::Config PassiveLayerBuilder::getConfiguration() const { return m_config; }
     
-  inline const LayerVector* PassiveLayerBuilder::positiveLayers() const { if(not m_constructionFlag) constructLayers(); return m_pLayers; }
+  inline const LayerVector PassiveLayerBuilder::positiveLayers() const { if(not m_constructionFlag) constructLayers(); return m_pLayers; }
 
-  inline const LayerVector* PassiveLayerBuilder::negativeLayers() const { if(not m_constructionFlag) constructLayers(); return m_nLayers; }
+  inline const LayerVector PassiveLayerBuilder::negativeLayers() const { if(not m_constructionFlag) constructLayers(); return m_nLayers; }
     
-  inline const LayerVector* PassiveLayerBuilder::centralLayers() const { if(not m_constructionFlag) constructLayers(); return m_cLayers; }
+  inline const LayerVector PassiveLayerBuilder::centralLayers() const { if(not m_constructionFlag) constructLayers(); return m_cLayers; }
     
 } //end of namespace
 

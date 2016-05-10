@@ -28,9 +28,9 @@
 
 // constructor
 Acts::GenericLayerBuilder::GenericLayerBuilder(const Acts::GenericLayerBuilder::Config glbConfig) :
-  m_nLayers(nullptr),
-  m_cLayers(nullptr),    
-  m_pLayers(nullptr)
+  m_nLayers(),
+  m_cLayers(),
+  m_pLayers()
 {
     setConfiguration(std::move(glbConfig));
     //@TODO make checks if needed parameters are set and if vectors have all same size - waiting for message stream
@@ -97,8 +97,7 @@ void Acts::GenericLayerBuilder::constructLayers()
    size_t numcLayers = m_config.centralLayerRadii.size();
    if (numcLayers){
        //MSG_DEBUG("Configured to build " << numcLayers << " active central layers.");
-       m_cLayers = new LayerVector;
-       m_cLayers->reserve(numcLayers);
+       m_cLayers.reserve(numcLayers);
        // loop through
        for (size_t icl = 0; icl < numcLayers; ++icl){
            // layer R/Z
@@ -241,7 +240,7 @@ void Acts::GenericLayerBuilder::constructLayers()
                }
            }
            // push it into the layer vector
-           m_cLayers->push_back(cLayer);
+           m_cLayers.push_back(cLayer);
        }
     }
     
@@ -250,10 +249,8 @@ void Acts::GenericLayerBuilder::constructLayers()
     size_t numpnLayers = m_config.posnegLayerPositionsZ.size();
     if (numpnLayers){
       //MSG_DEBUG("Configured to build 2 * " << numpnLayers << " passive positive/negative side layers.");
-      m_pLayers = new LayerVector;
-      m_pLayers->reserve(numpnLayers);
-      m_nLayers = new LayerVector;
-      m_nLayers->reserve(numpnLayers);
+      m_pLayers.reserve(numpnLayers);
+      m_nLayers.reserve(numpnLayers);
       // loop through
       for (size_t ipnl = 0; ipnl < numpnLayers; ++ipnl){
                    
@@ -468,8 +465,8 @@ void Acts::GenericLayerBuilder::constructLayers()
          }                                             
                                              
          // push it into the layer vector
-         m_nLayers->push_back(nLayer);
-         m_pLayers->push_back(pLayer);
+         m_nLayers.push_back(nLayer);
+         m_pLayers.push_back(pLayer);
      }
     }
     

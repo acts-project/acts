@@ -18,7 +18,7 @@ namespace Acts {
   typedef std::shared_ptr<const TrackingVolume> TrackingVolumePtr;
   typedef std::shared_ptr<const VolumeBounds>   VolumeBoundsPtr;
   typedef std::shared_ptr<const Volume>         VolumePtr;
-  typedef std::tuple< std::vector< std::shared_ptr<const Layer> >*, std::vector< std::shared_ptr<const Layer> >*, std::vector< std::shared_ptr<const Layer> >* > LayerTriple;
+  typedef std::tuple< std::vector< std::shared_ptr<const Layer> >, std::vector< std::shared_ptr<const Layer> >, std::vector< std::shared_ptr<const Layer> > > LayerTriple;
     typedef std::tuple< VolumePtr, VolumePtr, VolumePtr> VolumeTriple;
       
   
