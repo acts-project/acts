@@ -26,14 +26,14 @@ Acts::Layer::Layer() :
   assignGeoID(GeometryID(1));
 }
 
-Acts::Layer::Layer(Acts::SurfaceArray* surfaceArray,
+Acts::Layer::Layer(std::unique_ptr<Acts::SurfaceArray> surfaceArray,
                   double thickness,
                   Acts::OverlapDescriptor* olap,
                   Acts::ApproachDescriptor* ades,
                   int laytyp) :
   m_nextLayers( NextLayers(nullptr,nullptr) ),
   m_nextLayerUtility(nullptr),
-  m_surfaceArray(surfaceArray),
+m_surfaceArray(std::move(surfaceArray)),
   m_layerThickness(thickness),
   m_overlapDescriptor(olap),
   m_approachDescriptor(ades),
@@ -45,10 +45,22 @@ Acts::Layer::Layer(Acts::SurfaceArray* surfaceArray,
     // @TODO temporary - until GeoID service is in place
     assignGeoID(GeometryID(1));
 }
+
+Acts::Layer::Layer(const Acts::Layer& lay) :
+    m_nextLayers( NextLayers(nullptr,nullptr) ),
+    m_nextLayerUtility(nullptr),
+    m_surfaceArray(),
+    m_layerThickness(lay.m_layerThickness),
+    m_overlapDescriptor(nullptr),
+    m_approachDescriptor(nullptr),
+    m_enclosingTrackingVolume(nullptr),
+    m_enclosingDetachedTrackingVolume(nullptr),
+    m_representingVolume(lay.m_representingVolume),
+    m_layerType(lay.m_layerType)
+{}
                 
 Acts::Layer::~Layer()
-{  
-  delete m_surfaceArray;
+{
   delete m_overlapDescriptor;
   delete m_approachDescriptor;
   delete m_representingVolume;

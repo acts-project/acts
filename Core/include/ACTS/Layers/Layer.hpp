@@ -195,9 +195,12 @@ namespace Acts {
   protected:
     /** Default Constructor*/
     Layer();
+      
+    /** Copy Constructor */
+    Layer(const Layer& lay);
 
     /** Constructor with pointer to SurfaceArray (passing ownership) */
-    Layer(SurfaceArray* surfaceArray,
+      Layer(std::unique_ptr<SurfaceArray> surfaceArray,
           double thickness = 0.,
           OverlapDescriptor* od = nullptr,
           ApproachDescriptor* ad = nullptr,
@@ -248,7 +251,7 @@ namespace Acts {
     mutable NextLayers                              m_nextLayers;                       //!< the previous Layer according to BinGenUtils
     mutable const BinUtility*                       m_nextLayerUtility;                 //!< the bin utility to find the next layer
 
-    SurfaceArray*                                   m_surfaceArray;                     //!< SurfaceArray on this layer Surface
+    std::unique_ptr<SurfaceArray>                   m_surfaceArray;                     //!< SurfaceArray on this layer Surface
     double                                          m_layerThickness;                   //!< thickness of the Layer
 
     OverlapDescriptor*                              m_overlapDescriptor;                //!< descriptor for overlap/next surface
@@ -263,7 +266,7 @@ namespace Acts {
   };
 
   inline const SurfaceArray* Layer::surfaceArray() const
-    { return m_surfaceArray; }
+    { return m_surfaceArray.get(); }
 
   inline double Layer::thickness() const
     { return m_layerThickness; }

@@ -35,11 +35,11 @@ namespace Acts {
       /** Factory for shared layer */
       static LayerPtr create(std::shared_ptr<Transform3D> transform,
                                                  std::shared_ptr<const ConeBounds> cbounds,
-                                                 SurfaceArray* surfaceArray,
+                                                 std::unique_ptr<SurfaceArray> surfaceArray,
                                                  double thickness = 0.,
                                                  OverlapDescriptor* od = 0,
                                                  int laytyp=int(Acts::active)) 
-      { return LayerPtr(new ConeLayer(transform,cbounds,surfaceArray, thickness, od, laytyp));}
+      { return LayerPtr(new ConeLayer(transform,cbounds,std::move(surfaceArray), thickness, od, laytyp));}
 
       /** Factory for shared layer with shift */
       static LayerPtr create(const ConeLayer& cla, const Transform3D& shift)
@@ -70,7 +70,7 @@ namespace Acts {
          @TODO implement ApproachDescriptor */
       ConeLayer(std::shared_ptr<Transform3D> transform,
                 std::shared_ptr<const ConeBounds> cbounds,
-                SurfaceArray* surfaceArray,
+                std::unique_ptr<SurfaceArray> surfaceArray,
                 double thickness = 0.,
                 OverlapDescriptor* od = 0,
                 int laytyp=int(Acts::active));

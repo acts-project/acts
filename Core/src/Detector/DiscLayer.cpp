@@ -19,13 +19,13 @@
 
 Acts::DiscLayer::DiscLayer(std::shared_ptr<Acts::Transform3D> transform,
                           std::shared_ptr<const Acts::DiscBounds> dbounds,
-                          Acts::SurfaceArray* surfaceArray,
+                          std::unique_ptr<SurfaceArray> surfaceArray,
                           double thickness,
                           Acts::OverlapDescriptor* olap,
                           Acts::ApproachDescriptor* ades,
                           int laytyp) :
   DiscSurface(transform, dbounds),
-  Layer(surfaceArray, thickness, olap, ades, laytyp)
+Layer(std::move(surfaceArray), thickness, olap, ades, laytyp)
 {
     
     // just create a generic overlap descriptor if none is there
