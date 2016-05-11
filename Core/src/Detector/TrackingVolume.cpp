@@ -70,7 +70,7 @@ Acts::TrackingVolume::TrackingVolume(std::shared_ptr<Transform3D> htrans,
 Acts::TrackingVolume::TrackingVolume(std::shared_ptr<Transform3D> htrans,
                                     VolumeBoundsPtr volbounds,
                                     const Material& matprop,
-                                    const LayerArray* staticLayerArray,
+                                     std::unique_ptr<const LayerArray> staticLayerArray,
                                     const LayerVector* arbitraryLayerVector, 
                                     const TrackingVolumeArray* containedVolumeArray,
                                     const TrackingVolumeVector* denseVolumeVector,
@@ -79,7 +79,7 @@ Acts::TrackingVolume::TrackingVolume(std::shared_ptr<Transform3D> htrans,
   Volume(htrans, volbounds),
   Material(matprop),
   m_motherVolume(nullptr),
-  m_confinedLayers(staticLayerArray),
+  m_confinedLayers(std::move(staticLayerArray)),
   m_confinedVolumes(containedVolumeArray),
   m_confinedDetachedVolumes(detachedVolumeVector),
   m_confinedDenseVolumes(denseVolumeVector),
@@ -116,8 +116,7 @@ Acts::TrackingVolume::TrackingVolume(const TrackingVolume& tvol,
 
 Acts::TrackingVolume::~TrackingVolume()
 {
-   delete m_boundarySurfaces;   
-   delete m_confinedLayers;
+   delete m_boundarySurfaces;
    delete m_confinedDetachedVolumes;
    delete m_confinedDenseVolumes;
    delete m_confinedArbitraryLayers;

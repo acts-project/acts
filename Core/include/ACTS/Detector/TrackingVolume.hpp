@@ -80,7 +80,7 @@ namespace Acts {
       static TrackingVolumePtr create(std::shared_ptr<Transform3D> htrans,
                                       VolumeBoundsPtr volumeBounds,
                                       const Material& matprop,
-                                      const LayerArray* cLayerArray = nullptr,
+                                      std::unique_ptr<const LayerArray> cLayerArray = nullptr,
                                       const LayerVector* cLayerVector = nullptr,
                                       const TrackingVolumeVector* cVolumeVector = nullptr,
                                       const DetachedVolumeVector* dVolumeVector = nullptr,
@@ -88,7 +88,7 @@ namespace Acts {
         { return TrackingVolumePtr(new TrackingVolume(htrans,
                                                       volumeBounds,
                                                       matprop,
-                                                      cLayerArray,
+                                                      std::move(cLayerArray),
                                                       cLayerVector,
                                                       nullptr,
                                                       cVolumeVector,
@@ -232,7 +232,7 @@ namespace Acts {
       TrackingVolume(std::shared_ptr<Transform3D> htrans,
                      VolumeBoundsPtr volbounds,
                      const Material& matprop,
-                     const LayerArray* cLayerArray = nullptr,
+                     std::unique_ptr<const LayerArray> cLayerArray = nullptr,
                      const LayerVector* cLayerVector = nullptr,
                      const TrackingVolumeArray* cVolumeArray = nullptr,
                      const TrackingVolumeVector* cVolumeVector = nullptr,
@@ -266,7 +266,7 @@ namespace Acts {
       mutable std::vector< std::shared_ptr<const BoundarySurface<TrackingVolume> > >*  m_boundarySurfaces;        //!< boundary Surfaces
 
       //(a) static configuration ordered by Binned arrays
-      mutable const LayerArray*                                                        m_confinedLayers;          //!< Array of Layers inside the Volume
+      mutable std::unique_ptr<const LayerArray>                                                        m_confinedLayers;          //!< Array of Layers inside the Volume
       mutable std::shared_ptr<const TrackingVolumeArray>                               m_confinedVolumes;         //!< Array of Volumes inside the Volume
       //(b)  non-static setups
       mutable const DetachedVolumeVector*                                              m_confinedDetachedVolumes; //!< Detached subvolumes
@@ -286,7 +286,7 @@ namespace Acts {
   inline const std::string& TrackingVolume::volumeName() const { return m_name; }
 
   inline const LayerArray*  TrackingVolume::confinedLayers() const
-  { return m_confinedLayers; }
+  { return m_confinedLayers.get(); }
 
   inline const LayerVector* TrackingVolume::confinedArbitraryLayers() const
   { return m_confinedArbitraryLayers; }

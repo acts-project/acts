@@ -45,9 +45,9 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createTr
 {
 
     // the final one to build / sensitive Volume / Bounds
-    TrackingVolumePtr tVolume     = nullptr;
+    TrackingVolumePtr tVolume                       = nullptr;
     // the layer array
-    const LayerArray* layerArray  = nullptr;
+    std::unique_ptr<const LayerArray> layerArray     = nullptr;
 
     // cases are:
     // (1) volBounds && transform   : use both information
@@ -107,11 +107,11 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createTr
 
     // finally create the TrackingVolume
     tVolume = TrackingVolume::create(transform,
-                                          volBoundsFinal,
-                                          matprop,
-                                          layerArray,
-                                          nullptr, nullptr, nullptr,
-                                          volumeName);
+                                     volBoundsFinal,
+                                     matprop,
+                                     std::move(layerArray),
+                                     nullptr, nullptr, nullptr,
+                                     volumeName);
     // screen output
     // MSG_VERBOSE( "Created cylindrical volume at z-position :" <<  tVolume->center().z() );
     // MSG_VERBOSE( "   created bounds : " << tVolume->volumeBounds() );
