@@ -110,7 +110,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createTr
                                      volBoundsFinal,
                                      matprop,
                                      std::move(layerArray),
-                                     nullptr, nullptr, nullptr,
+                                     {}, {}, {},
                                      volumeName);
     // screen output
     // MSG_VERBOSE( "Created cylindrical volume at z-position :" <<  tVolume->center().z() );

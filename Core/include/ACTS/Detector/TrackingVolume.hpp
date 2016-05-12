@@ -81,9 +81,9 @@ namespace Acts {
                                       VolumeBoundsPtr volumeBounds,
                                       const Material& matprop,
                                       std::unique_ptr<const LayerArray> cLayerArray = nullptr,
-                                      const LayerVector* cLayerVector = nullptr,
-                                      const TrackingVolumeVector* cVolumeVector = nullptr,
-                                      const DetachedVolumeVector* dVolumeVector = nullptr,
+                                      const LayerVector cLayerVector = {},
+                                      const TrackingVolumeVector cVolumeVector = {},
+                                      const DetachedVolumeVector dVolumeVector = {},
                                       const std::string& volumeName="undefined")
         { return TrackingVolumePtr(new TrackingVolume(htrans,
                                                       volumeBounds,
@@ -131,19 +131,19 @@ namespace Acts {
       const LayerArray* confinedLayers() const;
 
       /** Return the arbitrary layer array - if it exists */
-      const LayerVector* confinedArbitraryLayers() const;
+      const LayerVector confinedArbitraryLayers() const;
 
       /** Return the confined volumes of this container array - if it exists */
-      const TrackingVolumeArray* confinedVolumes() const;
+      std::shared_ptr<const TrackingVolumeArray> confinedVolumes() const;
 
       /** Return the confind volume array as a shared pointer - for glueing */
       std::shared_ptr<const TrackingVolumeArray> confinedVolumesSharedPtr() const;
 
       /** Return detached subVolumes - not the ownership */
-      const DetachedVolumeVector* confinedDetachedVolumes() const;
+      const DetachedVolumeVector confinedDetachedVolumes() const;
 
       /** Return unordered subVolumes - not the ownership */
-      const TrackingVolumeVector* confinedDenseVolumes() const;
+      const TrackingVolumeVector confinedDenseVolumes() const;
 
       /** Returns the VolumeName - for debug reason, might be depreciated later */
       const std::string& volumeName() const;
@@ -233,10 +233,10 @@ namespace Acts {
                      VolumeBoundsPtr volbounds,
                      const Material& matprop,
                      std::unique_ptr<const LayerArray> cLayerArray = nullptr,
-                     const LayerVector* cLayerVector = nullptr,
-                     const TrackingVolumeArray* cVolumeArray = nullptr,
-                     const TrackingVolumeVector* cVolumeVector = nullptr,
-                     const DetachedVolumeVector* dVolumeVector = nullptr,
+                     const LayerVector cLayerVector = {},
+                     std::shared_ptr<const TrackingVolumeArray> cVolumeArray = nullptr,
+                     const TrackingVolumeVector cVolumeVector = {},
+                     const DetachedVolumeVector dVolumeVector = {},
                      const std::string& volumeName="undefined");
 
       /** Copy Constructor with a shift  */
@@ -263,15 +263,15 @@ namespace Acts {
 
       mutable const TrackingVolume*                                                    m_motherVolume;            //!< mother volume of this volume
 
-      mutable std::vector< std::shared_ptr<const BoundarySurface<TrackingVolume> > >*  m_boundarySurfaces;        //!< boundary Surfaces
+      mutable std::vector< std::shared_ptr<const BoundarySurface<TrackingVolume> > >  m_boundarySurfaces;        //!< boundary Surfaces
 
       //(a) static configuration ordered by Binned arrays
       mutable std::unique_ptr<const LayerArray>                                                        m_confinedLayers;          //!< Array of Layers inside the Volume
       mutable std::shared_ptr<const TrackingVolumeArray>                               m_confinedVolumes;         //!< Array of Volumes inside the Volume
       //(b)  non-static setups
-      mutable const DetachedVolumeVector*                                              m_confinedDetachedVolumes; //!< Detached subvolumes
-      mutable const TrackingVolumeVector*                                              m_confinedDenseVolumes;    //!< Unordered subvolumes
-      mutable const LayerVector*                                                       m_confinedArbitraryLayers; //!< Unordered Layers inside the Volume
+      const DetachedVolumeVector                                              m_confinedDetachedVolumes; //!< Detached subvolumes
+      const TrackingVolumeVector                                              m_confinedDenseVolumes;    //!< Unordered subvolumes
+      const LayerVector                                                       m_confinedArbitraryLayers; //!< Unordered Layers inside the Volume
 
       mutable GlueVolumesDescriptor*                                                   m_glueVolumeDescriptor;      //!< Volumes to glue Volumes from the outside
 
@@ -288,19 +288,19 @@ namespace Acts {
   inline const LayerArray*  TrackingVolume::confinedLayers() const
   { return m_confinedLayers.get(); }
 
-  inline const LayerVector* TrackingVolume::confinedArbitraryLayers() const
+  inline const LayerVector TrackingVolume::confinedArbitraryLayers() const
   { return m_confinedArbitraryLayers; }
 
-  inline const TrackingVolumeArray* TrackingVolume::confinedVolumes() const
-  { return m_confinedVolumes.get(); }
+  inline std::shared_ptr<const TrackingVolumeArray> TrackingVolume::confinedVolumes() const
+  { return m_confinedVolumes; }
 
   inline std::shared_ptr<const TrackingVolumeArray> TrackingVolume::confinedVolumesSharedPtr() const
   { return m_confinedVolumes; }
 
-  inline const DetachedVolumeVector* TrackingVolume::confinedDetachedVolumes() const
+  inline const DetachedVolumeVector TrackingVolume::confinedDetachedVolumes() const
   { return m_confinedDetachedVolumes; }
 
-  inline const TrackingVolumeVector* TrackingVolume::confinedDenseVolumes() const
+  inline const TrackingVolumeVector TrackingVolume::confinedDenseVolumes() const
   { return m_confinedDenseVolumes; }
 
   template <class T> bool TrackingVolume::onVolumeBoundary(const T& pars) const {
@@ -388,9 +388,9 @@ namespace Acts {
 
       }
       // and the arbitraray layers
-      if (m_confinedArbitraryLayers){
+      if (!m_confinedArbitraryLayers.empty()){
           // loop over the layers and intersect them
-          for (auto& layer : (*m_confinedArbitraryLayers)){
+          for (auto& layer : m_confinedArbitraryLayers){
               // intersections
               Intersection lIntersection = layer->surfaceRepresentation().intersectionEstimate(gp,dir,true,bchk);
               if (lIntersection.valid)

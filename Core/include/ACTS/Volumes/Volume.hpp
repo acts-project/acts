@@ -74,7 +74,7 @@ namespace Acts {
       protected:
         std::shared_ptr<Transform3D>             m_transform;         //!< Transform3D
         mutable Vector3D*                        m_center;            //!< center position of the surface
-        VolumeBoundsPtr      m_volumeBounds;      //!< the volumeBounds
+        VolumeBoundsPtr                          m_volumeBounds;      //!< the volumeBounds
     };
 
     inline const Transform3D& Volume::transform() const

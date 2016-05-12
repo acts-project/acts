@@ -70,9 +70,9 @@ void Acts::DiscLayer::buildApproachDescriptor() const {
         // get teh boundary surfaces
         const std::vector< std::shared_ptr<const Acts::BoundarySurface<Acts::AbstractVolume> > >& bSurfaces = m_representingVolume->boundarySurfaces();
         // fill in the surfaces into the vector
-        std::vector< std::shared_ptr<const Acts::BoundarySurface<Acts::AbstractVolume> > >* aSurfaces = new std::vector< std::shared_ptr<const Acts::BoundarySurface<Acts::AbstractVolume> > >;
-        aSurfaces->push_back(bSurfaces[negativeFaceXY]);
-        aSurfaces->push_back(bSurfaces[positiveFaceXY]);
+        std::vector< std::shared_ptr<const Acts::BoundarySurface<Acts::AbstractVolume> > > aSurfaces;
+        aSurfaces.push_back(bSurfaces[negativeFaceXY]);
+        aSurfaces.push_back(bSurfaces[positiveFaceXY]);
         // create an ApproachDescriptor with Boundary surfaces
         m_approachDescriptor = new Acts::GenericApproachDescriptor<const BoundarySurface<AbstractVolume> >(aSurfaces);   
     } else {        

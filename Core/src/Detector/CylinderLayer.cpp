@@ -67,9 +67,9 @@ void Acts::CylinderLayer::buildApproachDescriptor() const {
         // get teh boundary surfaces
         const std::vector< std::shared_ptr<const Acts::BoundarySurface<Acts::AbstractVolume> > >& bSurfaces = m_representingVolume->boundarySurfaces();
         // fill in the surfaces into the vector
-        std::vector< std::shared_ptr<const Acts::BoundarySurface<Acts::AbstractVolume> > >* aSurfaces = new std::vector< std::shared_ptr<const Acts::BoundarySurface<Acts::AbstractVolume> > >;
-        if (bSurfaces.size() > size_t(tubeOuterCover)) aSurfaces->push_back(bSurfaces[tubeInnerCover]);
-        aSurfaces->push_back(bSurfaces[tubeOuterCover]);
+        std::vector< std::shared_ptr<const Acts::BoundarySurface<Acts::AbstractVolume> > > aSurfaces;
+        if (bSurfaces.size() > size_t(tubeOuterCover)) aSurfaces.push_back(bSurfaces[tubeInnerCover]);
+        aSurfaces.push_back(bSurfaces[tubeOuterCover]);
         // create an ApproachDescriptor with Boundary surfaces
         m_approachDescriptor = new Acts::GenericApproachDescriptor<const BoundarySurface<AbstractVolume> >(aSurfaces);   
     } else {        
