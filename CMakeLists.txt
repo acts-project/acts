@@ -17,8 +17,8 @@ set (ACTS_MSG_MACROS_PLUGIN "ACTS/Utilities/detail/DefaultMsgMacros.hpp" CACHE S
 set(ConfigPackageLocation lib/cmake/ACTS)
 
 add_subdirectory (Core)
-#add_subdirectory (doc)
-#add_subdirectory (Plugins)
+add_subdirectory (doc)
+add_subdirectory (Plugins)
 
 include(GenerateExportHeader)
 generate_export_header (ACTSCore)

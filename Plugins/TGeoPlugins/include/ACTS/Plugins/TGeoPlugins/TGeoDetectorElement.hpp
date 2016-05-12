@@ -8,7 +8,7 @@
 // Geometry module
 #include "ACTS/Detector/DetectorElementBase.hpp"
 //Root
-#include "TGeoManager.hpp"
+#include "TGeoManager.h"
 #include<iostream>
 
 namespace Acts {

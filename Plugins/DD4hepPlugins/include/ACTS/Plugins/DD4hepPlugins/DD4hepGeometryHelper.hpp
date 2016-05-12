@@ -10,7 +10,7 @@
 // Geometry Module
 #include "ACTS/Volumes/VolumeBounds.hpp"
 // DD4hep
-#include "DD4hep/Detector.hpp"
+#include "DD4hep/Detector.h"
 
 
 namespace Acts {

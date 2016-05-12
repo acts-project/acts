@@ -2,7 +2,7 @@
 // Geometry Module
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
 // Root TGeo
-#include "TGeoManager.hpp"
+#include "TGeoManager.h"
 
 std::shared_ptr<Acts::Transform3D> Acts::DD4hepGeometryHelper::extractTransform(DD4hep::Geometry::DetElement& detElement)
 {

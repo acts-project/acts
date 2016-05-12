@@ -8,8 +8,8 @@
 #include "ACTS/Material/MaterialProperties.hpp"
 #include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
 
-#include "TGeoBBox.hpp"
-#include "TGeoTrd2.hpp"
+#include "TGeoBBox.h"
+#include "TGeoTrd2.h"
 
 #include "ACTS/Utilities/Definitions.hpp"
 

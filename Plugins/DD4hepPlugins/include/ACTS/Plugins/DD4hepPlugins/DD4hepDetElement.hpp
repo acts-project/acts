@@ -8,7 +8,7 @@
 //TGeoDetectorElement
 #include "ACTS/Plugins/TGeoPlugins/TGeoDetectorElement.hpp"
 //DD4hep
-#include "DD4hep/Detector.hpp"
+#include "DD4hep/Detector.h"
 
 namespace Acts {
     
