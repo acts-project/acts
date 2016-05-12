@@ -38,7 +38,7 @@ Acts::StraightLineSurface::StraightLineSurface(std::unique_ptr<Acts::Transform3D
 Acts::StraightLineSurface::StraightLineSurface(std::shared_ptr<Acts:: Transform3D> htrans, double radius, double halez) :
   Surface(htrans),
   m_lineDirection(nullptr),
-  m_bounds(new Acts::CylinderBounds(radius, halez))
+m_bounds(std::make_shared<Acts::CylinderBounds>(radius, halez))
 {}
 
 // constructors by arguments

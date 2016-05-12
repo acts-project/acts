@@ -49,5 +49,5 @@ std::shared_ptr<const Acts::TrackingVolumeArray> Acts::TrackingVolumeArrayCreato
     BinUtility* binUtility = new BinUtility(boundaries, open, bValue);
 
     // and return the newly created binned array
-    return std::shared_ptr<const TrackingVolumeArray>(new BinnedArray1D< std::shared_ptr<const TrackingVolume> >(tVolumesOrdered,binUtility));
+    return std::make_shared<BinnedArray1D< std::shared_ptr<const TrackingVolume> >>(tVolumesOrdered,binUtility);
 }

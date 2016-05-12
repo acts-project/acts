@@ -37,18 +37,18 @@ Acts::DiscSurface::DiscSurface(const DiscSurface& dsf, const Acts::Transform3D& 
 // construct a disc with full phi coverage
 Acts::DiscSurface::DiscSurface(std::shared_ptr<Acts:: Transform3D> htrans, double rmin, double rmax) :
   Acts::Surface(htrans),
-  m_bounds(new Acts::RadialBounds(rmin, rmax))
+m_bounds(std::make_shared<Acts::RadialBounds>(rmin, rmax))
 {}
 
 // construct a disc with given phi coverage
 Acts::DiscSurface::DiscSurface(std::shared_ptr<Acts:: Transform3D> htrans, double rmin, double rmax, double hphisec) :
   Acts::Surface(htrans),
-  m_bounds(new Acts::RadialBounds(rmin, rmax, hphisec))
+m_bounds(std::make_shared<Acts::RadialBounds>(rmin, rmax, hphisec))
 {}
 
 Acts::DiscSurface::DiscSurface(std::shared_ptr<Acts:: Transform3D> htrans, double minhalfx, double maxhalfx, double maxR, double minR, double avephi, double stereo):
   Acts::Surface(htrans),
-  m_bounds(new Acts::DiscTrapezoidalBounds(minhalfx, maxhalfx, maxR, minR, avephi, stereo)),
+m_bounds(std::make_shared<Acts::DiscTrapezoidalBounds>(minhalfx, maxhalfx, maxR, minR, avephi, stereo)),
   m_referencePoint(nullptr)
 {}
 

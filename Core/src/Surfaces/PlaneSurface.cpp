@@ -57,7 +57,7 @@ Acts::PlaneSurface::PlaneSurface(const Acts::Vector3D& position, const Vector3D&
     curvilinearRotation.col(2) = V;
 
     // curvilinear surfaces are boundless
-    Acts::Surface::m_transform   = std::shared_ptr<Acts::Transform3D>(new Acts::Transform3D);
+    Acts::Surface::m_transform   = std::make_shared<Acts::Transform3D>();
     (*Acts::Surface::m_transform) = curvilinearRotation;
     Acts::Surface::m_transform->pretranslate(position);
 }
@@ -83,13 +83,13 @@ Acts::PlaneSurface::PlaneSurface(std::unique_ptr<Acts::Transform3D> htrans) :
 // construct rectangle module
 Acts::PlaneSurface::PlaneSurface(std::shared_ptr<Acts:: Transform3D> htrans, double halephi, double haleta) :
   Acts::Surface(htrans),
-  m_bounds(new Acts::RectangleBounds(halephi, haleta))
+m_bounds(std::make_shared<Acts::RectangleBounds>(halephi, haleta))
 {}
 
 // construct trapezoidal module with parameters
 Acts::PlaneSurface::PlaneSurface(std::shared_ptr<Acts:: Transform3D> htrans, double minhalephi, double maxhalephi, double haleta) :
   Acts::Surface(htrans),
-  m_bounds(new Acts::TrapezoidBounds(minhalephi, maxhalephi, haleta))
+m_bounds(std::make_shared<Acts::TrapezoidBounds>(minhalephi, maxhalephi, haleta))
 {}
 
 // construct module with shared boundaries

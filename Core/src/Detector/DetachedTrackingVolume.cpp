@@ -69,9 +69,9 @@ std::shared_ptr<const Acts::DetachedTrackingVolume> Acts::DetachedTrackingVolume
    
     // return a new cloned TrackingVolume
     return std::shared_ptr<const Acts::DetachedTrackingVolume>(new Acts::DetachedTrackingVolume(name,
-                                                                                              shiftedTrackingVolume,
-                                                                                              layerRepresentation,
-                                                                                              multiLayerRepresentation));
+                                                                                                shiftedTrackingVolume,
+                                                                                                layerRepresentation,
+                                                                                                multiLayerRepresentation));
 
 }
 

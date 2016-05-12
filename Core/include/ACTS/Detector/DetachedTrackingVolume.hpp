@@ -49,7 +49,7 @@ namespace Acts {
                                                 TrackingVolumePtr vol,
                                                 LayerPtr layer = nullptr,
                                                 LayerVector* multiLayer = nullptr) 
-        { return DetachedTrackingVolumePtr(new DetachedTrackingVolume(name,vol,layer,multiLayer)); } 
+      { return DetachedTrackingVolumePtr(new DetachedTrackingVolume(name,vol,layer,multiLayer)); }
                               
         /** Destructor*/
         ~DetachedTrackingVolume();

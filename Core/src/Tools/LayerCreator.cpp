@@ -102,7 +102,7 @@ Acts::LayerPtr Acts::LayerCreator::discLayer(const std::vector<const Surface*>& 
     std::unique_ptr<SurfaceArray> sArray = m_config.surfaceArrayCreator->surfaceArrayOnDisc(surfaces, minR, maxR, minPhi, maxPhi, binsR, binsPhi, rBoundaries);
     
     // create the share disc bounds
-    std::shared_ptr<const DiscBounds> dBounds(new RadialBounds(minR-envelopeMinR,maxR+envelopeMaxR));
+    auto dBounds = std::make_shared<RadialBounds>(minR-envelopeMinR,maxR+envelopeMaxR);
     
     // create the layer transforms
     Transform3D* transform = new Transform3D(Transform3D::Identity());

@@ -42,7 +42,7 @@ bool Acts::PassiveLayerBuilder::constructLayers() const
             // some screen output
             // MSG_VERBOSE("- build layer " << icl << " with radius = " << m_config.centralLayerRadii[icl] << " and halfZ = " << m_config.centralLayerHalflengthZ[icl]);
             // create the layer and push it back
-            std::shared_ptr<const CylinderBounds> cBounds(new CylinderBounds(m_config.centralLayerRadii[icl],m_config.centralLayerHalflengthZ[icl]));
+            auto cBounds = std::make_shared<CylinderBounds>(m_config.centralLayerRadii[icl],m_config.centralLayerHalflengthZ[icl]);
             // create the layer
             LayerPtr cLayer = CylinderLayer::create(nullptr, cBounds, nullptr, m_config.centralLayerThickness[icl]);
             // assign the material to the layer surface
@@ -50,12 +50,13 @@ bool Acts::PassiveLayerBuilder::constructLayers() const
             // create the material from jobOptions
             if (m_config.centralLayerMaterialX0.size()){
                 // create homogeneous material
-                material = std::shared_ptr<const SurfaceMaterial>(new HomogeneousSurfaceMaterial(MaterialProperties(m_config.centralLayerThickness[icl],
-                                                                                                                    m_config.centralLayerMaterialX0[icl],
-                                                                                                                    m_config.centralLayerMaterialL0[icl],
-                                                                                                                    m_config.centralLayerMaterialA[icl],
-                                                                                                                    m_config.centralLayerMaterialZ[icl],
-                                                                                                                    m_config.centralLayerMaterialRho[icl]), 1.));
+                material = std::make_shared<const HomogeneousSurfaceMaterial>(MaterialProperties(m_config.centralLayerThickness[icl],
+                                                                                                 m_config.centralLayerMaterialX0[icl],
+                                                                                                 m_config.centralLayerMaterialL0[icl],
+                                                                                                 m_config.centralLayerMaterialA[icl],
+                                                                                                 m_config.centralLayerMaterialZ[icl],
+                                                                                                 m_config.centralLayerMaterialRho[icl]), 1.);
+
                 // sign it to the surface
                 cLayer->surfaceRepresentation().setSurfaceMaterial(material);
             } 
@@ -76,7 +77,7 @@ bool Acts::PassiveLayerBuilder::constructLayers() const
             // MSG_VERBOSE("- build layers " << (2*ipnl) << " and "<<  (2*ipnl)+1 << " at +/- z = " << m_config.posnegLayerPositionZ[ipnl] 
             //                               << " and rMin/rMax = " << m_config.posnegLayerRmin[ipnl] << " / " << m_config.posnegLayerRmax[ipnl]);
             // create the share disc bounds
-            std::shared_ptr<const DiscBounds> dBounds(new RadialBounds(m_config.posnegLayerRmin[ipnl], m_config.posnegLayerRmax[ipnl]));
+            std::shared_ptr<const DiscBounds> dBounds = std::make_shared<RadialBounds>(m_config.posnegLayerRmin[ipnl], m_config.posnegLayerRmax[ipnl]);
             // create the layer transforms
             Transform3D* nTransform = new Transform3D(Transform3D::Identity());
             nTransform->translation() = Vector3D(0.,0.,-m_config.posnegLayerPositionZ[ipnl]);
@@ -90,12 +91,12 @@ bool Acts::PassiveLayerBuilder::constructLayers() const
             // create the material from jobOptions
             if (m_config.posnegLayerMaterialX0.size()){
                 // create homogeneous material
-                material = std::shared_ptr<const SurfaceMaterial>(new HomogeneousSurfaceMaterial(MaterialProperties(m_config.posnegLayerThickness[ipnl],
+                material = std::make_shared<const HomogeneousSurfaceMaterial>(MaterialProperties(m_config.posnegLayerThickness[ipnl],
                                                                                                                     m_config.posnegLayerMaterialX0[ipnl],
                                                                                                                     m_config.posnegLayerMaterialL0[ipnl],
                                                                                                                     m_config.posnegLayerMaterialA[ipnl],
                                                                                                                     m_config.posnegLayerMaterialZ[ipnl],
-                                                                                                                    m_config.posnegLayerMaterialRho[ipnl]), 1.));
+                                                                                                                    m_config.posnegLayerMaterialRho[ipnl]), 1.);
                 // sign it to the surface
                 nLayer->surfaceRepresentation().setSurfaceMaterial(material);
                 pLayer->surfaceRepresentation().setSurfaceMaterial(material);
