@@ -1,5 +1,5 @@
 # get list of all source files
-file (GLOB src_files "src/*.cxx")
+file (GLOB src_files "src/*.cpp")
 
 # define library target
 add_library(ACTSGenericDetectorPlugin SHARED ${src_files})
