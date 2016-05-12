@@ -9,7 +9,7 @@
 //Algebra
 #include "ACTS/Utilities/Definitions.hpp"
 //DD4hep
-#include "DD4hep/Detector.hpp"
+#include "DD4hep/Detector.h"
 
 
 namespace Acts {

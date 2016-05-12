@@ -7,7 +7,7 @@
 
 #include "ACTS/Plugins/DD4hepPlugins/IDetExtension.hpp"
 //DD4hep
-#include "DD4hep/Detector.hpp"
+#include "DD4hep/Detector.h"
 #include "ACTS/Plugins/DD4hepPlugins/Module.hpp"
 
 

@@ -12,7 +12,7 @@
 #include "ACTS/Utilities/BinnedArray.hpp"
 #include "ACTS/Tools/ITrackingVolumeBuilder.hpp"
 // DD4hep
-#include "DD4hep/Detector.hpp"
+#include "DD4hep/Detector.h"
 
 namespace Acts {
     class Surface;
