@@ -45,7 +45,7 @@ namespace Acts
     // create the volume for the beam pipe
     Acts::CylinderVolumeBuilder::Config bpvConfig;
     bpvConfig.trackingVolumeHelper          = CylinderVolumeHelper;
-    bpvConfig.volumeName                    = BeamPipeBuilder.identification();
+    bpvConfig.volumeName                    = "BeamPipe";
     bpvConfig.layerEnvelopeR                = 1.;
     bpvConfig.layerEnvelopeZ                = 1.;
     auto BeamPipeVolumeBuilder = std::make_shared<Acts::CylinderVolumeBuilder>(bpvConfig);
