@@ -2,7 +2,7 @@
 find_package(ROOT COMPONENTS Geom)
 
 # get list of all source files
-file(GLOB src_files "src/*.cxx")
+file(GLOB src_files "src/*.cpp")
 
 # define library target
 add_library(ACTSTGeoPlugin SHARED ${src_files})

@@ -2,7 +2,7 @@
 find_package(DD4hep REQUIRED DDCore DDSegmentation)
 
 # get list of all source files
-file (GLOB src_files "src/*.cxx")
+file (GLOB src_files "src/*.cpp")
 
 # define library target
 add_library(ACTSDD4hepPlugin SHARED ${src_files})

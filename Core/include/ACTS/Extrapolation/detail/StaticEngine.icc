@@ -3,13 +3,13 @@
 ///////////////////////////////////////////////////////////////////
 
 // Extrapolation module
-#include "ACTS/Extrapolation/INavigationEngine.h"
-#include "ACTS/Extrapolation/IPropagationEngine.h"
-#include "ACTS/Extrapolation/IMaterialEffectsEngine.h"
-#include "ACTS/Surfaces/Surface.h"
-#include "ACTS/Detector/TrackingGeometry.h"
-#include "ACTS/Detector/TrackingVolume.h"
-#include "ACTS/Layers/Layer.h"
+#include "ACTS/Extrapolation/INavigationEngine.hpp"
+#include "ACTS/Extrapolation/IPropagationEngine.hpp"
+#include "ACTS/Extrapolation/IMaterialEffectsEngine.hpp"
+#include "ACTS/Surfaces/Surface.hpp"
+#include "ACTS/Detector/TrackingGeometry.hpp"
+#include "ACTS/Detector/TrackingVolume.hpp"
+#include "ACTS/Layers/Layer.hpp"
 // STD
 #include <iostream>
 #include <iomanip>

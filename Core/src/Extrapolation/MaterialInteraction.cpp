@@ -1,0 +1,7 @@
+///////////////////////////////////////////////////////////////////
+// MaterialInteraction.cpp, ACTS project
+///////////////////////////////////////////////////////////////////
+#include "ACTS/Extrapolation/detail/MaterialInteraction.hpp"
+
+//static particle masses
+Acts::ParticleMasses Acts::MaterialInteraction::s_particleMasses;
