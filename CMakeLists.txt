@@ -8,17 +8,17 @@ set (ACTS_VERSION 0.0.1)
 set (CMAKE_INSTALL_PREFIX "/opt/ACTS/${ACTS_VERSION}" CACHE STRING "installation directory")
 
 # default parameter definitions
-set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.h" CACHE STRING "default track parameter definition")
+set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE STRING "default track parameter definition")
 
 # default message macros
-set (ACTS_MSG_MACROS_PLUGIN "ACTS/Utilities/detail/DefaultMsgMacros.h" CACHE STRING "default message macros")
+set (ACTS_MSG_MACROS_PLUGIN "ACTS/Utilities/detail/DefaultMsgMacros.hpp" CACHE STRING "default message macros")
 
 # set location of cmake configuration files
 set(ConfigPackageLocation lib/cmake/ACTS)
 
 add_subdirectory (Core)
-add_subdirectory (doc)
-add_subdirectory (Plugins)
+#add_subdirectory (doc)
+#add_subdirectory (Plugins)
 
 include(GenerateExportHeader)
 generate_export_header (ACTSCore)
