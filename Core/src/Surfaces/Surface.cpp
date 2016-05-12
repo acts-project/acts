@@ -96,7 +96,7 @@ Acts::Surface::Surface(const Surface& sf) :
 // copy constructor with shift - Attention! sets the associatedDetElement to 0 and the identifieer to invalid
 // also invalidates the material layer
 Acts::Surface::Surface(const Surface& sf, const Acts::Transform3D& shift) :
-  m_transform(std::shared_ptr<Acts::Transform3D>(new Acts::Transform3D(shift*sf.transform()))),
+  m_transform(std::make_shared<Acts::Transform3D>(Acts::Transform3D(shift*sf.transform()))),
   m_center(nullptr),
   m_normal(nullptr),
   m_associatedDetElement(nullptr),

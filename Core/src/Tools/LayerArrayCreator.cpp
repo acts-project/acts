@@ -20,7 +20,7 @@
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 
-Acts::LayerArray* Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
+std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
                                                       double min, double max, 
                                                       BinningType bType,
                                                       BinningValue bValue) const 
@@ -41,7 +41,6 @@ Acts::LayerArray* Acts::LayerArrayCreator::layerArray(const LayerVector& layersI
    typedef std::pair< std::shared_ptr<const Layer>, Vector3D > LayerOrderPosition;
    // needed for all cases
    std::shared_ptr<const Layer>   layer      = nullptr;
-   LayerArray*                    layerArray = nullptr;
    BinUtility*                    binUtility = nullptr;
    std::vector< LayerOrderPosition >   layerOrderVector;
 
@@ -122,9 +121,9 @@ Acts::LayerArray* Acts::LayerArrayCreator::layerArray(const LayerVector& layersI
 
     }
     // create the BinnedArray
-    layerArray = new BinnedArray1D< std::shared_ptr< const Layer> >(layerOrderVector, binUtility);
+  //  auto layerArray = std::make_unique<const LayerArray>(BinnedArray1D< std::shared_ptr< const Layer> >(layerOrderVector, binUtility));
     // return what we have here
-    return layerArray;
+    return std::make_unique<BinnedArray1D< std::shared_ptr< const Layer> >>(layerOrderVector, binUtility);
 
 }
 

@@ -34,14 +34,14 @@ Acts::CylinderSurface::CylinderSurface(const CylinderSurface& csf, const Acts::T
 // constructor by radius and halflength
 Acts::CylinderSurface::CylinderSurface(std::shared_ptr<Acts::Transform3D> htrans, double radius, double hlength) :
   Acts::Surface(htrans),
-  m_bounds(new Acts::CylinderBounds(radius, hlength)),
+  m_bounds(std::make_shared<Acts::CylinderBounds>(radius, hlength)),
   m_rotSymmetryAxis(nullptr)
 {}
 
 // constructor by radius, halflenght and phisector
 Acts::CylinderSurface::CylinderSurface(std::shared_ptr<Acts::Transform3D> htrans, double radius, double hphi, double hlength) :
   Acts::Surface(htrans),
-  m_bounds(new Acts::CylinderBounds(radius, hphi, hlength)),
+m_bounds(std::make_shared<Acts::CylinderBounds>(radius, hphi, hlength)),
   m_rotSymmetryAxis(nullptr)
 {}
 

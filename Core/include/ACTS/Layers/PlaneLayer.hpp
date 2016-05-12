@@ -35,12 +35,12 @@ namespace Acts {
         /** Factory for a shared plane layer */
         static LayerPtr create(std::shared_ptr<Transform3D> transform,
                                                    std::shared_ptr<const PlanarBounds> pbounds,
-                                                   SurfaceArray* surfaces = nullptr,
+                                                   std::unique_ptr<SurfaceArray> surfaces = nullptr,
                                                    double thickness = 0.,
                                                    OverlapDescriptor* od = nullptr,
                                                    ApproachDescriptor* ad = nullptr,
                                                    int laytyp=int(Acts::active)) 
-        { return LayerPtr(new PlaneLayer(transform, pbounds, surfaces, thickness, od, ad, laytyp)); } 
+      { return LayerPtr(new PlaneLayer(transform, pbounds, std::move(surfaces), thickness, od, ad, laytyp)); }
                            
         /** Factory for a shared plane layer */
         static LayerPtr create(const PlaneLayer& pla, const Transform3D& tr)
@@ -75,7 +75,7 @@ namespace Acts {
            - shared bounds */
         PlaneLayer(std::shared_ptr<Transform3D> transform,
                    std::shared_ptr<const PlanarBounds>& pbounds,
-                   SurfaceArray* = nullptr,
+                   std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
                    double thickness = 0.,
                    OverlapDescriptor* od = nullptr,
                    ApproachDescriptor* ad = nullptr,

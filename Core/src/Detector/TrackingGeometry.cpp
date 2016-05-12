@@ -46,7 +46,7 @@ const Acts::TrackingVolume* Acts::TrackingGeometry::lowestStaticTrackingVolume(c
     const Acts::TrackingVolume* currentVolume = nullptr;
     while (currentVolume != searchVolume && searchVolume ) {
         currentVolume = searchVolume;
-        if (!(searchVolume->confinedDetachedVolumes()) ) 
+        if ((searchVolume->confinedDetachedVolumes()).empty() )
             searchVolume  = searchVolume->associatedSubVolume(gp);
     }
     return currentVolume;
@@ -61,22 +61,22 @@ void Acts::TrackingGeometry::registerTrackingVolumes(const Acts::TrackingVolume&
     tvol.setMotherVolume(mvol);
     
     m_trackingVolumes[tvol.volumeName()] = (&tvol);
-    const Acts::TrackingVolumeArray* confinedVolumes = tvol.confinedVolumes();
+    std::shared_ptr<const Acts::TrackingVolumeArray> confinedVolumes = tvol.confinedVolumes();
     if (confinedVolumes){
         for (auto& volumesIter: confinedVolumes->arrayObjects())
             if (volumesIter) registerTrackingVolumes(*volumesIter, &tvol, sublvl);
     }
 
-    const Acts::TrackingVolumeVector* confinedDenseVolumes = tvol.confinedDenseVolumes();
-    if (confinedDenseVolumes){
-        for (auto& volumesIter : (*confinedDenseVolumes) )
+    const Acts::TrackingVolumeVector confinedDenseVolumes = tvol.confinedDenseVolumes();
+    if (!confinedDenseVolumes.empty()){
+        for (auto& volumesIter : confinedDenseVolumes )
             if (volumesIter) registerTrackingVolumes(*volumesIter, &tvol, sublvl);
     }
     
     /** should detached tracking volumes be part of the tracking geometry ? */
-    const Acts::DetachedVolumeVector* confinedDetachedVolumes = tvol.confinedDetachedVolumes();
-    if (confinedDetachedVolumes){
-        for (auto& volumesIter : (*confinedDetachedVolumes) )
+    const Acts::DetachedVolumeVector confinedDetachedVolumes = tvol.confinedDetachedVolumes();
+    if (!confinedDetachedVolumes.empty()){
+        for (auto& volumesIter : confinedDetachedVolumes )
             if (volumesIter && tvol.inside(volumesIter->trackingVolume()->center(),0.) )
                 registerTrackingVolumes(*(volumesIter->trackingVolume()), &tvol, sublvl);
     }

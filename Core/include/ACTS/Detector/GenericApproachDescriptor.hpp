@@ -28,32 +28,29 @@ namespace Acts {
         /** A generic approach descriptor for new Acts::Surface objects - passing ownership */
         GenericApproachDescriptor(const std::vector<T*>& aSurfaces) : 
            ApproachDescriptor(),
-           m_surfaces(nullptr),
+           m_surfaces(),
            m_surfacesCache(aSurfaces)
          {
              // create the surface container with memory control
-             m_surfaces = new std::vector< std::shared_ptr<T> >;
              for (auto& sf : (aSurfaces) )
-                 m_surfaces->push_back(std::shared_ptr<T>(sf));
+                 m_surfaces.push_back(std::shared_ptr<T>(sf));
         }  
           
         /** A generic approach descriptor with shared surfaces to test - can not be used with Acts::Surfaces obejcts */
-        GenericApproachDescriptor(std::vector< std::shared_ptr<T> >* aSurfaces) : 
+        GenericApproachDescriptor(std::vector< std::shared_ptr<T> > aSurfaces) :
            ApproachDescriptor(),
            m_surfaces(aSurfaces),
            m_surfacesCache()
          {
-             m_surfacesCache.reserve(m_surfaces->size());
+             m_surfacesCache.reserve(m_surfaces.size());
              // cache the surfaces 
-             for (auto& sf : (*aSurfaces) )
+             for (auto& sf : (aSurfaces) )
                  m_surfacesCache.push_back(&(sf->surfaceRepresentation()));
          }
                       
         /** A generic approach descriptor with n surfaces to test */
         ~GenericApproachDescriptor()
-        {
-          delete m_surfaces;
-        }
+        {}
 
         /** register the Layer to the surfaces */
         void registerLayer(const Layer& lay) override;
@@ -72,7 +69,7 @@ namespace Acts {
         const std::vector< const Surface* >& containedSurfaces() const override;
         
      private:
-        std::vector< std::shared_ptr<T> >*  m_surfaces;         //!< approach surfaces with ownership control 
+        std::vector< std::shared_ptr<T> >   m_surfaces;         //!< approach surfaces with ownership control
         std::vector< const Surface*>        m_surfacesCache;    //!< the surface container cache
         
     };

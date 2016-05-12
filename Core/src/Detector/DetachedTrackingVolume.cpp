@@ -11,7 +11,7 @@ Acts::DetachedTrackingVolume::DetachedTrackingVolume() :
   m_name("undefined"),
   m_trkVolume(),
   m_layerRepresentation(nullptr),
-  m_multilayerRepresentation(nullptr),
+  m_multilayerRepresentation(),
   m_baseTransform(nullptr),
   m_constituents(nullptr)
 {}
@@ -19,7 +19,7 @@ Acts::DetachedTrackingVolume::DetachedTrackingVolume() :
 Acts::DetachedTrackingVolume::DetachedTrackingVolume(const std::string& name,
                                                     std::shared_ptr<const Acts::TrackingVolume> volume,
                                                     std::shared_ptr<const Acts::Layer> layer,
-                                                    std::vector< std::shared_ptr<const Acts::Layer> >* multiLayer) :
+                                                    std::vector< std::shared_ptr<const Acts::Layer> > multiLayer) :
   m_name(name),
   m_trkVolume(volume),
   m_layerRepresentation(layer),
@@ -30,7 +30,6 @@ Acts::DetachedTrackingVolume::DetachedTrackingVolume(const std::string& name,
   
 Acts::DetachedTrackingVolume::~DetachedTrackingVolume()
 {
-  delete m_multilayerRepresentation; 
   delete m_baseTransform;
 }
 
@@ -55,23 +54,22 @@ std::shared_ptr<const Acts::DetachedTrackingVolume> Acts::DetachedTrackingVolume
     
     // create and shift the layers if there are any
     std::shared_ptr<const Acts::Layer> layerRepresentation = m_layerRepresentation ? m_layerRepresentation->cloneWithShift(shift) : nullptr;
-    std::vector< std::shared_ptr<const Acts::Layer> >* multiLayerRepresentation = nullptr;
+    std::vector< std::shared_ptr<const Acts::Layer> > multiLayerRepresentation;
     
     // create and shift the multi layer
-    if (m_multilayerRepresentation) {
+    if (!m_multilayerRepresentation.empty()) {
         // create the new multi layer representation
-        multiLayerRepresentation = new std::vector< std::shared_ptr<const Acts::Layer> >;
-        multiLayerRepresentation->reserve(m_multilayerRepresentation->size());
+        multiLayerRepresentation.reserve(m_multilayerRepresentation.size());
         // now clone the original consitutents 
-        for (auto& lay : (*m_multilayerRepresentation))
-            multiLayerRepresentation->push_back(lay->cloneWithShift(shift));
+        for (auto& lay : m_multilayerRepresentation)
+            multiLayerRepresentation.push_back(lay->cloneWithShift(shift));
     }    
    
     // return a new cloned TrackingVolume
     return std::shared_ptr<const Acts::DetachedTrackingVolume>(new Acts::DetachedTrackingVolume(name,
-                                                                                              shiftedTrackingVolume,
-                                                                                              layerRepresentation,
-                                                                                              multiLayerRepresentation));
+                                                                                                shiftedTrackingVolume,
+                                                                                                layerRepresentation,
+                                                                                                multiLayerRepresentation));
 
 }
 

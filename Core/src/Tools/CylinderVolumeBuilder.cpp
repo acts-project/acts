@@ -50,9 +50,9 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
     double volumeZmax  = 0.;
     
     // now analyize the layers that are provided -----------------------------------------------------
-    const LayerVector* negativeLayers   = nullptr;
-    const LayerVector* centralLayers    = nullptr;
-    const LayerVector* positiveLayers   = nullptr;
+    LayerVector negativeLayers;
+    LayerVector centralLayers;
+    LayerVector positiveLayers;
     // - get the layers from a provided layer triple or from the layer builder
     if (layerTriple) {
         // the negative Layers
@@ -139,7 +139,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
            // we need to bail out, the given volume is not cylindrical
            // MSG_ERROR("Given volume to wrap was not cylindrical. Bailing out.");
            // cleanup teh memory 
-           delete negativeLayers; delete centralLayers; delete positiveLayers;
+           negativeLayers.clear(); centralLayers.clear(); positiveLayers.clear();
            // return a null pointer, upstream builder will have to understand this
            return nullptr;
        }
@@ -159,7 +159,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
           } else {
              // MSG_ERROR("Non-cylindrical bounds given to the CylinderVolumeBuilder. Bailing out.");
              // cleanup teh memory 
-             delete negativeLayers; delete centralLayers; delete positiveLayers;
+             negativeLayers.clear(); centralLayers.clear(); positiveLayers.clear();
              // return a null pointer, upstream builder will have to understand this
              return nullptr;
          }
@@ -167,7 +167,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
          if (layerConfiguration && (volumeRmin > layerRmin || volumeRmax < layerRmax || volumeZmax < layerZmax)){
              // MSG_ERROR("Given layer dimensions do not fit inside the provided volume bounds. Bailing out." << " volumeRmin: " << volumeRmin << " volumeRmax: " << volumeRmax << " layerRmin: " << layerRmin << " layerRmax: " << layerRmax << " volumeZmax: " << volumeZmax << " layerZmax: " << layerZmax);
              // cleanup teh memory 
-             delete negativeLayers; delete centralLayers; delete positiveLayers;
+             negativeLayers.clear(); centralLayers.clear(); positiveLayers.clear();
              // return a null pointer, upstream builder will have to understand this
              return nullptr; 
          }
@@ -251,7 +251,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
                     // we need to bail out, the given volume does not fit around the other
                     // MSG_ERROR("Given layer dimensions do not fit around the provided inside volume. Bailing out." << "insideVolumeRmax: " << insideVolumeRmax << " layerRmin: " << layerRmin);
                     // cleanup teh memory
-                    delete negativeLayers; delete centralLayers; delete positiveLayers;
+                    negativeLayers.clear(); centralLayers.clear(); positiveLayers.clear();
                     // return a null pointer, upstream builder will have to understand this
                     return nullptr;
                 }
@@ -296,7 +296,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
         }//else - no volume bounds given from translation
         
         // the barrel is created
-        barrel = m_config.trackingVolumeHelper->createTrackingVolume(*centralLayers,
+        barrel = m_config.trackingVolumeHelper->createTrackingVolume(centralLayers,
                                                               m_config.volumeMaterial,
                                                               barrelRmin, barrelRmax,
                                                               -barrelZmax, barrelZmax,
@@ -304,16 +304,16 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
         
         
         // the negative endcap is created
-        nEndcap = negativeLayers ?
-        m_config.trackingVolumeHelper->createTrackingVolume(*negativeLayers,
+        nEndcap = !negativeLayers.empty() ?
+        m_config.trackingVolumeHelper->createTrackingVolume(negativeLayers,
                                                      m_config.volumeMaterial,
                                                      endcapRmin, endcapRmax,
                                                      -endcapZmax, -endcapZmin,
                                                      m_config.volumeName+"::NegativeEndcap") : nullptr;
         
         // the positive endcap is created
-        pEndcap = positiveLayers ?
-        m_config.trackingVolumeHelper->createTrackingVolume(*positiveLayers,
+        pEndcap = !positiveLayers.empty() ?
+        m_config.trackingVolumeHelper->createTrackingVolume(positiveLayers,
                                                      m_config.volumeMaterial,
                                                      endcapRmin, endcapRmax,
                                                      endcapZmin, endcapZmax,
@@ -419,14 +419,14 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
     return volume;
 }
 
-Acts::LayerSetup Acts::CylinderVolumeBuilder::analyzeLayerSetup(const LayerVector* lVector) const {
+Acts::LayerSetup Acts::CylinderVolumeBuilder::analyzeLayerSetup(const LayerVector lVector) const {
     // return object
     LayerSetup lSetup;
     // only if the vector is present it can actually be analyzed
-    if (lVector && !lVector->empty()){
+    if (!lVector.empty()){
         // we have layers
         lSetup.present = true;
-        for (auto& layer : (*lVector)){
+        for (auto& layer : lVector){
            // the thickness of the layer needs to be taken into account
            double thickness = layer->thickness();
            // get the center of the layer 

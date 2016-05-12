@@ -62,13 +62,13 @@ Acts::LayerPtr Acts::LayerCreator::cylinderLayer(const std::vector<const Surface
     //MSG_VERBOSE(" - # of modules    = " << surfaces.size() << " ordered in ( " << binsPhi << " x " << binsZ << ")");
     
     // create the surface array
-    SurfaceArray* sArray = m_config.surfaceArrayCreator->surfaceArrayOnCylinder(surfaces, layerR, minPhi, maxPhi, layerHalfZ, binsPhi, binsZ);
+    std::unique_ptr<SurfaceArray> sArray = m_config.surfaceArrayCreator->surfaceArrayOnCylinder(surfaces, layerR, minPhi, maxPhi, layerHalfZ, binsPhi, binsZ);
 
     // create the layer and push it back
     std::shared_ptr<const CylinderBounds> cBounds(new CylinderBounds(layerR, layerHalfZ+envelopeZ));
     
     // create the layer
-    LayerPtr cLayer = CylinderLayer::create(nullptr, cBounds, sArray, layerThickness, new GenericOverlapDescriptor(), nullptr, active);
+    LayerPtr cLayer = CylinderLayer::create(nullptr, cBounds, std::move(sArray), layerThickness, new GenericOverlapDescriptor(), nullptr, active);
     
     // now return
     return cLayer;
@@ -99,10 +99,10 @@ Acts::LayerPtr Acts::LayerCreator::discLayer(const std::vector<const Surface*>& 
     double layerThickness = (maxZ-minZ)+2*envelopeZ;
     
     // create the surface array
-    SurfaceArray* sArray = m_config.surfaceArrayCreator->surfaceArrayOnDisc(surfaces, minR, maxR, minPhi, maxPhi, binsR, binsPhi, rBoundaries);
+    std::unique_ptr<SurfaceArray> sArray = m_config.surfaceArrayCreator->surfaceArrayOnDisc(surfaces, minR, maxR, minPhi, maxPhi, binsR, binsPhi, rBoundaries);
     
     // create the share disc bounds
-    std::shared_ptr<const DiscBounds> dBounds(new RadialBounds(minR-envelopeMinR,maxR+envelopeMaxR));
+    auto dBounds = std::make_shared<RadialBounds>(minR-envelopeMinR,maxR+envelopeMaxR);
     
     // create the layer transforms
     Transform3D* transform = new Transform3D(Transform3D::Identity());
@@ -111,7 +111,7 @@ Acts::LayerPtr Acts::LayerCreator::discLayer(const std::vector<const Surface*>& 
     // create the layers
     LayerPtr dLayer = DiscLayer::create(std::shared_ptr<Transform3D>(transform), 
                                         dBounds,
-                                        sArray,
+                                        std::move(sArray),
                                         layerThickness,
                                         new GenericOverlapDescriptor(),
                                         nullptr,

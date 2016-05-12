@@ -36,12 +36,12 @@ class ApproachDescriptor;
       /**create a shared, fully deployed CylinderLayer */
       static LayerPtr create(std::shared_ptr<Transform3D> transform,
                              std::shared_ptr<const CylinderBounds> cbounds,
-                             SurfaceArray* surfaceArray = nullptr,
+                             std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
                              double thickness = 0.,
                              OverlapDescriptor* od  = nullptr,
                              ApproachDescriptor* ad = nullptr,
                              int laytyp=int(Acts::passive))
-      { return LayerPtr(new CylinderLayer(transform, cbounds, surfaceArray, thickness, od, ad, laytyp));}
+      { return LayerPtr(new CylinderLayer(transform, cbounds, std::move(surfaceArray), thickness, od, ad, laytyp));}
         
       /** Copy constructor with shift - will not copy anything of the static next/previous environment*/
       static LayerPtr create(const CylinderLayer& cla, const Transform3D& shift) 
@@ -75,7 +75,7 @@ class ApproachDescriptor;
        /** Fully deployed CylinderLayer constructor */
        CylinderLayer(std::shared_ptr<Transform3D> transform,
                      std::shared_ptr<const CylinderBounds> cbounds,
-                     SurfaceArray* surfaceArray = nullptr,
+                     std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
                      double thickness = 0.,
                      OverlapDescriptor* od  = nullptr,
                      ApproachDescriptor* ad = nullptr,

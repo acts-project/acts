@@ -19,13 +19,13 @@
 
 Acts::DiscLayer::DiscLayer(std::shared_ptr<Acts::Transform3D> transform,
                           std::shared_ptr<const Acts::DiscBounds> dbounds,
-                          Acts::SurfaceArray* surfaceArray,
+                          std::unique_ptr<SurfaceArray> surfaceArray,
                           double thickness,
                           Acts::OverlapDescriptor* olap,
                           Acts::ApproachDescriptor* ades,
                           int laytyp) :
   DiscSurface(transform, dbounds),
-  Layer(surfaceArray, thickness, olap, ades, laytyp)
+Layer(std::move(surfaceArray), thickness, olap, ades, laytyp)
 {
     
     // just create a generic overlap descriptor if none is there
@@ -70,9 +70,9 @@ void Acts::DiscLayer::buildApproachDescriptor() const {
         // get teh boundary surfaces
         const std::vector< std::shared_ptr<const Acts::BoundarySurface<Acts::AbstractVolume> > >& bSurfaces = m_representingVolume->boundarySurfaces();
         // fill in the surfaces into the vector
-        std::vector< std::shared_ptr<const Acts::BoundarySurface<Acts::AbstractVolume> > >* aSurfaces = new std::vector< std::shared_ptr<const Acts::BoundarySurface<Acts::AbstractVolume> > >;
-        aSurfaces->push_back(bSurfaces[negativeFaceXY]);
-        aSurfaces->push_back(bSurfaces[positiveFaceXY]);
+        std::vector< std::shared_ptr<const Acts::BoundarySurface<Acts::AbstractVolume> > > aSurfaces;
+        aSurfaces.push_back(bSurfaces[negativeFaceXY]);
+        aSurfaces.push_back(bSurfaces[positiveFaceXY]);
         // create an ApproachDescriptor with Boundary surfaces
         m_approachDescriptor = new Acts::GenericApproachDescriptor<const BoundarySurface<AbstractVolume> >(aSurfaces);   
     } else {        

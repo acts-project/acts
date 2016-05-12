@@ -38,12 +38,12 @@ namespace Acts {
        /** Factory constructor with DiscSurface components and pointer to SurfaceArray (passing ownership) */
        static LayerPtr create(std::shared_ptr<Transform3D> transform,
                               std::shared_ptr<const DiscBounds> dbounds,
-                              SurfaceArray* surfaceArray = nullptr,
+                              std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
                               double thickness = 0.,
                               OverlapDescriptor* od = nullptr,
                               ApproachDescriptor* ad = nullptr,
                               int laytyp=int(Acts::passive)) 
-       { return LayerPtr(new DiscLayer(transform,dbounds,surfaceArray,thickness,od,ad,laytyp)); }
+      { return LayerPtr(new DiscLayer(transform,dbounds,std::move(surfaceArray),thickness,od,ad,laytyp)); }
                                                         
        /** Factory constructor as copy with shift */
        static LayerPtr create(const DiscLayer& cla, const Transform3D& shift)
@@ -76,7 +76,7 @@ namespace Acts {
        /** Constructor with DiscSurface components and pointer to SurfaceArray (passing ownership) */
        DiscLayer(std::shared_ptr<Transform3D> transform,
                  std::shared_ptr<const DiscBounds> dbounds,
-                 SurfaceArray* surfaceArray = nullptr,
+                 std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
                  double thickness = 0.,
                  OverlapDescriptor* od = nullptr,
                  ApproachDescriptor* ad = nullptr,

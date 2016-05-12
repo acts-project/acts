@@ -20,7 +20,6 @@ Acts::NavigationLayer::NavigationLayer(Acts::Surface* surfaceRepresentation, dou
 // constructor with shift
 std::shared_ptr<const Acts::Layer> Acts::NavigationLayer::cloneWithShift(const Acts::Transform3D& shift) const
 {
-
   Acts::Surface* shiftedSurface = m_surfaceRepresentation->clone(&shift);
   return std::shared_ptr<const Acts::Layer>( new Acts::NavigationLayer(shiftedSurface,Layer::m_layerThickness));
 }

@@ -13,13 +13,13 @@
   
 Acts::PlaneLayer::PlaneLayer(std::shared_ptr<Acts::Transform3D> transform,
                             std::shared_ptr<const Acts::PlanarBounds>& pbounds,
-                            Acts::SurfaceArray* surfaceArray,
+                            std::unique_ptr<SurfaceArray> surfaceArray,
                             double thickness,
                             Acts::OverlapDescriptor* olap,
                             Acts::ApproachDescriptor* ades,
                             int laytyp) :
   PlaneSurface(transform, pbounds),
-  Layer(surfaceArray, thickness, olap, ades, laytyp)
+Layer(std::move(surfaceArray), thickness, olap, ades, laytyp)
 {
     //@TODO create representing volume 
     // register the layer to the surface

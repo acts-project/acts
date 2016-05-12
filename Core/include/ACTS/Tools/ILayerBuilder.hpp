@@ -31,13 +31,13 @@ namespace Acts {
       virtual ~ILayerBuilder(){}
 
       /** LayerBuilder interface method - returning the layers at negative side */
-      virtual const LayerVector* negativeLayers() const = 0; 
+      virtual const LayerVector negativeLayers() const = 0;
       
       /** LayerBuilder interface method - returning the central layers */
-      virtual const LayerVector* centralLayers() const = 0; 
+      virtual const LayerVector centralLayers() const = 0;
       
       /** LayerBuilder interface method - returning the layers at negative side */
-      virtual const LayerVector* positiveLayers() const = 0; 
+      virtual const LayerVector positiveLayers() const = 0; 
 
       /** Name identification */
       virtual const std::string& identification() const = 0;

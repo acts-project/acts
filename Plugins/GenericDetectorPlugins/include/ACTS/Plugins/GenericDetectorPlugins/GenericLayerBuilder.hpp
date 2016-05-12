@@ -110,13 +110,13 @@ namespace Acts {
         ~GenericLayerBuilder();
         
         /** LayerBuilder interface method - returning the layers at negative side */
-        const LayerVector* negativeLayers() const override; 
+        const LayerVector negativeLayers() const override;
       
         /** LayerBuilder interface method - returning the central layers */
-        const LayerVector* centralLayers() const override; 
+        const LayerVector centralLayers() const override;
       
         /** LayerBuilder interface method - returning the layers at negative side */
-        const LayerVector* positiveLayers() const override;         
+        const LayerVector positiveLayers() const override;         
         
         /**ILayerBuilder method*/
         const std::string& identification() const override { return m_config.layerIdentification; }
@@ -130,9 +130,9 @@ namespace Acts {
         
         void constructLayers();
                                                             
-        LayerVector*                                        m_nLayers; //!< layers on negative side
-        LayerVector*                                        m_cLayers; //!< layers on central side
-        LayerVector*                                        m_pLayers; //!< layers on positive side
+        LayerVector                                         m_nLayers; //!< layers on negative side
+        LayerVector                                         m_cLayers; //!< layers on central side
+        LayerVector                                         m_pLayers; //!< layers on positive side
         
         std::vector<const DetectorElementBase*>             m_centralModule;                   //!< acts as detector store
         std::vector<const DetectorElementBase*>             m_posnegModule;                     //!< acts as detector store
@@ -144,11 +144,11 @@ namespace Acts {
 
     };
     
-    inline const LayerVector* GenericLayerBuilder::positiveLayers() const { return m_pLayers; }
+    inline const LayerVector GenericLayerBuilder::positiveLayers() const { return m_pLayers; }
 
-    inline const LayerVector* GenericLayerBuilder::negativeLayers() const { return m_nLayers; }
+    inline const LayerVector GenericLayerBuilder::negativeLayers() const { return m_nLayers; }
     
-    inline const LayerVector* GenericLayerBuilder::centralLayers() const { return m_cLayers; }
+    inline const LayerVector GenericLayerBuilder::centralLayers() const { return m_cLayers; }
     
     inline GenericLayerBuilder::Config GenericLayerBuilder::getConfiguration() const
     { return m_config; }

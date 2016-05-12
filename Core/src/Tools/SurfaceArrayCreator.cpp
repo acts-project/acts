@@ -17,7 +17,7 @@ Acts::SurfaceArrayCreator::SurfaceArrayCreator()
 {}
 
 /** SurfaceArrayCreator interface method - create an array in a cylinder, binned in phi, z */
-Acts::SurfaceArray* Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(const std::vector<const Acts::Surface*>& surfaces,
+std::unique_ptr<Acts::SurfaceArray> Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(const std::vector<const Acts::Surface*>& surfaces,
                                                                       double R, double minPhi, double maxPhi, double halfZ, 
                                                                       size_t binsPhi, size_t binsZ, 
                                                                       std::shared_ptr<Acts::Transform3D> transform) const
@@ -63,15 +63,15 @@ Acts::SurfaceArray* Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(const std:
     // complete
     completeBinning(surfaces, *arrayUtility, sVector, phizSystem);
     // create the surfaceArray
-    BinnedArray2D<const Surface*>* sArray = new BinnedArray2D<const Surface*>(sVector,arrayUtility);
+    auto sArray = std::make_unique<BinnedArray2D<const Surface*>>(sVector,arrayUtility);
     // register the neighbours  
     registerNeighboursGrid(sArray->arrayObjectsOrdered(), false, true);
     // return the surface array
-    return sArray;
+    return std::move(sArray);
 } 
 
 /** SurfaceArrayCreator interface method - create an array on a disc, binned in r, phi */
-Acts::SurfaceArray* Acts::SurfaceArrayCreator::surfaceArrayOnDisc(const std::vector<const Acts::Surface*>& surfaces,
+std::unique_ptr<Acts::SurfaceArray> Acts::SurfaceArrayCreator::surfaceArrayOnDisc(const std::vector<const Acts::Surface*>& surfaces,
                                                                   double minR, double maxR, double minPhi, double maxPhi,
                                                                   size_t binsR, size_t binsPhi,
                                                                   const std::vector<double>& rBoundaries,
@@ -98,7 +98,7 @@ Acts::SurfaceArray* Acts::SurfaceArrayCreator::surfaceArrayOnDisc(const std::vec
             sVector.push_back(SurfacePosition(surface,surface->binningPosition(binPhi)));
         }
         // create the surface array
-        SurfaceArray* sArray = new BinnedArray1D<const Surface*>(sVector,arrayUtility);
+        auto sArray = std::make_unique<BinnedArray2D<const Surface*>>(sVector,arrayUtility);
         // register the neighbours
         // copy to get const away, 
         // - but take them from the surface array (and not the input vector) because like this they are bin ordered
@@ -108,7 +108,7 @@ Acts::SurfaceArray* Acts::SurfaceArrayCreator::surfaceArrayOnDisc(const std::vec
         // prepared to run the neighbour registration now
         registerNeighboursGrid(arraySystem, false, true);
         // now return
-        return sArray;              
+        return std::move(sArray);
     } 
     // more complicated binning 2D 
     double rStep   = ((maxR-minR)/(binsR));
@@ -143,15 +143,15 @@ Acts::SurfaceArray* Acts::SurfaceArrayCreator::surfaceArrayOnDisc(const std::vec
     // create and complete 
     completeBinning(surfaces, *arrayUtility, sVector, rphiSystem);
     // create the surfaceArray
-    BinnedArray2D<const Surface*>* sArray = new BinnedArray2D<const Surface*>(sVector,arrayUtility);
+    auto sArray = std::make_unique<BinnedArray2D<const Surface*>>(sVector,arrayUtility);
     // register the neighbours  
     registerNeighboursGrid(sArray->arrayObjectsOrdered(), false, true);
     // return the surface array
-    return sArray;
+    return std::move(sArray);
 }
 
 /** SurfaceArrayCreator interface method - create an array on a plane */
-Acts::SurfaceArray* Acts::SurfaceArrayCreator::surfaceArrayOnPlane(const std::vector<const Acts::Surface*>& /*surfaces*/,
+std::unique_ptr<Acts::SurfaceArray> Acts::SurfaceArrayCreator::surfaceArrayOnPlane(const std::vector<const Acts::Surface*>& /*surfaces*/,
                                                                    double /*halflengthX*/, double /*halflengthY*/, 
                                                                    size_t /*binsX*/, size_t /*binsY*/,
                                                                    std::shared_ptr<Acts::Transform3D> /*transform*/) const

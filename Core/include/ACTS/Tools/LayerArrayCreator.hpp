@@ -48,11 +48,11 @@ namespace Acts {
 
         /** LayerArraycreator interface method 
            - we assume the layer thickness to be used together with the binning value */
-        LayerArray* layerArray(const LayerVector& layers, 
-                               double min,
-                               double max,
-                               BinningType btype = arbitrary,
-                               BinningValue bvalue = binX) const override; 
+        std::unique_ptr<const LayerArray> layerArray(const LayerVector& layers,
+                                                     double min,
+                                                     double max,
+                                                     BinningType btype = arbitrary,
+                                                     BinningValue bvalue = binX) const override;
       
       private:
           Surface* createNavigationSurface(const Layer& layer, BinningValue bvalue, double offset) const;

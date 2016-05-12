@@ -39,11 +39,11 @@ namespace Acts
     virtual ~ILayerArrayCreator() = default;
       
       /** LayerArraycreator interface method */
-      virtual const LayerArray* layerArray(const LayerVector& layers, 
-                                           double min,
-                                           double max,
-                                           BinningType btype = arbitrary,
-                                           BinningValue bv   = binX) const = 0; 
+      virtual std::unique_ptr<const LayerArray> layerArray(const LayerVector& layers,
+                                                           double min,
+                                                           double max,
+                                                           BinningType btype = arbitrary,
+                                                           BinningValue bv   = binX) const = 0; 
    
   };
 } // end of namespace

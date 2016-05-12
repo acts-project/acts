@@ -34,14 +34,14 @@ Acts::ConeSurface::ConeSurface(const ConeSurface& csf, const Acts::Transform3D& 
 // constructor by opening angle and whether its symmetric or a single cone
 Acts::ConeSurface::ConeSurface(std::shared_ptr<Acts::Transform3D> htrans, double alpha, bool symmetric) :
   Acts::Surface(htrans),
-  m_bounds(new Acts::ConeBounds(alpha, symmetric)),
+  m_bounds(std::make_shared<Acts::ConeBounds>(alpha, symmetric)),
   m_rotSymmetryAxis(nullptr)
 {}
 
 // constructor by opening angle and its z values
 Acts::ConeSurface::ConeSurface(std::shared_ptr<Acts::Transform3D> htrans, double alpha, double zmin, double zmax, double halfPhi) :
   Acts::Surface(htrans),
-  m_bounds(new Acts::ConeBounds(alpha, zmin, zmax, halfPhi)),
+  m_bounds(std::make_shared<Acts::ConeBounds>(alpha, zmin, zmax, halfPhi)),
   m_rotSymmetryAxis(nullptr)
 {}
 

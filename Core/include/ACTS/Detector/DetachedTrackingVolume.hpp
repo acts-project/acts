@@ -48,8 +48,8 @@ namespace Acts {
         static DetachedTrackingVolumePtr create(const std::string& name,
                                                 TrackingVolumePtr vol,
                                                 LayerPtr layer = nullptr,
-                                                LayerVector* multiLayer = nullptr) 
-        { return DetachedTrackingVolumePtr(new DetachedTrackingVolume(name,vol,layer,multiLayer)); } 
+                                                LayerVector multiLayer = {})
+      { return DetachedTrackingVolumePtr(new DetachedTrackingVolume(name,vol,layer,multiLayer)); }
                               
         /** Destructor*/
         ~DetachedTrackingVolume();
@@ -70,7 +70,7 @@ namespace Acts {
         const Layer* layerRepresentation() const;
 
         /** returns (multi)layer representation */
-        const LayerVector* multilayerRepresentation() const;
+        const LayerVector multilayerRepresentation() const;
 
         /** sign the volume - the geometry builder has to do that */
         void sign(GeometrySignature signat, GeometryType geotype) const;
@@ -101,7 +101,7 @@ namespace Acts {
         DetachedTrackingVolume(const std::string& name,
                                TrackingVolumePtr vol,
                                LayerPtr layer,
-                               std::vector< LayerPtr >* multilayer);
+                               std::vector< LayerPtr > multilayer);
         
 
     private:
@@ -109,7 +109,7 @@ namespace Acts {
         const std::string                        m_name;         
         TrackingVolumePtr                        m_trkVolume;
         LayerPtr                                 m_layerRepresentation;
-        std::vector< LayerPtr >*                 m_multilayerRepresentation;
+        std::vector< LayerPtr >                  m_multilayerRepresentation;
 	    mutable Transform3D*                                         m_baseTransform;         // optional use (for alignment purpose) 
         mutable std::vector<std::pair<const Acts::Volume*,float> >*   m_constituents;  
         
@@ -122,7 +122,7 @@ inline const std::string DetachedTrackingVolume::name() const { return (m_name);
 
 inline const Layer* DetachedTrackingVolume::layerRepresentation() const { return m_layerRepresentation.get(); }
 
-inline const LayerVector* DetachedTrackingVolume::multilayerRepresentation() const { return m_multilayerRepresentation; }
+inline const LayerVector DetachedTrackingVolume::multilayerRepresentation() const { return m_multilayerRepresentation; }
  
 inline void DetachedTrackingVolume::saveConstituents(std::vector<std::pair<const Acts::Volume*,float> >* constituents ) const { m_constituents = constituents; } 
 
