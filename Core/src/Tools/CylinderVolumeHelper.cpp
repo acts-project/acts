@@ -37,7 +37,7 @@ void Acts::CylinderVolumeHelper::setConfiguration(const Acts::CylinderVolumeHelp
 } 
 
 std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createTrackingVolume(const LayerVector& layers,
-                                                                                           const Material& matprop,
+                                                                                             std::shared_ptr<Material> matprop,
                                                                                            std::shared_ptr<const VolumeBounds> volBounds,
                                                                                            std::shared_ptr<Transform3D> transform,
                                                                                            const std::string& volumeName,
@@ -121,7 +121,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createTr
 
 
 std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createTrackingVolume(const LayerVector& layers,
-                                                                                             const Material& matprop,
+                                                                                             std::shared_ptr<Material> matprop,
                                                                                              double rMin, double rMax,
                                                                                              double zMin, double zMax,
                                                                                              const std::string& volumeName,
@@ -161,7 +161,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createTr
 }
 
 
-std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createGapTrackingVolume(const Material& matprop,
+std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createGapTrackingVolume(std::shared_ptr<Material> matprop,
                                                                                                 double rMin, double rMax,
                                                                                                 double zMin, double zMax,
                                                                                                 unsigned int materialLayers,
@@ -192,7 +192,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createGa
 }
 
 
-std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createGapTrackingVolume(const Material& matprop,
+std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createGapTrackingVolume(std::shared_ptr<Material> matprop,
                                                                                                 double rMin, double rMax,
                                                                                                 double zMin, double zMax,
                                                                                                 const std::vector<double>& layerPositions,

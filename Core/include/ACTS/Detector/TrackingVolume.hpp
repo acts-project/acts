@@ -11,7 +11,6 @@
 #include "ACTS/Volumes/Volume.hpp"
 #include "ACTS/Volumes/BoundarySurface.hpp"
 #include "ACTS/Layers/Layer.hpp"
-#include "ACTS/Material/Material.hpp"
 #include "ACTS/Utilities/BinnedArray.hpp"
 #include "ACTS/Utilities/GeometrySignature.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
@@ -25,6 +24,7 @@ namespace Acts {
   class DetachedTrackingVolume;
   class GlueVolumesDescriptor;
   class VolumeBounds;
+  class Material;
 
   // master typedefs
   typedef std::shared_ptr<const TrackingVolume>          TrackingVolumePtr;
@@ -62,8 +62,7 @@ namespace Acts {
    @author Andreas.Salzburger@cern.ch
    */
 
-   class TrackingVolume : public Volume,
-                          public Material {
+   class TrackingVolume : public Volume {
 
     public:
       /** Destructor */
@@ -79,7 +78,7 @@ namespace Acts {
       /** Factory constructor for Tracking Volumes with content - can not be a container volume */
       static TrackingVolumePtr create(std::shared_ptr<Transform3D> htrans,
                                       VolumeBoundsPtr volumeBounds,
-                                      const Material& matprop,
+                                      std::shared_ptr<Material> matprop,
                                       std::unique_ptr<const LayerArray> cLayerArray = nullptr,
                                       const LayerVector cLayerVector = {},
                                       const TrackingVolumeVector cVolumeVector = {},
@@ -215,7 +214,7 @@ namespace Acts {
       void setMotherVolume(const TrackingVolume* mvol) const;
 
       /** add Material */
-      void addMaterial( const Material& mat, float fact=1. ) const;
+      void addMaterial( std::shared_ptr<const Material> mat, float fact=1. );
 
     protected:
       /** Default constructor */
@@ -231,7 +230,7 @@ namespace Acts {
       /** Constructor for a full equipped Tracking Volume  */
       TrackingVolume(std::shared_ptr<Transform3D> htrans,
                      VolumeBoundsPtr volbounds,
-                     const Material& matprop,
+                     std::shared_ptr<Material> matprop,
                      std::unique_ptr<const LayerArray> cLayerArray = nullptr,
                      const LayerVector cLayerVector = {},
                      std::shared_ptr<const TrackingVolumeArray> cVolumeArray = nullptr,
@@ -256,10 +255,12 @@ namespace Acts {
       void interlinkLayers();
 
       /** Forbidden copy constructor */
-      TrackingVolume(const TrackingVolume&): Volume(), Material() {}
+      TrackingVolume(const TrackingVolume&): Volume() {}
 
       /** Forbid assignment */
       TrackingVolume &operator=(const TrackingVolume&) { return *this; }
+                              
+      std::shared_ptr<Material>                                                          m_material; //!< The Material the TrackingVolume consists of
 
       mutable const TrackingVolume*                                                    m_motherVolume;            //!< mother volume of this volume
 
@@ -280,6 +281,7 @@ namespace Acts {
 
       std::string                                                                      m_name;                    //!< Volume name for debug reasons
       mutable unsigned int                                                             m_colorCode;               //!< Color code for displaying
+     
 
   };
 

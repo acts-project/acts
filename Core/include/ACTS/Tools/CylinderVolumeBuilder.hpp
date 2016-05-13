@@ -69,7 +69,7 @@ namespace Acts {
             std::shared_ptr<ITrackingVolumeHelper>  trackingVolumeHelper;       //!< the tracking volume creator for container volume creation
             std::string                             volumeName;                  //!< the name of the volume to be created
             std::vector< double >                   volumeDimension;             //!< The dimensions of the manually created world
-            Material                                volumeMaterial;              //!< the world material  
+            std::shared_ptr<Material>               volumeMaterial;              //!< the world material
             bool                                    volumeToBeamPipe;            //!< build the volume to the beam pipe
             std::shared_ptr<ILayerBuilder>          layerBuilder;                //!< needed to build layers within the volume
             double                                  layerEnvelopeR;              //!< the envelope covering the potential layers

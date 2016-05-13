@@ -4,6 +4,7 @@
 
 // Geometry module
 #include "ACTS/Detector/TrackingVolume.hpp"
+#include "ACTS/Material/Material.hpp"
 #include "ACTS/Detector/GlueVolumesDescriptor.hpp"
 #include "ACTS/Detector/DetachedTrackingVolume.hpp"
 #include "ACTS/Volumes/VolumeBounds.hpp"
@@ -27,7 +28,7 @@
 // default constructor
 Acts::TrackingVolume::TrackingVolume() :
   Volume(),
-  Material(),
+  m_material(std::make_shared<Acts::Material>()),
   m_motherVolume(),
   m_boundarySurfaces(),
   m_confinedLayers(nullptr),
@@ -48,7 +49,7 @@ Acts::TrackingVolume::TrackingVolume(std::shared_ptr<Transform3D> htrans,
                                     const std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
                                     const std::string& volumeName) :
   Volume(htrans, volbounds),
-  Material(),
+  m_material(std::make_shared<Acts::Material>()),
   m_motherVolume(nullptr),
   m_boundarySurfaces(),
   m_confinedLayers(nullptr),
@@ -69,15 +70,15 @@ Acts::TrackingVolume::TrackingVolume(std::shared_ptr<Transform3D> htrans,
 // constructor for arguments
 Acts::TrackingVolume::TrackingVolume(std::shared_ptr<Transform3D> htrans,
                                     VolumeBoundsPtr volbounds,
-                                    const Material& matprop,
-                                     std::unique_ptr<const LayerArray> staticLayerArray,
+                                    std::shared_ptr<Material> matprop,
+                                    std::unique_ptr<const LayerArray> staticLayerArray,
                                     const LayerVector arbitraryLayerVector,
                                     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
                                     const TrackingVolumeVector denseVolumeVector,
                                     const DetachedVolumeVector detachedVolumeVector,
                                     const std::string& volumeName) :
   Volume(htrans, volbounds),
-  Material(matprop),
+  m_material(matprop),
   m_motherVolume(nullptr),
   m_confinedLayers(std::move(staticLayerArray)),
   m_confinedVolumes(containedVolumeArray),
@@ -95,10 +96,10 @@ Acts::TrackingVolume::TrackingVolume(std::shared_ptr<Transform3D> htrans,
 }
 
 Acts::TrackingVolume::TrackingVolume(const TrackingVolume& tvol,
-                                    const Transform3D& shift, 
+                                    const Transform3D& shift,
                                     const std::string& volumeName) :
   Volume(tvol, shift),
-  Material(tvol),
+  m_material(tvol.m_material),
   m_motherVolume(tvol.motherVolume()),
   m_confinedLayers(nullptr),
   m_confinedVolumes(nullptr),
@@ -192,33 +193,35 @@ const Acts::DetachedVolumeVector* Acts::TrackingVolume::assocDetachedSubVolumes(
   return currVols;
 }
 
-void Acts::TrackingVolume::addMaterial(const Material& mprop, float fact) const
+void Acts::TrackingVolume::addMaterial(std::shared_ptr<const Material> mprop, float fact)
 {
+  
   // assume the scaling factor refers to the volume scaling
   float flin = pow(fact,0.33); 
   //average X0
-  double invX0 = X0>0. ? 1./X0 : 0.;
-  double sum_invX0 = invX0 + flin/mprop.X0;
-  X0 = 1./sum_invX0;
+  double invX0 = m_material->X0>0. ? 1./m_material->X0 : 0.;
+  double sum_invX0 = invX0 + flin/mprop->X0;
+  float X0 = 1./sum_invX0;
   //average L0
-  double invL0 = L0>0. ? 1./L0 : 0.;
-  double sum_invL0 = invL0 + flin/mprop.L0;
-  L0 = 1./sum_invL0;
+  double invL0 = m_material->L0>0. ? 1./m_material->L0 : 0.;
+  double sum_invL0 = invL0 + flin/mprop->L0;
+  float L0 = 1./sum_invL0;
   //add density
-  float rho1 = rho;
-  rho += fact*mprop.rho; 
+  float rho1 = m_material->rho;
+  float rho  = rho1 + fact*mprop->rho;
   // averageZ
-  float n1 = Z>0. ? rho1/Z : 0.;  
-  float n2 = fact*mprop.rho/mprop.Z;
-  Z = rho/(n1+n2);   
+  float n1 = m_material->Z>0. ? rho1/m_material->Z : 0.;
+  float n2 = fact*mprop->rho/mprop->Z;
+  float Z = rho/(n1+n2);
   // averageA
-  n1 = A>0. ? rho1/A : 0.;  
-  n2 = fact*mprop.rho/mprop.A;
-  A = rho/(n1+n2);   
-  // zOverAtimesRho 
-  zOaTr = Z/A*rho;  
+  n1 = m_material->A>0. ? rho1/m_material->A : 0.;
+  n2 = fact*mprop->rho/mprop->A;
+  float A = rho/(n1+n2);
   // mean energy loss (linear scaling)
-  dEdX += flin*mprop.dEdX; 
+  float dEdX = m_material->dEdX + flin*mprop->dEdX;
+    
+    m_material.reset(new Material(X0,L0,A,Z,rho,dEdX));
+   // m_material.reset(std::make_shared<Material>(X0,L0,A,Z,rho,dEdX));
 }
 
 void Acts::TrackingVolume::sign(GeometrySignature geosign, GeometryType geotype) const
