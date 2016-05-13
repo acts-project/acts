@@ -79,10 +79,10 @@ namespace Acts {
       static TrackingVolumePtr create(std::shared_ptr<Transform3D> htrans,
                                       VolumeBoundsPtr volumeBounds,
                                       std::shared_ptr<Material> matprop,
-                                      const LayerArray* cLayerArray = nullptr,
-                                      const LayerVector* cLayerVector = nullptr,
-                                      const TrackingVolumeVector* cVolumeVector = nullptr,
-                                      const DetachedVolumeVector* dVolumeVector = nullptr,
+                                      std::unique_ptr<const LayerArray> cLayerArray = nullptr,
+                                      const LayerVector cLayerVector = {},
+                                      const TrackingVolumeVector cVolumeVector = {},
+                                      const DetachedVolumeVector dVolumeVector = {},
                                       const std::string& volumeName="undefined")
         { return TrackingVolumePtr(new TrackingVolume(htrans,
                                                       volumeBounds,
@@ -231,11 +231,11 @@ namespace Acts {
       TrackingVolume(std::shared_ptr<Transform3D> htrans,
                      VolumeBoundsPtr volbounds,
                      std::shared_ptr<Material> matprop,
-                     const LayerArray* cLayerArray = nullptr,
-                     const LayerVector* cLayerVector = nullptr,
-                     const TrackingVolumeArray* cVolumeArray = nullptr,
-                     const TrackingVolumeVector* cVolumeVector = nullptr,
-                     const DetachedVolumeVector* dVolumeVector = nullptr,
+                     std::unique_ptr<const LayerArray> cLayerArray = nullptr,
+                     const LayerVector cLayerVector = {},
+                     std::shared_ptr<const TrackingVolumeArray> cVolumeArray = nullptr,
+                     const TrackingVolumeVector cVolumeVector = {},
+                     const DetachedVolumeVector dVolumeVector = {},
                      const std::string& volumeName="undefined");
 
       /** Copy Constructor with a shift  */
