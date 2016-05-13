@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 2.8)
 project (ACTS)
 
 # Use GNU-style hierarchy for installing build products
-include(GNUInstallDirs)
+include (GNUInstallDirs)
 
 # set the current version of ACTS
 set (ACTS_VERSION 0.01.00)
@@ -11,9 +11,9 @@ set (ACTS_VERSION 0.01.00)
 string (REPLACE "." "" ACTS_VERSION_NUMBER ${ACTS_VERSION})
 
 # default installation direction
-IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set (CMAKE_INSTALL_PREFIX "/opt/ACTS/${ACTS_VERSION}" CACHE PATH "installation directory" FORCE)
-ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+endif (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 # default parameter definitions
 <<<<<<< HEAD
