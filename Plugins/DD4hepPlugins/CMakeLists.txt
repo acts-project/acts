@@ -1,23 +1,34 @@
-# we need DD4Hep
-find_package(DD4hep REQUIRED DDCore DDSegmentation)
+# manually trigger build of DD4Hep plugin
+option (BUILD_DD4HEP_PLUGIN "build DD4HEP plugins" OFF)
 
-# get list of all source files
-file (GLOB src_files "src/*.cpp")
+if (BUILD_DD4HEP_PLUGIN)
+  # we need DD4Hep
+  find_package (DD4hep QUIET COMPONENTS DDCore DDSegmentation)
 
-# define library target
-add_library(ACTSDD4hepPlugin SHARED ${src_files})
+  if (DD4hep_FOUND)
+    # get list of all source files
+    file (GLOB src_files "src/*.cpp")
 
-# setup include directories
-target_include_directories(ACTSDD4hepPlugin PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
-target_include_directories(ACTSDD4hepPlugin PUBLIC ${DD4hep_INCLUDE_DIRS})
+    # define library target
+    add_library (ACTSDD4hepPlugin SHARED ${src_files})
 
-# setup linker dependencies
-target_link_libraries(ACTSDD4hepPlugin PUBLIC ACTSCore)
-target_link_libraries(ACTSDD4hepPlugin PUBLIC ACTSTGeoPlugin)
+    # setup include directories
+    target_include_directories (ACTSDD4hepPlugin PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
+    target_include_directories (ACTSDD4hepPlugin PUBLIC ${DD4hep_INCLUDE_DIRS})
 
-# set installation directories
-install(TARGETS ACTSDD4hepPlugin EXPORT ACTSTargets
-	LIBRARY DESTINATION lib)
+    # setup linker dependencies
+    target_link_libraries (ACTSDD4hepPlugin PUBLIC ACTSCore)
+    target_link_libraries (ACTSDD4hepPlugin PUBLIC ACTSTGeoPlugin)
 
-install(DIRECTORY include/ACTS DESTINATION include)
+    # set installation directories
+    install (TARGETS ACTSDD4hepPlugin EXPORT ACTSTargets
+             LIBRARY DESTINATION lib)
 
+    install (DIRECTORY include/ACTS DESTINATION include)
+  # do not fail if ROOT is not available, just inform and continue
+  else (DD4hep_FOUND)
+    message (STATUS "${Red}DD4hep was not found -> skip build of DD4hepPlugins${ColorReset}")
+  endif (DD4hep_FOUND)
+else (BUILD_DD4HEP_PLUGIN)
+  message (STATUS "${Blue}disable build of DD4hepPlugins${ColorReset}")
+endif (BUILD_DD4HEP_PLUGIN)
