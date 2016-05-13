@@ -22,9 +22,7 @@ set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDe
 # default message macros
 set (ACTS_MSG_MACROS_PLUGIN "ACTS/Utilities/detail/DefaultMsgMacros.hpp" CACHE FILEPATH "default message macros")
 
-# set location of cmake configuration files
-set(ConfigPackageLocation lib/cmake/ACTS)
-
+# delegate
 add_subdirectory (Core)
 add_subdirectory (doc)
 add_subdirectory (Plugins)
