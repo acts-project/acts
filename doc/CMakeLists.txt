@@ -14,6 +14,6 @@ if (BUILD_DOC)
     install (FILES ${CMAKE_CURRENT_BINARY_DIR}/ACTS.tag DESTINATION doc)
   # do not fail if doxygen is not available, just inform and continue
   else (DOXYGEN_FOUND)
-    message (STATUS "doxygen was not found -> skip generation of documentation")
+    message (STATUS "${Red}doxygen was not found -> skip generation of documentation${ColorReset}")
   endif (DOXYGEN_FOUND)
 endif (BUILD_DOC)  

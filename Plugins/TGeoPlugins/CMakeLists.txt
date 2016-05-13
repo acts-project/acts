@@ -27,6 +27,6 @@ if (BUILD_TGEO_PLUGIN)
     install (DIRECTORY include/ACTS DESTINATION include)
   # do not fail if ROOT is not available, just inform and continue
   else (ROOT_FOUND)
-    message (STATUS "ROOT was not found -> skip build of TGeoPlugins")
+    message (STATUS "${Red}ROOT was not found -> skip build of TGeoPlugins${ColorReset}")
   endif (ROOT_FOUND)
 endif (BUILD_TGEO_PLUGIN)

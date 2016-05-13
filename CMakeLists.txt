@@ -11,6 +11,9 @@ if (DEFINED PRINT_OPTIONS)
   return ()
 endif (DEFINED PRINT_OPTIONS)
 
+# include support for colored output
+include (cmake/Colors.cmake)
+
 # Use GNU-style hierarchy for installing build products
 include (GNUInstallDirs)
 
