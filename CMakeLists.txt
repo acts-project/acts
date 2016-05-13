@@ -1,6 +1,15 @@
 cmake_minimum_required (VERSION 2.8)
 project (ACTS)
 
+# print all available options
+if (DEFINED PRINT_OPTIONS)
+  # silence cmake
+  set (_print_options ${PRINT_OPTIONS})
+  # include options file
+  include (cmake/PrintOptions.cmake)
+  return ()
+endif (DEFINED PRINT_OPTIONS)
+
 # Use GNU-style hierarchy for installing build products
 include (GNUInstallDirs)
 
