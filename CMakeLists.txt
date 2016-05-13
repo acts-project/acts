@@ -7,6 +7,7 @@ if (DEFINED PRINT_OPTIONS)
   set (_print_options ${PRINT_OPTIONS})
   # include options file
   include (cmake/PrintOptions.cmake)
+  unset (PRINT_OPTIONS CACHE)
   return ()
 endif (DEFINED PRINT_OPTIONS)
 
