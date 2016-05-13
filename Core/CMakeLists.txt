@@ -6,7 +6,7 @@ if (NOT DEFINED EIGEN_INCLUDE_DIR)
 endif()
 
 # we need boost
-find_package(Boost)
+find_package(Boost REQUIRED)
 
 # get list of all source files
 file (GLOB src_files "src/*/*.cpp")
