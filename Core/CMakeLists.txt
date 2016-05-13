@@ -30,8 +30,3 @@ install (TARGETS ACTSCore EXPORT ACTSTargets
 	 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 install (DIRECTORY include/ACTS DESTINATION include)
-
-# hack to fix INTERFACE_COMPILE_DEFINITIONS
-add_custom_target (fix python ${PROJECT_SOURCE_DIR}/cmake/fix-cmake-target-file.py ACTSTargets.cmake
-		       WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/cmake/ACTS VERBATIM)
-install(CODE "execute_process(COMMAND \"${CMAKE_COMMAND}\" --build \"${CMAKE_BINARY_DIR}\" --target fix)")
