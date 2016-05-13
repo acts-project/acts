@@ -55,11 +55,11 @@ namespace Acts {
 	@param volumeName  : volume name to be given
     */
     virtual TrackingVolumePtr createTrackingVolume(const LayerVector& layers,
-						   const Material& matprop,
-						   VolumeBoundsPtr volBounds,
-						   std::shared_ptr<Transform3D> transform = nullptr,
-						   const std::string& volumeName = "UndefinedVolume",
-						   BinningType btype = arbitrary) const = 0;
+                                                   std::shared_ptr<Material> matprop,
+                                                   VolumeBoundsPtr volBounds,
+                                                   std::shared_ptr<Transform3D> transform = nullptr,
+                                                   const std::string& volumeName = "UndefinedVolume",
+                                                   BinningType btype = arbitrary) const = 0;
                                                                                                             
     /** create a TrackingVolume* from a set of layers and (optional) parameters
 
@@ -72,11 +72,11 @@ namespace Acts {
 	@param volumeName  : volume name to be given
     */
     virtual TrackingVolumePtr createTrackingVolume(const LayerVector& layers,
-						   const Material& matprop,
-						   double loc1Min, double loc1Max,
-						   double loc2Min, double loc2Max,
-						   const std::string& volumeName = "UndefinedVolume",
-						   BinningType btype = arbitrary) const = 0;
+                                                   std::shared_ptr<Material> matprop,
+                                                   double loc1Min, double loc1Max,
+                                                   double loc2Min, double loc2Max,
+                                                   const std::string& volumeName = "UndefinedVolume",
+                                                   BinningType btype = arbitrary) const = 0;
                                                                                                             
 
     /** create a gap volume from dimensions and
@@ -89,12 +89,12 @@ namespace Acts {
 	@param volumeName  : volume name to be given
                    
     */                                                      
-    virtual TrackingVolumePtr createGapTrackingVolume(const Material& matprop,
-						      double loc1Min, double loc1Max,
-						      double loc2Min, double loc2Max,
-						      unsigned int materialLayers,
-						      bool cylinder = true,
-						      const std::string& volumeName = "UndefinedVolume") const = 0;
+      virtual TrackingVolumePtr createGapTrackingVolume(std::shared_ptr<Material> matprop,
+                                                        double loc1Min, double loc1Max,
+                                                        double loc2Min, double loc2Max,
+                                                        unsigned int materialLayers,
+                                                        bool cylinder = true,
+                                                        const std::string& volumeName = "UndefinedVolume") const = 0;
 
     /** create a gap volume from dimensions and
        
@@ -105,13 +105,13 @@ namespace Acts {
 	@param volumeName  : volume name to be given
                    
     */                                                      
-    virtual TrackingVolumePtr createGapTrackingVolume(const Material& matprop,
-						      double loc1Min, double loc1Max,
-						      double loc2Min, double loc2Max,
-						      const std::vector<double>& layerPositions,
-						      bool cylinder = true,
-						      const std::string& volumeName = "UndefinedVolume",
-						      BinningType btype = arbitrary) const = 0;
+      virtual TrackingVolumePtr createGapTrackingVolume(std::shared_ptr<Material> matprop,
+                                                        double loc1Min, double loc1Max,
+                                                        double loc2Min, double loc2Max,
+                                                        const std::vector<double>& layerPositions,
+                                                        bool cylinder = true,
+                                                        const std::string& volumeName = "UndefinedVolume",
+                                                        BinningType btype = arbitrary) const = 0;
                                                                                                                                                                   
     /** Create a one level higher TrackingVolue
 

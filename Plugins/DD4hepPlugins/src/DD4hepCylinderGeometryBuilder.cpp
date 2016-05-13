@@ -2,6 +2,7 @@
 // Geometry module
 #include "ACTS/Detector/TrackingGeometry.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
+#include "ACTS/Material/Material.hpp"
 // DD4hepPlugin
 #include "ACTS/Plugins/DD4hepPlugins/DD4hepGeometryHelper.hpp"
 #include "ACTS/Plugins/DD4hepPlugins/DD4hepLayerHelper.hpp"
@@ -51,7 +52,7 @@ std::unique_ptr<Acts::TrackingGeometry> Acts::DD4hepCylinderGeometryBuilder::tra
             //extract material
             DD4hep::Geometry::Material mat = detElement.volume().material();
             //create the tracking volume
-            beamPipeVolume = Acts::TrackingVolume::create(Acts::DD4hepGeometryHelper::extractTransform(detElement),Acts::DD4hepGeometryHelper::extractVolumeBounds(detElement),Acts::Material(mat.radLength(),mat.intLength(),mat.A(),mat.Z(),mat.density()),nullptr,nullptr,nullptr,nullptr,"BeamTube");
+            beamPipeVolume = Acts::TrackingVolume::create(Acts::DD4hepGeometryHelper::extractTransform(detElement),Acts::DD4hepGeometryHelper::extractVolumeBounds(detElement),std::make_shared<Acts::Material>(mat.radLength(),mat.intLength(),mat.A(),mat.Z(),mat.density()),nullptr,nullptr,nullptr,nullptr,"BeamTube");
         }
         else {
         // assign a new highest volume (and potentially wrap around the given highest volume so far)
