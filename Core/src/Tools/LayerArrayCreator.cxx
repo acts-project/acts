@@ -80,7 +80,7 @@ Acts::LayerArray* Acts::LayerArrayCreator::layerArray(const LayerVector& layersI
                 boundaries.push_back(layerValue-0.5*layerThickness);
                 boundaries.push_back(layerValue+0.5*layerThickness);
                 // calculate the layer value for the offset
-                double navigationValue = 0.5*((layerValue-0.5*layerThickness) + boundaries[boundaries.size()-3]);
+                double navigationValue = 0.5*((layerValue-0.5*layerThickness) + boundaries.at(boundaries.size()-3));
                 //if layers are attached to each other, no navigation layer needed
                 if (navigationValue!=(layerValue-0.5*layerThickness)) {
                     // create the navigation layer surface from the layer
@@ -98,7 +98,7 @@ Acts::LayerArray* Acts::LayerArrayCreator::layerArray(const LayerVector& layersI
             }
             // a final navigation layer
             // calculate the layer value for the offset
-            double navigationValue = 0.5*(boundaries[boundaries.size()-1]+max);
+            double navigationValue = 0.5*(boundaries.at(boundaries.size()-1)+max);
             //create navigation layer only when necessary
             if (navigationValue!=max) {
                 // create the navigation layer surface from the layer

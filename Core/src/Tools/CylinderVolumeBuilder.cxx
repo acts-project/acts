@@ -173,9 +173,9 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
     } else if (m_config.volumeDimension.size() > 2) {
         // cylinder volume
         // get values from the out bounds 
-        volumeRmin  = m_config.volumeDimension[0];
-        volumeRmax  = m_config.volumeDimension[1];
-        volumeZmax  = m_config.volumeDimension[2];
+        volumeRmin  = m_config.volumeDimension.at(0);
+        volumeRmax  = m_config.volumeDimension.at(1);
+        volumeZmax  = m_config.volumeDimension.at(2);
         // MSG_VERBOSE("Outer CylinderVolumeBounds provided by configuration, rMin/rMax/zMax = " << volumeRmin << ", " << volumeRmax << ", " << volumeZmax);
         
     } else {
