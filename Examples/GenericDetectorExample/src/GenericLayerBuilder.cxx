@@ -26,6 +26,8 @@
 #include "ACTS/Examples/GenericDetectorExample/GenericLayerBuilder.h"
 #include "ACTS/Examples/GenericDetectorExample/GenericDetectorElement.h"
 
+#include <iostream>
+
 // constructor
 Acts::GenericLayerBuilder::GenericLayerBuilder(const Acts::GenericLayerBuilder::Config glbConfig) :
   m_nLayers(nullptr),
@@ -33,6 +35,7 @@ Acts::GenericLayerBuilder::GenericLayerBuilder(const Acts::GenericLayerBuilder::
   m_pLayers(nullptr)
 {
     setConfiguration(std::move(glbConfig));
+    
     //@TODO make checks if needed parameters are set and if vectors have all same size - waiting for message stream
     
     
@@ -57,7 +60,8 @@ Acts::GenericLayerBuilder::GenericLayerBuilder(const Acts::GenericLayerBuilder::
             std::vector< double > ringPhiPositions;
             size_t nphiModules = size_t(m_config.posnegModuleInPhi[idisc][iring]);
             for (size_t iphi = 0; iphi < nphiModules; ++iphi, ++iphistream){
-                ringPhiPositions.push_back(m_config.posnegModulePositionPhiStream[idisc][iphistream]);
+                //ringPhiPositions.push_back(m_config.posnegModulePositionPhiStream[idisc][iphistream]);
+                ringPhiPositions.push_back(m_config.posnegModulePositionPhi[idisc][iring][iphi]);
             }
             discPhiPositions.push_back(ringPhiPositions);
             
@@ -91,7 +95,6 @@ Acts::GenericLayerBuilder::~GenericLayerBuilder()
 
 void Acts::GenericLayerBuilder::constructLayers()
 {
-    
    // -------------------------------- central layers -----------------------------------------------------------
    // the central layers
    size_t numcLayers = m_config.centralLayerRadii.size();
@@ -139,7 +142,7 @@ void Acts::GenericLayerBuilder::constructLayers()
                // the moduel moaterial from input 
                Material moduleMaterial(x0,l0,a,z,rho);
                MaterialProperties moduleMaterialProperties(moduleMaterial,moduleThickness);
-               moduleMaterialPtr = std::shared_ptr<const SurfaceMaterial>(new HomogeneousSurfaceMaterial(moduleMaterialProperties));   
+               moduleMaterialPtr = std::shared_ptr<const SurfaceMaterial>(new HomogeneousSurfaceMaterial(moduleMaterialProperties));
            }
            // loop over z module and phi module position
            for (auto& moduleZ : zValues){
@@ -171,9 +174,9 @@ void Acts::GenericLayerBuilder::constructLayers()
                    // count the modules
                    ++imodule;
                    Identifier moduleIdentifier = Identifier(Identifier::value_type(imodule));
-                   // create the module 
+                   // create the module
                    DetectorElementBase* module = new GenericDetectorElement(moduleIdentifier, moduleTransform, moduleBounds, moduleThickness, moduleMaterialPtr);
-                   // register the surface 
+                   // register the surface
                    sVector.push_back(&module->surface());
                    // memory management - we need a detector store to hold them somewhere @TODO detector store facility
                    m_centralModule.push_back(module);
@@ -203,13 +206,10 @@ void Acts::GenericLayerBuilder::constructLayers()
                    }
                }
            }
-           
            size_t phiBins = m_config.centralLayerBinPhimultiplier*phiValues.size();
            size_t zBins   = m_config.centralLayerBinZmultiplier*zValues.size();
-           
            // create the surface array - it will also fill the accesible binmember chache if avalable
            LayerPtr cLayer = m_config.layerCreator->cylinderLayer(sVector, m_config.approachSurfaceEnvelope, layerEnvelopeCoverZ, phiBins, zBins);
-                      
            // the layer is built le't see if it needs material
            if (m_config.centralLayerMaterialProperties.size()){
                // get the material from configuration
@@ -220,7 +220,7 @@ void Acts::GenericLayerBuilder::constructLayers()
                double lMaterialZ         = m_config.centralLayerMaterialProperties[icl][4];
                double lMaterialRho       = m_config.centralLayerMaterialProperties[icl][5];
                MaterialProperties layerMaterialProperties(lMaterialThickness,lMaterialX0,lMaterialL0,lMaterialA,lMaterialZ,lMaterialRho);
-               std::shared_ptr<const SurfaceMaterial> layerMaterialPtr(new HomogeneousSurfaceMaterial(layerMaterialProperties));   
+               std::shared_ptr<const SurfaceMaterial> layerMaterialPtr(new HomogeneousSurfaceMaterial(layerMaterialProperties));
                // central material
                if (m_config.centralLayerMaterialConcentration[icl] == 0.){
                    // the layer surface is the material surface
@@ -256,7 +256,6 @@ void Acts::GenericLayerBuilder::constructLayers()
       m_nLayers->reserve(numpnLayers);
       // loop through
       for (size_t ipnl = 0; ipnl < numpnLayers; ++ipnl){
-                   
          // some screen output
          //MSG_VERBOSE("- build layers " << (2*ipnl) << " and "<<  (2*ipnl)+1 << " at +/- z = " << m_posnegLayerPositionsZ[ipnl]);
          // layer position update
@@ -265,7 +264,6 @@ void Acts::GenericLayerBuilder::constructLayers()
          double layerStaggerR                      = m_config.posnegModuleStaggerR[ipnl];
          size_t layerBinsR                         = 0;
          size_t layerBinsPhi                       = 0;
-             
          // module positioning update
          auto layerModuleRadii                     = m_config.posnegModuleRadii[ipnl];
          auto layerModulePositionsPhi              = m_config.posnegModulePositionPhi[ipnl];
@@ -275,11 +273,9 @@ void Acts::GenericLayerBuilder::constructLayers()
          auto layerModuleMaxHalfX                  = m_config.posnegModuleMaxHalfX[ipnl];
          auto layerModuleHalfY                     = m_config.posnegModuleHalfY[ipnl];
          auto layerModuleThickness                 = m_config.posnegModuleThickness[ipnl];
-
          // prepare for the r binning
          std::vector< const Surface* > nsVector;
          std::vector< const Surface* > psVector;
-         
          // loop over bins in R
          size_t imodule = 0;
 
@@ -318,7 +314,6 @@ void Acts::GenericLayerBuilder::constructLayers()
                  // and create the shared pointer
                  moduleMaterialPtr = std::shared_ptr<const SurfaceMaterial>(new HomogeneousSurfaceMaterial(moduleMaterialProperties));   
              }
-             
              // create the bounds
              PlanarBounds* pBounds =  nullptr;
              if (layerModuleMinHalfX.size() && moduleMinHalfX != moduleMaxHalfX)
@@ -333,7 +328,6 @@ void Acts::GenericLayerBuilder::constructLayers()
 
              // the phi module of this ring
              auto ringModulePositionsPhi = layerModulePositionsPhi[ipnR];
-             
              //MSG_VERBOSE("Ring - " << ipnR << " - has " << ringModulePositionsPhi.size() << " phi modules.");
              
              // now loop over phi
@@ -395,7 +389,6 @@ void Acts::GenericLayerBuilder::constructLayers()
                      // everything is set for the next module
                      GenericDetectorElement* bsnmodule = new GenericDetectorElement(nModuleIdentifier, nModuleTransform, moduleBounds, moduleThickness, moduleMaterialPtr);
                      GenericDetectorElement* bspmodule = new GenericDetectorElement(pModuleIdentifier, pModuleTransform, moduleBounds, moduleThickness, moduleMaterialPtr);
-                     
                      // register the backside of the binmembers
                      std::vector<const DetectorElementBase*> bspbinmember = {pmodule};
                      std::vector<const DetectorElementBase*> pbinmember = {bspmodule};
@@ -404,8 +397,7 @@ void Acts::GenericLayerBuilder::constructLayers()
                      bsnmodule->registerBinmembers(bsnbinmember);   
                      nmodule->registerBinmembers(nbinmember);   
                      bspmodule->registerBinmembers(bspbinmember);   
-                     pmodule->registerBinmembers(pbinmember);   
-                     
+                     pmodule->registerBinmembers(pbinmember);
                      // memory management - we need a detector store to hold them somewhere @TODO add detector store facility
                      m_posnegModule.push_back(bsnmodule);
                      m_posnegModule.push_back(bspmodule);
@@ -420,21 +412,17 @@ void Acts::GenericLayerBuilder::constructLayers()
              }
                           
          }
-         
          // estimate teh layerBinsR 
          layerBinsR = layerModuleRadii.size() > 1 ? layerModuleRadii.size()*m_config.posnegLayerBinRmultiplier : 1;
          layerBinsPhi *= m_config.posnegLayerBinPhimultiplier;
-         
          // create teh surface arrays 
          LayerPtr nLayer = m_config.layerCreator->discLayer(nsVector, layerEnvelopeR, layerEnvelopeR, m_config.approachSurfaceEnvelope, layerBinsR, layerBinsPhi);
          LayerPtr pLayer = m_config.layerCreator->discLayer(psVector, layerEnvelopeR, layerEnvelopeR, m_config.approachSurfaceEnvelope, layerBinsR, layerBinsPhi);
-
          // create the layer transforms
          Transform3D* nLayerTransform = new Transform3D(Transform3D::Identity());
          nLayerTransform->translation() = Vector3D(0.,0.,-layerPosZ);
          Transform3D* pLayerTransform = new Transform3D(Transform3D::Identity());
          pLayerTransform->translation() = Vector3D(0.,0.,layerPosZ);
-
          // the layer is built le't see if it needs material
          if (m_config.posnegLayerMaterialProperties.size()){
              // get the material from configuration
@@ -445,8 +433,7 @@ void Acts::GenericLayerBuilder::constructLayers()
              double lMaterialZ         = m_config.posnegLayerMaterialProperties[ipnl][4];
              double lMaterialRho       = m_config.posnegLayerMaterialProperties[ipnl][5];
              MaterialProperties layerMaterialProperties(lMaterialThickness,lMaterialX0,lMaterialL0,lMaterialA,lMaterialZ,lMaterialRho);
-             std::shared_ptr<const SurfaceMaterial> layerMaterialPtr(new HomogeneousSurfaceMaterial(layerMaterialProperties));   
-             
+             std::shared_ptr<const SurfaceMaterial> layerMaterialPtr(new HomogeneousSurfaceMaterial(layerMaterialProperties));
              // central material
              if (m_config.posnegLayerMaterialConcentration[ipnl] == 0.){
                  // assign the surface material - the layer surface is the material surface
@@ -466,7 +453,6 @@ void Acts::GenericLayerBuilder::constructLayers()
                  }
              }
          }                                             
-                                             
          // push it into the layer vector
          m_nLayers->push_back(nLayer);
          m_pLayers->push_back(pLayer);

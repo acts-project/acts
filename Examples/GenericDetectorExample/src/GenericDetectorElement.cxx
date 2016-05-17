@@ -17,18 +17,18 @@ Acts::GenericDetectorElement::GenericDetectorElement(const Identifier identifier
                                       double thickness,
                                       std::shared_ptr<const Acts::SurfaceMaterial> material) :
     DetectorElementBase(),                                  
-m_elementIdentifier(std::move(identifier)),
+    m_elementIdentifier(std::move(identifier)),
     m_elementTransform(std::move(transform)),
     m_elementBounds(pBounds.get()),
     m_elementSurface(new Acts::PlaneSurface(*this)),
     m_elementThickness(std::move(thickness)),
-    m_elementCenter(transform->translation()),                    
-    m_elementNormal(transform->rotation().col(2)),                                  
+    m_elementCenter(m_elementTransform->translation()),
+    m_elementNormal(m_elementTransform->rotation().col(2)),
     m_elementSurfaces({m_elementSurface}),
     m_elementPlanarBounds(std::move(pBounds)),
     m_elementDiscBounds(nullptr)
 {
-    m_elementSurface->setSurfaceMaterial(material);    
+    m_elementSurface->setSurfaceMaterial(material);
 }
 
 /** Constructor for single sided detector element - bound to a Disc Suface */

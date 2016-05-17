@@ -48,7 +48,6 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
     double volumeRmin  = 10e10;
     double volumeRmax  = -10e10;
     double volumeZmax  = 0.;
-    
     // now analyize the layers that are provided -----------------------------------------------------
     const LayerVector* negativeLayers   = nullptr;
     const LayerVector* centralLayers    = nullptr;
@@ -63,12 +62,14 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
         positiveLayers = std::get<2>(*layerTriple);
     }
     else {
-        // the negative Layers
-        negativeLayers = m_config.layerBuilder->negativeLayers();
-        // the central Layers
-        centralLayers  = m_config.layerBuilder->centralLayers();
-        // the positive Layer
-        positiveLayers = m_config.layerBuilder->positiveLayers();
+        if (m_config.layerBuilder) {
+            // the negative Layers
+            negativeLayers = m_config.layerBuilder->negativeLayers();
+            // the central Layers
+            centralLayers  = m_config.layerBuilder->centralLayers();
+            // the positive Layer
+            positiveLayers = m_config.layerBuilder->positiveLayers();
+        }
     }
     // analyze the layers
     LayerSetup nLayerSetup = analyzeLayerSetup(negativeLayers);
@@ -113,7 +114,6 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
         // set the 1-digit for p present
         layerConfiguration += 1;
     }
-    
     if (layerConfiguration) {
         // MSG_DEBUG("Layer configuration estimated as " << layerConfiguration << " with r(min,max) / z(min,max) = " <<
     } else {
@@ -144,7 +144,6 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
            return nullptr;
        }
     }
-    
     // -------------------- outside boundary conditions -------------------------------------------------- 
     //check if we have outsideBounds 
     if (outsideBounds){
@@ -187,7 +186,6 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
         // from setup 
         // MSG_VERBOSE("Outer CylinderVolumeBounds estimated from layer setup, rMin/rMax/zMax = " << volumeRmin << ", " << volumeRmax << ", " << volumeZmax);
     }
-    
     // -------------------- analyse the layer setups -------------------------------------------------- 
     TrackingVolumePtr negativeSector = nullptr;
     TrackingVolumePtr centralSector  = nullptr;
@@ -295,6 +293,7 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
             }
         }//else - no volume bounds given from translation
         
+        
         // the barrel is created
         barrel = m_config.trackingVolumeHelper->createTrackingVolume(*centralLayers,
                                                               m_config.volumeMaterial,
@@ -375,7 +374,6 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
             insideVolume = m_config.trackingVolumeHelper->createContainerTrackingVolume({insideVolume, barrel});
             volume = (nEndcap && pEndcap) ? m_config.trackingVolumeHelper->createContainerTrackingVolume({nEndcap, insideVolume, pEndcap}) : insideVolume;
         }
-
     } else if (outsideBounds){
         // screen output
         // MSG_DEBUG("Building Volume without layer configuration.");
@@ -412,7 +410,6 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
     } else {
       // MSG_ERROR("Neither layer configuration nor volume bounds given. Bailing out.");
     }
-    
     // sign the volume
     volume->sign(GeometrySignature(m_config.volumeSignature));
     // now return what you have
