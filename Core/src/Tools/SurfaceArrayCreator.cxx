@@ -234,6 +234,7 @@ void Acts::SurfaceArrayCreator::registerNeighboursGrid(const std::vector< std::v
     // get the number of bins
     size_t bins0 = surfaceArrayObjects.at(0).size();
     size_t bins1 = surfaceArrayObjects.size();
+    std::cout << "bins0,bins1 " << bins0 << " , "  << bins1 << std::endl;
     
     size_t emptybins = 0;
     
@@ -242,8 +243,10 @@ void Acts::SurfaceArrayCreator::registerNeighboursGrid(const std::vector< std::v
     // neighbour registration
     for (size_t i1 = 0; i1 < bins1; ++i1){
         for (size_t i0 = 0; i0 < bins0; ++i0){
+            std::cout << "loop1" << std::endl;
             // the current one
             const Surface* surface  = surfaceArrayObjects.at(i1).at(i0);
+            std::cout << "loop1.1" << std::endl;
             // leavit if there's no chance to do anything
             if (!surface || !surface->associatedDetectorElement()){
                 ++emptybins;
@@ -267,7 +270,7 @@ void Acts::SurfaceArrayCreator::registerNeighboursGrid(const std::vector< std::v
             // find the next neighbour in Loc0
             nsurface = surface;
             while (increment(n0,bins0,open0) && surface == nsurface){
-                surfaceArrayObjects.at(i1).at(n0);
+                nsurface = surfaceArrayObjects.at(i1).at(n0);
                 //MSG_VERBOSE("                       - increment to bin [" << n0 << "][" << i1 << "] - surface is " << nsurface);
                 if (nsurface && nsurface != surface) break;
             }
