@@ -10,13 +10,26 @@
 #include <string>
 #include <functional>
 #include <ostream>
+#include <memory>
+#include <thread>
 
 namespace Acts
 {
+  /**
+   * @brief logging related helper classes
+   */
   namespace Logging
   {
+    /**
+     * @enum Level
+     *
+     * @brief different logging levels
+     */
     enum Level {VERBOSE = 0, DEBUG, INFO, WARNING, ERROR, FATAL};
 
+    /**
+     * @brief abstract base class for logging output policy
+     */
     class OutputPolicy
     {
     public:
@@ -25,6 +38,9 @@ namespace Acts
       virtual void flush(const Level& lvl,const std::ostringstream& input) = 0;
     };
 
+    /**
+     * @brief abstract base class for logging printing policy
+     */
     class PrintPolicy
     {
     public:
@@ -33,6 +49,9 @@ namespace Acts
       virtual bool doPrint(const Level& lvl) const = 0;
     };
 
+    /**
+     * @brief thread-safe output stream
+     */
     class OutStream
     {
       typedef std::function<void(const std::ostringstream&)> OutputFunc;
@@ -206,6 +225,9 @@ namespace Acts
     };
   }  // end of namespace Logging
 
+  /**
+   * @brief logging class
+   */
   class Logger
   {
   public:
@@ -226,6 +248,8 @@ namespace Acts
     std::unique_ptr<Logging::OutputPolicy> m_outputPolicy;
     std::unique_ptr<Logging::PrintPolicy> m_printPolicy;
   };
+
+  std::unique_ptr<Logger> getDefaultLogger(const std::string& name,const Logging::Level& lvl);
 }  // end of namespace Acts
 
 #endif // ACTS_LOGGER_H
