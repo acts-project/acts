@@ -2,11 +2,11 @@
 // ExtrapolationEngine.icc, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Surfaces/Surface.h"
-#include "ACTS/Layers/Layer.h"
-#include "ACTS/Volumes/BoundarySurface.h"
-#include "ACTS/Detector/TrackingGeometry.h"
-#include "ACTS/Detector/TrackingVolume.h"
+#include "ACTS/Surfaces/Surface.hpp"
+#include "ACTS/Layers/Layer.hpp"
+#include "ACTS/Volumes/BoundarySurface.hpp"
+#include "ACTS/Detector/TrackingGeometry.hpp"
+#include "ACTS/Detector/TrackingVolume.hpp"
 // STD
 #include <iostream>
 #include <iomanip>

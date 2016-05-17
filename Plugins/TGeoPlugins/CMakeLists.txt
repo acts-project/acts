@@ -1,22 +1,34 @@
-# we need root
-find_package(ROOT COMPONENTS Geom)
+# manually trigger build of TGeo plugin
+option (BUILD_TGEO_PLUGIN "build TGeo plugins" OFF)
 
-# get list of all source files
-file(GLOB src_files "src/*.cxx")
+if (BUILD_TGEO_PLUGIN)
+  # we need root
+  find_package (ROOT QUIET COMPONENTS Geom)
 
-# define library target
-add_library(ACTSTGeoPlugin SHARED ${src_files})
+  if (ROOT_FOUND)
+    # get list of all source files
+    file (GLOB src_files "src/*.cpp")
 
-# setup include directories
-target_include_directories(ACTSTGeoPlugin PUBLIC ${ROOT_INCLUDE_DIRS})
-target_include_directories(ACTSTGeoPlugin PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
+    # define library target
+    add_library (ACTSTGeoPlugin SHARED ${src_files})
 
-# setup linker dependencies
-target_link_libraries(ACTSTGeoPlugin PUBLIC ACTSCore)
-target_link_libraries(ACTSTGeoPlugin PUBLIC Geom)
+    # setup include directories
+    target_include_directories (ACTSTGeoPlugin PUBLIC ${ROOT_INCLUDE_DIRS})
+    target_include_directories (ACTSTGeoPlugin PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
 
-# set installation directories
-install(TARGETS ACTSTGeoPlugin EXPORT ACTSTargets
-	LIBRARY DESTINATION lib)
+    # setup linker dependencies
+    target_link_libraries (ACTSTGeoPlugin PUBLIC ACTSCore)
+    target_link_libraries (ACTSTGeoPlugin PUBLIC Geom)
 
-install(DIRECTORY include/ACTS DESTINATION include)
+    # set installation directories
+    install (TARGETS ACTSTGeoPlugin EXPORT ACTSTargets
+             LIBRARY DESTINATION lib)
+
+    install (DIRECTORY include/ACTS DESTINATION include)
+  # do not fail if ROOT is not available, just inform and continue
+  else (ROOT_FOUND)
+    message (STATUS "${Red}ROOT was not found -> skip build of TGeoPlugins${ColorReset}")
+  endif (ROOT_FOUND)
+else (BUILD_TGEO_PLUGIN)
+  message (STATUS "${Blue}disable build of TGeoPlugins${ColorReset}")
+endif (BUILD_TGEO_PLUGIN)

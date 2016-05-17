@@ -1,32 +1,49 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 2.8)
 project (ACTS)
 
+# print all available options
+if (DEFINED PRINT_OPTIONS)
+  # silence cmake
+  set (_print_options ${PRINT_OPTIONS})
+  # include options file
+  include (cmake/PrintOptions.cmake)
+  unset (PRINT_OPTIONS CACHE)
+  return ()
+endif (DEFINED PRINT_OPTIONS)
+
+# include support for colored output
+include (cmake/Colors.cmake)
+
+# Use GNU-style hierarchy for installing build products
+include (GNUInstallDirs)
+
 # set the current version of ACTS
-set (ACTS_VERSION 0.0.1)
+set (ACTS_VERSION 0.01.00)
+
+# convert the version into a plain number to be used in the version header file
+string (REPLACE "." "" ACTS_VERSION_NUMBER ${ACTS_VERSION})
 
 # default installation direction
-set (CMAKE_INSTALL_PREFIX "/opt/ACTS/${ACTS_VERSION}" CACHE STRING "installation directory")
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set (CMAKE_INSTALL_PREFIX "/opt/ACTS/${ACTS_VERSION}" CACHE PATH "installation directory" FORCE)
+endif (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 # default parameter definitions
-set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.h" CACHE STRING "default track parameter definition")
+set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "default track parameter definition")
 
 # default message macros
-set (ACTS_MSG_MACROS_PLUGIN "ACTS/Utilities/detail/DefaultMsgMacros.h" CACHE STRING "default message macros")
+set (ACTS_MSG_MACROS_PLUGIN "ACTS/Utilities/detail/DefaultMsgMacros.hpp" CACHE FILEPATH "default message macros")
 
-# set location of cmake configuration files
-set(ConfigPackageLocation lib/cmake/ACTS)
-
+# delegate
 add_subdirectory (Core)
 add_subdirectory (doc)
 add_subdirectory (Plugins)
 add_subdirectory (Examples)
 
-include(GenerateExportHeader)
-generate_export_header (ACTSCore)
-set_property (TARGET ACTSCore PROPERTY VERSION ${ACTS_VERSION})
+# add version header
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/ACTSVersion.h ${CMAKE_CURRENT_BINARY_DIR}/ACTSVersion.h)
+install (FILES ${CMAKE_CURRENT_BINARY_DIR}/ACTSVersion.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ACTS)
 
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file ("${CMAKE_INSTALL_PREFIX}/${ConfigPackageLocation}/ACTSConfigVersion.cmake" VERSION ${ACTS_VERSION} COMPATIBILITY AnyNewerVersion)
-configure_file(cmake/ACTSConfig.cmake "${CMAKE_INSTALL_PREFIX}/${ConfigPackageLocation}/ACTSConfig.cmake" COPYONLY)
-install(EXPORT ACTSTargets FILE ACTSTargets.cmake DESTINATION ${ConfigPackageLocation})
+# add CMake infrastructure
+include (cmake/ACTSCreateConfig.cmake)
 

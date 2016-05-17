@@ -1,7 +1,7 @@
 #include <memory>
 
-#include "ACTS/Examples/GenericDetectorExample/BuildGenericDetector.h"
-#include "ACTS/Detector/TrackingGeometry.h"
+#include "ACTS/Examples/GenericDetectorExample/BuildGenericDetector.hpp"
+#include "ACTS/Detector/TrackingGeometry.hpp"
 
 int main()
 {
