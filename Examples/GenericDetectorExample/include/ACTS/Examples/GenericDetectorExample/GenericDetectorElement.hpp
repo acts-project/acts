@@ -97,17 +97,17 @@ namespace Acts {
     
     inline Identifier GenericDetectorElement::identify() const { return m_elementIdentifier; }
    
-    inline const Transform3D& GenericDetectorElement::transform(const Identifier&) const { return transform(); }
+    inline const Transform3D& GenericDetectorElement::transform(const Identifier&) const { return *m_elementTransform; }
    
-    inline const Surface& GenericDetectorElement::surface (const Identifier& ) const { return surface(); }
+    inline const Surface& GenericDetectorElement::surface (const Identifier& ) const { return *m_elementSurface; }
    
     inline const std::vector< std::shared_ptr<const Surface> >& GenericDetectorElement::surfaces() const { return m_elementSurfaces; }
    
-    inline const SurfaceBounds& GenericDetectorElement::bounds(const Identifier& ) const { return bounds(); }
+    inline const SurfaceBounds& GenericDetectorElement::bounds(const Identifier& ) const { return *m_elementBounds; }
    
-    inline const Vector3D& GenericDetectorElement::center(const Identifier& ) const { return center(); }
+    inline const Vector3D& GenericDetectorElement::center(const Identifier& ) const { return m_elementCenter; }
    
-    inline const Vector3D& GenericDetectorElement::normal(const Identifier&) const { return normal(); }
+    inline const Vector3D& GenericDetectorElement::normal(const Identifier&) const { return m_elementNormal; }
 
     inline double GenericDetectorElement::thickness() const { return m_elementThickness; }
 

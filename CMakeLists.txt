@@ -41,6 +41,7 @@ set(Boost_NO_BOOST_CMAKE ON CACHE BOOL "disable boost-cmake find mechanism")
 add_subdirectory (Core)
 add_subdirectory (doc)
 add_subdirectory (Plugins)
+add_subdirectory (Examples)
 
 # add version header
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/ACTSVersion.h ${CMAKE_CURRENT_BINARY_DIR}/ACTSVersion.h)

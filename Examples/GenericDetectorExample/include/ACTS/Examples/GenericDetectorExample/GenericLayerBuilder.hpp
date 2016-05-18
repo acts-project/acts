@@ -71,7 +71,7 @@ namespace Acts {
             std::vector< std::vector<double>  >                 posnegModuleInPhi;               //!< used to fill the position-phi
             std::vector< std::vector<double>  >                 posnegModulePositionPhiStream;   //!< used to fill the position-phi
             std::vector< std::vector< std::vector<double> > >   posnegModulePositionPhi;         //!< this one is being filled by the two before
-            std::vector< std::vector<double> >                  posnegMoudleStaggerPhi;
+            std::vector< std::vector<double> >                  posnegModuleStaggerPhi;
             std::vector< std::vector<double> >                  posnegModuleMinHalfX;
             std::vector< std::vector<double> >                  posnegModuleMaxHalfX;
             std::vector< std::vector<double> >                  posnegModuleHalfY;
@@ -116,7 +116,7 @@ namespace Acts {
         const LayerVector centralLayers() const override;
       
         /** LayerBuilder interface method - returning the layers at negative side */
-        const LayerVector positiveLayers() const override;         
+        const LayerVector positiveLayers() const override;
         
         /**ILayerBuilder method*/
         const std::string& identification() const override { return m_config.layerIdentification; }
@@ -130,9 +130,9 @@ namespace Acts {
         
         void constructLayers();
                                                             
-        LayerVector                                         m_nLayers; //!< layers on negative side
-        LayerVector                                         m_cLayers; //!< layers on central side
-        LayerVector                                         m_pLayers; //!< layers on positive side
+        LayerVector                                        m_nLayers; //!< layers on negative side
+        LayerVector                                        m_cLayers; //!< layers on central side
+        LayerVector                                        m_pLayers; //!< layers on positive side
         
         std::vector<const DetectorElementBase*>             m_centralModule;                   //!< acts as detector store
         std::vector<const DetectorElementBase*>             m_posnegModule;                     //!< acts as detector store

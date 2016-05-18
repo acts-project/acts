@@ -38,7 +38,7 @@ Acts::CylinderLayer::CylinderLayer(std::shared_ptr<Acts::Transform3D> transform,
     // associate teh layer 
     CylinderSurface::associateLayer(*this);
     // an approach descriptor is automatically created if there's a surface array
-    if (!ades && surfaceArray) 
+    if (!ades && Layer::m_surfaceArray)
         buildApproachDescriptor();
     // register the layer if the approach descriptor was provided
     if (ades) m_approachDescriptor->registerLayer(*this);

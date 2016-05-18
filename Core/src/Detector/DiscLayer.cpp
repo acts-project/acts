@@ -41,7 +41,7 @@ Layer(std::move(surfaceArray), thickness, olap, ades, laytyp)
     }
     // associate teh layer to this
     DiscSurface::associateLayer(*this);
-    if (!ades && surfaceArray) buildApproachDescriptor();
+    if (!ades && Layer::m_surfaceArray) buildApproachDescriptor();
     // register the layer
     if (ades) m_approachDescriptor->registerLayer(*this);
     

@@ -13,6 +13,7 @@
 #include "ACTS/Utilities/Identifier.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include <memory>
+#include <vector>
 
 namespace Acts
 {

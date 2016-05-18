@@ -154,8 +154,8 @@ void Acts::LayerCreator::moduleExtend(const Surface& sf,
                      // thickness
                      double locz = side ? 0.5*thickness : -0.5*thickness;
                      // p1 & p2 vectors 
-                     Vector3D p2(sf.transform()*Vector3D(vertices[iv].x(),vertices[iv].y(),locz));
-                     Vector3D p1(sf.transform()*Vector3D(vertices[ivp].x(),vertices[ivp].y(),locz));
+                     Vector3D p2(sf.transform()*Vector3D(vertices.at(iv).x(),vertices.at(iv).y(),locz));
+                     Vector3D p1(sf.transform()*Vector3D(vertices.at(ivp).x(),vertices.at(ivp).y(),locz));
                      // let's get
                      takeSmallerBigger(minZ,maxZ,p2.z());
                      takeBigger(maxR,p2.perp());

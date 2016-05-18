@@ -26,16 +26,14 @@ void Acts::CylinderGeometryBuilder::setConfiguration(const Acts::CylinderGeometr
 
 std::unique_ptr<Acts::TrackingGeometry> Acts::CylinderGeometryBuilder::trackingGeometry() const
 {
-  // the return geometry -- and the highest volume 
+  // the return geometry -- and the highest volume
   std::unique_ptr<Acts::TrackingGeometry> trackingGeometry;
   TrackingVolumePtr    highestVolume = nullptr;
-
   // loop over the builders and wrap one around the other -----------------------------
   for (auto& volumeBuilder : m_config.trackingVolumeBuilders) {
     // assign a new highest volume (and potentially wrap around the given highest volume so far)
     highestVolume = volumeBuilder->trackingVolume(highestVolume);
   } // --------------------------------------------------------------------------------
-
   // if you have a highst volume, stuff it into a TrackingGeometry
   if (highestVolume) {
     // see if the beampipe needs to be wrapped
