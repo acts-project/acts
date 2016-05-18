@@ -129,7 +129,7 @@ namespace Acts {
      dt << "Acts::SimplePolygonBrepVolumeBounds: (halfZ, xy vertices) = ";
      dt << "( " << m_halfZ << ")";
      for (unsigned int i=0;i<m_xyVtx.size();i++)
-       dt << "(" << m_xyVtx[i].first << ","<<m_xyVtx[i].second <<")";
+       dt << "(" << m_xyVtx.at(i).first << ","<<m_xyVtx.at(i).second <<")";
      return dt;
  }
 

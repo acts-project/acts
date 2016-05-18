@@ -46,7 +46,7 @@ Acts::CombinedVolumeBounds::CombinedVolumeBounds(const Acts::CombinedVolumeBound
  m_boundsOrientation()
 {
   m_boundsOrientation.resize(bobo.m_boundsOrientation.size());
-  for (unsigned int i=0;i<bobo.m_boundsOrientation.size();i++) m_boundsOrientation[i]=bobo.m_boundsOrientation[i];
+  for (unsigned int i=0;i<bobo.m_boundsOrientation.size();i++) m_boundsOrientation.at(i)=bobo.m_boundsOrientation.at(i);
 }
 
 Acts::CombinedVolumeBounds::~CombinedVolumeBounds()
@@ -64,7 +64,7 @@ Acts::CombinedVolumeBounds& Acts::CombinedVolumeBounds::operator=(const Acts::Co
     m_intersection   = bobo.m_intersection;
     m_boundsOrientation = bobo.m_boundsOrientation;
     m_boundsOrientation.resize(bobo.m_boundsOrientation.size());
-    for (unsigned int i=0;i<bobo.m_boundsOrientation.size();i++) m_boundsOrientation[i]=bobo.m_boundsOrientation[i];
+    for (unsigned int i=0;i<bobo.m_boundsOrientation.size();i++) m_boundsOrientation.at(i)=bobo.m_boundsOrientation.at(i);
  }
   return *this;
 }
@@ -97,20 +97,20 @@ const std::vector<const Acts::Surface*>* Acts::CombinedVolumeBounds::decomposeTo
     // loop over surfaces; convert disc surface to a plane surface using elliptic bounds
     for (unsigned int out=0; out < firstSurfaces->size(); out++) {
         //
-        const SubtractedPlaneSurface* splo = dynamic_cast<const SubtractedPlaneSurface*> ((*firstSurfaces)[out]);
-        const PlaneSurface* plo = dynamic_cast<const PlaneSurface*> ((*firstSurfaces)[out]);
-        const SubtractedCylinderSurface* sclo = dynamic_cast<const SubtractedCylinderSurface*> ((*firstSurfaces)[out]);
-        const CylinderSurface* clo = dynamic_cast<const CylinderSurface*> ((*firstSurfaces)[out]);
-        const DiscSurface* dlo = dynamic_cast<const DiscSurface*> ((*firstSurfaces)[out]);
+        const SubtractedPlaneSurface* splo = dynamic_cast<const SubtractedPlaneSurface*> ((*firstSurfaces).at(out));
+        const PlaneSurface* plo = dynamic_cast<const PlaneSurface*> ((*firstSurfaces).at(out));
+        const SubtractedCylinderSurface* sclo = dynamic_cast<const SubtractedCylinderSurface*> ((*firstSurfaces).at(out));
+        const CylinderSurface* clo = dynamic_cast<const CylinderSurface*> ((*firstSurfaces).at(out));
+        const DiscSurface* dlo = dynamic_cast<const DiscSurface*> ((*firstSurfaces).at(out));
 
         // resolve bounds orientation : copy from combined/subtracted, swap inner cyl, swap bottom spb
-        if (comVol) m_boundsOrientation[out]=comVol->boundsOrientation()[out];
-        else if (subVol) m_boundsOrientation[out]=subVol->boundsOrientation()[out];
-        else if (cylVol && clo && out==3 ) m_boundsOrientation[out] = false;
-        else if (spbVol && out==0 ) m_boundsOrientation[out] = false;
-        else m_boundsOrientation[out] = true;
+        if (comVol) m_boundsOrientation.at(out)=comVol->boundsOrientation().at(out);
+        else if (subVol) m_boundsOrientation.at(out)=subVol->boundsOrientation().at(out);
+        else if (cylVol && clo && out==3 ) m_boundsOrientation.at(out) = false;
+        else if (spbVol && out==0 ) m_boundsOrientation.at(out) = false;
+        else m_boundsOrientation.at(out) = true;
 
-        Acts::Volume* secondSub = createSubtractedVolume((*firstSurfaces)[out]->transform().inverse()*transf, m_second);
+        Acts::Volume* secondSub = createSubtractedVolume((*firstSurfaces).at(out)->transform().inverse()*transf, m_second);
 
         if ( sclo || splo ) {
             bool shared = false;
@@ -168,20 +168,20 @@ const std::vector<const Acts::Surface*>* Acts::CombinedVolumeBounds::decomposeTo
 
     for (unsigned int in=0; in< secondSurfaces->size(); in++) {
         //
-        const SubtractedPlaneSurface* spli = dynamic_cast<const SubtractedPlaneSurface*> ((*secondSurfaces)[in]);
-        const PlaneSurface* pli = dynamic_cast<const PlaneSurface*> ((*secondSurfaces)[in]);
-        const SubtractedCylinderSurface* scli = dynamic_cast<const SubtractedCylinderSurface*> ((*secondSurfaces)[in]);
-        const CylinderSurface* cli = dynamic_cast<const CylinderSurface*> ((*secondSurfaces)[in]);
-        const DiscSurface* dli = dynamic_cast<const DiscSurface*> ((*secondSurfaces)[in]);
+        const SubtractedPlaneSurface* spli = dynamic_cast<const SubtractedPlaneSurface*> ((*secondSurfaces).at(in));
+        const PlaneSurface* pli = dynamic_cast<const PlaneSurface*> ((*secondSurfaces).at(in));
+        const SubtractedCylinderSurface* scli = dynamic_cast<const SubtractedCylinderSurface*> ((*secondSurfaces).at(in));
+        const CylinderSurface* cli = dynamic_cast<const CylinderSurface*> ((*secondSurfaces).at(in));
+        const DiscSurface* dli = dynamic_cast<const DiscSurface*> ((*secondSurfaces).at(in));
 
         // resolve bounds orientation : copy from combined/subtracted, swap inner cyl, swap bottom spb
-        if (comVol) m_boundsOrientation[nOut+in]=comVol->boundsOrientation()[in];
-        else if (subVol) m_boundsOrientation[nOut+in]=subVol->boundsOrientation()[in];
-        else if (cylVol && cli && in==3 ) m_boundsOrientation[nOut+in]= false;
-        else if (spbVol && in==0 ) m_boundsOrientation[nOut+in]= false;
-        else m_boundsOrientation[nOut+in]= true;
+        if (comVol) m_boundsOrientation.at(nOut+in)=comVol->boundsOrientation().at(in);
+        else if (subVol) m_boundsOrientation.at(nOut+in)=subVol->boundsOrientation().at(in);
+        else if (cylVol && cli && in==3 ) m_boundsOrientation.at(nOut+in)= false;
+        else if (spbVol && in==0 ) m_boundsOrientation.at(nOut+in)= false;
+        else m_boundsOrientation.at(nOut+in)= true;
 
-        Acts::Volume* firstSub = createSubtractedVolume((*secondSurfaces)[in]->transform().inverse()*transf, m_first);
+        Acts::Volume* firstSub = createSubtractedVolume((*secondSurfaces).at(in)->transform().inverse()*transf, m_first);
         if ( scli || spli ) {
             bool shared = false;
             std::shared_ptr<Acts::AreaExcluder> vEx;
@@ -230,9 +230,9 @@ const std::vector<const Acts::Surface*>* Acts::CombinedVolumeBounds::decomposeTo
     }
 
     for (size_t i=0; i < firstSurfaces->size(); i++)
-        delete (*firstSurfaces)[i];
+        delete (*firstSurfaces).at(i);
     for (size_t i=0; i < secondSurfaces->size(); i++)
-        delete (*secondSurfaces)[i];
+        delete (*secondSurfaces).at(i);
     delete firstSurfaces;
     delete secondSurfaces;
 

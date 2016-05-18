@@ -197,28 +197,28 @@ namespace Acts {
  inline bool BevelledCylinderVolumeBounds::inside(const Vector3D &pos, double tol) const
  {
    double ros = pos.perp();
-   bool insidePhi =  fabs(pos.phi()) <= m_boundValues[bv_halfPhiSector] + tol;
+   bool insidePhi =  fabs(pos.phi()) <= m_boundValues.at(bv_halfPhiSector) + tol;
    double cphi = cos(pos.phi());
    bool insideR = insidePhi;
-   if (m_type < 1)  insideR  = insidePhi ? ((ros >=  m_boundValues[bv_innerRadius] - tol ) && (ros <= m_boundValues[bv_outerRadius] + tol)) : false;
-   else if (m_type == 1 ) insideR = insidePhi ? ((ros>= m_boundValues[bv_innerRadius]/cphi-tol)&&(ros<=m_boundValues[bv_outerRadius]+tol)):false;
-   else if (m_type == 2 ) insideR = insidePhi ? ((ros>= m_boundValues[bv_innerRadius]-tol)&&(ros<=m_boundValues[bv_outerRadius]/cphi+tol)):false;
-   else if (m_type == 3 ) insideR = insidePhi ? ((ros>= m_boundValues[bv_innerRadius]/cphi-tol)&&(ros<=m_boundValues[bv_outerRadius]/cphi+tol)):false;
+   if (m_type < 1)  insideR  = insidePhi ? ((ros >=  m_boundValues.at(bv_innerRadius) - tol ) && (ros <= m_boundValues.at(bv_outerRadius) + tol)) : false;
+   else if (m_type == 1 ) insideR = insidePhi ? ((ros>= m_boundValues.at(bv_innerRadius)/cphi-tol)&&(ros<=m_boundValues.at(bv_outerRadius)+tol)):false;
+   else if (m_type == 2 ) insideR = insidePhi ? ((ros>= m_boundValues.at(bv_innerRadius)-tol)&&(ros<=m_boundValues.at(bv_outerRadius)/cphi+tol)):false;
+   else if (m_type == 3 ) insideR = insidePhi ? ((ros>= m_boundValues.at(bv_innerRadius)/cphi-tol)&&(ros<=m_boundValues.at(bv_outerRadius)/cphi+tol)):false;
 //   bool insideZ = insideR ? (fabs(pos.z()) <= m_boundValues[bv_halfZ] + tol ) : false ;
-   bool insideZ = insideR ? ((pos.z()<=m_boundValues[bv_halfZ]-(pos.x()+m_boundValues[bv_outerRadius])*tan(m_boundValues[bv_thetaPlus]) + tol)
-			     && ( pos.z()>=-m_boundValues[bv_halfZ]+(pos.x()+m_boundValues[bv_outerRadius])*tan(m_boundValues[bv_thetaMinus]) - tol)) : false ;
+   bool insideZ = insideR ? ((pos.z()<=m_boundValues.at(bv_halfZ)-(pos.x()+m_boundValues.at(bv_outerRadius))*tan(m_boundValues.at(bv_thetaPlus)) + tol)
+			     && ( pos.z()>=-m_boundValues.at(bv_halfZ)+(pos.x()+m_boundValues.at(bv_outerRadius))*tan(m_boundValues.at(bv_thetaMinus)) - tol)) : false ;
 
    return insideZ;
  }
 
- inline double BevelledCylinderVolumeBounds::innerRadius() const { return m_boundValues[bv_innerRadius]; }
- inline double BevelledCylinderVolumeBounds::outerRadius() const { return m_boundValues[bv_outerRadius]; }
- inline double BevelledCylinderVolumeBounds::mediumRadius() const { return 0.5*(m_boundValues[bv_innerRadius]+m_boundValues[bv_outerRadius]); }
- inline double BevelledCylinderVolumeBounds::deltaRadius() const { return (m_boundValues[bv_outerRadius]-m_boundValues[bv_innerRadius]); }
- inline double BevelledCylinderVolumeBounds::halfPhiSector() const { return m_boundValues[bv_halfPhiSector]; }
- inline double BevelledCylinderVolumeBounds::halflengthZ() const { return m_boundValues[bv_halfZ]; }
- inline double BevelledCylinderVolumeBounds::thetaMinus() const { return m_boundValues[bv_thetaMinus]; }
- inline double BevelledCylinderVolumeBounds::thetaPlus() const { return m_boundValues[bv_thetaPlus]; }
+ inline double BevelledCylinderVolumeBounds::innerRadius() const { return m_boundValues.at(bv_innerRadius); }
+ inline double BevelledCylinderVolumeBounds::outerRadius() const { return m_boundValues.at(bv_outerRadius); }
+ inline double BevelledCylinderVolumeBounds::mediumRadius() const { return 0.5*(m_boundValues.at(bv_innerRadius)+m_boundValues.at(bv_outerRadius)); }
+ inline double BevelledCylinderVolumeBounds::deltaRadius() const { return (m_boundValues.at(bv_outerRadius)-m_boundValues.at(bv_innerRadius)); }
+ inline double BevelledCylinderVolumeBounds::halfPhiSector() const { return m_boundValues.at(bv_halfPhiSector); }
+ inline double BevelledCylinderVolumeBounds::halflengthZ() const { return m_boundValues.at(bv_halfZ); }
+ inline double BevelledCylinderVolumeBounds::thetaMinus() const { return m_boundValues.at(bv_thetaMinus); }
+ inline double BevelledCylinderVolumeBounds::thetaPlus() const { return m_boundValues.at(bv_thetaPlus); }
  inline int BevelledCylinderVolumeBounds::type() const { return m_type; }
 
  template <class T> T& BevelledCylinderVolumeBounds::dumpT(T& tstream) const
@@ -226,7 +226,7 @@ namespace Acts {
      tstream << std::setiosflags(std::ios::fixed);
      tstream << std::setprecision(7);
      tstream << "Acts::BevelledCylinderVolumeBounds: (innerR, outerR, halfPhiSector, halflengthInZ, thetaMinus, thetaPlus) = ";
-     tstream << "(" << m_boundValues[bv_innerRadius] << ", " << m_boundValues[bv_outerRadius] << ", " << m_boundValues[bv_halfPhiSector] << ", " << m_boundValues[bv_halfZ] << m_boundValues[bv_thetaMinus]<< ", " << m_boundValues[bv_thetaPlus] << ")";
+     tstream << "(" << m_boundValues.at(bv_innerRadius) << ", " << m_boundValues.at(bv_outerRadius) << ", " << m_boundValues.at(bv_halfPhiSector) << ", " << m_boundValues.at(bv_halfZ) << m_boundValues.at(bv_thetaMinus)<< ", " << m_boundValues.at(bv_thetaPlus) << ")";
      return tstream;
  }
 

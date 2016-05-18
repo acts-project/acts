@@ -20,9 +20,9 @@ Acts::CuboidVolumeBounds::CuboidVolumeBounds(double halex, double haley, double 
  VolumeBounds(),
  m_boundValues(bv_length,0.)
 {
-  m_boundValues[bv_halfX] = halex;
-  m_boundValues[bv_halfY] = haley;
-  m_boundValues[bv_halfZ] = halez;
+  m_boundValues.at(bv_halfX) = halex;
+  m_boundValues.at(bv_halfY) = haley;
+  m_boundValues.at(bv_halfZ) = halez;
 }
 
 Acts::CuboidVolumeBounds::CuboidVolumeBounds(const Acts::CuboidVolumeBounds& bobo) :
@@ -86,13 +86,13 @@ const std::vector<const Acts::Surface*>* Acts::CuboidVolumeBounds::decomposeToSu
 }
 
 Acts::RectangleBounds* Acts::CuboidVolumeBounds::faceXYRectangleBounds() const
-{ return new Acts::RectangleBounds(m_boundValues[bv_halfX], m_boundValues[bv_halfY]); }
+{ return new Acts::RectangleBounds(m_boundValues.at(bv_halfX), m_boundValues.at(bv_halfY)); }
 
 Acts::RectangleBounds* Acts::CuboidVolumeBounds::faceYZRectangleBounds() const
-{ return new Acts::RectangleBounds(m_boundValues[bv_halfY], m_boundValues[bv_halfZ]); }
+{ return new Acts::RectangleBounds(m_boundValues.at(bv_halfY), m_boundValues.at(bv_halfZ)); }
 
 Acts::RectangleBounds* Acts::CuboidVolumeBounds::faceZXRectangleBounds() const
-{ return new Acts::RectangleBounds(m_boundValues[bv_halfZ], m_boundValues[bv_halfX]); }
+{ return new Acts::RectangleBounds(m_boundValues.at(bv_halfZ), m_boundValues.at(bv_halfX)); }
 
 // ostream operator overload
 std::ostream& Acts::CuboidVolumeBounds::dump( std::ostream& sl ) const

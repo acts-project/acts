@@ -99,13 +99,13 @@ Acts::PlaneSurface* Acts::PrismVolumeBounds::sideSurf(Acts::Transform3D transfor
 {
   Acts::PlaneSurface* plane=0;
 
-  double xdif = m_xyVtx[iv2].first  - m_xyVtx[iv1].first;
-  double ydif = m_xyVtx[iv2].second - m_xyVtx[iv1].second;
+  double xdif = m_xyVtx.at(iv2).first  - m_xyVtx.at(iv1).first;
+  double ydif = m_xyVtx.at(iv2).second - m_xyVtx.at(iv1).second;
   double xsize = sqrt( xdif*xdif + ydif*ydif );
 
   double ori = ordering() > 0 ? 1. : -1.;
 
-  Acts::Vector3D pos(0.5*(m_xyVtx[iv1].first+m_xyVtx[iv2].first), 0.5*(m_xyVtx[iv1].second+m_xyVtx[iv2].second),0.);
+  Acts::Vector3D pos(0.5*(m_xyVtx.at(iv1).first+m_xyVtx.at(iv2).first), 0.5*(m_xyVtx.at(iv1).second+m_xyVtx.at(iv2).second),0.);
   double phi = ori*ydif < 0 ? M_PI/2 : -M_PI/2;
   if (ori>0 && ydif>0) phi = M_PI/2;
   if (fabs(xdif)>1e-6) {
@@ -120,8 +120,8 @@ Acts::PlaneSurface* Acts::PrismVolumeBounds::sideSurf(Acts::Transform3D transfor
   int ivr = (iv1==0 || iv2==0) ? 1 : 0;
   if ( ivr == 1 && (iv1==1 || iv2==1) ) ivr=2;
 
-  double ox = m_xyVtx[ivr].first  - pos[0];
-  double oy = m_xyVtx[ivr].second - pos[1];
+  double ox = m_xyVtx.at(ivr).first  - pos[0];
+  double oy = m_xyVtx.at(ivr).second - pos[1];
   Acts::Vector3D d(ox,oy,0.);
 
   // protect against wrong orientation
@@ -150,7 +150,7 @@ std::vector<std::pair<TDD_real_t,TDD_real_t> > Acts::PrismVolumeBounds::mirror_x
   mirrored.resize(m_xyVtx.size());
   // flip the second coordinate
   for (unsigned int i=0; i<m_xyVtx.size();i++)
-    mirrored[i]=std::pair<TDD_real_t,TDD_real_t> (m_xyVtx[i].first,-m_xyVtx[i].second);
+    mirrored.at(i)=std::pair<TDD_real_t,TDD_real_t> (m_xyVtx.at(i).first,-m_xyVtx.at(i).second);
   // return the mirroed ones
   return mirrored;
 }
@@ -161,10 +161,10 @@ int Acts::PrismVolumeBounds::ordering() const
 
   m_ordering = 1;
 
-  double yd2 = m_xyVtx[2].second-m_xyVtx[1].second;
-  double yd0 = m_xyVtx[0].second-m_xyVtx[1].second;
-  double xd2 = m_xyVtx[2].first-m_xyVtx[1].first;
-  double xd0 = m_xyVtx[0].first-m_xyVtx[1].first;
+  double yd2 = m_xyVtx.at(2).second-m_xyVtx.at(1).second;
+  double yd0 = m_xyVtx.at(0).second-m_xyVtx.at(1).second;
+  double xd2 = m_xyVtx.at(2).first-m_xyVtx.at(1).first;
+  double xd0 = m_xyVtx.at(0).first-m_xyVtx.at(1).first;
   double ph2 = yd2 < 0 ? -M_PI/2 : M_PI/2;
   if (fabs(xd2)>1e-6) {
     ph2 = atan(yd2/xd2);

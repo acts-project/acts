@@ -23,12 +23,12 @@ Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex, double maxha
  m_boundValues(bv_length,0.)
 {
 
-  m_boundValues[bv_minHalfX] = minhalex;
-  m_boundValues[bv_maxHalfX] = maxhalex;
-  m_boundValues[bv_halfY]    = haley;
-  m_boundValues[bv_halfZ]    = halez;
-  m_boundValues[bv_alpha]    = atan((m_boundValues[bv_maxHalfX]-m_boundValues[bv_minHalfX])/2/m_boundValues[bv_halfY]) + 0.5*M_PI;
-  m_boundValues[bv_beta]     = m_boundValues[bv_alpha];
+  m_boundValues.at(bv_minHalfX) = minhalex;
+  m_boundValues.at(bv_maxHalfX) = maxhalex;
+  m_boundValues.at(bv_halfY)    = haley;
+  m_boundValues.at(bv_halfZ)    = halez;
+  m_boundValues.at(bv_alpha)    = atan((m_boundValues.at(bv_maxHalfX)-m_boundValues.at(bv_minHalfX))/2/m_boundValues.at(bv_halfY)) + 0.5*M_PI;
+  m_boundValues.at(bv_beta)     = m_boundValues.at(bv_alpha);
 
 }
 
@@ -36,14 +36,14 @@ Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex, double haley
  VolumeBounds(),
  m_boundValues(bv_length,0.)
 {
-  m_boundValues[bv_minHalfX] = minhalex;
-  m_boundValues[bv_halfY]    = haley;
-  m_boundValues[bv_halfZ]    = halez;
-  m_boundValues[bv_alpha]    = alpha;
-  m_boundValues[bv_beta]     = beta;
+  m_boundValues.at(bv_minHalfX) = minhalex;
+  m_boundValues.at(bv_halfY)    = haley;
+  m_boundValues.at(bv_halfZ)    = halez;
+  m_boundValues.at(bv_alpha)    = alpha;
+  m_boundValues.at(bv_beta)     = beta;
   // now calculate the remaining max half X
   double gamma = (alpha > beta) ? (alpha - 0.5*M_PI) : (beta - 0.5*M_PI);
-  m_boundValues[bv_maxHalfX] = minhalex + (2.*haley)*tan(gamma);
+  m_boundValues.at(bv_maxHalfX) = minhalex + (2.*haley)*tan(gamma);
 }
 
 Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(const Acts::TrapezoidVolumeBounds& trabo) :
@@ -129,35 +129,35 @@ const std::vector<const Acts::Surface*>* Acts::TrapezoidVolumeBounds::decomposeT
 // faces in xy
 Acts::TrapezoidBounds* Acts::TrapezoidVolumeBounds::faceXYTrapezoidBounds() const
 {
-    return new Acts::TrapezoidBounds(m_boundValues[bv_minHalfX], m_boundValues[bv_maxHalfX], m_boundValues[bv_halfY]);
+    return new Acts::TrapezoidBounds(m_boundValues.at(bv_minHalfX), m_boundValues.at(bv_maxHalfX), m_boundValues.at(bv_halfY));
 }
 
 Acts::RectangleBounds* Acts::TrapezoidVolumeBounds::faceAlphaRectangleBounds() const
 {
-    return new Acts::RectangleBounds(m_boundValues[bv_halfY]/cos(m_boundValues[bv_alpha]-0.5*M_PI), m_boundValues[bv_halfZ]);
+    return new Acts::RectangleBounds(m_boundValues.at(bv_halfY)/cos(m_boundValues.at(bv_alpha)-0.5*M_PI), m_boundValues.at(bv_halfZ));
 }
 
 Acts::RectangleBounds* Acts::TrapezoidVolumeBounds::faceBetaRectangleBounds() const
 {
-    return new Acts::RectangleBounds(m_boundValues[bv_halfY]/cos(m_boundValues[bv_beta]-0.5*M_PI), m_boundValues[bv_halfZ]);
+    return new Acts::RectangleBounds(m_boundValues.at(bv_halfY)/cos(m_boundValues.at(bv_beta)-0.5*M_PI), m_boundValues.at(bv_halfZ));
 }
 
 Acts::RectangleBounds* Acts::TrapezoidVolumeBounds::faceZXRectangleBoundsBottom() const
 {
-    return new Acts::RectangleBounds(m_boundValues[bv_halfZ], m_boundValues[bv_minHalfX]);
+    return new Acts::RectangleBounds(m_boundValues.at(bv_halfZ), m_boundValues.at(bv_minHalfX));
 }
 
 Acts::RectangleBounds* Acts::TrapezoidVolumeBounds::faceZXRectangleBoundsTop() const
 {
-    //double delta = (m_boundValues[bv_alpha] < m_boundValues[bv_beta]) ? m_boundValues[bv_alpha] - M_PI/2. : m_boundValues[bv_beta] - M_PI/2.;
-    // return new Acts::RectangleBounds(m_boundValues[bv_halfZ], 0.5*(m_boundValues[bv_minHalfX]+m_boundValues[bv_minHalfX]+2.*m_boundValues[bv_halfY]/cos(delta)));
-    return new Acts::RectangleBounds(m_boundValues[bv_halfZ], m_boundValues[bv_maxHalfX]);
+    //double delta = (m_boundValues.at(bv_alpha) < m_boundValues.at(bv_beta)) ? m_boundValues.at(bv_alpha) - M_PI/2. : m_boundValues.at(bv_beta) - M_PI/2.;
+    // return new Acts::RectangleBounds(m_boundValues.at(bv_halfZ), 0.5*(m_boundValues.at(bv_minHalfX)+m_boundValues.at(bv_minHalfX)+2.*m_boundValues.at(bv_halfY)/cos(delta)));
+    return new Acts::RectangleBounds(m_boundValues.at(bv_halfZ), m_boundValues.at(bv_maxHalfX));
 }
 
 bool Acts::TrapezoidVolumeBounds::inside(const Acts::Vector3D& pos, double tol) const
 {
-    if (fabs(pos.z()) > m_boundValues[bv_halfZ] + tol) return false;
-    if (fabs(pos.y()) > m_boundValues[bv_halfY] + tol) return false;
+    if (fabs(pos.z()) > m_boundValues.at(bv_halfZ) + tol) return false;
+    if (fabs(pos.y()) > m_boundValues.at(bv_halfY) + tol) return false;
     Acts::TrapezoidBounds* faceXYBounds = faceXYTrapezoidBounds();
     Acts::Vector2D locp(pos.x(), pos.y());
     bool inside(faceXYBounds->inside(locp, BoundaryCheck(true, true, tol, tol)) );
