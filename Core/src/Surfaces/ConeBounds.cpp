@@ -22,11 +22,11 @@ Acts::ConeBounds::ConeBounds(double alpha, bool symm, double halfphi, double avp
   m_sinAlpha(0.),
   m_cosAlpha(0.)
 {
-  m_boundValues[ConeBounds::bv_alpha]         = alpha;
-  m_boundValues[ConeBounds::bv_minZ]          = symm ? -TDD_max_bound_value : 0.;
-  m_boundValues[ConeBounds::bv_maxZ]          = TDD_max_bound_value;
-  m_boundValues[ConeBounds::bv_averagePhi]    = avphi;
-  m_boundValues[ConeBounds::bv_halfPhiSector] = halfphi;
+  m_boundValues.at(ConeBounds::bv_alpha)         = alpha;
+  m_boundValues.at(ConeBounds::bv_minZ)          = symm ? -TDD_max_bound_value : 0.;
+  m_boundValues.at(ConeBounds::bv_maxZ)          = TDD_max_bound_value;
+  m_boundValues.at(ConeBounds::bv_averagePhi)    = avphi;
+  m_boundValues.at(ConeBounds::bv_halfPhiSector) = halfphi;
   initCache();
 }
 
@@ -37,11 +37,11 @@ Acts::ConeBounds::ConeBounds(double alpha, double zmin, double zmax, double half
   m_sinAlpha(0.),
   m_cosAlpha(0.)
 {
-  m_boundValues[ConeBounds::bv_alpha]         = alpha;
-  m_boundValues[ConeBounds::bv_minZ]          = zmin;
-  m_boundValues[ConeBounds::bv_maxZ]          = zmax;
-  m_boundValues[ConeBounds::bv_averagePhi]    = avphi;
-  m_boundValues[ConeBounds::bv_halfPhiSector] = halfphi;
+  m_boundValues.at(ConeBounds::bv_alpha)         = alpha;
+  m_boundValues.at(ConeBounds::bv_minZ)          = zmin;
+  m_boundValues.at(ConeBounds::bv_maxZ)          = zmax;
+  m_boundValues.at(ConeBounds::bv_averagePhi)    = avphi;
+  m_boundValues.at(ConeBounds::bv_halfPhiSector) = halfphi;
   initCache();
 }
 
@@ -89,8 +89,8 @@ double Acts::ConeBounds::minDistance(const Acts::Vector2D& pos) const
   // then it won't work
 
   // find the minimum distance along the z direction
-  double toMinZ = m_boundValues[ConeBounds::bv_minZ] - pos[Acts::eLOC_Z];
-  double toMaxZ = pos[Acts::eLOC_Z] - m_boundValues[ConeBounds::bv_maxZ];
+  double toMinZ = m_boundValues.at(ConeBounds::bv_minZ) - pos[Acts::eLOC_Z];
+  double toMaxZ = pos[Acts::eLOC_Z] - m_boundValues.at(ConeBounds::bv_maxZ);
   double toZ = (fabs(toMinZ) < fabs(toMaxZ)) ? toMinZ : toMaxZ;
 
   // NB this works only if the localPos is in the same hemisphere as
@@ -102,7 +102,7 @@ double Acts::ConeBounds::minDistance(const Acts::Vector2D& pos) const
 
   // if the cone is complete, or pos is in the same phi range as the
   // cone piece then its just the distance along the cone.
-  if (m_boundValues[ConeBounds::bv_halfPhiSector] >= M_PI)
+  if (m_boundValues.at(ConeBounds::bv_halfPhiSector) >= M_PI)
     return zDist;
 
   // we have a conical segment, so find also the phi distance
@@ -111,12 +111,12 @@ double Acts::ConeBounds::minDistance(const Acts::Vector2D& pos) const
   // input by the user (not at the point of closest approach to the
   // cone)
   double posR = pos[Acts::eLOC_Z]*m_tanAlpha;
-  double deltaPhi = pos[Acts::eLOC_RPHI] / posR - m_boundValues[ConeBounds::bv_averagePhi]; // from center
+  double deltaPhi = pos[Acts::eLOC_RPHI] / posR - m_boundValues.at(ConeBounds::bv_averagePhi); // from center
   if (deltaPhi >  M_PI) deltaPhi = 2*M_PI - deltaPhi;
   if (deltaPhi < -M_PI) deltaPhi = 2*M_PI + deltaPhi;
 
   // straight line distance (goes off cone)
-  double phiDist = 2*posR*sin(.5*(deltaPhi-m_boundValues[ConeBounds::bv_halfPhiSector]));
+  double phiDist = 2*posR*sin(.5*(deltaPhi-m_boundValues.at(ConeBounds::bv_halfPhiSector)));
 
   // if inside the cone, return the smaller length (since both are
   // negative, the *larger* of the 2 is the *smaller* distance)

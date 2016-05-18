@@ -106,7 +106,7 @@ namespace Acts {
     { return new RectangleBounds(*this); }
 
   inline bool RectangleBounds::inside(const Vector2D &locpo, double tol1, double tol2) const
-    { return ((fabs(locpo[Acts::eLOC_X]) < m_boundValues[RectangleBounds::bv_halfX] + tol1) && (fabs(locpo[Acts::eLOC_Y]) < m_boundValues[RectangleBounds::bv_halfY] + tol2)  ); }
+    { return ((fabs(locpo[Acts::eLOC_X]) < m_boundValues.at(RectangleBounds::bv_halfX) + tol1) && (fabs(locpo[Acts::eLOC_Y]) < m_boundValues.at(RectangleBounds::bv_halfY) + tol2)  ); }
 
   inline bool RectangleBounds::inside(const Vector2D& locpo, const BoundaryCheck& bchk) const
   {
@@ -131,15 +131,15 @@ namespace Acts {
                 -scResult.sinC, scResult.cosC;
 	// ellipse is always at (0,0), surface is moved to ellipse position and then rotated
     Vector2D p;
-    p << m_boundValues[RectangleBounds::bv_halfX],m_boundValues[RectangleBounds::bv_halfY];
-    elementP[0] = ( rotMatrix * (p - locpo) );
-    p << m_boundValues[RectangleBounds::bv_halfX],-m_boundValues[RectangleBounds::bv_halfY];
-    elementP[1] =( rotMatrix * (p - locpo) );
-    p << -m_boundValues[RectangleBounds::bv_halfX],m_boundValues[RectangleBounds::bv_halfY];
-    elementP[2] =( rotMatrix * (p - locpo) );
-    p << -m_boundValues[RectangleBounds::bv_halfX],-m_boundValues[RectangleBounds::bv_halfY];
-    elementP[3] =( rotMatrix * (p - locpo) );
-    std::vector<Vector2D> axis = {elementP[0]-elementP[1], elementP[0]-elementP[2], elementP[0]-elementP[3], elementP[1]-elementP[2]};
+    p << m_boundValues.at(RectangleBounds::bv_halfX),m_boundValues.at(RectangleBounds::bv_halfY);
+    elementP.at(0) = ( rotMatrix * (p - locpo) );
+    p << m_boundValues.at(RectangleBounds::bv_halfX),-m_boundValues.at(RectangleBounds::bv_halfY);
+    elementP.at(1) =( rotMatrix * (p - locpo) );
+    p << -m_boundValues.at(RectangleBounds::bv_halfX),m_boundValues.at(RectangleBounds::bv_halfY);
+    elementP.at(2) =( rotMatrix * (p - locpo) );
+    p << -m_boundValues.at(RectangleBounds::bv_halfX),-m_boundValues.at(RectangleBounds::bv_halfY);
+    elementP.at(3) =( rotMatrix * (p - locpo) );
+    std::vector<Vector2D> axis = {elementP.at(0)-elementP.at(1), elementP.at(0)-elementP.at(2), elementP.at(0)-elementP.at(3), elementP.at(1)-elementP.at(2)};
     bchk.ComputeKDOP(elementP, axis, elementKDOP);
 	// compute KDOP for error ellipse
     std::vector<KDOP> errelipseKDOP(4);
@@ -149,22 +149,22 @@ namespace Acts {
   }
 
   inline bool RectangleBounds::insideLoc1(const Vector2D &locpo, double tol1) const
-    { return (fabs(locpo[Acts::eLOC_X]) < m_boundValues[RectangleBounds::bv_halfX] + tol1); }
+    { return (fabs(locpo[Acts::eLOC_X]) < m_boundValues.at(RectangleBounds::bv_halfX) + tol1); }
 
   inline bool RectangleBounds::insideLoc2(const Vector2D &locpo, double tol2) const
-    { return (fabs(locpo[Acts::eLOC_Y]) < m_boundValues[RectangleBounds::bv_halfY] + tol2); }
+    { return (fabs(locpo[Acts::eLOC_Y]) < m_boundValues.at(RectangleBounds::bv_halfY) + tol2); }
 
   inline double RectangleBounds::halflengthPhi() const { return this->halflengthX(); }
 
   inline double RectangleBounds::halflengthEta() const { return this->halflengthY(); }
 
-  inline double RectangleBounds::halflengthX() const { return m_boundValues[RectangleBounds::bv_halfX]; }
+  inline double RectangleBounds::halflengthX() const { return m_boundValues.at(RectangleBounds::bv_halfX); }
 
-  inline double RectangleBounds::halflengthY() const { return m_boundValues[RectangleBounds::bv_halfY]; }
+  inline double RectangleBounds::halflengthY() const { return m_boundValues.at(RectangleBounds::bv_halfY); }
 
   inline double RectangleBounds::r() const {
-        return sqrt(m_boundValues[RectangleBounds::bv_halfX]*m_boundValues[RectangleBounds::bv_halfX]
-                  + m_boundValues[RectangleBounds::bv_halfY]*m_boundValues[RectangleBounds::bv_halfY]);
+        return sqrt(m_boundValues.at(RectangleBounds::bv_halfX)*m_boundValues.at(RectangleBounds::bv_halfX)
+                  + m_boundValues.at(RectangleBounds::bv_halfY)*m_boundValues.at(RectangleBounds::bv_halfY));
   }
   
   inline const std::vector< Vector2D > RectangleBounds::vertices() const {
@@ -172,10 +172,10 @@ namespace Acts {
       std::vector< Vector2D > vertices;
       // fill the vertices
       vertices.reserve(4);
-      vertices.push_back(Vector2D(m_boundValues[RectangleBounds::bv_halfX],-m_boundValues[RectangleBounds::bv_halfY]));   // [0]
-      vertices.push_back(Vector2D(m_boundValues[RectangleBounds::bv_halfX], m_boundValues[RectangleBounds::bv_halfY]));   // [1]
-      vertices.push_back(Vector2D(-m_boundValues[RectangleBounds::bv_halfX],m_boundValues[RectangleBounds::bv_halfY]));   // [1]
-      vertices.push_back(Vector2D(-m_boundValues[RectangleBounds::bv_halfX],-m_boundValues[RectangleBounds::bv_halfY]));  // [3]
+      vertices.push_back(Vector2D(m_boundValues.at(RectangleBounds::bv_halfX),-m_boundValues.at(RectangleBounds::bv_halfY)));   // [0]
+      vertices.push_back(Vector2D(m_boundValues.at(RectangleBounds::bv_halfX), m_boundValues.at(RectangleBounds::bv_halfY)));   // [1]
+      vertices.push_back(Vector2D(-m_boundValues.at(RectangleBounds::bv_halfX),m_boundValues.at(RectangleBounds::bv_halfY)));   // [1]
+      vertices.push_back(Vector2D(-m_boundValues.at(RectangleBounds::bv_halfX),-m_boundValues.at(RectangleBounds::bv_halfY)));  // [3]
       return vertices;
       
   }

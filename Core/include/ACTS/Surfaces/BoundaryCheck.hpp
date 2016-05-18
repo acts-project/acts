@@ -206,10 +206,10 @@ namespace Acts {
 		// first add the four vertices
 		std::vector<Vector2D> v((1+resolution)*4);
 		Vector2D p;
-		p << w,	0;	v[0] = p;
-		p << -w,0;	v[1] = p;
-		p << 0,	h;	v[2] = p;
-		p << 0,-h;	v[3] = p;
+		p << w,	0;	v.at(0) = p;
+		p << -w,0;	v.at(1) = p;
+		p << 0,	h;	v.at(2) = p;
+		p << 0,-h;	v.at(3) = p;
 
 		// now add a number, equal to the resolution, of equidistant points  in each quadrant
 		// resolution == 3 seems to be a solid working point, but possibility open to change to any number in the future
@@ -222,28 +222,28 @@ namespace Acts {
 			for(int i=1; i<=resolution; i++) {
 			    scResult = FastSinCos(M_PI_2*i/(resolution+1));
 				t << w*scResult.sinC,h*scResult.cosC;
-				v[i*4+0] = t;
-				v[i*4+1] = t1*t;
-				v[i*4+2] = t2*t;
-				v[i*4+3] = t3*t;
+				v.at(i*4+0) = t;
+				v.at(i*4+1) = t1*t;
+				v.at(i*4+2) = t2*t;
+				v.at(i*4+3) = t3*t;
 			}
 		}
 		else{
 			t << w*s_cos22,h*s_cos67;
-			v[4] = t;
-			v[5] = t1*t;
-			v[6] = t2*t;
-			v[7] = t3*t;
+			v.at(4)  = t;
+			v.at(5)  = t1*t;
+			v.at(6)  = t2*t;
+			v.at(7)  = t3*t;
 			t << w*s_cos45,h*s_cos45;
-			v[8] = t;
-			v[9] = t1*t;
-			v[10] = t2*t;
-			v[11] = t3*t;
+			v.at(8)  = t;
+			v.at(9)  = t1*t;
+			v.at(10) = t2*t;
+			v.at(11) = t3*t;
 			t << w*s_cos67,h*s_cos22;
-			v[12] = t;
-			v[13] = t1*t;
-			v[14] = t2*t;
-			v[15] = t3*t;
+			v.at(12) = t;
+			v.at(13) = t1*t;
+			v.at(14) = t2*t;
+			v.at(15) = t3*t;
 		}
 	return v;
 	}
@@ -254,16 +254,16 @@ namespace Acts {
 		// initialize KDOP to first point
 		unsigned int k = KDOPAxes.size();
 		for(unsigned int i=0; i<k; i++) {
-			kdop[i].max = KDOPAxes[i](0,0)*v[0](0,0)+KDOPAxes[i](1,0)*v[0](1,0);
-			kdop[i].min = KDOPAxes[i](0,0)*v[0](0,0)+KDOPAxes[i](1,0)*v[0](1,0);
+			kdop.at(i).max = KDOPAxes.at(i)(0,0)*v.at(0)(0,0)+KDOPAxes.at(i)(1,0)*v.at(0)(1,0);
+			kdop.at(i).min = KDOPAxes.at(i)(0,0)*v.at(0)(0,0)+KDOPAxes.at(i)(1,0)*v.at(0)(1,0);
 		}
 		// now for each additional point, update KDOP bounds if necessary
 		float value;
 		for(unsigned int i=1; i<v.size(); i++) {
 		    for(unsigned int j=0; j<k; j++) {
-				value = KDOPAxes[j](0,0)*v[i](0,0)+KDOPAxes[j](1,0)*v[i](1,0);
-				if (value < kdop[j].min) kdop[j].min = value;
-				else if (value > kdop[j].max) kdop[j].max = value;
+				value = KDOPAxes.at(j)(0,0)*v.at(i)(0,0)+KDOPAxes.at(j)(1,0)*v.at(i)(1,0);
+				if (value < kdop.at(j).min) kdop.at(j).min = value;
+				else if (value > kdop.at(j).max) kdop.at(j).max = value;
 			}
 		}
 	}
@@ -273,7 +273,7 @@ namespace Acts {
 	{
 		int k = a.size();
 		// check if any intervals are non-overlapping, return if so
-		for(int i=0;i<k;i++) if(a[i].min > b[i].max || a[i].max < b[i].min) return false;
+		for(int i=0;i<k;i++) if(a.at(i).min > b.at(i).max || a.at(i).max < b.at(i).min) return false;
 		// all intervals are overlapping, so KDOPs must intersect
 		return true;
 	}

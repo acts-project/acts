@@ -162,11 +162,11 @@ namespace Acts {
 
   inline TrapezoidBounds* TrapezoidBounds::clone() const { return new TrapezoidBounds(*this); }
 
-  inline double TrapezoidBounds::minHalflengthX() const { return m_boundValues[TrapezoidBounds::bv_minHalfX]; }
+  inline double TrapezoidBounds::minHalflengthX() const { return m_boundValues.at(TrapezoidBounds::bv_minHalfX); }
 
-  inline double TrapezoidBounds::maxHalflengthX() const { return m_boundValues[TrapezoidBounds::bv_maxHalfX]; }
+  inline double TrapezoidBounds::maxHalflengthX() const { return m_boundValues.at(TrapezoidBounds::bv_maxHalfX); }
 
-  inline double TrapezoidBounds::halflengthY() const    { return m_boundValues[TrapezoidBounds::bv_halfY]; }
+  inline double TrapezoidBounds::halflengthY() const    { return m_boundValues.at(TrapezoidBounds::bv_halfY); }
 
   inline double TrapezoidBounds::minHalflengthPhi() const { return minHalflengthX(); }
 
@@ -179,8 +179,8 @@ namespace Acts {
   inline double TrapezoidBounds::beta() const { return m_beta; }
 
   inline double TrapezoidBounds::r() const
-   { return sqrt(m_boundValues[TrapezoidBounds::bv_maxHalfX]*m_boundValues[TrapezoidBounds::bv_maxHalfX]
-               + m_boundValues[TrapezoidBounds::bv_halfY]*m_boundValues[TrapezoidBounds::bv_halfY]); }
+   { return sqrt(m_boundValues.at(TrapezoidBounds::bv_maxHalfX)*m_boundValues.at(TrapezoidBounds::bv_maxHalfX)
+               + m_boundValues.at(TrapezoidBounds::bv_halfY)*m_boundValues.at(TrapezoidBounds::bv_halfY)); }
 
   inline bool TrapezoidBounds::inside(const Vector2D& locpo, const BoundaryCheck& bchk) const
   {
@@ -190,14 +190,14 @@ namespace Acts {
 	double fabsY = fabs(locpo[Acts::eLOC_Y]);
 	double max_ell = bchk.lCovariance(0,0) > bchk.lCovariance(1,1) ? bchk.lCovariance(0,0) :bchk.lCovariance(1,1);
 	double limit = bchk.nSigmas*sqrt(max_ell);
-	if (fabsY > ( m_boundValues[TrapezoidBounds::bv_halfY] + limit)) return false;
+	if (fabsY > ( m_boundValues.at(TrapezoidBounds::bv_halfY) + limit)) return false;
 	// a fast FALSE
 	double fabsX = fabs(locpo[Acts::eLOC_X]);
-	if (fabsX > (m_boundValues[TrapezoidBounds::bv_maxHalfX] + limit)) return false;
+	if (fabsX > (m_boundValues.at(TrapezoidBounds::bv_maxHalfX) + limit)) return false;
 	// a fast TRUE
 	double min_ell = bchk.lCovariance(0,0) < bchk.lCovariance(1,1) ? bchk.lCovariance(0,0) : bchk.lCovariance(1,1);
 	limit = bchk.nSigmas*sqrt(min_ell);
-	if (fabsX < (m_boundValues[TrapezoidBounds::bv_minHalfX] + limit) && fabsY < (m_boundValues[TrapezoidBounds::bv_halfY] + limit)) return true;
+	if (fabsX < (m_boundValues.at(TrapezoidBounds::bv_minHalfX) + limit) && fabsY < (m_boundValues.at(TrapezoidBounds::bv_halfY) + limit)) return true;
 
 	// compute KDOP and axes for surface polygon
     std::vector<KDOP> elementKDOP(3);
@@ -212,17 +212,17 @@ namespace Acts {
                  1,  0;
 	// ellipse is always at (0,0), surface is moved to ellipse position and then rotated
     Vector2D p;
-    p << m_boundValues[TrapezoidBounds::bv_minHalfX],-m_boundValues[TrapezoidBounds::bv_halfY];
-    elementP[0] =( rotMatrix * (p - locpo) );
-    p << -m_boundValues[TrapezoidBounds::bv_minHalfX],-m_boundValues[TrapezoidBounds::bv_halfY];
-    elementP[1] =( rotMatrix * (p - locpo) );
+    p << m_boundValues.at(TrapezoidBounds::bv_minHalfX),-m_boundValues.at(TrapezoidBounds::bv_halfY);
+    elementP.at(0) =( rotMatrix * (p - locpo) );
+    p << -m_boundValues.at(TrapezoidBounds::bv_minHalfX),-m_boundValues.at(TrapezoidBounds::bv_halfY);
+    elementP.at(1) =( rotMatrix * (p - locpo) );
 	scResult = bchk.FastSinCos(m_beta);
-    p << m_boundValues[TrapezoidBounds::bv_minHalfX] + (2.*m_boundValues[TrapezoidBounds::bv_halfY])*(scResult.sinC/scResult.cosC),m_boundValues[TrapezoidBounds::bv_halfY];
-    elementP[2] =( rotMatrix * (p - locpo) );
+    p << m_boundValues.at(TrapezoidBounds::bv_minHalfX) + (2.*m_boundValues.at(TrapezoidBounds::bv_halfY))*(scResult.sinC/scResult.cosC),m_boundValues.at(TrapezoidBounds::bv_halfY);
+    elementP.at(2) =( rotMatrix * (p - locpo) );
 	scResult = bchk.FastSinCos(m_alpha);
-    p << -(m_boundValues[TrapezoidBounds::bv_minHalfX] + (2.*m_boundValues[TrapezoidBounds::bv_halfY])*(scResult.sinC/scResult.cosC)),m_boundValues[TrapezoidBounds::bv_halfY];
-    elementP[3] =( rotMatrix * (p - locpo) );
-    std::vector<Vector2D> axis = {normal*(elementP[1]-elementP[0]), normal*(elementP[3]-elementP[1]), normal*(elementP[2]-elementP[0])};
+    p << -(m_boundValues.at(TrapezoidBounds::bv_minHalfX) + (2.*m_boundValues[TrapezoidBounds::bv_halfY])*(scResult.sinC/scResult.cosC)),m_boundValues.at(TrapezoidBounds::bv_halfY);
+    elementP.at(3) =( rotMatrix * (p - locpo) );
+    std::vector<Vector2D> axis = {normal*(elementP.at(1)-elementP.at(0)), normal*(elementP.at(3)-elementP.at(1)), normal*(elementP.at(2)-elementP.at(0))};
     bchk.ComputeKDOP(elementP, axis, elementKDOP);
 	// compute KDOP for error ellipse
     std::vector<KDOP> errelipseKDOP(3);
@@ -232,20 +232,20 @@ namespace Acts {
   }
 
   inline bool TrapezoidBounds::insideLoc1(const Vector2D &locpo, double tol1) const
-    { return (fabs(locpo[Acts::eLOC_X]) < m_boundValues[TrapezoidBounds::bv_maxHalfX] + tol1); }
+    { return (fabs(locpo[Acts::eLOC_X]) < m_boundValues.at(TrapezoidBounds::bv_maxHalfX) + tol1); }
 
   inline bool TrapezoidBounds::insideLoc2(const Vector2D &locpo, double tol2) const
-    { return (fabs(locpo[Acts::eLOC_Y]) < m_boundValues[TrapezoidBounds::bv_halfY] + tol2); }
+    { return (fabs(locpo[Acts::eLOC_Y]) < m_boundValues.at(TrapezoidBounds::bv_halfY) + tol2); }
 
   inline const std::vector< Vector2D > TrapezoidBounds::vertices() const {
       // create the return vector
       std::vector< Vector2D > vertices;
       // fill the vertices
       vertices.reserve(4);
-      vertices.push_back(Vector2D(m_boundValues[TrapezoidBounds::bv_minHalfX],-m_boundValues[TrapezoidBounds::bv_halfY]));   // [0]
-      vertices.push_back(Vector2D(m_boundValues[TrapezoidBounds::bv_maxHalfX], m_boundValues[TrapezoidBounds::bv_halfY]));   // [1]
-      vertices.push_back(Vector2D(-m_boundValues[TrapezoidBounds::bv_maxHalfX],m_boundValues[TrapezoidBounds::bv_halfY]));   // [1]
-      vertices.push_back(Vector2D(-m_boundValues[TrapezoidBounds::bv_minHalfX],-m_boundValues[TrapezoidBounds::bv_halfY]));  // [3]
+      vertices.push_back(Vector2D(m_boundValues.at(TrapezoidBounds::bv_minHalfX),-m_boundValues.at(TrapezoidBounds::bv_halfY)));   // [0]
+      vertices.push_back(Vector2D(m_boundValues.at(TrapezoidBounds::bv_maxHalfX), m_boundValues.at(TrapezoidBounds::bv_halfY)));   // [1]
+      vertices.push_back(Vector2D(-m_boundValues.at(TrapezoidBounds::bv_maxHalfX),m_boundValues.at(TrapezoidBounds::bv_halfY)));   // [1]
+      vertices.push_back(Vector2D(-m_boundValues.at(TrapezoidBounds::bv_minHalfX),-m_boundValues.at(TrapezoidBounds::bv_halfY)));  // [3]
       return vertices;
       
   }

@@ -23,13 +23,13 @@ Acts::DiamondBounds::DiamondBounds(double minhalex, double medhalex, double maxh
     m_alpha1(0.),
     m_alpha2(0.)
 {
-  m_boundValues[DiamondBounds::bv_minHalfX] = minhalex;
-  m_boundValues[DiamondBounds::bv_medHalfX] = medhalex;
-  m_boundValues[DiamondBounds::bv_maxHalfX] = maxhalex;
-  m_boundValues[DiamondBounds::bv_halfY1]   = haley1;
-  m_boundValues[DiamondBounds::bv_halfY2]   = haley2;
+  m_boundValues.at(DiamondBounds::bv_minHalfX) = minhalex;
+  m_boundValues.at(DiamondBounds::bv_medHalfX) = medhalex;
+  m_boundValues.at(DiamondBounds::bv_maxHalfX) = maxhalex;
+  m_boundValues.at(DiamondBounds::bv_halfY1)   = haley1;
+  m_boundValues.at(DiamondBounds::bv_halfY2)   = haley2;
   if (minhalex > maxhalex)
-      swap(m_boundValues[DiamondBounds::bv_minHalfX], m_boundValues[DiamondBounds::bv_maxHalfX]);
+      swap(m_boundValues.at(DiamondBounds::bv_minHalfX), m_boundValues.at(DiamondBounds::bv_maxHalfX));
   initCache();
 
 }
@@ -75,22 +75,22 @@ bool Acts::DiamondBounds::insideFull(const Acts::Vector2D& locpo, double tol1, d
 {
   // the cases:
   // (0)
-  if (!m_boundValues[DiamondBounds::bv_halfY1] && !m_boundValues[DiamondBounds::bv_minHalfX]) return false;
+  if (!m_boundValues.at(DiamondBounds::bv_halfY1) && !m_boundValues.at(DiamondBounds::bv_minHalfX)) return false;
   // (1)
-  if (locpo[Acts::eLOC_Y] < -2. * m_boundValues[DiamondBounds::bv_halfY1] - tol2) return false;
-  if (locpo[Acts::eLOC_Y] >  2. * m_boundValues[DiamondBounds::bv_halfY2] + tol2) return false;
+  if (locpo[Acts::eLOC_Y] < -2. * m_boundValues.at(DiamondBounds::bv_halfY1) - tol2) return false;
+  if (locpo[Acts::eLOC_Y] >  2. * m_boundValues.at(DiamondBounds::bv_halfY2) + tol2) return false;
   // (2)
-  if (fabs(locpo[Acts::eLOC_X]) > (m_boundValues[DiamondBounds::bv_medHalfX] + tol1)) return false;
+  if (fabs(locpo[Acts::eLOC_X]) > (m_boundValues.at(DiamondBounds::bv_medHalfX) + tol1)) return false;
   // (3)
-  if (fabs(locpo[Acts::eLOC_X]) < (fmin(m_boundValues[DiamondBounds::bv_minHalfX],m_boundValues[DiamondBounds::bv_maxHalfX]) - tol1)) return true;
+  if (fabs(locpo[Acts::eLOC_X]) < (fmin(m_boundValues.at(DiamondBounds::bv_minHalfX),m_boundValues.at(DiamondBounds::bv_maxHalfX)) - tol1)) return true;
   // (4)
   /** use basic calculation of a straight line */
   if (locpo[Acts::eLOC_Y]<0) {
-    double k = m_boundValues[DiamondBounds::bv_halfY1]>0. ? (m_boundValues[DiamondBounds::bv_medHalfX] - m_boundValues[DiamondBounds::bv_minHalfX])/2/m_boundValues[DiamondBounds::bv_halfY1] : 0.;
-    return ( fabs(locpo[Acts::eLOC_X]) <= m_boundValues[DiamondBounds::bv_medHalfX]-k*fabs(locpo[Acts::eLOC_Y]) );
+    double k = m_boundValues.at(DiamondBounds::bv_halfY1)>0. ? (m_boundValues.at(DiamondBounds::bv_medHalfX) - m_boundValues.at(DiamondBounds::bv_minHalfX))/2/m_boundValues.at(DiamondBounds::bv_halfY1) : 0.;
+    return ( fabs(locpo[Acts::eLOC_X]) <= m_boundValues.at(DiamondBounds::bv_medHalfX)-k*fabs(locpo[Acts::eLOC_Y]) );
   } else {
-    double k = m_boundValues[DiamondBounds::bv_halfY2]>0. ? (m_boundValues[DiamondBounds::bv_medHalfX] - m_boundValues[DiamondBounds::bv_maxHalfX])/2/m_boundValues[DiamondBounds::bv_halfY2] : 0.;
-    return ( fabs(locpo[Acts::eLOC_X]) <= m_boundValues[DiamondBounds::bv_medHalfX]-k*fabs(locpo[Acts::eLOC_Y]) );
+    double k = m_boundValues.at(DiamondBounds::bv_halfY2)>0. ? (m_boundValues.at(DiamondBounds::bv_medHalfX) - m_boundValues.at(DiamondBounds::bv_maxHalfX))/2/m_boundValues.at(DiamondBounds::bv_halfY2) : 0.;
+    return ( fabs(locpo[Acts::eLOC_X]) <= m_boundValues.at(DiamondBounds::bv_medHalfX)-k*fabs(locpo[Acts::eLOC_Y]) );
   }
 }
 
@@ -110,15 +110,15 @@ double Acts::DiamondBounds::minDistance(const Acts::Vector2D& pos ) const
 {
   const int Np = 6;
 
-  double y1 = 2.*m_boundValues[DiamondBounds::bv_halfY1];
-  double y2 = 2.*m_boundValues[DiamondBounds::bv_halfY2];
+  double y1 = 2.*m_boundValues.at(DiamondBounds::bv_halfY1);
+  double y2 = 2.*m_boundValues.at(DiamondBounds::bv_halfY2);
 
-  double X [6] = {-m_boundValues[DiamondBounds::bv_minHalfX],
-                  -m_boundValues[DiamondBounds::bv_medHalfX],
-                  -m_boundValues[DiamondBounds::bv_maxHalfX],
-                  m_boundValues[DiamondBounds::bv_maxHalfX],
-                  m_boundValues[DiamondBounds::bv_medHalfX],
-                  m_boundValues[DiamondBounds::bv_minHalfX]};
+  double X [6] = {-m_boundValues.at(DiamondBounds::bv_minHalfX),
+                  -m_boundValues.at(DiamondBounds::bv_medHalfX),
+                  -m_boundValues.at(DiamondBounds::bv_maxHalfX),
+                  m_boundValues.at(DiamondBounds::bv_maxHalfX),
+                  m_boundValues.at(DiamondBounds::bv_medHalfX),
+                  m_boundValues.at(DiamondBounds::bv_minHalfX)};
   double Y [6] = {        -y1,         0.,         y2,        y2,        0.,       -y1};
 
   double dm = 1.e+20;
@@ -160,11 +160,11 @@ std::ostream& Acts::DiamondBounds::dump( std::ostream& sl ) const
     sl << std::setiosflags(std::ios::fixed);
     sl << std::setprecision(7);
     sl << "Acts::DiamondBounds:  (minHlenghtX, medHlengthX, maxHlengthX, hlengthY1, hlengthY2 ) = ";
-    sl << "(" << m_boundValues[DiamondBounds::bv_minHalfX] << ", "
-        << m_boundValues[DiamondBounds::bv_medHalfX] <<", "
-        << m_boundValues[DiamondBounds::bv_maxHalfX] << ", "
-        << m_boundValues[DiamondBounds::bv_halfY1] << ", "
-        << m_boundValues[DiamondBounds::bv_halfY2] << ")";
+    sl << "(" << m_boundValues.at(DiamondBounds::bv_minHalfX) << ", "
+        << m_boundValues.at(DiamondBounds::bv_medHalfX) <<", "
+        << m_boundValues.at(DiamondBounds::bv_maxHalfX) << ", "
+        << m_boundValues.at(DiamondBounds::bv_halfY1) << ", "
+        << m_boundValues.at(DiamondBounds::bv_halfY2) << ")";
     sl << std::setprecision(-1);
     return sl;
 }

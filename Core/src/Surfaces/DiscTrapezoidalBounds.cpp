@@ -17,29 +17,29 @@ Acts::DiscTrapezoidalBounds::DiscTrapezoidalBounds(double minhalfx, double maxha
   Acts::DiscBounds(),
   m_boundValues(DiscTrapezoidalBounds::bv_length, 0.)
 {
-  m_boundValues[DiscTrapezoidalBounds::bv_averagePhi]    = avephi;
-  m_boundValues[DiscTrapezoidalBounds::bv_stereo]        = stereo;
+  m_boundValues.at(DiscTrapezoidalBounds::bv_averagePhi)    = avephi;
+  m_boundValues.at(DiscTrapezoidalBounds::bv_stereo)        = stereo;
 
-  m_boundValues[DiscTrapezoidalBounds::bv_minHalfX]      = minhalfx;
-  m_boundValues[DiscTrapezoidalBounds::bv_maxHalfX]      = maxhalfx;
-  if (m_boundValues[DiscTrapezoidalBounds::bv_minHalfX] >  m_boundValues[DiscTrapezoidalBounds::bv_maxHalfX])
-    swap(m_boundValues[DiscTrapezoidalBounds::bv_minHalfX],  m_boundValues[DiscTrapezoidalBounds::bv_maxHalfX]);
+  m_boundValues.at(DiscTrapezoidalBounds::bv_minHalfX)      = minhalfx;
+  m_boundValues.at(DiscTrapezoidalBounds::bv_maxHalfX)      = maxhalfx;
+  if (m_boundValues.at(DiscTrapezoidalBounds::bv_minHalfX) >  m_boundValues.at(DiscTrapezoidalBounds::bv_maxHalfX))
+    swap(m_boundValues.at(DiscTrapezoidalBounds::bv_minHalfX),  m_boundValues.at(DiscTrapezoidalBounds::bv_maxHalfX));
 
-  m_boundValues[DiscTrapezoidalBounds::bv_rMax] = minR;
-  m_boundValues[DiscTrapezoidalBounds::bv_rMin] = maxR;
-  if (m_boundValues[DiscTrapezoidalBounds::bv_rMin] >  m_boundValues[DiscTrapezoidalBounds::bv_rMax])
-    swap(m_boundValues[DiscTrapezoidalBounds::bv_rMin],  m_boundValues[DiscTrapezoidalBounds::bv_rMax]);
+  m_boundValues.at(DiscTrapezoidalBounds::bv_rMax) = minR;
+  m_boundValues.at(DiscTrapezoidalBounds::bv_rMin) = maxR;
+  if (m_boundValues.at(DiscTrapezoidalBounds::bv_rMin) >  m_boundValues.at(DiscTrapezoidalBounds::bv_rMax))
+    swap(m_boundValues.at(DiscTrapezoidalBounds::bv_rMin),  m_boundValues.at(DiscTrapezoidalBounds::bv_rMax));
 
-  m_boundValues[DiscTrapezoidalBounds::bv_halfPhiSector] = asin(m_boundValues[DiscTrapezoidalBounds::bv_maxHalfX]/m_boundValues[DiscTrapezoidalBounds::bv_rMax]);
+  m_boundValues.at(DiscTrapezoidalBounds::bv_halfPhiSector) = asin(m_boundValues.at(DiscTrapezoidalBounds::bv_maxHalfX)/m_boundValues.at(DiscTrapezoidalBounds::bv_rMax));
 
-  double hmax = sqrt(m_boundValues[DiscTrapezoidalBounds::bv_rMax]*m_boundValues[DiscTrapezoidalBounds::bv_rMax]-
-		     m_boundValues[DiscTrapezoidalBounds::bv_maxHalfX]*m_boundValues[DiscTrapezoidalBounds::bv_maxHalfX]);
+  double hmax = sqrt(m_boundValues.at(DiscTrapezoidalBounds::bv_rMax)*m_boundValues.at(DiscTrapezoidalBounds::bv_rMax)-
+		     m_boundValues.at(DiscTrapezoidalBounds::bv_maxHalfX)*m_boundValues.at(DiscTrapezoidalBounds::bv_maxHalfX));
 
-  double hmin = sqrt(m_boundValues[DiscTrapezoidalBounds::bv_rMin]*m_boundValues[DiscTrapezoidalBounds::bv_rMin]-
-		     m_boundValues[DiscTrapezoidalBounds::bv_minHalfX]*m_boundValues[DiscTrapezoidalBounds::bv_minHalfX]);
+  double hmin = sqrt(m_boundValues.at(DiscTrapezoidalBounds::bv_rMin)*m_boundValues.at(DiscTrapezoidalBounds::bv_rMin)-
+		     m_boundValues.at(DiscTrapezoidalBounds::bv_minHalfX)*m_boundValues.at(DiscTrapezoidalBounds::bv_minHalfX));
 
-  m_boundValues[DiscTrapezoidalBounds::bv_rCenter] = (hmax+hmin)/2.;
-  m_boundValues[DiscTrapezoidalBounds::bv_halfY]   = (hmax-hmin)/2.;
+  m_boundValues.at(DiscTrapezoidalBounds::bv_rCenter) = (hmax+hmin)/2.;
+  m_boundValues.at(DiscTrapezoidalBounds::bv_halfY)   = (hmax-hmin)/2.;
 
 
 }
@@ -73,23 +73,23 @@ double Acts::DiscTrapezoidalBounds::minDistance(const Acts::Vector2D& pos ) cons
    double alpha = fabs(pos[Acts::eLOC_PHI]);
    if ( alpha>M_PI) alpha = pi2 - alpha;
 
-   double r  = pos[Acts::eLOC_R];  if(r==0.) return m_boundValues[DiscTrapezoidalBounds::bv_rMin]*cos(m_boundValues[DiscTrapezoidalBounds::bv_halfPhiSector])/cos(alpha);
+   double r  = pos[Acts::eLOC_R];  if(r==0.) return m_boundValues.at(DiscTrapezoidalBounds::bv_rMin)*cos(m_boundValues.at(DiscTrapezoidalBounds::bv_halfPhiSector))/cos(alpha);
 
    // check if it is external in R
-   double sr0 = m_boundValues[DiscTrapezoidalBounds::bv_rMin]*cos(m_boundValues[DiscTrapezoidalBounds::bv_halfPhiSector])/cos(alpha)-r;
+   double sr0 = m_boundValues.at(DiscTrapezoidalBounds::bv_rMin)*cos(m_boundValues.at(DiscTrapezoidalBounds::bv_halfPhiSector))/cos(alpha)-r;
    if(sr0 > 0.) return sr0;
-   double sr1 = r-m_boundValues[DiscTrapezoidalBounds::bv_rMax]*cos(m_boundValues[DiscTrapezoidalBounds::bv_halfPhiSector])/cos(alpha);
+   double sr1 = r-m_boundValues.at(DiscTrapezoidalBounds::bv_rMax)*cos(m_boundValues.at(DiscTrapezoidalBounds::bv_halfPhiSector))/cos(alpha);
    if(sr1 > 0.) return sr1;
 
    // check if it is external in phi
-   if((alpha-m_boundValues[DiscTrapezoidalBounds::bv_halfPhiSector])>0.) return r*fabs(sin(alpha-m_boundValues[DiscTrapezoidalBounds::bv_halfPhiSector]));
+   if((alpha-m_boundValues.at(DiscTrapezoidalBounds::bv_halfPhiSector))>0.) return r*fabs(sin(alpha-m_boundValues.at(DiscTrapezoidalBounds::bv_halfPhiSector)));
 
    // if here it is inside:
    // Evaluate the distance from the 4 segments
    double dist [4] = { sr0,
 		       sr1,
-		       -r*sin(m_boundValues[DiscTrapezoidalBounds::bv_halfPhiSector]-alpha),
-		       -r*sin(m_boundValues[DiscTrapezoidalBounds::bv_halfPhiSector]+alpha)};
+		       -r*sin(m_boundValues.at(DiscTrapezoidalBounds::bv_halfPhiSector)-alpha),
+		       -r*sin(m_boundValues.at(DiscTrapezoidalBounds::bv_halfPhiSector)+alpha)};
 
    return *std::max_element(dist,dist+4);
 }

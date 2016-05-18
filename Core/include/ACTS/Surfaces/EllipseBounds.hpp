@@ -119,11 +119,11 @@ namespace Acts {
  { return new EllipseBounds(*this); }
 
  inline bool EllipseBounds::inside(const Vector2D &locpo, double tol1, double tol2) const
- { double alpha = acos(cos(locpo[Acts::eLOC_PHI]-m_boundValues[EllipseBounds::bv_averagePhi]));
-   bool insidePhi = ( m_boundValues[EllipseBounds::bv_halfPhiSector]+tol2 < M_PI ) ? (alpha <= (m_boundValues[EllipseBounds::bv_halfPhiSector]+tol2)) : 1;
-   bool insideInner =( m_boundValues[EllipseBounds::bv_rMinX]<=tol1 ) || ( m_boundValues[EllipseBounds::bv_rMinY] <= tol1 )
-                   || ( square(locpo[Acts::eLOC_X]/(m_boundValues[EllipseBounds::bv_rMinX]-tol1)) + square(locpo[Acts::eLOC_Y]/(m_boundValues[EllipseBounds::bv_rMinY]-tol1)) >1);
-   bool insideOuter = ( square(locpo[Acts::eLOC_X]/(m_boundValues[EllipseBounds::bv_rMaxX]+tol1)) + square(locpo[Acts::eLOC_Y]/(m_boundValues[EllipseBounds::bv_rMaxY]+tol1)) <1);
+ { double alpha = acos(cos(locpo[Acts::eLOC_PHI]-m_boundValues.at(EllipseBounds::bv_averagePhi)));
+   bool insidePhi = ( m_boundValues.at(EllipseBounds::bv_halfPhiSector)+tol2 < M_PI ) ? (alpha <= (m_boundValues.at(EllipseBounds::bv_halfPhiSector)+tol2)) : 1;
+   bool insideInner =( m_boundValues.at(EllipseBounds::bv_rMinX)<=tol1 ) || ( m_boundValues.at(EllipseBounds::bv_rMinY) <= tol1 )
+                   || ( square(locpo[Acts::eLOC_X]/(m_boundValues.at(EllipseBounds::bv_rMinX)-tol1)) + square(locpo[Acts::eLOC_Y]/(m_boundValues.at(EllipseBounds::bv_rMinY)-tol1)) >1);
+   bool insideOuter = ( square(locpo[Acts::eLOC_X]/(m_boundValues.at(EllipseBounds::bv_rMaxX)+tol1)) + square(locpo[Acts::eLOC_Y]/(m_boundValues.at(EllipseBounds::bv_rMaxY)+tol1)) <1);
    return ( insideInner && insideOuter && insidePhi );
 
  }
@@ -135,36 +135,36 @@ namespace Acts {
 
  inline bool EllipseBounds::insideLoc1(const Vector2D &locpo, double tol1) const
  {
-   bool insideInner =( m_boundValues[EllipseBounds::bv_rMinX]<=tol1 ) || ( m_boundValues[EllipseBounds::bv_rMinY] <= tol1 )
-                   || ( square(locpo[Acts::eLOC_X]/(m_boundValues[EllipseBounds::bv_rMinX]-tol1)) + square(locpo[Acts::eLOC_Y]/(m_boundValues[EllipseBounds::bv_rMinY]-tol1)) >1);
-   bool insideOuter = ( square(locpo[Acts::eLOC_X]/(m_boundValues[EllipseBounds::bv_rMaxX]+tol1)) + square(locpo[Acts::eLOC_Y]/(m_boundValues[EllipseBounds::bv_rMaxY]+tol1)) <1);
+   bool insideInner =( m_boundValues[EllipseBounds::bv_rMinX]<=tol1 ) || ( m_boundValues.at(EllipseBounds::bv_rMinY) <= tol1 )
+                   || ( square(locpo[Acts::eLOC_X]/(m_boundValues.at(EllipseBounds::bv_rMinX)-tol1)) + square(locpo[Acts::eLOC_Y]/(m_boundValues.at(EllipseBounds::bv_rMinY)-tol1)) >1);
+   bool insideOuter = ( square(locpo[Acts::eLOC_X]/(m_boundValues.at(EllipseBounds::bv_rMaxX)+tol1)) + square(locpo[Acts::eLOC_Y]/(m_boundValues.at(EllipseBounds::bv_rMaxY)+tol1)) <1);
    return ( insideInner && insideOuter );
 }
 
  inline bool EllipseBounds::insideLoc2(const Vector2D &locpo, double tol2) const
  {
-   double alpha = acos(cos(locpo[Acts::eLOC_PHI]-m_boundValues[EllipseBounds::bv_averagePhi]));
-   bool insidePhi = ( m_boundValues[EllipseBounds::bv_halfPhiSector]+tol2 < M_PI ) ? (alpha <= (m_boundValues[EllipseBounds::bv_halfPhiSector]+tol2)) : 1;
+   double alpha = acos(cos(locpo[Acts::eLOC_PHI]-m_boundValues.at(EllipseBounds::bv_averagePhi)));
+   bool insidePhi = ( m_boundValues.at(EllipseBounds::bv_halfPhiSector)+tol2 < M_PI ) ? (alpha <= (m_boundValues.at(EllipseBounds::bv_halfPhiSector)+tol2)) : 1;
    return insidePhi;
  }
 
- inline double EllipseBounds::rMinX() const { return m_boundValues[EllipseBounds::bv_rMinX]; }
- inline double EllipseBounds::rMinY() const { return m_boundValues[EllipseBounds::bv_rMinY]; }
- inline double EllipseBounds::rMaxX() const { return m_boundValues[EllipseBounds::bv_rMaxX]; }
- inline double EllipseBounds::rMaxY() const { return m_boundValues[EllipseBounds::bv_rMaxY]; }
- inline double EllipseBounds::r() const { return std::max(m_boundValues[EllipseBounds::bv_rMaxX],m_boundValues[EllipseBounds::bv_rMaxY]); }
- inline double EllipseBounds::averagePhi() const { return m_boundValues[EllipseBounds::bv_averagePhi]; }
- inline double EllipseBounds::halfPhiSector() const { return m_boundValues[EllipseBounds::bv_halfPhiSector]; }
+ inline double EllipseBounds::rMinX() const { return m_boundValues.at(EllipseBounds::bv_rMinX); }
+ inline double EllipseBounds::rMinY() const { return m_boundValues.at(EllipseBounds::bv_rMinY); }
+ inline double EllipseBounds::rMaxX() const { return m_boundValues.at(EllipseBounds::bv_rMaxX); }
+ inline double EllipseBounds::rMaxY() const { return m_boundValues.at(EllipseBounds::bv_rMaxY); }
+ inline double EllipseBounds::r() const { return std::max(m_boundValues.at(EllipseBounds::bv_rMaxX),m_boundValues.at(EllipseBounds::bv_rMaxY)); }
+ inline double EllipseBounds::averagePhi() const { return m_boundValues.at(EllipseBounds::bv_averagePhi); }
+ inline double EllipseBounds::halfPhiSector() const { return m_boundValues.at(EllipseBounds::bv_halfPhiSector); }
  
  inline const std::vector< Vector2D > EllipseBounds::vertices() const {
      // create the return vector
      std::vector< Vector2D > vertices;
      // fill the vertices
      vertices.reserve(4);
-     vertices.push_back(Vector2D(m_boundValues[EllipseBounds::bv_rMaxX],0.));   // [0]
-     vertices.push_back(Vector2D(0., m_boundValues[EllipseBounds::bv_rMaxY]));   // [1]
-     vertices.push_back(Vector2D(-m_boundValues[EllipseBounds::bv_rMaxX],0.));  // [2]
-     vertices.push_back(Vector2D(0., -m_boundValues[EllipseBounds::bv_rMaxY]));  // [3]
+     vertices.push_back(Vector2D(m_boundValues.at(EllipseBounds::bv_rMaxX),0.));   // [0]
+     vertices.push_back(Vector2D(0., m_boundValues.at(EllipseBounds::bv_rMaxY)));   // [1]
+     vertices.push_back(Vector2D(-m_boundValues.at(EllipseBounds::bv_rMaxX),0.));  // [2]
+     vertices.push_back(Vector2D(0., -m_boundValues.at(EllipseBounds::bv_rMaxY)));  // [3]
      return vertices;
      
  }

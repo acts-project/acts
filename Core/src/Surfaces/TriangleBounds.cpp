@@ -21,8 +21,8 @@ Acts::TriangleBounds::TriangleBounds(std::vector<std::pair<float,float> > vertic
    std::vector< std::pair<float, float> >::iterator vIt  = vertices.begin();
    std::vector< std::pair<float, float> >::iterator vItE = vertices.end();
    for (size_t ib = 0 ; vIt != vItE; ++vIt, ++ib){
-       m_boundValues[2*ib]    = (*vIt).first;
-       m_boundValues[2*ib+1]  = (*vIt).second;
+       m_boundValues.at(2*ib)    = (*vIt).first;
+       m_boundValues.at(2*ib+1)  = (*vIt).second;
        if (ib==2) break;
    }
 }
@@ -35,8 +35,8 @@ Acts::TriangleBounds::TriangleBounds(std::vector<std::pair<double,double> > vert
     std::vector< std::pair<double, double> >::iterator vIt  = vertices.begin();
     std::vector< std::pair<double, double> >::iterator vItE = vertices.end();
     for (size_t ib = 0 ; vIt != vItE; ++vIt, ++ib){
-        m_boundValues[2*ib]    = (*vIt).first;
-        m_boundValues[2*ib+1]  = (*vIt).second;
+        m_boundValues.at(2*ib)    = (*vIt).first;
+        m_boundValues.at(2*ib+1)  = (*vIt).second;
         if (ib==2) break;
     }
 }
@@ -46,12 +46,12 @@ Acts::TriangleBounds::TriangleBounds( const Acts::Vector2D& p1, const Acts::Vect
     Acts::PlanarBounds(),
     m_boundValues(TriangleBounds::bv_length,0.)
 {
-    m_boundValues[TriangleBounds::bv_x1] = p1.x();
-    m_boundValues[TriangleBounds::bv_y1] = p1.y();
-    m_boundValues[TriangleBounds::bv_x2] = p2.x();
-    m_boundValues[TriangleBounds::bv_y2] = p2.y();
-    m_boundValues[TriangleBounds::bv_x3] = p3.x();
-    m_boundValues[TriangleBounds::bv_y3] = p3.y();
+    m_boundValues.at(TriangleBounds::bv_x1) = p1.x();
+    m_boundValues.at(TriangleBounds::bv_y1) = p1.y();
+    m_boundValues.at(TriangleBounds::bv_x2) = p2.x();
+    m_boundValues.at(TriangleBounds::bv_y2) = p2.y();
+    m_boundValues.at(TriangleBounds::bv_x3) = p3.x();
+    m_boundValues.at(TriangleBounds::bv_y3) = p3.y();
 }
 
 // copy constructor
@@ -83,12 +83,12 @@ double Acts::TriangleBounds::minDistance(const Acts::Vector2D& pos ) const
 {
   const int Np = 3;
 
-  double X [3] = { m_boundValues[TriangleBounds::bv_x1] ,
-                   m_boundValues[TriangleBounds::bv_x2] ,
-                   m_boundValues[TriangleBounds::bv_x3] };
-  double Y [3] = { m_boundValues[TriangleBounds::bv_y1] ,
-                   m_boundValues[TriangleBounds::bv_y2] ,
-                   m_boundValues[TriangleBounds::bv_y3] };
+  double X [3] = { m_boundValues.at(TriangleBounds::bv_x1) ,
+                   m_boundValues.at(TriangleBounds::bv_x2) ,
+                   m_boundValues.at(TriangleBounds::bv_x3) };
+  double Y [3] = { m_boundValues.at(TriangleBounds::bv_y1) ,
+                   m_boundValues.at(TriangleBounds::bv_y2) ,
+                   m_boundValues.at(TriangleBounds::bv_y3) };
 
   double dm = 1.e+20;
   double Ao =     0.;
@@ -129,9 +129,9 @@ std::ostream& Acts::TriangleBounds::dump( std::ostream& sl ) const
     sl << std::setiosflags(std::ios::fixed);
     sl << std::setprecision(7);
     sl << "Acts::TriangleBounds:  generating vertices (X, Y)";
-    sl <<  "(" << m_boundValues[TriangleBounds::bv_x1] << " , " << m_boundValues[TriangleBounds::bv_y1] << ") " << '\n';
-    sl <<  "(" << m_boundValues[TriangleBounds::bv_x2] << " , " << m_boundValues[TriangleBounds::bv_y2] << ") " << '\n';
-    sl <<  "(" << m_boundValues[TriangleBounds::bv_x3] << " , " << m_boundValues[TriangleBounds::bv_y3] << ") ";
+    sl <<  "(" << m_boundValues.at(TriangleBounds::bv_x1) << " , " << m_boundValues.at(TriangleBounds::bv_y1) << ") " << '\n';
+    sl <<  "(" << m_boundValues.at(TriangleBounds::bv_x2) << " , " << m_boundValues.at(TriangleBounds::bv_y2) << ") " << '\n';
+    sl <<  "(" << m_boundValues.at(TriangleBounds::bv_x3) << " , " << m_boundValues.at(TriangleBounds::bv_y3) << ") ";
     sl << std::setprecision(-1);
     return sl;
 }

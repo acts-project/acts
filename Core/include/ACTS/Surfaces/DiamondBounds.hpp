@@ -122,19 +122,19 @@ namespace Acts {
 
   inline DiamondBounds* DiamondBounds::clone() const { return new DiamondBounds(*this); }
 
-  inline double DiamondBounds::minHalflengthX() const { return m_boundValues[DiamondBounds::bv_minHalfX]; }
+  inline double DiamondBounds::minHalflengthX() const { return m_boundValues.at(DiamondBounds::bv_minHalfX); }
 
-  inline double DiamondBounds::medHalflengthX() const { return m_boundValues[DiamondBounds::bv_medHalfX]; }
+  inline double DiamondBounds::medHalflengthX() const { return m_boundValues.at(DiamondBounds::bv_medHalfX); }
 
-  inline double DiamondBounds::maxHalflengthX() const { return m_boundValues[DiamondBounds::bv_maxHalfX]; }
+  inline double DiamondBounds::maxHalflengthX() const { return m_boundValues.at(DiamondBounds::bv_maxHalfX); }
 
-  inline double DiamondBounds::halflengthY1() const    { return m_boundValues[DiamondBounds::bv_halfY1]; }
+  inline double DiamondBounds::halflengthY1() const    { return m_boundValues.at(DiamondBounds::bv_halfY1); }
 
-  inline double DiamondBounds::halflengthY2() const    { return m_boundValues[DiamondBounds::bv_halfY2]; }
+  inline double DiamondBounds::halflengthY2() const    { return m_boundValues.at(DiamondBounds::bv_halfY2); }
 
   inline double DiamondBounds::r() const
-    { return sqrt(m_boundValues[DiamondBounds::bv_medHalfX]*m_boundValues[DiamondBounds::bv_medHalfX]
-                + m_boundValues[DiamondBounds::bv_halfY1]*m_boundValues[DiamondBounds::bv_halfY1]); }
+    { return sqrt(m_boundValues.at(DiamondBounds::bv_medHalfX)*m_boundValues.at(DiamondBounds::bv_medHalfX)
+                + m_boundValues.at(DiamondBounds::bv_halfY1)*m_boundValues.at(DiamondBounds::bv_halfY1)); }
 
   inline bool DiamondBounds::inside(const Vector2D& locpo, const BoundaryCheck& bchk) const
   {
@@ -143,17 +143,17 @@ namespace Acts {
 	// a fast FALSE
 	double max_ell = bchk.lCovariance(0,0) > bchk.lCovariance(1,1) ? bchk.lCovariance(0,0) :bchk.lCovariance(1,1);
 	double limit = bchk.nSigmas*sqrt(max_ell);
-	if ( locpo[Acts::eLOC_Y] <  -2*m_boundValues[DiamondBounds::bv_halfY1] - limit) return false;
-	if ( locpo[Acts::eLOC_Y] >  2*m_boundValues[DiamondBounds::bv_halfY2] + limit) return false;
+	if ( locpo[Acts::eLOC_Y] <  -2*m_boundValues.at(DiamondBounds::bv_halfY1) - limit) return false;
+	if ( locpo[Acts::eLOC_Y] >  2*m_boundValues.at(DiamondBounds::bv_halfY2) + limit) return false;
 	// a fast FALSE
 	double fabsX = fabs(locpo[Acts::eLOC_X]);
-	if (fabsX > (m_boundValues[DiamondBounds::bv_medHalfX] + limit)) return false;
+	if (fabsX > (m_boundValues.at(DiamondBounds::bv_medHalfX) + limit)) return false;
 	// a fast TRUE
 	double min_ell = bchk.lCovariance(0,0) < bchk.lCovariance(1,1) ? bchk.lCovariance(0,0) : bchk.lCovariance(1,1);
 	limit = bchk.nSigmas*sqrt(min_ell);
-	if (fabsX < (fmin(m_boundValues[DiamondBounds::bv_minHalfX],m_boundValues[DiamondBounds::bv_maxHalfX]) - limit)) return true;
+	if (fabsX < (fmin(m_boundValues.at(DiamondBounds::bv_minHalfX),m_boundValues.at(DiamondBounds::bv_maxHalfX)) - limit)) return true;
 	// a fast TRUE
-	if (fabs(locpo[Acts::eLOC_Y]) < (fmin(m_boundValues[DiamondBounds::bv_halfY1],m_boundValues[DiamondBounds::bv_halfY2]) - limit)) return true;
+	if (fabs(locpo[Acts::eLOC_Y]) < (fmin(m_boundValues.at(DiamondBounds::bv_halfY1),m_boundValues.at(DiamondBounds::bv_halfY2)) - limit)) return true;
 
 	// compute KDOP and axes for surface polygon
     std::vector<KDOP> elementKDOP(5);
@@ -168,19 +168,19 @@ namespace Acts {
                  1,  0;
 	// ellipse is always at (0,0), surface is moved to ellipse position and then rotated
     Vector2D p;
-    p << -m_boundValues[DiamondBounds::bv_minHalfX],-2.*m_boundValues[DiamondBounds::bv_halfY1];
-    elementP[0] =( rotMatrix * (p - locpo) );
-    p << -m_boundValues[DiamondBounds::bv_medHalfX],0.;
-    elementP[1] =( rotMatrix * (p - locpo) );
-    p <<  -m_boundValues[DiamondBounds::bv_maxHalfX], 2.*m_boundValues[DiamondBounds::bv_halfY2];
-    elementP[2] =( rotMatrix * (p - locpo) );
-    p << m_boundValues[DiamondBounds::bv_maxHalfX], 2.*m_boundValues[DiamondBounds::bv_halfY2];
-    elementP[3] =( rotMatrix * (p - locpo) );
-	p << m_boundValues[DiamondBounds::bv_medHalfX], 0.;
-    elementP[4] =( rotMatrix * (p - locpo) );
-	p << m_boundValues[DiamondBounds::bv_minHalfX], -2.*m_boundValues[DiamondBounds::bv_halfY1];
-    elementP[5] =( rotMatrix * (p - locpo) );
-    std::vector<Vector2D> axis = {normal*(elementP[1]-elementP[0]), normal*(elementP[2]-elementP[1]), normal*(elementP[3]-elementP[2]), normal*(elementP[4]-elementP[3]), normal*(elementP[5]-elementP[4])};
+    p << -m_boundValues.at(DiamondBounds::bv_minHalfX),-2.*m_boundValues.at(DiamondBounds::bv_halfY1);
+    elementP.at(0) =( rotMatrix * (p - locpo) );
+    p << -m_boundValues.at(DiamondBounds::bv_medHalfX),0.;
+    elementP.at(1) =( rotMatrix * (p - locpo) );
+    p <<  -m_boundValues.at(DiamondBounds::bv_maxHalfX), 2.*m_boundValues.at(DiamondBounds::bv_halfY2);
+    elementP.at(2) =( rotMatrix * (p - locpo) );
+    p << m_boundValues.at(DiamondBounds::bv_maxHalfX), 2.*m_boundValues.at(DiamondBounds::bv_halfY2);
+    elementP.at(3) =( rotMatrix * (p - locpo) );
+	p << m_boundValues.at(DiamondBounds::bv_medHalfX), 0.;
+    elementP.at(4) =( rotMatrix * (p - locpo) );
+	p << m_boundValues.at(DiamondBounds::bv_minHalfX), -2.*m_boundValues.at(DiamondBounds::bv_halfY1);
+    elementP.at(5) =( rotMatrix * (p - locpo) );
+    std::vector<Vector2D> axis = {normal*(elementP.at(1)-elementP.at(0)), normal*(elementP.at(2)-elementP.at(1)), normal*(elementP.at(3)-elementP.at(2)), normal*(elementP.at(4)-elementP.at(3)), normal*(elementP.at(5)-elementP.at(4))};
     bchk.ComputeKDOP(elementP, axis, elementKDOP);
 	// compute KDOP for error ellipse
     std::vector<KDOP> errelipseKDOP(5);
@@ -190,14 +190,14 @@ namespace Acts {
   }
 
   inline bool DiamondBounds::insideLoc1(const Vector2D &locpo, double tol1) const
-    { return (fabs(locpo[Acts::eLOC_X]) < m_boundValues[DiamondBounds::bv_medHalfX] + tol1); }
+    { return (fabs(locpo[Acts::eLOC_X]) < m_boundValues.at(DiamondBounds::bv_medHalfX) + tol1); }
 
   inline bool DiamondBounds::insideLoc2(const Vector2D &locpo, double tol2) const
-    { return ((locpo[Acts::eLOC_Y] > -2.*m_boundValues[DiamondBounds::bv_halfY1] - tol2) && (locpo[Acts::eLOC_Y] < 2.*m_boundValues[DiamondBounds::bv_halfY2] + tol2) ); }
+    { return ((locpo[Acts::eLOC_Y] > -2.*m_boundValues.at(DiamondBounds::bv_halfY1) - tol2) && (locpo[Acts::eLOC_Y] < 2.*m_boundValues.at(DiamondBounds::bv_halfY2) + tol2) ); }
 
   inline void DiamondBounds::initCache() {
-      m_alpha1 = atan2(m_boundValues[DiamondBounds::bv_medHalfX]-m_boundValues[DiamondBounds::bv_minHalfX], 2.*m_boundValues[DiamondBounds::bv_halfY1]);
-      m_alpha2 = atan2(m_boundValues[DiamondBounds::bv_medHalfX]-m_boundValues[DiamondBounds::bv_maxHalfX], 2.*m_boundValues[DiamondBounds::bv_halfY2]);
+      m_alpha1 = atan2(m_boundValues.at(DiamondBounds::bv_medHalfX)-m_boundValues.at(DiamondBounds::bv_minHalfX), 2.*m_boundValues.at(DiamondBounds::bv_halfY1));
+      m_alpha2 = atan2(m_boundValues.at(DiamondBounds::bv_medHalfX)-m_boundValues.at(DiamondBounds::bv_maxHalfX), 2.*m_boundValues.at(DiamondBounds::bv_halfY2));
   }
 
   inline const std::vector< Vector2D > DiamondBounds::vertices() const {
@@ -205,12 +205,12 @@ namespace Acts {
       std::vector< Vector2D > vertices;
       // fill the vertices
       vertices.reserve(6);
-      vertices.push_back(Vector2D(m_boundValues[DiamondBounds::bv_minHalfX],-m_boundValues[DiamondBounds::bv_halfY1]));  // [0]
-      vertices.push_back(Vector2D(m_boundValues[DiamondBounds::bv_medHalfX],0.));                                         // [1]
-      vertices.push_back(Vector2D(m_boundValues[DiamondBounds::bv_maxHalfX], m_boundValues[DiamondBounds::bv_halfY2]));  // [2]
-      vertices.push_back(Vector2D(-m_boundValues[DiamondBounds::bv_maxHalfX], m_boundValues[DiamondBounds::bv_halfY2])); // [3]
-      vertices.push_back(Vector2D(-m_boundValues[DiamondBounds::bv_medHalfX],0.));                                        // [4]
-      vertices.push_back(Vector2D(-m_boundValues[DiamondBounds::bv_minHalfX],-m_boundValues[DiamondBounds::bv_halfY1])); // [5]
+      vertices.push_back(Vector2D(m_boundValues.at(DiamondBounds::bv_minHalfX),-m_boundValues.at(DiamondBounds::bv_halfY1)));  // [0]
+      vertices.push_back(Vector2D(m_boundValues.at(DiamondBounds::bv_medHalfX),0.));                                         // [1]
+      vertices.push_back(Vector2D(m_boundValues.at(DiamondBounds::bv_maxHalfX), m_boundValues.at(DiamondBounds::bv_halfY2)));  // [2]
+      vertices.push_back(Vector2D(-m_boundValues.at(DiamondBounds::bv_maxHalfX), m_boundValues.at(DiamondBounds::bv_halfY2))); // [3]
+      vertices.push_back(Vector2D(-m_boundValues.at(DiamondBounds::bv_medHalfX),0.));                                        // [4]
+      vertices.push_back(Vector2D(-m_boundValues.at(DiamondBounds::bv_minHalfX),-m_boundValues.at(DiamondBounds::bv_halfY1))); // [5]
       return vertices;
       
   }
