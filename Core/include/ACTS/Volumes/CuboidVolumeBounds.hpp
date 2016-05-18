@@ -104,21 +104,21 @@ namespace Acts {
 
  inline bool CuboidVolumeBounds::inside(const Vector3D &pos, double tol) const
  {
-   return (fabs(pos.x())<=m_boundValues[bv_halfX]+tol && fabs(pos.y())<=m_boundValues[bv_halfY]+tol && fabs(pos.z())<=m_boundValues[bv_halfZ]+tol);
+   return (fabs(pos.x())<=m_boundValues.at(bv_halfX)+tol && fabs(pos.y())<=m_boundValues.at(bv_halfY)+tol && fabs(pos.z())<=m_boundValues.at(bv_halfZ)+tol);
  }
 
- inline double CuboidVolumeBounds::halflengthX() const { return m_boundValues[bv_halfX]; }
+ inline double CuboidVolumeBounds::halflengthX() const { return m_boundValues.at(bv_halfX); }
 
- inline double CuboidVolumeBounds::halflengthY() const { return m_boundValues[bv_halfY]; }
+ inline double CuboidVolumeBounds::halflengthY() const { return m_boundValues.at(bv_halfY); }
 
- inline double CuboidVolumeBounds::halflengthZ() const { return m_boundValues[bv_halfZ]; }
+ inline double CuboidVolumeBounds::halflengthZ() const { return m_boundValues.at(bv_halfZ); }
 
  template <class T> T& CuboidVolumeBounds::dumpT(T& dt) const
  {
      dt << std::setiosflags(std::ios::fixed);
      dt << std::setprecision(7);
      dt << "Acts::CuboidVolumeBounds: (halfX, halfY, halfZ) = ";
-     dt << "(" << m_boundValues[bv_halfX] << ", " << m_boundValues[bv_halfY] << ", " << m_boundValues[bv_halfZ] << ")";
+     dt << "(" << m_boundValues.at(bv_halfX) << ", " << m_boundValues.at(bv_halfY) << ", " << m_boundValues.at(bv_halfZ) << ")";
      return dt;
  }
 

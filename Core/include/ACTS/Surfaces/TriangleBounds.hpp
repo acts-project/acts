@@ -99,12 +99,12 @@ namespace Acts {
     { return new TriangleBounds(*this); }
 
   inline bool TriangleBounds::inside(const Vector2D &locpo, double tol1, double tol2) const {
-    std::pair<double,double> locB(m_boundValues[TriangleBounds::bv_x2]-m_boundValues[TriangleBounds::bv_x1],
-				  m_boundValues[TriangleBounds::bv_y2]-m_boundValues[TriangleBounds::bv_y1]);
-    std::pair<double,double> locT(m_boundValues[TriangleBounds::bv_x3] -locpo[0],
-				  m_boundValues[TriangleBounds::bv_y3]-locpo[1]);
-    std::pair<double,double> locV(m_boundValues[TriangleBounds::bv_x1] -locpo[0],
-				  m_boundValues[TriangleBounds::bv_y1]-locpo[1]);
+    std::pair<double,double> locB(m_boundValues.at(TriangleBounds::bv_x2)-m_boundValues.at(TriangleBounds::bv_x1),
+				  m_boundValues.at(TriangleBounds::bv_y2)-m_boundValues.at(TriangleBounds::bv_y1));
+    std::pair<double,double> locT(m_boundValues.at(TriangleBounds::bv_x3) -locpo[0],
+				  m_boundValues.at(TriangleBounds::bv_y3)-locpo[1]);
+    std::pair<double,double> locV(m_boundValues.at(TriangleBounds::bv_x1) -locpo[0],
+				  m_boundValues.at(TriangleBounds::bv_y1)-locpo[1]);
 
     // special case :: third vertex ?
     if (locT.first*locT.first+locT.second*locT.second<tol1*tol1) return true;
@@ -156,13 +156,13 @@ namespace Acts {
                  1,  0;
 	// ellipse is always at (0,0), surface is moved to ellipse position and then rotated
     Vector2D p;
-    p << m_boundValues[TriangleBounds::bv_x1],m_boundValues[TriangleBounds::bv_y1];
-    elementP[0] =( rotMatrix * (p - locpo) );
-    p << m_boundValues[TriangleBounds::bv_x2],m_boundValues[TriangleBounds::bv_y2];
-    elementP[1] =( rotMatrix * (p - locpo) );
-    p << m_boundValues[TriangleBounds::bv_x3],m_boundValues[TriangleBounds::bv_y3];
-    elementP[2] =( rotMatrix * (p - locpo) );
-    std::vector<Vector2D> axis = {normal*(elementP[1]-elementP[0]), normal*(elementP[2]-elementP[1]), normal*(elementP[2]-elementP[0])};
+    p << m_boundValues.at(TriangleBounds::bv_x1),m_boundValues.at(TriangleBounds::bv_y1);
+    elementP.at(0) =( rotMatrix * (p - locpo) );
+    p << m_boundValues.at(TriangleBounds::bv_x2),m_boundValues.at(TriangleBounds::bv_y2);
+    elementP.at(1) =( rotMatrix * (p - locpo) );
+    p << m_boundValues.at(TriangleBounds::bv_x3),m_boundValues.at(TriangleBounds::bv_y3);
+    elementP.at(2) =( rotMatrix * (p - locpo) );
+    std::vector<Vector2D> axis = {normal*(elementP.at(1)-elementP.at(0)), normal*(elementP.at(2)-elementP.at(1)), normal*(elementP.at(2)-elementP.at(0))};
     bchk.ComputeKDOP(elementP, axis, elementKDOP);
 	// compute KDOP for error ellipse
     std::vector<KDOP> errelipseKDOP(3);
@@ -182,14 +182,14 @@ namespace Acts {
     std::vector< Vector2D > vertices;
     vertices.resize(3);
     for (size_t iv = 0; iv < 3 ; iv++) 
-       vertices.push_back(Vector2D(m_boundValues[2*iv],m_boundValues[2*iv+1]));
+       vertices.push_back(Vector2D(m_boundValues.at(2*iv),m_boundValues.at(2*iv+1)));
    return vertices;  
   }
 
   inline double TriangleBounds::r() const {
     double rmax = 0.;
     for (size_t iv = 0; iv < 3 ; iv++)
-      rmax = fmax(rmax, m_boundValues[2*iv]*m_boundValues[2*iv] + m_boundValues[2*iv+1]*m_boundValues[2*iv+1]);
+      rmax = fmax(rmax, m_boundValues.at(2*iv)*m_boundValues.at(2*iv) + m_boundValues.at(2*iv+1)*m_boundValues.at(2*iv+1));
     return sqrt(rmax);
   }
 

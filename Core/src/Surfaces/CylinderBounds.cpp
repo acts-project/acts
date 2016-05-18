@@ -18,28 +18,28 @@ Acts::CylinderBounds::CylinderBounds(double radius, double halez) :
     m_boundValues(CylinderBounds::bv_length, 0.),
     m_checkPhi(false)
 {
-    m_boundValues[CylinderBounds::bv_radius]        = fabs(radius);
-    m_boundValues[CylinderBounds::bv_halfPhiSector] = M_PI;
-    m_boundValues[CylinderBounds::bv_halfZ]         = fabs(halez);
+    m_boundValues.at(CylinderBounds::bv_radius)        = fabs(radius);
+    m_boundValues.at(CylinderBounds::bv_halfPhiSector) = M_PI;
+    m_boundValues.at(CylinderBounds::bv_halfZ)         = fabs(halez);
 }
 
 Acts::CylinderBounds::CylinderBounds(double radius, double haphi, double halez) :
     m_boundValues(CylinderBounds::bv_length, 0.),
     m_checkPhi(true)
 {
-    m_boundValues[CylinderBounds::bv_radius]        = fabs(radius);
-    m_boundValues[CylinderBounds::bv_halfPhiSector] = haphi;
-    m_boundValues[CylinderBounds::bv_halfZ]         = fabs(halez);
+    m_boundValues.at(CylinderBounds::bv_radius)        = fabs(radius);
+    m_boundValues.at(CylinderBounds::bv_halfPhiSector) = haphi;
+    m_boundValues.at(CylinderBounds::bv_halfZ)         = fabs(halez);
 }
 
 Acts::CylinderBounds::CylinderBounds(double radius, double haphi, double averagephi, double halez) :
     m_boundValues(CylinderBounds::bv_length, 0.),
     m_checkPhi(true)
 {
-    m_boundValues[CylinderBounds::bv_radius]        = fabs(radius);
-    m_boundValues[CylinderBounds::bv_averagePhi]    = averagephi;
-    m_boundValues[CylinderBounds::bv_halfPhiSector] = haphi;
-    m_boundValues[CylinderBounds::bv_halfZ]         = fabs(halez);
+    m_boundValues.at(CylinderBounds::bv_radius)        = fabs(radius);
+    m_boundValues.at(CylinderBounds::bv_averagePhi)    = averagephi;
+    m_boundValues.at(CylinderBounds::bv_halfPhiSector) = haphi;
+    m_boundValues.at(CylinderBounds::bv_halfZ)         = fabs(halez);
 }
 
 Acts::CylinderBounds::CylinderBounds(const Acts::CylinderBounds& cylbo) :
@@ -81,10 +81,10 @@ double Acts::CylinderBounds::minDistance(const Acts::Vector2D& pos ) const
 {
   const double pi2 = 2.*M_PI;
 
-  double sZ = fabs(pos[Acts::eLOC_Z])-m_boundValues[CylinderBounds::bv_halfZ];
-  double wF = m_boundValues[CylinderBounds::bv_halfPhiSector]; if(wF >= M_PI) return sZ;
-  double dF = fabs(pos[Acts::eLOC_RPHI]/m_boundValues[CylinderBounds::bv_radius]-m_boundValues[CylinderBounds::bv_averagePhi]); if(dF>M_PI) dF=pi2-dF;
-  double sF = 2.*m_boundValues[CylinderBounds::bv_radius]*sin(.5* (dF-wF));
+  double sZ = fabs(pos[Acts::eLOC_Z])-m_boundValues.at(CylinderBounds::bv_halfZ);
+  double wF = m_boundValues.at(CylinderBounds::bv_halfPhiSector); if(wF >= M_PI) return sZ;
+  double dF = fabs(pos[Acts::eLOC_RPHI]/m_boundValues.at(CylinderBounds::bv_radius)-m_boundValues.at(CylinderBounds::bv_averagePhi)); if(dF>M_PI) dF=pi2-dF;
+  double sF = 2.*m_boundValues.at(CylinderBounds::bv_radius)*sin(.5* (dF-wF));
 
   if(sF <= 0. || sZ <= 0.) {
       if (sF > sZ) return sF;

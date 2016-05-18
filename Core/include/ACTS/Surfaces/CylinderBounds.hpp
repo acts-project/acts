@@ -133,14 +133,14 @@ namespace Acts {
     // no check on Phi neccesary
     if (!m_checkPhi) return true;
     // now check insidePhi
-    double localPhi = (locpo[Acts::eLOC_RPHI]/m_boundValues[CylinderBounds::bv_radius])-m_boundValues[CylinderBounds::bv_averagePhi];
+    double localPhi = (locpo[Acts::eLOC_RPHI]/m_boundValues.at(CylinderBounds::bv_radius))-m_boundValues.at(CylinderBounds::bv_averagePhi);
     localPhi -= (localPhi > M_PI) ? 2.*M_PI : 0.;
-    return ( localPhi*localPhi < (m_boundValues[CylinderBounds::bv_halfPhiSector]+tol1)*(m_boundValues[CylinderBounds::bv_halfPhiSector]+tol1) );
+    return ( localPhi*localPhi < (m_boundValues.at(CylinderBounds::bv_halfPhiSector)+tol1)*(m_boundValues.at(CylinderBounds::bv_halfPhiSector)+tol1) );
   }
 
   inline bool CylinderBounds::inside(const Vector2D& locpo, const BoundaryCheck& bchk) const
   {
-	if(bchk.bcType==0 || bchk.nSigmas==0 || m_boundValues[CylinderBounds::bv_halfPhiSector]!=M_PI)	return CylinderBounds::inside(locpo, bchk.toleranceLoc1, bchk.toleranceLoc2);
+	if(bchk.bcType==0 || bchk.nSigmas==0 || m_boundValues.at(CylinderBounds::bv_halfPhiSector)!=M_PI)	return CylinderBounds::inside(locpo, bchk.toleranceLoc1, bchk.toleranceLoc2);
 
 	float theta = (bchk.lCovariance(1,0) != 0 && (bchk.lCovariance(1,1)-bchk.lCovariance(0,0))!=0 ) ? .5*bchk.FastArcTan( 2*bchk.lCovariance(1,0)/(bchk.lCovariance(1,1)-bchk.lCovariance(0,0)) ) : 0.;
     sincosCache scResult = bchk.FastSinCos(theta);
@@ -162,31 +162,31 @@ namespace Acts {
 
     bool insideZ   = insideLocZ(z,tol2);
     if (!insideZ) return false;
-    double diffR = (m_boundValues[CylinderBounds::bv_radius] - r );
+    double diffR = (m_boundValues.at(CylinderBounds::bv_radius) - r );
     bool insideR   = diffR*diffR < s_onSurfaceTolerance*s_onSurfaceTolerance;
     if (!insideR) return false;
     // now check insidePhi if needed
     if (!m_checkPhi) return true;
     // phi needs to be checked
-    double localPhi = phi-m_boundValues[CylinderBounds::bv_averagePhi];
+    double localPhi = phi-m_boundValues.at(CylinderBounds::bv_averagePhi);
     localPhi -= (localPhi > M_PI) ? 2.*M_PI : 0.;
-    return (localPhi*localPhi < m_boundValues[CylinderBounds::bv_halfPhiSector]*m_boundValues[CylinderBounds::bv_halfPhiSector]);
+    return (localPhi*localPhi < m_boundValues.at(CylinderBounds::bv_halfPhiSector)*m_boundValues.at(CylinderBounds::bv_halfPhiSector));
   }
 
   inline bool CylinderBounds::insideLocZ(double z, double tol2) const
   {
-     return (m_boundValues[CylinderBounds::bv_halfZ]+tol2)-fabs(z) > 0.;
+     return (m_boundValues.at(CylinderBounds::bv_halfZ)+tol2)-fabs(z) > 0.;
   }
 
   inline bool CylinderBounds::insideLoc1(const Vector2D &locpo, double tol1) const
   {
     bool insideRphi = false;
-    if (fabs(m_boundValues[CylinderBounds::bv_averagePhi])<10e-7)
-       insideRphi = ( fabs(locpo[Acts::eLOC_RPHI]/m_boundValues[CylinderBounds::bv_radius]) < (m_boundValues[CylinderBounds::bv_halfPhiSector]+tol1) ) ;
+    if (fabs(m_boundValues.at(CylinderBounds::bv_averagePhi))<10e-7)
+       insideRphi = ( fabs(locpo[Acts::eLOC_RPHI]/m_boundValues.at(CylinderBounds::bv_radius)) < (m_boundValues.at(CylinderBounds::bv_halfPhiSector)+tol1) ) ;
     else {
-       double localPhi = (locpo[Acts::eLOC_RPHI]/m_boundValues[CylinderBounds::bv_radius])-m_boundValues[CylinderBounds::bv_averagePhi];
+       double localPhi = (locpo[Acts::eLOC_RPHI]/m_boundValues.at(CylinderBounds::bv_radius))-m_boundValues.at(CylinderBounds::bv_averagePhi);
        localPhi -= (localPhi > M_PI) ? 2.*M_PI : 0.;
-       insideRphi = ( localPhi < (m_boundValues[CylinderBounds::bv_halfPhiSector]+tol1) ) ;
+       insideRphi = ( localPhi < (m_boundValues.at(CylinderBounds::bv_halfPhiSector)+tol1) ) ;
     }
     return (insideRphi);
   }
@@ -196,16 +196,16 @@ namespace Acts {
 
   inline bool CylinderBounds::insideRadius(const Vector2D& locpo, double tol) const
   {
-    return ( this->inside(locpo,tol,0) && fabs(locpo[Acts::eLOC_R])< m_boundValues[CylinderBounds::bv_radius] + tol);
+    return ( this->inside(locpo,tol,0) && fabs(locpo[Acts::eLOC_R])< m_boundValues.at(CylinderBounds::bv_radius) + tol);
   }
 
-  inline double CylinderBounds::r() const { return m_boundValues[CylinderBounds::bv_radius]; }
+  inline double CylinderBounds::r() const { return m_boundValues.at(CylinderBounds::bv_radius); }
 
-  inline double CylinderBounds::averagePhi() const { return m_boundValues[CylinderBounds::bv_averagePhi]; }
+  inline double CylinderBounds::averagePhi() const { return m_boundValues.at(CylinderBounds::bv_averagePhi); }
 
-  inline double CylinderBounds::halfPhiSector() const { return m_boundValues[CylinderBounds::bv_halfPhiSector]; }
+  inline double CylinderBounds::halfPhiSector() const { return m_boundValues.at(CylinderBounds::bv_halfPhiSector); }
 
-  inline double CylinderBounds::halflengthZ() const { return m_boundValues[CylinderBounds::bv_halfZ]; }
+  inline double CylinderBounds::halflengthZ() const { return m_boundValues.at(CylinderBounds::bv_halfZ); }
 
 }
 

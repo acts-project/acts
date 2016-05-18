@@ -128,8 +128,8 @@ namespace Acts {
       virtual void initCache() override;
 
       /** Helpers for inside() functions */
-      inline double minPhi() const {return m_boundValues[ConeBounds::bv_averagePhi]-m_boundValues[ConeBounds::bv_halfPhiSector];}
-      inline double maxPhi() const {return m_boundValues[ConeBounds::bv_averagePhi]+m_boundValues[ConeBounds::bv_halfPhiSector];}
+      inline double minPhi() const {return m_boundValues.at(ConeBounds::bv_averagePhi)-m_boundValues.at(ConeBounds::bv_halfPhiSector);}
+      inline double maxPhi() const {return m_boundValues.at(ConeBounds::bv_averagePhi)+m_boundValues.at(ConeBounds::bv_halfPhiSector);}
    };
 
    inline ConeBounds* ConeBounds::clone() const
@@ -138,7 +138,7 @@ namespace Acts {
    inline bool ConeBounds::inside(const Vector2D &locpo, double tol1, double tol2) const
    {
       double z = locpo[Acts::eLOC_Z];
-      bool insideZ = z > (m_boundValues[ConeBounds::bv_minZ]-tol2) && z < (m_boundValues[ConeBounds::bv_maxZ]+tol2);
+      bool insideZ = z > (m_boundValues.at(ConeBounds::bv_minZ)-tol2) && z < (m_boundValues.at(ConeBounds::bv_maxZ)+tol2);
       if (!insideZ) return false;
       // TODO: Do we need some sort of "R" tolerance also here (take
       // it off the z tol2 in that case?) or does the rphi tol1 cover
@@ -176,12 +176,12 @@ namespace Acts {
    inline bool ConeBounds::insideLoc2(const Vector2D &locpo, double tol2) const
      {
        double z = locpo[Acts::eLOC_Z];
-       return (z > (m_boundValues[ConeBounds::bv_minZ] - tol2) && z < (m_boundValues[ConeBounds::bv_maxZ] + tol2));
+       return (z > (m_boundValues.at(ConeBounds::bv_minZ) - tol2) && z < (m_boundValues.at(ConeBounds::bv_maxZ) + tol2));
      }
 
    inline double ConeBounds::r() const
    {
-      double z = fabs(m_boundValues[ConeBounds::bv_maxZ]), mz = fabs(m_boundValues[ConeBounds::bv_minZ]);
+      double z = fabs(m_boundValues.at(ConeBounds::bv_maxZ)), mz = fabs(m_boundValues.at(ConeBounds::bv_minZ));
       if(mz > z)
 	 z = mz;
       return fabs(z*m_tanAlpha);
@@ -199,26 +199,26 @@ namespace Acts {
 
    inline double ConeBounds::cosAlpha() const { return m_cosAlpha; }
 
-   inline double ConeBounds::alpha() const { return m_boundValues[ConeBounds::bv_alpha]; }
+   inline double ConeBounds::alpha() const { return m_boundValues.at(ConeBounds::bv_alpha); }
 
-   inline double ConeBounds::minZ() const { return m_boundValues[ConeBounds::bv_minZ]; }
+   inline double ConeBounds::minZ() const { return m_boundValues.at(ConeBounds::bv_minZ); }
 
-   inline double ConeBounds::maxZ() const { return m_boundValues[ConeBounds::bv_maxZ]; }
+   inline double ConeBounds::maxZ() const { return m_boundValues.at(ConeBounds::bv_maxZ); }
 
-   inline double ConeBounds::averagePhi() const { return m_boundValues[ConeBounds::bv_averagePhi]; }
+   inline double ConeBounds::averagePhi() const { return m_boundValues.at(ConeBounds::bv_averagePhi); }
 
-   inline double ConeBounds::halfPhiSector() const { return m_boundValues[ConeBounds::bv_halfPhiSector]; }
+   inline double ConeBounds::halfPhiSector() const { return m_boundValues.at(ConeBounds::bv_halfPhiSector); }
 
    inline void ConeBounds::initCache()
    {
-     m_tanAlpha = tan(m_boundValues[ConeBounds::bv_alpha]);
-     m_sinAlpha = sin(m_boundValues[ConeBounds::bv_alpha]);
-     m_cosAlpha = cos(m_boundValues[ConeBounds::bv_alpha]);
+     m_tanAlpha = tan(m_boundValues.at(ConeBounds::bv_alpha));
+     m_sinAlpha = sin(m_boundValues.at(ConeBounds::bv_alpha));
+     m_cosAlpha = cos(m_boundValues.at(ConeBounds::bv_alpha));
      // validate the halfphi
-     if(m_boundValues[ConeBounds::bv_halfPhiSector] < 0.)
-         m_boundValues[ConeBounds::bv_halfPhiSector] = -m_boundValues[ConeBounds::bv_halfPhiSector];
-     if(m_boundValues[ConeBounds::bv_halfPhiSector] >  M_PI)
-         m_boundValues[ConeBounds::bv_halfPhiSector] = M_PI;
+     if(m_boundValues.at(ConeBounds::bv_halfPhiSector) < 0.)
+         m_boundValues.at(ConeBounds::bv_halfPhiSector) = -m_boundValues.at(ConeBounds::bv_halfPhiSector);
+     if(m_boundValues.at(ConeBounds::bv_halfPhiSector) >  M_PI)
+         m_boundValues.at(ConeBounds::bv_halfPhiSector) = M_PI;
    }
 }
 

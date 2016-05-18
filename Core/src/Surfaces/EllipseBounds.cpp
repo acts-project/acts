@@ -17,16 +17,16 @@ Acts::EllipseBounds::EllipseBounds(double minradX, double minradY, double maxrad
     Acts::PlanarBounds(),
     m_boundValues(EllipseBounds::bv_length,0.)
 {
-    m_boundValues[EllipseBounds::bv_rMinX]         = minradX;
-    m_boundValues[EllipseBounds::bv_rMinY]         = minradY;
-    m_boundValues[EllipseBounds::bv_rMaxX]         = maxradX;
-    m_boundValues[EllipseBounds::bv_rMaxY]         = maxradY;
-    m_boundValues[EllipseBounds::bv_averagePhi]    = 0.;
-    m_boundValues[EllipseBounds::bv_halfPhiSector] = hphisec;
-    if (m_boundValues[EllipseBounds::bv_rMinX] > m_boundValues[EllipseBounds::bv_rMaxX])
-        swap(m_boundValues[EllipseBounds::bv_rMinX], m_boundValues[EllipseBounds::bv_rMaxX]);
-    if (m_boundValues[EllipseBounds::bv_rMinY] > m_boundValues[EllipseBounds::bv_rMaxY])
-        swap(m_boundValues[EllipseBounds::bv_rMinY], m_boundValues[EllipseBounds::bv_rMaxY]);
+    m_boundValues.at(EllipseBounds::bv_rMinX)         = minradX;
+    m_boundValues.at(EllipseBounds::bv_rMinY)         = minradY;
+    m_boundValues.at(EllipseBounds::bv_rMaxX)         = maxradX;
+    m_boundValues.at(EllipseBounds::bv_rMaxY)         = maxradY;
+    m_boundValues.at(EllipseBounds::bv_averagePhi)    = 0.;
+    m_boundValues.at(EllipseBounds::bv_halfPhiSector) = hphisec;
+    if (m_boundValues.at(EllipseBounds::bv_rMinX) > m_boundValues.at(EllipseBounds::bv_rMaxX))
+        swap(m_boundValues.at(EllipseBounds::bv_rMinX), m_boundValues.at(EllipseBounds::bv_rMaxX));
+    if (m_boundValues.at(EllipseBounds::bv_rMinY) > m_boundValues.at(EllipseBounds::bv_rMaxY))
+        swap(m_boundValues.at(EllipseBounds::bv_rMinY), m_boundValues.at(EllipseBounds::bv_rMaxY));
 }
 
 Acts::EllipseBounds::EllipseBounds(double minradX, double minradY, double maxradX, double maxradY, double avephi, double hphisec) :
@@ -34,16 +34,16 @@ Acts::EllipseBounds::EllipseBounds(double minradX, double minradY, double maxrad
     m_boundValues(EllipseBounds::bv_length,0.)
 {
 
-    m_boundValues[EllipseBounds::bv_rMinX]         = minradX;
-    m_boundValues[EllipseBounds::bv_rMinY]         = minradY;
-    m_boundValues[EllipseBounds::bv_rMaxX]         = maxradX;
-    m_boundValues[EllipseBounds::bv_rMaxY]         = maxradY;
-    m_boundValues[EllipseBounds::bv_averagePhi]    = avephi;
-    m_boundValues[EllipseBounds::bv_halfPhiSector] = hphisec;
-    if (m_boundValues[EllipseBounds::bv_rMinX] > m_boundValues[EllipseBounds::bv_rMaxX])
-        swap(m_boundValues[EllipseBounds::bv_rMinX], m_boundValues[EllipseBounds::bv_rMaxX]);
-    if (m_boundValues[EllipseBounds::bv_rMinY] > m_boundValues[EllipseBounds::bv_rMaxY])
-        swap(m_boundValues[EllipseBounds::bv_rMinY], m_boundValues[EllipseBounds::bv_rMaxY]);
+    m_boundValues.at(EllipseBounds::bv_rMinX)         = minradX;
+    m_boundValues.at(EllipseBounds::bv_rMinY)         = minradY;
+    m_boundValues.at(EllipseBounds::bv_rMaxX)         = maxradX;
+    m_boundValues.at(EllipseBounds::bv_rMaxY)         = maxradY;
+    m_boundValues.at(EllipseBounds::bv_averagePhi)    = avephi;
+    m_boundValues.at(EllipseBounds::bv_halfPhiSector) = hphisec;
+    if (m_boundValues.at(EllipseBounds::bv_rMinX) > m_boundValues.at(EllipseBounds::bv_rMaxX))
+        swap(m_boundValues.at(EllipseBounds::bv_rMinX), m_boundValues.at(EllipseBounds::bv_rMaxX));
+    if (m_boundValues.at(EllipseBounds::bv_rMinY) > m_boundValues.at(EllipseBounds::bv_rMaxY))
+        swap(m_boundValues.at(EllipseBounds::bv_rMinY), m_boundValues.at(EllipseBounds::bv_rMaxY));
 }
 
 Acts::EllipseBounds::EllipseBounds(const EllipseBounds& discbo) :
@@ -77,8 +77,8 @@ bool Acts::EllipseBounds::operator==(const Acts::SurfaceBounds& sbo) const
 }
 
 // For ellipse bound this is only approximation which is valid
-// only if m_boundValues[EllipseBounds::bv_rMinX] ~= m_boundValues[EllipseBounds::bv_rMinY]
-// and m_boundValues[EllipseBounds::bv_rMaxX] ~= m_boundValues[EllipseBounds::bv_rMaxY]
+// only if m_boundValues.at(EllipseBounds::bv_rMinX) ~= m_boundValues.at(EllipseBounds::bv_rMinY)
+// and m_boundValues.at(EllipseBounds::bv_rMaxX) ~= m_boundValues.at(EllipseBounds::bv_rMaxY)
 //
 double Acts::EllipseBounds::minDistance(const Acts::Vector2D& pos ) const
 {
@@ -86,8 +86,8 @@ double Acts::EllipseBounds::minDistance(const Acts::Vector2D& pos ) const
 
   double r    = sqrt(pos[0]*pos[0]+pos[1]*pos[1]);
   if(r==0.) {
-      if (m_boundValues[EllipseBounds::bv_rMinX] <= m_boundValues[EllipseBounds::bv_rMinY]) return m_boundValues[EllipseBounds::bv_rMinX];
-      return m_boundValues[EllipseBounds::bv_rMinY];
+      if (m_boundValues.at(EllipseBounds::bv_rMinX) <= m_boundValues.at(EllipseBounds::bv_rMinY)) return m_boundValues.at(EllipseBounds::bv_rMinX);
+      return m_boundValues.at(EllipseBounds::bv_rMinY);
   }
 
   const double inv_r = 1. / r;
@@ -96,11 +96,11 @@ double Acts::EllipseBounds::minDistance(const Acts::Vector2D& pos ) const
   double sf   = 0.                               ;
   double dF   = 0.                               ;
 
-  if(m_boundValues[EllipseBounds::bv_halfPhiSector] < M_PI) {
+  if(m_boundValues.at(EllipseBounds::bv_halfPhiSector) < M_PI) {
 
-    dF = atan2(cs,sn)-m_boundValues[EllipseBounds::bv_averagePhi];
+    dF = atan2(cs,sn)-m_boundValues.at(EllipseBounds::bv_averagePhi);
     dF += (dF > M_PI) ? -pi2 : (dF < -M_PI) ? pi2 : 0;
-    double df = fabs(dF)-m_boundValues[EllipseBounds::bv_halfPhiSector];
+    double df = fabs(dF)-m_boundValues.at(EllipseBounds::bv_halfPhiSector);
     sf = r*sin(df);
     if (df > 0.) r*=cos(df);
   }
@@ -110,11 +110,11 @@ double Acts::EllipseBounds::minDistance(const Acts::Vector2D& pos ) const
 
   if(sf <= 0. ) {
 
-    double a   = cs/m_boundValues[EllipseBounds::bv_rMaxX]        ;
-    double b   = sn/m_boundValues[EllipseBounds::bv_rMaxY]        ;
+    double a   = cs/m_boundValues.at(EllipseBounds::bv_rMaxX)        ;
+    double b   = sn/m_boundValues.at(EllipseBounds::bv_rMaxY)        ;
     double sr0 = r-1./sqrt(a*a+b*b); if(sr0 >=0.) return sr0;
-    a          = cs/m_boundValues[EllipseBounds::bv_rMinX]        ;
-    b          = sn/m_boundValues[EllipseBounds::bv_rMinY]        ;
+    a          = cs/m_boundValues.at(EllipseBounds::bv_rMinX)        ;
+    b          = sn/m_boundValues.at(EllipseBounds::bv_rMinY)        ;
     double sr1 = 1./sqrt(a*a+b*b)-r; if(sr1 >=0.) return sr1;
     if(sf < sr0) sf = sr0          ;
     if(sf < sr1) sf = sr1          ;
@@ -122,14 +122,14 @@ double Acts::EllipseBounds::minDistance(const Acts::Vector2D& pos ) const
   }
 
   double fb;
-  fb = (dF > 0.) ? m_boundValues[EllipseBounds::bv_averagePhi]+m_boundValues[EllipseBounds::bv_halfPhiSector] : m_boundValues[EllipseBounds::bv_averagePhi]-m_boundValues[EllipseBounds::bv_halfPhiSector];
+  fb = (dF > 0.) ? m_boundValues.at(EllipseBounds::bv_averagePhi)+m_boundValues.at(EllipseBounds::bv_halfPhiSector) : m_boundValues.at(EllipseBounds::bv_averagePhi)-m_boundValues.at(EllipseBounds::bv_halfPhiSector);
   sn         = sin(fb)           ;
   cs         = cos(fb)           ;
-  double a   = cs/m_boundValues[EllipseBounds::bv_rMaxX]        ;
-  double b   = sn/m_boundValues[EllipseBounds::bv_rMaxY]        ;
+  double a   = cs/m_boundValues.at(EllipseBounds::bv_rMaxX)        ;
+  double b   = sn/m_boundValues.at(EllipseBounds::bv_rMaxY)        ;
   double sr0 = r-1./sqrt(a*a+b*b); if(sr0 >=0.) return sqrt(sr0*sr0+sf*sf);
-  a          = cs/m_boundValues[EllipseBounds::bv_rMinX]        ;
-  b          = sn/m_boundValues[EllipseBounds::bv_rMinY]        ;
+  a          = cs/m_boundValues.at(EllipseBounds::bv_rMinX)        ;
+  b          = sn/m_boundValues.at(EllipseBounds::bv_rMinY)        ;
   double sr1 = 1./sqrt(a*a+b*b)-r; if(sr1 >=0.) return sqrt(sr1*sr1+sf*sf);
   return sf;
 }

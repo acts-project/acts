@@ -140,29 +140,29 @@ namespace Acts {
  inline DoubleTrapezoidVolumeBounds* DoubleTrapezoidVolumeBounds::clone() const
  { return new DoubleTrapezoidVolumeBounds(*this); }
 
- inline double DoubleTrapezoidVolumeBounds::minHalflengthX() const { return m_boundValues[bv_minHalfX]; }
+ inline double DoubleTrapezoidVolumeBounds::minHalflengthX() const { return m_boundValues.at(bv_minHalfX); }
 
- inline double DoubleTrapezoidVolumeBounds::medHalflengthX() const { return m_boundValues[bv_medHalfX]; }
+ inline double DoubleTrapezoidVolumeBounds::medHalflengthX() const { return m_boundValues.at(bv_medHalfX); }
 
- inline double DoubleTrapezoidVolumeBounds::maxHalflengthX() const { return m_boundValues[bv_maxHalfX ]; }
+ inline double DoubleTrapezoidVolumeBounds::maxHalflengthX() const { return m_boundValues.at(bv_maxHalfX ); }
 
- inline double DoubleTrapezoidVolumeBounds::halflengthY1() const { return m_boundValues[bv_halfY1]; }
+ inline double DoubleTrapezoidVolumeBounds::halflengthY1() const { return m_boundValues.at(bv_halfY1); }
 
- inline double DoubleTrapezoidVolumeBounds::halflengthY2() const { return m_boundValues[bv_halfY2]; }
+ inline double DoubleTrapezoidVolumeBounds::halflengthY2() const { return m_boundValues.at(bv_halfY2); }
 
- inline double DoubleTrapezoidVolumeBounds::halflengthZ() const { return m_boundValues[bv_halfZ]; }
+ inline double DoubleTrapezoidVolumeBounds::halflengthZ() const { return m_boundValues.at(bv_halfZ); }
 
- inline double DoubleTrapezoidVolumeBounds::alpha1() const { return m_boundValues[bv_alpha1]; }
+ inline double DoubleTrapezoidVolumeBounds::alpha1() const { return m_boundValues.at(bv_alpha1); }
 
- inline double DoubleTrapezoidVolumeBounds::alpha2() const { return m_boundValues[bv_alpha2]; }
+ inline double DoubleTrapezoidVolumeBounds::alpha2() const { return m_boundValues.at(bv_alpha2); }
 
  template <class T> T& DoubleTrapezoidVolumeBounds::dumpT(T& dT) const
  {
      dT << std::setiosflags(std::ios::fixed);
      dT << std::setprecision(7);
      dT << "Acts::DoubleTrapezoidVolumeBounds: (minhalfX, medhalfX, maxhalfX, halfY1, halfY2, halfZ) = ";
-     dT << "(" << m_boundValues[bv_minHalfX] << ", " << m_boundValues[bv_medHalfX] << ", " << m_boundValues[bv_maxHalfX];
-     dT << ", " << m_boundValues[bv_halfY1] <<", " << m_boundValues[bv_halfY2] << ", " << m_boundValues[bv_halfZ] << ")";
+     dT << "(" << m_boundValues.at(bv_minHalfX) << ", " << m_boundValues.at(bv_medHalfX) << ", " << m_boundValues.at(bv_maxHalfX);
+     dT << ", " << m_boundValues.at(bv_halfY1) <<", " << m_boundValues.at(bv_halfY2) << ", " << m_boundValues.at(bv_halfZ) << ")";
      return dT;
  }
 

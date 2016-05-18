@@ -25,30 +25,30 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(double radius, double halez) :
  VolumeBounds(),
  m_boundValues(4,0.)
 {
-    m_boundValues[bv_innerRadius]   = 0.;
-    m_boundValues[bv_outerRadius]   = fabs(radius);
-    m_boundValues[bv_halfPhiSector] = M_PI;
-    m_boundValues[bv_halfZ]         = fabs(halez);
+    m_boundValues.at(bv_innerRadius)   = 0.;
+    m_boundValues.at(bv_outerRadius)   = fabs(radius);
+    m_boundValues.at(bv_halfPhiSector) = M_PI;
+    m_boundValues.at(bv_halfZ)         = fabs(halez);
 }
 
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(double rinner, double router, double halez) :
  VolumeBounds(),
  m_boundValues(4,0.)
 {
-    m_boundValues[bv_innerRadius]   = fabs(rinner);
-    m_boundValues[bv_outerRadius]   = fabs(router);
-    m_boundValues[bv_halfPhiSector] = M_PI;
-    m_boundValues[bv_halfZ]         = fabs(halez);
+    m_boundValues.at(bv_innerRadius)   = fabs(rinner);
+    m_boundValues.at(bv_outerRadius)   = fabs(router);
+    m_boundValues.at(bv_halfPhiSector) = M_PI;
+    m_boundValues.at(bv_halfZ)         = fabs(halez);
 }
 
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(double rinner, double router, double haphi, double halez) :
  VolumeBounds(),
  m_boundValues(4,0.)
 {
-    m_boundValues[bv_innerRadius]   = fabs(rinner);
-    m_boundValues[bv_outerRadius]   = fabs(router);
-    m_boundValues[bv_halfPhiSector] = fabs(haphi);
-    m_boundValues[bv_halfZ]         = fabs(halez);
+    m_boundValues.at(bv_innerRadius)   = fabs(rinner);
+    m_boundValues.at(bv_outerRadius)   = fabs(router);
+    m_boundValues.at(bv_halfPhiSector) = fabs(haphi);
+    m_boundValues.at(bv_halfZ)         = fabs(halez);
  }
 
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(const Acts::CylinderVolumeBounds& cylbo) :
@@ -116,22 +116,22 @@ const std::vector<const Acts::Surface*>* Acts::CylinderVolumeBounds::decomposeTo
 
 Acts::CylinderBounds* Acts::CylinderVolumeBounds::innerCylinderBounds() const
 {
-    return new Acts::CylinderBounds(m_boundValues[bv_innerRadius], m_boundValues[bv_halfPhiSector], m_boundValues[bv_halfZ]);
+    return new Acts::CylinderBounds(m_boundValues.at(bv_innerRadius), m_boundValues.at(bv_halfPhiSector), m_boundValues.at(bv_halfZ));
 }
 
 Acts::CylinderBounds* Acts::CylinderVolumeBounds::outerCylinderBounds() const
 {
-    return new Acts::CylinderBounds(m_boundValues[bv_outerRadius], m_boundValues[bv_halfPhiSector], m_boundValues[bv_halfZ]);
+    return new Acts::CylinderBounds(m_boundValues.at(bv_outerRadius), m_boundValues.at(bv_halfPhiSector), m_boundValues.at(bv_halfZ));
 }
 
 Acts::RadialBounds* Acts::CylinderVolumeBounds::discBounds() const
 {
-    return new Acts::RadialBounds(m_boundValues[bv_innerRadius], m_boundValues[bv_outerRadius], m_boundValues[bv_halfPhiSector]);
+    return new Acts::RadialBounds(m_boundValues.at(bv_innerRadius), m_boundValues.at(bv_outerRadius), m_boundValues.at(bv_halfPhiSector));
 }
 
 Acts::RectangleBounds* Acts::CylinderVolumeBounds::sectorPlaneBounds() const
 {
-    return new Acts::RectangleBounds(0.5*(m_boundValues[bv_outerRadius]-m_boundValues[bv_innerRadius]), m_boundValues[bv_halfZ]);
+    return new Acts::RectangleBounds(0.5*(m_boundValues.at(bv_outerRadius)-m_boundValues.at(bv_innerRadius)), m_boundValues.at(bv_halfZ));
 }
 
 std::ostream& Acts::CylinderVolumeBounds::dump( std::ostream& sl ) const

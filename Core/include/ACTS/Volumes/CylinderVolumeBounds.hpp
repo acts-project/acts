@@ -177,24 +177,24 @@ namespace Acts {
     return VolumeBounds::binningBorder(bValue);
  }
 
- inline double CylinderVolumeBounds::innerRadius() const { return m_boundValues[bv_innerRadius]; }
+ inline double CylinderVolumeBounds::innerRadius() const { return m_boundValues.at(bv_innerRadius); }
 
- inline double CylinderVolumeBounds::outerRadius() const { return m_boundValues[bv_outerRadius]; }
+ inline double CylinderVolumeBounds::outerRadius() const { return m_boundValues.at(bv_outerRadius); }
 
- inline double CylinderVolumeBounds::mediumRadius() const { return 0.5*(m_boundValues[bv_innerRadius]+m_boundValues[bv_outerRadius]); }
+ inline double CylinderVolumeBounds::mediumRadius() const { return 0.5*(m_boundValues.at(bv_innerRadius)+m_boundValues.at(bv_outerRadius)); }
 
- inline double CylinderVolumeBounds::deltaRadius() const { return (m_boundValues[bv_outerRadius]-m_boundValues[bv_innerRadius]); }
+ inline double CylinderVolumeBounds::deltaRadius() const { return (m_boundValues.at(bv_outerRadius)-m_boundValues.at(bv_innerRadius)); }
 
- inline double CylinderVolumeBounds::halfPhiSector() const { return m_boundValues[bv_halfPhiSector]; }
+ inline double CylinderVolumeBounds::halfPhiSector() const { return m_boundValues.at(bv_halfPhiSector); }
 
- inline double CylinderVolumeBounds::halflengthZ() const { return m_boundValues[bv_halfZ]; }
+ inline double CylinderVolumeBounds::halflengthZ() const { return m_boundValues.at(bv_halfZ); }
 
  template <class T> T& CylinderVolumeBounds::dumpT(T& tstream) const
  {
      tstream << std::setiosflags(std::ios::fixed);
      tstream << std::setprecision(2);
      tstream << "Acts::CylinderVolumeBounds: (rMin, rMax, halfPhi, halfZ) = ";
-     tstream <<  m_boundValues[bv_innerRadius] << ", " << m_boundValues[bv_outerRadius] << ", " << m_boundValues[bv_halfPhiSector] << ", " << m_boundValues[bv_halfZ];
+     tstream <<  m_boundValues.at(bv_innerRadius) << ", " << m_boundValues.at(bv_outerRadius) << ", " << m_boundValues.at(bv_halfPhiSector) << ", " << m_boundValues.at(bv_halfZ);
      return tstream;
  }
 

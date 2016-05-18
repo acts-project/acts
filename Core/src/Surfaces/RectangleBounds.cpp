@@ -18,8 +18,8 @@ Acts::RectangleBounds::RectangleBounds(double halex, double haley) :
     Acts::PlanarBounds(),
     m_boundValues(RectangleBounds::bv_length,0.)
 {
-    m_boundValues[RectangleBounds::bv_halfX] = halex;
-    m_boundValues[RectangleBounds::bv_halfY] = haley;
+    m_boundValues.at(RectangleBounds::bv_halfX) = halex;
+    m_boundValues.at(RectangleBounds::bv_halfY) = haley;
 }
 
 // copy constructor
@@ -49,8 +49,8 @@ bool Acts::RectangleBounds::operator==(const Acts::SurfaceBounds& sbo) const
 
 double Acts::RectangleBounds::minDistance(const Acts::Vector2D& pos ) const
 {
-  double dx = fabs(pos[0])-m_boundValues[RectangleBounds::bv_halfX];
-  double dy = fabs(pos[1])-m_boundValues[RectangleBounds::bv_halfY];
+  double dx = fabs(pos[0])-m_boundValues.at(RectangleBounds::bv_halfX);
+  double dy = fabs(pos[1])-m_boundValues.at(RectangleBounds::bv_halfY);
 
   if (dx <= 0. || dy <=0.) {
       if (dx > dy) return dx;
@@ -64,7 +64,7 @@ std::ostream& Acts::RectangleBounds::dump( std::ostream& sl ) const
 {
     sl << std::setiosflags(std::ios::fixed);
     sl << std::setprecision(7);
-    sl << "Acts::RectangleBounds:  (halflenghtX, halflengthY) = " << "(" << m_boundValues[RectangleBounds::bv_halfX] << ", " << m_boundValues[RectangleBounds::bv_halfY] << ")";
+    sl << "Acts::RectangleBounds:  (halflenghtX, halflengthY) = " << "(" << m_boundValues.at(RectangleBounds::bv_halfX) << ", " << m_boundValues.at(RectangleBounds::bv_halfY) << ")";
     sl << std::setprecision(-1);
     return sl;
 }

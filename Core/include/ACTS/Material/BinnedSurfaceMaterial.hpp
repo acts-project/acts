@@ -116,7 +116,7 @@ inline const BinUtility* BinnedSurfaceMaterial::binUtility() const
   
   inline const MaterialProperties* BinnedSurfaceMaterial::material(size_t bin0, size_t bin1 ) const 
   {
-     return m_fullMaterial[bin1][bin0];
+     return m_fullMaterial.at(bin1).at(bin0);
   }
   
   inline void BinnedSurfaceMaterial::updateBinning(BinUtility* bu) const {
