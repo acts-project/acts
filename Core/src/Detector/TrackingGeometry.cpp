@@ -60,7 +60,7 @@ void Acts::TrackingGeometry::registerTrackingVolumes(const Acts::TrackingVolume&
 
     tvol.setMotherVolume(mvol);
     
-    m_trackingVolumes[tvol.volumeName()] = (&tvol);
+    m_trackingVolumes.at(tvol.volumeName()) = (&tvol);
     std::shared_ptr<const Acts::TrackingVolumeArray> confinedVolumes = tvol.confinedVolumes();
     if (confinedVolumes){
         for (auto& volumesIter: confinedVolumes->arrayObjects())

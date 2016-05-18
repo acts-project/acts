@@ -20,7 +20,7 @@ void Acts::GlueVolumesDescriptor::registerGlueVolumes(Acts::BoundarySurfaceFace 
   auto searchIter= m_glueVolumes.find(bsf);
    if (searchIter == m_glueVolumes.end()) m_glueFaces.push_back(bsf);
   // simple assignment overwrites already existing entries
-  m_glueVolumes[bsf] = gvs;   //!< @todo change to addGlueVolumes principle
+  m_glueVolumes.at(bsf) = gvs;   //!< @todo change to addGlueVolumes principle
 
 }
 

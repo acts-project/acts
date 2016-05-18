@@ -325,8 +325,8 @@ void Acts::TrackingVolume::createBoundarySurfaces()
      
     for ( ; surfIter != surfaces->end(); ++surfIter){
       
-      TrackingVolume* in  = bOrient[sfCounter] ? this : 0;
-      TrackingVolume* out = bOrient[sfCounter] ? 0 : this;
+      TrackingVolume* in  = bOrient.at(sfCounter) ? this : 0;
+      TrackingVolume* out = bOrient.at(sfCounter) ? 0 : this;
       sfCounter++;
    
       const SubtractedPlaneSurface*      psf = dynamic_cast<const SubtractedPlaneSurface*>(*surfIter);
@@ -357,7 +357,7 @@ void Acts::TrackingVolume::glueTrackingVolume(BoundarySurfaceFace bsfMine,
     Vector3D bPosition(binningPosition(binR));
     Vector3D distance = Vector3D(neighbor->binningPosition(binR)-bPosition);
     // glue to the face
-    std::shared_ptr<const BoundarySurface<TrackingVolume> > bSurfaceMine = boundarySurfaces()[bsfMine]; 
+    std::shared_ptr<const BoundarySurface<TrackingVolume> > bSurfaceMine = boundarySurfaces().at(bsfMine);
     // @TODO - complex glueing could be possible with actual intersection for the normal vector 
     Vector3D normal = bSurfaceMine->surfaceRepresentation().normal(bPosition);
     // estimate the orientation
@@ -368,7 +368,7 @@ void Acts::TrackingVolume::glueTrackingVolume(BoundarySurfaceFace bsfMine,
         // the boundary orientation 
         bSurfaceMine->attachVolume(neighbor, bOrientation);
         // now set it to the neighbor volume - the optised way
-        (neighbor->m_boundarySurfaces)[bsfNeighbor] =  bSurfaceMine;
+        (neighbor->m_boundarySurfaces).at(bsfNeighbor) =  bSurfaceMine;
     }
 }                                                
 
@@ -378,12 +378,12 @@ void Acts::TrackingVolume::glueTrackingVolumes(BoundarySurfaceFace bsfMine,
                                               BoundarySurfaceFace bsfNeighbor) const 
 {
     // find the connection of the two tracking volumes : binR returns the center except for cylindrical volumes    
-    std::shared_ptr<const TrackingVolume> nRefVolume = neighbors->arrayObjects()[0];
+    std::shared_ptr<const TrackingVolume> nRefVolume = neighbors->arrayObjects().at(0);
     // get the distance 
     Vector3D bPosition(binningPosition(binR));
     Vector3D distance = Vector3D(nRefVolume->binningPosition(binR)-bPosition);
     // take the normal at the binning positio
-    std::shared_ptr<const BoundarySurface<TrackingVolume> > bSurfaceMine = boundarySurfaces()[bsfMine];
+    std::shared_ptr<const BoundarySurface<TrackingVolume> > bSurfaceMine = boundarySurfaces().at(bsfMine);
     // @TODO - complex glueing could be possible with actual intersection for the normal vector 
     Vector3D normal = bSurfaceMine->surfaceRepresentation().normal(bPosition);
     // estimate the orientation
@@ -395,14 +395,14 @@ void Acts::TrackingVolume::glueTrackingVolumes(BoundarySurfaceFace bsfMine,
         bSurfaceMine->attachVolumeArray(neighbors, bOrientation);
         // now set it to the neighbor volumes - the optised way
         for (auto& nVolume : neighbors->arrayObjects())        
-            (nVolume->m_boundarySurfaces)[bsfNeighbor] =  bSurfaceMine; 
+            (nVolume->m_boundarySurfaces).at(bsfNeighbor) =  bSurfaceMine;
     }
 } 
 
 /** update the boundary surface after glueing */
 void Acts::TrackingVolume::updateBoundarySurface(BoundarySurfaceFace bsf, std::shared_ptr<const BoundarySurface<TrackingVolume> > bs) const
 {
-    m_boundarySurfaces[bsf] = bs;
+    m_boundarySurfaces.at(bsf) = bs;
 }    
     
 void Acts::TrackingVolume::registerGlueVolumeDescriptor(GlueVolumesDescriptor* gvd) const 
