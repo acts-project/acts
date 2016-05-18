@@ -14,6 +14,8 @@
 #include "ACTS/Tools/CylinderVolumeHelper.hpp"
 
 #include <iostream>
+#include <array>
+#include <vector>
 
 namespace Acts
 {
@@ -61,7 +63,7 @@ namespace Acts
       //fill necessary vectors for configuration
       //-------------------------------------------------------------------------------------
       //central
-      int pcLayers = 3;
+      const int pcLayers = 3;
       std::vector<double> pixelLayerRadii {29.,55.,88.};
       
       std::vector<double> pixelEnvelopeZ(pcLayers,2.);
@@ -71,7 +73,7 @@ namespace Acts
       std::vector<double> pixelMaterialParamters = {1.,95.7,465.2,28.03,14.,2.32e-3}; //thickness,X0,L0,A,Z,Rho
       std::vector<std::vector<double>> pixelMaterialProperties(pcLayers,pixelMaterialParamters);
       //phi properties centrallayers
-      double pcNumPhi[pcLayers] = {15,24,40};
+      std::array<double,3> pcNumPhi = {{15,24,40}};
       std::vector<double> pcLayerModulesTiltPhi = {0.18,0.18,0.2};
       std::vector<std::vector<double>> pcLayerModulesPositionPhi;
       for (int i=0; i<pcLayers;i++) {
@@ -98,15 +100,15 @@ namespace Acts
           pcLayerModulesPositionZ.push_back(positionsZ);
       }
       std::vector<double> pcLayerModulesStaggerZ(pcLayers,0.5);
-      std::vector<double> pcLayerModulesMinHalfX();
+      std::vector<double> pcLayerModulesMinHalfX;
       std::vector<double> pcLayerModulesMaxHalfX(pcLayers,8.4);
       std::vector<double> pcLayerModulesThickness(pcLayers,0.15);
       std::vector<double> pcModuleMaterialParameters = {95.7,465.2,28.03,14.,2.32e-3}; //X0,L0,A,Z,Rho
       std::vector<std::vector<double>> pcLayerModulesMaterial(pcLayers,pcModuleMaterialParameters);
       //-------------------------------------------------------------------------------------
       //posneg
-      int ppnLayers=3;
-      int ppnRings =1;
+      const int ppnLayers=3;
+      const int ppnRings =1;
       std::vector<double> pixelPositionsZ = {500.,580.,650.};
       
       std::vector<double> pixelEnvelopesR(ppnLayers,5.);
@@ -191,8 +193,8 @@ namespace Acts
       trackingVolumeBuilders.push_back(PixelVolumeBuilder);
       tgConfig.trackingVolumeBuilders             = trackingVolumeBuilders;
       tgConfig.trackingVolumeHelper               = CylinderVolumeHelper;
-      auto CylinderGeometryBuilder = std::make_shared<const Acts::CylinderGeometryBuilder>(tgConfig);
-      return CylinderGeometryBuilder->trackingGeometry();
+      auto cylinderGeometryBuilder = std::make_shared<const Acts::CylinderGeometryBuilder>(tgConfig);
+      return cylinderGeometryBuilder->trackingGeometry();
   }
 } // end of namespace Acts
 

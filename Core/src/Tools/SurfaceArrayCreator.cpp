@@ -98,7 +98,7 @@ std::unique_ptr<Acts::SurfaceArray> Acts::SurfaceArrayCreator::surfaceArrayOnDis
             sVector.push_back(SurfacePosition(surface,surface->binningPosition(binPhi)));
         }
         // create the surface array
-        auto sArray = std::make_unique<BinnedArray2D<const Surface*>>(sVector,arrayUtility);
+        auto sArray = std::make_unique<BinnedArray1D<const Surface*>>(sVector,arrayUtility);
         // register the neighbours
         // copy to get const away, 
         // - but take them from the surface array (and not the input vector) because like this they are bin ordered

@@ -11,7 +11,7 @@ set(Boost_NO_BOOST_CMAKE ON CACHE BOOL "disable boost-cmake find mechanism")
 find_package (Boost REQUIRED)
 
 # get list of all source files
-file (GLOB src_files "src/*/*.cpp")
+file (GLOB src_files "src/*/*.cpp" "include/*/*/*.hpp")
 
 # define library target
 add_library (ACTSCore SHARED ${src_files})
