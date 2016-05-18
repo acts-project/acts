@@ -142,7 +142,7 @@ namespace Acts {
         bool isFailureOrRecovered() const { return (code > SuccessMaterialLimit); };
 
         /** toString */
-        const std::string& toString() const { return s_ecodeNames[code]; }
+        const std::string& toString() const { return s_ecodeNames.at(code); }
         
      private :
          static std::vector<std::string>  s_ecodeNames; 
@@ -444,14 +444,14 @@ namespace Acts {
        // current step surface
        const Surface* cssf = &(parameters->associatedSurface());
        // get the last step surface - if it is identical with the current one -> attach information
-       const Surface* lssf = extrapolationSteps.size() ? extrapolationSteps[extrapolationSteps.size()-1].surface : 0;
+       const Surface* lssf = extrapolationSteps.size() ? extrapolationSteps.at(extrapolationSteps.size()-1).surface : 0;
        // create a new step 
        if (cssf != lssf)
            extrapolationSteps.push_back(ExtrapolationStep<T>());
        // fill the parameters, the surface and add the mode
-       extrapolationSteps[extrapolationSteps.size()-1].parameters = parameters->clone();
-       extrapolationSteps[extrapolationSteps.size()-1].surface    = cssf;
-       extrapolationSteps[extrapolationSteps.size()-1].stepConfiguration.addMode(fillMode);
+       extrapolationSteps.at(extrapolationSteps.size()-1).parameters = parameters->clone();
+       extrapolationSteps.at(extrapolationSteps.size()-1).surface    = cssf;
+       extrapolationSteps.at(extrapolationSteps.size()-1).stepConfiguration.addMode(fillMode);
     }
     
     template <class T>  void ExtrapolationCell<T>::stepTransport(const Surface& sf,
@@ -462,21 +462,21 @@ namespace Acts {
        // current step surface
        const Surface* cssf = &sf;
        // get the last step surface - if it is identical with the current one -> attach information
-       const Surface* lssf = extrapolationSteps.size() ? extrapolationSteps[extrapolationSteps.size()-1].surface : 0;
+       const Surface* lssf = extrapolationSteps.size() ? extrapolationSteps.at(extrapolationSteps.size()-1).surface : 0;
        // only create a new step for a transport jacobian
        if (tjac){
            // create a new step 
            if (cssf != lssf)
                extrapolationSteps.push_back(ExtrapolationStep<T>());
            // set the surface
-           extrapolationSteps[extrapolationSteps.size()-1].surface    = cssf;
+           extrapolationSteps.at(extrapolationSteps.size()-1).surface    = cssf;
            // set the the transport information 
-           extrapolationSteps[extrapolationSteps.size()-1].transportJacobian = tjac;
-           extrapolationSteps[extrapolationSteps.size()-1].stepConfiguration.addMode(Acts::ExtrapolationMode::CollectJacobians);
+           extrapolationSteps.at(extrapolationSteps.size()-1).transportJacobian = tjac;
+           extrapolationSteps.at(extrapolationSteps.size()-1).stepConfiguration.addMode(Acts::ExtrapolationMode::CollectJacobians);
            // fill the step path length
            if (pLength > 0.){
-               extrapolationSteps[extrapolationSteps.size()-1].pathLength = pLength;
-               extrapolationSteps[extrapolationSteps.size()-1].stepConfiguration.addMode(Acts::ExtrapolationMode::CollectPathSteps);
+               extrapolationSteps.at(extrapolationSteps.size()-1).pathLength = pLength;
+               extrapolationSteps.at(extrapolationSteps.size()-1).stepConfiguration.addMode(Acts::ExtrapolationMode::CollectPathSteps);
            }
        } else {
            // let's just fill the pathLength information
@@ -526,20 +526,20 @@ namespace Acts {
        // current step surface
        const Surface* cssf = &sf;
        // get the last step surface - if it is identical with the current one -> attach information
-       const Surface* lssf = extrapolationSteps.size() ? extrapolationSteps[extrapolationSteps.size()-1].surface : 0;
+       const Surface* lssf = extrapolationSteps.size() ? extrapolationSteps.at(extrapolationSteps.size()-1).surface : 0;
        // create a new step 
        if (cssf != lssf)
            extrapolationSteps.push_back(ExtrapolationStep<T>());
        // set the surface
-       extrapolationSteps[extrapolationSteps.size()-1].surface    = cssf;
-       extrapolationSteps[extrapolationSteps.size()-1].layer      = lay;
+       extrapolationSteps.at(extrapolationSteps.size()-1).surface    = cssf;
+       extrapolationSteps.at(extrapolationSteps.size()-1).layer      = lay;
        // fill the material if there
        if (mprop){
            // record the step information
-           extrapolationSteps[extrapolationSteps.size()-1].material = mprop;
-           extrapolationSteps[extrapolationSteps.size()-1].stepConfiguration.addMode(Acts::ExtrapolationMode::CollectMaterial);
-           extrapolationSteps[extrapolationSteps.size()-1].materialPosition = mposition;
-           extrapolationSteps[extrapolationSteps.size()-1].materialScaling  = sfactor;
+           extrapolationSteps.at(extrapolationSteps.size()-1).material = mprop;
+           extrapolationSteps.at(extrapolationSteps.size()-1).stepConfiguration.addMode(Acts::ExtrapolationMode::CollectMaterial);
+           extrapolationSteps.at(extrapolationSteps.size()-1).materialPosition = mposition;
+           extrapolationSteps.at(extrapolationSteps.size()-1).materialScaling  = sfactor;
        }
     }
 
