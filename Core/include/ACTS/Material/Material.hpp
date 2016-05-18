@@ -65,7 +65,7 @@ namespace Acts {
       {
          reserve(iel.size());
          for (std::size_t elvc =0; elvc < iel.size() && ifrac.size(); ++elvc )
-              push_back( ElementFraction(iel[elvc],ifrac[elvc]) );
+              push_back( ElementFraction(iel.at(elvc),ifrac.at(elvc)) );
      }
 
      /** constructor for persistency (2), size optimized */
