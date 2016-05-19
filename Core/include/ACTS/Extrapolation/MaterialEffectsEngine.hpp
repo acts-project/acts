@@ -49,6 +49,7 @@ namespace Acts {
           bool          mscCorrection;           //!< apply the multiple (coulomb) scattering correction
           std::string   prefix;                  //!< screen output prefix
           std::string   postfix;                 //!< screen output postfix
+          std::string   name;                    //!< the name of this engine
           
           Config() :
 	    logger(getDefaultLogger("MaterialEffectsEngine",Logging::INFO)),
@@ -56,8 +57,9 @@ namespace Acts {
             eLossMpv(true),        
             mscCorrection(true),
             prefix("[ME] - "),
-            postfix(" - ") 
-         {}         
+            postfix(" - "),
+            name("Anonymous")
+         {}
           
       };        
 

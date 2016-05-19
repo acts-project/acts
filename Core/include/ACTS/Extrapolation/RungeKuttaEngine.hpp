@@ -170,6 +170,7 @@ namespace Acts {
         bool                                 usegradient   ;  //!< use magnetif field gradient
         std::string                          prefix        ;  //!< screen output prefix
         std::string                          postfix       ;  //!< screen output postfix
+        std::string                          name;         ;  //!< name of the tool
     
         Config() :
 	  logger(getDefaultLogger("RungeKuttaEngine",Logging::INFO)),
@@ -180,7 +181,8 @@ namespace Acts {
           maxPathLength(25000.),
           usegradient(false),
           prefix("[RK] - "),
-          postfix(" - ")
+          postfix(" - "),
+          name("Anonymous")
          {}
            
       };    

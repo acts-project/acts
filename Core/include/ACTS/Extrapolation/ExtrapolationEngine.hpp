@@ -41,7 +41,8 @@ namespace Acts {
        
     */
     class ExtrapolationEngine : virtual public IExtrapolationEngine {
-    
+    public:
+  
         /** @struct Config
         
             Configuration struct to be used for this ExtrapolationEngine.
@@ -56,7 +57,8 @@ namespace Acts {
             std::shared_ptr<INavigationEngine>                    navigationEngine;      //!< access to tracking geometry (unique?)
             std::string                                           prefix;                //!< output prefix
             std::string                                           postfix;               //!< output postfix
-            
+            std::string                                           name;                  //!< name of the tool
+
             Config() :
 	      logger(getDefaultLogger("ExtrapolationEngine",Logging::INFO)),
               trackingGeometry(nullptr),
@@ -64,12 +66,12 @@ namespace Acts {
               propagationEngine(nullptr),
               navigationEngine(nullptr),
               prefix("[ME] - "),
-              postfix(" - ")
+              postfix(" - "),
+              name("Anonymous")
             {}             
             
         };    
           
-        public:
             /** Constructor */
             ExtrapolationEngine(const Config& eeConfig);
             

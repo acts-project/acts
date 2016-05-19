@@ -73,6 +73,7 @@ namespace Acts {
             
             std::string                             prefix;                //!< output prefix
             std::string                             postfix;               //!< output postfix
+            std::string                             name;                  //!< name of this engine
             
             Config() :
 	      logger(getDefaultLogger("StaticEngine",Logging::INFO)),
@@ -80,7 +81,8 @@ namespace Acts {
               navigationEngine(nullptr),
               materialEffectsEngine(nullptr),
               prefix("[SE] - "),
-              postfix(" - ")
+              postfix(" - "),
+              name("Anonymous")
             {}     
             
         };
