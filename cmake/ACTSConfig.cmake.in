@@ -1,8 +1,5 @@
 # - Config file for the ACTS package
 
-# - Define exported version
-set(ACTS_VERSION "@PROJECT_VERSION@")
-
 # - Init CMakePackageConfigHelpers
 @PACKAGE_INIT@
 

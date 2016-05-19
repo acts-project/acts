@@ -10,7 +10,7 @@ def main(file_name,pattern):
         if re.search(pattern,l):
             r = re.match('([^"]*")(.*)("[^"]*)',l)
             inner = r.group(2)
-            inner = inner.replace('"','\\"')
+            inner = re.sub(r'([^\\])"',r'\1\"',inner)
             l = r.group(1) + inner + r.group(3)
         new.write(l)
     new.close()
