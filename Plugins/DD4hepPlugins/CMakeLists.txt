@@ -7,7 +7,7 @@ if (BUILD_DD4HEP_PLUGIN)
 
   if (DD4hep_FOUND)
     # get list of all source files
-    file (GLOB src_files "src/*.cpp")
+    file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 
     # define library target
     add_library (ACTSDD4hepPlugin SHARED ${src_files})
