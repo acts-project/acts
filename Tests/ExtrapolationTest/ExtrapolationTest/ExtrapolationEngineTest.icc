@@ -1,0 +1,188 @@
+// Root includes
+#include "TTree.h"
+#include "TString.h"
+// Core module
+#include "Algebra/StringConverters.h"
+// EventData modules
+#include "TrackParameters/TrackParameters.h"
+#include "NeutralParameters/NeutralParameters.h"
+#include "EventDataUtils/ParticleHypothesis.h"
+#include "Detector/Layer.h"
+
+template <class T> StatusCode Acts::ExtrapolationEngineTest::executeTestT(const T& startParameters)
+{
+
+    m_startPositionX = startParameters.position().x();
+    m_startPositionY = startParameters.position().y();
+    m_startPositionZ = startParameters.position().z();
+    m_startPositionR = startParameters.position().perp();
+
+    // use the pocessor if needed
+    if (!m_parametersProcessor.empty() && m_parametersProcessor->process(startParameters).isFailure())
+        MSG_WARNING("Event Processing did not work with the parameter processor!");
+
+    // setup the extrapolation how you'd like it
+    Acts::ExtrapolationCell<T> ecc(startParameters);
+    ecc.setParticleHypothesis((Acts::ParticleHypothesis)m_particleHypothesis);
+    ecc.addConfigurationMode(Acts::ExtrapolationMode::StopAtBoundary);
+    ecc.addConfigurationMode(Acts::ExtrapolationMode::FATRAS);
+    if (m_collectSensitive) ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectSensitive);
+    if (m_collectPassive)   ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectPassive);
+    if (m_collectBoundary)  ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectBoundary);
+    if (m_collectMaterial)  ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectMaterial);
+    if (m_collectJacobians)  ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectJacobians);
+    if (m_sensitiveCurvilinear) ecc.sensitiveCurvilinear = true;
+    ecc.searchMode = m_searchMode; 
+    
+    // force a stop in the extrapoaltion mode
+    if (m_pathLimit > 0.) {
+        ecc.pathLimit = m_pathLimit;
+        ecc.addConfigurationMode(Acts::ExtrapolationMode::StopWithPathLimit);
+    }
+    // screen output
+    MSG_DEBUG("===> forward extrapolation - collecting information <<===");
+    // call the extrapolation engine
+    Acts::ExtrapolationCode eCode = m_extrapolationEngine->extrapolate(ecc);
+    // save the success code
+    m_endSuccessful= int(eCode.code);
+    // end the parameters if there
+    if (eCode.isSuccess() && ecc.endParameters){
+        m_endPositionX  = ecc.endParameters->position().x();
+        m_endPositionY  = ecc.endParameters->position().y();
+        m_endPositionZ  = ecc.endParameters->position().z();
+        m_endPositionR  = ecc.endParameters->position().perp();
+        m_endPhi        = ecc.endParameters->momentum().phi();
+        m_endEta        = ecc.endParameters->momentum().eta();
+        m_endTheta      = ecc.endParameters->momentum().theta();
+        m_endP          = ecc.endParameters->momentum().mag();
+        m_endPt         = ecc.endParameters->momentum().perp();
+        m_endPathLength = ecc.pathLength;
+        // fill in the step parameters
+        if (!fillStepInformationT<T>(ecc,1).isSuccess())
+            MSG_VERBOSE("Somthing went wrong with recording the step information.");
+        // for the memory cleanup
+        const T* feParameters = ecc.endParameters;
+        // do the back extrapolation
+        if (m_backExtrapolation){
+            // let's restart at the destination
+            ecc.restartAtDestination();
+            // screen output
+            MSG_DEBUG("===> backward extrapolation - collecting information <<===");
+            // call the extrapolation engine
+            Acts::ExtrapolationCode eCodeBwd = m_extrapolationEngine->extrapolate(ecc,&startParameters.associatedSurface());
+            // safe the success code
+            m_backSuccessful= int(eCodeBwd.code);
+            // end the parameters if there
+            if (eCodeBwd.isSuccess() && ecc.endParameters){
+                m_backPositionX = ecc.endParameters->position().x();
+                m_backPositionY = ecc.endParameters->position().y();
+                m_backPositionZ = ecc.endParameters->position().z();
+                m_backPositionR = ecc.endParameters->position().perp();
+                m_backPhi       = ecc.endParameters->momentum().phi();
+                m_backEta       = ecc.endParameters->momentum().eta();
+                m_backTheta     = ecc.endParameters->momentum().theta();
+                m_backP         = ecc.endParameters->momentum().mag();
+                m_backPt        = ecc.endParameters->momentum().perp();
+                // fill in the step parameters
+                if (!fillStepInformationT<T>(ecc,-1).isSuccess())
+                    MSG_VERBOSE("Somthing went wrong with recording the step information.");
+                // memory cleanup
+                delete ecc.endParameters;
+            }
+        }
+        // now clean up the first end parameters
+        delete feParameters;
+    } else {
+        MSG_WARNING("Extrapolation was not Successful - code : " << eCode.toString() << " -> Printing start parameters.");
+        MSG_WARNING("    -> start x     = " << m_startPositionX );
+        MSG_WARNING("    -> start y     = " << m_startPositionY );
+        MSG_WARNING("    -> start z     = " << m_startPositionZ  );
+        MSG_WARNING("    -> start r     = " << m_startPositionR );
+        MSG_WARNING("    -> start phi   = " << m_startPhi       );
+        MSG_WARNING("    -> start eta   = " << m_startEta       );
+        MSG_WARNING("    -> start theta = " << m_startTheta     );
+        MSG_WARNING("    -> start pt    = " << m_startPt        );
+        MSG_WARNING("    -> start p     = " << m_startP         );
+    }
+    return StatusCode::SUCCESS;
+}
+
+template <class T> StatusCode Acts::ExtrapolationEngineTest::fillStepInformationT(Acts::ExtrapolationCell<T>& ecc, int fwdBwd)
+{
+
+    std::vector< const TrackParametersBase* > processParameters;
+    // reserve the right size
+    processParameters.reserve(ecc.extrapolationSteps.size());
+    // loop over the collected information
+    for (auto& es : ecc.extrapolationSteps){
+       // continue if we have parameters
+       const T* parameters = es.parameters;
+       if (parameters && m_writeTree){
+           // push back the parameters into the vector
+           if ((m_processSensitive && parameters->associatedSurface().isActive()) ||
+               (m_processPassive && parameters->associatedSurface().isFree()))
+               processParameters.push_back(parameters);
+           // there are parameters assigned, so they need to be either
+           // sensitive -> ip = 0
+           // passive   -> ip = 1
+           // boundary  -> ip = 2
+           unsigned int ip = 0;
+           if (es.stepConfiguration.checkMode(Acts::ExtrapolationMode::CollectPassive)){
+               ip = 1;
+           } else if (es.stepConfiguration.checkMode(Acts::ExtrapolationMode::CollectBoundary)){
+               ip = 2;
+           }
+           // fill the parameters
+           m_pPositionX[ip]->push_back(parameters->position().x());
+           m_pPositionY[ip]->push_back(parameters->position().y());
+           m_pPositionZ[ip]->push_back(parameters->position().z());
+           m_pPositionR[ip]->push_back(parameters->position().perp());
+           m_pPhi[ip]->push_back(parameters->momentum().phi());
+           m_pTheta[ip]->push_back(parameters->momentum().eta());
+           m_pEta[ip]->push_back(parameters->momentum().theta());
+           m_pP[ip]->push_back(parameters->momentum().mag());
+           m_pPt[ip]->push_back(parameters->momentum().perp());
+           
+            if (es.stepConfiguration.checkMode(Acts::ExtrapolationMode::CollectSensitive)){
+                m_sensitiveLocalType->push_back(float(parameters->associatedSurface().type()));
+                m_sensitiveLocal0->push_back(parameters->parameters()[0]);
+                m_sensitiveLocal1->push_back(parameters->parameters()[1]);
+            }
+        }
+
+        // collect the material if configured to do so - only forward direction for the moment
+        // @TODO ultimate material test - collect forward backword and add up at 0
+        if (m_collectMaterial && es.material && fwdBwd > 0 && m_writeTree){
+            // VERBOSE output
+            MSG_VERBOSE("Crossing material with scaling " << es.materialScaling);
+            MSG_VERBOSE("         material information  " << *es.material);
+            // thickness in X0 and L0
+            float tInX0 = es.material->thicknessInX0()*es.materialScaling;
+            float tInL0 = es.material->thicknessInL0()*es.materialScaling;
+            float tzarho = es.material->zOverAtimesRhoTimesD()*es.materialScaling;
+            // the overall material
+            m_materialThicknessInX0              += tInX0;
+            m_materialThicknessInL0              += tInL0;
+            m_materialThicknessZARho             += tzarho;
+            // the stepwise material
+            m_materialThicknessInX0Accumulated->push_back(m_materialThicknessInX0);
+            m_materialThicknessInX0Steps->push_back(tInX0);
+            m_materialThicknessInX0Steps->push_back(tInL0);
+            m_materialPositionX->push_back(es.materialPosition.x());
+            m_materialPositionY->push_back(es.materialPosition.y());
+            m_materialPositionZ->push_back(es.materialPosition.z());
+            m_materialPositionR->push_back(es.materialPosition.perp());
+            m_materialPositionP->push_back(parameters->momentum().mag());
+            m_materialPositionPt->push_back(parameters->momentum().perp());
+            m_materialScaling->push_back(es.materialScaling);
+        }
+
+    }
+
+
+    // use the pocessor if needed
+    if (!m_parametersProcessor.empty() && m_parametersProcessor->process(processParameters).isFailure())
+        MSG_WARNING("Event Processing did not work with the parameter processor!");
+    // return SUCCESS
+    return StatusCode::SUCCESS;
+}
