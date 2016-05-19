@@ -6,12 +6,10 @@ if (NOT DEFINED EIGEN_INCLUDE_DIR)
 endif (NOT DEFINED EIGEN_INCLUDE_DIR)
 
 # we need boost
-#add_definitions( -DBOOST_ALL_NO_LIB )
-set(Boost_NO_BOOST_CMAKE ON CACHE BOOL "disable boost-cmake find mechanism")
 find_package (Boost REQUIRED)
 
 # get list of all source files
-file (GLOB src_files "src/*/*.cpp" "include/*/*/*.hpp")
+file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 
 # define library target
 add_library (ACTSCore SHARED ${src_files})

@@ -7,7 +7,7 @@ if (BUILD_TGEO_PLUGIN)
 
   if (ROOT_FOUND)
     # get list of all source files
-    file (GLOB src_files "src/*.cpp")
+    file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 
     # define library target
     add_library (ACTSTGeoPlugin SHARED ${src_files})
