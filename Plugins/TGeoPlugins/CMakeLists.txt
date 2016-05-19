@@ -22,9 +22,9 @@ if (BUILD_TGEO_PLUGIN)
 
     # set installation directories
     install (TARGETS ACTSTGeoPlugin EXPORT ACTSTargets
-             LIBRARY DESTINATION lib)
+             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-    install (DIRECTORY include/ACTS DESTINATION include)
+    install (DIRECTORY include/ACTS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
   # do not fail if ROOT is not available, just inform and continue
   else (ROOT_FOUND)
     message (STATUS "${Red}ROOT was not found -> skip build of TGeoPlugins${ColorReset}")

@@ -16,7 +16,7 @@ target_link_libraries(ACTSGenericDetector PRIVATE ACTSCore ACTSGenericDetectorEx
 # set installation directories
 install (TARGETS ACTSGenericDetectorExample ACTSGenericDetector
 	 EXPORT ACTSTargets
-	 LIBRARY DESTINATION lib
-	 RUNTIME DESTINATION bin)
+	 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-install (DIRECTORY include/ACTS DESTINATION include)
+install (DIRECTORY include/ACTS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
