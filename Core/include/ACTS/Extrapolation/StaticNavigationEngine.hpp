@@ -44,6 +44,7 @@ namespace Acts {
             std::string                               postfix;               //!< output postfix
             
             Config() :
+	      logger(getDefaultLogger("StaticNavigationEngine",Logging::INFO)),
               propagationEngine(nullptr),
               materialEffectsEngine(nullptr),
               trackingGeometry(nullptr),
