@@ -251,10 +251,10 @@ namespace Acts {
       double stepEstimatorWithCurvature(PropagationCache& pCache, int, double*, bool&) const;
 
       /** Build new track parameters without propagation */
-      const TrackParameters* buildTrackParametersWithoutPropagation(const TrackParameters &, double*) const;
+      std::unique_ptr<const TrackParameters> buildTrackParametersWithoutPropagation(const TrackParameters &, double*) const;
 
       /** Build new track parameters without propagation */
-      const NeutralParameters* buildNeutralParametersWithoutPropagation(const NeutralParameters&, double*) const;
+      std::unique_ptr<const NeutralParameters> buildNeutralParametersWithoutPropagation(const NeutralParameters&, double*) const;
 
       /** Test new propagation to cylinder boundary */
       bool newCrossPoint(const CylinderSurface&, const double *, const double  *) const;

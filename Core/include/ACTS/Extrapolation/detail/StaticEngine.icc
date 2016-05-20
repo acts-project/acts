@@ -71,9 +71,9 @@ template <class T> Acts::ExtrapolationCode Acts::StaticEngine::extrapolateT(Acts
     // - surface on approach is not yet resolved
     const Acts::Layer* fLayer = eCell.finalVolumeReached() ? eCell.endLayer  : nullptr;   
     auto layerIntersections = eCell.leadVolume->layerCandidatesOrdered(eCell.leadLayer, fLayer,
-                                                                      *eCell.leadParameters,
-                                                                      pDir,
-                                                                      true);
+                                                                       *eCell.leadParameters,
+                                                                       pDir,
+                                                                       true);
                                                                       
     EX_MSG_VERBOSE(eCell.navigationStep, "layer", "loop", "found " << layerIntersections.size() << " layers for the layer-to-layer loop.");
     // layer-to-layer loop starts here 
@@ -183,7 +183,7 @@ template <class T> Acts::ExtrapolationCode Acts::StaticEngine::handleLayerT(Acts
     //      - sensitive surface which should be tried to hit
     //      - material sub structure to be resolved (independent of sensitive surface)
     // - (b) layer is start layer (can not be if there was a volume switch)
-    bool isStartLayer  = eCell.initialVolume() && eCell.leadLayer->onLayer(*eCell.leadParameters); 
+    bool isStartLayer  = eCell.initialVolume() && eCell.leadLayer->onLayer(*eCell.leadParameters);
     // - (c) layer is destination layer 
     //      - final propagation to the layer and update if necessary
     bool isDestinationLayer = (sf && eCell.leadLayer == eCell.endLayer);
@@ -218,7 +218,7 @@ template <class T> Acts::ExtrapolationCode Acts::StaticEngine::handleLayerT(Acts
         eCode = m_config.materialEffectsEngine->handleMaterial(eCell,pDir,Acts::fullUpdate);
         CHECK_ECODE_CONTINUE(eCell, eCode);
         // record the passive parameters
-        eCell.stepParameters(eCell.leadParameters, Acts::ExtrapolationMode::CollectPassive);
+        eCell.step(Acts::ExtrapolationMode::CollectPassive);
         // return the progress eCode back to the extrapolateT
         return eCode;
     }    
@@ -263,7 +263,7 @@ template <class T> Acts::ExtrapolationCode Acts::StaticEngine::resolveLayerT(Act
        } 
        EX_MSG_VERBOSE(eCell.navigationStep, "layer", eCell.leadLayer->geoID().value(), "successfuly hit."); 
        // fill the corresponding parameters, the material effects updator can attach material to them
-       eCell.stepParameters(eCell.leadParameters, Acts::ExtrapolationMode::CollectPassive);
+       eCell.step(Acts::ExtrapolationMode::CollectPassive);
        // the correct material layer needs to be assigned - in case of the approach surface not being hit, his can be the layer surface
        if (eCell.leadLayerSurface->surfaceMaterial() ){
            // set the material surface for the update
@@ -332,7 +332,7 @@ template <class T> Acts::ExtrapolationCode Acts::StaticEngine::resolveLayerT(Act
                 // record the parameters as sensitive or passive depending on the surface
                 Acts::ExtrapolationMode::eMode emode =  csf.object->isActive() ? Acts::ExtrapolationMode::CollectSensitive : Acts::ExtrapolationMode::CollectPassive;
                 // fill the corresponding parameters, the material effects updator can attach material to them
-                eCell.stepParameters(eCell.leadParameters, emode);
+                eCell.step(emode);
                 // check if the surface holds material and hence needs to be processed
                 if ( csf.object->surfaceMaterial() ) {
                     // set the material surface

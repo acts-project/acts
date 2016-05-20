@@ -100,7 +100,8 @@ Acts::ExtrapolationCode Acts::MaterialEffectsEngine::handleMaterial(Acts::ExCell
     if (mSurface && mSurface->surfaceMaterial()){
         EX_MSG_DEBUG( ++eCell.navigationStep, "layer",  mLayer->geoID().value(), "handleMaterial for charged parameters called.");
         // update the track parameters
-        eCell.leadParameters = updateTrackParameters(*eCell.leadParameters,eCell,dir,matupstage);
+        // @TODO sort out interface of track parameter update
+        // eCell.leadParameters = updateTrackParameters(eCell.leadParameters,eCell,dir,matupstage);
     }
     // only in case of post update it should not return InProgress
     return ExtrapolationCode::InProgress;
@@ -187,7 +188,7 @@ const Acts::TrackParameters* Acts::MaterialEffectsEngine::updateTrackParameters(
 	        eCell.addMaterial(pathCorrection, materialProperties);
         }
         // now either create new ones or update - only start parameters can not be updated
-        if (eCell.leadParameters != eCell.startParameters ){
+        if (eCell.leadParameters != &eCell.startParameters ){
             EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "material update on non-initial parameters.");
             // @TODO how to update parameters ?!?
             // parameters.updateParameters(uParameters,uCovariance);

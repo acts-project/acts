@@ -155,7 +155,7 @@ template <class T> Acts::ExtrapolationCode Acts::StaticNavigationEngine::handleB
         // fill the boundary into the cache if successfully hit boundary surface
         // - only cache if those are not the final parameters caused by a StopAtBoundary
         if (!stopAtThisBoundary)
-            eCell.stepParameters(eCell.leadParameters, ExtrapolationMode::CollectBoundary);
+        eCell.step(ExtrapolationMode::CollectBoundary);
         // loop protection - relaxed for the cases where you start from the boundary
         if (eCell.leadVolume == nextVolume ) {
             // the start parameters where on the boundary already give a relaxed return code

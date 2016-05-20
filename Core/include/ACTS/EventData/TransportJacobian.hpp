@@ -47,7 +47,7 @@ namespace Acts {
       TransportJacobian(const ActsMatrixD<5,5>&);
       
       /** Destructor */
-      ~TransportJacobian(){};
+      virtual ~TransportJacobian(){};
             
   };
 
