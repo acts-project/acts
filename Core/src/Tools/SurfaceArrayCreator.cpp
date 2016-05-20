@@ -12,10 +12,6 @@
 // Core module
 #include "ACTS/Utilities/Definitions.hpp"
 
-// constructor
-Acts::SurfaceArrayCreator::SurfaceArrayCreator()
-{}
-
 /** SurfaceArrayCreator interface method - create an array in a cylinder, binned in phi, z */
 std::unique_ptr<Acts::SurfaceArray> Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(const std::vector<const Acts::Surface*>& surfaces,
                                                                       double R, double minPhi, double maxPhi, double halfZ, 

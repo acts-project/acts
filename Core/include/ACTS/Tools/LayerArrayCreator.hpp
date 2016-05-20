@@ -14,6 +14,7 @@
 
 // Core module
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Logger.hpp"
 // Geometry module
 #include "ACTS/Tools/ILayerArrayCreator.hpp"
 // STL
@@ -40,8 +41,19 @@ namespace Acts {
     class LayerArrayCreator : public ILayerArrayCreator {
 
       public:
+      struct Config
+      {
+	std::shared_ptr<Logger>                 logger;                      //!< logging instance
+
+	Config():
+	  logger(getDefaultLogger("LayerArrayCreator",Logging::INFO))
+	  {}
+      };
+      
         /** Constructor */
-        LayerArrayCreator() = default;
+      LayerArrayCreator(const Config& c):
+	m_config(c)
+	{}
         
         /** Destructor */
         virtual ~LayerArrayCreator() = default;
@@ -54,7 +66,19 @@ namespace Acts {
                                                      BinningType btype = arbitrary,
                                                      BinningValue bvalue = binX) const override;
       
-      private:
+       /** Set configuration method */
+       void setConfiguration(const Config& c)
+	{
+	  m_config = c;
+	}
+
+       /** Get configuration method */
+      Config getConfiguration() const {return m_config;}
+
+    private:
+        const Logger& logger() const {return *m_config.logger;}
+
+      Config m_config;
           Surface* createNavigationSurface(const Layer& layer, BinningValue bvalue, double offset) const;
     };
 

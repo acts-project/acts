@@ -10,6 +10,7 @@
 #include <list>
 
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Logger.hpp"
 #include "ACTS/Tools/ITrackingGeometryBuilder.hpp"
 #include "ACTS/Tools/ITrackingVolumeBuilder.hpp"
 #include "ACTS/Tools/ITrackingVolumeHelper.hpp"
@@ -25,7 +26,7 @@ namespace Acts
       It retrieves ITrackingVolumeBuilders as configured and builds one
       detector around the other one.
 
-      @author Andreas.Salzburger@cern.ch   
+      @author Andreas.Salzburger@cern.ch
   */
 
   class CylinderGeometryBuilder : public ITrackingGeometryBuilder
@@ -33,43 +34,47 @@ namespace Acts
     public:
       /** @struct Config
         Configuration for the CylinderVolumeBuilder */
-      struct Config {  
-    
+      struct Config {
+
+        std::shared_ptr<Logger>                              logger;                 //! logging instance
         std::shared_ptr<ITrackingVolumeBuilder>              beamPipeBuilder;        //!< a special builder for the beam pipe (for post-insertion)
         std::list<std::shared_ptr<ITrackingVolumeBuilder> >  trackingVolumeBuilders; //!< the sub detector TrackingVolume builder
         std::shared_ptr<ITrackingVolumeHelper>               trackingVolumeHelper;   //!< used for creating a container
-    
+
         Config() :
-          beamPipeBuilder(nullptr),       
+          logger(getDefaultLogger("CylinderGeometryBuilder",Logging::INFO)),
+          beamPipeBuilder(nullptr),
           trackingVolumeBuilders(),
-          trackingVolumeHelper(nullptr)  
+          trackingVolumeHelper(nullptr)
         {}
-      };        
-        
+      };
+
       /** Constructor */
       CylinderGeometryBuilder(const Config& cgbConfig);
-          
+
       /** Destructor */
       virtual ~CylinderGeometryBuilder() = default;
-    
+
       /** TrackingGeometry Interface method */
       virtual std::unique_ptr<TrackingGeometry> trackingGeometry() const override;
-      
+
       /** Set configuration method */
       void setConfiguration(const Config& cgbConfig);
-   
+
       /** Get configuration method */
-      Config getConfiguration() const;   
-      
-    protected: 
-      /** Configuration member */    
-      Config  m_config;     
+      Config getConfiguration() const;
+
+    private:
+      /** Configuration member */
+      Config  m_config;
+
+      const Logger& logger() const {return *m_config.logger;}
 
   };
-  
-  inline CylinderGeometryBuilder::Config CylinderGeometryBuilder::getConfiguration() const 
+
+  inline CylinderGeometryBuilder::Config CylinderGeometryBuilder::getConfiguration() const
       { return m_config; }
-  
+
 } // end of namespace
 
 #endif // ACTS_GEOMETRYTOOLS_TRACKINGGEOMETRYBUILDER_H

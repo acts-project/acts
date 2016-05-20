@@ -31,16 +31,16 @@ void Acts::PassiveLayerBuilder::setConfiguration(const PassiveLayerBuilder::Conf
 
 bool Acts::PassiveLayerBuilder::constructLayers() const
 {
-    
+
     // the central layers
     size_t numcLayers = m_config.centralLayerRadii.size();
     if (numcLayers){
-        // MSG_DEBUG("Configured to build " << numcLayers << " passive central layers.");
+        ACTS_DEBUG("Configured to build " << numcLayers << " passive central layers.");
         m_cLayers.reserve(numcLayers);
         // loop through
         for (size_t icl = 0; icl < numcLayers; ++icl){
             // some screen output
-            // MSG_VERBOSE("- build layer " << icl << " with radius = " << m_config.centralLayerRadii.at(icl) << " and halfZ = " << m_config.centralLayerHalflengthZ.at(icl));
+            ACTS_VERBOSE("- build layer " << icl << " with radius = " << m_config.centralLayerRadii.at(icl) << " and halfZ = " << m_config.centralLayerHalflengthZ.at(icl));
             // create the layer and push it back
             auto cBounds = std::make_shared<CylinderBounds>(m_config.centralLayerRadii[icl],m_config.centralLayerHalflengthZ.at(icl));
             // create the layer
@@ -59,22 +59,22 @@ bool Acts::PassiveLayerBuilder::constructLayers() const
 
                 // sign it to the surface
                 cLayer->surfaceRepresentation().setSurfaceMaterial(material);
-            } 
+            }
             // push it into the layer vector
             m_cLayers.push_back(cLayer);
         }
     }
-    
+
     // pos/neg layers
     size_t numpnLayers = m_config.posnegLayerPositionZ.size();
     if (numpnLayers){
-        // MSG_DEBUG("Configured to build 2 * " << numpnLayers << " passive positive/negative side layers.");
+        ACTS_DEBUG("Configured to build 2 * " << numpnLayers << " passive positive/negative side layers.");
         m_pLayers.reserve(numpnLayers);
         m_nLayers.reserve(numpnLayers);
         // loop through
         for (size_t ipnl = 0; ipnl < numpnLayers; ++ipnl){
             // some screen output
-            // MSG_VERBOSE("- build layers " << (2*ipnl) << " and "<<  (2*ipnl)+1 << " at +/- z = " << m_config.posnegLayerPositionZ.at(ipnl)
+            ACTS_VERBOSE("- build layers " << (2*ipnl) << " and "<<  (2*ipnl)+1 << " at +/- z = " << m_config.posnegLayerPositionZ.at(ipnl));
             //                               << " and rMin/rMax = " << m_config.posnegLayerRmin.at(ipnl) << " / " << m_config.posnegLayerRmax.at(ipnl));
             // create the share disc bounds
             std::shared_ptr<const DiscBounds> dBounds = std::make_shared<RadialBounds>(m_config.posnegLayerRmin.at(ipnl), m_config.posnegLayerRmax.at(ipnl));
@@ -100,7 +100,7 @@ bool Acts::PassiveLayerBuilder::constructLayers() const
                 // sign it to the surface
                 nLayer->surfaceRepresentation().setSurfaceMaterial(material);
                 pLayer->surfaceRepresentation().setSurfaceMaterial(material);
-            } 
+            }
             // push it into the layer vector
             m_nLayers.push_back(nLayer);
             m_pLayers.push_back(pLayer);

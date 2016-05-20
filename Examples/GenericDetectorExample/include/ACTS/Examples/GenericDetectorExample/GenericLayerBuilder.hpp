@@ -7,6 +7,7 @@
 
 // Utilities
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Logger.hpp"
 // Geometry module
 #include "ACTS/Tools/ILayerBuilder.hpp"
 #include "ACTS/Layers/Layer.hpp"
@@ -35,6 +36,7 @@ namespace Acts {
         /** @struct Config
             Configuration for the GenericLayerBuilder */
         struct Config {
+	  std::shared_ptr<Logger> logger;
             std::string                                         layerIdentification;
             // a single paramater for the approach surface envelope
             double                                              approachSurfaceEnvelope;
@@ -140,7 +142,8 @@ namespace Acts {
         Config                                              m_config;
         
         
-        
+          const Logger& logger() const {return *m_config.logger;}
+
 
     };
     
@@ -152,7 +155,6 @@ namespace Acts {
     
     inline GenericLayerBuilder::Config GenericLayerBuilder::getConfiguration() const
     { return m_config; }
-    
 } // end of namespace
 
 #endif //ACTS_GEOMETRYTOOLS_GENERICLAYERBUILDER_H

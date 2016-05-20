@@ -12,6 +12,7 @@
 #include "ACTS/Extrapolation/INavigationEngine.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/EventData/NeutralParameters.hpp"
+#include "ACTS/Utilities/Logger.hpp"
 
 namespace Acts {
   
@@ -41,7 +42,7 @@ namespace Acts {
             with the setConfig method.
         */
         struct Config {
-            
+   	    std::shared_ptr<Logger>                               logger;
             std::shared_ptr<const TrackingGeometry>               trackingGeometry;      //!< the tracking geometry used by the navigator
             std::vector< std::shared_ptr<IExtrapolationEngine> >  extrapolationEngines;  //!< the extrapolation engines for different geometry layouts
             std::shared_ptr<IPropagationEngine>                   propagationEngine;     //!< the used propagation engine for navigation initialization
@@ -50,6 +51,7 @@ namespace Acts {
             std::string                                           postfix;               //!< output postfix
             
             Config() :
+	      logger(getDefaultLogger("ExtrapolationEngine",Logging::INFO)),
               trackingGeometry(nullptr),
               extrapolationEngines(),
               propagationEngine(nullptr),
@@ -94,6 +96,7 @@ namespace Acts {
             Config m_config;
              
         private:
+      const Logger& logger() const {return *m_config.logger;}
             /** main extrapolation method, templated to chared/neutral */
             template <class T> ExtrapolationCode extrapolateT(ExtrapolationCell<T>& eCell,
                                                               const Surface* sf = nullptr,

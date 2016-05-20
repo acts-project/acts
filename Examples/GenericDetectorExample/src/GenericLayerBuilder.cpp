@@ -39,7 +39,7 @@ Acts::GenericLayerBuilder::GenericLayerBuilder(const Acts::GenericLayerBuilder::
     //@TODO make checks if needed parameters are set and if vectors have all same size - waiting for message stream
     
     
-    //MSG_DEBUG( "initialize()" );
+    ACTS_DEBUG( "initialize()" );
     //Tool needs to be initialized
     //   if (!AlgToolBase::initialize()) return StatusCode::FAILURE;
     
