@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 ///////////////////////////////////////////////////////////////////
 // DD4hepGeometryHelper.h, ACTS project
 ///////////////////////////////////////////////////////////////////
@@ -20,7 +28,6 @@ namespace Acts {
      Provides helper function to translate the DD4hep geometry into the ACTS Tracking Geometry.
      @TODO find replacement for Gaudi exeption and message stream
      
-     @author julia.hrdinka@cern.ch
      */
     
     class DD4hepGeometryHelper {

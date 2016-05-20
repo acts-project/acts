@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 ///////////////////////////////////////////////////////////////////
 // TrackingVolume.h, ACTS project
 ///////////////////////////////////////////////////////////////////
@@ -59,7 +67,6 @@ namespace Acts {
 
    In addition it is capable of holding a subarray of Layers and TrackingVolumes.
 
-   @author Andreas.Salzburger@cern.ch
    */
 
    class TrackingVolume : public Volume {

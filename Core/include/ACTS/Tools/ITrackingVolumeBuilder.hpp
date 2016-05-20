@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 ///////////////////////////////////////////////////////////////////
 // ITrackingVolumeBuilder.h, ACTS project
 ///////////////////////////////////////////////////////////////////
@@ -32,7 +40,6 @@ namespace Acts {
      If an innerVolume is given, this is wrapped
      If a VolumeBounds object is given this defines the maximum extent.
   
-     @author Andreas.Salzburger@cern.ch
     */
   class ITrackingVolumeBuilder
   {

@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 ///////////////////////////////////////////////////////////////////
 // PrismVolumeBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
@@ -27,7 +35,6 @@ namespace Acts {
                                    parallel to \f$ xy \f$ plane at positive \f$ z \f$
         - face [2... n+1] : Rectangular  Acts::PlaneSurface
 
-    @author Sarka.Todorova@cern.ch
     */
 
  class PrismVolumeBounds : public VolumeBounds {

@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 ///////////////////////////////////////////////////////////////////
 // BoundaryCheck.h, ACTS project
 ///////////////////////////////////////////////////////////////////
@@ -27,7 +35,6 @@ namespace Acts {
 
 	 It also provides all the necessary tools for the individual implementations in the different SurfaceBounds classes.
 
-     @author Andreas.Salzburger@cern.ch, Roland.Jansky@cern.ch
      */
 
 	// maint struct for comparing the extent of arbitrary convex polygons relative to prefixed axes

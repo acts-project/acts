@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 ///////////////////////////////////////////////////////////////////
 // AlgebraHelper.h, ACTS project
 ///////////////////////////////////////////////////////////////////
@@ -15,9 +23,6 @@
 #include "Definitions.hpp"
 
 /** Geometry primitives helper functions
- @author  Niels van Eldik
- @author  Robert Johannes Langenberg <robert.langenberg@cern.ch>
- @author Andreas Salzburger <Andreas.Salzburger@cern.ch>
  */
 
 namespace Acts
@@ -33,7 +38,6 @@ namespace Acts
       The offset can be used to offset the lines (starting from line 2) wrt to the
       zero position for formatting reasons.
 
-      @author Niels.Van.Eldik@cern.ch, Andreas.Salzburger@cern.ch
 
    */
 

@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 ///////////////////////////////////////////////////////////////////
 // BinnedArray1D.h, ACTS project
 ///////////////////////////////////////////////////////////////////
@@ -17,7 +25,6 @@ namespace Acts {
 
     1-dimensional binned array based on a sorting as given by the BinUtitlity.
 
-    @author Andreas.Salzburger@cern.ch
    */
 
   template <class T> class BinnedArray1D : public BinnedArray<T> {

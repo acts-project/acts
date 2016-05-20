@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 ///////////////////////////////////////////////////////////////////
 // SubtractedCylinderSurface.h, ACTS project
 ///////////////////////////////////////////////////////////////////
@@ -19,7 +27,6 @@ namespace Acts {
    Class for a cylinder subtracted/shared surface in the ATLAS detector.
    It owns its surface bounds and subtracted volume.
 
-   @author Sarka.Todorova@cern.ch
    */
 
   class SubtractedCylinderSurface : public CylinderSurface {

@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 ///////////////////////////////////////////////////////////////////
 // DetectorElementBase.h, ACTS project
 ///////////////////////////////////////////////////////////////////
@@ -32,7 +40,6 @@ namespace Acts
      DetectorElements close by can be registered as neighbours as this will help
      the navigation.
      
-     @author Andreas.Salzburger@cern.ch
 
      */
 

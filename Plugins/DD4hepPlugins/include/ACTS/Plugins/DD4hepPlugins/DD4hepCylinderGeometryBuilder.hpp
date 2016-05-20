@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 ///////////////////////////////////////////////////////////////////
 // DD4hepCylinderGeometryBuilder.h, ACTS project
 ///////////////////////////////////////////////////////////////////
@@ -28,7 +36,6 @@ namespace Acts {
         It returns the world tracking geometry element.
      @TODO find replacement for Gaudi exeption and message stream
      
-     @author julia.hrdinka@cern.ch, andreas.salzburger@cern.ch
      */
     
     

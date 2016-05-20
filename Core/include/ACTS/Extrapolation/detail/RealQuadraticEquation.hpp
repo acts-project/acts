@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 ///////////////////////////////////////////////////////////////////
 // RealQuadraticEquation.h, ACTS project
 ///////////////////////////////////////////////////////////////////
@@ -32,7 +40,6 @@ namespace Acts {
      Hence,@f$ -\frac{\beta(1-\sqrt{1-4\alpha\gamma/\beta^{2}}}{2\alpha} = - \frac{\beta - \sqrt{\beta^{2}-4\alpha\gamma}}{2\alpha} @f$.<br>
      - case @f$ \beta > 0 @f$ is similar.
    
-    @author Andreas.Salzburger@cern.ch   
    */
  
   struct RealQuadraticEquation {

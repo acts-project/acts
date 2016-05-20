@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 ///////////////////////////////////////////////////////////////////
 // AbstractVolume.h, ACTS project
 ///////////////////////////////////////////////////////////////////
@@ -26,7 +34,6 @@ namespace Acts {
     the interface for inherited Volume classes
     regarding the geometrical information.
 
-    @author Andreas.Salzburger@cern.ch
     */
 
     class Volume : public virtual GeometryObject {

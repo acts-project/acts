@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 ///////////////////////////////////////////////////////////////////
 // ExtrapolationCell.h, ACTS project
 ///////////////////////////////////////////////////////////////////
@@ -82,7 +90,6 @@ namespace Acts {
     
     
     /** @class ExtrapolationCode 
-        @author Andreas.Salzburger -at- cern.ch 
     */
     class ExtrapolationCode {
       
@@ -190,7 +197,6 @@ namespace Acts {
         templated class as an input-output object of the extrapolation,
         only public members, since it is a container class
     
-        @author Andreas.Salzburger -at- cern.ch 
     */
     
     template <class T> class ExtrapolationCell {

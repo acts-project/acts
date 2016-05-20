@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 ///////////////////////////////////////////////////////////////////
 // SlidingDiscSurface.h, ACTS project
 ///////////////////////////////////////////////////////////////////
@@ -27,7 +35,6 @@ namespace Acts {
    Local eta bin is defined by Acts::eLOC_R and z position for base transform ( corrected for misalignement ).
    Inherits from DiscSurface.
 
-   @author sarka.todorova@cern.ch
    */
 
   class SlidingDiscSurface : public DiscSurface {
