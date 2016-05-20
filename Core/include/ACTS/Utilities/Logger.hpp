@@ -13,6 +13,13 @@
 #include <memory>
 #include <thread>
 
+#define ACTS_VERBOSE(x) if(logger().print(Acts::Logging::VERBOSE)) logger().log(Acts::Logging::VERBOSE) << x;
+#define ACTS_DEBUG(x)   if(logger().print(Acts::Logging::DEBUG)  ) logger().log(Acts::Logging::DEBUG)   << x;
+#define ACTS_INFO(x)    if(logger().print(Acts::Logging::INFO)   ) logger().log(Acts::Logging::INFO)    << x;
+#define ACTS_WARNING(x) if(logger().print(Acts::Logging::WARNING)) logger().log(Acts::Logging::WARNING) << x;
+#define ACTS_ERROR(x)   if(logger().print(Acts::Logging::ERROR)  ) logger().log(Acts::Logging::ERROR)   << x;
+#define ACTS_FATAL(x)   if(logger().print(Acts::Logging::FATAL)  ) logger().log(Acts::Logging::FATAL)   << x;
+
 namespace Acts
 {
   /**
@@ -214,7 +221,7 @@ namespace Acts
         m_out(out)
     {}
 
-      void flush(const Level& lvl,const std::ostringstream& input) final
+      void flush(const Level&,const std::ostringstream& input) final
           {
         fprintf(m_out, "%s\n", input.str().c_str());
         fflush(m_out);

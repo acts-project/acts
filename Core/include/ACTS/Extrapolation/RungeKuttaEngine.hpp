@@ -17,6 +17,7 @@
 #include "ACTS/Surfaces/ConeSurface.hpp"
 #include "ACTS/Surfaces/BoundaryCheck.hpp"
 #include "ACTS/MagneticField/IMagneticFieldSvc.hpp"
+#include "ACTS/Utilities/Logger.hpp"
 
 namespace Acts {
 
@@ -152,6 +153,7 @@ namespace Acts {
           @TODO explain parametr meanings (input from Igor needed)
         */
       struct Config {
+	std::shared_ptr<Logger>                               logger;
     
         std::shared_ptr<IMagneticFieldSvc>   fieldService  ;  //!< the field service 
         double                               dlt           ;  //!< accuracy parameter
@@ -163,6 +165,7 @@ namespace Acts {
         std::string                          postfix       ;  //!< screen output postfix
     
         Config() :
+	  logger(getDefaultLogger("RungeKuttaEngine",Logging::INFO)),
           fieldService(nullptr),
           dlt(0.000200),           
           helixStep(1.),     
@@ -206,7 +209,9 @@ namespace Acts {
       RungeKuttaUtils   m_rkUtils; //!< RungeKuttaUtils class
       
     private:
-      /** Templated RungeKutta propagation method - charged/neutral */
+      const Logger& logger() const {return *m_config.logger;}
+
+    /** Templated RungeKutta propagation method - charged/neutral */
       template <class T> bool propagateRungeKuttaT(ExtrapolationCell<T>& eCell,
                                                    PropagationCache& pCache,
                                                    const T& tParameters,

@@ -18,6 +18,7 @@
 #include "ACTS/Extrapolation/detail/ExtrapolationMacros.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/EventData/NeutralParameters.hpp"
+#include "ACTS/Utilities/Logger.hpp"
 
 namespace Acts {
 
@@ -57,6 +58,7 @@ namespace Acts {
             holds the helper engines that can be configured
           */
         struct Config {
+	std::shared_ptr<Logger>                               logger;
             
             std::shared_ptr<IPropagationEngine>     propagationEngine;        //!< the used propagation engine
             std::shared_ptr<INavigationEngine>      navigationEngine;         //!< the navigation engine to resolve the boundary
@@ -66,7 +68,8 @@ namespace Acts {
             std::string                             postfix;               //!< output postfix
             
             Config() :
-              propagationEngine(nullptr),
+	      logger(getDefaultLogger("StaticEngine",Logging::INFO)),
+	      propagationEngine(nullptr),
               navigationEngine(nullptr),
               materialEffectsEngine(nullptr),
               prefix("[SE] - "),
@@ -108,7 +111,9 @@ namespace Acts {
         Config m_config;        
                          
      private:
-        /** main loop extrapolation method */
+      const Logger& logger() const {return *m_config.logger;}
+
+    /** main loop extrapolation method */
         template <class T> ExtrapolationCode extrapolateT(ExtrapolationCell<T>& eCell,
                                                           const Surface* sf = 0,
                                                           PropDirection dir=alongMomentum,

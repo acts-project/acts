@@ -13,7 +13,8 @@
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/EventData/NeutralParameters.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
- 
+#include "ACTS/Utilities/Logger.hpp"
+
 namespace Acts {
   
   class Layer;
@@ -35,6 +36,7 @@ namespace Acts {
           Configuration struct for the MaterialEffectsEngine
         */
       struct Config {
+	std::shared_ptr<Logger>                               logger;
           bool          eLossCorrection;         //!< apply the energy loss correction
           bool          eLossMpv;                //!< apply the energy loss correction as most probable value
           bool          mscCorrection;           //!< apply the multiple (coulomb) scattering correction
@@ -42,6 +44,7 @@ namespace Acts {
           std::string   postfix;                 //!< screen output postfix
           
           Config() :
+	    logger(getDefaultLogger("MaterialEffectsEngine",Logging::INFO)),
             eLossCorrection(true),
             eLossMpv(true),        
             mscCorrection(true),
@@ -78,6 +81,7 @@ namespace Acts {
       Config                 m_config;                //!< configuration struct
      
     private:
+      const Logger& logger() const {return *m_config.logger;}
       /** charged extrapolation - depending on the MaterialUpdateStage -
         it either manipulates or creates new parameters
         @TODO check for memory handling

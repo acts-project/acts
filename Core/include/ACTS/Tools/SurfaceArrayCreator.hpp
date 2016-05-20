@@ -9,6 +9,7 @@
 #include "ACTS/Utilities/Definitions.hpp"
 // Geometry module
 #include "ACTS/Tools/ISurfaceArrayCreator.hpp"
+#include "ACTS/Utilities/Logger.hpp"
 
 
 namespace Acts {
@@ -30,8 +31,18 @@ namespace Acts {
     class SurfaceArrayCreator : virtual public ISurfaceArrayCreator {
 
       public:
+      struct Config
+      {
+	std::shared_ptr<Logger>                 logger;                      //!< logging instance
+	Config():
+	  logger(getDefaultLogger("SurfaceArrayCreator",Logging::INFO))
+	  {}	  
+      };
+      
         /** Constructor */
-        SurfaceArrayCreator();
+      SurfaceArrayCreator(const Config& c):
+	m_config(c)
+	{}
         
         /** Destructor */
         virtual ~SurfaceArrayCreator() = default;
@@ -55,7 +66,16 @@ namespace Acts {
                                          size_t binsX, size_t binsY,
                                          std::shared_ptr<Transform3D> transform = nullptr) const final; 
       
+      void setConfiguration(const Config& c) {m_config = c;}
+
+       /** Get configuration method */
+      Config getConfiguration() const {return m_config;}
+      
       private:
+        /** Configuration struct */
+        Config m_config;
+        const Logger& logger() const {return *m_config.logger;}
+      
           void completeBinning(const std::vector<const Surface*>& surfaces, 
                                const BinUtility& binUtility,
                                std::vector<SurfacePosition>& sVector, 

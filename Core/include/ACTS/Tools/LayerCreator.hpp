@@ -8,6 +8,7 @@
 // Geometry module
 #include "ACTS/Tools/ILayerCreator.hpp"
 #include "ACTS/Tools/ISurfaceArrayCreator.hpp"
+#include "ACTS/Utilities/Logger.hpp"
 
 #ifndef ACTS_LAYERCREATOR_TAKESMALLERBIGGER
 #define ACTS_LAYERCREATOR_TAKESMALLERBIGGER
@@ -33,11 +34,12 @@ namespace Acts {
         /** @struct Config 
             Configuration for the LayerCreator */
         struct Config {
-        
+            std::shared_ptr<Logger>                 logger;                      //!< logging instance   
             std::shared_ptr<ISurfaceArrayCreator>           surfaceArrayCreator; //!< geometry tool binning the surfaces into arrays
             
             Config() :
-                surfaceArrayCreator(nullptr)
+              logger(getDefaultLogger("LayerCreator",Logging::INFO)),
+              surfaceArrayCreator(nullptr)
             {}
         };
         /** constructor */
@@ -80,6 +82,7 @@ namespace Acts {
         
         /** configuration object */
         Config                                      m_config;
+        const Logger& logger() const {return *m_config.logger;}
 
     };
     

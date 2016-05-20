@@ -13,6 +13,7 @@
 #include "ACTS/Volumes/BoundarySurface.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/EventData/NeutralParameters.hpp"
+#include "ACTS/Utilities/Logger.hpp"
 
 namespace Acts {
 
@@ -33,6 +34,7 @@ namespace Acts {
             configuration struct for the StaticNavigationEngine
         */
         struct Config {
+	std::shared_ptr<Logger>                               logger;
             
             std::shared_ptr<IPropagationEngine>       propagationEngine;     //!< the used propagation engine
             std::shared_ptr<IMaterialEffectsEngine>   materialEffectsEngine; //!< the material effects updated
@@ -84,6 +86,7 @@ namespace Acts {
         Config  m_config; 
         
     private:
+      const Logger& logger() const {return *m_config.logger;}
         /** resolve the boundary situation */
         template <class T> ExtrapolationCode resolveBoundaryT(ExtrapolationCell<T>& eCell,
                                                               PropDirection dir=alongMomentum) const;

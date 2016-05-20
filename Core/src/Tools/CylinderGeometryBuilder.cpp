@@ -12,17 +12,17 @@
 // constructor
 Acts::CylinderGeometryBuilder::CylinderGeometryBuilder(const Acts::CylinderGeometryBuilder::Config& cgbConfig):
   m_config()
-{    
-  setConfiguration(cgbConfig);   
+{
+  setConfiguration(cgbConfig);
 }
 
 // configuration
 void Acts::CylinderGeometryBuilder::setConfiguration(const Acts::CylinderGeometryBuilder::Config& cgbConfig)
 {
-  // @TODO check consistency    
-  // copy the configuration 
+  // @TODO check consistency
+  // copy the configuration
   m_config = cgbConfig;
-} 
+}
 
 std::unique_ptr<Acts::TrackingGeometry> Acts::CylinderGeometryBuilder::trackingGeometry() const
 {
@@ -39,7 +39,7 @@ std::unique_ptr<Acts::TrackingGeometry> Acts::CylinderGeometryBuilder::trackingG
     // see if the beampipe needs to be wrapped
     if (m_config.beamPipeBuilder && m_config.trackingVolumeHelper){
       // some screen output
-      // MSG_DEBUG("BeamPipe is being built and inserted.");
+      ACTS_DEBUG("BeamPipe is being built and inserted.");
       // cast to cylinder volume bounds
       const CylinderVolumeBounds* cvB = dynamic_cast<const CylinderVolumeBounds*>(&(highestVolume->volumeBounds()));
       if (cvB){
@@ -54,8 +54,8 @@ std::unique_ptr<Acts::TrackingGeometry> Acts::CylinderGeometryBuilder::trackingG
       }
     }
     // create the TrackingGeoemtry
-    trackingGeometry.reset(new Acts::TrackingGeometry(highestVolume));      
+    trackingGeometry.reset(new Acts::TrackingGeometry(highestVolume));
   }
   // return the geometry to the service
   return trackingGeometry;
-} 
+}

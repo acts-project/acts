@@ -17,54 +17,58 @@
 #include "ACTS/Volumes/BoundarySurfaceFace.hpp"
 #include "ACTS/Tools/ILayerArrayCreator.hpp"
 #include "ACTS/Tools/ITrackingVolumeArrayCreator.hpp"
+#include "ACTS/Utilities/Logger.hpp"
+
 // STL
 #include <string>
 #include <vector>
 #include <memory>
 
 namespace Acts
-{    
+{
   class Layer;
   class TrackingVolume;
   class VolumeBounds;
   class CylinderVolumeBounds;
   class Material;
-    
+
   /** @class CylinderVolumeHelper
-     
+
       The concrete implementation for cylindrical TrackingVolume
       objects of the ITrackingVolumeCreator interface
-          
+
       @author Andreas.Salzburger@cern.ch
   */
-    
+
   class CylinderVolumeHelper : public ITrackingVolumeHelper
-  {    
+  {
   public:
-    /** @struct Config 
+    /** @struct Config
       Configuration struct for this CylinderVolumeHelper */
-    struct Config {  
+    struct Config {
+      std::shared_ptr<Logger>                      logger;                      //!< logging instance
       std::shared_ptr<ILayerArrayCreator>          layerArrayCreator;           //!< A Tool for coherent LayerArray creation
       std::shared_ptr<ITrackingVolumeArrayCreator> trackingVolumeArrayCreator;  //!< Helper Tool to create TrackingVolume Arrays
       double                                       passiveLayerThickness;       //!< thickness of passive layers
       int                                          passiveLayerPhiBins;         //!< bins in phi for the passive layer
-      int                                          passiveLayerRzBins;          //!< bins in r/z for the passive layer    
+      int                                          passiveLayerRzBins;          //!< bins in r/z for the passive layer
 
       Config() :
-        layerArrayCreator(nullptr),       
+        logger(getDefaultLogger("CylinderVolumeHelper",Logging::INFO)),
+        layerArrayCreator(nullptr),
         trackingVolumeArrayCreator(nullptr),
         passiveLayerThickness(1),
         passiveLayerPhiBins(1),
         passiveLayerRzBins(100)
         {}
     };
-      
+
     /** Constructor */
     CylinderVolumeHelper(const Config& cvhConfig);
-        
+
     /** Destructor */
     virtual ~CylinderVolumeHelper() = default;
-        
+
     /** @copydoc ITrackingVolumeCreator::createTrackingVolume(const LayerVector&, std::shared_ptr<const Material> matprop, VolumeBounds*, Transform3D*,bool, const std::string&) const;  */
     TrackingVolumePtr createTrackingVolume(const LayerVector& layers,
 					   std::shared_ptr<Material> matprop,
@@ -72,7 +76,7 @@ namespace Acts
 					   std::shared_ptr<Transform3D> transform = nullptr,
 					   const std::string& volumeName = "UndefinedVolume",
 					   BinningType btype = arbitrary) const;
-        
+
     /** @copydoc ITrackingVolumeCreator::createTrackingVolume(const std::vector<const Layer*>& , std::shared_ptr<const Material>, ,double,double,double,double,bool,const std::string&) const;
      */
     TrackingVolumePtr createTrackingVolume(const LayerVector& layers,
@@ -81,7 +85,7 @@ namespace Acts
 					   double loc2Min, double loc2Max,
 					   const std::string& volumeName = "UndefinedVolume",
 					   BinningType btype = arbitrary) const;
-        
+
     /** @copydoc ITrackingVolumeCreator::createGapTrackingVolume(std::shared_ptr<const Material>, double,double,double,double,int,bool,const std::string&) const; */
     TrackingVolumePtr createGapTrackingVolume(std::shared_ptr<Material> matprop,
 					      double rMin, double rMax,
@@ -89,7 +93,7 @@ namespace Acts
 					      unsigned int materialLayers,
 					      bool cylinder = true,
 					      const std::string& volumeName = "UndefinedVolume") const;
-        
+
     /** @copydoc ITrackingVolumeCreator::createGaoTrackingVolume(std::shared_ptr<const Material>,,std::vector<double>&,int,bool,const std::string&) const;  */
     TrackingVolumePtr createGapTrackingVolume(std::shared_ptr<Material> matprop,
 					      double rMin, double rMax,
@@ -98,21 +102,22 @@ namespace Acts
 					      bool cylinder = true,
 					      const std::string& volumeName = "UndefinedVolume",
 					      BinningType btype = arbitrary) const;
-        
+
     /** Create a container volumes from sub volumes, input volumes are ordered in R or Z by convention */
     TrackingVolumePtr createContainerTrackingVolume(const TrackingVolumeVector& volumes) const;
 
     /** Set configuration method */
     void setConfiguration(const Config& cvbConfig);
-   
+
     /** Get configuration method */
-    Config getConfiguration() const;   
+    Config getConfiguration() const;
 
   protected:
     /** Configuration object */
-    Config m_config;  
-        
+    Config m_config;
+
   private:
+    const Logger& logger() const {return *m_config.logger;}
     /** Private method - it estimates the CylinderBounds and Translation of layers,
 	if given, these are checked against the layer positions/dimensions. */
     bool estimateAndCheckDimension(const LayerVector& layers,
@@ -122,14 +127,14 @@ namespace Acts
 				   double& zMinClean, double& zMaxClean,
 				   BinningValue& bValue,
 				   BinningType bType = arbitrary) const;
-        
+
     /** Private method - interglue all volumes contained by a TrackingVolume
 	and set the outside glue volumes in the descriptor */
     bool interGlueTrackingVolume(TrackingVolumePtr tVolume,
 				 bool rBinned,
 				 double rMin, double rMax,
 				 double zMin, double zMax) const;
-        
+
     /** Private method - glue volume to the other -- use trackingVolume helper */
     void glueTrackingVolumes(TrackingVolumePtr volumeOne,
 			     BoundarySurfaceFace faceOne,
@@ -137,14 +142,14 @@ namespace Acts
 			     BoundarySurfaceFace faceTwod,
 			     double rMin, double rMax,
 			     double zMin, double zMax) const;
-        
-        
+
+
     /** Private method - helper method not to duplicate code */
     void addFaceVolumes(TrackingVolumePtr tVolume,
 			Acts::BoundarySurfaceFace bsf,
 			TrackingVolumeVector& vols) const;
-        
-        
+
+
     /** Private method - helper method to save some code */
     LayerPtr createCylinderLayer(double z,
 				 double r,
@@ -152,18 +157,18 @@ namespace Acts
 				 double thickness,
 				 int binsPhi,
 				 int binsZ) const;
-        
+
     /** Private method - helper method to save some code */
     LayerPtr createDiscLayer(double z,
 			     double rMin, double rMax,
 			     double thickness,
 			     int binsPhi,
 			     int binsR) const;
-        
-      
+
+
   };
-  
-  /** Return the configuration object */    
+
+  /** Return the configuration object */
   inline CylinderVolumeHelper::Config CylinderVolumeHelper::getConfiguration() const { return m_config; }
 }
 
