@@ -28,6 +28,7 @@ namespace Acts {
     illustration.
 
     @image html RectangularBounds.gif
+   */
 
 
   class RectangleBounds : public PlanarBounds {

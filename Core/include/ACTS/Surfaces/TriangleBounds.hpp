@@ -26,7 +26,7 @@ namespace Acts {
     Bounds for a triangular, planar surface.
 
     @image html TriangularBounds.gif
-
+   */
 
   class TriangleBounds : public PlanarBounds {
 

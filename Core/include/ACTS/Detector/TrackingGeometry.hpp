@@ -40,7 +40,7 @@ namespace Acts {
     (respectively, if existing, a global search of an associated Layer or the next
     associated Layer), such as a continous navigation by BoundarySurfaces between 
     the confined TrackingVolumes.
-    
+  */
   
   class TrackingGeometry {
 

@@ -28,7 +28,7 @@ namespace Acts {
       - (Layer)     Surfaces    - uses simple counting through approachSurfaces()
       - (Boundary)  Surfaces    - uses simple counting through boundarySurfaces()
       -  Volumes                - AtlasDetector region and AtlasSubDetector enum and static counter
-
+  */
 
   class GeometryID {
     public:

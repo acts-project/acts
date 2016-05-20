@@ -22,7 +22,7 @@ namespace Acts {
    @class NoBounds
 
    Bounds object for a boundless surface (...)
-
+  */
 
    class NoBounds : public SurfaceBounds {
      public:

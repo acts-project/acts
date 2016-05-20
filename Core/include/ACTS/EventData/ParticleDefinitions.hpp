@@ -297,7 +297,7 @@ namespace Acts {
   /** @class ProcessVertex 
   
       process vertex class for the fast track simulation
-  
+  */
     
   class ProcessVertex {
       public :
