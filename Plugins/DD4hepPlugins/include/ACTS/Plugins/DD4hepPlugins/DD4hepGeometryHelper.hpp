@@ -28,7 +28,6 @@ namespace Acts {
      Provides helper function to translate the DD4hep geometry into the ACTS Tracking Geometry.
      @TODO find replacement for Gaudi exeption and message stream
      
-     @author julia.hrdinka@cern.ch
      */
     
     class DD4hepGeometryHelper {

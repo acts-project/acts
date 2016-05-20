@@ -30,7 +30,6 @@ namespace Acts {
 
    @image html RadialBounds.gif
 
-   @author Andreas.Salzburger@cern.ch
    */
 
  class RadialBounds : public DiscBounds {

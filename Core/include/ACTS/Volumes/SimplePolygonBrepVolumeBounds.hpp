@@ -36,7 +36,6 @@ namespace Acts {
                                    parallel to \f$ xy \f$ plane at positive \f$ z \f$
         - face [2... n+1] : Rectangular  Acts::PlaneSurface
 
-    @author sarka.todorova@cern.ch , marcin.wolter@cern.ch
     */
 
  class SimplePolygonBrepVolumeBounds : public VolumeBounds {

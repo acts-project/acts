@@ -23,7 +23,6 @@ namespace Acts {
    
     Collection of parametrizations used in the Tracking realm
     
-    @author sarka.todorova@cern.ch 
   */    
 
   class MaterialInteraction {

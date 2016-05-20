@@ -40,7 +40,6 @@ namespace Acts {
   
    Base Class for a navigation object (active/passive) in the Tracking geometry.
 
-   @author Sarka.Todorova@cern.ch, Andreas.Salzburger@cern.ch
    
    */
 

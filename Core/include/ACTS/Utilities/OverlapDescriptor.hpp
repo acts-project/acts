@@ -31,7 +31,6 @@ namespace Acts {
 
      It allows to describe the potentially reachable surfaces
 
-     @author Andreas.Salzburger@cern.ch
     */
 
     class OverlapDescriptor {

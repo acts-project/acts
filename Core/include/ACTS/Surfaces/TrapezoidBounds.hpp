@@ -30,7 +30,6 @@ namespace Acts {
 
    @todo can be speed optimized by calculating kappa/delta and caching it
 
-   @author Andreas.Salzburger@cern.ch
    */
 
   class TrapezoidBounds : public PlanarBounds {

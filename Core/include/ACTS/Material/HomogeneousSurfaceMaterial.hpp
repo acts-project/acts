@@ -30,7 +30,6 @@ namespace Acts {
    It extends the SurfaceMaterial base class and describes a simple homogeneus material
    descriptions
       
-   @author Andreas.Salzburger@cern.ch 
    */
 
   class HomogeneousSurfaceMaterial : public SurfaceMaterial {

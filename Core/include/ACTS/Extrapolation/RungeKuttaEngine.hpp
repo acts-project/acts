@@ -148,7 +148,6 @@ namespace Acts {
          parameters and jacobian of transformation according straight line model
     
     
-    @author Igor.Gavrilenko@cern.ch (adapted to ATS by Andreas.Salzburger -at- cern.ch)   
   */
 
   class RungeKuttaEngine : virtual public IPropagationEngine {

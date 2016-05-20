@@ -43,7 +43,6 @@ namespace Acts {
    For all isOnSurface, or positionOnSurface and insideBounds methods two tolerance parameters
    can be given which correspond to the two local natural coordinates of the surface loc1, loc2.
 
-   @author Andreas.Salzburger@cern.ch
    */
 
   class Surface : public virtual GeometryObject {

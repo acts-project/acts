@@ -18,7 +18,6 @@
 namespace Acts {
   /** @class GeometryObjectSorter
 
-      @author Andreas.Salzburger@cern.ch 
     */
   template <class T> class GeometryObjectSorterT : public std::binary_function<T, T, bool> {
 

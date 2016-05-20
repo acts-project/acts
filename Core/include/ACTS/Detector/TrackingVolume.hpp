@@ -67,7 +67,6 @@ namespace Acts {
 
    In addition it is capable of holding a subarray of Layers and TrackingVolumes.
 
-   @author Andreas.Salzburger@cern.ch
    */
 
    class TrackingVolume : public Volume {

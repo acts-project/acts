@@ -34,7 +34,6 @@ namespace Acts {
       binned arrays of TrackingVolumes for both, confinement in another volume 
       and navigation issues.
      
-      @author Andreas.Salzburger@cern.ch   
      */
 
     class TrackingVolumeArrayCreator : public ITrackingVolumeArrayCreator {

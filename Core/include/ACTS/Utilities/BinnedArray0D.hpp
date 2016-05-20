@@ -28,7 +28,6 @@ namespace Acts {
    allows to have the same structure for just one single
    contained object.
 
-   @author Andreas.Salzburger@cern.ch
    */
 
   template <class T> class BinnedArray0D : public BinnedArray<T> {

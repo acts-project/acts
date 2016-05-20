@@ -35,7 +35,6 @@ namespace Acts {
 
     @image html CylinderBounds.gif
 
-    @author Andreas.Salzburger@cern.ch
     */
 
   class CylinderBounds : public SurfaceBounds {

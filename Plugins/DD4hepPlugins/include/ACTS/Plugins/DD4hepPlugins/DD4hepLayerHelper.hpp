@@ -34,7 +34,6 @@ namespace Acts {
      The DD4hepLayerHelper translates Layers with its containing modules (if given) from the DD4hep geometry into Layers and Surfaces from TrackingGeometry.
      @TODO find replacement for Gaudi exeption and message stream
      
-     @author julia.hrdinka@cern.ch
     */
     
     class DD4hepGeometryHelper;

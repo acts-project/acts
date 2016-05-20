@@ -35,7 +35,6 @@ class ApproachDescriptor;
    Class to describe a cylindrical detector layer for tracking, it inhertis from both, 
    Layer base class and CylinderSurface class
        
-   @author Andreas.Salzburger@cern.ch
   */
 
   class CylinderLayer : public CylinderSurface, public Layer {

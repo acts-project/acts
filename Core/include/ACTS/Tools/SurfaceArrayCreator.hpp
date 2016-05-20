@@ -33,7 +33,6 @@ namespace Acts {
 
       It is designed create sub surface arrays to be ordered on Surfaces
 
-      @author Andreas.Salzburger@cern.ch   
      */
 
     class SurfaceArrayCreator : virtual public ISurfaceArrayCreator {

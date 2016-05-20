@@ -28,7 +28,6 @@ namespace Acts {
    
    Class to describe a planar detector layer for tracking, with subtraction 
        
-   @author Sarka.Todorova@cern.ch, Andres.Salzburger@cern.ch 
    */
 
   class SubtractedPlaneLayer : virtual public SubtractedPlaneSurface, public Layer {

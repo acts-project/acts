@@ -32,7 +32,6 @@ namespace Acts {
    Navigation Layers have a surface representation, but should usually never be
    propagated to.
       
-   @author Andreas.Salzburger@cern.ch
    
    */
 

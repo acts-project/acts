@@ -35,7 +35,6 @@ namespace Acts {
 
    designed to allow transcript of GeoShapeUnion and GeoShapeIntersection
 
-   @author Sarka.Todorova@cern.ch
   */
 
  class CombinedVolumeBounds : public VolumeBounds {

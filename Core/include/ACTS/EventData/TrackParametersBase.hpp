@@ -34,7 +34,6 @@ namespace Acts
      @tparam DIM number of track parameters (usually 5)
      @tparam T   charge of track (either <tt>Charged</tt> or <tt>Neutral</tt>)
 
-     @author Andreas.Salzburger@cern.ch
   */
 
   class TrackParametersBase

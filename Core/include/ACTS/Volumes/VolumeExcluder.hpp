@@ -26,7 +26,6 @@ namespace Acts {
 /** @class VolumeExcluder
     removes explicit dependence of Subtracted*Surface on Volumes
 
-   @author sarka.todorova@cern.ch
   */
 
    class VolumeExcluder: public AreaExcluder {

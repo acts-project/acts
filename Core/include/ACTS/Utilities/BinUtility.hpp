@@ -31,7 +31,6 @@ namespace Acts {
     the transform is usually shared with the geometric object the Array is defined on,
     for performance reasons, also the inverse transform is stored.
         
-    @author Andreas.Salzburger@cern.ch 
   */
 
    class BinUtility {

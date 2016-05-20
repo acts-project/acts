@@ -30,7 +30,6 @@ namespace Acts {
    it extends the Surface description to make a surface being a boundary of a
    Acts::Volume
 
-   @author Andreas.Salzburger@cern.ch
    */
 
   template <class T> class BoundaryCylinderSurface :

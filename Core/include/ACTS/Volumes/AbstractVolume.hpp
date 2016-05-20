@@ -44,7 +44,6 @@ namespace Acts {
 
    @image html VolumeShapes.gif
 
-   @author Andreas.Salzburger@cern.ch
    */
 
   class AbstractVolume : public Volume {

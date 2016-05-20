@@ -23,7 +23,6 @@ namespace Acts {
    common base class for all bounds that are in a r/phi frame
     - simply introduced to avoid wrong bound assigments to surfaces
     
-   @author Andreas.Salzburger@cern.ch
    */
         
       

@@ -33,7 +33,6 @@ namespace Acts {
      The GenericLayerBuilder is able to build cylinder & disc layers from python input.
      This is ment for the simple detector examples.
      
-     @author julia.hrdinka@cern.ch, Noemi.Calace@cern.ch, Andreas.Salzburger@cern.ch
      */
 
     

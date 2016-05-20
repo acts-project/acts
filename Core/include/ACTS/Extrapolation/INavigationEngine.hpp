@@ -30,7 +30,6 @@ namespace Acts {
       it serves as the Master extrapolation interface but also as the specialized
       extrapolation engine ones.
 
-      @author Andreas Salzburger -at - cern.ch
   */
 
   class INavigationEngine {

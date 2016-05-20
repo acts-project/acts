@@ -34,7 +34,6 @@ namespace Acts {
      Class to describe a cylindrical detector layer for tracking, it inhertis from both, 
      Layer base class and ConeSurface class
      
-     @author Ian.Watson@cern.ch, Andreas.Salzburger@cern.ch
   */
   
   class ConeLayer : virtual public ConeSurface, public Layer {

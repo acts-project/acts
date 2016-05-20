@@ -59,7 +59,6 @@ namespace Acts {
 
     @image html CylinderVolumeBounds_decomp.gif
 
-    @author Andreas.Salzburger@cern.ch
     */
 
  class CylinderVolumeBounds : public VolumeBounds {

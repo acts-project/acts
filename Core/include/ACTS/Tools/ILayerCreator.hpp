@@ -28,7 +28,6 @@ namespace Acts {
   
     Interface class for LayerCreator from DetectorElements
       
-    @author Andreas.Salzburger@cern.ch
     */
   class ILayerCreator {
     

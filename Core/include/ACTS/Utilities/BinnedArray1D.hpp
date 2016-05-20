@@ -25,7 +25,6 @@ namespace Acts {
 
     1-dimensional binned array based on a sorting as given by the BinUtitlity.
 
-    @author Andreas.Salzburger@cern.ch
    */
 
   template <class T> class BinnedArray1D : public BinnedArray<T> {

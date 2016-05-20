@@ -23,7 +23,6 @@ namespace Acts {
 
    Bounds object for a boundless surface (...)
 
-   @author Andreas.Salzburger@cern.ch */
 
    class NoBounds : public SurfaceBounds {
      public:

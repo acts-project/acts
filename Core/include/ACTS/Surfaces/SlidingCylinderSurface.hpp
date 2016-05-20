@@ -30,7 +30,6 @@ namespace Acts {
    Local eta bin is defined by base curvature and z position in base transform ( corrected for misalignement ).
    It inherits from CylinderSurface.
 
-   @author Sarka.Todorova@cern.ch
    */
 
   class SlidingCylinderSurface : public CylinderSurface {

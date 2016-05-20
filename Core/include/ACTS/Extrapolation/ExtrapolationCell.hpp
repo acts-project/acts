@@ -90,7 +90,6 @@ namespace Acts {
     
     
     /** @class ExtrapolationCode 
-        @author Andreas.Salzburger -at- cern.ch 
     */
     class ExtrapolationCode {
       
@@ -198,7 +197,6 @@ namespace Acts {
         templated class as an input-output object of the extrapolation,
         only public members, since it is a container class
     
-        @author Andreas.Salzburger -at- cern.ch 
     */
     
     template <class T> class ExtrapolationCell {

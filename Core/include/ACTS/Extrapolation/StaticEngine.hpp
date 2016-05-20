@@ -41,7 +41,6 @@ namespace Acts {
 
     The entire code is written as a template in either charged or neutral parameters.  
     
-    @author Andreas.Salzburger -at- cern.ch
   
   */
   class StaticEngine : virtual public IExtrapolationEngine {

@@ -29,7 +29,6 @@ namespace Acts {
    Acts::Volume (used for all volume shapes).
    It inherits from BoundarySurface to get the interface of boundaries.
 
-   @author Sarka.Todorova@cern.ch
   */
 
   template <class T> class BoundarySubtractedPlaneSurface :

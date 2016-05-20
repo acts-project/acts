@@ -33,7 +33,6 @@ namespace Acts
   /** @enum PropDirection
     PropDirection, enum for direction of the propagation.
 
-     @author Andreas.Salzburger@cern.ch
     */
   enum PropDirection {alongMomentum    = 1,
     oppositeMomentum =-1,

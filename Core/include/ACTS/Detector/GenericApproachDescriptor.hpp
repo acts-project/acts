@@ -27,7 +27,6 @@ namespace Acts {
    It is templated in order to allow for BoundarySurfaces from
    representing volumes of layers to be re-used
    
-   @author Andreas.Salzburger@cern.ch
   */
 
   template <class T> class GenericApproachDescriptor : public ApproachDescriptor {

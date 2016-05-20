@@ -39,7 +39,6 @@ namespace Acts {
 
     @image html CuboidVolumeBounds_decomp.gif
 
-    @author Andreas.Salzburger@cern.ch
     */
 
  class CuboidVolumeBounds : public VolumeBounds {

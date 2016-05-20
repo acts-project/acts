@@ -34,7 +34,6 @@ namespace Acts
       It retrieves ITrackingVolumeBuilders as configured and builds one
       detector around the other one.
 
-      @author Andreas.Salzburger@cern.ch
   */
 
   class CylinderGeometryBuilder : public ITrackingGeometryBuilder

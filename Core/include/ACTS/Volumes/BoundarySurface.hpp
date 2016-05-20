@@ -44,7 +44,6 @@ namespace Acts {
    to be friend, so that it can glue Volumes together by sharing the same
    Boundary Surface.
 
-   @author Andreas.Salzburger@cern.ch
   */
 
   template <class T> class BoundarySurface {

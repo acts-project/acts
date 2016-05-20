@@ -40,7 +40,6 @@ namespace Acts {
      Hence,@f$ -\frac{\beta(1-\sqrt{1-4\alpha\gamma/\beta^{2}}}{2\alpha} = - \frac{\beta - \sqrt{\beta^{2}-4\alpha\gamma}}{2\alpha} @f$.<br>
      - case @f$ \beta > 0 @f$ is similar.
    
-    @author Andreas.Salzburger@cern.ch   
    */
  
   struct RealQuadraticEquation {

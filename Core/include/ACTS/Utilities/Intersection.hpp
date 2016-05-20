@@ -20,7 +20,6 @@ namespace Acts {
    /**
      @struct Intersection 
      
-     @author Andreas.Salzburger -at- cern.ch 
      */
       
     struct Intersection {

@@ -28,7 +28,6 @@ namespace Acts {
      T must be of pointer type in order to be initialized withh nullptr
      and to allow for nulpptr return type
 
-   @author Andreas.Salzburger@cern.ch
    */
 
   template <class T> class BinnedArray {

@@ -28,7 +28,6 @@ namespace Acts {
      Since in DD4hep volumes used as a cylinder (detector layers are binned in r and z, e.g. central barrel volume) and discs (detector layers are binned in r and phi, e.g. end caps) are both described as a ROOT TGeoConeSeg one needs to distinguish between these volume types by setting the shape.
      @TODO find replacement for Gaudi exeption and message stream
      
-     @author julia.hrdinka@cern.ch
      */
     
     class DetExtension : virtual public IDetExtension {

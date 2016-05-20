@@ -34,7 +34,6 @@ namespace Acts {
     BoundarySurfaceFace [index]: [n1] surfaces from 'outer' volume
                                  [n1+n2-n_subtr] remaining surfaces (after subtraction) from 'inner' volume
 
-    @author Sarka.Todorova@cern.ch
     */
 
  class SubtractedVolumeBounds : public VolumeBounds {

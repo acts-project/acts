@@ -27,7 +27,6 @@ namespace Acts {
     Helper Class needed for the material approxiamtion of a detector module. Stores one DD4hep::Geometry::DetElement, which describes a detector module plus its various placements.
      @TODO find replacement for Gaudi exeption and message stream
      
-     @author julia.hrdinka@cern.ch
      */
     
     class Module {

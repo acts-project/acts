@@ -50,7 +50,6 @@ namespace Acts {
 
     @image html DoubleTrapezoidVolumeBounds_decomp.gif
 
-    @author Andreas.Salzburger@cern.ch , Sarka.Todorova@cern.ch
     */
 
  class DoubleTrapezoidVolumeBounds : public VolumeBounds {

@@ -29,7 +29,6 @@ namespace Acts {
     Acts::Volume (used for cylindrical shape).
     It inherits from BoundarySurface to get the interface of boundaries.
 
-    @author Andreas.Salzburger@cern.ch
    */
 
   template <class T> class BoundaryDiscSurface :

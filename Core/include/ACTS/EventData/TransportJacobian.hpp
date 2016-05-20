@@ -37,7 +37,6 @@ namespace Acts {
         |
         | first index 
        
-   @author Igor.Gavrilenko@cern.ch   
   */
 
   class TransportJacobian : public ActsMatrixD<5,5>{

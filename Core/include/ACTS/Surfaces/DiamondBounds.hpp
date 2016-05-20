@@ -25,7 +25,6 @@ namespace Acts {
    @class DiamondBounds
    Bounds for a double trapezoidal ("diamond"), planar Surface.
 
-   @author Andreas.Salzburger@cern.ch, Sarka.Todorova@cern.ch
    */
 
   class DiamondBounds : public PlanarBounds {

@@ -33,7 +33,6 @@ namespace Acts {
         multiplicative : each bin has the same sub structure, i.e. first binnning structure is equidistant
         additive : sub structure replaces one bin (and one bin only)
 
-        @author Andreas.Salzburger @ cern.ch, Federica.Fabbri @ cern.ch  , Sharka.Todorova @ cern.ch
    */
 
    class BinningData {

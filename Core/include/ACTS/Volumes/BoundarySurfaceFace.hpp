@@ -28,7 +28,6 @@ namespace Acts {
     The order of faces is chosen to follow - as much as 
     possible - a cycular structure.
     
-    @author Andreas.Salzburger@cern.ch 
     
     */
 

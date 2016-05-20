@@ -45,7 +45,6 @@ namespace Acts {
    The SurfaceMaterial class inherits from GeometryID,
    in order to allow storing the material in a file and assigning it uniquely.
       
-   @author Andreas.Salzburger@cern.ch 
    */
 
   class SurfaceMaterial {

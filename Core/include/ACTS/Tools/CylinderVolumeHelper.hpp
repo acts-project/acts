@@ -45,7 +45,6 @@ namespace Acts
       The concrete implementation for cylindrical TrackingVolume
       objects of the ITrackingVolumeCreator interface
 
-      @author Andreas.Salzburger@cern.ch
   */
 
   class CylinderVolumeHelper : public ITrackingVolumeHelper

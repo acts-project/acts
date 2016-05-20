@@ -35,7 +35,6 @@ namespace Acts {
    it inhertis from both, Layer base class
    and DiscSurface class
        
-   @author Andreas.Salzburger@cern.ch 
    */
 
   class DiscLayer : virtual public DiscSurface, public Layer {

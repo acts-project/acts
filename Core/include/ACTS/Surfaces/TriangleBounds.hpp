@@ -27,7 +27,6 @@ namespace Acts {
 
     @image html TriangularBounds.gif
 
-    @author sarka.todorova@cern.ch */
 
   class TriangleBounds : public PlanarBounds {
 

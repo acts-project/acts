@@ -39,7 +39,6 @@ namespace Acts {
         process can be stopped by other directives, e.g. stopping at a certain path limit, material limit
         or with a change of detector signature.
        
-        @author Andreas.Salzburger -at- cern.ch 
     */
     class ExtrapolationEngine : virtual public IExtrapolationEngine {
     

@@ -27,7 +27,6 @@ namespace Acts {
    Class to describe a cylindrical detector layer for tracking, with subtraction; it inhertis from both, 
    Layer base class and SubtractedCylinderSurface class
        
-   @author Sarka.Todorova@cern.ch
   */
 
   class SubtractedCylinderLayer : virtual public SubtractedCylinderSurface, public Layer {

@@ -33,7 +33,6 @@ namespace Acts {
 
       It also wraps the MultiTrackParameters (@TODO do this actually)
 
-      @author Andreas Salzburger -at - cern.ch
   */
 
   class IPropagationEngine {

@@ -34,7 +34,6 @@ namespace Acts {
    Class to describe a planar detector layer for tracking, 
    it inhertis from both, Layer base class and PlaneSurface class
        
-   @author Andreas.Salzburger@cern.ch 
    */
 
   class PlaneLayer : virtual public PlaneSurface, public Layer {

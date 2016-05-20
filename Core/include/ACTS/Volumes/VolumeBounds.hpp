@@ -45,7 +45,6 @@ namespace Acts {
 
    The Volume, retrieving a set of Surfaces from the VolumeBounds, can turn the Surfaces into BoundarySurfaces.
 
-   @author Andreas.Salzburger@cern.ch
    */
 
   class VolumeBounds {

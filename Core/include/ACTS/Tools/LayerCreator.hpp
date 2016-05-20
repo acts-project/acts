@@ -33,7 +33,6 @@ namespace Acts {
      
      The LayerCreator is able to build cylinde, disc layers or plane layers from detector elements
      
-     @author Andreas.Salzburger@cern.ch
      */
     
     class LayerCreator : public ILayerCreator {

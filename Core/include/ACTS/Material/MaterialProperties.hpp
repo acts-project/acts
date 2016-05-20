@@ -33,7 +33,6 @@ namespace Acts {
     - Z 
     - rho [g/mm3]
 
-   @author Andreas.Salzburger@cern.ch 
    */
 
   class MaterialProperties {

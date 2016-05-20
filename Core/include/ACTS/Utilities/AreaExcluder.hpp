@@ -21,7 +21,6 @@ namespace Acts {
 /** @class AreaExcluder
     Pure abstract base class
 
-    @author sarka.todorova@cern.ch
   */
 
    class AreaExcluder {

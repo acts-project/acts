@@ -43,7 +43,6 @@ namespace Acts
     Arrays for glueing and confinement are often the same, 
     therefore the newly created TrackingVolumeArray is done by a shared_ptr
 
-    @author Andreas.Salzburger@cern.ch
     */
   class ITrackingVolumeArrayCreator
   {  

@@ -31,7 +31,6 @@ namespace Acts {
    Class for a DiscSurface in the TrackingGEometry.
    It inherits from Surface.
 
-   @author Andreas.Salzburger@cern.ch
    */
 
   class DiscSurface : public Surface {

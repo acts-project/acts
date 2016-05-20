@@ -28,7 +28,6 @@ namespace Acts {
 
    It extends the SurfaceMaterial base class and is just an array of it
 
-   @author Andreas.Salzburger@cern.ch 
    */
 
   class BinnedSurfaceMaterial : public SurfaceMaterial {

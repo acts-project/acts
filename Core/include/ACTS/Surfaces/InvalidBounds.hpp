@@ -24,7 +24,6 @@ namespace Acts {
 
    Invalid Bounds object - catches problems in geometry building
 
-   @author Shaun Roe
    */
 
    class InvalidBounds : public SurfaceBounds {

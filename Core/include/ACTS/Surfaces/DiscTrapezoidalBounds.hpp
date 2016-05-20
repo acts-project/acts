@@ -28,7 +28,6 @@ namespace Acts {
      By providing an argument for hphisec, the bounds can
      be restricted to a phirange around the center position.
 
-     @author Noemi.Calace@cern.ch , Andreas.Salzburger@cern.ch
   */
 
   class DiscTrapezoidalBounds : public DiscBounds {

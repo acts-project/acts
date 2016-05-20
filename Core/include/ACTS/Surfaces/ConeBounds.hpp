@@ -29,7 +29,6 @@ namespace Acts {
 
        @image html ConeBounds.gif
 
-       @author Ian.Watson@cern.ch, Andreas.Salzburger@cern.ch, Robert.Langenberg@cern.ch
    */
 
    class ConeBounds : public SurfaceBounds {

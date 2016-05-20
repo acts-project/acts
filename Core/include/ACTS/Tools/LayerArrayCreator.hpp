@@ -43,7 +43,6 @@ namespace Acts {
 
      @TODO Julia: make private tools private again after Gaudi update (bug in Gaudi), marked with //b
      
-      @author Andreas.Salzburger@cern.ch   
      */
 
     class LayerArrayCreator : public ILayerArrayCreator {

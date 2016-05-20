@@ -33,7 +33,6 @@ namespace Acts {
      the surfaces are std::shared_ptr, as they can be the boundary surfaces of the 
      representingVolume of the Layer
      
-     @author Andreas.Salzburger@cern.ch 
      */
 
     class ApproachDescriptor {

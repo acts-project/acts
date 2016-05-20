@@ -83,7 +83,6 @@ namespace Acts {
        Az  - direction cosine to z-axis = Cos(The)
        CM  - charge/momentum            = local CM
 
-  @author Igor.Gavrilenko@cern.ch
   **/
 
   class RungeKuttaUtils

@@ -41,7 +41,6 @@ namespace Acts {
     associated Layer), such as a continous navigation by BoundarySurfaces between 
     the confined TrackingVolumes.
     
-    @author Andreas.Salzburger@cern.ch */
   
   class TrackingGeometry {
 

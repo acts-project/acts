@@ -43,7 +43,6 @@ namespace Acts {
   
     TrackingVolumes only exist as std::shared_ptr
 
-     @author Andreas.Salzburger@cern.ch
     */
   class ITrackingVolumeHelper
   {

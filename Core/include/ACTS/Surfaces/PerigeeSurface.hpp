@@ -27,7 +27,6 @@ namespace Acts {
    The Surface axis is fixed to be the z-axis of the Tracking frame.
    It inherits from Surface.
 
-   @author Andreas.Salzburger@cern.ch
    */
 
   class PerigeeSurface : public Surface {

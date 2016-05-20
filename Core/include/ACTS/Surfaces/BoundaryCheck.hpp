@@ -35,7 +35,6 @@ namespace Acts {
 
 	 It also provides all the necessary tools for the individual implementations in the different SurfaceBounds classes.
 
-     @author Andreas.Salzburger@cern.ch, Roland.Jansky@cern.ch
      */
 
 	// maint struct for comparing the extent of arbitrary convex polygons relative to prefixed axes

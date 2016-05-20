@@ -33,7 +33,6 @@ namespace Acts {
        Should ease the wrapping of a TrackingGeometry object describing one Detector
        by another one.
 
-       @author Andreas.Salzburger@cern.ch
        */
 
     class GlueVolumesDescriptor {

@@ -40,7 +40,6 @@ namespace Acts
      DetectorElements close by can be registered as neighbours as this will help
      the navigation.
      
-     @author Andreas.Salzburger@cern.ch
 
      */
 

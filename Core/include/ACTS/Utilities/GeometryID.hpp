@@ -29,7 +29,6 @@ namespace Acts {
       - (Boundary)  Surfaces    - uses simple counting through boundarySurfaces()
       -  Volumes                - AtlasDetector region and AtlasSubDetector enum and static counter
 
-      @author Andreas.Salzburger@cern.ch      */
 
   class GeometryID {
     public:

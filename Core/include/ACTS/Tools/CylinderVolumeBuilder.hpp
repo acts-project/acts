@@ -67,7 +67,6 @@ namespace Acts {
       To receive the tracking volume it is possible to also hand over a triple of layers, which is a C++ tuple of three pointers to layer vectors (defined in the ITrackingVolumeBuilder). This functionality is needed for a possible translation of an geometry existing in another format. The first entry represents the layers of the negative endcap, the second the layers of the barrel and the third the layers of the positive endcap. If the one of these pointers is a nullptr no layers will be created for this volume
       Another functionality needed to translate an already existing geometry is to hand over a volume triple, which is a triple of shared pointers of volumes (defined in the ITrackingVolumeBuilder). The first entry contains the negative endcap volume, the second the barrel volume and the third one the positive endcap volume. This volumes are then used to get the internal boundaries of the current hierarchy.
 
-      @author Andreas.Salzburger@cern.ch
   */
 
   class CylinderVolumeBuilder : public ITrackingVolumeBuilder{

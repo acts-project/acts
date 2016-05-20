@@ -30,7 +30,6 @@ namespace Acts {
     | EC- | Central | EC+ | 
     detector setup.
       
-    @author Andreas.Salzburger@cern.ch
     */
   class ILayerBuilder
   { 

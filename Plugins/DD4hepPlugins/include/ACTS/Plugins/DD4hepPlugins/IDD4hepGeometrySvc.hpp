@@ -27,7 +27,6 @@ namespace Acts {
         Interface for the service providing the DD4hep geometry.
         @TODO find replacement for Gaudi exeption and message stream
      
-        @author julia.hrdinka@cern.ch
      
      */
     

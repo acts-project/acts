@@ -23,9 +23,6 @@
 #include "Definitions.hpp"
 
 /** Geometry primitives helper functions
- @author  Niels van Eldik
- @author  Robert Johannes Langenberg <robert.langenberg@cern.ch>
- @author Andreas Salzburger <Andreas.Salzburger@cern.ch>
  */
 
 namespace Acts
@@ -41,7 +38,6 @@ namespace Acts
       The offset can be used to offset the lines (starting from line 2) wrt to the
       zero position for formatting reasons.
 
-      @author Niels.Van.Eldik@cern.ch, Andreas.Salzburger@cern.ch
 
    */
 

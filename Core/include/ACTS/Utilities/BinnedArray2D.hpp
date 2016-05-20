@@ -30,7 +30,6 @@ namespace Acts {
      
      dedicated for 2-dim regular binning
      
-     @author Andreas.Salzburger@cern.ch
      */
     
     template <class T> class BinnedArray2D : public BinnedArray<T> {

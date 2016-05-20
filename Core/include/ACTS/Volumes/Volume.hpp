@@ -34,7 +34,6 @@ namespace Acts {
     the interface for inherited Volume classes
     regarding the geometrical information.
 
-    @author Andreas.Salzburger@cern.ch
     */
 
     class Volume : public virtual GeometryObject {

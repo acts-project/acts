@@ -27,7 +27,6 @@ namespace Acts {
    Class for a cylinder subtracted/shared surface in the ATLAS detector.
    It owns its surface bounds and subtracted volume.
 
-   @author Sarka.Todorova@cern.ch
    */
 
   class SubtractedCylinderSurface : public CylinderSurface {

@@ -35,7 +35,6 @@ namespace Acts {
    Local eta bin is defined by Acts::eLOC_R and z position for base transform ( corrected for misalignement ).
    Inherits from DiscSurface.
 
-   @author sarka.todorova@cern.ch
    */
 
   class SlidingDiscSurface : public DiscSurface {

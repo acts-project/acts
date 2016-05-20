@@ -85,7 +85,6 @@ namespace Acts {
       4     - as 3 but with intersection test @TODO compatibility test
       5     - whatever the overlap descriptor returns with this
 
-     @author Andreas.Salzburger@cern.ch
   */
 
   class Layer : public virtual GeometryObject {

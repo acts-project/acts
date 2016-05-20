@@ -31,7 +31,6 @@ namespace Acts {
      This is a lightweight type of detector element, 
      it simply implements the base class.
      
-     @author Andreas.Salzburger@cern.ch
      
      */
     

@@ -27,7 +27,6 @@ namespace Acts {
    Class for a planar subtracted/shared surface in the ATLAS detector.
    It owns its surface bounds and subtracted volume.
 
-   @author Sarka.Todorova@cern.ch
    */
 
   class SubtractedPlaneSurface : public PlaneSurface {

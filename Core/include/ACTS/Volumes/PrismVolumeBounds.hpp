@@ -35,7 +35,6 @@ namespace Acts {
                                    parallel to \f$ xy \f$ plane at positive \f$ z \f$
         - face [2... n+1] : Rectangular  Acts::PlaneSurface
 
-    @author Sarka.Todorova@cern.ch
     */
 
  class PrismVolumeBounds : public VolumeBounds {

@@ -32,7 +32,6 @@ namespace Acts {
       The static navigation engine for finding the next volume,
       propagate to the boundary, can be shared with other engines that have a static frame.
 
-      @author Andreas.Salzburger -at- cern.ch
     */
   class StaticNavigationEngine : virtual public INavigationEngine {
 

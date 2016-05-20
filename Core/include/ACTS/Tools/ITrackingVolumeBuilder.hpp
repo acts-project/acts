@@ -40,7 +40,6 @@ namespace Acts {
      If an innerVolume is given, this is wrapped
      If a VolumeBounds object is given this defines the maximum extent.
   
-     @author Andreas.Salzburger@cern.ch
     */
   class ITrackingVolumeBuilder
   {

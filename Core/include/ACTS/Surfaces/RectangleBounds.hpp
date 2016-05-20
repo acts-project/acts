@@ -29,7 +29,6 @@ namespace Acts {
 
     @image html RectangularBounds.gif
 
-    @author Andreas.Salzburger@cern.ch */
 
   class RectangleBounds : public PlanarBounds {
 

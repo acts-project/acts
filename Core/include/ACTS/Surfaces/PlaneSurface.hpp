@@ -33,7 +33,6 @@ namespace Acts {
 
    @image html PlaneSurface.gif
 
-   @author Andreas.Salzburger@cern.ch
    */
 
   class PlaneSurface : public Surface {

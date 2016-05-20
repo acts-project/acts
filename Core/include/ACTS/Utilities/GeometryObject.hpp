@@ -31,7 +31,6 @@ namespace Acts {
       It also provides the binningPosition method for 
       Geometry geometrical object to be binned in BinnedArrays
 
-      @author Andreas.Salzburger@cern.ch 
     */
 
   class GeometryObject {

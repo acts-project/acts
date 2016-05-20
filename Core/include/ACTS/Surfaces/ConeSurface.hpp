@@ -32,7 +32,6 @@ namespace Acts {
    Propagations to a cone surface will be returned in
    curvilinear coordinates.
 
-   @author Ian.Watson@cern.ch, Andreas.Salzburger@cern.ch
    */
 
   class ConeSurface : public Surface {

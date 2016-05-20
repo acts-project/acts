@@ -22,7 +22,6 @@ namespace Acts {
   /**@class IMultipleScatteringUpdator
      Interface class IMultipleScatteringUpdator
      
-     @author Andreas.Salzburger@cern.ch
     */
   class IMultipleScatteringUpdator {
       

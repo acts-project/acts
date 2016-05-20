@@ -45,7 +45,6 @@ namespace Acts {
 
     @image html TrapezoidVolumeBounds_decomp.gif
 
-    @author Andreas.Salzburger@cern.ch
     */
 
  class TrapezoidVolumeBounds : public VolumeBounds {

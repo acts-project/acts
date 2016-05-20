@@ -23,7 +23,6 @@ namespace Acts {
     
     This is a highly repetitive call, hence the interface is extremely simplistic
 
-    @ author Andreas.Salzburger -at- cern.ch
  */
     class IMagneticFieldSvc {
 

@@ -117,7 +117,6 @@ namespace Acts {
     - MaterialProperties ( for reconstruction )
     - it is optimized for T/P split
     
-    @author Andreas.Salzburger@cern.ch 
   */    
   class Material {
     public :  

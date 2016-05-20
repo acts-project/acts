@@ -30,7 +30,6 @@ namespace Acts
     The TrackingGeometry is returned as a non-const object in order to recreate
     from conditions callback if necessary.
       
-    @author Andreas.Salzburger@cern.ch
     */
   class ITrackingGeometryBuilder
   {

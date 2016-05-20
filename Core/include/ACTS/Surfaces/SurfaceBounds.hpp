@@ -32,7 +32,6 @@ namespace Acts {
    - the BoundsType return type to avoid dynamic casting
    - an initCache() method
 
-   @author Andreas.Salzburger@cern.ch
    */
 
 

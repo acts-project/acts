@@ -28,7 +28,6 @@ namespace Acts {
    By providing an argument for hphisec, the bounds can
    be restricted to a phirange around the center position.
 
-   @author Marcin.Wolter@cern.ch
    */
 
   class EllipseBounds : public PlanarBounds {

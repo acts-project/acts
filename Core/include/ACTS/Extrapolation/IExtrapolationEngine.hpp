@@ -35,7 +35,6 @@ namespace Acts {
       The ExtrapolationEngine is desinged as a thread safe const-correct service,
       all used components need to follow this approach.
 
-      @author Andreas Salzburger -at - cern.ch
   */
 
   class IExtrapolationEngine {

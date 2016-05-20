@@ -25,7 +25,6 @@ namespace Acts {
      
      DetectorElement plugin for ROOT TGeo shapes.
      
-     @author julia.hrdinka@cern.ch
      @TODO what if shape conversion failes? add implementation of more than one surface per module, implementing also for other shapes->Cone,ConeSeg,Tube? what if not used with DD4hep?
      
      */

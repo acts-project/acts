@@ -29,7 +29,6 @@ namespace Acts {
   
     Interface class ISurfaceArrayCreators, it inherits from IAlgTool. 
         
-    @author Andreas.Salzburger@cern.ch
   */
   
   class ISurfaceArrayCreator {

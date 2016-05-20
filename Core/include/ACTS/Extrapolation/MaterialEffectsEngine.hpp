@@ -35,7 +35,6 @@ namespace Acts {
        - if eCell.leadPameters == eCell.startParamters clone to new parameters
          else : update the new parameters
 
-      @author Andreas Salzburger -at - cern.ch
   */
   class MaterialEffectsEngine : virtual public IMaterialEffectsEngine {
 

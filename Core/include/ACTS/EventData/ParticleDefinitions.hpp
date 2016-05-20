@@ -34,7 +34,6 @@ namespace Acts {
    Enumeration for Particle type respecting
    the interaction with the material
 
-   @author Andreas.Salzburger@cern.ch
    */
    enum ParticleType { nonInteracting     = 0,     //!< for non-interacting extrapolation
                        geantino           = 0,     //!< for non-interacting extrapolation
@@ -59,7 +58,6 @@ namespace Acts {
    Review of Particle Physics (2010)
    K. Nakamura et al. (Particle Data Group), J. Phys. G 37, 075021 (2010)
 
-   @author Andreas.Salzburger@cern.ch
    */
     
    struct ParticleMasses {
@@ -224,7 +222,6 @@ namespace Acts {
       very simplistic class for particle properties,
       in order to be used in fast track simulation
   
-      @author Andreas.Salzburger -at- cern.ch
   */
   class ParticleProperties {
     public :
@@ -301,7 +298,6 @@ namespace Acts {
   
       process vertex class for the fast track simulation
   
-      @author Andreas.Salzburger -at- cern.ch */
     
   class ProcessVertex {
       public :

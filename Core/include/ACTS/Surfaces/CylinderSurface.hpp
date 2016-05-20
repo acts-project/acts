@@ -31,7 +31,6 @@ namespace Acts {
 
    @image html CylinderSurface.gif
 
-   @author Andreas.Salzburger@cern.ch
    */
 
   class CylinderSurface : public Surface {

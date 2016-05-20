@@ -27,7 +27,6 @@ namespace Acts {
      
      Neighbour & bin member based overlap descriptor
 
-     @author Andreas.Salzburger@cern.ch
     */
 
     class GenericOverlapDescriptor : public OverlapDescriptor {

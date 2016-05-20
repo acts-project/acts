@@ -36,7 +36,6 @@ namespace Acts {
         It returns the world tracking geometry element.
      @TODO find replacement for Gaudi exeption and message stream
      
-     @author julia.hrdinka@cern.ch, andreas.salzburger@cern.ch
      */
     
     

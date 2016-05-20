@@ -37,7 +37,6 @@ namespace Acts
     It receives the LayerVector and creaets an array with NaivgationLayer objects
     filled in between.
     
-    @author Andreas.Salzburger@cern.ch
   */
   
   class ILayerArrayCreator

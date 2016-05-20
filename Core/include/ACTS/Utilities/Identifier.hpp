@@ -29,7 +29,6 @@
     please use the ACTS_CORE_IDENTIFIER_PLUGING in to use instead if
     another type of Identifier is needed
 
-    @author Andreas.Salzburger -at cern.ch ( based on ATLAS Identifier by R.D. Shaffer)
   */
 
 

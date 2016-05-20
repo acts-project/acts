@@ -22,7 +22,6 @@ namespace Acts {
     
     @TODO will be in the future be replace by GeometryID mechanism
       
-    @author Andreas.Salzburger@cern.ch
     
     */
     

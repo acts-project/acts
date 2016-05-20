@@ -30,7 +30,6 @@ namespace Acts {
    to describe dirft tube and straw like detectors.
    It inherits from Surface.
 
-   @author Andreas.Salzburger@cern.ch
    */
 
   class StraightLineSurface : public Surface {

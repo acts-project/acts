@@ -33,7 +33,6 @@ namespace Acts {
       - BinningValue
         necessary access to global positions
 
-      @author Andreas.Salzburger@cern.ch
      */
   enum BinningType { equidistant, arbitrary };
 
