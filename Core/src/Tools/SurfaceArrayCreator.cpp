@@ -16,6 +16,7 @@
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/BinnedArray2D.hpp"
 #include "ACTS/Utilities/BinnedArray1D.hpp"
+#include "ACTS/Utilities/MsgMacros.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 // Core module
 #include "ACTS/Utilities/Definitions.hpp"
@@ -27,7 +28,7 @@ std::unique_ptr<Acts::SurfaceArray> Acts::SurfaceArrayCreator::surfaceArrayOnCyl
                                                                       std::shared_ptr<Acts::Transform3D> transform) const
 {
 
-    //MSG_DEBUG("Creating a SurfaceArray on a cylinder with bins in phi x z = " << binsPhi << " x " << binsZ );
+    MSG_DEBUG("Creating a SurfaceArray on a cylinder with bins in phi x z = " << binsPhi << " x " << binsZ );
 
     // create the (plain) binUtility - with the transform
     BinUtility* arrayUtility = new BinUtility(binsPhi, minPhi, maxPhi, closed, binPhi, transform);
@@ -82,7 +83,7 @@ std::unique_ptr<Acts::SurfaceArray> Acts::SurfaceArrayCreator::surfaceArrayOnDis
                                                                   std::shared_ptr<Acts::Transform3D> transform) const
 {
 
-    //MSG_DEBUG("Creating a SurfaceArray on a disc with bins in r x phi = " << binsR << " x " << binsPhi );
+    MSG_DEBUG("Creating a SurfaceArray on a disc with bins in r x phi = " << binsR << " x " << binsPhi );
     
     // the z step and the phi step
     double phiStep = (maxPhi-minPhi)/(binsPhi-1);
@@ -91,7 +92,7 @@ std::unique_ptr<Acts::SurfaceArray> Acts::SurfaceArrayCreator::surfaceArrayOnDis
     // create the (plain) binUtility - with the transform
     BinUtility* arrayUtility = nullptr;
     if (binsR == 1){
-        //MSG_DEBUG("Only one single ring is R is present - 1D surface array to be created." );
+        MSG_DEBUG("Only one single ring is R is present - 1D surface array to be created." );
         // reserve the right amoung
         sVector.reserve(binsPhi);
         // solve this at once 
@@ -171,13 +172,13 @@ void Acts::SurfaceArrayCreator::completeBinning(const std::vector<const Surface*
                                                 std::vector< std::vector< SurfacePositionDirection > >& binSystem) const 
 {
     
-    //MSG_DEBUG("Complete binning by filling closest neighbour surfaces in potentially empty bins." );
+    MSG_DEBUG("Complete binning by filling closest neighbour surfaces in potentially empty bins." );
     
     // get the number of bins 
     size_t bins0 = binSystem.at(0).size();
     size_t bins1 = binSystem.size();
 
-    //MSG_VERBOSE("Prefilling a bin system with [ " << bins0 << " x " << bins1 << " ].");
+    MSG_VERBOSE("Prefilling a bin system with [ " << bins0 << " x " << bins1 << " ].");
 
     // prefill the easy ones
     for (auto& surface : surfaces){
@@ -186,7 +187,7 @@ void Acts::SurfaceArrayCreator::completeBinning(const std::vector<const Surface*
         // calculate the bin
         size_t bin0 = binUtility.bin(surface->center(),0);
         size_t bin1 = binUtility.bin(surface->center(),1);
-        //MSG_VERBOSE("- estimated bin [ " << bin0 << " x " << bin1 << " ] for surface " << surface);
+        MSG_VERBOSE("- estimated bin [ " << bin0 << " x " << bin1 << " ] for surface " << surface);
         // fill it
         binSystem.at(bin1).at(bin0).first.first = surface;
     }
@@ -220,15 +221,13 @@ void Acts::SurfaceArrayCreator::completeBinning(const std::vector<const Surface*
             }
         }
     }
-    //MSG_VERBOSE("Number of empty bins that were filled with neighbours: " << completedBins );
+    MSG_VERBOSE("Number of empty bins that were filled with neighbours: " << completedBins );
     
     // stream out the system for Binned Array creation
     sVector.reserve(bins0*bins1);
     for (auto& outer : binSystem)
         for (auto& inner : outer){
-            //size_t bin0 = binUtility.bin(inner.first.second,0);
-            //size_t bin1 = binUtility.bin(inner.first.second,1);
-            //MSG_VERBOSE("- bin [ " << bin0 << " x " << bin1 << " ] holds surface " << inner.first.first);
+            MSG_VERBOSE("- bin [ " << binUtility.bin(inner.first.second,0) << " x " << binUtility.bin(inner.first.second,1) << " ] holds surface " << inner.first.first);
             sVector.push_back(SurfacePosition(inner.first.first,inner.first.second));
        }
 }
@@ -241,7 +240,7 @@ void Acts::SurfaceArrayCreator::registerNeighboursGrid(const std::vector< std::v
     
     size_t emptybins = 0;
     
-    //MSG_DEBUG("Registering the neigbours for " << bins0 << " x " << bins1 << " bins.");
+    MSG_DEBUG("Registering the neigbours for " << bins0 << " x " << bins1 << " bins.");
     
     // neighbour registration
     for (size_t i1 = 0; i1 < bins1; ++i1){
@@ -251,13 +250,13 @@ void Acts::SurfaceArrayCreator::registerNeighboursGrid(const std::vector< std::v
             // leavit if there's no chance to do anything
             if (!surface || !surface->associatedDetectorElement()){
                 ++emptybins;
-                //MSG_WARNING(" - empty bin detected at [" << i0 << "][" << i1 << "]");
+                MSG_WARNING(" - empty bin detected at [" << i0 << "][" << i1 << "]");
                 continue;
             }    
-            //MSG_VERBOSE("Processing neighbour registration for bin [" << i0 << "][" << i1 << "] - surface is " << surface);
+            MSG_VERBOSE("Processing neighbour registration for bin [" << i0 << "][" << i1 << "] - surface is " << surface);
             
             // the surface is defined
-            const Surface* nsurface = surface;
+            const Surface* nsurface = nullptr;
             size_t p0 = i0;
             size_t n0 = i0;
             size_t p1 = i1;
@@ -265,33 +264,33 @@ void Acts::SurfaceArrayCreator::registerNeighboursGrid(const std::vector< std::v
             // find the previous neighbours in Loc0
             while (decrement(p0,bins0,open0)){
                 nsurface = surfaceArrayObjects.at(i1).at(p0);
-                //MSG_VERBOSE("                       - decrement to bin [" << p0 << "][" << i1 << "] - surface is " << nsurface);
+                MSG_VERBOSE("                       - decrement to bin [" << p0 << "][" << i1 << "] - surface is " << nsurface);
                 if (nsurface && nsurface != surface) break;
             }       
             // find the next neighbour in Loc0
             nsurface = surface;
             while (increment(n0,bins0,open0) && surface == nsurface){
                 nsurface = surfaceArrayObjects.at(i1).at(n0);
-                //MSG_VERBOSE("                       - increment to bin [" << n0 << "][" << i1 << "] - surface is " << nsurface);
+                MSG_VERBOSE("                       - increment to bin [" << n0 << "][" << i1 << "] - surface is " << nsurface);
                 if (nsurface && nsurface != surface) break;
             }
             // find the previous neighbour in Loc1
             nsurface = surface;
             while (decrement(p1,bins1,open1) && surface == nsurface){
                 nsurface = surfaceArrayObjects.at(p1).at(i0);
-                //MSG_VERBOSE("                       - decrement to bin [" << i0 << "][" << p1 << "] - surface is " << nsurface);
+                MSG_VERBOSE("                       - decrement to bin [" << i0 << "][" << p1 << "] - surface is " << nsurface);
                 if (nsurface && nsurface != surface) break;
             }
             // find the next neighbour in Loc1
             nsurface = surface;
             while (increment(n1,bins1,open1) && surface == nsurface){
                 nsurface = surfaceArrayObjects.at(n1).at(i0);
-                //MSG_VERBOSE("                       - increment to bin [" << i0 << "][" << n1 << "] - surface is " << nsurface);
+                MSG_VERBOSE("                       - increment to bin [" << i0 << "][" << n1 << "] - surface is " << nsurface);
                 if (nsurface && nsurface != surface) break;
             }
             // end th detector element
             const DetectorElementBase* element = surface->associatedDetectorElement();
-            //MSG_VERBOSE("    element neighbour search for grid [" <<  p0 << " | " << i0 << " | " << n0 << "]  x [ " << p1 << " | " << i1 << " | " << n1 << " ]");
+            MSG_VERBOSE("    element neighbour search for grid [" <<  p0 << " | " << i0 << " | " << n0 << "]  x [ " << p1 << " | " << i1 << " | " << n1 << " ]");
             // bools for breaking
             bool processNext1 = true; bool zero1passed = false;
             // now the previous and next bins are defined
@@ -306,11 +305,11 @@ void Acts::SurfaceArrayCreator::registerNeighboursGrid(const std::vector< std::v
                    zero0passed = zero0passed ? zero0passed : !ipn0;
                    // skip the main bin 
                    if (ipn0 == i0 && ipn1 == i1){
-                       //MSG_VERBOSE("                       - skipping the bin [" << ipn0 << "][" << ipn1 << "]");
+                       MSG_VERBOSE("                       - skipping the bin [" << ipn0 << "][" << ipn1 << "]");
                        continue;
                    }
                    const DetectorElementBase* pnElement = surfaceArrayObjects.at(ipn1).at(ipn0) ? surfaceArrayObjects.at(ipn1).at(ipn0)->associatedDetectorElement() : nullptr;
-                   //MSG_VERBOSE("                       - neighbour at bin [" << ipn0 << "][" << ipn1 << "] - element is " << pnElement);
+                   MSG_VERBOSE("                       - neighbour at bin [" << ipn0 << "][" << ipn1 << "] - element is " << pnElement);
                    if (element != pnElement && pnElement){  
                        // we can prevent double filling already here 
                        if (std::find(neighbourElements.begin(),neighbourElements.end(),pnElement) == neighbourElements.end())
@@ -340,8 +339,8 @@ void Acts::SurfaceArrayCreator::registerNeighboursGrid(const std::vector< std::v
                 expectedNeighbours = (open0 && (p0==i0 || n0==i0)) ? 1 : 2;
             } 
             if (!correctlyConnected || !neighbours) {
-                //MSG_WARNING("This element has " << neighbours << " neighbours, should be " << expectedNeighbours);
-                //MSG_WARNING("    the grid for [" <<  p0 << " | " << i0 << " | " << n0 << "]  x [ " << p1 << " | " << i1 << " | " << n1 << " ]");
+                MSG_WARNING("This element has " << neighbours << " neighbours, should be " << expectedNeighbours);
+                MSG_WARNING("    the grid for [" <<  p0 << " | " << i0 << " | " << n0 << "]  x [ " << p1 << " | " << i1 << " | " << n1 << " ]");
             }
             // register and move to the next
             element->registerNeighbours(neighbourElements);

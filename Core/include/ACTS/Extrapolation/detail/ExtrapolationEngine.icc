@@ -123,7 +123,7 @@ template <class T> Acts::ExtrapolationCode Acts::ExtrapolationEngine::initNaviga
       if (eCell.endLayer)
           EX_MSG_VERBOSE( eCell.navigationStep, "navigation", "", "end layer termined with index : " << eCell.endLayer->geoID());
     } else
-        EX_MSG_VERBOSE( eCell.navigationStep, "navigation", "", "no destination surface nor end volume provided, extrapolaiton has to stop on other means." );
+        EX_MSG_VERBOSE( eCell.navigationStep, "navigation", "", "no destination surface nor end volume provided, extrapolation has to stop by other means." );
     // return the progress call
     return ExtrapolationCode::InProgress;
 }
