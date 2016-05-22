@@ -23,11 +23,6 @@ set (ACTS_VERSION 0.01.00)
 # convert the version into a plain number to be used in the version header file
 string (REPLACE "." "" ACTS_VERSION_NUMBER ${ACTS_VERSION})
 
-# default installation direction
-if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set (CMAKE_INSTALL_PREFIX "/opt/ACTS/${ACTS_VERSION}" CACHE PATH "installation directory" FORCE)
-endif (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-
 # default parameter definitions
 set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "default track parameter definition")
 
