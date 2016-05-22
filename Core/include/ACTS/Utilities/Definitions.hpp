@@ -15,7 +15,11 @@
 #define EIGEN_TRANSFORM_PLUGIN "ACTS/Utilities/detail/TransformPlugin.hpp"
 
 // external include(s)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <Eigen/Dense>
+#pragma GCC diagnostic pop
+
 
 #ifdef TRKDETDESCR_USEFLOATPRECISON
 typedef float TDD_real_t;
