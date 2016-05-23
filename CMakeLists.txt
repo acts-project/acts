@@ -32,6 +32,9 @@ set (ACTS_MSG_MACROS_PLUGIN "ACTS/Utilities/detail/DefaultMsgMacros.hpp" CACHE F
 # finding boost on lxplus does not work with standard boost-cmake look up
 set (Boost_NO_BOOST_CMAKE ON CACHE BOOL "disable boost-cmake find mechanism")
 
+# initialize empty list of built components
+set (_supported_components)
+
 # delegate
 add_subdirectory (Core)
 add_subdirectory (doc)

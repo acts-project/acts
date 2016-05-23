@@ -16,9 +16,13 @@ configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/ACTSConfig.cmake.in
 # - install and export
 install(FILES "${PROJECT_BINARY_DIR}/ACTSConfigVersion.cmake" "${PROJECT_BINARY_DIR}/ACTSConfig.cmake"
 	DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/cmake/ACTS")
-install(EXPORT ACTSTargets NAMESPACE ACTS:: DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/cmake/ACTS")
+
+message (STATUS "${_supported_components}")
+foreach (_comp ${_supported_components})
+  install (EXPORT ACTS${_comp}Targets NAMESPACE ACTS:: DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/cmake/ACTS")
+endforeach ()
 
 # hack to fix INTERFACE_COMPILE_DEFINITIONS
-add_custom_target (fix python ${PROJECT_SOURCE_DIR}/cmake/fix-cmake-target-file.py ACTSTargets.cmake
+add_custom_target (fix python ${PROJECT_SOURCE_DIR}/cmake/fix-cmake-target-file.py ACTSCoreTargets.cmake
 		       WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/cmake/ACTS VERBATIM)
 install(CODE "execute_process(COMMAND \"${CMAKE_COMMAND}\" --build \"${CMAKE_BINARY_DIR}\" --target fix)")
