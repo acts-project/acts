@@ -38,9 +38,9 @@ namespace Acts {
       
       public :
       
-       enum eMode {    
-         Direct                        =  1,  // call propagator directly, no navigation 
-         Destination                   =  2,  // try to hit the destination, if not other means to stop
+       enum eMode {
+         Destination                   =  1,  // try to hit the destination, if not other means to stop
+         Propagation                   =  2,  // any propagation filling by the propagator that is not the destination call
          StopWithPathLimit             =  3,  // stop when the path limit is reached
          StopWithMaterialLimitX0       =  4,  // stop when the material limit is reached in X0
          StopWithMaterialLimitL0       =  5,  // stop when the material limit is reached in L0
@@ -211,8 +211,6 @@ namespace Acts {
             const TrackingVolume*                   endVolume;              //!< the end Volume - can be optionally nullptr (needs other trigger to stop)
             const Layer*                            endLayer;               //!< the end Layer  - can be optionally nullptr (needs other trigger to stop)
             const Surface*                          endSurface;             //!< keep track of the destination surface - can be optionally 0
-
-            std::unique_ptr<const T>                stepParameters;         //!< newly created parametrs by the propagation or material effects update
         
             const T*                                leadParameters;         //!< the one last truely valid parameter in the stream
             const TrackingVolume*                   leadVolume;             //!< the lead Volume - carrying the navigation stream
@@ -268,7 +266,6 @@ namespace Acts {
             endVolume(nullptr),
             endLayer(nullptr),
             endSurface(nullptr),
-            stepParameters(nullptr),
             leadParameters(&sParameters),
             leadVolume(nullptr),
             leadLayer(nullptr),
@@ -316,9 +313,12 @@ namespace Acts {
           
           /** check if you are still at the last boundary surface */
           bool onLastBoundary() const { return (leadParameters == lastBoundaryParameters); }
-          
+        
+          /** turn the last step's parameters into the final parameters */
+          void checkoutLastStep();
+        
           /** fill or attach the parameters from a step */
-          void step(ExtrapolationMode::eMode fillMode);
+          void step(std::unique_ptr<const T> stepParameters, ExtrapolationMode::eMode fillMode = ExtrapolationMode::Propagation);
           
           /** fill transport information - path length and TransportJacobian 
               - jacobians need to be cleared */
@@ -343,8 +343,11 @@ namespace Acts {
           bool finalVolumeReached() const { return (leadVolume==endVolume && endVolume); }
 
           /** the materialLimitReached */
-          bool pathLimitReached(double tolerance=0.001) const { 
-	      return (checkConfigurationMode(Acts::ExtrapolationMode::StopWithPathLimit) && reachedLimit(pathLength,pathLimit,tolerance) );
+          bool pathLimitReached(double tolerance=0.001, bool checkout = true) {
+            bool reached = checkConfigurationMode(Acts::ExtrapolationMode::StopWithPathLimit) && reachedLimit(pathLength,pathLimit,tolerance);
+            if (reached && checkout)
+                endParameters = std::move(extrapolationSteps.back().parameters);
+            return reached;
           }
           
           /** the materialLimitReached */
@@ -387,7 +390,6 @@ namespace Acts {
         
     };
 
-
     template <class T> void ExtrapolationCell<T>::restartAtDestination() {
         /** set end to start - and reset the rest */
         startParameters             = endParameters;
@@ -411,11 +413,13 @@ namespace Acts {
         // clear the vector
         extrapolationSteps.clear();        
     }
-
-    template <class T>  void ExtrapolationCell<T>::step(Acts::ExtrapolationMode::eMode fillMode)
+    
+    
+    template <class T>  void ExtrapolationCell<T>::step(std::unique_ptr<const T> stepParameters, Acts::ExtrapolationMode::eMode fillMode)
     {  
    
-       // move the prop parameters into the cache and set them to the new lead parameters
+       // move the step parameters into the step cache
+       // and set them to the new lead parameters
        leadParameters = stepParameters.get();
        // current step surface
        const Surface* cssf = &(stepParameters->associatedSurface());
@@ -425,9 +429,9 @@ namespace Acts {
        if (cssf != lssf)
            extrapolationSteps.push_back(ExtrapolationStep<T>());
        // fill the parameters (memory membership goes to the steps), the surface and add the mode
-       extrapolationSteps.at(extrapolationSteps.size()-1).parameters = std::move(stepParameters);
-       extrapolationSteps.at(extrapolationSteps.size()-1).surface    = cssf;
-       extrapolationSteps.at(extrapolationSteps.size()-1).stepConfiguration.addMode(fillMode);
+       extrapolationSteps.back().parameters = std::move(stepParameters);
+       extrapolationSteps.back().surface    = cssf;
+       extrapolationSteps.back().stepConfiguration.addMode(fillMode);
     }
     
     template <class T>  void ExtrapolationCell<T>::stepTransport(const Surface& sf,
@@ -438,26 +442,25 @@ namespace Acts {
        // current step surface
        const Surface* cssf = &sf;
        // get the last step surface - if it is identical with the current one -> attach information
-       const Surface* lssf = extrapolationSteps.size() ? extrapolationSteps.at(extrapolationSteps.size()-1).surface : 0;
+       const Surface* lssf = extrapolationSteps.size() ? extrapolationSteps.at(extrapolationSteps.size()-1).surface : nullptr;
        // only create a new step for a transport jacobian
        if (tjac){
            // create a new step 
            if (cssf != lssf)
                extrapolationSteps.push_back(ExtrapolationStep<T>());
            // set the surface
-           extrapolationSteps.at(extrapolationSteps.size()-1).surface    = cssf;
+           extrapolationSteps.back().surface    = cssf;
            // set the the transport information 
-           extrapolationSteps.at(extrapolationSteps.size()-1).transportJacobian = std::move(tjac);
-           extrapolationSteps.at(extrapolationSteps.size()-1).stepConfiguration.addMode(Acts::ExtrapolationMode::CollectJacobians);
+           extrapolationSteps.back().transportJacobian = std::move(tjac);
+           extrapolationSteps.back().stepConfiguration.addMode(Acts::ExtrapolationMode::CollectJacobians);
            // fill the step path length
            if (pLength > 0.){
-               extrapolationSteps.at(extrapolationSteps.size()-1).pathLength = pLength;
-               extrapolationSteps.at(extrapolationSteps.size()-1).stepConfiguration.addMode(Acts::ExtrapolationMode::CollectPathSteps);
+               extrapolationSteps.back().pathLength = pLength;
+               extrapolationSteps.back().stepConfiguration.addMode(Acts::ExtrapolationMode::CollectPathSteps);
            }
-       } else {
-           // let's just fill the pathLength information
-           pathLength += pLength;
        }
+       // also update the global pathLength information
+       pathLength += pLength;
     }
     
     

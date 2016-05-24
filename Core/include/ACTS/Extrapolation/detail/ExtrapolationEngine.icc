@@ -34,8 +34,6 @@ template <class T> Acts::ExtrapolationCode Acts::ExtrapolationEngine::extrapolat
         EX_MSG_VERBOSE(eCell.navigationStep, "extrapolate", "", "returned from volume with return code : " << eCode.toString() << " and geoType:"<< geoType );
     }
     EX_MSG_DEBUG(eCell.navigationStep, "extrapolate", "", "extrapolation finished with return code : " << eCode.toString() );
-    // before you return, set the final parameters
-    eCell.endParameters = std::move(eCell.stepParameters);
     // return the code
     return eCode;
 }
@@ -103,9 +101,13 @@ template <class T> Acts::ExtrapolationCode Acts::ExtrapolationEngine::initNaviga
           // use a propagation to find the endVolume and endLayer
           // @TODO can be opmisied (straight line for high momentum - use directly )
           ExtrapolationCell<T> navCell(*eCell.leadParameters, dir);
-          navCell.addConfigurationMode(ExtrapolationMode::Direct);
           // screen output
-          ExtrapolationCode eCode = m_config.propagationEngine->propagate(navCell,*eCell.endSurface,anyDirection,false, eCell.navigationCurvilinear);
+          ExtrapolationCode eCode = m_config.propagationEngine->propagate(navCell,
+                                                                          *eCell.endSurface,
+                                                                          anyDirection,
+                                                                          ExtrapolationMode::Destination,
+                                                                          false,
+                                                                          eCell.navigationCurvilinear);
           // check for sucess to the destination
           //@TODO check what this is
            CHECK_ECODE_SUCCESS_NODEST(navCell, eCode);

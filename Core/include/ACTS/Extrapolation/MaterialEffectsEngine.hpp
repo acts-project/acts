@@ -91,14 +91,15 @@ namespace Acts {
      
     private:
       const Logger& logger() const {return *m_config.logger;}
-      /** charged extrapolation - depending on the MaterialUpdateStage -
-        it either manipulates or creates new parameters
-        @TODO check for memory handling
-        */
-      const TrackParameters* updateTrackParameters(const Acts::TrackParameters& parameters,
-                                                   Acts::ExCellCharged& eCell,
-                                                   Acts::PropDirection dir,
-                                                   Acts::MaterialUpdateStage matupstage) const; 
+      /** charged extrapolation 
+          depending on the MaterialUpdateStage:
+            - postUpdate : creates a new unique_ptr and stores them as step parameters
+            - preUpdate | fullUpdate : manipulates the parameters and returns a nullptr
+           nothing to do (e.g. no material) : return nullptr */
+      void updateTrackParameters(const TrackParameters& parameters,
+                                 ExCellCharged& eCell,
+                                 PropDirection dir,
+                                 MaterialUpdateStage matupstage) const;
         
       MaterialInteraction    m_interactionFormulae;     //!< the formulas concentrated
       ParticleMasses         m_particleMasses;          //!< struct of Particle masses

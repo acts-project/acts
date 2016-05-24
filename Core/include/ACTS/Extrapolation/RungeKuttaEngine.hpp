@@ -196,13 +196,15 @@ namespace Acts {
       ExtrapolationCode propagate(ExCellCharged& ecCell,
                                   const Surface& sf,
                                   PropDirection dir=alongMomentum,
+                                  ExtrapolationMode::eMode purpose = ExtrapolationMode::Destination,
                                   const BoundaryCheck& bcheck = true,
-                                  bool returnCurvilinear = true) const final;  
+                                  bool returnCurvilinear = true) const final;
 
       /** resolve the boundary situation - for neutral particles */
       ExtrapolationCode propagate(ExCellNeutral& enCell,
                                   const Surface& sf,
                                   PropDirection dir=alongMomentum,
+                                  ExtrapolationMode::eMode purpose = ExtrapolationMode::Destination,
                                   const BoundaryCheck& bcheck = true,
                                   bool returnCurvilinear = true) const final;
                                   
