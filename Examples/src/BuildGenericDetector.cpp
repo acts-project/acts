@@ -7,8 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // ACTS include(s)
-#include "ACTS/Examples/GenericDetectorExample/BuildGenericDetector.hpp"
-#include "ACTS/Examples/GenericDetectorExample/GenericLayerBuilder.hpp"
+#include "ACTS/Examples/BuildGenericDetector.hpp"
+#include "ACTS/Examples/GenericLayerBuilder.hpp"
 #include "ACTS/Detector/TrackingGeometry.hpp"
 #include "ACTS/Material/Material.hpp"
 #include "ACTS/Tools/LayerCreator.hpp"

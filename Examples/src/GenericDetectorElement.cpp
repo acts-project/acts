@@ -11,7 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 // Acts module
-#include "ACTS/Examples/GenericDetectorExample/GenericDetectorElement.hpp"
+#include "ACTS/Examples/GenericDetectorElement.hpp"
 // Geometry module
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
