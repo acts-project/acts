@@ -2,23 +2,25 @@
 file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 
 # define library target
-add_library(ACTSGenericDetectorExample SHARED ${src_files})
-target_include_directories(ACTSGenericDetectorExample PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
-target_compile_options(ACTSGenericDetectorExample PUBLIC -std=c++14)
-target_link_libraries(ACTSGenericDetectorExample PUBLIC ACTSCore)
+add_library (ACTSExamples SHARED ${src_files})
+target_include_directories (ACTSExamples PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
+target_compile_options (ACTSExamples PUBLIC -std=c++14)
+target_link_libraries (ACTSExamples PUBLIC ACTSCore)
 
 # define executables
-add_executable(ACTSGenericDetector bin/main.cxx)
-target_include_directories(ACTSGenericDetector PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
-target_compile_options(ACTSGenericDetector PRIVATE -std=c++14)
-target_link_libraries(ACTSGenericDetector PRIVATE ACTSCore ACTSGenericDetectorExample)
+add_executable (ACTSGenericDetector bin/main.cxx)
+target_include_directories (ACTSGenericDetector PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
+target_compile_options (ACTSGenericDetector PRIVATE -std=c++14)
+target_link_libraries (ACTSGenericDetector PRIVATE ACTSCore ACTSExamples)
 
 # set installation directories
-install (TARGETS ACTSGenericDetectorExample ACTSGenericDetector
+install (TARGETS ACTSExamples
 	 EXPORT ACTSExamplesTargets
 	 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-	 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 	 COMPONENT Examples)
+
+install (TARGETS ACTSGenericDetector
+	 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 install (DIRECTORY include/ACTS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 	 COMPONENT Examples)
