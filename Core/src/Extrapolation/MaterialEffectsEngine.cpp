@@ -100,24 +100,37 @@ Acts::ExtrapolationCode Acts::MaterialEffectsEngine::handleMaterial(Acts::ExCell
     if (mSurface && mSurface->surfaceMaterial()){
         EX_MSG_DEBUG( ++eCell.navigationStep, "layer",  mLayer->geoID().value(), "handleMaterial for charged parameters called.");
         // update the track parameters
+        updateTrackParameters(*eCell.leadParameters,eCell,dir,matupstage);
+
+        // check if material filling was requested
+        //if (eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial)){
+        //    EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "collecting material of [t/X0] = " << thicknessInX0);
+        //    eCell.stepMaterial(*mSurface, eCell.leadLayer, eCell.leadParameters->position(), pathCorrection, materialProperties);
+        //} else {
+        //    EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "adding material of [t/X0] = " << thicknessInX0);
+        //    eCell.addMaterial(pathCorrection, materialProperties);
+       // }
+        
         // @TODO sort out interface of track parameter update
-        // eCell.leadParameters = updateTrackParameters(eCell.leadParameters,eCell,dir,matupstage);
+        //eCell.stepParameters =
+        //
+        //updateTrackParameters(eCell.leadParameters,eCell,dir,matupstage);
     }
     // only in case of post update it should not return InProgress
     return ExtrapolationCode::InProgress;
 }
 
 /** charged extrapolation */
-const Acts::TrackParameters* Acts::MaterialEffectsEngine::updateTrackParameters(const Acts::TrackParameters& parameters,
-                                                                                Acts::ExCellCharged& eCell,
-                                                                                Acts::PropDirection dir,
-                                                                                Acts::MaterialUpdateStage matupstage) const 
+void Acts::MaterialEffectsEngine::updateTrackParameters(const Acts::TrackParameters& parameters,
+                                                        Acts::ExCellCharged& eCell,
+                                                        Acts::PropDirection dir,
+                                                        Acts::MaterialUpdateStage matupstage) const
 {
     // the material surface & it's material
     const Surface* mSurface = eCell.materialSurface;
     const Layer*   mLayer   = eCell.leadLayer;
     // return if you have nothing to do
-    if (!mSurface || !mSurface->surfaceMaterial()) return (&parameters);
+    if (!mSurface || !mSurface->surfaceMaterial()) return;
 
     // path correction
     double pathCorrection = mSurface->pathCorrection(parameters.position(),dir*(parameters.momentum()));
@@ -128,7 +141,7 @@ const Acts::TrackParameters* Acts::MaterialEffectsEngine::updateTrackParameters(
     if (mFactor == 0.){
         EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "material update with "  << (matupstage > 0. ? "pre " : "post ")  << "factor 0. No update done.");
         // return the parameters untouched -
-        return (&parameters);
+        return;
     }
     pathCorrection = mFactor*pathCorrection;
     // screen output
@@ -167,7 +180,7 @@ const Acts::TrackParameters* Acts::MaterialEffectsEngine::updateTrackParameters(
             // update the covariance if needed
             if (uCovariance)
     	       (*uCovariance)(eQOP, eQOP) += sign*sigmaQoverP*sigmaQoverP;
-	}
+        }
         // (B) - update the covariance if needed
         if (uCovariance && m_config.mscCorrection){
 	        /** multiple scattering as function of dInX0 */
@@ -179,6 +192,21 @@ const Acts::TrackParameters* Acts::MaterialEffectsEngine::updateTrackParameters(
 	        (*uCovariance)(ePHI,ePHI)      += sign*sigmaDeltaPhiSq;
 	        (*uCovariance)(eTHETA,eTHETA)  += sign*sigmaDeltaThetaSq;
         }
+        
+        // now either create new ones or update - only start parameters can not be updated
+        if (eCell.leadParameters != &eCell.startParameters ){
+            EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "material update on non-initial parameters.");
+            // @TODO how to update parameters
+            // parameters.updateParameters(uParameters,uCovariance);
+        } else {
+            EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "material update on initial parameters, creating new ones.");
+            // create new parameters
+            const Surface& tSurface = parameters.associatedSurface();
+            // these are newly created
+            auto stepParameters = std::move(std::make_unique<const BoundParameters>(std::move(uCovariance),uParameters,tSurface));
+            eCell.step(std::move(stepParameters), ExtrapolationMode::CollectMaterial);
+        }
+        
         // check if material filling was requested
         if (eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial)){
 	        EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "collecting material of [t/X0] = " << thicknessInX0); 
@@ -187,19 +215,7 @@ const Acts::TrackParameters* Acts::MaterialEffectsEngine::updateTrackParameters(
 	        EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "adding material of [t/X0] = " << thicknessInX0);
 	        eCell.addMaterial(pathCorrection, materialProperties);
         }
-        // now either create new ones or update - only start parameters can not be updated
-        if (eCell.leadParameters != &eCell.startParameters ){
-            EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "material update on non-initial parameters.");
-            // @TODO how to update parameters ?!?
-            // parameters.updateParameters(uParameters,uCovariance);
-        } else {
-            EX_MSG_VERBOSE(eCell.navigationStep, "layer",  mLayer->geoID().value(), "material update on initial parameters, creating new ones.");
-            // create new parameters
-            const Surface& tSurface = parameters.associatedSurface();
-            const TrackParameters* tParameters = new BoundParameters(std::move(uCovariance),uParameters,tSurface);
-	      // these are newly created
-	      return tParameters;
-        }
+
     }
-    return (&parameters);
+    return;
 }
