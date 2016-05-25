@@ -38,11 +38,9 @@ std::unique_ptr<Acts::TrackingGeometry> Acts::DD4hepCylinderGeometryBuilder::tra
     Acts::TrackingVolumePtr    highestVolume = nullptr;
     Acts::TrackingVolumePtr beamPipeVolume   = nullptr;
     
-    // get the DD4hep world detector element
-    DD4hep::Geometry::DetElement detWorld = m_config.DD4hepGeometrySvc->worldDetElement();
     // get the sub detectors
     std::vector<DD4hep::Geometry::DetElement> detElements;
-    const DD4hep::Geometry::DetElement::Children& children = detWorld.children();
+    const DD4hep::Geometry::DetElement::Children& children = m_config.detWorld.children();
     for (auto& detElement : children) detElements.push_back(detElement.second);
     //sort by id to build detector from bottom to top
     sort(detElements.begin(),detElements.end(),

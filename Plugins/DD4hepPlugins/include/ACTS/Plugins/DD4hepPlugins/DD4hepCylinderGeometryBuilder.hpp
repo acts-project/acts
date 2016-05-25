@@ -47,12 +47,12 @@ namespace Acts {
         
             std::shared_ptr<ITrackingVolumeBuilder>     volumeBuilder; //!< building the contained sub detectors
             std::shared_ptr<ITrackingVolumeHelper>      volumeHelper; //!< helper tool needed for volume building
-            std::shared_ptr<IDD4hepGeometrySvc>         DD4hepGeometrySvc; //!< service providing the DD4hep geometry
+            DD4hep::Geometry::DetElement                detWorld;     //!< world detector element of the DD4hep geometry
             
             Config() :
                 volumeBuilder(nullptr),
                 volumeHelper(nullptr),
-                DD4hepGeometrySvc(nullptr)
+                detWorld()
             {}
         };
         
@@ -68,7 +68,7 @@ namespace Acts {
         /** get the configuration object */
         Config getConfiguration() const;
         
-        /** TrackingGeometry Interface method */
+        /** TrackingGeometry Interface method - translates the DD4hep geometry into the tracking geometry*/
         std::unique_ptr<TrackingGeometry> trackingGeometry() const override;
         
     private:
