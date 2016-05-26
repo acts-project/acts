@@ -25,8 +25,14 @@ target_compile_definitions (ACTSCore PUBLIC -DACTS_PARAMETER_DEFINITIONS_PLUGIN=
 target_compile_definitions (ACTSCore PUBLIC -DACTS_MSG_MACROS_PLUGIN="${ACTS_MSG_MACROS_PLUGIN}")
 
 # set installation directories
-install (TARGETS ACTSCore EXPORT ACTSTargets
+install (TARGETS ACTSCore EXPORT ACTSCoreTargets
 	 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-	 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+	 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	 COMPONENT Core)
 
-install (DIRECTORY include/ACTS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install (DIRECTORY include/ACTS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+	 COMPONENT Core)
+
+# add to list of supported components
+list (APPEND _supported_components Core)
+set (_supported_components "${_supported_components}" PARENT_SCOPE)

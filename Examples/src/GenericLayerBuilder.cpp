@@ -31,8 +31,8 @@
 #include "ACTS/Material/MaterialProperties.hpp"
 #include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
 // A generic detector
-#include "ACTS/Examples/GenericDetectorExample/GenericLayerBuilder.hpp"
-#include "ACTS/Examples/GenericDetectorExample/GenericDetectorElement.hpp"
+#include "ACTS/Examples/GenericLayerBuilder.hpp"
+#include "ACTS/Examples/GenericDetectorElement.hpp"
 
 #include <iostream>
 
