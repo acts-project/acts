@@ -40,7 +40,7 @@ m_supportStructure(support),
 m_modules()
 {}
 
-Acts::DetExtension::DetExtension(std::vector<DD4hep::Geometry::DetElement> mod) :
+Acts::DetExtension::DetExtension(std::vector<Module> mod) :
 Acts::IDetExtension(),
 m_segmentation(nullptr),
 m_shape(Acts::ShapeType::None),
