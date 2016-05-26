@@ -97,6 +97,7 @@ namespace Acts {
             std::shared_ptr<ILayerBuilder>                      posnegPassiveLayerBuilder;
             
             Config() :
+	      logger(getDefaultLogger("GenericLayerBuilder",Logging::INFO)),
                 layerIdentification(""),
                 approachSurfaceEnvelope(0.5),
                 centralLayerBinPhimultiplier(1),
