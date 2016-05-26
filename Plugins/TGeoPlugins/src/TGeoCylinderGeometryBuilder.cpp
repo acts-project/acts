@@ -1,5 +1,5 @@
 //
-//  TGeoGdmlCylinderGeometryBuilder.cpp
+//  TGeoCylinderGeometryBuilder.cpp
 //  ACTS-Development
 //
 //  Created by Andreas Salzburger on 25/05/16.
@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 
-#include "ACTS/Plugins/TGeoPlugins/TGeoGdmlCylinderGeometryBuilder.hpp"
+#include "ACTS/Plugins/TGeoPlugins/TGeoCylinderGeometryBuilder.hpp"
 #include "ACTS/Plugins/TGeoPlugins/TGeoDetectorElement.hpp"
 // Geometry module
 #include "ACTS/Detector/TrackingGeometry.hpp"
@@ -21,18 +21,17 @@
 
 #include "TGeoManager.h"
 
-Acts::TGeoGdmlCylinderGeometryBuilder::TGeoGdmlCylinderGeometryBuilder(const Acts::TGeoGdmlCylinderGeometryBuilder::Config& dgbConfig) :
-Acts::ITrackingGeometryBuilder(),
-m_tgManager(new TGeoManager("TGeoManagerGDML","TGeo GDML Manager"))
+Acts::TGeoCylinderGeometryBuilder::TGeoCylinderGeometryBuilder(const Acts::TGeoCylinderGeometryBuilder::Config& dgbConfig) :
+Acts::ITrackingGeometryBuilder()
 {
     setConfiguration(dgbConfig);
 }
 
-Acts::TGeoGdmlCylinderGeometryBuilder::~TGeoGdmlCylinderGeometryBuilder()
+Acts::TGeoCylinderGeometryBuilder::~TGeoCylinderGeometryBuilder()
 {}
 
 // configuration
-void Acts::TGeoGdmlCylinderGeometryBuilder::setConfiguration(const Acts::TGeoGdmlCylinderGeometryBuilder::Config& dgbConfig)
+void Acts::TGeoCylinderGeometryBuilder::setConfiguration(const Acts::TGeoCylinderGeometryBuilder::Config& dgbConfig)
 {
     // @TODO check consistency
     // copy the configuration
@@ -40,15 +39,15 @@ void Acts::TGeoGdmlCylinderGeometryBuilder::setConfiguration(const Acts::TGeoGdm
 }
 
 
-std::unique_ptr<Acts::TrackingGeometry> Acts::TGeoGdmlCylinderGeometryBuilder::trackingGeometry() const
+std::unique_ptr<Acts::TrackingGeometry> Acts::TGeoCylinderGeometryBuilder::trackingGeometry() const
 {
     
-    // get the TGeoManager
-    TGeoManager::Import(m_config.gdmlFile.c_str());
-    // get the volume
-    
+    // the local cache - @TODO fix this with the detector store
     std::vector<Acts::TGeoDetectorElement*> tgDetectorElement;
-
+    
+    // return if you have no gGeoManager
+    if (!gGeoManager) return nullptr;
+    
     //  now get the volumes chosen for translating
     for (auto volumeCfg : m_config.volumeConfigs){
         // translating layer volume ID
@@ -78,10 +77,10 @@ std::unique_ptr<Acts::TrackingGeometry> Acts::TGeoGdmlCylinderGeometryBuilder::t
         
     }
     
-    //return nullptr;
+    return nullptr;
 }
 
-void Acts::TGeoGdmlCylinderGeometryBuilder::collectSensitive(TGeoVolume* tgVolume, TGeoNode* tNode, const std::string& sensitiveName, std::vector<TGeoNode*>& sensitiveNodes)const
+void Acts::TGeoCylinderGeometryBuilder::collectSensitive(TGeoVolume* tgVolume, TGeoNode* tNode, const std::string& sensitiveName, std::vector<TGeoNode*>& sensitiveNodes)const
 {
     // if it's still the master volume
     if (tgVolume){

@@ -1,13 +1,13 @@
 //
-//  TGeoGdmlCylinderGeometryBuilder.hpp
+//  TGeoCylinderGeometryBuilder.hpp
 //  ACTS-Development
 //
 //  Created by Andreas Salzburger on 25/05/16.
 //
 //
 
-#ifndef ACTS_TGEOPLUGIN_TGEOGDMLCYLINDERGEOMETRYBUILDER_h
-#define ACTS_TGEOPLUGIN_TGEOGDMLCYLINDERGEOMETRYBUILDER_h
+#ifndef ACTS_TGEOPLUGIN_TGeoCylinderGeometryBuilder_h
+#define ACTS_TGEOPLUGIN_TGeoCylinderGeometryBuilder_h
 
 // Geometry module
 #include <memory>
@@ -26,10 +26,10 @@ namespace Acts {
     class ITrackingVolumeHelper;
     class ILayerCreator;
     
-    /** @ class TGeoGdmlCylinderGeometryBuilder 
+    /** @ class TGeoCylinderGeometryBuilder 
 
      */
-    class TGeoGdmlCylinderGeometryBuilder : virtual public Acts::ITrackingGeometryBuilder {
+    class TGeoCylinderGeometryBuilder : virtual public Acts::ITrackingGeometryBuilder {
         
     public:
         
@@ -65,10 +65,10 @@ namespace Acts {
         };
         
         /** Constructor */
-        TGeoGdmlCylinderGeometryBuilder(const Config& dgbConfig);
+        TGeoCylinderGeometryBuilder(const Config& dgbConfig);
         
         /** Destructor */
-        virtual ~TGeoGdmlCylinderGeometryBuilder();
+        virtual ~TGeoCylinderGeometryBuilder();
         
         /** setting the builders and helpers with the configuration object*/
         void setConfiguration(const Config& dgbConfig);
@@ -89,9 +89,9 @@ namespace Acts {
         
     };
     
-    inline TGeoGdmlCylinderGeometryBuilder::Config TGeoGdmlCylinderGeometryBuilder::getConfiguration() const
+    inline TGeoCylinderGeometryBuilder::Config TGeoCylinderGeometryBuilder::getConfiguration() const
     { return m_config; }
     
 }
 
-#endif /* TGeoGdmlCylinderGeometryBuilder_h */
+#endif /* TGeoCylinderGeometryBuilder_h */
