@@ -66,11 +66,13 @@ std::unique_ptr<Acts::SurfaceArray> Acts::SurfaceArrayCreator::surfaceArrayOnCyl
     // create and complete 
     std::vector<SurfacePosition> sVector;
     // complete
-    completeBinning(surfaces, *arrayUtility, sVector, phizSystem);
+    // @TODO - switch on again !!
+    // completeBinning(surfaces, *arrayUtility, sVector, phizSystem);
     // create the surfaceArray
     auto sArray = std::make_unique<BinnedArray2D<const Surface*>>(sVector,arrayUtility);
     // register the neighbours  
-    registerNeighboursGrid(sArray->arrayObjectsOrdered(), false, true);
+    // @TODO
+    // registerNeighboursGrid(sArray->arrayObjectsOrdered(), false, true);
     // return the surface array
     return std::move(sArray);
 } 
@@ -111,7 +113,7 @@ std::unique_ptr<Acts::SurfaceArray> Acts::SurfaceArrayCreator::surfaceArrayOnDis
         arraySurfaces.insert(arraySurfaces.begin(),sArray->arrayObjects().begin(),sArray->arrayObjects().end());
         std::vector< std::vector< const Surface*> > arraySystem = { arraySurfaces };
         // prepared to run the neighbour registration now
-        registerNeighboursGrid(arraySystem, false, true);
+        // registerNeighboursGrid(arraySystem, false, true);
         // now return
         return std::move(sArray);
     } 
@@ -146,11 +148,13 @@ std::unique_ptr<Acts::SurfaceArray> Acts::SurfaceArrayCreator::surfaceArrayOnDis
         rphiSystem.push_back(rSystem);
     }    
     // create and complete 
-    completeBinning(surfaces, *arrayUtility, sVector, rphiSystem);
+    // @TODO
+    // completeBinning(surfaces, *arrayUtility, sVector, rphiSystem);
     // create the surfaceArray
     auto sArray = std::make_unique<BinnedArray2D<const Surface*>>(sVector,arrayUtility);
     // register the neighbours  
-    registerNeighboursGrid(sArray->arrayObjectsOrdered(), false, true);
+    // @TODO
+    // registerNeighboursGrid(sArray->arrayObjectsOrdered(), false, true);
     // return the surface array
     return std::move(sArray);
 }
