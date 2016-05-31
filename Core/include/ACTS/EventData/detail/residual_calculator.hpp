@@ -2,8 +2,8 @@
 #define ACTS_RESIDUAL_CALCULATOR_H 1
 
 // ACTS include(s)
-#include "ACTS/Utilities/AlgebraDefinitions.h"
-#include "ACTS/Utilities/ParameterDefinitions.h"
+#include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts
 {

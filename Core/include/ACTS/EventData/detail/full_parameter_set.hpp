@@ -6,7 +6,7 @@
 #include <utility>
 
 // ACTS include(s)
-#include "ACTS/Utilities/ParameterDefinitions.h"
+#include "ACTS/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts
 {

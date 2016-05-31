@@ -22,10 +22,10 @@ namespace Acts
   class SingleCurvilinearTrackParameters : public SingleTrackParameters<ChargePolicy>
   {
   public:
-    typedef typename SingleTrackParameters<ChargePolicy>::Cov_uptr Cov_uptr;
+    typedef typename SingleTrackParameters<ChargePolicy>::CovPtr_t  CovPtr_t;  ///< type of covariance matrix
 
     template<typename T = ChargePolicy,std::enable_if_t<std::is_same<T,ChargedPolicy>::value,int> = 0>
-    SingleCurvilinearTrackParameters(Cov_uptr cov,
+    SingleCurvilinearTrackParameters(CovPtr_t cov,
                                      const ActsVectorD<3>& position,
                                      const ActsVectorD<3>& momentum,
                                      double dCharge):
@@ -36,7 +36,7 @@ namespace Acts
     {}
 
     template<typename T = ChargePolicy,std::enable_if_t<std::is_same<T,NeutralPolicy>::value,int> = 0>
-    SingleCurvilinearTrackParameters(Cov_uptr cov,
+    SingleCurvilinearTrackParameters(CovPtr_t cov,
                                      const ActsVectorD<3>& position,
                                      const ActsVectorD<3>& momentum):
       SingleTrackParameters<ChargePolicy>(std::move(cov),

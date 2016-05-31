@@ -2,7 +2,7 @@
 #define ACTS_MAKE_PROJECTION_MATRIX_H 1
 
 // ACTS include(s)
-#include "ACTS/Utilities/AlgebraDefinitions.h"
+#include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts
 {

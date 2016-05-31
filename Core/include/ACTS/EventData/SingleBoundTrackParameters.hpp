@@ -20,10 +20,10 @@ namespace Acts
   {
   public:
     typedef typename SingleTrackParameters<ChargePolicy>::ParVector_t ParVector_t;
-    typedef typename SingleTrackParameters<ChargePolicy>::Cov_uptr    Cov_uptr;
+    typedef typename SingleTrackParameters<ChargePolicy>::CovPtr_t    CovPtr_t;
 
     template<typename T = ChargePolicy,std::enable_if_t<std::is_same<T,ChargedPolicy>::value,int> = 0>
-    SingleBoundTrackParameters(Cov_uptr cov,
+    SingleBoundTrackParameters(CovPtr_t cov,
                                const ParVector_t& parValues,
                                const Surface& surface):
       SingleTrackParameters<ChargePolicy>(std::move(cov),
@@ -34,7 +34,7 @@ namespace Acts
     {}
 
     template<typename T = ChargePolicy,std::enable_if_t<std::is_same<T,ChargedPolicy>::value,int> = 0>
-    SingleBoundTrackParameters(Cov_uptr cov,
+    SingleBoundTrackParameters(CovPtr_t cov,
                                const ActsVectorD<3>& position,
                                const ActsVectorD<3>& momentum,
                                double dCharge,
@@ -47,7 +47,7 @@ namespace Acts
     {}
 
     template<typename T = ChargePolicy,std::enable_if_t<std::is_same<T,NeutralPolicy>::value,int> = 0>
-    SingleBoundTrackParameters(Cov_uptr cov,
+    SingleBoundTrackParameters(CovPtr_t cov,
                                const ParVector_t& parValues,
                                const Surface& surface):
       SingleTrackParameters<ChargePolicy>(std::move(cov),
@@ -58,7 +58,7 @@ namespace Acts
     {}
 
     template<typename T = ChargePolicy,std::enable_if_t<std::is_same<T,NeutralPolicy>::value,int> = 0>
-    SingleBoundTrackParameters(Cov_uptr cov,
+    SingleBoundTrackParameters(CovPtr_t cov,
                                const ActsVectorD<3>& position,
                                const ActsVectorD<3>& momentum,
                                const Surface& surface):
