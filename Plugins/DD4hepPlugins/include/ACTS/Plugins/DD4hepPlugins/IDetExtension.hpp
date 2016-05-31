@@ -62,9 +62,9 @@ namespace Acts {
         /* access supporting structure */
         virtual const DD4hep::Geometry::DetElement& supportStructure() const = 0;
         /* possibility to set contained sensitive DetectorModules by a layer*/
-        virtual void setModules(std::vector<Module> mod) = 0;
+        virtual void setModules(std::vector<DD4hep::Geometry::DetElement> mod) = 0;
         /* access modules */
-        virtual std::vector<Module> modules() const = 0;
+        virtual std::vector<DD4hep::Geometry::DetElement> modules() const = 0;
         
     protected:
         /* protected constructor **/

@@ -129,7 +129,7 @@ void Acts::DD4hepGeometryHelper::createCylinderLayers(DD4hep::Geometry::DetEleme
             double thickness = fabs(tube->GetRmax2()-tube->GetRmin1());
             //if necessary receive the modules contained by the layer and create the layer, otherwise create an empty layer
             Acts::IDetExtension* detExtension = detElement.extension<Acts::IDetExtension>();
-            std::vector<Module> modules(detExtension->modules());
+            std::vector<DD4hep::Geometry::DetElement> modules(detExtension->modules());
             if (modules.empty()) centralLayers.push_back(Acts::CylinderLayer::create(transform,cylinderBounds,nullptr,thickness,nullptr,nullptr,Acts::passive));
             else {
                 //create surfaces binned in phi and z
@@ -162,7 +162,7 @@ void Acts::DD4hepGeometryHelper::createDiscLayers(DD4hep::Geometry::DetElement& 
             double thickness = 2.*disc->GetDz();
             //if necessary receive the modules contained by the layer and create the layer, otherwise create empty layer
             Acts::IDetExtension* detExtension = detElement.extension<Acts::IDetExtension>();
-            std::vector<Module> modules(detExtension->modules());
+            std::vector<DD4hep::Geometry::DetElement> modules(detExtension->modules());
             if (modules.empty()) layers.push_back(Acts::DiscLayer::create(transform,discBounds,nullptr,thickness,nullptr,nullptr,Acts::passive));
             else {
                 //create surfaces binned in phi and r
@@ -173,11 +173,10 @@ void Acts::DD4hepGeometryHelper::createDiscLayers(DD4hep::Geometry::DetElement& 
     } //volume has layers
 }
 
-Acts::SurfaceArray* Acts::DD4hepGeometryHelper::createSurfaceArray(std::vector<Module>& modules, Acts::BinningValue lValue, std::shared_ptr<const Acts::Transform3D> motherTransform)
+std::unique_ptr<Acts::SurfaceArray> Acts::DD4hepGeometryHelper::createSurfaceArray(std::vector<DD4hep::Geometry::DetElement>& modules, Acts::BinningValue lValue, std::shared_ptr<const Acts::Transform3D> motherTransform)
 {
     std::vector<const Acts::Surface*> surfaces;
-    for (auto& module : modules) {
-        DD4hep::Geometry::DetElement detElement(module.module());
+    for (auto& detElement : modules) {
         //make here the material mapping
         DD4hep::Geometry::Segmentation segmentation;
         //extract segmentation //change later
@@ -187,18 +186,15 @@ Acts::SurfaceArray* Acts::DD4hepGeometryHelper::createSurfaceArray(std::vector<M
             if (!segmentation) throw "Detector element is sensitive but Segmentation was not handed over in geometry constructor, can not access segmentation";
         }
         else throw "Detector element is not declared sensitive, can not access segmentation";
-        std::vector<std::shared_ptr<const Acts::Transform3D>> placements = module.placements();
-        for (auto& placement : placements) {
-            Acts::DD4hepDetElement* dd4hepDetElement = new Acts::DD4hepDetElement(detElement,segmentation,motherTransform, placement);
-            //add surface to surface vector
-            surfaces.push_back(&(dd4hepDetElement->surface()));
-        }
+        Acts::DD4hepDetElement* dd4hepDetElement = new Acts::DD4hepDetElement(detElement,segmentation,motherTransform);
+        //add surface to surface vector
+        surfaces.push_back(&(dd4hepDetElement->surface()));
     }
     return binnedSurfaceArray2DPhiL(surfaces, lValue);
 }
 
 //creating a surface array binned in phi and a longitudinal direction which can either be z or r
-Acts::SurfaceArray* Acts::DD4hepGeometryHelper::binnedSurfaceArray2DPhiL(const std::vector<const Acts::Surface*> surfaces, Acts::BinningValue lValue)
+std::unique_ptr<Acts::SurfaceArray> Acts::DD4hepGeometryHelper::binnedSurfaceArray2DPhiL(const std::vector<const Acts::Surface*> surfaces, Acts::BinningValue lValue)
 {
     if (surfaces.empty()) throw "Active layer has no surfaces";
     //boundaries in r, first value minimum radius and second value maximum radius of the current cylinder layer

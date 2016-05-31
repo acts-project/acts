@@ -21,7 +21,6 @@
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Utilities/BinnedArray.hpp"
 #include "ACTS/Tools/ITrackingVolumeBuilder.hpp"
-#include "ACTS/Plugins/DD4hepPlugins/Module.hpp"
 // DD4hep
 #include "DD4hep/Detector.hpp"
 
@@ -58,9 +57,9 @@ namespace Acts {
        /**creates disc shaped layers*/
        static void createDiscLayers(DD4hep::Geometry::DetElement& motherDetElement, Acts::LayerVector& layers, std::shared_ptr< Acts::Transform3D> motherTransform = nullptr);
        /**creates a binned array of Acts::Surfaces out of vector of DD4hep detector modules*/
-       static Acts::SurfaceArray* createSurfaceArray(std::vector<Module>& modules, Acts::BinningValue lValue, std::shared_ptr<const Acts::Transform3D> motherTransform = nullptr);
+       static std::unique_ptr<Acts::SurfaceArray> createSurfaceArray(std::vector<DD4hep::Geometry::DetElement>& modules, Acts::BinningValue lValue, std::shared_ptr<const Acts::Transform3D> motherTransform = nullptr);
        /**creating a surface array binned in phi and a longitudinal direction which can either be z or r*/
-       static Acts::SurfaceArray* binnedSurfaceArray2DPhiL(const std::vector<const Acts::Surface*> surfaces, Acts::BinningValue lValue);
+       static std::unique_ptr<Acts::SurfaceArray> binnedSurfaceArray2DPhiL(const std::vector<const Acts::Surface*> surfaces, Acts::BinningValue lValue);
        /**helper method to get the bin values for a binned array out of overlapping modules*/
        static std::vector<float> createBinValues(std::vector<std::pair<float,float>> old);
         /**helper method to sort pairs of doubles*/
