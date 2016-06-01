@@ -16,7 +16,7 @@ add_library (ACTSCore SHARED ${src_files})
 
 # setup include directories
 target_include_directories (ACTSCore PUBLIC ${EIGEN_INCLUDE_DIR})
-target_include_directories (ACTSCore PUBLIC ${BOOST_INCLUDE_DIR})
+target_include_directories (ACTSCore PUBLIC ${Boost_INCLUDE_DIRS})
 target_include_directories (ACTSCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
 
 # set compiler flags
