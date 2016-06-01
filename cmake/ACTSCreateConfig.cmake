@@ -17,7 +17,6 @@ configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/ACTSConfig.cmake.in
 install(FILES "${PROJECT_BINARY_DIR}/ACTSConfigVersion.cmake" "${PROJECT_BINARY_DIR}/ACTSConfig.cmake"
 	DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/cmake/ACTS")
 
-message (STATUS "${_supported_components}")
 foreach (_comp ${_supported_components})
   install (EXPORT ACTS${_comp}Targets NAMESPACE ACTS:: DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/cmake/ACTS")
 endforeach ()
