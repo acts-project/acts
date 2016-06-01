@@ -43,10 +43,10 @@ namespace Acts
   class Measurement
   {
     // check type conditions
-    static_assert(not std::is_copy_constructible<Identifier>::value,"'Identifier' must be copy-constructible");
-    static_assert(not std::is_move_constructible<Identifier>::value,"'Identifier' must be move-constructible");
-    static_assert(not std::is_copy_assignable<Identifier>::value,"'Identifier' must be copy-assignable");
-    static_assert(not std::is_move_assignable<Identifier>::value,"'Identifier' must be move-assignable");
+    static_assert(std::is_copy_constructible<Identifier>::value,"'Identifier' must be copy-constructible");
+    static_assert(std::is_move_constructible<Identifier>::value,"'Identifier' must be move-constructible");
+    static_assert(std::is_copy_assignable<Identifier>::value,"'Identifier' must be copy-assignable");
+    static_assert(std::is_move_assignable<Identifier>::value,"'Identifier' must be move-assignable");
   private:
     // private typedef's
     typedef ParameterSet<params...>    ParSet_t;   ///< type of the underlying ParameterSet object
