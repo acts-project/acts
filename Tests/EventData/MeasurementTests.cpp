@@ -7,9 +7,9 @@
 #include <boost/test/included/unit_test.hpp>
 
 // ACTS include(s)
-#include "CoreUtils/ParameterDefinitions.h"
-#include "Measurement/Measurement.h"
-#include "Surfaces/CylinderSurface.h"
+#include "ACTS/Utilities/ParameterDefinitions.hpp"
+#include "ACTS/EventData/Measurement.hpp"
+#include "ACTS/Surfaces/CylinderSurface.hpp"
 
 namespace Acts
 {

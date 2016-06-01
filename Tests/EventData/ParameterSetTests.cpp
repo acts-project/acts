@@ -12,11 +12,9 @@
 #include <boost/test/included/unit_test.hpp>
 
 // ACTS include(s)
-#include "ParameterSet/ParameterSet.h"
-#include "Algebra/AlgebraDefinitions.h"
-
-// Test include(s)
-//#include "DummyParameterDefs.h"
+#include "ACTS/EventData/ParameterSet.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
+using namespace Acts::detail;
 
 /**
  * @brief Ats namespace

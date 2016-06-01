@@ -1,30 +1,21 @@
-find_package (Boost COMPONENTS unit_test_framework REQUIRED)
-find_package (Eigen3 REQUIRED)
+# allow to turn of unit tests manually
+option (BUILD_TESTS "build unit tests" ON)
 
-include_directories (${Boost_INCLUDE_DIRS}
-		     ${EIGEN_INCLUDE_DIR}
-		     ${CMAKE_SOURCE_DIR}/Core/Algebra
-		     ${CMAKE_SOURCE_DIR}/Core/CoreIdentifier
-		     ${CMAKE_SOURCE_DIR}/Core/CoreUtils
-		     ${CMAKE_SOURCE_DIR}/EventData/ParameterSet
-		     ${CMAKE_SOURCE_DIR}/EventData/EventDataUtils
-		     ${CMAKE_SOURCE_DIR}/EventData/ParametersBase
-		     ${CMAKE_SOURCE_DIR}/EventData/TrackParameters
-		     ${CMAKE_SOURCE_DIR}/EventData/Measurement
-		     ${CMAKE_SOURCE_DIR}/Geometry/Surfaces
-		     ${CMAKE_SOURCE_DIR}/Geometry/DetectorElementBase
-		     ${CMAKE_SOURCE_DIR}/Geometry/GeometryUtils
-		    )
+if (BUILD_TESTS)
+   # we need boost
+   find_package (Boost REQUIRED)
 
-link_directories(${PROJECT_BINARY_DIR}/lib
-				/afs/cern.ch/exp/fcc/sw/0.5/LCG_80/tbb/42_20140122/x86_64-slc6-gcc49-opt/lib
-				/afs/cern.ch/exp/fcc/sw/0.5/LCG_80/Boost/1.59.0_python2.7/x86_64-slc6-gcc49-opt/lib
-				/afs/cern.ch/exp/fcc/sw/0.5/GAUDI/GAUDI_v26r4/InstallArea/x86_64-slc6-gcc49-opt/lib
-				)
-add_definitions (-DBOOST_TEST_DYN_LINK)
-add_executable (ParameterSetTest ParameterSetTests.cxx)
-add_executable (MeasurementTest MeasurementTests.cxx)
-target_link_libraries (ParameterSetTest ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-target_link_libraries (MeasurementTest ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} libSurfaces.so)
-add_test(NAME ParSetUnitTest COMMAND ParameterSetTest)
-add_test(NAME MeasurementUnitTest COMMAND MeasurementTest)
+   if (Boost_FOUND)
+      add_executable (ParameterSetTest ParameterSetTests.cpp)
+      target_include_directories (ParameterSetTest PRIVATE ${Boost_INCLUDE_DIRS})
+      target_link_libraries (ParameterSetTest PRIVATE ACTSCore)
+      add_test(NAME ParSetUnitTest COMMAND ParameterSetTest)
+
+      add_executable (MeasurementTest MeasurementTests.cpp)
+      target_include_directories (MeasurementTest PRIVATE ${Boost_INCLUDE_DIRS})
+      target_link_libraries (MeasurementTest PRIVATE ACTSCore)
+      add_test(NAME MeasurementUnitTest COMMAND MeasurementTest)
+   endif (Boost_FOUND)
+else (BUILD_TESTS)
+  message (STATUS "${Blue}disable build unit tests{ColorReset}")
+endif (BUILD_TESTS)
