@@ -94,6 +94,14 @@ namespace Acts
       return m_oChargePolicy.getCharge();
     }
 
+    /**
+     * @copydoc TrackParametersBase::getParameterSet
+     */
+    virtual const FullParameterSet& getParameterSet() const final
+    {
+      return m_oParameters;
+    }
+
   protected:
     /**
      * @brief standard constructor for track parameters of charged particles
@@ -203,14 +211,6 @@ namespace Acts
     void updateGlobalCoordinates(const local_parameter&)
     {
       m_vPosition = detail::coordinate_transformation::parameters2globalPosition(getParameterSet().getParameters(),this->associatedSurface());
-    }
-
-    /**
-     * @copydoc TrackParametersBase::getParameterSet
-     */
-    virtual const FullParameterSet& getParameterSet() const final
-    {
-      return m_oParameters;
     }
 
     ChargePolicy      m_oChargePolicy;  ///< charge policy object distinguishing between charged and neutral tracks
