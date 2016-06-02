@@ -20,50 +20,50 @@ namespace Acts
   {
   public:
     typedef typename SingleTrackParameters<ChargePolicy>::ParVector_t ParVector_t;
-    typedef typename SingleTrackParameters<ChargePolicy>::Cov_uptr    Cov_uptr;
+    typedef typename SingleTrackParameters<ChargePolicy>::CovPtr_t    CovPtr_t;
 
     template<typename T = ChargePolicy,std::enable_if_t<std::is_same<T,ChargedPolicy>::value,int> = 0>
-    SingleBoundTrackParameters(Cov_uptr cov,
+    SingleBoundTrackParameters(CovPtr_t cov,
                                const ParVector_t& parValues,
                                const Surface& surface):
       SingleTrackParameters<ChargePolicy>(std::move(cov),
                                           parValues,
-                                          coordinate_transformation::parameters2globalPosition(parValues,surface),
-                                          coordinate_transformation::parameters2globalMomentum(parValues)),
+                                          detail::coordinate_transformation::parameters2globalPosition(parValues,surface),
+                                          detail::coordinate_transformation::parameters2globalMomentum(parValues)),
       m_pSurface(surface.isFree() ? surface.clone() : &surface)
     {}
 
     template<typename T = ChargePolicy,std::enable_if_t<std::is_same<T,ChargedPolicy>::value,int> = 0>
-    SingleBoundTrackParameters(Cov_uptr cov,
+    SingleBoundTrackParameters(CovPtr_t cov,
                                const ActsVectorD<3>& position,
                                const ActsVectorD<3>& momentum,
                                double dCharge,
                                const Surface& surface):
       SingleTrackParameters<ChargePolicy>(std::move(cov),
-                                          coordinate_transformation::global2parameters(position,momentum,dCharge,surface),
+                                          detail::coordinate_transformation::global2parameters(position,momentum,dCharge,surface),
                                           position,
                                           momentum),
       m_pSurface(surface.isFree() ? surface.clone() : &surface)
     {}
 
     template<typename T = ChargePolicy,std::enable_if_t<std::is_same<T,NeutralPolicy>::value,int> = 0>
-    SingleBoundTrackParameters(Cov_uptr cov,
+    SingleBoundTrackParameters(CovPtr_t cov,
                                const ParVector_t& parValues,
                                const Surface& surface):
       SingleTrackParameters<ChargePolicy>(std::move(cov),
                                           parValues,
-                                          coordinate_transformation::parameters2globalPosition(parValues,surface),
-                                          coordinate_transformation::parameters2globalMomentum(parValues)),
+                                          detail::coordinate_transformation::parameters2globalPosition(parValues,surface),
+                                          detail::coordinate_transformation::parameters2globalMomentum(parValues)),
       m_pSurface(surface.isFree() ? surface.clone() : &surface)
     {}
 
     template<typename T = ChargePolicy,std::enable_if_t<std::is_same<T,NeutralPolicy>::value,int> = 0>
-    SingleBoundTrackParameters(Cov_uptr cov,
+    SingleBoundTrackParameters(CovPtr_t cov,
                                const ActsVectorD<3>& position,
                                const ActsVectorD<3>& momentum,
                                const Surface& surface):
           SingleTrackParameters<ChargePolicy>(std::move(cov),
-                                              coordinate_transformation::global2parameters(position,momentum,0,surface),
+                                              detail::coordinate_transformation::global2parameters(position,momentum,0,surface),
                                               position,
                                               momentum),
           m_pSurface(surface.isFree() ? surface.clone() : &surface)

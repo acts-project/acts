@@ -21,7 +21,4 @@ namespace Acts
   typedef SingleBoundTrackParameters<NeutralPolicy> NeutralBoundParameters;
 } // end of namespace Acts
 
-/**Overload of << operator for both, MsgStream and std::ostream for debug output*/
-std::ostream& operator << ( std::ostream& sl, const Acts::NeutralParameters& pars);
-
 #endif // ACTS_NEUTRALPARAMETERS_H

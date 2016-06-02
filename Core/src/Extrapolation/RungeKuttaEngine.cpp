@@ -12,7 +12,7 @@
 
 #include "ACTS/Extrapolation/RungeKuttaEngine.hpp"
 #include "ACTS/EventData/TransportJacobian.hpp"
-#include "ACTS/EventData/detail/CoordinateTransformations.hpp"
+#include "ACTS/EventData/detail/coordinate_transformations.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Surfaces/DiscSurface.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
@@ -214,7 +214,7 @@ Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellCharged& eCell,
           double charge = pCache.parameters[4] > 0. ? 1. : -1.;
           // new curvilinear parameters
           Acts::Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);
-          pParameters = new CurvilinearParameters(std::move(cov),gp,coordinate_transformation::parameters2globalMomentum(pars),charge);
+          pParameters = new CurvilinearParameters(std::move(cov),gp,detail::coordinate_transformation::parameters2globalMomentum(pars),charge);
         }
     }
     // set the return type according to how the propagation went

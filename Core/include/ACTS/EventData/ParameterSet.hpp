@@ -14,103 +14,25 @@
 #include <type_traits>
 #include <utility>
 
-#include "ACTS/Utilities/Definitions.hpp"
 // ACTS includes
+#include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
+#include "ACTS/EventData/detail/are_within.hpp"
+#include "ACTS/EventData/detail/are_sorted.hpp"
+#include "ACTS/EventData/detail/full_parameter_set.hpp"
+#include "ACTS/EventData/detail/get_position.hpp"
+#include "ACTS/EventData/detail/initialize_parameter_set.hpp"
+#include "ACTS/EventData/detail/is_contained.hpp"
+#include "ACTS/EventData/detail/make_projection_matrix.hpp"
+#include "ACTS/EventData/detail/residual_calculator.hpp"
+#include "ACTS/EventData/detail/value_corrector.hpp"
 
 namespace Acts
 {
   /// @cond
-  // forward declaration
-  template<ParID_t... params>
-  class ParameterSet;
+  // forward type declaration for full parameter set
+  typedef typename detail::full_parset::type FullParameterSet;
   /// @endcond
-
-  /// @cond DEV
-  /**
-   * @brief anonymous namespace for implementation details
-   *
-   * Anonymous namespace containing implementation details for consistency checks at compile time.
-   */
-  namespace
-  {
-    /**
-     * @brief check whether integral values are sorted
-     *
-     * @tparam ascending boolean flag to check for ascending order (@c true) or descending order (@c false)
-     * @tparam strict boolean flag whether strict ordering is required
-     * @tparam T integral type of values whose order should be checked
-     * @tparam values template parameter pack containing the list of values
-     *
-     * @test Unit tests are implemented \link Acts::Test::BOOST_AUTO_TEST_CASE(are_sorted_helper_tests) here\endlink.
-     *
-     * @return `are_sorted<asc,strict,T,values...>::value` is @c true if the given values are properly sorted,
-     *         otherwise @c false
-     */
-    template<bool ascending, bool strict, typename T, T ... values>
-    struct are_sorted;
-
-    /**
-     * @brief check whether integral values are within a given range
-     *
-     * @tparam T integral type of values whose range should be checked
-     * @tparam MIN lower accepted bound of values (inclusive)
-     * @tparam MAX upper accepted bound of values (exclusive)
-     * @tparam values template parameter pack containing the list of values
-     *
-     * @test Unit tests are implemented \link Acts::Test::BOOST_AUTO_TEST_CASE(are_within_helper_tests) here\endlink.
-     *
-     * @return `are_within<T,MIN,MAX,values...>::value` is @c true if all given values are within the
-     *          interval [MIN,MAX), otherwise @c false
-     */
-    template<typename T, T MIN, T MAX, T... values>
-    struct are_within;
-
-    /**
-     * @brief generate ParameterSet type containing all defined parameters
-     *
-     * @return `full_parset<Policy>::type` is equivalent to `ParameterSet<Policy,ID_t(0),ID_t(1),...,ID_t(N-1)>`
-     *         where @c ID_t is a @c typedef to `Policy::par_id_type` and @c N is the total number of parameters
-     */
-    struct full_parset
-    {
-      template<ParID_t v,typename C>
-      struct add_to_value_container;
-
-      template<ParID_t v,ParID_t... others>
-      struct add_to_value_container<v,std::integer_sequence<ParID_t,others...> >
-      {
-        typedef std::integer_sequence<ParID_t,others...,v> type;
-      };
-
-      template<typename T,unsigned int N>
-      struct tparam_generator
-      {
-        typedef typename add_to_value_container<static_cast<T>(N),typename tparam_generator<T,N-1>::type>::type type;
-      };
-
-      template<typename T>
-      struct tparam_generator<T,0>
-      {
-        typedef std::integer_sequence<T,static_cast<T>(0)> type;
-      };
-
-      template<typename T>
-      struct converter;
-
-      template<ParID_t... values>
-      struct converter<std::integer_sequence<ParID_t,values...> >
-      {
-        typedef ParameterSet<values...> type;
-      };
-
-      typedef typename converter<typename tparam_generator<ParID_t,Acts::NGlobalPars-1>::type>::type type;
-    };
-    /// @endcond
-  }  // end of anonymous namespace
-  /// @endcond
-
-  typedef typename full_parset::type FullParameterSet;
 
   /**
    * @class ParameterSet
@@ -146,33 +68,38 @@ namespace Acts
   {
   private:
     // local typedefs and constants
-    typedef ParameterSet<params...> ParSet_t;        ///< type of this parameter set
-    static constexpr unsigned int NPars = sizeof...(params);         ///< number of parameters stored in this class
+    typedef ParameterSet<params...> ParSet_t;                  ///< type of this parameter set
+    static constexpr unsigned int NPars = sizeof...(params);   ///< number of parameters stored in this class
 
-    // static assert to check that the template parameter are consistent
-    static_assert(are_sorted<true,true,ParID_t,params...>::value,"parameter identifiers are not sorted");
-    static_assert(are_within<unsigned int,0,Acts::NGlobalPars,static_cast<unsigned int>(params)...>::value,"parameter identifiers must be greater or "
+    // static assert to check that the template parameters are consistent
+    static_assert(detail::are_sorted<true,true,ParID_t,params...>::value,"parameter identifiers are not sorted");
+    static_assert(detail::are_within<unsigned int,0,Acts::NGlobalPars,static_cast<unsigned int>(params)...>::value,"parameter identifiers must be greater or "
         "equal to zero and smaller than the total number of parameters");
     static_assert(NPars > 0,"number of stored parameters can not be zero");
     static_assert(NPars <= Acts::NGlobalPars,"number of stored parameters can not exceed number of total parameters");
 
   public:
     // public typedefs
-    typedef ActsMatrix<ParValue_t,NPars,Acts::NGlobalPars> Projection_t;       ///< matrix type for projecting full parameter vector onto local parameter space
-    typedef ActsVector<ParValue_t,NPars> ParVector_t;                 ///< vector type for stored parameters
-    typedef ActsSymMatrix<ParValue_t,NPars> CovMatrix_t;              ///< type of covariance matrix
-    typedef std::unique_ptr<CovMatrix_t> Cov_uptr;                   ///< type for unique pointer to covariance matrix
+    typedef ActsMatrix<ParValue_t,NPars,Acts::NGlobalPars>   Projection_t;  ///< matrix type for projecting full parameter vector onto local parameter space
+    typedef ActsVector<ParValue_t,NPars>                     ParVector_t;   ///< vector type for stored parameters
+    typedef ActsSymMatrix<ParValue_t,NPars>                  CovMatrix_t;   ///< type of covariance matrix
+    typedef std::unique_ptr<CovMatrix_t>                     CovPtr_t;      ///< type for unique pointer to covariance matrix
 
     /**
      * @brief initialize values of stored parameters and their covariance matrix
      *
-     * @note  No validation of the given covariance matrix is performed.
+     * @note  No validation of the given covariance matrix is performed (e.g. that it is symmetric).
      *
      * @param cov unique pointer to covariance matrix (nullptr is accepted)
      * @param values parameter pack with values for the stored parameters
      */
     template<typename ... Tail>
-    ParameterSet(Cov_uptr cov,std::enable_if_t<sizeof...(Tail) + 1 == NPars, ParValue_t> head, Tail ... values);
+    ParameterSet(CovPtr_t cov,std::enable_if_t<sizeof...(Tail) + 1 == NPars, ParValue_t> head, Tail ... values):
+      m_vValues(NPars),
+      m_pCovariance(std::move(cov))
+    {
+      detail::initialize_parset<ParID_t,params...>::init(*this,head,values...);
+    }
 
     /**
      * @brief initialize parameter values from vector and set their covariance matrix
@@ -183,21 +110,35 @@ namespace Acts
      * @param cov unique pointer to covariance matrix (nullptr is accepted)
      * @param values vector with parameter values
      */
-    ParameterSet(Cov_uptr cov,const ParVector_t& values);
+    ParameterSet(CovPtr_t cov,const ParVector_t& values):
+      m_vValues(NPars),
+      m_pCovariance(std::move(cov))
+    {
+      detail::initialize_parset<ParID_t,params...>::init(*this,values);
+    }
 
     /**
      * @brief copy constructor
      *
      * @param copy object whose content is copied into the new @c ParameterSet object
      */
-    ParameterSet(const ParSet_t& copy);
+    ParameterSet(const ParSet_t& copy):
+      m_vValues(copy.m_vValues),
+      m_pCovariance(nullptr)
+    {
+      if(copy.m_pCovariance)
+        m_pCovariance = std::make_unique<CovMatrix_t>(*copy.m_pCovariance);
+    }
 
     /**
      * @brief move constructor
      *
      * @param copy object whose content is moved into the new @c ParameterSet object
      */
-    ParameterSet(ParSet_t&& copy);
+    ParameterSet(ParSet_t&& copy):
+      m_vValues(std::move(copy.m_vValues)),
+      m_pCovariance(std::move(copy.m_pCovariance))
+    {}
 
     /**
      * @brief standard destructor
@@ -209,14 +150,24 @@ namespace Acts
      *
      * @param rhs object whose content is assigned to this @c ParameterSet object
      */
-    ParSet_t& operator=(const ParSet_t& rhs);
+    ParSet_t& operator=(const ParSet_t& rhs)
+    {
+      m_vValues = rhs.m_vValues;
+      m_pCovariance = (rhs.m_pCovariance ? std::make_unique<CovMatrix_t>(*rhs.m_pCovariance): nullptr);
+      return *this;
+    }
 
     /**
      * @brief move assignment operator
      *
      * @param rhs object whose content is moved into this @c ParameterSet object
      */
-    ParSet_t& operator=(ParSet_t&& rhs);
+    ParSet_t& operator=(ParSet_t&& rhs)
+    {
+      m_vValues = std::move(rhs.m_vValues);
+      m_pCovariance = std::move(rhs.m_pCovariance);
+      return *this;
+    }
 
     /**
      * @brief swap two objects
@@ -238,14 +189,20 @@ namespace Acts
      * @return value of the stored parameter
      */
     template<ParID_t parameter>
-    ParValue_t getParameter() const;
+    ParValue_t getParameter() const
+    {
+      return m_vValues(detail::get_position<ParID_t, parameter, params...>::value);
+    }
 
     /**
      * @brief access vector with stored parameters
      *
      * @return column vector with @c #NPars rows
      */
-    ParVector_t getParameters() const;
+    ParVector_t getParameters() const
+    {
+      return m_vValues;
+    }
 
     /**
      * @brief sets value for given parameter
@@ -257,7 +214,11 @@ namespace Acts
      * @return previously stored value of this parameter
      */
     template<ParID_t parameter>
-    void setParameter(ParValue_t value);
+    void setParameter(ParValue_t value)
+    {
+      typedef typename par_type<parameter>::type parameter_type;
+      m_vValues(detail::get_position<ParID_t, parameter, params...>::value) = parameter_type::getValue(value);
+    }
 
     /**
      * @brief sets values of stored parameters
@@ -267,7 +228,10 @@ namespace Acts
      *
      * @param values vector of length #NPars
      */
-    void setParameters(const ParVector_t& values);
+    void setParameters(const ParVector_t& values)
+    {
+      detail::initialize_parset<ParID_t,params...>::init(*this,values);
+    }
 
     /**
      * @brief checks whether a given parameter is included in this set of parameters
@@ -279,16 +243,22 @@ namespace Acts
      * @return @c true if the parameter is stored in this set, otherwise @c false
      */
     template<ParID_t parameter>
-    bool contains() const;
+    bool contains() const
+    {
+      return detail::is_contained<ParID_t, parameter, params...>::value;
+    }
 
     /**
      * @brief access covariance matrix for stored parameters
      *
      * @note The ownership of the covariance matrix is @b not transferred with this call.
      *
-     * @return raw pointer to covariance matrix (can be zero)
+     * @return raw pointer to covariance matrix (can be a nullptr)
      */
-    const CovMatrix_t* getCovariance() const;
+    const CovMatrix_t* getCovariance() const
+    {
+      return m_pCovariance.get();
+    }
 
     /**
      * @brief access uncertainty for individual parameter
@@ -310,7 +280,10 @@ namespace Acts
      *
      * @param cov unique pointer to new covariance matrix (nullptr is accepted)
      */
-    void setCovariance(Cov_uptr cov);
+    void setCovariance(CovPtr_t cov)
+    {
+      m_pCovariance = std::move(cov);
+    }
 
     /**
      * @brief equality operator
@@ -318,7 +291,24 @@ namespace Acts
      * @return @c true if stored parameter values are equal and both covariance matrices are
      *         either identical or not set, otherwise @c false
      */
-    bool operator==(const ParSet_t& rhs) const;
+    bool operator==(const ParSet_t& rhs) const
+    {
+      // shortcut comparison with myself
+      if(&rhs == this)
+        return true;
+
+      // parameter values
+      if(m_vValues != rhs.m_vValues)
+        return false;
+      // both have covariance matrices set
+      if((m_pCovariance && rhs.m_pCovariance) && (*m_pCovariance != *rhs.m_pCovariance))
+        return false;
+      // only one has a covariance matrix set
+      if((m_pCovariance && !rhs.m_pCovariance) || (!m_pCovariance && rhs.m_pCovariance))
+        return false;
+
+      return true;
+    }
 
     /**
      * @brief inequality operator
@@ -348,7 +338,10 @@ namespace Acts
      * @return vector containing only the parameter values from the full parameter vector
      *         which are also defined for this ParameterSet object
      */
-    ParVector_t project(const FullParameterSet& fullParSet) const;
+    ParVector_t project(const FullParameterSet& fullParSet) const
+    {
+      return projector() * fullParSet.getParameters();
+    }
 
     /**
      * @brief calculate residual difference to full parameter vector
@@ -378,7 +371,10 @@ namespace Acts
     /// @cond
     template<typename T = ParSet_t,std::enable_if_t<not std::is_same<T,FullParameterSet>::value,int> = 0>
     /// @endcond
-    ParVector_t residual(const FullParameterSet& fullParSet) const;
+    ParVector_t residual(const FullParameterSet& fullParSet) const
+    {
+      return detail::residual_calculator<params...>::result(m_vValues,projector() * fullParSet.getParameters());
+    }
 
     /**
      * @brief calculate residual difference to other parameter vector
@@ -404,7 +400,10 @@ namespace Acts
      * @return vector containing the residual parameter values of this ParameterSet object
      *         with respect to the given other parameter set
      */
-    ParVector_t residual(const ParSet_t& otherParSet) const;
+    ParVector_t residual(const ParSet_t& otherParSet) const
+    {
+      return detail::residual_calculator<params...>::result(m_vValues,otherParSet.m_vValues);
+    }
 
     /**
      * @brief get projection matrix
@@ -438,16 +437,22 @@ namespace Acts
      *
      * @param values vector with parameter values to be checked and corrected if necessary
      */
-    static void correctValues(ParVector_t& values);
+    static void correctValues(ParVector_t& values)
+    {
+      detail::value_corrector<params...>::result(values);
+    }
 
   private:
-    ParVector_t m_vValues;           ///< column vector containing values of local parameters
-    Cov_uptr    m_pCovariance;       ///< unique pointer to covariance matrix
+    ParVector_t m_vValues;                 ///< column vector containing values of local parameters
+    CovPtr_t    m_pCovariance;             ///< unique pointer to covariance matrix
 
     static const Projection_t sProjector;  ///< matrix to project full parameter vector onto local parameter space
   };
-} // end of namespace Acts
 
-#include "ACTS/EventData/detail/ParameterSet.icc"
+  // initialize static class members
+  template<ParID_t ... params>
+  const typename ParameterSet<params...>::Projection_t
+  ParameterSet<params...>::sProjector = detail::make_projection_matrix<Acts::NGlobalPars, static_cast<unsigned int>(params)...>::init();
+} // end of namespace Acts
 
 #endif // ACTS_PARAMETERSET_H
