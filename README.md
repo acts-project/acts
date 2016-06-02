@@ -1,4 +1,4 @@
-[![Build Status](http://acts-jenkins:8080/job/ACTS-CI-tests/badge/icon)](http://acts-jenkins:8080/job/ACTS-CI-tests)
+[![Build Status](http://acts-ci:8080/job/ACTS-CI/badge/icon)](http://acts-ci:8080/job/ACTS-CI)
 
 # A Common Tracking Software (ACTS) Project
 
