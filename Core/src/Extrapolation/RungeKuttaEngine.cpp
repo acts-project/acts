@@ -201,7 +201,7 @@ Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellCharged& eCell,
           double charge = pCache.parameters[4] > 0. ? 1. : -1.;
           // new curvilinear parameters
           Acts::Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);
-          pParameters = std::make_unique<const CurvilinearParameters>(std::move(cov),gp,coordinate_transformation::parameters2globalMomentum(pars),charge);
+          pParameters = std::make_unique<const CurvilinearParameters>(std::move(cov),gp,detail::coordinate_transformation::parameters2globalMomentum(pars),charge);
         }
     }
     

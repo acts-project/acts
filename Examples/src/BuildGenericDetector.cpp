@@ -31,12 +31,12 @@ namespace Acts
   {  
       // configure the layer creator with the surface array creator
       Acts::LayerCreator::Config lcConfig;
-      lcConfig.surfaceArrayCreator = std::make_shared<Acts::SurfaceArrayCreator>();
+      lcConfig.surfaceArrayCreator = std::make_shared<Acts::SurfaceArrayCreator>(Acts::SurfaceArrayCreator::Config());
       auto layerCreator = std::make_shared<Acts::LayerCreator>(lcConfig);
       // configure the cylinder volume helper
       Acts::CylinderVolumeHelper::Config cvhConfig;
-      cvhConfig.layerArrayCreator             = std::make_shared<Acts::LayerArrayCreator>();
-      cvhConfig.trackingVolumeArrayCreator    = std::make_shared<Acts::TrackingVolumeArrayCreator>();
+      cvhConfig.layerArrayCreator             = std::make_shared<Acts::LayerArrayCreator>(Acts::LayerArrayCreator::Config());
+      cvhConfig.trackingVolumeArrayCreator    = std::make_shared<Acts::TrackingVolumeArrayCreator>(Acts::TrackingVolumeArrayCreator::Config());
       auto cylinderVolumeHelper = std::make_shared<Acts::CylinderVolumeHelper>(cvhConfig);
       //-------------------------------------------------------------------------------------
       //beam pipe
