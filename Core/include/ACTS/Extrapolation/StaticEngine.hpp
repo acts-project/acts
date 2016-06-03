@@ -170,7 +170,7 @@ namespace Acts {
 } // end of namespace
 
 //!< define the templated function    
-#include "ACTS/Extrapolation/detail/StaticEngine.icc"  
+#include "ACTS/Extrapolation/detail/StaticEngine.ipp"  
 
 #endif // ACTS_EXTRAPOLATIONENGING_STATICENGINE_H
 
