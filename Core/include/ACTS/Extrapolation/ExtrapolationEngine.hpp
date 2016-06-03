@@ -127,7 +127,7 @@ namespace Acts {
 } // end of namespace
 
 //!< define the templated function    
-#include "ACTS/Extrapolation/detail/ExtrapolationEngine.icc"  
+#include "ACTS/Extrapolation/detail/ExtrapolationEngine.ipp"  
 
 #endif // ACTS_EXTRAPOLATIONENGINE_EXTRAPOLATIONENGINE_H 
 

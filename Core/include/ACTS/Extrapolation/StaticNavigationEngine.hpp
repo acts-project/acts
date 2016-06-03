@@ -120,7 +120,7 @@ namespace Acts {
 } // end of namespace
 
 //!< define the templated function
-#include "ACTS/Extrapolation/detail/StaticNavigationEngine.icc"
+#include "ACTS/Extrapolation/detail/StaticNavigationEngine.ipp"
 
 #endif // ACTS_EXTRAPOLATIONENGINE_STATICNAVIGATIONENGINE_H
 

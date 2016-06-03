@@ -9,7 +9,7 @@ endif (NOT DEFINED EIGEN_INCLUDE_DIR)
 find_package (Boost REQUIRED)
 
 # get list of all source files
-file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp" "include/*.*icc")
+file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp" "include/*.ipp")
 
 # define library target
 add_library (ACTSCore SHARED ${src_files})

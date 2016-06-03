@@ -305,7 +305,7 @@ namespace Acts {
   inline void Layer::registerRepresentingVolume(const AbstractVolume *theVol) const
     { delete m_representingVolume; m_representingVolume = theVol; }
 
-  #include "ACTS/Layers/detail/Layer.icc"
+  #include "ACTS/Layers/detail/Layer.ipp"
 
   /** Layers are constructedd with shared_ptr factories, hence the layer array is describes as: */
   typedef BinnedArray< LayerPtr > LayerArray;
