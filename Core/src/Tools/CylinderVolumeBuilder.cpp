@@ -233,9 +233,11 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
                 barrelRmin = barrelBounds->innerRadius();
                 barrelRmax = barrelBounds->outerRadius();
                 barrelZmax = barrelVolume->center().z() + barrelBounds->halflengthZ();
+
                 ACTS_VERBOSE("Outer Barrel bounds provided by configuration, rMin/rMax/zMax = " << barrelRmin << ", " << barrelRmax << ", " << barrelZmax);
             } else
                 ACTS_ERROR("No Barrel volume given for current hierarchy!");
+            
             //check if end cap volumes are provided
             if (endcapVolume) {
                 const CylinderVolumeBounds* endcapBounds = dynamic_cast<const CylinderVolumeBounds*>(&(endcapVolume->volumeBounds()));
@@ -327,7 +329,6 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeBuilder::trackin
                                                      endcapRmin, endcapRmax,
                                                      endcapZmin, endcapZmax,
                                                      m_config.volumeName+"::PositiveEndcap") : nullptr;
-
 
         // no wrapping condition
         if (wrappingCondition == 0){

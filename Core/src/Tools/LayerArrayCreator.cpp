@@ -34,11 +34,10 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(cons
                                                       BinningType bType,
                                                       BinningValue bValue) const 
 {
-
-   MSG_VERBOSE( "Build LayerArray with "     << layersInput.size() << " layers at input." );
-   MSG_VERBOSE( "       min/max provided : " << min << " / " << max );
-   MSG_VERBOSE( "       binning type     : " << bType );
-   MSG_VERBOSE( "       binning value    : " << bValue );
+   ACTS_VERBOSE( "Build LayerArray with "     << layersInput.size() << " layers at input." );
+   ACTS_VERBOSE( "       min/max provided : " << min << " / " << max );
+   ACTS_VERBOSE( "       binning type     : " << bType );
+   ACTS_VERBOSE( "       binning value    : " << bValue );
 
    // create a local copy of the layer vector
    LayerVector layers(layersInput);

@@ -69,7 +69,6 @@ std::unique_ptr<Acts::TrackingGeometry> Acts::DD4hepCylinderGeometryBuilder::tra
     if (highestVolume) {
         // see if the beampipe needs to be wrapped
         if (beamPipeVolume) highestVolume = m_config.volumeHelper->createContainerTrackingVolume({beamPipeVolume,highestVolume});
-        
         // create the TrackingGeometry
         trackingGeometry = std::make_unique<Acts::TrackingGeometry>(highestVolume);
     }

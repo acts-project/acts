@@ -34,7 +34,7 @@ namespace Acts {
     public:
         /** Constructor  */
         TGeoDetectorElement(const Identifier& identifier,
-                            TGeoNode* tGeoDetElement, std::shared_ptr<const Acts::Transform3D> motherTransform = nullptr, std::shared_ptr<const Acts::Transform3D> transform = nullptr);
+                            TGeoNode* tGeoDetElement, std::shared_ptr<const Acts::Transform3D> motherTransform = nullptr);
         
         /**  Destructor */
         virtual ~TGeoDetectorElement();

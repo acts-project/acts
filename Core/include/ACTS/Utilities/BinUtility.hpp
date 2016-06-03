@@ -21,6 +21,9 @@
 #include <memory>
 #include "Definitions.hpp"
 
+//debug
+#include <iostream>
+
 namespace Acts {
 
 /** @class BinUtility

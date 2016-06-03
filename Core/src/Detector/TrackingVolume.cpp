@@ -455,39 +455,28 @@ void Acts::TrackingVolume::synchronizeLayers(double envelope) const {
 
 void Acts::TrackingVolume::interlinkLayers() {
     
-   // std::cout << "TrackingVolume::interlinkLayers0" << std::endl;
   if (m_confinedLayers){
-   //   std::cout << "TrackingVolume::interlinkLayers1" << std::endl;
     auto& layers = m_confinedLayers->arrayObjects();
-  //  std::cout << "TrackingVolume::interlinkLayers2" << std::endl;
     // forward register the last one as the previous one
     //  first <- | -> second, first <- | -> second, first <- | -> second
     const Layer* lastLayer = nullptr;
     for (auto& layerPtr : layers)
       {
-   //       std::cout << "TrackingVolume::interlinkLayers03" << std::endl;
         // register the layers
         (*layerPtr).m_nextLayerUtility = m_confinedLayers->binUtility();
-   //       std::cout << "TrackingVolume::interlinkLayers4" << std::endl;
         (*layerPtr).m_nextLayers.first = lastLayer;
-   //       std::cout << "TrackingVolume::interlinkLayers05" << std::endl;
         // register the volume
         (*layerPtr).encloseTrackingVolume(*this);
-   //       std::cout << "TrackingVolume::interlinkLayers06" << std::endl;
         // remember the last layer
         lastLayer = layerPtr.get();
-   //       std::cout << "TrackingVolume::interlinkLayers07" << std::endl;
       }
     // backward loop
     lastLayer = nullptr;
     for ( auto layerIter = layers.rbegin(); layerIter != layers.rend(); ++layerIter )
       {
-   //       std::cout << "TrackingVolume::interlinkLayers8" << std::endl;
         // set the other next volume
         (**layerIter).m_nextLayers.second = lastLayer;
-   //       std::cout << "TrackingVolume::interlinkLayers9" << std::endl;
         lastLayer = (*layerIter).get();
-   //       std::cout << "TrackingVolume::interlinkLayers10" << std::endl;
       }
   }
 }

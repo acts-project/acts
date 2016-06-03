@@ -98,8 +98,7 @@ void Acts::DD4hepGeometryHelper::createSubVolumes(DD4hep::Geometry::DetElement& 
         //create cylindrical layers
         createCylinderLayers(detElement, centralLayers, transform);
     }
-    
-    volumeTriple    = VolumeTriple(std::move(nEndcapVolume), std::move(barrelVolume),std::move(pEndcapVolume));
+    volumeTriple    = VolumeTriple(nEndcapVolume, barrelVolume,pEndcapVolume);
     //set the triples
     layerTriple     = LayerTriple(new Acts::LayerVector(negativeLayers),new Acts::LayerVector(centralLayers), new Acts::LayerVector(positiveLayers));
 }
@@ -190,7 +189,8 @@ std::unique_ptr<Acts::SurfaceArray> Acts::DD4hepGeometryHelper::createSurfaceArr
         //add surface to surface vector
         surfaces.push_back(&(dd4hepDetElement->surface()));
     }
-    return binnedSurfaceArray2DPhiL(surfaces, lValue);
+
+    return (std::move(binnedSurfaceArray2DPhiL(surfaces, lValue)));
 }
 
 //creating a surface array binned in phi and a longitudinal direction which can either be z or r
@@ -216,7 +216,8 @@ std::unique_ptr<Acts::SurfaceArray> Acts::DD4hepGeometryHelper::binnedSurfaceArr
         if (vertices.empty()) throw "Vertices of current module empty!";
         //accessing any entry to access the longitudinal coordinate is sufficient
         //make local coordinate global
-        double longCoord = vertices.front().perp();
+       // double longCoord = vertices.front().perp();
+        double longCoord = fabs(vertices.front().y());
         double lposition = 0;
         //surfaces can be binned in z or r
         if(lValue==Acts::binZ) lposition = surface->center().z();
@@ -247,7 +248,7 @@ std::unique_ptr<Acts::SurfaceArray> Acts::DD4hepGeometryHelper::binnedSurfaceArr
     Acts::BinUtility* binUtility = new Acts::BinUtility(lValues,Acts::open,lValue);
     (*binUtility) += Acts::BinUtility(binsPhi,minPhiCorrected,maxPhiCorrected,Acts::closed,Acts::binPhi);
     //create the binned array of surfaces
-    return (new Acts::BinnedArray2D<const Acts::Surface*>(posSurfaces,binUtility));
+    return (std::move(std::make_unique<Acts::BinnedArray2D<const Acts::Surface*>>(posSurfaces,binUtility)));
 }
 
 std::vector<float> Acts::DD4hepGeometryHelper::createBinValues(std::vector<std::pair<float,float>> old)
@@ -271,7 +272,7 @@ std::vector<float> Acts::DD4hepGeometryHelper::createBinValues(std::vector<std::
         if (it == oldKeys.begin()) newlValues.push_back(current.first);
         if (next.first<=current.second) newlValues.push_back((current.second+next.first)*0.5);
         else newlValues.push_back(current.second);
-        if (it==(old.end()-2)) newlValues.push_back(next.second);
+        if (it==(oldKeys.end()-2)) newlValues.push_back(next.second);
     }
     return(newlValues);
 }
