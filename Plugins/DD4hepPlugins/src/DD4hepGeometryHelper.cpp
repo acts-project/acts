@@ -27,11 +27,6 @@
 #include "ACTS/Layers/DiscLayer.hpp"
 #include "ACTS/Volumes/Volume.hpp"
 
-Acts::DD4hepGeometryHelper::DD4hepGeometryHelper()
-{}
-
-Acts::DD4hepGeometryHelper::~DD4hepGeometryHelper()
-{}
 
 std::shared_ptr<Acts::Transform3D> Acts::DD4hepGeometryHelper::extractTransform(DD4hep::Geometry::DetElement& detElement)
 {
@@ -100,7 +95,7 @@ void Acts::DD4hepGeometryHelper::createSubVolumes(DD4hep::Geometry::DetElement& 
     }
     volumeTriple    = VolumeTriple(nEndcapVolume, barrelVolume,pEndcapVolume);
     //set the triples
-    layerTriple     = LayerTriple(new Acts::LayerVector(negativeLayers),new Acts::LayerVector(centralLayers), new Acts::LayerVector(positiveLayers));
+    layerTriple     = LayerTriple(Acts::LayerVector(negativeLayers),Acts::LayerVector(centralLayers),Acts::LayerVector(positiveLayers));
 }
 
 void Acts::DD4hepGeometryHelper::createCylinderLayers(DD4hep::Geometry::DetElement& motherDetElement, Acts::LayerVector& centralLayers, std::shared_ptr<Acts::Transform3D> motherTransform)
@@ -132,8 +127,8 @@ void Acts::DD4hepGeometryHelper::createCylinderLayers(DD4hep::Geometry::DetEleme
             if (modules.empty()) centralLayers.push_back(Acts::CylinderLayer::create(transform,cylinderBounds,nullptr,thickness,nullptr,nullptr,Acts::passive));
             else {
                 //create surfaces binned in phi and z
-                Acts::SurfaceArray* surfaceArray = createSurfaceArray(modules, binZ, motherTransform);
-                centralLayers.push_back(Acts::CylinderLayer::create(transform,cylinderBounds,surfaceArray,thickness,nullptr,nullptr,Acts::active));
+                auto surfaceArray = createSurfaceArray(modules, binZ, motherTransform);
+                centralLayers.push_back(Acts::CylinderLayer::create(transform,cylinderBounds,std::move(surfaceArray),thickness,nullptr,nullptr,Acts::active));
             }
         } //for children
     } //volume has layers
@@ -165,8 +160,8 @@ void Acts::DD4hepGeometryHelper::createDiscLayers(DD4hep::Geometry::DetElement& 
             if (modules.empty()) layers.push_back(Acts::DiscLayer::create(transform,discBounds,nullptr,thickness,nullptr,nullptr,Acts::passive));
             else {
                 //create surfaces binned in phi and r
-                Acts::SurfaceArray* surfaceArray = createSurfaceArray(modules, binR, motherTransform);
-                layers.push_back(Acts::DiscLayer::create(transform,discBounds,surfaceArray,thickness,nullptr,nullptr,Acts::active));
+                auto surfaceArray = createSurfaceArray(modules, binR, motherTransform);
+                layers.push_back(Acts::DiscLayer::create(transform,discBounds,std::move(surfaceArray),thickness,nullptr,nullptr,Acts::active));
             }
         } //for children
     } //volume has layers

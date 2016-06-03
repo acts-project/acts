@@ -280,7 +280,6 @@ std::shared_ptr<const Acts::TrackingVolume> Acts::CylinderVolumeHelper::createCo
         if (ivol+1 < volumes.size()) volumeName += " | ";
 
     }
-    volumeName += " }";*/
     // reset the iterator -----
     firstVolume = volumes.begin();
     --lastVolume; // set to the last volume

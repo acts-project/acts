@@ -13,8 +13,6 @@
 #ifndef ACTS_DD4HEPGEOMETRYTOOLS_DD4HEPCYLINDERGEOMETRYBUILDER_H
 #define ACTS_DD4HEPGEOMETRYTOOLS_DD4HEPCYLINDERGEOMETRYBUILDER_H 1
 
-// DD4hepPlugin
-#include "ACTS/Plugins/DD4hepPlugins/IDD4hepGeometrySvc.hpp"
 // Geometry module
 #include "ACTS/Tools/ITrackingGeometryBuilder.hpp"
 #include "ACTS/Tools/ITrackingVolumeBuilder.hpp"
