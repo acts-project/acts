@@ -49,7 +49,7 @@ Acts::CylinderSurface::CylinderSurface(std::shared_ptr<Acts::Transform3D> htrans
 // constructor by radius, halflenght and phisector
 Acts::CylinderSurface::CylinderSurface(std::shared_ptr<Acts::Transform3D> htrans, double radius, double hphi, double hlength) :
   Acts::Surface(htrans),
-m_bounds(std::make_shared<Acts::CylinderBounds>(radius, hphi, hlength)),
+  m_bounds(std::make_shared<Acts::CylinderBounds>(radius, hphi, hlength)),
   m_rotSymmetryAxis(nullptr)
 {}
 
@@ -170,6 +170,7 @@ void Acts::CylinderSurface::localToGlobal(const Acts::Vector2D& locpos, const Ac
 
 bool Acts::CylinderSurface::globalToLocal(const Acts::Vector3D& glopos, const Acts::Vector3D&, Acts::Vector2D& locpos) const {
     // get the transform & transform global position into cylinder frame
+    // @TODO clean up intolerance parameters
     // transform it to the globalframe: CylinderSurfaces are allowed to have 0 pointer transform
     double radius = 0.;
     double inttol = bounds().r()*0.0001;

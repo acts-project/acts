@@ -23,12 +23,13 @@ namespace Acts {
   class TrackingVolume;
   class Layer;
   class Volume;
-  typedef std::shared_ptr<const TrackingVolume> TrackingVolumePtr;
-  typedef std::shared_ptr<const VolumeBounds>   VolumeBoundsPtr;
-  typedef std::shared_ptr<const Volume>         VolumePtr;
-  typedef std::tuple< std::vector< std::shared_ptr<const Layer> >, std::vector< std::shared_ptr<const Layer> >, std::vector< std::shared_ptr<const Layer> > > LayerTriple;
-    typedef std::tuple< VolumePtr, VolumePtr, VolumePtr> VolumeTriple;
-      
+  typedef std::shared_ptr<const TrackingVolume>                         TrackingVolumePtr;
+  typedef std::shared_ptr<const VolumeBounds>                           VolumeBoundsPtr;
+  typedef std::shared_ptr<const Volume>                                 VolumePtr;
+  typedef std::shared_ptr<const Layer>                                  LayerPtr;
+  typedef std::vector< LayerPtr >                                       LayerVector;
+  typedef std::tuple< LayerVector, LayerVector, LayerVector >           LayerTriple;
+  typedef std::tuple< VolumePtr, VolumePtr, VolumePtr>                  VolumeTriple;
   
   /** @class ITrackingVolumeBuilder
   
@@ -50,9 +51,9 @@ namespace Acts {
 
     /** TrackingVolumeBuilder interface method - returns the volumes of Volumes */
     virtual TrackingVolumePtr trackingVolume(TrackingVolumePtr insideVolume = nullptr,
-					     VolumeBoundsPtr outsideBounds = nullptr,
-					     const LayerTriple* layerTriple = nullptr,
-					     const VolumeTriple* volumeTriple = nullptr) const = 0;                       
+                                             VolumeBoundsPtr outsideBounds = nullptr,
+                                             const LayerTriple* layerTriple = nullptr,
+                                             const VolumeTriple* volumeTriple = nullptr) const = 0;
   };
 
 } // end of namespace

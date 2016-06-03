@@ -51,9 +51,6 @@ namespace Acts {
       /** resolve the position - for neutral particles */
       virtual ExtrapolationCode resolvePosition(ExCellNeutral& enCell, PropDirection dir=alongMomentum, bool noLoop=false) const = 0;
 
-      /** acces to tracking geometry */
-      virtual const TrackingGeometry& trackingGeometry() const = 0;
-
     protected:
       //!< SCREEN output formatting  (SOP) - unify amongst extrapolation engines
       std::string m_sopPrefix;            //!< prefix for screen output

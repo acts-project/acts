@@ -12,6 +12,7 @@
 
 #include "ACTS/Tools/PassiveLayerBuilder.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/MsgMacros.hpp"
 #include "ACTS/Layers/CylinderLayer.hpp"
 #include "ACTS/Layers/DiscLayer.hpp"
 #include "ACTS/Surfaces/CylinderBounds.hpp"
@@ -82,8 +83,8 @@ bool Acts::PassiveLayerBuilder::constructLayers() const
         // loop through
         for (size_t ipnl = 0; ipnl < numpnLayers; ++ipnl){
             // some screen output
-            ACTS_VERBOSE("- build layers " << (2*ipnl) << " and "<<  (2*ipnl)+1 << " at +/- z = " << m_config.posnegLayerPositionZ.at(ipnl));
-            //                               << " and rMin/rMax = " << m_config.posnegLayerRmin.at(ipnl) << " / " << m_config.posnegLayerRmax.at(ipnl));
+            ACTS_VERBOSE("- build layers " << (2*ipnl) << " and "<<  (2*ipnl)+1 << " at +/- z = " << m_config.posnegLayerPositionZ.at(ipnl)
+                                           << " and rMin/rMax = " << m_config.posnegLayerRmin.at(ipnl) << " / " << m_config.posnegLayerRmax.at(ipnl));
             // create the share disc bounds
             std::shared_ptr<const DiscBounds> dBounds = std::make_shared<RadialBounds>(m_config.posnegLayerRmin.at(ipnl), m_config.posnegLayerRmax.at(ipnl));
             // create the layer transforms

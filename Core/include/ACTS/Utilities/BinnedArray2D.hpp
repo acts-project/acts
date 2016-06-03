@@ -64,7 +64,7 @@ namespace Acts {
                         ((m_array)[bingen->bin(currentGlobal,1)])[bingen->bin(currentGlobal,0)] = object;
                         // also fill the one-dimensional store - only if unique ones though
                         auto beginIter = BinnedArray<T>::m_arrayObjects.begin();
-                        auto endIter = BinnedArray<T>::m_arrayObjects.end();
+                        auto endIter   = BinnedArray<T>::m_arrayObjects.end();
                         if (std::find(beginIter,endIter,object) == endIter)
                             BinnedArray<T>::m_arrayObjects.push_back(object);
                     } else

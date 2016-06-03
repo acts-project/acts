@@ -52,6 +52,7 @@ namespace Acts {
       virtual ExtrapolationCode propagate(ExCellCharged& ecCell,
                                           const Surface& sf,
                                           PropDirection dir=alongMomentum,
+                                          ExtrapolationMode::eMode purpose = ExtrapolationMode::Destination,
                                           const BoundaryCheck& bcheck = true,
                                           bool returnCurvilinear = true) const = 0;
 
@@ -65,6 +66,7 @@ namespace Acts {
       virtual ExtrapolationCode propagate(ExCellNeutral& enCell,
                                           const Surface& sf,
                                           PropDirection dir=alongMomentum,
+                                          ExtrapolationMode::eMode purpose = ExtrapolationMode::Destination,
                                           const BoundaryCheck& bcheck = true,
                                           bool returnCurvilinear = true) const = 0;
 

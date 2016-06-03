@@ -170,6 +170,7 @@ namespace Acts {
         bool                                 usegradient   ;  //!< use magnetif field gradient
         std::string                          prefix        ;  //!< screen output prefix
         std::string                          postfix       ;  //!< screen output postfix
+        std::string                          name;         ;  //!< name of the tool
     
         Config() :
 	  logger(getDefaultLogger("RungeKuttaEngine",Logging::INFO)),
@@ -180,7 +181,8 @@ namespace Acts {
           maxPathLength(25000.),
           usegradient(false),
           prefix("[RK] - "),
-          postfix(" - ")
+          postfix(" - "),
+          name("Anonymous")
          {}
            
       };    
@@ -194,13 +196,15 @@ namespace Acts {
       ExtrapolationCode propagate(ExCellCharged& ecCell,
                                   const Surface& sf,
                                   PropDirection dir=alongMomentum,
+                                  ExtrapolationMode::eMode purpose = ExtrapolationMode::Destination,
                                   const BoundaryCheck& bcheck = true,
-                                  bool returnCurvilinear = true) const final;  
+                                  bool returnCurvilinear = true) const final;
 
       /** resolve the boundary situation - for neutral particles */
       ExtrapolationCode propagate(ExCellNeutral& enCell,
                                   const Surface& sf,
                                   PropDirection dir=alongMomentum,
+                                  ExtrapolationMode::eMode purpose = ExtrapolationMode::Destination,
                                   const BoundaryCheck& bcheck = true,
                                   bool returnCurvilinear = true) const final;
                                   
@@ -249,10 +253,10 @@ namespace Acts {
       double stepEstimatorWithCurvature(PropagationCache& pCache, int, double*, bool&) const;
 
       /** Build new track parameters without propagation */
-      const TrackParameters* buildTrackParametersWithoutPropagation(const TrackParameters &, double*) const;
+      std::unique_ptr<const TrackParameters> buildTrackParametersWithoutPropagation(const TrackParameters &, double*) const;
 
       /** Build new track parameters without propagation */
-      const NeutralParameters* buildNeutralParametersWithoutPropagation(const NeutralParameters&, double*) const;
+      std::unique_ptr<const NeutralParameters> buildNeutralParametersWithoutPropagation(const NeutralParameters&, double*) const;
 
       /** Test new propagation to cylinder boundary */
       bool newCrossPoint(const CylinderSurface&, const double *, const double  *) const;

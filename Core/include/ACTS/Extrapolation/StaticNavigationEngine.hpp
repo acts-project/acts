@@ -49,6 +49,7 @@ namespace Acts {
             
             std::string                               prefix;                //!< output prefix
             std::string                               postfix;               //!< output postfix
+            std::string                               name;                  //!< name of this engine
             
             Config() :
 	      logger(getDefaultLogger("StaticNavigationEngine",Logging::INFO)),
@@ -56,8 +57,9 @@ namespace Acts {
               materialEffectsEngine(nullptr),
               trackingGeometry(nullptr),
               prefix("[SN] - "),
-              postfix(" - ")
-            {}             
+              postfix(" - "),
+              name("Anonymous")
+            {}
             
         };
 

@@ -115,9 +115,9 @@ template <class T> Acts::ExtrapolationCode Acts::StaticNavigationEngine::resolve
 
 /** handle the failure - as configured */
 template <class T> Acts::ExtrapolationCode Acts::StaticNavigationEngine::handleBoundaryT(Acts::ExtrapolationCell<T>& eCell,
-                                                                                       const Acts::BoundarySurface<Acts::TrackingVolume>& bSurfaceTV,
-                                                                                       Acts::PropDirection pDir,
-                                                                                       bool stepout) const 
+                                                                                         const Acts::BoundarySurface<Acts::TrackingVolume>& bSurfaceTV,
+                                                                                         Acts::PropDirection pDir,
+                                                                                         bool stepout) const 
 {
     // get the bondary surface and compare with last one to prevent loops
     const Surface& bSurface = bSurfaceTV.surfaceRepresentation(); 
@@ -125,7 +125,12 @@ template <class T> Acts::ExtrapolationCode Acts::StaticNavigationEngine::handleB
     // - SuccessPathLimit : pathLimit reached during propagation
     // - InProgress       : boundary reached
     // - Recovered        : boundary not reached
-    ExtrapolationCode eCode = m_config.propagationEngine->propagate(eCell,bSurface,pDir,!stepout,eCell.destinationCurvilinear);
+    ExtrapolationCode eCode = m_config.propagationEngine->propagate(eCell,
+                                                                    bSurface,
+                                                                    pDir,
+                                                                    ExtrapolationMode::CollectBoundary,
+                                                                    !stepout,
+                                                                    eCell.destinationCurvilinear);
     CHECK_ECODE_SUCCESS(eCell, eCode);
     EX_MSG_VERBOSE(eCell.navigationStep, "navigation", "handleBoundaryT", "propagation with eCode " << eCode.toString());
     // check for progress 
@@ -134,7 +139,7 @@ template <class T> Acts::ExtrapolationCode Acts::StaticNavigationEngine::handleB
 	    if (!eCell.checkRadialCompatibility()) {
             // screen output for the radial compatibility check
             EX_MSG_VERBOSE(eCell.navigationStep, "navigation", "handleBoundaryT", "radial compatbility check failed, radial direction is: " << eCell.radialDirection);
-            // it's not jump back to the last valid lead parameters and return Unset as a trigger
+            // if it's not jump back to the last valid lead parameters and return Unset as a trigger
 	        eCell.leadParameters = eCell.lastLeadParameters;
 	        return ExtrapolationCode::Unset;
         }
@@ -153,9 +158,6 @@ template <class T> Acts::ExtrapolationCode Acts::StaticNavigationEngine::handleB
         bool stopAtThisBoundary = eCell.checkConfigurationMode(ExtrapolationMode::StopAtBoundary) 
                                   && (nextVolume->geometrySignature() != eCell.leadVolume->geometrySignature());        
         // fill the boundary into the cache if successfully hit boundary surface
-        // - only cache if those are not the final parameters caused by a StopAtBoundary
-        if (!stopAtThisBoundary)
-            eCell.stepParameters(eCell.leadParameters, ExtrapolationMode::CollectBoundary);
         // loop protection - relaxed for the cases where you start from the boundary
         if (eCell.leadVolume == nextVolume ) {
             // the start parameters where on the boundary already give a relaxed return code

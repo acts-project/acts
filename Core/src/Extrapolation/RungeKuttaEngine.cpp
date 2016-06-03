@@ -53,31 +53,28 @@ void Acts::RungeKuttaEngine::setConfiguration(const Acts::RungeKuttaEngine::Conf
 Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellNeutral& eCell,
                                                           const Surface& sf,
                                                           PropDirection pDir,
+                                                          ExtrapolationMode::eMode purpose,
                                                           const BoundaryCheck& bcheck,
                                                           bool returnCurvilinear) const
 {
     EX_MSG_DEBUG(++eCell.navigationStep, "propagate", "neut", "propagation engine called with neutral parameters with propagation direction " << pDir );
-    // it is the final propagation if it is the endSurface
-    bool finalPropagation = (eCell.endSurface == (&sf));
+    
+    // it is the final propagation if it is the endSurface & the purpose is a Destination propagation
+    bool finalPropagation = (eCell.endSurface == (&sf) && purpose == ExtrapolationMode::Destination);
 
     // create the PropagationCache
     PropagationCache pCache;
 
     // get the start parameters
-    const NeutralParameters* sParameters = eCell.leadParameters;
-    const NeutralParameters* nParameters = nullptr;
+    const NeutralParameters*                 sParameters = eCell.leadParameters;
+    std::unique_ptr<const NeutralParameters> nParameters = nullptr;
 
     // if the desination surface is the start surface -> bail out and build parameters directly
     if (&sf == &(sParameters->associatedSurface())){
        EX_MSG_VERBOSE(eCell.navigationStep, "propagate", "neut", "parameters are already on the surface, returning.");
-       nParameters = buildNeutralParametersWithoutPropagation(*sParameters,pCache.jacobian);
-       // fast exit
-       eCell.lastLeadParameters = sParameters;
-       // assign the lead and end parameters
-       eCell.leadParameters = nParameters;
-       // check if the propagation was called with directly, then lead parameters become end parameters
-       if (eCell.checkConfigurationMode(ExtrapolationMode::Direct))
-           eCell.endParameters = eCell.leadParameters;
+       nParameters = std::move(buildNeutralParametersWithoutPropagation(*sParameters,pCache.jacobian));
+       // record the parameters as a step
+       eCell.step(std::move(nParameters),purpose);
        // return success or in progress
        return (finalPropagation ? ExtrapolationCode::SuccessDestination : ExtrapolationCode::InProgress);
     }
@@ -104,41 +101,36 @@ Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellNeutral& eCell,
           // new parameters bound to the surface
           ActsVectorD<5> pars;
           pars << pCache.parameters[0],pCache.parameters[1],pCache.parameters[2],pCache.parameters[3],pCache.parameters[4];
-          nParameters = new NeutralBoundParameters(std::move(cov),std::move(pars),sf);
+          nParameters = std::make_unique<const NeutralBoundParameters>(std::move(cov),std::move(pars),sf);
         } else {
           // new curvilinear parameters
           Acts::Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);
           Acts::Vector3D mom(pCache.pVector[3],pCache.pVector[4],pCache.pVector[5]);
           mom /= fabs(pCache.parameters[4]);
-          nParameters = new NeutralCurvilinearParameters(std::move(cov),gp,mom);
+          nParameters = std::make_unique<NeutralCurvilinearParameters>(std::move(cov),gp,mom);
         }
     }
     // only go on if the parameter creation worked
     if (nParameters){
+        // set teh new parameters to the eCell and record their purpose
+        eCell.step(std::move(nParameters),purpose);
         // fill the transport information - only if the propation direction is not 0 ('anyDirection')
-        if (pDir!=anyDirection || eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectJacobians)){
+        if (pDir !=anyDirection || eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectJacobians)){
            EX_MSG_VERBOSE(eCell.navigationStep,"propagate", "neut", "path length of " << pCache.step << " added to the extrapolation cell (limit = " << eCell.pathLimit << ")" );
-           TransportJacobian* jac = 0;
+           std::unique_ptr<const TransportJacobian> jac = nullptr;
            if (eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectJacobians))
-             jac = new TransportJacobian(pCache.jacobian);
-           eCell.stepTransport(sf,pCache.step,jac);
+               jac = std::make_unique<const TransportJacobian>(pCache.jacobian);
+            eCell.stepTransport(sf,pCache.step,std::move(jac));
         }
 		// cache the last lead parameters
 		eCell.lastLeadParameters = sParameters;
-        // now exchange the lead parameters
         // create the new curvilinear paramters at the surface intersection -> if so, trigger the success
-        eCell.leadParameters = nParameters;
-
         // now check if it is valid it's further away than the pathLimit
-        if (eCell.pathLimitReached(m_config.dlt)){
+        if (eCell.pathLimitReached(m_config.dlt, true)){
             // screen output
             EX_MSG_VERBOSE(eCell.navigationStep,"propagate", "neut", "path limit of " << eCell.pathLimit << " reached. Stopping extrapolation.");
             return ExtrapolationCode::SuccessPathLimit;
         }
-
-        // check if the propagation was called with directly, then lead parameters become end parameters
-        if (eCell.checkConfigurationMode(ExtrapolationMode::Direct))
-	        eCell.endParameters = eCell.leadParameters;
 	    // return success for the final destination or in progress
         return (finalPropagation ? ExtrapolationCode::SuccessDestination : ExtrapolationCode::InProgress);
     } else {
@@ -155,34 +147,29 @@ Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellNeutral& eCell,
 Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellCharged& eCell,
                                                         const Surface& sf,
                                                         PropDirection pDir,
+                                                        ExtrapolationMode::eMode purpose,
                                                         const BoundaryCheck& bcheck,
                                                         bool returnCurvilinear) const
 {
     EX_MSG_DEBUG(++eCell.navigationStep, "propagate", "char", "propagation engine called with charged parameters with propagation direction " << pDir );
     // it is the final propagation if it is the endSurface
-    bool finalPropagation = (eCell.endSurface == (&sf));
+    bool finalPropagation = (eCell.endSurface == (&sf) && purpose == ExtrapolationMode::Destination);
 
     // the start and teh result
-    const TrackParameters* pParameters = nullptr;
-    const TrackParameters* sParameters = eCell.leadParameters;
+    std::unique_ptr<const TrackParameters> pParameters = nullptr;
+    const TrackParameters* sParameters                 = eCell.leadParameters;
 
     // build the propagation cache
     PropagationCache pCache;
 
     // if the desination surface is the start surface -> bail out and build parameters directly
     if (&sf == &(eCell.leadParameters->associatedSurface())) {
-        EX_MSG_VERBOSE(eCell.navigationStep, "propagate", "char", "parameters are already on the surface, returning.");
-       // create them without propagation -> success
-       pParameters = buildTrackParametersWithoutPropagation(*sParameters,pCache.jacobian);
-       // fast exit
-       eCell.lastLeadParameters = sParameters;
-       // assign the lead and end parameters
-       eCell.leadParameters = pParameters;
-       // check if the propagation was called with directly, then lead parameters become end parameters
-       if (eCell.checkConfigurationMode(ExtrapolationMode::Direct))
-           eCell.endParameters = eCell.leadParameters;
-       // return success or in progress
-       return (finalPropagation ? ExtrapolationCode::SuccessDestination : ExtrapolationCode::InProgress);
+        EX_MSG_VERBOSE(eCell.navigationStep, "propagate", "neut", "parameters are already on the surface, returning.");
+        pParameters = std::move(buildTrackParametersWithoutPropagation(*pParameters,pCache.jacobian));
+        // record the parameters as a step
+        eCell.step(std::move(pParameters),purpose);
+        // return success or in progress
+        return (finalPropagation ? ExtrapolationCode::SuccessDestination : ExtrapolationCode::InProgress);
     }
 
     // and configure the propagation cache now
@@ -208,41 +195,36 @@ Acts::ExtrapolationCode Acts::RungeKuttaEngine::propagate(ExCellCharged& eCell,
         // create the new parameters
         if (!pCache.returnCurvilinear){
           // new parameters bound to the surface
-          pParameters = new BoundParameters(std::move(cov),std::move(pars),sf);
+            pParameters = std::make_unique<const BoundParameters>(std::move(cov),std::move(pars),sf);
         } else {
           // get the charge
           double charge = pCache.parameters[4] > 0. ? 1. : -1.;
           // new curvilinear parameters
           Acts::Vector3D gp(pCache.pVector[0],pCache.pVector[1],pCache.pVector[2]);
-          pParameters = new CurvilinearParameters(std::move(cov),gp,detail::coordinate_transformation::parameters2globalMomentum(pars),charge);
+          pParameters = std::make_unique<const CurvilinearParameters>(std::move(cov),gp,detail::coordinate_transformation::parameters2globalMomentum(pars),charge);
         }
     }
+    
     // set the return type according to how the propagation went
     if (pParameters){
-       // @!TODO fill the jacobian
+        // set teh new parameters to the eCell
+        eCell.step(std::move(pParameters),purpose);
+       // fill the jacobian
         if (eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectJacobians))
-        {
-          eCell.stepTransport(sf,pCache.step,new TransportJacobian(pCache.jacobian));
-        }
+            eCell.stepTransport(sf,pCache.step,std::move(std::make_unique<const TransportJacobian>(pCache.jacobian)));
 
        // cache the last lead parameters, useful in case a navigation error occured
        eCell.lastLeadParameters = eCell.leadParameters;
-       // assign the lead and end parameters
-       eCell.leadParameters = pParameters;
        // check what to do with the path Length
        if (eCell.checkConfigurationMode(ExtrapolationMode::StopWithPathLimit) || eCell.pathLength > 0){
            // add the new propagation length to the path length
            eCell.pathLength += pCache.step;
-           // check if Limit reached
-           if (eCell.pathLimitReached(m_config.dlt)){
+           // check if Limit reached & prepare for final return
+           if (eCell.pathLimitReached(m_config.dlt, true)){
                EX_MSG_VERBOSE(eCell.navigationStep, "propagate", "char", "path limit of " << eCell.pathLimit << " successfully reached -> stopping." );
                return ExtrapolationCode::SuccessPathLimit;
            }
        }
-       // check if the propagation was called with directly, then lead parameters become end parameters
-       if (eCell.checkConfigurationMode(ExtrapolationMode::Direct))
-           eCell.endParameters = eCell.leadParameters;
-
        // return Success only if it is the final propagation - the extrapolation engine knows that
        return (finalPropagation ? ExtrapolationCode::SuccessDestination : ExtrapolationCode::InProgress);
    }
@@ -784,21 +766,21 @@ double Acts::RungeKuttaEngine::straightLineStep(int navigationStep, PropagationC
 /////////////////////////////////////////////////////////////////////////////////
 // Build new track parameters without propagation
 /////////////////////////////////////////////////////////////////////////////////
-const Acts::TrackParameters* Acts::RungeKuttaEngine::buildTrackParametersWithoutPropagation(const TrackParameters& tParameters,double* jacobian) const
+std::unique_ptr<const Acts::TrackParameters> Acts::RungeKuttaEngine::buildTrackParametersWithoutPropagation(const TrackParameters& tParameters,double* jacobian) const
 {
   jacobian[0]=jacobian[6]=jacobian[12]=jacobian[18]=jacobian[20]=1.;
   jacobian[1]=jacobian[2]=jacobian[3]=jacobian[4]=jacobian[5]=jacobian[7]=jacobian[8]=jacobian[9]=jacobian[10]=jacobian[11]=jacobian[13]=jacobian[14]=jacobian[15]=jacobian[16]=jacobian[17]=jacobian[19]=0.;
-  return tParameters.clone();
+    return nullptr; // @TODO FIX !! std::make_unique<const TrackParameters>(tParameters.clone()); // @TODO change clone() to return unique_ptr
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 // Build new neutral track parameters without propagation
 /////////////////////////////////////////////////////////////////////////////////
-const Acts::NeutralParameters* Acts::RungeKuttaEngine::buildNeutralParametersWithoutPropagation(const NeutralParameters& nParameters,double* jacobian) const
+std::unique_ptr<const Acts::NeutralParameters> Acts::RungeKuttaEngine::buildNeutralParametersWithoutPropagation(const NeutralParameters& nParameters,double* jacobian) const
 {
   jacobian[0]=jacobian[6]=jacobian[12]=jacobian[18]=jacobian[20]=1.;
   jacobian[1]=jacobian[2]=jacobian[3]=jacobian[4]=jacobian[5]=jacobian[7]=jacobian[8]=jacobian[9]=jacobian[10]=jacobian[11]=jacobian[13]=jacobian[14]=jacobian[15]=jacobian[16]=jacobian[17]=jacobian[19]=0.;
-  return nParameters.clone();
+    return nullptr; // @TODO FIX !! std::make_unique<const NeutralParameters>(nParameters.clone());
 }
 
 /////////////////////////////////////////////////////////////////////////////////

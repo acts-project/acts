@@ -15,6 +15,7 @@
 // GeometryTools
 #include "ACTS/Tools/LayerCreator.hpp"
 #include "ACTS/Utilities/OverlapDescriptor.hpp"
+#include "ACTS/Utilities/MsgMacros.hpp"
 #include "ACTS/Layers/CylinderLayer.hpp"
 #include "ACTS/Layers/DiscLayer.hpp"
 #include "ACTS/Detector/GenericOverlapDescriptor.hpp"
@@ -61,13 +62,12 @@ Acts::LayerPtr Acts::LayerCreator::cylinderLayer(const std::vector<const Surface
     double layerThickness = (maxR-minR)+2*envelopeR;    
     
     // adjust the layer radius 
-    layerR = 0.5*(minR+maxR);
-    //MSG_VERBOSE("Creating a cylindrical Layer:");
-    //MSG_VERBOSE(" - with layer R    = " << layerR);
-    //MSG_VERBOSE(" - from R min/max  = " << minR            << " / "  << maxR);
-    //MSG_VERBOSE(" - with z min/max  = " << -layerHalfZ     << " / " << layerHalfZ);
-    //MSG_VERBOSE(" - and phi min/max = " <<  minPhi         << " / " << maxPhi);
-    //MSG_VERBOSE(" - # of modules    = " << surfaces.size() << " ordered in ( " << binsPhi << " x " << binsZ << ")");
+    MSG_VERBOSE("Creating a cylindrical Layer:");
+    MSG_VERBOSE(" - with layer R    = " << layerR);
+    MSG_VERBOSE(" - from R min/max  = " << minR            << " / "  << maxR);
+    MSG_VERBOSE(" - with z min/max  = " << -layerHalfZ     << " / " << layerHalfZ);
+    MSG_VERBOSE(" - and phi min/max = " <<  minPhi         << " / " << maxPhi);
+    MSG_VERBOSE(" - # of modules    = " << surfaces.size() << " ordered in ( " << binsPhi << " x " << binsZ << ")");
     
     // create the surface array
     std::unique_ptr<SurfaceArray> sArray = m_config.surfaceArrayCreator->surfaceArrayOnCylinder(surfaces, layerR, minPhi, maxPhi, layerHalfZ, binsPhi, binsZ);
@@ -171,8 +171,7 @@ void Acts::LayerCreator::moduleExtend(const Surface& sf,
                 }
             }
         } else 
-            //MSG_WARNING("Not implemented yet for Non-Planar bounds")
-            ;
+            MSG_WARNING("Not implemented yet for Non-Planar bounds");
     }
 }       
 

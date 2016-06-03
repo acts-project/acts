@@ -29,12 +29,12 @@ namespace Acts {
      
      */
     
-    class TGeoDetectorElement : public Acts::DetectorElementBase {
+    class TGeoDetectorElement : public DetectorElementBase {
     
     public:
         /** Constructor  */
         TGeoDetectorElement(const Identifier& identifier,
-                            TGeoNode* tGeoDetElement, std::shared_ptr<const Acts::Transform3D> motherTransform = nullptr);
+                            TGeoNode* tGeoDetElement, std::shared_ptr<const Transform3D> motherTransform = nullptr);
         
         /**  Destructor */
         virtual ~TGeoDetectorElement();
@@ -43,24 +43,24 @@ namespace Acts {
         virtual Identifier identify() const override;
         
         /**Return local to global transform associated with this identifier*/
-        virtual const Acts::Transform3D& transform(const Identifier& identifier = Identifier()) const override;
+        virtual const Transform3D& transform(const Identifier& identifier = Identifier()) const override;
         
         /**Return surface associated with this identifier, which should come from the */
-        virtual const Acts::Surface& surface (const Identifier& identifier = Identifier()) const override;
+        virtual const Surface& surface (const Identifier& identifier = Identifier()) const override;
         
         /** Returns the full list of all detection surfaces associated to this detector element */
-        virtual const std::vector< std::shared_ptr<const Acts::Surface> >& surfaces() const override;
+        virtual const std::vector< std::shared_ptr<const Surface> >& surfaces() const override;
         
         /**Return the boundaries of the surface associated with this identifier */
-        virtual const Acts::SurfaceBounds& bounds(const Identifier& identifier = Identifier()) const override;
+        virtual const SurfaceBounds& bounds(const Identifier& identifier = Identifier()) const override;
         
         /**Return the center of the surface associated with this identifier
          In the case of silicon it returns the same as center()*/
-        virtual const Acts::Vector3D& center(const Identifier& identifier = Identifier()) const override;
+        virtual const Vector3D& center(const Identifier& identifier = Identifier()) const override;
         
         /**Return the normal of the surface associated with this identifier
          In the case of silicon it returns the same as normal()*/
-        virtual const Acts::Vector3D& normal(const Identifier& identifier = Identifier()) const override;
+        virtual const Vector3D& normal(const Identifier& identifier = Identifier()) const override;
         
         /** Returns the thickness of the module */
         virtual double thickness() const override;
@@ -68,38 +68,38 @@ namespace Acts {
     private:
         
         /**DD4hep detector element*/
-        TGeoNode*                                            m_detElement;
+        TGeoNode*                                      m_detElement;
         /**Transformation of the detector element*/
-        std::shared_ptr<Acts::Transform3D>                   m_transform;
+        std::shared_ptr<Transform3D>                   m_transform;
         /**Center position of the detector element*/
-        mutable std::shared_ptr<const Acts::Vector3D>        m_center;
+        mutable std::shared_ptr<const Vector3D>        m_center;
         /**Normal vector to the detector element*/
-        mutable std::shared_ptr<const Acts::Vector3D>        m_normal;
+        mutable std::shared_ptr<const Vector3D>        m_normal;
         /**Identifier of the detector element*/
-        const Identifier                                     m_identifier;
+        const Identifier                               m_identifier;
         /**Boundaries of the detector element*/
-        std::shared_ptr<const Acts::SurfaceBounds>           m_bounds;
+        std::shared_ptr<const SurfaceBounds>           m_bounds;
         /** Thickness of this detector element*/
-        double                                               m_thickness; //@TODO implement thickness from TGeoMode
+        double                                         m_thickness; //@TODO implement thickness from TGeoMode
         /**Corresponding Surface*/
-        std::shared_ptr<const Acts::Surface>                 m_surface;
+        std::shared_ptr<const Surface>                 m_surface;
         /**possible contained surfaces*/
-        std::vector<std::shared_ptr<const Acts::Surface>>    m_surfaces;
+        std::vector<std::shared_ptr<const Surface>>    m_surfaces;
 
     };
+
+    inline Identifier TGeoDetectorElement::identify() const {return m_identifier;}
+    
+    inline const Transform3D& TGeoDetectorElement::transform(const Identifier&) const {return (*m_transform);}
+    
+    inline const Surface& TGeoDetectorElement::surface(const Identifier&) const {return (*m_surface);}
+    
+    inline const std::vector< std::shared_ptr<const Surface> >& TGeoDetectorElement::surfaces() const {return (m_surfaces);}
+    
+    inline const SurfaceBounds& TGeoDetectorElement::bounds(const Identifier&) const {return (*m_bounds);}
+    
+    inline double TGeoDetectorElement::thickness() const { return m_thickness; }
+
 }
-
-inline Identifier Acts::TGeoDetectorElement::identify() const {return m_identifier;}
-
-inline const Acts::Transform3D& Acts::TGeoDetectorElement::transform(const Identifier&) const {return (*m_transform);}
-
-inline const Acts::Surface& Acts::TGeoDetectorElement::surface(const Identifier&) const {return (*m_surface);}
-
-inline const std::vector< std::shared_ptr<const Acts::Surface> >& Acts::TGeoDetectorElement::surfaces() const {return (m_surfaces);}
-
-inline const Acts::SurfaceBounds& Acts::TGeoDetectorElement::bounds(const Identifier&) const {return (*m_bounds);}
-
-inline double Acts::TGeoDetectorElement::thickness() const { return m_thickness; }
-
 
 #endif

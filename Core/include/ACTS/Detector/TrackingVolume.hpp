@@ -267,9 +267,9 @@ namespace Acts {
       /** Forbid assignment */
       TrackingVolume &operator=(const TrackingVolume&) { return *this; }
                               
-      std::shared_ptr<Material>                                                          m_material; //!< The Material the TrackingVolume consists of
+      std::shared_ptr<Material>                                                       m_material; //!< The Material the TrackingVolume consists of
 
-      mutable const TrackingVolume*                                                    m_motherVolume;            //!< mother volume of this volume
+      mutable const TrackingVolume*                                                   m_motherVolume;            //!< mother volume of this volume
 
       mutable std::vector< std::shared_ptr<const BoundarySurface<TrackingVolume> > >  m_boundarySurfaces;        //!< boundary Surfaces
 
@@ -277,9 +277,9 @@ namespace Acts {
       mutable std::unique_ptr<const LayerArray>                                                        m_confinedLayers;          //!< Array of Layers inside the Volume
       mutable std::shared_ptr<const TrackingVolumeArray>                               m_confinedVolumes;         //!< Array of Volumes inside the Volume
       //(b)  non-static setups
-      const DetachedVolumeVector                                              m_confinedDetachedVolumes; //!< Detached subvolumes
-      const TrackingVolumeVector                                              m_confinedDenseVolumes;    //!< Unordered subvolumes
-      const LayerVector                                                       m_confinedArbitraryLayers; //!< Unordered Layers inside the Volume
+      const DetachedVolumeVector                                                       m_confinedDetachedVolumes; //!< Detached subvolumes
+      const TrackingVolumeVector                                                       m_confinedDenseVolumes;    //!< Unordered subvolumes
+      const LayerVector                                                                m_confinedArbitraryLayers; //!< Unordered Layers inside the Volume
 
       mutable GlueVolumesDescriptor*                                                   m_glueVolumeDescriptor;      //!< Volumes to glue Volumes from the outside
 

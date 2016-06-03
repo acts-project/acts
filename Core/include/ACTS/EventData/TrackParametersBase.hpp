@@ -170,7 +170,6 @@ namespace Acts
       return out;
     }
 
-  protected:
     /**
      * @brief access to the internally stored ParameterSet
      *
@@ -178,6 +177,7 @@ namespace Acts
      */
     virtual const FullParameterSet& getParameterSet() const = 0;
 
+  protected:
     /**
      * @brief print information to output stream
      *

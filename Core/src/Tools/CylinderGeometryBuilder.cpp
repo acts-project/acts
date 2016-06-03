@@ -16,6 +16,7 @@
 #include "ACTS/Detector/TrackingGeometry.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
+#include "ACTS/Utilities/MsgMacros.hpp"
 
 // constructor
 Acts::CylinderGeometryBuilder::CylinderGeometryBuilder(const Acts::CylinderGeometryBuilder::Config& cgbConfig):
