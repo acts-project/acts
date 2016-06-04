@@ -91,7 +91,5 @@ void Acts::CylinderLayer::buildApproachDescriptor() const {
     for (auto& sIter : (m_approachDescriptor->containedSurfaces())){
         if (sIter)
             sIter->associateLayer(*this);
-        else 
-            std::cout << "No approach descriptor surface!" << std::endl;
     }
 }

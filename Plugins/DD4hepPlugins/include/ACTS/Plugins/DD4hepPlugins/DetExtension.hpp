@@ -16,7 +16,6 @@
 #include "ACTS/Plugins/DD4hepPlugins/IDetExtension.hpp"
 //DD4hep
 #include "DD4hep/Detector.h"
-#include "ACTS/Plugins/DD4hepPlugins/Module.hpp"
 
 
 namespace Acts {
@@ -35,6 +34,16 @@ namespace Acts {
     public:
         /* constructor **/
         DetExtension();
+        /* constructor for sensitive detector element **/
+        DetExtension(const DD4hep::Geometry::Segmentation segmentation);
+        /* constructor for volume with shape **/
+        DetExtension(ShapeType shape);
+        /* constructor for layer with support structure **/
+        DetExtension(const DD4hep::Geometry::DetElement support);
+        /* constructor for layer with modules **/
+        DetExtension(std::vector<DD4hep::Geometry::DetElement> mod);
+        /* constructor for layer with support structure and modules **/
+        DetExtension(const DD4hep::Geometry::DetElement support, std::vector<DD4hep::Geometry::DetElement> mod);
         /* copy constructor **/
         DetExtension(const DetExtension&, const DD4hep::Geometry::DetElement&)
         {}
@@ -53,16 +62,16 @@ namespace Acts {
         /* access supporting structure */
         const DD4hep::Geometry::DetElement& supportStructure() const override;
         /* possibility to set contained sensitive DetectorModules by a layer*/
-        void setModules(std::vector<Module>) override;
+        void setModules(std::vector<DD4hep::Geometry::DetElement> mod) override;
         /* access modules */
-        std::vector<Module> modules() const override;
+        std::vector<DD4hep::Geometry::DetElement> modules() const override;
 
     private:
         
-        DD4hep::Geometry::Segmentation          m_segmentation;  //!< segmentation of a sensitive detector module
-        ShapeType                               m_shape;         //!< shape of a volume
-        DD4hep::Geometry::DetElement            m_supportStructure; //!< possible support structure e.g. for a layer
-        std::vector<Module>                     m_modules; //!< possible contained modules by a layer
+        DD4hep::Geometry::Segmentation                                  m_segmentation;  //!< segmentation of a sensitive detector module
+        ShapeType                                                       m_shape;         //!< shape of a volume
+        DD4hep::Geometry::DetElement                                    m_supportStructure; //!< possible support structure e.g. for a layer
+        std::vector<DD4hep::Geometry::DetElement>                 m_modules; //!< possible contained modules by a layer
     };
 }
 
@@ -90,11 +99,11 @@ inline const DD4hep::Geometry::DetElement& Acts::DetExtension::supportStructure(
     return m_supportStructure;
 }
 
-inline void Acts::DetExtension::setModules(std::vector<Acts::Module> mod) {
+inline void Acts::DetExtension::setModules(std::vector<DD4hep::Geometry::DetElement> mod) {
     m_modules = std::move(mod);
 }
 
-inline std::vector<Acts::Module> Acts::DetExtension::modules() const {
+inline std::vector<DD4hep::Geometry::DetElement> Acts::DetExtension::modules() const {
     return m_modules;
 }
 

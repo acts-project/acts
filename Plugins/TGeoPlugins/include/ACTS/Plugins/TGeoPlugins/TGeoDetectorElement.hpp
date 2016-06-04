@@ -23,7 +23,7 @@ namespace Acts {
     
     /** @class TGeoDetectorElement
      
-     DetectorElement plugin for ROOT TGeo shapes.
+     DetectorElement plugin for ROOT TGeo shapes. Added possibility to hand over transformation matrix.
      
      @TODO what if shape conversion failes? add implementation of more than one surface per module, implementing also for other shapes->Cone,ConeSeg,Tube? what if not used with DD4hep?
      
@@ -34,7 +34,7 @@ namespace Acts {
     public:
         /** Constructor  */
         TGeoDetectorElement(const Identifier& identifier,
-                            TGeoNode* tGeoDetElement, std::shared_ptr<const Transform3D> motherTransform = nullptr);
+                            TGeoNode* tGeoDetElement, std::shared_ptr<const Acts::Transform3D> motherTransform = nullptr);
         
         /**  Destructor */
         virtual ~TGeoDetectorElement();
@@ -70,7 +70,7 @@ namespace Acts {
         /**DD4hep detector element*/
         TGeoNode*                                      m_detElement;
         /**Transformation of the detector element*/
-        std::shared_ptr<Transform3D>                   m_transform;
+        std::shared_ptr<const Acts::Transform3D>             m_transform;
         /**Center position of the detector element*/
         mutable std::shared_ptr<const Vector3D>        m_center;
         /**Normal vector to the detector element*/

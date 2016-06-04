@@ -18,6 +18,8 @@
 #include "ACTS/Utilities/BinUtility.hpp"
 // STL
 #include <vector>
+//debug
+#include <iostream>
 
 class MsgStream;
 
@@ -67,11 +69,9 @@ namespace Acts {
                         auto endIter   = BinnedArray<T>::m_arrayObjects.end();
                         if (std::find(beginIter,endIter,object) == endIter)
                             BinnedArray<T>::m_arrayObjects.push_back(object);
-                    } else
-                        throw "BinnedArray2D";
+                    } else throw "BinnedArray2D";
                 }
-            } else
-              throw "BinnedArray2D";
+            } else throw "BinnedArray2D";
         }
         
         /**Copy Constructor - copies only pointers !*/

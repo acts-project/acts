@@ -63,8 +63,10 @@ std::unique_ptr<Acts::TrackingGeometry> Acts::CylinderGeometryBuilder::trackingG
       }
     }
     // create the TrackingGeoemtry
+
     trackingGeometry.reset(new Acts::TrackingGeometry(highestVolume));
   }
-  // return the geometry to the service
-  return trackingGeometry;
-}
+ // return the geometry to the service
+    return (std::move(trackingGeometry));
+} 
+
