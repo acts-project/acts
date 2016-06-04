@@ -39,7 +39,7 @@ set (_supported_components)
 add_subdirectory (Core)
 add_subdirectory (doc)
 add_subdirectory (Plugins)
-#add_subdirectory (Examples)
+add_subdirectory (Examples)
 
 # add unit tests
 enable_testing ()
