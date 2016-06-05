@@ -9,125 +9,135 @@
 #ifndef ACTS_CHARGEDEFINITION_H
 #define ACTS_CHARGEDEFINITION_H 1
 
-namespace Acts
+namespace Acts {
+/**
+ * @class ChargedPolicy
+ *
+ * @brief policy class for charged particles/tracks
+ *
+ * This type is meant to be used as template parameter to the
+ * SingleTrackParameters class
+ * and its derived classes in order to provide a distinction between charged and
+ * neutral
+ * track (parameters) at the C++ type level. This allows other class to employ
+ * optimized
+ * algorithms for either case by using template specializations.
+ */
+class ChargedPolicy
 {
+public:
   /**
-   * @class ChargedPolicy
+   * @brief constructor with given charge
    *
-   * @brief policy class for charged particles/tracks
-   *
-   * This type is meant to be used as template parameter to the SingleTrackParameters class
-   * and its derived classes in order to provide a distinction between charged and neutral
-   * track (parameters) at the C++ type level. This allows other class to employ optimized
-   * algorithms for either case by using template specializations.
+   * @param charge electric charge of particle/track (parameters)
    */
-  class ChargedPolicy
+  ChargedPolicy(double charge) : m_dCharge(charge) {}
+  /**
+   * @brief equality operator
+   *
+   * @return @c true if rhs has the same charge, otherwise @c false
+   */
+  bool
+  operator==(const ChargedPolicy& rhs) const
   {
-  public:
-    /**
-     * @brief constructor with given charge
-     *
-     * @param charge electric charge of particle/track (parameters)
-     */
-    ChargedPolicy(double charge):
-      m_dCharge(charge)
-    {}
-
-    /**
-     * @brief equality operator
-     *
-     * @return @c true if rhs has the same charge, otherwise @c false
-     */
-    bool operator==(const ChargedPolicy& rhs) const
-    {
-      return m_dCharge == rhs.m_dCharge;
-    }
-
-    /**
-     * @brief inequality operator
-     *
-     * @return @c true if rhs has a different charge, otherwise @c false
-     */
-    bool operator!=(const ChargedPolicy& rhs) const
-    {
-      return !(*this == rhs);
-    }
-
-    /**
-     * @brief retrieve stored value of the electric charge
-     *
-     * @return value for charge
-     */
-    double getCharge() const
-    {
-      return m_dCharge;
-    }
-
-    /**
-     * @brief sets charge
-     *
-     * @param charge new value for the electric charge
-     */
-    void setCharge(double charge)
-    {
-      m_dCharge = charge;
-    }
-
-    /**
-     * @brief flip sign of electric charge
-     */
-    void flipSign()
-    {
-      m_dCharge *= -1.;
-    }
-
-  private:
-    double m_dCharge;  ///< value of electric charge
-  };
+    return m_dCharge == rhs.m_dCharge;
+  }
 
   /**
-   * @class NeutralPolicy
+   * @brief inequality operator
    *
-   * @brief policy class for neutral particles/tracks
-   *
-   * This type is meant to be used as template parameter to the SingleTrackParameters class
-   * and its derived classes in order to provide a distinction between charged and neutral
-   * track (parameters) at the C++ type level. This allows other class to employ optimized
-   * algorithms for either case by using template specializations.
+   * @return @c true if rhs has a different charge, otherwise @c false
    */
-  class NeutralPolicy
+  bool
+  operator!=(const ChargedPolicy& rhs) const
   {
-  public:
-    /**
-     * @brief equality operator
-     *
-     * @return always @c true
-     */
-    bool operator==(const NeutralPolicy&) const
-    {
-      return true;
-    }
+    return !(*this == rhs);
+  }
 
-    /**
-     * @brief inequality operator
-     *
-     * @return always @c false
-     */
-    bool operator!=(const NeutralPolicy& rhs) const
-    {
-      return !(*this == rhs);
-    }
+  /**
+   * @brief retrieve stored value of the electric charge
+   *
+   * @return value for charge
+   */
+  double
+  getCharge() const
+  {
+    return m_dCharge;
+  }
 
-    /**
-     * @brief get electric charge
-     *
-     * @return always 0
-     */
-    double getCharge() const
-    {
-      return 0.;
-    }
-  };
-} // end of namespace Acts
+  /**
+   * @brief sets charge
+   *
+   * @param charge new value for the electric charge
+   */
+  void
+  setCharge(double charge)
+  {
+    m_dCharge = charge;
+  }
 
-#endif // ACTS_CHARGEPOLICY_H
+  /**
+   * @brief flip sign of electric charge
+   */
+  void
+  flipSign()
+  {
+    m_dCharge *= -1.;
+  }
+
+private:
+  double m_dCharge;  ///< value of electric charge
+};
+
+/**
+ * @class NeutralPolicy
+ *
+ * @brief policy class for neutral particles/tracks
+ *
+ * This type is meant to be used as template parameter to the
+ * SingleTrackParameters class
+ * and its derived classes in order to provide a distinction between charged and
+ * neutral
+ * track (parameters) at the C++ type level. This allows other class to employ
+ * optimized
+ * algorithms for either case by using template specializations.
+ */
+class NeutralPolicy
+{
+public:
+  /**
+   * @brief equality operator
+   *
+   * @return always @c true
+   */
+  bool
+  operator==(const NeutralPolicy&) const
+  {
+    return true;
+  }
+
+  /**
+   * @brief inequality operator
+   *
+   * @return always @c false
+   */
+  bool
+  operator!=(const NeutralPolicy& rhs) const
+  {
+    return !(*this == rhs);
+  }
+
+  /**
+   * @brief get electric charge
+   *
+   * @return always 0
+   */
+  double
+  getCharge() const
+  {
+    return 0.;
+  }
+};
+}  // end of namespace Acts
+
+#endif  // ACTS_CHARGEPOLICY_H

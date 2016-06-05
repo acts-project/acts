@@ -15,9 +15,11 @@
 
 #ifndef TRKDETDESCR_TAKESMALLERBIGGER
 #define TRKDETDESCR_TAKESMALLERBIGGER
-#define takeSmaller(current,test) current = current < test ? current : test
-#define takeBigger(current,test)  current = current > test ? current : test
-#define takeSmallerBigger(cSmallest, cBiggest, test) takeSmaller(cSmallest, test); takeBigger(cBiggest, test)
+#define takeSmaller(current, test) current = current < test ? current : test
+#define takeBigger(current, test) current  = current > test ? current : test
+#define takeSmallerBigger(cSmallest, cBiggest, test)                           \
+  takeSmaller(cSmallest, test);                                                \
+  takeBigger(cBiggest, test)
 #endif
 
 // Core module
@@ -30,66 +32,77 @@
 
 namespace Acts {
 
-    class Surface;
-    class Layer;
+class Surface;
+class Layer;
 
-    /** @class LayerArrayCreator
+/** @class LayerArrayCreator
 
-      The LayerArrayCreator is a simple Tool that helps to construct
-      LayerArrays from std::vector of Acts::CylinderLayer, Acts::DiscLayer, Acts::PlaneLayer.
+  The LayerArrayCreator is a simple Tool that helps to construct
+  LayerArrays from std::vector of Acts::CylinderLayer, Acts::DiscLayer,
+ Acts::PlaneLayer.
 
-      It fills the gaps automatically with Acts::NavigationLayer to be processed easily in the
-      Navigation of the Extrapolation process.
+  It fills the gaps automatically with Acts::NavigationLayer to be processed
+ easily in the
+  Navigation of the Extrapolation process.
 
-     @TODO Julia: make private tools private again after Gaudi update (bug in Gaudi), marked with //b
-     
+ @TODO Julia: make private tools private again after Gaudi update (bug in
+ Gaudi), marked with //b
+
+ */
+
+class LayerArrayCreator : public ILayerArrayCreator
+{
+public:
+  struct Config
+  {
+    std::shared_ptr<Logger> logger;  //!< logging instance
+
+    Config() : logger(getDefaultLogger("LayerArrayCreator", Logging::INFO)) {}
+  };
+
+  /** Constructor */
+  LayerArrayCreator(const Config& c) : m_config(c) {}
+  /** Destructor */
+  virtual ~LayerArrayCreator() = default;
+
+  /** LayerArraycreator interface method
+     - we assume the layer thickness to be used together with the binning value
      */
+  std::unique_ptr<const LayerArray>
+  layerArray(const LayerVector& layers,
+             double             min,
+             double             max,
+             BinningType        btype  = arbitrary,
+             BinningValue       bvalue = binX) const override;
 
-    class LayerArrayCreator : public ILayerArrayCreator {
+  /** Set configuration method */
+  void
+  setConfiguration(const Config& c)
+  {
+    m_config = c;
+  }
 
-      public:
-      struct Config
-      {
-	std::shared_ptr<Logger>                 logger;                      //!< logging instance
+  /** Get configuration method */
+  Config
+  getConfiguration() const
+  {
+    return m_config;
+  }
 
-	Config():
-	  logger(getDefaultLogger("LayerArrayCreator",Logging::INFO))
-	  {}
-      };
-      
-        /** Constructor */
-      LayerArrayCreator(const Config& c):
-	m_config(c)
-	{}
-        
-        /** Destructor */
-        virtual ~LayerArrayCreator() = default;
+private:
+  const Logger&
+  logger() const
+  {
+    return *m_config.logger;
+  }
 
-        /** LayerArraycreator interface method 
-           - we assume the layer thickness to be used together with the binning value */
-        std::unique_ptr<const LayerArray> layerArray(const LayerVector& layers,
-                                                     double min,
-                                                     double max,
-                                                     BinningType btype = arbitrary,
-                                                     BinningValue bvalue = binX) const override;
-      
-       /** Set configuration method */
-       void setConfiguration(const Config& c)
-	{
-	  m_config = c;
-	}
+  Config m_config;
+  Surface*
+  createNavigationSurface(const Layer& layer,
+                          BinningValue bvalue,
+                          double       offset) const;
+};
 
-       /** Get configuration method */
-      Config getConfiguration() const {return m_config;}
+}  // end of namespace
 
-    private:
-        const Logger& logger() const {return *m_config.logger;}
-
-      Config m_config;
-          Surface* createNavigationSurface(const Layer& layer, BinningValue bvalue, double offset) const;
-    };
-
-} // end of namespace
-
-#endif // ACTS_GEOMETRYTOOLS_LAYERARRAYCREATOR_H
-
+#endif  // ACTS_GEOMETRYTOOLS_LAYERARRAYCREATOR_H

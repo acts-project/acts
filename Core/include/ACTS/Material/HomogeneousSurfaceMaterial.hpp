@@ -14,86 +14,114 @@
 #define ACTS_MATERIAL_HOMOGENOUSLAYERMATERIAL_H
 
 // Core module
-#include "ACTS/Material/SurfaceMaterial.hpp"
 #include "ACTS/Material/MaterialProperties.hpp"
+#include "ACTS/Material/SurfaceMaterial.hpp"
 // STD/STL
 #include <vector>
 #include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
 
+class BinUtility;
+/**
+ @class HomogeneousSurfaceMaterial
 
-  class BinUtility;
-  /** 
-   @class HomogeneousSurfaceMaterial
+ It extends the SurfaceMaterial base class and describes a simple homogeneus
+ material
+ descriptions
 
-   It extends the SurfaceMaterial base class and describes a simple homogeneus material
-   descriptions
-      
-   */
+ */
 
-  class HomogeneousSurfaceMaterial : public SurfaceMaterial {
-    
-    public:
-      /** Default Constructor - creates empty HomogeneousSurfaceMaterial */
-      HomogeneousSurfaceMaterial();
-      
-      /**Explizit constructor with only full MaterialProperties, and a split factor*/
-      HomogeneousSurfaceMaterial(const MaterialProperties& full, double splitFactor=1.);
-      
-      /**Copy Constructor */  
-      HomogeneousSurfaceMaterial(const HomogeneousSurfaceMaterial& mprop);
-      
-      /**Destructor*/
-      virtual ~HomogeneousSurfaceMaterial();
-      
-      /**Pseudo-Constructor clone()*/ 
-      HomogeneousSurfaceMaterial* clone() const override;
-      
-      /** Assignment operator */
-      HomogeneousSurfaceMaterial& operator=(const HomogeneousSurfaceMaterial& lmp);
+class HomogeneousSurfaceMaterial : public SurfaceMaterial
+{
+public:
+  /** Default Constructor - creates empty HomogeneousSurfaceMaterial */
+  HomogeneousSurfaceMaterial();
 
-      /** Scale operator */
-      HomogeneousSurfaceMaterial& operator*=(double scale) override;
+  /**Explizit constructor with only full MaterialProperties, and a split
+   * factor*/
+  HomogeneousSurfaceMaterial(const MaterialProperties& full,
+                             double                    splitFactor = 1.);
 
-      /**Return method for full material description of the Layer - local coordinates*/
-      virtual const MaterialProperties* material(const Vector2D& lp) const override;
-      
-      /**Return method for full material description of the Layer - global coordinates*/
-      virtual const MaterialProperties* material(const Vector3D& gp) const override;
+  /**Copy Constructor */
+  HomogeneousSurfaceMaterial(const HomogeneousSurfaceMaterial& mprop);
 
-      /**Direct access via bins to the MaterialProperties */
-      virtual const MaterialProperties* material(size_t ib0, size_t ib1) const override;
-      
-      /** Return the BinUtility */
-      const BinUtility* binUtility() const  override { return nullptr; }
-      
-      /** Update the BinUtility if necessary - passing ownership of the utility class*/
-      void updateBinning(BinUtility*) const override { }
-          
-      /** Output Method for std::ostream, to be overloaded by child classes */
-      std::ostream& dump(std::ostream& sl) const override;      
+  /**Destructor*/
+  virtual ~HomogeneousSurfaceMaterial();
 
-    private:
-      /** The five different MaterialProperties */
-      MaterialProperties*           m_fullMaterial;
-                                            
-  };
-  
-inline HomogeneousSurfaceMaterial* HomogeneousSurfaceMaterial::clone() const
-  { return new HomogeneousSurfaceMaterial(*this); }  
+  /**Pseudo-Constructor clone()*/
+  HomogeneousSurfaceMaterial*
+  clone() const override;
 
-inline const MaterialProperties* HomogeneousSurfaceMaterial::material(const Vector2D&) const
-  { return m_fullMaterial; }
-  
-inline const MaterialProperties* HomogeneousSurfaceMaterial::material(const Vector3D&) const
-  { return m_fullMaterial; }
-      
-inline const MaterialProperties* HomogeneousSurfaceMaterial::material(size_t, size_t) const
-  { return m_fullMaterial; }      
-    
-} // end of namespace
+  /** Assignment operator */
+  HomogeneousSurfaceMaterial&
+  operator=(const HomogeneousSurfaceMaterial& lmp);
 
-#endif 
+  /** Scale operator */
+  HomogeneousSurfaceMaterial&
+  operator*=(double scale) override;
 
+  /**Return method for full material description of the Layer - local
+   * coordinates*/
+  virtual const MaterialProperties*
+  material(const Vector2D& lp) const override;
 
+  /**Return method for full material description of the Layer - global
+   * coordinates*/
+  virtual const MaterialProperties*
+  material(const Vector3D& gp) const override;
+
+  /**Direct access via bins to the MaterialProperties */
+  virtual const MaterialProperties*
+  material(size_t ib0, size_t ib1) const override;
+
+  /** Return the BinUtility */
+  const BinUtility*
+  binUtility() const override
+  {
+    return nullptr;
+  }
+
+  /** Update the BinUtility if necessary - passing ownership of the utility
+   * class*/
+  void
+  updateBinning(BinUtility*) const override
+  {
+  }
+
+  /** Output Method for std::ostream, to be overloaded by child classes */
+  std::ostream&
+  dump(std::ostream& sl) const override;
+
+private:
+  /** The five different MaterialProperties */
+  MaterialProperties* m_fullMaterial;
+};
+
+inline HomogeneousSurfaceMaterial*
+HomogeneousSurfaceMaterial::clone() const
+{
+  return new HomogeneousSurfaceMaterial(*this);
+}
+
+inline const MaterialProperties*
+HomogeneousSurfaceMaterial::material(const Vector2D&) const
+{
+  return m_fullMaterial;
+}
+
+inline const MaterialProperties*
+HomogeneousSurfaceMaterial::material(const Vector3D&) const
+{
+  return m_fullMaterial;
+}
+
+inline const MaterialProperties*
+    HomogeneousSurfaceMaterial::material(size_t, size_t) const
+{
+  return m_fullMaterial;
+}
+
+}  // end of namespace
+
+#endif

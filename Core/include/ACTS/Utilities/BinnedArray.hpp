@@ -30,43 +30,48 @@ namespace Acts {
 
    */
 
-  template <class T> class BinnedArray {
+template <class T>
+class BinnedArray
+{
+public:
+  /** Default Constructor - needed for inherited classes */
+  BinnedArray() {}
+  /** Default Constructor - needed for inherited classes */
+  BinnedArray(const BinnedArray<T>& ba) : m_arrayObjects(ba.m_arrayObjects) {}
+  /**Virtual Destructor*/
+  virtual ~BinnedArray() {}
+  /** Implicit constructor */
+  virtual BinnedArray*
+  clone() const = 0;
 
-    public:
-      /** Default Constructor - needed for inherited classes */
-      BinnedArray() {}
+  /** Returns the object in the associated bin according the local position  */
+  virtual T
+  object(const Vector2D& lp) const = 0;
 
-      /** Default Constructor - needed for inherited classes */
-      BinnedArray(const BinnedArray<T>& ba) :
-        m_arrayObjects(ba.m_arrayObjects)
-      {}
+  /** Returns the object in the associated bin according the global position  */
+  virtual T
+  object(const Vector3D& gp) const = 0;
 
-      /**Virtual Destructor*/
-      virtual ~BinnedArray(){}
+  /** Returns the pointer to the templated class object from the BinnedArray -
+   * entry point*/
+  virtual T
+  entryObject(const Vector3D&) const = 0;
 
-      /** Implicit constructor */
-      virtual BinnedArray* clone() const = 0;
-
-      /** Returns the object in the associated bin according the local position  */
-      virtual T object(const Vector2D& lp) const = 0;
-
-      /** Returns the object in the associated bin according the global position  */
-      virtual T object(const Vector3D& gp) const = 0;
-
-      /** Returns the pointer to the templated class object from the BinnedArray - entry point*/
-      virtual T entryObject(const Vector3D&) const = 0;
-      
-      /** Return all objects of the Array - in one */
-      virtual const std::vector< T >& arrayObjects() const { return m_arrayObjects; };
-
-      /** Return the BinUtility*/
-      virtual const BinUtility* binUtility() const = 0;
-
-    protected:
-      std::vector< T >    m_arrayObjects;
-
+  /** Return all objects of the Array - in one */
+  virtual const std::vector<T>&
+  arrayObjects() const
+  {
+    return m_arrayObjects;
   };
 
-} // end of namespace Acts
+  /** Return the BinUtility*/
+  virtual const BinUtility*
+  binUtility() const = 0;
 
-#endif // ACTS_GEOMETRYUTILS_BINNEDARRAY_H
+protected:
+  std::vector<T> m_arrayObjects;
+};
+
+}  // end of namespace Acts
+
+#endif  // ACTS_GEOMETRYUTILS_BINNEDARRAY_H

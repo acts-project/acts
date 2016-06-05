@@ -23,24 +23,22 @@ namespace Acts {
 
   */
 
-   class AreaExcluder {
+class AreaExcluder
+{
+public:
+  /** Default constructor */
+  AreaExcluder() {}
+  /** Virtual Destructor */
+  virtual ~AreaExcluder() {}
+  /** Implizit Constructor */
+  virtual AreaExcluder*
+  clone() const = 0;
 
-      public:
-        /** Default constructor */
-        AreaExcluder(){}
+  /** First bin from global position */
+  virtual bool
+  inside(const Vector3D& gp, double tol = 0.) const = 0;
+};
 
-        /** Virtual Destructor */
-        virtual ~AreaExcluder(){}
+}  // end of namespace Acts
 
-        /** Implizit Constructor */
-        virtual AreaExcluder* clone() const = 0;
-
-        /** First bin from global position */
-        virtual bool inside(const Vector3D& gp, double tol=0.) const = 0;
-
-   };
-
-} // end of namespace Acts
-
-#endif // TRKDETDESCRUTILS_AREAEXCLUDER_H
-
+#endif  // TRKDETDESCRUTILS_AREAEXCLUDER_H

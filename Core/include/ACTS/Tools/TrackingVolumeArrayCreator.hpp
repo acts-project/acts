@@ -23,54 +23,61 @@
 
 namespace Acts {
 
-    class Layer;
-    class TrackingVolume;
-    
-    typedef std::pair< TrackingVolumePtr, Vector3D>   TrackingVolumeOrderPosition;
-    
-    /** @class TrackingVolumeArrayCreator
+class Layer;
+class TrackingVolume;
 
-      The TrackingVolumeArrayCreator is a simple Tool that helps to construct
-      binned arrays of TrackingVolumes for both, confinement in another volume 
-      and navigation issues.
-     
-     */
+typedef std::pair<TrackingVolumePtr, Vector3D> TrackingVolumeOrderPosition;
 
-    class TrackingVolumeArrayCreator : public ITrackingVolumeArrayCreator {
+/** @class TrackingVolumeArrayCreator
 
-      public:
-      struct Config
-      {
-	std::shared_ptr<Logger>                 logger;                      //!< logging instance
+  The TrackingVolumeArrayCreator is a simple Tool that helps to construct
+  binned arrays of TrackingVolumes for both, confinement in another volume
+  and navigation issues.
 
-	Config():
-	  logger(getDefaultLogger("LayerArrayCreator",Logging::INFO))
-	  {}
-      };
-      
-        /** Constructor */
-      TrackingVolumeArrayCreator(const Config& c):
-	m_config(c)
-      {}
+ */
 
-      /** Destructor */
-      virtual ~TrackingVolumeArrayCreator() = default;
+class TrackingVolumeArrayCreator : public ITrackingVolumeArrayCreator
+{
+public:
+  struct Config
+  {
+    std::shared_ptr<Logger> logger;  //!< logging instance
 
-      /** create a tracking volume array */
-      std::shared_ptr<const TrackingVolumeArray> trackingVolumeArray(const TrackingVolumeVector& vols, BinningValue bVal) const;
+    Config() : logger(getDefaultLogger("LayerArrayCreator", Logging::INFO)) {}
+  };
 
-      void setConfiguration(const Config& c) {m_config = c;}
+  /** Constructor */
+  TrackingVolumeArrayCreator(const Config& c) : m_config(c) {}
+  /** Destructor */
+  virtual ~TrackingVolumeArrayCreator() = default;
 
-       /** Get configuration method */
-      Config getConfiguration() const {return m_config;}
-      
-      private:
-        /** Configuration struct */
-        Config m_config;
-        const Logger& logger() const {return *m_config.logger;}
-      
-    };
+  /** create a tracking volume array */
+  std::shared_ptr<const TrackingVolumeArray>
+  trackingVolumeArray(const TrackingVolumeVector& vols,
+                      BinningValue                bVal) const;
+
+  void
+  setConfiguration(const Config& c)
+  {
+    m_config = c;
+  }
+
+  /** Get configuration method */
+  Config
+  getConfiguration() const
+  {
+    return m_config;
+  }
+
+private:
+  /** Configuration struct */
+  Config m_config;
+  const Logger&
+  logger() const
+  {
+    return *m_config.logger;
+  }
+};
 }
 
 #endif
-

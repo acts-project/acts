@@ -17,96 +17,109 @@
 
 #include "ACTS/Utilities/Definitions.hpp"
 // Geometry module
-#include "ACTS/Utilities/GeometryStatics.hpp"
 #include "ACTS/Utilities/GeometryObject.hpp"
+#include "ACTS/Utilities/GeometryStatics.hpp"
 // Core module
 
 namespace Acts {
 
-  class VolumeBounds;
-  typedef std::shared_ptr<const VolumeBounds> VolumeBoundsPtr;
+class VolumeBounds;
+typedef std::shared_ptr<const VolumeBounds> VolumeBoundsPtr;
 
-  /** @class Volume
+/** @class Volume
 
-    It inhertis of GeometryObject for TDD identification
+  It inhertis of GeometryObject for TDD identification
 
-    Base class for all volumes inside the tracking realm, it defines
-    the interface for inherited Volume classes
-    regarding the geometrical information.
+  Base class for all volumes inside the tracking realm, it defines
+  the interface for inherited Volume classes
+  regarding the geometrical information.
 
-    */
+  */
 
-    class Volume : public virtual GeometryObject {
+class Volume : public virtual GeometryObject
+{
+public:
+  /** Default constructor */
+  Volume();
 
-      public:
-        /** Default constructor */
-        Volume();
+  /** Expizit constructor with arguments */
+  Volume(Transform3D* htrans, const VolumeBounds* volBounds);
 
-        /** Expizit constructor with arguments */
-        Volume(Transform3D* htrans, const VolumeBounds* volBounds);
+  /** Expizit constructor with shared arguments */
+  Volume(std::shared_ptr<Transform3D> htrans, VolumeBoundsPtr volBounds);
 
-        /** Expizit constructor with shared arguments */
-        Volume(std::shared_ptr<Transform3D> htrans, VolumeBoundsPtr volBounds);
+  /** Copy Constructor */
+  Volume(const Volume& vol);
 
-        /** Copy Constructor */
-        Volume(const Volume& vol);
+  /** Copy Constructor */
+  Volume(const Volume& vol, const Transform3D& shift);
 
-        /** Copy Constructor */
-        Volume(const Volume& vol, const Transform3D& shift);
+  /** Destructor */
+  virtual ~Volume();
 
-        /** Destructor */
-        virtual ~Volume();
+  /** Assignment operator */
+  Volume&
+  operator=(const Volume& vol);
 
-        /** Assignment operator */
-        Volume& operator=(const Volume& vol);
+  /** Pseudo-constructor */
+  virtual Volume*
+  clone() const;
 
-        /** Pseudo-constructor */
-        virtual Volume* clone() const;
+  /** Return methods for geometry transform */
+  const Transform3D&
+  transform() const;
 
-        /** Return methods for geometry transform */
-        const Transform3D& transform() const;
+  /** returns the center of the volume */
+  const Vector3D&
+  center() const;
 
-        /** returns the center of the volume */
-        const Vector3D& center() const;
+  /** returns the volumeBounds() */
+  const VolumeBounds&
+  volumeBounds() const;
 
-        /** returns the volumeBounds() */
-        const VolumeBounds& volumeBounds() const;
+  /** Inside() method for checks */
+  bool
+  inside(const Vector3D& gp, double tol = 0.) const;
 
-        /** Inside() method for checks */
-        bool inside(const Vector3D& gp, double tol=0.) const;
+  /** The binning position method - as default the center is given, but may be
+   * overloaded */
+  virtual Vector3D
+  binningPosition(BinningValue bValue) const override;
 
-        /** The binning position method - as default the center is given, but may be overloaded */
-        virtual Vector3D binningPosition(BinningValue bValue) const override;
+protected:
+  std::shared_ptr<Transform3D> m_transform;  //!< Transform3D
+  mutable Vector3D*            m_center;     //!< center position of the surface
+  VolumeBoundsPtr              m_volumeBounds;  //!< the volumeBounds
+};
 
-      protected:
-        std::shared_ptr<Transform3D>             m_transform;         //!< Transform3D
-        mutable Vector3D*                        m_center;            //!< center position of the surface
-        VolumeBoundsPtr                          m_volumeBounds;      //!< the volumeBounds
-    };
+inline const Transform3D&
+Volume::transform() const
+{
+  if (m_transform.get()) return (*(m_transform.get()));
+  return Acts::s_idTransform;
+}
 
-    inline const Transform3D& Volume::transform() const
-    {  if (m_transform.get()) return(*(m_transform.get()));
-       return Acts::s_idTransform;
-    }
+inline const Vector3D&
+Volume::center() const
+{
+  if (m_center) return (*m_center);
+  if (!m_center && m_transform.get()) {
+    m_center = new Vector3D(m_transform->translation());
+    return (*m_center);
+  }
+  return Acts::s_origin;
+}
 
-    inline const Vector3D& Volume::center() const
-    {
-     if (m_center) return (*m_center);
-     if (!m_center && m_transform.get()){
-        m_center = new Vector3D(m_transform->translation());
-        return(*m_center);
-      }
-      return Acts::s_origin;
-    }
-
-    inline const VolumeBounds& Volume::volumeBounds() const
-    {  return (*(m_volumeBounds.get())); }
-
+inline const VolumeBounds&
+Volume::volumeBounds() const
+{
+  return (*(m_volumeBounds.get()));
+}
 
 /**Overload of << operator for std::ostream for debug output*/
-std::ostream& operator << ( std::ostream& sl, const Volume& vol);
+std::ostream&
+operator<<(std::ostream& sl, const Volume& vol);
 
+}  // end of namespace Acts
 
-} // end of namespace Acts
-
-#endif // ACTS_VOLUMES_VOLUME_H
+#endif  // ACTS_VOLUMES_VOLUME_H

@@ -12,7 +12,7 @@
 #ifdef ACTS_MSG_MACROS_PLUGIN
 #include ACTS_MSG_MACROS_PLUGIN
 #else
-  static_assert(false,"no message macros defined");
+static_assert(false, "no message macros defined");
 #endif
 
-#endif // ACTS_MSG_MACROS_H
+#endif  // ACTS_MSG_MACROS_H

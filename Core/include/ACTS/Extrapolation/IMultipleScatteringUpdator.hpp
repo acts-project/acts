@@ -17,28 +17,26 @@
 
 namespace Acts {
 
-  class MaterialProperties;
-   
-  /**@class IMultipleScatteringUpdator
-     Interface class IMultipleScatteringUpdator
-     
-    */
-  class IMultipleScatteringUpdator {
-      
-     public:
-       /**Virtual destructor*/
-       virtual ~IMultipleScatteringUpdator(){}
-       
-       
-      /** Calculate the sigma on theta introduced by multiple scatteringt */
-      virtual double sigmaSquare(const MaterialProperties& mat,
-                                 double p,
-                                 double pathcorrection,
-                                 ParticleType particle=pion,
-                                 double deltaE=0.) const = 0;  
-  };
+class MaterialProperties;
 
+/**@class IMultipleScatteringUpdator
+   Interface class IMultipleScatteringUpdator
 
-} // end of namespace
+  */
+class IMultipleScatteringUpdator
+{
+public:
+  /**Virtual destructor*/
+  virtual ~IMultipleScatteringUpdator() {}
+  /** Calculate the sigma on theta introduced by multiple scatteringt */
+  virtual double
+  sigmaSquare(const MaterialProperties& mat,
+              double                    p,
+              double                    pathcorrection,
+              ParticleType              particle = pion,
+              double                    deltaE = 0.) const = 0;
+};
 
-#endif // ACTS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H
+}  // end of namespace
+
+#endif  // ACTS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H

@@ -13,114 +13,142 @@
 #ifndef ACTS_EXTRAPOLATIONENGINE_STATICNAVIGATIONENGINE_H
 #define ACTS_EXTRAPOLATIONENGINE_STATICNAVIGATIONENGINE_H 1
 
-#include "ACTS/Extrapolation/INavigationEngine.hpp"
+#include "ACTS/EventData/NeutralParameters.hpp"
+#include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Extrapolation/ExtrapolationCell.hpp"
 #include "ACTS/Extrapolation/IMaterialEffectsEngine.hpp"
+#include "ACTS/Extrapolation/INavigationEngine.hpp"
 #include "ACTS/Extrapolation/IPropagationEngine.hpp"
 #include "ACTS/Extrapolation/detail/ExtrapolationMacros.hpp"
-#include "ACTS/Volumes/BoundarySurface.hpp"
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/EventData/NeutralParameters.hpp"
 #include "ACTS/Utilities/Logger.hpp"
+#include "ACTS/Volumes/BoundarySurface.hpp"
 
 namespace Acts {
 
-  class TrackingGeometry;
+class TrackingGeometry;
 
-  /** @class StaticNavigationEntine
+/** @class StaticNavigationEntine
 
-      The static navigation engine for finding the next volume,
-      propagate to the boundary, can be shared with other engines that have a static frame.
+    The static navigation engine for finding the next volume,
+    propagate to the boundary, can be shared with other engines that have a
+   static frame.
 
-    */
-  class StaticNavigationEngine : virtual public INavigationEngine {
+  */
+class StaticNavigationEngine : virtual public INavigationEngine
+{
+public:
+  /** @struct Config
+      configuration struct for the StaticNavigationEngine
+  */
+  struct Config
+  {
+    std::shared_ptr<Logger> logger;
 
-      public:
+    std::shared_ptr<IPropagationEngine>
+        propagationEngine;  //!< the used propagation engine
+    std::shared_ptr<IMaterialEffectsEngine>
+        materialEffectsEngine;  //!< the material effects updated
+    std::shared_ptr<const TrackingGeometry>
+        trackingGeometry;  //!< the tracking geometry used by the navigator
 
-        /** @struct Config 
-            configuration struct for the StaticNavigationEngine
-        */
-        struct Config {
-	std::shared_ptr<Logger>                               logger;
-            
-            std::shared_ptr<IPropagationEngine>       propagationEngine;     //!< the used propagation engine
-            std::shared_ptr<IMaterialEffectsEngine>   materialEffectsEngine; //!< the material effects updated
-            std::shared_ptr<const TrackingGeometry>   trackingGeometry;      //!< the tracking geometry used by the navigator
-            
-            std::string                               prefix;                //!< output prefix
-            std::string                               postfix;               //!< output postfix
-            std::string                               name;                  //!< name of this engine
-            
-            Config() :
-	      logger(getDefaultLogger("StaticNavigationEngine",Logging::INFO)),
-              propagationEngine(nullptr),
-              materialEffectsEngine(nullptr),
-              trackingGeometry(nullptr),
-              prefix("[SN] - "),
-              postfix(" - "),
-              name("Anonymous")
-            {}
-            
-        };
+    std::string prefix;   //!< output prefix
+    std::string postfix;  //!< output postfix
+    std::string name;     //!< name of this engine
 
-        /** Constructor */
-        StaticNavigationEngine(const Config& snConfig);
+    Config()
+      : logger(getDefaultLogger("StaticNavigationEngine", Logging::INFO))
+      , propagationEngine(nullptr)
+      , materialEffectsEngine(nullptr)
+      , trackingGeometry(nullptr)
+      , prefix("[SN] - ")
+      , postfix(" - ")
+      , name("Anonymous")
+    {
+    }
+  };
 
-        /** Destructor */
-        ~StaticNavigationEngine();
+  /** Constructor */
+  StaticNavigationEngine(const Config& snConfig);
 
-        /** avoid method shaddowing */
-        using INavigationEngine::resolveBoundary;
-        using INavigationEngine::resolvePosition;
+  /** Destructor */
+  ~StaticNavigationEngine();
 
-        /** resolve the boundary situation - for charged particles */
-        ExtrapolationCode resolveBoundary(ExCellCharged& eCell, PropDirection dir=alongMomentum) const final;                                                                                          
+  /** avoid method shaddowing */
+  using INavigationEngine::resolveBoundary;
+  using INavigationEngine::resolvePosition;
 
-        /** resolve the boundary situation - for neutral particles */
-        ExtrapolationCode resolveBoundary(ExCellNeutral& eCelll, PropDirection dir=alongMomentum) const final;
+  /** resolve the boundary situation - for charged particles */
+  ExtrapolationCode
+  resolveBoundary(ExCellCharged& eCell,
+                  PropDirection  dir = alongMomentum) const final;
 
-        /** resolve the boundary situation - for charged particles */
-        ExtrapolationCode resolvePosition(ExCellCharged& eCell, PropDirection dir=alongMomentum, bool noLoop=false) const final;          
+  /** resolve the boundary situation - for neutral particles */
+  ExtrapolationCode
+  resolveBoundary(ExCellNeutral& eCelll,
+                  PropDirection  dir = alongMomentum) const final;
 
-        /** resolve the boundary situation - for neutral particles */
-        ExtrapolationCode resolvePosition(ExCellNeutral& eCelll, PropDirection dir=alongMomentum, bool noLoop=false) const final;
-        
-        /** Set configuration method */
-        void setConfiguration(const Config& meConfig);
-      
-        /** Get configuration method */
-        Config getConfiguration() const;
+  /** resolve the boundary situation - for charged particles */
+  ExtrapolationCode
+  resolvePosition(ExCellCharged& eCell,
+                  PropDirection  dir    = alongMomentum,
+                  bool           noLoop = false) const final;
 
-    protected:
-        /** the configuration member of the static navigation engine */                                                     
-        Config  m_config; 
-        
-    private:
-      const Logger& logger() const {return *m_config.logger;}
-        /** resolve the boundary situation */
-        template <class T> ExtrapolationCode resolveBoundaryT(ExtrapolationCell<T>& eCell,
-                                                              PropDirection dir=alongMomentum) const;
+  /** resolve the boundary situation - for neutral particles */
+  ExtrapolationCode
+  resolvePosition(ExCellNeutral& eCelll,
+                  PropDirection  dir    = alongMomentum,
+                  bool           noLoop = false) const final;
 
-        /** resolve position */
-        template <class T> ExtrapolationCode resolvePositionT(ExtrapolationCell<T>& eCell, 
-                                                              PropDirection dir=alongMomentum,
-                                                              bool noLoop=false) const;
+  /** Set configuration method */
+  void
+  setConfiguration(const Config& meConfig);
 
-        /** deal with the boundary Surface - called by resolveBoundary */
-        template <class T> ExtrapolationCode handleBoundaryT(ExtrapolationCell<T>& eCell,
-                                                             const BoundarySurface<TrackingVolume>& bSurfaceTV,
-                                                             PropDirection dir=alongMomentum,
-                                                             bool stepout=false) const;
+  /** Get configuration method */
+  Config
+  getConfiguration() const;
 
-    };
-    
-    /** Return the configuration object */    
-    inline StaticNavigationEngine::Config StaticNavigationEngine::getConfiguration() const { return m_config; }
+protected:
+  /** the configuration member of the static navigation engine */
+  Config m_config;
 
-} // end of namespace
+private:
+  const Logger&
+  logger() const
+  {
+    return *m_config.logger;
+  }
+  /** resolve the boundary situation */
+  template <class T>
+  ExtrapolationCode
+  resolveBoundaryT(ExtrapolationCell<T>& eCell,
+                   PropDirection         dir = alongMomentum) const;
+
+  /** resolve position */
+  template <class T>
+  ExtrapolationCode
+  resolvePositionT(ExtrapolationCell<T>& eCell,
+                   PropDirection         dir    = alongMomentum,
+                   bool                  noLoop = false) const;
+
+  /** deal with the boundary Surface - called by resolveBoundary */
+  template <class T>
+  ExtrapolationCode
+  handleBoundaryT(ExtrapolationCell<T>&                  eCell,
+                  const BoundarySurface<TrackingVolume>& bSurfaceTV,
+                  PropDirection                          dir = alongMomentum,
+                  bool                                   stepout = false) const;
+};
+
+/** Return the configuration object */
+inline StaticNavigationEngine::Config
+StaticNavigationEngine::getConfiguration() const
+{
+  return m_config;
+}
+
+}  // end of namespace
 
 //!< define the templated function
 #include "ACTS/Extrapolation/detail/StaticNavigationEngine.ipp"
 
-#endif // ACTS_EXTRAPOLATIONENGINE_STATICNAVIGATIONENGINE_H
-
+#endif  // ACTS_EXTRAPOLATIONENGINE_STATICNAVIGATIONENGINE_H
