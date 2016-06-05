@@ -13,20 +13,20 @@
 #include "ACTS/Volumes/VolumeExcluder.hpp"
 
 // Default constructor
-Acts::VolumeExcluder::VolumeExcluder() :
-  m_vol(0)
-{}
+Acts::VolumeExcluder::VolumeExcluder() : m_vol(0)
+{
+}
 
 // constructor with volume
-Acts::VolumeExcluder::VolumeExcluder(Acts::Volume* vol) :
-  m_vol(vol)
-{}
+Acts::VolumeExcluder::VolumeExcluder(Acts::Volume* vol) : m_vol(vol)
+{
+}
 
 // copy constructor
 Acts::VolumeExcluder::VolumeExcluder(const VolumeExcluder& ex)
-  : Acts::AreaExcluder (ex),
-    m_vol( new Volume(*(ex.m_vol)) )
-{}
+  : Acts::AreaExcluder(ex), m_vol(new Volume(*(ex.m_vol)))
+{
+}
 
 // destructor
 Acts::VolumeExcluder::~VolumeExcluder()
@@ -35,15 +35,19 @@ Acts::VolumeExcluder::~VolumeExcluder()
 }
 
 /** Assignment operator */
-Acts::VolumeExcluder& Acts::VolumeExcluder::operator=(const VolumeExcluder &vol) {
+Acts::VolumeExcluder&
+Acts::VolumeExcluder::operator=(const VolumeExcluder& vol)
+{
   if (&vol != this) {
     delete m_vol;
     AreaExcluder::operator=(vol);
-    m_vol=new Volume(*(vol.m_vol));
+    m_vol                 = new Volume(*(vol.m_vol));
   }
   return *this;
 }
 
-Acts::VolumeExcluder* Acts::VolumeExcluder::clone() const
-{ return new Acts::VolumeExcluder(*this); }
-
+Acts::VolumeExcluder*
+Acts::VolumeExcluder::clone() const
+{
+  return new Acts::VolumeExcluder(*this);
+}

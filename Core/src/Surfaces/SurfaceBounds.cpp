@@ -10,9 +10,11 @@
 // SurfaceBounds.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-
-//Trk
+// Trk
 #include "ACTS/Surfaces/SurfaceBounds.hpp"
 
-std::ostream& Acts::operator << ( std::ostream& sl, const SurfaceBounds& sb)
-{ return sb.dump(sl); }
+std::ostream&
+Acts::operator<<(std::ostream& sl, const SurfaceBounds& sb)
+{
+  return sb.dump(sl);
+}
