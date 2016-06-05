@@ -310,7 +310,7 @@ protected:
 
   mutable const AbstractVolume* m_representingVolume;  //!< Representing Volume
                                                        //!- the surfaces of that
-                                                       //!can be used as
+                                                       //! can be used as
 
   int m_layerType;  //!< make a passive/active division
 };

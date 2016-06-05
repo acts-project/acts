@@ -95,7 +95,7 @@ protected:
   NavigationLayer(Surface* surfaceRepresentation, double thickness);
 
   Surface* m_surfaceRepresentation;  //!< for the navigation Volume the surface
-                                     //!is a private member */
+                                     //! is a private member */
 };
 
 inline const Surface&

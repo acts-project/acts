@@ -94,12 +94,12 @@ public:
   {
     std::shared_ptr<Logger>                logger;  //!< logging instance
     std::shared_ptr<ITrackingVolumeHelper> trackingVolumeHelper;  //!< the
-                                                                  //!tracking
-                                                                  //!volume
-                                                                  //!creator for
-                                                                  //!container
-                                                                  //!volume
-                                                                  //!creation
+                                                                  //! tracking
+    //! volume
+    //! creator for
+    //! container
+    //! volume
+    //! creation
     std::string volumeName;  //!< the name of the volume to be created
     std::vector<double>
                               volumeDimension;  //!< The dimensions of the manually created world

@@ -83,10 +83,12 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
   }
   // [2] ------------------------ slow boundary access : take all boundary
   // surfaces and simply try --------------
-  EX_MSG_VERBOSE(
-      eCell.navigationStep, "navigation", "", "fast boundary navigation did "
-                                              "not succeeed - trying slow "
-                                              "navigation now.");
+  EX_MSG_VERBOSE(eCell.navigationStep,
+                 "navigation",
+                 "",
+                 "fast boundary navigation did "
+                 "not succeeed - trying slow "
+                 "navigation now.");
   // ignore the ones you have tried already
   for (auto& bSurface : eCell.leadVolume->boundarySurfaces()) {
     // we tried this one already, no point to do it again
@@ -132,11 +134,14 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
   }
   // [3] ------------------------ slowest boundary access : step-out-of-volume
   // approach -------------------------
-  EX_MSG_VERBOSE(eCell.navigationStep, "navigation", "", "slow boundary "
-                                                         "navigation did not "
-                                                         "succeeed - trying "
-                                                         "step-out-of-volume "
-                                                         "approach now");
+  EX_MSG_VERBOSE(eCell.navigationStep,
+                 "navigation",
+                 "",
+                 "slow boundary "
+                 "navigation did not "
+                 "succeeed - trying "
+                 "step-out-of-volume "
+                 "approach now");
   for (auto& boundaryCandidate : boundaryIntersections) {
     // the surface of the
     const BoundarySurface<TrackingVolume>* bSurfaceTV

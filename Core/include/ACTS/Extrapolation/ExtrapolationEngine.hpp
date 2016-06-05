@@ -60,12 +60,12 @@ public:
         trackingGeometry;  //!< the tracking geometry used by the navigator
     std::vector<std::shared_ptr<IExtrapolationEngine>>
         extrapolationEngines;  //!< the extrapolation engines for different
-                               //!geometry layouts
+                               //! geometry layouts
     std::shared_ptr<IPropagationEngine> propagationEngine;  //!< the used
-                                                            //!propagation
-                                                            //!engine for
-                                                            //!navigation
-                                                            //!initialization
+                                                            //! propagation
+    //! engine for
+    //! navigation
+    //! initialization
     std::shared_ptr<INavigationEngine>
                 navigationEngine;  //!< access to tracking geometry (unique?)
     std::string prefix;            //!< output prefix

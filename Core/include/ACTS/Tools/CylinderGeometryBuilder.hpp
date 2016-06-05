@@ -44,9 +44,9 @@ public:
   {
     std::shared_ptr<Logger>                 logger;  //! logging instance
     std::shared_ptr<ITrackingVolumeBuilder> beamPipeBuilder;  //!< a special
-                                                              //!builder for the
-                                                              //!beam pipe (for
-                                                              //!post-insertion)
+    //! builder for the
+    //! beam pipe (for
+    //! post-insertion)
     std::list<std::shared_ptr<ITrackingVolumeBuilder>>
         trackingVolumeBuilders;  //!< the sub detector TrackingVolume builder
     std::shared_ptr<ITrackingVolumeHelper>

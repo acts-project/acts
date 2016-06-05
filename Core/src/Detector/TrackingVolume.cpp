@@ -124,7 +124,7 @@ Acts::TrackingVolume::TrackingVolume(const TrackingVolume& tvol,
   , m_colorCode(20)
 {
   //< @TODO implement - requires cloneWithShift for BinUtility and an
-  //orderPosition() addon to GeometryObjects
+  // orderPosition() addon to GeometryObjects
 }
 
 Acts::TrackingVolume::~TrackingVolume()

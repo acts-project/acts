@@ -44,7 +44,7 @@ Acts::GenericLayerBuilder::GenericLayerBuilder(
   setConfiguration(std::move(glbConfig));
 
   //@TODO make checks if needed parameters are set and if vectors have all same
-  //size - waiting for message stream
+  // size - waiting for message stream
 
   ACTS_DEBUG("initialize()");
   // Tool needs to be initialized

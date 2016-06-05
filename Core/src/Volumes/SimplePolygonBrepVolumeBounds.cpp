@@ -35,7 +35,7 @@ Acts::SimplePolygonBrepVolumeBounds::SimplePolygonBrepVolumeBounds()
   , m_envelope(0)
 {
   //@TODO an object created by the default constructor cannot be copied or
-  //assigned.
+  // assigned.
 }
 
 Acts::SimplePolygonBrepVolumeBounds::SimplePolygonBrepVolumeBounds(

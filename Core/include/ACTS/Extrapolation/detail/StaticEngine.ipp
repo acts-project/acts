@@ -630,10 +630,12 @@ Acts::StaticEngine::handleReturnT(Acts::ExtrapolationCode     eCode,
   if (sf
       && !eCell.checkConfigurationMode(
              Acts::ExtrapolationMode::AvoidFallback)) {
-    EX_MSG_VERBOSE(
-        eCell.navigationStep, "return", "", "fallback configured. Trying to "
-                                            "hit destination surface from last "
-                                            "valid parameters.");
+    EX_MSG_VERBOSE(eCell.navigationStep,
+                   "return",
+                   "",
+                   "fallback configured. Trying to "
+                   "hit destination surface from last "
+                   "valid parameters.");
     // check if you hit the surface, could still be stopped by PathLimit, but
     // would also count as recovered
     eCode

@@ -243,9 +243,9 @@ protected:
   }
 
   ChargePolicy m_oChargePolicy;    ///< charge policy object distinguishing
-                                   ///between charged and neutral tracks
+                                   /// between charged and neutral tracks
   FullParameterSet m_oParameters;  ///< ParameterSet object holding the
-                                   ///parameter values and covariance matrix
+                                   /// parameter values and covariance matrix
   ActsVectorD<3> m_vPosition;      ///< 3D vector with global position
   ActsVectorD<3> m_vMomentum;      ///< 3D vector with global momentum
 };

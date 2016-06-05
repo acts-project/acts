@@ -105,7 +105,7 @@ public:
   // public typedefs
   typedef ActsMatrix<ParValue_t, NPars, Acts::NGlobalPars>
       Projection_t;  ///< matrix type for projecting full parameter vector onto
-                     ///local parameter space
+                     /// local parameter space
   typedef ActsVector<ParValue_t, NPars>
       ParVector_t;  ///< vector type for stored parameters
   typedef ActsSymMatrix<ParValue_t, NPars>
@@ -549,7 +549,7 @@ private:
   CovPtr_t m_pCovariance;  ///< unique pointer to covariance matrix
 
   static const Projection_t sProjector;  ///< matrix to project full parameter
-                                         ///vector onto local parameter space
+                                         /// vector onto local parameter space
 };
 
 // initialize static class members

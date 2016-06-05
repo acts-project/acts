@@ -113,7 +113,7 @@ private:
   mutable LayerVector m_pLayers;  //!< layers on positive side
 
   mutable bool m_constructionFlag;  //!< indicator if the layer construction has
-                                    //!been done already
+                                    //! been done already
 };
 
 inline PassiveLayerBuilder::Config

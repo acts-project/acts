@@ -60,7 +60,7 @@ public:
         layerArrayCreator;  //!< A Tool for coherent LayerArray creation
     std::shared_ptr<ITrackingVolumeArrayCreator>
         trackingVolumeArrayCreator;  //!< Helper Tool to create TrackingVolume
-                                     //!Arrays
+                                     //! Arrays
     double passiveLayerThickness;    //!< thickness of passive layers
     int    passiveLayerPhiBins;      //!< bins in phi for the passive layer
     int    passiveLayerRzBins;       //!< bins in r/z for the passive layer

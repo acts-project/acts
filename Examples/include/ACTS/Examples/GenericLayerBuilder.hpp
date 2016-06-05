@@ -23,6 +23,7 @@
 namespace Acts {
 
 class ILayerCreator;
+
 class Surface;
 class DetecorElementBase;
 typedef std::pair<const Surface*, Vector3D> SurfacePosition;
@@ -82,7 +83,7 @@ public:
         posnegModulePositionPhiStream;  //!< used to fill the position-phi
     std::vector<std::vector<std::vector<double>>>
         posnegModulePositionPhi;  //!< this one is being filled by the two
-                                  //!before
+                                  //! before
     std::vector<std::vector<double>>              posnegModuleStaggerPhi;
     std::vector<std::vector<double>>              posnegModuleMinHalfX;
     std::vector<std::vector<double>>              posnegModuleMaxHalfX;

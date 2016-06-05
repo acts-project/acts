@@ -217,7 +217,7 @@ public:
   const Layer*
                       layer;  //!< the associatedLayer() or materialLayer() of the surface
   ExtrapolationConfig stepConfiguration;  //!< sensitive, passive, boundary to
-                                          //!name the parameters
+                                          //! name the parameters
   const MaterialProperties* material;     //!< the associated material
   Vector3D materialPosition;  //!< position from where the material is taken
   double   materialScaling;   //!< scale factor for the material as calculated
@@ -262,13 +262,13 @@ public:
   const Layer* startLayer;  //!< the start layer  - needed for layerToLayer loop
 
   std::unique_ptr<const T> endParameters;  //!< by pointer - are newly created
-                                           //!and can be optionally 0
+                                           //! and can be optionally 0
   const TrackingVolume* endVolume;  //!< the end Volume - can be optionally
-                                    //!nullptr (needs other trigger to stop)
+                                    //! nullptr (needs other trigger to stop)
   const Layer* endLayer;  //!< the end Layer  - can be optionally nullptr (needs
-                          //!other trigger to stop)
+                          //! other trigger to stop)
   const Surface* endSurface;  //!< keep track of the destination surface - can
-                              //!be optionally 0
+                              //! be optionally 0
 
   const T*
       leadParameters;  //!< the one last truely valid parameter in the stream
@@ -276,22 +276,22 @@ public:
                leadVolume;  //!< the lead Volume - carrying the navigation stream
   const Layer* leadLayer;  //!< the lead Layer  - carrying the navigation stream
   const Surface* leadLayerSurface;  //!< if the lead layer has sub structure
-                                    //!that is the first one to start with
+                                    //! that is the first one to start with
 
   const T* lastBoundaryParameters;     //!< this is the last boundary surface to
-                                       //!prevent loops
+                                       //! prevent loops
   const Surface* lastBoundarySurface;  //!< this is the last boundary surface to
-                                       //!prevent loops
+                                       //! prevent loops
 
   const T* lastLeadParameters;  //!< this is for caching the last valid
-                                //!parameters before the lead parameters
+                                //! parameters before the lead parameters
   PropDirection propDirection;  //!< this is the propagation direction
   int radialDirection;  //!< for checking if navigation is radially towards the
-                        //!IP, this has consequences for entering cylinders
+                        //! IP, this has consequences for entering cylinders
 
   GeometrySignature nextGeometrySignature;  //!< when a boundary is reached the
-                                            //!geometry signature is updated to
-                                            //!the next volume one
+                                            //! geometry signature is updated to
+  //! the next volume one
 
   int    navigationStep;  //!< a counter of the navigation Step
   double pathLength;      //!< the path length accumulated
@@ -307,13 +307,13 @@ public:
   ParticleType
                      particleType;  //!< what particle hypothesis to be used, default : pion
   MaterialUpdateMode materialUpdateMode;  //!< how to deal with the material
-                                          //!effect, default: addNoise
+                                          //! effect, default: addNoise
   bool navigationCurvilinear;   //!< stay in curvilinear parameters where
-                                //!possible, default : true
+                                //! possible, default : true
   bool sensitiveCurvilinear;    //!< stay in curvilinear parameters even on the
-                                //!destination surface
+                                //! destination surface
   bool destinationCurvilinear;  //!< return curvilinear parameters even on
-                                //!destination
+                                //! destination
   int searchMode;               //!< the tupe of search being performed
 
   std::vector<ExtrapolationStep<T>>

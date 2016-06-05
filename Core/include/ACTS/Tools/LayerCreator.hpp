@@ -47,9 +47,9 @@ public:
   {
     std::shared_ptr<Logger>               logger;  //!< logging instance
     std::shared_ptr<ISurfaceArrayCreator> surfaceArrayCreator;  //!< geometry
-                                                                //!tool binning
-                                                                //!the surfaces
-                                                                //!into arrays
+                                                                //! tool binning
+    //! the surfaces
+    //! into arrays
 
     Config()
       : logger(getDefaultLogger("LayerCreator", Logging::INFO))
