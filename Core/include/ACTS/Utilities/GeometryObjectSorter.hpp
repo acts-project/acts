@@ -16,49 +16,70 @@
 #include "Definitions.hpp"
 
 namespace Acts {
-  /** @class GeometryObjectSorter
+/** @class GeometryObjectSorter
 
-    */
-  template <class T> class GeometryObjectSorterT : public std::binary_function<T, T, bool> {
+  */
+template <class T>
+class GeometryObjectSorterT : public std::binary_function<T, T, bool>
+{
+public:
+  /** Constructor from a binning value */
+  GeometryObjectSorterT(BinningValue                 bValue,
+                        std::shared_ptr<Transform3D> transform = nullptr)
+    : m_binningValue(bValue), m_transform(transform)
+  {
+  }
 
-    public:
-      /** Constructor from a binning value */    
-      GeometryObjectSorterT(BinningValue bValue, std::shared_ptr<Transform3D> transform = nullptr ) :
-        m_binningValue(bValue),
-        m_transform(transform)
-      {}
-            
-      /** the comparison */
-      bool operator() (T one, T two) const 
-      { 
-          // get the pos one / pos two 
-          Vector3D posOne = m_transform ? m_transform->inverse()*one->binningPosition(m_binningValue) : one->binningPosition(m_binningValue);
-          Vector3D posTwo = m_transform ? m_transform->inverse()*two->binningPosition(m_binningValue) : two->binningPosition(m_binningValue);
-          
-          // switch the binning value
-          // - binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
-          switch (m_binningValue) {
-              // compare on x
-              case binX : { return (posOne.x() < posTwo.x()); }
-              // compare on y
-              case binY : { return (posOne.y() < posTwo.y()); }
-              // compare on z
-              case binZ : { return (posOne.z() < posTwo.z()); }
-              // compare on r
-              case binR : { return (posOne.perp() < posTwo.perp()); }
-              // compare on phi
-              case binPhi : { return (posOne.phi() < posTwo.phi()); }
-              // compare on eta 
-              case binEta : { return (posOne.eta() < posTwo.eta()); }
-              // default for the moment
-              default : { return (posOne.mag() < posTwo.mag());  }
-          }
-      }          
-          
-    protected:      
-      BinningValue                      m_binningValue;
-      std::shared_ptr<Transform3D> m_transform;
-  };
+  /** the comparison */
+  bool
+  operator()(T one, T two) const
+  {
+    // get the pos one / pos two
+    Vector3D posOne = m_transform
+        ? m_transform->inverse() * one->binningPosition(m_binningValue)
+        : one->binningPosition(m_binningValue);
+    Vector3D posTwo = m_transform
+        ? m_transform->inverse() * two->binningPosition(m_binningValue)
+        : two->binningPosition(m_binningValue);
+
+    // switch the binning value
+    // - binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
+    switch (m_binningValue) {
+    // compare on x
+    case binX: {
+      return (posOne.x() < posTwo.x());
+    }
+    // compare on y
+    case binY: {
+      return (posOne.y() < posTwo.y());
+    }
+    // compare on z
+    case binZ: {
+      return (posOne.z() < posTwo.z());
+    }
+    // compare on r
+    case binR: {
+      return (posOne.perp() < posTwo.perp());
+    }
+    // compare on phi
+    case binPhi: {
+      return (posOne.phi() < posTwo.phi());
+    }
+    // compare on eta
+    case binEta: {
+      return (posOne.eta() < posTwo.eta());
+    }
+    // default for the moment
+    default: {
+      return (posOne.mag() < posTwo.mag());
+    }
+    }
+  }
+
+protected:
+  BinningValue                 m_binningValue;
+  std::shared_ptr<Transform3D> m_transform;
+};
 }
 
-#endif // ACTS_GEOMETRYUTILS_GEOMETRYOBJECTSORTER_H
+#endif  // ACTS_GEOMETRYUTILS_GEOMETRYOBJECTSORTER_H

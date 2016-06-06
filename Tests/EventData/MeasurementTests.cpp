@@ -7,27 +7,25 @@
 #include <boost/test/included/unit_test.hpp>
 
 // ACTS include(s)
-#include "ACTS/Utilities/ParameterDefinitions.hpp"
 #include "ACTS/EventData/Measurement.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
+#include "ACTS/Utilities/ParameterDefinitions.hpp"
 
-namespace Acts
-{
-  namespace Test
+namespace Acts {
+namespace Test {
+  template <ParID_t... params>
+  using Measurement_t = Measurement<unsigned long int, params...>;
+
+  /**
+   * @brief Unit test for creation of Measurement object
+   */
+  BOOST_AUTO_TEST_CASE(measurement_initialization)
   {
-    template<ParID_t... params>
-    using Measurement_t = Measurement<unsigned long int,params...>;
-
-    /**
-     * @brief Unit test for creation of Measurement object
-     */
-    BOOST_AUTO_TEST_CASE(measurement_initialization)
-    {
-      CylinderSurface cylinder(3,10);
-      ActsSymMatrixD<2> cov;
-      cov << 0.04,0,
-             0,0.1;
-      Measurement_t<ParDef::eLOC_1,ParDef::eLOC_2> m(cylinder,0,std::move(cov),-0.1,0.45);
-    }
-  }  // end of namespace Test
+    CylinderSurface   cylinder(3, 10);
+    ActsSymMatrixD<2> cov;
+    cov << 0.04, 0, 0, 0.1;
+    Measurement_t<ParDef::eLOC_1, ParDef::eLOC_2> m(
+        cylinder, 0, std::move(cov), -0.1, 0.45);
+  }
+}  // end of namespace Test
 }  // end of namespace Acts

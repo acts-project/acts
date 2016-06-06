@@ -8,9 +8,8 @@
 
 #include "ACTS/EventData/TrackParameters.hpp"
 
-namespace Acts
-{
- template class SingleTrackParameters<ChargedPolicy>;
- template class SingleCurvilinearTrackParameters<ChargedPolicy>;
- template class SingleBoundTrackParameters<ChargedPolicy>;
-} // end of namespace Acts
+namespace Acts {
+template class SingleTrackParameters<ChargedPolicy>;
+template class SingleCurvilinearTrackParameters<ChargedPolicy>;
+template class SingleBoundTrackParameters<ChargedPolicy>;
+}  // end of namespace Acts

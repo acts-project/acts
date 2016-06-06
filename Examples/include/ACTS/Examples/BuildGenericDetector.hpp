@@ -13,11 +13,11 @@
 #include <memory>
 
 // ACTS include(s)
-namespace Acts
-{
-  class TrackingGeometry;
+namespace Acts {
+class TrackingGeometry;
 
-  std::unique_ptr<const Acts::TrackingGeometry> trackingGeometry();
+std::unique_ptr<const Acts::TrackingGeometry>
+trackingGeometry();
 }
 
-#endif // ACTS_BUILDGENERICDETECTOR_H
+#endif  // ACTS_BUILDGENERICDETECTOR_H

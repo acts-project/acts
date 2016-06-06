@@ -12,35 +12,31 @@
 // ACTS include(s)
 #include "ACTS/EventData/TrackParametersBase.hpp"
 
-namespace Acts
+namespace Acts {
+std::ostream&
+TrackParametersBase::print(std::ostream& sl) const
 {
-  std::ostream& TrackParametersBase::print(std::ostream& sl) const
-  {
-    // set stream output format
-    auto old_precision = sl.precision(7);
-    auto old_flags = sl.setf(std::ios::fixed);
+  // set stream output format
+  auto old_precision = sl.precision(7);
+  auto old_flags     = sl.setf(std::ios::fixed);
 
-    sl << " * TrackParameters:" << std::endl;
-    sl << parameters() << std::endl;
-    sl << " * charge: " << charge() << std::endl;
-    if(covariance())
-      sl << " * covariance matrix = " << *covariance() << std::endl;
-    else
-      sl << " * covariance matrix = " << covariance() << std::endl;
-    sl << " * corresponding global parameters:" << std::endl;
-    sl << " *    position  (x,  y,  z ) = ("
-       << position().x() << ", "
-       << position().y() << ", "
-       << position().z() << ")" << std::endl;
-    sl << " *    momentum  (px, py, pz) = ("
-       << momentum().x() << ", "
-       << momentum().y() << ", "
-       << momentum().z() << ")" << std::endl;
+  sl << " * TrackParameters:" << std::endl;
+  sl << parameters() << std::endl;
+  sl << " * charge: " << charge() << std::endl;
+  if (covariance())
+    sl << " * covariance matrix = " << *covariance() << std::endl;
+  else
+    sl << " * covariance matrix = " << covariance() << std::endl;
+  sl << " * corresponding global parameters:" << std::endl;
+  sl << " *    position  (x,  y,  z ) = (" << position().x() << ", "
+     << position().y() << ", " << position().z() << ")" << std::endl;
+  sl << " *    momentum  (px, py, pz) = (" << momentum().x() << ", "
+     << momentum().y() << ", " << momentum().z() << ")" << std::endl;
 
-    // reset stream format
-    sl.precision(old_precision);
-    sl.setf(old_flags);
+  // reset stream format
+  sl.precision(old_precision);
+  sl.setf(old_flags);
 
-    return sl;
-  }
-} // end of namespace Acts
+  return sl;
+}
+}  // end of namespace Acts

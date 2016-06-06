@@ -13,7 +13,6 @@
 #ifndef ACTS_CORE_IDENTIFIER_H
 #define ACTS_CORE_IDENTIFIER_H 1
 
-
 #ifdef ACTS_CORE_IDENTIFIER_PLUGIN
 #include ACTS_CORE_IDENTIFIER_PLUGIN
 #else
@@ -23,7 +22,7 @@
 
 #include <string>
 
-/** @class Identifier 
+/** @class Identifier
 
     minimum implementation of an Identifier,
     please use the ACTS_CORE_IDENTIFIER_PLUGING in to use instead if
@@ -31,76 +30,82 @@
 
   */
 
+class Identifier
+{
+public:
+  ///----------------------------------------------------------------
+  /// Define public typedefs
+  ///----------------------------------------------------------------
+  typedef Identifier           id_type;
+  typedef IDENTIFIER_TYPE      value_type;
+  typedef IDENTIFIER_DIFF_TYPE diff_type;
+  typedef IDENTIFIER_TYPE      size_type;
 
-class Identifier {
+  typedef enum {
+    NBITS    = sizeof(value_type) * 8,  // bits per byte
+    MAX_BIT  = (static_cast<value_type>(1) << (NBITS - 1)),
+    ALL_BITS = ~(static_cast<value_type>(0))
+  } bit_defs;
 
-  public:
+  ///----------------------------------------------------------------
+  /// Constructors
+  ///----------------------------------------------------------------
 
-    ///----------------------------------------------------------------
-    /// Define public typedefs
-    ///----------------------------------------------------------------
-    typedef Identifier                  id_type;
-    typedef IDENTIFIER_TYPE             value_type;
-    typedef IDENTIFIER_DIFF_TYPE        diff_type;
-    typedef IDENTIFIER_TYPE             size_type;
+  /// Default constructor
+  Identifier();
 
-    typedef enum
-    {
-        NBITS = sizeof(value_type) * 8, // bits per byte
-        MAX_BIT = (static_cast<value_type>(1) << (NBITS - 1)),
-        ALL_BITS = ~(static_cast<value_type>(0))
-    } bit_defs;
+  /// Constructor from value_type
+  explicit Identifier(value_type value);
 
-    ///----------------------------------------------------------------
-    /// Constructors
-    ///----------------------------------------------------------------
+  /// Copy constructor
+  Identifier(const Identifier& other);
 
-    /// Default constructor
-    Identifier ();
+  ///----------------------------------------------------------------
+  /// Modifications
+  ///----------------------------------------------------------------
+  Identifier&
+  operator|=(value_type value);
+  Identifier&
+  operator&=(value_type value);
 
-    /// Constructor from value_type
-    explicit Identifier (value_type value);
+  ///----------------------------------------------------------------
+  /// Assignment operator
+  ///----------------------------------------------------------------
+  Identifier&
+  operator=(const Identifier& old);
+  Identifier&
+  operator=(value_type value);
 
-    /// Copy constructor
-    Identifier (const Identifier& other);
+  ///----------------------------------------------------------------
+  /// Comparison operators
+  ///----------------------------------------------------------------
+  bool
+  operator==(const Identifier& other) const;
+  bool
+  operator!=(const Identifier& other) const;
+  bool
+  operator<(const Identifier& other) const;
+  bool
+  operator>(const Identifier& other) const;
+  bool
+  operator<=(const Identifier& other) const;
+  bool
+  operator>=(const Identifier& other) const;
 
-    ///----------------------------------------------------------------
-    /// Modifications
-    ///----------------------------------------------------------------
-    Identifier& operator |= (value_type value);
-    Identifier& operator &= (value_type value);
-    
-    ///----------------------------------------------------------------
-    /// Assignment operator
-    ///----------------------------------------------------------------
-    Identifier& operator = (const Identifier& old);
-    Identifier& operator = (value_type value);
+  /// Check if id is in a valid state
+  bool
+  is_valid() const;
 
-    ///----------------------------------------------------------------
-    /// Comparison operators
-    ///----------------------------------------------------------------
-    bool operator ==    (const Identifier& other) const;
-    bool operator !=    (const Identifier& other) const;
-    bool operator <     (const Identifier& other) const;
-    bool operator >     (const Identifier& other) const;
-    bool operator <=    (const Identifier& other) const;
-    bool operator >=    (const Identifier& other) const;
+private:
+  //----------------------------------------------------------------
+  // The compact identifier data.
+  //----------------------------------------------------------------
+  value_type m_id;
 
-    /// Check if id is in a valid state
-    bool is_valid () const;
-
-  private:
-
-    //----------------------------------------------------------------
-    // The compact identifier data.
-    //----------------------------------------------------------------
-    value_type m_id;
-    
-    typedef enum {
-   	      //max_value = 0xFFFFFFFFFFFFFFFFULL
-   	      max_value = ~(static_cast<value_type>(0))
-   	  } max_value_type;
-
+  typedef enum {
+    // max_value = 0xFFFFFFFFFFFFFFFFULL
+    max_value = ~(static_cast<value_type>(0))
+  } max_value_type;
 };
 //-----------------------------------------------
 
@@ -108,99 +113,103 @@ class Identifier {
 
 // Constructors
 //-----------------------------------------------
-inline Identifier::Identifier ()
-        : m_id(max_value)
-{}
+inline Identifier::Identifier() : m_id(max_value)
+{
+}
 
 //-----------------------------------------------
-inline Identifier::Identifier (const Identifier& other)
-        : m_id(other.m_id)
-{}
+inline Identifier::Identifier(const Identifier& other) : m_id(other.m_id)
+{
+}
 
 //-----------------------------------------------
-inline Identifier::Identifier (value_type value)
-        : m_id(value)
-{}
+inline Identifier::Identifier(value_type value) : m_id(value)
+{
+}
 
 // Modifications
 //-----------------------------------------------
 
-inline Identifier& Identifier::operator = (const Identifier& other) {
+inline Identifier&
+Identifier::operator=(const Identifier& other)
+{
   if (&other != this) {
-      m_id = other.m_id;
+    m_id = other.m_id;
   }
   return (*this);
 }
 
-inline Identifier& Identifier::operator = (value_type value)
+inline Identifier&
+Identifier::operator=(value_type value)
 {
-    m_id = value;
-    return (*this);
+  m_id = value;
+  return (*this);
 }
 
-inline Identifier&                                   
-Identifier::operator |= (value_type value)
+inline Identifier&
+Identifier::operator|=(value_type value)
 {
-    m_id |= value;
-    return (*this);
+  m_id |= value;
+  return (*this);
 }
 
-inline Identifier& 
-Identifier::operator &= (value_type value)
+inline Identifier&
+Identifier::operator&=(value_type value)
 {
-    m_id &= value;
-    return (*this);
+  m_id &= value;
+  return (*this);
 }
 
 // Comparison operators
 //----------------------------------------------------------------
-inline bool 
-Identifier::operator == (const Identifier& other) const
+inline bool
+Identifier::operator==(const Identifier& other) const
 {
-    return (m_id == other.m_id);
+  return (m_id == other.m_id);
 }
 
 //----------------------------------------------------------------
-inline bool 
-Identifier::operator != (const Identifier& other) const
+inline bool
+Identifier::operator!=(const Identifier& other) const
 {
-    return (m_id != other.m_id);
+  return (m_id != other.m_id);
 }
 
 //-----------------------------------------------
-inline bool 
-Identifier::operator < (const Identifier& other) const
+inline bool
+Identifier::operator<(const Identifier& other) const
 {
-    return (m_id < other.m_id);
+  return (m_id < other.m_id);
 }
 
 //-----------------------------------------------
-inline bool 
-Identifier::operator > (const Identifier& other) const
+inline bool
+Identifier::operator>(const Identifier& other) const
 {
-    return (m_id > other.m_id);
+  return (m_id > other.m_id);
 }
 
 //-----------------------------------------------
-inline bool 
-Identifier::operator <= (const Identifier& other) const
+inline bool
+Identifier::operator<=(const Identifier& other) const
 {
-    return (m_id <= other.m_id);
+  return (m_id <= other.m_id);
 }
 
 //-----------------------------------------------
-inline bool 
-Identifier::operator >= (const Identifier& other) const
+inline bool
+Identifier::operator>=(const Identifier& other) const
 {
-    return (m_id >= other.m_id);
+  return (m_id >= other.m_id);
 }
 
 //----------------------------------------------------------------
-inline bool  Identifier::is_valid () const
+inline bool
+Identifier::is_valid() const
 {
-    return (!(max_value == m_id));
+  return (!(max_value == m_id));
 }
 
-#endif // ACTS_CORE_IDENTIFIER_PLUGIN
+#endif  // ACTS_CORE_IDENTIFIER_PLUGIN
 
-#endif // ACTS_CORE_IDENTIFIER_H
+#endif  // ACTS_CORE_IDENTIFIER_H

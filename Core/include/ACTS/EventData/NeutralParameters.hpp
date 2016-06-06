@@ -9,16 +9,16 @@
 #ifndef ACTS_NEUTRALPARAMETERS_H
 #define ACTS_NEUTRALPARAMETERS_H 1
 
-#include "ACTS/EventData/SingleTrackParameters.hpp"
-#include "ACTS/EventData/SingleCurvilinearTrackParameters.hpp"
-#include "ACTS/EventData/SingleBoundTrackParameters.hpp"
 #include "ACTS/EventData/ChargePolicy.hpp"
+#include "ACTS/EventData/SingleBoundTrackParameters.hpp"
+#include "ACTS/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "ACTS/EventData/SingleTrackParameters.hpp"
 
-namespace Acts
-{
-  typedef SingleTrackParameters<NeutralPolicy> NeutralParameters;
-  typedef SingleCurvilinearTrackParameters<NeutralPolicy> NeutralCurvilinearParameters;
-  typedef SingleBoundTrackParameters<NeutralPolicy> NeutralBoundParameters;
-} // end of namespace Acts
+namespace Acts {
+typedef SingleTrackParameters<NeutralPolicy> NeutralParameters;
+typedef SingleCurvilinearTrackParameters<NeutralPolicy>
+                                                  NeutralCurvilinearParameters;
+typedef SingleBoundTrackParameters<NeutralPolicy> NeutralBoundParameters;
+}  // end of namespace Acts
 
-#endif // ACTS_NEUTRALPARAMETERS_H
+#endif  // ACTS_NEUTRALPARAMETERS_H

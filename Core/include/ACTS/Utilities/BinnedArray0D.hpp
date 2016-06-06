@@ -30,61 +30,75 @@ namespace Acts {
 
    */
 
-  template <class T> class BinnedArray0D : public BinnedArray<T> {
+template <class T>
+class BinnedArray0D : public BinnedArray<T>
+{
+public:
+  /**Default Constructor - needed for inherited classes */
+  BinnedArray0D() : BinnedArray<T>() {}
+  /**Constructor  from oneobject  */
+  BinnedArray0D(T obj) : BinnedArray<T>(), m_object(obj)
+  {
+    BinnedArray<T>::m_arrayObjects.push_back(obj);
+  }
 
-    public:
-     /**Default Constructor - needed for inherited classes */
-     BinnedArray0D():
-       BinnedArray<T>()
-     {}
+  /**Copy Constructor - copies only pointers !*/
+  BinnedArray0D(const BinnedArray0D& barr)
+    : BinnedArray<T>(barr), m_object(barr.m_object)
+  {
+  }
 
-     /**Constructor  from oneobject  */
-     BinnedArray0D(T obj):
-       BinnedArray<T>(),
-       m_object(obj)
-     {
-       BinnedArray<T>::m_arrayObjects.push_back(obj);
-     }
+  /**Assignment operator*/
+  BinnedArray0D&
+  operator=(const BinnedArray0D& barr)
+  {
+    if (this != &barr) {
+      m_object = barr.m_object;
+    }
+    return *this;
+  }
 
-     /**Copy Constructor - copies only pointers !*/
-     BinnedArray0D(const BinnedArray0D& barr):
-       BinnedArray<T>(barr),
-       m_object(barr.m_object)
-      {}
+  /** Implizit Constructor */
+  BinnedArray0D*
+  clone() const final
+  {
+    return new BinnedArray0D(*this);
+  }
 
-     /**Assignment operator*/
-     BinnedArray0D& operator=(const BinnedArray0D& barr)
-     {
-       if (this != &barr){
-          m_object       = barr.m_object;
-       }
-        return *this;
-     }
+  /**Virtual Destructor*/
+  ~BinnedArray0D() {}
+  /** Returns the single contained object */
+  T
+  object(const Vector2D&) const final
+  {
+    return m_object;
+  }
 
-     /** Implizit Constructor */
-     BinnedArray0D* clone() const final
-     { return new BinnedArray0D(*this); }
+  /** Returns the single contained object */
+  T
+  object(const Vector3D&) const final
+  {
+    return m_object;
+  }
 
-     /**Virtual Destructor*/
-     ~BinnedArray0D(){}
+  /** Returns the single contained object */
+  T
+  entryObject(const Vector3D&) const final
+  {
+    return m_object;
+  }
 
-     /** Returns the single contained object */
-     T object(const Vector2D&) const final { return m_object; }
+  /** Return the BinUtility*/
+  const BinUtility*
+  binUtility() const
+  {
+    return nullptr;
+  }
 
-     /** Returns the single contained object */
-     T object(const Vector3D&) const final { return m_object; }
+private:
+  T m_object;  //!< the single contained object
+};
 
-     /** Returns the single contained object */
-     T entryObject(const Vector3D&) const final { return m_object; }
+}  // end of namespace Acts
 
-     /** Return the BinUtility*/
-     const BinUtility* binUtility() const { return nullptr; }
-
-    private:
-     T          m_object;       //!< the single contained object
-
-  };
-
-} // end of namespace Acts
-
-#endif // ACTS_GEOMETRYUTILS_BINNEDARRAY0D_H
+#endif  // ACTS_GEOMETRYUTILS_BINNEDARRAY0D_H

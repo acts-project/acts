@@ -8,9 +8,8 @@
 
 #include "ACTS/EventData/NeutralParameters.hpp"
 
-namespace Acts
-{
- template class SingleTrackParameters<NeutralPolicy>;
- template class SingleCurvilinearTrackParameters<NeutralPolicy>;
- template class SingleBoundTrackParameters<NeutralPolicy>;
-} // end of namespace Acts
+namespace Acts {
+template class SingleTrackParameters<NeutralPolicy>;
+template class SingleCurvilinearTrackParameters<NeutralPolicy>;
+template class SingleBoundTrackParameters<NeutralPolicy>;
+}  // end of namespace Acts
