@@ -61,11 +61,12 @@ public:
 
     */
   enum SurfaceType {
-    Cone        = 0,
-    Cylinder    = 1,
-    Disc        = 2,
-    Perigee     = 3,
-    Plane       = 4,
+    Cone     = 0,
+    Cylinder = 1,
+    Disc     = 2,
+    Perigee  = 3,
+    Plane    = 4,
+
     Line        = 5,
     Curvilinear = 6,
     Other       = 7

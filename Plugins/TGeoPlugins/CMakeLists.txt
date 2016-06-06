@@ -21,10 +21,14 @@ if (BUILD_TGEO_PLUGIN)
     target_link_libraries (ACTSTGeoPlugin PUBLIC Geom)
 
     # set installation directories
-    install (TARGETS ACTSTGeoPlugin EXPORT ACTSTargets
+    install (TARGETS ACTSTGeoPlugin EXPORT ACTSTGeoPluginTargets
              LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
     install (DIRECTORY include/ACTS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+    # add to list of supported components
+    list (APPEND _supported_components TGeoPlugin)
+    set (_supported_components "${_supported_components}" PARENT_SCOPE)
   # do not fail if ROOT is not available, just inform and continue
   else (ROOT_FOUND)
     message (STATUS "${Red}ROOT was not found -> skip build of TGeoPlugins${ColorReset}")
