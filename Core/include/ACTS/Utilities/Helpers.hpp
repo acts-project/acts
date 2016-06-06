@@ -278,7 +278,7 @@ getTranslationVectorFromTransform(const Acts::Transform3D& tr)
 {
   return Acts::Vector3D(tr(0, 3), tr(1, 3), tr(2, 3));
 }  // TODO: check! it's perhaps useless, you acn use the transform.translation()
-// method
+   // method
 
 /**
  * get a AngleAxis from an angle and an axis.
