@@ -1,4 +1,3 @@
-
 // This file is part of the ACTS project.
 //
 // Copyright (C) 2016 ACTS project team
