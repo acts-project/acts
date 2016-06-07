@@ -49,6 +49,12 @@ add_subdirectory (Tests)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/ACTSVersion.h ${CMAKE_CURRENT_BINARY_DIR}/ACTSVersion.h)
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/ACTSVersion.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ACTS)
 
+# list components which are going to be installed
+message (STATUS "going to install the following components:")
+foreach (_scomp ${_supported_components})
+  message (STATUS "   - ${_scomp}")
+endforeach ()
+
 # add CMake infrastructure
 include (cmake/ACTSCreateConfig.cmake)
 
