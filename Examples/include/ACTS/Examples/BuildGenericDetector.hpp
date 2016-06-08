@@ -13,11 +13,13 @@
 #include <memory>
 
 // ACTS include(s)
+#include "ACTS/Utilities/Logger.hpp"
+
 namespace Acts {
 class TrackingGeometry;
 
 std::unique_ptr<const Acts::TrackingGeometry>
-trackingGeometry();
+trackingGeometry(Acts::Logging::Level lvl = Acts::Logging::INFO);
 }
 
 #endif  // ACTS_BUILDGENERICDETECTOR_H
