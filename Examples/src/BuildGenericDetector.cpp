@@ -27,15 +27,17 @@
 
 namespace Acts {
 std::unique_ptr<const Acts::TrackingGeometry>
-trackingGeometry()
+trackingGeometry(Acts::Logging::Level lvl)
 {
   // configure the layer creator with the surface array creator
   Acts::LayerCreator::Config lcConfig;
+  lcConfig.logger              = Acts::getDefaultLogger("LayerCreator", lvl);
   lcConfig.surfaceArrayCreator = std::make_shared<Acts::SurfaceArrayCreator>(
       Acts::SurfaceArrayCreator::Config());
   auto layerCreator = std::make_shared<Acts::LayerCreator>(lcConfig);
   // configure the cylinder volume helper
   Acts::CylinderVolumeHelper::Config cvhConfig;
+  cvhConfig.logger = Acts::getDefaultLogger("CylinderVolumeHelper", lvl);
   cvhConfig.layerArrayCreator = std::make_shared<Acts::LayerArrayCreator>(
       Acts::LayerArrayCreator::Config());
   cvhConfig.trackingVolumeArrayCreator
@@ -48,6 +50,7 @@ trackingGeometry()
   //-------------------------------------------------------------------------------------
   // configure the beam pipe layer builder
   Acts::PassiveLayerBuilder::Config bplConfig;
+  bplConfig.logger = Acts::getDefaultLogger("PassiveLayerBuilder", lvl);
   bplConfig.layerIdentification     = "BeamPipe";
   bplConfig.centralLayerRadii       = std::vector<double>(1, 21.);
   bplConfig.centralLayerHalflengthZ = std::vector<double>(1, 200.);
@@ -60,6 +63,7 @@ trackingGeometry()
   auto beamPipeBuilder = std::make_shared<Acts::PassiveLayerBuilder>(bplConfig);
   // create the volume for the beam pipe
   Acts::CylinderVolumeBuilder::Config bpvConfig;
+  bpvConfig.logger = Acts::getDefaultLogger("CylinderVolumeBuilder", lvl);
   bpvConfig.trackingVolumeHelper = cylinderVolumeHelper;
   bpvConfig.volumeName           = "BeamPipe";
   bpvConfig.layerBuilder         = beamPipeBuilder;
@@ -74,6 +78,7 @@ trackingGeometry()
   //-------------------------------------------------------------------------------------
   // configure pixel layer builder
   Acts::GenericLayerBuilder::Config plbConfig;
+  plbConfig.logger = Acts::getDefaultLogger("GenericLayerBuilder", lvl);
   plbConfig.layerCreator        = layerCreator;
   plbConfig.layerIdentification = "Pixel";
   // fill necessary vectors for configuration
@@ -206,6 +211,7 @@ trackingGeometry()
   //-------------------------------------------------------------------------------------
   // build the pixel volume
   Acts::CylinderVolumeBuilder::Config pvbConfig;
+  pvbConfig.logger = Acts::getDefaultLogger("CylinderVolumeBuilder", lvl);
   pvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
   pvbConfig.volumeName           = "Pixel";
   pvbConfig.volumeToBeamPipe     = false;
@@ -220,6 +226,7 @@ trackingGeometry()
   //-------------------------------------------------------------------------------------
   // create the tracking geometry
   Acts::CylinderGeometryBuilder::Config tgConfig;
+  tgConfig.logger = Acts::getDefaultLogger("CylinderGeometryBuilder", lvl);
   tgConfig.beamPipeBuilder = beamPipeVolumeBuilder;
   std::list<std::shared_ptr<Acts::ITrackingVolumeBuilder>>
       trackingVolumeBuilders;
