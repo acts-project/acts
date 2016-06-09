@@ -27,15 +27,17 @@ version numbers were tested to be working. Older versions may or may not work.
 
 The following dependencies are required:
 
-+ [clang](http://clang.llvm.org/) (>= 3.8.0) or [gcc](https://gcc.gnu.org/) (>= 5.3.1)
++ [clang](http://clang.llvm.org/) (>= 3.8.0) or [gcc](https://gcc.gnu.org/) (>= 4.9.3)
 + [cmake](https://cmake.org/) (>= 2.8)
-+ [boost](http://www.boost.org/) (>= 1.61)
++ [boost](http://boost.org/) (>= 1.59)
 + [Eigen](http://eigen.tuxfamily.org/) (>= 3.2.8)
 
 The following dependencies are optional and only needed for some of the plugins
 
-+ [ROOT](https://root.cern.ch/) (>= 6.06.04)
-+ DD4Hep
++ [doxygen](http://doxygen.org) (>= 1.6.1) for the documentation
++ [graphviz](http://www.graphviz.org/) (>= 2.26.00) for the documentation
++ [ROOT](https://root.cern.ch/) (>= 6.06.04) for TGeo plugin
++ DD4Hep for DD4Hep plugin
 
 ## Installation
 
@@ -57,7 +59,8 @@ where \<DIR\> refers to some directory which needs to be set.
 
 ## cmake options
 
-For a complete list of cmake options please refer to the [official documentation](https://cmake.org/cmake/help/v3.1/index.html).
+For a complete list of cmake options please refer to the [official documentation](https://cmake.org/cmake/help/v3.1/index.html)
+and this nice [list of general cmake options](https://cmake.org/Wiki/CMake_Useful_Variables).
 A full list of ACTS specific cmake options can be obtained by running the following command
 > cmake \<ACTS_DIR\> -DPRINT_OPTIONS=ON
 Important options relevant for the ACTS project are given below. They can be set
@@ -65,8 +68,42 @@ by adding '-D<OPTION>=<VALUE>' to the cmake command.
 
 |option|default|description|
 |------|-------|-----------|
-|BOOST_ROOT| empty | |
+|BOOST_ROOT           | empty                 | path to the ROOT installation          |
+|EIGEN_INCLUDE_DIR    | empty                 | path to the Eigen installation         |
+|BUILD_DD4HEP_PLUGIN  | OFF                   | build DD4Hep plugin (requires DD4hep)  |
+|BUILD_DOC            | OFF                   | build doxygen documentation            |
+|BUILD_TESTS          | ON                    | build unit tests                       |
+|BUILD_TGEO_PLUGIN    | OFF                   | build TGeo plugin (requires ROOT)      |
+|CMAKE_INSTALL_PREFIX | /opt/ACTS/\<version\> | target installation directory          |
+|CMAKE_PREFIX_PATH    | empty                 | search path for external packages      |    
+|CMAKE_CXX_COMPILER   | empty                 | set C++ compiler (e.g. g++ or clang++) |    
+|CMAKE_CXX_FLAGS      | -std=c++14            | set C++ compiler flags (e.g. "-O2 -g") |  
+|CMAKE_BUILD_TYPE     | None                  | build type (e.g. Debug, Release)       |
 
+## Example build on lxplus at CERN
+
+If you are logged in to lxplus at CERN, you could run the following commands
+to install ACTS with all its components and run an example. Please note the 
+ong cmake command which spans several lines.
+
+> git clone ssh://git@gitlab.cern.ch:7999/acts/a-common-tracking-sw.git acts<br />
+> mkdir acts/build<br />
+> cd acts/build<br />
+> source /afs/cern.ch/sw/lcg/contrib/gcc/4.9.3/x86_64-slc6/setup.sh<br />
+> cmake .. \\ <br />
+>   -DEIGEN_INCLUDE_DIR=/afs/cern.ch/sw/lcg/releases/eigen/3.2.7-292e1/x86_64-slc6-gcc49-opt/include/eigen3/ \\ <br />
+>   -DBOOST_ROOT=/afs/cern.ch/sw/lcg/releases/LCG_83/Boost/1.59.0_python2.7/x86_64-slc6-gcc49-opt/include/boost-1_59/ \\ <br />
+>   -DBUILD_DOC=ON \\ <br />
+>   -DBUILD_TGEO_PLUGIN=ON \\ <br />
+>   -DBUILD_DD4HEP_PLUGIN=ON \\ <br />
+>   -DCMAKE_PREFIX_PATH="/afs/cern.ch/exp/fcc/sw/0.7/DD4hep/20161003/x86_64-slc6-gcc49-opt/;/afs/cern.ch/sw/lcg/releases/LCG_83/ROOT/6.06.00/x86_64-slc6-gcc49-opt/cmake" \\ <br />
+>   -DCMAKE_INSTALL_PREFIX=\`pwd\`/installed <br />
+> make<br />
+> make doc<br />
+> make install<br />
+> cd installed <br />
+> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:\`pwd\`/lib64 <br />
+> ./bin/ACTSGenericDetector
 
 # License and Authors
 
