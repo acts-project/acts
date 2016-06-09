@@ -22,8 +22,9 @@ Please visit our [Wiki](https://gitlab.cern.ch/acts/a-common-tracking-sw/wikis/h
 
 ## Prerequisites
 
-Only few dependencies are required to build the Core library of ACTS. The given
-version numbers were tested to be working. Older versions may or may not work.
+Only few dependencies are required to build the Core library of ACTS. A list of 
+prerequisites required is given below with the numbers indicating which versions 
+were tested. Older versions may or may not work, feedback is very welcome.
 
 The following dependencies are required:
 
@@ -32,7 +33,7 @@ The following dependencies are required:
 + [boost](http://boost.org/) (>= 1.59)
 + [Eigen](http://eigen.tuxfamily.org/) (>= 3.2.8)
 
-The following dependencies are optional and only needed for some of the plugins
+The following dependencies are optional and are only needed for some of the plugins
 
 + [doxygen](http://doxygen.org) (>= 1.6.1) for the documentation
 + [graphviz](http://www.graphviz.org/) (>= 2.26.00) for the documentation
@@ -42,18 +43,18 @@ The following dependencies are optional and only needed for some of the plugins
 ## Installation
 
 The ACTS repository is hosted on the GitLab instance at CERN. For the time being
-you need to have a full CERN account in order to access this. We are working on
+you need to have a full CERN account in order to access the repository. We are working on
 a solution for non-CERN users. We use cmake as build system for compiling and
 installing ACTS libraries. For a complete description of the available cmake
 options please see below.
 
 In order to install the latest version, you can follow the instructions below
-where \<DIR\> refers to some directory which needs to be set.
+where \<DIR\> refers to some directory which needs to be set depending your configuration.
 
 > git clone https://gitlab.cern.ch/acts/a-common-tracking-sw.git \<ACTS_DIR\><br />
 > mkdir \<BUILD_DIR\><br />
 > cd \<BUILD_DIR\><br />
-> cmake .. -DEIGEN_INCLUDE_DIR=\<EIGEN_INSTALLATION\> -DBOOST_ROOT=\<BOOST_INSTALLATION\><br />
+> cmake \<ACTS_DIR\> -DEIGEN_INCLUDE_DIR=\<EIGEN_INSTALLATION\> -DBOOST_ROOT=\<BOOST_INSTALLATION\><br />
 > make<br />
 > make install<br />
 
@@ -62,9 +63,11 @@ where \<DIR\> refers to some directory which needs to be set.
 For a complete list of cmake options please refer to the [official documentation](https://cmake.org/cmake/help/v3.1/index.html)
 and this nice [list of general cmake options](https://cmake.org/Wiki/CMake_Useful_Variables).
 A full list of ACTS specific cmake options can be obtained by running the following command
+
 > cmake \<ACTS_DIR\> -DPRINT_OPTIONS=ON
+
 Important options relevant for the ACTS project are given below. They can be set
-by adding '-D<OPTION>=<VALUE>' to the cmake command.
+by adding '-D\<OPTION\>=\<VALUE\>' to the cmake command.
 
 |option|default|description|
 |------|-------|-----------|
