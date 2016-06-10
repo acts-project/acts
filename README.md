@@ -111,7 +111,7 @@ ong cmake command which spans several lines.
 # License and Authors
 
 This project is published under the Mozilla Public License, v. 2.0. Details of
-this license can be found in the LICENSE file or at http://mozilla.org/MPL/2.0/.
+this license can be found in the [LICENSE](LICENSE) file or at http://mozilla.org/MPL/2.0/.
 
 The authors of this project are (in alphabetical order):
 - Noemi Calace
