@@ -3,7 +3,7 @@ option (BUILD_TESTS "build unit tests" ON)
 
 if (BUILD_TESTS)
    # we need boost
-   find_package (Boost REQUIRED)
+   find_package (Boost 1.59 REQUIRED)
 
    if (Boost_FOUND)
       add_executable (ParameterSetTest ParameterSetTests.cpp)
