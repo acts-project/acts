@@ -3,7 +3,7 @@ option (BUILD_TGEO_PLUGIN "build TGeo plugins" OFF)
 
 if (BUILD_TGEO_PLUGIN)
   # we need root
-  find_package (ROOT QUIET COMPONENTS Geom)
+  find_package (ROOT 6.04.06 QUIET COMPONENTS Geom)
 
   if (ROOT_FOUND)
     # get list of all source files
