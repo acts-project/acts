@@ -12,19 +12,12 @@
 
 #include "ACTS/Surfaces/SubtractedDiscSurface.hpp"
 
-Acts::SubtractedDiscSurface::SubtractedDiscSurface()
-  : Acts::DiscSurface(), m_subtrVol(), m_shared(true)
-{
-}
-
-// copy constructor
 Acts::SubtractedDiscSurface::SubtractedDiscSurface(
     const SubtractedDiscSurface& psf)
   : Acts::DiscSurface(psf), m_subtrVol(psf.m_subtrVol), m_shared(psf.m_shared)
 {
 }
 
-// copy constructor with shift
 Acts::SubtractedDiscSurface::SubtractedDiscSurface(
     const SubtractedDiscSurface& psf,
     const Acts::Transform3D&     shift)
@@ -34,7 +27,6 @@ Acts::SubtractedDiscSurface::SubtractedDiscSurface(
 {
 }
 
-// constructor
 Acts::SubtractedDiscSurface::SubtractedDiscSurface(const Acts::DiscSurface& ps,
                                                    AreaExcluder*            vol,
                                                    bool shared)
@@ -44,7 +36,6 @@ Acts::SubtractedDiscSurface::SubtractedDiscSurface(const Acts::DiscSurface& ps,
 {
 }
 
-// destructor (will call destructor from base class which deletes objects)
 Acts::SubtractedDiscSurface::~SubtractedDiscSurface()
 {
 }

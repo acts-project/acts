@@ -11,12 +11,8 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/PerigeeSurface.hpp"
-
-// STD/STL
 #include <iomanip>
 #include <iostream>
-
-Acts::NoBounds Acts::PerigeeSurface::s_perigeeBounds;
 
 Acts::PerigeeSurface::PerigeeSurface() : Surface(), m_lineDirection(nullptr)
 {

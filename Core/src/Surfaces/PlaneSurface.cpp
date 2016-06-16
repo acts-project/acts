@@ -10,45 +10,44 @@
 // PlaneSurface.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// eometry module
 #include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/DiamondBounds.hpp"
-#include "ACTS/Surfaces/EllipseBounds.hpp"
-#include "ACTS/Surfaces/NoBounds.hpp"
-#include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Surfaces/TrapezoidBounds.hpp"
-#include "ACTS/Surfaces/TriangleBounds.hpp"
-// Core module
+#include "ACTS/Surfaces/BoundlessT.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
-// STD/STL
 #include <iomanip>
 #include <iostream>
 
-Acts::NoBounds Acts::PlaneSurface::s_boundless;
-
 // default constructor
-Acts::PlaneSurface::PlaneSurface() : Acts::Surface(), m_bounds(nullptr)
-{
-}
+Acts::PlaneSurface::PlaneSurface() 
+    : Surface()
+    , m_bounds(nullptr)
+    , m_normal(0.,0.,0.)    
+
+{}
 
 // copy constructor
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface& psf)
-  : Acts::Surface(psf), m_bounds(psf.m_bounds)
-{
-}
+  : Surface(psf)
+  , m_bounds(psf.m_bounds)
+  , m_normal(psf.m_normal)
+{}
 
 // copy constructor with shift
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface&      psf,
                                  const Acts::Transform3D& transf)
-  : Acts::Surface(psf, transf), m_bounds(psf.m_bounds)
+  : Surface(psf, transf)
+  , m_bounds(psf.m_bounds)
+  , m_normal(0.,0.,0.) 
 {
+    m_normal = transform().rotation().col(2);
 }
 
 // constructor from normal vector
 Acts::PlaneSurface::PlaneSurface(const Acts::Vector3D& position,
                                  const Vector3D&       normal)
-  : Acts::Surface(), m_bounds(nullptr)
+  : Surface()
+  , m_bounds(nullptr)
+  , m_normal(normal)
 {
   Acts::Translation3D curvilinearTranslation(
       position.x(), position.y(), position.z());
@@ -68,87 +67,72 @@ Acts::PlaneSurface::PlaneSurface(const Acts::Vector3D& position,
   curvilinearRotation.col(2) = V;
 
   // curvilinear surfaces are boundless
-  Acts::Surface::m_transform    = std::make_shared<Acts::Transform3D>();
-  (*Acts::Surface::m_transform) = curvilinearRotation;
-  Acts::Surface::m_transform->pretranslate(position);
+  Surface::m_transform    = std::make_shared<Acts::Transform3D>();
+  (*Surface::m_transform) = curvilinearRotation;
+  Surface::m_transform->pretranslate(position);
 }
 
 // construct form DetectorElementBase & potentially identifier
 Acts::PlaneSurface::PlaneSurface(const Acts::DetectorElementBase& detelement,
                                  const Identifier&                identifier)
-  : Acts::Surface(detelement, identifier), m_bounds(nullptr)
+  : Surface(detelement, identifier)
+  , m_bounds(nullptr)
+  , m_normal(0.,0.,0.)
 {
+    m_normal = transform().rotation().col(2);    
 }
 
 // construct planar surface without bounds
 Acts::PlaneSurface::PlaneSurface(std::shared_ptr<Acts::Transform3D> htrans)
-  : Acts::Surface(htrans), m_bounds(nullptr)
+  : Surface(htrans)
+  , m_bounds(std::make_shared<BoundlessT<RectangleBounds>()>)
+  , m_normal(0.,0.,0.) 
 {
+    m_normal = transform().rotation().col(2);    
 }
 
 // construct planar surface without bounds
 Acts::PlaneSurface::PlaneSurface(std::unique_ptr<Acts::Transform3D> htrans)
-  : Acts::Surface(std::move(htrans)), m_bounds(nullptr)
+  : Surface(std::move(htrans))
+  , m_bounds(nullptr)
+  , m_normal(0.,0.,0.) 
 {
-}
-
-// construct rectangle module
-Acts::PlaneSurface::PlaneSurface(std::shared_ptr<Acts::Transform3D> htrans,
-                                 double                             halephi,
-                                 double                             haleta)
-  : Acts::Surface(htrans)
-  , m_bounds(std::make_shared<Acts::RectangleBounds>(halephi, haleta))
-{
-}
-
-// construct trapezoidal module with parameters
-Acts::PlaneSurface::PlaneSurface(std::shared_ptr<Acts::Transform3D> htrans,
-                                 double                             minhalephi,
-                                 double                             maxhalephi,
-                                 double                             haleta)
-  : Acts::Surface(htrans)
-  , m_bounds(
-        std::make_shared<Acts::TrapezoidBounds>(minhalephi, maxhalephi, haleta))
-{
-}
-
-// construct module with shared boundaries
-Acts::PlaneSurface::PlaneSurface(std::shared_ptr<Acts::Transform3D> htrans,
-                                 const Acts::PlanarBounds*          tbounds)
-  : Acts::Surface(htrans), m_bounds(tbounds)
-{
+    m_normal = transform().rotation().col(2);    
 }
 
 // construct module with shared boundaries
 Acts::PlaneSurface::PlaneSurface(
     std::shared_ptr<Acts::Transform3D>        htrans,
     std::shared_ptr<const Acts::PlanarBounds> tbounds)
-  : Acts::Surface(htrans), m_bounds(tbounds)
+  : Surface(std::move(htrans))
+  , m_bounds(nullptr)
+  , m_normal(0.,0.,0.) 
 {
+    m_normal = transform().rotation().col(2);    
 }
 
 // destructor (will call destructor from base class which deletes objects)
 Acts::PlaneSurface::~PlaneSurface()
-{
-}
+{}
 
 Acts::PlaneSurface&
 Acts::PlaneSurface::operator=(const Acts::PlaneSurface& psf)
 {
   if (this != &psf) {
-    Acts::Surface::operator=(psf);
+    Surface::operator=(psf);
     m_bounds               = psf.m_bounds;
   }
   return *this;
 }
 
 bool
-Acts::PlaneSurface::operator==(const Acts::Surface& sf) const
+Acts::PlaneSurface::operator==(const Surface& sf) const
 {
   // first check the type not to compare apples with oranges
-  const Acts::PlaneSurface* psf = dynamic_cast<const Acts::PlaneSurface*>(&sf);
+  const PlaneSurface* psf = dynamic_cast<const PlaneSurface*>(&sf);
   if (!psf) return false;
   if (psf == this) return true;
+  // @TODO make approx parameter more useful
   bool transfEqual(transform().isApprox(psf->transform(), 10e-8));
   bool centerEqual = center() == psf->center();
   bool boundsEqual = bounds() == psf->bounds();

@@ -22,114 +22,117 @@
 
 namespace Acts {
 
-/**
- @class SurfaceBounds
-
- Abstract base class for surface bounds to be specified.
-
- Surface bounds provide:
- - inside() checks
- - the BoundsType return type to avoid dynamic casting
- - an initCache() method
-
- */
-
+/// @class SurfaceBounds
+///
+/// Abstract base class for surface bounds to be specified.
+///
+/// Surface bounds provide:
+/// - inside() checks
+/// - the BoundsType return type to avoid dynamic casting
+///
+/// @TODO for easy persistency access, force Constructor from ValueStore
+///   
 class SurfaceBounds
 {
 public:
-  /** @enum BoundsType
-
-      This enumerator simplifies the persistency,
-      by saving a dynamic_cast to happen.
-
-      Other is reserved for the GeometrySurfaces implementation.
-
-    */
+  /// @enum BoundsType
+  ///
+  /// This enumerator simplifies the persistency,
+  /// by saving a dynamic_cast to happen.
+  ///
   enum BoundsType {
     Cone             = 0,
     Cylinder         = 1,
     Diamond          = 2,
     Disc             = 3,
     Ellipse          = 5,
-    Rectangle        = 6,
-    RotatedTrapezoid = 7,
-    Trapezoid        = 8,
-    Triangle         = 9,
-    DiscTrapezoidal  = 10,
-    Other            = 11
+    Line             = 6,
+    Rectangle        = 7,
+    RotatedTrapezoid = 8,
+    Trapezoid        = 9,
+    Triangle         = 10,
+    DiscTrapezoidal  = 11,
+    Boundless        = 12,
+    Other            = 12
   };
 
-  /**Default Constructor*/
-  SurfaceBounds() {}
-  /**Destructor*/
+  /// Default Constructor 
+  /// @param sSize is the size of the data store
+  /// @note the value Store is initialized to the given size
+  SurfaceBounds(size_t sSize=0) : m_valueStore(sSize,0.) {}
+  
+  /// Copy constructor
+  /// It copies the value store
+  SurfaceBounds(const SurfaceBounds& sb ) : m_valueStore(sb.m_valueStore) {}
+  
+  /// Destructor
   virtual ~SurfaceBounds() {}
-  /** clone() method to make deep copy in Surface copy constructor and for
-    assigment operator
-    of the Surface class.*/
+  
+  /// clone() method to make deep copy in Surface copy constructor and for
+  /// assigment operator of the Surface class
   virtual SurfaceBounds*
   clone() const = 0;
 
-  /**Equality operator*/
-  virtual bool
-  operator==(const SurfaceBounds& sb) const = 0;
+  /// Assignment operator
+  SurfaceBounds& operator=(const SurfaceBounds& sb);
 
-  /**Non-Equality operator*/
+  /// Comparison (equality) operator
+  /// checks first on the pointer equality
+  /// then it cheks on the type
+  /// lastly it checks on the data store
+  virtual bool
+  operator==(const SurfaceBounds& sb) const;
+
+  /// Comparison (non-equality) operator
+  /// checks first on the pointer equality, inverts operator==
   bool
   operator!=(const SurfaceBounds& sb) const;
 
-  /** Return the bounds type - for persistency optimization */
+  /// Return the bounds type - for persistency optimization 
   virtual BoundsType
   type() const = 0;
+  
+  /// Access method for bound variable store
+  /// @return of the stored values for the boundary object
+  virtual std::vector<TDD_real_t> valueStore() const;
 
-  /** Each Bounds has a method inside, which checks if a LocalPosition is inside
-     the bounds.
-      Inside can be called without/with tolerances. */
+  /// Inside check for the bounds object driven by the boundary check directive
+  /// Each Bounds has a method inside, which checks if a LocalPosition is inside
+  /// the bounds  Inside can be called without/with tolerances.
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param bchk boundary check directive
+  /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& locpo, double tol1 = 0., double tol2 = 0.) const = 0;
-  virtual bool
-  inside(const Vector2D& locpo, const BoundaryCheck& bchk) const = 0;
+  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const = 0;
 
-  /** Extend the interface to for single inside Loc 1 / Loc2 tests
-     - loc1/loc2 correspond to the natural coordinates of the surface */
+  /// Inside check for the bounds object with tolerance
+  /// checks for first coordinate only.
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol1 tolerance parameter 
+  /// @return boolean indicator for the success of this operation
   virtual bool
-  insideLoc1(const Vector2D& locpo, double tol1 = 0.) const = 0;
+  insideLoc0(const Vector2D& lpos, double tol1 = 0.) const = 0;
 
-  /** Extend the interface to for single inside Loc 1 / Loc2 tests
-     - loc1/loc2 correspond to the natural coordinates of the surface */
+  /// Inside check for the bounds object with tolerance
+  /// checks for second coordinate only.
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol2 tolerance parameter 
+  /// @return boolean indicator for the success of this operation
   virtual bool
-  insideLoc2(const Vector2D& locpo, double tol2 = 0.) const = 0;
+  insideLoc1(const Vector2D& lpos, double tol2 = 0.) const = 0;
 
-  /** Minimal distance to boundary ( > 0 if outside and <=0 if inside) */
+  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   virtual double
   minDistance(const Vector2D& pos) const = 0;
-
-  /** Interface method for the maximal extension or the radius*/
-  virtual double
-  r() const = 0;
-
-  /** Output Method for std::ostream, to be overloaded by child classes */
+  
+  /// Output Method for std::ostream, to be overloaded by child classes 
   virtual std::ostream&
   dump(std::ostream& sl) const = 0;
-
+  
 protected:
-  /** Swap method to be called from DiscBounds or TrapezoidalBounds */
-  void
-  swap(double& b1, double& b2);
+  std::vector<TDD_real_t> m_valueStore; ///< internal data store
 
-  /** virtual initCache method for object persistency */
-  virtual void
-  initCache()
-  {
-  }
 };
-
-inline void
-SurfaceBounds::swap(double& b1, double& b2)
-{
-  double tmp = b1;
-  b1         = b2;
-  b2         = tmp;
-}
 
 inline bool
 SurfaceBounds::operator!=(const SurfaceBounds& sb) const

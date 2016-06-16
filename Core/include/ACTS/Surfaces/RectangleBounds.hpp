@@ -18,115 +18,83 @@
 
 namespace Acts {
 
-/**
- @class RectangleBounds
-
- Bounds for a rectangular, planar surface.
- The two local coordinates Acts::eLOC_X, Acts::eLOC_Y are for legacy reasons
- also called @f$ phi @f$ respectively @f$ eta @f$. The orientation
- with respect to the local surface framce can be seen in the attached
- illustration.
-
- @image html RectangularBounds.gif
-*/
+/// @class RectangleBounds
+///
+/// Bounds for a rectangular, planar surface.
+/// The two local coordinates Acts::eLOC_X, Acts::eLOC_Y are for legacy reasons
+/// also called @f$ phi @f$ respectively @f$ eta @f$. The orientation
+/// with respect to the local surface framce can be seen in the attached
+/// illustration.
+///
+/// @image html RectangularBounds.gif
 
 class RectangleBounds : public PlanarBounds
 {
 public:
-  /** @enum BoundValues for readability */
+  /// @enum BoundValues for readability 
   enum BoundValues { bv_halfX = 0, bv_halfY = 1, bv_length = 2 };
 
-  /** Default Constructor - needed for persistency*/
-  RectangleBounds();
+  /// Default Constructor - deleted
+  RectangleBounds() = delete;
 
-  /** Constructor with halflength in phi and halflength in eta*/
-  RectangleBounds(double halephi, double haleta);
+  /// Constructor with halflength in x and y
+  /// @param halfX halflength in X
+  /// @param halfY halflength in Y
+  RectangleBounds(double halfX, double halfY);
 
-  /** Copy constructor*/
-  RectangleBounds(const RectangleBounds& recbo);
+  /// Copy constructor
+  RectangleBounds(const RectangleBounds& recbo) : PlanarBounds(recbo) {}
 
-  /** Destructor*/
+  /// Destructor
   virtual ~RectangleBounds();
 
-  /** Assignment Operator*/
+  /// Assignment Operator
   RectangleBounds&
   operator=(const RectangleBounds& recbo);
 
-  /** Equality operator*/
-  virtual bool
-  operator==(const SurfaceBounds& sbo) const override;
-
-  /** Virtual constructor*/
+  /// Virtual constructor
   virtual RectangleBounds*
   clone() const override;
 
-  /** Return the type of the bounds for persistency */
+  /// Return the type of the bounds for persistency 
   virtual BoundsType
   type() const override
   {
     return SurfaceBounds::Rectangle;
   }
 
-  /** This method checks if the provided local coordinates are inside the
-   * surface bounds*/
+  /// @copydoc SurfaceBounds::inside
   virtual bool
-  inside(const Vector2D& locpo,
-         double          tol1 = 0.,
-         double          tol2 = 0.) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
-  /** This method checks if the provided local coordinates are inside the
-   * surface bounds*/
+  /// @copydoc SurfaceBounds::insideLoc0
   virtual bool
-  inside(const Vector2D& locpo, const BoundaryCheck& bchk) const override;
+  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
-  /** This method checks inside bounds in loc1
-    - loc1/loc2 correspond to the natural coordinates of the surface */
+  /// @copydoc SurfaceBounds::insideLoc1
   virtual bool
-  insideLoc1(const Vector2D& locpo, double tol1 = 0.) const override;
+  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /** This method checks inside bounds in loc2
-    - loc1/loc2 correspond to the natural coordinates of the surface */
-  virtual bool
-  insideLoc2(const Vector2D& locpo, double tol2 = 0.) const override;
-
-  /** Minimal distance to boundary ( > 0 if outside and <=0 if inside) */
+  /// @copydoc SurfaceBounds::minDistance 
   virtual double
-  minDistance(const Vector2D& pos) const override;
+  minDistance(const Vector2D& lpos) const override;
 
-  /** This method returns the halflength in phi (first coordinate of local
-   * surface frame)*/
-  double
-  halflengthPhi() const;
-
-  /** This method returns the halflength in Eta (second coordinate of local
-   * surface frame)*/
-  double
-  halflengthEta() const;
-
-  /* *for consistant naming*/
+  /// Return method for the half length in X
   double
   halflengthX() const;
 
-  /** for consitant naming*/
+  /// Return method for the half length in Y
   double
   halflengthY() const;
 
-  /** This method returns the maximal extension on the local plane, i.e.
-   * @f$s\sqrt{h_{\phi}^2 + h_{\eta}^2}\f$*/
-  virtual double
-  r() const override;
-
-  /** Return the vertices - or, the points of the extremas */
+  /// Return the vertices - or, the points of the extremas 
   virtual const std::vector<Vector2D>
   vertices() const override;
 
-  /** Output Method for std::ostream */
+  /// Output Method for std::ostream 
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
-private:
-  /** The internal version of the bounds can be float/double*/
-  std::vector<TDD_real_t> m_boundValues;
 };
 
 inline RectangleBounds*
@@ -136,33 +104,24 @@ RectangleBounds::clone() const
 }
 
 inline bool
-RectangleBounds::inside(const Vector2D& locpo, double tol1, double tol2) const
-{
-  return ((fabs(locpo[Acts::eLOC_X])
-           < m_boundValues.at(RectangleBounds::bv_halfX) + tol1)
-          && (fabs(locpo[Acts::eLOC_Y])
-              < m_boundValues.at(RectangleBounds::bv_halfY) + tol2));
-}
-
-inline bool
-RectangleBounds::inside(const Vector2D& locpo, const BoundaryCheck& bchk) const
+RectangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
 {
   if (bchk.bcType == 0)
-    return RectangleBounds::inside(
-        locpo, bchk.toleranceLoc1, bchk.toleranceLoc2);
+    return RectangleBounds::insideLoc0(lpos, bchk.toleranceLoc0)
+      && RectangleBounds::insideLoc1(lpos, bchk.toleranceLoc1);
 
   // a fast FALSE
   double max_ell = bchk.lCovariance(0, 0) > bchk.lCovariance(1, 1)
       ? bchk.lCovariance(0, 0)
       : bchk.lCovariance(1, 1);
   double limit = bchk.nSigmas * sqrt(max_ell);
-  if (!RectangleBounds::inside(locpo, limit, limit)) return false;
+  if (!RectangleBounds::inside(lpos, limit, limit)) return false;
   // a fast TRUE
   double min_ell = bchk.lCovariance(0, 0) < bchk.lCovariance(1, 1)
       ? bchk.lCovariance(0, 0)
       : bchk.lCovariance(1, 1);
   limit = bchk.nSigmas * sqrt(min_ell);
-  if (RectangleBounds::inside(locpo, limit, limit)) return true;
+  if (RectangleBounds::inside(lpos, limit, limit)) return true;
 
   // compute KDOP and axes for surface polygon
   std::vector<KDOP>     elementKDOP(4);
@@ -179,18 +138,18 @@ RectangleBounds::inside(const Vector2D& locpo, const BoundaryCheck& bchk) const
   // ellipse is always at (0,0), surface is moved to ellipse position and then
   // rotated
   Vector2D p;
-  p << m_boundValues.at(RectangleBounds::bv_halfX),
-      m_boundValues.at(RectangleBounds::bv_halfY);
-  elementP.at(0) = (rotMatrix * (p - locpo));
-  p << m_boundValues.at(RectangleBounds::bv_halfX),
-      -m_boundValues.at(RectangleBounds::bv_halfY);
-  elementP.at(1) = (rotMatrix * (p - locpo));
-  p << -m_boundValues.at(RectangleBounds::bv_halfX),
-      m_boundValues.at(RectangleBounds::bv_halfY);
-  elementP.at(2) = (rotMatrix * (p - locpo));
-  p << -m_boundValues.at(RectangleBounds::bv_halfX),
-      -m_boundValues.at(RectangleBounds::bv_halfY);
-  elementP.at(3)             = (rotMatrix * (p - locpo));
+  p << m_valueStore.at(RectangleBounds::bv_halfX),
+      m_valueStore.at(RectangleBounds::bv_halfY);
+  elementP.at(0) = (rotMatrix * (p - lpos));
+  p << m_valueStore.at(RectangleBounds::bv_halfX),
+      -m_valueStore.at(RectangleBounds::bv_halfY);
+  elementP.at(1) = (rotMatrix * (p - lpos));
+  p << -m_valueStore.at(RectangleBounds::bv_halfX),
+      m_valueStore.at(RectangleBounds::bv_halfY);
+  elementP.at(2) = (rotMatrix * (p - lpos));
+  p << -m_valueStore.at(RectangleBounds::bv_halfX),
+      -m_valueStore.at(RectangleBounds::bv_halfY);
+  elementP.at(3)             = (rotMatrix * (p - lpos));
   std::vector<Vector2D> axis = {elementP.at(0) - elementP.at(1),
                                 elementP.at(0) - elementP.at(2),
                                 elementP.at(0) - elementP.at(3),
@@ -204,50 +163,29 @@ RectangleBounds::inside(const Vector2D& locpo, const BoundaryCheck& bchk) const
 }
 
 inline bool
-RectangleBounds::insideLoc1(const Vector2D& locpo, double tol1) const
+RectangleBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 {
-  return (fabs(locpo[Acts::eLOC_X])
-          < m_boundValues.at(RectangleBounds::bv_halfX) + tol1);
+  return (fabs(lpos[Acts::eLOC_X])
+          < m_valueStore.at(RectangleBounds::bv_halfX) + tol0);
 }
 
 inline bool
-RectangleBounds::insideLoc2(const Vector2D& locpo, double tol2) const
+RectangleBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 {
-  return (fabs(locpo[Acts::eLOC_Y])
-          < m_boundValues.at(RectangleBounds::bv_halfY) + tol2);
-}
-
-inline double
-RectangleBounds::halflengthPhi() const
-{
-  return this->halflengthX();
-}
-
-inline double
-RectangleBounds::halflengthEta() const
-{
-  return this->halflengthY();
+  return (fabs(lpos[Acts::eLOC_Y])
+          < m_valueStore.at(RectangleBounds::bv_halfY) + tol1);
 }
 
 inline double
 RectangleBounds::halflengthX() const
 {
-  return m_boundValues.at(RectangleBounds::bv_halfX);
+  return m_valueStore.at(RectangleBounds::bv_halfX);
 }
 
 inline double
 RectangleBounds::halflengthY() const
 {
-  return m_boundValues.at(RectangleBounds::bv_halfY);
-}
-
-inline double
-RectangleBounds::r() const
-{
-  return sqrt(m_boundValues.at(RectangleBounds::bv_halfX)
-                  * m_boundValues.at(RectangleBounds::bv_halfX)
-              + m_boundValues.at(RectangleBounds::bv_halfY)
-                  * m_boundValues.at(RectangleBounds::bv_halfY));
+  return m_valueStore.at(RectangleBounds::bv_halfY);
 }
 
 inline const std::vector<Vector2D>
@@ -258,17 +196,17 @@ RectangleBounds::vertices() const
   // fill the vertices
   vertices.reserve(4);
   vertices.push_back(
-      Vector2D(m_boundValues.at(RectangleBounds::bv_halfX),
-               -m_boundValues.at(RectangleBounds::bv_halfY)));  // [0]
+      Vector2D(m_valueStore.at(RectangleBounds::bv_halfX),
+               -m_valueStore.at(RectangleBounds::bv_halfY)));  // [0]
   vertices.push_back(
-      Vector2D(m_boundValues.at(RectangleBounds::bv_halfX),
-               m_boundValues.at(RectangleBounds::bv_halfY)));  // [1]
+      Vector2D(m_valueStore.at(RectangleBounds::bv_halfX),
+               m_valueStore.at(RectangleBounds::bv_halfY)));  // [1]
   vertices.push_back(
-      Vector2D(-m_boundValues.at(RectangleBounds::bv_halfX),
-               m_boundValues.at(RectangleBounds::bv_halfY)));  // [1]
+      Vector2D(-m_valueStore.at(RectangleBounds::bv_halfX),
+               m_valueStore.at(RectangleBounds::bv_halfY)));  // [1]
   vertices.push_back(
-      Vector2D(-m_boundValues.at(RectangleBounds::bv_halfX),
-               -m_boundValues.at(RectangleBounds::bv_halfY)));  // [3]
+      Vector2D(-m_valueStore.at(RectangleBounds::bv_halfX),
+               -m_valueStore.at(RectangleBounds::bv_halfY)));  // [3]
   return vertices;
 }
 

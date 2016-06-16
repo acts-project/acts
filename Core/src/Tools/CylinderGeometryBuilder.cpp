@@ -79,5 +79,5 @@ Acts::CylinderGeometryBuilder::trackingGeometry() const
     trackingGeometry.reset(new Acts::TrackingGeometry(highestVolume));
   }
   // return the geometry to the service
-  return (std::move(trackingGeometry));
+  return (trackingGeometry);
 }

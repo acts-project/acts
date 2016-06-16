@@ -25,45 +25,45 @@
 double Acts::CylinderVolumeBounds::s_numericalStable = 10e-2;
 
 Acts::CylinderVolumeBounds::CylinderVolumeBounds()
-  : VolumeBounds(), m_boundValues(4, 0.)
+  : VolumeBounds(), m_valueStore(4, 0.)
 {
 }
 
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(double radius, double halez)
-  : VolumeBounds(), m_boundValues(4, 0.)
+  : VolumeBounds(), m_valueStore(4, 0.)
 {
-  m_boundValues.at(bv_innerRadius)   = 0.;
-  m_boundValues.at(bv_outerRadius)   = fabs(radius);
-  m_boundValues.at(bv_halfPhiSector) = M_PI;
-  m_boundValues.at(bv_halfZ)         = fabs(halez);
+  m_valueStore.at(bv_innerRadius)   = 0.;
+  m_valueStore.at(bv_outerRadius)   = fabs(radius);
+  m_valueStore.at(bv_halfPhiSector) = M_PI;
+  m_valueStore.at(bv_halfZ)         = fabs(halez);
 }
 
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(double rinner,
                                                  double router,
                                                  double halez)
-  : VolumeBounds(), m_boundValues(4, 0.)
+  : VolumeBounds(), m_valueStore(4, 0.)
 {
-  m_boundValues.at(bv_innerRadius)   = fabs(rinner);
-  m_boundValues.at(bv_outerRadius)   = fabs(router);
-  m_boundValues.at(bv_halfPhiSector) = M_PI;
-  m_boundValues.at(bv_halfZ)         = fabs(halez);
+  m_valueStore.at(bv_innerRadius)   = fabs(rinner);
+  m_valueStore.at(bv_outerRadius)   = fabs(router);
+  m_valueStore.at(bv_halfPhiSector) = M_PI;
+  m_valueStore.at(bv_halfZ)         = fabs(halez);
 }
 
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(double rinner,
                                                  double router,
                                                  double haphi,
                                                  double halez)
-  : VolumeBounds(), m_boundValues(4, 0.)
+  : VolumeBounds(), m_valueStore(4, 0.)
 {
-  m_boundValues.at(bv_innerRadius)   = fabs(rinner);
-  m_boundValues.at(bv_outerRadius)   = fabs(router);
-  m_boundValues.at(bv_halfPhiSector) = fabs(haphi);
-  m_boundValues.at(bv_halfZ)         = fabs(halez);
+  m_valueStore.at(bv_innerRadius)   = fabs(rinner);
+  m_valueStore.at(bv_outerRadius)   = fabs(router);
+  m_valueStore.at(bv_halfPhiSector) = fabs(haphi);
+  m_valueStore.at(bv_halfZ)         = fabs(halez);
 }
 
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(
     const Acts::CylinderVolumeBounds& cylbo)
-  : VolumeBounds(), m_boundValues(cylbo.m_boundValues)
+  : VolumeBounds(), m_valueStore(cylbo.m_valueStore)
 {
 }
 
@@ -74,7 +74,7 @@ Acts::CylinderVolumeBounds::~CylinderVolumeBounds()
 Acts::CylinderVolumeBounds&
 Acts::CylinderVolumeBounds::operator=(const Acts::CylinderVolumeBounds& cylbo)
 {
-  if (this != &cylbo) m_boundValues = cylbo.m_boundValues;
+  if (this != &cylbo) m_valueStore = cylbo.m_valueStore;
   return *this;
 }
 
@@ -149,33 +149,33 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
 Acts::CylinderBounds*
 Acts::CylinderVolumeBounds::innerCylinderBounds() const
 {
-  return new Acts::CylinderBounds(m_boundValues.at(bv_innerRadius),
-                                  m_boundValues.at(bv_halfPhiSector),
-                                  m_boundValues.at(bv_halfZ));
+  return new Acts::CylinderBounds(m_valueStore.at(bv_innerRadius),
+                                  m_valueStore.at(bv_halfPhiSector),
+                                  m_valueStore.at(bv_halfZ));
 }
 
 Acts::CylinderBounds*
 Acts::CylinderVolumeBounds::outerCylinderBounds() const
 {
-  return new Acts::CylinderBounds(m_boundValues.at(bv_outerRadius),
-                                  m_boundValues.at(bv_halfPhiSector),
-                                  m_boundValues.at(bv_halfZ));
+  return new Acts::CylinderBounds(m_valueStore.at(bv_outerRadius),
+                                  m_valueStore.at(bv_halfPhiSector),
+                                  m_valueStore.at(bv_halfZ));
 }
 
 Acts::RadialBounds*
 Acts::CylinderVolumeBounds::discBounds() const
 {
-  return new Acts::RadialBounds(m_boundValues.at(bv_innerRadius),
-                                m_boundValues.at(bv_outerRadius),
-                                m_boundValues.at(bv_halfPhiSector));
+  return new Acts::RadialBounds(m_valueStore.at(bv_innerRadius),
+                                m_valueStore.at(bv_outerRadius),
+                                m_valueStore.at(bv_halfPhiSector));
 }
 
 Acts::RectangleBounds*
 Acts::CylinderVolumeBounds::sectorPlaneBounds() const
 {
-  return new Acts::RectangleBounds(0.5 * (m_boundValues.at(bv_outerRadius)
-                                          - m_boundValues.at(bv_innerRadius)),
-                                   m_boundValues.at(bv_halfZ));
+  return new Acts::RectangleBounds(0.5 * (m_valueStore.at(bv_outerRadius)
+                                          - m_valueStore.at(bv_innerRadius)),
+                                   m_valueStore.at(bv_halfZ));
 }
 
 std::ostream&

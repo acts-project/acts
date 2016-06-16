@@ -10,11 +10,30 @@
 // SurfaceBounds.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Trk
 #include "ACTS/Surfaces/SurfaceBounds.hpp"
+
+Acts::SurfaceBounds::operator=(const SurfaceBounds& sb)
+{
+  if (this != &sb){
+    m_valueStore = sb.m_valueStore;
+  }
+  return *this;
+}
+
+bool Acts::SurfaceBounds::operator==(const SurfaceBounds& sb) const
+{
+  /// fast exit for pointer comparison
+  if (&sb == this) return true;
+  /// fast exit for type comparison
+  if (sb.type() != type() ) return false;
+  // value comparison
+  return (sb.m_valueStore ==  valueStore); 
+}
 
 std::ostream&
 Acts::operator<<(std::ostream& sl, const SurfaceBounds& sb)
 {
   return sb.dump(sl);
 }
+
+

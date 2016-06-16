@@ -289,7 +289,7 @@ Acts::StaticNavigationEngine::handleBoundaryT(
     }
     // update the with the information of the layer material - will change the
     // leadParameters
-    if (bSurface.surfaceMaterial()) {
+    if (bSurface.associatedMaterial()) {
       // now handle the material, possible return codes:
       // - InProgress            : material update performed or not (depending
       // on material)

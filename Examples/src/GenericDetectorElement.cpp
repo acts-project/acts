@@ -37,7 +37,7 @@ Acts::GenericDetectorElement::GenericDetectorElement(
   , m_elementPlanarBounds(std::move(pBounds))
   , m_elementDiscBounds(nullptr)
 {
-  m_elementSurface->setSurfaceMaterial(material);
+  m_elementSurface->setAssociatedMaterial(material);
 }
 
 /** Constructor for single sided detector element - bound to a Disc Suface */
@@ -59,7 +59,7 @@ Acts::GenericDetectorElement::GenericDetectorElement(
   , m_elementPlanarBounds(nullptr)
   , m_elementDiscBounds(std::move(dBounds))
 {
-  m_elementSurface->setSurfaceMaterial(material);
+  m_elementSurface->setAssociatedMaterial(material);
 }
 
 /**  Destructor */

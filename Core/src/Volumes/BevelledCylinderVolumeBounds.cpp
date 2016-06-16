@@ -30,7 +30,7 @@
 double Acts::BevelledCylinderVolumeBounds::s_numericalStable = 10e-2;
 
 Acts::BevelledCylinderVolumeBounds::BevelledCylinderVolumeBounds()
-  : VolumeBounds(), m_boundValues(bv_length, 0.)
+  : VolumeBounds(), m_valueStore(bv_length, 0.)
 {
 }
 
@@ -40,23 +40,23 @@ Acts::BevelledCylinderVolumeBounds::BevelledCylinderVolumeBounds(double rinner,
                                                                  double halez,
                                                                  int    type)
   : VolumeBounds()
-  , m_boundValues(bv_length, 0.)
+  , m_valueStore(bv_length, 0.)
   , m_type(type)
   , m_subtractedVolume(nullptr)
 
 {
-  m_boundValues.at(bv_innerRadius)   = fabs(rinner);
-  m_boundValues.at(bv_outerRadius)   = fabs(router);
-  m_boundValues.at(bv_halfPhiSector) = fabs(haphi);
-  m_boundValues.at(bv_halfZ)         = fabs(halez);
-  m_boundValues.at(bv_thetaMinus)    = 0.;
-  m_boundValues.at(bv_thetaPlus)     = 0.;
+  m_valueStore.at(bv_innerRadius)   = fabs(rinner);
+  m_valueStore.at(bv_outerRadius)   = fabs(router);
+  m_valueStore.at(bv_halfPhiSector) = fabs(haphi);
+  m_valueStore.at(bv_halfZ)         = fabs(halez);
+  m_valueStore.at(bv_thetaMinus)    = 0.;
+  m_valueStore.at(bv_thetaPlus)     = 0.;
 }
 
 Acts::BevelledCylinderVolumeBounds::BevelledCylinderVolumeBounds(
     const Acts::BevelledCylinderVolumeBounds& cylbo)
   : VolumeBounds()
-  , m_boundValues(cylbo.m_boundValues)
+  , m_valueStore(cylbo.m_valueStore)
   , m_type(cylbo.m_type)
   , m_subtractedVolume(nullptr)
 {
@@ -72,7 +72,7 @@ Acts::BevelledCylinderVolumeBounds::
 operator=(const Acts::BevelledCylinderVolumeBounds& cylbo)
 {
   if (this != &cylbo) {
-    m_boundValues      = cylbo.m_boundValues;
+    m_valueStore      = cylbo.m_valueStore;
     m_type             = cylbo.m_type;
     m_subtractedVolume = 0;
   }
@@ -104,12 +104,12 @@ Acts::BevelledCylinderVolumeBounds::decomposeToSurfaces(
 
   if (m_type < 0) {
     tTransform = new Acts::Transform3D(
-        (discRot * Acts::AngleAxis3D(-m_boundValues.at(bv_thetaMinus) + M_PI,
+        (discRot * Acts::AngleAxis3D(-m_valueStore.at(bv_thetaMinus) + M_PI,
                                      Acts::Vector3D(0., 1., 0.)))
         * Acts::Translation3D(cylCenter
                               - (halflengthZ()
-                                 - m_boundValues.at(bv_outerRadius)
-                                     * tan(m_boundValues.at(bv_thetaMinus)))
+                                 - m_valueStore.at(bv_outerRadius)
+                                     * tan(m_valueStore.at(bv_thetaMinus)))
                                   * discRot.col(2)));
     retsf->push_back(new Acts::PlaneSurface(
         std::shared_ptr<Acts::Transform3D>(tTransform), bottomEllipseBounds()));
@@ -136,12 +136,12 @@ Acts::BevelledCylinderVolumeBounds::decomposeToSurfaces(
   // top Ellipse/Disc (positive z)
   if (m_type < 0) {
     tTransform = new Acts::Transform3D(
-        discRot * Acts::AngleAxis3D(m_boundValues.at(bv_thetaPlus),
+        discRot * Acts::AngleAxis3D(m_valueStore.at(bv_thetaPlus),
                                     Acts::Vector3D(0., 1., 0.))
         * Acts::Translation3D(cylCenter
                               + (halflengthZ()
-                                 - m_boundValues.at(bv_outerRadius)
-                                     * tan(m_boundValues.at(bv_thetaPlus)))
+                                 - m_valueStore.at(bv_outerRadius)
+                                     * tan(m_valueStore.at(bv_thetaPlus)))
                                   * discRot.col(2)));
     retsf->push_back(new Acts::PlaneSurface(
         std::shared_ptr<Acts::Transform3D>(tTransform), topEllipseBounds()));
@@ -252,35 +252,35 @@ Acts::BevelledCylinderVolumeBounds::decomposeToSurfaces(
 Acts::CylinderBounds*
 Acts::BevelledCylinderVolumeBounds::innerBevelledCylinderBounds() const
 {
-  return new Acts::CylinderBounds(m_boundValues.at(bv_innerRadius),
-                                  m_boundValues.at(bv_halfPhiSector),
-                                  m_boundValues.at(bv_halfZ));
+  return new Acts::CylinderBounds(m_valueStore.at(bv_innerRadius),
+                                  m_valueStore.at(bv_halfPhiSector),
+                                  m_valueStore.at(bv_halfZ));
 }
 
 Acts::CylinderBounds*
 Acts::BevelledCylinderVolumeBounds::outerBevelledCylinderBounds() const
 {
-  return new Acts::CylinderBounds(m_boundValues.at(bv_outerRadius),
-                                  m_boundValues.at(bv_halfPhiSector),
-                                  m_boundValues.at(bv_halfZ));
+  return new Acts::CylinderBounds(m_valueStore.at(bv_outerRadius),
+                                  m_valueStore.at(bv_halfPhiSector),
+                                  m_valueStore.at(bv_halfZ));
 }
 
 Acts::RectangleBounds*
 Acts::BevelledCylinderVolumeBounds::outerBevelledPlaneBounds() const
 {
   return new Acts::RectangleBounds(
-      m_boundValues.at(bv_outerRadius)
-          * tan(m_boundValues.at(bv_halfPhiSector)),
-      m_boundValues.at(bv_halfZ));
+      m_valueStore.at(bv_outerRadius)
+          * tan(m_valueStore.at(bv_halfPhiSector)),
+      m_valueStore.at(bv_halfZ));
 }
 
 Acts::RectangleBounds*
 Acts::BevelledCylinderVolumeBounds::innerBevelledPlaneBounds() const
 {
   return new Acts::RectangleBounds(
-      m_boundValues.at(bv_innerRadius)
-          * tan(m_boundValues.at(bv_halfPhiSector)),
-      m_boundValues.at(bv_halfZ));
+      m_valueStore.at(bv_innerRadius)
+          * tan(m_valueStore.at(bv_halfPhiSector)),
+      m_valueStore.at(bv_halfZ));
 }
 
 Acts::EllipseBounds*
@@ -288,11 +288,11 @@ Acts::BevelledCylinderVolumeBounds::bottomEllipseBounds() const
 {
   //    return new Acts::EllipseBounds();
   return new Acts::EllipseBounds(
-      m_boundValues.at(bv_innerRadius) / cos(m_boundValues.at(bv_thetaMinus)),
-      m_boundValues.at(bv_innerRadius),
-      m_boundValues.at(bv_outerRadius) / cos(m_boundValues.at(bv_thetaMinus)),
-      m_boundValues.at(bv_outerRadius),
-      m_boundValues.at(bv_halfPhiSector));
+      m_valueStore.at(bv_innerRadius) / cos(m_valueStore.at(bv_thetaMinus)),
+      m_valueStore.at(bv_innerRadius),
+      m_valueStore.at(bv_outerRadius) / cos(m_valueStore.at(bv_thetaMinus)),
+      m_valueStore.at(bv_outerRadius),
+      m_valueStore.at(bv_halfPhiSector));
 }
 
 Acts::EllipseBounds*
@@ -300,27 +300,27 @@ Acts::BevelledCylinderVolumeBounds::topEllipseBounds() const
 {
   //    return new Acts::EllipseBounds();
   return new Acts::EllipseBounds(
-      m_boundValues.at(bv_innerRadius) / cos(m_boundValues.at(bv_thetaPlus)),
-      m_boundValues.at(bv_innerRadius),
-      m_boundValues.at(bv_outerRadius) / cos(m_boundValues.at(bv_thetaPlus)),
-      m_boundValues.at(bv_outerRadius),
-      m_boundValues.at(bv_halfPhiSector));
+      m_valueStore.at(bv_innerRadius) / cos(m_valueStore.at(bv_thetaPlus)),
+      m_valueStore.at(bv_innerRadius),
+      m_valueStore.at(bv_outerRadius) / cos(m_valueStore.at(bv_thetaPlus)),
+      m_valueStore.at(bv_outerRadius),
+      m_valueStore.at(bv_halfPhiSector));
 }
 
 Acts::CylinderBounds*
 Acts::BevelledCylinderVolumeBounds::innerCylinderBounds() const
 {
-  return new Acts::CylinderBounds(m_boundValues.at(bv_innerRadius),
-                                  m_boundValues.at(bv_halfPhiSector),
-                                  m_boundValues.at(bv_halfZ));
+  return new Acts::CylinderBounds(m_valueStore.at(bv_innerRadius),
+                                  m_valueStore.at(bv_halfPhiSector),
+                                  m_valueStore.at(bv_halfZ));
 }
 
 Acts::CylinderBounds*
 Acts::BevelledCylinderVolumeBounds::outerCylinderBounds() const
 {
-  return new Acts::CylinderBounds(m_boundValues.at(bv_outerRadius),
-                                  m_boundValues.at(bv_halfPhiSector),
-                                  m_boundValues.at(bv_halfZ));
+  return new Acts::CylinderBounds(m_valueStore.at(bv_outerRadius),
+                                  m_valueStore.at(bv_halfPhiSector),
+                                  m_valueStore.at(bv_halfZ));
 }
 
 Acts::RadialBounds*
@@ -328,21 +328,21 @@ Acts::BevelledCylinderVolumeBounds::discBounds() const
 {
   // adjust radius to make sure all surface covered
   double outerRadius = (m_type > 1)
-      ? m_boundValues.at(bv_outerRadius)
-          / cos(m_boundValues.at(bv_halfPhiSector))
-      : m_boundValues.at(bv_outerRadius);
-  return new Acts::RadialBounds(m_boundValues.at(bv_innerRadius),
+      ? m_valueStore.at(bv_outerRadius)
+          / cos(m_valueStore.at(bv_halfPhiSector))
+      : m_valueStore.at(bv_outerRadius);
+  return new Acts::RadialBounds(m_valueStore.at(bv_innerRadius),
                                 outerRadius,
-                                m_boundValues.at(bv_halfPhiSector));
+                                m_valueStore.at(bv_halfPhiSector));
 }
 
 Acts::TrapezoidBounds*
 Acts::BevelledCylinderVolumeBounds::sectorTrdBounds() const
 {
   return new Acts::TrapezoidBounds(0.5 * (outerRadius() - innerRadius()),
-                                   m_boundValues.at(bv_halfZ),
-                                   m_boundValues.at(bv_thetaMinus),
-                                   m_boundValues.at(bv_thetaPlus));
+                                   m_valueStore.at(bv_halfZ),
+                                   m_valueStore.at(bv_thetaMinus),
+                                   m_valueStore.at(bv_thetaPlus));
 }
 
 Acts::RectangleBounds*
@@ -352,7 +352,7 @@ Acts::BevelledCylinderVolumeBounds::sectorPlaneBounds() const
   double ro = outerRadius();
   if (m_type == 1 || m_type == 3) ri *= 1. / cos(halfPhiSector());
   if (m_type > 1) ro *= 1. / cos(halfPhiSector());
-  return new Acts::RectangleBounds(0.5 * (ro - ri), m_boundValues.at(bv_halfZ));
+  return new Acts::RectangleBounds(0.5 * (ro - ri), m_valueStore.at(bv_halfZ));
 }
 
 Acts::Volume*
@@ -360,26 +360,26 @@ Acts::BevelledCylinderVolumeBounds::subtractedVolume() const
 {
   if (m_type < 1) return 0;
 
-  double        tp     = tan(m_boundValues.at(bv_halfPhiSector));
+  double        tp     = tan(m_valueStore.at(bv_halfPhiSector));
   Acts::Volume* volIn  = 0;
   Acts::Volume* volOut = 0;
   if (m_type == 1 || m_type == 3) {  // cut inner cylinder
     volIn = new Acts::Volume(0,
                              new Acts::CuboidVolumeBounds(
-                                 m_boundValues.at(bv_innerRadius),
-                                 m_boundValues.at(bv_innerRadius) * tp + 0.1,
-                                 m_boundValues.at(bv_halfZ) + 0.1));
+                                 m_valueStore.at(bv_innerRadius),
+                                 m_valueStore.at(bv_innerRadius) * tp + 0.1,
+                                 m_valueStore.at(bv_halfZ) + 0.1));
   }
   if (m_type > 1) {
-    double hz = m_boundValues.at(bv_outerRadius)
-        * (1. / cos(m_boundValues.at(bv_halfPhiSector)) - 1.);
+    double hz = m_valueStore.at(bv_outerRadius)
+        * (1. / cos(m_valueStore.at(bv_halfPhiSector)) - 1.);
     volOut = new Acts::Volume(
         new Acts::Transform3D(Acts::Translation3D(
-            Acts::Vector3D(m_boundValues.at(bv_outerRadius) + hz, 0., 0.))),
+            Acts::Vector3D(m_valueStore.at(bv_outerRadius) + hz, 0., 0.))),
         new Acts::CuboidVolumeBounds(hz,
-                                     m_boundValues.at(bv_outerRadius) * tp
+                                     m_valueStore.at(bv_outerRadius) * tp
                                          + 0.1,
-                                     m_boundValues.at(bv_halfZ) + 0.1));
+                                     m_valueStore.at(bv_halfZ) + 0.1));
   }
 
   if (!volIn)

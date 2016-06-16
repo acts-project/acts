@@ -66,7 +66,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     m_surface = std::make_shared<const Acts::PlaneSurface>(*this, m_identifier);
     MaterialProperties moduleMaterialProperties(
         moduleMaterial, 0.5 * (trapezoid->GetDy1() + trapezoid->GetDy1()));
-    m_surface->setSurfaceMaterial(std::shared_ptr<const SurfaceMaterial>(
+    m_surface->setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial>(
         new HomogeneousSurfaceMaterial(moduleMaterialProperties)));
   } else {
     m_transform = std::make_shared<Acts::Transform3D>(
@@ -85,7 +85,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     m_bounds  = rectangleBounds;
     m_surface = std::make_shared<const Acts::PlaneSurface>(*this, m_identifier);
     MaterialProperties moduleMaterialProperties(moduleMaterial, box->GetDZ());
-    m_surface->setSurfaceMaterial(std::shared_ptr<const SurfaceMaterial>(
+    m_surface->setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial>(
         new HomogeneousSurfaceMaterial(moduleMaterialProperties)));
   }
 }

@@ -87,8 +87,8 @@ Acts::RungeKuttaEngine::propagate(ExCellNeutral&           eCell,
                    "propagate",
                    "neut",
                    "parameters are already on the surface, returning.");
-    nParameters = std::move(buildNeutralParametersWithoutPropagation(
-        *sParameters, pCache.jacobian));
+    nParameters = buildNeutralParametersWithoutPropagation(
+        *sParameters, pCache.jacobian);
     // record the parameters as a step
     eCell.step(std::move(nParameters), purpose);
     // return success or in progress
@@ -224,8 +224,7 @@ Acts::RungeKuttaEngine::propagate(ExCellCharged&           eCell,
                    "propagate",
                    "neut",
                    "parameters are already on the surface, returning.");
-    pParameters = std::move(
-        buildTrackParametersWithoutPropagation(*pParameters, pCache.jacobian));
+    pParameters = buildTrackParametersWithoutPropagation(*pParameters, pCache.jacobian);
     // record the parameters as a step
     eCell.step(std::move(pParameters), purpose);
     // return success or in progress
@@ -286,8 +285,8 @@ Acts::RungeKuttaEngine::propagate(ExCellCharged&           eCell,
     if (eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectJacobians))
       eCell.stepTransport(sf,
                           pCache.step,
-                          std::move(std::make_unique<const TransportJacobian>(
-                              pCache.jacobian)));
+                          std::make_unique<const TransportJacobian>(
+                                                                    pCache.jacobian));
 
     // cache the last lead parameters, useful in case a navigation error occured
     eCell.lastLeadParameters = eCell.leadParameters;

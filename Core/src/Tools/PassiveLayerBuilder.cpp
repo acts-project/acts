@@ -76,7 +76,7 @@ Acts::PassiveLayerBuilder::constructLayers() const
             1.);
 
         // sign it to the surface
-        cLayer->surfaceRepresentation().setSurfaceMaterial(material);
+        cLayer->surfaceRepresentation().setAssociatedMaterial(material);
       }
       // push it into the layer vector
       m_cLayers.push_back(cLayer);
@@ -137,8 +137,8 @@ Acts::PassiveLayerBuilder::constructLayers() const
                                m_config.posnegLayerMaterialRho.at(ipnl)),
             1.);
         // sign it to the surface
-        nLayer->surfaceRepresentation().setSurfaceMaterial(material);
-        pLayer->surfaceRepresentation().setSurfaceMaterial(material);
+        nLayer->surfaceRepresentation().setAssociatedMaterial(material);
+        pLayer->surfaceRepresentation().setAssociatedMaterial(material);
       }
       // push it into the layer vector
       m_nLayers.push_back(nLayer);

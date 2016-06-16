@@ -10,39 +10,25 @@
 // DiscSurface.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Trk
 #include "ACTS/Surfaces/DiscSurface.hpp"
+#include "ACTS/Surfaces/BoundlessT.hpp"
 #include "ACTS/Surfaces/DiscTrapezoidalBounds.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
-
-// STD/STL
+#include "ACTS/Utilities/Definitions.hpp"
 #include <iomanip>
 #include <iostream>
-// Amg
 
-#include "ACTS/Utilities/Definitions.hpp"
-
-Acts::NoBounds Acts::DiscSurface::s_boundless;
-
-// default constructor
-Acts::DiscSurface::DiscSurface() : Acts::Surface(), m_bounds(nullptr)
-{
-}
-
-// copy constructor
 Acts::DiscSurface::DiscSurface(const DiscSurface& dsf)
   : Acts::Surface(dsf), m_bounds(dsf.m_bounds)
 {
 }
 
-// copy constructor with shift
 Acts::DiscSurface::DiscSurface(const DiscSurface&       dsf,
                                const Acts::Transform3D& transf)
   : Acts::Surface(dsf, transf), m_bounds(dsf.m_bounds)
 {
 }
 
-// construct a disc with full phi coverage
 Acts::DiscSurface::DiscSurface(std::shared_ptr<Acts::Transform3D> htrans,
                                double                             rmin,
                                double                             rmax)
@@ -51,7 +37,6 @@ Acts::DiscSurface::DiscSurface(std::shared_ptr<Acts::Transform3D> htrans,
 {
 }
 
-// construct a disc with given phi coverage
 Acts::DiscSurface::DiscSurface(std::shared_ptr<Acts::Transform3D> htrans,
                                double                             rmin,
                                double                             rmax,
@@ -79,42 +64,19 @@ Acts::DiscSurface::DiscSurface(std::shared_ptr<Acts::Transform3D> htrans,
 {
 }
 
-// construct a disc with given bounds
-Acts::DiscSurface::DiscSurface(std::shared_ptr<Acts::Transform3D> htrans,
-                               const Acts::RadialBounds*          dbounds)
-  : Acts::Surface(htrans), m_bounds(dbounds), m_referencePoint(nullptr)
-{
-}
-
-// construct a disc with given bounds
-Acts::DiscSurface::DiscSurface(std::shared_ptr<Acts::Transform3D> htrans,
-                               const Acts::DiscTrapezoidalBounds* dbounds)
-  : Acts::Surface(htrans), m_bounds(dbounds)
-{
-}
-
-// construct a disc with given bounds
 Acts::DiscSurface::DiscSurface(std::shared_ptr<Acts::Transform3D>      htrans,
                                std::shared_ptr<const Acts::DiscBounds> dbounds)
   : Acts::Surface(htrans), m_bounds(dbounds)
 {
+  if (m_bounds == nullptr) m_bounds = BoundlessT<SurfaceBounds>;
 }
 
-// construct a disc from a transform, bounds is not set.
-Acts::DiscSurface::DiscSurface(std::unique_ptr<Acts::Transform3D> htrans)
-  : Acts::Surface(std::shared_ptr<Acts::Transform3D>(std::move(htrans)))
-  , m_bounds(nullptr)
-{
-}
-
-// construct form DetectorElementBase
 Acts::DiscSurface::DiscSurface(const Acts::DetectorElementBase& detelement,
                                const Identifier&                identifier)
   : Acts::Surface(detelement, identifier), m_bounds(nullptr)
 {
 }
 
-// destructor (will call destructor from base class which deletes objects)
 Acts::DiscSurface::~DiscSurface()
 {
 }
@@ -127,19 +89,6 @@ Acts::DiscSurface::operator=(const DiscSurface& dsf)
     m_bounds               = dsf.m_bounds;
   }
   return *this;
-}
-
-bool
-Acts::DiscSurface::operator==(const Acts::Surface& sf) const
-{
-  // first check the type not to compare apples with oranges
-  const Acts::DiscSurface* dsf = dynamic_cast<const Acts::DiscSurface*>(&sf);
-  if (!dsf) return false;
-  if (this == dsf) return true;
-  bool transfEqual(transform().isApprox(dsf->transform(), 10e-8));
-  bool centerEqual = (transfEqual) ? (center() == dsf->center()) : false;
-  bool boundsEqual = (centerEqual) ? (bounds() == dsf->bounds()) : false;
-  return boundsEqual;
 }
 
 void
@@ -155,7 +104,6 @@ Acts::DiscSurface::localToGlobal(const Acts::Vector2D& locpos,
   glopos = transform() * loc3Dframe;
 }
 
-/** local<->global transformation in case of polar local coordinates */
 bool
 Acts::DiscSurface::globalToLocal(const Acts::Vector3D& glopos,
                                  const Acts::Vector3D&,

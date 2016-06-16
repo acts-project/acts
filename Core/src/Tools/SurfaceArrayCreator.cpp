@@ -341,7 +341,7 @@ Acts::SurfaceArrayCreator::registerNeighboursGrid(
                                                           << nsurface);
         if (nsurface && nsurface != surface) break;
       }
-      // find the previous neighbour in Loc1
+      // find the previous neighbour in Loc0
       nsurface = surface;
       while (decrement(p1, bins1, open1) && surface == nsurface) {
         nsurface = surfaceArrayObjects.at(p1).at(i0);
@@ -351,7 +351,7 @@ Acts::SurfaceArrayCreator::registerNeighboursGrid(
                                                           << nsurface);
         if (nsurface && nsurface != surface) break;
       }
-      // find the next neighbour in Loc1
+      // find the next neighbour in Loc0
       nsurface = surface;
       while (increment(n1, bins1, open1) && surface == nsurface) {
         nsurface = surfaceArrayObjects.at(n1).at(i0);

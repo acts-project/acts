@@ -30,18 +30,16 @@ class BoundaryCheck;
 
 /** @class ExtrapolationEngine
 
-    Master extrapolation engine for extrapolation through the TrackingGeometry,
-    it delegates the extrapolation to optimised engines, handing over the
-   ExtrapolationCell
+    Master extrapolation engine for extrapolation through the TrackingGeometry.
+ 
+    It delegates the extrapolation to optimised engines, handing over the ExtrapolationCell
     as internal cache.
 
     There are identical interfaces for charged and neutral track parameters.
-    Providing a destination surface is optional, if no destination surface is
-   given the extrapolation
-    process can be stopped by other directives, e.g. stopping at a certain path
-   limit, material limit
+ 
+    Providing a destination surface is optional, if no destination surface is given the extrapolation
+    process can be stopped by other directives, e.g. stopping at a certain path limit, material limit
     or with a change of detector signature.
-
 */
 class ExtrapolationEngine : virtual public IExtrapolationEngine
 {
@@ -55,11 +53,9 @@ public:
   */
   struct Config
   {
-    std::shared_ptr<Logger> logger;
-    std::shared_ptr<const TrackingGeometry>
-        trackingGeometry;  //!< the tracking geometry used by the navigator
-    std::vector<std::shared_ptr<IExtrapolationEngine>>
-        extrapolationEngines;  //!< the extrapolation engines for different
+    std::shared_ptr<Logger> logger = getDefaultLogger("ExtrapolationEngine", Logging::INFO);
+    std::shared_ptr<const TrackingGeometry> trackingGeometry = nullptr;  //!< tracking geometry used by the navigator
+    std::vector<std::shared_ptr<IExtrapolationEngine>> extrapolationEngines;  //!< the extrapolation engines for different
                                //! geometry layouts
     std::shared_ptr<IPropagationEngine> propagationEngine;  //!< the used
                                                             //! propagation

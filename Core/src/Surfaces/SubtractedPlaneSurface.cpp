@@ -12,20 +12,12 @@
 
 #include "ACTS/Surfaces/SubtractedPlaneSurface.hpp"
 
-// default constructor
-Acts::SubtractedPlaneSurface::SubtractedPlaneSurface()
-  : Acts::PlaneSurface(), m_subtrVol(), m_shared(true)
-{
-}
-
-// copy constructor
 Acts::SubtractedPlaneSurface::SubtractedPlaneSurface(
     const SubtractedPlaneSurface& psf)
   : Acts::PlaneSurface(psf), m_subtrVol(psf.m_subtrVol), m_shared(psf.m_shared)
 {
 }
 
-// copy constructor with shift
 Acts::SubtractedPlaneSurface::SubtractedPlaneSurface(
     const SubtractedPlaneSurface& psf,
     const Acts::Transform3D&      transf)
@@ -35,7 +27,6 @@ Acts::SubtractedPlaneSurface::SubtractedPlaneSurface(
 {
 }
 
-// constructor
 Acts::SubtractedPlaneSurface::SubtractedPlaneSurface(
     const Acts::PlaneSurface& ps,
     AreaExcluder*             vol,
@@ -44,13 +35,12 @@ Acts::SubtractedPlaneSurface::SubtractedPlaneSurface(
 {
 }
 
-// destructor (will call destructor from base class which deletes objects)
 Acts::SubtractedPlaneSurface::~SubtractedPlaneSurface()
 {
 }
 
 Acts::SubtractedPlaneSurface&
-Acts::SubtractedPlaneSurface::operator=(const Acts::SubtractedPlaneSurface& psf)
+Acts::SubtractedPlaneSurface::operator=(const SubtractedPlaneSurface& psf)
 {
   if (this != &psf) {
     Acts::PlaneSurface::operator=(psf);
@@ -63,6 +53,8 @@ Acts::SubtractedPlaneSurface::operator=(const Acts::SubtractedPlaneSurface& psf)
 bool
 Acts::SubtractedPlaneSurface::operator==(const Acts::Surface& sf) const
 {
+  // fast exit
+  if (&sf == this) return true;
   // first check the type not to compare apples with oranges
   const Acts::SubtractedPlaneSurface* spsf
       = dynamic_cast<const Acts::SubtractedPlaneSurface*>(&sf);

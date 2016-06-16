@@ -13,36 +13,35 @@
 #ifndef ACTS_SURFACES_CYLINDERBOUNDS_H
 #define ACTS_SURFACES_CYLINDERBOUNDS_H 1
 
-// Geometry module
 #include "ACTS/Surfaces/SurfaceBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
 
-/**
- @class CylinderBounds
 
- Bounds for a cylindrical Surface.
+/// @class CylinderBounds
+///
+/// Bounds for a cylindrical Surface.
+///
+/// These bounds may be used for a CylinderSurface 
+/// In case of bounds for a StraightLineSurface the radius determines the radius
+/// within a localPosition
+/// is regarded as inside bounds.
+///
+/// CylinderBounds also enhance the possibility of a cylinder segment with an
+/// opening angle @f$ 2\cdot\phi_{half}@f$
+/// around an average @f$ \phi @f$ angle @f$ \phi_{ave} @f$.
+///
+/// @todo update the documentation picture for cylinder segments
+///
+/// @image html CylinderBounds.gif
 
- These bounds may be used for both, CylinderSurface and StraightLineSurface.
- In case of bounds for a StraightLineSurface the radius determines the radius
- within a localPosition
- is regarded as inside bounds.
-
- Acts::CylinderBounds also enhance the possibility of a cylinder segment with an
- opening angle @f$ 2\cdot\phi_{half}@f$
- around an average @f$ \phi @f$ angle @f$ \phi_{ave} @f$.
-
- @todo update the documentation picture for cylinder segments
-
- @image html CylinderBounds.gif
-
- */
 
 class CylinderBounds : public SurfaceBounds
 {
 public:
-  /** BoundValues for readablility */
+  /// @enum BoundValues for readablility
+  /// nested enumeration object
   enum BoundValues {
     bv_radius        = 0,
     bv_averagePhi    = 1,
@@ -51,109 +50,101 @@ public:
     bv_length        = 4
   };
 
-  /** Default Constructor*/
-  CylinderBounds();
+  /// Default Constructor - deleted
+  CylinderBounds() = delete;
 
-  /** Constructor - full cylinder */
+  /// Constructor - full cylinder
+  /// @param radius is the radius of the cylinder
+  /// @param halez is the half length in z 
   CylinderBounds(double radius, double halez);
 
-  /** Constructor - cylinder segment */
+  /// Constructor - open cylinder
+  /// @param radius is the radius of the cylinder
+  /// @param halfphi is the half opening angle
+  /// @param halez is the half length in z
   CylinderBounds(double radius, double halfphi, double halez);
 
-  /** Constructor - cylinder segment with given averagePhi, not supposed for
-   * CylinderSurfaces*/
+  /// Constructor - open cylinder
+  /// @param radius is the radius of the cylinder
+  /// @param avphi is the middle phi position of the segment
+  /// @param halfphi is the half opening angle
+  /// @param halez is the half length in z
   CylinderBounds(double radius, double avphi, double halfphi, double halez);
 
-  /** Copy Constructor */
-  CylinderBounds(const CylinderBounds& cylbo);
+  /// Copy Constructor 
+  CylinderBounds(const CylinderBounds& cylbo) : SurfaceBounds(cylbo) {}
 
-  /** Destructor */
+  /// Destructor
   virtual ~CylinderBounds();
 
-  /** Assignment operator*/
+  /// Assignment operator
   CylinderBounds&
   operator=(const CylinderBounds& cylbo);
 
-  /** Move assignment operator*/
-  CylinderBounds&
-  operator=(CylinderBounds&& cylbo);
-
-  /** Equality operator*/
-  virtual bool
-  operator==(const SurfaceBounds& sbo) const override;
-
-  /** Virtual constructor */
+  /// Virtual constructor
   virtual CylinderBounds*
   clone() const override;
 
-  /** Return the bounds type */
+  /// Return of the bounds type
   virtual BoundsType
   type() const override
   {
     return SurfaceBounds::Cylinder;
   }
 
-  /** This method checks if a LocalPosition is inside z bounds and rphi value-
-   * interface method */
-  virtual bool
-  inside(const Vector2D& locpo, double tol1, double tol2) const override;
-  virtual bool
-  inside(const Vector2D& locpo, const BoundaryCheck& bchk) const override;
+  /// @copydoc SurfaceBounds::inside
+  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
-  /** This method checks if a GlobalPosition is inside the Cylinder - not an
-    interface method,
-    assumes that GlobalPosition is in the right frame*/
+  /// specialized method for CylinderBounds 
   bool
   inside3D(const Vector3D& gp, const BoundaryCheck& bchk = true) const;
 
-  /** This method checks inside bounds in loc1
-    - loc1/loc2 correspond to the natural coordinates of the surface */
+  /// @copydoc Surface::insideLoc0
   virtual bool
-  insideLoc1(const Vector2D& locpo, double tol1 = 0.) const override;
+  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
-  /** This method checks inside bounds in loc1
-    - loc1/loc2 correspond to the natural coordinates of the surface */
+  /// @copydoc Surface::insideLoc1
   virtual bool
-  insideLoc2(const Vector2D& locpo, double tol2 = 0.) const override;
+  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /** Minimal distance to boundary ( > 0 if outside and <=0 if inside) */
+  /// Minimal distance to boundary 
+  /// return minimal distance to boundary ( > 0 if outside and <=0 if inside) 
   virtual double
   minDistance(const Vector2D& pos) const override;
-
-  /** This method checks if a LocalPosition is inside z bounds and inside the
-   * radius (for straws) */
-  bool
-  insideRadius(const Vector2D& locpo, double tol) const;
-
-  /** This method returns the radius*/
+  
+  /// This method returns the radius
   virtual double
-  r() const override;
+  r() const;
 
-  /** This method returns the average phi*/
+  /// This method returns the average phi
   double
   averagePhi() const;
 
-  /** This method returns the halfPhiSector angle*/
+  /// This method returns the halfPhiSector angle
   double
   halfPhiSector() const;
 
-  /** This method returns the halflengthZ*/
+  /// This method returns the halflengthZ
   double
   halflengthZ() const;
 
-  /** Output Method for std::ostream */
+  /// Output Method for std::ostream 
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
 private:
-  /** helper methods for the inside check */
+  /// private method for inside check
   bool
-  inside(double r, double phi, double z, double tol1, double tol2) const;
+  inside(double r, double phi, double z, double tol0, double tol1) const;
+  
+  /// private method for inside check
   bool
-  insideLocZ(double z, double tol2) const;
-
-  /** internal storage of the geometry parameters */
-  std::vector<TDD_real_t> m_boundValues;
+  insideLocZ(double z, double tol1) const;
+  
+  /// private method for inside check
+  bool inside(const Vector2D& lpos, double tol0, double tol1) const;
+  
+  /// indiciator whether to check phi or not
   bool                    m_checkPhi;
 };
 
@@ -164,30 +155,30 @@ CylinderBounds::clone() const
 }
 
 inline bool
-CylinderBounds::inside(const Vector2D& locpo, double tol1, double tol2) const
+CylinderBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 {
-  double z       = locpo[Acts::eLOC_Z];
-  bool   insideZ = insideLocZ(z, tol2);
+  double z       = lpos[Acts::eLOC_Z];
+  bool   insideZ = insideLocZ(z, tol1);
   if (!insideZ) return false;
   // no check on Phi neccesary
   if (!m_checkPhi) return true;
   // now check insidePhi
   double localPhi
-      = (locpo[Acts::eLOC_RPHI] / m_boundValues.at(CylinderBounds::bv_radius))
-      - m_boundValues.at(CylinderBounds::bv_averagePhi);
+      = (lpos[Acts::eLOC_RPHI] / m_valueStore.at(CylinderBounds::bv_radius))
+      - m_valueStore.at(CylinderBounds::bv_averagePhi);
   localPhi -= (localPhi > M_PI) ? 2. * M_PI : 0.;
   return (localPhi * localPhi
-          < (m_boundValues.at(CylinderBounds::bv_halfPhiSector) + tol1)
-              * (m_boundValues.at(CylinderBounds::bv_halfPhiSector) + tol1));
+          < (m_valueStore.at(CylinderBounds::bv_halfPhiSector) + tol0)
+              * (m_valueStore.at(CylinderBounds::bv_halfPhiSector) + tol0));
 }
 
 inline bool
-CylinderBounds::inside(const Vector2D& locpo, const BoundaryCheck& bchk) const
+CylinderBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
 {
   if (bchk.bcType == 0 || bchk.nSigmas == 0
-      || m_boundValues.at(CylinderBounds::bv_halfPhiSector) != M_PI)
+      || m_valueStore.at(CylinderBounds::bv_halfPhiSector) != M_PI)
     return CylinderBounds::inside(
-        locpo, bchk.toleranceLoc1, bchk.toleranceLoc2);
+        lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
 
   float theta = (bchk.lCovariance(1, 0) != 0
                  && (bchk.lCovariance(1, 1) - bchk.lCovariance(0, 0)) != 0)
@@ -200,7 +191,7 @@ CylinderBounds::inside(const Vector2D& locpo, const BoundaryCheck& bchk) const
   double      dz       = scResult.cosC * scResult.cosC * bchk.lCovariance(0, 1);
   double      max_ell  = dphi > dz ? dphi : dz;
   double      limit    = bchk.nSigmas * sqrt(max_ell);
-  return insideLocZ(locpo[Acts::eLOC_Z], limit);
+  return insideLocZ(lpos[Acts::eLOC_Z], limit);
 }
 
 inline bool
@@ -209,95 +200,87 @@ CylinderBounds::inside3D(const Vector3D& glopo, const BoundaryCheck& bchk) const
   return inside(glopo.perp(),
                 glopo.phi(),
                 glopo.z(),
-                bchk.toleranceLoc1,
-                bchk.toleranceLoc1);
+                bchk.toleranceLoc0,
+                bchk.toleranceLoc0);
 }
 
-//!< @TODO integrate tol1
+//!< @TODO integrate tol0
 inline bool
 CylinderBounds::inside(double r,
                        double phi,
                        double z,
-                       double /*tol1*/,
-                       double tol2) const
+                       double /*tol0*/,
+                       double tol1) const
 {
-  bool insideZ = insideLocZ(z, tol2);
+  bool insideZ = insideLocZ(z, tol1);
   if (!insideZ) return false;
-  double diffR   = (m_boundValues.at(CylinderBounds::bv_radius) - r);
+  double diffR   = (m_valueStore.at(CylinderBounds::bv_radius) - r);
   bool   insideR = diffR * diffR < s_onSurfaceTolerance * s_onSurfaceTolerance;
   if (!insideR) return false;
   // now check insidePhi if needed
   if (!m_checkPhi) return true;
   // phi needs to be checked
-  double localPhi = phi - m_boundValues.at(CylinderBounds::bv_averagePhi);
+  double localPhi = phi - m_valueStore.at(CylinderBounds::bv_averagePhi);
   localPhi -= (localPhi > M_PI) ? 2. * M_PI : 0.;
   return (localPhi * localPhi
-          < m_boundValues.at(CylinderBounds::bv_halfPhiSector)
-              * m_boundValues.at(CylinderBounds::bv_halfPhiSector));
+          < m_valueStore.at(CylinderBounds::bv_halfPhiSector)
+              * m_valueStore.at(CylinderBounds::bv_halfPhiSector));
 }
 
 inline bool
-CylinderBounds::insideLocZ(double z, double tol2) const
+CylinderBounds::insideLocZ(double z, double tol1) const
 {
-  return (m_boundValues.at(CylinderBounds::bv_halfZ) + tol2) - fabs(z) > 0.;
+  return (m_valueStore.at(CylinderBounds::bv_halfZ) + tol1) - fabs(z) > 0.;
 }
 
 inline bool
-CylinderBounds::insideLoc1(const Vector2D& locpo, double tol1) const
+CylinderBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 {
   bool insideRphi = false;
-  if (fabs(m_boundValues.at(CylinderBounds::bv_averagePhi)) < 10e-7)
+  if (fabs(m_valueStore.at(CylinderBounds::bv_averagePhi)) < 10e-7)
     insideRphi
-        = (fabs(locpo[Acts::eLOC_RPHI]
-                / m_boundValues.at(CylinderBounds::bv_radius))
-           < (m_boundValues.at(CylinderBounds::bv_halfPhiSector) + tol1));
+        = (fabs(lpos[Acts::eLOC_RPHI]
+                / m_valueStore.at(CylinderBounds::bv_radius))
+           < (m_valueStore.at(CylinderBounds::bv_halfPhiSector) + tol0));
   else {
     double localPhi
-        = (locpo[Acts::eLOC_RPHI] / m_boundValues.at(CylinderBounds::bv_radius))
-        - m_boundValues.at(CylinderBounds::bv_averagePhi);
+        = (lpos[Acts::eLOC_RPHI] / m_valueStore.at(CylinderBounds::bv_radius))
+        - m_valueStore.at(CylinderBounds::bv_averagePhi);
     localPhi -= (localPhi > M_PI) ? 2. * M_PI : 0.;
-    insideRphi = (localPhi < (m_boundValues.at(CylinderBounds::bv_halfPhiSector)
-                              + tol1));
+    insideRphi = (localPhi < (m_valueStore.at(CylinderBounds::bv_halfPhiSector)
+                              + tol0));
   }
   return (insideRphi);
 }
 
 inline bool
-CylinderBounds::insideLoc2(const Vector2D& locpo, double tol2) const
+CylinderBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 {
-  return insideLocZ(locpo[Acts::eLOC_Z], tol2);
-}
-
-inline bool
-CylinderBounds::insideRadius(const Vector2D& locpo, double tol) const
-{
-  return (this->inside(locpo, tol, 0)
-          && fabs(locpo[Acts::eLOC_R])
-              < m_boundValues.at(CylinderBounds::bv_radius) + tol);
+  return insideLocZ(lpos[Acts::eLOC_Z], tol1);
 }
 
 inline double
 CylinderBounds::r() const
 {
-  return m_boundValues.at(CylinderBounds::bv_radius);
+  return m_valueStore.at(CylinderBounds::bv_radius);
 }
 
 inline double
 CylinderBounds::averagePhi() const
 {
-  return m_boundValues.at(CylinderBounds::bv_averagePhi);
+  return m_valueStore.at(CylinderBounds::bv_averagePhi);
 }
 
 inline double
 CylinderBounds::halfPhiSector() const
 {
-  return m_boundValues.at(CylinderBounds::bv_halfPhiSector);
+  return m_valueStore.at(CylinderBounds::bv_halfPhiSector);
 }
 
 inline double
 CylinderBounds::halflengthZ() const
 {
-  return m_boundValues.at(CylinderBounds::bv_halfZ);
+  return m_valueStore.at(CylinderBounds::bv_halfZ);
 }
 }
 

@@ -168,7 +168,7 @@ private:
   faceZXRectangleBoundsTop() const;
 
   /** the bounds values */
-  std::vector<TDD_real_t> m_boundValues;
+  std::vector<TDD_real_t> m_valueStore;
 };
 
 inline TrapezoidVolumeBounds*
@@ -180,32 +180,32 @@ TrapezoidVolumeBounds::clone() const
 inline double
 TrapezoidVolumeBounds::minHalflengthX() const
 {
-  return m_boundValues.at(bv_minHalfX);
+  return m_valueStore.at(bv_minHalfX);
 }
 inline double
 TrapezoidVolumeBounds::maxHalflengthX() const
 {
-  return m_boundValues.at(bv_maxHalfX);
+  return m_valueStore.at(bv_maxHalfX);
 }
 inline double
 TrapezoidVolumeBounds::halflengthY() const
 {
-  return m_boundValues.at(bv_halfY);
+  return m_valueStore.at(bv_halfY);
 }
 inline double
 TrapezoidVolumeBounds::halflengthZ() const
 {
-  return m_boundValues.at(bv_halfZ);
+  return m_valueStore.at(bv_halfZ);
 }
 inline double
 TrapezoidVolumeBounds::alpha() const
 {
-  return m_boundValues.at(bv_alpha);
+  return m_valueStore.at(bv_alpha);
 }
 inline double
 TrapezoidVolumeBounds::beta() const
 {
-  return m_boundValues.at(bv_beta);
+  return m_valueStore.at(bv_beta);
 }
 
 template <class T>
@@ -215,9 +215,9 @@ TrapezoidVolumeBounds::dumpT(T& dt) const
   dt << std::setiosflags(std::ios::fixed);
   dt << std::setprecision(7);
   dt << "Acts::TrapezoidVolumeBounds: (minhalfX, halfY, halfZ, alpha, beta) = ";
-  dt << "(" << m_boundValues.at(bv_minHalfX) << ", "
-     << m_boundValues.at(bv_halfY) << ", " << m_boundValues.at(bv_halfZ);
-  dt << ", " << m_boundValues.at(bv_alpha) << ", " << m_boundValues.at(bv_beta)
+  dt << "(" << m_valueStore.at(bv_minHalfX) << ", "
+     << m_valueStore.at(bv_halfY) << ", " << m_valueStore.at(bv_halfZ);
+  dt << ", " << m_valueStore.at(bv_alpha) << ", " << m_valueStore.at(bv_beta)
      << ")";
   return dt;
 }

@@ -249,7 +249,7 @@ private:
   RectangleBounds*
   sectorPlaneBounds() const;
 
-  std::vector<TDD_real_t> m_boundValues;
+  std::vector<TDD_real_t> m_valueStore;
   int                     m_type;
 
   /** numerical stability */
@@ -268,38 +268,38 @@ inline bool
 BevelledCylinderVolumeBounds::inside(const Vector3D& pos, double tol) const
 {
   double ros     = pos.perp();
-  bool insidePhi = fabs(pos.phi()) <= m_boundValues.at(bv_halfPhiSector) + tol;
+  bool insidePhi = fabs(pos.phi()) <= m_valueStore.at(bv_halfPhiSector) + tol;
   double cphi    = cos(pos.phi());
   bool   insideR = insidePhi;
   if (m_type < 1)
-    insideR = insidePhi ? ((ros >= m_boundValues.at(bv_innerRadius) - tol)
-                           && (ros <= m_boundValues.at(bv_outerRadius) + tol))
+    insideR = insidePhi ? ((ros >= m_valueStore.at(bv_innerRadius) - tol)
+                           && (ros <= m_valueStore.at(bv_outerRadius) + tol))
                         : false;
   else if (m_type == 1)
     insideR = insidePhi
-        ? ((ros >= m_boundValues.at(bv_innerRadius) / cphi - tol)
-           && (ros <= m_boundValues.at(bv_outerRadius) + tol))
+        ? ((ros >= m_valueStore.at(bv_innerRadius) / cphi - tol)
+           && (ros <= m_valueStore.at(bv_outerRadius) + tol))
         : false;
   else if (m_type == 2)
     insideR = insidePhi
-        ? ((ros >= m_boundValues.at(bv_innerRadius) - tol)
-           && (ros <= m_boundValues.at(bv_outerRadius) / cphi + tol))
+        ? ((ros >= m_valueStore.at(bv_innerRadius) - tol)
+           && (ros <= m_valueStore.at(bv_outerRadius) / cphi + tol))
         : false;
   else if (m_type == 3)
     insideR = insidePhi
-        ? ((ros >= m_boundValues.at(bv_innerRadius) / cphi - tol)
-           && (ros <= m_boundValues.at(bv_outerRadius) / cphi + tol))
+        ? ((ros >= m_valueStore.at(bv_innerRadius) / cphi - tol)
+           && (ros <= m_valueStore.at(bv_outerRadius) / cphi + tol))
         : false;
-  //   bool insideZ = insideR ? (fabs(pos.z()) <= m_boundValues[bv_halfZ] + tol
+  //   bool insideZ = insideR ? (fabs(pos.z()) <= m_valueStore[bv_halfZ] + tol
   //   ) : false ;
   bool insideZ = insideR
-      ? ((pos.z() <= m_boundValues.at(bv_halfZ)
-              - (pos.x() + m_boundValues.at(bv_outerRadius))
-                  * tan(m_boundValues.at(bv_thetaPlus))
+      ? ((pos.z() <= m_valueStore.at(bv_halfZ)
+              - (pos.x() + m_valueStore.at(bv_outerRadius))
+                  * tan(m_valueStore.at(bv_thetaPlus))
               + tol)
-         && (pos.z() >= -m_boundValues.at(bv_halfZ)
-                 + (pos.x() + m_boundValues.at(bv_outerRadius))
-                     * tan(m_boundValues.at(bv_thetaMinus))
+         && (pos.z() >= -m_valueStore.at(bv_halfZ)
+                 + (pos.x() + m_valueStore.at(bv_outerRadius))
+                     * tan(m_valueStore.at(bv_thetaMinus))
                  - tol))
       : false;
 
@@ -309,43 +309,43 @@ BevelledCylinderVolumeBounds::inside(const Vector3D& pos, double tol) const
 inline double
 BevelledCylinderVolumeBounds::innerRadius() const
 {
-  return m_boundValues.at(bv_innerRadius);
+  return m_valueStore.at(bv_innerRadius);
 }
 inline double
 BevelledCylinderVolumeBounds::outerRadius() const
 {
-  return m_boundValues.at(bv_outerRadius);
+  return m_valueStore.at(bv_outerRadius);
 }
 inline double
 BevelledCylinderVolumeBounds::mediumRadius() const
 {
   return 0.5
-      * (m_boundValues.at(bv_innerRadius) + m_boundValues.at(bv_outerRadius));
+      * (m_valueStore.at(bv_innerRadius) + m_valueStore.at(bv_outerRadius));
 }
 inline double
 BevelledCylinderVolumeBounds::deltaRadius() const
 {
-  return (m_boundValues.at(bv_outerRadius) - m_boundValues.at(bv_innerRadius));
+  return (m_valueStore.at(bv_outerRadius) - m_valueStore.at(bv_innerRadius));
 }
 inline double
 BevelledCylinderVolumeBounds::halfPhiSector() const
 {
-  return m_boundValues.at(bv_halfPhiSector);
+  return m_valueStore.at(bv_halfPhiSector);
 }
 inline double
 BevelledCylinderVolumeBounds::halflengthZ() const
 {
-  return m_boundValues.at(bv_halfZ);
+  return m_valueStore.at(bv_halfZ);
 }
 inline double
 BevelledCylinderVolumeBounds::thetaMinus() const
 {
-  return m_boundValues.at(bv_thetaMinus);
+  return m_valueStore.at(bv_thetaMinus);
 }
 inline double
 BevelledCylinderVolumeBounds::thetaPlus() const
 {
-  return m_boundValues.at(bv_thetaPlus);
+  return m_valueStore.at(bv_thetaPlus);
 }
 inline int
 BevelledCylinderVolumeBounds::type() const
@@ -361,11 +361,11 @@ BevelledCylinderVolumeBounds::dumpT(T& tstream) const
   tstream << std::setprecision(7);
   tstream << "Acts::BevelledCylinderVolumeBounds: (innerR, outerR, "
              "halfPhiSector, halflengthInZ, thetaMinus, thetaPlus) = ";
-  tstream << "(" << m_boundValues.at(bv_innerRadius) << ", "
-          << m_boundValues.at(bv_outerRadius) << ", "
-          << m_boundValues.at(bv_halfPhiSector) << ", "
-          << m_boundValues.at(bv_halfZ) << m_boundValues.at(bv_thetaMinus)
-          << ", " << m_boundValues.at(bv_thetaPlus) << ")";
+  tstream << "(" << m_valueStore.at(bv_innerRadius) << ", "
+          << m_valueStore.at(bv_outerRadius) << ", "
+          << m_valueStore.at(bv_halfPhiSector) << ", "
+          << m_valueStore.at(bv_halfZ) << m_valueStore.at(bv_thetaMinus)
+          << ", " << m_valueStore.at(bv_thetaPlus) << ")";
   return tstream;
 }
 }

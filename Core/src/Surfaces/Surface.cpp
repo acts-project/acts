@@ -11,161 +11,78 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/Surface.hpp"
-
-// STD/STL
 #include <iomanip>
 #include <iostream>
-
-unsigned int Acts::Surface::s_numberOfInstantiations     = 0;
-unsigned int Acts::Surface::s_numberOfFreeInstantiations = 0;
-
-Acts::Surface::Surface()
-  : m_transform(nullptr)
-  , m_center(nullptr)
-  , m_normal(nullptr)
-  , m_associatedDetElement(nullptr)
-  , m_associatedDetElementId()
-  , m_associatedLayer(nullptr)
-  , m_surfaceMaterial(nullptr)
-{
-#ifndef NDEBUG
-  s_numberOfInstantiations++;      // EDM Monitor
-  s_numberOfFreeInstantiations++;  // EDM Monitor
-#endif
-}
 
 Acts::Surface::Surface(std::shared_ptr<Acts::Transform3D> tform)
   : m_transform(tform)
   , m_center(nullptr)
-  , m_normal(nullptr)
   , m_associatedDetElement(nullptr)
   , m_associatedDetElementId()
   , m_associatedLayer(nullptr)
-  , m_surfaceMaterial(nullptr)
+  , m_associatedTrackingVolume(nullptr)
+  , m_associatedMaterial(nullptr)
 {
   m_transform = tform;
-#ifndef NDEBUG
-  s_numberOfInstantiations++;  // EDM Monitor - increment one instance
-  s_numberOfFreeInstantiations++;
-#endif
-}
-
-Acts::Surface::Surface(std::unique_ptr<Acts::Transform3D> tform)
-  : Surface(std::shared_ptr<Acts::Transform3D>(tform.release()))
-{
-  // No EDM monitor here since we delegate to the previous constructor.
-}
-
-Acts::Surface::Surface(const Acts::DetectorElementBase& detelement)
-  : m_transform(nullptr)
-  , m_center(nullptr)
-  , m_normal(nullptr)
-  , m_associatedDetElement(&detelement)
-  , m_associatedDetElementId()
-  , m_associatedLayer(nullptr)
-  , m_surfaceMaterial(nullptr)
-{
-#ifndef NDEBUG
-  s_numberOfInstantiations++;  // EDM Monitor - increment one instance
-#endif
 }
 
 Acts::Surface::Surface(const Acts::DetectorElementBase& detelement,
                        const Identifier&                id)
   : m_transform(nullptr)
   , m_center(nullptr)
-  , m_normal(nullptr)
   , m_associatedDetElement(&detelement)
   , m_associatedDetElementId(id)
   , m_associatedLayer(nullptr)
-  , m_surfaceMaterial(nullptr)
-{
-#ifndef NDEBUG
-  s_numberOfInstantiations++;  // EDM Monitor - increment one instance
-#endif
-}
+  , m_associatedTrackingVolume(nullptr)
+  , m_associatedMaterial(nullptr)
+{}
 
-// copy constructor - Attention! sets the associatedDetElement to 0 and the
-// identifier to invalid
 Acts::Surface::Surface(const Surface& sf)
   : m_transform(sf.m_transform)
   , m_center(nullptr)
-  , m_normal(nullptr)
   , m_associatedDetElement(nullptr)
   , m_associatedDetElementId()
   , m_associatedLayer(sf.m_associatedLayer)
-  , m_surfaceMaterial(sf.m_surfaceMaterial)
-{
-#ifndef NDEBUG
-  s_numberOfInstantiations++;  // EDM Monitor - increment one instance
-  // this is by definition a free surface since a copy is not allowed to point
-  // to the det element
-  s_numberOfFreeInstantiations++;
-#endif
-}
+  , m_associatedTrackingVolume(nullptr)
+  , m_associatedMaterial(sf.m_associatedMaterial)
+{}
 
-// copy constructor with shift - Attention! sets the associatedDetElement to 0
-// and the identifieer to invalid
-// also invalidates the material layer
 Acts::Surface::Surface(const Surface& sf, const Acts::Transform3D& shift)
   : m_transform(std::make_shared<Acts::Transform3D>(
         Acts::Transform3D(shift * sf.transform())))
   , m_center(nullptr)
-  , m_normal(nullptr)
   , m_associatedDetElement(nullptr)
   , m_associatedDetElementId()
   , m_associatedLayer(nullptr)
-  , m_surfaceMaterial(nullptr)
-{
-#ifndef NDEBUG
-  s_numberOfInstantiations++;  // EDM Monitor - increment one instance
-  // this is by definition a free surface since a copy is not allowed to point
-  // to the det element
-  s_numberOfFreeInstantiations++;
-#endif
-}
+  , m_associatedMaterial(nullptr)
+{}
 
-// destructor
 Acts::Surface::~Surface()
-{
-#ifndef NDEBUG
-  s_numberOfInstantiations--;  // EDM Monitor - decrement one instance
-  if (isFree()) s_numberOfFreeInstantiations--;
-#endif
+{}
 
-  delete m_center;
-  delete m_normal;
-}
-
-// assignment operator
-// the assigned surfaces loses its link to the detector element
-Acts::Surface&
-Acts::Surface::operator=(const Acts::Surface& sf)
-{
-  if (this != &sf) {
-    delete m_center;
-    m_center = 0;
-    delete m_normal;
-    m_normal    = 0;
-    m_transform = sf.m_transform;
-    m_associatedDetElement
-        = nullptr;  // link to detector element is forced to be broken
-    m_associatedDetElementId = Identifier();
-    m_associatedLayer        = sf.m_associatedLayer;
-    m_surfaceMaterial        = sf.m_surfaceMaterial;
-  }
-  return *this;
-}
-
-// checks if GlobalPosition is on Surface and inside bounds
 bool
-Acts::Surface::isOnSurface(const Acts::Vector3D& glopo,
+Acts::Surface::operator==(const Surface& sf) const
+{
+  // (a) fast exit for pointer comparison
+  if (&sf == this) return true;
+  // (b) fast exit for type
+  if (sf.type() != type()) return false;
+  // (c) fast exit for bounds
+  if (sf.bounds() != bounds()) return false;
+  // (d) comapre transform
+  if (!sf.transform().isApprox(transform(), 10e-9)) return false;
+  // we should be good
+  return true; 
+}
+  
+bool
+Acts::Surface::isOnSurface(const Acts::Vector3D& gpos,
                            const BoundaryCheck&  bchk) const
 {
   // create the local position
   Acts::Vector2D lpos;
   // global to local transformation
-  bool g2L = globalToLocal(glopo, Acts::Vector3D::UnitX(), lpos);
+  bool g2L = globalToLocal(gpos, Acts::Vector3D::UnitX(), lpos);
   if (g2L) {
     // no boundary check, then return true
     if (!bchk) return true;
@@ -176,26 +93,11 @@ Acts::Surface::isOnSurface(const Acts::Vector3D& glopo,
   return false;
 }
 
-// return the measurement frame
 const Acts::RotationMatrix3D
 Acts::Surface::measurementFrame(const Acts::Vector3D&,
                                 const Acts::Vector3D&) const
 {
   return transform().rotation();
-}
-
-// for the EDM monitor
-unsigned int
-Acts::Surface::numberOfInstantiations()
-{
-  return s_numberOfInstantiations;
-}
-
-// for the EDM monitor
-unsigned int
-Acts::Surface::numberOfFreeInstantiations()
-{
-  return s_numberOfFreeInstantiations;
 }
 
 // overload dump for stream operator

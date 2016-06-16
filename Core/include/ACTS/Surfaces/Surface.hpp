@@ -31,277 +31,292 @@ class SurfaceBounds;
 class SurfaceMaterial;
 class Layer;
 
-/**
- @class Surface
-
- Abstract Base Class for tracking surfaces
-
- The creation of a Surface by passing a std::shared_ptr<Transform3D> through the
- constructor
- implies that the ownership of the Transform3D object is also passed to the
- Surface,
- therfor the memory is freed in the Surface destructor.
-
- For all isOnSurface, or positionOnSurface and insideBounds methods two
- tolerance parameters
- can be given which correspond to the two local natural coordinates of the
- surface loc1, loc2.
-
- */
-
+/// @class Surface
+///
+/// @brief Abstract Base Class for tracking surfaces
+/// 
+/// The Surface class builds the core of the ACTS Tracking Geometry.
+/// All other geometrical objects are either extending the surface or 
+/// are built from it.
+///
+/// Surfaces are either owned by Detector elements or the Tracking Geometry,
+/// in which case they are not copied within the data model objects.
+///
 class Surface : public virtual GeometryObject
 {
 public:
-  /** @enum SurfaceType
-
-      This enumerator simplifies the persistency & calculations,
-      by saving a dynamic_cast to happen.
-
-      Other is reserved for the GeometrySurfaces implementation.
-
-    */
+  /// @enum SurfaceType
+  ///
+  /// This enumerator simplifies the persistency & calculations,
+  /// by saving a dynamic_cast, e.g. for persistency
+  ///
   enum SurfaceType {
-    Cone     = 0,
-    Cylinder = 1,
-    Disc     = 2,
-    Perigee  = 3,
-    Plane    = 4,
-
+    Cone        = 0,
+    Cylinder    = 1,
+    Disc        = 2,
+    Perigee     = 3,
+    Plane       = 4,
     Line        = 5,
     Curvilinear = 6,
     Other       = 7
   };
 
-  /** Default Constructor - needed for inherited classes */
-  Surface();
+  /// Constructor with Transform3D as a shared object
+  /// @param htrans Transform3D defines the position of the surface in 3D global space
+  /// @note also acts as default constructor
+  Surface(std::shared_ptr<Transform3D> htrans = nullptr);
 
-  /** Copy constructor - it invalidates the association to detector element and
-   * identifier */
+  /// Copy constructor
+  /// - invalidates the association to detector element and identifier
+  /// @param sf Source surface for copy.
   Surface(const Surface& sf);
 
-  /** Copy constructor with shift */
+  /// Copy constructor with shift 
+  /// - invalidates the association to detector element and identifier
+  /// @param sf Source surface for copy
+  /// @param transf Additional transform applied after copying from the source
   Surface(const Surface& sf, const Transform3D& transf);
 
-  /** Constructor with Transform3D, surface often share transforms */
-  Surface(std::shared_ptr<Transform3D> htrans);
+  /// Constructor with Transform3D
+  /// @param transf Transform3D (by shared_ptr) to position it in space
+  Surface(std::shared_ptr<Transform3D> transf);
 
-  /** Constructor with Transform3D, by unique_ptr */
-  Surface(std::unique_ptr<Transform3D> htrans);
+  /// Constructor fromt DetectorElementBase and (optional) Identifier 
+  /// @param detelement Detector element which is represented by this surface
+  /// @param id Optional identifier if more than one surface are associated to a detector element
+  Surface(const DetectorElementBase& detelement, const Identifier& id = Identifier());
 
-  /** Constructor from TrkDetElement*/
-  Surface(const DetectorElementBase& detelement);
-
-  /** Constructor form TrkDetElement and Identifier*/
-  Surface(const DetectorElementBase& detelement, const Identifier& id);
-
-  /** Virtual Destructor*/
+  /// Virtual Destructor
   virtual ~Surface();
 
-  /** Assignment operator - the alssignment invalidates the link
-     to detector element and identifier */
+  /// Assignment operator is not allowed
+  /// The alssignment invalidates the link to detector element, identifier, layer or tracking volume.
+  /// If  you want to assign, you need to copy or clone.
   Surface&
-  operator=(const Surface& sf);
+  operator=(const Surface& sf) = delete;
 
-  /** Equality operator*/
+  /// Comparison (equality) operator 
+  /// The strategy for comparison is
+  /// (a) first pointer comparison
+  /// (b) then type comparison
+  /// (c) then bounds comparison
+  /// (d) then transform comparison
+  /// @param sf source surface for the comparison
   virtual bool
-  operator==(const Surface& sf) const = 0;
+  operator==(const Surface& sf) const;
 
-  /** Non-equality operator*/
+  /// Comparison (non-equality) operator 
+  /// @param sf Source surface for the comparison
   virtual bool
   operator!=(const Surface& sf) const;
 
-  /** Implicit constructor - uses the copy constructor
-    - a new position can optionally be given  */
+  /// Implicit constructor 
+  /// uses the copy constructor a new position can optionally be given 
+  /// @param shift An additional (optional shift can be given) shift after cloning
   virtual Surface*
   clone(const Transform3D* shift = nullptr) const = 0;
 
-  /** Returns the Surface type to avoid dynamic casts */
+  /// Return method for the Surface type to avoid dynamic casts
   virtual SurfaceType
   type() const = 0;
 
-  /** Return the cached transformation directly, will create
-      a new transform if it's not here. */
-  std::shared_ptr<Transform3D>
-  cachedTransform() const;
-
-  /** Returns Transform3D by reference */
+  /// Return method for the surface Transform3D by reference 
+  /// In case a detector element is associated the surface transform
+  /// is just forwarded to the detector element in order to keep the 
+  /// (mis-)alignment cache cetrally handled
   virtual const Transform3D&
   transform() const;
 
-  /** Returns the center position of the Surface */
+  /// Return method for the surface center by reference 
+  /// In case a detector element is associated the surface transform
+  /// is just forwarded to the detector element in order to keep the 
+  /// (mis-)alignment cache cetrally handled
+  /// @return center position by reference
   virtual const Vector3D&
   center() const;
 
-  /** Returns the normal vector of the Surface */
-  virtual const Vector3D&
-  normal() const;
-
-  /** Returns a normal vector at a specific local position */
+  /// Return method for the normal vector of the surface
+  /// The normal vector can only be generally defined at a given local position
+  /// It requires a local position to be given (in general) 
+  /// @return normal vector by value
   virtual const Vector3D
-  normal(const Vector2D& lp) const;
+  normal(const Vector2D& lp) const = 0;
 
-  /** Returns a normal vector at a specific local position - no checking done on
-   * global position */
-  virtual const Vector3D
-  normal(const Vector3D& global) const;
+  /// Return method for SurfaceBounds
+  /// @return SurfaceBounds by reference
+  virtual const SurfaceBounds&
+  bounds() const = 0;
 
-  /** The binning position method - as default the center is given, but may be
-   * overloaded */
-  virtual Vector3D
-  binningPosition(BinningValue bValue) const override;
-
-  /** return associated Detector Element */
+  /// Return method for the associated Detector Element 
+  /// @return plain pointer to the DetectorElement, can be nullptr
   const DetectorElementBase*
   associatedDetectorElement() const;
 
-  /** return Identifier of the associated Detector Element */
+  /// Return method for the associated Identifier
+  /// @return Identifier by value, can be invalid
   const Identifier
-  associatedDetectorElementIdentifier() const;
+  associatedIdentifier() const;
 
-  /** return the associated Layer */
+  /// Return method for the associated Layer in which the surface is embedded
+  /// @return Layer by plain pointer, can be nullptr
   const Layer*
   associatedLayer() const;
 
-  /** The templated Parameters OnSurface method - checks on surface pointer
-   * first */
+  /// Return method for the associated Material to this surface
+  /// @return SurfaceMaterial as plain pointer, can be nullptr
+  const SurfaceMaterial*
+  associatedMaterial() const;
+
+  /// Set Associated Layer
+  /// Many surfaces can be associated to a Layer, but it might not be known yet
+  /// during construction of the layer, this can be set afterwards
+  /// @param Layer by reference
+  void
+  associateLayer(const Layer&) const;
+
+  /// Set Associated SurfaceMaterial
+  /// The material is usually derived in a complicated way and loaded from
+  /// a framework given source. As various srufaces may share the same
+  /// @param material Material description this given and stored as a shared pointer
+  void
+  setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial> material) const;
+
+  /// The templated Parameters onSurface method 
+  /// In order to avoid unneccessary geometrical operations, it checks on the surface pointer first.
+  /// If that check fails, it calls the geometrical check isOnSurface
+  /// @tparam parameters TrackParameters to be checked
+  /// @param bchk BoundaryCheck directive for this onSurface check
+  /// @return boolean indication if operation was successful
   template <class T>
   bool
   onSurface(const T&             parameters,
             const BoundaryCheck& bchk = BoundaryCheck(true)) const;
 
-  /** This method returns true if the GlobalPosition is on the Surface for both,
-    within
-    or without check of whether the local position is inside boundaries or not
-    */
-  virtual bool
-  isOnSurface(const Vector3D& glopo, const BoundaryCheck& bchk = true) const;
+  /// The insideBounds method for local positions
+  /// @param lpos local position to check
+  /// @param bchk  BoundaryCheck directive for this onSurface check  
+  /// @return boolean indication if operation was successful
+  virtual bool insideBounds(const Vector2D& lpos, const BoundaryCheck& bchk = true) const;
 
-  /**  virtual methods to be overwritten by the inherited surfaces */
+  /// The geometric onSurface method 
+  /// Geometrical check whether position is on Surface
+  /// @param gpos global position to be evaludated
+  /// @param bchk BoundaryCheck directive for this onSurface check
+  /// @return boolean indication if operation was successful
   virtual bool
-  insideBounds(const Vector2D& locpos, const BoundaryCheck& bchk) const;
+  isOnSurface(const Vector3D& gpos, const BoundaryCheck& bchk = true) const;
 
-  /** Specified by each surface type: LocalToGlobal method without dynamic
-   * memory allocation */
+  /// Local to global transformation
+  /// Generalized local to global transformation for the surface types. Since some surface
+  /// types need the global momentum/direction to resolve sign ambiguity this is also provided
+  /// @param lpos local 2D posittion in specialized surface frame
+  /// @param gmom global 3D momentum representation (optionally ignored)
+  /// @param gpos global 3D position to be filled (given by reference for method symmetry)
   virtual void
-  localToGlobal(const Vector2D& locp,
-                const Vector3D& mom,
-                Vector3D&       glob) const = 0;
+  localToGlobal(const Vector2D& lpos,
+                const Vector3D& gmom,
+                Vector3D&       gpos) const = 0;
 
-  /** Specified by each surface type: GlobalToLocal method without dynamic
-   * memory allocation - boolean checks if on surface */
+  /// Global to local transformation
+  /// Generalized global to local transformation for the surface types. Since some surface
+  /// types need the global momentum/direction to resolve sign ambiguity this is also provided
+  /// @param gpos global 3D position - considered to be on surface but not inside bounds (check is done)
+  /// @param gmom global 3D momentum representation (optionally ignored)
+  /// @param lpos local 2D position to be filled (given by reference for method symmetry)
+  /// @return boolean indication if operation was successful (fail means global position was not on surface)                
   virtual bool
-  globalToLocal(const Vector3D& glob,
-                const Vector3D& mom,
-                Vector2D&       loc) const = 0;
+  globalToLocal(const Vector3D& gpos,
+                const Vector3D& gmom,
+                Vector2D&       lpos) const = 0;
 
-  /** the pathCorrection for derived classes with thickness - it reflects if the
-   * direction projection is positive or negative */
-  virtual double
-  pathCorrection(const Vector3D& pos, const Vector3D& mom) const;
-
-  /** Return the measurement frame - this is needed for alignment, in particular
-     for StraightLine and Perigee Surface
-       - the default implementation is the the RotationMatrix3D of the transform
-     */
+  /// Return mehtod for the measurement frame 
+  /// This is the frame in which the covariance matrix is defined (specialized by all surfaces)
+  /// @param gpos global 3D position - considered to be on surface but not inside bounds (check is done)
+  /// @param gmom global 3D momentum representation (optionally ignored)
+  /// @return RotationMatrix3D which defines the three axes of the measurement frame                           
   virtual const Acts::RotationMatrix3D
-  measurementFrame(const Vector3D& glopos, const Vector3D& glomom) const;
+  measurementFrame(const Vector3D& gpos, const Vector3D& gmom) const;
 
-  /** fst straight line intersection schema - templated for cvharged and neutral
-   * parameters */
+  /// Calucation of the path correction for incident
+  /// @param gpos global 3D position - considered to be on surface but not inside bounds (check is done)
+  /// @param gmom global 3D momentum representation
+  /// @return Path correction with respect to the nominal incident.
+  virtual double             
+  pathCorrection(const Vector3D& gpos, const Vector3D& gmom) const = 0;
+
+
+  /// Straight line intersection schema from parameters
+  /// Templated for charged and neutral 
+  /// @TODO include intersector
+  /// @param pars TrackParameters to start from 
+  /// @param forceDir boolean indication whether to force the direction given by the TrackParameters to hold
+  /// @param bchk boundary check directive for this operation
+  /// @return Intersection class 
   template <class T>
   Intersection
-  intersectionEstimate(const T&            pars,
-                       bool                forceDir = false,
-                       Acts::BoundaryCheck bchk     = false) const
+  intersectionEstimate(const T&             pars,
+                       bool                 forceDir = false,
+                       const BoundaryCheck& bchk = false) const
   {
     return intersectionEstimate(
         pars.position(), pars.momentum().unit(), forceDir, bchk);
   }
 
-  /** fast straight line intersection schema - standard: provides closest
-     intersection and (signed) path length
-      forceFwd is to provide the closest forward solution */
+  /// Straight line intersection schema from parameters
+  /// Templated for charged and neutral 
+  /// @TODO include intersector
+  /// @param gpos global 3D position - considered to be on surface but not inside bounds (check is done)
+  /// @param gdir global 3D direction representation 
+  /// @param forceDir boolean indication whether to force the direction given by the TrackParameters to hold
+  /// @param bchk boundary check directive for this operation
+  /// @return Intersection class 
   virtual Intersection
-  intersectionEstimate(const Vector3D&      pos,
-                       const Vector3D&      dir,
+  intersectionEstimate(const Vector3D&      gpos,
+                       const Vector3D&      gdir,
                        bool                 forceDir = false,
                        const BoundaryCheck& bchk = false) const = 0;
 
-  /** Surface Bounds method */
-  virtual const SurfaceBounds&
-  bounds() const = 0;
-
-  /** Returns 'true' if this surface is 'free', i.e. it does not belong to a
-   * detector element (and returns false otherwise*/
+  /// Returns 'true' if this surface is 'free'
+  /// i.e. it does not belong to a detector element, a layer or a tracking volume
   bool
   isFree() const;
 
-  void
-  setSurfaceMaterial(std::shared_ptr<const SurfaceMaterial> material) const;
-
-  /** Return 'true' if this surface is own by the detector element */
-  bool
-  isActive() const;
-
-  /** set material layer */
-  const SurfaceMaterial*
-  surfaceMaterial() const;
-
-  /** Output Method for std::ostream, to be overloaded by child classes */
+  /// Output Method for std::ostream, to be overloaded by child classes 
   virtual std::ostream&
   dump(std::ostream& sl) const;
 
-  /** Return properly formatted class name */
+  /// Return properly formatted class name 
   virtual std::string
   name() const = 0;
 
-  /**return number of surfaces currently created - needed for EDM monitor */
-  static unsigned int
-  numberOfInstantiations();
-
-  /**return number of free surfaces currently created (i.e. those not belonging
-   * to a DE) - needed for EDM monitor */
-  static unsigned int
-  numberOfFreeInstantiations();
-
-  /** method to associate the associated Acts::Layer which is alreay owned
-     - only allowed by LayerBuilder
-     - only done if no Layer is set already  */
-  void
-  associateLayer(const Layer&) const;
 
 protected:
-  /** Private members are in principle implemented as mutable pointers to
-    objects for easy checks
-    if they are already declared or not */
-  std::shared_ptr<Transform3D>
-                    m_transform;  //!< Transform3D w.r.t to global frame
-  mutable Vector3D* m_center;     //!< center position of the surface
-  mutable Vector3D* m_normal;     //!< normal vector of the surface
+  /// Transform3D definition that positions (translation, rotation) the surface in global space
+  std::shared_ptr<Transform3D>                  m_transform;
+  /// center position for surfaces, only calculated if transform is given  
+  std::unique_ptr<Vector3D>                     m_center;  
 
-  /** Pointer to the a DetectorElementBase */
-  const DetectorElementBase* m_associatedDetElement;
-  Identifier                 m_associatedDetElementId;
+  /// Pointer to the a DetectorElementBase 
+  const DetectorElementBase*                    m_associatedDetElement;
+  
+  /// Associated Identifier to this 
+  Identifier                                    m_associatedDetElementId;
 
-  /** The associated layer Acts::Layer
-   - layer in which the Surface is be embedded */
-  mutable const Layer* m_associatedLayer;
+  /// The associated layer Layer - layer in which the Surface is be embedded, nullptr if not associated
+  mutable const Layer*                          m_associatedLayer;
+  
+  /// The assoicated TrackingVolume - tracking volume in case the surface is a boundary surface, nullptr if not
+  mutable const TrackingVolume*                 m_associatedTrackingVolume;
 
-  /** Possibility to attach a material descrption */
-  mutable std::shared_ptr<const SurfaceMaterial> m_surfaceMaterial;
+  /// Possibility to attach a material descrption
+  mutable std::shared_ptr<const SurfaceMaterial> m_associatedMaterial;
 
-  /** number of objects of this type in memory - needed for EDM monitor*/
-  static unsigned int s_numberOfInstantiations;
-
-  /** number of objects of this type in memory which do not belong to a detector
-   * element - needed for EDM monitor*/
-  static unsigned int s_numberOfFreeInstantiations;
 };
 
 inline bool
 Surface::operator!=(const Surface& sf) const
 {
-  return !((*this) == sf);
+  return !(operatpr==(sf));
 }
 
 inline std::shared_ptr<Transform3D>
@@ -313,7 +328,7 @@ Surface::cachedTransform() const
 inline const Transform3D&
 Surface::transform() const
 {
-  if (m_transform.get()) return (*(m_transform.get()));
+  if (m_transform) return (*(m_transform.get()));
   if (m_associatedDetElement && m_associatedDetElementId.is_valid())
     return m_associatedDetElement->transform(m_associatedDetElementId);
   if (m_associatedDetElement) return m_associatedDetElement->transform();
@@ -323,8 +338,7 @@ Surface::transform() const
 inline const Vector3D&
 Surface::center() const
 {
-  if (m_transform.get() && !m_center)
-    m_center = new Vector3D(m_transform->translation());
+  if (m_transform) && !m_center) m_center = new Vector3D(m_transform->translation());
   if (m_center) return (*m_center);
   if (m_associatedDetElement && m_associatedDetElementId.is_valid())
     return m_associatedDetElement->center(m_associatedDetElementId);
@@ -332,37 +346,6 @@ Surface::center() const
   return s_origin;
 }
 
-inline const Vector3D&
-Surface::normal() const
-{
-  if (m_transform.get() && m_normal == 0)
-    m_normal = new Vector3D(m_transform->rotation().col(2));
-  if (m_normal) return (*m_normal);
-  if (m_associatedDetElement && m_associatedDetElementId.is_valid())
-    return m_associatedDetElement->normal(m_associatedDetElementId);
-  if (m_associatedDetElement) return m_associatedDetElement->normal();
-  return s_zAxis;
-}
-
-// return the binning position for ordering in the BinnedArray
-inline Vector3D Surface::binningPosition(BinningValue) const
-{
-  // very simple binning directives following hte binning type
-  // give the center as default for all of these binning types
-  // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
-  return center();
-}
-
-// common to planar surfaces
-inline double
-Surface::pathCorrection(const Vector3D&, const Vector3D& mom) const
-{
-  Vector3D dir(mom.unit());
-  double   cosAlpha = dir.dot(normal());
-  return fabs(1. / cosAlpha);
-}
-
-//* the templated parameters on Surface method */
 template <class T>
 bool
 Surface::onSurface(const T& pars, const BoundaryCheck& bcheck) const
@@ -380,22 +363,6 @@ Surface::insideBounds(const Vector2D& locpos, const BoundaryCheck& bchk) const
   return bounds().inside(locpos, bchk);
 }
 
-// take local position and return a normal direction, local position is ignored
-// for planar surfaces
-inline const Vector3D
-Surface::normal(const Vector2D&) const
-{
-  return normal();
-}
-
-// take local position and return a normal direction, local position is ignored
-// for planar surfaces
-inline const Vector3D
-Surface::normal(const Vector3D&) const
-{
-  return normal();
-}
-
 inline const DetectorElementBase*
 Surface::associatedDetectorElement() const
 {
@@ -403,7 +370,7 @@ Surface::associatedDetectorElement() const
 }
 
 inline const Identifier
-Surface::associatedDetectorElementIdentifier() const
+Surface::associatedIdentifier() const
 {
   if (!m_associatedDetElement) return Identifier();  // in invalid state
   if (m_associatedDetElementId.is_valid()) return m_associatedDetElementId;
@@ -417,28 +384,16 @@ Surface::associatedLayer() const
 }
 
 inline const SurfaceMaterial*
-Surface::surfaceMaterial() const
+Surface::associatedMaterial() const
 {
-  return m_surfaceMaterial.get();
-}
-
-inline bool
-Surface::isActive() const
-{
-  return (m_associatedDetElement != nullptr);
-}
-
-inline bool
-Surface::isFree() const
-{
-  return (m_associatedDetElement == nullptr && m_associatedLayer == nullptr);
+  return m_associatedMaterial.get();
 }
 
 inline void
-Surface::setSurfaceMaterial(
+Surface::setAssociatedMaterial(
     std::shared_ptr<const SurfaceMaterial> material) const
 {
-  m_surfaceMaterial = material;
+  m_associatedMaterial = material;
 }
 
 inline void

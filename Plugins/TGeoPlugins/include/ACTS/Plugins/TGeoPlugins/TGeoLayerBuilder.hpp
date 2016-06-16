@@ -39,9 +39,9 @@ public:
     std::string layerName;
     std::string sensorName;
     size_t      binsLoc0;
-    size_t      binsLoc1;
+    size_t      binsLoc0;
 
-    LayerConfig() : layerName(""), sensorName(""), binsLoc0(0), binsLoc1(0) {}
+    LayerConfig() : layerName(""), sensorName(""), binsLoc0(0), binsLoc0(0) {}
   };
 
   /** @struct Config

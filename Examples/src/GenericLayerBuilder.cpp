@@ -295,7 +295,7 @@ Acts::GenericLayerBuilder::constructLayers()
           // the layer surface is the material surface
           // MSG_VERBOSE("- and material at central surface at radius =  " <<
           // cLayer->surfaceRepresentation().bounds().r() );
-          cLayer->surfaceRepresentation().setSurfaceMaterial(layerMaterialPtr);
+          cLayer->surfaceRepresentation().setAssociatedMaterial(layerMaterialPtr);
         } else {
           // approach surface material
           // get the approach descriptor - at this stage we know that the
@@ -303,11 +303,11 @@ Acts::GenericLayerBuilder::constructLayers()
           auto approachSurfaces
               = cLayer->approachDescriptor()->containedSurfaces();
           if (m_config.centralLayerMaterialConcentration.at(icl) > 0) {
-            approachSurfaces.at(1)->setSurfaceMaterial(layerMaterialPtr);
+            approachSurfaces.at(1)->setAssociatedMaterial(layerMaterialPtr);
             // MSG_VERBOSE("- and material at outer approach surfaceat radius =
             // " << approachSurfaces.at(1)->bounds().r() );
           } else {
-            approachSurfaces.at(0)->setSurfaceMaterial(layerMaterialPtr);
+            approachSurfaces.at(0)->setAssociatedMaterial(layerMaterialPtr);
             // MSG_VERBOSE("- and material at inner approach surface at radius =
             // " << approachSurfaces.at(0)->bounds().r() );
           }
@@ -590,8 +590,8 @@ Acts::GenericLayerBuilder::constructLayers()
         if (m_config.posnegLayerMaterialConcentration.at(ipnl) == 0.) {
           // assign the surface material - the layer surface is the material
           // surface
-          nLayer->surfaceRepresentation().setSurfaceMaterial(layerMaterialPtr);
-          pLayer->surfaceRepresentation().setSurfaceMaterial(layerMaterialPtr);
+          nLayer->surfaceRepresentation().setAssociatedMaterial(layerMaterialPtr);
+          pLayer->surfaceRepresentation().setAssociatedMaterial(layerMaterialPtr);
         } else {
           // approach surface material
           // get the approach descriptor - at this stage we know that the
@@ -601,11 +601,11 @@ Acts::GenericLayerBuilder::constructLayers()
           auto pApproachSurfaces
               = pLayer->approachDescriptor()->containedSurfaces();
           if (m_config.posnegLayerMaterialConcentration.at(ipnl) > 0.) {
-            nApproachSurfaces.at(0)->setSurfaceMaterial(layerMaterialPtr);
-            pApproachSurfaces.at(1)->setSurfaceMaterial(layerMaterialPtr);
+            nApproachSurfaces.at(0)->setAssociatedMaterial(layerMaterialPtr);
+            pApproachSurfaces.at(1)->setAssociatedMaterial(layerMaterialPtr);
           } else {
-            nApproachSurfaces.at(1)->setSurfaceMaterial(layerMaterialPtr);
-            pApproachSurfaces.at(0)->setSurfaceMaterial(layerMaterialPtr);
+            nApproachSurfaces.at(1)->setAssociatedMaterial(layerMaterialPtr);
+            pApproachSurfaces.at(0)->setAssociatedMaterial(layerMaterialPtr);
           }
         }
       }

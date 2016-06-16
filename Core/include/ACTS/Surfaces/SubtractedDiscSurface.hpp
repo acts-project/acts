@@ -19,53 +19,53 @@
 
 namespace Acts {
 
-/**
- @class SubtractedDiscSurface
- Class for a planar subtracted/shared surface in the ATLAS detector.
- It owns its surface bounds and subtracted volume.
 
- */
-
+/// @class SubtractedDiscSurface
+///    
+/// Class for a planar subtracted/shared surface in the ATLAS detector.
+/// It owns its surface bounds and subtracted volume.
+///
 class SubtractedDiscSurface : public DiscSurface
 {
 public:
-  /** Default Constructor - needed for persistency*/
-  SubtractedDiscSurface();
+  /// Default Constructor - deleted
+  SubtractedDiscSurface() = delete;
 
-  /** Copy Constructor*/
+  /// Copy Constructor
   SubtractedDiscSurface(const SubtractedDiscSurface& psf);
 
-  /** Copy Constructor*/
+  /// Copy Constructor
+  /// @param shift is the additional transform that is applied after copying
   SubtractedDiscSurface(const SubtractedDiscSurface& psf,
                         const Transform3D&           shift);
 
-  /** Constructor */
+  /// Constructor with area excluder
   SubtractedDiscSurface(const DiscSurface& ps, AreaExcluder* vol, bool shared);
 
-  /**Destructor*/
+  /// Destructor
   virtual ~SubtractedDiscSurface();
 
-  /**Assignment operator*/
+  /// Assignment operator
   SubtractedDiscSurface&
   operator=(const SubtractedDiscSurface& psf);
 
-  /**Equality operator*/
+  /// Equality operator
   bool
   operator==(const Surface& sf) const;
 
-  /** This method indicates the subtraction mode */
+  /// This method indicates the subtraction mode 
   bool
   shared() const;
 
-  /**This method calls the inside() method of the Bounds*/
+  /// This method calls the inside() method of the bounds
   bool
   insideBounds(const Vector2D& locpos, const BoundaryCheck& bchk = true) const;
 
-  /**This method allows access to the subtracted part*/
+  /// This method allows access to the subtracted part
   std::shared_ptr<AreaExcluder>
   subtractedVolume() const;
 
-  /** Return properly formatted class name for screen output */
+  /// Return properly formatted class name for screen output 
   std::string
   name() const
   {
@@ -73,7 +73,7 @@ public:
   }
 
 protected:
-  std::shared_ptr<AreaExcluder> m_subtrVol;
+  std::shared_ptr<AreaExcluder> m_subtrVol; ///< the area excluder
   bool                          m_shared;
 };
 

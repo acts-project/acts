@@ -383,16 +383,16 @@ namespace Test {
     BOOST_CHECK(*parSet_without_cov.getCovariance() == cov);
 
     // set new parameter values
-    double newLoc1 = 0.1;
-    double newLoc2 = 0.6;
+    double newLoc0 = 0.1;
+    double newLoc1 = 0.6;
     double newPhi  = -0.15 * M_PI;
-    parValues << newLoc1, newLoc2, newPhi;
-    parSet_with_cov.setParameter<ParID_t::eLOC_1>(newLoc1);
-    parSet_with_cov.setParameter<ParID_t::eLOC_2>(newLoc2);
+    parValues << newLoc0, newLoc1, newPhi;
+    parSet_with_cov.setParameter<ParID_t::eLOC_1>(newLoc0);
+    parSet_with_cov.setParameter<ParID_t::eLOC_2>(newLoc1);
     parSet_with_cov.setParameter<ParID_t::ePHI>(newPhi);
 
-    BOOST_CHECK(parSet_with_cov.getParameter<ParID_t::eLOC_1>() == newLoc1);
-    BOOST_CHECK(parSet_with_cov.getParameter<ParID_t::eLOC_2>() == newLoc2);
+    BOOST_CHECK(parSet_with_cov.getParameter<ParID_t::eLOC_1>() == newLoc0);
+    BOOST_CHECK(parSet_with_cov.getParameter<ParID_t::eLOC_2>() == newLoc1);
     BOOST_CHECK(parSet_with_cov.getParameter<ParID_t::ePHI>() == newPhi);
     BOOST_CHECK(parSet_with_cov.getParameters() == parValues);
   }

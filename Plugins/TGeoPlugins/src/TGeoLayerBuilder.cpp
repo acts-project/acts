@@ -82,7 +82,7 @@ Acts::TGeoLayerBuilder::centralLayers() const
         detSurfaces.push_back(&(tgElement->surface()));
         // create the layer
         cVector.push_back(m_config.layerCreator->cylinderLayer(
-            detSurfaces, 1., 5., layerCfg.binsLoc0, layerCfg.binsLoc1));
+            detSurfaces, 1., 5., layerCfg.binsLoc0, layerCfg.binsLoc0));
       }
     }
   }

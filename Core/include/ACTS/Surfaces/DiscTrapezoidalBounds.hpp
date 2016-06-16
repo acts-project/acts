@@ -21,19 +21,19 @@
 
 namespace Acts {
 
-/**
-   @class DiscTrapezoidalBounds
-
-   Class to describe the bounds for a planar DiscSurface.
-   By providing an argument for hphisec, the bounds can
-   be restricted to a phirange around the center position.
-
-*/
+/// 
+/// @class DiscTrapezoidalBounds
+/// 
+/// Class to describe the bounds for a planar DiscSurface.
+/// By providing an argument for hphisec, the bounds can
+/// be restricted to a phirange around the center position.
+/// 
 
 class DiscTrapezoidalBounds : public DiscBounds
 {
 public:
-  /** enumeration for readability */
+  /// @enum BoundValues
+  /// enumeration for readability
   enum BoundValues {
     bv_rMin          = 0,
     bv_rMax          = 1,
@@ -47,11 +47,16 @@ public:
     bv_length        = 9
   };
 
-  /** Default Constructor*/
-  DiscTrapezoidalBounds();
+  /// Default Constructor - deleted
+  DiscTrapezoidalBounds() = delete;
 
-  /** Constructor for a symmetric Trapezoid giving min X lenght, max X lenght,
-   * Rmin and R max */
+  /// Constructor for a symmetric Trapezoid giving min X lenght, max X lenght, Rmin and R max
+  /// @param minhalfx half length in X at min radius
+  /// @param minhalfx half length in X at maximum radius
+  /// @param rMin inner radius
+  /// @param rMax outer radius
+  /// @avephi average phi value
+  /// @stereo optional stero angle applied
   DiscTrapezoidalBounds(double minhalfx,
                         double maxhalfx,
                         double rMin,
@@ -59,103 +64,101 @@ public:
                         double avephi,
                         double stereo = 0.);
 
-  /** Copy constructor*/
-  DiscTrapezoidalBounds(const DiscTrapezoidalBounds& disctrbo);
+  /// Copy constructor
+  DiscTrapezoidalBounds(const DiscTrapezoidalBounds& disctrbo) : DiscBounds(disctrbo) {}
 
-  /** Destructor*/
+  /// Destructor
   virtual ~DiscTrapezoidalBounds();
 
-  /** Assignment operator*/
+  /// Assignment operator
   DiscTrapezoidalBounds&
   operator=(const DiscTrapezoidalBounds& disctrbo);
 
-  /** Equality operator*/
-  bool
-  operator==(const SurfaceBounds& sbo) const override;
-
-  /** Virtual constructor*/
+  /// Virtual constructor
   virtual DiscTrapezoidalBounds*
   clone() const override;
 
-  /** Return the type - mainly for persistency */
+  /// Return the type - mainly for persistency 
   virtual SurfaceBounds::BoundsType
   type() const override
   {
     return SurfaceBounds::DiscTrapezoidal;
   }
 
-  /** This method cheks if the radius given in the LocalPosition is inside
-     [rMin,rMax]
-     if only tol1 is given and additional in the phi sector is tol2 is given */
+  ///  This method cheks if the radius given in the LocalPosition is inside [rMin,rMax]
+  /// if only tol0 is given and additional in the phi sector is tol1 is given
+  /// @param lpos is the local position to be checked (in polar coordinates)
+  /// @param bchk is the boundary check directive
   virtual bool
-  inside(const Vector2D& locpo,
-         double          tol1 = 0.,
-         double          tol2 = 0.) const override;
-  virtual bool
-  inside(const Vector2D&      locpo,
+  inside(const Vector2D&      lpos,
          const BoundaryCheck& bchk = true) const override;
 
-  /** This method checks inside bounds in loc1
-- loc1/loc2 correspond to the natural coordinates of the surface */
+  /// This method checks inside bounds in loc0
+  /// @param lpos is the local position to be checked (in polar coordinates)
+  /// @param tol0 is the tolerance applied 
   virtual bool
-  insideLoc1(const Vector2D& locpo, double tol1 = 0.) const override;
+  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
-  /** This method checks inside bounds in loc2
-- loc1/loc2 correspond to the natural coordinates of the surface */
+  /// This method checks inside bounds in loc0
+  /// @param lpos is the local position to be checked (in polar coordinates)
+  /// @param tol0 is the tolerance applied 
   virtual bool
-  insideLoc2(const Vector2D& locpo, double tol2 = 0.) const override;
+  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /** Minimal distance to boundary ( > 0 if outside and <=0 if inside) */
+  /// Minimal distance to boundary 
+  /// @param lpos is the local position to be checked (in polar coordinates)
+  /// @return is the minimal distance ( > 0 if outside and <=0 if inside) 
   virtual double
-  minDistance(const Vector2D& pos) const override;
+  minDistance(const Vector2D& lpos) const override;
 
-  /** This method returns inner radius*/
+  /// This method returns inner radius
   double
   rMin() const;
 
-  /** This method returns outer radius*/
+  /// This method returns outer radius
   double
   rMax() const;
 
-  /** This method returns the maximum expansion on the plane (=rMax)*/
-  virtual double
-  r() const override;
-
-  /** This method returns the average phi*/
+  /// This method returns the average phi
   double
   averagePhi() const;
 
-  /** This method returns the center radius*/
+  /// This method returns the center radius
   double
   rCenter() const;
 
-  /** This method returns the stereo angle*/
+  /// This method returns the stereo angle
   double
   stereo() const;
 
-  /** This method returns the halfPhiSector which is covered by the disc*/
+  /// This method returns the halfPhiSector which is covered by the disc
   double
   halfPhiSector() const;
 
-  /** This method returns the minimal halflength in X */
+  /// This method returns the minimal halflength in X 
   double
   minHalflengthX() const;
 
-  /** This method returns the maximal halflength in X */
+  /// This method returns the maximal halflength in X 
   double
   maxHalflengthX() const;
 
-  /** This method returns the halflength in Y (this is Rmax -Rmin)*/
+  /// This method returns the halflength in Y (this is Rmax -Rmin)
   double
   halflengthY() const;
 
-  /** Output Method for std::ostream */
+  /// Output Method for std::ostream 
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
 private:
-  /** Internal members of the bounds (float/double)*/
-  std::vector<TDD_real_t> m_boundValues;
+  /// private helper method 
+  virtual bool
+  inside(const Vector2D& lpos,
+         double          tol0 = 0.,
+         double          tol1 = 0.) const;
+         
+
 };
 
 inline DiscTrapezoidalBounds*
@@ -165,15 +168,15 @@ DiscTrapezoidalBounds::clone() const
 }
 
 inline bool
-DiscTrapezoidalBounds::inside(const Vector2D& locpo, double, double) const
+DiscTrapezoidalBounds::inside(const Vector2D& lpos, double, double) const
 {
-  double rMedium = m_boundValues.at(DiscTrapezoidalBounds::bv_rCenter);
-  double phi     = m_boundValues.at(DiscTrapezoidalBounds::bv_averagePhi);
+  double rMedium = m_valueStore.at(DiscTrapezoidalBounds::bv_rCenter);
+  double phi     = m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi);
 
   Vector2D cartCenter(rMedium * cos(phi), rMedium * sin(phi));
 
-  Vector2D cartPos(locpo[Acts::eLOC_R] * cos(locpo[Acts::eLOC_PHI]),
-                   locpo[Acts::eLOC_R] * sin(locpo[Acts::eLOC_PHI]));
+  Vector2D cartPos(lpos[Acts::eLOC_R] * cos(lpos[Acts::eLOC_PHI]),
+                   lpos[Acts::eLOC_R] * sin(lpos[Acts::eLOC_PHI]));
 
   Vector2D Pos = cartPos - cartCenter;
 
@@ -182,25 +185,25 @@ DiscTrapezoidalBounds::inside(const Vector2D& locpo, double, double) const
                         + Pos[Acts::eLOC_X] * cos(phi));
 
   bool insideX = (fabs(DeltaPos[Acts::eLOC_X])
-                  < m_boundValues.at(DiscTrapezoidalBounds::bv_maxHalfX));
+                  < m_valueStore.at(DiscTrapezoidalBounds::bv_maxHalfX));
   bool insideY = (fabs(DeltaPos[Acts::eLOC_Y])
-                  < m_boundValues.at(DiscTrapezoidalBounds::bv_halfY));
+                  < m_valueStore.at(DiscTrapezoidalBounds::bv_halfY));
 
   if (!insideX || !insideY) return false;
 
   if (fabs(DeltaPos[Acts::eLOC_X])
-      < m_boundValues.at(DiscTrapezoidalBounds::bv_minHalfX))
+      < m_valueStore.at(DiscTrapezoidalBounds::bv_minHalfX))
     return true;
 
-  double m = 2. * m_boundValues.at(DiscTrapezoidalBounds::bv_halfY)
-      / (m_boundValues.at(DiscTrapezoidalBounds::bv_maxHalfX)
-         - m_boundValues.at(DiscTrapezoidalBounds::bv_minHalfX));
+  double m = 2. * m_valueStore.at(DiscTrapezoidalBounds::bv_halfY)
+      / (m_valueStore.at(DiscTrapezoidalBounds::bv_maxHalfX)
+         - m_valueStore.at(DiscTrapezoidalBounds::bv_minHalfX));
 
-  double q = m_boundValues.at(DiscTrapezoidalBounds::bv_halfY)
-      * (m_boundValues.at(DiscTrapezoidalBounds::bv_maxHalfX)
-         + m_boundValues.at(DiscTrapezoidalBounds::bv_minHalfX))
-      / (m_boundValues.at(DiscTrapezoidalBounds::bv_minHalfX)
-         - m_boundValues.at(DiscTrapezoidalBounds::bv_maxHalfX));
+  double q = m_valueStore.at(DiscTrapezoidalBounds::bv_halfY)
+      * (m_valueStore.at(DiscTrapezoidalBounds::bv_maxHalfX)
+         + m_valueStore.at(DiscTrapezoidalBounds::bv_minHalfX))
+      / (m_valueStore.at(DiscTrapezoidalBounds::bv_minHalfX)
+         - m_valueStore.at(DiscTrapezoidalBounds::bv_maxHalfX));
 
   bool inside
       = (DeltaPos[Acts::eLOC_Y] > (m * fabs(DeltaPos[Acts::eLOC_X]) + q));
@@ -209,37 +212,37 @@ DiscTrapezoidalBounds::inside(const Vector2D& locpo, double, double) const
 }
 
 inline bool
-DiscTrapezoidalBounds::inside(const Vector2D&      locpo,
+DiscTrapezoidalBounds::inside(const Vector2D&      lpos,
                               const BoundaryCheck& bchk) const
 {
   if (bchk.bcType == 0 || bchk.nSigmas == 0
-      || m_boundValues.at(DiscTrapezoidalBounds::bv_rMin) != 0)
+      || m_valueStore.at(DiscTrapezoidalBounds::bv_rMin) != 0)
     return DiscTrapezoidalBounds::inside(
-        locpo, bchk.toleranceLoc1, bchk.toleranceLoc2);
-  double alpha = fabs(locpo[Acts::eLOC_PHI]
-                      - m_boundValues.at(DiscTrapezoidalBounds::bv_averagePhi));
+        lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
+  double alpha = fabs(lpos[Acts::eLOC_PHI]
+                      - m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi));
   if (alpha > M_PI) alpha = 2 * M_PI - alpha;
   // a fast FALSE
-  sincosCache scResult = bchk.FastSinCos(locpo(1, 0));
+  sincosCache scResult = bchk.FastSinCos(lpos(1, 0));
   double      dx       = bchk.nSigmas * sqrt(bchk.lCovariance(0, 0));
   double      dy       = bchk.nSigmas
       * sqrt(scResult.sinC * scResult.sinC * bchk.lCovariance(0, 0)
-             + locpo(0, 0) * locpo(0, 0) * scResult.cosC * scResult.cosC
+             + lpos(0, 0) * lpos(0, 0) * scResult.cosC * scResult.cosC
                  * bchk.lCovariance(1, 1)
-             + 2 * scResult.cosC * scResult.sinC * locpo(0, 0)
+             + 2 * scResult.cosC * scResult.sinC * lpos(0, 0)
                  * bchk.lCovariance(0, 1));
   double max_ell = dx > dy ? dx : dy;
-  if (locpo(0, 0)
-      > (m_boundValues.at(DiscTrapezoidalBounds::bv_rMax)
-             * cos(m_boundValues.at(DiscTrapezoidalBounds::bv_halfPhiSector))
+  if (lpos(0, 0)
+      > (m_valueStore.at(DiscTrapezoidalBounds::bv_rMax)
+             * cos(m_valueStore.at(DiscTrapezoidalBounds::bv_halfPhiSector))
              / cos(alpha)
          + max_ell))
     return false;
   // a fast TRUE
   double min_ell = dx < dy ? dx : dy;
-  if (locpo(0, 0)
-      < (m_boundValues.at(DiscTrapezoidalBounds::bv_rMax)
-             * cos(m_boundValues.at(DiscTrapezoidalBounds::bv_halfPhiSector))
+  if (lpos(0, 0)
+      < (m_valueStore.at(DiscTrapezoidalBounds::bv_rMax)
+             * cos(m_valueStore.at(DiscTrapezoidalBounds::bv_halfPhiSector))
              / cos(alpha)
          + min_ell))
     return true;
@@ -384,11 +387,11 @@ DiscTrapezoidalBounds::inside(const Vector2D&      locpo,
   EllipseCollisionTest test(4);
   // convert to cartesian coordinates
   ActsMatrixD<2, 2> covRotMatrix;
-  covRotMatrix << scResult.cosC, -locpo(0, 0) * scResult.sinC, scResult.sinC,
-      locpo(0, 0) * scResult.cosC;
+  covRotMatrix << scResult.cosC, -lpos(0, 0) * scResult.sinC, scResult.sinC,
+      lpos(0, 0) * scResult.cosC;
   ActsMatrixD<2, 2> lCovarianceCar
       = covRotMatrix * bchk.lCovariance * covRotMatrix.transpose();
-  Vector2D locpoCar(covRotMatrix(1, 1), -covRotMatrix(0, 1));
+  Vector2D lposCar(covRotMatrix(1, 1), -covRotMatrix(0, 1));
 
   // ellipse is always at (0,0), surface is moved to ellipse position and then
   // rotated
@@ -405,103 +408,103 @@ DiscTrapezoidalBounds::inside(const Vector2D&      locpo,
   scResult = bchk.FastSinCos(theta);
   ActsMatrixD<2, 2> rotMatrix;
   rotMatrix << scResult.cosC, scResult.sinC, -scResult.sinC, scResult.cosC;
-  Vector2D tmp = rotMatrix * (-locpoCar);
+  Vector2D tmp = rotMatrix * (-lposCar);
   double   x1  = tmp(0, 0);
   double   y1  = tmp(1, 0);
-  double   r   = m_boundValues.at(DiscTrapezoidalBounds::bv_rMax);
+  double   r   = m_valueStore.at(DiscTrapezoidalBounds::bv_rMax);
   // check if ellipse and circle overlap and return result
   return test.collide(x0, y0, w, h, x1, y1, r);
 }
 
 inline bool
-DiscTrapezoidalBounds::insideLoc1(const Vector2D& locpo, double tol1) const
+DiscTrapezoidalBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 {
-  double alpha = fabs(locpo[Acts::eLOC_PHI]
-                      - m_boundValues.at(DiscTrapezoidalBounds::bv_averagePhi));
+  double alpha = fabs(lpos[Acts::eLOC_PHI]
+                      - m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi));
   if (alpha > M_PI) alpha = 2 * M_PI - alpha;
 
-  return (locpo[Acts::eLOC_R]
-              > (m_boundValues.at(DiscTrapezoidalBounds::bv_rMin)
-                     * cos(m_boundValues.at(
+  return (lpos[Acts::eLOC_R]
+              > (m_valueStore.at(DiscTrapezoidalBounds::bv_rMin)
+                     * cos(m_valueStore.at(
                            DiscTrapezoidalBounds::bv_halfPhiSector))
                      / cos(alpha)
-                 - tol1)
-          && locpo[Acts::eLOC_R]
-              < (m_boundValues.at(DiscTrapezoidalBounds::bv_rMax)
-                     * cos(m_boundValues.at(
+                 - tol0)
+          && lpos[Acts::eLOC_R]
+              < (m_valueStore.at(DiscTrapezoidalBounds::bv_rMax)
+                     * cos(m_valueStore.at(
                            DiscTrapezoidalBounds::bv_halfPhiSector))
                      / cos(alpha)
-                 + tol1));
+                 + tol0));
 }
 
 inline bool
-DiscTrapezoidalBounds::insideLoc2(const Vector2D& locpo, double tol2) const
+DiscTrapezoidalBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 {
-  double alpha = fabs(locpo[Acts::eLOC_PHI]
-                      - m_boundValues.at(DiscTrapezoidalBounds::bv_averagePhi));
+  double alpha = fabs(lpos[Acts::eLOC_PHI]
+                      - m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi));
   if (alpha > M_PI) alpha = 2. * M_PI - alpha;
-  return (alpha <= (m_boundValues.at(DiscTrapezoidalBounds::bv_halfPhiSector)
-                    + tol2));
+  return (alpha <= (m_valueStore.at(DiscTrapezoidalBounds::bv_halfPhiSector)
+                    + tol1));
 }
 
 inline double
 DiscTrapezoidalBounds::rMin() const
 {
-  return m_boundValues.at(DiscTrapezoidalBounds::bv_rMin);
+  return m_valueStore.at(DiscTrapezoidalBounds::bv_rMin);
 }
 
 inline double
 DiscTrapezoidalBounds::rMax() const
 {
-  return m_boundValues.at(DiscTrapezoidalBounds::bv_rMax);
+  return m_valueStore.at(DiscTrapezoidalBounds::bv_rMax);
 }
 
 inline double
 DiscTrapezoidalBounds::r() const
 {
-  return m_boundValues.at(DiscTrapezoidalBounds::bv_rMax);
+  return m_valueStore.at(DiscTrapezoidalBounds::bv_rMax);
 }
 
 inline double
 DiscTrapezoidalBounds::averagePhi() const
 {
-  return m_boundValues.at(DiscTrapezoidalBounds::bv_averagePhi);
+  return m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi);
 }
 
 inline double
 DiscTrapezoidalBounds::rCenter() const
 {
-  return m_boundValues.at(DiscTrapezoidalBounds::bv_rCenter);
+  return m_valueStore.at(DiscTrapezoidalBounds::bv_rCenter);
 }
 
 inline double
 DiscTrapezoidalBounds::stereo() const
 {
-  return m_boundValues.at(DiscTrapezoidalBounds::bv_stereo);
+  return m_valueStore.at(DiscTrapezoidalBounds::bv_stereo);
 }
 
 inline double
 DiscTrapezoidalBounds::halfPhiSector() const
 {
-  return m_boundValues.at(DiscTrapezoidalBounds::bv_halfPhiSector);
+  return m_valueStore.at(DiscTrapezoidalBounds::bv_halfPhiSector);
 }
 
 inline double
 DiscTrapezoidalBounds::minHalflengthX() const
 {
-  return m_boundValues.at(DiscTrapezoidalBounds::bv_minHalfX);
+  return m_valueStore.at(DiscTrapezoidalBounds::bv_minHalfX);
 }
 
 inline double
 DiscTrapezoidalBounds::maxHalflengthX() const
 {
-  return m_boundValues.at(DiscTrapezoidalBounds::bv_maxHalfX);
+  return m_valueStore.at(DiscTrapezoidalBounds::bv_maxHalfX);
 }
 
 inline double
 DiscTrapezoidalBounds::halflengthY() const
 {
-  return m_boundValues.at(DiscTrapezoidalBounds::bv_halfY);
+  return m_valueStore.at(DiscTrapezoidalBounds::bv_halfY);
 }
 
 }  // end of namespace

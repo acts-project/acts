@@ -100,7 +100,7 @@ public:
 
   /** r() method to complete inherited interface */
   virtual double
-  r() const override
+  r() const
   {
     return std::nan("");
   }

@@ -20,18 +20,16 @@
 
 namespace Acts {
 
-/**
- @class TriangleBounds
-
- Bounds for a triangular, planar surface.
-
- @image html TriangularBounds.gif
-*/
+ /// @class TriangleBounds
+ /// 
+ /// Bounds for a triangular, planar surface.
+ /// 
+ /// @image html TriangularBounds.gif
 
 class TriangleBounds : public PlanarBounds
 {
 public:
-  /** @enum BoundValues for readability */
+  // @enum BoundValues for readability 
   enum BoundValues {
     bv_x1     = 0,
     bv_y1     = 1,
@@ -42,81 +40,72 @@ public:
     bv_length = 6
   };
 
-  /**Default Constructor - needed for persistency*/
-  TriangleBounds();
+  /// Default Constructor - deleted
+  TriangleBounds() = delete;
 
-  /**Constructor with coordinates of vertices - floats*/
-  TriangleBounds(std::vector<std::pair<float, float>>);
+  /// Constructor with coordinates of vertices
+  /// @param vertices is the vector of vertices
+  TriangleBounds(const std::vector<Vector2D>& vertices );
 
-  /**Constructor with coordinates of vertices - double*/
-  TriangleBounds(std::vector<std::pair<double, double>>);
+  /// Copy constructor
+  /// @param tribo are the source bounds for assignment
+  TriangleBounds(const TriangleBounds& tribo) : PlanarBounds(tribo) {}
 
-  /**Constructor from three 2 Vectors */
-  TriangleBounds(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3);
-
-  /**Copy constructor*/
-  TriangleBounds(const TriangleBounds& tribo);
-
-  /**Destructor*/
+  /// Destructor 
   virtual ~TriangleBounds();
 
-  /**Assignment Operator*/
+  /// Assignment Operator
+  /// @param tribo are the source bounds for assignment
   TriangleBounds&
-  operator=(const TriangleBounds& recbo);
+  operator=(const TriangleBounds& tribo);
 
-  /**Equality operator*/
-  virtual bool
-  operator==(const SurfaceBounds& sbo) const override;
-
-  /**Virtual constructor*/
+  /// Virtual constructor
   virtual TriangleBounds*
   clone() const override;
 
-  /** Return the type of the bounds for persistency */
+  /// Return the type of the bounds for persistency 
   virtual BoundsType
   type() const override
   {
     return SurfaceBounds::Triangle;
   }
 
-  /**This method checks if the provided local coordinates are inside the surface
-   * bounds*/
+  /// This method checks if the provided local coordinates are inside the surface bounds
+  /// @param lpos local position in 2D local carthesian frame
+  /// @param bchk is the boundary check directive
   virtual bool
-  inside(const Vector2D& locpo,
-         double          tol1 = 0.,
-         double          tol2 = 0.) const override;
-  virtual bool
-  inside(const Vector2D& locpo, const BoundaryCheck& bchk) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
-  /** This method checks inside bounds in loc1
-    - loc1/loc2 correspond to the natural coordinates of the surface */
+  /// This method checks if the provided local coordinate 1 is inside the surface bounds
+  /// @param lpos local position in 2D local carthesian frame
+  /// @param bchk is the boundary check directive
   virtual bool
-  insideLoc1(const Vector2D& locpo, double tol1 = 0.) const override;
+  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
-  /** This method checks inside bounds in loc2
-    - loc1/loc2 correspond to the natural coordinates of the surface */
+  /// This method checks if the provided local coordinate 2 is inside the surface bounds
+  /// @param lpos local position in 2D local carthesian frame
+  /// @param bchk is the boundary check directive
   virtual bool
-  insideLoc2(const Vector2D& locpo, double tol2 = 0.) const override;
+  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /** Minimal distance to boundary ( > 0 if outside and <=0 if inside) */
+  /// Minimal distance to boundary 
+  /// @param lpos is the local position in 2D local carthesian frame
+  /// @return the distance ( > 0 if outside and <=0 if inside) 
   virtual double
-  minDistance(const Vector2D& pos) const override;
+  minDistance(const Vector2D& lpos) const override;
 
-  /**This method returns the coordinates of vertices */
+  /// This method returns the coordinates of vertices
   const std::vector<Vector2D>
   vertices() const override;
 
-  /**This method returns the maximal extension on the local plane, i.e.
-   * @f$s\sqrt{h_{\phi}^2 + h_{\eta}^2}\f$*/
-  virtual double
-  r() const override;
-
-  /** Output Method for std::ostream */
+  /// Output Method for std::ostream 
   virtual std::ostream&
   dump(std::ostream& sl) const override;
-
+  
 private:
-  std::vector<TDD_real_t> m_boundValues;
+  /// private helper method for inside check
+  bool inside(const Vector2D& lpos, double tol0, double tol2) const ; 
+
 };
 
 inline TriangleBounds*
@@ -126,42 +115,42 @@ TriangleBounds::clone() const
 }
 
 inline bool
-TriangleBounds::inside(const Vector2D& locpo, double tol1, double tol2) const
+TriangleBounds::inside(const Vector2D& lpos, double tol0, double tol2) const
 {
   std::pair<double, double> locB(m_boundValues.at(TriangleBounds::bv_x2)
                                      - m_boundValues.at(TriangleBounds::bv_x1),
                                  m_boundValues.at(TriangleBounds::bv_y2)
                                      - m_boundValues.at(TriangleBounds::bv_y1));
   std::pair<double, double> locT(
-      m_boundValues.at(TriangleBounds::bv_x3) - locpo[0],
-      m_boundValues.at(TriangleBounds::bv_y3) - locpo[1]);
+      m_boundValues.at(TriangleBounds::bv_x3) - lpos[0],
+      m_boundValues.at(TriangleBounds::bv_y3) - lpos[1]);
   std::pair<double, double> locV(
-      m_boundValues.at(TriangleBounds::bv_x1) - locpo[0],
-      m_boundValues.at(TriangleBounds::bv_y1) - locpo[1]);
+      m_boundValues.at(TriangleBounds::bv_x1) - lpos[0],
+      m_boundValues.at(TriangleBounds::bv_y1) - lpos[1]);
 
   // special case :: third vertex ?
-  if (locT.first * locT.first + locT.second * locT.second < tol1 * tol1)
+  if (locT.first * locT.first + locT.second * locT.second < tol0 * tol0)
     return true;
 
   // special case : lies on base ?
   double db = locB.first * locV.second - locB.second * locV.first;
-  if (fabs(db) < tol1) {
+  if (fabs(db) < tol0) {
     double a = (locB.first != 0) ? -locV.first / locB.first
                                  : -locV.second / locB.second;
-    if (a > -tol2 && a - 1. < tol2) return true;
+    if (a > -tol1 && a - 1. < tol1) return true;
     return false;
   }
 
   double dn = locB.first * locT.second - locB.second * locT.first;
 
-  if (fabs(dn) > fabs(tol1)) {
+  if (fabs(dn) > fabs(tol0)) {
     double t = (locB.first * locV.second - locB.second * locV.first) / dn;
     if (t > 0.) return false;
 
     double a = (locB.first != 0.)
         ? (t * locT.first - locV.first) / locB.first
         : (t * locT.second - locV.second) / locB.second;
-    if (a < -tol2 || a - 1. > tol2) return false;
+    if (a < -tol1 || a - 1. > tol1) return false;
   } else {
     return false;
   }
@@ -169,15 +158,15 @@ TriangleBounds::inside(const Vector2D& locpo, double tol1, double tol2) const
 }
 
 inline bool
-TriangleBounds::inside(const Vector2D& locpo, const BoundaryCheck& bchk) const
+TriangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
 {
   if (bchk.bcType == 0)
     return TriangleBounds::inside(
-        locpo, bchk.toleranceLoc1, bchk.toleranceLoc2);
+        lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
 
   // a fast FALSE
-  double fabsR = sqrt(locpo[Acts::eLOC_X] * locpo[Acts::eLOC_X]
-                      + locpo[Acts::eLOC_Y] * locpo[Acts::eLOC_Y]);
+  double fabsR = sqrt(lpos[Acts::eLOC_X] * lpos[Acts::eLOC_X]
+                      + lpos[Acts::eLOC_Y] * lpos[Acts::eLOC_Y]);
   double max_ell = bchk.lCovariance(0, 0) > bchk.lCovariance(1, 1)
       ? bchk.lCovariance(0, 0)
       : bchk.lCovariance(1, 1);
@@ -202,15 +191,15 @@ TriangleBounds::inside(const Vector2D& locpo, const BoundaryCheck& bchk) const
   // ellipse is always at (0,0), surface is moved to ellipse position and then
   // rotated
   Vector2D p;
-  p << m_boundValues.at(TriangleBounds::bv_x1),
-      m_boundValues.at(TriangleBounds::bv_y1);
-  elementP.at(0) = (rotMatrix * (p - locpo));
-  p << m_boundValues.at(TriangleBounds::bv_x2),
-      m_boundValues.at(TriangleBounds::bv_y2);
-  elementP.at(1) = (rotMatrix * (p - locpo));
-  p << m_boundValues.at(TriangleBounds::bv_x3),
-      m_boundValues.at(TriangleBounds::bv_y3);
-  elementP.at(2)             = (rotMatrix * (p - locpo));
+  p << m_valueStore.at(TriangleBounds::bv_x1),
+      m_valueStore.at(TriangleBounds::bv_y1);
+  elementP.at(0) = (rotMatrix * (p - lpos));
+  p << m_valueStore.at(TriangleBounds::bv_x2),
+      m_valueStore.at(TriangleBounds::bv_y2);
+  elementP.at(1) = (rotMatrix * (p - lpos));
+  p << m_valueStore.at(TriangleBounds::bv_x3),
+      m_valueStore.at(TriangleBounds::bv_y3);
+  elementP.at(2)             = (rotMatrix * (p - lpos));
   std::vector<Vector2D> axis = {normal * (elementP.at(1) - elementP.at(0)),
                                 normal * (elementP.at(2) - elementP.at(1)),
                                 normal * (elementP.at(2) - elementP.at(0))};
@@ -223,15 +212,15 @@ TriangleBounds::inside(const Vector2D& locpo, const BoundaryCheck& bchk) const
 }
 
 inline bool
-TriangleBounds::insideLoc1(const Vector2D& locpo, double tol1) const
+TriangleBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 {
-  return inside(locpo, tol1, tol1);
+  return inside(lpos, tol0, tol0);
 }
 
 inline bool
-TriangleBounds::insideLoc2(const Vector2D& locpo, double tol2) const
+TriangleBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 {
-  return inside(locpo, tol2, tol2);
+  return inside(lpos, tol1, tol1);
 }
 
 inline const std::vector<Vector2D>
@@ -241,20 +230,8 @@ TriangleBounds::vertices() const
   vertices.resize(3);
   for (size_t iv = 0; iv < 3; iv++)
     vertices.push_back(
-        Vector2D(m_boundValues.at(2 * iv), m_boundValues.at(2 * iv + 1)));
+        Vector2D(m_valueStore.at(2 * iv), m_valueStore.at(2 * iv + 1)));
   return vertices;
-}
-
-inline double
-TriangleBounds::r() const
-{
-  double rmax = 0.;
-  for (size_t iv = 0; iv < 3; iv++)
-    rmax = fmax(rmax,
-                m_boundValues.at(2 * iv) * m_boundValues.at(2 * iv)
-                    + m_boundValues.at(2 * iv + 1)
-                        * m_boundValues.at(2 * iv + 1));
-  return sqrt(rmax);
 }
 
 }  // end of namespace

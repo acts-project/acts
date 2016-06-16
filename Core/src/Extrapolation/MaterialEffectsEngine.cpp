@@ -57,7 +57,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
   const Layer*   mLayer   = eCell.leadLayer;
   // the Extrapolator made sure that the layer is the lead layer && the
   // parameters are the lead parameters
-  if (mSurface && mSurface->surfaceMaterial()) {
+  if (mSurface && mSurface->associatedMaterial()) {
     EX_MSG_DEBUG(
         ++eCell.navigationStep,
         "layer",
@@ -71,7 +71,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
     PropDirection rlDir
         = (pathCorrection > 0. ? alongMomentum : oppositeMomentum);
     // multiply by the pre-and post-update factor
-    double mFactor = mSurface->surfaceMaterial()->factor(rlDir, matupstage);
+    double mFactor = mSurface->associatedMaterial()->factor(rlDir, matupstage);
     if (mFactor == 0.) {
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "layer",
@@ -90,7 +90,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
                    "material update with corr factor = " << pathCorrection);
     // get the actual material bin
     const MaterialProperties* materialProperties
-        = mSurface->surfaceMaterial()->material(
+        = mSurface->associatedMaterial()->material(
             eCell.leadParameters->position());
     // and let's check if there's acutally something to do
     if (materialProperties) {
@@ -132,7 +132,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
   const Layer*   mLayer   = eCell.leadLayer;
   // the Extrapolator made sure that the layer is the lead layer && the
   // parameters are the lead parameters
-  if (mSurface && mSurface->surfaceMaterial()) {
+  if (mSurface && mSurface->associatedMaterial()) {
     EX_MSG_DEBUG(++eCell.navigationStep,
                  "layer",
                  mLayer->geoID().value(),
@@ -175,7 +175,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
   const Surface* mSurface = eCell.materialSurface;
   const Layer*   mLayer   = eCell.leadLayer;
   // return if you have nothing to do
-  if (!mSurface || !mSurface->surfaceMaterial()) return;
+  if (!mSurface || !mSurface->associatedMaterial()) return;
 
   // path correction
   double pathCorrection = mSurface->pathCorrection(
@@ -184,7 +184,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
   PropDirection rlDir
       = (pathCorrection > 0. ? alongMomentum : oppositeMomentum);
   // multiply by the pre-and post-update factor
-  double mFactor = mSurface->surfaceMaterial()->factor(rlDir, matupstage);
+  double mFactor = mSurface->associatedMaterial()->factor(rlDir, matupstage);
   if (mFactor == 0.) {
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "layer",
@@ -203,7 +203,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
                  "material update with corr factor = " << pathCorrection);
   // get the actual material bin
   const MaterialProperties* materialProperties
-      = mSurface->surfaceMaterial()->material(parameters.position());
+      = mSurface->associatedMaterial()->material(parameters.position());
   // and let's check if there's acutally something to do
   if (materialProperties && (m_config.eLossCorrection || m_config.mscCorrection
                              || eCell.checkConfigurationMode(

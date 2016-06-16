@@ -429,7 +429,7 @@ Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
                    "successfuly hit.");
     // the correct material layer needs to be assigned - in case of the approach
     // surface not being hit, his can be the layer surface
-    if (eCell.leadLayerSurface->surfaceMaterial()) {
+    if (eCell.leadLayerSurface->associatedMaterial()) {
       // set the material surface for the update
       eCell.materialSurface = eCell.leadLayerSurface;
       // now handle the material (full update when passing approach surface),
@@ -450,7 +450,7 @@ Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
         eCell.leadLayer->geoID().value(),
         "start layer (with sub structure), no propagation to be done.");
     // the start surface could have a material layer attached
-    if (eCell.leadParameters->associatedSurface().surfaceMaterial()) {
+    if (eCell.leadParameters->associatedSurface().associatedMaterial()) {
       // set the material surface
       eCell.materialSurface = &(eCell.leadParameters->associatedSurface());
       // now handle the material (post update on start layer), return codes are:
@@ -529,7 +529,7 @@ Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
                        eCell.leadLayer->geoID().value(),
                        "successfully hit sub structure surface.");
         // check if the surface holds material and hence needs to be processed
-        if (csf.object->surfaceMaterial()) {
+        if (csf.object->associatedMaterial()) {
           // set the material surface
           eCell.materialSurface = csf.object;
           // now handle the material, return codes are:
@@ -585,7 +585,7 @@ Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
                        << eCode.toString());
     // check for a potential preUpdate
     // - in case teh destination surface has material and the surface was hit
-    if (sf->surfaceMaterial() && eCode.isSuccess()) {
+    if (sf->associatedMaterial() && eCode.isSuccess()) {
       // set the material surface for the update
       eCell.materialSurface = sf;
       // finally do the material update, but even as this is the final call

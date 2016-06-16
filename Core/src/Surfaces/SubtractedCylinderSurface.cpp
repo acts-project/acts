@@ -12,13 +12,6 @@
 
 #include "ACTS/Surfaces/SubtractedCylinderSurface.hpp"
 
-// default constructor
-Acts::SubtractedCylinderSurface::SubtractedCylinderSurface()
-  : Acts::CylinderSurface(), m_subtrVol(), m_shared(true)
-{
-}
-
-// copy constructor
 Acts::SubtractedCylinderSurface::SubtractedCylinderSurface(
     const SubtractedCylinderSurface& psf)
   : Acts::CylinderSurface(psf)
@@ -27,7 +20,6 @@ Acts::SubtractedCylinderSurface::SubtractedCylinderSurface(
 {
 }
 
-// copy constructor with shift
 Acts::SubtractedCylinderSurface::SubtractedCylinderSurface(
     const SubtractedCylinderSurface& psf,
     const Acts::Transform3D&         transf)
@@ -37,7 +29,6 @@ Acts::SubtractedCylinderSurface::SubtractedCylinderSurface(
 {
 }
 
-// constructor
 Acts::SubtractedCylinderSurface::SubtractedCylinderSurface(
     const Acts::CylinderSurface& ps,
     AreaExcluder*                vol,
@@ -48,7 +39,6 @@ Acts::SubtractedCylinderSurface::SubtractedCylinderSurface(
 {
 }
 
-// destructor (will call destructor from base class which deletes objects)
 Acts::SubtractedCylinderSurface::~SubtractedCylinderSurface()
 {
 }
@@ -68,6 +58,8 @@ operator=(const Acts::SubtractedCylinderSurface& psf)
 bool
 Acts::SubtractedCylinderSurface::operator==(const Acts::Surface& sf) const
 {
+  // fast exit
+  if (&sf == this) return true;
   // first check the type not to compare apples with oranges
   const Acts::SubtractedCylinderSurface* scsf
       = dynamic_cast<const Acts::SubtractedCylinderSurface*>(&sf);

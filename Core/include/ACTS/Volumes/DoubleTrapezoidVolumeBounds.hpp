@@ -182,7 +182,7 @@ private:
   RectangleBounds*
   faceZXRectangleBoundsTop() const;
 
-  std::vector<TDD_real_t> m_boundValues;
+  std::vector<TDD_real_t> m_valueStore;
 };
 
 inline DoubleTrapezoidVolumeBounds*
@@ -194,49 +194,49 @@ DoubleTrapezoidVolumeBounds::clone() const
 inline double
 DoubleTrapezoidVolumeBounds::minHalflengthX() const
 {
-  return m_boundValues.at(bv_minHalfX);
+  return m_valueStore.at(bv_minHalfX);
 }
 
 inline double
 DoubleTrapezoidVolumeBounds::medHalflengthX() const
 {
-  return m_boundValues.at(bv_medHalfX);
+  return m_valueStore.at(bv_medHalfX);
 }
 
 inline double
 DoubleTrapezoidVolumeBounds::maxHalflengthX() const
 {
-  return m_boundValues.at(bv_maxHalfX);
+  return m_valueStore.at(bv_maxHalfX);
 }
 
 inline double
 DoubleTrapezoidVolumeBounds::halflengthY1() const
 {
-  return m_boundValues.at(bv_halfY1);
+  return m_valueStore.at(bv_halfY1);
 }
 
 inline double
 DoubleTrapezoidVolumeBounds::halflengthY2() const
 {
-  return m_boundValues.at(bv_halfY2);
+  return m_valueStore.at(bv_halfY2);
 }
 
 inline double
 DoubleTrapezoidVolumeBounds::halflengthZ() const
 {
-  return m_boundValues.at(bv_halfZ);
+  return m_valueStore.at(bv_halfZ);
 }
 
 inline double
 DoubleTrapezoidVolumeBounds::alpha1() const
 {
-  return m_boundValues.at(bv_alpha1);
+  return m_valueStore.at(bv_alpha1);
 }
 
 inline double
 DoubleTrapezoidVolumeBounds::alpha2() const
 {
-  return m_boundValues.at(bv_alpha2);
+  return m_valueStore.at(bv_alpha2);
 }
 
 template <class T>
@@ -247,10 +247,10 @@ DoubleTrapezoidVolumeBounds::dumpT(T& dT) const
   dT << std::setprecision(7);
   dT << "Acts::DoubleTrapezoidVolumeBounds: (minhalfX, medhalfX, maxhalfX, "
         "halfY1, halfY2, halfZ) = ";
-  dT << "(" << m_boundValues.at(bv_minHalfX) << ", "
-     << m_boundValues.at(bv_medHalfX) << ", " << m_boundValues.at(bv_maxHalfX);
-  dT << ", " << m_boundValues.at(bv_halfY1) << ", "
-     << m_boundValues.at(bv_halfY2) << ", " << m_boundValues.at(bv_halfZ)
+  dT << "(" << m_valueStore.at(bv_minHalfX) << ", "
+     << m_valueStore.at(bv_medHalfX) << ", " << m_valueStore.at(bv_maxHalfX);
+  dT << ", " << m_valueStore.at(bv_halfY1) << ", "
+     << m_valueStore.at(bv_halfY2) << ", " << m_valueStore.at(bv_halfZ)
      << ")";
   return dT;
 }

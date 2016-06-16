@@ -120,7 +120,7 @@ private:
   faceZXRectangleBounds() const;
 
   /** The bound values */
-  std::vector<TDD_real_t> m_boundValues;
+  std::vector<TDD_real_t> m_valueStore;
 };
 
 inline CuboidVolumeBounds*
@@ -132,27 +132,27 @@ CuboidVolumeBounds::clone() const
 inline bool
 CuboidVolumeBounds::inside(const Vector3D& pos, double tol) const
 {
-  return (fabs(pos.x()) <= m_boundValues.at(bv_halfX) + tol
-          && fabs(pos.y()) <= m_boundValues.at(bv_halfY) + tol
-          && fabs(pos.z()) <= m_boundValues.at(bv_halfZ) + tol);
+  return (fabs(pos.x()) <= m_valueStore.at(bv_halfX) + tol
+          && fabs(pos.y()) <= m_valueStore.at(bv_halfY) + tol
+          && fabs(pos.z()) <= m_valueStore.at(bv_halfZ) + tol);
 }
 
 inline double
 CuboidVolumeBounds::halflengthX() const
 {
-  return m_boundValues.at(bv_halfX);
+  return m_valueStore.at(bv_halfX);
 }
 
 inline double
 CuboidVolumeBounds::halflengthY() const
 {
-  return m_boundValues.at(bv_halfY);
+  return m_valueStore.at(bv_halfY);
 }
 
 inline double
 CuboidVolumeBounds::halflengthZ() const
 {
-  return m_boundValues.at(bv_halfZ);
+  return m_valueStore.at(bv_halfZ);
 }
 
 template <class T>
@@ -162,8 +162,8 @@ CuboidVolumeBounds::dumpT(T& dt) const
   dt << std::setiosflags(std::ios::fixed);
   dt << std::setprecision(7);
   dt << "Acts::CuboidVolumeBounds: (halfX, halfY, halfZ) = ";
-  dt << "(" << m_boundValues.at(bv_halfX) << ", " << m_boundValues.at(bv_halfY)
-     << ", " << m_boundValues.at(bv_halfZ) << ")";
+  dt << "(" << m_valueStore.at(bv_halfX) << ", " << m_valueStore.at(bv_halfY)
+     << ", " << m_valueStore.at(bv_halfZ) << ")";
   return dt;
 }
 }

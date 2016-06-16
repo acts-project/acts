@@ -173,11 +173,11 @@ Layer::testCompatibleSurface(std::vector<SurfaceIntersection>& cSurfaces,
   if (&surface == endSurface || &surface == startSurface) return;
   // (2) no material, no passive collection, not active
   if (!surface.isActive() && !collectPassive
-      && surface.surfaceMaterial() == nullptr)
+      && surface.associatedMaterial() == nullptr)
     return;
   // (3) is active, not configured for collect active
   if (surface.isActive() && !collectSensitive
-      && surface.surfaceMaterial() == nullptr)
+      && surface.associatedMaterial() == nullptr)
     return;
   // then take it if you don't have to do an intersection
   if (!intersectionTest) {
@@ -200,7 +200,7 @@ Layer::testCompatibleSurface(std::vector<SurfaceIntersection>& cSurfaces,
         = (sfIntersection.pathLength > 0 ? alongMomentum : oppositeMomentum);
     // and the surfaces & direction to push back - take all
     if (collectPassive || (collectSensitive && surface.isActive())
-        || surface.surfaceMaterial())
+        || surface.associatedMaterial())
       cSurfaces.push_back(SurfaceIntersection(sfIntersection, &surface, rDir));
   }
 }

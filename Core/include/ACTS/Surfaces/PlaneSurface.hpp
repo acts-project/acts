@@ -13,7 +13,6 @@
 #ifndef ACTS_SURFACES_PLANESURFACE_H
 #define ACTS_SURFACES_PLANESURFACE_H 1
 
-#include "ACTS/Surfaces/NoBounds.hpp"
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
@@ -23,157 +22,143 @@ namespace Acts {
 
 class DetectorElementBase;
 
-/**
- @class PlaneSurface
- Class for a planaer rectangular or trapezoidal surface in the TrackingGeometry.
- It inherits from Surface.
-
- The Acts::PlaneSurface extends the Surface class with the possibility to
- convert
- in addition to local to global positions, also local to global direction (vice
- versa).
-
- @image html PlaneSurface.gif
-
- */
-
+///
+/// @class PlaneSurface
+///
+/// Class for a planaer in the TrackingGeometry.
+///
+/// The PlaneSurface extends the Surface class with the possibility to
+/// convert local to global positions (vice versa).
+///
+/// @image html PlaneSurface.gif
+///
 class PlaneSurface : public Surface
 {
 public:
-  /** Default Constructor - needed for persistency*/
+  /// Default Constructor - needed for persistency
   PlaneSurface();
 
-  /** Copy Constructor*/
+  /// Copy Constructor
   PlaneSurface(const PlaneSurface& psf);
 
-  /** Copy Constructor with shift*/
+  /// Copy Constructor with shift
   PlaneSurface(const PlaneSurface& psf, const Transform3D& transf);
 
-  /** Dedicated Constructor with normal vector */
+  /// Dedicated Constructor with normal vector 
   PlaneSurface(const Vector3D& position, const Vector3D& normal);
 
-  /** Constructor from DetectorElementBase - potentially with identifier */
+  /// Constructor from DetectorElementBase - potentially with identifier 
   PlaneSurface(const DetectorElementBase& detelement,
                const Identifier&          identifier = Identifier());
 
-  /** Constructor for planar Surface without Bounds */
+  /// Constructor for planar Surface without Bounds
+  /// @param htrans transform in 3D that positions this surface              
   PlaneSurface(std::shared_ptr<Transform3D> htrans);
 
-  /** Constructor for planar Surface from unique_ptr without Bounds */
-  PlaneSurface(std::unique_ptr<Transform3D> htrans);
-
-  /** Constructor for Rectangular Planes*/
-  PlaneSurface(std::shared_ptr<Transform3D> htrans,
-               double                       halephi,
-               double                       haleta);
-
-  /** Constructor for Trapezoidal Planes*/
-  PlaneSurface(std::shared_ptr<Transform3D> htrans,
-               double                       minhalephi,
-               double                       maxhalephi,
-               double                       haleta);
-
-  /** Constructor for Planes with a pointer - passing ownership */
-  PlaneSurface(std::shared_ptr<Transform3D> htrans,
-               const PlanarBounds*          pbounds);
-
-  /** Constructor for Planes with shared bounds object */
+  /// Constructor for Planes with shared bounds object 
+  /// @param htrans transform in 3D that positions this surface              
+  /// @param pbounds bounds object to describe the actual surface area 
+  /// @attention the pointer to pbounds must not be a nullptr 
   PlaneSurface(std::shared_ptr<Transform3D>        htrans,
                std::shared_ptr<const PlanarBounds> pbounds);
 
-  /** Destructor*/
+  /// Destructor
   virtual ~PlaneSurface();
 
-  /** Assignment operator*/
+  /// Assignment operator
+  /// @param psf source PlaneSurface for assignment
   PlaneSurface&
   operator=(const PlaneSurface& psf);
 
-  /** Equality operator*/
+  /// Comparison: equality operator
+  /// @param sf source Surface for comparison
   virtual bool
   operator==(const Surface& sf) const override;
 
-  /** Virtual constructor - shift is optionally */
+  /// Virtual constructor with optional shift 
+  /// ownership of the shift transform is not given !!
+  /// @copydoc Surface::clone
   virtual PlaneSurface*
   clone(const Transform3D* shift = nullptr) const override;
 
-  /** Return the surface type */
+  /// Normal vector return
+  /// @param lpos is the local position is ignored
+  /// return a Vector3D by value
+  const Vector3D normal(const Vector2D& lpos = Vector2D()) const;
+
+  /// Return the surface type 
   virtual SurfaceType
   type() const override
   {
     return Surface::Plane;
   }
 
-  /**This method returns the bounds by reference, static NoBounds in case of no
-   * boundaries*/
-  virtual const SurfaceBounds&
+  /// Return method for bounds object of this surfrace
+  virtual const PlanarBounds&
   bounds() const override;
 
-  /**This method calls the inside() method of the Bounds*/
+  /// Geometrical on surface test
+  /// This method returns true if the GlobalPosition is on the Surface for both,
+  /// within or without check of whether the local position is inside boundaries or not
+  /// @param gpos global position to be checked
+  /// @param bchk gboundary check directive
   virtual bool
-  insideBounds(const Vector2D&      locpos,
-               const BoundaryCheck& bchk) const override;
-
-  /** This method returns true if the GlobalPosition is on the Surface for both,
-    within
-    or without check of whether the local position is inside boundaries or not
-    */
-  virtual bool
-  isOnSurface(const Vector3D&      glopo,
+  isOnSurface(const Vector3D&      gpos,
               const BoundaryCheck& bchk = true) const override;
 
-  /** Specified for PlaneSurface: LocalToGlobal method without dynamic memory
-   * allocation */
+  /// @copydoc Surface::localToGlobal
+  /// For planar surfaces the momentum is ignroed in the local to global transformation              
   virtual void
-  localToGlobal(const Vector2D& locp,
+  localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
-                Vector3D&       glob) const override;
+                Vector3D&       gpos) const override;
 
-  /** Specified for PlaneSurface: GlobalToLocal method without dynamic memory
-   * allocation - boolean checks if on surface */
+  /// @copydoc Surface::globalToLocal
+  /// For planar surfaces the momentum is ignroed in the gloabl to l transformation              
   virtual bool
-  globalToLocal(const Vector3D& glob,
+  globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
-                Vector2D&       loc) const override;
+                Vector2D&       lpos) const override;
 
-  /** fast straight line intersection schema - standard: provides closest
-     intersection and (signed) path length
-      forceDir is to provide the closest forward solution
-
-      <b>mathematical motivation:</b>
-
-      the equation of the plane is given by: <br>
-      @f$ \vec n \cdot \vec x = \vec n \cdot \vec p,@f$ <br>
-      where @f$ \vec n = (n_{x}, n_{y}, n_{z})@f$ denotes the normal vector of
-     the plane,
-      @f$ \vec p = (p_{x}, p_{y}, p_{z})@f$ one specific point on the plane and
-     @f$ \vec x = (x,y,z) @f$ all possible points
-      on the plane.<br>
-      Given a line with:<br>
-      @f$ \vec l(u) = \vec l_{1} + u \cdot \vec v @f$, <br>
-      the solution for @f$ u @f$ can be written:
-      @f$ u = \frac{\vec n (\vec p - \vec l_{1})}{\vec n \vec v}@f$ <br>
-      If the denominator is 0 then the line lies:
-      - either in the plane
-      - perpenticular to the normal of the plane
-
-   */
+  ///  fast straight line intersection schema - standard: provides closest
+  /// intersection and (signed) path length
+  ///  forceDir is to provide the closest forward solution
+  /// 
+  ///  <b>mathematical motivation:</b>
+  /// 
+  ///  the equation of the plane is given by: <br>
+  ///  @f$ \vec n \cdot \vec x = \vec n \cdot \vec p,@f$ <br>
+  ///  where @f$ \vec n = (n_{x}, n_{y}, n_{z})@f$ denotes the normal vector of
+  /// the plane,
+  ///  @f$ \vec p = (p_{x}, p_{y}, p_{z})@f$ one specific point on the plane and
+  /// @f$ \vec x = (x,y,z) @f$ all possible points
+  ///  on the plane.<br>
+  ///  Given a line with:<br>
+  ///  @f$ \vec l(u) = \vec l_{1} + u \cdot \vec v @f$, <br>
+  ///  the solution for @f$ u @f$ can be written:
+  ///  @f$ u = \frac{\vec n (\vec p - \vec l_{1})}{\vec n \vec v}@f$ <br>
+  ///  If the denominator is 0 then the line lies:
+  ///  - either in the plane
+  ///  - perpenticular to the normal of the plane
+  /// 
+  /// 
   virtual Intersection
   intersectionEstimate(const Vector3D&      pos,
                        const Vector3D&      dir,
                        bool                 forceDir,
                        const BoundaryCheck& bchk = true) const override;
 
-  /** Return properly formatted class name for screen output */
+  /// Return properly formatted class name for screen output 
   virtual std::string
   name() const override
   {
     return "Acts::PlaneSurface";
   }
 
-protected:                                               //!< data members
-  mutable std::shared_ptr<const PlanarBounds> m_bounds;  //!< bounds (shared)
-  static NoBounds
-      s_boundless;  //!< NoBounds as return object when no bounds are declared
+protected:                                                     
+  /// PlanarBounds - this can be nullptr if the Surface is a PROXY
+  std::shared_ptr<const PlanarBounds>       m_bounds;
+  Vector3D                                  m_normal;
 };
 
 inline PlaneSurface*
@@ -183,24 +168,23 @@ PlaneSurface::clone(const Transform3D* shift) const
   return new PlaneSurface(*this);
 }
 
-inline bool
-PlaneSurface::insideBounds(const Vector2D&      locpos,
-                           const BoundaryCheck& bchk) const
-{
-  return (bounds().inside(locpos, bchk));
-}
-
-inline const SurfaceBounds&
+inline const PlanarBounds&
 PlaneSurface::bounds() const
 {
-  if (m_bounds.get()) return (*m_bounds.get());
+  if (m_bounds) return (*m_bounds.get());
   if (Surface::m_associatedDetElement
       && Surface::m_associatedDetElementId.is_valid()) {
     return m_associatedDetElement->bounds(Surface::m_associatedDetElementId);
   }
-  if (Surface::m_associatedDetElement) return m_associatedDetElement->bounds();
-  return s_boundless;
+  return m_associatedDetElement->bounds();
 }
+
+inline const Vector3D 
+PlaneSurface::normal(const Vector2D& lpos = Vector2D()) const
+{
+    return m_normal;
+}
+
 
 inline Intersection
 PlaneSurface::intersectionEstimate(const Vector3D&      pos,

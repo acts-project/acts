@@ -21,25 +21,11 @@
 
 namespace Acts {
 
-/**
- @class BoundaryCheck
 
- The BoundaryCheck class allows to steer the way surface
- boundaries are used for inside/outside checks of
- parameters.
 
- These checks are performed in the local 2D frame of the
- surface and can either be:
- - inside/outside with and without tolerance
- - inside/outside according to a given chi2 value
-
-It also provides all the necessary tools for the individual implementations in
-the different SurfaceBounds classes.
-
- */
-
-// maint struct for comparing the extent of arbitrary convex polygons relative
-// to prefixed axes
+/// @struct KDOP 
+/// maint struct for comparing the extent of arbitrary convex polygons relative
+/// to prefixed axes
 struct KDOP
 {
   float min;
@@ -55,77 +41,97 @@ struct sincosCache
   double cosC;
 };
 
+///  @class BoundaryCheck
+/// 
+///  The BoundaryCheck class allows to steer the way surface
+///  boundaries are used for inside/outside checks of
+///  parameters.
+/// 
+///  These checks are performed in the local 2D frame of the
+///  surface and can either be:
+///  - inside/outside with and without tolerance
+///  - inside/outside according to a given chi2 value
+/// 
+/// It also provides all the necessary tools for the individual implementations in
+/// the different SurfaceBounds classes.
+///
+/// @TODO check if fast Sin/Cos ArcTan is necessary in field test
+///
+/// @TODO Move the Covariance away from this into the method signature of the call
+ 
 class BoundaryCheck
 {
-  // saves us a lot of function calls in the EllipseToPoly method
-  static constexpr double s_cos22
-      = 0.923879532511286756128183189396788286822416625863642486115097;
-  static constexpr double s_cos45
-      = 0.707106781186547524400844362104849039284835937688474036588339;
-  static constexpr double s_cos67
-      = 0.382683432365089771728459984030398866761344562485627041433800;
+  /// saves us a lot of function calls in the EllipseToPoly method
+  static constexpr double s_cos22 = cos(22.5*M_PI/180.);
+  static constexpr double s_cos45 = cos(45.*M_PI/180.);
+  static constexpr double s_cos67 = cos(67.5*M_PI/180.);
 
 public:
+    
+  /// @enum nested enumerator for the boundary check Type
   enum BoundaryCheckType {
-    absolute = 0,  //!< absolute check including tolerances
-    chi2corr = 1   //!< relative (chi2 based) with full correlations
+    absolute = 0,  ///< absolute check including tolerances
+    chi2corr = 1   ///< relative (chi2 based) with full correlations
   };
 
-  bool checkLoc1;  //!< check local 1 coordinate
-  bool checkLoc2;  //!< check local 2 coordinate
+  bool              checkLoc0;        ///< check local 1 coordinate
+  bool              checkLoc1;        ///< check local 2 coordinate
+  double            toleranceLoc0;    ///< absolute tolerance in local 1 coordinate
+  double            toleranceLoc1;    ///< absolute tolerance in local 2 coordinate
+  double            nSigmas;          ///< allowed sigmas for chi2 boundary check
+  ActsSymMatrixD<2> lCovariance;      ///< local covariance matrix
+  BoundaryCheckType bcType;           ///< the type how we check the boundary
 
-  double toleranceLoc1;  //!< absolute tolerance in local 1 coordinate
-  double toleranceLoc2;  //!< absolute tolerance in local 2 coordinate
-
-  int               nSigmas;      //!< allowed sigmas for chi2 boundary check
-  ActsSymMatrixD<2> lCovariance;  //!< local covariance matrix
-
-  BoundaryCheckType bcType;
-
-  /** Constructor for single boolean behavious */
+  /// Constructor for single boolean behavious
   BoundaryCheck(bool sCheck)
-    : checkLoc1(sCheck)
-    , checkLoc2(sCheck)
+    : checkLoc0(sCheck)
+    , checkLoc1(sCheck)
+    , toleranceLoc0(0.)
     , toleranceLoc1(0.)
-    , toleranceLoc2(0.)
     , nSigmas(-1)
     , lCovariance(ActsSymMatrixD<2>::Identity())
     , bcType(absolute)
-  {
-  }
+  {}
 
-  /** Constructor for tolerance based check */
-  BoundaryCheck(bool chkL1, bool chkL2, double tloc1 = 0., double tloc2 = 0.)
-    : checkLoc1(chkL1)
-    , checkLoc2(chkL2)
+  /// Constructor for tolerance based check
+  /// @param chkL0 boolean directive to check first coordinate
+  /// @param chkL1 boolean directive to check second coordinate
+  /// @param tloc0 tolereance on the first parameter
+  /// @param tloc1 tolereance on the second parameter
+  BoundaryCheck(bool chkL0, bool chkL1, double tloc0 = 0., double tloc1 = 0.)
+    : checkLoc0(chkL0)
+    , checkLoc1(chkL1)
+    , toleranceLoc0(tloc0)
     , toleranceLoc1(tloc1)
-    , toleranceLoc2(tloc2)
     , nSigmas(-1)
     , lCovariance(ActsSymMatrixD<2>::Identity())
     , bcType(absolute)
-  {
-  }
+  {}
 
-  /** Constructor for chi2 based check */
+  /// Constructor for chi2 based check 
+  /// @param lCov the coverance matrix to be checked 
+  /// @param nsig number of sigma checked checked for the compatibility test
+  /// @param chkL0 directive wheter the first coordinate is being checked
+  /// @param chkL1 directive wheter the first coordinate is being checked
   BoundaryCheck(const ActsSymMatrixD<2>& lCov,
-                int                      nsig  = 1,
-                bool                     chkL1 = true,
-                bool                     chkL2 = true)
-    : checkLoc1(chkL1)
-    , checkLoc2(chkL2)
+                double                   nsig  = 1.,
+                bool                     chkL0 = true,
+                bool                     chkL1 = true)
+    : checkLoc0(chkL0)
+    , checkLoc1(chkL1)
+    , toleranceLoc0(0.)
     , toleranceLoc1(0.)
-    , toleranceLoc2(0.)
     , nSigmas(nsig)
     , lCovariance(lCov)
     , bcType(chi2corr)
-  {
-  }
+  {}
 
-  /** Conversion operator to bool */
-  operator bool() const { return (checkLoc1 || checkLoc2); }
-  /** Each Bounds has a method inside, which checks if a LocalPosition is inside
-     the bounds.
-      Inside can be called without/with boundary check */
+  /// Overwriting of the 
+  /// Conversion operator to bool
+  operator bool() const { return (checkLoc0 || checkLoc1); }
+  
+  ///  Each Bounds has a method inside, which checks if a LocalPosition is inside the bounds.
+  ///  Inside can be called without/with boundary check */
   void
   ComputeKDOP(std::vector<Vector2D> v,
               std::vector<Vector2D> KDOPAxes,
@@ -144,8 +150,8 @@ public:
   FastSinCos(double x) const;
 };
 
-// should have maximum (average) error of 0.0015 (0.00089) radians or 0.0859
-// (0.0509) degrees, fine for us and much faster (>4 times)
+/// should have maximum (average) error of 0.0015 (0.00089) radians or 0.0859
+/// (0.0509) degrees, fine for us and much faster (>4 times)
 inline double
 BoundaryCheck::FastArcTan(double x) const
 {
@@ -166,8 +172,8 @@ BoundaryCheck::FastArcTan(double x) const
   return y;
 }
 
-// should have maximum (average) error of 0.001 (0.0005) radians or 0.0573
-// (0.029) degrees, fine for us and much faster (>8 times)
+/// should have maximum (average) error of 0.001 (0.0005) radians or 0.0573
+/// (0.029) degrees, fine for us and much faster (>8 times)
 inline sincosCache
 BoundaryCheck::FastSinCos(double x) const
 {

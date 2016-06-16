@@ -182,7 +182,7 @@ private:
   sectorPlaneBounds() const;
 
   /** The internal version of the bounds can be float/double*/
-  std::vector<TDD_real_t> m_boundValues;
+  std::vector<TDD_real_t> m_valueStore;
 
   /** numerical stability */
   static double s_numericalStable;
@@ -198,12 +198,12 @@ inline bool
 CylinderVolumeBounds::inside(const Vector3D& pos, double tol) const
 {
   double ros     = pos.perp();
-  bool insidePhi = cos(pos.phi()) >= cos(m_boundValues[bv_halfPhiSector]) - tol;
-  bool insideR   = insidePhi ? ((ros >= m_boundValues[bv_innerRadius] - tol)
-                              && (ros <= m_boundValues[bv_outerRadius] + tol))
+  bool insidePhi = cos(pos.phi()) >= cos(m_valueStore[bv_halfPhiSector]) - tol;
+  bool insideR   = insidePhi ? ((ros >= m_valueStore[bv_innerRadius] - tol)
+                              && (ros <= m_valueStore[bv_outerRadius] + tol))
                            : false;
   bool insideZ
-      = insideR ? (fabs(pos.z()) <= m_boundValues[bv_halfZ] + tol) : false;
+      = insideR ? (fabs(pos.z()) <= m_valueStore[bv_halfZ] + tol) : false;
   return (insideZ && insideR && insidePhi);
 }
 
@@ -226,38 +226,38 @@ CylinderVolumeBounds::binningBorder(BinningValue bValue) const
 inline double
 CylinderVolumeBounds::innerRadius() const
 {
-  return m_boundValues.at(bv_innerRadius);
+  return m_valueStore.at(bv_innerRadius);
 }
 
 inline double
 CylinderVolumeBounds::outerRadius() const
 {
-  return m_boundValues.at(bv_outerRadius);
+  return m_valueStore.at(bv_outerRadius);
 }
 
 inline double
 CylinderVolumeBounds::mediumRadius() const
 {
   return 0.5
-      * (m_boundValues.at(bv_innerRadius) + m_boundValues.at(bv_outerRadius));
+      * (m_valueStore.at(bv_innerRadius) + m_valueStore.at(bv_outerRadius));
 }
 
 inline double
 CylinderVolumeBounds::deltaRadius() const
 {
-  return (m_boundValues.at(bv_outerRadius) - m_boundValues.at(bv_innerRadius));
+  return (m_valueStore.at(bv_outerRadius) - m_valueStore.at(bv_innerRadius));
 }
 
 inline double
 CylinderVolumeBounds::halfPhiSector() const
 {
-  return m_boundValues.at(bv_halfPhiSector);
+  return m_valueStore.at(bv_halfPhiSector);
 }
 
 inline double
 CylinderVolumeBounds::halflengthZ() const
 {
-  return m_boundValues.at(bv_halfZ);
+  return m_valueStore.at(bv_halfZ);
 }
 
 template <class T>
@@ -267,10 +267,10 @@ CylinderVolumeBounds::dumpT(T& tstream) const
   tstream << std::setiosflags(std::ios::fixed);
   tstream << std::setprecision(2);
   tstream << "Acts::CylinderVolumeBounds: (rMin, rMax, halfPhi, halfZ) = ";
-  tstream << m_boundValues.at(bv_innerRadius) << ", "
-          << m_boundValues.at(bv_outerRadius) << ", "
-          << m_boundValues.at(bv_halfPhiSector) << ", "
-          << m_boundValues.at(bv_halfZ);
+  tstream << m_valueStore.at(bv_innerRadius) << ", "
+          << m_valueStore.at(bv_outerRadius) << ", "
+          << m_valueStore.at(bv_halfPhiSector) << ", "
+          << m_valueStore.at(bv_halfZ);
   return tstream;
 }
 }

@@ -19,27 +19,10 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::NoBounds Acts::StraightLineSurface::s_boundless;
-
-// default constructor
-Acts::StraightLineSurface::StraightLineSurface()
-  : Surface(), m_lineDirection(nullptr), m_bounds()
-{
-}
-
 // constructors by arguments: boundless surface
 Acts::StraightLineSurface::StraightLineSurface(
     std::shared_ptr<Acts::Transform3D> htrans)
   : Surface(htrans), m_lineDirection(nullptr), m_bounds()
-{
-}
-
-// constructors by arguments: boundless surface
-Acts::StraightLineSurface::StraightLineSurface(
-    std::unique_ptr<Acts::Transform3D> htrans)
-  : Surface(std::shared_ptr<Acts::Transform3D>(std::move(htrans)))
-  , m_lineDirection(nullptr)
-  , m_bounds()
 {
 }
 
@@ -159,8 +142,8 @@ Acts::StraightLineSurface::isOnSurface(const Acts::Vector3D& glopo,
   // get the standard bounds
   Acts::Vector3D loc3Dframe = (transform().inverse()) * glopo;
   Acts::Vector2D locCand(loc3Dframe.perp(), loc3Dframe.z());
-  return (locCand[Acts::eLOC_R] < bounds().r() + bchk.toleranceLoc1
-          && bounds().insideLoc2(locCand, bchk.toleranceLoc2));
+  return (locCand[Acts::eLOC_R] < bounds().r() + bchk.toleranceLoc0
+          && bounds().insideLoc1(locCand, bchk.toleranceLoc1));
 }
 
 // return the measurement frame

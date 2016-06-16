@@ -10,46 +10,32 @@
 // ConeSurface.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module
 #include "ACTS/Surfaces/ConeSurface.hpp"
 #include "ACTS/Surfaces/RealQuadraticEquation.hpp"
-// STD/STL
 #include <assert.h>
 #include <iomanip>
 #include <iostream>
 
-// default constructor
-Acts::ConeSurface::ConeSurface()
-  : Acts::Surface(), m_bounds(nullptr), m_rotSymmetryAxis(nullptr)
-{
-}
-
-// copy constructor
 Acts::ConeSurface::ConeSurface(const ConeSurface& csf)
-  : Acts::Surface(csf), m_bounds(csf.m_bounds), m_rotSymmetryAxis(nullptr)
+  : Acts::Surface(csf), m_bounds(csf.m_bounds)
 {
 }
 
-// copy constructor with shift
 Acts::ConeSurface::ConeSurface(const ConeSurface&       csf,
                                const Acts::Transform3D& transf)
   : Acts::Surface(csf, transf)
   , m_bounds(csf.m_bounds)
-  , m_rotSymmetryAxis(nullptr)
 {
 }
 
-// constructor by opening angle and whether its symmetric or a single cone
 Acts::ConeSurface::ConeSurface(std::shared_ptr<Acts::Transform3D> htrans,
                                double                             alpha,
                                bool                               symmetric)
   : Acts::Surface(htrans)
   , m_bounds(std::make_shared<Acts::ConeBounds>(alpha, symmetric))
-  , m_rotSymmetryAxis(nullptr)
 {
 }
 
-// constructor by opening angle and its z values
 Acts::ConeSurface::ConeSurface(std::shared_ptr<Acts::Transform3D> htrans,
                                double                             alpha,
                                double                             zmin,
@@ -57,33 +43,20 @@ Acts::ConeSurface::ConeSurface(std::shared_ptr<Acts::Transform3D> htrans,
                                double                             halfPhi)
   : Acts::Surface(htrans)
   , m_bounds(std::make_shared<Acts::ConeBounds>(alpha, zmin, zmax, halfPhi))
-  , m_rotSymmetryAxis(nullptr)
 {
 }
 
-// constructor by ConeBounds
 Acts::ConeSurface::ConeSurface(std::shared_ptr<Acts::Transform3D>      htrans,
                                std::shared_ptr<const Acts::ConeBounds> cbounds)
-  : Acts::Surface(htrans), m_bounds(cbounds), m_rotSymmetryAxis(nullptr)
+  : Acts::Surface(htrans), m_bounds(cbounds)
 {
   assert(cbounds);
 }
 
-// constructor from transform, bounds not set.
-Acts::ConeSurface::ConeSurface(std::unique_ptr<Acts::Transform3D> htrans)
-  : Acts::Surface(std::shared_ptr<Acts::Transform3D>(std::move(htrans)))
-  , m_bounds(nullptr)
-  , m_rotSymmetryAxis(nullptr)
-{
-}
-
-// destructor (will call destructor from base class which deletes objects)
 Acts::ConeSurface::~ConeSurface()
 {
-  delete m_rotSymmetryAxis;
 }
 
-// return the binning position for ordering in the BinnedArray
 Acts::Vector3D
 Acts::ConeSurface::binningPosition(Acts::BinningValue bValue) const
 {
@@ -102,36 +75,16 @@ Acts::ConeSurface::operator=(const ConeSurface& csf)
   if (this != &csf) {
     Acts::Surface::operator=(csf);
     m_bounds               = csf.m_bounds;
-    delete m_rotSymmetryAxis;
-    m_rotSymmetryAxis = nullptr;
   }
   return *this;
 }
 
-bool
-Acts::ConeSurface::operator==(const Acts::Surface& sf) const
-{
-  // first check the type not to compare apples with oranges
-  const Acts::ConeSurface* csf = dynamic_cast<const Acts::ConeSurface*>(&sf);
-  if (!csf) return false;
-  if (this == csf) return true;
-  bool transfEqual(transform().isApprox(csf->transform(), 10e-8));
-  bool centerEqual = (transfEqual) ? (center() == csf->center()) : false;
-  bool boundsEqual = (centerEqual) ? (bounds() == csf->bounds()) : false;
-  return boundsEqual;
-}
-
-const Acts::Vector3D&
+const Acts::Vector3D
 Acts::ConeSurface::rotSymmetryAxis() const
 {
-  if (!m_rotSymmetryAxis) {
-    Acts::Vector3D zAxis(transform().rotation().col(2));
-    m_rotSymmetryAxis = new Acts::Vector3D(zAxis);
-  }
-  return (*m_rotSymmetryAxis);
+  return std::move(transform().rotation().col(2));
 }
 
-// return the measurement frame: it's the tangential plane
 const Acts::RotationMatrix3D
 Acts::ConeSurface::measurementFrame(const Acts::Vector3D& pos,
                                     const Acts::Vector3D&) const
@@ -152,37 +105,37 @@ Acts::ConeSurface::measurementFrame(const Acts::Vector3D& pos,
   // return the rotation matrix
   //!< @TODO fold in alpha
   // return it
-  return mFrame;
+  return std::move(mFrame);
 }
 
 void
-Acts::ConeSurface::localToGlobal(const Acts::Vector2D& locpos,
+Acts::ConeSurface::localToGlobal(const Acts::Vector2D& lpos,
                                  const Acts::Vector3D&,
-                                 Acts::Vector3D& glopos) const
+                                 Acts::Vector3D& gpos) const
 {
   // create the position in the local 3d frame
-  double         r   = locpos[Acts::eLOC_Z] * bounds().tanAlpha();
-  double         phi = locpos[Acts::eLOC_RPHI] / r;
-  Acts::Vector3D loc3Dframe(r * cos(phi), r * sin(phi), locpos[Acts::eLOC_Z]);
+  double         r   = lpos[Acts::eLOC_Z] * bounds().tanAlpha();
+  double         phi = lpos[Acts::eLOC_RPHI] / r;
+  Acts::Vector3D loc3Dframe(r * cos(phi), r * sin(phi), lpos[Acts::eLOC_Z]);
   // transport it to the globalframe
-  glopos = transform() * loc3Dframe;
+  gpos = transform() * loc3Dframe;
 }
 
 bool
-Acts::ConeSurface::globalToLocal(const Acts::Vector3D& glopos,
+Acts::ConeSurface::globalToLocal(const Acts::Vector3D& gpos,
                                  const Acts::Vector3D&,
-                                 Acts::Vector2D& locpos) const
+                                 Acts::Vector2D& lpos) const
 {
   const Acts::Transform3D& surfaceTrans = transform();
   Acts::Transform3D        inverseTrans(surfaceTrans.inverse());
-  Acts::Vector3D           loc3Dframe(inverseTrans * glopos);
+  Acts::Vector3D           loc3Dframe(inverseTrans * gpos);
   double                   r = loc3Dframe.z() * bounds().tanAlpha();
-  locpos = Acts::Vector2D(r * atan2(loc3Dframe.y(), loc3Dframe.x()),
+  lpos = Acts::Vector2D(r * atan2(loc3Dframe.y(), loc3Dframe.x()),
                           loc3Dframe.z());
   // now decide on the quility of the transformation
   double inttol = r * 0.0001;
   inttol        = (inttol < 0.01) ? 0.01 : 0.01;  // ?
-  return (((loc3Dframe.perp() - r) > inttol) ? false : true);
+  return ((fabs(loc3Dframe.perp() - r) > inttol) ? false : true);
 }
 
 Acts::Intersection

@@ -20,23 +20,23 @@
 #include <math.h>
 
 Acts::CuboidVolumeBounds::CuboidVolumeBounds()
-  : VolumeBounds(), m_boundValues(bv_length, 0.)
+  : VolumeBounds(), m_valueStore(bv_length, 0.)
 {
 }
 
 Acts::CuboidVolumeBounds::CuboidVolumeBounds(double halex,
                                              double haley,
                                              double halez)
-  : VolumeBounds(), m_boundValues(bv_length, 0.)
+  : VolumeBounds(), m_valueStore(bv_length, 0.)
 {
-  m_boundValues.at(bv_halfX) = halex;
-  m_boundValues.at(bv_halfY) = haley;
-  m_boundValues.at(bv_halfZ) = halez;
+  m_valueStore.at(bv_halfX) = halex;
+  m_valueStore.at(bv_halfY) = haley;
+  m_valueStore.at(bv_halfZ) = halez;
 }
 
 Acts::CuboidVolumeBounds::CuboidVolumeBounds(
     const Acts::CuboidVolumeBounds& bobo)
-  : VolumeBounds(), m_boundValues(bobo.m_boundValues)
+  : VolumeBounds(), m_valueStore(bobo.m_valueStore)
 {
 }
 
@@ -47,7 +47,7 @@ Acts::CuboidVolumeBounds::~CuboidVolumeBounds()
 Acts::CuboidVolumeBounds&
 Acts::CuboidVolumeBounds::operator=(const Acts::CuboidVolumeBounds& bobo)
 {
-  if (this != &bobo) m_boundValues = bobo.m_boundValues;
+  if (this != &bobo) m_valueStore = bobo.m_valueStore;
   return *this;
 }
 
@@ -120,22 +120,22 @@ Acts::CuboidVolumeBounds::decomposeToSurfaces(
 Acts::RectangleBounds*
 Acts::CuboidVolumeBounds::faceXYRectangleBounds() const
 {
-  return new Acts::RectangleBounds(m_boundValues.at(bv_halfX),
-                                   m_boundValues.at(bv_halfY));
+  return new Acts::RectangleBounds(m_valueStore.at(bv_halfX),
+                                   m_valueStore.at(bv_halfY));
 }
 
 Acts::RectangleBounds*
 Acts::CuboidVolumeBounds::faceYZRectangleBounds() const
 {
-  return new Acts::RectangleBounds(m_boundValues.at(bv_halfY),
-                                   m_boundValues.at(bv_halfZ));
+  return new Acts::RectangleBounds(m_valueStore.at(bv_halfY),
+                                   m_valueStore.at(bv_halfZ));
 }
 
 Acts::RectangleBounds*
 Acts::CuboidVolumeBounds::faceZXRectangleBounds() const
 {
-  return new Acts::RectangleBounds(m_boundValues.at(bv_halfZ),
-                                   m_boundValues.at(bv_halfX));
+  return new Acts::RectangleBounds(m_valueStore.at(bv_halfZ),
+                                   m_valueStore.at(bv_halfX));
 }
 
 // ostream operator overload

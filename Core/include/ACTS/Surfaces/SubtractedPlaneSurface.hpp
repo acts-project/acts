@@ -21,56 +21,60 @@ class Identifier;
 
 namespace Acts {
 
-/**
- @class SubtractedPlaneSurface
 
- Class for a planar subtracted/shared surface in the ATLAS detector.
- It owns its surface bounds and subtracted volume.
-
- */
+/// @class SubtractedPlaneSurface
+///
+/// Class for a planar subtracted/shared surface in the ATLAS detector.
+/// It owns its surface bounds and subtracted volume.
 
 class SubtractedPlaneSurface : public PlaneSurface
 {
 public:
-  /** Default Constructor - needed for persistency*/
+  /// Default Constructor - needed for persistency*/
   SubtractedPlaneSurface();
 
-  /** Copy Constructor*/
-  SubtractedPlaneSurface(const SubtractedPlaneSurface& psf);
+  /// Copy Constructor
+  /// @param spsf is the source surface for assignment
+  SubtractedPlaneSurface(const SubtractedPlaneSurface& spsf);
 
-  /** Copy Constructor with shift*/
+  /// Copy Constructor with shift
+  /// @param spsf is the source surface for assignment
+  /// @param transf is the additional transform applied after copying
   SubtractedPlaneSurface(const SubtractedPlaneSurface& psf,
                          const Transform3D&            transf);
 
-  /** Constructor */
+  /// Copy constructor from a plane with an AreaExcluder
+  /// @param ps is the source plane surface
+  /// @param vol is the AreaExcluder
+  /// @param shared is a @TODO check with ST                                            
   SubtractedPlaneSurface(const PlaneSurface& ps,
-                         AreaExcluder*       vol,
-                         bool                shared);
+                         std::shared_ptr<AreaExcluder> vol,
+                         bool                          shared);
 
-  /**Destructor*/
+  /// Destructor
   virtual ~SubtractedPlaneSurface();
 
-  /**Assignment operator*/
+  ///Assignment operator*/
   SubtractedPlaneSurface&
   operator=(const SubtractedPlaneSurface& psf);
 
-  /**Equality operator*/
+  ///Equality operator*/
   bool
   operator==(const Surface& sf) const;
 
-  /** This method indicates the subtraction mode */
+  /// This method indicates the subtraction mode */
   bool
   shared() const;
 
-  /**This method calls the inside() method of the Bounds*/
+  ///This method calls the inside() method of the Bounds*/
   bool
   insideBounds(const Vector2D& locpos, const BoundaryCheck& bchk = true) const;
 
-  /**This method allows access to the subtracted part*/
+  ///This method allows access to the subtracted part*/
   std::shared_ptr<AreaExcluder>
   subtractedVolume() const;
 
-  /** Return properly formatted class name for screen output */
+  /// Return properly formatted class name for screen output */
   std::string
   name() const
   {
