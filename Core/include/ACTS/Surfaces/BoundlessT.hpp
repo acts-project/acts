@@ -35,7 +35,7 @@ public:
 
   /// Return SurfaceBounds type for persistency mainly
   virtual SurfaceBounds::BoundsType
-  type() const final { return SurfaceBounds::Boundless;}
+  type() const final { return SurfaceBounds::Boundless; }
 
   /// Method inside() returns true for any case
   /// ignores input parameters
@@ -43,19 +43,19 @@ public:
   vritual bool
   inside(const Vector2D&, const BoundaryCheck&) const final { return true; }
 
-  /// Method inside() returns true for loc 1
+  /// Method inside() returns true for loc 0
   /// ignores input parameters
   /// @return always true
   virtual bool
-  insideLoc0(const Vector2D& locpo, double tol1 = 0.) const final { return true; }
+  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const final { return true; }
 
   /// Method inside() returns true for loc 1
   /// ignores input parameters
   /// @return always true
   virtual bool
-  insideLoc1(const Vector2D& locpo, double tol2 = 0.) const final { return true; }
+  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const final { return true; }
 
-  /// Method inside() returns true for loc 1
+  /// Minimal distance calculation
   /// ignores input parameter
   /// @return always 0.
   virtual double

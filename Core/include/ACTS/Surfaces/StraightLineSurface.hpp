@@ -13,9 +13,9 @@
 #ifndef ACTS_SURFACESSTRAIGHTLINESURFACE_H
 #define ACTS_SURFACESSTRAIGHTLINESURFACE_H
 
-#include "ACTS/Surfaces/BoundlessT.hpp"
-#include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
+#include "ACTS/Surfaces/BoundlessT.hpp"
+#include "ACTS/Surfaces/LineBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
 
@@ -36,21 +36,29 @@ public:
   StraightLineSurface() = delete;
 
   /// Constructor from Transform3D (boundless surface)
+  /// @param htrans is the transform that positions the surface in the global frame
   StraightLineSurface(std::shared_ptr<Transform3D> htrans);
 
   /// Constructor from Transform3D and bounds
+  /// @param htrans is the transform that positions the surface in the global frame
+  /// @param radius is the straw radius
+  /// @param halex is the half length in z
   StraightLineSurface(std::shared_ptr<Transform3D> htrans,
                       double                       radius,
                       double                       halez);
 
   /// Constructor from Transform3D and a shared bounds object
-  StraightLineSurface(std::shared_ptr<Transform3D>          htrans,
-                      std::shared_ptr<const CylinderBounds> cbounds);
+  /// @param htrans is the transform that positions the surface in the global frame
+  /// @param lbounds are teh bounds describing the straw dimensions, can be optionally nullptr                 
+  StraightLineSurface(std::shared_ptr<Transform3D>      htrans,
+                      std::shared_ptr<const LineBounds> lbounds = nullptr);
 
   /// Constructor from DetectorElementBase and Element identifier
+  /// @param lbounds are teh bounds describing the straw dimensions, they must not be nullptr                    
   /// @param detelement for which this surface is (at least) one representation
   /// @param identifier                                          
-  StraightLineSurface(const DetectorElementBase& detelement,
+  StraightLineSurface(std::shared_ptr<const LineBounds> lbounds,
+                      const DetectorElementBase& detelement,
                       const Identifier&          identifier = Identifier());
 
   /// Copy constructor
@@ -70,10 +78,6 @@ public:
   StraightLineSurface&
   operator=(const StraightLineSurface& slsf);
 
-  /// Equality operator
-  virtual bool
-  operator==(const Surface& sf) const override;
-
   /// Implicit constructor - shift can be provided */
   virtual StraightLineSurface*
   clone(const Transform3D* shift = nullptr) const override;
@@ -82,8 +86,8 @@ public:
   /// for StraightLine and Perigee Surface
   ///  - the default implementation is the the RotationMatrix3D of the transform
   virtual const RotationMatrix3D
-  measurementFrame(const Vector3D& glopos,
-                   const Vector3D& glomom) const override;
+  measurementFrame(const Vector3D& gpos,
+                   const Vector3D& mom) const override;
 
   /// Return the surface type 
   virtual SurfaceType
@@ -126,8 +130,9 @@ public:
                 const Vector3D& mom,
                 Vector2D&       loc) const override;
 
-  /// Special method for StraightLineSurface - provides the Line direction from cache: speedup
-  const Vector3D&
+  /// Special method for StraightLineSurface 
+  /// provides the Line direction from cache: speedup
+  const Vector3D
   lineDirection() const;
 
   /// fast straight line intersection schema - standard: provides closest
@@ -160,7 +165,7 @@ public:
   ///   - @f$ \mu_0 = - \frac{(\vec m_ab \cdot \vec e_b)-(\vec m_ab \cdot \vec
   ///  e_a)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
    virtual Intersection
-  intersectionEstimate(const Vector3D&      pos,
+  intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir,
                        const BoundaryCheck& bchk = true) const override;
@@ -179,7 +184,7 @@ public:
   ///  It overwrites isOnSurface from Base Class as it saves the time of sign
   ///  determination.
   virtual bool
-  isOnSurface(const Vector3D&      glopo,
+  isOnSurface(const Vector3D&      gpos,
               const BoundaryCheck& bchk = true) const override;
 
   ///This method returns the bounds of the Surface by reference */
@@ -194,8 +199,6 @@ public:
   };
 
 protected:  
-  mutable Vector3D*
-                                        m_lineDirection;  ///< cache of the line direction (speeds up)
   std::shared_ptr<const CylinderBounds> m_bounds;         ///< bounds (shared)
 };
 
@@ -209,22 +212,13 @@ StraightLineSurface::clone(const Transform3D* shift) const
 inline const SurfaceBounds&
 StraightLineSurface::bounds() const
 {
-  if (m_bounds.get()) return (*m_bounds.get());
-  if (Surface::m_associatedDetElement
-      && Surface::m_associatedDetElementId.is_valid()) {
-    return m_associatedDetElement->bounds(Surface::m_associatedDetElementId);
-  }
-  if (Surface::m_associatedDetElement) return m_associatedDetElement->bounds();
-  return s_boundless;
+  return (*m_bounds.get());
 }
 
-inline const Vector3D&
+inline const Vector3D
 StraightLineSurface::lineDirection() const
 {
-  if (!m_lineDirection) {
-    m_lineDirection = new Vector3D(transform().rotation().col(2));
-  }
-  return (*m_lineDirection);
+  return std::move(Vector3D(transform().rotation().col(2)));
 }
 
 }  // end of namespace

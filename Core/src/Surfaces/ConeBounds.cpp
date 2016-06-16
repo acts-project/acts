@@ -58,23 +58,12 @@ Acts::ConeBounds&
 Acts::ConeBounds::operator=(const Acts::ConeBounds& conebo)
 {
   if (this != &conebo) {
+    SurfaceBounds::operator=(conebo)
     m_tanAlpha    = conebo.m_tanAlpha;
     m_sinAlpha    = conebo.m_sinAlpha;
     m_cosAlpha    = conebo.m_cosAlpha;
-    m_valueStore = conebo.m_valueStore;
   }
   return *this;
-}
-
-bool
-Acts::ConeBounds::operator==(const SurfaceBounds& sbo) const
-{
-  // pointer comparison
-  if (this == &sbo) return true;
-  // check the type first not to compare apples with oranges
-  const Acts::ConeBounds* conebo = dynamic_cast<const Acts::ConeBounds*>(&sbo);
-  if (!conebo) return false;
-  return (m_valueStore == conebo->m_valueStore);
 }
 
 double

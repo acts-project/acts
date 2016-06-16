@@ -21,8 +21,6 @@
 
 namespace Acts {
 
-
-
 /// @struct KDOP 
 /// maint struct for comparing the extent of arbitrary convex polygons relative
 /// to prefixed axes

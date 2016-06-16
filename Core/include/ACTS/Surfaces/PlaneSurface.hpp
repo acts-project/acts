@@ -39,23 +39,26 @@ public:
   PlaneSurface();
 
   /// Copy Constructor
+  /// @param psf is the source surface for the copy
   PlaneSurface(const PlaneSurface& psf);
 
   /// Copy Constructor with shift
-  PlaneSurface(const PlaneSurface& psf, const Transform3D& transf);
+  /// @param psf is the source surface for the copy
+  /// @param htrans is the transformation that positions the surface in space
+  PlaneSurface(const PlaneSurface& psf, const Transform3D& htrans);
 
-  /// Dedicated Constructor with normal vector 
-  PlaneSurface(const Vector3D& position, const Vector3D& normal);
+  /// Dedicated Constructor with normal vector
+  /// This is for curvilinear surfaces which are by definition boundless
+  /// @param center is the center position of the surface
+  /// @param htrans is the transformation that positions the surface in space
+  PlaneSurface(const Vector3D& center, const Vector3D& normal);
 
-  /// Constructor from DetectorElementBase - potentially with identifier 
-  PlaneSurface(const DetectorElementBase& detelement,
+  /// Constructor from DetectorElementBase 
+  PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
+               const DetectorElementBase& detelement,
                const Identifier&          identifier = Identifier());
 
-  /// Constructor for planar Surface without Bounds
-  /// @param htrans transform in 3D that positions this surface              
-  PlaneSurface(std::shared_ptr<Transform3D> htrans);
-
-  /// Constructor for Planes with shared bounds object 
+  /// Constructor for Planes with (optional) shared bounds object 
   /// @param htrans transform in 3D that positions this surface              
   /// @param pbounds bounds object to describe the actual surface area 
   /// @attention the pointer to pbounds must not be a nullptr 
@@ -171,12 +174,7 @@ PlaneSurface::clone(const Transform3D* shift) const
 inline const PlanarBounds&
 PlaneSurface::bounds() const
 {
-  if (m_bounds) return (*m_bounds.get());
-  if (Surface::m_associatedDetElement
-      && Surface::m_associatedDetElementId.is_valid()) {
-    return m_associatedDetElement->bounds(Surface::m_associatedDetElementId);
-  }
-  return m_associatedDetElement->bounds();
+  return (*m_bounds.get());
 }
 
 inline const Vector3D 

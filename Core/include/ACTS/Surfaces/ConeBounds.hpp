@@ -69,7 +69,12 @@ public:
 
   /// Copy Constructor 
   /// @param cobo is the source bounds for the assignment             
-  ConeBounds(const ConeBounds& cobo) : SurfaceBounds(cobo) {}
+  ConeBounds(const ConeBounds& cobo) 
+    : SurfaceBounds(cobo)
+    ,  m_tanAlpha(conebo.m_tanAlpha)
+    ,  m_sinAlpha(conebo.m_sinAlpha)
+    ,  m_cosAlpha(conebo.m_cosAlpha)
+   {}
 
   /// Destructor 
   virtual ~ConeBounds();
@@ -92,20 +97,20 @@ public:
 
   /// @copydoc SurfaceBounds::inside
   virtual bool
-  inside(const Vector2D&      locpo,
+  inside(const Vector2D&      lpos,
          const BoundaryCheck& bchk = true) const override;
 
   /// @copydoc SurfaceBounds::insideLoc0
   virtual bool
-  insideLoc0(const Vector2D& locpo, double tol1 = 0.) const override;
+  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
   /// @copydoc SurfaceBounds::insideLoc1
   virtual bool
-  insideLoc1(const Vector2D& locpo, double tol2 = 0.) const override;
+  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
   /// @copydoc SurfaceBounds::minDistance
   virtual double
-  minDistance(const Vector2D& pos) const override;
+  minDistance(const Vector2D& gpos) const override;
 
   /// Return the radius at a specific z values 
   double
@@ -114,10 +119,16 @@ public:
   /// Return the average values for the angles (cached)
   double
   tanAlpha() const;
+  
+  /// Return the average values for the angles (cached)
   double
   sinAlpha() const;
+  
+  /// Return the average values for the angles (cached)
   double
   cosAlpha() const;
+  
+  /// Return the average values for the angles (cached)  
   double
   alpha() const;
 
@@ -146,10 +157,13 @@ public:
   dump(std::ostream& sl) const override;
 
 private:
+  /// private helper method
+  bool inside(const Vector2D& lpos, double tol0, double tol1) const;
+  
   std::vector<TDD_real_t> m_valueStore; ///< internal storage for the bound values
-  TDD_real_t              m_tanAlpha;    ///< internal cache 
-  TDD_real_t              m_sinAlpha;
-  TDD_real_t              m_cosAlpha;
+  TDD_real_t              m_tanAlpha;   ///< internal cache 
+  TDD_real_t              m_sinAlpha;   ///< internal cache
+  TDD_real_t              m_cosAlpha;   ///< internal cache
 
   /// Helper function for angle parameter initialization 
   virtual void
@@ -177,57 +191,57 @@ ConeBounds::clone() const
 }
 
 inline bool
-ConeBounds::inside(const Vector2D& locpo, double tol1, double tol2) const
+ConeBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 {
-  double z       = locpo[Acts::eLOC_Z];
-  bool   insideZ = z > (m_valueStore.at(ConeBounds::bv_minZ) - tol2)
-      && z < (m_valueStore.at(ConeBounds::bv_maxZ) + tol2);
+  double z       = lpos[Acts::eLOC_Z];
+  bool   insideZ = z > (m_valueStore.at(ConeBounds::bv_minZ) - tol1)
+      && z < (m_valueStore.at(ConeBounds::bv_maxZ) + tol1);
   if (!insideZ) return false;
   // TODO: Do we need some sort of "R" tolerance also here (take
-  // it off the z tol2 in that case?) or does the rphi tol1 cover
+  // it off the z tol1 in that case?) or does the rphi tol0 cover
   // this? (Could argue either way)
   double coneR   = z * m_tanAlpha;
-  double minRPhi = coneR * minPhi() - tol1, maxRPhi = coneR * maxPhi() + tol1;
-  return minRPhi < locpo[Acts::eLOC_RPHI] && locpo[Acts::eLOC_RPHI] < maxRPhi;
+  double minRPhi = coneR * minPhi() - tol0, maxRPhi = coneR * maxPhi() + tol0;
+  return minRPhi < lpos[Acts::eLOC_RPHI] && lpos[Acts::eLOC_RPHI] < maxRPhi;
 }
 
 inline bool
-ConeBounds::inside(const Vector3D& glopo, double tol1, double tol2) const
+ConeBounds::inside(const Vector3D& gpos, double tol0, double tol1) const
 {
   // coords are (rphi,z)
-  return inside(Vector2D(glopo.perp() * glopo.phi(), glopo.z()), tol1, tol2);
+  return inside(Vector2D(gpos.perp() * gpos.phi(), gpos.z()), tol0, tol1);
 }
 
 inline bool
-ConeBounds::inside(const Vector3D& glopo, const BoundaryCheck& bchk) const
+ConeBounds::inside(const Vector3D& gpos, const BoundaryCheck& bchk) const
 {
   // coords are (rphi,z)
-  return inside(Vector2D(glopo.perp() * glopo.phi(), glopo.z()),
+  return inside(Vector2D(gpos.perp() * gpos.phi(), gpos.z()),
                 bchk.toleranceLoc0,
                 bchk.toleranceLoc1);
 }
 
 inline bool
-ConeBounds::inside(const Vector2D& locpo, const BoundaryCheck& bchk) const
+ConeBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
 {
-  return ConeBounds::inside(locpo, bchk.toleranceLoc0, bchk.toleranceLoc1);
+  return ConeBounds::inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
 }
 
 inline bool
-ConeBounds::insideLoc0(const Vector2D& locpo, double tol1) const
+ConeBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 {
-  double z       = locpo[Acts::eLOC_Z];
+  double z       = lpos[Acts::eLOC_Z];
   double coneR   = z * m_tanAlpha;
-  double minRPhi = coneR * minPhi() - tol1, maxRPhi = coneR * maxPhi() + tol1;
-  return minRPhi < locpo[Acts::eLOC_RPHI] && locpo[Acts::eLOC_RPHI] < maxRPhi;
+  double minRPhi = coneR * minPhi() - tol0, maxRPhi = coneR * maxPhi() + tol0;
+  return minRPhi < lpos[Acts::eLOC_RPHI] && lpos[Acts::eLOC_RPHI] < maxRPhi;
 }
 
 inline bool
-ConeBounds::insideLoc1(const Vector2D& locpo, double tol2) const
+ConeBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 {
-  double z = locpo[Acts::eLOC_Z];
-  return (z > (m_valueStore.at(ConeBounds::bv_minZ) - tol2)
-          && z < (m_valueStore.at(ConeBounds::bv_maxZ) + tol2));
+  double z = lpos[Acts::eLOC_Z];
+  return (z > (m_valueStore.at(ConeBounds::bv_minZ) - tol1)
+          && z < (m_valueStore.at(ConeBounds::bv_maxZ) + tol1));
 }
 
 inline double
