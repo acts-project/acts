@@ -12,7 +12,7 @@
 
 // Geometry module
 #include "ACTS/Layers/PlaneLayer.hpp"
-#include "ACTS/Detector/GenericApproachDescriptor.hpp"
+#include "ACTS/Layers/GenericApproachDescriptor.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Helpers.hpp"

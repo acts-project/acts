@@ -13,7 +13,7 @@
 // Core module
 #include "ACTS/Utilities/Definitions.hpp"
 // GeometryTools
-#include "ACTS/Detector/GenericOverlapDescriptor.hpp"
+#include "ACTS/Layers/GenericOverlapDescriptor.hpp"
 #include "ACTS/Layers/CylinderLayer.hpp"
 #include "ACTS/Layers/DiscLayer.hpp"
 #include "ACTS/Surfaces/CylinderBounds.hpp"

@@ -197,10 +197,10 @@ PlaneSurface::binningPosition(BinningValue) const
     return center();
 }
     
-inline double PlaneSurface::pathCorrection(const Vector3D& gpos, const Vector3D& mom) const
+inline double PlaneSurface::pathCorrection(const Vector3D&, const Vector3D& mom) const
 {
-    /// @TODO fix
-    return 1.;
+  /// we can ignore the global position here
+  return 1./fabs(normal().dot(mom.unit()));  
 }
 
 inline Intersection

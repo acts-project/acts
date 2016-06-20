@@ -11,8 +11,8 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Layers/CylinderLayer.hpp"
-#include "ACTS/Detector/GenericApproachDescriptor.hpp"
-#include "ACTS/Detector/GenericOverlapDescriptor.hpp"
+#include "ACTS/Layers/GenericApproachDescriptor.hpp"
+#include "ACTS/Layers/GenericOverlapDescriptor.hpp"
 #include "ACTS/Material/SurfaceMaterial.hpp"
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"

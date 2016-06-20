@@ -11,8 +11,8 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Layers/DiscLayer.hpp"
-#include "ACTS/Detector/GenericApproachDescriptor.hpp"
-#include "ACTS/Detector/GenericOverlapDescriptor.hpp"
+#include "ACTS/Layers/GenericApproachDescriptor.hpp"
+#include "ACTS/Layers/GenericOverlapDescriptor.hpp"
 #include "ACTS/Material/SurfaceMaterial.hpp"
 #include "ACTS/Surfaces/DiscBounds.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
