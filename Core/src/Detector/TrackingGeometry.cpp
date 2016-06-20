@@ -19,7 +19,7 @@
 
 Acts::TrackingGeometry::TrackingGeometry(TrackingVolumePtr highestVolume)
   : m_world(highestVolume)
-  , m_beam(std::make_unique<const Acts::PerigeeSurface>())
+  , m_beam(std::make_unique<const Acts::PerigeeSurface>(s_origin))
 {
   // register all the TrackingVolumes
   if (m_world) registerTrackingVolumes(*m_world.get());

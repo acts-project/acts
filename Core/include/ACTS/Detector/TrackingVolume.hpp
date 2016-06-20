@@ -19,7 +19,7 @@
 #include "ACTS/Utilities/BinnedArray.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/GeometrySignature.hpp"
-#include "ACTS/Volumes/BoundarySurface.hpp"
+#include "ACTS/Volumes/BoundarySurfaceT.hpp"
 #include "ACTS/Volumes/Volume.hpp"
 #include <string>
 
@@ -185,7 +185,7 @@ public:
   /// Return the dynamically created vector of detached sub volumes 
   /// @param gpos  is the glboal position associated with that search  
   /// @return the list of associated detached tracking volumes, nullptr if it does not exist 
-              edVolumeVector*
+  const DetachedVolumeVector*
   detachedTrackingVolumes(const Vector3D& gpos, double tol) const;
 
   /// Return the confined static layer array - if it exists 
