@@ -13,11 +13,9 @@
 #ifndef ACTS_VOLUMES_COMBINEDVOLUMEBOUNDS_H
 #define ACTS_VOLUMES_COMBINEDVOLUMEBOUNDS_H 1
 
-// Geometry module
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Volumes/Volume.hpp"
 #include "ACTS/Volumes/VolumeBounds.hpp"
-// Core module
 
 namespace Acts {
 
@@ -25,67 +23,75 @@ class SurfaceBounds;
 class Volume;
 class Surface;
 
-/**
- @class CombinedVolumeBounds
-
- Bounds for a generic combined volume, the decomposeToSurfaces method creates a
- vector of n surfaces (n1+n2-nshared):
-
- BoundarySurfaceFace [index]: [n1+n2-nshared] combined surfaces
-
- designed to allow transcript of GeoShapeUnion and GeoShapeIntersection
-
-*/
+/// @class CombinedVolumeBounds
+///
+/// Bounds for a generic combined volume, the decomposeToSurfaces method creates a
+/// vector of n surfaces (n1+n2-nshared):
+///
+/// BoundarySurfaceFace [index]: [n1+n2-nshared] combined surfaces
+///
+/// designed to allow transcript of unitions and intersections
 
 class CombinedVolumeBounds : public VolumeBounds
 {
 public:
-  /**Default Constructor*/
+  /// Default Constructor
   CombinedVolumeBounds();
 
-  /**Constructor - the box boundaries */
-  CombinedVolumeBounds(Volume* first, Volume* second, bool intersection);
+  /// Constructor - the box boundaries 
+  /// @param first ist shared pointer to the first volume
+  /// @param second is the shared pointer to the second volume
+  /// @param interscection is a boolean directive whether to intersect of unify
+  CombinedVolumeBounds(std::shared_ptr<const Volume> first, 
+                       std::shared_ptr<const Volume> second, 
+                       bool intersection);
 
-  /**Copy Constructor */
+  /// Copy Constructor 
+  /// @param bobo is the source bounds                      
   CombinedVolumeBounds(const CombinedVolumeBounds& bobo);
 
-  /**Destructor */
+  /// Destructor 
   virtual ~CombinedVolumeBounds();
 
-  /**Assignment operator*/
+  /// Assignment operator
   CombinedVolumeBounds&
   operator=(const CombinedVolumeBounds& bobo);
 
-  /**Virtual constructor */
+  /// Virtual constructor
   CombinedVolumeBounds*
   clone() const override;
 
-  /**This method checks if position in the 3D volume frame is inside the
-   * volume*/
+  /// This method checks if position in the 3D volume frame 
+  /// is inside the volume
+  /// @param gpos is the global position to be checked
+  /// @param tol is the tolerance parameter for the check 
   bool
   inside(const Vector3D&, double tol = 0.) const override;
 
-  /** Method to decompose the Bounds into boundarySurfaces */
-  const std::vector<const Acts::Surface*>*
+  /// Method to decompose the Bounds into boundarySurfaces
+  /// @param transformPtr is the transform to position the surface in space
+  /// @param 
+  const std::vector<const Surface*>
   decomposeToSurfaces(std::shared_ptr<Transform3D> transformPtr) const override;
 
-  /**This method returns the first VolumeBounds*/
-  Volume*
+  /// This method returns the first VolumeBounds
+  std::shared_ptr<const Volume>
   first() const;
 
-  /**This method returns the second VolumeBounds*/
-  Volume*
+  /// This method returns the second VolumeBounds
+  std::shared_ptr<const Volume>
   second() const;
 
-  /**This method distinguishes between Union(0) and Intersection(1)*/
+  /// This method distinguishes between Union(0) and Intersection(1)
   bool
   intersection() const;
 
-  /**This method returns bounds orientation*/
+  /// This method returns bounds orientation
+  /// @TODO check with ST 
   const std::vector<bool>
   boundsOrientation() const;
 
-  /** Output Method for std::ostream */
+  /// Output Method for std::ostream 
   std::ostream&
   dump(std::ostream& sl) const override;
 
@@ -94,10 +100,10 @@ private:
   createSubtractedVolume(const Transform3D& transf,
                          Acts::Volume*      subtrVol) const;
 
-  Volume* m_first;         //!< first volume of the combination
-  Volume* m_second;        //!< second volume of the combination
-  bool    m_intersection;  //!< boolean if intersection is needed or not
-  mutable std::vector<bool> m_boundsOrientation;  //!< orientation of the bounds
+  Volume*                   m_first;              ///< first volume of the combination
+  Volume*                   m_second;             ///< second volume of the combination
+  bool                      m_intersection;       ///< boolean if intersection is needed or not
+  mutable std::vector<bool> m_boundsOrientation;  ///< orientation of the bounds
 };
 
 inline CombinedVolumeBounds*
@@ -114,13 +120,13 @@ CombinedVolumeBounds::inside(const Vector3D& pos, double tol) const
   return (m_first->inside(pos, tol) || m_second->inside(pos, tol));
 }
 
-inline Volume*
+inline std::shared_ptr<const Volume>
 CombinedVolumeBounds::first() const
 {
   return m_first;
 }
 
-inline Volume*
+inline std::shared_ptr<const Volume>
 CombinedVolumeBounds::second() const
 {
   return m_second;

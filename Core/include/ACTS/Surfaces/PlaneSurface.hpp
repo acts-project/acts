@@ -88,8 +88,9 @@ public:
   /// Normal vector return
   /// @param lpos is the local position is ignored
   /// return a Vector3D by value
-  const Vector3D normal(const Vector2D& lpos = Vector2D()) const override;
-  
+  const Vector3D normal(const Vector2D& lpos = s_origin2D) const final;
+
+    
   /// @copydoc Surface::biningPosition
   virtual const Vector3D
   binningPosition(BinningValue bValue) const final;
@@ -172,7 +173,7 @@ public:
   }
 
 protected:                                                     
-  /// PlanarBounds - this can be nullptr if the Surface is a PROXY
+  /// @TODO This is not safe yet for alignment updates
   std::shared_ptr<const PlanarBounds>       m_bounds;
   Vector3D                                  m_normal;
 };
@@ -192,7 +193,7 @@ PlaneSurface::bounds() const
 }
     
 inline const Vector3D 
-PlaneSurface::normal(const Vector2D& lpos) const
+PlaneSurface::normal(const Vector2D&) const
 {
     return m_normal;
 }

@@ -102,17 +102,22 @@ public:
   /// Return the measurement frame - this is needed for alignment, in particular
   ///  for StraightLine and Perigee Surface
   ///  - the default implementation is the the RotationMatrix3D of the transform 
-  virtual const RotationMatrix3D
+  const RotationMatrix3D
   measurementFrame(const Vector3D& gpos,
-                   const Vector3D& mom) const override;
+                   const Vector3D& mom) const final;
 
 
   /// Return method for surface normal information
   /// @param lpos is the local position on the cone for which the normal vector is requested
   /// @return Vector3D normal vector in global frame                 
-  virtual const Vector3D
-  normal(const Vector2D& lpos) const override;
+  const Vector3D
+  normal(const Vector2D& lpos) const final;
 
+  /// Return method for surface normal information
+  /// @param gpos is the global position on the cone for which the normal vector is requested
+  /// @return Vector3D normal vector in global frame                 
+  const Vector3D
+  normal(const Vector3D& gpos) const final;
 
   // Return method for the rotational symmetry axis 
   // @return This returns the local z axis
@@ -214,6 +219,18 @@ ConeSurface::normal(const Vector2D& lp) const
                        sgn * bounds().sinAlpha());
   return m_transform ? std::move(Vector3D(transform().linear() * localNormal))
                      : std::move(localNormal); 
+}
+
+inline const Vector3D
+CylinderSurface::normal(const Vector3D& gpos) const
+{
+  // get it into the cylinder frame if needed
+  Vector3D pos3D = gpos;
+  if (m_transform || m_associatdDetElement){
+    pos3D = transform().inverse()*gpos;
+    pos3D.z() = 0;
+  }
+  return pos3D.unit();
 }
 
 inline const ConeBounds&

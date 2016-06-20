@@ -7,104 +7,111 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// BoundarySurface.h, ACTS project
+// BoundarySurfaceT.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_VOLUMES_BOUNDARYSURFACE_H
-#define ACTS_VOLUMES_BOUNDARYSURFACE_H
+#ifndef ACTS_VOLUMES_BOUNDARYSURFACET_H
+#define ACTS_VOLUMES_BOUNDARYSURFACET_H
 
 #include "ACTS/Utilities/BinnedArray.hpp"
-#include "ACTS/Utilities/BinnedArray0D.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Volumes/BoundarySurfaceFace.hpp"
+#include "ACTS/Volumes/BoundarySurfaceTFace.hpp"
 #include "ACTS/Volumes/Volume.hpp"
 
 namespace Acts {
 
 class Surface;
 
-/**
- @class BoundarySurface
-
- Description of a BoundarySurface for volumes in the Tracking geometry.
- It extends the Surface description to make a surface being a boundary of a
- Acts::AbstractVolume & Acts::TrackingVolume.
-
- To avoid dynamic_cast operations the BoundarySurface class is realized as a
- templated class,
- with the Volume type as the template argument.
-
- A Acts::BoundarySurface can have an inside Volume and an outside Volume, resp.
- a Acts::BinnedArray for inside or outside direction.
-
- Inside and outside are by this referring to the normal vector definition of the
- Surface,
- and not necessarily corresponding to the Volume inside/outside definition.
-
- The GeometryBuilder as defined in the GeometryTools Package is declared
- to be friend, so that it can glue Volumes together by sharing the same
- Boundary Surface.
-
-*/
+/// @class BoundarySurfaceT 
+/// 
+/// The boundary surface class combines a Surface with the information of a volume.
+/// It's templated in the type of volume in order to allow for a return type tat is usable
+/// in the navigation stream.
+///
+/// @note inside/outside definitions are given by the normal vector of the surface
+/// 
 
 template <class T>
-class BoundarySurface
+class BoundarySurfaceT
 {
-  /** delcare the TrackingVolume as friend */
+  /// delcare the TrackingVolume as friend 
   friend T;
 
   typedef std::shared_ptr<const T> VolumePtr;
   typedef BinnedArray<VolumePtr>   VolumeArray;
 
 public:
-  /** Default Constructor - needed for pool and inherited classes */
-  BoundarySurface()
-    : m_insideVolume(nullptr)
+  /// Default Constructor
+  BoundarySurfaceT()
+    : m_surface(nullptr)
+    , m_insideVolume(nullptr)
     , m_outsideVolume(nullptr)
     , m_insideVolumeArray(nullptr)
     , m_outsideVolumeArray(nullptr)
   {
   }
 
-  /** Constructor for a Boundary with exact two Volumes attached to it - usually
-   * used in a volume constructor*/
-  BoundarySurface(const T* inside, const T* outside)
-    : m_insideVolume(inside)
+  /// Constructor for a Boundary with exact two Volumes attached to it 
+  /// - usually used in a volume constructor
+  /// @param surface is the unqiue surface the boundary represents
+  /// @paramt inside is the inside volume the bounday surface points to
+  /// @paramt outside is the outside volume the boundary surface points to
+  BoundarySurfaceT(sd::unique_ptr<const Surface*> surface,
+                  const T* inside,
+                  const T* outside)
+    : m_surface(std::move(surface))
+    , m_insideVolume(inside)
     , m_outsideVolume(outside)
     , m_insideVolumeArray(nullptr)
     , m_outsideVolumeArray(nullptr)
   {
   }
 
-  /** Constructor for a Boundary with exact two Volumes attached to it - for
-   * already constructed volumes */
-  BoundarySurface(VolumePtr inside, VolumePtr outside)
-    : m_insideVolume(nullptr)
-    , m_outsideVolume(nullptr)
-    , m_insideVolumeArray(new BinnedArray0D<VolumePtr>(inside))
-    , m_outsideVolumeArray(new BinnedArray0D<VolumePtr>(outside))
+  /// Constructor for a Boundary with exact two Volumes attached to it 
+  /// - usually used in a volume constructor
+  /// @param surface is the unqiue surface the boundary represents
+  /// @paramt inside is the inside volume the bounday surface points to
+  /// @paramt outside is the outside volume the boundary surface points to
+  BoundarySurfaceT(sd::unique_ptr<const Surface*> surface, 
+                  VolumePtr inside,
+                  VolumePtr outside)
+    , m_surface(std::move(surface))
+    , m_insideVolume(inside.get())
+    , m_outsideVolume(outside.get())
+    , m_insideVolumeArray(nullptr)
+    , m_outsideVolumeArray(nullptr)
   {
   }
 
-  /** Constructor for a Boundary with exact two Volumes attached to it*/
-  BoundarySurface(std::shared_ptr<const VolumeArray> insideArray,
+  /// Constructor for a Boundary with exact multiple Volumes attached to it 
+  /// - usually used in a volume constructor
+  /// @param surface is the unqiue surface the boundary represents
+  /// @param inside is the inside volume array the bounday surface points to
+  /// @param outside is the outside volume array the boundary surface points to
+  BoundarySurfaceT(sd::unique_ptr<const Surface*> surface,
+                  std::shared_ptr<const VolumeArray> insideArray,
                   std::shared_ptr<const VolumeArray> outsideArray)
-    : m_insideVolume(nullptr)
+    : m_surface(std::move(surface))
+    , m_insideVolume(nullptr)
     , m_outsideVolume(nullptr)
     , m_insideVolumeArray(insideArray)
     , m_outsideVolumeArray(outsideArray)
   {
   }
 
-  /** Get the next Volume depending on GlobalPosition, GlobalMomentum, dir on
-     the TrackParameters and the requested direction
-      - the position, momentum are assumed to be on surface  */
+  /// Get the next Volume depending on GlobalPosition, GlobalMomentum, dir on
+  /// the TrackParameters and the requested direction
+  /// @param gpos is the global position on surface
+  /// @param mom is the direction on the surface
+  /// @param dir is an aditional direction corrective
+  /// @return is the attached volume at that position  
   virtual const T*
-  attachedVolume(const Vector3D& pos,
+  attachedVolume(const Vector3D& gpos,
                  const Vector3D& mom,
                  PropDirection   dir) const;
 
-  /** templated onBoundary method */
+  /// templated onBoundary method 
+                 
   template <class P>
   bool
   onBoundary(const P& pars) const
@@ -112,47 +119,60 @@ public:
     return surfaceRepresentation().onSurface(pars);
   }
 
-  /** The Surface Representation of this */
+  /// The Surface Representation of this 
   virtual const Surface&
-  surfaceRepresentation() const = 0;
+  surfaceRepresentation() const;
 
-  /**Virtual Destructor*/
-  virtual ~BoundarySurface() {}
+  /// Virtual Destructor 
+  virtual ~BoundarySurfaceT() {}
+  
 protected:
-  /** attach a Volume to this BoundarySurface - will always be done as an 0D
-     array
-      - the owning volume can call this as it is fiend */
+  /// Helper metho: attach a Volume to this BoundarySurfaceT
+  /// this si done during the geometry construction and only called by 
+  /// the friend templated volume
   void
   attachVolume(VolumePtr volume, BoundaryOrientation inout) const;
 
-  /** attach a  VolumeArray to this BoundarySurface
-      - the owing volume can call this as it is friend */
+  /// Helper metho: attach a Volume to this BoundarySurfaceT
+  /// this si done during the geometry construction and only called by 
+  /// the friend templated volume
   void
   attachVolumeArray(std::shared_ptr<const VolumeArray> volumes,
                     BoundaryOrientation                inout) const;
 
+  /// the represented surface by this   
+  std::unique_ptr<const Surface>             m_surface;           
+  /// the inside (w.r.t. normal vector) volume to point to if only one exists
   mutable const T*                           m_insideVolume;
+  /// the outside (w.r.t. normal vector) volume to point to if only one exists
   mutable const T*                           m_outsideVolume;
+  /// the inside (w.r.t. normal vector) volume array to point to
   mutable std::shared_ptr<const VolumeArray> m_insideVolumeArray;
+  /// the outside (w.r.t. normal vector) volume array to point to
   mutable std::shared_ptr<const VolumeArray> m_outsideVolumeArray;
+  
 };
 
-template <class T>
-void
-BoundarySurface<T>::attachVolume(VolumePtr           volume,
-                                 BoundaryOrientation inout) const
+inline const Surface&
+BoundarySurfaceT<T>::surfaceRepresentation() const
 {
-  if (inout == insideVolume)
-    m_insideVolumeArray = std::shared_ptr<const VolumeArray>(
-        new BinnedArray0D<VolumePtr>(volume));
-  else
-    m_outsideVolumeArray = std::shared_ptr<const VolumeArray>(
-        new BinnedArray0D<VolumePtr>(volume));
+  return (*(m_surface.get());
 }
 
 template <class T>
 void
-BoundarySurface<T>::attachVolumeArray(
+BoundarySurfaceT<T>::attachVolume(VolumePtr           volume,
+                                 BoundaryOrientation inout) const
+{
+  if (inout == insideVolume)
+    m_insideVolume = volume.get();
+  else
+    m_outsideVolume = volume.get();
+}
+
+template <class T>
+void
+BoundarySurfaceT<T>::attachVolumeArray(
     const std::shared_ptr<const VolumeArray> volumes,
     BoundaryOrientation                      inout) const
 {
@@ -164,7 +184,7 @@ BoundarySurface<T>::attachVolumeArray(
 
 template <class T>
 const T*
-BoundarySurface<T>::attachedVolume(const Vector3D& pos,
+BoundarySurfaceT<T>::attachedVolume(const Vector3D& pos,
                                    const Vector3D& mom,
                                    PropDirection   dir) const
 {
@@ -180,4 +200,4 @@ BoundarySurface<T>::attachedVolume(const Vector3D& pos,
 }
 }  // end of namespace Acts
 
-#endif  // ACTS_VOLUMES_BOUNDARYSURFACE_H
+#endif  // ACTS_VOLUMES_BOUNDARYSURFACET_H

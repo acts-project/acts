@@ -135,7 +135,14 @@ public:
   /// It requires a local position to be given (in general) 
   /// @return normal vector by value
   virtual const Vector3D
-  normal(const Vector2D& lp) const = 0;
+  normal(const Vector2D& lpos) const = 0;
+
+  /// Return method for the normal vector of the surface
+  /// The normal vector can only be generally defined at a given local position
+  /// It requires a local position to be given (in general) 
+  /// @return normal vector by value
+  virtual const Vector3D
+  normal(const Vector3D& gpos) const;
 
   /// Return method for SurfaceBounds
   /// @return SurfaceBounds by reference
@@ -326,6 +333,12 @@ inline const Vector3D
 Surface::center() const
 {
    return transform().translation();
+}
+
+inline const Vector3D
+Surface::normal(const Vector3D&) const
+{
+  return normal(s_origin2D);
 }
 
 template <class T>

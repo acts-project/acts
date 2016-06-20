@@ -110,6 +110,12 @@ public:
   virtual const Vector3D
   normal(const Vector2D& lpos) const override;
 
+  /// Return method for surface normal information
+  /// @note for a Cylinder a local position is always required for the normal vector
+  /// @param gpos is the global postion for which the normal vector is requested
+  virtual const Vector3D
+  normal(const Vector3D& gpos) const override;
+
   ///  Return method for the rotational symmetry axis - the z-Axis of the HepTransform
   virtual const Vector3D
   rotSymmetryAxis() const;
@@ -191,24 +197,29 @@ CylinderSurface::clone(const Transform3D* shift) const
 }
 
 inline const Vector3D
-CylinderSurface::normal(const Vector2D& lp) const
+CylinderSurface::normal(const Vector2D& lpos) const
 {
-  double   phi = lp[Acts::eLOC_RPHI] / m_bounds->r();
+  double   phi = lpos[Acts::eLOC_RPHI] / m_bounds->r();
   Vector3D localNormal(cos(phi), sin(phi), 0.);
   return Vector3D(transform().rotation() * localNormal);
+}
+
+inline const Vector3D
+CylinderSurface::normal(const Vector3D& gpos) const
+{
+  // get it into the cylinder frame if needed
+  Vector3D pos3D = gpos;
+  if (m_transform || m_associatdDetElement){
+    pos3D = transform().inverse()*gpos;
+    pos3D.z() = 0;
+  }
+  return pos3D.unit();
 }
 
 inline double
 CylinderSurface::pathCorrection(const Vector3D& gpos, const Vector3D& mom) const
 {
-  // the global normal vector is pos-center.unit() - at the z of the position
-  if (m_transform || m_associatedDetElement){
-    Transform3D iTransform = transform().inverse();
-    return pathCorrection(iTransform*gpos,iTransform.linear()*gpos);
-  }
-  // 
-  Vector3D pcT(gpos.x() - center().x(), gpos.y() - center().y(), 0.);
-  Vector3D normalT(pcT.unit());  // transverse normal
+  Vector3D normalT = normal(gpos);
   double   cosAlpha = normalT.dot(mom.unit());
   return fabs(1./cosAlpha);
 }

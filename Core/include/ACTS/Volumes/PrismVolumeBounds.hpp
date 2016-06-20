@@ -22,78 +22,77 @@ class Surface;
 class PlaneSurface;
 class TriangleBounds;
 
-/**
- @class PrismVolumeBounds
-
- Bounds for the transcript of triangular prism
-
-  BoundarySurfaceFace [index]:
-
-      - negativeFaceXY     [0] : Triangular Acts::PlaneSurface,
-                                 parallel to \f$ xy \f$ plane at negative \f$ z
- \f$
-      - positiveFaceXY     [1] : Triangular Acts::PlaneSurface,
-                                 parallel to \f$ xy \f$ plane at positive \f$ z
- \f$
-      - face [2... n+1] : Rectangular  Acts::PlaneSurface
-
-  */
-
+/// @class PrismVolumeBounds
+///
+/// Bounds for the transcript of triangular prism
+///
+///  BoundarySurfaceFace [index]:
+///
+///      - negativeFaceXY     [0] : Triangular Acts::PlaneSurface,
+///                                 parallel to \f$ xy \f$ plane at negative \f$ z
+/// \f$
+///      - positiveFaceXY     [1] : Triangular Acts::PlaneSurface,
+///                                 parallel to \f$ xy \f$ plane at positive \f$ z
+/// \f$
+///      - face [2... n+1] : Rectangular  Acts::PlaneSurface
+///
 class PrismVolumeBounds : public VolumeBounds
 {
 public:
-  /**Default Constructor*/
+  /// Default Constructor
   PrismVolumeBounds();
 
-  /**Constructor - generic case (from float)*/
-  PrismVolumeBounds(std::vector<std::pair<float, float>> xyvtx, float hlengthz);
+  /// Constructor - generic case from (double)
+  /// @param xyvtx vertices in the x-y plane
+  /// @param hlengthz the half length in z 
+  PrismVolumeBounds(std::vector< Vector2D > xyvtx, double hlengthz);
 
-  /**Constructor - generic case from (double)*/
-  PrismVolumeBounds(std::vector<std::pair<double, double>> xyvtx,
-                    double hlengthz);
-
-  /**Copy Constructor */
+  /// Copy Constructor 
+  /// @param bobo source bounds for copy constructruction
   PrismVolumeBounds(const PrismVolumeBounds& bobo);
 
-  /**Destructor */
+  /// Destructor 
   virtual ~PrismVolumeBounds();
 
-  /**Assignment operator*/
+  /// Assignment operator
   PrismVolumeBounds&
   operator=(const PrismVolumeBounds& bobo);
 
-  /**Virtual constructor */
+  /// Virtual constructor 
   PrismVolumeBounds*
   clone() const override;
 
-  /**This method checks if position in the 3D volume frame is inside the
-   * volume*/
+  /// This method checks if position in the 3D volume frame 
+  /// is inside the volume
+  /// @param gpos is the global position to be checked
+  /// @param tol is the tolerance parameter for the check
   bool
-  inside(const Vector3D&, double tol = 0.) const override;
+  inside(const Vector3D& gpos, double tol = 0.) const override;
 
-  /** Method to decompose the Bounds into Surfaces */
-  const std::vector<const Surface*>*
+  /// Method to decompose the Bounds into Surfaces 
+  /// @param transformPtr is the is the 
+  const std::vector<const Surface*>
   decomposeToSurfaces(std::shared_ptr<Transform3D> transformPtr) const override;
 
-  /**This method returns the set of xy generating vertices*/
-  const std::vector<std::pair<TDD_real_t, TDD_real_t>>
+  /// This method returns the set of xy generating vertices
+  const std::vector< Vector2D >
   xyVertices() const;
 
-  /**This method returns the halflength in local z*/
+  /// This method returns the halflength in local z
   double
   halflengthZ() const;
 
-  /** Output Method for std::ostream */
+  /// Output Method for std::ostream 
   std::ostream&
   dump(std::ostream& sl) const override;
 
 private:
-  /** templated dump method */
+  /// templated dump method
   template <class T>
   T&
   dumpT(T& dt) const;
 
-  /** method to construct side boundary planes */
+  /// method to construct side boundary planes 
   Acts::PlaneSurface*
   sideSurf(Transform3D, unsigned int, unsigned int) const;
 
@@ -101,16 +100,15 @@ private:
   std::vector<std::pair<double, double>>
   mirror_xyVtx() const;
 
-  /** assess ordering of vertices */
-  int
-  ordering() const;
+  /// assess ordering of vertices 
+  /// @TODO check with ST for the meaning of this
+  int ordering() const;
 
-  mutable std::vector<std::pair<TDD_real_t, TDD_real_t>>
-             m_xyVtx;  //!< generating xy vertices
-  TDD_real_t m_halfZ;  //!< halflength in z
+  mutable std::vector< Vector2D >       m_xyVtx;  ///< generating xy vertices
+  TDD_real_t                            m_halfZ;  ///< halflength in z
 
-  mutable Acts::TriangleBounds* m_baseBounds;  //!< base xy bounds
-  mutable int                   m_ordering;    //!< cache vertex ordering
+  std::shared_ptr<const TriangleBounds> m_baseBounds;  ///< base xy bounds
+  mutable int                           m_ordering;    ///< cache vertex ordering
 };
 
 inline PrismVolumeBounds*
@@ -119,7 +117,7 @@ PrismVolumeBounds::clone() const
   return new PrismVolumeBounds(*this);
 }
 
-inline const std::vector<std::pair<TDD_real_t, TDD_real_t>>
+inline const std::vector< Vector2D >
 PrismVolumeBounds::xyVertices() const
 {
   return m_xyVtx;

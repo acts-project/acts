@@ -10,7 +10,6 @@
 // CylinderVolumeBounds.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
@@ -18,7 +17,6 @@
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
-// STD/STL
 #include <iostream>
 #include <math.h>
 
@@ -62,7 +60,7 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(double rinner,
 }
 
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(
-    const Acts::CylinderVolumeBounds& cylbo)
+    const CylinderVolumeBounds& cylbo)
   : VolumeBounds(), m_valueStore(cylbo.m_valueStore)
 {
 }
@@ -72,114 +70,112 @@ Acts::CylinderVolumeBounds::~CylinderVolumeBounds()
 }
 
 Acts::CylinderVolumeBounds&
-Acts::CylinderVolumeBounds::operator=(const Acts::CylinderVolumeBounds& cylbo)
+Acts::CylinderVolumeBounds::operator=(const CylinderVolumeBounds& cylbo)
 {
   if (this != &cylbo) m_valueStore = cylbo.m_valueStore;
   return *this;
 }
 
-const std::vector<const Acts::Surface*>*
+const std::vector<const Acts::Surface*>
 Acts::CylinderVolumeBounds::decomposeToSurfaces(
-    std::shared_ptr<Acts::Transform3D> transformPtr) const
+    std::shared_ptr<Transform3D> transformPtr) const
 {
-  std::vector<const Acts::Surface*>* retsf
-      = new std::vector<const Acts::Surface*>;
-  // memory optimisation --- reserve the maximum
-  retsf->reserve(6);
+  std::vector<const Surface*> rSurfaces;
+  rSurfaces.reserve(6);
 
   // set the transform
-  Acts::Transform3D transform = (transformPtr == nullptr)
-      ? Acts::Transform3D::Identity()
+  Transform3D transform = (transformPtr == nullptr)
+      ? Transform3D::Identity()
       : (*transformPtr.get());
-  Acts::Transform3D*     tTransform = nullptr;
-  Acts::RotationMatrix3D discRot(transform.rotation());
-  Acts::Vector3D         cylCenter(transform.translation());
+  Transform3D*     tTransform = nullptr;
+  RotationMatrix3D discRot(transform.rotation());
+  Vector3D         cylCenter(transform.translation());
 
   // bottom Disc (negative z)
-  Acts::RotationMatrix3D bottomDiscRot;
+  RotationMatrix3D bottomDiscRot;
   bottomDiscRot.col(0) = discRot.col(1);
   bottomDiscRot.col(1) = discRot.col(0);
   bottomDiscRot.col(2) = -discRot.col(2);
 
-  std::shared_ptr<const Acts::RadialBounds> dBounds(discBounds());
-  tTransform = new Acts::Transform3D(
-      transform * Acts::AngleAxis3D(M_PI, Acts::Vector3D(1., 0., 0.))
-      * Acts::Translation3D(Acts::Vector3D(0., 0., halflengthZ())));
-  retsf->push_back(new Acts::DiscSurface(
-      std::shared_ptr<Acts::Transform3D>(tTransform), dBounds));
+  std::shared_ptr<const RadialBounds> dBounds = discBounds();
+  tTransform = new Transform3D(
+      transform * AngleAxis3D(M_PI, Vector3D(1., 0., 0.))
+      * Translation3D(Vector3D(0., 0., halflengthZ())));
+  rSurfaces.push_back(new DiscSurface(
+      std::shared_ptr<Transform3D>(tTransform), dBounds));
   // top Disc (positive z)
-  tTransform = new Acts::Transform3D(
+  tTransform = new Transform3D(
       discRot
-      * Acts::Translation3D(cylCenter + halflengthZ() * discRot.col(2)));
-  retsf->push_back(new Acts::DiscSurface(
-      std::shared_ptr<Acts::Transform3D>(tTransform), dBounds));
+      * Translation3D(cylCenter + halflengthZ() * discRot.col(2)));
+  rSurfaces.push_back(new DiscSurface(
+      std::shared_ptr<Transform3D>(tTransform), dBounds));
 
   // outer Cylinder - shares the transform
-  retsf->push_back(
-      new Acts::CylinderSurface(transformPtr, outerCylinderBounds()));
+  rSurfaces.push_back(
+      new CylinderSurface(transformPtr, outerCylinderBounds()));
 
   // innermost Cylinder
   if (innerRadius() > s_numericalStable)
-    retsf->push_back(
-        new Acts::CylinderSurface(transformPtr, innerCylinderBounds()));
+    rSurfaces.push_back(
+        new CylinderSurface(transformPtr, innerCylinderBounds()));
 
   // the cylinder is sectoral
   if (fabs(halfPhiSector() - M_PI) > s_numericalStable) {
-    std::shared_ptr<const Acts::PlanarBounds> sp12Bounds(sectorPlaneBounds());
+    std::shared_ptr<const PlanarBounds> sp12Bounds = sectorPlaneBounds();
     // sectorPlane 1 (negative phi)
-    Acts::Transform3D* sp1Transform = new Acts::Transform3D(
+    Transform3D* sp1Transform = new Transform3D(
         transform
-        * Acts::AngleAxis3D(-halfPhiSector(), Acts::Vector3D(0., 0., 1.))
-        * Acts::Translation3D(Acts::Vector3D(mediumRadius(), 0., 0.))
-        * Acts::AngleAxis3D(M_PI / 2, Acts::Vector3D(1., 0., 0.)));
-    retsf->push_back(new Acts::PlaneSurface(
-        std::shared_ptr<Acts::Transform3D>(sp1Transform), sp12Bounds));
+        * AngleAxis3D(-halfPhiSector(), Vector3D(0., 0., 1.))
+        * Translation3D(Vector3D(mediumRadius(), 0., 0.))
+        * AngleAxis3D(M_PI / 2, Vector3D(1., 0., 0.)));
+    rSurfaces.push_back(new PlaneSurface(
+        std::shared_ptr<Transform3D>(sp1Transform), sp12Bounds));
     // sectorPlane 2 (positive phi)
-    Acts::Transform3D* sp2Transform = new Acts::Transform3D(
+    Transform3D* sp2Transform = new Transform3D(
         transform
-        * Acts::AngleAxis3D(halfPhiSector(), Acts::Vector3D(0., 0., 1.))
-        * Acts::Translation3D(Acts::Vector3D(mediumRadius(), 0., 0.))
-        * Acts::AngleAxis3D(-M_PI / 2, Acts::Vector3D(1., 0., 0.)));
-    retsf->push_back(new Acts::PlaneSurface(
-        std::shared_ptr<Acts::Transform3D>(sp2Transform), sp12Bounds));
+        * AngleAxis3D(halfPhiSector(), Vector3D(0., 0., 1.))
+        * Translation3D(Vector3D(mediumRadius(), 0., 0.))
+        * AngleAxis3D(-M_PI / 2, Vector3D(1., 0., 0.)));
+    rSurfaces.push_back(new PlaneSurface(
+        std::shared_ptr<Transform3D>(sp2Transform), sp12Bounds));
   }
-  return retsf;
+  return rSurfaces;
 }
 
-Acts::CylinderBounds*
+std::shared_ptr<const Acts::CylinderBounds>
 Acts::CylinderVolumeBounds::innerCylinderBounds() const
 {
-  return new Acts::CylinderBounds(m_valueStore.at(bv_innerRadius),
-                                  m_valueStore.at(bv_halfPhiSector),
-                                  m_valueStore.at(bv_halfZ));
+  return std::make_shared<const CylinderBounds>(m_valueStore.at(bv_innerRadius),
+                                                m_valueStore.at(bv_halfPhiSector),
+                                                m_valueStore.at(bv_halfZ));
 }
 
-Acts::CylinderBounds*
+std::shared_ptr<const Acts::CylinderBounds>
 Acts::CylinderVolumeBounds::outerCylinderBounds() const
 {
-  return new Acts::CylinderBounds(m_valueStore.at(bv_outerRadius),
-                                  m_valueStore.at(bv_halfPhiSector),
-                                  m_valueStore.at(bv_halfZ));
+  return std::make_shared<const CylinderBounds>(m_valueStore.at(bv_outerRadius),
+                                                m_valueStore.at(bv_halfPhiSector),
+                                                m_valueStore.at(bv_halfZ));
 }
 
-Acts::RadialBounds*
+std::shared_ptr<const Acts::RadialBounds>
 Acts::CylinderVolumeBounds::discBounds() const
 {
-  return new Acts::RadialBounds(m_valueStore.at(bv_innerRadius),
-                                m_valueStore.at(bv_outerRadius),
-                                m_valueStore.at(bv_halfPhiSector));
+  return std::shared_ptr<const RadialBounds>(m_valueStore.at(bv_innerRadius),
+                                             m_valueStore.at(bv_outerRadius),
+                                             m_valueStore.at(bv_halfPhiSector));
 }
 
-Acts::RectangleBounds*
+std::shared_ptr<const Acts::RectangleBounds>
 Acts::CylinderVolumeBounds::sectorPlaneBounds() const
 {
-  return new Acts::RectangleBounds(0.5 * (m_valueStore.at(bv_outerRadius)
-                                          - m_valueStore.at(bv_innerRadius)),
-                                   m_valueStore.at(bv_halfZ));
+  return std::shared_ptr<const RectangleBounds>(0.5 * (m_valueStore.at(bv_outerRadius)
+                                                - m_valueStore.at(bv_innerRadius)),
+                                                m_valueStore.at(bv_halfZ));
 }
 
 std::ostream&
-Acts::CylinderVolumeBounds::dump(std::ostream& sl) const
+CylinderVolumeBounds::dump(std::ostream& sl) const
 {
   return dumpT<std::ostream>(sl);
 }

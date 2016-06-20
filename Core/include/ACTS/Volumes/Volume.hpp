@@ -12,56 +12,48 @@
 #ifndef ACTS_VOLUMES_VOLUME_H
 #define ACTS_VOLUMES_VOLUME_H 1
 
-// STL include(s)
 #include <memory>
-
 #include "ACTS/Utilities/Definitions.hpp"
-// Geometry module
 #include "ACTS/Utilities/GeometryObject.hpp"
 #include "ACTS/Utilities/GeometryStatics.hpp"
-// Core module
 
 namespace Acts {
 
 class VolumeBounds;
 typedef std::shared_ptr<const VolumeBounds> VolumeBoundsPtr;
 
-/** @class Volume
-
-  It inhertis of GeometryObject for TDD identification
-
-  Base class for all volumes inside the tracking realm, it defines
-  the interface for inherited Volume classes
-  regarding the geometrical information.
-
-  */
+/// @class Volume
+///
+/// It inhertis of GeometryObject for TDD identification
+///
+/// Base class for all volumes inside the tracking realm, it defines
+/// the interface for inherited Volume classes
+/// regarding the geometrical information.
 
 class Volume : public virtual GeometryObject
 {
 public:
-  /** Default constructor */
+  ///  Default constructor 
   Volume();
 
-  /** Expizit constructor with arguments */
-  Volume(Transform3D* htrans, const VolumeBounds* volBounds);
-
-  /** Expizit constructor with shared arguments */
+  /// Expizit constructor with shared arguments 
+  /// @param htrans is the transform to position the volume in 3D space
+  /// @param volBounds is the volume boundary definitions
   Volume(std::shared_ptr<Transform3D> htrans, VolumeBoundsPtr volBounds);
 
-  /** Copy Constructor */
-  Volume(const Volume& vol);
+  /// Copy Constructor - with optional shift 
+  /// @param vol is the source volume for the copy
+  /// @param shift is the optional shift applied after copying
+  Volume(const Volume& vol, const Transform3D* shift = nullptr);
 
-  /** Copy Constructor */
-  Volume(const Volume& vol, const Transform3D& shift);
-
-  /** Destructor */
+  /// Destructor 
   virtual ~Volume();
 
-  /** Assignment operator */
+  /// Assignment operator
   Volume&
   operator=(const Volume& vol);
 
-  /** Pseudo-constructor */
+  /// Pseudo-constructor
   virtual Volume*
   clone() const;
 
@@ -73,41 +65,38 @@ public:
   const Vector3D&
   center() const;
 
-  /** returns the volumeBounds() */
+  /// returns the volumeBounds() 
   const VolumeBounds&
   volumeBounds() const;
 
-  /** Inside() method for checks */
+  /// Inside() method for checks 
+  /// @param gpos is the position to be checked
+  /// @param tol is the tolerance parameter
   bool
-  inside(const Vector3D& gp, double tol = 0.) const;
+  inside(const Vector3D& gpos, double tol = 0.) const;
 
-  /** The binning position method - as default the center is given, but may be
-   * overloaded */
+  /// The binning position method 
+  /// - as default the center is given, but may be overloaded
   virtual const Vector3D
   binningPosition(BinningValue bValue) const override;
 
 protected:
-  std::shared_ptr<Transform3D> m_transform;  //!< Transform3D
-  mutable Vector3D*            m_center;     //!< center position of the surface
-  VolumeBoundsPtr              m_volumeBounds;  //!< the volumeBounds
+  std::shared_ptr<Transform3D>      m_transform;  
+  Vector3D                          m_center;     
+  VolumeBoundsPtr                   m_volumeBounds;  
 };
 
 inline const Transform3D&
 Volume::transform() const
 {
-  if (m_transform.get()) return (*(m_transform.get()));
+  if (m_transform) return (*(m_transform.get()));
   return Acts::s_idTransform;
 }
 
 inline const Vector3D&
 Volume::center() const
 {
-  if (m_center) return (*m_center);
-  if (!m_center && m_transform.get()) {
-    m_center = new Vector3D(m_transform->translation());
-    return (*m_center);
-  }
-  return Acts::s_origin;
+  return m_center;
 }
 
 inline const VolumeBounds&
