@@ -49,7 +49,7 @@ template <class T>
 using LayerIntersection = FullIntersection<Layer, Surface, T>;
 template <class T>
 using BoundaryIntersection
-    = FullIntersection<BoundarySurface<TrackingVolume>, Surface, T>;
+    = FullIntersection<BoundarySurfaceT<TrackingVolume>, Surface, T>;
 
 /**
  @class TrackingVolume
@@ -189,7 +189,7 @@ public:
   volumeName() const;
 
   /** Method to return the BoundarySurfaces */
-  const std::vector<std::shared_ptr<const BoundarySurface<TrackingVolume>>>&
+  const std::vector<std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>>&
   boundarySurfaces() const;
 
   /** Returns the boundary surfaces ordered in probability to hit them based on
@@ -227,7 +227,7 @@ public:
   void
   updateBoundarySurface(
       BoundarySurfaceFace                                    bf,
-      std::shared_ptr<const BoundarySurface<TrackingVolume>> bs) const;
+      std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs) const;
 
   /** Register the outside glue volumes -
       ordering is in the TrackingVolume Frame:
@@ -336,7 +336,7 @@ private:
   mutable const TrackingVolume*
       m_motherVolume;  //!< mother volume of this volume
 
-  mutable std::vector<std::shared_ptr<const BoundarySurface<TrackingVolume>>>
+  mutable std::vector<std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>>
       m_boundarySurfaces;  //!< boundary Surfaces
 
   //(a) static configuration ordered by Binned arrays
@@ -413,14 +413,14 @@ TrackingVolume::onVolumeBoundary(const T& pars) const
   auto&          bSurfaces = boundarySurfaces();
   // fast loop pointer comparison of the surfaces
   for (auto& bsIter : bSurfaces) {
-    const BoundarySurface<TrackingVolume>* bSurface = bsIter.get();
+    const BoundarySurfaceT<TrackingVolume>* bSurface = bsIter.get();
     // pointer of the parameter surface is identical with one of the boundary
     // surface pointers
     if (pSurface == &bSurface->surfaceRepresentation()) return true;
   }
   // slow loop - checking the onSurface (does pointer comparison as well)
   for (auto& bsIter : bSurfaces) {
-    const BoundarySurface<TrackingVolume>* bSurface = bsIter.get();
+    const BoundarySurfaceT<TrackingVolume>* bSurface = bsIter.get();
     // pointer of the parameter surface is identical with one of the boundary
     // surface pointers
     if (bSurface->onBoundary(pars)) return true;
@@ -545,7 +545,7 @@ TrackingVolume::boundarySurfacesOrdered(const T&      pars,
   std::vector<BoundaryIntersection<T>> bIntersections;
   auto&                                bSurfaces = boundarySurfaces();
   for (auto& bsIter : bSurfaces) {
-    const BoundarySurface<TrackingVolume>* bSurface = bsIter.get();
+    const BoundarySurfaceT<TrackingVolume>* bSurface = bsIter.get();
     Intersection                           bsIntersection
         = bSurface->surfaceRepresentation().intersectionEstimate(
             pars.position(), dir, true, false);

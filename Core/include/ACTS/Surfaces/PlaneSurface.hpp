@@ -74,11 +74,6 @@ public:
   PlaneSurface&
   operator=(const PlaneSurface& psf);
 
-  /// Comparison: equality operator
-  /// @param sf source Surface for comparison
-  virtual bool
-  operator==(const Surface& sf) const override;
-
   /// Virtual constructor with optional shift 
   /// ownership of the shift transform is not given !!
   /// @copydoc Surface::clone
@@ -89,7 +84,6 @@ public:
   /// @param lpos is the local position is ignored
   /// return a Vector3D by value
   const Vector3D normal(const Vector2D& lpos = s_origin2D) const final;
-
     
   /// @copydoc Surface::biningPosition
   virtual const Vector3D
@@ -173,9 +167,8 @@ public:
   }
 
 protected:                                                     
-  /// @TODO This is not safe yet for alignment updates
+  /// the bounds of this surface
   std::shared_ptr<const PlanarBounds>       m_bounds;
-  Vector3D                                  m_normal;
 };
 
 inline PlaneSurface*
@@ -195,7 +188,7 @@ PlaneSurface::bounds() const
 inline const Vector3D 
 PlaneSurface::normal(const Vector2D&) const
 {
-    return m_normal;
+    return transform().translation();
 }
 
 inline const Vector3D

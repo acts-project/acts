@@ -71,14 +71,14 @@ Acts::TrapezoidVolumeBounds::~TrapezoidVolumeBounds()
 {
 }
 
-TrapezoidVolumeBounds&
-TrapezoidVolumeBounds::operator=(const TrapezoidVolumeBounds& trabo)
+Acts::TrapezoidVolumeBounds&
+Acts::TrapezoidVolumeBounds::operator=(const TrapezoidVolumeBounds& trabo)
 {
   if (this != &trabo) m_valueStore = trabo.m_valueStore;
   return *this;
 }
 
-const std::vector<const Acts::Surface*>*
+const std::vector<const Acts::Surface*>
 Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
     std::shared_ptr<Transform3D> transformPtr) const
 {
@@ -121,7 +121,7 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
   faceAlphaRotation.col(0)         = alphaZRotation.col(1);
   faceAlphaRotation.col(1)         = -alphaZRotation.col(2);
   faceAlphaRotation.col(2)         = -alphaZRotation.col(0);
-  RectangleBounds* faceAlphaBounds = faceAlphaRectangleBounds();
+  std::shared_ptr<const PlanarBounds> faceAlphaBounds(faceAlphaRectangleBounds());
   // Vector3D
   // faceAlphaPosition(A+faceAlphaRotation.colX()*faceAlphaBounds->halflengthX());
   Vector3D faceAlphaPosition0(
@@ -142,7 +142,7 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
   faceBetaRotation.col(0)         = betaZRotation.col(1);
   faceBetaRotation.col(1)         = betaZRotation.col(2);
   faceBetaRotation.col(2)         = betaZRotation.col(0);
-  RectangleBounds* faceBetaBounds = faceBetaRectangleBounds();
+  std::shared_ptr<const PlanarBounds> faceBetaBounds(faceBetaRectangleBounds());
   // Vector3D
   // faceBetaPosition(B+faceBetaRotation.colX()*faceBetaBounds->halflengthX());
   Vector3D faceBetaPosition0(
@@ -161,7 +161,7 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
       * AngleAxis3D(-0.5 * M_PI, Vector3D(1., 0., 0.)));
   rSurfaces.push_back(
       new PlaneSurface(std::shared_ptr<Transform3D>(tTransform),
-                             faceZXRectangleBoundsBottom()));
+                       std::shared_ptr<const PlanarBounds>(faceZXRectangleBoundsBottom())));
   //   (6) - at positive local x
   tTransform = new Transform3D(
       transform * Translation3D(Vector3D(0., halflengthY(), 0.))
@@ -169,44 +169,44 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
       * AngleAxis3D(-0.5 * M_PI, Vector3D(1., 0., 0.)));
   rSurfaces.push_back(
       new PlaneSurface(std::shared_ptr<Transform3D>(tTransform),
-                             faceZXRectangleBoundsTop()));
+                       std::shared_ptr<const PlanarBounds>(faceZXRectangleBoundsTop())));
 
   return rSurfaces;
 }
 
-TrapezoidBounds*
-TrapezoidVolumeBounds::faceXYTrapezoidBounds() const
+Acts::TrapezoidBounds*
+Acts::TrapezoidVolumeBounds::faceXYTrapezoidBounds() const
 {
   return new TrapezoidBounds(m_valueStore.at(bv_minHalfX),
                                    m_valueStore.at(bv_maxHalfX),
                                    m_valueStore.at(bv_halfY));
 }
 
-RectangleBounds*
-TrapezoidVolumeBounds::faceAlphaRectangleBounds() const
+Acts::RectangleBounds*
+Acts::TrapezoidVolumeBounds::faceAlphaRectangleBounds() const
 {
   return new RectangleBounds(
       m_valueStore.at(bv_halfY) / cos(m_valueStore.at(bv_alpha) - 0.5 * M_PI),
       m_valueStore.at(bv_halfZ));
 }
 
-RectangleBounds*
-TrapezoidVolumeBounds::faceBetaRectangleBounds() const
+Acts::RectangleBounds*
+Acts::TrapezoidVolumeBounds::faceBetaRectangleBounds() const
 {
   return new RectangleBounds(
       m_valueStore.at(bv_halfY) / cos(m_valueStore.at(bv_beta) - 0.5 * M_PI),
       m_valueStore.at(bv_halfZ));
 }
 
-RectangleBounds*
-TrapezoidVolumeBounds::faceZXRectangleBoundsBottom() const
+Acts::RectangleBounds*
+Acts::TrapezoidVolumeBounds::faceZXRectangleBoundsBottom() const
 {
   return new RectangleBounds(m_valueStore.at(bv_halfZ),
                                    m_valueStore.at(bv_minHalfX));
 }
 
-RectangleBounds*
-TrapezoidVolumeBounds::faceZXRectangleBoundsTop() const
+Acts::RectangleBounds*
+Acts::TrapezoidVolumeBounds::faceZXRectangleBoundsTop() const
 {
   // double delta = (m_valueStore.at(bv_alpha) < m_valueStore.at(bv_beta)) ?
   // m_valueStore.at(bv_alpha) - M_PI/2. : m_valueStore.at(bv_beta) - M_PI/2.;
@@ -217,7 +217,7 @@ TrapezoidVolumeBounds::faceZXRectangleBoundsTop() const
 }
 
 bool
-TrapezoidVolumeBounds::inside(const Vector3D& pos, double tol) const
+Acts::TrapezoidVolumeBounds::inside(const Vector3D& pos, double tol) const
 {
   if (fabs(pos.z()) > m_valueStore.at(bv_halfZ) + tol) return false;
   if (fabs(pos.y()) > m_valueStore.at(bv_halfY) + tol) return false;
@@ -229,7 +229,7 @@ TrapezoidVolumeBounds::inside(const Vector3D& pos, double tol) const
 }
 
 std::ostream&
-TrapezoidVolumeBounds::dump(std::ostream& sl) const
+Acts::TrapezoidVolumeBounds::dump(std::ostream& sl) const
 {
   return dumpT<std::ostream>(sl);
 }

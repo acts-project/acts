@@ -222,11 +222,11 @@ ConeSurface::normal(const Vector2D& lp) const
 }
 
 inline const Vector3D
-CylinderSurface::normal(const Vector3D& gpos) const
+ConeSurface::normal(const Vector3D& gpos) const
 {
   // get it into the cylinder frame if needed
   Vector3D pos3D = gpos;
-  if (m_transform || m_associatdDetElement){
+  if (m_transform || m_associatedDetElement){
     pos3D = transform().inverse()*gpos;
     pos3D.z() = 0;
   }

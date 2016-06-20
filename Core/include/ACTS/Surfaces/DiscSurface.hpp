@@ -103,7 +103,7 @@ public:
   /// Normal vector
   /// @param lpos the local position where the normal is requested (ignored)
   const Vector3D
-  normal(const Vector2D& lpos = s_origin2D) const override;
+  normal(const Vector2D& lpos = s_origin2D) const final;
     
   /// @copydoc Surface::biningPosition
   virtual const Vector3D
@@ -206,7 +206,6 @@ public:
 
 protected:                                             
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
-  Vector3D                          m_normal;  ///< 
   
 };
 
@@ -222,6 +221,12 @@ DiscSurface::bounds() const
 {
   if (m_bounds) return (*(m_bounds.get()));
   return s_noBounds;
+}
+
+inline const Vector3D 
+DiscSurface::normal(const Vector2D&) const
+{
+    return transform().translation();
 }
 
 inline const Vector3D

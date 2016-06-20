@@ -41,7 +41,7 @@ Acts::CuboidVolumeBounds::CuboidVolumeBounds(double halex,
   
 }
 
-CuboidVolumeBounds::CuboidVolumeBounds(
+Acts::CuboidVolumeBounds::CuboidVolumeBounds(
     const CuboidVolumeBounds& bobo)
   : VolumeBounds()
   , m_valueStore(bobo.m_valueStore)
@@ -128,22 +128,22 @@ Acts::CuboidVolumeBounds::decomposeToSurfaces(
   return rSurfaces;
 }
 
-std::shared_ptr<const RectangleBounds>
-CuboidVolumeBounds::faceXYRectangleBounds() const
+std::shared_ptr<const Acts::RectangleBounds>
+Acts::CuboidVolumeBounds::faceXYRectangleBounds() const
 {
   return std::make_shared<const RectangleBounds>(m_valueStore.at(bv_halfX),
                                                  m_valueStore.at(bv_halfY));
 }
 
-std::shared_ptr<const RectangleBounds>
-CuboidVolumeBounds::faceYZRectangleBounds() const
+std::shared_ptr<const Acts::RectangleBounds>
+Acts::CuboidVolumeBounds::faceYZRectangleBounds() const
 {
   return std::make_shared<const RectangleBounds>(m_valueStore.at(bv_halfY),
                                                  m_valueStore.at(bv_halfZ));
 }
 
-std::shared_ptr<const RectangleBounds>
-CuboidVolumeBounds::faceZXRectangleBounds() const
+std::shared_ptr<const Acts::RectangleBounds>
+Acts::CuboidVolumeBounds::faceZXRectangleBounds() const
 {
   return std::make_shared<const RectangleBounds>(m_valueStore.at(bv_halfZ),
                                                  m_valueStore.at(bv_halfX));
@@ -151,7 +151,7 @@ CuboidVolumeBounds::faceZXRectangleBounds() const
 
 // ostream operator overload
 std::ostream&
-CuboidVolumeBounds::dump(std::ostream& sl) const
+Acts::CuboidVolumeBounds::dump(std::ostream& sl) const
 {
   return dumpT(sl);
 }

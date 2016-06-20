@@ -29,18 +29,9 @@ Acts::Volume::Volume(std::shared_ptr<Transform3D>        htrans,
   , m_center(s_origin)
   , m_volumeBounds(volbounds)
 {
-  if (htrans) m_center = htransf->translation();
+  if (htrans) m_center = htrans->translation();
 }
 
-Acts::Volume::Volume(const Volume& vol)
-  : GeometryObject()
-  , m_transform(vol.m_transform)
-  , m_center(vol.m_center)
-  , m_volumeBounds(vol.m_volumeBounds)
-{
-  if (m_transform)
-  
-}
 
 Acts::Volume::Volume(const Volume& vol, const Transform3D* shift)
   : GeometryObject()
@@ -50,7 +41,7 @@ Acts::Volume::Volume(const Volume& vol, const Transform3D* shift)
 {
   // applyt he shift if it exists
   if (shift)
-    m_transform = transform() * (*shift);
+      m_transform = std::make_shared<Transform3D>(transform() * (*shift));
   // now set the center 
   m_center = transform().translation();
   
@@ -59,7 +50,7 @@ Acts::Volume::Volume(const Volume& vol, const Transform3D* shift)
 Acts::Volume::~Volume()
 {}
 
-  Acts::Vector3D
+const Acts::Vector3D
 Acts::Volume::binningPosition(Acts::BinningValue bValue) const
 {
   // for most of the binning types it is actually the center,
@@ -77,7 +68,6 @@ Acts::Volume&
 Acts::Volume::operator=(const Acts::Volume& vol)
 {
   if (this != &vol) {
-    delete m_center;
     m_transform    = vol.m_transform;
     m_center       = vol.m_center;
     m_volumeBounds = vol.m_volumeBounds;

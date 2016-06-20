@@ -94,7 +94,7 @@ public:
   
   /// Access method for bound variable store
   /// @return of the stored values for the boundary object
-  virtual std::vector<TDD_real_t> valueStore() const;
+  virtual const std::vector<TDD_real_t>& valueStore() const;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -140,8 +140,13 @@ SurfaceBounds::operator!=(const SurfaceBounds& sb) const
   return !((*this) == sb);
 }
 
-/**Overload of << operator for std::ostream for debug output*/
-std::ostream&
+inline const std::vector<TDD_real_t>&
+SurfaceBounds::valueStore() const  
+{
+  return m_valueStore;
+}
+
+  std::ostream&
 operator<<(std::ostream& sl, const SurfaceBounds& sb);
 
 }  // end of namespace

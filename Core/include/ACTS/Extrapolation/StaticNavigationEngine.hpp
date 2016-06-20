@@ -134,7 +134,7 @@ private:
   template <class T>
   ExtrapolationCode
   handleBoundaryT(ExtrapolationCell<T>&                  eCell,
-                  const BoundarySurface<TrackingVolume>& bSurfaceTV,
+                  const BoundarySurfaceT<TrackingVolume>& bSurfaceTV,
                   PropDirection                          dir = alongMomentum,
                   bool                                   stepout = false) const;
 };

@@ -15,8 +15,9 @@
 
 #include "ACTS/Utilities/BinnedArray.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Volumes/BoundarySurfaceTFace.hpp"
+#include "ACTS/Volumes/BoundarySurfaceFace.hpp"
 #include "ACTS/Volumes/Volume.hpp"
+#include <memory>
 
 namespace Acts {
 
@@ -56,7 +57,7 @@ public:
   /// @param surface is the unqiue surface the boundary represents
   /// @paramt inside is the inside volume the bounday surface points to
   /// @paramt outside is the outside volume the boundary surface points to
-  BoundarySurfaceT(sd::unique_ptr<const Surface*> surface,
+  BoundarySurfaceT(std::unique_ptr<const Surface> surface,
                   const T* inside,
                   const T* outside)
     : m_surface(std::move(surface))
@@ -72,10 +73,10 @@ public:
   /// @param surface is the unqiue surface the boundary represents
   /// @paramt inside is the inside volume the bounday surface points to
   /// @paramt outside is the outside volume the boundary surface points to
-  BoundarySurfaceT(sd::unique_ptr<const Surface*> surface, 
+  BoundarySurfaceT(std::unique_ptr<const Surface> surface,
                   VolumePtr inside,
                   VolumePtr outside)
-    , m_surface(std::move(surface))
+    : m_surface(std::move(surface))
     , m_insideVolume(inside.get())
     , m_outsideVolume(outside.get())
     , m_insideVolumeArray(nullptr)
@@ -88,7 +89,7 @@ public:
   /// @param surface is the unqiue surface the boundary represents
   /// @param inside is the inside volume array the bounday surface points to
   /// @param outside is the outside volume array the boundary surface points to
-  BoundarySurfaceT(sd::unique_ptr<const Surface*> surface,
+  BoundarySurfaceT(std::unique_ptr<const Surface> surface,
                   std::shared_ptr<const VolumeArray> insideArray,
                   std::shared_ptr<const VolumeArray> outsideArray)
     : m_surface(std::move(surface))
@@ -153,10 +154,11 @@ protected:
   
 };
 
+template <class T>
 inline const Surface&
 BoundarySurfaceT<T>::surfaceRepresentation() const
 {
-  return (*(m_surface.get());
+  return (*(m_surface.get()));
 }
 
 template <class T>

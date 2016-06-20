@@ -13,17 +13,20 @@
 #ifndef ACTS_VOLUMES_ABSTRACTVOLUME_H
 #define ACTS_VOLUMES_ABSTRACTVOLUME_H
 
-#include "ACTS/Volumes/BoundarySurface.hpp"
+#include "ACTS/Volumes/BoundarySurfaceT.hpp"
 #include "ACTS/Volumes/Volume.hpp"
 #include <vector>
 #include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
 
+class AbstractVolume;
+typedef std::shared_ptr<const BoundarySurfaceT<AbstractVolume> > BoundarySurfacePtr;
+    
+    
 class VolumeBounds;
 typedef std::shared_ptr<const VolumeBounds> VolumeBoundsPtr;
 
-typedef std::shared_ptr<const BoundarySurface<AbstractVolume> > BoundarySurfacePtr;
 /// @class AbstractVolume
 ///
 /// AbstractVolume description inside the tracking realm. This is the purely
@@ -45,7 +48,6 @@ typedef std::shared_ptr<const BoundarySurface<AbstractVolume> > BoundarySurfaceP
 /// std::shared_ptr holder class.
 ///
 /// @image html VolumeShapes.gif
-
 
 class AbstractVolume : public Volume
 {

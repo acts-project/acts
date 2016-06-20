@@ -266,7 +266,7 @@ Acts::TrackingVolume::sign(GeometrySignature geosign,
 }
 
 const std::
-    vector<std::shared_ptr<const Acts::BoundarySurface<Acts::TrackingVolume>>>&
+    vector<std::shared_ptr<const Acts::BoundarySurfaceT<Acts::TrackingVolume>>>&
     Acts::TrackingVolume::boundarySurfaces() const
 {
   return (m_boundarySurfaces);
@@ -317,14 +317,14 @@ Acts::TrackingVolume::createBoundarySurfaces()
           out = this;
         }
         m_boundarySurfaces.push_back(
-            std::shared_ptr<const BoundarySurface<TrackingVolume>>(
+            std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>(
                 new BoundarySubtractedPlaneSurface<TrackingVolume>(
                     in, out, *spsf)));
         delete spsf;
         continue;
       } else if (psf) {
         m_boundarySurfaces.push_back(
-            std::shared_ptr<const BoundarySurface<TrackingVolume>>(
+            std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>(
                 new BoundaryPlaneSurface<TrackingVolume>(in, out, *psf)));
         delete psf;
         continue;
@@ -333,7 +333,7 @@ Acts::TrackingVolume::createBoundarySurfaces()
       const DiscSurface* dsf = dynamic_cast<const DiscSurface*>(*surfIter);
       if (dsf) {
         m_boundarySurfaces.push_back(
-            std::shared_ptr<const BoundarySurface<TrackingVolume>>(
+            std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>(
                 new BoundaryDiscSurface<TrackingVolume>(in, out, *dsf)));
         delete dsf;
         continue;
@@ -347,7 +347,7 @@ Acts::TrackingVolume::createBoundarySurfaces()
         TrackingVolume* inner = (sfCounter == 4 && sfNumber > 3) ? 0 : this;
         TrackingVolume* outer = (inner) ? 0 : this;
         m_boundarySurfaces.push_back(
-            std::shared_ptr<const BoundarySurface<TrackingVolume>>(
+            std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>(
                 new BoundarySubtractedCylinderSurface<TrackingVolume>(
                     inner, outer, *scsf)));
         delete scsf;
@@ -356,7 +356,7 @@ Acts::TrackingVolume::createBoundarySurfaces()
         TrackingVolume* inner = (sfCounter == 4 && sfNumber > 3) ? 0 : this;
         TrackingVolume* outer = (inner) ? 0 : this;
         m_boundarySurfaces.push_back(
-            std::shared_ptr<const BoundarySurface<TrackingVolume>>(
+            std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>(
                 new BoundaryCylinderSurface<TrackingVolume>(
                     inner, outer, *csf)));
         delete csf;
@@ -377,7 +377,7 @@ Acts::TrackingVolume::createBoundarySurfaces()
           = dynamic_cast<const SubtractedPlaneSurface*>(*surfIter);
       if (psf) {
         m_boundarySurfaces.push_back(
-            std::shared_ptr<const BoundarySurface<TrackingVolume>>(
+            std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>(
                 new BoundarySubtractedPlaneSurface<TrackingVolume>(
                     in, out, *psf)));
         delete psf;
@@ -388,7 +388,7 @@ Acts::TrackingVolume::createBoundarySurfaces()
           = dynamic_cast<const SubtractedCylinderSurface*>(*surfIter);
       if (csf) {
         m_boundarySurfaces.push_back(
-            std::shared_ptr<const BoundarySurface<TrackingVolume>>(
+            std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>(
                 new BoundarySubtractedCylinderSurface<TrackingVolume>(
                     in, out, *csf)));
         delete csf;
@@ -412,7 +412,7 @@ Acts::TrackingVolume::glueTrackingVolume(
   Vector3D bPosition(binningPosition(binR));
   Vector3D distance = Vector3D(neighbor->binningPosition(binR) - bPosition);
   // glue to the face
-  std::shared_ptr<const BoundarySurface<TrackingVolume>> bSurfaceMine
+  std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine
       = boundarySurfaces().at(bsfMine);
   // @TODO - complex glueing could be possible with actual intersection for the
   // normal vector
@@ -446,7 +446,7 @@ Acts::TrackingVolume::glueTrackingVolumes(
   Vector3D bPosition(binningPosition(binR));
   Vector3D distance = Vector3D(nRefVolume->binningPosition(binR) - bPosition);
   // take the normal at the binning positio
-  std::shared_ptr<const BoundarySurface<TrackingVolume>> bSurfaceMine
+  std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine
       = boundarySurfaces().at(bsfMine);
   // @TODO - complex glueing could be possible with actual intersection for the
   // normal vector
@@ -470,7 +470,7 @@ Acts::TrackingVolume::glueTrackingVolumes(
 void
 Acts::TrackingVolume::updateBoundarySurface(
     BoundarySurfaceFace                                    bsf,
-    std::shared_ptr<const BoundarySurface<TrackingVolume>> bs) const
+    std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs) const
 {
   m_boundarySurfaces.at(bsf) = bs;
 }

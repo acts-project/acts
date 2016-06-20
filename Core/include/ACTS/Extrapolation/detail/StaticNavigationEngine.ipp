@@ -45,11 +45,11 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
                << (eCell.onLastBoundary() ? " - starting from last boundary."
                                           : "."));
   // remember them for the slow acces
-  std::map<const BoundarySurface<TrackingVolume>*, bool> bSurfacesTried;
+  std::map<const BoundarySurfaceT<TrackingVolume>*, bool> bSurfacesTried;
 
   for (auto& boundaryCandidate : boundaryIntersections) {
     // the surface of the
-    const BoundarySurface<TrackingVolume>* bSurfaceTV
+    const BoundarySurfaceT<TrackingVolume>* bSurfaceTV
         = boundaryCandidate.object;
     // skip if it's the last boundary surface
     if (eCell.onLastBoundary()
@@ -152,7 +152,7 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
                  "approach now");
   for (auto& boundaryCandidate : boundaryIntersections) {
     // the surface of the
-    const BoundarySurface<TrackingVolume>* bSurfaceTV
+    const BoundarySurfaceT<TrackingVolume>* bSurfaceTV
         = boundaryCandidate.object;
     // check this boudnary, possible return codes are:
     // - SuccessPathLimit     : propagation to boundary caused PathLimit to be
@@ -200,7 +200,7 @@ template <class T>
 Acts::ExtrapolationCode
 Acts::StaticNavigationEngine::handleBoundaryT(
     Acts::ExtrapolationCell<T>&                        eCell,
-    const Acts::BoundarySurface<Acts::TrackingVolume>& bSurfaceTV,
+    const Acts::BoundarySurfaceT<Acts::TrackingVolume>& bSurfaceTV,
     Acts::PropDirection                                pDir,
     bool                                               stepout) const
 {

@@ -19,9 +19,9 @@
 namespace Acts {
 
 class Surface;
-class RadialBounds;
 class CylinderBounds;
-class RectangleBounds;
+class DiscBounds;
+class PlanarBounds;
 
 /// @class CylinderVolumeBounds
 ///
@@ -187,12 +187,12 @@ private:
 
   /// This method returns the associated RadialBounds 
   /// for the bottom/top DiscSurface
-  std::shared_ptr<const RadialBounds>
+  std::shared_ptr<const DiscBounds>
   discBounds() const;
 
   /// This method returns the associated PlaneBounds 
   /// limiting a sectoral CylinderVolume
-  std::shared_ptr<const RectangleBounds>
+  std::shared_ptr<const PlanarBounds>
   sectorPlaneBounds() const;
 
   /// The internal version of the bounds can be float/double

@@ -97,7 +97,7 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
   bottomDiscRot.col(1) = discRot.col(0);
   bottomDiscRot.col(2) = -discRot.col(2);
 
-  std::shared_ptr<const RadialBounds> dBounds = discBounds();
+  std::shared_ptr<const DiscBounds> dBounds = discBounds();
   tTransform = new Transform3D(
       transform * AngleAxis3D(M_PI, Vector3D(1., 0., 0.))
       * Translation3D(Vector3D(0., 0., halflengthZ())));
@@ -158,24 +158,24 @@ Acts::CylinderVolumeBounds::outerCylinderBounds() const
                                                 m_valueStore.at(bv_halfZ));
 }
 
-std::shared_ptr<const Acts::RadialBounds>
+std::shared_ptr<const Acts::DiscBounds>
 Acts::CylinderVolumeBounds::discBounds() const
 {
-  return std::shared_ptr<const RadialBounds>(m_valueStore.at(bv_innerRadius),
-                                             m_valueStore.at(bv_outerRadius),
-                                             m_valueStore.at(bv_halfPhiSector));
+  return std::shared_ptr<const DiscBounds>(new RadialBounds(m_valueStore.at(bv_innerRadius),
+                                                            m_valueStore.at(bv_outerRadius),
+                                                            m_valueStore.at(bv_halfPhiSector)));
 }
 
-std::shared_ptr<const Acts::RectangleBounds>
+std::shared_ptr<const Acts::PlanarBounds>
 Acts::CylinderVolumeBounds::sectorPlaneBounds() const
 {
-  return std::shared_ptr<const RectangleBounds>(0.5 * (m_valueStore.at(bv_outerRadius)
+  return std::shared_ptr<const PlanarBounds>(new RectangleBounds(0.5 * (m_valueStore.at(bv_outerRadius)
                                                 - m_valueStore.at(bv_innerRadius)),
-                                                m_valueStore.at(bv_halfZ));
+                                                m_valueStore.at(bv_halfZ)));
 }
 
 std::ostream&
-CylinderVolumeBounds::dump(std::ostream& sl) const
+Acts::CylinderVolumeBounds::dump(std::ostream& sl) const
 {
   return dumpT<std::ostream>(sl);
 }

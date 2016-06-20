@@ -20,23 +20,19 @@
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface& psf)
   : Surface(psf)
   , m_bounds(psf.m_bounds)
-  , m_normal(psf.m_normal)
 {}
 
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface& psf,
                                  const Transform3D&  transf)
   : Surface(psf, transf)
   , m_bounds(psf.m_bounds)
-  , m_normal(0.,0.,0.) 
 {
-    m_normal = std::move(transform().rotation().col(2));
 }
 
 Acts::PlaneSurface::PlaneSurface(const Vector3D&  center,
                                  const Vector3D&  normal)
   : Surface()
   , m_bounds(nullptr)
-  , m_normal(normal)
 {
   Translation3D curvilinearTranslation(center.x(), center.y(), center.z());
   /// the right-handed coordinate system is defined as
@@ -64,11 +60,9 @@ Acts::PlaneSurface::PlaneSurface( std::shared_ptr<const PlanarBounds> pbounds,
                                  const Identifier&                identifier)
   : Surface(detelement, identifier)
   , m_bounds(pbounds)
-  , m_normal(0.,0.,0.)
 {
     /// surfaces representing a detector element must have bounds
     assert(pbounds);
-    m_normal = std::move(transform().rotation().col(2));    
 }
 
 Acts::PlaneSurface::PlaneSurface(
@@ -76,9 +70,7 @@ Acts::PlaneSurface::PlaneSurface(
     std::shared_ptr<const PlanarBounds> pbounds)
   : Surface(std::move(htrans))
   , m_bounds(std::move(pbounds))
-  , m_normal(0.,0.,0.) 
 {
-    m_normal = std::move(transform().rotation().col(2));    
 }
 
 Acts::PlaneSurface::~PlaneSurface()

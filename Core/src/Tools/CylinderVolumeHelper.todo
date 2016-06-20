@@ -843,7 +843,7 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
                                        << " ]");
 
     // create the BoundarySurface as shared pointer
-    const BoundarySurface<TrackingVolume>* boundarySurface = nullptr;
+    const BoundarySurfaceT<TrackingVolume>* boundarySurface = nullptr;
     //
     // the transform of the new boundary surface
     std::shared_ptr<Transform3D> transform = nullptr;
@@ -879,7 +879,7 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
     }
     // create the BoundarySurface as shared pointer
     auto nBoundarySurface
-        = std::shared_ptr<const BoundarySurface<TrackingVolume>>(
+        = std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>(
             boundarySurface);
     // m_config.trackingVolumeGluer->glueTrackingVolumes(gvDescriptorOne.glueVolumes(faceOne),
     // faceOne,

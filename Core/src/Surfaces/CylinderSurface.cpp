@@ -83,7 +83,7 @@ Acts::CylinderSurface::binningPosition(BinningValue bValue) const
   }
   // give the center as default for all of these binning types
   // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
-  return Acts::Surface::binningPosition(bValue);
+  return center();
 }
 
 // return the measurement frame: it's the tangential plane

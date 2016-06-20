@@ -52,14 +52,14 @@ public:
   /// by saving a dynamic_cast, e.g. for persistency
   ///
   enum SurfaceType {
-    Cone        = 0,
-    Cylinder    = 1,
-    Disc        = 2,
-    Perigee     = 3,
-    Plane       = 4,
-    Straw       = 5,
-    Curvilinear = 6,
-    Other       = 7
+          Cone        = 0,
+          Cylinder    = 1,
+          Disc        = 2,
+          Perigee     = 3,
+          Plane       = 4,
+          Straw       = 5,
+          Curvilinear = 6,
+          Other       = 7
   };
 
   /// Constructor with Transform3D as a shared object
@@ -294,19 +294,19 @@ public:
 
 protected:
   /// Transform3D definition that positions (translation, rotation) the surface in global space
-  std::shared_ptr<Transform3D>                  m_transform;
+  std::shared_ptr<Transform3D>                   m_transform;
 
   /// Pointer to the a DetectorElementBase 
-  const DetectorElementBase*                    m_associatedDetElement;
+  const DetectorElementBase*                     m_associatedDetElement;
   
   /// Associated Identifier to this 
-  Identifier                                    m_associatedDetElementId;
+  Identifier                                     m_associatedDetElementId;
 
   /// The associated layer Layer - layer in which the Surface is be embedded, nullptr if not associated
-  mutable const Layer*                          m_associatedLayer;
+  mutable const Layer*                           m_associatedLayer;
   
   /// The assoicated TrackingVolume - tracking volume in case the surface is a boundary surface, nullptr if not
-  mutable const TrackingVolume*                 m_associatedTrackingVolume;
+  mutable const TrackingVolume*                  m_associatedTrackingVolume;
 
   /// Possibility to attach a material descrption
   mutable std::shared_ptr<const SurfaceMaterial> m_associatedMaterial;
@@ -370,6 +370,12 @@ Surface::associatedIdentifier() const
   if (!m_associatedDetElement) return Identifier();  // in invalid state
   if (m_associatedDetElementId.is_valid()) return m_associatedDetElementId;
   return m_associatedDetElement->identify();
+}
+
+inline bool
+Surface::isFree() const
+{
+  return (!m_associatedDetElement && !m_associatedTrackingVolume);
 }
 
 inline const Layer*

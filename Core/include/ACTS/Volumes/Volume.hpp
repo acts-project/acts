@@ -57,11 +57,11 @@ public:
   virtual Volume*
   clone() const;
 
-  /** Return methods for geometry transform */
+  //// Return methods for geometry transform */
   const Transform3D&
   transform() const;
 
-  /** returns the center of the volume */
+  /// returns the center of the volume 
   const Vector3D&
   center() const;
 

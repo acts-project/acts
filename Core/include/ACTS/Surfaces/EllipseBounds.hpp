@@ -73,10 +73,6 @@ public:
   EllipseBounds&
   operator=(EllipseBounds&& discbo);
 
-  /// Equality operator
-  virtual bool
-  operator==(const SurfaceBounds& sbo) const override;
-
   /// Virtual constructor
   virtual EllipseBounds*
   clone() const override;

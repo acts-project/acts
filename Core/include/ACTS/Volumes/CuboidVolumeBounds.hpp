@@ -113,12 +113,12 @@ private:
 
   /// This method returns the associated RecantleBounds of the face PlaneSurface
   /// parallel to local yz plane
-  std::shared<const RectangleBounds>
+  std::shared_ptr<const RectangleBounds>
   faceYZRectangleBounds() const;
 
   /// This method returns the associated RecantleBounds of the face PlaneSurface
   // parallel to local zx plane 
-  std::shared<const RectangleBounds>
+  std::shared_ptr<const RectangleBounds>
   faceZXRectangleBounds() const;
 
   /// The bound values  
