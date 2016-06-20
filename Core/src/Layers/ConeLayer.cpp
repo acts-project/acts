@@ -10,27 +10,25 @@
 // ConeLayer.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module
 #include "ACTS/Layers/ConeLayer.hpp"
-
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Surfaces/ConeBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-// Core module
 
-Acts::ConeLayer::ConeLayer(std::shared_ptr<Acts::Transform3D>      transform,
-                           std::shared_ptr<const Acts::ConeBounds> cbounds,
-                           std::unique_ptr<SurfaceArray>           surfaceArray,
-                           double                                  thickness,
-                           Acts::OverlapDescriptor*                olap,
-                           int                                     laytyp)
+Acts::ConeLayer::ConeLayer(std::shared_ptr<Transform3D>      transform,
+                           std::shared_ptr<const ConeBounds> cbounds,
+                           std::unique_ptr<SurfaceArray>     surfaceArray,
+                           double                            thickness,
+                           OverlapDescriptor*                olap,
+                           ApproachDescriptor*               ade,
+                           LayerType                         laytyp)
   : ConeSurface(transform, cbounds)
-  , Layer(std::move(surfaceArray), thickness, olap, nullptr, laytyp)
+  , Layer(std::move(surfaceArray), thickness, olap, ade, laytyp)
 {
 }
 
-Acts::ConeLayer::ConeLayer(const Acts::ConeLayer&   clay,
-                           const Acts::Transform3D& transf)
+Acts::ConeLayer::ConeLayer(const ConeLayer&   clay,
+                           const Transform3D& transf)
   : ConeSurface(clay, transf), Layer(clay)
 {
 }

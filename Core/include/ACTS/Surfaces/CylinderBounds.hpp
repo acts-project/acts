@@ -93,6 +93,7 @@ public:
   }
 
   /// @copydoc SurfaceBounds::inside
+  bool
   inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
   /// specialized method for CylinderBounds 

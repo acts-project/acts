@@ -10,92 +10,119 @@
 // ConeLayer.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_DETECTOR_CONELAYER_H
-#define ACTS_DETECTOR_CONELAYER_H
+#ifndef ACTS_LAYERS_CONELAYER_H
+#define ACTS_LAYERS_CONELAYER_H
 
-class MsgStream;
-
-// Core module
 #include "ACTS/Utilities/Definitions.hpp"
-// Geometry module
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Surfaces/ConeSurface.hpp"
-// STL sorting
 #include <algorithm>
 
 namespace Acts {
 
 class ConeBounds;
 class OverlapDescriptor;
+class ApproachDescriptor;
 
-/**
-   @class ConeLayer
-
-   Class to describe a cylindrical detector layer for tracking, it inhertis from
-   both,
-   Layer base class and ConeSurface class
-
-*/
-
+/// 
+/// @class ConeLayer
+/// 
+/// Class to describe a conical detector layer for tracking, it inhertis from
+/// both, Layer base class and ConeSurface class
+/// 
 class ConeLayer : virtual public ConeSurface, public Layer
 {
 public:
-  /** Factory for shared layer */
+  /// Factory for shared layer
+  /// 
+  /// @param transform is the 3D transform that poisitions the layer in 3D frame
+  /// @param cbounds is the conical bound description
+  /// @param thickness is the layer thickness along the normal axis
+  /// @param od is the overlap description for the sensitive layers
+  /// @param ad is the approach descriptor for navigation towards the layer
+  /// @param laytyp is the layer type
+  ///
+  /// @TODO chage od and ad to unique_ptr
+  ///
+  /// @return is a shared pointer to a layer
   static LayerPtr
   create(std::shared_ptr<Transform3D>      transform,
          std::shared_ptr<const ConeBounds> cbounds,
          std::unique_ptr<SurfaceArray>     surfaceArray,
          double                            thickness = 0.,
-         OverlapDescriptor*                od        = 0,
-         int                               laytyp    = int(Acts::active))
+         OverlapDescriptor*                od        = nullptr,
+         ApproachDescriptor*               ad        = nullptr,
+         LayerType                         laytyp    = Acts::active)
   {
     return LayerPtr(new ConeLayer(
-        transform, cbounds, std::move(surfaceArray), thickness, od, laytyp));
+        transform, cbounds, std::move(surfaceArray), thickness, od, ad, laytyp));
   }
 
-  /** Factory for shared layer with shift */
+  /// Factory for shared layer with shift 
+  ///
+  /// @param cla is the source clone layer
+  /// @param shift is the additional shift applied after copying
+  ///
+  /// @return is a shared pointer to a layer
   static LayerPtr
   create(const ConeLayer& cla, const Transform3D& shift)
   {
     return LayerPtr(new ConeLayer(cla, shift));
   }
 
-  /** Clone with a shift - only cloning that is allowed */
+  /// Factory for shared layer with shift - clone
+  ///
+  /// @param shift is the additional shift applied after copying
+  ///
+  /// @return is a shared pointer to a layer
   LayerPtr
   cloneWithShift(const Transform3D& shift) const override
   {
     return ConeLayer::create(*this, shift);
   }
 
-  /** Copy constructor of ConeLayer - forbidden */
+  /// Default Constructor - delete
+  ConeLayer() = delete;
+    
+  /// Copy constructor of ConeLayer - delete
   ConeLayer(const ConeLayer& cla) = delete;
 
-  /** Assignment operator for ConeLayers - forbidden */
+  /// Assignment operator for ConeLayers - delete
   ConeLayer&
   operator=(const ConeLayer&)
       = delete;
 
-  /** Destructor*/
+  /// Destructor
   virtual ~ConeLayer() {}
-  /** Transforms the layer into a Surface representation for extrapolation */
+  
+  /// Transforms the layer into a Surface representation for extrapolation 
   const ConeSurface&
   surfaceRepresentation() const override;
 
 protected:
-  /** Default Constructor*/
-  ConeLayer() {}
-  /** Constructor with ConeSurface components,
-     MaterialProperties and pointer SurfaceArray (passing ownership)
-     @TODO implement ApproachDescriptor */
+  /// Private constructor with arguments
+  /// 
+  /// @param transform is the 3D transform that poisitions the layer in 3D frame
+  /// @param cbounds is the conical bound description
+  /// @param thickness is the layer thickness along the normal axis
+  /// @param od is the overlap description for the sensitive layers
+  /// @param ad is the approach descriptor for navigation towards the layer
+  /// @param laytyp is the layer type
+  ///
+  /// @TODO chage od and ad to unique_ptr
   ConeLayer(std::shared_ptr<Transform3D>      transform,
             std::shared_ptr<const ConeBounds> cbounds,
             std::unique_ptr<SurfaceArray>     surfaceArray,
             double                            thickness = 0.,
-            OverlapDescriptor*                od        = 0,
-            int                               laytyp    = int(Acts::active));
+            OverlapDescriptor*                od        = nullptr,
+            ApproachDescriptor*               ad        = nullptr,
+            LayerType                         laytyp    = Acts::active);
 
-  /** Copy constructor with shift*/
-  ConeLayer(const ConeLayer& cla, const Transform3D& tr);
+  /// Private copy constructor with shift, called by create(args*)
+  ///
+  /// @param cla is the source clone layer
+  /// @param shift is the additional shift applied after copying
+  ConeLayer(const ConeLayer& cla, const Transform3D& shift);
 };
 
 }  // end of namespace

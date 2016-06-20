@@ -42,7 +42,7 @@ public:
   };
 
   /// Default Constructor - deleted
-  EllipseBounds() = deleted;
+  EllipseBounds() = delete;
 
   /// Constructor for full of an ellipsoid disc
   /// @param minrad1
@@ -91,6 +91,7 @@ public:
   /// This method checks if the point given in the local coordinates is between
   /// two ellipsoids if only tol0 is given and additional in the phi sector is tol1 is given
   /// @copydoc SurfaceBounds::inside
+  virtual bool
   inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
   /// Check for inside first local coordinate 
@@ -223,32 +224,31 @@ EllipseBounds::rMinX() const
 {
   return m_valueStore.at(EllipseBounds::bv_rMinX);
 }
+  
 inline double
 EllipseBounds::rMinY() const
 {
   return m_valueStore.at(EllipseBounds::bv_rMinY);
 }
+  
 inline double
 EllipseBounds::rMaxX() const
 {
   return m_valueStore.at(EllipseBounds::bv_rMaxX);
 }
+
 inline double
 EllipseBounds::rMaxY() const
 {
   return m_valueStore.at(EllipseBounds::bv_rMaxY);
 }
-inline double
-EllipseBounds::r() const
-{
-  return std::max(m_valueStore.at(EllipseBounds::bv_rMaxX),
-                  m_valueStore.at(EllipseBounds::bv_rMaxY));
-}
+
 inline double
 EllipseBounds::averagePhi() const
 {
   return m_valueStore.at(EllipseBounds::bv_averagePhi);
 }
+  
 inline double
 EllipseBounds::halfPhiSector() const
 {

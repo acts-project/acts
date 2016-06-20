@@ -12,7 +12,7 @@
 
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Surfaces/BoundlessT.hpp"
+#include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
 #include <iomanip>
 #include <iostream>
@@ -38,8 +38,7 @@ Acts::PlaneSurface::PlaneSurface(const Vector3D&  center,
   , m_bounds(nullptr)
   , m_normal(normal)
 {
-  Acts::Translation3D curvilinearTranslation(
-      center.x(), center.y(), center.z());
+  Translation3D curvilinearTranslation(center.x(), center.y(), center.z());
   /// the right-handed coordinate system is defined as
   /// T = normal
   /// U = Z x T if T not parallel to Z otherwise U = X x T
@@ -100,7 +99,8 @@ Acts::PlaneSurface::localToGlobal(const Vector2D& lpos,
                                   const Vector3D&,
                                   Vector3D& gpos) const
 {
-  Acts::Vector3D loc3Dframe(lpos[Acts::eLOC_X], lpos[Acts::eLOC_Y], 0.);
+  Vector3D loc3Dframe(lpos[Acts::eLOC_X], lpos[Acts::eLOC_Y], 0.);
+  /// the chance that there is no transform is almost 0, let's apply it
   gpos = transform() * loc3Dframe;
 }
 
@@ -109,8 +109,9 @@ Acts::PlaneSurface::globalToLocal(const Vector3D& gpos,
                                   const Vector3D&,
                                   Acts::Vector2D& lpos) const
 {
-  Acts::Vector3D loc3Dframe = (transform().inverse()) * gpos;
-  lpos                    = Acts::Vector2D(loc3Dframe.x(), loc3Dframe.y());
+  /// the chance that there is no transform is almost 0, let's apply it
+  Vector3D loc3Dframe = (transform().inverse()) * gpos;
+  lpos                    = Vector2D(loc3Dframe.x(), loc3Dframe.y());
   return ((loc3Dframe.z() * loc3Dframe.z()
            > s_onSurfaceTolerance * s_onSurfaceTolerance)
               ? false
@@ -121,10 +122,10 @@ bool
 Acts::PlaneSurface::isOnSurface(const Vector3D& glopo,
                                 const BoundaryCheck&  bchk) const
 {
-  Acts::Vector3D loc3Dframe = (transform().inverse()) * glopo;
+  /// the chance that there is no transform is almost 0, let's apply it
+  Vector3D loc3Dframe = (transform().inverse()) * glopo;
   if (fabs(loc3Dframe.z()) > s_onSurfaceTolerance) return false;
   return (bchk
-              ? bounds().inside(Acts::Vector2D(loc3Dframe.x(), loc3Dframe.y()),
-                                bchk)
+              ? bounds().inside(Vector2D(loc3Dframe.x(), loc3Dframe.y()), bchk)
               : true);
 }

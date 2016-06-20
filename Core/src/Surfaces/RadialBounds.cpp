@@ -50,7 +50,7 @@ Acts::RadialBounds::~RadialBounds()
 Acts::RadialBounds&
 Acts::RadialBounds::operator=(const RadialBounds& rbo)
 {
-  if (this != &discbo)
+  if (this != &rbo)
     SurfaceBounds::operator=(rbo);
   return *this;
 }

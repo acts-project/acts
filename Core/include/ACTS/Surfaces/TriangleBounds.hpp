@@ -115,18 +115,18 @@ TriangleBounds::clone() const
 }
 
 inline bool
-TriangleBounds::inside(const Vector2D& lpos, double tol0, double tol2) const
+TriangleBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 {
-  std::pair<double, double> locB(m_boundValues.at(TriangleBounds::bv_x2)
-                                     - m_boundValues.at(TriangleBounds::bv_x1),
-                                 m_boundValues.at(TriangleBounds::bv_y2)
-                                     - m_boundValues.at(TriangleBounds::bv_y1));
+  std::pair<double, double> locB(m_valueStore.at(TriangleBounds::bv_x2)
+                                     - m_valueStore.at(TriangleBounds::bv_x1),
+                                 m_valueStore.at(TriangleBounds::bv_y2)
+                                     - m_valueStore.at(TriangleBounds::bv_y1));
   std::pair<double, double> locT(
-      m_boundValues.at(TriangleBounds::bv_x3) - lpos[0],
-      m_boundValues.at(TriangleBounds::bv_y3) - lpos[1]);
+      m_valueStore.at(TriangleBounds::bv_x3) - lpos[0],
+      m_valueStore.at(TriangleBounds::bv_y3) - lpos[1]);
   std::pair<double, double> locV(
-      m_boundValues.at(TriangleBounds::bv_x1) - lpos[0],
-      m_boundValues.at(TriangleBounds::bv_y1) - lpos[1]);
+      m_valueStore.at(TriangleBounds::bv_x1) - lpos[0],
+      m_valueStore.at(TriangleBounds::bv_y1) - lpos[1]);
 
   // special case :: third vertex ?
   if (locT.first * locT.first + locT.second * locT.second < tol0 * tol0)
@@ -164,20 +164,20 @@ TriangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
     return TriangleBounds::inside(
         lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
 
-  // a fast FALSE
-  double fabsR = sqrt(lpos[Acts::eLOC_X] * lpos[Acts::eLOC_X]
-                      + lpos[Acts::eLOC_Y] * lpos[Acts::eLOC_Y]);
-  double max_ell = bchk.lCovariance(0, 0) > bchk.lCovariance(1, 1)
-      ? bchk.lCovariance(0, 0)
-      : bchk.lCovariance(1, 1);
-  double limit = bchk.nSigmas * sqrt(max_ell);
-  double r_max = TriangleBounds::r();
-  if (fabsR > (r_max + limit)) return false;
-
+  /// @TODO check for quick limit test  
+  ///double max_ell = bchk.lCovariance(0, 0) > bchk.lCovariance(1, 1)
+  ///    ? bchk.lCovariance(0, 0)
+  ///    : bchk.lCovariance(1, 1);
+  /// a fast FALSE
+  /// double fabsR = sqrt(lpos[Acts::eLOC_X] * lpos[Acts::eLOC_X]
+  ///                    + lpos[Acts::eLOC_Y] * lpos[Acts::eLOC_Y]);
+  /// double limit = bchk.nSigmas * sqrt(max_ell);
+  ///double r_max = TriangleBounds::r();
+  ///if (fabsR > (r_max + limit)) return false;
   // compute KDOP and axes for surface polygon
   std::vector<KDOP>     elementKDOP(3);
   std::vector<Vector2D> elementP(3);
-  float                 theta = (bchk.lCovariance(1, 0) != 0
+  double                theta = (bchk.lCovariance(1, 0) != 0
                  && (bchk.lCovariance(1, 1) - bchk.lCovariance(0, 0)) != 0)
       ? .5
           * bchk.FastArcTan(2 * bchk.lCovariance(1, 0)

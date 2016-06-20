@@ -130,7 +130,7 @@ public:
 
 private:
   /// private helper method for inside
-  bool inside(const Vector2D& lpos, double tol0, double tol1);
+  bool inside(const Vector2D& lpos, double tol0, double tol1) const;
  
 };
 

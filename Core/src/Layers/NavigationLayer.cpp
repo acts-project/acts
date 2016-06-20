@@ -10,37 +10,33 @@
 // NavigationLayer.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module
 #include "ACTS/Layers/NavigationLayer.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 
-// constructor with arguments
-Acts::NavigationLayer::NavigationLayer(Acts::Surface* surfaceRepresentation,
-                                       double         thickness)
-  : Acts::Layer(), m_surfaceRepresentation(surfaceRepresentation)
+Acts::NavigationLayer::NavigationLayer(
+    std::unique_ptr<const Surface> surfaceRepresentation,
+    double                         thickness)
+  : Acts::Layer(), m_surfaceRepresentation(std::move(surfaceRepresentation))
 {
   Layer::m_layerThickness = thickness;
   // @TODO temporary - until GeoID service is in place
   assignGeoID(GeometryID(0));
 }
 
-// constructor with shift
 std::shared_ptr<const Acts::Layer>
 Acts::NavigationLayer::cloneWithShift(const Acts::Transform3D& shift) const
 {
-  Acts::Surface* shiftedSurface = m_surfaceRepresentation->clone(&shift);
+  Surface* shiftedSurface = m_surfaceRepresentation->clone(&shift);
   return std::shared_ptr<const Acts::Layer>(
-      new Acts::NavigationLayer(shiftedSurface, Layer::m_layerThickness));
+      new Acts::NavigationLayer(std::unique_ptr<Surface>(shiftedSurface), Layer::m_layerThickness));
 }
 
-// destructor - only deletes surface representation
 Acts::NavigationLayer::~NavigationLayer()
 {
-  delete m_surfaceRepresentation;
 }
 
 bool
-Acts::NavigationLayer::isOnLayer(const Acts::Vector3D& gp,
+Acts::NavigationLayer::isOnLayer(const Vector3D& gp,
                                  const BoundaryCheck&  bcheck) const
 {
   return m_surfaceRepresentation->isOnSurface(gp, bcheck);

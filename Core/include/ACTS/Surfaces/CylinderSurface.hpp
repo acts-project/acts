@@ -30,7 +30,6 @@ namespace Acts {
 ///
 /// @image html CylinderSurface.gif
 
-
 class CylinderSurface : public Surface
 {
 public:
@@ -60,7 +59,7 @@ public:
   /// Constructor from Transform3D and CylinderBounds
   /// @param htrans transform to position the surface, can be nullptr
   /// @note if htrans == nullptr, the cylinder is positioned around (0.,0.,0.)
-  /// @param cbounds is a shared pointer to a cylindeer bounds object                
+  /// @param cbounds is a shared pointer to a cylindeer bounds object, must exist
   CylinderSurface(std::shared_ptr<Transform3D>          htrans,
                   std::shared_ptr<const CylinderBounds> cbounds);
 
@@ -87,7 +86,7 @@ public:
 
   /// The binning position method - is overloaded for r-type binning 
   /// @param bValue is the type of global binning to be done
-  virtual Vector3D
+  virtual const Vector3D
   binningPosition(BinningValue bValue) const override;
 
   /// Return the measurement frame - this is needed for alignment, in particular
@@ -194,9 +193,9 @@ CylinderSurface::clone(const Transform3D* shift) const
 inline const Vector3D
 CylinderSurface::normal(const Vector2D& lp) const
 {
-  double   phi = lp[Acts::eLOC_RPHI] / (bounds().r());
+  double   phi = lp[Acts::eLOC_RPHI] / m_bounds->r();
   Vector3D localNormal(cos(phi), sin(phi), 0.);
-  return std::move(Vector3D(transform().rotation() * localNormal));
+  return Vector3D(transform().rotation() * localNormal);
 }
 
 inline double

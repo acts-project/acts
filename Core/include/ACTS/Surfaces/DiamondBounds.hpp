@@ -24,7 +24,6 @@ namespace Acts {
 //@class DiamondBounds
 //Bounds for a double trapezoidal ("diamond"), planar Surface.
 //
-ZZ    
 class DiamondBounds : public PlanarBounds
 {
 public:
@@ -115,21 +114,21 @@ public:
 
   /// @copydoc Surface::inside
   virtual bool
-  inside(const Vector2D& locpo, const BoundaryCheck& bchk) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
   ///  This method checks inside bounds in loc1
   /// - loc1/loc2 correspond to the natural coordinates of the surface
   /// - As loc1/loc2 are correlated the single check doesn't make sense :
   /// -> check is done on enclosing Rectangle !
   virtual bool
-  insideLoc0(const Vector2D& locpo, double tol1 = 0.) const override;
+  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
   ///  This method checks inside bounds in loc2
   /// - loc1/loc2 correspond to the natural coordinates of the surface
   /// - As loc1/loc2 are correlated the single check doesn't make sense :
   /// -> check is done on enclosing Rectangle !
   virtual bool
-  insideLoc1(const Vector2D& locpo, double tol2 = 0.) const override;
+  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside) 
   virtual double
@@ -144,13 +143,17 @@ public:
   dump(std::ostream& sl) const override;
 
 private:
+  /// private helper method
+  bool
+  inside(const Vector2D& lpos, double tol0 = 0., double tol1 = 0.) const;
+  
   /// inside() method for a full symmetric diamond 
   bool
-  insideFull(const Vector2D& locpo, double tol1 = 0., double tol2 = 0.) const;
+  insideFull(const Vector2D& lpos, double tol0 = 0., double tol1 = 0.) const;
 
   /// initialize the alpha1/2 cache - needed also for object persistency 
   virtual void
-  initCache() override;
+  initCache();
 
   std::vector<TDD_real_t> m_valueStore;  ///< internal parameter store
   TDD_real_t              m_alpha1;       ///< internal parameter cache for alpha1
@@ -193,34 +196,25 @@ DiamondBounds::halflengthY2() const
   return m_valueStore.at(DiamondBounds::bv_halfY2);
 }
 
-inline double
-DiamondBounds::r() const
-{
-  return sqrt(m_valueStore.at(DiamondBounds::bv_medHalfX)
-                  * m_valueStore.at(DiamondBounds::bv_medHalfX)
-              + m_valueStore.at(DiamondBounds::bv_halfY1)
-                  * m_valueStore.at(DiamondBounds::bv_halfY1));
-}
-
 inline bool
-DiamondBounds::inside(const Vector2D& locpo, const BoundaryCheck& bchk) const
+DiamondBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
 {
   if (bchk.bcType == 0)
-    return DiamondBounds::inside(locpo, bchk.toleranceLoc0, bchk.toleranceLoc1);
+    return DiamondBounds::inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
 
   // a fast FALSE
   double max_ell = bchk.lCovariance(0, 0) > bchk.lCovariance(1, 1)
       ? bchk.lCovariance(0, 0)
       : bchk.lCovariance(1, 1);
   double limit = bchk.nSigmas * sqrt(max_ell);
-  if (locpo[Acts::eLOC_Y]
+  if (lpos[Acts::eLOC_Y]
       < -2 * m_valueStore.at(DiamondBounds::bv_halfY1) - limit)
     return false;
-  if (locpo[Acts::eLOC_Y]
+  if (lpos[Acts::eLOC_Y]
       > 2 * m_valueStore.at(DiamondBounds::bv_halfY2) + limit)
     return false;
   // a fast FALSE
-  double fabsX = fabs(locpo[Acts::eLOC_X]);
+  double fabsX = fabs(lpos[Acts::eLOC_X]);
   if (fabsX > (m_valueStore.at(DiamondBounds::bv_medHalfX) + limit))
     return false;
   // a fast TRUE
@@ -233,7 +227,7 @@ DiamondBounds::inside(const Vector2D& locpo, const BoundaryCheck& bchk) const
                - limit))
     return true;
   // a fast TRUE
-  if (fabs(locpo[Acts::eLOC_Y])
+  if (fabs(lpos[Acts::eLOC_Y])
       < (fmin(m_valueStore.at(DiamondBounds::bv_halfY1),
               m_valueStore.at(DiamondBounds::bv_halfY2))
          - limit))
@@ -258,20 +252,20 @@ DiamondBounds::inside(const Vector2D& locpo, const BoundaryCheck& bchk) const
   Vector2D p;
   p << -m_valueStore.at(DiamondBounds::bv_minHalfX),
       -2. * m_valueStore.at(DiamondBounds::bv_halfY1);
-  elementP.at(0) = (rotMatrix * (p - locpo));
+  elementP.at(0) = (rotMatrix * (p - lpos));
   p << -m_valueStore.at(DiamondBounds::bv_medHalfX), 0.;
-  elementP.at(1) = (rotMatrix * (p - locpo));
+  elementP.at(1) = (rotMatrix * (p - lpos));
   p << -m_valueStore.at(DiamondBounds::bv_maxHalfX),
       2. * m_valueStore.at(DiamondBounds::bv_halfY2);
-  elementP.at(2) = (rotMatrix * (p - locpo));
+  elementP.at(2) = (rotMatrix * (p - lpos));
   p << m_valueStore.at(DiamondBounds::bv_maxHalfX),
       2. * m_valueStore.at(DiamondBounds::bv_halfY2);
-  elementP.at(3) = (rotMatrix * (p - locpo));
+  elementP.at(3) = (rotMatrix * (p - lpos));
   p << m_valueStore.at(DiamondBounds::bv_medHalfX), 0.;
-  elementP.at(4) = (rotMatrix * (p - locpo));
+  elementP.at(4) = (rotMatrix * (p - lpos));
   p << m_valueStore.at(DiamondBounds::bv_minHalfX),
       -2. * m_valueStore.at(DiamondBounds::bv_halfY1);
-  elementP.at(5)             = (rotMatrix * (p - locpo));
+  elementP.at(5)             = (rotMatrix * (p - lpos));
   std::vector<Vector2D> axis = {normal * (elementP.at(1) - elementP.at(0)),
                                 normal * (elementP.at(2) - elementP.at(1)),
                                 normal * (elementP.at(3) - elementP.at(2)),
@@ -286,19 +280,19 @@ DiamondBounds::inside(const Vector2D& locpo, const BoundaryCheck& bchk) const
 }
 
 inline bool
-DiamondBounds::insideLoc0(const Vector2D& locpo, double tol1) const
+DiamondBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 {
-  return (fabs(locpo[Acts::eLOC_X])
-          < m_valueStore.at(DiamondBounds::bv_medHalfX) + tol1);
+  return (fabs(lpos[Acts::eLOC_X])
+          < m_valueStore.at(DiamondBounds::bv_medHalfX) + tol0);
 }
 
 inline bool
-DiamondBounds::insideLoc1(const Vector2D& locpo, double tol2) const
+DiamondBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 {
-  return ((locpo[Acts::eLOC_Y]
-           > -2. * m_valueStore.at(DiamondBounds::bv_halfY1) - tol2)
-          && (locpo[Acts::eLOC_Y]
-              < 2. * m_valueStore.at(DiamondBounds::bv_halfY2) + tol2));
+  return ((lpos[Acts::eLOC_Y]
+           > -2. * m_valueStore.at(DiamondBounds::bv_halfY1) - tol1)
+          && (lpos[Acts::eLOC_Y]
+              < 2. * m_valueStore.at(DiamondBounds::bv_halfY2) + tol1));
 }
 
 inline void

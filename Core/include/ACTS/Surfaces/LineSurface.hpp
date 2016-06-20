@@ -7,81 +7,83 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /////////////////////////////////////////////////////////////////
-// StraightLineSurface.h, ACTS project
+// LineSurface.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACESSTRAIGHTLINESURFACE_H
-#define ACTS_SURFACESSTRAIGHTLINESURFACE_H
+#ifndef ACTS_SURFACES_LINESURFACE_H
+#define ACTS_SURFACES_LINESURFACE_H
 
 #include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Surfaces/BoundlessT.hpp"
 #include "ACTS/Surfaces/LineBounds.hpp"
+#include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Identifier.hpp"
 
 namespace Acts {
 
-class DetectorElementBase;
-
-///  @class StraightLineSurface
+class LineBounds;
+  
+///  @class LineSurface
 /// 
-///  Class for a StraightLineSurface in the TrackingGeometry
-///  to describe dirft tube and straw like detectors.
+///  Base class for a linear surfaces in the TrackingGeometry
+///  to describe dirft tube, straw like detectors or the Perigee
 ///  It inherits from Surface.
+///
+///  @note It leaves the type() method virtual, so it can not be instantiated
 
-class StraightLineSurface : public Surface
+class LineSurface : public Surface
 {
 public:
   /// Default Constructor - deleted
-  StraightLineSurface() = delete;
-
-  /// Constructor from Transform3D (boundless surface)
-  /// @param htrans is the transform that positions the surface in the global frame
-  StraightLineSurface(std::shared_ptr<Transform3D> htrans);
+  LineSurface() = delete;
 
   /// Constructor from Transform3D and bounds
   /// @param htrans is the transform that positions the surface in the global frame
   /// @param radius is the straw radius
   /// @param halex is the half length in z
-  StraightLineSurface(std::shared_ptr<Transform3D> htrans,
-                      double                       radius,
-                      double                       halez);
+  LineSurface(std::shared_ptr<Transform3D> htrans,
+              double                       radius,
+              double                       halez);
 
   /// Constructor from Transform3D and a shared bounds object
   /// @param htrans is the transform that positions the surface in the global frame
   /// @param lbounds are teh bounds describing the straw dimensions, can be optionally nullptr                 
-  StraightLineSurface(std::shared_ptr<Transform3D>      htrans,
-                      std::shared_ptr<const LineBounds> lbounds = nullptr);
-
+  LineSurface(std::shared_ptr<Transform3D>      htrans,
+              std::shared_ptr<const LineBounds> lbounds = nullptr);
+              
   /// Constructor from DetectorElementBase and Element identifier
   /// @param lbounds are teh bounds describing the straw dimensions, they must not be nullptr                    
   /// @param detelement for which this surface is (at least) one representation
   /// @param identifier                                          
-  StraightLineSurface(std::shared_ptr<const LineBounds> lbounds,
-                      const DetectorElementBase& detelement,
-                      const Identifier&          identifier = Identifier());
+  LineSurface(std::shared_ptr<const LineBounds> lbounds,
+             const DetectorElementBase& detelement,
+             const Identifier&          identifier = Identifier());              
 
   /// Copy constructor
   /// @param slsf is teh source surface for copying                      
-  StraightLineSurface(const StraightLineSurface& slsf);
+  LineSurface(const LineSurface& slsf);
 
   /// Copy constructor with shift
   /// @param slsf is the source surface dor copying
   /// @param transf is the additional transform applied after copying
-  StraightLineSurface(const StraightLineSurface& slsf,
-                      const Transform3D&         transf);
+  LineSurface(const LineSurface& slsf,
+              const Transform3D& transf);
 
   /// Destructor
-  virtual ~StraightLineSurface();
+  virtual ~LineSurface();
 
   /// Assignment operator
-  StraightLineSurface&
-  operator=(const StraightLineSurface& slsf);
-
-  /// Implicit constructor - shift can be provided */
-  virtual StraightLineSurface*
-  clone(const Transform3D* shift = nullptr) const override;
-
+  LineSurface&
+  operator=(const LineSurface& slsf);
+  
+  /// Normal vector return
+  /// @param lpos is the local position is ignored
+  /// return a Vector3D by value
+  const Vector3D normal(const Vector2D& lpos = s_origin2D) const override;
+  
+  /// @copydoc Surface::biningPosition
+  virtual const Vector3D
+  binningPosition(BinningValue bValue) const final;
+  
   /// Return the measurement frame - this is needed for alignment, in particular
   /// for StraightLine and Perigee Surface
   ///  - the default implementation is the the RotationMatrix3D of the transform
@@ -89,20 +91,13 @@ public:
   measurementFrame(const Vector3D& gpos,
                    const Vector3D& mom) const override;
 
-  /// Return the surface type 
-  virtual SurfaceType
-  type() const override
-  {
-    return Surface::Line;
-  }
-
   /// @copydoc Surface::localToGlobal
   virtual void
-  localToGlobal(const Vector2D& locp,
+  localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
-                Vector3D&       glob) const override;
+                Vector3D&       gpos) const override;
 
-  /// Specified for StraightLineSurface: GlobalToLocal method without dynamic
+  /// Specified for LineSurface: global to local method without dynamic
   /// memory allocation
   /// This method is the true global->local transformation.<br>
   /// makes use of globalToLocal and indicates the sign of the Acts::eLOC_R by the
@@ -126,11 +121,11 @@ public:
   /// 
   /// \image html SignOfDriftCircleD0.gif
   virtual bool
-  globalToLocal(const Vector3D& glob,
+  globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
-                Vector2D&       loc) const override;
+                Vector2D&       lpos) const override;
 
-  /// Special method for StraightLineSurface 
+  /// Special method for LineSurface 
   /// provides the Line direction from cache: speedup
   const Vector3D
   lineDirection() const;
@@ -164,14 +159,15 @@ public:
   ///  e_b)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
   ///   - @f$ \mu_0 = - \frac{(\vec m_ab \cdot \vec e_b)-(\vec m_ab \cdot \vec
   ///  e_a)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
-   virtual Intersection
+  virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir,
                        const BoundaryCheck& bchk = true) const override;
 
   /// the pathCorrection for derived classes with thickness
-  /// is by definition 1 for StraightLineSurfaces                     
+  /// is by definition 1 for LineSurfaces
+  /// @note there's no material associated to the line surface                                           
   virtual double
   pathCorrection(const Vector3D&, const Vector3D&) const override
   {
@@ -189,38 +185,51 @@ public:
 
   ///This method returns the bounds of the Surface by reference */
   virtual const SurfaceBounds&
-  bounds() const override;
+  bounds() const final;
 
   /// Return properly formatted class name for screen output */
   virtual std::string
   name() const override
   {
-    return "Acts::StraightLineSurface";
+    return "Acts::LineSurface";
   };
 
 protected:  
-  std::shared_ptr<const CylinderBounds> m_bounds;         ///< bounds (shared)
+  std::shared_ptr<const LineBounds> m_bounds;  ///< bounds (shared)
+  
+private:
+    /// helper function to apply the globalToLocal with out transform
+    bool globalToLocalPlain(const Vector3D& pos,
+                            const Vector3D& mom,
+                            Vector2D&       lpos) const;
 };
 
-inline StraightLineSurface*
-StraightLineSurface::clone(const Transform3D* shift) const
+inline const Vector3D
+LineSurface::binningPosition(BinningValue bValue) const
 {
-  if (shift) new StraightLineSurface(*this, *shift);
-  return new StraightLineSurface(*this);
-}
-
-inline const SurfaceBounds&
-StraightLineSurface::bounds() const
-{
-  return (*m_bounds.get());
+  return center();
 }
 
 inline const Vector3D
-StraightLineSurface::lineDirection() const
+LineSurface::normal(const Vector2D& lpos) const
 {
-  return std::move(Vector3D(transform().rotation().col(2)));
+  // the normal is conceptionally closest to the line direction
+  return lineDirection();
+}
+      
+inline const SurfaceBounds&
+LineSurface::bounds() const
+{
+  if (m_bounds) return (*m_bounds.get());
+  return s_noBounds;
+}
+
+inline const Vector3D
+LineSurface::lineDirection() const
+{
+  return Vector3D(transform().rotation().col(2));
 }
 
 }  // end of namespace
 
-#endif  // ACTS_SURFACESSTRAIGHTLINESURFACE_H
+#endif  // ACTS_SURFACES_LINESURFACE_H

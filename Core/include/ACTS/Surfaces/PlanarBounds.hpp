@@ -16,7 +16,6 @@
 #include "ACTS/Surfaces/SurfaceBounds.hpp"
 
 namespace Acts {
-
 ///
 /// @class PlanarBounds
 ///
@@ -27,7 +26,7 @@ class PlanarBounds : public SurfaceBounds
 {
 public:
   /// Default Constructor 
-  PlanarBounds(size_t sStore) : SurfaceBounds(sStore) {}
+  PlanarBounds(size_t sStore=0) : SurfaceBounds(sStore) {}
   
   /// Destructor 
   virtual ~PlanarBounds() {}

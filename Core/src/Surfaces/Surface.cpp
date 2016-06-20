@@ -16,20 +16,16 @@
 
 Acts::Surface::Surface(std::shared_ptr<Acts::Transform3D> tform)
   : m_transform(tform)
-  , m_center(nullptr)
   , m_associatedDetElement(nullptr)
   , m_associatedDetElementId()
   , m_associatedLayer(nullptr)
   , m_associatedTrackingVolume(nullptr)
   , m_associatedMaterial(nullptr)
-{
-  m_transform = tform;
-}
+{}
 
 Acts::Surface::Surface(const Acts::DetectorElementBase& detelement,
                        const Identifier&                id)
   : m_transform(nullptr)
-  , m_center(nullptr)
   , m_associatedDetElement(&detelement)
   , m_associatedDetElementId(id)
   , m_associatedLayer(nullptr)
@@ -39,10 +35,9 @@ Acts::Surface::Surface(const Acts::DetectorElementBase& detelement,
 
 Acts::Surface::Surface(const Surface& sf)
   : m_transform(sf.m_transform)
-  , m_center(nullptr)
   , m_associatedDetElement(nullptr)
   , m_associatedDetElementId()
-  , m_associatedLayer(sf.m_associatedLayer)
+  , m_associatedLayer(nullptr)
   , m_associatedTrackingVolume(nullptr)
   , m_associatedMaterial(sf.m_associatedMaterial)
 {}
@@ -50,15 +45,29 @@ Acts::Surface::Surface(const Surface& sf)
 Acts::Surface::Surface(const Surface& sf, const Acts::Transform3D& shift)
   : m_transform(std::make_shared<Acts::Transform3D>(
         Acts::Transform3D(shift * sf.transform())))
-  , m_center(nullptr)
   , m_associatedDetElement(nullptr)
   , m_associatedDetElementId()
-  , m_associatedLayer(nullptr)
-  , m_associatedMaterial(nullptr)
+  , m_associatedLayer(sf.m_associatedLayer)
+  , m_associatedMaterial(sf.m_associatedMaterial)
 {}
 
 Acts::Surface::~Surface()
 {}
+
+Acts::Surface&
+Acts::Surface::operator=(const Surface& sf)
+{
+  if (&sf != this){
+    // detector element, identifier & layer association are unique
+    m_transform               = m_transform;
+    m_associatedDetElement    = nullptr;
+    m_associatedDetElementId  = Identifier();
+    m_associatedLayer         = nullptr;
+    m_associatedMaterial      = sf.m_associatedMaterial;
+  }
+  return *this; 
+}
+  
 
 bool
 Acts::Surface::operator==(const Surface& sf) const

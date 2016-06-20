@@ -506,7 +506,7 @@ Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
                      "trying candidate surfaces with straight line path length "
                          << csf.intersection.pathLength);
       // record the parameters as sensitive or passive depending on the surface
-      Acts::ExtrapolationMode::eMode emode = csf.object->isActive()
+      Acts::ExtrapolationMode::eMode emode = csf.object->associatedDetectorElement()
           ? Acts::ExtrapolationMode::CollectSensitive
           : Acts::ExtrapolationMode::CollectPassive;
       // propagate to the compatible surface, return types are

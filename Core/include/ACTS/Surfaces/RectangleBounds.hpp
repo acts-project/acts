@@ -94,6 +94,12 @@ public:
   /// Output Method for std::ostream 
   virtual std::ostream&
   dump(std::ostream& sl) const override;
+  
+private:
+  /// Private helper method
+  bool
+  inside(const Vector2D& lpos, double tol0 = 0., double tol1 = 0.) const;
+  
 
 };
 
@@ -162,6 +168,14 @@ RectangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   return bchk.TestKDOPKDOP(elementKDOP, errelipseKDOP);
 }
 
+  
+inline bool
+RectangleBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
+{
+  return insideLoc0(lpos,tol0) && insideLoc1(lpos,tol1);
+}
+
+  
 inline bool
 RectangleBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 {

@@ -16,7 +16,7 @@
 #include <math.h>
 
 Acts::CylinderBounds::CylinderBounds(double radius, double halez)
-  : m_valueStore(CylinderBounds::bv_length, 0.), m_checkPhi(false)
+  : SurfaceBounds(CylinderBounds::bv_length), m_checkPhi(false)
 {
   m_valueStore.at(CylinderBounds::bv_radius)        = fabs(radius);
   m_valueStore.at(CylinderBounds::bv_halfPhiSector) = M_PI;
@@ -24,7 +24,7 @@ Acts::CylinderBounds::CylinderBounds(double radius, double halez)
 }
 
 Acts::CylinderBounds::CylinderBounds(double radius, double haphi, double halez)
-  : m_valueStore(CylinderBounds::bv_length, 0.), m_checkPhi(true)
+: SurfaceBounds(CylinderBounds::bv_length), m_checkPhi(true)
 {
   m_valueStore.at(CylinderBounds::bv_radius)        = fabs(radius);
   m_valueStore.at(CylinderBounds::bv_halfPhiSector) = haphi;
@@ -35,19 +35,12 @@ Acts::CylinderBounds::CylinderBounds(double radius,
                                      double haphi,
                                      double averagephi,
                                      double halez)
-  : m_valueStore(CylinderBounds::bv_length, 0.), m_checkPhi(true)
+: SurfaceBounds(CylinderBounds::bv_length), m_checkPhi(true)
 {
   m_valueStore.at(CylinderBounds::bv_radius)        = fabs(radius);
   m_valueStore.at(CylinderBounds::bv_averagePhi)    = averagephi;
   m_valueStore.at(CylinderBounds::bv_halfPhiSector) = haphi;
   m_valueStore.at(CylinderBounds::bv_halfZ)         = fabs(halez);
-}
-
-Acts::CylinderBounds::CylinderBounds(const Acts::CylinderBounds& cylbo)
-  : Acts::SurfaceBounds()
-  , m_valueStore(cylbo.m_valueStore)
-  , m_checkPhi(cylbo.m_checkPhi)
-{
 }
 
 Acts::CylinderBounds::~CylinderBounds()

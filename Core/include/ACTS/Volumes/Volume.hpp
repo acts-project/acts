@@ -83,7 +83,7 @@ public:
 
   /** The binning position method - as default the center is given, but may be
    * overloaded */
-  virtual Vector3D
+  virtual const Vector3D
   binningPosition(BinningValue bValue) const override;
 
 protected:

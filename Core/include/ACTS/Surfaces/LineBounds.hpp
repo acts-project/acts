@@ -63,6 +63,7 @@ public:
   }
 
   /// @copydoc SurfaceBounds::inside
+  virtual bool
   inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
   /// @copydoc Surface::insideLoc0
@@ -93,7 +94,7 @@ public:
 private:
   /// private helper method
   bool
-  insideLocR(double r, double tol0) const 
+  insideLocR(double r, double tol0) const; 
 
   /// private helper method
   bool
@@ -152,7 +153,7 @@ LineBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 inline bool
 LineBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 {
-  return insideLocR(lpos[Acts::eLOC_R]], tol0) && insideLocZ(lpos[Acts::eLOC_Z],tol1);
+  return insideLocR(lpos[Acts::eLOC_R], tol0) && insideLocZ(lpos[Acts::eLOC_Z],tol1);
 }
 
 inline bool
@@ -171,18 +172,6 @@ inline double
 LineBounds::r() const
 {
   return m_valueStore.at(LineBounds::bv_radius);
-}
-
-inline double
-LineBounds::averagePhi() const
-{
-  return m_valueStore.at(LineBounds::bv_averagePhi);
-}
-
-inline double
-LineBounds::halfPhiSector() const
-{
-  return m_valueStore.at(LineBounds::bv_halfPhiSector);
 }
 
 inline double

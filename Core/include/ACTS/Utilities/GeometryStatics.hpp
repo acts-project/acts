@@ -27,10 +27,12 @@ static Rotation3D s_idRotation
     = Acts::Rotation3D::Identity();  //!< idendity rotation
 
 // axis system
-
 static Vector3D s_xAxis(1, 0, 0);  //!< global x Axis;
 static Vector3D s_yAxis(0, 1, 0);  //!< global y Axis;
 static Vector3D s_zAxis(0, 0, 1);  //!< global z Axis;
+
+// unit vectors
+static Vector2D s_origin2D(0.,0.);
 
 // origin
 

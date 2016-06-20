@@ -15,7 +15,7 @@
 #include <iostream>
 
 Acts::TriangleBounds::TriangleBounds(
-    std::vector< Vector2D > vertices)
+    const std::vector< Vector2D >& vertices)
   : Acts::PlanarBounds()
 {
   m_valueStore.reserve(6);

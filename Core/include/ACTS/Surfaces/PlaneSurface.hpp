@@ -13,8 +13,9 @@
 #ifndef ACTS_SURFACES_PLANESURFACE_H
 #define ACTS_SURFACES_PLANESURFACE_H 1
 
-#include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
+#include "ACTS/Surfaces/PlanarBounds.hpp"
+#include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
 
@@ -87,8 +88,12 @@ public:
   /// Normal vector return
   /// @param lpos is the local position is ignored
   /// return a Vector3D by value
-  const Vector3D normal(const Vector2D& lpos = Vector2D()) const;
-
+  const Vector3D normal(const Vector2D& lpos = Vector2D()) const override;
+  
+  /// @copydoc Surface::biningPosition
+  virtual const Vector3D
+  binningPosition(BinningValue bValue) const final;
+  
   /// Return the surface type 
   virtual SurfaceType
   type() const override
@@ -97,9 +102,9 @@ public:
   }
 
   /// Return method for bounds object of this surfrace
-  virtual const PlanarBounds&
+  virtual const SurfaceBounds&
   bounds() const override;
-
+    
   /// Geometrical on surface test
   /// This method returns true if the GlobalPosition is on the Surface for both,
   /// within or without check of whether the local position is inside boundaries or not
@@ -122,11 +127,21 @@ public:
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
                 Vector2D&       lpos) const override;
+    
+    
+  /// @copydoc Surface::pathCorrection
+  /// @note this is the final implementation of the pathCorrection function
+  double pathCorrection(const Vector3D& gpos, const Vector3D& mom) const final;
 
   ///  fast straight line intersection schema - standard: provides closest
   /// intersection and (signed) path length
   ///  forceDir is to provide the closest forward solution
-  /// 
+  ///
+  ///  @param gpos is the start position of the intersection attempt
+  ///  @param dir is the direction of the interesection attempt
+  ///  @param forceDir is the directive whether to force only foward solution (w.r.t dir)                
+  ///  @param bhck is the boundary check directive
+  ///                  
   ///  <b>mathematical motivation:</b>
   /// 
   ///  the equation of the plane is given by: <br>
@@ -143,10 +158,8 @@ public:
   ///  If the denominator is 0 then the line lies:
   ///  - either in the plane
   ///  - perpenticular to the normal of the plane
-  /// 
-  /// 
   virtual Intersection
-  intersectionEstimate(const Vector3D&      pos,
+  intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir,
                        const BoundaryCheck& bchk = true) const override;
@@ -171,29 +184,41 @@ PlaneSurface::clone(const Transform3D* shift) const
   return new PlaneSurface(*this);
 }
 
-inline const PlanarBounds&
+inline const SurfaceBounds&
 PlaneSurface::bounds() const
 {
-  return (*m_bounds.get());
+  if (m_bounds) return (*m_bounds.get());
+  return s_noBounds;
 }
-
+    
 inline const Vector3D 
-PlaneSurface::normal(const Vector2D& lpos = Vector2D()) const
+PlaneSurface::normal(const Vector2D& lpos) const
 {
     return m_normal;
 }
 
+inline const Vector3D
+PlaneSurface::binningPosition(BinningValue) const
+{
+    return center();
+}
+    
+inline double PlaneSurface::pathCorrection(const Vector3D& gpos, const Vector3D& mom) const
+{
+    /// @TODO fix
+    return 1.;
+}
 
 inline Intersection
-PlaneSurface::intersectionEstimate(const Vector3D&      pos,
+PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
                                    const Vector3D&      dir,
                                    bool                 forceDir,
                                    const BoundaryCheck& bchk) const
 {
   double denom = dir.dot(normal());
   if (denom) {
-    double   u = (normal().dot((center() - pos))) / (denom);
-    Vector3D intersectPoint(pos + u * dir);
+    double   u = (normal().dot((center() - gpos))) / (denom);
+    Vector3D intersectPoint(gpos + u * dir);
     // evaluate the intersection in terms of direction
     bool isValid = forceDir ? (u > 0.) : true;
     // evaluate (if necessary in terms of boundaries)
@@ -201,7 +226,7 @@ PlaneSurface::intersectionEstimate(const Vector3D&      pos,
     // return the result
     return Intersection(intersectPoint, u, isValid);
   }
-  return Intersection(pos, 0., false);
+  return Intersection(gpos, 0., false);
 }
 
 }  // end of namespace

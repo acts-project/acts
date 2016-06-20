@@ -60,7 +60,7 @@ public:
 
   /// Constructor from HepTransform and ConeBounds
   /// @param htrans is the transform that places the cone in the global frame
-  /// @param cbounds is the boundary class            
+  /// @param cbounds is the boundary class, the bounds must exit            
   ConeSurface(std::shared_ptr<Transform3D>      htrans,
               std::shared_ptr<const ConeBounds> cbounds);
 
@@ -89,7 +89,7 @@ public:
   /// The binning position method - is overloaded for r-type binning 
   /// @param bValue defines the type of binning to be applied in the global frame
   /// @return The return type is a vector for positioning in the global frame
-  virtual Vector3D
+  virtual const Vector3D
   binningPosition(BinningValue bValue) const override;
 
   /// Return the surface type 
@@ -212,12 +212,14 @@ ConeSurface::normal(const Vector2D& lp) const
   Vector3D localNormal(cos(phi) * bounds().cosAlpha(),
                        sin(phi) * bounds().cosAlpha(),
                        sgn * bounds().sinAlpha());
-  return Vector3D(transform().rotation() * localNormal);
+  return m_transform ? std::move(Vector3D(transform().linear() * localNormal))
+                     : std::move(localNormal); 
 }
 
 inline const ConeBounds&
 ConeSurface::bounds() const
 {
+  // is safe because no constructor w/o bounds exists
   return (*m_bounds.get());
 }
 

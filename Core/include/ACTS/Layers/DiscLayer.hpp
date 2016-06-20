@@ -18,7 +18,6 @@ class MsgStream;
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Surfaces/DiscSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-// STL sorting
 #include <algorithm>
 
 namespace Acts {
@@ -28,22 +27,28 @@ class SurfaceMaterial;
 class OverlapDescriptor;
 class ApproachDescriptor;
 
-/**
- @class DiscLayer
 
- Class to describe a disc-like detector layer for tracking,
- it inhertis from both, Layer base class
- and DiscSurface class
+/// @class DiscLayer
+///
+/// Class to describe a disc-like detector layer for tracking,
+/// it inhertis from both, Layer base class
+/// and DiscSurface class
 
- */
 
 class DiscLayer : virtual public DiscSurface, public Layer
 {
-  friend class TrackingVolume;
-
 public:
-  /** Factory constructor with DiscSurface components and pointer to
-   * SurfaceArray (passing ownership) */
+  ///  Factory constructor with DiscSurface components 
+  ///
+  /// @param transform is the transform to place the layer in the 3D frame
+  /// @param dbounds are the disc bounds that describe the layer dimensions
+  /// @param surfaceArray is the array of sensitive surfaces
+  /// @param thickness is the layer thickness (along the normal vector)
+  /// @param od is the overlap descriptor that describes sensitive surface neighbours
+  /// @param ad is the approach descriptor that provides the approach surface
+  /// @param laytyp is the layer type
+  ///
+  /// @TODO move OverlapDescriptor and ApproachDescriptor to unqique_ptr
   static LayerPtr
   create(std::shared_ptr<Transform3D>      transform,
          std::shared_ptr<const DiscBounds> dbounds,
@@ -51,7 +56,7 @@ public:
          double                            thickness    = 0.,
          OverlapDescriptor*                od           = nullptr,
          ApproachDescriptor*               ad           = nullptr,
-         int                               laytyp       = int(Acts::passive))
+         LayerType                         laytyp       = Acts::passive)
   {
     return LayerPtr(new DiscLayer(transform,
                                   dbounds,
@@ -62,31 +67,38 @@ public:
                                   laytyp));
   }
 
-  /** Factory constructor as copy with shift */
+  /// Factory constructor as copy with shift 
+  /// @param dla is the disc laye to be cloned
+  /// @param shift is the additional transform to be applied after copying
   static LayerPtr
-  create(const DiscLayer& cla, const Transform3D& shift)
+  create(const DiscLayer& dla, const Transform3D& shift)
   {
-    return LayerPtr(new DiscLayer(cla, shift));
+    return LayerPtr(new DiscLayer(dla, shift));
   }
 
-  /** Clone with a shift - only cloning that is allowed */
+  ///  Clone with a shift - only cloning that is allowed 
+  /// @param shift is the additional transform to be applied after cloning
   LayerPtr
   cloneWithShift(const Transform3D& shift) const override
   {
     return DiscLayer::create(*this, shift);
   }
+  
+  /// Default Constructor
+  DiscLayer() = delete;
 
-  /** Copy constructor of DiscLayer - forbidden */
+  /// Copy constructor of DiscLayer - deleted 
   DiscLayer(const DiscLayer& cla) = delete;
 
-  /* *Assignment operator for DiscLayers - forbidden */
+  /// Assignment operator for DiscLayers - deleted
   DiscLayer&
-  operator=(const DiscLayer&)
-      = delete;
+  operator=(const DiscLayer&) = delete;
 
-  /** Destructor*/
+  /// Destructor
   virtual ~DiscLayer() {}
-  /** Transforms the layer into a Surface representation for extrapolation */
+  
+  /// Transforms the layer into a Surface representation for extrapolation 
+  /// @return This method returns a surface reference 
   const DiscSurface&
   surfaceRepresentation() const override;
 
@@ -96,8 +108,6 @@ private:
   buildApproachDescriptor() const;
 
 protected:
-  /** Default Constructor*/
-  DiscLayer() {}
   /** Constructor with DiscSurface components and pointer to SurfaceArray
    * (passing ownership) */
   DiscLayer(std::shared_ptr<Transform3D>      transform,
@@ -106,7 +116,7 @@ protected:
             double                            thickness    = 0.,
             OverlapDescriptor*                od           = nullptr,
             ApproachDescriptor*               ad           = nullptr,
-            int                               laytyp       = int(Acts::active));
+            LayerType                         laytyp       = Acts::active);
 
   /** Copy constructor with shift*/
   DiscLayer(const DiscLayer& cla, const Transform3D& tr);

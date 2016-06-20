@@ -30,6 +30,7 @@ class DetectorElementBase;
 class SurfaceBounds;
 class SurfaceMaterial;
 class Layer;
+    class TrackingVolume;
 
 /// @class Surface
 ///
@@ -56,7 +57,7 @@ public:
     Disc        = 2,
     Perigee     = 3,
     Plane       = 4,
-    Line        = 5,
+    Straw       = 5,
     Curvilinear = 6,
     Other       = 7
   };
@@ -77,10 +78,6 @@ public:
   /// @param transf Additional transform applied after copying from the source
   Surface(const Surface& sf, const Transform3D& transf);
 
-  /// Constructor with Transform3D
-  /// @param transf Transform3D (by shared_ptr) to position it in space
-  Surface(std::shared_ptr<Transform3D> transf);
-
   /// Constructor fromt DetectorElementBase and (optional) Identifier 
   /// @param detelement Detector element which is represented by this surface
   /// @param id Optional identifier if more than one surface are associated to a detector element
@@ -90,10 +87,10 @@ public:
   virtual ~Surface();
 
   /// Assignment operator is not allowed
-  /// The alssignment invalidates the link to detector element, identifier, layer or tracking volume.
-  /// If  you want to assign, you need to copy or clone.
+  /// @note handle with care !
+  // The alssignment invalidates the link to detector element, identifier, layer or tracking volume.
   Surface&
-  operator=(const Surface& sf) = delete;
+  operator=(const Surface& sf);
 
   /// Comparison (equality) operator 
   /// The strategy for comparison is
@@ -128,11 +125,9 @@ public:
   transform() const;
 
   /// Return method for the surface center by reference 
-  /// In case a detector element is associated the surface transform
-  /// is just forwarded to the detector element in order to keep the 
-  /// (mis-)alignment cache cetrally handled
-  /// @return center position by reference
-  virtual const Vector3D&
+  /// @note the center is always recalculated in order to not keep a cache
+  /// @return center position by value
+  virtual const Vector3D
   center() const;
 
   /// Return method for the normal vector of the surface
@@ -223,7 +218,7 @@ public:
   /// @param gpos global 3D position - considered to be on surface but not inside bounds (check is done)
   /// @param gmom global 3D momentum representation (optionally ignored)
   /// @param lpos local 2D position to be filled (given by reference for method symmetry)
-  /// @return boolean indication if operation was successful (fail means global position was not on surface)                
+  /// @return boolean indication if operation was successful (fail means global position was not on surface)
   virtual bool
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& gmom,
@@ -293,8 +288,6 @@ public:
 protected:
   /// Transform3D definition that positions (translation, rotation) the surface in global space
   std::shared_ptr<Transform3D>                  m_transform;
-  /// center position for surfaces, only calculated if transform is given  
-  std::unique_ptr<Vector3D>                     m_center;  
 
   /// Pointer to the a DetectorElementBase 
   const DetectorElementBase*                    m_associatedDetElement;
@@ -316,13 +309,7 @@ protected:
 inline bool
 Surface::operator!=(const Surface& sf) const
 {
-  return !(operatpr==(sf));
-}
-
-inline std::shared_ptr<Transform3D>
-Surface::cachedTransform() const
-{
-  return m_transform;
+  return !(operator==(sf));
 }
 
 inline const Transform3D&
@@ -335,15 +322,10 @@ Surface::transform() const
   return s_idTransform;
 }
 
-inline const Vector3D&
+inline const Vector3D
 Surface::center() const
 {
-  if (m_transform) && !m_center) m_center = new Vector3D(m_transform->translation());
-  if (m_center) return (*m_center);
-  if (m_associatedDetElement && m_associatedDetElementId.is_valid())
-    return m_associatedDetElement->center(m_associatedDetElementId);
-  if (m_associatedDetElement) return m_associatedDetElement->center();
-  return s_origin;
+   return transform().translation();
 }
 
 template <class T>

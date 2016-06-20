@@ -30,8 +30,8 @@ Acts::LineBounds::~LineBounds()
 Acts::LineBounds&
 Acts::LineBounds::operator=(const Acts::LineBounds& libo)
 {
-  if (this != &cylbo)
-    SurfaceBounds::operator=(libo)
+  if (this != &libo)
+    SurfaceBounds::operator=(libo);
   return *this;
 }
 
@@ -49,7 +49,7 @@ Acts::LineBounds::dump(std::ostream& sl) const
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::LineBounds: (radius, halflengthInZ) = ";
-  sl << "(" <<r() << ", " <<averagePhi() << ")";
+  sl << "(" << r() << ", " << halflengthZ() << ")";
   sl << std::setprecision(-1);
   return sl;
 }

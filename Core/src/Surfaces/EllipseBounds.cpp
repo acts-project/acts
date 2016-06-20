@@ -30,11 +30,11 @@ Acts::EllipseBounds::EllipseBounds(double minradX,
   m_valueStore.at(EllipseBounds::bv_halfPhiSector) = hphisec;
   if (m_valueStore.at(EllipseBounds::bv_rMinX)
       > m_valueStore.at(EllipseBounds::bv_rMaxX))
-    swap(m_valueStore.at(EllipseBounds::bv_rMinX),
+    std::swap(m_valueStore.at(EllipseBounds::bv_rMinX),
          m_valueStore.at(EllipseBounds::bv_rMaxX));
   if (m_valueStore.at(EllipseBounds::bv_rMinY)
       > m_valueStore.at(EllipseBounds::bv_rMaxY))
-    swap(m_valueStore.at(EllipseBounds::bv_rMinY),
+    std::swap(m_valueStore.at(EllipseBounds::bv_rMinY),
          m_valueStore.at(EllipseBounds::bv_rMaxY));
 }
 
@@ -45,8 +45,8 @@ Acts::EllipseBounds::~EllipseBounds()
 Acts::EllipseBounds&
 Acts::EllipseBounds::operator=(const EllipseBounds& ebo)
 {
-  if (this != &discbo) 
-    PlanarBounds::operator=(ebo)
+  if (this != &ebo)
+    PlanarBounds::operator=(ebo);
   return *this;
 }
 
@@ -57,7 +57,7 @@ Acts::EllipseBounds::operator=(const EllipseBounds& ebo)
 // m_valueStore.at(EllipseBounds::bv_rMaxY)
 //
 double
-Acts::EllipseBounds::minDistance(const Acts::Vector2D& lpos) const
+Acts::EllipseBounds::minDistance(const Vector2D& lpos) const
 {
   const double pi2 = 2. * M_PI;
 

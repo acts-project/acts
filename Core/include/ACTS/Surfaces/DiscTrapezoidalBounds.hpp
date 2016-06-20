@@ -460,12 +460,6 @@ DiscTrapezoidalBounds::rMax() const
 }
 
 inline double
-DiscTrapezoidalBounds::r() const
-{
-  return m_valueStore.at(DiscTrapezoidalBounds::bv_rMax);
-}
-
-inline double
 DiscTrapezoidalBounds::averagePhi() const
 {
   return m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi);

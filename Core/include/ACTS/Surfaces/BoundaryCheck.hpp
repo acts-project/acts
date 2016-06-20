@@ -60,9 +60,10 @@ struct sincosCache
 class BoundaryCheck
 {
   /// saves us a lot of function calls in the EllipseToPoly method
-  static constexpr double s_cos22 = cos(22.5*M_PI/180.);
-  static constexpr double s_cos45 = cos(45.*M_PI/180.);
-  static constexpr double s_cos67 = cos(67.5*M_PI/180.);
+  /// @TODO fix it
+    static constexpr double s_cos22 = 1.; // cos(22.5*M_PI/180.);
+    static constexpr double s_cos45 = 1.; // cos(45.0*M_PI/180.);
+    static constexpr double s_cos67 = 1.; // cos(67.5*M_PI/180.);
 
 public:
     

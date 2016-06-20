@@ -13,7 +13,6 @@ Layer::onLayer(const T& pars, const BoundaryCheck& bcheck) const
   return isOnLayer(pars.position(), bcheck);
 }
 
-/** returns all Compatible surfaces with given BoundaryCheck */
 template <class T>
 bool
 Layer::getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
@@ -172,11 +171,11 @@ Layer::testCompatibleSurface(std::vector<SurfaceIntersection>& cSurfaces,
   // (1) skip the start and end surface
   if (&surface == endSurface || &surface == startSurface) return;
   // (2) no material, no passive collection, not active
-  if (!surface.isActive() && !collectPassive
+  if (!surface.associatedDetectorElement() && !collectPassive
       && surface.associatedMaterial() == nullptr)
     return;
   // (3) is active, not configured for collect active
-  if (surface.isActive() && !collectSensitive
+  if (surface.associatedDetectorElement() && !collectSensitive
       && surface.associatedMaterial() == nullptr)
     return;
   // then take it if you don't have to do an intersection
@@ -199,7 +198,7 @@ Layer::testCompatibleSurface(std::vector<SurfaceIntersection>& cSurfaces,
     PropDirection rDir
         = (sfIntersection.pathLength > 0 ? alongMomentum : oppositeMomentum);
     // and the surfaces & direction to push back - take all
-    if (collectPassive || (collectSensitive && surface.isActive())
+    if (collectPassive || (collectSensitive && surface.associatedDetectorElement())
         || surface.associatedMaterial())
       cSurfaces.push_back(SurfaceIntersection(sfIntersection, &surface, rDir));
   }

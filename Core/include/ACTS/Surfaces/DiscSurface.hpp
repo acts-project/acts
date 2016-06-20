@@ -13,19 +13,16 @@
 #ifndef ACTS_SURFACE_SDISCSURFACE_H
 #define ACTS_SURFACE_SDISCSURFACE_H 1
 
-#include "ACTS/Surfaces/DiscBounds.hpp"
-#include "ACTS/Surfaces/NoBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
+#include "ACTS/Surfaces/DiscBounds.hpp"
+#include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
 
 namespace Acts {
 
-class RadialBounds;
-class DiscTrapezoidalBounds;
 class DetectorElementBase;
 
-/// 
 /// @class DiscSurface
 /// 
 /// Class for a DiscSurface in the TrackingGEometry.
@@ -67,10 +64,12 @@ public:
               std::shared_ptr<const DiscBounds> dbounds = nullptr);
 
   /// Constructor from detector element and identifier
-  /// @note the surface only acts as a proxy of the detector element, its interal members as mostly 0
+  /// @note the surface only acts as a proxy of the detector element
+  /// @param dbounds are the disc bounds associated to this surface, must not be nullptr              
   /// @param detelement is the detector element that is represented by this surface
   /// @param identifier is the optional identifier in case one detector element owns more than 1 surface        
-  DiscSurface(const DetectorElementBase& detelement,
+  DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
+              const DetectorElementBase& detelement,
               const Identifier&          identifier = Identifier());
 
   /// Copy Constructor
@@ -100,20 +99,25 @@ public:
   {
     return Surface::Disc;
   }
-
-  /// This method returns the bounds by reference
-  const SurfaceBounds&
-  bounds() const override;
   
   /// Normal vector
   /// @param lpos the local position where the normal is requested (ignored)
   const Vector3D
-  normal(const Vector2D& lpos = Vector2D::Unit()) const;
+  normal(const Vector2D& lpos = s_origin2D) const override;
+    
+  /// @copydoc Surface::biningPosition
+  virtual const Vector3D
+  binningPosition(BinningValue bValue) const final;
+
+
+  /// This method returns the bounds by reference
+  const SurfaceBounds&
+  bounds() const override;
 
   /// This method returns true if the GlobalPosition is on the Surface for both, within
   /// or without check of whether the local position is inside boundaries or not
   virtual bool
-  isOnSurface(const Vector3D&      glopo,
+  isOnSurface(const Vector3D&      gpos,
               const BoundaryCheck& bchk = true) const override;
 
   /// @copydoc Surface::localToGlobal
@@ -160,6 +164,10 @@ public:
   const Vector2D
   globalToLocalCartesian(const Vector3D& gpos, double tol = 0.) const;
 
+  /// Path correction method
+  /// @copydoc Surface::pathCorrection
+  double pathCorrection(const Vector3D& gpos, const Vector3D& mom) const override;
+    
   /// @copydoc Surface::intersectionEstimate
   /// 
   /// fast straight line intersection schema - standard: provides closest
@@ -198,7 +206,7 @@ public:
 
 protected:                                             
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
-  Vector3D                          m_normal;
+  Vector3D                          m_normal;  ///< 
   
 };
 
@@ -213,12 +221,13 @@ inline const SurfaceBounds&
 DiscSurface::bounds() const
 {
   if (m_bounds) return (*(m_bounds.get()));
-  if (Surface::m_associatedDetElement
-      && Surface::m_associatedDetElementId.is_valid()) {
-    return m_associatedDetElement->bounds(Surface::m_associatedDetElementId);
-  }
-  if (Surface::m_associatedDetElement) return m_associatedDetElement->bounds();
-  return s_boundless;
+  return s_noBounds;
+}
+
+inline const Vector3D
+DiscSurface::binningPosition(BinningValue) const
+{
+    return center();
 }
 
 inline const Vector2D
@@ -236,16 +245,22 @@ DiscSurface::localCartesianToPolar(const Vector2D& lcart) const
                    atan2(lcart[Acts::eLOC_Y], lcart[Acts::eLOC_X])));
 }
 
+inline double DiscSurface::pathCorrection(const Vector3D& gpos, const Vector3D& mom) const
+{
+    /// @TODO fix
+    return 1.;
+}
+
 inline Intersection
-DiscSurface::intersectionEstimate(const Vector3D&      pos,
+DiscSurface::intersectionEstimate(const Vector3D&      gpos,
                                   const Vector3D&      dir,
                                   bool                 forceDir,
                                   const BoundaryCheck& bchk) const
 {
   double denom = dir.dot(normal());
   if (denom) {
-    double   u = (normal().dot((center() - pos))) / (denom);
-    Vector3D intersectPoint(pos + u * dir);
+    double   u = (normal().dot((center() - gpos))) / (denom);
+    Vector3D intersectPoint(gpos + u * dir);
     // evaluate the intersection in terms of direction
     bool isValid = forceDir ? (u > 0.) : true;
     // evaluate (if necessary in terms of boundaries)
@@ -253,7 +268,7 @@ DiscSurface::intersectionEstimate(const Vector3D&      pos,
     // return the result
     return Intersection(intersectPoint, u, isValid);
   }
-  return Intersection(pos, 0., false);
+  return Intersection(gpos, 0., false);
 }
 
 }  // end of namespace

@@ -7,31 +7,30 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// BoundlessT.h, ACTS project
+// InfiniteBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_BOUNDLESST_H
-#define ACTS_BOUNDLESST_H 1
+#ifndef ACTS_INFINITE_BOUNDS_H
+#define ACTS_INFINITE_BOUNDS_H 1
 
 #include "ACTS/Surfaces/SurfaceBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
 
-/// @class BoundlessT 
+/// @class InfiniteBounds 
 ///    
 /// templated boundless extension to forward the interface
 /// Returns all inside checks to true and can templated for all bounds
 
-template <class T> class BoundlessT : public T
+class InfiniteBounds : public SurfaceBounds
 {
 public:
   /// Default Constructor
-  BoundlessT() :
-  T(){}
+  InfiniteBounds() {}
 
   /// Destructor 
-  ~BoundlessT() {}
+  ~InfiniteBounds() {}
 
   /// Return SurfaceBounds type for persistency mainly
   virtual SurfaceBounds::BoundsType
@@ -40,7 +39,7 @@ public:
   /// Method inside() returns true for any case
   /// ignores input parameters
   /// @return always true
-  vritual bool
+  virtual bool
   inside(const Vector2D&, const BoundaryCheck&) const final { return true; }
 
   /// Method inside() returns true for loc 0
@@ -57,13 +56,13 @@ public:
 
   /// Minimal distance calculation
   /// ignores input parameter
-  /// @return always 0.
+  /// @return always 0. (should be -NaN)
   virtual double
   minDistance(const Vector2D& pos) const final { return 0.; }
 
   /// Clone method to complete inherited interface 
-  virtual BoundlessT*
-  clone() const final { return BoundlessT<T>(); }
+  virtual InfiniteBounds*
+  clone() const final { return new InfiniteBounds(); }
 
   /// Output Method for std::ostream 
   virtual std::ostream&
@@ -72,12 +71,14 @@ public:
 };
 
 inline std::ostream&
-NoBounds::dump(std::ostream& sl) const
+InfiniteBounds::dump(std::ostream& sl) const
 {
-  sl << "Acts::BoundlessT ... boundless surface" << std::endl;
+  sl << "Acts::InfiniteBounds ... boundless surface" << std::endl;
   return sl;
 }
 
+static InfiniteBounds s_noBounds = InfiniteBounds();
+
 }  // end of namespace
 
-#endif  // ACTS_BOUNDLESST_H
+#endif  // ACTS_INFINITE_BOUNDS_H

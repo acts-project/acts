@@ -12,6 +12,7 @@
 
 #include "ACTS/Surfaces/SurfaceBounds.hpp"
 
+Acts::SurfaceBounds&
 Acts::SurfaceBounds::operator=(const SurfaceBounds& sb)
 {
   if (this != &sb){
@@ -27,7 +28,7 @@ bool Acts::SurfaceBounds::operator==(const SurfaceBounds& sb) const
   /// fast exit for type comparison
   if (sb.type() != type() ) return false;
   // value comparison
-  return (sb.m_valueStore ==  valueStore); 
+  return (sb.m_valueStore ==  m_valueStore);
 }
 
 std::ostream&

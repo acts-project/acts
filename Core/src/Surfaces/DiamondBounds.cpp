@@ -20,8 +20,7 @@ Acts::DiamondBounds::DiamondBounds(double minhalex,
                                    double maxhalex,
                                    double haley1,
                                    double haley2)
-  : Acts::PlanarBounds()
-  , m_valueStore(DiamondBounds::bv_length, 0.)
+  : PlanarBounds(DiamondBounds::bv_length)
   , m_alpha1(0.)
   , m_alpha2(0.)
 {
@@ -38,7 +37,7 @@ Acts::DiamondBounds::DiamondBounds(double minhalex,
 
 // copy constructor
 Acts::DiamondBounds::DiamondBounds(const DiamondBounds& diabo)
-  : Acts::PlanarBounds()
+  : PlanarBounds(DiamondBounds::bv_length)
   , m_valueStore(diabo.m_valueStore)
   , m_alpha1(diabo.m_alpha1)
   , m_alpha2(diabo.m_alpha2)

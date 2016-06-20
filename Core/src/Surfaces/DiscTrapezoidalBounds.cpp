@@ -20,7 +20,7 @@ Acts::DiscTrapezoidalBounds::DiscTrapezoidalBounds(double minhalfx,
                                                    double minR,
                                                    double avephi,
                                                    double stereo)
-  : Acts::DiscBounds(), m_valueStore(DiscTrapezoidalBounds::bv_length, 0.)
+  : DiscBounds(DiscTrapezoidalBounds::bv_length)
 {
   m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi) = avephi;
   m_valueStore.at(DiscTrapezoidalBounds::bv_stereo)     = stereo;
@@ -59,12 +59,6 @@ Acts::DiscTrapezoidalBounds::DiscTrapezoidalBounds(double minhalfx,
   m_valueStore.at(DiscTrapezoidalBounds::bv_halfY)   = (hmax - hmin) / 2.;
 }
 
-Acts::DiscTrapezoidalBounds::DiscTrapezoidalBounds(
-    const DiscTrapezoidalBounds& disctrbo)
-  : Acts::DiscBounds(), m_valueStore(disctrbo.m_valueStore)
-{
-}
-
 Acts::DiscTrapezoidalBounds::~DiscTrapezoidalBounds()
 {
 }
@@ -73,7 +67,7 @@ Acts::DiscTrapezoidalBounds&
 Acts::DiscTrapezoidalBounds::operator=(const DiscTrapezoidalBounds& disctrbo)
 {
   if (this != &disctrbo) 
-    DiscBounds::opertor=(disctrbo);
+    DiscBounds::operator=(disctrbo);
   return *this;
 }
 

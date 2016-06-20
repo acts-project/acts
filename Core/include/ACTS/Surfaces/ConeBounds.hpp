@@ -71,9 +71,9 @@ public:
   /// @param cobo is the source bounds for the assignment             
   ConeBounds(const ConeBounds& cobo) 
     : SurfaceBounds(cobo)
-    ,  m_tanAlpha(conebo.m_tanAlpha)
-    ,  m_sinAlpha(conebo.m_sinAlpha)
-    ,  m_cosAlpha(conebo.m_cosAlpha)
+    ,  m_tanAlpha(cobo.m_tanAlpha)
+    ,  m_sinAlpha(cobo.m_sinAlpha)
+    ,  m_cosAlpha(cobo.m_cosAlpha)
    {}
 
   /// Destructor 
@@ -167,7 +167,7 @@ private:
 
   /// Helper function for angle parameter initialization 
   virtual void
-  initCache() override;
+  initCache();
 
   /// Helpers for inside() functions 
   inline double
@@ -203,22 +203,6 @@ ConeBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
   double coneR   = z * m_tanAlpha;
   double minRPhi = coneR * minPhi() - tol0, maxRPhi = coneR * maxPhi() + tol0;
   return minRPhi < lpos[Acts::eLOC_RPHI] && lpos[Acts::eLOC_RPHI] < maxRPhi;
-}
-
-inline bool
-ConeBounds::inside(const Vector3D& gpos, double tol0, double tol1) const
-{
-  // coords are (rphi,z)
-  return inside(Vector2D(gpos.perp() * gpos.phi(), gpos.z()), tol0, tol1);
-}
-
-inline bool
-ConeBounds::inside(const Vector3D& gpos, const BoundaryCheck& bchk) const
-{
-  // coords are (rphi,z)
-  return inside(Vector2D(gpos.perp() * gpos.phi(), gpos.z()),
-                bchk.toleranceLoc0,
-                bchk.toleranceLoc1);
 }
 
 inline bool
