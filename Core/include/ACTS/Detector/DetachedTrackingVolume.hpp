@@ -35,13 +35,9 @@ class DetachedTrackingVolume;
 typedef std::shared_ptr<const DetachedTrackingVolume> DetachedTrackingVolumePtr;
 typedef std::shared_ptr<const TrackingVolume>         TrackingVolumePtr;
 
-/**
- @class DetachedTrackingVolume
-
- Base Class for a navigation object (active/passive) in the Tracking geometry.
-
-
- */
+/// @class DetachedTrackingVolume
+///
+/// Base Class for a navigation object (active/passive) in the Tracking geometry.
 
 class DetachedTrackingVolume
 {
@@ -52,7 +48,11 @@ class DetachedTrackingVolume
   friend class IDetachedTrackingVolumeBuilder;
 
 public:
-  /** Factory Constructor */
+  /// Factory Constructor 
+  /// @param name is name identifier
+  /// @param vol is the contained TrackingVolume
+  /// @param layer is the contained layer
+  /// @param multiLayer is the multi layer representation
   static DetachedTrackingVolumePtr
   create(const std::string& name,
          TrackingVolumePtr  vol,
@@ -63,79 +63,79 @@ public:
         new DetachedTrackingVolume(name, vol, layer, multiLayer));
   }
 
-  /** Destructor*/
+  /// Destructor
   ~DetachedTrackingVolume();
 
-  /** returns the TrackingVolume */
+  /// returns the TrackingVolume 
   const TrackingVolume*
   trackingVolume() const;
 
-  /** returns the Name */
+  /// returns the Name 
   const std::string
   name() const;
 
-  /** moving object around */
+  /// moving object around 
   void
   move(Transform3D& shift) const;
 
-  /** clone with shift */
+  /// clone with shift 
   DetachedTrackingVolumePtr
   clone(std::string name, Transform3D& shift) const;
 
-  /** returns layer representation */
+  /// returns layer representation 
   const Layer*
   layerRepresentation() const;
 
-  /** returns (multi)layer representation */
+  /// returns (multi)layer representation 
   const LayerVector
   multilayerRepresentation() const;
 
-  /** sign the volume - the geometry builder has to do that */
+  /// sign the volume - the geometry builder has to do that 
   void
   sign(GeometrySignature signat, GeometryType geotype) const;
 
-  /** return the Signature */
+  /// return the Signature 
   GeometrySignature
   geometrySignature() const;
 
-  /** return the Type */
+  /// return the Type 
   GeometryType
   geometryType() const;
 
-  /** set the simplified calculable components */
+  /// set the simplified calculable components 
   void
   saveConstituents(std::vector<std::pair<const Acts::Volume*, float>>*) const;
 
-  /** get the simplified calculable components */
+  /// get the simplified calculable components 
   std::vector<std::pair<const Acts::Volume*, float>>*
   constituents() const;
 
-  /** alignment methods: set base transform / default argument to current
-   * transform */
+  ///  alignment methods: set base transform 
+  /// default argument to current transform
   void
   setBaseTransform(Transform3D* transf = 0) const;
 
-  /** alignment methods: realign  / default argument to base transform */
+  /// alignment methods: realign  / default argument to base transform 
   void
   realign(Transform3D* transf = 0) const;
 
 protected:
-  /**Default Constructor*/
+  /// Default Constructor
   DetachedTrackingVolume();
 
-  /**Constructor with name & layer representation*/
+  /// Constructor with name & layer representation
   DetachedTrackingVolume(const std::string&    name,
                          TrackingVolumePtr     vol,
                          LayerPtr              layer,
                          std::vector<LayerPtr> multilayer);
 
 private:
-  const std::string     m_name;
-  TrackingVolumePtr     m_trkVolume;
-  LayerPtr              m_layerRepresentation;
-  std::vector<LayerPtr> m_multilayerRepresentation;
-  mutable Transform3D* m_baseTransform;  // optional use (for alignment purpose)
-  mutable std::vector<std::pair<const Acts::Volume*, float>>* m_constituents;
+  const std::string               m_name;
+  TrackingVolumePtr               m_trkVolume;
+  LayerPtr                        m_layerRepresentation;
+  std::vector<LayerPtr>           m_multilayerRepresentation;
+  mutable Transform3D*            m_baseTransform;  
+  mutable std::vector<std::pair<const Volume*, float>>* m_constituents;
 };
 
 inline const TrackingVolume*

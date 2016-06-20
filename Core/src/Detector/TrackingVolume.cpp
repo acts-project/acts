@@ -143,7 +143,7 @@ Acts::TrackingVolume::associatedLayer(const Vector3D& gp) const
 }
 
 const Acts::TrackingVolume*
-Acts::TrackingVolume::associatedSubVolume(const Vector3D& gp) const
+Acts::TrackingVolume::trackingVolume(const Vector3D& gp) const
 {
   // confined static volumes - highest hierarchy
   if (m_confinedVolumes) return (m_confinedVolumes->object(gp).get());
@@ -195,7 +195,7 @@ Acts::TrackingVolume::nextVolume(const Vector3D& gp,
 }
 
 const Acts::DetachedVolumeVector*
-Acts::TrackingVolume::assocDetachedSubVolumes(const Vector3D& gp,
+Acts::TrackingVolume::detachedTrackingVolumes(const Vector3D& gp,
                                               double          tol) const
 {
   // create a new vector

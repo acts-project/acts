@@ -36,7 +36,7 @@ Acts::TrackingGeometry::lowestTrackingVolume(const Acts::Vector3D& gp) const
   const Acts::TrackingVolume* currentVolume = nullptr;
   while (currentVolume != searchVolume && searchVolume) {
     currentVolume = searchVolume;
-    searchVolume  = searchVolume->associatedSubVolume(gp);
+    searchVolume  = searchVolume->trackingVolume(gp);
   }
   return currentVolume;
 }
@@ -47,7 +47,7 @@ Acts::TrackingGeometry::lowestDetachedTrackingVolumes(
 {
   double                      tol           = 0.001;
   const Acts::TrackingVolume* currentVolume = lowestStaticTrackingVolume(gp);
-  if (currentVolume) return currentVolume->assocDetachedSubVolumes(gp, tol);
+  if (currentVolume) return currentVolume->detachedTrackingVolumes(gp, tol);
   return nullptr;
 }
 
@@ -60,7 +60,7 @@ Acts::TrackingGeometry::lowestStaticTrackingVolume(
   while (currentVolume != searchVolume && searchVolume) {
     currentVolume = searchVolume;
     if ((searchVolume->confinedDetachedVolumes()).empty())
-      searchVolume = searchVolume->associatedSubVolume(gp);
+      searchVolume = searchVolume->trackingVolume(gp);
   }
   return currentVolume;
 }

@@ -10,7 +10,6 @@
 // GlueVolumesDescriptor.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module
 #include "ACTS/Detector/GlueVolumesDescriptor.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
 
@@ -44,7 +43,6 @@ Acts::GlueVolumesDescriptor::glueVolumes(Acts::BoundarySurfaceFace bsf) const
   return nullptr;
 }
 
-/** dump it to the screen */
 std::string
 Acts::GlueVolumesDescriptor::screenOutput() const
 {
