@@ -10,7 +10,6 @@
 // SurfaceArrayCreator.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module
 #include "ACTS/Tools/SurfaceArrayCreator.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/BinStepping.hpp"
@@ -18,11 +17,8 @@
 #include "ACTS/Utilities/BinnedArray1D.hpp"
 #include "ACTS/Utilities/BinnedArray2D.hpp"
 #include "ACTS/Utilities/MsgMacros.hpp"
-// Core module
 #include "ACTS/Utilities/Definitions.hpp"
 
-/** SurfaceArrayCreator interface method - create an array in a cylinder, binned
- * in phi, z */
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const std::vector<const Acts::Surface*>& surfaces,

@@ -20,7 +20,6 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/MsgMacros.hpp"
 
-// constructor
 Acts::PassiveLayerBuilder::PassiveLayerBuilder(
     const PassiveLayerBuilder::Config& plConfig)
   : m_config(), m_nLayers(), m_cLayers(), m_pLayers(), m_constructionFlag(false)
@@ -28,7 +27,6 @@ Acts::PassiveLayerBuilder::PassiveLayerBuilder(
   setConfiguration(plConfig);
 }
 
-// configuration method
 void
 Acts::PassiveLayerBuilder::setConfiguration(
     const PassiveLayerBuilder::Config& plConfig)
@@ -64,16 +62,11 @@ Acts::PassiveLayerBuilder::constructLayers() const
       // assign the material to the layer surface
       std::shared_ptr<const SurfaceMaterial> material = nullptr;
       // create the material from jobOptions
-      if (m_config.centralLayerMaterialX0.size()) {
+      if (m_config.centralLayerMaterial.size()) {
         // create homogeneous material
         material = std::make_shared<const HomogeneousSurfaceMaterial>(
-            MaterialProperties(m_config.centralLayerThickness.at(icl),
-                               m_config.centralLayerMaterialX0.at(icl),
-                               m_config.centralLayerMaterialL0.at(icl),
-                               m_config.centralLayerMaterialA.at(icl),
-                               m_config.centralLayerMaterialZ.at(icl),
-                               m_config.centralLayerMaterialRho.at(icl)),
-            1.);
+            MaterialProperties(m_config.centralLayerMaterial.at(icl),
+                               m_config.centralLayerThickness.at(icl)),1.);
 
         // sign it to the surface
         cLayer->surfaceRepresentation().setAssociatedMaterial(material);
@@ -126,16 +119,11 @@ Acts::PassiveLayerBuilder::constructLayers() const
       // assign the material to the layer surface
       std::shared_ptr<const SurfaceMaterial> material = nullptr;
       // create the material from jobOptions
-      if (m_config.posnegLayerMaterialX0.size()) {
+      if (m_config.posnegLayerMaterial.size()) {
         // create homogeneous material
         material = std::make_shared<const HomogeneousSurfaceMaterial>(
-            MaterialProperties(m_config.posnegLayerThickness.at(ipnl),
-                               m_config.posnegLayerMaterialX0.at(ipnl),
-                               m_config.posnegLayerMaterialL0.at(ipnl),
-                               m_config.posnegLayerMaterialA.at(ipnl),
-                               m_config.posnegLayerMaterialZ.at(ipnl),
-                               m_config.posnegLayerMaterialRho.at(ipnl)),
-            1.);
+            MaterialProperties(m_config.posnegLayerMaterial.at(ipnl),
+                               m_config.posnegLayerThickness.at(ipnl)), 1.);
         // sign it to the surface
         nLayer->surfaceRepresentation().setAssociatedMaterial(material);
         pLayer->surfaceRepresentation().setAssociatedMaterial(material);

@@ -18,25 +18,24 @@
 namespace Acts {
 class TrackingGeometry;
 
-/** @class ITrackingGeometryBuilder
-
-  Interface class for the TrackingGeometry building,
-  this is used by the TrackingGeometrySvc to build the geoemtry.
-
-  The TrackingGeometry is written to the detector store and thus not created
-  as a std::shared_ptr.
-
-  The TrackingGeometry is returned as a non-const object in order to recreate
-  from conditions callback if necessary.
-
-  */
+/// @class ITrackingGeometryBuilder
+///
+/// Interface class for the TrackingGeometry building,
+/// this is used by the TrackingGeometrySvc to build the geoemtry.
+///
+/// The TrackingGeometry is written to the detector store and thus not created
+/// as a std::shared_ptr.
+///
+/// The TrackingGeometry is returned as a non-const object in order to recreate
+/// from conditions callback if necessary.
+///
 class ITrackingGeometryBuilder
 {
 public:
-  /**Virtual destructor*/
+  /// Virtual destructor
   virtual ~ITrackingGeometryBuilder() = default;
 
-  /** TrackingGeometry Interface methode */
+  /// TrackingGeometry Interface methode 
   virtual std::unique_ptr<TrackingGeometry>
   trackingGeometry() const = 0;
 };

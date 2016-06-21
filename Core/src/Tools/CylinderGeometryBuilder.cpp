@@ -18,7 +18,6 @@
 #include "ACTS/Utilities/MsgMacros.hpp"
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
 
-// constructor
 Acts::CylinderGeometryBuilder::CylinderGeometryBuilder(
     const Acts::CylinderGeometryBuilder::Config& cgbConfig)
   : m_config()
@@ -26,7 +25,6 @@ Acts::CylinderGeometryBuilder::CylinderGeometryBuilder(
   setConfiguration(cgbConfig);
 }
 
-// configuration
 void
 Acts::CylinderGeometryBuilder::setConfiguration(
     const Acts::CylinderGeometryBuilder::Config& cgbConfig)
@@ -75,7 +73,6 @@ Acts::CylinderGeometryBuilder::trackingGeometry() const
       }
     }
     // create the TrackingGeoemtry
-
     trackingGeometry.reset(new Acts::TrackingGeometry(highestVolume));
   }
   // return the geometry to the service

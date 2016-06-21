@@ -114,7 +114,7 @@ Acts::TrackingGeometry::atVolumeBoundary(const Acts::Vector3D&       gp,
   bool isAtBoundary = false;
   if (!vol) return isAtBoundary;
   for (auto& bSurface : vol->boundarySurfaces()) {
-    const Acts::Surface& surf = bSurface->surfaceRepresentation();
+    const Surface& surf = bSurface->surfaceRepresentation();
     if (surf.isOnSurface(gp, true)) isAtBoundary = true;
   }
   return isAtBoundary;
@@ -123,11 +123,11 @@ Acts::TrackingGeometry::atVolumeBoundary(const Acts::Vector3D&       gp,
 /** check position at volume boundary + navigation link */
 //@TODO change to BoundaryCheck
 bool
-Acts::TrackingGeometry::atVolumeBoundary(const Acts::Vector3D&  gp,
-                                         const Acts::Vector3D&  mom,
+Acts::TrackingGeometry::atVolumeBoundary(const Vector3D&  gp,
+                                         const Vector3D&  mom,
                                          const TrackingVolume*  vol,
                                          const TrackingVolume*& nextVol,
-                                         Acts::PropDirection    dir,
+                                         PropDirection    dir,
                                          double) const
 {
   bool isAtBoundary = false;

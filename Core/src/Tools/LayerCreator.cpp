@@ -10,9 +10,7 @@
 // LayerCreator.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Core module
 #include "ACTS/Utilities/Definitions.hpp"
-// GeometryTools
 #include "ACTS/Layers/GenericOverlapDescriptor.hpp"
 #include "ACTS/Layers/CylinderLayer.hpp"
 #include "ACTS/Layers/DiscLayer.hpp"
@@ -23,7 +21,6 @@
 #include "ACTS/Utilities/MsgMacros.hpp"
 #include "ACTS/Utilities/OverlapDescriptor.hpp"
 
-// constructor
 Acts::LayerCreator::LayerCreator(const Acts::LayerCreator::Config& lcConfig)
   : m_config()
 {

@@ -21,7 +21,6 @@
 #include "ACTS/Utilities/MsgMacros.hpp"
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
 
-// constructor
 Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(
     const Acts::CylinderVolumeBuilder::Config& cvbConfig)
   : Acts::ITrackingVolumeBuilder(), m_config()
@@ -29,12 +28,10 @@ Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(
   setConfiguration(cvbConfig);
 }
 
-// destructor
 Acts::CylinderVolumeBuilder::~CylinderVolumeBuilder()
 {
 }
 
-// configuration
 void
 Acts::CylinderVolumeBuilder::setConfiguration(
     const Acts::CylinderVolumeBuilder::Config& cvbConfig)

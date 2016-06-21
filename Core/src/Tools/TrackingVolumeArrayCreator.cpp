@@ -10,16 +10,13 @@
 // TrackingVolumeArrayCreator.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module
 #include "ACTS/Tools/TrackingVolumeArrayCreator.hpp"
-
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/BinnedArray1D.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/GeometryObjectSorter.hpp"
 #include "ACTS/Volumes/VolumeBounds.hpp"
-// Core module
 
 std::shared_ptr<const Acts::TrackingVolumeArray>
 Acts::TrackingVolumeArrayCreator::trackingVolumeArray(

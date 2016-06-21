@@ -10,8 +10,8 @@
 // ITrackingVolumeBuilder.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETRYINTERFACES_ITRACKINGVOLUMEBUILDER_H
-#define ACTS_GEOMETRYINTERFACES_ITRACKINGVOLUMEBUILDER_H 1
+#ifndef ACTS_TOOLS_ITRACKINGVOLUMEBUILDER_H
+#define ACTS_TOOLS_ITRACKINGVOLUMEBUILDER_H 1
 
 #include <memory>
 #include <tuple>
@@ -31,25 +31,29 @@ typedef std::vector<LayerPtr>                 LayerVector;
 typedef std::tuple<LayerVector, LayerVector, LayerVector> LayerTriple;
 typedef std::tuple<VolumePtr, VolumePtr, VolumePtr>       VolumeTriple;
 
-/** @class ITrackingVolumeBuilder
+///  @class ITrackingVolumeBuilder
+/// 
+/// Interface class ITrackingVolumeBuilders & inherits from IAlgTool
+/// 
+/// this returns the sub-detector tracking volume that is wrapped by the next
+/// outer one
+/// in the TrackingGeometry building process
+/// 
+/// If an innerVolume is given, this is wrapped
+/// If a VolumeBounds object is given this defines the maximum extent.
+/// 
 
-   Interface class ITrackingVolumeBuilders & inherits from IAlgTool
-
-   this returns the sub-detector tracking volume that is wrapped by the next
-   outer one
-   in the TrackingGeometry building process
-
-   If an innerVolume is given, this is wrapped
-   If a VolumeBounds object is given this defines the maximum extent.
-
-  */
 class ITrackingVolumeBuilder
 {
 public:
-  /**Virtual destructor*/
+  /// Virtual destructor
   virtual ~ITrackingVolumeBuilder() = default;
 
-  /** TrackingVolumeBuilder interface method - returns the volumes of Volumes */
+  /// CylinderVolumeBuilder interface method  
+  /// @param insideVolume is an (optional) volume to be wrapped
+  /// @param outsideBounds is an (optional) outside confinement
+  /// @param layerTriple is an (optional) triplet of layers 
+  /// @param volumeTriple is an (optional) triplet of volumes
   virtual TrackingVolumePtr
   trackingVolume(TrackingVolumePtr   insideVolume  = nullptr,
                  VolumeBoundsPtr     outsideBounds = nullptr,
@@ -59,4 +63,4 @@ public:
 
 }  // end of namespace
 
-#endif  // ACTS_GEOMETRYINTERFACES_IITRACKINGVOLUMEBUILDER_H
+#endif  // ACTS_TOOLS_ITRACKINGVOLUMEBUILDER_H

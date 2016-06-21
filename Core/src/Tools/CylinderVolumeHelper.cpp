@@ -10,7 +10,6 @@
 // CylinderVolumeHelper.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module
 #include "ACTS/Tools/CylinderVolumeHelper.hpp"
 #include "ACTS/Detector/GlueVolumesDescriptor.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
@@ -26,11 +25,9 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/MsgMacros.hpp"
 #include "ACTS/Volumes/AbstractVolume.hpp"
-#include "ACTS/Volumes/BoundaryCylinderSurface.hpp"
-#include "ACTS/Volumes/BoundaryDiscSurface.hpp"
+#include "ACTS/Volumes/BoundarySurfaceT.hpp"
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
 
-// constructor
 Acts::CylinderVolumeHelper::CylinderVolumeHelper(
     const Acts::CylinderVolumeHelper::Config& cvhConfig)
   : Acts::ITrackingVolumeHelper(), m_config()
@@ -857,25 +854,26 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
     if (faceOne == cylinderCover || faceOne == tubeOuterCover) {
       // (1) create the BoundaryCylinderSurface
       // now create the CylinderSurface
-      CylinderSurface cSurface(transform, rMin, 0.5 * (zMax - zMin));
+      std::unique_ptr<const Surface> cSurface(new CylinderSurface(transform, 
+                                              rMin, 0.5 * (zMax - zMin)));
       ACTS_VERBOSE("             creating a new cylindrical boundary surface "
                    "with bounds = "
-                   << cSurface.bounds());
-      boundarySurface = new BoundaryCylinderSurface<TrackingVolume>(
+                   << cSurface->bounds());
+      boundarySurface = new BoundarySurfaceT<TrackingVolume>(
+          std::move(cSurface),
           gvDescriptorOne.glueVolumes(faceOne),
-          gvDescriptorTwo.glueVolumes(faceTwo),
-          cSurface);
+          gvDescriptorTwo.glueVolumes(faceTwo));
     } else {
       // (2) create teh BoundaryDiscSurface, in that case the zMin/zMax provided
       // are both the position of the disk in question
-      DiscSurface dSurface(transform, rMin, rMax);
+       std::unique_ptr<const Surface> dSurface(new DiscSurface(transform, rMin, rMax));
       ACTS_VERBOSE("             creating a new disc-like boundary surface "
                    "with bounds = "
-                   << dSurface.bounds());
-      boundarySurface = new BoundaryDiscSurface<TrackingVolume>(
-          gvDescriptorOne.glueVolumes(faceOne),
-          gvDescriptorTwo.glueVolumes(faceTwo),
-          dSurface);
+                   << dSurface->bounds());
+      boundarySurface = new BoundarySurfaceT<TrackingVolume>(
+                            std::move(dSurface),
+                            gvDescriptorOne.glueVolumes(faceOne),
+                            gvDescriptorTwo.glueVolumes(faceTwo));
     }
     // create the BoundarySurface as shared pointer
     auto nBoundarySurface
