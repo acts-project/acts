@@ -10,7 +10,6 @@
 // StaticEngine.ipp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Extrapolation module
 #include "ACTS/Detector/TrackingGeometry.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Extrapolation/IMaterialEffectsEngine.hpp"
@@ -18,7 +17,6 @@
 #include "ACTS/Extrapolation/IPropagationEngine.hpp"
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
-// STD
 #include <iomanip>
 #include <iostream>
 

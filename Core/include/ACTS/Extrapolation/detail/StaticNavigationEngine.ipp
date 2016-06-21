@@ -15,9 +15,8 @@
 #include "ACTS/Extrapolation/IMaterialEffectsEngine.hpp"
 #include "ACTS/Extrapolation/IPropagationEngine.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Volumes/BoundarySurface.hpp"
+#include "ACTS/Volumes/BoundarySurfaceT.hpp"
 
-/** handle the failure - as configured */
 template <class T>
 Acts::ExtrapolationCode
 Acts::StaticNavigationEngine::resolveBoundaryT(

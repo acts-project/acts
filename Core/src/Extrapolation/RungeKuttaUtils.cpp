@@ -16,7 +16,7 @@
 #include "ACTS/Surfaces/DiscSurface.hpp"
 #include "ACTS/Surfaces/PerigeeSurface.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/StraightLineSurface.hpp"
+#include "ACTS/Surfaces/StrawSurface.hpp"
 
 #ifndef __USE_GNU
 void
@@ -105,7 +105,7 @@ Acts::RungeKuttaUtils::transformGlobalToLocal(const Acts::Surface* su,
 
   if (ty == Acts::Surface::Plane)
     transformGlobalToPlane(su, useJac, P, par, Jac);
-  else if (ty == Acts::Surface::Line)
+  else if (ty == Acts::Surface::Straw)
     transformGlobalToLine(su, useJac, P, par, Jac);
   else if (ty == Acts::Surface::Cylinder)
     transformGlobalToCylinder(su, useJac, P, par, Jac);
@@ -421,7 +421,7 @@ Acts::RungeKuttaUtils::transformGlobalToCylinder(const Acts::Surface* su,
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-// Global position transformation to local Straight line  system coordinate
+// Global position transformation to local straw line  system coordinate
 /////////////////////////////////////////////////////////////////////////////////
 void
 Acts::RungeKuttaUtils::transformGlobalToLine(const Acts::Surface* su,
@@ -572,7 +572,7 @@ Acts::RungeKuttaUtils::stepEstimator(int           kind,
                                      bool&         Q) const
 {
   if (kind == 1) return stepEstimatorToPlane(Su, P, Q);
-  if (kind == 0) return stepEstimatorToStraightLine(Su, P, Q);
+  if (kind == 0) return stepEstimatorToStraw(Su, P, Q);
   if (kind == 2) return stepEstimatorToCylinder(Su, P, Q);
   if (kind == 3) return stepEstimatorToCone(Su, P, Q);
   return 1000000.;
@@ -683,9 +683,9 @@ Acts::RungeKuttaUtils::stepEstimatorToCylinder(double*       S,
 // Step estimation to Straight Line
 /////////////////////////////////////////////////////////////////////////////////
 double
-Acts::RungeKuttaUtils::stepEstimatorToStraightLine(double*       S,
-                                                   const double* P,
-                                                   bool&         Q) const
+Acts::RungeKuttaUtils::stepEstimatorToStraw(double*       S,
+                                            const double* P,
+                                            bool&         Q) const
 {
   const double* r = &P[0];  // Start coordinate
   const double* a = &P[3];  // Start direction
@@ -1131,7 +1131,7 @@ Acts::RungeKuttaUtils::transformLocalToGlobal(bool                 useJac,
     transformPlaneToGlobal(useJac, su, p, P);
     return true;
   }
-  if (ty == Acts::Surface::Line) {
+  if (ty == Acts::Surface::Straw) {
     transformLineToGlobal(useJac, su, p, P);
     return true;
   }
@@ -1388,8 +1388,8 @@ Acts::RungeKuttaUtils::jacobianTransformCurvilinearToLocal(
     jacobianTransformCurvilinearToPlane(P, Jac);
     return;
   }
-  if (ty == Acts::Surface::Line) {
-    jacobianTransformCurvilinearToStraightLine(P, Jac);
+  if (ty == Acts::Surface::Straw) {
+    jacobianTransformCurvilinearToLine(P, Jac);
     return;
   }
   if (ty == Acts::Surface::Cylinder) {
@@ -1398,7 +1398,7 @@ Acts::RungeKuttaUtils::jacobianTransformCurvilinearToLocal(
     return;
   }
   if (ty == Acts::Surface::Perigee) {
-    jacobianTransformCurvilinearToStraightLine(P, Jac);
+    jacobianTransformCurvilinearToLine(P, Jac);
     return;
   }
   if (ty == Acts::Surface::Disc) {
@@ -1569,7 +1569,7 @@ Acts::RungeKuttaUtils::jacobianTransformCurvilinearToCylinder(double* P,
 // coordinates
 /////////////////////////////////////////////////////////////////////////////////
 void
-Acts::RungeKuttaUtils::jacobianTransformCurvilinearToStraightLine(
+Acts::RungeKuttaUtils::jacobianTransformCurvilinearToLine(
     double* P,
     double* Jac) const
 {

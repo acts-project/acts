@@ -14,8 +14,6 @@
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Volumes/BoundarySurface.hpp"
-// STD
 #include <iomanip>
 #include <iostream>
 

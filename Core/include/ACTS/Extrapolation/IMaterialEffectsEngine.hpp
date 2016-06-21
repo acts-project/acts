@@ -10,8 +10,8 @@
 // IMaterialEffectsEngine.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_EXTRAPOLATIONINTERFACES_IMATERIAKEFFECTSENGINE_H
-#define ACTS_EXTRAPOLATIONINTERFACES_IMATERIAKEFFECTSENGINE_H 1
+#ifndef ACTS_EXTRAPOLATION_IMATERIALEFFECTSENGINE_H
+#define ACTS_EXTRAPOLATION_IMATERIALEFFECTSENGINE_H 1
 
 #include "ACTS/EventData/NeutralParameters.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
@@ -24,38 +24,43 @@ namespace Acts {
 typedef ExtrapolationCell<TrackParameters>   ExCellCharged;
 typedef ExtrapolationCell<NeutralParameters> ExCellNeutral;
 
-/** @class IMaterialEffectsEngine
-
-    Material effects engine interface for charged and neutral (fast track
-   simulation) ,
-    the update is alwyas on the:
-     - eCell.leadParmaeters && eCell.leadLayer
-     - if eCell.leadPameters == eCell.startParamters clone to new parameters
-       else : update the new parameters
-
-*/
+/// @class IMaterialEffectsEngine
+///
+/// Material effects engine interface for charged and neutral 
+/// (fast track simulation) ,
+/// the update is alwyas on the:
+///  - eCell.leadParmaeters && eCell.leadLayer
+///  - if eCell.leadPameters == eCell.startParamters clone to new parameters
+///    else : update the new parameters
 class IMaterialEffectsEngine
 {
 public:
-  /** Virtual destructor */
+  /// Virtual destructor 
   virtual ~IMaterialEffectsEngine() {}
-  /** charged extrapolation */
+  
+  /// Public charged material effects interface
+  /// @param ecCharged is the charged extrapolaiton cell
+  /// @param dir is the additional direction prescription
+  /// @param matupstage is the update stage (pre/full/post)
   virtual ExtrapolationCode
   handleMaterial(ExCellCharged&      ecCharged,
                  PropDirection       dir        = alongMomentum,
                  MaterialUpdateStage matupstage = fullUpdate) const = 0;
 
-  /** neutral extrapolation */
+  /// Public neutral material effects interface
+  /// @param ecCharged is the neutral extrapolaiton cell
+  /// @param dir is the additional direction prescription
+  /// @param matupstage is the update stage (pre/full/post)
   virtual ExtrapolationCode
   handleMaterial(ExCellNeutral&      ecNeutral,
                  PropDirection       dir        = alongMomentum,
                  MaterialUpdateStage matupstage = fullUpdate) const = 0;
 
 protected:
-  std::string m_sopPrefix;   //!< prefix for screen output
-  std::string m_sopPostfix;  //!< prefix for screen output
+  std::string m_sopPrefix;   ///< prefix for screen output
+  std::string m_sopPostfix;  ///< prefix for screen output
 };
 
 }  // end of namespace
 
-#endif  // ACTS_EXTRAPOLATIONINTERFACES_IMATERIAKEFFECTSENGINE_H
+#endif  // ACTS_EXTRAPOLATION_IMATERIALEFFECTSENGINE_H

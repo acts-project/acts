@@ -16,7 +16,7 @@
 #include "ACTS/Surfaces/DiscSurface.hpp"
 #include "ACTS/Surfaces/PerigeeSurface.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/StraightLineSurface.hpp"
+#include "ACTS/Surfaces/StrawSurface.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 
 /////////////////////////////////////////////////////////////////////////////////

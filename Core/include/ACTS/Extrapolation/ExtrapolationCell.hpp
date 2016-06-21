@@ -13,7 +13,6 @@
 #ifndef ACTS_EXTRAPOLATIONUTILS_EXTRAPOLATIONCELL_H
 #define ACTS_EXTRAPOLATIONUTILS_EXTRAPOLATIONCELL_H 1
 
-// Extrapolation moudle
 #include "ACTS/EventData/ParticleDefinitions.hpp"
 #include "ACTS/EventData/TransportJacobian.hpp"
 #include "ACTS/Extrapolation/MaterialUpdateMode.hpp"
@@ -36,20 +35,17 @@ namespace Acts {
 class TrackingVolume;
 class Layer;
 
-/** enumeration to decode - for Extrapolation steering
-     - they are used as bits in the configuration integer */
+/// enumeration to decode - for Extrapolation steering
+///  - they are used as bits in the configuration integer */
 class ExtrapolationMode
 {
 public:
   enum eMode {
     Destination = 1,  // try to hit the destination, if not other means to stop
-    Propagation = 2,  // any propagation filling by the propagator that is not
-                      // the destination call
+    Propagation = 2,  // any propagation but the final one to destinaion
     StopWithPathLimit = 3,  // stop when the path limit is reached
-    StopWithMaterialLimitX0
-    = 4,  // stop when the material limit is reached in X0
-    StopWithMaterialLimitL0
-    = 5,                    // stop when the material limit is reached in L0
+    StopWithMaterialLimitX0 = 4,  // stop when  material limit is reached in X0
+    StopWithMaterialLimitL0 = 5,  // stop when material limit is reached in L0
     StopAtBoundary   = 6,   // stop at the next ID / Calo / MS boundary
     CollectSensitive = 7,   // collect parameters on sensitive elements
     CollectPassive   = 8,   // collect parameters on passive layers
@@ -62,20 +58,20 @@ public:
   };
 };
 
-/** @class ExtrapolationConfig
-  - this is a collection of extrapolation modes and a simple check
-*/
+/// @class ExtrapolationConfig
+/// this is a collection of extrapolation modes and a simple check
 class ExtrapolationConfig
 {
 public:
-  /** Constructor */
+  /// Constructor 
   ExtrapolationConfig(unsigned int evalue = 0) : value(evalue) {}
-  /** Copy Constructor */
+  
+  /// Copy Constructor 
   ExtrapolationConfig(const ExtrapolationConfig& eConfig) : value(eConfig.value)
   {
   }
 
-  /** add a configuration mode */
+  /// add a configuration mode 
   void
   addMode(ExtrapolationMode::eMode em)
   {
@@ -83,7 +79,7 @@ public:
     value |= (1 << int(em));
   }
 
-  /** check the configuration mode */
+  /// check the configuration mode 
   bool
   checkMode(ExtrapolationMode::eMode em) const
   {
@@ -95,36 +91,33 @@ private:
   unsigned int value;
 };
 
-/** @class ExtrapolationCode
-*/
+/// @class ExtrapolationCode
 class ExtrapolationCode
 {
 public:
   enum eCode {
-    Unset              = 0,  // no code set yet
-    InProgress         = 1,  // successful : extrapolation in process
-    SuccessDestination = 2,  // successful : destination reached
-    SuccessBoundaryReached
-    = 3,  // successful : boundary reached & configured to do so
-    SuccessPathLimit
-    = 4,  // successful : path limit reached & configured to do so
-    SuccessMaterialLimit
-    = 5,  // successful : material limit reached & configured to do so
-    Recovered          = 6,  // successful : recovered & configured to do so
-    FailureDestination = 7,  // failure    : could not reach destination
-    FailureLoop        = 8,  // failure    : loop or oscillation between volumes
-    FailureNavigation  = 9,  // failure    : general navigation failure
-    FailureUpdateKill  = 10,    // failure    : updated track under threshold
-    FailureConfiguration = 11,  // failure    : general configuration failure
-    LeftKnownWorld       = 12   // successful ? failure ? if we just knew ...
+    Unset                = 0,  // no code set yet
+    InProgress           = 1,  // successful : extrapolation in process
+    SuccessDestination   = 2,  // successful : destination reached
+    SuccessBoundaryReached = 3,  // successful : boundary reached 
+    SuccessPathLimit     = 4,  // successful : path limit reached 
+    SuccessMaterialLimit = 5,  // successful : material limit reached 
+    Recovered            = 6,  // successful : recovered 
+    FailureDestination   = 7,  // failure    : could not reach destination
+    FailureLoop          = 8,  // failure    : loop or oscillation between volumes
+    FailureNavigation    = 9,  // failure    : general navigation failure
+    FailureUpdateKill    = 10, // failure    : updated track under threshold
+    FailureConfiguration = 11, // failure    : general configuration failure
+    LeftKnownWorld       = 12  // successful ? failure ? if we just knew ...
   };
 
-  /** the actual code */
+  /// the actual code 
   eCode code;
 
-  /* create a simple extrapolation code */
+  /// create a simple extrapolation code 
   ExtrapolationCode(eCode c) : code(c) {}
-  /** assigment operator - because we can */
+  
+  /// assigment operator - because we can 
   ExtrapolationCode&
   operator=(const eCode& ec)
   {
@@ -132,14 +125,14 @@ public:
     return (*this);
   }
 
-  /** == operator to eCode */
+  /// == operator to eCode 
   bool
   operator==(const eCode& ec) const
   {
     return (ec == code);
   }
 
-  /** != operator to eCode */
+  /// != operator to eCode 
   bool
   operator!=(const eCode& ec) const
   {

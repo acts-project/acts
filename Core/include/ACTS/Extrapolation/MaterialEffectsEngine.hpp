@@ -10,8 +10,8 @@
 // MaterialEffectsEngine.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_EXTRAPOLATIONENGINE_MATERIALEFFECTSENGINE_H
-#define ACTS_EXTRAPOLATIONENGINE_MATERIALEFFECTSENGINE_H 1
+#ifndef ACTS_EXTRAPOLATION_MATERIALEFFECTSENGINE_H
+#define ACTS_EXTRAPOLATION_MATERIALEFFECTSENGINE_H 1
 
 #include "ACTS/EventData/NeutralParameters.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
@@ -27,31 +27,29 @@ namespace Acts {
 
 class Layer;
 
-/** @class MaterialEffectsEngine
-
-    Material effects engine interface for charged and neutral (fast track
-   simulation) ,
-    the update is alwyas on the:
-     - eCell.leadParmaeters && eCell.leadLayer
-     - if eCell.leadPameters == eCell.startParamters clone to new parameters
-       else : update the new parameters
-
-*/
+/// @class MaterialEffectsEngine
+///
+/// Material effects engine interface for charged and neutral 
+/// (fast track simulation), the update is alwyas on the:
+///  - eCell.leadParmaeters && eCell.leadLayer
+///  - if eCell.leadPameters == eCell.startParamters clone to new parameters
+///    else : update the new parameters
+///
+///
 class MaterialEffectsEngine : virtual public IMaterialEffectsEngine
 {
 public:
-  /** @struct Config
-      Configuration struct for the MaterialEffectsEngine
-    */
+  /// @struct Config
+  /// Configuration struct for the MaterialEffectsEngine
   struct Config
   {
     std::shared_ptr<Logger> logger;
-    bool eLossCorrection;  //!< apply the energy loss correction
-    bool eLossMpv;  //!< apply the energy loss correction as most probable value
-    bool mscCorrection;  //!< apply the multiple (coulomb) scattering correction
-    std::string prefix;  //!< screen output prefix
-    std::string postfix;  //!< screen output postfix
-    std::string name;     //!< the name of this engine
+    bool eLossCorrection;   ///< apply the energy loss correction
+    bool eLossMpv;          ///< apply the energy loss correction as most probable value
+    bool mscCorrection;     ///< apply the multiple (coulomb) scattering correction
+    std::string prefix;     ///< screen output prefix
+    std::string postfix;    ///< screen output postfix
+    std::string name;       ///< the name of this engine
 
     Config()
       : logger(getDefaultLogger("MaterialEffectsEngine", Logging::INFO))
@@ -65,34 +63,42 @@ public:
     }
   };
 
-  /** Constructor */
+  /// Constructor 
+  /// @param meConfig is an instance of the configuration struct
   MaterialEffectsEngine(const Config& meConfig);
 
-  /** Destructor */
+  /// Destructor 
   ~MaterialEffectsEngine();
 
-  /** charged extrapolation */
+  /// Public charged material effects interface
+  /// @param ecCharged is the charged extrapolaiton cell
+  /// @param dir is the additional direction prescription
+  /// @param matupstage is the update stage (pre/full/post)
   ExtrapolationCode
   handleMaterial(ExCellCharged&      ecCharged,
                  PropDirection       dir        = alongMomentum,
                  MaterialUpdateStage matupstage = fullUpdate) const final;
 
-  /** neutral extrapolation - only for Fatras, dummy implementation here */
+
+  /// Public neutral material effects interface
+  /// @param ecCharged is the neutral extrapolaiton cell
+  /// @param dir is the additional direction prescription
+  /// @param matupstage is the update stage (pre/full/post)
   ExtrapolationCode
   handleMaterial(ExCellNeutral&      ecNeutral,
                  PropDirection       dir        = alongMomentum,
                  MaterialUpdateStage matupstage = fullUpdate) const final;
 
-  /** Set configuration method */
+  /// Set configuration method 
   void
   setConfiguration(const Config& meConfig);
 
-  /** Get configuration method */
+  /// Get configuration method 
   Config
   getConfiguration() const;
 
 protected:
-  Config m_config;  //!< configuration struct
+  Config m_config;  ///< configuration struct
 
 private:
   const Logger&
@@ -100,13 +106,13 @@ private:
   {
     return *m_config.logger;
   }
-  /** charged extrapolation
-      depending on the MaterialUpdateStage:
-        - postUpdate : creates a new unique_ptr and stores them as step
-     parameters
-        - preUpdate | fullUpdate : manipulates the parameters and returns a
-     nullptr
-       nothing to do (e.g. no material) : return nullptr */
+  ///  charged extrapolation
+  ///  depending on the MaterialUpdateStage:
+  ///    - postUpdate : creates a new unique_ptr and stores them as step
+  /// parameters
+  ///    - preUpdate | fullUpdate : manipulates the parameters and returns a
+  /// nullptr
+  ///   nothing to do (e.g. no material) : return nullptr */
   void
   updateTrackParameters(const TrackParameters& parameters,
                         ExCellCharged&         eCell,
@@ -117,7 +123,7 @@ private:
   ParticleMasses      m_particleMasses;       //!< struct of Particle masses
 };
 
-/** Return the configuration object */
+/// Return the configuration object 
 inline MaterialEffectsEngine::Config
 MaterialEffectsEngine::getConfiguration() const
 {
@@ -126,4 +132,4 @@ MaterialEffectsEngine::getConfiguration() const
 
 }  // end of namespace
 
-#endif  // ACTS_EXTRAPOLATIONENGINE_MATERIAKEFFECTSENGINE_H
+#endif  // ACTS_EXTRAPOLATION_MATERIALEFFECTSENGINE_H

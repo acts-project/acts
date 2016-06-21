@@ -10,11 +10,11 @@
 // StaticEngine.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_EXTRAPOLATIONENGING_STATICENGINE_H
-#define ACTS_EXTRAPOLATIONENGING_STATICENGINE_H 1
+#ifndef ACTS_EXTRAPOLATION_STATICENGINE_H
+#define ACTS_EXTRAPOLATION_STATICENGINE_H 1
 
-#ifndef ACTS_EXTRAPOLATIONENINGE_OUTPUTHELPER
-#define ACTS_EXTRAPOLATIONENINGE_OUTPUTHELPER 1
+#ifndef ACTS_EXTRAPOLATION_OUTPUTHELPER
+#define ACTS_EXTRAPOLATION_OUTPUTHELPER 1
 #define OH_CHECKFOUND(object) (object ? "found" : "not found")
 #endif
 
@@ -30,28 +30,27 @@
 
 namespace Acts {
 
-/** @class StaticEngine
+/// @class StaticEngine
+///
+/// Extrapolation engine for static layer & volume setup.
+///
+/// This engine relies on the fact that every position in a static layer setup can
+/// be uniquely associated to a layer (NavigationLayer or real physical layer),
+/// and thus to a voume at navigation level. The extrapolation process within a
+/// fully static setup is then realised as a step from layer to layer within a
+/// volume,
+/// and from volume to volume at a higher level.
+///
+/// The entire code is written as a template in either charged or neutral
+/// parameters.
+///
 
-  Extrapolation engine for static layer & volume setup.
-
-  This engine relies on the fact that every position in a static layer setup can
-  be uniquely associated to a layer (NavigationLayer or real physical layer),
-  and thus to a voume at navigation level. The extrapolation process within a
-  fully static setup is then realised as a step from layer to layer within a
-  volume,
-  and from volume to volume at a higher level.
-
-  The entire code is written as a template in either charged or neutral
-  parameters.
-
-
-*/
 class StaticEngine : virtual public IExtrapolationEngine
 {
 public:
-  /** @enum ResolveLayerType
-      - use for code readability
-  */
+  /// @enum ResolveLayerType
+  /// - use for code readability
+  ///
   enum ResolveLayerType {
     StartLayer               = 0,
     NavigationLayer          = 1,
@@ -62,24 +61,23 @@ public:
     UndefinedLayer           = 5
   };
 
-  /** @struct Config
-      Configuration struct of the StaticEngine,
-      holds the helper engines that can be configured
-    */
+  /// @struct Config
+  /// Configuration struct of the StaticEngine,
+  /// holds the helper engines that can be configured
   struct Config
   {
     std::shared_ptr<Logger> logger;
 
-    std::shared_ptr<IPropagationEngine>
-        propagationEngine;  //!< the used propagation engine
-    std::shared_ptr<INavigationEngine>
-        navigationEngine;  //!< the navigation engine to resolve the boundary
-    std::shared_ptr<IMaterialEffectsEngine>
-        materialEffectsEngine;  //!< the material effects updated
+    /// the used propagation engine
+    std::shared_ptr<IPropagationEngine>      propagationEngine;  
+    /// the navigation engine to resolve the boundary
+    std::shared_ptr<INavigationEngine>       navigationEngine;  
+    /// the material effects updated
+    std::shared_ptr<IMaterialEffectsEngine>  materialEffectsEngine;  
 
-    std::string prefix;   //!< output prefix
-    std::string postfix;  //!< output postfix
-    std::string name;     //!< name of this engine
+    std::string prefix;   ///< output prefix
+    std::string postfix;  ///< output postfix
+    std::string name;     ///< name of this engine
 
     Config()
       : logger(getDefaultLogger("StaticEngine", Logging::INFO))
@@ -93,51 +91,60 @@ public:
     }
   };
 
-  /** Constructor */
+  /// Constructor 
+  /// @param seConfig is the configuration struct
   StaticEngine(const Config& seConfig);
 
-  /** Destructor */
+  /// Destructor 
   ~StaticEngine();
 
   using IExtrapolationEngine::extrapolate;
 
-  /** charged extrapolation - public interface */
+  /// main extrapolation method, templated to chared/neutral 
+  /// @paramt eCell ist he extrapolaiton cell
+  /// @param sf is the (optional) destinaton surface
+  /// @param dir is the additional direction prescription
+  /// @param bchk is the boudnary check directive @TODO shift to cell after splitting
   ExtrapolationCode
   extrapolate(ExCellCharged&       ecCharged,
               const Surface*       sf     = 0,
               const BoundaryCheck& bcheck = true) const final;
 
-  /** neutral extrapolation - public interface */
+  /// main extrapolation method, templated to chared/neutral 
+  /// @paramt eCell ist he extrapolaiton cell
+  /// @param sf is the (optional) destinaton surface
+  /// @param dir is the additional direction prescription
   ExtrapolationCode
   extrapolate(ExCellNeutral&       ecNeutral,
               const Surface*       sf     = 0,
               const BoundaryCheck& bcheck = true) const final;
 
-  /** define for which GeometrySignature this extrapolator is valid - this is
-   * GLOBAL */
+  /// define for which GeometrySignature this extrapolator is valid 
+  /// @return this retursn static for this engine            
   GeometryType
   geometryType() const final;
 
-  /** Set configuration method */
+  /// Set configuration method
   void
   setConfiguration(const Config& meConfig);
 
-  /** Get configuration method */
+  /// Get configuration method 
   Config
   getConfiguration() const;
 
 protected:
-  /** Configuration struct */
+  /// Configuration struct
   Config m_config;
 
 private:
+  /// Private access to the logger
   const Logger&
   logger() const
   {
     return *m_config.logger;
   }
 
-  /** main loop extrapolation method */
+  /// main loop extrapolation method 
   template <class T>
   ExtrapolationCode
   extrapolateT(ExtrapolationCell<T>& eCell,
@@ -145,7 +152,7 @@ private:
                PropDirection         dir    = alongMomentum,
                const BoundaryCheck&  bcheck = true) const;
 
-  /** init Navigation for static setup */
+  /// init Navigation for static setup 
   template <class T>
   ExtrapolationCode
   initNavigationT(ExtrapolationCell<T>& eCell,
@@ -153,7 +160,7 @@ private:
                   PropDirection         dir    = alongMomentum,
                   const BoundaryCheck&  bcheck = true) const;
 
-  /** main static layer handling */
+  /// main static layer handling 
   template <class T>
   ExtrapolationCode
   handleLayerT(ExtrapolationCell<T>& eCell,
@@ -161,7 +168,7 @@ private:
                PropDirection         dir    = alongMomentum,
                const BoundaryCheck&  bcheck = true) const;
 
-  /** main sub structure layer handling */
+  /// main sub structure layer handling 
   template <class T>
   ExtrapolationCode
   resolveLayerT(ExtrapolationCell<T>& eCell,
@@ -171,7 +178,8 @@ private:
                 bool                  hasSubStructure    = false,
                 bool                  isStartLayer       = false,
                 bool                  isDestinationLayer = false) const;
-  /** handle the failure - as configured */
+
+  /// handle the failure - as configured 
   template <class T>
   ExtrapolationCode
   handleReturnT(ExtrapolationCode     eCode,
@@ -181,14 +189,14 @@ private:
                 const BoundaryCheck&  bcheck = true) const;
 };
 
-/** Return the geomtry type */
+/// Return the geomtry type 
 inline GeometryType
 StaticEngine::geometryType() const
 {
   return Acts::Static;
 }
 
-/** Return the configuration object */
+/// Return the configuration object 
 inline StaticEngine::Config
 StaticEngine::getConfiguration() const
 {
@@ -197,7 +205,6 @@ StaticEngine::getConfiguration() const
 
 }  // end of namespace
 
-//!< define the templated function
 #include "ACTS/Extrapolation/detail/StaticEngine.ipp"
 
-#endif  // ACTS_EXTRAPOLATIONENGING_STATICENGINE_H
+#endif  // ACTS_EXTRAPOLATION_STATICENGINE_H

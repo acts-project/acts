@@ -49,7 +49,7 @@ Acts::RungeKuttaEngine::propagateRungeKuttaT(ExtrapolationCell<T>& eCell,
     // check for propagation failure
     if (!propagateWithJacobian(eCell.navigationStep, pCache, 1, s))
       return false;
-  } else if (sType == Surface::Line || sType == Surface::Perigee) {
+  } else if (sType == Surface::Straw || sType == Surface::Perigee) {
     // (ii) line-type surfaces
     double s[6] = {sTransform(0, 3),
                    sTransform(1, 3),
@@ -71,7 +71,7 @@ Acts::RungeKuttaEngine::propagateRungeKuttaT(ExtrapolationCell<T>& eCell,
                    sTransform(0, 2),
                    sTransform(1, 2),
                    sTransform(2, 2),
-                   dSurface.bounds().r(),
+                   cyl->bounds().r(),
                    pCache.direction,
                    0.};
     // check for propagation failure
