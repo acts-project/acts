@@ -7,20 +7,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ACTS/Plugins/TGeoPlugins/TGeoDetectorElement.hpp"
-// ACTS
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
-
 #include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
 #include "ACTS/Material/Material.hpp"
 #include "ACTS/Material/MaterialProperties.hpp"
-
+#include "ACTS/Utilities/Definitions.hpp"
 #include "TGeoBBox.h"
 #include "TGeoTrd2.h"
-
-#include "ACTS/Utilities/Definitions.hpp"
-
 #include <iostream>
 
 Acts::TGeoDetectorElement::TGeoDetectorElement(
@@ -63,7 +58,9 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     auto trapezoidBounds = std::make_shared<const Acts::TrapezoidBounds>(
         trapezoid->GetDx1(), trapezoid->GetDx2(), trapezoid->GetDz());
     m_bounds  = trapezoidBounds;
-    m_surface = std::make_shared<const Acts::PlaneSurface>(*this, m_identifier);
+    m_surface = std::make_shared<const Acts::PlaneSurface>(trapezoidBounds, 
+                                                           *this, 
+                                                           m_identifier);
     MaterialProperties moduleMaterialProperties(
         moduleMaterial, 0.5 * (trapezoid->GetDy1() + trapezoid->GetDy1()));
     m_surface->setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial>(
@@ -77,13 +74,15 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     // now calculate the global transformation
     if (motherTransform) {
       m_transform = std::make_shared<const Acts::Transform3D>((*motherTransform)
-                                                              * (*m_transform));
+                                                               *(*m_transform));
     }
     // extract the surface bounds
     auto rectangleBounds = std::make_shared<const Acts::RectangleBounds>(
         box->GetDX(), box->GetDY());
     m_bounds  = rectangleBounds;
-    m_surface = std::make_shared<const Acts::PlaneSurface>(*this, m_identifier);
+    m_surface = std::make_shared<const Acts::PlaneSurface>(rectangleBounds,
+                                                           *this,
+                                                          m_identifier);
     MaterialProperties moduleMaterialProperties(moduleMaterial, box->GetDZ());
     m_surface->setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial>(
         new HomogeneousSurfaceMaterial(moduleMaterialProperties)));
@@ -92,22 +91,4 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
 
 Acts::TGeoDetectorElement::~TGeoDetectorElement()
 {
-}
-
-const Acts::Vector3D&
-Acts::TGeoDetectorElement::center(const Identifier&) const
-{
-  if (!m_center)
-    m_center
-        = std::make_shared<const Acts::Vector3D>(m_transform->translation());
-  return (*m_center);
-}
-
-const Acts::Vector3D&
-Acts::TGeoDetectorElement::normal(const Identifier&) const
-{
-  if (!m_normal)
-    m_normal = std::make_shared<const Acts::Vector3D>(
-        Acts::Vector3D(m_transform->rotation().col(2)));
-  return (*m_normal);
 }

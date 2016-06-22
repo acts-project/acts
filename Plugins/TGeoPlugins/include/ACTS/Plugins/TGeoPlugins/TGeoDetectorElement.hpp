@@ -13,91 +13,75 @@
 #ifndef ACTS_TGEODETECTORELEMENT_TGEODETECTORELEMENT
 #define ACTS_TGEODETECTORELEMENT_TGEODETECTORELEMENT 1
 
-// Geometry module
 #include "ACTS/Detector/DetectorElementBase.hpp"
-// Root
 #include <iostream>
 #include "TGeoManager.h"
 
 namespace Acts {
 
-/** @class TGeoDetectorElement
-
- DetectorElement plugin for ROOT TGeo shapes. Added possibility to hand over
- transformation matrix.
-
- @TODO what if shape conversion failes? add implementation of more than one
- surface per module, implementing also for other shapes->Cone,ConeSeg,Tube? what
- if not used with DD4hep?
-
- */
-
-class TGeoDetectorElement : public DetectorElementBase
+/// @class TGeoDetectorElement
+///
+/// DetectorElement plugin for ROOT TGeo shapes. Added possibility to hand over
+/// transformation matrix.
+///
+/// @TODO what if shape conversion failes? add implementation of more than one
+/// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube? what
+/// if not used with DD4hep?
+///
+  class TGeoDetectorElement : public DetectorElementBase
 {
 public:
-  /** Constructor  */
+  /// Constructor  
+  /// @param identifier is the detector identifier
+  /// @param tGeoDetElement is the TGeoNode which should be represented
+  /// @Param motherTransform is the (optional) transform applied to the TGeoNode
   TGeoDetectorElement(const Identifier&                        identifier,
                       TGeoNode*                                tGeoDetElement,
                       std::shared_ptr<const Acts::Transform3D> motherTransform
                       = nullptr);
 
-  /**  Destructor */
+  ///  Destructor 
   virtual ~TGeoDetectorElement();
 
-  /** Identifier */
+  /// Identifier 
   virtual Identifier
   identify() const override;
 
-  /**Return local to global transform associated with this identifier*/
+  /// Return local to global transform associated with this identifier
   virtual const Transform3D&
-  transform(const Identifier& identifier = Identifier()) const override;
+  transform(const Identifier& identifier = Identifier()) const final;
 
-  /**Return surface associated with this identifier, which should come from the
-   */
+  /// Return surface associated with this identifier, which should come from the 
   virtual const Surface&
-  surface(const Identifier& identifier = Identifier()) const override;
+  surface(const Identifier& identifier = Identifier()) const final;
 
-  /** Returns the full list of all detection surfaces associated to this
-   * detector element */
+  /// Returns the full list of all detection surfaces associated
+  /// to this detector element 
   virtual const std::vector<std::shared_ptr<const Surface>>&
   surfaces() const override;
 
-  /**Return the boundaries of the surface associated with this identifier */
-  virtual const SurfaceBounds&
-  bounds(const Identifier& identifier = Identifier()) const override;
-
-  /**Return the center of the surface associated with this identifier
-   In the case of silicon it returns the same as center()*/
-  virtual const Vector3D&
-  center(const Identifier& identifier = Identifier()) const override;
-
-  /**Return the normal of the surface associated with this identifier
-   In the case of silicon it returns the same as normal()*/
-  virtual const Vector3D&
-  normal(const Identifier& identifier = Identifier()) const override;
-
-  /** Returns the thickness of the module */
+  /// Returns the thickness of the module 
   virtual double
   thickness() const override;
 
 private:
-  /**DD4hep detector element*/
+  /// DD4hep detector element, just linked - not owned
   TGeoNode* m_detElement;
-  /**Transformation of the detector element*/
+  /// Transformation of the detector element
   std::shared_ptr<const Acts::Transform3D> m_transform;
-  /**Center position of the detector element*/
+  /// Center position of the detector element
   mutable std::shared_ptr<const Vector3D> m_center;
-  /**Normal vector to the detector element*/
+  /// Normal vector to the detector element
   mutable std::shared_ptr<const Vector3D> m_normal;
-  /**Identifier of the detector element*/
+  /// Identifier of the detector element
   const Identifier m_identifier;
-  /**Boundaries of the detector element*/
+  /// Boundaries of the detector element
   std::shared_ptr<const SurfaceBounds> m_bounds;
-  /** Thickness of this detector element*/
+  ///  Thickness of this detector element
   double m_thickness;  //@TODO implement thickness from TGeoMode
-  /**Corresponding Surface*/
+  /// Corresponding Surface
   std::shared_ptr<const Surface> m_surface;
-  /**possible contained surfaces*/
+  /// possible contained surfaces
   std::vector<std::shared_ptr<const Surface>> m_surfaces;
 };
 
@@ -123,12 +107,6 @@ inline const std::vector<std::shared_ptr<const Surface>>&
 TGeoDetectorElement::surfaces() const
 {
   return (m_surfaces);
-}
-
-inline const SurfaceBounds&
-TGeoDetectorElement::bounds(const Identifier&) const
-{
-  return (*m_bounds);
 }
 
 inline double

@@ -77,9 +77,10 @@ public:
   containedSurfaces() const override;
 
 private:
-  std::vector<std::shared_ptr<T>>
-                              m_surfaces;  ///< approach surfaces with ownership control
-  std::vector<const Surface*> m_surfacesCache;  ///< the surface container cache
+  /// approach surfaces with ownership control
+  std::vector< std::shared_ptr<T> >  m_surfaces;  
+  /// the surface container cache
+  std::vector<const Surface*>        m_surfacesCache;  
 };
 
 template <class T>

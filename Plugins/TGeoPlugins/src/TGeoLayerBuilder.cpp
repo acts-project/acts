@@ -6,20 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-//
-//  TGeoLayerBuilder.cpp
-//  ACTS-Development
-//
-//  Created by Andreas Salzburger on 26/05/16.
-//
-//
-
 #include "ACTS/Plugins/TGeoPlugins/TGeoLayerBuilder.hpp"
-#include <stdio.h>
 #include "ACTS/Plugins/TGeoPlugins/TGeoDetectorElement.hpp"
 #include "ACTS/Tools/ILayerCreator.hpp"
 #include "ACTS/Utilities/MsgMacros.hpp"
 #include "TGeoManager.h"
+#include <stdio.h>
 
 Acts::TGeoLayerBuilder::TGeoLayerBuilder(
     const Acts::TGeoLayerBuilder::Config& config)
@@ -42,7 +34,7 @@ Acts::TGeoLayerBuilder::setConfiguration(
 const Acts::LayerVector
 Acts::TGeoLayerBuilder::negativeLayers() const
 {
-  Acts::LayerVector nVector;
+  LayerVector nVector;
   return std::move(nVector);
 }
 
@@ -50,7 +42,7 @@ const Acts::LayerVector
 Acts::TGeoLayerBuilder::centralLayers() const
 {
   // the return vector
-  Acts::LayerVector cVector;
+  LayerVector cVector;
   // bail out if you have no gGeoManager
   if (!gGeoManager) return std::move(cVector);
 
@@ -69,7 +61,7 @@ Acts::TGeoLayerBuilder::centralLayers() const
       collectSensitive(volume, nullptr, layerCfg.sensorName, sensitiveNodes);
       MSG_INFO("- layer found to have " << sensitiveNodes.size()
                                         << " sensitive sensors ");
-      // create teh detector surface vector
+      // create the detector surface vector
       std::vector<const Acts::Surface*> detSurfaces;
       detSurfaces.reserve(sensitiveNodes.size());
       // loop and fill
@@ -93,7 +85,7 @@ Acts::TGeoLayerBuilder::centralLayers() const
 const Acts::LayerVector
 Acts::TGeoLayerBuilder::positiveLayers() const
 {
-  Acts::LayerVector pVector;
+  LayerVector pVector;
   return std::move(pVector);
 }
 

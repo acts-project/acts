@@ -10,15 +10,15 @@
 // LayerArrayCreator.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GENERICGEOMETRYTOOLS_GENERICLAYERBUILDER_H
-#define ACTS_GENERICGEOMETRYTOOLS_GENERICLAYERBUILDER_H 1
+#ifndef ACTS_EXAMPLES_GENERICLAYERBUILDER_H
+#define ACTS_EXAMPLES_GENERICLAYERBUILDER_H 1
 
-// Utilities
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
-// Geometry module
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Tools/ILayerBuilder.hpp"
+#include "ACTS/Material/Material.hpp"
+#include "ACTS/Material/MaterialProperties.hpp"
 
 namespace Acts {
 
@@ -28,125 +28,138 @@ class Surface;
 class DetecorElementBase;
 typedef std::pair<const Surface*, Vector3D> SurfacePosition;
 
-/** @class GenericLayerBuilder
-
- The GenericLayerBuilder is able to build cylinder & disc layers from python
- input.
- This is ment for the simple detector examples.
-
- */
-
+/// @class GenericLayerBuilder
+/// 
+/// The GenericLayerBuilder is able to build cylinder & disc layers from python
+/// input.
+/// This is ment for the simple detector examples.
+/// 
 class GenericLayerBuilder : public ILayerBuilder
 {
 public:
-  /** @struct Config
-      Configuration for the GenericLayerBuilder */
+  /// @struct Config
+  /// Nested configuration struct for the GenericLayerBuilder 
   struct Config
   {
-    std::shared_ptr<Logger> logger;
-    std::string             layerIdentification;
-    // a single paramater for the approach surface envelope
-    double approachSurfaceEnvelope;
+    /// the loging instance 
+    std::shared_ptr<Logger>              logger;
+    /// the string based identification
+    std::string                          layerIdentification;
+    /// a single paramater for the approach surface envelope
+    double                               approachSurfaceEnvelope;
+    /// central layer specification
+    /// bin multipliers in rphi,z for finer module binning 
+    std::pair<int,int>                   centralLayerBinMultipliers;
+    /// layer radii for the sensitive layers
+    std::vector<double>                  centralLayerRadii;
+    /// the (additional) layer envelope in R/Z
+    std::vector< std::pair<double,double> >                 
+                                         centralLayerEnvelopes;
+    /// the material concentration: -1 inner, 0 central, 1 outer
+    std::vector<int>                     centralLayerMaterialConcentration;
+    /// the assigned material propertis @TODO change to surface material
+    std::vector<MaterialProperties>      centralLayerMaterialProperties;
+    /// teh binning schema: nPhi x nZ
+    std::vector< std::pair<int,int> >    centralModuleBinningSchema; 
+    /// the module center positions
+    std::vector< std::vector<Vector3D> > centralModulePositions;
+    /// the module tilt for this layer    
+    std::vector<double>                  centralModuleTiltPhi;
+    /// the module bounds: local x    
+    std::vector<double>                  centralModuleHalfX;
+    /// the module bounds: local y    
+    std::vector<double>                  centralModuleHalfY;
+    /// the module bounds: local z -> thickness    
+    std::vector<double>                  centralModuleThickness;
+    /// the module material @TODO change to surface material
+    std::vector<Material>                centralModuleMaterial;
+    /// the module front side stereo (if exists)
+    std::vector<double>                  centralModuleFrontsideStereo;
+    /// the module back side stereo (if exists)
+    std::vector<double>                  centralModuleBacksideStereo;
+    /// the module gap between frontside and backside  
+    std::vector<double>                  centralModuleBacksideGap;
 
-    int centralLayerBinPhimultiplier;
-    int centralLayerBinZmultiplier;
-    // the central layers
-    std::vector<double>              centralLayerRadii;
-    std::vector<double>              centralLayerEnvelopeR;
-    std::vector<double>              centralLayerEnvelopeZ;
-    std::vector<double>              centralLayerMaterialConcentration;
-    std::vector<std::vector<double>> centralLayerMaterialProperties;
-    std::vector<std::vector<double>> centralModulePositionPhi;
-    std::vector<double>              centralModuleTiltPhi;
-    std::vector<std::vector<double>> centralModulePositionZ;
-    std::vector<double>              centralModuleStaggerZ;
-    std::vector<double>              centralModuleHalfX;
-    std::vector<double>              centralModuleHalfY;
-    std::vector<double>              centralModuleThickness;
-    std::vector<std::vector<double>> centralModuleMaterial;
-    std::vector<double>              centralModuleFrontsideStereo;
-    std::vector<double>              centralModuleBacksideStereo;
-    std::vector<double>              centralModuleBacksideGap;
+    /// the layers at p/e side
+    /// bin multipliers in r,phi for finer module binning
+    std::pair<int,int>                   posnegLayerBinMultipliers;
+    /// layer positions in Z 
+    std::vector<double>                  posnegLayerPositionsZ;
+    /// the 
+    std::vector<double>                  posnegLayerEnvelopeR;
+    /// the material concentration: -1 inner, 0 central, 1 outer
+    std::vector<int>                     posnegLayerMaterialConcentration;
+    /// the material prooperties @TODO change to surface material
+    std::vector<MaterialProperties>      posnegLayerMaterialProperties;
+    /// the module center positions
+    std::vector< std::vector< std::vector<Vector3D> > >
+                                         posnegModulePositions;
+    /// the module bounds: min halfx
+    std::vector<std::vector<double>>     posnegModuleMinHalfX;
+    /// the module bounds: max halfx
+    std::vector<std::vector<double>>     posnegModuleMaxHalfX;
+    /// the module bounds: local y    
+    std::vector<std::vector<double>>     posnegModuleHalfY;
+    /// the module bounds: local z -> thickness    
+    std::vector<std::vector<double>>     posnegModuleThickness;
+    /// the module material @TODO change to surface material
+    std::vector<std::vector<Material>>   posnegModuleMaterial;
+    /// the module front side stereo (if exists)
+    std::vector<std::vector<double>>     posnegModuleFrontsideStereo;
+    /// the module back side stereo (if exists)
+    std::vector<std::vector<double>>     posnegModuleBacksideStereo;
+    /// the module gap between frontside and backside  
+    std::vector<std::vector<double>>     posnegModuleBacksideGap;
 
-    // the layers at p/e side
-    int                              posnegLayerBinRmultiplier;
-    int                              posnegLayerBinPhimultiplier;
-    std::vector<double>              posnegLayerPositionsZ;
-    std::vector<double>              posnegLayerEnvelopeR;
-    std::vector<double>              posnegLayerMaterialConcentration;
-    std::vector<std::vector<double>> posnegLayerMaterialProperties;
-    std::vector<std::vector<double>> posnegModuleRadii;
-    std::vector<double>              posnegModuleStaggerR;
-    std::vector<std::vector<double>>
-        posnegModuleInPhi;  //!< used to fill the position-phi
-    std::vector<std::vector<double>>
-        posnegModulePositionPhiStream;  //!< used to fill the position-phi
-    std::vector<std::vector<std::vector<double>>>
-        posnegModulePositionPhi;  //!< this one is being filled by the two
-                                  //! before
-    std::vector<std::vector<double>>              posnegModuleStaggerPhi;
-    std::vector<std::vector<double>>              posnegModuleMinHalfX;
-    std::vector<std::vector<double>>              posnegModuleMaxHalfX;
-    std::vector<std::vector<double>>              posnegModuleHalfY;
-    std::vector<std::vector<double>>              posnegModuleThickness;
-    std::vector<std::vector<double>>              posnegModuleMaterialStream;
-    std::vector<std::vector<std::vector<double>>> posnegModuleMaterial;
-    std::vector<std::vector<double>>              posnegModuleFrontsideStereo;
-    std::vector<std::vector<double>>              posnegModuleBacksideStereo;
-    std::vector<std::vector<double>>              posnegModuleBacksideGap;
-
-    // the layer tools
+    /// helper tools: layer creator
     std::shared_ptr<ILayerCreator> layerCreator;
+    /// helper tools: central passiva layer builder
     std::shared_ptr<ILayerBuilder> centralPassiveLayerBuilder;
+    /// helper tools: p/n passive layer builder
     std::shared_ptr<ILayerBuilder> posnegPassiveLayerBuilder;
 
     Config()
       : logger(getDefaultLogger("GenericLayerBuilder", Logging::INFO))
       , layerIdentification("")
       , approachSurfaceEnvelope(0.5)
-      , centralLayerBinPhimultiplier(1)
-      , centralLayerBinZmultiplier(1)
-      ,
-
-      posnegLayerBinRmultiplier(1)
-      , posnegLayerBinPhimultiplier(1)
-      ,
-
-      layerCreator(nullptr)
+      , layerCreator(nullptr)
       , centralPassiveLayerBuilder(nullptr)
       , posnegPassiveLayerBuilder(nullptr)
     {
     }
   };
-  /** constructor */
-  GenericLayerBuilder(const Acts::GenericLayerBuilder::Config glbConfig);
+  
+  /// Constructor
+  /// @param glbConfig is the configuration class
+  GenericLayerBuilder(const Config& glbConfig);
 
-  /** destructor */
+  /// Destructor 
   ~GenericLayerBuilder();
 
-  /** LayerBuilder interface method - returning the layers at negative side */
+  /// LayerBuilder interface method - returning the layers at negative side 
   const LayerVector
   negativeLayers() const override;
 
-  /** LayerBuilder interface method - returning the central layers */
+  /// LayerBuilder interface method - returning the central layers 
   const LayerVector
   centralLayers() const override;
 
-  /** LayerBuilder interface method - returning the layers at negative side */
+  /// LayerBuilder interface method - returning the layers at negative side 
   const LayerVector
   positiveLayers() const override;
 
-  /**ILayerBuilder method*/
+  /// ILayerBuilder method
   const std::string&
   identification() const override
   {
     return m_config.layerIdentification;
   }
 
-  /** set the configuration object */
+  /// set the configuration object 
   void
-  setConfiguration(const Config glbConfig);
-  /** get the configuration object */
+  setConfiguration(const Config& glbConfig);
+  
+  /// get the configuration object 
   Config
   getConfiguration() const;
 
@@ -154,17 +167,20 @@ private:
   void
   constructLayers();
 
-  LayerVector m_nLayers;  //!< layers on negative side
-  LayerVector m_cLayers;  //!< layers on central side
-  LayerVector m_pLayers;  //!< layers on positive side
+  LayerVector m_nLayers;  ///< layers on negative side
+  LayerVector m_cLayers;  ///< layers on central side
+  LayerVector m_pLayers;  ///< layers on positive side
 
   std::vector<const DetectorElementBase*>
-      m_centralModule;  //!< acts as detector store
+      m_centralModule;  ///< acts as detector store
+
   std::vector<const DetectorElementBase*>
-      m_posnegModule;  //!< acts as detector store
-  /** Configuration member */
+      m_posnegModule;  ///< acts as detector store
+  
+  /// Configuration member 
   Config m_config;
 
+  /// Private access to the looging instance 
   const Logger&
   logger() const
   {
@@ -197,4 +213,4 @@ GenericLayerBuilder::getConfiguration() const
 }
 }  // end of namespace
 
-#endif  // ACTS_GEOMETRYTOOLS_GENERICLAYERBUILDER_H
+#endif  // ACTS_EXAMPLES_GENERICLAYERBUILDER_H
