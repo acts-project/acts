@@ -22,7 +22,7 @@
 #include "ACTS/Utilities/OverlapDescriptor.hpp"
 
 Acts::LayerCreator::LayerCreator(const Acts::LayerCreator::Config& lcConfig)
-  : m_config()
+  : m_cfg()
 {
   setConfiguration(lcConfig);
 }
@@ -32,7 +32,7 @@ Acts::LayerCreator::setConfiguration(const Acts::LayerCreator::Config& lcConfig)
 {
   // @TODO check consistency
   // copy the configuration
-  m_config = lcConfig;
+  m_cfg = lcConfig;
 }
 
 Acts::LayerPtr
@@ -77,7 +77,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
 
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray
-      = m_config.surfaceArrayCreator->surfaceArrayOnCylinder(
+      = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
           surfaces, layerR, minPhi, maxPhi, layerHalfZ, binsPhi, binsZ);
 
   // create the layer and push it back
@@ -128,7 +128,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>& surfaces,
 
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray
-      = m_config.surfaceArrayCreator->surfaceArrayOnDisc(
+      = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
           surfaces, minR, maxR, minPhi, maxPhi, binsR, binsPhi, rBoundaries);
 
   // create the share disc bounds

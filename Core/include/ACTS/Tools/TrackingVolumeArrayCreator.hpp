@@ -46,7 +46,7 @@ public:
 
   /// Constructor 
   /// @param cfg is the configuration class
-  TrackingVolumeArrayCreator(const Config& cfg) : m_config(cfg) {}
+  TrackingVolumeArrayCreator(const Config& cfg) : m_cfg(cfg) {}
   
   /// Destructor 
   virtual ~TrackingVolumeArrayCreator() = default;
@@ -63,25 +63,25 @@ public:
   void
   setConfiguration(const Config& cfg)
   {
-    m_config = cfg;
+    m_cfg = cfg;
   }
 
   /// Get configuration method 
   Config
   getConfiguration() const
   {
-    return m_config;
+    return m_cfg;
   }
 
 private:
   /// Configuration struct 
-  Config m_config;
+  Config m_cfg;
   
   // Private access to the logger method
   const Logger&
   logger() const
   {
-    return *m_config.logger;
+    return *m_cfg.logger;
   }
 };
 }

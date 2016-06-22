@@ -83,7 +83,7 @@ public:
   const std::string&
   identification() const override
   {
-    return m_config.layerIdentification;
+    return m_cfg.layerIdentification;
   }
 
   /// Set configuration method 
@@ -97,13 +97,13 @@ public:
   getConfiguration() const;
 
 protected:
-  Config m_config;  //!< configuration
+  Config m_cfg;  //!< configuration
 
 private:
   const Logger&
   logger() const
   {
-    return *m_config.logger;
+    return *m_cfg.logger;
   }
   bool
   constructLayers() const;
@@ -119,7 +119,7 @@ private:
 inline PassiveLayerBuilder::Config
 PassiveLayerBuilder::getConfiguration() const
 {
-  return m_config;
+  return m_cfg;
 }
 
 inline const LayerVector

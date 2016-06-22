@@ -51,14 +51,15 @@ public:
     std::string postfix;    ///< screen output postfix
     std::string name;       ///< the name of this engine
 
-    Config()
-      : logger(getDefaultLogger("MaterialEffectsEngine", Logging::INFO))
+    Config(const std::string& lname = "MaterialEffectsEngine",
+           Logging::Level lvl = Logging::INFO)
+      : logger(getDefaultLogger(lname, lvl))
       , eLossCorrection(true)
       , eLossMpv(true)
       , mscCorrection(true)
       , prefix("[ME] - ")
       , postfix(" - ")
-      , name("Anonymous")
+      , name(lname)
     {
     }
   };
@@ -98,13 +99,13 @@ public:
   getConfiguration() const;
 
 protected:
-  Config m_config;  ///< configuration struct
+  Config m_cfg;  ///< configuration struct
 
 private:
   const Logger&
   logger() const
   {
-    return *m_config.logger;
+    return *m_cfg.logger;
   }
   ///  charged extrapolation
   ///  depending on the MaterialUpdateStage:
@@ -127,7 +128,7 @@ private:
 inline MaterialEffectsEngine::Config
 MaterialEffectsEngine::getConfiguration() const
 {
-  return m_config;
+  return m_cfg;
 }
 
 }  // end of namespace

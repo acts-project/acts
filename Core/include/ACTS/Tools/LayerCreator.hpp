@@ -130,13 +130,13 @@ private:
   radialDistance(const Vector3D& pos1, const Vector3D& pos2) const;
 
   /// configuration object 
-  Config m_config;
+  Config m_cfg;
   
   /// Private acces method to the logger
   const Logger&
   logger() const
   {
-    return *m_config.logger;
+    return *m_cfg.logger;
   }
 
 };
@@ -144,7 +144,7 @@ private:
 inline LayerCreator::Config
 LayerCreator::getConfiguration() const
 {
-  return m_config;
+  return m_cfg;
 }
 
 }  // end of namespace

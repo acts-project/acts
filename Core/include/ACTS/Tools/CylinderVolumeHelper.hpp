@@ -148,14 +148,14 @@ public:
 
 protected:
   /// Configuration object 
-  Config m_config;
+  Config m_cfg;
 
 private:
   /// Private access method to the logging instance
   const Logger&
   logger() const
   {
-    return *m_config.logger;
+    return *m_cfg.logger;
   }
   
   /// Private method - it estimates the CylinderBounds and Translation 
@@ -220,7 +220,7 @@ private:
 inline CylinderVolumeHelper::Config
 CylinderVolumeHelper::getConfiguration() const
 {
-  return m_config;
+  return m_cfg;
 }
 
 }

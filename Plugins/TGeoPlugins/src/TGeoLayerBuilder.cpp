@@ -15,7 +15,7 @@
 
 Acts::TGeoLayerBuilder::TGeoLayerBuilder(
     const Acts::TGeoLayerBuilder::Config& config)
-  : m_config()
+  : m_cfg()
 {
   setConfiguration(config);
 }
@@ -28,7 +28,7 @@ void
 Acts::TGeoLayerBuilder::setConfiguration(
     const Acts::TGeoLayerBuilder::Config& config)
 {
-  m_config = config;
+  m_cfg = config;
 }
 
 const Acts::LayerVector
@@ -46,10 +46,10 @@ Acts::TGeoLayerBuilder::centralLayers() const
   // bail out if you have no gGeoManager
   if (!gGeoManager) return std::move(cVector);
 
-  MSG_INFO("Central Layers : found " << m_config.centralLayerConfigs.size()
+  MSG_INFO("Central Layers : found " << m_cfg.centralLayerConfigs.size()
                                      << " configurations.");
 
-  for (auto layerCfg : m_config.centralLayerConfigs) {
+  for (auto layerCfg : m_cfg.centralLayerConfigs) {
     MSG_INFO("- layer configuration found for layer " << layerCfg.layerName
                                                       << " with sensor "
                                                       << layerCfg.sensorName);
@@ -73,7 +73,7 @@ Acts::TGeoLayerBuilder::centralLayers() const
         // create a layer out of the surfaces
         detSurfaces.push_back(&(tgElement->surface()));
         // create the layer
-        cVector.push_back(m_config.layerCreator->cylinderLayer(
+        cVector.push_back(m_cfg.layerCreator->cylinderLayer(
             detSurfaces, 1., 5., layerCfg.binsLoc0, layerCfg.binsLoc0));
       }
     }

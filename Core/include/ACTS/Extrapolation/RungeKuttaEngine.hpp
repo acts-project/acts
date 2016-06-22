@@ -169,8 +169,9 @@ public:
     std::string postfix;        //!< screen output postfix
     std::string name;            //!< name of the tool
 
-    Config()
-      : logger(getDefaultLogger("RungeKuttaEngine", Logging::INFO))
+    Config(const std::string& lname = "RungeKuttaEngine",
+           Logging::Level lvl = Logging::INFO)
+      : logger(getDefaultLogger(lname, lvl))
       , fieldService(nullptr)
       , dlt(0.000200)
       , helixStep(1.)
@@ -179,7 +180,7 @@ public:
       , usegradient(false)
       , prefix("[RK] - ")
       , postfix(" - ")
-      , name("Anonymous")
+      , name(lname)
     {
     }
   };
@@ -243,7 +244,7 @@ public:
   getConfiguration() const;
 
 protected:
-  Config m_config;            ///< configuration class
+  Config m_cfg;            ///< configuration class
 
   RungeKuttaUtils m_rkUtils;  ///< RungeKuttaUtils class
 
@@ -251,7 +252,7 @@ private:
   const Logger&
   logger() const
   {
-    return *m_config.logger;
+    return *m_cfg.logger;
   }
 
   /// Templated RungeKutta propagation method - charged/neutral 
@@ -321,20 +322,20 @@ private:
 inline void
 RungeKuttaEngine::getField(double* R, double* H) const
 {
-  m_config.fieldService->getField(R, H);
+  m_cfg.fieldService->getField(R, H);
 }
 
 inline void
 RungeKuttaEngine::getFieldGradient(double* R, double* H, double* dH) const
 {
-  m_config.fieldService->getField(R, H, dH);
+  m_cfg.fieldService->getField(R, H, dH);
 }
 
 
 inline RungeKuttaEngine::Config
 RungeKuttaEngine::getConfiguration() const
 {
-  return m_config;
+  return m_cfg;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

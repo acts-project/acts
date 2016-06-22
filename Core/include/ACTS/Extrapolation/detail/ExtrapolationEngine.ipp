@@ -47,9 +47,9 @@ Acts::ExtrapolationEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
         = eCell.leadVolume->geometrySignature() > 2 ? Dense : Static;
 
     std::shared_ptr<const IExtrapolationEngine> iee
-        = (m_config.extrapolationEngines.size()
+        = (m_cfg.extrapolationEngines.size()
            > eCell.leadVolume->geometrySignature())
-        ? m_config.extrapolationEngines[geoType]
+        ? m_cfg.extrapolationEngines[geoType]
         : nullptr;
     eCode = iee ? iee->extrapolate(eCell, sf, bcheck)
                 : ExtrapolationCode::FailureConfiguration;
@@ -91,7 +91,7 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
   // startParameters
   eCell.leadParameters = &(eCell.startParameters);
   // now check the tracking geometry and retrieve it if not existing
-  if (!m_config.trackingGeometry) {
+  if (!m_cfg.trackingGeometry) {
     EX_MSG_WARNING(eCell.navigationStep,
                    "navigation",
                    "",
@@ -114,10 +114,10 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
   // check if you are at the volume boundary
   //!< @TODO do not use hard coded number of atVolumeBoundary, check with ST
   if (!eCell.startVolume
-      || m_config.trackingGeometry->atVolumeBoundary(
+      || m_cfg.trackingGeometry->atVolumeBoundary(
              eCell.startParameters.position(), eCell.startVolume, 0.001)) {
     ExtrapolationCode ecVol
-        = m_config.navigationEngine->resolvePosition(eCell, dir, true);
+        = m_cfg.navigationEngine->resolvePosition(eCell, dir, true);
     if (!ecVol.isSuccessOrRecovered() && !ecVol.inProgress()) return ecVol;
     // the volume is found and assigned as start volume
     eCell.startVolume = eCell.leadVolume;
@@ -171,7 +171,7 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
       // @TODO can be opmisied (straight line for high momentum - use directly )
       ExtrapolationCell<T> navCell(*eCell.leadParameters, dir);
       // screen output
-      ExtrapolationCode eCode = m_config.propagationEngine->propagate(
+      ExtrapolationCode eCode = m_cfg.propagationEngine->propagate(
           navCell,
           *eCell.endSurface,
           anyDirection,
@@ -189,9 +189,9 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
           "found endVolume and andLayer through propagation - return code : "
               << eCode.toString());
       // take the lead parameters to find end volume and end layer
-      eCell.endVolume = m_config.trackingGeometry->lowestTrackingVolume(
+      eCell.endVolume = m_cfg.trackingGeometry->lowestTrackingVolume(
           navCell.endParameters->position());
-      eCell.endLayer = m_config.trackingGeometry->associatedLayer(
+      eCell.endLayer = m_cfg.trackingGeometry->associatedLayer(
           navCell.endParameters->position());
     }
     // check the final end volume configuraiton - screen output

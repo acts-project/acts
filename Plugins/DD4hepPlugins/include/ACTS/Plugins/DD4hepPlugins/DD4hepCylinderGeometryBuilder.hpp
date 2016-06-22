@@ -75,13 +75,13 @@ public:
 
 private:
   /** configuration object */
-  Config m_config;
+  Config m_cfg;
 };
 
 inline DD4hepCylinderGeometryBuilder::Config
 DD4hepCylinderGeometryBuilder::getConfiguration() const
 {
-  return m_config;
+  return m_cfg;
 }
 }  // end of namespace
 

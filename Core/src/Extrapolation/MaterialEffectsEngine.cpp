@@ -20,7 +20,7 @@
 // constructor
 Acts::MaterialEffectsEngine::MaterialEffectsEngine(
     const MaterialEffectsEngine::Config& meConfig)
-  : m_config()
+  : m_cfg()
 {
   setConfiguration(meConfig);
   // steering of the screen outoput (SOP)
@@ -42,7 +42,7 @@ Acts::MaterialEffectsEngine::setConfiguration(
   IMaterialEffectsEngine::m_sopPrefix  = meConfig.prefix;
   IMaterialEffectsEngine::m_sopPostfix = meConfig.postfix;
   // copy the configuration
-  m_config = meConfig;
+  m_cfg = meConfig;
 }
 
 // neutral extrapolation - just collect material /
@@ -205,7 +205,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
   const MaterialProperties* materialProperties
       = mSurface->associatedMaterial()->material(parameters.position());
   // and let's check if there's acutally something to do
-  if (materialProperties && (m_config.eLossCorrection || m_config.mscCorrection
+  if (materialProperties && (m_cfg.eLossCorrection || m_cfg.mscCorrection
                              || eCell.checkConfigurationMode(
                                     ExtrapolationMode::CollectMaterial))) {
     // and add them
@@ -225,7 +225,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     double E    = sqrt(p * p + m * m);
     double beta = p / E;
     // (A) - energy loss correction
-    if (m_config.eLossCorrection) {
+    if (m_cfg.eLossCorrection) {
       double sigmaP = 0.;
       double kazl   = 0.;
       /** dE/dl ionization energy loss per path unit */
@@ -244,7 +244,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
         (*uCovariance)(eQOP, eQOP) += sign * sigmaQoverP * sigmaQoverP;
     }
     // (B) - update the covariance if needed
-    if (uCovariance && m_config.mscCorrection) {
+    if (uCovariance && m_cfg.mscCorrection) {
       /** multiple scattering as function of dInX0 */
       double sigmaMS = m_interactionFormulae.sigmaMS(
           thicknessInX0 * pathCorrection, p, beta);

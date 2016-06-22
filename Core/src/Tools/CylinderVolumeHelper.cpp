@@ -30,7 +30,7 @@
 
 Acts::CylinderVolumeHelper::CylinderVolumeHelper(
     const Acts::CylinderVolumeHelper::Config& cvhConfig)
-  : Acts::ITrackingVolumeHelper(), m_config()
+  : Acts::ITrackingVolumeHelper(), m_cfg()
 {
   setConfiguration(cvhConfig);
 }
@@ -42,7 +42,7 @@ Acts::CylinderVolumeHelper::setConfiguration(
 {
   // @TODO check consistency
   // copy the configuration
-  m_config = cvhConfig;
+  m_cfg = cvhConfig;
 }
 
 std::shared_ptr<const Acts::TrackingVolume>
@@ -115,9 +115,9 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
 
     // create the Layer Array
     layerArray = (bValue == binR)
-        ? m_config.layerArrayCreator->layerArray(
+        ? m_cfg.layerArrayCreator->layerArray(
               layers, rMin, rMax, bType, bValue)
-        : m_config.layerArrayCreator->layerArray(
+        : m_cfg.layerArrayCreator->layerArray(
               layers, zMin, zMax, bType, bValue);
 
   }  // layers are created and done
@@ -271,9 +271,9 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
       layers.push_back(createCylinderLayer(0.5 * (zMinLayer + zMaxLayer),
                                            (*layerPropIter),
                                            fabs(0.5 * (zMaxLayer - zMinLayer)),
-                                           m_config.passiveLayerThickness,
-                                           m_config.passiveLayerPhiBins,
-                                           m_config.passiveLayerRzBins));
+                                           m_cfg.passiveLayerThickness,
+                                           m_cfg.passiveLayerPhiBins,
+                                           m_cfg.passiveLayerRzBins));
 
     } else {
       // take the envelopes into account
@@ -283,9 +283,9 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
       layers.push_back(createDiscLayer((*layerPropIter),
                                        rMinLayer,
                                        rMaxLayer,
-                                       m_config.passiveLayerThickness,
-                                       m_config.passiveLayerPhiBins,
-                                       m_config.passiveLayerRzBins));
+                                       m_cfg.passiveLayerThickness,
+                                       m_cfg.passiveLayerPhiBins,
+                                       m_cfg.passiveLayerRzBins));
     }
   }
   // now call the createTrackingVolume() method
@@ -387,8 +387,8 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
   //       bVal) const = 0;
 
   std::shared_ptr<const TrackingVolumeArray> volumeArray = (rCase)
-      ? m_config.trackingVolumeArrayCreator->trackingVolumeArray(volumes, binR)
-      : m_config.trackingVolumeArrayCreator->trackingVolumeArray(volumes, binZ);
+      ? m_cfg.trackingVolumeArrayCreator->trackingVolumeArray(volumes, binR)
+      : m_cfg.trackingVolumeArrayCreator->trackingVolumeArray(volumes, binZ);
   if (volumeArray == nullptr) {
     ACTS_WARNING(
         "Creation of TrackingVolume array did not succeed - returning 0 ");
@@ -688,7 +688,7 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
     if (glueVolumesNegativeFace.size()) {
       // create the outside volume array
       std::shared_ptr<const TrackingVolumeArray> glueVolumesNegativeFaceArray
-          = m_config.trackingVolumeArrayCreator->trackingVolumeArray(
+          = m_cfg.trackingVolumeArrayCreator->trackingVolumeArray(
               glueVolumesNegativeFace, binR);
       // register the glue voluems
       glueDescr.registerGlueVolumes(negativeFaceXY,
@@ -697,7 +697,7 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
     if (glueVolumesPositiveFace.size()) {
       // create the outside volume array
       std::shared_ptr<const TrackingVolumeArray> glueVolumesPositiveFaceArray
-          = m_config.trackingVolumeArrayCreator->trackingVolumeArray(
+          = m_cfg.trackingVolumeArrayCreator->trackingVolumeArray(
               glueVolumesPositiveFace, binR);
       // register the glue voluems
       glueDescr.registerGlueVolumes(positiveFaceXY,
@@ -706,7 +706,7 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
     if (glueVolumesInnerTube.size()) {
       // create the outside volume array
       std::shared_ptr<const TrackingVolumeArray> glueVolumesInnerTubeArray
-          = m_config.trackingVolumeArrayCreator->trackingVolumeArray(
+          = m_cfg.trackingVolumeArrayCreator->trackingVolumeArray(
               glueVolumesInnerTube, binZ);
       // register the glue voluems
       glueDescr.registerGlueVolumes(tubeInnerCover, glueVolumesInnerTubeArray);
@@ -714,7 +714,7 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
     if (glueVolumesOuterTube.size()) {
       // create the outside volume array
       std::shared_ptr<const TrackingVolumeArray> glueVolumesOuterTubeArray
-          = m_config.trackingVolumeArrayCreator->trackingVolumeArray(
+          = m_cfg.trackingVolumeArrayCreator->trackingVolumeArray(
               glueVolumesOuterTube, binZ);
       // register the glue voluems
       glueDescr.registerGlueVolumes(tubeOuterCover, glueVolumesOuterTubeArray);
@@ -879,7 +879,7 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
     auto nBoundarySurface
         = std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>(
             boundarySurface);
-    // m_config.trackingVolumeGluer->glueTrackingVolumes(gvDescriptorOne.glueVolumes(faceOne),
+    // m_cfg.trackingVolumeGluer->glueTrackingVolumes(gvDescriptorOne.glueVolumes(faceOne),
     // faceOne,
     // gvDescriptorTwo.glueVolumes(faceTwo),
     // faceTwo,

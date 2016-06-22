@@ -20,7 +20,7 @@
 
 Acts::CylinderGeometryBuilder::CylinderGeometryBuilder(
     const Acts::CylinderGeometryBuilder::Config& cgbConfig)
-  : m_config()
+  : m_cfg()
 {
   setConfiguration(cgbConfig);
 }
@@ -31,7 +31,7 @@ Acts::CylinderGeometryBuilder::setConfiguration(
 {
   // @TODO check consistency
   // copy the configuration
-  m_config = cgbConfig;
+  m_cfg = cgbConfig;
 }
 
 std::unique_ptr<Acts::TrackingGeometry>
@@ -42,7 +42,7 @@ Acts::CylinderGeometryBuilder::trackingGeometry() const
   TrackingVolumePtr                       highestVolume = nullptr;
   // loop over the builders and wrap one around the other
   // -----------------------------
-  for (auto& volumeBuilder : m_config.trackingVolumeBuilders) {
+  for (auto& volumeBuilder : m_cfg.trackingVolumeBuilders) {
     // assign a new highest volume (and potentially wrap around the given
     // highest volume so far)
     highestVolume = volumeBuilder->trackingVolume(highestVolume);
@@ -50,7 +50,7 @@ Acts::CylinderGeometryBuilder::trackingGeometry() const
   // if you have a highst volume, stuff it into a TrackingGeometry
   if (highestVolume) {
     // see if the beampipe needs to be wrapped
-    if (m_config.beamPipeBuilder && m_config.trackingVolumeHelper) {
+    if (m_cfg.beamPipeBuilder && m_cfg.trackingVolumeHelper) {
       // some screen output
       ACTS_DEBUG("BeamPipe is being built and inserted.");
       // cast to cylinder volume bounds
@@ -65,10 +65,10 @@ Acts::CylinderGeometryBuilder::trackingGeometry() const
         VolumeBoundsPtr beamPipeBounds(
             new CylinderVolumeBounds(0., innerR, halfZ));
         TrackingVolumePtr beamPipeVolume
-            = m_config.beamPipeBuilder->trackingVolume(nullptr, beamPipeBounds);
+            = m_cfg.beamPipeBuilder->trackingVolume(nullptr, beamPipeBounds);
         // update the highest volume with the beam pipe
         highestVolume
-            = m_config.trackingVolumeHelper->createContainerTrackingVolume(
+            = m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
                 {beamPipeVolume, highestVolume});
       }
     }

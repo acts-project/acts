@@ -106,7 +106,7 @@ public:
 
 private:
   /// configruation object
-  Config m_config;  
+  Config m_cfg;  
   
   /// @TODO make clear where the TGeoDetectorElement lives
   mutable std::vector< std::shared_ptr<TGeoDetectorElement> > m_elementStore;  
@@ -122,13 +122,13 @@ private:
 inline TGeoLayerBuilder::Config
 TGeoLayerBuilder::getConfiguration() const
 {
-  return m_config;
+  return m_cfg;
 }
 
 inline const std::string&
 TGeoLayerBuilder::identification() const
 {
-  return m_config.configurationName;
+  return m_cfg.configurationName;
 }
 }
 

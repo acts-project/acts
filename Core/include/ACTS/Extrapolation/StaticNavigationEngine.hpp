@@ -53,14 +53,15 @@ public:
     std::string postfix;  ///< output postfix
     std::string name;     ///< name of this engine
 
-    Config()
-      : logger(getDefaultLogger("StaticNavigationEngine", Logging::INFO))
+    Config(const std::string& lname = "StaticNavigationEngine",
+           Logging::Level lvl = Logging::INFO)
+      : logger(getDefaultLogger(lname, lvl))
       , propagationEngine(nullptr)
       , materialEffectsEngine(nullptr)
       , trackingGeometry(nullptr)
       , prefix("[SN] - ")
       , postfix(" - ")
-      , name("Anonymous")
+      , name(lname)
     {
     }
   };
@@ -120,14 +121,14 @@ public:
 
 protected:
   /// the configuration member of the static navigation engine 
-  Config m_config;
+  Config m_cfg;
 
 private:
   /// Private access to the logging instance
   const Logger&
   logger() const
   {
-    return *m_config.logger;
+    return *m_cfg.logger;
   }
 
   /// resolve the boundary situation 
@@ -155,7 +156,7 @@ private:
 inline StaticNavigationEngine::Config
 StaticNavigationEngine::getConfiguration() const
 {
-  return m_config;
+  return m_cfg;
 }
 
 }  // end of namespace

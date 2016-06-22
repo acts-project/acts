@@ -23,7 +23,7 @@
 
 Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(
     const Acts::CylinderVolumeBuilder::Config& cvbConfig)
-  : Acts::ITrackingVolumeBuilder(), m_config()
+  : Acts::ITrackingVolumeBuilder(), m_cfg()
 {
   setConfiguration(cvbConfig);
 }
@@ -38,7 +38,7 @@ Acts::CylinderVolumeBuilder::setConfiguration(
 {
   // @TODO check consistency
   // copy the configuration
-  m_config = cvbConfig;
+  m_cfg = cvbConfig;
 }
 
 std::shared_ptr<const Acts::TrackingVolume>
@@ -48,7 +48,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     const Acts::LayerTriple* layerTriple,
     const VolumeTriple*      volumeTriple) const
 {
-  MSG_DEBUG("Configured to build volume : " << m_config.volumeName);
+  MSG_DEBUG("Configured to build volume : " << m_cfg.volumeName);
 
   // the return volume
   // -----------------------------------------------------------------------------
@@ -76,13 +76,13 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     // the positive Layer
     positiveLayers = std::get<2>(*layerTriple);
   } else {
-    if (m_config.layerBuilder) {
+    if (m_cfg.layerBuilder) {
       // the negative Layers
-      negativeLayers = m_config.layerBuilder->negativeLayers();
+      negativeLayers = m_cfg.layerBuilder->negativeLayers();
       // the central Layers
-      centralLayers = m_config.layerBuilder->centralLayers();
+      centralLayers = m_cfg.layerBuilder->centralLayers();
       // the positive Layer
-      positiveLayers = m_config.layerBuilder->positiveLayers();
+      positiveLayers = m_cfg.layerBuilder->positiveLayers();
     }
   }
   // analyze the layers
@@ -241,12 +241,12 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       // return a null pointer, upstream builder will have to understand this
       return nullptr;
     }
-  } else if (m_config.volumeDimension.size() > 2) {
+  } else if (m_cfg.volumeDimension.size() > 2) {
     // cylinder volume
     // get values from the out bounds
-    volumeRmin = m_config.volumeDimension.at(0);
-    volumeRmax = m_config.volumeDimension.at(1);
-    volumeZmax = m_config.volumeDimension.at(2);
+    volumeRmin = m_cfg.volumeDimension.at(0);
+    volumeRmax = m_cfg.volumeDimension.at(1);
+    volumeZmax = m_cfg.volumeDimension.at(2);
     ACTS_VERBOSE("Outer CylinderVolumeBounds provided by configuration, "
                  "rMin/rMax/zMax = "
                  << volumeRmin
@@ -257,9 +257,9 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   } else {
     // outside dimensions will have to be determined by the layer dimensions
     volumeRmin
-        = m_config.volumeToBeamPipe ? 0. : layerRmin - m_config.layerEnvelopeR;
-    volumeRmax = layerRmax + m_config.layerEnvelopeR;
-    volumeZmax = layerZmax + m_config.layerEnvelopeZ;
+        = m_cfg.volumeToBeamPipe ? 0. : layerRmin - m_cfg.layerEnvelopeR;
+    volumeRmax = layerRmax + m_cfg.layerEnvelopeR;
+    volumeZmax = layerZmax + m_cfg.layerEnvelopeZ;
     // from setup
     ACTS_VERBOSE("Outer CylinderVolumeBounds estimated from layer setup, "
                  "rMin/rMax/zMax = "
@@ -418,37 +418,37 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     }  // else - no volume bounds given from translation
 
     // the barrel is created
-    barrel = m_config.trackingVolumeHelper->createTrackingVolume(
+    barrel = m_cfg.trackingVolumeHelper->createTrackingVolume(
         centralLayers,
-        m_config.volumeMaterial,
+        m_cfg.volumeMaterial,
         barrelRmin,
         barrelRmax,
         -barrelZmax,
         barrelZmax,
-        m_config.volumeName + "::Barrel");
+        m_cfg.volumeName + "::Barrel");
 
     // the negative endcap is created
     nEndcap = !negativeLayers.empty()
-        ? m_config.trackingVolumeHelper->createTrackingVolume(
+        ? m_cfg.trackingVolumeHelper->createTrackingVolume(
               negativeLayers,
-              m_config.volumeMaterial,
+              m_cfg.volumeMaterial,
               endcapRmin,
               endcapRmax,
               -endcapZmax,
               -endcapZmin,
-              m_config.volumeName + "::NegativeEndcap")
+              m_cfg.volumeName + "::NegativeEndcap")
         : nullptr;
 
     // the positive endcap is created
     pEndcap = !positiveLayers.empty()
-        ? m_config.trackingVolumeHelper->createTrackingVolume(
+        ? m_cfg.trackingVolumeHelper->createTrackingVolume(
               positiveLayers,
-              m_config.volumeMaterial,
+              m_cfg.volumeMaterial,
               endcapRmin,
               endcapRmax,
               endcapZmin,
               endcapZmax,
-              m_config.volumeName + "::PositiveEndcap")
+              m_cfg.volumeName + "::PositiveEndcap")
         : nullptr;
 
     // no wrapping condition
@@ -456,81 +456,81 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       // we have endcap volumes
       if (nEndcap && pEndcap) {
         // a new barrel sector
-        volume = m_config.trackingVolumeHelper->createContainerTrackingVolume(
+        volume = m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
             {nEndcap, barrel, pEndcap});
       } else  // just take the barrel as the return value
         volume = barrel;
 
     } else if (wrappingCondition == 1) {
       // a new barrel sector
-      volume = m_config.trackingVolumeHelper->createContainerTrackingVolume(
+      volume = m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
           {nEndcap, barrel, pEndcap});
       // now check if we need gaps as in 1
       if (fabs(insideVolumeZmax - volumeZmax) > 10e-5) {
         // create the gap volumes
         // - negative side
-        nEndcap = m_config.trackingVolumeHelper->createGapTrackingVolume(
-            m_config.volumeMaterial,
+        nEndcap = m_cfg.trackingVolumeHelper->createGapTrackingVolume(
+            m_cfg.volumeMaterial,
             insideVolumeRmax,
             volumeRmax,
             -volumeZmax,
             -barrelZmax,
             1,
             false,
-            m_config.volumeName + "::NegativeGap");
+            m_cfg.volumeName + "::NegativeGap");
         // - positive side
-        pEndcap = m_config.trackingVolumeHelper->createGapTrackingVolume(
-            m_config.volumeMaterial,
+        pEndcap = m_cfg.trackingVolumeHelper->createGapTrackingVolume(
+            m_cfg.volumeMaterial,
             insideVolumeRmax,
             volumeRmax,
             barrelZmax,
             volumeZmax,
             1,
             false,
-            m_config.volumeName + "::PositiveGap");
+            m_cfg.volumeName + "::PositiveGap");
         // update the volume with the two sides
         insideVolume
-            = m_config.trackingVolumeHelper->createContainerTrackingVolume(
+            = m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
                 {nEndcap, insideVolume, pEndcap});
       }
       // update the volume
-      volume = m_config.trackingVolumeHelper->createContainerTrackingVolume(
+      volume = m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
           {insideVolume, volume});
 
     } else if (wrappingCondition == 2) {
       // create gap volumes if needed
       if (barrelZmax > insideVolumeZmax) {
         // create the gap volumes
-        auto niGap = m_config.trackingVolumeHelper->createGapTrackingVolume(
-            m_config.volumeMaterial,
+        auto niGap = m_cfg.trackingVolumeHelper->createGapTrackingVolume(
+            m_cfg.volumeMaterial,
             insideVolumeRmin,
             volumeRmin,
             -barrelZmax,
             -insideVolumeZmax,
             1,
             false,
-            m_config.volumeName + "::InnerNegativeGap");
+            m_cfg.volumeName + "::InnerNegativeGap");
 
-        auto piGap = m_config.trackingVolumeHelper->createGapTrackingVolume(
-            m_config.volumeMaterial,
+        auto piGap = m_cfg.trackingVolumeHelper->createGapTrackingVolume(
+            m_cfg.volumeMaterial,
             insideVolumeRmin,
             volumeRmin,
             insideVolumeZmax,
             barrelZmax,
             1,
             false,
-            m_config.volumeName + "::InnerPositiveGap");
+            m_cfg.volumeName + "::InnerPositiveGap");
         // pack into a new insideVolume
         insideVolume
-            = m_config.trackingVolumeHelper->createContainerTrackingVolume(
+            = m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
                 {niGap, insideVolume, piGap});
       }
       // create the container of the detector
       insideVolume
-          = m_config.trackingVolumeHelper->createContainerTrackingVolume(
+          = m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
               {insideVolume, barrel});
       volume = (nEndcap && pEndcap)
-          ? m_config.trackingVolumeHelper->createContainerTrackingVolume(
+          ? m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
                 {nEndcap, insideVolume, pEndcap})
           : insideVolume;
     }
@@ -539,52 +539,52 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     ACTS_DEBUG("Building Volume without layer configuration.");
     if (insideVolume && outsideBounds) {
       // the barrel is created
-      barrel = m_config.trackingVolumeHelper->createTrackingVolume(
+      barrel = m_cfg.trackingVolumeHelper->createTrackingVolume(
           {},
-          m_config.volumeMaterial,
+          m_cfg.volumeMaterial,
           insideVolumeRmin,
           volumeRmax,
           -insideVolumeZmax,
           insideVolumeZmax,
-          m_config.volumeName + "::Barrel");
+          m_cfg.volumeName + "::Barrel");
       // pack into the appropriate container
-      volume = m_config.trackingVolumeHelper->createContainerTrackingVolume(
+      volume = m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
           {insideVolume, barrel});
       // check if necap gaps are needed
       if (fabs(insideVolumeZmax - volumeZmax) > 10e-5) {
         // the negative endcap is created
-        nEndcap = m_config.trackingVolumeHelper->createTrackingVolume(
+        nEndcap = m_cfg.trackingVolumeHelper->createTrackingVolume(
             {},
-            m_config.volumeMaterial,
+            m_cfg.volumeMaterial,
             insideVolumeRmin,
             volumeRmax,
             -volumeZmax,
             -insideVolumeZmax,
-            m_config.volumeName + "::NegativeEndcap");
+            m_cfg.volumeName + "::NegativeEndcap");
         // the positive endcap is created
-        pEndcap = m_config.trackingVolumeHelper->createTrackingVolume(
+        pEndcap = m_cfg.trackingVolumeHelper->createTrackingVolume(
             {},
-            m_config.volumeMaterial,
+            m_cfg.volumeMaterial,
             insideVolumeRmin,
             volumeRmax,
             insideVolumeZmax,
             volumeZmax,
-            m_config.volumeName + "::PositiveEndcap");
+            m_cfg.volumeName + "::PositiveEndcap");
         // pack into a the container
-        volume = m_config.trackingVolumeHelper->createContainerTrackingVolume(
+        volume = m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
             {nEndcap, barrel, pEndcap});
       }
 
     } else
       volume = TrackingVolume::create(
-          nullptr, outsideBounds, m_config.volumeMaterial);
+          nullptr, outsideBounds, m_cfg.volumeMaterial);
 
   } else {
     ACTS_ERROR(
         "Neither layer configuration nor volume bounds given. Bailing out.");
   }
   // sign the volume
-  volume->sign(GeometrySignature(m_config.volumeSignature));
+  volume->sign(GeometrySignature(m_cfg.volumeSignature));
   // now return what you have
   return volume;
 }

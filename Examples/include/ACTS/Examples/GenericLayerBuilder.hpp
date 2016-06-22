@@ -152,7 +152,7 @@ public:
   const std::string&
   identification() const override
   {
-    return m_config.layerIdentification;
+    return m_cfg.layerIdentification;
   }
 
   /// set the configuration object 
@@ -178,13 +178,13 @@ private:
       m_posnegModule;  ///< acts as detector store
   
   /// Configuration member 
-  Config m_config;
+  Config m_cfg;
 
   /// Private access to the looging instance 
   const Logger&
   logger() const
   {
-    return *m_config.logger;
+    return *m_cfg.logger;
   }
 };
 
@@ -209,7 +209,7 @@ GenericLayerBuilder::centralLayers() const
 inline GenericLayerBuilder::Config
 GenericLayerBuilder::getConfiguration() const
 {
-  return m_config;
+  return m_cfg;
 }
 }  // end of namespace
 

@@ -79,14 +79,15 @@ public:
     std::string postfix;  ///< output postfix
     std::string name;     ///< name of this engine
 
-    Config()
-      : logger(getDefaultLogger("StaticEngine", Logging::INFO))
+    Config(const std::string& lname = "StaticEngine",
+           Logging::Level lvl = Logging::INFO)
+      : logger(getDefaultLogger(lname, lvl))
       , propagationEngine(nullptr)
       , navigationEngine(nullptr)
       , materialEffectsEngine(nullptr)
       , prefix("[SE] - ")
       , postfix(" - ")
-      , name("Anonymous")
+      , name(lname)
     {
     }
   };
@@ -134,14 +135,14 @@ public:
 
 protected:
   /// Configuration struct
-  Config m_config;
+  Config m_cfg;
 
 private:
   /// Private access to the logger
   const Logger&
   logger() const
   {
-    return *m_config.logger;
+    return *m_cfg.logger;
   }
 
   /// main loop extrapolation method 
@@ -200,7 +201,7 @@ StaticEngine::geometryType() const
 inline StaticEngine::Config
 StaticEngine::getConfiguration() const
 {
-  return m_config;
+  return m_cfg;
 }
 
 }  // end of namespace

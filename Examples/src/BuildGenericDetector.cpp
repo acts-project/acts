@@ -119,7 +119,6 @@ trackingGeometry(Logging::Level lvl, size_t version)
                                                              plbConfig.centralModuleBinningSchema[plb]));
     
   }
-            
   plbConfig.centralModulePositions            = centralModulePositions;
 
 ///
@@ -257,7 +256,7 @@ trackingGeometry(Logging::Level lvl, size_t version)
   pvbConfig.logger = Acts::getDefaultLogger("CylinderVolumeBuilder", lvl);
   pvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
   pvbConfig.volumeName           = "Pixel";
-  pvbConfig.volumeToBeamPipe     = false;
+  pvbConfig.volumeToBeamPipe     = true; // @TODO revert to this -> false;
   pvbConfig.layerBuilder         = pixelLayerBuilder;
   pvbConfig.layerEnvelopeR       = 1.;
   pvbConfig.layerEnvelopeZ       = 10.;
@@ -270,7 +269,7 @@ trackingGeometry(Logging::Level lvl, size_t version)
   // create the tracking geometry
   CylinderGeometryBuilder::Config tgConfig;
   tgConfig.logger = getDefaultLogger("CylinderGeometryBuilder", lvl);
-  tgConfig.beamPipeBuilder = beamPipeVolumeBuilder;
+  tgConfig.beamPipeBuilder = nullptr; /// @TODO bring that back in -> beamPipeVolumeBuilder;
   tgConfig.trackingVolumeBuilders = {pixelVolumeBuilder};
   tgConfig.trackingVolumeHelper   = cylinderVolumeHelper;
   auto cylinderGeometryBuilder
@@ -278,6 +277,10 @@ trackingGeometry(Logging::Level lvl, size_t version)
   return cylinderGeometryBuilder->trackingGeometry();
 }
 
+    
+    
+    
+/// helper method
 std::vector< Acts::Vector3D >
 modulePositionsCylinder(double radius,
                         double zStagger,
@@ -306,6 +309,7 @@ modulePositionsCylinder(double radius,
       mPositions.push_back( Vector3D(moduleR*cos(modulePhi),moduleR*sin(modulePhi),moduleZ));
       }
    }
+    return mPositions;
 }
                           
 

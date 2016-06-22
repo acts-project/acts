@@ -81,20 +81,20 @@ public:
 
 private:
   /// Configuration member 
-  Config   m_config;
+  Config   m_cfg;
 
   /// Private access method to the logger
   const Logger&
   logger() const
   {
-    return *m_config.logger;
+    return *m_cfg.logger;
   }
 };
 
 inline CylinderGeometryBuilder::Config
 CylinderGeometryBuilder::getConfiguration() const
 {
-  return m_config;
+  return m_cfg;
 }
 
 }  // end of namespace

@@ -54,7 +54,7 @@ public:
   struct Config
   {
     /// the default logger
-    std::shared_ptr<Logger> logger = getDefaultLogger("ExtrapolationEngine", Logging::INFO);
+    std::shared_ptr<Logger> logger; 
     /// the tracking geometry
     std::shared_ptr<const TrackingGeometry>   trackingGeometry = nullptr; 
     /// the list of extrapolation engines 
@@ -67,15 +67,16 @@ public:
     std::string postfix;   ///< output postfix
     std::string name;      ///< name of the tool
               
-    Config()
-      : logger(getDefaultLogger("ExtrapolationEngine", Logging::INFO))
+    Config(const std::string& lname = "ExtrapolationEngine",
+           Logging::Level lvl = Logging::INFO)
+      : logger(getDefaultLogger(lname, lvl))
       , trackingGeometry(nullptr)
       , extrapolationEngines()
       , propagationEngine(nullptr)
       , navigationEngine(nullptr)
       , prefix("[ME] - ")
       , postfix(" - ")
-      , name("Anonymous")
+      , name(lname)
     {
     }
   };
@@ -122,14 +123,14 @@ public:
 
 protected:
   /// ExtrapolationEngine config object 
-  Config m_config;
+  Config m_cfg;
 
 private:
   /// Private access to the logging instance
   const Logger&
   logger() const
   {
-    return *m_config.logger;
+    return *m_cfg.logger;
   }
   
   /// main extrapolation method, templated to chared/neutral 
@@ -166,7 +167,7 @@ ExtrapolationEngine::geometryType() const
 inline ExtrapolationEngine::Config
 ExtrapolationEngine::getConfiguration() const
 {
-  return m_config;
+  return m_cfg;
 }
 
 }  // end of namespace

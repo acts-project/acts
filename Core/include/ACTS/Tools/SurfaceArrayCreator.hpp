@@ -43,7 +43,7 @@ public:
 
   /// Constructor 
   /// @param cfg is the configuration struct for this component
-  SurfaceArrayCreator(const Config& cfg) : m_config(cfg) {}
+  SurfaceArrayCreator(const Config& cfg) : m_cfg(cfg) {}
   
   /// Destructor 
   virtual ~SurfaceArrayCreator() = default;
@@ -114,7 +114,7 @@ public:
   void
   setConfiguration(const Config& cfg)
   {
-    m_config = cfg;
+    m_cfg = cfg;
   }
 
   /// Get configuration method 
@@ -122,18 +122,18 @@ public:
   Config
   getConfiguration() const
   {
-    return m_config;
+    return m_cfg;
   }
 
 private:
   /// Configuration struct 
-  Config m_config;
+  Config m_cfg;
   
   /// Private access to logger 
   const Logger&
   logger() const
   {
-    return *m_config.logger;
+    return *m_cfg.logger;
   }
 
   /// Private helper method to complete the binning

@@ -146,13 +146,13 @@ public:
 
 private:
   /// Configuration struct 
-  Config m_config;
+  Config m_cfg;
 
   /// Private access to the logger
   const Logger&
   logger() const
   {
-    return *m_config.logger;
+    return *m_cfg.logger;
   }
   
   /// analyse the layer setup 
@@ -164,7 +164,7 @@ private:
 inline CylinderVolumeBuilder::Config
 CylinderVolumeBuilder::getConfiguration() const
 {
-  return m_config;
+  return m_cfg;
 }
 
 }  // end of namespace

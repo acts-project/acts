@@ -210,7 +210,7 @@ Acts::StaticNavigationEngine::handleBoundaryT(
   // - SuccessPathLimit : pathLimit reached during propagation
   // - InProgress       : boundary reached
   // - Recovered        : boundary not reached
-  ExtrapolationCode eCode = m_config.propagationEngine->propagate(
+  ExtrapolationCode eCode = m_cfg.propagationEngine->propagate(
       eCell,
       bSurface,
       pDir,
@@ -246,7 +246,7 @@ Acts::StaticNavigationEngine::handleBoundaryT(
     // get the nextVolume - modify the position in case you have a step out
     // trial, take attachment otherwise
     const TrackingVolume* nextVolume = stepout
-        ? m_config.trackingGeometry->lowestTrackingVolume(
+        ? m_cfg.trackingGeometry->lowestTrackingVolume(
               Vector3D(eCell.leadParameters->position()
                        + pDir * eCell.leadParameters->momentum().unit()))
         : bSurfaceTV.attachedVolume(eCell.leadParameters->position(),
@@ -294,7 +294,7 @@ Acts::StaticNavigationEngine::handleBoundaryT(
       // on material)
       // - SuccessMaterialLimit  : material limit reached & configured to stop
       // there
-      eCode = m_config.materialEffectsEngine->handleMaterial(
+      eCode = m_cfg.materialEffectsEngine->handleMaterial(
           eCell, pDir, fullUpdate);
       CHECK_ECODE_SUCCESS(eCell, eCode);
     }
@@ -345,11 +345,11 @@ Acts::StaticNavigationEngine::resolvePositionT(
   // noLoop= True is used when we have exit from leadVolume
 
   if (!eCell.leadVolume)
-    eCell.leadVolume = m_config.trackingGeometry->lowestStaticTrackingVolume(
+    eCell.leadVolume = m_cfg.trackingGeometry->lowestStaticTrackingVolume(
         eCell.leadParameters->position());
   if (!eCell.leadVolume) return ExtrapolationCode::FailureNavigation;
   const TrackingVolume* nextVol = 0;
-  if (m_config.trackingGeometry->atVolumeBoundary(
+  if (m_cfg.trackingGeometry->atVolumeBoundary(
           eCell.leadParameters->position(),
           eCell.leadParameters->momentum(),
           eCell.leadVolume,

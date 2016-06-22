@@ -58,7 +58,7 @@ public:
 
   /// Constructor 
   /// @param cfg is the configuration struct that steers the behavoir
-  LayerArrayCreator(const Config& cfg) : m_config(cfg) {}
+  LayerArrayCreator(const Config& cfg) : m_cfg(cfg) {}
   
   /// Destructor 
   virtual ~LayerArrayCreator() = default;
@@ -80,14 +80,14 @@ public:
   void
   setConfiguration(const Config& c)
   {
-    m_config = c;
+    m_cfg = c;
   }
 
   /// Get configuration method 
   Config
   getConfiguration() const
   {
-    return m_config;
+    return m_cfg;
   }
 
 private:
@@ -95,11 +95,11 @@ private:
   const Logger&
   logger() const
   {
-    return *m_config.logger;
+    return *m_cfg.logger;
   }
 
   /// logging instance
-  Config m_config;
+  Config m_cfg;
   
   /// Private helper method for creating a surface for
   /// the NavigationLayer
