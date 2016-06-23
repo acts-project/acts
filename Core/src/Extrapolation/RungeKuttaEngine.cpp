@@ -82,7 +82,7 @@ Acts::RungeKuttaEngine::propagate(ExCellNeutral&           eCell,
 
   // if the desination surface is the start surface -> bail out and build
   // parameters directly
-  if (&sf == &(sParameters->associatedSurface())) {
+  if (sf == sParameters->associatedSurface()) {
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "propagate",
                    "neut",

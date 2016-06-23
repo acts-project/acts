@@ -514,11 +514,11 @@ Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
       // - SuccessPathLimit : propagation to compatible surface reached the path
       // limit
       eCode = m_cfg.propagationEngine->propagate(eCell,
-                                                    *(csf.object),
-                                                    pDir,
-                                                    emode,
-                                                    bcheck,
-                                                    eCell.sensitiveCurvilinear);
+                                                 *(csf.object),
+                                                 pDir,
+                                                 emode,
+                                                 bcheck,
+                                                 eCell.sensitiveCurvilinear);
       CHECK_ECODE_SUCCESS_NODEST(eCell, eCode);
       // check if the propagation was successful
       if (eCode.inProgress()) {
@@ -528,6 +528,11 @@ Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
                        "successfully hit sub structure surface.");
         // check if the surface holds material and hence needs to be processed
         if (csf.object->associatedMaterial()) {
+          // screen output
+          EX_MSG_VERBOSE(eCell.navigationStep,
+                         "surface",
+                          csf.object->geoID().value(),
+                         "applying material effects.");
           // set the material surface
           eCell.materialSurface = csf.object;
           // now handle the material, return codes are:
@@ -540,7 +545,8 @@ Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
         }
         // if the search mode returns unordered surfaces :
         // - ATTENTION this invalidates the correct material estimate
-        if (!orderedSurfaces) eCell.leadParameters = dbgLeadParameters;
+        if (!orderedSurfaces)
+          eCell.leadParameters = dbgLeadParameters;
       }
 
     }  // loop over test surfaces done

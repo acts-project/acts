@@ -35,7 +35,7 @@ Layer::getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
   // fast exit - nothing to do
   if (!m_surfaceArray || !m_overlapDescriptor || !m_approachDescriptor)
     return false;
-
+  
   // position and momentum/dir
   const Vector3D& pos = pars.position();
   const Vector3D  dir = (pDir == oppositeMomentum)
@@ -63,51 +63,49 @@ Layer::getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
 
   // we have a contained surface array
   // - resolve the different search modes
-  if (m_surfaceArray) {
-    // constructed test surfaces
-    std::vector<const Surface*> compatibleTestSurfaces;
-    //
-    if (searchType <= 0) {
-      // that take all the test surfaces & their bin mates
-      auto allTestSurfaces = m_surfaceArray->arrayObjects();
-      // reserve twice the amount
-      compatibleTestSurfaces.reserve(allTestSurfaces.size());
-      for (auto& atSurface : allTestSurfaces) {
-        // get the bin mates if they exist
-        if (atSurface && atSurface->associatedDetectorElement()) {
-          // get the bin mates
-          auto bmElements
-              = atSurface->associatedDetectorElement()->binmembers();
-          for (auto& bmElement : bmElements)
-            compatibleTestSurfaces.push_back(&(bmElement->surface()));
-        }
-        compatibleTestSurfaces.push_back(atSurface);
+  // constructed test surfaces
+  std::vector<const Surface*> compatibleTestSurfaces;
+  //
+  if (searchType <= 0) {
+    // that take all the test surfaces & their bin mates
+    auto allTestSurfaces = m_surfaceArray->arrayObjects();
+    // reserve twice the amount
+    compatibleTestSurfaces.reserve(allTestSurfaces.size());
+    for (auto& atSurface : allTestSurfaces) {
+      // get the bin mates if they exist
+      if (atSurface && atSurface->associatedDetectorElement()) {
+        // get the bin mates
+        auto bmElements
+            = atSurface->associatedDetectorElement()->binmembers();
+        for (auto& bmElement : bmElements)
+          compatibleTestSurfaces.push_back(&(bmElement->surface()));
       }
-    } else if (m_overlapDescriptor && searchType <= 5) {
-      // get the first target surface for search types > 2
-      const Surface* ftSurface = m_surfaceArray->object(pos);
-      // outsource to the OverlapDescriptor - if you have a first target surface
-      if (ftSurface)
-        m_overlapDescriptor->reachableSurfaces(
-            compatibleTestSurfaces, *ftSurface, pos, dir, searchType);
+      compatibleTestSurfaces.push_back(atSurface);
     }
-    // loop over all the possible surfaces and test them
-    for (auto& ctSurface : compatibleTestSurfaces)
-      testCompatibleSurface(cSurfaces,
-                            *ctSurface,
-                            pos,
-                            dir,
-                            pDir,
-                            bcheck,
-                            maxPathLength,
-                            collectSensitive,
-                            collectPassive,
-                            intersectionTest,
-                            startSurface,
-                            endSurface,
-                            ice);
+  } else if (m_overlapDescriptor && searchType <= 5) {
+    // get the first target surface for search types > 2
+    const Surface* ftSurface = m_surfaceArray->object(pos);
+    // outsource to the OverlapDescriptor - if you have a first target surface
+    if (ftSurface)
+        m_overlapDescriptor->reachableSurfaces(
+          compatibleTestSurfaces, *ftSurface, pos, dir, searchType);
   }
-
+  // loop over all the possible surfaces and test them
+  for (auto& ctSurface : compatibleTestSurfaces)
+    testCompatibleSurface(cSurfaces,
+                          *ctSurface,
+                          pos,
+                          dir,
+                          pDir,
+                          bcheck,
+                          maxPathLength,
+                          collectSensitive,
+                          collectPassive,
+                          intersectionTest,
+                          startSurface,
+                          endSurface,
+                          ice);
+    
   // the layer surface itself is a testSurface
   const Surface* layerSurface = &surfaceRepresentation();
   testCompatibleSurface(cSurfaces,

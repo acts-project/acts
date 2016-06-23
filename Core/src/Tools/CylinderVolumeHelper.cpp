@@ -315,12 +315,16 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
   for (size_t ivol = 0; firstVolume != lastVolume; ++firstVolume, ++ivol) {
     ACTS_VERBOSE(
         "   - volume (" << ivol << ") is : " << (*firstVolume)->volumeName());
-    ACTS_VERBOSE("     at position : " << (*firstVolume)->center());
+    ACTS_VERBOSE("     at position : " << (*firstVolume)->center().x() << ", "
+    << (*firstVolume)->center().y() << ", " << (*firstVolume)->center().z());
+
     ACTS_VERBOSE("     with bounds : " << (*firstVolume)->volumeBounds());
     // put the name together
     volumeName += (*firstVolume)->volumeName();
     if (ivol + 1 < volumes.size()) volumeName += " | ";
   }
+  // close the volume name
+  volumeName += " }";
   // reset the iterator -----
   firstVolume = volumes.begin();
   --lastVolume;  // set to the last volume
@@ -557,22 +561,21 @@ Acts::CylinderVolumeHelper::estimateAndCheckDimension(
         && cylinderVolumeBounds->outerRadius() >= layerRmax)
       return true;
     else {
-      ACTS_WARNING("Provided layers are not contained by volume ! Bailing out. "
-                   << "zFromTransform: "
-                   << zFromTransform
-                   << "volumeZmin:"
+      ACTS_WARNING("Provided layers are not contained by volume ! Bailing out. ");
+      ACTS_WARNING("- zFromTransform: " << zFromTransform);
+      ACTS_WARNING("- volumeZmin:"
                    << zFromTransform - cylinderVolumeBounds->halflengthZ()
                    << ", layerZmin: "
-                   << layerZmin
-                   << ", volumeZmax: "
+                   << layerZmin);
+      ACTS_WARNING("- volumeZmax: "
                    << zFromTransform + cylinderVolumeBounds->halflengthZ()
                    << ", layerZmax: "
-                   << layerZmax
-                   << ", volumeRmin: "
+                   << layerZmax);
+      ACTS_WARNING("- volumeRmin: "
                    << cylinderVolumeBounds->innerRadius()
                    << ", layerRmin: "
-                   << layerRmin
-                   << ", volumeRmax: "
+                   << layerRmin);
+      ACTS_WARNING("- volumeRmax: "
                    << cylinderVolumeBounds->outerRadius()
                    << ", layerRmax: "
                    << layerRmax);
@@ -807,6 +810,8 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
                                       << faceTwo
                                       << " ]");
     glueVolOne->glueTrackingVolume(faceOne, glueVolTwo, faceTwo);
+      
+      std::cout << "test" << std::endl;
   } else if (volOneGlueVols <= 1) {
     // (ii) one -> many
     ACTS_VERBOSE("      glue : one[ " << glueVolOne->volumeName() << " @ "

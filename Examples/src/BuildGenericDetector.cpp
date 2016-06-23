@@ -59,7 +59,7 @@ trackingGeometry(Logging::Level lvl, size_t version)
   PassiveLayerBuilder::Config bplConfig;
   bplConfig.logger = getDefaultLogger("PassiveLayerBuilder", lvl);
   bplConfig.layerIdentification     = "BeamPipe";
-  bplConfig.centralLayerRadii       = std::vector<double>(1, 21.);
+  bplConfig.centralLayerRadii       = std::vector<double>(1, 19.);
   bplConfig.centralLayerHalflengthZ = std::vector<double>(1, 200.);
   bplConfig.centralLayerThickness   = std::vector<double>(1, 0.8);
     bplConfig.centralLayerMaterial    = { Material(352.8,407.,9.012, 4., 1.848e-3) };
@@ -99,7 +99,7 @@ trackingGeometry(Logging::Level lvl, size_t version)
   plbConfig.centralLayerEnvelopes             = { pcEnvelope, pcEnvelope, pcEnvelope };
   plbConfig.centralLayerMaterialConcentration = { 1, 1, 1 };
   plbConfig.centralLayerMaterialProperties    = { pcmProperties, pcmProperties, pcmProperties };
-  plbConfig.centralModuleBinningSchema        = { {15,13} , {24,3}, {40,13} };
+  plbConfig.centralModuleBinningSchema        = { {15,13} , {24,13}, {40,13} };
   plbConfig.centralModuleTiltPhi              = { 0.18, 0.18, 0.2 };
   plbConfig.centralModuleHalfX                = { 8.4, 8.4, 8.4 }; 
   plbConfig.centralModuleHalfY                = { 32., 32., 32.};
@@ -113,141 +113,40 @@ trackingGeometry(Logging::Level lvl, size_t version)
   for (size_t plb = 0; plb < plbConfig.centralLayerRadii.size(); ++plb){
     // call the helper function
     centralModulePositions.push_back(modulePositionsCylinder(plbConfig.centralLayerRadii[plb],
-                                                             1., // 1 mm stagger
-                                                             2*plbConfig.centralModuleHalfY[plb],
+                                                             0.5, // 1 mm stagger
+                                                             plbConfig.centralModuleHalfY[plb],
                                                              2., // 2 mm module overlap
                                                              plbConfig.centralModuleBinningSchema[plb]));
     
   }
   plbConfig.centralModulePositions            = centralModulePositions;
-
-///
-///
-///
-///
-///
-///
-///  // pixel radii
-///  std::vector<double>   pcLayerRadii = {29., 55., 88.};
-///  // the envelope
-///  std::vector<double>   pcEnvelopes(pcLayers, std::make_pair<double,double>(2.,2.));
-///  // the material concentration : outside
-///  std::vector<double>   pcMaterialConcentration(pcLayers, 1.);
-///  // thickness,X0,L0,A,Z,Rho
-///  std::vector<size_t>   pcNumPhi = {15, 24, 40};
-///  std::vector<double>   pcLayerModulesTiltPhi = {};
-///  
-///  std::vector<std::pair<int,int>>       pcNumZ     = {13, 13, 13};
-///  
-///  
-///  std::vector<std::vector<double>> pcLayerModulesPositionPhi;
-///  for (int i = 0; i < pcLayers; i++) {
-///    std::vector<double> positionsPhi;
-///    double              phiStep = 2. * M_PI / pcNumPhi[i];
-///    for (int j = 0; j < pcNumPhi[i]; j++) {
-///      positionsPhi.push_back(-M_PI + j * phiStep);
-///    }
-///    pcLayerModulesPositionPhi.push_back(positionsPhi);
-///  }
-///  // z properties centrallayers
-///  double              pcNumZ[pcLayers]     = {13, 13, 13};
-///  double              pcOverlapZ[pcLayers] = {2., 2., 2.};
-///  std::vector<double> pcLayerModulesHalfY  = {32., 32., 32.};
-///
-///  std::vector<std::vector<double>> pcLayerModulesPositionZ;
-///  for (int i = 0; i < pcLayers; i++) {
-///    std::vector<double> positionsZ;
-///    double              firstToLast
-///        = (pcNumZ[i] - 1) * (2. * pcLayerModulesHalfY.at(i) - pcOverlapZ[i]);
-///    double zStep = firstToLast / (pcNumZ[i] - 1);
-///    for (int j = 0; j < pcNumZ[i]; j++) {
-///      positionsZ.push_back(-0.5 * firstToLast + j * zStep);
-///    }
-///    pcLayerModulesPositionZ.push_back(positionsZ);
-///  }
-///  std::vector<double> pcLayerModulesStaggerZ(pcLayers, 0.5);
-///  std::vector<double> pcLayerModulesMinHalfX;
-///  std::vector<double> pcLayerModulesMaxHalfX(pcLayers, 8.4);
-///  std::vector<double> pcLayerModulesThickness(pcLayers, 0.15);
-///  std::vector<double> pcModuleMaterialParameters
-///      = {95.7, 465.2, 28.03, 14., 2.32e-3};  // X0,L0,A,Z,Rho
-///  std::vector<std::vector<double>> pcLayerModulesMaterial(
-///      pcLayers, pcModuleMaterialParameters);
-///  //-------------------------------------------------------------------------------------
-///  // posneg
-///  const int           ppnLayers       = 3;
-///  const int           ppnRings        = 1;
-///  std::vector<double> pixelPositionsZ = {500., 580., 650.};
-///
-///  std::vector<double>              pixelEnvelopesR(ppnLayers, 5.);
-///  std::vector<double>              ppnRadii(ppnRings, 65.);
-///  std::vector<std::vector<double>> ppnLayerModulesRadii(ppnLayers, ppnRadii);
-///  std::vector<double>              ppnLayerModulesStaggerR(ppnLayers, 3.);
-///  // phi properties posneglayers
-///  std::vector<double>              ppnInPhi = {24., 24., 24.};
-///  std::vector<std::vector<double>> ppnLayerModulesInPhi(ppnLayers, ppnInPhi);
-///  std::vector<std::vector<double>> ppnPositionPhi;
-///  for (int i = 0; i < ppnRings; i++) {
-///    std::vector<double> positionsPhi;
-///    double              phiStep = 2. * M_PI / ppnInPhi.at(i);
-///    for (int j = 0; j < ppnInPhi.at(i); j++) {
-///      positionsPhi.push_back(-M_PI + j * phiStep);
-///    }
-///    ppnPositionPhi.push_back(positionsPhi);
-///  }
-///  std::vector<std::vector<std::vector<double>>> ppnLayerModulesPositionPhi(
-///      ppnLayers, ppnPositionPhi);
-///  std::vector<double>              ppnStaggerPhi(ppnRings, 0.5);
-///  std::vector<std::vector<double>> ppnLayerModulesStaggerPhi(ppnLayers,
-///                                                             ppnStaggerPhi);
-///  // Module properties
-///  std::vector<std::vector<double>> ppnLayerModulesMinHalfX(ppnLayers);
-///  std::vector<double>              ppnMaxHalfX(ppnRings, 8.4);
-///  std::vector<std::vector<double>> ppnLayerModulesMaxHalfX(ppnLayers,
-///                                                           ppnMaxHalfX);
-///  std::vector<double>              ppnMaxHalfY(ppnRings, 32.);
-///  std::vector<std::vector<double>> ppnLayerModulesHalfY(ppnLayers, ppnMaxHalfY);
-///  std::vector<double>              ppnThickness(ppnRings, 0.15);
-///  std::vector<std::vector<double>> ppnLayerModulesThickness(pcLayers,
-///                                                            ppnThickness);
-///  std::vector<double> ppnModuleMaterialParameters
-///      = {95.7, 465.2, 28.03, 14., 2.32e-3};  // X0,L0,A,Z,Rho
-///  std::vector<std::vector<double>> ppnMaterial(ppnLayers,
-///                                               ppnModuleMaterialParameters);
-///  std::vector<std::vector<std::vector<double>>> ppnLayerModulesMaterial(
-///      ppnLayers, ppnMaterial);
-///
-///  //-------------------------------------------------------------------------------------
-///
-///  // configure the central barrel
-///  plbConfig.centralLayerRadii                 = pixelLayerRadii;
-///  plbConfig.centralLayerEnvelopeZ             = pixelEnvelopeZ;
-///  plbConfig.centralLayerMaterialConcentration = pixelMaterialConcentration;
-///  plbConfig.centralLayerMaterialProperties    = pixelMaterialProperties;
-///  plbConfig.centralModulePositionPhi          = pcLayerModulesPositionPhi;
-///  plbConfig.centralModuleTiltPhi              = pcLayerModulesTiltPhi;
-///  plbConfig.centralModulePositionZ            = pcLayerModulesPositionZ;
-///  plbConfig.centralModuleStaggerZ             = pcLayerModulesStaggerZ;
-///  plbConfig.centralModuleHalfX                = pcLayerModulesMaxHalfX;
-///  plbConfig.centralModuleHalfY                = pcLayerModulesHalfY;
-///  plbConfig.centralModuleThickness            = pcLayerModulesThickness;
-///  plbConfig.centralModuleMaterial             = pcLayerModulesMaterial;
-///  //-------------------------------------------------------------------------------------
-///  // configure end caps
-///  plbConfig.posnegLayerPositionsZ            = pixelPositionsZ;
-///  plbConfig.posnegLayerEnvelopeR             = pixelEnvelopesR;
-///  plbConfig.posnegLayerMaterialConcentration = pixelMaterialConcentration;
-///  plbConfig.posnegLayerMaterialProperties    = pixelMaterialProperties;
-///  plbConfig.posnegModuleRadii                = ppnLayerModulesRadii;
-///  plbConfig.posnegModuleStaggerR             = ppnLayerModulesStaggerR;
-///  plbConfig.posnegModuleInPhi                = ppnLayerModulesInPhi;
-///  plbConfig.posnegModulePositionPhi          = ppnLayerModulesPositionPhi;
-///  plbConfig.posnegModuleStaggerPhi           = ppnLayerModulesStaggerPhi;
-///  plbConfig.posnegModuleMinHalfX             = ppnLayerModulesMinHalfX;
-///  plbConfig.posnegModuleMaxHalfX             = ppnLayerModulesMaxHalfX;
-///  plbConfig.posnegModuleHalfY                = ppnLayerModulesHalfY;
-///  plbConfig.posnegModuleThickness            = ppnLayerModulesThickness;
-///  plbConfig.posnegModuleMaterial             = ppnLayerModulesMaterial;
+  // 
+  plbConfig.posnegLayerBinMultipliers          = { 1, 1 };
+  plbConfig.posnegLayerPositionsZ              = { 500., 580., 680. };  
+  plbConfig.posnegLayerEnvelopeR               = { 5., 5., 5. };
+  plbConfig.posnegLayerMaterialConcentration   = { 1, 1, 1 };
+  plbConfig.posnegLayerMaterialProperties      = { pcmProperties, pcmProperties, pcmProperties };
+  plbConfig.posnegModuleMinHalfX               = { {8.4}, {8.4}, {8.4} }; 
+  plbConfig.posnegModuleMaxHalfX               = {};
+  plbConfig.posnegModuleHalfY                  = { {32.}, {32.}, {32.} };
+  plbConfig.posnegModulePhiBins                = { {24}, {24}, {24} };
+  plbConfig.posnegModuleThickness              = { {0.15} , {0.15} , {0.15} };
+  plbConfig.posnegModuleMaterial               = { {pcMaterial}, {pcMaterial}, {pcMaterial} };
+  plbConfig.posnegModuleFrontsideStereo        = {};
+  plbConfig.posnegModuleBacksideStereo         = {};
+  plbConfig.posnegModuleBacksideGap            = {};
+  // mPositions  
+  std::vector< std::vector< std::vector<Vector3D> > > posnegModulePositions;
+  for (size_t id = 0; id < plbConfig.posnegLayerPositionsZ.size(); ++id ){
+    posnegModulePositions.push_back(
+    modulePositionsDisc(plbConfig.posnegLayerPositionsZ[id],
+                        2.0, 0.5, 
+                        29., 93.,
+                        plbConfig.posnegModulePhiBins[id],
+                        plbConfig.posnegModuleHalfY[id]));
+  }
+  plbConfig.posnegModulePositions = posnegModulePositions;
+  // define the builder
   auto pixelLayerBuilder
       = std::make_shared<GenericLayerBuilder>(plbConfig);
   //-------------------------------------------------------------------------------------
@@ -256,7 +155,7 @@ trackingGeometry(Logging::Level lvl, size_t version)
   pvbConfig.logger = Acts::getDefaultLogger("CylinderVolumeBuilder", lvl);
   pvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
   pvbConfig.volumeName           = "Pixel";
-  pvbConfig.volumeToBeamPipe     = true; // @TODO revert to this -> false;
+  pvbConfig.volumeToBeamPipe     = false;
   pvbConfig.layerBuilder         = pixelLayerBuilder;
   pvbConfig.layerEnvelopeR       = 1.;
   pvbConfig.layerEnvelopeZ       = 10.;
@@ -269,8 +168,8 @@ trackingGeometry(Logging::Level lvl, size_t version)
   // create the tracking geometry
   CylinderGeometryBuilder::Config tgConfig;
   tgConfig.logger = getDefaultLogger("CylinderGeometryBuilder", lvl);
-  tgConfig.beamPipeBuilder = nullptr; /// @TODO bring that back in -> beamPipeVolumeBuilder;
-  tgConfig.trackingVolumeBuilders = {pixelVolumeBuilder};
+  tgConfig.beamPipeBuilder        = beamPipeVolumeBuilder;
+  tgConfig.trackingVolumeBuilders = { pixelVolumeBuilder };
   tgConfig.trackingVolumeHelper   = cylinderVolumeHelper;
   auto cylinderGeometryBuilder
       = std::make_shared<const CylinderGeometryBuilder>(tgConfig);
@@ -278,13 +177,11 @@ trackingGeometry(Logging::Level lvl, size_t version)
 }
 
     
-    
-    
-/// helper method
+/// helper method for cylinder
 std::vector< Acts::Vector3D >
 modulePositionsCylinder(double radius,
                         double zStagger,
-                        double lModule,
+                        double moduleHalfLength,
                         double lOverlap,
                         const std::pair<int,int>& binningSchema)
 {
@@ -294,23 +191,101 @@ modulePositionsCylinder(double radius,
   std::vector< Vector3D > mPositions;
   mPositions.reserve(nPhiBins*nZbins);
   // prep work
-  double phiStep = 2*M_PI/(nPhiBins+1);
+  double phiStep = 2*M_PI/(nPhiBins);
   double minPhi  = -M_PI + 0.5*phiStep;
-  double zStart  = -0.5*(nZbins-1)*(lModule-lOverlap); 
-  double zStep   =  fabs(zStart)/(nZbins-1);
+  double zStart  = -0.5*(nZbins-1)*(2*moduleHalfLength-lOverlap); 
+  double zStep   =  2*fabs(zStart)/(nZbins-1);
   // loop over the bins
   for (size_t zBin = 0; zBin < size_t(nZbins); ++zBin){
     // prepare z and r
     double moduleZ = zStart + zBin*zStep;
-    double moduleR = (zBin%2) ? radius : radius + zStagger;
+    double moduleR = (zBin%2) ? radius - 0.5*zStagger : radius + 0.5*zStagger;
     for (size_t phiBin = 0; phiBin < size_t(nPhiBins); ++phiBin){
       // calculate the current phi value
       double modulePhi = minPhi + phiBin*phiStep;
       mPositions.push_back( Vector3D(moduleR*cos(modulePhi),moduleR*sin(modulePhi),moduleZ));
-      }
+     }
    }
     return mPositions;
 }
-                          
 
+/// helper method for disc 
+std::vector<  std::vector< Acts::Vector3D > >
+modulePositionsDisc(double z, 
+                    double ringStagger, double phiStagger,
+                    double innerRadius,
+                    double outerRadius,
+                    const std::vector< int >& discBinning,
+                    const std::vector< double >& moduleHalfLength)
+{
+   
+  // calculate the radii
+  std::vector<double> radii;  
+  // calculate the radial borders
+  std::vector<double> radialBoarders;
+  // the radial span of the disc
+  double deltaR = outerRadius-innerRadius;
+  // quick exits
+  if (discBinning.size()==1){
+    radii.push_back(0.5*(innerRadius+outerRadius));
+    radialBoarders = { innerRadius, outerRadius };
+  } else {
+    double totalLength = 0;
+    // sum up the total length
+    for (auto& mhlength : moduleHalfLength)
+      totalLength += 2*mhlength;
+    // now calculate the overlap (equal pay)
+    double rOverlap = (totalLength-deltaR)/(moduleHalfLength.size()-1);
+    // and now fill the radii and gaps
+    double lastR   = innerRadius;
+    double lastHl  = 0.;
+    double lastOl  = 0.;
+    // remember the radial boarders   
+    radialBoarders.push_back(innerRadius);
+    // now calculate 
+    for (auto& mhlength : moduleHalfLength){
+      // calculate the radius
+      radii.push_back(lastR+lastHl-lastOl+mhlength);
+      lastR   = radii[radii.size()-1];
+      lastOl  = rOverlap;
+      lastHl  = mhlength;
+      // and register the radial boarder
+      radialBoarders.push_back(lastR+2*lastHl-0.5*lastOl);
+    }
+  }
+  // now prepare the return method
+  std::vector< std::vector< Vector3D > > mPositions;
+  for (size_t ir = 0; ir < radii.size(); ++ir){
+    // generate the z value
+    double rz = radii.size() == 1 ? z : 
+          ( ir%2 ? z-0.5*ringStagger : z+0.5*ringStagger);
+    // fill the ring positions
+    mPositions.push_back(modulePositionsRing(rz,radii[ir],phiStagger,discBinning[ir]));
+  }
+  return mPositions;
+}  
+
+/// Helper method for positioning
+std::vector<  Acts::Vector3D >
+modulePositionsRing(double z,
+                    double radius,
+                    double phiStagger,
+                    int nPhiBins)
+{
+  // create and fill the positions
+  std::vector < Vector3D > rPositions;
+  rPositions.reserve(nPhiBins);
+  // prep work
+  double phiStep = 2*M_PI/(nPhiBins);
+  double minPhi  = -M_PI + 0.5*phiStep;
+  // phi loop
+  for (size_t iphi = 0; iphi < size_t(nPhiBins); ++iphi){
+    double phi = minPhi + iphi*phiStep;
+    double rz  = iphi%2 ? z - 0.5*phiStagger : z + 0.5*phiStagger;
+    rPositions.push_back(Vector3D(radius*cos(phi),radius*sin(phi),rz));
+  }
+  return rPositions;
+}    
+
+                          
 }  // end of namespace Acts

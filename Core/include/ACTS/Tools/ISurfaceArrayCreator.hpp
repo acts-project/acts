@@ -50,7 +50,7 @@ public:
                          double                             minPhi,
                          double                             maxPhi,
                          double                             halfZ,
-                         size_t                             binsPhi,
+                         size_t                             binsRPhi,
                          size_t                             binsZ,
                          std::shared_ptr<Transform3D>       transform
                          = nullptr) const = 0;

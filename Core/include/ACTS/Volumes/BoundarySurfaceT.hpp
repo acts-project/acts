@@ -188,11 +188,11 @@ template <class T>
 const T*
 BoundarySurfaceT<T>::attachedVolume(const Vector3D& pos,
                                    const Vector3D& mom,
-                                   PropDirection   dir) const
+                                   PropDirection   pdir) const
 {
   const T* attVolume = nullptr;
   // dot product with normal vector to distinguish inside/outside
-  if ((surfaceRepresentation().normal(pos)).dot(dir * mom) > 0.)
+  if ((surfaceRepresentation().normal(pos)).dot(pdir * mom) > 0.)
     attVolume = m_outsideVolumeArray ? m_outsideVolumeArray->object(pos).get()
                                      : m_outsideVolume;
   else

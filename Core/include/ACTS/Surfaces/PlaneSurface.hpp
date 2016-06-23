@@ -188,7 +188,7 @@ PlaneSurface::bounds() const
 inline const Vector3D 
 PlaneSurface::normal(const Vector2D&) const
 {
-    return transform().translation();
+  return transform().rotation().col(2);
 }
 
 inline const Vector3D

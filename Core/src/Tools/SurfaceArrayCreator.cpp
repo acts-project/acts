@@ -81,7 +81,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   auto sArray
       = std::make_unique<BinnedArray2D<const Surface*>>(sVector, arrayUtility);
   // register the neighbours
-  registerNeighboursGrid(sArray->arrayObjectsOrdered(), false, true);
+  // @TODO -> registerNeighboursGrid(sArray->arrayObjectsOrdered(), false, true);
   // return the surface array
   return std::move(sArray);
 }
@@ -138,7 +138,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
                          sArray->arrayObjects().end());
     std::vector<std::vector<const Surface*>> arraySystem = {arraySurfaces};
     // prepared to run the neighbour registration now
-    // registerNeighboursGrid(arraySystem, false, true);
+    // @TODO -> registerNeighboursGrid(arraySystem, false, true);
     // now return
     return std::move(sArray);
   }
@@ -180,10 +180,10 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // create and complete
   completeBinning(surfaces, *arrayUtility, sVector, rphiSystem);
   // create the surfaceArray
-  auto sArray
-      = std::make_unique<BinnedArray2D<const Surface*>>(sVector, arrayUtility);
+  auto sArray = std::make_unique<BinnedArray2D<const Surface*>>(sVector, arrayUtility);
   // register the neighbours
-  registerNeighboursGrid(sArray->arrayObjectsOrdered(), false, true);
+  // @TODO -> put it back
+  // registerNeighboursGrid(sArray->arrayObjectsOrdered(), false, true);
   // return the surface array
   return std::move(sArray);
 }

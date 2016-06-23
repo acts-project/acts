@@ -94,22 +94,24 @@ public:
     /// the module center positions
     std::vector< std::vector< std::vector<Vector3D> > >
                                          posnegModulePositions;
+    /// the phi binning
+    std::vector< std::vector<int> >      posnegModulePhiBins;
     /// the module bounds: min halfx
-    std::vector<std::vector<double>>     posnegModuleMinHalfX;
+    std::vector< std::vector<double> >   posnegModuleMinHalfX;
     /// the module bounds: max halfx
-    std::vector<std::vector<double>>     posnegModuleMaxHalfX;
+    std::vector< std::vector<double> >   posnegModuleMaxHalfX;
     /// the module bounds: local y    
-    std::vector<std::vector<double>>     posnegModuleHalfY;
+    std::vector< std::vector<double> >   posnegModuleHalfY;
     /// the module bounds: local z -> thickness    
-    std::vector<std::vector<double>>     posnegModuleThickness;
+    std::vector< std::vector<double> >   posnegModuleThickness;
     /// the module material @TODO change to surface material
-    std::vector<std::vector<Material>>   posnegModuleMaterial;
+    std::vector< std::vector<Material> > posnegModuleMaterial;
     /// the module front side stereo (if exists)
-    std::vector<std::vector<double>>     posnegModuleFrontsideStereo;
+    std::vector< std::vector<double> >   posnegModuleFrontsideStereo;
     /// the module back side stereo (if exists)
-    std::vector<std::vector<double>>     posnegModuleBacksideStereo;
+    std::vector< std::vector<double> >   posnegModuleBacksideStereo;
     /// the module gap between frontside and backside  
-    std::vector<std::vector<double>>     posnegModuleBacksideGap;
+    std::vector< std::vector<double> >   posnegModuleBacksideGap;
 
     /// helper tools: layer creator
     std::shared_ptr<ILayerCreator> layerCreator;

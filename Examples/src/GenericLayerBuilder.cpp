@@ -12,8 +12,6 @@
 
 #include "ACTS/Utilities/Helpers.hpp"
 #include "ACTS/Detector/DetectorElementBase.hpp"
-#include "ACTS/Layers/CylinderLayer.hpp"
-#include "ACTS/Layers/DiscLayer.hpp"
 #include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
 #include "ACTS/Material/Material.hpp"
 #include "ACTS/Material/MaterialProperties.hpp"
@@ -73,6 +71,7 @@ Acts::GenericLayerBuilder::constructLayers()
       double layerR = m_cfg.centralLayerRadii.at(icl);
       // some screen output
       ACTS_VERBOSE("Build layer " << icl << " with target radius = " << layerR);
+      
       // prepare the Surface vector
       std::vector<const Surface*> sVector;
       // assign the current envelope
@@ -87,10 +86,15 @@ Acts::GenericLayerBuilder::constructLayers()
       std::shared_ptr<const PlanarBounds> moduleBounds(
           new RectangleBounds(moduleHalfX, moduleHalfY));
       // Identifier @TODO unique Identifier - use a GenericDetector identifier
-      size_t nCetralModue = 
+      size_t nCetralModules = 
           m_cfg.centralModuleBinningSchema.at(icl).first
         * m_cfg.centralModuleBinningSchema.at(icl).second;
-      sVector.reserve(nCetralModue);
+      
+      ACTS_VERBOSE("- number of modules " << nCetralModules 
+       << " ( from " << m_cfg.centralModuleBinningSchema.at(icl).first << " x "
+       << m_cfg.centralModuleBinningSchema.at(icl).second << " )");
+      
+      sVector.reserve(nCetralModules);
       // create the Module material from input
       std::shared_ptr<const SurfaceMaterial> moduleMaterialPtr = nullptr;
       if (m_cfg.centralModuleMaterial.size()) {
@@ -102,7 +106,14 @@ Acts::GenericLayerBuilder::constructLayers()
         moduleMaterialPtr = std::shared_ptr<const SurfaceMaterial>(
             new HomogeneousSurfaceMaterial(moduleMaterialProperties));
       }
-      
+
+      // confirm
+      if (m_cfg.centralModulePositions.at(icl).size() != nCetralModules){
+         ACTS_WARNING("Mismatching module numbers, configuration error!");
+         ACTS_WARNING("- Binning schema suggests : " << nCetralModules);
+         ACTS_WARNING("- Positions provided are  : " << m_cfg.centralModulePositions.at(icl).size());
+         
+       }
       // loop over the position, create the modules 
       for (auto& moduleCenter : m_cfg.centralModulePositions.at(icl)){
         // create the association transform
@@ -227,304 +238,220 @@ Acts::GenericLayerBuilder::constructLayers()
       m_cLayers.push_back(cLayer);
     }
   }
-}
 
-///  // -------------------------------- endcap type layers
-///  // -----------------------------------------------------------
-///  // pos/neg layers
-///  size_t numpnLayers = m_cfg.posnegLayerPositionsZ.size();
-///  if (numpnLayers) {
-///    ACTS_DEBUG("Configured to build 2 * " << numpnLayers << " passive
-///    // positive/negative side layers.");
-///    m_pLayers.reserve(numpnLayers);
-///    m_nLayers.reserve(numpnLayers);
-///    // loop through
-///    for (size_t ipnl = 0; ipnl < numpnLayers; ++ipnl) {
-///      // some screen output
-///      ACTS_VERBOSE"- build layers " << (2*ipnl) << " and "<<  (2*ipnl)+1 << "
-///      // at +/- z = " << m_posnegLayerPositionsZ.at(ipnl));
-///      // layer position update
-///      double layerPosZ      = m_cfg.posnegLayerPositionsZ.at(ipnl);
-///      double layerEnvelopeR = m_cfg.posnegLayerEnvelopeR.at(ipnl);
-///      double layerStaggerR  = m_cfg.posnegModuleStaggerR.at(ipnl);
-///      size_t layerBinsR     = 0;
-///      size_t layerBinsPhi   = 0;
-///      // module positioning update
-///      auto layerModuleRadii        = m_cfg.posnegModuleRadii.at(ipnl);
-///      auto layerModulePositionsPhi = m_cfg.posnegModulePositionPhi.at(ipnl);
-///      auto layerModulePhiStagger   = m_cfg.posnegModuleStaggerPhi.at(ipnl);
-///
-///      // module description
-///      auto layerModuleMinHalfX  = m_cfg.posnegModuleMinHalfX.at(ipnl);
-///      auto layerModuleMaxHalfX  = m_cfg.posnegModuleMaxHalfX.at(ipnl);
-///      auto layerModuleHalfY     = m_cfg.posnegModuleHalfY.at(ipnl);
-///      auto layerModuleThickness = m_cfg.posnegModuleThickness.at(ipnl);
-///      // prepare for the r binning
-///      std::vector<const Surface*> nsVector;
-///      std::vector<const Surface*> psVector;
-///      // loop over bins in R
-///      size_t imodule = 0;
-///
-///      // staggering sterring
-///      bool rstagger = true;
-///      // screen output
-///      ACTS_VERBOSE"This pair of discs has " << layerModuleRadii.size() << "
-///      // rings.");
-///      // loop over rings
-///      for (size_t ipnR = 0; ipnR < layerModuleRadii.size(); ++ipnR) {
-///        // incremement @TODO create valid identifier using identifier service
-///        ++imodule;
-///        // the actual layer radius & properties of this ring
-///        double moduleR = layerModuleRadii.at(ipnR);
-///        // figure out the staggering
-///        double moduleZ = layerPosZ;
-///        moduleZ += rstagger ? 0.5 * layerStaggerR : -0.5 * layerStaggerR;
-///        rstagger = !rstagger;
-///        // and the bounds
-///        double moduleMinHalfX
-///            = layerModuleMinHalfX.size() ? layerModuleMinHalfX.at(ipnR) : 0.;
-///        double moduleMaxHalfX  = layerModuleMaxHalfX.at(ipnR);
-///        double moduleHalfY     = layerModuleHalfY.at(ipnR);
-///        double moduleThickness = layerModuleThickness.at(ipnR);
-///
-///        ACTS_VERBOSE"Ring - " << ipnR << " - Checking for sensor material to
-///        // be built for sensors");
-///        // create the Module material from input
-///        std::shared_ptr<const SurfaceMaterial> moduleMaterialPtr = nullptr;
-///        if (m_cfg.posnegModuleMaterial.size()) {
-///          // get the sensor material - it has to be vectors of 5
-///          double x0  = m_cfg.posnegModuleMaterial.at(ipnl).at(ipnR).at(0);
-///          double l0  = m_cfg.posnegModuleMaterial.at(ipnl).at(ipnR).at(1);
-///          double a   = m_cfg.posnegModuleMaterial.at(ipnl).at(ipnR).at(2);
-///          double z   = m_cfg.posnegModuleMaterial.at(ipnl).at(ipnR).at(3);
-///          double rho = m_cfg.posnegModuleMaterial.at(ipnl).at(ipnR).at(4);
-///          // the moduel moaterial from input
-///          Material           moduleMaterial(x0, l0, a, z, rho);
-///          MaterialProperties moduleMaterialProperties(moduleMaterial,
-///                                                      moduleThickness);
-///          // and create the shared pointer
-///          moduleMaterialPtr = std::shared_ptr<const SurfaceMaterial>(
-///              new HomogeneousSurfaceMaterial(moduleMaterialProperties));
-///        }
-///        // create the bounds
-///        PlanarBounds* pBounds = nullptr;
-///        if (layerModuleMinHalfX.size() && moduleMinHalfX != moduleMaxHalfX)
-///          pBounds = new TrapezoidBounds(
-///              moduleMinHalfX, moduleMaxHalfX, moduleHalfY);
-///        else
-///          pBounds = new RectangleBounds(moduleMaxHalfX, moduleHalfY);
-///        // now create the shared bounds from it
-///        std::shared_ptr<const PlanarBounds> moduleBounds(pBounds);
-///        // stagger in phi
-///        bool   phistagger       = true;
-///        double modulePhiStagger = layerModulePhiStagger.at(ipnR);
-///
-///        // the phi module of this ring
-///        auto ringModulePositionsPhi = layerModulePositionsPhi.at(ipnR);
-///        ACTS_VERBOSE"Ring - " << ipnR << " - has " <<
-///        // ringModulePositionsPhi.size() << " phi modules.");
-///
-///        // now loop over phi
-///        for (auto& modulePhi : ringModulePositionsPhi) {
-///          // update the module z position
-///          moduleZ
-///              += phistagger ? 0.5 * modulePhiStagger : -0.5 * modulePhiStagger;
-///          phistagger = !phistagger;
-///          // the center position of the modules
-///          Vector3D pModuleCenter(
-///              moduleR * cos(modulePhi), moduleR * sin(modulePhi), moduleZ);
-///          Vector3D nModuleCenter(
-///              moduleR * cos(modulePhi), moduleR * sin(modulePhi), -moduleZ);
-///          // the rotation matrix of the module
-///          Vector3D moduleLocalY(cos(modulePhi), sin(modulePhi), 0.);
-///          Vector3D pModuleLocalZ(
-///              0.,
-///              0.,
-///              1.);  // take different axis to have the same readout direction
-///          Vector3D nModuleLocalZ(
-///              0.,
-///              0.,
-///              -1.);  // take different axis to have the same readout direction
-///          Vector3D nModuleLocalX = moduleLocalY.cross(nModuleLocalZ);
-///          Vector3D pModuleLocalX = moduleLocalY.cross(pModuleLocalZ);
-///          // local rotation matrices
-///          // create the RotationMatrix - negative side
-///          RotationMatrix3D nModuleRotation;
-///          nModuleRotation.col(0) = nModuleLocalX;
-///          nModuleRotation.col(1) = moduleLocalY;
-///          nModuleRotation.col(2) = nModuleLocalZ;
-///          // create the RotationMatrix - positive side
-///          RotationMatrix3D pModuleRotation;
-///          pModuleRotation.col(0) = pModuleLocalX;
-///          pModuleRotation.col(1) = moduleLocalY;
-///          pModuleRotation.col(2) = pModuleLocalZ;
-///          // the transforms for the two modules
-///          std::shared_ptr<Transform3D> nModuleTransform(new Transform3D(
-///              getTransformFromRotTransl(nModuleRotation, nModuleCenter)));
-///          std::shared_ptr<Transform3D> pModuleTransform(new Transform3D(
-///              getTransformFromRotTransl(pModuleRotation, pModuleCenter)));
-///          // create the modules identifier @TODO Idenfier service
-///          Identifier nModuleIdentifier
-///              = Identifier(Identifier::value_type(2 * imodule));
-///          Identifier pModuleIdentifier
-///              = Identifier(Identifier::value_type(2 * imodule + 1));
-///          // create the module
-///          GenericDetectorElement* nmodule
-///              = new GenericDetectorElement(nModuleIdentifier,
-///                                           nModuleTransform,
-///                                           moduleBounds,
-///                                           moduleThickness,
-///                                           moduleMaterialPtr);
-///          GenericDetectorElement* pmodule
-///              = new GenericDetectorElement(pModuleIdentifier,
-///                                           pModuleTransform,
-///                                           moduleBounds,
-///                                           moduleThickness,
-///                                           moduleMaterialPtr);
-///          // memory management - we need a detector store to hold them somewhere
-///          // @TODO add detector store facility
-///          m_posnegModule.push_back(nmodule);
-///          m_posnegModule.push_back(pmodule);
-///
-///          // and the backside one (if configured to do so)
-///          if (m_cfg.posnegModuleBacksideGap.size()) {
-///            // ncrease the counter @TODO switch to identifier service
-///            nModuleIdentifier = Identifier(Identifier::value_type(++imodule));
-///            pModuleIdentifier = Identifier(Identifier::value_type(++imodule));
-///            // the new centers
-///            nModuleCenter = nModuleCenter
-///                + m_cfg.posnegModuleBacksideGap.at(ipnl).at(ipnR)
-///                    * nModuleLocalZ;
-///            pModuleCenter = pModuleCenter
-///                + m_cfg.posnegModuleBacksideGap.at(ipnl).at(ipnR)
-///                    * pModuleLocalZ;
-///            // the new transforms
-///            nModuleTransform = std::shared_ptr<Transform3D>(new Transform3D(
-///                getTransformFromRotTransl(nModuleRotation, nModuleCenter)));
-///            pModuleTransform = std::shared_ptr<Transform3D>(new Transform3D(
-///                getTransformFromRotTransl(pModuleRotation, pModuleCenter)));
-///            // apply the stereo
-///            if (m_cfg.posnegModuleBacksideStereo.size()) {
-///              // twist by the stereo angle
-///              double stereoBackSide
-///                  = m_cfg.posnegModuleBacksideStereo.at(ipnl).at(ipnR);
-///              (*nModuleTransform.get())
-///                  *= AngleAxis3D(-stereoBackSide, Vector3D::UnitZ());
-///              (*pModuleTransform.get())
-///                  *= AngleAxis3D(-stereoBackSide, Vector3D::UnitZ());
-///            }
-///            // everything is set for the next module
-///            GenericDetectorElement* bsnmodule
-///                = new GenericDetectorElement(nModuleIdentifier,
-///                                             nModuleTransform,
-///                                             moduleBounds,
-///                                             moduleThickness,
-///                                             moduleMaterialPtr);
-///            GenericDetectorElement* bspmodule
-///                = new GenericDetectorElement(pModuleIdentifier,
-///                                             pModuleTransform,
-///                                             moduleBounds,
-///                                             moduleThickness,
-///                                             moduleMaterialPtr);
-///            // register the backside of the binmembers
-///            std::vector<const DetectorElementBase*> bspbinmember = {pmodule};
-///            std::vector<const DetectorElementBase*> pbinmember   = {bspmodule};
-///            std::vector<const DetectorElementBase*> bsnbinmember = {nmodule};
-///            std::vector<const DetectorElementBase*> nbinmember   = {bsnmodule};
-///            bsnmodule->registerBinmembers(bsnbinmember);
-///            nmodule->registerBinmembers(nbinmember);
-///            bspmodule->registerBinmembers(bspbinmember);
-///            pmodule->registerBinmembers(pbinmember);
-///            // memory management - we need a detector store to hold them
-///            // somewhere @TODO add detector store facility
-///            m_posnegModule.push_back(bsnmodule);
-///            m_posnegModule.push_back(bspmodule);
-///          }
-///          // create the surface
-///          nsVector.push_back(&nmodule->surface());
-///          psVector.push_back(&pmodule->surface());
-///        }
-///        // take the values of the maximum phi bins
-///        if (ringModulePositionsPhi.size() > layerBinsPhi) {
-///          layerBinsPhi = ringModulePositionsPhi.size();
-///        }
-///      }
-///      // estimate teh layerBinsR
-///      layerBinsR = layerModuleRadii.size() > 1
-///          ? layerModuleRadii.size() * m_cfg.posnegLayerBinRmultiplier
-///          : 1;
-///      layerBinsPhi *= m_cfg.posnegLayerBinPhimultiplier;
-///      // create teh surface arrays
-///      LayerPtr nLayer
-///          = m_cfg.layerCreator->discLayer(nsVector,
-///                                             layerEnvelopeR,
-///                                             layerEnvelopeR,
-///                                             m_cfg.approachSurfaceEnvelope,
-///                                             layerBinsR,
-///                                             layerBinsPhi);
-///      LayerPtr pLayer
-///          = m_cfg.layerCreator->discLayer(psVector,
-///                                             layerEnvelopeR,
-///                                             layerEnvelopeR,
-///                                             m_cfg.approachSurfaceEnvelope,
-///                                             layerBinsR,
-///                                             layerBinsPhi);
-///      // create the layer transforms
-///      Transform3D* nLayerTransform   = new Transform3D(Transform3D::Identity());
-///      nLayerTransform->translation() = Vector3D(0., 0., -layerPosZ);
-///      Transform3D* pLayerTransform   = new Transform3D(Transform3D::Identity());
-///      pLayerTransform->translation() = Vector3D(0., 0., layerPosZ);
-///      // the layer is built le't see if it needs material
-///      if (m_cfg.posnegLayerMaterialProperties.size()) {
-///        // get the material from configuration
-///        double lMaterialThickness
-///            = m_cfg.posnegLayerMaterialProperties.at(ipnl).at(0);
-///        double lMaterialX0
-///            = m_cfg.posnegLayerMaterialProperties.at(ipnl).at(1);
-///        double lMaterialL0
-///            = m_cfg.posnegLayerMaterialProperties.at(ipnl).at(2);
-///        double lMaterialA
-///            = m_cfg.posnegLayerMaterialProperties.at(ipnl).at(3);
-///        double lMaterialZ
-///            = m_cfg.posnegLayerMaterialProperties.at(ipnl).at(4);
-///        double lMaterialRho
-///            = m_cfg.posnegLayerMaterialProperties.at(ipnl).at(5);
-///        MaterialProperties layerMaterialProperties(lMaterialThickness,
-///                                                   lMaterialX0,
-///                                                   lMaterialL0,
-///                                                   lMaterialA,
-///                                                   lMaterialZ,
-///                                                   lMaterialRho);
-///        std::shared_ptr<const SurfaceMaterial> layerMaterialPtr(
-///            new HomogeneousSurfaceMaterial(layerMaterialProperties));
-///        // central material
-///        if (m_cfg.posnegLayerMaterialConcentration.at(ipnl) == 0.) {
-///          // assign the surface material - the layer surface is the material
-///          // surface
-///          nLayer->surfaceRepresentation().setAssociatedMaterial(layerMaterialPtr);
-///          pLayer->surfaceRepresentation().setAssociatedMaterial(layerMaterialPtr);
-///        } else {
-///          // approach surface material
-///          // get the approach descriptor - at this stage we know that the
-///          // approachDescriptor exists
-///          auto nApproachSurfaces
-///              = nLayer->approachDescriptor()->containedSurfaces();
-///          auto pApproachSurfaces
-///              = pLayer->approachDescriptor()->containedSurfaces();
-///          if (m_cfg.posnegLayerMaterialConcentration.at(ipnl) > 0.) {
-///            nApproachSurfaces.at(0)->setAssociatedMaterial(layerMaterialPtr);
-///            pApproachSurfaces.at(1)->setAssociatedMaterial(layerMaterialPtr);
-///          } else {
-///            nApproachSurfaces.at(1)->setAssociatedMaterial(layerMaterialPtr);
-///            pApproachSurfaces.at(0)->setAssociatedMaterial(layerMaterialPtr);
-///          }
-///        }
-///      }
-///      // push it into the layer vector
-///      m_nLayers.push_back(nLayer);
-///      m_pLayers.push_back(pLayer);
-///    }
-///  }
-///
-// everything was successful - let's return back
-//}
+
+  // -------------------------------- endcap type layers
+  // pos/neg layers
+  size_t numpnLayers = m_cfg.posnegLayerPositionsZ.size();
+  if (numpnLayers) {
+    ACTS_DEBUG("Configured to build 2 * " << numpnLayers
+               << " passive positive/negative side layers.");
+    m_pLayers.reserve(numpnLayers);
+    m_nLayers.reserve(numpnLayers);
+    
+    for (size_t ipnl = 0; ipnl < numpnLayers; ++ipnl) {
+      // some screen output
+      ACTS_VERBOSE("- build layers " << (2*ipnl) << " and "
+        <<  (2*ipnl)+1 << "at +/- z = " << m_cfg.posnegLayerPositionsZ.at(ipnl));    
+      /// some preparation work
+      // define the layer envelope
+      double layerEnvelopeR = m_cfg.posnegLayerEnvelopeR.at(ipnl);
+      // prepare for the r binning
+      std::vector<const Surface*> nsVector;
+      std::vector<const Surface*> psVector;
+      // now fill the vectors 
+      for (auto& discModulePositions : m_cfg.posnegModulePositions.at(ipnl)){
+        size_t ipnR = 0;
+        for (auto& ringModulePosition : discModulePositions){
+          // module specifications
+          double moduleThickness = m_cfg.posnegModuleThickness.at(ipnl).at(ipnR);
+          double moduleMinHalfX  = m_cfg.posnegModuleMinHalfX.at(ipnl).at(ipnR);
+          double moduleMaxHalfX  = m_cfg.posnegModuleMaxHalfX.size() ?
+          m_cfg.posnegModuleMaxHalfX.at(ipnl).at(ipnR) : 0.;
+          double moduleHalfY     = m_cfg.posnegModuleHalfY.at(ipnl).at(ipnR);
+          // module material
+          // create the Module material from input
+          std::shared_ptr<const SurfaceMaterial> moduleMaterialPtr = nullptr;
+          if (m_cfg.posnegModuleMaterial.size()) {
+            MaterialProperties moduleMaterialProperties(m_cfg.posnegModuleMaterial.at(ipnl).at(ipnR),
+                                                        moduleThickness);
+            // and create the shared pointer
+            moduleMaterialPtr = std::shared_ptr<const SurfaceMaterial>(
+                new HomogeneousSurfaceMaterial(moduleMaterialProperties));
+          } 
+          // create the bounds
+          PlanarBounds* pBounds = nullptr;
+          if (moduleMaxHalfX != 0. && moduleMinHalfX != moduleMaxHalfX)
+            pBounds = new TrapezoidBounds(
+                moduleMinHalfX, moduleMaxHalfX, moduleHalfY);
+          else
+            pBounds = new RectangleBounds(moduleMaxHalfX, moduleHalfY);
+          // now create the shared bounds from it
+          std::shared_ptr<const PlanarBounds> moduleBounds(pBounds);
+          // the module transform from the position
+          double modulePhi = ringModulePosition.phi();
+          // the center position of the modules
+          Vector3D pModuleCenter(ringModulePosition);
+          // take the mirrored position wrt x/y
+          Vector3D nModuleCenter(pModuleCenter.x(),
+                                 pModuleCenter.y(),
+                                 -pModuleCenter.z());
+          // the rotation matrix of the module
+          Vector3D moduleLocalY(cos(modulePhi), sin(modulePhi), 0.);
+          // take different axis to have the same readout direction
+          Vector3D pModuleLocalZ(0., 0., 1.);  
+          // take different axis to have the same readout direction
+          Vector3D nModuleLocalZ(0., 0., -1.);  
+          Vector3D nModuleLocalX = moduleLocalY.cross(nModuleLocalZ);
+          Vector3D pModuleLocalX = moduleLocalY.cross(pModuleLocalZ);
+          // local rotation matrices
+          // create the RotationMatrix - negative side
+          RotationMatrix3D nModuleRotation;
+          nModuleRotation.col(0) = nModuleLocalX;
+          nModuleRotation.col(1) = moduleLocalY;
+          nModuleRotation.col(2) = nModuleLocalZ;
+          // create the RotationMatrix - positive side
+          RotationMatrix3D pModuleRotation;
+          pModuleRotation.col(0) = pModuleLocalX;
+          pModuleRotation.col(1) = moduleLocalY;
+          pModuleRotation.col(2) = pModuleLocalZ;
+          // the transforms for the two modules
+          std::shared_ptr<Transform3D> nModuleTransform(new Transform3D(
+              getTransformFromRotTransl(nModuleRotation, nModuleCenter)));
+          std::shared_ptr<Transform3D> pModuleTransform(new Transform3D(
+              getTransformFromRotTransl(pModuleRotation, pModuleCenter)));
+          // create the modules identifier @TODO Idenfier service
+          Identifier nModuleIdentifier
+              = Identifier(Identifier::value_type(2 * imodule));
+          Identifier pModuleIdentifier
+              = Identifier(Identifier::value_type(2 * imodule + 1));
+          // create the module
+          GenericDetectorElement* nmodule
+              = new GenericDetectorElement(nModuleIdentifier,
+                                           nModuleTransform,
+                                           moduleBounds,
+                                           moduleThickness,
+                                           moduleMaterialPtr);
+          GenericDetectorElement* pmodule
+              = new GenericDetectorElement(pModuleIdentifier,
+                                           pModuleTransform,
+                                           moduleBounds,
+                                           moduleThickness,
+                                           moduleMaterialPtr);
+          // memory management - we need a detector store to hold them somewhere
+          // @TODO add detector store facility
+          m_posnegModule.push_back(nmodule);
+          m_posnegModule.push_back(pmodule);
+          // now deal with the potential backside
+          if (m_cfg.posnegModuleBacksideGap.size()) {
+            // ncrease the counter @TODO switch to identifier service
+            nModuleIdentifier = Identifier(Identifier::value_type(++imodule));
+            pModuleIdentifier = Identifier(Identifier::value_type(++imodule));
+            // the new centers
+            nModuleCenter = nModuleCenter
+                + m_cfg.posnegModuleBacksideGap.at(ipnl).at(ipnR)
+                    * nModuleLocalZ;
+            pModuleCenter = pModuleCenter
+                + m_cfg.posnegModuleBacksideGap.at(ipnl).at(ipnR)
+                    * pModuleLocalZ;
+            // the new transforms
+            nModuleTransform = std::shared_ptr<Transform3D>(new Transform3D(
+                getTransformFromRotTransl(nModuleRotation, nModuleCenter)));
+            pModuleTransform = std::shared_ptr<Transform3D>(new Transform3D(
+                getTransformFromRotTransl(pModuleRotation, pModuleCenter)));
+            // apply the stereo
+            if (m_cfg.posnegModuleBacksideStereo.size()) {
+              // twist by the stereo angle
+              double stereoBackSide
+                  = m_cfg.posnegModuleBacksideStereo.at(ipnl).at(ipnR);
+              (*nModuleTransform.get())
+                  *= AngleAxis3D(-stereoBackSide, Vector3D::UnitZ());
+              (*pModuleTransform.get())
+                  *= AngleAxis3D(-stereoBackSide, Vector3D::UnitZ());
+            }
+            // everything is set for the next module
+            GenericDetectorElement* bsnmodule
+                = new GenericDetectorElement(nModuleIdentifier,
+                                             nModuleTransform,
+                                             moduleBounds,
+                                             moduleThickness,
+                                             moduleMaterialPtr);
+            GenericDetectorElement* bspmodule
+                = new GenericDetectorElement(pModuleIdentifier,
+                                             pModuleTransform,
+                                             moduleBounds,
+                                             moduleThickness,
+                                             moduleMaterialPtr);
+            // register the backside of the binmembers
+            std::vector<const DetectorElementBase*> bspbinmember = {pmodule};
+            std::vector<const DetectorElementBase*> pbinmember   = {bspmodule};
+            std::vector<const DetectorElementBase*> bsnbinmember = {nmodule};
+            std::vector<const DetectorElementBase*> nbinmember   = {bsnmodule};
+            bsnmodule->registerBinmembers(bsnbinmember);
+            nmodule->registerBinmembers(nbinmember);
+            bspmodule->registerBinmembers(bspbinmember);
+            pmodule->registerBinmembers(pbinmember);
+            // memory management - we need a detector store to hold them
+            // somewhere @TODO add detector store facility
+            m_posnegModule.push_back(bsnmodule);
+            m_posnegModule.push_back(bspmodule);
+          }
+          // create the surface
+          nsVector.push_back(&nmodule->surface());
+          psVector.push_back(&pmodule->surface());
+        }
+        // counter of rings
+        ++ipnR;
+      }
+      // @TODO this needs an update
+      size_t layerBinsR   = m_cfg.posnegModulePhiBins.at(ipnl).size();
+      size_t layerBinsPhi = m_cfg.posnegModulePhiBins.at(ipnl).at(0);
+      // create the layers with the surface arrays
+      LayerPtr nLayer
+          = m_cfg.layerCreator->discLayer(nsVector,
+                                          layerEnvelopeR,
+                                          layerEnvelopeR,
+                                          m_cfg.approachSurfaceEnvelope,
+                                          layerBinsR,
+                                          layerBinsPhi);
+      LayerPtr pLayer
+          = m_cfg.layerCreator->discLayer(psVector,
+                                          layerEnvelopeR,
+                                          layerEnvelopeR,
+                                          m_cfg.approachSurfaceEnvelope,
+                                          layerBinsR,
+                                          layerBinsPhi);
+                                          
+      // the layer is built le't see if it needs material
+      if (m_cfg.posnegLayerMaterialProperties.size()) {
+          std::shared_ptr<const SurfaceMaterial> layerMaterialPtr(
+            new HomogeneousSurfaceMaterial(m_cfg.posnegLayerMaterialProperties[ipnl]));
+        // central material
+        if (m_cfg.posnegLayerMaterialConcentration.at(ipnl) == 0.) {
+          // assign the surface material - the layer surface is the material
+          // surface
+          nLayer->surfaceRepresentation().setAssociatedMaterial(layerMaterialPtr);
+          pLayer->surfaceRepresentation().setAssociatedMaterial(layerMaterialPtr);
+        } else {
+          // approach surface material
+          // get the approach descriptor - at this stage we know that the
+          // approachDescriptor exists
+          auto nApproachSurfaces
+              = nLayer->approachDescriptor()->containedSurfaces();
+          auto pApproachSurfaces
+              = pLayer->approachDescriptor()->containedSurfaces();
+          if (m_cfg.posnegLayerMaterialConcentration.at(ipnl) > 0.) {
+            nApproachSurfaces.at(0)->setAssociatedMaterial(layerMaterialPtr);
+            pApproachSurfaces.at(1)->setAssociatedMaterial(layerMaterialPtr);
+          } else {
+            nApproachSurfaces.at(1)->setAssociatedMaterial(layerMaterialPtr);
+            pApproachSurfaces.at(0)->setAssociatedMaterial(layerMaterialPtr);
+          }
+        }
+      }
+      // push it into the layer vector
+      m_nLayers.push_back(nLayer);
+      m_pLayers.push_back(pLayer);                                          
+    }
+  }
+}

@@ -48,7 +48,7 @@ public:
   ///
   /// Configuration struct to be used for this ExtrapolationEngine.
   /// This has to be prepared by the framework/main and can be either given to
-  ///the ExtrapolationEngine at construction or
+  /// the ExtrapolationEngine at construction or
   /// with the setConfig method.
   ///
   struct Config

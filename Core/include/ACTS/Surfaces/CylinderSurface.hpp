@@ -211,8 +211,9 @@ CylinderSurface::normal(const Vector3D& gpos) const
   Vector3D pos3D = gpos;
   if (m_transform || m_associatedDetElement){
     pos3D = transform().inverse()*gpos;
-    pos3D.z() = 0;
   }
+  // set the z coordinate to 0
+  pos3D.z() = 0.;
   return pos3D.unit();
 }
 

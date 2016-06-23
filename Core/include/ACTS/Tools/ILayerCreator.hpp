@@ -39,13 +39,13 @@ public:
   /// @param surfaces is the vector of sensitive surfaces represented by this layer
   /// @param envelopR is the additional envelope applied in R
   /// @param envelopZ is the additional envelope applied in z  
-  /// @param binsPhi is number of bins the sensitive surfaces are ordered in phi
+  /// @param binsRPhi is number of bins the sensitive surfaces are ordered in phi
   /// @param binsZ is number of bins the sensitive surfaces are ordered in Z
   virtual LayerPtr
   cylinderLayer(const std::vector<const Surface*>& surfaces,
                 double                             envelopeR,
                 double                             evelopeZ,
-                size_t                             binsPhi,
+                size_t                             binsRPhi,
                 size_t                             binsZ) const = 0;
 
   /// ILayerCreator interface method - returning a disc layer

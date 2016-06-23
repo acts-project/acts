@@ -249,73 +249,89 @@ template <class T>
 class ExtrapolationCell
 {
 public:
-  const T& startParameters;  //!< by reference - need to be defined
-  const TrackingVolume*
-               startVolume;  //!< the start volume - needed for the volumeToVolume loop
-  const Layer* startLayer;  //!< the start layer  - needed for layerToLayer loop
+  /// The start parameters by reference - must exist
+  const T&                  startParameters;  
+  /// the start volume - needed for the volume-to-volume loop
+  const TrackingVolume*     startVolume; 
+  /// the start layer  - needed for layer-to-layer loop
+  const Layer*              startLayer;  
+  /// the end parameters as newly created unique pointer
+  std::unique_ptr<const T>  endParameters; 
+  /// the end volume - this breaks the volume-to-volume loop 
+  /// (can be nullptr in which case it breaks at world boundary latest)
+  const TrackingVolume*     endVolume;  
+  /// the end layer - this breaks the layer-to-layer llop 
+  /// (can be nullptr in which case it breaks at world boundary latest)  
+  const Layer*              endLayer;  
+  /// the end surface - triggers extrapolation to destination
+  /// (can be nullptr in which case it breaks at world boundary latest)  
+  const Surface*            endSurface;  
+  /// the one last validated parameters along the lines
+  const T*                  leadParameters; 
+  /// this is the current volume the extrapolation is in 
+  const TrackingVolume*     leadVolume; 
+  /// this is the current associated layer  
+  const Layer*              leadLayer;  
+  /// if the lead layer has sub structure
+  const Surface*            leadLayerSurface; 
+  /// this is the last boundary information (prevents loops)
+  const T*                  lastBoundaryParameters;
+  /// this is the last boundary surface information (prevents loops)
+  const Surface*            lastBoundarySurface;  
+  /// these are the one-but-last lead parameters (fallback)
+  const T*                  lastLeadParameters;  
+  /// this is the propagation direction w.r.t the parameters
+  PropDirection             propDirection;
+  /// for checking if navigation is radially towards the
+  /// IP, this has consequences for entering cylinders  
+  int                       radialDirection;  
+  /// when a boundary is reached the
+  /// geometry signature is updated to the next volume
+  GeometrySignature         nextGeometrySignature;  
 
-  std::unique_ptr<const T> endParameters;  //!< by pointer - are newly created
-                                           //! and can be optionally 0
-  const TrackingVolume* endVolume;  //!< the end Volume - can be optionally
-                                    //! nullptr (needs other trigger to stop)
-  const Layer* endLayer;  //!< the end Layer  - can be optionally nullptr (needs
-                          //! other trigger to stop)
-  const Surface* endSurface;  //!< keep track of the destination surface - can
-                              //! be optionally 0
+  /// a counter of the navigation steps done in that extrapolation
+  int                       navigationStep;  
+  /// the accumulated path legnth
+  double                    pathLength;     
+  /// the given path limit (-1 if no limit)
+  double                    pathLimit;       
+  ///  the surface for the next material update 
+  /// @TODO devel : this concept could be omitted in the future 
+  const Surface*            materialSurface;  
+  /// the accumulated material in X0 at this stage
+  double                    materialX0;
+  /// the material limit in X0 (-1 if no limit)       
+  double                    materialLimitX0;  
+  /// the accumulated material in L0 at this stage
+  double                    materialL0;    
+  /// the material limit in L0 (-1 if no limit)
+  double                    materialLimitL0; 
 
-  const T*
-      leadParameters;  //!< the one last truely valid parameter in the stream
-  const TrackingVolume*
-               leadVolume;  //!< the lead Volume - carrying the navigation stream
-  const Layer* leadLayer;  //!< the lead Layer  - carrying the navigation stream
-  const Surface* leadLayerSurface;  //!< if the lead layer has sub structure
-                                    //! that is the first one to start with
-
-  const T* lastBoundaryParameters;     //!< this is the last boundary surface to
-                                       //! prevent loops
-  const Surface* lastBoundarySurface;  //!< this is the last boundary surface to
-                                       //! prevent loops
-
-  const T* lastLeadParameters;  //!< this is for caching the last valid
-                                //! parameters before the lead parameters
-  PropDirection propDirection;  //!< this is the propagation direction
-  int radialDirection;  //!< for checking if navigation is radially towards the
-                        //! IP, this has consequences for entering cylinders
-
-  GeometrySignature nextGeometrySignature;  //!< when a boundary is reached the
-                                            //! geometry signature is updated to
-  //! the next volume one
-
-  int    navigationStep;  //!< a counter of the navigation Step
-  double pathLength;      //!< the path length accumulated
-  double pathLimit;       //!< the maximal limit of the extrapolation
-
-  const Surface* materialSurface;  //!< the surface for the next material update
-  double         materialX0;       //!< collected material so far in units of X0
-  double         materialLimitX0;  //!< given material limit in X0
-  double         materialL0;       //!< collected material so far in units of L0
-  double         materialLimitL0;  //!< given material limit in L0
-
-  process_type interactionProcess;  //!< the material process to be generated
-  ParticleType
-                     particleType;  //!< what particle hypothesis to be used, default : pion
-  MaterialUpdateMode materialUpdateMode;  //!< how to deal with the material
-                                          //! effect, default: addNoise
-  bool navigationCurvilinear;   //!< stay in curvilinear parameters where
-                                //! possible, default : true
-  bool sensitiveCurvilinear;    //!< stay in curvilinear parameters even on the
-                                //! destination surface
-  bool destinationCurvilinear;  //!< return curvilinear parameters even on
-                                //! destination
-  int searchMode;               //!< the tupe of search being performed
-
-  std::vector<ExtrapolationStep<T>>
-      extrapolationSteps;  //!< parameters on sensitive detector elements
-
+  /// the occured interaction type (for FATRAS)
+  process_type              interactionProcess;  
+  ParticleType              particleType;  
+  /// how to deal with the material 
+  MaterialUpdateMode materialUpdateMode;  
+  /// stay with curvilinear parameters for navigation mode
+  /// default is true
+  bool                      navigationCurvilinear;  
+  /// stay with curvilinear parameters for sensitive mode
+  /// default is false (loses layer binding)
+  bool                      sensitiveCurvilinear;   
+  /// stay with curvilinear parameters for destination 
+  /// default is false
+  bool                      destinationCurvilinear; 
+  /// depth of search applied
+  /// @TODO docu : write documetnation 
+  int                       searchMode;      
+  /// the cache of the extrapolation
+  std::vector<ExtrapolationStep<T>>  
+                            extrapolationSteps;  
+  /// the configuration concentrated
   ExtrapolationConfig
-      extrapolationConfiguration;  //!< overall global configuration
-
-  std::vector<ProcessVertex> interactionVertices;  //!< interaction vertices
+                            extrapolationConfiguration;  
+  /// The process vertices that occured (for FATRAS)
+  std::vector<ProcessVertex> interactionVertices;  
 
   float time;    //!< timing info
   float zOaTrX;  //!< z/A*rho*dInX0 (for average calculations)

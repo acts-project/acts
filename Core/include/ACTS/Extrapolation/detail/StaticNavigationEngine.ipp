@@ -250,7 +250,7 @@ Acts::StaticNavigationEngine::handleBoundaryT(
               Vector3D(eCell.leadParameters->position()
                        + pDir * eCell.leadParameters->momentum().unit()))
         : bSurfaceTV.attachedVolume(eCell.leadParameters->position(),
-                                    eCell.leadParameters->momentum(),
+                                    eCell.leadParameters->momentum().unit(),
                                     pDir);
     // check if we have no nextVolume : boundary rechaed @TODO it's not really a
     // success
@@ -337,10 +337,12 @@ Acts::StaticNavigationEngine::resolvePositionT(
   EX_MSG_DEBUG(++eCell.navigationStep,
                "navigation",
                "",
-               "resolve position '"
-                   << eCell.leadParameters->position()
-                   << (int(pDir) > 0 ? "' along momentum."
-                                     : "' opposite momentum."));
+               "resolve position ("
+                   << eCell.leadParameters->position().x()
+                   << eCell.leadParameters->position().y() << ", "
+                   << eCell.leadParameters->position().z() << ", "
+                   << (int(pDir) > 0 ? ") along momentum."
+                                     : ") opposite momentum."));
 
   // noLoop= True is used when we have exit from leadVolume
 
