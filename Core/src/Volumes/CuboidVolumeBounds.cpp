@@ -10,33 +10,44 @@
 // CuboidVolumeBounds.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module
 #include "ACTS/Volumes/CuboidVolumeBounds.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
-// STD/STL
 #include <iostream>
 #include <math.h>
 
 Acts::CuboidVolumeBounds::CuboidVolumeBounds()
-  : VolumeBounds(), m_boundValues(bv_length, 0.)
+  : VolumeBounds(), m_valueStore(bv_length, 0.)
 {
 }
 
 Acts::CuboidVolumeBounds::CuboidVolumeBounds(double halex,
                                              double haley,
                                              double halez)
-  : VolumeBounds(), m_boundValues(bv_length, 0.)
+  : VolumeBounds()
+  , m_valueStore(bv_length, 0.)
+  , m_xyBounds(nullptr)
+  , m_yzBounds(nullptr)
+  , m_zxBounds(nullptr)
 {
-  m_boundValues.at(bv_halfX) = halex;
-  m_boundValues.at(bv_halfY) = haley;
-  m_boundValues.at(bv_halfZ) = halez;
+  m_valueStore.at(bv_halfX) = halex;
+  m_valueStore.at(bv_halfY) = haley;
+  m_valueStore.at(bv_halfZ) = halez;
+  
+  m_xyBounds = faceXYRectangleBounds();
+  m_yzBounds = faceYZRectangleBounds();
+  m_zxBounds = faceZXRectangleBounds();
+  
 }
 
 Acts::CuboidVolumeBounds::CuboidVolumeBounds(
-    const Acts::CuboidVolumeBounds& bobo)
-  : VolumeBounds(), m_boundValues(bobo.m_boundValues)
+    const CuboidVolumeBounds& bobo)
+  : VolumeBounds()
+  , m_valueStore(bobo.m_valueStore)
+  , m_xyBounds(bobo.m_xyBounds)
+  , m_yzBounds(bobo.m_yzBounds)
+  , m_zxBounds(bobo.m_zxBounds)
 {
 }
 
@@ -45,97 +56,97 @@ Acts::CuboidVolumeBounds::~CuboidVolumeBounds()
 }
 
 Acts::CuboidVolumeBounds&
-Acts::CuboidVolumeBounds::operator=(const Acts::CuboidVolumeBounds& bobo)
+Acts::CuboidVolumeBounds::operator=(const CuboidVolumeBounds& bobo)
 {
-  if (this != &bobo) m_boundValues = bobo.m_boundValues;
+  if (this != &bobo){
+      m_valueStore = bobo.m_valueStore;
+      m_xyBounds   = bobo.m_xyBounds;
+      m_yzBounds   = bobo.m_yzBounds;
+      m_zxBounds   = bobo.m_zxBounds;
+  }    
   return *this;
 }
 
-const std::vector<const Acts::Surface*>*
+const std::vector<const Acts::Surface*>
 Acts::CuboidVolumeBounds::decomposeToSurfaces(
-    std::shared_ptr<Acts::Transform3D> transformPtr) const
+    std::shared_ptr<Transform3D> transformPtr) const
 {
-  // the transform
-  Acts::Transform3D transform = (transformPtr == nullptr)
-      ? Acts::Transform3D::Identity()
+  // the transform - apply when given
+  Transform3D transform = (transformPtr == nullptr)
+      ? Transform3D::Identity()
       : (*transformPtr.get());
-  Acts::Transform3D* tTransform = 0;
+  Transform3D* tTransform = nullptr;
 
-  std::vector<const Acts::Surface*>* retsf
-      = new std::vector<const Acts::Surface*>;
-  // memory optimisation
-  retsf->reserve(6);
+  std::vector<const Surface*> rSurfaces;
+  rSurfaces.reserve(6);
   // face surfaces xy -------------------------------------
   //   (1) - at negative local z
-  std::shared_ptr<const Acts::PlanarBounds> xyBounds(faceXYRectangleBounds());
-  tTransform = new Acts::Transform3D(
-      transform * Acts::AngleAxis3D(M_PI, Acts::Vector3D(0., 1., 0.))
-      * Acts::Translation3D(Acts::Vector3D(0., 0., halflengthZ())));
-  retsf->push_back(new Acts::PlaneSurface(
-      std::shared_ptr<Acts::Transform3D>(tTransform), xyBounds));
+  tTransform = new Transform3D(
+      transform * AngleAxis3D(M_PI, Vector3D(0., 1., 0.))
+      * Translation3D(Vector3D(0., 0., halflengthZ())));
+  rSurfaces.push_back(new PlaneSurface(
+      std::shared_ptr<Transform3D>(tTransform), m_xyBounds));
   //   (2) - at positive local z
-  tTransform = new Acts::Transform3D(
-      transform * Acts::Translation3D(Acts::Vector3D(0., 0., halflengthZ())));
-  retsf->push_back(new Acts::PlaneSurface(
-      std::shared_ptr<Acts::Transform3D>(tTransform), xyBounds));
+  tTransform = new Transform3D(
+      transform * Translation3D(Vector3D(0., 0., halflengthZ())));
+  rSurfaces.push_back(new PlaneSurface(
+      std::shared_ptr<Transform3D>(tTransform), m_xyBounds));
   // face surfaces yz -------------------------------------
   // transmute cyclical
   //   (3) - at negative local x
-  std::shared_ptr<const Acts::PlanarBounds> yzBounds(faceYZRectangleBounds());
-  tTransform = new Acts::Transform3D(
-      transform * Acts::AngleAxis3D(M_PI, Acts::Vector3D(0., 0., 1.))
-      * Acts::Translation3D(Acts::Vector3D(halflengthX(), 0., 0))
-      * Acts::AngleAxis3D(0.5 * M_PI, Acts::Vector3D(0., 1., 0))
-      * Acts::AngleAxis3D(0.5 * M_PI, Acts::Vector3D(0., 0., 1.)));
-  retsf->push_back(new Acts::PlaneSurface(
-      std::shared_ptr<Acts::Transform3D>(tTransform), yzBounds));
+  tTransform = new Transform3D(
+      transform * AngleAxis3D(M_PI, Vector3D(0., 0., 1.))
+      * Translation3D(Vector3D(halflengthX(), 0., 0))
+      * AngleAxis3D(0.5 * M_PI, Vector3D(0., 1., 0))
+      * AngleAxis3D(0.5 * M_PI, Vector3D(0., 0., 1.)));
+  rSurfaces.push_back(new PlaneSurface(
+      std::shared_ptr<Transform3D>(tTransform), m_yzBounds));
   //   (4) - at positive local x
-  tTransform = new Acts::Transform3D(
-      transform * Acts::Translation3D(Acts::Vector3D(halflengthX(), 0., 0.))
-      * Acts::AngleAxis3D(0.5 * M_PI, Acts::Vector3D(0., 1., 0.))
-      * Acts::AngleAxis3D(0.5 * M_PI, Acts::Vector3D(0., 0., 1.)));
-  retsf->push_back(new Acts::PlaneSurface(
-      std::shared_ptr<Acts::Transform3D>(tTransform), yzBounds));
+  tTransform = new Transform3D(
+      transform * Translation3D(Vector3D(halflengthX(), 0., 0.))
+      * AngleAxis3D(0.5 * M_PI, Vector3D(0., 1., 0.))
+      * AngleAxis3D(0.5 * M_PI, Vector3D(0., 0., 1.)));
+  rSurfaces.push_back(new PlaneSurface(
+      std::shared_ptr<Transform3D>(tTransform), m_yzBounds));
   // face surfaces zx -------------------------------------
-  std::shared_ptr<const Acts::PlanarBounds> zxBounds(faceZXRectangleBounds());
   //   (5) - at negative local y
-  tTransform = new Acts::Transform3D(
-      transform * Acts::AngleAxis3D(M_PI, Acts::Vector3D(1., 0., 0.))
-      * Acts::Translation3D(Acts::Vector3D(0., halflengthY(), 0.))
-      * Acts::AngleAxis3D(-0.5 * M_PI, Acts::Vector3D(0., 1., 0.))
-      * Acts::AngleAxis3D(-0.5 * M_PI, Acts::Vector3D(1., 0., 0.)));
-  retsf->push_back(new Acts::PlaneSurface(
-      std::shared_ptr<Acts::Transform3D>(tTransform), zxBounds));
+  tTransform = new Transform3D(
+      transform * AngleAxis3D(M_PI, Vector3D(1., 0., 0.))
+      * Translation3D(Vector3D(0., halflengthY(), 0.))
+      * AngleAxis3D(-0.5 * M_PI, Vector3D(0., 1., 0.))
+      * AngleAxis3D(-0.5 * M_PI, Vector3D(1., 0., 0.)));
+  rSurfaces.push_back(new PlaneSurface(
+      std::shared_ptr<Transform3D>(tTransform), m_zxBounds));
   //   (6) - at positive local y
-  tTransform = new Acts::Transform3D(
-      transform * Acts::Translation3D(Acts::Vector3D(0., halflengthY(), 0.))
-      * Acts::AngleAxis3D(-0.5 * M_PI, Acts::Vector3D(0., 1., 0.))
-      * Acts::AngleAxis3D(-0.5 * M_PI, Acts::Vector3D(1., 0., 0.)));
-  retsf->push_back(new Acts::PlaneSurface(
-      std::shared_ptr<Acts::Transform3D>(tTransform), zxBounds));
+  tTransform = new Transform3D(
+      transform * Translation3D(Vector3D(0., halflengthY(), 0.))
+      * AngleAxis3D(-0.5 * M_PI, Vector3D(0., 1., 0.))
+      * AngleAxis3D(-0.5 * M_PI, Vector3D(1., 0., 0.)));
+  rSurfaces.push_back(new PlaneSurface(
+      std::shared_ptr<Transform3D>(tTransform), m_zxBounds));
   // return the surfaces
-  return retsf;
+  return rSurfaces;
 }
 
-Acts::RectangleBounds*
+std::shared_ptr<const Acts::RectangleBounds>
 Acts::CuboidVolumeBounds::faceXYRectangleBounds() const
 {
-  return new Acts::RectangleBounds(m_boundValues.at(bv_halfX),
-                                   m_boundValues.at(bv_halfY));
+  return std::make_shared<const RectangleBounds>(m_valueStore.at(bv_halfX),
+                                                 m_valueStore.at(bv_halfY));
 }
 
-Acts::RectangleBounds*
+std::shared_ptr<const Acts::RectangleBounds>
 Acts::CuboidVolumeBounds::faceYZRectangleBounds() const
 {
-  return new Acts::RectangleBounds(m_boundValues.at(bv_halfY),
-                                   m_boundValues.at(bv_halfZ));
+  return std::make_shared<const RectangleBounds>(m_valueStore.at(bv_halfY),
+                                                 m_valueStore.at(bv_halfZ));
 }
 
-Acts::RectangleBounds*
+std::shared_ptr<const Acts::RectangleBounds>
 Acts::CuboidVolumeBounds::faceZXRectangleBounds() const
 {
-  return new Acts::RectangleBounds(m_boundValues.at(bv_halfZ),
-                                   m_boundValues.at(bv_halfX));
+  return std::make_shared<const RectangleBounds>(m_valueStore.at(bv_halfZ),
+                                                 m_valueStore.at(bv_halfX));
 }
 
 // ostream operator overload

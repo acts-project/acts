@@ -17,22 +17,22 @@
 
 namespace Acts {
 
-/**
- @class DiscBounds
 
- common base class for all bounds that are in a r/phi frame
-  - simply introduced to avoid wrong bound assigments to surfaces
-
- */
+/// @class DiscBounds
+///
+/// common base class for all bounds that are in a r/phi frame
+///  - simply introduced to avoid wrong bound assigments to surfaces
 
 class DiscBounds : public SurfaceBounds
 {
 public:
-  /** Default Constructor */
-  DiscBounds() : SurfaceBounds() {}
-  /** Destructor */
+  /// Default Constructor 
+  DiscBounds(size_t sSize=0) : SurfaceBounds(sSize) {}
+  
+  /// Destructor 
   virtual ~DiscBounds() {}
-  /** Virtual Constructor */
+  
+  /// Virtual Constructor
   virtual DiscBounds*
   clone() const = 0;
 };

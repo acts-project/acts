@@ -10,8 +10,8 @@
 // IMultipleScatteringUpdator.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H
-#define ACTS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H 1
+#ifndef ACTS_EXTRAPOLATIONIN_IMULTIPLESCATTERINGUPDATOR_H
+#define ACTS_EXTRAPOLATIONIN_IMULTIPLESCATTERINGUPDATOR_H 1
 
 #include "ACTS/EventData/ParticleDefinitions.hpp"
 
@@ -19,16 +19,20 @@ namespace Acts {
 
 class MaterialProperties;
 
-/**@class IMultipleScatteringUpdator
-   Interface class IMultipleScatteringUpdator
-
-  */
+// @class IMultipleScatteringUpdator
+// Interface class IMultipleScatteringUpdator
 class IMultipleScatteringUpdator
 {
 public:
-  /**Virtual destructor*/
+  /// Virtual destructor
   virtual ~IMultipleScatteringUpdator() {}
-  /** Calculate the sigma on theta introduced by multiple scatteringt */
+  
+  /// Calculate the sigma on theta introduced by multiple scattering
+  /// @param mat are the material properties for this update
+  /// @param p is the momentum of the particle
+  /// @param pathcorrection is the incident angle correction
+  /// @param particle is the particle type for this 
+  /// @param deltaE is the energy loss associated
   virtual double
   sigmaSquare(const MaterialProperties& mat,
               double                    p,
@@ -39,4 +43,4 @@ public:
 
 }  // end of namespace
 
-#endif  // ACTS_EXTRAPOLATIONINTERFACES_IMULTIPLESCATTERINGUPDATOR_H
+#endif  // ACTS_EXTRAPOLATIONIN_IMULTIPLESCATTERINGUPDATOR_H

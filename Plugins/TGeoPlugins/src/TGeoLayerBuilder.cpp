@@ -6,24 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-//
-//  TGeoLayerBuilder.cpp
-//  ACTS-Development
-//
-//  Created by Andreas Salzburger on 26/05/16.
-//
-//
-
 #include "ACTS/Plugins/TGeoPlugins/TGeoLayerBuilder.hpp"
-#include <stdio.h>
 #include "ACTS/Plugins/TGeoPlugins/TGeoDetectorElement.hpp"
 #include "ACTS/Tools/ILayerCreator.hpp"
 #include "ACTS/Utilities/MsgMacros.hpp"
 #include "TGeoManager.h"
+#include <stdio.h>
 
 Acts::TGeoLayerBuilder::TGeoLayerBuilder(
     const Acts::TGeoLayerBuilder::Config& config)
-  : m_config()
+  : m_cfg()
 {
   setConfiguration(config);
 }
@@ -36,13 +28,13 @@ void
 Acts::TGeoLayerBuilder::setConfiguration(
     const Acts::TGeoLayerBuilder::Config& config)
 {
-  m_config = config;
+  m_cfg = config;
 }
 
 const Acts::LayerVector
 Acts::TGeoLayerBuilder::negativeLayers() const
 {
-  Acts::LayerVector nVector;
+  LayerVector nVector;
   return std::move(nVector);
 }
 
@@ -50,14 +42,14 @@ const Acts::LayerVector
 Acts::TGeoLayerBuilder::centralLayers() const
 {
   // the return vector
-  Acts::LayerVector cVector;
+  LayerVector cVector;
   // bail out if you have no gGeoManager
   if (!gGeoManager) return std::move(cVector);
 
-  MSG_INFO("Central Layers : found " << m_config.centralLayerConfigs.size()
+  MSG_INFO("Central Layers : found " << m_cfg.centralLayerConfigs.size()
                                      << " configurations.");
 
-  for (auto layerCfg : m_config.centralLayerConfigs) {
+  for (auto layerCfg : m_cfg.centralLayerConfigs) {
     MSG_INFO("- layer configuration found for layer " << layerCfg.layerName
                                                       << " with sensor "
                                                       << layerCfg.sensorName);
@@ -69,7 +61,7 @@ Acts::TGeoLayerBuilder::centralLayers() const
       collectSensitive(volume, nullptr, layerCfg.sensorName, sensitiveNodes);
       MSG_INFO("- layer found to have " << sensitiveNodes.size()
                                         << " sensitive sensors ");
-      // create teh detector surface vector
+      // create the detector surface vector
       std::vector<const Acts::Surface*> detSurfaces;
       detSurfaces.reserve(sensitiveNodes.size());
       // loop and fill
@@ -81,8 +73,8 @@ Acts::TGeoLayerBuilder::centralLayers() const
         // create a layer out of the surfaces
         detSurfaces.push_back(&(tgElement->surface()));
         // create the layer
-        cVector.push_back(m_config.layerCreator->cylinderLayer(
-            detSurfaces, 1., 5., layerCfg.binsLoc0, layerCfg.binsLoc1));
+        cVector.push_back(m_cfg.layerCreator->cylinderLayer(
+            detSurfaces, 1., 5., layerCfg.binsLoc0, layerCfg.binsLoc0));
       }
     }
   }
@@ -93,7 +85,7 @@ Acts::TGeoLayerBuilder::centralLayers() const
 const Acts::LayerVector
 Acts::TGeoLayerBuilder::positiveLayers() const
 {
-  Acts::LayerVector pVector;
+  LayerVector pVector;
   return std::move(pVector);
 }
 

@@ -45,7 +45,7 @@ public:
   assignGeoID(const GeometryID& geoID) const;
 
   /** force a binning position method */
-  virtual Vector3D
+  virtual const Vector3D
   binningPosition(BinningValue bValue) const = 0;
 
   /** implement the binningValue */

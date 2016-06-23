@@ -15,7 +15,7 @@
 // constructor
 Acts::ExtrapolationEngine::ExtrapolationEngine(
     const Acts::ExtrapolationEngine::Config& eeConfig)
-  : m_config()
+  : m_cfg()
 {
   setConfiguration(eeConfig);
 }
@@ -34,7 +34,7 @@ Acts::ExtrapolationEngine::setConfiguration(
   IExtrapolationEngine::m_sopPrefix  = eeConfig.prefix;
   IExtrapolationEngine::m_sopPostfix = eeConfig.postfix;
   // copy the configuration
-  m_config = eeConfig;
+  m_cfg = eeConfig;
 }
 
 /** charged extrapolation */

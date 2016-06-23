@@ -18,7 +18,7 @@
 // constructor
 Acts::StaticNavigationEngine::StaticNavigationEngine(
     const Acts::StaticNavigationEngine::Config& snConfig)
-  : m_config()
+  : m_cfg()
 {
   setConfiguration(snConfig);
 }
@@ -37,7 +37,7 @@ Acts::StaticNavigationEngine::setConfiguration(
   INavigationEngine::m_sopPrefix  = snConfig.prefix;
   INavigationEngine::m_sopPostfix = snConfig.postfix;
   // copy the configuration
-  m_config = snConfig;
+  m_cfg = snConfig;
 }
 
 // charged situation

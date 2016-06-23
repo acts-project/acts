@@ -10,9 +10,8 @@
 // GenericOverlapDescriptor.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module
-#include "ACTS/Detector/GenericOverlapDescriptor.hpp"
 #include "ACTS/Detector/DetectorElementBase.hpp"
+#include "ACTS/Layers/GenericOverlapDescriptor.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 
 bool

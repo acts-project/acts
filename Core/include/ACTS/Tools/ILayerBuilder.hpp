@@ -10,10 +10,9 @@
 // ILayerBuilder.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETRYINTERFACES_ILAYERBUILDER_H
-#define ACTS_GEOMETRYINTERFACES_ILAYERBUILDER_H 1
+#ifndef ACTS_TOOLS_ILAYERBUILDER_H
+#define ACTS_TOOLS_ILAYERBUILDER_H 1
 
-// STL
 #include <memory>
 #include <string>
 #include <vector>
@@ -24,35 +23,39 @@ class Layer;
 typedef std::shared_ptr<const Layer> LayerPtr;
 typedef std::vector<LayerPtr>        LayerVector;
 
-/** @class ILayerBuilder
-
-  Interface class for ILayerBuilders in a typical
-  | EC- | Central | EC+ |
-  detector setup.
-
-  */
-class ILayerBuilder
+/// @class ILayerBuilder
+///
+/// Interface class for ILayerBuilders in a typical
+/// | EC- | Central | EC+ |
+/// detector setup.
+///
+   class ILayerBuilder
 {
 public:
-  /**Virtual destructor*/
+  /// Virtual destructor
   virtual ~ILayerBuilder() {}
-  /** LayerBuilder interface method - returning the layers at negative side */
+  
+  /// LayerBuilder interface method 
+  /// @return  the layers at negative side 
   virtual const LayerVector
   negativeLayers() const = 0;
 
-  /** LayerBuilder interface method - returning the central layers */
+  /// LayerBuilder interface method 
+  /// @return the layers at the central sector
   virtual const LayerVector
   centralLayers() const = 0;
 
-  /** LayerBuilder interface method - returning the layers at negative side */
+  /// LayerBuilder interface method 
+  /// @return  the layers at positive side 
   virtual const LayerVector
   positiveLayers() const = 0;
 
-  /** Name identification */
+  /// Name identification
+  /// @return the string based identification 
   virtual const std::string&
   identification() const = 0;
 };
 
 }  // end of namespace
 
-#endif  // ACTS_GEOMETRYINTERFACES_ILAYERBUILDER_H
+#endif  // ACTS_TOOLS_ILAYERBUILDER_H

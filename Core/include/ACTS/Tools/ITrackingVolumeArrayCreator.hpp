@@ -13,44 +13,42 @@
 #ifndef ACTS_GEOMETRYINTERFACES_ITRACKINGVOLUMEARRAYCREATOR_H
 #define ACTS_GEOMETRYINTERFACES_ITRACKINGVOLUMEARRAYCREATOR_H 1
 
-// Geometry module
 #include "ACTS/Utilities/BinnedArray.hpp"
 #include "ACTS/Utilities/BinningType.hpp"
-// STL
 #include <memory>
 #include <vector>
 
 namespace Acts {
-/** forward declarations*/
+
 class TrackingVolume;
 typedef std::shared_ptr<const TrackingVolume> TrackingVolumePtr;
 
-/** @typedef TrackingVolumeArray */
+/// @typedef TrackingVolumeArray 
 typedef BinnedArray<TrackingVolumePtr> TrackingVolumeArray;
 typedef std::vector<TrackingVolumePtr> TrackingVolumeVector;
 
-/** @class ITrackingVolumeArrayCreator
-
-  Interface class ITrackingVolumeArrayCreators It inherits from IAlgTool.
-
-  It is designed to centralize the code to create
-  Arrays of Tracking Volumes for both:
-
-    - confinement in another TrackingVolume
-    - navigation and glueing
-
-  Arrays for glueing and confinement are often the same,
-  therefore the newly created TrackingVolumeArray is done by a shared_ptr
-
-  */
+/// @class ITrackingVolumeArrayCreator
+/// 
+/// Interface class ITrackingVolumeArrayCreators It inherits from IAlgTool.
+/// 
+/// It is designed to centralize the code to create
+/// Arrays of Tracking Volumes for both:
+/// 
+///   - confinement in another TrackingVolume
+///   - navigation and glueing
+/// 
+/// Arrays for glueing and confinement are often the same,
+/// therefore the newly created TrackingVolumeArray is done by a shared_ptr
 class ITrackingVolumeArrayCreator
 {
 public:
-  /**Virtual destructor*/
+  /// Virtual destructor
   virtual ~ITrackingVolumeArrayCreator() = default;
 
-  /** TrackingVolumeArrayCreator interface method - creates array depending on
-   * the binning type */
+  /// TrackingVolumeArrayCreator interface method - creates array depending on
+  /// the binning type 
+  /// @param vols are the TrackingVolumes ordered in a tracker
+  /// @param bVal is the binning value for the volume binning
   virtual std::shared_ptr<const TrackingVolumeArray>
   trackingVolumeArray(const TrackingVolumeVector& vols,
                       BinningValue                bVal) const = 0;

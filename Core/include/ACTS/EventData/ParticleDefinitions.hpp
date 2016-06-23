@@ -180,7 +180,8 @@ convertToParticleType(pdg_type pdg, bool& stable, bool& exiting, double charge)
   return particleType;
 }
 
-/** Static method : convert to pdg from ParticleType */
+/**
+ Static method : convert to pdg from ParticleType
 static int
 convertToPdg(ParticleType particleHypo, double charge, bool dist)
 {
@@ -241,7 +242,7 @@ convertToPdg(ParticleType particleHypo, double charge, bool dist)
   }
   return pdg;
 }
-
+*/
 /** @class ParticleProperties
 
     very simplistic class for particle properties,

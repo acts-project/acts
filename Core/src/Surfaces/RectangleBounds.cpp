@@ -11,31 +11,16 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/RectangleBounds.hpp"
-// STD/STL
 #include <iomanip>
 #include <iostream>
 
-// default constructor
-Acts::RectangleBounds::RectangleBounds()
-  : Acts::PlanarBounds(), m_boundValues(RectangleBounds::bv_length, 0.)
-{
-}
-
-// rectangle constructor
 Acts::RectangleBounds::RectangleBounds(double halex, double haley)
-  : Acts::PlanarBounds(), m_boundValues(RectangleBounds::bv_length, 0.)
+  : Acts::PlanarBounds(RectangleBounds::bv_length)
 {
-  m_boundValues.at(RectangleBounds::bv_halfX) = halex;
-  m_boundValues.at(RectangleBounds::bv_halfY) = haley;
+  m_valueStore.at(RectangleBounds::bv_halfX) = halex;
+  m_valueStore.at(RectangleBounds::bv_halfY) = haley;
 }
 
-// copy constructor
-Acts::RectangleBounds::RectangleBounds(const RectangleBounds& recbo)
-  : Acts::PlanarBounds(), m_boundValues(recbo.m_boundValues)
-{
-}
-
-// destructor
 Acts::RectangleBounds::~RectangleBounds()
 {
 }
@@ -43,25 +28,16 @@ Acts::RectangleBounds::~RectangleBounds()
 Acts::RectangleBounds&
 Acts::RectangleBounds::operator=(const RectangleBounds& recbo)
 {
-  if (this != &recbo) m_boundValues = recbo.m_boundValues;
+  if (this != &recbo) 
+    PlanarBounds::operator=(recbo);
   return *this;
 }
 
-bool
-Acts::RectangleBounds::operator==(const Acts::SurfaceBounds& sbo) const
-{
-  // check the type first not to compare apples with oranges
-  const Acts::RectangleBounds* recbo
-      = dynamic_cast<const Acts::RectangleBounds*>(&sbo);
-  if (!recbo) return false;
-  return (m_boundValues == recbo->m_boundValues);
-}
-
 double
-Acts::RectangleBounds::minDistance(const Acts::Vector2D& pos) const
+Acts::RectangleBounds::minDistance(const Acts::Vector2D& lpos) const
 {
-  double dx = fabs(pos[0]) - m_boundValues.at(RectangleBounds::bv_halfX);
-  double dy = fabs(pos[1]) - m_boundValues.at(RectangleBounds::bv_halfY);
+  double dx = fabs(lpos[0]) - m_valueStore.at(RectangleBounds::bv_halfX);
+  double dy = fabs(lpos[1]) - m_valueStore.at(RectangleBounds::bv_halfY);
 
   if (dx <= 0. || dy <= 0.) {
     if (dx > dy)
@@ -79,8 +55,8 @@ Acts::RectangleBounds::dump(std::ostream& sl) const
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::RectangleBounds:  (halflenghtX, halflengthY) = "
-     << "(" << m_boundValues.at(RectangleBounds::bv_halfX) << ", "
-     << m_boundValues.at(RectangleBounds::bv_halfY) << ")";
+     << "(" << m_valueStore.at(RectangleBounds::bv_halfX) << ", "
+     << m_valueStore.at(RectangleBounds::bv_halfY) << ")";
   sl << std::setprecision(-1);
   return sl;
 }

@@ -28,9 +28,9 @@ Acts::Layer::Layer()
   , m_enclosingTrackingVolume(nullptr)
   , m_enclosingDetachedTrackingVolume(nullptr)
   , m_representingVolume(nullptr)
-  , m_layerType(0)
+  , m_layerType(Acts::passive)
 {
-  // @TODO temporary - until GeoID service is in place
+  /// @TODO temporary - until GeoID service is in place
   assignGeoID(GeometryID(1));
 }
 
@@ -38,7 +38,7 @@ Acts::Layer::Layer(std::unique_ptr<Acts::SurfaceArray> surfaceArray,
                    double                              thickness,
                    Acts::OverlapDescriptor*            olap,
                    Acts::ApproachDescriptor*           ades,
-                   int                                 laytyp)
+                   LayerType                           laytyp)
   : m_nextLayers(NextLayers(nullptr, nullptr))
   , m_nextLayerUtility(nullptr)
   , m_surfaceArray(std::move(surfaceArray))
@@ -50,7 +50,7 @@ Acts::Layer::Layer(std::unique_ptr<Acts::SurfaceArray> surfaceArray,
   , m_representingVolume(nullptr)
   , m_layerType(laytyp)
 {
-  // @TODO temporary - until GeoID service is in place
+  /// @TODO temporary - until GeoID service is in place
   assignGeoID(GeometryID(1));
 }
 
@@ -70,6 +70,7 @@ Acts::Layer::Layer(const Acts::Layer& lay)
 
 Acts::Layer::~Layer()
 {
+  /// @TODO witch to std::unique_ptr
   delete m_overlapDescriptor;
   delete m_approachDescriptor;
   delete m_representingVolume;
@@ -82,8 +83,6 @@ Acts::Layer::isOnLayer(const Acts::Vector3D& gp,
   return (surfaceRepresentation()).isOnSurface(gp, bchk);
 }
 
-/** Surface seen on approach - if not defined differently, it is the
- * surfaceRepresentation() */
 const Acts::SurfaceIntersection
 Acts::Layer::surfaceOnApproach(const Acts::Vector3D&      position,
                                const Acts::Vector3D&      momentum,

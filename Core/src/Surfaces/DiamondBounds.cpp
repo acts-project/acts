@@ -11,46 +11,34 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/DiamondBounds.hpp"
-// STD/STL
 #include <iomanip>
 #include <iostream>
 #include <math.h>
 
-// default constructor
-Acts::DiamondBounds::DiamondBounds()
-  : Acts::PlanarBounds()
-  , m_boundValues(DiamondBounds::bv_length, 0.)
-  , m_alpha1(0.)
-  , m_alpha2(0.)
-{
-}
-
-// constructor from arguments I
 Acts::DiamondBounds::DiamondBounds(double minhalex,
                                    double medhalex,
                                    double maxhalex,
                                    double haley1,
                                    double haley2)
-  : Acts::PlanarBounds()
-  , m_boundValues(DiamondBounds::bv_length, 0.)
+  : PlanarBounds(DiamondBounds::bv_length)
   , m_alpha1(0.)
   , m_alpha2(0.)
 {
-  m_boundValues.at(DiamondBounds::bv_minHalfX) = minhalex;
-  m_boundValues.at(DiamondBounds::bv_medHalfX) = medhalex;
-  m_boundValues.at(DiamondBounds::bv_maxHalfX) = maxhalex;
-  m_boundValues.at(DiamondBounds::bv_halfY1)   = haley1;
-  m_boundValues.at(DiamondBounds::bv_halfY2)   = haley2;
+  m_valueStore.at(DiamondBounds::bv_minHalfX) = minhalex;
+  m_valueStore.at(DiamondBounds::bv_medHalfX) = medhalex;
+  m_valueStore.at(DiamondBounds::bv_maxHalfX) = maxhalex;
+  m_valueStore.at(DiamondBounds::bv_halfY1)   = haley1;
+  m_valueStore.at(DiamondBounds::bv_halfY2)   = haley2;
   if (minhalex > maxhalex)
-    swap(m_boundValues.at(DiamondBounds::bv_minHalfX),
-         m_boundValues.at(DiamondBounds::bv_maxHalfX));
+    std::swap(m_valueStore.at(DiamondBounds::bv_minHalfX),
+         m_valueStore.at(DiamondBounds::bv_maxHalfX));
   initCache();
 }
 
 // copy constructor
 Acts::DiamondBounds::DiamondBounds(const DiamondBounds& diabo)
-  : Acts::PlanarBounds()
-  , m_boundValues(diabo.m_boundValues)
+  : PlanarBounds(DiamondBounds::bv_length)
+  , m_valueStore(diabo.m_valueStore)
   , m_alpha1(diabo.m_alpha1)
   , m_alpha2(diabo.m_alpha2)
 {
@@ -65,7 +53,7 @@ Acts::DiamondBounds&
 Acts::DiamondBounds::operator=(const DiamondBounds& diabo)
 {
   if (this != &diabo) {
-    m_boundValues = diabo.m_boundValues;
+    m_valueStore = diabo.m_valueStore;
     m_alpha1      = diabo.m_alpha1;
     m_alpha2      = diabo.m_alpha2;
   }
@@ -75,11 +63,13 @@ Acts::DiamondBounds::operator=(const DiamondBounds& diabo)
 bool
 Acts::DiamondBounds::operator==(const Acts::SurfaceBounds& sbo) const
 {
+  // fast exit
+  if (&sbo == this) return true;
   // check the type first not to compare apples with oranges
   const Acts::DiamondBounds* diabo
       = dynamic_cast<const Acts::DiamondBounds*>(&sbo);
   if (!diabo) return false;
-  return (m_boundValues == diabo->m_boundValues);
+  return (m_valueStore == diabo->m_valueStore);
 }
 
 // checking if inside bounds (Full symmetrical Diamond)
@@ -88,7 +78,7 @@ Acts::DiamondBounds::inside(const Acts::Vector2D& locpo,
                             double                tol1,
                             double                tol2) const
 {
-  return this->insideFull(locpo, tol1, tol2);
+  return insideFull(locpo, tol1, tol2);
 }
 
 // checking if inside bounds (Full symmetrical Diamond)
@@ -99,57 +89,55 @@ Acts::DiamondBounds::insideFull(const Acts::Vector2D& locpo,
 {
   // the cases:
   // (0)
-  if (!m_boundValues.at(DiamondBounds::bv_halfY1)
-      && !m_boundValues.at(DiamondBounds::bv_minHalfX))
+  if (!m_valueStore.at(DiamondBounds::bv_halfY1)
+      && !m_valueStore.at(DiamondBounds::bv_minHalfX))
     return false;
   // (1)
   if (locpo[Acts::eLOC_Y]
-      < -2. * m_boundValues.at(DiamondBounds::bv_halfY1) - tol2)
+      < -2. * m_valueStore.at(DiamondBounds::bv_halfY1) - tol2)
     return false;
   if (locpo[Acts::eLOC_Y]
-      > 2. * m_boundValues.at(DiamondBounds::bv_halfY2) + tol2)
+      > 2. * m_valueStore.at(DiamondBounds::bv_halfY2) + tol2)
     return false;
   // (2)
   if (fabs(locpo[Acts::eLOC_X])
-      > (m_boundValues.at(DiamondBounds::bv_medHalfX) + tol1))
+      > (m_valueStore.at(DiamondBounds::bv_medHalfX) + tol1))
     return false;
   // (3)
   if (fabs(locpo[Acts::eLOC_X])
-      < (fmin(m_boundValues.at(DiamondBounds::bv_minHalfX),
-              m_boundValues.at(DiamondBounds::bv_maxHalfX))
+      < (fmin(m_valueStore.at(DiamondBounds::bv_minHalfX),
+              m_valueStore.at(DiamondBounds::bv_maxHalfX))
          - tol1))
     return true;
   // (4)
   /** use basic calculation of a straight line */
   if (locpo[Acts::eLOC_Y] < 0) {
-    double k = m_boundValues.at(DiamondBounds::bv_halfY1) > 0.
-        ? (m_boundValues.at(DiamondBounds::bv_medHalfX)
-           - m_boundValues.at(DiamondBounds::bv_minHalfX))
-            / 2 / m_boundValues.at(DiamondBounds::bv_halfY1)
+    double k = m_valueStore.at(DiamondBounds::bv_halfY1) > 0.
+        ? (m_valueStore.at(DiamondBounds::bv_medHalfX)
+           - m_valueStore.at(DiamondBounds::bv_minHalfX))
+            / 2 / m_valueStore.at(DiamondBounds::bv_halfY1)
         : 0.;
     return (fabs(locpo[Acts::eLOC_X])
-            <= m_boundValues.at(DiamondBounds::bv_medHalfX)
+            <= m_valueStore.at(DiamondBounds::bv_medHalfX)
                 - k * fabs(locpo[Acts::eLOC_Y]));
   } else {
-    double k = m_boundValues.at(DiamondBounds::bv_halfY2) > 0.
-        ? (m_boundValues.at(DiamondBounds::bv_medHalfX)
-           - m_boundValues.at(DiamondBounds::bv_maxHalfX))
-            / 2 / m_boundValues.at(DiamondBounds::bv_halfY2)
+    double k = m_valueStore.at(DiamondBounds::bv_halfY2) > 0.
+        ? (m_valueStore.at(DiamondBounds::bv_medHalfX)
+           - m_valueStore.at(DiamondBounds::bv_maxHalfX))
+            / 2 / m_valueStore.at(DiamondBounds::bv_halfY2)
         : 0.;
     return (fabs(locpo[Acts::eLOC_X])
-            <= m_boundValues.at(DiamondBounds::bv_medHalfX)
+            <= m_valueStore.at(DiamondBounds::bv_medHalfX)
                 - k * fabs(locpo[Acts::eLOC_Y]));
   }
 }
 
-// opening angle in point A
 double
 Acts::DiamondBounds::alpha1() const
 {
   return m_alpha1;
 }
 
-// opening angle in point A'
 double
 Acts::DiamondBounds::alpha2() const
 {
@@ -161,15 +149,15 @@ Acts::DiamondBounds::minDistance(const Acts::Vector2D& pos) const
 {
   const int Np = 6;
 
-  double y1 = 2. * m_boundValues.at(DiamondBounds::bv_halfY1);
-  double y2 = 2. * m_boundValues.at(DiamondBounds::bv_halfY2);
+  double y1 = 2. * m_valueStore.at(DiamondBounds::bv_halfY1);
+  double y2 = 2. * m_valueStore.at(DiamondBounds::bv_halfY2);
 
-  double X[6] = {-m_boundValues.at(DiamondBounds::bv_minHalfX),
-                 -m_boundValues.at(DiamondBounds::bv_medHalfX),
-                 -m_boundValues.at(DiamondBounds::bv_maxHalfX),
-                 m_boundValues.at(DiamondBounds::bv_maxHalfX),
-                 m_boundValues.at(DiamondBounds::bv_medHalfX),
-                 m_boundValues.at(DiamondBounds::bv_minHalfX)};
+  double X[6] = {-m_valueStore.at(DiamondBounds::bv_minHalfX),
+                 -m_valueStore.at(DiamondBounds::bv_medHalfX),
+                 -m_valueStore.at(DiamondBounds::bv_maxHalfX),
+                 m_valueStore.at(DiamondBounds::bv_maxHalfX),
+                 m_valueStore.at(DiamondBounds::bv_medHalfX),
+                 m_valueStore.at(DiamondBounds::bv_minHalfX)};
   double Y[6] = {-y1, 0., y2, y2, 0., -y1};
 
   double dm = 1.e+20;
@@ -212,11 +200,11 @@ Acts::DiamondBounds::dump(std::ostream& sl) const
   sl << std::setprecision(7);
   sl << "Acts::DiamondBounds:  (minHlenghtX, medHlengthX, maxHlengthX, "
         "hlengthY1, hlengthY2 ) = ";
-  sl << "(" << m_boundValues.at(DiamondBounds::bv_minHalfX) << ", "
-     << m_boundValues.at(DiamondBounds::bv_medHalfX) << ", "
-     << m_boundValues.at(DiamondBounds::bv_maxHalfX) << ", "
-     << m_boundValues.at(DiamondBounds::bv_halfY1) << ", "
-     << m_boundValues.at(DiamondBounds::bv_halfY2) << ")";
+  sl << "(" << m_valueStore.at(DiamondBounds::bv_minHalfX) << ", "
+     << m_valueStore.at(DiamondBounds::bv_medHalfX) << ", "
+     << m_valueStore.at(DiamondBounds::bv_maxHalfX) << ", "
+     << m_valueStore.at(DiamondBounds::bv_halfY1) << ", "
+     << m_valueStore.at(DiamondBounds::bv_halfY2) << ")";
   sl << std::setprecision(-1);
   return sl;
 }

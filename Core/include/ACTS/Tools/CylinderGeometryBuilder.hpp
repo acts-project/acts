@@ -10,13 +10,11 @@
 // CylinderGeometryBuilder.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETRYTOOLS_TRACKINGGEOMETRYBUILDER_H
-#define ACTS_GEOMETRYTOOLS_TRACKINGGEOMETRYBUILDER_H 1
+#ifndef ACTS_TOOLS_CYLINDERGEOMETRYBUILDER_H
+#define ACTS_TOOLS_CYLINDERGEOMETRYBUILDER_H 1
 
-// STL include(s)
 #include <list>
 #include <memory>
-
 #include "ACTS/Tools/ITrackingGeometryBuilder.hpp"
 #include "ACTS/Tools/ITrackingVolumeBuilder.hpp"
 #include "ACTS/Tools/ITrackingVolumeHelper.hpp"
@@ -26,32 +24,30 @@
 namespace Acts {
 class TrackingGeometry;
 
-/** @class GeometryBuilder
-
-    The Acts::TrackingGeometry Builder for volumes that wrap around another
-
-    It retrieves ITrackingVolumeBuilders as configured and builds one
-    detector around the other one.
-
-*/
-
+/// @class GeometryBuilder
+///
+/// The Acts::TrackingGeometry Builder for volumes that wrap around another
+///
+/// It retrieves ITrackingVolumeBuilders as configured and builds one
+/// detector around the other one.
+///
 class CylinderGeometryBuilder : public ITrackingGeometryBuilder
 {
 public:
-  /** @struct Config
-    Configuration for the CylinderVolumeBuilder */
+  /// @struct Config
+  /// Nested Configuration for the CylinderVolumeBuilder
   struct Config
   {
-    std::shared_ptr<Logger>                 logger;  //! logging instance
-    std::shared_ptr<ITrackingVolumeBuilder> beamPipeBuilder;  //!< a special
-    //! builder for the
-    //! beam pipe (for
-    //! post-insertion)
-    std::list<std::shared_ptr<ITrackingVolumeBuilder>>
-        trackingVolumeBuilders;  //!< the sub detector TrackingVolume builder
-    std::shared_ptr<ITrackingVolumeHelper>
-        trackingVolumeHelper;  //!< used for creating a container
-
+    /// the logging instance
+    std::shared_ptr<Logger>                            logger;  
+    /// a dedicated builder of the beam pipe volume
+    std::shared_ptr<ITrackingVolumeBuilder>            beamPipeBuilder; 
+    /// the list of trackign volume builders
+    std::list<std::shared_ptr<ITrackingVolumeBuilder>> trackingVolumeBuilders;  
+    /// the tracking volume helper for detector construction
+    std::shared_ptr<ITrackingVolumeHelper>             trackingVolumeHelper;  
+    
+    /// Constructor of the Configuration struct
     Config()
       : logger(getDefaultLogger("CylinderGeometryBuilder", Logging::INFO))
       , beamPipeBuilder(nullptr)
@@ -61,41 +57,46 @@ public:
     }
   };
 
-  /** Constructor */
+  /// Constructor 
+  /// @param cgb is the configuration struct for this builder
   CylinderGeometryBuilder(const Config& cgbConfig);
 
-  /** Destructor */
+  /// Destructor 
   virtual ~CylinderGeometryBuilder() = default;
 
-  /** TrackingGeometry Interface method */
+  /// TrackingGeometry Interface method 
+  /// returns a unique pointer to a TrackingGeometry 
   virtual std::unique_ptr<TrackingGeometry>
-  trackingGeometry() const override;
+  trackingGeometry() const final;
 
-  /** Set configuration method */
+  /// Set configuration method 
+  /// @param cgbConfig is the new configuration struct
   void
   setConfiguration(const Config& cgbConfig);
 
-  /** Get configuration method */
+  /// Get configuration method
+  /// @return the current configuration
   Config
   getConfiguration() const;
 
 private:
-  /** Configuration member */
-  Config m_config;
+  /// Configuration member 
+  Config   m_cfg;
 
+  /// Private access method to the logger
   const Logger&
   logger() const
   {
-    return *m_config.logger;
+    return *m_cfg.logger;
   }
 };
 
 inline CylinderGeometryBuilder::Config
 CylinderGeometryBuilder::getConfiguration() const
 {
-  return m_config;
+  return m_cfg;
 }
 
 }  // end of namespace
 
-#endif  // ACTS_GEOMETRYTOOLS_TRACKINGGEOMETRYBUILDER_H
+#endif  // ACTS_TOOLS_CYLINDERGEOMETRYBUILDER_H

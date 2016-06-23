@@ -12,20 +12,18 @@
 
 // Geometry module
 #include "ACTS/Layers/PlaneLayer.hpp"
-
-#include "../../include/ACTS/Utilities/Helpers.hpp"
-#include "ACTS/Detector/GenericApproachDescriptor.hpp"
+#include "ACTS/Layers/GenericApproachDescriptor.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-// CLHEP
+#include "ACTS/Utilities/Helpers.hpp"
 
-Acts::PlaneLayer::PlaneLayer(std::shared_ptr<Acts::Transform3D> transform,
-                             std::shared_ptr<const Acts::PlanarBounds>& pbounds,
-                             std::unique_ptr<SurfaceArray> surfaceArray,
-                             double                        thickness,
-                             Acts::OverlapDescriptor*      olap,
-                             Acts::ApproachDescriptor*     ades,
-                             int                           laytyp)
+Acts::PlaneLayer::PlaneLayer(std::shared_ptr<Transform3D>         transform,
+                             std::shared_ptr<const PlanarBounds>& pbounds,
+                             std::unique_ptr<SurfaceArray>        surfaceArray,
+                             double                               thickness,
+                             OverlapDescriptor*                   olap,
+                             ApproachDescriptor*                  ades,
+                             LayerType                            laytyp)
   : PlaneSurface(transform, pbounds)
   , Layer(std::move(surfaceArray), thickness, olap, ades, laytyp)
 {
@@ -38,8 +36,8 @@ Acts::PlaneLayer::PlaneLayer(std::shared_ptr<Acts::Transform3D> transform,
   if (ades) m_approachDescriptor->registerLayer(*this);
 }
 
-Acts::PlaneLayer::PlaneLayer(const Acts::PlaneLayer&  play,
-                             const Acts::Transform3D& transf)
+Acts::PlaneLayer::PlaneLayer(const PlaneLayer&  play,
+                             const Transform3D& transf)
   : PlaneSurface(play, transf), Layer(play)
 {
 }
@@ -50,7 +48,6 @@ Acts::PlaneLayer::surfaceRepresentation() const
   return (*this);
 }
 
-/** build approach surfaces */
 void
 Acts::PlaneLayer::buildApproachDescriptor() const
 {

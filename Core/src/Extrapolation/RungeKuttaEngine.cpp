@@ -16,7 +16,7 @@
 #include "ACTS/Surfaces/DiscSurface.hpp"
 #include "ACTS/Surfaces/PerigeeSurface.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/StraightLineSurface.hpp"
+#include "ACTS/Surfaces/StrawSurface.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -24,7 +24,7 @@
 /////////////////////////////////////////////////////////////////////////////////
 Acts::RungeKuttaEngine::RungeKuttaEngine(
     const Acts::RungeKuttaEngine::Config& rkConfig)
-  : m_config(), m_rkUtils()
+  : m_cfg(), m_rkUtils()
 {
   setConfiguration(rkConfig);
 }
@@ -47,7 +47,7 @@ Acts::RungeKuttaEngine::setConfiguration(
   IPropagationEngine::m_sopPrefix  = rkConfig.prefix;
   IPropagationEngine::m_sopPostfix = rkConfig.postfix;
   // copy the configuration
-  m_config = rkConfig;
+  m_cfg = rkConfig;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -82,13 +82,13 @@ Acts::RungeKuttaEngine::propagate(ExCellNeutral&           eCell,
 
   // if the desination surface is the start surface -> bail out and build
   // parameters directly
-  if (&sf == &(sParameters->associatedSurface())) {
+  if (sf == sParameters->associatedSurface()) {
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "propagate",
                    "neut",
                    "parameters are already on the surface, returning.");
-    nParameters = std::move(buildNeutralParametersWithoutPropagation(
-        *sParameters, pCache.jacobian));
+    nParameters = buildNeutralParametersWithoutPropagation(
+        *sParameters, pCache.jacobian);
     // record the parameters as a step
     eCell.step(std::move(nParameters), purpose);
     // return success or in progress
@@ -97,7 +97,7 @@ Acts::RungeKuttaEngine::propagate(ExCellNeutral&           eCell,
   }
   // specify the parameters for the propagation
   pCache.maxPathLength = eCell.pathLimit < 0.
-      ? m_config.maxPathLength
+      ? m_cfg.maxPathLength
       : (eCell.pathLimit - eCell.pathLength);
   pCache.direction         = double(pDir);
   pCache.boundaryCheck     = bcheck;
@@ -165,7 +165,7 @@ Acts::RungeKuttaEngine::propagate(ExCellNeutral&           eCell,
     // create the new curvilinear paramters at the surface intersection -> if
     // so, trigger the success
     // now check if it is valid it's further away than the pathLimit
-    if (eCell.pathLimitReached(m_config.dlt, true)) {
+    if (eCell.pathLimitReached(m_cfg.dlt, true)) {
       // screen output
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "propagate",
@@ -224,8 +224,7 @@ Acts::RungeKuttaEngine::propagate(ExCellCharged&           eCell,
                    "propagate",
                    "neut",
                    "parameters are already on the surface, returning.");
-    pParameters = std::move(
-        buildTrackParametersWithoutPropagation(*pParameters, pCache.jacobian));
+    pParameters = buildTrackParametersWithoutPropagation(*pParameters, pCache.jacobian);
     // record the parameters as a step
     eCell.step(std::move(pParameters), purpose);
     // return success or in progress
@@ -235,7 +234,7 @@ Acts::RungeKuttaEngine::propagate(ExCellCharged&           eCell,
 
   // and configure the propagation cache now
   pCache.maxPathLength = eCell.pathLimit < 0.
-      ? m_config.maxPathLength
+      ? m_cfg.maxPathLength
       : (eCell.pathLimit - eCell.pathLength);
   pCache.direction         = double(pDir);
   pCache.boundaryCheck     = bcheck;
@@ -243,7 +242,7 @@ Acts::RungeKuttaEngine::propagate(ExCellCharged&           eCell,
   pCache.useJacobian       = eCell.leadParameters->covariance();
   pCache.mcondition        = true;
   pCache.needgradient
-      = (pCache.useJacobian && m_config.usegradient) ? true : false;
+      = (pCache.useJacobian && m_cfg.usegradient) ? true : false;
 
   // propagate with templated helper function
   if (propagateRungeKuttaT<TrackParameters>(eCell, pCache, *sParameters, sf)) {
@@ -286,8 +285,8 @@ Acts::RungeKuttaEngine::propagate(ExCellCharged&           eCell,
     if (eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectJacobians))
       eCell.stepTransport(sf,
                           pCache.step,
-                          std::move(std::make_unique<const TransportJacobian>(
-                              pCache.jacobian)));
+                          std::make_unique<const TransportJacobian>(
+                                                                    pCache.jacobian));
 
     // cache the last lead parameters, useful in case a navigation error occured
     eCell.lastLeadParameters = eCell.leadParameters;
@@ -297,7 +296,7 @@ Acts::RungeKuttaEngine::propagate(ExCellCharged&           eCell,
       // add the new propagation length to the path length
       eCell.pathLength += pCache.step;
       // check if Limit reached & prepare for final return
-      if (eCell.pathLimitReached(m_config.dlt, true)) {
+      if (eCell.pathLimitReached(m_cfg.dlt, true)) {
         EX_MSG_VERBOSE(eCell.navigationStep,
                        "propagate",
                        "char",
@@ -365,7 +364,7 @@ Acts::RungeKuttaEngine::propagateWithJacobian(int               navigationStep,
   pCache.newfield = true;
 
   // whie loop over the steps
-  while (fabs(step) > m_config.straightStep) {
+  while (fabs(step) > m_cfg.straightStep) {
     // maximum number of steps
     if (++niter > 10000) {
       //!< @TODO make max number configurable
@@ -486,7 +485,7 @@ Acts::RungeKuttaEngine::rungeKuttaStep(int               navigationStep,
   double* A    = &(pCache.pVector[3]);  // Directions
   double* sA   = &(pCache.pVector[42]);
   double  Pi   = 149.89626 * pCache.pVector[6];  // Invert mometum/2.
-  double  dltm = m_config.dlt * .03;
+  double  dltm = m_cfg.dlt * .03;
 
   double f0[3], f[3];
 
@@ -500,7 +499,7 @@ Acts::RungeKuttaEngine::rungeKuttaStep(int               navigationStep,
   }
 
   bool Helix                              = false;
-  if (fabs(S) < m_config.helixStep) Helix = true;
+  if (fabs(S) < m_cfg.helixStep) Helix = true;
 
   while (S != 0.) {
     double S3 = (1. / 3.) * S, S4 = .25 * S, PS2 = Pi * S;
@@ -560,7 +559,7 @@ Acts::RungeKuttaEngine::rungeKuttaStep(int               navigationStep,
     //
     double EST = fabs((A1 + A6) - (A3 + A4)) + fabs((B1 + B6) - (B3 + B4))
         + fabs((C1 + C6) - (C3 + C4));
-    if (EST > m_config.dlt) {
+    if (EST > m_cfg.dlt) {
       S *= .5;
       dltm = 0.;
       continue;
@@ -712,7 +711,7 @@ Acts::RungeKuttaEngine::rungeKuttaStepWithGradient(int navigationStep,
   double*      A    = &(pCache.pVector[3]);  // Directions
   double*      sA   = &(pCache.pVector[42]);
   double       Pi   = 149.89626 * pCache.pVector[6];  // Invert mometum/2.
-  double       dltm = m_config.dlt * .03;
+  double       dltm = m_cfg.dlt * .03;
 
   double f0[3], f1[3], f2[3], g0[9], g1[9], g2[9], H0[12], H1[12], H2[12];
   getFieldGradient(R, f0, g0);
@@ -769,7 +768,7 @@ Acts::RungeKuttaEngine::rungeKuttaStepWithGradient(int navigationStep,
     //
     double EST = fabs((A1 + A6) - (A3 + A4)) + fabs((B1 + B6) - (B3 + B4))
         + fabs((C1 + C6) - (C3 + C4));
-    if (EST > m_config.dlt) {
+    if (EST > m_cfg.dlt) {
       S *= .5;
       dltm = 0.;
       continue;
@@ -1027,7 +1026,7 @@ Acts::RungeKuttaEngine::stepEstimatorWithCurvature(PropagationCache& pCache,
   double Step = m_rkUtils.stepEstimator(kind, Su, pCache.pVector, Q);
   if (!Q) return 0.;
   double AStep = fabs(Step);
-  if (kind || AStep < m_config.straightStep || !pCache.mcondition) return Step;
+  if (kind || AStep < m_cfg.straightStep || !pCache.mcondition) return Step;
 
   const double* SA = &(pCache.pVector[42]);  // Start direction
   double        S  = .5 * Step;

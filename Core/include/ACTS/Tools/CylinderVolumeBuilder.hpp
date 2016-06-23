@@ -10,8 +10,8 @@
 // CylinderVolumeBuilder.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETRYTOOLS_CYLINDERVOLUMEBUILDER_H
-#define ACTS_GEOMETRYTOOLS_CYLINDERVOLUMEBUILDER_H 1
+#ifndef ACTS_TOOLS_CYLINDERVOLUMEBUILDER_H
+#define ACTS_TOOLS_CYLINDERVOLUMEBUILDER_H 1
 
 // Geometry module
 #include "ACTS/Material/Material.hpp"
@@ -35,17 +35,18 @@ namespace Acts {
 class TrackingVolume;
 class VolumeBounds;
 
-/** @ LayerSetup struct to understand the layer setup */
+/// LayerSetup struct to understand the layer setup
 struct LayerSetup
 {
-  bool         present;       //!< layers are present
-  BinningValue binningValue;  //!< in what way they are binned
+  bool         present;       ///< layers are present
+  BinningValue binningValue;  ///< in what way they are binned
 
   std::pair<double, double> rBoundaries;  //!< raidal boundaries
   std::pair<double, double> zBoundaries;  //!< zBoundaries
 
-  // std::vector<double>      ringBoundaries;      //!< ring boundaries if
-  // present //!< @TODO insert ring layout
+  /// std::vector<double>      ringBoundaries;      //!< ring boundaries if
+  /// present //!< @TODO insert ring layout
+  
   LayerSetup()
     : present(false)
     , binningValue(binR)
@@ -54,110 +55,118 @@ struct LayerSetup
   {
   }
 
-  /** Conversion operator to bool */
+  /// Conversion operator to bool 
   operator bool() const { return present; }
 };
 
-/** @class CylinderVolumeBuilder
-
-    A simple cylindrical volume builder to be used for building a concentrical
-   cylindrical volume
-    - a) configured volume
-    - b) wrapping around a cylindrical/disk layer setup
-
-    All are optionally wrapped around a given volume which has to by a cylinder
-   volume
-    and which has to be center at z == 0
-
-    To receive the tracking volume it is possible to also hand over a triple of
-   layers, which is a C++ tuple of three pointers to layer vectors (defined in
-   the ITrackingVolumeBuilder). This functionality is needed for a possible
-   translation of an geometry existing in another format. The first entry
-   represents the layers of the negative endcap, the second the layers of the
-   barrel and the third the layers of the positive endcap. If the one of these
-   pointers is a nullptr no layers will be created for this volume
-    Another functionality needed to translate an already existing geometry is to
-   hand over a volume triple, which is a triple of shared pointers of volumes
-   (defined in the ITrackingVolumeBuilder). The first entry contains the
-   negative endcap volume, the second the barrel volume and the third one the
-   positive endcap volume. This volumes are then used to get the internal
-   boundaries of the current hierarchy.
-
-*/
-
+/// @class CylinderVolumeBuilder
+///
+///  A simple cylindrical volume builder to be used for building a concentrical
+/// cylindrical volume
+///  - a) configured volume
+///  - b) wrapping around a cylindrical/disk layer setup
+///
+///  All are optionally wrapped around a given volume which has to by a cylinder
+/// volume
+///  and which has to be center at z == 0
+///
+///  To receive the tracking volume it is possible to also hand over a triple of
+/// layers, which is a C++ tuple of three pointers to layer vectors (defined in
+/// the ITrackingVolumeBuilder). This functionality is needed for a possible
+/// translation of an geometry existing in another format. The first entry
+/// represents the layers of the negative endcap, the second the layers of the
+/// barrel and the third the layers of the positive endcap. If the one of these
+/// pointers is a nullptr no layers will be created for this volume
+///  Another functionality needed to translate an already existing geometry is to
+/// hand over a volume triple, which is a triple of shared pointers of volumes
+/// (defined in the ITrackingVolumeBuilder). The first entry contains the
+/// negative endcap volume, the second the barrel volume and the third one the
+/// positive endcap volume. This volumes are then used to get the internal
+/// boundaries of the current hierarchy.
+///
 class CylinderVolumeBuilder : public ITrackingVolumeBuilder
 {
 public:
-  /** @struct Config
-      Configuration struct for this CylinderVolumeBuilder */
+  /// @struct Config
+  /// Nested configuration struct for this CylinderVolumeBuilder
   struct Config
   {
-    std::shared_ptr<Logger>                logger;  //!< logging instance
-    std::shared_ptr<ITrackingVolumeHelper> trackingVolumeHelper;  //!< the
-                                                                  //! tracking
-    //! volume
-    //! creator for
-    //! container
-    //! volume
-    //! creation
-    std::string volumeName;  //!< the name of the volume to be created
-    std::vector<double>
-                              volumeDimension;  //!< The dimensions of the manually created world
-    std::shared_ptr<Material> volumeMaterial;  //!< the world material
-    bool volumeToBeamPipe;  //!< build the volume to the beam pipe
-    std::shared_ptr<ILayerBuilder>
-           layerBuilder;     //!< needed to build layers within the volume
-    double layerEnvelopeR;   //!< the envelope covering the potential layers
-    double layerEnvelopeZ;   //!< the envelope covering the potential layers
-    int    volumeSignature;  //!< the volume signature
+    /// the logging instance
+    std::shared_ptr<Logger>                logger;        
+    /// the trackign volume helper for construction
+    std::shared_ptr<ITrackingVolumeHelper> trackingVolumeHelper;  
+    /// the string based indenfication
+    std::string                            volumeName;  
+    /// The dimensions of the manually created world
+    std::vector<double>                    volumeDimension; 
+    /// the world material 
+    std::shared_ptr<Material>              volumeMaterial;  
+    /// build the volume to the beam pipe
+    bool                                    volumeToBeamPipe; 
+    /// needed to build layers within the volume 
+    std::shared_ptr<ILayerBuilder>          layerBuilder;
+    /// the envelope covering the potential layers     
+    double                                  layerEnvelopeR;
+    /// the envelope covering the potential layers   
+    double                                  layerEnvelopeZ; 
+    /// the volume signature  
+    int                                     volumeSignature;  
 
     Config() : logger(getDefaultLogger("CylinderVolumeBuilder", Logging::INFO))
     {
     }
   };
 
-  /** Constructor */
+  /// Constructor 
+  /// @param cvbConfig is the configuraiton struct to steer the builder
   CylinderVolumeBuilder(const Config& cvbConfig);
 
-  /** Destructor */
+  /// Destructor 
   virtual ~CylinderVolumeBuilder();
 
-  /** CylinderVolumeBuilder interface method - returns the volumes of Volumes */
+  /// CylinderVolumeBuilder interface method  
+  /// @param insideVolume is an (optional) volume to be wrapped
+  /// @param outsideBounds is an (optional) outside confinement
+  /// @param layerTriple is an (optional) triplet of layers 
+  /// @param volumeTriple is an (optional) triplet of volumes
   TrackingVolumePtr
   trackingVolume(TrackingVolumePtr   insideVolume  = nullptr,
                  VolumeBoundsPtr     outsideBounds = nullptr,
                  const LayerTriple*  layerTriple   = nullptr,
                  const VolumeTriple* volumeTriple  = nullptr) const override;
 
-  /** Set configuration method */
+  /// Set configuration method 
+  /// @param cvbConfig is the new configuration to be set               
   void
   setConfiguration(const Config& cvbConfig);
 
-  /** Get configuration method */
+  /// Get configuration method
   Config
   getConfiguration() const;
 
 private:
-  /** Configuration struct */
-  Config m_config;
+  /// Configuration struct 
+  Config m_cfg;
 
+  /// Private access to the logger
   const Logger&
   logger() const
   {
-    return *m_config.logger;
+    return *m_cfg.logger;
   }
-  /** analyse the layer setup */
+  
+  /// analyse the layer setup 
   LayerSetup
   analyzeLayerSetup(const LayerVector lVector) const;
 };
 
-/** Return the configuration object */
+/// Return the configuration object 
 inline CylinderVolumeBuilder::Config
 CylinderVolumeBuilder::getConfiguration() const
 {
-  return m_config;
+  return m_cfg;
 }
 
 }  // end of namespace
 
-#endif  // ACTS_GEOMETRYINTERFACES_WORLDVOLUMEBUILDER_H
+#endif  // ACTS_TOOLS_CYLINDERVOLUMEBUILDER_H

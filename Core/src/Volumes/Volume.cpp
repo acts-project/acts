@@ -10,68 +10,47 @@
 // Volume.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module
 #include "ACTS/Volumes/Volume.hpp"
 #include "ACTS/Volumes/VolumeBounds.hpp"
-// STD/STL
 #include <iostream>
 
-// Default constructor
 Acts::Volume::Volume()
   : GeometryObject()
   , m_transform(nullptr)
-  , m_center(nullptr)
+  , m_center(s_origin)
   , m_volumeBounds(nullptr)
 {
 }
 
-// constructor with Transform3D
-Acts::Volume::Volume(Acts::Transform3D*        htrans,
-                     const Acts::VolumeBounds* volbounds)
-  : GeometryObject()
-  , m_transform(std::shared_ptr<Acts::Transform3D>(htrans))
-  , m_center(nullptr)
-  , m_volumeBounds(std::shared_ptr<const Acts::VolumeBounds>(volbounds))
-{
-}
-
-// constructor with shared arguments Transform3D
-Acts::Volume::Volume(std::shared_ptr<Acts::Transform3D>        htrans,
-                     std::shared_ptr<const Acts::VolumeBounds> volbounds)
+Acts::Volume::Volume(std::shared_ptr<Transform3D>        htrans,
+                     std::shared_ptr<const VolumeBounds> volbounds)
   : GeometryObject()
   , m_transform(htrans)
-  , m_center(nullptr)
+  , m_center(s_origin)
   , m_volumeBounds(volbounds)
 {
+  if (htrans) m_center = htrans->translation();
 }
 
-// copy constructor - will up to now not copy the sub structure!
-Acts::Volume::Volume(const Acts::Volume& vol)
+
+Acts::Volume::Volume(const Volume& vol, const Transform3D* shift)
   : GeometryObject()
   , m_transform(vol.m_transform)
-  , m_center(nullptr)
+  , m_center(s_origin)
   , m_volumeBounds(vol.m_volumeBounds)
 {
+  // applyt he shift if it exists
+  if (shift)
+      m_transform = std::make_shared<Transform3D>(transform() * (*shift));
+  // now set the center 
+  m_center = transform().translation();
+  
 }
 
-// copy constructor with shift
-Acts::Volume::Volume(const Acts::Volume& vol, const Acts::Transform3D& shift)
-  : GeometryObject()
-  , m_transform(std::shared_ptr<Acts::Transform3D>(
-        new Acts::Transform3D(shift * vol.transform())))
-  , m_center(nullptr)
-  , m_volumeBounds(vol.m_volumeBounds)
-{
-}
-
-// destructor
 Acts::Volume::~Volume()
-{
-  delete m_center;
-}
+{}
 
-// The binning position method
-Acts::Vector3D
+const Acts::Vector3D
 Acts::Volume::binningPosition(Acts::BinningValue bValue) const
 {
   // for most of the binning types it is actually the center,
@@ -89,9 +68,8 @@ Acts::Volume&
 Acts::Volume::operator=(const Acts::Volume& vol)
 {
   if (this != &vol) {
-    delete m_center;
     m_transform    = vol.m_transform;
-    m_center       = nullptr;
+    m_center       = vol.m_center;
     m_volumeBounds = vol.m_volumeBounds;
   }
   return *this;
@@ -104,14 +82,13 @@ Acts::Volume::clone() const
 }
 
 bool
-Acts::Volume::inside(const Acts::Vector3D& gp, double tol) const
+Acts::Volume::inside(const Acts::Vector3D& gpos, double tol) const
 {
-  if (!m_transform) return (volumeBounds()).inside(gp, tol);
-  Acts::Vector3D posInVolFrame((transform().inverse()) * gp);
+  if (!m_transform) return (volumeBounds()).inside(gpos, tol);
+  Acts::Vector3D posInVolFrame((transform().inverse()) * gpos);
   return (volumeBounds()).inside(posInVolFrame, tol);
 }
 
-/**Overload of << operator for std::ostream for debug output*/
 std::ostream&
 Acts::operator<<(std::ostream& sl, const Acts::Volume& vol)
 {

@@ -26,19 +26,22 @@ class PlanarBounds;
 class DiscBounds;
 class SurfaceMaterial;
 
-/** @class GenericDetectorElement
-
- This is a lightweight type of detector element,
- it simply implements the base class.
-
-
- */
-
+/// @class GenericDetectorElement
+/// 
+/// This is a lightweight type of detector element,
+/// it simply implements the base class.
+/// 
 class GenericDetectorElement : public DetectorElementBase
 {
 public:
-  /** Constructor for single sided detector element - bound to a Plane Surface
-   */
+  /// Constructor for single sided detector element 
+  /// - bound to a Plane Surface
+  ///
+  /// @param identifier is the module identifier
+  /// @param transform is the transform that element the layer in 3D frame
+  /// @param pBounds is the planar bounds for the planar detector element
+  /// @param thickness is the module thickness
+  /// @param material is the (optional) Surface material associated to it
   GenericDetectorElement(const Identifier                       identifier,
                          std::shared_ptr<Transform3D>           transform,
                          std::shared_ptr<const PlanarBounds>    pBounds,
@@ -46,8 +49,14 @@ public:
                          std::shared_ptr<const SurfaceMaterial> material
                          = nullptr);
 
-  /** Constructor for single sided detector element - bound to a Plane Surface /
-   * Disc Surface */
+  /// Constructor for single sided detector element 
+  /// - bound to a Disc Surface
+  ///                       
+  /// @param identifier is the module identifier
+  /// @param transform is the transform that element the layer in 3D frame
+  /// @param dBounds is the planar bounds for the disc like detector element
+  /// @param thickness is the module thickness
+  /// @param material is the (optional) Surface material associated to it
   GenericDetectorElement(const Identifier                       identifier,
                          std::shared_ptr<Transform3D>           transform,
                          std::shared_ptr<const DiscBounds>      dBounds,
@@ -55,62 +64,54 @@ public:
                          std::shared_ptr<const SurfaceMaterial> material
                          = nullptr);
 
-  /**  Destructor */
+  ///  Destructor 
   ~GenericDetectorElement();
 
-  /** Identifier */
+  /// Identifier 
   Identifier
   identify() const override;
 
-  /** Return local to global transform associated with this identifier*/
+  /// Return local to global transform associated with this identifier
+  ///
+  /// @note this is called from the surface().transform() in the PROXY mode
+  ///
+  /// @param identifier is ignored for this simple detector element
   const Transform3D&
   transform(const Identifier& identifier = Identifier()) const override;
 
-  /** Return surface associated with this identifier, which should come from the
-   */
+  /// Return surface associated with this identifier,
+  ///
+  /// @param identifier is ignored in this case
+  ///
+  /// @param identifier is ignored for this simple detector element
   const Surface&
   surface(const Identifier& identifier = Identifier()) const override;
 
-  /** Returns the full list of all detection surfaces associated to this
-   * detector element */
-  const std::vector<std::shared_ptr<const Surface>>&
+  /// Returns the full list of all detection surfaces associated
+  /// to this detector element 
+  const std::vector< std::shared_ptr<const Surface> >&
   surfaces() const override;
 
-  /** Return the boundaries of the surface associated with this identifier */
-  const SurfaceBounds&
-  bounds(const Identifier& identifier = Identifier()) const override;
-
-  /** Return the center of the surface associated with this identifier
-   In the case of silicon it returns the same as center()*/
-  const Vector3D&
-  center(const Identifier& identifier = Identifier()) const override;
-
-  /** Return the normal of the surface associated with this identifier
-   In the case of silicon it returns the same as normal()*/
-  const Vector3D&
-  normal(const Identifier& identifier = Identifier()) const override;
-
-  /** The maximal thickness of the detector element outside the surface
-   * dimension */
+  /// The maximal thickness of the detector element wrt normal axis
   double
   thickness() const override;
 
 private:
-  // the element representation
-  Identifier                   m_elementIdentifier;
-  std::shared_ptr<Transform3D> m_elementTransform;
-  const SurfaceBounds*         m_elementBounds;
+  /// the element representation
+  /// identifier
+  Identifier                                    m_elementIdentifier;
+  /// the transform for positioning in 3D space
+  std::shared_ptr<Transform3D>                  m_elementTransform;
+  /// the surface represented by it
+  std::shared_ptr<const Surface>                m_elementSurface;
+  /// the element thickness
+  double                                        m_elementThickness;
 
-  std::shared_ptr<const Surface> m_elementSurface;
-  double                         m_elementThickness;
-
-  // the cache
-  Vector3D                                    m_elementCenter;
-  Vector3D                                    m_elementNormal;
-  std::vector<std::shared_ptr<const Surface>> m_elementSurfaces;
-
-  std::shared_ptr<const PlanarBounds> m_elementPlanarBounds;
-  std::shared_ptr<const DiscBounds>   m_elementDiscBounds;
+  /// the cache
+  std::vector< std::shared_ptr<const Surface> > m_elementSurfaces;
+  /// store either 
+  std::shared_ptr<const PlanarBounds>           m_elementPlanarBounds;
+  std::shared_ptr<const DiscBounds>             m_elementDiscBounds;
 };
 
 inline Identifier
@@ -131,28 +132,10 @@ GenericDetectorElement::surface(const Identifier&) const
   return *m_elementSurface;
 }
 
-inline const std::vector<std::shared_ptr<const Surface>>&
+inline const std::vector< std::shared_ptr<const Surface> >&
 GenericDetectorElement::surfaces() const
 {
   return m_elementSurfaces;
-}
-
-inline const SurfaceBounds&
-GenericDetectorElement::bounds(const Identifier&) const
-{
-  return *m_elementBounds;
-}
-
-inline const Vector3D&
-GenericDetectorElement::center(const Identifier&) const
-{
-  return m_elementCenter;
-}
-
-inline const Vector3D&
-GenericDetectorElement::normal(const Identifier&) const
-{
-  return m_elementNormal;
 }
 
 inline double

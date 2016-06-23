@@ -20,7 +20,7 @@
 // constructor
 Acts::MaterialEffectsEngine::MaterialEffectsEngine(
     const MaterialEffectsEngine::Config& meConfig)
-  : m_config()
+  : m_cfg()
 {
   setConfiguration(meConfig);
   // steering of the screen outoput (SOP)
@@ -42,7 +42,7 @@ Acts::MaterialEffectsEngine::setConfiguration(
   IMaterialEffectsEngine::m_sopPrefix  = meConfig.prefix;
   IMaterialEffectsEngine::m_sopPostfix = meConfig.postfix;
   // copy the configuration
-  m_config = meConfig;
+  m_cfg = meConfig;
 }
 
 // neutral extrapolation - just collect material /
@@ -57,7 +57,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
   const Layer*   mLayer   = eCell.leadLayer;
   // the Extrapolator made sure that the layer is the lead layer && the
   // parameters are the lead parameters
-  if (mSurface && mSurface->surfaceMaterial()) {
+  if (mSurface && mSurface->associatedMaterial()) {
     EX_MSG_DEBUG(
         ++eCell.navigationStep,
         "layer",
@@ -71,7 +71,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
     PropDirection rlDir
         = (pathCorrection > 0. ? alongMomentum : oppositeMomentum);
     // multiply by the pre-and post-update factor
-    double mFactor = mSurface->surfaceMaterial()->factor(rlDir, matupstage);
+    double mFactor = mSurface->associatedMaterial()->factor(rlDir, matupstage);
     if (mFactor == 0.) {
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "layer",
@@ -90,7 +90,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
                    "material update with corr factor = " << pathCorrection);
     // get the actual material bin
     const MaterialProperties* materialProperties
-        = mSurface->surfaceMaterial()->material(
+        = mSurface->associatedMaterial()->material(
             eCell.leadParameters->position());
     // and let's check if there's acutally something to do
     if (materialProperties) {
@@ -132,7 +132,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
   const Layer*   mLayer   = eCell.leadLayer;
   // the Extrapolator made sure that the layer is the lead layer && the
   // parameters are the lead parameters
-  if (mSurface && mSurface->surfaceMaterial()) {
+  if (mSurface && mSurface->associatedMaterial()) {
     EX_MSG_DEBUG(++eCell.navigationStep,
                  "layer",
                  mLayer->geoID().value(),
@@ -175,7 +175,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
   const Surface* mSurface = eCell.materialSurface;
   const Layer*   mLayer   = eCell.leadLayer;
   // return if you have nothing to do
-  if (!mSurface || !mSurface->surfaceMaterial()) return;
+  if (!mSurface || !mSurface->associatedMaterial()) return;
 
   // path correction
   double pathCorrection = mSurface->pathCorrection(
@@ -184,7 +184,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
   PropDirection rlDir
       = (pathCorrection > 0. ? alongMomentum : oppositeMomentum);
   // multiply by the pre-and post-update factor
-  double mFactor = mSurface->surfaceMaterial()->factor(rlDir, matupstage);
+  double mFactor = mSurface->associatedMaterial()->factor(rlDir, matupstage);
   if (mFactor == 0.) {
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "layer",
@@ -203,9 +203,9 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
                  "material update with corr factor = " << pathCorrection);
   // get the actual material bin
   const MaterialProperties* materialProperties
-      = mSurface->surfaceMaterial()->material(parameters.position());
+      = mSurface->associatedMaterial()->material(parameters.position());
   // and let's check if there's acutally something to do
-  if (materialProperties && (m_config.eLossCorrection || m_config.mscCorrection
+  if (materialProperties && (m_cfg.eLossCorrection || m_cfg.mscCorrection
                              || eCell.checkConfigurationMode(
                                     ExtrapolationMode::CollectMaterial))) {
     // and add them
@@ -225,7 +225,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     double E    = sqrt(p * p + m * m);
     double beta = p / E;
     // (A) - energy loss correction
-    if (m_config.eLossCorrection) {
+    if (m_cfg.eLossCorrection) {
       double sigmaP = 0.;
       double kazl   = 0.;
       /** dE/dl ionization energy loss per path unit */
@@ -244,7 +244,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
         (*uCovariance)(eQOP, eQOP) += sign * sigmaQoverP * sigmaQoverP;
     }
     // (B) - update the covariance if needed
-    if (uCovariance && m_config.mscCorrection) {
+    if (uCovariance && m_cfg.mscCorrection) {
       /** multiple scattering as function of dInX0 */
       double sigmaMS = m_interactionFormulae.sigmaMS(
           thicknessInX0 * pathCorrection, p, beta);

@@ -10,11 +10,9 @@
 // CylinderLayer.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module
 #include "ACTS/Layers/CylinderLayer.hpp"
-
-#include "ACTS/Detector/GenericApproachDescriptor.hpp"
-#include "ACTS/Detector/GenericOverlapDescriptor.hpp"
+#include "ACTS/Layers/GenericApproachDescriptor.hpp"
+#include "ACTS/Layers/GenericOverlapDescriptor.hpp"
 #include "ACTS/Material/SurfaceMaterial.hpp"
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
@@ -22,16 +20,15 @@
 #include "ACTS/Volumes/AbstractVolume.hpp"
 #include "ACTS/Volumes/BoundarySurfaceFace.hpp"
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
-// Core module
 
 Acts::CylinderLayer::CylinderLayer(
-    std::shared_ptr<Acts::Transform3D>          transform,
-    std::shared_ptr<const Acts::CylinderBounds> cBounds,
-    std::unique_ptr<SurfaceArray>               surfaceArray,
-    double                                      thickness,
-    Acts::OverlapDescriptor*                    olap,
-    Acts::ApproachDescriptor*                   ades,
-    int                                         laytyp)
+    std::shared_ptr<Transform3D>          transform,
+    std::shared_ptr<const CylinderBounds> cBounds,
+    std::unique_ptr<SurfaceArray>         surfaceArray,
+    double                                thickness,
+    OverlapDescriptor*                    olap,
+    ApproachDescriptor*                   ades,
+    LayerType                             laytyp)
   : CylinderSurface(transform, cBounds)
   , Layer(std::move(surfaceArray), thickness, olap, ades, laytyp)
 {
@@ -53,8 +50,8 @@ Acts::CylinderLayer::CylinderLayer(
   if (ades) m_approachDescriptor->registerLayer(*this);
 }
 
-Acts::CylinderLayer::CylinderLayer(const Acts::CylinderLayer& clay,
-                                   const Acts::Transform3D&   transf)
+Acts::CylinderLayer::CylinderLayer(const CylinderLayer& clay,
+                                   const Transform3D&   transf)
   : CylinderSurface(clay, transf), Layer(clay)
 {
   if (m_surfaceArray) buildApproachDescriptor();
@@ -66,7 +63,6 @@ Acts::CylinderLayer::surfaceRepresentation() const
   return (*this);
 }
 
-/** build approach surfaces */
 void
 Acts::CylinderLayer::buildApproachDescriptor() const
 {
@@ -78,19 +74,19 @@ Acts::CylinderLayer::buildApproachDescriptor() const
     // get teh boundary surfaces
     const std::
         vector<std::shared_ptr<const Acts::
-                                   BoundarySurface<Acts::AbstractVolume>>>&
+                                   BoundarySurfaceT<Acts::AbstractVolume>>>&
             bSurfaces
         = m_representingVolume->boundarySurfaces();
     // fill in the surfaces into the vector
     std::vector<std::shared_ptr<const Acts::
-                                    BoundarySurface<Acts::AbstractVolume>>>
+                                    BoundarySurfaceT<Acts::AbstractVolume>>>
         aSurfaces;
     if (bSurfaces.size() > size_t(tubeOuterCover))
       aSurfaces.push_back(bSurfaces.at(tubeInnerCover));
     aSurfaces.push_back(bSurfaces.at(tubeOuterCover));
     // create an ApproachDescriptor with Boundary surfaces
     m_approachDescriptor = new Acts::
-        GenericApproachDescriptor<const BoundarySurface<AbstractVolume>>(
+        GenericApproachDescriptor<const BoundarySurfaceT<AbstractVolume>>(
             aSurfaces);
   } else {
     // create the new surfaces

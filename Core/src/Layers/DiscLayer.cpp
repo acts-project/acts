@@ -10,11 +10,9 @@
 // DiscLayer.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module
 #include "ACTS/Layers/DiscLayer.hpp"
-
-#include "ACTS/Detector/GenericApproachDescriptor.hpp"
-#include "ACTS/Detector/GenericOverlapDescriptor.hpp"
+#include "ACTS/Layers/GenericApproachDescriptor.hpp"
+#include "ACTS/Layers/GenericOverlapDescriptor.hpp"
 #include "ACTS/Material/SurfaceMaterial.hpp"
 #include "ACTS/Surfaces/DiscBounds.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
@@ -23,7 +21,6 @@
 #include "ACTS/Volumes/AbstractVolume.hpp"
 #include "ACTS/Volumes/BoundarySurfaceFace.hpp"
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
-// Core module
 
 Acts::DiscLayer::DiscLayer(std::shared_ptr<Acts::Transform3D>      transform,
                            std::shared_ptr<const Acts::DiscBounds> dbounds,
@@ -31,7 +28,7 @@ Acts::DiscLayer::DiscLayer(std::shared_ptr<Acts::Transform3D>      transform,
                            double                                  thickness,
                            Acts::OverlapDescriptor*                olap,
                            Acts::ApproachDescriptor*               ades,
-                           int                                     laytyp)
+                           LayerType                               laytyp)
   : DiscSurface(transform, dbounds)
   , Layer(std::move(surfaceArray), thickness, olap, ades, laytyp)
 {
@@ -69,7 +66,6 @@ Acts::DiscLayer::surfaceRepresentation() const
   return (*this);
 }
 
-/** build approach surfaces */
 void
 Acts::DiscLayer::buildApproachDescriptor() const
 {
@@ -79,41 +75,31 @@ Acts::DiscLayer::buildApproachDescriptor() const
   // take the boundary surfaces of the representving volume if they exist
   if (m_representingVolume) {
     // get teh boundary surfaces
-    const std::
-        vector<std::shared_ptr<const Acts::
-                                   BoundarySurface<Acts::AbstractVolume>>>&
-            bSurfaces
-        = m_representingVolume->boundarySurfaces();
+    const std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>&
+    bSurfaces = m_representingVolume->boundarySurfaces();
     // fill in the surfaces into the vector
-    std::vector<std::shared_ptr<const Acts::
-                                    BoundarySurface<Acts::AbstractVolume>>>
-        aSurfaces;
+    std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>> aSurfaces;
     aSurfaces.push_back(bSurfaces.at(negativeFaceXY));
     aSurfaces.push_back(bSurfaces.at(positiveFaceXY));
     // create an ApproachDescriptor with Boundary surfaces
-    m_approachDescriptor = new Acts::
-        GenericApproachDescriptor<const BoundarySurface<AbstractVolume>>(
+    m_approachDescriptor = new
+        GenericApproachDescriptor<const BoundarySurfaceT<AbstractVolume>>(
             aSurfaces);
   } else {
     // create the new surfaces - positions first
-    Acts::Vector3D     aspPosition(center() + 0.5 * thickness() * normal());
-    Acts::Vector3D     asnPosition(center() - 0.5 * thickness() * normal());
-    Acts::Transform3D* asnTransform
-        = new Acts::Transform3D(Acts::Translation3D(asnPosition));
-    Acts::Transform3D* aspTransform
-        = new Acts::Transform3D(Acts::Translation3D(aspPosition));
+    Vector3D     aspPosition(center() + 0.5 * thickness() * normal());
+    Vector3D     asnPosition(center() - 0.5 * thickness() * normal());
+    auto asnTransform = std::make_shared<Transform3D>(Translation3D(asnPosition));
+    auto aspTransform = std::make_shared<Transform3D>(Translation3D(aspPosition));
     // create the vector
-    std::vector<const Acts::Surface*> aSurfaces;
-    aSurfaces.push_back(new Acts::DiscSurface(
-        std::shared_ptr<Acts::Transform3D>(asnTransform), m_bounds));
-    aSurfaces.push_back(new Acts::DiscSurface(
-        std::shared_ptr<Acts::Transform3D>(aspTransform), m_bounds));
+    std::vector<const Surface*> aSurfaces;
+    aSurfaces.push_back(new DiscSurface(asnTransform, m_bounds));
+    aSurfaces.push_back(new DiscSurface(aspTransform, m_bounds));
     // create an ApproachDescriptor with standard surfaces surfaces - these will
     // be deleted by the approach descriptor
-    m_approachDescriptor
-        = new Acts::GenericApproachDescriptor<const Acts::Surface>(aSurfaces);
+    m_approachDescriptor = new GenericApproachDescriptor<const Surface>(aSurfaces);
   }
   for (auto& sIter : (m_approachDescriptor->containedSurfaces())) {
-    sIter->associateLayer(*this);
+       sIter->associateLayer(*this);
   }
 }

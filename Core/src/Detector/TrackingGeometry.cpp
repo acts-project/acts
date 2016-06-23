@@ -19,7 +19,7 @@
 
 Acts::TrackingGeometry::TrackingGeometry(TrackingVolumePtr highestVolume)
   : m_world(highestVolume)
-  , m_beam(std::make_unique<const Acts::PerigeeSurface>())
+  , m_beam(std::make_unique<const Acts::PerigeeSurface>(s_origin))
 {
   // register all the TrackingVolumes
   if (m_world) registerTrackingVolumes(*m_world.get());
@@ -36,7 +36,7 @@ Acts::TrackingGeometry::lowestTrackingVolume(const Acts::Vector3D& gp) const
   const Acts::TrackingVolume* currentVolume = nullptr;
   while (currentVolume != searchVolume && searchVolume) {
     currentVolume = searchVolume;
-    searchVolume  = searchVolume->associatedSubVolume(gp);
+    searchVolume  = searchVolume->trackingVolume(gp);
   }
   return currentVolume;
 }
@@ -47,7 +47,7 @@ Acts::TrackingGeometry::lowestDetachedTrackingVolumes(
 {
   double                      tol           = 0.001;
   const Acts::TrackingVolume* currentVolume = lowestStaticTrackingVolume(gp);
-  if (currentVolume) return currentVolume->assocDetachedSubVolumes(gp, tol);
+  if (currentVolume) return currentVolume->detachedTrackingVolumes(gp, tol);
   return nullptr;
 }
 
@@ -60,7 +60,7 @@ Acts::TrackingGeometry::lowestStaticTrackingVolume(
   while (currentVolume != searchVolume && searchVolume) {
     currentVolume = searchVolume;
     if ((searchVolume->confinedDetachedVolumes()).empty())
-      searchVolume = searchVolume->associatedSubVolume(gp);
+      searchVolume = searchVolume->trackingVolume(gp);
   }
   return currentVolume;
 }
@@ -114,7 +114,7 @@ Acts::TrackingGeometry::atVolumeBoundary(const Acts::Vector3D&       gp,
   bool isAtBoundary = false;
   if (!vol) return isAtBoundary;
   for (auto& bSurface : vol->boundarySurfaces()) {
-    const Acts::Surface& surf = bSurface->surfaceRepresentation();
+    const Surface& surf = bSurface->surfaceRepresentation();
     if (surf.isOnSurface(gp, true)) isAtBoundary = true;
   }
   return isAtBoundary;
@@ -123,11 +123,11 @@ Acts::TrackingGeometry::atVolumeBoundary(const Acts::Vector3D&       gp,
 /** check position at volume boundary + navigation link */
 //@TODO change to BoundaryCheck
 bool
-Acts::TrackingGeometry::atVolumeBoundary(const Acts::Vector3D&  gp,
-                                         const Acts::Vector3D&  mom,
+Acts::TrackingGeometry::atVolumeBoundary(const Vector3D&  gp,
+                                         const Vector3D&  mom,
                                          const TrackingVolume*  vol,
                                          const TrackingVolume*& nextVol,
-                                         Acts::PropDirection    dir,
+                                         PropDirection    dir,
                                          double) const
 {
   bool isAtBoundary = false;

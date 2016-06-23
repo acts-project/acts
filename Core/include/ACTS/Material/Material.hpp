@@ -31,6 +31,7 @@ class ElementFraction : public std::pair<unsigned char, unsigned char>
 public:
   /** Default Constructor */
   ElementFraction() : std::pair<unsigned char, unsigned char>(0, 0) {}
+  
   /** Copy Constructor from base class */
   ElementFraction(const std::pair<unsigned char, unsigned char>& ef)
     : std::pair<unsigned char, unsigned char>(ef)

@@ -11,66 +11,42 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
-// STD/STL
 #include <iomanip>
 #include <iostream>
 #include <math.h>
 
-// default constructor
-Acts::TrapezoidBounds::TrapezoidBounds()
-  : Acts::PlanarBounds()
-  , m_boundValues(TrapezoidBounds::bv_length, 0.)
-  , m_alpha(0.)
-  , m_beta(0.)
-{
-}
-
-// constructor from arguments I
 Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
                                        double maxhalex,
                                        double haley)
-  : Acts::PlanarBounds()
-  , m_boundValues(TrapezoidBounds::bv_length, 0.)
+  : Acts::PlanarBounds(TrapezoidBounds::bv_length)
   , m_alpha(0.)
   , m_beta(0.)
 {
-  m_boundValues.at(TrapezoidBounds::bv_minHalfX) = fabs(minhalex);
-  m_boundValues.at(TrapezoidBounds::bv_maxHalfX) = fabs(maxhalex);
-  m_boundValues.at(TrapezoidBounds::bv_halfY)    = fabs(haley);
-  if (m_boundValues.at(TrapezoidBounds::bv_minHalfX)
-      > m_boundValues.at(TrapezoidBounds::bv_maxHalfX))
-    swap(m_boundValues.at(TrapezoidBounds::bv_minHalfX),
-         m_boundValues.at(TrapezoidBounds::bv_maxHalfX));
+  m_valueStore.at(TrapezoidBounds::bv_minHalfX) = fabs(minhalex);
+  m_valueStore.at(TrapezoidBounds::bv_maxHalfX) = fabs(maxhalex);
+  m_valueStore.at(TrapezoidBounds::bv_halfY)    = fabs(haley);
+  if (m_valueStore.at(TrapezoidBounds::bv_minHalfX)
+      > m_valueStore.at(TrapezoidBounds::bv_maxHalfX))
+    std::swap(m_valueStore.at(TrapezoidBounds::bv_minHalfX),
+              m_valueStore.at(TrapezoidBounds::bv_maxHalfX));
 }
 
-// constructor from arguments II
 Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
                                        double haley,
                                        double alpha,
                                        double beta)
-  : Acts::PlanarBounds()
-  , m_boundValues(TrapezoidBounds::bv_length, 0.)
+  : Acts::PlanarBounds(TrapezoidBounds::bv_length)
   , m_alpha(alpha)
   , m_beta(beta)
 {
   double gamma = (alpha > beta) ? (alpha - 0.5 * M_PI) : (beta - 0.5 * M_PI);
   // now fill them
-  m_boundValues.at(TrapezoidBounds::bv_minHalfX) = fabs(minhalex);
-  m_boundValues.at(TrapezoidBounds::bv_maxHalfX) = minhalex
-      + (2. * m_boundValues.at(TrapezoidBounds::bv_halfY)) * tan(gamma);
-  m_boundValues.at(TrapezoidBounds::bv_halfY) = fabs(haley);
+  m_valueStore.at(TrapezoidBounds::bv_minHalfX) = fabs(minhalex);
+  m_valueStore.at(TrapezoidBounds::bv_maxHalfX) = minhalex
+      + (2. * m_valueStore.at(TrapezoidBounds::bv_halfY)) * tan(gamma);
+  m_valueStore.at(TrapezoidBounds::bv_halfY) = fabs(haley);
 }
 
-// copy constructor
-Acts::TrapezoidBounds::TrapezoidBounds(const TrapezoidBounds& trabo)
-  : Acts::PlanarBounds()
-  , m_boundValues(trabo.m_boundValues)
-  , m_alpha(trabo.m_alpha)
-  , m_beta(trabo.m_beta)
-{
-}
-
-// destructor
 Acts::TrapezoidBounds::~TrapezoidBounds()
 {
 }
@@ -79,7 +55,7 @@ Acts::TrapezoidBounds&
 Acts::TrapezoidBounds::operator=(const TrapezoidBounds& trabo)
 {
   if (this != &trabo) {
-    m_boundValues = trabo.m_boundValues;
+    PlanarBounds::operator=(trabo);
     m_alpha       = trabo.m_alpha;
     m_beta        = trabo.m_beta;
   }
@@ -87,115 +63,101 @@ Acts::TrapezoidBounds::operator=(const TrapezoidBounds& trabo)
 }
 
 bool
-Acts::TrapezoidBounds::operator==(const Acts::SurfaceBounds& sbo) const
+Acts::TrapezoidBounds::inside(const Acts::Vector2D& lpos,
+                              double                tol0,
+                              double                tol1) const
 {
-  // check the type first not to compare apples with oranges
-  const Acts::TrapezoidBounds* trabo
-      = dynamic_cast<const Acts::TrapezoidBounds*>(&sbo);
-  if (!trabo) return false;
-  return (m_boundValues == trabo->m_boundValues);
+  if (m_alpha == 0.) return insideFull(lpos, tol0, tol1);
+  return (insideFull(lpos, tol0, tol1) && !insideExclude(lpos, tol0, tol1));
 }
 
-// checking if inside bounds
 bool
-Acts::TrapezoidBounds::inside(const Acts::Vector2D& locpo,
-                              double                tol1,
-                              double                tol2) const
-{
-  if (m_alpha == 0.) return insideFull(locpo, tol1, tol2);
-  return (insideFull(locpo, tol1, tol2) && !insideExclude(locpo, tol1, tol2));
-}
-
-// checking if inside bounds (Full symmetrical Trapezoid)
-bool
-Acts::TrapezoidBounds::insideFull(const Acts::Vector2D& locpo,
-                                  double                tol1,
-                                  double                tol2) const
+Acts::TrapezoidBounds::insideFull(const Acts::Vector2D& lpos,
+                                  double                tol0,
+                                  double                tol1) const
 {
   // the cases:
   // the cases:
-  double fabsX = fabs(locpo[Acts::eLOC_X]);
-  double fabsY = fabs(locpo[Acts::eLOC_Y]);
+  double fabsX = fabs(lpos[Acts::eLOC_X]);
+  double fabsY = fabs(lpos[Acts::eLOC_Y]);
   // (1) a fast FALSE
-  if (fabsY > (m_boundValues.at(TrapezoidBounds::bv_halfY) + tol2))
+  if (fabsY > (m_valueStore.at(TrapezoidBounds::bv_halfY) + tol1))
     return false;
   // (2) a fast FALSE
-  if (fabsX > (m_boundValues.at(TrapezoidBounds::bv_maxHalfX) + tol1))
+  if (fabsX > (m_valueStore.at(TrapezoidBounds::bv_maxHalfX) + tol0))
     return false;
   // (3) a fast TRUE
-  if (fabsX < (m_boundValues.at(TrapezoidBounds::bv_minHalfX) - tol1))
+  if (fabsX < (m_valueStore.at(TrapezoidBounds::bv_minHalfX) - tol0))
     return true;
   // (4) particular case - a rectangle
-  if (m_boundValues.at(TrapezoidBounds::bv_maxHalfX)
-      == m_boundValues.at(TrapezoidBounds::bv_minHalfX))
+  if (m_valueStore.at(TrapezoidBounds::bv_maxHalfX)
+      == m_valueStore.at(TrapezoidBounds::bv_minHalfX))
     return true;
   // (5) /** use basic calculation of a straight line */
-  double k = 2.0 * m_boundValues.at(TrapezoidBounds::bv_halfY)
-      / (m_boundValues.at(TrapezoidBounds::bv_maxHalfX)
-         - m_boundValues.at(TrapezoidBounds::bv_minHalfX))
-      * ((locpo[Acts::eLOC_X] > 0.) ? 1.0 : -1.0);
+  double k = 2.0 * m_valueStore.at(TrapezoidBounds::bv_halfY)
+      / (m_valueStore.at(TrapezoidBounds::bv_maxHalfX)
+         - m_valueStore.at(TrapezoidBounds::bv_minHalfX))
+      * ((lpos[Acts::eLOC_X] > 0.) ? 1.0 : -1.0);
   double d
-      = -fabs(k) * 0.5 * (m_boundValues.at(TrapezoidBounds::bv_maxHalfX)
-                          + m_boundValues.at(TrapezoidBounds::bv_minHalfX));
-  return (isAbove(locpo, tol1, tol2, k, d));
+      = -fabs(k) * 0.5 * (m_valueStore.at(TrapezoidBounds::bv_maxHalfX)
+                          + m_valueStore.at(TrapezoidBounds::bv_minHalfX));
+  return (isAbove(lpos, tol0, tol1, k, d));
 }
 
-// checking if local point is inside the exclude area
 bool
-Acts::TrapezoidBounds::insideExclude(const Acts::Vector2D& locpo,
-                                     double                tol1,
-                                     double                tol2) const
+Acts::TrapezoidBounds::insideExclude(const Acts::Vector2D& lpos,
+                                     double                tol0,
+                                     double                tol1) const
 {
   // line a
   bool   alphaBiggerBeta(m_alpha > m_beta);
   double ka   = alphaBiggerBeta ? tan(M_PI - m_alpha) : tan(m_alpha);
   double kb   = alphaBiggerBeta ? tan(M_PI - m_beta) : tan(m_beta);
   double sign = alphaBiggerBeta ? -1. : 1.;
-  double da   = -m_boundValues.at(TrapezoidBounds::bv_halfY)
-      + sign * ka * m_boundValues.at(TrapezoidBounds::bv_minHalfX);
-  double db = -m_boundValues.at(TrapezoidBounds::bv_halfY)
-      + sign * kb * m_boundValues.at(TrapezoidBounds::bv_minHalfX);
+  double da   = -m_valueStore.at(TrapezoidBounds::bv_halfY)
+      + sign * ka * m_valueStore.at(TrapezoidBounds::bv_minHalfX);
+  double db = -m_valueStore.at(TrapezoidBounds::bv_halfY)
+      + sign * kb * m_valueStore.at(TrapezoidBounds::bv_minHalfX);
 
-  return (isAbove(locpo, tol1, tol2, ka, da)
-          && isAbove(locpo, tol1, tol2, kb, db));
+  return (isAbove(lpos, tol0, tol1, ka, da)
+          && isAbove(lpos, tol0, tol1, kb, db));
 }
 
-// checking if local point lies above a line
 bool
-Acts::TrapezoidBounds::isAbove(const Acts::Vector2D& locpo,
+Acts::TrapezoidBounds::isAbove(const Acts::Vector2D& lpos,
+                               double                tol0,
                                double                tol1,
-                               double                tol2,
                                double                k,
                                double                d) const
 {
-  // the most tolerant approach for tol1 and tol2
+  // the most tolerant approach for tol0 and tol1
   double sign = k > 0. ? -1. : +1.;
-  return (locpo[Acts::eLOC_Y] + tol2
-          > (k * (locpo[Acts::eLOC_X] + sign * tol1) + d));
+  return (lpos[Acts::eLOC_Y] + tol1
+          > (k * (lpos[Acts::eLOC_X] + sign * tol0) + d));
 }
 
 double
-Acts::TrapezoidBounds::minDistance(const Acts::Vector2D& pos) const
+Acts::TrapezoidBounds::minDistance(const Acts::Vector2D& lpos) const
 {
   const int Np = 4;
 
-  double xl = -m_boundValues.at(TrapezoidBounds::bv_maxHalfX);
-  double xr = m_boundValues.at(TrapezoidBounds::bv_maxHalfX);
+  double xl = -m_valueStore.at(TrapezoidBounds::bv_maxHalfX);
+  double xr = m_valueStore.at(TrapezoidBounds::bv_maxHalfX);
   if (m_alpha != 0.) {
-    xl = -m_boundValues.at(TrapezoidBounds::bv_minHalfX)
-        - 2. * tan(m_alpha) * m_boundValues.at(TrapezoidBounds::bv_halfY);
+    xl = -m_valueStore.at(TrapezoidBounds::bv_minHalfX)
+        - 2. * tan(m_alpha) * m_valueStore.at(TrapezoidBounds::bv_halfY);
   } else if (m_beta != 0.) {
-    xr = m_boundValues.at(TrapezoidBounds::bv_minHalfX)
-        + 2. * tan(m_beta) * m_boundValues.at(TrapezoidBounds::bv_halfY);
+    xr = m_valueStore.at(TrapezoidBounds::bv_minHalfX)
+        + 2. * tan(m_beta) * m_valueStore.at(TrapezoidBounds::bv_halfY);
   }
-  double X[4] = {-m_boundValues.at(TrapezoidBounds::bv_minHalfX),
+  double X[4] = {-m_valueStore.at(TrapezoidBounds::bv_minHalfX),
                  xl,
                  xr,
-                 m_boundValues.at(TrapezoidBounds::bv_minHalfX)};
-  double Y[4] = {-m_boundValues.at(TrapezoidBounds::bv_halfY),
-                 m_boundValues.at(TrapezoidBounds::bv_halfY),
-                 m_boundValues.at(TrapezoidBounds::bv_halfY),
-                 -m_boundValues.at(TrapezoidBounds::bv_halfY)};
+                 m_valueStore.at(TrapezoidBounds::bv_minHalfX)};
+  double Y[4] = {-m_valueStore.at(TrapezoidBounds::bv_halfY),
+                 m_valueStore.at(TrapezoidBounds::bv_halfY),
+                 m_valueStore.at(TrapezoidBounds::bv_halfY),
+                 -m_valueStore.at(TrapezoidBounds::bv_halfY)};
 
   double dm = 1.e+20;
   double Ao = 0.;
@@ -205,8 +167,8 @@ Acts::TrapezoidBounds::minDistance(const Acts::Vector2D& pos) const
     int j          = i + 1;
     if (j == Np) j = 0;
 
-    double x  = X[i] - pos[0];
-    double y  = Y[i] - pos[1];
+    double x  = X[i] - lpos[0];
+    double y  = Y[i] - lpos[1];
     double dx = X[j] - X[i];
     double dy = Y[j] - Y[i];
     double A  = x * dy - y * dx;
@@ -231,16 +193,15 @@ Acts::TrapezoidBounds::minDistance(const Acts::Vector2D& pos) const
     return sqrt(dm);
 }
 
-// ostream operator overload
 std::ostream&
 Acts::TrapezoidBounds::dump(std::ostream& sl) const
 {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::TrapezoidBounds:  (minHlenghtX, maxHlengthX, hlengthY) = "
-     << "(" << m_boundValues.at(TrapezoidBounds::bv_minHalfX) << ", "
-     << m_boundValues.at(TrapezoidBounds::bv_maxHalfX) << ", "
-     << m_boundValues.at(TrapezoidBounds::bv_halfY) << ")";
+     << "(" << m_valueStore.at(TrapezoidBounds::bv_minHalfX) << ", "
+     << m_valueStore.at(TrapezoidBounds::bv_maxHalfX) << ", "
+     << m_valueStore.at(TrapezoidBounds::bv_halfY) << ")";
   sl << std::setprecision(-1);
   return sl;
 }

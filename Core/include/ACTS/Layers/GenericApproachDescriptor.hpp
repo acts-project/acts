@@ -13,37 +13,35 @@
 #ifndef ACTS_DETECTOR_GENERICAPPROPACHDESCRIPTOR_H
 #define ACTS_DETECTOR_GENERICAPPROPACHDESCRIPTOR_H 1
 
-// Geometry module
 #include "ACTS/Utilities/ApproachDescriptor.hpp"
 
 namespace Acts {
 
-/**
- @class GenericApproachDescriptor
+/// @class GenericApproachDescriptor
+///
+/// Class to decide and return which approaching surface to be taken,
+/// it's a generic descriptor for n surfaces
+///
+/// It is templated in order to allow for BoundarySurfaces from
+/// representing volumes of layers to be re-used
 
- Class to decide and return which approaching surface to be taken,
- it's a generic descriptor for n surfaces
-
- It is templated in order to allow for BoundarySurfaces from
- representing volumes of layers to be re-used
-
-*/
 
 template <class T>
 class GenericApproachDescriptor : public ApproachDescriptor
 {
 public:
-  /** A generic approach descriptor for new Acts::Surface objects - passing
-   * ownership */
+  /// A generic approach descriptor for new Acts::Surface objects 
+  /// passing ownership 
   GenericApproachDescriptor(const std::vector<T*>& aSurfaces)
     : ApproachDescriptor(), m_surfaces(), m_surfacesCache(aSurfaces)
   {
     // create the surface container with memory control
-    for (auto& sf : (aSurfaces)) m_surfaces.push_back(std::shared_ptr<T>(sf));
+    for (auto& sf : (aSurfaces)) 
+      m_surfaces.push_back(std::shared_ptr<T>(sf));
   }
 
-  /** A generic approach descriptor with shared surfaces to test - can not be
-   * used with Acts::Surfaces obejcts */
+  /// A generic approach descriptor with shared surfaces to test 
+  /// can not be sed with Acts::Surfaces obejcts 
   GenericApproachDescriptor(std::vector<std::shared_ptr<T>> aSurfaces)
     : ApproachDescriptor(), m_surfaces(aSurfaces), m_surfacesCache()
   {
@@ -53,31 +51,36 @@ public:
       m_surfacesCache.push_back(&(sf->surfaceRepresentation()));
   }
 
-  /** A generic approach descriptor with n surfaces to test */
+  /// A generic approach descriptor with n surfaces to test 
   ~GenericApproachDescriptor() {}
-  /** register the Layer to the surfaces */
+  
+  /// register the Layer to the surfaces 
   void
   registerLayer(const Layer& lay) override;
 
-  /** get the compatible surfaces
-      - return : a boolean indicating if an actual intersection had been tried
-      - fill vector of intersections
-      - primary bin surface : sf
-      - position & direction : pos, dir */
+  /// get the compatible surfaces
+  /// - return : a boolean indicating if an actual intersection had been tried
+  /// - fill vector of intersections
+  /// - primary bin surface : sf
+  /// @param gpos is the global posoition to start the approach from
+  /// @param dir is the direction in which you approach the layer
+  /// @param bchk is the boundary check presrcition
+  /// @param ice is a (future) compatibility estimater if needed
   const SurfaceIntersection
-  approachSurface(const Vector3D&                pos,
+  approachSurface(const Vector3D&                gpos,
                   const Vector3D&                dir,
                   const BoundaryCheck&           bchk,
                   const ICompatibilityEstimator* ice = nullptr) const override;
 
-  /* return all containes surfaces of this approach descriptor */
+  /// return all containes surfaces of this approach descriptor 
   const std::vector<const Surface*>&
   containedSurfaces() const override;
 
 private:
-  std::vector<std::shared_ptr<T>>
-                              m_surfaces;  //!< approach surfaces with ownership control
-  std::vector<const Surface*> m_surfacesCache;  //!< the surface container cache
+  /// approach surfaces with ownership control
+  std::vector< std::shared_ptr<T> >  m_surfaces;  
+  /// the surface container cache
+  std::vector<const Surface*>        m_surfacesCache;  
 };
 
 template <class T>

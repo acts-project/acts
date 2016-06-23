@@ -10,9 +10,7 @@
 // LayerArrayCreator.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module
 #include "ACTS/Tools/LayerArrayCreator.hpp"
-
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Layers/NavigationLayer.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
@@ -94,9 +92,9 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
       // if layers are attached to each other, no navigation layer needed
       if (navigationValue != (layerValue - 0.5 * layerThickness)) {
         // create the navigation layer surface from the layer
-        Surface* navLayerSurface = createNavigationSurface(
-            *layIter, bValue, -fabs(layerValue - navigationValue));
-        navLayer = NavigationLayer::create(navLayerSurface);
+        std::unique_ptr<const Surface> navLayerSurface
+        (createNavigationSurface(*layIter, bValue, -fabs(layerValue - navigationValue)));
+          navLayer = NavigationLayer::create(std::move(navLayerSurface));
         // push the navigation layer in
         layerOrderVector.push_back(
             LayerOrderPosition(navLayer, navLayer->binningPosition(bValue)));
@@ -117,9 +115,9 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
     // create navigation layer only when necessary
     if (navigationValue != max) {
       // create the navigation layer surface from the layer
-      Surface* navLayerSurface = createNavigationSurface(
-          *lastLayer, bValue, navigationValue - layerValue);
-      navLayer = NavigationLayer::create(navLayerSurface);
+      std::unique_ptr<const Surface> navLayerSurface(
+        createNavigationSurface(*lastLayer, bValue, navigationValue - layerValue));
+        navLayer = NavigationLayer::create(std::move(navLayerSurface));
       // push the navigation layer in
       layerOrderVector.push_back(
           LayerOrderPosition(navLayer, navLayer->binningPosition(bValue)));
@@ -196,9 +194,12 @@ Acts::LayerArrayCreator::createNavigationSurface(const Layer& layer,
         = dynamic_cast<const CylinderBounds*>(&(layerSurface.bounds()));
     double navigationR = cBounds->r() + offset;
     double halflengthZ = cBounds->halflengthZ();
+    // create the new layer surface
+    std::shared_ptr<Transform3D> navTrasform = nullptr;
+    if (!layerSurface.transform().isApprox(s_idTransform))
+        navTrasform = std::make_shared<Transform3D>(layerSurface.transform());
     // new navigation layer
-    navigationSurface = new CylinderSurface(
-        layerSurface.cachedTransform(), navigationR, halflengthZ);
+    navigationSurface = new CylinderSurface(navTrasform, navigationR, halflengthZ);
   }
   return navigationSurface;
 }

@@ -10,7 +10,6 @@
 // SurfaceArrayCreator.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module
 #include "ACTS/Tools/SurfaceArrayCreator.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/BinStepping.hpp"
@@ -18,11 +17,8 @@
 #include "ACTS/Utilities/BinnedArray1D.hpp"
 #include "ACTS/Utilities/BinnedArray2D.hpp"
 #include "ACTS/Utilities/MsgMacros.hpp"
-// Core module
 #include "ACTS/Utilities/Definitions.hpp"
 
-/** SurfaceArrayCreator interface method - create an array in a cylinder, binned
- * in phi, z */
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const std::vector<const Acts::Surface*>& surfaces,
@@ -80,14 +76,12 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   // create and complete
   std::vector<SurfacePosition> sVector;
   // complete
-  // @TODO - switch on again !!
-  // completeBinning(surfaces, *arrayUtility, sVector, phizSystem);
+  completeBinning(surfaces, *arrayUtility, sVector, phizSystem);
   // create the surfaceArray
   auto sArray
       = std::make_unique<BinnedArray2D<const Surface*>>(sVector, arrayUtility);
   // register the neighbours
-  // @TODO
-  // registerNeighboursGrid(sArray->arrayObjectsOrdered(), false, true);
+  // @TODO -> registerNeighboursGrid(sArray->arrayObjectsOrdered(), false, true);
   // return the surface array
   return std::move(sArray);
 }
@@ -144,7 +138,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
                          sArray->arrayObjects().end());
     std::vector<std::vector<const Surface*>> arraySystem = {arraySurfaces};
     // prepared to run the neighbour registration now
-    // registerNeighboursGrid(arraySystem, false, true);
+    // @TODO -> registerNeighboursGrid(arraySystem, false, true);
     // now return
     return std::move(sArray);
   }
@@ -184,13 +178,11 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     rphiSystem.push_back(rSystem);
   }
   // create and complete
-  // @TODO
-  // completeBinning(surfaces, *arrayUtility, sVector, rphiSystem);
+  completeBinning(surfaces, *arrayUtility, sVector, rphiSystem);
   // create the surfaceArray
-  auto sArray
-      = std::make_unique<BinnedArray2D<const Surface*>>(sVector, arrayUtility);
+  auto sArray = std::make_unique<BinnedArray2D<const Surface*>>(sVector, arrayUtility);
   // register the neighbours
-  // @TODO
+  // @TODO -> put it back
   // registerNeighboursGrid(sArray->arrayObjectsOrdered(), false, true);
   // return the surface array
   return std::move(sArray);
@@ -341,7 +333,7 @@ Acts::SurfaceArrayCreator::registerNeighboursGrid(
                                                           << nsurface);
         if (nsurface && nsurface != surface) break;
       }
-      // find the previous neighbour in Loc1
+      // find the previous neighbour in Loc0
       nsurface = surface;
       while (decrement(p1, bins1, open1) && surface == nsurface) {
         nsurface = surfaceArrayObjects.at(p1).at(i0);
@@ -351,7 +343,7 @@ Acts::SurfaceArrayCreator::registerNeighboursGrid(
                                                           << nsurface);
         if (nsurface && nsurface != surface) break;
       }
-      // find the next neighbour in Loc1
+      // find the next neighbour in Loc0
       nsurface = surface;
       while (increment(n1, bins1, open1) && surface == nsurface) {
         nsurface = surfaceArrayObjects.at(n1).at(i0);

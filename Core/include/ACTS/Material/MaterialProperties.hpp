@@ -32,7 +32,6 @@ namespace Acts {
   - A   [g/mole]
   - Z
   - rho [g/mm3]
-
  */
 
 class MaterialProperties

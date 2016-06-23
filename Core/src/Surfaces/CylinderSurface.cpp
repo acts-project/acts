@@ -10,166 +10,96 @@
 // CylinderSurface.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Trk
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Surfaces/RealQuadraticEquation.hpp"
-// STD/STL
 #include <assert.h>
 #include <iomanip>
 #include <iostream>
 
-// default constructor
-Acts::CylinderSurface::CylinderSurface()
-  : Acts::Surface(), m_bounds(nullptr), m_rotSymmetryAxis(nullptr)
-{
-}
-
-// copy constructor
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface& csf)
-  : Acts::Surface(csf), m_bounds(csf.m_bounds), m_rotSymmetryAxis(nullptr)
+  : Surface(csf), m_bounds(csf.m_bounds)
 {
 }
 
-// copy constructor with shift
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface&   csf,
                                        const Acts::Transform3D& transf)
-  : Acts::Surface(csf, transf)
+  : Surface(csf, transf)
   , m_bounds(csf.m_bounds)
-  , m_rotSymmetryAxis(nullptr)
 {
 }
 
-// constructor by radius and halflength
 Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<Acts::Transform3D> htrans,
     double                             radius,
     double                             hlength)
-  : Acts::Surface(htrans)
-  , m_bounds(std::make_shared<Acts::CylinderBounds>(radius, hlength))
-  , m_rotSymmetryAxis(nullptr)
+  : Surface(htrans)
+  , m_bounds(std::make_shared<CylinderBounds>(radius, hlength))
 {
 }
 
-// constructor by radius, halflenght and phisector
 Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<Acts::Transform3D> htrans,
     double                             radius,
     double                             hphi,
     double                             hlength)
-  : Acts::Surface(htrans)
-  , m_bounds(std::make_shared<Acts::CylinderBounds>(radius, hphi, hlength))
-  , m_rotSymmetryAxis(nullptr)
+  : Surface(htrans)
+  , m_bounds(std::make_shared<CylinderBounds>(radius, hphi, hlength))
 {
 }
 
-// constructor by CylinderBounds
 Acts::CylinderSurface::CylinderSurface(
-    std::shared_ptr<Acts::Transform3D> htrans,
-    const Acts::CylinderBounds*        cbounds)
-  : Acts::Surface(htrans), m_bounds(cbounds), m_rotSymmetryAxis(nullptr)
+    std::shared_ptr<Acts::Transform3D>     htrans,
+    std::shared_ptr<const CylinderBounds> cbounds)
+  : Surface(htrans)
+  , m_bounds(cbounds)
 {
   assert(cbounds);
 }
 
-// constructor by CylinderBounds
-Acts::CylinderSurface::CylinderSurface(
-    std::shared_ptr<Acts::Transform3D>          htrans,
-    std::shared_ptr<const Acts::CylinderBounds> cbounds)
-  : Acts::Surface(htrans), m_bounds(cbounds), m_rotSymmetryAxis(nullptr)
-{
-  assert(cbounds);
-}
-
-// constructor from transform by unique_ptr
-Acts::CylinderSurface::CylinderSurface(
-    std::unique_ptr<Acts::Transform3D> htrans)
-  : Acts::Surface(std::shared_ptr<Acts::Transform3D>(std::move(htrans)))
-  , m_bounds(nullptr)
-  , m_rotSymmetryAxis(nullptr)
-{
-}
-
-// constructor by radius and halflength
-Acts::CylinderSurface::CylinderSurface(double radius, double hlength)
-  : Acts::Surface()
-  , m_bounds(new Acts::CylinderBounds(radius, hlength))
-  , m_rotSymmetryAxis(nullptr)
-{
-}
-
-// constructor by radius, halflenght and phisector
-Acts::CylinderSurface::CylinderSurface(double radius,
-                                       double hphi,
-                                       double hlength)
-  : Acts::Surface()
-  , m_bounds(new Acts::CylinderBounds(radius, hphi, hlength))
-  , m_rotSymmetryAxis(nullptr)
-{
-}
-
-// destructor (will call destructor from base class which deletes objects)
 Acts::CylinderSurface::~CylinderSurface()
-{
-  delete m_rotSymmetryAxis;
+{  
 }
 
 Acts::CylinderSurface&
 Acts::CylinderSurface::operator=(const CylinderSurface& csf)
 {
   if (this != &csf) {
-    Acts::Surface::operator=(csf);
+    Surface::operator=(csf);
     m_bounds               = csf.m_bounds;
-    delete m_rotSymmetryAxis;
-    m_rotSymmetryAxis = nullptr;
   }
   return *this;
 }
 
-bool
-Acts::CylinderSurface::operator==(const Acts::Surface& sf) const
-{
-  // first check the type not to compare apples with oranges
-  const Acts::CylinderSurface* csf
-      = dynamic_cast<const Acts::CylinderSurface*>(&sf);
-  if (!csf) return false;
-  if (this == csf) return true;
-  bool transfEqual(transform().isApprox(csf->transform(), 10e-8));
-  bool centerEqual = (transfEqual) ? (center() == csf->center()) : false;
-  bool boundsEqual = (centerEqual) ? (bounds() == csf->bounds()) : false;
-  return boundsEqual;
-}
-
 // return the binning position for ordering in the BinnedArray
-Acts::Vector3D
-Acts::CylinderSurface::binningPosition(Acts::BinningValue bValue) const
+const Acts::Vector3D
+Acts::CylinderSurface::binningPosition(BinningValue bValue) const
 {
   // special binning type for R-type methods
   if (bValue == Acts::binR || bValue == Acts::binRPhi) {
     double R   = bounds().r();
     double phi = m_bounds ? m_bounds->averagePhi() : 0.;
-    return Acts::Vector3D(
+    return Vector3D(
         center().x() + R * cos(phi), center().y() + R * sin(phi), center().z());
   }
   // give the center as default for all of these binning types
   // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
-  return Acts::Surface::binningPosition(bValue);
+  return center();
 }
 
 // return the measurement frame: it's the tangential plane
 const Acts::RotationMatrix3D
-Acts::CylinderSurface::measurementFrame(const Acts::Vector3D& pos,
-                                        const Acts::Vector3D&) const
+Acts::CylinderSurface::measurementFrame(const Vector3D& gpos,
+                                        const Vector3D&) const
 {
   Acts::RotationMatrix3D mFrame;
   // construct the measurement frame
-  Acts::Vector3D measY(
-      transform().rotation().col(2));  // measured Y is the z axis
-  Acts::Vector3D measDepth
-      = Acts::Vector3D(pos.x(), pos.y(), 0.)
-            .unit();  // measured z is the position transverse normalized
-  Acts::Vector3D measX(
-      measY.cross(measDepth).unit());  // measured X is what comoes out of it
-  // the columnes
+  // measured Y is the z axis
+  Acts::Vector3D measY(transform().rotation().col(2));  
+  // measured z is the position transverse normalized
+  Acts::Vector3D measDepth = Vector3D(gpos.x(), gpos.y(), 0.).unit();
+  // measured X is what comoes out of it  
+  Acts::Vector3D measX(measY.cross(measDepth).unit());  
+  // assign the columnes
   mFrame.col(0) = measX;
   mFrame.col(1) = measY;
   mFrame.col(2) = measDepth;
@@ -177,34 +107,30 @@ Acts::CylinderSurface::measurementFrame(const Acts::Vector3D& pos,
   return mFrame;
 }
 
-const Acts::Vector3D&
+const Acts::Vector3D
 Acts::CylinderSurface::rotSymmetryAxis() const
 {
-  if (!m_rotSymmetryAxis) {
-    Acts::Vector3D zAxis(transform().rotation().col(2));
-    m_rotSymmetryAxis = new Acts::Vector3D(zAxis);
-  }
-  return (*m_rotSymmetryAxis);
+  return Vector3D(transform().rotation().col(2));
 }
 
 void
-Acts::CylinderSurface::localToGlobal(const Acts::Vector2D& locpos,
-                                     const Acts::Vector3D&,
-                                     Acts::Vector3D& glopos) const
+Acts::CylinderSurface::localToGlobal(const Vector2D& lpos,
+                                     const Vector3D&,
+                                     Vector3D& gpos) const
 {
   // create the position in the local 3d frame
   double r   = bounds().r();
-  double phi = locpos[Acts::eLOC_RPHI] / r;
-  glopos     = Acts::Vector3D(r * cos(phi), r * sin(phi), locpos[Acts::eLOC_Z]);
+  double phi = lpos[Acts::eLOC_RPHI] / r;
+  gpos       = Vector3D(r * cos(phi), r * sin(phi), lpos[Acts::eLOC_Z]);
   // transform it to the globalframe: CylinderSurfaces are allowed to have 0
-  // pointer transform
-  if (Acts::Surface::m_transform) glopos = transform() * glopos;
+  // if pointer transform exists -> port into frame
+  if (Surface::m_transform) gpos = transform() * gpos;
 }
 
 bool
-Acts::CylinderSurface::globalToLocal(const Acts::Vector3D& glopos,
-                                     const Acts::Vector3D&,
-                                     Acts::Vector2D& locpos) const
+Acts::CylinderSurface::globalToLocal(const Vector3D& gpos,
+                                     const Vector3D&,
+                                     Vector2D& lpos) const
 {
   // get the transform & transform global position into cylinder frame
   // @TODO clean up intolerance parameters
@@ -214,42 +140,42 @@ Acts::CylinderSurface::globalToLocal(const Acts::Vector3D& glopos,
   double inttol             = bounds().r() * 0.0001;
   if (inttol < 0.01) inttol = 0.01;
   // do the transformation or not
-  if (Acts::Surface::m_transform) {
-    const Acts::Transform3D& surfaceTrans = transform();
-    Acts::Transform3D        inverseTrans(surfaceTrans.inverse());
-    Acts::Vector3D           loc3Dframe(inverseTrans * glopos);
-    locpos = Acts::Vector2D(bounds().r() * loc3Dframe.phi(), loc3Dframe.z());
+  if (Surface::m_transform) {
+    const Transform3D& surfaceTrans = transform();
+    Transform3D        inverseTrans(surfaceTrans.inverse());
+    Vector3D           loc3Dframe(inverseTrans * gpos);
+    lpos = Vector2D(bounds().r()) * loc3Dframe.phi(), loc3Dframe.z();
     radius = loc3Dframe.perp();
   } else {
-    locpos = Acts::Vector2D(bounds().r() * glopos.phi(), glopos.z());
-    radius = glopos.perp();
+    lpos = Vector2D(bounds().r() * gpos.phi(), gpos.z());
+    radius = gpos.perp();
   }
   // return true or false
   return ((fabs(radius - bounds().r()) > inttol) ? false : true);
 }
 
 bool
-Acts::CylinderSurface::isOnSurface(const Acts::Vector3D& glopo,
+Acts::CylinderSurface::isOnSurface(const Acts::Vector3D& gpos,
                                    const BoundaryCheck&  bchk) const
 {
   Acts::Vector3D loc3Dframe
-      = Acts::Surface::m_transform ? (transform().inverse()) * glopo : glopo;
+      = Acts::Surface::m_transform ? (transform().inverse()) * gpos : gpos;
   return (bchk ? bounds().inside3D(loc3Dframe, bchk) : true);
 }
 
 Acts::Intersection
-Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& pos,
+Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
                                             const Acts::Vector3D& dir,
                                             bool                  forceDir,
                                             const BoundaryCheck&  bchk) const
 {
   bool needsTransform = (m_transform || m_associatedDetElement) ? true : false;
   // create the hep points
-  Acts::Vector3D point1    = pos;
+  Acts::Vector3D point1    = gpos;
   Acts::Vector3D direction = dir;
   if (needsTransform) {
     Acts::Transform3D invTrans = transform().inverse();
-    point1                     = invTrans * pos;
+    point1                     = invTrans * gpos;
     direction                  = invTrans.linear() * dir;
   }
   Acts::Vector3D point2 = point1 + dir;
@@ -269,7 +195,7 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& pos,
       t1 = (pquad.first - point1.x()) / direction.x();
       t2 = (pquad.second - point1.x()) / direction.x();
     } else  // bail out if no solution exists
-      return Acts::Intersection(pos, 0., false);
+      return Intersection(gpos, 0., false);
   } else {
     // x value ise th one of point1
     // x^2 + y^2 = R^2
@@ -277,7 +203,7 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& pos,
     double x     = point1.x();
     double r2mx2 = R * R - x * x;
     // bail out if no solution
-    if (r2mx2 < 0.) return Acts::Intersection(pos, 0., false);
+    if (r2mx2 < 0.) return Intersection(gpos, 0., false);
     double y = sqrt(r2mx2);
     // assign parameters and solutions
     t1 = y - point1.y();
@@ -315,9 +241,9 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& pos,
     }
   }
   // the solution is still in the local 3D frame, direct check
-  isValid = bchk ? (isValid && m_bounds->inside3D(solution, bchk)) : isValid;
+  isValid = bchk ? (isValid && bounds().inside3D(solution, bchk)) : isValid;
 
   // now return
-  return needsTransform ? Intersection(transform() * solution, path, isValid)
-                        : Intersection(solution, path, isValid);
+  return needsTransform ? std::move(Intersection(transform() * solution, path, isValid))
+                        : std::move(Intersection(solution, path, isValid));
 }

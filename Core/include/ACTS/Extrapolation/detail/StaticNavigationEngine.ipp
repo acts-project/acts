@@ -15,9 +15,8 @@
 #include "ACTS/Extrapolation/IMaterialEffectsEngine.hpp"
 #include "ACTS/Extrapolation/IPropagationEngine.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Volumes/BoundarySurface.hpp"
+#include "ACTS/Volumes/BoundarySurfaceT.hpp"
 
-/** handle the failure - as configured */
 template <class T>
 Acts::ExtrapolationCode
 Acts::StaticNavigationEngine::resolveBoundaryT(
@@ -45,11 +44,11 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
                << (eCell.onLastBoundary() ? " - starting from last boundary."
                                           : "."));
   // remember them for the slow acces
-  std::map<const BoundarySurface<TrackingVolume>*, bool> bSurfacesTried;
+  std::map<const BoundarySurfaceT<TrackingVolume>*, bool> bSurfacesTried;
 
   for (auto& boundaryCandidate : boundaryIntersections) {
     // the surface of the
-    const BoundarySurface<TrackingVolume>* bSurfaceTV
+    const BoundarySurfaceT<TrackingVolume>* bSurfaceTV
         = boundaryCandidate.object;
     // skip if it's the last boundary surface
     if (eCell.onLastBoundary()
@@ -152,7 +151,7 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
                  "approach now");
   for (auto& boundaryCandidate : boundaryIntersections) {
     // the surface of the
-    const BoundarySurface<TrackingVolume>* bSurfaceTV
+    const BoundarySurfaceT<TrackingVolume>* bSurfaceTV
         = boundaryCandidate.object;
     // check this boudnary, possible return codes are:
     // - SuccessPathLimit     : propagation to boundary caused PathLimit to be
@@ -200,7 +199,7 @@ template <class T>
 Acts::ExtrapolationCode
 Acts::StaticNavigationEngine::handleBoundaryT(
     Acts::ExtrapolationCell<T>&                        eCell,
-    const Acts::BoundarySurface<Acts::TrackingVolume>& bSurfaceTV,
+    const Acts::BoundarySurfaceT<Acts::TrackingVolume>& bSurfaceTV,
     Acts::PropDirection                                pDir,
     bool                                               stepout) const
 {
@@ -211,7 +210,7 @@ Acts::StaticNavigationEngine::handleBoundaryT(
   // - SuccessPathLimit : pathLimit reached during propagation
   // - InProgress       : boundary reached
   // - Recovered        : boundary not reached
-  ExtrapolationCode eCode = m_config.propagationEngine->propagate(
+  ExtrapolationCode eCode = m_cfg.propagationEngine->propagate(
       eCell,
       bSurface,
       pDir,
@@ -247,11 +246,11 @@ Acts::StaticNavigationEngine::handleBoundaryT(
     // get the nextVolume - modify the position in case you have a step out
     // trial, take attachment otherwise
     const TrackingVolume* nextVolume = stepout
-        ? m_config.trackingGeometry->lowestTrackingVolume(
+        ? m_cfg.trackingGeometry->lowestTrackingVolume(
               Vector3D(eCell.leadParameters->position()
                        + pDir * eCell.leadParameters->momentum().unit()))
         : bSurfaceTV.attachedVolume(eCell.leadParameters->position(),
-                                    eCell.leadParameters->momentum(),
+                                    eCell.leadParameters->momentum().unit(),
                                     pDir);
     // check if we have no nextVolume : boundary rechaed @TODO it's not really a
     // success
@@ -289,13 +288,13 @@ Acts::StaticNavigationEngine::handleBoundaryT(
     }
     // update the with the information of the layer material - will change the
     // leadParameters
-    if (bSurface.surfaceMaterial()) {
+    if (bSurface.associatedMaterial()) {
       // now handle the material, possible return codes:
       // - InProgress            : material update performed or not (depending
       // on material)
       // - SuccessMaterialLimit  : material limit reached & configured to stop
       // there
-      eCode = m_config.materialEffectsEngine->handleMaterial(
+      eCode = m_cfg.materialEffectsEngine->handleMaterial(
           eCell, pDir, fullUpdate);
       CHECK_ECODE_SUCCESS(eCell, eCode);
     }
@@ -338,19 +337,21 @@ Acts::StaticNavigationEngine::resolvePositionT(
   EX_MSG_DEBUG(++eCell.navigationStep,
                "navigation",
                "",
-               "resolve position '"
-                   << eCell.leadParameters->position()
-                   << (int(pDir) > 0 ? "' along momentum."
-                                     : "' opposite momentum."));
+               "resolve position ("
+                   << eCell.leadParameters->position().x()
+                   << eCell.leadParameters->position().y() << ", "
+                   << eCell.leadParameters->position().z() << ", "
+                   << (int(pDir) > 0 ? ") along momentum."
+                                     : ") opposite momentum."));
 
   // noLoop= True is used when we have exit from leadVolume
 
   if (!eCell.leadVolume)
-    eCell.leadVolume = m_config.trackingGeometry->lowestStaticTrackingVolume(
+    eCell.leadVolume = m_cfg.trackingGeometry->lowestStaticTrackingVolume(
         eCell.leadParameters->position());
   if (!eCell.leadVolume) return ExtrapolationCode::FailureNavigation;
   const TrackingVolume* nextVol = 0;
-  if (m_config.trackingGeometry->atVolumeBoundary(
+  if (m_cfg.trackingGeometry->atVolumeBoundary(
           eCell.leadParameters->position(),
           eCell.leadParameters->momentum(),
           eCell.leadVolume,

@@ -13,11 +13,9 @@
 #ifndef ACTS_GEOMETRYTOOLS_TRACKINGVOLUMEARRAYCREATOR_H
 #define ACTS_GEOMETRYTOOLS_TRACKINGVOLUMEARRAYCREATOR_H
 
-// Core module
 #include "ACTS/Tools/ITrackingVolumeArrayCreator.hpp"
 #include "ACTS/Utilities/BinnedArray.hpp"
 #include "ACTS/Utilities/Logger.hpp"
-// STL
 #include <algorithm>
 #include "ACTS/Utilities/Definitions.hpp"
 
@@ -28,54 +26,62 @@ class TrackingVolume;
 
 typedef std::pair<TrackingVolumePtr, Vector3D> TrackingVolumeOrderPosition;
 
-/** @class TrackingVolumeArrayCreator
-
-  The TrackingVolumeArrayCreator is a simple Tool that helps to construct
-  binned arrays of TrackingVolumes for both, confinement in another volume
-  and navigation issues.
-
- */
-
+///@class TrackingVolumeArrayCreator
+///
+/// The TrackingVolumeArrayCreator is a simple Tool that helps to construct
+/// binned arrays of TrackingVolumes for both, confinement in another volume
+/// and navigation issues.
+///
 class TrackingVolumeArrayCreator : public ITrackingVolumeArrayCreator
 {
 public:
+  /// @struct Config
+  /// Nested configuration struct for this array creator
   struct Config
   {
-    std::shared_ptr<Logger> logger;  //!< logging instance
+    std::shared_ptr<Logger> logger;  ///< logging instance
 
     Config() : logger(getDefaultLogger("LayerArrayCreator", Logging::INFO)) {}
   };
 
-  /** Constructor */
-  TrackingVolumeArrayCreator(const Config& c) : m_config(c) {}
-  /** Destructor */
+  /// Constructor 
+  /// @param cfg is the configuration class
+  TrackingVolumeArrayCreator(const Config& cfg) : m_cfg(cfg) {}
+  
+  /// Destructor 
   virtual ~TrackingVolumeArrayCreator() = default;
 
-  /** create a tracking volume array */
+  /// create a tracking volume array 
+  /// @param vols is the vector of TrackingVolumes to be 
+  /// @param bVals is the binning value
   std::shared_ptr<const TrackingVolumeArray>
   trackingVolumeArray(const TrackingVolumeVector& vols,
                       BinningValue                bVal) const;
 
+  /// Set the configuration
+  /// @param cfg configuration struct to be set
   void
-  setConfiguration(const Config& c)
+  setConfiguration(const Config& cfg)
   {
-    m_config = c;
+    m_cfg = cfg;
   }
 
-  /** Get configuration method */
+  /// Get configuration method 
   Config
   getConfiguration() const
   {
-    return m_config;
+    return m_cfg;
   }
 
 private:
-  /** Configuration struct */
-  Config m_config;
+  /// Configuration struct 
+  Config m_cfg;
+  
+  // Private access to the logger method
   const Logger&
   logger() const
   {
-    return *m_config.logger;
+    return *m_cfg.logger;
   }
 };
 }

@@ -10,16 +10,13 @@
 // CylinderLayer.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_DETECTOR_CYLINDERLAYER_H
-#define ACTS_DETECTOR_CYLINDERLAYER_H
-
-class MsgStream;
+#ifndef ACTS_LAYERS_CYLINDERLAYER_H
+#define ACTS_LAYERS_CYLINDERLAYER_H
 
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Utilities/BinnedArray.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-// STL sorting
 #include <algorithm>
 
 namespace Acts {
@@ -29,19 +26,29 @@ class SurfaceMaterial;
 class OverlapDescriptor;
 class ApproachDescriptor;
 
-/**
- @class CylinderLayer
-
- Class to describe a cylindrical detector layer for tracking, it inhertis from
- both,
- Layer base class and CylinderSurface class
-
-*/
-
+/// @class CylinderLayer
+///
+/// Class to describe a cylindrical detector layer for tracking, it inhertis from
+/// both,
+/// Layer base class and CylinderSurface class
+///
 class CylinderLayer : public CylinderSurface, public Layer
 {
 public:
-  /**create a shared, fully deployed CylinderLayer */
+  /// Factory for shared Layer pointer
+  /// create a shared, fully deployed CylinderLayer
+  ///
+  /// @param transform is the 3D transform that places the layer in 3D space
+  /// @param cbounds are the cylindrical bounds of the layer
+  /// @param surfaceArray is the Binned Array that holds the sensitive surfaces
+  /// @param thickness is the layer thickness (along the normal)
+  /// @param od is the overlap descriptor for sensitive surfaces
+  /// @param ad is the approach descriptor for approaching the layer
+  /// @param laytyp is the layer type
+  ///
+  /// @TODO change OverlapDescriptor and ApproachDescriptor to unique_ptr
+  ///
+  /// @return The return object is a shared poiter to the layer.
   static LayerPtr
   create(std::shared_ptr<Transform3D>          transform,
          std::shared_ptr<const CylinderBounds> cbounds,
@@ -49,7 +56,7 @@ public:
          double                                thickness    = 0.,
          OverlapDescriptor*                    od           = nullptr,
          ApproachDescriptor*                   ad           = nullptr,
-         int                                   laytyp = int(Acts::passive))
+         LayerType                             laytyp       = Acts::passive)
   {
     return LayerPtr(new CylinderLayer(transform,
                                       cbounds,
@@ -60,58 +67,84 @@ public:
                                       laytyp));
   }
 
-  /** Copy constructor with shift - will not copy anything of the static
-   * next/previous environment*/
+  /// Factory copy constructor with shift
+  /// 
+  /// @param cla is the source cylinder layer for the copy
+  /// @shift is the additional transform applied after cloning
+  /// 
+  /// @return The return object is a shared poiter to the layer.
   static LayerPtr
   create(const CylinderLayer& cla, const Transform3D& shift)
   {
     return LayerPtr(new CylinderLayer(cla, shift));
   }
 
-  /** Clone with a shift - only cloning that is allowed */
+  /// Factory clone constructor with shift
+  /// 
+  /// @param cla is the source cylinder layer for the clone
+  /// @shift is the additional transform applied after cloning
+  /// 
+  /// @return The return object is a shared poiter to the layer.
   LayerPtr
   cloneWithShift(const Transform3D& shift) const override
   {
     return CylinderLayer::create(*this, shift);
   }
 
-  /** Copy constructor - forbidden, create a new one if you need */
+  /// Copy constructor - deleted
   CylinderLayer(const CylinderLayer& cla) = delete;
 
-  /** Assignment operator for CylinderLayers - forbidden, create a new one */
+  /// Assignment operator for CylinderLayers - deleted
   CylinderLayer&
-  operator=(const CylinderLayer&)
-      = delete;
+  operator=(const CylinderLayer&) = delete;
 
-  /** Destructor*/
+  /// Default Constructor
+  CylinderLayer() = delete;
+  
+  /// Destructor
   virtual ~CylinderLayer() {}
-  /** Transforms the layer into a Surface representation for global positioning
-   * & navigation */
+  
+  /// Transforms the layer into a Surface representation
+  /// This is for positioning and extrapolation 
   const CylinderSurface&
   surfaceRepresentation() const override;
 
 private:
-  /** build approach surfaces */
+  /// build approach surfaces */
   void
   buildApproachDescriptor() const;
 
 protected:
-  /** Default Constructor*/
-  CylinderLayer() {}
-  /** Fully deployed CylinderLayer constructor */
+  /// Private constructor for CylinderLayer, called by create(args*) factory
+  ///
+  /// @param transform is the 3D transform that places the layer in 3D space
+  /// @param cbounds are the cylindrical bounds of the layer
+  /// @param surfaceArray is the Binned Array that holds the sensitive surfaces
+  /// @param thickness is the layer thickness (along the normal)
+  /// @param od is the overlap descriptor for sensitive surfaces
+  /// @param ad is the approach descriptor for approaching the layer
+  /// @param laytyp is the layer type
+  ///
+  /// @TODO change OverlapDescriptor and ApproachDescriptor to unique_ptr
+  ///
+  /// @return The return object is a shared poiter to the layer.
   CylinderLayer(std::shared_ptr<Transform3D>          transform,
                 std::shared_ptr<const CylinderBounds> cbounds,
                 std::unique_ptr<SurfaceArray>         surfaceArray = nullptr,
                 double                                thickness    = 0.,
                 OverlapDescriptor*                    od           = nullptr,
                 ApproachDescriptor*                   ad           = nullptr,
-                int laytyp = int(Acts::passive));
+                LayerType                             laytyp       = Acts::passive);
 
-  /** Copy constructor with shift - will not copy anything of the static
-   * next/previous environment*/
+  /// Private copy constructor with shift, called by create(args*)
+  /// 
+  /// @param cla is the source cylinder layer for the copy
+  /// @shift is the additional transform applied after cloning
+  /// 
+  /// @return The return object is a shared poiter to the layer.
   CylinderLayer(const CylinderLayer& cla, const Transform3D& tr);
 };
 
 }  // end of namespace
 
-#endif  // TRKGEOMETY_CYLINDERLAYER_H
+#endif  // ACTS_LAYERS_CYLINDERLAYER_H
