@@ -16,6 +16,7 @@
 #include "ACTS/Plugins/DD4hepPlugins/IDetExtension.hpp"
 // DD4hep
 #include "DD4hep/Detector.h"
+#include <vector>
 
 namespace Acts {
 
@@ -99,7 +100,6 @@ public:
   /// @return mod Possible sensitive modules contained by a layer
   std::vector<DD4hep::Geometry::DetElement>
   modules() const override;
-
 private:
   /// segmentation of a sensitive detector module
   DD4hep::Geometry::Segmentation m_segmentation;

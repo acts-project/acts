@@ -15,6 +15,7 @@
 
 // Algebra
 #include "ACTS/Utilities/Definitions.hpp"
+#include <vector>
 
 namespace DD4hep {
 namespace Geometry {
