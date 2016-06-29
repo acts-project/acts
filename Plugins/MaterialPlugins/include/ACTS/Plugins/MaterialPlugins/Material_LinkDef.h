@@ -5,4 +5,5 @@
 #pragma link C++ nestedclasses;
 #pragma link C++ class Acts::MaterialStep+;
 #pragma link C++ class Acts::MaterialStepCollection+;
+#pragma link C++ class Acts::MaterialStep::Position+;
 #endif
