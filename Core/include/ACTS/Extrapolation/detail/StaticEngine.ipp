@@ -256,10 +256,10 @@ Acts::StaticEngine::handleLayerT(Acts::ExtrapolationCell<T>& eCell,
                                  const Acts::BoundaryCheck&  bcheck) const
 {
   Acts::ExtrapolationCode eCode = Acts::ExtrapolationCode::InProgress;
-  
+
   /// prepare the layer output number
-  auto layerValue =
-  eCell.leadLayer->geoID().value(GeometryID::layer_mask, GeometryID::layer_shift);
+  auto layerValue = eCell.leadLayer->geoID().value(GeometryID::layer_mask,
+                                                   GeometryID::layer_shift);
   // screen output
   EX_MSG_DEBUG(++eCell.navigationStep,
                "layer",
@@ -273,8 +273,8 @@ Acts::StaticEngine::handleLayerT(Acts::ExtrapolationCell<T>& eCell,
       eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectSensitive));
   // [A] layer is a pure navigation layer and has no sub structure -> skip it,
   // but only if it is not the final layer
-  if (eCell.leadLayer->layerType() == navigation ||
-     (!hasSubStructure && eCell.leadLayer != eCell.endLayer)){
+  if (eCell.leadLayer->layerType() == navigation
+      || (!hasSubStructure && eCell.leadLayer != eCell.endLayer)) {
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "layer",
                    layerValue,
@@ -329,11 +329,11 @@ Acts::StaticEngine::handleLayerT(Acts::ExtrapolationCell<T>& eCell,
   //                               try to handle the material and sub structure
   //    - Recovered              : layer was not hit, skip for layer-to-layer
   eCode = m_cfg.propagationEngine->propagate(eCell,
-                                            *eCell.leadLayerSurface,
-                                            pDir,
-                                            ExtrapolationMode::CollectPassive,
-                                            true,
-                                            eCell.navigationCurvilinear);
+                                             *eCell.leadLayerSurface,
+                                             pDir,
+                                             ExtrapolationMode::CollectPassive,
+                                             true,
+                                             eCell.navigationCurvilinear);
   CHECK_ECODE_SUCCESS_NODEST(eCell, eCode);
   // check if the layer was actually hit
   if (eCode.inProgress()) {
@@ -358,7 +358,6 @@ Acts::StaticEngine::handleLayerT(Acts::ExtrapolationCell<T>& eCell,
   return Acts::ExtrapolationCode::InProgress;
 }
 
-
 template <class T>
 Acts::ExtrapolationCode
 Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
@@ -371,8 +370,8 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
 {
   ExtrapolationCode eCode = ExtrapolationCode::InProgress;
   /// prepare the layer output number
-  auto layerValue =
-  eCell.leadLayer->geoID().value(GeometryID::layer_mask, GeometryID::layer_shift);
+  auto layerValue = eCell.leadLayer->geoID().value(GeometryID::layer_mask,
+                                                   GeometryID::layer_shift);
   // screen output
   EX_MSG_DEBUG(
       ++eCell.navigationStep,
@@ -423,10 +422,8 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
                      "has not been hit, skipping it.");
       return Acts::ExtrapolationCode::InProgress;
     }
-    EX_MSG_VERBOSE(eCell.navigationStep,
-                   "layer",
-                   layerValue,
-                   "successfuly hit.");
+    EX_MSG_VERBOSE(
+        eCell.navigationStep, "layer", layerValue, "successfuly hit.");
     // the correct material layer needs to be assigned - in case of the approach
     // surface not being hit, his can be the layer surface
     if (eCell.leadLayerSurface->associatedMaterial()) {
@@ -642,8 +639,7 @@ Acts::StaticEngine::handleReturnT(ExtrapolationCode     eCode,
                      << eCode.toString()
                      << " - checking fallback configuration.");
   // obviously we need a surface to exercise the fallback
-  if (sf
-      && !eCell.checkConfigurationMode(ExtrapolationMode::AvoidFallback)) {
+  if (sf && !eCell.checkConfigurationMode(ExtrapolationMode::AvoidFallback)) {
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "return",
                    "",

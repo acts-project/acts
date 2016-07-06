@@ -86,11 +86,9 @@ public:
     // check if the bit is set or not
     return (value & (1 << int(em)));
   }
-  
+
   /// int operator
   operator int() const { return value; }
-  
-  
 private:
   unsigned int value;
 };
@@ -210,27 +208,26 @@ class ExtrapolationStep
 {
 public:
   /// the unique parameter associated to this step
-  std::unique_ptr<const T>  parameters;
+  std::unique_ptr<const T> parameters;
   /// the surface for this step
-  const Surface*            surface;
+  const Surface* surface;
   /// the associated layer where this step was done
-  const Layer*              layer;
+  const Layer* layer;
   /// the present step configuration
   /// can be sensitive, passive, boundary, material
-  ExtrapolationConfig       stepConfiguration;
+  ExtrapolationConfig stepConfiguration;
   /// the material properties found in this step
   const MaterialProperties* material;
   /// the position where the material was estimated
   /// @TODO clean: can be removed
-  Vector3D                  materialPosition;
+  Vector3D materialPosition;
   /// the applied material scaling due to incident
-  double                    materialScaling;
+  double materialScaling;
   /// uniquely associated transprt jacobian matrix
-  std::unique_ptr<const TransportJacobian>
-         transportJacobian;
-  double                    pathLength;
+  std::unique_ptr<const TransportJacobian> transportJacobian;
+  double                                   pathLength;
   /// the converted timing info
-  float                     time;
+  float time;
 
   ExtrapolationStep(std::unique_ptr<const T>  pars    = nullptr,
                     const Surface*            sf      = nullptr,

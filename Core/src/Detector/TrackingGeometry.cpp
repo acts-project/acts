@@ -22,9 +22,8 @@ Acts::TrackingGeometry::TrackingGeometry(TrackingVolumePtr highestVolume)
 {
   // create the GeometryID for this
   GeometryID geoID(0);
-  // close up the geometry 
-  if (m_world) 
-      m_world->closeGeometry(geoID, m_trackingVolumes);
+  // close up the geometry
+  if (m_world) m_world->closeGeometry(geoID, m_trackingVolumes);
 }
 
 Acts::TrackingGeometry::~TrackingGeometry()

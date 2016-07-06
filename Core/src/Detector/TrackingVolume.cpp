@@ -433,66 +433,63 @@ Acts::TrackingVolume::interlinkLayers()
 }
 
 void
-Acts::TrackingVolume::closeGeometry(const GeometryID& volumeID, 
-                                    std::map<std::string, const TrackingVolume*>& volumeMap) const
+Acts::TrackingVolume::closeGeometry(
+    const GeometryID& volumeID,
+    std::map<std::string, const TrackingVolume*>& volumeMap) const
 {
-  
   // insert the volume into the map
   volumeMap[volumeName()] = this;
-  
+
   // set the volumeID of this
-  geo_id_value ivolume  = 0;
-  GeometryID currentID  = volumeID;
-             currentID += (ivolume++ << GeometryID::volume_shift);
+  geo_id_value ivolume   = 0;
+  GeometryID   currentID = volumeID;
+  currentID += (ivolume++ << GeometryID::volume_shift);
   assignGeoID(currentID);
-  
+
   // loop over the boundary surfaces
   geo_id_value iboundary = 0;
   for (auto& bSurfIter : boundarySurfaces()) {
     // get the intersection soltuion
     auto& bSurface = bSurfIter->surfaceRepresentation();
     // create the boundary surface id
-    GeometryID boundaryID  = volumeID;
-               boundaryID += (iboundary++ << GeometryID::boundary_shift); 
+    GeometryID boundaryID = volumeID;
+    boundaryID += (iboundary++ << GeometryID::boundary_shift);
     // now assign to the boundary surface
     bSurface.assignGeoID(boundaryID);
   }
-  
+
   // loop over the confined layers
   if (m_confinedLayers) {
     geo_id_value ilayer = 0;
     // loop over the layers
     for (auto& layerPtr : m_confinedLayers->arrayObjects()) {
       // create the layer identification
-      GeometryID layerID  = volumeID;
-                 layerID += (ilayer++ << GeometryID::layer_shift);
-      // now close the geometry 
-      layerPtr->closeGeometry(layerID);  
+      GeometryID layerID = volumeID;
+      layerID += (ilayer++ << GeometryID::layer_shift);
+      // now close the geometry
+      layerPtr->closeGeometry(layerID);
     }
   }
-  
+
   if (m_confinedVolumes) {
     for (auto& volumesIter : m_confinedVolumes->arrayObjects())
-      if (volumesIter) 
-          volumesIter->closeGeometry(currentID,volumeMap);
+      if (volumesIter) volumesIter->closeGeometry(currentID, volumeMap);
   }
 
- // @TODO update that
- // auto confinedDenseVolumes= tvol.confinedDenseVolumes();
- // if (!confinedDenseVolumes.empty()) {
- //   for (auto& volumesIter : confinedDenseVolumes)
- //     if (volumesIter) closeGeometry(*volumesIter, &tvol, ++cCounter);
- // }
- //
- // // should detached tracking volumes be part of the tracking geometry ? */
- // auto confinedDetachedVolumes = tvol.confinedDetachedVolumes();
- // if (!confinedDetachedVolumes.empty()) {
- //   for (auto& volumesIter : confinedDetachedVolumes)
- //     if (volumesIter
- //         && tvol.inside(volumesIter->trackingVolume()->center(), 0.))
- //       closeGeometry(*(volumesIter->trackingVolume()), &tvol, ++cCounter);
- // }
- // 
-
+  // @TODO update that
+  // auto confinedDenseVolumes= tvol.confinedDenseVolumes();
+  // if (!confinedDenseVolumes.empty()) {
+  //   for (auto& volumesIter : confinedDenseVolumes)
+  //     if (volumesIter) closeGeometry(*volumesIter, &tvol, ++cCounter);
+  // }
+  //
+  // // should detached tracking volumes be part of the tracking geometry ? */
+  // auto confinedDetachedVolumes = tvol.confinedDetachedVolumes();
+  // if (!confinedDetachedVolumes.empty()) {
+  //   for (auto& volumesIter : confinedDetachedVolumes)
+  //     if (volumesIter
+  //         && tvol.inside(volumesIter->trackingVolume()->center(), 0.))
+  //       closeGeometry(*(volumesIter->trackingVolume()), &tvol, ++cCounter);
+  // }
+  //
 }
-

@@ -19,7 +19,7 @@ Acts::NavigationLayer::NavigationLayer(
   : Acts::Layer(), m_surfaceRepresentation(std::move(surfaceRepresentation))
 {
   Layer::m_layerThickness = thickness;
-  Layer::m_layerType      = navigation; 
+  Layer::m_layerType      = navigation;
 }
 
 std::shared_ptr<const Acts::Layer>

@@ -109,9 +109,8 @@ private:
   TrackingVolumePtr                             m_world;
   mutable std::unique_ptr<const PerigeeSurface> m_beam;
 
-  /// The Volumes in a map for string based search 
+  /// The Volumes in a map for string based search
   std::map<std::string, const TrackingVolume*> m_trackingVolumes;
-  
 };
 
 }  // end of namespace
