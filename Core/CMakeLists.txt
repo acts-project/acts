@@ -36,3 +36,4 @@ install (DIRECTORY include/ACTS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 # add to list of supported components
 list (APPEND _supported_components Core)
 set (_supported_components "${_supported_components}" PARENT_SCOPE)
+
