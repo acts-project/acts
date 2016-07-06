@@ -86,7 +86,11 @@ public:
     // check if the bit is set or not
     return (value & (1 << int(em)));
   }
-
+  
+  /// int operator
+  operator int() const { return value; }
+  
+  
 private:
   unsigned int value;
 };
@@ -205,19 +209,28 @@ template <class T>
 class ExtrapolationStep
 {
 public:
-  std::unique_ptr<const T> parameters;  //!< the parameters of this step
-  const Surface*           surface;     //!< the surface where the step is bound
-  const Layer*
-                      layer;  //!< the associatedLayer() or materialLayer() of the surface
-  ExtrapolationConfig stepConfiguration;  //!< sensitive, passive, boundary to
-                                          //! name the parameters
-  const MaterialProperties* material;     //!< the associated material
-  Vector3D materialPosition;  //!< position from where the material is taken
-  double   materialScaling;   //!< scale factor for the material as calculated
+  /// the unique parameter associated to this step
+  std::unique_ptr<const T>  parameters;
+  /// the surface for this step
+  const Surface*            surface;
+  /// the associated layer where this step was done
+  const Layer*              layer;
+  /// the present step configuration
+  /// can be sensitive, passive, boundary, material
+  ExtrapolationConfig       stepConfiguration;
+  /// the material properties found in this step
+  const MaterialProperties* material;
+  /// the position where the material was estimated
+  /// @TODO clean: can be removed
+  Vector3D                  materialPosition;
+  /// the applied material scaling due to incident
+  double                    materialScaling;
+  /// uniquely associated transprt jacobian matrix
   std::unique_ptr<const TransportJacobian>
-         transportJacobian;  //!< the transport jacobian from the last step
-  double pathLength;         //!< the path length from the last step
-  float  time;               //!< timing info
+         transportJacobian;
+  double                    pathLength;
+  /// the converted timing info
+  float                     time;
 
   ExtrapolationStep(std::unique_ptr<const T>  pars    = nullptr,
                     const Surface*            sf      = nullptr,

@@ -274,8 +274,8 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
       // create new parameters
       const Surface& tSurface = parameters.associatedSurface();
       // these are newly created
-      auto stepParameters = std::move(std::make_unique<const BoundParameters>(
-          std::move(uCovariance), uParameters, tSurface));
+      auto stepParameters = std::make_unique<const BoundParameters>(
+          std::move(uCovariance), uParameters, tSurface);
       eCell.step(std::move(stepParameters), ExtrapolationMode::CollectMaterial);
     }
 

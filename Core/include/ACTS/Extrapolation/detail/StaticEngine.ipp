@@ -248,7 +248,6 @@ Acts::StaticEngine::initNavigationT(Acts::ExtrapolationCell<T>& eCell,
   return Acts::ExtrapolationCode::InProgress;
 }
 
-/** handle the layer  */
 template <class T>
 Acts::ExtrapolationCode
 Acts::StaticEngine::handleLayerT(Acts::ExtrapolationCell<T>& eCell,
@@ -257,10 +256,15 @@ Acts::StaticEngine::handleLayerT(Acts::ExtrapolationCell<T>& eCell,
                                  const Acts::BoundaryCheck&  bcheck) const
 {
   Acts::ExtrapolationCode eCode = Acts::ExtrapolationCode::InProgress;
+  
+  /// prepare the layer output number
+  auto layerValue =
+  eCell.leadLayer->geoID().value(GeometryID::layer_mask, GeometryID::layer_shift);
+  // screen output
   EX_MSG_DEBUG(++eCell.navigationStep,
                "layer",
-               eCell.leadLayer->geoID().value(),
-               "handle this layer");
+               layerValue,
+               "in volume " << eCell.leadVolume->volumeName());
   // layer has sub structure - this can be (and the layer will tell you):
   //      - sensitive surface which should be tried to hit
   //      - material sub structure to be resolved (independent of sensitive
@@ -269,11 +273,11 @@ Acts::StaticEngine::handleLayerT(Acts::ExtrapolationCell<T>& eCell,
       eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectSensitive));
   // [A] layer is a pure navigation layer and has no sub structure -> skip it,
   // but only if it is not the final layer
-  if (!hasSubStructure && !eCell.leadLayer->geoID().value()
-      && eCell.leadLayer != eCell.endLayer) {
+  if (eCell.leadLayer->layerType() == navigation ||
+     (!hasSubStructure && eCell.leadLayer != eCell.endLayer)){
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "layer",
-                   eCell.leadLayer->geoID().value(),
+                   layerValue,
                    "layer is a navigation layer -> skipping it ...");
     return Acts::ExtrapolationCode::InProgress;
   }
@@ -293,7 +297,7 @@ Acts::StaticEngine::handleLayerT(Acts::ExtrapolationCell<T>& eCell,
     // screen output for sub strucutred layer
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "layer",
-                   eCell.leadLayer->geoID().value(),
+                   layerValue,
                    "has sub structure, is start layer, or destination layer -> "
                    "resolving it ...");
     // resolve the layer, it handles all possible return types and gives them
@@ -301,7 +305,6 @@ Acts::StaticEngine::handleLayerT(Acts::ExtrapolationCell<T>& eCell,
     // - InProgress           : layer resolving went without problem
     // - SuccessPathLimit     : path limit reached & configured to stop
     // - SuccessMaterialLimit : material limit reached & configured to stop
-    // there
     // - SuccessDestination   : destination reached & everything is fine
     return resolveLayerT<T>(eCell,
                             sf,
@@ -311,44 +314,39 @@ Acts::StaticEngine::handleLayerT(Acts::ExtrapolationCell<T>& eCell,
                             isStartLayer,
                             isDestinationLayer);
   }
-  // [C] layer is a material layer without sub structure but material -> pass
-  // through
-  // no resolving ob sub structure to be done, an intermediate layer to be
-  // crossed
+  // [C] layer is a material layer without sub structure but material
+  // -> pass through no resolving ob sub structure to be done,
+  // an intermediate layer to be crossed
   EX_MSG_VERBOSE(
       eCell.navigationStep,
       "layer",
-      eCell.leadLayer->geoID().value(),
+      layerValue,
       "intermediate layer without sub structure ->  passing through ...");
   //    propagate to it, possible return codes ( with the default of
   //    finalPropagation = false):
   //    - SuccessPathLimit       : propagation to layer exceeded path limit
-  //    - InProgress             : layer was hit successfuly, try to handle the
-  //    material and sub structure, these are new parameters
-  //    - Recovered              : layer was not hit, so can be ignored in the
-  //    layer to layer loop
-  eCode
-      = m_cfg.propagationEngine->propagate(eCell,
-                                              *eCell.leadLayerSurface,
-                                              pDir,
-                                              ExtrapolationMode::CollectPassive,
-                                              true,
-                                              eCell.navigationCurvilinear);
+  //    - InProgress             : layer was hit successfuly,
+  //                               try to handle the material and sub structure
+  //    - Recovered              : layer was not hit, skip for layer-to-layer
+  eCode = m_cfg.propagationEngine->propagate(eCell,
+                                            *eCell.leadLayerSurface,
+                                            pDir,
+                                            ExtrapolationMode::CollectPassive,
+                                            true,
+                                            eCell.navigationCurvilinear);
   CHECK_ECODE_SUCCESS_NODEST(eCell, eCode);
   // check if the layer was actually hit
   if (eCode.inProgress()) {
     // successful layer hit
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "layer",
-                   eCell.leadLayer->geoID().value(),
+                   layerValue,
                    "has been succesful hit, handling material update.");
     // layer has no sub-structure : it is an intermediate layer that just needs
     // pass-throgh
     // return possbilities:
-    // - InProgress            : material update performed or not (depending on
-    // material)
+    // - InProgress            : material update performed
     // - SuccessMaterialLimit  : material limit reached & configured to stop
-    // there
     eCode = m_cfg.materialEffectsEngine->handleMaterial(
         eCell, pDir, Acts::fullUpdate);
     CHECK_ECODE_CONTINUE(eCell, eCode);
@@ -360,22 +358,26 @@ Acts::StaticEngine::handleLayerT(Acts::ExtrapolationCell<T>& eCell,
   return Acts::ExtrapolationCode::InProgress;
 }
 
-/** main sub structure layer handling */
+
 template <class T>
 Acts::ExtrapolationCode
-Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
-                                  const Acts::Surface*        sf,
-                                  Acts::PropDirection         pDir,
-                                  const Acts::BoundaryCheck&  bcheck,
-                                  bool                        hasSubStructure,
-                                  bool                        isStartLayer,
+Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
+                                  const Surface*        sf,
+                                  PropDirection         pDir,
+                                  const BoundaryCheck&  bcheck,
+                                  bool                  hasSubStructure,
+                                  bool                  isStartLayer,
                                   bool isDestinationLayer) const
 {
-  Acts::ExtrapolationCode eCode = Acts::ExtrapolationCode::InProgress;
+  ExtrapolationCode eCode = ExtrapolationCode::InProgress;
+  /// prepare the layer output number
+  auto layerValue =
+  eCell.leadLayer->geoID().value(GeometryID::layer_mask, GeometryID::layer_shift);
+  // screen output
   EX_MSG_DEBUG(
       ++eCell.navigationStep,
       "layer",
-      eCell.leadLayer->geoID().value(),
+      layerValue,
       "resolve it with" << (hasSubStructure ? " " : "out ") << "sub structure"
                         << (isDestinationLayer
                                 ? " -> destination layer."
@@ -383,7 +385,7 @@ Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
 
   // cache the leadLayer - this is needed for the layer-to-layer loop not to be
   // broken
-  const Acts::Layer* initialLayer = eCell.leadLayer;
+  const Layer* initialLayer = eCell.leadLayer;
   // ----- [0] the start situation on the layer needs to be resolved:
   // - either for sensitive parameters
   // - or for material substructure
@@ -395,7 +397,7 @@ Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
   if (!isStartLayer && !isDestinationLayer) {
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "layer",
-                   eCell.leadLayer->geoID().value(),
+                   layerValue,
                    "not the start layer (with sub structue), propagate to it.");
     // propagate to the representing surface of this layer
     // - InProgress       : propagation to approaching surface worked - check
@@ -414,16 +416,16 @@ Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
     CHECK_ECODE_SUCCESS_NODEST(eCell, eCode);
     // the extrapolation to the initial layer did not succeed - skip this layer
     // in the layer-to-layer loop
-    if (eCode == Acts::ExtrapolationCode::Recovered) {
+    if (eCode == ExtrapolationCode::Recovered) {
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "layer",
-                     eCell.leadLayer->geoID().value(),
+                     layerValue,
                      "has not been hit, skipping it.");
       return Acts::ExtrapolationCode::InProgress;
     }
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "layer",
-                   eCell.leadLayer->geoID().value(),
+                   layerValue,
                    "successfuly hit.");
     // the correct material layer needs to be assigned - in case of the approach
     // surface not being hit, his can be the layer surface
@@ -445,7 +447,7 @@ Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
     EX_MSG_VERBOSE(
         eCell.navigationStep,
         "layer",
-        eCell.leadLayer->geoID().value(),
+        layerValue,
         "start layer (with sub structure), no propagation to be done.");
     // the start surface could have a material layer attached
     if (eCell.leadParameters->associatedSurface().associatedMaterial()) {
@@ -487,7 +489,7 @@ Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
   // some screen output for the sub structure
   EX_MSG_VERBOSE(eCell.navigationStep,
                  "layer",
-                 eCell.leadLayer->geoID().value(),
+                 layerValue,
                  "found " << ncSurfaces << " sub structure surfaces to test.");
   // check if you have to do something
   if (ncSurfaces) {
@@ -498,9 +500,10 @@ Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
     // now loop over the surfaces:
     // the surfaces will be sorted
     for (auto& csf : cSurfaces) {
+      // the surface to try
       EX_MSG_VERBOSE(eCell.navigationStep,
-                     "layer",
-                     eCell.leadLayer->geoID().value(),
+                     "surface",
+                     layerValue,
                      "trying candidate surfaces with straight line path length "
                          << csf.intersection.pathLength);
       // record the parameters as sensitive or passive depending on the surface
@@ -524,14 +527,14 @@ Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
       if (eCode.inProgress()) {
         EX_MSG_VERBOSE(eCell.navigationStep,
                        "layer",
-                       eCell.leadLayer->geoID().value(),
+                       layerValue,
                        "successfully hit sub structure surface.");
         // check if the surface holds material and hence needs to be processed
         if (csf.object->associatedMaterial()) {
           // screen output
           EX_MSG_VERBOSE(eCell.navigationStep,
                          "surface",
-                          csf.object->geoID().value(),
+                         csf.object->geoID().value(),
                          "applying material effects.");
           // set the material surface
           eCell.materialSurface = csf.object;
@@ -584,7 +587,7 @@ Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
     CHECK_ECODE_SUCCESS_NODEST(eCell, eCode);
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "layer",
-                   eCell.leadLayer->geoID().value(),
+                   layerValue,
                    "attempt to hit destination surface resulted in "
                        << eCode.toString());
     // check for a potential preUpdate
@@ -614,11 +617,11 @@ Acts::StaticEngine::resolveLayerT(Acts::ExtrapolationCell<T>& eCell,
 /** handle the failure - as configured */
 template <class T>
 Acts::ExtrapolationCode
-Acts::StaticEngine::handleReturnT(Acts::ExtrapolationCode     eCode,
-                                  Acts::ExtrapolationCell<T>& eCell,
-                                  const Acts::Surface*        sf,
-                                  Acts::PropDirection         pDir,
-                                  const Acts::BoundaryCheck&  bcheck) const
+Acts::StaticEngine::handleReturnT(ExtrapolationCode     eCode,
+                                  ExtrapolationCell<T>& eCell,
+                                  const Surface*        sf,
+                                  PropDirection         pDir,
+                                  const BoundaryCheck&  bcheck) const
 {
   EX_MSG_DEBUG(++eCell.navigationStep,
                "return",
@@ -640,8 +643,7 @@ Acts::StaticEngine::handleReturnT(Acts::ExtrapolationCode     eCode,
                      << " - checking fallback configuration.");
   // obviously we need a surface to exercise the fallback
   if (sf
-      && !eCell.checkConfigurationMode(
-             Acts::ExtrapolationMode::AvoidFallback)) {
+      && !eCell.checkConfigurationMode(ExtrapolationMode::AvoidFallback)) {
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "return",
                    "",
@@ -658,6 +660,6 @@ Acts::StaticEngine::handleReturnT(Acts::ExtrapolationCode     eCode,
                                                 bcheck,
                                                 eCell.destinationCurvilinear);
   }
-
+  // return the extrapolation code
   return eCode;
 }

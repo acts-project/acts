@@ -139,7 +139,7 @@ Acts::RungeKuttaEngine::propagate(ExCellNeutral&           eCell,
   }
   // only go on if the parameter creation worked
   if (nParameters) {
-    // set teh new parameters to the eCell and record their purpose
+    // set the new parameters to the eCell and record their purpose
     eCell.step(std::move(nParameters), purpose);
     // fill the transport information - only if the propation direction is not 0
     // ('anyDirection')
