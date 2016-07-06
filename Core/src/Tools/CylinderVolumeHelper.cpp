@@ -811,7 +811,6 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
                                       << " ]");
     glueVolOne->glueTrackingVolume(faceOne, glueVolTwo, faceTwo);
       
-      std::cout << "test" << std::endl;
   } else if (volOneGlueVols <= 1) {
     // (ii) one -> many
     ACTS_VERBOSE("      glue : one[ " << glueVolOne->volumeName() << " @ "

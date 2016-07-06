@@ -105,19 +105,12 @@ private:
   void
   sign(GeometrySignature geosit, GeometryType geotype = Static) const;
 
-  /// private method to register recursively the tracking volume
-  /// & set the mother volume 
-  void
-  registerTrackingVolumes(const TrackingVolume& tvol,
-                          const TrackingVolume* mvol = nullptr,
-                          int                   lvl  = 0);
-
   /// The known world - and the beamline 
   TrackingVolumePtr                             m_world;
   mutable std::unique_ptr<const PerigeeSurface> m_beam;
 
-  /// The Volumes in a map for later finding 
-  std::map<const std::string, const TrackingVolume*> m_trackingVolumes;
+  /// The Volumes in a map for string based search
+  std::map<std::string, const TrackingVolume*> m_trackingVolumes;
 };
 
 }  // end of namespace

@@ -13,42 +13,38 @@
 #ifndef ACTS_GEOMETRYUTILS_GEOMETRYOBJECT_H
 #define ACTS_GEOMETRYUTILS_GEOMETRYOBJECT_H
 
-// Geometry module
 #include "ACTS/Utilities/BinningType.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/GeometryID.hpp"
-// Core module
-#include "Definitions.hpp"
 
 namespace Acts {
 
-/** @class GeometryObject
-
-    Base class to provide GeometryID interface:
-    - simple set and get
-
-    It also provides the binningPosition method for
-    Geometry geometrical object to be binned in BinnedArrays
-
-  */
-
+/// @class GeometryObject
+///
+/// Base class to provide GeometryID interface:
+/// - simple set and get
+///
+/// It also provides the binningPosition method for
+/// Geometry geometrical object to be binned in BinnedArrays
+///
 class GeometryObject
 {
 public:
-  /** constructor from a ready-made value */
-  GeometryObject() : m_geoID() {}
-  /** return the value */
+  /// constructor from a ready-made value
+  GeometryObject(const GeometryID& geoID = GeometryID()) : m_geoID() {}
+  /// return the value
   const GeometryID&
   geoID() const;
 
-  /** set the value */
+  /// set the value
   void
   assignGeoID(const GeometryID& geoID) const;
 
-  /** force a binning position method */
+  /// force a binning position method
   virtual const Vector3D
   binningPosition(BinningValue bValue) const = 0;
 
-  /** implement the binningValue */
+  /// implement the binningValue
   double
   binningPositionValue(BinningValue bValue) const;
 
@@ -91,7 +87,7 @@ GeometryObject::binningPositionValue(BinningValue bValue) const
   } break;
   // do nothing for the default
   default:
-    return 0;
+    return 0.;
   }
 }
 }

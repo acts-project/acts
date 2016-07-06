@@ -56,8 +56,8 @@ Layer::getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
       maxPathLength = endInter.pathLength;
     else
       return cSurfaces.size();
-    // search Type will be increased automatically when endSurface is given and
-    // no test done
+    // search Type will be increased automatically
+    // when endSurface is given and no test done
     if (searchType % 2) ++searchType;
   }
 
@@ -67,7 +67,7 @@ Layer::getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
   std::vector<const Surface*> compatibleTestSurfaces;
   //
   if (searchType <= 0) {
-    // that take all the test surfaces & their bin mates
+    // take all the test surfaces & their bin mates
     auto allTestSurfaces = m_surfaceArray->arrayObjects();
     // reserve twice the amount
     compatibleTestSurfaces.reserve(allTestSurfaces.size());

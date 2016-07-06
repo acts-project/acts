@@ -35,7 +35,7 @@ const Acts::LayerVector
 Acts::TGeoLayerBuilder::negativeLayers() const
 {
   LayerVector nVector;
-  return std::move(nVector);
+  return nVector;
 }
 
 const Acts::LayerVector
@@ -44,7 +44,7 @@ Acts::TGeoLayerBuilder::centralLayers() const
   // the return vector
   LayerVector cVector;
   // bail out if you have no gGeoManager
-  if (!gGeoManager) return std::move(cVector);
+  if (!gGeoManager) return cVector;
 
   MSG_INFO("Central Layers : found " << m_cfg.centralLayerConfigs.size()
                                      << " configurations.");

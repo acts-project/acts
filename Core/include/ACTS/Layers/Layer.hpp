@@ -48,9 +48,9 @@ typedef std::pair<const Layer*, const Layer*> NextLayers;
 /// @enum LayerType
 /// 
 /// For readability
-/// 
-enum LayerType { passive = 0, active = 1 };
- 
+///
+enum LayerType { navigation = -1, passive = 0, active = 1 };
+
 /// @class Layer
 /// 
 /// Base Class for a Detector Layer in the Tracking realm.
@@ -67,27 +67,27 @@ enum LayerType { passive = 0, active = 1 };
 /// 0      - activ
 /// 1      - passive
 /// [....] - other
-/// 
-/// The search type for compatible surfaces on a layer is [ the higher the
-/// number, the faster ]:
+///
+/// The search type for compatible surfaces on a layer is
+///   [ the higher the number, the faster ]:
 /// --------- Layer internal ------------------------------------------------
 /// -1     - untested: provide all layer surfaces to the extrapolation engine
-///               - does not work with endSurface, will be increased to 0 if
-/// endSurface is given
+///               - does not work with endSurface,
+///                 will be increased to 0 if endSurface is given
 ///               - debug mode only !
 ///  0     - test all on intersection and provide to the extrapolation engine
 /// --------- Overlap descriptor --------------------------------------------
 ///  1     - provide bin surface and registered neighbours and bin mates
-///               - does not work with endSurface, will be increased to 2 if
-/// endSurface is given
+///               - does not work with endSurface,
+///                 will be increased to 2 if endSurface is given
 ///  2     - as 1 but with intersection test @TODO compatibility test
 ///  3     - provide bin surface and next bin surfaces (if differ)
-///               - does not work with endSurface, will be increased to 4 if
-/// endSurface is given
+///               - does not work with endSurface
+///                 will be increased to 4 if endSurface is given
 ///  4     - as 3 but with intersection test @TODO compatibility test
 ///  5     - whatever the overlap descriptor returns with this
-/// 
-/// 
+///
+///
 class Layer : public virtual GeometryObject
 {
   /// Declare the TrackingVolume as a friend, to be able to register previous,
@@ -265,6 +265,10 @@ public:
   const AbstractVolume*
   representingVolume() const;
 
+  /// return the LayerType
+  LayerType
+  layerType() const;
+
 protected:
   /// Default Constructor
   Layer();
@@ -358,6 +362,13 @@ protected:
   mutable const AbstractVolume*         m_representingVolume; 
   //// make a passive/active divisio
   LayerType                             m_layerType;
+
+private:
+  /// Private helper method to close the geometry
+  /// @param layerID is the geometry id of the volume
+  ///                as calculated by the TrackingGeometry
+  void
+  closeGeometry(const GeometryID& layerID) const;
 };
 
 inline const SurfaceArray*
@@ -370,6 +381,12 @@ inline double
 Layer::thickness() const
 {
   return m_layerThickness;
+}
+
+inline LayerType
+Layer::layerType() const
+{
+  return m_layerType;
 }
 
 inline const OverlapDescriptor*

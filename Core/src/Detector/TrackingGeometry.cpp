@@ -10,7 +10,6 @@
 // TrackingGeometry.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// Geometry module
 #include "ACTS/Detector/TrackingGeometry.hpp"
 #include "ACTS/Detector/DetachedTrackingVolume.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
@@ -21,8 +20,10 @@ Acts::TrackingGeometry::TrackingGeometry(TrackingVolumePtr highestVolume)
   : m_world(highestVolume)
   , m_beam(std::make_unique<const Acts::PerigeeSurface>(s_origin))
 {
-  // register all the TrackingVolumes
-  if (m_world) registerTrackingVolumes(*m_world.get());
+  // create the GeometryID for this
+  GeometryID geoID(0);
+  // close up the geometry
+  if (m_world) m_world->closeGeometry(geoID, m_trackingVolumes);
 }
 
 Acts::TrackingGeometry::~TrackingGeometry()
@@ -65,46 +66,6 @@ Acts::TrackingGeometry::lowestStaticTrackingVolume(
   return currentVolume;
 }
 
-void
-Acts::TrackingGeometry::registerTrackingVolumes(
-    const Acts::TrackingVolume& tvol,
-    const Acts::TrackingVolume* mvol,
-    int                         lvl)
-{
-  int         sublvl = lvl + 1;
-  std::string indent = "";
-  for (int l = 0; l < lvl; ++l, indent += "  ")
-    ;
-
-  tvol.setMotherVolume(mvol);
-
-  m_trackingVolumes[tvol.volumeName()] = (&tvol);
-  std::shared_ptr<const Acts::TrackingVolumeArray> confinedVolumes
-      = tvol.confinedVolumes();
-  if (confinedVolumes) {
-    for (auto& volumesIter : confinedVolumes->arrayObjects())
-      if (volumesIter) registerTrackingVolumes(*volumesIter, &tvol, sublvl);
-  }
-
-  const Acts::TrackingVolumeVector confinedDenseVolumes
-      = tvol.confinedDenseVolumes();
-  if (!confinedDenseVolumes.empty()) {
-    for (auto& volumesIter : confinedDenseVolumes)
-      if (volumesIter) registerTrackingVolumes(*volumesIter, &tvol, sublvl);
-  }
-
-  /** should detached tracking volumes be part of the tracking geometry ? */
-  const Acts::DetachedVolumeVector confinedDetachedVolumes
-      = tvol.confinedDetachedVolumes();
-  if (!confinedDetachedVolumes.empty()) {
-    for (auto& volumesIter : confinedDetachedVolumes)
-      if (volumesIter
-          && tvol.inside(volumesIter->trackingVolume()->center(), 0.))
-        registerTrackingVolumes(
-            *(volumesIter->trackingVolume()), &tvol, sublvl);
-  }
-}
-
 //@TODO change to BoundaryCheck
 bool
 Acts::TrackingGeometry::atVolumeBoundary(const Acts::Vector3D&       gp,
@@ -120,7 +81,6 @@ Acts::TrackingGeometry::atVolumeBoundary(const Acts::Vector3D&       gp,
   return isAtBoundary;
 }
 
-/** check position at volume boundary + navigation link */
 //@TODO change to BoundaryCheck
 bool
 Acts::TrackingGeometry::atVolumeBoundary(const Vector3D&  gp,
@@ -161,8 +121,7 @@ Acts::TrackingGeometry::sign(GeometrySignature geosit,
 const Acts::TrackingVolume*
 Acts::TrackingGeometry::trackingVolume(const std::string& name) const
 {
-  std::map<const std::string, const TrackingVolume*>::const_iterator sVol
-      = m_trackingVolumes.begin();
+  auto sVol = m_trackingVolumes.begin();
   sVol = m_trackingVolumes.find(name);
   if (sVol != m_trackingVolumes.end()) return (sVol->second);
   return nullptr;

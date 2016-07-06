@@ -19,8 +19,7 @@ Acts::NavigationLayer::NavigationLayer(
   : Acts::Layer(), m_surfaceRepresentation(std::move(surfaceRepresentation))
 {
   Layer::m_layerThickness = thickness;
-  // @TODO temporary - until GeoID service is in place
-  assignGeoID(GeometryID(0));
+  Layer::m_layerType      = navigation;
 }
 
 std::shared_ptr<const Acts::Layer>

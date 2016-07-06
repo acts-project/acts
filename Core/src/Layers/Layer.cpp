@@ -175,3 +175,30 @@ Acts::Layer::approachDescriptor() const
 {
   return m_approachDescriptor;
 }
+
+void
+Acts::Layer::closeGeometry(const GeometryID& layerID) const
+{
+  // set the volumeID of this
+  assignGeoID(layerID);
+
+  // loop over the boundary surfaces
+  if (m_approachDescriptor) {
+    geo_id_value iasurface = 0;
+    for (auto& aSurface : m_approachDescriptor->containedSurfaces()) {
+      GeometryID asurfaceID = layerID;
+      asurfaceID += (iasurface++ << GeometryID::approach_shift);
+      aSurface->assignGeoID(asurfaceID);
+    }
+  }
+  // check if you have sensitive surfaces
+  if (m_surfaceArray) {
+    // loop sensitive surfaces
+    geo_id_value issurface = 0;
+    for (auto& sSurface : m_surfaceArray->arrayObjects()) {
+      GeometryID ssurfaceID = layerID;
+      ssurfaceID += (issurface++ << GeometryID::sensitive_shift);
+      sSurface->assignGeoID(ssurfaceID);
+    }
+  }
+}

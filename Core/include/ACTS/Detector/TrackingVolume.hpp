@@ -13,6 +13,8 @@
 #ifndef ACTS_DETECTOR_TRACKINGVOLUME_H
 #define ACTS_DETECTOR_TRACKINGVOLUME_H 1
 
+#include <map>
+#include <string>
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Surfaces/BoundaryCheck.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
@@ -21,7 +23,6 @@
 #include "ACTS/Utilities/GeometrySignature.hpp"
 #include "ACTS/Volumes/BoundarySurfaceT.hpp"
 #include "ACTS/Volumes/Volume.hpp"
-#include <string>
 
 namespace Acts {
 
@@ -72,6 +73,8 @@ using BoundaryIntersection
 ///
 class TrackingVolume : public Volume
 {
+  friend class TrackingGeometry;
+
 public:
   /// Destructor 
   ~TrackingVolume();
@@ -346,7 +349,7 @@ protected:
                  const std::string&    volumeName = "undefined");
 
 private:
-  /// Create Boundary Surface */
+  /// Create Boundary Surface
   void
   createBoundarySurfaces();
 
@@ -354,6 +357,16 @@ private:
   /// - adapts the layer dimensions to the new volumebounds + envelope 
   void
   synchronizeLayers(double envelope = 1.) const;
+
+  /// close the Geometry, i.e. set the TDD_ID
+  ///
+  /// @param volumeID is the geometry id of the volume
+  ///        as calculated by the TrackingGeometry
+  /// @param volumeMap is a map to find the a volume
+  ///        by a given name
+  void
+  closeGeometry(const GeometryID& volumeID,
+                std::map<std::string, const TrackingVolume*>& volumMap) const;
 
   /// interlink the layers in this TrackingVolume 
   void

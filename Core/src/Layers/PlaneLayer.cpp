@@ -27,7 +27,7 @@ Acts::PlaneLayer::PlaneLayer(std::shared_ptr<Transform3D>         transform,
   : PlaneSurface(transform, pbounds)
   , Layer(std::move(surfaceArray), thickness, olap, ades, laytyp)
 {
-  //@TODO create representing volume
+  // @TODO create representing volume
   // register the layer to the surface
   Acts::PlaneSurface::associateLayer(*this);
   // deal with the approach descriptor
