@@ -65,6 +65,9 @@ public:
   typedef typename ParSet_t::ParVector_t ParVector_t;
   /// type of the covariance matrix of the measurement
   typedef typename ParSet_t::CovMatrix_t CovMatrix_t;
+  /// matrix type for projecting full parameter vector onto local parameter
+  /// space
+  typedef typename ParSet_t::Projection_t Projection_t;
 
   /**
    * @brief standard constructor
@@ -312,6 +315,12 @@ public:
     return !(*this == rhs);
   }
 
+  static Projection_t
+  projector()
+  {
+    return ParSet_t::projector();
+  }
+
   friend std::ostream&
   operator<<(std::ostream& out, const Measurement<Identifier, params...>& m)
   {
@@ -330,7 +339,8 @@ protected:
     out << parameters() << std::endl;
     out << "covariance matrix:" << std::endl;
     out << covariance() << std::endl;
-    out << "at " << (associatedSurface().isFree() ? "free" : "non-free") << " surface:" << std::endl;
+    out << "at " << (associatedSurface().isFree() ? "free" : "non-free")
+        << " surface:" << std::endl;
     out << associatedSurface();
 
     return out;

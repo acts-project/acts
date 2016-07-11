@@ -9,6 +9,7 @@ if (BUILD_TESTS)
       message (STATUS "enable ACTS unit tests")
       # delegate
       add_subdirectory (EventData)
+      add_subdirectory (Fitter)
    else (Boost_FOUND)
       message (STATUS "${Red}Boost not found -> disable ACTS unit tests${ColorReset}")
    endif (Boost_FOUND)
