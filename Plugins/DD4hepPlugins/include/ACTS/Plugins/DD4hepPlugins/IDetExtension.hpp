@@ -82,10 +82,10 @@ public:
   /// @return segmentation DD4hep segmentation for the readout
   virtual const DD4hep::Geometry::Segmentation
   segmentation() const = 0;
-  /// possibility to hand over supporte structure of a layer
-  /// @param support Possible support structure of the layer
+  /// possibility to mark layer to have support material
+  /// @param support Boolean to mark if the layer carries support material
   virtual void
-  setSupportStructure(const DD4hep::Geometry::DetElement support)
+  supportMaterial(bool support)
       = 0;
   /// Access supporting structure of a layer
   /// @return support Possible support structure of the layer

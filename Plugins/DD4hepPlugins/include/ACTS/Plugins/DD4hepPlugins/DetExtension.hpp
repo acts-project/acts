@@ -51,15 +51,14 @@ public:
   DetExtension(ShapeType shape);
   /// Constructor for layer with support structure
   /// @param support Possible support structure of the layer
-  DetExtension(const DD4hep::Geometry::DetElement support);
+  DetExtension(bool support);
   /// Constructor for layer with modules
   /// @param mod Possible sensitive modules contained by a layer
   DetExtension(std::vector<DD4hep::Geometry::DetElement> mod);
   /// Constructor for layer with support structure and modules
   /// @param support Possible support structure of the layer
   /// @param mod Possible sensitive modules contained by a layer
-  DetExtension(const DD4hep::Geometry::DetElement        support,
-               std::vector<DD4hep::Geometry::DetElement> mod);
+  DetExtension(bool        support,
   /// Copy constructor
   DetExtension(const DetExtension&, const DD4hep::Geometry::DetElement&);
   /// Virtual destructor
@@ -84,22 +83,25 @@ public:
   /// @return segmentation DD4hep segmentation for the readout
   const DD4hep::Geometry::Segmentation
   segmentation() const override;
+               
   /// possibility to hand over supporte structure of a layer
   /// @param support Possible support structure of the layer
-  void
-  setSupportStructure(const DD4hep::Geometry::DetElement support) override;
+  virtual void
+               supportMaterial(bool support) final;
   /// Access supporting structure of a layer
   /// @return support Possible support structure of the layer
-  const DD4hep::Geometry::DetElement&
-  supportStructure() const override;
+               bool
+               hasSupportMaterial() const override;
   /// Possibility to set contained detector modules of a layer
   /// @param mod Possible sensitive modules contained by a layer
   void
   setModules(std::vector<DD4hep::Geometry::DetElement> mod) override;
+
   /// Access modules detector module contained by a layer
   /// @return mod Possible sensitive modules contained by a layer
-  std::vector<DD4hep::Geometry::DetElement>
-  modules() const override;
+  virtual std::vector<DD4hep::Geometry::DetElement>
+  modules() const final;
+
 private:
   /// segmentation of a sensitive detector module
   DD4hep::Geometry::Segmentation m_segmentation;
@@ -107,7 +109,8 @@ private:
   /// cylinder
   ShapeType m_shape;
   /// possible support structure of a layer
-  DD4hep::Geometry::DetElement m_supportStructure;
+               bool
+               m_supportMaterial;
   /// possible contained modules of a layer
   std::vector<DD4hep::Geometry::DetElement> m_modules;
 };
@@ -138,16 +141,15 @@ Acts::DetExtension::segmentation() const
 }
 
 inline void
-Acts::DetExtension::setSupportStructure(
-    const DD4hep::Geometry::DetElement support)
+Acts::DetExtension::supportMaterial(bool support)
 {
-  m_supportStructure = std::move(support);
+  m_supportMaterial = support;
 }
 
-inline const DD4hep::Geometry::DetElement&
-Acts::DetExtension::supportStructure() const
+inline bool
+Acts::DetExtension::hasSupportMaterial() const
 {
-  return m_supportStructure;
+  return m_supportMaterial;
 }
 
 inline void
