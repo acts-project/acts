@@ -13,7 +13,7 @@ if (BUILD_MATERIAL_PLUGIN)
         message(STATUS "ROOT_USE_FILE" ${ROOT_USE_FILE})
         include(${ROOT_USE_FILE})
         # generate root dictionary - needed to write this class to a root file
-        ROOT_GENERATE_DICTIONARY(G__Material include/ACTS/Plugins/MaterialPlugins/MaterialStep.hpp include/ACTS/Plugins/MaterialPlugins/MaterialStepCollection.hpp LINKDEF include/ACTS/Plugins/MaterialPlugins/Material_LinkDef.h OPTIONS -I/afs/cern.ch/work/j/jhrdinka/ACTS/ACTS/a-common-tracking-sw/Plugins/MaterialPlugins/include)
+        ROOT_GENERATE_DICTIONARY(G__Material include/ACTS/Plugins/MaterialPlugins/MaterialStep.hpp include/ACTS/Plugins/MaterialPlugins/MaterialTrackRecord.hpp ../../Core/include/ACTS/Material/Material.hpp LINKDEF include/ACTS/Plugins/MaterialPlugins/Material_LinkDef.h OPTIONS -I/afs/cern.ch/work/j/jhrdinka/ACTS/ACTS/a-common-tracking-sw/Plugins/MaterialPlugins/include -I/afs/cern.ch/work/j/jhrdinka/ACTS/ACTS/a-common-tracking-sw/Core/include)
 
         # define library target
         add_library (ACTSMaterialPlugin SHARED ${src_files} G__Material.cxx)
@@ -23,9 +23,10 @@ if (BUILD_MATERIAL_PLUGIN)
         target_include_directories (ACTSMaterialPlugin PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
 
         # setup linker dependencies
-        target_link_libraries (ACTSMaterialPlugin PUBLIC ACTSCore)
         target_link_libraries(ACTSMaterialPlugin PUBLIC ${ROOT_LIBRARIES})
+        target_link_libraries (ACTSMaterialPlugin PUBLIC ACTSCore)
 
+        target_compile_options (ACTSMaterialPlugin PUBLIC -std=c++14)
         # set installation directories
         install (TARGETS ACTSMaterialPlugin EXPORT ACTSMaterialPluginTargets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -35,6 +36,7 @@ if (BUILD_MATERIAL_PLUGIN)
         # add to list of supported components
         list (APPEND _supported_components MaterialPlugin)
         set (_supported_components "${_supported_components}" PARENT_SCOPE)
+        set(CMAKE_DEBUG_TARGET_PROPERTIES COMPILE_OPTIONS)
         # do not fail if ROOT is not available, just inform and continue
     else (ROOT_FOUND)
         message (STATUS "${Red}ROOT was not found -> skip build of MaterialPlugins${ColorReset}")
