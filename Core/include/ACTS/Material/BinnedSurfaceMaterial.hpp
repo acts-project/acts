@@ -87,7 +87,7 @@ public:
   /** Update the BinUtility if necessary - passing ownership of the utility
    * class*/
   void
-  updateBinning(BinUtility* bu) const override;
+  updateBinning(BinUtility* bu) override;
 
   /**Return method for full material description of the Layer - for all bins*/
   const MaterialPropertiesMatrix&
@@ -112,7 +112,7 @@ public:
   dump(std::ostream& sl) const override;
 
 private:
-  mutable BinUtility* m_binUtility;  //!< the helper for the bin finding
+  BinUtility* m_binUtility;  //!< the helper for the bin finding
 
   /** The five different MaterialProperties */
   MaterialPropertiesMatrix m_fullMaterial;
@@ -145,7 +145,7 @@ BinnedSurfaceMaterial::material(size_t bin0, size_t bin1) const
 }
 
 inline void
-BinnedSurfaceMaterial::updateBinning(BinUtility* bu) const
+BinnedSurfaceMaterial::updateBinning(BinUtility* bu)
 {
   if (bu) {
     delete m_binUtility;

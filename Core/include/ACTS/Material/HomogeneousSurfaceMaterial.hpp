@@ -85,7 +85,7 @@ public:
   /** Update the BinUtility if necessary - passing ownership of the utility
    * class*/
   void
-  updateBinning(BinUtility*) const override
+  updateBinning(BinUtility*) override
   {
   }
 
