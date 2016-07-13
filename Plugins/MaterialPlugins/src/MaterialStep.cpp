@@ -13,33 +13,18 @@
 #include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
 
 Acts::MaterialStep::MaterialStep() :
-X0(0.),
-L0(0.),
-A(0.),
-Z(0.),
-rho(0.),
-position(Position()),
-steplength(0.)
+m_position(Position()),
+m_material()
 {}
 
-Acts::MaterialStep::MaterialStep(double X0, double L0, double A, double Z, double rho, Position pos, double steplength) :
-X0(X0),
-L0(L0),
-A(A),
-Z(Z),
-rho(rho),
-position(pos),
-steplength(steplength)
+Acts::MaterialStep::MaterialStep(const Acts::MaterialProperties& mat, const Position& pos) :
+m_position(pos),
+m_material(mat)
 {}
 
 Acts::MaterialStep::MaterialStep(const MaterialStep& mstep) :
-X0(mstep.X0),
-L0(mstep.L0),
-A(mstep.A),
-Z(mstep.Z),
-rho(mstep.rho),
-position(mstep.position),
-steplength(mstep.steplength)
+m_position(mstep.m_position),
+m_material(mstep.m_material)
 {}
 
 Acts::MaterialStep* Acts::MaterialStep::clone() const
@@ -47,17 +32,11 @@ Acts::MaterialStep* Acts::MaterialStep::clone() const
     return (new MaterialStep(*this));
 }
 
-Acts::MaterialStep& Acts::MaterialStep::operator=(const MaterialStep& mstep)
+Acts::MaterialStep& Acts::MaterialStep::operator=(const Acts::MaterialStep& mstep)
 {
-    if(this != &mstep)
-    {
-        X0              = mstep.X0;
-        L0              = mstep.L0;
-        A               = mstep.A;
-        Z               = mstep.Z;
-        rho             = mstep.rho;
-        position        = mstep.position;
-        steplength      = mstep.steplength;
+    if (this != &mstep) {
+        m_position = mstep.m_position;
+        m_material = mstep.m_material;
     }
-    return *this;
+    return (*this);
 }
