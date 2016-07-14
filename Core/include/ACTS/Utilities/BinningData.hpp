@@ -13,10 +13,10 @@
 #define ACTS_UTILITIES_BINNINGDATA_H 1
 
 #include "ACTS/Utilities/BinningType.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
 #include <cmath>
 #include <utility>
 #include <vector>
-#include "Definitions.hpp"
 #include <iostream>
 
 namespace Acts {

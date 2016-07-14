@@ -48,8 +48,10 @@ namespace Acts {
     
     /// constructor from a ready-made value
     GeometryID(geo_id_value id_value = 0) : m_value(id_value) {}
+    
     /// Copy constructor
     GeometryID(const GeometryID& tddID) : m_value(tddID.m_value) {}
+    
     /// Assignement operator
     GeometryID&
     operator=(const GeometryID& tddID)

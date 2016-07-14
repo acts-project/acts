@@ -10,12 +10,11 @@
 // ApproachDescriptor.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETRYUTILS_APPROACHDESCRIPTOR_H
-#define ACTS_GEOMETRYUTILS_APPROACHDESCRIPTOR_H 1
+#ifndef ACTS_UTILITIES_APPROACHDESCRIPTOR_H
+#define ACTS_UTILITIES_APPROACHDESCRIPTOR_H 1
 
-// Core module
 #include "ACTS/Utilities/Intersection.hpp"
-#include "Definitions.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -26,36 +25,44 @@ class ICompatibilityEstimator;
 
 typedef ObjectIntersection<Surface> SurfaceIntersection;
 
-/**
-@class ApproachDescriptor
-
-Virtual base class to decide and return which approaching surface to be taken,
-the surfaces are std::shared_ptr, as they can be the boundary surfaces of the
-representingVolume of the Layer
-
-*/
-
+/// @class ApproachDescriptor
+/// 
+/// Virtual base class to decide and return which approaching surface to be taken,
+/// the surfaces are std::shared_ptr, as they can be the boundary surfaces of the
+/// representingVolume of the Layer
+/// 
+/// 
 class ApproachDescriptor
 {
 public:
-  /** Default constructor */
+  /// Default constructor 
   ApproachDescriptor() {}
-  /** Virtual destructor */
+
+  /// Virtual destructor 
   virtual ~ApproachDescriptor() {}
-  /** register Layer */
+
+  /// register Layer 
+  /// this gives the approach surfaces the link to the layer
   virtual void
   registerLayer(const Layer& lay)
       = 0;
 
-  /** get the surface on approach - nullptr means that there's no surface on
-   * approach */
+  // get the surface on approach 
+  // - nullptr means that there's no surface on approach 
+  ///
+  /// @param pos is the position from start of the search
+  /// @param dir is the direction
+  /// @param bchk is the boundary check directive
+  /// @param ice is a (future) compatibility estimator
+  /// @return is a surface isntersection
   virtual const SurfaceIntersection
   approachSurface(const Vector3D&                pos,
                   const Vector3D&                dir,
                   const BoundaryCheck&           bchk,
                   const ICompatibilityEstimator* ice = nullptr) const = 0;
 
-  /** return all contained surfaces of this approach descriptor */
+  /// get to all the contained surfaces
+  /// @return all contained surfaces of this approach descriptor
   virtual const std::vector<const Surface*>&
   containedSurfaces() const = 0;
 };

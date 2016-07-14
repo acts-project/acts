@@ -13,10 +13,10 @@
 #ifndef ACTS_GEOMETYRUTILS_GEOMETRYSTATICS_H
 #define ACTS_GEOMETYRUTILS_GEOMETRYSTATICS_H 1
 
-#include "Definitions.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
 
-/** Define statics for Geometry in Tracking
- */
+/// Define statics for Geometry in Tracking
+/// 
 namespace Acts {
 
 // transformations

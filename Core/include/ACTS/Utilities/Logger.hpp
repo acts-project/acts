@@ -41,20 +41,20 @@
     logger().log(Acts::Logging::FATAL) << x;
 
 namespace Acts {
-/**
- * @brief logging related helper classes
- */
+/// 
+/// @brief logging related helper classes
+/// 
 namespace Logging {
-  /**
-   * @enum Level
-   *
-   * @brief different logging levels
-   */
+  /// 
+  /// @enum Level
+  /// 
+  /// @brief different logging levels
+  /// 
   enum Level { VERBOSE = 0, DEBUG, INFO, WARNING, ERROR, FATAL };
 
-  /**
-   * @brief abstract base class for logging output policy
-   */
+  /// 
+  /// @brief abstract base class for logging output policy
+  /// 
   class OutputPolicy
   {
   public:
@@ -65,9 +65,9 @@ namespace Logging {
         = 0;
   };
 
-  /**
-   * @brief abstract base class for logging printing policy
-   */
+  /// 
+  /// @brief abstract base class for logging printing policy
+  /// 
   class PrintPolicy
   {
   public:
@@ -77,9 +77,9 @@ namespace Logging {
     doPrint(const Level& lvl) const = 0;
   };
 
-  /**
-   * @brief thread-safe output stream
-   */
+  /// 
+  /// @brief thread-safe output stream
+  /// 
   class OutStream
   {
     typedef std::function<void(const std::ostringstream&)> OutputFunc;
@@ -261,9 +261,9 @@ namespace Logging {
   };
 }  // end of namespace Logging
 
-/**
- * @brief logging class
- */
+/// 
+/// @brief logging class
+/// 
 class Logger
 {
 public:
