@@ -21,7 +21,7 @@
 #include "ACTS/Surfaces/SurfaceBounds.hpp"
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
-#include "ACTS/Utilities/BinnedArray1D.hpp"
+#include "ACTS/Utilities/BinnedArrayXD.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/GeometryObjectSorter.hpp"
 #include "ACTS/Utilities/GeometryStatics.hpp"
@@ -50,7 +50,7 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
   typedef std::pair<std::shared_ptr<const Layer>, Vector3D> LayerOrderPosition;
   // needed for all cases
   std::shared_ptr<const Layer>    layer      = nullptr;
-  BinUtility*                     binUtility = nullptr;
+  std::unique_ptr<BinUtility>     binUtility = nullptr;
   std::vector<LayerOrderPosition> layerOrderVector;
 
   // switch the binning type
@@ -65,7 +65,7 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
           LayerOrderPosition(layIter, layIter->binningPosition(bValue)));
     }
     // create the binUitlity
-    binUtility = new BinUtility(layers.size(), min, max, open, bValue);
+      binUtility = std::make_unique<BinUtility>(layers.size(), min, max, open, bValue);
     MSG_VERBOSE("equidistant : created a BinUtility as " << *binUtility);
   } break;
 
@@ -130,7 +130,7 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
     MSG_VERBOSE(layerOrderVector.size()
                 << " Layers (material + navigation) built. ");
     // create the BinUtility
-    binUtility = new BinUtility(boundaries, open, bValue);
+      binUtility = std::make_unique<BinUtility>(boundaries, open, bValue);
     MSG_VERBOSE("arbitrary : created a BinUtility as " << *binUtility);
 
   } break;
@@ -140,8 +140,7 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
   }
   }
   // return the binned array
-  return std::make_unique<BinnedArray1D<std::shared_ptr<const Layer>>>(
-      layerOrderVector, binUtility);
+  return std::make_unique< BinnedArrayXD< LayerPtr > >(layerOrderVector, std::move(binUtility));
 }
 
 Acts::Surface*

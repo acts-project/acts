@@ -10,44 +10,39 @@
 // BinUtility.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETRYUTILS_BINUTILITY_H
-#define ACTS_GEOMETRYUTILS_BINUTILITY_H 1
+#ifndef ACTS_UTILITIES_BINUTILITY_H
+#define ACTS_UTILITIES_BINUTILITY_H 1
 
-// Core module
 #include "ACTS/Utilities/BinningData.hpp"
 #include "ACTS/Utilities/BinningType.hpp"
-// STL
+#include "ACTS/Utilities/Definitions.hpp"
 #include <memory>
 #include <vector>
-#include "Definitions.hpp"
-
-// debug
 #include <iostream>
 
 namespace Acts {
 
-/** @class BinUtility
-
-    The BinUtility class that translated global and local position into a bins
-   of a BinnedArray,
-    most performant is equidistant binning without a transform, however,
-    optionally a transform can be provided, e.g. for binning on shifted object,
-    the transform is usually shared with the geometric object the Array is
-   defined on,
-    for performance reasons, also the inverse transform is stored.
-
-  */
-
+///  @class BinUtility
+/// 
+/// The BinUtility class that translated global and local position into a bins
+/// of a BinnedArray, most performant is equidistant binning without a transform,
+/// however, optionally a transform can be provided, e.g. for binning on shifted 
+/// object, the transform is usually shared with the geometric object the Array is
+/// defined on, for performance reasons, also the inverse transform is stored.
+/// 
 class BinUtility
 {
 public:
-  /** Constructor for equidistant */
+  /// Constructor for equidistant
   BinUtility() : m_binningData(), m_transform(nullptr), m_itransform(nullptr)
   {
     m_binningData.reserve(3);
   }
 
-  /** Constructor from BinningData directly */
+  /// Constructor from BinningData directly
+  /// 
+  /// @param bData is the provided binning data
+  /// @param tForm is the (optional) transform
   BinUtility(const BinningData&           bData,
              std::shared_ptr<Transform3D> tForm = nullptr)
     : m_binningData()
@@ -58,7 +53,14 @@ public:
     m_binningData.push_back(bData);
   }
 
-  /** Constructor for equidistant  */
+  /// Constructor for equidistant 
+  ///
+  /// @param bins is the number of bins 
+  /// @param min in the minimal value
+  /// @param max is the maximal value
+  /// @param opt is the binning option : open, closed
+  /// @param value is the binninb value : binX, binY, binZ, etc.
+  /// @param tForm is the (optional) transform 
   BinUtility(size_t                       bins,
              float                        min,
              float                        max,
@@ -73,7 +75,12 @@ public:
     m_binningData.push_back(BinningData(opt, value, bins, min, max));
   }
 
-  /** Constructor for arbitrary */
+  /// Constructor for arbitrary 
+  ///
+  /// @param bValues is the boundary values of the binning
+  /// @param opt is the binning option : open, closed
+  /// @param value is the binninb value : binX, binY, binZ, etc.
+  /// @param tForm is the (optional) transform 
   BinUtility(std::vector<float>&          bValues,
              BinningOption                opt   = open,
              BinningValue                 value = binPhi,
@@ -86,28 +93,19 @@ public:
     m_binningData.push_back(BinningData(opt, value, bValues));
   }
 
-  /** Constructor for binH */
-  BinUtility(float phiRef,
-             std::vector<std::pair<int, float>>& bValues,
-             std::shared_ptr<Transform3D> tForm = nullptr)
-    : m_binningData()
-    , m_transform(tForm)
-    , m_itransform(tForm ? new Transform3D(tForm->inverse()) : nullptr)
-  {
-    m_binningData.reserve(3);
-    m_binningData.push_back(BinningData(open, phiRef, bValues));
-  }
-
-  /** Copy constructor */
+  /// Copy constructor 
+  /// 
+  /// @param sbu is the source bin utility
   BinUtility(const BinUtility& sbu)
     : m_binningData(sbu.m_binningData)
     , m_transform(sbu.m_transform)
     , m_itransform(sbu.m_transform ? new Transform3D(sbu.m_transform->inverse())
                                    : nullptr)
-  {
-  }
+  {}
 
-  /** Assignment operator Constructor */
+  /// Assignment operator
+  /// 
+  /// @param sbu is the source bin utility
   BinUtility&
   operator=(const BinUtility& sbu)
   {
@@ -122,7 +120,9 @@ public:
     return (*this);
   }
 
-  /** Operator++ to make multidimensional BinUtility */
+  /// Operator++ to make multidimensional BinUtility 
+  ///
+  /// @param sbu is the additional BinUtility to be chosen
   BinUtility&
   operator+=(const BinUtility& gbu) throw(std::string)
   {
@@ -133,28 +133,34 @@ public:
     return (*this);
   }
 
-  /** Destructor */
+  /// Virtual Destructor 
   ~BinUtility() {}
-  /** Implizit Constructor */
+  
+  /// Implizit Constructor 
   BinUtility*
+
   clone() const
   {
     return new BinUtility(*this);
   }
 
-  /** return the binning data */
+  /// return the binning data 
   const std::vector<BinningData>&
   binningData() const
   {
     return m_binningData;
   }
 
-  /** Bin from a 3D vector (already in binning frame) - optionally the
-   * itransform is applied */
+  /// Bin from a 3D vector (already in binning frame) 
+  /// - optionally the itransform is applied 
+  ///
+  /// @param position is the 3D position to be evaluated
+  /// @param ba is the bin dimension 
+  /// @return is the bin value
   size_t
-  bin(const Vector3D& position, size_t ba = 0) const throw(std::string)
+  bin(const Vector3D& position, size_t ba = 0) const 
   {
-    if (ba >= m_binningData.size()) throw "dimension out of bounds";
+    if (ba >= m_binningData.size()) return 0;
     size_t bEval = m_itransform
         ? m_binningData[ba].searchGlobal((*m_itransform) * position)
         : m_binningData[ba].searchGlobal(position);
@@ -163,7 +169,8 @@ public:
                 : bEval);  //!< @TODO ST additional protection : DEBUG source
   }
 
-  /** Bin neighbour range */
+  /// Bin neighbour range
+  /// 
   std::vector<size_t>
   neighbourRange(const Vector3D& position, size_t ba = 0) const
   {
@@ -179,64 +186,55 @@ public:
     return neighbourRange;
   }
 
-  /** Bin from a 3D vector (already in binning frame) */
-  size_t
-  entry(const Vector3D& position, size_t ba = 0) const throw(std::string)
-  {
-    if (ba >= m_binningData.size()) throw "dimension out of bounds";
-    return (m_itransform ? m_binningData[ba].entry((*m_itransform) * position)
-                         : m_binningData[ba].entry(position));
-  }
-
-  /** Bin from a 3D vector (already in binning frame) */
+  /// Bin from a 3D vector (already in binning frame) 
+  /// 
+  /// @param position is the position to evaluate
+  /// @param direction is the direction for the next
+  /// @param ba is the bin dimension 
+  ///
+  /// @return the next bin
   size_t
   next(const Vector3D& position, const Vector3D& direction, size_t ba = 0) const
-      throw(std::string)
   {
-    if (ba >= m_binningData.size()) throw "dimension out of bounds";
+    if (ba >= m_binningData.size()) return 0;
     return (m_itransform
                 ? m_binningData[ba].next((*m_itransform) * position,
                                          (m_itransform->linear()) * direction)
                 : m_binningData[ba].next(position, direction));
   }
 
-  /** Return the oder direciton for fast interlinking */
+  /// Return the oder direciton for fast interlinking 
   int
   nextDirection(const Vector3D& position,
                 const Vector3D& direction,
-                size_t          ba = 0) const throw(std::string)
+                size_t          ba = 0) const
   {
-    if (ba >= m_binningData.size()) throw "dimension out of bounds";
+    if (ba >= m_binningData.size()) return 0;
     return m_binningData[ba].nextDirection(position, direction);
   }
 
-  /** Distance estimate to next bin  */
-  std::pair<size_t, float>
-  distanceToNext(const Vector3D& position,
-                 const Vector3D& direction,
-                 size_t          ba = 0) const throw(std::string)
-  {
-    if (ba >= m_binningData.size()) throw "dimension out of bounds";
-    return (m_itransform
-                ? m_binningData[ba].distanceToNext((*m_itransform) * position,
-                                                   (m_itransform->linear())
-                                                       * direction)
-                : m_binningData[ba].distanceToNext(position, direction));
-  }
-
-  /** Bin from a 2D vector (following local parameters defintitions) - no
-     optional transform applied
-      - USE WITH CARE !!
-        You need to check if your local position is actually in the binning
-     frame of the BinUtility */
+  /// Bin from a 2D vector (following local parameters defintitions)
+  /// - no optional transform applied
+  /// - USE WITH CARE !!
+  /// 
+  /// You need to make sure that the local position is actually in the binning
+  /// frame of the BinUtility 
+  /// 
+  /// @param lposition is the local position to be set
+  /// @param ba is the bin dimension
+  ///
+  ///  @return bin calculated from local 
   size_t
-  bin(const Vector2D& lposition, size_t ba = 0) const throw(std::string)
+  bin(const Vector2D& lposition, size_t ba = 0) const
   {
-    if (ba >= m_binningData.size()) throw "dimension out of bounds";
+    if (ba >= m_binningData.size()) return 0;
     return m_binningData[ba].searchLocal(lposition);
   }
 
-  /** Check if bin is inside from Vector3D - optional transform applied */
+  /// Check if bin is inside from Vector3D - optional transform applied
+  ///
+  /// @param position is the global position to be evaluated
+  /// @return is a boolean check
   bool
   inside(const Vector3D& position) const
   {
@@ -250,7 +248,10 @@ public:
     return true;
   }
 
-  /** Check if bin is inside from Vector2D - no optional transform applied */
+  /// Check if bin is inside from Vector2D - no optional transform applied
+  ///
+  /// @param lposition is the local position to be evaluated
+  /// @return is a boolean check
   bool
   inside(const Vector2D& lposition) const
   {
@@ -261,14 +262,14 @@ public:
     return true;
   }
 
-  /** First bin maximal value */
+  /// First bin maximal value
   size_t
   dimensions() const
   {
     return m_binningData.size();
   }
 
-  /** First bin maximal value */
+  /// First bin maximal value 
   size_t
   max(size_t ba = 0) const
   {
@@ -276,15 +277,15 @@ public:
     return (m_binningData[ba].bins() - 1);
   }
 
-  /** Number of bins */
+  /// Number of bins 
   size_t
   bins(size_t ba = 0) const
   {
-    if (ba >= m_binningData.size()) return 0;
+    if (ba >= m_binningData.size()) return 1;
     return (m_binningData[ba].bins());
   }
 
-  /** The type/value of the binning */
+  /// The type/value of the binning 
   BinningValue
   binningValue(size_t ba = 0) const throw(std::string)
   {
@@ -292,7 +293,7 @@ public:
     return (m_binningData[ba].binvalue);
   }
 
-  /** bin->BinningValue navigation : pos=+-1. edges/ 0. bin center */
+  /// bin->BinningValue navigation : pos=+-1. edges/ 0. bin center 
   float
   binPosition(size_t bin, float pos, size_t ba = 0) const
   {
@@ -300,14 +301,7 @@ public:
     return (m_binningData[ba].binPosition(bin, pos));
   }
 
-  /** Clear the data. */
-  void
-  clear()
-  {
-    m_binningData.clear();
-  }
-
-  /** Output Method for std::ostream, to be overloaded by child classes */
+  /// Output Method for std::ostream, to be overloaded by child classes 
   std::ostream&
   dump(std::ostream& sl) const
   {
@@ -334,15 +328,15 @@ public:
   }
 
 private:
-  std::vector<BinningData>     m_binningData;
-  std::shared_ptr<Transform3D> m_transform;
-  std::unique_ptr<Transform3D> m_itransform;
+  std::vector<BinningData>     m_binningData; /// vector of BinningData
+  std::shared_ptr<Transform3D> m_transform;   /// shared pointer to the transfrom 
+  std::unique_ptr<Transform3D> m_itransform;  /// unique inverse transform 
 };
 
-/**Overload of << operator for std::ostream for debug output*/
+/// Overload of << operator for std::ostream for debug output
 std::ostream&
 operator<<(std::ostream& sl, const BinUtility& bgen);
 
 }  // end of namespace Acts
 
-#endif  // ACTS_GEOMETRYUTILS_BINUTILITY_H
+#endif  // ACTS_UTILITIES_BINUTILITY_H

@@ -31,7 +31,7 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   // configure surface array creator
   SurfaceArrayCreator::Config sacConfig;
   sacConfig.logger             = getDefaultLogger("SurfaceArrayCreator", lvl);
-    auto surfaceArrayCreator = std::make_shared<SurfaceArrayCreator>(sacConfig);
+  auto surfaceArrayCreator = std::make_shared<SurfaceArrayCreator>(sacConfig);
   // configure the layer creator that uses the surface array creator
   LayerCreator::Config lcConfig;
   lcConfig.logger              = getDefaultLogger("LayerCreator", lvl);
@@ -94,7 +94,7 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   // Module material - X0, L0, A, Z, Rho
   Material pcMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
   // configure the central barrel
-  plbConfig.centralLayerBinMultipliers        = { 1, 1 };
+  plbConfig.centralLayerBinMultipliers        = { 2, 2 };
   plbConfig.centralLayerRadii                 = { 29., 55., 88., 120. };
   plbConfig.centralLayerEnvelopes             = { pcEnvelope, pcEnvelope, pcEnvelope, pcEnvelope };
   plbConfig.centralLayerMaterialConcentration = { 1, 1, 1, 1 };

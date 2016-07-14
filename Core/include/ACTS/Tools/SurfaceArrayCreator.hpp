@@ -58,7 +58,7 @@ public:
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsX is the number of bin in Z for the surfaces   
   /// @param transform is the (optional) additional transform applied
-  /// @return a unique pointer a new SurfaceArray
+  /// @return a unique pointer to a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
                          double                             R,
@@ -77,7 +77,6 @@ public:
   /// @param rMax is the maximal radius of the disc
   /// @param minPhi is the minimal phi position of the surfaces
   /// @param maxPhi is the maximal phi position of the surfaces
-  /// @param rBoundaries are the optional boundaris of the r rings 
   /// @param transform is the (optional) additional transform applied
   /// @return a unique pointer a new SurfaceArray    
   std::unique_ptr<SurfaceArray>
@@ -87,8 +86,7 @@ public:
                      double                             minPhi,
                      double                             maxPhi,
                      size_t                             binsR,
-                     size_t                             binsZ,
-                     const std::vector<double>&         rBoundaries = {},
+                     size_t                             binsPhi,
                      std::shared_ptr<Transform3D>       transform
                      = nullptr) const final;
 
@@ -137,6 +135,8 @@ private:
   }
 
   /// Private helper method to complete the binning
+  ///
+  ///
   /// This is being called when you chose to use more bins thans surfaces
   /// I.e. to put a finer granularity binning onto your surface
   /// Neighbour bins are then filled to contain pointers as well
@@ -151,13 +151,6 @@ private:
       std::vector<SurfacePosition>&                       sVector,
       std::vector<std::vector<SurfacePositionDirection>>& binSystem) const;
 
-  /// Register the neighbours on a Grid - needs to be a BinnedArray1D or
-  //  BinnedArray2D type binning 
-  void
-  registerNeighboursGrid(
-      const std::vector<std::vector<const Surface*>>& surfaceArrayObjects,
-      bool                                            open0,
-      bool                                            open1) const;
 };
 
 }  // end of namespace

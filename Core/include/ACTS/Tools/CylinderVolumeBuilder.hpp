@@ -92,15 +92,15 @@ public:
   struct Config
   {
     /// the logging instance
-    std::shared_ptr<Logger>                logger;        
+    std::shared_ptr<Logger>                 logger;        
     /// the trackign volume helper for construction
-    std::shared_ptr<ITrackingVolumeHelper> trackingVolumeHelper;  
+    std::shared_ptr<ITrackingVolumeHelper>  trackingVolumeHelper;  
     /// the string based indenfication
-    std::string                            volumeName;  
+    std::string                             volumeName;  
     /// The dimensions of the manually created world
-    std::vector<double>                    volumeDimension; 
+    std::vector<double>                     volumeDimension; 
     /// the world material 
-    std::shared_ptr<Material>              volumeMaterial;  
+    std::shared_ptr<Material>               volumeMaterial;  
     /// build the volume to the beam pipe
     bool                                    volumeToBeamPipe; 
     /// needed to build layers within the volume 

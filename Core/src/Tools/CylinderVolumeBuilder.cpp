@@ -367,7 +367,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
                      << insideVolumeRmax
                      << " layerRmin: "
                      << layerRmin);
-          // cleanup teh memory
+          // cleanup the memory
           negativeLayers.clear();
           centralLayers.clear();
           positiveLayers.clear();
