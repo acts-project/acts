@@ -15,6 +15,7 @@
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Surfaces/PerigeeSurface.hpp"
+#include "ACTS/Surfaces/Surface.hpp"
 
 Acts::TrackingGeometry::TrackingGeometry(TrackingVolumePtr highestVolume)
   : m_world(highestVolume)
@@ -83,11 +84,11 @@ Acts::TrackingGeometry::atVolumeBoundary(const Acts::Vector3D&       gp,
 
 //@TODO change to BoundaryCheck
 bool
-Acts::TrackingGeometry::atVolumeBoundary(const Vector3D&  gp,
-                                         const Vector3D&  mom,
+Acts::TrackingGeometry::atVolumeBoundary(const Vector3D&        gp,
+                                         const Vector3D&        mom,
                                          const TrackingVolume*  vol,
                                          const TrackingVolume*& nextVol,
-                                         PropDirection    dir,
+                                         PropDirection          dir,
                                          double) const
 {
   bool isAtBoundary = false;
@@ -122,7 +123,7 @@ const Acts::TrackingVolume*
 Acts::TrackingGeometry::trackingVolume(const std::string& name) const
 {
   auto sVol = m_trackingVolumes.begin();
-  sVol = m_trackingVolumes.find(name);
+  sVol      = m_trackingVolumes.find(name);
   if (sVol != m_trackingVolumes.end()) return (sVol->second);
   return nullptr;
 }
@@ -139,4 +140,10 @@ Acts::TrackingGeometry::registerBeamTube(
     std::unique_ptr<const Acts::PerigeeSurface> beam) const
 {
   m_beam = std::move(beam);
+}
+
+const Acts::Surface*
+Acts::TrackingGeometry::getBeamline() const
+{
+  return m_beam.get();
 }
