@@ -1,4 +1,4 @@
-#include "ACTS/Plugins/MaterialPlugins/SurfaceMaterialProxy.hpp"
+#include "ACTS/Material/SurfaceMaterialProxy.hpp"
 
 Acts::SurfaceMaterialProxy::SurfaceMaterialProxy(BinUtility& binutility) :
 Acts::SurfaceMaterial(),
