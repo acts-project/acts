@@ -66,8 +66,6 @@ public:
   /// type of the covariance matrix of the measurement
   typedef typename ParSet_t::CovMatrix_t CovMatrix_t;
 
-  typedef typename ParSet_t::Projection_t Projection_t;
-
   /**
    * @brief standard constructor
    *
@@ -314,6 +312,30 @@ public:
     return !(*this == rhs);
   }
 
+  friend std::ostream&
+  operator<<(std::ostream& out, const Measurement<Identifier, params...>& m)
+  {
+    m.print(out);
+    return out;
+  }
+
+protected:
+  virtual std::ostream&
+  print(std::ostream& out) const
+  {
+    out << sizeof...(params) << "D measurement: ";
+    int dummy[sizeof...(params)] = {(out << params << ", ", 0)...};
+    out << std::endl;
+    out << "measured values:" << std::endl;
+    out << parameters() << std::endl;
+    out << "covariance matrix:" << std::endl;
+    out << covariance() << std::endl;
+    out << "at " << (associatedSurface().isFree() ? "free" : "non-free") << " surface:" << std::endl;
+    out << associatedSurface();
+
+    return out;
+  }
+
 private:
   ParSet_t       m_oParameters;  ///< measured parameter set
   const Surface* m_pSurface;  ///< surface at which the measurement took place
@@ -326,6 +348,30 @@ private:
 template <typename Identifier>
 using FittableMeasurement =
     typename detail::fittable_type_generator<Identifier>::type;
+
+struct MeasurementPrinter : public boost::static_visitor<std::ostream>
+{
+public:
+  MeasurementPrinter(std::ostream& out) : m_out(out) {}
+  template <typename Meas_t>
+  std::ostream&
+  operator()(const Meas_t& m)
+  {
+    m_out << m;
+    return m_out;
+  }
+
+private:
+  std::ostream& m_out;
+};
+
+template <typename Identifier>
+std::ostream&
+operator<<(std::ostream& out, const FittableMeasurement<Identifier>& m)
+{
+  MeasurementPrinter mp(out);
+  return mp(m);
+}
 }  // end of namespace Acts
 
 #endif  // ACTS_MEASUREMENT_H
