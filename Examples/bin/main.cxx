@@ -1,7 +1,9 @@
 #include <iostream>
 #include <math.h>
 #include <memory>
+#include <random>
 #include "ACTS/Detector/TrackingGeometry.hpp"
+#include "ACTS/EventData/Measurement.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Examples/BuildGenericDetector.hpp"
 #include "ACTS/Extrapolation/ExtrapolationCell.hpp"
@@ -17,6 +19,10 @@
 #include "ACTS/Utilities/Logger.hpp"
 
 using namespace Acts;
+
+typedef FittableMeasurement<long int> FitMeas_t;
+template <ParID_t... pars>
+using Meas_t = Measurement<long int, pars...>;
 
 class ConstantField : public IMagneticFieldSvc
 {
@@ -90,16 +96,45 @@ main()
       = std::make_unique<BoundParameters>(nullptr, std::move(pars), *pSurf);
 
   ExtrapolationCell<TrackParameters> exCell(*startTP);
-//  exCell.addConfigurationMode(ExtrapolationMode::CollectSensitive);
+  exCell.addConfigurationMode(ExtrapolationMode::CollectSensitive);
   exCell.addConfigurationMode(ExtrapolationMode::StopAtBoundary);
 
   auto exEngine = initExtrapolator(geo);
   exEngine->extrapolate(exCell);
 
-  std::cout << "crossed " << exCell.extrapolationSteps.size()
-            << " active sensor surfaces" << std::endl;
-  for (const auto& step : exCell.extrapolationSteps)
-    std::cout << *step.parameters << std::endl;
+  std::cout << "got " << exCell.extrapolationSteps.size()
+            << " extrapolation steps" << std::endl;
+
+  std::vector<FitMeas_t> vMeasurements;
+  vMeasurements.reserve(exCell.extrapolationSteps.size());
+
+  // identifier
+  long int id = 0;
+  // random numbers for smearing measurements
+  std::default_random_engine             e;
+  std::uniform_real_distribution<double> std_loc1(1, 5);
+  std::uniform_real_distribution<double> std_loc2(0.1, 2);
+  std::normal_distribution<double>       g(0, 1);
+
+  double std1, std2, l1, l2;
+  for (const auto& step : exCell.extrapolationSteps) {
+    const auto& tp = step.parameters;
+    if (tp->associatedSurface().type() != Surface::Cylinder) continue;
+
+    std1 = std_loc1(e);
+    std2 = std_loc2(e);
+    l1   = tp->get<eLOC_1>() + std1 * g(e);
+    l2   = tp->get<eLOC_2>() + std2 * g(e);
+    ActsSymMatrixD<2> cov;
+    cov << std1 * std1, 0, 0, std2 * std2;
+    vMeasurements.push_back(Meas_t<eLOC_1, eLOC_2>(
+        tp->associatedSurface(), id, std::move(cov), l1, l2));
+    ++id;
+  }
+
+  std::cout << "created " << vMeasurements.size() << " pseudo-measurements"
+            << std::endl;
+  for (const auto& m : vMeasurements) std::cout << m << std::endl << std::endl;
 
   return 0;
 }
