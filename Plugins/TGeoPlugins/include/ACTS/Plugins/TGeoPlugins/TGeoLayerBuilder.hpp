@@ -37,12 +37,20 @@ public:
     std::string layerName;
     /// identify the sensor by name
     std::string sensorName;
+    /// unit scalor, e.g. from geant 4
+    double      unitscalor;
     /// define the number of bins in loc0
     size_t      binsLoc0;
     /// define the number of bins in loc1
     size_t      binsLoc1;
 
-    LayerConfig() : layerName(""), sensorName(""), binsLoc0(0), binsLoc1(0) {}
+    LayerConfig() 
+      : layerName("")
+      , sensorName("")
+      , unitscalor(1.)
+      , binsLoc0(0)
+      , binsLoc1(0)
+    {}
   };
 
   /// @struct Config
@@ -62,7 +70,7 @@ public:
     std::vector<LayerConfig>       positiveLayerConfigs;
 
     Config()
-      : logger(getDefaultLogger("LayerArrayCreator", Logging::INFO))
+      : logger(getDefaultLogger("TGeoLayerBuilder", Logging::INFO))
       , configurationName("Undefined")
       , layerCreator(nullptr)
       , negativeLayerConfigs()
@@ -107,6 +115,13 @@ public:
 private:
   /// configruation object
   Config m_cfg;  
+  
+  /// Private acces method to the logger
+  const Logger&
+  logger() const
+  {
+    return *m_cfg.logger;
+  }
   
   /// @TODO make clear where the TGeoDetectorElement lives
   mutable std::vector< std::shared_ptr<TGeoDetectorElement> > m_elementStore;  

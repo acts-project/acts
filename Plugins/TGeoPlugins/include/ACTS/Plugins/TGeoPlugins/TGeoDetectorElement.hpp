@@ -35,10 +35,10 @@ public:
   /// @param identifier is the detector identifier
   /// @param tGeoDetElement is the TGeoNode which should be represented
   /// @Param motherTransform is the (optional) transform applied to the TGeoNode
-  TGeoDetectorElement(const Identifier&                        identifier,
-                      TGeoNode*                                tGeoDetElement,
-                      std::shared_ptr<const Acts::Transform3D> motherTransform
-                      = nullptr);
+  TGeoDetectorElement(const Identifier&                  identifier,
+                      TGeoNode*                          tGeoDetElement,
+                      std::shared_ptr<Acts::Transform3D> motherTransform = nullptr,
+                      double scalor = 0.);
 
   ///  Destructor 
   virtual ~TGeoDetectorElement();

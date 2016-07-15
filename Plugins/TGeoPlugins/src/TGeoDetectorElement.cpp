@@ -19,9 +19,10 @@
 #include <iostream>
 
 Acts::TGeoDetectorElement::TGeoDetectorElement(
-    const Identifier&                        identifier,
-    TGeoNode*                                tGeoDetElement,
-    std::shared_ptr<const Acts::Transform3D> motherTransform)
+    const Identifier&            identifier,
+    TGeoNode*                    tGeoDetElement,
+    std::shared_ptr<Transform3D> motherTransform,
+    double                       scalor)
   : Acts::DetectorElementBase()
   , m_detElement(tGeoDetElement)
   , m_identifier(identifier)
@@ -57,9 +58,9 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
           * AngleAxis3D(0.5 * M_PI, Vector3D::UnitX()));
     // extract the surface bounds
     auto trapezoidBounds = std::make_shared<const Acts::TrapezoidBounds>(
-        trapezoid->GetDx1() * cm,
-        trapezoid->GetDx2() * cm,
-        trapezoid->GetDz() * cm);
+        scalor*trapezoid->GetDx1(), 
+        scalor*trapezoid->GetDx2(), 
+        scalor*trapezoid->GetDz());
     m_bounds  = trapezoidBounds;
     m_surface = std::make_shared<const Acts::PlaneSurface>(trapezoidBounds, 
                                                            *this, 
@@ -68,9 +69,11 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     /*
         MaterialProperties moduleMaterialProperties(
             moduleMaterial,
-            0.5 * (trapezoid->GetDy1() * cm + trapezoid->GetDy1() * cm));
+            0.5 * scalor * (trapezoid->GetDy1() + trapezoid->GetDy1()));
         m_surface->setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial>(
             new HomogeneousSurfaceMaterial(moduleMaterialProperties)));*/
+    // set the thickness
+    m_thickness = scalor*2*trapezoid->GetDy1();
   } else {
     m_transform = std::make_shared<Acts::Transform3D>(
         Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
@@ -84,17 +87,18 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
                                                                *(*m_transform));
     }
     // extract the surface bounds
-    auto rectangleBounds = std::make_shared<const Acts::RectangleBounds>(
-        box->GetDX() * cm, box->GetDY() * cm);
+    auto rectangleBounds = std::make_shared<const Acts::RectangleBounds>(scalor*box->GetDX(), scalor*box->GetDY());
     m_bounds  = rectangleBounds;
     m_surface = std::make_shared<const Acts::PlaneSurface>(rectangleBounds,
                                                            *this,
                                                           m_identifier);
     // ignore module material for the moment @TODO handle module material
     /*    MaterialProperties moduleMaterialProperties(moduleMaterial,
-                                                    box->GetDZ() * cm);
+                                                     scalor * box->GetDZ());
         m_surface->setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial>(
             new HomogeneousSurfaceMaterial(moduleMaterialProperties)));*/
+    // set the thickness
+    m_thickness = scalor*2*box->GetDZ();
   }
 }
 

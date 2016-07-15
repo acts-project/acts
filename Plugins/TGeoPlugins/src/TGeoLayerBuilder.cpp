@@ -46,36 +46,45 @@ Acts::TGeoLayerBuilder::centralLayers() const
   // bail out if you have no gGeoManager
   if (!gGeoManager) return cVector;
 
-  MSG_INFO("Central Layers : found " << m_cfg.centralLayerConfigs.size()
+  ACTS_DEBUG("Central Layers : found " << m_cfg.centralLayerConfigs.size()
                                      << " configurations.");
 
   for (auto layerCfg : m_cfg.centralLayerConfigs) {
-    MSG_INFO("- layer configuration found for layer " << layerCfg.layerName
+    ACTS_DEBUG("- layer configuration found for layer " << layerCfg.layerName
                                                       << " with sensor "
                                                       << layerCfg.sensorName);
     TGeoVolume* volume = gGeoManager->GetVolume(layerCfg.layerName.c_str());
     if (volume) {
+      /// 
+      ACTS_DEBUG("- found parent volume :"  << volume->GetName());
       // prepare the vector for the sensitive nodes
       std::vector<TGeoNode*> sensitiveNodes;
       // run recursive collection
       collectSensitive(volume, nullptr, layerCfg.sensorName, sensitiveNodes);
-      MSG_INFO("- layer found to have " << sensitiveNodes.size()
+      ACTS_DEBUG("- layer found to have " << sensitiveNodes.size()
                                         << " sensitive sensors ");
       // create the detector surface vector
       std::vector<const Acts::Surface*> detSurfaces;
       detSurfaces.reserve(sensitiveNodes.size());
+      // get inner outer radius
+      double innerR = 10e10;
+      double outerR = 0.;
       // loop and fill
       for (auto& sNode : sensitiveNodes) {
         // create the new detector element
         auto tgElement
-            = std::make_shared<Acts::TGeoDetectorElement>(Identifier(), sNode);
+          = std::make_shared<Acts::TGeoDetectorElement>(Identifier(), 
+                                                        sNode, 
+                                                        nullptr, 
+                                                        layerCfg.unitscalor);
+        // 
         m_elementStore.push_back(tgElement);
         // create a layer out of the surfaces
         detSurfaces.push_back(&(tgElement->surface()));
-        // create the layer
-        cVector.push_back(m_cfg.layerCreator->cylinderLayer(
-            detSurfaces, 1., 5., layerCfg.binsLoc0, layerCfg.binsLoc0));
       }
+      // create the layer
+      cVector.push_back(m_cfg.layerCreator->cylinderLayer(
+          detSurfaces, 1., 5., layerCfg.binsLoc0, layerCfg.binsLoc0));
     }
   }
 
@@ -109,18 +118,21 @@ Acts::TGeoLayerBuilder::collectSensitive(
   } else {
     // get the name as a string and compare
     std::string tNodeName = tNode->GetName();
-    MSG_VERBOSE("-- node :" << tNodeName);
     if (tNodeName.find(sensitiveName) != std::string::npos) {
       // senstive volume found, collect it
+      ACTS_VERBOSE("-- accepted :" << tNodeName);
       sensitiveNodes.push_back(tNode);
-    }
+    } else
+      ACTS_VERBOSE("-- ignored :" << tNodeName);
     // get the children nodes from the
     auto  daugthers = tNode->GetNodes();
     TIter iObj(daugthers);
     while (TObject* obj = iObj()) {
       // dynamic_cast to a node
       TGeoNode* node = dynamic_cast<TGeoNode*>(obj);
-      if (node) collectSensitive(nullptr, node, sensitiveName, sensitiveNodes);
+      if (node) {     
+        collectSensitive(nullptr, node, sensitiveName, sensitiveNodes);
+      }
     }
   }
 }

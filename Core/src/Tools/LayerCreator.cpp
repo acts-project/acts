@@ -175,6 +175,7 @@ Acts::LayerCreator::moduleExtend(const Surface& sf,
   if (element) {
     // get the thickness
     double thickness = element->thickness();
+    ACTS_VERBOSE("Parsing and associated element with thickness " << thickness);
     // check the shape
     const PlanarBounds* pBounds
         = dynamic_cast<const PlanarBounds*>(&(sf.bounds()));
