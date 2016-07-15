@@ -16,6 +16,7 @@
 #include "ACTS/Utilities/BinningData.hpp"
 #include "ACTS/Utilities/BinningType.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include <array>
 #include <memory>
 #include <vector>
 #include <iostream>
@@ -144,12 +145,41 @@ public:
     return new BinUtility(*this);
   }
 
-  /// return the binning data 
+  /// return the binning data vector
   const std::vector<BinningData>&
   binningData() const
   {
     return m_binningData;
   }
+
+  /// Return the total number of bins
+  size_t 
+  bins() const
+  {
+    return bins(0)*bins(1)*bins(2);
+  }
+
+  /// Bin-triple fast accaess
+  ///
+  /// - saves potentially 2 global * local 3D 
+  ///
+  /// @param position is the 3D position to be evaluated
+  /// @return is the bin value
+  std::array<size_t,3>
+  binTriple(const Vector3D& position) const
+  {
+    /// transform or not
+    const Vector3D& bPosition = m_itransform ? 
+      Vector3D((*m_itransform) * position) : position;
+    // get the dimension
+    size_t mdim = m_binningData.size();
+    /// now get the bins
+    size_t bin0 = m_binningData[0].searchGlobal(bPosition);
+    size_t bin1 = mdim > 1 ? m_binningData[1].searchGlobal(bPosition) : 0;
+    size_t bin2 = mdim > 2 ? m_binningData[2].searchGlobal(bPosition) : 0;
+    /// return the triple
+    return { {bin0, bin1, bin2} };
+  } 
 
   /// Bin from a 3D vector (already in binning frame) 
   /// - optionally the itransform is applied 
@@ -186,7 +216,7 @@ public:
     return neighbourRange;
   }
 
-  /// Bin from a 3D vector (already in binning frame) 
+  /// Next bin from a 3D vector (already in binning frame) 
   /// 
   /// @param position is the position to evaluate
   /// @param direction is the direction for the next
@@ -230,21 +260,21 @@ public:
     if (ba >= m_binningData.size()) return 0;
     return m_binningData[ba].searchLocal(lposition);
   }
-
-  /// Check if bin is inside from Vector3D - optional transform applied
+  /// Check if bin is inside from Vector2D - optional transform applied
   ///
   /// @param position is the global position to be evaluated
   /// @return is a boolean check
   bool
   inside(const Vector3D& position) const
   {
-    std::vector<BinningData>::const_iterator bdIter = m_binningData.begin();
-    for (; bdIter != m_binningData.end(); ++bdIter) {
-      if (m_itransform && !(*bdIter).inside((*m_itransform) * position))
+    /// transform or not
+    const Vector3D& bPosition = m_itransform ? 
+      Vector3D((*m_itransform) * position) : position;
+    // loop and break
+    for (auto& bData : m_binningData )
+      if (!(bData.inside(bPosition)))
         return false;
-      else if (!(*bdIter).inside(position))
-        return false;
-    }
+    // survived all the checks
     return true;
   }
 
@@ -279,7 +309,7 @@ public:
 
   /// Number of bins 
   size_t
-  bins(size_t ba = 0) const
+  bins(size_t ba) const
   {
     if (ba >= m_binningData.size()) return 1;
     return (m_binningData[ba].bins());
@@ -291,14 +321,6 @@ public:
   {
     if (ba >= m_binningData.size()) throw "dimension out of bounds";
     return (m_binningData[ba].binvalue);
-  }
-
-  /// bin->BinningValue navigation : pos=+-1. edges/ 0. bin center 
-  float
-  binPosition(size_t bin, float pos, size_t ba = 0) const
-  {
-    if (ba >= m_binningData.size()) throw "dimension out of bounds";
-    return (m_binningData[ba].binPosition(bin, pos));
   }
 
   /// Output Method for std::ostream, to be overloaded by child classes 

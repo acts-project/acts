@@ -22,8 +22,13 @@ namespace Acts {
 class Surface;
 class BinUtility;
 
-typedef std::pair<const Surface*, Vector3D>  SurfacePosition;
-typedef std::pair<SurfacePosition, Vector3D> SurfacePositionDirection;
+typedef std::vector< const Surface* > SurfaceVector;
+typedef std::vector< SurfaceVector >  SurfaceMatrix;
+typedef std::vector< SurfaceMatrix >  SurfaceGrid;
+
+typedef std::vector< Vector3D >       V3Vector;
+typedef std::vector< V3Vector >       V3Matrix;
+
 
 /// @class SurfaceArrayCreator
 ///
@@ -136,6 +141,14 @@ private:
 
   /// Private helper method to complete the binning
   ///
+  /// @TODO implement closest neighbour search
+  ///
+  ///  given a grid point o
+  ///    |  0  |  1 |  2  |  3 |  4  |
+  ///    ------------------------------
+  ///  0 |  x  |    |     |    |  x  |
+  ///  1 |     |    |  o  |    |     | 
+  ///  2 |  x  |    |     |    |  x  |
   ///
   /// This is being called when you chose to use more bins thans surfaces
   /// I.e. to put a finer granularity binning onto your surface
@@ -145,11 +158,10 @@ private:
   /// sVector is the filled vector of Surface and binning position 
   /// binSystem is the full system of bins 
   void
-  completeBinning(
-      const std::vector<const Surface*>&                  surfaces,
-      const BinUtility&                                   binUtility,
-      std::vector<SurfacePosition>&                       sVector,
-      std::vector<std::vector<SurfacePositionDirection>>& binSystem) const;
+  completeBinning(const BinUtility&  binUtility,
+                  const V3Matrix&,
+                  const SurfaceVector& sVector,
+                  SurfaceGrid& sGrid) const;
 
 };
 

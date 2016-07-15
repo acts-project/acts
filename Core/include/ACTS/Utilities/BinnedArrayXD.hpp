@@ -15,6 +15,7 @@
 
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/BinnedArray.hpp"
+#include <array>
 #include <vector>
 #include <iostream>
 
@@ -66,18 +67,38 @@ public:
       if (m_binUtility->inside(tap.second)) {
         // butil to the array store - if the bingen
         // dimension is smaller 1,2 it will provide 0
-        size_t bin0 = m_binUtility->bin(tap.second, 0);
-        size_t bin1 = m_binUtility->bin(tap.second, 1);
-        size_t bin2 = m_binUtility->bin(tap.second, 2);
+        auto bins = m_binUtility->binTriple(tap.second);
         /// fill the data  
-        m_objectGrid[bin2][bin1][bin0] = tap.first;
+        m_objectGrid[bins[2]][bins[1]][bins[0]] = tap.first;
         /// fill the unique m_arrayObjects
-        auto beginIter = m_arrayObjects.begin();
-        auto endIter   = m_arrayObjects.end();
-        if (std::find(beginIter, endIter, tap.first) == endIter)
-            m_arrayObjects.push_back(tap.first); 
+        if (std::find(m_arrayObjects.begin(),m_arrayObjects.end(),tap.first) 
+            == m_arrayObjects.end()) m_arrayObjects.push_back(tap.first);
       } 
     }
+  }
+
+  /// Constructor with a grid and a BinUtility 
+  BinnedArrayXD(const std::vector< std::vector< std::vector < T > > >& grid,
+                std::unique_ptr<BinUtility> bu)
+    : BinnedArray<T>()
+    , m_objectGrid(grid)
+    , m_arrayObjects()
+    , m_binUtility(std::move(bu))
+  {
+    // get the total dimension
+    size_t objects = m_binUtility->bins(0)*m_binUtility->bins(1)*m_binUtility->bins(2);
+    /// reserve the right amount of data
+    m_arrayObjects.reserve(objects);
+    /// loop over the object & position for ordering
+    for (auto& o2 : m_objectGrid)
+      for (auto& o1 : o2)
+        for (auto& o0 : o1){
+          if (o0){
+            /// fill the unique m_arrayObjects
+            if (std::find(m_arrayObjects.begin(), m_arrayObjects.end(), o0) 
+                == m_arrayObjects.end()) m_arrayObjects.push_back(o0); 
+          }
+      }
   }
 
   /// Copy constructor
@@ -99,14 +120,14 @@ public:
   /// @param lposition is the local position for the bin search
   /// @return is the object in that bin
   T
-  object(const Vector2D& lposition) const final
+  object(const Vector2D& lposition, std::array<size_t,3>& bins) const final
   {
     if (m_binUtility){
       size_t bdim = m_binUtility->dimensions();
-      size_t bin2 = bdim > 2 ? m_binUtility->bin(lposition, 2)  :  0; 
-      size_t bin1 = bdim > 1 ? m_binUtility->bin(lposition, 1)  :  0; 
-      size_t bin0 =  m_binUtility->bin(lposition, 0);
-      return m_objectGrid[bin2][bin1][bin0];      
+      bins[2] = bdim > 2 ? m_binUtility->bin(lposition, 2)  :  0; 
+      bins[1] = bdim > 1 ? m_binUtility->bin(lposition, 1)  :  0; 
+      bins[0] =  m_binUtility->bin(lposition, 0);
+      return m_objectGrid[bins[2]][bins[1]][bins[0]];      
     }
     return m_objectGrid[0][0][0];
   }
@@ -118,14 +139,14 @@ public:
   /// @param position is the global position for the bin search
   /// @return is the object in that bin
   T
-  object(const Vector3D& position) const final
+  object(const Vector3D& position, std::array<size_t,3>& bins ) const final
   {
     if (m_binUtility){
       size_t bdim = m_binUtility->dimensions();
-      size_t bin2 = bdim > 2 ? m_binUtility->bin(position, 2)  :  0; 
-      size_t bin1 = bdim > 1 ? m_binUtility->bin(position, 1)  :  0; 
-      size_t bin0 =  m_binUtility->bin(position, 0);
-      return m_objectGrid[bin2][bin1][bin0];      
+      bins[2] = bdim > 2 ? m_binUtility->bin(position, 2)  :  0; 
+      bins[1] = bdim > 1 ? m_binUtility->bin(position, 1)  :  0; 
+      bins[0] =  m_binUtility->bin(position, 0);
+      return m_objectGrid[bins[2]][bins[1]][bins[0]];      
     }
     return m_objectGrid[0][0][0];
   }
@@ -135,7 +156,15 @@ public:
   arrayObjects() const final
   {
     return m_arrayObjects;
-  };
+  }
+  
+  /// Return the object grid
+  /// multiple entries are allowed and wanted 
+  const std::vector< std::vector< std::vector< T > > >&
+  objectGrid() const final
+  {
+    return m_objectGrid;
+  }
 
   /// Return the BinUtility
   const BinUtility*
