@@ -11,6 +11,7 @@
 
 // STL include(s)
 #include <memory>
+#include <ostream>
 #include <type_traits>
 #include <utility>
 
@@ -60,31 +61,36 @@ private:
       ParSet_t;  ///< type of the underlying ParameterSet object
 
 public:
-  typedef typename ParSet_t::ParVector_t
-      ParVector_t;  ///< type of the vector containing the parameter values
-  typedef typename ParSet_t::CovMatrix_t
-      CovMatrix_t;  ///< type of the covariance matrix of the measurement
+  /// type of the vector containing the parameter values
+  typedef typename ParSet_t::ParVector_t ParVector_t;
+  /// type of the covariance matrix of the measurement
+  typedef typename ParSet_t::CovMatrix_t CovMatrix_t;
+
+  typedef typename ParSet_t::Projection_t Projection_t;
 
   /**
    * @brief standard constructor
    *
    * Interface class for all possible measurements.
    *
-   * @note Only a reference to the given surface is stored. The user must ensure
+   * @note Only a reference to the given surface is stored. The user must
+   * ensure
    * that the lifetime of the @c Surface
    *       object surpasses the lifetime of this Measurement object.<br />
    *       The given parameter values are interpreted as values to the
    * parameters as defined in the class template
    *       argument @c params.
    *
-   * @attention The current design will fail if the in-memory location of the @c
+   * @attention The current design will fail if the in-memory location of
+   * the @c
    * Surface object is changed (e.g.
    *            if it is stored in a container and this gets relocated).
    *
    * @param surface surface at which the measurement took place
    * @param id identification object for this measurement
    * @param cov covariance matrix of the measurement.
-   * @param head,values consistent number of parameter values of the measurement
+   * @param head,values consistent number of parameter values of the
+   * measurement
    */
   template <typename... Tail>
   Measurement(const Surface&    surface,
@@ -96,7 +102,8 @@ public:
     : m_oParameters(std::make_unique<CovMatrix_t>(std::move(cov)),
                     head,
                     values...)
-    , m_pSurface(&surface)
+    , m_pSurface(surface.isFree() ? const_cast<const Surface*>(surface.clone())
+                                  : &surface)
     , m_oIdentifier(id)
   {
   }
@@ -104,14 +111,22 @@ public:
   /**
    * @brief virtual destructor
    */
-  virtual ~Measurement() = default;
+  virtual ~Measurement()
+  {
+    if (m_pSurface && m_pSurface->isFree()) {
+      delete m_pSurface;
+      m_pSurface = 0;
+    }
+  }
 
   /**
    * @brief copy constructor
    */
   Measurement(const Measurement<Identifier, params...>& copy)
     : m_oParameters(copy.m_oParameters)
-    , m_pSurface(copy.m_pSurface)
+    , m_pSurface(copy.m_pSurface->isFree()
+                     ? const_cast<const Surface*>(copy.m_pSurface->clone())
+                     : copy.m_pSurface)
     , m_oIdentifier(copy.m_oIdentifier)
   {
   }
@@ -124,6 +139,7 @@ public:
     , m_pSurface(rhs.m_pSurface)
     , m_oIdentifier(std::move(rhs.m_oIdentifier))
   {
+    rhs.m_pSurface = 0;
   }
 
   /**
