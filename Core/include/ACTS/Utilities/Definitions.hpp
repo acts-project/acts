@@ -31,6 +31,12 @@ typedef double TDD_real_t;
 namespace Acts {
 /** Tolerance for being on Surface */
 static const double s_onSurfaceTolerance = 10e-5;
+    
+/// conversion factors to internal length unit mm
+    const float km = 1000 000;
+    const float m  = 1000;
+    const float cm = 10;
+
 
 /** @enum PropDirection
   PropDirection, enum for direction of the propagation.
