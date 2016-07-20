@@ -12,8 +12,11 @@ Acts::DetExtension::DetExtension()
   : Acts::IDetExtension()
   , m_segmentation(nullptr)
   , m_shape(Acts::ShapeType::None)
-  , m_supportStructure()
+  , m_supportMaterial(false)
+  , m_bins1(0)
+  , m_bins2(0)
   , m_modules()
+  , m_layerMatPos(LayerMaterialPos::inner)
 {
 }
 
@@ -22,8 +25,11 @@ Acts::DetExtension::DetExtension(
   : Acts::IDetExtension()
   , m_segmentation(segmentation)
   , m_shape(Acts::ShapeType::None)
-  , m_supportStructure()
+  , m_supportMaterial(false)
+  , m_bins1(0)
+  , m_bins2(0)
   , m_modules()
+  , m_layerMatPos(LayerMaterialPos::inner)
 {
 }
 
@@ -31,17 +37,23 @@ Acts::DetExtension::DetExtension(ShapeType shape)
   : Acts::IDetExtension()
   , m_segmentation(nullptr)
   , m_shape(shape)
-  , m_supportStructure()
+  , m_supportMaterial(false)
+  , m_bins1(0)
+  , m_bins2(0)
   , m_modules()
+  , m_layerMatPos(LayerMaterialPos::inner)
 {
 }
 
-Acts::DetExtension::DetExtension(const DD4hep::Geometry::DetElement support)
+Acts::DetExtension::DetExtension(size_t bins1, size_t bins2, Acts::LayerMaterialPos layerMatPos)
   : Acts::IDetExtension()
   , m_segmentation(nullptr)
   , m_shape(Acts::ShapeType::None)
-  , m_supportStructure(support)
+  , m_supportMaterial(true)
+  , m_bins1(bins1)
+  , m_bins2(bins2)
   , m_modules()
+  , m_layerMatPos(layerMatPos)
 {
 }
 
@@ -49,18 +61,24 @@ Acts::DetExtension::DetExtension(std::vector<DD4hep::Geometry::DetElement> mod)
   : Acts::IDetExtension()
   , m_segmentation(nullptr)
   , m_shape(Acts::ShapeType::None)
-  , m_supportStructure()
+  , m_supportMaterial(false)
+  , m_bins1(0)
+  , m_bins2(0)
   , m_modules(mod)
+  , m_layerMatPos(LayerMaterialPos::inner)
 {
 }
 
-Acts::DetExtension::DetExtension(const DD4hep::Geometry::DetElement support,
+Acts::DetExtension::DetExtension(size_t bins1, size_t bins2, Acts::LayerMaterialPos layerMatPos,
                                  std::vector<DD4hep::Geometry::DetElement> mod)
   : Acts::IDetExtension()
   , m_segmentation(nullptr)
   , m_shape(Acts::ShapeType::None)
-  , m_supportStructure(support)
+  , m_supportMaterial(true)
+  , m_bins1(bins1)
+  , m_bins2(bins2)
   , m_modules(mod)
+  , m_layerMatPos(layerMatPos)
 {
 }
 

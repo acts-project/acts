@@ -51,14 +51,15 @@ public:
   DetExtension(ShapeType shape);
   /// Constructor for layer with support structure
   /// @param support Possible support structure of the layer
-  DetExtension(bool support);
+  DetExtension(size_t bins1, size_t bins2, LayerMaterialPos layerMatPos);
   /// Constructor for layer with modules
   /// @param mod Possible sensitive modules contained by a layer
   DetExtension(std::vector<DD4hep::Geometry::DetElement> mod);
   /// Constructor for layer with support structure and modules
   /// @param support Possible support structure of the layer
   /// @param mod Possible sensitive modules contained by a layer
-  DetExtension(bool        support,
+  DetExtension(size_t bins1, size_t bins2, LayerMaterialPos layerMatPos,
+                 std::vector<DD4hep::Geometry::DetElement> mod);
   /// Copy constructor
   DetExtension(const DetExtension&, const DD4hep::Geometry::DetElement&);
   /// Virtual destructor
@@ -87,6 +88,14 @@ public:
   /// possibility to hand over supporte structure of a layer
   /// @param support Possible support structure of the layer
   virtual void
+  supportMaterial(size_t bins1, size_t bins2, LayerMaterialPos layerMatPos) final;
+  /* access supporting structure */
+  bool
+  hasSupportMaterial() const override;
+  std::pair<size_t,size_t> materialBins() const final;
+  virtual Acts::LayerMaterialPos layerMaterialPos() const final;
+  /* possibility to set contained sensitive DetectorModules by a layer*/
+  virtual void
                supportMaterial(bool support) final;
   /// Access supporting structure of a layer
   /// @return support Possible support structure of the layer
@@ -113,6 +122,9 @@ private:
                m_supportMaterial;
   /// possible contained modules of a layer
   std::vector<DD4hep::Geometry::DetElement> m_modules;
+    size_t m_bins1;
+    size_t m_bins2;
+    LayerMaterialPos m_layerMatPos;
 };
 }
 
@@ -141,15 +153,29 @@ Acts::DetExtension::segmentation() const
 }
 
 inline void
-Acts::DetExtension::supportMaterial(bool support)
+Acts::DetExtension::supportMaterial(size_t bins1, size_t bins2, LayerMaterialPos layerMatPos)
 {
-  m_supportMaterial = support;
+  m_supportMaterial = true;
+  m_bins1 = bins1;
+  m_bins2 = bins2;
+    m_layerMatPos = layerMatPos;
 }
 
 inline bool
 Acts::DetExtension::hasSupportMaterial() const
 {
   return m_supportMaterial;
+}
+
+inline Acts::LayerMaterialPos Acts::DetExtension::layerMaterialPos() const
+{
+    return m_layerMatPos;
+}
+
+inline std::pair<size_t,size_t> Acts::DetExtension::materialBins() const
+{
+    std::pair<size_t,size_t> bins(m_bins1,m_bins2);
+    return (bins);
 }
 
 inline void
@@ -163,5 +189,7 @@ Acts::DetExtension::modules() const
 {
   return m_modules;
 }
+
+
 
 #endif  // ACTS_DD4HEPDETECTORELEMENT_DETEXTENSION_H

@@ -54,6 +54,15 @@ enum ShapeType {
   Cylinder = 1,
   Disc     = 2
 };
+    /// @enum the LayerMaterialPos enumeration is foreseen to mark on which surface
+    /// the two dimensional material of the layer sits. Either on the inner or
+    /// the other boundary surface of the layer or at the representing (center)
+    /// surface of the layer
+enum LayerMaterialPos{
+        inner   = 0,
+        central = 1,
+        outer   = 2,
+};
 
 class IDetExtension
 {
@@ -85,14 +94,20 @@ public:
   /// possibility to mark layer to have support material
   /// @param support Boolean to mark if the layer carries support material
   virtual void
-  supportMaterial(bool support)
+  supportMaterial(size_t bins1, size_t bins2, LayerMaterialPos layerMatPos)
       = 0;
   /// Access supporting structure of a layer
   /// @return support Possible support structure of the layer
-  virtual const DD4hep::Geometry::DetElement&
-  supportStructure() const = 0;
   /// Possibility to set contained detector modules of a layer
   /// @param mod Possible sensitive modules contained by a layer
+  /* access supporting structure */
+  virtual bool
+  hasSupportMaterial() const = 0;
+    
+  virtual std::pair<size_t,size_t> materialBins() const = 0;
+    
+    virtual Acts::LayerMaterialPos layerMaterialPos() const = 0;
+  /* possibility to set contained sensitive DetectorModules by a layer*/
   virtual void
   setModules(std::vector<DD4hep::Geometry::DetElement> mod)
       = 0;
