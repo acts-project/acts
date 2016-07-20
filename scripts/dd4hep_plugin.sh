@@ -1,9 +1,12 @@
 source /afs/cern.ch/sw/lcg/contrib/gcc/4.9.3/x86_64-slc6-gcc49-opt/setup.sh
 export PATH=/afs/cern.ch/sw/lcg/contrib/CMake/3.5.2/Linux-x86_64/bin/:${PATH}
 
-export DD4hep_DIR=/afs/cern.ch/exp/fcc/sw/0.7/DD4hep/20161003/x86_64-slc6-gcc49-opt
-export ROOT_DIR=/afs/cern.ch/sw/lcg/releases/LCG_83/ROOT/6.06.00/x86_64-slc6-gcc49-opt/
-
+# needs DD4hep with c++14
+#export DD4hep_DIR=/afs/cern.ch/exp/fcc/sw/0.7/DD4hep/20161003/x86_64-slc6-gcc49-opt
+#export DD4hep_DIR=/afs/cern.ch/user/j/jhrdinka/sw/DD4hep/
+export DD4hep_DIR=/afs/cern.ch/work/j/jhrdinka/sw/DD4hep/
+#export ROOT_DIR=/afs/cern.ch/sw/lcg/releases/LCG_83/ROOT/6.06.00/x86_64-slc6-gcc49-opt/
+export ROOT_DIR=/afs/cern.ch/work/j/jhrdinka/sw/ROOT/root-install/
 source $ROOT_DIR/bin/thisroot.sh
 
 # DD4hep needed for DD4hep Plugin and example - decouple later
