@@ -38,7 +38,7 @@ Acts::DD4hepGeometryHelper::extractTransform(
       Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
       Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
       Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
-      Acts::Vector3D(translation[0], translation[1], translation[2]));
+      Acts::Vector3D(translation[0]*cm, translation[1]*cm, translation[2]*cm));
   return (transform);
 }
 
@@ -50,7 +50,7 @@ Acts::DD4hepGeometryHelper::extractVolumeBounds(
   TGeoConeSeg* tube     = dynamic_cast<TGeoConeSeg*>(geoShape);
   if (!tube) throw "Volume has wrong shape - needs to be TGeoConeSeg!";
   auto cylinderBounds = std::make_shared<const Acts::CylinderVolumeBounds>(
-      tube->GetRmin1(), tube->GetRmax1(), tube->GetDz());
+      tube->GetRmin1()*cm, tube->GetRmax1()*cm, tube->GetDz()*cm);
   return cylinderBounds;
 }
 
@@ -145,11 +145,11 @@ Acts::DD4hepGeometryHelper::createCylinderLayers(
       if (!tube)
         throw "Cylinder layer has wrong shape - needs to be TGeoConeSeg!";
       // extract the boundaries
-      double halfZ          = tube->GetDz();
-      double zPos           = transform->translation().z();
+      double halfZ          = tube->GetDz()*cm;
+      double zPos           = transform->translation().z()*cm;
       auto   cylinderBounds = std::make_shared<const Acts::CylinderBounds>(
-          0.5 * (tube->GetRmin1() + tube->GetRmax1()), halfZ);
-      double thickness = fabs(tube->GetRmax2() - tube->GetRmin1());
+          0.5 * (tube->GetRmin1()*cm + tube->GetRmax1()*cm), halfZ*cm);
+      double thickness = fabs(tube->GetRmax2()*cm - tube->GetRmin1()*cm);
       // if necessary receive the modules contained by the layer and create the
       // layer, otherwise create an empty layer
       Acts::IDetExtension* detExtension
@@ -207,8 +207,8 @@ Acts::DD4hepGeometryHelper::createDiscLayers(
         throw "Cylinder layer has wrong shape - needs to be TGeoConeSeg!";
       // extract the boundaries
       auto discBounds = std::make_shared<const Acts::RadialBounds>(
-          disc->GetRmin1(), disc->GetRmax1());
-      double thickness = 2. * disc->GetDz();
+          disc->GetRmin1()*cm, disc->GetRmax1()*cm);
+      double thickness = 2. * disc->GetDz()*cm;
       // if necessary receive the modules contained by the layer and create the
       // layer, otherwise create empty layer
       Acts::IDetExtension* detExtension
