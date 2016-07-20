@@ -103,9 +103,8 @@ public:
     : m_binningData(sbu.m_binningData)
     , m_transform(sbu.m_transform)
     , m_itransform(sbu.m_transform ? new Transform3D(sbu.m_transform->inverse())
-                                   : nullptr)
-  {
-  }
+                   : nullptr)
+  {}
 
   /** Assignment operator Constructor */
   BinUtility&
@@ -133,10 +132,10 @@ public:
     return (*this);
   }
 
-  /** Virtual Destructor */
-  virtual ~BinUtility() {}
+  /** Destructor */
+  ~BinUtility() {}
   /** Implizit Constructor */
-  virtual BinUtility*
+  BinUtility*
   clone() const
   {
     return new BinUtility(*this);
