@@ -237,6 +237,15 @@ public:
   // - can be approach surfaces or layer surface
   virtual bool
   hasMaterial() const;
+    
+  /// method returning a pointer to the surface material of the layer
+  /// @note not the layer itself holds the material but one of its approachsurfaces
+  const SurfaceMaterial* material() const;
+    
+  /// Returns a pointer to the surface which carries the surface material
+  /// @note can be either inner, outer BoundarySurface or the surface representation (central)
+  /// return nullptr if layer has not material
+  const Surface* materialSurface() const;
 
   /// Boolean check method if layer has sensitive surfaces 
   /// @note checks if a surfaceArray is present
@@ -369,6 +378,9 @@ private:
   ///                as calculated by the TrackingGeometry
   void
   closeGeometry(const GeometryID& layerID) const;
+  /// pointer to the approach surface carrying the material
+  /// nullptr if no material set
+  const Acts::Surface*                  m_materialSurface;
 };
 
 inline const SurfaceArray*

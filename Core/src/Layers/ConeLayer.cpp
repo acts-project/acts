@@ -25,6 +25,16 @@ Acts::ConeLayer::ConeLayer(std::shared_ptr<Transform3D>      transform,
   : ConeSurface(transform, cbounds)
   , Layer(std::move(surfaceArray), thickness, olap, ade, laytyp)
 {
+    // set the material if present
+    // material can be on any approach surface or on the representing surface
+    if (m_approachDescriptor) {
+        // the approach surfaces
+        const std::vector<const Surface*>& approachSurfaces
+        = m_approachDescriptor->containedSurfaces();
+        for (auto& aSurface : approachSurfaces)
+            if(aSurface->associatedMaterial()) m_materialSurface = aSurface;
+    }
+    if (surfaceRepresentation().associatedMaterial()) m_materialSurface = &surfaceRepresentation();
 }
 
 Acts::ConeLayer::ConeLayer(const ConeLayer&   clay,

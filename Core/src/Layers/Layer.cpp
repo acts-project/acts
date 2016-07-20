@@ -29,6 +29,7 @@ Acts::Layer::Layer()
   , m_enclosingDetachedTrackingVolume(nullptr)
   , m_representingVolume(nullptr)
   , m_layerType(Acts::passive)
+  , m_materialSurface(nullptr)
 {
   /// @TODO temporary - until GeoID service is in place
   assignGeoID(GeometryID(1));
@@ -49,6 +50,7 @@ Acts::Layer::Layer(std::unique_ptr<Acts::SurfaceArray> surfaceArray,
   , m_enclosingDetachedTrackingVolume(nullptr)
   , m_representingVolume(nullptr)
   , m_layerType(laytyp)
+  , m_materialSurface(nullptr)
 {
   /// @TODO temporary - until GeoID service is in place
   assignGeoID(GeometryID(1));
@@ -65,6 +67,7 @@ Acts::Layer::Layer(const Acts::Layer& lay)
   , m_enclosingDetachedTrackingVolume(nullptr)
   , m_representingVolume(lay.m_representingVolume)
   , m_layerType(lay.m_layerType)
+  , m_materialSurface(nullptr)
 {
 }
 
@@ -154,7 +157,7 @@ Acts::Layer::compatibleSurfaces(
 bool
 Acts::Layer::hasSubStructure(bool resolveSensitive) const
 {
-  if (resolveSensitive && m_surfaceArray) return true;
+    if (resolveSensitive && m_surfaceArray) return true;
   return false;
 }
 
@@ -167,7 +170,7 @@ Acts::Layer::hasSensitive() const
 bool
 Acts::Layer::hasMaterial() const
 {
-  return true;
+    return bool(material());
 }
 
 const Acts::ApproachDescriptor*
@@ -202,3 +205,15 @@ Acts::Layer::closeGeometry(const GeometryID& layerID) const
     }
   }
 }
+
+const Acts::SurfaceMaterial* Acts::Layer::material() const {
+    
+    if (m_materialSurface) return m_materialSurface->associatedMaterial();
+    return nullptr;
+}
+
+const Acts::Surface* Acts::Layer::materialSurface() const {
+    return m_materialSurface;
+}
+
+
