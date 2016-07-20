@@ -70,11 +70,11 @@ namespace Acts {
     
 }
 
-inline const Acts::MaterialProperties* Acts::SurfaceMaterialProxy::material(const Vector2D&) const {return nullptr;}
+inline const Acts::MaterialProperties* Acts::SurfaceMaterialProxy::material(const Vector2D&) const {return new MaterialProperties();}
 
-inline const Acts::MaterialProperties* Acts::SurfaceMaterialProxy::material(const Vector3D&) const {return nullptr;}
+inline const Acts::MaterialProperties* Acts::SurfaceMaterialProxy::material(const Vector3D&) const {return new MaterialProperties();}
 
-inline const Acts::MaterialProperties* Acts::SurfaceMaterialProxy::material(size_t, size_t) const {return nullptr;}
+inline const Acts::MaterialProperties* Acts::SurfaceMaterialProxy::material(size_t, size_t) const {return new MaterialProperties();}
 
 inline const Acts::BinUtility* Acts::SurfaceMaterialProxy::binUtility() const {return m_binUtility;}
 

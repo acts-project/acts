@@ -8,6 +8,7 @@
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
 #include "ACTS/Plugins/MaterialPlugins/LayerMaterialRecord.hpp"
+#include "ACTS/EventData/TrackParameters.hpp"
 
 Acts::MaterialMapping::MaterialMapping(const Config& cnf) :
 m_cnf(cnf)
@@ -24,16 +25,14 @@ Acts::MaterialMapping::~MaterialMapping()
 
 void Acts::MaterialMapping::mapMaterial(const MaterialTrackRecord& matTrackRec)
 {
-    ACTS_INFO("mapMaterial");
     // create object which connects layer with hits
-    std::vector< std::pair<const Acts::Layer*, const Acts::Vector3D> > layersAndHits;
+    std::vector< std::pair<const Acts::Layer*, Acts::Vector3D> > layersAndHits;
     // associate the m material to the layer only if hits have been collected
     if (collectLayersAndHits(matTrackRec,layersAndHits)) associateLayerMaterial(matTrackRec,layersAndHits);
 }
 
-bool Acts::MaterialMapping::collectLayersAndHits(const MaterialTrackRecord& matTrackRec, std::vector< std::pair<const Acts::Layer*,const Acts::Vector3D> > & layersAndHits)
+bool Acts::MaterialMapping::collectLayersAndHits(const MaterialTrackRecord& matTrackRec, std::vector< std::pair<const Acts::Layer*,Acts::Vector3D> > & layersAndHits)
 {
-    ACTS_INFO("collectLayerAndHits");
     // access the parameters
     double eta                                  = matTrackRec.eta();
     double phi                                  = matTrackRec.phi();
@@ -47,18 +46,22 @@ bool Acts::MaterialMapping::collectLayersAndHits(const MaterialTrackRecord& matT
         // calculate the direction in cartesian coordinates
         Acts::Vector3D direction(cos(phi),sin(phi),sinh(eta));
         // create the beginning neutral parameters to extrapolate through the geometry
-        Acts::NeutralCurvilinearParameters startParameters(std::unique_ptr<Acts::ActsSymMatrixD<5> >(),startPos,direction);
+        std::unique_ptr<Acts::ActsSymMatrixD<5> > cov;
+        Acts::NeutralCurvilinearParameters startParameters(std::move(cov),startPos,direction);
+//c        Acts::CurvilinearParameters startParameters(std::move(cov),startPos,direction,1.);
         // create a neutral extrapolation cell and configure it to only collect layer and surfaces with a SurfaceMaterialProxy
         Acts::ExtrapolationCell<Acts::NeutralParameters> ecc(startParameters);
+//c        Acts::ExtrapolationCell<Acts::TrackParameters> ecc(startParameters);
         ecc.addConfigurationMode(Acts::ExtrapolationMode::StopAtBoundary);
         ecc.addConfigurationMode(Acts::ExtrapolationMode::FATRAS);
+        ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectSensitive);
         ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectMaterial);
+        
         // call the extrapolation engine
         // screen output
         ACTS_DEBUG( "===> forward extrapolation - collecting material layers <<===" );
         // call the extrapolation engine
         Acts::ExtrapolationCode eCode = m_cnf.extrapolationEngine->extrapolate(ecc);
-        ACTS_INFO( "AFTER EXTRAPOLATION" );
         // end parameter, if there
         if (eCode.isSuccess()) {
             // number of layers hit
@@ -71,9 +74,7 @@ bool Acts::MaterialMapping::collectLayersAndHits(const MaterialTrackRecord& matT
             for (auto& es : ecc.extrapolationSteps) {
                 if (es.stepConfiguration.checkMode(Acts::ExtrapolationMode::CollectMaterial)) {
                     //CHECK now different than original, & raw pointer to layer
-                    if (es.layer) {ACTS_INFO("layer given");}
-                    else ACTS_INFO("no layer given");
-                    layersAndHits.push_back(std::make_pair(es.layer,parameters->position()));
+                    layersAndHits.push_back(std::make_pair(es.layer,es.materialPosition));
                 }
                 // continue if we have parameters
             } // loop over extrapolationsteps
@@ -82,9 +83,8 @@ bool Acts::MaterialMapping::collectLayersAndHits(const MaterialTrackRecord& matT
     return bool(layersAndHits.size());
 }
 
-void Acts::MaterialMapping::associateLayerMaterial(const MaterialTrackRecord& matTrackRec, std::vector< std::pair< const Acts::Layer*,const Acts::Vector3D> >& layersAndHits)
+void Acts::MaterialMapping::associateLayerMaterial(const MaterialTrackRecord& matTrackRec, std::vector< std::pair< const Acts::Layer*,Acts::Vector3D> >& layersAndHits)
 {
-    ACTS_INFO("associateLayerMaterial");
     // now go through the material step collection and find best fitting layer
     // layers are ordered, hence you can move the starting point along
     // CHECK if Pre-Post-Update needs to be done - Here!
@@ -93,7 +93,7 @@ void Acts::MaterialMapping::associateLayerMaterial(const MaterialTrackRecord& ma
     std::vector<MaterialStep>   materialSteps   = matTrackRec.materialSteps();
     // loop through hits and find the closest layer, the start point moves outwards as we go
     for (auto& step : materialSteps) {
-        ACTS_VERBOSE( "[L] starting from layer" << currentLayer << "from layer collection for this step." );
+        ACTS_VERBOSE( "[L] starting from layer " << currentLayer << "from layer collection for this step." );
         // step length and position
         Acts::Vector3D pos(step.position().x,step.position().y,step.position().z);
         // now find the closest layer
@@ -124,29 +124,23 @@ void Acts::MaterialMapping::associateLayerMaterial(const MaterialTrackRecord& ma
         const Acts::MaterialProperties* layerMaterialProperties = new MaterialProperties(step.material());
         // associate the hit
         associateHit(assignedLayer, assignedPosition, layerMaterialProperties);
-       
     } // go through material step collection
     
 }
 
 void Acts::MaterialMapping::associateHit(const Layer* layer, const Acts::Vector3D& position, const Acts::MaterialProperties* layerMaterialProperties)
 {
-    ACTS_INFO("associateHit");
     auto layerRecord = m_layerRecords.find(layer);
-    ACTS_INFO("associateHit1");
     // if layer was not present already create new Material Record
     if (layerRecord == m_layerRecords.end()) {
-        ACTS_INFO("associateHit2");
-        if (!layer) ACTS_INFO("No Layer given!");
-        const Acts::Surface* surfRepresentation = &(layer->surfaceRepresentation());
         // get the bin utility
-        ACTS_INFO("associateHit3");
-        const Acts::BinUtility* binUtility = surfRepresentation->associatedMaterial()->binUtility();
+        const Acts::BinUtility* binUtility = layer->material()->binUtility();
         // create the material record
         ACTS_VERBOSE("Creating new Layer record at position " << Acts::toString(position));
         m_layerRecords[layer] = LayerMaterialRecord(binUtility);
     }
-    ACTS_VERBOSE("Add new layer material properties at position " << Acts::toString(position));
+    ACTS_VERBOSE("Add new layer material properties  at position " << Acts::toString(position));
+    ACTS_VERBOSE (*layerMaterialProperties);
     // add material to record, if record exists already
     m_layerRecords[layer].addLayerMaterialProperties(position, layerMaterialProperties);
 }
@@ -165,6 +159,6 @@ void Acts::MaterialMapping::finalizeLayerMaterial()
     ACTS_VERBOSE(m_layerRecords.size() << " LayerMaterialRecords to be finalized");
     // finally set the material of the layers
     for (auto& layRecord :  m_layerRecords) {
-        layRecord.first->surfaceRepresentation().setAssociatedMaterial(layRecord.second.layerMaterial());
+        layRecord.first->materialSurface()->setAssociatedMaterial(layRecord.second.layerMaterial());
     }
 }
