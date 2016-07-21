@@ -371,16 +371,16 @@ protected:
   mutable const AbstractVolume*         m_representingVolume; 
   //// make a passive/active divisio
   LayerType                             m_layerType;
-
+  /// pointer to the approach surface carrying the material
+  /// nullptr if no material set
+  const Acts::Surface*                  m_materialSurface;
+    
 private:
   /// Private helper method to close the geometry
   /// @param layerID is the geometry id of the volume
   ///                as calculated by the TrackingGeometry
   void
   closeGeometry(const GeometryID& layerID) const;
-  /// pointer to the approach surface carrying the material
-  /// nullptr if no material set
-  const Acts::Surface*                  m_materialSurface;
 };
 
 inline const SurfaceArray*
