@@ -48,7 +48,8 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
         Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
         Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
-        Acts::Vector3D(translation[0], translation[1], translation[2]));
+        Acts::Vector3D(
+            translation[0] * cm, translation[1] * cm, translation[2] * cm));
     // now calculate the global transformation
     if (motherTransform)
       m_transform = std::make_shared<const Acts::Transform3D>(
@@ -62,7 +63,8 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
                                                            *this, 
                                                            m_identifier);
     MaterialProperties moduleMaterialProperties(
-        moduleMaterial, 0.5 * (trapezoid->GetDy1() + trapezoid->GetDy1()));
+        moduleMaterial,
+        0.5 * (trapezoid->GetDy1() * cm + trapezoid->GetDy1() * cm));
     m_surface->setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial>(
         new HomogeneousSurfaceMaterial(moduleMaterialProperties)));
   } else {
@@ -70,7 +72,8 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
         Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
         Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
-        Acts::Vector3D(translation[0], translation[1], translation[2]));
+        Acts::Vector3D(
+            translation[0] * cm, translation[1] * cm, translation[2] * cm));
     // now calculate the global transformation
     if (motherTransform) {
       m_transform = std::make_shared<const Acts::Transform3D>((*motherTransform)
@@ -78,12 +81,13 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     }
     // extract the surface bounds
     auto rectangleBounds = std::make_shared<const Acts::RectangleBounds>(
-        box->GetDX(), box->GetDY());
+        box->GetDX() * cm, box->GetDY() * cm);
     m_bounds  = rectangleBounds;
     m_surface = std::make_shared<const Acts::PlaneSurface>(rectangleBounds,
                                                            *this,
                                                           m_identifier);
-    MaterialProperties moduleMaterialProperties(moduleMaterial, box->GetDZ());
+    MaterialProperties moduleMaterialProperties(moduleMaterial,
+                                                box->GetDZ() * cm);
     m_surface->setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial>(
         new HomogeneousSurfaceMaterial(moduleMaterialProperties)));
   }

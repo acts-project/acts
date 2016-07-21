@@ -32,6 +32,13 @@ namespace Acts {
 /** Tolerance for being on Surface */
 static const double s_onSurfaceTolerance = 10e-5;
 
+/// conversion factors to internal length unit mm
+const float m  = 1000;
+const float km = 1000 * m;
+const float cm = 0.01 * m;
+const float mm = 0.001 * m;
+const float um = 10e-06 * m;
+
 /** @enum PropDirection
   PropDirection, enum for direction of the propagation.
 
