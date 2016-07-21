@@ -57,7 +57,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
           * AngleAxis3D(0.5 * M_PI, Vector3D::UnitX()));
     // extract the surface bounds
     auto trapezoidBounds = std::make_shared<const Acts::TrapezoidBounds>(
-        trapezoid->GetDx1(), trapezoid->GetDx2(), trapezoid->GetDz());
+        trapezoid->GetDx1() * cm, trapezoid->GetDx2() * cm, trapezoid->GetDz() * cm);
     m_bounds  = trapezoidBounds;
     m_surface = std::make_shared<const Acts::PlaneSurface>(trapezoidBounds, 
                                                            *this, 

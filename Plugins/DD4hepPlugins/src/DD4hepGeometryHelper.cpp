@@ -149,7 +149,7 @@ Acts::DD4hepGeometryHelper::createCylinderLayers(
       double halfZ          = tube->GetDz() * cm;
       double zPos           = transform->translation().z() * cm;
       auto   cylinderBounds = std::make_shared<const Acts::CylinderBounds>(
-          0.5 * (tube->GetRmin1() * cm + tube->GetRmax1() * cm), halfZ * cm);
+          0.5 * (tube->GetRmin1() * cm + tube->GetRmax1() * cm), halfZ);
       double thickness = fabs(tube->GetRmax2() * cm - tube->GetRmin1() * cm);
       // if necessary receive the modules contained by the layer and create the
       // layer, otherwise create an empty layer
