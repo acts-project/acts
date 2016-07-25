@@ -22,6 +22,7 @@
 #include "ACTS/Volumes/VolumeBounds.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Utilities/BinnedArray.hpp"
+#include "ACTS/Utilities/Logger.hpp"
 // DD4hep
 #include "DD4hep/Detector.h"
 
@@ -48,6 +49,8 @@ public:
    Configuration for the DD4hepCylinderGeometryBuilder */
   struct Config
   {
+      /// the logging instance
+      std::shared_ptr<Logger>                            logger;
     std::shared_ptr<ITrackingVolumeBuilder>
         volumeBuilder;  //!< building the contained sub detectors
     std::shared_ptr<ITrackingVolumeHelper>
@@ -55,7 +58,7 @@ public:
     DD4hep::Geometry::DetElement
         detWorld;  //!< world detector element of the DD4hep geometry
 
-    Config() : volumeBuilder(nullptr), volumeHelper(nullptr), detWorld() {}
+    Config() : logger(getDefaultLogger("DD4hepCylinderGeometryBuilder", Logging::INFO)), volumeBuilder(nullptr), volumeHelper(nullptr), detWorld() {}
   };
 
   /** Constructor */
@@ -128,6 +131,13 @@ private:
     /**helper method to sort pairs of doubles*/
     static bool
     sortFloatPairs(std::pair<float, float> ap, std::pair<float, float> bp);
+    
+    /// Private access method to the logger
+    const Logger&
+    logger() const
+    {
+        return *m_cfg.logger;
+    }
     
     
   /** configuration object */

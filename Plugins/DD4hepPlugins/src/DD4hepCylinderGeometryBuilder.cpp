@@ -53,6 +53,7 @@ Acts::DD4hepCylinderGeometryBuilder::~DD4hepCylinderGeometryBuilder()
 std::unique_ptr<Acts::TrackingGeometry>
 Acts::DD4hepCylinderGeometryBuilder::trackingGeometry() const
 {
+  ACTS_INFO("Translating DD4hep geometry into ACTS geometry");
   // the return geometry -- and the highest volume
   std::unique_ptr<Acts::TrackingGeometry> trackingGeometry = nullptr;
   Acts::TrackingVolumePtr                 highestVolume    = nullptr;
@@ -71,7 +72,7 @@ Acts::DD4hepCylinderGeometryBuilder::trackingGeometry() const
   // loop over the volumes
   for (auto& detElement : detElements) {
     if (detElement.type() == "beamtube") {
-      // MSG_DEBUG("BeamPipe is being built");
+      ACTS_VERBOSE("BeamPipe is being built");
       // extract material
       DD4hep::Geometry::Material mat = detElement.volume().material();
       // create the tracking volume
@@ -139,9 +140,13 @@ Acts::DD4hepCylinderGeometryBuilder::extractVolumeBounds(
 {
     TGeoShape*   geoShape = detElement.placement().ptr()->GetVolume()->GetShape();
     TGeoConeSeg* tube     = dynamic_cast<TGeoConeSeg*>(geoShape);
-    if (!tube) throw "Volume has wrong shape - needs to be TGeoConeSeg!";
-    auto cylinderBounds = std::make_shared<const Acts::CylinderVolumeBounds>(
-                                                                             tube->GetRmin1() * cm, tube->GetRmax1() * cm, tube->GetDz() * cm);
+    if (!tube) ACTS_ERROR("Volume has wrong shape - needs to be TGeoConeSeg!");
+    // get the dimension of TGeo and convert lengths
+    double rMin     = tube->GetRmin1() * cm;
+    double rMax     = tube->GetRmax1() * cm;
+    double halfZ    = tube->GetDz()    * cm;
+    ACTS_DEBUG("[V] Extracting cylindrical volume bounds ( rmin / rmax / halfZ )=  ( " << rMin << " / " <<  rMax << " / " <<  halfZ << " )");
+    auto cylinderBounds = std::make_shared<const Acts::CylinderVolumeBounds>(rMin, rMax, halfZ);
     return cylinderBounds;
 }
 
@@ -165,6 +170,7 @@ Acts::DD4hepCylinderGeometryBuilder::createSubVolumes(
     Acts::LayerVector positiveLayers;
     
     if (detElement.type() == "compound") {
+        ACTS_VERBOSE("[V] Volume : " << detElement.name() << " is a compound volume -> resolve now the sub volumes");
         // create tracking volume of compound type
         const DD4hep::Geometry::DetElement::Children& compoundChildren
         = detElement.children();
@@ -180,16 +186,20 @@ Acts::DD4hepCylinderGeometryBuilder::createSubVolumes(
             // create disc layers in case of a disc volume, otherwise create
             // cylindrical layers
             if (detExtension->shape() == Acts::ShapeType::Disc) {
+                ACTS_VERBOSE("[V] Subvolume : " << compoundDetElement.name() << " is a disc volume -> handling as an endcap");
                 if (transform->translation().z() < 0.) {
+                    ACTS_VERBOSE("[V]       ->is negative endcap");
                     nEndcapVolume = std::make_shared<const Volume>(
                                                                    transform, extractVolumeBounds(compoundDetElement));
                     createDiscLayers(compoundDetElement, negativeLayers, transform);
                 } else {
+                    ACTS_VERBOSE("[V]       ->is positive endcap");
                     pEndcapVolume = std::make_shared<const Volume>(
                                                                    transform, extractVolumeBounds(compoundDetElement));
                     createDiscLayers(compoundDetElement, positiveLayers, transform);
                 }
             } else {
+                ACTS_VERBOSE("[V] Subvolume : " << compoundDetElement.name() << " is a cylinder volume -> handling as a barrel");
                 barrelVolume = std::make_shared<const Volume>(
                                                               transform, extractVolumeBounds(compoundDetElement));
                 createCylinderLayers(compoundDetElement, centralLayers, transform);
@@ -197,6 +207,7 @@ Acts::DD4hepCylinderGeometryBuilder::createSubVolumes(
         }  // compoundchildren
     }    // compoundtype
     else {
+        ACTS_VERBOSE("[V] Volume : " << detElement.name() << " is not of compound type -> handling as a barrel");
         // support structure
         std::shared_ptr<Acts::Transform3D> transform(extractTransform(detElement));
         // create cylindrical layers
@@ -220,6 +231,7 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
     = motherDetElement.children();
     // check if volume has layers
     if (!children.empty()) {
+        ACTS_VERBOSE("[V] Volume containes layers -> creating cylindrical layers");
         // go through layers
         for (auto& child : children) {
             // get the detector element of the layer
@@ -234,13 +246,15 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
             = detElement.placement().ptr()->GetVolume()->GetShape();
             TGeoConeSeg* tube = dynamic_cast<TGeoConeSeg*>(geoShape);
             if (!tube)
-                throw "Cylinder layer has wrong shape - needs to be TGeoConeSeg!";
+                ACTS_ERROR("[L] Cylinder layer has wrong shape - needs to be TGeoConeSeg!");
             // extract the boundaries
+            double rMin           = tube->GetRmin1() * cm;
+            double rMax           = tube->GetRmax1() * cm;
             double halfZ          = tube->GetDz() * cm;
-            double zPos           = transform->translation().z() * cm;
             auto   cylinderBounds = std::make_shared<const Acts::CylinderBounds>(
-                                                                                 0.5 * (tube->GetRmin1() * cm + tube->GetRmax1() * cm), halfZ);
-            double thickness = fabs(tube->GetRmax2() * cm - tube->GetRmin1() * cm);
+                                                                                 0.5 * (rMin + rMax), halfZ);
+            double thickness = fabs(rMin - rMax);
+            ACTS_DEBUG("[L] Creating cylinder layer with dimensions ( rmin / rmax / halfZ ) = ( " << rMin << " / " <<  rMax << " / " << halfZ << " )");
             // if necessary receive the modules contained by the layer and create the
             // layer, otherwise create an empty layer
             Acts::IDetExtension* detExtension
@@ -256,6 +270,7 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
                                                                     nullptr,
                                                                     Acts::passive));
             else {
+                ACTS_VERBOSE("[L] Layer containes modules -> resolving them as surfaces");
                 // create surfaces binned in phi and z
                 auto surfaceArray = createSurfaceArray(modules, binZ, motherTransform);
                 centralLayers.push_back(
@@ -269,6 +284,7 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
             }
         }  // for children
     }    // volume has layers
+    ACTS_VERBOSE("[V] Volume has no layers");
 }
 
 void
@@ -282,6 +298,7 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
     = motherDetElement.children();
     // check if volume has layers
     if (!children.empty()) {
+        ACTS_VERBOSE("[V] Volume containes layers -> creating disc layers");
         for (auto& child : children) {
             // get the detector element of the layer
             DD4hep::Geometry::DetElement detElement = child.second;
@@ -297,9 +314,13 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
             if (!disc)
                 throw "Cylinder layer has wrong shape - needs to be TGeoConeSeg!";
             // extract the boundaries
+            double rMin         = disc->GetRmin1() * cm;
+            double rMax         = disc->GetRmax1() * cm;
+            double thickness    = 2. * disc->GetDz() * cm;
             auto discBounds = std::make_shared<const Acts::RadialBounds>(
-                                                                         disc->GetRmin1() * cm, disc->GetRmax1() * cm);
-            double thickness = 2. * disc->GetDz() * cm;
+                                                                         rMin, rMax);
+            
+            ACTS_DEBUG("[L] Creating disc layer with dimensions ( rmin / rmax / halfZ ) = ( " << rMin << " / " <<  rMax << " / " << thickness << " )");
             // if necessary receive the modules contained by the layer and create the
             // layer, otherwise create empty layer
             Acts::IDetExtension* detExtension
@@ -315,6 +336,7 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
                                                          nullptr,
                                                          Acts::passive));
             else {
+                ACTS_VERBOSE("[L] Layer containes modules -> resolving them as surfaces");
                 // create surfaces binned in phi and r
                 auto surfaceArray = createSurfaceArray(modules, binR, motherTransform);
                 layers.push_back(Acts::DiscLayer::create(transform,
@@ -327,6 +349,7 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
             }
         }  // for children
     }    // volume has layers
+    ACTS_VERBOSE("[V] Volume has no layers");
 }
 
 std::unique_ptr<Acts::SurfaceArray>
@@ -335,6 +358,7 @@ Acts::DD4hepCylinderGeometryBuilder::createSurfaceArray(
                                                Acts::BinningValue                         lValue,
                                                std::shared_ptr<const Acts::Transform3D>   motherTransform) const
 {
+    ACTS_VERBOSE("[L] Creating surface array of the layer");
     std::vector<const Acts::Surface*> surfaces;
     for (auto& detElement : modules) {
         // make here the material mapping
@@ -345,11 +369,9 @@ Acts::DD4hepCylinderGeometryBuilder::createSurfaceArray(
             = detElement.extension<Acts::IDetExtension>();
             segmentation = detExtension->segmentation();
             if (!segmentation)
-                throw "Detector element is sensitive but Segmentation was not handed "
-                "over in geometry constructor, can not access segmentation";
+                ACTS_ERROR("[S] Detector element is sensitive but Segmentation was not handed over in geometry constructor, can not access segmentation");
         } else
-            throw "Detector element is not declared sensitive, can not access "
-            "segmentation";
+            ACTS_ERROR("[S] Detector element is not declared sensitive, can not access segmentation");
         Acts::DD4hepDetElement* dd4hepDetElement
         = new Acts::DD4hepDetElement(detElement, segmentation, motherTransform);
         // add surface to surface vector
@@ -366,7 +388,7 @@ Acts::DD4hepCylinderGeometryBuilder::binnedSurfaceArray2DPhiL(
                                                      const std::vector<const Acts::Surface*> surfaces,
                                                      Acts::BinningValue                      lValue) const
 {
-    if (surfaces.empty()) throw "Active layer has no surfaces";
+    if (surfaces.empty()) ACTS_ERROR("[L] Active layer has no surfaces");
     // boundaries in r, first value minimum radius and second value maximum radius
     // of the current cylinder layer
     std::vector<std::pair<float, float>> lBoundaries;
@@ -384,11 +406,10 @@ Acts::DD4hepCylinderGeometryBuilder::binnedSurfaceArray2DPhiL(
         const PlanarBounds* planarBounds
         = dynamic_cast<const PlanarBounds*>(&(surface->bounds()));
         if (!planarBounds)
-            throw " Given SurfaceBounds are not planar - not implemented for other "
-            "bounds yet! ";
+            ACTS_ERROR("[S] Given SurfaceBounds are not planar - not implemented for other bounds yet! ");
         // get the boundaries of the longitudinal coordinate
         std::vector<Acts::Vector2D> vertices = planarBounds->vertices();
-        if (vertices.empty()) throw "Vertices of current module empty!";
+        if (vertices.empty()) ACTS_ERROR("[S] Vertices of current module empty!");
         // accessing any entry to access the longitudinal coordinate is sufficient
         // make local coordinate global
         // double longCoord = vertices.front().perp();
