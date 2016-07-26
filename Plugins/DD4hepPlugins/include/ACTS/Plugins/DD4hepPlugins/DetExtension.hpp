@@ -19,75 +19,97 @@
 
 namespace Acts {
 
-/** @class DetExtension
-
- Implementation of the IDetExtension class, which uses the extension mechanism
- of DD4hep, needed for the translation from the DD4hep geometry into the
- tracking geometry of the ACTS package.
- In this way, the segmentation of the sensitive detector elements can be
- directly accessed from DD4hep to ensure consistency between the full and the
- tracking geometry.
- Since in DD4hep volumes used as a cylinder (detector layers are binned in r and
- z, e.g. central barrel volume) and discs (detector layers are binned in r and
- phi, e.g. end caps) are both described as a ROOT TGeoConeSeg one needs to
- distinguish between these volume types by setting the shape.
- @TODO find replacement for Gaudi exeption and message stream
-
- */
+/// @class DetExtension
+///
+/// Implementation of the IDetExtension class, which uses the extension
+/// mechanism
+/// of DD4hep, needed for the translation from the DD4hep geometry into the
+/// tracking geometry of the ACTS package.
+/// In this way, the segmentation of the sensitive detector elements can be
+/// directly accessed from DD4hep to ensure consistency between the full and the
+/// tracking geometry.
+/// Since in DD4hep volumes used as a cylinder (detector layers are binned in r
+/// and
+/// z, e.g. central barrel volume) and discs (detector layers are binned in r
+/// and
+/// phi, e.g. end caps) are both described as a ROOT TGeoConeSeg one needs to
+/// distinguish between these volume types by setting the shape.
 
 class DetExtension : virtual public IDetExtension
 {
 public:
-  /* constructor **/
+  /// Constructor
   DetExtension();
-  /* constructor for sensitive detector element **/
+  /// Constructor for sensitive detector element
+  /// @param segmentation DD4hep segmentation for the readout
   DetExtension(const DD4hep::Geometry::Segmentation segmentation);
-  /* constructor for volume with shape **/
+  /// Constructor for volume with shape to distinguish between disc and cylinder
+  /// volume
+  /// @param shape The type of the shape defined in IDetExtension can be either
+  /// disc or cylinder
   DetExtension(ShapeType shape);
-  /* constructor for layer with support structure **/
+  /// Constructor for layer with support structure
+  /// @param support Possible support structure of the layer
   DetExtension(const DD4hep::Geometry::DetElement support);
-  /* constructor for layer with modules **/
+  /// Constructor for layer with modules
+  /// @param mod Possible sensitive modules contained by a layer
   DetExtension(std::vector<DD4hep::Geometry::DetElement> mod);
-  /* constructor for layer with support structure and modules **/
+  /// Constructor for layer with support structure and modules
+  /// @param support Possible support structure of the layer
+  /// @param mod Possible sensitive modules contained by a layer
   DetExtension(const DD4hep::Geometry::DetElement        support,
                std::vector<DD4hep::Geometry::DetElement> mod);
-  /* copy constructor **/
-  DetExtension(const DetExtension&, const DD4hep::Geometry::DetElement&) {}
-  /* virtual destructor **/
-  virtual ~DetExtension();
-  /* possibility to hand over shape of a volume **/
+  /// Copy constructor
+  DetExtension(const DetExtension&, const DD4hep::Geometry::DetElement&);
+  /// Virtual destructor
+  virtual ~DetExtension() = default;
+  /// Possibility to set shape of a volume to distinguish between disc and
+  /// cylinder volume
+  /// @param shape The type of the shape defined in IDetExtension can be either
+  /// disc or cylinder
   void
   setShape(ShapeType shape) override;
-  /* access shape **/
+  /// Access shape type of a volume to distinguish between disc and cylinder
+  /// volume
+  /// @return shape The type of the shape defined in IDetExtension can be either
+  /// disc or cylinder
   ShapeType
   shape() const override;
-  /* method to hand over the DD4hep segmentation **/
+  /// Method to set the DD4hep segmentation for the readout
+  /// @param segmentation DD4hep segmentation for the readout
   void
   setSegmentation(const DD4hep::Geometry::Segmentation segmentation) override;
-  /* access segmentation **/
+  /// Method to access the DD4hep segmentation for the readout
+  /// @return segmentation DD4hep segmentation for the readout
   const DD4hep::Geometry::Segmentation
   segmentation() const override;
-  /* possibility to hand over supporting structure of a layer*/
+  /// possibility to hand over supporte structure of a layer
+  /// @param support Possible support structure of the layer
   void
   setSupportStructure(const DD4hep::Geometry::DetElement support) override;
-  /* access supporting structure */
+  /// Access supporting structure of a layer
+  /// @return support Possible support structure of the layer
   const DD4hep::Geometry::DetElement&
   supportStructure() const override;
-  /* possibility to set contained sensitive DetectorModules by a layer*/
+  /// Possibility to set contained detector modules of a layer
+  /// @param mod Possible sensitive modules contained by a layer
   void
   setModules(std::vector<DD4hep::Geometry::DetElement> mod) override;
-  /* access modules */
+  /// Access modules detector module contained by a layer
+  /// @return mod Possible sensitive modules contained by a layer
   std::vector<DD4hep::Geometry::DetElement>
   modules() const override;
 
 private:
-  DD4hep::Geometry::Segmentation
-            m_segmentation;  //!< segmentation of a sensitive detector module
-  ShapeType m_shape;         //!< shape of a volume
-  DD4hep::Geometry::DetElement
-      m_supportStructure;  //!< possible support structure e.g. for a layer
-  std::vector<DD4hep::Geometry::DetElement>
-      m_modules;  //!< possible contained modules by a layer
+  /// segmentation of a sensitive detector module
+  DD4hep::Geometry::Segmentation m_segmentation;
+  /// shape type of a volume defined in IDetExtension can be either disc or
+  /// cylinder
+  ShapeType m_shape;
+  /// possible support structure of a layer
+  DD4hep::Geometry::DetElement m_supportStructure;
+  /// possible contained modules of a layer
+  std::vector<DD4hep::Geometry::DetElement> m_modules;
 };
 }
 

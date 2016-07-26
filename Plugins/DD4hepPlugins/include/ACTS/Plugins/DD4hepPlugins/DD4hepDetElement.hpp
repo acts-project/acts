@@ -13,41 +13,50 @@
 #ifndef ACTS_DD4HEPDETECTORELEMENT_DD4HEPDETELEMENT_H
 #define ACTS_DD4HEPDETECTORELEMENT_DD4HEPDETELEMENT_H 1
 
-// TGeoDetectorElement
 #include "ACTS/Plugins/TGeoPlugins/TGeoDetectorElement.hpp"
-// DD4hep
 #include "DD4hep/Detector.h"
 
 namespace Acts {
 
-/** @class DD4hepDetElement
+/// @class DD4hepDetElement
+///
+/// @brief DetectorElement class implementation for DD4hep geometry
+///
+/// DetectorElement plugin for DD4hep detector elements. DD4hep is based on TGeo
+/// shapes, therefore the DD4hepDetElement inherits from TGeoDetectorElement.
+/// The
+/// full geometrical information is provided by the TGeoDetectorElement. The
+/// DD4hepDetrElement ectends the TGeoDetectorElement by containing a
+/// segmentation
+/// for the readout.
 
- DetectorElement plugin for DD4hep detector elements. DD4hep is based on TGeo
- shapes, therefore the DD4hepDetElement inherits from TGeoDetectorElement. The
- full geometrical information is provided by the TGeoDetectorElement. Only the
- TGeoShape and the DD4hepIdentifier need to be provided.
-
- @TODO what if shape conversion failes? add implementation of more than one
- surface per module, implementing also for other shapes->Cone,ConeSeg,Tube? what
- if not used with DD4hep?
-
- */
+/// @TODO what if shape conversion failes? add implementation of more than one
+/// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
+/// what
+/// if not used with DD4hep?
+/// @TODO segmentation
 
 class DD4hepDetElement : public TGeoDetectorElement
 {
 public:
-  /** Constructor */
+  /// Constructor
+  /// @param detElement The DD4hep DetElement which should be linked to a
+  /// surface
+  /// @param segmentation The segmentation for the readout of the detector
+  /// element
+  /// @param motherTransform global transformation matrix of the mother detector
+  /// element
   DD4hepDetElement(const DD4hep::Geometry::DetElement       detElement,
                    const DD4hep::Geometry::Segmentation     segmentation,
                    std::shared_ptr<const Acts::Transform3D> motherTransform
                    = nullptr);
-  /** Desctructor */
-  virtual ~DD4hepDetElement();
+  /// Desctructor
+  virtual ~DD4hepDetElement() = default;
 
 private:
-  /** DD4hep detector element */
+  /// DD4hep detector element
   DD4hep::Geometry::DetElement m_detElement;
-  /** DD4hep segmentation */
+  /// DD4hep segmentation
   DD4hep::Geometry::Segmentation m_segmentation;
 };
 }

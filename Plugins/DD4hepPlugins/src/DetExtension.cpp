@@ -64,6 +64,12 @@ Acts::DetExtension::DetExtension(const DD4hep::Geometry::DetElement support,
 {
 }
 
-Acts::DetExtension::~DetExtension()
+Acts::DetExtension::DetExtension(const DetExtension& det,
+                                 const DD4hep::Geometry::DetElement&)
+  : Acts::IDetExtension()
+  , m_segmentation(det.m_segmentation)
+  , m_shape(det.m_shape)
+  , m_supportStructure(det.m_supportStructure)
+  , m_modules(det.m_modules)
 {
 }
