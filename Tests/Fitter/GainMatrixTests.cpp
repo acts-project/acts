@@ -10,45 +10,43 @@
 #include <boost/test/included/unit_test.hpp>
 
 // ATS include(s)
-#include "ACTS/Fitter/KalmanUpdator.hpp"
-#include "ACTS/Utilities/ParameterDefinitions.hpp"
 #include "ACTS/EventData/Measurement.hpp"
-#include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
+#include "ACTS/Fitter/KalmanUpdator.hpp"
+#include "ACTS/Surfaces/CylinderSurface.hpp"
+#include "ACTS/Utilities/ParameterDefinitions.hpp"
 
-namespace Acts
-{
-  namespace Test
+namespace Acts {
+namespace Test {
+  template <ParID_t... params>
+  using Measurement_t = Measurement<unsigned long int, params...>;
+
+  BOOST_AUTO_TEST_CASE(gain_matrix_updator)
   {
-    template<ParID_t... params>
-    using Measurement_t = Measurement<unsigned long int,params...>;
+    // make dummy measurement
+    CylinderSurface   cylinder(nullptr, 3, 10);
+    ActsSymMatrixD<2> cov;
+    cov << 0.04, 0, 0, 0.1;
+    FittableMeasurement<unsigned long int> m
+        = Measurement_t<ParDef::eLOC_1, ParDef::eLOC_2>(
+            cylinder, 0, std::move(cov), -0.1, 0.45);
 
-    BOOST_AUTO_TEST_CASE(gain_matrix_updator)
-    {
-      // make dummy measurement
-      CylinderSurface cylinder(nullptr,3,10);
-      ActsSymMatrixD<2> cov;
-      cov << 0.04,0,
-             0,0.1;
-      FittableMeasurement<unsigned long int> m = Measurement_t<ParDef::eLOC_1,ParDef::eLOC_2>(cylinder,0,std::move(cov),-0.1,0.45);
+    // make dummy track parameter
+    ActsSymMatrixD<Acts::NGlobalPars> covTrk;
+    covTrk << 0.08, 0, 0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0,
+        0, 0, 0, 0, 1;
+    ActsVectorD<Acts::NGlobalPars> parValues;
+    parValues << 0.3, 0.5, 0.5 * M_PI, 0.3 * M_PI, 0.01;
+    BoundParameters pars(
+        std::make_unique<BoundParameters::CovMatrix_t>(std::move(covTrk)),
+        parValues,
+        cylinder);
 
-      // make dummy track parameter
-      ActsSymMatrixD<Acts::NGlobalPars> covTrk;
-      covTrk << 0.08,0,0,0,0,
-                0,0.3,0,0,0,
-                0,0,1,0,0,
-                0,0,0,1,0,
-                0,0,0,0,1;
-      ActsVectorD<Acts::NGlobalPars> parValues;
-      parValues << 0.3,0.5,0.5 * M_PI,0.3 * M_PI,0.01;
-      BoundParameters pars(std::make_unique<BoundParameters::CovMatrix_t>(std::move(covTrk)),parValues,cylinder);
+    GainMatrixUpdator                g;
+    std::unique_ptr<BoundParameters> filtered(g(m, pars));
 
-      GainMatrixUpdator g;
-      std::unique_ptr<BoundParameters> filtered(g(m,pars));
-
-      std::cout << pars << std::endl;
-      if (filtered)
-        std::cout << *filtered << std::endl;
-    }
-  }  // end of namespace Test
+    std::cout << pars << std::endl;
+    if (filtered) std::cout << *filtered << std::endl;
+  }
+}  // end of namespace Test
 }  // end of namespace Acts

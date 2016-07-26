@@ -370,13 +370,12 @@ public:
   }
 };
 
-
 template <BOOST_VARIANT_ENUM_PARAMS(typename T)>
 const Surface&
 getSurface(const boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& m)
 {
   static const SurfaceGetter sg = SurfaceGetter();
-  return boost::apply_visitor(sg,m);
+  return boost::apply_visitor(sg, m);
 }
 }  // end of namespace Acts
 
