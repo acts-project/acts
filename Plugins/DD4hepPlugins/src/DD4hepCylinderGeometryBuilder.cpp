@@ -7,17 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ACTS/Plugins/DD4hepPlugins/DD4hepCylinderGeometryBuilder.hpp"
-// Geometry module
 #include "ACTS/Detector/TrackingGeometry.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Material/Material.hpp"
-// Root TGeo
 #include "TGeoManager.h"
-// DD4hepPlugin
 #include "ACTS/Plugins/DD4hepPlugins/DD4hepDetElement.hpp"
 #include "ACTS/Plugins/DD4hepPlugins/DetExtension.hpp"
 #include "ACTS/Plugins/DD4hepPlugins/IDetExtension.hpp"
-// Geometry module
 #include "ACTS/Layers/CylinderLayer.hpp"
 #include "ACTS/Layers/DiscLayer.hpp"
 #include "ACTS/Surfaces/CylinderBounds.hpp"
@@ -44,10 +40,6 @@ Acts::DD4hepCylinderGeometryBuilder::setConfiguration(
   // @TODO check consistency
   // copy the configuration
   m_cfg = std::move(dgbConfig);
-}
-
-Acts::DD4hepCylinderGeometryBuilder::~DD4hepCylinderGeometryBuilder()
-{
 }
 
 std::unique_ptr<Acts::TrackingGeometry>
@@ -223,7 +215,7 @@ Acts::DD4hepCylinderGeometryBuilder::createSubVolumes(
 void
 Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
                                                  DD4hep::Geometry::DetElement&      motherDetElement,
-                                                 Acts::LayerVector&                 centralLayers,
+                                                 Acts::LayerVector&                 layers,
                                                  std::shared_ptr<Acts::Transform3D> motherTransform) const
 {
     // get possible layers
@@ -262,7 +254,7 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
             std::vector<DD4hep::Geometry::DetElement> modules(
                                                               detExtension->modules());
             if (modules.empty())
-                centralLayers.push_back(Acts::CylinderLayer::create(transform,
+                layers.push_back(Acts::CylinderLayer::create(transform,
                                                                     cylinderBounds,
                                                                     nullptr,
                                                                     thickness,
@@ -273,7 +265,7 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
                 ACTS_VERBOSE("[L] Layer containes modules -> resolving them as surfaces");
                 // create surfaces binned in phi and z
                 auto surfaceArray = createSurfaceArray(modules, binZ, motherTransform);
-                centralLayers.push_back(
+                layers.push_back(
                                         Acts::CylinderLayer::create(transform,
                                                                     cylinderBounds,
                                                                     std::move(surfaceArray),

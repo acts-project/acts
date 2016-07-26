@@ -19,7 +19,3 @@ Acts::DD4hepDetElement::DD4hepDetElement(
   , m_segmentation(std::move(segmentation))
 {
 }
-
-Acts::DD4hepDetElement::~DD4hepDetElement()
-{
-}
