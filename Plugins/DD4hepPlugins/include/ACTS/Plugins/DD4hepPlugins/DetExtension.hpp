@@ -21,17 +21,19 @@ namespace Acts {
 
 /// @class DetExtension
 ///
-/// Implementation of the IDetExtension class, which uses the extension mechanism
+/// Implementation of the IDetExtension class, which uses the extension
+/// mechanism
 /// of DD4hep, needed for the translation from the DD4hep geometry into the
 /// tracking geometry of the ACTS package.
 /// In this way, the segmentation of the sensitive detector elements can be
 /// directly accessed from DD4hep to ensure consistency between the full and the
 /// tracking geometry.
-/// Since in DD4hep volumes used as a cylinder (detector layers are binned in r and
-/// z, e.g. central barrel volume) and discs (detector layers are binned in r and
+/// Since in DD4hep volumes used as a cylinder (detector layers are binned in r
+/// and
+/// z, e.g. central barrel volume) and discs (detector layers are binned in r
+/// and
 /// phi, e.g. end caps) are both described as a ROOT TGeoConeSeg one needs to
 /// distinguish between these volume types by setting the shape.
-
 
 class DetExtension : virtual public IDetExtension
 {
@@ -41,8 +43,10 @@ public:
   /// Constructor for sensitive detector element
   /// @param segmentation DD4hep segmentation for the readout
   DetExtension(const DD4hep::Geometry::Segmentation segmentation);
-  /// Constructor for volume with shape to distinguish between disc and cylinder volume
-  /// @param shape The type of the shape defined in IDetExtension can be either disc or cylinder
+  /// Constructor for volume with shape to distinguish between disc and cylinder
+  /// volume
+  /// @param shape The type of the shape defined in IDetExtension can be either
+  /// disc or cylinder
   DetExtension(ShapeType shape);
   /// Constructor for layer with support structure
   /// @param support Possible support structure of the layer
@@ -59,12 +63,16 @@ public:
   DetExtension(const DetExtension&, const DD4hep::Geometry::DetElement&);
   /// Virtual destructor
   virtual ~DetExtension() = default;
-  /// Possibility to set shape of a volume to distinguish between disc and cylinder volume
-  /// @param shape The type of the shape defined in IDetExtension can be either disc or cylinder
+  /// Possibility to set shape of a volume to distinguish between disc and
+  /// cylinder volume
+  /// @param shape The type of the shape defined in IDetExtension can be either
+  /// disc or cylinder
   void
   setShape(ShapeType shape) override;
-  /// Access shape type of a volume to distinguish between disc and cylinder volume
-  /// @return shape The type of the shape defined in IDetExtension can be either disc or cylinder
+  /// Access shape type of a volume to distinguish between disc and cylinder
+  /// volume
+  /// @return shape The type of the shape defined in IDetExtension can be either
+  /// disc or cylinder
   ShapeType
   shape() const override;
   /// Method to set the DD4hep segmentation for the readout
@@ -94,16 +102,14 @@ public:
 
 private:
   /// segmentation of a sensitive detector module
-  DD4hep::Geometry::Segmentation
-            m_segmentation;
-  /// shape type of a volume defined in IDetExtension can be either disc or cylinder
+  DD4hep::Geometry::Segmentation m_segmentation;
+  /// shape type of a volume defined in IDetExtension can be either disc or
+  /// cylinder
   ShapeType m_shape;
   /// possible support structure of a layer
-  DD4hep::Geometry::DetElement
-      m_supportStructure;
+  DD4hep::Geometry::DetElement m_supportStructure;
   /// possible contained modules of a layer
-  std::vector<DD4hep::Geometry::DetElement>
-      m_modules;
+  std::vector<DD4hep::Geometry::DetElement> m_modules;
 };
 }
 

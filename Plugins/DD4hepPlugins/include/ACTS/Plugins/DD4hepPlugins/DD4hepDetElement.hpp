@@ -23,24 +23,29 @@ namespace Acts {
 /// @brief DetectorElement class implementation for DD4hep geometry
 ///
 /// DetectorElement plugin for DD4hep detector elements. DD4hep is based on TGeo
-/// shapes, therefore the DD4hepDetElement inherits from TGeoDetectorElement. The
+/// shapes, therefore the DD4hepDetElement inherits from TGeoDetectorElement.
+/// The
 /// full geometrical information is provided by the TGeoDetectorElement. The
-/// DD4hepDetrElement ectends the TGeoDetectorElement by containing a segmentation
+/// DD4hepDetrElement ectends the TGeoDetectorElement by containing a
+/// segmentation
 /// for the readout.
 
 /// @TODO what if shape conversion failes? add implementation of more than one
-/// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube? what
+/// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
+/// what
 /// if not used with DD4hep?
 /// @TODO segmentation
-
 
 class DD4hepDetElement : public TGeoDetectorElement
 {
 public:
   /// Constructor
-  /// @param detElement The DD4hep DetElement which should be linked to a surface
-  /// @param segmentation The segmentation for the readout of the detector element
-  /// @param motherTransform global transformation matrix of the mother detector element
+  /// @param detElement The DD4hep DetElement which should be linked to a
+  /// surface
+  /// @param segmentation The segmentation for the readout of the detector
+  /// element
+  /// @param motherTransform global transformation matrix of the mother detector
+  /// element
   DD4hepDetElement(const DD4hep::Geometry::DetElement       detElement,
                    const DD4hep::Geometry::Segmentation     segmentation,
                    std::shared_ptr<const Acts::Transform3D> motherTransform
