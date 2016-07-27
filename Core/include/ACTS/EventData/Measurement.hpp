@@ -65,6 +65,9 @@ public:
   typedef typename ParSet_t::ParVector_t ParVector_t;
   /// type of the covariance matrix of the measurement
   typedef typename ParSet_t::CovMatrix_t CovMatrix_t;
+  /// matrix type for projecting full parameter vector onto local parameter
+  /// space
+  typedef typename ParSet_t::Projection_t Projection_t;
 
   /**
    * @brief standard constructor
@@ -312,6 +315,12 @@ public:
     return !(*this == rhs);
   }
 
+  static Projection_t
+  projector()
+  {
+    return ParSet_t::projector();
+  }
+
   friend std::ostream&
   operator<<(std::ostream& out, const Measurement<Identifier, params...>& m)
   {
@@ -330,7 +339,8 @@ protected:
     out << parameters() << std::endl;
     out << "covariance matrix:" << std::endl;
     out << covariance() << std::endl;
-    out << "at " << (associatedSurface().isFree() ? "free" : "non-free") << " surface:" << std::endl;
+    out << "at " << (associatedSurface().isFree() ? "free" : "non-free")
+        << " surface:" << std::endl;
     out << associatedSurface();
 
     return out;
@@ -349,28 +359,23 @@ template <typename Identifier>
 using FittableMeasurement =
     typename detail::fittable_type_generator<Identifier>::type;
 
-struct MeasurementPrinter : public boost::static_visitor<std::ostream>
+struct SurfaceGetter : public boost::static_visitor<const Surface&>
 {
 public:
-  MeasurementPrinter(std::ostream& out) : m_out(out) {}
   template <typename Meas_t>
-  std::ostream&
-  operator()(const Meas_t& m)
+  const Surface&
+  operator()(const Meas_t& m) const
   {
-    m_out << m;
-    return m_out;
+    return m.associatedSurface();
   }
-
-private:
-  std::ostream& m_out;
 };
 
-template <typename Identifier>
-std::ostream&
-operator<<(std::ostream& out, const FittableMeasurement<Identifier>& m)
+template <BOOST_VARIANT_ENUM_PARAMS(typename T)>
+const Surface&
+getSurface(const boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& m)
 {
-  MeasurementPrinter mp(out);
-  return mp(m);
+  static const SurfaceGetter sg = SurfaceGetter();
+  return boost::apply_visitor(sg, m);
 }
 }  // end of namespace Acts
 

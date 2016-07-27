@@ -190,9 +190,9 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
               << eCode.toString());
       // take the lead parameters to find end volume and end layer
       eCell.endVolume = m_cfg.trackingGeometry->lowestTrackingVolume(
-          navCell.endParameters->position());
+          navCell.leadParameters->position());
       eCell.endLayer = m_cfg.trackingGeometry->associatedLayer(
-          navCell.endParameters->position());
+          navCell.leadParameters->position());
     }
     // check the final end volume configuraiton - screen output
     if (eCell.endVolume)
