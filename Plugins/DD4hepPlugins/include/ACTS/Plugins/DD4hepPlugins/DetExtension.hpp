@@ -15,8 +15,8 @@
 
 #include "ACTS/Plugins/DD4hepPlugins/IDetExtension.hpp"
 // DD4hep
-#include "DD4hep/Detector.h"
 #include <vector>
+#include "DD4hep/Detector.h"
 
 namespace Acts {
 
@@ -72,8 +72,10 @@ public:
   /// @param layerMatPos states if the material should be mapped on the inner,
   /// the center or the outer surface of the layer
   /// @param mod Possible sensitive modules contained by a layer
-  DetExtension(size_t bins1, size_t bins2, LayerMaterialPos layerMatPos,
-                 std::vector<DD4hep::Geometry::DetElement> mod);
+  DetExtension(size_t                                    bins1,
+               size_t                                    bins2,
+               LayerMaterialPos                          layerMatPos,
+               std::vector<DD4hep::Geometry::DetElement> mod);
   /// Copy constructor
   DetExtension(const DetExtension&, const DD4hep::Geometry::DetElement&);
   /// Virtual destructor
@@ -108,16 +110,21 @@ public:
   /// @param layerMatPos states if the material should be mapped on the inner,
   /// the center or the outer surface of the layer
   virtual void
-  supportMaterial(size_t bins1, size_t bins2, LayerMaterialPos layerMatPos) override;
+  supportMaterial(size_t           bins1,
+                  size_t           bins2,
+                  LayerMaterialPos layerMatPos) override;
   /// Bool returning true if the layers should carry material
   bool
   hasSupportMaterial() const override;
-  /// Access to the two bin numbers determining the granularity of the two dimensional grid
+  /// Access to the two bin numbers determining the granularity of the two
+  /// dimensional grid
   /// on which the material of the layer should be mapped on
-  std::pair<size_t,size_t> materialBins() const override;
+  std::pair<size_t, size_t>
+  materialBins() const override;
   /// returns states if the material should be mapped on the inner,
   /// the center or the outer surface of the layer
-  virtual Acts::LayerMaterialPos layerMaterialPos() const override;
+  virtual Acts::LayerMaterialPos
+  layerMaterialPos() const override;
   /// Possibility to set contained detector modules of a layer
   /// @param mod Possible sensitive modules contained by a layer
   void
@@ -146,7 +153,6 @@ private:
   LayerMaterialPos m_layerMatPos;
   /// Possible contained modules of a layer
   std::vector<DD4hep::Geometry::DetElement> m_modules;
-  
 };
 }
 
@@ -175,12 +181,14 @@ Acts::DetExtension::segmentation() const
 }
 
 inline void
-Acts::DetExtension::supportMaterial(size_t bins1, size_t bins2, LayerMaterialPos layerMatPos)
+Acts::DetExtension::supportMaterial(size_t           bins1,
+                                    size_t           bins2,
+                                    LayerMaterialPos layerMatPos)
 {
   m_supportMaterial = true;
-  m_bins1 = bins1;
-  m_bins2 = bins2;
-  m_layerMatPos = layerMatPos;
+  m_bins1           = bins1;
+  m_bins2           = bins2;
+  m_layerMatPos     = layerMatPos;
 }
 
 inline bool
@@ -189,15 +197,17 @@ Acts::DetExtension::hasSupportMaterial() const
   return m_supportMaterial;
 }
 
-inline Acts::LayerMaterialPos Acts::DetExtension::layerMaterialPos() const
+inline Acts::LayerMaterialPos
+Acts::DetExtension::layerMaterialPos() const
 {
-    return m_layerMatPos;
+  return m_layerMatPos;
 }
 
-inline std::pair<size_t,size_t> Acts::DetExtension::materialBins() const
+inline std::pair<size_t, size_t>
+Acts::DetExtension::materialBins() const
 {
-    std::pair<size_t,size_t> bins(m_bins1,m_bins2);
-    return (bins);
+  std::pair<size_t, size_t> bins(m_bins1, m_bins2);
+  return (bins);
 }
 
 inline void
@@ -211,7 +221,5 @@ Acts::DetExtension::modules() const
 {
   return m_modules;
 }
-
-
 
 #endif  // ACTS_DD4HEPDETECTORELEMENT_DETEXTENSION_H

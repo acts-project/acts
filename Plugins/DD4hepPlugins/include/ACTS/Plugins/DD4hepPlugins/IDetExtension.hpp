@@ -14,8 +14,8 @@
 #define ACTS_DD4HEPDETECTORELEMENT_IDETEXTENSION_H 1
 
 // Algebra
-#include "ACTS/Utilities/Definitions.hpp"
 #include <vector>
+#include "ACTS/Utilities/Definitions.hpp"
 
 namespace DD4hep {
 namespace Geometry {
@@ -48,23 +48,23 @@ namespace Acts {
 
 class Module;
 
-    /// @enum The ShapeType enumeration is used to distinguish between a volume
-    /// having a disc and a volume having a cylinder shape, since in DD4hep they
-    /// are both described as TGeoConeSeg.
+/// @enum The ShapeType enumeration is used to distinguish between a volume
+/// having a disc and a volume having a cylinder shape, since in DD4hep they
+/// are both described as TGeoConeSeg.
 enum ShapeType {
 
   None     = 0,
   Cylinder = 1,
   Disc     = 2
 };
-    /// @enum The LayerMaterialPos enumeration is foreseen to mark on which surface
-    /// the two dimensional material of the layer sits. Either on the inner or
-    /// the other boundary surface of the layer or at the representing (center)
-    /// surface of the layer
-enum LayerMaterialPos{
-        inner   = 0,
-        central = 1,
-        outer   = 2,
+/// @enum The LayerMaterialPos enumeration is foreseen to mark on which surface
+/// the two dimensional material of the layer sits. Either on the inner or
+/// the other boundary surface of the layer or at the representing (center)
+/// surface of the layer
+enum LayerMaterialPos {
+  inner   = 0,
+  central = 1,
+  outer   = 2,
 };
 
 class IDetExtension
@@ -109,12 +109,15 @@ public:
   /// Bool returning true if the layers should carry material
   virtual bool
   hasSupportMaterial() const = 0;
-  /// Access to the two bin numbers determining the granularity of the two dimensional grid
+  /// Access to the two bin numbers determining the granularity of the two
+  /// dimensional grid
   /// on which the material of the layer should be mapped on
-  virtual std::pair<size_t,size_t> materialBins() const = 0;
+  virtual std::pair<size_t, size_t>
+  materialBins() const = 0;
   /// returns states if the material should be mapped on the inner,
   /// the center or the outer surface of the layer
-  virtual Acts::LayerMaterialPos layerMaterialPos() const = 0;
+  virtual Acts::LayerMaterialPos
+  layerMaterialPos() const = 0;
   /// Possibility to set contained detector modules of a layer
   /// @param mod Possible sensitive modules contained by a layer
   virtual void

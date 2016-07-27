@@ -157,7 +157,7 @@ Acts::Layer::compatibleSurfaces(
 bool
 Acts::Layer::hasSubStructure(bool resolveSensitive) const
 {
-    if (resolveSensitive && m_surfaceArray) return true;
+  if (resolveSensitive && m_surfaceArray) return true;
   return false;
 }
 
@@ -170,7 +170,7 @@ Acts::Layer::hasSensitive() const
 bool
 Acts::Layer::hasMaterial() const
 {
-    return bool(material());
+  return bool(material());
 }
 
 const Acts::ApproachDescriptor*
@@ -206,14 +206,15 @@ Acts::Layer::closeGeometry(const GeometryID& layerID) const
   }
 }
 
-const Acts::SurfaceMaterial* Acts::Layer::material() const {
-    
-    if (m_materialSurface) return m_materialSurface->associatedMaterial();
-    return nullptr;
+const Acts::SurfaceMaterial*
+Acts::Layer::material() const
+{
+  if (m_materialSurface) return m_materialSurface->associatedMaterial();
+  return nullptr;
 }
 
-const Acts::Surface* Acts::Layer::materialSurface() const {
-    return m_materialSurface;
+const Acts::Surface*
+Acts::Layer::materialSurface() const
+{
+  return m_materialSurface;
 }
-
-

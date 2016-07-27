@@ -11,7 +11,9 @@
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Layers/CylinderLayer.hpp"
 #include "ACTS/Layers/DiscLayer.hpp"
+#include "ACTS/Layers/GenericApproachDescriptor.hpp"
 #include "ACTS/Material/Material.hpp"
+#include "ACTS/Material/SurfaceMaterialProxy.hpp"
 #include "ACTS/Plugins/DD4hepPlugins/DD4hepDetElement.hpp"
 #include "ACTS/Plugins/DD4hepPlugins/DetExtension.hpp"
 #include "ACTS/Plugins/DD4hepPlugins/IDetExtension.hpp"
@@ -23,8 +25,6 @@
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
 #include "ACTS/Volumes/Volume.hpp"
 #include "TGeoManager.h"
-#include "ACTS/Material/SurfaceMaterialProxy.hpp"
-#include "ACTS/Layers/GenericApproachDescriptor.hpp"
 
 Acts::DD4hepCylinderGeometryBuilder::DD4hepCylinderGeometryBuilder(
     const Config dgbConfig)
@@ -64,12 +64,11 @@ Acts::DD4hepCylinderGeometryBuilder::trackingGeometry() const
   // loop over the volumes
   for (auto& detElement : detElements) {
     if (detElement.type() == "beamtube") {
-
       ACTS_VERBOSE("BeamPipe is being built");
       // extract material
       DD4hep::Geometry::Material mat = detElement.volume().material();
       // create the tracking volume
-    beamPipeVolume = Acts::TrackingVolume::create(
+      beamPipeVolume = Acts::TrackingVolume::create(
           extractTransform(detElement),
           extractVolumeBounds(detElement),
           std::make_shared<Acts::Material>(mat.radLength(),
@@ -277,91 +276,103 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
           = detElement.extension<Acts::IDetExtension>();
       std::vector<DD4hep::Geometry::DetElement> modules(
           detExtension->modules());
-        // create the two dimensional BinUtility for the material map of the layer
-        Acts::BinUtility* materialBinUtil = nullptr;
-        std::shared_ptr<const SurfaceMaterialProxy> materialProxy(nullptr);
-        // the approachdescriptor telling where the material sits on the layer
-        Acts::ApproachDescriptor* approachDescriptor = nullptr;
-        // material position on the layer can be inner, outer or center and will be accessed from the Extensions
-        Acts::LayerMaterialPos layerPos = LayerMaterialPos::inner;
-        // check if layer should have material
-        if (detExtension->hasSupportMaterial()){
-            std::pair<size_t,size_t> materialBins = detExtension->materialBins();
-            size_t bins1 = materialBins.first;
-            size_t bins2 = materialBins.second;
-            materialBinUtil = new Acts::BinUtility(bins1,-M_PI,M_PI,Acts::closed,Acts::binPhi);
-            (*materialBinUtil) += Acts::BinUtility(bins2,-halfZ,halfZ,Acts::open,Acts::binZ);
-            // and create material proxy to mark layer for material mapping
-            materialProxy = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
-            // access the material position
-            Acts::LayerMaterialPos layerPos = detExtension->layerMaterialPos();
-            ACTS_DEBUG("[L] Layer is marked to carry support material on Surface ( inner=0 / center=1 / outer=2 ) :   " << layerPos);
-            // Create an approachdescriptor for the layer
-            // create the new surfaces for the approachdescriptor
-            std::vector<const Acts::Surface*> aSurfaces;
-            // create the inner boundary surface
-            Acts::CylinderSurface* innerBoundary = new Acts::CylinderSurface(transform,
-                                                                             rMin,
-                                                                             halfZ);
-            // create outer boundary surface
-            Acts::CylinderSurface* outerBoundary = new Acts::CylinderSurface(transform,
-                                                                             rMax,
-                                                                             halfZ);
-            // check if the material should be set to the inner or outer boundary and set it in case
-            if (layerPos==Acts::LayerMaterialPos::inner) innerBoundary->setAssociatedMaterial(materialProxy);
-            if (layerPos==Acts::LayerMaterialPos::outer) outerBoundary->setAssociatedMaterial(materialProxy);
-            // collect the surfaces
-            aSurfaces.push_back(innerBoundary);
-            aSurfaces.push_back(outerBoundary);
-            // create an ApproachDescriptor with standard surfaces surfaces - these will
-            // be deleted by the approach descriptor
-            approachDescriptor = new Acts::GenericApproachDescriptor<const Acts::Surface>(aSurfaces);
-            
+      // create the two dimensional BinUtility for the material map of the layer
+      Acts::BinUtility*                           materialBinUtil = nullptr;
+      std::shared_ptr<const SurfaceMaterialProxy> materialProxy(nullptr);
+      // the approachdescriptor telling where the material sits on the layer
+      Acts::ApproachDescriptor* approachDescriptor = nullptr;
+      // material position on the layer can be inner, outer or center and will
+      // be accessed from the Extensions
+      Acts::LayerMaterialPos layerPos = LayerMaterialPos::inner;
+      // check if layer should have material
+      if (detExtension->hasSupportMaterial()) {
+        std::pair<size_t, size_t> materialBins = detExtension->materialBins();
+        size_t bins1    = materialBins.first;
+        size_t bins2    = materialBins.second;
+        materialBinUtil = new Acts::BinUtility(
+            bins1, -M_PI, M_PI, Acts::closed, Acts::binPhi);
+        (*materialBinUtil)
+            += Acts::BinUtility(bins2, -halfZ, halfZ, Acts::open, Acts::binZ);
+        // and create material proxy to mark layer for material mapping
+        materialProxy
+            = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
+        // access the material position
+        Acts::LayerMaterialPos layerPos = detExtension->layerMaterialPos();
+        ACTS_DEBUG("[L] Layer is marked to carry support material on Surface ( "
+                   "inner=0 / center=1 / outer=2 ) :   "
+                   << layerPos);
+        // Create an approachdescriptor for the layer
+        // create the new surfaces for the approachdescriptor
+        std::vector<const Acts::Surface*> aSurfaces;
+        // create the inner boundary surface
+        Acts::CylinderSurface* innerBoundary
+            = new Acts::CylinderSurface(transform, rMin, halfZ);
+        // create outer boundary surface
+        Acts::CylinderSurface* outerBoundary
+            = new Acts::CylinderSurface(transform, rMax, halfZ);
+        // check if the material should be set to the inner or outer boundary
+        // and set it in case
+        if (layerPos == Acts::LayerMaterialPos::inner)
+          innerBoundary->setAssociatedMaterial(materialProxy);
+        if (layerPos == Acts::LayerMaterialPos::outer)
+          outerBoundary->setAssociatedMaterial(materialProxy);
+        // collect the surfaces
+        aSurfaces.push_back(innerBoundary);
+        aSurfaces.push_back(outerBoundary);
+        // create an ApproachDescriptor with standard surfaces surfaces - these
+        // will
+        // be deleted by the approach descriptor
+        approachDescriptor
+            = new Acts::GenericApproachDescriptor<const Acts::Surface>(
+                aSurfaces);
+      }
+      if (modules.empty()) {
+        auto cylLayer = Acts::CylinderLayer::create(transform,
+                                                    cylinderBounds,
+                                                    nullptr,
+                                                    thickness,
+                                                    nullptr,
+                                                    approachDescriptor,
+                                                    Acts::passive);
+        // assign layer to approach surfaces if approach descriptor is given
+        if (approachDescriptor) {
+          for (auto& sIter : (approachDescriptor->containedSurfaces())) {
+            if (sIter) sIter->associateLayer(*cylLayer.get());
+          }
         }
-        if (modules.empty()) {
-            auto cylLayer = Acts::CylinderLayer::create(transform,
-                                                        cylinderBounds,
-                                                        nullptr,
-                                                        thickness,
-                                                        nullptr,
-                                                        approachDescriptor,
-                                                        Acts::passive);
-            // assign layer to approach surfaces if approach descriptor is given
-            if (approachDescriptor) {
-                for (auto& sIter : (approachDescriptor->containedSurfaces())) {
-                    if (sIter) sIter->associateLayer(*cylLayer.get());
-                }
-            }
-            // hand over the possible material if it should be in the center
-            if (layerPos==Acts::LayerMaterialPos::central) cylLayer->surfaceRepresentation().setAssociatedMaterial(materialProxy);
-            layers.push_back(cylLayer);
-            
+        // hand over the possible material if it should be in the center
+        if (layerPos == Acts::LayerMaterialPos::central)
+          cylLayer->surfaceRepresentation().setAssociatedMaterial(
+              materialProxy);
+        layers.push_back(cylLayer);
+
+      } else {
+        ACTS_VERBOSE(
+            "[L] Layer containes modules -> resolving them as surfaces");
+        // create surfaces binned in phi and z
+        auto surfaceArray = createSurfaceArray(modules, binZ, motherTransform);
+        auto cylLayer     = Acts::CylinderLayer::create(transform,
+                                                    cylinderBounds,
+                                                    std::move(surfaceArray),
+                                                    thickness,
+                                                    nullptr,
+                                                    approachDescriptor,
+                                                    Acts::active);
+        // assign layer to approach surfaces if approach descriptor is given
+        if (approachDescriptor) {
+          for (auto& sIter : (approachDescriptor->containedSurfaces())) {
+            if (sIter) sIter->associateLayer(*cylLayer.get());
+          }
         }
-        else {
-            ACTS_VERBOSE(
-                         "[L] Layer containes modules -> resolving them as surfaces");
-            // create surfaces binned in phi and z
-            auto surfaceArray = createSurfaceArray(modules, binZ, motherTransform);
-            auto cylLayer = Acts::CylinderLayer::create(transform,
-                                                        cylinderBounds,
-                                                        std::move(surfaceArray),
-                                                        thickness,
-                                                        nullptr,
-                                                        approachDescriptor,
-                                                        Acts::active);
-            // assign layer to approach surfaces if approach descriptor is given
-            if (approachDescriptor){
-                for (auto& sIter : (approachDescriptor->containedSurfaces())) {
-                    if (sIter) sIter->associateLayer(*cylLayer.get());
-                }
-            }
-            // hand over the possible material if it should be in the center
-            if (layerPos==Acts::LayerMaterialPos::central) cylLayer->surfaceRepresentation().setAssociatedMaterial(materialProxy);
-            layers.push_back(cylLayer);
-        }
+        // hand over the possible material if it should be in the center
+        if (layerPos == Acts::LayerMaterialPos::central)
+          cylLayer->surfaceRepresentation().setAssociatedMaterial(
+              materialProxy);
+        layers.push_back(cylLayer);
+      }
     }  // for children
   }    // volume has layers
-    ACTS_VERBOSE("[V] Volume has no layers");
+  ACTS_VERBOSE("[V] Volume has no layers");
 }
 
 void
@@ -410,94 +421,113 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
           = detElement.extension<Acts::IDetExtension>();
       std::vector<DD4hep::Geometry::DetElement> modules(
           detExtension->modules());
-        
-        // create the two dimensional BinUtility for the material map of the layer
-        Acts::BinUtility* materialBinUtil = nullptr;
-        std::shared_ptr<const SurfaceMaterialProxy> materialProxy = nullptr;
-        // the approachdescriptor telling where the material sits on the layer
-        Acts::ApproachDescriptor* approachDescriptor = nullptr;
+
+      // create the two dimensional BinUtility for the material map of the layer
+      Acts::BinUtility*                           materialBinUtil = nullptr;
+      std::shared_ptr<const SurfaceMaterialProxy> materialProxy   = nullptr;
+      // the approachdescriptor telling where the material sits on the layer
+      Acts::ApproachDescriptor* approachDescriptor = nullptr;
+      // access the material position
+      Acts::LayerMaterialPos layerPos = detExtension->layerMaterialPos();
+      // check if layer should have material
+      if (detExtension->hasSupportMaterial()) {
+        std::pair<size_t, size_t> materialBins = detExtension->materialBins();
+        materialBinUtil = new Acts::BinUtility(
+            materialBins.first, -M_PI, M_PI, Acts::closed, Acts::binPhi);
+        (*materialBinUtil) += Acts::BinUtility(
+            materialBins.second, rMin, rMax, Acts::open, Acts::binR);
+        // and create material proxy to mark layer for material mapping
+        materialProxy
+            = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
         // access the material position
         Acts::LayerMaterialPos layerPos = detExtension->layerMaterialPos();
-        // check if layer should have material
-        if (detExtension->hasSupportMaterial()){
-            std::pair<size_t,size_t> materialBins = detExtension->materialBins();
-            materialBinUtil = new Acts::BinUtility(materialBins.first,-M_PI,M_PI,Acts::closed,Acts::binPhi);
-            (*materialBinUtil) += Acts::BinUtility(materialBins.second,rMin,rMax,Acts::open,Acts::binR);
-            // and create material proxy to mark layer for material mapping
-            materialProxy = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
-            // access the material position
-            Acts::LayerMaterialPos layerPos = detExtension->layerMaterialPos();
-            ACTS_DEBUG("[L] Layer is marked to carry support material on Surface ( inner=0 / center=1 / outer=2 ) :   " << layerPos);
-            // Create an approachdescriptor for the layer
-            // create the new surfaces - positions first
-            double thickness = fabs(rMax-rMin);
-            const Vector3D center = transform->translation();
-            const Vector3D normal = transform->rotation().col(2);
-            Vector3D     aspPosition(center + 0.5 * thickness * normal);
-            Vector3D     asnPosition(center - 0.5 * thickness * normal);
-            auto asnTransform = std::make_shared<Transform3D>(Translation3D(asnPosition));
-            auto aspTransform = std::make_shared<Transform3D>(Translation3D(aspPosition));
-            // create the vector
-            std::vector<const Surface*> aSurfaces;
-            // create the inner boundary surface
-            std::shared_ptr<const DiscBounds>  bounds = std::make_shared<const RadialBounds>(rMin, rMax);
-            Acts::DiscSurface* innerBoundary = new DiscSurface(asnTransform, bounds);
-            // create outer boundary surface
-            Acts::DiscSurface* outerBoundary = new DiscSurface(aspTransform, bounds);
-            // check if the material should be set to the inner or outer boundary and set it in case
-            if (layerPos==Acts::LayerMaterialPos::inner) innerBoundary->setAssociatedMaterial(materialProxy);
-            if (layerPos==Acts::LayerMaterialPos::outer) outerBoundary->setAssociatedMaterial(materialProxy);
-            // collect the surfaces
-            aSurfaces.push_back(innerBoundary);
-            aSurfaces.push_back(outerBoundary);
-            // create an ApproachDescriptor with standard surfaces surfaces - these will
-            // be deleted by the approach descriptor
-            approachDescriptor = new Acts::GenericApproachDescriptor<const Acts::Surface>(aSurfaces);
-        }
+        ACTS_DEBUG("[L] Layer is marked to carry support material on Surface ( "
+                   "inner=0 / center=1 / outer=2 ) :   "
+                   << layerPos);
+        // Create an approachdescriptor for the layer
+        // create the new surfaces - positions first
+        double         thickness = fabs(rMax - rMin);
+        const Vector3D center    = transform->translation();
+        const Vector3D normal    = transform->rotation().col(2);
+        Vector3D       aspPosition(center + 0.5 * thickness * normal);
+        Vector3D       asnPosition(center - 0.5 * thickness * normal);
+        auto           asnTransform
+            = std::make_shared<Transform3D>(Translation3D(asnPosition));
+        auto aspTransform
+            = std::make_shared<Transform3D>(Translation3D(aspPosition));
+        // create the vector
+        std::vector<const Surface*> aSurfaces;
+        // create the inner boundary surface
+        std::shared_ptr<const DiscBounds> bounds
+            = std::make_shared<const RadialBounds>(rMin, rMax);
+        Acts::DiscSurface* innerBoundary
+            = new DiscSurface(asnTransform, bounds);
+        // create outer boundary surface
+        Acts::DiscSurface* outerBoundary
+            = new DiscSurface(aspTransform, bounds);
+        // check if the material should be set to the inner or outer boundary
+        // and set it in case
+        if (layerPos == Acts::LayerMaterialPos::inner)
+          innerBoundary->setAssociatedMaterial(materialProxy);
+        if (layerPos == Acts::LayerMaterialPos::outer)
+          outerBoundary->setAssociatedMaterial(materialProxy);
+        // collect the surfaces
+        aSurfaces.push_back(innerBoundary);
+        aSurfaces.push_back(outerBoundary);
+        // create an ApproachDescriptor with standard surfaces surfaces - these
+        // will
+        // be deleted by the approach descriptor
+        approachDescriptor
+            = new Acts::GenericApproachDescriptor<const Acts::Surface>(
+                aSurfaces);
+      }
 
-        if (modules.empty()) {
-            auto discLayer = Acts::DiscLayer::create(transform,
-                                                     discBounds,
-                                                     nullptr,
-                                                     thickness,
-                                                     nullptr,
-                                                     approachDescriptor,
-                                                     Acts::passive);
-            // assign layer to approach surfaces if approach descriptor is given
-            if (approachDescriptor) {
-                for (auto& sIter : (approachDescriptor->containedSurfaces())) {
-                    if (sIter) sIter->associateLayer(*discLayer.get());
-                }
-            }
-            // hand over the possible material if it should be in the center
-            if (layerPos==Acts::LayerMaterialPos::central) discLayer->surfaceRepresentation().setAssociatedMaterial(materialProxy);
-            layers.push_back(discLayer);
+      if (modules.empty()) {
+        auto discLayer = Acts::DiscLayer::create(transform,
+                                                 discBounds,
+                                                 nullptr,
+                                                 thickness,
+                                                 nullptr,
+                                                 approachDescriptor,
+                                                 Acts::passive);
+        // assign layer to approach surfaces if approach descriptor is given
+        if (approachDescriptor) {
+          for (auto& sIter : (approachDescriptor->containedSurfaces())) {
+            if (sIter) sIter->associateLayer(*discLayer.get());
+          }
         }
-        else {
-            ACTS_VERBOSE(
-                         "[L] Layer containes modules -> resolving them as surfaces");
-            // create surfaces binned in phi and r
-            auto surfaceArray = createSurfaceArray(modules, binR, motherTransform);
-            auto discLayer = Acts::DiscLayer::create(transform,
-                                                     discBounds,
-                                                     std::move(surfaceArray),
-                                                     thickness,
-                                                     nullptr,
-                                                     approachDescriptor,
-                                                     Acts::active);
-            // assign layer to approach surfaces if approach descriptor is given
-            if (approachDescriptor) {
-                for (auto& sIter : (approachDescriptor->containedSurfaces())) {
-                    if (sIter) sIter->associateLayer(*discLayer.get());
-                }
-            }
-            // hand over the possible material if it should be in the center
-            if (layerPos==Acts::LayerMaterialPos::central) discLayer->surfaceRepresentation().setAssociatedMaterial(materialProxy);
-            layers.push_back(discLayer);
+        // hand over the possible material if it should be in the center
+        if (layerPos == Acts::LayerMaterialPos::central)
+          discLayer->surfaceRepresentation().setAssociatedMaterial(
+              materialProxy);
+        layers.push_back(discLayer);
+      } else {
+        ACTS_VERBOSE(
+            "[L] Layer containes modules -> resolving them as surfaces");
+        // create surfaces binned in phi and r
+        auto surfaceArray = createSurfaceArray(modules, binR, motherTransform);
+        auto discLayer    = Acts::DiscLayer::create(transform,
+                                                 discBounds,
+                                                 std::move(surfaceArray),
+                                                 thickness,
+                                                 nullptr,
+                                                 approachDescriptor,
+                                                 Acts::active);
+        // assign layer to approach surfaces if approach descriptor is given
+        if (approachDescriptor) {
+          for (auto& sIter : (approachDescriptor->containedSurfaces())) {
+            if (sIter) sIter->associateLayer(*discLayer.get());
+          }
         }
+        // hand over the possible material if it should be in the center
+        if (layerPos == Acts::LayerMaterialPos::central)
+          discLayer->surfaceRepresentation().setAssociatedMaterial(
+              materialProxy);
+        layers.push_back(discLayer);
+      }
     }  // for children
   }    // volume has layers
-    ACTS_VERBOSE("[V] Volume has no layers");
+  ACTS_VERBOSE("[V] Volume has no layers");
 }
 std::unique_ptr<Acts::SurfaceArray>
 Acts::DD4hepCylinderGeometryBuilder::createSurfaceArray(
