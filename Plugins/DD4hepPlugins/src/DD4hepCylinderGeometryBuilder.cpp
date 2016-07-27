@@ -23,6 +23,8 @@
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
 #include "ACTS/Volumes/Volume.hpp"
 #include "TGeoManager.h"
+#include "ACTS/Material/SurfaceMaterialProxy.hpp"
+#include "ACTS/Layers/GenericApproachDescriptor.hpp"
 
 Acts::DD4hepCylinderGeometryBuilder::DD4hepCylinderGeometryBuilder(
     const Config dgbConfig)
@@ -68,8 +70,8 @@ Acts::DD4hepCylinderGeometryBuilder::trackingGeometry() const
       DD4hep::Geometry::Material mat = detElement.volume().material();
       // create the tracking volume
     beamPipeVolume = Acts::TrackingVolume::create(
-          Acts::DD4hepGeometryHelper::extractTransform(detElement),
-          Acts::DD4hepGeometryHelper::extractVolumeBounds(detElement),
+          extractTransform(detElement),
+          extractVolumeBounds(detElement),
           std::make_shared<Acts::Material>(mat.radLength(),
                                            mat.intLength(),
                                            mat.A(),
@@ -293,6 +295,7 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
             materialProxy = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
             // access the material position
             Acts::LayerMaterialPos layerPos = detExtension->layerMaterialPos();
+            ACTS_DEBUG("[L] Layer is marked to carry support material on Surface ( inner=0 / center=1 / outer=2 ) :   " << layerPos);
             // Create an approachdescriptor for the layer
             // create the new surfaces for the approachdescriptor
             std::vector<const Acts::Surface*> aSurfaces;
@@ -331,7 +334,7 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
             }
             // hand over the possible material if it should be in the center
             if (layerPos==Acts::LayerMaterialPos::central) cylLayer->surfaceRepresentation().setAssociatedMaterial(materialProxy);
-            centralLayers.push_back(cylLayer);
+            layers.push_back(cylLayer);
             
         }
         else {
@@ -354,7 +357,7 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
             }
             // hand over the possible material if it should be in the center
             if (layerPos==Acts::LayerMaterialPos::central) cylLayer->surfaceRepresentation().setAssociatedMaterial(materialProxy);
-            centralLayers.push_back(cylLayer);
+            layers.push_back(cylLayer);
         }
     }  // for children
   }    // volume has layers
@@ -424,6 +427,7 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
             materialProxy = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
             // access the material position
             Acts::LayerMaterialPos layerPos = detExtension->layerMaterialPos();
+            ACTS_DEBUG("[L] Layer is marked to carry support material on Surface ( inner=0 / center=1 / outer=2 ) :   " << layerPos);
             // Create an approachdescriptor for the layer
             // create the new surfaces - positions first
             double thickness = fabs(rMax-rMin);

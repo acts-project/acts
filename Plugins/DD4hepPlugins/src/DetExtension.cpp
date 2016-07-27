@@ -15,8 +15,8 @@ Acts::DetExtension::DetExtension()
   , m_supportMaterial(false)
   , m_bins1(0)
   , m_bins2(0)
-  , m_modules()
   , m_layerMatPos(LayerMaterialPos::inner)
+  , m_modules()
 {
 }
 
@@ -28,8 +28,8 @@ Acts::DetExtension::DetExtension(
   , m_supportMaterial(false)
   , m_bins1(0)
   , m_bins2(0)
-  , m_modules()
   , m_layerMatPos(LayerMaterialPos::inner)
+  , m_modules()
 {
 }
 
@@ -40,8 +40,8 @@ Acts::DetExtension::DetExtension(ShapeType shape)
   , m_supportMaterial(false)
   , m_bins1(0)
   , m_bins2(0)
-  , m_modules()
   , m_layerMatPos(LayerMaterialPos::inner)
+  , m_modules()
 {
 }
 
@@ -52,8 +52,8 @@ Acts::DetExtension::DetExtension(size_t bins1, size_t bins2, Acts::LayerMaterial
   , m_supportMaterial(true)
   , m_bins1(bins1)
   , m_bins2(bins2)
-  , m_modules()
   , m_layerMatPos(layerMatPos)
+  , m_modules()
 {
 }
 
@@ -64,8 +64,8 @@ Acts::DetExtension::DetExtension(std::vector<DD4hep::Geometry::DetElement> mod)
   , m_supportMaterial(false)
   , m_bins1(0)
   , m_bins2(0)
-  , m_modules(mod)
   , m_layerMatPos(LayerMaterialPos::inner)
+  , m_modules(mod)
 {
 }
 
@@ -77,8 +77,8 @@ Acts::DetExtension::DetExtension(size_t bins1, size_t bins2, Acts::LayerMaterial
   , m_supportMaterial(true)
   , m_bins1(bins1)
   , m_bins2(bins2)
-  , m_modules(mod)
   , m_layerMatPos(layerMatPos)
+  , m_modules(mod)
 {
 }
 
@@ -87,7 +87,9 @@ Acts::DetExtension::DetExtension(const DetExtension& det,
   : Acts::IDetExtension()
   , m_segmentation(det.m_segmentation)
   , m_shape(det.m_shape)
-  , m_supportStructure(det.m_supportStructure)
+  , m_bins1(det.m_bins1)
+  , m_bins2(det.m_bins2)
+  , m_layerMatPos(det.m_layerMatPos)
   , m_modules(det.m_modules)
 {
 }
