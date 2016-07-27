@@ -24,6 +24,7 @@ namespace Acts {
 
 class TrackingVolume;
 class DetachedTrackingVolume;
+class Surface;
 class PerigeeSurface;
 class Layer;
 
@@ -36,23 +37,25 @@ typedef std::vector<DetachedTrackingVolumePtr>        DetachedVolumeVector;
 ///  The TrackingGeometry class is the owner of the constructed TrackingVolumes.
 ///
 ///  It enables both, a global search for an asociatedVolume
-///  (respectively, if existing, a global search of an associated Layer or the next
-///  associated Layer), such as a continous navigation by BoundarySurfaces between
+///  (respectively, if existing, a global search of an associated Layer or the
+///  next
+///  associated Layer), such as a continous navigation by BoundarySurfaces
+///  between
 ///  the confined TrackingVolumes.
 
 class TrackingGeometry
 {
-  /// Give the GeometryBuilder friend rights 
+  /// Give the GeometryBuilder friend rights
   friend class TrackingGeometryBuilder;
 
 public:
   /// Constructor
   TrackingGeometry(TrackingVolumePtr highestVolume);
 
-  /// Destructor 
+  /// Destructor
   ~TrackingGeometry();
 
-  /// return the world 
+  /// return the world
   const TrackingVolume*
   highestTrackingVolume() const;
 
@@ -71,23 +74,23 @@ public:
   const TrackingVolume*
   lowestStaticTrackingVolume(const Vector3D& gpos) const;
 
-  /// return the tracking Volume by name, 0 if it doesn't exist 
+  /// return the tracking Volume by name, 0 if it doesn't exist
   const TrackingVolume*
   trackingVolume(const std::string& name) const;
 
-  /// Forward the associated Layer information 
+  /// Forward the associated Layer information
   /// @param gpos is the global position fo the call
   const Layer*
   associatedLayer(const Vector3D& gpos) const;
 
-  /// check position at volume boundary 
+  /// check position at volume boundary
   /// @param gpos is the global position fo the call
   bool
   atVolumeBoundary(const Vector3D&       gpos,
                    const TrackingVolume* vol,
                    double                tol) const;
 
-  /// check position at volume boundary + navigation link 
+  /// check position at volume boundary + navigation link
   bool
   atVolumeBoundary(const Vector3D&        gpos,
                    const Vector3D&        mom,
@@ -95,17 +98,26 @@ public:
                    const TrackingVolume*& nextVol,
                    Acts::PropDirection    dir,
                    double                 tol) const;
- 
-  /// register the beam tube 
+
+  /// register the beam tube
   void
   registerBeamTube(std::unique_ptr<const PerigeeSurface> beam) const;
+
+  /// @brief surface representing the beam pipe
+  ///
+  /// @note The ownership is not passed, e.g. do not delete the pointer
+  ///
+  /// @return raw pointer to surface representing the beam pipe
+  ///         (could be a null pointer)
+  const Surface*
+  getBeamline() const;
 
 private:
   /// Geometry Builder busineess: the geometry builder has to sign
   void
   sign(GeometrySignature geosit, GeometryType geotype = Static) const;
 
-  /// The known world - and the beamline 
+  /// The known world - and the beamline
   TrackingVolumePtr                             m_world;
   mutable std::unique_ptr<const PerigeeSurface> m_beam;
 
