@@ -93,7 +93,7 @@ void Acts::MaterialMapping::associateLayerMaterial(const MaterialTrackRecord& ma
     std::vector<MaterialStep>   materialSteps   = matTrackRec.materialSteps();
     // loop through hits and find the closest layer, the start point moves outwards as we go
     for (auto& step : materialSteps) {
-        ACTS_VERBOSE( "[L] starting from layer " << currentLayer << "from layer collection for this step." );
+        ACTS_VERBOSE( "[L] starting from layer " << currentLayer << " from layer collection for this step." );
         // step length and position
         Acts::Vector3D pos(step.position().x,step.position().y,step.position().z);
         // now find the closest layer
@@ -101,13 +101,13 @@ void Acts::MaterialMapping::associateLayerMaterial(const MaterialTrackRecord& ma
         if (currentLayer < nLayersHit-1) {
             // search through the layers - this is the reference distance for projection
             double currentDistance = (pos-layersAndHits.at(currentLayer).second).mag();
-            ACTS_VERBOSE("- current distance is " << currentDistance << " from " << Acts::toString(pos) << " and " << Acts::toString(layersAndHits.at(currentLayer).second) );
+            ACTS_VERBOSE("  - current distance is " << currentDistance << " from " << Acts::toString(pos) << " and " << Acts::toString(layersAndHits.at(currentLayer).second) );
             // check if other layer is more suitable
             for ( size_t testLayer = (currentLayer+1); testLayer < nLayersHit; ++testLayer ) {
                 // calculate the distance to the testlayer
                 double testDistance = (pos-layersAndHits.at(testLayer).second).mag();
                 ACTS_VERBOSE( "[L] Testing layer " << testLayer << " from layer collection for this step." );
-                ACTS_VERBOSE( "- test distance is " << testDistance << " from " << Acts::toString(pos) << " and " << Acts::toString(layersAndHits.at(testLayer).second) );
+                ACTS_VERBOSE( " - test distance is " << testDistance << " from " << Acts::toString(pos) << " and " << Acts::toString(layersAndHits.at(testLayer).second) );
                 if (testDistance < currentDistance) {
                     ACTS_VERBOSE( "[L] Skipping over to current layer " << testLayer << " because " << testDistance << " < " << currentDistance );
                     // the test distance did shrink - update currentlayer
@@ -123,6 +123,7 @@ void Acts::MaterialMapping::associateLayerMaterial(const MaterialTrackRecord& ma
         // create material Properties
         const Acts::MaterialProperties* layerMaterialProperties = new MaterialProperties(step.material());
         // associate the hit
+        ACTS_VERBOSE("[L] Now associate hit at " << Acts::toString(pos));
         associateHit(assignedLayer, assignedPosition, layerMaterialProperties);
     } // go through material step collection
     
@@ -136,10 +137,10 @@ void Acts::MaterialMapping::associateHit(const Layer* layer, const Acts::Vector3
         // get the bin utility
         const Acts::BinUtility* binUtility = layer->material()->binUtility();
         // create the material record
-        ACTS_VERBOSE("Creating new Layer record at position " << Acts::toString(position));
+        ACTS_VERBOSE("[L] Creating new Layer record at position " << Acts::toString(position));
         m_layerRecords[layer] = LayerMaterialRecord(binUtility);
     }
-    ACTS_VERBOSE("Add new layer material properties  at position " << Acts::toString(position));
+    ACTS_VERBOSE("[L] Add new layer material properties  at position " << Acts::toString(position));
     ACTS_VERBOSE (*layerMaterialProperties);
     // add material to record, if record exists already
     m_layerRecords[layer].addLayerMaterialProperties(position, layerMaterialProperties);
