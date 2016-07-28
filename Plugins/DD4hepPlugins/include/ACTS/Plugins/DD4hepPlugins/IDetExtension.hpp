@@ -14,6 +14,7 @@
 #define ACTS_DD4HEPDETECTORELEMENT_IDETEXTENSION_H 1
 
 // Algebra
+#include <vector>
 #include "ACTS/Utilities/Definitions.hpp"
 
 namespace DD4hep {
@@ -47,11 +48,23 @@ namespace Acts {
 
 class Module;
 
+/// @enum The ShapeType enumeration is used to distinguish between a volume
+/// having a disc and a volume having a cylinder shape, since in DD4hep they
+/// are both described as TGeoConeSeg.
 enum ShapeType {
 
   None     = 0,
   Cylinder = 1,
   Disc     = 2
+};
+/// @enum The LayerMaterialPos enumeration is foreseen to mark on which surface
+/// the two dimensional material of the layer sits. Either on the inner or
+/// the other boundary surface of the layer or at the representing (center)
+/// surface of the layer
+enum LayerMaterialPos {
+  inner   = 0,
+  central = 1,
+  outer   = 2,
 };
 
 class IDetExtension
@@ -81,15 +94,30 @@ public:
   /// @return segmentation DD4hep segmentation for the readout
   virtual const DD4hep::Geometry::Segmentation
   segmentation() const = 0;
-  /// possibility to hand over supporte structure of a layer
-  /// @param support Possible support structure of the layer
+  /// possibility to mark layer to have support material
+  /// @note the numer of bins determines the granularity of the material
+  /// map of the layer
+  /// @param bins1 The number of bins in first direction of the layer
+  /// which is phi for both, cylinder and disc layers.
+  /// @param bins2 The number of bins in second direction of the layer
+  /// which is r in case of a disc layer and z in case of a cylinder layer
+  /// @param layerMatPos States if the material should be mapped on the inner,
+  /// the center or the outer surface of the layer
   virtual void
-  setSupportStructure(const DD4hep::Geometry::DetElement support)
+  supportMaterial(size_t bins1, size_t bins2, LayerMaterialPos layerMatPos)
       = 0;
-  /// Access supporting structure of a layer
-  /// @return support Possible support structure of the layer
-  virtual const DD4hep::Geometry::DetElement&
-  supportStructure() const = 0;
+  /// Bool returning true if the layers should carry material
+  virtual bool
+  hasSupportMaterial() const = 0;
+  /// Access to the two bin numbers determining the granularity of the two
+  /// dimensional grid
+  /// on which the material of the layer should be mapped on
+  virtual std::pair<size_t, size_t>
+  materialBins() const = 0;
+  /// returns states if the material should be mapped on the inner,
+  /// the center or the outer surface of the layer
+  virtual Acts::LayerMaterialPos
+  layerMaterialPos() const = 0;
   /// Possibility to set contained detector modules of a layer
   /// @param mod Possible sensitive modules contained by a layer
   virtual void
@@ -101,7 +129,7 @@ public:
   modules() const = 0;
 
 protected:
-  /// protected constructor
+  /// Protected constructor
   IDetExtension() {}
 };
 }

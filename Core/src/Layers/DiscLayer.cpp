@@ -50,6 +50,17 @@ Acts::DiscLayer::DiscLayer(std::shared_ptr<Acts::Transform3D>      transform,
   if (!ades && Layer::m_surfaceArray) buildApproachDescriptor();
   // register the layer
   if (ades) m_approachDescriptor->registerLayer(*this);
+  // set the material if present
+  // material can be on any approach surface or on the representing surface
+  if (m_approachDescriptor) {
+    // the approach surfaces
+    const std::vector<const Surface*>& approachSurfaces
+        = m_approachDescriptor->containedSurfaces();
+    for (auto& aSurface : approachSurfaces)
+      if (aSurface->associatedMaterial()) m_materialSurface = aSurface;
+  }
+  if (surfaceRepresentation().associatedMaterial())
+    m_materialSurface = &surfaceRepresentation();
 }
 
 Acts::DiscLayer::DiscLayer(const Acts::DiscLayer&   dlay,

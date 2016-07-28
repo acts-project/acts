@@ -133,10 +133,10 @@ public:
     return (*this);
   }
 
-  /** Virtual Destructor */
-  virtual ~BinUtility() {}
+  /** Destructor */
+  ~BinUtility() {}
   /** Implizit Constructor */
-  virtual BinUtility*
+  BinUtility*
   clone() const
   {
     return new BinUtility(*this);

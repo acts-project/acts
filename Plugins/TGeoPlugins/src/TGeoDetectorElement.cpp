@@ -10,9 +10,9 @@
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
-#include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
-#include "ACTS/Material/Material.hpp"
-#include "ACTS/Material/MaterialProperties.hpp"
+//#include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
+//#include "ACTS/Material/Material.hpp"
+//#include "ACTS/Material/MaterialProperties.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "TGeoBBox.h"
 #include "TGeoTrd2.h"
@@ -35,12 +35,12 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
       = dynamic_cast<TGeoBBox*>(m_detElement->GetVolume()->GetShape());
   TGeoTrd2* trapezoid
       = dynamic_cast<TGeoTrd2*>(m_detElement->GetVolume()->GetShape());
-  TGeoMaterial* mat = m_detElement->GetVolume()->GetMaterial();
-  Material      moduleMaterial(mat->GetRadLen(),
-                          mat->GetIntLen(),
-                          mat->GetA(),
-                          mat->GetZ(),
-                          mat->GetDensity());
+  //  TGeoMaterial* mat = m_detElement->GetVolume()->GetMaterial();
+  /*  Material      moduleMaterial(mat->GetRadLen(),
+                            mat->GetIntLen(),
+                            mat->GetA(),
+                            mat->GetZ(),
+                            mat->GetDensity());*/
   if (trapezoid) {
     // if the shape is TGeoTrd2 y and z axes needs to be exchanged, since in
     // TGei the description is different
@@ -64,11 +64,13 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     m_surface = std::make_shared<const Acts::PlaneSurface>(trapezoidBounds, 
                                                            *this, 
                                                            m_identifier);
-    MaterialProperties moduleMaterialProperties(
-        moduleMaterial,
-        0.5 * (trapezoid->GetDy1() * cm + trapezoid->GetDy1() * cm));
-    m_surface->setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial>(
-        new HomogeneousSurfaceMaterial(moduleMaterialProperties)));
+    // ignore module material for the moment @TODO handle module material
+    /*
+        MaterialProperties moduleMaterialProperties(
+            moduleMaterial,
+            0.5 * (trapezoid->GetDy1() * cm + trapezoid->GetDy1() * cm));
+        m_surface->setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial>(
+            new HomogeneousSurfaceMaterial(moduleMaterialProperties)));*/
   } else {
     m_transform = std::make_shared<Acts::Transform3D>(
         Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
@@ -88,10 +90,11 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     m_surface = std::make_shared<const Acts::PlaneSurface>(rectangleBounds,
                                                            *this,
                                                           m_identifier);
-    MaterialProperties moduleMaterialProperties(moduleMaterial,
-                                                box->GetDZ() * cm);
-    m_surface->setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial>(
-        new HomogeneousSurfaceMaterial(moduleMaterialProperties)));
+    // ignore module material for the moment @TODO handle module material
+    /*    MaterialProperties moduleMaterialProperties(moduleMaterial,
+                                                    box->GetDZ() * cm);
+        m_surface->setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial>(
+            new HomogeneousSurfaceMaterial(moduleMaterialProperties)));*/
   }
 }
 

@@ -15,6 +15,7 @@
 
 #include "ACTS/Plugins/DD4hepPlugins/IDetExtension.hpp"
 // DD4hep
+#include <vector>
 #include "DD4hep/Detector.h"
 
 namespace Acts {
@@ -49,15 +50,31 @@ public:
   /// disc or cylinder
   DetExtension(ShapeType shape);
   /// Constructor for layer with support structure
-  /// @param support Possible support structure of the layer
-  DetExtension(const DD4hep::Geometry::DetElement support);
+  /// @note the numer of bins determines the granularity of the material
+  /// map of the layer
+  /// @param bins1 The number of bins in first direction of the layer
+  /// which is phi for both, cylinder and disc layers.
+  /// @param bins2 The number of bins in second direction of the layer
+  /// which is r in case of a disc layer and z in case of a cylinder layer
+  /// @param layerMatPos states if the material should be mapped on the inner,
+  /// the center or the outer surface of the layer
+  DetExtension(size_t bins1, size_t bins2, LayerMaterialPos layerMatPos);
   /// Constructor for layer with modules
   /// @param mod Possible sensitive modules contained by a layer
   DetExtension(std::vector<DD4hep::Geometry::DetElement> mod);
   /// Constructor for layer with support structure and modules
-  /// @param support Possible support structure of the layer
+  /// @note the numer of bins determines the granularity of the material
+  /// map of the layer
+  /// @param bins1 The number of bins in first direction of the layer
+  /// which is phi for both, cylinder and disc layers.
+  /// @param bins2 The number of bins in second direction of the layer
+  /// which is r in case of a disc layer and z in case of a cylinder layer
+  /// @param layerMatPos states if the material should be mapped on the inner,
+  /// the center or the outer surface of the layer
   /// @param mod Possible sensitive modules contained by a layer
-  DetExtension(const DD4hep::Geometry::DetElement        support,
+  DetExtension(size_t                                    bins1,
+               size_t                                    bins2,
+               LayerMaterialPos                          layerMatPos,
                std::vector<DD4hep::Geometry::DetElement> mod);
   /// Copy constructor
   DetExtension(const DetExtension&, const DD4hep::Geometry::DetElement&);
@@ -83,32 +100,58 @@ public:
   /// @return segmentation DD4hep segmentation for the readout
   const DD4hep::Geometry::Segmentation
   segmentation() const override;
-  /// possibility to hand over supporte structure of a layer
-  /// @param support Possible support structure of the layer
-  void
-  setSupportStructure(const DD4hep::Geometry::DetElement support) override;
-  /// Access supporting structure of a layer
-  /// @return support Possible support structure of the layer
-  const DD4hep::Geometry::DetElement&
-  supportStructure() const override;
+  /// possibility to mark layer to have support material
+  /// @note the numer of bins determines the granularity of the material
+  /// map of the layer
+  /// @param bins1 The number of bins in first direction of the layer
+  /// which is phi for both, cylinder and disc layers.
+  /// @param bins2 The number of bins in second direction of the layer
+  /// which is r in case of a disc layer and z in case of a cylinder layer
+  /// @param layerMatPos states if the material should be mapped on the inner,
+  /// the center or the outer surface of the layer
+  virtual void
+  supportMaterial(size_t           bins1,
+                  size_t           bins2,
+                  LayerMaterialPos layerMatPos) override;
+  /// Bool returning true if the layers should carry material
+  bool
+  hasSupportMaterial() const override;
+  /// Access to the two bin numbers determining the granularity of the two
+  /// dimensional grid
+  /// on which the material of the layer should be mapped on
+  std::pair<size_t, size_t>
+  materialBins() const override;
+  /// returns states if the material should be mapped on the inner,
+  /// the center or the outer surface of the layer
+  virtual Acts::LayerMaterialPos
+  layerMaterialPos() const override;
   /// Possibility to set contained detector modules of a layer
   /// @param mod Possible sensitive modules contained by a layer
   void
   setModules(std::vector<DD4hep::Geometry::DetElement> mod) override;
   /// Access modules detector module contained by a layer
   /// @return mod Possible sensitive modules contained by a layer
-  std::vector<DD4hep::Geometry::DetElement>
-  modules() const override;
+  virtual std::vector<DD4hep::Geometry::DetElement>
+  modules() const final;
 
 private:
-  /// segmentation of a sensitive detector module
+  /// Segmentation of a sensitive detector module
   DD4hep::Geometry::Segmentation m_segmentation;
-  /// shape type of a volume defined in IDetExtension can be either disc or
+  /// Shape type of a volume defined in IDetExtension can be either disc or
   /// cylinder
   ShapeType m_shape;
-  /// possible support structure of a layer
-  DD4hep::Geometry::DetElement m_supportStructure;
-  /// possible contained modules of a layer
+  /// Stating if the layer will carry material
+  bool m_supportMaterial;
+  /// The number of bins in first direction of the layer
+  /// which is phi for both, cylinder and disc layers.
+  size_t m_bins1;
+  /// The number of bins in second direction of the layer
+  /// which is r in case of a disc layer and z in case of a cylinder layer
+  size_t m_bins2;
+  /// States if the material should be mapped on the inner,
+  /// the center or the outer surface of the layer
+  LayerMaterialPos m_layerMatPos;
+  /// Possible contained modules of a layer
   std::vector<DD4hep::Geometry::DetElement> m_modules;
 };
 }
@@ -138,16 +181,33 @@ Acts::DetExtension::segmentation() const
 }
 
 inline void
-Acts::DetExtension::setSupportStructure(
-    const DD4hep::Geometry::DetElement support)
+Acts::DetExtension::supportMaterial(size_t           bins1,
+                                    size_t           bins2,
+                                    LayerMaterialPos layerMatPos)
 {
-  m_supportStructure = std::move(support);
+  m_supportMaterial = true;
+  m_bins1           = bins1;
+  m_bins2           = bins2;
+  m_layerMatPos     = layerMatPos;
 }
 
-inline const DD4hep::Geometry::DetElement&
-Acts::DetExtension::supportStructure() const
+inline bool
+Acts::DetExtension::hasSupportMaterial() const
 {
-  return m_supportStructure;
+  return m_supportMaterial;
+}
+
+inline Acts::LayerMaterialPos
+Acts::DetExtension::layerMaterialPos() const
+{
+  return m_layerMatPos;
+}
+
+inline std::pair<size_t, size_t>
+Acts::DetExtension::materialBins() const
+{
+  std::pair<size_t, size_t> bins(m_bins1, m_bins2);
+  return (bins);
 }
 
 inline void
