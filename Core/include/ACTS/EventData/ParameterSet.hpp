@@ -327,7 +327,7 @@ public:
    */
   template <ParID_t parameter>
   ParValue_t
-  uncertainty() const
+  getUncertainty() const
   {
     if (m_pCovariance)
       return sqrt((*m_pCovariance)(

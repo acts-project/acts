@@ -119,7 +119,7 @@ public:
   ParValue_t
   uncertainty() const
   {
-    return getParameterSet().template uncertainty<par>();
+    return getParameterSet().template getUncertainty<par>();
   }
 
   /**
