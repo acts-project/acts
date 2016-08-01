@@ -368,9 +368,12 @@ namespace Test {
     // check stored covariance
     BOOST_CHECK(parSet_with_cov.getCovariance() != 0);
     BOOST_CHECK(*parSet_with_cov.getCovariance() == cov);
-    BOOST_CHECK(parSet_with_cov.getUncertainty<ParID_t::eLOC_1>() == sqrt(cov(0,0)));
-    BOOST_CHECK(parSet_with_cov.getUncertainty<ParID_t::eLOC_2>() == sqrt(cov(1,1)));
-    BOOST_CHECK(parSet_with_cov.getUncertainty<ParID_t::ePHI>() == sqrt(cov(2,2)));
+    BOOST_CHECK(parSet_with_cov.getUncertainty<ParID_t::eLOC_1>()
+                == sqrt(cov(0, 0)));
+    BOOST_CHECK(parSet_with_cov.getUncertainty<ParID_t::eLOC_2>()
+                == sqrt(cov(1, 1)));
+    BOOST_CHECK(parSet_with_cov.getUncertainty<ParID_t::ePHI>()
+                == sqrt(cov(2, 2)));
 
     // same parameter set without covariance matrix
     ParameterSet<ParID_t::eLOC_1, ParID_t::eLOC_2, ParID_t::ePHI>
