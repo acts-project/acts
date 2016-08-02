@@ -225,7 +225,7 @@ public:
   ParValue_t
   uncertainty() const
   {
-    return m_oParameters.template uncertainty<parameter>();
+    return m_oParameters.template getUncertainty<parameter>();
   }
 
   /**

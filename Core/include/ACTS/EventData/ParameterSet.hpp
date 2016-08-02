@@ -327,7 +327,15 @@ public:
    */
   template <ParID_t parameter>
   ParValue_t
-  uncertainty() const;
+  getUncertainty() const
+  {
+    if (m_pCovariance)
+      return sqrt((*m_pCovariance)(
+          detail::get_position<ParID_t, parameter, params...>::value,
+          detail::get_position<ParID_t, parameter, params...>::value));
+    else
+      return -1;
+  }
 
   /**
    * @brief update covariance matrix
