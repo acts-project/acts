@@ -380,6 +380,9 @@ namespace Test {
         parSet_without_cov(nullptr, parValues);
 
     BOOST_CHECK(parSet_without_cov.getCovariance() == 0);
+    BOOST_CHECK(parSet_without_cov.getUncertainty<ParID_t::eLOC_1>() < 0);
+    BOOST_CHECK(parSet_without_cov.getUncertainty<ParID_t::eLOC_2>() < 0);
+    BOOST_CHECK(parSet_without_cov.getUncertainty<ParID_t::ePHI>() < 0);
     BOOST_CHECK(parSet_without_cov.getParameters()
                 == parSet_with_cov.getParameters());
 
