@@ -38,6 +38,18 @@ The instructions below should help you getting started with development process 
 
 The ACTS project uses a <tt>git</tt> repository which is hosted on the CERN GitLab server. In order to be able to create merge requests (and thus, contribute to the development of ACTS), you need to create a fork on the CERN GitLab server. A general introduction to the GitLab web interface can be found [here](https://gitlab.cern.ch/help/gitlab-basics/README.md). Very nice tutorials as well as explanations for concepts and workflows with <tt>git</tt> can be found on [Atlassian](https://www.atlassian.com/git/). For a shorter introduction and the full <tt>git</tt> documentation have a look [here](https://git-scm.com/docs/gittutorial).
 
+##### Configuring git
+
+Commits to repositories on the CERN GitLab server are only accepted from CERN users. Therefore, it is important that <tt>git</tt> is correctly configured on all machines you are working on. It is necessary to that the git user email address to the primary email address of your CERN account (usually: firstname.lastname@cern.ch). You can check the current values with:
+
+`git config user.name`<br />
+`git config user.email`<br />
+
+You can change those settings by either editing the `.gitconfig` file in your home directory or by running:
+
+`git config --global user.name "Donald Duck"`<br />
+`git config --global user.email "donald.duck@cern.ch"`<br />
+
 ##### Creating your fork
 
 As a first step, you need to create your own fork of the ACTS project. For doing this, please go to the [ACTS GitLab page](https://gitlab.cern.ch/acts/a-common-tracking-sw), click on the fork button, and follow the instructions ([GitLab Help "How to fork a project"](https://gitlab.cern.ch/help/gitlab-basics/fork-project.md)).
@@ -78,3 +90,19 @@ At certain points you may want to sync your fork with the latest updates from th
 #### Coding style and guidelines
 
 ### Submitting a merge request
+
+### git tipps and tricks
+
+The following section gives some advise on how to solve certain situations you may encounter during your development process. Many of these commands have the potential to loose uncommitted data. So please make sure that you understand what you are doing before running the receipes below. Also, this collection is non-exhaustive and alternative approaches exist. If you want to contribute to this list, please drop an email to [acts-developers@cern.ch](mailto:acts-developers@cern.ch).
+
+1. **Never, ever directly work on any "official" branch**<br />
+Though not strictly necessary and in the end it is up to you, it is strongly recommended that you never commit directly on a branch which tracks an "official" branch. As branches are all equal in <tt>git</tt>, the definition of "official" branch is quite subjective. In the ACTS project you should not work directed on branches which are **protected** in the CERN GitLab repository. Usually, these are the _master_ and _release-X.Y.Z_ branches. The benefit of this strategy is that you will never have problems to update your fork. Any <tt>git merge</tt> in your local repository on such an "official" branch will always be a fast-forward merge.<br />
+<br />
+1. **Move most recent commit(s) to new branch**<br/>
+Very enthusiastic about the cool feature you are going to implement, you started from master and made one (or more) commits for your development. That's when you realised that you did not create a new branch and committed directly to the master branch. Feeling guilty about having violated rule 1.) you are desperately looking for a solution. Assuming your current situation is: A -> B -> C -> D -> E where HEAD is pointing to E (= master) and the last "official" commit is B. You can resolve this situation by running:<br />
+<br />
+`git checkout <new_branch_name>`<br />
+`git reset --hard <hash of B>`<br />
+`git checkout <new_branch_name>`<br />
+<br />
+Now, master is pointing to B, HEAD and &lt;new\_branch\_name&gt; are pointing to E and you can happily continue with your work.
