@@ -87,6 +87,12 @@ At certain points you may want to sync your fork with the latest updates from th
 
 #### Workflow recommendations
 
+In the following a few recommendations are outlined which should help you to get familiar with development process in the ACTS project.
+
+1. **Each development its own branch**<br />
+Branching in <tt>git</tt> is simple, it is fun and it helps you keep your working copy clean. Therefore, you should start a new branch for every development. All work which is logically/conceptually linked should happen in one branch. If projects are complex (e.g. large code refactoring or complex new features), you may want to use _sub_-branches from the main development branch as illustrated in the picture below. 
+
+[altText](doc/figures/sub_dev.png)
 #### Coding style and guidelines
 
 ### Submitting a merge request
