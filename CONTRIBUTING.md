@@ -76,12 +76,12 @@ Once you have created your fork on the CERN GitLab server, you need to create a 
 
 You probably want to be able to pull in changes from the official ACTS repository to benefit from the latest and greatest improvements. This requires that you add the official ACTS repository as another remote to your local clone. 
 
-`cd <DESTINATION>`<br />
-`git remote add ACTS ssh://git@gitlab.cern.ch:7999/acts/a-common-tracking-sw.git`
+    cd <DESTINATION>
+    git remote add ACTS ssh://git@gitlab.cern.ch:7999/acts/a-common-tracking-sw.git
 
 You can check that everything went ok with
 
-`git remote -v`
+    git remote -v
 
 where the reference to the ACTS repository should appear (along with your forked repository on the CERN GitLab server). This procedure is also described on [github](https://help.github.com/articles/configuring-a-remote-for-a-fork/).
 
@@ -134,13 +134,13 @@ In the rare event that you end up in a situation you do not know how to solve, g
 **Modify the author of a commit**<br />
 If your <tt>git</tt> client is not correctly set up on the machine you are working on, it may derive the committer name and email address from login and hostname information. In this case your commits are likely rejected by the CERN GitLab server. As a first step, you should correctly configure <tt>git</tt> on this machine as described above so that this problems does not appear again.
 -  You are lucky and only need to fix the author of the latest commit. You can use `git commit --amend`:<br />
-`git commit --amend --no-edit --author "My Name <login@cern.ch>`<br /><br />
+    git commit --amend --no-edit --author "My Name <login@cern.ch>
 - You need to fix (several) commit(s) which are not the current head. You can use `git rebase`:<br />
 For the following it is assumed that all commits which need to be fixed are in the same branch &lt;BRANCH&gt;, and &lt;SHA&gt; is the hash of the earliest commit which needs to be corrected.<br />
-`git checkout <BRANCH>`<br />
-`git rebase -i -p <SHA>^`<br />
+    git checkout <BRANCH>
+    git rebase -i -p <SHA>^
 In the editor opened by the git rebase procedure, add the following line after each commit you want to fix:<br />
-`exec git commit --amend --author="New Author Name <email@address.com>" -C HEAD`<br />
+    exec git commit --amend --author="New Author Name <email@address.com>" -C HEAD
 Then continue with the usual rebase procedure.
 
 **Make a bugfix while working on a feature**<br />
@@ -173,9 +173,9 @@ Very enthusiastic about the cool feature you are going to implement, you started
 <img src="doc/figures/move_to_branch1.png" alt="moving commits to new branch"><br />
 You can resolve this situation by running:<br />
 <br />
-`git checkout <new_branch_name>`<br />
-`git reset --hard <hash of B>`<br />
-`git checkout <new_branch_name>`<br />
+    git checkout <new_branch_name>
+    git reset --hard <hash of B>
+    git checkout <new_branch_name>
 <br />
 which should give
 <img src="doc/figures/move_to_branch2.png" alt="moving commits to new branch">
