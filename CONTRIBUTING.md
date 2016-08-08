@@ -121,6 +121,17 @@ Unless required by other circumstances (e.g. collaboration with colleagues, code
 The following section gives some advise on how to solve certain situations you may encounter during your development process. Many of these commands have the potential to loose uncommitted data. So please make sure that you understand what you are doing before running the receipes below. Also, this collection is non-exhaustive and alternative approaches exist. If you want to contribute to this list, please drop an email to [acts-developers@cern.ch](mailto:acts-developers@cern.ch).
 
 **Modify the author of a commit**<br />
+If your <tt>git</tt> client is not correctly set up on the machine you are working on, it may derive the committer name and email address from login and hostname information. In this case your commits are likely rejected by the CERN GitLab server. As a first step, you should correctly configure <tt>git</tt> on this machine as described above so that this problems does not appear again.
+-  You are lucky and only need to fix the author of the latest commit. You can use `git commit --amend`:<br />
+`git commit --amend --no-edit --author "My Name <login@cern.ch>`<br /><br />
+- You need to fix (several) commit(s) which are not the current head. You can use `git rebase`:<br />
+For the following it is assumed that all commits which need to be fixed are in the same branch &lt;BRANCH&gt;, and &lt;SHA&gt; is the hash of the earliest commit which needs to be corrected.<br />
+`git checkout <BRANCH>`<br />
+`git rebase -i -p <SHA>^`<br />
+In the editor opened by the git rebase procedure, add the following line after each commit you want to fix:<br />
+`exec git commit --amend --author="New Author Name <email@address.com>" -C HEAD`<br />
+Then continue with the usual rebase procedure.
+
 **Make a bugfix while working on a feature**<br />
     During the developmen of a new feature you discover a bug which needs to be fixed. In order to not mix bug fix and feature development, the bug fix should happen in a different branch. The recommended procedure for handling this situation is the following:
 1. Get into a clean state of your working directory on your feature branche (either by commiting open changes or by stashing them).
