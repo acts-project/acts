@@ -123,7 +123,15 @@ Unless required by other circumstances (e.g. collaboration with colleagues, code
 
 ### Coding style and guidelines
 
-The ACTS project uses [clang-format](http://clang.llvm.org/docs/ClangFormat.html) for formatting its source code. A `.clang-format` configuration file comes with the project and should be used to automatically format the code. There are several instructions available on how to integrate clang-format with your favourite IDE (e.g. [eclipse](https://marketplace.eclipse.org/content/cppstyle), [Xcode](https://github.com/travisjeffery/ClangFormat-Xcode), [emacs](http://clang.llvm.org/docs/ClangFormat.html#emacs-integration)).
+The ACTS project uses [clang-format](http://clang.llvm.org/docs/ClangFormat.html) for formatting its source code. A `.clang-format` configuration file comes with the project and should be used to automatically format the code. There are several instructions available on how to integrate clang-format with your favourite IDE (e.g. [eclipse](https://marketplace.eclipse.org/content/cppstyle), [Xcode](https://github.com/travisjeffery/ClangFormat-Xcode), [emacs](http://clang.llvm.org/docs/ClangFormat.html#emacs-integration)). The ACTS CI system will automatically apply code reformatting using the provided clang-format configuration once merge requests are opened. However, developers are strongly encouraged to use this code formatter also locally to avoid any possible conflicts.
+
+In addition, the following conventions are used in ACTS code:
+
+- Class names start with a capital letter.
+- Function names start with a lower-case letter and use camel-case.
+- Names of class member variables start with `m_`.
+- Doxygen documentation uses `///` as block comment.
+- Doxygen documentation goes in front of the documented entity (class, function, (member) variable).
  
 ### Creating a merge request
 
