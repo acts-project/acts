@@ -2,7 +2,6 @@
 
 Contributions to the ACTS project are very welcome and feedback on the documentation is greatly appreciated. In order to be able to contribute to the ACTS project, developers must have a valid CERN user account. Unfortunately, lightweight CERN accounts for external users do not have sufficient permissions to access certain CERN services used by the ACTS project.
 
-Table of content:
 1. [Mailing lists](#mailing-lists)
 1. [Bug reports and feature requests](#bug-reports-and-feature-requests)
 1. [Make a contribution](#make-a-contribution)
@@ -90,10 +89,10 @@ where the reference to the ACTS repository should appear (along with your forked
 
 At certain points you may want to sync your fork with the latest updates from the official ACTS repository. The following commands illustrate how to update the 'master' branch of fork. The same procedure can be used to sync any other branch, but you will rarely need this. Please mak sure to commit/stash all changes before proceeding to avoid any loss of data. The following commands must be run in the working directory of the local clone or your forked repository. 
 
-`git fetch ACTS`<br />
-`git checkout master`<br />
-`git merge --ff-only ACTS/master`<br />
-`git push origin master`
+    git fetch ACTS
+    git checkout master
+    git merge --ff-only ACTS/master
+    git push origin master
 
 #### Workflow recommendations
 
