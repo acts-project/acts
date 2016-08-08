@@ -135,6 +135,25 @@ In addition, the following conventions are used in ACTS code:
  
 ### Creating a merge request
 
+Once your development is ready for integration, you should open a merge request at the [ACTS project](https://gitlab.cern.ch/acts/a-common-tracking-sw) ([GitLab Help: Create a merge request](https://gitlab.cern.ch/help/gitlab-basics/add-merge-request.md)). The target branch should usually be _master_ for feature requests and _releas-X,Y,Z_ for bugfixes. The ACTS projects accepts only fast-foward merges which means that your branch must have been rebased on the target branch. This can be achieved by updating your fork as described above and then run:
+
+    git checkout <my_feature_branch>
+    git rebase -i origin/<target_branch>
+    git push
+    
+At this point you should make use of the interactive rebase procedure to clean up your commits (squash mal fixes, improve commit messages etc; [Rewriting history](https://robots.thoughtbot.com/git-interactive-rebase-squash-amend-rewriting-history)).  
+Merge requests are required to close a ACTS JIRA ticket. This is achieved by adding e.g. 'fixes ACTS-XYZ' to the end of the merge request description. Please note that JIRA tickets should only be referenced by merge requests and not individual commits (since strictly there should only be one JIRA ticket per merge request). Once the merge request is opened, a continous integration job is triggered which will add multiple comments to the merge request (e.g. build status, missing license statements, doxygen errors, test coverage etc). Please have a look at them and fix them by adding more commits to your branch if needed.  
+Please find below a short checklist for merge requests.
+
+##### Checklist for merge requests
+
+- Your branch has been rebased on the target branch and can be integrated through a fast-forward merge.
+- A detailed description of the merge request is provided which includes a reference to a JIRA ticket (e.g. `Closes ACTS-1234`, [GitLab Help: Closing JIRA tickets](http://docs.gitlab.com/ee/project_services/jira.html#closing-jira-issues)).
+- All files start with the MPLv2 license statement.
+- All newly introduced functions and classes have been documented properly with doxygen.
+- Unit tests are provided for new functionalities.
+- For bugfixes: a test case has been added to avoid the re-appearance of this bug in the future.
+
 ### git tips and tricks
 
 The following section gives some advise on how to solve certain situations you may encounter during your development process. Many of these commands have the potential to loose uncommitted data. So please make sure that you understand what you are doing before running the receipes below. Also, this collection is non-exhaustive and alternative approaches exist. If you want to contribute to this list, please drop an email to [acts-developers@cern.ch](mailto:acts-developers@cern.ch).
