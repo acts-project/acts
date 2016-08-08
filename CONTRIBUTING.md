@@ -98,27 +98,27 @@ At certain points you may want to sync your fork with the latest updates from th
 
 In the following a few recommendations are outlined which should help you to get familiar with development process in the ACTS project.
 
-1. **Each development its own branch!**<br />
-Branching in git is simple, it is fun and it helps you keep your working copy clean. Therefore, you should start a new branch for every development. All work which is logically/conceptually linked should happen in one branch. Keep your branches short. This helps immensly to understand the git history if you need to look at it in the future.<br />
-If projects are complex (e.g. large code refactoring or complex new features), you may want to use _sub_-branches from the main development branch as illustrated in the picture below.<br />
-<br />
+1. **Each development its own branch!**  
+Branching in git is simple, it is fun and it helps you keep your working copy clean. Therefore, you should start a new branch for every development. All work which is logically/conceptually linked should happen in one branch. Keep your branches short. This helps immensly to understand the git history if you need to look at it in the future.
+If projects are complex (e.g. large code refactoring or complex new features), you may want to use _sub_-branches from the main development branch as illustrated in the picture below.  
+
 <img src="doc/figures/sub_dev.png" alt="workflow for large feature">
-1. **Never, ever directly work on any "official" branch!**<br />
-Though not strictly necessary and in the end it is up to you, it is strongly recommended that you never commit directly on a branch which tracks an "official" branch. As all branches are equal in git, the definition of "official" branch is quite subjective. In the ACTS project you should not work directly on branches which are **protected** in the CERN GitLab repository. Usually, these are the _master_ and _release-X.Y.Z_ branches. The benefit of this strategy is that you will never have problems to update your fork. Any git merge in your local repository on such an "official" branch will always be a fast-forward merge.<br />
-<br />
-1. **Use atomic commits!**<br />
-Similarly to the concept of branches, each commit should reflect a self-contained change. Try to avoid overly large commits (bad examples are for instance mixing logical change with code cleanup and typo fixes).<br />
-<br />
-1. **Write good commit messages!**<br />
+1. **Never, ever directly work on any "official" branch!**  
+Though not strictly necessary and in the end it is up to you, it is strongly recommended that you never commit directly on a branch which tracks an "official" branch. As all branches are equal in git, the definition of "official" branch is quite subjective. In the ACTS project you should not work directly on branches which are **protected** in the CERN GitLab repository. Usually, these are the _master_ and _release-X.Y.Z_ branches. The benefit of this strategy is that you will never have problems to update your fork. Any git merge in your local repository on such an "official" branch will always be a fast-forward merge.
+
+1. **Use atomic commits!**  
+Similarly to the concept of branches, each commit should reflect a self-contained change. Try to avoid overly large commits (bad examples are for instance mixing logical change with code cleanup and typo fixes).
+
+1. **Write good commit messages!**  
 Well-written commit messages are key to understand your changes. There are many guidelines available on how to write proper commit logs (e.g. [here](http://alistapart.com/article/the-art-of-the-commit), [here](http://chris.beams.io/posts/git-commit/), or [here](https://wiki.openstack.org/wiki/GitCommitMessages#Information_in_commit_messages)). As a short summary:
-    - Structure your commit messages into short title (max 50 characters) and longer description (max width 72 characters)!<br />
+    - Structure your commit messages into short title (max 50 characters) and longer description (max width 72 characters)!
       This is best achieved by avoiding the `commit -m` option. Instead write the commit message in an editor/git tool/IDE... 
     - Describe why you did the change (git diff already tells you what has changed)!
-    - Mention any side effects/implications/consquences!<br /><br />
+    - Mention any side effects/implications/consquences!
 
-1. **Prefer git pull --rebase!**<br />
-If you work with a colleague on a new development, you may want to include his latest changes. This is usually done by calling `git pull` which will synchronise your local working copy with the remote repository (which may have been updated by your colleague). By default, this action creates a merge commit if you have local commits which were not yet published to the remote repository. These merge commits are considered to contribute little information to the development process of the feature and they clutter the history (read more e.g.  [here](https://developer.atlassian.com/blog/2016/04/stop-foxtrots-now/) or [here](http://victorlin.me/posts/2013/09/30/keep-a-readable-git-history)). This problem can be avoided by using `git pull --rebase` which replays your local (un-pushed) commits on the tip of the remote branch. You can make this the default behaviour by running `git config pull.rebase true`. More about merging vs rebasing can be found [here](https://www.atlassian.com/git/tutorials/merging-vs-rebasing/).<br />
-1. **Push your development branches as late as possible!**<br />
+1. **Prefer git pull --rebase!**  
+If you work with a colleague on a new development, you may want to include his latest changes. This is usually done by calling `git pull` which will synchronise your local working copy with the remote repository (which may have been updated by your colleague). By default, this action creates a merge commit if you have local commits which were not yet published to the remote repository. These merge commits are considered to contribute little information to the development process of the feature and they clutter the history (read more e.g.  [here](https://developer.atlassian.com/blog/2016/04/stop-foxtrots-now/) or [here](http://victorlin.me/posts/2013/09/30/keep-a-readable-git-history)). This problem can be avoided by using `git pull --rebase` which replays your local (un-pushed) commits on the tip of the remote branch. You can make this the default behaviour by running `git config pull.rebase true`. More about merging vs rebasing can be found [here](https://www.atlassian.com/git/tutorials/merging-vs-rebasing/).
+1. **Push your development branches as late as possible!**  
 Unless required by other circumstances (e.g. collaboration with colleagues, code reviews etc) it is recommended to push your development branch once you are finished. This gives you more flexibility on what you can do with your local commits (e.g. rebase interactively) without affecting others. Thus, it minimises the risk for running into git rebase problems.
 
 #### Coding style and guidelines
@@ -129,27 +129,27 @@ Unless required by other circumstances (e.g. collaboration with colleagues, code
 
 The following section gives some advise on how to solve certain situations you may encounter during your development process. Many of these commands have the potential to loose uncommitted data. So please make sure that you understand what you are doing before running the receipes below. Also, this collection is non-exhaustive and alternative approaches exist. If you want to contribute to this list, please drop an email to [acts-developers@cern.ch](mailto:acts-developers@cern.ch).
 
-**Before doing anything**<br />
-In the rare event that you end up in a situation you do not know how to solve, get to a clean state of working copy and create a (backup) branch, then switch back to the original branch. If anything goes wrong, you can always checkout the backup branch and you are back to where you started.<br /><br /> 
-**Modify the author of a commit**<br />
-If your git client is not correctly set up on the machine you are working on, it may derive the committer name and email address from login and hostname information. In this case your commits are likely rejected by the CERN GitLab server. As a first step, you should correctly configure git on this machine as described above so that this problems does not appear again.
--  You are lucky and only need to fix the author of the latest commit. You can use `git commit --amend`:<br />
+**Before doing anything**  
+In the rare event that you end up in a situation you do not know how to solve, get to a clean state of working copy and create a (backup) branch, then switch back to the original branch. If anything goes wrong, you can always checkout the backup branch and you are back to where you started.  
+**Modify the author of a commit**  
+If your git client is not correctly set up on the machine you are working on, it may derive the committer name and email address from login and hostname information. In this case your commits are likely rejected by the CERN GitLab server. As a first step, you should correctly configure git on this machine as described above so that this problems does not appear again.  
+a)  You are lucky and only need to fix the author of the latest commit. You can use `git commit --amend`:
 
     git commit --amend --no-edit --author "My Name <login@cern.ch>
     
-- You need to fix (several) commit(s) which are not the current head. You can use `git rebase`:<br />
-For the following it is assumed that all commits which need to be fixed are in the same branch &lt;BRANCH&gt;, and &lt;SHA&gt; is the hash of the earliest commit which needs to be corrected.<br />
+b) You need to fix (several) commit(s) which are not the current head. You can use `git rebase`:  
+For the following it is assumed that all commits which need to be fixed are in the same branch &lt;BRANCH&gt;, and &lt;SHA&gt; is the hash of the earliest commit which needs to be corrected.
 
     git checkout <BRANCH>
     git rebase -i -p <SHA>^
     
-In the editor opened by the git rebase procedure, add the following line after each commit you want to fix:<br />
+In the editor opened by the git rebase procedure, add the following line after each commit you want to fix:
 
     exec git commit --amend --author="New Author Name <email@address.com>" -C HEAD
     
 Then continue with the usual rebase procedure.
 
-**Make a bugfix while working on a feature**<br />
+**Make a bugfix while working on a feature**  
     During the developmen of a new feature you discover a bug which needs to be fixed. In order to not mix bug fix and feature development, the bug fix should happen in a different branch. The recommended procedure for handling this situation is the following:
 1. Get into a clean state of your working directory on your feature branche (either by commiting open changes or by stashing them).
 1. Checkout the branch the bugfix should be merged into (either _master_ or _release-X.Y.Z_) and get the most recent version.
@@ -161,30 +161,29 @@ Then continue with the usual rebase procedure.
 1. Eventually, the bugfix will be merged into _master_. Then, you can rebase your feature branch on master which will remove all duplicate commits related to the bugfix.    
 
 In git commands this looks like:
-1. `git stash`
-1. `git checkout master && git pull`
-1. `git checkout -b <bug_fix_branch>`
-1. Implement the bug fix, add tests, commit.
-1. Open a merge request.
-1. `git checkout <feature_branch>`
-1. `git merge <bug_fix_branch>`
-1. Once the merge request for the bug fix is accepted in the upstream repository:
-  `git fetch`
-  `git rebase origin/master` 
+
+    git stash
+    git checkout master && git pull
+    git checkout -b <bug_fix_branch>
+    # Implement the bug fix, add tests, commit.
+    # Open a merge request.
+    git checkout <feature_branch>
+    git merge <bug_fix_branch>
+    # Once the merge request for the bug fix is accepted in the upstream repository:
+    git fetch
+    git rebase origin/master
 
 This should give the following git history where the initial feature branch is blue, the bugfix branch is yellow and the feature branch after the rebase is red.
 <img src="doc/figures/bugfix_while_on_feature.png" alt="fixing a bug while working on a feature">     
-**Move most recent commit(s) to new branch**<br/>
+**Move most recent commit(s) to new branch**  
 Very enthusiastic about the cool feature you are going to implement, you started from master and made one (or more) commits for your development. That's when you realised that you did not create a new branch and committed directly to the master branch. As you know that you should not directly commit to any "official" branch, you are desperately looking for a solution. Assuming your current situation is: A -> B -> C -> D -> E where HEAD is pointing to E (= master) and the last "official" commit is B as shown below.
-<img src="doc/figures/move_to_branch1.png" alt="moving commits to new branch"><br />
-You can resolve this situation by running:<br />
-<br />
+<img src="doc/figures/move_to_branch1.png" alt="moving commits to new branch">
+You can resolve this situation by running:
 
     git checkout <new_branch_name>
     git reset --hard <hash of B>
     git checkout <new_branch_name>
     
-<br />
-which should give
-<img src="doc/figures/move_to_branch2.png" alt="moving commits to new branch">
+which should give the following situation:  
+<img src="doc/figures/move_to_branch2.png" alt="moving commits to new branch">  
 Now, master is pointing to B, HEAD and &lt;new\_branch\_name&gt; are pointing to E and you can happily continue with your work.
