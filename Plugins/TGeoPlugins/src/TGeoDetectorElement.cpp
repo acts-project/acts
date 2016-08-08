@@ -169,12 +169,12 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
                                                            *this, 
                                                            m_identifier);
     // ignore module material for the moment @TODO handle module material
-    /*
+    
         MaterialProperties moduleMaterialProperties(
             moduleMaterial,
             0.5 * scalor * (trapezoid->GetDy1() + trapezoid->GetDy1()));
         m_surface->setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial>(
-            new HomogeneousSurfaceMaterial(moduleMaterialProperties)));*/
+            new HomogeneousSurfaceMaterial(moduleMaterialProperties)));
     // set the thickness
     m_thickness = scalor*2*trapezoid->GetDy1();
   } else {
@@ -195,11 +195,6 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     m_surface = std::make_shared<const Acts::PlaneSurface>(rectangleBounds,
                                                            *this,
                                                           m_identifier);
-    // ignore module material for the moment @TODO handle module material
-    /*    MaterialProperties moduleMaterialProperties(moduleMaterial,
-                                                     scalor * box->GetDZ());
-        m_surface->setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial>(
-            new HomogeneousSurfaceMaterial(moduleMaterialProperties)));*/
     // set the thickness
     m_thickness = scalor*2*box->GetDZ();
   }

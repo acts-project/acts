@@ -121,7 +121,7 @@ public:
 };
 
 std::shared_ptr<IExtrapolationEngine>
-initExtrapolator(const std::shared_ptr<const TrackingGeometry>& geo)
+initExtrapolator(const std::unique_ptr<const TrackingGeometry>& geo)
 {
   auto propConfig         = RungeKuttaEngine::Config();
   propConfig.fieldService = std::make_shared<ConstantField>(0, 0, 0.002);
