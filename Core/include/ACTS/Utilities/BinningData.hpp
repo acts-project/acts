@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 #include <iostream>
+#include <memory>
 
 namespace Acts {
 
