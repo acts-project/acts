@@ -35,7 +35,6 @@ Acts::MaterialMapping::MaterialMapping(const Config&           cnf,
 
 Acts::MaterialMapping::~MaterialMapping()
 {
-  finalizeLayerMaterial();
 }
 
 void

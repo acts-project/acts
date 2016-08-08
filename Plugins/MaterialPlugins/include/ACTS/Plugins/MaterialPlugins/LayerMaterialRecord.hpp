@@ -68,9 +68,8 @@ public:
   averageMaterial();
   /// Return method for the final layer material
   /// given as a binned surface material
-  /// averages the material before returning the final material
   std::shared_ptr<const Acts::BinnedSurfaceMaterial>
-  layerMaterial();
+  layerMaterial() const;
 
 private:
   /// two dimensional grid on which the material is binned

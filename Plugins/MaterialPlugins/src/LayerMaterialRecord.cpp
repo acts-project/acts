@@ -144,9 +144,8 @@ Acts::LayerMaterialRecord::averageMaterial()
 }
 
 std::shared_ptr<const Acts::BinnedSurfaceMaterial>
-Acts::LayerMaterialRecord::layerMaterial()
+Acts::LayerMaterialRecord::layerMaterial() const
 {
-  averageMaterial();
   // return the binned surface material
   return (std::make_shared<const Acts::BinnedSurfaceMaterial>(
       *m_binUtility, m_materialMatrix));

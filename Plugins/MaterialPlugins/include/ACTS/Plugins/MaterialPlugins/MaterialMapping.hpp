@@ -73,6 +73,8 @@ public:
   /// it sets the created material to the layers
   void
   finalizeLayerMaterial();
+  /// return the layer records
+  const std::map<const Layer*, LayerMaterialRecord> layerRecords() const;
 
   /// set logging instance
   void
@@ -113,4 +115,9 @@ private:
 };
 }
 
-#endif  // ACTS_MATERIALPLUGINS_MATERIALMAPPIN_H
+inline const std::map<const Acts::Layer*, Acts::LayerMaterialRecord> Acts::MaterialMapping::layerRecords() const
+{
+    return m_layerRecords;
+}
+
+#endif  // ACTS_MATERIALPLUGINS_MATERIALMAAPPIN_H
