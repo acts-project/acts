@@ -124,6 +124,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // average the z position
   z /= surfaces.size();
   
+  ACTS_DEBUG("- z-position of disk estimated as " << z);
+  
   // get access to the binning data
   const std::vector<BinningData>& bdataSet = arrayUtility->binningData();
   // create the position matrix first

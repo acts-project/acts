@@ -34,11 +34,17 @@ public:
   /// Constructor  
   /// @param identifier is the detector identifier
   /// @param tGeoDetElement is the TGeoNode which should be represented
-  /// @Param motherTransform is the (optional) transform applied to the TGeoNode
-  TGeoDetectorElement(const Identifier&                  identifier,
-                      TGeoNode*                          tGeoDetElement,
-                      std::shared_ptr<Acts::Transform3D> motherTransform = nullptr,
-                      double scalor = 0.);
+  /// @param mtoglobal to global is the (optional) transform applied to the TGeoNode
+  /// @param axis is the axis orientation with respect to the tracking frame
+  ///        options are "xyz" -> identical frame definition
+  ///                    "yzx" -> node y axis is tracking x axis, etc.
+  ///                    "zxy" -> node z axis is tracking x axis, etc.
+  /// @param scalor is the scale factor for unit conversion if needed
+  TGeoDetectorElement(const Identifier&   identifier,
+                      TGeoNode*           tGeoDetElement,
+                      const TGeoMatrix*   mtoglobal = nullptr,
+                      const std::string&  axes = "xyz",
+                      double              scalor = 1.);
 
   ///  Destructor 
   virtual ~TGeoDetectorElement();
