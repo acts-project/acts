@@ -110,14 +110,20 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
   const Acts::Layer* fLayer
       = eCell.finalVolumeReached() ? eCell.endLayer : nullptr;
   auto layerIntersections = eCell.leadVolume->layerCandidatesOrdered(
-                                                                     eCell.leadLayer, fLayer, *eCell.leadParameters, pDir, true, eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectMaterial),eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectSensitive));
+      eCell.leadLayer,
+      fLayer,
+      *eCell.leadParameters,
+      pDir,
+      true,
+      eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectMaterial),
+      eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectSensitive));
 
   EX_MSG_VERBOSE(eCell.navigationStep,
                  "layer",
                  "loop",
                  "found " << layerIntersections.size()
                           << " layers for the layer-to-layer loop.");
-    
+
   // layer-to-layer loop starts here
   for (auto& layerCandidate : layerIntersections) {
     // assign the leadLayer
