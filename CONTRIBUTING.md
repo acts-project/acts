@@ -46,7 +46,7 @@ The instructions below should help you getting started with development process 
 
 ### Setting up your fork
 
-The ACTS project uses a <tt>git</tt> repository which is hosted on the CERN GitLab server. In order to be able to create merge requests (and thus, contribute to the development of ACTS), you need to create a fork on the CERN GitLab server. A general introduction to the GitLab web interface can be found [here](https://gitlab.cern.ch/help/gitlab-basics/README.md). Very nice tutorials as well as explanations for concepts and workflows with <tt>git</tt> can be found on [Atlassian](https://www.atlassian.com/git/). For a shorter introduction and the full <tt>git</tt> documentation have a look [here](https://git-scm.com/docs/gittutorial).
+The ACTS project uses a <tt>git</tt> repository which is hosted on the CERN GitLab server. In order to be able to create merge requests (and thus, contribute to the development of ACTS), you need to create a fork on the CERN GitLab server. A general introduction to the GitLab web interface can be found [here](https://gitlab.cern.ch/help/gitlab-basics/README.md). Very nice tutorials as well as explanations for concepts and workflows with <tt>git</tt> can be found on [Atlassian](https://www.atlassian.com/git/). For a shorter introduction and the full <tt>git</tt> documentation have a look at the [git tutorial](https://git-scm.com/docs/gittutorial).
 
 ##### Configuring git
 
@@ -84,7 +84,7 @@ You can check that everything went ok with
 
 `git remote -v`
 
-where the reference to the ACTS repository should appear (along with your forked repository on the CERN GitLab server). This procedure is also described [here](https://help.github.com/articles/configuring-a-remote-for-a-fork/).
+where the reference to the ACTS repository should appear (along with your forked repository on the CERN GitLab server). This procedure is also described on [github](https://help.github.com/articles/configuring-a-remote-for-a-fork/).
 
 ##### Keeping your fork up-to-date
 
