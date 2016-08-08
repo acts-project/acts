@@ -120,6 +120,8 @@ Unless required by other circumstances (e.g. collaboration with colleagues, code
 
 The following section gives some advise on how to solve certain situations you may encounter during your development process. Many of these commands have the potential to loose uncommitted data. So please make sure that you understand what you are doing before running the receipes below. Also, this collection is non-exhaustive and alternative approaches exist. If you want to contribute to this list, please drop an email to [acts-developers@cern.ch](mailto:acts-developers@cern.ch).
 
+**Before doing anything**<br />
+In the rare event that you end up in a situation you do not know how to solve, get to a clean state of working copy and create a (backup) branch, then switch back to the original branch. If anything goes wrong, you can always checkout the backup branch and you are back to where you started.<br /><br /> 
 **Modify the author of a commit**<br />
 If your <tt>git</tt> client is not correctly set up on the machine you are working on, it may derive the committer name and email address from login and hostname information. In this case your commits are likely rejected by the CERN GitLab server. As a first step, you should correctly configure <tt>git</tt> on this machine as described above so that this problems does not appear again.
 -  You are lucky and only need to fix the author of the latest commit. You can use `git commit --amend`:<br />
