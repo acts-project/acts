@@ -2,6 +2,16 @@
 
 Contributions to the ACTS project are very welcome and feedback on the documentation is greatly appreciated. In order to be able to contribute to the ACTS project, developers must have a valid CERN user account. Unfortunately, lightweight CERN accounts for external users do not have sufficient permissions to access certain CERN services used by the ACTS project.
 
+Table of content:
+1. [Mailing lists](#mailing-lists)
+1. [Bug reports and feature requests](#bug-reports-and-feature-requests)
+1. [Make a contribution](#make-a-contribution)
+    1. [Setting up your fork](#setting-up-your-fork)
+    1. [Workflow recommendations](#workflow-recommendations)
+    1. [Coding style and guidelines](#coding-style-and-guidelines)
+    1. [Creating a merge request](#creating-a-merge-request)
+    1. [git tips and tricks](#git-tips-and-tricks)
+
 ## Mailing lists
 
 1. [acts-users@cern.ch](https://e-groups.cern.ch/e-groups/Egroup.do?egroupName=acts-users): Users of the ACTS project should subscribe to this list as it provides:
@@ -114,9 +124,9 @@ Unless required by other circumstances (e.g. collaboration with colleagues, code
 
 #### Coding style and guidelines
 
-### Submitting a merge request
+### Creating a merge request
 
-### git tipps and tricks
+### git tips and tricks
 
 The following section gives some advise on how to solve certain situations you may encounter during your development process. Many of these commands have the potential to loose uncommitted data. So please make sure that you understand what you are doing before running the receipes below. Also, this collection is non-exhaustive and alternative approaches exist. If you want to contribute to this list, please drop an email to [acts-developers@cern.ch](mailto:acts-developers@cern.ch).
 
