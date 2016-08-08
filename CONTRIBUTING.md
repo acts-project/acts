@@ -153,6 +153,7 @@ Please find below a short checklist for merge requests.
 - All newly introduced functions and classes have been documented properly with doxygen.
 - Unit tests are provided for new functionalities.
 - For bugfixes: a test case has been added to avoid the re-appearance of this bug in the future.
+- All added cmake options were added to 'cmake/PrintOptions.cmake'.
 
 ### git tips and tricks
 
