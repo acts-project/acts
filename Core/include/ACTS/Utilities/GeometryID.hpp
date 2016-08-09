@@ -87,21 +87,21 @@ GeometryID::value(geo_id_value mask, geo_id_value shift) const
 {
   if (mask) return ((m_value & mask) >> shift);
   return m_value;
-  }
+}
 
-  /// Overload of operator< | <= | > | >=  for the usage in a map
-  bool
-  operator<(const GeometryID& one, const GeometryID& two);
-  bool
-  operator<=(const GeometryID& one, const GeometryID& two);
-  bool
-  operator>(const GeometryID& one, const GeometryID& two);
-  bool
-  operator>=(const GeometryID& one, const GeometryID& two);
+/// Overload of operator< | <= | > | >=  for the usage in a map
+bool
+operator<(const GeometryID& one, const GeometryID& two);
+bool
+operator<=(const GeometryID& one, const GeometryID& two);
+bool
+operator>(const GeometryID& one, const GeometryID& two);
+bool
+operator>=(const GeometryID& one, const GeometryID& two);
 
-  /// Overload of << operator for std::ostream for debug output
-  std::ostream&
-  operator<<(std::ostream& sl, const GeometryID& tddID);
+/// Overload of << operator for std::ostream for debug output
+std::ostream&
+operator<<(std::ostream& sl, const GeometryID& tddID);
 }
 
 #endif  // ACTS_GEOMETRYUTILS_GEOMETRYID_H
