@@ -707,16 +707,45 @@ namespace Test {
   using ParSet = ParameterSet<params...>;
 
   /**
-   * @brief Unit test for accessing index of coordinate in ParameterSet object
+   * @brief Unit test for index-/type-based access of coordinates
    *
    * @sa ParameterSet::getIndex
+   * @sa ParameterSet::getParID
    */
-  BOOST_AUTO_TEST_CASE(parset_getIndex)
+  BOOST_AUTO_TEST_CASE(parset_parID_mapping)
   {
+    // check logic for type-based access
     BOOST_CHECK((ParSet<eLOC_1, eLOC_2, ePHI, eQOP>::getIndex<eLOC_1>() == 0));
     BOOST_CHECK((ParSet<eLOC_1, eLOC_2, ePHI, eQOP>::getIndex<eLOC_2>() == 1));
     BOOST_CHECK((ParSet<eLOC_1, eLOC_2, ePHI, eQOP>::getIndex<ePHI>() == 2));
     BOOST_CHECK((ParSet<eLOC_1, eLOC_2, ePHI, eQOP>::getIndex<eQOP>() == 3));
+
+    // check logic for index-based access
+    BOOST_CHECK((ParSet<eLOC_1, eLOC_2, ePHI, eQOP>::getParID<0>() == eLOC_1));
+    BOOST_CHECK((ParSet<eLOC_1, eLOC_2, ePHI, eQOP>::getParID<1>() == eLOC_2));
+    BOOST_CHECK((ParSet<eLOC_1, eLOC_2, ePHI, eQOP>::getParID<2>() == ePHI));
+    BOOST_CHECK((ParSet<eLOC_1, eLOC_2, ePHI, eQOP>::getParID<3>() == eQOP));
+
+    // check consistency
+    typedef FullParameterSet FullSet;
+    BOOST_CHECK((FullSet::getIndex<FullSet::getParID<0>()>() == 0));
+    BOOST_CHECK((FullSet::getIndex<FullSet::getParID<1>()>() == 1));
+    BOOST_CHECK((FullSet::getIndex<FullSet::getParID<2>()>() == 2));
+    BOOST_CHECK((FullSet::getIndex<FullSet::getParID<3>()>() == 3));
+    BOOST_CHECK((FullSet::getIndex<FullSet::getParID<4>()>() == 4));
+
+    BOOST_CHECK((FullSet::getParID<FullSet::getIndex<eLOC_1>()>() == eLOC_1));
+    BOOST_CHECK((FullSet::getParID<FullSet::getIndex<eLOC_2>()>() == eLOC_2));
+    BOOST_CHECK((FullSet::getParID<FullSet::getIndex<ePHI>()>() == ePHI));
+    BOOST_CHECK((FullSet::getParID<FullSet::getIndex<eTHETA>()>() == eTHETA));
+    BOOST_CHECK((FullSet::getParID<FullSet::getIndex<eQOP>()>() == eQOP));
+
+    // consistency of types
+    BOOST_CHECK((std::is_same<std::remove_cv<decltype(
+                                  at_index<ParID_t, 0, eLOC_1>::value)>::type,
+                              decltype(eLOC_1)>::value));
+    BOOST_CHECK((std::is_same<decltype(FullSet::getParID<0>()),
+                              decltype(eLOC_1)>::value));
   }
 }  // end of namespace Test
 }  // end of namespace Acts
