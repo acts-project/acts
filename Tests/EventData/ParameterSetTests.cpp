@@ -317,6 +317,18 @@ namespace Test {
   }
 
   /**
+   * @brief Unit test for Acts::details::at_index helper
+   */
+  BOOST_AUTO_TEST_CASE(at_index_helper_tests)
+  {
+    BOOST_CHECK((at_index<int, 0, 10, 1, 3, 7, 2>::value == 10));
+    BOOST_CHECK((at_index<int, 1, 10, 1, 3, 7, 2>::value == 1));
+    BOOST_CHECK((at_index<int, 2, 10, 1, 3, 7, 2>::value == 3));
+    BOOST_CHECK((at_index<int, 3, 10, 1, 3, 7, 2>::value == 7));
+    BOOST_CHECK((at_index<int, 4, 10, 1, 3, 7, 2>::value == 2));
+  }
+
+  /**
    * @brief Unit test for checking consistency of ParameterSet class
    *
    * The following functions are tested to yield the expected result/behavior:

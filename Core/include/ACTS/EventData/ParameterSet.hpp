@@ -17,6 +17,7 @@
 // ACTS includes
 #include "ACTS/EventData/detail/are_sorted.hpp"
 #include "ACTS/EventData/detail/are_within.hpp"
+#include "ACTS/EventData/detail/at_index.hpp"
 #include "ACTS/EventData/detail/full_parameter_set.hpp"
 #include "ACTS/EventData/detail/get_position.hpp"
 #include "ACTS/EventData/detail/initialize_parameter_set.hpp"
@@ -232,6 +233,24 @@ public:
   getIndex()
   {
     return detail::get_position<ParID_t, parameter, params...>::value;
+  }
+
+  /**
+   * @brief return parameter identifier for given index
+   *
+   * @tparam index position of parameter identifier in @c params
+   * @remark @c index must be a positive number smaller than the size of the
+   *         parameter pack @c params. Otherwise a compile-time error is
+   *         generated.
+   *
+   * @return parameter identifier at position @c index in variadic template
+   *         parameter set @c params
+   */
+  template <size_t index>
+  static constexpr ParID_t
+  getParID()
+  {
+    return detail::at_index<ParID_t, index, params...>::value;
   }
 
   /**
