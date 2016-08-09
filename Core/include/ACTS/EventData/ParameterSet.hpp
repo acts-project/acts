@@ -219,12 +219,27 @@ public:
   }
 
   /**
+   * @brief return index of parameter identifier in parameter list
+   *
+   * @tparam parameter identifier for the parameter to be retrieved
+   * @remark @c parameter must be part of the template parameter pack @c params.
+   *         Otherwise a compile-time error is generated.
+   *
+   * @return position of parameter in variadic template parameter set @c params
+   */
+  template <ParID_t parameter>
+  static constexpr size_t
+  getIndex()
+  {
+    return detail::get_position<ParID_t, parameter, params...>::value;
+  }
+
+  /**
    * @brief retrieve stored value for given parameter
    *
    * @tparam parameter identifier for the parameter to be retrieved
    * @remark @c parameter must be part of the template parameter pack @c params.
-   * Otherwise a compile-time
-   *         error is generated.
+   *         Otherwise a compile-time error is generated.
    *
    * @return value of the stored parameter
    */
