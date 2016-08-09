@@ -120,13 +120,29 @@ public:
   layerMaterialPos() const = 0;
   /// Possibility to set contained detector modules of a layer
   /// @param mod Possible sensitive modules contained by a layer
+  /// @param axis is the axis orientation with respect to the tracking frame
+  ///        it is a string of the three characters x, y and z (standing for the
+  ///        three axes)
+  ///        there is a distinction between capital and lower case characters :
+  ///        - capital      -> positive orientation of the axis
+  ///        - lower case   -> negative oriantation of the axis
+  ///        example options are "XYZ" -> identical frame definition (default
+  ///        value)
+  ///                            "YZX" -> node y axis is tracking x axis, etc.
+  ///                            "XzY" -> negative node z axis is tracking y
+  ///                            axis, etc.
   virtual void
-  setModules(std::vector<DD4hep::Geometry::DetElement> mod)
+  setModules(std::vector<DD4hep::Geometry::DetElement> mod,
+             const std::string&                        axes = "XYZ")
       = 0;
   /// Access modules detector module contained by a layer
-  /// @return mod Possible sensitive modules contained by a layer
+  /// @return Possible sensitive modules contained by a layer
   virtual std::vector<DD4hep::Geometry::DetElement>
   modules() const = 0;
+  /// Access the orientation of the module
+  /// @return string describing the orientation of the axes
+  virtual const std::string
+  axes() const = 0;
 
 protected:
   /// Protected constructor

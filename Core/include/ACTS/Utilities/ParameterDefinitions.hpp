@@ -13,24 +13,24 @@
 #include ACTS_PARAMETER_DEFINITIONS_PLUGIN
 #endif
 
-// testing requirements on parameter definitions
+/// testing requirements on parameter definitions
 #include <type_traits>
 
-// typedefs for parameter identifier and parameter value must be present
+/// typedefs for parameter identifier and parameter value must be present
 static_assert(std::is_enum<Acts::ParID_t>::value,
               "'ParID_t' is not an enum type");
 static_assert(std::is_floating_point<Acts::ParValue_t>::value,
               "'ParValue_t' is not floating point type");
 
-// parameter ID type must be convertible to size_t
+/// parameter ID type must be convertible to size_t
 static_assert(std::is_convertible<Acts::ParID_t, size_t>::value,
               "'ParID_t' is not convertible to size_t");
 
-// number of global parameter must be at least 2 (for the two local parameters)
+/// number of global parameter must be at least 2 (for the two local parameters)
 static_assert(Acts::NGlobalPars > 1,
               "total number of global parameters must be >= 2");
 
-// several constants for the local parameters need to be defined
+/// several constants for the local parameters need to be defined
 static_assert(Acts::eLOC_1 != Acts::eLOC_2,
               "local parameters must have different IDs");
 static_assert(Acts::eLOC_R == Acts::eLOC_1 or Acts::eLOC_R == Acts::eLOC_2,
@@ -51,7 +51,7 @@ static_assert(Acts::eLOC_D0 == Acts::eLOC_1 or Acts::eLOC_D0 == Acts::eLOC_2,
 static_assert(Acts::eLOC_Z0 == Acts::eLOC_1 or Acts::eLOC_Z0 == Acts::eLOC_2,
               "z0 must be a local parameter");
 
-// check for par_type_t definition
+/// check for par_type_t definition
 static_assert(sizeof(Acts::par_type_t<Acts::eLOC_1>) > 0,
               "'par_type_t' is not defined");
 

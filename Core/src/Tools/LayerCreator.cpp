@@ -64,16 +64,16 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   double layerThickness = (maxR - minR) + 2 * envelopeR;
 
   // adjust the layer radius
-  MSG_VERBOSE("Creating a cylindrical Layer:");
-  MSG_VERBOSE(" - with layer R    = " << layerR);
-  MSG_VERBOSE(" - from R min/max  = " << minR << " / " << maxR);
-  MSG_VERBOSE(" - with z min/max  = " << -layerHalfZ << " / " << layerHalfZ);
-  MSG_VERBOSE(" - and phi min/max = " << minPhi << " / " << maxPhi);
-  MSG_VERBOSE(" - # of modules    = " << surfaces.size() << " ordered in ( "
-                                      << binsPhi
-                                      << " x "
-                                      << binsZ
-                                      << ")");
+  ACTS_VERBOSE("Creating a cylindrical Layer:");
+  ACTS_VERBOSE(" - with layer R    = " << layerR);
+  ACTS_VERBOSE(" - from R min/max  = " << minR << " / " << maxR);
+  ACTS_VERBOSE(" - with z min/max  = " << -layerHalfZ << " / " << layerHalfZ);
+  ACTS_VERBOSE(" - and phi min/max = " << minPhi << " / " << maxPhi);
+  ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << " ordered in ( "
+                                       << binsPhi
+                                       << " x "
+                                       << binsZ
+                                       << ")");
 
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray
@@ -103,8 +103,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>& surfaces,
                               double                             envelopeMaxR,
                               double                             envelopeZ,
                               size_t                             binsR,
-                              size_t                             binsPhi,
-                              const std::vector<double>& rBoundaries) const
+                              size_t                             binsPhi) const
 {
   // loop over the surfaces and estimate
   double minR   = 10e10;
@@ -129,7 +128,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>& surfaces,
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-          surfaces, minR, maxR, minPhi, maxPhi, binsR, binsPhi, rBoundaries);
+          surfaces, minR, maxR, minPhi, maxPhi, binsR, binsPhi);
 
   // create the share disc bounds
   auto dBounds = std::make_shared<RadialBounds>(minR - envelopeMinR,
@@ -176,6 +175,7 @@ Acts::LayerCreator::moduleExtend(const Surface& sf,
   if (element) {
     // get the thickness
     double thickness = element->thickness();
+    ACTS_VERBOSE("Parsing and associated element with thickness " << thickness);
     // check the shape
     const PlanarBounds* pBounds
         = dynamic_cast<const PlanarBounds*>(&(sf.bounds()));
@@ -206,7 +206,7 @@ Acts::LayerCreator::moduleExtend(const Surface& sf,
         }
       }
     } else
-      MSG_WARNING("Not implemented yet for Non-Planar bounds");
+      ACTS_WARNING("Not implemented yet for Non-Planar bounds");
   }
 }
 

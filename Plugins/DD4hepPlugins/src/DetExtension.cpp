@@ -17,6 +17,7 @@ Acts::DetExtension::DetExtension()
   , m_bins2(0)
   , m_layerMatPos(LayerMaterialPos::inner)
   , m_modules()
+  , m_axes("XYZ")
 {
 }
 
@@ -30,6 +31,7 @@ Acts::DetExtension::DetExtension(
   , m_bins2(0)
   , m_layerMatPos(LayerMaterialPos::inner)
   , m_modules()
+  , m_axes("XYZ")
 {
 }
 
@@ -42,6 +44,7 @@ Acts::DetExtension::DetExtension(ShapeType shape)
   , m_bins2(0)
   , m_layerMatPos(LayerMaterialPos::inner)
   , m_modules()
+  , m_axes("XYZ")
 {
 }
 
@@ -56,10 +59,12 @@ Acts::DetExtension::DetExtension(size_t                 bins1,
   , m_bins2(bins2)
   , m_layerMatPos(layerMatPos)
   , m_modules()
+  , m_axes("XYZ")
 {
 }
 
-Acts::DetExtension::DetExtension(std::vector<DD4hep::Geometry::DetElement> mod)
+Acts::DetExtension::DetExtension(std::vector<DD4hep::Geometry::DetElement> mod,
+                                 const std::string&                        axes)
   : Acts::IDetExtension()
   , m_segmentation(nullptr)
   , m_shape(Acts::ShapeType::None)
@@ -68,13 +73,15 @@ Acts::DetExtension::DetExtension(std::vector<DD4hep::Geometry::DetElement> mod)
   , m_bins2(0)
   , m_layerMatPos(LayerMaterialPos::inner)
   , m_modules(mod)
+  , m_axes(axes)
 {
 }
 
 Acts::DetExtension::DetExtension(size_t                 bins1,
                                  size_t                 bins2,
                                  Acts::LayerMaterialPos layerMatPos,
-                                 std::vector<DD4hep::Geometry::DetElement> mod)
+                                 std::vector<DD4hep::Geometry::DetElement> mod,
+                                 const std::string&                        axes)
   : Acts::IDetExtension()
   , m_segmentation(nullptr)
   , m_shape(Acts::ShapeType::None)
@@ -83,6 +90,7 @@ Acts::DetExtension::DetExtension(size_t                 bins1,
   , m_bins2(bins2)
   , m_layerMatPos(layerMatPos)
   , m_modules(mod)
+  , m_axes(axes)
 {
 }
 
@@ -95,5 +103,6 @@ Acts::DetExtension::DetExtension(const DetExtension& det,
   , m_bins2(det.m_bins2)
   , m_layerMatPos(det.m_layerMatPos)
   , m_modules(det.m_modules)
+  , m_axes(det.m_axes)
 {
 }
