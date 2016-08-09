@@ -247,8 +247,7 @@ public:
   ParValue_t
   getParameter() const
   {
-    return m_vValues(
-        detail::get_position<ParID_t, parameter, params...>::value);
+    return m_vValues(getIndex<parameter>());
   }
 
   /**
@@ -277,8 +276,7 @@ public:
   setParameter(ParValue_t value)
   {
     typedef typename par_type<parameter>::type parameter_type;
-    m_vValues(detail::get_position<ParID_t, parameter, params...>::value)
-        = parameter_type::getValue(value);
+    m_vValues(getIndex<parameter>()) = parameter_type::getValue(value);
   }
 
   /**
@@ -344,11 +342,10 @@ public:
   ParValue_t
   getUncertainty() const
   {
-    if (m_pCovariance)
-      return sqrt((*m_pCovariance)(
-          detail::get_position<ParID_t, parameter, params...>::value,
-          detail::get_position<ParID_t, parameter, params...>::value));
-    else
+    if (m_pCovariance) {
+      size_t index = getIndex<parameter>();
+      return sqrt((*m_pCovariance)(index, index));
+    } else
       return -1;
   }
 
