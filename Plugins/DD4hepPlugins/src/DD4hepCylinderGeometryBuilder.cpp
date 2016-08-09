@@ -540,7 +540,7 @@ Acts::DD4hepCylinderGeometryBuilder::createSurfaceArray(
     const TGeoMatrix*   motherTransform,
     const std::string&  axes) const
 {
-  ACTS_VERBOSE("[L] Creating surface array of the layer);
+  ACTS_VERBOSE("[L] Creating surface array of the layer");
   std::vector<const Acts::Surface*> surfaces;
   for (auto& detElement : modules) {
     // make here the material mapping
