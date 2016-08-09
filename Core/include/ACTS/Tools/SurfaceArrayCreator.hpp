@@ -22,12 +22,8 @@ namespace Acts {
 class Surface;
 class BinUtility;
 
-typedef std::vector<const Surface*> SurfaceVector;
-typedef std::vector<SurfaceVector>  SurfaceMatrix;
-typedef std::vector<SurfaceMatrix>  SurfaceGrid;
-
-typedef std::vector<Vector3D> V3Vector;
-typedef std::vector<V3Vector> V3Matrix;
+typedef std::pair<const Surface*, Vector3D>  SurfacePosition;
+typedef std::pair<SurfacePosition, Vector3D> SurfacePositionDirection;
 
 /// @class SurfaceArrayCreator
 ///
@@ -62,7 +58,7 @@ public:
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsX is the number of bin in Z for the surfaces   
   /// @param transform is the (optional) additional transform applied
-  /// @return a unique pointer to a new SurfaceArray
+  /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
                          double                             R,
@@ -81,8 +77,9 @@ public:
   /// @param rMax is the maximal radius of the disc
   /// @param minPhi is the minimal phi position of the surfaces
   /// @param maxPhi is the maximal phi position of the surfaces
+  /// @param rBoundaries are the optional boundaris of the r rings 
   /// @param transform is the (optional) additional transform applied
-  /// @return a unique pointer a new SurfaceArray
+  /// @return a unique pointer a new SurfaceArray    
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
                      double                             rMin,
@@ -90,7 +87,8 @@ public:
                      double                             minPhi,
                      double                             maxPhi,
                      size_t                             binsR,
-                     size_t                             binsPhi,
+                     size_t                             binsZ,
+                     const std::vector<double>&         rBoundaries = {},
                      std::shared_ptr<Transform3D>       transform
                      = nullptr) const final;
 
@@ -139,28 +137,27 @@ private:
   }
 
   /// Private helper method to complete the binning
-  ///
-  /// @TODO implement closest neighbour search
-  ///
-  ///  given a grid point o
-  ///    |  0  |  1 |  2  |  3 |  4  |
-  ///    ------------------------------
-  ///  0 |  x  |    |     |    |  x  |
-  ///  1 |     |    |  o  |    |     |
-  ///  2 |  x  |    |     |    |  x  |
-  ///
   /// This is being called when you chose to use more bins thans surfaces
   /// I.e. to put a finer granularity binning onto your surface
   /// Neighbour bins are then filled to contain pointers as well
   /// @param surfaces are the contained surfaces of the layer
   /// @param binUtility is the unitility class that describes the binning
-  /// sVector is the filled vector of Surface and binning position
-  /// binSystem is the full system of bins
+  /// sVector is the filled vector of Surface and binning position 
+  /// binSystem is the full system of bins 
   void
-  completeBinning(const BinUtility& binUtility,
-                  const V3Matrix&,
-                  const SurfaceVector& sVector,
-                  SurfaceGrid&         sGrid) const;
+  completeBinning(
+      const std::vector<const Surface*>&                  surfaces,
+      const BinUtility&                                   binUtility,
+      std::vector<SurfacePosition>&                       sVector,
+      std::vector<std::vector<SurfacePositionDirection>>& binSystem) const;
+
+  /// Register the neighbours on a Grid - needs to be a BinnedArray1D or
+  //  BinnedArray2D type binning 
+  void
+  registerNeighboursGrid(
+      const std::vector<std::vector<const Surface*>>& surfaceArrayObjects,
+      bool                                            open0,
+      bool                                            open1) const;
 };
 
 }  // end of namespace

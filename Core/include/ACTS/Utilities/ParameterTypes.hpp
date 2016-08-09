@@ -9,26 +9,27 @@
 #ifndef ACTS_PARAMETERTYPES_H
 #define ACTS_PARAMETERTYPES_H 1
 
+// STL include(s)
 #include <algorithm>
 #include <cmath>
 
 namespace Acts {
-///
-/// @brief type for parameters with unrestricted value range
-///
+/**
+ * @brief type for parameters with unrestricted value range
+ */
 struct unbound_parameter
 {
   static constexpr bool may_modify_value{
       false};  ///< parameter values need no adjustment
 
-  ///
-  /// @brief retrieve value for unconstrained parameter value ranges
-  ///
-  /// @tparam T type of the input parameter
-  /// @param input input parameter value
-  ///
-  /// @return identical input parameter value
-  ///
+  /**
+   * @brief retrieve value for unconstrained parameter value ranges
+   *
+   * @tparam T type of the input parameter
+   * @param input input parameter value
+   *
+   * @return identical input parameter value
+   */
   template <typename T>
   static T
   getValue(const T& input)
@@ -44,25 +45,25 @@ struct unbound_parameter
   }
 };
 
-///
-/// @brief type for local parameters bound to a surface
-///
+/**
+ * @brief type for local parameters bound to a surface
+ */
 struct local_parameter : public unbound_parameter
 {
 };
 
-///
-/// @brief type for parameter with restricted value range
-///
-/// This parameter type could be useful to describe parameter with physical
-/// meaningful bounds (e.g. radius).
-///
-/// @tparam T type for boundary value (usually @c double)
-/// @tparam MIN pointer to a @c constexpr function returning the lower bound of
-/// the value range
-/// @tparam MAX pointer to a @c constexpr function returning the upper bound of
-/// the value range
-///
+/**
+ * @brief type for parameter with restricted value range
+ *
+ * This parameter type could be useful to describe parameter with physical
+ * meaningful bounds (e.g. radius).
+ *
+ * @tparam T type for boundary value (usually @c double)
+ * @tparam MIN pointer to a @c constexpr function returning the lower bound of
+ * the value range
+ * @tparam MAX pointer to a @c constexpr function returning the upper bound of
+ * the value range
+ */
 template <typename T, T (*MIN)(), T (*MAX)()>
 struct bound_parameter
 {
@@ -71,16 +72,16 @@ struct bound_parameter
   static constexpr T min{MIN()};  ///< lower bound of range
   static constexpr T max{MAX()};  ///< upper bound of range
 
-  ///
-  /// @brief retrieve value for constrained parameter value ranges
-  ///
-  /// @tparam U type of the input parameter
-  /// @param input input parameter value
-  ///
-  /// @return input parameter value cut of at the boundaries @c
-  /// bound_parameter<U<MIN<MAX>::min and
-  ///         @c bound_parameter<U,MIN,MAX>::max.
-  ///
+  /**
+   * @brief retrieve value for constrained parameter value ranges
+   *
+   * @tparam U type of the input parameter
+   * @param input input parameter value
+   *
+   * @return input parameter value cut of at the boundaries @c
+   * bound_parameter<U<MIN<MAX>::min and
+   *         @c bound_parameter<U,MIN,MAX>::max.
+   */
   template <typename U>
   static U
   getValue(const U& input)
@@ -96,17 +97,17 @@ struct bound_parameter
   }
 };
 
-///
-/// @brief type for parameter with cyclic value range
-///
-/// This parameter type is useful to e.g. describe angles.
-///
-/// @tparam T type for boundary value (usually @c double)
-/// @tparam MIN pointer to a @c constexpr function returning the lower bound of
-/// the value range
-/// @tparam MAX pointer to a @c constexpr function returning the upper bound of
-/// the value range
-///
+/**
+ * @brief type for parameter with cyclic value range
+ *
+ * This parameter type is useful to e.g. describe angles.
+ *
+ * @tparam T type for boundary value (usually @c double)
+ * @tparam MIN pointer to a @c constexpr function returning the lower bound of
+ * the value range
+ * @tparam MAX pointer to a @c constexpr function returning the upper bound of
+ * the value range
+ */
 template <typename T, T (*MIN)(), T (*MAX)()>
 struct cyclic_parameter
 {
@@ -115,17 +116,17 @@ struct cyclic_parameter
   static constexpr T min{MIN()};  ///< lower bound of range
   static constexpr T max{MAX()};  ///< upper bound of range
 
-  ///
-  /// @brief retrieve value for constrained cyclic parameter value ranges
-  ///
-  /// @tparam U type of the input parameter
-  /// @param input input parameter value
-  ///
-  /// @return parameter value in the range [@c bound_parameter<U,MIN,MAX>::min,
-  ///         @c bound_parameter<U,MIN,MAX>::max] taking into account the cycle
-  /// of this
-  ///         parameter type.
-  ///
+  /**
+   * @brief retrieve value for constrained cyclic parameter value ranges
+   *
+   * @tparam U type of the input parameter
+   * @param input input parameter value
+   *
+   * @return parameter value in the range [@c bound_parameter<U,MIN,MAX>::min,
+   *         @c bound_parameter<U,MIN,MAX>::max] taking into account the cycle
+   * of this
+   *         parameter type.
+   */
   template <typename U>
   static U
   getValue(const U& input)
@@ -148,29 +149,27 @@ struct cyclic_parameter
   }
 };
 
-///
-/// @brief parameter traits class
-///
-/// The user needs to provide a specialization of this class for his parameter
-/// definitions.
-/// The specialization must include a @c typedef with the name @c
-/// parameter_type.
-/// This type
-/// must fulfill the following requirements:
-///   * `parameter_type::getValue` must be a valid expression excepting one
-/// parameter value
-///     as input and returning a valid parameter value (possibly mapped onto
-///     some
-/// restricted/
-///     cyclic value range).
-///   * A static boolean constant with the name `may_modify_value` must exist
-/// which indicates
-///     whether the `getValue` function may actually return a value different
-/// from the output.
-///
-/// @tparam ParameterPolicy struct or class containing the parameter definitions
-/// @tparam parID identifier for the parameter
-///
+/**
+ * @brief parameter traits class
+ *
+ * The user needs to provide a specialization of this class for his parameter
+ * definitions.
+ * The specialization must include a @c typedef with the name @c parameter_type.
+ * This type
+ * must fulfill the following requirements:
+ *   * `parameter_type::getValue` must be a valid expression excepting one
+ * parameter value
+ *     as input and returning a valid parameter value (possibly mapped onto some
+ * restricted/
+ *     cyclic value range).
+ *   * A static boolean constant with the name `may_modify_value` must exist
+ * which indicates
+ *     whether the `getValue` function may actually return a value different
+ * from the output.
+ *
+ * @tparam ParameterPolicy struct or class containing the parameter definitions
+ * @tparam parID identifier for the parameter
+ */
 //  template<typename ParameterPolicy,typename ParameterPolicy::par_id_type
 //  parID>
 //  struct parameter_traits;

@@ -22,12 +22,14 @@
 
 #include <string>
 
-/// @class Identifier
-///
-/// minimum implementation of an Identifier,
-/// please use the ACTS_CORE_IDENTIFIER_PLUGING in to use instead if
-/// another type of Identifier is needed
-///
+/** @class Identifier
+
+    minimum implementation of an Identifier,
+    please use the ACTS_CORE_IDENTIFIER_PLUGING in to use instead if
+    another type of Identifier is needed
+
+  */
+
 class Identifier
 {
 public:

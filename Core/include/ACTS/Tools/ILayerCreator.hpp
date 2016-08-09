@@ -54,14 +54,15 @@ public:
   /// @param envelopeMaxR is the additional envelope applied in R in Rmax  
   /// @param binsR is number of bins the sensitive surfaces are ordered in R
   /// @param binsPhi is number of bins the sensitive surfaces are ordered in Phi
-  /// @param rBoundaries is the optional r-separation of provided rings
+  /// @param rBoundaries is the optional r-separation of provided rings                       
   virtual LayerPtr
   discLayer(const std::vector<const Surface*>& surfaces,
             double                             envelopeMinR,
             double                             envelopeMaxR,
             double                             envelopeZ,
             size_t                             binsR,
-            size_t                             binsPhi) const = 0;
+            size_t                             binsPhi,
+            const std::vector<double>&         rBoundaries = {}) const = 0;
 
   /// ILayerCreator interface method - returning a plane layer 
   /// @param surfaces is the vector of sensitive surfaces represented by this layer
