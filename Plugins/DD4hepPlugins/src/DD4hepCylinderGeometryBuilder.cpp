@@ -277,6 +277,8 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
           = detElement.extension<Acts::IDetExtension>();
       std::vector<DD4hep::Geometry::DetElement> modules(
           detExtension->modules());
+      // access the axis orienation of the modules
+      const std::string  axes = detExtension->axes();
       // create the two dimensional BinUtility for the material map of the layer
       Acts::BinUtility*                           materialBinUtil = nullptr;
       std::shared_ptr<const SurfaceMaterialProxy> materialProxy(nullptr);
@@ -351,7 +353,7 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
         ACTS_VERBOSE(
             "[L] Layer containes modules -> resolving them as surfaces");
         // create surfaces binned in phi and z
-        auto surfaceArray = createSurfaceArray(modules, binZ, motherTransform);
+        auto surfaceArray = createSurfaceArray(modules, binZ, motherTransform, axes);
         auto cylLayer     = Acts::CylinderLayer::create(convertTransform(transform),
                                                     cylinderBounds,
                                                     std::move(surfaceArray),
@@ -422,7 +424,8 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
           = detElement.extension<Acts::IDetExtension>();
       std::vector<DD4hep::Geometry::DetElement> modules(
           detExtension->modules());
-
+      // access the axis orienation of the modules
+        const std::string  axes = detExtension->axes();
       // create the two dimensional BinUtility for the material map of the layer
       Acts::BinUtility*                           materialBinUtil = nullptr;
       std::shared_ptr<const SurfaceMaterialProxy> materialProxy   = nullptr;
@@ -506,7 +509,7 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
         ACTS_VERBOSE(
             "[L] Layer containes modules -> resolving them as surfaces");
         // create surfaces binned in phi and r
-        auto surfaceArray = createSurfaceArray(modules, binR, motherTransform, "XzY");
+        auto surfaceArray = createSurfaceArray(modules, binR, motherTransform, axes);
         auto discLayer    = Acts::DiscLayer::create(actsTransform,
                                                  discBounds,
                                                  std::move(surfaceArray),
@@ -537,7 +540,7 @@ Acts::DD4hepCylinderGeometryBuilder::createSurfaceArray(
     const TGeoMatrix*   motherTransform,
     const std::string&  axes) const
 {
-  ACTS_VERBOSE("[L] Creating surface array of the layer");
+  ACTS_VERBOSE("[L] Creating surface array of the layer);
   std::vector<const Acts::Surface*> surfaces;
   for (auto& detElement : modules) {
     // make here the material mapping
