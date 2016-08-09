@@ -121,7 +121,7 @@ public:
 };
 
 std::shared_ptr<IExtrapolationEngine>
-initExtrapolator(const std::unique_ptr<const TrackingGeometry>& geo)
+initExtrapolator(const std::shared_ptr<const TrackingGeometry>& geo)
 {
   auto propConfig         = RungeKuttaEngine::Config();
   propConfig.fieldService = std::make_shared<ConstantField>(0, 0, 0.002);
@@ -162,7 +162,7 @@ int
 main()
 {
   // options are stage = 0, 1, 2
-  std::unique_ptr<const Acts::TrackingGeometry> geo = Acts::trackingGeometry(Acts::Logging::VERBOSE, 0);
+  std::shared_ptr<const Acts::TrackingGeometry> geo = Acts::trackingGeometry(Acts::Logging::VERBOSE, 0);
   ActsVector<ParValue_t, NGlobalPars> pars;
   pars << 0, 0, M_PI / 2, M_PI / 2, 0.0001;
   auto startCov = std::make_unique<ActsSymMatrix<ParValue_t, NGlobalPars>>(
