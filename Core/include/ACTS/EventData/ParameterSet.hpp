@@ -17,6 +17,7 @@
 // ACTS includes
 #include "ACTS/EventData/detail/are_sorted.hpp"
 #include "ACTS/EventData/detail/are_within.hpp"
+#include "ACTS/EventData/detail/at_index.hpp"
 #include "ACTS/EventData/detail/full_parameter_set.hpp"
 #include "ACTS/EventData/detail/get_position.hpp"
 #include "ACTS/EventData/detail/initialize_parameter_set.hpp"
@@ -219,12 +220,45 @@ public:
   }
 
   /**
+   * @brief return index of parameter identifier in parameter list
+   *
+   * @tparam parameter identifier for the parameter to be retrieved
+   * @remark @c parameter must be part of the template parameter pack @c params.
+   *         Otherwise a compile-time error is generated.
+   *
+   * @return position of parameter in variadic template parameter set @c params
+   */
+  template <ParID_t parameter>
+  static constexpr size_t
+  getIndex()
+  {
+    return detail::get_position<ParID_t, parameter, params...>::value;
+  }
+
+  /**
+   * @brief return parameter identifier for given index
+   *
+   * @tparam index position of parameter identifier in @c params
+   * @remark @c index must be a positive number smaller than the size of the
+   *         parameter pack @c params. Otherwise a compile-time error is
+   *         generated.
+   *
+   * @return parameter identifier at position @c index in variadic template
+   *         parameter set @c params
+   */
+  template <size_t index>
+  static constexpr ParID_t
+  getParID()
+  {
+    return detail::at_index<ParID_t, index, params...>::value;
+  }
+
+  /**
    * @brief retrieve stored value for given parameter
    *
    * @tparam parameter identifier for the parameter to be retrieved
    * @remark @c parameter must be part of the template parameter pack @c params.
-   * Otherwise a compile-time
-   *         error is generated.
+   *         Otherwise a compile-time error is generated.
    *
    * @return value of the stored parameter
    */
@@ -232,8 +266,7 @@ public:
   ParValue_t
   getParameter() const
   {
-    return m_vValues(
-        detail::get_position<ParID_t, parameter, params...>::value);
+    return m_vValues(getIndex<parameter>());
   }
 
   /**
@@ -262,8 +295,7 @@ public:
   setParameter(ParValue_t value)
   {
     typedef typename par_type<parameter>::type parameter_type;
-    m_vValues(detail::get_position<ParID_t, parameter, params...>::value)
-        = parameter_type::getValue(value);
+    m_vValues(getIndex<parameter>()) = parameter_type::getValue(value);
   }
 
   /**
@@ -329,11 +361,10 @@ public:
   ParValue_t
   getUncertainty() const
   {
-    if (m_pCovariance)
-      return sqrt((*m_pCovariance)(
-          detail::get_position<ParID_t, parameter, params...>::value,
-          detail::get_position<ParID_t, parameter, params...>::value));
-    else
+    if (m_pCovariance) {
+      size_t index = getIndex<parameter>();
+      return sqrt((*m_pCovariance)(index, index));
+    } else
       return -1;
   }
 

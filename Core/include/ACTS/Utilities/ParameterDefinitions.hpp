@@ -22,9 +22,9 @@ static_assert(std::is_enum<Acts::ParID_t>::value,
 static_assert(std::is_floating_point<Acts::ParValue_t>::value,
               "'ParValue_t' is not floating point type");
 
-// parameter ID type must be convertible to unsigned int
-static_assert(std::is_convertible<Acts::ParID_t, unsigned int>::value,
-              "'ParID_t' is not convertible to unsigned int");
+// parameter ID type must be convertible to size_t
+static_assert(std::is_convertible<Acts::ParID_t, size_t>::value,
+              "'ParID_t' is not convertible to size_t");
 
 // number of global parameter must be at least 2 (for the two local parameters)
 static_assert(Acts::NGlobalPars > 1,
