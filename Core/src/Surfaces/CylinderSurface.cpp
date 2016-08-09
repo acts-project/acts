@@ -144,7 +144,7 @@ Acts::CylinderSurface::globalToLocal(const Vector3D& gpos,
     const Transform3D& surfaceTrans = transform();
     Transform3D        inverseTrans(surfaceTrans.inverse());
     Vector3D           loc3Dframe(inverseTrans * gpos);
-    lpos = Vector2D(bounds().r()) * loc3Dframe.phi(), loc3Dframe.z();
+    lpos = Vector2D(bounds().r() * loc3Dframe.phi(), loc3Dframe.z());
     radius = loc3Dframe.perp();
   } else {
     lpos = Vector2D(bounds().r() * gpos.phi(), gpos.z());
