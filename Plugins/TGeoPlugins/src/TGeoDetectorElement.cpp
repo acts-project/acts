@@ -17,6 +17,7 @@
 #include "TGeoBBox.h"
 #include "TGeoTrd2.h"
 #include <iostream>
+#include <boost/algorithm/string.hpp>
 
 Acts::TGeoDetectorElement::TGeoDetectorElement(
     const Identifier&            identifier,
@@ -56,12 +57,26 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   TGeoBBox* box = dynamic_cast<TGeoBBox*>(m_detElement->GetVolume()->GetShape());
   // check if it's a trapezoid - unfortunately box is the base of everything
   TGeoTrd2* trapezoid = dynamic_cast<TGeoTrd2*>(m_detElement->GetVolume()->GetShape());
-  // 
-  if (axes == "xyz"){
-    // identical definition
-    m_transform = std::make_shared<Transform3D>(colX,colY,colZ,colT);
+  //
+  if (boost::iequals(axes, "XYZ")) {
+    // get the sign of the axes
+    int signX = 1;
+    int signY = 1;
+    int signZ = 1;
+    if (islower(axes.at(0))) signX = -1;
+    if (islower(axes.at(1))) signY = -1;
+    if (islower(axes.at(2))) signZ = -1;
+    // the transformation matrix
+    m_transform = std::make_shared<Transform3D>(signX * colX,signY * colY, signZ * colZ,colT);
     if (trapezoid){
-      //
+      // bounds with x/y
+      auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(scalor*trapezoid->GetDx1(), scalor*trapezoid->GetDx2(), scalor*0.5*(trapezoid->GetDy1() + trapezoid->GetDy2()));
+      // thickness
+      m_thickness = scalor * trapezoid->GetDz();
+      // assign them
+      m_bounds = trapezoidBounds;
+      // create the surface
+      m_surface = std::make_shared<const PlaneSurface>(trapezoidBounds, *this, m_identifier);
     } else {
       // bounds with x/y
       auto rectangleBounds = std::make_shared<const RectangleBounds>(
@@ -76,11 +91,61 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
                                                        m_identifier);
     
     }
-  } else if (axes == "yzx"){
-    // next possibility
-    m_transform = std::make_shared<Transform3D>(colY,colZ,colX,colT);
+  } else if (boost::iequals(axes, "XZY")){
+      // next possibility
+      // get the sign of the axes
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0))) signX = -1;
+      if (islower(axes.at(1))) signZ = -1;
+      if (islower(axes.at(2))) signY = -1;
+      // the transformation matrix
+      m_transform = std::make_shared<Transform3D>(signX * colX,signZ * colZ, signY * colY,colT);
+      if (trapezoid){
+          // bounds with x/z
+          auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(scalor*trapezoid->GetDx1(), scalor*trapezoid->GetDx2(), scalor*trapezoid->GetDz());
+          // thickness
+          m_thickness = scalor*0.5*(trapezoid->GetDy1() + trapezoid->GetDy2());
+          // assign them
+          m_bounds = trapezoidBounds;
+          // create the surface
+          m_surface = std::make_shared<const PlaneSurface>(trapezoidBounds, *this, m_identifier);
+      } else {
+          // bounds with x/z
+          auto rectangleBounds = std::make_shared<const RectangleBounds>(
+                                                                         scalor*box->GetDX(), scalor*box->GetDZ());
+          // thickness
+          m_thickness = scalor*box->GetDY();
+          // assign them
+          m_bounds  = rectangleBounds;
+          // create the surface
+          m_surface = std::make_shared<const PlaneSurface>(rectangleBounds,
+                                                           *this,
+                                                           m_identifier);
+          
+      }
+
+  } else if (boost::iequals(axes, "YZX")){
+      // next possibility
+      // get the sign of the axes
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0))) signY = -1;
+      if (islower(axes.at(1))) signZ = -1;
+      if (islower(axes.at(2))) signX = -1;
+      // the transformation matrix
+    m_transform = std::make_shared<Transform3D>(signY * colY,signZ * colZ, signX * colX,colT);
     if (trapezoid){
-      //
+      // bounds with y/z
+      auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(scalor*trapezoid->GetDy1(), scalor*trapezoid->GetDy2(), scalor*trapezoid->GetDz());
+      // thickness
+      m_thickness = scalor*0.5*(trapezoid->GetDx1() + trapezoid->GetDx2());
+      // assign them
+      m_bounds = trapezoidBounds;
+      // create the surface
+      m_surface = std::make_shared<const PlaneSurface>(trapezoidBounds, *this, m_identifier);
     } else {
       // bounds with y/z
       auto rectangleBounds = std::make_shared<const RectangleBounds>(
@@ -95,12 +160,95 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
                                                        m_identifier);
     
     }
+  } else if (boost::iequals(axes, "YXZ")){
+      // next possibility
+      // get the sign of the axes
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0))) signY = -1;
+      if (islower(axes.at(1))) signX = -1;
+      if (islower(axes.at(2))) signZ = -1;
+      // the transformation matrix
+      m_transform = std::make_shared<Transform3D>(signY * colY,signX * colX, signZ * colZ,colT);
+      if (trapezoid){
+          // bounds with y/x
+          auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(scalor*trapezoid->GetDy1(), scalor*trapezoid->GetDy2(), scalor*0.5*(trapezoid->GetDx1() + trapezoid->GetDx2()));
+          // thickness
+          m_thickness = scalor*trapezoid->GetDz();
+          // assign them
+          m_bounds = trapezoidBounds;
+          // create the surface
+          m_surface = std::make_shared<const PlaneSurface>(trapezoidBounds, *this, m_identifier);
+      } else {
+          // bounds with y/x
+          auto rectangleBounds = std::make_shared<const RectangleBounds>(
+                                                                         scalor*box->GetDY(), scalor*box->GetDX());
+          // thickness
+          m_thickness = scalor*box->GetDZ();
+          // assign them
+          m_bounds  = rectangleBounds;
+          // create the surface
+          m_surface = std::make_shared<const PlaneSurface>(rectangleBounds,
+                                                           *this,
+                                                           m_identifier);
+          
+      }
+  } else if (boost::iequals(axes, "ZYX")){
+      // next possibility
+      // get the sign of the axes
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0))) signZ = -1;
+      if (islower(axes.at(1))) signY = -1;
+      if (islower(axes.at(2))) signX = -1;
+      // the transformation matrix
+      m_transform = std::make_shared<Transform3D>(signZ * colZ,signY * colY,signX * colX,colT);
+      if (trapezoid){
+          // bounds with z/y
+          auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(scalor*trapezoid->GetDz(), scalor*trapezoid->GetDz(),scalor*0.5*(trapezoid->GetDy1() + trapezoid->GetDy2()));
+          // thickness
+          m_thickness = scalor*0.5*(trapezoid->GetDx1() + trapezoid->GetDx2());
+          // assign them
+          m_bounds = trapezoidBounds;
+          // create the surface
+          m_surface = std::make_shared<const PlaneSurface>(trapezoidBounds, *this, m_identifier);
+      } else {
+          // bounds with z/y
+          auto rectangleBounds = std::make_shared<const RectangleBounds>(
+                                                                         scalor*box->GetDZ(), scalor*box->GetDY());
+          // thickness
+          m_thickness = scalor*box->GetDX();
+          // assign them
+          m_bounds  = rectangleBounds;
+          // create the surface
+          m_surface = std::make_shared<const PlaneSurface>(rectangleBounds,
+                                                           *this,
+                                                           m_identifier);
+          
+      }
   } else {
-    // default is "zxy"
-    // next possibility
-    m_transform = std::make_shared<Transform3D>(colZ,colX,colY,colT);
+    // default is "ZXY"
+      // next possibility
+      // get the sign of the axes
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0))) signZ = -1;
+      if (islower(axes.at(1))) signX = -1;
+      if (islower(axes.at(2))) signY = -1;
+      // the transformation matrix
+    m_transform = std::make_shared<Transform3D>(signZ * colZ, signX * colX, signY * colY,colT);
     if (trapezoid){
-      //
+      // bounds with z/x
+      auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(scalor*trapezoid->GetDz(), scalor*trapezoid->GetDz(), scalor*0.5*(trapezoid->GetDx1() + trapezoid->GetDx2()));
+      // thickness
+      m_thickness = scalor*0.5*(trapezoid->GetDy1() + trapezoid->GetDy2());
+      // assign them
+      m_bounds = trapezoidBounds;
+      // create the surface
+      m_surface = std::make_shared<const PlaneSurface>(trapezoidBounds, *this, m_identifier);
     } else {
       // bounds with z/x
       auto rectangleBounds = std::make_shared<const RectangleBounds>(
@@ -115,91 +263,6 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
                                                        m_identifier);
     }
   }
-
-
-  //// currently only surfaces with rectangular or trapezoidal shape implemented
-  //// check if it's a box
-  //TGeoBBox* box = dynamic_cast<TGeoBBox*>(m_detElement->GetVolume()->GetShape());
-  //// check if it's a trapezoid (only when it's not a box)
-  //TGeoTrd2* trapezoid = box ? nullptr :
-  //  dynamic_cast<TGeoTrd2*>(m_detElement->GetVolume()->GetShape());
-  //
-  //
-  //  
-  //  
-  //  
-  //// get the material
-  //TGeoMaterial* mat = m_detElement->GetVolume()->GetMaterial();
-  //
-  //  
-  //  
-  //  
-  // Material      moduleMaterial(mat->GetRadLen(),
-  //                        mat->GetIntLen(),
-  //                        mat->GetA(),
-  //                        mat->GetZ(),
-  //                        mat->GetDensity());
-  //  
-  //  
-  //  
-  //  
-  //  
-  /**
-  if (trapezoid) {
-    // if the shape is TGeoTrd2 y and z axes needs to be exchanged, since in
-    // TGei the description is different
-    m_transform = std::make_shared<Acts::Transform3D>(
-        Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
-        Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
-        Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
-        Acts::Vector3D(
-            translation[0] * cm, translation[1] * cm, translation[2] * cm));
-    // now calculate the global transformation
-    if (transformToGlobal)
-      m_transform = std::make_shared<const Acts::Transform3D>(
-          (*transformToGlobal) * (*m_transform)
-          * AngleAxis3D(0.5 * M_PI, Vector3D::UnitX()));
-    // extract the surface bounds
-    auto trapezoidBounds = std::make_shared<const Acts::TrapezoidBounds>(
-        scalor*trapezoid->GetDx1(), 
-        scalor*trapezoid->GetDx2(), 
-        scalor*trapezoid->GetDz());
-    m_bounds  = trapezoidBounds;
-    m_surface = std::make_shared<const Acts::PlaneSurface>(trapezoidBounds, 
-                                                           *this, 
-                                                           m_identifier);
-    // ignore module material for the moment @TODO handle module material
-    
-        MaterialProperties moduleMaterialProperties(
-            moduleMaterial,
-            0.5 * scalor * (trapezoid->GetDy1() + trapezoid->GetDy1()));
-        m_surface->setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial>(
-            new HomogeneousSurfaceMaterial(moduleMaterialProperties)));
-    // set the thickness
-    m_thickness = scalor*2*trapezoid->GetDy1();
-  } else {
-    m_transform = std::make_shared<Acts::Transform3D>(
-        Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
-        Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
-        Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
-        Acts::Vector3D(
-            translation[0] * cm, translation[1] * cm, translation[2] * cm));
-    // now calculate the global transformation
-    if (transformToGlobal) {
-      m_transform = std::make_shared<const Acts::Transform3D>((*transformToGlobal)
-                                                               *(*m_transform));
-    }
-    // extract the surface bounds
-    auto rectangleBounds = std::make_shared<const Acts::RectangleBounds>(scalor*box->GetDX(), scalor*box->GetDY());
-    m_bounds  = rectangleBounds;
-    m_surface = std::make_shared<const Acts::PlaneSurface>(rectangleBounds,
-                                                           *this,
-                                                          m_identifier);
-    // set the thickness
-    m_thickness = scalor*2*box->GetDZ();
-  }
-
-  **/
 }
 
 Acts::TGeoDetectorElement::~TGeoDetectorElement()

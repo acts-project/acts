@@ -36,14 +36,18 @@ public:
   /// @param tGeoDetElement is the TGeoNode which should be represented
   /// @param mtoglobal to global is the (optional) transform applied to the TGeoNode
   /// @param axis is the axis orientation with respect to the tracking frame
-  ///        options are "xyz" -> identical frame definition
-  ///                    "yzx" -> node y axis is tracking x axis, etc.
-  ///                    "zxy" -> node z axis is tracking x axis, etc.
+  ///        it is a string of the three characters x, y and z (standing for the three axes)
+  ///        there is a distinction between capital and lower case characters :
+  ///        - capital      -> positive orientation of the axis
+  ///        - lower case   -> negative oriantation of the axis
+  ///        example options are "XYZ" -> identical frame definition (default value)
+  ///                            "YZX" -> node y axis is tracking x axis, etc.
+  ///                            "XzY" -> negative node z axis is tracking y axis, etc.
   /// @param scalor is the scale factor for unit conversion if needed
   TGeoDetectorElement(const Identifier&   identifier,
                       TGeoNode*           tGeoDetElement,
                       const TGeoMatrix*   mtoglobal = nullptr,
-                      const std::string&  axes = "xyz",
+                      const std::string&  axes = "XYZ",
                       double              scalor = 1.);
 
   ///  Destructor 
