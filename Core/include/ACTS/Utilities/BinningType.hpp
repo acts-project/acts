@@ -34,13 +34,13 @@ namespace Acts {
 ///
 enum BinningType { equidistant, arbitrary };
 
-/// @enum BinValue 
+/// @enum BinValue
 enum BinningOption { open, closed };
 
-/// @enum BinningValue how to take the global / local position 
+/// @enum BinningValue how to take the global / local position
 enum BinningValue { binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta };
 
-/// @enum screen output option 
+/// @enum screen output option
 static std::vector<std::string> binningValueNames
     = {"binX", "binY", "binZ", "binR", "binPhi", "binRPhi", "binH", "binEta"};
 }

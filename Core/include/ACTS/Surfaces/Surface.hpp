@@ -407,7 +407,7 @@ std::ostream&
 operator<<(std::ostream& sl, const Surface& sf);
 
 // Surfaces are not constructed by shared_ptr factories as they are EDM
-// objects, hence the SurfaceArray is defined as such: 
+// objects, hence the SurfaceArray is defined as such:
 typedef BinnedArray<const Surface*> SurfaceArray;
 
 }  // end of namespace Acts

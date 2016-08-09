@@ -106,11 +106,13 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     ACTS_DEBUG("Negative layers are present with r(min,max) = ( "
                << nLayerSetup.rBoundaries.first
                << ", "
-               << nLayerSetup.rBoundaries.second << " )");
+               << nLayerSetup.rBoundaries.second
+               << " )");
     ACTS_DEBUG("                                 z(min,max) = ( "
                << nLayerSetup.zBoundaries.first
                << ", "
-               << nLayerSetup.zBoundaries.second << " )");
+               << nLayerSetup.zBoundaries.second
+               << " )");
 
     takeSmaller(layerRmin, nLayerSetup.rBoundaries.first);
     takeBigger(layerRmax, nLayerSetup.rBoundaries.second);
@@ -123,11 +125,13 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     ACTS_DEBUG("Central  layers are present with r(min,max) = ( "
                << cLayerSetup.rBoundaries.first
                << ", "
-               << cLayerSetup.rBoundaries.second << " )");
+               << cLayerSetup.rBoundaries.second
+               << " )");
     ACTS_DEBUG("                                 z(min,max) = ( "
                << cLayerSetup.zBoundaries.first
                << ", "
-               << cLayerSetup.zBoundaries.second << " )");
+               << cLayerSetup.zBoundaries.second
+               << " )");
 
     takeSmaller(layerRmin, cLayerSetup.rBoundaries.first);
     takeBigger(layerRmax, cLayerSetup.rBoundaries.second);
@@ -141,11 +145,13 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     ACTS_DEBUG("Positive layers are present with r(min,max) = ( "
                << pLayerSetup.rBoundaries.first
                << ", "
-               << pLayerSetup.rBoundaries.second << " )");
+               << pLayerSetup.rBoundaries.second
+               << " )");
     ACTS_DEBUG("                                 z(min,max) = ( "
                << pLayerSetup.zBoundaries.first
                << ", "
-               << pLayerSetup.zBoundaries.second << " )");
+               << pLayerSetup.zBoundaries.second
+               << " )");
 
     takeSmaller(layerRmin, pLayerSetup.rBoundaries.first);
     takeBigger(layerRmax, pLayerSetup.rBoundaries.second);
@@ -153,9 +159,9 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     // set the 1-digit for p present
     layerConfiguration += 1;
   }
-  
+
   ACTS_DEBUG("Layer configuration estimated with " << layerConfiguration);
-    
+
   // the inside volume dimensions
   // ------------------------------------------------------------------
   double insideVolumeRmin = 0.;
@@ -397,12 +403,13 @@ Acts::CylinderVolumeBuilder::trackingVolume(
           // set the barrel parameters first to the volume Zmax
           barrelZmax = volumeZmax;
           // adapt in case endcaps eixt
-          if (pLayerSetup){
+          if (pLayerSetup) {
             // the barrel z extend is either set to the inside z extend
             /// or into the middle of the two
             barrelZmax = cLayerSetup.zBoundaries.second < insideVolumeZmax
-            ? insideVolumeZmax : 0.5 * (cLayerSetup.zBoundaries.second
-                                      + pLayerSetup.zBoundaries.first);
+                ? insideVolumeZmax
+                : 0.5 * (cLayerSetup.zBoundaries.second
+                         + pLayerSetup.zBoundaries.first);
             // set the endcap parameters
             endcapRmin = insideVolumeRmin;
           }
@@ -411,8 +418,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
         }
         // consequent setting (regardless if endcaps exist or not )
         endcapZmin = barrelZmax;
- 
-          
+
       } else {
         // no inside volume is given, wrapping conditions remains 0
         barrelRmin = volumeRmin;

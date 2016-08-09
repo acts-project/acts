@@ -59,6 +59,6 @@ Acts::TrackingVolumeArrayCreator::trackingVolumeArray(
   auto binUtility = std::make_unique<BinUtility>(boundaries, open, bValue);
 
   // and return the newly created binned array
-  return std::make_shared< BinnedArrayXD< TrackingVolumePtr > >(
-                                                                tVolumesOrdered, std::move(binUtility));
+  return std::make_shared<BinnedArrayXD<TrackingVolumePtr>>(
+      tVolumesOrdered, std::move(binUtility));
 }

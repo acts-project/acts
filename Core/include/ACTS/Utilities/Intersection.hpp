@@ -48,7 +48,7 @@ struct Intersection
   }
 };
 
-/// class extensions to return also the object 
+/// class extensions to return also the object
 template <class T>
 class ObjectIntersection
 {
@@ -59,14 +59,13 @@ public:
 
   /// Default constructor
   ObjectIntersection() : intersection(), object(nullptr), pDirection(0) {}
-  
-  /// Object intersection 
+  /// Object intersection
   ObjectIntersection(const Intersection& sInter, const T* sObject, int dir = 1)
     : intersection(sInter), object(sObject), pDirection(dir)
   {
   }
 
-  /// smaller operator for ordering & sorting 
+  /// smaller operator for ordering & sorting
   ///
   /// @param oi is the source intersection for comparison
   bool
@@ -76,7 +75,7 @@ public:
   }
 };
 
-/// Class extension to return the object, a represenation & the result 
+/// Class extension to return the object, a represenation & the result
 template <class T, class R, class S>
 class FullIntersection
 {
@@ -109,7 +108,7 @@ public:
   {
   }
 
-  /// smaller operator for ordering & sorting 
+  /// smaller operator for ordering & sorting
   bool
   operator<(const FullIntersection<T, R, S>& oi) const
   {

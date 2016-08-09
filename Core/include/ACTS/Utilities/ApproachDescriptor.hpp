@@ -13,8 +13,8 @@
 #ifndef ACTS_UTILITIES_APPROACHDESCRIPTOR_H
 #define ACTS_UTILITIES_APPROACHDESCRIPTOR_H 1
 
-#include "ACTS/Utilities/Intersection.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Intersection.hpp"
 
 namespace Acts {
 
@@ -26,29 +26,29 @@ class ICompatibilityEstimator;
 typedef ObjectIntersection<Surface> SurfaceIntersection;
 
 /// @class ApproachDescriptor
-/// 
-/// Virtual base class to decide and return which approaching surface to be taken,
-/// the surfaces are std::shared_ptr, as they can be the boundary surfaces of the
+///
+/// Virtual base class to decide and return which approaching surface to be
+/// taken,
+/// the surfaces are std::shared_ptr, as they can be the boundary surfaces of
+/// the
 /// representingVolume of the Layer
-/// 
-/// 
+///
+///
 class ApproachDescriptor
 {
 public:
-  /// Default constructor 
+  /// Default constructor
   ApproachDescriptor() {}
-
-  /// Virtual destructor 
+  /// Virtual destructor
   virtual ~ApproachDescriptor() {}
-
-  /// register Layer 
+  /// register Layer
   /// this gives the approach surfaces the link to the layer
   virtual void
   registerLayer(const Layer& lay)
       = 0;
 
-  // get the surface on approach 
-  // - nullptr means that there's no surface on approach 
+  // get the surface on approach
+  // - nullptr means that there's no surface on approach
   ///
   /// @param pos is the position from start of the search
   /// @param dir is the direction

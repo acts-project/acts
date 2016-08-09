@@ -22,13 +22,12 @@ namespace Acts {
 class Surface;
 class BinUtility;
 
-typedef std::vector< const Surface* > SurfaceVector;
-typedef std::vector< SurfaceVector >  SurfaceMatrix;
-typedef std::vector< SurfaceMatrix >  SurfaceGrid;
+typedef std::vector<const Surface*> SurfaceVector;
+typedef std::vector<SurfaceVector>  SurfaceMatrix;
+typedef std::vector<SurfaceMatrix>  SurfaceGrid;
 
-typedef std::vector< Vector3D >       V3Vector;
-typedef std::vector< V3Vector >       V3Matrix;
-
+typedef std::vector<Vector3D> V3Vector;
+typedef std::vector<V3Vector> V3Matrix;
 
 /// @class SurfaceArrayCreator
 ///
@@ -83,7 +82,7 @@ public:
   /// @param minPhi is the minimal phi position of the surfaces
   /// @param maxPhi is the maximal phi position of the surfaces
   /// @param transform is the (optional) additional transform applied
-  /// @return a unique pointer a new SurfaceArray    
+  /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
                      double                             rMin,
@@ -147,7 +146,7 @@ private:
   ///    |  0  |  1 |  2  |  3 |  4  |
   ///    ------------------------------
   ///  0 |  x  |    |     |    |  x  |
-  ///  1 |     |    |  o  |    |     | 
+  ///  1 |     |    |  o  |    |     |
   ///  2 |  x  |    |     |    |  x  |
   ///
   /// This is being called when you chose to use more bins thans surfaces
@@ -155,14 +154,13 @@ private:
   /// Neighbour bins are then filled to contain pointers as well
   /// @param surfaces are the contained surfaces of the layer
   /// @param binUtility is the unitility class that describes the binning
-  /// sVector is the filled vector of Surface and binning position 
-  /// binSystem is the full system of bins 
+  /// sVector is the filled vector of Surface and binning position
+  /// binSystem is the full system of bins
   void
-  completeBinning(const BinUtility&  binUtility,
+  completeBinning(const BinUtility& binUtility,
                   const V3Matrix&,
                   const SurfaceVector& sVector,
-                  SurfaceGrid& sGrid) const;
-
+                  SurfaceGrid&         sGrid) const;
 };
 
 }  // end of namespace

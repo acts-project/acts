@@ -109,20 +109,19 @@ Acts::DD4hepCylinderGeometryBuilder::trackingGeometry() const
 }
 
 std::shared_ptr<Acts::Transform3D>
-Acts::DD4hepCylinderGeometryBuilder::convertTransform(const TGeoMatrix* tGeoTrans) const
+Acts::DD4hepCylinderGeometryBuilder::convertTransform(
+    const TGeoMatrix* tGeoTrans) const
 {
-    // get the placement and orientation in respect to its mother
-    const Double_t* rotation
-    = tGeoTrans->GetRotationMatrix();
-    const Double_t* translation
-    = tGeoTrans->GetTranslation();
-    auto transform = std::make_shared<Acts::Transform3D>(
-                                                         Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
-                                                         Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
-                                                         Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
-                                                         Acts::Vector3D(
-                                                                        translation[0] * cm, translation[1] * cm, translation[2] * cm));
-    return (transform);
+  // get the placement and orientation in respect to its mother
+  const Double_t* rotation    = tGeoTrans->GetRotationMatrix();
+  const Double_t* translation = tGeoTrans->GetTranslation();
+  auto            transform   = std::make_shared<Acts::Transform3D>(
+      Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
+      Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
+      Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
+      Acts::Vector3D(
+          translation[0] * cm, translation[1] * cm, translation[2] * cm));
+  return (transform);
 }
 
 std::shared_ptr<const Acts::VolumeBounds>
@@ -178,10 +177,9 @@ Acts::DD4hepCylinderGeometryBuilder::createSubVolumes(
     for (auto& compoundChild : compoundChildren) {
       DD4hep::Geometry::DetElement compoundDetElement = compoundChild.second;
       // extract the transformation
-      TGeoMatrix* transform
-          = compoundDetElement.placement().ptr()->GetMatrix();
+      TGeoMatrix* transform = compoundDetElement.placement().ptr()->GetMatrix();
       std::shared_ptr<Acts::Transform3D> actsTransform
-        = convertTransform(transform);
+          = convertTransform(transform);
       // distinguish between TGeoConeSeg used as a cylinder (barrel) and as a
       // disc (end caps)
       Acts::IDetExtension* detExtension
@@ -192,7 +190,7 @@ Acts::DD4hepCylinderGeometryBuilder::createSubVolumes(
         ACTS_VERBOSE("[V] Subvolume : "
                      << compoundDetElement.name()
                      << " is a disc volume -> handling as an endcap");
-          
+
         if (actsTransform->translation().z() < 0.) {
           ACTS_VERBOSE("[V]       ->is negative endcap");
           nEndcapVolume = std::make_shared<const Volume>(
@@ -220,7 +218,8 @@ Acts::DD4hepCylinderGeometryBuilder::createSubVolumes(
                  << " is not of compound type -> handling as a barrel");
     // support structure
     // create cylindrical layers
-    createCylinderLayers(detElement, centralLayers, detElement.placement().ptr()->GetMatrix());
+    createCylinderLayers(
+        detElement, centralLayers, detElement.placement().ptr()->GetMatrix());
   }
   volumeTriple = VolumeTriple(nEndcapVolume, barrelVolume, pEndcapVolume);
   // set the triples
@@ -231,9 +230,9 @@ Acts::DD4hepCylinderGeometryBuilder::createSubVolumes(
 
 void
 Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
-    DD4hep::Geometry::DetElement&      motherDetElement,
-    Acts::LayerVector&                 layers,
-    const TGeoMatrix* motherTransform) const
+    DD4hep::Geometry::DetElement& motherDetElement,
+    Acts::LayerVector&            layers,
+    const TGeoMatrix*             motherTransform) const
 {
   // get possible layers
   const DD4hep::Geometry::DetElement::Children& children
@@ -248,7 +247,8 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
       // build the matrix
       TGeoMatrix* locTrans = detElement.placement().ptr()->GetMatrix();
       // make the transformation global
-      TGeoHMatrix* transform = new TGeoHMatrix((*motherTransform) * (*locTrans));
+      TGeoHMatrix* transform
+          = new TGeoHMatrix((*motherTransform) * (*locTrans));
       // get the shape of the layer
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
@@ -278,7 +278,7 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
       std::vector<DD4hep::Geometry::DetElement> modules(
           detExtension->modules());
       // access the axis orienation of the modules
-      const std::string  axes = detExtension->axes();
+      const std::string axes = detExtension->axes();
       // create the two dimensional BinUtility for the material map of the layer
       Acts::BinUtility*                           materialBinUtil = nullptr;
       std::shared_ptr<const SurfaceMaterialProxy> materialProxy(nullptr);
@@ -308,11 +308,11 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
         // create the new surfaces for the approachdescriptor
         std::vector<const Acts::Surface*> aSurfaces;
         // create the inner boundary surface
-        Acts::CylinderSurface* innerBoundary
-            = new Acts::CylinderSurface(convertTransform(transform), rMin, halfZ);
+        Acts::CylinderSurface* innerBoundary = new Acts::CylinderSurface(
+            convertTransform(transform), rMin, halfZ);
         // create outer boundary surface
-        Acts::CylinderSurface* outerBoundary
-            = new Acts::CylinderSurface(convertTransform(transform), rMax, halfZ);
+        Acts::CylinderSurface* outerBoundary = new Acts::CylinderSurface(
+            convertTransform(transform), rMax, halfZ);
         // check if the material should be set to the inner or outer boundary
         // and set it in case
         if (layerPos == Acts::LayerMaterialPos::inner)
@@ -353,8 +353,9 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
         ACTS_VERBOSE(
             "[L] Layer containes modules -> resolving them as surfaces");
         // create surfaces binned in phi and z
-        auto surfaceArray = createSurfaceArray(modules, binZ, motherTransform, axes);
-        auto cylLayer     = Acts::CylinderLayer::create(convertTransform(transform),
+        auto surfaceArray
+            = createSurfaceArray(modules, binZ, motherTransform, axes);
+        auto cylLayer = Acts::CylinderLayer::create(convertTransform(transform),
                                                     cylinderBounds,
                                                     std::move(surfaceArray),
                                                     thickness,
@@ -380,9 +381,9 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
 
 void
 Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
-    DD4hep::Geometry::DetElement&      motherDetElement,
-    Acts::LayerVector&                 layers,
-    const TGeoMatrix* motherTransform) const
+    DD4hep::Geometry::DetElement& motherDetElement,
+    Acts::LayerVector&            layers,
+    const TGeoMatrix*             motherTransform) const
 {
   // get possible layers
   const DD4hep::Geometry::DetElement::Children& children
@@ -396,8 +397,10 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
       // build the matrix
       TGeoMatrix* locTrans = detElement.placement().ptr()->GetMatrix();
       // make the transformation global
-      TGeoHMatrix* transform = new TGeoHMatrix((*motherTransform) * (*locTrans));
-      std::shared_ptr<Acts::Transform3D> actsTransform = convertTransform(transform);
+      TGeoHMatrix* transform
+          = new TGeoHMatrix((*motherTransform) * (*locTrans));
+      std::shared_ptr<Acts::Transform3D> actsTransform
+          = convertTransform(transform);
       // get the shape of the layer
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
@@ -425,7 +428,7 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
       std::vector<DD4hep::Geometry::DetElement> modules(
           detExtension->modules());
       // access the axis orienation of the modules
-        const std::string  axes = detExtension->axes();
+      const std::string axes = detExtension->axes();
       // create the two dimensional BinUtility for the material map of the layer
       Acts::BinUtility*                           materialBinUtil = nullptr;
       std::shared_ptr<const SurfaceMaterialProxy> materialProxy   = nullptr;
@@ -509,8 +512,9 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
         ACTS_VERBOSE(
             "[L] Layer containes modules -> resolving them as surfaces");
         // create surfaces binned in phi and r
-        auto surfaceArray = createSurfaceArray(modules, binR, motherTransform, axes);
-        auto discLayer    = Acts::DiscLayer::create(actsTransform,
+        auto surfaceArray
+            = createSurfaceArray(modules, binR, motherTransform, axes);
+        auto discLayer = Acts::DiscLayer::create(actsTransform,
                                                  discBounds,
                                                  std::move(surfaceArray),
                                                  thickness,
@@ -537,8 +541,8 @@ std::unique_ptr<Acts::SurfaceArray>
 Acts::DD4hepCylinderGeometryBuilder::createSurfaceArray(
     std::vector<DD4hep::Geometry::DetElement>& modules,
     Acts::BinningValue                         lValue,
-    const TGeoMatrix*   motherTransform,
-    const std::string&  axes) const
+    const TGeoMatrix*                          motherTransform,
+    const std::string&                         axes) const
 {
   ACTS_VERBOSE("[L] Creating surface array of the layer");
   std::vector<const Acts::Surface*> surfaces;
@@ -557,8 +561,8 @@ Acts::DD4hepCylinderGeometryBuilder::createSurfaceArray(
     } else
       ACTS_ERROR("[S] Detector element is not declared sensitive, can not "
                  "access segmentation");
-    Acts::DD4hepDetElement* dd4hepDetElement
-        = new Acts::DD4hepDetElement(detElement, segmentation, motherTransform, axes, cm);
+    Acts::DD4hepDetElement* dd4hepDetElement = new Acts::DD4hepDetElement(
+        detElement, segmentation, motherTransform, axes, cm);
     // add surface to surface vector
     surfaces.push_back(&(dd4hepDetElement->surface()));
   }
@@ -631,12 +635,12 @@ Acts::DD4hepCylinderGeometryBuilder::binnedSurfaceArray2DPhiL(
   std::vector<float> lValues(createBinValues(lBoundaries));
   // create the 2D bin utility
   auto binUtility
-    = std::make_unique<Acts::BinUtility>(lValues, Acts::open, lValue);
+      = std::make_unique<Acts::BinUtility>(lValues, Acts::open, lValue);
   (*binUtility) += Acts::BinUtility(
       binsPhi, minPhiCorrected, maxPhiCorrected, Acts::closed, Acts::binPhi);
   // create the binned array of surfaces
   return (std::move(std::make_unique<Acts::BinnedArrayXD<const Acts::Surface*>>(
-                                                                                posSurfaces, std::move(binUtility))));
+      posSurfaces, std::move(binUtility))));
 }
 
 std::vector<float>

@@ -63,7 +63,8 @@ Acts::DetExtension::DetExtension(size_t                 bins1,
 {
 }
 
-Acts::DetExtension::DetExtension(std::vector<DD4hep::Geometry::DetElement> mod, const std::string&  axes)
+Acts::DetExtension::DetExtension(std::vector<DD4hep::Geometry::DetElement> mod,
+                                 const std::string&                        axes)
   : Acts::IDetExtension()
   , m_segmentation(nullptr)
   , m_shape(Acts::ShapeType::None)
@@ -80,7 +81,7 @@ Acts::DetExtension::DetExtension(size_t                 bins1,
                                  size_t                 bins2,
                                  Acts::LayerMaterialPos layerMatPos,
                                  std::vector<DD4hep::Geometry::DetElement> mod,
-                                 const std::string&  axes)
+                                 const std::string&                        axes)
   : Acts::IDetExtension()
   , m_segmentation(nullptr)
   , m_shape(Acts::ShapeType::None)

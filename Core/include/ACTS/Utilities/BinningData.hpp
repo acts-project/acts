@@ -12,13 +12,13 @@
 #ifndef ACTS_UTILITIES_BINNINGDATA_H
 #define ACTS_UTILITIES_BINNINGDATA_H 1
 
-#include "ACTS/Utilities/BinningType.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
 #include <cmath>
-#include <utility>
-#include <vector>
 #include <iostream>
 #include <memory>
+#include <utility>
+#include <vector>
+#include "ACTS/Utilities/BinningType.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -40,38 +40,35 @@ namespace Acts {
 class BinningData
 {
 public:
-  
-  BinningType   type;      ///< binning type: equidistant, arbitrary 
+  BinningType   type;      ///< binning type: equidistant, arbitrary
   BinningOption option;    ///< binning option: open, closed
   BinningValue  binvalue;  ///< binning value: binX, binY, binZ, binR ...
   float         min;       ///< minimum value
-  float         max;       ///< maximum value 
-  float         step;      ///< binning step 
+  float         max;       ///< maximum value
+  float         step;      ///< binning step
   bool          zdim;      ///< zero dimensional binning : direct access
 
   /// sub structure: describe some sub binning
   std::unique_ptr<BinningData> subBinningData;
   /// sub structure: additive or multipicative
-  bool                         subBinningAdditive;
+  bool subBinningAdditive;
 
-  /// Constructor for 0D binning 
+  /// Constructor for 0D binning
   ///
   /// @param bValue is the binning value: binX, binY, etc.
   /// @param bBins is number of equidistant bins
   /// @param bMin is the minum value
   /// @param bMax is the maxmimum value
-  /// @param sBinData is (optional) sub structure 
+  /// @param sBinData is (optional) sub structure
   /// @param sBinAdditive is the prescription for the sub structure
-  BinningData(BinningValue  bValue,
-              float         bMin,
-              float         bMax)
+  BinningData(BinningValue bValue, float bMin, float bMax)
     : type(equidistant)
     , option(open)
     , binvalue(bValue)
     , min(bMin)
     , max(bMax)
     , step((bMax - bMin))
-    , zdim(true) 
+    , zdim(true)
     , subBinningData(nullptr)
     , subBinningAdditive(false)
     , m_bins(1)
@@ -79,33 +76,34 @@ public:
     , m_totalBins(1)
     , m_totalBoundaries(std::vector<float>())
     , m_functionPtr(&searchEquidstantWithBoundary)
-  {}
+  {
+  }
 
-  /// Constructor for equidistant binning 
+  /// Constructor for equidistant binning
   /// and optional sub structure can be
-  /// mulitplicative or additive 
+  /// mulitplicative or additive
   ///
   /// @param bOption is the binning option : open, closed
   /// @param bValue is the binning value: binX, binY, etc.
   /// @param bBins is number of equidistant bins
   /// @param bMin is the minum value
   /// @param bMax is the maxmimum value
-  /// @param sBinData is (optional) sub structure 
+  /// @param sBinData is (optional) sub structure
   /// @param sBinAdditive is the prescription for the sub structure
-  BinningData(BinningOption bOption,
-              BinningValue  bValue,
-              size_t        bBins,
-              float         bMin,
-              float         bMax,
-              std::unique_ptr<BinningData> sBinData = nullptr,
-              bool          sBinAdditive = false)
+  BinningData(BinningOption                bOption,
+              BinningValue                 bValue,
+              size_t                       bBins,
+              float                        bMin,
+              float                        bMax,
+              std::unique_ptr<BinningData> sBinData     = nullptr,
+              bool                         sBinAdditive = false)
     : type(equidistant)
     , option(bOption)
     , binvalue(bValue)
     , min(bMin)
     , max(bMax)
     , step((bMax - bMin) / bBins)
-    , zdim(bBins == 1 ? true : false) 
+    , zdim(bBins == 1 ? true : false)
     , subBinningData(std::move(sBinData))
     , subBinningAdditive(sBinAdditive)
     , m_bins(bBins)
@@ -124,15 +122,15 @@ public:
     checkSubStructure();
   }
 
-  /// Constructor for equidistant binning 
+  /// Constructor for equidistant binning
   ///
   /// @param bOption is the binning option : open / closed
   /// @param bValue is the binning value : binX, binY, etc.
   /// @param bBoundaries are teh bin boundaries
-  /// @param sBinData is (optional) sub structure 
-  BinningData(BinningOption            bOption,
-              BinningValue             bValue,
-              const std::vector<float> bBoundaries,
+  /// @param sBinData is (optional) sub structure
+  BinningData(BinningOption                bOption,
+              BinningValue                 bValue,
+              const std::vector<float>     bBoundaries,
               std::unique_ptr<BinningData> sBinData = nullptr)
     : type(arbitrary)
     , option(bOption)
@@ -140,7 +138,7 @@ public:
     , min(0.)
     , max(0.)
     , step(0.)
-    , zdim(bBoundaries.size() == 2 ? true : false)                 
+    , zdim(bBoundaries.size() == 2 ? true : false)
     , subBinningData(std::move(sBinData))
     , subBinningAdditive(true)
     , m_bins(bBoundaries.size() - 1)
@@ -162,7 +160,7 @@ public:
 
   /// Copy constructor
   ///
-  /// @param bdata is the source object 
+  /// @param bdata is the source object
   BinningData(const BinningData& bdata)
     : type(bdata.type)
     , option(bdata.option)
@@ -170,7 +168,7 @@ public:
     , min(bdata.min)
     , max(bdata.max)
     , step(bdata.step)
-    , zdim(bdata.zdim)                     
+    , zdim(bdata.zdim)
     , subBinningData(nullptr)
     , subBinningAdditive(bdata.subBinningAdditive)
     , m_bins(bdata.m_bins)
@@ -181,7 +179,7 @@ public:
   {
     // get the binning data
     subBinningData = bdata.subBinningData
-      ? std::make_unique<BinningData>(*bdata.subBinningData)
+        ? std::make_unique<BinningData>(*bdata.subBinningData)
         : nullptr;
     // set the pointer depending on the type
       // set the correct function pointer
@@ -192,7 +190,7 @@ public:
                                     : &binarySearchWithBoundary;
   }
 
-  /// Assignment operator 
+  /// Assignment operator
   ///
   /// @param bdata is the source object
   BinningData&
@@ -224,17 +222,16 @@ public:
     return (*this);
   }
 
-  /// Destructor 
+  /// Destructor
   ~BinningData() {}
-  
-  /// return the number of bins - including sub bins 
+  /// return the number of bins - including sub bins
   size_t
   bins() const
   {
     return m_totalBins;
   }
 
-  /// return the boundaries  - including sub boundaries 
+  /// return the boundaries  - including sub boundaries
   const std::vector<float>&
   boundaries() const
   {
@@ -242,7 +239,7 @@ public:
     return m_boundaries;
   }
 
-  /// take the right float value 
+  /// take the right float value
   ///
   /// @param lposition assumes the correct local position expression
   float
@@ -256,7 +253,7 @@ public:
     return lposition[1];
   }
 
-  /// take the right float value 
+  /// take the right float value
   ///
   /// @param position ais the global position
   float
@@ -281,7 +278,7 @@ public:
     return phi;
   }
 
-  /// Check if bin is inside from Vector3D 
+  /// Check if bin is inside from Vector3D
   ///
   /// @param position is the search position in global coordinated
   bool
@@ -293,10 +290,9 @@ public:
     // @TODO remove hard-coded tolerance parameters
     float val = value(position);
     return (val > min - 0.001 && val < max + 0.001);
-  
   }
 
-  /// Check if bin is inside from Vector2D 
+  /// Check if bin is inside from Vector2D
   ///
   /// @param lposition is the search position in global coordinated
   bool
@@ -310,8 +306,8 @@ public:
     return (val > min - 0.001 && val < max + 0.001);
   }
 
-  /// generic search from a 2D position 
-  /// -- corresponds to local coordinate schema 
+  /// generic search from a 2D position
+  /// -- corresponds to local coordinate schema
   size_t
   searchLocal(const Vector2D& lposition) const
   {
@@ -319,8 +315,8 @@ public:
     return search(value(lposition));
   }
 
-  /// generic search from a 3D position 
-  /// -- corresponds to global coordinate schema 
+  /// generic search from a 3D position
+  /// -- corresponds to global coordinate schema
   size_t
   searchGlobal(const Vector3D& position) const
   {
@@ -328,7 +324,7 @@ public:
     return search(value(position));
   }
 
-  /// generic search - forwards to correct function pointer 
+  /// generic search - forwards to correct function pointer
   size_t
   search(float value) const
   {
@@ -338,8 +334,8 @@ public:
                              : searchWithSubStructure(value);
   }
 
-  ///  generic search  sub structure 
-  /// - forwards to correct function pointer 
+  ///  generic search  sub structure
+  /// - forwards to correct function pointer
   size_t
   searchWithSubStructure(float value) const
   {
@@ -359,8 +355,7 @@ public:
     return masterbin * subBinningData->bins() + subbin;
   }
 
- 
-  /// layer next direction is needed  
+  /// layer next direction is needed
   ///
   /// @param position is the start search position
   /// @param dir is the direction
@@ -368,7 +363,7 @@ public:
   nextDirection(const Vector3D& position, const Vector3D& dir) const
   {
     if (zdim) return 0;
-    float val = value(position);
+    float    val     = value(position);
     Vector3D probe   = position + dir.normalized();
     float    nextval = value(probe);
     return (nextval > val) ? 1 : -1;
@@ -398,7 +393,7 @@ public:
 
   /// access to the center value
   /// this uses the bin boundary vector, it also works with sub structure
-  /// 
+  ///
   /// @param bin is the bin for which the value is requested, if bin > nbins
   /// it is set to max
   ///
@@ -406,21 +401,21 @@ public:
   float
   centerValue(size_t bin) const
   {
-    if (zdim) return 0.5*(min+max);
+    if (zdim) return 0.5 * (min + max);
     float bmin = m_boundaries[bin];
-    float bmax = bin < m_boundaries.size() ? m_boundaries[bin+1] : max;
-    return 0.5*(bmin+bmax);
+    float bmax = bin < m_boundaries.size() ? m_boundaries[bin + 1] : max;
+    return 0.5 * (bmin + bmax);
   }
 
 private:
-  size_t             m_bins;             ///< number of bins
+  size_t             m_bins;  ///< number of bins
   std::vector<float> m_boundaries;
   size_t             m_totalBins;        ///< including potential substructure
   std::vector<float> m_totalBoundaries;  ///< including potential substructure
 
-  size_t (*m_functionPtr)(float, const BinningData&);                /// function pointer
+  size_t (*m_functionPtr)(float, const BinningData&);  /// function pointer
 
-  /// helper method to set the sub structure 
+  /// helper method to set the sub structure
   void
   checkSubStructure()
   {
@@ -470,7 +465,7 @@ private:
     }
   }
 
-  /// Equidistant search : equidist 0 
+  /// Equidistant search : equidist 0
   static size_t
   searchEquidstantWithBoundary(float value, const BinningData& bData)
   {
@@ -510,7 +505,7 @@ private:
     return (bin - 1);
   }
 
-  /// A binary search with underflow/overflow 
+  /// A binary search with underflow/overflow
   ///    - faster than vector search for O(50) objects
   static size_t
   binarySearchWithBoundary(float value, const BinningData& bData)

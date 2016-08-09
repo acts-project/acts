@@ -16,7 +16,7 @@
 #include "ACTS/Utilities/Definitions.hpp"
 
 /// Define statics for Geometry in Tracking
-/// 
+///
 namespace Acts {
 
 // transformations

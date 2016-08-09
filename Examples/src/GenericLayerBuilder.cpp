@@ -402,16 +402,15 @@ Acts::GenericLayerBuilder::constructLayers()
       // the binning
       size_t layerBinsR   = m_cfg.posnegModulePhiBins.at(ipnl).size();
       // never multiply 1 single r-bin, does not make sense
-      if (layerBinsR > 1){
-          // multiply with the given bin mulitplier
-          layerBinsR *= m_cfg.posnegLayerBinMultipliers.first;
+      if (layerBinsR > 1) {
+        // multiply with the given bin mulitplier
+        layerBinsR *= m_cfg.posnegLayerBinMultipliers.first;
       }
       size_t layerBinsPhi = 0;
       // take the maximum phi bins in that layer
-      for (auto& phiBins :  m_cfg.posnegModulePhiBins.at(ipnl)){
-          layerBinsPhi = phiBins > layerBinsPhi ? phiBins : layerBinsPhi;
-          layerBinsPhi *= m_cfg.posnegLayerBinMultipliers.second;
-          
+      for (auto& phiBins : m_cfg.posnegModulePhiBins.at(ipnl)) {
+        layerBinsPhi = phiBins > layerBinsPhi ? phiBins : layerBinsPhi;
+        layerBinsPhi *= m_cfg.posnegLayerBinMultipliers.second;
       }
       // create the layers with the surface arrays
       LayerPtr nLayer

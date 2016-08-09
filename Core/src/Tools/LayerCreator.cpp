@@ -70,10 +70,10 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   ACTS_VERBOSE(" - with z min/max  = " << -layerHalfZ << " / " << layerHalfZ);
   ACTS_VERBOSE(" - and phi min/max = " << minPhi << " / " << maxPhi);
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << " ordered in ( "
-                                      << binsPhi
-                                      << " x "
-                                      << binsZ
-                                      << ")");
+                                       << binsPhi
+                                       << " x "
+                                       << binsZ
+                                       << ")");
 
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray

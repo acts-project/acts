@@ -22,20 +22,18 @@ namespace Acts {
 class Surface;
 
 /// @class OverlapDescriptor
-/// 
+///
 /// BaseClass to be overloaded for describing overlaps
 /// and next-by elements for the sub-detector implementations.
-/// 
+///
 /// It allows to describe the potentially reachable surfaces
 class OverlapDescriptor
 {
 public:
   /// Default constructor
   OverlapDescriptor() {}
-  
   /// Virtual destructor
   virtual ~OverlapDescriptor() {}
-  
   /// Pseudo-constructor
   virtual OverlapDescriptor*
   clone() const = 0;
