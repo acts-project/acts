@@ -690,5 +690,21 @@ namespace Test {
     // inspecific residual tests with random numbers
     random_residual_tests();
   }
+
+  template <ParID_t... params>
+  using ParSet = ParameterSet<params...>;
+
+  /**
+   * @brief Unit test for accessing index of coordinate in ParameterSet object
+   *
+   * @sa ParameterSet::getIndex
+   */
+  BOOST_AUTO_TEST_CASE(parset_getIndex)
+  {
+    BOOST_CHECK((ParSet<eLOC_1, eLOC_2, ePHI, eQOP>::getIndex<eLOC_1>() == 0));
+    BOOST_CHECK((ParSet<eLOC_1, eLOC_2, ePHI, eQOP>::getIndex<eLOC_2>() == 1));
+    BOOST_CHECK((ParSet<eLOC_1, eLOC_2, ePHI, eQOP>::getIndex<ePHI>() == 2));
+    BOOST_CHECK((ParSet<eLOC_1, eLOC_2, ePHI, eQOP>::getIndex<eQOP>() == 3));
+  }
 }  // end of namespace Test
 }  // end of namespace Acts
