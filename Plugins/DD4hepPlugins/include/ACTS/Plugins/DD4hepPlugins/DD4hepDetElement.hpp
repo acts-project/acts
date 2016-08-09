@@ -48,8 +48,9 @@ public:
   /// element
   DD4hepDetElement(const DD4hep::Geometry::DetElement       detElement,
                    const DD4hep::Geometry::Segmentation     segmentation,
-                   std::shared_ptr<const Acts::Transform3D> motherTransform
-                   = nullptr);
+                   const TGeoMatrix* mtoglobal = nullptr,
+                   const std::string&  axes = "xyz",
+                   double              scalor = 1.);
   /// Desctructor
   virtual ~DD4hepDetElement() = default;
 
