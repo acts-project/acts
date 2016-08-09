@@ -32,13 +32,16 @@ class BoundaryCheck;
 ///
 /// Master extrapolation engine for extrapolation through the TrackingGeometry.
 ///
-/// It delegates the extrapolation to optimised engines, handing over the ExtrapolationCell
+/// It delegates the extrapolation to optimised engines, handing over the
+/// ExtrapolationCell
 /// as internal cache.
 ///
 /// There are identical interfaces for charged and neutral track parameters.
 ///
-/// Providing a destination surface is optional, if no destination surface is given the extrapolation
-/// process can be stopped by other directives, e.g. stopping at a certain path limit, material limit
+/// Providing a destination surface is optional, if no destination surface is
+/// given the extrapolation
+/// process can be stopped by other directives, e.g. stopping at a certain path
+/// limit, material limit
 /// or with a change of detector signature.
 ///
 class ExtrapolationEngine : virtual public IExtrapolationEngine
@@ -53,76 +56,71 @@ public:
   ///
   struct Config
   {
-    /// the default logger
-    std::shared_ptr<Logger> logger; 
-    /// the tracking geometry
-    std::shared_ptr<const TrackingGeometry>   trackingGeometry = nullptr; 
-    /// the list of extrapolation engines 
-    std::vector<std::shared_ptr<IExtrapolationEngine>> extrapolationEngines;  
-    /// the helper propagator for navigation initialization  
-    std::shared_ptr<IPropagationEngine>       propagationEngine; 
-    /// the navigation engine 
-    std::shared_ptr<INavigationEngine>        navigationEngine;  
-    std::string prefix;    ///< output prefix
-    std::string postfix;   ///< output postfix
-    std::string name;      ///< name of the tool
-              
-    Config(const std::string& lname = "ExtrapolationEngine",
-           Logging::Level lvl = Logging::INFO)
-      : logger(getDefaultLogger(lname, lvl))
-      , trackingGeometry(nullptr)
-      , extrapolationEngines()
-      , propagationEngine(nullptr)
-      , navigationEngine(nullptr)
-      , prefix("[ME] - ")
-      , postfix(" - ")
-      , name(lname)
-    {
-    }
+    /// tracking geometry
+    std::shared_ptr<const TrackingGeometry> trackingGeometry = nullptr;
+    /// list of extrapolation engines
+    std::vector<std::shared_ptr<IExtrapolationEngine>> extrapolationEngines{};
+    /// helper propagator for navigation initialization
+    std::shared_ptr<IPropagationEngine> propagationEngine = nullptr;
+    /// navigation engine
+    std::shared_ptr<INavigationEngine> navigationEngine = nullptr;
+    /// output prefix
+    std::string prefix = "[ME] - ";
+    /// output postfix
+    std::string postfix = " - ";
   };
 
-  /// Constructor 
-  /// @param eeConfig is the configuration struct for this engine 
-  ExtrapolationEngine(const Config& eeConfig);
+  /// Constructor
+  /// @param eeConfig is the configuration struct for this engine
+  /// @param logger logging instance
+  ExtrapolationEngine(const Config&           eeConfig,
+                      std::unique_ptr<Logger> logger
+                      = getDefaultLogger("ExtrapolationEngine", Logging::INFO));
 
-  /// Destructor 
+  /// Destructor
   ~ExtrapolationEngine();
 
   using IExtrapolationEngine::extrapolate;
 
-  /// charged extrapolation - public interface 
+  /// charged extrapolation - public interface
   /// @param ecCharged is the charged extrapolation cell that holds the cache
   /// @param sf is the (optional) destinaton surface
-  /// @param bchk is the boudnary check directive @TODO shift to cell after splitting
+  /// @param bchk is the boudnary check directive @TODO shift to cell after
+  /// splitting
   ExtrapolationCode
   extrapolate(ExCellCharged&       ecCharged,
-              const Surface*       sf     = nullptr,
+              const Surface*       sf   = nullptr,
               const BoundaryCheck& bchk = true) const final;
 
-  /// neutral extrapolation - public interface 
+  /// neutral extrapolation - public interface
   /// @param ecNeutral is the neutral extrapolation cell that holds the cache
   /// @param sf is the (optional) destinaton surface
-  /// @param bchk is the boudnary check directive @TODO shift to cell after splitting
+  /// @param bchk is the boudnary check directive @TODO shift to cell after
+  /// splitting
   ExtrapolationCode
   extrapolate(ExCellNeutral&       ecNeutral,
-              const Surface*       sf     = nullptr,
+              const Surface*       sf   = nullptr,
               const BoundaryCheck& bchk = true) const final;
 
-  /// define for which GeometrySignature this extrapolator is valid 
+  /// define for which GeometrySignature this extrapolator is valid
   ///  - this is GLOBAL
   GeometryType
   geometryType() const final;
 
-  /// Set configuration method 
+  /// Set configuration method
   void
   setConfiguration(const Config& eeConfig);
 
-  /// Get configuration method 
+  /// Get configuration method
   Config
   getConfiguration() const;
 
+  /// set logging instance
+  void
+  setLogger(std::unique_ptr<Logger> logger);
+
 protected:
-  /// ExtrapolationEngine config object 
+  /// ExtrapolationEngine config object
   Config m_cfg;
 
 private:
@@ -130,14 +128,18 @@ private:
   const Logger&
   logger() const
   {
-    return *m_cfg.logger;
+    return *m_logger;
   }
-  
-  /// main extrapolation method, templated to chared/neutral 
+
+  /// logger instance
+  std::unique_ptr<Logger> m_logger;
+
+  /// main extrapolation method, templated to chared/neutral
   /// @paramt eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param dir is the additional direction prescription
-  /// @param bchk is the boudnary check directive @TODO shift to cell after splitting
+  /// @param bchk is the boudnary check directive @TODO shift to cell after
+  /// splitting
   template <class T>
   ExtrapolationCode
   extrapolateT(ExtrapolationCell<T>& eCell,
@@ -145,7 +147,7 @@ private:
                PropDirection         dir    = alongMomentum,
                const BoundaryCheck&  bcheck = true) const;
 
-  /// main extrapolation method, templated to chared/neutral 
+  /// main extrapolation method, templated to chared/neutral
   /// @paramt eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param dir is the additional direction prescription
@@ -156,14 +158,14 @@ private:
                  PropDirection         dir = alongMomentum) const;
 };
 
-/// Return the geometry type, it's the master 
+/// Return the geometry type, it's the master
 inline GeometryType
 ExtrapolationEngine::geometryType() const
 {
   return Acts::Master;
 }
 
-/// Return the configuration object 
+/// Return the configuration object
 inline ExtrapolationEngine::Config
 ExtrapolationEngine::getConfiguration() const
 {
