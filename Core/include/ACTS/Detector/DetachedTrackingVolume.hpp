@@ -14,11 +14,14 @@
 #define ACTS_DETECTOR_DETACHEDTRACKINGVOLUME_H 1
 
 #include <memory>
+
+#include "ACTS/Utilities/Definitions.hpp"
+// Geometry module
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Layers/PlaneLayer.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/GeometrySignature.hpp"
+// Core module
 
 namespace Acts {
 
@@ -38,7 +41,11 @@ typedef std::shared_ptr<const TrackingVolume>         TrackingVolumePtr;
 
 class DetachedTrackingVolume
 {
+  /** Declare the IDetachedTrackingVolumeBuilder as a friend, to be able to
+   * change the volumelink */
   friend class TrackingVolume;
+  friend class DetachedTrackingVolumeBuilder;
+  friend class IDetachedTrackingVolumeBuilder;
 
 public:
   /// Factory Constructor 

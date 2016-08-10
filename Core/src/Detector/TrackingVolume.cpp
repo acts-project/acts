@@ -281,8 +281,6 @@ Acts::TrackingVolume::createBoundarySurfaces()
       // create the boundary surface
       m_boundarySurfaces.push_back(std::make_shared<const BoundarySurfaceT<TrackingVolume> >
                                    (std::unique_ptr<const Surface>(sf), inner, outer));
-      // increase the counter
-      ++sfCounter;
   }
 }
 

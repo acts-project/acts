@@ -15,14 +15,15 @@
 
 namespace Acts {
 
-///@class GeometrySignature
-///
-///  An enumeration object that puts the signature
-///  of a GeometryBuilder to all subvolumes
-///
-/// @TODO will be in the future be replace by GeometryID mechanism
-///
-///
+/** @class GeometrySignature
+
+   An enumeration object that puts the signature
+   of a GeometryBuilder to all subvolumes
+
+  @TODO will be in the future be replace by GeometryID mechanism
+
+
+  */
 
 enum GeometrySignature {
   Global             = 0,

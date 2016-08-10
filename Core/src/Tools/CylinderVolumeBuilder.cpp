@@ -106,13 +106,11 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     ACTS_DEBUG("Negative layers are present with r(min,max) = ( "
                << nLayerSetup.rBoundaries.first
                << ", "
-               << nLayerSetup.rBoundaries.second
-               << " )");
+               << nLayerSetup.rBoundaries.second);
     ACTS_DEBUG("                                 z(min,max) = ( "
                << nLayerSetup.zBoundaries.first
                << ", "
-               << nLayerSetup.zBoundaries.second
-               << " )");
+               << nLayerSetup.zBoundaries.second);
 
     takeSmaller(layerRmin, nLayerSetup.rBoundaries.first);
     takeBigger(layerRmax, nLayerSetup.rBoundaries.second);
@@ -123,15 +121,13 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   if (cLayerSetup) {
     // central layers are present
     ACTS_DEBUG("Central  layers are present with r(min,max) = ( "
-               << cLayerSetup.rBoundaries.first
+               << nLayerSetup.rBoundaries.first
                << ", "
-               << cLayerSetup.rBoundaries.second
-               << " )");
+               << nLayerSetup.rBoundaries.second);
     ACTS_DEBUG("                                 z(min,max) = ( "
-               << cLayerSetup.zBoundaries.first
+               << nLayerSetup.zBoundaries.first
                << ", "
-               << cLayerSetup.zBoundaries.second
-               << " )");
+               << nLayerSetup.zBoundaries.second);
 
     takeSmaller(layerRmin, cLayerSetup.rBoundaries.first);
     takeBigger(layerRmax, cLayerSetup.rBoundaries.second);
@@ -143,15 +139,13 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   if (pLayerSetup) {
     // positive layers are present
     ACTS_DEBUG("Positive layers are present with r(min,max) = ( "
-               << pLayerSetup.rBoundaries.first
+               << nLayerSetup.rBoundaries.first
                << ", "
-               << pLayerSetup.rBoundaries.second
-               << " )");
+               << nLayerSetup.rBoundaries.second);
     ACTS_DEBUG("                                 z(min,max) = ( "
-               << pLayerSetup.zBoundaries.first
+               << nLayerSetup.zBoundaries.first
                << ", "
-               << pLayerSetup.zBoundaries.second
-               << " )");
+               << nLayerSetup.zBoundaries.second);
 
     takeSmaller(layerRmin, pLayerSetup.rBoundaries.first);
     takeBigger(layerRmax, pLayerSetup.rBoundaries.second);
@@ -159,8 +153,6 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     // set the 1-digit for p present
     layerConfiguration += 1;
   }
-
-  ACTS_DEBUG("Layer configuration estimated with " << layerConfiguration);
 
   // the inside volume dimensions
   // ------------------------------------------------------------------
@@ -365,7 +357,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       // layer configuration
       // wrapping condition can only be set if there's an inside volume
       if (insideVolume) {
-        if (insideVolumeRmax > volumeRmin) {
+        if (insideVolumeRmax > volumeRmax || insideVolumeZmax > volumeZmax) {
           // we need to bail out, the given volume does not fit around the other
           ACTS_ERROR("Given layer dimensions do not fit around the provided "
                      "inside volume. Bailing out."
@@ -373,7 +365,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
                      << insideVolumeRmax
                      << " layerRmin: "
                      << layerRmin);
-          // cleanup the memory
+          // cleanup teh memory
           negativeLayers.clear();
           centralLayers.clear();
           positiveLayers.clear();
@@ -381,44 +373,34 @@ Acts::CylinderVolumeBuilder::trackingVolume(
           // this
           return nullptr;
         }
-        // obvious settings
-        // the new barrel inner radius is the inside volume outer radius
-        barrelRmin = insideVolumeRmax;
-        // the new barrel outer radius is the estimated maximal outer radius
-        barrelRmax = volumeRmax;
-        // regardless if the endcap setup exists or not
-        endcapRmax = volumeRmax;
-        endcapZmax = volumeZmax;
-        // if the endcap layers exist and are within the inside volume extend
-        // this is radial wrapping
         if (pLayerSetup && pLayerSetup.zBoundaries.first < insideVolumeZmax) {
-          // set the barrel / endcap z division in the middle
+          // set the barrel parameters
+          barrelRmin = insideVolumeRmin;
+          barrelRmax = volumeRmax;
           barrelZmax = 0.5 * (cLayerSetup.zBoundaries.second
                               + pLayerSetup.zBoundaries.first);
-          // set the endcap inner radius to wrap the inner volume
+          // set the endcap parameters
           endcapRmin = insideVolumeRmax;
+          endcapRmax = volumeRmax;
+          endcapZmin = barrelZmax;
+          endcapZmax = volumeZmax;
           // set the wrapping condition
           wrappingCondition = 1;
         } else {
-          // set the barrel parameters first to the volume Zmax
-          barrelZmax = volumeZmax;
-          // adapt in case endcaps eixt
-          if (pLayerSetup) {
-            // the barrel z extend is either set to the inside z extend
-            /// or into the middle of the two
-            barrelZmax = cLayerSetup.zBoundaries.second < insideVolumeZmax
-                ? insideVolumeZmax
-                : 0.5 * (cLayerSetup.zBoundaries.second
-                         + pLayerSetup.zBoundaries.first);
-            // set the endcap parameters
-            endcapRmin = insideVolumeRmin;
-          }
+          // set the barrel parameters
+          barrelRmin = insideVolumeRmin;
+          barrelRmax = volumeRmax;
+          barrelZmax = cLayerSetup.zBoundaries.second < insideVolumeZmax
+              ? insideVolumeZmax
+              : volumeZmax;
+          // set the endcap parameters
+          endcapRmin = insideVolumeRmin;
+          endcapRmax = volumeRmax;
+          endcapZmin = barrelZmax;
+          endcapZmax = volumeZmax;
           // set the wrapping condition
           wrappingCondition = 2;
         }
-        // consequent setting (regardless if endcaps exist or not )
-        endcapZmin = barrelZmax;
-
       } else {
         // no inside volume is given, wrapping conditions remains 0
         barrelRmin = volumeRmin;

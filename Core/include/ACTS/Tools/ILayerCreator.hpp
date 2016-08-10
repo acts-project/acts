@@ -61,7 +61,8 @@ public:
             double                             envelopeMaxR,
             double                             envelopeZ,
             size_t                             binsR,
-            size_t                             binsPhi) const = 0;
+            size_t                             binsPhi,
+            const std::vector<double>&         rBoundaries = {}) const = 0;
 
   /// ILayerCreator interface method - returning a plane layer 
   /// @param surfaces is the vector of sensitive surfaces represented by this layer

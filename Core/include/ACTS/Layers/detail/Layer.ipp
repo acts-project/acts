@@ -90,8 +90,7 @@ Layer::getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
         m_overlapDescriptor->reachableSurfaces(
           compatibleTestSurfaces, *ftSurface, pos, dir, searchType);
   }
-  // loop over all the possible
-  // sensiive surfaces and test them
+  // loop over all the possible surfaces and test them
   for (auto& ctSurface : compatibleTestSurfaces)
     testCompatibleSurface(cSurfaces,
                           *ctSurface,

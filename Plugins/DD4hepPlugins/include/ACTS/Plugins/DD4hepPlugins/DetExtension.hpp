@@ -36,7 +36,7 @@ namespace Acts {
 /// phi, e.g. end caps) are both described as a ROOT TGeoConeSeg one needs to
 /// distinguish between these volume types by setting the shape.
 
-class DetExtension : public IDetExtension
+class DetExtension : virtual public IDetExtension
 {
 public:
   /// Constructor
@@ -61,8 +61,7 @@ public:
   DetExtension(size_t bins1, size_t bins2, LayerMaterialPos layerMatPos);
   /// Constructor for layer with modules
   /// @param mod Possible sensitive modules contained by a layer
-  DetExtension(std::vector<DD4hep::Geometry::DetElement> mod,
-               const std::string&                        axes = "XYZ");
+  DetExtension(std::vector<DD4hep::Geometry::DetElement> mod);
   /// Constructor for layer with support structure and modules
   /// @note the numer of bins determines the granularity of the material
   /// map of the layer
@@ -76,12 +75,11 @@ public:
   DetExtension(size_t                                    bins1,
                size_t                                    bins2,
                LayerMaterialPos                          layerMatPos,
-               std::vector<DD4hep::Geometry::DetElement> mod,
-               const std::string&                        axes = "XYZ");
+               std::vector<DD4hep::Geometry::DetElement> mod);
   /// Copy constructor
   DetExtension(const DetExtension&, const DD4hep::Geometry::DetElement&);
-  /// destructor
-  ~DetExtension() = default;
+  /// Virtual destructor
+  virtual ~DetExtension() = default;
   /// Possibility to set shape of a volume to distinguish between disc and
   /// cylinder volume
   /// @param shape The type of the shape defined in IDetExtension can be either
@@ -111,7 +109,7 @@ public:
   /// which is r in case of a disc layer and z in case of a cylinder layer
   /// @param layerMatPos states if the material should be mapped on the inner,
   /// the center or the outer surface of the layer
-  void
+  virtual void
   supportMaterial(size_t           bins1,
                   size_t           bins2,
                   LayerMaterialPos layerMatPos) override;
@@ -125,32 +123,16 @@ public:
   materialBins() const override;
   /// returns states if the material should be mapped on the inner,
   /// the center or the outer surface of the layer
-  Acts::LayerMaterialPos
+  virtual Acts::LayerMaterialPos
   layerMaterialPos() const override;
   /// Possibility to set contained detector modules of a layer
   /// @param mod Possible sensitive modules contained by a layer
-  /// @param axis is the axis orientation with respect to the tracking frame
-  ///        it is a string of the three characters x, y and z (standing for the
-  ///        three axes)
-  ///        there is a distinction between capital and lower case characters :
-  ///        - capital      -> positive orientation of the axis
-  ///        - lower case   -> negative oriantation of the axis
-  ///        example options are "XYZ" -> identical frame definition (default
-  ///        value)
-  ///                            "YZX" -> node y axis is tracking x axis, etc.
-  ///                            "XzY" -> negative node z axis is tracking y
-  ///                            axis, etc.
   void
-  setModules(std::vector<DD4hep::Geometry::DetElement> mod,
-             const std::string&                        axes = "XYZ") override;
+  setModules(std::vector<DD4hep::Geometry::DetElement> mod) override;
   /// Access modules detector module contained by a layer
   /// @return mod Possible sensitive modules contained by a layer
-  std::vector<DD4hep::Geometry::DetElement>
-  modules() const override;
-  /// Access the orientation of the module in respect to the tracking frame
-  /// @return string describing the orientation of the axes
-  const std::string
-  axes() const override;
+  virtual std::vector<DD4hep::Geometry::DetElement>
+  modules() const final;
 
 private:
   /// Segmentation of a sensitive detector module
@@ -171,8 +153,6 @@ private:
   LayerMaterialPos m_layerMatPos;
   /// Possible contained modules of a layer
   std::vector<DD4hep::Geometry::DetElement> m_modules;
-  /// orientation of a module in respect to the tracking frame
-  std::string m_axes;
 };
 }
 
@@ -231,24 +211,15 @@ Acts::DetExtension::materialBins() const
 }
 
 inline void
-Acts::DetExtension::setModules(std::vector<DD4hep::Geometry::DetElement> mod,
-                               const std::string&                        axes)
+Acts::DetExtension::setModules(std::vector<DD4hep::Geometry::DetElement> mod)
 {
   m_modules = std::move(mod);
-  m_axes    = axes;
 }
 
 inline std::vector<DD4hep::Geometry::DetElement>
 Acts::DetExtension::modules() const
 {
   return m_modules;
-}
-
-inline const std::string
-Acts::DetExtension::axes() const
-{
-  std::cout << "trying to access axes: " << m_axes << std::endl;
-  return m_axes;
 }
 
 #endif  // ACTS_DD4HEPDETECTORELEMENT_DETEXTENSION_H

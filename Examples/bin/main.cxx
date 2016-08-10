@@ -161,8 +161,7 @@ fit(const std::vector<FitMeas_t>& measurements, const T& fitter)
 int
 main()
 {
-  // options are stage = 0, 1, 2
-  std::shared_ptr<const Acts::TrackingGeometry> geo = Acts::trackingGeometry(Acts::Logging::VERBOSE, 0);
+  std::shared_ptr<const TrackingGeometry> geo(trackingGeometry(Logging::DEBUG));
   ActsVector<ParValue_t, NGlobalPars> pars;
   pars << 0, 0, M_PI / 2, M_PI / 2, 0.0001;
   auto startCov = std::make_unique<ActsSymMatrix<ParValue_t, NGlobalPars>>(
@@ -229,6 +228,6 @@ main()
     std::cout << *p->getCalibratedMeasurement() << std::endl;
     std::cout << *p->getSmoothedState() << std::endl;
   }
-    
+
   return 0;
 }

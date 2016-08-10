@@ -10,8 +10,10 @@
 // GenericLayerBuilder.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Utilities/Helpers.hpp"
+#include "ACTS/Examples/GenericLayerBuilder.hpp"
+#include <iostream>
 #include "ACTS/Detector/DetectorElementBase.hpp"
+#include "ACTS/Examples/GenericDetectorElement.hpp"
 #include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
 #include "ACTS/Material/Material.hpp"
 #include "ACTS/Material/MaterialProperties.hpp"
@@ -22,9 +24,11 @@
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
 #include "ACTS/Tools/LayerCreator.hpp"
 #include "ACTS/Utilities/ApproachDescriptor.hpp"
-#include "ACTS/Examples/GenericDetectorElement.hpp"
-#include "ACTS/Examples/GenericLayerBuilder.hpp"
-#include <iostream>
+#include "ACTS/Utilities/BinUtility.hpp"
+#include "ACTS/Utilities/BinnedArray.hpp"
+#include "ACTS/Utilities/BinnedArray1D.hpp"
+#include "ACTS/Utilities/BinnedArray2D.hpp"
+#include "ACTS/Utilities/Helpers.hpp"
 
 Acts::GenericLayerBuilder::GenericLayerBuilder(
     const Acts::GenericLayerBuilder::Config& glbConfig)
@@ -399,19 +403,9 @@ Acts::GenericLayerBuilder::constructLayers()
         // counter of rings
         ++ipnR;
       }
-      // the binning
+      // @TODO this needs an update
       size_t layerBinsR   = m_cfg.posnegModulePhiBins.at(ipnl).size();
-      // never multiply 1 single r-bin, does not make sense
-      if (layerBinsR > 1) {
-        // multiply with the given bin mulitplier
-        layerBinsR *= m_cfg.posnegLayerBinMultipliers.first;
-      }
-      size_t layerBinsPhi = 0;
-      // take the maximum phi bins in that layer
-      for (auto& phiBins : m_cfg.posnegModulePhiBins.at(ipnl)) {
-        layerBinsPhi = phiBins > layerBinsPhi ? phiBins : layerBinsPhi;
-        layerBinsPhi *= m_cfg.posnegLayerBinMultipliers.second;
-      }
+      size_t layerBinsPhi = m_cfg.posnegModulePhiBins.at(ipnl).at(0);
       // create the layers with the surface arrays
       LayerPtr nLayer
           = m_cfg.layerCreator->discLayer(nsVector,

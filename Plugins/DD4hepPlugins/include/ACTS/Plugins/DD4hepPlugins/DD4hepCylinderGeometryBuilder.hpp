@@ -91,11 +91,12 @@ public:
   std::unique_ptr<TrackingGeometry>
   trackingGeometry() const override;
 
-  /// helper to convert the TGeo transformation matrix into a ACTS
-  /// transformation matrix
-  /// @param tGeoTrans TGeo transformation matrix which should be converted
+  /// helper method to extract the ACTS transformation matrix from a DD4hep
+  /// DetElement
+  /// @param detElement DD4hep detector element of which the transform should be
+  /// returned
   std::shared_ptr<Acts::Transform3D>
-  convertTransform(const TGeoMatrix* tGeoTrans) const;
+  extractTransform(DD4hep::Geometry::DetElement& detElement) const;
   /// helper method to extract the ACTS volume boundaries of a cylindrical
   /// volume
   /// @note Only cylindrical volume boundary implemented
@@ -125,18 +126,20 @@ private:
   /// @param motherTransform the global transformation matrix of the
   /// motherDetElement
   void
-  createCylinderLayers(DD4hep::Geometry::DetElement& motherDetElement,
-                       Acts::LayerVector&            layers,
-                       const TGeoMatrix*             motherTransform) const;
+  createCylinderLayers(DD4hep::Geometry::DetElement&      motherDetElement,
+                       Acts::LayerVector&                 layers,
+                       std::shared_ptr<Acts::Transform3D> motherTransform
+                       = nullptr) const;
   /// Creates the disc shaped layers
   /// @param motherDetElement The DD4hep detector element containing the layers
   /// @param centralLayers A vector of layers which should get filled
   /// @param motherTransform The global transformation matrix of the
   /// motherDetElement
   void
-  createDiscLayers(DD4hep::Geometry::DetElement& motherDetElement,
-                   Acts::LayerVector&            layers,
-                   const TGeoMatrix*             motherTransform) const;
+  createDiscLayers(DD4hep::Geometry::DetElement&      motherDetElement,
+                   Acts::LayerVector&                 layers,
+                   std::shared_ptr<Acts::Transform3D> motherTransform
+                   = nullptr) const;
 
   /// Creates a binned array of Acts::Surfaces out of vector of DD4hep detector
   /// modules
@@ -150,8 +153,8 @@ private:
   std::unique_ptr<Acts::SurfaceArray>
   createSurfaceArray(std::vector<DD4hep::Geometry::DetElement>& modules,
                      Acts::BinningValue                         lValue,
-                     const TGeoMatrix*                          motherTransform,
-                     const std::string& axes = "xyz") const;
+                     std::shared_ptr<const Acts::Transform3D>   motherTransform
+                     = nullptr) const;
   /// Creates a two dimensional surface array binned in phi and a longitudinal
   /// direction which
   /// can either be z or r
