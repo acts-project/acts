@@ -30,11 +30,11 @@ class Surface;
 typedef std::pair<TGeoNode*, std::shared_ptr<Transform3D>> NodeTransform;
 
 /// @class TGeoLayerBuilder
-/// works on the gGeoManager, as this is filled from GDML 
+/// works on the gGeoManager, as this is filled from GDML
 class TGeoLayerBuilder : public ILayerBuilder
 {
 public:
-  ///  Helper config structs for volume parsin 
+  ///  Helper config structs for volume parsin
   struct LayerConfig
   {
   public:
@@ -64,78 +64,73 @@ public:
 
   /// @struct Config
   /// nested configuration struct for steering of the layer builder
-  class Config
+  struct Config
   {
-  public:
-    /// logging instance 
-    std::shared_ptr<Logger>        logger; 
     /// string based identification
-    std::string                    configurationName;
+    std::string                    configurationName = "undefined";
     // unit conversion
-    double unit;
+    double unit = 10;
     // set visibility flag
     bool setVisibility;
     // layer creator
-    std::shared_ptr<ILayerCreator> layerCreator;
+    std::shared_ptr<ILayerCreator> layerCreator = nullptr;
     // configurations 
     std::vector<LayerConfig>       negativeLayerConfigs;
     std::vector<LayerConfig>       centralLayerConfigs;
     std::vector<LayerConfig>       positiveLayerConfigs;
-
-    Config()
-      : logger(getDefaultLogger("TGeoLayerBuilder", Logging::INFO))
-      , configurationName("Undefined")
-      , unit(10.)
-      , layerCreator(nullptr)
-      , negativeLayerConfigs()
-      , centralLayerConfigs()
-      , positiveLayerConfigs()
-    {
-    }
   };
 
-  /// Constructor 
+  /// Constructor
   /// @param cfg is the configuration struct
-  TGeoLayerBuilder(const Config& cfg);
+  TGeoLayerBuilder(const Config&           cfg,
+                   std::unique_ptr<Logger> logger
+                   = getDefaultLogger("LayerArrayCreator", Logging::INFO));
 
-  /// Destructor 
+  /// Destructor
   ~TGeoLayerBuilder();
 
-  /// LayerBuilder interface method - returning the layers at negative side 
+  /// LayerBuilder interface method - returning the layers at negative side
   const LayerVector
   negativeLayers() const final;
 
-  /// LayerBuilder interface method - returning the central layers 
+  /// LayerBuilder interface method - returning the central layers
   const LayerVector
   centralLayers() const final;
 
-  /// LayerBuilder interface method - returning the layers at negative side 
+  /// LayerBuilder interface method - returning the layers at negative side
   const LayerVector
   positiveLayers() const final;
 
-  /// Name identification 
+  /// Name identification
   const std::string&
   identification() const final;
 
-  /// set the configuration object 
-  /// @param cfg is the configuration struct 
+  /// set the configuration object
+  /// @param cfg is the configuration struct
   void
   setConfiguration(const Config& cfg);
 
-  /// get the configuration object 
+  /// get the configuration object
   Config
   getConfiguration() const;
+
+  /// set logging instance
+  void
+  setLogger(std::unique_ptr<Logger> logger);
 
 private:
   /// configruation object
   Config m_cfg;
 
-  /// Private acces method to the logger
+  /// Private access to the logger
   const Logger&
   logger() const
   {
-    return *m_cfg.logger;
+    return *m_logger;
   }
+
+  /// logging instance
+  std::unique_ptr<Logger> m_logger;
 
   /// @TODO make clear where the TGeoDetectorElement lives
   mutable std::vector<std::shared_ptr<TGeoDetectorElement>> m_elementStore;
@@ -171,4 +166,4 @@ TGeoLayerBuilder::identification() const
 }
 }
 
-#endif 
+#endif
