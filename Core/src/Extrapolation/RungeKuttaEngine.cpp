@@ -23,8 +23,9 @@
 // Constructor
 /////////////////////////////////////////////////////////////////////////////////
 Acts::RungeKuttaEngine::RungeKuttaEngine(
-    const Acts::RungeKuttaEngine::Config& rkConfig)
-  : m_cfg(), m_rkUtils()
+    const Acts::RungeKuttaEngine::Config& rkConfig,
+    std::unique_ptr<Logger>               logger)
+  : m_cfg(), m_rkUtils(), m_logger(std::move(logger))
 {
   setConfiguration(rkConfig);
 }
@@ -48,6 +49,12 @@ Acts::RungeKuttaEngine::setConfiguration(
   IPropagationEngine::m_sopPostfix = rkConfig.postfix;
   // copy the configuration
   m_cfg = rkConfig;
+}
+
+void
+Acts::RungeKuttaEngine::setLogger(std::unique_ptr<Logger> newLogger)
+{
+  m_logger = std::move(newLogger);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -87,8 +94,8 @@ Acts::RungeKuttaEngine::propagate(ExCellNeutral&           eCell,
                    "propagate",
                    "neut",
                    "parameters are already on the surface, returning.");
-    nParameters = buildNeutralParametersWithoutPropagation(
-        *sParameters, pCache.jacobian);
+    nParameters = buildNeutralParametersWithoutPropagation(*sParameters,
+                                                           pCache.jacobian);
     // record the parameters as a step
     eCell.step(std::move(nParameters), purpose);
     // return success or in progress
@@ -224,7 +231,8 @@ Acts::RungeKuttaEngine::propagate(ExCellCharged&           eCell,
                    "propagate",
                    "neut",
                    "parameters are already on the surface, returning.");
-    pParameters = buildTrackParametersWithoutPropagation(*pParameters, pCache.jacobian);
+    pParameters
+        = buildTrackParametersWithoutPropagation(*pParameters, pCache.jacobian);
     // record the parameters as a step
     eCell.step(std::move(pParameters), purpose);
     // return success or in progress
@@ -283,10 +291,10 @@ Acts::RungeKuttaEngine::propagate(ExCellCharged&           eCell,
     eCell.step(std::move(pParameters), purpose);
     // fill the jacobian
     if (eCell.checkConfigurationMode(Acts::ExtrapolationMode::CollectJacobians))
-      eCell.stepTransport(sf,
-                          pCache.step,
-                          std::make_unique<const TransportJacobian>(
-                                                                    pCache.jacobian));
+      eCell.stepTransport(
+          sf,
+          pCache.step,
+          std::make_unique<const TransportJacobian>(pCache.jacobian));
 
     // cache the last lead parameters, useful in case a navigation error occured
     eCell.lastLeadParameters = eCell.leadParameters;
@@ -498,7 +506,7 @@ Acts::RungeKuttaEngine::rungeKuttaStep(int               navigationStep,
     f0[2] = pCache.field[2];
   }
 
-  bool Helix                              = false;
+  bool Helix                           = false;
   if (fabs(S) < m_cfg.helixStep) Helix = true;
 
   while (S != 0.) {

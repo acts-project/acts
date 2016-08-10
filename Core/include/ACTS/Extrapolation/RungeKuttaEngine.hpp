@@ -84,7 +84,8 @@ class Surface;
 ///  2.The second step is propagation through magnetic field with or without
 ///    jacobian.
 ///
-///  3.Third step is transformation from global Runge Kutta presentation to local
+///  3.Third step is transformation from global Runge Kutta presentation to
+///  local
 ///    presentation of given output surface.
 ///
 ///
@@ -93,7 +94,8 @@ class Surface;
 ///       |               |               |               |              |
 ///       V               V               V               V              V
 ///       -----------------------------------------------------------------
-///                                       |          Local->Global transformation
+///                                       |          Local->Global
+///                                       transformation
 ///                                       V
 ///                    Global position (Runge Kutta presentation)
 ///                                       |
@@ -102,15 +104,19 @@ class Surface;
 ///                           using Nystroem algorithm
 ///               (See Handbook Net. Bur. of Standards, procedure 25.5.20)
 ///                                       |
-///                                       V          Global->Local transformation
+///                                       V          Global->Local
+///                                       transformation
 ///       ----------------------------------------------------------------
 ///       |               |               |               |              |
 ///       |               |               |               |              |
 ///       V               V               V               V              V
-///   PlaneSurface StraightLineSurface DiscSurface CylinderSurface PerigeeSurface
+///   PlaneSurface StraightLineSurface DiscSurface CylinderSurface
+///   PerigeeSurface
 ///
-///  For propagation using Runge Kutta method we use global coordinate, direction,
-///  inverse momentum and Jacobian of transformation. All this parameters we save
+///  For propagation using Runge Kutta method we use global coordinate,
+///  direction,
+///  inverse momentum and Jacobian of transformation. All this parameters we
+///  save
 ///  in array P[42] called pVector
 ///
 ///                   /dL0    /dL1    /dPhi   /dThe   /dCM
@@ -143,7 +149,8 @@ class Surface;
 ///
 ///  Comment:
 ///       if pointer to const *  = 0 algorithm will propagate track
-///       parameters and jacobian of transformation according straight line model
+///       parameters and jacobian of transformation according straight line
+///       model
 ///
 ///
 ///
@@ -152,41 +159,35 @@ class RungeKuttaEngine : virtual public IPropagationEngine
 public:
   /// @struct Config
   /// Configuration struct for the RungeKuttaEngine
-  /// 
+  ///
   /// @TODO docu : explain parametr meanings (input from Igor needed)
-  /// 
+  ///
   struct Config
   {
-    std::shared_ptr<Logger> logger;
-
-    std::shared_ptr<IMagneticFieldSvc> fieldService;  //!< the field service
-    double                             dlt;           //!< accuracy parameter
-    double      helixStep;      //!< max step whith helix model
-    double      straightStep;   //!< max step whith srtaight line model
-    double      maxPathLength;  //!< max overal path length
-    bool        usegradient;    //!< use magnetif field gradient
-    std::string prefix;         //!< screen output prefix
-    std::string postfix;        //!< screen output postfix
-    std::string name;            //!< name of the tool
-
-    Config(const std::string& lname = "RungeKuttaEngine",
-           Logging::Level lvl = Logging::INFO)
-      : logger(getDefaultLogger(lname, lvl))
-      , fieldService(nullptr)
-      , dlt(0.000200)
-      , helixStep(1.)
-      , straightStep(0.01)
-      , maxPathLength(25000.)
-      , usegradient(false)
-      , prefix("[RK] - ")
-      , postfix(" - ")
-      , name(lname)
-    {
-    }
+    /// the field service
+    std::shared_ptr<IMagneticFieldSvc> fieldService = nullptr;
+    /// accuracy parameter
+    double dlt = 0.0002;
+    /// max step whith helix model
+    double helixStep = 1.;
+    /// max step whith srtaight line model
+    double straightStep = 0.01;
+    /// max overal path length
+    double maxPathLength = 25000.;
+    /// use magnetif field gradient
+    bool usegradient = false;
+    /// screen output prefix
+    std::string prefix = "[RK] - ";
+    /// screen output postfix
+    std::string postfix = " - ";
   };
 
-  /// Constructor 
-  RungeKuttaEngine(const Config& rkConfig);
+  /// Constructor
+  /// @param meConfig is an instance of the configuration struct
+  /// @param logger logging instance
+  RungeKuttaEngine(const Config&           rkConfig,
+                   std::unique_ptr<Logger> logger
+                   = getDefaultLogger("RungeKuttaEngine", Logging::INFO));
 
   /// Destructor
   virtual ~RungeKuttaEngine();
@@ -235,16 +236,20 @@ public:
             const BoundaryCheck&     bcheck  = true,
             bool                     returnCurvilinear = true) const final;
 
-  /// Set configuration method 
+  /// Set configuration method
   void
   setConfiguration(const Config& meConfig);
 
-  /// Get configuration method 
+  /// Get configuration method
   Config
   getConfiguration() const;
 
+  /// set logging instance
+  void
+  setLogger(std::unique_ptr<Logger> logger);
+
 protected:
-  Config m_cfg;            ///< configuration class
+  Config m_cfg;  ///< configuration class
 
   RungeKuttaUtils m_rkUtils;  ///< RungeKuttaUtils class
 
@@ -252,10 +257,12 @@ private:
   const Logger&
   logger() const
   {
-    return *m_cfg.logger;
+    return *m_logger;
   }
 
-  /// Templated RungeKutta propagation method - charged/neutral 
+  std::unique_ptr<Logger> m_logger;
+
+  /// Templated RungeKutta propagation method - charged/neutral
   template <class T>
   bool
   propagateRungeKuttaT(ExtrapolationCell<T>& eCell,
@@ -270,7 +277,7 @@ private:
                         int               surfaceType,
                         double*           sVector) const;
 
-  /// Propagation methods runge kutta step - returns the step length 
+  /// Propagation methods runge kutta step - returns the step length
   double
   rungeKuttaStep(int               navigationStep,
                  PropagationCache& pCache,
@@ -288,18 +295,18 @@ private:
   double
   straightLineStep(int navigationStep, PropagationCache& pCache, double) const;
 
-  /// Step estimator with directions correction 
+  /// Step estimator with directions correction
   double
   stepEstimatorWithCurvature(PropagationCache& pCache,
                              int,
                              double*,
                              bool&) const;
 
-  /// Build new track parameters without propagation 
+  /// Build new track parameters without propagation
   std::unique_ptr<const TrackParameters>
   buildTrackParametersWithoutPropagation(const TrackParameters&, double*) const;
 
-  /// Build new track parameters without propagation 
+  /// Build new track parameters without propagation
   std::unique_ptr<const NeutralParameters>
   buildNeutralParametersWithoutPropagation(const NeutralParameters&,
                                            double*) const;
@@ -330,7 +337,6 @@ RungeKuttaEngine::getFieldGradient(double* R, double* H, double* dH) const
 {
   m_cfg.fieldService->getField(R, H, dH);
 }
-
 
 inline RungeKuttaEngine::Config
 RungeKuttaEngine::getConfiguration() const
