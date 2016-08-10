@@ -24,11 +24,16 @@
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
 #include "ACTS/Tools/LayerCreator.hpp"
 #include "ACTS/Utilities/ApproachDescriptor.hpp"
+#include "ACTS/Utilities/BinUtility.hpp"
+#include "ACTS/Utilities/BinnedArray.hpp"
+#include "ACTS/Utilities/BinnedArray1D.hpp"
+#include "ACTS/Utilities/BinnedArray2D.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
 
 Acts::GenericLayerBuilder::GenericLayerBuilder(
-    const Acts::GenericLayerBuilder::Config& glbConfig)
-  : m_nLayers(), m_cLayers(), m_pLayers()
+    const Acts::GenericLayerBuilder::Config& glbConfig,
+    std::unique_ptr<Logger>                  log)
+  : m_nLayers(), m_cLayers(), m_pLayers(), m_logger(std::move(log))
 {
   ACTS_DEBUG("initialize()");
   /// @TODO a configuraiton check should be done here
@@ -46,6 +51,12 @@ Acts::GenericLayerBuilder::setConfiguration(
   m_cfg = glbConfig;
 }
 
+void
+Acts::GenericLayerBuilder::setLogger(std::unique_ptr<Logger> newLogger)
+{
+  m_logger = std::move(newLogger);
+}
+
 Acts::GenericLayerBuilder::~GenericLayerBuilder()
 {
 }
@@ -53,13 +64,13 @@ Acts::GenericLayerBuilder::~GenericLayerBuilder()
 void
 Acts::GenericLayerBuilder::constructLayers()
 {
-  
   size_t imodule = 0;
   // ----------------------- central layers -------------------------
   // the central layers
   size_t numcLayers = m_cfg.centralLayerRadii.size();
   if (numcLayers) {
-    ACTS_DEBUG("Configured to build " << numcLayers << " active central layers.");
+    ACTS_DEBUG("Configured to build " << numcLayers
+                                      << " active central layers.");
     m_cLayers.reserve(numcLayers);
     // loop through
     for (size_t icl = 0; icl < numcLayers; ++icl) {
@@ -67,12 +78,13 @@ Acts::GenericLayerBuilder::constructLayers()
       double layerR = m_cfg.centralLayerRadii.at(icl);
       // some screen output
       ACTS_VERBOSE("Build layer " << icl << " with target radius = " << layerR);
-      
+
       // prepare the Surface vector
       std::vector<const Surface*> sVector;
       // assign the current envelope
       double layerEnvelopeCoverZ = m_cfg.centralLayerEnvelopes.size()
-          ? m_cfg.centralLayerEnvelopes.at(icl).second : 0.;
+          ? m_cfg.centralLayerEnvelopes.at(icl).second
+          : 0.;
       // module size & tilt
       double modulePhiTilt   = m_cfg.centralModuleTiltPhi.at(icl);
       double moduleHalfX     = m_cfg.centralModuleHalfX.at(icl);
@@ -82,43 +94,45 @@ Acts::GenericLayerBuilder::constructLayers()
       std::shared_ptr<const PlanarBounds> moduleBounds(
           new RectangleBounds(moduleHalfX, moduleHalfY));
       // Identifier @TODO unique Identifier - use a GenericDetector identifier
-      size_t nCetralModules = 
-          m_cfg.centralModuleBinningSchema.at(icl).first
-        * m_cfg.centralModuleBinningSchema.at(icl).second;
-      
-      ACTS_VERBOSE("- number of modules " << nCetralModules 
-       << " ( from " << m_cfg.centralModuleBinningSchema.at(icl).first << " x "
-       << m_cfg.centralModuleBinningSchema.at(icl).second << " )");
-      
+      size_t nCetralModules = m_cfg.centralModuleBinningSchema.at(icl).first
+          * m_cfg.centralModuleBinningSchema.at(icl).second;
+
+      ACTS_VERBOSE("- number of modules "
+                   << nCetralModules
+                   << " ( from "
+                   << m_cfg.centralModuleBinningSchema.at(icl).first
+                   << " x "
+                   << m_cfg.centralModuleBinningSchema.at(icl).second
+                   << " )");
+
       sVector.reserve(nCetralModules);
       // create the Module material from input
       std::shared_ptr<const SurfaceMaterial> moduleMaterialPtr = nullptr;
       if (m_cfg.centralModuleMaterial.size()) {
         // get the sensor material from configuration
-        Material moduleMaterial = m_cfg.centralModuleMaterial.at(icl);
+        Material           moduleMaterial = m_cfg.centralModuleMaterial.at(icl);
         MaterialProperties moduleMaterialProperties(moduleMaterial,
                                                     moduleThickness);
-        // create a new surface material                                            
+        // create a new surface material
         moduleMaterialPtr = std::shared_ptr<const SurfaceMaterial>(
             new HomogeneousSurfaceMaterial(moduleMaterialProperties));
       }
 
       // confirm
-      if (m_cfg.centralModulePositions.at(icl).size() != nCetralModules){
-         ACTS_WARNING("Mismatching module numbers, configuration error!");
-         ACTS_WARNING("- Binning schema suggests : " << nCetralModules);
-         ACTS_WARNING("- Positions provided are  : " << m_cfg.centralModulePositions.at(icl).size());
-         
-       }
-      // loop over the position, create the modules 
-      for (auto& moduleCenter : m_cfg.centralModulePositions.at(icl)){
+      if (m_cfg.centralModulePositions.at(icl).size() != nCetralModules) {
+        ACTS_WARNING("Mismatching module numbers, configuration error!");
+        ACTS_WARNING("- Binning schema suggests : " << nCetralModules);
+        ACTS_WARNING("- Positions provided are  : "
+                     << m_cfg.centralModulePositions.at(icl).size());
+      }
+      // loop over the position, create the modules
+      for (auto& moduleCenter : m_cfg.centralModulePositions.at(icl)) {
         // create the association transform
         double modulePhi = moduleCenter.phi();
         // the local z axis is the normal vector
-        Vector3D moduleLocalZ(cos(modulePhi + modulePhiTilt),
-                              sin(modulePhi + modulePhiTilt),
-                              0.);
-        // the local y axis is the global z axis                      
+        Vector3D moduleLocalZ(
+            cos(modulePhi + modulePhiTilt), sin(modulePhi + modulePhiTilt), 0.);
+        // the local y axis is the global z axis
         Vector3D moduleLocalY(0., 0., 1);
         // the local x axis the normal to local y,z
         Vector3D moduleLocalX(-sin(modulePhi + modulePhiTilt),
@@ -151,7 +165,7 @@ Acts::GenericLayerBuilder::constructLayers()
                                          moduleThickness,
                                          moduleMaterialPtr);
         // register the surface
-        sVector.push_back(&module->surface());                              
+        sVector.push_back(&module->surface());
         // store the module
         // @TODO detector store facility
         m_centralModule.push_back(module);
@@ -169,8 +183,7 @@ Acts::GenericLayerBuilder::constructLayers()
           // apply the stereo
           if (m_cfg.centralModuleBacksideStereo.size()) {
             // twist by the stereo angle
-            double stereoBackSide
-                = m_cfg.centralModuleBacksideStereo.at(icl);
+            double stereoBackSide = m_cfg.centralModuleBacksideStereo.at(icl);
             (*moduleTransform.get())
                 *= AngleAxis3D(-stereoBackSide, Vector3D::UnitZ());
           }
@@ -191,30 +204,31 @@ Acts::GenericLayerBuilder::constructLayers()
           m_centralModule.push_back(bsmodule);
         }
       }
-      
-      size_t phiBins  = m_cfg.centralModuleBinningSchema.at(icl).first;
+
+      size_t phiBins = m_cfg.centralModuleBinningSchema.at(icl).first;
       phiBins *= m_cfg.centralLayerBinMultipliers.first;
-      size_t zBins    = m_cfg.centralModuleBinningSchema.at(icl).second;
+      size_t zBins = m_cfg.centralModuleBinningSchema.at(icl).second;
       zBins *= m_cfg.centralLayerBinMultipliers.second;
       // create the surface array - it will also fill the accesible binmember
       // chache if avalable
-      LayerPtr cLayer = m_cfg.layerCreator->cylinderLayer(
-          sVector,
-          m_cfg.approachSurfaceEnvelope,
-          layerEnvelopeCoverZ,
-          phiBins,
-          zBins);
+      LayerPtr cLayer
+          = m_cfg.layerCreator->cylinderLayer(sVector,
+                                              m_cfg.approachSurfaceEnvelope,
+                                              layerEnvelopeCoverZ,
+                                              phiBins,
+                                              zBins);
       // the layer is built le't see if it needs material
       if (m_cfg.centralLayerMaterialProperties.size()) {
         // get the material from configuration
-        MaterialProperties layerMaterialProperties =
-          m_cfg.centralLayerMaterialProperties.at(icl);
+        MaterialProperties layerMaterialProperties
+            = m_cfg.centralLayerMaterialProperties.at(icl);
         std::shared_ptr<const SurfaceMaterial> layerMaterialPtr(
             new HomogeneousSurfaceMaterial(layerMaterialProperties));
         // central material
         if (m_cfg.centralLayerMaterialConcentration.at(icl) == 0.) {
           // the layer surface is the material surface
-          cLayer->surfaceRepresentation().setAssociatedMaterial(layerMaterialPtr);
+          cLayer->surfaceRepresentation().setAssociatedMaterial(
+              layerMaterialPtr);
         } else {
           // approach surface material
           // get the approach descriptor - at this stage we know that the
@@ -223,7 +237,7 @@ Acts::GenericLayerBuilder::constructLayers()
               = cLayer->approachDescriptor()->containedSurfaces();
           if (m_cfg.centralLayerMaterialConcentration.at(icl) > 0) {
             approachSurfaces.at(1)->setAssociatedMaterial(layerMaterialPtr);
-              ACTS_VERBOSE("- and material at outer approach surface");
+            ACTS_VERBOSE("- and material at outer approach surface");
           } else {
             approachSurfaces.at(0)->setAssociatedMaterial(layerMaterialPtr);
             ACTS_VERBOSE("- and material at inner approach surface");
@@ -235,46 +249,49 @@ Acts::GenericLayerBuilder::constructLayers()
     }
   }
 
-
   // -------------------------------- endcap type layers
   // pos/neg layers
   size_t numpnLayers = m_cfg.posnegLayerPositionsZ.size();
   if (numpnLayers) {
-    ACTS_DEBUG("Configured to build 2 * " << numpnLayers
+    ACTS_DEBUG("Configured to build 2 * "
+               << numpnLayers
                << " passive positive/negative side layers.");
     m_pLayers.reserve(numpnLayers);
     m_nLayers.reserve(numpnLayers);
-    
+
     for (size_t ipnl = 0; ipnl < numpnLayers; ++ipnl) {
       // some screen output
-      ACTS_VERBOSE("- build layers " << (2*ipnl) << " and "
-        <<  (2*ipnl)+1 << "at +/- z = " << m_cfg.posnegLayerPositionsZ.at(ipnl));    
+      ACTS_VERBOSE("- build layers " << (2 * ipnl) << " and " << (2 * ipnl) + 1
+                                     << "at +/- z = "
+                                     << m_cfg.posnegLayerPositionsZ.at(ipnl));
       /// some preparation work
       // define the layer envelope
       double layerEnvelopeR = m_cfg.posnegLayerEnvelopeR.at(ipnl);
       // prepare for the r binning
       std::vector<const Surface*> nsVector;
       std::vector<const Surface*> psVector;
-      // now fill the vectors 
-      for (auto& discModulePositions : m_cfg.posnegModulePositions.at(ipnl)){
+      // now fill the vectors
+      for (auto& discModulePositions : m_cfg.posnegModulePositions.at(ipnl)) {
         size_t ipnR = 0;
-        for (auto& ringModulePosition : discModulePositions){
+        for (auto& ringModulePosition : discModulePositions) {
           // module specifications
-          double moduleThickness = m_cfg.posnegModuleThickness.at(ipnl).at(ipnR);
-          double moduleMinHalfX  = m_cfg.posnegModuleMinHalfX.at(ipnl).at(ipnR);
-          double moduleMaxHalfX  = m_cfg.posnegModuleMaxHalfX.size() ?
-          m_cfg.posnegModuleMaxHalfX.at(ipnl).at(ipnR) : 0.;
-          double moduleHalfY     = m_cfg.posnegModuleHalfY.at(ipnl).at(ipnR);
+          double moduleThickness
+              = m_cfg.posnegModuleThickness.at(ipnl).at(ipnR);
+          double moduleMinHalfX = m_cfg.posnegModuleMinHalfX.at(ipnl).at(ipnR);
+          double moduleMaxHalfX = m_cfg.posnegModuleMaxHalfX.size()
+              ? m_cfg.posnegModuleMaxHalfX.at(ipnl).at(ipnR)
+              : 0.;
+          double moduleHalfY = m_cfg.posnegModuleHalfY.at(ipnl).at(ipnR);
           // module material
           // create the Module material from input
           std::shared_ptr<const SurfaceMaterial> moduleMaterialPtr = nullptr;
           if (m_cfg.posnegModuleMaterial.size()) {
-            MaterialProperties moduleMaterialProperties(m_cfg.posnegModuleMaterial.at(ipnl).at(ipnR),
-                                                        moduleThickness);
+            MaterialProperties moduleMaterialProperties(
+                m_cfg.posnegModuleMaterial.at(ipnl).at(ipnR), moduleThickness);
             // and create the shared pointer
             moduleMaterialPtr = std::shared_ptr<const SurfaceMaterial>(
                 new HomogeneousSurfaceMaterial(moduleMaterialProperties));
-          } 
+          }
           // create the bounds
           PlanarBounds* pBounds = nullptr;
           if (moduleMaxHalfX != 0. && moduleMinHalfX != moduleMaxHalfX)
@@ -289,15 +306,14 @@ Acts::GenericLayerBuilder::constructLayers()
           // the center position of the modules
           Vector3D pModuleCenter(ringModulePosition);
           // take the mirrored position wrt x/y
-          Vector3D nModuleCenter(pModuleCenter.x(),
-                                 pModuleCenter.y(),
-                                 -pModuleCenter.z());
+          Vector3D nModuleCenter(
+              pModuleCenter.x(), pModuleCenter.y(), -pModuleCenter.z());
           // the rotation matrix of the module
           Vector3D moduleLocalY(cos(modulePhi), sin(modulePhi), 0.);
           // take different axis to have the same readout direction
-          Vector3D pModuleLocalZ(0., 0., 1.);  
+          Vector3D pModuleLocalZ(0., 0., 1.);
           // take different axis to have the same readout direction
-          Vector3D nModuleLocalZ(0., 0., -1.);  
+          Vector3D nModuleLocalZ(0., 0., -1.);
           Vector3D nModuleLocalX = moduleLocalY.cross(nModuleLocalZ);
           Vector3D pModuleLocalX = moduleLocalY.cross(pModuleLocalZ);
           // local rotation matrices
@@ -427,17 +443,20 @@ Acts::GenericLayerBuilder::constructLayers()
                                           m_cfg.approachSurfaceEnvelope,
                                           layerBinsR,
                                           layerBinsPhi);
-                                          
+
       // the layer is built le't see if it needs material
       if (m_cfg.posnegLayerMaterialProperties.size()) {
-          std::shared_ptr<const SurfaceMaterial> layerMaterialPtr(
-            new HomogeneousSurfaceMaterial(m_cfg.posnegLayerMaterialProperties[ipnl]));
+        std::shared_ptr<const SurfaceMaterial> layerMaterialPtr(
+            new HomogeneousSurfaceMaterial(
+                m_cfg.posnegLayerMaterialProperties[ipnl]));
         // central material
         if (m_cfg.posnegLayerMaterialConcentration.at(ipnl) == 0.) {
           // assign the surface material - the layer surface is the material
           // surface
-          nLayer->surfaceRepresentation().setAssociatedMaterial(layerMaterialPtr);
-          pLayer->surfaceRepresentation().setAssociatedMaterial(layerMaterialPtr);
+          nLayer->surfaceRepresentation().setAssociatedMaterial(
+              layerMaterialPtr);
+          pLayer->surfaceRepresentation().setAssociatedMaterial(
+              layerMaterialPtr);
         } else {
           // approach surface material
           // get the approach descriptor - at this stage we know that the
@@ -457,7 +476,7 @@ Acts::GenericLayerBuilder::constructLayers()
       }
       // push it into the layer vector
       m_nLayers.push_back(nLayer);
-      m_pLayers.push_back(pLayer);                                          
+      m_pLayers.push_back(pLayer);
     }
   }
 }
