@@ -64,7 +64,7 @@ public:
   /// @param maxPhi is the maximal phi position of the surfaces
   /// @param rBoundaries are the optional boundaris of the r rings 
   /// @param transform is the (optional) additional transform applied
-  /// @return a unique pointer a new SurfaceArray
+  /// @return a unique pointer a new SurfaceArray                                                                       
   virtual std::unique_ptr<SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
                      double                             rMin,
@@ -73,7 +73,6 @@ public:
                      double                             maxPhi,
                      size_t                             binsR,
                      size_t                             binsZ,
-                     const std::vector<double>&         rBoundaries = {},
                      std::shared_ptr<Transform3D>       transform
                      = nullptr) const = 0;
 

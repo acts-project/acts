@@ -17,11 +17,9 @@
 
 namespace Acts {
 
-/**
-  @struct Intersection
-
-  */
-
+///  @struct Intersection
+///
+///  intersection struct used for position
 struct Intersection
 {
   Vector3D position;
@@ -50,7 +48,7 @@ struct Intersection
   }
 };
 
-/** class extensions to return also the object */
+/// class extensions to return also the object
 template <class T>
 class ObjectIntersection
 {
@@ -59,15 +57,17 @@ public:
   mutable const T* object;
   int              pDirection;
 
-  /** Default constructor */
+  /// Default constructor
   ObjectIntersection() : intersection(), object(nullptr), pDirection(0) {}
-  /** Object intersection */
+  /// Object intersection
   ObjectIntersection(const Intersection& sInter, const T* sObject, int dir = 1)
     : intersection(sInter), object(sObject), pDirection(dir)
   {
   }
 
-  /** smaller operator for ordering & sorting */
+  /// smaller operator for ordering & sorting
+  ///
+  /// @param oi is the source intersection for comparison
   bool
   operator<(const ObjectIntersection<T>& oi) const
   {
@@ -75,7 +75,7 @@ public:
   }
 };
 
-/** Class extension to return the object, a represenation & the result */
+/// Class extension to return the object, a represenation & the result
 template <class T, class R, class S>
 class FullIntersection
 {
@@ -86,7 +86,15 @@ public:
   mutable const S* result;
   int              pDirection;
 
-  /** Full intersection */
+  /// Full intersection constructor
+  ///
+  /// @param sInter is the intersection struct
+  /// @param sObject is the intersected object
+  /// @param sReprensentation is the surface representation of the object
+  /// @param sResult is the type of result: neutral, charged TP e.g.
+  /// @param dir is the direction
+  ///
+  /// @TODO use unique_ptr for result !
   FullIntersection(const Intersection& sInter,
                    const T*            sObject,
                    const R*            sRepresentation,
@@ -100,7 +108,7 @@ public:
   {
   }
 
-  /** smaller operator for ordering & sorting */
+  /// smaller operator for ordering & sorting
   bool
   operator<(const FullIntersection<T, R, S>& oi) const
   {

@@ -10,68 +10,75 @@
 // BinnedArray.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETRYUTILS_BINNEDARRAY_H
-#define ACTS_GEOMETRYUTILS_BINNEDARRAY_H 1
+#ifndef ACTS_UTILITIES_BINNEDARRAY_H
+#define ACTS_UTILITIES_BINNEDARRAY_H 1
 
-// Geometry module
-#include "ACTS/Utilities/BinUtility.hpp"
-// Core moudle
+#include <array>
 #include <vector>
-#include "Definitions.hpp"
+#include "ACTS/Utilities/BinUtility.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
 
-/** @class BinnedArray
-
-   Pure virtual base class for Binned Array to avoid map searches
-   - there is only one restriction:
-     T must be of pointer type in order to be initialized withh nullptr
-     and to allow for nulpptr return type
-
-   */
-
+///  @class BinnedArray
+///
+/// Pure virtual base class for Binned Array to avoid map searches
+/// - there is only one restriction:
+///   T must be of pointer type in order to be initialized withh nullptr
+///   and to allow for nullptr return type
+///
+/// - the BinnedArray is designed for 0D, 1D, 2D, and 3D binning
 template <class T>
 class BinnedArray
 {
 public:
-  /** Default Constructor - needed for inherited classes */
+  /// Default Constructor - needed for inherited classes
   BinnedArray() {}
-  /** Default Constructor - needed for inherited classes */
-  BinnedArray(const BinnedArray<T>& ba) : m_arrayObjects(ba.m_arrayObjects) {}
-  /**Virtual Destructor*/
+  /// Virtual Destructor
   virtual ~BinnedArray() {}
-  /** Implicit constructor */
-  virtual BinnedArray*
-  clone() const = 0;
-
-  /** Returns the object in the associated bin according the local position  */
+  /// Returns the object in the associated bin according the local position
+  ///
+  /// @param lposition is the local position for the object retrieval
+  /// @return the object according to the estimated bin
   virtual T
-  object(const Vector2D& lp) const = 0;
-
-  /** Returns the object in the associated bin according the global position  */
+  object(const Vector2D& lposition, std::array<size_t, 3>& bins) const = 0;
+  /// same method without bins for backward compatibility
   virtual T
-  object(const Vector3D& gp) const = 0;
-
-  /** Returns the pointer to the templated class object from the BinnedArray -
-   * entry point*/
-  virtual T
-  entryObject(const Vector3D&) const = 0;
-
-  /** Return all objects of the Array - in one */
-  virtual const std::vector<T>&
-  arrayObjects() const
+  object(const Vector2D& lposition) const
   {
-    return m_arrayObjects;
-  };
+    std::array<size_t, 3> bins;
+    return object(lposition, bins);
+  }
 
-  /** Return the BinUtility*/
+  /// Returns the object in the associated bin according the local position
+  ///
+  /// @param position is the global position for the object retrieval
+  /// @return the object according to the estimated bin
+  virtual T
+  object(const Vector3D& position, std::array<size_t, 3>& bins) const = 0;
+  /// same method without bins for backward compatibility
+  virtual T
+  object(const Vector3D& position) const
+  {
+    std::array<size_t, 3> bins;
+    return object(position, bins);
+  }
+
+  /// Return all unqiue object
+  virtual const std::vector<T>&
+  arrayObjects() const = 0;
+
+  /// Return the object grid
+  /// multiple entries are allowed and wanted
+  virtual const std::vector<std::vector<std::vector<T>>>&
+  objectGrid() const = 0;
+
+  /// Return the BinUtility
+  /// - if returned 0 it is a 0D array
   virtual const BinUtility*
   binUtility() const = 0;
-
-protected:
-  std::vector<T> m_arrayObjects;
 };
 
 }  // end of namespace Acts
 
-#endif  // ACTS_GEOMETRYUTILS_BINNEDARRAY_H
+#endif  // ACTS_UTILITIES_BINNEDARRAY_H
