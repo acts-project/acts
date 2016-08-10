@@ -73,7 +73,6 @@ public:
                      double                             maxPhi,
                      size_t                             binsR,
                      size_t                             binsZ,
-                     const std::vector<double>&         rBoundaries = {},
                      std::shared_ptr<Transform3D>       transform
                      = nullptr) const = 0;
 

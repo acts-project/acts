@@ -13,7 +13,7 @@
 #include "ACTS/Tools/TrackingVolumeArrayCreator.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
-#include "ACTS/Utilities/BinnedArray1D.hpp"
+#include "ACTS/Utilities/BinnedArrayXD.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/GeometryObjectSorter.hpp"
 #include "ACTS/Volumes/VolumeBounds.hpp"
@@ -56,9 +56,9 @@ Acts::TrackingVolumeArrayCreator::trackingVolumeArray(
   }
 
   // now create teh bin utility
-  BinUtility* binUtility = new BinUtility(boundaries, open, bValue);
+  auto binUtility = std::make_unique<BinUtility>(boundaries, open, bValue);
 
   // and return the newly created binned array
-  return std::make_shared<BinnedArray1D<std::shared_ptr<const TrackingVolume>>>(
-      tVolumesOrdered, binUtility);
+  return std::make_shared<BinnedArrayXD<TrackingVolumePtr>>(
+      tVolumesOrdered, std::move(binUtility));
 }

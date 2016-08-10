@@ -16,21 +16,20 @@
 #include "Definitions.hpp"
 
 namespace Acts {
-/** @class GeometryObjectSorter
-
-  */
+/// @class GeometryObjectSorter
+///
 template <class T>
 class GeometryObjectSorterT : public std::binary_function<T, T, bool>
 {
 public:
-  /** Constructor from a binning value */
+  /// Constructor from a binning value
   GeometryObjectSorterT(BinningValue                 bValue,
                         std::shared_ptr<Transform3D> transform = nullptr)
     : m_binningValue(bValue), m_transform(transform)
   {
   }
 
-  /** the comparison */
+  /// the comparison
   bool
   operator()(T one, T two) const
   {
