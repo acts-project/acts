@@ -16,8 +16,9 @@
 #include "ACTS/Extrapolation/StaticEngine.hpp"
 
 // constructor
-Acts::StaticEngine::StaticEngine(const Acts::StaticEngine::Config& seConfig)
-  : m_cfg()
+Acts::StaticEngine::StaticEngine(const Acts::StaticEngine::Config& seConfig,
+                                 std::unique_ptr<Logger>           logger)
+  : m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(seConfig);
 }
@@ -36,6 +37,12 @@ Acts::StaticEngine::setConfiguration(const Acts::StaticEngine::Config& seConfig)
   IExtrapolationEngine::m_sopPostfix = seConfig.postfix;
   // copy the configuration
   m_cfg = seConfig;
+}
+
+void
+Acts::StaticEngine::setLogger(std::unique_ptr<Logger> newLogger)
+{
+  m_logger = std::move(newLogger);
 }
 
 // charged extrapolation /
