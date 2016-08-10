@@ -29,7 +29,7 @@ class Layer;
 
 /// @class MaterialEffectsEngine
 ///
-/// Material effects engine interface for charged and neutral 
+/// Material effects engine interface for charged and neutral
 /// (fast track simulation), the update is alwyas on the:
 ///  - eCell.leadParmaeters && eCell.leadLayer
 ///  - if eCell.leadPameters == eCell.startParamters clone to new parameters
@@ -43,32 +43,27 @@ public:
   /// Configuration struct for the MaterialEffectsEngine
   struct Config
   {
-    std::shared_ptr<Logger> logger;
-    bool eLossCorrection;   ///< apply the energy loss correction
-    bool eLossMpv;          ///< apply the energy loss correction as most probable value
-    bool mscCorrection;     ///< apply the multiple (coulomb) scattering correction
-    std::string prefix;     ///< screen output prefix
-    std::string postfix;    ///< screen output postfix
-    std::string name;       ///< the name of this engine
-
-    Config(const std::string& lname = "MaterialEffectsEngine",
-           Logging::Level lvl = Logging::INFO)
-      : logger(getDefaultLogger(lname, lvl))
-      , eLossCorrection(true)
-      , eLossMpv(true)
-      , mscCorrection(true)
-      , prefix("[ME] - ")
-      , postfix(" - ")
-      , name(lname)
-    {
-    }
+    /// apply the energy loss correction
+    bool eLossCorrection = true;
+    /// apply the energy loss correction as most probable value
+    bool eLossMpv = true;
+    /// apply the multiple (coulomb) scattering correction
+    bool mscCorrection = true;
+    /// screen output prefix
+    std::string prefix = "[ME] - ";
+    /// screen output postfix
+    std::string postfix = " - ";
   };
 
-  /// Constructor 
+  /// Constructor
   /// @param meConfig is an instance of the configuration struct
-  MaterialEffectsEngine(const Config& meConfig);
+  /// @param logger logging instance
+  MaterialEffectsEngine(const Config&           meConfig,
+                        std::unique_ptr<Logger> logger
+                        = getDefaultLogger("MaterialEffectsEngine",
+                                           Logging::INFO));
 
-  /// Destructor 
+  /// Destructor
   ~MaterialEffectsEngine();
 
   /// Public charged material effects interface
@@ -80,7 +75,6 @@ public:
                  PropDirection       dir        = alongMomentum,
                  MaterialUpdateStage matupstage = fullUpdate) const final;
 
-
   /// Public neutral material effects interface
   /// @param ecCharged is the neutral extrapolaiton cell
   /// @param dir is the additional direction prescription
@@ -90,13 +84,17 @@ public:
                  PropDirection       dir        = alongMomentum,
                  MaterialUpdateStage matupstage = fullUpdate) const final;
 
-  /// Set configuration method 
+  /// Set configuration method
   void
   setConfiguration(const Config& meConfig);
 
-  /// Get configuration method 
+  /// Get configuration method
   Config
   getConfiguration() const;
+
+  /// set logging instance
+  void
+  setLogger(std::unique_ptr<Logger> logger);
 
 protected:
   Config m_cfg;  ///< configuration struct
@@ -105,8 +103,12 @@ private:
   const Logger&
   logger() const
   {
-    return *m_cfg.logger;
+    return *m_logger;
   }
+
+  /// logger instance
+  std::unique_ptr<Logger> m_logger;
+
   ///  charged extrapolation
   ///  depending on the MaterialUpdateStage:
   ///    - postUpdate : creates a new unique_ptr and stores them as step
@@ -124,7 +126,7 @@ private:
   ParticleMasses      m_particleMasses;       //!< struct of Particle masses
 };
 
-/// Return the configuration object 
+/// Return the configuration object
 inline MaterialEffectsEngine::Config
 MaterialEffectsEngine::getConfiguration() const
 {
