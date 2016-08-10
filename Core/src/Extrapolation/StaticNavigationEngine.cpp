@@ -17,8 +17,9 @@
 
 // constructor
 Acts::StaticNavigationEngine::StaticNavigationEngine(
-    const Acts::StaticNavigationEngine::Config& snConfig)
-  : m_cfg()
+    const Acts::StaticNavigationEngine::Config& snConfig,
+    std::unique_ptr<Logger>                     logger)
+  : m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(snConfig);
 }
@@ -38,6 +39,12 @@ Acts::StaticNavigationEngine::setConfiguration(
   INavigationEngine::m_sopPostfix = snConfig.postfix;
   // copy the configuration
   m_cfg = snConfig;
+}
+
+void
+Acts::StaticNavigationEngine::setLogger(std::unique_ptr<Logger> newLogger)
+{
+  m_logger = std::move(newLogger);
 }
 
 // charged situation
