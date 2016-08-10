@@ -50,27 +50,21 @@ public:
   /// Configuration for the DD4hepCylinderGeometryBuilder
   struct Config
   {
-    /// The logging instance
-    std::shared_ptr<Logger> logger;
     /// Building the contained sub detectors
-    std::shared_ptr<ITrackingVolumeBuilder> volumeBuilder;
+    std::shared_ptr<ITrackingVolumeBuilder> volumeBuilder = nullptr;
     /// Helper tool needed for volume building
-    std::shared_ptr<ITrackingVolumeHelper> volumeHelper;
+    std::shared_ptr<ITrackingVolumeHelper> volumeHelper = nullptr;
     /// World detector element of the DD4hep geometry
     DD4hep::Geometry::DetElement detWorld;
-
-    Config()
-      : logger(getDefaultLogger("DD4hepCylinderGeometryBuilder", Logging::INFO))
-      , volumeBuilder(nullptr)
-      , volumeHelper(nullptr)
-      , detWorld()
-    {
-    }
   };
 
   /// Constructor
   /// @param dbgConfig The conficuration struct for this builder
-  DD4hepCylinderGeometryBuilder(const Config dgbConfig);
+  /// @param logger logging instance
+  DD4hepCylinderGeometryBuilder(
+      const Config            dgbConfig,
+      std::unique_ptr<Logger> logger
+      = getDefaultLogger("DD4hepCylinderGeometryBuilder", Logging::INFO));
 
   /// Destructor
   virtual ~DD4hepCylinderGeometryBuilder() = default;
@@ -84,6 +78,10 @@ public:
   /// @return The conficuration struct for this builder
   Config
   getConfiguration() const;
+
+  /// set logging instance
+  void
+  setLogger(std::unique_ptr<Logger> logger);
 
   /// TrackingGeometry Interface method - translates the DD4hep geometry into
   /// the tracking geometry
@@ -172,11 +170,14 @@ private:
   const Logger&
   logger() const
   {
-    return *m_cfg.logger;
+    return *m_logger;
   }
 
   /// configuration object
   Config m_cfg;
+
+  /// The logging instance
+  std::unique_ptr<Logger> m_logger;
 };
 
 inline DD4hepCylinderGeometryBuilder::Config
