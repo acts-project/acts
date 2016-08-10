@@ -10,8 +10,10 @@
 // GenericLayerBuilder.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Utilities/Helpers.hpp"
+#include "ACTS/Examples/GenericLayerBuilder.hpp"
+#include <iostream>
 #include "ACTS/Detector/DetectorElementBase.hpp"
+#include "ACTS/Examples/GenericDetectorElement.hpp"
 #include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
 #include "ACTS/Material/Material.hpp"
 #include "ACTS/Material/MaterialProperties.hpp"
@@ -22,9 +24,7 @@
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
 #include "ACTS/Tools/LayerCreator.hpp"
 #include "ACTS/Utilities/ApproachDescriptor.hpp"
-#include "ACTS/Examples/GenericDetectorElement.hpp"
-#include "ACTS/Examples/GenericLayerBuilder.hpp"
-#include <iostream>
+#include "ACTS/Utilities/Helpers.hpp"
 
 Acts::GenericLayerBuilder::GenericLayerBuilder(
     const Acts::GenericLayerBuilder::Config& glbConfig)
