@@ -10,8 +10,10 @@
 // GenericLayerBuilder.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Utilities/Helpers.hpp"
+#include "ACTS/Examples/GenericLayerBuilder.hpp"
+#include <iostream>
 #include "ACTS/Detector/DetectorElementBase.hpp"
+#include "ACTS/Examples/GenericDetectorElement.hpp"
 #include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
 #include "ACTS/Material/Material.hpp"
 #include "ACTS/Material/MaterialProperties.hpp"
@@ -26,9 +28,7 @@
 #include "ACTS/Utilities/BinnedArray.hpp"
 #include "ACTS/Utilities/BinnedArray1D.hpp"
 #include "ACTS/Utilities/BinnedArray2D.hpp"
-#include "ACTS/Examples/GenericDetectorElement.hpp"
-#include "ACTS/Examples/GenericLayerBuilder.hpp"
-#include <iostream>
+#include "ACTS/Utilities/Helpers.hpp"
 
 Acts::GenericLayerBuilder::GenericLayerBuilder(
     const Acts::GenericLayerBuilder::Config& glbConfig)

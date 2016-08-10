@@ -77,9 +77,9 @@ public:
   /// @param rMax is the maximal radius of the disc
   /// @param minPhi is the minimal phi position of the surfaces
   /// @param maxPhi is the maximal phi position of the surfaces
-  /// @param rBoundaries are the optional boundaris of the r rings 
+  /// @param rBoundaries are the optional boundaris of the r rings
   /// @param transform is the (optional) additional transform applied
-  /// @return a unique pointer a new SurfaceArray    
+  /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
                      double                             rMin,
@@ -142,8 +142,8 @@ private:
   /// Neighbour bins are then filled to contain pointers as well
   /// @param surfaces are the contained surfaces of the layer
   /// @param binUtility is the unitility class that describes the binning
-  /// sVector is the filled vector of Surface and binning position 
-  /// binSystem is the full system of bins 
+  /// sVector is the filled vector of Surface and binning position
+  /// binSystem is the full system of bins
   void
   completeBinning(
       const std::vector<const Surface*>&                  surfaces,
@@ -152,7 +152,7 @@ private:
       std::vector<std::vector<SurfacePositionDirection>>& binSystem) const;
 
   /// Register the neighbours on a Grid - needs to be a BinnedArray1D or
-  //  BinnedArray2D type binning 
+  //  BinnedArray2D type binning
   void
   registerNeighboursGrid(
       const std::vector<std::vector<const Surface*>>& surfaceArrayObjects,

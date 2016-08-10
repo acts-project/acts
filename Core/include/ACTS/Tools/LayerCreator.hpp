@@ -81,7 +81,7 @@ public:
   /// @param envelopeMaxR is the additional envelope applied in R in Rmax  
   /// @param binsR is number of bins the sensitive surfaces are ordered in R
   /// @param binsPhi is number of bins the sensitive surfaces are ordered in Phi
-  /// @param rBoundaries is the optional r-separation of provided rings              
+  /// @param rBoundaries is the optional r-separation of provided rings
   LayerPtr
   discLayer(const std::vector<const Surface*>& surfaces,
             double                             envelopeMinR,

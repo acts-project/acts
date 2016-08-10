@@ -38,9 +38,9 @@ public:
     /// identify the sensor by name
     std::string sensorName;
     /// define the number of bins in loc0
-    size_t      binsLoc0;
+    size_t binsLoc0;
     /// define the number of bins in loc1
-    size_t      binsLoc1;
+    size_t binsLoc1;
 
     LayerConfig() : layerName(""), sensorName(""), binsLoc0(0), binsLoc1(0) {}
   };
@@ -106,12 +106,12 @@ public:
 
 private:
   /// configruation object
-  Config m_cfg;  
-  
-  /// @TODO make clear where the TGeoDetectorElement lives
-  mutable std::vector< std::shared_ptr<TGeoDetectorElement> > m_elementStore;  
+  Config m_cfg;
 
-  /// Private helper function to parse the geometry tree 
+  /// @TODO make clear where the TGeoDetectorElement lives
+  mutable std::vector<std::shared_ptr<TGeoDetectorElement>> m_elementStore;
+
+  /// Private helper function to parse the geometry tree
   void
   collectSensitive(TGeoVolume*             tgVolume,
                    TGeoNode*               tgNode,

@@ -16,8 +16,8 @@
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/BinnedArray1D.hpp"
 #include "ACTS/Utilities/BinnedArray2D.hpp"
-#include "ACTS/Utilities/MsgMacros.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/MsgMacros.hpp"
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
@@ -81,7 +81,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   auto sArray
       = std::make_unique<BinnedArray2D<const Surface*>>(sVector, arrayUtility);
   // register the neighbours
-  // @TODO -> registerNeighboursGrid(sArray->arrayObjectsOrdered(), false, true);
+  // @TODO -> registerNeighboursGrid(sArray->arrayObjectsOrdered(), false,
+  // true);
   // return the surface array
   return std::move(sArray);
 }
@@ -180,7 +181,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // create and complete
   completeBinning(surfaces, *arrayUtility, sVector, rphiSystem);
   // create the surfaceArray
-  auto sArray = std::make_unique<BinnedArray2D<const Surface*>>(sVector, arrayUtility);
+  auto sArray
+      = std::make_unique<BinnedArray2D<const Surface*>>(sVector, arrayUtility);
   // register the neighbours
   // @TODO -> put it back
   // registerNeighboursGrid(sArray->arrayObjectsOrdered(), false, true);

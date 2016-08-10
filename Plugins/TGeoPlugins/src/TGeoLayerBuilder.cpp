@@ -7,11 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ACTS/Plugins/TGeoPlugins/TGeoLayerBuilder.hpp"
+#include <stdio.h>
 #include "ACTS/Plugins/TGeoPlugins/TGeoDetectorElement.hpp"
 #include "ACTS/Tools/ILayerCreator.hpp"
 #include "ACTS/Utilities/MsgMacros.hpp"
 #include "TGeoManager.h"
-#include <stdio.h>
 
 Acts::TGeoLayerBuilder::TGeoLayerBuilder(
     const Acts::TGeoLayerBuilder::Config& config)

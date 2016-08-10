@@ -13,10 +13,10 @@
 //#include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
 //#include "ACTS/Material/Material.hpp"
 //#include "ACTS/Material/MaterialProperties.hpp"
+#include <iostream>
 #include "ACTS/Utilities/Definitions.hpp"
 #include "TGeoBBox.h"
 #include "TGeoTrd2.h"
-#include <iostream>
 
 Acts::TGeoDetectorElement::TGeoDetectorElement(
     const Identifier&                        identifier,
@@ -61,9 +61,8 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         trapezoid->GetDx2() * cm,
         trapezoid->GetDz() * cm);
     m_bounds  = trapezoidBounds;
-    m_surface = std::make_shared<const Acts::PlaneSurface>(trapezoidBounds, 
-                                                           *this, 
-                                                           m_identifier);
+    m_surface = std::make_shared<const Acts::PlaneSurface>(
+        trapezoidBounds, *this, m_identifier);
     // ignore module material for the moment @TODO handle module material
     /*
         MaterialProperties moduleMaterialProperties(
@@ -81,15 +80,14 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     // now calculate the global transformation
     if (motherTransform) {
       m_transform = std::make_shared<const Acts::Transform3D>((*motherTransform)
-                                                               *(*m_transform));
+                                                              * (*m_transform));
     }
     // extract the surface bounds
     auto rectangleBounds = std::make_shared<const Acts::RectangleBounds>(
         box->GetDX() * cm, box->GetDY() * cm);
     m_bounds  = rectangleBounds;
-    m_surface = std::make_shared<const Acts::PlaneSurface>(rectangleBounds,
-                                                           *this,
-                                                          m_identifier);
+    m_surface = std::make_shared<const Acts::PlaneSurface>(
+        rectangleBounds, *this, m_identifier);
     // ignore module material for the moment @TODO handle module material
     /*    MaterialProperties moduleMaterialProperties(moduleMaterial,
                                                     box->GetDZ() * cm);
