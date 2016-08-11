@@ -56,13 +56,13 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   //-------------------------------------------------------------------------------------
   // configure the beam pipe layer builder
   PassiveLayerBuilder::Config bplConfig;
-  bplConfig.logger              = getDefaultLogger("PassiveLayerBuilder", lvl);
-  bplConfig.layerIdentification = "BeamPipe";
-  bplConfig.centralLayerRadii   = std::vector<double>(1, 19.);
+  bplConfig.layerIdentification     = "BeamPipe";
+  bplConfig.centralLayerRadii       = std::vector<double>(1, 19.);
   bplConfig.centralLayerHalflengthZ = std::vector<double>(1, 200.);
   bplConfig.centralLayerThickness   = std::vector<double>(1, 0.8);
   bplConfig.centralLayerMaterial = {Material(352.8, 407., 9.012, 4., 1.848e-3)};
-  auto beamPipeBuilder = std::make_shared<PassiveLayerBuilder>(bplConfig);
+  auto beamPipeBuilder           = std::make_shared<PassiveLayerBuilder>(
+      bplConfig, getDefaultLogger("PassiveLayerBuilder", lvl));
   // create the volume for the beam pipe
   CylinderVolumeBuilder::Config bpvConfig;
   bpvConfig.trackingVolumeHelper = cylinderVolumeHelper;
