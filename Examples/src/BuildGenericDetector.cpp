@@ -281,10 +281,10 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   CylinderGeometryBuilder::Config tgConfig;
   tgConfig.beamPipeBuilder        = beamPipeVolumeBuilder;
   tgConfig.trackingVolumeBuilders = detectorBuilders;
-  tgConfig.logger          = getDefaultLogger("CylinderGeometryBuilder", lvl);
   tgConfig.trackingVolumeHelper   = cylinderVolumeHelper;
   auto cylinderGeometryBuilder
-      = std::make_shared<const CylinderGeometryBuilder>(tgConfig);
+      = std::make_shared<const CylinderGeometryBuilder>(
+          tgConfig, getDefaultLogger("CylinderGeometryBuilder", lvl));
   return cylinderGeometryBuilder->trackingGeometry();
 }
 
