@@ -10,19 +10,20 @@
 // LayerCreator.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Layers/GenericOverlapDescriptor.hpp"
+#include "ACTS/Tools/LayerCreator.hpp"
 #include "ACTS/Layers/CylinderLayer.hpp"
 #include "ACTS/Layers/DiscLayer.hpp"
+#include "ACTS/Layers/GenericOverlapDescriptor.hpp"
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
-#include "ACTS/Tools/LayerCreator.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/MsgMacros.hpp"
 #include "ACTS/Utilities/OverlapDescriptor.hpp"
 
-Acts::LayerCreator::LayerCreator(const Acts::LayerCreator::Config& lcConfig)
-  : m_cfg()
+Acts::LayerCreator::LayerCreator(const Acts::LayerCreator::Config& lcConfig,
+                                 std::unique_ptr<Logger>           logger)
+  : m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(lcConfig);
 }
@@ -33,6 +34,12 @@ Acts::LayerCreator::setConfiguration(const Acts::LayerCreator::Config& lcConfig)
   // @TODO check consistency
   // copy the configuration
   m_cfg = lcConfig;
+}
+
+void
+Acts::LayerCreator::setLogger(std::unique_ptr<Logger> newLogger)
+{
+  m_logger = std::move(newLogger);
 }
 
 Acts::LayerPtr

@@ -34,9 +34,9 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   auto surfaceArrayCreator = std::make_shared<SurfaceArrayCreator>(sacConfig);
   // configure the layer creator that uses the surface array creator
   LayerCreator::Config lcConfig;
-  lcConfig.logger              = getDefaultLogger("LayerCreator", lvl);
   lcConfig.surfaceArrayCreator = surfaceArrayCreator;
-  auto layerCreator            = std::make_shared<LayerCreator>(lcConfig);
+  auto layerCreator            = std::make_shared<LayerCreator>(
+      lcConfig, getDefaultLogger("LayerCreator", lvl));
   // configure the layer array creator
   auto layerArrayCreator = std::make_shared<LayerArrayCreator>(
       getDefaultLogger("LayerArrayCreator", lvl));
