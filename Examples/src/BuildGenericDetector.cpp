@@ -29,9 +29,8 @@ std::unique_ptr<const Acts::TrackingGeometry>
 trackingGeometry(Logging::Level lvl, size_t stage)
 {
   // configure surface array creator
-  SurfaceArrayCreator::Config sacConfig;
-  sacConfig.logger         = getDefaultLogger("SurfaceArrayCreator", lvl);
-  auto surfaceArrayCreator = std::make_shared<SurfaceArrayCreator>(sacConfig);
+  auto surfaceArrayCreator = std::make_shared<SurfaceArrayCreator>(
+      getDefaultLogger("SurfaceArrayCreator", lvl));
   // configure the layer creator that uses the surface array creator
   LayerCreator::Config lcConfig;
   lcConfig.surfaceArrayCreator = surfaceArrayCreator;
@@ -41,10 +40,8 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   auto layerArrayCreator = std::make_shared<LayerArrayCreator>(
       getDefaultLogger("LayerArrayCreator", lvl));
   // tracking volume array creator
-  TrackingVolumeArrayCreator::Config tvacConfig;
-  tvacConfig.logger = getDefaultLogger("TrackingVolumeArrayCreator", lvl);
-  auto tVolumeArrayCreator
-      = std::make_shared<TrackingVolumeArrayCreator>(tvacConfig);
+  auto tVolumeArrayCreator = std::make_shared<TrackingVolumeArrayCreator>(
+      getDefaultLogger("TrackingVolumeArrayCreator", lvl));
   // configure the cylinder volume helper
   CylinderVolumeHelper::Config cvhConfig;
   cvhConfig.layerArrayCreator          = layerArrayCreator;

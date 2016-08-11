@@ -13,11 +13,11 @@
 #ifndef ACTS_GEOMETRYTOOLS_TRACKINGVOLUMEARRAYCREATOR_H
 #define ACTS_GEOMETRYTOOLS_TRACKINGVOLUMEARRAYCREATOR_H
 
+#include <algorithm>
 #include "ACTS/Tools/ITrackingVolumeArrayCreator.hpp"
 #include "ACTS/Utilities/BinnedArray.hpp"
-#include "ACTS/Utilities/Logger.hpp"
-#include <algorithm>
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Logger.hpp"
 
 namespace Acts {
 
@@ -35,54 +35,41 @@ typedef std::pair<TrackingVolumePtr, Vector3D> TrackingVolumeOrderPosition;
 class TrackingVolumeArrayCreator : public ITrackingVolumeArrayCreator
 {
 public:
-  /// @struct Config
-  /// Nested configuration struct for this array creator
-  struct Config
+  /// Constructor
+  /// @param logger logging instance
+  TrackingVolumeArrayCreator(std::unique_ptr<Logger> logger
+                             = getDefaultLogger("LayerArrayCreator",
+                                                Logging::INFO))
+    : m_logger(std::move(logger))
   {
-    std::shared_ptr<Logger> logger;  ///< logging instance
-
-    Config() : logger(getDefaultLogger("LayerArrayCreator", Logging::INFO)) {}
-  };
-
-  /// Constructor 
-  /// @param cfg is the configuration class
-  TrackingVolumeArrayCreator(const Config& cfg) : m_cfg(cfg) {}
-  
-  /// Destructor 
+  }
+  /// Destructor
   virtual ~TrackingVolumeArrayCreator() = default;
 
-  /// create a tracking volume array 
-  /// @param vols is the vector of TrackingVolumes to be 
+  /// create a tracking volume array
+  /// @param vols is the vector of TrackingVolumes to be
   /// @param bVals is the binning value
   std::shared_ptr<const TrackingVolumeArray>
   trackingVolumeArray(const TrackingVolumeVector& vols,
                       BinningValue                bVal) const;
 
-  /// Set the configuration
-  /// @param cfg configuration struct to be set
+  /// set logging instance
   void
-  setConfiguration(const Config& cfg)
+  setLogger(std::unique_ptr<Logger> logger)
   {
-    m_cfg = cfg;
-  }
-
-  /// Get configuration method 
-  Config
-  getConfiguration() const
-  {
-    return m_cfg;
+    m_logger = std::move(logger);
   }
 
 private:
-  /// Configuration struct 
-  Config m_cfg;
-  
   // Private access to the logger method
   const Logger&
   logger() const
   {
-    return *m_cfg.logger;
+    return *m_logger;
   }
+
+  /// logging instance
+  std::unique_ptr<Logger> m_logger;
 };
 }
 
