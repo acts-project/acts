@@ -26,8 +26,6 @@
 #include "ACTS/Utilities/ApproachDescriptor.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/BinnedArray.hpp"
-#include "ACTS/Utilities/BinnedArray1D.hpp"
-#include "ACTS/Utilities/BinnedArray2D.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
 
 Acts::GenericLayerBuilder::GenericLayerBuilder(
@@ -416,7 +414,7 @@ Acts::GenericLayerBuilder::constructLayers()
         ++ipnR;
       }
       // the binning
-      size_t layerBinsR   = m_cfg.posnegModulePhiBins.at(ipnl).size();
+      size_t layerBinsR = m_cfg.posnegModulePhiBins.at(ipnl).size();
       // never multiply 1 single r-bin, does not make sense
       if (layerBinsR > 1) {
         // multiply with the given bin mulitplier
