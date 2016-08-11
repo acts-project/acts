@@ -22,8 +22,9 @@
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
 
 Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(
-    const Acts::CylinderVolumeBuilder::Config& cvbConfig)
-  : Acts::ITrackingVolumeBuilder(), m_cfg()
+    const Acts::CylinderVolumeBuilder::Config& cvbConfig,
+    std::unique_ptr<Logger>                    logger)
+  : Acts::ITrackingVolumeBuilder(), m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(cvbConfig);
 }
@@ -39,6 +40,12 @@ Acts::CylinderVolumeBuilder::setConfiguration(
   // @TODO check consistency
   // copy the configuration
   m_cfg = cvbConfig;
+}
+
+void
+Acts::CylinderVolumeBuilder::setLogger(std::unique_ptr<Logger> newLogger)
+{
+  m_logger = std::move(newLogger);
 }
 
 std::shared_ptr<const Acts::TrackingVolume>
@@ -264,8 +271,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
                  << volumeZmax);
   } else {
     // outside dimensions will have to be determined by the layer dimensions
-    volumeRmin
-        = m_cfg.volumeToBeamPipe ? 0. : layerRmin - m_cfg.layerEnvelopeR;
+    volumeRmin = m_cfg.volumeToBeamPipe ? 0. : layerRmin - m_cfg.layerEnvelopeR;
     volumeRmax = layerRmax + m_cfg.layerEnvelopeR;
     volumeZmax = layerZmax + m_cfg.layerEnvelopeZ;
     // from setup
@@ -544,9 +550,8 @@ Acts::CylinderVolumeBuilder::trackingVolume(
                 {niGap, insideVolume, piGap});
       }
       // create the container of the detector
-      insideVolume
-          = m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
-              {insideVolume, barrel});
+      insideVolume = m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
+          {insideVolume, barrel});
       volume = (nEndcap && pEndcap)
           ? m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
                 {nEndcap, insideVolume, pEndcap})

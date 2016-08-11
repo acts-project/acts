@@ -46,7 +46,7 @@ struct LayerSetup
 
   /// std::vector<double>      ringBoundaries;      //!< ring boundaries if
   /// present //!< @TODO insert ring layout
-  
+
   LayerSetup()
     : present(false)
     , binningValue(binR)
@@ -55,7 +55,7 @@ struct LayerSetup
   {
   }
 
-  /// Conversion operator to bool 
+  /// Conversion operator to bool
   operator bool() const { return present; }
 };
 
@@ -77,7 +77,8 @@ struct LayerSetup
 /// represents the layers of the negative endcap, the second the layers of the
 /// barrel and the third the layers of the positive endcap. If the one of these
 /// pointers is a nullptr no layers will be created for this volume
-///  Another functionality needed to translate an already existing geometry is to
+///  Another functionality needed to translate an already existing geometry is
+///  to
 /// hand over a volume triple, which is a triple of shared pointers of volumes
 /// (defined in the ITrackingVolumeBuilder). The first entry contains the
 /// negative endcap volume, the second the barrel volume and the third one the
@@ -91,43 +92,41 @@ public:
   /// Nested configuration struct for this CylinderVolumeBuilder
   struct Config
   {
-    /// the logging instance
-    std::shared_ptr<Logger> logger;
     /// the trackign volume helper for construction
-    std::shared_ptr<ITrackingVolumeHelper> trackingVolumeHelper;
+    std::shared_ptr<ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
     /// the string based indenfication
-    std::string volumeName;
+    std::string volumeName = "";
     /// The dimensions of the manually created world
-    std::vector<double> volumeDimension;
+    std::vector<double> volumeDimension{};
     /// the world material
-    std::shared_ptr<Material> volumeMaterial;
+    std::shared_ptr<Material> volumeMaterial = nullptr;
     /// build the volume to the beam pipe
-    bool                                    volumeToBeamPipe; 
-    /// needed to build layers within the volume 
-    std::shared_ptr<ILayerBuilder>          layerBuilder;
-    /// the envelope covering the potential layers     
-    double                                  layerEnvelopeR;
-    /// the envelope covering the potential layers   
-    double                                  layerEnvelopeZ; 
-    /// the volume signature  
-    int                                     volumeSignature;  
-
-    Config() : logger(getDefaultLogger("CylinderVolumeBuilder", Logging::INFO))
-    {
-    }
+    bool volumeToBeamPipe = false;
+    /// needed to build layers within the volume
+    std::shared_ptr<ILayerBuilder> layerBuilder = nullptr;
+    /// the envelope covering the potential layers
+    double layerEnvelopeR = 0.5;
+    /// the envelope covering the potential layers
+    double layerEnvelopeZ = 0.5;
+    /// the volume signature
+    int volumeSignature = -1;
   };
 
-  /// Constructor 
+  /// Constructor
   /// @param cvbConfig is the configuraiton struct to steer the builder
-  CylinderVolumeBuilder(const Config& cvbConfig);
+  /// @param logger logging instance
+  CylinderVolumeBuilder(const Config&           cvbConfig,
+                        std::unique_ptr<Logger> logger
+                        = getDefaultLogger("CylinderVolumeBuilder",
+                                           Logging::INFO));
 
-  /// Destructor 
+  /// Destructor
   virtual ~CylinderVolumeBuilder();
 
-  /// CylinderVolumeBuilder interface method  
+  /// CylinderVolumeBuilder interface method
   /// @param insideVolume is an (optional) volume to be wrapped
   /// @param outsideBounds is an (optional) outside confinement
-  /// @param layerTriple is an (optional) triplet of layers 
+  /// @param layerTriple is an (optional) triplet of layers
   /// @param volumeTriple is an (optional) triplet of volumes
   TrackingVolumePtr
   trackingVolume(TrackingVolumePtr   insideVolume  = nullptr,
@@ -135,8 +134,8 @@ public:
                  const LayerTriple*  layerTriple   = nullptr,
                  const VolumeTriple* volumeTriple  = nullptr) const override;
 
-  /// Set configuration method 
-  /// @param cvbConfig is the new configuration to be set               
+  /// Set configuration method
+  /// @param cvbConfig is the new configuration to be set
   void
   setConfiguration(const Config& cvbConfig);
 
@@ -144,23 +143,30 @@ public:
   Config
   getConfiguration() const;
 
+  /// set logging instance
+  void
+  setLogger(std::unique_ptr<Logger> logger);
+
 private:
-  /// Configuration struct 
+  /// Configuration struct
   Config m_cfg;
 
   /// Private access to the logger
   const Logger&
   logger() const
   {
-    return *m_cfg.logger;
+    return *m_logger;
   }
-  
-  /// analyse the layer setup 
+
+  /// the logging instance
+  std::unique_ptr<Logger> m_logger;
+
+  /// analyse the layer setup
   LayerSetup
   analyzeLayerSetup(const LayerVector lVector) const;
 };
 
-/// Return the configuration object 
+/// Return the configuration object
 inline CylinderVolumeBuilder::Config
 CylinderVolumeBuilder::getConfiguration() const
 {

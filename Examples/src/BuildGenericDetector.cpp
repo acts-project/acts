@@ -66,15 +66,14 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   auto beamPipeBuilder = std::make_shared<PassiveLayerBuilder>(bplConfig);
   // create the volume for the beam pipe
   CylinderVolumeBuilder::Config bpvConfig;
-  bpvConfig.logger = getDefaultLogger("CylinderVolumeBuilder", lvl);
   bpvConfig.trackingVolumeHelper = cylinderVolumeHelper;
   bpvConfig.volumeName           = "BeamPipe";
   bpvConfig.layerBuilder         = beamPipeBuilder;
   bpvConfig.layerEnvelopeR       = 1.;
   bpvConfig.layerEnvelopeZ       = 1.;
   bpvConfig.volumeSignature      = 0;
-  auto beamPipeVolumeBuilder
-      = std::make_shared<CylinderVolumeBuilder>(bpvConfig);
+  auto beamPipeVolumeBuilder     = std::make_shared<CylinderVolumeBuilder>(
+      bpvConfig, getDefaultLogger("CylinderVolumeBuilder", lvl));
   //-------------------------------------------------------------------------------------
   //-------------------------------------------------------------------------------------
   // pixel detector
@@ -160,7 +159,6 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   //-------------------------------------------------------------------------------------
   // build the pixel volume
   CylinderVolumeBuilder::Config pvbConfig;
-  pvbConfig.logger = Acts::getDefaultLogger("PixelVolumeBuilder", lvl);
   pvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
   pvbConfig.volumeName           = "Pixel";
   pvbConfig.volumeToBeamPipe     = false;
@@ -168,7 +166,8 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   pvbConfig.layerEnvelopeR       = 1.;
   pvbConfig.layerEnvelopeZ       = 10.;
   pvbConfig.volumeSignature      = 0;
-  auto pixelVolumeBuilder = std::make_shared<CylinderVolumeBuilder>(pvbConfig);
+  auto pixelVolumeBuilder        = std::make_shared<CylinderVolumeBuilder>(
+      pvbConfig, getDefaultLogger("CylinderVolumeBuilder", lvl));
 
   //-------------------------------------------------------------------------------------
   // list the volume builders
