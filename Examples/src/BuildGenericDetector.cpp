@@ -48,10 +48,10 @@ trackingGeometry(Logging::Level lvl, size_t stage)
       = std::make_shared<TrackingVolumeArrayCreator>(tvacConfig);
   // configure the cylinder volume helper
   CylinderVolumeHelper::Config cvhConfig;
-  cvhConfig.logger            = getDefaultLogger("CylinderVolumeHelper", lvl);
-  cvhConfig.layerArrayCreator = layerArrayCreator;
+  cvhConfig.layerArrayCreator          = layerArrayCreator;
   cvhConfig.trackingVolumeArrayCreator = tVolumeArrayCreator;
-  auto cylinderVolumeHelper = std::make_shared<CylinderVolumeHelper>(cvhConfig);
+  auto cylinderVolumeHelper            = std::make_shared<CylinderVolumeHelper>(
+      cvhConfig, getDefaultLogger("CylinderVolumeHelper", lvl));
   //-------------------------------------------------------------------------------------
   // beam pipe
   //-------------------------------------------------------------------------------------
