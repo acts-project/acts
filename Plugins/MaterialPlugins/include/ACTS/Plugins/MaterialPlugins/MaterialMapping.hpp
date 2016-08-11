@@ -41,20 +41,14 @@ public:
     //         double etaCutoff;
     // needed for debugging: -1 negative | 0 all | 1 positive @TODO add later
     //          int etaSide;
-    // logging instsance
-    std::shared_ptr<Logger> logger;
     /// extrapolation engine
-    std::shared_ptr<IExtrapolationEngine> extrapolationEngine;
-    /// default constructor of Config struct
-    Config(const std::string& lname = "ExtrapolationEngine",
-           Logging::Level     lvl   = Logging::INFO)
-      : logger(getDefaultLogger(lname, lvl)), extrapolationEngine(nullptr)
-    {
-    }
+    std::shared_ptr<IExtrapolationEngine> extrapolationEngine = nullptr;
   };
 
   ///@brief default constructor
-  MaterialMapping(const Config& cnf);
+  MaterialMapping(const Config&           cnf,
+                  std::unique_ptr<Logger> logger
+                  = getDefaultLogger("MaterialMapping", Logging::INFO));
 
   ///@brief destructor
   ~MaterialMapping();
@@ -79,6 +73,10 @@ public:
   /// it sets the created material to the layers
   void
   finalizeLayerMaterial();
+
+  /// set logging instance
+  void
+  setLogger(std::unique_ptr<Logger> logger);
 
 private:
   /// internally used method to collect hits on their corresponding layers
@@ -106,10 +104,11 @@ private:
   const Logger&
   logger() const
   {
-    return *m_cnf.logger;
+    return *m_logger;
   }
 
-  Config m_cnf;
+  Config                  m_cnf;
+  std::unique_ptr<Logger> m_logger;
   std::map<const Layer*, LayerMaterialRecord> m_layerRecords;
 };
 }
