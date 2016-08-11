@@ -67,7 +67,7 @@ public:
   struct Config
   {
     /// string based identification
-    std::string                    configurationName = "undefined";
+    std::string configurationName = "undefined";
     // unit conversion
     double unit = 10;
     // set visibility flag
