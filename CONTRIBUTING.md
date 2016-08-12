@@ -58,6 +58,11 @@ You can change those settings by either editing the `.gitconfig` file in your ho
 
     git config --global user.name "Donald Duck"
     git config --global user.email "donald.duck@cern.ch"
+    
+Further recommended settings are:
+
+    git config --global push.default simple
+    git config --global pill.rebase true
 
 ##### Creating your fork
 
