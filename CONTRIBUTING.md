@@ -125,6 +125,8 @@ Well-written commit messages are key to understand your changes. There are many 
 If you work with a colleague on a new development, you may want to include his latest changes. This is usually done by calling `git pull` which will synchronise your local working copy with the remote repository (which may have been updated by your colleague). By default, this action creates a merge commit if you have local commits which were not yet published to the remote repository. These merge commits are considered to contribute little information to the development process of the feature and they clutter the history (read more e.g.  [here](https://developer.atlassian.com/blog/2016/04/stop-foxtrots-now/) or [here](http://victorlin.me/posts/2013/09/30/keep-a-readable-git-history)). This problem can be avoided by using `git pull --rebase` which replays your local (un-pushed) commits on the tip of the remote branch. You can make this the default behaviour by running `git config pull.rebase true`. More about merging vs rebasing can be found [here](https://www.atlassian.com/git/tutorials/merging-vs-rebasing/).
 1. **Push your development branches as late as possible!**  
 Unless required by other circumstances (e.g. collaboration with colleagues, code reviews etc) it is recommended to push your development branch once you are finished. This gives you more flexibility on what you can do with your local commits (e.g. rebase interactively) without affecting others. Thus, it minimises the risk for running into git rebase problems.
+1. **Update the documentation!**
+Make sure that the documentation is still valid after your changes. Perform updates where needed and ensure integrity between the code and its documentation. 
 
 ### Coding style and guidelines
 
@@ -149,8 +151,16 @@ In addition, the following conventions are used in ACTS code:
     - existing objects (e.g. member variables) should be returned by<br />
       a) const reference for custom types with costly copy constructors<br />
       b) value in all other cases   
-- Doxygen documentation uses `///` as block comment.
-- Doxygen documentation goes in front of the documented entity (class, function, (member) variable).
+- Doxygen documentation:
+    - Put all documentation in the header files. 
+    - Use `///` as block comment (instead of `/* ... */`).
+    - Doxygen documentation goes in front of the documented entity (class, function, (member) variable).
+    - Use the `@<cmd>` notation.
+    - Functions and classes must have the `@brief` description.
+    - Document all (template) parameters using `@(t)param` and explain the return value for non-void functions. Mention important conditions which may affect the return value.
+    - Use `@remark` to specify pre-conditions.
+    - Use `@note` to provide additional information.
+    - Link other related entities (e.g. functions) using `@sa`. 
  
 ### Creating a merge request
 
