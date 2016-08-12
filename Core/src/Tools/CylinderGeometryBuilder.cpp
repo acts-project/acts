@@ -19,8 +19,9 @@
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
 
 Acts::CylinderGeometryBuilder::CylinderGeometryBuilder(
-    const Acts::CylinderGeometryBuilder::Config& cgbConfig)
-  : m_cfg()
+    const Acts::CylinderGeometryBuilder::Config& cgbConfig,
+    std::unique_ptr<Logger>                      logger)
+  : m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(cgbConfig);
 }
@@ -32,6 +33,12 @@ Acts::CylinderGeometryBuilder::setConfiguration(
   // @TODO check consistency
   // copy the configuration
   m_cfg = cgbConfig;
+}
+
+void
+Acts::CylinderGeometryBuilder::setLogger(std::unique_ptr<Logger> newLogger)
+{
+  m_logger = std::move(newLogger);
 }
 
 std::unique_ptr<Acts::TrackingGeometry>

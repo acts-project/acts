@@ -58,11 +58,11 @@ private:
 struct MyCache
 {
   std::unique_ptr<const KF::Step<long int>::JacobianMatrix> jacobian;
-  std::unique_ptr<const BoundParameters> parameters;
+  std::unique_ptr<const BoundParameters>                    parameters;
 
-  MyCache() = default;
+  MyCache()               = default;
   MyCache(const MyCache&) = delete;
-  MyCache(MyCache&&) = default;
+  MyCache(MyCache&&)      = default;
 };
 
 class MyExtrapolator
@@ -83,10 +83,11 @@ public:
     const Surface& sf = getSurface(m);
 
     ExtrapolationCode eCode = m_exEngine->extrapolate(*exCell, &sf);
-    MyCache c;
+    MyCache           c;
     auto j = exCell->extrapolationSteps.back().transportJacobian.release();
     c.jacobian.reset(new KF::Step<long int>::JacobianMatrix(*j));
-    auto pars = static_cast<const BoundParameters*>(exCell->leadParameters->clone());
+    auto pars
+        = static_cast<const BoundParameters*>(exCell->leadParameters->clone());
     c.parameters.reset(pars);
 
     return c;
@@ -142,14 +143,16 @@ initExtrapolator(const std::shared_ptr<const TrackingGeometry>& geo)
   statConfig.materialEffectsEngine = materialEngine;
   auto statEngine                  = std::make_shared<StaticEngine>(statConfig);
 
-  auto exEngineConfig
-      = ExtrapolationEngine::Config("ExtrapolationEngine", Logging::VERBOSE);
+  auto exEngineConfig                 = ExtrapolationEngine::Config();
   exEngineConfig.trackingGeometry     = geo;
   exEngineConfig.propagationEngine    = propEngine;
   exEngineConfig.navigationEngine     = navEngine;
   exEngineConfig.extrapolationEngines = {statEngine};
+  auto exEngine = std::make_shared<ExtrapolationEngine>(exEngineConfig);
+  exEngine->setLogger(
+      getDefaultLogger("ExtrapolationEngine", Logging::VERBOSE));
 
-  return std::make_shared<ExtrapolationEngine>(exEngineConfig);
+  return exEngine;
 }
 
 template <typename T>
@@ -221,11 +224,11 @@ main()
   KF.m_oUpdator        = GainMatrixUpdator();
 
   std::cout << "start fit" << std::endl;
-  auto track = KF.fit(vMeasurements, std::make_unique<BoundParameters>(*startTP));
+  auto track
+      = KF.fit(vMeasurements, std::make_unique<BoundParameters>(*startTP));
 
   // dump track
-  for(const auto& p: track)
-  {
+  for (const auto& p : track) {
     std::cout << *p->getCalibratedMeasurement() << std::endl;
     std::cout << *p->getSmoothedState() << std::endl;
   }

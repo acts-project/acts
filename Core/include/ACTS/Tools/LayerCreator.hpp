@@ -41,31 +41,28 @@ class LayerCreator : public ILayerCreator
 {
 public:
   ///  @struct Config
-  ///  Configuration for the LayerCreator 
+  ///  Configuration for the LayerCreator
   ///  This is the nexted configuration struct for the LayerCreator class
   struct Config
   {
-    std::shared_ptr<Logger>               logger;               ///< logging instance
-    std::shared_ptr<ISurfaceArrayCreator> surfaceArrayCreator;  ///< surface array helper
-
-    Config()
-      : logger(getDefaultLogger("LayerCreator", Logging::INFO))
-      , surfaceArrayCreator(nullptr)
-    {
-    }
+    /// surface array helper
+    std::shared_ptr<ISurfaceArrayCreator> surfaceArrayCreator = nullptr;
   };
-  
+
   /// Constructor
   /// @param lcConfig is the configuration lo
-  LayerCreator(const Config& lcConfig);
+  LayerCreator(const Config&           lcConfig,
+               std::unique_ptr<Logger> logger
+               = getDefaultLogger("LayerCreator", Logging::INFO));
 
-  /// Destructor   
+  /// Destructor
   ~LayerCreator() = default;
 
-  /// ILayerCreator interface method - returning a cylindrical layer 
-  /// @param surfaces is the vector of sensitive surfaces represented by this layer
+  /// ILayerCreator interface method - returning a cylindrical layer
+  /// @param surfaces is the vector of sensitive surfaces represented by this
+  /// layer
   /// @param envelopR is the additional envelope applied in R
-  /// @param envelopZ is the additional envelope applied in z  
+  /// @param envelopZ is the additional envelope applied in z
   /// @param binsPhi is number of bins the sensitive surfaces are ordered in phi
   /// @param binsZ is number of bins the sensitive surfaces are ordered in Z
   LayerPtr
@@ -75,10 +72,11 @@ public:
                 size_t                             binsPhi,
                 size_t                             binsZ) const override;
 
-  /// ILayerCreator interface method - returning a cylindrical layer 
-  /// @param surfaces is the vector of sensitive surfaces represented by this layer
+  /// ILayerCreator interface method - returning a cylindrical layer
+  /// @param surfaces is the vector of sensitive surfaces represented by this
+  /// layer
   /// @param envelopeMinR is the additional envelope applied in R at Rmin
-  /// @param envelopeMaxR is the additional envelope applied in R in Rmax  
+  /// @param envelopeMaxR is the additional envelope applied in R in Rmax
   /// @param binsR is number of bins the sensitive surfaces are ordered in R
   /// @param binsPhi is number of bins the sensitive surfaces are ordered in Phi
   LayerPtr
@@ -89,10 +87,11 @@ public:
             size_t                             binsR,
             size_t                             binsPhi) const override;
 
-  /// ILayerCreator interface method - returning a cylindrical layer 
-  /// @param surfaces is the vector of sensitive surfaces represented by this layer
+  /// ILayerCreator interface method - returning a cylindrical layer
+  /// @param surfaces is the vector of sensitive surfaces represented by this
+  /// layer
   /// @param envelopeXY is the additional envelope applied in XY
-  /// @param envelopeZ is the additional envelope applied in Z 
+  /// @param envelopeZ is the additional envelope applied in Z
   /// @param binsX is number of bins the sensitive surfaces are ordered in X
   /// @param binsY is number of bins the sensitive surfaces are ordered in Y
   LayerPtr
@@ -103,16 +102,20 @@ public:
              size_t                             binsY) const override;
 
   /// set the configuration object
-  /// @param lcConfig is the configuration struct           
+  /// @param lcConfig is the configuration struct
   void
   setConfiguration(const Config& lcConfig);
-  
-  /// access th configuration object 
+
+  /// access th configuration object
   Config
   getConfiguration() const;
 
+  /// set logging instance
+  void
+  setLogger(std::unique_ptr<Logger> logger);
+
 private:
-  /// method to get the global extends in space for the module 
+  /// method to get the global extends in space for the module
   /// @TODO shift to vertices of surfaces
   void
   moduleExtend(const Surface& sf,
@@ -123,20 +126,22 @@ private:
                double&        minZ,
                double&        maxZ) const;
 
-  /// calculates the closest radial distance of a line 
+  /// calculates the closest radial distance of a line
   double
   radialDistance(const Vector3D& pos1, const Vector3D& pos2) const;
 
-  /// configuration object 
+  /// configuration object
   Config m_cfg;
-  
+
   /// Private acces method to the logger
   const Logger&
   logger() const
   {
-    return *m_cfg.logger;
+    return *m_logger;
   }
 
+  /// logging instance
+  std::unique_ptr<Logger> m_logger;
 };
 
 inline LayerCreator::Config

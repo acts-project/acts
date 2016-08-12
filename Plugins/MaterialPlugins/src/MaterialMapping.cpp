@@ -22,7 +22,9 @@
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
 
-Acts::MaterialMapping::MaterialMapping(const Config& cnf) : m_cnf(cnf)
+Acts::MaterialMapping::MaterialMapping(const Config&           cnf,
+                                       std::unique_ptr<Logger> log)
+  : m_cnf(cnf), m_logger(std::move(log))
 {
   // check if extrapolation engine is given
   if (!m_cnf.extrapolationEngine) {
@@ -34,6 +36,12 @@ Acts::MaterialMapping::MaterialMapping(const Config& cnf) : m_cnf(cnf)
 Acts::MaterialMapping::~MaterialMapping()
 {
   finalizeLayerMaterial();
+}
+
+void
+Acts::MaterialMapping::setLogger(std::unique_ptr<Logger> newLogger)
+{
+  m_logger = std::move(newLogger);
 }
 
 void

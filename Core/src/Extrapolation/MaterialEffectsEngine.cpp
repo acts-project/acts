@@ -19,8 +19,9 @@
 
 // constructor
 Acts::MaterialEffectsEngine::MaterialEffectsEngine(
-    const MaterialEffectsEngine::Config& meConfig)
-  : m_cfg()
+    const MaterialEffectsEngine::Config& meConfig,
+    std::unique_ptr<Logger>              logger)
+  : m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(meConfig);
   // steering of the screen outoput (SOP)
@@ -43,6 +44,12 @@ Acts::MaterialEffectsEngine::setConfiguration(
   IMaterialEffectsEngine::m_sopPostfix = meConfig.postfix;
   // copy the configuration
   m_cfg = meConfig;
+}
+
+void
+Acts::MaterialEffectsEngine::setLogger(std::unique_ptr<Logger> newLogger)
+{
+  m_logger = std::move(newLogger);
 }
 
 // neutral extrapolation - just collect material /

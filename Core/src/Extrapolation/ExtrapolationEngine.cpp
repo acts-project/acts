@@ -14,8 +14,9 @@
 
 // constructor
 Acts::ExtrapolationEngine::ExtrapolationEngine(
-    const Acts::ExtrapolationEngine::Config& eeConfig)
-  : m_cfg()
+    const Acts::ExtrapolationEngine::Config& eeConfig,
+    std::unique_ptr<Logger>                  logger)
+  : m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(eeConfig);
 }
@@ -35,6 +36,12 @@ Acts::ExtrapolationEngine::setConfiguration(
   IExtrapolationEngine::m_sopPostfix = eeConfig.postfix;
   // copy the configuration
   m_cfg = eeConfig;
+}
+
+void
+Acts::ExtrapolationEngine::setLogger(std::unique_ptr<Logger> newLogger)
+{
+  m_logger = std::move(newLogger);
 }
 
 /** charged extrapolation */

@@ -21,8 +21,14 @@
 #include "ACTS/Utilities/MsgMacros.hpp"
 
 Acts::PassiveLayerBuilder::PassiveLayerBuilder(
-    const PassiveLayerBuilder::Config& plConfig)
-  : m_cfg(), m_nLayers(), m_cLayers(), m_pLayers(), m_constructionFlag(false)
+    const PassiveLayerBuilder::Config& plConfig,
+    std::unique_ptr<Logger>            logger)
+  : m_cfg()
+  , m_logger(std::move(logger))
+  , m_nLayers()
+  , m_cLayers()
+  , m_pLayers()
+  , m_constructionFlag(false)
 {
   setConfiguration(plConfig);
 }
@@ -33,6 +39,12 @@ Acts::PassiveLayerBuilder::setConfiguration(
 {
   //!< @TODO add configuration check
   m_cfg = plConfig;
+}
+
+void
+Acts::PassiveLayerBuilder::setLogger(std::unique_ptr<Logger> newLogger)
+{
+  m_logger = std::move(newLogger);
 }
 
 bool
@@ -47,15 +59,13 @@ Acts::PassiveLayerBuilder::constructLayers() const
     // loop through
     for (size_t icl = 0; icl < numcLayers; ++icl) {
       // some screen output
-      ACTS_VERBOSE(
-          "- build layer " << icl << " with radius = "
-                           << m_cfg.centralLayerRadii.at(icl)
-                           << " and halfZ = "
-                           << m_cfg.centralLayerHalflengthZ.at(icl));
+      ACTS_VERBOSE("- build layer " << icl << " with radius = "
+                                    << m_cfg.centralLayerRadii.at(icl)
+                                    << " and halfZ = "
+                                    << m_cfg.centralLayerHalflengthZ.at(icl));
       // create the layer and push it back
       auto cBounds = std::make_shared<CylinderBounds>(
-          m_cfg.centralLayerRadii[icl],
-          m_cfg.centralLayerHalflengthZ.at(icl));
+          m_cfg.centralLayerRadii[icl], m_cfg.centralLayerHalflengthZ.at(icl));
       // create the layer
       LayerPtr cLayer = CylinderLayer::create(
           nullptr, cBounds, nullptr, m_cfg.centralLayerThickness.at(icl));
@@ -66,7 +76,8 @@ Acts::PassiveLayerBuilder::constructLayers() const
         // create homogeneous material
         material = std::make_shared<const HomogeneousSurfaceMaterial>(
             MaterialProperties(m_cfg.centralLayerMaterial.at(icl),
-                               m_cfg.centralLayerThickness.at(icl)),1.);
+                               m_cfg.centralLayerThickness.at(icl)),
+            1.);
 
         // sign it to the surface
         cLayer->surfaceRepresentation().setAssociatedMaterial(material);
@@ -123,7 +134,8 @@ Acts::PassiveLayerBuilder::constructLayers() const
         // create homogeneous material
         material = std::make_shared<const HomogeneousSurfaceMaterial>(
             MaterialProperties(m_cfg.posnegLayerMaterial.at(ipnl),
-                               m_cfg.posnegLayerThickness.at(ipnl)), 1.);
+                               m_cfg.posnegLayerThickness.at(ipnl)),
+            1.);
         // sign it to the surface
         nLayer->surfaceRepresentation().setAssociatedMaterial(material);
         pLayer->surfaceRepresentation().setAssociatedMaterial(material);

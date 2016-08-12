@@ -22,10 +22,10 @@
   takeBigger(cBiggest, test)
 #endif
 
+#include <algorithm>
+#include "ACTS/Tools/ILayerArrayCreator.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
-#include "ACTS/Tools/ILayerArrayCreator.hpp"
-#include <algorithm>
 
 namespace Acts {
 
@@ -47,28 +47,23 @@ class Layer;
 class LayerArrayCreator : public ILayerArrayCreator
 {
 public:
-  /// @strcut Config
-  /// This is the nested configuration struct for the Layer Array creator
-  struct Config
-  {
-    std::shared_ptr<Logger> logger;  ///< logging instance
-
-    Config() : logger(getDefaultLogger("LayerArrayCreator", Logging::INFO)) {}
-  };
-
-  /// Constructor 
+  /// Constructor
   /// @param cfg is the configuration struct that steers the behavoir
-  LayerArrayCreator(const Config& cfg) : m_cfg(cfg) {}
-  
-  /// Destructor 
+  LayerArrayCreator(std::unique_ptr<Logger> logger
+                    = getDefaultLogger("LayerArrayCreator", Logging::INFO))
+    : m_logger(std::move(logger))
+  {
+  }
+
+  /// Destructor
   virtual ~LayerArrayCreator() = default;
 
   /// LayerArrayCreator interface method
   /// @param layers are the layers to be moved into an array
   /// @min is the minimul value for binning
   /// @max is the maximum value for binning
-  /// @btype is the binning type 
-  /// @bvalue is the value in which the binning should be done 
+  /// @btype is the binning type
+  /// @bvalue is the value in which the binning should be done
   std::unique_ptr<const LayerArray>
   layerArray(const LayerVector& layers,
              double             min,
@@ -76,18 +71,11 @@ public:
              BinningType        btype  = arbitrary,
              BinningValue       bvalue = binX) const override;
 
-  /// Set configuration method 
+  /// set logging instance
   void
-  setConfiguration(const Config& c)
+  setLogger(std::unique_ptr<Logger> logger)
   {
-    m_cfg = c;
-  }
-
-  /// Get configuration method 
-  Config
-  getConfiguration() const
-  {
-    return m_cfg;
+    m_logger = std::move(logger);
   }
 
 private:
@@ -95,12 +83,12 @@ private:
   const Logger&
   logger() const
   {
-    return *m_cfg.logger;
+    return *m_logger;
   }
 
   /// logging instance
-  Config m_cfg;
-  
+  std::unique_ptr<Logger> m_logger;
+
   /// Private helper method for creating a surface for
   /// the NavigationLayer
   Surface*

@@ -15,8 +15,9 @@
 #include "TGeoMatrix.h"
 
 Acts::TGeoLayerBuilder::TGeoLayerBuilder(
-    const Acts::TGeoLayerBuilder::Config& config)
-  : m_cfg()
+    const Acts::TGeoLayerBuilder::Config& config,
+    std::unique_ptr<Logger>               logger)
+  : m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(config);
 }
@@ -30,6 +31,12 @@ Acts::TGeoLayerBuilder::setConfiguration(
     const Acts::TGeoLayerBuilder::Config& config)
 {
   m_cfg = config;
+}
+
+void
+Acts::TGeoLayerBuilder::setLogger(std::unique_ptr<Logger> newLogger)
+{
+  m_logger = std::move(newLogger);
 }
 
 const Acts::LayerVector

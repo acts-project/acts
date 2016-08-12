@@ -13,8 +13,8 @@
 #ifndef ACTS_TOOLS_SURFACERARRAYCREATOR_H
 #define ACTS_TOOLS_SURFACERARRAYCREATOR_H 1
 
-#include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Tools/ISurfaceArrayCreator.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -36,31 +36,26 @@ typedef std::vector<V3Vector> V3Matrix;
 class SurfaceArrayCreator : virtual public ISurfaceArrayCreator
 {
 public:
-  /// @struct Config
-  /// Nested configuration class for this surface array creator
-  struct Config
+  /// Constructor
+  /// @param logger logging instance
+  SurfaceArrayCreator(std::unique_ptr<Logger> logger
+                      = getDefaultLogger("SurfaceArrayCreator", Logging::INFO))
+    : m_logger(std::move(logger))
   {
-    std::shared_ptr<Logger> logger;  ///< logging instance
-    
-    Config() : logger(getDefaultLogger("SurfaceArrayCreator", Logging::INFO)) {}
-  };
+  }
 
-  /// Constructor 
-  /// @param cfg is the configuration struct for this component
-  SurfaceArrayCreator(const Config& cfg) : m_cfg(cfg) {}
-  
-  /// Destructor 
+  /// Destructor
   virtual ~SurfaceArrayCreator() = default;
 
-  /// SurfaceArrayCreator interface method 
-  /// - create an array in a cylinder, binned in phi, z 
+  /// SurfaceArrayCreator interface method
+  /// - create an array in a cylinder, binned in phi, z
   /// @param surfaces are the sensitive surfaces to be ordered on the cylinder
   /// @param R is the radius of the cylinder
   /// @param minPhi is the minimal phi position of the surfaces
   /// @param maxPhi is the maximal phi position of the surfaces
   /// @param halfZ is the half length in z of the cylinder
   /// @param binsPhi is the number of bins in phi for the surfaces
-  /// @param binsX is the number of bin in Z for the surfaces   
+  /// @param binsX is the number of bin in Z for the surfaces
   /// @param transform is the (optional) additional transform applied
   /// @return a unique pointer to a new SurfaceArray
   std::unique_ptr<SurfaceArray>
@@ -74,9 +69,9 @@ public:
                          std::shared_ptr<Transform3D>       transform
                          = nullptr) const final;
 
-  /// SurfaceArrayCreator interface method 
-  /// - create an array on a disc, binned in r, phi 
-  /// @param surfaces are the sensitive surfaces to be 
+  /// SurfaceArrayCreator interface method
+  /// - create an array on a disc, binned in r, phi
+  /// @param surfaces are the sensitive surfaces to be
   /// @param rMin is the minimimal radius of the disc
   /// @param rMax is the maximal radius of the disc
   /// @param minPhi is the minimal phi position of the surfaces
@@ -94,9 +89,9 @@ public:
                      std::shared_ptr<Transform3D>       transform
                      = nullptr) const final;
 
-  /// SurfaceArrayCreator interface method 
+  /// SurfaceArrayCreator interface method
   /// - create an array on a plane
-  /// @param surfaces are the sensitive surfaces to be 
+  /// @param surfaces are the sensitive surfaces to be
   /// @param halflengthX is the half length in X
   /// @param halflengthY is the half length in Y
   /// @param binsX is the number of bins in X
@@ -111,32 +106,23 @@ public:
                       std::shared_ptr<Transform3D>       transform
                       = nullptr) const final;
 
-  /// set the configuration class
-  /// @param cfg is a Configuraiton struct                    
+  /// set logging instance
   void
-  setConfiguration(const Config& cfg)
+  setLogger(std::unique_ptr<Logger> logger)
   {
-    m_cfg = cfg;
-  }
-
-  /// Get configuration method 
-  /// @return the current congifuration
-  Config
-  getConfiguration() const
-  {
-    return m_cfg;
+    m_logger = std::move(logger);
   }
 
 private:
-  /// Configuration struct 
-  Config m_cfg;
-  
-  /// Private access to logger 
+  /// Private access to logger
   const Logger&
   logger() const
   {
-    return *m_cfg.logger;
+    return *m_logger;
   }
+
+  /// logging instance
+  std::unique_ptr<Logger> m_logger;
 
   /// Private helper method to complete the binning
   ///

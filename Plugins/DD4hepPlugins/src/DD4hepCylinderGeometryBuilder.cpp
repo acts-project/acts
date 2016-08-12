@@ -28,7 +28,9 @@
 #include "TGeoMatrix.h"
 
 Acts::DD4hepCylinderGeometryBuilder::DD4hepCylinderGeometryBuilder(
-    const Config dgbConfig)
+    const Config            dgbConfig,
+    std::unique_ptr<Logger> logger)
+  : m_logger(std::move(logger))
 {
   setConfiguration(std::move(dgbConfig));
 }
@@ -41,6 +43,13 @@ Acts::DD4hepCylinderGeometryBuilder::setConfiguration(
   // @TODO check consistency
   // copy the configuration
   m_cfg = std::move(dgbConfig);
+}
+
+void
+Acts::DD4hepCylinderGeometryBuilder::setLogger(
+    std::unique_ptr<Logger> newLogger)
+{
+  m_logger = std::move(newLogger);
 }
 
 std::unique_ptr<Acts::TrackingGeometry>

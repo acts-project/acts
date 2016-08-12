@@ -40,44 +40,34 @@ public:
   /// NEsted configuration struct for the StaticNavigationEngine
   struct Config
   {
-    std::shared_ptr<Logger> logger;
-
     /// the used propagation engine
-    std::shared_ptr<IPropagationEngine>       propagationEngine;  
+    std::shared_ptr<IPropagationEngine> propagationEngine = nullptr;
     /// the material effects updator
-    std::shared_ptr<IMaterialEffectsEngine>   materialEffectsEngine;  
+    std::shared_ptr<IMaterialEffectsEngine> materialEffectsEngine = nullptr;
     /// the tracking geometry cache
-    std::shared_ptr<const TrackingGeometry>   trackingGeometry;  
-
-    std::string prefix;   ///< output prefix
-    std::string postfix;  ///< output postfix
-    std::string name;     ///< name of this engine
-
-    Config(const std::string& lname = "StaticNavigationEngine",
-           Logging::Level lvl = Logging::INFO)
-      : logger(getDefaultLogger(lname, lvl))
-      , propagationEngine(nullptr)
-      , materialEffectsEngine(nullptr)
-      , trackingGeometry(nullptr)
-      , prefix("[SN] - ")
-      , postfix(" - ")
-      , name(lname)
-    {
-    }
+    std::shared_ptr<const TrackingGeometry> trackingGeometry = nullptr;
+    /// output prefix
+    std::string prefix = "[SN] - ";
+    /// output postfix
+    std::string postfix = " - ";
   };
 
-  /// Constructor 
+  /// Constructor
   /// @param snConfig is the configuration struct to steer behaviour
-  StaticNavigationEngine(const Config& snConfig);
+  /// @param logger logging instance
+  StaticNavigationEngine(const Config&           snConfig,
+                         std::unique_ptr<Logger> logger
+                         = getDefaultLogger("StaticNavigationEngine",
+                                            Logging::INFO));
 
-  /// Destructor 
+  /// Destructor
   ~StaticNavigationEngine();
 
-  /// avoid method shaddowing 
+  /// avoid method shaddowing
   using INavigationEngine::resolveBoundary;
   using INavigationEngine::resolvePosition;
 
-  /// resolve the boundary situation - for charged particles 
+  /// resolve the boundary situation - for charged particles
   /// @param ecCell is the charged extrapolation cell
   /// @param dir is the additional direction prescription
   /// @return is a extrapolation code indication
@@ -85,7 +75,7 @@ public:
   resolveBoundary(ExCellCharged& eCell,
                   PropDirection  dir = alongMomentum) const final;
 
-  /// resolve the boundary situation - for neutral particles 
+  /// resolve the boundary situation - for neutral particles
   /// @param ecCell is the neutral extrapolation cell
   /// @param dir is the additional direction prescription
   /// @return is a extrapolation code indication
@@ -93,7 +83,7 @@ public:
   resolveBoundary(ExCellNeutral& eCelll,
                   PropDirection  dir = alongMomentum) const final;
 
-  /// resolve the boundary situation - for charged particles 
+  /// resolve the boundary situation - for charged particles
   /// @param ecCell is the charged extrapolation cell
   /// @param dir is the additional direction prescription
   /// @return is a extrapolation code indication
@@ -102,7 +92,7 @@ public:
                   PropDirection  dir    = alongMomentum,
                   bool           noLoop = false) const final;
 
-  /// resolve the boundary situation - for neutral particles 
+  /// resolve the boundary situation - for neutral particles
   /// @param ecCell is the neutral extrapolation cell
   /// @param dir is the additional direction prescription
   /// @return is a extrapolation code indication
@@ -111,7 +101,7 @@ public:
                   PropDirection  dir    = alongMomentum,
                   bool           noLoop = false) const final;
 
-  /// Set configuration method 
+  /// Set configuration method
   void
   setConfiguration(const Config& meConfig);
 
@@ -119,8 +109,12 @@ public:
   Config
   getConfiguration() const;
 
+  /// set logging instance
+  void
+  setLogger(std::unique_ptr<Logger> logger);
+
 protected:
-  /// the configuration member of the static navigation engine 
+  /// the configuration member of the static navigation engine
   Config m_cfg;
 
 private:
@@ -128,29 +122,31 @@ private:
   const Logger&
   logger() const
   {
-    return *m_cfg.logger;
+    return *m_logger;
   }
 
-  /// resolve the boundary situation 
+  std::unique_ptr<Logger> m_logger;
+
+  /// resolve the boundary situation
   template <class T>
   ExtrapolationCode
   resolveBoundaryT(ExtrapolationCell<T>& eCell,
                    PropDirection         dir = alongMomentum) const;
 
-  /// resolve position 
+  /// resolve position
   template <class T>
   ExtrapolationCode
   resolvePositionT(ExtrapolationCell<T>& eCell,
                    PropDirection         dir    = alongMomentum,
                    bool                  noLoop = false) const;
 
-  /// deal with the boundary Surface - called by resolveBoundary 
+  /// deal with the boundary Surface - called by resolveBoundary
   template <class T>
   ExtrapolationCode
-  handleBoundaryT(ExtrapolationCell<T>&                  eCell,
+  handleBoundaryT(ExtrapolationCell<T>&                   eCell,
                   const BoundarySurfaceT<TrackingVolume>& bSurfaceTV,
-                  PropDirection                          dir = alongMomentum,
-                  bool                                   stepout = false) const;
+                  PropDirection                           dir = alongMomentum,
+                  bool stepout                                = false) const;
 };
 
 inline StaticNavigationEngine::Config

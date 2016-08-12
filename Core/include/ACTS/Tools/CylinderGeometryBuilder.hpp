@@ -38,38 +38,31 @@ public:
   /// Nested Configuration for the CylinderVolumeBuilder
   struct Config
   {
-    /// the logging instance
-    std::shared_ptr<Logger>                            logger;  
     /// a dedicated builder of the beam pipe volume
-    std::shared_ptr<ITrackingVolumeBuilder>            beamPipeBuilder; 
+    std::shared_ptr<ITrackingVolumeBuilder> beamPipeBuilder = nullptr;
     /// the list of trackign volume builders
-    std::list<std::shared_ptr<ITrackingVolumeBuilder>> trackingVolumeBuilders;  
+    std::list<std::shared_ptr<ITrackingVolumeBuilder>> trackingVolumeBuilders{};
     /// the tracking volume helper for detector construction
-    std::shared_ptr<ITrackingVolumeHelper>             trackingVolumeHelper;  
-    
-    /// Constructor of the Configuration struct
-    Config()
-      : logger(getDefaultLogger("CylinderGeometryBuilder", Logging::INFO))
-      , beamPipeBuilder(nullptr)
-      , trackingVolumeBuilders()
-      , trackingVolumeHelper(nullptr)
-    {
-    }
+    std::shared_ptr<ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
   };
 
-  /// Constructor 
+  /// Constructor
   /// @param cgb is the configuration struct for this builder
-  CylinderGeometryBuilder(const Config& cgbConfig);
+  /// @param logger logging instance
+  CylinderGeometryBuilder(const Config&           cgbConfig,
+                          std::unique_ptr<Logger> logger
+                          = getDefaultLogger("CylinderGeometryBuilder",
+                                             Logging::INFO));
 
-  /// Destructor 
+  /// Destructor
   virtual ~CylinderGeometryBuilder() = default;
 
-  /// TrackingGeometry Interface method 
-  /// returns a unique pointer to a TrackingGeometry 
+  /// TrackingGeometry Interface method
+  /// returns a unique pointer to a TrackingGeometry
   virtual std::unique_ptr<TrackingGeometry>
   trackingGeometry() const final;
 
-  /// Set configuration method 
+  /// Set configuration method
   /// @param cgbConfig is the new configuration struct
   void
   setConfiguration(const Config& cgbConfig);
@@ -79,16 +72,23 @@ public:
   Config
   getConfiguration() const;
 
+  /// set logging instance
+  void
+  setLogger(std::unique_ptr<Logger> logger);
+
 private:
-  /// Configuration member 
-  Config   m_cfg;
+  /// Configuration member
+  Config m_cfg;
 
   /// Private access method to the logger
   const Logger&
   logger() const
   {
-    return *m_cfg.logger;
+    return *m_logger;
   }
+
+  /// the logging instance
+  std::unique_ptr<Logger> m_logger;
 };
 
 inline CylinderGeometryBuilder::Config
