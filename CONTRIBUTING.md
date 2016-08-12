@@ -135,6 +135,20 @@ In addition, the following conventions are used in ACTS code:
 - Class names start with a capital letter.
 - Function names start with a lower-case letter and use camel-case.
 - Names of class member variables start with `m_`.
+- getter methods are called like the corresponding member variable without the prefix 'get' (e.g. `covariance()` instead of `getCovariance()`)
+- setter methods use the prefix 'set' (e.g. `setCovariance(...)`)
+- passing arguments to functions:
+    - by value for simple data types (e.g. int, float double, bool)
+    - by constant reference for required input of non-trivial type
+    - by (raw) pointer for optional input of non-trivial type
+    - only use smart pointers if the function called must handle ownership (very few function actually do)
+- returning results from functions:
+    - newly created objects should be returned<br />
+      a) as unique pointer if the object is of polymorphic type or its presence is not always ensured<br />
+      b) by value if the object is of non-polymorphic type and always exists
+    - existing objects (e.g. member variables) should be returned by<br />
+      a) const reference for custom types with costly copy constructors<br />
+      b) value in all other cases   
 - Doxygen documentation uses `///` as block comment.
 - Doxygen documentation goes in front of the documented entity (class, function, (member) variable).
  
