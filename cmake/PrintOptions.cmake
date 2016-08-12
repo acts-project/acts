@@ -9,7 +9,6 @@ message (STATUS "BOOST_ROOT                          path to root directory of b
 message (STATUS "")
 message (STATUS "Optional variables:")
 message (STATUS "ACTS_PARAMETER_DEFINITIONS_PLUGIN   path to header file with track parameter definitions     [ACTS/Utilities/detail/DefaultParameterDefinitions.h]")
-message (STATUS "ACTS_MSG_MACROS_PLUGIN              path to header file with message macros                  [ACTS/Utilities/detail/DefaultMsgMacros.h]")
 message (STATUS "BUILD_DD4HEP_PLUGIN                 build DD4hep plugin                                      [OFF]  (ON|OFF)")
 message (STATUS "BUILD_DOC                           build doxygen documentation                              [OFF]  (ON|OFF)")
 message (STATUS "BUILD_TESTS                         build unit tests                                         [ON]   (ON|OFF)")
