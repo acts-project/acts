@@ -18,7 +18,6 @@
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/MsgMacros.hpp"
 #include "ACTS/Utilities/OverlapDescriptor.hpp"
 
 Acts::LayerCreator::LayerCreator(const Acts::LayerCreator::Config& lcConfig,

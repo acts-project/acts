@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include "ACTS/Plugins/TGeoPlugins/TGeoDetectorElement.hpp"
 #include "ACTS/Tools/ILayerCreator.hpp"
-#include "ACTS/Utilities/MsgMacros.hpp"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 
