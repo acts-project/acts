@@ -18,7 +18,6 @@
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/MsgMacros.hpp"
 
 Acts::PassiveLayerBuilder::PassiveLayerBuilder(
     const PassiveLayerBuilder::Config& plConfig,

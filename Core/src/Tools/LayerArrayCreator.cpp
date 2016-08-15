@@ -25,7 +25,6 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/GeometryObjectSorter.hpp"
 #include "ACTS/Utilities/GeometryStatics.hpp"
-#include "ACTS/Utilities/MsgMacros.hpp"
 
 std::unique_ptr<const Acts::LayerArray>
 Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
@@ -59,15 +58,15 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
   case equidistant: {
     // loop over layers and put them in
     for (auto& layIter : layers) {
-      MSG_VERBOSE("equidistant : registering a Layer at binning position : "
-                  << (layIter->binningPosition(bValue)));
+      ACTS_VERBOSE("equidistant : registering a Layer at binning position : "
+                   << (layIter->binningPosition(bValue)));
       layerOrderVector.push_back(
           LayerOrderPosition(layIter, layIter->binningPosition(bValue)));
     }
     // create the binUitlity
     binUtility
         = std::make_unique<BinUtility>(layers.size(), min, max, open, bValue);
-    MSG_VERBOSE("equidistant : created a BinUtility as " << *binUtility);
+    ACTS_VERBOSE("equidistant : created a BinUtility as " << *binUtility);
   } break;
 
   // arbitrary binning
@@ -93,20 +92,20 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
       // if layers are attached to each other, no navigation layer needed
       if (navigationValue != (layerValue - 0.5 * layerThickness)) {
         // create the navigation layer surface from the layer
-        std::unique_ptr<const Surface> navLayerSurface
-        (createNavigationSurface(*layIter, bValue, -fabs(layerValue - navigationValue)));
-          navLayer = NavigationLayer::create(std::move(navLayerSurface));
+        std::unique_ptr<const Surface> navLayerSurface(createNavigationSurface(
+            *layIter, bValue, -fabs(layerValue - navigationValue)));
+        navLayer = NavigationLayer::create(std::move(navLayerSurface));
         // push the navigation layer in
         layerOrderVector.push_back(
             LayerOrderPosition(navLayer, navLayer->binningPosition(bValue)));
-        MSG_VERBOSE("arbitrary : creating a  NavigationLayer at "
-                    << (navLayerSurface->binningPosition(bValue)));
+        ACTS_VERBOSE("arbitrary : creating a  NavigationLayer at "
+                     << (navLayerSurface->binningPosition(bValue)));
       }
       // push the original layer in
       layerOrderVector.push_back(
           LayerOrderPosition(layIter, layIter->binningPosition(bValue)));
-      MSG_VERBOSE("arbitrary : registering MaterialLayer at  "
-                  << (layIter->binningPosition(bValue)));
+      ACTS_VERBOSE("arbitrary : registering MaterialLayer at  "
+                   << (layIter->binningPosition(bValue)));
       // remember the last
       lastLayer = layIter;
     }
@@ -116,23 +115,23 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
     // create navigation layer only when necessary
     if (navigationValue != max) {
       // create the navigation layer surface from the layer
-      std::unique_ptr<const Surface> navLayerSurface(
-        createNavigationSurface(*lastLayer, bValue, navigationValue - layerValue));
-        navLayer = NavigationLayer::create(std::move(navLayerSurface));
+      std::unique_ptr<const Surface> navLayerSurface(createNavigationSurface(
+          *lastLayer, bValue, navigationValue - layerValue));
+      navLayer = NavigationLayer::create(std::move(navLayerSurface));
       // push the navigation layer in
       layerOrderVector.push_back(
           LayerOrderPosition(navLayer, navLayer->binningPosition(bValue)));
-      MSG_VERBOSE("arbitrary : creating a  NavigationLayer at "
-                  << (navLayerSurface->binningPosition(bValue)));
+      ACTS_VERBOSE("arbitrary : creating a  NavigationLayer at "
+                   << (navLayerSurface->binningPosition(bValue)));
     }
     // now close the boundaries
     boundaries.push_back(max);
     // some screen output
-    MSG_VERBOSE(layerOrderVector.size()
-                << " Layers (material + navigation) built. ");
+    ACTS_VERBOSE(layerOrderVector.size()
+                 << " Layers (material + navigation) built. ");
     // create the BinUtility
     binUtility = std::make_unique<BinUtility>(boundaries, open, bValue);
-    MSG_VERBOSE("arbitrary : created a BinUtility as " << *binUtility);
+    ACTS_VERBOSE("arbitrary : created a BinUtility as " << *binUtility);
 
   } break;
   // default return nullptr
@@ -176,7 +175,7 @@ Acts::LayerArrayCreator::createNavigationSurface(const Layer& layer,
   } break;
   // do nothing for the default
   default: {
-    MSG_WARNING("Not yet implemented.");
+    ACTS_WARNING("Not yet implemented.");
   }
   }
   // navigation surface
@@ -198,9 +197,10 @@ Acts::LayerArrayCreator::createNavigationSurface(const Layer& layer,
     // create the new layer surface
     std::shared_ptr<Transform3D> navTrasform = nullptr;
     if (!layerSurface.transform().isApprox(s_idTransform))
-        navTrasform = std::make_shared<Transform3D>(layerSurface.transform());
+      navTrasform = std::make_shared<Transform3D>(layerSurface.transform());
     // new navigation layer
-    navigationSurface = new CylinderSurface(navTrasform, navigationR, halflengthZ);
+    navigationSurface
+        = new CylinderSurface(navTrasform, navigationR, halflengthZ);
   }
   return navigationSurface;
 }

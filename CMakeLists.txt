@@ -26,9 +26,6 @@ string (REPLACE "." "" ACTS_VERSION_NUMBER ${ACTS_VERSION})
 # default parameter definitions
 set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "default track parameter definition")
 
-# default message macros
-set (ACTS_MSG_MACROS_PLUGIN "ACTS/Utilities/detail/DefaultMsgMacros.hpp" CACHE FILEPATH "default message macros")
-
 # finding boost on lxplus does not work with standard boost-cmake look up
 set (Boost_NO_BOOST_CMAKE ON CACHE BOOL "disable boost-cmake find mechanism")
 

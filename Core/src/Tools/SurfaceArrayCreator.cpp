@@ -15,7 +15,6 @@
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/BinnedArrayXD.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/MsgMacros.hpp"
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
@@ -54,24 +53,24 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
       // fill the position
       v3Matrix[iz][iphi] = Vector3D(R * cos(phi), R * sin(phi), z);
     }
-    }
+  }
 
-    /// prefill the surfaces we have
-    for (auto& sf : surfaces) {
-      /// get the binning position
-      Vector3D bPosition = sf->binningPosition(binR);
-      // get the bins and fill
-      std::array<size_t, 3> bTriple = arrayUtility->binTriple(bPosition);
-      // and fill into the grid
-      sGrid[bTriple[2]][bTriple[1]][bTriple[0]] = sf;
-    }
-    // complete the Binning
-    completeBinning(*arrayUtility, v3Matrix, surfaces, sGrid);
-    // create the surfaceArray
-    auto sArray = std::make_unique<BinnedArrayXD<const Surface*>>(
-        sGrid, std::move(arrayUtility));
-    // return the surface array
-    return std::move(sArray);
+  /// prefill the surfaces we have
+  for (auto& sf : surfaces) {
+    /// get the binning position
+    Vector3D bPosition = sf->binningPosition(binR);
+    // get the bins and fill
+    std::array<size_t, 3> bTriple = arrayUtility->binTriple(bPosition);
+    // and fill into the grid
+    sGrid[bTriple[2]][bTriple[1]][bTriple[0]] = sf;
+  }
+  // complete the Binning
+  completeBinning(*arrayUtility, v3Matrix, surfaces, sGrid);
+  // create the surfaceArray
+  auto sArray = std::make_unique<BinnedArrayXD<const Surface*>>(
+      sGrid, std::move(arrayUtility));
+  // return the surface array
+  return std::move(sArray);
 }
 
 std::unique_ptr<Acts::SurfaceArray>
@@ -203,6 +202,6 @@ Acts::SurfaceArrayCreator::completeBinning(const BinUtility&    binUtility,
       // increase the bin completion
       ++binCompleted;
     }
-    }
-    ACTS_DEBUG("       filled  : " << binCompleted);
+  }
+  ACTS_DEBUG("       filled  : " << binCompleted);
 }

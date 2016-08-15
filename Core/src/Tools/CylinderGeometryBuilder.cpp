@@ -15,7 +15,6 @@
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Tools/ITrackingVolumeBuilder.hpp"
 #include "ACTS/Tools/ITrackingVolumeHelper.hpp"
-#include "ACTS/Utilities/MsgMacros.hpp"
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
 
 Acts::CylinderGeometryBuilder::CylinderGeometryBuilder(

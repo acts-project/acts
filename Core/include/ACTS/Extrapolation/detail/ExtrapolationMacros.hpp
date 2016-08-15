@@ -11,8 +11,6 @@
 ///////////////////////////////////////////////////////////////////
 // output stream macros to facilitate screen output and consistent checking
 
-#include "ACTS/Utilities/MsgMacros.hpp"
-
 #ifndef EXSCREENOUTPUTDEFS
 #define EXSCREENOUTPUTDEFS 1
 #define EX_MSG_INFO(navstep, step, idx, x)                                     \

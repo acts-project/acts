@@ -18,7 +18,6 @@
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Tools/ITrackingVolumeHelper.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/MsgMacros.hpp"
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
 
 Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(
@@ -55,7 +54,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     const Acts::LayerTriple* layerTriple,
     const VolumeTriple*      volumeTriple) const
 {
-  MSG_DEBUG("Configured to build volume : " << m_cfg.volumeName);
+  ACTS_DEBUG("Configured to build volume : " << m_cfg.volumeName);
 
   // the return volume
   // -----------------------------------------------------------------------------
@@ -185,13 +184,13 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       insideVolumeRmin = icvBounds->innerRadius();
       insideVolumeRmax = icvBounds->outerRadius();
       insideVolumeZmax = insideVolume->center().z() + icvBounds->halflengthZ();
-      MSG_VERBOSE("Inner CylinderVolumeBounds provided from external builder, "
-                  "rMin/rMax/zMax = "
-                  << insideVolumeRmin
-                  << ", "
-                  << insideVolumeRmax
-                  << ", "
-                  << insideVolumeZmax);
+      ACTS_VERBOSE("Inner CylinderVolumeBounds provided from external builder, "
+                   "rMin/rMax/zMax = "
+                   << insideVolumeRmin
+                   << ", "
+                   << insideVolumeRmax
+                   << ", "
+                   << insideVolumeZmax);
     } else {
       // we need to bail out, the given volume is not cylindrical
       ACTS_ERROR("Given volume to wrap was not cylindrical. Bailing out.");

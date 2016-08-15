@@ -22,7 +22,6 @@ target_include_directories (ACTSCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SO
 # set compiler flags
 target_compile_options (ACTSCore PUBLIC -std=c++14)
 target_compile_definitions (ACTSCore PUBLIC -DACTS_PARAMETER_DEFINITIONS_PLUGIN="${ACTS_PARAMETER_DEFINITIONS_PLUGIN}")
-target_compile_definitions (ACTSCore PUBLIC -DACTS_MSG_MACROS_PLUGIN="${ACTS_MSG_MACROS_PLUGIN}")
 
 # set installation directories
 install (TARGETS ACTSCore EXPORT ACTSCoreTargets
