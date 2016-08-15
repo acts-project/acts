@@ -32,16 +32,16 @@ typedef std::tuple<LayerVector, LayerVector, LayerVector> LayerTriple;
 typedef std::tuple<VolumePtr, VolumePtr, VolumePtr>       VolumeTriple;
 
 ///  @class ITrackingVolumeBuilder
-/// 
+///
 /// Interface class ITrackingVolumeBuilders & inherits from IAlgTool
-/// 
+///
 /// this returns the sub-detector tracking volume that is wrapped by the next
 /// outer one
 /// in the TrackingGeometry building process
-/// 
+///
 /// If an innerVolume is given, this is wrapped
 /// If a VolumeBounds object is given this defines the maximum extent.
-/// 
+///
 
 class ITrackingVolumeBuilder
 {
@@ -49,10 +49,10 @@ public:
   /// Virtual destructor
   virtual ~ITrackingVolumeBuilder() = default;
 
-  /// CylinderVolumeBuilder interface method  
+  /// CylinderVolumeBuilder interface method
   /// @param insideVolume is an (optional) volume to be wrapped
   /// @param outsideBounds is an (optional) outside confinement
-  /// @param layerTriple is an (optional) triplet of layers 
+  /// @param layerTriple is an (optional) triplet of layers
   /// @param volumeTriple is an (optional) triplet of volumes
   virtual TrackingVolumePtr
   trackingVolume(TrackingVolumePtr   insideVolume  = nullptr,

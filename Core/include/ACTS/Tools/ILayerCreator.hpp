@@ -30,16 +30,16 @@ typedef std::shared_ptr<const Layer> LayerPtr;
 ///
 class ILayerCreator
 {
-
 public:
   /// Virtual destructor
   virtual ~ILayerCreator() {}
-  
   /// ILayerCreator interface method - returning a cylindrical layer
-  /// @param surfaces is the vector of sensitive surfaces represented by this layer
+  /// @param surfaces is the vector of sensitive surfaces represented by this
+  /// layer
   /// @param envelopR is the additional envelope applied in R
-  /// @param envelopZ is the additional envelope applied in z  
-  /// @param binsRPhi is number of bins the sensitive surfaces are ordered in phi
+  /// @param envelopZ is the additional envelope applied in z
+  /// @param binsRPhi is number of bins the sensitive surfaces are ordered in
+  /// phi
   /// @param binsZ is number of bins the sensitive surfaces are ordered in Z
   virtual LayerPtr
   cylinderLayer(const std::vector<const Surface*>& surfaces,
@@ -49,9 +49,10 @@ public:
                 size_t                             binsZ) const = 0;
 
   /// ILayerCreator interface method - returning a disc layer
-  /// @param surfaces is the vector of sensitive surfaces represented by this layer
+  /// @param surfaces is the vector of sensitive surfaces represented by this
+  /// layer
   /// @param envelopeMinR is the additional envelope applied in R at Rmin
-  /// @param envelopeMaxR is the additional envelope applied in R in Rmax  
+  /// @param envelopeMaxR is the additional envelope applied in R in Rmax
   /// @param binsR is number of bins the sensitive surfaces are ordered in R
   /// @param binsPhi is number of bins the sensitive surfaces are ordered in Phi
   /// @param rBoundaries is the optional r-separation of provided rings
@@ -63,10 +64,11 @@ public:
             size_t                             binsR,
             size_t                             binsPhi) const = 0;
 
-  /// ILayerCreator interface method - returning a plane layer 
-  /// @param surfaces is the vector of sensitive surfaces represented by this layer
+  /// ILayerCreator interface method - returning a plane layer
+  /// @param surfaces is the vector of sensitive surfaces represented by this
+  /// layer
   /// @param envelopeXY is the additional envelope applied in XY
-  /// @param envelopeZ is the additional envelope applied in Z 
+  /// @param envelopeZ is the additional envelope applied in Z
   /// @param binsX is number of bins the sensitive surfaces are ordered in X
   /// @param binsY is number of bins the sensitive surfaces are ordered in Y
   virtual LayerPtr

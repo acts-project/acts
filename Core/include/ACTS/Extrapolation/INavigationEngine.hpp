@@ -33,10 +33,9 @@ typedef ExtrapolationCell<NeutralParameters> ExCellNeutral;
 class INavigationEngine
 {
 public:
-  /// Virtual destructor 
+  /// Virtual destructor
   virtual ~INavigationEngine() {}
-  
-  /// resolve the boundary situation - for charged particles 
+  /// resolve the boundary situation - for charged particles
   /// @param ecCell is the charged extrapolation cell
   /// @param dir is the additional direction prescription
   /// @return is a extrapolation code indication
@@ -44,7 +43,7 @@ public:
   resolveBoundary(ExCellCharged& ecCell,
                   PropDirection  dir = alongMomentum) const = 0;
 
-  /// resolve the boundary situation - for neutral particles 
+  /// resolve the boundary situation - for neutral particles
   /// @param ecCell is the neutral extrapolation cell
   /// @param dir is the additional direction prescription
   /// @return is a extrapolation code indication
@@ -52,7 +51,7 @@ public:
   resolveBoundary(ExCellNeutral& enCell,
                   PropDirection  dir = alongMomentum) const = 0;
 
-  /// resolve the boundary situation - for charged particles 
+  /// resolve the boundary situation - for charged particles
   /// @param ecCell is the charged extrapolation cell
   /// @param dir is the additional direction prescription
   /// @return is a extrapolation code indication
@@ -61,7 +60,7 @@ public:
                   PropDirection  dir    = alongMomentum,
                   bool           noLoop = false) const = 0;
 
-  /// resolve the boundary situation - for neutral particles 
+  /// resolve the boundary situation - for neutral particles
   /// @param ecCell is the neutral extrapolation cell
   /// @param dir is the additional direction prescription
   /// @return is a extrapolation code indication

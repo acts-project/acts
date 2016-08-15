@@ -74,10 +74,10 @@ public:
     bool setVisibility;
     // layer creator
     std::shared_ptr<ILayerCreator> layerCreator = nullptr;
-    // configurations 
-    std::vector<LayerConfig>       negativeLayerConfigs;
-    std::vector<LayerConfig>       centralLayerConfigs;
-    std::vector<LayerConfig>       positiveLayerConfigs;
+    // configurations
+    std::vector<LayerConfig> negativeLayerConfigs;
+    std::vector<LayerConfig> centralLayerConfigs;
+    std::vector<LayerConfig> positiveLayerConfigs;
   };
 
   /// Constructor

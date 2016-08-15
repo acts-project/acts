@@ -20,10 +20,10 @@
 namespace Acts {
 
 ///  @class IMagneticFieldSvc
-/// 
+///
 ///  This is a highly repetitive call, hence the interface is extremely
 ///  simplistic
-/// 
+///
 class IMagneticFieldSvc
 {
   ///////////////////////////////////////////////////////////////////

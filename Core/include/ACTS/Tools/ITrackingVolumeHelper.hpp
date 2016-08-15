@@ -36,13 +36,13 @@ typedef std::vector<LayerPtr>          LayerVector;
 typedef std::vector<TrackingVolumePtr> TrackingVolumeVector;
 
 ///  @class ITrackingVolumeHelper
-/// 
+///
 /// Interface class ITrackingVolumeHelper tools, it inherits from IAlgTool.
 /// The ITrackingVolumeHelper is a tool to pack a set of layers into a volume,
 /// or - to wrap several volumes into a container volume.
-/// 
+///
 /// TrackingVolumes only exist as std::shared_ptr
-/// 
+///
 class ITrackingVolumeHelper
 {
 public:
@@ -51,11 +51,13 @@ public:
 
   /// create a TrackingVolume* from a set of layers and (optional) parameters
   ///@param layers : vector of static layers confined by the TrackingVolume
-  ///if no bounds or HepTransform is given, they define the size
-  ///together with the volume enevlope parameters
+  /// if no bounds or HepTransform is given, they define the size
+  /// together with the volume enevlope parameters
   ///@param matprop : dense material properties for this TrackingVolume
-  ///@param volBounds : (optional) bounds of this TrackingVolume - ownership given
-  ///@param transform : (optional) placement of this TrackingVolume - ownership given
+  ///@param volBounds : (optional) bounds of this TrackingVolume - ownership
+  /// given
+  ///@param transform : (optional) placement of this TrackingVolume - ownership
+  /// given
   ///@param entryLayers : switch to build entry layers
   ///@param volumeName  : volume name to be given
   virtual TrackingVolumePtr
@@ -67,7 +69,7 @@ public:
                        BinningType        btype = arbitrary) const = 0;
 
   /// create a TrackingVolume* from a set of layers and (optional) parameters
-  /// 
+  ///
   /// @param layers : vector of static layers confined by the TrackingVolume
   /// if no bounds or HepTransform is given, they define the size
   /// together with the volume enevlope parameters
@@ -86,7 +88,7 @@ public:
                        BinningType               btype = arbitrary) const = 0;
 
   /// create a gap volume from dimensions and
-  /// 
+  ///
   /// @param matprop : dense material properties for this TrackingVolume
   /// @param loc1Min, loc1Max, loc2Min, loc2Max : local position in space,
   /// this TrackingVolume is restricted to Translation only
@@ -105,13 +107,13 @@ public:
                           = "UndefinedVolume") const = 0;
 
   /// create a gap volume from dimensions and
-  /// 
+  ///
   /// @param matprop : dense material properties for this TrackingVolume
   /// @param layerPositions : custom layer positions
   /// @param materialLayers : number of material layers (aequidistant binning)
   /// @param cylinder : type of layers
   /// @param volumeName  : volume name to be given
-  /// 
+  ///
   virtual TrackingVolumePtr
   createGapTrackingVolume(std::shared_ptr<Material>  matprop,
                           double                     loc1Min,
@@ -124,11 +126,11 @@ public:
                           BinningType        btype = arbitrary) const = 0;
 
   /// create a one level higher TrackingVolue
-  /// 
+  ///
   /// @param volumes : the volumes to be comnbined
   /// @param matprop : dense material properties for this TrackingVolume
   /// @param volumeName  : volume name to be given
-  /// 
+  ///
   virtual TrackingVolumePtr
   createContainerTrackingVolume(const TrackingVolumeVector& volumes) const = 0;
 };

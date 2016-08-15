@@ -31,7 +31,7 @@ namespace Acts {
 class RectangleBounds : public PlanarBounds
 {
 public:
-  /// @enum BoundValues for readability 
+  /// @enum BoundValues for readability
   enum BoundValues { bv_halfX = 0, bv_halfY = 1, bv_length = 2 };
 
   /// Default Constructor - deleted
@@ -44,7 +44,6 @@ public:
 
   /// Copy constructor
   RectangleBounds(const RectangleBounds& recbo) : PlanarBounds(recbo) {}
-
   /// Destructor
   virtual ~RectangleBounds();
 
@@ -56,7 +55,7 @@ public:
   virtual RectangleBounds*
   clone() const override;
 
-  /// Return the type of the bounds for persistency 
+  /// Return the type of the bounds for persistency
   virtual BoundsType
   type() const override
   {
@@ -75,7 +74,7 @@ public:
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /// @copydoc SurfaceBounds::minDistance 
+  /// @copydoc SurfaceBounds::minDistance
   virtual double
   minDistance(const Vector2D& lpos) const override;
 
@@ -87,20 +86,18 @@ public:
   double
   halflengthY() const;
 
-  /// Return the vertices - or, the points of the extremas 
+  /// Return the vertices - or, the points of the extremas
   virtual const std::vector<Vector2D>
   vertices() const override;
 
-  /// Output Method for std::ostream 
+  /// Output Method for std::ostream
   virtual std::ostream&
   dump(std::ostream& sl) const override;
-  
+
 private:
   /// Private helper method
   bool
   inside(const Vector2D& lpos, double tol0 = 0., double tol1 = 0.) const;
-  
-
 };
 
 inline RectangleBounds*
@@ -114,7 +111,7 @@ RectangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
 {
   if (bchk.bcType == 0)
     return RectangleBounds::insideLoc0(lpos, bchk.toleranceLoc0)
-      && RectangleBounds::insideLoc1(lpos, bchk.toleranceLoc1);
+        && RectangleBounds::insideLoc1(lpos, bchk.toleranceLoc1);
 
   // a fast FALSE
   double max_ell = bchk.lCovariance(0, 0) > bchk.lCovariance(1, 1)
@@ -168,14 +165,12 @@ RectangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   return bchk.TestKDOPKDOP(elementKDOP, errelipseKDOP);
 }
 
-  
 inline bool
 RectangleBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 {
-  return insideLoc0(lpos,tol0) && insideLoc1(lpos,tol1);
+  return insideLoc0(lpos, tol0) && insideLoc1(lpos, tol1);
 }
 
-  
 inline bool
 RectangleBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 {

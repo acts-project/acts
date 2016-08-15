@@ -25,23 +25,21 @@ namespace Acts {
 /// It is templated in order to allow for BoundarySurfaces from
 /// representing volumes of layers to be re-used
 
-
 template <class T>
 class GenericApproachDescriptor : public ApproachDescriptor
 {
 public:
-  /// A generic approach descriptor for new Acts::Surface objects 
-  /// passing ownership 
+  /// A generic approach descriptor for new Acts::Surface objects
+  /// passing ownership
   GenericApproachDescriptor(const std::vector<T*>& aSurfaces)
     : ApproachDescriptor(), m_surfaces(), m_surfacesCache(aSurfaces)
   {
     // create the surface container with memory control
-    for (auto& sf : (aSurfaces)) 
-      m_surfaces.push_back(std::shared_ptr<T>(sf));
+    for (auto& sf : (aSurfaces)) m_surfaces.push_back(std::shared_ptr<T>(sf));
   }
 
-  /// A generic approach descriptor with shared surfaces to test 
-  /// can not be sed with Acts::Surfaces obejcts 
+  /// A generic approach descriptor with shared surfaces to test
+  /// can not be sed with Acts::Surfaces obejcts
   GenericApproachDescriptor(std::vector<std::shared_ptr<T>> aSurfaces)
     : ApproachDescriptor(), m_surfaces(aSurfaces), m_surfacesCache()
   {
@@ -51,10 +49,9 @@ public:
       m_surfacesCache.push_back(&(sf->surfaceRepresentation()));
   }
 
-  /// A generic approach descriptor with n surfaces to test 
+  /// A generic approach descriptor with n surfaces to test
   ~GenericApproachDescriptor() {}
-  
-  /// register the Layer to the surfaces 
+  /// register the Layer to the surfaces
   void
   registerLayer(const Layer& lay) override;
 
@@ -72,15 +69,15 @@ public:
                   const BoundaryCheck&           bchk,
                   const ICompatibilityEstimator* ice = nullptr) const override;
 
-  /// return all containes surfaces of this approach descriptor 
+  /// return all containes surfaces of this approach descriptor
   const std::vector<const Surface*>&
   containedSurfaces() const override;
 
 private:
   /// approach surfaces with ownership control
-  std::vector< std::shared_ptr<T> >  m_surfaces;  
+  std::vector<std::shared_ptr<T>> m_surfaces;
   /// the surface container cache
-  std::vector<const Surface*>        m_surfacesCache;  
+  std::vector<const Surface*> m_surfacesCache;
 };
 
 template <class T>

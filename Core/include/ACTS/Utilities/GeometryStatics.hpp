@@ -32,7 +32,7 @@ static Vector3D s_yAxis(0, 1, 0);  //!< global y Axis;
 static Vector3D s_zAxis(0, 0, 1);  //!< global z Axis;
 
 // unit vectors
-static Vector2D s_origin2D(0.,0.);
+static Vector2D s_origin2D(0., 0.);
 
 // origin
 

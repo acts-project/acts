@@ -13,26 +13,27 @@
 #ifndef ACTS_TOOLS_ILAYERARRAYCREATOR_H
 #define ACTS_TOOLS_ILAYERARRAYCREATOR_H 1
 
-#include "ACTS/Utilities/BinnedArray.hpp"
-#include "ACTS/Utilities/BinningType.hpp"
 #include <memory>
 #include <vector>
+#include "ACTS/Utilities/BinnedArray.hpp"
+#include "ACTS/Utilities/BinningType.hpp"
 
 namespace Acts {
-  
+
 class Layer;
 typedef std::shared_ptr<const Layer> LayerPtr;
 
-/// @typedef LayerArray and LayerVector 
+/// @typedef LayerArray and LayerVector
 typedef BinnedArray<LayerPtr> LayerArray;
 typedef std::vector<LayerPtr> LayerVector;
 
 /// @class ILayerArrayCreator
 ///
-///Interface class ILayerArrayCreators, it inherits from IAlgTool.
+/// Interface class ILayerArrayCreators, it inherits from IAlgTool.
 ///
-///It receives the LayerVector and creaets an array with NaivgationLayer objects
-///filled in between.
+/// It receives the LayerVector and creaets an array with NaivgationLayer
+/// objects
+/// filled in between.
 class ILayerArrayCreator
 {
 public:
@@ -43,13 +44,13 @@ public:
   /// @param layers are the layers to be moved into an array
   /// @min is the minimul value for binning
   /// @max is the maximum value for binning
-  /// @btype is the binning type 
-  /// @bvalue is the value in which the binning should be done 
+  /// @btype is the binning type
+  /// @bvalue is the value in which the binning should be done
   virtual std::unique_ptr<const LayerArray>
   layerArray(const LayerVector& layers,
              double             min,
              double             max,
-             BinningType        btype = arbitrary,
+             BinningType        btype  = arbitrary,
              BinningValue       bvalue = binX) const = 0;
 };
 }  // end of namespace

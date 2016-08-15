@@ -35,7 +35,7 @@ Layer::getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
   // fast exit - nothing to do
   if (!m_surfaceArray || !m_overlapDescriptor || !m_approachDescriptor)
     return false;
-  
+
   // position and momentum/dir
   const Vector3D& pos = pars.position();
   const Vector3D  dir = (pDir == oppositeMomentum)
@@ -75,8 +75,7 @@ Layer::getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
       // get the bin mates if they exist
       if (atSurface && atSurface->associatedDetectorElement()) {
         // get the bin mates
-        auto bmElements
-            = atSurface->associatedDetectorElement()->binmembers();
+        auto bmElements = atSurface->associatedDetectorElement()->binmembers();
         for (auto& bmElement : bmElements)
           compatibleTestSurfaces.push_back(&(bmElement->surface()));
       }
@@ -87,7 +86,7 @@ Layer::getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
     const Surface* ftSurface = m_surfaceArray->object(pos);
     // outsource to the OverlapDescriptor - if you have a first target surface
     if (ftSurface)
-        m_overlapDescriptor->reachableSurfaces(
+      m_overlapDescriptor->reachableSurfaces(
           compatibleTestSurfaces, *ftSurface, pos, dir, searchType);
   }
   // loop over all the possible
@@ -106,7 +105,7 @@ Layer::getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
                           startSurface,
                           endSurface,
                           ice);
-    
+
   // the layer surface itself is a testSurface
   const Surface* layerSurface = &surfaceRepresentation();
   testCompatibleSurface(cSurfaces,
@@ -197,7 +196,8 @@ Layer::testCompatibleSurface(std::vector<SurfaceIntersection>& cSurfaces,
     PropDirection rDir
         = (sfIntersection.pathLength > 0 ? alongMomentum : oppositeMomentum);
     // and the surfaces & direction to push back - take all
-    if (collectPassive || (collectSensitive && surface.associatedDetectorElement())
+    if (collectPassive
+        || (collectSensitive && surface.associatedDetectorElement())
         || surface.associatedMaterial())
       cSurfaces.push_back(SurfaceIntersection(sfIntersection, &surface, rDir));
   }

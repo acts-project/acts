@@ -31,7 +31,7 @@ namespace Acts {
 /// - the BoundsType return type to avoid dynamic casting
 ///
 /// @TODO for easy persistency access, force Constructor from ValueStore
-///   
+///
 class SurfaceBounds
 {
 public:
@@ -56,25 +56,23 @@ public:
     Other            = 12
   };
 
-  /// Default Constructor 
+  /// Default Constructor
   /// @param sSize is the size of the data store
   /// @note the value Store is initialized to the given size
-  SurfaceBounds(size_t sSize=0) : m_valueStore(sSize,0.) {}
-  
+  SurfaceBounds(size_t sSize = 0) : m_valueStore(sSize, 0.) {}
   /// Copy constructor
   /// It copies the value store
-  SurfaceBounds(const SurfaceBounds& sb ) : m_valueStore(sb.m_valueStore) {}
-  
+  SurfaceBounds(const SurfaceBounds& sb) : m_valueStore(sb.m_valueStore) {}
   /// Destructor
   virtual ~SurfaceBounds() {}
-  
   /// clone() method to make deep copy in Surface copy constructor and for
   /// assigment operator of the Surface class
   virtual SurfaceBounds*
   clone() const = 0;
 
   /// Assignment operator
-  SurfaceBounds& operator=(const SurfaceBounds& sb);
+  SurfaceBounds&
+  operator=(const SurfaceBounds& sb);
 
   /// Comparison (equality) operator
   /// checks first on the pointer equality
@@ -88,13 +86,14 @@ public:
   bool
   operator!=(const SurfaceBounds& sb) const;
 
-  /// Return the bounds type - for persistency optimization 
+  /// Return the bounds type - for persistency optimization
   virtual BoundsType
   type() const = 0;
-  
+
   /// Access method for bound variable store
   /// @return of the stored values for the boundary object
-  virtual const std::vector<TDD_real_t>& valueStore() const;
+  virtual const std::vector<TDD_real_t>&
+  valueStore() const;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -108,7 +107,7 @@ public:
   /// Inside check for the bounds object with tolerance
   /// checks for first coordinate only.
   /// @param lpos Local position (assumed to be in right surface frame)
-  /// @param tol1 tolerance parameter 
+  /// @param tol1 tolerance parameter
   /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol1 = 0.) const = 0;
@@ -116,7 +115,7 @@ public:
   /// Inside check for the bounds object with tolerance
   /// checks for second coordinate only.
   /// @param lpos Local position (assumed to be in right surface frame)
-  /// @param tol2 tolerance parameter 
+  /// @param tol2 tolerance parameter
   /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol2 = 0.) const = 0;
@@ -124,14 +123,13 @@ public:
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   virtual double
   minDistance(const Vector2D& pos) const = 0;
-  
-  /// Output Method for std::ostream, to be overloaded by child classes 
+
+  /// Output Method for std::ostream, to be overloaded by child classes
   virtual std::ostream&
   dump(std::ostream& sl) const = 0;
-  
-protected:
-  std::vector<TDD_real_t> m_valueStore; ///< internal data store
 
+protected:
+  std::vector<TDD_real_t> m_valueStore;  ///< internal data store
 };
 
 inline bool
@@ -141,12 +139,12 @@ SurfaceBounds::operator!=(const SurfaceBounds& sb) const
 }
 
 inline const std::vector<TDD_real_t>&
-SurfaceBounds::valueStore() const  
+SurfaceBounds::valueStore() const
 {
   return m_valueStore;
 }
 
-  std::ostream&
+std::ostream&
 operator<<(std::ostream& sl, const SurfaceBounds& sb);
 
 }  // end of namespace

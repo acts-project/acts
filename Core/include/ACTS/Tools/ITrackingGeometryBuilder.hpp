@@ -35,7 +35,7 @@ public:
   /// Virtual destructor
   virtual ~ITrackingGeometryBuilder() = default;
 
-  /// TrackingGeometry Interface methode 
+  /// TrackingGeometry Interface methode
   virtual std::unique_ptr<TrackingGeometry>
   trackingGeometry() const = 0;
 };

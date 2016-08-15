@@ -14,10 +14,9 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::LineBounds::LineBounds(double radius, double halez)
-  : SurfaceBounds()
+Acts::LineBounds::LineBounds(double radius, double halez) : SurfaceBounds()
 {
-  if (radius != 0. || halez != 0.){
+  if (radius != 0. || halez != 0.) {
     m_valueStore.push_back(radius);
     m_valueStore.push_back(halez);
   }
@@ -30,15 +29,15 @@ Acts::LineBounds::~LineBounds()
 Acts::LineBounds&
 Acts::LineBounds::operator=(const Acts::LineBounds& libo)
 {
-  if (this != &libo)
-    SurfaceBounds::operator=(libo);
+  if (this != &libo) SurfaceBounds::operator=(libo);
   return *this;
 }
 
 double
 Acts::LineBounds::minDistance(const Acts::Vector2D& lpos) const
 {
-  // per definition the min Distance of a correct local position on the line is r
+  // per definition the min Distance of a correct local position on the line is
+  // r
   return lpos[Acts::eLOC_R];
 }
 

@@ -22,12 +22,11 @@ namespace Acts {
 
 //
 //@class DiamondBounds
-//Bounds for a double trapezoidal ("diamond"), planar Surface.
+// Bounds for a double trapezoidal ("diamond"), planar Surface.
 //
 class DiamondBounds : public PlanarBounds
 {
 public:
-
   /// @enum BoundValues for better readability
   enum BoundValues {
     bv_minHalfX = 0,
@@ -38,7 +37,7 @@ public:
     bv_length   = 5
   };
 
-  /// Default Constructor is deleted 
+  /// Default Constructor is deleted
   DiamondBounds() = delete;
 
   /// Constructor for symmetric Diamond
@@ -46,7 +45,7 @@ public:
   /// @param medhalex is the halflength in x at y = 0
   /// @param maxhalex is the halflength in x at maximal y
   /// @param haley1 is the halflength into y < 0
-  /// @param haley2 is the halflength into y > 0  
+  /// @param haley2 is the halflength into y > 0
   DiamondBounds(double minhalex,
                 double medhalex,
                 double maxhalex,
@@ -54,7 +53,7 @@ public:
                 double haley2);
 
   /// Copy constructor
-  /// @param diabo are the source bounds for the copy                
+  /// @param diabo are the source bounds for the copy
   DiamondBounds(const DiamondBounds& diabo);
 
   /// Destructor
@@ -65,7 +64,7 @@ public:
   clone() const override;
 
   /// Assignment operator
-  /// @param diabo are the source bounds for the copy                
+  /// @param diabo are the source bounds for the copy
   DiamondBounds&
   operator=(const DiamondBounds& diabo);
 
@@ -74,24 +73,24 @@ public:
   virtual bool
   operator==(const SurfaceBounds& sbo) const override;
 
-  /// Return the bounds type 
+  /// Return the bounds type
   virtual BoundsType
   type() const override
   {
     return SurfaceBounds::Diamond;
   }
 
-  /// This method returns the halflength in X at minimal Y 
+  /// This method returns the halflength in X at minimal Y
   /// (first coordinate of local surface frame)
   double
   minHalflengthX() const;
 
-  /// This method returns the (maximal) halflength in X 
+  /// This method returns the (maximal) halflength in X
   /// (first coordinate of local surface frame)
   double
   medHalflengthX() const;
 
-  /// This method returns the halflength in X at maximal Y 
+  /// This method returns the halflength in X at maximal Y
   /// (first coordinate of local surface frame)
   double
   maxHalflengthX() const;
@@ -104,11 +103,11 @@ public:
   double
   halflengthY2() const;
 
-  /// This method returns the opening angle alpha in point A   
+  /// This method returns the opening angle alpha in point A
   double
   alpha1() const;
 
-  /// This method returns the opening angle alpha in point A'  
+  /// This method returns the opening angle alpha in point A'
   double
   alpha2() const;
 
@@ -130,15 +129,15 @@ public:
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside) 
+  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   virtual double
   minDistance(const Vector2D& pos) const override;
 
-  /// Return the vertices - or, the points of the extremas 
+  /// Return the vertices - or, the points of the extremas
   virtual const std::vector<Vector2D>
   vertices() const override;
 
-  /// Output Method for std::ostream 
+  /// Output Method for std::ostream
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
@@ -146,18 +145,18 @@ private:
   /// private helper method
   bool
   inside(const Vector2D& lpos, double tol0 = 0., double tol1 = 0.) const;
-  
-  /// inside() method for a full symmetric diamond 
+
+  /// inside() method for a full symmetric diamond
   bool
   insideFull(const Vector2D& lpos, double tol0 = 0., double tol1 = 0.) const;
 
-  /// initialize the alpha1/2 cache - needed also for object persistency 
+  /// initialize the alpha1/2 cache - needed also for object persistency
   virtual void
   initCache();
 
   std::vector<TDD_real_t> m_valueStore;  ///< internal parameter store
-  TDD_real_t              m_alpha1;       ///< internal parameter cache for alpha1
-  TDD_real_t              m_alpha2;       ///< internal parameter cahce for alpha2
+  TDD_real_t              m_alpha1;  ///< internal parameter cache for alpha1
+  TDD_real_t              m_alpha2;  ///< internal parameter cahce for alpha2
 };
 
 inline DiamondBounds*

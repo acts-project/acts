@@ -22,7 +22,7 @@ enum RQESolutionType { none = 0, one = 1, two = 2 };
 
 ///  @struct RealQuadradicEquation
 ///  Mathematic struct for solving real quadratic equations
-/// 
+///
 /// <b>Mathematical motivation</b>:<br>
 /// The equation is given by:<br>
 /// @f$ \alpha x^{2} + \beta x + \gamma = 0  @f$
@@ -44,7 +44,7 @@ enum RQESolutionType { none = 0, one = 1, two = 2 };
 /// Hence,@f$ -\frac{\beta(1-\sqrt{1-4\alpha\gamma/\beta^{2}}}{2\alpha} = -
 /// frac{\beta - \sqrt{\beta^{2}-4\alpha\gamma}}{2\alpha} @f$.<br>
 /// - case @f$ \beta > 0 @f$ is similar.
-/// 
+///
 struct RealQuadraticEquation
 {
   double          first;

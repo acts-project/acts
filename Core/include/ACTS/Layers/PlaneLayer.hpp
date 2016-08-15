@@ -13,10 +13,10 @@
 #ifndef ACTS_LAYERS_PLANELAYER_H
 #define ACTS_LAYERS_PLANELAYER_H
 
+#include <algorithm>
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include <algorithm>
 
 namespace Acts {
 
@@ -24,20 +24,21 @@ class OverlapDescriptor;
 class ApproachDescriptor;
 
 /// @class PlaneLayer
-/// 
+///
 /// Class to describe a planar detector layer for tracking,
 /// it inhertis from both, Layer base class and PlaneSurface class
-/// 
+///
 class PlaneLayer : virtual public PlaneSurface, public Layer
 {
 public:
-  /// Factory for a shared plane layer 
+  /// Factory for a shared plane layer
   ///
   /// @param transform which places the layer in the global frame
   /// @param pbounds the planar bounds that define the layer dimensions
   /// @param surfaces is the surface array that holds the sensitive surfaces
   /// @param thickness is the thickness of the layer (normal direction to plane)
-  /// @param od is the overlap descriptor for describing sensitive surface overlaps
+  /// @param od is the overlap descriptor for describing sensitive surface
+  /// overlaps
   /// @param ad is the approach descriptor for describing the approach surface
   /// @param laytyp is the layer type
   ///
@@ -56,7 +57,7 @@ public:
   }
 
   /// Factory for a shared plane layer
-  /// 
+  ///
   /// @param pla is the plain layer to be coped
   /// @param shift is the additional shift applied after copying
   static LayerPtr
@@ -80,13 +81,13 @@ public:
 
   /// Assignment operator for PlaneLayers - deleted
   PlaneLayer&
-  operator=(const PlaneLayer&) = delete;
+  operator=(const PlaneLayer&)
+      = delete;
 
   /// Destructor
   virtual ~PlaneLayer() {}
-
   /// Transforms the layer into a Surface representation for extrapolation
-  /// @return returns a reference to a PlaneSurface   
+  /// @return returns a reference to a PlaneSurface
   const PlaneSurface&
   surfaceRepresentation() const;
 
@@ -102,7 +103,8 @@ protected:
   /// @param pbounds the planar bounds that define the layer dimensions
   /// @param surfaces is the surface array that holds the sensitive surfaces
   /// @param thickness is the thickness of the layer (normal direction to plane)
-  /// @param od is the overlap descriptor for describing sensitive surface overlaps
+  /// @param od is the overlap descriptor for describing sensitive surface
+  /// overlaps
   /// @param ad is the approach descriptor for describing the approach surface
   /// @param laytyp is the layer type
   ///

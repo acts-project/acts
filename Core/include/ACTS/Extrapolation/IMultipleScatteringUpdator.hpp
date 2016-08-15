@@ -26,12 +26,11 @@ class IMultipleScatteringUpdator
 public:
   /// Virtual destructor
   virtual ~IMultipleScatteringUpdator() {}
-  
   /// Calculate the sigma on theta introduced by multiple scattering
   /// @param mat are the material properties for this update
   /// @param p is the momentum of the particle
   /// @param pathcorrection is the incident angle correction
-  /// @param particle is the particle type for this 
+  /// @param particle is the particle type for this
   /// @param deltaE is the energy loss associated
   virtual double
   sigmaSquare(const MaterialProperties& mat,

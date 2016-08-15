@@ -21,21 +21,18 @@ namespace Acts {
 
 class Surface;
 
-
 /// @class GenericOverlapDescriptor
-/// 
+///
 /// Neighbour & bin member based overlap descriptor
 
 class GenericOverlapDescriptor : public OverlapDescriptor
 {
 public:
-  /// Default constructor - surfaceArray is not given 
-  
+  /// Default constructor - surfaceArray is not given
+
   GenericOverlapDescriptor() {}
-  
   /// Virtual destructor
   virtual ~GenericOverlapDescriptor() {}
-  
   /// Pseudo-constructor
   GenericOverlapDescriptor*
   clone() const override

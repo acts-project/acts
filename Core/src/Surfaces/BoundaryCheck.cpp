@@ -12,9 +12,9 @@
 
 #include "ACTS/Surfaces/BoundaryCheck.hpp"
 
-double Acts::BoundaryCheck::s_cos22 = cos(0.125*M_PI);
-double Acts::BoundaryCheck::s_cos45 = cos(0.25*M_PI);
-double Acts::BoundaryCheck::s_cos67 = cos(0.375*M_PI);
+double Acts::BoundaryCheck::s_cos22 = cos(0.125 * M_PI);
+double Acts::BoundaryCheck::s_cos45 = cos(0.25 * M_PI);
+double Acts::BoundaryCheck::s_cos67 = cos(0.375 * M_PI);
 
 Acts::BoundaryCheck::BoundaryCheck(bool sCheck)
   : checkLoc0(sCheck)
@@ -24,10 +24,13 @@ Acts::BoundaryCheck::BoundaryCheck(bool sCheck)
   , nSigmas(-1)
   , lCovariance(ActsSymMatrixD<2>::Identity())
   , bcType(absolute)
-{}
-  
-Acts::BoundaryCheck::BoundaryCheck(
-  bool chkL0, bool chkL1, double tloc0, double tloc1)
+{
+}
+
+Acts::BoundaryCheck::BoundaryCheck(bool   chkL0,
+                                   bool   chkL1,
+                                   double tloc0,
+                                   double tloc1)
   : checkLoc0(chkL0)
   , checkLoc1(chkL1)
   , toleranceLoc0(tloc0)
@@ -35,10 +38,13 @@ Acts::BoundaryCheck::BoundaryCheck(
   , nSigmas(-1)
   , lCovariance(ActsSymMatrixD<2>::Identity())
   , bcType(absolute)
-{}   
-  
-Acts::BoundaryCheck::BoundaryCheck(
-    const ActsSymMatrixD<2>& lCov, double nsig, bool chkL0, bool chkL1)
+{
+}
+
+Acts::BoundaryCheck::BoundaryCheck(const ActsSymMatrixD<2>& lCov,
+                                   double                   nsig,
+                                   bool                     chkL0,
+                                   bool                     chkL1)
   : checkLoc0(chkL0)
   , checkLoc1(chkL1)
   , toleranceLoc0(0.)
@@ -46,5 +52,5 @@ Acts::BoundaryCheck::BoundaryCheck(
   , nSigmas(nsig)
   , lCovariance(lCov)
   , bcType(chi2corr)
-{}
-    
+{
+}

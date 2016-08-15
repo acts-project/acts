@@ -27,12 +27,10 @@ namespace Acts {
 class MaterialInteraction
 {
 public:
-  /// Default Constructor needed for POOL 
+  /// Default Constructor needed for POOL
   MaterialInteraction() {}
-  
-  /// Descructor 
+  /// Descructor
   ~MaterialInteraction() {}
-
   /// dE/dl ionization energy loss per path unit
   ///
   /// calculate mean ionization that is pathlentgh INDEPENDENT
@@ -43,15 +41,15 @@ public:
   /// kazL is calculated in this function for later use.
   ///
   /// For a Landau: MOP value = Mean + 3.59524*sigmaL
-  /// 
+  ///
   double
   dEdl_ionization(double          p,
                   const Material* mat,
                   ParticleType    particle,
                   double&         sigma,
                   double&         kazL) const;
-  
-  /// ionization energy loss from PDG 
+
+  /// ionization energy loss from PDG
   double
   PDG_energyLoss_ionization(double                p,
                             const Acts::Material* mat,
@@ -60,7 +58,7 @@ public:
                             double&               kazL,
                             double                path) const;
 
-  /// dE/dl radiation energy loss per path unit 
+  /// dE/dl radiation energy loss per path unit
   double
   dEdl_radiation(double          p,
                  const Material* mat,
@@ -82,7 +80,6 @@ Acts::MaterialInteraction::dEdl_ionization(double                p,
                                            double&               sigma,
                                            double&               kazL) const
 {
-
   const double factor = (1. / 3.59524);  // the compiler will evaulate this
 
   double path = 1.;  // this is a scaling factor for the landau convolution

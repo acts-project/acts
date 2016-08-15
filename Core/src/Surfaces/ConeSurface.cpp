@@ -11,10 +11,10 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/ConeSurface.hpp"
-#include "ACTS/Surfaces/RealQuadraticEquation.hpp"
 #include <assert.h>
 #include <iomanip>
 #include <iostream>
+#include "ACTS/Surfaces/RealQuadraticEquation.hpp"
 
 Acts::ConeSurface::ConeSurface(const ConeSurface& csf)
   : Surface(csf), m_bounds(csf.m_bounds)
@@ -23,16 +23,14 @@ Acts::ConeSurface::ConeSurface(const ConeSurface& csf)
 
 Acts::ConeSurface::ConeSurface(const ConeSurface& csf,
                                const Transform3D& transf)
-  : Surface(csf, transf)
-  , m_bounds(csf.m_bounds)
+  : Surface(csf, transf), m_bounds(csf.m_bounds)
 {
 }
 
 Acts::ConeSurface::ConeSurface(std::shared_ptr<Transform3D> htrans,
                                double                       alpha,
                                bool                         symmetric)
-  : Surface(htrans)
-  , m_bounds(std::make_shared<ConeBounds>(alpha, symmetric))
+  : Surface(htrans), m_bounds(std::make_shared<ConeBounds>(alpha, symmetric))
 {
 }
 
@@ -62,7 +60,8 @@ Acts::ConeSurface::binningPosition(Acts::BinningValue bValue) const
 {
   // special binning type for R-type methods
   if (bValue == Acts::binR || bValue == Acts::binRPhi)
-    return Vector3D(center().x()+ bounds().r(center().z()), center().y(), center().z() );
+    return Vector3D(
+        center().x() + bounds().r(center().z()), center().y(), center().z());
   // give the center as default for all of these binning types
   // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
   return center();
@@ -73,7 +72,7 @@ Acts::ConeSurface::operator=(const ConeSurface& csf)
 {
   if (this != &csf) {
     Surface::operator=(csf);
-    m_bounds = csf.m_bounds;
+    m_bounds         = csf.m_bounds;
   }
   return *this;
 }
@@ -85,17 +84,16 @@ Acts::ConeSurface::rotSymmetryAxis() const
 }
 
 const Acts::RotationMatrix3D
-Acts::ConeSurface::measurementFrame(const Vector3D& pos,
-                                    const Vector3D&) const
+Acts::ConeSurface::measurementFrame(const Vector3D& pos, const Vector3D&) const
 {
   RotationMatrix3D mFrame;
   // construct the measurement frame
   // measured Y is the z axis
-  Vector3D measY(transform().rotation().col(2));  
+  Vector3D measY(transform().rotation().col(2));
   // measured z is the position transverse normalized
-  Vector3D measDepth = Vector3D(pos.x(), pos.y(), 0.).unit(); 
-  // measured X is what comoes out of it 
-  Acts::Vector3D measX(measY.cross(measDepth).unit());  
+  Vector3D measDepth = Vector3D(pos.x(), pos.y(), 0.).unit();
+  // measured X is what comoes out of it
+  Acts::Vector3D measX(measY.cross(measDepth).unit());
   // the columnes
   mFrame.col(0) = measX;
   mFrame.col(1) = measY;
@@ -112,8 +110,8 @@ Acts::ConeSurface::localToGlobal(const Vector2D& lpos,
                                  Vector3D& gpos) const
 {
   // create the position in the local 3d frame
-  double         r   = lpos[Acts::eLOC_Z] * bounds().tanAlpha();
-  double         phi = lpos[Acts::eLOC_RPHI] / r;
+  double   r   = lpos[Acts::eLOC_Z] * bounds().tanAlpha();
+  double   phi = lpos[Acts::eLOC_RPHI] / r;
   Vector3D loc3Dframe(r * cos(phi), r * sin(phi), lpos[Acts::eLOC_Z]);
   // transport it to the globalframe
   if (m_transform) gpos = transform() * loc3Dframe;
@@ -124,11 +122,11 @@ Acts::ConeSurface::globalToLocal(const Vector3D& gpos,
                                  const Vector3D&,
                                  Vector2D& lpos) const
 {
-  Acts::Vector3D           loc3Dframe = m_transform ? 
-    (transform().inverse() * gpos ) : gpos;
-  double                   r = loc3Dframe.z() * bounds().tanAlpha();
-  lpos = Acts::Vector2D(r * atan2(loc3Dframe.y(), loc3Dframe.x()),
-                          loc3Dframe.z());
+  Acts::Vector3D loc3Dframe
+      = m_transform ? (transform().inverse() * gpos) : gpos;
+  double r = loc3Dframe.z() * bounds().tanAlpha();
+  lpos     = Acts::Vector2D(r * atan2(loc3Dframe.y(), loc3Dframe.x()),
+                        loc3Dframe.z());
   // now decide on the quility of the transformation
   double inttol = r * 0.0001;
   inttol        = (inttol < 0.01) ? 0.01 : 0.01;  // ?
@@ -136,14 +134,15 @@ Acts::ConeSurface::globalToLocal(const Vector3D& gpos,
 }
 
 Acts::Intersection
-Acts::ConeSurface::intersectionEstimate(const Vector3D& gpos,
-                                        const Vector3D& dir,
-                                        bool                  forceDir,
-                                        const BoundaryCheck&  bchk) const
+Acts::ConeSurface::intersectionEstimate(const Vector3D&      gpos,
+                                        const Vector3D&      dir,
+                                        bool                 forceDir,
+                                        const BoundaryCheck& bchk) const
 {
   // transform to a frame with the cone along z, with the tip at 0
   Acts::Vector3D tpos1 = m_transform ? transform().inverse() * gpos : gpos;
-  Acts::Vector3D tdir  = m_transform ? transform().inverse().linear() * dir : dir;
+  Acts::Vector3D tdir
+      = m_transform ? transform().inverse().linear() * dir : dir;
   // see the header for the formula derivation
   double tan2Alpha = bounds().tanAlpha() * bounds().tanAlpha(),
          A         = tdir.x() * tdir.x() + tdir.y() * tdir.y()
@@ -202,12 +201,12 @@ Acts::ConeSurface::pathCorrection(const Vector3D& gpos,
                                   const Vector3D& mom) const
 {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
-  Vector3D posLocal  = m_transform ? transform().inverse() * gpos : gpos;
-  double         phi = posLocal.phi();
-  double         sgn = posLocal.z() > 0. ? -1. : +1.;
+  Vector3D posLocal = m_transform ? transform().inverse() * gpos : gpos;
+  double   phi      = posLocal.phi();
+  double   sgn      = posLocal.z() > 0. ? -1. : +1.;
   Vector3D normalC(cos(phi) * bounds().cosAlpha(),
-                         sin(phi) * bounds().cosAlpha(),
-                         sgn * bounds().sinAlpha());
+                   sin(phi) * bounds().cosAlpha(),
+                   sgn * bounds().sinAlpha());
   if (m_transform) normalC = transform() * normalC;
   // back in global frame
   double cAlpha = normalC.dot(mom.unit());

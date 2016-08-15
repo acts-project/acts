@@ -43,18 +43,18 @@ public:
   enum eMode {
     Destination = 1,  // try to hit the destination, if not other means to stop
     Propagation = 2,  // any propagation but the final one to destinaion
-    StopWithPathLimit = 3,  // stop when the path limit is reached
-    StopWithMaterialLimitX0 = 4,  // stop when  material limit is reached in X0
-    StopWithMaterialLimitL0 = 5,  // stop when material limit is reached in L0
-    StopAtBoundary   = 6,   // stop at the next ID / Calo / MS boundary
-    CollectSensitive = 7,   // collect parameters on sensitive elements
-    CollectPassive   = 8,   // collect parameters on passive layers
-    CollectBoundary  = 9,   // collect parameters on boundary parameters
-    CollectMaterial  = 10,  // collect all material on the way
-    CollectJacobians = 11,  // collect the transport jacobians
-    CollectPathSteps = 12,  // collect the single path steps
-    AvoidFallback    = 13,  // don't fallback to propagation
-    FATRAS           = 14   // force initial radialDirection to be outward
+    StopWithPathLimit       = 3,   // stop when the path limit is reached
+    StopWithMaterialLimitX0 = 4,   // stop when  material limit is reached in X0
+    StopWithMaterialLimitL0 = 5,   // stop when material limit is reached in L0
+    StopAtBoundary          = 6,   // stop at the next ID / Calo / MS boundary
+    CollectSensitive        = 7,   // collect parameters on sensitive elements
+    CollectPassive          = 8,   // collect parameters on passive layers
+    CollectBoundary         = 9,   // collect parameters on boundary parameters
+    CollectMaterial         = 10,  // collect all material on the way
+    CollectJacobians        = 11,  // collect the transport jacobians
+    CollectPathSteps        = 12,  // collect the single path steps
+    AvoidFallback           = 13,  // don't fallback to propagation
+    FATRAS                  = 14  // force initial radialDirection to be outward
   };
 };
 
@@ -63,15 +63,14 @@ public:
 class ExtrapolationConfig
 {
 public:
-  /// Constructor 
+  /// Constructor
   ExtrapolationConfig(unsigned int evalue = 0) : value(evalue) {}
-  
-  /// Copy Constructor 
+  /// Copy Constructor
   ExtrapolationConfig(const ExtrapolationConfig& eConfig) : value(eConfig.value)
   {
   }
 
-  /// add a configuration mode 
+  /// add a configuration mode
   void
   addMode(ExtrapolationMode::eMode em)
   {
@@ -79,7 +78,7 @@ public:
     value |= (1 << int(em));
   }
 
-  /// check the configuration mode 
+  /// check the configuration mode
   bool
   checkMode(ExtrapolationMode::eMode em) const
   {
@@ -98,28 +97,27 @@ class ExtrapolationCode
 {
 public:
   enum eCode {
-    Unset                = 0,  // no code set yet
-    InProgress           = 1,  // successful : extrapolation in process
-    SuccessDestination   = 2,  // successful : destination reached
-    SuccessBoundaryReached = 3,  // successful : boundary reached 
-    SuccessPathLimit     = 4,  // successful : path limit reached 
-    SuccessMaterialLimit = 5,  // successful : material limit reached 
-    Recovered            = 6,  // successful : recovered 
-    FailureDestination   = 7,  // failure    : could not reach destination
-    FailureLoop          = 8,  // failure    : loop or oscillation between volumes
-    FailureNavigation    = 9,  // failure    : general navigation failure
-    FailureUpdateKill    = 10, // failure    : updated track under threshold
-    FailureConfiguration = 11, // failure    : general configuration failure
-    LeftKnownWorld       = 12  // successful ? failure ? if we just knew ...
+    Unset                  = 0,  // no code set yet
+    InProgress             = 1,  // successful : extrapolation in process
+    SuccessDestination     = 2,  // successful : destination reached
+    SuccessBoundaryReached = 3,  // successful : boundary reached
+    SuccessPathLimit       = 4,  // successful : path limit reached
+    SuccessMaterialLimit   = 5,  // successful : material limit reached
+    Recovered              = 6,  // successful : recovered
+    FailureDestination     = 7,  // failure    : could not reach destination
+    FailureLoop       = 8,   // failure    : loop or oscillation between volumes
+    FailureNavigation = 9,   // failure    : general navigation failure
+    FailureUpdateKill = 10,  // failure    : updated track under threshold
+    FailureConfiguration = 11,  // failure    : general configuration failure
+    LeftKnownWorld       = 12   // successful ? failure ? if we just knew ...
   };
 
-  /// the actual code 
+  /// the actual code
   eCode code;
 
-  /// create a simple extrapolation code 
+  /// create a simple extrapolation code
   ExtrapolationCode(eCode c) : code(c) {}
-  
-  /// assigment operator - because we can 
+  /// assigment operator - because we can
   ExtrapolationCode&
   operator=(const eCode& ec)
   {
@@ -127,14 +125,14 @@ public:
     return (*this);
   }
 
-  /// == operator to eCode 
+  /// == operator to eCode
   bool
   operator==(const eCode& ec) const
   {
     return (ec == code);
   }
 
-  /// != operator to eCode 
+  /// != operator to eCode
   bool
   operator!=(const eCode& ec) const
   {
@@ -260,88 +258,86 @@ class ExtrapolationCell
 {
 public:
   /// The start parameters by reference - must exist
-  const T&                  startParameters;  
+  const T& startParameters;
   /// the start volume - needed for the volume-to-volume loop
-  const TrackingVolume*     startVolume; 
+  const TrackingVolume* startVolume;
   /// the start layer  - needed for layer-to-layer loop
-  const Layer*              startLayer;  
+  const Layer* startLayer;
   /// the end parameters as newly created unique pointer
-  std::unique_ptr<const T>  endParameters; 
-  /// the end volume - this breaks the volume-to-volume loop 
+  std::unique_ptr<const T> endParameters;
+  /// the end volume - this breaks the volume-to-volume loop
   /// (can be nullptr in which case it breaks at world boundary latest)
-  const TrackingVolume*     endVolume;  
-  /// the end layer - this breaks the layer-to-layer llop 
-  /// (can be nullptr in which case it breaks at world boundary latest)  
-  const Layer*              endLayer;  
+  const TrackingVolume* endVolume;
+  /// the end layer - this breaks the layer-to-layer llop
+  /// (can be nullptr in which case it breaks at world boundary latest)
+  const Layer* endLayer;
   /// the end surface - triggers extrapolation to destination
-  /// (can be nullptr in which case it breaks at world boundary latest)  
-  const Surface*            endSurface;  
+  /// (can be nullptr in which case it breaks at world boundary latest)
+  const Surface* endSurface;
   /// the one last validated parameters along the lines
-  const T*                  leadParameters; 
-  /// this is the current volume the extrapolation is in 
-  const TrackingVolume*     leadVolume; 
-  /// this is the current associated layer  
-  const Layer*              leadLayer;  
+  const T* leadParameters;
+  /// this is the current volume the extrapolation is in
+  const TrackingVolume* leadVolume;
+  /// this is the current associated layer
+  const Layer* leadLayer;
   /// if the lead layer has sub structure
-  const Surface*            leadLayerSurface; 
+  const Surface* leadLayerSurface;
   /// this is the last boundary information (prevents loops)
-  const T*                  lastBoundaryParameters;
+  const T* lastBoundaryParameters;
   /// this is the last boundary surface information (prevents loops)
-  const Surface*            lastBoundarySurface;  
+  const Surface* lastBoundarySurface;
   /// these are the one-but-last lead parameters (fallback)
-  const T*                  lastLeadParameters;  
+  const T* lastLeadParameters;
   /// this is the propagation direction w.r.t the parameters
-  PropDirection             propDirection;
+  PropDirection propDirection;
   /// for checking if navigation is radially towards the
-  /// IP, this has consequences for entering cylinders  
-  int                       radialDirection;  
+  /// IP, this has consequences for entering cylinders
+  int radialDirection;
   /// when a boundary is reached the
   /// geometry signature is updated to the next volume
-  GeometrySignature         nextGeometrySignature;  
+  GeometrySignature nextGeometrySignature;
 
   /// a counter of the navigation steps done in that extrapolation
-  int                       navigationStep;  
+  int navigationStep;
   /// the accumulated path legnth
-  double                    pathLength;     
+  double pathLength;
   /// the given path limit (-1 if no limit)
-  double                    pathLimit;       
-  ///  the surface for the next material update 
-  /// @TODO devel : this concept could be omitted in the future 
-  const Surface*            materialSurface;  
+  double pathLimit;
+  ///  the surface for the next material update
+  /// @TODO devel : this concept could be omitted in the future
+  const Surface* materialSurface;
   /// the accumulated material in X0 at this stage
-  double                    materialX0;
-  /// the material limit in X0 (-1 if no limit)       
-  double                    materialLimitX0;  
+  double materialX0;
+  /// the material limit in X0 (-1 if no limit)
+  double materialLimitX0;
   /// the accumulated material in L0 at this stage
-  double                    materialL0;    
+  double materialL0;
   /// the material limit in L0 (-1 if no limit)
-  double                    materialLimitL0; 
+  double materialLimitL0;
 
   /// the occured interaction type (for FATRAS)
-  process_type              interactionProcess;  
-  ParticleType              particleType;  
-  /// how to deal with the material 
-  MaterialUpdateMode materialUpdateMode;  
+  process_type interactionProcess;
+  ParticleType particleType;
+  /// how to deal with the material
+  MaterialUpdateMode materialUpdateMode;
   /// stay with curvilinear parameters for navigation mode
   /// default is true
-  bool                      navigationCurvilinear;  
+  bool navigationCurvilinear;
   /// stay with curvilinear parameters for sensitive mode
   /// default is false (loses layer binding)
-  bool                      sensitiveCurvilinear;   
-  /// stay with curvilinear parameters for destination 
+  bool sensitiveCurvilinear;
+  /// stay with curvilinear parameters for destination
   /// default is false
-  bool                      destinationCurvilinear; 
+  bool destinationCurvilinear;
   /// depth of search applied
-  /// @TODO docu : write documetnation 
-  int                       searchMode;      
+  /// @TODO docu : write documetnation
+  int searchMode;
   /// the cache of the extrapolation
-  std::vector<ExtrapolationStep<T>>  
-                            extrapolationSteps;  
+  std::vector<ExtrapolationStep<T>> extrapolationSteps;
   /// the configuration concentrated
-  ExtrapolationConfig
-                            extrapolationConfiguration;  
+  ExtrapolationConfig extrapolationConfiguration;
   /// The process vertices that occured (for FATRAS)
-  std::vector<ProcessVertex> interactionVertices;  
+  std::vector<ProcessVertex> interactionVertices;
 
   float time;    //!< timing info
   float zOaTrX;  //!< z/A*rho*dInX0 (for average calculations)

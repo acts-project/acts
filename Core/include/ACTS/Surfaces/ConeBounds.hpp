@@ -21,14 +21,15 @@
 namespace Acts {
 
 ///  @class ConeBounds
-/// 
+///
 ///  Bounds for a conical Surface,
 ///  the opening angle is stored in \f$ \tan(\alpha) \f$ and always positively
 /// defined.
-///  The cone can open to both sides, steered by \f$ z_min \f$ and \f$ z_max \f$.
-/// 
+///  The cone can open to both sides, steered by \f$ z_min \f$ and \f$ z_max
+///  \f$.
+///
 ///  @image html ConeBounds.gif
-/// 
+///
 
 class ConeBounds : public SurfaceBounds
 {
@@ -55,7 +56,7 @@ public:
   ConeBounds(double alpha, bool symm, double halfphi = M_PI, double avphi = 0.);
 
   /// Constructor - open cone with alpha, minz and maxz, by
-  /// default a full cone but can optionally make it a conical section 
+  /// default a full cone but can optionally make it a conical section
   /// @param alpha is the opening angle of the cone
   /// @param zmin cone expanding from minimal z
   /// @param zmax cone expanding to maximal z
@@ -67,28 +68,29 @@ public:
              double halfphi = M_PI,
              double avphi   = 0.);
 
-  /// Copy Constructor 
-  /// @param cobo is the source bounds for the assignment             
-  ConeBounds(const ConeBounds& cobo) 
+  /// Copy Constructor
+  /// @param cobo is the source bounds for the assignment
+  ConeBounds(const ConeBounds& cobo)
     : SurfaceBounds(cobo)
-    ,  m_tanAlpha(cobo.m_tanAlpha)
-    ,  m_sinAlpha(cobo.m_sinAlpha)
-    ,  m_cosAlpha(cobo.m_cosAlpha)
-   {}
+    , m_tanAlpha(cobo.m_tanAlpha)
+    , m_sinAlpha(cobo.m_sinAlpha)
+    , m_cosAlpha(cobo.m_cosAlpha)
+  {
+  }
 
-  /// Destructor 
+  /// Destructor
   virtual ~ConeBounds();
 
   /// Assignment operator
-  /// @param cylbo is the source bounds for the assignment             
+  /// @param cylbo is the source bounds for the assignment
   ConeBounds&
   operator=(const ConeBounds& cobo);
 
-  /// Virtual constructor 
+  /// Virtual constructor
   virtual ConeBounds*
   clone() const override;
 
-  /// Return the bounds type 
+  /// Return the bounds type
   virtual BoundsType
   type() const override
   {
@@ -97,8 +99,7 @@ public:
 
   /// @copydoc SurfaceBounds::inside
   virtual bool
-  inside(const Vector2D&      lpos,
-         const BoundaryCheck& bchk = true) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bchk = true) const override;
 
   /// @copydoc SurfaceBounds::insideLoc0
   virtual bool
@@ -112,64 +113,66 @@ public:
   virtual double
   minDistance(const Vector2D& gpos) const override;
 
-  /// Return the radius at a specific z values 
+  /// Return the radius at a specific z values
   double
-  r (double z) const;
+  r(double z) const;
 
   /// Return the average values for the angles (cached)
   double
   tanAlpha() const;
-  
+
   /// Return the average values for the angles (cached)
   double
   sinAlpha() const;
-  
+
   /// Return the average values for the angles (cached)
   double
   cosAlpha() const;
-  
-  /// Return the average values for the angles (cached)  
+
+  /// Return the average values for the angles (cached)
   double
   alpha() const;
 
-  /// This method returns the minimum z value in the local 
+  /// This method returns the minimum z value in the local
   /// frame for an unbound symmetric cone, it returns -MAXBOUNDVALUE*/
   double
   minZ() const;
 
-  /// This method returns the maximum z value in the local 
+  /// This method returns the maximum z value in the local
   /// frame for an unbound symmetric cone, it returns -MAXBOUNDVALUE*/
   double
   maxZ() const;
 
-  /// This method returns the average phi value 
-  /// (i.e. the "middle" phi value for the conical sector we  are describing) 
+  /// This method returns the average phi value
+  /// (i.e. the "middle" phi value for the conical sector we  are describing)
   double
   averagePhi() const;
-  
-  /// This method returns the half-phi width of the sector 
+
+  /// This method returns the half-phi width of the sector
   /// (so that averagePhi +/- halfPhiSector gives the phi bounds of the cone)
   double
   halfPhiSector() const;
 
-  /// Output Method for std::ostream 
+  /// Output Method for std::ostream
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
 private:
   /// private helper method
-  bool inside(const Vector2D& lpos, double tol0, double tol1) const;
-  
-  std::vector<TDD_real_t> m_valueStore; ///< internal storage for the bound values
-  TDD_real_t              m_tanAlpha;   ///< internal cache 
-  TDD_real_t              m_sinAlpha;   ///< internal cache
-  TDD_real_t              m_cosAlpha;   ///< internal cache
+  bool
+  inside(const Vector2D& lpos, double tol0, double tol1) const;
 
-  /// Helper function for angle parameter initialization 
+  std::vector<TDD_real_t>
+             m_valueStore;  ///< internal storage for the bound values
+  TDD_real_t m_tanAlpha;    ///< internal cache
+  TDD_real_t m_sinAlpha;    ///< internal cache
+  TDD_real_t m_cosAlpha;    ///< internal cache
+
+  /// Helper function for angle parameter initialization
   virtual void
   initCache();
 
-  /// Helpers for inside() functions 
+  /// Helpers for inside() functions
   inline double
   minPhi() const
   {

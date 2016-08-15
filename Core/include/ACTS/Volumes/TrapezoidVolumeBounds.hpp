@@ -24,29 +24,36 @@ class TrapezoidBounds;
 
 /// @class TrapezoidVolumeBounds
 ///
-/// Bounds for a trapezoidal shaped Volume, the decomposeToSurfaces method creates
+/// Bounds for a trapezoidal shaped Volume, the decomposeToSurfaces method
+/// creates
 /// a
 /// vector of 6 surfaces:
 ///
 ///  BoundarySurfaceFace [index]:
 ///
 ///      - negativeFaceXY     [0] : Trazpezoidal Acts::PlaneSurface,
-///                                 parallel to \f$ xy \f$ plane at negative \f$ z
+///                                 parallel to \f$ xy \f$ plane at negative \f$
+///                                 z
 /// \f$
 ///      - positiveFaceXY     [1] : Trazpezoidal Acts::PlaneSurface,
-///                                 parallel to \f$ xy \f$ plane at positive \f$ z
+///                                 parallel to \f$ xy \f$ plane at positive \f$
+///                                 z
 /// \f$
 ///      - trapezoidFaceAlpha [2] : Rectangular  Acts::PlaneSurface,
-///                                 attached to [0] and [1] at negative \f$ x \f$
+///                                 attached to [0] and [1] at negative \f$ x
+///                                 \f$
 /// (associated to alpha)
 ///      - trapezoidFaceBeta  [3] : Rectangular  Acts::PlaneSurface,
-///                                 attached to [0] and [1] at positive \f$ x \f$
+///                                 attached to [0] and [1] at positive \f$ x
+///                                 \f$
 /// (associated to beta)
 ///      - negativeFaceZX     [4] : Rectangular  Acts::PlaneSurface,
-///                                 parallel to \f$ zx \f$ plane at negative \f$ y
+///                                 parallel to \f$ zx \f$ plane at negative \f$
+///                                 y
 /// \f$
 ///      - positiveFaceZX     [5] : Rectangular  Acts::PlaneSurface,
-///                                 parallel to \f$ zx \f$ plane at positive \f$ y
+///                                 parallel to \f$ zx \f$ plane at positive \f$
+///                                 y
 /// \f$
 ///
 ///  @image html TrapezoidVolumeBounds_decomp.gif
@@ -54,7 +61,7 @@ class TrapezoidBounds;
 class TrapezoidVolumeBounds : public VolumeBounds
 {
 public:
-  /// @enum BoundValues for readability 
+  /// @enum BoundValues for readability
   enum BoundValues {
     bv_minHalfX = 0,  //!< minimal halflength in x
     bv_maxHalfX = 1,  //!< maximal halflength in x
@@ -69,39 +76,39 @@ public:
   /// Default Constructor
   TrapezoidVolumeBounds();
 
-  /// Constructor - the trapezoid boundaries (symmetric trapezoid) 
+  /// Constructor - the trapezoid boundaries (symmetric trapezoid)
   /// @param minhalengthx is the half length in x at minimal y
   /// @param maxhalengthx is the half length in x at maximal y
   /// @param hlenghty is the half length in y
-  /// @param hlengthz is the half length in z  
+  /// @param hlengthz is the half length in z
   TrapezoidVolumeBounds(double minhlenghtx,
                         double maxhlengthx,
                         double hlenghty,
                         double hlengthz);
 
-  /// Constructor - the trapezoid boundaries (arbitrary trapezoid) 
+  /// Constructor - the trapezoid boundaries (arbitrary trapezoid)
   /// @param minhlenghtx is the half length in x at minimal y
   /// @param hlenghty is the half length in y
-  /// @param hlengthz is the half length in z 
+  /// @param hlengthz is the half length in z
   /// @param alpha is the openeing angle at -x,-y
-  /// @param beta is the openeing angle at +x,-y                                                                   
+  /// @param beta is the openeing angle at +x,-y
   TrapezoidVolumeBounds(double minhlenghtx,
                         double hlenghty,
                         double hlengthz,
                         double alpha,
                         double beta);
 
-  /// Copy Constructor 
+  /// Copy Constructor
   TrapezoidVolumeBounds(const TrapezoidVolumeBounds& bobo);
 
-  /// Destructor 
+  /// Destructor
   virtual ~TrapezoidVolumeBounds();
 
   /// Assignment operator
   TrapezoidVolumeBounds&
   operator=(const TrapezoidVolumeBounds& bobo);
 
-  /// Virtual constructor 
+  /// Virtual constructor
   TrapezoidVolumeBounds*
   clone() const override;
 
@@ -112,7 +119,7 @@ public:
   bool
   inside(const Vector3D& gpos, double tol = 0.) const override;
 
-  /// Method to decompose the Bounds into Surfaces 
+  /// Method to decompose the Bounds into Surfaces
   /// @param transformPtr is the transform to position the surfaces in 3D space
   /// @note this is a factory method
   const std::vector<const Surface*>
@@ -142,22 +149,22 @@ public:
   double
   beta() const;
 
-  /// Output Method for std::ostream 
+  /// Output Method for std::ostream
   std::ostream&
   dump(std::ostream& sl) const override;
 
 private:
-  /// Templated dump methos 
+  /// Templated dump methos
   template <class T>
   T&
   dumpT(T& dt) const;
 
-  /// This method returns the associated TrapezoidBounds 
-  /// of the face PlaneSurface parallel to local xy plane 
+  /// This method returns the associated TrapezoidBounds
+  /// of the face PlaneSurface parallel to local xy plane
   TrapezoidBounds*
   faceXYTrapezoidBounds() const;
 
-  /// This method returns the associated RecangleBounds 
+  /// This method returns the associated RecangleBounds
   /// of the face PlaneSurface attached to alpha (negative local x)
   RectangleBounds*
   faceAlphaRectangleBounds() const;
@@ -167,17 +174,17 @@ private:
   RectangleBounds*
   faceBetaRectangleBounds() const;
 
-  /// This method returns the associated RectangleBounds 
+  /// This method returns the associated RectangleBounds
   /// of the face PlaneSurface parallel to local zx plane, negative local y
   RectangleBounds*
   faceZXRectangleBoundsBottom() const;
 
   /// This method returns the associated RectangleBounds
-  /// of the face PlaneSurface parallel to local zx plane, positive local y 
+  /// of the face PlaneSurface parallel to local zx plane, positive local y
   RectangleBounds*
   faceZXRectangleBoundsTop() const;
 
-  /// the bounds values 
+  /// the bounds values
   std::vector<TDD_real_t> m_valueStore;
 };
 
@@ -225,8 +232,8 @@ TrapezoidVolumeBounds::dumpT(T& dt) const
   dt << std::setiosflags(std::ios::fixed);
   dt << std::setprecision(7);
   dt << "Acts::TrapezoidVolumeBounds: (minhalfX, halfY, halfZ, alpha, beta) = ";
-  dt << "(" << m_valueStore.at(bv_minHalfX) << ", "
-     << m_valueStore.at(bv_halfY) << ", " << m_valueStore.at(bv_halfZ);
+  dt << "(" << m_valueStore.at(bv_minHalfX) << ", " << m_valueStore.at(bv_halfY)
+     << ", " << m_valueStore.at(bv_halfZ);
   dt << ", " << m_valueStore.at(bv_alpha) << ", " << m_valueStore.at(bv_beta)
      << ")";
   return dt;

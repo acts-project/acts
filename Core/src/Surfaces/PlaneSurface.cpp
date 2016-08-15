@@ -11,28 +11,25 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Surfaces/InfiniteBounds.hpp"
-#include "ACTS/Utilities/Identifier.hpp"
 #include <iomanip>
 #include <iostream>
+#include "ACTS/Surfaces/InfiniteBounds.hpp"
+#include "ACTS/Surfaces/RectangleBounds.hpp"
+#include "ACTS/Utilities/Identifier.hpp"
 
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface& psf)
-  : Surface(psf)
-  , m_bounds(psf.m_bounds)
-{}
-
-Acts::PlaneSurface::PlaneSurface(const PlaneSurface& psf,
-                                 const Transform3D&  transf)
-  : Surface(psf, transf)
-  , m_bounds(psf.m_bounds)
+  : Surface(psf), m_bounds(psf.m_bounds)
 {
 }
 
-Acts::PlaneSurface::PlaneSurface(const Vector3D&  center,
-                                 const Vector3D&  normal)
-  : Surface()
-  , m_bounds(nullptr)
+Acts::PlaneSurface::PlaneSurface(const PlaneSurface& psf,
+                                 const Transform3D&  transf)
+  : Surface(psf, transf), m_bounds(psf.m_bounds)
+{
+}
+
+Acts::PlaneSurface::PlaneSurface(const Vector3D& center, const Vector3D& normal)
+  : Surface(), m_bounds(nullptr)
 {
   Translation3D curvilinearTranslation(center.x(), center.y(), center.z());
   /// the right-handed coordinate system is defined as
@@ -43,8 +40,8 @@ Acts::PlaneSurface::PlaneSurface(const Vector3D&  center,
   Vector3D U = fabs(T.dot(Vector3D::UnitZ())) < 0.99
       ? Vector3D::UnitZ().cross(T)
       : Vector3D::UnitX().cross(T);
-  Vector3D               V = T.cross(U);
-  RotationMatrix3D       curvilinearRotation;
+  Vector3D         V = T.cross(U);
+  RotationMatrix3D curvilinearRotation;
   curvilinearRotation.col(0) = T;
   curvilinearRotation.col(1) = U;
   curvilinearRotation.col(2) = V;
@@ -55,33 +52,31 @@ Acts::PlaneSurface::PlaneSurface(const Vector3D&  center,
   Surface::m_transform->pretranslate(center);
 }
 
-Acts::PlaneSurface::PlaneSurface( std::shared_ptr<const PlanarBounds> pbounds,
-                                 const Acts::DetectorElementBase& detelement,
-                                 const Identifier&                identifier)
-  : Surface(detelement, identifier)
-  , m_bounds(pbounds)
+Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
+                                 const Acts::DetectorElementBase&    detelement,
+                                 const Identifier&                   identifier)
+  : Surface(detelement, identifier), m_bounds(pbounds)
 {
-    /// surfaces representing a detector element must have bounds
-    assert(pbounds);
+  /// surfaces representing a detector element must have bounds
+  assert(pbounds);
 }
 
-Acts::PlaneSurface::PlaneSurface(
-    std::shared_ptr<Transform3D>        htrans,
-    std::shared_ptr<const PlanarBounds> pbounds)
-  : Surface(std::move(htrans))
-  , m_bounds(std::move(pbounds))
+Acts::PlaneSurface::PlaneSurface(std::shared_ptr<Transform3D>        htrans,
+                                 std::shared_ptr<const PlanarBounds> pbounds)
+  : Surface(std::move(htrans)), m_bounds(std::move(pbounds))
 {
 }
 
 Acts::PlaneSurface::~PlaneSurface()
-{}
+{
+}
 
 Acts::PlaneSurface&
 Acts::PlaneSurface::operator=(const PlaneSurface& psf)
 {
   if (this != &psf) {
     Surface::operator=(psf);
-    m_bounds               = psf.m_bounds;
+    m_bounds         = psf.m_bounds;
   }
   return *this;
 }
@@ -103,7 +98,7 @@ Acts::PlaneSurface::globalToLocal(const Vector3D& gpos,
 {
   /// the chance that there is no transform is almost 0, let's apply it
   Vector3D loc3Dframe = (transform().inverse()) * gpos;
-  lpos                    = Vector2D(loc3Dframe.x(), loc3Dframe.y());
+  lpos                = Vector2D(loc3Dframe.x(), loc3Dframe.y());
   return ((loc3Dframe.z() * loc3Dframe.z()
            > s_onSurfaceTolerance * s_onSurfaceTolerance)
               ? false
@@ -111,13 +106,12 @@ Acts::PlaneSurface::globalToLocal(const Vector3D& gpos,
 }
 
 bool
-Acts::PlaneSurface::isOnSurface(const Vector3D& glopo,
-                                const BoundaryCheck&  bchk) const
+Acts::PlaneSurface::isOnSurface(const Vector3D&      glopo,
+                                const BoundaryCheck& bchk) const
 {
   /// the chance that there is no transform is almost 0, let's apply it
   Vector3D loc3Dframe = (transform().inverse()) * glopo;
   if (fabs(loc3Dframe.z()) > s_onSurfaceTolerance) return false;
-  return (bchk
-              ? bounds().inside(Vector2D(loc3Dframe.x(), loc3Dframe.y()), bchk)
-              : true);
+  return (bchk ? bounds().inside(Vector2D(loc3Dframe.x(), loc3Dframe.y()), bchk)
+               : true);
 }

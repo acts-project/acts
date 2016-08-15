@@ -17,7 +17,6 @@
 
 namespace Acts {
 
-
 /// @class DiscBounds
 ///
 /// common base class for all bounds that are in a r/phi frame
@@ -26,12 +25,10 @@ namespace Acts {
 class DiscBounds : public SurfaceBounds
 {
 public:
-  /// Default Constructor 
-  DiscBounds(size_t sSize=0) : SurfaceBounds(sSize) {}
-  
-  /// Destructor 
+  /// Default Constructor
+  DiscBounds(size_t sSize = 0) : SurfaceBounds(sSize) {}
+  /// Destructor
   virtual ~DiscBounds() {}
-  
   /// Virtual Constructor
   virtual DiscBounds*
   clone() const = 0;

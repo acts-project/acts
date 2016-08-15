@@ -20,9 +20,7 @@ Acts::DiamondBounds::DiamondBounds(double minhalex,
                                    double maxhalex,
                                    double haley1,
                                    double haley2)
-  : PlanarBounds(DiamondBounds::bv_length)
-  , m_alpha1(0.)
-  , m_alpha2(0.)
+  : PlanarBounds(DiamondBounds::bv_length), m_alpha1(0.), m_alpha2(0.)
 {
   m_valueStore.at(DiamondBounds::bv_minHalfX) = minhalex;
   m_valueStore.at(DiamondBounds::bv_medHalfX) = medhalex;
@@ -31,7 +29,7 @@ Acts::DiamondBounds::DiamondBounds(double minhalex,
   m_valueStore.at(DiamondBounds::bv_halfY2)   = haley2;
   if (minhalex > maxhalex)
     std::swap(m_valueStore.at(DiamondBounds::bv_minHalfX),
-         m_valueStore.at(DiamondBounds::bv_maxHalfX));
+              m_valueStore.at(DiamondBounds::bv_maxHalfX));
   initCache();
 }
 
@@ -54,8 +52,8 @@ Acts::DiamondBounds::operator=(const DiamondBounds& diabo)
 {
   if (this != &diabo) {
     m_valueStore = diabo.m_valueStore;
-    m_alpha1      = diabo.m_alpha1;
-    m_alpha2      = diabo.m_alpha2;
+    m_alpha1     = diabo.m_alpha1;
+    m_alpha2     = diabo.m_alpha2;
   }
   return *this;
 }

@@ -28,8 +28,7 @@ Acts::RectangleBounds::~RectangleBounds()
 Acts::RectangleBounds&
 Acts::RectangleBounds::operator=(const RectangleBounds& recbo)
 {
-  if (this != &recbo) 
-    PlanarBounds::operator=(recbo);
+  if (this != &recbo) PlanarBounds::operator=(recbo);
   return *this;
 }
 

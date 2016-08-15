@@ -13,17 +13,17 @@
 #ifndef ACTS_VOLUMES_ABSTRACTVOLUME_H
 #define ACTS_VOLUMES_ABSTRACTVOLUME_H
 
-#include "ACTS/Volumes/BoundarySurfaceT.hpp"
-#include "ACTS/Volumes/Volume.hpp"
 #include <vector>
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Volumes/BoundarySurfaceT.hpp"
+#include "ACTS/Volumes/Volume.hpp"
 
 namespace Acts {
 
 class AbstractVolume;
-typedef std::shared_ptr<const BoundarySurfaceT<AbstractVolume> > BoundarySurfacePtr;
-    
-    
+typedef std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>
+    BoundarySurfacePtr;
+
 class VolumeBounds;
 typedef std::shared_ptr<const VolumeBounds> VolumeBoundsPtr;
 
@@ -38,8 +38,10 @@ typedef std::shared_ptr<const VolumeBounds> VolumeBoundsPtr;
 /// AbstractVolume can also be
 /// constructed with shared_ptr objects.
 ///
-/// A Acts::AbstractVolume is at first a collection class of Acts::BoundarySurface,
-/// the vector of Acts::BoundarySurface is returned by the Acts::VolumeBounds that
+/// A Acts::AbstractVolume is at first a collection class of
+/// Acts::BoundarySurface,
+/// the vector of Acts::BoundarySurface is returned by the Acts::VolumeBounds
+/// that
 /// carry a decompose method.
 ///
 /// Boundary surfaces can be shared between AbstractVolumes to enhance automatic
@@ -51,15 +53,14 @@ typedef std::shared_ptr<const VolumeBounds> VolumeBoundsPtr;
 
 class AbstractVolume : public Volume
 {
-    
 public:
-  /// Constructor with shared Transform3D*, VolumeBounds* 
+  /// Constructor with shared Transform3D*, VolumeBounds*
   /// @param htrans is the transform 3D the positions the volume in global frame
   /// @param volbounds is the boundary definition
   AbstractVolume(std::shared_ptr<Transform3D> htrans,
                  VolumeBoundsPtr              volbounds);
 
-  /// Copy constructor - deleted 
+  /// Copy constructor - deleted
   AbstractVolume(const AbstractVolume& vol) = delete;
 
   /// Default Constructor - deleted
@@ -70,19 +71,20 @@ public:
 
   /// Assignment operator - deleted
   AbstractVolume&
-  operator=(const AbstractVolume& vol) = delete;
+  operator=(const AbstractVolume& vol)
+      = delete;
 
-  /// Method to return the BoundarySurfaces 
-  const std::vector< BoundarySurfacePtr >& boundarySurfaces() const;
+  /// Method to return the BoundarySurfaces
+  const std::vector<BoundarySurfacePtr>&
+  boundarySurfaces() const;
 
 private:
-
-  /// Private method to create BoundarySurfaces 
+  /// Private method to create BoundarySurfaces
   void
   createBoundarySurfaces();
 
   /// boundary Surfaces for this volume
-  std::vector< BoundarySurfacePtr > m_boundarySurfaces;  
+  std::vector<BoundarySurfacePtr> m_boundarySurfaces;
 };
 
 }  // end of namespace

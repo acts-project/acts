@@ -1569,9 +1569,8 @@ Acts::RungeKuttaUtils::jacobianTransformCurvilinearToCylinder(double* P,
 // coordinates
 /////////////////////////////////////////////////////////////////////////////////
 void
-Acts::RungeKuttaUtils::jacobianTransformCurvilinearToLine(
-    double* P,
-    double* Jac) const
+Acts::RungeKuttaUtils::jacobianTransformCurvilinearToLine(double* P,
+                                                          double* Jac) const
 {
   double* p  = &P[0];
   double* At = &P[4];

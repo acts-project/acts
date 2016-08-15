@@ -24,7 +24,7 @@ Acts::CylinderBounds::CylinderBounds(double radius, double halez)
 }
 
 Acts::CylinderBounds::CylinderBounds(double radius, double haphi, double halez)
-: SurfaceBounds(CylinderBounds::bv_length), m_checkPhi(true)
+  : SurfaceBounds(CylinderBounds::bv_length), m_checkPhi(true)
 {
   m_valueStore.at(CylinderBounds::bv_radius)        = fabs(radius);
   m_valueStore.at(CylinderBounds::bv_halfPhiSector) = haphi;
@@ -35,7 +35,7 @@ Acts::CylinderBounds::CylinderBounds(double radius,
                                      double haphi,
                                      double averagephi,
                                      double halez)
-: SurfaceBounds(CylinderBounds::bv_length), m_checkPhi(true)
+  : SurfaceBounds(CylinderBounds::bv_length), m_checkPhi(true)
 {
   m_valueStore.at(CylinderBounds::bv_radius)        = fabs(radius);
   m_valueStore.at(CylinderBounds::bv_averagePhi)    = averagephi;
@@ -52,7 +52,7 @@ Acts::CylinderBounds::operator=(const Acts::CylinderBounds& cylbo)
 {
   if (this != &cylbo) {
     m_valueStore = cylbo.m_valueStore;
-    m_checkPhi    = cylbo.m_checkPhi;
+    m_checkPhi   = cylbo.m_checkPhi;
   }
   return *this;
 }

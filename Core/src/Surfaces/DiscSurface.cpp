@@ -11,12 +11,12 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/DiscSurface.hpp"
-#include "ACTS/Surfaces/InfiniteBounds.hpp"
-#include "ACTS/Surfaces/DiscTrapezoidalBounds.hpp"
-#include "ACTS/Surfaces/RadialBounds.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
 #include <iomanip>
 #include <iostream>
+#include "ACTS/Surfaces/DiscTrapezoidalBounds.hpp"
+#include "ACTS/Surfaces/InfiniteBounds.hpp"
+#include "ACTS/Surfaces/RadialBounds.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
 
 Acts::DiscSurface::DiscSurface(const DiscSurface& dsf)
   : Surface(dsf), m_bounds(dsf.m_bounds)
@@ -61,9 +61,9 @@ Acts::DiscSurface::DiscSurface(std::shared_ptr<Transform3D>      htrans,
 {
 }
 
-Acts::DiscSurface::DiscSurface(std::shared_ptr<const DiscBounds>  dbounds,
-                               const DetectorElementBase&         detelement,
-                               const Identifier&                  identifier)
+Acts::DiscSurface::DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
+                               const DetectorElementBase&        detelement,
+                               const Identifier&                 identifier)
   : Surface(detelement, identifier), m_bounds(nullptr)
 {
   assert(dbounds);
@@ -101,9 +101,9 @@ Acts::DiscSurface::globalToLocal(const Acts::Vector3D& gpos,
                                  const Acts::Vector3D&,
                                  Acts::Vector2D& lpos) const
 {
-  // transport it to the globalframe (very unlikely that this is not needed)  
+  // transport it to the globalframe (very unlikely that this is not needed)
   Vector3D loc3Dframe = (transform().inverse()) * gpos;
-  lpos = Acts::Vector2D(loc3Dframe.perp(), loc3Dframe.phi());
+  lpos                = Acts::Vector2D(loc3Dframe.perp(), loc3Dframe.phi());
   return ((fabs(loc3Dframe.z()) > s_onSurfaceTolerance) ? false : true);
 }
 
@@ -139,20 +139,20 @@ Acts::DiscSurface::localCartesianToGlobal(const Vector2D& lpos) const
 }
 
 const Acts::Vector2D
-Acts::DiscSurface::globalToLocalCartesian(const Vector3D& gpos,
-                                          double) const
+Acts::DiscSurface::globalToLocalCartesian(const Vector3D& gpos, double) const
 {
   Acts::Vector3D loc3Dframe = (transform().inverse()) * gpos;
   return Acts::Vector2D(loc3Dframe.x(), loc3Dframe.y());
 }
 
 bool
-Acts::DiscSurface::isOnSurface(const Vector3D& glopo,
-                               const BoundaryCheck&  bchk) const
+Acts::DiscSurface::isOnSurface(const Vector3D&      glopo,
+                               const BoundaryCheck& bchk) const
 {
   Vector3D loc3Dframe = (transform().inverse()) * glopo;
   if (fabs(loc3Dframe.z()) > (s_onSurfaceTolerance)) return false;
-  return (bchk
-              ? bounds().inside(Vector2D(loc3Dframe.perp(), loc3Dframe.phi()), bchk)
-              : true);
+  return (
+      bchk
+          ? bounds().inside(Vector2D(loc3Dframe.perp(), loc3Dframe.phi()), bchk)
+          : true);
 }
