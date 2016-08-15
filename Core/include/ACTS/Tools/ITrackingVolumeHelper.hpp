@@ -55,9 +55,9 @@ public:
   /// together with the volume enevlope parameters
   ///@param matprop : dense material properties for this TrackingVolume
   ///@param volBounds : (optional) bounds of this TrackingVolume - ownership
-  ///given
+  /// given
   ///@param transform : (optional) placement of this TrackingVolume - ownership
-  ///given
+  /// given
   ///@param entryLayers : switch to build entry layers
   ///@param volumeName  : volume name to be given
   virtual TrackingVolumePtr
