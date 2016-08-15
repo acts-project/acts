@@ -44,20 +44,20 @@ class Layer;
 typedef std::shared_ptr<const Layer> LayerPtr;
 typedef std::pair<const Layer*, const Layer*> NextLayers;
 
-/// 
+///
 /// @enum LayerType
-/// 
+///
 /// For readability
 ///
 enum LayerType { navigation = -1, passive = 0, active = 1 };
 
 /// @class Layer
-/// 
+///
 /// Base Class for a Detector Layer in the Tracking realm.
 /// An actual implemented Detector Layer inheriting from this base
 /// class has to inherit from a specific type of Surface as well.
 /// In addition, a Layer can carry:
-/// 
+///
 /// - a SurfaceArray of Surfaces holding the actual detector elements or
 /// subSurfaces.
 /// - SurfaceMaterial for Surface-based materialUpdates
@@ -98,7 +98,7 @@ class Layer : public virtual GeometryObject
   friend class DetachedTrackingVolume;
 
 public:
-  /// Clone at a with a shift - this is the only clone allowed 
+  /// Clone at a with a shift - this is the only clone allowed
   /// @param shift is the additional transform applied after cloning
   virtual LayerPtr
   cloneWithShift(const Transform3D& shift) const = 0;
@@ -106,16 +106,16 @@ public:
   /// Destructor
   virtual ~Layer();
 
-  /// Assignment operator - forbidden, layer assignment must not be ambiguous 
+  /// Assignment operator - forbidden, layer assignment must not be ambiguous
   Layer&
   operator=(const Layer& lay)
       = delete;
 
-  /// Return the entire SurfaceArray, returns a nullptr if no SurfaceArray 
+  /// Return the entire SurfaceArray, returns a nullptr if no SurfaceArray
   const SurfaceArray*
   surfaceArray() const;
 
-  /// Transforms the layer into a Surface representation for extrapolation 
+  /// Transforms the layer into a Surface representation for extrapolation
   /// @note the layer can be hosting many surfaces, but this is the global
   /// one to which one can extrapolate
   virtual const Surface&
@@ -131,18 +131,16 @@ public:
   /// @param bchk is the boundary check directive
   template <class T>
   bool
-  onLayer(const T&             parameters,
-          const BoundaryCheck& bchk = true) const;
+  onLayer(const T& parameters, const BoundaryCheck& bchk = true) const;
 
   /// geometrical isOnLayer() method
-  /// @note using isOnSurface() with Layer specific tolerance 
+  /// @note using isOnSurface() with Layer specific tolerance
   /// @param gpos is the gobal position to be checked
-  /// @param bchk is the boundary check directive       
+  /// @param bchk is the boundary check directive
   virtual bool
-  isOnLayer(const Vector3D&      gp,
-            const BoundaryCheck& bchk = true) const;
+  isOnLayer(const Vector3D& gp, const BoundaryCheck& bchk = true) const;
 
-  /// Return method for the overlap descriptor, can be nullptr        
+  /// Return method for the overlap descriptor, can be nullptr
   const OverlapDescriptor*
   overlapDescriptor() const;
 
@@ -150,15 +148,18 @@ public:
   const ApproachDescriptor*
   approachDescriptor() const;
 
-  ///  Surface seen on approach 
+  ///  Surface seen on approach
   /// for surcfaces without sub structure, this is the surfaceRepresentation
-  /// @param gpos is the global position to start the approach from 
+  /// @param gpos is the global position to start the approach from
   /// @param dir is the direction from where to attempt the approach
   /// @param pdir is the direction prescription
   /// @param bhck is the boundary check directive
-  /// @param resolveSubSurfaces is a boolean directive whether to resolve structure or not
-  /// @note reasons for resolving are: collect & find material, collect & find sensitivex
-  /// @ice is a (future) compatibility estimator that could be used to modify the straight line approach
+  /// @param resolveSubSurfaces is a boolean directive whether to resolve
+  /// structure or not
+  /// @note reasons for resolving are: collect & find material, collect & find
+  /// sensitivex
+  /// @ice is a (future) compatibility estimator that could be used to modify
+  /// the straight line approach
   virtual const SurfaceIntersection
   surfaceOnApproach(const Vector3D&                gpos,
                     const Vector3D&                dir,
@@ -168,7 +169,8 @@ public:
                     const ICompatibilityEstimator* ice = nullptr) const;
 
   ///  get compatible surfaces starting from charged parameters
-  ///  returns back the compatible surfaces either with straight line estimation,
+  ///  returns back the compatible surfaces either with straight line
+  ///  estimation,
   ///  or (@TODO later) with a compatiblityEstimator.
   ///  - if start/end surface are given, surfaces are provided in between (start
   /// & end excluded)
@@ -177,13 +179,16 @@ public:
   /// @param cSurfaces are the retrun surface intersections
   /// @param pars are the (charged) track parameters for the search
   /// @param pdir is the propagation direction prescription
-  /// @param bchk is the boundary check directive                  
+  /// @param bchk is the boundary check directive
   /// @param collectSensitive is the prescription to find the sensitive surfaces
   /// @param collectPassive is the prescription to find all passive surfaces
   /// @param searchType is the level of depth for the search
-  /// @param startSurface is an (optional) start surface for the search: excluded in return
-  /// @param endSurface is an (optional) end surface for the search: excluded in return
-  /// @ice is a (future) compatibility estimator that could be used to modify the straight line approach                               
+  /// @param startSurface is an (optional) start surface for the search:
+  /// excluded in return
+  /// @param endSurface is an (optional) end surface for the search: excluded in
+  /// return
+  /// @ice is a (future) compatibility estimator that could be used to modify
+  /// the straight line approach
   virtual bool
   compatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
                      const TrackParameters&            pars,
@@ -197,7 +202,8 @@ public:
                      const ICompatibilityEstimator*    ice = nullptr) const;
 
   ///  get compatible surfaces starting from neutral parameters
-  ///  returns back the compatible surfaces either with straight line estimation,
+  ///  returns back the compatible surfaces either with straight line
+  ///  estimation,
   ///  or (@TODO later) with a compatiblityEstimator.
   ///  - if start/end surface are given, surfaces are provided in between (start
   /// & end excluded)
@@ -206,13 +212,16 @@ public:
   /// @param cSurfaces are the retrun surface intersections
   /// @param pars are the (charged) track parameters for the search
   /// @param pdir is the propagation direction prescription
-  /// @param bchk is the boundary check directive                  
+  /// @param bchk is the boundary check directive
   /// @param collectSensitive is the prescription to find the sensitive surfaces
   /// @param collectPassive is the prescription to find all passive surfaces
   /// @param searchType is the level of depth for the search
-  /// @param startSurface is an (optional) start surface for the search: excluded in return
-  /// @param endSurface is an (optional) end surface for the search: excluded in return
-  /// @ice is a (future) compatibility estimator that could be used to modify the straight line approach  
+  /// @param startSurface is an (optional) start surface for the search:
+  /// excluded in return
+  /// @param endSurface is an (optional) end surface for the search: excluded in
+  /// return
+  /// @ice is a (future) compatibility estimator that could be used to modify
+  /// the straight line approach
   virtual bool
   compatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
                      const NeutralParameters&          pars,
@@ -228,7 +237,7 @@ public:
   /// Has sub-structure method:
   /// @note sub-structure depending on :
   ///   (a) only when required to resolve sub surfaces for sensitive hits
-  ///   (b) also material is ordered with sub structure 
+  ///   (b) also material is ordered with sub structure
   virtual bool
   hasSubStructure(bool resolveSensitive = false) const;
 
@@ -251,7 +260,7 @@ public:
   const Surface*
   materialSurface() const;
 
-  /// Boolean check method if layer has sensitive surfaces 
+  /// Boolean check method if layer has sensitive surfaces
   /// @note checks if a surfaceArray is present
   virtual bool
   hasSensitive() const;
@@ -262,11 +271,11 @@ public:
   const Layer*
   nextLayer(const Vector3D& pos, const Vector3D& dir) const;
 
-  /// get the confining TrackingVolume 
+  /// get the confining TrackingVolume
   const TrackingVolume*
   enclosingTrackingVolume() const;
 
-  /// get the confining DetachedTrackingVolume 
+  /// get the confining DetachedTrackingVolume
   const DetachedTrackingVolume*
   enclosingDetachedTrackingVolume() const;
 
@@ -286,15 +295,15 @@ protected:
   /// Default Constructor
   Layer();
 
-  /// Copy Constructor 
+  /// Copy Constructor
   Layer(const Layer& lay);
 
   /// Constructor with pointer to SurfaceArray (passing ownership)
   /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the normal thickness of the Layer
-  /// @param od overlap descriptor (@TODO change to unique_ptr)  
-  /// @param ad approach descriptor (@TODO change to unique_ptr)  
-  /// 
+  /// @param od overlap descriptor (@TODO change to unique_ptr)
+  /// @param ad approach descriptor (@TODO change to unique_ptr)
+  ///
   Layer(std::unique_ptr<SurfaceArray> surfaceArray,
         double                        thickness = 0.,
         OverlapDescriptor*            od        = nullptr,
@@ -312,9 +321,9 @@ protected:
                         bool                              collectSensitive,
                         bool                              collectPassive,
                         int                               searchType,
-                        const Surface*                    startSurface = nullptr,
-                        const Surface*                    endSurface   = nullptr,
-                        const ICompatibilityEstimator*    ice = nullptr) const;
+                        const Surface*                 startSurface = nullptr,
+                        const Surface*                 endSurface   = nullptr,
+                        const ICompatibilityEstimator* ice = nullptr) const;
 
   /// test compatible surface - checking directly for intersection & collection
   /// geometrical test compatible surface method
@@ -329,9 +338,9 @@ protected:
                         bool                              collectSensitive,
                         bool                              collectPassive,
                         bool                              intersectionTest,
-                        const Surface*                    startSurface = nullptr,
-                        const Surface*                    endSurface   = nullptr,
-                        const ICompatibilityEstimator*    ice = nullptr) const;
+                        const Surface*                 startSurface = nullptr,
+                        const Surface*                 endSurface   = nullptr,
+                        const ICompatibilityEstimator* ice = nullptr) const;
 
   ///  private method to set enclosing TrackingVolume, called by friend class
   /// only
@@ -340,41 +349,41 @@ protected:
   ///  - Bounds of the Surface are resized
   ///  - MaterialProperties dimensions are resized
   ///  - SubSurface array boundaries are NOT resized
-  /// 
+  ///
   /// @param tvol is the tracking volume the layer is confined
   void
   encloseTrackingVolume(const TrackingVolume& tvol) const;
 
   ///  private method to set the enclosed detached TV,
-  /// called by friend class only 
+  /// called by friend class only
   /// @param dtvol is the detached tracking volume the layer is confined
   void
   encloseDetachedTrackingVolume(const DetachedTrackingVolume& tvol) const;
 
   //// the previous Layer according to BinGenUtils
-  mutable NextLayers                    m_nextLayers; 
+  mutable NextLayers m_nextLayers;
   //// A binutility to find the next layer
-  mutable const BinUtility*             m_nextLayerUtility; 
+  mutable const BinUtility* m_nextLayerUtility;
   //// SurfaceArray on this layer Surface
-  std::unique_ptr<SurfaceArray>         m_surfaceArray;    
+  std::unique_ptr<SurfaceArray> m_surfaceArray;
   //// thickness of the Layer
-  double                                m_layerThickness;  
+  double m_layerThickness;
   //// descriptor for overlap/next surface
-  OverlapDescriptor*                    m_overlapDescriptor;
+  OverlapDescriptor* m_overlapDescriptor;
   //// descriptor for surface on approach
-  //// @note this is a mutable member, since resize may trigger to 
-  mutable ApproachDescriptor*           m_approachDescriptor;
+  //// @note this is a mutable member, since resize may trigger to
+  mutable ApproachDescriptor* m_approachDescriptor;
   //// the enclosing TrackingVolume
   //// @note this is a mutable member since it's set after the layer creation
-  mutable const TrackingVolume*         m_enclosingTrackingVolume;  
+  mutable const TrackingVolume* m_enclosingTrackingVolume;
   //// the eventual enclosing detached Tracking volume
   //// @note this is a mutable member since it is set after layer creation
-  mutable const DetachedTrackingVolume* m_enclosingDetachedTrackingVolume;  
+  mutable const DetachedTrackingVolume* m_enclosingDetachedTrackingVolume;
   //// Representing Volume
-  //// can be used as appraoch suraces 
-  mutable const AbstractVolume*         m_representingVolume; 
+  //// can be used as appraoch suraces
+  mutable const AbstractVolume* m_representingVolume;
   //// make a passive/active divisio
-  LayerType                             m_layerType;
+  LayerType m_layerType;
   /// pointer to the approach surface carrying the material
   /// nullptr if no material set
   const Acts::Surface* m_materialSurface;

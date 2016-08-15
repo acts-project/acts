@@ -266,23 +266,24 @@ Acts::TrackingVolume::createBoundarySurfaces()
   // transform Surfaces To BoundarySurfaces
   const std::vector<const Surface*> surfaces
       = Volume::volumeBounds().decomposeToSurfaces(m_transform);
-  
+
   // counter to flip the inner/outer position for Cylinders
   int sfCounter = 0;
   int sfNumber  = surfaces.size();
-  
-  for (auto& sf : surfaces){
-      // flip inner/outer for cylinders
-      TrackingVolume* inner
-          = (sf->type() == Surface::Cylinder && sfCounter == 3 && sfNumber > 3)
-          ? nullptr
-          : this;
-      TrackingVolume* outer = (inner) ? nullptr : this;
-      // create the boundary surface
-      m_boundarySurfaces.push_back(std::make_shared<const BoundarySurfaceT<TrackingVolume> >
-                                   (std::unique_ptr<const Surface>(sf), inner, outer));
-      // increase the counter
-      ++sfCounter;
+
+  for (auto& sf : surfaces) {
+    // flip inner/outer for cylinders
+    TrackingVolume* inner
+        = (sf->type() == Surface::Cylinder && sfCounter == 3 && sfNumber > 3)
+        ? nullptr
+        : this;
+    TrackingVolume* outer = (inner) ? nullptr : this;
+    // create the boundary surface
+    m_boundarySurfaces.push_back(
+        std::make_shared<const BoundarySurfaceT<TrackingVolume>>(
+            std::unique_ptr<const Surface>(sf), inner, outer));
+    // increase the counter
+    ++sfCounter;
   }
 }
 
@@ -352,7 +353,7 @@ Acts::TrackingVolume::glueTrackingVolumes(
 
 void
 Acts::TrackingVolume::updateBoundarySurface(
-    BoundarySurfaceFace                                    bsf,
+    BoundarySurfaceFace                                     bsf,
     std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs) const
 {
   m_boundarySurfaces.at(bsf) = bs;

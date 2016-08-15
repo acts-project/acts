@@ -87,30 +87,35 @@ Acts::DiscLayer::buildApproachDescriptor() const
   if (m_representingVolume) {
     // get teh boundary surfaces
     const std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>&
-    bSurfaces = m_representingVolume->boundarySurfaces();
+        bSurfaces
+        = m_representingVolume->boundarySurfaces();
     // fill in the surfaces into the vector
-    std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>> aSurfaces;
+    std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>
+        aSurfaces;
     aSurfaces.push_back(bSurfaces.at(negativeFaceXY));
     aSurfaces.push_back(bSurfaces.at(positiveFaceXY));
     // create an ApproachDescriptor with Boundary surfaces
-    m_approachDescriptor = new
-        GenericApproachDescriptor<const BoundarySurfaceT<AbstractVolume>>(
+    m_approachDescriptor
+        = new GenericApproachDescriptor<const BoundarySurfaceT<AbstractVolume>>(
             aSurfaces);
   } else {
     // create the new surfaces - positions first
-    Vector3D     aspPosition(center() + 0.5 * thickness() * normal());
-    Vector3D     asnPosition(center() - 0.5 * thickness() * normal());
-    auto asnTransform = std::make_shared<Transform3D>(Translation3D(asnPosition));
-    auto aspTransform = std::make_shared<Transform3D>(Translation3D(aspPosition));
+    Vector3D aspPosition(center() + 0.5 * thickness() * normal());
+    Vector3D asnPosition(center() - 0.5 * thickness() * normal());
+    auto     asnTransform
+        = std::make_shared<Transform3D>(Translation3D(asnPosition));
+    auto aspTransform
+        = std::make_shared<Transform3D>(Translation3D(aspPosition));
     // create the vector
     std::vector<const Surface*> aSurfaces;
     aSurfaces.push_back(new DiscSurface(asnTransform, m_bounds));
     aSurfaces.push_back(new DiscSurface(aspTransform, m_bounds));
     // create an ApproachDescriptor with standard surfaces surfaces - these will
     // be deleted by the approach descriptor
-    m_approachDescriptor = new GenericApproachDescriptor<const Surface>(aSurfaces);
+    m_approachDescriptor
+        = new GenericApproachDescriptor<const Surface>(aSurfaces);
   }
   for (auto& sIter : (m_approachDescriptor->containedSurfaces())) {
-       sIter->associateLayer(*this);
+    sIter->associateLayer(*this);
   }
 }

@@ -13,8 +13,8 @@
 #ifndef ACTS_TGEODETECTORELEMENT_TGEODETECTORELEMENT
 #define ACTS_TGEODETECTORELEMENT_TGEODETECTORELEMENT 1
 
-#include "ACTS/Detector/DetectorElementBase.hpp"
 #include <iostream>
+#include "ACTS/Detector/DetectorElementBase.hpp"
 #include "TGeoManager.h"
 
 namespace Acts {
@@ -25,13 +25,14 @@ namespace Acts {
 /// transformation matrix.
 ///
 /// @TODO what if shape conversion failes? add implementation of more than one
-/// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube? what
+/// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
+/// what
 /// if not used with DD4hep?
 ///
-  class TGeoDetectorElement : public DetectorElementBase
+class TGeoDetectorElement : public DetectorElementBase
 {
 public:
-  /// Constructor  
+  /// Constructor
   /// @param identifier is the detector identifier
   /// @param tGeoDetElement is the TGeoNode which should be represented
   /// @param mtoglobal to global is the (optional) transform applied to the
@@ -54,10 +55,10 @@ public:
                       const std::string& axes      = "XYZ",
                       double             scalor    = 1.);
 
-  ///  Destructor 
+  ///  Destructor
   virtual ~TGeoDetectorElement();
 
-  /// Identifier 
+  /// Identifier
   virtual Identifier
   identify() const override;
 
@@ -65,16 +66,16 @@ public:
   virtual const Transform3D&
   transform(const Identifier& identifier = Identifier()) const final;
 
-  /// Return surface associated with this identifier, which should come from the 
+  /// Return surface associated with this identifier, which should come from the
   virtual const Surface&
   surface(const Identifier& identifier = Identifier()) const final;
 
   /// Returns the full list of all detection surfaces associated
-  /// to this detector element 
+  /// to this detector element
   virtual const std::vector<std::shared_ptr<const Surface>>&
   surfaces() const override;
 
-  /// Returns the thickness of the module 
+  /// Returns the thickness of the module
   virtual double
   thickness() const override;
 

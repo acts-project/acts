@@ -21,7 +21,6 @@
 
 namespace Acts {
 
-
 /// @class RadialBounds
 ///
 /// Class to describe the bounds for a planar DiscSurface.
@@ -33,7 +32,6 @@ namespace Acts {
 class RadialBounds : public DiscBounds
 {
 public:
-    
   /// enumeration for readability
   enum BoundValues {
     bv_rMin          = 0,
@@ -49,20 +47,21 @@ public:
   /// Constructor for full disc of symmetric disc around phi=0
   /// @param minrad is the inner radius of the disc (0 for full disc)
   /// @param maxrad is the outer radius of the disc
-  /// @param hphisec is the half opening angle of the disc (Pi for full angular coverage)
+  /// @param hphisec is the half opening angle of the disc (Pi for full angular
+  /// coverage)
   RadialBounds(double minrad, double maxrad, double hphisec = M_PI);
 
   /// Constructor for full disc of symmetric disc around phi!=0
   /// @param minrad is the inner radius of the disc (0 for full disc)
   /// @param maxrad is the outer radius of the disc
   /// @param avephi is the phi value of the local x-axis in the local 3D frame
-  /// @param hphisec is the half opening angle of the disc (Pi for full angular coverage)
+  /// @param hphisec is the half opening angle of the disc (Pi for full angular
+  /// coverage)
   RadialBounds(double minrad, double maxrad, double avephi, double hphisec);
 
   /// Copy constructor
   /// @param rbounds is the source bounds for assignment
   RadialBounds(const RadialBounds& dbounds) : DiscBounds(dbounds) {}
-
   /// Destructor
   virtual ~RadialBounds();
 
@@ -83,7 +82,7 @@ public:
   }
 
   /// @copydoc SurfaceBounds::inside
-  /// 
+  ///
   /// For disc surfaces the local position in (r,phi) is checked
   /// @param lpos local position to be checked
   /// @param bchk boundary check directive
@@ -91,13 +90,13 @@ public:
   inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
   /// @copydoc SurfaceBounds::insideLoc0
-  /// 
+  ///
   /// For disc surfaces the local position in (r,phi) is checked
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
   /// @copydoc SurfaceBounds::insideLoc1
-  /// 
+  ///
   /// For disc surfaces the local position in (r,phi) is checked
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
@@ -116,7 +115,8 @@ public:
   double
   rMax() const;
 
-  /// Return method for the central phi value (i.e. phi value of x-axis of local 3D frame)
+  /// Return method for the central phi value (i.e. phi value of x-axis of local
+  /// 3D frame)
   double
   averagePhi() const;
 
@@ -130,8 +130,8 @@ public:
 
 private:
   /// private helper method for inside
-  bool inside(const Vector2D& lpos, double tol0, double tol1) const;
- 
+  bool
+  inside(const Vector2D& lpos, double tol0, double tol1) const;
 };
 
 inline RadialBounds*
@@ -143,8 +143,8 @@ RadialBounds::clone() const
 inline bool
 RadialBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 {
-  double alpha = fabs(lpos[Acts::eLOC_PHI]
-                      - m_valueStore[RadialBounds::bv_averagePhi]);
+  double alpha
+      = fabs(lpos[Acts::eLOC_PHI] - m_valueStore[RadialBounds::bv_averagePhi]);
   if (alpha > M_PI) alpha = 2 * M_PI - alpha;
   bool insidePhi
       = (alpha <= (m_valueStore[RadialBounds::bv_halfPhiSector] + tol1));
@@ -175,8 +175,7 @@ RadialBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
     return false;
   // a fast TRUE
   double min_ell = dx < dy ? dx : dy;
-  if (lpos(0, 0) < (m_valueStore[RadialBounds::bv_rMax] + min_ell))
-    return true;
+  if (lpos(0, 0) < (m_valueStore[RadialBounds::bv_rMax] + min_ell)) return true;
 
   // we are not using the KDOP approach here but rather a highly optimized one
   class EllipseCollisionTest
@@ -351,15 +350,14 @@ inline bool
 RadialBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 {
   return (lpos[Acts::eLOC_R] > (m_valueStore[RadialBounds::bv_rMin] - tol0)
-          && lpos[Acts::eLOC_R]
-              < (m_valueStore[RadialBounds::bv_rMax] + tol0));
+          && lpos[Acts::eLOC_R] < (m_valueStore[RadialBounds::bv_rMax] + tol0));
 }
 
 inline bool
 RadialBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 {
-  double alpha = fabs(lpos[Acts::eLOC_PHI]
-                      - m_valueStore[RadialBounds::bv_averagePhi]);
+  double alpha
+      = fabs(lpos[Acts::eLOC_PHI] - m_valueStore[RadialBounds::bv_averagePhi]);
   if (alpha > M_PI) alpha = 2. * M_PI - alpha;
   // alpha -= alpha > M_PI ? 2.*M_PI : 0.;
   // alpha += alpha < -M_PI ? 2.*M_PI : 0.;

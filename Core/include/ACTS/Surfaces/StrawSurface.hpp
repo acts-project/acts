@@ -13,8 +13,8 @@
 #ifndef ACTS_SURFACES_STRAWSURFACE_H
 #define ACTS_SURFACES_STRAWSURFACE_H
 
-#include "ACTS/Surfaces/LineSurface.hpp"
 #include "ACTS/Surfaces/LineBounds.hpp"
+#include "ACTS/Surfaces/LineSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
 
@@ -23,7 +23,7 @@ namespace Acts {
 class DetectorElementBase;
 
 ///  @class StrawSurface
-/// 
+///
 ///  Class for a StrawSurface in the TrackingGeometry
 ///  to describe dirft tube and straw like detectors.
 
@@ -34,35 +34,42 @@ public:
   StrawSurface() = delete;
 
   /// Constructor from Transform3D and bounds
-  /// @param htrans is the transform that positions the surface in the global frame
+  /// @param htrans is the transform that positions the surface in the global
+  /// frame
   /// @param radius is the straw radius
   /// @param halex is the half length in z
   StrawSurface(std::shared_ptr<Transform3D> htrans, double radius, double halez)
-    : LineSurface(htrans, radius, halez) {}
+    : LineSurface(htrans, radius, halez)
+  {
+  }
 
   /// Constructor from Transform3D and a shared bounds object
-  /// @param htrans is the transform that positions the surface in the global frame
-  /// @param lbounds are teh bounds describing the straw dimensions, can be optionally nullptr                 
+  /// @param htrans is the transform that positions the surface in the global
+  /// frame
+  /// @param lbounds are teh bounds describing the straw dimensions, can be
+  /// optionally nullptr
   StrawSurface(std::shared_ptr<Transform3D>      htrans,
                std::shared_ptr<const LineBounds> lbounds = nullptr);
 
   /// Constructor from DetectorElementBase and Element identifier
-  /// @param lbounds are teh bounds describing the straw dimensions, they must not be nullptr                    
+  /// @param lbounds are teh bounds describing the straw dimensions, they must
+  /// not be nullptr
   /// @param detelement for which this surface is (at least) one representation
-  /// @param identifier                                          
+  /// @param identifier
   StrawSurface(std::shared_ptr<const LineBounds> lbounds,
-               const DetectorElementBase& detelement,
-               const Identifier&          identifier = Identifier());
+               const DetectorElementBase&        detelement,
+               const Identifier&                 identifier = Identifier());
 
   /// Copy constructor
-  /// @param slsf is teh source surface for copying                      
+  /// @param slsf is teh source surface for copying
   StrawSurface(const StrawSurface& slsf) : LineSurface(slsf) {}
-
   /// Copy constructor with shift
   /// @param slsf is the source surface dor copying
   /// @param htrans is the additional transform applied after copying
   StrawSurface(const StrawSurface& slsf, const Transform3D& htrans)
-    : LineSurface(slsf, htrans) {}
+    : LineSurface(slsf, htrans)
+  {
+  }
 
   /// Destructor
   virtual ~StrawSurface();
@@ -75,13 +82,13 @@ public:
   virtual StrawSurface*
   clone(const Transform3D* shift = nullptr) const override;
 
-  /// Return the surface type 
+  /// Return the surface type
   virtual SurfaceType
   type() const override
   {
     return Surface::Straw;
   }
- 
+
   /// Return properly formatted class name for screen output */
   virtual std::string
   name() const override

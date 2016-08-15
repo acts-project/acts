@@ -14,12 +14,11 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::TriangleBounds::TriangleBounds(
-    const std::vector< Vector2D >& vertices)
+Acts::TriangleBounds::TriangleBounds(const std::vector<Vector2D>& vertices)
   : Acts::PlanarBounds()
 {
   m_valueStore.reserve(6);
-  for (auto& v : vertices){ 
+  for (auto& v : vertices) {
     m_valueStore.push_back(v.x());
     m_valueStore.push_back(v.y());
   }
@@ -32,8 +31,7 @@ Acts::TriangleBounds::~TriangleBounds()
 Acts::TriangleBounds&
 Acts::TriangleBounds::operator=(const TriangleBounds& tribo)
 {
-  if (this != &tribo)
-    Acts::PlanarBounds::operator=(tribo);
+  if (this != &tribo) Acts::PlanarBounds::operator=(tribo);
   return *this;
 }
 

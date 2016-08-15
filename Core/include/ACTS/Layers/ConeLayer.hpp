@@ -13,10 +13,10 @@
 #ifndef ACTS_LAYERS_CONELAYER_H
 #define ACTS_LAYERS_CONELAYER_H
 
-#include "ACTS/Utilities/Definitions.hpp"
+#include <algorithm>
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Surfaces/ConeSurface.hpp"
-#include <algorithm>
+#include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -24,17 +24,17 @@ class ConeBounds;
 class OverlapDescriptor;
 class ApproachDescriptor;
 
-/// 
+///
 /// @class ConeLayer
-/// 
+///
 /// Class to describe a conical detector layer for tracking, it inhertis from
 /// both, Layer base class and ConeSurface class
-/// 
+///
 class ConeLayer : virtual public ConeSurface, public Layer
 {
 public:
   /// Factory for shared layer
-  /// 
+  ///
   /// @param transform is the 3D transform that poisitions the layer in 3D frame
   /// @param cbounds is the conical bound description
   /// @param thickness is the layer thickness along the normal axis
@@ -54,11 +54,16 @@ public:
          ApproachDescriptor*               ad        = nullptr,
          LayerType                         laytyp    = Acts::active)
   {
-    return LayerPtr(new ConeLayer(
-        transform, cbounds, std::move(surfaceArray), thickness, od, ad, laytyp));
+    return LayerPtr(new ConeLayer(transform,
+                                  cbounds,
+                                  std::move(surfaceArray),
+                                  thickness,
+                                  od,
+                                  ad,
+                                  laytyp));
   }
 
-  /// Factory for shared layer with shift 
+  /// Factory for shared layer with shift
   ///
   /// @param cla is the source clone layer
   /// @param shift is the additional shift applied after copying
@@ -83,7 +88,7 @@ public:
 
   /// Default Constructor - delete
   ConeLayer() = delete;
-    
+
   /// Copy constructor of ConeLayer - delete
   ConeLayer(const ConeLayer& cla) = delete;
 
@@ -94,14 +99,13 @@ public:
 
   /// Destructor
   virtual ~ConeLayer() {}
-  
-  /// Transforms the layer into a Surface representation for extrapolation 
+  /// Transforms the layer into a Surface representation for extrapolation
   const ConeSurface&
   surfaceRepresentation() const override;
 
 protected:
   /// Private constructor with arguments
-  /// 
+  ///
   /// @param transform is the 3D transform that poisitions the layer in 3D frame
   /// @param cbounds is the conical bound description
   /// @param thickness is the layer thickness along the normal axis

@@ -50,8 +50,7 @@ Acts::RadialBounds::~RadialBounds()
 Acts::RadialBounds&
 Acts::RadialBounds::operator=(const RadialBounds& rbo)
 {
-  if (this != &rbo)
-    SurfaceBounds::operator=(rbo);
+  if (this != &rbo) SurfaceBounds::operator=(rbo);
   return *this;
 }
 
@@ -101,8 +100,8 @@ Acts::RadialBounds::dump(std::ostream& sl) const
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::RadialBounds:  (innerRadius, outerRadius, hPhiSector) = ";
-  sl << "(" << rMin() << ", " << rMax() << ", "
-     << averagePhi() << ", " << halfPhiSector() << ")";
+  sl << "(" << rMin() << ", " << rMax() << ", " << averagePhi() << ", "
+     << halfPhiSector() << ")";
   sl << std::setprecision(-1);
   return sl;
 }

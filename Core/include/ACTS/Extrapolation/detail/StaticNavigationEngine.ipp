@@ -198,10 +198,10 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
 template <class T>
 Acts::ExtrapolationCode
 Acts::StaticNavigationEngine::handleBoundaryT(
-    Acts::ExtrapolationCell<T>&                        eCell,
+    Acts::ExtrapolationCell<T>&                         eCell,
     const Acts::BoundarySurfaceT<Acts::TrackingVolume>& bSurfaceTV,
-    Acts::PropDirection                                pDir,
-    bool                                               stepout) const
+    Acts::PropDirection                                 pDir,
+    bool                                                stepout) const
 {
   // get the bondary surface and compare with last one to prevent loops
   const Surface& bSurface = bSurfaceTV.surfaceRepresentation();
@@ -210,13 +210,13 @@ Acts::StaticNavigationEngine::handleBoundaryT(
   // - SuccessPathLimit : pathLimit reached during propagation
   // - InProgress       : boundary reached
   // - Recovered        : boundary not reached
-  ExtrapolationCode eCode = m_cfg.propagationEngine->propagate(
-      eCell,
-      bSurface,
-      pDir,
-      ExtrapolationMode::CollectBoundary,
-      !stepout,
-      eCell.destinationCurvilinear);
+  ExtrapolationCode eCode
+      = m_cfg.propagationEngine->propagate(eCell,
+                                           bSurface,
+                                           pDir,
+                                           ExtrapolationMode::CollectBoundary,
+                                           !stepout,
+                                           eCell.destinationCurvilinear);
   CHECK_ECODE_SUCCESS(eCell, eCode);
   EX_MSG_VERBOSE(eCell.navigationStep,
                  "navigation",
@@ -339,8 +339,10 @@ Acts::StaticNavigationEngine::resolvePositionT(
                "",
                "resolve position ("
                    << eCell.leadParameters->position().x()
-                   << eCell.leadParameters->position().y() << ", "
-                   << eCell.leadParameters->position().z() << ", "
+                   << eCell.leadParameters->position().y()
+                   << ", "
+                   << eCell.leadParameters->position().z()
+                   << ", "
                    << (int(pDir) > 0 ? ") along momentum."
                                      : ") opposite momentum."));
 

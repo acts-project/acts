@@ -16,8 +16,8 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
-#include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/BinningType.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -31,12 +31,15 @@ typedef std::shared_ptr<const VolumeBounds> VolumeBoundsPtr;
 ///
 /// Pure Absract Base Class for Volume bounds.
 ///
-/// Acts::VolumeBounds are a set of up to six confining Surfaces that are stored in
+/// Acts::VolumeBounds are a set of up to six confining Surfaces that are stored
+/// in
 /// a std::vector.
-/// Each type of Acts::VolumeBounds has to implement a decomposeToSurfaces() and a
+/// Each type of Acts::VolumeBounds has to implement a decomposeToSurfaces() and
+/// a
 /// inside() method.
 ///
-/// The orientation of the Surfaces are in a way that the normal vector points to
+/// The orientation of the Surfaces are in a way that the normal vector points
+/// to
 /// the oustide world.
 ///
 /// The Volume, retrieving a set of Surfaces from the VolumeBounds, can turn the
@@ -45,13 +48,10 @@ typedef std::shared_ptr<const VolumeBounds> VolumeBoundsPtr;
 class VolumeBounds
 {
 public:
-  
   /// Default Constructor*/
   VolumeBounds() {}
-  
   /// Destructor
   virtual ~VolumeBounds() {}
-  
   ///  clone() method to make deep copy in Volume copy constructor and for
   /// assigment operator  of the Surface class.
   virtual VolumeBounds*
@@ -65,26 +65,27 @@ public:
 
   /// Method to decompose the Bounds into Surfaces
   /// the Volume can turn them into BoundarySurfaces
-  /// @param transform is the 3D transform to be applied to the boundary surfaces
+  /// @param transform is the 3D transform to be applied to the boundary
+  /// surfaces
   ///        to position them in 3D space
   /// @note this is factory method
   virtual const std::vector<const Surface*>
   decomposeToSurfaces(std::shared_ptr<Transform3D> transform) const = 0;
 
-  /// Binning offset - overloaded for some R-binning types 
+  /// Binning offset - overloaded for some R-binning types
   virtual Vector3D
   binningOffset(BinningValue bValue) const;
 
-  /// Binning borders in double 
+  /// Binning borders in double
   virtual double
   binningBorder(BinningValue bValue) const;
-  
-  /// Output Method for std::ostream, to be overloaded by child classes 
+
+  /// Output Method for std::ostream, to be overloaded by child classes
   virtual std::ostream&
   dump(std::ostream& sl) const = 0;
 };
 
-/// Binning offset - overloaded for some R-binning types 
+/// Binning offset - overloaded for some R-binning types
 inline Vector3D VolumeBounds::binningOffset(BinningValue) const
 {  // standard offset is 0.,0.,0.
   return Vector3D(0., 0., 0.);

@@ -14,32 +14,28 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::LineSurface::LineSurface(
-    std::shared_ptr<Transform3D> htrans,
-    double                       radius,
-    double                       halez)
-  : Surface(htrans)
-  , m_bounds(std::make_shared<LineBounds>(radius, halez))
+Acts::LineSurface::LineSurface(std::shared_ptr<Transform3D> htrans,
+                               double                       radius,
+                               double                       halez)
+  : Surface(htrans), m_bounds(std::make_shared<LineBounds>(radius, halez))
 {
 }
 
-Acts::LineSurface::LineSurface(
-    std::shared_ptr<Transform3D>      htrans,
-    std::shared_ptr<const LineBounds> lbounds)
+Acts::LineSurface::LineSurface(std::shared_ptr<Transform3D>      htrans,
+                               std::shared_ptr<const LineBounds> lbounds)
   : Surface(htrans), m_bounds(lbounds)
-{}
+{
+}
 
-Acts::LineSurface::LineSurface(
-    std::shared_ptr<const LineBounds> lbounds,
-    const DetectorElementBase&        detelement,
-    const Identifier&                 id)
+Acts::LineSurface::LineSurface(std::shared_ptr<const LineBounds> lbounds,
+                               const DetectorElementBase&        detelement,
+                               const Identifier&                 id)
   : Surface(detelement, id), m_bounds(lbounds)
 {
-    assert(lbounds);
+  assert(lbounds);
 }
 
-Acts::LineSurface::LineSurface(
-    const LineSurface& slsf)
+Acts::LineSurface::LineSurface(const LineSurface& slsf)
   : Surface(slsf), m_bounds(slsf.m_bounds)
 {
 }
@@ -59,7 +55,7 @@ Acts::LineSurface::operator=(const LineSurface& slsf)
 {
   if (this != &slsf) {
     Surface::operator=(slsf);
-    m_bounds               = slsf.m_bounds;
+    m_bounds         = slsf.m_bounds;
   }
   return *this;
 }
@@ -74,21 +70,22 @@ Acts::LineSurface::localToGlobal(const Vector2D& lpos,
   Vector3D locZinGlobal(0., 0., lpos[Acts::eLOC_Z]);
   // apply a transform if needed
   if (m_transform || m_associatedDetElement)
-      locZinGlobal = transform() * locZinGlobal;
+    locZinGlobal = transform() * locZinGlobal;
   // transform zPosition into global coordinates and
   // add Acts::eLOC_R * radiusAxis
-  gpos = Vector3D(locZinGlobal + lpos[Acts::eLOC_R] * radiusAxisGlobal.normalized());
+  gpos = Vector3D(locZinGlobal
+                  + lpos[Acts::eLOC_R] * radiusAxisGlobal.normalized());
 }
-
 
 bool
 Acts::LineSurface::globalToLocal(const Vector3D& gpos,
                                  const Vector3D& mom,
                                  Vector2D&       lpos) const
 {
-  // apply the transform when needed 
-  Acts::Vector3D loc3Dframe = (m_transform || m_associatedDetElement) ? 
-                              (transform().inverse()) * gpos : gpos;
+  // apply the transform when needed
+  Acts::Vector3D loc3Dframe = (m_transform || m_associatedDetElement)
+      ? (transform().inverse()) * gpos
+      : gpos;
   // construct localPosition with sign*candidate.perp() and z.()
   lpos = Acts::Vector2D(loc3Dframe.perp(), loc3Dframe.z());
   Acts::Vector3D decVec(gpos - center());
@@ -96,12 +93,11 @@ Acts::LineSurface::globalToLocal(const Vector3D& gpos,
   double sign = ((lineDirection().cross(mom)).dot(decVec) < 0.) ? -1. : 1.;
   lpos[Acts::eLOC_R] *= sign;
   return true;
-
 }
 
 bool
-Acts::LineSurface::isOnSurface(const Vector3D& gpos,
-                               const BoundaryCheck&  bchk) const
+Acts::LineSurface::isOnSurface(const Vector3D&      gpos,
+                               const BoundaryCheck& bchk) const
 {
   if (!bchk) return true;
   // check whether this is a boundless surface
@@ -109,12 +105,11 @@ Acts::LineSurface::isOnSurface(const Vector3D& gpos,
   // get the standard bounds
   Vector3D loc3Dframe = (transform().inverse()) * gpos;
   Vector2D locCand(loc3Dframe.perp(), loc3Dframe.z());
-  return bounds().inside(locCand,bchk);
+  return bounds().inside(locCand, bchk);
 }
 
 const Acts::RotationMatrix3D
-Acts::LineSurface::measurementFrame(const Vector3D&,
-                                            const Vector3D& mom) const
+Acts::LineSurface::measurementFrame(const Vector3D&, const Vector3D& mom) const
 {
   Acts::RotationMatrix3D mFrame;
   // construct the measurement frame
@@ -131,9 +126,9 @@ Acts::LineSurface::measurementFrame(const Vector3D&,
 
 Acts::Intersection
 Acts::LineSurface::intersectionEstimate(const Vector3D&      gpos,
-                                                const Vector3D&      dir,
-                                                bool                 forceDir,
-                                                const BoundaryCheck& bchk) const
+                                        const Vector3D&      dir,
+                                        bool                 forceDir,
+                                        const BoundaryCheck& bchk) const
 {
   // following nominclature found in header file and doxygen documentation
   // line one is the straight track

@@ -34,19 +34,18 @@ namespace Acts {
 class ConeSurface : public Surface
 {
 public:
-
-  /// Default constructor is deleted    
+  /// Default constructor is deleted
   ConeSurface() = delete;
 
-  /// Constructor form HepTransform and an opening angle 
+  /// Constructor form HepTransform and an opening angle
   /// @param htrans is the transform to place to cone in a 3D frame
   /// @param alpha is the opening angle of the cone
-  /// @param symmetric indicates if the cones are built to +/1 z  
+  /// @param symmetric indicates if the cones are built to +/1 z
   ConeSurface(std::shared_ptr<Transform3D> htrans,
               double                       alpha,
               bool                         symmetric = false);
 
-  /// Constructor form HepTransform and an opening angle 
+  /// Constructor form HepTransform and an opening angle
   /// @param htrans is the transform that places the cone in the global frame
   /// @param alpha is the opening angle of the cone
   /// @param locZmin is the z range over which the cone spans
@@ -60,11 +59,11 @@ public:
 
   /// Constructor from HepTransform and ConeBounds
   /// @param htrans is the transform that places the cone in the global frame
-  /// @param cbounds is the boundary class, the bounds must exit            
+  /// @param cbounds is the boundary class, the bounds must exit
   ConeSurface(std::shared_ptr<Transform3D>      htrans,
               std::shared_ptr<const ConeBounds> cbounds);
 
-  /// Copy constructor 
+  /// Copy constructor
   /// @param csf is the source cone surface
   ConeSurface(const ConeSurface& csf);
 
@@ -86,13 +85,14 @@ public:
   virtual ConeSurface*
   clone(const Transform3D* shift = nullptr) const override;
 
-  /// The binning position method - is overloaded for r-type binning 
-  /// @param bValue defines the type of binning to be applied in the global frame
+  /// The binning position method - is overloaded for r-type binning
+  /// @param bValue defines the type of binning to be applied in the global
+  /// frame
   /// @return The return type is a vector for positioning in the global frame
   virtual const Vector3D
   binningPosition(BinningValue bValue) const override;
 
-  /// Return the surface type 
+  /// Return the surface type
   virtual SurfaceType
   type() const override
   {
@@ -101,27 +101,28 @@ public:
 
   /// Return the measurement frame - this is needed for alignment, in particular
   ///  for StraightLine and Perigee Surface
-  ///  - the default implementation is the the RotationMatrix3D of the transform 
+  ///  - the default implementation is the the RotationMatrix3D of the transform
   const RotationMatrix3D
-  measurementFrame(const Vector3D& gpos,
-                   const Vector3D& mom) const final;
-
+  measurementFrame(const Vector3D& gpos, const Vector3D& mom) const final;
 
   /// Return method for surface normal information
-  /// @param lpos is the local position on the cone for which the normal vector is requested
-  /// @return Vector3D normal vector in global frame                 
+  /// @param lpos is the local position on the cone for which the normal vector
+  /// is requested
+  /// @return Vector3D normal vector in global frame
   const Vector3D
   normal(const Vector2D& lpos) const final;
 
   /// Return method for surface normal information
-  /// @param gpos is the global position on the cone for which the normal vector is requested
-  /// @return Vector3D normal vector in global frame                 
+  /// @param gpos is the global position on the cone for which the normal vector
+  /// is requested
+  /// @return Vector3D normal vector in global frame
   const Vector3D
   normal(const Vector3D& gpos) const final;
 
-  // Return method for the rotational symmetry axis 
+  // Return method for the rotational symmetry axis
   // @return This returns the local z axis
-  virtual const Vector3D rotSymmetryAxis() const;
+  virtual const Vector3D
+  rotSymmetryAxis() const;
 
   /// This method returns the ConeBounds by reference
   virtual const ConeBounds&
@@ -144,15 +145,16 @@ public:
   ///
   /// @param gpos is the start position for the intersection
   /// @param dir is the start direction for the intersection
-  /// @param forcDir is the flag to force to go along the forward direction              
-  /// @param bchk is the boundary check to be used in this directive                            
+  /// @param forcDir is the flag to force to go along the forward direction
+  /// @param bchk is the boundary check to be used in this directive
   /// <b>mathematical motivation:</b>
   ///
   ///   The calculation will be done in the 3-dim frame of the cone,
   ///   i.e. the symmetry axis of the cone is the z-axis, x- and y-axis are
   /// perpenticular
   ///   to the the z-axis. In this frame the cone is centered around the origin.
-  ///   Therefore the two points describing the line have to be first recalculated
+  ///   Therefore the two points describing the line have to be first
+  ///   recalculated
   /// into the new frame.
   ///   Suppose, this is done, the points of intersection can be
   ///   obtained as follows:<br>
@@ -176,7 +178,7 @@ public:
   ///   equation of the line gives the points of intersection. @f$t@f$
   ///   is also the length of the path, since we normalized @f$x_d@f$
   ///   to be unit length.
-  /// 
+  ///
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
@@ -185,20 +187,19 @@ public:
 
   // the pathCorrection for derived classes with thickness
   // @param gpos is the global potion at the correction point
-  // @param mom is the momentum at the correction point                     
+  // @param mom is the momentum at the correction point
   virtual double
   pathCorrection(const Vector3D& gpos, const Vector3D& mom) const override;
 
-  /// Return properly formatted class name for screen output 
+  /// Return properly formatted class name for screen output
   virtual std::string
   name() const override
   {
     return "Acts::ConeSurface";
   }
 
-protected:                                     
-  std::shared_ptr<const ConeBounds>   m_bounds;           ///< bounds (shared)
-
+protected:
+  std::shared_ptr<const ConeBounds> m_bounds;  ///< bounds (shared)
 };
 
 inline ConeSurface*
@@ -218,7 +219,7 @@ ConeSurface::normal(const Vector2D& lp) const
                        sin(phi) * bounds().cosAlpha(),
                        sgn * bounds().sinAlpha());
   return m_transform ? std::move(Vector3D(transform().linear() * localNormal))
-                     : std::move(localNormal); 
+                     : std::move(localNormal);
 }
 
 inline const Vector3D
@@ -226,8 +227,8 @@ ConeSurface::normal(const Vector3D& gpos) const
 {
   // get it into the cylinder frame if needed
   Vector3D pos3D = gpos;
-  if (m_transform || m_associatedDetElement){
-    pos3D = transform().inverse()*gpos;
+  if (m_transform || m_associatedDetElement) {
+    pos3D     = transform().inverse() * gpos;
     pos3D.z() = 0;
   }
   return pos3D.unit();

@@ -18,9 +18,7 @@
 Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
                                        double maxhalex,
                                        double haley)
-  : Acts::PlanarBounds(TrapezoidBounds::bv_length)
-  , m_alpha(0.)
-  , m_beta(0.)
+  : Acts::PlanarBounds(TrapezoidBounds::bv_length), m_alpha(0.), m_beta(0.)
 {
   m_valueStore.at(TrapezoidBounds::bv_minHalfX) = fabs(minhalex);
   m_valueStore.at(TrapezoidBounds::bv_maxHalfX) = fabs(maxhalex);
@@ -35,9 +33,7 @@ Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
                                        double haley,
                                        double alpha,
                                        double beta)
-  : Acts::PlanarBounds(TrapezoidBounds::bv_length)
-  , m_alpha(alpha)
-  , m_beta(beta)
+  : Acts::PlanarBounds(TrapezoidBounds::bv_length), m_alpha(alpha), m_beta(beta)
 {
   double gamma = (alpha > beta) ? (alpha - 0.5 * M_PI) : (beta - 0.5 * M_PI);
   // now fill them
@@ -56,8 +52,8 @@ Acts::TrapezoidBounds::operator=(const TrapezoidBounds& trabo)
 {
   if (this != &trabo) {
     PlanarBounds::operator=(trabo);
-    m_alpha       = trabo.m_alpha;
-    m_beta        = trabo.m_beta;
+    m_alpha               = trabo.m_alpha;
+    m_beta                = trabo.m_beta;
   }
   return *this;
 }
@@ -81,8 +77,7 @@ Acts::TrapezoidBounds::insideFull(const Acts::Vector2D& lpos,
   double fabsX = fabs(lpos[Acts::eLOC_X]);
   double fabsY = fabs(lpos[Acts::eLOC_Y]);
   // (1) a fast FALSE
-  if (fabsY > (m_valueStore.at(TrapezoidBounds::bv_halfY) + tol1))
-    return false;
+  if (fabsY > (m_valueStore.at(TrapezoidBounds::bv_halfY) + tol1)) return false;
   // (2) a fast FALSE
   if (fabsX > (m_valueStore.at(TrapezoidBounds::bv_maxHalfX) + tol0))
     return false;
@@ -98,9 +93,8 @@ Acts::TrapezoidBounds::insideFull(const Acts::Vector2D& lpos,
       / (m_valueStore.at(TrapezoidBounds::bv_maxHalfX)
          - m_valueStore.at(TrapezoidBounds::bv_minHalfX))
       * ((lpos[Acts::eLOC_X] > 0.) ? 1.0 : -1.0);
-  double d
-      = -fabs(k) * 0.5 * (m_valueStore.at(TrapezoidBounds::bv_maxHalfX)
-                          + m_valueStore.at(TrapezoidBounds::bv_minHalfX));
+  double d = -fabs(k) * 0.5 * (m_valueStore.at(TrapezoidBounds::bv_maxHalfX)
+                               + m_valueStore.at(TrapezoidBounds::bv_minHalfX));
   return (isAbove(lpos, tol0, tol1, k, d));
 }
 

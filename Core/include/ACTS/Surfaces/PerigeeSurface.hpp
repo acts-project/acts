@@ -13,8 +13,8 @@
 #ifndef ACTS_SURFACES_PERIGEESURFACE_H
 #define ACTS_SURFACES_PERIGEESURFACE_H 1
 
-#include "ACTS/Surfaces/LineSurface.hpp"
 #include "ACTS/Surfaces/InfiniteBounds.hpp"
+#include "ACTS/Surfaces/LineSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/GeometryStatics.hpp"
 
@@ -57,7 +57,7 @@ public:
   PerigeeSurface&
   operator=(const PerigeeSurface& slsf);
 
-  /// Return the surface type 
+  /// Return the surface type
   virtual SurfaceType
   type() const override
   {
@@ -74,7 +74,6 @@ public:
   /// Output Method for std::ostream*/
   virtual std::ostream&
   dump(std::ostream& sl) const override;
-
 };
 
 inline PerigeeSurface*
@@ -83,7 +82,6 @@ PerigeeSurface::clone(const Transform3D* shift) const
   if (shift) return new PerigeeSurface(*this, *shift);
   return new PerigeeSurface(*this);
 }
-
 
 }  // end of namespace
 

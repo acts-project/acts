@@ -38,8 +38,7 @@ Acts::ConeLayer::ConeLayer(std::shared_ptr<Transform3D>      transform,
     m_materialSurface = &surfaceRepresentation();
 }
 
-Acts::ConeLayer::ConeLayer(const ConeLayer&   clay,
-                           const Transform3D& transf)
+Acts::ConeLayer::ConeLayer(const ConeLayer& clay, const Transform3D& transf)
   : ConeSurface(clay, transf), Layer(clay)
 {
 }

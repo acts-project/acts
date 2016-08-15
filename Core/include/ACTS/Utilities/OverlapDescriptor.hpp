@@ -13,9 +13,9 @@
 #ifndef ACTS_DETECTOR_IOVERLAPDESCRIPTOR_H
 #define ACTS_DETECTOR_IOVERLAPDESCRIPTOR_H
 
+#include <vector>
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Intersection.hpp"
-#include <vector>
 
 namespace Acts {
 

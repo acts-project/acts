@@ -18,7 +18,6 @@
 
 namespace Acts {
 
-
 /// @class LineBounds
 ///
 /// Bounds for a LineSurface.
@@ -29,13 +28,9 @@ class LineBounds : public SurfaceBounds
 public:
   /// @enum BoundValues for readablility
   /// nested enumeration object
-  enum BoundValues {
-    bv_radius        = 0,
-    bv_halfZ         = 1,
-    bv_length        = 2
-  };
+  enum BoundValues { bv_radius = 0, bv_halfZ = 1, bv_length = 2 };
 
-  /// Constructor 
+  /// Constructor
   /// @param radius is the radius of the cylinder, default = 0.
   /// @param halez is the half length in z, defualt = 0.
   LineBounds(double radius = 0., double halez = 0.);
@@ -43,7 +38,6 @@ public:
   /// Copy constructor
   /// calls teh base copy constructor
   LineBounds(const LineBounds& lbo) : SurfaceBounds(lbo) {}
-
   /// Destructor
   virtual ~LineBounds();
 
@@ -74,35 +68,35 @@ public:
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /// Minimal distance to boundary 
-  /// return minimal distance to boundary ( > 0 if outside and <=0 if inside) 
+  /// Minimal distance to boundary
+  /// return minimal distance to boundary ( > 0 if outside and <=0 if inside)
   virtual double
   minDistance(const Vector2D& lpos) const override;
-  
+
   /// This method returns the radius
-  virtual double 
+  virtual double
   r() const;
 
   /// This method returns the halflengthZ
   double
   halflengthZ() const;
 
-  /// Output Method for std::ostream 
+  /// Output Method for std::ostream
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
 private:
   /// private helper method
   bool
-  insideLocR(double r, double tol0) const; 
+  insideLocR(double r, double tol0) const;
 
   /// private helper method
   bool
   insideLocZ(double z, double tol1) const;
-  
-  /// private method for inside check
-  bool inside(const Vector2D& lpos, double tol0, double tol1) const;
 
+  /// private method for inside check
+  bool
+  inside(const Vector2D& lpos, double tol0, double tol1) const;
 };
 
 inline LineBounds*
@@ -139,7 +133,7 @@ LineBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 {
   // fast exit - this is a public interface method
   if (!m_valueStore.size()) return true;
-  return insideLocR(lpos[Acts::eLOC_R],tol0);
+  return insideLocR(lpos[Acts::eLOC_R], tol0);
 }
 
 inline bool
@@ -153,7 +147,8 @@ LineBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 inline bool
 LineBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 {
-  return insideLocR(lpos[Acts::eLOC_R], tol0) && insideLocZ(lpos[Acts::eLOC_Z],tol1);
+  return insideLocR(lpos[Acts::eLOC_R], tol0)
+      && insideLocZ(lpos[Acts::eLOC_Z], tol1);
 }
 
 inline bool
@@ -180,6 +175,6 @@ LineBounds::halflengthZ() const
   return m_valueStore.at(LineBounds::bv_halfZ);
 }
 
-} // end of namespace
+}  // end of namespace
 
-#endif // ACTS_SURFACES_LINEBOUNDS_H
+#endif  // ACTS_SURFACES_LINEBOUNDS_H

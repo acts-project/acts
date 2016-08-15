@@ -11,10 +11,10 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/CylinderSurface.hpp"
-#include "ACTS/Surfaces/RealQuadraticEquation.hpp"
 #include <assert.h>
 #include <iomanip>
 #include <iostream>
+#include "ACTS/Surfaces/RealQuadraticEquation.hpp"
 
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface& csf)
   : Surface(csf), m_bounds(csf.m_bounds)
@@ -23,8 +23,7 @@ Acts::CylinderSurface::CylinderSurface(const CylinderSurface& csf)
 
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface&   csf,
                                        const Acts::Transform3D& transf)
-  : Surface(csf, transf)
-  , m_bounds(csf.m_bounds)
+  : Surface(csf, transf), m_bounds(csf.m_bounds)
 {
 }
 
@@ -32,8 +31,7 @@ Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<Acts::Transform3D> htrans,
     double                             radius,
     double                             hlength)
-  : Surface(htrans)
-  , m_bounds(std::make_shared<CylinderBounds>(radius, hlength))
+  : Surface(htrans), m_bounds(std::make_shared<CylinderBounds>(radius, hlength))
 {
 }
 
@@ -48,16 +46,15 @@ Acts::CylinderSurface::CylinderSurface(
 }
 
 Acts::CylinderSurface::CylinderSurface(
-    std::shared_ptr<Acts::Transform3D>     htrans,
+    std::shared_ptr<Acts::Transform3D>    htrans,
     std::shared_ptr<const CylinderBounds> cbounds)
-  : Surface(htrans)
-  , m_bounds(cbounds)
+  : Surface(htrans), m_bounds(cbounds)
 {
   assert(cbounds);
 }
 
 Acts::CylinderSurface::~CylinderSurface()
-{  
+{
 }
 
 Acts::CylinderSurface&
@@ -65,7 +62,7 @@ Acts::CylinderSurface::operator=(const CylinderSurface& csf)
 {
   if (this != &csf) {
     Surface::operator=(csf);
-    m_bounds               = csf.m_bounds;
+    m_bounds         = csf.m_bounds;
   }
   return *this;
 }
@@ -94,11 +91,11 @@ Acts::CylinderSurface::measurementFrame(const Vector3D& gpos,
   Acts::RotationMatrix3D mFrame;
   // construct the measurement frame
   // measured Y is the z axis
-  Acts::Vector3D measY(transform().rotation().col(2));  
+  Acts::Vector3D measY(transform().rotation().col(2));
   // measured z is the position transverse normalized
   Acts::Vector3D measDepth = Vector3D(gpos.x(), gpos.y(), 0.).unit();
-  // measured X is what comoes out of it  
-  Acts::Vector3D measX(measY.cross(measDepth).unit());  
+  // measured X is what comoes out of it
+  Acts::Vector3D measX(measY.cross(measDepth).unit());
   // assign the columnes
   mFrame.col(0) = measX;
   mFrame.col(1) = measY;
@@ -144,10 +141,10 @@ Acts::CylinderSurface::globalToLocal(const Vector3D& gpos,
     const Transform3D& surfaceTrans = transform();
     Transform3D        inverseTrans(surfaceTrans.inverse());
     Vector3D           loc3Dframe(inverseTrans * gpos);
-    lpos = Vector2D(bounds().r() * loc3Dframe.phi(), loc3Dframe.z());
+    lpos   = Vector2D(bounds().r() * loc3Dframe.phi(), loc3Dframe.z());
     radius = loc3Dframe.perp();
   } else {
-    lpos = Vector2D(bounds().r() * gpos.phi(), gpos.z());
+    lpos   = Vector2D(bounds().r() * gpos.phi(), gpos.z());
     radius = gpos.perp();
   }
   // return true or false
@@ -244,6 +241,7 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
   isValid = bchk ? (isValid && bounds().inside3D(solution, bchk)) : isValid;
 
   // now return
-  return needsTransform ? std::move(Intersection(transform() * solution, path, isValid))
-                        : std::move(Intersection(solution, path, isValid));
+  return needsTransform
+      ? std::move(Intersection(transform() * solution, path, isValid))
+      : std::move(Intersection(solution, path, isValid));
 }

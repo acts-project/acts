@@ -27,14 +27,14 @@ class DiscBounds;
 class SurfaceMaterial;
 
 /// @class GenericDetectorElement
-/// 
+///
 /// This is a lightweight type of detector element,
 /// it simply implements the base class.
-/// 
+///
 class GenericDetectorElement : public DetectorElementBase
 {
 public:
-  /// Constructor for single sided detector element 
+  /// Constructor for single sided detector element
   /// - bound to a Plane Surface
   ///
   /// @param identifier is the module identifier
@@ -49,9 +49,9 @@ public:
                          std::shared_ptr<const SurfaceMaterial> material
                          = nullptr);
 
-  /// Constructor for single sided detector element 
+  /// Constructor for single sided detector element
   /// - bound to a Disc Surface
-  ///                       
+  ///
   /// @param identifier is the module identifier
   /// @param transform is the transform that element the layer in 3D frame
   /// @param dBounds is the planar bounds for the disc like detector element
@@ -64,10 +64,10 @@ public:
                          std::shared_ptr<const SurfaceMaterial> material
                          = nullptr);
 
-  ///  Destructor 
+  ///  Destructor
   ~GenericDetectorElement();
 
-  /// Identifier 
+  /// Identifier
   Identifier
   identify() const override;
 
@@ -88,8 +88,8 @@ public:
   surface(const Identifier& identifier = Identifier()) const override;
 
   /// Returns the full list of all detection surfaces associated
-  /// to this detector element 
-  const std::vector< std::shared_ptr<const Surface> >&
+  /// to this detector element
+  const std::vector<std::shared_ptr<const Surface>>&
   surfaces() const override;
 
   /// The maximal thickness of the detector element wrt normal axis
@@ -99,19 +99,19 @@ public:
 private:
   /// the element representation
   /// identifier
-  Identifier                                    m_elementIdentifier;
+  Identifier m_elementIdentifier;
   /// the transform for positioning in 3D space
-  std::shared_ptr<Transform3D>                  m_elementTransform;
+  std::shared_ptr<Transform3D> m_elementTransform;
   /// the surface represented by it
-  std::shared_ptr<const Surface>                m_elementSurface;
+  std::shared_ptr<const Surface> m_elementSurface;
   /// the element thickness
-  double                                        m_elementThickness;
+  double m_elementThickness;
 
   /// the cache
-  std::vector< std::shared_ptr<const Surface> > m_elementSurfaces;
-  /// store either 
-  std::shared_ptr<const PlanarBounds>           m_elementPlanarBounds;
-  std::shared_ptr<const DiscBounds>             m_elementDiscBounds;
+  std::vector<std::shared_ptr<const Surface>> m_elementSurfaces;
+  /// store either
+  std::shared_ptr<const PlanarBounds> m_elementPlanarBounds;
+  std::shared_ptr<const DiscBounds>   m_elementDiscBounds;
 };
 
 inline Identifier
@@ -132,7 +132,7 @@ GenericDetectorElement::surface(const Identifier&) const
   return *m_elementSurface;
 }
 
-inline const std::vector< std::shared_ptr<const Surface> >&
+inline const std::vector<std::shared_ptr<const Surface>>&
 GenericDetectorElement::surfaces() const
 {
   return m_elementSurfaces;

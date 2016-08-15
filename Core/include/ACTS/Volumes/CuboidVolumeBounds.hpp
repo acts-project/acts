@@ -47,41 +47,41 @@ class Surface;
 class CuboidVolumeBounds : public VolumeBounds
 {
 public:
-  /// @enum BoundValues for readability 
+  /// @enum BoundValues for readability
   enum BoundValues { bv_halfX = 0, bv_halfY = 1, bv_halfZ = 2, bv_length = 3 };
 
   /// Default Constructor
   CuboidVolumeBounds();
 
-  /// Constructor - the box boundaries 
+  /// Constructor - the box boundaries
   /// @param hlengthx is the half length of the cube in x
   /// @param hlengthy is the half length of the cube in y
   /// @param hlengthz is the half length of the cube in z
   CuboidVolumeBounds(double hlenghtx, double hlenghty, double hlengthz);
 
-  /// Copy Constructor 
+  /// Copy Constructor
   CuboidVolumeBounds(const CuboidVolumeBounds& bobo);
 
-  /// Destructor 
+  /// Destructor
   virtual ~CuboidVolumeBounds();
 
   /// Assignment operator
   CuboidVolumeBounds&
   operator=(const CuboidVolumeBounds& bobo);
 
-  /// Virtual constructor 
+  /// Virtual constructor
   CuboidVolumeBounds*
   clone() const override;
 
-  /// This method checks if position in the 3D volume 
+  /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
   bool
   inside(const Vector3D&, double tol = 0.) const override;
 
-  /// Method to decompose the Bounds into boundarySurfaces 
+  /// Method to decompose the Bounds into boundarySurfaces
   /// @note this method is a pure factory the volume is resposible
   /// for the memory management
-  const std::vector< const Surface* >
+  const std::vector<const Surface*>
   decomposeToSurfaces(std::shared_ptr<Transform3D> transformPtr) const override;
 
   /// This method returns the halflength in local x
@@ -96,18 +96,18 @@ public:
   double
   halflengthZ() const;
 
-  /// Output Method for std::ostream 
+  /// Output Method for std::ostream
   std::ostream&
   dump(std::ostream& sl) const override;
 
 private:
-  /// Templated dumpT method 
+  /// Templated dumpT method
   template <class T>
   T&
   dumpT(T& dt) const;
 
   /// This method returns the associated RecantleBounds of the face PlaneSurface
-  /// parallel to local xy plane 
+  /// parallel to local xy plane
   std::shared_ptr<const RectangleBounds>
   faceXYRectangleBounds() const;
 
@@ -117,16 +117,15 @@ private:
   faceYZRectangleBounds() const;
 
   /// This method returns the associated RecantleBounds of the face PlaneSurface
-  // parallel to local zx plane 
+  // parallel to local zx plane
   std::shared_ptr<const RectangleBounds>
   faceZXRectangleBounds() const;
 
-  /// The bound values  
-  std::vector<TDD_real_t>                 m_valueStore;  
-  std::shared_ptr<const RectangleBounds>  m_xyBounds;
-  std::shared_ptr<const RectangleBounds>  m_yzBounds;
-  std::shared_ptr<const RectangleBounds>  m_zxBounds;
-  
+  /// The bound values
+  std::vector<TDD_real_t>                m_valueStore;
+  std::shared_ptr<const RectangleBounds> m_xyBounds;
+  std::shared_ptr<const RectangleBounds> m_yzBounds;
+  std::shared_ptr<const RectangleBounds> m_zxBounds;
 };
 
 inline CuboidVolumeBounds*

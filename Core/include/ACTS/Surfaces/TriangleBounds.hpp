@@ -20,16 +20,16 @@
 
 namespace Acts {
 
- /// @class TriangleBounds
- /// 
- /// Bounds for a triangular, planar surface.
- /// 
- /// @image html TriangularBounds.gif
+/// @class TriangleBounds
+///
+/// Bounds for a triangular, planar surface.
+///
+/// @image html TriangularBounds.gif
 
 class TriangleBounds : public PlanarBounds
 {
 public:
-  // @enum BoundValues for readability 
+  // @enum BoundValues for readability
   enum BoundValues {
     bv_x1     = 0,
     bv_y1     = 1,
@@ -45,13 +45,12 @@ public:
 
   /// Constructor with coordinates of vertices
   /// @param vertices is the vector of vertices
-  TriangleBounds(const std::vector<Vector2D>& vertices );
+  TriangleBounds(const std::vector<Vector2D>& vertices);
 
   /// Copy constructor
   /// @param tribo are the source bounds for assignment
   TriangleBounds(const TriangleBounds& tribo) : PlanarBounds(tribo) {}
-
-  /// Destructor 
+  /// Destructor
   virtual ~TriangleBounds();
 
   /// Assignment Operator
@@ -63,34 +62,37 @@ public:
   virtual TriangleBounds*
   clone() const override;
 
-  /// Return the type of the bounds for persistency 
+  /// Return the type of the bounds for persistency
   virtual BoundsType
   type() const override
   {
     return SurfaceBounds::Triangle;
   }
 
-  /// This method checks if the provided local coordinates are inside the surface bounds
+  /// This method checks if the provided local coordinates are inside the
+  /// surface bounds
   /// @param lpos local position in 2D local carthesian frame
   /// @param bchk is the boundary check directive
   virtual bool
   inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
-  /// This method checks if the provided local coordinate 1 is inside the surface bounds
+  /// This method checks if the provided local coordinate 1 is inside the
+  /// surface bounds
   /// @param lpos local position in 2D local carthesian frame
   /// @param bchk is the boundary check directive
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
-  /// This method checks if the provided local coordinate 2 is inside the surface bounds
+  /// This method checks if the provided local coordinate 2 is inside the
+  /// surface bounds
   /// @param lpos local position in 2D local carthesian frame
   /// @param bchk is the boundary check directive
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /// Minimal distance to boundary 
+  /// Minimal distance to boundary
   /// @param lpos is the local position in 2D local carthesian frame
-  /// @return the distance ( > 0 if outside and <=0 if inside) 
+  /// @return the distance ( > 0 if outside and <=0 if inside)
   virtual double
   minDistance(const Vector2D& lpos) const override;
 
@@ -98,14 +100,14 @@ public:
   const std::vector<Vector2D>
   vertices() const override;
 
-  /// Output Method for std::ostream 
+  /// Output Method for std::ostream
   virtual std::ostream&
   dump(std::ostream& sl) const override;
-  
+
 private:
   /// private helper method for inside check
-  bool inside(const Vector2D& lpos, double tol0, double tol2) const ; 
-
+  bool
+  inside(const Vector2D& lpos, double tol0, double tol2) const;
 };
 
 inline TriangleBounds*
@@ -161,24 +163,23 @@ inline bool
 TriangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
 {
   if (bchk.bcType == 0)
-    return TriangleBounds::inside(
-        lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
+    return TriangleBounds::inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
 
-  /// @TODO check for quick limit test  
-  ///double max_ell = bchk.lCovariance(0, 0) > bchk.lCovariance(1, 1)
+  /// @TODO check for quick limit test
+  /// double max_ell = bchk.lCovariance(0, 0) > bchk.lCovariance(1, 1)
   ///    ? bchk.lCovariance(0, 0)
   ///    : bchk.lCovariance(1, 1);
   /// a fast FALSE
   /// double fabsR = sqrt(lpos[Acts::eLOC_X] * lpos[Acts::eLOC_X]
   ///                    + lpos[Acts::eLOC_Y] * lpos[Acts::eLOC_Y]);
   /// double limit = bchk.nSigmas * sqrt(max_ell);
-  ///double r_max = TriangleBounds::r();
-  ///if (fabsR > (r_max + limit)) return false;
+  /// double r_max = TriangleBounds::r();
+  /// if (fabsR > (r_max + limit)) return false;
   // compute KDOP and axes for surface polygon
   std::vector<KDOP>     elementKDOP(3);
   std::vector<Vector2D> elementP(3);
   double                theta = (bchk.lCovariance(1, 0) != 0
-                 && (bchk.lCovariance(1, 1) - bchk.lCovariance(0, 0)) != 0)
+                  && (bchk.lCovariance(1, 1) - bchk.lCovariance(0, 0)) != 0)
       ? .5
           * bchk.FastArcTan(2 * bchk.lCovariance(1, 0)
                             / (bchk.lCovariance(1, 1) - bchk.lCovariance(0, 0)))

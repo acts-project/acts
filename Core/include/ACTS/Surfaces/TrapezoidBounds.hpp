@@ -21,17 +21,17 @@
 namespace Acts {
 
 /// @class TrapezoidBounds
-/// 
+///
 /// Bounds for a trapezoidal, planar Surface.
-/// 
+///
 /// @image html TrapezoidalBounds.gif
-/// 
+///
 /// @todo can be speed optimized by calculating kappa/delta and caching it
 
 class TrapezoidBounds : public PlanarBounds
 {
 public:
-  /// @enum BoundValues - for readability 
+  /// @enum BoundValues - for readability
   enum BoundValues {
     bv_minHalfX = 0,
     bv_maxHalfX = 1,
@@ -43,7 +43,8 @@ public:
   TrapezoidBounds() = delete;
 
   /// Constructor for symmetric Trapezoid
-  /// @param minhalex minimal half lenght X - definition at negative halflength Y
+  /// @param minhalex minimal half lenght X - definition at negative halflength
+  /// Y
   /// @param maxhalex maximal half length X - definition at maximum halflength Y
   /// @param haley maximal half length Y - defined at x=0
   TrapezoidBounds(double minhalex, double maxhalex, double haley);
@@ -51,14 +52,13 @@ public:
   /// Constructor for arbitrary Trapezoid
   /// @param minhalex minimal half lenght - definition at negative halflength Y
   /// @param maxhalex maximal half length - definition at maximum halflength Y
-  /// @param alpha opening angle at @TODO check 
+  /// @param alpha opening angle at @TODO check
   /// @param beta opentin angle at @TODO check
   TrapezoidBounds(double minhalex, double haley, double alpha, double beta);
 
   /// Copy constructor
   /// @param trabo are the source bounds for assignment
   TrapezoidBounds(const TrapezoidBounds& trabo) : PlanarBounds(trabo) {}
-
   /// Destructor
   virtual ~TrapezoidBounds();
 
@@ -66,7 +66,7 @@ public:
   virtual TrapezoidBounds*
   clone() const override;
 
-  /// Return the type of the bounds for persistency 
+  /// Return the type of the bounds for persistency
   virtual BoundsType
   type() const override
   {
@@ -77,43 +77,45 @@ public:
   TrapezoidBounds&
   operator=(const TrapezoidBounds& sbo);
 
-  ///  This method returns the minimal halflength in X 
+  ///  This method returns the minimal halflength in X
   /// (first coordinate of local surface frame)
   double
   minHalflengthX() const;
 
-  /// This method returns the maximal halflength in X 
+  /// This method returns the maximal halflength in X
   /// (first coordinate of local surface frame)
   double
   maxHalflengthX() const;
 
-  /// This method returns the halflength in Y 
+  /// This method returns the halflength in Y
   /// (second coordinate of local surface frame)
   double
   halflengthY() const;
 
-  /// This method returns the opening angle alpha in point A 
+  /// This method returns the opening angle alpha in point A
   // (negative local phi)
   double
   alpha() const;
 
-  /// This method returns the opening angle beta in point B 
+  /// This method returns the opening angle beta in point B
   /// (positive local phi)
   double
   beta() const;
 
   ///  The orientation of the Trapezoid is according to the figure above,
-  /// in words: the shorter of the two parallel sides of the trapezoid intersects
+  /// in words: the shorter of the two parallel sides of the trapezoid
+  /// intersects
   /// with the negative @f$ y @f$ - axis of the local frame.
   ///
   /// @param lpos is the local position to be checked (carthesian local frame)
   /// @param bchk is the boundary check directive
-  /// 
+  ///
   /// <br>
   /// The cases are:<br>
   /// (0) @f$ y @f$ or @f$ x @f$ bounds are 0 || 0<br>
   /// (1) the local position is outside @f$ y @f$ bounds <br>
-  /// (2) the local position is inside @f$ y @f$ bounds, but outside maximum @f$ x
+  /// (2) the local position is inside @f$ y @f$ bounds, but outside maximum @f$
+  /// x
   /// @f$ bounds  <br>
   /// (3) the local position is inside @f$ y @f$ bounds AND inside minimum @f$ x
   /// @f$ bounds <br>
@@ -121,10 +123,12 @@ public:
   /// @f$ bounds, so that
   /// it depends on the @f$ eta @f$ coordinate
   /// (5) the local position fails test of (4) <br>
-  /// 
-  /// The inside check is done using single equations of straight lines and one has
+  ///
+  /// The inside check is done using single equations of straight lines and one
+  /// has
   /// to take care if a point
-  /// lies on the positive @f$ x @f$ half area(I) or the negative one(II). Denoting
+  /// lies on the positive @f$ x @f$ half area(I) or the negative one(II).
+  /// Denoting
   /// @f$ |x_{min}| @f$ and
   /// @f$ | x_{max} | @f$ as \c minHalfX respectively \c maxHalfX, such as @f$ |
   /// y_{H} | @f$ as \c halfY,
@@ -133,17 +137,18 @@ public:
   /// - (I):  @f$ y = \kappa_{I} x + \delta_{I} @f$ <br>
   /// - (II): @f$ y = \kappa_{II} x + \delta_{II} @f$ ,<br>
   ///  <br>
-  /// where @f$  \kappa_{I} = - \kappa_{II} = 2 \frac{y_{H}}{x_{max} - x_{min}} @f$
+  /// where @f$  \kappa_{I} = - \kappa_{II} = 2 \frac{y_{H}}{x_{max} - x_{min}}
+  /// @f$
   /// <br>
   /// and   @f$  \delta_{I} = \delta_{II} = - \frac{1}{2}\kappa_{I}(x_{max} +
   /// x_{min}) @f$  */
   virtual bool
   inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
-  ///This method checks inside bounds in loc0
+  /// This method checks inside bounds in loc0
   /// @note loc0/loc1 correspond to the natural coordinates of the surface
   /// @note As loc0/loc1 are correlated the single check doesn't make sense :
-  ///       check is done on enclosing Rectangle ! 
+  ///       check is done on enclosing Rectangle !
   /// @param lpos is the local position to be checked
   /// @param tol0 is the tolerance applied
   virtual bool
@@ -152,13 +157,13 @@ public:
   /// This method checks inside bounds in loc0
   /// @note loc0/loc1 correspond to the natural coordinates of the surface
   /// @note As loc0/loc1 are correlated the single check doesn't make sense :
-  ///   -> check is done on enclosing Rectangle ! 
+  ///   -> check is done on enclosing Rectangle !
   /// @param lpos is the local position to be checked
   /// @param tol1 is the tolerance applied
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /// Minimal distance to boundary 
+  /// Minimal distance to boundary
   /// @param lpos is the local position to be checked
   /// @return minimal distance ( > 0 if outside and <=0 if inside)
   virtual double
@@ -168,35 +173,32 @@ public:
   virtual const std::vector<Vector2D>
   vertices() const override;
 
-  /// Output Method for std::ostream 
+  /// Output Method for std::ostream
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
 private:
-  
   /// private helper method for inside check
-  bool inside(const Vector2D& lpos, double tol0, double tol2) const ; 
-  
-  /// private helper method inside() method for a full symmetric trapezoid 
+  bool
+  inside(const Vector2D& lpos, double tol0, double tol2) const;
+
+  /// private helper method inside() method for a full symmetric trapezoid
   bool
   insideFull(const Vector2D& lpos, double tol0 = 0., double tol1 = 0.) const;
 
-  /// private inside() method for the triangular exclude area for an arbitrary trapezoid
+  /// private inside() method for the triangular exclude area for an arbitrary
+  /// trapezoid
   bool
-  insideExclude(const Vector2D& lpos,
-                double          tol0 = 0.,
-                double          tol1 = 0.) const;
-                
-                
-                
+  insideExclude(const Vector2D& lpos, double tol0 = 0., double tol1 = 0.) const;
 
-  /// private isAbove() method for checking whether a point lies above or under a straight line 
+  /// private isAbove() method for checking whether a point lies above or under
+  /// a straight line
   bool
-  isAbove(const Vector2D& lpos, double tol0, double tol1, double k, double d) const;
+  isAbove(const Vector2D& lpos, double tol0, double tol1, double k, double d)
+      const;
 
-  TDD_real_t              m_alpha;  ///< private cache of angle alpha
-  TDD_real_t              m_beta;   ///< private cahce of angle beta
-  
+  TDD_real_t m_alpha;  ///< private cache of angle alpha
+  TDD_real_t m_beta;   ///< private cahce of angle beta
 };
 
 inline TrapezoidBounds*

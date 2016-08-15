@@ -14,27 +14,27 @@
 #include <iomanip>
 #include <iostream>
 
-
-Acts::PerigeeSurface::PerigeeSurface(const Vector3D& gp)
-  : LineSurface(nullptr)
+Acts::PerigeeSurface::PerigeeSurface(const Vector3D& gp) : LineSurface(nullptr)
 {
-  Surface::m_transform = std::make_shared<Transform3D>();
+  Surface::m_transform            = std::make_shared<Transform3D>();
   (*(Surface::m_transform.get())) = Translation3D(gp.x(), gp.y(), gp.z());
 }
 
 Acts::PerigeeSurface::PerigeeSurface(std::shared_ptr<Transform3D> tTransform)
   : LineSurface(tTransform)
-{}
+{
+}
 
-  Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& pesf)
+Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& pesf)
   : LineSurface(pesf)
 {
 }
 
-Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface&    pesf,
-                                     const Transform3D& shift)
-  : LineSurface(pesf,shift)
-{}
+Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& pesf,
+                                     const Transform3D&    shift)
+  : LineSurface(pesf, shift)
+{
+}
 
 Acts::PerigeeSurface::~PerigeeSurface()
 {

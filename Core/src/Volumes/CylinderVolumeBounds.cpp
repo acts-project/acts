@@ -11,14 +11,14 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
+#include <iostream>
+#include <math.h>
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Surfaces/DiscSurface.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
-#include <iostream>
-#include <math.h>
 
 double Acts::CylinderVolumeBounds::s_numericalStable = 10e-2;
 
@@ -84,9 +84,8 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
   rSurfaces.reserve(6);
 
   // set the transform
-  Transform3D transform = (transformPtr == nullptr)
-      ? Transform3D::Identity()
-      : (*transformPtr.get());
+  Transform3D transform = (transformPtr == nullptr) ? Transform3D::Identity()
+                                                    : (*transformPtr.get());
   Transform3D*     tTransform = nullptr;
   RotationMatrix3D discRot(transform.rotation());
   Vector3D         cylCenter(transform.translation());
@@ -98,21 +97,19 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
   bottomDiscRot.col(2) = -discRot.col(2);
 
   std::shared_ptr<const DiscBounds> dBounds = discBounds();
-  tTransform = new Transform3D(
-      transform * AngleAxis3D(M_PI, Vector3D(1., 0., 0.))
-      * Translation3D(Vector3D(0., 0., halflengthZ())));
-  rSurfaces.push_back(new DiscSurface(
-      std::shared_ptr<Transform3D>(tTransform), dBounds));
+  tTransform
+      = new Transform3D(transform * AngleAxis3D(M_PI, Vector3D(1., 0., 0.))
+                        * Translation3D(Vector3D(0., 0., halflengthZ())));
+  rSurfaces.push_back(
+      new DiscSurface(std::shared_ptr<Transform3D>(tTransform), dBounds));
   // top Disc (positive z)
   tTransform = new Transform3D(
-      discRot
-      * Translation3D(cylCenter + halflengthZ() * discRot.col(2)));
-  rSurfaces.push_back(new DiscSurface(
-      std::shared_ptr<Transform3D>(tTransform), dBounds));
+      discRot * Translation3D(cylCenter + halflengthZ() * discRot.col(2)));
+  rSurfaces.push_back(
+      new DiscSurface(std::shared_ptr<Transform3D>(tTransform), dBounds));
 
   // outer Cylinder - shares the transform
-  rSurfaces.push_back(
-      new CylinderSurface(transformPtr, outerCylinderBounds()));
+  rSurfaces.push_back(new CylinderSurface(transformPtr, outerCylinderBounds()));
 
   // innermost Cylinder
   if (innerRadius() > s_numericalStable)
@@ -124,16 +121,14 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
     std::shared_ptr<const PlanarBounds> sp12Bounds = sectorPlaneBounds();
     // sectorPlane 1 (negative phi)
     Transform3D* sp1Transform = new Transform3D(
-        transform
-        * AngleAxis3D(-halfPhiSector(), Vector3D(0., 0., 1.))
+        transform * AngleAxis3D(-halfPhiSector(), Vector3D(0., 0., 1.))
         * Translation3D(Vector3D(mediumRadius(), 0., 0.))
         * AngleAxis3D(M_PI / 2, Vector3D(1., 0., 0.)));
     rSurfaces.push_back(new PlaneSurface(
         std::shared_ptr<Transform3D>(sp1Transform), sp12Bounds));
     // sectorPlane 2 (positive phi)
     Transform3D* sp2Transform = new Transform3D(
-        transform
-        * AngleAxis3D(halfPhiSector(), Vector3D(0., 0., 1.))
+        transform * AngleAxis3D(halfPhiSector(), Vector3D(0., 0., 1.))
         * Translation3D(Vector3D(mediumRadius(), 0., 0.))
         * AngleAxis3D(-M_PI / 2, Vector3D(1., 0., 0.)));
     rSurfaces.push_back(new PlaneSurface(
@@ -145,33 +140,36 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
 std::shared_ptr<const Acts::CylinderBounds>
 Acts::CylinderVolumeBounds::innerCylinderBounds() const
 {
-  return std::make_shared<const CylinderBounds>(m_valueStore.at(bv_innerRadius),
-                                                m_valueStore.at(bv_halfPhiSector),
-                                                m_valueStore.at(bv_halfZ));
+  return std::make_shared<const CylinderBounds>(
+      m_valueStore.at(bv_innerRadius),
+      m_valueStore.at(bv_halfPhiSector),
+      m_valueStore.at(bv_halfZ));
 }
 
 std::shared_ptr<const Acts::CylinderBounds>
 Acts::CylinderVolumeBounds::outerCylinderBounds() const
 {
-  return std::make_shared<const CylinderBounds>(m_valueStore.at(bv_outerRadius),
-                                                m_valueStore.at(bv_halfPhiSector),
-                                                m_valueStore.at(bv_halfZ));
+  return std::make_shared<const CylinderBounds>(
+      m_valueStore.at(bv_outerRadius),
+      m_valueStore.at(bv_halfPhiSector),
+      m_valueStore.at(bv_halfZ));
 }
 
 std::shared_ptr<const Acts::DiscBounds>
 Acts::CylinderVolumeBounds::discBounds() const
 {
-  return std::shared_ptr<const DiscBounds>(new RadialBounds(m_valueStore.at(bv_innerRadius),
-                                                            m_valueStore.at(bv_outerRadius),
-                                                            m_valueStore.at(bv_halfPhiSector)));
+  return std::shared_ptr<const DiscBounds>(
+      new RadialBounds(m_valueStore.at(bv_innerRadius),
+                       m_valueStore.at(bv_outerRadius),
+                       m_valueStore.at(bv_halfPhiSector)));
 }
 
 std::shared_ptr<const Acts::PlanarBounds>
 Acts::CylinderVolumeBounds::sectorPlaneBounds() const
 {
-  return std::shared_ptr<const PlanarBounds>(new RectangleBounds(0.5 * (m_valueStore.at(bv_outerRadius)
-                                                - m_valueStore.at(bv_innerRadius)),
-                                                m_valueStore.at(bv_halfZ)));
+  return std::shared_ptr<const PlanarBounds>(new RectangleBounds(
+      0.5 * (m_valueStore.at(bv_outerRadius) - m_valueStore.at(bv_innerRadius)),
+      m_valueStore.at(bv_halfZ)));
 }
 
 std::ostream&

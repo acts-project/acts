@@ -11,8 +11,8 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Volumes/Volume.hpp"
-#include "ACTS/Volumes/VolumeBounds.hpp"
 #include <iostream>
+#include "ACTS/Volumes/VolumeBounds.hpp"
 
 Acts::Volume::Volume()
   : GeometryObject()
@@ -32,7 +32,6 @@ Acts::Volume::Volume(std::shared_ptr<Transform3D>        htrans,
   if (htrans) m_center = htrans->translation();
 }
 
-
 Acts::Volume::Volume(const Volume& vol, const Transform3D* shift)
   : GeometryObject()
   , m_transform(vol.m_transform)
@@ -41,14 +40,14 @@ Acts::Volume::Volume(const Volume& vol, const Transform3D* shift)
 {
   // applyt he shift if it exists
   if (shift)
-      m_transform = std::make_shared<Transform3D>(transform() * (*shift));
-  // now set the center 
+    m_transform = std::make_shared<Transform3D>(transform() * (*shift));
+  // now set the center
   m_center = transform().translation();
-  
 }
 
 Acts::Volume::~Volume()
-{}
+{
+}
 
 const Acts::Vector3D
 Acts::Volume::binningPosition(Acts::BinningValue bValue) const

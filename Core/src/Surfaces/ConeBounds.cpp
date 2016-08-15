@@ -24,10 +24,10 @@ Acts::ConeBounds::ConeBounds(double alpha,
   , m_sinAlpha(0.)
   , m_cosAlpha(0.)
 {
-  m_valueStore.at(ConeBounds::bv_alpha)         = alpha;
-  m_valueStore.at(ConeBounds::bv_minZ)          = symm ? -TDD_max_bound_value : 0.;
-  m_valueStore.at(ConeBounds::bv_maxZ)          = TDD_max_bound_value;
-  m_valueStore.at(ConeBounds::bv_averagePhi)    = avphi;
+  m_valueStore.at(ConeBounds::bv_alpha)      = alpha;
+  m_valueStore.at(ConeBounds::bv_minZ)       = symm ? -TDD_max_bound_value : 0.;
+  m_valueStore.at(ConeBounds::bv_maxZ)       = TDD_max_bound_value;
+  m_valueStore.at(ConeBounds::bv_averagePhi) = avphi;
   m_valueStore.at(ConeBounds::bv_halfPhiSector) = halfphi;
   initCache();
 }
@@ -59,9 +59,9 @@ Acts::ConeBounds::operator=(const Acts::ConeBounds& conebo)
 {
   if (this != &conebo) {
     SurfaceBounds::operator=(conebo);
-    m_tanAlpha    = conebo.m_tanAlpha;
-    m_sinAlpha    = conebo.m_sinAlpha;
-    m_cosAlpha    = conebo.m_cosAlpha;
+    m_tanAlpha             = conebo.m_tanAlpha;
+    m_sinAlpha             = conebo.m_sinAlpha;
+    m_cosAlpha             = conebo.m_cosAlpha;
   }
   return *this;
 }

@@ -29,7 +29,8 @@ enum RQESolutionType { none = 0, one = 1, two = 2 };
 ///  The equation is given by:<br>
 ///  @f$ \alpha x^{2} + \beta x + \gamma = 0  @f$
 ///  and has therefore the analytical solution:<br>
-///  @f$ x_{1, 2} = - \frac{\beta \pm \sqrt{\beta^{2}-4\alpha\gamma}}{2\alpha}@f$
+///  @f$ x_{1, 2} = - \frac{\beta \pm
+///  \sqrt{\beta^{2}-4\alpha\gamma}}{2\alpha}@f$
 /// <br>
 /// <br>
 ///  - case @f$ \beta > 0 @f$:<br>

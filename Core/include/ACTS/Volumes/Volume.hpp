@@ -33,20 +33,20 @@ typedef std::shared_ptr<const VolumeBounds> VolumeBoundsPtr;
 class Volume : public virtual GeometryObject
 {
 public:
-  ///  Default constructor 
+  ///  Default constructor
   Volume();
 
-  /// Expizit constructor with shared arguments 
+  /// Expizit constructor with shared arguments
   /// @param htrans is the transform to position the volume in 3D space
   /// @param volBounds is the volume boundary definitions
   Volume(std::shared_ptr<Transform3D> htrans, VolumeBoundsPtr volBounds);
 
-  /// Copy Constructor - with optional shift 
+  /// Copy Constructor - with optional shift
   /// @param vol is the source volume for the copy
   /// @param shift is the optional shift applied after copying
   Volume(const Volume& vol, const Transform3D* shift = nullptr);
 
-  /// Destructor 
+  /// Destructor
   virtual ~Volume();
 
   /// Assignment operator
@@ -61,29 +61,29 @@ public:
   const Transform3D&
   transform() const;
 
-  /// returns the center of the volume 
+  /// returns the center of the volume
   const Vector3D&
   center() const;
 
-  /// returns the volumeBounds() 
+  /// returns the volumeBounds()
   const VolumeBounds&
   volumeBounds() const;
 
-  /// Inside() method for checks 
+  /// Inside() method for checks
   /// @param gpos is the position to be checked
   /// @param tol is the tolerance parameter
   bool
   inside(const Vector3D& gpos, double tol = 0.) const;
 
-  /// The binning position method 
+  /// The binning position method
   /// - as default the center is given, but may be overloaded
   virtual const Vector3D
   binningPosition(BinningValue bValue) const override;
 
 protected:
-  std::shared_ptr<Transform3D>      m_transform;  
-  Vector3D                          m_center;     
-  VolumeBoundsPtr                   m_volumeBounds;  
+  std::shared_ptr<Transform3D> m_transform;
+  Vector3D                     m_center;
+  VolumeBoundsPtr              m_volumeBounds;
 };
 
 inline const Transform3D&

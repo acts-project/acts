@@ -182,12 +182,12 @@ public:
         ? std::make_unique<BinningData>(*bdata.subBinningData)
         : nullptr;
     // set the pointer depending on the type
-      // set the correct function pointer
-      if (type == equidistant)
-        m_functionPtr = &searchEquidstantWithBoundary;
-      else
-        m_functionPtr = m_bins < 50 ? &searchInVectorWithBoundary
-                                    : &binarySearchWithBoundary;
+    // set the correct function pointer
+    if (type == equidistant)
+      m_functionPtr = &searchEquidstantWithBoundary;
+    else
+      m_functionPtr = m_bins < 50 ? &searchInVectorWithBoundary
+                                  : &binarySearchWithBoundary;
   }
 
   /// Assignment operator

@@ -31,11 +31,11 @@ Acts::EllipseBounds::EllipseBounds(double minradX,
   if (m_valueStore.at(EllipseBounds::bv_rMinX)
       > m_valueStore.at(EllipseBounds::bv_rMaxX))
     std::swap(m_valueStore.at(EllipseBounds::bv_rMinX),
-         m_valueStore.at(EllipseBounds::bv_rMaxX));
+              m_valueStore.at(EllipseBounds::bv_rMaxX));
   if (m_valueStore.at(EllipseBounds::bv_rMinY)
       > m_valueStore.at(EllipseBounds::bv_rMaxY))
     std::swap(m_valueStore.at(EllipseBounds::bv_rMinY),
-         m_valueStore.at(EllipseBounds::bv_rMaxY));
+              m_valueStore.at(EllipseBounds::bv_rMaxY));
 }
 
 Acts::EllipseBounds::~EllipseBounds()
@@ -45,8 +45,7 @@ Acts::EllipseBounds::~EllipseBounds()
 Acts::EllipseBounds&
 Acts::EllipseBounds::operator=(const EllipseBounds& ebo)
 {
-  if (this != &ebo)
-    PlanarBounds::operator=(ebo);
+  if (this != &ebo) PlanarBounds::operator=(ebo);
   return *this;
 }
 
@@ -126,9 +125,8 @@ Acts::EllipseBounds::dump(std::ostream& sl) const
   sl << std::setprecision(7);
   sl << "Acts::EllipseBounds:  (innerRadiusX, innerRadiusY, outerRadiusX, "
         "outerRadiusY, hPhiSector) = ";
-  sl << "(" << rMinX() << ", " << rMinY() << ", " << rMaxX()
-     << ", " << rMaxY() << ", " << averagePhi() << ", "
-     << halfPhiSector() << ")";
+  sl << "(" << rMinX() << ", " << rMinY() << ", " << rMaxX() << ", " << rMaxY()
+     << ", " << averagePhi() << ", " << halfPhiSector() << ")";
   sl << std::setprecision(-1);
   return sl;
 }

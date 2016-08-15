@@ -31,7 +31,6 @@ class ElementFraction : public std::pair<unsigned char, unsigned char>
 public:
   /** Default Constructor */
   ElementFraction() : std::pair<unsigned char, unsigned char>(0, 0) {}
-  
   /** Copy Constructor from base class */
   ElementFraction(const std::pair<unsigned char, unsigned char>& ef)
     : std::pair<unsigned char, unsigned char>(ef)
@@ -132,13 +131,13 @@ class Material
 {
 public:
   // standard x0, l0, A, Z, rho description
-  mutable float                X0;
-  mutable float                L0;
-  mutable float                A;
-  mutable float                Z;
-  mutable float                rho;
-  mutable float                dEdX;
-  mutable float                zOaTr;
+  mutable float X0;
+  mutable float L0;
+  mutable float A;
+  mutable float Z;
+  mutable float rho;
+  mutable float dEdX;
+  mutable float zOaTr;
   mutable MaterialComposition*
       composition;  //! transient member to ROOT (for the moment)
 

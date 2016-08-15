@@ -26,7 +26,7 @@ typedef ExtrapolationCell<NeutralParameters> ExCellNeutral;
 
 /// @class IMaterialEffectsEngine
 ///
-/// Material effects engine interface for charged and neutral 
+/// Material effects engine interface for charged and neutral
 /// (fast track simulation) ,
 /// the update is alwyas on the:
 ///  - eCell.leadParmaeters && eCell.leadLayer
@@ -35,9 +35,8 @@ typedef ExtrapolationCell<NeutralParameters> ExCellNeutral;
 class IMaterialEffectsEngine
 {
 public:
-  /// Virtual destructor 
+  /// Virtual destructor
   virtual ~IMaterialEffectsEngine() {}
-  
   /// Public charged material effects interface
   /// @param ecCharged is the charged extrapolaiton cell
   /// @param dir is the additional direction prescription

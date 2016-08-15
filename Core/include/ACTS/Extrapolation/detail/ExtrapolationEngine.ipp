@@ -10,12 +10,12 @@
 // ExtrapolationEngine.ipp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
+#include <iomanip>
+#include <iostream>
 #include "ACTS/Detector/TrackingGeometry.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
-#include <iomanip>
-#include <iostream>
 
 template <class T>
 Acts::ExtrapolationCode
@@ -171,13 +171,13 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
       // @TODO can be opmisied (straight line for high momentum - use directly )
       ExtrapolationCell<T> navCell(*eCell.leadParameters, dir);
       // screen output
-      ExtrapolationCode eCode = m_cfg.propagationEngine->propagate(
-          navCell,
-          *eCell.endSurface,
-          anyDirection,
-          ExtrapolationMode::Destination,
-          false,
-          eCell.navigationCurvilinear);
+      ExtrapolationCode eCode
+          = m_cfg.propagationEngine->propagate(navCell,
+                                               *eCell.endSurface,
+                                               anyDirection,
+                                               ExtrapolationMode::Destination,
+                                               false,
+                                               eCell.navigationCurvilinear);
       // check for sucess to the destination
       //@TODO check what this is
       CHECK_ECODE_SUCCESS_NODEST(navCell, eCode);

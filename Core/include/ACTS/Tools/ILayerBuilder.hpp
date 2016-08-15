@@ -29,29 +29,28 @@ typedef std::vector<LayerPtr>        LayerVector;
 /// | EC- | Central | EC+ |
 /// detector setup.
 ///
-   class ILayerBuilder
+class ILayerBuilder
 {
 public:
   /// Virtual destructor
   virtual ~ILayerBuilder() {}
-  
-  /// LayerBuilder interface method 
-  /// @return  the layers at negative side 
+  /// LayerBuilder interface method
+  /// @return  the layers at negative side
   virtual const LayerVector
   negativeLayers() const = 0;
 
-  /// LayerBuilder interface method 
+  /// LayerBuilder interface method
   /// @return the layers at the central sector
   virtual const LayerVector
   centralLayers() const = 0;
 
-  /// LayerBuilder interface method 
-  /// @return  the layers at positive side 
+  /// LayerBuilder interface method
+  /// @return  the layers at positive side
   virtual const LayerVector
   positiveLayers() const = 0;
 
   /// Name identification
-  /// @return the string based identification 
+  /// @return the string based identification
   virtual const std::string&
   identification() const = 0;
 };

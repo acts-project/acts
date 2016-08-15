@@ -12,8 +12,8 @@
 
 // Geometry module
 #include "ACTS/Layers/PlaneLayer.hpp"
-#include "ACTS/Layers/GenericApproachDescriptor.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
+#include "ACTS/Layers/GenericApproachDescriptor.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
 
@@ -47,8 +47,7 @@ Acts::PlaneLayer::PlaneLayer(std::shared_ptr<Transform3D>         transform,
     m_materialSurface = &surfaceRepresentation();
 }
 
-Acts::PlaneLayer::PlaneLayer(const PlaneLayer&  play,
-                             const Transform3D& transf)
+Acts::PlaneLayer::PlaneLayer(const PlaneLayer& play, const Transform3D& transf)
   : PlaneSurface(play, transf), Layer(play)
 {
 }

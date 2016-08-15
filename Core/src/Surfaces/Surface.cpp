@@ -21,7 +21,8 @@ Acts::Surface::Surface(std::shared_ptr<Acts::Transform3D> tform)
   , m_associatedLayer(nullptr)
   , m_associatedTrackingVolume(nullptr)
   , m_associatedMaterial(nullptr)
-{}
+{
+}
 
 Acts::Surface::Surface(const Acts::DetectorElementBase& detelement,
                        const Identifier&                id)
@@ -31,7 +32,8 @@ Acts::Surface::Surface(const Acts::DetectorElementBase& detelement,
   , m_associatedLayer(nullptr)
   , m_associatedTrackingVolume(nullptr)
   , m_associatedMaterial(nullptr)
-{}
+{
+}
 
 Acts::Surface::Surface(const Surface& sf)
   : m_transform(sf.m_transform)
@@ -40,7 +42,8 @@ Acts::Surface::Surface(const Surface& sf)
   , m_associatedLayer(nullptr)
   , m_associatedTrackingVolume(nullptr)
   , m_associatedMaterial(sf.m_associatedMaterial)
-{}
+{
+}
 
 Acts::Surface::Surface(const Surface& sf, const Acts::Transform3D& shift)
   : m_transform(std::make_shared<Acts::Transform3D>(
@@ -49,25 +52,26 @@ Acts::Surface::Surface(const Surface& sf, const Acts::Transform3D& shift)
   , m_associatedDetElementId()
   , m_associatedLayer(sf.m_associatedLayer)
   , m_associatedMaterial(sf.m_associatedMaterial)
-{}
+{
+}
 
 Acts::Surface::~Surface()
-{}
+{
+}
 
 Acts::Surface&
 Acts::Surface::operator=(const Surface& sf)
 {
-  if (&sf != this){
+  if (&sf != this) {
     // detector element, identifier & layer association are unique
-    m_transform               = m_transform;
-    m_associatedDetElement    = nullptr;
-    m_associatedDetElementId  = Identifier();
-    m_associatedLayer         = nullptr;
-    m_associatedMaterial      = sf.m_associatedMaterial;
+    m_transform              = m_transform;
+    m_associatedDetElement   = nullptr;
+    m_associatedDetElementId = Identifier();
+    m_associatedLayer        = nullptr;
+    m_associatedMaterial     = sf.m_associatedMaterial;
   }
-  return *this; 
+  return *this;
 }
-  
 
 bool
 Acts::Surface::operator==(const Surface& sf) const
@@ -81,9 +85,9 @@ Acts::Surface::operator==(const Surface& sf) const
   // (d) comapre transform
   if (!sf.transform().isApprox(transform(), 10e-9)) return false;
   // we should be good
-  return true; 
+  return true;
 }
-  
+
 bool
 Acts::Surface::isOnSurface(const Acts::Vector3D& gpos,
                            const BoundaryCheck&  bchk) const

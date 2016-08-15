@@ -13,9 +13,9 @@
 #ifndef ACTS_SURFACES_PLANESURFACE_H
 #define ACTS_SURFACES_PLANESURFACE_H 1
 
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/InfiniteBounds.hpp"
+#include "ACTS/Surfaces/PlanarBounds.hpp"
+#include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
 
@@ -54,15 +54,15 @@ public:
   /// @param htrans is the transformation that positions the surface in space
   PlaneSurface(const Vector3D& center, const Vector3D& normal);
 
-  /// Constructor from DetectorElementBase 
+  /// Constructor from DetectorElementBase
   PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-               const DetectorElementBase& detelement,
-               const Identifier&          identifier = Identifier());
+               const DetectorElementBase&          detelement,
+               const Identifier&                   identifier = Identifier());
 
-  /// Constructor for Planes with (optional) shared bounds object 
-  /// @param htrans transform in 3D that positions this surface              
-  /// @param pbounds bounds object to describe the actual surface area 
-  /// @attention the pointer to pbounds must not be a nullptr 
+  /// Constructor for Planes with (optional) shared bounds object
+  /// @param htrans transform in 3D that positions this surface
+  /// @param pbounds bounds object to describe the actual surface area
+  /// @attention the pointer to pbounds must not be a nullptr
   PlaneSurface(std::shared_ptr<Transform3D>        htrans,
                std::shared_ptr<const PlanarBounds> pbounds);
 
@@ -74,7 +74,7 @@ public:
   PlaneSurface&
   operator=(const PlaneSurface& psf);
 
-  /// Virtual constructor with optional shift 
+  /// Virtual constructor with optional shift
   /// ownership of the shift transform is not given !!
   /// @copydoc Surface::clone
   virtual PlaneSurface*
@@ -83,13 +83,14 @@ public:
   /// Normal vector return
   /// @param lpos is the local position is ignored
   /// return a Vector3D by value
-  const Vector3D normal(const Vector2D& lpos = s_origin2D) const final;
-    
+  const Vector3D
+  normal(const Vector2D& lpos = s_origin2D) const final;
+
   /// @copydoc Surface::biningPosition
   virtual const Vector3D
   binningPosition(BinningValue bValue) const final;
-  
-  /// Return the surface type 
+
+  /// Return the surface type
   virtual SurfaceType
   type() const override
   {
@@ -99,10 +100,11 @@ public:
   /// Return method for bounds object of this surfrace
   virtual const SurfaceBounds&
   bounds() const override;
-    
+
   /// Geometrical on surface test
   /// This method returns true if the GlobalPosition is on the Surface for both,
-  /// within or without check of whether the local position is inside boundaries or not
+  /// within or without check of whether the local position is inside boundaries
+  /// or not
   /// @param gpos global position to be checked
   /// @param bchk gboundary check directive
   virtual bool
@@ -110,23 +112,25 @@ public:
               const BoundaryCheck& bchk = true) const override;
 
   /// @copydoc Surface::localToGlobal
-  /// For planar surfaces the momentum is ignroed in the local to global transformation              
+  /// For planar surfaces the momentum is ignroed in the local to global
+  /// transformation
   virtual void
   localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
                 Vector3D&       gpos) const override;
 
   /// @copydoc Surface::globalToLocal
-  /// For planar surfaces the momentum is ignroed in the gloabl to l transformation              
+  /// For planar surfaces the momentum is ignroed in the gloabl to l
+  /// transformation
   virtual bool
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
                 Vector2D&       lpos) const override;
-    
-    
+
   /// @copydoc Surface::pathCorrection
   /// @note this is the final implementation of the pathCorrection function
-  double pathCorrection(const Vector3D& gpos, const Vector3D& mom) const final;
+  double
+  pathCorrection(const Vector3D& gpos, const Vector3D& mom) const final;
 
   ///  fast straight line intersection schema - standard: provides closest
   /// intersection and (signed) path length
@@ -134,11 +138,12 @@ public:
   ///
   ///  @param gpos is the start position of the intersection attempt
   ///  @param dir is the direction of the interesection attempt
-  ///  @param forceDir is the directive whether to force only foward solution (w.r.t dir)                
+  ///  @param forceDir is the directive whether to force only foward solution
+  ///  (w.r.t dir)
   ///  @param bhck is the boundary check directive
-  ///                  
+  ///
   ///  <b>mathematical motivation:</b>
-  /// 
+  ///
   ///  the equation of the plane is given by: <br>
   ///  @f$ \vec n \cdot \vec x = \vec n \cdot \vec p,@f$ <br>
   ///  where @f$ \vec n = (n_{x}, n_{y}, n_{z})@f$ denotes the normal vector of
@@ -159,16 +164,16 @@ public:
                        bool                 forceDir,
                        const BoundaryCheck& bchk = true) const override;
 
-  /// Return properly formatted class name for screen output 
+  /// Return properly formatted class name for screen output
   virtual std::string
   name() const override
   {
     return "Acts::PlaneSurface";
   }
 
-protected:                                                     
+protected:
   /// the bounds of this surface
-  std::shared_ptr<const PlanarBounds>       m_bounds;
+  std::shared_ptr<const PlanarBounds> m_bounds;
 };
 
 inline PlaneSurface*
@@ -184,23 +189,23 @@ PlaneSurface::bounds() const
   if (m_bounds) return (*m_bounds.get());
   return s_noBounds;
 }
-    
-inline const Vector3D 
+
+inline const Vector3D
 PlaneSurface::normal(const Vector2D&) const
 {
   return transform().rotation().col(2);
 }
 
-inline const Vector3D
-PlaneSurface::binningPosition(BinningValue) const
+inline const Vector3D PlaneSurface::binningPosition(BinningValue) const
 {
-    return center();
+  return center();
 }
-    
-inline double PlaneSurface::pathCorrection(const Vector3D&, const Vector3D& mom) const
+
+inline double
+PlaneSurface::pathCorrection(const Vector3D&, const Vector3D& mom) const
 {
   /// we can ignore the global position here
-  return 1./fabs(normal().dot(mom.unit()));  
+  return 1. / fabs(normal().dot(mom.unit()));
 }
 
 inline Intersection

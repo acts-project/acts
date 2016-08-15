@@ -42,17 +42,15 @@ class SurfaceBounds;
 class DetectorElementBase
 {
 public:
-  /// Constructor 
+  /// Constructor
   DetectorElementBase() {}
-  
-  /// virtual Destructor 
+  /// virtual Destructor
   virtual ~DetectorElementBase() {}
-  
-  /// Identifier 
+  /// Identifier
   virtual Identifier
   identify() const = 0;
 
-  ///  Return local to global transform 
+  ///  Return local to global transform
   /// (optionally associated with an identifier)
   virtual const Transform3D&
   transform(const Identifier& identifier = Identifier()) const = 0;
@@ -63,7 +61,7 @@ public:
   surface(const Identifier& identifier = Identifier()) const = 0;
 
   ///  Return full list of associated surfaces
-  virtual const std::vector< std::shared_ptr<const Surface> >&
+  virtual const std::vector<std::shared_ptr<const Surface>>&
   surfaces() const = 0;
 
   /// Returns the thickness of the module

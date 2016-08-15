@@ -23,23 +23,22 @@ typedef ExtrapolationCell<TrackParameters>   ExCellCharged;
 typedef ExtrapolationCell<NeutralParameters> ExCellNeutral;
 
 /// @class IPropagationEngine
-/// 
+///
 /// A propagation engine wrapping the propagator algtool it respects the path
 /// limit
 /// to stop particles if needed.
-/// 
+///
 /// If the propagation is successful to the surface it will return
 /// SuccessfulDestination,
 /// the parameters will be attached to the ExtrapolationCell as leadParameters,
 /// such that the engine can chose.
-/// 
+///
 /// It also wraps the MultiTrackParameters (@TODO do this actually)
 class IPropagationEngine
 {
 public:
-  /// Virtual destructor 
+  /// Virtual destructor
   virtual ~IPropagationEngine() {}
-  
   /// Main Charged extrapolation method
   /// @param ecCell is the charged extrapolation cell
   /// @param sf is the destination surface

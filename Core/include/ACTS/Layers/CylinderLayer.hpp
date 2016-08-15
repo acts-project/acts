@@ -13,11 +13,11 @@
 #ifndef ACTS_LAYERS_CYLINDERLAYER_H
 #define ACTS_LAYERS_CYLINDERLAYER_H
 
+#include <algorithm>
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Utilities/BinnedArray.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include <algorithm>
 
 namespace Acts {
 
@@ -28,7 +28,8 @@ class ApproachDescriptor;
 
 /// @class CylinderLayer
 ///
-/// Class to describe a cylindrical detector layer for tracking, it inhertis from
+/// Class to describe a cylindrical detector layer for tracking, it inhertis
+/// from
 /// both,
 /// Layer base class and CylinderSurface class
 ///
@@ -68,10 +69,10 @@ public:
   }
 
   /// Factory copy constructor with shift
-  /// 
+  ///
   /// @param cla is the source cylinder layer for the copy
   /// @shift is the additional transform applied after cloning
-  /// 
+  ///
   /// @return The return object is a shared poiter to the layer.
   static LayerPtr
   create(const CylinderLayer& cla, const Transform3D& shift)
@@ -80,10 +81,10 @@ public:
   }
 
   /// Factory clone constructor with shift
-  /// 
+  ///
   /// @param cla is the source cylinder layer for the clone
   /// @shift is the additional transform applied after cloning
-  /// 
+  ///
   /// @return The return object is a shared poiter to the layer.
   LayerPtr
   cloneWithShift(const Transform3D& shift) const override
@@ -96,16 +97,16 @@ public:
 
   /// Assignment operator for CylinderLayers - deleted
   CylinderLayer&
-  operator=(const CylinderLayer&) = delete;
+  operator=(const CylinderLayer&)
+      = delete;
 
   /// Default Constructor
   CylinderLayer() = delete;
-  
+
   /// Destructor
   virtual ~CylinderLayer() {}
-  
   /// Transforms the layer into a Surface representation
-  /// This is for positioning and extrapolation 
+  /// This is for positioning and extrapolation
   const CylinderSurface&
   surfaceRepresentation() const override;
 
@@ -134,13 +135,13 @@ protected:
                 double                                thickness    = 0.,
                 OverlapDescriptor*                    od           = nullptr,
                 ApproachDescriptor*                   ad           = nullptr,
-                LayerType                             laytyp       = Acts::passive);
+                LayerType                             laytyp = Acts::passive);
 
   /// Private copy constructor with shift, called by create(args*)
-  /// 
+  ///
   /// @param cla is the source cylinder layer for the copy
   /// @shift is the additional transform applied after cloning
-  /// 
+  ///
   /// @return The return object is a shared poiter to the layer.
   CylinderLayer(const CylinderLayer& cla, const Transform3D& tr);
 };

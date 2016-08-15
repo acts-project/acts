@@ -34,14 +34,14 @@ public:
   ///  Factory Constructor - the surface representation is given by pointer
   /// (ownership passed)
   /// @param sRepresenation is the represenation for extrapolation
-  /// @param thickness is the thickness for the binning 
+  /// @param thickness is the thickness for the binning
   static LayerPtr
   create(std::unique_ptr<const Surface> sRepresentation, double thickness = 0.)
   {
     return LayerPtr(new NavigationLayer(std::move(sRepresentation), thickness));
   }
 
-  /// Clone with a shift 
+  /// Clone with a shift
   /// @param shift is the addition transform applied after cloning
   LayerPtr
   cloneWithShift(const Transform3D& shift) const override;
@@ -49,7 +49,7 @@ public:
   /// Destructor
   virtual ~NavigationLayer();
 
-  /// The binning position method 
+  /// The binning position method
   ///  - as default the center is given, but may be overloaded
   /// @return The return vector can be used for binning in a TrackingVolume
   virtual const Vector3D
@@ -57,15 +57,16 @@ public:
 
   /// Default Constructor - deleted
   NavigationLayer() = delete;
-  
-  /// Copy Constructor - deleted 
+
+  /// Copy Constructor - deleted
   NavigationLayer(const NavigationLayer&) = delete;
 
   /// Assignment operator - deleted
   NavigationLayer&
-  operator=(const NavigationLayer&) = delete;
+  operator=(const NavigationLayer&)
+      = delete;
 
-  /// Transforms the layer into a Surface representation for extrapolation 
+  /// Transforms the layer into a Surface representation for extrapolation
   /// In general, extrapolation to a surface should be avoided
   const Surface&
   surfaceRepresentation() const override;
@@ -79,7 +80,7 @@ public:
 
   ///  Boolean check method if layer has material:
   /// - checks if any of the layer surfaces has material:
-  /// - can be approach surfaces or layer surface 
+  /// - can be approach surfaces or layer surface
   bool
   hasMaterial() const override;
 
@@ -88,14 +89,14 @@ public:
   hasSensitive() const override;
 
 protected:
-  /// Private Constructor 
+  /// Private Constructor
   /// - this is called by the creat(args*) method
   /// passed spacer layer if needed  */
-  NavigationLayer(std::unique_ptr<const Surface> surfaceRepresentation, 
-                  double thickness);
-  
+  NavigationLayer(std::unique_ptr<const Surface> surfaceRepresentation,
+                  double                         thickness);
+
   //// for the navigation Volume the surface
-  std::unique_ptr<const Surface>   m_surfaceRepresentation;
+  std::unique_ptr<const Surface> m_surfaceRepresentation;
 };
 
 inline const Surface&

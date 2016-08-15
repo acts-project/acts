@@ -15,10 +15,10 @@
 
 class MsgStream;
 
+#include <algorithm>
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Surfaces/DiscSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include <algorithm>
 
 namespace Acts {
 
@@ -27,24 +27,23 @@ class SurfaceMaterial;
 class OverlapDescriptor;
 class ApproachDescriptor;
 
-
 /// @class DiscLayer
 ///
 /// Class to describe a disc-like detector layer for tracking,
 /// it inhertis from both, Layer base class
 /// and DiscSurface class
 
-
 class DiscLayer : virtual public DiscSurface, public Layer
 {
 public:
-  ///  Factory constructor with DiscSurface components 
+  ///  Factory constructor with DiscSurface components
   ///
   /// @param transform is the transform to place the layer in the 3D frame
   /// @param dbounds are the disc bounds that describe the layer dimensions
   /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the layer thickness (along the normal vector)
-  /// @param od is the overlap descriptor that describes sensitive surface neighbours
+  /// @param od is the overlap descriptor that describes sensitive surface
+  /// neighbours
   /// @param ad is the approach descriptor that provides the approach surface
   /// @param laytyp is the layer type
   ///
@@ -67,7 +66,7 @@ public:
                                   laytyp));
   }
 
-  /// Factory constructor as copy with shift 
+  /// Factory constructor as copy with shift
   /// @param dla is the disc laye to be cloned
   /// @param shift is the additional transform to be applied after copying
   static LayerPtr
@@ -76,34 +75,34 @@ public:
     return LayerPtr(new DiscLayer(dla, shift));
   }
 
-  /// Clone with a shift - only cloning that is allowed 
+  /// Clone with a shift - only cloning that is allowed
   /// @param shift is the additional transform to be applied after cloning
   LayerPtr
   cloneWithShift(const Transform3D& shift) const override
   {
     return DiscLayer::create(*this, shift);
   }
-  
+
   /// Default Constructor
   DiscLayer() = delete;
 
-  /// Copy constructor of DiscLayer - deleted 
+  /// Copy constructor of DiscLayer - deleted
   DiscLayer(const DiscLayer& cla) = delete;
 
   /// Assignment operator for DiscLayers - deleted
   DiscLayer&
-  operator=(const DiscLayer&) = delete;
+  operator=(const DiscLayer&)
+      = delete;
 
   /// Destructor
   virtual ~DiscLayer() {}
-  
-  /// Transforms the layer into a Surface representation for extrapolation 
-  /// @return This method returns a surface reference 
+  /// Transforms the layer into a Surface representation for extrapolation
+  /// @return This method returns a surface reference
   const DiscSurface&
   surfaceRepresentation() const override;
 
 private:
-  /// build approach surfaces 
+  /// build approach surfaces
   void
   buildApproachDescriptor() const;
 
@@ -114,7 +113,8 @@ protected:
   /// @param dbounds are the disc bounds that describe the layer dimensions
   /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the layer thickness (along the normal vector)
-  /// @param od is the overlap descriptor that describes sensitive surface neighbours
+  /// @param od is the overlap descriptor that describes sensitive surface
+  /// neighbours
   /// @param ad is the approach descriptor that provides the approach surface
   /// @param laytyp is the layer taype
   DiscLayer(std::shared_ptr<Transform3D>      transform,

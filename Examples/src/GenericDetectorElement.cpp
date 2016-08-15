@@ -53,4 +53,5 @@ Acts::GenericDetectorElement::GenericDetectorElement(
 }
 
 Acts::GenericDetectorElement::~GenericDetectorElement()
-{}
+{
+}

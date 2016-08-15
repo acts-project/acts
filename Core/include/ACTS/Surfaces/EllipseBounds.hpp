@@ -27,10 +27,10 @@ namespace Acts {
 /// By providing an argument for hphisec, the bounds can
 /// be restricted to a phirange around the center position.
 ///
-    class EllipseBounds : public PlanarBounds
+class EllipseBounds : public PlanarBounds
 {
 public:
-  /// @enum for readibility 
+  /// @enum for readibility
   enum BoundValues {
     bv_rMinX         = 0,
     bv_rMinY         = 1,
@@ -59,9 +59,8 @@ public:
                 double hphisec = M_PI);
 
   /// Copy constructor
-  /// @param ebo is the source bounds for the copy           
+  /// @param ebo is the source bounds for the copy
   EllipseBounds(const EllipseBounds& ebo) : PlanarBounds(ebo) {}
-
   /// Destructor
   virtual ~EllipseBounds();
 
@@ -77,7 +76,7 @@ public:
   virtual EllipseBounds*
   clone() const override;
 
-  /// Return the type of the bounds for persistency 
+  /// Return the type of the bounds for persistency
   virtual BoundsType
   type() const override
   {
@@ -85,21 +84,22 @@ public:
   }
 
   /// This method checks if the point given in the local coordinates is between
-  /// two ellipsoids if only tol0 is given and additional in the phi sector is tol1 is given
+  /// two ellipsoids if only tol0 is given and additional in the phi sector is
+  /// tol1 is given
   /// @copydoc SurfaceBounds::inside
   virtual bool
   inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
-  /// Check for inside first local coordinate 
+  /// Check for inside first local coordinate
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
-  /// Check for inside second local coordinate 
+  /// Check for inside second local coordinate
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /// Minimal distance to boundary 
-  /// return minimal distance ( > 0 if outside and <=0 if inside) 
+  /// Minimal distance to boundary
+  /// return minimal distance ( > 0 if outside and <=0 if inside)
   virtual double
   minDistance(const Vector2D& lpos) const override;
 
@@ -131,15 +131,16 @@ public:
   double
   halfPhiSector() const;
 
-  /// Output Method for std::ostream 
+  /// Output Method for std::ostream
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
 private:
   /// private helper function
-  bool inside(const Vector2D& lpos, double tol0, double tol1) const;
+  bool
+  inside(const Vector2D& lpos, double tol0, double tol1) const;
 
-  /// helper function for squaring 
+  /// helper function for squaring
   inline double
   square(double x) const
   {
@@ -220,13 +221,13 @@ EllipseBounds::rMinX() const
 {
   return m_valueStore.at(EllipseBounds::bv_rMinX);
 }
-  
+
 inline double
 EllipseBounds::rMinY() const
 {
   return m_valueStore.at(EllipseBounds::bv_rMinY);
 }
-  
+
 inline double
 EllipseBounds::rMaxX() const
 {
@@ -244,7 +245,7 @@ EllipseBounds::averagePhi() const
 {
   return m_valueStore.at(EllipseBounds::bv_averagePhi);
 }
-  
+
 inline double
 EllipseBounds::halfPhiSector() const
 {
@@ -263,9 +264,9 @@ EllipseBounds::vertices() const
   vertices.push_back(
       Vector2D(0., m_valueStore.at(EllipseBounds::bv_rMaxY)));  // [1]
   vertices.push_back(
-      Vector2D(-m_valueStore.at(EllipseBounds::bv_rMaxX), 0.)); // [2]
+      Vector2D(-m_valueStore.at(EllipseBounds::bv_rMaxX), 0.));  // [2]
   vertices.push_back(
-      Vector2D(0., -m_valueStore.at(EllipseBounds::bv_rMaxY))); // [3]
+      Vector2D(0., -m_valueStore.at(EllipseBounds::bv_rMaxY)));  // [3]
   return vertices;
 }
 
