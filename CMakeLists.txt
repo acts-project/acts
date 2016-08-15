@@ -43,8 +43,12 @@ enable_testing ()
 add_subdirectory (Tests)
 
 # add version header
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/ACTSVersion.h ${CMAKE_CURRENT_BINARY_DIR}/ACTSVersion.h)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/ACTSVersion.h.in ${CMAKE_CURRENT_BINARY_DIR}/ACTSVersion.h)
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/ACTSVersion.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ACTS)
+
+# add setup scripts
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/setup.sh.in ${CMAKE_CURRENT_BINARY_DIR}/setup.sh)
+install (FILES ${CMAKE_CURRENT_BINARY_DIR}/setup.sh DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # list components which are going to be installed
 message (STATUS "going to install the following components:")
