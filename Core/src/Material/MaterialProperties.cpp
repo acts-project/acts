@@ -14,7 +14,7 @@
 #include <climits>
 
 Acts::MaterialProperties::MaterialProperties()
-  : m_material(), m_dInX0(0.), m_dInL0(0.), m_zOaTrTd(0.)
+  : m_material(), m_dInX0(0.), m_dInL0(0.), m_zOaTrTd(0.), m_entries(1)
 {
 }
 
@@ -31,6 +31,7 @@ Acts::MaterialProperties::MaterialProperties(float path,
   , m_zOaTrTd(averageA * averageA > 10e-10
                   ? averageZ / averageA * averageRho * path
                   : 0.)
+  , m_entries(1)
 {
 }
 
@@ -44,6 +45,7 @@ Acts::MaterialProperties::MaterialProperties(const Acts::Material& material,
   , m_zOaTrTd(material.A * material.A > 10e-10
                   ? path * material.Z / material.A * material.rho
                   : 0.)
+  , m_entries(1)
 {
 }
 
@@ -53,6 +55,7 @@ Acts::MaterialProperties::MaterialProperties(
   , m_dInX0(mprop.m_dInX0)
   , m_dInL0(mprop.m_dInL0)
   , m_zOaTrTd(mprop.m_zOaTrTd)
+  , m_entries(mprop.m_entries)
 {
 }
 
@@ -70,6 +73,7 @@ Acts::MaterialProperties::operator=(const Acts::MaterialProperties& mprop)
     m_dInX0    = mprop.m_dInX0;
     m_dInL0    = mprop.m_dInL0;
     m_zOaTrTd  = mprop.m_zOaTrTd;
+    m_entries  = mprop.m_entries;
   }
   return (*this);
 }
@@ -108,6 +112,8 @@ Acts::MaterialProperties::addMaterial(const Acts::Material& mat,
   m_zOaTrTd = m_material.A > 0
       ? m_dInX0 * m_material.X0 * m_material.Z / m_material.A * m_material.rho
       : 0;
+  // update number of entries
+  ++m_entries;
 }
 
 void
@@ -115,10 +121,14 @@ Acts::MaterialProperties::setMaterial(const Acts::Material& mat,
                                       float                 thickness) const
 {
   // just overwrite what you have
-  m_material = mat;
-  m_dInX0    = thickness / mat.X0;
-  m_dInL0    = thickness / mat.L0;
-  m_zOaTrTd  = mat.Z / mat.A * mat.rho * thickness;
+  m_material                   = mat;
+  m_dInX0                      = 0.;
+  m_dInL0                      = 0.;
+  m_zOaTrTd                    = 0.;
+  if (thickness != 0.) m_dInX0 = thickness / mat.X0;
+  if (thickness != 0.) m_dInL0 = thickness / mat.L0;
+  if (mat.A != 0.) m_zOaTrTd   = mat.Z / mat.A * mat.rho * thickness;
+  m_entries                    = 1;
 }
 
 void
