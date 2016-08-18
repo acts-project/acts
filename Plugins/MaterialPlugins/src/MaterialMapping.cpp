@@ -22,9 +22,11 @@
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
 
+
 Acts::MaterialMapping::MaterialMapping(const Config&           cnf,
                                        std::unique_ptr<Logger> log)
-  : m_cnf(cnf), m_logger(std::move(log))
+  : m_cnf(cnf), m_logger(std::move(log)), m_layerRecords(), m_layersAndSteps()
+
 {
   // check if extrapolation engine is given
   if (!m_cnf.extrapolationEngine) {
@@ -190,6 +192,8 @@ Acts::MaterialMapping::associateLayerMaterial(
     // create material Properties
     const Acts::MaterialProperties* layerMaterialProperties
         = new MaterialProperties(step.material());
+    // fill the step pos of the current material step
+    m_layersAndSteps.insert(std::make_pair(assignedLayer, step));
     // associate the hit
     ACTS_VERBOSE("[L] Now associate hit at " << Acts::toString(pos));
     associateHit(assignedLayer, assignedPosition, layerMaterialProperties);
@@ -208,7 +212,9 @@ Acts::MaterialMapping::associateHit(
     // get the bin utility
     const Acts::BinUtility* binUtility = layer->material()->binUtility();
     // create the material record
-    ACTS_VERBOSE("[L] Creating new Layer record at position "
+    ACTS_VERBOSE("[L] Creating new Layer record, for layer  "
+                 << layer->geoID()
+                 << " at position "
                  << Acts::toString(position));
     m_layerRecords[layer] = LayerMaterialRecord(binUtility);
   }
