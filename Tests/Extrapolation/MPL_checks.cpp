@@ -65,15 +65,25 @@ namespace Test {
                                         detail::observer_type_extractor>::type
             found_observers;
 
+    typedef typename detail::type_collector<dummy_traits,
+                                            7,
+                                            detail::trait_type_extractor>::type
+        found_traits;
+
     typedef
         typename boost::mpl::set<int, bool, dummy_traits<4>::result_type>::type
             expected_results;
     typedef typename boost::mpl::set<char, float>::type expected_observers;
+    typedef typename boost::mpl::set<dummy_traits<1>,
+                                     dummy_traits<2>,
+                                     dummy_traits<4>>::type expected_traits;
 
     static_assert(std::is_same<found_results, expected_results>::value,
                   "collecting result types failed");
     static_assert(std::is_same<found_observers, expected_observers>::value,
                   "collecting observer types failed");
+    static_assert(std::is_same<found_traits, expected_traits>::value,
+                  "collecting trait types failed");
   }
 }  // namespace Test
 

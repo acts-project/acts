@@ -21,6 +21,12 @@ namespace detail {
     typedef typename T::observer_type type;
   };
 
+  template <typename T>
+  struct trait_type_extractor
+  {
+    typedef T type;
+  };
+
   namespace {
     template <template <int> class traits,
               int bitmask,
