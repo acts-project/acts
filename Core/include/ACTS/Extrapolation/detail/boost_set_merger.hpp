@@ -1,3 +1,6 @@
+#ifndef ACTS_BOOST_SET_MERGER_HPP
+#define ACTS_BOOST_SET_MERGER_HPP 1
+
 #include <boost/mpl/fold.hpp>
 #include <boost/mpl/inserter.hpp>
 #include <boost/mpl/set.hpp>
@@ -47,3 +50,5 @@ namespace detail {
 }  // namespace detail
 
 }  // namespace Acts
+
+#endif  // ACTS_BOOST_SET_MERGER_HPP
