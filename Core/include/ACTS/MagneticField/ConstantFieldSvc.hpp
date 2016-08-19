@@ -17,7 +17,7 @@
 #include <string>
 #include "ACTS/MagneticField/IMagneticFieldSvc.hpp"
 
-namespace FWE {
+namespace Acts {
 
 /// @class ConstantFieldSvc
 ///
