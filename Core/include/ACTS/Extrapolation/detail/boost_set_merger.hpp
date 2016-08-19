@@ -39,7 +39,7 @@ namespace detail {
   };
 
   template <typename s, typename v>
-  struct boost_mpl_set_merger
+  struct boost_set_merger
   {
     typedef typename fold<v, s, insert<_1, _2>>::type unique_types;
     typedef typename fold<unique_types, tuple<>, to_std_tuple<_1, _2>>::type

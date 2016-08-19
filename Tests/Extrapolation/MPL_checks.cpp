@@ -16,7 +16,7 @@ namespace Test {
   {
     typedef typename boost::mpl::set<float, int, char, bool>::type first;
     typedef typename boost::mpl::vector<long, int, void*>::type second;
-    typedef typename detail::boost_mpl_set_merger<first, second>::type found;
+    typedef typename detail::boost_set_merger<first, second>::type found;
     typedef typename boost::mpl::set<float, int, char, bool, long, void*>::type
         expected;
 

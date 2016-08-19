@@ -66,7 +66,7 @@ namespace detail {
   struct type_collector
   {
     typedef typename impl<traits, bitmask, extractor, bm::set<>>::type found;
-    typedef typename boost_mpl_set_merger<found, bm::set<>>::type type;
+    typedef typename boost_set_merger<found, bm::set<>>::type type;
   };
 }  // namespace detail
 
