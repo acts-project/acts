@@ -1,5 +1,5 @@
-#ifndef ACTS_BOOST_SET_MERGER_HPP
-#define ACTS_BOOST_SET_MERGER_HPP 1
+#ifndef ACTS_BOOST_MPL_HELPER_HPP
+#define ACTS_BOOST_MPL_HELPER_HPP 1
 
 #include <boost/mpl/fold.hpp>
 #include <boost/mpl/inserter.hpp>
@@ -21,19 +21,19 @@ namespace detail {
   }
 
   template <typename seq>
-  struct to_boost_set;
+  struct tuple2boost_set;
 
   template <typename... args>
-  struct to_boost_set<tuple<args...>>
+  struct tuple2boost_set<tuple<args...>>
   {
     typedef typename set<args...>::type type;
   };
 
   template <typename T, typename R>
-  struct to_std_tuple;
+  struct fold2tuple;
 
   template <typename... args, typename next>
-  struct to_std_tuple<tuple<args...>, next>
+  struct fold2tuple<tuple<args...>, next>
   {
     typedef tuple<next, args...> type;
   };
@@ -42,13 +42,26 @@ namespace detail {
   struct boost_set_merger
   {
     typedef typename fold<v, s, insert<_1, _2>>::type unique_types;
-    typedef typename fold<unique_types, tuple<>, to_std_tuple<_1, _2>>::type
-                                                 flatten;
-    typedef typename to_boost_set<flatten>::type type;
+    typedef
+        typename fold<unique_types, tuple<>, fold2tuple<_1, _2>>::type flatten;
+    typedef typename tuple2boost_set<flatten>::type type;
+  };
+
+  template <template <typename...> class R, typename S>
+  struct unpack_boost_set_as_tparams
+  {
+    typedef typename fold<S, tuple<>, fold2tuple<_1, _2>>::type as_tuple;
+    typedef typename unpack_boost_set_as_tparams<R, as_tuple>::type type;
+  };
+
+  template <template <typename...> class R, typename... args>
+  struct unpack_boost_set_as_tparams<R, tuple<args...>>
+  {
+    typedef R<args...> type;
   };
 
 }  // namespace detail
 
 }  // namespace Acts
 
-#endif  // ACTS_BOOST_SET_MERGER_HPP
+#endif  // ACTS_BOOST_MPL_HELPER_HPP
