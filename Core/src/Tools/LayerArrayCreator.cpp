@@ -94,12 +94,12 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
         // create the navigation layer surface from the layer
         std::unique_ptr<const Surface> navLayerSurface(createNavigationSurface(
             *layIter, bValue, -fabs(layerValue - navigationValue)));
+        ACTS_VERBOSE("arbitrary : creating a  NavigationLayer at "
+                       << (navLayerSurface->binningPosition(bValue)));
         navLayer = NavigationLayer::create(std::move(navLayerSurface));
         // push the navigation layer in
         layerOrderVector.push_back(
             LayerOrderPosition(navLayer, navLayer->binningPosition(bValue)));
-        ACTS_VERBOSE("arbitrary : creating a  NavigationLayer at "
-                     << (navLayerSurface->binningPosition(bValue)));
       }
       // push the original layer in
       layerOrderVector.push_back(
@@ -117,12 +117,12 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
       // create the navigation layer surface from the layer
       std::unique_ptr<const Surface> navLayerSurface(createNavigationSurface(
           *lastLayer, bValue, navigationValue - layerValue));
+      ACTS_VERBOSE("arbitrary : creating a  NavigationLayer at "
+                     << (navLayerSurface->binningPosition(bValue)));
       navLayer = NavigationLayer::create(std::move(navLayerSurface));
       // push the navigation layer in
       layerOrderVector.push_back(
           LayerOrderPosition(navLayer, navLayer->binningPosition(bValue)));
-      ACTS_VERBOSE("arbitrary : creating a  NavigationLayer at "
-                   << (navLayerSurface->binningPosition(bValue)));
     }
     // now close the boundaries
     boundaries.push_back(max);
