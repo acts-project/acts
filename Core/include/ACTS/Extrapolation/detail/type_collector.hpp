@@ -2,7 +2,7 @@
 #define ACTS_TYPE_COLLECTOR_HPP 1
 
 #include <boost/mpl/set.hpp>
-#include "ACTS/Extrapolation/detail/boost_set_merger.hpp"
+#include "ACTS/Extrapolation/detail/boost_mpl_helper.hpp"
 namespace bm = boost::mpl;
 
 namespace Acts {
