@@ -38,6 +38,12 @@ namespace detail {
     typedef tuple<next, args...> type;
   };
 
+  template <typename S>
+  struct boost_set2tuple
+  {
+    typedef typename fold<S, tuple<>, fold2tuple<_1, _2>>::type type;
+  };
+
   template <typename s, typename v>
   struct boost_set_merger
   {
@@ -50,7 +56,7 @@ namespace detail {
   template <template <typename...> class R, typename S>
   struct unpack_boost_set_as_tparams
   {
-    typedef typename fold<S, tuple<>, fold2tuple<_1, _2>>::type as_tuple;
+    typedef typename boost_set2tuple<S>::type as_tuple;
     typedef typename unpack_boost_set_as_tparams<R, as_tuple>::type type;
   };
 
