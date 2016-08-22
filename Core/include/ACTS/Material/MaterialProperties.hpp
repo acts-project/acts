@@ -119,6 +119,10 @@ public:
   float
   dEdX() const;
 
+  /** Return the number of material entries */
+  size_t
+  entries() const;
+
   /** Material averaging */
   void
   addMaterial(const Material& mp, float dInX0) const;
@@ -137,7 +141,9 @@ protected:
   mutable float m_dInX0;  //!< thickness in units of radiation length
   mutable float m_dInL0;  //!< thickness in units of nuclear interaction length
   mutable float
-      m_zOaTrTd;  //!< @f$ \frac{Z}{A}\cdot\rho\cdot d @f$ - in ATLAS units
+                 m_zOaTrTd;  //!< @f$ \frac{Z}{A}\cdot\rho\cdot d @f$ - in ATLAS units
+  mutable size_t m_entries;  //!< number of different material entries of an
+                             //! averaged material
 };
 
 /** Return method for the full material */
@@ -223,6 +229,12 @@ inline float
 MaterialProperties::dEdX() const
 {
   return m_material.dEdX;
+}
+
+inline size_t
+MaterialProperties::entries() const
+{
+  return m_entries;
 }
 
 /**Overload of << operator for std::ostream for debug output*/

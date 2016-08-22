@@ -25,14 +25,14 @@ namespace Acts {
 ///
 /// The LayerMaterialRecord class is used as a cache during the material mapping
 /// process for the layers
-/// hands back the layer material.
+/// and hands back the layer material.
 /// It stores the current material in a matrix binned in a given BinUtility. It
 /// is possible to add material
 /// at a certain position which is transformed into the corresponding bin. It is
-/// possible to additionally average
+/// possible to average
 /// the material during the mapping process material whenever wanted (e.g. after
 /// run). In the end before handing
-/// back the complete layer material an averaging is done automatically.
+/// back the complete layer material an averaging needs to be done.
 ///
 
 class LayerMaterialRecord
@@ -68,9 +68,8 @@ public:
   averageMaterial();
   /// Return method for the final layer material
   /// given as a binned surface material
-  /// averages the material before returning the final material
   std::shared_ptr<const Acts::BinnedSurfaceMaterial>
-  layerMaterial();
+  layerMaterial() const;
 
 private:
   /// two dimensional grid on which the material is binned
@@ -78,12 +77,6 @@ private:
   /// two dimensional material matrix describing the material binned according
   /// to the binUtility
   std::vector<std::vector<const Acts::MaterialProperties*>> m_materialMatrix;
-  /// number of material entries
-  size_t m_entries;
-  /// sum of the thickness of all materials
-  float m_sumThickness;
-  /// sum of the density of all material
-  float m_sumRho;
 };
 }
 

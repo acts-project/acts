@@ -73,6 +73,12 @@ public:
   /// it sets the created material to the layers
   void
   finalizeLayerMaterial();
+  /// return the layer records
+  const std::map<const Layer*, LayerMaterialRecord>
+  layerRecords() const;
+  /// return the material step positions per layer
+  const std::multimap<const Acts::Layer*, const MaterialStep>
+  layerMaterialSteps() const;
 
   /// set logging instance
   void
@@ -110,7 +116,22 @@ private:
   Config                  m_cnf;
   std::unique_ptr<Logger> m_logger;
   std::map<const Layer*, LayerMaterialRecord> m_layerRecords;
+  /// create object which connects layer with the original material step
+  /// positions
+  std::multimap<const Acts::Layer*, const MaterialStep> m_layersAndSteps;
 };
 }
 
-#endif  // ACTS_MATERIALPLUGINS_MATERIALMAPPIN_H
+inline const std::map<const Acts::Layer*, Acts::LayerMaterialRecord>
+Acts::MaterialMapping::layerRecords() const
+{
+  return m_layerRecords;
+}
+
+inline const std::multimap<const Acts::Layer*, const Acts::MaterialStep>
+Acts::MaterialMapping::layerMaterialSteps() const
+{
+  return m_layersAndSteps;
+}
+
+#endif  // ACTS_MATERIALPLUGINS_MATERIALMAPPIN_Hr

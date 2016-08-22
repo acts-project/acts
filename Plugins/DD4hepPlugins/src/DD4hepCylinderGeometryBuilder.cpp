@@ -296,6 +296,9 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
       // material position on the layer can be inner, outer or center and will
       // be accessed from the Extensions
       Acts::LayerMaterialPos layerPos = LayerMaterialPos::inner;
+      // access transformation matrix of the layer
+      std::shared_ptr<Acts::Transform3D> actsTransform
+          = convertTransform(transform);
       // check if layer should have material
       if (detExtension->hasSupportMaterial()) {
         std::pair<size_t, size_t> materialBins = detExtension->materialBins();
@@ -303,25 +306,31 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
         size_t bins2    = materialBins.second;
         materialBinUtil = new Acts::BinUtility(
             bins1, -M_PI, M_PI, Acts::closed, Acts::binPhi);
-        (*materialBinUtil)
-            += Acts::BinUtility(bins2, -halfZ, halfZ, Acts::open, Acts::binZ);
+        (*materialBinUtil) += Acts::BinUtility(
+            bins2, -halfZ, halfZ, Acts::open, Acts::binZ, actsTransform);
         // and create material proxy to mark layer for material mapping
         materialProxy
             = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
         // access the material position
         Acts::LayerMaterialPos layerPos = detExtension->layerMaterialPos();
-        ACTS_DEBUG("[L] Layer is marked to carry support material on Surface ( "
-                   "inner=0 / center=1 / outer=2 ) :   "
-                   << layerPos);
+        ACTS_VERBOSE(
+            "[L] Layer is marked to carry support material on Surface ( "
+            "inner=0 / center=1 / outer=2 ) :   "
+            << layerPos
+            << "    with binning: ["
+            << bins1
+            << ", "
+            << bins2
+            << "]");
         // Create an approachdescriptor for the layer
         // create the new surfaces for the approachdescriptor
         std::vector<const Acts::Surface*> aSurfaces;
         // create the inner boundary surface
-        Acts::CylinderSurface* innerBoundary = new Acts::CylinderSurface(
-            convertTransform(transform), rMin, halfZ);
+        Acts::CylinderSurface* innerBoundary
+            = new Acts::CylinderSurface(actsTransform, rMin, halfZ);
         // create outer boundary surface
-        Acts::CylinderSurface* outerBoundary = new Acts::CylinderSurface(
-            convertTransform(transform), rMax, halfZ);
+        Acts::CylinderSurface* outerBoundary
+            = new Acts::CylinderSurface(actsTransform, rMax, halfZ);
         // check if the material should be set to the inner or outer boundary
         // and set it in case
         if (layerPos == Acts::LayerMaterialPos::inner)
@@ -448,18 +457,26 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
       // check if layer should have material
       if (detExtension->hasSupportMaterial()) {
         std::pair<size_t, size_t> materialBins = detExtension->materialBins();
+        size_t bins1    = materialBins.first;
+        size_t bins2    = materialBins.second;
         materialBinUtil = new Acts::BinUtility(
-            materialBins.first, -M_PI, M_PI, Acts::closed, Acts::binPhi);
-        (*materialBinUtil) += Acts::BinUtility(
-            materialBins.second, rMin, rMax, Acts::open, Acts::binR);
+            bins1, -M_PI, M_PI, Acts::closed, Acts::binPhi, actsTransform);
+        (*materialBinUtil)
+            += Acts::BinUtility(bins2, rMin, rMax, Acts::open, Acts::binR);
         // and create material proxy to mark layer for material mapping
         materialProxy
             = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
         // access the material position
         Acts::LayerMaterialPos layerPos = detExtension->layerMaterialPos();
-        ACTS_DEBUG("[L] Layer is marked to carry support material on Surface ( "
-                   "inner=0 / center=1 / outer=2 ) :   "
-                   << layerPos);
+        ACTS_VERBOSE(
+            "[L] Layer is marked to carry support material on Surface ( "
+            "inner=0 / center=1 / outer=2 ) :   "
+            << layerPos
+            << "    with binning: ["
+            << bins1
+            << ", "
+            << bins2
+            << "]");
         // Create an approachdescriptor for the layer
         // create the new surfaces - positions first
         double         thickness = fabs(rMax - rMin);
