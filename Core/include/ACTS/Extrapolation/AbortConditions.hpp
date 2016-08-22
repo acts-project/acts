@@ -5,17 +5,9 @@
 
 namespace Acts {
 
-enum AbortConditions {
-  DestinationSurface = 1 << 0,
-  MaxMaterial        = 1 << 1,
-  MaxPathLength      = 1 << 2
-};
+class Surface;
 
-template <class Derived, int bitmask>
-struct AbortCondition;
-
-template <class Derived>
-struct AbortCondition<Derived, DestinationSurface>
+struct DestinationSurface
 {
   typedef struct
   {
@@ -25,43 +17,30 @@ struct AbortCondition<Derived, DestinationSurface>
   {
   } observer_type;
 
-  Derived&
-  destinationSurface()
+  void
+  setTargetSurface(const Surface& target)
   {
-    return static_cast<Derived&>(*this);
+    m_pTarget = &target;
   }
+
+private:
+  const Surface* m_pTarget = 0;
 };
 
-template <class Derived>
-struct AbortCondition<Derived, MaxMaterial>
+struct MaxMaterial
 {
   typedef MaterialObserver           observer_type;
   typedef observer_type::result_type result_type;
 
-  Derived&
-  maxMaterial(double m)
-  {
-    m_maxMaterial = m;
-    return static_cast<Derived&>(*this);
-  }
-
-  double m_maxMaterial = 0;
+  double maxMaterial = 0;
 };
 
-template <class Derived>
-struct AbortCondition<Derived, MaxPathLength>
+struct MaxPathLength
 {
   typedef PathLengthObserver         observer_type;
   typedef observer_type::result_type result_type;
 
-  Derived&
-  maxPathLength(double p)
-  {
-    m_maxPathLength = p;
-    return static_cast<Derived&>(*this);
-  }
-
-  double m_maxPathLength = 0;
+  double maxPathLength = 0;
 };
 
 }  // namespace Acts
