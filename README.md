@@ -71,17 +71,18 @@ by adding '-D\<OPTION\>=\<VALUE\>' to the cmake command.
 
 |option|default|description|
 |------|-------|-----------|
-|BOOST_ROOT           | empty                 | path to the ROOT installation          |
-|EIGEN_INCLUDE_DIR    | empty                 | path to the Eigen installation         |
-|BUILD_DD4HEP_PLUGIN  | OFF                   | build DD4Hep plugin (requires DD4hep)  |
-|BUILD_DOC            | OFF                   | build doxygen documentation            |
-|BUILD_TESTS          | ON                    | build unit tests                       |
-|BUILD_TGEO_PLUGIN    | OFF                   | build TGeo plugin (requires ROOT)      |
-|CMAKE_INSTALL_PREFIX | /opt/ACTS/\<version\> | target installation directory          |
-|CMAKE_PREFIX_PATH    | empty                 | search path for external packages      |    
-|CMAKE_CXX_COMPILER   | empty                 | set C++ compiler (e.g. g++ or clang++) |    
-|CMAKE_CXX_FLAGS      | -std=c++14            | set C++ compiler flags (e.g. "-O2 -g") |  
-|CMAKE_BUILD_TYPE     | None                  | build type (e.g. Debug, Release)       |
+|BOOST_ROOT             | empty                 | path to the ROOT installation          |
+|EIGEN_INCLUDE_DIR      | empty                 | path to the Eigen installation         |
+|BUILD_DD4HEP_PLUGIN    | OFF                   | build DD4Hep plugin (requires DD4hep)  |
+|BUILD_DOC              | OFF                   | build doxygen documentation            |
+|BUILD_TESTS            | ON                    | build unit tests                       |
+|BUILD_TGEO_PLUGIN      | OFF                   | build TGeo plugin (requires ROOT)      |
+|BUILD_MATERIAL_PLUGIN  | OFF                   | build Material plugin                  |
+|CMAKE_INSTALL_PREFIX   | /opt/ACTS/\<version\> | target installation directory          |
+|CMAKE_PREFIX_PATH      | empty                 | search path for external packages      |    
+|CMAKE_CXX_COMPILER     | empty                 | set C++ compiler (e.g. g++ or clang++) |    
+|CMAKE_CXX_FLAGS        | -std=c++14            | set C++ compiler flags (e.g. "-O2 -g") |  
+|CMAKE_BUILD_TYPE       | None                  | build type (e.g. Debug, Release)       |
 
 ## Example build on lxplus at CERN
 
@@ -98,6 +99,7 @@ ong cmake command which spans several lines.
 >   -DBOOST_ROOT=/afs/cern.ch/sw/lcg/releases/LCG_83/Boost/1.59.0_python2.7/x86_64-slc6-gcc49-opt/include/boost-1_59/ \\ <br />
 >   -DBUILD_DOC=ON \\ <br />
 >   -DBUILD_TGEO_PLUGIN=ON \\ <br />
+>   -DBUILD_MATERIAL_PLUGIN=ON \\ <br />
 >   -DBUILD_DD4HEP_PLUGIN=ON \\ <br />
 >   -DCMAKE_PREFIX_PATH="/afs/cern.ch/exp/fcc/sw/0.7/DD4hep/20161003/x86_64-slc6-gcc49-opt/;/afs/cern.ch/sw/lcg/releases/LCG_83/ROOT/6.06.00/x86_64-slc6-gcc49-opt/cmake" \\ <br />
 >   -DCMAKE_INSTALL_PREFIX=\`pwd\`/installed <br />
