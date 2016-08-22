@@ -28,44 +28,37 @@ namespace detail {
   };
 
   namespace {
-    template <template <int> class traits,
-              int bitmask,
-              template <typename> class extractor,
-              typename sequence>
+    template <template <typename> class extractor,
+              typename sequence,
+              typename... traits>
     struct impl;
 
-    template <template <int> class traits,
-              int bitmask,
-              template <typename> class extractor,
-              typename sequence>
-    struct impl
+    template <template <typename> class extractor,
+              typename sequence,
+              typename first,
+              typename... others>
+    struct impl<extractor, sequence, first, others...>
     {
-      static constexpr int lsb        = bitmask & ~(bitmask - 1);
-      static constexpr int other_bits = bitmask ^ lsb;
-
-      typedef typename extractor<traits<lsb>>::type new_type;
-      typedef typename impl<traits,
-                            other_bits,
-                            extractor,
-                            typename bm::insert<sequence, new_type>::type>::type
-          type;
+      typedef typename extractor<first>::type new_type;
+      typedef typename impl<extractor,
+                            typename bm::insert<sequence, new_type>::type,
+                            others...>::type type;
     };
 
-    template <template <int> class traits,
-              template <typename> class extractor,
-              typename sequence>
-    struct impl<traits, 0, extractor, sequence>
+    template <template <typename> class extractor,
+              typename sequence,
+              typename last>
+    struct impl<extractor, sequence, last>
     {
-      typedef sequence type;
+      typedef typename extractor<last>::type new_type;
+      typedef typename bm::insert<sequence, new_type>::type type;
     };
   }
 
-  template <template <int> class traits,
-            int bitmask,
-            template <typename> class extractor>
+  template <template <typename> class extractor, typename... traits>
   struct type_collector
   {
-    typedef typename impl<traits, bitmask, extractor, bm::set<>>::type found;
+    typedef typename impl<extractor, bm::set<>, traits...>::type found;
     typedef typename boost_set_merger<found, bm::set<>>::type type;
   };
 }  // namespace detail
