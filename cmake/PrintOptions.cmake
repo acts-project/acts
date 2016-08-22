@@ -13,6 +13,7 @@ message (STATUS "BUILD_DD4HEP_PLUGIN                 build DD4hep plugin        
 message (STATUS "BUILD_DOC                           build doxygen documentation                              [OFF]  (ON|OFF)")
 message (STATUS "BUILD_TESTS                         build unit tests                                         [ON]   (ON|OFF)")
 message (STATUS "BUILD_TGEO_PLUGIN                   build TGeo plugin                                        [OFF]  (ON|OFF)")
+message (STATUS "BUILD_MATERIAL_PLUGIN               build Material plugin                                    [OFF]  (ON|OFF)")
 message (STATUS "CMAKE_INSTALL_PREFIX                target installation directory                            [/opt/ACTS/<version>]")
 message (STATUS "PRINT_OPTIONS                       print this help")
 message (STATUS "")
