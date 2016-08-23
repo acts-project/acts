@@ -64,9 +64,6 @@ namespace Test {
     template <>
     struct traits2<true>
     {
-      typedef struct
-      {
-      } result_type;
       typedef float observer_type;
     };
   }
@@ -84,32 +81,13 @@ namespace Test {
                                         traits2<true>,
                                         traits2<false>>::type found_observers;
 
-    typedef typename detail::type_collector<detail::trait_type_extractor,
-                                            traits1,
-                                            traits2<true>,
-                                            traits2<false>>::type found_traits;
-
-    typedef
-        typename boost::mpl::set<int, traits2<true>::result_type, bool>::type
-            expected_results;
+    typedef typename boost::mpl::set<int, bool>::type   expected_results;
     typedef typename boost::mpl::set<char, float>::type expected_observers;
-    typedef
-        typename boost::mpl::set<traits1, traits2<true>, traits2<false>>::type
-            expected_traits;
 
     static_assert(std::is_same<found_results, expected_results>::value,
                   "collecting result types failed");
     static_assert(std::is_same<found_observers, expected_observers>::value,
                   "collecting observer types failed");
-    static_assert(std::is_same<found_traits, expected_traits>::value,
-                  "collecting trait types failed");
-  }
-
-  template <typename... args>
-  void
-  f()
-  {
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
   }
 
   BOOST_AUTO_TEST_CASE(abort_list_test)
@@ -118,14 +96,14 @@ namespace Test {
                       DestinationSurface,
                       MaxMaterial,
                       MaxPathLength>
-                               AList;
-    typedef AList::result_type found;
-    typedef variadic_struct<DestinationSurface::result_type,
-                            MaxMaterial::result_type,
+                                      AList;
+    typedef AList::result_type        found_result_type;
+    typedef AList::observer_list_type found_observer_list_type;
+    typedef variadic_struct<MaxMaterial::result_type,
                             MaxPathLength::result_type>
-        expected;
+        expected_result_type;
 
-    static_assert(std::is_same<found, expected>::value,
+    static_assert(std::is_same<found_result_type, expected_result_type>::value,
                   "creating abort condition list failed");
 
     static_assert(std::is_base_of<DestinationSurface, AList>::value, "");
@@ -136,10 +114,10 @@ namespace Test {
     al.maxMaterial   = 3;
     al.maxPathLength = 17.8;
 
-    f<AList::result_type>();
-    std::cout << al.maxMaterial << std::endl;
-    std::cout << al.maxPathLength << std::endl;
-    std::cout << sizeof(al) << std::endl;
+    AList c = al;
+    std::cout << c.maxMaterial << std::endl;
+    std::cout << c.maxPathLength << std::endl;
+    std::cout << sizeof(c) << std::endl;
     std::cout << sizeof(double) << std::endl;
   }
 }  // namespace Test
