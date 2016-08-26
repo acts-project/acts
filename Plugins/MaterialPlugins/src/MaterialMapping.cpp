@@ -22,7 +22,6 @@
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
 
-
 Acts::MaterialMapping::MaterialMapping(const Config&           cnf,
                                        std::unique_ptr<Logger> log)
   : m_cnf(cnf), m_logger(std::move(log)), m_layerRecords(), m_layersAndSteps()
@@ -189,9 +188,18 @@ Acts::MaterialMapping::associateLayerMaterial(
     // the current layer *should* be correct now
     const Acts::Layer* assignedLayer    = layersAndHits.at(currentLayer).first;
     Acts::Vector3D     assignedPosition = layersAndHits.at(currentLayer).second;
+    // correct material thickness with pathcorrection
+    double eta = matTrackRec.eta();
+    double phi = matTrackRec.phi();
+    // calculate the direction in cartesian coordinates
+    Acts::Vector3D direction(cos(phi), sin(phi), sinh(eta));
+    // access the path correction of the associated material surface
+    double pathCorrection
+        = assignedLayer->materialSurface()->pathCorrection(pos, direction);
     // create material Properties
     const Acts::MaterialProperties* layerMaterialProperties
-        = new MaterialProperties(step.material());
+        = new MaterialProperties(step.material().material(),
+                                 step.material().thickness()/pathCorrection);
     // fill the step pos of the current material step
     m_layersAndSteps.insert(std::make_pair(assignedLayer, step));
     // associate the hit
