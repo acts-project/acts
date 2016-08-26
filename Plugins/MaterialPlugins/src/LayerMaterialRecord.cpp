@@ -29,7 +29,7 @@ Acts::LayerMaterialRecord::LayerMaterialRecord(const BinUtility* binutility)
     matVec.reserve(m_binUtility->max(0) + 1);
     for (unsigned int ibin = 0; ibin < (unsigned int)m_binUtility->max(0) + 1;
          ++ibin)
-      matVec.push_back(new MaterialProperties(0., 0., 0., 0., 0., 0.));
+      matVec.push_back(new MaterialProperties(0., 0., 0., 0., 0., 0., 0., 0));
     m_materialMatrix.push_back(matVec);
   }
 }
@@ -121,7 +121,8 @@ Acts::LayerMaterialRecord::averageMaterial()
       if (A != 0.) A /= rho;
       if (Z != 0.) Z /= rho;
       if (rho != 0.) rho /= thickness;
-      if (thickness != 0.) thickness /= material->entries();
+      if (thickness != 0. && material->entries() != 0)
+        thickness /= material->entries();
       // set the new current material
       const Acts::Material updatedMaterial(x0, l0, A, Z, rho);
       m_materialMatrix.at(bin1).at(bin0)->setMaterial(updatedMaterial,
