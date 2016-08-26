@@ -78,7 +78,7 @@ by adding '-D\<OPTION\>=\<VALUE\>' to the cmake command.
 |BUILD_TESTS            | ON                    | build unit tests                       |
 |BUILD_TGEO_PLUGIN      | OFF                   | build TGeo plugin (requires ROOT)      |
 |BUILD_MATERIAL_PLUGIN  | OFF                   | build Material plugin                  |
-|CMAKE_INSTALL_PREFIX   | /opt/ACTS/\<version\> | target installation directory          |
+|CMAKE_INSTALL_PREFIX   | empty                 | target installation directory          |
 |CMAKE_PREFIX_PATH      | empty                 | search path for external packages      |    
 |CMAKE_CXX_COMPILER     | empty                 | set C++ compiler (e.g. g++ or clang++) |    
 |CMAKE_CXX_FLAGS        | -std=c++14            | set C++ compiler flags (e.g. "-O2 -g") |  
