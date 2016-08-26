@@ -18,20 +18,21 @@ Acts::MaterialProperties::MaterialProperties()
 {
 }
 
-Acts::MaterialProperties::MaterialProperties(float path,
-                                             float Xo,
-                                             float Lo,
-                                             float averageA,
-                                             float averageZ,
-                                             float averageRho,
-                                             float dEdX)
+Acts::MaterialProperties::MaterialProperties(float  path,
+                                             float  Xo,
+                                             float  Lo,
+                                             float  averageA,
+                                             float  averageZ,
+                                             float  averageRho,
+                                             float  dEdX,
+                                             size_t entries)
   : m_material(Xo, Lo, averageA, averageZ, averageRho, dEdX)
   , m_dInX0(Xo * Xo > 10e-10 ? path / Xo : 0.)
   , m_dInL0(Lo * Lo > 10e-10 ? path / Lo : 0.)
   , m_zOaTrTd(averageA * averageA > 10e-10
                   ? averageZ / averageA * averageRho * path
                   : 0.)
-  , m_entries(1)
+  , m_entries(entries)
 {
 }
 
@@ -118,7 +119,8 @@ Acts::MaterialProperties::addMaterial(const Acts::Material& mat,
 
 void
 Acts::MaterialProperties::setMaterial(const Acts::Material& mat,
-                                      float                 thickness) const
+                                      float                 thickness,
+                                      size_t                entries) const
 {
   // just overwrite what you have
   m_material                   = mat;
@@ -128,7 +130,7 @@ Acts::MaterialProperties::setMaterial(const Acts::Material& mat,
   if (thickness != 0.) m_dInX0 = thickness / mat.X0;
   if (thickness != 0.) m_dInL0 = thickness / mat.L0;
   if (mat.A != 0.) m_zOaTrTd   = mat.Z / mat.A * mat.rho * thickness;
-  m_entries                    = 1;
+  m_entries                    = entries;
 }
 
 void
