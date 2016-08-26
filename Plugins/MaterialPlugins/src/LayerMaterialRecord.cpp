@@ -94,7 +94,13 @@ Acts::LayerMaterialRecord::addLayerMaterialProperties(
   Z += newMaterial->averageZ() * newRho;
   // set the new current material (not averaged yet)
   const Acts::Material updatedMaterial(x0, l0, A, Z, rho);
-  m_materialMatrix.at(bin1).at(bin0)->setMaterial(updatedMaterial, thickness);
+  // pick the number of entries for the next material entry
+  size_t entries = m_materialMatrix.at(bin2).at(bin1)->entries();
+  // set the material with the right number of entries
+  m_materialMatrix.at(bin2).at(bin1)->setMaterial(
+      updatedMaterial, thickness, entries);
+  // increase the number of entries for this material
+  m_materialMatrix.at(bin2).at(bin1)->addEntry();
 }
 
 void
