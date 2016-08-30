@@ -1,7 +1,8 @@
 
 // Boost include(s)
-#define BOOST_TEST_MODULE ParameterSet Tests
+#define BOOST_TEST_MODULE MPL Tests
 #include <ACTS/Extrapolation/AbortList.hpp>
+#include <ACTS/Extrapolation/detail/all_of.hpp>
 #include <ACTS/Extrapolation/detail/boost_mpl_helper.hpp>
 #include <ACTS/Extrapolation/detail/has_duplicates.hpp>
 #include <boost/mpl/equal.hpp>
@@ -104,6 +105,21 @@ namespace Test {
                   "has_duplicates failed");
     static_assert(not has_duplicates<int, bool, char, float>::value,
                   "has_duplicates failed");
+  }
+
+  BOOST_AUTO_TEST_CASE(all_of_test)
+  {
+    using detail::all_of;
+
+    static_assert(not all_of<true, true, false>::value,
+                  "all_of<true, true, false> failed");
+    static_assert(not all_of<false, true, true, false>::value,
+                  "all_of<false, true, true, false> failed");
+    static_assert(all_of<true, true, true>::value,
+                  "all_of<true, true, true> failed");
+    static_assert(all_of<true>::value, "all_of<true> failed");
+    static_assert(not all_of<false>::value, "all_of<false> failed");
+    static_assert(all_of<>::value, "all_of<> failed");
   }
 
   BOOST_AUTO_TEST_CASE(abort_list_test)
