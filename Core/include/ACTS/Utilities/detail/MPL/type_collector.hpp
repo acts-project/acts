@@ -3,7 +3,7 @@
 
 #include <boost/mpl/set.hpp>
 #include <type_traits>
-#include "ACTS/Extrapolation/detail/boost_mpl_helper.hpp"
+#include "ACTS/Utilities/detail/MPL/boost_mpl_helper.hpp"
 namespace bm = boost::mpl;
 
 #define HAS_TYPE(x)                                                            \

@@ -12,19 +12,22 @@
 namespace Acts {
 /// @cond detail
 namespace detail {
-  /// @brief check whether integral values are sorted
-  ///
-  /// @tparam ascending boolean flag to check for ascending order (@c true) or
-  /// descending order (@c false)
-  /// @tparam strict boolean flag whether strict ordering is required
-  /// @tparam T integral type of values whose order should be checked
-  /// @tparam values template parameter pack containing the list of values
-  ///
-  /// @test Unit tests are implemented \link
-  /// Acts::Test::BOOST_AUTO_TEST_CASE(are_sorted_helper_tests) here\endlink.
-  ///
-  /// @return are_sorted<asc,strict,T,values...>::value is @c true if the
-  ///         given values are properly sorted, otherwise @c false
+  /**
+   * @brief check whether integral values are sorted
+   *
+   * @tparam ascending boolean flag to check for ascending order (@c true) or
+   * descending order (@c false)
+   * @tparam strict boolean flag whether strict ordering is required
+   * @tparam T integral type of values whose order should be checked
+   * @tparam values template parameter pack containing the list of values
+   *
+   * @test Unit tests are implemented \link
+   * Acts::Test::BOOST_AUTO_TEST_CASE(are_sorted_helper_tests) here\endlink.
+   *
+   * @return `are_sorted<asc,strict,T,values...>::value` is @c true if the given
+   * values are properly sorted,
+   *         otherwise @c false
+   */
   template <bool ascending, bool strict, typename T, T... values>
   struct are_sorted;
 

@@ -13,24 +13,14 @@ namespace Acts {
 /// @cond detail
 namespace detail {
   /**
-   * @brief return integral constant at given position in parameter pack
+   * @brief return integral constant at position in template parameter pack
    *
    * @tparam T integral type of the values to be investigated
-   * @tparam index position in the parameter pack
-   * @tparam values parameter pack containing the list of values
+   * @tparam index position in the template parameter pack
+   * @tparam values template parameter pack containing the list of values
    *
-   * @par Usage
-   * @code at_index<T,index,values...>::value @endcode
-   *
-   * @par Example
-   * @code
-   * #include "ACTS/detail/at_index.hpp"
-   * using Acts::detail::at_index
-   * constexpr int i = at_index<int, 3, -4, 1, -7, 8, 9>::value;
-   * static_assert(i == 8, "third element of given values");
-   * @endcode
-   *
-   * @return integral constant at given position in `values` if 0 &le; `index` <
+   * @return `at_index<T,index,values...>::type` yields the integral constant
+   *         at the given position in `values` if 0 &le; `index` <
    *         sizeof...(values). Otherwise, a compile-time error is generated.
    */
   template <typename T, size_t index, T... values>

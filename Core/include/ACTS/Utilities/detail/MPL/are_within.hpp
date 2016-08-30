@@ -12,18 +12,21 @@
 namespace Acts {
 /// @cond detail
 namespace detail {
-  /// @brief check whether integral values are within a given range
-  ///
-  /// @tparam T integral type of values whose range should be checked
-  /// @tparam MIN lower accepted bound of values (inclusive)
-  /// @tparam MAX upper accepted bound of values (exclusive)
-  /// @tparam values template parameter pack containing the list of values
-  ///
-  /// @test Unit tests are implemented \link
-  /// Acts::Test::BOOST_AUTO_TEST_CASE(are_within_helper_tests) here\endlink.
-  ///
-  /// @return are_within<T,MIN,MAX,values...>::value is @c true if all given
-  ///         values are within the interval [MIN,MAX), otherwise @c false
+  /**
+   * @brief check whether integral values are within a given range
+   *
+   * @tparam T integral type of values whose range should be checked
+   * @tparam MIN lower accepted bound of values (inclusive)
+   * @tparam MAX upper accepted bound of values (exclusive)
+   * @tparam values template parameter pack containing the list of values
+   *
+   * @test Unit tests are implemented \link
+   * Acts::Test::BOOST_AUTO_TEST_CASE(are_within_helper_tests) here\endlink.
+   *
+   * @return `are_within<T,MIN,MAX,values...>::value` is @c true if all given
+   * values are within the
+   *          interval [MIN,MAX), otherwise @c false
+   */
   template <typename T, T MIN, T MAX, T... values>
   struct are_within;
 
