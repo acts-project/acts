@@ -3,6 +3,7 @@
 #define BOOST_TEST_MODULE MPL Tests
 #include <ACTS/Extrapolation/AbortList.hpp>
 #include <ACTS/Extrapolation/detail/all_of.hpp>
+#include <ACTS/Extrapolation/detail/any_of.hpp>
 #include <ACTS/Extrapolation/detail/boost_mpl_helper.hpp>
 #include <ACTS/Extrapolation/detail/has_duplicates.hpp>
 #include <boost/mpl/equal.hpp>
@@ -120,6 +121,23 @@ namespace Test {
     static_assert(all_of<true>::value, "all_of<true> failed");
     static_assert(not all_of<false>::value, "all_of<false> failed");
     static_assert(all_of<>::value, "all_of<> failed");
+  }
+
+  BOOST_AUTO_TEST_CASE(any_of_test)
+  {
+    using detail::any_of;
+
+    static_assert(any_of<true, true, false>::value,
+                  "any_of<true, true, false> failed");
+    static_assert(any_of<false, true, true, false>::value,
+                  "any_of<false, true, true, false> failed");
+    static_assert(any_of<true, true, true>::value,
+                  "any_of<true, true, true> failed");
+    static_assert(not any_of<false, false>::value,
+                  "any_of<false, false> failed");
+    static_assert(any_of<true>::value, "any_of<true> failed");
+    static_assert(not any_of<false>::value, "any_of<false> failed");
+    static_assert(not any_of<>::value, "any_of<> failed");
   }
 
   BOOST_AUTO_TEST_CASE(abort_list_test)
