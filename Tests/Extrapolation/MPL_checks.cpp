@@ -23,7 +23,7 @@ namespace Test {
   {
     typedef typename boost::mpl::set<float, int, char, bool>::type first;
     typedef typename boost::mpl::vector<long, int, void*>::type second;
-    typedef typename detail::boost_set_merger<first, second>::type found;
+    typedef typename detail::boost_set_merger_t<first, second> found;
     typedef typename boost::mpl::set<float, int, char, bool, long, void*>::type
         expected;
 
@@ -40,8 +40,8 @@ namespace Test {
   {
     typedef boost::mpl::set<float, int, char>::type boost_set;
     typedef variadic_struct<float, int, char>       expected;
-    typedef typename detail::unpack_boost_set_as_tparams<variadic_struct,
-                                                         boost_set>::type found;
+    typedef detail::unpack_boost_set_as_tparams_t<variadic_struct, boost_set>
+        found;
 
     static_assert(std::is_same<found, expected>::value,
                   "using boost::mpl::set for variadic templates failed");
@@ -73,16 +73,17 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(type_collector_test)
   {
-    typedef typename detail::type_collector<detail::result_type_extractor,
-                                            traits1,
-                                            traits2<true>,
-                                            traits2<false>>::type found_results;
+    typedef detail::type_collector_t<detail::result_type_extractor,
+                                     traits1,
+                                     traits2<true>,
+                                     traits2<false>>
+        found_results;
 
-    typedef
-        typename detail::type_collector<detail::observer_type_extractor,
-                                        traits1,
-                                        traits2<true>,
-                                        traits2<false>>::type found_observers;
+    typedef detail::type_collector_t<detail::observer_type_extractor,
+                                     traits1,
+                                     traits2<true>,
+                                     traits2<false>>
+        found_observers;
 
     typedef typename boost::mpl::set<int, bool>::type   expected_results;
     typedef typename boost::mpl::set<char, float>::type expected_observers;
@@ -95,49 +96,48 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(has_duplicates_test)
   {
-    using detail::has_duplicates;
-    static_assert(has_duplicates<int, float, char, int>::value,
-                  "has_duplicates failed");
-    static_assert(has_duplicates<int, int, char, float>::value,
-                  "has_duplicates failed");
-    static_assert(has_duplicates<int, char, float, float>::value,
-                  "has_duplicates failed");
-    static_assert(has_duplicates<int, char, char, float>::value,
-                  "has_duplicates failed");
-    static_assert(not has_duplicates<int, bool, char, float>::value,
-                  "has_duplicates failed");
+    using detail::has_duplicates_v;
+    static_assert(has_duplicates_v<int, float, char, int>,
+                  "has_duplicates_v failed");
+    static_assert(has_duplicates_v<int, int, char, float>,
+                  "has_duplicates_v failed");
+    static_assert(has_duplicates_v<int, char, float, float>,
+                  "has_duplicates_v failed");
+    static_assert(has_duplicates_v<int, char, char, float>,
+                  "has_duplicates_v failed");
+    static_assert(not has_duplicates_v<int, bool, char, float>,
+                  "has_duplicates_v failed");
   }
 
   BOOST_AUTO_TEST_CASE(all_of_test)
   {
-    using detail::all_of;
+    using detail::all_of_v;
 
-    static_assert(not all_of<true, true, false>::value,
-                  "all_of<true, true, false> failed");
-    static_assert(not all_of<false, true, true, false>::value,
-                  "all_of<false, true, true, false> failed");
-    static_assert(all_of<true, true, true>::value,
-                  "all_of<true, true, true> failed");
-    static_assert(all_of<true>::value, "all_of<true> failed");
-    static_assert(not all_of<false>::value, "all_of<false> failed");
-    static_assert(all_of<>::value, "all_of<> failed");
+    static_assert(not all_of_v<true, true, false>,
+                  "all_of_v<true, true, false> failed");
+    static_assert(not all_of_v<false, true, true, false>,
+                  "all_of_v<false, true, true, false> failed");
+    static_assert(all_of_v<true, true, true>,
+                  "all_of_v<true, true, true> failed");
+    static_assert(all_of_v<true>, "all_of_v<true> failed");
+    static_assert(not all_of_v<false>, "all_of_v<false> failed");
+    static_assert(all_of_v<>, "all_of_v<> failed");
   }
 
   BOOST_AUTO_TEST_CASE(any_of_test)
   {
-    using detail::any_of;
+    using detail::any_of_v;
 
-    static_assert(any_of<true, true, false>::value,
-                  "any_of<true, true, false> failed");
-    static_assert(any_of<false, true, true, false>::value,
-                  "any_of<false, true, true, false> failed");
-    static_assert(any_of<true, true, true>::value,
-                  "any_of<true, true, true> failed");
-    static_assert(not any_of<false, false>::value,
-                  "any_of<false, false> failed");
-    static_assert(any_of<true>::value, "any_of<true> failed");
-    static_assert(not any_of<false>::value, "any_of<false> failed");
-    static_assert(not any_of<>::value, "any_of<> failed");
+    static_assert(any_of_v<true, true, false>,
+                  "any_of_v<true, true, false> failed");
+    static_assert(any_of_v<false, true, true, false>,
+                  "any_of_v<false, true, true, false> failed");
+    static_assert(any_of_v<true, true, true>,
+                  "any_of_v<true, true, true> failed");
+    static_assert(not any_of_v<false, false>, "any_of_v<false, false> failed");
+    static_assert(any_of_v<true>, "any_of_v<true> failed");
+    static_assert(not any_of_v<false>, "any_of_v<false> failed");
+    static_assert(not any_of_v<>, "any_of_v<> failed");
   }
 
   BOOST_AUTO_TEST_CASE(abort_list_test)

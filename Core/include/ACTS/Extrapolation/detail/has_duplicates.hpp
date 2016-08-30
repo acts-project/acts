@@ -30,6 +30,9 @@ namespace detail {
   {
     static constexpr bool value = true;
   };
+
+  template <typename... Args>
+  constexpr bool has_duplicates_v = has_duplicates<Args...>::value;
 }  // namespace detail
 
 }  // namespace Acts

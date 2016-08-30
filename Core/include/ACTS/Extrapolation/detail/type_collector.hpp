@@ -100,9 +100,13 @@ namespace detail {
   template <typename extractor, typename... traits>
   struct type_collector
   {
-    typedef typename type_collector_impl<bm::set<>, extractor, traits...>::type found;
-    typedef typename boost_set_merger<found, bm::set<>>::type type;
+    typedef typename type_collector_impl<bm::set<>, extractor, traits...>::type
+        found;
+    typedef boost_set_merger_t<found, bm::set<>> type;
   };
+
+  template <typename extractor, typename... traits>
+  using type_collector_t = typename type_collector<extractor, traits...>::type;
 }  // namespace detail
 
 }  // namespace Acts

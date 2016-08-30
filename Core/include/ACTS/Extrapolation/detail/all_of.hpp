@@ -16,6 +16,9 @@ namespace detail {
 
   template <bool... others>
   struct all_of<true, others...> : public all_of<others...> {};
+
+  template<bool... values>
+  constexpr bool all_of_v = all_of<values...>::value;
   // clang-format on
 }  // namespace detail
 

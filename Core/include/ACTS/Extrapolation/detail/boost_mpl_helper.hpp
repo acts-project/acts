@@ -53,6 +53,9 @@ namespace detail {
     typedef typename tuple2boost_set<flatten>::type type;
   };
 
+  template <typename s, typename v>
+  using boost_set_merger_t = typename boost_set_merger<s, v>::type;
+
   template <template <typename...> class R, typename S>
   struct unpack_boost_set_as_tparams
   {
@@ -65,6 +68,10 @@ namespace detail {
   {
     typedef R<args...> type;
   };
+
+  template <template <typename...> class R, typename S>
+  using unpack_boost_set_as_tparams_t =
+      typename unpack_boost_set_as_tparams<R, S>::type;
 
 }  // namespace detail
 
