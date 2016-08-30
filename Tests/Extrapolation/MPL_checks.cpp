@@ -3,6 +3,7 @@
 #define BOOST_TEST_MODULE ParameterSet Tests
 #include <ACTS/Extrapolation/AbortList.hpp>
 #include <ACTS/Extrapolation/detail/boost_mpl_helper.hpp>
+#include <ACTS/Extrapolation/detail/has_duplicates.hpp>
 #include <boost/mpl/equal.hpp>
 #include <boost/mpl/set.hpp>
 #include <boost/mpl/vector.hpp>
@@ -88,6 +89,21 @@ namespace Test {
                   "collecting result types failed");
     static_assert(std::is_same<found_observers, expected_observers>::value,
                   "collecting observer types failed");
+  }
+
+  BOOST_AUTO_TEST_CASE(has_duplicates_test)
+  {
+    using detail::has_duplicates;
+    static_assert(has_duplicates<int, float, char, int>::value,
+                  "has_duplicates failed");
+    static_assert(has_duplicates<int, int, char, float>::value,
+                  "has_duplicates failed");
+    static_assert(has_duplicates<int, char, float, float>::value,
+                  "has_duplicates failed");
+    static_assert(has_duplicates<int, char, char, float>::value,
+                  "has_duplicates failed");
+    static_assert(not has_duplicates<int, bool, char, float>::value,
+                  "has_duplicates failed");
   }
 
   BOOST_AUTO_TEST_CASE(abort_list_test)
