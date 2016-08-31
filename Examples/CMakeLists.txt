@@ -11,6 +11,11 @@ add_executable (ACTSGenericDetector bin/main.cpp)
 target_include_directories (ACTSGenericDetector PRIVATE include/)
 target_link_libraries (ACTSGenericDetector PRIVATE ACTSCore ACTSExamples)
 
+add_executable (PropagatorExample bin/PropagatorExample.cpp)
+target_compile_options (PropagatorExample PRIVATE -g)
+target_link_libraries (PropagatorExample PRIVATE ACTSCore)
+target_link_libraries (PropagatorExample PRIVATE gsl gslcblas)
+
 # set installation directories
 install (TARGETS ACTSExamples
          EXPORT ACTSExamplesTargets
