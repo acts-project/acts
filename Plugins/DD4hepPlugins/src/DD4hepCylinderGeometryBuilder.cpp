@@ -22,10 +22,13 @@
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
 #include "ACTS/Utilities/BinnedArrayXD.hpp"
+#include "ACTS/Utilities/Units.hpp"
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
 #include "ACTS/Volumes/Volume.hpp"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
+
+using namespace Acts::units;
 
 Acts::DD4hepCylinderGeometryBuilder::DD4hepCylinderGeometryBuilder(
     const Config            dgbConfig,
@@ -129,7 +132,7 @@ Acts::DD4hepCylinderGeometryBuilder::convertTransform(
       Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
       Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
       Acts::Vector3D(
-          translation[0] * cm, translation[1] * cm, translation[2] * cm));
+          translation[0] * _cm, translation[1] * _cm, translation[2] * _cm));
   return (transform);
 }
 
@@ -141,9 +144,9 @@ Acts::DD4hepCylinderGeometryBuilder::extractVolumeBounds(
   TGeoConeSeg* tube     = dynamic_cast<TGeoConeSeg*>(geoShape);
   if (!tube) ACTS_ERROR("Volume has wrong shape - needs to be TGeoConeSeg!");
   // get the dimension of TGeo and convert lengths
-  double rMin  = tube->GetRmin1() * cm;
-  double rMax  = tube->GetRmax1() * cm;
-  double halfZ = tube->GetDz() * cm;
+  double rMin  = tube->GetRmin1() * _cm;
+  double rMax  = tube->GetRmax1() * _cm;
+  double halfZ = tube->GetDz() * _cm;
   ACTS_DEBUG(
       "[V] Extracting cylindrical volume bounds ( rmin / rmax / halfZ )=  ( "
       << rMin
@@ -266,9 +269,9 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
         ACTS_ERROR(
             "[L] Cylinder layer has wrong shape - needs to be TGeoConeSeg!");
       // extract the boundaries
-      double rMin           = tube->GetRmin1() * cm;
-      double rMax           = tube->GetRmax1() * cm;
-      double halfZ          = tube->GetDz() * cm;
+      double rMin           = tube->GetRmin1() * _cm;
+      double rMax           = tube->GetRmax1() * _cm;
+      double halfZ          = tube->GetDz() * _cm;
       auto   cylinderBounds = std::make_shared<const Acts::CylinderBounds>(
           0.5 * (rMin + rMax), halfZ);
       double thickness = fabs(rMin - rMax);
@@ -426,9 +429,9 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
       if (!disc)
         throw "Cylinder layer has wrong shape - needs to be TGeoConeSeg!";
       // extract the boundaries
-      double rMin      = disc->GetRmin1() * cm;
-      double rMax      = disc->GetRmax1() * cm;
-      double thickness = 2. * disc->GetDz() * cm;
+      double rMin      = disc->GetRmin1() * _cm;
+      double rMax      = disc->GetRmax1() * _cm;
+      double thickness = 2. * disc->GetDz() * _cm;
       auto discBounds  = std::make_shared<const Acts::RadialBounds>(rMin, rMax);
 
       ACTS_DEBUG(
@@ -588,7 +591,7 @@ Acts::DD4hepCylinderGeometryBuilder::createSurfaceArray(
       ACTS_ERROR("[S] Detector element is not declared sensitive, can not "
                  "access segmentation");
     Acts::DD4hepDetElement* dd4hepDetElement = new Acts::DD4hepDetElement(
-        detElement, segmentation, motherTransform, axes, cm);
+        detElement, segmentation, motherTransform, axes, _cm);
     // add surface to surface vector
     surfaces.push_back(&(dd4hepDetElement->surface()));
   }
