@@ -1,0 +1,4 @@
+add_executable (unit_conversion_tests unit_conversion.cpp)
+target_link_libraries (unit_conversion_tests PRIVATE ACTSCore)
+add_test(NAME unit_conversion_tests COMMAND unit_conversion_tests)
+
