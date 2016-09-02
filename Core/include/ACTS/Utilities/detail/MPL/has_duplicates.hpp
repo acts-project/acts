@@ -8,6 +8,12 @@ namespace detail {
   template <typename... Args>
   struct has_duplicates;
 
+  template <>
+  struct has_duplicates<>
+  {
+    static constexpr bool value = false;
+  };
+
   template <typename last>
   struct has_duplicates<last>
   {

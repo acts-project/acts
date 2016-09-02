@@ -72,6 +72,12 @@ namespace detail {
     template <typename sequence, typename ex, typename... traits>
     struct type_collector_impl;
 
+    template <typename sequence, typename ex>
+    struct type_collector_impl<sequence, ex>
+    {
+      typedef sequence type;
+    };
+
     template <typename sequence,
               typename ex,
               typename first,
