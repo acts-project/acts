@@ -140,36 +140,37 @@ namespace Test {
     static_assert(not any_of_v<>, "any_of_v<> failed");
   }
 
-  BOOST_AUTO_TEST_CASE(abort_list_test)
-  {
-    typedef AbortList<variadic_struct,
-                      DestinationSurface,
-                      MaxMaterial,
-                      MaxPathLength>
-                                      AList;
-    typedef AList::result_type        found_result_type;
-    typedef AList::observer_list_type found_observer_list_type;
-    typedef variadic_struct<MaxMaterial::result_type,
-                            MaxPathLength::result_type>
-        expected_result_type;
-
-    static_assert(std::is_same<found_result_type, expected_result_type>::value,
-                  "creating abort condition list failed");
-
-    static_assert(std::is_base_of<DestinationSurface, AList>::value, "");
-    static_assert(std::is_base_of<MaxMaterial, AList>::value, "");
-    static_assert(std::is_base_of<MaxPathLength, AList>::value, "");
-
-    AList al;
-    al.maxMaterial   = 3;
-    al.maxPathLength = 17.8;
-
-    AList c = al;
-    std::cout << c.maxMaterial << std::endl;
-    std::cout << c.maxPathLength << std::endl;
-    std::cout << sizeof(c) << std::endl;
-    std::cout << sizeof(double) << std::endl;
-  }
+  //  BOOST_AUTO_TEST_CASE(abort_list_test)
+  //  {
+  //    typedef AbortList<variadic_struct,
+  //                      DestinationSurface,
+  //                      MaxMaterial,
+  //                      MaxPathLength>
+  //                                      AList;
+  //    typedef AList::result_type        found_result_type;
+  //    typedef AList::observer_list_type found_observer_list_type;
+  //    typedef variadic_struct<MaxMaterial::result_type,
+  //                            MaxPathLength::result_type>
+  //        expected_result_type;
+  //
+  //    static_assert(std::is_same<found_result_type,
+  //    expected_result_type>::value,
+  //                  "creating abort condition list failed");
+  //
+  //    static_assert(std::is_base_of<DestinationSurface, AList>::value, "");
+  //    static_assert(std::is_base_of<MaxMaterial, AList>::value, "");
+  //    static_assert(std::is_base_of<MaxPathLength, AList>::value, "");
+  //
+  //    AList al;
+  //    al.maxMaterial   = 3;
+  //    al.maxPathLength = 17.8;
+  //
+  //    AList c = al;
+  //    std::cout << c.maxMaterial << std::endl;
+  //    std::cout << c.maxPathLength << std::endl;
+  //    std::cout << sizeof(c) << std::endl;
+  //    std::cout << sizeof(double) << std::endl;
+  //  }
 }  // namespace Test
 
 }  // namespace Acts
