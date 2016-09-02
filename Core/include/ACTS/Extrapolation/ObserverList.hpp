@@ -23,6 +23,7 @@ namespace {
             typename result,
             typename = decltype(std::declval<T>().
                                 operator()(std::declval<const input&>(),
+                                           std::declval<const input&>(),
                                            std::declval<result&>()))>
   std::true_type
   test_with_result(int);
@@ -33,7 +34,8 @@ namespace {
   template <typename T,
             typename input,
             typename = decltype(std::declval<T>().
-                                operator()(std::declval<const input&>()))>
+                                operator()(std::declval<const input&>(),
+                                           std::declval<const input&>()))>
   std::true_type
   test_without_result(int);
 
@@ -66,9 +68,14 @@ namespace {
   {
     template <typename observer, typename result, typename input>
     static void
-    observe(const observer& obs, const input& in, result& r)
+    observe(const observer& obs,
+            const input&    current,
+            const input&    previous,
+            result&         r)
     {
-      obs(in, std::get<typename result_type_extractor::type<observer>>(r));
+      obs(current,
+          previous,
+          std::get<typename result_type_extractor::type<observer>>(r));
     }
   };
 
@@ -77,9 +84,12 @@ namespace {
   {
     template <typename observer, typename result, typename input>
     static void
-    observe(const observer& obs, const input& in, result& r)
+    observe(const observer& obs,
+            const input&    current,
+            const input&    previous,
+            result&)
     {
-      obs(in);
+      obs(current, previous);
     }
   };
 
@@ -91,12 +101,15 @@ namespace {
   {
     template <typename T, typename result, typename input>
     static void
-    observe(const T& obs_tuple, const input& in, result& r)
+    observe(const T&     obs_tuple,
+            const input& current,
+            const input& previous,
+            result&      r)
     {
       const auto& this_observer = std::get<first>(obs_tuple);
       ObserverCaller<result_type_extractor::has_type<first>::value>::observe(
-          this_observer, in, r);
-      ObserverListImpl<others...>::observe(obs_tuple, in, r);
+          this_observer, current, previous, r);
+      ObserverListImpl<others...>::observe(obs_tuple, current, previous, r);
     }
   };
 
@@ -105,11 +118,14 @@ namespace {
   {
     template <typename T, typename result, typename input>
     static void
-    observe(const T& obs_tuple, const input& in, result& r)
+    observe(const T&     obs_tuple,
+            const input& current,
+            const input& previous,
+            result&      r)
     {
       const auto& this_observer = std::get<last>(obs_tuple);
       ObserverCaller<result_type_extractor::has_type<last>::value>::observe(
-          this_observer, in, r);
+          this_observer, current, previous, r);
     }
   };
 
@@ -118,7 +134,7 @@ namespace {
   {
     template <typename T, typename result, typename input>
     static void
-    observe(const T& obs_tuple, const input& in, result& r)
+    observe(const T&, const input&, result&)
     {
     }
   };
@@ -153,9 +169,10 @@ public:
   }
 
   void
-  operator()(const input& in, result_type& result) const
+  operator()(const input& current, const input& previous, result_type& result) const
   {
-    ObserverListImpl<observers...>::observe(m_tObservers, in, result);
+    ObserverListImpl<observers...>::observe(
+        m_tObservers, current, previous, result);
   }
 
 private:

@@ -107,10 +107,12 @@ public:
   {
     Result<TrackParameters> r = {start, Status::pINPROGRESS};
 
+    TrackParameters previous    = start;
     TrackParameters current = start;
     for (unsigned int i = 0; i < 1000; ++i) {
-      current = m_impl.doStep(current, 1 * units::_cm);
-      obsList(current, r);
+      current = m_impl.doStep(previous, 1 * units::_cm);
+      obsList(current, previous, r);
+      previous = current;
     }
 
     r.endParameters = current;
