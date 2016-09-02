@@ -19,6 +19,24 @@ struct DebugObserver
   }
 };
 
+struct PathLengthObserver
+{
+  typedef struct
+  {
+    double pathLength = 0.;
+  } result_type;
+
+  template <typename TrackParameters>
+  void
+  operator()(const TrackParameters& current,
+             const TrackParameters& previous,
+             result_type&           r) const
+  {
+    const auto& step = current.position() - previous.position();
+    r.pathLength += step.norm();
+  }
+};
+
 }  // namespace Acts
 
 #endif  //  ACTS_OBSERVERS_HPP
