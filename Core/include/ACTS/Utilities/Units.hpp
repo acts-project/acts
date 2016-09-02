@@ -17,23 +17,26 @@ namespace Acts {
 /// calculations, one should make use of the constants defined in this
 /// namespace to express the units of numerical values. The following
 /// conventions are used:
-/// - input values to ACTS must be given as `numerical_value * unit_constant`
-/// - output values can be converted into the desired unit using
-///   `numerical_value / unit_constant`
+/// - Input values to ACTS must be given as `numerical_value * unit_constant`.
+/// - Output values can be converted into the desired unit using
+///   `numerical_value / unit_constant`.
+/// - Converting between SI and natural units should be done using the template
+///   functions `SI2Nat(const double)` and `Nat2SI(const double)`.
 ///
 /// Examples:
 /// @code
+/// #include "ACTS/include/Utilities/Units.hpp"
 /// using namespace Acts::units;
 /// // specify input variables
 /// double momentum = 2.5 * _GeV;
-/// double width = 23 * _cm;
+/// double width    = 23 * _cm;
 /// double velocity = 345 * _m/_s;
-/// double density = 1.2 * _kg/(_m*_m*_m);
-/// double bfield = 2 * _T;
+/// double density  = 1.2 * _kg/(_m*_m*_m);
+/// double bfield   = 2 * _T;
 ///
 /// // convert output values
-/// double x_position = trackPars.position().x() / _mm;
-/// double pt         = trackPars.momentum().pT() / _TeV;
+/// double x_in_mm   = trackPars.position().x() / _mm;
+/// double pt_in_TeV = trackPars.momentum().pT() / _TeV;
 /// @endcode
 namespace units {
 
@@ -97,7 +100,6 @@ namespace units {
 #else
   const double _C   = 1. / 1.60217733e-19;
 #endif  // DOXYGEN
-  /// elementary electric charge
   const double _e = 1.60217733e-19 * _C;
   /// @}
 
@@ -110,8 +112,12 @@ namespace units {
 
   /// @name fundamental physical constants in SI units
   /// @{
-  const double _c         = 2.99792458e8 * _m / _s;
-  const double _hbar      = 1.05457266e-34 * _J * _s;
+
+  /// speed of light in vacuum
+  const double _c = 2.99792458e8 * _m / _s;
+  /// reduced Planck constant
+  const double _hbar = 1.05457266e-34 * _J * _s;
+  /// value of elementary charge in Coulomb
   const double _el_charge = _e / _C;
   /// @}
 
@@ -127,12 +133,10 @@ namespace units {
   }
   /// @endcond
 
-  /// @brief physical quantities
-  ///
-  /// These constants can be used to select the correct conversion function
-  /// from SI units to natural units and vice versa.
+  /// @brief physical quantities for selecting right conversion function
   enum Quantity { MOMENTUM, ENERGY, LENGTH, MASS };
 
+  /// @cond
   template <Quantity>
   double
   SI2Nat(const double);
@@ -140,7 +144,21 @@ namespace units {
   template <Quantity>
   double
   Nat2SI(const double);
+  /// @endcond
 
+  /// @brief convert energy from SI to natural units
+  ///
+  /// This function converts the given energy value from SI units to natural
+  /// units. Example:
+  /// @code
+  /// #include "ACTS/include/Utilities/Units.hpp"
+  /// using namespace Acts::units;
+  ///
+  /// double E_in_TeV = SI2Nat<ENERGY>(2.3 * _J) / _TeV;
+  /// @endcode
+  ///
+  /// @param[in] E numeric value of energy in SI units
+  /// @result numeric value of energy in natural units
   template <>
   double
   SI2Nat<ENERGY>(const double E)
@@ -149,6 +167,19 @@ namespace units {
     return E * conversion;
   }
 
+  /// @brief convert energy from natural to SI units
+  ///
+  /// This function converts the given energy value from natural units to SI
+  /// units. Example:
+  /// @code
+  /// #include "ACTS/include/Utilities/Units.hpp"
+  /// using namespace Acts::units;
+  ///
+  /// double E_in_Joule = Nat2SI<ENERGY>(2.3 * _TeV) / _J;
+  /// @endcode
+  ///
+  /// @param[in] E numeric value of energy in natural units
+  /// @result numeric value of energy in SI units
   template <>
   double
   Nat2SI<ENERGY>(const double E)
@@ -157,6 +188,19 @@ namespace units {
     return E * conversion;
   }
 
+  /// @brief convert length from SI to natural units
+  ///
+  /// This function converts the given length value from SI units to natural
+  /// units. Example:
+  /// @code
+  /// #include "ACTS/include/Utilities/Units.hpp"
+  /// using namespace Acts::units;
+  ///
+  /// double l_per_MeV = SI2Nat<LENGTH>(3 * _um) * _MeV;
+  /// @endcode
+  ///
+  /// @param[in] l numeric value of length in SI units
+  /// @result numeric value of length in natural units
   template <>
   double
   SI2Nat<LENGTH>(const double l)
@@ -165,6 +209,19 @@ namespace units {
     return l * conversion;
   }
 
+  /// @brief convert length from natural to SI units
+  ///
+  /// This function converts the given length value from natural units to SI
+  /// units. Example:
+  /// @code
+  /// #include "ACTS/include/Utilities/Units.hpp"
+  /// using namespace Acts::units;
+  ///
+  /// double l_in_m = Nat2SI<LENGTH>(1. / (2 * _TeV)) / _m;
+  /// @endcode
+  ///
+  /// @param[in] l numeric value of length in natural units
+  /// @result numeric value of length in SI units
   template <>
   double
   Nat2SI<LENGTH>(const double l)
@@ -173,6 +230,19 @@ namespace units {
     return l * conversion;
   }
 
+  /// @brief convert momentum from SI to natural units
+  ///
+  /// This function converts the given momentum value from SI units to natural
+  /// units. Example:
+  /// @code
+  /// #include "ACTS/include/Utilities/Units.hpp"
+  /// using namespace Acts::units;
+  ///
+  /// double p_in_GeV = SI2Nat<MOMENTUM>(2 * _N * _s) / _GeV;
+  /// @endcode
+  ///
+  /// @param[in] p numeric value of momentum in SI units
+  /// @result numeric value of momentum in natural units
   template <>
   double
   SI2Nat<MOMENTUM>(const double p)
@@ -182,6 +252,19 @@ namespace units {
     return p * conversion;
   }
 
+  /// @brief convert momentum from natural to SI units
+  ///
+  /// This function converts the given momentum value from natural units to SI
+  /// units. Example:
+  /// @code
+  /// #include "ACTS/include/Utilities/Units.hpp"
+  /// using namespace Acts::units;
+  ///
+  /// double p_in_Ns = Nat2SI<MOMENTUM>(132 * _GeV) / (_N * _s);
+  /// @endcode
+  ///
+  /// @param[in] p numeric value of momentum in natural units
+  /// @result numeric value of momentum in SI units
   template <>
   double
   Nat2SI<MOMENTUM>(const double p)
@@ -191,6 +274,19 @@ namespace units {
     return p * conversion;
   }
 
+  /// @brief convert mass from SI to natural units
+  ///
+  /// This function converts the given mass value from SI units to natural
+  /// units. Example:
+  /// @code
+  /// #include "ACTS/include/Utilities/Units.hpp"
+  /// using namespace Acts::units;
+  ///
+  /// double m_in_keV = SI2Nat<MASS>(2 * _g) / _keV;
+  /// @endcode
+  ///
+  /// @param[in] m numeric value of mass in SI units
+  /// @result numeric value of mass in natural units
   template <>
   double
   SI2Nat<MASS>(const double m)
@@ -200,6 +296,19 @@ namespace units {
     return m * conversion;
   }
 
+  /// @brief convert mass from natural to SI units
+  ///
+  /// This function converts the given mass value from natural units to SI
+  /// units. Example:
+  /// @code
+  /// #include "ACTS/include/Utilities/Units.hpp"
+  /// using namespace Acts::units;
+  ///
+  /// double higgs_in_kg= Nat2SI<MASS>(125 * _GeV) / _kg;
+  /// @endcode
+  ///
+  /// @param[in] m numeric value of mass in natural units
+  /// @result numeric value of mass in SI units
   template <>
   double
   Nat2SI<MASS>(const double m)
