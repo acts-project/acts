@@ -9,10 +9,9 @@
 #ifndef ACTS_EXTRAPOLATION_PROPAGATOR_H
 #define ACTS_EXTRAPOLATION_PROPAGATOR_H 1
 
-#include <functional>
 #include <type_traits>
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
+#include "ACTS/Extrapolation/ObserverList.hpp"
+#include "ACTS/Utilities/Units.hpp"
 
 namespace Acts {
 
@@ -79,27 +78,40 @@ public:
 
   enum struct Status { pSUCCESS, pFAILURE, pUNSET, pINPROGRESS };
 
-  // template <typename... ExResult>
-  template <typename TrackParameters>
+  template <typename TrackParameters, typename... ExResult>
   struct Result  //: public ExResult...
   {
     TrackParameters endParameters;
     Status          status = Status::pUNSET;
   };
 
-  struct Options
+private:
+  template <typename TrackParameters, typename... observers>
+  struct observer_list_type_helper
   {
+    template <typename... args>
+    using result_type = Result<TrackParameters, args...>;
+
+    typedef ObserverList<result_type, TrackParameters, observers...> type;
   };
 
+public:
+  template <typename TrackParameters, typename... observers>
+  using observer_list_t =
+      typename observer_list_type_helper<TrackParameters, observers...>::type;
+
   /// @brief propagate track parameters
-  template <typename TrackParameters>
+  template <typename TrackParameters, typename ObserverList>
   Result<TrackParameters>
-  propagate(const TrackParameters& start)
+  propagate(const TrackParameters& start, const ObserverList& obsList)
   {
     Result<TrackParameters> r = {start, Status::pINPROGRESS};
 
     TrackParameters current = start;
-    for (unsigned int i = 0; i < 100; ++i) current = m_impl.doStep(current, 1);
+    for (unsigned int i = 0; i < 1000; ++i) {
+      current = m_impl.doStep(current, 1 * units::_cm);
+      obsList(current, r);
+    }
 
     r.endParameters = current;
     r.status        = Status::pSUCCESS;
