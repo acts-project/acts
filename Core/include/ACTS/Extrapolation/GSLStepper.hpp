@@ -5,7 +5,7 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_odeiv2.h>
 #include <memory>
-#include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Units.hpp"
 
 namespace Acts {
 
@@ -20,7 +20,7 @@ public:
     , m_GSL_driver(nullptr)
   {
     m_GSL_driver.reset(gsl_odeiv2_driver_alloc_y_new(
-        &m_ODE_system, gsl_odeiv2_step_rkck, 1e-9, 1e-6, 0.0));
+        &m_ODE_system, gsl_odeiv2_step_rkck, 0.1 * units::_cm, 1e-6, 0.0));
     gsl_odeiv2_driver_set_nmax(m_GSL_driver.get(), 1);
   }
 
@@ -36,7 +36,7 @@ public:
 
   template <typename TrackParameters>
   TrackParameters
-  doStep(const TrackParameters& in, double stepMax = 1 * cm)
+  doStep(const TrackParameters& in, double stepMax = 1 * units::_cm)
   {
     Vector3D pos    = in.position();
     Vector3D mom    = in.momentum();
@@ -47,8 +47,10 @@ public:
 
     // set B-Field and q/p
     m_bField(input, m_params.data());
-    m_params[3] = charge / p;
+    // conversion to SI units: p --> (p/c)/J / (kg * m^2 / s^2)
+    m_params[3] = charge / units::Nat2SI<units::MOMENTUM>(p);
 
+    gsl_odeiv2_driver_set_hmax(m_GSL_driver.get(), stepMax);
     performStep(input, stepMax);
 
     return CurvilinearParameters(nullptr,
