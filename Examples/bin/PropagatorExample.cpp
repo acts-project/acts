@@ -25,9 +25,15 @@ main()
   Vector3D              mom(1 * units::_GeV, 0, 0);
   CurvilinearParameters pars(nullptr, pos, mom, +1);
 
-  typedef Propagator_t::observer_list_t<CurvilinearParameters, DebugObserver>
+  typedef Propagator_t::observer_list_t<CurvilinearParameters,
+                                        DebugObserver,
+                                        PathLengthObserver>
        ObsList_t;
   auto r = propagator.propagate(pars, ObsList_t());
+
+  std::cout << "total path length = "
+            << r.get<PathLengthObserver::result_type>().pathLength / units::_m
+            << std::endl;
 
   return 0;
 }

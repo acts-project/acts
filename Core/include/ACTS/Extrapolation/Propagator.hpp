@@ -79,10 +79,33 @@ public:
   enum struct Status { pSUCCESS, pFAILURE, pUNSET, pINPROGRESS };
 
   template <typename TrackParameters, typename... ExResult>
-  struct Result  //: public ExResult...
+  struct Result
   {
+    Result(const TrackParameters& startParameters,
+           const Status&          s = Status::pUNSET)
+      : endParameters(startParameters), status(s), m_tResults()
+    {
+    }
+
     TrackParameters endParameters;
     Status          status = Status::pUNSET;
+
+    template <typename R>
+    const R&
+    get() const
+    {
+      return std::get<R>(m_tResults);
+    }
+
+    template <typename R>
+    R&
+    get()
+    {
+      return std::get<R>(m_tResults);
+    }
+
+  private:
+    std::tuple<ExResult...> m_tResults;
   };
 
 private:
@@ -102,13 +125,13 @@ public:
 
   /// @brief propagate track parameters
   template <typename TrackParameters, typename ObserverList>
-  Result<TrackParameters>
+  typename ObserverList::result_type
   propagate(const TrackParameters& start, const ObserverList& obsList)
   {
-    Result<TrackParameters> r = {start, Status::pINPROGRESS};
+    typename ObserverList::result_type r(start, Status::pINPROGRESS);
 
-    TrackParameters previous    = start;
-    TrackParameters current = start;
+    TrackParameters previous = start;
+    TrackParameters current  = start;
     for (unsigned int i = 0; i < 1000; ++i) {
       current = m_impl.doStep(previous, 1 * units::_cm);
       obsList(current, previous, r);

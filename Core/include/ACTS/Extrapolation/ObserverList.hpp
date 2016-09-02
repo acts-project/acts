@@ -75,7 +75,7 @@ namespace {
     {
       obs(current,
           previous,
-          std::get<typename result_type_extractor::type<observer>>(r));
+          r.template get<typename result_type_extractor::type<observer>>());
     }
   };
 
@@ -169,7 +169,9 @@ public:
   }
 
   void
-  operator()(const input& current, const input& previous, result_type& result) const
+  operator()(const input& current,
+             const input& previous,
+             result_type& result) const
   {
     ObserverListImpl<observers...>::observe(
         m_tObservers, current, previous, result);
