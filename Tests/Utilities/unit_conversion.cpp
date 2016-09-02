@@ -74,6 +74,8 @@ BOOST_AUTO_TEST_CASE(si_nat_conversions, *utf::tolerance(1e-8))
   BOOST_TEST(SI2Nat<MASS>(Nat2SI<MASS>(1.77 * _GeV)) == 1770 * _MeV);
 
   BOOST_TEST(SI2Nat<ENERGY>(_hbar * _c) == 0.197327052356 * _fm * _GeV);
+
+  BOOST_TEST(Nat2SI<MOMENTUM>(_GeV) / (_el_charge * _C * 2 * _T) == 10./6. * _m, tt::tolerance(1e-3));
 }
 // clang-format on
 
