@@ -10,6 +10,7 @@ if (BUILD_TESTS)
       # delegate
       add_subdirectory (EventData)
       add_subdirectory (Fitter)
+      add_subdirectory (Seeding)
       add_subdirectory (Utilities)
    else (Boost_FOUND)
       message (STATUS "${Red}Boost not found -> disable ACTS unit tests${ColorReset}")
