@@ -218,8 +218,8 @@ ConeSurface::normal(const Vector2D& lp) const
   Vector3D localNormal(cos(phi) * bounds().cosAlpha(),
                        sin(phi) * bounds().cosAlpha(),
                        sgn * bounds().sinAlpha());
-  return m_transform ? std::move(Vector3D(transform().linear() * localNormal))
-                     : std::move(localNormal);
+  return m_transform ? Vector3D(transform().linear() * localNormal)
+                     : localNormal;
 }
 
 inline const Vector3D
@@ -232,7 +232,7 @@ ConeSurface::normal(const Vector3D& gpos) const
     pos3D     = transform().inverse() * gpos;
     pos3D.z() = 0;
   }
-  return std::move(pos3D.unit());
+  return pos3D.unit();
 }
 
 inline const ConeBounds&

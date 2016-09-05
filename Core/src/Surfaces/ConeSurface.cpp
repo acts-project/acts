@@ -123,10 +123,10 @@ Acts::ConeSurface::globalToLocal(const Vector3D& gpos,
                                  const Vector3D&,
                                  Vector2D& lpos) const
 {
-  Acts::Vector3D loc3Dframe
+  Vector3D loc3Dframe
       = m_transform ? (transform().inverse() * gpos) : gpos;
   double r = loc3Dframe.z() * bounds().tanAlpha();
-  lpos     = Acts::Vector2D(r * atan2(loc3Dframe.y(), loc3Dframe.x()),
+  lpos     = Vector2D(r * atan2(loc3Dframe.y(), loc3Dframe.x()),
                         loc3Dframe.z());
   // now decide on the quility of the transformation
   double inttol = r * 0.0001;
@@ -194,7 +194,7 @@ Acts::ConeSurface::intersectionEstimate(const Vector3D&      gpos,
   if (m_transform) solution = transform() * solution;
 
   isValid = bchk ? (isValid && isOnSurface(solution, bchk)) : isValid;
-  return std::move(Intersection(solution, path, isValid));
+  return Intersection(solution, path, isValid);
 }
 
 double

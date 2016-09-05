@@ -358,7 +358,7 @@ Surface::center() const
 {
   // fast access via tranform matrix (and not translation())
   auto tMatrix = transform().matrix();
-  return std::move(Vector3D(tMatrix(0,3),tMatrix(1,3),tMatrix(2,3)));
+  return Vector3D(tMatrix(0,3),tMatrix(1,3),tMatrix(2,3));
 }
 
 inline const Vector3D

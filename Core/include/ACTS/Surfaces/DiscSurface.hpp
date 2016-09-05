@@ -241,27 +241,27 @@ DiscSurface::normal(const Vector2D&) const
 {
   // fast access via tranform matrix (and not rotation())
   auto tMatrix = transform().matrix();
-  return std::move(Vector3D(tMatrix(0,2),tMatrix(1,2),tMatrix(2,2)));
+  return Vector3D(tMatrix(0,2),tMatrix(1,2),tMatrix(2,2));
 }
 
 inline const Vector3D DiscSurface::binningPosition(BinningValue) const
 {
-  return std::move(center());
+  return center();
 }
 
 inline const Vector2D
 DiscSurface::localPolarToCartesian(const Vector2D& lpolar) const
 {
-  return std::move(Vector2D(lpolar[Acts::eLOC_R] * cos(lpolar[Acts::eLOC_PHI]),
-                   lpolar[Acts::eLOC_R] * sin(lpolar[Acts::eLOC_PHI])));
+  return Vector2D(lpolar[Acts::eLOC_R] * cos(lpolar[Acts::eLOC_PHI]),
+                  lpolar[Acts::eLOC_R] * sin(lpolar[Acts::eLOC_PHI]));
 }
 
 inline const Vector2D
 DiscSurface::localCartesianToPolar(const Vector2D& lcart) const
 {
-  return std::move((Vector2D(sqrt(lcart[Acts::eLOC_X] * lcart[Acts::eLOC_X]
+  return Vector2D(sqrt(lcart[Acts::eLOC_X] * lcart[Acts::eLOC_X]
                     + lcart[Acts::eLOC_Y] * lcart[Acts::eLOC_Y]),
-                   atan2(lcart[Acts::eLOC_Y], lcart[Acts::eLOC_X]))));
+                   atan2(lcart[Acts::eLOC_Y], lcart[Acts::eLOC_X]));
 }
 
 inline double
@@ -286,9 +286,9 @@ DiscSurface::intersectionEstimate(const Vector3D&      gpos,
     // evaluate (if necessary in terms of boundaries)
     isValid = bchk ? (isValid && isOnSurface(intersectPoint, bchk)) : isValid;
     // return the result
-    return std::move(Intersection(intersectPoint, u, isValid));
+    return Intersection(intersectPoint, u, isValid);
   }
-  return std::move(Intersection(gpos, 0., false));
+  return Intersection(gpos, 0., false);
 }
 
 }  // end of namespace

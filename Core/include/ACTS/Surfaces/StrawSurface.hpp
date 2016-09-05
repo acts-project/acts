@@ -68,8 +68,7 @@ public:
   /// @param htrans is the additional transform applied after copying
   StrawSurface(const StrawSurface& slsf, const Transform3D& htrans)
     : LineSurface(slsf, htrans)
-  {
-  }
+  {}
 
   /// Destructor
   virtual ~StrawSurface();

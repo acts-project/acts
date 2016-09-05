@@ -195,7 +195,7 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
       t1 = (pquad.first - point1.x()) / direction.x();
       t2 = (pquad.second - point1.x()) / direction.x();
     } else  // bail out if no solution exists
-      return std::move(Intersection(gpos, 0., false));
+      return Intersection(gpos, 0., false);
   } else {
     // x value ise th one of point1
     // x^2 + y^2 = R^2
@@ -203,7 +203,7 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
     double x     = point1.x();
     double r2mx2 = R * R - x * x;
     // bail out if no solution
-    if (r2mx2 < 0.) return std::move(Intersection(gpos, 0., false));
+    if (r2mx2 < 0.) return Intersection(gpos, 0., false);
     double y = sqrt(r2mx2);
     // assign parameters and solutions
     t1 = y - point1.y();
@@ -245,6 +245,6 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
 
   // now return
   return needsTransform
-      ? std::move(Intersection(transform() * solution, path, isValid))
-      : std::move(Intersection(solution, path, isValid));
+      ? Intersection(transform() * solution, path, isValid)
+      : Intersection(solution, path, isValid);
 }

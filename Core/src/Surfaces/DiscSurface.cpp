@@ -125,24 +125,24 @@ Acts::DiscSurface::localPolarToLocalCartesian(const Vector2D& locpol) const
         Pos[Acts::eLOC_X] * sin(phi) - Pos[Acts::eLOC_Y] * cos(phi),
         Pos[Acts::eLOC_Y] * sin(phi) + Pos[Acts::eLOC_X] * cos(phi));
 
-    return std::move(Vector2D(locPos[Acts::eLOC_X], locPos[Acts::eLOC_Y]));
+    return Vector2D(locPos[Acts::eLOC_X], locPos[Acts::eLOC_Y]);
   }
-  return std::move(Vector2D(locpol[Acts::eLOC_R] * cos(locpol[Acts::eLOC_PHI]),
-                            locpol[Acts::eLOC_R] * sin(locpol[Acts::eLOC_PHI])));
+  return Vector2D(locpol[Acts::eLOC_R] * cos(locpol[Acts::eLOC_PHI]),
+                  locpol[Acts::eLOC_R] * sin(locpol[Acts::eLOC_PHI]));
 }
 
 const Acts::Vector3D
 Acts::DiscSurface::localCartesianToGlobal(const Vector2D& lpos) const
 {
   Vector3D loc3Dframe(lpos[Acts::eLOC_X], lpos[Acts::eLOC_Y], 0.);
-  return std::move(Vector3D(transform() * loc3Dframe));
+  return Vector3D(transform() * loc3Dframe);
 }
 
 const Acts::Vector2D
 Acts::DiscSurface::globalToLocalCartesian(const Vector3D& gpos, double) const
 {
   Vector3D loc3Dframe = (transform().inverse()) * gpos;
-  return std::move(Vector2D(loc3Dframe.x(), loc3Dframe.y()));
+  return Vector2D(loc3Dframe.x(), loc3Dframe.y());
 }
 
 bool
