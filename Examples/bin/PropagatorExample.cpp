@@ -25,10 +25,7 @@ main()
 
   // first example: simple propagation of a single track
   {
-    typedef Propagator_t::observer_list_t<CurvilinearParameters,
-                                          PathLengthObserver,
-                                          DebugObserver>
-        ObsList_t;
+    typedef ObserverList<PathLengthObserver, DebugObserver> ObsList_t;
 
     std::ofstream out_file("track.txt");
     ObsList_t     ol;
@@ -49,8 +46,7 @@ main()
     std::default_random_engine             e(r());
     std::uniform_real_distribution<double> uniform(0, 1);
 
-    typedef Propagator_t::observer_list_t<CurvilinearParameters, HitSimulator>
-        ObsList_t;
+    typedef ObserverList<HitSimulator> ObsList_t;
 
     ObsList_t     ol;
     HitSimulator& hit_sim = ol.get<HitSimulator>();

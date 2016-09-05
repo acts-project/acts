@@ -109,26 +109,26 @@ public:
   };
 
 private:
-  template <typename TrackParameters, typename... observers>
-  struct observer_list_type_helper
+  template <typename TrackParameters, typename ObserverList>
+  struct result_type_helper
   {
     template <typename... args>
-    using result_type = Result<TrackParameters, args...>;
+    using this_result_type = Result<TrackParameters, args...>;
 
-    typedef ObserverList<result_type, observers...> type;
+    typedef typename ObserverList::template result_type<this_result_type> type;
   };
 
-public:
-  template <typename TrackParameters, typename... observers>
-  using observer_list_t =
-      typename observer_list_type_helper<TrackParameters, observers...>::type;
+  template <typename T, typename ObsList>
+  using obs_list_result_t = typename result_type_helper<T, ObsList>::type;
 
+public:
   /// @brief propagate track parameters
   template <typename TrackParameters, typename ObserverList>
-  typename ObserverList::result_type
+  obs_list_result_t<TrackParameters, ObserverList>
   propagate(const TrackParameters& start, const ObserverList& obsList)
   {
-    typename ObserverList::result_type r(start, Status::pINPROGRESS);
+    typedef obs_list_result_t<TrackParameters, ObserverList> result_t;
+    result_t r(start, Status::pINPROGRESS);
 
     TrackParameters previous = start;
     TrackParameters current  = start;

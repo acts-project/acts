@@ -140,7 +140,7 @@ namespace {
   };
 }
 
-template <template <typename...> class R, typename... observers>
+template <typename... observers>
 struct ObserverList
 {
 private:
@@ -150,7 +150,8 @@ private:
   typedef type_collector_t<result_type_extractor, observers...> results;
 
 public:
-  typedef unpack_boost_set_as_tparams_t<R, results> result_type;
+  template <template <typename...> class R>
+  using result_type = unpack_boost_set_as_tparams_t<R, results>;
 
   template <typename obs>
   const obs&
@@ -166,11 +167,11 @@ public:
     return std::get<obs>(m_tObservers);
   }
 
-  template <typename input>
+  template <typename input, typename result_t>
   void
   operator()(const input& current,
              const input& previous,
-             result_type& result) const
+             result_t&    result) const
   {
     static_assert(all_of_v<observer_traits_checker<observers, input>::value...>,
                   "not all observers support the specified input");
