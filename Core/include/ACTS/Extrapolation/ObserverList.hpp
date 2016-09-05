@@ -140,14 +140,12 @@ namespace {
   };
 }
 
-template <template <typename...> class R, typename input, typename... observers>
+template <template <typename...> class R, typename... observers>
 struct ObserverList
 {
 private:
   static_assert(not has_duplicates_v<observers...>,
-                "same observer type specified many times for ObserverList");
-  static_assert(all_of_v<observer_traits_checker<observers, input>::value...>,
-                "not all observers support the specified input");
+                "same observer type specified several times");
 
   typedef type_collector_t<result_type_extractor, observers...> results;
 
@@ -168,11 +166,15 @@ public:
     return std::get<obs>(m_tObservers);
   }
 
+  template <typename input>
   void
   operator()(const input& current,
              const input& previous,
              result_type& result) const
   {
+    static_assert(all_of_v<observer_traits_checker<observers, input>::value...>,
+                  "not all observers support the specified input");
+
     ObserverListImpl<observers...>::observe(
         m_tObservers, current, previous, result);
   }

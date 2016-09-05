@@ -115,7 +115,7 @@ private:
     template <typename... args>
     using result_type = Result<TrackParameters, args...>;
 
-    typedef ObserverList<result_type, TrackParameters, observers...> type;
+    typedef ObserverList<result_type, observers...> type;
   };
 
 public:
