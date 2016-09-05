@@ -48,32 +48,37 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
                                   size_t                             binsPhi,
                                   size_t binsZ) const
 {
-  // loop over the surfaces and estimate
+  // fist loop over the surfaces and estimate the dimensions
   double minR   = 10e10;
   double maxR   = -10e10;
   double minZ   = 10e10;
   double maxZ   = -10e10;
   double minPhi = 10;
   double maxPhi = -10;
+
+  // 1st LOOP --- ESTIMATION ------ test code for automated detection
   // make a surface loop and get the extends
   for (auto& surface : surfaces)
     moduleExtend(*surface, minR, maxR, minPhi, maxPhi, minZ, maxZ);
 
-  // harmonize the phi boundaries @TODO - allow for sectorally filled arrrays
-  // later
-  double phiStep = (maxPhi - minPhi) / (binsPhi - 1);
-  minPhi -= 0.5 * phiStep;
-  maxPhi += 0.5 * phiStep;
   // remaining layer parameters
   double layerR         = 0.5 * (minR + maxR);
   double layerHalfZ     = maxZ;
   double layerThickness = (maxR - minR) + 2 * envelopeR;
+
+  // harmonize the phi boundaries (1st step)
+  // @TODO - allow for sectorally filled arrrays
+  double phiStep = (maxPhi - minPhi) / (binsPhi - 1);
+  minPhi -= 0.5 * phiStep;
+  maxPhi += 0.5 * phiStep;
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a cylindrical Layer:");
   ACTS_VERBOSE(" - with layer R    = " << layerR);
   ACTS_VERBOSE(" - from R min/max  = " << minR << " / " << maxR);
   ACTS_VERBOSE(" - with z min/max  = " << -layerHalfZ << " / " << layerHalfZ);
+  ACTS_VERBOSE(" - with thickness  = " << (maxR - minR));
+  ACTS_VERBOSE("   and tolerance   = " << envelopeR);
   ACTS_VERBOSE(" - and phi min/max = " << minPhi << " / " << maxPhi);
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << " ordered in ( "
                                        << binsPhi
@@ -122,6 +127,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>& surfaces,
   // make a surface loop and get the extends
   for (auto& surface : surfaces)
     moduleExtend(*surface, minR, maxR, minPhi, maxPhi, minZ, maxZ);
+
   // harmonize the phi boundaries @TODO - allow for sectorally filled arrrays
   // later
   double phiStep = (maxPhi - minPhi) / (binsPhi - 1);
@@ -130,6 +136,19 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>& surfaces,
   // layer parametres
   double layerZ         = 0.5 * (minZ + maxZ);
   double layerThickness = (maxZ - minZ) + 2 * envelopeZ;
+
+  // adjust the layer radius
+  ACTS_VERBOSE("Creating a disk Layer:");
+  ACTS_VERBOSE(" - at Z position   = " << layerZ);
+  ACTS_VERBOSE(" - from R min/max  = " << minR << " / " << maxR);
+  ACTS_VERBOSE(" - with thickness  = " << (maxZ - minZ));
+  ACTS_VERBOSE("   and tolerance   = " << envelopeZ);
+  ACTS_VERBOSE(" - and phi min/max = " << minPhi << " / " << maxPhi);
+  ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << " ordered in ( "
+                                       << binsR
+                                       << " x "
+                                       << binsPhi
+                                       << ")");
 
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray
@@ -181,7 +200,6 @@ Acts::LayerCreator::moduleExtend(const Surface& sf,
   if (element) {
     // get the thickness
     double thickness = element->thickness();
-    ACTS_VERBOSE("Parsing and associated element with thickness " << thickness);
     // check the shape
     const PlanarBounds* pBounds
         = dynamic_cast<const PlanarBounds*>(&(sf.bounds()));
@@ -212,7 +230,7 @@ Acts::LayerCreator::moduleExtend(const Surface& sf,
         }
       }
     } else
-      ACTS_WARNING("Not implemented yet for Non-Planar bounds");
+      ACTS_WARNING("Not implemented yet for Non-planar bounds");
   }
 }
 

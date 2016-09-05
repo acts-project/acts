@@ -33,6 +33,7 @@ public:
   /// Virtual destructor
   virtual ~ISurfaceArrayCreator() {}
   /// SurfaceArrayCreator interface method
+  ///
   /// - create an array in a cylinder, binned in phi, z
   /// @param surfaces are the sensitive surfaces to be ordered on the cylinder
   /// @param R is the radius of the cylinder
@@ -42,6 +43,7 @@ public:
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsX is the number of bin in Z for the surfaces
   /// @param transform is the (optional) additional transform applied
+  ///
   /// @return a unique pointer a new SurfaceArray
   virtual std::unique_ptr<SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
@@ -55,6 +57,7 @@ public:
                          = nullptr) const = 0;
 
   /// SurfaceArrayCreator interface method
+  ///
   /// - create an array on a disc, binned in r, phi
   /// @param surfaces are the sensitive surfaces to be
   /// @param rMin is the minimimal radius of the disc
@@ -63,6 +66,7 @@ public:
   /// @param maxPhi is the maximal phi position of the surfaces
   /// @param rBoundaries are the optional boundaris of the r rings
   /// @param transform is the (optional) additional transform applied
+  ///
   /// @return a unique pointer a new SurfaceArray
   virtual std::unique_ptr<SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
@@ -71,7 +75,7 @@ public:
                      double                             minPhi,
                      double                             maxPhi,
                      size_t                             binsR,
-                     size_t                             binsZ,
+                     size_t                             binsPhi,
                      std::shared_ptr<Transform3D>       transform
                      = nullptr) const = 0;
 

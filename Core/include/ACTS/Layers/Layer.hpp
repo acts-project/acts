@@ -81,6 +81,7 @@ enum LayerType { navigation = -1, passive = 0, active = 1 };
 ///               - does not work with endSurface,
 ///                 will be increased to 2 if endSurface is given
 ///  2     - as 1 but with intersection test @TODO compatibility test
+/// @TODO check for update
 ///  3     - provide bin surface and next bin surfaces (if differ)
 ///               - does not work with endSurface
 ///                 will be increased to 4 if endSurface is given
@@ -386,7 +387,7 @@ protected:
   LayerType m_layerType;
   /// pointer to the approach surface carrying the material
   /// nullptr if no material set
-  const Acts::Surface* m_materialSurface;
+  const Surface* m_materialSurface;
 
 private:
   /// Private helper method to close the geometry

@@ -29,7 +29,7 @@ Acts::RungeKuttaEngine::propagateRungeKuttaT(ExtrapolationCell<T>& eCell,
   // now switch the surface type (defines local parameters)
   Surface::SurfaceType sType = dSurface.type();
 
-  // propaate with different surface types
+  // propagate with different surface types
   if (sType == Surface::Plane || sType == Surface::Disc) {
     // (i) planar surface types
     double s[4], d = sTransform(0, 3) * sTransform(0, 2)

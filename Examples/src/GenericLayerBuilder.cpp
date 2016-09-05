@@ -75,7 +75,7 @@ Acts::GenericLayerBuilder::constructLayers()
       // layer R/Z
       double layerR = m_cfg.centralLayerRadii.at(icl);
       // some screen output
-      ACTS_VERBOSE("Build layer " << icl << " with target radius = " << layerR);
+      ACTS_DEBUG("Build layer " << icl << " with target radius = " << layerR);
 
       // prepare the Surface vector
       std::vector<const Surface*> sVector;
@@ -95,13 +95,13 @@ Acts::GenericLayerBuilder::constructLayers()
       size_t nCetralModules = m_cfg.centralModuleBinningSchema.at(icl).first
           * m_cfg.centralModuleBinningSchema.at(icl).second;
 
-      ACTS_VERBOSE("- number of modules "
-                   << nCetralModules
-                   << " ( from "
-                   << m_cfg.centralModuleBinningSchema.at(icl).first
-                   << " x "
-                   << m_cfg.centralModuleBinningSchema.at(icl).second
-                   << " )");
+      ACTS_DEBUG("- number of modules "
+                 << nCetralModules
+                 << " ( from "
+                 << m_cfg.centralModuleBinningSchema.at(icl).first
+                 << " x "
+                 << m_cfg.centralModuleBinningSchema.at(icl).second
+                 << " )");
 
       sVector.reserve(nCetralModules);
       // create the Module material from input
@@ -257,11 +257,13 @@ Acts::GenericLayerBuilder::constructLayers()
     m_pLayers.reserve(numpnLayers);
     m_nLayers.reserve(numpnLayers);
 
+    /// this is the loop over th elayer positions
     for (size_t ipnl = 0; ipnl < numpnLayers; ++ipnl) {
       // some screen output
-      ACTS_VERBOSE("- build layers " << (2 * ipnl) << " and " << (2 * ipnl) + 1
-                                     << "at +/- z = "
-                                     << m_cfg.posnegLayerPositionsZ.at(ipnl));
+      ACTS_VERBOSE(
+          "- building layers " << ipnl << " and " << numpnLayers + ipnl
+                               << "at +/- z = "
+                               << m_cfg.posnegLayerPositionsZ.at(ipnl));
       /// some preparation work
       // define the layer envelope
       double layerEnvelopeR = m_cfg.posnegLayerEnvelopeR.at(ipnl);
@@ -269,36 +271,39 @@ Acts::GenericLayerBuilder::constructLayers()
       std::vector<const Surface*> nsVector;
       std::vector<const Surface*> psVector;
       // now fill the vectors
+      size_t ipnR = 0;
       for (auto& discModulePositions : m_cfg.posnegModulePositions.at(ipnl)) {
-        size_t ipnR = 0;
+        ACTS_VERBOSE("- building ring " << ipnR << " for this pair.");
+        // now prepare all the shared stuff
+        // (1) module specifications
+        double moduleThickness = m_cfg.posnegModuleThickness.at(ipnl).at(ipnR);
+        double moduleMinHalfX  = m_cfg.posnegModuleMinHalfX.at(ipnl).at(ipnR);
+        double moduleMaxHalfX  = m_cfg.posnegModuleMaxHalfX.size()
+            ? m_cfg.posnegModuleMaxHalfX.at(ipnl).at(ipnR)
+            : 0.;
+        double moduleHalfY = m_cfg.posnegModuleHalfY.at(ipnl).at(ipnR);
+        // (2) module material
+        // create the Module material from input
+        std::shared_ptr<const SurfaceMaterial> moduleMaterialPtr = nullptr;
+        if (m_cfg.posnegModuleMaterial.size()) {
+          MaterialProperties moduleMaterialProperties(
+              m_cfg.posnegModuleMaterial.at(ipnl).at(ipnR), moduleThickness);
+          // and create the shared pointer
+          moduleMaterialPtr = std::shared_ptr<const SurfaceMaterial>(
+              new HomogeneousSurfaceMaterial(moduleMaterialProperties));
+        }
+        // (3) module bounds
+        // create the bounds
+        PlanarBounds* pBounds = nullptr;
+        if (moduleMaxHalfX != 0. && moduleMinHalfX != moduleMaxHalfX)
+          pBounds = new TrapezoidBounds(
+              moduleMinHalfX, moduleMaxHalfX, moduleHalfY);
+        else
+          pBounds = new RectangleBounds(moduleMinHalfX, moduleHalfY);
+        // now create the shared bounds from it
+        std::shared_ptr<const PlanarBounds> moduleBounds(pBounds);
+        // low loop over the phi positions and build the stuff
         for (auto& ringModulePosition : discModulePositions) {
-          // module specifications
-          double moduleThickness
-              = m_cfg.posnegModuleThickness.at(ipnl).at(ipnR);
-          double moduleMinHalfX = m_cfg.posnegModuleMinHalfX.at(ipnl).at(ipnR);
-          double moduleMaxHalfX = m_cfg.posnegModuleMaxHalfX.size()
-              ? m_cfg.posnegModuleMaxHalfX.at(ipnl).at(ipnR)
-              : 0.;
-          double moduleHalfY = m_cfg.posnegModuleHalfY.at(ipnl).at(ipnR);
-          // module material
-          // create the Module material from input
-          std::shared_ptr<const SurfaceMaterial> moduleMaterialPtr = nullptr;
-          if (m_cfg.posnegModuleMaterial.size()) {
-            MaterialProperties moduleMaterialProperties(
-                m_cfg.posnegModuleMaterial.at(ipnl).at(ipnR), moduleThickness);
-            // and create the shared pointer
-            moduleMaterialPtr = std::shared_ptr<const SurfaceMaterial>(
-                new HomogeneousSurfaceMaterial(moduleMaterialProperties));
-          }
-          // create the bounds
-          PlanarBounds* pBounds = nullptr;
-          if (moduleMaxHalfX != 0. && moduleMinHalfX != moduleMaxHalfX)
-            pBounds = new TrapezoidBounds(
-                moduleMinHalfX, moduleMaxHalfX, moduleHalfY);
-          else
-            pBounds = new RectangleBounds(moduleMaxHalfX, moduleHalfY);
-          // now create the shared bounds from it
-          std::shared_ptr<const PlanarBounds> moduleBounds(pBounds);
           // the module transform from the position
           double modulePhi = ringModulePosition.phi();
           // the center position of the modules

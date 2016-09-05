@@ -64,11 +64,13 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     // and fill into the grid
     sGrid[bTriple[2]][bTriple[1]][bTriple[0]] = sf;
   }
-  // complete the Binning
+  // complete the Binning @TODO switch on when we have a faster method for this
   completeBinning(*arrayUtility, v3Matrix, surfaces, sGrid);
   // create the surfaceArray
   auto sArray = std::make_unique<BinnedArrayXD<const Surface*>>(
       sGrid, std::move(arrayUtility));
+  // define neigbourhood
+  registerNeighbourHood(*sArray);
   // return the surface array
   return std::move(sArray);
 }
@@ -144,6 +146,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // create the surfaceArray
   auto sArray = std::make_unique<BinnedArrayXD<const Surface*>>(
       sGrid, std::move(arrayUtility));
+  // define neigbourhood
+  registerNeighbourHood(*sArray);
   // return the surface array
   return std::move(sArray);
 }
@@ -162,7 +166,55 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
   return nullptr;
 }
 
-/// @TODO implement nearest neighbour search
+/// Register the neigbourhood
+void
+Acts::SurfaceArrayCreator::registerNeighbourHood(
+    const SurfaceArray& sArray) const
+{
+  ACTS_DEBUG("Register neighbours to the elements.");
+  // get the grid first
+  auto objectGrid = sArray.objectGrid();
+  // statistics
+  size_t neighboursSet = 0;
+  // then go through, will respect a non-regular matrix
+  size_t io2 = 0;
+  for (auto& v210 : objectGrid) {
+    size_t io1 = 0;
+    for (auto& v10 : v210) {
+      size_t io0 = 0;
+      for (auto& bSurface : v10) {
+        // get the member of this bin
+        if (bSurface && bSurface->associatedDetectorElement()) {
+          // get the bin detector element (for readability)
+          auto bElement = bSurface->associatedDetectorElement();
+          // get all the surfaces clustering around
+          auto objectCluster = sArray.objectCluster({{io0, io1, io2}});
+          // now loop and fill
+          for (auto& nSurface : objectCluster) {
+            // create the detector element vector with nullptr protection
+            std::vector<const DetectorElementBase*> neighbourElements;
+            if (nSurface && nSurface != bSurface
+                && nSurface->associatedDetectorElement()) {
+              // register it to the vector
+              neighbourElements.push_back(
+                  nSurface->associatedDetectorElement());
+              // increase the counter
+              ++neighboursSet;
+            }
+            // now register the neighbours
+            bElement->registerNeighbours(neighbourElements);
+          }
+        }
+        ++io0;
+      }
+      ++io1;
+    }
+    ++io2;
+  }
+  ACTS_DEBUG("Neighbours set for this layer: " << neighboursSet);
+}
+
+/// @TODO implement nearest neighbour search - this is brute force attack
 /// - takes too long otherwise in initialization
 void
 Acts::SurfaceArrayCreator::completeBinning(const BinUtility&    binUtility,
@@ -170,16 +222,21 @@ Acts::SurfaceArrayCreator::completeBinning(const BinUtility&    binUtility,
                                            const SurfaceVector& sVector,
                                            SurfaceGrid&         sGrid) const
 {
-  ACTS_DEBUG("Complete binning by filling closest neighbour surfaces in "
-             "potentially empty bins.");
+  ACTS_DEBUG("Complete binning by filling closest neighbour surfaces into "
+             "empty bins.");
   // make a copy of the surface grid
   size_t nSurfaces   = sVector.size();
   size_t nGridPoints = v3Matrix.size() * v3Matrix[0].size();
-  //
-  ACTS_DEBUG("- Object count : " << nSurfaces << " number of surfaces");
-  ACTS_DEBUG("- Surface grid : " << nGridPoints << " number of bins");
-  ACTS_DEBUG("       to fill : " << nGridPoints - nSurfaces);
-  //
+  // bail out as there is nothing to do
+  if (nGridPoints == nSurfaces) {
+    ACTS_VERBOSE(" - Nothing to do, no empty bins present.");
+    return;
+  }
+  // VERBOSE screen output
+  ACTS_VERBOSE("- Object count : " << nSurfaces << " number of surfaces");
+  ACTS_VERBOSE("- Surface grid : " << nGridPoints << " number of bins");
+  ACTS_VERBOSE("       to fill : " << nGridPoints - nSurfaces);
+
   size_t binCompleted = 0;
   //
   for (size_t io1 = 0; io1 < v3Matrix.size(); ++io1) {
@@ -203,5 +260,6 @@ Acts::SurfaceArrayCreator::completeBinning(const BinUtility&    binUtility,
       ++binCompleted;
     }
   }
+
   ACTS_DEBUG("       filled  : " << binCompleted);
 }

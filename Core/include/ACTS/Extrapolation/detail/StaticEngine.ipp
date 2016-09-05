@@ -509,6 +509,12 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
                      layerValue,
                      "trying candidate surfaces with straight line path length "
                          << csf.intersection.pathLength);
+      // indicate if the surface is active or not
+      EX_MSG_VERBOSE(eCell.navigationStep,
+                     "surface",
+                     layerValue,
+                     (csf.object->associatedDetectorElement() ? "is active"
+                                                              : "is passive"));
       // record the parameters as sensitive or passive depending on the surface
       Acts::ExtrapolationMode::eMode emode
           = csf.object->associatedDetectorElement()
@@ -532,7 +538,11 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
         EX_MSG_VERBOSE(eCell.navigationStep,
                        "layer",
                        layerValue,
-                       "successfully hit sub structure surface.");
+                       "successfully hit "
+                           << (csf.object->associatedDetectorElement()
+                                   ? "active"
+                                   : "passive")
+                           << " sub structure surface.");
         // check if the surface holds material and hence needs to be processed
         if (csf.object->associatedMaterial()) {
           // screen output
