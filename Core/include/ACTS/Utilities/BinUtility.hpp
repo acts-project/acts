@@ -138,10 +138,10 @@ public:
   }
 
   /// Virtual Destructor
-  ~BinUtility() {}
+  ~BinUtility(){}
+
   /// Implizit Constructor
   BinUtility*
-
   clone() const
   {
     return new BinUtility(*this);
@@ -161,12 +161,12 @@ public:
     return bins(0) * bins(1) * bins(2);
   }
 
-  /// Bin-triple fast accaess
+  /// Bin-triple fast access
   ///
-  /// - saves potentially 2 global * local 3D
+  /// - calculate the bin triple with one transform
   ///
   /// @param position is the 3D position to be evaluated
-  /// @return is the bin value
+  /// @return is the bin value in 3D
   std::array<size_t, 3>
   binTriple(const Vector3D& position) const
   {
@@ -183,6 +183,7 @@ public:
     return {{bin0, bin1, bin2}};
   }
 
+
   /// Bin from a 3D vector (already in binning frame)
   /// - optionally the itransform is applied
   ///
@@ -194,11 +195,9 @@ public:
   {
     if (ba >= m_binningData.size()) return 0;
     size_t bEval = m_itransform
-        ? m_binningData[ba].searchGlobal((*m_itransform) * position)
+        ? m_binningData[ba].searchGlobal((*m_itransform)*position)
         : m_binningData[ba].searchGlobal(position);
-    return (bEval > bins(ba) - 1
-                ? bins(ba) - 1
-                : bEval);  //!< @TODO ST additional protection : DEBUG source
+    return bEval;
   }
 
   /// Bin neighbour range

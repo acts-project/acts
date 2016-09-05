@@ -147,6 +147,16 @@ private:
                   const V3Matrix&,
                   const SurfaceVector& sVector,
                   SurfaceGrid&         sGrid) const;
+                  
+  /// Private helper method to complete the binning
+  ///
+  ///
+  /// @TODO write documentation
+  ///
+  void                 
+  registerNeighbourHood(const SurfaceArray& sArray) const;
+                  
+                  
 };
 
 }  // end of namespace

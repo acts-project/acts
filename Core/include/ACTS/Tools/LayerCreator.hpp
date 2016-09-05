@@ -13,7 +13,6 @@
 #ifndef ACTS_GEOMETRYTOOLS_LAYERCREATOR_H
 #define ACTS_GEOMETRYTOOLS_LAYERCREATOR_H 1
 
-// Geometry module
 #include "ACTS/Tools/ILayerCreator.hpp"
 #include "ACTS/Tools/ISurfaceArrayCreator.hpp"
 #include "ACTS/Utilities/Logger.hpp"
@@ -30,13 +29,11 @@
 namespace Acts {
 
 class ISurfaceArrayCreator;
-
 /// @class LayerCreator
 ///
 /// The LayerCreator is able to build cylinde,r disc layers or plane layers from
 /// detector elements
 ///
-
 class LayerCreator : public ILayerCreator
 {
 public:
@@ -47,6 +44,17 @@ public:
   {
     /// surface array helper
     std::shared_ptr<ISurfaceArrayCreator> surfaceArrayCreator = nullptr;
+    /// cylinder module z tolerance : it counts at same z, if ...
+    double   cylinderZtolerance;
+    /// cylinder module phi tolerance : it counts at same phi, if ...
+    double   cylinderPhiTolerance;
+    
+    // standard constructor
+    Config():
+     cylinderZtolerance(10.),
+     cylinderPhiTolerance(0.1)
+     {}
+    
   };
 
   /// Constructor

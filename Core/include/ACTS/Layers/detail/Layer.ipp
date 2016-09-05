@@ -58,40 +58,53 @@ Layer::getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
       return cSurfaces.size();
     // search Type will be increased automatically
     // when endSurface is given and no test done
-    if (searchType % 2) ++searchType;
+    if (searchType % 2) 
+        ++searchType;
   }
-
   // we have a contained surface array
   // - resolve the different search modes
-  // constructed test surfaces
-  std::vector<const Surface*> compatibleTestSurfaces;
-  //
+  // compatible test surfaces
+  std::vector<const Surface*> ctestSurfaces;
+  // this is providing all surfaces to the extrapolation eninge 
   if (searchType <= 0) {
     // take all the test surfaces & their bin mates
     auto allTestSurfaces = m_surfaceArray->arrayObjects();
     // reserve twice the amount
-    compatibleTestSurfaces.reserve(allTestSurfaces.size());
+    ctestSurfaces.reserve(allTestSurfaces.size());
     for (auto& atSurface : allTestSurfaces) {
       // get the bin mates if they exist
       if (atSurface && atSurface->associatedDetectorElement()) {
         // get the bin mates
         auto bmElements = atSurface->associatedDetectorElement()->binmembers();
         for (auto& bmElement : bmElements)
-          compatibleTestSurfaces.push_back(&(bmElement->surface()));
+          ctestSurfaces.push_back(&(bmElement->surface()));
       }
-      compatibleTestSurfaces.push_back(atSurface);
+      ctestSurfaces.push_back(atSurface);
     }
-  } else if (m_overlapDescriptor && searchType <= 5) {
-    // get the first target surface for search types > 2
-    const Surface* ftSurface = m_surfaceArray->object(pos);
-    // outsource to the OverlapDescriptor - if you have a first target surface
-    if (ftSurface)
-      m_overlapDescriptor->reachableSurfaces(
-          compatibleTestSurfaces, *ftSurface, pos, dir, searchType);
+  } else if (m_surfaceArray) {
+    // get the nominal test object 
+    auto tSurface = m_surfaceArray->object(pos);
+    if (tSurface && tSurface->associatedDetectorElement()){
+      // get the detector elements
+      auto dElement    = tSurface->associatedDetectorElement();
+      std::vector<const DetectorElementBase*> dElements = { dElement };
+      // get the neighbours
+      dElements.insert(dElements.begin(), dElement->neighbours().begin(), dElement->neighbours().end());
+      // loop over all detector elements and add their surfaces and binmember surfaces
+      for (auto& ade : dElements){
+        // insert the surface
+        ctestSurfaces.push_back(&(ade->surface()));
+        // insert the bin members and the neighbors
+        for (auto& abm : ade->binmembers()){
+          ctestSurfaces.push_back(&(abm->surface()));
+        }
+      }
+    }
   }
+  
   // loop over all the possible
-  // sensiive surfaces and test them
-  for (auto& ctSurface : compatibleTestSurfaces)
+  // sensitive surfaces and test them
+  for (auto& ctSurface : ctestSurfaces)
     testCompatibleSurface(cSurfaces,
                           *ctSurface,
                           pos,
@@ -122,7 +135,8 @@ Layer::getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
                         endSurface,
                         ice);
 
-  // the approach surfaces are testSurfaces
+  // the approach surfaces are always testSurfaces
+  // usually, the surface on approach is excluded                       
   if (m_approachDescriptor) {
     // the approach surfaces
     const std::vector<const Surface*>& approachSurfaces
@@ -144,7 +158,8 @@ Layer::getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
   }
 
   // only sort it if the intersection was done
-  if (intersectionTest) std::sort(cSurfaces.begin(), cSurfaces.end());
+  if (intersectionTest) 
+      std::sort(cSurfaces.begin(), cSurfaces.end());
 
   // return
   return intersectionTest;

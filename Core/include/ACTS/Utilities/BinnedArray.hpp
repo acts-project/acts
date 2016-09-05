@@ -34,14 +34,17 @@ class BinnedArray
 public:
   /// Default Constructor - needed for inherited classes
   BinnedArray() {}
+  
   /// Virtual Destructor
   virtual ~BinnedArray() {}
+  
   /// Returns the object in the associated bin according the local position
   ///
   /// @param lposition is the local position for the object retrieval
   /// @return the object according to the estimated bin
   virtual T
   object(const Vector2D& lposition, std::array<size_t, 3>& bins) const = 0;
+  
   /// same method without bins for backward compatibility
   virtual T
   object(const Vector2D& lposition) const
@@ -55,7 +58,8 @@ public:
   /// @param position is the global position for the object retrieval
   /// @return the object according to the estimated bin
   virtual T
-  object(const Vector3D& position, std::array<size_t, 3>& bins) const = 0;
+  object(const Vector3D& position, std::array<size_t, 3>& bin) const = 0;
+  
   /// same method without bins for backward compatibility
   virtual T
   object(const Vector3D& position) const
@@ -64,12 +68,20 @@ public:
     return object(position, bins);
   }
 
+  /// Returns the object found through global position search
+  /// and their neighbor objects
+  /// 
+  /// @param bin is the binning
+  /// @return a vector of unique objects
+  virtual std::vector<T>
+  objectCluster(const std::array<size_t, 3>& bin) const = 0;
+
   /// Return all unqiue object
   virtual const std::vector<T>&
   arrayObjects() const = 0;
 
   /// Return the object grid
-  /// multiple entries are allowed and wanted
+  /// multiple entries are allowed
   virtual const std::vector<std::vector<std::vector<T>>>&
   objectGrid() const = 0;
 
@@ -77,6 +89,7 @@ public:
   /// - if returned 0 it is a 0D array
   virtual const BinUtility*
   binUtility() const = 0;
+  
 };
 
 }  // end of namespace Acts

@@ -87,22 +87,46 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   MaterialProperties pcmProperties(1., 95.7, 465.2, 28.03, 14., 2.32e-3);
   // Module material - X0, L0, A, Z, Rho
   Material pcMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
-  // configure the central barrel
-  plbConfig.centralLayerBinMultipliers = {2, 2};
-  plbConfig.centralLayerRadii          = {29., 55., 88., 120.};
-  plbConfig.centralLayerEnvelopes
-      = {pcEnvelope, pcEnvelope, pcEnvelope, pcEnvelope};
-  plbConfig.centralLayerMaterialConcentration = {1, 1, 1, 1};
-  plbConfig.centralLayerMaterialProperties
-      = {pcmProperties, pcmProperties, pcmProperties, pcmProperties};
-  plbConfig.centralModuleBinningSchema
-      = {{16, 13}, {24, 13}, {38, 13}, {60, 13}};
-  plbConfig.centralModuleTiltPhi   = {0.18, 0.18, 0.2, 0.2};
-  plbConfig.centralModuleHalfX     = {8.4, 8.4, 8.4, 8.4};
-  plbConfig.centralModuleHalfY     = {32., 32., 32., 32.};
-  plbConfig.centralModuleThickness = {0.15, 0.15, 0.15, 0.15};
-  plbConfig.centralModuleMaterial
-      = {pcMaterial, pcMaterial, pcMaterial, pcMaterial};
+
+  // standard, an approach envelope
+  plbConfig.approachSurfaceEnvelope = 0.5;
+    
+  // STAGE 0 --- 1 pixel layer detector for debugging
+  if (stage == 0){
+    // configure the central barrel
+    plbConfig.centralLayerBinMultipliers        = {1, 1};
+    
+    plbConfig.centralLayerRadii                 = { 29. };
+    plbConfig.centralLayerEnvelopes             = { pcEnvelope };
+    plbConfig.centralLayerMaterialConcentration = { 1 };
+    plbConfig.centralLayerMaterialProperties    = {pcmProperties };
+    plbConfig.centralModuleBinningSchema        = { {16, 13} };
+    plbConfig.centralModuleTiltPhi              = { 0.18 };
+    plbConfig.centralModuleHalfX                = { 8.4 };
+    plbConfig.centralModuleHalfY                = { 32. };
+    plbConfig.centralModuleThickness            = { 0.15 };
+    plbConfig.centralModuleMaterial             = { pcMaterial };
+  } else {
+    // configure the central barrel
+    plbConfig.centralLayerBinMultipliers = {1, 1};
+    // STAGE > 0 --- 4 pixel layers
+    plbConfig.centralLayerRadii          = {29., 55., 88., 120.};
+    plbConfig.centralLayerEnvelopes
+        = {pcEnvelope, pcEnvelope, pcEnvelope, pcEnvelope};
+    plbConfig.centralLayerMaterialConcentration = {1, 1, 1, 1};
+    plbConfig.centralLayerMaterialProperties
+        = {pcmProperties, pcmProperties, pcmProperties, pcmProperties};
+    plbConfig.centralModuleBinningSchema
+        = {{16, 13}, {24, 13}, {38, 13}, {60, 13}};
+    plbConfig.centralModuleTiltPhi   = {0.18, 0.18, 0.2, 0.2};
+    plbConfig.centralModuleHalfX     = {8.4, 8.4, 8.4, 8.4};
+    plbConfig.centralModuleHalfY     = {32., 32., 32., 32.};
+    plbConfig.centralModuleThickness = {0.15, 0.15, 0.15, 0.15};
+    plbConfig.centralModuleMaterial
+        = {pcMaterial, pcMaterial, pcMaterial, pcMaterial};
+    
+  }
+  // no frontside/backside
   plbConfig.centralModuleFrontsideStereo = {};
   plbConfig.centralModuleBacksideStereo  = {};
   plbConfig.centralModuleBacksideGap     = {};
@@ -118,21 +142,39 @@ trackingGeometry(Logging::Level lvl, size_t stage)
                                 plbConfig.centralModuleBinningSchema[plb]));
   }
   plbConfig.centralModulePositions = centralModulePositions;
+  // STAGE = 0 - 1 disk detector
+  if (stage == 0){
+      // configure the endcaps
+      plbConfig.posnegLayerBinMultipliers        = { 1, 1 };
+      plbConfig.posnegLayerPositionsZ            = { 500. };
+      plbConfig.posnegLayerEnvelopeR             = { 1. };
+      plbConfig.posnegLayerMaterialConcentration = { 1 };
+      plbConfig.posnegLayerMaterialProperties    = { pcmProperties };
+      plbConfig.posnegModuleMinHalfX             = {{8.4}};
+      plbConfig.posnegModuleMaxHalfX             = {};
+      plbConfig.posnegModuleHalfY                = {{42.}};
+      plbConfig.posnegModulePhiBins              = {{48}};
+      plbConfig.posnegModuleThickness            = {{0.15}};
+      plbConfig.posnegModuleMaterial             = {{pcMaterial}};
+  } else {
+    // STAGE > 0 - pixel endcap detector
+    // configure the endcaps
+    plbConfig.posnegLayerBinMultipliers        = {1, 1};
+    plbConfig.posnegLayerPositionsZ            = {500., 580., 680., 700.};
+    plbConfig.posnegLayerEnvelopeR             = {1., 1., 1., 1.};
+    plbConfig.posnegLayerMaterialConcentration = {1, 1, 1, 1};
+    plbConfig.posnegLayerMaterialProperties
+        = {pcmProperties, pcmProperties, pcmProperties, pcmProperties};
+    plbConfig.posnegModuleMinHalfX  = {{8.4}, {8.4}, {8.4}, {8.4}};
+    plbConfig.posnegModuleMaxHalfX  = {};
+    plbConfig.posnegModuleHalfY     = {{42.}, {42.}, {42.}, {42.}};
+    plbConfig.posnegModulePhiBins   = {{48}, {48}, {48}, {48}};
+    plbConfig.posnegModuleThickness = {{0.15}, {0.15}, {0.15}, {0.15}};
+    plbConfig.posnegModuleMaterial
+        = {{pcMaterial}, {pcMaterial}, {pcMaterial}, {pcMaterial}};
 
-  // configure the endcaps
-  plbConfig.posnegLayerBinMultipliers        = {1, 1};
-  plbConfig.posnegLayerPositionsZ            = {500., 580., 680., 700.};
-  plbConfig.posnegLayerEnvelopeR             = {1., 1., 1., 1.};
-  plbConfig.posnegLayerMaterialConcentration = {1, 1, 1, 1};
-  plbConfig.posnegLayerMaterialProperties
-      = {pcmProperties, pcmProperties, pcmProperties, pcmProperties};
-  plbConfig.posnegModuleMinHalfX  = {{8.4}, {8.4}, {8.4}, {8.4}};
-  plbConfig.posnegModuleMaxHalfX  = {};
-  plbConfig.posnegModuleHalfY     = {{42.}, {42.}, {42.}, {42.}};
-  plbConfig.posnegModulePhiBins   = {{24}, {24}, {24}, {24}};
-  plbConfig.posnegModuleThickness = {{0.15}, {0.15}, {0.15}, {0.15}};
-  plbConfig.posnegModuleMaterial
-      = {{pcMaterial}, {pcMaterial}, {pcMaterial}, {pcMaterial}};
+  }
+  // no frontside/backside
   plbConfig.posnegModuleFrontsideStereo = {};
   plbConfig.posnegModuleBacksideStereo  = {};
   plbConfig.posnegModuleBacksideGap     = {};
@@ -149,9 +191,10 @@ trackingGeometry(Logging::Level lvl, size_t stage)
                             plbConfig.posnegModuleHalfY[id]));
   }
   plbConfig.posnegModulePositions = posnegModulePositions;
+  
   // define the builder
   auto pixelLayerBuilder = std::make_shared<GenericLayerBuilder>(
-      plbConfig, getDefaultLogger("GenericLayerBuilder", lvl));
+      plbConfig, getDefaultLogger("PixelLayerBuilder", lvl));
   //-------------------------------------------------------------------------------------
   // build the pixel volume
   CylinderVolumeBuilder::Config pvbConfig;
@@ -163,7 +206,7 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   pvbConfig.layerEnvelopeZ       = 10.;
   pvbConfig.volumeSignature      = 0;
   auto pixelVolumeBuilder        = std::make_shared<CylinderVolumeBuilder>(
-      pvbConfig, getDefaultLogger("CylinderVolumeBuilder", lvl));
+      pvbConfig, getDefaultLogger("PixelVolumeBuilder", lvl));
 
   //-------------------------------------------------------------------------------------
   // list the volume builders
@@ -174,7 +217,8 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   //-------------------------------------------------------------------------------------
   // strip detector
   //-------------------------------------------------------------------------------------
-  if (stage > 0) {
+  // STAGE > 1 - strip detector added 
+  if (stage > 1) {
     // configure short strip layer builder
     GenericLayerBuilder::Config sslbConfig;
     sslbConfig.layerCreator        = layerCreator;
@@ -220,7 +264,7 @@ trackingGeometry(Logging::Level lvl, size_t stage)
     sslbConfig.centralModulePositions = centralModulePositions;
 
     // configure the endcaps
-    sslbConfig.posnegLayerBinMultipliers        = {1, 1};
+    sslbConfig.posnegLayerBinMultipliers        = {1, 2};
     sslbConfig.posnegLayerPositionsZ            = {880.};
     sslbConfig.posnegLayerEnvelopeR             = {5.};
     sslbConfig.posnegLayerMaterialConcentration = {1};
@@ -228,7 +272,7 @@ trackingGeometry(Logging::Level lvl, size_t stage)
     sslbConfig.posnegModuleMinHalfX             = {{16.4, 18.2}};
     sslbConfig.posnegModuleMaxHalfX             = {{24.2, 32.2}};
     sslbConfig.posnegModuleHalfY                = {{52.5, 52.5}};
-    sslbConfig.posnegModulePhiBins              = {{42, 42}};
+    sslbConfig.posnegModulePhiBins              = {{42, 62}};
     sslbConfig.posnegModuleThickness            = {{0.25, 0.25}};
     sslbConfig.posnegModuleMaterial             = {{ssMaterial, ssMaterial}};
     sslbConfig.posnegModuleFrontsideStereo      = {};
@@ -278,7 +322,7 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   tgConfig.trackingVolumeHelper   = cylinderVolumeHelper;
   auto cylinderGeometryBuilder
       = std::make_shared<const CylinderGeometryBuilder>(
-          tgConfig, getDefaultLogger("CylinderGeometryBuilder", lvl));
+          tgConfig, getDefaultLogger("TrackerGeometryBuilder", lvl));
   return cylinderGeometryBuilder->trackingGeometry();
 }
 

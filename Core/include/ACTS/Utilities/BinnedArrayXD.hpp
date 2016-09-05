@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// BinnedArray.h, ACTS project
+// BinnedArrayXD.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 #ifndef ACTS_UTILITIES_BINNEDARRAYXD_H
@@ -23,12 +23,12 @@ class MsgStream;
 
 namespace Acts {
 
-/// @class BinnedArray
+/// @class BinnedArrayXD
 ///
 /// Avoiding a map search, the templated BinnedArray class can help
 /// ordereing geometrical objects by providing a dedicated BinUtility.
 ///
-/// This can be 0D, 1D, 2D, and 3D
+/// This can be 0D, 1D, 2D, and 3D in regular binning
 ///
 /// the type of Binning is given defined through the BinUtility
 template <class T>
@@ -51,7 +51,7 @@ public:
 
   /// Constructor with std::vector and a BinUtility
   /// - fills the internal data structur
-  BinnedArrayXD(const std::vector<TAP>&     tapvector,
+  BinnedArrayXD(const std::vector<TAP>& tapvector,
                 std::unique_ptr<BinUtility> bu)
     : BinnedArray<T>()
     , m_objectGrid(
@@ -81,8 +81,8 @@ public:
   }
 
   /// Constructor with a grid and a BinUtility
-  BinnedArrayXD(const std::vector<std::vector<std::vector<T>>>& grid,
-                std::unique_ptr<BinUtility>                     bu)
+  BinnedArrayXD(const std::vector< std::vector<std::vector<T> > >& grid,
+                std::unique_ptr<BinUtility>                        bu)
     : BinnedArray<T>()
     , m_objectGrid(grid)
     , m_arrayObjects()
@@ -165,11 +165,51 @@ public:
 
   /// Return the object grid
   /// multiple entries are allowed and wanted
-  const std::vector<std::vector<std::vector<T>>>&
+  const std::vector< std::vector< std::vector<T> > >&
   objectGrid() const final
   {
     return m_objectGrid;
   }
+
+  /// Returns the object according to the bin triple 
+  /// and their neighbour objects (if different)
+  ///
+  /// @param binTriple is the binning 
+  /// @return a vector of unique objects
+  std::vector<T>
+  objectCluster(const std::array<size_t, 3>& binTriple) const
+  {
+    // prepare the return vector
+    std::vector<T> rvector;
+    // reference bin object to be excluded
+    T bObject = m_objectGrid[binTriple[2]][binTriple[1]][binTriple[0]];
+    // get the dimensions first
+    size_t bdim = m_binUtility->dimensions();
+    // avoiding code duplication
+    std::vector<size_t> zerorange = { 0 };
+    // 2D bin
+    std::vector<size_t> bin2values = (bdim > 2) ? 
+      m_binUtility->binningData()[2].neighbourRange(binTriple[2]) : zerorange;
+    // 1D bin
+    std::vector<size_t> bin1values = (bdim > 1) ? 
+      m_binUtility->binningData()[1].neighbourRange(binTriple[1]) : zerorange;
+    // 0D bin
+    std::vector<size_t> bin0values = 
+      m_binUtility->binningData()[0].neighbourRange(binTriple[0]);
+    
+    // do the loop
+    for (auto b2 : bin2values)
+      for (auto b1 : bin1values)
+        for (auto b0 : bin0values){
+          // get the object
+          T object = m_objectGrid[b2][b1][b0];
+            if (object && object != bObject && 
+                std::find(rvector.begin(), rvector.end(), object) == rvector.end())
+            rvector.push_back(object);
+        }
+  // return the ones you found
+  return std::move(rvector);
+  }  
 
   /// Return the BinUtility
   const BinUtility*
