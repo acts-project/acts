@@ -225,9 +225,9 @@ PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
     // evaluate (if necessary in terms of boundaries)
     isValid = bchk ? (isValid && isOnSurface(intersectPoint, bchk)) : isValid;
     // return the result
-    return std::move(Intersection(intersectPoint, u, isValid));
+    return Intersection(intersectPoint, u, isValid);
   }
-  return std::move(Intersection(gpos, 0., false));
+  return Intersection(gpos, 0., false);
 }
 
 }  // end of namespace

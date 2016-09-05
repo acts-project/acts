@@ -232,7 +232,7 @@ ConeSurface::normal(const Vector3D& gpos) const
     pos3D     = transform().inverse() * gpos;
     pos3D.z() = 0;
   }
-  return std::move(pos3D.unit());
+  return pos3D.unit();
 }
 
 inline const ConeBounds&
