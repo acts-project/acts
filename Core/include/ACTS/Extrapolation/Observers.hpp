@@ -5,6 +5,7 @@
 #include <list>
 #include <ostream>
 #include <tuple>
+#include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
 namespace Acts {
