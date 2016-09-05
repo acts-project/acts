@@ -224,13 +224,13 @@ DiscTrapezoidalBounds::inside(const Vector2D&      lpos,
   if (alpha > M_PI) alpha = 2 * M_PI - alpha;
   // a fast FALSE
   sincosCache scResult = bchk.FastSinCos(lpos(1, 0));
-  double      dx       = bchk.nSigmas * sqrt(bchk.lCovariance(0, 0));
+  double      dx       = bchk.nSigmas * sqrt((*bchk.lCovariance)(0, 0));
   double      dy       = bchk.nSigmas
-      * sqrt(scResult.sinC * scResult.sinC * bchk.lCovariance(0, 0)
+      * sqrt(scResult.sinC * scResult.sinC * (*bchk.lCovariance)(0, 0)
              + lpos(0, 0) * lpos(0, 0) * scResult.cosC * scResult.cosC
-                 * bchk.lCovariance(1, 1)
+                 * (*bchk.lCovariance)(1, 1)
              + 2 * scResult.cosC * scResult.sinC * lpos(0, 0)
-                 * bchk.lCovariance(0, 1));
+                 * (*bchk.lCovariance)(0, 1));
   double max_ell = dx > dy ? dx : dy;
   if (lpos(0, 0)
       > (m_valueStore.at(DiscTrapezoidalBounds::bv_rMax)
@@ -390,7 +390,7 @@ DiscTrapezoidalBounds::inside(const Vector2D&      lpos,
   covRotMatrix << scResult.cosC, -lpos(0, 0) * scResult.sinC, scResult.sinC,
       lpos(0, 0) * scResult.cosC;
   ActsMatrixD<2, 2> lCovarianceCar
-      = covRotMatrix * bchk.lCovariance * covRotMatrix.transpose();
+      = covRotMatrix * (*bchk.lCovariance) * covRotMatrix.transpose();
   Vector2D lposCar(covRotMatrix(1, 1), -covRotMatrix(0, 1));
 
   // ellipse is always at (0,0), surface is moved to ellipse position and then

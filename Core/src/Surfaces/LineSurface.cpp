@@ -121,7 +121,7 @@ Acts::LineSurface::measurementFrame(const Vector3D&, const Vector3D& mom) const
   mFrame.col(1) = measY;
   mFrame.col(2) = measDepth;
   // return the rotation matrix
-  return mFrame;
+  return std::move(mFrame);
 }
 
 Acts::Intersection
@@ -149,7 +149,7 @@ Acts::LineSurface::intersectionEstimate(const Vector3D&      gpos,
     Vector3D result = (ma + lambda0 * ea);
     isValid         = bchk ? (isValid && isOnSurface(result, bchk)) : isValid;
     // return the result
-    return Intersection(result, lambda0, isValid);
+    return std::move(Intersection(result, lambda0, isValid));
   }
-  return Intersection(gpos, 0., false);
+  return std::move(Intersection(gpos, 0., false));
 }

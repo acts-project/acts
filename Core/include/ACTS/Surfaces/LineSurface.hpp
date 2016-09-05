@@ -234,7 +234,9 @@ LineSurface::bounds() const
 inline const Vector3D
 LineSurface::lineDirection() const
 {
-  return Vector3D(transform().rotation().col(2));
+  // fast access via tranform matrix (and not rotation())
+  auto tMatrix = transform().matrix();
+  return std::move(Vector3D(tMatrix(0,2),tMatrix(1,2),tMatrix(2,2)));
 }
 
 }  // end of namespace

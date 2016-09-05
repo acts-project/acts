@@ -75,12 +75,13 @@ Acts::CylinderSurface::binningPosition(BinningValue bValue) const
   if (bValue == Acts::binR || bValue == Acts::binRPhi) {
     double R   = bounds().r();
     double phi = m_bounds ? m_bounds->averagePhi() : 0.;
-    return Vector3D(
-        center().x() + R * cos(phi), center().y() + R * sin(phi), center().z());
+    return std::move(Vector3D(center().x() + R * cos(phi), 
+                              center().y() + R * sin(phi),
+                              center().z()));
   }
   // give the center as default for all of these binning types
   // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
-  return center();
+  return std::move(center());
 }
 
 // return the measurement frame: it's the tangential plane
@@ -101,13 +102,15 @@ Acts::CylinderSurface::measurementFrame(const Vector3D& gpos,
   mFrame.col(1) = measY;
   mFrame.col(2) = measDepth;
   // return the rotation matrix
-  return mFrame;
+  return std::move(mFrame);
 }
 
 const Acts::Vector3D
 Acts::CylinderSurface::rotSymmetryAxis() const
 {
-  return Vector3D(transform().rotation().col(2));
+  // fast access via tranform matrix (and not rotation())
+  auto tMatrix = transform().matrix();
+  return std::move(Vector3D(tMatrix(0,2),tMatrix(1,2),tMatrix(2,2)));
 }
 
 void
@@ -192,7 +195,7 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
       t1 = (pquad.first - point1.x()) / direction.x();
       t2 = (pquad.second - point1.x()) / direction.x();
     } else  // bail out if no solution exists
-      return Intersection(gpos, 0., false);
+      return std::move(Intersection(gpos, 0., false));
   } else {
     // x value ise th one of point1
     // x^2 + y^2 = R^2
@@ -200,7 +203,7 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
     double x     = point1.x();
     double r2mx2 = R * R - x * x;
     // bail out if no solution
-    if (r2mx2 < 0.) return Intersection(gpos, 0., false);
+    if (r2mx2 < 0.) return std::move(Intersection(gpos, 0., false));
     double y = sqrt(r2mx2);
     // assign parameters and solutions
     t1 = y - point1.y();

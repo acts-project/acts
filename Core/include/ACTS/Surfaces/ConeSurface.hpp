@@ -226,12 +226,13 @@ inline const Vector3D
 ConeSurface::normal(const Vector3D& gpos) const
 {
   // get it into the cylinder frame if needed
+  // @TODO respect opening angle 
   Vector3D pos3D = gpos;
   if (m_transform || m_associatedDetElement) {
     pos3D     = transform().inverse() * gpos;
     pos3D.z() = 0;
   }
-  return pos3D.unit();
+  return std::move(pos3D.unit());
 }
 
 inline const ConeBounds&
