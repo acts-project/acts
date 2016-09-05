@@ -208,7 +208,7 @@ CylinderSurface::normal(const Vector2D& lpos) const
 {
   double   phi = lpos[Acts::eLOC_RPHI] / m_bounds->r();
   Vector3D localNormal(cos(phi), sin(phi), 0.);
-  return Vector3D(transform().rotation() * localNormal);
+  return std::move(Vector3D(transform().rotation() * localNormal));
 }
 
 inline const Vector3D
@@ -221,7 +221,7 @@ CylinderSurface::normal(const Vector3D& gpos) const
   }
   // set the z coordinate to 0
   pos3D.z() = 0.;
-  return pos3D.unit();
+  return std::move(pos3D.unit());
 }
 
 inline double

@@ -246,7 +246,7 @@ DiscSurface::normal(const Vector2D&) const
 
 inline const Vector3D DiscSurface::binningPosition(BinningValue) const
 {
-  return center();
+  return std::move(center());
 }
 
 inline const Vector2D
@@ -286,9 +286,9 @@ DiscSurface::intersectionEstimate(const Vector3D&      gpos,
     // evaluate (if necessary in terms of boundaries)
     isValid = bchk ? (isValid && isOnSurface(intersectPoint, bchk)) : isValid;
     // return the result
-    return Intersection(intersectPoint, u, isValid);
+    return std::move(Intersection(intersectPoint, u, isValid));
   }
-  return Intersection(gpos, 0., false);
+  return std::move(Intersection(gpos, 0., false));
 }
 
 }  // end of namespace

@@ -125,10 +125,17 @@ Acts::DiscSurface::localPolarToLocalCartesian(const Vector2D& locpol) const
         Pos[Acts::eLOC_X] * sin(phi) - Pos[Acts::eLOC_Y] * cos(phi),
         Pos[Acts::eLOC_Y] * sin(phi) + Pos[Acts::eLOC_X] * cos(phi));
 
+<<<<<<< HEAD
     return Vector2D(locPos[Acts::eLOC_X], locPos[Acts::eLOC_Y]);
   }
   return Vector2D(locpol[Acts::eLOC_R] * cos(locpol[Acts::eLOC_PHI]),
                   locpol[Acts::eLOC_R] * sin(locpol[Acts::eLOC_PHI]));
+=======
+    return std::move(Vector2D(locPos[Acts::eLOC_X], locPos[Acts::eLOC_Y]));
+  }
+  return std::move(Vector2D(locpol[Acts::eLOC_R] * cos(locpol[Acts::eLOC_PHI]),
+                            locpol[Acts::eLOC_R] * sin(locpol[Acts::eLOC_PHI])));
+>>>>>>> 4464bc2... Round of Speed-improvement
 }
 
 const Acts::Vector3D
