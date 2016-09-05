@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <list>
+#include <ostream>
 #include <tuple>
 #include "ACTS/Utilities/Units.hpp"
 
@@ -17,10 +18,12 @@ struct DebugObserver
   {
     const auto& pos = current.position();
     const auto& mom = current.momentum();
-    std::cout << pos(0) / units::_mm << " " << pos(1) / units::_mm << " "
-              << pos(2) / units::_mm << " " << mom.perp() / units::_GeV << " "
-              << mom.phi() << " " << mom.theta() << std::endl;
+    out << pos(0) / units::_mm << " " << pos(1) / units::_mm << " "
+        << pos(2) / units::_mm << " " << mom.perp() / units::_GeV << " "
+        << mom.phi() << " " << mom.theta() << std::endl;
   }
+
+  mutable std::ostream out{std::cout.rdbuf()};
 };
 
 struct PathLengthObserver
@@ -54,11 +57,11 @@ struct HitSimulator
     }
 
     void
-    print() const
+    print(std::ostream& out = std::cout) const
     {
       for (const auto& v : hits)
-        std::cout << v(0) / units::_cm << " " << v(1) / units::_cm << " "
-                  << v(2) / units::_cm << std::endl;
+        out << v(0) / units::_cm << " " << v(1) / units::_cm << " "
+            << v(2) / units::_cm << std::endl;
     }
   };
 

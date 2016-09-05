@@ -1,4 +1,5 @@
 #include "ACTS/Extrapolation/Propagator.hpp"
+#include <fstream>
 #include <random>
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Extrapolation/GSLStepper.hpp"
@@ -12,10 +13,6 @@ using namespace Acts;
 int
 main()
 {
-  // random numbers for smearing measurements
-  std::default_random_engine             e;
-  std::uniform_real_distribution<double> uniform(-1, 1);
-
   typedef ConstantFieldSvc      BField_t;
   typedef GSLStepper<BField_t>  Stepper_t;
   typedef Propagator<Stepper_t> Propagator_t;
@@ -26,42 +23,67 @@ main()
   Stepper_t    gsl_stepper(std::move(bField));
   Propagator_t propagator(std::move(gsl_stepper));
 
-  typedef Propagator_t::observer_list_t<CurvilinearParameters,
-                                        PathLengthObserver,
-                                        HitSimulator>
-      ObsList_t;
+  // first example: simple propagation of a single track
+  {
+    typedef Propagator_t::observer_list_t<CurvilinearParameters,
+                                          PathLengthObserver,
+                                          DebugObserver>
+        ObsList_t;
 
-  ObsList_t     ol;
-  HitSimulator& hit_sim = ol.get<HitSimulator>();
-  typedef std::tuple<float, float, float> tuple_t;
-  hit_sim.barrel
-      = {tuple_t(5 * units::_cm, -50 * units::_cm, 50 * units::_cm),
-         tuple_t(15 * units::_cm, -55 * units::_cm, 55 * units::_cm),
-         tuple_t(25 * units::_cm, -60 * units::_cm, 60 * units::_cm),
-         tuple_t(50 * units::_cm, -75 * units::_cm, 75 * units::_cm),
-         tuple_t(60 * units::_cm, -80 * units::_cm, 80 * units::_cm)};
-
-  hit_sim.endcaps
-      = {tuple_t(70 * units::_cm, 5 * units::_cm, 45 * units::_cm),
-         tuple_t(85 * units::_cm, 15 * units::_cm, 60 * units::_cm),
-         tuple_t(-70 * units::_cm, 5 * units::_cm, 45 * units::_cm),
-         tuple_t(-85 * units::_cm, 15 * units::_cm, 60 * units::_cm)};
-
-  HitSimulator::result_type hits;
-  double                    totalPathLength = 0;
-  for (unsigned int i = 0; i < 1000; ++i) {
-    Vector3D pos(0, 0, 0);
-    Vector3D mom(uniform(e), uniform(e), uniform(e));
-    mom *= 1 * units::_GeV;
+    std::ofstream out_file("track.txt");
+    ObsList_t     ol;
+    ol.get<DebugObserver>().out.rdbuf(out_file.rdbuf());
+    Vector3D              pos(0, 0, 0);
+    Vector3D              mom(1 * units::_GeV, 0, 0);
     CurvilinearParameters pars(nullptr, pos, mom, +1);
     auto                  r = propagator.propagate(pars, ol);
-    totalPathLength += r.get<PathLengthObserver::result_type>().pathLength;
-    hits.add(r.get<HitSimulator::result_type>());
+    std::cout << "path length = "
+              << r.get<PathLengthObserver::result_type>().pathLength / units::_m
+              << std::endl;
   }
-  std::cout << "total path length = " << totalPathLength / units::_m
-            << std::endl;
-  std::cout << "simulated hits:" << std::endl;
-  hits.print();
+
+  // second example: use propagator to generate pseudo-hits
+  {
+    // random numbers for initializing track parameters
+    std::random_device                     r;
+    std::default_random_engine             e(r());
+    std::uniform_real_distribution<double> uniform(-1, 1);
+
+    typedef Propagator_t::observer_list_t<CurvilinearParameters, HitSimulator>
+        ObsList_t;
+
+    ObsList_t     ol;
+    HitSimulator& hit_sim = ol.get<HitSimulator>();
+    typedef std::tuple<float, float, float> tuple_t;
+
+    // setup barrel structure: r, zmin, zmax
+    hit_sim.barrel
+        = {tuple_t(5 * units::_cm, -50 * units::_cm, 50 * units::_cm),
+           tuple_t(15 * units::_cm, -55 * units::_cm, 55 * units::_cm),
+           tuple_t(25 * units::_cm, -60 * units::_cm, 60 * units::_cm),
+           tuple_t(50 * units::_cm, -75 * units::_cm, 75 * units::_cm),
+           tuple_t(60 * units::_cm, -80 * units::_cm, 80 * units::_cm)};
+
+    // setup endcap structure: z, rmin, rmax
+    hit_sim.endcaps
+        = {tuple_t(70 * units::_cm, 5 * units::_cm, 45 * units::_cm),
+           tuple_t(85 * units::_cm, 15 * units::_cm, 60 * units::_cm),
+           tuple_t(-70 * units::_cm, 5 * units::_cm, 45 * units::_cm),
+           tuple_t(-85 * units::_cm, 15 * units::_cm, 60 * units::_cm)};
+
+    HitSimulator::result_type hits;
+    for (unsigned int i = 0; i < 1000; ++i) {
+      Vector3D pos(0, 0, 0);
+      Vector3D mom(uniform(e), uniform(e), uniform(e));
+      mom *= 1 * units::_GeV;
+      CurvilinearParameters pars(nullptr, pos, mom, +1);
+      auto                  r = propagator.propagate(pars, ol);
+      hits.add(r.get<HitSimulator::result_type>());
+    }
+
+    std::ofstream hits_file("hits.txt");
+    hits.print(hits_file);
+  }
 
   return 0;
 }
