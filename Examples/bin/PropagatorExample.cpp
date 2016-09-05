@@ -47,7 +47,7 @@ main()
     // random numbers for initializing track parameters
     std::random_device                     r;
     std::default_random_engine             e(r());
-    std::uniform_real_distribution<double> uniform(-1, 1);
+    std::uniform_real_distribution<double> uniform(0, 1);
 
     typedef Propagator_t::observer_list_t<CurvilinearParameters, HitSimulator>
         ObsList_t;
@@ -72,9 +72,12 @@ main()
            tuple_t(-85 * units::_cm, 15 * units::_cm, 60 * units::_cm)};
 
     HitSimulator::result_type hits;
-    for (unsigned int i = 0; i < 1000; ++i) {
+    for (unsigned int i = 0; i < 100000; ++i) {
       Vector3D pos(0, 0, 0);
-      Vector3D mom(uniform(e), uniform(e), uniform(e));
+      double   pT  = 10 * units::_GeV;
+      double   eta = -4 + uniform(e) * 8;
+      double   phi = -M_PI + uniform(e) * 2 * M_PI;
+      Vector3D mom(pT * cos(phi), pT * sin(phi), pT / tan(2 * atan(exp(-eta))));
       mom *= 1 * units::_GeV;
       CurvilinearParameters pars(nullptr, pos, mom, +1);
       auto                  r = propagator.propagate(pars, ol);
