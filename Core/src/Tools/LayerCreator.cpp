@@ -55,17 +55,17 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   double maxZ   = -10e10;
   double minPhi = 10;
   double maxPhi = -10;
-  
+
   // 1st LOOP --- ESTIMATION ------ test code for automated detection
   // make a surface loop and get the extends
   for (auto& surface : surfaces)
     moduleExtend(*surface, minR, maxR, minPhi, maxPhi, minZ, maxZ);
-  
+
   // remaining layer parameters
   double layerR         = 0.5 * (minR + maxR);
   double layerHalfZ     = maxZ;
   double layerThickness = (maxR - minR) + 2 * envelopeR;
-  
+
   // harmonize the phi boundaries (1st step)
   // @TODO - allow for sectorally filled arrrays
   double phiStep = (maxPhi - minPhi) / (binsPhi - 1);
@@ -78,7 +78,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   ACTS_VERBOSE(" - from R min/max  = " << minR << " / " << maxR);
   ACTS_VERBOSE(" - with z min/max  = " << -layerHalfZ << " / " << layerHalfZ);
   ACTS_VERBOSE(" - with thickness  = " << (maxR - minR));
-  ACTS_VERBOSE("   and tolerance   = " << envelopeR );
+  ACTS_VERBOSE("   and tolerance   = " << envelopeR);
   ACTS_VERBOSE(" - and phi min/max = " << minPhi << " / " << maxPhi);
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << " ordered in ( "
                                        << binsPhi
@@ -127,7 +127,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>& surfaces,
   // make a surface loop and get the extends
   for (auto& surface : surfaces)
     moduleExtend(*surface, minR, maxR, minPhi, maxPhi, minZ, maxZ);
-  
+
   // harmonize the phi boundaries @TODO - allow for sectorally filled arrrays
   // later
   double phiStep = (maxPhi - minPhi) / (binsPhi - 1);
@@ -142,14 +142,14 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>& surfaces,
   ACTS_VERBOSE(" - at Z position   = " << layerZ);
   ACTS_VERBOSE(" - from R min/max  = " << minR << " / " << maxR);
   ACTS_VERBOSE(" - with thickness  = " << (maxZ - minZ));
-  ACTS_VERBOSE("   and tolerance   = " << envelopeZ );
+  ACTS_VERBOSE("   and tolerance   = " << envelopeZ);
   ACTS_VERBOSE(" - and phi min/max = " << minPhi << " / " << maxPhi);
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << " ordered in ( "
                                        << binsR
                                        << " x "
                                        << binsPhi
                                        << ")");
-  
+
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(

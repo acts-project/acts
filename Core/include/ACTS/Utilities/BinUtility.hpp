@@ -138,8 +138,7 @@ public:
   }
 
   /// Virtual Destructor
-  ~BinUtility(){}
-
+  ~BinUtility() {}
   /// Implizit Constructor
   BinUtility*
   clone() const
@@ -183,7 +182,6 @@ public:
     return {{bin0, bin1, bin2}};
   }
 
-
   /// Bin from a 3D vector (already in binning frame)
   /// - optionally the itransform is applied
   ///
@@ -195,7 +193,7 @@ public:
   {
     if (ba >= m_binningData.size()) return 0;
     size_t bEval = m_itransform
-        ? m_binningData[ba].searchGlobal((*m_itransform)*position)
+        ? m_binningData[ba].searchGlobal((*m_itransform) * position)
         : m_binningData[ba].searchGlobal(position);
     return bEval;
   }

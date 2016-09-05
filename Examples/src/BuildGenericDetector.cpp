@@ -90,27 +90,27 @@ trackingGeometry(Logging::Level lvl, size_t stage)
 
   // standard, an approach envelope
   plbConfig.approachSurfaceEnvelope = 0.5;
-    
+
   // STAGE 0 --- 1 pixel layer detector for debugging
-  if (stage == 0){
+  if (stage == 0) {
     // configure the central barrel
-    plbConfig.centralLayerBinMultipliers        = {1, 1};
-    
-    plbConfig.centralLayerRadii                 = { 29. };
-    plbConfig.centralLayerEnvelopes             = { pcEnvelope };
-    plbConfig.centralLayerMaterialConcentration = { 1 };
-    plbConfig.centralLayerMaterialProperties    = {pcmProperties };
-    plbConfig.centralModuleBinningSchema        = { {16, 13} };
-    plbConfig.centralModuleTiltPhi              = { 0.18 };
-    plbConfig.centralModuleHalfX                = { 8.4 };
-    plbConfig.centralModuleHalfY                = { 32. };
-    plbConfig.centralModuleThickness            = { 0.15 };
-    plbConfig.centralModuleMaterial             = { pcMaterial };
+    plbConfig.centralLayerBinMultipliers = {1, 1};
+
+    plbConfig.centralLayerRadii                 = {29.};
+    plbConfig.centralLayerEnvelopes             = {pcEnvelope};
+    plbConfig.centralLayerMaterialConcentration = {1};
+    plbConfig.centralLayerMaterialProperties    = {pcmProperties};
+    plbConfig.centralModuleBinningSchema        = {{16, 13}};
+    plbConfig.centralModuleTiltPhi              = {0.18};
+    plbConfig.centralModuleHalfX                = {8.4};
+    plbConfig.centralModuleHalfY                = {32.};
+    plbConfig.centralModuleThickness            = {0.15};
+    plbConfig.centralModuleMaterial             = {pcMaterial};
   } else {
     // configure the central barrel
     plbConfig.centralLayerBinMultipliers = {1, 1};
     // STAGE > 0 --- 4 pixel layers
-    plbConfig.centralLayerRadii          = {29., 55., 88., 120.};
+    plbConfig.centralLayerRadii = {29., 55., 88., 120.};
     plbConfig.centralLayerEnvelopes
         = {pcEnvelope, pcEnvelope, pcEnvelope, pcEnvelope};
     plbConfig.centralLayerMaterialConcentration = {1, 1, 1, 1};
@@ -124,7 +124,6 @@ trackingGeometry(Logging::Level lvl, size_t stage)
     plbConfig.centralModuleThickness = {0.15, 0.15, 0.15, 0.15};
     plbConfig.centralModuleMaterial
         = {pcMaterial, pcMaterial, pcMaterial, pcMaterial};
-    
   }
   // no frontside/backside
   plbConfig.centralModuleFrontsideStereo = {};
@@ -143,19 +142,19 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   }
   plbConfig.centralModulePositions = centralModulePositions;
   // STAGE = 0 - 1 disk detector
-  if (stage == 0){
-      // configure the endcaps
-      plbConfig.posnegLayerBinMultipliers        = { 1, 1 };
-      plbConfig.posnegLayerPositionsZ            = { 500. };
-      plbConfig.posnegLayerEnvelopeR             = { 1. };
-      plbConfig.posnegLayerMaterialConcentration = { 1 };
-      plbConfig.posnegLayerMaterialProperties    = { pcmProperties };
-      plbConfig.posnegModuleMinHalfX             = {{8.4}};
-      plbConfig.posnegModuleMaxHalfX             = {};
-      plbConfig.posnegModuleHalfY                = {{42.}};
-      plbConfig.posnegModulePhiBins              = {{48}};
-      plbConfig.posnegModuleThickness            = {{0.15}};
-      plbConfig.posnegModuleMaterial             = {{pcMaterial}};
+  if (stage == 0) {
+    // configure the endcaps
+    plbConfig.posnegLayerBinMultipliers        = {1, 1};
+    plbConfig.posnegLayerPositionsZ            = {500.};
+    plbConfig.posnegLayerEnvelopeR             = {1.};
+    plbConfig.posnegLayerMaterialConcentration = {1};
+    plbConfig.posnegLayerMaterialProperties    = {pcmProperties};
+    plbConfig.posnegModuleMinHalfX             = {{8.4}};
+    plbConfig.posnegModuleMaxHalfX             = {};
+    plbConfig.posnegModuleHalfY                = {{42.}};
+    plbConfig.posnegModulePhiBins              = {{48}};
+    plbConfig.posnegModuleThickness            = {{0.15}};
+    plbConfig.posnegModuleMaterial             = {{pcMaterial}};
   } else {
     // STAGE > 0 - pixel endcap detector
     // configure the endcaps
@@ -172,7 +171,6 @@ trackingGeometry(Logging::Level lvl, size_t stage)
     plbConfig.posnegModuleThickness = {{0.15}, {0.15}, {0.15}, {0.15}};
     plbConfig.posnegModuleMaterial
         = {{pcMaterial}, {pcMaterial}, {pcMaterial}, {pcMaterial}};
-
   }
   // no frontside/backside
   plbConfig.posnegModuleFrontsideStereo = {};
@@ -191,7 +189,7 @@ trackingGeometry(Logging::Level lvl, size_t stage)
                             plbConfig.posnegModuleHalfY[id]));
   }
   plbConfig.posnegModulePositions = posnegModulePositions;
-  
+
   // define the builder
   auto pixelLayerBuilder = std::make_shared<GenericLayerBuilder>(
       plbConfig, getDefaultLogger("PixelLayerBuilder", lvl));
@@ -217,7 +215,7 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   //-------------------------------------------------------------------------------------
   // strip detector
   //-------------------------------------------------------------------------------------
-  // STAGE > 1 - strip detector added 
+  // STAGE > 1 - strip detector added
   if (stage > 1) {
     // configure short strip layer builder
     GenericLayerBuilder::Config sslbConfig;

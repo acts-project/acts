@@ -224,7 +224,6 @@ public:
 
   /// Destructor
   ~BinningData() {}
-  
   /// return the number of bins - including sub bins
   size_t
   bins() const
@@ -234,23 +233,23 @@ public:
 
   // decrement
   // - boolean indicates if decrement actually worked
-  bool 
+  bool
   decrement(size_t& bin) const
-  { 
+  {
     size_t sbin = bin;
-    bin = bin > 0 ? bin-1 : ( option == open ? bin : m_bins-1 );
-    return (sbin!=bin);
+    bin         = bin > 0 ? bin - 1 : (option == open ? bin : m_bins - 1);
+    return (sbin != bin);
   }
-  
+
   // increment
   // - boolean indicates if decrement actually worked
-  bool 
+  bool
   increment(size_t& bin) const
   {
     size_t sbin = bin;
-    bin =  bin+1 < m_bins ? bin+1 : ( option == open ? bin : 0 );
-    return (sbin!=bin);
-  }  
+    bin         = bin + 1 < m_bins ? bin + 1 : (option == open ? bin : 0);
+    return (sbin != bin);
+  }
 
   /// return the boundaries  - including sub boundaries
   const std::vector<float>&
@@ -436,22 +435,22 @@ public:
   std::vector<size_t>
   neighbourRange(size_t bin) const
   {
-    size_t low   = bin;
-    size_t high  = bin;
+    size_t low  = bin;
+    size_t high = bin;
     // decrement and increment
     bool dsucc = decrement(low);
     bool isucc = increment(high);
     // both worked -> triple range
-    if ( dsucc && isucc ) return { low, bin, high };
+    if (dsucc && isucc) return {low, bin, high};
     // one worked -> double range
-    if ( dsucc || isucc) return { low, high };
+    if (dsucc || isucc) return {low, high};
     // none worked -> single bin
-    return { bin }; 
+    return {bin};
   }
 
 private:
-  size_t             m_bins;             ///< number of bins
-  std::vector<float> m_boundaries;       ///< vector of holding the bin boundaries
+  size_t             m_bins;        ///< number of bins
+  std::vector<float> m_boundaries;  ///< vector of holding the bin boundaries
   size_t             m_totalBins;        ///< including potential substructure
   std::vector<float> m_totalBoundaries;  ///< including potential substructure
 

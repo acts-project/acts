@@ -10,8 +10,8 @@
 // GenericLayerBuilder.cxx, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include <iostream>
 #include "ACTS/Examples/GenericLayerBuilder.hpp"
+#include <iostream>
 #include "ACTS/Detector/DetectorElementBase.hpp"
 #include "ACTS/Examples/GenericDetectorElement.hpp"
 #include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
@@ -257,13 +257,13 @@ Acts::GenericLayerBuilder::constructLayers()
     m_pLayers.reserve(numpnLayers);
     m_nLayers.reserve(numpnLayers);
 
-
-    /// this is the loop over th elayer positions 
+    /// this is the loop over th elayer positions
     for (size_t ipnl = 0; ipnl < numpnLayers; ++ipnl) {
       // some screen output
-      ACTS_VERBOSE("- building layers " << ipnl << " and " << numpnLayers+ipnl
-                                        << "at +/- z = "
-                                        << m_cfg.posnegLayerPositionsZ.at(ipnl));
+      ACTS_VERBOSE(
+          "- building layers " << ipnl << " and " << numpnLayers + ipnl
+                               << "at +/- z = "
+                               << m_cfg.posnegLayerPositionsZ.at(ipnl));
       /// some preparation work
       // define the layer envelope
       double layerEnvelopeR = m_cfg.posnegLayerEnvelopeR.at(ipnl);
@@ -271,15 +271,14 @@ Acts::GenericLayerBuilder::constructLayers()
       std::vector<const Surface*> nsVector;
       std::vector<const Surface*> psVector;
       // now fill the vectors
-      size_t ipnR       = 0;
+      size_t ipnR = 0;
       for (auto& discModulePositions : m_cfg.posnegModulePositions.at(ipnl)) {
         ACTS_VERBOSE("- building ring " << ipnR << " for this pair.");
         // now prepare all the shared stuff
         // (1) module specifications
-        double moduleThickness
-            = m_cfg.posnegModuleThickness.at(ipnl).at(ipnR);
-        double moduleMinHalfX = m_cfg.posnegModuleMinHalfX.at(ipnl).at(ipnR);
-        double moduleMaxHalfX = m_cfg.posnegModuleMaxHalfX.size()
+        double moduleThickness = m_cfg.posnegModuleThickness.at(ipnl).at(ipnR);
+        double moduleMinHalfX  = m_cfg.posnegModuleMinHalfX.at(ipnl).at(ipnR);
+        double moduleMaxHalfX  = m_cfg.posnegModuleMaxHalfX.size()
             ? m_cfg.posnegModuleMaxHalfX.at(ipnl).at(ipnR)
             : 0.;
         double moduleHalfY = m_cfg.posnegModuleHalfY.at(ipnl).at(ipnR);
@@ -293,7 +292,7 @@ Acts::GenericLayerBuilder::constructLayers()
           moduleMaterialPtr = std::shared_ptr<const SurfaceMaterial>(
               new HomogeneousSurfaceMaterial(moduleMaterialProperties));
         }
-        // (3) module bounds  
+        // (3) module bounds
         // create the bounds
         PlanarBounds* pBounds = nullptr;
         if (moduleMaxHalfX != 0. && moduleMinHalfX != moduleMaxHalfX)

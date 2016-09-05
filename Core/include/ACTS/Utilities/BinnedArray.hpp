@@ -34,17 +34,15 @@ class BinnedArray
 public:
   /// Default Constructor - needed for inherited classes
   BinnedArray() {}
-  
   /// Virtual Destructor
   virtual ~BinnedArray() {}
-  
   /// Returns the object in the associated bin according the local position
   ///
   /// @param lposition is the local position for the object retrieval
   /// @return the object according to the estimated bin
   virtual T
   object(const Vector2D& lposition, std::array<size_t, 3>& bins) const = 0;
-  
+
   /// same method without bins for backward compatibility
   virtual T
   object(const Vector2D& lposition) const
@@ -59,7 +57,7 @@ public:
   /// @return the object according to the estimated bin
   virtual T
   object(const Vector3D& position, std::array<size_t, 3>& bin) const = 0;
-  
+
   /// same method without bins for backward compatibility
   virtual T
   object(const Vector3D& position) const
@@ -70,7 +68,7 @@ public:
 
   /// Returns the object found through global position search
   /// and their neighbor objects
-  /// 
+  ///
   /// @param bin is the binning
   /// @return a vector of unique objects
   virtual std::vector<T>
@@ -89,7 +87,6 @@ public:
   /// - if returned 0 it is a 0D array
   virtual const BinUtility*
   binUtility() const = 0;
-  
 };
 
 }  // end of namespace Acts

@@ -32,7 +32,6 @@ class ISurfaceArrayCreator
 public:
   /// Virtual destructor
   virtual ~ISurfaceArrayCreator() {}
-  
   /// SurfaceArrayCreator interface method
   ///
   /// - create an array in a cylinder, binned in phi, z
@@ -67,7 +66,7 @@ public:
   /// @param maxPhi is the maximal phi position of the surfaces
   /// @param rBoundaries are the optional boundaris of the r rings
   /// @param transform is the (optional) additional transform applied
-  ///                       
+  ///
   /// @return a unique pointer a new SurfaceArray
   virtual std::unique_ptr<SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
