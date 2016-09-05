@@ -50,7 +50,6 @@ public:
     // conversion to SI units: p --> (p/c)/J / (kg * m^2 / s^2)
     m_params[3] = charge / units::Nat2SI<units::MOMENTUM>(p);
 
-    gsl_odeiv2_driver_set_hmax(m_GSL_driver.get(), stepMax);
     performStep(input, stepMax);
 
     return CurvilinearParameters(nullptr,
