@@ -57,7 +57,8 @@ struct sincosCache
 /// @TODO check if fast Sin/Cos ArcTan is necessary in field test
 ///
 /// @TODO Move the Covariance away from this into the method signature of the
-/// call
+/// call 
+/// @TODO (short term) protect against lCovariance = nullptr acess
 
 class BoundaryCheck
 {
