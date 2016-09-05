@@ -10,6 +10,7 @@
 #define ACTS_EXTRAPOLATION_PROPAGATOR_H 1
 
 #include <type_traits>
+#include "ACTS/Extrapolation/AbortList.hpp"
 #include "ACTS/Extrapolation/ObserverList.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
