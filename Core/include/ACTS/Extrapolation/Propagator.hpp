@@ -12,6 +12,7 @@
 #include <type_traits>
 #include "ACTS/Extrapolation/AbortList.hpp"
 #include "ACTS/Extrapolation/ObserverList.hpp"
+#include "ACTS/Extrapolation/detail/Extendable.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
 namespace Acts {
@@ -80,33 +81,20 @@ public:
   enum struct Status { pSUCCESS, pFAILURE, pUNSET, pINPROGRESS };
 
   template <typename TrackParameters, typename... ExResult>
-  struct Result
+  struct Result : private detail::Extendable<ExResult...>
   {
     Result(const TrackParameters& startParameters,
            const Status&          s = Status::pUNSET)
-      : endParameters(startParameters), status(s), m_tResults()
+      : detail::Extendable<ExResult...>()
+      , endParameters(startParameters)
+      , status(s)
     {
     }
+
+    using detail::Extendable<ExResult...>::get;
 
     TrackParameters endParameters;
     Status          status = Status::pUNSET;
-
-    template <typename R>
-    const R&
-    get() const
-    {
-      return std::get<R>(m_tResults);
-    }
-
-    template <typename R>
-    R&
-    get()
-    {
-      return std::get<R>(m_tResults);
-    }
-
-  private:
-    std::tuple<ExResult...> m_tResults;
   };
 
 private:

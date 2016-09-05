@@ -4,6 +4,7 @@
 #include <iostream>
 #include <tuple>
 #include <utility>
+#include "ACTS/Extrapolation/detail/Extendable.hpp"
 #include "ACTS/Utilities/detail/MPL/all_of.hpp"
 #include "ACTS/Utilities/detail/MPL/boost_mpl_helper.hpp"
 #include "ACTS/Utilities/detail/MPL/has_duplicates.hpp"
@@ -141,7 +142,7 @@ namespace {
 }
 
 template <typename... observers>
-struct ObserverList
+struct ObserverList : private detail::Extendable<observers...>
 {
 private:
   static_assert(not has_duplicates_v<observers...>,
@@ -149,23 +150,13 @@ private:
 
   typedef type_collector_t<result_type_extractor, observers...> results;
 
+  using detail::Extendable<observers...>::tuple;
+
 public:
   template <template <typename...> class R>
   using result_type = unpack_boost_set_as_tparams_t<R, results>;
 
-  template <typename obs>
-  const obs&
-  get() const
-  {
-    return std::get<obs>(m_tObservers);
-  }
-
-  template <typename obs>
-  obs&
-  get()
-  {
-    return std::get<obs>(m_tObservers);
-  }
+  using detail::Extendable<observers...>::get;
 
   template <typename input, typename result_t>
   void
@@ -176,12 +167,8 @@ public:
     static_assert(all_of_v<observer_traits_checker<observers, input>::value...>,
                   "not all observers support the specified input");
 
-    ObserverListImpl<observers...>::observe(
-        m_tObservers, current, previous, result);
+    ObserverListImpl<observers...>::observe(tuple(), current, previous, result);
   }
-
-private:
-  std::tuple<observers...> m_tObservers;
 };
 
 }  // namespace Acts
