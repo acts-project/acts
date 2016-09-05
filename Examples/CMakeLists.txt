@@ -23,7 +23,10 @@ install (TARGETS ACTSExamples
          COMPONENT Examples)
 
 install (TARGETS ACTSGenericDetector PropagatorExample
-         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/Examples)
+
+install (FILES scripts/plot_hits.gp scripts/plot_track.gp
+         DESTINATION ${CMAKE_INSTALL_BINDIR}/Examples)
 
 install (DIRECTORY include/ACTS 
          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
