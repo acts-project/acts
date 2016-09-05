@@ -22,7 +22,7 @@ install (TARGETS ACTSExamples
          LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
          COMPONENT Examples)
 
-install (TARGETS ACTSGenericDetector
+install (TARGETS ACTSGenericDetector PropagatorExample
          RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 install (DIRECTORY include/ACTS 
