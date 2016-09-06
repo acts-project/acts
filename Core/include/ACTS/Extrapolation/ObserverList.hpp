@@ -21,10 +21,10 @@ namespace {
                                            std::declval<const input&>(),
                                            std::declval<result&>()))>
   std::true_type
-  test_with_result(int);
+  test_observer_with_result(int);
 
   template <typename, typename, typename>
-  std::false_type test_with_result(...);
+  std::false_type test_observer_with_result(...);
 
   template <typename T,
             typename input,
@@ -32,19 +32,20 @@ namespace {
                                 operator()(std::declval<const input&>(),
                                            std::declval<const input&>()))>
   std::true_type
-  test_without_result(int);
+  test_observer_without_result(int);
 
   template <typename, typename>
-  std::false_type test_without_result(...);
+  std::false_type test_observer_without_result(...);
 
   // clang-format off
   template <typename T, typename input, bool has_result = false>
-  struct observer_traits_check_impl : decltype(test_without_result<T, input>(0)) {};
+  struct observer_traits_check_impl : decltype(test_observer_without_result<T, input>(0)) {};
   // clang-format on
 
   template <typename T, typename input>
   struct observer_traits_check_impl<T, input, true>
-      : decltype(test_with_result<T, input, detail::result_type_t<T>>(0))
+      : decltype(
+            test_observer_with_result<T, input, detail::result_type_t<T>>(0))
   {
   };
 
