@@ -118,8 +118,8 @@ public:
             const ObserverList&    obsList,
             const AbortList&       conditions)
   {
-    typedef obs_list_result_t<TrackParameters, ObserverList> result_t;
-    result_t r(start, Status::pINPROGRESS);
+    typedef obs_list_result_t<TrackParameters, ObserverList> result_type;
+    result_type r(start, Status::pINPROGRESS);
 
     TrackParameters previous = start;
     TrackParameters current  = start;

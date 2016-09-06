@@ -13,10 +13,6 @@
 namespace Acts {
 
 namespace {
-  using detail::all_of_v;
-  using detail::has_duplicates_v;
-  using detail::type_collector_t;
-
   template <typename T,
             typename input,
             typename result,
@@ -137,10 +133,11 @@ template <typename... observers>
 struct ObserverList : private detail::Extendable<observers...>
 {
 private:
-  static_assert(not has_duplicates_v<observers...>,
+  static_assert(not detail::has_duplicates_v<observers...>,
                 "same observer type specified several times");
 
-  typedef type_collector_t<detail::result_type_extractor, observers...> results;
+  typedef detail::type_collector_t<detail::result_type_extractor, observers...>
+      results;
 
   using detail::Extendable<observers...>::tuple;
 
@@ -156,8 +153,9 @@ public:
              const input& previous,
              result_t&    result) const
   {
-    static_assert(all_of_v<observer_traits_checker<observers, input>::value...>,
-                  "not all observers support the specified input");
+    static_assert(
+        detail::all_of_v<observer_traits_checker<observers, input>::value...>,
+        "not all observers support the specified input");
 
     ObserverListImpl<observers...>::observe(tuple(), current, previous, result);
   }

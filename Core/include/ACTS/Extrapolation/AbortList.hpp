@@ -144,9 +144,9 @@ public:
   bool
   operator()(input& current, const result_t& r) const
   {
-    static_assert(
-        all_of_v<conditions_traits_checker<conditions, input>::value...>,
-        "not all abort conditions support the specified input");
+    static_assert(detail::all_of_v<conditions_traits_checker<conditions,
+                                                             input>::value...>,
+                  "not all abort conditions support the specified input");
 
     AbortListImpl<conditions...>::check(tuple(), current, r);
   }
