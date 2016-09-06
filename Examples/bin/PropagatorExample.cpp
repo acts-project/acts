@@ -2,6 +2,8 @@
 #include <fstream>
 #include <random>
 #include "ACTS/EventData/TrackParameters.hpp"
+#include "ACTS/Extrapolation/AbortConditions.hpp"
+#include "ACTS/Extrapolation/AbortList.hpp"
 #include "ACTS/Extrapolation/GSLStepper.hpp"
 #include "ACTS/Extrapolation/ObserverList.hpp"
 #include "ACTS/Extrapolation/Observers.hpp"
@@ -26,6 +28,9 @@ main()
   // first example: simple propagation of a single track
   {
     typedef ObserverList<PathLengthObserver, DebugObserver> ObsList_t;
+    typedef AbortList<MaxPathLength> AbortConditions_t;
+    AbortConditions_t                al;
+    al.get<MaxPathLength>().maxPathLength = 35 * units::_cm;
 
     std::ofstream out_file("track.txt");
     ObsList_t     ol;
@@ -33,7 +38,7 @@ main()
     Vector3D              pos(0, 0, 0);
     Vector3D              mom(1 * units::_GeV, 0, 0);
     CurvilinearParameters pars(nullptr, pos, mom, +1);
-    auto                  r = propagator.propagate(pars, ol);
+    auto                  r = propagator.propagate(pars, ol, al);
     std::cout << "path length = "
               << r.get<PathLengthObserver::result_type>().pathLength / units::_m
               << std::endl;
@@ -47,6 +52,7 @@ main()
     std::uniform_real_distribution<double> uniform(0, 1);
 
     typedef ObserverList<HitSimulator> ObsList_t;
+    typedef AbortList<>                AbortConditions_t;
 
     ObsList_t     ol;
     HitSimulator& hit_sim = ol.get<HitSimulator>();
@@ -68,7 +74,7 @@ main()
            tuple_t(-85 * units::_cm, 15 * units::_cm, 60 * units::_cm)};
 
     HitSimulator::result_type hits;
-    for (unsigned int i = 0; i < 100000; ++i) {
+    for (unsigned int i = 0; i < 1000; ++i) {
       Vector3D pos(0, 0, 0);
       double   pT  = 10 * units::_GeV;
       double   eta = -4 + uniform(e) * 8;
@@ -76,7 +82,7 @@ main()
       Vector3D mom(pT * cos(phi), pT * sin(phi), pT / tan(2 * atan(exp(-eta))));
       mom *= 1 * units::_GeV;
       CurvilinearParameters pars(nullptr, pos, mom, +1);
-      auto                  r = propagator.propagate(pars, ol);
+      auto r = propagator.propagate(pars, ol, AbortConditions_t());
       hits.add(r.get<HitSimulator::result_type>());
     }
 
