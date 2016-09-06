@@ -40,8 +40,7 @@ namespace Test {
   {
     typedef boost::mpl::set<float, int, char>::type boost_set;
     typedef variadic_struct<float, int, char>       expected;
-    typedef detail::unpack_boost_set_as_tparams_t<variadic_struct, boost_set>
-        found;
+    typedef detail::boost_set_as_tparams_t<variadic_struct, boost_set> found;
 
     static_assert(std::is_same<found, expected>::value,
                   "using boost::mpl::set for variadic templates failed");

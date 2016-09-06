@@ -7,19 +7,21 @@ namespace Acts {
 
 namespace detail {
 
-  // clang-format off
+  namespace {
+    // clang-format off
+    template <bool... values>
+    struct all_of : std::true_type {};
+
+    template <bool... others>
+    struct all_of<false, others...> : public std::false_type {};
+
+    template <bool... others>
+    struct all_of<true, others...> : public all_of<others...> {};
+    // clang-format on
+  }  // end of anonymous namespace
+
   template <bool... values>
-  struct all_of : std::true_type  {};
-
-  template <bool... others>
-  struct all_of<false, others...> : public std::false_type {};
-
-  template <bool... others>
-  struct all_of<true, others...> : public all_of<others...> {};
-
-  template<bool... values>
   constexpr bool all_of_v = all_of<values...>::value;
-  // clang-format on
 }  // namespace detail
 
 }  // namespace Acts

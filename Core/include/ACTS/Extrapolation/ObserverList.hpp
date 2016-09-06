@@ -16,7 +16,6 @@ namespace {
   using detail::all_of_v;
   using detail::has_duplicates_v;
   using detail::type_collector_t;
-  using detail::unpack_boost_set_as_tparams_t;
 
   template <typename T,
             typename input,
@@ -147,7 +146,7 @@ private:
 
 public:
   template <template <typename...> class R>
-  using result_type = unpack_boost_set_as_tparams_t<R, results>;
+  using result_type = detail::boost_set_as_tparams_t<R, results>;
 
   using detail::Extendable<observers...>::get;
 

@@ -136,7 +136,7 @@ private:
   using detail::Extendable<conditions...>::tuple;
 
 public:
-  typedef detail::unpack_boost_set_as_tparams_t<ObserverList, observers>
+  typedef detail::boost_set_as_tparams_t<ObserverList, observers>
       observer_list_type;
   using detail::Extendable<conditions...>::get;
 
