@@ -6,34 +6,13 @@
 #include "ACTS/Extrapolation/AbortConditions.hpp"
 #include "ACTS/Extrapolation/ObserverList.hpp"
 #include "ACTS/Extrapolation/detail/Extendable.hpp"
+#include "ACTS/Extrapolation/detail/condition_uses_result_type.hpp"
 #include "ACTS/Utilities/detail/MPL/boost_mpl_helper.hpp"
 #include "ACTS/Utilities/detail/MPL/has_duplicates.hpp"
-#include "ACTS/Utilities/detail/MPL/type_collector.hpp"
 
 namespace Acts {
 
 namespace {
-  template <typename T, bool has_observer = true>
-  struct condition_has_return_type_impl
-  {
-    typedef detail::observer_type_extractor::type<T> observer;
-    static constexpr bool                            value
-        = detail::result_type_extractor::has_type<observer>::value;
-  };
-
-  template <typename T>
-  struct condition_has_return_type_impl<T, false> : std::false_type
-  {
-  };
-
-  template <typename T>
-  struct condition_has_return_type
-      : condition_has_return_type_impl<T,
-                                       detail::observer_type_extractor::
-                                           has_type<T>::value>
-  {
-  };
-
   template <typename T,
             typename input,
             typename result,
@@ -63,13 +42,13 @@ namespace {
   template <typename T, typename input>
   struct conditions_traits_check_impl<T, input, true>
       : decltype(test_condition_with_result<T,input,
-          typename detail::result_type_extractor::type<detail::observer_type_extractor::type<T>>>(0))
+          typename detail::result_type_t<detail::observer_type_t<T>>>(0))
   {
   };
 
   template <typename T, typename input>
   struct conditions_traits_checker
-      : conditions_traits_check_impl<T, input, condition_has_return_type<T>::value>
+      : conditions_traits_check_impl<T, input, detail::condition_uses_result_type<T>::value>
   {
   };
   // clang-format on
@@ -81,10 +60,10 @@ namespace {
     static bool
     check(const condition& c, const result& r, input& current)
     {
-      typedef detail::observer_type_extractor::type<condition> observer_t;
-      typedef detail::result_type_extractor::type<observer_t>  result_t;
+      typedef detail::observer_type_t<condition>   observer_type;
+      typedef detail::result_type_t<observer_type> result_type;
 
-      return c(r.template get<result_t>(), current);
+      return c(r.template get<result_type>(), current);
     }
   };
 
@@ -110,7 +89,8 @@ namespace {
     check(const T& conditions_tuple, input& current, const result& r)
     {
       const auto&    this_condition = std::get<first>(conditions_tuple);
-      constexpr bool has_result     = condition_has_return_type<first>::value;
+      constexpr bool has_result
+          = detail::condition_uses_result_type<first>::value;
       return ConditionCaller<has_result>::check(this_condition, r, current)
           || AbortListImpl<others...>::check(conditions_tuple, current, r);
     }
@@ -123,8 +103,9 @@ namespace {
     static bool
     check(const T& conditions_tuple, input& current, const result& r)
     {
-      constexpr bool has_result     = condition_has_return_type<last>::value;
-      const auto&    this_condition = std::get<last>(conditions_tuple);
+      constexpr bool has_result
+          = detail::condition_uses_result_type<last>::value;
+      const auto& this_condition = std::get<last>(conditions_tuple);
       return ConditionCaller<has_result>::check(this_condition, r, current);
     }
   };

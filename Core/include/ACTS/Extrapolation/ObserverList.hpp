@@ -16,7 +16,6 @@ namespace {
   using detail::all_of_v;
   using detail::has_duplicates_v;
   using detail::type_collector_t;
-  using detail::result_type_extractor;
   using detail::unpack_boost_set_as_tparams_t;
 
   template <typename T,
@@ -50,17 +49,13 @@ namespace {
 
   template <typename T, typename input>
   struct observer_traits_check_impl<T, input, true>
-      : decltype(
-            test_with_result<T, input, typename result_type_extractor::type<T>>(
-                0))
+      : decltype(test_with_result<T, input, detail::result_type_t<T>>(0))
   {
   };
 
   template <typename T, typename input>
   struct observer_traits_checker
-      : observer_traits_check_impl<T,
-                                   input,
-                                   result_type_extractor::has_type<T>::value>
+      : observer_traits_check_impl<T, input, detail::has_result_type_v<T>>
   {
   };
 
@@ -74,9 +69,7 @@ namespace {
             const input&    previous,
             result&         r)
     {
-      obs(current,
-          previous,
-          r.template get<typename result_type_extractor::type<observer>>());
+      obs(current, previous, r.template get<detail::result_type_t<observer>>());
     }
   };
 
@@ -108,7 +101,7 @@ namespace {
             result&      r)
     {
       const auto& this_observer = std::get<first>(obs_tuple);
-      ObserverCaller<result_type_extractor::has_type<first>::value>::observe(
+      ObserverCaller<detail::has_result_type_v<first>>::observe(
           this_observer, current, previous, r);
       ObserverListImpl<others...>::observe(obs_tuple, current, previous, r);
     }
@@ -125,7 +118,7 @@ namespace {
             result&      r)
     {
       const auto& this_observer = std::get<last>(obs_tuple);
-      ObserverCaller<result_type_extractor::has_type<last>::value>::observe(
+      ObserverCaller<detail::has_result_type_v<last>>::observe(
           this_observer, current, previous, r);
     }
   };
@@ -148,7 +141,7 @@ private:
   static_assert(not has_duplicates_v<observers...>,
                 "same observer type specified several times");
 
-  typedef type_collector_t<result_type_extractor, observers...> results;
+  typedef type_collector_t<detail::result_type_extractor, observers...> results;
 
   using detail::Extendable<observers...>::tuple;
 

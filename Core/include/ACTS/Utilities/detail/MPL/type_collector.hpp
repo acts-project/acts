@@ -39,6 +39,12 @@ namespace detail {
     using type = typename extractor<T>::type;
   };
 
+  template <typename T>
+  constexpr bool has_result_type_v = result_type_extractor::has_type<T>::value;
+
+  template <typename T>
+  using result_type_t = typename result_type_extractor::type<T>;
+
   struct observer_type_extractor
   {
   private:
@@ -55,53 +61,55 @@ namespace detail {
     using type = typename extractor<T>::type;
   };
 
-  namespace {
-    template <typename sequence, typename ex, typename T, bool has_type = false>
-    struct type_inserter
-    {
-      typedef sequence type;
-    };
+  template <typename T>
+  constexpr bool has_observer_type_v
+      = observer_type_extractor::has_type<T>::value;
 
-    template <typename sequence, typename ex, typename T>
-    struct type_inserter<sequence, ex, T, true>
-    {
-      typedef typename bm::insert<sequence, typename ex::template type<T>>::type
-          type;
-    };
+  template <typename T>
+  using observer_type_t = typename observer_type_extractor::type<T>;
 
-    template <typename sequence, typename ex, typename... traits>
-    struct type_collector_impl;
+  template <typename sequence, typename ex, typename T, bool has_type = false>
+  struct type_inserter
+  {
+    typedef sequence type;
+  };
 
-    template <typename sequence, typename ex>
-    struct type_collector_impl<sequence, ex>
-    {
-      typedef sequence type;
-    };
+  template <typename sequence, typename ex, typename T>
+  struct type_inserter<sequence, ex, T, true>
+  {
+    typedef
+        typename bm::insert<sequence, typename ex::template type<T>>::type type;
+  };
 
-    template <typename sequence,
-              typename ex,
-              typename first,
-              typename... others>
-    struct type_collector_impl<sequence, ex, first, others...>
-    {
-      typedef typename type_inserter<sequence,
-                                     ex,
-                                     first,
-                                     ex::template has_type<first>::value>::type
-          new_seq;
-      typedef typename type_collector_impl<new_seq, ex, others...>::type type;
-    };
+  template <typename sequence, typename ex, typename... traits>
+  struct type_collector_impl;
 
-    template <typename sequence, typename ex, typename last>
-    struct type_collector_impl<sequence, ex, last>
-    {
-      typedef
-          typename type_inserter<sequence,
-                                 ex,
-                                 last,
-                                 ex::template has_type<last>::value>::type type;
-    };
-  }
+  template <typename sequence, typename ex>
+  struct type_collector_impl<sequence, ex>
+  {
+    typedef sequence type;
+  };
+
+  template <typename sequence, typename ex, typename first, typename... others>
+  struct type_collector_impl<sequence, ex, first, others...>
+  {
+    typedef typename type_inserter<sequence,
+                                   ex,
+                                   first,
+                                   ex::template has_type<first>::value>::type
+        new_seq;
+    typedef typename type_collector_impl<new_seq, ex, others...>::type type;
+  };
+
+  template <typename sequence, typename ex, typename last>
+  struct type_collector_impl<sequence, ex, last>
+  {
+    typedef
+        typename type_inserter<sequence,
+                               ex,
+                               last,
+                               ex::template has_type<last>::value>::type type;
+  };
 
   template <typename extractor, typename... traits>
   struct type_collector
