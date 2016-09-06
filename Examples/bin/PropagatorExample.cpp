@@ -28,9 +28,10 @@ main()
   // first example: simple propagation of a single track
   {
     typedef ObserverList<PathLengthObserver, DebugObserver> ObsList_t;
-    typedef AbortList<MaxPathLength> AbortConditions_t;
-    AbortConditions_t                al;
+    typedef AbortList<MaxPathLength, MaxRadius>             AbortConditions_t;
+    AbortConditions_t al;
     al.get<MaxPathLength>().maxPathLength = 35 * units::_cm;
+    al.get<MaxRadius>().maxRadius         = 15 * units::_cm;
 
     std::ofstream out_file("track.txt");
     ObsList_t     ol;

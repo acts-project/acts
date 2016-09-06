@@ -41,5 +41,17 @@ struct MaxPathLength
   }
 };
 
+struct MaxRadius
+{
+  double maxRadius = 0;
+
+  template <typename TrackParameters>
+  bool
+  operator()(const TrackParameters& pars) const
+  {
+    return (pars.position().perp() > maxRadius);
+  }
+};
+
 }  // namespace Acts
 #endif  //  ACTS_ABORTCONDITIONS_HPP
