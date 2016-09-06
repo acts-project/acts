@@ -41,8 +41,8 @@ class ExtrapolationMode
 {
 public:
   enum eMode {
-    Destination = 1,  // try to hit the destination, if not other means to stop
-    Propagation = 2,  // any propagation but the final one to destinaion
+    Destination             = 1,  // try to hit the destination, if not other means to stop
+    Propagation             = 2,  // any propagation but the final one to destinaion
     StopWithPathLimit       = 3,   // stop when the path limit is reached
     StopWithMaterialLimitX0 = 4,   // stop when  material limit is reached in X0
     StopWithMaterialLimitL0 = 5,   // stop when material limit is reached in L0
