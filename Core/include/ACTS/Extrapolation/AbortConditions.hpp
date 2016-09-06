@@ -27,13 +27,19 @@ private:
 //  double maxMaterial = 0;
 //};
 //
-// struct MaxPathLength
-//{
-//  typedef PathLengthObserver         observer_type;
-//  typedef observer_type::result_type result_type;
-//
-//  double maxPathLength = 0;
-//};
+struct MaxPathLength
+{
+  typedef PathLengthObserver observer_type;
+
+  double maxPathLength = 0;
+
+  template <typename TrackParameters>
+  bool
+  operator()(const observer_type::result_type& r, TrackParameters&) const
+  {
+    return (r.pathLength > maxPathLength);
+  }
+};
 
 }  // namespace Acts
 #endif  //  ACTS_ABORTCONDITIONS_HPP

@@ -112,9 +112,11 @@ private:
 
 public:
   /// @brief propagate track parameters
-  template <typename TrackParameters, typename ObserverList>
+  template <typename TrackParameters, typename ObserverList, typename AbortList>
   obs_list_result_t<TrackParameters, ObserverList>
-  propagate(const TrackParameters& start, const ObserverList& obsList)
+  propagate(const TrackParameters& start,
+            const ObserverList&    obsList,
+            const AbortList&       conditions)
   {
     typedef obs_list_result_t<TrackParameters, ObserverList> result_t;
     result_t r(start, Status::pINPROGRESS);
@@ -124,6 +126,7 @@ public:
     for (unsigned int i = 0; i < 1000; ++i) {
       current = m_impl.doStep(previous, 1 * units::_cm);
       obsList(current, previous, r);
+      if (conditions(current, r)) break;
       previous = current;
     }
 
