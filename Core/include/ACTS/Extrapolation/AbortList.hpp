@@ -2,6 +2,7 @@
 #define ACTS_ABORT_LIST_CREATOR_HPP 1
 
 #include <tuple>
+#include <type_traits>
 #include "ACTS/Extrapolation/AbortConditions.hpp"
 #include "ACTS/Extrapolation/ObserverList.hpp"
 #include "ACTS/Extrapolation/detail/Extendable.hpp"
@@ -12,6 +13,27 @@
 namespace Acts {
 
 namespace {
+  template <typename T, bool has_observer = true>
+  struct condition_has_return_type_impl
+  {
+    typedef detail::observer_type_extractor::type<T> observer;
+    static constexpr bool                            value
+        = detail::result_type_extractor::has_type<observer>::value;
+  };
+
+  template <typename T>
+  struct condition_has_return_type_impl<T, false> : std::false_type
+  {
+  };
+
+  template <typename T>
+  struct condition_has_return_type
+      : condition_has_return_type_impl<T,
+                                       detail::observer_type_extractor::
+                                           has_type<T>::value>
+  {
+  };
+
   template <typename T,
             typename input,
             typename result,
@@ -47,9 +69,7 @@ namespace {
 
   template <typename T, typename input>
   struct conditions_traits_checker
-      : conditions_traits_check_impl<T, input,
-                                   detail::observer_type_extractor::has_type<T>::value &&
-                                   detail::result_type_extractor::has_type<detail::observer_type_extractor::type<T>>::value>
+      : conditions_traits_check_impl<T, input, condition_has_return_type<T>::value>
   {
   };
   // clang-format on
@@ -90,12 +110,9 @@ namespace {
     check(const T& conditions_tuple, input& current, const result& r)
     {
       const auto&    this_condition = std::get<first>(conditions_tuple);
-      constexpr bool has_result
-          = detail::observer_type_extractor::has_type<first>::value
-          && detail::result_type_extractor::
-                 has_type<detail::observer_type_extractor::type<first>>::value;
+      constexpr bool has_result     = condition_has_return_type<first>::value;
       return ConditionCaller<has_result>::check(this_condition, r, current)
-          || AbortListImpl<others...>::observe(conditions_tuple, current, r);
+          || AbortListImpl<others...>::check(conditions_tuple, current, r);
     }
   };
 
@@ -106,12 +123,8 @@ namespace {
     static bool
     check(const T& conditions_tuple, input& current, const result& r)
     {
-      constexpr bool has_result
-          = detail::observer_type_extractor::has_type<last>::value
-          && detail::result_type_extractor::
-                 has_type<detail::observer_type_extractor::type<last>>::value;
-
-      const auto& this_condition = std::get<last>(conditions_tuple);
+      constexpr bool has_result     = condition_has_return_type<last>::value;
+      const auto&    this_condition = std::get<last>(conditions_tuple);
       return ConditionCaller<has_result>::check(this_condition, r, current);
     }
   };
