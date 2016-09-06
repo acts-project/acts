@@ -356,13 +356,15 @@ Surface::transform() const
 inline const Vector3D
 Surface::center() const
 {
-  return transform().translation();
+  // fast access via tranform matrix (and not translation())
+  auto tMatrix = transform().matrix();
+  return Vector3D(tMatrix(0,3),tMatrix(1,3),tMatrix(2,3));
 }
 
 inline const Vector3D
 Surface::normal(const Vector3D&) const
 {
-  return normal(s_origin2D);
+  return std::move(normal(s_origin2D));
 }
 
 template <class T>

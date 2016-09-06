@@ -15,9 +15,9 @@
 
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
-// STD
 #include <cmath>
 #include <vector>
+#include <memory>
 
 namespace Acts {
 
@@ -57,7 +57,8 @@ struct sincosCache
 /// @TODO check if fast Sin/Cos ArcTan is necessary in field test
 ///
 /// @TODO Move the Covariance away from this into the method signature of the
-/// call
+/// call 
+/// @TODO (short term) protect against lCovariance = nullptr acess
 
 class BoundaryCheck
 {
@@ -68,13 +69,13 @@ public:
     chi2corr = 1   ///< relative (chi2 based) with full correlations
   };
 
-  bool   checkLoc0;               ///< check local 1 coordinate
-  bool   checkLoc1;               ///< check local 2 coordinate
-  double toleranceLoc0;           ///< absolute tolerance in local 1 coordinate
-  double toleranceLoc1;           ///< absolute tolerance in local 2 coordinate
-  double nSigmas;                 ///< allowed sigmas for chi2 boundary check
-  ActsSymMatrixD<2> lCovariance;  ///< local covariance matrix
-  BoundaryCheckType bcType;       ///< the type how we check the boundary
+  bool   checkLoc0;                                   ///< check local 1 coordinate
+  bool   checkLoc1;                                   ///< check local 2 coordinate
+  double toleranceLoc0;                               ///< absolute tolerance in local 1 coordinate
+  double toleranceLoc1;                               ///< absolute tolerance in local 2 coordinate
+  double nSigmas;                                     ///< allowed sigmas for chi2 boundary check
+  std::unique_ptr< ActsSymMatrixD<2> > lCovariance;   ///< local covariance matrix
+  BoundaryCheckType bcType;                           ///< the type how we check the boundary
 
   /// Constructor for single boolean behavious
   BoundaryCheck(bool sCheck);
@@ -95,10 +96,21 @@ public:
                 double                   nsig  = 1.,
                 bool                     chkL0 = true,
                 bool                     chkL1 = true);
+  
+  /// Copy Constructor
+  ///
+  /// @param bCheck is the source class
+  BoundaryCheck(const BoundaryCheck& bCheck);
 
+  /// Assignment operator
+  /// 
+  /// @param bCheck is the source class
+  BoundaryCheck& operator=(const BoundaryCheck& bCheck); 
+    
   /// Overwriting of the
   /// Conversion operator to bool
   operator bool() const { return (checkLoc0 || checkLoc1); }
+
   ///  Each Bounds has a method inside, which checks if a LocalPosition is
   ///  inside the bounds.
   ///  Inside can be called without/with boundary check */
@@ -200,11 +212,13 @@ BoundaryCheck::FastSinCos(double x) const
 
 // does the conversion of an ellipse of height h and width w to an polygon with
 // 4 + 4*resolution points
+// @TODO clean this code  & write documentation
 inline std::vector<Vector2D>
 BoundaryCheck::EllipseToPoly(int resolution) const
 {
-  const double h = nSigmas * sqrt(lCovariance(1, 1));
-  const double w = nSigmas * sqrt(lCovariance(0, 0));
+
+  const double h = lCovariance ? nSigmas * sqrt((*lCovariance)(1, 1)) : 0.;
+  const double w = lCovariance ? nSigmas * sqrt((*lCovariance)(0, 0)) : 0.;
 
   // first add the four vertices
   std::vector<Vector2D> v((1 + resolution) * 4);

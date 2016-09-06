@@ -245,9 +245,9 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
 
   // a fast FALSE
   double fabsY   = fabs(lpos[Acts::eLOC_Y]);
-  double max_ell = bchk.lCovariance(0, 0) > bchk.lCovariance(1, 1)
-      ? bchk.lCovariance(0, 0)
-      : bchk.lCovariance(1, 1);
+  double max_ell = (*bchk.lCovariance)(0, 0) > (*bchk.lCovariance)(1, 1)
+      ? (*bchk.lCovariance)(0, 0)
+      : (*bchk.lCovariance)(1, 1);
   double limit = bchk.nSigmas * sqrt(max_ell);
   if (fabsY > (m_valueStore.at(TrapezoidBounds::bv_halfY) + limit))
     return false;
@@ -256,9 +256,9 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   if (fabsX > (m_valueStore.at(TrapezoidBounds::bv_maxHalfX) + limit))
     return false;
   // a fast TRUE
-  double min_ell = bchk.lCovariance(0, 0) < bchk.lCovariance(1, 1)
-      ? bchk.lCovariance(0, 0)
-      : bchk.lCovariance(1, 1);
+  double min_ell = (*bchk.lCovariance)(0, 0) < (*bchk.lCovariance)(1, 1)
+      ? (*bchk.lCovariance)(0, 0)
+      : (*bchk.lCovariance)(1, 1);
   limit = bchk.nSigmas * sqrt(min_ell);
   if (fabsX < (m_valueStore.at(TrapezoidBounds::bv_minHalfX) + limit)
       && fabsY < (m_valueStore.at(TrapezoidBounds::bv_halfY) + limit))
@@ -267,11 +267,11 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   // compute KDOP and axes for surface polygon
   std::vector<KDOP>     elementKDOP(3);
   std::vector<Vector2D> elementP(4);
-  float                 theta = (bchk.lCovariance(1, 0) != 0
-                 && (bchk.lCovariance(1, 1) - bchk.lCovariance(0, 0)) != 0)
+  float                 theta = ((*bchk.lCovariance)(1, 0) != 0
+                 && ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)) != 0)
       ? .5
-          * bchk.FastArcTan(2 * bchk.lCovariance(1, 0)
-                            / (bchk.lCovariance(1, 1) - bchk.lCovariance(0, 0)))
+          * bchk.FastArcTan(2 * (*bchk.lCovariance)(1, 0)
+                            / ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)))
       : 0.;
   sincosCache scResult = bchk.FastSinCos(theta);
   ActsMatrixD<2, 2> rotMatrix;

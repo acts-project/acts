@@ -245,8 +245,8 @@ trackingGeometry(Logging::Level lvl, size_t stage)
     sslbConfig.centralModuleThickness     = {0.25, 0.25, 0.25};
     sslbConfig.centralModuleMaterial
         = {ssMaterial, ssMaterial, ssMaterial, ssMaterial};
-    sslbConfig.centralModuleFrontsideStereo = {-0.2, 0.2, -0.2};
-    sslbConfig.centralModuleBacksideStereo  = {0.2, -0.2, 0.2};
+    sslbConfig.centralModuleFrontsideStereo = {-0.02, -0.02, -0.02};
+    sslbConfig.centralModuleBacksideStereo  = { 0.02, 0.02, 0.02};
     sslbConfig.centralModuleBacksideGap     = {2., 2., 2.};
     // mPositions
     std::vector<std::vector<Vector3D>> centralModulePositions;
@@ -262,20 +262,27 @@ trackingGeometry(Logging::Level lvl, size_t stage)
     sslbConfig.centralModulePositions = centralModulePositions;
 
     // configure the endcaps
-    sslbConfig.posnegLayerBinMultipliers        = {1, 2};
-    sslbConfig.posnegLayerPositionsZ            = {880.};
-    sslbConfig.posnegLayerEnvelopeR             = {5.};
-    sslbConfig.posnegLayerMaterialConcentration = {1};
-    sslbConfig.posnegLayerMaterialProperties    = {ssmProperties};
-    sslbConfig.posnegModuleMinHalfX             = {{16.4, 18.2}};
-    sslbConfig.posnegModuleMaxHalfX             = {{24.2, 32.2}};
-    sslbConfig.posnegModuleHalfY                = {{52.5, 52.5}};
-    sslbConfig.posnegModulePhiBins              = {{42, 62}};
-    sslbConfig.posnegModuleThickness            = {{0.25, 0.25}};
-    sslbConfig.posnegModuleMaterial             = {{ssMaterial, ssMaterial}};
-    sslbConfig.posnegModuleFrontsideStereo      = {};
-    sslbConfig.posnegModuleBacksideStereo       = {};
-    sslbConfig.posnegModuleBacksideGap          = {};
+    std::vector<double> rMinHx = {16.4, 18.2} ;
+    std::vector<double> rMaxHx = {24.2, 32.2} ;
+    std::vector<double> rHy    = {52.5, 52.5} ;
+
+    sslbConfig.posnegLayerBinMultipliers        = { 1, 2 };
+    sslbConfig.posnegLayerPositionsZ            = { 880., 1100., 1300., 1500. };
+    sslbConfig.posnegLayerEnvelopeR             = { 5., 5., 5., 5. };
+    sslbConfig.posnegLayerMaterialConcentration = { 1, 1, 1, 1};
+    sslbConfig.posnegLayerMaterialProperties    = { ssmProperties, ssmProperties, ssmProperties, ssmProperties};
+    sslbConfig.posnegModuleMinHalfX             = { rMinHx, rMinHx, rMinHx, rMinHx };
+    sslbConfig.posnegModuleMaxHalfX             = { rMaxHx, rMaxHx, rMaxHx, rMaxHx };
+    sslbConfig.posnegModuleHalfY                = { rHy, rHy, rHy, rHy };
+    sslbConfig.posnegModulePhiBins              = { {42, 62}, {42, 62}, {42, 62}, {42, 62} };
+    sslbConfig.posnegModuleThickness            = { {0.25, 0.25}, {0.25, 0.25}, {0.25, 0.25}, {0.25, 0.25} };
+    sslbConfig.posnegModuleMaterial             = { {ssMaterial, ssMaterial},
+                                                    {ssMaterial, ssMaterial},
+                                                    {ssMaterial, ssMaterial},
+                                                    {ssMaterial, ssMaterial} };
+    sslbConfig.posnegModuleFrontsideStereo      = { {-0.02, -0.02}, {-0.02, -0.02}, {-0.02, -0.02}, {-0.02, -0.02} };
+    sslbConfig.posnegModuleBacksideStereo       = { {0.02, 0.02}, {0.02, 0.02}, {0.02, 0.02}, {0.02, 0.02} };
+    sslbConfig.posnegModuleBacksideGap          = { {2., 2.}, {2., 2.}, {2., 2.}, {2., 2.} };
     // mPositions
     std::vector<std::vector<std::vector<Vector3D>>> posnegModulePositions;
     for (size_t id = 0; id < sslbConfig.posnegLayerPositionsZ.size(); ++id) {

@@ -22,10 +22,9 @@ Acts::BoundaryCheck::BoundaryCheck(bool sCheck)
   , toleranceLoc0(0.)
   , toleranceLoc1(0.)
   , nSigmas(-1)
-  , lCovariance(ActsSymMatrixD<2>::Identity())
+  , lCovariance(nullptr)
   , bcType(absolute)
-{
-}
+{}
 
 Acts::BoundaryCheck::BoundaryCheck(bool   chkL0,
                                    bool   chkL1,
@@ -36,7 +35,7 @@ Acts::BoundaryCheck::BoundaryCheck(bool   chkL0,
   , toleranceLoc0(tloc0)
   , toleranceLoc1(tloc1)
   , nSigmas(-1)
-  , lCovariance(ActsSymMatrixD<2>::Identity())
+  , lCovariance(nullptr)
   , bcType(absolute)
 {
 }
@@ -50,7 +49,35 @@ Acts::BoundaryCheck::BoundaryCheck(const ActsSymMatrixD<2>& lCov,
   , toleranceLoc0(0.)
   , toleranceLoc1(0.)
   , nSigmas(nsig)
-  , lCovariance(lCov)
+  , lCovariance(std::make_unique< ActsSymMatrixD<2> >(lCov))
   , bcType(chi2corr)
 {
 }
+
+Acts::BoundaryCheck::BoundaryCheck(const BoundaryCheck& bCheck)
+  : checkLoc0(bCheck.checkLoc0)
+  , checkLoc1(bCheck.checkLoc1)
+  , toleranceLoc0(bCheck.toleranceLoc0)
+  , toleranceLoc1(bCheck.toleranceLoc1)
+  , nSigmas(bCheck.nSigmas)
+  , lCovariance(nullptr)
+  , bcType(bCheck.bcType)
+{
+  lCovariance = bCheck.lCovariance ? 
+      std::make_unique< ActsSymMatrixD<2> >(*bCheck.lCovariance) : nullptr; 
+}
+
+Acts::BoundaryCheck& Acts::BoundaryCheck::operator=(const BoundaryCheck& bCheck)
+{
+  if (this != &bCheck){
+      checkLoc0     = bCheck.checkLoc0;
+      checkLoc1     = bCheck.checkLoc1;
+      toleranceLoc0 = bCheck.toleranceLoc0;
+      toleranceLoc1 = bCheck.toleranceLoc1;
+      nSigmas       = bCheck.nSigmas;
+      lCovariance   = nullptr;
+      bcType        = bCheck.bcType;
+  }
+  return (*this);
+}  
+

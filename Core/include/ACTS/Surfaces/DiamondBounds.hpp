@@ -202,9 +202,9 @@ DiamondBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
     return DiamondBounds::inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
 
   // a fast FALSE
-  double max_ell = bchk.lCovariance(0, 0) > bchk.lCovariance(1, 1)
-      ? bchk.lCovariance(0, 0)
-      : bchk.lCovariance(1, 1);
+  double max_ell = (*bchk.lCovariance)(0, 0) > (*bchk.lCovariance)(1, 1)
+      ? (*bchk.lCovariance)(0, 0)
+      : (*bchk.lCovariance)(1, 1);
   double limit = bchk.nSigmas * sqrt(max_ell);
   if (lpos[Acts::eLOC_Y]
       < -2 * m_valueStore.at(DiamondBounds::bv_halfY1) - limit)
@@ -217,9 +217,9 @@ DiamondBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   if (fabsX > (m_valueStore.at(DiamondBounds::bv_medHalfX) + limit))
     return false;
   // a fast TRUE
-  double min_ell = bchk.lCovariance(0, 0) < bchk.lCovariance(1, 1)
-      ? bchk.lCovariance(0, 0)
-      : bchk.lCovariance(1, 1);
+  double min_ell = (*bchk.lCovariance)(0, 0) < (*bchk.lCovariance)(1, 1)
+      ? (*bchk.lCovariance)(0, 0)
+      : (*bchk.lCovariance)(1, 1);
   limit = bchk.nSigmas * sqrt(min_ell);
   if (fabsX < (fmin(m_valueStore.at(DiamondBounds::bv_minHalfX),
                     m_valueStore.at(DiamondBounds::bv_maxHalfX))
@@ -235,11 +235,11 @@ DiamondBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   // compute KDOP and axes for surface polygon
   std::vector<KDOP>     elementKDOP(5);
   std::vector<Vector2D> elementP(6);
-  float                 theta = (bchk.lCovariance(1, 0) != 0
-                 && (bchk.lCovariance(1, 1) - bchk.lCovariance(0, 0)) != 0)
+  float                 theta = ((*bchk.lCovariance)(1, 0) != 0
+                 && ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)) != 0)
       ? .5
-          * bchk.FastArcTan(2 * bchk.lCovariance(1, 0)
-                            / (bchk.lCovariance(1, 1) - bchk.lCovariance(0, 0)))
+          * bchk.FastArcTan(2 * (*bchk.lCovariance)(1, 0)
+                            / ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)))
       : 0.;
   sincosCache scResult = bchk.FastSinCos(theta);
   ActsMatrixD<2, 2> rotMatrix;

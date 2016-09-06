@@ -178,15 +178,15 @@ CylinderBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
       || m_valueStore.at(CylinderBounds::bv_halfPhiSector) != M_PI)
     return CylinderBounds::inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
 
-  float theta = (bchk.lCovariance(1, 0) != 0
-                 && (bchk.lCovariance(1, 1) - bchk.lCovariance(0, 0)) != 0)
+  float theta = ((*bchk.lCovariance)(1, 0) != 0
+                 && ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)) != 0)
       ? .5
-          * bchk.FastArcTan(2 * bchk.lCovariance(1, 0)
-                            / (bchk.lCovariance(1, 1) - bchk.lCovariance(0, 0)))
+          * bchk.FastArcTan(2 * (*bchk.lCovariance)(1, 0)
+                            / ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)))
       : 0.;
   sincosCache scResult = bchk.FastSinCos(theta);
-  double      dphi     = scResult.sinC * scResult.sinC * bchk.lCovariance(0, 0);
-  double      dz       = scResult.cosC * scResult.cosC * bchk.lCovariance(0, 1);
+  double      dphi     = scResult.sinC * scResult.sinC * (*bchk.lCovariance)(0, 0);
+  double      dz       = scResult.cosC * scResult.cosC * (*bchk.lCovariance)(0, 1);
   double      max_ell  = dphi > dz ? dphi : dz;
   double      limit    = bchk.nSigmas * sqrt(max_ell);
   return insideLocZ(lpos[Acts::eLOC_Z], limit);

@@ -218,14 +218,15 @@ ConeSurface::normal(const Vector2D& lp) const
   Vector3D localNormal(cos(phi) * bounds().cosAlpha(),
                        sin(phi) * bounds().cosAlpha(),
                        sgn * bounds().sinAlpha());
-  return m_transform ? std::move(Vector3D(transform().linear() * localNormal))
-                     : std::move(localNormal);
+  return m_transform ? Vector3D(transform().linear() * localNormal)
+                     : localNormal;
 }
 
 inline const Vector3D
 ConeSurface::normal(const Vector3D& gpos) const
 {
   // get it into the cylinder frame if needed
+  // @TODO respect opening angle 
   Vector3D pos3D = gpos;
   if (m_transform || m_associatedDetElement) {
     pos3D     = transform().inverse() * gpos;
