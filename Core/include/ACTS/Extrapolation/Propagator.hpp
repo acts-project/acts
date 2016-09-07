@@ -24,6 +24,26 @@ template <typename Impl>
 class Propagator final
 {
 public:
+  /// @brief options for propagate() call
+  template <typename ObserverList, typename AbortList>
+  struct Options
+  {
+    /// maximum number of steps for one propagate() call
+    unsigned int max_steps = 1000;
+
+    /// minimum step size
+    double min_step_size = 0.1 * units::_mm;
+
+    /// maximum step size
+    double max_step_size = 1 * units::_m;
+
+    /// list of observers
+    ObserverList observer_list;
+
+    /// list of stop conditions
+    AbortList stop_conditions;
+  };
+
   /// @brief copy implementation object
   template <typename T = Impl>
   explicit Propagator(
@@ -115,18 +135,17 @@ public:
   template <typename TrackParameters, typename ObserverList, typename AbortList>
   obs_list_result_t<TrackParameters, ObserverList>
   propagate(const TrackParameters& start,
-            const ObserverList&    obsList,
-            const AbortList&       conditions)
+            const Options<ObserverList, AbortList>& options)
   {
     typedef obs_list_result_t<TrackParameters, ObserverList> result_type;
     result_type     r(start, Status::pINPROGRESS);
-    double          stepMax  = 1 * units::_m;
+    double          stepMax  = options.max_step_size;
     TrackParameters previous = start;
     TrackParameters current  = start;
-    for (unsigned int i = 0; i < 1000; ++i) {
+    for (unsigned int i = 0; i < options.max_steps; ++i) {
       current = m_impl.doStep(previous, stepMax);
-      obsList(current, previous, r);
-      if (conditions(current, r, stepMax)) break;
+      options.observer_list(current, previous, r);
+      if (options.stop_conditions(current, r, stepMax)) break;
       previous = current;
     }
 

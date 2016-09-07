@@ -29,17 +29,19 @@ main()
   {
     typedef ObserverList<PathLengthObserver, DebugObserver> ObsList_type;
     typedef AbortList<MaxPathLength, MaxRadius> AbortConditions_type;
-    AbortConditions_type al;
+
+    Propagator_type::Options<ObsList_type, AbortConditions_type> options;
+    AbortConditions_type& al              = options.stop_conditions;
     al.get<MaxPathLength>().maxPathLength = 35 * units::_cm;
     al.get<MaxRadius>().maxRadius         = 15 * units::_cm;
 
     std::ofstream out_file("track.txt");
-    ObsList_type  ol;
+    ObsList_type& ol = options.observer_list;
     ol.get<DebugObserver>().out.rdbuf(out_file.rdbuf());
     Vector3D              pos(0, 0, 0);
     Vector3D              mom(1 * units::_GeV, 0, 0);
     CurvilinearParameters pars(nullptr, pos, mom, +1);
-    auto                  r = propagator.propagate(pars, ol, al);
+    auto                  r = propagator.propagate(pars, options);
     std::cout << "path length = "
               << r.get<PathLengthObserver::result_type>().pathLength / units::_m
               << std::endl;
@@ -55,7 +57,8 @@ main()
     typedef ObserverList<HitSimulator> ObsList_type;
     typedef AbortList<>                AbortConditions_type;
 
-    ObsList_type  ol;
+    Propagator_type::Options<ObsList_type, AbortConditions_type> options;
+    ObsList_type& ol      = options.observer_list;
     HitSimulator& hit_sim = ol.get<HitSimulator>();
     typedef std::tuple<float, float, float> tuple_type;
 
@@ -83,7 +86,7 @@ main()
       Vector3D mom(pT * cos(phi), pT * sin(phi), pT / tan(2 * atan(exp(-eta))));
       mom *= 1 * units::_GeV;
       CurvilinearParameters pars(nullptr, pos, mom, +1);
-      auto r = propagator.propagate(pars, ol, AbortConditions_type());
+      auto                  r = propagator.propagate(pars, options);
       hits.add(r.get<HitSimulator::result_type>());
     }
 

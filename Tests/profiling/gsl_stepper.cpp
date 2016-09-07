@@ -27,20 +27,19 @@ main()
   typedef ObserverList<PathLengthObserver> ObsList_type;
   typedef AbortList<MaxPathLength>         AbortConditions_type;
 
-  AbortConditions_type al;
+  Propagator_type::Options<ObsList_type, AbortConditions_type> options;
+  AbortConditions_type& al              = options.stop_conditions;
   al.get<MaxPathLength>().maxPathLength = 35 * units::_cm;
-
-  ObsList_type ol;
 
   Vector3D              pos(0, 0, 0);
   Vector3D              mom(1 * units::_GeV, 0, 0);
   CurvilinearParameters pars(nullptr, pos, mom, +1);
   double                totalPathLength = 0;
   for (unsigned int i = 0; i < 10000; ++i) {
-    auto r = propagator.propagate(pars, ol, al);
+    auto r = propagator.propagate(pars, options);
     totalPathLength += r.get<PathLengthObserver::result_type>().pathLength;
   }
 
-  std::cout << totalPathLength << std::endl;
+  std::cout << totalPathLength / units::_cm << std::endl;
   return 0;
 }
