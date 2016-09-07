@@ -59,7 +59,7 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   bplConfig.centralLayerThickness   = std::vector<double>(1, 0.8);
   bplConfig.centralLayerMaterial = {Material(352.8, 407., 9.012, 4., 1.848e-3)};
   auto beamPipeBuilder              = std::make_shared<PassiveLayerBuilder>(
-      bplConfig, getDefaultLogger("PassiveLayerBuilder", lvl));
+      bplConfig, getDefaultLogger("beamPipeLayerBuilder", lvl));
   // create the volume for the beam pipe
   CylinderVolumeBuilder::Config bpvConfig;
   bpvConfig.trackingVolumeHelper = cylinderVolumeHelper;
@@ -69,7 +69,7 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   bpvConfig.layerEnvelopeZ       = 1.;
   bpvConfig.volumeSignature      = 0;
   auto beamPipeVolumeBuilder     = std::make_shared<CylinderVolumeBuilder>(
-      bpvConfig, getDefaultLogger("CylinderVolumeBuilder", lvl));
+      bpvConfig, getDefaultLogger("BeamPipeVolumeBuilder", lvl));
   //-------------------------------------------------------------------------------------
   //-------------------------------------------------------------------------------------
   // pixel detector
@@ -95,7 +95,6 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   if (stage == 0) {
     // configure the central barrel
     plbConfig.centralLayerBinMultipliers = {1, 1};
-
     plbConfig.centralLayerRadii                 = {29.};
     plbConfig.centralLayerEnvelopes             = {pcEnvelope};
     plbConfig.centralLayerMaterialConcentration = {1};
@@ -110,7 +109,7 @@ trackingGeometry(Logging::Level lvl, size_t stage)
     // configure the central barrel
     plbConfig.centralLayerBinMultipliers = {1, 1};
     // STAGE > 0 --- 4 pixel layers
-    plbConfig.centralLayerRadii = {29., 55., 88., 120.};
+    plbConfig.centralLayerRadii = {29., 55., 88., 124.};
     plbConfig.centralLayerEnvelopes
         = {pcEnvelope, pcEnvelope, pcEnvelope, pcEnvelope};
     plbConfig.centralLayerMaterialConcentration = {1, 1, 1, 1};
@@ -145,7 +144,7 @@ trackingGeometry(Logging::Level lvl, size_t stage)
   if (stage == 0) {
     // configure the endcaps
     plbConfig.posnegLayerBinMultipliers        = {1, 1};
-    plbConfig.posnegLayerPositionsZ            = {500.};
+    plbConfig.posnegLayerPositionsZ            = {500};
     plbConfig.posnegLayerEnvelopeR             = {1.};
     plbConfig.posnegLayerMaterialConcentration = {1};
     plbConfig.posnegLayerMaterialProperties    = {pcmProperties};
@@ -159,7 +158,7 @@ trackingGeometry(Logging::Level lvl, size_t stage)
     // STAGE > 0 - pixel endcap detector
     // configure the endcaps
     plbConfig.posnegLayerBinMultipliers        = {1, 1};
-    plbConfig.posnegLayerPositionsZ            = {500., 580., 680., 700.};
+    plbConfig.posnegLayerPositionsZ            = {500., 580., 680., 800.};
     plbConfig.posnegLayerEnvelopeR             = {1., 1., 1., 1.};
     plbConfig.posnegLayerMaterialConcentration = {1, 1, 1, 1};
     plbConfig.posnegLayerMaterialProperties
@@ -213,10 +212,40 @@ trackingGeometry(Logging::Level lvl, size_t stage)
 
   //-------------------------------------------------------------------------------------
   //-------------------------------------------------------------------------------------
-  // strip detector
+  // SHORT strip detector
   //-------------------------------------------------------------------------------------
-  // STAGE > 1 - strip detector added
+  // STAGE > 1 - short strip detector added
   if (stage > 1) {
+    // first add a Pixel Support Tube
+    //-------------------------------------------------------------------------------------
+    // Pixel Support Tybe (PST)
+    //-------------------------------------------------------------------------------------
+    PassiveLayerBuilder::Config pstConfig;
+    pstConfig.layerIdentification     = "PST";
+    pstConfig.centralLayerRadii       = std::vector<double>(1, 175.);
+    pstConfig.centralLayerHalflengthZ = std::vector<double>(1, 1200.);
+    pstConfig.centralLayerThickness   = std::vector<double>(1, 1.8);
+    pstConfig.centralLayerMaterial
+        = {Material(352.8, 407., 9.012, 4., 1.848e-3)};
+    auto pstBuilder = std::make_shared<PassiveLayerBuilder>(
+        pstConfig, getDefaultLogger("PstBuilder", lvl));
+    // create the volume for the beam pipe
+    CylinderVolumeBuilder::Config pstvolConfig;
+    pstvolConfig.trackingVolumeHelper = cylinderVolumeHelper;
+    pstvolConfig.volumeName           = "PST";
+    pstvolConfig.volumeToBeamPipe     = false;
+    pstvolConfig.layerBuilder         = pstBuilder;
+    pstvolConfig.layerEnvelopeR       = 1.;
+    pstvolConfig.layerEnvelopeZ       = 1.;
+    pstvolConfig.volumeSignature      = 0;
+    auto pstVolumeBuilder             = std::make_shared<CylinderVolumeBuilder>(
+        pstvolConfig, getDefaultLogger("PstVolumeBuilder", lvl));
+    // add to the detector builds
+    // @TODO check why this is not yet working
+    // detectorBuilders.push_back(pstVolumeBuilder);
+
+    // STRIPS
+    // ----------------------------------------------------------------------------
     // configure short strip layer builder
     GenericLayerBuilder::Config sslbConfig;
     sslbConfig.layerCreator        = layerCreator;
@@ -233,12 +262,12 @@ trackingGeometry(Logging::Level lvl, size_t stage)
 
     // configure the central barrel
     sslbConfig.centralLayerBinMultipliers = {1, 1};
-    sslbConfig.centralLayerRadii          = {220., 320., 420.};
+    sslbConfig.centralLayerRadii          = {220., 350., 500.};
     sslbConfig.centralLayerEnvelopes = {ssEnvelope, ssEnvelope, ssEnvelope};
     sslbConfig.centralLayerMaterialConcentration = {1, 1, 1};
     sslbConfig.centralLayerMaterialProperties
         = {ssmProperties, ssmProperties, ssmProperties};
-    sslbConfig.centralModuleBinningSchema = {{42, 12}, {64, 12}, {78, 12}};
+    sslbConfig.centralModuleBinningSchema = {{42, 12}, {64, 12}, {84, 12}};
     sslbConfig.centralModuleTiltPhi       = {-0.15, -0.15, -0.15};
     sslbConfig.centralModuleHalfX         = {18.2, 18.2, 18.2};
     sslbConfig.centralModuleHalfY         = {68., 68., 68.};
@@ -262,27 +291,42 @@ trackingGeometry(Logging::Level lvl, size_t stage)
     sslbConfig.centralModulePositions = centralModulePositions;
 
     // configure the endcaps
-    std::vector<double> rMinHx = {16.4, 18.2} ;
-    std::vector<double> rMaxHx = {24.2, 32.2} ;
-    std::vector<double> rHy    = {52.5, 52.5} ;
+    std::vector<double>   mrMinHx    = {16.4, 24.2, 32.2};
+    std::vector<double>   mrMaxHx    = {24.2, 32.2, 40.0};
+    std::vector<double>   mrHy       = {48., 48., 48.};
+    std::vector<int>      mPhiBins   = {42, 58, 72};
+    std::vector<double>   mThickness = {0.2, 0.2, 0.2};
+    std::vector<Material> mMaterial  = {ssMaterial, ssMaterial, ssMaterial};
+    std::vector<double>   mfStereo   = {-0.02, -0.02, -0.02};
+    std::vector<double>   mbStereo   = {0.02, 0.02, 0.02};
+    std::vector<double>   mfbGap     = {2., 2., 2.};
 
     sslbConfig.posnegLayerBinMultipliers        = { 1, 2 };
-    sslbConfig.posnegLayerPositionsZ            = { 880., 1100., 1300., 1500. };
-    sslbConfig.posnegLayerEnvelopeR             = { 5., 5., 5., 5. };
-    sslbConfig.posnegLayerMaterialConcentration = { 1, 1, 1, 1};
-    sslbConfig.posnegLayerMaterialProperties    = { ssmProperties, ssmProperties, ssmProperties, ssmProperties};
-    sslbConfig.posnegModuleMinHalfX             = { rMinHx, rMinHx, rMinHx, rMinHx };
-    sslbConfig.posnegModuleMaxHalfX             = { rMaxHx, rMaxHx, rMaxHx, rMaxHx };
-    sslbConfig.posnegModuleHalfY                = { rHy, rHy, rHy, rHy };
-    sslbConfig.posnegModulePhiBins              = { {42, 62}, {42, 62}, {42, 62}, {42, 62} };
-    sslbConfig.posnegModuleThickness            = { {0.25, 0.25}, {0.25, 0.25}, {0.25, 0.25}, {0.25, 0.25} };
-    sslbConfig.posnegModuleMaterial             = { {ssMaterial, ssMaterial},
-                                                    {ssMaterial, ssMaterial},
-                                                    {ssMaterial, ssMaterial},
-                                                    {ssMaterial, ssMaterial} };
-    sslbConfig.posnegModuleFrontsideStereo      = { {-0.02, -0.02}, {-0.02, -0.02}, {-0.02, -0.02}, {-0.02, -0.02} };
-    sslbConfig.posnegModuleBacksideStereo       = { {0.02, 0.02}, {0.02, 0.02}, {0.02, 0.02}, {0.02, 0.02} };
-    sslbConfig.posnegModuleBacksideGap          = { {2., 2.}, {2., 2.}, {2., 2.}, {2., 2.} };
+    sslbConfig.posnegLayerPositionsZ
+        = {880., 1100., 1300., 1550., 1800., 2200.};
+    size_t nposnegs                 = sslbConfig.posnegLayerPositionsZ.size();
+    sslbConfig.posnegLayerEnvelopeR = std::vector<double>(nposnegs, 5.);
+    sslbConfig.posnegLayerMaterialConcentration = std::vector<int>(nposnegs, 1);
+    sslbConfig.posnegLayerMaterialProperties
+        = std::vector<MaterialProperties>(nposnegs, ssmProperties);
+    sslbConfig.posnegModuleMinHalfX
+        = std::vector<std::vector<double>>(nposnegs, mrMinHx);
+    sslbConfig.posnegModuleMaxHalfX
+        = std::vector<std::vector<double>>(nposnegs, mrMaxHx);
+    sslbConfig.posnegModuleHalfY
+        = std::vector<std::vector<double>>(nposnegs, mrHy);
+    sslbConfig.posnegModulePhiBins
+        = std::vector<std::vector<int>>(nposnegs, mPhiBins);
+    sslbConfig.posnegModuleThickness
+        = std::vector<std::vector<double>>(nposnegs, mThickness);
+    sslbConfig.posnegModuleMaterial
+        = std::vector<std::vector<Material>>(nposnegs, mMaterial);
+    sslbConfig.posnegModuleFrontsideStereo
+        = std::vector<std::vector<double>>(nposnegs, mfStereo);
+    sslbConfig.posnegModuleBacksideStereo
+        = std::vector<std::vector<double>>(nposnegs, mbStereo);
+    sslbConfig.posnegModuleBacksideGap
+        = std::vector<std::vector<double>>(nposnegs, mfbGap);
     // mPositions
     std::vector<std::vector<std::vector<Vector3D>>> posnegModulePositions;
     for (size_t id = 0; id < sslbConfig.posnegLayerPositionsZ.size(); ++id) {
@@ -291,7 +335,7 @@ trackingGeometry(Logging::Level lvl, size_t stage)
                               2.0,
                               0.5,
                               220.,
-                              420.,
+                              500.,
                               sslbConfig.posnegModulePhiBins[id],
                               sslbConfig.posnegModuleHalfY[id]));
     }
@@ -315,6 +359,129 @@ trackingGeometry(Logging::Level lvl, size_t stage)
 
     //-------------------------------------------------------------------------------------
     // list the volume builders
+    detectorBuilders.push_back(sstripVolumeBuilder);
+  }
+
+  //-------------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------------
+  // LONG strip detector
+  //-------------------------------------------------------------------------------------
+  // STAGE > 2 - long strip detector added
+  if (stage > 2) {
+    // configure short strip layer builder
+    GenericLayerBuilder::Config lslbConfig;
+    lslbConfig.layerCreator        = layerCreator;
+    lslbConfig.layerIdentification = "LStrip";
+    // fill necessary vectors for configuration
+    //-------------------------------------------------------------------------------------
+    // some prep work
+    // envelope double
+    std::pair<double, double> lsEnvelope(2., 2.);
+    // Layer material properties - thickness, X0, L0, A, Z, Rho
+    MaterialProperties lsmProperties(1., 95.7, 465.2, 28.03, 14., 2.32e-3);
+    // Module material - X0, L0, A, Z, Rho
+    Material lsMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
+
+    // configure the central barrel
+    lslbConfig.centralLayerBinMultipliers        = {1, 1};
+    lslbConfig.centralLayerRadii                 = {680., 980.};
+    lslbConfig.centralLayerEnvelopes             = {lsEnvelope, lsEnvelope};
+    lslbConfig.centralLayerMaterialConcentration = {1, 1};
+    lslbConfig.centralLayerMaterialProperties = {lsmProperties, lsmProperties};
+    lslbConfig.centralModuleBinningSchema     = {{64, 16}, {98, 16}};
+    lslbConfig.centralModuleTiltPhi           = {-0.15, -0.15};
+    lslbConfig.centralModuleHalfX             = {42., 42.};
+    lslbConfig.centralModuleHalfY             = {76., 76.};
+    lslbConfig.centralModuleThickness         = {0.25, 0.25, 0.25};
+    lslbConfig.centralModuleMaterial
+        = {lsMaterial, lsMaterial, lsMaterial, lsMaterial};
+    lslbConfig.centralModuleFrontsideStereo = {-0.02, -0.02};
+    lslbConfig.centralModuleBacksideStereo  = {0.02, 0.02};
+    lslbConfig.centralModuleBacksideGap     = {2., 2.};
+    // mPositions
+    std::vector<std::vector<Vector3D>> centralModulePositions;
+    for (size_t lslb = 0; lslb < lslbConfig.centralLayerRadii.size(); ++lslb) {
+      // call the helper function
+      centralModulePositions.push_back(
+          modulePositionsCylinder(lslbConfig.centralLayerRadii[lslb],
+                                  0.5,  // 1 mm stagger
+                                  lslbConfig.centralModuleHalfY[lslb],
+                                  2.,  // 2 mm module overlap
+                                  lslbConfig.centralModuleBinningSchema[lslb]));
+    }
+    lslbConfig.centralModulePositions = centralModulePositions;
+
+    /**
+    // configure the endcaps
+    std::vector<double>   mrMinHx    = { 42., 42., 42. } ;
+    std::vector<double>   mrMaxHx    = { 56., 56., 56.} ;
+    std::vector<double>   mrHy       = { 64., 64., 64. } ;
+    std::vector<int>      mPhiBins   = { 64, 78, 98 };
+    std::vector<double>   mThickness = { 0.25, 0.25, 0.25  };
+    std::vector<Material> mMaterial  = { lsMaterial, lsMaterial, lsMaterial };
+    std::vector<double>   mfStereo   = { -0.02, -0.02, -0.02 };
+    std::vector<double>   mbStereo   = { 0.02, 0.02, 0.02 };
+    std::vector<double>   mfbGap     = { 2., 2., 2. };
+
+    // endcap
+    lslbConfig.posnegLayerBinMultipliers        = { 1, 2 };
+    lslbConfig.posnegLayerPositionsZ            = { 1380., 1680., 2180. };
+    size_t nposnegs =  lslbConfig.posnegLayerPositionsZ.size();
+    lslbConfig.posnegLayerEnvelopeR             =
+    std::vector<double>(nposnegs,5.);
+    lslbConfig.posnegLayerMaterialConcentration = std::vector<int>(nposnegs,1);
+    lslbConfig.posnegLayerMaterialProperties    =
+    std::vector<MaterialProperties>(nposnegs,lsmProperties);
+    lslbConfig.posnegModuleMinHalfX             = std::vector<
+    std::vector<double> >(nposnegs, mrMinHx);
+    lslbConfig.posnegModuleMaxHalfX             = std::vector<
+    std::vector<double> >(nposnegs, mrMaxHx);
+    lslbConfig.posnegModuleHalfY                = std::vector<
+    std::vector<double> >(nposnegs, mrHy);
+    lslbConfig.posnegModulePhiBins              = std::vector< std::vector< int
+    > > (nposnegs, mPhiBins);
+    lslbConfig.posnegModuleThickness            = std::vector<
+    std::vector<double> >(nposnegs, mThickness);
+    lslbConfig.posnegModuleMaterial             = std::vector<
+    std::vector<Material> >(nposnegs, mMaterial);
+    lslbConfig.posnegModuleFrontsideStereo      = std::vector<
+    std::vector<double> >(nposnegs, mfStereo);
+    lslbConfig.posnegModuleBacksideStereo       = std::vector<
+    std::vector<double> >(nposnegs, mbStereo);
+    lslbConfig.posnegModuleBacksideGap          = std::vector<
+    std::vector<double> >(nposnegs, mfbGap);
+    // mPositions
+    std::vector<std::vector<std::vector<Vector3D>>> posnegModulePositions;
+    for (size_t id = 0; id < lslbConfig.posnegLayerPositionsZ.size(); ++id) {
+      posnegModulePositions.push_back(
+          modulePositionsDisc(lslbConfig.posnegLayerPositionsZ[id],
+                              2.0,
+                              0.5,
+                              600.,
+                              980.,
+                              lslbConfig.posnegModulePhiBins[id],
+                              lslbConfig.posnegModuleHalfY[id]));
+    }
+    lslbConfig.posnegModulePositions = posnegModulePositions;
+    **/
+
+    // define the builder
+    auto lstripLayerBuilder = std::make_shared<GenericLayerBuilder>(
+        lslbConfig, getDefaultLogger("LStripLayerBuilder", lvl));
+    //-------------------------------------------------------------------------------------
+    // build the pixel volume
+    CylinderVolumeBuilder::Config lsvbConfig;
+    lsvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
+    lsvbConfig.volumeName           = "LStrip";
+    lsvbConfig.volumeToBeamPipe     = false;
+    lsvbConfig.layerBuilder         = lstripLayerBuilder;
+    lsvbConfig.layerEnvelopeR       = 1.;
+    lsvbConfig.layerEnvelopeZ       = 10.;
+    lsvbConfig.volumeSignature      = 0;
+    auto sstripVolumeBuilder        = std::make_shared<CylinderVolumeBuilder>(
+        lsvbConfig, getDefaultLogger("LStripVolumeBuilder", lvl));
+
+    //
     detectorBuilders.push_back(sstripVolumeBuilder);
   }
 

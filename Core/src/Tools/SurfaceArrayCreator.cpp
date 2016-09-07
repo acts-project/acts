@@ -254,8 +254,6 @@ Acts::SurfaceArrayCreator::completeBinning(const BinUtility&    binUtility,
           minPath            = testPath;
         }
       }
-      ACTS_VERBOSE("   -  bin [" << io0 << ", " << io1 << "] - surface is "
-                                 << sentry);
       // increase the bin completion
       ++binCompleted;
     }

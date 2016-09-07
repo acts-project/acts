@@ -999,9 +999,16 @@ Acts::RungeKuttaEngine::buildTrackParametersWithoutPropagation(
       = jacobian[7] = jacobian[8] = jacobian[9] = jacobian[10] = jacobian[11]
       = jacobian[13] = jacobian[14] = jacobian[15] = jacobian[16] = jacobian[17]
       = jacobian[19]                                              = 0.;
-  return nullptr;  // @TODO FIX !! std::make_unique<const
-                   // TrackParameters>(tParameters.clone()); // @TODO change
-                   // clone() to return unique_ptr
+
+  SingleTrackParameters<ChargedPolicy>::CovPtr_t cov = nullptr;
+  if (tParameters.covariance()) {
+    // @TODO check
+    // fix - how to copy a covariance ?
+  }
+  return std::make_unique<const BoundParameters>(
+      std::move(cov),
+      tParameters.parameters(),
+      tParameters.associatedSurface());
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -1017,8 +1024,16 @@ Acts::RungeKuttaEngine::buildNeutralParametersWithoutPropagation(
       = jacobian[7] = jacobian[8] = jacobian[9] = jacobian[10] = jacobian[11]
       = jacobian[13] = jacobian[14] = jacobian[15] = jacobian[16] = jacobian[17]
       = jacobian[19]                                              = 0.;
-  return nullptr;  // @TODO FIX !! std::make_unique<const
-                   // NeutralParameters>(nParameters.clone());
+
+  SingleTrackParameters<NeutralPolicy>::CovPtr_t cov = nullptr;
+  if (nParameters.covariance()) {
+    // @TODO check
+    // fix - how to copy a covariance ?
+  }
+  return std::make_unique<const NeutralBoundParameters>(
+      std::move(cov),
+      nParameters.parameters(),
+      nParameters.associatedSurface());
 }
 
 /////////////////////////////////////////////////////////////////////////////////

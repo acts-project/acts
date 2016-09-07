@@ -34,8 +34,9 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
   ExtrapolationCode eCode = ExtrapolationCode::InProgress;
   // [1] ------------------------ fast boundary access : take straight line
   // estimates as navigation guide --------------
-  auto boundaryIntersections = eCell.leadVolume->boundarySurfacesOrdered(
-      *eCell.leadParameters, pDir, eCell.onLastBoundary());
+  auto boundaryIntersections
+      = eCell.leadVolume->boundarySurfacesOrdered(*eCell.leadParameters, pDir);
+  // some screen output
   EX_MSG_VERBOSE(
       eCell.navigationStep,
       "navigation",
@@ -52,11 +53,17 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
         = boundaryCandidate.object;
     // skip if it's the last boundary surface
     if (eCell.onLastBoundary()
-        && &bSurfaceTV->surfaceRepresentation() == eCell.lastBoundarySurface)
+        && &bSurfaceTV->surfaceRepresentation() == eCell.lastBoundarySurface) {
+      EX_MSG_VERBOSE(
+          eCell.navigationStep,
+          "navigation",
+          "",
+          "skipping this candidate boundary - identical to last boundary.");
       continue;
+    }
     // check this boudnary, possible return codes are:
     // - SuccessPathLimit     : propagation to boundary caused PathLimit to be
-    // fail @TODO implement protection againg far of tries
+    // fail @TODO implement protection asainst far of tries
     // - SuccessMaterialLimit : boundary was reached and material update on
     // boundary reached limit
     // - InProgress           : boundary was reached and ready for continueing
@@ -334,17 +341,17 @@ Acts::StaticNavigationEngine::resolvePositionT(
     Acts::PropDirection         pDir,
     bool /*noLoop*/) const
 {
-  EX_MSG_DEBUG(++eCell.navigationStep,
-               "navigation",
-               "",
-               "resolve position ("
-                   << eCell.leadParameters->position().x()
-                   << eCell.leadParameters->position().y()
-                   << ", "
-                   << eCell.leadParameters->position().z()
-                   << ", "
-                   << (int(pDir) > 0 ? ") along momentum."
-                                     : ") opposite momentum."));
+  EX_MSG_DEBUG(
+      ++eCell.navigationStep,
+      "navigation",
+      "",
+      "resolve position (" << eCell.leadParameters->position().x() << ", "
+                           << eCell.leadParameters->position().y()
+                           << ", "
+                           << eCell.leadParameters->position().z()
+                           << ", "
+                           << (int(pDir) > 0 ? ") along momentum."
+                                             : ") opposite momentum."));
 
   // noLoop= True is used when we have exit from leadVolume
 
