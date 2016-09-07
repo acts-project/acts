@@ -1,4 +1,5 @@
 #include "ACTS/Extrapolation/Propagator.hpp"
+#include <cstdio>
 #include <fstream>
 #include <random>
 #include "ACTS/EventData/TrackParameters.hpp"
@@ -35,9 +36,9 @@ main()
     al.get<MaxPathLength>().maxPathLength = 35 * units::_cm;
     al.get<MaxRadius>().maxRadius         = 15 * units::_cm;
 
-    std::ofstream out_file("track.txt");
-    ObsList_type& ol = options.observer_list;
-    ol.get<DebugObserver>().out.rdbuf(out_file.rdbuf());
+    std::FILE*    file          = std::fopen("track.txt", "w");
+    ObsList_type& ol            = options.observer_list;
+    ol.get<DebugObserver>().out = file;
     Vector3D              pos(0, 0, 0);
     Vector3D              mom(1 * units::_GeV, 0, 0);
     CurvilinearParameters pars(nullptr, pos, mom, +1);
@@ -45,6 +46,7 @@ main()
     std::cout << "path length = "
               << r.get<PathLengthObserver::result_type>().pathLength / units::_m
               << std::endl;
+    std::fclose(file);
   }
 
   // second example: use propagator to generate pseudo-hits

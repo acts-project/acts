@@ -1,9 +1,8 @@
 #ifndef ACTS_OBSERVERS_HPP
 #define ACTS_OBSERVERS_HPP 1
 
-#include <iostream>
+#include <cstdio>
 #include <list>
-#include <ostream>
 #include <tuple>
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
@@ -19,12 +18,35 @@ struct DebugObserver
   {
     const auto& pos = current.position();
     const auto& mom = current.momentum();
-    out << pos(0) / units::_mm << " " << pos(1) / units::_mm << " "
-        << pos(2) / units::_mm << " " << mom.perp() / units::_GeV << " "
-        << mom.phi() << " " << mom.theta() << std::endl;
+    fprintf(out,
+            "x = %.2fmm, y = %.2fmm, z = %.2fmm, pT = %.3fGeV, phi = %.5f, "
+            "theta = %.5f\n",
+            pos(0) / units::_mm,
+            pos(1) / units::_mm,
+            pos(2) / units::_mm,
+            mom.perp() / units::_GeV,
+            mom.phi(),
+            mom.theta());
   }
 
-  mutable std::ostream out{std::cout.rdbuf()};
+  std::FILE* out = stdout;
+};
+
+struct NStepsObserver
+{
+  typedef struct
+  {
+    unsigned int steps = 0;
+  } result_type;
+
+  template <typename TrackParameters>
+  void
+  operator()(const TrackParameters&,
+             const TrackParameters&,
+             result_type& r) const
+  {
+    ++r.steps;
+  }
 };
 
 struct PathLengthObserver
