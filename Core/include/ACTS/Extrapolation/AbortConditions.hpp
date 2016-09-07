@@ -58,7 +58,7 @@ struct MaxRadius
     // dR/dS = pT/p -> dS = dR * p / pT = dR * sqrt( 1 + pZ^2 / pT^2)
     const double deltaR       = pars.position().perp() - maxRadius;
     const double pT2          = pars.momentum().perp2();
-    const double pZ2          = pars.momentum().pz() * pars.momentum().pz();
+    const double pZ2          = pars.momentum().z() * pars.momentum().z();
     const double inv_sintheta = sqrt(1 + pZ2 / pT2);
 
     stepMax = -deltaR * inv_sintheta;
