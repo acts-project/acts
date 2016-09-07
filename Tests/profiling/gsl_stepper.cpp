@@ -36,7 +36,7 @@ main()
   Vector3D              mom(1 * units::_GeV, 0, 0);
   CurvilinearParameters pars(nullptr, pos, mom, +1);
   double                totalPathLength = 0;
-  for (unsigned int i = 0; i < 100000; ++i) {
+  for (unsigned int i = 0; i < 10000; ++i) {
     auto r = propagator.propagate(pars, ol, al);
     totalPathLength += r.get<PathLengthObserver::result_type>().pathLength;
   }
