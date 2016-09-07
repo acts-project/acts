@@ -241,7 +241,7 @@ public:
   template <class T>
   std::vector<BoundaryIntersection<T>>
   boundarySurfacesOrdered(const T&      parameters,
-                          PropDirection pDir             = alongMomentum) const;
+                          PropDirection pDir = alongMomentum) const;
 
   /// check if you are on a boundary surface
   template <class T>
@@ -597,8 +597,7 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
  * straight line intersection @TODO change hard-coded default */
 template <class T>
 std::vector<BoundaryIntersection<T>>
-TrackingVolume::boundarySurfacesOrdered(const T&      pars,
-                                        PropDirection pDir) const
+TrackingVolume::boundarySurfacesOrdered(const T& pars, PropDirection pDir) const
 {
   // assign the direction
   const Vector3D dir

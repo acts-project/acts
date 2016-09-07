@@ -999,15 +999,16 @@ Acts::RungeKuttaEngine::buildTrackParametersWithoutPropagation(
       = jacobian[7] = jacobian[8] = jacobian[9] = jacobian[10] = jacobian[11]
       = jacobian[13] = jacobian[14] = jacobian[15] = jacobian[16] = jacobian[17]
       = jacobian[19]                                              = 0.;
-  
-    SingleTrackParameters<ChargedPolicy>::CovPtr_t cov = nullptr;
-    if (tParameters.covariance()){
-        // @TODO check
-        // fix - how to copy a covariance ?
-    }
-    return std::make_unique<const BoundParameters>(std::move(cov),
-                                                   tParameters.parameters(),
-                                                   tParameters.associatedSurface() );
+
+  SingleTrackParameters<ChargedPolicy>::CovPtr_t cov = nullptr;
+  if (tParameters.covariance()) {
+    // @TODO check
+    // fix - how to copy a covariance ?
+  }
+  return std::make_unique<const BoundParameters>(
+      std::move(cov),
+      tParameters.parameters(),
+      tParameters.associatedSurface());
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -1022,17 +1023,17 @@ Acts::RungeKuttaEngine::buildNeutralParametersWithoutPropagation(
   jacobian[1] = jacobian[2] = jacobian[3] = jacobian[4] = jacobian[5]
       = jacobian[7] = jacobian[8] = jacobian[9] = jacobian[10] = jacobian[11]
       = jacobian[13] = jacobian[14] = jacobian[15] = jacobian[16] = jacobian[17]
-      = jacobian[19]  = 0.;   
-  
-    
+      = jacobian[19]                                              = 0.;
+
   SingleTrackParameters<NeutralPolicy>::CovPtr_t cov = nullptr;
-  if (nParameters.covariance()){
-      // @TODO check
-      // fix - how to copy a covariance ?
+  if (nParameters.covariance()) {
+    // @TODO check
+    // fix - how to copy a covariance ?
   }
-  return std::make_unique<const NeutralBoundParameters>(std::move(cov),
-                                                        nParameters.parameters(),
-                                                        nParameters.associatedSurface() );
+  return std::make_unique<const NeutralBoundParameters>(
+      std::move(cov),
+      nParameters.parameters(),
+      nParameters.associatedSurface());
 }
 
 /////////////////////////////////////////////////////////////////////////////////

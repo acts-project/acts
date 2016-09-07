@@ -392,10 +392,10 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
   CylinderVolumeBounds* topVolumeBounds = fabs(rMin) > 0.1
       ? new CylinderVolumeBounds(rMin, rMax, 0.5 * fabs(zMax - zMin))
       : new CylinderVolumeBounds(rMax, 0.5 * fabs(zMax - zMin));
-    
+
   // some screen output
   ACTS_VERBOSE("Container voume bounds are " << (*topVolumeBounds));
-    
+
   // create the volume array with the ITrackingVolumeArrayCreator
   //       virtual std::shared_ptr<const TrackingVolumeArray>
   //       trackingVolumeArray(const TrackingVolumeVector& vols, BinningValue

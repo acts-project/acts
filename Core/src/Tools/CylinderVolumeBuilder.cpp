@@ -408,7 +408,8 @@ Acts::CylinderVolumeBuilder::trackingVolume(
           endcapRmin = insideVolumeRmax;
           // set the wrapping condition
           wrappingCondition = 1;
-        } else if (!pLayerSetup && cLayerSetup.zBoundaries.second < insideVolumeZmax){
+        } else if (!pLayerSetup
+                   && cLayerSetup.zBoundaries.second < insideVolumeZmax) {
           // screen output
           ACTS_VERBOSE("Only central setup given and radial wrapping possible");
           // set the barrel and volume z max to the insideVolumeZmax
@@ -498,9 +499,10 @@ Acts::CylinderVolumeBuilder::trackingVolume(
 
     } else if (wrappingCondition == 1) {
       // a new barrel sector
-      volume = ( nEndcap && pEndcap) ?
-        m_cfg.trackingVolumeHelper->createContainerTrackingVolume({nEndcap, barrel, pEndcap}) :
-        barrel;
+      volume = (nEndcap && pEndcap)
+          ? m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
+                {nEndcap, barrel, pEndcap})
+          : barrel;
       // now check if we need gaps as in 1
       if (fabs(insideVolumeZmax - volumeZmax) > 10e-5) {
         // create the gap volumes
