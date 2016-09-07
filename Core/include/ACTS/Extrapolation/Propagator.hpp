@@ -119,14 +119,14 @@ public:
             const AbortList&       conditions)
   {
     typedef obs_list_result_t<TrackParameters, ObserverList> result_type;
-    result_type r(start, Status::pINPROGRESS);
-
+    result_type     r(start, Status::pINPROGRESS);
+    double          stepMax  = 1 * units::_m;
     TrackParameters previous = start;
     TrackParameters current  = start;
     for (unsigned int i = 0; i < 1000; ++i) {
-      current = m_impl.doStep(previous, 1 * units::_cm);
+      current = m_impl.doStep(previous, stepMax);
       obsList(current, previous, r);
-      if (conditions(current, r)) break;
+      if (conditions(current, r, stepMax)) break;
       previous = current;
     }
 

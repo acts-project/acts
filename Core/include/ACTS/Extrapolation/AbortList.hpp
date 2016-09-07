@@ -30,14 +30,15 @@ public:
 
   template <typename input, typename result_t>
   bool
-  operator()(input& current, const result_t& r) const
+  operator()(input& current, const result_t& r, double& stepMax) const
   {
     // clang-format off
     static_assert(detail::all_of_v<detail::abort_condition_signature_check_v<conditions, input>...>,
                   "not all abort conditions support the specified input");
     // clang-format on
 
-    return detail::abort_list_impl<conditions...>::check(tuple(), current, r);
+    return detail::abort_list_impl<conditions...>::check(
+        tuple(), current, r, stepMax);
   }
 };
 

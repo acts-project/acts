@@ -35,9 +35,14 @@ struct MaxPathLength
 
   template <typename TrackParameters>
   bool
-  operator()(const observer_type::result_type& r, TrackParameters&) const
+  operator()(const observer_type::result_type& r,
+             TrackParameters&,
+             double& stepMax) const
   {
-    return (r.pathLength > maxPathLength);
+    // adjust maximum step size
+    stepMax = maxPathLength - r.pathLength;
+
+    return (r.pathLength >= maxPathLength);
   }
 };
 
@@ -47,9 +52,18 @@ struct MaxRadius
 
   template <typename TrackParameters>
   bool
-  operator()(const TrackParameters& pars) const
+  operator()(const TrackParameters& pars, double& stepMax) const
   {
-    return (pars.position().perp() > maxRadius);
+    // adjust maximum step size
+    // dR/dS = pT/p -> dS = dR * p / pT = dR * sqrt( 1 + pZ^2 / pT^2)
+    const double deltaR       = pars.position().perp() - maxRadius;
+    const double pT2          = pars.momentum().perp2();
+    const double pZ2          = pars.momentum().pz() * pars.momentum().pz();
+    const double inv_sintheta = sqrt(1 + pZ2 / pT2);
+
+    stepMax = -deltaR * inv_sintheta;
+
+    return (deltaR > 0);
   }
 };
 
