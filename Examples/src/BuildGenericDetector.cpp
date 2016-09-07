@@ -265,7 +265,7 @@ trackingGeometry(Logging::Level lvl, size_t stage)
     sslbConfig.centralLayerMaterialConcentration = {1, 1, 1};
     sslbConfig.centralLayerMaterialProperties
         = {ssmProperties, ssmProperties, ssmProperties};
-    sslbConfig.centralModuleBinningSchema = {{42, 12}, {64, 12}, {78, 12}};
+    sslbConfig.centralModuleBinningSchema = {{42, 12}, {64, 12}, {84, 12}};
     sslbConfig.centralModuleTiltPhi       = {-0.15, -0.15, -0.15};
     sslbConfig.centralModuleHalfX         = {18.2, 18.2, 18.2};
     sslbConfig.centralModuleHalfY         = {68., 68., 68.};
@@ -301,7 +301,7 @@ trackingGeometry(Logging::Level lvl, size_t stage)
     
 
     sslbConfig.posnegLayerBinMultipliers        = { 1, 2 };
-    sslbConfig.posnegLayerPositionsZ            = { 880., 1100., 1300., 1550., 1800., 2100. };
+    sslbConfig.posnegLayerPositionsZ            = { 880., 1100., 1300., 1550., 1800., 2200. };
     size_t nposnegs =  sslbConfig.posnegLayerPositionsZ.size();
     sslbConfig.posnegLayerEnvelopeR             = std::vector<double>(nposnegs,5.);
     sslbConfig.posnegLayerMaterialConcentration = std::vector<int>(nposnegs,1);
@@ -373,10 +373,10 @@ trackingGeometry(Logging::Level lvl, size_t stage)
     // configure the central barrel
     lslbConfig.centralLayerBinMultipliers        = { 1, 1 };
     lslbConfig.centralLayerRadii                 = { 680.,  980. };
-    lslbConfig.centralLayerEnvelopes             = {lsEnvelope, lsEnvelope };
-    lslbConfig.centralLayerMaterialConcentration = { -1, -1 };
+    lslbConfig.centralLayerEnvelopes             = { lsEnvelope, lsEnvelope };
+    lslbConfig.centralLayerMaterialConcentration = { 1, 1 };
     lslbConfig.centralLayerMaterialProperties    = { lsmProperties, lsmProperties};
-    lslbConfig.centralModuleBinningSchema        = { {64, 16}, {108, 16} };
+    lslbConfig.centralModuleBinningSchema        = { {64, 16}, {98, 16} };
     lslbConfig.centralModuleTiltPhi              = {-0.15, -0.15 };
     lslbConfig.centralModuleHalfX                = { 42., 42. };
     lslbConfig.centralModuleHalfY                = { 76., 76.};
@@ -398,22 +398,22 @@ trackingGeometry(Logging::Level lvl, size_t stage)
                                   lslbConfig.centralModuleBinningSchema[lslb]));
     }
     lslbConfig.centralModulePositions = centralModulePositions;
-    
+
     /**
     // configure the endcaps
     std::vector<double>   mrMinHx    = { 42., 42., 42. } ;
     std::vector<double>   mrMaxHx    = { 56., 56., 56.} ;
     std::vector<double>   mrHy       = { 64., 64., 64. } ;
-    std::vector<int>      mPhiBins   = { 64, 78, 108 };
+    std::vector<int>      mPhiBins   = { 64, 78, 98 };
     std::vector<double>   mThickness = { 0.25, 0.25, 0.25  };
     std::vector<Material> mMaterial  = { lsMaterial, lsMaterial, lsMaterial };
     std::vector<double>   mfStereo   = { -0.02, -0.02, -0.02 };
     std::vector<double>   mbStereo   = { 0.02, 0.02, 0.02 };
-    std::vector<double>   mfbGap     = {2., 2., 2. };
+    std::vector<double>   mfbGap     = { 2., 2., 2. };
     
     // endcap
     lslbConfig.posnegLayerBinMultipliers        = { 1, 2 };
-    lslbConfig.posnegLayerPositionsZ            = { 1380., 1680., 2200. };
+    lslbConfig.posnegLayerPositionsZ            = { 1380., 1680., 2180. };
     size_t nposnegs =  lslbConfig.posnegLayerPositionsZ.size();
     lslbConfig.posnegLayerEnvelopeR             = std::vector<double>(nposnegs,5.);
     lslbConfig.posnegLayerMaterialConcentration = std::vector<int>(nposnegs,1);
@@ -440,8 +440,8 @@ trackingGeometry(Logging::Level lvl, size_t stage)
                               lslbConfig.posnegModuleHalfY[id]));
     }
     lslbConfig.posnegModulePositions = posnegModulePositions;
-    */
-    
+    **/
+      
     // define the builder
     auto lstripLayerBuilder = std::make_shared<GenericLayerBuilder>(lslbConfig, getDefaultLogger("LStripLayerBuilder", lvl));
     //-------------------------------------------------------------------------------------

@@ -35,7 +35,7 @@ set (_supported_components)
 # delegate
 add_subdirectory (Core)
 add_subdirectory (doc)
-#add_subdirectory (Plugins)
+add_subdirectory (Plugins)
 add_subdirectory (Examples)
 
 # add unit tests

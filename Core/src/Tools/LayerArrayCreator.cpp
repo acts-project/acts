@@ -95,8 +95,12 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
         std::unique_ptr<const Surface> navLayerSurface(createNavigationSurface(
             *layIter, bValue, -fabs(layerValue - navigationValue)));
         ACTS_VERBOSE("arbitrary : creating a  NavigationLayer at "
-                       << (navLayerSurface->binningPosition(bValue)));
-        navLayer = NavigationLayer::create(std::move(navLayerSurface));
+                      << (navLayerSurface->binningPosition(bValue)).x()
+                      << ", "
+                      << (navLayerSurface->binningPosition(bValue)).y()
+                      << ", "
+                      << (navLayerSurface->binningPosition(bValue)).z());
+                     navLayer = NavigationLayer::create(std::move(navLayerSurface));
         // push the navigation layer in
         layerOrderVector.push_back(
             LayerOrderPosition(navLayer, navLayer->binningPosition(bValue)));
@@ -105,8 +109,12 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
       layerOrderVector.push_back(
           LayerOrderPosition(layIter, layIter->binningPosition(bValue)));
       ACTS_VERBOSE("arbitrary : registering MaterialLayer at  "
-                   << (layIter->binningPosition(bValue)));
-      // remember the last
+                   << (layIter->binningPosition(bValue)).x()
+                   << ", "
+                   << (layIter->binningPosition(bValue)).y()
+                   << ", "
+                   << (layIter->binningPosition(bValue)).z());
+        // remember the last
       lastLayer = layIter;
     }
     // a final navigation layer
@@ -118,8 +126,11 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
       std::unique_ptr<const Surface> navLayerSurface(createNavigationSurface(
           *lastLayer, bValue, navigationValue - layerValue));
       ACTS_VERBOSE("arbitrary : creating a  NavigationLayer at "
-                     << (navLayerSurface->binningPosition(bValue)));
-      navLayer = NavigationLayer::create(std::move(navLayerSurface));
+                   << (navLayerSurface->binningPosition(bValue)).x()
+                   << ", "
+                   << (navLayerSurface->binningPosition(bValue)).y()
+                   << ", "
+                   << (navLayerSurface->binningPosition(bValue)).z());      navLayer = NavigationLayer::create(std::move(navLayerSurface));
       // push the navigation layer in
       layerOrderVector.push_back(
           LayerOrderPosition(navLayer, navLayer->binningPosition(bValue)));
