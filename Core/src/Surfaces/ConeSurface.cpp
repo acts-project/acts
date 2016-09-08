@@ -60,9 +60,8 @@ Acts::ConeSurface::binningPosition(Acts::BinningValue bValue) const
 {
   // special binning type for R-type methods
   if (bValue == Acts::binR || bValue == Acts::binRPhi)
-    return Vector3D(center().x() + bounds().r(center().z()),
-                              center().y(), 
-                              center().z());
+    return Vector3D(
+        center().x() + bounds().r(center().z()), center().y(), center().z());
   // give the center as default for all of these binning types
   // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
   return center();
