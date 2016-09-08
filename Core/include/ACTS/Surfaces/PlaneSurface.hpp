@@ -200,7 +200,7 @@ PlaneSurface::normal(const Vector2D&) const
 
 inline const Vector3D PlaneSurface::binningPosition(BinningValue) const
 {
-  return std::move(center());
+  return center();
 }
 
 inline double

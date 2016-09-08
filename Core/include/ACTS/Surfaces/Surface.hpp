@@ -364,7 +364,7 @@ Surface::center() const
 inline const Vector3D
 Surface::normal(const Vector3D&) const
 {
-  return std::move(normal(s_origin2D));
+  return normal(s_origin2D);
 }
 
 template <class T>

@@ -75,13 +75,13 @@ Acts::CylinderSurface::binningPosition(BinningValue bValue) const
   if (bValue == Acts::binR || bValue == Acts::binRPhi) {
     double R   = bounds().r();
     double phi = m_bounds ? m_bounds->averagePhi() : 0.;
-    return std::move(Vector3D(center().x() + R * cos(phi), 
-                              center().y() + R * sin(phi),
-                              center().z()));
+    return Vector3D(center().x() + R * cos(phi), 
+                    center().y() + R * sin(phi),
+                    center().z());
   }
   // give the center as default for all of these binning types
   // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
-  return std::move(center());
+  return center();
 }
 
 // return the measurement frame: it's the tangential plane
@@ -102,7 +102,7 @@ Acts::CylinderSurface::measurementFrame(const Vector3D& gpos,
   mFrame.col(1) = measY;
   mFrame.col(2) = measDepth;
   // return the rotation matrix
-  return std::move(mFrame);
+  return mFrame;
 }
 
 const Acts::Vector3D
@@ -110,7 +110,7 @@ Acts::CylinderSurface::rotSymmetryAxis() const
 {
   // fast access via tranform matrix (and not rotation())
   auto tMatrix = transform().matrix();
-  return std::move(Vector3D(tMatrix(0,2),tMatrix(1,2),tMatrix(2,2)));
+  return Vector3D(tMatrix(0,2),tMatrix(1,2),tMatrix(2,2));
 }
 
 void
