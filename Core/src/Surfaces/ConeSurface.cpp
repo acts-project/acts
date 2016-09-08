@@ -60,12 +60,11 @@ Acts::ConeSurface::binningPosition(Acts::BinningValue bValue) const
 {
   // special binning type for R-type methods
   if (bValue == Acts::binR || bValue == Acts::binRPhi)
-    return std::move(Vector3D(center().x() + bounds().r(center().z()),
-                              center().y(), 
-                              center().z()));
+    return Vector3D(
+        center().x() + bounds().r(center().z()), center().y(), center().z());
   // give the center as default for all of these binning types
   // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
-  return std::move(center());
+  return center();
 }
 
 Acts::ConeSurface&
@@ -102,7 +101,7 @@ Acts::ConeSurface::measurementFrame(const Vector3D& pos, const Vector3D&) const
   // return the rotation matrix
   //!< @TODO fold in alpha
   // return it
-  return std::move(mFrame);
+  return mFrame;
 }
 
 void
