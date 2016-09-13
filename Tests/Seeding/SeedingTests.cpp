@@ -15,7 +15,6 @@
 #include "ACTS/Seeding/SpacePoint.hpp"
 #include "ACTS/Seeding/TrackSeed.hpp"
 
-using std::cout;
 using namespace Acts::Seeding;
 
 // construct barrel layer w/ n points equidistant in phi
