@@ -45,12 +45,8 @@ template <typename Identifier, size_t N>
 void
 print(std::ostream& os, const std::vector<TrackSeed<Identifier, N>>& seeds)
 {
-  for (const auto& seed : seeds) {
-    os << seed << '\n';
-    for (size_t i = 0; i < seed.kNumPoints; ++i) {
-      os << "  " << seed.point(i) << '\n';
-    }
-  }
+  for (const auto& seed : seeds)
+    seed.print(os);
 }
 
 BOOST_AUTO_TEST_CASE(PhiRangeTest)
