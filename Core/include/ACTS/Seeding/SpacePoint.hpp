@@ -33,8 +33,12 @@ namespace Seeding {
       : m_position(x, y, z), m_identifier(id)
     {
     }
+    SpacePoint(const Acts::Vector3D& xyz, Identifier id)
+      : m_position(xyz), m_identifier(id)
+    {
+    }
 
-    const Acts::Vector3D
+    auto
     position() const
     {
       return m_position;
