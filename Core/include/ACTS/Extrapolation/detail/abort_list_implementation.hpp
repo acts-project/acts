@@ -45,11 +45,11 @@ namespace detail {
   template <typename first, typename... others>
   struct abort_list_impl<first, others...>
   {
-    template <typename T, typename input, typename result>
+    template <typename T, typename result, typename input>
     static bool
     check(const T&      conditions_tuple,
-          input&        current,
           const result& r,
+          input&        current,
           double&       stepMax)
     {
       // get the right helper for calling the abort condition
@@ -67,7 +67,7 @@ namespace detail {
       // -> skip remaining conditions if this abort condition evaluates to true
       bool abort = caller_type::check(this_condition, r, current, stepMax)
           || abort_list_impl<others...>::check(
-                       conditions_tuple, current, r, other_stepMax);
+                       conditions_tuple, r, current, other_stepMax);
 
       // set remaining step size
       stepMax = std::min(stepMax, other_stepMax);
@@ -79,11 +79,11 @@ namespace detail {
   template <typename last>
   struct abort_list_impl<last>
   {
-    template <typename T, typename input, typename result>
+    template <typename T, typename result, typename input>
     static bool
     check(const T&      conditions_tuple,
-          input&        current,
           const result& r,
+          input&        current,
           double&       stepMax)
     {
       // get the right helper for calling the abort condition
@@ -98,9 +98,9 @@ namespace detail {
   template <>
   struct abort_list_impl<>
   {
-    template <typename T, typename input, typename result>
+    template <typename T, typename result, typename input>
     static bool
-    check(const T&, input&, const result&, double&)
+    check(const T&, const result&, input&, double&)
     {
       return false;
     }

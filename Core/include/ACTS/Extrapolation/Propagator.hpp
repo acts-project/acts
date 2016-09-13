@@ -145,7 +145,7 @@ public:
     for (unsigned int i = 0; i < options.max_steps; ++i) {
       current = m_impl.doStep(previous, stepMax);
       options.observer_list(current, previous, r);
-      if (options.stop_conditions(current, r, stepMax)) break;
+      if (options.stop_conditions(r, current, stepMax)) break;
       previous = current;
     }
 
