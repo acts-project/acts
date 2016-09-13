@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "ACTS/Seeding/SpacePoint.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
 namespace Seeding {
@@ -30,26 +31,30 @@ namespace Seeding {
   public:
     static_assert(0 < N, "TrackSeed must have at least one space point.");
 
-    static constexpr size_t kNumPoints = N;
+    using Point            = SpacePoint<Identifier>;
+    using PointIdentifiers = std::array<Identifier, N>;
 
     template <typename... P>
-    TrackSeed(double phi, double theta, double curvature, P&&... ps)
-      : m_phi(phi)
+    TrackSeed(double       phi,
+              double       theta,
+              double       curvature,
+              const Point& p0,
+              const P&... ps)
+      : m_position(p0.position())
+      , m_phi(phi)
       , m_theta(theta)
       , m_curvature(curvature)
-      , m_points{std::forward<P>(ps)...}
+      , m_pointIds{p0.identifier(), ps.identifier()...}
     {
-      static_assert(sizeof...(ps) == N, "Number of input points must be N");
-    }
-    template <typename... P>
-    TrackSeed(const Vector3D direction, double curvature, P&&... ps)
-      : TrackSeed(direction.phi(),
-                  direction.theta(),
-                  curvature,
-                  std::forward<P>(ps)...)
-    {
+      static_assert((sizeof...(ps) + 1) == N,
+                    "Number of input points must be N");
     }
 
+    auto
+    position() const
+    {
+      return m_position;
+    }
     auto
     phi() const
     {
@@ -65,28 +70,25 @@ namespace Seeding {
     {
       return m_curvature;
     }
-    template <size_t INDEX>
-    constexpr const SpacePoint<Identifier>&
-    point() const
+    const PointIdentifiers&
+    pointIdentifiers() const
     {
-      return std::get<INDEX>(m_points);
-    }
-    const SpacePoint<Identifier>&
-    point(size_t index) const
-    {
-      return m_points[index];
+      return m_pointIds;
     }
 
-    void print(std::ostream& os) const {
-      os << "phi=" << m_phi << " theta=" << m_theta
+    void
+    print(std::ostream& os) const
+    {
+      os << "x=" << m_position.x() << " y=" << m_position.y()
+         << " z=" << m_position.z() << " phi=" << m_phi << " theta=" << m_theta
          << " curvature=" << m_curvature << '\n';
-      for (const auto& point : m_points)
-        os << "  " << point << '\n';
+      for (auto id : pointIdentifiers()) os << "  " << id << '\n';
     }
 
   private:
-    double m_phi, m_theta, m_curvature;
-    std::array<const SpacePoint<Identifier>, N> m_points;
+    Acts::Vector3D   m_position;
+    double           m_phi, m_theta, m_curvature;
+    PointIdentifiers m_pointIds;
   };
 
   template <typename Identifier>
@@ -95,15 +97,6 @@ namespace Seeding {
   using TrackSeeds3 = std::vector<TrackSeed<Identifier, 3>>;
   template <typename Identifier>
   using TrackSeeds4 = std::vector<TrackSeed<Identifier, 4>>;
-
-  template <typename Identifier, size_t N>
-  inline std::ostream&
-  operator<<(std::ostream& os, const TrackSeed<Identifier, N>& seed)
-  {
-    os << "phi=" << seed.phi() << " theta=" << seed.theta()
-       << " kappa=" << seed.curvature() << " n_points=" << N;
-    return os;
-  }
 
 }  // namespace Seeding
 }  // namespace Acts
