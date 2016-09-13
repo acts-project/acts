@@ -81,6 +81,9 @@ namespace Seeding {
 
   /**
    * @brief A set of space points on a barrel layer with fixed radius.
+   *
+   * \warning After adding points to the container, `.sort()` must be called to
+   * ensure correct ordering. Failure to do so leads to undefined behaviour.
    */
   template <typename Identifier>
   struct BarrelSpacePoints
@@ -88,14 +91,17 @@ namespace Seeding {
     std::vector<SpacePoint<Identifier>> points;
     double                              radius;
 
+    /**
+     * @brief Subset of points with phi value plus/minus delta around given phi.
+     */
     auto
-    rangePhiDelta(double phi, double phiDelta) const
+    rangeDeltaPhi(double phi, double delta) const
     {
-      return detail::makeRangePhi(points, phi - phiDelta, phi + phiDelta);
+      return detail::makeRangePhi(points, phi - delta, phi + delta);
     }
 
     void
-    sortByPhi()
+    sort()
     {
       auto compare
           = [](const auto p0, const auto& p1) { return (p0.phi() < p1.phi()); };
