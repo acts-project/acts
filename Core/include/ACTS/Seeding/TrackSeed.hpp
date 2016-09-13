@@ -21,9 +21,7 @@ namespace Acts {
 namespace Seeding {
 
   /**
-   * @brief (Geometric) parameter estimates and a set of space points.
-   *
-   * The parameter estimates are always defined at the first space point.
+   * @brief (Geometric) parameter estimates and a set of points.
    */
   template <typename Identifier, size_t N>
   class TrackSeed
