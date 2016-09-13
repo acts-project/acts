@@ -19,9 +19,9 @@ namespace Seeding {
 
   struct HelixSeedConfig
   {
-    double deltaPhi01 = 0.2;
-    double deltaPhi12 = 0.2;
-    double maxLambda  = M_PI_2;
+    double rangePhi1     = 0.2;  // search range in phi at layer 1
+    double rangePhi2     = 0.2;  // search range in phi at layer 2
+    double maxDeltaTheta = 0.1;  // cut on difference in theta between doublets
   };
 
   template <typename Identifier>
@@ -44,17 +44,20 @@ Acts::Seeding::findHelixSeeds(const HelixSeedConfig&               cfg,
                               TrackSeeds3<Identifier>&             seeds)
 {
   for (const auto& p0 : barrel0.points) {
-    for (const auto& p1 : barrel1.rangePhiDelta(p0.phi(), cfg.deltaPhi01)) {
-      auto phi01 = (p1.position() - p0.position()).phi();
-      auto theta01 = (p1.position() - p0.position()).theta();
-      if (cfg.maxLambda < std::abs(M_PI_2 - theta01)) continue;
+    for (const auto& p1 : barrel1.rangePhiDelta(p0.phi(), cfg.rangePhi1)) {
+      Acts::Vector3D at2
+          = detail::calcLineCircleIntersection(p0, p1, barrel2.radius);
 
-      for (const auto& p2 : barrel2.rangePhiDelta(p1.phi(), cfg.deltaPhi12)) {
+      for (const auto& p2 : barrel2.rangePhiDelta(at2.phi(), cfg.rangePhi2)) {
+        auto theta01 = (p1.position() - p0.position()).theta();
         auto theta12 = (p2.position() - p1.position()).theta();
-        if (cfg.maxLambda < std::abs(M_PI_2 - theta12)) continue;
 
-        double kappa = detail::calcCircleCurvature(p0, p1, p2);
-        // use first doublet to estimate direction
+        if (cfg.maxDeltaTheta < std::abs(theta12 - theta01)) continue;
+
+        // use initial doublet to define direction
+        // TODO add curvature corrections to angles
+        auto phi01 = (p1.position() - p0.position()).phi();
+        auto kappa = detail::calcCircleCurvature(p0, p1, p2);
         seeds.emplace_back(phi01, theta01, kappa, p0, p1, p2);
       }
     }
