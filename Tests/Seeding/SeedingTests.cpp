@@ -30,23 +30,23 @@ makeBarrel(double radius, int nPoints)
     barrel.points.emplace_back(
         radius * std::cos(phi), radius * std::sin(phi), 0, i);
   }
-  barrel.sortByPhi();
+  barrel.sort();
   return barrel;
 }
 
 template <typename Identifier>
 void
-print(std::ostream& os, const BarrelSpacePoints<Identifier>& barrel)
+print(const BarrelSpacePoints<Identifier>& barrel)
 {
-  for (const auto& point : barrel.points) os << point << '\n';
+  for (const auto& point : barrel.points) std::cout << point << '\n';
 }
 
 template <typename Identifier, size_t N>
 void
-print(std::ostream& os, const std::vector<TrackSeed<Identifier, N>>& seeds)
+print(const std::vector<TrackSeed<Identifier, N>>& seeds)
 {
   for (const auto& seed : seeds)
-    seed.print(os);
+    seed.print(std::cout);
 }
 
 BOOST_AUTO_TEST_CASE(PhiRangeTest)
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(PhiRangeTest)
   auto layer = makeBarrel(10, 16);
   auto dphi  = 2 * M_PI / 16;
 
-  print(std::cout, layer);
+  print(layer);
 
   {
     // empty range, linear
@@ -115,32 +115,45 @@ BOOST_AUTO_TEST_CASE(BarrelHelixSeedFinderTest)
   auto layer1 = makeBarrel(30, pointsPerLayer);
   auto layer2 = makeBarrel(50, pointsPerLayer);
 
-  print(std::cout, layer0);
-  print(std::cout, layer1);
-  print(std::cout, layer2);
+  print(layer0);
+  print(layer1);
+  print(layer2);
 
   // hard cuts, only straight tracks
   {
     HelixSeedConfig cfg;
-    cfg.deltaPhi01 = 0.1 * dphi;
-    cfg.deltaPhi12 = 0.1 * dphi;
+    cfg.rangePhi1 = 0.001 * dphi;
+    cfg.rangePhi2 = 0.001 * dphi;
+    cfg.maxDeltaTheta = 0.2;
     TrackSeeds3<size_t> seeds;
 
     findHelixSeeds(cfg, layer0, layer1, layer2, seeds);
-    print(std::cout, seeds);
 
     BOOST_CHECK_EQUAL(seeds.size(), pointsPerLayer);
   }
-  // looser cuts, multiple combinations for each inner hit
+  // medium cuts, hit1 is matched, hit2 pickups 3 hits
   {
     HelixSeedConfig cfg;
-    cfg.deltaPhi01 = 1.1 * dphi;
-    cfg.deltaPhi12 = 1.1 * dphi;
+    cfg.rangePhi1 = 0.001 * dphi;
+    cfg.rangePhi2 = 1.001 * dphi; // matching hit +- 1 neighbor
+    cfg.maxDeltaTheta = 0.2;
     TrackSeeds3<size_t> seeds;
 
     findHelixSeeds(cfg, layer0, layer1, layer2, seeds);
-    print(std::cout, seeds);
 
-    BOOST_CHECK_GT(seeds.size(), pointsPerLayer);
+    BOOST_CHECK_EQUAL(seeds.size(), 3*pointsPerLayer);
+  }
+  // loose cuts, hit1 picks up 3 hits, each hit2 picks up 3 hits
+  {
+    HelixSeedConfig cfg;
+    cfg.rangePhi1 = 1.001 * dphi; // matching hit +- 1 neighbor
+    cfg.rangePhi2 = 1.2 * dphi; // matching hit +- 1 neighbor
+    cfg.maxDeltaTheta = 0.2;
+    TrackSeeds3<size_t> seeds;
+
+    findHelixSeeds(cfg, layer0, layer1, layer2, seeds);
+    print(seeds);
+
+    BOOST_CHECK_EQUAL(seeds.size(), 9*pointsPerLayer);
   }
 }
