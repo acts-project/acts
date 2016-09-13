@@ -11,10 +11,9 @@
 #define BOOST_TEST_MODULE Seeding Tests
 #include <boost/test/included/unit_test.hpp>
 
-#include "ACTS/Seeding/BarrelHelixSeedFinder.hpp"
+#include "ACTS/Seeding/BarrelSeedFinder.hpp"
 #include "ACTS/Seeding/SpacePoint.hpp"
 #include "ACTS/Seeding/TrackSeed.hpp"
-#include "ACTS/Seeding/detail/SubRange.hpp"
 
 using std::cout;
 using namespace Acts::Seeding;
@@ -60,21 +59,21 @@ BOOST_AUTO_TEST_CASE(PhiRangeTest)
 
   {
     // empty range, linear
-    auto range = layer.rangePhiDelta(0.5 * dphi, 0.4 * dphi);
+    auto range = layer.rangeDeltaPhi(0.5 * dphi, 0.4 * dphi);
     BOOST_CHECK(range.empty());
     BOOST_CHECK_EQUAL(range.size(), 0);
     BOOST_CHECK(range.begin() == range.end());
   }
   {
     // empty range at edge
-    auto range = layer.rangePhiDelta(2 * M_PI - 0.5 * dphi, 0.4 * dphi);
+    auto range = layer.rangeDeltaPhi(2 * M_PI - 0.5 * dphi, 0.4 * dphi);
     BOOST_CHECK(range.empty());
     BOOST_CHECK_EQUAL(range.size(), 0);
     BOOST_CHECK(range.begin() == range.end());
   }
   {
     // linear range, no wrap-around
-    auto range = layer.rangePhiDelta(1 * dphi, 1 * dphi);
+    auto range = layer.rangeDeltaPhi(1 * dphi, 1 * dphi);
     auto it    = range.begin();
     BOOST_CHECK_EQUAL(range.size(), 3);
     BOOST_CHECK_CLOSE(it->phi(), 0 * dphi, 1e-6);
@@ -89,7 +88,7 @@ BOOST_AUTO_TEST_CASE(PhiRangeTest)
   }
   {
     // wrap around at edge
-    auto range = layer.rangePhiDelta(M_PI, 2 * dphi);
+    auto range = layer.rangeDeltaPhi(M_PI, 2 * dphi);
     auto it    = range.begin();
     BOOST_CHECK_EQUAL(range.size(), 5);
     BOOST_CHECK_CLOSE(it->phi(), M_PI - 2 * dphi, 1e-6);
@@ -106,7 +105,7 @@ BOOST_AUTO_TEST_CASE(PhiRangeTest)
   }
 }
 
-BOOST_AUTO_TEST_CASE(BarrelHelixSeedFinderTest)
+BOOST_AUTO_TEST_CASE(HelixBarrelSeedFinderTest)
 {
   size_t pointsPerLayer = 16;
   double dphi           = 2 * M_PI / pointsPerLayer;

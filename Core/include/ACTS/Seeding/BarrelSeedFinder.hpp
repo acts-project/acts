@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_SEEDING_BARRELHELIXSEEDFINDER_HPP
-#define ACTS_SEEDING_BARRELHELIXSEEDFINDER_HPP
+#ifndef ACTS_SEEDING_BARRELSEEDFINDER_HPP
+#define ACTS_SEEDING_BARRELSEEDFINDER_HPP
 
 #include "ACTS/Seeding/SpacePoint.hpp"
 #include "ACTS/Seeding/TrackSeed.hpp"
@@ -44,11 +44,11 @@ Acts::Seeding::findHelixSeeds(const HelixSeedConfig&               cfg,
                               TrackSeeds3<Identifier>&             seeds)
 {
   for (const auto& p0 : barrel0.points) {
-    for (const auto& p1 : barrel1.rangePhiDelta(p0.phi(), cfg.rangePhi1)) {
+    for (const auto& p1 : barrel1.rangeDeltaPhi(p0.phi(), cfg.rangePhi1)) {
       Acts::Vector3D at2
           = detail::calcLineCircleIntersection(p0, p1, barrel2.radius);
 
-      for (const auto& p2 : barrel2.rangePhiDelta(at2.phi(), cfg.rangePhi2)) {
+      for (const auto& p2 : barrel2.rangeDeltaPhi(at2.phi(), cfg.rangePhi2)) {
         auto theta01 = (p1.position() - p0.position()).theta();
         auto theta12 = (p2.position() - p1.position()).theta();
 
@@ -64,4 +64,4 @@ Acts::Seeding::findHelixSeeds(const HelixSeedConfig&               cfg,
   }
 }
 
-#endif  // ACTS_SEEDING_BARRELHELIXSEEDFINDER_HPP
+#endif  // ACTS_SEEDING_BARRELSEEDFINDER_HPP

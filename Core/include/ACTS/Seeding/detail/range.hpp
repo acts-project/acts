@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_SEEDING_SUBRANGE_HPP
-#define ACTS_SEEDING_SUBRANGE_HPP
+#ifndef ACTS_SEEDING_RANGE_HPP
+#define ACTS_SEEDING_RANGE_HPP
 
 #include <algorithm>
 
@@ -142,4 +142,4 @@ namespace Seeding {
 }  // namespace Seeding
 }  // namespace Acts
 
-#endif  // ACTS_SEEDING_SUBRANGE_HPP
+#endif  // ACTS_SEEDING_RANGE_HPP
