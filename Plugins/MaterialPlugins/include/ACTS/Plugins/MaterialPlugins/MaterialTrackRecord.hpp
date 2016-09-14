@@ -40,13 +40,13 @@ public:
   /// Constructor handing over all the relevant parameters for the material
   /// track
   /// @param startPos three dimensional global start position of the track
-  /// @param eta pseudorapidity indicating the first coordinate of the direction
+  /// @param theta polar angle indicating the first coordinate of the direction
   /// of the material track
   /// @param phi azimuthal angle indicating the second coordinate of the
   /// direction of the material track
   /// @param materialSteps the collection material steps along the track
   MaterialTrackRecord(const MaterialStep::Position& startPos,
-                      double                        eta,
+                      double                        theta,
                       double                        phi,
                       std::vector<MaterialStep>     materialSteps);
   /// Copy constructor
@@ -60,9 +60,9 @@ public:
   /// Assignment operator
   MaterialTrackRecord&
   operator=(const MaterialTrackRecord& mtrecord);
-  /// Return method for the pseudorapidity eta
+  /// Return method for the polar angle theta
   double
-  eta() const;
+  theta() const;
   /// Return method for the azimuthal angle phi
   double
   phi() const;
@@ -78,7 +78,7 @@ private:
   MaterialStep::Position m_startPosition;
   /// pseudorapidity indicating the first coordinate of the direction of the
   /// material track
-  double m_eta;
+  double m_theta;
   /// azimuthal angle phi indicating the second coordinate of the direction of
   /// the material track
   double m_phi;
@@ -88,9 +88,9 @@ private:
 }
 
 inline double
-Acts::MaterialTrackRecord::eta() const
+Acts::MaterialTrackRecord::theta() const
 {
-  return m_eta;
+  return m_theta;
 }
 
 inline double

@@ -14,11 +14,11 @@
 
 Acts::MaterialTrackRecord::MaterialTrackRecord(
     const MaterialStep::Position& startPos,
-    double                        eta,
+    double                        theta,
     double                        phi,
     std::vector<MaterialStep>     materialSteps)
   : m_startPosition(startPos)
-  , m_eta(eta)
+  , m_theta(theta)
   , m_phi(phi)
   , m_materialSteps(materialSteps)
 {
@@ -27,7 +27,7 @@ Acts::MaterialTrackRecord::MaterialTrackRecord(
 Acts::MaterialTrackRecord::MaterialTrackRecord(
     const MaterialTrackRecord& mtrecord)
   : m_startPosition(mtrecord.m_startPosition)
-  , m_eta(mtrecord.m_eta)
+  , m_theta(mtrecord.m_theta)
   , m_phi(mtrecord.m_phi)
   , m_materialSteps(mtrecord.m_materialSteps)
 {
@@ -44,7 +44,7 @@ Acts::MaterialTrackRecord::operator=(const MaterialTrackRecord& mtrecord)
 {
   if (this != &mtrecord) {
     m_startPosition = mtrecord.m_startPosition;
-    m_eta           = mtrecord.m_eta;
+    m_theta         = mtrecord.m_theta;
     m_phi           = mtrecord.m_phi;
     m_materialSteps = mtrecord.m_materialSteps;
   }

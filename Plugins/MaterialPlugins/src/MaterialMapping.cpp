@@ -60,7 +60,7 @@ Acts::MaterialMapping::collectLayersAndHits(
     std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>& layersAndHits)
 {
   // access the parameters
-  double                    eta           = matTrackRec.eta();
+  double                    theta         = matTrackRec.theta();
   double                    phi           = matTrackRec.phi();
   std::vector<MaterialStep> materialSteps = matTrackRec.materialSteps();
   Acts::Vector3D            startPos(matTrackRec.position().x,
@@ -75,7 +75,8 @@ Acts::MaterialMapping::collectLayersAndHits(
     // propagate through the detector and collect the layers hit in the given
     // direction eta phi
     // calculate the direction in cartesian coordinates
-    Acts::Vector3D direction(cos(phi), sin(phi), sinh(eta));
+    Acts::Vector3D direction(
+        cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));
     // create the beginning neutral parameters to extrapolate through the
     // geometry
     std::unique_ptr<Acts::ActsSymMatrixD<Acts::NGlobalPars>> cov;
@@ -189,17 +190,18 @@ Acts::MaterialMapping::associateLayerMaterial(
     const Acts::Layer* assignedLayer    = layersAndHits.at(currentLayer).first;
     Acts::Vector3D     assignedPosition = layersAndHits.at(currentLayer).second;
     // correct material thickness with pathcorrection
-    double eta = matTrackRec.eta();
-    double phi = matTrackRec.phi();
+    double theta = matTrackRec.theta();
+    double phi   = matTrackRec.phi();
     // calculate the direction in cartesian coordinates
-    Acts::Vector3D direction(cos(phi), sin(phi), sinh(eta));
+    Acts::Vector3D direction(
+        cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));
     // access the path correction of the associated material surface
     double pathCorrection
         = assignedLayer->materialSurface()->pathCorrection(pos, direction);
     // create material Properties
     const Acts::MaterialProperties* layerMaterialProperties
         = new MaterialProperties(step.material().material(),
-                                 step.material().thickness()/pathCorrection);
+                                 step.material().thickness() / pathCorrection);
     // fill the step pos of the current material step
     m_layersAndSteps.insert(std::make_pair(assignedLayer, step));
     // associate the hit
