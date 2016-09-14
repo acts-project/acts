@@ -24,7 +24,6 @@ if (BUILD_MATERIAL_PLUGIN)
   # add to list of supported components
   list (APPEND _supported_components MaterialPlugin)
   set (_supported_components "${_supported_components}" PARENT_SCOPE)
-  set(CMAKE_DEBUG_TARGET_PROPERTIES COMPILE_OPTIONS)
    
 else (BUILD_MATERIAL_PLUGIN)
     message (STATUS "${Blue}disable build of MaterialPlugins${ColorReset}")
