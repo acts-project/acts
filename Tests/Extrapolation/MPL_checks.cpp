@@ -1,4 +1,3 @@
-
 // Boost include(s)
 #define BOOST_TEST_MODULE MPL Tests
 #include <ACTS/Extrapolation/AbortList.hpp>
