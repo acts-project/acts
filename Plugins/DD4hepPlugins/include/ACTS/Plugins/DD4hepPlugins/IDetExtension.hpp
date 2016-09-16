@@ -85,15 +85,6 @@ public:
   /// disc or cylinder
   virtual ShapeType
   shape() const = 0;
-  /// Method to set the DD4hep segmentation for the readout
-  /// @param segmentation DD4hep segmentation for the readout
-  virtual void
-  setSegmentation(const DD4hep::Geometry::Segmentation segmentation)
-      = 0;
-  /// Method to access the DD4hep segmentation for the readout
-  /// @return segmentation DD4hep segmentation for the readout
-  virtual const DD4hep::Geometry::Segmentation
-  segmentation() const = 0;
   /// possibility to mark layer to have support material
   /// @note the numer of bins determines the granularity of the material
   /// map of the layer
@@ -119,7 +110,6 @@ public:
   virtual Acts::LayerMaterialPos
   layerMaterialPos() const = 0;
   /// Possibility to set contained detector modules of a layer
-  /// @param mod Possible sensitive modules contained by a layer
   /// @param axis is the axis orientation with respect to the tracking frame
   ///        it is a string of the three characters x, y and z (standing for the
   ///        three axes)
@@ -132,13 +122,8 @@ public:
   ///                            "XzY" -> negative node z axis is tracking y
   ///                            axis, etc.
   virtual void
-  setModules(std::vector<DD4hep::Geometry::DetElement> mod,
-             const std::string&                        axes = "XYZ")
+  setAxes(const std::string& axes = "XYZ")
       = 0;
-  /// Access modules detector module contained by a layer
-  /// @return Possible sensitive modules contained by a layer
-  virtual std::vector<DD4hep::Geometry::DetElement>
-  modules() const = 0;
   /// Access the orientation of the module
   /// @return string describing the orientation of the axes
   virtual const std::string

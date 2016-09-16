@@ -41,28 +41,14 @@ class DetExtension : public IDetExtension
 public:
   /// Constructor
   DetExtension();
-  /// Constructor for sensitive detector element
-  /// @param segmentation DD4hep segmentation for the readout
-  DetExtension(const DD4hep::Geometry::Segmentation segmentation);
   /// Constructor for volume with shape to distinguish between disc and cylinder
   /// volume
   /// @param shape The type of the shape defined in IDetExtension can be either
   /// disc or cylinder
   DetExtension(ShapeType shape);
-  /// Constructor for layer with support structure
-  /// @note the numer of bins determines the granularity of the material
-  /// map of the layer
-  /// @param bins1 The number of bins in first direction of the layer
-  /// which is phi for both, cylinder and disc layers.
-  /// @param bins2 The number of bins in second direction of the layer
-  /// which is r in case of a disc layer and z in case of a cylinder layer
-  /// @param layerMatPos states if the material should be mapped on the inner,
-  /// the center or the outer surface of the layer
-  DetExtension(size_t bins1, size_t bins2, LayerMaterialPos layerMatPos);
   /// Constructor for layer with modules
-  /// @param mod Possible sensitive modules contained by a layer
-  DetExtension(std::vector<DD4hep::Geometry::DetElement> mod,
-               const std::string&                        axes = "XYZ");
+  /// @param axes is the axis orientation with respect to the tracking frame
+  DetExtension(const std::string& axes);
   /// Constructor for layer with support structure and modules
   /// @note the numer of bins determines the granularity of the material
   /// map of the layer
@@ -72,12 +58,11 @@ public:
   /// which is r in case of a disc layer and z in case of a cylinder layer
   /// @param layerMatPos states if the material should be mapped on the inner,
   /// the center or the outer surface of the layer
-  /// @param mod Possible sensitive modules contained by a layer
-  DetExtension(size_t                                    bins1,
-               size_t                                    bins2,
-               LayerMaterialPos                          layerMatPos,
-               std::vector<DD4hep::Geometry::DetElement> mod,
-               const std::string&                        axes = "XYZ");
+  /// @param axes is the axis orientation with respect to the tracking frame
+  DetExtension(size_t             bins1,
+               size_t             bins2,
+               LayerMaterialPos   layerMatPos,
+               const std::string& axes = "XYZ");
   /// Copy constructor
   DetExtension(const DetExtension&, const DD4hep::Geometry::DetElement&);
   /// destructor
@@ -94,14 +79,6 @@ public:
   /// disc or cylinder
   ShapeType
   shape() const override;
-  /// Method to set the DD4hep segmentation for the readout
-  /// @param segmentation DD4hep segmentation for the readout
-  void
-  setSegmentation(const DD4hep::Geometry::Segmentation segmentation) override;
-  /// Method to access the DD4hep segmentation for the readout
-  /// @return segmentation DD4hep segmentation for the readout
-  const DD4hep::Geometry::Segmentation
-  segmentation() const override;
   /// possibility to mark layer to have support material
   /// @note the numer of bins determines the granularity of the material
   /// map of the layer
@@ -128,8 +105,7 @@ public:
   Acts::LayerMaterialPos
   layerMaterialPos() const override;
   /// Possibility to set contained detector modules of a layer
-  /// @param mod Possible sensitive modules contained by a layer
-  /// @param axis is the axis orientation with respect to the tracking frame
+  /// @param axes is the axis orientation with respect to the tracking frame
   ///        it is a string of the three characters x, y and z (standing for the
   ///        three axes)
   ///        there is a distinction between capital and lower case characters :
@@ -141,20 +117,13 @@ public:
   ///                            "XzY" -> negative node z axis is tracking y
   ///                            axis, etc.
   void
-  setModules(std::vector<DD4hep::Geometry::DetElement> mod,
-             const std::string&                        axes = "XYZ") override;
-  /// Access modules detector module contained by a layer
-  /// @return mod Possible sensitive modules contained by a layer
-  std::vector<DD4hep::Geometry::DetElement>
-  modules() const override;
+  setAxes(const std::string& axes = "XYZ") override;
   /// Access the orientation of the module in respect to the tracking frame
   /// @return string describing the orientation of the axes
   const std::string
   axes() const override;
 
 private:
-  /// Segmentation of a sensitive detector module
-  DD4hep::Geometry::Segmentation m_segmentation;
   /// Shape type of a volume defined in IDetExtension can be either disc or
   /// cylinder
   ShapeType m_shape;
@@ -169,8 +138,6 @@ private:
   /// States if the material should be mapped on the inner,
   /// the center or the outer surface of the layer
   LayerMaterialPos m_layerMatPos;
-  /// Possible contained modules of a layer
-  std::vector<DD4hep::Geometry::DetElement> m_modules;
   /// orientation of a module in respect to the tracking frame
   std::string m_axes;
 };
@@ -186,18 +153,6 @@ inline Acts::ShapeType
 Acts::DetExtension::shape() const
 {
   return m_shape;
-}
-
-inline void
-Acts::DetExtension::setSegmentation(const DD4hep::Geometry::Segmentation seg)
-{
-  m_segmentation = std::move(seg);
-}
-
-inline const DD4hep::Geometry::Segmentation
-Acts::DetExtension::segmentation() const
-{
-  return m_segmentation;
 }
 
 inline void
@@ -231,23 +186,14 @@ Acts::DetExtension::materialBins() const
 }
 
 inline void
-Acts::DetExtension::setModules(std::vector<DD4hep::Geometry::DetElement> mod,
-                               const std::string&                        axes)
+Acts::DetExtension::setAxes(const std::string& axes)
 {
-  m_modules = std::move(mod);
-  m_axes    = axes;
-}
-
-inline std::vector<DD4hep::Geometry::DetElement>
-Acts::DetExtension::modules() const
-{
-  return m_modules;
+  m_axes = axes;
 }
 
 inline const std::string
 Acts::DetExtension::axes() const
 {
-  std::cout << "trying to access axes: " << m_axes << std::endl;
   return m_axes;
 }
 
