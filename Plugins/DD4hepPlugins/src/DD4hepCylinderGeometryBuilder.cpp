@@ -271,8 +271,6 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
       // layer, otherwise create an empty layer
       Acts::IDetExtension* detExtension
           = detElement.extension<Acts::IDetExtension>();
-      std::vector<DD4hep::Geometry::DetElement> modules(
-          detExtension->modules());
       // access the axis orienation of the modules
       const std::string axes = detExtension->axes();
       // create the two dimensional BinUtility for the material map of the layer
@@ -334,7 +332,10 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
             = new Acts::GenericApproachDescriptor<const Acts::Surface>(
                 aSurfaces);
       }
-      if (modules.empty()) {
+      // get possible modules
+      const DD4hep::Geometry::DetElement::Children& layerChildren
+          = detElement.children();
+      if (layerChildren.empty()) {
         auto cylLayer = Acts::CylinderLayer::create(convertTransform(transform),
                                                     cylinderBounds,
                                                     nullptr,
@@ -356,6 +357,10 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
       } else {
         ACTS_VERBOSE(
             "[L] Layer containes modules -> resolving them as surfaces");
+
+        std::vector<DD4hep::Geometry::DetElement> modules;
+        for (auto& layerChild : layerChildren)
+          modules.push_back(layerChild.second);
         // create surfaces binned in phi and z
         auto surfaceArray
             = createSurfaceArray(modules, binZ, motherTransform, axes);
@@ -411,9 +416,9 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
       if (!disc)
         throw "Cylinder layer has wrong shape - needs to be TGeoConeSeg!";
       // extract the boundaries
-      double rMin        = disc->GetRmin1() * _cm;
-      double rMax        = disc->GetRmax1() * _cm;
-      double thickness   = 2. * disc->GetDz() * _cm;
+      double rMin      = disc->GetRmin1() * _cm;
+      double rMax      = disc->GetRmax1() * _cm;
+      double thickness = 2. * disc->GetDz() * _cm;
       auto discBounds  = std::make_shared<const Acts::RadialBounds>(rMin, rMax);
 
       ACTS_DEBUG(
@@ -428,8 +433,6 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
       // layer, otherwise create empty layer
       Acts::IDetExtension* detExtension
           = detElement.extension<Acts::IDetExtension>();
-      std::vector<DD4hep::Geometry::DetElement> modules(
-          detExtension->modules());
       // access the axis orienation of the modules
       const std::string axes = detExtension->axes();
       // create the two dimensional BinUtility for the material map of the layer
@@ -499,8 +502,10 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
             = new Acts::GenericApproachDescriptor<const Acts::Surface>(
                 aSurfaces);
       }
-
-      if (modules.empty()) {
+      // get possible modules
+      const DD4hep::Geometry::DetElement::Children& layerChildren
+          = detElement.children();
+      if (layerChildren.empty()) {
         auto discLayer = Acts::DiscLayer::create(actsTransform,
                                                  discBounds,
                                                  nullptr,
@@ -521,6 +526,9 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
       } else {
         ACTS_VERBOSE(
             "[L] Layer containes modules -> resolving them as surfaces");
+        std::vector<DD4hep::Geometry::DetElement> modules;
+        for (auto& layerChild : layerChildren)
+          modules.push_back(layerChild.second);
         // create surfaces binned in phi and r
         auto surfaceArray
             = createSurfaceArray(modules, binR, motherTransform, axes);
@@ -557,21 +565,8 @@ Acts::DD4hepCylinderGeometryBuilder::createSurfaceArray(
   std::vector<const Acts::Surface*> surfaces;
   for (auto& detElement : modules) {
     // make here the material mapping
-    DD4hep::Geometry::Segmentation segmentation;
-    // extract segmentation //change later
-    if (detElement.volume().isSensitive()) {
-      Acts::IDetExtension* detExtension
-          = detElement.extension<Acts::IDetExtension>();
-      segmentation = detExtension->segmentation();
-      if (!segmentation)
-        ACTS_ERROR("[S] Detector element is sensitive but Segmentation was not "
-                   "handed over in geometry constructor, can not access "
-                   "segmentation");
-    } else
-      ACTS_ERROR("[S] Detector element is not declared sensitive, can not "
-                 "access segmentation");
-    Acts::DD4hepDetElement* dd4hepDetElement = new Acts::DD4hepDetElement(
-        detElement, segmentation, motherTransform, axes, _cm);
+    Acts::DD4hepDetElement* dd4hepDetElement
+        = new Acts::DD4hepDetElement(detElement, motherTransform, axes, _cm);
     // add surface to surface vector
     surfaces.push_back(&(dd4hepDetElement->surface()));
   }
