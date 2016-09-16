@@ -2,7 +2,7 @@
 #
 # It include the cmake targets of all defined components. Additionally, the 
 # following variables are set:
-#
+# - ACTS_INCLUDE_DIR ... directory containing the ACTS header files
 # - compiler flags used during the compilation of ACTS:
 #  + ACTS_CXX_FLAGS
 #  + ACTS_CXX_FLAGS_DEBUG
