@@ -3,6 +3,7 @@
 # It include the cmake targets of all defined components. Additionally, the 
 # following variables are set:
 # - ACTS_INCLUDE_DIR ... directory containing the ACTS header files
+# - ACTS_LIBRARY_DIR ... directory containing the ACTS libraries
 # - compiler flags used during the compilation of ACTS:
 #  + ACTS_CXX_FLAGS
 #  + ACTS_CXX_FLAGS_DEBUG
@@ -61,6 +62,7 @@ endforeach ()
 # NOTE: Do not strictly need paths as all usage requirements are encoded in
 # the imported targets created later.
 set_and_check (ACTS_INCLUDE_DIR "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
+set_and_check (ACTS_LIBRARY_DIR "@PACKAGE_CMAKE_INSTALL_LIBDIR@")
 
 # set ACTS compilation and linker flags
 set (ACTS_CXX_FLAGS "@ACTS_CXX_FLAGS@")
