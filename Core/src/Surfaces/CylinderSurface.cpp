@@ -196,6 +196,8 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
     } else  // bail out if no solution exists
       return Intersection(gpos, 0., false);
   } else {
+    // bail out if no solution exists
+    if (!direction.y()) return Intersection(gpos, 0., false);
     // x value ise th one of point1
     // x^2 + y^2 = R^2
     // y = sqrt(R^2-x^2)
@@ -205,8 +207,8 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
     if (r2mx2 < 0.) return Intersection(gpos, 0., false);
     double y = sqrt(r2mx2);
     // assign parameters and solutions
-    t1 = y - point1.y();
-    t2 = -y - point1.y();
+    t1 = (y - point1.y()) / direction.y();
+    t2 = (-y - point1.y()) / direction.y();
   }
   Acts::Vector3D sol1raw(point1 + t1 * direction);
   Acts::Vector3D sol2raw(point1 + t2 * direction);
@@ -243,7 +245,6 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
   isValid = bchk ? (isValid && bounds().inside3D(solution, bchk)) : isValid;
 
   // now return
-  return needsTransform
-      ? Intersection(transform() * solution, path, isValid)
-      : Intersection(solution, path, isValid);
+  return needsTransform ? Intersection(transform() * solution, path, isValid)
+                        : Intersection(solution, path, isValid);
 }
