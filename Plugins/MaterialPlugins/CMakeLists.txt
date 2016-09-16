@@ -14,7 +14,6 @@ if (BUILD_MATERIAL_PLUGIN)
   # setup linker dependencies
   target_link_libraries (ACTSMaterialPlugin PUBLIC ACTSCore)
 
-  target_compile_options (ACTSMaterialPlugin PUBLIC -std=c++14)
   # set installation directories
   install (TARGETS ACTSMaterialPlugin EXPORT ACTSMaterialPluginTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

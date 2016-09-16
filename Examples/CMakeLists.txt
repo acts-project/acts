@@ -4,13 +4,11 @@ file (GLOB_RECURSE src_files "*/*.*pp")
 # define library target
 add_library (ACTSExamples SHARED ${src_files})
 target_include_directories (ACTSExamples PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
-target_compile_options (ACTSExamples PUBLIC -std=c++14)
 target_link_libraries (ACTSExamples PUBLIC ACTSCore)
 
 # define executables
 add_executable (ACTSGenericDetector bin/main.cxx)
 target_include_directories (ACTSGenericDetector PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
-target_compile_options (ACTSGenericDetector PRIVATE -std=c++14)
 target_link_libraries (ACTSGenericDetector PRIVATE ACTSCore ACTSExamples)
 
 # set installation directories
