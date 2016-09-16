@@ -1,4 +1,17 @@
 # - Config file for the ACTS package
+#
+# It include the cmake targets of all defined components. Additionally, the 
+# following variables are set:
+#
+# - compiler flags used during the compilation of ACTS:
+#  + ACTS_CXX_FLAGS
+#  + ACTS_CXX_FLAGS_DEBUG
+#  + ACTS_CXX_FLAGS_MINSIZEREL
+#  + ACTS_CXX_FLAGS_RELEASE
+#  + ACTS_CXX_FLAGS_RELWITHDEBINFO
+# - linker flags used for ACTS:
+#  + ACTS_EXE_LINKER_FLAGS_DEBUG
+#  + ACTS_SHARED_LINKER_FLAGS_DEBUG
 
 # - Init CMakePackageConfigHelpers
 @PACKAGE_INIT@
@@ -48,3 +61,12 @@ endforeach ()
 # NOTE: Do not strictly need paths as all usage requirements are encoded in
 # the imported targets created later.
 set_and_check (ACTS_INCLUDE_DIR "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
+
+# set ACTS compilation and linker flags
+set (ACTS_CXX_FLAGS "@ACTS_CXX_FLAGS@")
+set (ACTS_CXX_FLAGS_DEBUG "@ACTS_CXX_FLAGS_DEBUG@")
+set (ACTS_CXX_FLAGS_MINSIZEREL "@ACTS_CXX_FLAGS_MINSIZEREL@")
+set (ACTS_CXX_FLAGS_RELEASE "@ACTS_CXX_FLAGS_RELEASE@")
+set (ACTS_CXX_FLAGS_RELWITHDEBINFO "@ACTS_CXX_FLAGS_RELWITHDEBINFO@")
+set (ACTS_EXE_LINKER_FLAGS_DEBUG "@ACTS_EXE_LINKER_FLAGS_DEBUG@")
+set (ACTS_SHARED_LINKER_FLAGS_DEBUG "@ACTS_SHARED_LINKER_FLAGS_DEBUG@")
