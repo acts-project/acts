@@ -17,6 +17,9 @@ include (cmake/Colors.cmake)
 # Use GNU-style hierarchy for installing build products
 include (GNUInstallDirs)
 
+# include ACTS specific compilation options
+include (cmake/ACTSCompilerOptions.cmake)
+
 # set the current version of ACTS
 set (ACTS_VERSION 0.01.00)
 
