@@ -46,11 +46,10 @@ public:
   /// element
   /// @param motherTransform global transformation matrix of the mother detector
   /// element
-  DD4hepDetElement(const DD4hep::Geometry::DetElement   detElement,
-                   const DD4hep::Geometry::Segmentation segmentation,
-                   const TGeoMatrix*                    mtoglobal = nullptr,
-                   const std::string&                   axes      = "xyz",
-                   double                               scalor    = 1.);
+  DD4hepDetElement(const DD4hep::Geometry::DetElement detElement,
+                   const TGeoMatrix*                  mtoglobal = nullptr,
+                   const std::string&                 axes      = "xyz",
+                   double                             scalor    = 1.);
   /// Desctructor
   virtual ~DD4hepDetElement() = default;
 
