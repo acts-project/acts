@@ -246,3 +246,5 @@ You can resolve this situation by running:
 which should give the following situation:  
 <img src="doc/figures/move_to_branch2.png" alt="moving commits to new branch">  
 Now, master is pointing to B, HEAD and &lt;new\_branch\_name&gt; are pointing to E and you can happily continue with your work.
+
+/// @ingroup Contributing
