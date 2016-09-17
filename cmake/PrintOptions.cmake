@@ -14,6 +14,6 @@ message (STATUS "BUILD_DOC                           build doxygen documentation
 message (STATUS "BUILD_TESTS                         build unit tests                                         [ON]   (ON|OFF)")
 message (STATUS "BUILD_TGEO_PLUGIN                   build TGeo plugin                                        [OFF]  (ON|OFF)")
 message (STATUS "BUILD_MATERIAL_PLUGIN               build Material plugin                                    [OFF]  (ON|OFF)")
-message (STATUS "CMAKE_INSTALL_PREFIX                target installation directory                            [/opt/ACTS/<version>]")
+message (STATUS "CMAKE_INSTALL_PREFIX                target installation directory                            (e.g. /opt/ACTS/)")
 message (STATUS "PRINT_OPTIONS                       print this help")
 message (STATUS "")
