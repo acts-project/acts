@@ -1,6 +1,7 @@
 #define BOOST_TEST_MODULE Propagator validation
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/included/unit_test.hpp>
+
+#include <boost/test/data/test_case.hpp>
 #include <fstream>
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Extrapolation/AbortConditions.hpp"
