@@ -3,15 +3,15 @@
 Contributions to the ACTS project are very welcome and feedback on the documentation is greatly appreciated. In order to be able to contribute to the ACTS project, developers must have a valid CERN user account. Unfortunately, lightweight CERN accounts for external users do not have sufficient permissions to access certain CERN services used by the ACTS project.
 
 1. [Mailing lists](#mailing-lists)
-1. [Bug reports and feature requests](#bug-reports-and-feature-requests)
-1. [Make a contribution](#make-a-contribution)
+2. [Bug reports and feature requests](#bug-reports-and-feature-requests)
+3. [Make a contribution](#make-a-contribution)
     1. [Setting up your fork](#setting-up-your-fork)
-    1. [Workflow recommendations](#workflow-recommendations)
-    1. [Coding style and guidelines](#coding-style-and-guidelines)
-    1. [Creating a merge request](#creating-a-merge-request)
-    1. [git tips and tricks](#git-tips-and-tricks)
+    2. [Creating a merge request](#creating-a-merge-request)
+    3. [Workflow recommendations](#workflow-recommendations)
+    4. [Coding style and guidelines](#coding-style-and-guidelines)
+    5. [git tips and tricks](#git-tips-and-tricks)
 
-## Mailing lists
+## <a name="mailing-lists">Mailing lists</a>
 
 1. [acts-users@cern.ch](https://e-groups.cern.ch/e-groups/Egroup.do?egroupName=acts-users): Users of the ACTS project should subscribe to this list as it provides:
     - regular updates on the software,
@@ -22,7 +22,7 @@ Contributions to the ACTS project are very welcome and feedback on the documenta
     - information about developer meetings,
     - a common place for technical discussions.
 
-## Bug reports and feature requests
+## <a name="bug-reports-and-feature-requests">Bug reports and feature requests</a>
 
 If you want to report or start a feature request, please open a ticket in the [ACTS JIRA](https://its.cern.ch/jira/projects/ACTS/) (**Note:** access is restricted to members of the mailing lists mentioned above). A comprehensive explanation will help the development team to respond in a timely manner. Therefore, the following details should be mentioned:
 
@@ -39,15 +39,15 @@ If you want to report or start a feature request, please open a ticket in the [A
     - priority: will be set by the development team
     - a detailed description of the feature request including possible use cases and benefits for other users
 
-## Make a contribution
+## <a name="make-a-contribution">Make a contribution</a>
 
 The instructions below should help you getting started with development process in the ACTS project. If you have any questions, feel free to ask [acts-developers@cern](mailto:acts-developers@cern.ch) for help or guidance.
 
-### Setting up your fork
+### <a name="setting-up-your-fork">Setting up your fork</a>
 
 The ACTS project uses a git repository which is hosted on the CERN GitLab server. In order to be able to create merge requests (and thus, contribute to the development of ACTS), you need to create a fork on the CERN GitLab server. A general introduction to the GitLab web interface can be found [here](https://gitlab.cern.ch/help/gitlab-basics/README.md). Very nice tutorials as well as explanations for concepts and workflows with git can be found on [Atlassian](https://www.atlassian.com/git/). For a shorter introduction and the full git documentation have a look at the [git tutorial](https://git-scm.com/docs/gittutorial).
 
-##### Configuring git
+#### Configuring git
 
 Commits to repositories on the CERN GitLab server are only accepted from CERN users. Therefore, it is important that git is correctly configured on all machines you are working on. It is necessary to that the git user email address to the primary email address of your CERN account (usually: firstname.lastname@cern.ch). You can check the current values with:
 
@@ -64,11 +64,11 @@ Further recommended settings are:
     git config --global push.default simple
     git config --global pill.rebase true
 
-##### Creating your fork
+#### Creating your fork
 
 As a first step, you need to create your own fork of the ACTS project. For doing this, please go to the [ACTS GitLab page](https://gitlab.cern.ch/acts/a-common-tracking-sw), click on the fork button, and follow the instructions ([GitLab Help "How to fork a project"](https://gitlab.cern.ch/help/gitlab-basics/fork-project.md)).
 
-##### Configuring your fork
+#### Configuring your fork
 
 **Important:** Due to some limitations in the GitLab JIRA integration, you need to fix the JIRA settings for your forked project. This can be done by starting from the GitLab project page of your fork and then going to "Settings -> Services -> JIRA". Remove anything in the field "Username" and leave it empty. If you fail to do so, the ACTS JIRA project will be spammed with hundreds of duplicates comments and you will likely receive an angry email from the development team ;-).
 
@@ -90,7 +90,7 @@ You can check that everything went ok with
 
 where the reference to the ACTS repository should appear (along with your forked repository on the CERN GitLab server). This procedure is also described on [github](https://help.github.com/articles/configuring-a-remote-for-a-fork/).
 
-##### Keeping your fork up-to-date
+#### Keeping your fork up-to-date
 
 At certain points you may want to sync your fork with the latest updates from the official ACTS repository. The following commands illustrate how to update the 'master' branch of fork. The same procedure can be used to sync any other branch, but you will rarely need this. Please mak sure to commit/stash all changes before proceeding to avoid any loss of data. The following commands must be run in the working directory of the local clone or your forked repository. 
 
@@ -99,7 +99,29 @@ At certain points you may want to sync your fork with the latest updates from th
     git merge --ff-only ACTS/master
     git push origin master
 
-#### Workflow recommendations
+### <a name="creating-a-merge-request">Creating a merge request</a>
+
+Once your development is ready for integration, you should open a merge request at the [ACTS project](https://gitlab.cern.ch/acts/a-common-tracking-sw) ([GitLab Help: Create a merge request](https://gitlab.cern.ch/help/gitlab-basics/add-merge-request.md)). The target branch should usually be _master_ for feature requests and _releas-X,Y,Z_ for bugfixes. The ACTS projects accepts only fast-foward merges which means that your branch must have been rebased on the target branch. This can be achieved by updating your fork as described above and then run:
+
+    git checkout <my_feature_branch>
+    git rebase -i origin/<target_branch>
+    git push
+    
+At this point you should make use of the interactive rebase procedure to clean up your commits (squash small fixes, improve commit messages etc; [Rewriting history](https://robots.thoughtbot.com/git-interactive-rebase-squash-amend-rewriting-history)).  
+Merge requests are required to close a ACTS JIRA ticket. This is achieved by adding e.g. 'fixes ACTS-XYZ' to the end of the merge request description. Please note that JIRA tickets should only be referenced by merge requests and not individual commits (since strictly there should only be one JIRA ticket per merge request). Once the merge request is opened, a continous integration job is triggered which will add multiple comments to the merge request (e.g. build status, missing license statements, doxygen errors, test coverage etc). Please have a look at them and fix them by adding more commits to your branch if needed.  
+Please find below a short checklist for merge requests.
+
+#### Checklist for merge requests
+
+- Your branch has been rebased on the target branch and can be integrated through a fast-forward merge.
+- A detailed description of the merge request is provided which includes a reference to a JIRA ticket (e.g. `Closes ACTS-1234`, [GitLab Help: Closing JIRA tickets](http://docs.gitlab.com/ee/project_services/jira.html#closing-jira-issues)).
+- All files start with the MPLv2 license statement.
+- All newly introduced functions and classes have been documented properly with doxygen.
+- Unit tests are provided for new functionalities.
+- For bugfixes: a test case has been added to avoid the re-appearance of this bug in the future.
+- All added cmake options were added to 'cmake/PrintOptions.cmake'.
+
+### <a name="workflow-recommendations">Workflow recommendations</a>
 
 In the following a few recommendations are outlined which should help you to get familiar with development process in the ACTS project.
 
@@ -128,7 +150,7 @@ Unless required by other circumstances (e.g. collaboration with colleagues, code
 1. **Update the documentation!**  
 Make sure that the documentation is still valid after your changes. Perform updates where needed and ensure integrity between the code and its documentation. 
 
-### Coding style and guidelines
+### <a name="coding-style-and-guidelines">Coding style and guidelines</a>
 
 The ACTS project uses [clang-format](http://clang.llvm.org/docs/ClangFormat.html) (currently v3.8.0) for formatting its source code. A `.clang-format` configuration file comes with the project and should be used to automatically format the code. There are several instructions available on how to integrate clang-format with your favourite IDE (e.g. [eclipse](https://marketplace.eclipse.org/content/cppstyle), [Xcode](https://github.com/travisjeffery/ClangFormat-Xcode), [emacs](http://clang.llvm.org/docs/ClangFormat.html#emacs-integration)). The ACTS CI system will automatically apply code reformatting using the provided clang-format configuration once merge requests are opened. However, developers are strongly encouraged to use this code formatter also locally to reduce conflicts due to formatting issues.
 
@@ -143,7 +165,7 @@ In addition, the following conventions are used in ACTS code:
     - by value for simple data types (e.g. int, float double, bool)
     - by constant reference for required input of non-trivial type
     - by (raw) pointer for optional input of non-trivial type
-    - only use smart pointers if the function called must handle ownership (very few function actually do)
+    - only use smart pointers if the function called must handle ownership (very few functions actually do)
 - returning results from functions:
     - newly created objects should be returned<br />
       a) as unique pointer if the object is of polymorphic type or its presence is not always ensured<br />
@@ -155,36 +177,14 @@ In addition, the following conventions are used in ACTS code:
     - Put all documentation in the header files. 
     - Use `///` as block comment (instead of `/* ... */`).
     - Doxygen documentation goes in front of the documented entity (class, function, (member) variable).
-    - Use the `@<cmd>` notation.
-    - Functions and classes must have the `@brief` description.
-    - Document all (template) parameters using `@(t)param` and explain the return value for non-void functions. Mention important conditions which may affect the return value.
+    - Use the \@<cmd> notation.
+    - Functions and classes must have the \@brief description.
+    - Document all (template) parameters using \@(t)param and explain the return value for non-void functions. Mention important conditions which may affect the return value.
     - Use `@remark` to specify pre-conditions.
     - Use `@note` to provide additional information.
     - Link other related entities (e.g. functions) using `@sa`. 
  
-### Creating a merge request
-
-Once your development is ready for integration, you should open a merge request at the [ACTS project](https://gitlab.cern.ch/acts/a-common-tracking-sw) ([GitLab Help: Create a merge request](https://gitlab.cern.ch/help/gitlab-basics/add-merge-request.md)). The target branch should usually be _master_ for feature requests and _releas-X,Y,Z_ for bugfixes. The ACTS projects accepts only fast-foward merges which means that your branch must have been rebased on the target branch. This can be achieved by updating your fork as described above and then run:
-
-    git checkout <my_feature_branch>
-    git rebase -i origin/<target_branch>
-    git push
-    
-At this point you should make use of the interactive rebase procedure to clean up your commits (squash mal fixes, improve commit messages etc; [Rewriting history](https://robots.thoughtbot.com/git-interactive-rebase-squash-amend-rewriting-history)).  
-Merge requests are required to close a ACTS JIRA ticket. This is achieved by adding e.g. 'fixes ACTS-XYZ' to the end of the merge request description. Please note that JIRA tickets should only be referenced by merge requests and not individual commits (since strictly there should only be one JIRA ticket per merge request). Once the merge request is opened, a continous integration job is triggered which will add multiple comments to the merge request (e.g. build status, missing license statements, doxygen errors, test coverage etc). Please have a look at them and fix them by adding more commits to your branch if needed.  
-Please find below a short checklist for merge requests.
-
-##### Checklist for merge requests
-
-- Your branch has been rebased on the target branch and can be integrated through a fast-forward merge.
-- A detailed description of the merge request is provided which includes a reference to a JIRA ticket (e.g. `Closes ACTS-1234`, [GitLab Help: Closing JIRA tickets](http://docs.gitlab.com/ee/project_services/jira.html#closing-jira-issues)).
-- All files start with the MPLv2 license statement.
-- All newly introduced functions and classes have been documented properly with doxygen.
-- Unit tests are provided for new functionalities.
-- For bugfixes: a test case has been added to avoid the re-appearance of this bug in the future.
-- All added cmake options were added to 'cmake/PrintOptions.cmake'.
-
-### git tips and tricks
+### <a name="git-tips-and-tricks">git tips and tricks</a>
 
 The following section gives some advise on how to solve certain situations you may encounter during your development process. Many of these commands have the potential to loose uncommitted data. So please make sure that you understand what you are doing before running the receipes below. Also, this collection is non-exhaustive and alternative approaches exist. If you want to contribute to this list, please drop an email to [acts-developers@cern.ch](mailto:acts-developers@cern.ch).
 
@@ -209,7 +209,7 @@ In the editor opened by the git rebase procedure, add the following line after e
 Then continue with the usual rebase procedure.
 
 **Make a bugfix while working on a feature**  
-    During the developmen of a new feature you discover a bug which needs to be fixed. In order to not mix bug fix and feature development, the bug fix should happen in a different branch. The recommended procedure for handling this situation is the following:
+    During the development of a new feature you discover a bug which needs to be fixed. In order to not mix bugfix and feature development, the bugfix should happen in a different branch. The recommended procedure for handling this situation is the following:
 1. Get into a clean state of your working directory on your feature branche (either by commiting open changes or by stashing them).
 1. Checkout the branch the bugfix should be merged into (either _master_ or _release-X.Y.Z_) and get the most recent version.
 1. Create a new branch for the bugfix.
@@ -246,3 +246,5 @@ You can resolve this situation by running:
 which should give the following situation:  
 <img src="doc/figures/move_to_branch2.png" alt="moving commits to new branch">  
 Now, master is pointing to B, HEAD and &lt;new\_branch\_name&gt; are pointing to E and you can happily continue with your work.
+
+/// @ingroup Contributing

@@ -30,7 +30,7 @@ namespace Acts {
 class EllipseBounds : public PlanarBounds
 {
 public:
-  /// @enum for readibility
+  /// @brief constants for readability
   enum BoundValues {
     bv_rMinX         = 0,
     bv_rMinY         = 1,
