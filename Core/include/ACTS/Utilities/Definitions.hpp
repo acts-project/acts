@@ -43,9 +43,7 @@ enum PropDirection {
   mappingMode      = 2
 };
 
-/** @enum SearDirection
- Simple enum for searching Surfaces
- */
+/// @brief simple enum for searching surfaces
 enum SearchDirection {
   outside            = 1,
   inside             = -1,

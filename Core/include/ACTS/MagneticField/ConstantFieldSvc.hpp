@@ -19,8 +19,6 @@
 
 namespace Acts {
 
-/// @class ConstantFieldSvc
-///
 /// @brief returns a given constant field value at every point
 ///
 ///  Implementation of the IMagneticFieldSvc interface with a constant magnetic
@@ -29,14 +27,13 @@ namespace Acts {
 ///  the
 ///  constant magnetic field at any point.
 ///
-
 class ConstantFieldSvc : public Acts::IMagneticFieldSvc
 {
   ///////////////////////////////////////////////////////////////////
   // Public methods:
   ///////////////////////////////////////////////////////////////////
 public:
-  /// @class Config - nested configuraiton class
+  /// @brief nested configuraiton class
   class Config
   {
   public:

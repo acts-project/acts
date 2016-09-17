@@ -59,8 +59,7 @@ enum BoundarySurfaceFace {
 
 };
 
-/// @enum to specify the inside/outside
-/// this is with respect to the normal vector
+/// @brief specify the inside/outside with respect to the normal vector
 enum BoundaryOrientation { insideVolume = -1, outsideVolume = 1 };
 }
 
