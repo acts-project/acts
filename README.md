@@ -10,7 +10,8 @@
     3. [cmake options](#cmake-options)
     4. [Example build on lxplus at CERN](#example-build)
 4. [Using ACTS in your own cmake project](#using-acts)
-5. [License and authors](#license-authors)
+5. [Documentation](#documentation)
+6. [License and authors](#license-authors)
 
 # <a name="intro">Introduction</a>
 
@@ -116,6 +117,10 @@ When using ACTS in your own cmake-based project, you need to include the followi
 > find_package (ACTS COMPONENTS comp1 comp2 ...)
 
 where `compX` are the required components from the ACTS project. 
+
+# <a name="documentation">Documentation</a>
+
+You can find a complete documentation of the ACTS functionality and the class reference guide at [http://acts.web.cern.ch/ACTS/latest/index.html](http://acts.web.cern.ch/ACTS/latest/index.html).
 
 # <a name="license-authors">License and authors</a>
 
