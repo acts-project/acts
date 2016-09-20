@@ -43,8 +43,7 @@ template <typename Identifier, size_t N>
 void
 print(const std::vector<TrackSeed<Identifier, N>>& seeds)
 {
-  for (const auto& seed : seeds)
-    seed.print(std::cout);
+  for (const auto& seed : seeds) seed.print(std::cout);
 }
 
 BOOST_AUTO_TEST_CASE(PhiRangeTest)
@@ -104,6 +103,19 @@ BOOST_AUTO_TEST_CASE(PhiRangeTest)
   }
 }
 
+BOOST_AUTO_TEST_CASE(SignCircleCurvatureTest)
+{
+  using Acts::Vector3D;
+
+  Vector3D p0(0, 0, 0);
+  Vector3D p1(1, 0, 0);
+  Vector3D p2pos(2, 1, 0);
+  Vector3D p2neg(2, -1, 0);
+
+  BOOST_CHECK_LT(detail::calcCircleCurvature(p0, p1, p2pos), 0);
+  BOOST_CHECK_GT(detail::calcCircleCurvature(p0, p1, p2neg), 0);
+}
+
 BOOST_AUTO_TEST_CASE(HelixBarrelSeedFinderTest)
 {
   size_t pointsPerLayer = 16;
@@ -120,8 +132,8 @@ BOOST_AUTO_TEST_CASE(HelixBarrelSeedFinderTest)
   // hard cuts, only straight tracks
   {
     HelixSeedConfig cfg;
-    cfg.rangePhi1 = 0.001 * dphi;
-    cfg.rangePhi2 = 0.001 * dphi;
+    cfg.rangePhi1     = 0.001 * dphi;
+    cfg.rangePhi2     = 0.001 * dphi;
     cfg.maxDeltaTheta = 0.2;
     TrackSeeds3<size_t> seeds;
 
@@ -132,26 +144,26 @@ BOOST_AUTO_TEST_CASE(HelixBarrelSeedFinderTest)
   // medium cuts, hit1 is matched, hit2 pickups 3 hits
   {
     HelixSeedConfig cfg;
-    cfg.rangePhi1 = 0.001 * dphi;
-    cfg.rangePhi2 = 1.001 * dphi; // matching hit +- 1 neighbor
+    cfg.rangePhi1     = 0.001 * dphi;
+    cfg.rangePhi2     = 1.001 * dphi;  // matching hit +- 1 neighbor
     cfg.maxDeltaTheta = 0.2;
     TrackSeeds3<size_t> seeds;
 
     findHelixSeeds(cfg, layer0, layer1, layer2, seeds);
 
-    BOOST_CHECK_EQUAL(seeds.size(), 3*pointsPerLayer);
+    BOOST_CHECK_EQUAL(seeds.size(), 3 * pointsPerLayer);
   }
   // loose cuts, hit1 picks up 3 hits, each hit2 picks up 3 hits
   {
     HelixSeedConfig cfg;
-    cfg.rangePhi1 = 1.001 * dphi; // matching hit +- 1 neighbor
-    cfg.rangePhi2 = 1.2 * dphi; // matching hit +- 1 neighbor
+    cfg.rangePhi1     = 1.001 * dphi;  // matching hit +- 1 neighbor
+    cfg.rangePhi2     = 1.2 * dphi;    // matching hit +- 1 neighbor
     cfg.maxDeltaTheta = 0.2;
     TrackSeeds3<size_t> seeds;
 
     findHelixSeeds(cfg, layer0, layer1, layer2, seeds);
     print(seeds);
 
-    BOOST_CHECK_EQUAL(seeds.size(), 9*pointsPerLayer);
+    BOOST_CHECK_EQUAL(seeds.size(), 9 * pointsPerLayer);
   }
 }
