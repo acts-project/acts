@@ -29,26 +29,23 @@ namespace Seeding {
   public:
     static_assert(0 < N, "TrackSeed must have at least one space point.");
 
-    using Point            = SpacePoint<Identifier>;
-    using PointIdentifiers = std::array<Identifier, N>;
-
     template <typename... P>
-    TrackSeed(double       phi,
-              double       theta,
-              double       curvature,
-              const Point& p0,
+    TrackSeed(double                        phi,
+              double                        theta,
+              double                        curvature,
+              const SpacePoint<Identifier>& p0,
               const P&... ps)
       : m_position(p0.position())
       , m_phi(phi)
       , m_theta(theta)
       , m_curvature(curvature)
-      , m_pointIds{p0.identifier(), ps.identifier()...}
+      , m_ids{p0.identifier(), ps.identifier()...}
     {
       static_assert((sizeof...(ps) + 1) == N,
                     "Number of input points must be N");
     }
 
-    auto
+    const Acts::Vector3D&
     position() const
     {
       return m_position;
@@ -68,10 +65,10 @@ namespace Seeding {
     {
       return m_curvature;
     }
-    const PointIdentifiers&
-    pointIdentifiers() const
+    const std::array<Identifier, N>&
+    identifiers() const
     {
-      return m_pointIds;
+      return m_ids;
     }
 
     void
@@ -80,13 +77,13 @@ namespace Seeding {
       os << "x=" << m_position.x() << " y=" << m_position.y()
          << " z=" << m_position.z() << " phi=" << m_phi << " theta=" << m_theta
          << " curvature=" << m_curvature << '\n';
-      for (auto id : pointIdentifiers()) os << "  " << id << '\n';
+      for (const auto& id : m_ids) os << "  " << id << '\n';
     }
 
   private:
-    Acts::Vector3D   m_position;
-    double           m_phi, m_theta, m_curvature;
-    PointIdentifiers m_pointIds;
+    Acts::Vector3D m_position;
+    double         m_phi, m_theta, m_curvature;
+    std::array<Identifier, N> m_ids;
   };
 
   template <typename Identifier>
