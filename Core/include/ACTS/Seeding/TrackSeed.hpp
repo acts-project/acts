@@ -21,6 +21,10 @@ namespace Acts {
 namespace Seeding {
 
   /// A set of points and (geometric) parameter estimates.
+  ///
+  /// @tparam Identifier  A value-like type that is used to link back to the
+  ///                     original hits. Must be printable.
+  /// @tparam N           Number of hits / space points in this seed.
   template <typename Identifier, size_t N>
   class TrackSeed
   {

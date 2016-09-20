@@ -24,6 +24,7 @@ namespace Seeding {
     double maxDeltaTheta = 0.1;  // cut on difference in theta between doublets
   };
 
+  /// Find 3-point seeds assuming helix tracks with a combinatorial algorithm.
   template <typename Identifier>
   void
   findHelixSeeds(const HelixSeedConfig&               cfg,

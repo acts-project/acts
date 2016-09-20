@@ -21,8 +21,8 @@ namespace Seeding {
 
   /// @brief 3D space point for track seeding.
   ///
-  /// The identifier is used to link back to the original measurement / hit. It
-  /// must behave like a value type and can be default initialized.
+  /// @tparam Identifier  A value-like type that is used to link back to the
+  ///                     original hits. Must be printable.
   template <typename Identifier>
   class SpacePoint
   {
