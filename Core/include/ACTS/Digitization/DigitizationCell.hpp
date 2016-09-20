@@ -10,10 +10,11 @@
 #define ACTS_DIGITIZATION_DIGITIZATIONCELL_H
 
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Logger.hpp"
 
 namespace Acts {
     
-    /// @typedef of a pair of ints for definition a cell 
+    /// @typedef of a pair of ints for definition of a cell 
     typedef std::pair<size_t,size_t> DigitizationCell;
 
     /// @struct DigitizationStep for further handling 
