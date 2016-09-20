@@ -13,55 +13,60 @@
 #include "ACTS/Digitization//PlanarModuleStepper.hpp"
 #include "ACTS/Digitization/DigitizationModule.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Utilities/Intersection.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Intersection.hpp"
 
 std::vector<Acts::DigitizationStep>
 Acts::PlanarModuleStepper::cellSteps(const DigitizationModule& dmodule,
-                                     const Vector3D& startPoint,
-                                     const Vector3D& endPoint) const
-{  
-    // create the return vector
-    std::vector<DigitizationStep> cSteps;
-    
-    // get the test surfaces for bin intersections
-    auto& stepSurfaces = dmodule.stepSurfaces(startPoint,endPoint);
-    
-    // the track direction
-    Vector3D trackDirection((endPoint-startPoint).unit());
-    
-    // the intersections through the surfaces, start one is the first valid one
-    std::vector<Acts::Intersection> stepIntersections;
-    stepIntersections.reserve(stepSurfaces.size()+1);
-    
-    // run them - and check for the fast exit    
-    for (auto& sSurface : stepSurfaces){
-        // try it out by intersecting, but do not force the direction 
-        Acts::Intersection sIntersection = sSurface->intersectionEstimate(startPoint,trackDirection,true,true);
-        if (sIntersection.valid) {
-            // now record
-            stepIntersections.push_back(sIntersection);
-            ACTS_VERBOSE("Boundary Surface intersected with = " << sIntersection.position.x() << ", "
-                                                                << sIntersection.position.y() << ", "
-                                                                << sIntersection.position.z());
-        }  
+                                     const Vector3D&           startPoint,
+                                     const Vector3D&           endPoint) const
+{
+  // create the return vector
+  std::vector<DigitizationStep> cSteps;
+
+  // get the test surfaces for bin intersections
+  auto& stepSurfaces = dmodule.stepSurfaces(startPoint, endPoint);
+
+  // the track direction
+  Vector3D trackDirection((endPoint - startPoint).unit());
+
+  // the intersections through the surfaces, start one is the first valid one
+  std::vector<Acts::Intersection> stepIntersections;
+  stepIntersections.reserve(stepSurfaces.size() + 1);
+
+  // run them - and check for the fast exit
+  for (auto& sSurface : stepSurfaces) {
+    // try it out by intersecting, but do not force the direction
+    Acts::Intersection sIntersection = sSurface->intersectionEstimate(
+        startPoint, trackDirection, true, true);
+    if (sIntersection.valid) {
+      // now record
+      stepIntersections.push_back(sIntersection);
+      ACTS_VERBOSE("Boundary Surface intersected with = "
+                   << sIntersection.position.x()
+                   << ", "
+                   << sIntersection.position.y()
+                   << ", "
+                   << sIntersection.position.z());
     }
-    // last one is also valid - now sort
-    stepIntersections.push_back(Intersection(endPoint,(startPoint-endPoint).mag(),true));
-    std::sort(stepIntersections.begin(),stepIntersections.end());
-    
-    Vector3D lastPosition = startPoint;    
-    // reserve the right amount
-    cSteps.reserve(stepIntersections.size());
-    for (auto& sIntersection : stepIntersections){
-        // create the new cStep 
-        cSteps.push_back( dmodule.digitizationStep(lastPosition,sIntersection.position));
-        lastPosition = sIntersection.position;
-    }
-    // return all the steps
-    return cSteps;
-}                                                                      
-                                                                                                                                                
+  }
+  // last one is also valid - now sort
+  stepIntersections.push_back(
+      Intersection(endPoint, (startPoint - endPoint).mag(), true));
+  std::sort(stepIntersections.begin(), stepIntersections.end());
+
+  Vector3D lastPosition = startPoint;
+  // reserve the right amount
+  cSteps.reserve(stepIntersections.size());
+  for (auto& sIntersection : stepIntersections) {
+    // create the new cStep
+    cSteps.push_back(
+        dmodule.digitizationStep(lastPosition, sIntersection.position));
+    lastPosition = sIntersection.position;
+  }
+  // return all the steps
+  return cSteps;
+}
 
 // calculate the steps caused by this track - fast simulation interface
 std::vector<Acts::DigitizationStep>
@@ -69,41 +74,52 @@ Acts::PlanarModuleStepper::cellSteps(const Acts::DigitizationModule& dmodule,
                                      const Vector2D& moduleIntersection,
                                      const Vector3D& trackDirection) const
 {
-
-    
-    // first, intersect the boundary surfaces
-    auto boundarySurfaces =  dmodule.boundarySurfaces();
-    // intersect them - fast exit for cases where readout and counter readout are hit
-    Vector3D intersection3D(moduleIntersection.x(),moduleIntersection.y(),0.);
-    size_t attempts = 0;
-    // the collected intersections
-    std::vector< Acts::Intersection > boundaryIntersections; 
-    // run them - and check for the fast exit    
-    for (auto& bSurface : boundarySurfaces){
-        // count as an attempt
-        ++attempts;
-        // try it out by intersecting, but do not force the direction 
-        Acts::Intersection bIntersection = bSurface->intersectionEstimate(intersection3D,trackDirection,false,true);
-        if (bIntersection.valid) {
-            // now record
-            boundaryIntersections.push_back(bIntersection);
-            ACTS_VERBOSE("Boundary Surface intersected with = " << bIntersection.position.x() << ", "
-                                                                << bIntersection.position.y() << ", "
-                                                                << bIntersection.position.z());
-        }
-        // fast break in case of readout/counter surface hit
-        if (attempts == 2 && boundaryIntersections.size() == attempts) break; 
-        else if (attempts > 2 && boundaryIntersections.size()==3) break;    
+  // first, intersect the boundary surfaces
+  auto boundarySurfaces = dmodule.boundarySurfaces();
+  // intersect them - fast exit for cases where readout and counter readout are
+  // hit
+  Vector3D intersection3D(moduleIntersection.x(), moduleIntersection.y(), 0.);
+  size_t   attempts = 0;
+  // the collected intersections
+  std::vector<Acts::Intersection> boundaryIntersections;
+  // run them - and check for the fast exit
+  for (auto& bSurface : boundarySurfaces) {
+    // count as an attempt
+    ++attempts;
+    // try it out by intersecting, but do not force the direction
+    Acts::Intersection bIntersection = bSurface->intersectionEstimate(
+        intersection3D, trackDirection, false, true);
+    if (bIntersection.valid) {
+      // now record
+      boundaryIntersections.push_back(bIntersection);
+      ACTS_VERBOSE("Boundary Surface intersected with = "
+                   << bIntersection.position.x()
+                   << ", "
+                   << bIntersection.position.y()
+                   << ", "
+                   << bIntersection.position.z());
     }
-    // post-process if we have more than 2 intersections, only first or last can be wrong after resorting 
-    if (boundaryIntersections.size() > 2){
-        ACTS_VERBOSE("More than 2 Boundary Surfaces intersected, this is an edge case, resolving ... ");
-        std::sort(boundaryIntersections.begin(),boundaryIntersections.end());
-        if (boundaryIntersections[0].pathLength*boundaryIntersections[1].pathLength < 0.) 
-             boundaryIntersections.erase(boundaryIntersections.end());
-        else boundaryIntersections.erase(boundaryIntersections.begin());
-    }
-    // return 
-    return cellSteps(dmodule, boundaryIntersections[0].position, boundaryIntersections[1].position);
+    // fast break in case of readout/counter surface hit
+    if (attempts == 2 && boundaryIntersections.size() == attempts)
+      break;
+    else if (attempts > 2 && boundaryIntersections.size() == 3)
+      break;
+  }
+  // post-process if we have more than 2 intersections, only first or last can
+  // be wrong after resorting
+  if (boundaryIntersections.size() > 2) {
+    ACTS_VERBOSE("More than 2 Boundary Surfaces intersected, this is an edge "
+                 "case, resolving ... ");
+    std::sort(boundaryIntersections.begin(), boundaryIntersections.end());
+    if (boundaryIntersections[0].pathLength
+            * boundaryIntersections[1].pathLength
+        < 0.)
+      boundaryIntersections.erase(boundaryIntersections.end());
+    else
+      boundaryIntersections.erase(boundaryIntersections.begin());
+  }
+  // return
+  return cellSteps(dmodule,
+                   boundaryIntersections[0].position,
+                   boundaryIntersections[1].position);
 }
-

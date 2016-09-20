@@ -294,11 +294,10 @@ public:
   {
     const std::vector<float>& bvals = boundaries();
     // take the center between bin boundaries
-    float value = bin < bvals.size() ? 0.5*(bvals[bin]+bvals[bin+1]) : 0.;
+    float value = bin < bvals.size() ? 0.5 * (bvals[bin] + bvals[bin + 1]) : 0.;
     return value;
   }
-    
-    
+
   /// gauge phi for phi boundary
   float
   gaugePhi(float phi) const

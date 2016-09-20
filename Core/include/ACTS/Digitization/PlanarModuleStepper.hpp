@@ -9,71 +9,72 @@
 #ifndef ACTS_DIGITIZATION_PLANARMODULESTEPPER_H
 #define ACTS_DIGITIZATION_PLANARMODULESTEPPER_H
 
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Digitization/DigitizationCell.hpp"
-#include <vector>
 #include <memory>
+#include <vector>
+#include "ACTS/Digitization/DigitizationCell.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
 
-    class DigitizationModule;
-    
-    /// @class PlanarModuleStepper
-    ///
-    /// Module for fast, geometric digitization
-    /// this is a planar module stepper that calculates the step length
-    /// in given segmentations and retrunes digitisation steps
+class DigitizationModule;
 
-    class PlanarModuleStepper {
+/// @class PlanarModuleStepper
+///
+/// Module for fast, geometric digitization
+/// this is a planar module stepper that calculates the step length
+/// in given segmentations and retrunes digitisation steps
 
-      public:
-        ///  @struct Config
-        ///  Configuration for the planar module stepper
-        struct Config
-        {
-          // standard constructor
-          Config(){}
-        };
-      
-        /// Constructor
-        /// @param pmsConfig is the configuration lo
-        PlanarModuleStepper(const Config&  pmsConfig,
-                     std::unique_ptr<Logger> logger
-                     = getDefaultLogger("LayerCreator", Logging::INFO));
-      
-        /// Destructor
-        ~PlanarModuleStepper() = default;
+class PlanarModuleStepper
+{
+public:
+  ///  @struct Config
+  ///  Configuration for the planar module stepper
+  struct Config
+  {
+    // standard constructor
+    Config() {}
+  };
 
-        /// calculate the steps caused by this track - full simulation interface 
-        std::vector<DigitizationStep> cellSteps(const DigitizationModule& dmodule,
-                                                const Vector3D& startPosition,
-                                                const Vector3D& endPosition) const;
-        
-        /// calculate the steps caused by this track - fast simulation interface */
-        std::vector<DigitizationStep> cellSteps(const DigitizationModule& dmodule,
-                                                const Vector2D& intersection,
-                                                const Vector3D& direction) const;
-                                                
-        /// set logging instance
-        void
-        setLogger(std::unique_ptr<Logger> logger)
-        {
-          m_logger = std::move(logger);
-        }
-     
-      private:
-        /// Private access method to the logging instance
-        const Logger&
-        logger() const
-        {
-          return *m_logger;
-        }
-     
-        /// logging instance
-        std::unique_ptr<Logger> m_logger;
+  /// Constructor
+  /// @param pmsConfig is the configuration lo
+  PlanarModuleStepper(const Config&           pmsConfig,
+                      std::unique_ptr<Logger> logger
+                      = getDefaultLogger("LayerCreator", Logging::INFO));
 
-    };
+  /// Destructor
+  ~PlanarModuleStepper() = default;
 
-} // end of namespace
+  /// calculate the steps caused by this track - full simulation interface
+  std::vector<DigitizationStep>
+  cellSteps(const DigitizationModule& dmodule,
+            const Vector3D&           startPosition,
+            const Vector3D&           endPosition) const;
 
-#endif // ACTS_DIGITIZATION_PLANARMODULESTEPPER_H
+  /// calculate the steps caused by this track - fast simulation interface */
+  std::vector<DigitizationStep>
+  cellSteps(const DigitizationModule& dmodule,
+            const Vector2D&           intersection,
+            const Vector3D&           direction) const;
+
+  /// set logging instance
+  void
+  setLogger(std::unique_ptr<Logger> logger)
+  {
+    m_logger = std::move(logger);
+  }
+
+private:
+  /// Private access method to the logging instance
+  const Logger&
+  logger() const
+  {
+    return *m_logger;
+  }
+
+  /// logging instance
+  std::unique_ptr<Logger> m_logger;
+};
+
+}  // end of namespace
+
+#endif  // ACTS_DIGITIZATION_PLANARMODULESTEPPER_H
