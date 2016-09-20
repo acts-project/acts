@@ -22,12 +22,12 @@ struct DigitizationStep
 {
   double stepLength;   ///< this is the path length within the cell
   double driftLength;  ///< this is the path length of the setp center to the
-                       ///readout surface
+                       /// readout surface
   DigitizationCell stepCell;   ///< this is the cell identifier of the segment
   Vector3D         stepEntry;  ///< this is the Entry point into the segment
   Vector3D         stepExit;   ///< this is the Exit point from the segment
   Vector2D stepReadoutProjected;  ///< this is the projected position at the
-                                  ///readout surface
+                                  /// readout surface
   Vector2D stepCellCenter;        ///< this is the cell position
 
   /// Standard constructor

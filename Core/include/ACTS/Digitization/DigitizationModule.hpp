@@ -121,7 +121,7 @@ public:
 private:
   double m_halfThickness;
   int m_readoutDirection;  ///< defines if the readout is along (+1) / (-1) wrt
-                           ///the z axis
+                           /// the z axis
   double m_lorentzAngle;   ///< the lorentz angle
   double m_tanLorentzAngle;  ///< and the tangent of it
 
@@ -129,9 +129,9 @@ private:
                    m_segmentation;           /// segmentation descriptor
   SurfacePtrVector m_boundarySurfaces;       ///< boundary surfaces z, x, y
   SurfacePtrVector m_segmentationSurfacesX;  ///< segmentation surfaces in X -
-                                             ///without boundaries
+                                             /// without boundaries
   SurfacePtrVector m_segmentationSurfacesY;  ///< segmentation surfaces in Y -
-                                             ///without boundaries
+                                             /// without boundaries
 };
 
 inline double
