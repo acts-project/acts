@@ -182,10 +182,11 @@ const Acts::Vector2D
 Acts::RectangularSegmentation::cellPosition(const DigitizationCell& dCell) const
 {
 
-    // use the bin utility for this job
-    double bX = 0. ; //m_binsX ? m_binUtility->
-    //0.; // m_binsX ? m_binUtility->binPosition(dCell.first,0.,0) : 0.;
-    double bY = 0.;// m_binsY ? m_binUtility->binPosition(dCell.second,0.,1) : 0.;
+    // @TODO add protection agains 1D binUtility for Y
+    double bX = m_binsX > 1 ? m_binUtility->binningData()[0].center(dCell.first) : 0.;
+    double bY = m_binsY > 1 ? m_binUtility->binningData()[1].center(dCell.second) : 0.;
+    return Vector2D(bX,bY);
+
     return Vector2D(bX,bY);
 }
 
