@@ -9,10 +9,41 @@
 
 namespace Acts {
 
-template <typename BField>
+struct DefaultParConverter
+{
+  template <typename T>
+  using internal_parameter_type = T;
+
+  template <typename T>
+  using return_parameter_type = T;
+
+  template <typename T>
+  static T
+  convert(const T& input)
+  {
+    return input;
+  }
+};
+
+template <typename BField, typename ParConverter = DefaultParConverter>
 class GSLStepper
 {
 public:
+  template <typename T>
+  using internal_parameter_type =
+      typename ParConverter::template internal_parameter_type<T>;
+
+  template <typename T>
+  using return_parameter_type =
+      typename ParConverter::template return_parameter_type<T>;
+
+  template <typename T>
+  static auto
+  convert(const T& input)
+  {
+    return ParConverter::convert(input);
+  }
+
   GSLStepper(BField&& bField = BField())
     : m_bField(std::move(bField))
     , m_params{0, 0, 0, 1}
