@@ -19,12 +19,10 @@
 namespace Acts {
 namespace Seeding {
 
-  /**
-  * @brief 3D space point for track seeding.
-  *
-  * The identifier is used to link back to the original measurement / hit. It
-  * must behave like a value type and can be default initialized.
-  */
+  /// @brief 3D space point for track seeding.
+  ///
+  /// The identifier is used to link back to the original measurement / hit. It
+  /// must behave like a value type and can be default initialized.
   template <typename Identifier>
   class SpacePoint
   {
@@ -79,21 +77,18 @@ namespace Seeding {
     Identifier     m_identifier;
   };
 
-  /**
-   * @brief A set of space points on a barrel layer with fixed radius.
-   *
-   * \warning After adding points to the container, `.sort()` must be called to
-   * ensure correct ordering. Failure to do so leads to undefined behaviour.
-   */
+  /// @brief A set of space points on a barrel layer with fixed radius.
+  ///
+  /// @warning After adding points to the container, `.sort()` must be called
+  ///          to ensure correct ordering. Failure to do so leads to undefined
+  ///          behaviour.
   template <typename Identifier>
   struct BarrelSpacePoints
   {
     std::vector<SpacePoint<Identifier>> points;
     double                              radius;
 
-    /**
-     * @brief Subset of points with phi value plus/minus delta around given phi.
-     */
+    /// Subset of points with phi value plus/minus delta around given phi.
     auto
     rangeDeltaPhi(double phi, double delta) const
     {

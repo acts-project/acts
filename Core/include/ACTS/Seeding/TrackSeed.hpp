@@ -20,9 +20,7 @@
 namespace Acts {
 namespace Seeding {
 
-  /**
-   * @brief (Geometric) parameter estimates and a set of points.
-   */
+  /// A set of points and (geometric) parameter estimates.
   template <typename Identifier, size_t N>
   class TrackSeed
   {
