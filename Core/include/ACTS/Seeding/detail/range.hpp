@@ -11,7 +11,7 @@
 
 #include <algorithm>
 
-#include "ACTS/Seeding/detail/periodic.hpp"
+#include "ACTS/Utilities/detail/periodic.hpp"
 
 namespace Acts {
 namespace Seeding {
@@ -95,8 +95,8 @@ namespace Seeding {
       PhiRange(const Container& values_, double phi0, double phi1)
         : values(values_)
       {
-        phi0 = radian_sym(phi0);
-        phi1 = radian_sym(phi1);
+        phi0 = Acts::detail::radian_sym(phi0);
+        phi1 = Acts::detail::radian_sym(phi1);
 
         // std algorithms assumes a sorted container for fast upper/lower
         // bound binary search.
