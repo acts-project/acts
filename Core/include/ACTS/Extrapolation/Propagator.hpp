@@ -133,15 +133,24 @@ private:
 public:
   /// @brief propagate track parameters
   template <typename TrackParameters, typename ObserverList, typename AbortList>
-  obs_list_result_t<TrackParameters, ObserverList>
+  obs_list_result_t<
+      typename Impl::template return_parameter_type<TrackParameters>,
+      ObserverList>
   propagate(const TrackParameters& start,
             const Options<ObserverList, AbortList>& options)
   {
-    typedef obs_list_result_t<TrackParameters, ObserverList> result_type;
-    result_type     r(start, Status::pINPROGRESS);
-    double          stepMax  = options.max_step_size;
-    TrackParameters previous = start;
-    TrackParameters current  = start;
+    typedef typename Impl::template return_parameter_type<TrackParameters>
+        return_parameter_type;
+    typedef typename Impl::template internal_parameter_type<TrackParameters>
+        internal_parameter_type;
+    static_assert(std::is_copy_constructible<internal_parameter_type>::value,
+                  "internal track parameter type must be copy-constructible");
+
+    typedef obs_list_result_t<return_parameter_type, ObserverList> result_type;
+    result_type             r(start, Status::pINPROGRESS);
+    double                  stepMax  = options.max_step_size;
+    internal_parameter_type previous = start;
+    internal_parameter_type current  = previous;
     for (unsigned int i = 0; i < options.max_steps; ++i) {
       current = m_impl.doStep(previous, stepMax);
       options.observer_list(current, previous, r);
@@ -149,7 +158,7 @@ public:
       previous = current;
     }
 
-    r.endParameters = current;
+    r.endParameters = m_impl.convert(current);
     r.status        = Status::pSUCCESS;
 
     return r;
