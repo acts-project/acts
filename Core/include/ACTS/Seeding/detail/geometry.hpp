@@ -78,9 +78,9 @@ namespace Seeding {
       double u     = 0;
 
       RealQuadraticEquation eq(alpha, beta, gamma);
-      if (eq.solutions = two) {
+      if (eq.solutions == two) {
         u = (std::abs(eq.first) < std::abs(eq.second)) ? eq.first : eq.second;
-      } else if (eq.solutions = one) {
+      } else if (eq.solutions == one) {
         u = eq.first;
       } else {
         // fall-back: closest approach to the circle, (x + d * u) . d = 0
