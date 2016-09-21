@@ -134,7 +134,7 @@ public:
     double* A  = &(cache.pVector[3]);  // Directions
     double* sA = &(cache.pVector[42]);
     // Invert mometum/2.
-    double Pi   = 1. / units::Nat2SI<units::MOMENTUM>(1. / cache.pVector[6]);
+    double Pi   = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / cache.pVector[6]);
     double dltm = 0.0002 * .03;
 
     double f0[3], f[3];
