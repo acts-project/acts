@@ -36,7 +36,7 @@ struct MaxPathLength
   template <typename TrackParameters>
   bool
   operator()(const observer_type::result_type& r,
-             TrackParameters&,
+             const TrackParameters&,
              double& stepMax) const
   {
     // adjust maximum step size
