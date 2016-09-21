@@ -12,16 +12,39 @@ namespace Acts {
 struct DefaultParConverter
 {
   template <typename T>
-  using internal_parameter_type = T;
-
-  template <typename T>
   using return_parameter_type = T;
 
   template <typename T>
-  static T
-  convert(const T& input)
+  struct cache_type
   {
-    return input;
+    cache_type(const T& trackPar)
+      : params{0, 0, 0, 0, 0, 0}, charge(trackPar.charge()), p(0)
+    {
+      const auto& pos = trackPar.position();
+      const auto& mom = trackPar.momentum();
+      p               = mom.norm();
+      params[0]       = pos(0);
+      params[1]       = pos(1);
+      params[2]       = pos(2);
+      params[3]       = mom(0) / p;
+      params[4]       = mom(1) / p;
+      params[5]       = mom(2) / p;
+    }
+
+    double params[6];
+    double charge;
+    double p;
+  };
+
+  template <typename T>
+  static return_parameter_type<T>
+  convert(const cache_type<T>& cache)
+  {
+    return CurvilinearParameters(
+        nullptr,
+        Vector3D(cache.params[0], cache.params[1], cache.params[2]),
+        cache.p * Vector3D(cache.params[3], cache.params[4], cache.params[5]),
+        cache.charge);
   }
 };
 
@@ -30,8 +53,7 @@ class GSLStepper
 {
 public:
   template <typename T>
-  using internal_parameter_type =
-      typename ParConverter::template internal_parameter_type<T>;
+  using cache_type = typename ParConverter::template cache_type<T>;
 
   template <typename T>
   using return_parameter_type =
@@ -66,28 +88,17 @@ public:
   }
 
   template <typename TrackParameters>
-  TrackParameters
-  doStep(const TrackParameters& in, double stepMax = 1 * units::_cm)
+  bool
+  doStep(cache_type<TrackParameters>& cache, double stepMax = 1 * units::_cm)
   {
-    Vector3D pos    = in.position();
-    Vector3D mom    = in.momentum();
-    double   p      = mom.norm();
-    double   charge = in.charge();
-    double   input[6]
-        = {pos(0), pos(1), pos(2), mom(0) / p, mom(1) / p, mom(2) / p};
-
     // set B-Field and q/p
-    m_bField(input, m_params.data());
+    m_bField(cache.params, m_params.data());
     // conversion to SI units: p --> (p/c)/J / (kg * m^2 / s^2)
-    m_params[3] = charge / units::Nat2SI<units::MOMENTUM>(p);
+    m_params[3] = cache.charge / units::Nat2SI<units::MOMENTUM>(cache.p);
 
-    performStep(input, stepMax);
+    performStep(cache.params, stepMax);
 
-    return CurvilinearParameters(nullptr,
-                                 Vector3D(input[0], input[1], input[2]),
-                                 p * Vector3D(input[3], input[4], input[5]),
-                                 in.charge());
-    ;
+    return true;
   }
 
 private:
