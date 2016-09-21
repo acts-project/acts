@@ -29,7 +29,7 @@ main()
 
   Propagator_type::Options<ObsList_type, AbortConditions_type> options;
   AbortConditions_type& al              = options.stop_conditions;
-  al.get<MaxPathLength>().maxPathLength = 35 * units::_cm;
+  al.get<MaxPathLength>().maxPathLength = 5 * units::_m;
 
   Vector3D              pos(0, 0, 0);
   Vector3D              mom(1 * units::_GeV, 0, 0);

@@ -23,12 +23,12 @@ namespace Test {
 
       RungeKuttaEngine::Config c;
       c.fieldService  = std::move(magnetic_field);
-      c.maxPathLength = 35 * units::_cm;
+      c.maxPathLength = 5 * units::_m;
 
       propagator = std::make_unique<RungeKuttaEngine>(c);
 
       surface = std::make_unique<CylinderSurface>(
-          nullptr, 1 * units::_m, 3 * units::_m);
+          nullptr, 100 * units::_m, 30 * units::_m);
     }
 
     ~atlas_propagator_fixture() = default;
