@@ -88,12 +88,14 @@ namespace Seeding {
     std::array<Identifier, N> m_ids;
   };
 
+  template <typename Identifier, size_t N>
+  using TrackSeeds = std::vector<TrackSeed<Identifier, N>>;
   template <typename Identifier>
-  using TrackSeeds2 = std::vector<TrackSeed<Identifier, 2>>;
+  using TrackSeeds2 = TrackSeeds<Identifier, 2>;
   template <typename Identifier>
-  using TrackSeeds3 = std::vector<TrackSeed<Identifier, 3>>;
+  using TrackSeeds3 = TrackSeeds<Identifier, 3>;
   template <typename Identifier>
-  using TrackSeeds4 = std::vector<TrackSeed<Identifier, 4>>;
+  using TrackSeeds4 = TrackSeeds<Identifier, 4>;
 
 }  // namespace Seeding
 }  // namespace Acts
