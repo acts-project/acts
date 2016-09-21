@@ -18,11 +18,19 @@ namespace Acts {
 namespace Seeding {
   namespace detail {
 
-    /**
-     * @brief Calculate the curvature of a circle from three points.
-     */
+    /// Calculate the curvature of a circle from three points.
+    ///
+    /// @note Input positions must provide `.x()`, `.y()`.
+    ///
+    /// Sign convention as defined in
+    ///
+    ///     P. Billoir and S. Qian, NIM A311 (1992), 139--150
+    ///
+    /// i.e. curvature is positive for a counter-clockwise rotation and
+    /// negative for a clockwise rotation as defined by the order of the
+    /// input points.
     template <typename P0, typename P1, typename P2>
-    double
+    inline double
     calcCircleCurvature(const P0& p0, const P1& p1, const P2& p2)
     {
       double x01 = p1.x() - p0.x();
@@ -34,26 +42,24 @@ namespace Seeding {
       double b = std::hypot(x02, y02);
       double c = std::hypot(x01, y01);
       // 2 * (signed) area of the triangle
-      double k = (x01 * y02 - x02 * y01);
+      double k = (x02 * y01 - x01 * y02);
       // radius = product of side lengths / 4 times triangle area
-      // TODO check sign convention, clockwise-/counterclockwise
       return (2 * k) / (a * b * c);
     }
 
-    /**
-     * @brief Calculate the intersection point of a line and a cylinder
-     * @param l0 first point on the line (must provide `.x()`, `.y()`, `.z()`)
-     * @param l1 second point on the line (must provide `.x()`, `.y()`, `.z()`)
-     * @param radius radius of a circle centered around the origin
-     *
-     * Returns the intersection point with the closest propagation path
-     * along the line. If no intersection exists, the closest point on the line
-     * to the circle is returned. Intersection and closest approach are
-     * calculated only in the transverse plane but the final position
-     * is calculated in three dimensions.
-     */
+    /// Calculate the intersection point of a line and a cylinder.
+    ///
+    /// @param l0 first point on the line (must provide `.x()`, `.y()`, `.z()`)
+    /// @param l1 second point on the line (must provide `.x()`, `.y()`, `.z()`)
+    /// @param radius radius of a circle centered around the origin
+    ///
+    /// Returns the intersection point with the closest propagation path
+    /// along the line. If no intersection exists, the closest point on the line
+    /// to the circle is returned. Intersection and closest approach are
+    /// calculated only in the transverse plane but the final position
+    /// is calculated in three dimensions.
     template <typename L0, typename L1>
-    Acts::Vector3D
+    inline Acts::Vector3D
     calcLineCircleIntersection(const L0& l0, const L1& l1, double radius)
     {
       // line equation x + d * u, with start point between the input points
