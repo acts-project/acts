@@ -139,27 +139,30 @@ public:
   propagate(const TrackParameters& start,
             const Options<ObserverList, AbortList>& options)
   {
+    typedef typename Impl::template cache_type<TrackParameters> cache_type;
     typedef typename Impl::template return_parameter_type<TrackParameters>
         return_parameter_type;
-    typedef typename Impl::template internal_parameter_type<TrackParameters>
-        internal_parameter_type;
-    static_assert(std::is_copy_constructible<internal_parameter_type>::value,
-                  "internal track parameter type must be copy-constructible");
+
+    static_assert(std::is_copy_constructible<return_parameter_type>::value,
+                  "return track parameter type must be copy-constructible");
 
     typedef obs_list_result_t<return_parameter_type, ObserverList> result_type;
-    result_type             r(start, Status::pINPROGRESS);
-    double                  stepMax  = options.max_step_size;
-    internal_parameter_type previous = start;
-    internal_parameter_type current  = previous;
+    result_type           r(start, Status::pINPROGRESS);
+    double                stepMax = options.max_step_size;
+    cache_type            propagation_cache(start);
+    return_parameter_type previous = m_impl.convert(propagation_cache);
     for (unsigned int i = 0; i < options.max_steps; ++i) {
-      current = m_impl.doStep(previous, stepMax);
+      m_impl.doStep(propagation_cache, stepMax);
+      return_parameter_type current = m_impl.convert(propagation_cache);
       options.observer_list(current, previous, r);
-      if (options.stop_conditions(r, current, stepMax)) break;
+      if (options.stop_conditions(r, current, stepMax)) {
+        r.endParameters = current;
+        r.status        = Status::pSUCCESS;
+        break;
+      }
+
       previous = current;
     }
-
-    r.endParameters = m_impl.convert(current);
-    r.status        = Status::pSUCCESS;
 
     return r;
   }
