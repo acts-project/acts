@@ -6,6 +6,7 @@
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Extrapolation/AbortConditions.hpp"
 #include "ACTS/Extrapolation/AbortList.hpp"
+#include "ACTS/Extrapolation/AtlasStepper.hpp"
 #include "ACTS/Extrapolation/GSLStepper.hpp"
 #include "ACTS/Extrapolation/ObserverList.hpp"
 #include "ACTS/Extrapolation/Observers.hpp"
@@ -36,9 +37,9 @@ namespace Test {
                          theta,
                          index)
   {
-    typedef ConstantFieldSvc         BField_type;
-    typedef GSLStepper<BField_type>  Stepper_type;
-    typedef Propagator<Stepper_type> Propagator_type;
+    typedef ConstantFieldSvc          BField_type;
+    typedef AtlasStepper<BField_type> Stepper_type;
+    typedef Propagator<Stepper_type>  Propagator_type;
 
     BField_type::Config c;
     c.field = {0, 0, 2 * units::_T};
@@ -51,7 +52,7 @@ namespace Test {
 
     Propagator_type::Options<ObsList_type, AbortConditions_type> options;
     AbortConditions_type& al              = options.stop_conditions;
-    al.get<MaxPathLength>().maxPathLength = 35 * units::_cm;
+    al.get<MaxPathLength>().maxPathLength = 5 * units::_m;
 
     std::ofstream out("gsl_stepper_validation.txt",
                       std::ios::out | std::ios::app);
@@ -67,7 +68,8 @@ namespace Test {
     ExtrapolationCell<TrackParameters> exCell(pars2);
     exCell.addConfigurationMode(ExtrapolationMode::StopWithPathLimit);
     // perform propagation with test propagator
-    const auto& p = test_propagator.propagate(pars1, options).endParameters;
+    const auto& r = test_propagator.propagate(pars1, options);
+    const auto& p = r.endParameters;
     out << std::fixed << p.position().x() / units::_mm << " "
         << " " << p.position().y() / units::_mm << " "
         << p.position().z() / units::_mm << " "
@@ -88,7 +90,10 @@ namespace Test {
         << val->momentum().y() << " " << val->momentum().z() << " "
         << val->parameters()(0) << " " << val->parameters()(1) << " "
         << val->parameters()(2) << " " << val->parameters()(3) << " "
-        << val->parameters()(4) * 1000 << std::endl;
+        << val->parameters()(4) * 1000;  //<< std::endl;
+
+    out << " " << r.get<PathLengthObserver::result_type>().pathLength << " "
+        << exCell.pathLength << std::endl;
   }
 
   BOOST_AUTO_TEST_SUITE_END();
