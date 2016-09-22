@@ -37,8 +37,12 @@ public:
                   "not all abort conditions support the specified input");
     // clang-format on
 
-    return detail::abort_list_impl<conditions...>::check(
-        tuple(), r, current, stepMax);
+    double conditions_stepMax = stepMax;
+    bool   abort              = detail::abort_list_impl<conditions...>::check(
+        tuple(), r, current, conditions_stepMax);
+    stepMax = std::min(stepMax, conditions_stepMax);
+
+    return abort;
   }
 };
 
