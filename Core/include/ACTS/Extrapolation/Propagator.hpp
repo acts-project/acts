@@ -24,8 +24,13 @@ template <typename Impl>
 class Propagator final
 {
 public:
+  /// @brief propagation direction relative to momentum
+  enum Direction : int { backward = -1, forward = 1 };
+
   /// @brief options for propagate() call
-  template <typename ObserverList, typename AbortList>
+  template <Direction             = forward,
+            typename ObserverList = ObserverList<>,
+            typename AbortList    = AbortList<>>
   struct Options
   {
     /// maximum number of steps for one propagate() call
@@ -135,12 +140,15 @@ private:
 
 public:
   /// @brief propagate track parameters
-  template <typename TrackParameters, typename ObserverList, typename AbortList>
+  template <typename TrackParameters,
+            Direction direction,
+            typename ObserverList,
+            typename AbortList>
   obs_list_result_t<
       typename Impl::template return_parameter_type<TrackParameters>,
       ObserverList>
   propagate(const TrackParameters& start,
-            const Options<ObserverList, AbortList>& options)
+            const Options<direction, ObserverList, AbortList>& options)
   {
     typedef typename Impl::template cache_type<TrackParameters> cache_type;
     typedef typename Impl::template return_parameter_type<TrackParameters>

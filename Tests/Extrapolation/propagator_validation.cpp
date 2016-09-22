@@ -37,9 +37,9 @@ namespace Test {
                          theta,
                          index)
   {
-    typedef ConstantFieldSvc          BField_type;
-    typedef AtlasStepper<BField_type> Stepper_type;
-    typedef Propagator<Stepper_type>  Propagator_type;
+    typedef ConstantFieldSvc         BField_type;
+    typedef GSLStepper<BField_type>  Stepper_type;
+    typedef Propagator<Stepper_type> Propagator_type;
 
     BField_type::Config c;
     c.field = {0, 0, 2 * units::_T};
@@ -50,7 +50,10 @@ namespace Test {
     typedef ObserverList<PathLengthObserver> ObsList_type;
     typedef AbortList<MaxPathLength>         AbortConditions_type;
 
-    Propagator_type::Options<ObsList_type, AbortConditions_type> options;
+    Propagator_type::Options<Propagator_type::forward,
+                             ObsList_type,
+                             AbortConditions_type>
+                          options;
     AbortConditions_type& al              = options.stop_conditions;
     al.get<MaxPathLength>().maxPathLength = 5 * units::_m;
 
