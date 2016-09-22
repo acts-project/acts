@@ -5,6 +5,7 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_odeiv2.h>
 #include <memory>
+#include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
 namespace Acts {
@@ -88,7 +89,7 @@ public:
   }
 
   template <typename TrackParameters>
-  bool
+  double
   doStep(cache_type<TrackParameters>& cache, double stepMax = 1 * units::_cm)
   {
     // set B-Field and q/p
@@ -96,9 +97,7 @@ public:
     // conversion to SI units: p --> (p/c)/J / (kg * m^2 / s^2)
     m_params[3] = cache.charge / units::Nat2SI<units::MOMENTUM>(cache.p);
 
-    performStep(cache.params, stepMax);
-
-    return true;
+    return performStep(cache.params, stepMax);
   }
 
 private:
@@ -108,13 +107,13 @@ private:
   std::unique_ptr<gsl_odeiv2_driver> m_GSL_driver;
 
   /// input = [x,y,z,Tx,Ty,Tz,q/p]
-  bool
+  double
   performStep(double input[6], double stepMax) const
   {
     double t = 0;
     gsl_odeiv2_driver_apply(m_GSL_driver.get(), &t, stepMax, input);
 
-    return true;
+    return t;
   }
 
   static int

@@ -37,6 +37,9 @@ public:
     /// maximum step size
     double max_step_size = 1 * units::_m;
 
+    /// maximum step size
+    double max_path_length = 5 * units::_m;
+
     /// list of observers
     ObserverList observer_list;
 
@@ -150,16 +153,21 @@ public:
     result_type           r(start, Status::pINPROGRESS);
     double                stepMax = options.max_step_size;
     cache_type            propagation_cache(start);
-    return_parameter_type previous = m_impl.convert(propagation_cache);
+    return_parameter_type previous   = m_impl.convert(propagation_cache);
+    double                pathLength = 0;
     for (unsigned int i = 0; i < options.max_steps; ++i) {
-      m_impl.doStep(propagation_cache, stepMax);
+      pathLength += m_impl.doStep(propagation_cache, stepMax);
       return_parameter_type current = m_impl.convert(propagation_cache);
       options.observer_list(current, previous, r);
-      if (options.stop_conditions(r, current, stepMax)) {
-        r.endParameters = current;
+      if (pathLength >= options.max_path_length
+          || options.stop_conditions(r, current, stepMax)) {
+        r.endParameters = m_impl.convert(propagation_cache);
         r.status        = Status::pSUCCESS;
         break;
       }
+
+      if (stepMax > options.max_path_length - pathLength)
+        stepMax = options.max_path_length - pathLength;
 
       previous = current;
     }

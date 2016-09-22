@@ -125,8 +125,8 @@ public:
 
   AtlasStepper(BField&& bField = BField()) : m_bField(std::move(bField)){};
 
-  bool
-  doStep(Cache& cache, double stepMax = 1 * units::_cm) const
+  double
+  doStep(Cache& cache, double& stepMax) const
   {
     bool Jac = cache.useJacobian;
 
@@ -243,7 +243,8 @@ public:
       cache.field[2] = f[2];
       cache.newfield = false;
 
-      if (!Jac) return true;
+      // stepMax *= 2;
+      if (!Jac) return stepMax;
 
       // Jacobian calculation
       //
@@ -331,10 +332,10 @@ public:
       d4A[0] = ((d4A0 + 2. * d4A3) + (d4A5 + d4A6 + A6)) * (1. / 3.);
       d4A[1] = ((d4B0 + 2. * d4B3) + (d4B5 + d4B6 + B6)) * (1. / 3.);
       d4A[2] = ((d4C0 + 2. * d4C3) + (d4C5 + d4C6 + C6)) * (1. / 3.);
-      return true;
+      return stepMax;
     }
 
-    return true;
+    return stepMax;
   }
 
 private:
