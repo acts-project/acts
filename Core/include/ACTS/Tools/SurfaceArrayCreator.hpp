@@ -60,12 +60,13 @@ public:
   /// @return a unique pointer to a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
+                         Acts::BinningType                  bType,
                          double                             R,
-                         double                             minPhi,
-                         double                             maxPhi,
-                         double                             halfZ,
-                         size_t                             binsPhi,
-                         size_t                             binsZ,
+                         double                             minPhi  = 10e-10,
+                         double                             maxPhi  = 10e-10,
+                         double                             halfZ   = 10e-10,
+                         size_t                             binsPhi = 0,
+                         size_t                             binsZ   = 0,
                          std::shared_ptr<Transform3D>       transform
                          = nullptr) const final;
 
@@ -80,12 +81,13 @@ public:
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
-                     double                             rMin,
-                     double                             rMax,
-                     double                             minPhi,
-                     double                             maxPhi,
-                     size_t                             binsR,
-                     size_t                             binsPhi,
+                     Acts::BinningType                  bType,
+                     double                             rMin    = 10e-10,
+                     double                             rMax    = 10e-10,
+                     double                             minPhi  = 10e-10,
+                     double                             maxPhi  = 10e-10,
+                     size_t                             binsR   = 0,
+                     size_t                             binsPhi = 0,
                      std::shared_ptr<Transform3D>       transform
                      = nullptr) const final;
 
@@ -112,6 +114,30 @@ public:
   {
     m_logger = std::move(logger);
   }
+
+  /// SurfaceArrayCreator internal method
+  /// - create a BinUtility
+  /// currently implemented for phi, r and z bining
+  /// @TODD implement for x,y binning
+  /// @param surfaces are the sensitive surfaces to be
+  /// @param bValue the BinningValue in which direction should be binned
+  /// (currently possible: binPhi, binR, binZ)
+  /// @param bType the BinningType (equidistant or arbitrary binning)
+  /// @param bins the number of bins
+  /// @param min is the minimal position of the surfaces in the binning
+  /// direction
+  /// @param max is the maximal position of the surfaces in the binning
+  /// direction
+  /// @return a unique pointer a one dimensional BinUtility
+  std::unique_ptr<Acts::BinUtility>
+  createBinUtility(const std::vector<const Acts::Surface*>& surfaces,
+                   Acts::BinningValue                       bValue,
+                   Acts::BinningType                        bType,
+                   size_t                                   bins = 0,
+                   double                                   min  = 10e-10,
+                   double                                   max  = 10e-10,
+                   std::shared_ptr<Acts::Transform3D>       transform
+                   = nullptr) const;
 
 private:
   /// Private access to logger
@@ -155,6 +181,11 @@ private:
   ///
   void
   registerNeighbourHood(const SurfaceArray& sArray) const;
+  /// Private helper method to create the bin boundaries out of a vector of
+  /// float pairs which represent the boundaries of the surfaces, which do not
+  /// need to be attached to each other or can possibly be overlapping
+  std::vector<float>
+  createBinValues(std::vector<std::pair<float, float>> old) const;
 };
 
 }  // end of namespace

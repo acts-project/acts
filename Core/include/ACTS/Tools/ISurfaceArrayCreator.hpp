@@ -47,12 +47,13 @@ public:
   /// @return a unique pointer a new SurfaceArray
   virtual std::unique_ptr<SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
+                         Acts::BinningType                  bType,
                          double                             R,
-                         double                             minPhi,
-                         double                             maxPhi,
-                         double                             halfZ,
-                         size_t                             binsRPhi,
-                         size_t                             binsZ,
+                         double                             minPhi  = 10e-10,
+                         double                             maxPhi  = 10e-10,
+                         double                             halfZ   = 10e-10,
+                         size_t                             binsPhi = 0,
+                         size_t                             binsZ   = 0,
                          std::shared_ptr<Transform3D>       transform
                          = nullptr) const = 0;
 
@@ -70,12 +71,13 @@ public:
   /// @return a unique pointer a new SurfaceArray
   virtual std::unique_ptr<SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
-                     double                             rMin,
-                     double                             rMax,
-                     double                             minPhi,
-                     double                             maxPhi,
-                     size_t                             binsR,
-                     size_t                             binsPhi,
+                     Acts::BinningType                  bType,
+                     double                             rMin    = 10e-10,
+                     double                             rMax    = 10e-10,
+                     double                             minPhi  = 10e-10,
+                     double                             maxPhi  = 10e-10,
+                     size_t                             binsR   = 0,
+                     size_t                             binsPhi = 0,
                      std::shared_ptr<Transform3D>       transform
                      = nullptr) const = 0;
 
