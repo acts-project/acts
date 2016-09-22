@@ -88,14 +88,8 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
 
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray
-      = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(surfaces,
-                                                          equidistant,
-                                                          layerR,
-                                                          minPhi,
-                                                          maxPhi,
-                                                          layerHalfZ,
-                                                          binsPhi,
-                                                          binsZ);
+      = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
+          surfaces, layerR, minPhi, maxPhi, layerHalfZ, binsPhi, binsZ);
 
   // create the layer and push it back
   std::shared_ptr<const CylinderBounds> cBounds(
@@ -159,7 +153,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>& surfaces,
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-          surfaces, equidistant, minR, maxR, minPhi, maxPhi, binsR, binsPhi);
+          surfaces, minR, maxR, minPhi, maxPhi, binsR, binsPhi);
 
   // create the share disc bounds
   auto dBounds = std::make_shared<RadialBounds>(minR - envelopeMinR,
