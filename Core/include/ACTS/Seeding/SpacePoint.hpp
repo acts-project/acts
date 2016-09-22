@@ -22,7 +22,7 @@ namespace Seeding {
   /// @brief 3D space point for track seeding.
   ///
   /// @tparam Identifier  A value-like type that is used to link back to the
-  ///                     original hits. Must be printable.
+  ///                     original hits.
   template <typename Identifier>
   class SpacePoint
   {
@@ -111,7 +111,6 @@ namespace Seeding {
   operator<<(std::ostream& os, const SpacePoint<Identifier>& point)
   {
     os << "rho=" << point.rho() << " phi=" << point.phi() << " z=" << point.z();
-    os << ' ' << point.identifier();
     return os;
   }
 

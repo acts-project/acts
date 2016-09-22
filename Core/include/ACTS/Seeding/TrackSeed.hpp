@@ -23,7 +23,7 @@ namespace Seeding {
   /// A set of points and (geometric) parameter estimates.
   ///
   /// @tparam Identifier  A value-like type that is used to link back to the
-  ///                     original hits. Must be printable.
+  ///                     original hits.
   /// @tparam N           Number of hits / space points in this seed.
   template <typename Identifier, size_t N>
   class TrackSeed
@@ -73,20 +73,22 @@ namespace Seeding {
       return m_ids;
     }
 
-    void
-    print(std::ostream& os) const
-    {
-      os << "x=" << m_position.x() << " y=" << m_position.y()
-         << " z=" << m_position.z() << " phi=" << m_phi << " theta=" << m_theta
-         << " curvature=" << m_curvature << '\n';
-      for (const auto& id : m_ids) os << "  " << id << '\n';
-    }
-
   private:
     Acts::Vector3D m_position;
     double         m_phi, m_theta, m_curvature;
     std::array<Identifier, N> m_ids;
   };
+
+  template <typename Identifier, size_t N>
+  std::ostream&
+  operator<<(std::ostream& os, const TrackSeed<Identifier, N>& seed)
+  {
+    os << "pos=[" << seed.position().x() << ',' << seed.position().y() << ','
+       << seed.position().z() << ']';
+    os << " phi=" << seed.phi() << " theta=" << seed.theta();
+    os << " curvature=" << seed.curvature() << " n=" << N;
+    return os;
+  }
 
   template <typename Identifier, size_t N>
   using TrackSeeds = std::vector<TrackSeed<Identifier, N>>;
