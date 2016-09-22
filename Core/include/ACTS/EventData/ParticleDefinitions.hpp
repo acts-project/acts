@@ -47,7 +47,7 @@ enum ParticleType {
   pi0      = 8,  //!< for fatras usage
   k0       = 9,  //!< for fatras usage
   nonInteractingMuon
-  = 10,  //!< for material collection @TODO check if this is still needed
+  = 10,  //!< for material collection @todo check if this is still needed
   noHypothesis = 99,
   undefined    = 99
 };

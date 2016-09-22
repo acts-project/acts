@@ -169,7 +169,7 @@ Acts::RungeKuttaEngine::propagate(ExCellNeutral&           eCell,
     }
     // cache the last lead parameters
     eCell.lastLeadParameters = sParameters;
-    // create the new curvilinear paramters at the surface intersection -> if
+    // create the new curvilinear tparamers at the surface intersection -> if
     // so, trigger the success
     // now check if it is valid it's further away than the pathLimit
     if (eCell.pathLimitReached(m_cfg.dlt, true)) {
@@ -375,7 +375,7 @@ Acts::RungeKuttaEngine::propagateWithJacobian(int               navigationStep,
   while (fabs(step) > m_cfg.straightStep) {
     // maximum number of steps
     if (++niter > 10000) {
-      //!< @TODO make max number configurable
+      //!< @todo make max number configurable
       EX_MSG_DEBUG(navigationStep,
                    "propagate",
                    "<T> ",
@@ -1002,7 +1002,7 @@ Acts::RungeKuttaEngine::buildTrackParametersWithoutPropagation(
 
   SingleTrackParameters<ChargedPolicy>::CovPtr_t cov = nullptr;
   if (tParameters.covariance()) {
-    // @TODO check
+    // @todo check
     // fix - how to copy a covariance ?
   }
   return std::make_unique<const BoundParameters>(
@@ -1027,7 +1027,7 @@ Acts::RungeKuttaEngine::buildNeutralParametersWithoutPropagation(
 
   SingleTrackParameters<NeutralPolicy>::CovPtr_t cov = nullptr;
   if (nParameters.covariance()) {
-    // @TODO check
+    // @todo check
     // fix - how to copy a covariance ?
   }
   return std::make_unique<const NeutralBoundParameters>(

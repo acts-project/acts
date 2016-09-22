@@ -156,11 +156,11 @@ public:
   /// Return the material layers ordered based on straight line intersections:
   ///
   /// - startLayer and endLayer are included in the list
-  /// @param sLayer is the start layer for the search (@TODO docu: check if
+  /// @param sLayer is the start layer for the search (@todo docu: check if
   /// returned)
-  /// @param eLayer is the end layer for the search (@TODO docu: check if
+  /// @param eLayer is the end layer for the search (@todo docu: check if
   /// returned)
-  /// @paramt parameters are the templated parameters for searching
+  /// @tparam parameters are the templated parameters for searching
   /// @param pDir is an additional direction prescription
   /// @param bchk is a boundary check directive
   /// @param resolveMaterial is the prescription how to deal with material
@@ -237,7 +237,7 @@ public:
 
   /// Returns the boundary surfaces ordered in probability to hit them based
   /// on straight line intersection
-  /// @paramt parameters are the templated tracking parameters
+  /// @tparam parameters are the templated tracking parameters
   /// @param pDir is the additional direction presciprion
   /// @param startOffBoundary is a flag telling that you are already on a
   /// boundary
@@ -538,7 +538,7 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
           // taking the layer representation, not the approach surface, latter
           // is resolved in the navigation stream
           const Surface& tSurface = tLayer->surfaceRepresentation();
-          // intersect the layer @TODO should probably be surface on approach
+          // intersect the layer @todo should probably be surface on approach
           Intersection lIntersection
               = tSurface.intersectionEstimate(gp, dir, true, bchk);
           // (a) if the current layer is NOT the start layer - intersection is
@@ -597,7 +597,7 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
 }
 
 /** Returns the boundary surfaces ordered in probability to hit them based on
- * straight line intersection @TODO change hard-coded default */
+ * straight line intersection @todo change hard-coded default */
 template <class T>
 std::vector<BoundaryIntersection<T>>
 TrackingVolume::boundarySurfacesOrdered(const T& pars, PropDirection pDir) const

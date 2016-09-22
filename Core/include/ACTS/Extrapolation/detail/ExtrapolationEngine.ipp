@@ -112,7 +112,7 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
       : (eCell.startLayer ? eCell.startLayer->enclosingTrackingVolume()
                           : nullptr);
   // check if you are at the volume boundary
-  //!< @TODO do not use hard coded number of atVolumeBoundary, check with ST
+  //!< @todo do not use hard coded number of atVolumeBoundary, check with ST
   if (!eCell.startVolume
       || m_cfg.trackingGeometry->atVolumeBoundary(
              eCell.startParameters.position(), eCell.startVolume, 0.001)) {
@@ -168,7 +168,7 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
           "",
           "end volume needs to be determinded by surface intersection.");
       // use a propagation to find the endVolume and endLayer
-      // @TODO can be opmisied (straight line for high momentum - use directly )
+      // @todo can be opmisied (straight line for high momentum - use directly )
       ExtrapolationCell<T> navCell(*eCell.leadParameters, dir);
       // screen output
       ExtrapolationCode eCode
@@ -179,7 +179,7 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
                                                false,
                                                eCell.navigationCurvilinear);
       // check for sucess to the destination
-      //@TODO check what this is
+      //@todo check what this is
       CHECK_ECODE_SUCCESS_NODEST(navCell, eCode);
       // screen output
       EX_MSG_VERBOSE(

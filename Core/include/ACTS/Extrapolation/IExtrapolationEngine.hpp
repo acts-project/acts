@@ -41,10 +41,10 @@ public:
   /// Virtual destructor
   virtual ~IExtrapolationEngine() {}
   /// main extrapolation method, templated to chared/neutral
-  /// @paramt eCell ist he extrapolaiton cell
+  /// @tparam eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param dir is the additional direction prescription
-  /// @param bchk is the boudnary check directive @TODO shift to cell after
+  /// @param bchk is the boudnary check directive @todo shift to cell after
   /// splitting
   virtual ExtrapolationCode
   extrapolate(ExCellCharged&       ecCharged,
@@ -52,7 +52,7 @@ public:
               const BoundaryCheck& bcheck = true) const = 0;
 
   /// main extrapolation method, templated to chared/neutral
-  /// @paramt eCell ist he extrapolaiton cell
+  /// @tparam eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param dir is the additional direction prescription
   virtual ExtrapolationCode

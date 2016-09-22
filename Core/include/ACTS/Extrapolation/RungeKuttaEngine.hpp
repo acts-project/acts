@@ -160,7 +160,7 @@ public:
   /// @struct Config
   /// Configuration struct for the RungeKuttaEngine
   ///
-  /// @TODO docu : explain parametr meanings (input from Igor needed)
+  /// @todo docu : explain parametr meanings (input from Igor needed)
   ///
   struct Config
   {

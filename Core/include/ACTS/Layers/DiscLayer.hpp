@@ -46,7 +46,7 @@ public:
   /// @param ad is the approach descriptor that provides the approach surface
   /// @param laytyp is the layer type
   ///
-  /// @TODO move ApproachDescriptor to unqique_ptr
+  /// @todo move ApproachDescriptor to unqique_ptr
   static LayerPtr
   create(std::shared_ptr<Transform3D>      transform,
          std::shared_ptr<const DiscBounds> dbounds,

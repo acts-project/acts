@@ -121,7 +121,7 @@ public:
   ~BinnedArrayXD() {}
   /// Returns the object in the array from a local position
   ///
-  /// @TODO check if we can change to triple return at once
+  /// @todo check if we can change to triple return at once
   ///
   /// @param lposition is the local position for the bin search
   /// @return is the object in that bin
@@ -140,7 +140,7 @@ public:
 
   /// Returns the object in the array from a global position
   ///
-  /// @TODO check if we can change to triple return at once
+  /// @todo check if we can change to triple return at once
   ///
   /// @param position is the global position for the bin search
   /// @return is the object in that bin

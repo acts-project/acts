@@ -41,7 +41,7 @@ public:
   /// @param ad is the approach descriptor for navigation towards the layer
   /// @param laytyp is the layer type
   ///
-  /// @TODO chage od and ad to unique_ptr
+  /// @todo chage od and ad to unique_ptr
   ///
   /// @return is a shared pointer to a layer
   static LayerPtr
@@ -110,7 +110,7 @@ protected:
   /// @param ad is the approach descriptor for navigation towards the layer
   /// @param laytyp is the layer type
   ///
-  /// @TODO chage od and ad to unique_ptr
+  /// @todo chage od and ad to unique_ptr
   ConeLayer(std::shared_ptr<Transform3D>      transform,
             std::shared_ptr<const ConeBounds> cbounds,
             std::unique_ptr<SurfaceArray>     surfaceArray,

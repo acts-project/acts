@@ -58,8 +58,8 @@ public:
   /// Constructor for a Boundary with exact two Volumes attached to it
   /// - usually used in a volume constructor
   /// @param surface is the unqiue surface the boundary represents
-  /// @paramt inside is the inside volume the bounday surface points to
-  /// @paramt outside is the outside volume the boundary surface points to
+  /// @tparam inside is the inside volume the bounday surface points to
+  /// @tparam outside is the outside volume the boundary surface points to
   BoundarySurfaceT(std::unique_ptr<const Surface> surface,
                    const T*                       inside,
                    const T*                       outside)
@@ -74,8 +74,8 @@ public:
   /// Constructor for a Boundary with exact two Volumes attached to it
   /// - usually used in a volume constructor
   /// @param surface is the unqiue surface the boundary represents
-  /// @paramt inside is the inside volume the bounday surface points to
-  /// @paramt outside is the outside volume the boundary surface points to
+  /// @tparam inside is the inside volume the bounday surface points to
+  /// @tparam outside is the outside volume the boundary surface points to
   BoundarySurfaceT(std::unique_ptr<const Surface> surface,
                    VolumePtr                      inside,
                    VolumePtr                      outside)

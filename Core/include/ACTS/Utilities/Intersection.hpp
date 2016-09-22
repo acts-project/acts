@@ -94,7 +94,7 @@ public:
   /// @param sResult is the type of result: neutral, charged TP e.g.
   /// @param dir is the direction
   ///
-  /// @TODO use unique_ptr for result !
+  /// @todo use unique_ptr for result !
   FullIntersection(const Intersection& sInter,
                    const T*            sObject,
                    const R*            sRepresentation,

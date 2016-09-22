@@ -226,7 +226,7 @@ inline const Vector3D
 ConeSurface::normal(const Vector3D& gpos) const
 {
   // get it into the cylinder frame if needed
-  // @TODO respect opening angle 
+  // @todo respect opening angle 
   Vector3D pos3D = gpos;
   if (m_transform || m_associatedDetElement) {
     pos3D     = transform().inverse() * gpos;

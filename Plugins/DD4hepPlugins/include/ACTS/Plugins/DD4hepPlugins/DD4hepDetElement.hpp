@@ -30,11 +30,11 @@ namespace Acts {
 /// segmentation
 /// for the readout.
 
-/// @TODO what if shape conversion failes? add implementation of more than one
+/// @todo what if shape conversion failes? add implementation of more than one
 /// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
 /// what
 /// if not used with DD4hep?
-/// @TODO segmentation
+/// @todo segmentation
 
 class DD4hepDetElement : public TGeoDetectorElement
 {

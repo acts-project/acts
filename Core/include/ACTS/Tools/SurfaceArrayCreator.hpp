@@ -230,7 +230,7 @@ private:
 
   /// Private helper method to complete the binning
   ///
-  /// @TODO implement closest neighbour search
+  /// @todo implement closest neighbour search
   ///
   ///  given a grid point o
   ///    |  0  |  1 |  2  |  3 |  4  |
@@ -255,7 +255,7 @@ private:
   /// Private helper method to complete the binning
   ///
   ///
-  /// @TODO write documentation
+  /// @todo write documentation
   ///
   void
   registerNeighbourHood(const SurfaceArray& sArray) const;

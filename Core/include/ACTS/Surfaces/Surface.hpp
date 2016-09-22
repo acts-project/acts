@@ -268,7 +268,7 @@ public:
 
   /// Straight line intersection schema from parameters
   /// Templated for charged and neutral
-  /// @TODO include intersector
+  /// @todo include intersector
   /// @param pars TrackParameters to start from
   /// @param forceDir boolean indication whether to force the direction given by
   /// the TrackParameters to hold
@@ -286,7 +286,7 @@ public:
 
   /// Straight line intersection schema from parameters
   /// Templated for charged and neutral
-  /// @TODO include intersector
+  /// @todo include intersector
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param gdir global 3D direction representation

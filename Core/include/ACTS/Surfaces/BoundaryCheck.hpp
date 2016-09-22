@@ -54,11 +54,11 @@ struct sincosCache
 /// in
 /// the different SurfaceBounds classes.
 ///
-/// @TODO check if fast Sin/Cos ArcTan is necessary in field test
+/// @todo check if fast Sin/Cos ArcTan is necessary in field test
 ///
-/// @TODO Move the Covariance away from this into the method signature of the
+/// @todo Move the Covariance away from this into the method signature of the
 /// call
-/// @TODO (short term) protect against lCovariance = nullptr acess
+/// @todo (short term) protect against lCovariance = nullptr acess
 
 class BoundaryCheck
 {
@@ -212,7 +212,7 @@ BoundaryCheck::FastSinCos(double x) const
 
 // does the conversion of an ellipse of height h and width w to an polygon with
 // 4 + 4*resolution points
-// @TODO clean this code  & write documentation
+// @todo clean this code  & write documentation
 inline std::vector<Vector2D>
 BoundaryCheck::EllipseToPoly(int resolution) const
 {

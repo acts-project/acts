@@ -29,8 +29,7 @@ Acts::Layer::Layer()
   , m_representingVolume(nullptr)
   , m_layerType(Acts::passive)
   , m_materialSurface(nullptr)
-{
-}
+{}
 
 Acts::Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray,
                    double                        thickness,
@@ -46,8 +45,7 @@ Acts::Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray,
   , m_representingVolume(nullptr)
   , m_layerType(laytyp)
   , m_materialSurface(nullptr)
-{
-}
+{}
 
 Acts::Layer::Layer(const Layer& lay)
   : m_nextLayers(NextLayers(nullptr, nullptr))

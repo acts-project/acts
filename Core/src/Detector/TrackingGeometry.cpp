@@ -67,7 +67,7 @@ Acts::TrackingGeometry::lowestStaticTrackingVolume(
   return currentVolume;
 }
 
-//@TODO change to BoundaryCheck
+//@todo change to BoundaryCheck
 bool
 Acts::TrackingGeometry::atVolumeBoundary(const Acts::Vector3D&       gp,
                                          const Acts::TrackingVolume* vol,
@@ -82,7 +82,7 @@ Acts::TrackingGeometry::atVolumeBoundary(const Acts::Vector3D&       gp,
   return isAtBoundary;
 }
 
-//@TODO change to BoundaryCheck
+//@todo change to BoundaryCheck
 bool
 Acts::TrackingGeometry::atVolumeBoundary(const Vector3D&        gp,
                                          const Vector3D&        mom,

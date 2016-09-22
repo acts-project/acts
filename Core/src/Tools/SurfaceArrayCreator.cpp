@@ -63,7 +63,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     // and fill into the grid
     sGrid[bTriple.at(2)][bTriple.at(1)][bTriple.at(0)] = sf;
   }
-  // complete the Binning @TODO switch on when we have a faster method for this
+  // complete the Binning @todo switch on when we have a faster method for this
   completeBinning(*arrayUtility, v3Matrix, surfaces, sGrid);
   // create the surfaceArray
   auto sArray = std::make_unique<BinnedArrayXD<const Surface*>>(
@@ -278,7 +278,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
     size_t /*binsY*/,
     std::shared_ptr<Acts::Transform3D> /*transform*/) const
 {
-  //!< @TODO implement - take from ATLAS complex TRT builder
+  //!< @todo implement - take from ATLAS complex TRT builder
   return nullptr;
 }
 
@@ -726,7 +726,7 @@ Acts::SurfaceArrayCreator::registerNeighbourHood(
   ACTS_DEBUG("Neighbours set for this layer: " << neighboursSet);
 }
 
-/// @TODO implement nearest neighbour search - this is brute force attack
+/// @todo implement nearest neighbour search - this is brute force attack
 /// - takes too long otherwise in initialization
 void
 Acts::SurfaceArrayCreator::completeBinning(const BinUtility&    binUtility,

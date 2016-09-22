@@ -211,7 +211,7 @@ private:
   std::vector<TDD_real_t> m_valueStore;
 
   /// numerical stability
-  /// @TODO unify the numerical stability checks
+  /// @todo unify the numerical stability checks
   static double s_numericalStable;
 };
 

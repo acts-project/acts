@@ -153,7 +153,7 @@ public:
   /// Special method for DiscSurface : local<->local transformations polar <->
   /// cartesian
   /// @param lpolar is a local position in polar coordinates
-  /// @return values is local 2D position in carthesian coordinates  @TODO check
+  /// @return values is local 2D position in carthesian coordinates  @todo check
   const Vector2D
   localPolarToCartesian(const Vector2D& lpolar) const;
 

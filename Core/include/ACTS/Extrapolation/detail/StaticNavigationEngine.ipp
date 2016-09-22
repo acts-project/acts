@@ -66,7 +66,7 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
     }
     // check this boudnary, possible return codes are:
     // - SuccessPathLimit     : propagation to boundary caused PathLimit to be
-    // fail @TODO implement protection asainst far of tries
+    // fail @todo implement protection asainst far of tries
     // - SuccessMaterialLimit : boundary was reached and material update on
     // boundary reached limit
     // - InProgress           : boundary was reached and ready for continueing
@@ -127,7 +127,7 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
     // there is now loop protection in the slow access, needs to be done by hand
     // check this boudnary, possible return codes are:
     // - SuccessPathLimit     : propagation to boundary caused PathLimit to be
-    // fail @TODO implement protection againg far of tries
+    // fail @todo implement protection againg far of tries
     // - SuccessMaterialLimit : boundary was reached and material update on
     // boundary reached limit
     // - InProgress           : boundary was reached and ready for continueing
@@ -174,7 +174,7 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
     const Surface& bSurface = bSurfaceTV->surfaceRepresentation();
     // check this boudnary, possible return codes are:
     // - SuccessPathLimit     : propagation to boundary caused PathLimit to be
-    // fail @TODO implement protection againg far of tries
+    // fail @todo implement protection againg far of tries
     // - SuccessMaterialLimit : boundary was reached and material update on
     // boundary reached limit
     // - InProgress           : boundary was reached and ready for continueing
@@ -275,7 +275,7 @@ Acts::StaticNavigationEngine::handleBoundaryT(
         : bSurfaceTV.attachedVolume(eCell.leadParameters->position(),
                                     eCell.leadParameters->momentum().unit(),
                                     pDir);
-    // check if we have no nextVolume : boundary rechaed @TODO it's not really a
+    // check if we have no nextVolume : boundary rechaed @todo it's not really a
     // success
     if (!nextVolume) {
       EX_MSG_VERBOSE(eCell.navigationStep,
@@ -384,7 +384,7 @@ Acts::StaticNavigationEngine::resolvePositionT(
           eCell.leadVolume,
           nextVol,
           pDir,
-          0.01)) {  //!< @TODO set tolerance globally
+          0.01)) {  //!< @todo set tolerance globally
 
     // if (noLoop && nextVol==eCell.leadVolume) return
     // ExtrapolationCode::FailureLoop;

@@ -34,7 +34,7 @@ Acts::GenericLayerBuilder::GenericLayerBuilder(
   : m_nLayers(), m_cLayers(), m_pLayers(), m_logger(std::move(log))
 {
   ACTS_DEBUG("initialize()");
-  /// @TODO a configuraiton check should be done here
+  /// @todo a configuraiton check should be done here
   setConfiguration(glbConfig);
   // Tool needs to be initialized
   constructLayers();
@@ -44,7 +44,7 @@ void
 Acts::GenericLayerBuilder::setConfiguration(
     const Acts::GenericLayerBuilder::Config& glbConfig)
 {
-  // @TODO check consistency
+  // @todo check consistency
   // copy the configuration
   m_cfg = glbConfig;
 }
@@ -91,7 +91,7 @@ Acts::GenericLayerBuilder::constructLayers()
       // create the shared module
       std::shared_ptr<const PlanarBounds> moduleBounds(
           new RectangleBounds(moduleHalfX, moduleHalfY));
-      // Identifier @TODO unique Identifier - use a GenericDetector identifier
+      // Identifier @todo unique Identifier - use a GenericDetector identifier
       size_t nCetralModules = m_cfg.centralModuleBinningSchema.at(icl).first
           * m_cfg.centralModuleBinningSchema.at(icl).second;
 
@@ -165,12 +165,12 @@ Acts::GenericLayerBuilder::constructLayers()
         // register the surface
         sVector.push_back(&module->surface());
         // store the module
-        // @TODO detector store facility
+        // @todo detector store facility
         m_centralModule.push_back(module);
         // IF double modules exist
         // and the backside one (if configured to do so)
         if (m_cfg.centralModuleBacksideGap.size()) {
-          // ncrease the counter @TODO switch to identifier service
+          // ncrease the counter @todo switch to identifier service
           ++imodule;
           // create the module identifier
           moduleIdentifier = Identifier(Identifier::value_type(imodule));
@@ -198,7 +198,7 @@ Acts::GenericLayerBuilder::constructLayers()
           bsmodule->registerBinmembers(bsbinmember);
           module->registerBinmembers(binmember);
           // memory management - we need a detector store to hold them
-          // somewhere @TODO detector store facility
+          // somewhere @todo detector store facility
           m_centralModule.push_back(bsmodule);
         }
       }
@@ -335,7 +335,7 @@ Acts::GenericLayerBuilder::constructLayers()
               getTransformFromRotTransl(nModuleRotation, nModuleCenter)));
           std::shared_ptr<Transform3D> pModuleTransform(new Transform3D(
               getTransformFromRotTransl(pModuleRotation, pModuleCenter)));
-          // create the modules identifier @TODO Idenfier service
+          // create the modules identifier @todo Idenfier service
           Identifier nModuleIdentifier
               = Identifier(Identifier::value_type(2 * imodule));
           Identifier pModuleIdentifier
@@ -354,12 +354,12 @@ Acts::GenericLayerBuilder::constructLayers()
                                            moduleThickness,
                                            moduleMaterialPtr);
           // memory management - we need a detector store to hold them somewhere
-          // @TODO add detector store facility
+          // @todo add detector store facility
           m_posnegModule.push_back(nmodule);
           m_posnegModule.push_back(pmodule);
           // now deal with the potential backside
           if (m_cfg.posnegModuleBacksideGap.size()) {
-            // ncrease the counter @TODO switch to identifier service
+            // ncrease the counter @todo switch to identifier service
             nModuleIdentifier = Identifier(Identifier::value_type(++imodule));
             pModuleIdentifier = Identifier(Identifier::value_type(++imodule));
             // the new centers
@@ -407,7 +407,7 @@ Acts::GenericLayerBuilder::constructLayers()
             bspmodule->registerBinmembers(bspbinmember);
             pmodule->registerBinmembers(pbinmember);
             // memory management - we need a detector store to hold them
-            // somewhere @TODO add detector store facility
+            // somewhere @todo add detector store facility
             m_posnegModule.push_back(bsnmodule);
             m_posnegModule.push_back(bspmodule);
           }

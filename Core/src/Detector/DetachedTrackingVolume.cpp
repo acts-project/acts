@@ -47,7 +47,7 @@ Acts::DetachedTrackingVolume::~DetachedTrackingVolume()
 void
 Acts::DetachedTrackingVolume::move(Acts::Transform3D&) const
 {
-  //!< @TODO implement
+  //!< @todo implement
   //// move the volume
   // m_trkVolume->moveTrackingVolume(shift);
   //// move the single layer

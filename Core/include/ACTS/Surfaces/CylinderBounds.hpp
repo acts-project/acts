@@ -202,7 +202,7 @@ CylinderBounds::inside3D(const Vector3D& glopo, const BoundaryCheck& bchk) const
                 bchk.toleranceLoc0);
 }
 
-//!< @TODO integrate tol0
+//!< @todo integrate tol0
 inline bool
 CylinderBounds::inside(double r,
                        double phi,

@@ -30,7 +30,7 @@ namespace Acts {
 /// - inside() checks
 /// - the BoundsType return type to avoid dynamic casting
 ///
-/// @TODO for easy persistency access, force Constructor from ValueStore
+/// @todo for easy persistency access, force Constructor from ValueStore
 ///
 class SurfaceBounds
 {

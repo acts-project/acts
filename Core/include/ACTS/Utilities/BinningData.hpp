@@ -29,7 +29,7 @@ namespace Acts {
 ///   phi has a very particular behaviour:
 ///   - there's the change around +/- PI
 ///
-///   @TODO add description of convention for sub structure
+///   @todo add description of convention for sub structure
 ///   - it can be multiplicative or additive
 ///   multiplicative : each bin has the same sub structure
 ///                    i.e. first binnning
@@ -317,7 +317,7 @@ public:
     // closed one is always inside
     if (option == closed) return true;
     // all other options
-    // @TODO remove hard-coded tolerance parameters
+    // @todo remove hard-coded tolerance parameters
     float val = value(position);
     return (val > min - 0.001 && val < max + 0.001);
   }
@@ -331,7 +331,7 @@ public:
     // closed one is always inside
     if (option == closed) return true;
     // all other options
-    // @TODO remove hard-coded tolerance parameters
+    // @todo remove hard-coded tolerance parameters
     float val = value(lposition);
     return (val > min - 0.001 && val < max + 0.001);
   }
@@ -562,7 +562,7 @@ private:
   binarySearchWithBoundary(float value, const BinningData& bData)
   {
     // Binary search in an array of n values to locate value
-    //!< @TODO exchange acos(-1) with a const value
+    //!< @todo exchange acos(-1) with a const value
     if (bData.binvalue == binPhi)
       while (value < bData.m_boundaries[0]) value += 2 * acos(-1.);
     if (bData.binvalue == binPhi)

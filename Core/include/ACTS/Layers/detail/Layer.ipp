@@ -26,7 +26,7 @@ Layer::getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
                              const Surface*                    endSurface,
                              const ICompatibilityEstimator*    ice) const
 {
-  // @TODO check if the approach surface should be provided, would be a waste
+  // @todo check if the approach surface should be provided, would be a waste
   // since it's already propagated for
 
   // intersectionTest with searchType

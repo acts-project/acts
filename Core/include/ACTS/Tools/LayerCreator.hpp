@@ -120,7 +120,7 @@ public:
 
 private:
   /// method to get the global extends in space for the module
-  /// @TODO shift to vertices of surfaces
+  /// @todo shift to vertices of surfaces
   void
   moduleExtend(const Surface& sf,
                double&        minR,

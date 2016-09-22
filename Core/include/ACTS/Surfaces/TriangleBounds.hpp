@@ -165,7 +165,7 @@ TriangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   if (bchk.bcType == 0)
     return TriangleBounds::inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
 
-  /// @TODO check for quick limit test
+  /// @todo check for quick limit test
   /// double max_ell = (*bchk.lCovariance)(0, 0) > (*bchk.lCovariance)(1, 1)
   ///    ? (*bchk.lCovariance)(0, 0)
   ///    : (*bchk.lCovariance)(1, 1);

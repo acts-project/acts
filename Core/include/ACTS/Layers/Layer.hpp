@@ -77,12 +77,12 @@ enum LayerType { navigation = -1, passive = 0, active = 1 };
 ///  1     - provide bin surface and registered neighbours and bin mates
 ///               - does not work with endSurface,
 ///                 will be increased to 2 if endSurface is given
-///  2     - as 1 but with intersection test @TODO compatibility test
-/// @TODO check for update
+///  2     - as 1 but with intersection test @todo compatibility test
+/// @todo check for update
 ///  3     - provide bin surface and next bin surfaces (if differ)
 ///               - does not work with endSurface
 ///                 will be increased to 4 if endSurface is given
-///  4     - as 3 but with intersection test @TODO compatibility test
+///  4     - as 3 but with intersection test @todo compatibility test
 ///  5     - whatever the overlap descriptor returns with this
 ///
 ///
@@ -125,7 +125,7 @@ public:
   thickness() const;
 
   /// templated onLayer() method
-  /// @paramt parameters are the templated (charged/neutral) on layer check
+  /// @tparam parameters are the templated (charged/neutral) on layer check
   /// @param bchk is the boundary check directive
   template <class T>
   bool
@@ -165,7 +165,7 @@ public:
   ///  get compatible surfaces starting from charged parameters
   ///  returns back the compatible surfaces either with straight line
   ///  estimation,
-  ///  or (@TODO later) with a compatiblityEstimator.
+  ///  or (@todo later) with a compatiblityEstimator.
   ///  - if start/end surface are given, surfaces are provided in between (start
   /// & end excluded)
   ///  - the boolean indicates if the surfaces are direction ordered
@@ -198,7 +198,7 @@ public:
   ///  get compatible surfaces starting from neutral parameters
   ///  returns back the compatible surfaces either with straight line
   ///  estimation,
-  ///  or (@TODO later) with a compatiblityEstimator.
+  ///  or (@todo later) with a compatiblityEstimator.
   ///  - if start/end surface are given, surfaces are provided in between (start
   /// & end excluded)
   ///  - the boolean indicates if the surfaces are direction ordered
@@ -296,7 +296,6 @@ protected:
   /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the normal thickness of the Layer
   /// @param ad approach descriptor (@TODO change to unique_ptr)
-  ///
   Layer(std::unique_ptr<SurfaceArray> surfaceArray,
         double                        thickness = 0.,
         ApproachDescriptor*           ad        = nullptr,

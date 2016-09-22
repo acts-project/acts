@@ -56,8 +56,8 @@ public:
   /// @param minhalfx half length in X at maximum radius
   /// @param rMin inner radius
   /// @param rMax outer radius
-  /// @avephi average phi value
-  /// @stereo optional stero angle applied
+  /// @param avephi average phi value
+  /// @param stereo optional stero angle applied
   DiscTrapezoidalBounds(double minhalfx,
                         double maxhalfx,
                         double rMin,

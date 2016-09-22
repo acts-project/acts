@@ -52,8 +52,8 @@ public:
   /// Constructor for arbitrary Trapezoid
   /// @param minhalex minimal half lenght - definition at negative halflength Y
   /// @param maxhalex maximal half length - definition at maximum halflength Y
-  /// @param alpha opening angle at @TODO check
-  /// @param beta opentin angle at @TODO check
+  /// @param alpha opening angle at @todo check
+  /// @param beta opentin angle at @todo check
   TrapezoidBounds(double minhalex, double haley, double alpha, double beta);
 
   /// Copy constructor

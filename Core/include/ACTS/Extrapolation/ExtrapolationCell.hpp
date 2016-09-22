@@ -217,7 +217,7 @@ public:
   /// the material properties found in this step
   const MaterialProperties* material;
   /// the position where the material was estimated
-  /// @TODO clean: can be removed
+  /// @todo clean: can be removed
   Vector3D materialPosition;
   /// the applied material scaling due to incident
   double materialScaling;
@@ -304,7 +304,7 @@ public:
   /// the given path limit (-1 if no limit)
   double pathLimit;
   ///  the surface for the next material update
-  /// @TODO devel : this concept could be omitted in the future
+  /// @todo devel : this concept could be omitted in the future
   const Surface* materialSurface;
   /// the accumulated material in X0 at this stage
   double materialX0;
@@ -330,7 +330,7 @@ public:
   /// default is false
   bool destinationCurvilinear;
   /// depth of search applied
-  /// @TODO docu : write documetnation
+  /// @todo docu : write documetnation
   int searchMode;
   /// the cache of the extrapolation
   std::vector<ExtrapolationStep<T>> extrapolationSteps;

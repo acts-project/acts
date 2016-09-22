@@ -24,7 +24,7 @@ namespace Acts {
 /// DetectorElement plugin for ROOT TGeo shapes. Added possibility to hand over
 /// transformation matrix.
 ///
-/// @TODO what if shape conversion failes? add implementation of more than one
+/// @todo what if shape conversion failes? add implementation of more than one
 /// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
 /// what
 /// if not used with DD4hep?
@@ -93,7 +93,7 @@ private:
   /// Boundaries of the detector element
   std::shared_ptr<const SurfaceBounds> m_bounds;
   ///  Thickness of this detector element
-  double m_thickness;  //@TODO implement thickness from TGeoMode
+  double m_thickness;  //@todo implement thickness from TGeoMode
   /// Corresponding Surface
   std::shared_ptr<const Surface> m_surface;
   /// possible contained surfaces

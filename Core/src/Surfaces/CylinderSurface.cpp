@@ -132,7 +132,7 @@ Acts::CylinderSurface::globalToLocal(const Vector3D& gpos,
                                      Vector2D& lpos) const
 {
   // get the transform & transform global position into cylinder frame
-  // @TODO clean up intolerance parameters
+  // @todo clean up intolerance parameters
   // transform it to the globalframe: CylinderSurfaces are allowed to have 0
   // pointer transform
   double radius             = 0.;

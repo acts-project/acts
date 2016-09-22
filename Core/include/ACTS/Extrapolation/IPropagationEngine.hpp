@@ -33,7 +33,7 @@ typedef ExtrapolationCell<NeutralParameters> ExCellNeutral;
 /// the parameters will be attached to the ExtrapolationCell as leadParameters,
 /// such that the engine can chose.
 ///
-/// It also wraps the MultiTrackParameters (@TODO do this actually)
+/// It also wraps the MultiTrackParameters (@todo do this actually)
 class IPropagationEngine
 {
 public:

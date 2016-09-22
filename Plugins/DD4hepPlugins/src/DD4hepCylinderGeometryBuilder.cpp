@@ -43,7 +43,7 @@ void
 Acts::DD4hepCylinderGeometryBuilder::setConfiguration(
     const Acts::DD4hepCylinderGeometryBuilder::Config dgbConfig)
 {
-  // @TODO check consistency
+  // @todo check consistency
   // copy the configuration
   m_cfg = std::move(dgbConfig);
 }

@@ -37,9 +37,9 @@ public:
   /// Configuration for the MaterialMapping
   struct Config
   {
-    // ignore events with eta bigger than the cutoff value @TODO add later
+    // ignore events with eta bigger than the cutoff value @todo add later
     //         double etaCutoff;
-    // needed for debugging: -1 negative | 0 all | 1 positive @TODO add later
+    // needed for debugging: -1 negative | 0 all | 1 positive @todo add later
     //          int etaSide;
     /// extrapolation engine
     std::shared_ptr<IExtrapolationEngine> extrapolationEngine = nullptr;

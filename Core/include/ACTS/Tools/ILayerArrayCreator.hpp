@@ -42,10 +42,10 @@ public:
 
   /// LayerArrayCreator interface method
   /// @param layers are the layers to be moved into an array
-  /// @min is the minimul value for binning
-  /// @max is the maximum value for binning
-  /// @btype is the binning type
-  /// @bvalue is the value in which the binning should be done
+  /// @param min is the minimul value for binning
+  /// @param max is the maximum value for binning
+  /// @param btype is the binning type
+  /// @param bvalue is the value in which the binning should be done
   virtual std::unique_ptr<const LayerArray>
   layerArray(const LayerVector& layers,
              double             min,

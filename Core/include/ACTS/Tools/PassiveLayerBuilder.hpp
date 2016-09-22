@@ -25,7 +25,7 @@ namespace Acts {
 ///   The PassiveLayerBuilder is able to build cylinder & disc layers with given
 ///  detector
 ///
-///   @TODO Julia: make private tools private again after Gaudi update (bug in
+///   @todo Julia: make private tools private again after Gaudi update (bug in
 ///  Gaudi), marked with //b
 
 class PassiveLayerBuilder : public ILayerBuilder
