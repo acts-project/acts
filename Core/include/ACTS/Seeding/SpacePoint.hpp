@@ -13,7 +13,7 @@
 #include <ostream>
 #include <vector>
 
-#include "ACTS/Seeding/detail/range.hpp"
+#include "ACTS/Seeding/detail/wrapping_range.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
