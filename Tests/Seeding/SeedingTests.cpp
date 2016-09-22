@@ -43,7 +43,7 @@ template <typename Identifier, size_t N>
 void
 print(const std::vector<TrackSeed<Identifier, N>>& seeds)
 {
-  for (const auto& seed : seeds) seed.print(std::cout);
+  for (const auto& seed : seeds) std::cout << seed << '\n';
 }
 
 BOOST_AUTO_TEST_CASE(PhiRangeTest)
