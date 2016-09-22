@@ -57,7 +57,6 @@ buildGenericDetector(Logging::Level surfaceLLevel,
   // a hash include for the Generic Detector : a bit ugly but effective
   #include "GenericDetector.ipp"
   //-------------------------------------------------------------------------------------
-  //-------------------------------------------------------------------------------------
   // create the tracking geometry
   TrackingGeometryBuilder::Config tgConfig;
   tgConfig.trackingVolumeBuilders = volumeBuilders;

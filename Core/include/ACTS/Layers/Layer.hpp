@@ -295,7 +295,8 @@ protected:
   /// Constructor with pointer to SurfaceArray (passing ownership)
   /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the normal thickness of the Layer
-  /// @param ad approach descriptor (@TODO change to unique_ptr)
+  /// @param ad approach descriptor (@todo change to unique_ptr)
+  ///
   Layer(std::unique_ptr<SurfaceArray> surfaceArray,
         double                        thickness = 0.,
         ApproachDescriptor*           ad        = nullptr,

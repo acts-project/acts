@@ -62,6 +62,7 @@ Acts::Layer::Layer(const Layer& lay)
 
 Acts::Layer::~Layer()
 {
+  // @todo move to std::unique_ptr
   delete m_approachDescriptor;
   delete m_representingVolume;
 }

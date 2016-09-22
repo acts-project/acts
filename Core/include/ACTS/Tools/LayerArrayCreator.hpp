@@ -41,6 +41,8 @@ class Layer;
 /// easily in the
 ///  Navigation of the Extrapolation process.
 ///
+/// @todo Julia: make private tools private again after Gaudi update (bug in
+/// Gaudi), marked with //b
 
 class LayerArrayCreator : public ILayerArrayCreator
 {
