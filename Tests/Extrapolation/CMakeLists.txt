@@ -1,6 +1,10 @@
 add_executable (MPL_checks MPL_checks)
 target_link_libraries (MPL_checks PRIVATE ACTSCore)
-add_test(NAME mpl_unit_test COMMAND MPL_check)
+add_test(NAME mpl_unit_test COMMAND MPL_checks)
+
+add_executable (constant_bfield_propagation_test propagation.cpp)
+target_link_libraries (constant_bfield_propagation_test PRIVATE ACTSCore)
+add_test(NAME constant_bfield_propagation_test COMMAND constant_bfield_propagation_test)
 
 add_executable (propagator_validation propagator_validation)
 target_link_libraries (propagator_validation PRIVATE ACTSCore)
