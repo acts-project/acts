@@ -48,7 +48,8 @@ public:
   virtual ~SurfaceArrayCreator() = default;
 
   /// SurfaceArrayCreator interface method
-  /// - create an array in a cylinder, binned in phi, z
+  /// - create an array in a cylinder, binned in phi, z when extremas and
+  /// bin numbers are known
   /// @param surfaces are the sensitive surfaces to be ordered on the cylinder
   /// @param R is the radius of the cylinder
   /// @param minPhi is the minimal phi position of the surfaces
@@ -70,7 +71,26 @@ public:
                          = nullptr) const final;
 
   /// SurfaceArrayCreator interface method
-  /// - create an array on a disc, binned in r, phi
+  ///
+  /// - create an array in a cylinder, binned in phi, z when extremas and bin
+  /// numbers are unknown - this method goes through the surfaces and finds out
+  /// the needed information
+  /// @param surfaces are the sensitive surfaces to be ordered on the cylinder
+  /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
+  /// @param bTypeZ the binning type in z direction (equidistant/aribtrary)
+  /// @param transform is the (optional) additional transform applied
+  ///
+  /// @return a unique pointer a new SurfaceArray
+  std::unique_ptr<Acts::SurfaceArray>
+  surfaceArrayOnCylinder(const std::vector<const Acts::Surface*>& surfaces,
+                         Acts::BinningType bTypePhi = equidistant,
+                         Acts::BinningType bTypeZ   = equidistant,
+                         std::shared_ptr<Acts::Transform3D> transform
+                         = nullptr) const final;
+
+  /// SurfaceArrayCreator interface method
+  /// - create an array on a disc, binned in r, phi when extremas and
+  /// bin numbers are known
   /// @param surfaces are the sensitive surfaces to be
   /// @param rMin is the minimimal radius of the disc
   /// @param rMax is the maximal radius of the disc
@@ -88,6 +108,23 @@ public:
                      size_t                             binsPhi,
                      std::shared_ptr<Transform3D>       transform
                      = nullptr) const final;
+
+  /// SurfaceArrayCreator interface method
+  ///
+  /// - create an array in a cylinder, binned in phi, r when extremas and bin
+  /// numbers are unknown - this method goes through the surfaces and finds out
+  /// the needed information
+  /// @param surfaces are the sensitive surfaces to be ordered on the cylinder
+  /// @param bTypeR the binning type in r direction (equidistant/aribtrary)
+  /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
+  /// @param transform is the (optional) additional transform applied
+  ///
+  /// @return a unique pointer a new SurfaceArray
+  std::unique_ptr<Acts::SurfaceArray>
+  surfaceArrayOnDisc(const std::vector<const Acts::Surface*>& surfaces,
+                     Acts::BinningType                        bTypeR,
+                     Acts::BinningType                        bTypePhi,
+                     std::shared_ptr<Acts::Transform3D> transform) const final;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
@@ -120,6 +157,61 @@ private:
   {
     return *m_logger;
   }
+  /// SurfaceArrayCreator internal method
+  /// - create an arbitrary BinUtility when the extremas and the bin numer are
+  /// not known
+  /// - it will loop through the surfaces and find out the needed information
+  /// currently implemented for phi, r and z bining
+  /// @TODD implement for x,y binning
+  /// @param surfaces are the sensitive surfaces to be
+  /// @param bValue the BinningValue in which direction should be binned
+  /// (currently possible: binPhi, binR, binZ)
+  /// @param bType the BinningType (equidistant or arbitrary binning)
+  /// @return a unique pointer a one dimensional BinUtility
+  std::unique_ptr<Acts::BinUtility>
+  createArbitraryBinUtility(const std::vector<const Acts::Surface*>& surfaces,
+                            Acts::BinningValue                       bValue,
+                            std::shared_ptr<Acts::Transform3D>       transform
+                            = nullptr) const;
+  /// SurfaceArrayCreator internal method
+  /// - create an equidistant BinUtility when the extremas and the bin numer are
+  /// - it will loop through the surfaces and find out the needed information
+  /// currently implemented for phi, r and z bining
+  /// @TODD implement for x,y binning
+  /// @param surfaces are the sensitive surfaces to be
+  /// @param bValue the BinningValue in which direction should be binned
+  /// (currently possible: binPhi, binR, binZ)
+  /// @param bType the BinningType (equidistant or arbitrary binning)
+  /// @return a unique pointer a one dimensional BinUtility
+  std::unique_ptr<Acts::BinUtility>
+  createEquidistantBinUtility(const std::vector<const Acts::Surface*>& surfaces,
+                              Acts::BinningValue                       bValue,
+                              std::shared_ptr<Acts::Transform3D>       transform
+                              = nullptr) const;
+  /// SurfaceArrayCreator internal method
+  /// - create an equidistant BinUtility with all parameters given
+  /// - if parameters are known this function is preferred
+  /// currently implemented for phi, r and z bining
+  /// @TODD implement for x,y binning
+  /// @param surfaces are the sensitive surfaces to be
+  /// @param bValue the BinningValue in which direction should be binned
+  /// (currently possible: binPhi, binR, binZ)
+  /// @param bType the BinningType (equidistant or arbitrary binning)
+  /// @param bins the number of bins
+  /// @param min is the minimal position of the surfaces in the binning
+  /// direction
+  /// @param max is the maximal position of the surfaces in the binning
+  /// direction
+  /// @return a unique pointer a one dimensional BinUtility
+  std::unique_ptr<Acts::BinUtility>
+  createBinUtility(const std::vector<const Acts::Surface*>& surfaces,
+                   Acts::BinningValue                       bValue,
+                   Acts::BinningType                        bType,
+                   size_t                                   bins,
+                   double                                   min,
+                   double                                   max,
+                   std::shared_ptr<Acts::Transform3D>       transform
+                   = nullptr) const;
 
   /// logging instance
   std::unique_ptr<Logger> m_logger;
@@ -155,6 +247,11 @@ private:
   ///
   void
   registerNeighbourHood(const SurfaceArray& sArray) const;
+  /// Private helper method to create the bin boundaries out of a vector of
+  /// float pairs which represent the boundaries of the surfaces, which do not
+  /// need to be attached to each other or can possibly be overlapping
+  std::vector<float>
+  createBinValues(std::vector<std::pair<float, float>> old) const;
 };
 
 }  // end of namespace
