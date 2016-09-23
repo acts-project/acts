@@ -20,6 +20,8 @@
 #include "ACTS/Tools/ITrackingVolumeHelper.hpp"
 #include "ACTS/Utilities/BinningType.hpp"
 #include "ACTS/Utilities/Logger.hpp"
+#include "ACTS/Utilities/Units.hpp"
+
 
 #ifndef ATAS_GEOMETRYTOOLS_TAKESMALLERBIGGER
 #define ATAS_GEOMETRYTOOLS_TAKESMALLERBIGGER
@@ -157,17 +159,18 @@ public:
     /// the string based indenfication
     std::string volumeName = "";
     /// The dimensions of the manually created world
-    std::vector<double> volumeDimension{};
+    std::vector<double> volumeDimension = {};
     /// the world material
     std::shared_ptr<Material> volumeMaterial = nullptr;
     /// build the volume to the beam line
     bool buildToRadiusZero = false;
     /// needed to build layers within the volume
     std::shared_ptr<ILayerBuilder> layerBuilder = nullptr;
-    /// the envelope covering the potential layers
-    double layerEnvelopeR = 0.5;
-    /// the envelope covering the potential layers
-    double layerEnvelopeZ = 0.5;
+    /// the envelope covering the potential layers rMin, rMax
+    std::pair<double,double> layerEnvelopeR 
+      = {5.*Acts::units::_mm, 5.*Acts::units::_mm};
+    /// the envelope covering the potential layers inner/outer
+    double layerEnvelopeZ  = 10.*Acts::units::_mm;
     /// the volume signature
     int volumeSignature = -1;
   };

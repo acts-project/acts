@@ -510,9 +510,12 @@ Acts::CylinderVolumeBuilder::synchronizeVolumeSetups(VolumeSetup& nVolumeSetup,
       if (insideSetup.zMin <= nVolumeSetup.zMin &&
           insideSetup.zMax >= pVolumeSetup.zMax)
       {
+        // also need to overwrite the inner radius to close up
+        nVolumeSetup.rMin = insideSetup.rMax; // on3 - overwrites
+        pVolumeSetup.rMin = insideSetup.rMax; // op3 - overwrites
         // adjust and no wrapping needed
-        nVolumeSetup.zMin  = insideSetup.zMin; // o2 - overwrites
-        pVolumeSetup.zMax  = insideSetup.zMax; // o2 - overwrites
+        nVolumeSetup.zMin  = insideSetup.zMin; // on2 - overwrites
+        pVolumeSetup.zMax  = insideSetup.zMax; // op2 - overwrites
         // now overwrite it to wrappping without gaps
         wCondition = WrappingCondition::TripleWrapping;
         wConditionStr = "inside triple wrapping, triple adjusted in z to inside volume."; 
@@ -570,8 +573,8 @@ Acts::CylinderVolumeBuilder::analyzeLayers(const LayerVector& lVector) const
         double rMaxC
             = cLayer->surfaceRepresentation().bounds().r() + 0.5 * thickness;
         double hZ = cLayer->surfaceRepresentation().bounds().halflengthZ();
-        takeSmaller(lSetup.rMin, rMinC-m_cfg.layerEnvelopeR);
-        takeBigger(lSetup.rMax, rMaxC+m_cfg.layerEnvelopeR);
+        takeSmaller(lSetup.rMin, rMinC-m_cfg.layerEnvelopeR.first);
+        takeBigger(lSetup.rMax, rMaxC+m_cfg.layerEnvelopeR.second);
         takeSmaller(lSetup.zMin, center.z() -hZ -m_cfg.layerEnvelopeZ);
         takeBigger(lSetup.zMax, center.z()  +hZ +m_cfg.layerEnvelopeZ);
       }
@@ -584,8 +587,8 @@ Acts::CylinderVolumeBuilder::analyzeLayers(const LayerVector& lVector) const
         double rMaxD = dBounds->rMax();
         double zMinD = center.z() - 0.5 * thickness;
         double zMaxD = center.z() + 0.5 * thickness;
-        takeSmaller(lSetup.rMin, rMinD -m_cfg.layerEnvelopeR);
-        takeBigger(lSetup.rMax, rMaxD  +m_cfg.layerEnvelopeR);
+        takeSmaller(lSetup.rMin, rMinD -m_cfg.layerEnvelopeR.first);
+        takeBigger(lSetup.rMax, rMaxD  +m_cfg.layerEnvelopeR.second);
         takeSmaller(lSetup.zMin, zMinD -m_cfg.layerEnvelopeZ);
         takeBigger(lSetup.zMax, zMaxD  +m_cfg.layerEnvelopeZ);
         //!< @TODO check for Endcap Ring setup
