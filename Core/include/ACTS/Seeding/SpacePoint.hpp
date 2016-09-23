@@ -36,7 +36,7 @@ namespace Seeding {
     {
     }
 
-    auto
+    const Vector3D&
     position() const
     {
       return m_position;
