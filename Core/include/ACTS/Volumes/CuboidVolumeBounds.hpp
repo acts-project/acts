@@ -165,7 +165,7 @@ T&
 CuboidVolumeBounds::dumpT(T& dt) const
 {
   dt << std::setiosflags(std::ios::fixed);
-  dt << std::setprecision(7);
+  dt << std::setprecision(5);
   dt << "Acts::CuboidVolumeBounds: (halfX, halfY, halfZ) = ";
   dt << "(" << m_valueStore.at(bv_halfX) << ", " << m_valueStore.at(bv_halfY)
      << ", " << m_valueStore.at(bv_halfZ) << ")";

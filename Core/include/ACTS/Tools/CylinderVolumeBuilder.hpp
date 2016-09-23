@@ -13,7 +13,7 @@
 #ifndef ACTS_TOOLS_CYLINDERVOLUMEBUILDER_H
 #define ACTS_TOOLS_CYLINDERVOLUMEBUILDER_H 1
 
-// Geometry module
+#include <string>
 #include "ACTS/Material/Material.hpp"
 #include "ACTS/Tools/ILayerBuilder.hpp"
 #include "ACTS/Tools/ITrackingVolumeBuilder.hpp"
@@ -35,25 +35,94 @@ namespace Acts {
 class TrackingVolume;
 class VolumeBounds;
 
-/// LayerSetup struct to understand the layer setup
-struct LayerSetup
+/// VolumeSetup struct to understand the layer setup
+struct VolumeSetup
 {
-  bool         present;       ///< layers are present
-  BinningValue binningValue;  ///< in what way they are binned
+  bool                      present;       ///< layers are present
+  bool                      wrapping;      ///< in what way they are binned
+  double                    rMin;          ///< min/max parameters 
+  double                    rMax;          ///< min/max parameters 
+  double                    zMin;          ///< min/max parameters 
+  double                    zMax;          ///< min/max parameters 
+  LayerVector               layers;        ///< the layers you have
 
-  std::pair<double, double> rBoundaries;  //!< raidal boundaries
-  std::pair<double, double> zBoundaries;  //!< zBoundaries
-
-  /// std::vector<double>      ringBoundaries;      //!< ring boundaries if
-  /// present //!< @TODO insert ring layout
-
-  LayerSetup()
+  /// Default constructor
+  VolumeSetup()
     : present(false)
-    , binningValue(binR)
-    , rBoundaries(std::pair<double, double>(10e10, -10e10))
-    , zBoundaries(std::pair<double, double>(10e10, -10e10))
+    , wrapping(false)
+    , rMin(10e10)
+    , rMax(10e-10)
+    , zMin(10e10)
+    , zMax(-10e10)
+    , layers()
+  {}
+
+  /// Adapt to the dimensions of another setup
+  /// 
+  /// @param lSetup is the setup to which it should be adapded 
+  void 
+  adapt(const VolumeSetup& lSetup)
   {
+    takeSmaller(rMin, lSetup.rMin);
+    takeBigger(rMax, lSetup.rMax);
+    takeSmaller(zMin, lSetup.zMin);
+    takeBigger(zMax, lSetup.zMax);   
   }
+
+  /// Overlap check radially
+  bool
+  overlapsInR(const VolumeSetup& vSetup) const
+  {
+    if (!present) return false;
+    if (rMin < vSetup.rMax && rMax > vSetup.rMax) return true;
+    if (vSetup.rMin < rMax && vSetup.rMax > rMin) return true;
+    return false;
+  }
+
+  /// Overlap check longitudinally
+  bool
+  overlapsInZ(const VolumeSetup& vSetup) const
+  {
+    if (!present) return false;
+    if (zMin < vSetup.zMax && zMax > vSetup.zMax) return true;
+    if (vSetup.zMin < zMax && vSetup.zMax > zMin) return true;    
+    return false;
+  }
+
+  /// Compatibility check radially
+  bool 
+  wrapsInR(const VolumeSetup& vSetup) const
+  {
+    if (vSetup.rMax > rMin)
+      return false;
+    return true;
+  }
+
+  /// Compatibility check longitudinally
+  bool 
+  wrapsInZ(const VolumeSetup& vSetup) const
+  {
+    if (vSetup.zMin < zMin || vSetup.zMax > zMax)
+      return false;
+    return true;
+  }
+
+  /// Compatibility check full set
+  bool 
+  wraps(const VolumeSetup& vSetup) const
+  {
+    // it wraps
+    return wrapsInR(vSetup) && wrapsInZ(vSetup);
+  }
+
+  /// toString
+  std::string toString() const
+  {
+    /// for screen output
+    std::stringstream sl;
+    sl << rMin << ", " << rMax << " / " << zMin << ", " << zMax;
+    return sl.str();
+  } 
 
   /// Conversion operator to bool
   operator bool() const { return present; }
@@ -61,14 +130,12 @@ struct LayerSetup
 
 /// @class CylinderVolumeBuilder
 ///
-///  A simple cylindrical volume builder to be used for building a concentrical
-/// cylindrical volume
+/// A volume builder to be used for building a concentrical cylindrical volumes
 ///  - a) configured volume
 ///  - b) wrapping around a cylindrical/disk layer setup
 ///
 ///  All are optionally wrapped around a given volume which has to by a cylinder
-/// volume
-///  and which has to be center at z == 0
+/// volume and which has to be center at z == 0
 ///
 ///  To receive the tracking volume it is possible to also hand over a triple of
 /// layers, which is a C++ tuple of three pointers to layer vectors (defined in
@@ -77,14 +144,7 @@ struct LayerSetup
 /// represents the layers of the negative endcap, the second the layers of the
 /// barrel and the third the layers of the positive endcap. If the one of these
 /// pointers is a nullptr no layers will be created for this volume
-///  Another functionality needed to translate an already existing geometry is
-///  to
-/// hand over a volume triple, which is a triple of shared pointers of volumes
-/// (defined in the ITrackingVolumeBuilder). The first entry contains the
-/// negative endcap volume, the second the barrel volume and the third one the
-/// positive endcap volume. This volumes are then used to get the internal
-/// boundaries of the current hierarchy.
-///
+
 class CylinderVolumeBuilder : public ITrackingVolumeBuilder
 {
 public:
@@ -100,8 +160,8 @@ public:
     std::vector<double> volumeDimension{};
     /// the world material
     std::shared_ptr<Material> volumeMaterial = nullptr;
-    /// build the volume to the beam pipe
-    bool volumeToBeamPipe = false;
+    /// build the volume to the beam line
+    bool buildToRadiusZero = false;
     /// needed to build layers within the volume
     std::shared_ptr<ILayerBuilder> layerBuilder = nullptr;
     /// the envelope covering the potential layers
@@ -110,6 +170,19 @@ public:
     double layerEnvelopeZ = 0.5;
     /// the volume signature
     int volumeSignature = -1;
+  };
+
+  /// @enum WrappingCondition
+  enum WrappingCondition {
+    
+    SynchronizationError = 0,
+    NoWrapping           = 1,
+    BarrelWrapping       = 2,
+    BarrelWrappingGaps   = 3,
+    TripleWrapping       = 4,
+    TripleWrappingGaps   = 5,
+    Undefined            = 6
+    
   };
 
   /// Constructor
@@ -123,7 +196,8 @@ public:
   /// Destructor
   virtual ~CylinderVolumeBuilder();
 
-  /// CylinderVolumeBuilder interface method
+  /// CylinderVolumeBuilder main call method
+  ///
   /// @param insideVolume is an (optional) volume to be wrapped
   /// @param outsideBounds is an (optional) outside confinement
   /// @param layerTriple is an (optional) triplet of layers
@@ -131,8 +205,7 @@ public:
   TrackingVolumePtr
   trackingVolume(TrackingVolumePtr   insideVolume  = nullptr,
                  VolumeBoundsPtr     outsideBounds = nullptr,
-                 const LayerTriple*  layerTriple   = nullptr,
-                 const VolumeTriple* volumeTriple  = nullptr) const override;
+                 const LayerTriple*  layerTriple   = nullptr) const override;
 
   /// Set configuration method
   /// @param cvbConfig is the new configuration to be set
@@ -161,9 +234,52 @@ private:
   /// the logging instance
   std::unique_ptr<Logger> m_logger;
 
-  /// analyse the layer setup
-  LayerSetup
-  analyzeLayerSetup(const LayerVector lVector) const;
+  /// Analyze the layer setup to gather needed dimension
+  /// 
+  /// @param lVector is the vector of layers that are parsed
+  /// @return a VolumeSetup representing this layer
+  VolumeSetup
+  analyzeLayers(const LayerVector& lVector) const;
+    
+  /// Helper method check the layer containment, 
+  /// both for inside / outside. 
+  ///
+  /// @param layerSetup is the VolumeSetup to be tested
+  ///        the wrapping flag may be set                    
+  /// @param insideSetup is the inside volume in order to
+  ///        check the wrapping
+  /// @param volumeSetup is the volume to be tested
+  /// @param sign distinguishes inside/outside testing
+  /// @return boolean that indicates the test result                                         
+  bool
+  checkLayerContainment(VolumeSetup& layerSetup, 
+                        const VolumeSetup& insideSetup,
+                        const VolumeSetup& volumeSetup,
+                        int sign) const;
+  
+  /// Wynchronize the layer setups with given
+  /// inside / outside constraints.
+  /// 
+  /// This is the last method to be called in the building
+  /// chain. It adapts the setups accordingly and sets the
+  /// right boundaries.
+  ///
+  /// @param nSetup the setup of negative EC layers (if present) 
+  /// @param cSetup the setup of the barrel layers
+  /// @param pSetup the setup of positive EC layers (if present)
+  /// @param is the inside volume setup/dimensions
+  /// @param is the outside and final volume setup/dimensions 
+  ///
+  /// @note non-const references may be changed
+  ///
+  /// @return a wrapping condition @TODO check if needed                                                                                                     
+  WrappingCondition 
+  synchronizeVolumeSetups(VolumeSetup& nSetup, 
+                          VolumeSetup& cSetup,
+                          VolumeSetup& pSetup,
+                          const VolumeSetup& insideSetup,
+                          VolumeSetup& outsideBoundSetup) const;
+  
 };
 
 /// Return the configuration object
