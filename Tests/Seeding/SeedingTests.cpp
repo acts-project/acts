@@ -18,13 +18,15 @@
 using namespace Acts::Seeding;
 
 // construct barrel layer w/ n points equidistant in phi
+// points go from 0.5 * delta to (n + 0.5) * delta
 BarrelSpacePoints<size_t>
 makeBarrel(double radius, int nPoints)
 {
   BarrelSpacePoints<size_t> barrel(radius);
 
   for (int i = 0; i < nPoints; ++i) {
-    double phi = 2 * M_PI * i / nPoints;
+    // try to avoid floating point corner cases, e.g. 2*M_PI equivalent 0
+    double phi = (2 * M_PI * (i + 0.5) / nPoints);
     barrel.points.emplace_back(
         radius * std::cos(phi), radius * std::sin(phi), 0, i);
   }
@@ -48,58 +50,78 @@ print(const std::vector<TrackSeed<Identifier, N>>& seeds)
 
 BOOST_AUTO_TEST_CASE(PhiRangeTest)
 {
-  using detail::makeRangePhi;
+  using Acts::detail::makeRangePhi;
 
-  auto layer = makeBarrel(10, 16);
-  auto dphi  = 2 * M_PI / 16;
+  auto layer              = makeBarrel(10, 16);
+  auto dphi               = 2 * M_PI / 16;
+  auto compareSpacePoints = [](const auto& a, const auto& b) {
+    return (a.identifier() == b.identifier());
+  };
 
   print(layer);
 
   {
-    // empty range, linear
-    auto range = layer.rangeDeltaPhi(0.5 * dphi, 0.4 * dphi);
+    // empty range, in the middle
+    auto range = layer.rangeDeltaPhi(dphi, 0.4 * dphi);
     BOOST_CHECK(range.empty());
-    BOOST_CHECK_EQUAL(range.size(), 0);
-    BOOST_CHECK(range.begin() == range.end());
+    BOOST_CHECK_EQUAL(std::distance(range.begin(), range.end()), 0);
+    BOOST_CHECK(!(range.begin() != range.end()));
   }
   {
-    // empty range at edge
-    auto range = layer.rangeDeltaPhi(2 * M_PI - 0.5 * dphi, 0.4 * dphi);
+    // empty range at left edge
+    auto range = layer.rangeDeltaPhi(0, 0.4 * dphi);
     BOOST_CHECK(range.empty());
-    BOOST_CHECK_EQUAL(range.size(), 0);
-    BOOST_CHECK(range.begin() == range.end());
+    BOOST_CHECK_EQUAL(std::distance(range.begin(), range.end()), 0);
+    BOOST_CHECK(!(range.begin() != range.end()));
+  }
+  {
+    // empty range at right edge
+    auto range = layer.rangeDeltaPhi(M_PI, 0.4 * dphi);
+    BOOST_CHECK(range.empty());
+    BOOST_CHECK_EQUAL(std::distance(range.begin(), range.end()), 0);
+    BOOST_CHECK(!(range.begin() != range.end()));
+  }
+  {
+    // full linear range
+    auto range = layer.rangeDeltaPhi(0, M_PI - 0.1 * dphi);
+    BOOST_CHECK(!range.empty());
+    BOOST_CHECK_EQUAL(std::distance(range.begin(), range.end()),
+                      layer.points.size());
+    BOOST_CHECK(range.begin() != range.end());
+    BOOST_CHECK(std::equal(
+        range.begin(), range.end(), layer.points.begin(), compareSpacePoints));
   }
   {
     // linear range, no wrap-around
-    auto range = layer.rangeDeltaPhi(1 * dphi, 1 * dphi);
+    auto range = layer.rangeDeltaPhi(1.5 * dphi, 1.1 * dphi);
     auto it    = range.begin();
-    BOOST_CHECK_EQUAL(range.size(), 3);
-    BOOST_CHECK_CLOSE(it->phi(), 0 * dphi, 1e-6);
+    BOOST_CHECK_EQUAL(std::distance(range.begin(), range.end()), 3);
+    BOOST_CHECK_CLOSE((*it).phi(), 0.5 * dphi, 1e-6);
     ++it;
-    BOOST_CHECK_CLOSE(it->phi(), 1 * dphi, 1e-6);
+    BOOST_CHECK_CLOSE((*it).phi(), 1.5 * dphi, 1e-6);
     ++it;
-    BOOST_CHECK_CLOSE(it->phi(), 2 * dphi, 1e-6);
+    BOOST_CHECK_CLOSE((*it).phi(), 2.5 * dphi, 1e-6);
     ++it;
-    // BOOST_CHECK_CLOSE(it->phi(), 3 * dphi, 1e-6);
-    // ++it;
-    BOOST_CHECK(it == range.end());
+    BOOST_CHECK(!(it != range.end()));
   }
   {
     // wrap around at edge
-    auto range = layer.rangeDeltaPhi(M_PI, 2 * dphi);
+    auto range = layer.rangeDeltaPhi(M_PI, 3.1 * dphi);
     auto it    = range.begin();
-    BOOST_CHECK_EQUAL(range.size(), 5);
-    BOOST_CHECK_CLOSE(it->phi(), M_PI - 2 * dphi, 1e-6);
+    BOOST_CHECK_EQUAL(std::distance(range.begin(), range.end()), 6);
+    BOOST_CHECK_CLOSE((*it).phi(), M_PI - 2.5 * dphi, 1e-6);
     ++it;
-    BOOST_CHECK_CLOSE(it->phi(), M_PI - 1 * dphi, 1e-6);
+    BOOST_CHECK_CLOSE((*it).phi(), M_PI - 1.5 * dphi, 1e-6);
     ++it;
-    BOOST_CHECK_CLOSE(it->phi(), M_PI - 0 * dphi, 1e-6);
+    BOOST_CHECK_CLOSE((*it).phi(), M_PI - 0.5 * dphi, 1e-6);
     ++it;
-    BOOST_CHECK_CLOSE(it->phi(), -M_PI + 1 * dphi, 1e-6);
+    BOOST_CHECK_CLOSE((*it).phi(), -M_PI + 0.5 * dphi, 1e-6);
     ++it;
-    BOOST_CHECK_CLOSE(it->phi(), -M_PI + 2 * dphi, 1e-6);
+    BOOST_CHECK_CLOSE((*it).phi(), -M_PI + 1.5 * dphi, 1e-6);
     ++it;
-    BOOST_CHECK(it == range.end());
+    BOOST_CHECK_CLOSE((*it).phi(), -M_PI + 2.5 * dphi, 1e-6);
+    ++it;
+    BOOST_CHECK(!(it != range.end()));
   }
 }
 

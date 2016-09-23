@@ -13,7 +13,7 @@
 #include <ostream>
 #include <vector>
 
-#include "ACTS/Seeding/detail/wrapping_range.hpp"
+#include "ACTS/Seeding/detail/cyclic_range.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -92,7 +92,7 @@ namespace Seeding {
     auto
     rangeDeltaPhi(double phi, double delta) const
     {
-      return detail::makeRangePhi(points, phi - delta, phi + delta);
+      return Acts::detail::makeRangePhi(points, phi - delta, phi + delta);
     }
 
     void
