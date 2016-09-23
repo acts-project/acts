@@ -362,9 +362,12 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
         for (auto& layerChild : layerChildren)
           modules.push_back(layerChild.second);
         // create surfaces binned in phi and z
-        auto surfaceArray
-            = createSurfaceArray(modules, binZ, motherTransform, axes);
-        auto cylLayer = Acts::CylinderLayer::create(convertTransform(transform),
+        auto surfaces = createSurfaceVector(modules, transform, axes);
+        std::shared_ptr<Acts::Transform3D> transf = convertTransform(transform);
+        auto surfaceArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
+            surfaces, equidistant, equidistant, transf);
+        // create the cylinder layer
+        auto cylLayer = Acts::CylinderLayer::create(transf,
                                                     cylinderBounds,
                                                     std::move(surfaceArray),
                                                     thickness,
@@ -530,8 +533,10 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
         for (auto& layerChild : layerChildren)
           modules.push_back(layerChild.second);
         // create surfaces binned in phi and r
-        auto surfaceArray
-            = createSurfaceArray(modules, binR, motherTransform, axes);
+        auto surfaces = createSurfaceVector(modules, transform, axes);
+        std::shared_ptr<Acts::Transform3D> transf = convertTransform(transform);
+        auto surfaceArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
+            surfaces, equidistant, equidistant, transf);
         auto discLayer = Acts::DiscLayer::create(actsTransform,
                                                  discBounds,
                                                  std::move(surfaceArray),
@@ -554,10 +559,9 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
   }    // volume has layers
   ACTS_VERBOSE("[V] Volume has no layers");
 }
-std::unique_ptr<Acts::SurfaceArray>
-Acts::DD4hepCylinderGeometryBuilder::createSurfaceArray(
+std::vector<const Acts::Surface*>
+Acts::DD4hepCylinderGeometryBuilder::createSurfaceVector(
     std::vector<DD4hep::Geometry::DetElement>& modules,
-    Acts::BinningValue                         lValue,
     const TGeoMatrix*                          motherTransform,
     const std::string&                         axes) const
 {
@@ -570,8 +574,7 @@ Acts::DD4hepCylinderGeometryBuilder::createSurfaceArray(
     // add surface to surface vector
     surfaces.push_back(&(dd4hepDetElement->surface()));
   }
-
-  return (std::move(binnedSurfaceArray2DPhiL(surfaces, lValue)));
+  return (surfaces);
 }
 
 // creating a surface array binned in phi and a longitudinal direction which can

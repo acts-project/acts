@@ -15,6 +15,7 @@
 
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Layers/Layer.hpp"
+#include "ACTS/Tools/ISurfaceArrayCreator.hpp"
 #include "ACTS/Tools/ITrackingGeometryBuilder.hpp"
 #include "ACTS/Tools/ITrackingVolumeBuilder.hpp"
 #include "ACTS/Tools/ITrackingVolumeHelper.hpp"
@@ -54,6 +55,8 @@ public:
     std::shared_ptr<ITrackingVolumeBuilder> volumeBuilder = nullptr;
     /// Helper tool needed for volume building
     std::shared_ptr<ITrackingVolumeHelper> volumeHelper = nullptr;
+    /// Surface array creator needed for building binned surface arrays
+    std::shared_ptr<ISurfaceArrayCreator> surfaceArrayCreator = nullptr;
     /// World detector element of the DD4hep geometry
     DD4hep::Geometry::DetElement detWorld;
   };
@@ -135,35 +138,16 @@ private:
                    Acts::LayerVector&            layers,
                    const TGeoMatrix*             motherTransform) const;
 
-  /// Creates a binned array of Acts::Surfaces out of vector of DD4hep detector
-  /// modules
-  /// @note the BinnedArray is two dimensional and one binning value will alway
-  /// be phi
+  /// Creates a std::vector of Acts::Surface out of std::vector of DD4hep
+  /// DetELements
   /// @param modules Vector of DD4hep detector modules which should get
   /// translated into surfaces
-  /// @param lValue The second binning value which can be either r or z
   /// @param motherTransform The global transformation matrix of the mother
-  /// detector element containing the modules/surfaces(the layer)
-  std::unique_ptr<Acts::SurfaceArray>
-  createSurfaceArray(std::vector<DD4hep::Geometry::DetElement>& modules,
-                     Acts::BinningValue                         lValue,
-                     const TGeoMatrix*                          motherTransform,
-                     const std::string& axes = "xyz") const;
-  /// Creates a two dimensional surface array binned in phi and a longitudinal
-  /// direction which
-  /// can either be z or r
-  /// @param surfaces The vector of pointers to surfaces which should be binned
-  /// @param lValue The second binning value which can be either r or z
-  std::unique_ptr<Acts::SurfaceArray>
-  binnedSurfaceArray2DPhiL(const std::vector<const Acts::Surface*> surfaces,
-                           Acts::BinningValue lValue) const;
-  /// Helper method needed to get the bin values for a binned array out of
-  /// overlapping modules in r
-  std::vector<float>
-  createBinValues(std::vector<std::pair<float, float>> old) const;
-  // Helper method to sort pairs of floats
-  static bool
-  sortFloatPairs(std::pair<float, float> ap, std::pair<float, float> bp);
+  /// @param axes the orientation of the modules
+  std::vector<const Acts::Surface*>
+  createSurfaceVector(std::vector<DD4hep::Geometry::DetElement>& modules,
+                      const TGeoMatrix*  motherTransform,
+                      const std::string& axes = "xyz") const;
 
   /// Private access method to the logger
   const Logger&
