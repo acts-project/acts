@@ -125,17 +125,46 @@ BOOST_AUTO_TEST_CASE(PhiRangeTest)
   }
 }
 
+BOOST_AUTO_TEST_CASE(ZeroCircleCurvatureTest)
+{
+  using Acts::detail::calcCircleCurvature;
+
+  Acts::Vector3D delta(1, 1, 0);
+
+  BOOST_CHECK_CLOSE(calcCircleCurvature(delta, delta), 0, 1e-6);
+  BOOST_CHECK_CLOSE(calcCircleCurvature(-delta, -delta), 0, 1e-6);
+}
+
 BOOST_AUTO_TEST_CASE(SignCircleCurvatureTest)
 {
   using Acts::Vector3D;
+  using Acts::detail::calcCircleCurvature;
 
-  Vector3D p0(0, 0, 0);
-  Vector3D p1(1, 0, 0);
-  Vector3D p2pos(2, 1, 0);
-  Vector3D p2neg(2, -1, 0);
+  Vector3D d01(1, 0, 0);
+  Vector3D d12pos(1, 1, 0);
+  Vector3D d12neg(1, -1, 0);
 
-  BOOST_CHECK_LT(detail::calcCircleCurvature(p0, p1, p2pos), 0);
-  BOOST_CHECK_GT(detail::calcCircleCurvature(p0, p1, p2neg), 0);
+  BOOST_CHECK_LT(calcCircleCurvature(d01, d12pos), 0);
+  BOOST_CHECK_GT(calcCircleCurvature(d01, d12neg), 0);
+}
+
+BOOST_AUTO_TEST_CASE(EstimateCircleD0Test)
+{
+  using Acts::Vector3D;
+  using Acts::detail::estimateCircleD0;
+
+  // track position on the y-axis pointing towards positive x
+  double phi = 0;
+  // vanishing curvature
+  BOOST_CHECK_CLOSE(estimateCircleD0(Vector3D(0, 1, 0), phi, 0), 1, 1e-6);
+  BOOST_CHECK_CLOSE(estimateCircleD0(Vector3D(10, 1, 0), phi, 0), 1, 1e-6);
+  BOOST_CHECK_CLOSE(estimateCircleD0(Vector3D(0, -1, 0), phi, 0), -1, 1e-6);
+  BOOST_CHECK_CLOSE(estimateCircleD0(Vector3D(10, -1, 0), phi, 0), -1, 1e-6);
+  // small curvature (epsilon is given in percent, *not* fraction)
+  BOOST_CHECK_CLOSE(estimateCircleD0(Vector3D(0, 1, 0), phi, 1e-4), 1, 0.1);
+  BOOST_CHECK_CLOSE(estimateCircleD0(Vector3D(0, 1, 0), phi, -1e-4), 1, 0.1);
+  BOOST_CHECK_CLOSE(estimateCircleD0(Vector3D(0, -1, 0), phi, 1e-4), -1, 0.1);
+  BOOST_CHECK_CLOSE(estimateCircleD0(Vector3D(0, -1, 0), phi, -1e-4), -1, 0.1);
 }
 
 BOOST_AUTO_TEST_CASE(HelixBarrelSeedFinderTest)
