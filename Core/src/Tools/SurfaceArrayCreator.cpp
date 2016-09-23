@@ -85,13 +85,16 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   // create the (plain) binUtility - with the transform if given
   std::unique_ptr<Acts::BinUtility> arrayUtility = nullptr;
   if (bTypePhi == equidistant)
-    arrayUtility = createEquidistantBinUtility(surfaces, binPhi, transform);
+    arrayUtility
+        = std::move(createEquidistantBinUtility(surfaces, binPhi, transform));
   else
-    arrayUtility = createArbitraryBinUtility(surfaces, binPhi, transform);
+    arrayUtility
+        = std::move(createArbitraryBinUtility(surfaces, binPhi, transform));
   if (bTypeZ == equidistant)
-    (*arrayUtility) += *createEquidistantBinUtility(surfaces, binZ);
+    (*arrayUtility)
+        += *(std::move(createEquidistantBinUtility(surfaces, binZ)));
   else
-    (*arrayUtility) += *createArbitraryBinUtility(surfaces, binZ);
+    (*arrayUtility) += *(std::move(createArbitraryBinUtility(surfaces, binZ)));
   // for creating the binned array a vector of surfaces plus their
   // corresponding
   // position is needed
@@ -182,11 +185,15 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   ACTS_DEBUG("Creating a SurfaceArray on a disc.");
   std::unique_ptr<Acts::BinUtility> arrayUtility = nullptr;
   if (bTypeR == equidistant)
-    (*arrayUtility) += *createEquidistantBinUtility(surfaces, binR);
-  (*arrayUtility) += *createArbitraryBinUtility(surfaces, binR);
+    arrayUtility = std::move(createEquidistantBinUtility(surfaces, binR));
+  else
+    arrayUtility = std::move(createArbitraryBinUtility(surfaces, binR));
   if (bTypePhi == equidistant)
-    arrayUtility = createEquidistantBinUtility(surfaces, binPhi, transform);
-  arrayUtility   = createArbitraryBinUtility(surfaces, binPhi, transform);
+    (*arrayUtility) += *(
+        std::move(createEquidistantBinUtility(surfaces, binPhi, transform)));
+  else
+    (*arrayUtility)
+        += *(std::move(createArbitraryBinUtility(surfaces, binPhi, transform)));
   // for creating the binned array a vector of surfaces plus their
   // corresponding
   // position is needed
