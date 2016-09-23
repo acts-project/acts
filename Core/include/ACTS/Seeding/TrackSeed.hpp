@@ -47,7 +47,7 @@ namespace Seeding {
                     "Number of input points must be N");
     }
 
-    const Acts::Vector3D&
+    const Vector3D&
     position() const
     {
       return m_position;
@@ -74,8 +74,8 @@ namespace Seeding {
     }
 
   private:
-    Acts::Vector3D m_position;
-    double         m_phi, m_theta, m_curvature;
+    Vector3D m_position;
+    double   m_phi, m_theta, m_curvature;
     std::array<Identifier, N> m_ids;
   };
 
@@ -86,7 +86,7 @@ namespace Seeding {
     os << "pos=[" << seed.position().x() << ',' << seed.position().y() << ','
        << seed.position().z() << ']';
     os << " phi=" << seed.phi() << " theta=" << seed.theta();
-    os << " curvature=" << seed.curvature() << " n=" << N;
+    os << " curvature=" << seed.curvature();
     return os;
   }
 
