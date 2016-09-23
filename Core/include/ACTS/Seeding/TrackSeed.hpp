@@ -16,6 +16,7 @@
 
 #include "ACTS/Seeding/SpacePoint.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/detail/periodic.hpp"
 
 namespace Acts {
 namespace Seeding {
@@ -38,7 +39,7 @@ namespace Seeding {
               const SpacePoint<Identifier>& p0,
               const P&... ps)
       : m_position(p0.position())
-      , m_phi(phi)
+      , m_phi(Acts::detail::radian_sym(phi))
       , m_theta(theta)
       , m_curvature(curvature)
       , m_ids{p0.identifier(), ps.identifier()...}
