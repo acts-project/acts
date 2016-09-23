@@ -404,8 +404,8 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
     // get the vertices
     std::vector<Acts::Vector2D> backVertices = backBounds->vertices();
     // set the minimum and maximum
-    minimum = frontSurface->center().y() - fabs(frontVertices.front().y());
-    maximum = backSurface->center().y() + fabs(backVertices.front().y());
+    minimum = frontSurface->center().z() - fabs(frontVertices.front().y());
+    maximum = backSurface->center().z() + fabs(backVertices.front().y());
   } else {
     // R binning
     // sort first in r
@@ -442,8 +442,8 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
     // get vertices
     std::vector<Acts::Vector2D> backVertices = backBounds->vertices();
     // calculate minimum and maximum
-    minimum = frontSurface->center().y() - fabs(frontVertices.front().y());
-    maximum = backSurface->center().y() + fabs(backVertices.front().y());
+    minimum = frontSurface->center().perp() - fabs(frontVertices.front().y());
+    maximum = backSurface->center().perp() + fabs(backVertices.front().y());
   }
   // assign the bin size
   double binNumber = keys.size();
