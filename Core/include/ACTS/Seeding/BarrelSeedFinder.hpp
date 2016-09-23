@@ -12,7 +12,6 @@
 #include "ACTS/Seeding/SpacePoint.hpp"
 #include "ACTS/Seeding/TrackSeed.hpp"
 #include "ACTS/Seeding/detail/geometry.hpp"
-#include "ACTS/Utilities/Units.hpp"
 
 namespace Acts {
 namespace Seeding {
@@ -24,7 +23,7 @@ namespace Seeding {
     double maxDeltaTheta = 0.1;  // cut on difference in theta between doublets
   };
 
-  /// Find 3-point seeds assuming helix tracks with a combinatorial algorithm.
+  /// Find 3-point seeds with a combinatorial algorithm.
   template <typename Identifier>
   void
   findHelixSeeds(const HelixSeedConfig&               cfg,
@@ -46,19 +45,21 @@ Acts::Seeding::findHelixSeeds(const HelixSeedConfig&               cfg,
 {
   for (const auto& p0 : barrel0.points) {
     for (const auto& p1 : barrel1.rangeDeltaPhi(p0.phi(), cfg.rangePhi1)) {
-      Acts::Vector3D at2
-          = detail::calcLineCircleIntersection(p0, p1, barrel2.radius);
-
-      for (const auto& p2 : barrel2.rangeDeltaPhi(at2.phi(), cfg.rangePhi2)) {
-        auto theta01 = (p1.position() - p0.position()).theta();
-        auto theta12 = (p2.position() - p1.position()).theta();
-
+      Vector3D d01 = p1.position() - p0.position();
+      // Acts::Vector3D at2
+      //     = detail::calcLineCircleIntersection(p0, d01, barrel2.radius);
+      for (const auto& p2 : barrel2.rangeDeltaPhi(p1.phi(), cfg.rangePhi2)) {
+        Vector3D d12     = p2.position() - p1.position();
+        double   theta01 = d01.theta();
+        double   theta12 = d12.theta();
         if (cfg.maxDeltaTheta < std::abs(theta12 - theta01)) continue;
 
-        // use initial doublet to define direction
-        // TODO add curvature corrections to angles
-        auto phi01 = (p1.position() - p0.position()).phi();
-        auto kappa = detail::calcCircleCurvature(p0, p1, p2);
+        double kappa = detail::calcCircleCurvature(d01, d12);
+        // initial direction correction due to curvature, use
+        //   chord = 2 * radius * sin(propagation angle / 2)
+        // and assume sin(x) = x
+        double phi01 = d01.phi() - d01.head<2>().norm() * kappa / 2;
+        // track parameters defined at the first space point
         seeds.emplace_back(phi01, theta01, kappa, p0, p1, p2);
       }
     }

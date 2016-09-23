@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(HelixBarrelSeedFinderTest)
   {
     HelixSeedConfig cfg;
     cfg.rangePhi1     = 1.001 * dphi;  // matching hit +- 1 neighbor
-    cfg.rangePhi2     = 1.2 * dphi;    // matching hit +- 1 neighbor
+    cfg.rangePhi2     = 1.001 * dphi;    // matching hit +- 1 neighbor
     cfg.maxDeltaTheta = 0.2;
     TrackSeeds3<size_t> seeds;
 
