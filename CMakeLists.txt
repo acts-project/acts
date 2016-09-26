@@ -21,7 +21,7 @@ include (GNUInstallDirs)
 include (cmake/ACTSCompilerOptions.cmake)
 
 # set the current version of ACTS
-set (ACTS_VERSION 0.02.00)
+set (ACTS_VERSION 0.02.01)
 
 # convert the version into a plain number to be used in the version header file
 string (REPLACE "." "" ACTS_VERSION_NUMBER ${ACTS_VERSION})
