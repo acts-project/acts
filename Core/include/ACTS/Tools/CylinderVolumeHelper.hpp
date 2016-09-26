@@ -178,6 +178,7 @@ private:
   interGlueTrackingVolume(TrackingVolumePtr tVolume,
                           bool              rBinned,
                           double            rMin,
+                          double            rGlueMin,
                           double            rMax,
                           double            zMin,
                           double            zMax) const;
@@ -189,6 +190,7 @@ private:
                       TrackingVolumePtr   volumeTwo,
                       BoundarySurfaceFace faceTwod,
                       double              rMin,
+                      double              rGlueMin,
                       double              rMax,
                       double              zMin,
                       double              zMax) const;
