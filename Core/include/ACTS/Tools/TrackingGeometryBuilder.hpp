@@ -38,7 +38,6 @@ public:
   /// Nested Configuration for the CylinderVolumeBuilder
   struct Config
   {
-
     /// the list of trackign volume builders
     std::list<std::shared_ptr<ITrackingVolumeBuilder>> trackingVolumeBuilders{};
     /// the tracking volume helper for detector construction

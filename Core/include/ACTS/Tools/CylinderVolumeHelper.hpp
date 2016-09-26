@@ -32,7 +32,7 @@
 #include "ACTS/Volumes/BoundarySurfaceFace.hpp"
 
 namespace Acts {
-    
+
 class Layer;
 class TrackingVolume;
 class VolumeBounds;

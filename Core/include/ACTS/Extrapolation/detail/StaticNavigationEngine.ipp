@@ -266,8 +266,8 @@ Acts::StaticNavigationEngine::handleBoundaryT(
                      "navigation",
                      "",
                      "No next volume found of '"
-                     << eCell.leadVolume->volumeName()
-                     << "'. End of known world ?");
+                         << eCell.leadVolume->volumeName()
+                         << "'. End of known world ?");
       return ExtrapolationCode::SuccessBoundaryReached;
     }
     // check if it is a boundary reached case

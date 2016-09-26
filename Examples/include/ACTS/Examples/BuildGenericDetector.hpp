@@ -22,9 +22,9 @@ class TrackingGeometry;
 /// @param version is the detector version
 std::unique_ptr<const Acts::TrackingGeometry>
 buildGenericDetector(Logging::Level surfaceLLevel = Logging::INFO,
-                     Logging::Level layerLLevel = Logging::INFO,
-                     Logging::Level volumeLLevel = Logging::INFO,
-                     size_t               version = 0);
+                     Logging::Level layerLLevel   = Logging::INFO,
+                     Logging::Level volumeLLevel  = Logging::INFO,
+                     size_t         version       = 0);
 
 /// Helper method for positioning
 /// @param radius is the cylinder radius

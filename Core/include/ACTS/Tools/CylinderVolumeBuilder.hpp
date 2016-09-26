@@ -22,7 +22,6 @@
 #include "ACTS/Utilities/Logger.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
-
 #ifndef ATAS_GEOMETRYTOOLS_TAKESMALLERBIGGER
 #define ATAS_GEOMETRYTOOLS_TAKESMALLERBIGGER
 #define takeSmaller(current, test) current = current < test ? current : test
@@ -40,13 +39,13 @@ class VolumeBounds;
 /// VolumeSetup struct to understand the layer setup
 struct VolumeSetup
 {
-  bool                      present;       ///< layers are present
-  bool                      wrapping;      ///< in what way they are binned
-  double                    rMin;          ///< min/max parameters 
-  double                    rMax;          ///< min/max parameters 
-  double                    zMin;          ///< min/max parameters 
-  double                    zMax;          ///< min/max parameters 
-  LayerVector               layers;        ///< the layers you have
+  bool        present;   ///< layers are present
+  bool        wrapping;  ///< in what way they are binned
+  double      rMin;      ///< min/max parameters
+  double      rMax;      ///< min/max parameters
+  double      zMin;      ///< min/max parameters
+  double      zMax;      ///< min/max parameters
+  LayerVector layers;    ///< the layers you have
 
   /// Default constructor
   VolumeSetup()
@@ -57,18 +56,19 @@ struct VolumeSetup
     , zMin(10e10)
     , zMax(-10e10)
     , layers()
-  {}
+  {
+  }
 
   /// Adapt to the dimensions of another setup
-  /// 
-  /// @param lSetup is the setup to which it should be adapded 
-  void 
+  ///
+  /// @param lSetup is the setup to which it should be adapded
+  void
   adapt(const VolumeSetup& lSetup)
   {
     takeSmaller(rMin, lSetup.rMin);
     takeBigger(rMax, lSetup.rMax);
     takeSmaller(zMin, lSetup.zMin);
-    takeBigger(zMax, lSetup.zMax);   
+    takeBigger(zMax, lSetup.zMax);
   }
 
   /// Overlap check radially
@@ -87,30 +87,28 @@ struct VolumeSetup
   {
     if (!present) return false;
     if (zMin < vSetup.zMax && zMax > vSetup.zMax) return true;
-    if (vSetup.zMin < zMax && vSetup.zMax > zMin) return true;    
+    if (vSetup.zMin < zMax && vSetup.zMax > zMin) return true;
     return false;
   }
 
   /// Compatibility check radially
-  bool 
+  bool
   wrapsInR(const VolumeSetup& vSetup) const
   {
-    if (vSetup.rMax > rMin)
-      return false;
+    if (vSetup.rMax > rMin) return false;
     return true;
   }
 
   /// Compatibility check longitudinally
-  bool 
+  bool
   wrapsInZ(const VolumeSetup& vSetup) const
   {
-    if (vSetup.zMin < zMin || vSetup.zMax > zMax)
-      return false;
+    if (vSetup.zMin < zMin || vSetup.zMax > zMax) return false;
     return true;
   }
 
   /// Compatibility check full set
-  bool 
+  bool
   wraps(const VolumeSetup& vSetup) const
   {
     // it wraps
@@ -118,13 +116,14 @@ struct VolumeSetup
   }
 
   /// toString
-  std::string toString() const
+  std::string
+  toString() const
   {
     /// for screen output
     std::stringstream sl;
     sl << rMin << ", " << rMax << " / " << zMin << ", " << zMax;
     return sl.str();
-  } 
+  }
 
   /// Conversion operator to bool
   operator bool() const { return present; }
@@ -167,17 +166,17 @@ public:
     /// needed to build layers within the volume
     std::shared_ptr<ILayerBuilder> layerBuilder = nullptr;
     /// the envelope covering the potential layers rMin, rMax
-    std::pair<double,double> layerEnvelopeR 
-      = {5.*Acts::units::_mm, 5.*Acts::units::_mm};
+    std::pair<double, double> layerEnvelopeR
+        = {5. * Acts::units::_mm, 5. * Acts::units::_mm};
     /// the envelope covering the potential layers inner/outer
-    double layerEnvelopeZ  = 10.*Acts::units::_mm;
+    double layerEnvelopeZ = 10. * Acts::units::_mm;
     /// the volume signature
     int volumeSignature = -1;
   };
 
   /// @enum WrappingCondition
   enum WrappingCondition {
-    
+
     SynchronizationError = 0,
     NoWrapping           = 1,
     BarrelWrapping       = 2,
@@ -185,7 +184,7 @@ public:
     TripleWrapping       = 4,
     TripleWrappingGaps   = 5,
     Undefined            = 6
-    
+
   };
 
   /// Constructor
@@ -206,9 +205,9 @@ public:
   /// @param layerTriple is an (optional) triplet of layers
   /// @param volumeTriple is an (optional) triplet of volumes
   TrackingVolumePtr
-  trackingVolume(TrackingVolumePtr   insideVolume  = nullptr,
-                 VolumeBoundsPtr     outsideBounds = nullptr,
-                 const LayerTriple*  layerTriple   = nullptr) const override;
+  trackingVolume(TrackingVolumePtr  insideVolume  = nullptr,
+                 VolumeBoundsPtr    outsideBounds = nullptr,
+                 const LayerTriple* layerTriple   = nullptr) const override;
 
   /// Set configuration method
   /// @param cvbConfig is the new configuration to be set
@@ -238,51 +237,50 @@ private:
   std::unique_ptr<Logger> m_logger;
 
   /// Analyze the layer setup to gather needed dimension
-  /// 
+  ///
   /// @param lVector is the vector of layers that are parsed
   /// @return a VolumeSetup representing this layer
   VolumeSetup
   analyzeLayers(const LayerVector& lVector) const;
-    
-  /// Helper method check the layer containment, 
-  /// both for inside / outside. 
+
+  /// Helper method check the layer containment,
+  /// both for inside / outside.
   ///
   /// @param layerSetup is the VolumeSetup to be tested
-  ///        the wrapping flag may be set                    
+  ///        the wrapping flag may be set
   /// @param insideSetup is the inside volume in order to
   ///        check the wrapping
   /// @param volumeSetup is the volume to be tested
   /// @param sign distinguishes inside/outside testing
-  /// @return boolean that indicates the test result                                         
+  /// @return boolean that indicates the test result
   bool
-  checkLayerContainment(VolumeSetup& layerSetup, 
+  checkLayerContainment(VolumeSetup&       layerSetup,
                         const VolumeSetup& insideSetup,
                         const VolumeSetup& volumeSetup,
-                        int sign) const;
-  
+                        int                sign) const;
+
   /// Wynchronize the layer setups with given
   /// inside / outside constraints.
-  /// 
+  ///
   /// This is the last method to be called in the building
   /// chain. It adapts the setups accordingly and sets the
   /// right boundaries.
   ///
-  /// @param nSetup the setup of negative EC layers (if present) 
+  /// @param nSetup the setup of negative EC layers (if present)
   /// @param cSetup the setup of the barrel layers
   /// @param pSetup the setup of positive EC layers (if present)
   /// @param is the inside volume setup/dimensions
-  /// @param is the outside and final volume setup/dimensions 
+  /// @param is the outside and final volume setup/dimensions
   ///
   /// @note non-const references may be changed
   ///
-  /// @return a wrapping condition @TODO check if needed                                                                                                     
-  WrappingCondition 
-  synchronizeVolumeSetups(VolumeSetup& nSetup, 
-                          VolumeSetup& cSetup,
-                          VolumeSetup& pSetup,
+  /// @return a wrapping condition @TODO check if needed
+  WrappingCondition
+  synchronizeVolumeSetups(VolumeSetup&       nSetup,
+                          VolumeSetup&       cSetup,
+                          VolumeSetup&       pSetup,
                           const VolumeSetup& insideSetup,
-                          VolumeSetup& outsideBoundSetup) const;
-  
+                          VolumeSetup&       outsideBoundSetup) const;
 };
 
 /// Return the configuration object

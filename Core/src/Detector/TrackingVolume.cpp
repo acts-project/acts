@@ -300,7 +300,7 @@ Acts::TrackingVolume::glueTrackingVolume(
   // glue to the face
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine
       = boundarySurfaces().at(bsfMine);
-  // @TODO - complex glueing could be possible 
+  // @TODO - complex glueing could be possible
   // with actual intersection for the normal vector
   Vector3D normal = bSurfaceMine->surfaceRepresentation().normal(bPosition);
   // estimate the orientation

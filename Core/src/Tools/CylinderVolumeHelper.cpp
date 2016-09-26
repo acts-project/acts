@@ -416,7 +416,8 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
                                volumeName);
   // glueing section
   // --------------------------------------------------------------------------------------
-  if (not interGlueTrackingVolume(topVolume, rCase, rMin, rGlueMin, rMax, zSep1, zSep2)) {
+  if (not interGlueTrackingVolume(
+          topVolume, rCase, rMin, rGlueMin, rMax, zSep1, zSep2)) {
     ACTS_WARNING("Problem with inter-glueing of TrackingVolumes (needed) - "
                  "returning 0 ");
     return nullptr;
@@ -645,7 +646,7 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
         // screen output
         ACTS_VERBOSE("r-binning: Processing volume [" << ivol++ << "]");
         // for the first one
-        if (tVolIter == tVolFirst){
+        if (tVolIter == tVolFirst) {
           addFaceVolumes((*tVolIter), tubeInnerCover, glueVolumesInnerTube);
         }
         // add this or the subvolumes to the negativeFace and positiveFace
@@ -858,8 +859,9 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
                                        << " ]");
 
     // create the BoundarySurface as shared pointer
-     std::shared_ptr<const BoundarySurfaceT<TrackingVolume> > boundarySurface = nullptr;
-    
+    std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> boundarySurface
+        = nullptr;
+
     // the transform of the new boundary surface
     std::shared_ptr<Transform3D> transform = nullptr;
     if (fabs(zMin + zMax) > 0.1) {
@@ -877,10 +879,11 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
       ACTS_VERBOSE("             creating a new cylindrical boundary surface "
                    "with bounds = "
                    << cSurface->bounds());
-      boundarySurface = std::make_shared<const BoundarySurfaceT<TrackingVolume> >(
-          std::move(cSurface),
-          gvDescriptorOne.glueVolumes(faceOne),
-          gvDescriptorTwo.glueVolumes(faceTwo));
+      boundarySurface
+          = std::make_shared<const BoundarySurfaceT<TrackingVolume>>(
+              std::move(cSurface),
+              gvDescriptorOne.glueVolumes(faceOne),
+              gvDescriptorTwo.glueVolumes(faceTwo));
     } else {
       // (2) create the BoundaryDiscSurface, in that case the zMin/zMax provided
       // are both the position of the disk in question
@@ -889,18 +892,19 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
       ACTS_VERBOSE("             creating a new disc-like boundary surface "
                    "with bounds = "
                    << dSurface->bounds());
-      boundarySurface = std::make_shared<const BoundarySurfaceT<TrackingVolume> >(
-          std::move(dSurface),
-          gvDescriptorOne.glueVolumes(faceOne),
-          gvDescriptorTwo.glueVolumes(faceTwo));
+      boundarySurface
+          = std::make_shared<const BoundarySurfaceT<TrackingVolume>>(
+              std::move(dSurface),
+              gvDescriptorOne.glueVolumes(faceOne),
+              gvDescriptorTwo.glueVolumes(faceTwo));
     }
     // update the volume with the boundary surface accordingly
-    // it's safe to access directly, they can not be nullptr 
+    // it's safe to access directly, they can not be nullptr
     for (auto& oneVolume : gvDescriptorOne.glueVolumes(faceOne)->arrayObjects())
-         oneVolume->updateBoundarySurface(faceOne,boundarySurface);
+      oneVolume->updateBoundarySurface(faceOne, boundarySurface);
     for (auto& twoVolume : gvDescriptorTwo.glueVolumes(faceTwo)->arrayObjects())
-         twoVolume->updateBoundarySurface(faceTwo,boundarySurface);
-  } // end of case (iv)
+      twoVolume->updateBoundarySurface(faceTwo, boundarySurface);
+  }  // end of case (iv)
 }
 
 /** Private method - helper method not to duplicate code */
