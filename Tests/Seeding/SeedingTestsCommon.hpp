@@ -1,0 +1,46 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include <iostream>
+
+#include "ACTS/Seeding/SpacePoint.hpp"
+#include "ACTS/Seeding/TrackSeed.hpp"
+
+/// Construct barrel layer w/ n points equidistant in phi.
+///
+/// Points go from 0.5 * delta to (n + 0.5) * delta
+Acts::Seeding::BarrelSpacePoints<size_t>
+makeBarrel(double radius, int nPoints)
+{
+  Acts::Seeding::BarrelSpacePoints<size_t> barrel(radius);
+
+  for (int i = 0; i < nPoints; ++i) {
+    // try to avoid floating point corner cases, e.g. 2*M_PI equivalent 0
+    double phi = (2 * M_PI * (i + 0.5) / nPoints);
+    barrel.points.emplace_back(
+        radius * std::cos(phi), radius * std::sin(phi), 0, i);
+  }
+  barrel.sort();
+  return barrel;
+}
+
+template <typename Identifier>
+void
+print(const Acts::Seeding::BarrelSpacePoints<Identifier>& barrel)
+{
+  for (const auto& point : barrel.points) std::cout << point << '\n';
+}
+
+template <typename Identifier, size_t N>
+void
+print(const std::vector<Acts::Seeding::TrackSeed<Identifier, N>>& seeds)
+{
+  for (const auto& seed : seeds) std::cout << seed << '\n';
+}
