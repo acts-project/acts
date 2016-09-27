@@ -70,6 +70,21 @@ namespace detail {
     }
   };
 
+  template <typename Container, typename Index>
+  std::ostream&
+  operator<<(std::ostream& os, const CyclicRange<Container, Index>& range)
+  {
+    if (range.empty()) {
+      os << '{' << range.start << ',' << range.start << '}';
+    } else {
+      auto first = range.start;
+      auto last  = range.start + range.length - 1;
+      os << '{' << first << "=(" << range.values[first] << "), " << last << "=("
+         << range.values[last % range.values.size()] << ")}";
+    }
+    return os;
+  }
+
   /// Select subset of ordered points within phi range.
   ///
   /// The container must fulfill the preconditions for the `CyclicRange`.
@@ -80,29 +95,30 @@ namespace detail {
   CyclicRange<Container, Index>
   makeRangePhi(const Container& values, double phi0, double phi1)
   {
-    using Value = typename Container::value_type;
-
     phi0 = Acts::detail::radian_sym(phi0);
     phi1 = Acts::detail::radian_sym(phi1);
 
     // assumes a sorted container for fast upper/lower binary search
-    auto cmpValuePhi = [](const Value& a, double b) { return (a.phi() < b); };
-    auto cmpPhiValue = [](double a, const Value& b) { return (a < b.phi()); };
-    auto it0
-        = std::lower_bound(values.begin(), values.end(), phi0, cmpValuePhi);
+    auto compValPhi = [](const auto& a, double b) { return (a.phi() < b); };
+    auto compPhiVal = [](double a, const auto& b) { return (a < b.phi()); };
+
+    auto it0 = std::lower_bound(values.begin(), values.end(), phi0, compValPhi);
     // all elements are smaller then lower limit -> empty range
     if (it0 == values.end()) {
       return {values, 0, 0};
     }
-    auto it1
-        = std::upper_bound(values.begin(), values.end(), phi1, cmpPhiValue);
-    auto begin = std::distance(values.begin(), it0);
-    auto diff  = std::distance(it0, it1);
-    if (diff < 0) {
-      // range wraps around the end
-      return {values, Index(begin), Index(values.size() + diff)};
+    // selected range must be linear w/o wrapping
+    if (phi0 <= phi1) {
+      auto it1 = std::upper_bound(it0, values.end(), phi1, compPhiVal);
+      return {values,
+              Index(std::distance(values.begin(), it0)),
+              Index(std::distance(it0, it1))};
     }
-    return {values, Index(begin), Index(diff)};
+    // look for additional elements after the wrap-around
+    auto it2 = std::upper_bound(values.begin(), it0, phi1, compPhiVal);
+    return {values,
+            Index(std::distance(values.begin(), it0)),
+            Index(values.size() - std::distance(it2, it0))};
   }
 
 }  // namespace detail
