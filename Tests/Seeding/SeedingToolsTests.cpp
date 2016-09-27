@@ -19,7 +19,6 @@
 #include "ACTS/Seeding/detail/geometry.hpp"
 #include "SeedingTestsCommon.hpp"
 
-namespace ut = boost::unit_test;
 namespace data = boost::unit_test::data;
 
 BOOST_AUTO_TEST_CASE(ContainerSizeOnePhiCyclicRangeTest)
@@ -113,6 +112,14 @@ BOOST_DATA_TEST_CASE(VariableContainerSizePhiCyclicRangeTest,
     BOOST_TEST(range.begin().index == (n - 1));
     BOOST_TEST(range.end().index == (n + 1));
     BOOST_TEST(std::distance(range.begin(), range.end()) == 2);
+  }
+  BOOST_TEST_CONTEXT("wrap-around boundaries but only 1 element after wrap")
+  {
+    auto range = makeRangePhi(points, high, low + delta);
+    BOOST_TEST(!range.empty());
+    BOOST_TEST(range.begin().index == 0);
+    BOOST_TEST(range.end().index == 1);
+    BOOST_TEST(std::distance(range.begin(), range.end()) == 1);
   }
 }
 

@@ -87,6 +87,8 @@ namespace detail {
 
   /// Select subset of ordered points within phi range.
   ///
+  /// @note Assumes a sorted container for fast upper/lower binary search.
+  ///
   /// The container must fulfill the preconditions for the `CyclicRange`.
   /// In addition, its iterators must be RandomAccessIterators, its values must
   /// provide a `.phi()` accessor that returns values in the [-phi, phi) range
@@ -98,27 +100,30 @@ namespace detail {
     phi0 = Acts::detail::radian_sym(phi0);
     phi1 = Acts::detail::radian_sym(phi1);
 
-    // assumes a sorted container for fast upper/lower binary search
     auto compValPhi = [](const auto& a, double b) { return (a.phi() < b); };
     auto compPhiVal = [](double a, const auto& b) { return (a < b.phi()); };
 
-    auto it0 = std::lower_bound(values.begin(), values.end(), phi0, compValPhi);
-    // all elements are smaller then lower limit -> empty range
-    if (it0 == values.end()) {
-      return {values, 0, 0};
-    }
-    // selected range must be linear w/o wrapping
+    // linear boundaries that do not allow wrap-around
     if (phi0 <= phi1) {
+      auto it0
+          = std::lower_bound(values.begin(), values.end(), phi0, compValPhi);
       auto it1 = std::upper_bound(it0, values.end(), phi1, compPhiVal);
+      // special value for empty range
+      if (it0 == it1) return {values, 0, 0};
       return {values,
               Index(std::distance(values.begin(), it0)),
               Index(std::distance(it0, it1))};
     }
-    // look for additional elements after the wrap-around
-    auto it2 = std::upper_bound(values.begin(), it0, phi1, compPhiVal);
+    // inverted boundaries w/ possible wrap-around
+    auto it1 = std::upper_bound(values.begin(), values.end(), phi1, compPhiVal);
+    auto it0 = std::lower_bound(it1, values.end(), phi0, compValPhi);
+    // wrap-around can be reduced to linear part
+    if (it0 == values.end())
+      return {values, 0, Index(std::distance(values.begin(), it1))};
+    // full wrap-around w/ elements before and after end
     return {values,
             Index(std::distance(values.begin(), it0)),
-            Index(values.size() - std::distance(it2, it0))};
+            Index(values.size() - std::distance(it1, it0))};
   }
 
 }  // namespace detail
