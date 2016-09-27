@@ -17,13 +17,13 @@
 ///
 /// Points go from 0.5 * delta to (n + 0.5) * delta
 Acts::Seeding::BarrelSpacePoints<size_t>
-makeBarrel(double radius, int nPoints)
+makeBarrel(double radius, size_t nPoints)
 {
   Acts::Seeding::BarrelSpacePoints<size_t> barrel(radius);
 
-  for (int i = 0; i < nPoints; ++i) {
+  for (size_t i = 0; i < nPoints; ++i) {
     // try to avoid floating point corner cases, e.g. 2*M_PI equivalent 0
-    double phi = (2 * M_PI * (i + 0.5) / nPoints);
+    double phi = -M_PI + (2 * M_PI * (i + 0.5) / nPoints);
     barrel.points.emplace_back(
         radius * std::cos(phi), radius * std::sin(phi), 0, i);
   }
@@ -33,9 +33,17 @@ makeBarrel(double radius, int nPoints)
 
 template <typename Identifier>
 void
+print(const std::vector<Acts::Seeding::SpacePoint<Identifier>>& points)
+{
+  for (const auto& point : points)
+    std::cout << point.identifier() << ' ' << point << '\n';
+}
+
+template <typename Identifier>
+void
 print(const Acts::Seeding::BarrelSpacePoints<Identifier>& barrel)
 {
-  for (const auto& point : barrel.points) std::cout << point << '\n';
+  print(barrel.points);
 }
 
 template <typename Identifier, size_t N>
