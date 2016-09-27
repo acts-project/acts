@@ -165,7 +165,11 @@ int
 main()
 {
   // options are stage = 0, 1, 2
-  std::shared_ptr<const Acts::TrackingGeometry> geo = Acts::trackingGeometry(Acts::Logging::VERBOSE, 0);
+  std::shared_ptr<const Acts::TrackingGeometry> geo
+    = Acts::buildGenericDetector(Acts::Logging::VERBOSE,
+                                 Acts::Logging::VERBOSE,
+                                 Acts::Logging::VERBOSE,
+                                 0);
   ActsVector<ParValue_t, NGlobalPars> pars;
   pars << 0, 0, M_PI / 2, M_PI / 2, 0.0001;
   auto startCov = std::make_unique<ActsSymMatrix<ParValue_t, NGlobalPars>>(

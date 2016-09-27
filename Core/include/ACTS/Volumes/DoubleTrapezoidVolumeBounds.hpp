@@ -266,7 +266,7 @@ T&
 DoubleTrapezoidVolumeBounds::dumpT(T& dT) const
 {
   dT << std::setiosflags(std::ios::fixed);
-  dT << std::setprecision(7);
+  dT << std::setprecision(5);
   dT << "Acts::DoubleTrapezoidVolumeBounds: (minhalfX, medhalfX, maxhalfX, "
         "halfY1, halfY2, halfZ) = ";
   dT << "(" << m_valueStore.at(bv_minHalfX) << ", "

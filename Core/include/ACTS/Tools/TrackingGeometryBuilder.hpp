@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// CylinderGeometryBuilder.h, ACTS project
+// TrackingGeometryBuilder.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 #ifndef ACTS_TOOLS_CYLINDERGEOMETRYBUILDER_H
@@ -31,15 +31,13 @@ class TrackingGeometry;
 /// It retrieves ITrackingVolumeBuilders as configured and builds one
 /// detector around the other one.
 ///
-class CylinderGeometryBuilder : public ITrackingGeometryBuilder
+class TrackingGeometryBuilder : public ITrackingGeometryBuilder
 {
 public:
   /// @struct Config
   /// Nested Configuration for the CylinderVolumeBuilder
   struct Config
   {
-    /// a dedicated builder of the beam pipe volume
-    std::shared_ptr<ITrackingVolumeBuilder> beamPipeBuilder = nullptr;
     /// the list of trackign volume builders
     std::list<std::shared_ptr<ITrackingVolumeBuilder>> trackingVolumeBuilders{};
     /// the tracking volume helper for detector construction
@@ -49,13 +47,13 @@ public:
   /// Constructor
   /// @param cgb is the configuration struct for this builder
   /// @param logger logging instance
-  CylinderGeometryBuilder(const Config&           cgbConfig,
+  TrackingGeometryBuilder(const Config&           cgbConfig,
                           std::unique_ptr<Logger> logger
-                          = getDefaultLogger("CylinderGeometryBuilder",
+                          = getDefaultLogger("TrackingGeometryBuilder",
                                              Logging::INFO));
 
   /// Destructor
-  virtual ~CylinderGeometryBuilder() = default;
+  virtual ~TrackingGeometryBuilder() = default;
 
   /// TrackingGeometry Interface method
   /// returns a unique pointer to a TrackingGeometry
@@ -91,8 +89,8 @@ private:
   std::unique_ptr<Logger> m_logger;
 };
 
-inline CylinderGeometryBuilder::Config
-CylinderGeometryBuilder::getConfiguration() const
+inline TrackingGeometryBuilder::Config
+TrackingGeometryBuilder::getConfiguration() const
 {
   return m_cfg;
 }

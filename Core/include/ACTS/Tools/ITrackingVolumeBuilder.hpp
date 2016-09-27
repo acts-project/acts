@@ -53,12 +53,10 @@ public:
   /// @param insideVolume is an (optional) volume to be wrapped
   /// @param outsideBounds is an (optional) outside confinement
   /// @param layerTriple is an (optional) triplet of layers
-  /// @param volumeTriple is an (optional) triplet of volumes
   virtual TrackingVolumePtr
-  trackingVolume(TrackingVolumePtr   insideVolume  = nullptr,
-                 VolumeBoundsPtr     outsideBounds = nullptr,
-                 const LayerTriple*  layerTriple   = nullptr,
-                 const VolumeTriple* volumeTriple = nullptr) const = 0;
+  trackingVolume(TrackingVolumePtr  insideVolume  = nullptr,
+                 VolumeBoundsPtr    outsideBounds = nullptr,
+                 const LayerTriple* layerTriple = nullptr) const = 0;
 };
 
 }  // end of namespace

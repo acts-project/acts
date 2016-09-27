@@ -292,7 +292,7 @@ T&
 CylinderVolumeBounds::dumpT(T& tstream) const
 {
   tstream << std::setiosflags(std::ios::fixed);
-  tstream << std::setprecision(2);
+  tstream << std::setprecision(5);
   tstream << "Acts::CylinderVolumeBounds: (rMin, rMax, halfPhi, halfZ) = ";
   tstream << m_valueStore.at(bv_innerRadius) << ", "
           << m_valueStore.at(bv_outerRadius) << ", "
