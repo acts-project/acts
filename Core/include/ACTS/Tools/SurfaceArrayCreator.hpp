@@ -168,7 +168,7 @@ private:
   /// (currently possible: binPhi, binR, binZ)
   /// @param bType the BinningType (equidistant or arbitrary binning)
   /// @return a unique pointer a one dimensional BinUtility
-  std::unique_ptr<Acts::BinUtility>
+  Acts::BinUtility
   createArbitraryBinUtility(const std::vector<const Acts::Surface*>& surfaces,
                             Acts::BinningValue                       bValue,
                             std::shared_ptr<Acts::Transform3D>       transform
@@ -183,7 +183,7 @@ private:
   /// (currently possible: binPhi, binR, binZ)
   /// @param bType the BinningType (equidistant or arbitrary binning)
   /// @return a unique pointer a one dimensional BinUtility
-  std::unique_ptr<Acts::BinUtility>
+  Acts::BinUtility
   createEquidistantBinUtility(const std::vector<const Acts::Surface*>& surfaces,
                               Acts::BinningValue                       bValue,
                               std::shared_ptr<Acts::Transform3D>       transform
@@ -203,7 +203,7 @@ private:
   /// @param max is the maximal position of the surfaces in the binning
   /// direction
   /// @return a unique pointer a one dimensional BinUtility
-  std::unique_ptr<Acts::BinUtility>
+  Acts::BinUtility
   createBinUtility(const std::vector<const Acts::Surface*>& surfaces,
                    Acts::BinningValue                       bValue,
                    Acts::BinningType                        bType,

@@ -31,10 +31,10 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   ACTS_DEBUG("Creating a SurfaceArray on a cylinder.");
   // create the 2D bin utility
   // create the (plain) binUtility - with the transform if given
-  auto arrayUtility = createBinUtility(
-      surfaces, binPhi, equidistant, binsPhi, minPhi, maxPhi, transform);
+  auto arrayUtility = std::make_unique<Acts::BinUtility>(createBinUtility(
+      surfaces, binPhi, equidistant, binsPhi, minPhi, maxPhi, transform));
   (*arrayUtility)
-      += *createBinUtility(surfaces, binZ, equidistant, binsZ, -halfZ, halfZ);
+      += createBinUtility(surfaces, binZ, equidistant, binsZ, -halfZ, halfZ);
   // prepare the surface matrix
   size_t      bins1 = arrayUtility->bins(1);
   size_t      bins0 = arrayUtility->bins(0);
@@ -83,15 +83,15 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   ACTS_DEBUG("Creating a SurfaceArray on a cylinder.");
   // create the 2D bin utility
   // create the (plain) binUtility - with the transform if given
-  std::unique_ptr<Acts::BinUtility> arrayUtility = nullptr;
+  Acts::BinUtility arrayUtility;
   if (bTypePhi == equidistant)
     arrayUtility = createEquidistantBinUtility(surfaces, binPhi, transform);
   else
     arrayUtility = createArbitraryBinUtility(surfaces, binPhi, transform);
   if (bTypeZ == equidistant)
-    (*arrayUtility) += *createEquidistantBinUtility(surfaces, binZ);
+    arrayUtility += createEquidistantBinUtility(surfaces, binZ);
   else
-    (*arrayUtility) += *createArbitraryBinUtility(surfaces, binZ);
+    arrayUtility += createArbitraryBinUtility(surfaces, binZ);
   // for creating the binned array a vector of surfaces plus their
   // corresponding
   // position is needed
@@ -101,7 +101,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     posSurfaces.push_back(std::make_pair(surface, surface->center()));
   }
   auto sArray = std::make_unique<BinnedArrayXD<const Surface*>>(
-      posSurfaces, std::move(arrayUtility));
+      posSurfaces, std::make_unique<Acts::BinUtility>(arrayUtility));
   // define neigbourhood
   registerNeighbourHood(*sArray);
   // return the surface array
@@ -121,9 +121,9 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 {
   ACTS_DEBUG("Creating a SurfaceArray on a disc.");
 
-  auto arrayUtility = std::move(createBinUtility(
+  auto arrayUtility = std::make_unique<Acts::BinUtility>(createBinUtility(
       surfaces, binR, equidistant, binsR, minR, maxR, transform));
-  (*arrayUtility) += *createBinUtility(
+  (*arrayUtility) += createBinUtility(
       surfaces, binPhi, equidistant, binsPhi, minPhi, maxPhi);
 
   // prepare the surface matrix
@@ -180,13 +180,15 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     std::shared_ptr<Acts::Transform3D>       transform) const
 {
   ACTS_DEBUG("Creating a SurfaceArray on a disc.");
-  std::unique_ptr<Acts::BinUtility> arrayUtility = nullptr;
+  Acts::BinUtility arrayUtility;
   if (bTypeR == equidistant)
-    (*arrayUtility) += *createEquidistantBinUtility(surfaces, binR);
-  (*arrayUtility) += *createArbitraryBinUtility(surfaces, binR);
+    arrayUtility = createEquidistantBinUtility(surfaces, binR);
+  else
+    arrayUtility = createArbitraryBinUtility(surfaces, binR);
   if (bTypePhi == equidistant)
-    arrayUtility = createEquidistantBinUtility(surfaces, binPhi, transform);
-  arrayUtility   = createArbitraryBinUtility(surfaces, binPhi, transform);
+    arrayUtility += createEquidistantBinUtility(surfaces, binPhi, transform);
+  else
+    arrayUtility += createArbitraryBinUtility(surfaces, binPhi, transform);
   // for creating the binned array a vector of surfaces plus their
   // corresponding
   // position is needed
@@ -196,7 +198,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     posSurfaces.push_back(std::make_pair(surface, surface->center()));
   }
   auto sArray = std::make_unique<BinnedArrayXD<const Surface*>>(
-      posSurfaces, std::move(arrayUtility));
+      posSurfaces, std::make_unique<Acts::BinUtility>(arrayUtility));
   // define neigbourhood
   registerNeighbourHood(*sArray);
   // return the surface array
@@ -217,7 +219,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
   return nullptr;
 }
 
-std::unique_ptr<Acts::BinUtility>
+Acts::BinUtility
 Acts::SurfaceArrayCreator::createArbitraryBinUtility(
     const std::vector<const Acts::Surface*>& surfaces,
     Acts::BinningValue                       bValue,
@@ -295,10 +297,10 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
              "binRPhi = 5, binH = 6, binEta = 7)");
   ACTS_DEBUG("	Number of bins: " << bValues.size());
   // create the BinUtility
-  return (std::make_unique<Acts::BinUtility>(bValues, bOption, bValue));
+  return (Acts::BinUtility(bValues, bOption, bValue));
 }
 
-std::unique_ptr<Acts::BinUtility>
+Acts::BinUtility
 Acts::SurfaceArrayCreator::createEquidistantBinUtility(
     const std::vector<const Acts::Surface*>& surfaces,
     Acts::BinningValue                       bValue,
@@ -404,8 +406,8 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
     // get the vertices
     std::vector<Acts::Vector2D> backVertices = backBounds->vertices();
     // set the minimum and maximum
-    minimum = frontSurface->center().y() - fabs(frontVertices.front().y());
-    maximum = backSurface->center().y() + fabs(backVertices.front().y());
+    minimum = frontSurface->center().z() - fabs(frontVertices.front().y());
+    maximum = backSurface->center().z() + fabs(backVertices.front().y());
   } else {
     // R binning
     // sort first in r
@@ -442,8 +444,8 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
     // get vertices
     std::vector<Acts::Vector2D> backVertices = backBounds->vertices();
     // calculate minimum and maximum
-    minimum = frontSurface->center().y() - fabs(frontVertices.front().y());
-    maximum = backSurface->center().y() + fabs(backVertices.front().y());
+    minimum = frontSurface->center().perp() - fabs(frontVertices.front().y());
+    maximum = backSurface->center().perp() + fabs(backVertices.front().y());
   }
   // assign the bin size
   double binNumber = keys.size();
@@ -454,11 +456,10 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
              "binRPhi = 5, binH = 6, binEta = 7)");
   ACTS_DEBUG("	Number of bins: " << binNumber);
   ACTS_DEBUG("	(Min/Max) = (" << minimum << "/" << maximum << ")");
-  return (std::make_unique<Acts::BinUtility>(
-      binNumber, minimum, maximum, bOption, bValue));
+  return (Acts::BinUtility(binNumber, minimum, maximum, bOption, bValue));
 }
 
-std::unique_ptr<Acts::BinUtility>
+Acts::BinUtility
 Acts::SurfaceArrayCreator::createBinUtility(
     const std::vector<const Acts::Surface*>& surfaces,
     Acts::BinningValue                       bValue,
@@ -485,8 +486,7 @@ Acts::SurfaceArrayCreator::createBinUtility(
   ACTS_DEBUG("	Number of bins: " << bins);
   ACTS_DEBUG("	(Min/Max) = (" << min << "/" << max << ")");
   // create the BinUtility
-  return (std::make_unique<Acts::BinUtility>(
-      bins, min, max, bOption, bValue, transform));
+  return (Acts::BinUtility(bins, min, max, bOption, bValue, transform));
 }
 
 /// Register the neigbourhood
