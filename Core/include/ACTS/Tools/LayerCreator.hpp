@@ -54,7 +54,8 @@ public:
   };
 
   /// Constructor
-  /// @param lcConfig is the configuration lo
+  /// @param lcConfig is the configuration object
+  /// @param logger logging instance
   LayerCreator(const Config&           lcConfig,
                std::unique_ptr<Logger> logger
                = getDefaultLogger("LayerCreator", Logging::INFO));
@@ -65,14 +66,14 @@ public:
   /// ILayerCreator interface method - returning a cylindrical layer
   /// @param surfaces is the vector of sensitive surfaces represented by this
   /// layer
-  /// @param envelopR is the additional envelope applied in R
-  /// @param envelopZ is the additional envelope applied in z
+  /// @param envelopeR is the additional envelope applied in R
+  /// @param envelopeZ is the additional envelope applied in z
   /// @param binsPhi is number of bins the sensitive surfaces are ordered in phi
   /// @param binsZ is number of bins the sensitive surfaces are ordered in Z
   LayerPtr
   cylinderLayer(const std::vector<const Surface*>& surfaces,
                 double                             envelopeR,
-                double                             evelopeZ,
+                double                             envelopeZ,
                 size_t                             binsPhi,
                 size_t                             binsZ) const override;
 
@@ -81,6 +82,7 @@ public:
   /// layer
   /// @param envelopeMinR is the additional envelope applied in R at Rmin
   /// @param envelopeMaxR is the additional envelope applied in R in Rmax
+  /// @param envelopeZ is the additional envelope applied in z
   /// @param binsR is number of bins the sensitive surfaces are ordered in R
   /// @param binsPhi is number of bins the sensitive surfaces are ordered in Phi
   LayerPtr

@@ -48,7 +48,7 @@ public:
 
   /// create a tracking volume array
   /// @param vols is the vector of TrackingVolumes to be
-  /// @param bVals is the binning value
+  /// @param bVal is the binning value
   std::shared_ptr<const TrackingVolumeArray>
   trackingVolumeArray(const TrackingVolumeVector& vols,
                       BinningValue                bVal) const;

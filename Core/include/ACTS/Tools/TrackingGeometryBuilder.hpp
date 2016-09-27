@@ -45,7 +45,7 @@ public:
   };
 
   /// Constructor
-  /// @param cgb is the configuration struct for this builder
+  /// @param cgbConfig is the configuration struct for this builder
   /// @param logger logging instance
   TrackingGeometryBuilder(const Config&           cgbConfig,
                           std::unique_ptr<Logger> logger

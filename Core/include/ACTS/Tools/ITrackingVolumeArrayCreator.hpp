@@ -21,10 +21,13 @@
 namespace Acts {
 
 class TrackingVolume;
+
+/// A std::shared_ptr to a tracking volume
 typedef std::shared_ptr<const TrackingVolume> TrackingVolumePtr;
 
-/// @typedef TrackingVolumeArray
+/// A BinnedArray of a std::shared_tr to a TrackingVolume
 typedef BinnedArray<TrackingVolumePtr> TrackingVolumeArray;
+  /// A std::vector of a std::shared_ptr to a TrackingVolume
 typedef std::vector<TrackingVolumePtr> TrackingVolumeVector;
 
 /// @class ITrackingVolumeArrayCreator

@@ -75,9 +75,9 @@ public:
   /// Destructor
   virtual ~CylinderVolumeHelper() = default;
 
-  /// @copydoc ITrackingVolumeCreator::createTrackingVolume(const LayerVector&,
-  /// std::shared_ptr<const Material> matprop, VolumeBounds*, Transform3D*,bool,
-  /// const std::string&) const
+  // clang-format off
+  /// @copydoc ITrackingVolumeHelper::createTrackingVolume(const LayerVector&,std::shared_ptr<Material>,VolumeBoundsPtr,std::shared_ptr<Transform3D>,const std::string&,BinningType) const
+  // clang-format on
   TrackingVolumePtr
   createTrackingVolume(const LayerVector&           layers,
                        std::shared_ptr<Material>    matprop,
@@ -85,10 +85,9 @@ public:
                        std::shared_ptr<Transform3D> transform = nullptr,
                        const std::string& volumeName = "UndefinedVolume",
                        BinningType        btype      = arbitrary) const;
-
-  /// @copydoc ITrackingVolumeCreator::createTrackingVolume(const
-  /// std::vector<const Layer*>& , std::shared_ptr<const Material>,
-  /// ,double,double,double,double,bool,const std::string&) const;
+  // clang-format off
+  /// @copydoc ITrackingVolumeHelper::createTrackingVolume(const LayerVector&,std::shared_ptr<Material>,double,double,double,double,const std::string&,BinningType) const
+  // clang-format on
   TrackingVolumePtr
   createTrackingVolume(const LayerVector&        layers,
                        std::shared_ptr<Material> matprop,
@@ -98,30 +97,32 @@ public:
                        double                    loc2Max,
                        const std::string&        volumeName = "UndefinedVolume",
                        BinningType               btype      = arbitrary) const;
-
-  /// @copydoc
-  /// ITrackingVolumeCreator::createGapTrackingVolume(std::shared_ptr<const
-  /// Material>, double,double,double,double,int,bool,const std::string&) const;
+  // clang-format off
+  /// @copydoc ITrackingVolumeHelper::createGapTrackingVolume(std::shared_ptr<Material>,double,double,double,double,unsigned int,bool,const std::string&) const
+  // clang-format on
+  /// @note for cylindrical implementation loc1Min = rMin, loc1Max = rMax,
+  /// loc2Min = zMin, loc2Max = zMax
   TrackingVolumePtr
   createGapTrackingVolume(std::shared_ptr<Material> matprop,
-                          double                    rMin,
-                          double                    rMax,
-                          double                    zMin,
-                          double                    zMax,
+                          double                    loc1Min,
+                          double                    loc1Max,
+                          double                    loc2Min,
+                          double                    loc2Max,
                           unsigned int              materialLayers,
                           bool                      cylinder = true,
                           const std::string&        volumeName
                           = "UndefinedVolume") const;
-
-  /// @copydoc
-  /// ITrackingVolumeCreator::createGaoTrackingVolume(std::shared_ptr<const
-  /// Material>,,std::vector<double>&,int,bool,const std::string&) const;
+  // clang-format off
+  /// @copydoc ITrackingVolumeHelper::createGapTrackingVolume(std::shared_ptr<Material>  matprop,double,double,double,double,const std::vector<double>&,bool,const std::string&,BinningType) const
+  // clang-format on
+  /// @note for cylindrical implementation loc1Min = rMin, loc1Max = rMax,
+  /// loc2Min = zMin, loc2Max = zMax
   TrackingVolumePtr
   createGapTrackingVolume(std::shared_ptr<Material>  matprop,
-                          double                     rMin,
-                          double                     rMax,
-                          double                     zMin,
-                          double                     zMax,
+                          double                     loc1Min,
+                          double                     loc1Max,
+                          double                     loc2Min,
+                          double                     loc2Max,
                           const std::vector<double>& layerPositions,
                           bool                       cylinder = true,
                           const std::string& volumeName = "UndefinedVolume",
