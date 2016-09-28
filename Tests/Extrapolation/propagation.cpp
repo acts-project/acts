@@ -72,9 +72,11 @@ namespace Test {
     const auto& tp = propagator.propagate(pars, options).endParameters;
 
     // test propagation invariants
-    BOOST_TEST(pT == tp.momentum().perp(), tt::tolerance(1 * units::_keV));
-    BOOST_TEST(pz == tp.momentum()(2), tt::tolerance(1 * units::_keV));
-    BOOST_TEST(theta == tp.momentum().theta(), tt::tolerance(1e-4));
+    // clang-format off
+    BOOST_TEST((pT - tp.momentum().perp()) == 0., tt::tolerance(1 * units::_keV));
+    BOOST_TEST((pz - tp.momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
+    BOOST_TEST((theta - tp.momentum().theta()) == 0., tt::tolerance(1e-4));
+    // clang-format on
 
     // calculate bending radius
     double r = fabs(Nat2SI<units::MOMENTUM>(pT) / (q * Bz));
@@ -110,10 +112,12 @@ namespace Test {
     double exp_x = xc + r * cos(phi0 + turns * 2 * M_PI);
     double exp_y = yc + r * sin(phi0 + turns * 2 * M_PI);
 
-    BOOST_TEST(exp_phi == tp.momentum().phi(), tt::tolerance(1e-4));
-    BOOST_TEST(exp_x == tp.position()(0), tt::tolerance(0.5 * units::_um));
-    BOOST_TEST(exp_y == tp.position()(1), tt::tolerance(0.5 * units::_um));
-    BOOST_TEST(exp_z == tp.position()(2), tt::tolerance(0.5 * units::_um));
+    // clang-format off
+    BOOST_TEST((exp_phi - tp.momentum().phi()) == 0., tt::tolerance(1e-4));
+    BOOST_TEST((exp_x - tp.position()(0)) == 0., tt::tolerance(0.1 * units::_um));
+    BOOST_TEST((exp_y - tp.position()(1)) == 0., tt::tolerance(0.1 * units::_um));
+    BOOST_TEST((exp_z - tp.position()(2)) == 0., tt::tolerance(0.1 * units::_um));
+    // clang-format on
   }
 
 }  // namespace Test
