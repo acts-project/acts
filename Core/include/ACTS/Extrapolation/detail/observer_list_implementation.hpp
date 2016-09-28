@@ -80,7 +80,7 @@ namespace detail {
   {
     template <typename T, typename result, typename input>
     static void
-    observe(const T&, const input&, result&)
+    observe(const T&, const input&, const input&, result&)
     {
     }
   };
