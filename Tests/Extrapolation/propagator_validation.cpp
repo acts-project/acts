@@ -37,9 +37,9 @@ namespace Test {
                          theta,
                          index)
   {
-    typedef ConstantFieldSvc         BField_type;
-    typedef GSLStepper<BField_type>  Stepper_type;
-    typedef Propagator<Stepper_type> Propagator_type;
+    typedef ConstantFieldSvc          BField_type;
+    typedef AtlasStepper<BField_type> Stepper_type;
+    typedef Propagator<Stepper_type>  Propagator_type;
 
     BField_type::Config c;
     c.field = {0, 0, 2 * units::_T};
