@@ -2,7 +2,7 @@
 #define ACTS_ATLAS_STEPPER_HPP 1
 
 #include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Units.hpp"
 
 namespace Acts {
 
