@@ -62,10 +62,7 @@ main(int argc, char* argv[])
   typedef ObserverList<PathLengthObserver> ObsList_type;
   typedef AbortList<MaxPathLength>         AbortConditions_type;
 
-  Propagator_type::Options<Propagator_type::forward,
-                           ObsList_type,
-                           AbortConditions_type>
-                        options;
+  Propagator_type::Options<forward, ObsList_type, AbortConditions_type> options;
   AbortConditions_type& al              = options.stop_conditions;
   al.get<MaxPathLength>().maxPathLength = maxPath;
 

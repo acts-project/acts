@@ -17,6 +17,9 @@
 
 namespace Acts {
 
+/// @brief propagation direction relative to momentum
+enum Direction : int { backward = -1, forward = 1 };
+
 /// @brief propagator for particles in a magnetic field
 ///
 /// @tparam Impl implementation of the propagation algorithm
@@ -24,9 +27,6 @@ template <typename Impl>
 class Propagator final
 {
 public:
-  /// @brief propagation direction relative to momentum
-  enum Direction : int { backward = -1, forward = 1 };
-
   /// @brief options for propagate() call
   template <Direction             = forward,
             typename ObserverList = ObserverList<>,
