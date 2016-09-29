@@ -60,17 +60,15 @@ namespace detail {
   inline double
   estimateCircleD0(const P0& p0, double phi0, double kappa)
   {
-    double x0     = p0.x();
-    double y0     = p0.y();
-    double sinPhi = std::sin(phi0);
-    double cosPhi = std::cos(phi0);
+    double x0sin = p0.x() * std::sin(phi0);
+    double y0cos = p0.y() * std::cos(phi0);
     // d0 = distance(origin, circle center) - radius
-    // distance^2 / radius^2= (1 + kappa*(y*cos(phi) - x*sin(phi))
+    // distance^2 / radius^2= (1 + 2*kappa*(y*cos(phi) - x*sin(phi))
     //                           + kappa^2*(x^2 + y^2))
     // approximate sqrt(distance^2 / radius^2) = sqrt(1 + x) = ...
-    // TODO 2016-09-23 msmk: there's a factor 2 i don't understand
-    return ((y0 * cosPhi - x0 * sinPhi)) + ((x0 * x0 + y0 * y0) * kappa)
-        - ((x0 * y0 * sinPhi * cosPhi * kappa) / 4);
+    // TODO 2016-09-29 msmk: redid the calculations but distribution still weird
+    return (y0cos - x0sin) + 0.5 * kappa * (p0.x() * p0.x() + p0.y() * p0.y())
+        + 0.5 * kappa * (x0sin * x0sin + y0cos * y0cos - 2 * x0sin * y0cos);
   }
 
   /// Estimate the z position at vanishing transverse radius.
