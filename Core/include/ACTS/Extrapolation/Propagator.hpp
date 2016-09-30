@@ -11,14 +11,13 @@
 
 #include <type_traits>
 #include "ACTS/Extrapolation/AbortList.hpp"
+#include "ACTS/Extrapolation/Direction.hpp"
 #include "ACTS/Extrapolation/ObserverList.hpp"
 #include "ACTS/Extrapolation/detail/Extendable.hpp"
+#include "ACTS/Extrapolation/detail/step_caller.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
 namespace Acts {
-
-/// @brief propagation direction relative to momentum
-enum Direction : int { backward = -1, forward = 1 };
 
 /// @brief propagator for particles in a magnetic field
 ///
@@ -148,28 +147,31 @@ public:
       typename Impl::template return_parameter_type<TrackParameters>,
       ObserverList>
   propagate(const TrackParameters& start,
-            const Options<direction, ObserverList, AbortList>& options)
+            const Options<direction, ObserverList, AbortList>& options) const
   {
     typedef typename Impl::template cache_type<TrackParameters> cache_type;
     typedef typename Impl::template return_parameter_type<TrackParameters>
         return_parameter_type;
+    typedef obs_list_result_t<return_parameter_type, ObserverList> result_type;
+    typedef detail::step_caller<Impl, cache_type, direction> step_caller;
 
     static_assert(std::is_copy_constructible<return_parameter_type>::value,
                   "return track parameter type must be copy-constructible");
 
-    typedef obs_list_result_t<return_parameter_type, ObserverList> result_type;
     result_type           r(start, Status::pINPROGRESS);
     double                stepMax = options.max_step_size;
-    cache_type            propagation_cache(start);
-    return_parameter_type previous   = m_impl.convert(propagation_cache);
-    double                pathLength = 0;
+    cache_type            propagation_cache(start, direction);
+    return_parameter_type previous
+        = m_impl.convert(propagation_cache, direction);
+    double pathLength = 0;
     for (unsigned int i = 0; i < options.max_steps; ++i) {
-      pathLength += m_impl.doStep(propagation_cache, stepMax);
-      return_parameter_type current = m_impl.convert(propagation_cache);
+      pathLength += step_caller::step(m_impl, propagation_cache, stepMax);
+      return_parameter_type current
+          = m_impl.convert(propagation_cache, direction);
       options.observer_list(current, previous, r);
       if (pathLength >= options.max_path_length
           || options.stop_conditions(r, current, stepMax)) {
-        r.endParameters = m_impl.convert(propagation_cache);
+        r.endParameters = m_impl.convert(propagation_cache, direction);
         r.status        = Status::pSUCCESS;
         break;
       }
