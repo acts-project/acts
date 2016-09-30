@@ -16,6 +16,7 @@
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/BinnedArrayXD.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Units.hpp"
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
@@ -92,16 +93,46 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     arrayUtility += createEquidistantBinUtility(surfaces, binZ);
   else
     arrayUtility += createArbitraryBinUtility(surfaces, binZ);
-  // for creating the binned array a vector of surfaces plus their
-  // corresponding
-  // position is needed
-  std::vector<std::pair<const Acts::Surface*, Acts::Vector3D>> posSurfaces;
-  for (auto& surface : surfaces) {
-    // fill the position and surface vector
-    posSurfaces.push_back(std::make_pair(surface, surface->center()));
+
+  // get the number of bins
+  size_t bins1 = arrayUtility.bins(1);
+  size_t bins0 = arrayUtility.bins(0);
+  // prepare the surface matrix
+  SurfaceGrid sGrid(1, SurfaceMatrix(bins1, SurfaceVector(bins0, nullptr)));
+  V3Matrix    v3Matrix(bins1, V3Vector(bins0, Vector3D(0., 0., 0.)));
+  // get the average r
+  double R = 0;
+  /// prefill the surfaces we have
+  for (auto& sf : surfaces) {
+    /// get the binning position
+    Vector3D bPosition = sf->binningPosition(binR);
+    // record the r position
+    R += bPosition.perp();
+    // get the bins and fill
+    std::array<size_t, 3> bTriple = arrayUtility.binTriple(bPosition);
+    // and fill into the grid
+    sGrid[bTriple.at(2)][bTriple.at(1)][bTriple.at(0)] = sf;
   }
+  // average the R position
+  R /= surfaces.size();
+  // get access to the binning data
+  const std::vector<BinningData>& bdataSet = arrayUtility.binningData();
+  // create the position matrix first
+  for (size_t iz = 0; iz < bins1; ++iz) {
+    // generate the z value
+    double z = bdataSet[1].centerValue(iz);
+    for (size_t iphi = 0; iphi < bins0; ++iphi) {
+      // generate the phi value
+      double phi = bdataSet[0].centerValue(iphi);
+      // fill the position
+      v3Matrix[iz][iphi] = Vector3D(R * cos(phi), R * sin(phi), z);
+    }
+  }
+  // complete the Binning @TODO switch on when we have a faster method for this
+  completeBinning(arrayUtility, v3Matrix, surfaces, sGrid);
+  // create the surfaceArray
   auto sArray = std::make_unique<BinnedArrayXD<const Surface*>>(
-      posSurfaces, std::make_unique<Acts::BinUtility>(arrayUtility));
+      sGrid, std::make_unique<Acts::BinUtility>(arrayUtility));
   // define neigbourhood
   registerNeighbourHood(*sArray);
   // return the surface array
@@ -189,16 +220,48 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     arrayUtility += createEquidistantBinUtility(surfaces, binPhi, transform);
   else
     arrayUtility += createArbitraryBinUtility(surfaces, binPhi, transform);
-  // for creating the binned array a vector of surfaces plus their
-  // corresponding
-  // position is needed
-  std::vector<std::pair<const Acts::Surface*, Acts::Vector3D>> posSurfaces;
-  for (auto& surface : surfaces) {
-    // fill the position and surface vector
-    posSurfaces.push_back(std::make_pair(surface, surface->center()));
+  // get the number of bins
+  size_t bins1 = arrayUtility.bins(1);
+  size_t bins0 = arrayUtility.bins(0);
+  // prepare the surface matrix
+  SurfaceGrid sGrid(1, SurfaceMatrix(bins1, SurfaceVector(bins0, nullptr)));
+  V3Matrix    v3Matrix(bins1, V3Vector(bins0, Vector3D(0., 0., 0.)));
+  // get the average z
+  double z = 0;
+  /// prefill the surfaces we have
+  for (auto& sf : surfaces) {
+    /// get the binning position
+    Vector3D bPosition = sf->binningPosition(binR);
+    // record the z position
+    z += bPosition.z();
+    // get the bins and fill
+    std::array<size_t, 3> bTriple = arrayUtility.binTriple(bPosition);
+    // and fill into the grid
+    sGrid[bTriple[2]][bTriple[1]][bTriple[0]] = sf;
   }
+  // average the z position
+  z /= surfaces.size();
+
+  ACTS_DEBUG("- z-position of disk estimated as " << z);
+
+  // get access to the binning data
+  const std::vector<BinningData>& bdataSet = arrayUtility.binningData();
+  // create the position matrix first
+  for (size_t iphi = 0; iphi < bins1; ++iphi) {
+    // generate the z value
+    double phi = bdataSet[1].centerValue(iphi);
+    for (size_t ir = 0; ir < bins0; ++ir) {
+      // generate the phi value
+      double R = bdataSet[0].centerValue(ir);
+      // fill the position
+      v3Matrix[iphi][ir] = Vector3D(R * cos(phi), R * sin(phi), z);
+    }
+  }
+  // complete the Binning
+  completeBinning(arrayUtility, v3Matrix, surfaces, sGrid);
+  // create the surfaceArray
   auto sArray = std::make_unique<BinnedArrayXD<const Surface*>>(
-      posSurfaces, std::make_unique<Acts::BinUtility>(arrayUtility));
+      sGrid, std::make_unique<Acts::BinUtility>(arrayUtility));
   // define neigbourhood
   registerNeighbourHood(*sArray);
   // return the surface array
@@ -232,34 +295,84 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
   std::vector<std::pair<float, float>> boundaries;
   // now loop through the surfaces and find out the needed information
   std::vector<float> bValues;
-  for (auto& surface : surfaces) {
-    // get the bounds
-    const Acts::PlanarBounds* planarBounds
-        = dynamic_cast<const Acts::PlanarBounds*>(&(surface->bounds()));
-    if (!planarBounds)
-      ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
-                 "other bounds yet! ");
-    // get the vertices
-    std::vector<Acts::Vector2D> vertices = planarBounds->vertices();
-    if (vertices.empty()) ACTS_ERROR("Vertices of current surface empty!");
+  if (bValue == Acts::binPhi) {
+    // set the BinningOption
+    bOption = closed;
+    // copy the surface vector to a non constant vector
+    std::vector<const Acts::Surface*> surf(surfaces);
+    // the key surfaces - placed in different bins in the given binning
+    // direction
+    std::vector<const Acts::Surface*> keys;
+    // sort first in phi
+    std::stable_sort(surf.begin(),
+                     surf.end(),
+                     [](const Acts::Surface* a, const Acts::Surface* b) {
+                       return (a->center().phi() < b->center().phi());
+                     });
+    // fill the key surfaces at the different phi positions
+    std::unique_copy(begin(surf),
+                     end(surf),
+                     back_inserter(keys),
+                     [](const Acts::Surface* a, const Acts::Surface* b) {
+                       return (fabs(a->center().phi() - b->center().phi())
+                               < 10e-12);
+                     });
+    // loop through the key surfaces and access the internal boundaries
+    for (auto& surface : keys) {
+      // get the bounds
+      const Acts::PlanarBounds* planarBounds
+          = dynamic_cast<const Acts::PlanarBounds*>(&(surface->bounds()));
+      if (!planarBounds)
+        ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
+                   "other bounds yet! ");
+      // get the vertices
+      std::vector<Acts::Vector2D> vertices = planarBounds->vertices();
+      if (vertices.empty()) ACTS_ERROR("Vertices of current surface empty!");
 
-    if (bValue == Acts::binPhi) {
-      // set the BinningOption
-      bOption = closed;
       // Phi binning
       Acts::Vector3D globPos1(0., 0., 0.);
-      Acts::Vector3D globPos2(0., 0., 0.);
       // @TODO think of which position to take (or mixture) for a more
-      // general
-      // case (e.g. what if modules are twisted?)
+      // general case (e.g. what if modules are twisted?)
       surface->localToGlobal(
-          vertices.at(3), Acts::Vector3D(0., 0., 0.), globPos1);
-      surface->localToGlobal(
-          vertices.at(0), Acts::Vector3D(0., 0., 0.), globPos2);
-      // add the boundaries
-      boundaries.push_back(
-          std::make_pair<float, float>(globPos1.phi(), globPos2.phi()));
-    } else if (bValue == Acts::binZ) {
+          vertices.at(2), Acts::Vector3D(0., 0., 0.), globPos1);
+      bValues.push_back(globPos1.phi());
+      if (surface == *(keys.end() - 1)) {
+        Acts::Vector3D globPos2(0., 0., 0.);
+        surface->localToGlobal(
+            vertices.at(1), Acts::Vector3D(0., 0., 0.), globPos1);
+        bValues.push_back(globPos2.phi());
+      }
+    }
+  } else if (bValue == Acts::binZ) {
+    // copy the surface vector to a non constant vector
+    std::vector<const Acts::Surface*> surf(surfaces);
+    // the key surfaces - placed in different bins in the given binning
+    // direction
+    std::vector<const Acts::Surface*> keys;
+    // sort first in z
+    std::stable_sort(surf.begin(),
+                     surf.end(),
+                     [](const Acts::Surface* a, const Acts::Surface* b) {
+                       return (a->center().z() < b->center().z());
+                     });
+    // fill the key surfaces at the different z positions
+    std::unique_copy(begin(surf),
+                     end(surf),
+                     back_inserter(keys),
+                     [](const Acts::Surface* a, const Acts::Surface* b) {
+                       return (a->center().z() == b->center().z());
+                     });
+    // go through key surfaces
+    for (auto& surface : keys) {
+      // get the bounds
+      const Acts::PlanarBounds* planarBounds
+          = dynamic_cast<const Acts::PlanarBounds*>(&(surface->bounds()));
+      if (!planarBounds)
+        ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
+                   "other bounds yet! ");
+      // get the vertices
+      std::vector<Acts::Vector2D> vertices = planarBounds->vertices();
+      if (vertices.empty()) ACTS_ERROR("Vertices of current surface empty!");
       // Z binning
       // accessing any entry to access the second coordinate is sufficient
       // make local coordinate global
@@ -269,11 +382,42 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
       double position = 0;
       // surfaces can be binned in z or r
       position = surface->center().z();
-      boundaries.push_back(
-          std::make_pair<float, float>(position - length, position + length));
-      // eliminate double values and sort values
-      bValues = createBinValues(boundaries);
-    } else {
+      bValues.push_back(position - length);
+      if (surface == *(keys.end() - 1)) {
+        bValues.push_back(position + length);
+      }
+    }
+  } else {
+    // copy the surface vector to a non constant vector
+    std::vector<const Acts::Surface*> surf(surfaces);
+    // the key surfaces - placed in different bins in the given binning
+    // direction
+    std::vector<const Acts::Surface*> keys;
+    // sort first in r
+    std::stable_sort(surf.begin(),
+                     surf.end(),
+                     [](const Acts::Surface* a, const Acts::Surface* b) {
+                       return (a->center().perp() < b->center().perp());
+                     });
+    // fill the key surfaces at the different r positions
+    std::unique_copy(begin(surf),
+                     end(surf),
+                     back_inserter(keys),
+                     [](const Acts::Surface* a, const Acts::Surface* b) {
+                       return (fabs(a->center().perp() - b->center().perp())
+                               < Acts::units::_um);
+                     });
+    // go through key surfaces
+    for (auto& surface : keys) {
+      // get the bounds
+      const Acts::PlanarBounds* planarBounds
+          = dynamic_cast<const Acts::PlanarBounds*>(&(surface->bounds()));
+      if (!planarBounds)
+        ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
+                   "other bounds yet! ");
+      // get the vertices
+      std::vector<Acts::Vector2D> vertices = planarBounds->vertices();
+      if (vertices.empty()) ACTS_ERROR("Vertices of current surface empty!");
       // R binning
       // accessing any entry to access the second coordinate is
       // sufficient
@@ -284,12 +428,14 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
       double position = 0;
       // surfaces can be binned in z or r
       position = surface->center().perp();
-      boundaries.push_back(
-          std::make_pair<float, float>(position - length, position + length));
+      bValues.push_back(position - length);
       // eliminate double values and sort values
-      bValues = createBinValues(boundaries);
+      if (surface == *(keys.end() - 1)) {
+        bValues.push_back(position + length);
+      }
     }
   }
+  std::sort(bValues.begin(), bValues.end());
   ACTS_DEBUG("Create BinUtility for BinnedSurfaceArray with arbitrary "
              "BinningType");
   ACTS_DEBUG("	BinningValue: " << bValue);
