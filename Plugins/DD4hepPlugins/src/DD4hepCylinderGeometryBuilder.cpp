@@ -365,7 +365,7 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
         auto surfaces = createSurfaceVector(modules, transform, axes);
         std::shared_ptr<Acts::Transform3D> transf = convertTransform(transform);
         auto surfaceArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-            surfaces, equidistant, equidistant, transf);
+            surfaces, arbitrary, arbitrary, transf);
         // create the cylinder layer
         auto cylLayer = Acts::CylinderLayer::create(transf,
                                                     cylinderBounds,
@@ -536,7 +536,7 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
         auto surfaces = createSurfaceVector(modules, transform, axes);
         std::shared_ptr<Acts::Transform3D> transf = convertTransform(transform);
         auto surfaceArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-            surfaces, equidistant, equidistant, transf);
+            surfaces, arbitrary, arbitrary, transf);
         auto discLayer = Acts::DiscLayer::create(actsTransform,
                                                  discBounds,
                                                  std::move(surfaceArray),
