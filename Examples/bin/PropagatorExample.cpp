@@ -5,7 +5,7 @@
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Extrapolation/AbortConditions.hpp"
 #include "ACTS/Extrapolation/AbortList.hpp"
-#include "ACTS/Extrapolation/GSLStepper.hpp"
+#include "ACTS/Extrapolation/AtlasStepper.hpp"
 #include "ACTS/Extrapolation/ObserverList.hpp"
 #include "ACTS/Extrapolation/Observers.hpp"
 #include "ACTS/MagneticField/ConstantFieldSvc.hpp"
@@ -16,9 +16,9 @@ using namespace Acts;
 int
 main()
 {
-  typedef ConstantFieldSvc         BField_type;
-  typedef GSLStepper<BField_type>  Stepper_type;
-  typedef Propagator<Stepper_type> Propagator_type;
+  typedef ConstantFieldSvc          BField_type;
+  typedef AtlasStepper<BField_type> Stepper_type;
+  typedef Propagator<Stepper_type>  Propagator_type;
 
   BField_type::Config c;
   c.field = {0, 0, 2 * units::_T};
