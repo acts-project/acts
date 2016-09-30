@@ -16,7 +16,7 @@
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/BinnedArrayXD.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Units.hpp"
+//#include "ACTS/Utilities/Units.hpp"
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
@@ -405,7 +405,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
                      back_inserter(keys),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
                        return (fabs(a->center().perp() - b->center().perp())
-                               < Acts::units::_um);
+                               < 10e-6);
                      });
     // go through key surfaces
     for (auto& surface : keys) {
@@ -477,7 +477,8 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                      end(surf),
                      back_inserter(keys),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (a->center().phi() == b->center().phi());
+                       return (fabs(a->center().phi() - b->center().phi())
+                               < 10e-12);
                      });
     // set the minimum and maximum
     Acts::Vector3D globPos1(0., 0., 0.);
@@ -567,7 +568,8 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                      end(surf),
                      back_inserter(keys),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (a->center().perp() == b->center().perp());
+                       return (fabs(a->center().perp() - b->center().perp())
+                               < 10e-6);
                      });
     // set the minimum and maximum
     // get the first and the last surface in phi
