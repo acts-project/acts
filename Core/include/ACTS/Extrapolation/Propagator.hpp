@@ -11,13 +11,14 @@
 
 #include <type_traits>
 #include "ACTS/Extrapolation/AbortList.hpp"
-#include "ACTS/Extrapolation/Direction.hpp"
 #include "ACTS/Extrapolation/ObserverList.hpp"
 #include "ACTS/Extrapolation/detail/Extendable.hpp"
-#include "ACTS/Extrapolation/detail/step_caller.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
 namespace Acts {
+
+/// @brief propagation direction relative to momentum
+enum Direction : int { backward = -1, forward = 1 };
 
 /// @brief propagator for particles in a magnetic field
 ///
@@ -27,11 +28,13 @@ class Propagator final
 {
 public:
   /// @brief options for propagate() call
-  template <Direction             = forward,
-            typename ObserverList = ObserverList<>,
+  template <typename ObserverList = ObserverList<>,
             typename AbortList    = AbortList<>>
   struct Options
   {
+    /// propagation direction
+    Direction direction = forward;
+
     /// maximum number of steps for one propagate() call
     unsigned int max_steps = 1000;
 
@@ -139,44 +142,38 @@ private:
 
 public:
   /// @brief propagate track parameters
-  template <typename TrackParameters,
-            Direction direction,
-            typename ObserverList,
-            typename AbortList>
+  template <typename TrackParameters, typename ObserverList, typename AbortList>
   obs_list_result_t<
       typename Impl::template return_parameter_type<TrackParameters>,
       ObserverList>
   propagate(const TrackParameters& start,
-            const Options<direction, ObserverList, AbortList>& options) const
+            const Options<ObserverList, AbortList>& options) const
   {
     typedef typename Impl::template cache_type<TrackParameters> cache_type;
     typedef typename Impl::template return_parameter_type<TrackParameters>
         return_parameter_type;
     typedef obs_list_result_t<return_parameter_type, ObserverList> result_type;
-    typedef detail::step_caller<Impl, cache_type, direction> step_caller;
 
     static_assert(std::is_copy_constructible<return_parameter_type>::value,
                   "return track parameter type must be copy-constructible");
 
     result_type           r(start, Status::pINPROGRESS);
-    double                stepMax = options.max_step_size;
-    cache_type            propagation_cache(start, direction);
-    return_parameter_type previous
-        = m_impl.convert(propagation_cache, direction);
-    double pathLength = 0;
+    double                stepMax = options.direction * options.max_step_size;
+    cache_type            propagation_cache(start);
+    return_parameter_type previous   = m_impl.convert(propagation_cache);
+    double                pathLength = 0;
     for (unsigned int i = 0; i < options.max_steps; ++i) {
-      pathLength += step_caller::step(m_impl, propagation_cache, stepMax);
-      return_parameter_type current
-          = m_impl.convert(propagation_cache, direction);
+      pathLength += m_impl.step(propagation_cache, stepMax);
+      return_parameter_type current = m_impl.convert(propagation_cache);
       options.observer_list(current, previous, r);
-      if (pathLength >= options.max_path_length
+      if (fabs(pathLength) >= options.max_path_length
           || options.stop_conditions(r, current, stepMax)) {
-        r.endParameters = m_impl.convert(propagation_cache, direction);
+        r.endParameters = m_impl.convert(propagation_cache);
         r.status        = Status::pSUCCESS;
         break;
       }
 
-      if (stepMax > options.max_path_length - pathLength)
+      if (fabs(stepMax) > fabs(options.max_path_length - pathLength))
         stepMax = options.max_path_length - pathLength;
 
       previous = current;

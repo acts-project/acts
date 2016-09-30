@@ -50,8 +50,7 @@ namespace Test {
     typedef ObserverList<PathLengthObserver> ObsList_type;
     typedef AbortList<MaxPathLength>         AbortConditions_type;
 
-    Propagator_type::Options<forward, ObsList_type, AbortConditions_type>
-                          options;
+    Propagator_type::Options<ObsList_type, AbortConditions_type> options;
     AbortConditions_type& al              = options.stop_conditions;
     al.get<MaxPathLength>().maxPathLength = 5 * units::_m;
 

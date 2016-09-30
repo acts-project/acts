@@ -145,11 +145,12 @@ namespace Test {
     Propagator_type propagator(std::move(stepper));
 
     // setup propagation options
-    Propagator_type::Options<forward> fwd_options;
+    Propagator_type::Options<> fwd_options;
     fwd_options.max_path_length = 5 * units::_m;
     fwd_options.max_step_size   = 1 * units::_cm;
 
-    Propagator_type::Options<backward> back_options;
+    Propagator_type::Options<> back_options;
+    back_options.direction       = backward;
     back_options.max_path_length = 5 * units::_m;
     back_options.max_step_size   = 1 * units::_cm;
 

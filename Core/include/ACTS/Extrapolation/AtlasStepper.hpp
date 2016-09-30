@@ -2,7 +2,6 @@
 #define ACTS_ATLAS_STEPPER_HPP 1
 
 #include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Extrapolation/Direction.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
 namespace Acts {
@@ -28,7 +27,7 @@ class AtlasStepper
     ActsSymMatrixD<5>* covariance;
     double             jacobian[25];
 
-    Cache(const CurvilinearParameters& pars, Direction dir)
+    Cache(const CurvilinearParameters& pars)
       : direction(alongMomentum)
       , useJacobian(false)
       , step(0.)
@@ -44,13 +43,6 @@ class AtlasStepper
       const ActsVectorD<3> pos = pars.position();
       ActsVectorD<5>       Vp  = pars.parameters();
 
-      // invert direction for backward propagation
-      if (dir == backward) {
-        // phi
-        Vp(2) += M_PI;
-        if (Vp(2) > M_PI) Vp(2) -= 2 * M_PI;
-        Vp(3) = M_PI - Vp(3);
-      }
       double Sf, Cf, Ce, Se;
       sincos(Vp(2), &Sf, &Cf);
       sincos(Vp(3), &Se, &Ce);
@@ -61,10 +53,10 @@ class AtlasStepper
       pVector[0] = pos(0);
       pVector[1] = pos(1);
       pVector[2] = pos(2);
-      pVector[3] = Cf * Se;      // Ax
-      pVector[4] = Sf * Se;      // Ay
-      pVector[5] = Ce;           // Az
-      pVector[6] = dir * Vp[4];  // CM
+      pVector[3] = Cf * Se;  // Ax
+      pVector[4] = Sf * Se;  // Ay
+      pVector[5] = Ce;       // Az
+      pVector[6] = Vp[4];    // CM
       if (fabs(pVector[6]) < .000000000000001) {
         pVector[6] < 0. ? pVector[6] = -.000000000000001 : pVector[6]
             = .000000000000001;
@@ -121,12 +113,12 @@ public:
   using return_parameter_type = CurvilinearParameters;
 
   static CurvilinearParameters
-  convert(const Cache& cache, Direction dir)
+  convert(const Cache& cache)
   {
-    double         charge = cache.pVector[6] > 0. ? dir : -dir;
+    double         charge = cache.pVector[6] > 0. ? 1. : -1.;
     Acts::Vector3D gp(cache.pVector[0], cache.pVector[1], cache.pVector[2]);
     Acts::Vector3D mom(cache.pVector[3], cache.pVector[4], cache.pVector[5]);
-    mom /= fabs(cache.pVector[6]) * dir;
+    mom /= fabs(cache.pVector[6]);
 
     return CurvilinearParameters(
         std::unique_ptr<ActsSymMatrixD<5>>(cache.covariance), gp, mom, charge);
@@ -135,13 +127,7 @@ public:
   AtlasStepper(BField&& bField = BField()) : m_bField(std::move(bField)){};
 
   double
-  step_backward(Cache& cache, double& stepMax) const
-  {
-    return step_forward(cache, stepMax);
-  }
-
-  double
-  step_forward(Cache& cache, double& stepMax) const
+  step(Cache& cache, double& stepMax) const
   {
     bool Jac = cache.useJacobian;
 
@@ -230,6 +216,8 @@ public:
         dltm = 0.;
         continue;
       }
+
+      //      if (EST < dltm) stepMax *= 2.;
 
       // Parameters calculation
       //

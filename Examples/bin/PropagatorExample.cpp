@@ -31,8 +31,7 @@ main()
     typedef ObserverList<PathLengthObserver, DebugObserver> ObsList_type;
     typedef AbortList<MaxPathLength, MaxRadius> AbortConditions_type;
 
-    Propagator_type::Options<forward, ObsList_type, AbortConditions_type>
-                          options;
+    Propagator_type::Options<ObsList_type, AbortConditions_type> options;
     AbortConditions_type& al              = options.stop_conditions;
     al.get<MaxPathLength>().maxPathLength = 35 * units::_cm;
     al.get<MaxRadius>().maxRadius         = 15 * units::_cm;
@@ -60,8 +59,7 @@ main()
     typedef ObserverList<HitSimulator> ObsList_type;
     typedef AbortList<>                AbortConditions_type;
 
-    Propagator_type::Options<forward, ObsList_type, AbortConditions_type>
-                  options;
+    Propagator_type::Options<ObsList_type, AbortConditions_type> options;
     ObsList_type& ol      = options.observer_list;
     HitSimulator& hit_sim = ol.get<HitSimulator>();
     typedef std::tuple<float, float, float> tuple_type;
