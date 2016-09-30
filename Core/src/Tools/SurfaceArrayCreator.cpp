@@ -712,8 +712,6 @@ Acts::SurfaceArrayCreator::completeBinning(const BinUtility&    binUtility,
   //
   for (size_t io1 = 0; io1 < v3Matrix.size(); ++io1) {
     for (size_t io0 = 0; io0 < v3Matrix[0].size(); ++io0) {
-      // screen output
-      const Surface* sentry = sGrid[0][io1][io0];
       /// intersect
       Vector3D sposition = v3Matrix[io1][io0];
       double   minPath   = 10e10;
@@ -721,7 +719,6 @@ Acts::SurfaceArrayCreator::completeBinning(const BinUtility&    binUtility,
         double testPath = (sposition - sf->binningPosition(binR)).mag();
         if (testPath < minPath) {
           sGrid[0][io1][io0] = sf;
-          sentry             = sf;
           minPath            = testPath;
         }
       }
