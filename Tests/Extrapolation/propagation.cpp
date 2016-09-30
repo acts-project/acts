@@ -120,6 +120,65 @@ namespace Test {
     // clang-format on
   }
 
+  BOOST_DATA_TEST_CASE(forward_backward_propagation,
+                       bdata::random(0.4 * units::_GeV, 10. * units::_GeV)
+                           ^ bdata::random(0., 2 * M_PI)
+                           ^ bdata::random(0., M_PI)
+                           ^ bdata::random(-1, 1)
+                           ^ bdata::xrange(1000),
+                       pT,
+                       phi,
+                       theta,
+                       charge,
+                       index)
+  {
+    typedef ConstantFieldSvc          BField_type;
+    typedef AtlasStepper<BField_type> Stepper_type;
+    typedef Propagator<Stepper_type>  Propagator_type;
+
+    // setup propagator with constant B-field
+    const double        Bz = 2 * units::_T;
+    BField_type::Config c;
+    c.field = {0, 0, Bz};
+    BField_type     bField(std::move(c));
+    Stepper_type    stepper(std::move(bField));
+    Propagator_type propagator(std::move(stepper));
+
+    // setup propagation options
+    Propagator_type::Options<forward> fwd_options;
+    fwd_options.max_path_length = 5 * units::_m;
+    fwd_options.max_step_size   = 1 * units::_cm;
+
+    Propagator_type::Options<backward> back_options;
+    back_options.max_path_length = 5 * units::_m;
+    back_options.max_step_size   = 1 * units::_cm;
+
+    // define start parameters
+    double                x  = 0;
+    double                y  = 0;
+    double                z  = 0;
+    double                px = pT * cos(phi);
+    double                py = pT * sin(phi);
+    double                pz = pT / tan(theta);
+    double                q  = (charge != 0) ? charge : +1;
+    Vector3D              pos(x, y, z);
+    Vector3D              mom(px, py, pz);
+    CurvilinearParameters start(nullptr, pos, mom, q);
+
+    // do forward-backward propagation
+    const auto& tp1 = propagator.propagate(start, fwd_options).endParameters;
+    const auto& tp2 = propagator.propagate(tp1, back_options).endParameters;
+
+    // test propagation invariants
+    // clang-format off
+    BOOST_TEST((x - tp2.position()(0)) == 0., tt::tolerance(0.1 * units::_um));
+    BOOST_TEST((y - tp2.position()(1)) == 0., tt::tolerance(0.1 * units::_um));
+    BOOST_TEST((z - tp2.position()(2)) == 0., tt::tolerance(0.1 * units::_um));
+    BOOST_TEST((px - tp2.momentum()(0)) == 0., tt::tolerance(1 * units::_keV));
+    BOOST_TEST((py - tp2.momentum()(1)) == 0., tt::tolerance(1 * units::_keV));
+    BOOST_TEST((pz - tp2.momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
+    // clang-format on
+  }
 }  // namespace Test
 
 }  // namespace Acts
