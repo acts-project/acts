@@ -53,17 +53,17 @@ namespace Seeding {
     {
       return m_position;
     }
-    auto
+    double
     phi() const
     {
       return m_phi;
     }
-    auto
+    double
     theta() const
     {
       return m_theta;
     }
-    auto
+    double
     curvature() const
     {
       return m_curvature;

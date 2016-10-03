@@ -41,32 +41,32 @@ namespace Seeding {
     {
       return m_position;
     }
-    auto
+    double
     x() const
     {
       return m_position.x();
     }
-    auto
+    double
     y() const
     {
       return m_position.y();
     }
-    auto
+    double
     z() const
     {
       return m_position.z();
     }
-    auto
+    double
     rho() const
     {
       return m_position.head<2>().norm();
     }
-    auto
+    double
     phi() const
     {
       return m_position.phi();
     }
-    auto
+    const Identifier&
     identifier() const
     {
       return m_identifier;
