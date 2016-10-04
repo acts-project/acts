@@ -124,7 +124,9 @@ public:
     using detail::Extendable<ExResult...>::get;
 
     TrackParameters endParameters;
-    Status          status = Status::pUNSET;
+    Status          status     = Status::pUNSET;
+    unsigned int    steps      = 0;
+    double          pathLength = 0.;
   };
 
 private:
@@ -157,24 +159,24 @@ public:
     static_assert(std::is_copy_constructible<return_parameter_type>::value,
                   "return track parameter type must be copy-constructible");
 
-    result_type           r(start, Status::pINPROGRESS);
-    double                stepMax = options.direction * options.max_step_size;
-    cache_type            propagation_cache(start);
-    return_parameter_type previous   = m_impl.convert(propagation_cache);
-    double                pathLength = 0;
-    for (unsigned int i = 0; i < options.max_steps; ++i) {
-      pathLength += m_impl.step(propagation_cache, stepMax);
+    result_type  r(start, Status::pINPROGRESS);
+    const double signed_pathLimit = options.direction * options.max_path_length;
+    double       stepMax   = options.direction * options.max_step_size;
+    cache_type   propagation_cache(start);
+    return_parameter_type previous = m_impl.convert(propagation_cache);
+    for (; r.steps < options.max_steps; ++r.steps) {
+      r.pathLength += m_impl.step(propagation_cache, stepMax);
       return_parameter_type current = m_impl.convert(propagation_cache);
       options.observer_list(current, previous, r);
-      if (fabs(pathLength) >= options.max_path_length
+      if (fabs(r.pathLength) >= options.max_path_length
           || options.stop_conditions(r, current, stepMax)) {
         r.endParameters = m_impl.convert(propagation_cache);
         r.status        = Status::pSUCCESS;
         break;
       }
 
-      if (fabs(stepMax) > fabs(options.max_path_length - pathLength))
-        stepMax = options.max_path_length - pathLength;
+      if (fabs(stepMax) > fabs(signed_pathLimit - r.pathLength))
+        stepMax = signed_pathLimit - r.pathLength;
 
       previous = current;
     }
