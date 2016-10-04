@@ -15,7 +15,7 @@
 
 # <a name="intro">Introduction</a>
 
-This project is supposed to be an experiment-independent set of track reconstruction tools. The main philosophy is to provide high-level track reconstruction modules that can be used for any tracking detector. The description of the tracking detector's geometry is optimized for efficient navigation and quick extrapolation of tracks. Converters for several common geometry description languages exist. Having a highly performant, yet largely customizable implementation of track reconstruction algorithms was a primary objective for the design of this toolset. Additionally, the applicability to real-life HEP experiments played a major role in the development process. Apart from algorithmic code, this project also provides an event data model for the description of track parameters and measurements. 
+This project is supposed to be an experiment-independent set of track reconstruction tools. The main philosophy is to provide high-level track reconstruction modules that can be used for any tracking detector. The description of the tracking detector's geometry is optimized for efficient navigation and quick extrapolation of tracks. Converters for several common geometry description languages exist. Having a highly performant, yet largely customizable implementation of track reconstruction algorithms was a primary objective for the design of this toolset. Additionally, the applicability to real-life HEP experiments played a major role in the development process. Apart from algorithmic code, this project also provides an event data model for the description of track parameters and measurements.
 
 Key features of this project include:
 * tracking geometry description which can be constructed from TGeo, DD4Hep, or gdml input,
@@ -44,7 +44,7 @@ The following dependencies are required:
 
 + [clang](http://clang.llvm.org/) (>= 3.8.0) or [gcc](https://gcc.gnu.org/) (>= 4.9.3)
 + [cmake](https://cmake.org/) (>= 2.8)
-+ [boost](http://boost.org/) (>= 1.59)
++ [boost](http://boost.org/) (>= 1.60)
 + [Eigen](http://eigen.tuxfamily.org/) (>= 3.2.8)
 
 The following dependencies are optional and are only needed for some of the plugins
@@ -116,7 +116,7 @@ When using ACTS in your own cmake-based project, you need to include the followi
 
 > find_package (ACTS COMPONENTS comp1 comp2 ...)
 
-where `compX` are the required components from the ACTS project. 
+where `compX` are the required components from the ACTS project.
 
 # <a name="documentation">Documentation</a>
 
@@ -133,4 +133,3 @@ The authors of this project are (in alphabetical order):
 - Andreas Salzburger
 
 Some of the code was originally written for the ATLAS software. A list of contributors for this portion of the code will be added shortly.
-
