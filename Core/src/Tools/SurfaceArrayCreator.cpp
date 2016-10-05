@@ -290,13 +290,10 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
 {
   // BinningOption is open for z and r, in case of phi binning reset later
   Acts::BinningOption bOption = Acts::open;
-  // arbitrary binning - find out the binning positions and boundaries
-  // of the surfaces in the specific direction
-  std::vector<std::pair<float, float>> boundaries;
-  // now loop through the surfaces and find out the needed information
+  // the vector with the binning Values (boundaries for each bin)
   std::vector<float> bValues;
   if (bValue == Acts::binPhi) {
-    // set the BinningOption
+    // set the BinningOption closed for binning in phi
     bOption = closed;
     // copy the surface vector to a non constant vector
     std::vector<const Acts::Surface*> surf(surfaces);
@@ -317,30 +314,65 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
                        return (fabs(a->center().phi() - b->center().phi())
                                < 10e-12);
                      });
-    // loop through the key surfaces and access the internal boundaries
+    // the phi-center position of the previous surface
+    double previous = 0.;
+    // go through key surfaces
     for (auto& surface : keys) {
-      // get the bounds
-      const Acts::PlanarBounds* planarBounds
-          = dynamic_cast<const Acts::PlanarBounds*>(&(surface->bounds()));
-      if (!planarBounds)
-        ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
-                   "other bounds yet! ");
-      // get the vertices
-      std::vector<Acts::Vector2D> vertices = planarBounds->vertices();
-      if (vertices.empty()) ACTS_ERROR("Vertices of current surface empty!");
+      if (surface != *(keys.begin()) && surface != *(keys.end() - 1)) {
+        // create central binning values which is the mean of the center
+        // positions in the binning direction of the current and previous
+        // surface
+        bValues.push_back(0.5 * (previous + surface->center().phi()));
+        previous = surface->center().phi();
 
-      // Phi binning
-      Acts::Vector3D globPos1(0., 0., 0.);
-      // @TODO think of which position to take (or mixture) for a more
-      // general case (e.g. what if modules are twisted?)
-      surface->localToGlobal(
-          vertices.at(2), Acts::Vector3D(0., 0., 0.), globPos1);
-      bValues.push_back(globPos1.phi());
-      if (surface == *(keys.end() - 1)) {
-        Acts::Vector3D globPos2(0., 0., 0.);
-        surface->localToGlobal(
-            vertices.at(1), Acts::Vector3D(0., 0., 0.), globPos1);
-        bValues.push_back(globPos2.phi());
+      } else {
+        // the first boundary (minimum) and the last boundary (maximum) need to
+        // be calculated separately with the vertices of the first and last
+        // surface in the binning direction
+        // first get the bounds
+        const Acts::PlanarBounds* planarBounds
+            = dynamic_cast<const Acts::PlanarBounds*>(&(surface->bounds()));
+        if (!planarBounds)
+          ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
+                     "other bounds yet! ");
+        // get the vertices
+        std::vector<Acts::Vector2D> vertices = planarBounds->vertices();
+        if (vertices.empty()) ACTS_ERROR("Vertices of current surface empty!");
+        if (surface == *(keys.begin())) {
+          // get the minimum vertex
+          double minBValue  = 0.;
+          double prevVertex = 0.;
+          // get the minimum position in the binning direction
+          for (auto& vertex : vertices) {
+            Acts::Vector3D globVertex;
+            // get the global position of the vertices
+            surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
+            minBValue                             = globVertex.phi();
+            if (prevVertex < minBValue) minBValue = prevVertex;
+            prevVertex                            = globVertex.phi();
+          }
+          // phi correction
+          if (surface->center().phi() < minBValue) minBValue = -M_PI;
+          bValues.push_back(minBValue);
+        }
+        if (surface == *(keys.end() - 1)) {
+          bValues.push_back(0.5 * (previous + surface->center().phi()));
+          double maxBValue  = 0.;
+          double prevVertex = 0.;
+          // get the maximum position in the binning direction
+          for (auto& vertex : vertices) {
+            Acts::Vector3D globVertex;
+            // get the global position of the vertices
+            surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
+            maxBValue                             = globVertex.phi();
+            if (prevVertex > maxBValue) maxBValue = prevVertex;
+            prevVertex                            = globVertex.phi();
+          }
+          // phi correction
+          if (surface->center().phi() > maxBValue) maxBValue = M_PI;
+          bValues.push_back(maxBValue);
+        }
+        previous = surface->center().phi();
       }
     }
   } else if (bValue == Acts::binZ) {
@@ -360,31 +392,64 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
                      end(surf),
                      back_inserter(keys),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (a->center().z() == b->center().z());
+                       return (fabs(a->center().z() - b->center().z())
+                               < 10e-12);
                      });
+    // the z-center position of the previous surface
+    double previous = 0.;
     // go through key surfaces
     for (auto& surface : keys) {
-      // get the bounds
-      const Acts::PlanarBounds* planarBounds
-          = dynamic_cast<const Acts::PlanarBounds*>(&(surface->bounds()));
-      if (!planarBounds)
-        ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
-                   "other bounds yet! ");
-      // get the vertices
-      std::vector<Acts::Vector2D> vertices = planarBounds->vertices();
-      if (vertices.empty()) ACTS_ERROR("Vertices of current surface empty!");
-      // Z binning
-      // accessing any entry to access the second coordinate is sufficient
-      // make local coordinate global
-      // @TODO implement general approach - what if the modules are twisted
-      // and it is not the second coordinate?
-      double length   = fabs(vertices.front().y());
-      double position = 0;
-      // surfaces can be binned in z or r
-      position = surface->center().z();
-      bValues.push_back(position - length);
-      if (surface == *(keys.end() - 1)) {
-        bValues.push_back(position + length);
+      if (surface != *(keys.begin()) && surface != *(keys.end() - 1)) {
+        // create central binning values which is the mean of the center
+        // positions in the binning direction of the current and previous
+        // surface
+        bValues.push_back(0.5 * (previous + surface->center().z()));
+        previous = surface->center().z();
+
+      } else {
+        // the first boundary (minimum) and the last boundary (maximum) need to
+        // be calculated separately with the vertices of the first and last
+        // surface in the binning direction
+        // first get the bounds
+        const Acts::PlanarBounds* planarBounds
+            = dynamic_cast<const Acts::PlanarBounds*>(&(surface->bounds()));
+        if (!planarBounds)
+          ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
+                     "other bounds yet! ");
+        // get the vertices
+        std::vector<Acts::Vector2D> vertices = planarBounds->vertices();
+        if (vertices.empty()) ACTS_ERROR("Vertices of current surface empty!");
+        if (surface == *(keys.begin())) {
+          // get the minimum vertex
+          double minBValue  = 0.;
+          double prevVertex = 0.;
+          // get the minimum position in the binning direction
+          for (auto& vertex : vertices) {
+            Acts::Vector3D globVertex;
+            // get the global position of the vertices
+            surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
+            minBValue                             = globVertex.z();
+            if (prevVertex < minBValue) minBValue = prevVertex;
+            prevVertex                            = globVertex.z();
+          }
+          bValues.push_back(minBValue);
+        }
+        if (surface == *(keys.end() - 1)) {
+          bValues.push_back(0.5 * (previous + surface->center().z()));
+          double maxBValue  = 0.;
+          double prevVertex = 0.;
+          // get the maximum position in the binning direction
+          for (auto& vertex : vertices) {
+            Acts::Vector3D globVertex;
+            // get the global position of the vertices
+            surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
+            maxBValue                             = globVertex.z();
+            if (prevVertex > maxBValue) maxBValue = prevVertex;
+            prevVertex                            = globVertex.z();
+          }
+          bValues.push_back(maxBValue);
+        }
+        previous = surface->center().z();
       }
     }
   } else {
@@ -407,31 +472,61 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
                        return (fabs(a->center().perp() - b->center().perp())
                                < 10e-6);
                      });
+    // the r-center position of the previous surface
+    double previous = 0.;
     // go through key surfaces
     for (auto& surface : keys) {
-      // get the bounds
-      const Acts::PlanarBounds* planarBounds
-          = dynamic_cast<const Acts::PlanarBounds*>(&(surface->bounds()));
-      if (!planarBounds)
-        ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
-                   "other bounds yet! ");
-      // get the vertices
-      std::vector<Acts::Vector2D> vertices = planarBounds->vertices();
-      if (vertices.empty()) ACTS_ERROR("Vertices of current surface empty!");
-      // R binning
-      // accessing any entry to access the second coordinate is
-      // sufficient
-      // make local coordinate global
-      // @TODO implement general approach - what if the modules are twisted
-      // and it is not the second coordinate?
-      double length   = fabs(vertices.front().y());
-      double position = 0;
-      // surfaces can be binned in z or r
-      position = surface->center().perp();
-      bValues.push_back(position - length);
-      // eliminate double values and sort values
-      if (surface == *(keys.end() - 1)) {
-        bValues.push_back(position + length);
+      if (surface != *(keys.begin()) && surface != *(keys.end() - 1)) {
+        // create central binning values which is the mean of the center
+        // positions in the binning direction of the current and previous
+        // surface
+        bValues.push_back(0.5 * (previous + surface->center().perp()));
+        previous = surface->center().perp();
+
+      } else {
+        // the first boundary (minimum) and the last boundary (maximum) need to
+        // be calculated separately with the vertices of the first and last
+        // surface in the binning direction
+        // first get the bounds
+        const Acts::PlanarBounds* planarBounds
+            = dynamic_cast<const Acts::PlanarBounds*>(&(surface->bounds()));
+        if (!planarBounds)
+          ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
+                     "other bounds yet! ");
+        // get the vertices
+        std::vector<Acts::Vector2D> vertices = planarBounds->vertices();
+        if (vertices.empty()) ACTS_ERROR("Vertices of current surface empty!");
+        if (surface == *(keys.begin())) {
+          // get the minimum vertex
+          double minBValue  = 0.;
+          double prevVertex = 0.;
+          // get the minimum position in the binning direction
+          for (auto& vertex : vertices) {
+            Acts::Vector3D globVertex;
+            // get the global position of the vertices
+            surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
+            minBValue                             = globVertex.perp();
+            if (prevVertex < minBValue) minBValue = prevVertex;
+            prevVertex                            = globVertex.perp();
+          }
+          bValues.push_back(minBValue);
+        }
+        if (surface == *(keys.end() - 1)) {
+          bValues.push_back(0.5 * (previous + surface->center().perp()));
+          double maxBValue  = 0.;
+          double prevVertex = 0.;
+          // get the maximum position in the binning direction
+          for (auto& vertex : vertices) {
+            Acts::Vector3D globVertex;
+            // get the global position of the vertices
+            surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
+            maxBValue                             = globVertex.perp();
+            if (prevVertex > maxBValue) maxBValue = prevVertex;
+            prevVertex                            = globVertex.perp();
+          }
+          bValues.push_back(maxBValue);
+        }
+        previous = surface->center().perp();
       }
     }
   }

@@ -158,10 +158,16 @@ private:
     return *m_logger;
   }
   /// SurfaceArrayCreator internal method
-  /// - create an arbitrary BinUtility when the extremas and the bin numer are
-  /// not known
-  /// - it will loop through the surfaces and find out the needed information
-  /// currently implemented for phi, r and z bining
+  /// Creates an arbitrary BinUtility from a vector of (unsorted) surfaces with
+  /// PlanarBounds
+  /// It loops through the surfaces and finds out the needed information
+  /// First the surfaces are sorted in the binning direction and the so called
+  /// "key" surfaces (surfaces with different positions in the binning
+  /// direction) are extracted. The boundary value between two surfaces is the
+  /// mean value of the two center position in the binning direction. The first
+  /// and the last boundaries are calculated from the vertices of the first and
+  /// last surface.
+  /// @note currently implemented for phi, r and z bining
   /// @TODD implement for x,y binning
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the BinningValue in which direction should be binned
