@@ -213,7 +213,7 @@ Acts::TGeoLayerBuilder::collectSensitive(
       // screen output for disk debugging
       if (type) ACTS_VERBOSE(offset << "  node translation in z = " << z);
       // build the matrix
-      TGeoHMatrix nTransform = (*tgMatrix) * tgTransform;
+      TGeoHMatrix nTransform = tgTransform * (*tgMatrix);
       std::string suffix     = "_transform";
       nTransform.SetName((tNodeName + suffix).c_str());
       // if it's not accepted, get the associated volume
