@@ -158,10 +158,16 @@ private:
     return *m_logger;
   }
   /// SurfaceArrayCreator internal method
-  /// - create an arbitrary BinUtility when the extremas and the bin numer are
-  /// not known
-  /// - it will loop through the surfaces and find out the needed information
-  /// currently implemented for phi, r and z bining
+  /// Creates an arbitrary BinUtility from a vector of (unsorted) surfaces with
+  /// PlanarBounds
+  /// It loops through the surfaces and finds out the needed information
+  /// First the surfaces are sorted in the binning direction and the so called
+  /// "key" surfaces (surfaces with different positions in the binning
+  /// direction) are extracted. The boundary value between two surfaces is the
+  /// mean value of the two center position in the binning direction. The first
+  /// and the last boundaries are calculated from the vertices of the first and
+  /// last surface.
+  /// @note currently implemented for phi, r and z bining
   /// @TODD implement for x,y binning
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the BinningValue in which direction should be binned
@@ -174,9 +180,15 @@ private:
                             std::shared_ptr<Acts::Transform3D>       transform
                             = nullptr) const;
   /// SurfaceArrayCreator internal method
-  /// - create an equidistant BinUtility when the extremas and the bin numer are
-  /// - it will loop through the surfaces and find out the needed information
-  /// currently implemented for phi, r and z bining
+  /// Creates an equidistant BinUtility when the extremas and the bin number are
+  /// It loops through the surfaces and finds out the needed information
+  /// First the surfaces are sorted in the binning direction and the so called
+  /// "key" surfaces (surfaces with different positions in the binning
+  /// direction) are extracted. The number of key surfaces euqals the number of
+  /// bins. Afterwards the minimum and maximum are calculated by
+  /// subtracting/adding half of a bin size to the center position (in the
+  /// binning direction) to the first/last surface.
+  /// @note currently implemented for phi, r and z bining
   /// @TODD implement for x,y binning
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the BinningValue in which direction should be binned
@@ -247,11 +259,6 @@ private:
   ///
   void
   registerNeighbourHood(const SurfaceArray& sArray) const;
-  /// Private helper method to create the bin boundaries out of a vector of
-  /// float pairs which represent the boundaries of the surfaces, which do not
-  /// need to be attached to each other or can possibly be overlapping
-  std::vector<float>
-  createBinValues(std::vector<std::pair<float, float>> old) const;
 };
 
 }  // end of namespace
