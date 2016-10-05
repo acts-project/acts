@@ -127,6 +127,8 @@ public:
     Status          status     = Status::pUNSET;
     unsigned int    steps      = 0;
     double          pathLength = 0.;
+
+    operator bool() const { return status == Status::pSUCCESS; }
   };
 
 private:
@@ -161,7 +163,7 @@ public:
 
     result_type  r(start, Status::pINPROGRESS);
     const double signed_pathLimit = options.direction * options.max_path_length;
-    double       stepMax   = options.direction * options.max_step_size;
+    double       stepMax          = options.direction * options.max_step_size;
     cache_type   propagation_cache(start);
     return_parameter_type previous = m_impl.convert(propagation_cache);
     for (; r.steps < options.max_steps; ++r.steps) {
