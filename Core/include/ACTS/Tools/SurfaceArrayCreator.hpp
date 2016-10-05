@@ -259,11 +259,6 @@ private:
   ///
   void
   registerNeighbourHood(const SurfaceArray& sArray) const;
-  /// Private helper method to create the bin boundaries out of a vector of
-  /// float pairs which represent the boundaries of the surfaces, which do not
-  /// need to be attached to each other or can possibly be overlapping
-  std::vector<float>
-  createBinValues(std::vector<std::pair<float, float>> old) const;
 };
 
 }  // end of namespace
