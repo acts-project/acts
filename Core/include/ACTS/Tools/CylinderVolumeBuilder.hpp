@@ -225,7 +225,6 @@ public:
   /// @param insideVolume is an (optional) volume to be wrapped
   /// @param outsideBounds is an (optional) outside confinement
   /// @param layerTriple is an (optional) triplet of layers
-  /// @param volumeTriple is an (optional) triplet of volumes
   TrackingVolumePtr
   trackingVolume(TrackingVolumePtr  insideVolume  = nullptr,
                  VolumeBoundsPtr    outsideBounds = nullptr,
@@ -281,7 +280,7 @@ private:
                         const VolumeSetup& volumeSetup,
                         int                sign) const;
 
-  /// Wynchronize the layer setups with given
+  /// Synchronize the layer setups with given
   /// inside / outside constraints.
   ///
   /// This is the last method to be called in the building
@@ -291,12 +290,12 @@ private:
   /// @param nSetup the setup of negative EC layers (if present)
   /// @param cSetup the setup of the barrel layers
   /// @param pSetup the setup of positive EC layers (if present)
-  /// @param is the inside volume setup/dimensions
-  /// @param is the outside and final volume setup/dimensions
+  /// @param insideSetup is the inside volume setup/dimensions
+  /// @param outsideBoundSetup is the outside and final volume setup/dimensions
   ///
   /// @note non-const references may be changed
   ///
-  /// @return a wrapping condition @TODO check if needed
+  /// @return a wrapping condition @todo check if needed
   WrappingCondition
   synchronizeVolumeSetups(VolumeSetup&       nSetup,
                           VolumeSetup&       cSetup,
