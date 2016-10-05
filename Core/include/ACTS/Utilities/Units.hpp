@@ -145,7 +145,7 @@ namespace units {
   double
   Nat2SI(const double);
   /// @endcond
-
+  
   /// @brief convert energy from SI to natural units
   ///
   /// This function converts the given energy value from SI units to natural
@@ -161,11 +161,7 @@ namespace units {
   /// @result numeric value of energy in natural units
   template <>
   double
-  SI2Nat<ENERGY>(const double E)
-  {
-    static const double conversion = _GeV_per_J;
-    return E * conversion;
-  }
+  SI2Nat<ENERGY>(const double E);
 
   /// @brief convert energy from natural to SI units
   ///
@@ -182,11 +178,7 @@ namespace units {
   /// @result numeric value of energy in SI units
   template <>
   double
-  Nat2SI<ENERGY>(const double E)
-  {
-    static const double conversion = 1. / _GeV_per_J;
-    return E * conversion;
-  }
+  Nat2SI<ENERGY>(const double E);
 
   /// @brief convert length from SI to natural units
   ///
@@ -203,11 +195,7 @@ namespace units {
   /// @result numeric value of length in natural units
   template <>
   double
-  SI2Nat<LENGTH>(const double l)
-  {
-    static const double conversion = 1. / _mm_times_GeV;
-    return l * conversion;
-  }
+  SI2Nat<LENGTH>(const double l);
 
   /// @brief convert length from natural to SI units
   ///
@@ -224,11 +212,7 @@ namespace units {
   /// @result numeric value of length in SI units
   template <>
   double
-  Nat2SI<LENGTH>(const double l)
-  {
-    static const double conversion = _mm_times_GeV;
-    return l * conversion;
-  }
+  Nat2SI<LENGTH>(const double l);
 
   /// @brief convert momentum from SI to natural units
   ///
@@ -245,12 +229,7 @@ namespace units {
   /// @result numeric value of momentum in natural units
   template <>
   double
-  SI2Nat<MOMENTUM>(const double p)
-  {
-    // p(NU) = p(SI) * c
-    static const double conversion = _c * _GeV_per_J;
-    return p * conversion;
-  }
+  SI2Nat<MOMENTUM>(const double p);
 
   /// @brief convert momentum from natural to SI units
   ///
@@ -267,12 +246,7 @@ namespace units {
   /// @result numeric value of momentum in SI units
   template <>
   double
-  Nat2SI<MOMENTUM>(const double p)
-  {
-    // p(SI) = p(NU)/c
-    static const double conversion = 1. / (_c * _GeV_per_J);
-    return p * conversion;
-  }
+  Nat2SI<MOMENTUM>(const double p);
 
   /// @brief convert mass from SI to natural units
   ///
@@ -289,12 +263,7 @@ namespace units {
   /// @result numeric value of mass in natural units
   template <>
   double
-  SI2Nat<MASS>(const double m)
-  {
-    // p(NU) = p(SI) * c
-    static const double conversion = _c * _c * _GeV_per_J;
-    return m * conversion;
-  }
+  SI2Nat<MASS>(const double m);
 
   /// @brief convert mass from natural to SI units
   ///
@@ -311,12 +280,7 @@ namespace units {
   /// @result numeric value of mass in SI units
   template <>
   double
-  Nat2SI<MASS>(const double m)
-  {
-    // p(SI) = p(NU)/c
-    static const double conversion = 1. / (_c * _c * _GeV_per_J);
-    return m * conversion;
-  }
+  Nat2SI<MASS>(const double m);
 }  // namespace units
 
 }  // namespace Acts
