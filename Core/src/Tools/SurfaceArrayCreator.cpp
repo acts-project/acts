@@ -575,42 +575,21 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                        return (fabs(a->center().phi() - b->center().phi())
                                < 10e-12);
                      });
-    // set the minimum and maximum
-    Acts::Vector3D globPos1(0., 0., 0.);
-    Acts::Vector3D globPos2(0., 0., 0.);
-    // get the first and the last surface in phi
-    const Acts::Surface* frontSurface = keys.front();
-    const Acts::Surface* backSurface  = keys.back();
-    // access the bounds of the first surface
-    const Acts::PlanarBounds* frontBounds
-        = dynamic_cast<const Acts::PlanarBounds*>(&(frontSurface->bounds()));
-    if (!frontBounds)
-      ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
-                 "other bounds yet! ");
-    // get the boundaries
-    std::vector<Acts::Vector2D> frontVertices = frontBounds->vertices();
-    // access boundaries of last surface
-    const Acts::PlanarBounds* backBounds
-        = dynamic_cast<const Acts::PlanarBounds*>(&(backSurface->bounds()));
-    if (!backBounds)
-      ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
-                 "other bounds yet! ");
-    // get the boundaries
-    std::vector<Acts::Vector2D> backVertices = backBounds->vertices();
-    // @TODO think of which position to take (or mixture) for a more
-    // general
-    // case (e.g. what if modules are twisted?)
-    // make point global
-    frontSurface->localToGlobal(
-        frontVertices.at(3), Acts::Vector3D(0., 0., 0.), globPos1);
-    backSurface->localToGlobal(
-        backVertices.at(0), Acts::Vector3D(0., 0., 0.), globPos2);
-    // get minimum and maximum
-    minimum = globPos1.phi();
-    maximum = globPos2.phi();
-    // check
-    if (frontSurface->center().phi() > maximum) maximum = M_PI;
-    if (backSurface->center().phi() < minimum) minimum  = -M_PI;
+    // set minimum and maximum
+    double min  = keys.front()->center().phi();
+    double max  = keys.back()->center().phi();
+    double step = fabs(max - min) / (keys.size() - 1);
+    minimum     = min - 0.5 * step;
+    maximum     = max + 0.5 * step;
+    // phi correction
+    if (minimum < -M_PI) {
+      minimum += step;
+      maximum += step;
+    }
+    if (maximum > M_PI) {
+      minimum -= step;
+      maximum -= step;
+    }
 
   } else if (bValue == Acts::binZ) {
     // Z binning
@@ -627,29 +606,12 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                      [](const Acts::Surface* a, const Acts::Surface* b) {
                        return (a->center().z() == b->center().z());
                      });
-    // set the minimum and maximum
-    // get the first and the last surface in z
-    const Acts::Surface* frontSurface = keys.front();
-    const Acts::Surface* backSurface  = keys.back();
-    // get the boundaries of the first surface
-    const Acts::PlanarBounds* frontBounds
-        = dynamic_cast<const Acts::PlanarBounds*>(&(frontSurface->bounds()));
-    if (!frontBounds)
-      ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
-                 "other bounds yet! ");
-    // get the vertices
-    std::vector<Acts::Vector2D> frontVertices = frontBounds->vertices();
-    // get boundaries of last surface
-    const Acts::PlanarBounds* backBounds
-        = dynamic_cast<const Acts::PlanarBounds*>(&(backSurface->bounds()));
-    if (!backBounds)
-      ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
-                 "other bounds yet! ");
-    // get the vertices
-    std::vector<Acts::Vector2D> backVertices = backBounds->vertices();
-    // set the minimum and maximum
-    minimum = frontSurface->center().z() - fabs(frontVertices.front().y());
-    maximum = backSurface->center().z() + fabs(backVertices.front().y());
+    // set minimum and maximum
+    double min  = keys.front()->center().z();
+    double max  = keys.back()->center().z();
+    double step = fabs(max - min) / (keys.size() - 1);
+    minimum     = min - 0.5 * step;
+    maximum     = max + 0.5 * step;
   } else {
     // R binning
     // sort first in r
@@ -667,28 +629,11 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                                < 10e-6);
                      });
     // set the minimum and maximum
-    // get the first and the last surface in phi
-    const Acts::Surface* frontSurface = keys.front();
-    const Acts::Surface* backSurface  = keys.back();
-    // get the boundaries of the first surface
-    const Acts::PlanarBounds* frontBounds
-        = dynamic_cast<const Acts::PlanarBounds*>(&(keys.front()->bounds()));
-    if (!frontBounds)
-      ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
-                 "other bounds yet! ");
-    // get the vertices
-    std::vector<Acts::Vector2D> frontVertices = frontBounds->vertices();
-    // get the boundaries of the last surface
-    const Acts::PlanarBounds* backBounds
-        = dynamic_cast<const Acts::PlanarBounds*>(&(keys.back()->bounds()));
-    if (!backBounds)
-      ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
-                 "other bounds yet! ");
-    // get vertices
-    std::vector<Acts::Vector2D> backVertices = backBounds->vertices();
-    // calculate minimum and maximum
-    minimum = frontSurface->center().perp() - fabs(frontVertices.front().y());
-    maximum = backSurface->center().perp() + fabs(backVertices.front().y());
+    double min  = keys.front()->center().perp();
+    double max  = keys.back()->center().perp();
+    double step = fabs(max - min) / (keys.size() - 1);
+    minimum     = min - 0.5 * step;
+    maximum     = max + 0.5 * step;
   }
   // assign the bin size
   double binNumber = keys.size();

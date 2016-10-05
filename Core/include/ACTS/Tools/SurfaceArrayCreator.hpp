@@ -180,9 +180,15 @@ private:
                             std::shared_ptr<Acts::Transform3D>       transform
                             = nullptr) const;
   /// SurfaceArrayCreator internal method
-  /// - create an equidistant BinUtility when the extremas and the bin numer are
-  /// - it will loop through the surfaces and find out the needed information
-  /// currently implemented for phi, r and z bining
+  /// Creates an equidistant BinUtility when the extremas and the bin number are
+  /// It loops through the surfaces and finds out the needed information
+  /// First the surfaces are sorted in the binning direction and the so called
+  /// "key" surfaces (surfaces with different positions in the binning
+  /// direction) are extracted. The number of key surfaces euqals the number of
+  /// bins. Afterwards the minimum and maximum are calculated by
+  /// subtracting/adding half of a bin size to the center position (in the
+  /// binning direction) to the first/last surface.
+  /// @note currently implemented for phi, r and z bining
   /// @TODD implement for x,y binning
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the BinningValue in which direction should be binned
