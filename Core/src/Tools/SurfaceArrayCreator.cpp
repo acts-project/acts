@@ -16,7 +16,7 @@
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/BinnedArrayXD.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-//#include "ACTS/Utilities/Units.hpp"
+#include "ACTS/Utilities/Units.hpp"
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
@@ -393,7 +393,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
                      back_inserter(keys),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
                        return (fabs(a->center().z() - b->center().z())
-                               < 10e-12);
+                               < Acts::units::_um);
                      });
     // the z-center position of the previous surface
     double previous = 0.;
@@ -470,7 +470,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
                      back_inserter(keys),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
                        return (fabs(a->center().perp() - b->center().perp())
-                               < 10e-6);
+                               < Acts::units::_um);
                      });
     // the r-center position of the previous surface
     double previous = 0.;
@@ -604,7 +604,8 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                      end(surf),
                      back_inserter(keys),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (a->center().z() == b->center().z());
+                       return (fabs(a->center().z() - b->center().z())
+                               < Acts::units::_um);
                      });
     // set minimum and maximum
     double min  = keys.front()->center().z();
@@ -626,7 +627,7 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                      back_inserter(keys),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
                        return (fabs(a->center().perp() - b->center().perp())
-                               < 10e-6);
+                               < Acts::units::_um);
                      });
     // set the minimum and maximum
     double min  = keys.front()->center().perp();
