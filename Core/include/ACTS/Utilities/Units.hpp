@@ -144,8 +144,8 @@ namespace units {
   template <Quantity>
   double
   Nat2SI(const double);
-
   /// @endcond
+  
   /// @brief convert energy from SI to natural units
   ///
   /// This function converts the given energy value from SI units to natural
