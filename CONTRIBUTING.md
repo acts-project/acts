@@ -10,6 +10,8 @@ Contributions to the ACTS project are very welcome and feedback on the documenta
     3. [Workflow recommendations](#workflow-recommendations)
     4. [Coding style and guidelines](#coding-style-and-guidelines)
     5. [git tips and tricks](#git-tips-and-tricks)
+4. [Administrator's corner](#admin-corner)
+    1. [Setting up a Jenkins CI server](#setup-jenkins)
 
 ## <a name="mailing-lists">Mailing lists</a>
 
@@ -247,4 +249,187 @@ which should give the following situation:
 <img src="doc/figures/move_to_branch2.png" alt="moving commits to new branch">  
 Now, master is pointing to B, HEAD and &lt;new\_branch\_name&gt; are pointing to E and you can happily continue with your work.
 
+## <a name="admin-corner">Administrator's corner</a>
+
+This section gives useful information to the administrators of the ACTS project. For normal developers the sections below are irrelevant.
+
+### <a name="setup-jenkins">Setting up a Jenkins CI server</a>
+
+The following steps explain on how to setup and configure a Jenkins server for continuous integration tests using the CERN openstack infrastructure.
+
+1. Launch an openstack instance as described [here](https://clouddocs.web.cern.ch/clouddocs/tutorial_using_a_browser/index.html). The following settings are recommended:
+  + flavor: m2.medium
+  + boot from image: Ubuntu 16.04 LTS - x86_64
+  + keypair: make sure to add a public ssh key using RSA encryption (**Note**: A DSA encrypted key does not work anymore with Ubuntu 16.04).
+2. Login to your virtual machine, update the system and setup a user with root privileges:
+
+        # login to the machine using the key-pair provided during instance creation
+        ssh -i <public key> ubuntu@<vm-name>
+        # update system 
+        sudo apt-get update 
+        sudo apt-get upgrade
+        # fix locale warnings
+        sudo locale-gen "en_GB.UTF-8"
+        sudo dpkg-reconfigure locales
+        # add ACTS jenkins user with sudo privileges
+        sudo adduser atsjenkins
+        sudo usermod -aG sudo atsjenkins
+        # to enable password authentication:
+        # change PasswordAuthentication to 'yes' in '/etc/ssh/sshd_config'
+        sudo service ssh restart
+        # generate public-private key pair
+        ssh-keygen -t rsa
+        # add the public key from '~/.ssh/id_rsa.pub' to the GitLab atsjenkins account (under Profile Settings -> SSH keys)
+
+3. Install required software:
+
+        # compilers
+        sudo apt-get install g++
+        sudo apt-get install clang
+        sudo apt-get install clang-format
+        # cmake
+        sudo apt-get install cmake
+        # doxygen
+        sudo apt-get install doxygen
+        sudo apt-get install graphviz        
+        # Eigen algebra library
+        wget http://bitbucket.org/eigen/eigen/get/3.2.9.tar.gz
+        tar xf 3.2.9.tar.gz
+        sudo mkdir -p /opt/eigen/
+        sudo mv eigen-eigen-dc6cfdf9bcec/ /opt/eigen/3.2.9
+        rm 3.2.9.tar.gz
+        # Boost library
+        wget -O boost-1_61_0.tar.gz http://downloads.sourceforge.net/project/boost/boost/1.61.0/boost_1_61_0.tar.gz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fboost%2Ffiles%2Fboost%2F1.61.0%2F&ts=1474572837&use_mirror=freefr
+        tar xf boost-1_61_0.tar.gz
+        cd boost_1_61_0/
+        ./bootstrap.sh --prefix=/opt/boost/1.61.0
+        sudo ./b2 install
+        cd .. && rm boost-1_61_0.tar.gz && rm -r boost_1_61_0
+        # ROOT
+        wget https://root.cern.ch/download/root_v6.06.08.source.tar.gz
+        tar xf root_v6.06.08.source.tar.gz
+        mkdir build && cd build
+        sudo apt-get install -y libx11-dev libxpm-dev libxft-dev libxext-dev libfftw3-dev libxml2-dev libgsl-dev
+        cmake ../root-6.06.08/ -DCMAKE_INSTALL_PREFIX=/opt/root/6.06.08 -Dcxx14=ON -Dminuit2=ON -Droofit=ON -Dxml=ON -Dfftw3=ON -Dgdml=ON -Dopengl=ON -DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=0
+        sudo cmake --build . --target install -- -j 4
+        cd .. && rm -rf build/ && rm -rf root-6.06.08/ && rm root_v6.06.08.source.tar.gz
+        # Python stuff
+        sudo apt install python-pip
+        sudo pip install requests
+        
+4. Install Jenkins (taken from [here](https://wiki.jenkins-ci.org/display/JENKINS/Installing+Jenkins+on+Ubuntu)):
+
+        wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -
+        sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+        sudo apt-get update
+        sudo apt-get install jenkins
+        sudo service jenkins start
+        
+5. Setup a convenience alias and SSH credentials:
+
+        # create an alias for executing commands as jenkins user
+        cat >> ~/.bash_aliases << EOF
+        > alias asjenkins="sudo -u jenkins"
+        > EOF
+        source ~/.bash_aliases
+        # copy atsjenkins SSH credentials
+        sudo cp ~/.ssh/id_rsa ~/.ssh/id_rsa.pub /var/lib/jenkins/.ssh
+        sudo chown jenkins /var/lib/jenkins/.ssh/id_rsa /var/lib/jenkins/.ssh/id_rsa.pub
+        sudo chgrp jenkins /var/lib/jenkins/.ssh/id_rsa /var/lib/jenkins/.ssh/id_rsa.pub
+
+6. Open firewall ports:
+
+        # install firewall configuration tool
+        sudo apt-get install firewalld
+        sudo firewall-cmd --zone=public --add-port=8080/tcp --permanent
+        sudo firewall-cmd --zone=public --add-service=http --permanent
+        sudo firewall-cmd --reload
+
+7. Configure the Jenkins instance through the web interface:
+    1. Open the Jenkins Dashboard under http://<VM-name>:8080 in your browser and follow the instructions to unlock the Jenkins instance.
+    2. Install the following Jenkins plugins:
+        + git
+        + gitlab
+        + multijob
+        + embeddable build status
+        + rebuilder
+        + timestamper
+        + conditional build step
+        + parametrized trigger
+        + workspace cleanup
+        + environment script
+    3. Create a Jenkins admin user with name `atsjenkins`, select a password and use `ats.jenkins@cern.ch` as email.
+    4. Configure Jenkins instance:
+        + Manage Jenkins -> Configure Global Security: enable "Allow anonymous read access"
+        + Manage Jenkins -> Configure System 
+            + Maven Project Configuration:
+                + # executors: 5
+            + GitLab section:
+                + Connection name: GitLab
+                + GitLab host URL: https://gitlab.cern.ch
+                + add credentials: use type "GitLab API token" and insert the private token from GitLab atsjenkins user (which can be found in GitLab under Profile settings -> Account -> Private token)
+                + under advanced: tick "Ignore SSL certificate errors"
+                + hit "Test Connection" which should return "success"
+            + Jenkins location:
+                + URL: http://<VM-name>.cern.ch:8080
+                + email: ats.jenkins@cern.ch
+            + Git plugin:
+                + user.name: ATS Jenkins
+                + user.email: ats.jenkins@cern.ch
+8. Configure the Jenkins CI jobs:
+
+        # checkout the job configuration and helper scripts
+        cd /var/lib/jenkins
+        asjenkins git init
+        asjenkins git remote add origin ssh://git@gitlab.cern.ch:7999/acts/jenkins-setup.git
+        asjenkins git fetch
+        asjenkins git checkout -t origin/master
+        
+        # fixing some credential settings which means manually copying the following part from 'credentials.xml.in'
+        # <com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey ...>
+        # ...
+        # </com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey>
+        # into 'credentials.xml' after the following line:
+        # <java.util.concurrent.CopyOnWriteArrayList>
+        
+        # allow passing undefined parameters:
+        # add '-Dhudson.model.ParametersAction.keepUndefinedParameters=true' to JAVA_ARGS in /etc/default/jenkins
+        
+        # set some symlinks
+        sudo sh create_symlinks.sh
+        
+        # restart the jenkins server
+        sudo service jenkins restart
+            
+9. Setup kerberos authentication needed for updating the ACTS webpage with new tags
+
+        # authentication
+        sudo apt install krb5-user
+        sudo apt-get install openafs-client
+        # generate keytab file
+        ktutil
+        ktutil:  addent -password -p atsjenkins@CERN.CH -k 1 -e aes256-cts-hmac-sha1-96
+        ktutil:  addent -password -p atsjenkins@CERN.CH -k 1 -e arcfour-hmac
+        ktutil:  wkt .keytab
+        ktutil:  q
+        sudo mv .keytab /etc/krb5_atsjenkins.keytab
+        sudo chown jenkins /etc/krb5_atsjenkins.keytab
+        sudo chgrp jenkins /etc/krb5_atsjenkins.keytab
+        # download kerberos configuration
+        sudo wget -O /etc/krb5.conf http://linux.web.cern.ch/linux/docs/krb5.conf
+        # add "@daily ID=afstoken kinit --renew" to /etc/crontab
+        
+        # add the following to /etc/ssh/ssh_config
+        #
+        # HOST lxplus*
+        #   ForwardX11 yes
+        #   ForwardX11Trusted no
+        #   GSSAPITrustDNS yes
+        #   HashKnownHosts yes
+        #   GSSAPIAuthentication yes
+        #   GSSAPIDelegateCredentials yes
+        
+        # install mailutils for sending notifications
+        sudo apt-get install mailutils
+        
 /// @ingroup Contributing
