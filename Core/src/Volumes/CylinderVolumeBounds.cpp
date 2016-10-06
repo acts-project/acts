@@ -90,13 +90,8 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
   RotationMatrix3D discRot(transform.rotation());
   Vector3D         cylCenter(transform.translation());
 
-  // bottom Disc (negative z)
-  RotationMatrix3D bottomDiscRot;
-  bottomDiscRot.col(0) = discRot.col(1);
-  bottomDiscRot.col(1) = discRot.col(0);
-  bottomDiscRot.col(2) = -discRot.col(2);
-
   std::shared_ptr<const DiscBounds> dBounds = discBounds();
+  // bottom Disc (negative z)
   tTransform
       = new Transform3D(transform * AngleAxis3D(M_PI, Vector3D(1., 0., 0.))
                         * Translation3D(Vector3D(0., 0., halflengthZ())));
@@ -104,7 +99,7 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
       new DiscSurface(std::shared_ptr<Transform3D>(tTransform), dBounds));
   // top Disc (positive z)
   tTransform = new Transform3D(
-      discRot * Translation3D(cylCenter + halflengthZ() * discRot.col(2)));
+      transform * Translation3D(Vector3D(0., 0., halflengthZ())));
   rSurfaces.push_back(
       new DiscSurface(std::shared_ptr<Transform3D>(tTransform), dBounds));
 
