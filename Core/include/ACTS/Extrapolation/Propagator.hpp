@@ -30,6 +30,11 @@ namespace propagation {
   template <typename TrackParameters, typename... ExResult>
   struct Result : private detail::Extendable<ExResult...>
   {
+    Result(Status s = Status::UNSET)
+      : detail::Extendable<ExResult...>(), status(s)
+    {
+    }
+
     using detail::Extendable<ExResult...>::get;
 
     std::unique_ptr<TrackParameters> endParameters = nullptr;
@@ -166,7 +171,7 @@ namespace propagation {
       static_assert(std::is_copy_constructible<return_parameter_type>::value,
                     "return track parameter type must be copy-constructible");
 
-      result_type  r;
+      result_type  r(Status::INPROGRESS);
       const double signed_pathLimit
           = options.direction * options.max_path_length;
       double                stepMax = options.direction * options.max_step_size;
@@ -218,7 +223,7 @@ namespace propagation {
       static_assert(std::is_copy_constructible<return_parameter_type>::value,
                     "return track parameter type must be copy-constructible");
 
-      result_type  r;
+      result_type  r(Status::INPROGRESS);
       const double signed_pathLimit
           = options.direction * options.max_path_length;
       cache_type          cache(start);
