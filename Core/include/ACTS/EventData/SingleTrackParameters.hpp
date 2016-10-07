@@ -216,6 +216,15 @@ protected:
   }
 
   /**
+   * @copydoc TrackParametersBase::getParameterSet
+   */
+  virtual FullParameterSet&
+  getParameterSet() final
+  {
+    return m_oParameters;
+  }
+
+  /**
    * @brief update global momentum from current parameter values
    *
    * @note This function is triggered when called with an argument of a type
