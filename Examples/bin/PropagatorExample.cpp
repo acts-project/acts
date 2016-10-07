@@ -12,6 +12,7 @@
 #include "ACTS/Utilities/Units.hpp"
 
 using namespace Acts;
+using namespace Acts::propagation;
 
 int
 main()

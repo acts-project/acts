@@ -12,6 +12,7 @@
 
 namespace po = boost::program_options;
 using namespace Acts;
+using namespace Acts::propagation;
 
 int
 main(int argc, char* argv[])

@@ -25,6 +25,7 @@ namespace tt    = boost::test_tools;
 namespace Acts {
 
 using units::Nat2SI;
+using namespace propagation;
 
 namespace Test {
 

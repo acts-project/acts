@@ -21,6 +21,8 @@ namespace utf   = boost::unit_test;
 
 namespace Acts {
 
+using namespace propagation;
+
 namespace Test {
 
   BOOST_AUTO_TEST_SUITE(propagator_validation,
