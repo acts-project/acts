@@ -112,7 +112,29 @@ struct VolumeSetup
   wraps(const VolumeSetup& vSetup) const
   {
     // it wraps
-    return wrapsInR(vSetup) && wrapsInZ(vSetup);
+    return (wrapsInR(vSetup) && wrapsInZ(vSetup));
+  }
+
+  /// Check if contained full set
+  bool
+  containes(const VolumeSetup& vSetup) const
+  {
+    return (containesInR(vSetup) && containesInZ(vSetup));
+  }
+  /// Check if contained radially
+  bool
+  containesInR(const VolumeSetup& vSetup) const
+  {
+    if (vSetup.rMin > rMin && vSetup.rMax < rMax) return true;
+    return false;
+  }
+
+  /// Check if contained longitudinally
+  bool
+  containesInZ(const VolumeSetup& vSetup) const
+  {
+    if (vSetup.zMin > zMin && vSetup.zMax < zMax) return true;
+    return false;
   }
 
   /// toString
