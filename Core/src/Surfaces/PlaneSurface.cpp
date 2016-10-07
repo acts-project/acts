@@ -42,9 +42,9 @@ Acts::PlaneSurface::PlaneSurface(const Vector3D& center, const Vector3D& normal)
       : Vector3D::UnitX().cross(T);
   Vector3D         V = T.cross(U);
   RotationMatrix3D curvilinearRotation;
-  curvilinearRotation.col(0) = T;
-  curvilinearRotation.col(1) = U;
-  curvilinearRotation.col(2) = V;
+  curvilinearRotation.col(0) = U;
+  curvilinearRotation.col(1) = V;
+  curvilinearRotation.col(2) = T;
 
   // curvilinear surfaces are boundless
   Surface::m_transform    = std::make_shared<Transform3D>();
