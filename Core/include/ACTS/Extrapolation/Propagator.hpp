@@ -9,6 +9,7 @@
 #ifndef ACTS_EXTRAPOLATION_PROPAGATOR_H
 #define ACTS_EXTRAPOLATION_PROPAGATOR_H 1
 
+#include <memory>
 #include <type_traits>
 #include "ACTS/Extrapolation/AbortList.hpp"
 #include "ACTS/Extrapolation/ObserverList.hpp"
@@ -108,15 +109,14 @@ public:
     return *this;
   }
 
-  enum struct Status { pSUCCESS, pFAILURE, pUNSET, pINPROGRESS };
+  enum struct Status { SUCCESS, FAILURE, UNSET, INPROGRESS, WRONG_DIRECTION };
 
   template <typename TrackParameters, typename... ExResult>
   struct Result : private detail::Extendable<ExResult...>
   {
-    Result(const TrackParameters& startParameters,
-           const Status&          s = Status::pUNSET)
+    Result(TrackParameters startParameters, const Status& s = Status::UNSET)
       : detail::Extendable<ExResult...>()
-      , endParameters(startParameters)
+      , endParameters(std::move(startParameters))
       , status(s)
     {
     }
@@ -124,11 +124,11 @@ public:
     using detail::Extendable<ExResult...>::get;
 
     TrackParameters endParameters;
-    Status          status     = Status::pUNSET;
+    Status          status     = Status::UNSET;
     unsigned int    steps      = 0;
     double          pathLength = 0.;
 
-    operator bool() const { return status == Status::pSUCCESS; }
+    operator bool() const { return status == Status::SUCCESS; }
   };
 
 private:
@@ -161,7 +161,7 @@ public:
     static_assert(std::is_copy_constructible<return_parameter_type>::value,
                   "return track parameter type must be copy-constructible");
 
-    result_type  r(start, Status::pINPROGRESS);
+    result_type  r(start, Status::INPROGRESS);
     const double signed_pathLimit = options.direction * options.max_path_length;
     double       stepMax          = options.direction * options.max_step_size;
     cache_type   propagation_cache(start);
@@ -173,12 +173,80 @@ public:
       if (fabs(r.pathLength) >= options.max_path_length
           || options.stop_conditions(r, current, stepMax)) {
         r.endParameters = m_impl.convert(propagation_cache);
-        r.status        = Status::pSUCCESS;
+        r.status        = Status::SUCCESS;
         break;
       }
 
       if (fabs(stepMax) > fabs(signed_pathLimit - r.pathLength))
         stepMax = signed_pathLimit - r.pathLength;
+
+      previous = current;
+    }
+
+    return r;
+  }
+
+  /// @brief propagate track parameters
+  template <typename TrackParameters,
+            typename Surface,
+            typename ObserverList,
+            typename AbortList>
+  obs_list_result_t<std::unique_ptr<
+                        typename Impl::
+                            template return_parameter_type<TrackParameters,
+                                                           Surface>>,
+                    ObserverList>
+  propagate(const TrackParameters& start,
+            const Surface&         target,
+            const Options<ObserverList, AbortList>& options) const
+  {
+    typedef typename Impl::template cache_type<TrackParameters, Surface>
+        cache_type;
+    typedef typename Impl::template step_parameter_type<TrackParameters>
+        step_parameter_type;
+    typedef
+        typename Impl::template return_parameter_type<TrackParameters, Surface>
+            return_parameter_type;
+    typedef obs_list_result_t<std::unique_ptr<return_parameter_type>,
+                              ObserverList>
+        result_type;
+
+    static_assert(std::is_copy_constructible<return_parameter_type>::value,
+                  "return track parameter type must be copy-constructible");
+
+    result_type  r(nullptr, Status::INPROGRESS);
+    const double signed_pathLimit = options.direction * options.max_path_length;
+    cache_type   cache(start);
+    step_parameter_type previous = m_impl.convert(cache);
+    double              distance
+        = m_impl.distance(target, cache.position(), cache.direction());
+
+    if (distance * options.direction < 0) {
+      r.status = Status::WRONG_DIRECTION;
+      return r;
+    }
+
+    double stepMax = options.direction * options.max_step_size;
+    if (fabs(stepMax) > fabs(distance)) stepMax = distance;
+
+    for (; r.steps < options.max_steps; ++r.steps) {
+      r.pathLength += m_impl.step(cache, stepMax);
+      step_parameter_type current = m_impl.convert(cache);
+      options.observer_list(current, previous, r);
+      distance = m_impl.distance(target, cache.position(), cache.direction());
+      if (fabs(distance) < 1 * units::_um
+          || fabs(r.pathLength) >= options.max_path_length
+          || options.stop_conditions(r, current, stepMax)) {
+        r.endParameters = std::make_unique<return_parameter_type>(
+            m_impl.convert(cache, target));
+        r.status = Status::SUCCESS;
+        break;
+      }
+
+      if (fabs(stepMax) > fabs(signed_pathLimit - r.pathLength))
+        stepMax = signed_pathLimit - r.pathLength;
+
+      if (fabs(stepMax) > fabs(distance)) stepMax = distance;
 
       previous = current;
     }
