@@ -36,7 +36,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(const Identifier& identifier,
 
   if (mGlobal) {
     // the new combined translation
-    TGeoHMatrix nTransform = (*nodeTransform) * (*mGlobal);
+    TGeoHMatrix nTransform = (*mGlobal) * (*nodeTransform);
     std::string nName      = tGeoDetElement->GetName();
     std::string suffix     = "_transform";
     nTransform.SetName((nName + suffix).c_str());
