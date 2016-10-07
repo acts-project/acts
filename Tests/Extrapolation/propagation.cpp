@@ -75,9 +75,9 @@ namespace Test {
 
     // test propagation invariants
     // clang-format off
-    BOOST_TEST((pT - tp.momentum().perp()) == 0., tt::tolerance(1 * units::_keV));
-    BOOST_TEST((pz - tp.momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
-    BOOST_TEST((theta - tp.momentum().theta()) == 0., tt::tolerance(1e-4));
+    BOOST_TEST((pT - tp->momentum().perp()) == 0., tt::tolerance(1 * units::_keV));
+    BOOST_TEST((pz - tp->momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
+    BOOST_TEST((theta - tp->momentum().theta()) == 0., tt::tolerance(1e-4));
     // clang-format on
 
     // calculate bending radius
@@ -115,10 +115,10 @@ namespace Test {
     double exp_y = yc + r * sin(phi0 + turns * 2 * M_PI);
 
     // clang-format off
-    BOOST_TEST((exp_phi - tp.momentum().phi()) == 0., tt::tolerance(1e-4));
-    BOOST_TEST((exp_x - tp.position()(0)) == 0., tt::tolerance(0.1 * units::_um));
-    BOOST_TEST((exp_y - tp.position()(1)) == 0., tt::tolerance(0.1 * units::_um));
-    BOOST_TEST((exp_z - tp.position()(2)) == 0., tt::tolerance(0.1 * units::_um));
+    BOOST_TEST((exp_phi - tp->momentum().phi()) == 0., tt::tolerance(1e-4));
+    BOOST_TEST((exp_x - tp->position()(0)) == 0., tt::tolerance(0.1 * units::_um));
+    BOOST_TEST((exp_y - tp->position()(1)) == 0., tt::tolerance(0.1 * units::_um));
+    BOOST_TEST((exp_z - tp->position()(2)) == 0., tt::tolerance(0.1 * units::_um));
     // clang-format on
   }
 
@@ -170,16 +170,16 @@ namespace Test {
 
     // do forward-backward propagation
     const auto& tp1 = propagator.propagate(start, fwd_options).endParameters;
-    const auto& tp2 = propagator.propagate(tp1, back_options).endParameters;
+    const auto& tp2 = propagator.propagate(*tp1, back_options).endParameters;
 
     // test propagation invariants
     // clang-format off
-    BOOST_TEST((x - tp2.position()(0)) == 0., tt::tolerance(0.1 * units::_um));
-    BOOST_TEST((y - tp2.position()(1)) == 0., tt::tolerance(0.1 * units::_um));
-    BOOST_TEST((z - tp2.position()(2)) == 0., tt::tolerance(0.1 * units::_um));
-    BOOST_TEST((px - tp2.momentum()(0)) == 0., tt::tolerance(1 * units::_keV));
-    BOOST_TEST((py - tp2.momentum()(1)) == 0., tt::tolerance(1 * units::_keV));
-    BOOST_TEST((pz - tp2.momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
+    BOOST_TEST((x - tp2->position()(0)) == 0., tt::tolerance(0.1 * units::_um));
+    BOOST_TEST((y - tp2->position()(1)) == 0., tt::tolerance(0.1 * units::_um));
+    BOOST_TEST((z - tp2->position()(2)) == 0., tt::tolerance(0.1 * units::_um));
+    BOOST_TEST((px - tp2->momentum()(0)) == 0., tt::tolerance(1 * units::_keV));
+    BOOST_TEST((py - tp2->momentum()(1)) == 0., tt::tolerance(1 * units::_keV));
+    BOOST_TEST((pz - tp2->momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
     // clang-format on
   }
 
@@ -238,7 +238,7 @@ namespace Test {
         = fixture.calculateCovariance(start, options);
 
     std::cout << *start.covariance() << std::endl;
-    std::cout << *tp.covariance() << std::endl;
+    std::cout << *tp->covariance() << std::endl;
 
     //    std::array<double, 3> x = {-1, 1, 2};
     //    std::vector<ActsVectorD<5>> values;

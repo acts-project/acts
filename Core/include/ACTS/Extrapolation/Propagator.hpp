@@ -20,8 +20,28 @@ namespace Acts {
 
 namespace propagation {
 
-  /// @brief propagation direction relative to momentum
+  /// propagation direction relative to momentum
   enum Direction : int { backward = -1, forward = 1 };
+
+  /// result status of track parameter propagation
+  enum struct Status { SUCCESS, FAILURE, UNSET, INPROGRESS, WRONG_DIRECTION };
+
+  /// result of propagation call
+  template <typename TrackParameters, typename... ExResult>
+  struct Result : private detail::Extendable<ExResult...>
+  {
+    using detail::Extendable<ExResult...>::get;
+
+    std::unique_ptr<TrackParameters> endParameters = nullptr;
+    Status                           status        = Status::UNSET;
+    unsigned int                     steps         = 0;
+    double                           pathLength    = 0.;
+
+    operator bool() const
+    {
+      return (endParameters && status == Status::SUCCESS);
+    }
+  };
 
   /// @brief propagator for particles in a magnetic field
   ///
@@ -112,28 +132,6 @@ namespace propagation {
       return *this;
     }
 
-    enum struct Status { SUCCESS, FAILURE, UNSET, INPROGRESS, WRONG_DIRECTION };
-
-    template <typename TrackParameters, typename... ExResult>
-    struct Result : private detail::Extendable<ExResult...>
-    {
-      Result(TrackParameters startParameters, const Status& s = Status::UNSET)
-        : detail::Extendable<ExResult...>()
-        , endParameters(std::move(startParameters))
-        , status(s)
-      {
-      }
-
-      using detail::Extendable<ExResult...>::get;
-
-      TrackParameters endParameters;
-      Status          status     = Status::UNSET;
-      unsigned int    steps      = 0;
-      double          pathLength = 0.;
-
-      operator bool() const { return status == Status::SUCCESS; }
-    };
-
   private:
     template <typename TrackParameters, typename ObserverList>
     struct result_type_helper
@@ -168,7 +166,7 @@ namespace propagation {
       static_assert(std::is_copy_constructible<return_parameter_type>::value,
                     "return track parameter type must be copy-constructible");
 
-      result_type  r(start, Status::INPROGRESS);
+      result_type  r;
       const double signed_pathLimit
           = options.direction * options.max_path_length;
       double                stepMax = options.direction * options.max_step_size;
@@ -180,8 +178,9 @@ namespace propagation {
         options.observer_list(current, previous, r);
         if (fabs(r.pathLength) >= options.max_path_length
             || options.stop_conditions(r, current, stepMax)) {
-          r.endParameters = m_impl.convert(propagation_cache);
-          r.status        = Status::SUCCESS;
+          r.endParameters = std::make_unique<return_parameter_type>(
+              m_impl.convert(propagation_cache));
+          r.status = Status::SUCCESS;
           break;
         }
 
@@ -199,11 +198,9 @@ namespace propagation {
               typename Surface,
               typename ObserverList,
               typename AbortList>
-    obs_list_result_t<std::unique_ptr<
-                          typename Impl::
-                              template return_parameter_type<TrackParameters,
-                                                             Surface>>,
-                      ObserverList>
+    obs_list_result_t<
+        typename Impl::template return_parameter_type<TrackParameters, Surface>,
+        ObserverList>
     propagate(const TrackParameters& start,
               const Surface&         target,
               const Options<ObserverList, AbortList>& options) const
@@ -215,14 +212,13 @@ namespace propagation {
       typedef typename Impl::template return_parameter_type<TrackParameters,
                                                             Surface>
           return_parameter_type;
-      typedef obs_list_result_t<std::unique_ptr<return_parameter_type>,
-                                ObserverList>
+      typedef obs_list_result_t<return_parameter_type, ObserverList>
           result_type;
 
       static_assert(std::is_copy_constructible<return_parameter_type>::value,
                     "return track parameter type must be copy-constructible");
 
-      result_type  r(nullptr, Status::INPROGRESS);
+      result_type  r;
       const double signed_pathLimit
           = options.direction * options.max_path_length;
       cache_type          cache(start);

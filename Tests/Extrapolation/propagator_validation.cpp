@@ -72,14 +72,14 @@ namespace Test {
     // perform propagation with test propagator
     const auto& r = test_propagator.propagate(pars1, options);
     const auto& p = r.endParameters;
-    out << std::fixed << p.position().x() / units::_mm << " "
-        << " " << p.position().y() / units::_mm << " "
-        << p.position().z() / units::_mm << " "
-        << p.momentum().x() / units::_MeV << " "
-        << p.momentum().y() / units::_MeV << " "
-        << p.momentum().z() / units::_MeV << " " << p.parameters()(0) << " "
-        << p.parameters()(1) << " " << p.parameters()(2) << " "
-        << p.parameters()(3) << " " << p.parameters()(4) << " ";
+    out << std::fixed << p->position().x() / units::_mm << " "
+        << " " << p->position().y() / units::_mm << " "
+        << p->position().z() / units::_mm << " "
+        << p->momentum().x() / units::_MeV << " "
+        << p->momentum().y() / units::_MeV << " "
+        << p->momentum().z() / units::_MeV << " " << p->parameters()(0) << " "
+        << p->parameters()(1) << " " << p->parameters()(2) << " "
+        << p->parameters()(3) << " " << p->parameters()(4) << " ";
 
     // perform propagation with ATLAS Runge-Kutta propagator
     exCell.leadParameters     = &pars2;

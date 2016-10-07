@@ -29,8 +29,8 @@ namespace Test {
 
       // nominal propagation
       const auto&    r_nominal = m_propagator.propagate(trackPars, options);
-      const auto&    nominal   = r_nominal.endParameters.parameters();
-      const Surface& dest      = r_nominal.endParameters.associatedSurface();
+      const auto&    nominal   = r_nominal.endParameters->parameters();
+      const Surface& dest      = r_nominal.endParameters->associatedSurface();
 
       U var_options = options;
       var_options.max_path_length *= 2;
