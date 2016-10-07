@@ -327,7 +327,7 @@ Acts::CylinderVolumeBuilder::synchronizeVolumeSetups(
   std::string outsideMethod = "";
   if (volumeSetup) {
     for (auto lSetup : lsVector)
-      if (lSetup && !volumeSetup.wraps(lSetup)) {
+      if (lSetup && !volumeSetup.containes(lSetup)) {
         /// give an ERROR and bail out
         ACTS_ERROR(
             "Given layer dimensions do not fit inside the provided volume "
@@ -352,7 +352,7 @@ Acts::CylinderVolumeBuilder::synchronizeVolumeSetups(
     volumeSetup.zMax = m_cfg.volumeDimension.at(3);
     // check for potential overlap
     for (auto lSetup : lsVector)
-      if (lSetup && !volumeSetup.wraps(lSetup)) {
+      if (lSetup && !volumeSetup.containes(lSetup)) {
         /// give an ERROR and bail out
         ACTS_ERROR(
             "Given layer dimensions do not fit inside the provided volume "
@@ -561,6 +561,7 @@ Acts::CylinderVolumeBuilder::analyzeLayers(const LayerVector& lVector) const
             = cLayer->surfaceRepresentation().bounds().r() - 0.5 * thickness;
         double rMaxC
             = cLayer->surfaceRepresentation().bounds().r() + 0.5 * thickness;
+
         double hZ = cLayer->surfaceRepresentation().bounds().halflengthZ();
         takeSmaller(lSetup.rMin, rMinC - m_cfg.layerEnvelopeR.first);
         takeBigger(lSetup.rMax, rMaxC + m_cfg.layerEnvelopeR.second);
