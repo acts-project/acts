@@ -14,12 +14,15 @@
 #include "ACTS/Utilities/Definitions.hpp"
 
 namespace bdata = boost::unit_test::data;
-namespace tt    = boost::test_tools;
+namespace utf   = boost::unit_test;
 
 namespace Acts {
 
 namespace Test {
   /// Unit test for creating plane surface from normal vector and position
+  ///
+  /// Test for random plane positions and orientations.
+  BOOST_TEST_DECORATOR(*utf::tolerance(1e-10))
   BOOST_DATA_TEST_CASE(plane_surface_normal1,
                        bdata::random(-10., 10.) ^ bdata::random(-10., 10.)
                            ^ bdata::random(-10., 10.)
@@ -40,10 +43,29 @@ namespace Test {
     const Vector3D normal(nx, ny, nz);
     PlaneSurface   p(pos, normal);
 
-    BOOST_TEST(p.normal().dot(normal) == 1., tt::tolerance(1e-10));
+    const auto& transform = p.transform();
+    const auto& ex        = transform.matrix().col(0).head<3>();
+    const auto& ey        = transform.matrix().col(1).head<3>();
+    const auto& ez        = transform.matrix().col(2).head<3>();
+    const auto& trans     = transform.matrix().col(3).head<3>();
+    const auto& n         = p.normal();
+
+    BOOST_TEST(n.dot(normal) == 1.);
+    BOOST_TEST(n.dot(ex) == 0.);
+    BOOST_TEST(n.dot(ey) == 0.);
+    BOOST_TEST(n.dot(ez) == 1.);
+    BOOST_TEST(ex.dot(ey) == 0.);
+    BOOST_TEST(ex.norm() == 1.);
+    BOOST_TEST(ey.norm() == 1.);
+    BOOST_TEST(ez.norm() == 1.);
+    BOOST_TEST(trans.dot(pos) == trans.norm() * pos.norm());
   }
 
   /// Unit test for creating plane surface from normal vector and position
+  ///
+  /// Test for random plane positions, but specific orientations to catch
+  /// pathological situations.
+  BOOST_TEST_DECORATOR(*utf::tolerance(1e-10))
   BOOST_DATA_TEST_CASE(plane_surface_normal2,
                        bdata::random(-10., 10.) ^ bdata::random(-10., 10.)
                            ^ bdata::random(-10., 10.)
@@ -63,7 +85,22 @@ namespace Test {
     const Vector3D normal(nx, ny, nz);
     PlaneSurface   p(pos, normal);
 
-    BOOST_TEST(p.normal().dot(normal) == 1., tt::tolerance(1e-10));
+    const auto& transform = p.transform();
+    const auto& ex        = transform.matrix().col(0).head<3>();
+    const auto& ey        = transform.matrix().col(1).head<3>();
+    const auto& ez        = transform.matrix().col(2).head<3>();
+    const auto& trans     = transform.matrix().col(3).head<3>();
+    const auto& n         = p.normal();
+
+    BOOST_TEST(n.dot(normal) == 1.);
+    BOOST_TEST(n.dot(ex) == 0.);
+    BOOST_TEST(n.dot(ey) == 0.);
+    BOOST_TEST(n.dot(ez) == 1.);
+    BOOST_TEST(ex.dot(ey) == 0.);
+    BOOST_TEST(ex.norm() == 1.);
+    BOOST_TEST(ey.norm() == 1.);
+    BOOST_TEST(ez.norm() == 1.);
+    BOOST_TEST(trans.dot(pos) == trans.norm() * pos.norm());
   }
 }  // end of namespace Test
 

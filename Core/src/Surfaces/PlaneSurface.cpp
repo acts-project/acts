@@ -38,8 +38,8 @@ Acts::PlaneSurface::PlaneSurface(const Vector3D& center, const Vector3D& normal)
   /// V = T x U
   Vector3D T = normal.normalized();
   Vector3D U = fabs(T.dot(Vector3D::UnitZ())) < 0.99
-      ? Vector3D::UnitZ().cross(T)
-      : Vector3D::UnitX().cross(T);
+      ? Vector3D::UnitZ().cross(T).normalized()
+      : Vector3D::UnitX().cross(T).normalized();
   Vector3D         V = T.cross(U);
   RotationMatrix3D curvilinearRotation;
   curvilinearRotation.col(0) = U;
