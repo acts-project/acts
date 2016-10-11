@@ -3,6 +3,7 @@
 
 #include <boost/test/data/test_case.hpp>
 #include <fstream>
+#include <random>
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Extrapolation/AbortConditions.hpp"
 #include "ACTS/Extrapolation/AbortList.hpp"
@@ -14,6 +15,7 @@
 #include "ACTS/MagneticField/ConstantFieldSvc.hpp"
 #include "ACTS/Utilities/Units.hpp"
 #include "atlas_propagator_fixture.hpp"
+#include "covariance_validation_fixture.hpp"
 #include "logfile_erasure_fixture.hpp"
 
 namespace bdata = boost::unit_test::data;
@@ -29,15 +31,23 @@ namespace Test {
                         *utf::fixture<logfile_erasure_fixture>(
                             std::string("gsl_stepper_validation.txt")))
 
-  BOOST_DATA_TEST_CASE_F(atlas_propagator_fixture,
-                         gsl_stepper_validation,
-                         bdata::random(0.4, 10.) ^ bdata::random(0., 2 * M_PI)
-                             ^ bdata::random(0., M_PI)
-                             ^ bdata::xrange(10000),
-                         pT,
-                         phi,
-                         theta,
-                         index)
+  BOOST_DATA_TEST_CASE_F(
+      atlas_propagator_fixture,
+      gsl_stepper_validation,
+      bdata::random((bdata::seed = 100,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(0.4, 10.)))
+          ^ bdata::random((bdata::seed = 100,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., 2 * M_PI)))
+          ^ bdata::random((bdata::seed = 100,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., M_PI)))
+          ^ bdata::xrange(1000),
+      pT,
+      phi,
+      theta,
+      index)
   {
     typedef ConstantFieldSvc          BField_type;
     typedef AtlasStepper<BField_type> Stepper_type;
@@ -64,11 +74,18 @@ namespace Test {
     Vector3D mom(pT * cos(phi) * units::_GeV,
                  pT * sin(phi) * units::_GeV,
                  pT * units::_GeV / tan(theta));
-    CurvilinearParameters pars1(nullptr, pos, mom, +1);
-    CurvilinearParameters pars2(nullptr, pos, mom / units::_MeV, +1);
+    ActsSymMatrixD<5> cov;
+    cov << 10, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+        0, 0, 0.1;
+
+    CurvilinearParameters pars1(
+        std::make_unique<ActsSymMatrixD<5>>(cov), pos, mom, +1);
+    CurvilinearParameters pars2(
+        std::make_unique<ActsSymMatrixD<5>>(cov), pos, mom, +1);
 
     ExtrapolationCell<TrackParameters> exCell(pars2);
     exCell.addConfigurationMode(ExtrapolationMode::StopWithPathLimit);
+    exCell.addConfigurationMode(ExtrapolationMode::CollectJacobians);
     // perform propagation with test propagator
     const auto& r = test_propagator.propagate(pars1, options);
     const auto& p = r.endParameters;
@@ -79,7 +96,10 @@ namespace Test {
         << p->momentum().y() / units::_MeV << " "
         << p->momentum().z() / units::_MeV << " " << p->parameters()(0) << " "
         << p->parameters()(1) << " " << p->parameters()(2) << " "
-        << p->parameters()(3) << " " << p->parameters()(4) << " ";
+        << p->parameters()(3) << " " << p->parameters()(4) << " "
+        << (*p->covariance())(0, 0) << " " << (*p->covariance())(1, 1) << " "
+        << (*p->covariance())(2, 2) << " " << (*p->covariance())(3, 3) << " "
+        << (*p->covariance())(4, 4) << " ";
 
     // perform propagation with ATLAS Runge-Kutta propagator
     exCell.leadParameters     = &pars2;
@@ -88,11 +108,15 @@ namespace Test {
     const auto* val = exCell.leadParameters;
     out << std::fixed << val->position().x() / units::_mm << " "
         << " " << val->position().y() / units::_mm << " "
-        << val->position().z() / units::_mm << " " << val->momentum().x() << " "
-        << val->momentum().y() << " " << val->momentum().z() << " "
-        << val->parameters()(0) << " " << val->parameters()(1) << " "
-        << val->parameters()(2) << " " << val->parameters()(3) << " "
-        << val->parameters()(4) * 1000;  //<< std::endl;
+        << val->position().z() / units::_mm << " "
+        << val->momentum().x() / units::_MeV << " "
+        << val->momentum().y() / units::_MeV << " "
+        << val->momentum().z() / units::_MeV << " " << val->parameters()(0)
+        << " " << val->parameters()(1) << " " << val->parameters()(2) << " "
+        << val->parameters()(3) << " " << val->parameters()(4) << " "
+        << (*val->covariance())(0, 0) << " " << (*val->covariance())(1, 1)
+        << " " << (*val->covariance())(2, 2) << " "
+        << (*val->covariance())(3, 3) << " " << (*val->covariance())(4, 4);
 
     out << " " << r.get<PathLengthObserver::result_type>().pathLength << " "
         << exCell.pathLength << std::endl;
