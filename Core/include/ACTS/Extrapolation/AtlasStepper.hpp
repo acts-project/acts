@@ -150,22 +150,24 @@ public:
     Acts::Vector3D mom(cache.pVector[3], cache.pVector[4], cache.pVector[5]);
     mom /= fabs(cache.pVector[6]);
 
+    double P[45];
+    for (unsigned int i = 0; i < 45; ++i) P[i] = cache.pVector[i];
+
     std::unique_ptr<ActsSymMatrixD<5>> cov = nullptr;
     if (cache.covariance) {
-      double p = 1. / cache.pVector[6];
-      cache.pVector[35] *= p;
-      cache.pVector[36] *= p;
-      cache.pVector[37] *= p;
-      cache.pVector[38] *= p;
-      cache.pVector[39] *= p;
-      cache.pVector[40] *= p;
+      double p = 1. / P[6];
+      P[35] *= p;
+      P[36] *= p;
+      P[37] *= p;
+      P[38] *= p;
+      P[39] *= p;
+      P[40] *= p;
 
-      double An = sqrt(cache.pVector[3] * cache.pVector[3]
-                       + cache.pVector[4] * cache.pVector[4]);
+      double An = sqrt(P[3] * P[3] + P[4] * P[4]);
       double Ax[3];
       if (An != 0.) {
-        Ax[0] = -cache.pVector[4] / An;
-        Ax[1] = cache.pVector[3] / An;
+        Ax[0] = -P[4] / An;
+        Ax[1] = P[3] / An;
         Ax[2] = 0.;
       } else {
         Ax[0] = 1.;
@@ -173,64 +175,57 @@ public:
         Ax[2] = 0.;
       }
 
-      double Ay[3] = {-Ax[1] * cache.pVector[5], Ax[0] * cache.pVector[5], An};
-      double S[3]  = {cache.pVector[3], cache.pVector[4], cache.pVector[5]};
+      double Ay[3] = {-Ax[1] * P[5], Ax[0] * P[5], An};
+      double S[3]  = {P[3], P[4], P[5]};
 
-      double A = cache.pVector[3] * S[0] + cache.pVector[4] * S[1]
-          + cache.pVector[5] * S[2];
+      double A       = P[3] * S[0] + P[4] * S[1] + P[5] * S[2];
       if (A != 0.) A = 1. / A;
       S[0] *= A;
       S[1] *= A;
       S[2] *= A;
 
-      double s0 = cache.pVector[7] * S[0] + cache.pVector[8] * S[1]
-          + cache.pVector[9] * S[2];
-      double s1 = cache.pVector[14] * S[0] + cache.pVector[15] * S[1]
-          + cache.pVector[16] * S[2];
-      double s2 = cache.pVector[21] * S[0] + cache.pVector[22] * S[1]
-          + cache.pVector[23] * S[2];
-      double s3 = cache.pVector[28] * S[0] + cache.pVector[29] * S[1]
-          + cache.pVector[30] * S[2];
-      double s4 = cache.pVector[35] * S[0] + cache.pVector[36] * S[1]
-          + cache.pVector[37] * S[2];
+      double s0 = P[7] * S[0] + P[8] * S[1] + P[9] * S[2];
+      double s1 = P[14] * S[0] + P[15] * S[1] + P[16] * S[2];
+      double s2 = P[21] * S[0] + P[22] * S[1] + P[23] * S[2];
+      double s3 = P[28] * S[0] + P[29] * S[1] + P[30] * S[2];
+      double s4 = P[35] * S[0] + P[36] * S[1] + P[37] * S[2];
 
-      cache.pVector[7] -= (s0 * cache.pVector[3]);
-      cache.pVector[8] -= (s0 * cache.pVector[4]);
-      cache.pVector[9] -= (s0 * cache.pVector[5]);
-      cache.pVector[10] -= (s0 * cache.pVector[42]);
-      cache.pVector[11] -= (s0 * cache.pVector[43]);
-      cache.pVector[12] -= (s0 * cache.pVector[44]);
-      cache.pVector[14] -= (s1 * cache.pVector[3]);
-      cache.pVector[15] -= (s1 * cache.pVector[4]);
-      cache.pVector[16] -= (s1 * cache.pVector[5]);
-      cache.pVector[17] -= (s1 * cache.pVector[42]);
-      cache.pVector[18] -= (s1 * cache.pVector[43]);
-      cache.pVector[19] -= (s1 * cache.pVector[44]);
-      cache.pVector[21] -= (s2 * cache.pVector[3]);
-      cache.pVector[22] -= (s2 * cache.pVector[4]);
-      cache.pVector[23] -= (s2 * cache.pVector[5]);
-      cache.pVector[24] -= (s2 * cache.pVector[42]);
-      cache.pVector[25] -= (s2 * cache.pVector[43]);
-      cache.pVector[26] -= (s2 * cache.pVector[44]);
-      cache.pVector[28] -= (s3 * cache.pVector[3]);
-      cache.pVector[29] -= (s3 * cache.pVector[4]);
-      cache.pVector[30] -= (s3 * cache.pVector[5]);
-      cache.pVector[31] -= (s3 * cache.pVector[42]);
-      cache.pVector[32] -= (s3 * cache.pVector[43]);
-      cache.pVector[33] -= (s3 * cache.pVector[44]);
-      cache.pVector[35] -= (s4 * cache.pVector[3]);
-      cache.pVector[36] -= (s4 * cache.pVector[4]);
-      cache.pVector[37] -= (s4 * cache.pVector[5]);
-      cache.pVector[38] -= (s4 * cache.pVector[42]);
-      cache.pVector[39] -= (s4 * cache.pVector[43]);
-      cache.pVector[40] -= (s4 * cache.pVector[44]);
+      P[7] -= (s0 * P[3]);
+      P[8] -= (s0 * P[4]);
+      P[9] -= (s0 * P[5]);
+      P[10] -= (s0 * P[42]);
+      P[11] -= (s0 * P[43]);
+      P[12] -= (s0 * P[44]);
+      P[14] -= (s1 * P[3]);
+      P[15] -= (s1 * P[4]);
+      P[16] -= (s1 * P[5]);
+      P[17] -= (s1 * P[42]);
+      P[18] -= (s1 * P[43]);
+      P[19] -= (s1 * P[44]);
+      P[21] -= (s2 * P[3]);
+      P[22] -= (s2 * P[4]);
+      P[23] -= (s2 * P[5]);
+      P[24] -= (s2 * P[42]);
+      P[25] -= (s2 * P[43]);
+      P[26] -= (s2 * P[44]);
+      P[28] -= (s3 * P[3]);
+      P[29] -= (s3 * P[4]);
+      P[30] -= (s3 * P[5]);
+      P[31] -= (s3 * P[42]);
+      P[32] -= (s3 * P[43]);
+      P[33] -= (s3 * P[44]);
+      P[35] -= (s4 * P[3]);
+      P[36] -= (s4 * P[4]);
+      P[37] -= (s4 * P[5]);
+      P[38] -= (s4 * P[42]);
+      P[39] -= (s4 * P[43]);
+      P[40] -= (s4 * P[44]);
 
-      double P3, P4, C = cache.pVector[3] * cache.pVector[3]
-          + cache.pVector[4] * cache.pVector[4];
+      double P3, P4, C = P[3] * P[3] + P[4] * P[4];
       if (C > 1.e-20) {
         C  = 1. / C;
-        P3 = cache.pVector[3] * C;
-        P4 = cache.pVector[4] * C;
+        P3 = P[3] * C;
+        P4 = P[4] * C;
         C  = -sqrt(C);
       } else {
         C  = -1.e10;
@@ -240,49 +235,38 @@ public:
 
       // Jacobian production
       //
-      cache.jacobian[0]
-          = Ax[0] * cache.pVector[7] + Ax[1] * cache.pVector[8];  // dL0/dL0
-      cache.jacobian[1]
-          = Ax[0] * cache.pVector[14] + Ax[1] * cache.pVector[15];  // dL0/dL1
-      cache.jacobian[2]
-          = Ax[0] * cache.pVector[21] + Ax[1] * cache.pVector[22];  // dL0/dPhi
-      cache.jacobian[3]
-          = Ax[0] * cache.pVector[28] + Ax[1] * cache.pVector[29];  // dL0/dThe
-      cache.jacobian[4]
-          = Ax[0] * cache.pVector[35] + Ax[1] * cache.pVector[36];  // dL0/dCM
-      cache.jacobian[5] = Ay[0] * cache.pVector[7] + Ay[1] * cache.pVector[8]
-          + Ay[2] * cache.pVector[9];  // dL1/dL0
-      cache.jacobian[6] = Ay[0] * cache.pVector[14] + Ay[1] * cache.pVector[15]
-          + Ay[2] * cache.pVector[16];  // dL1/dL1
-      cache.jacobian[7] = Ay[0] * cache.pVector[21] + Ay[1] * cache.pVector[22]
-          + Ay[2] * cache.pVector[23];  // dL1/dPhi
-      cache.jacobian[8] = Ay[0] * cache.pVector[28] + Ay[1] * cache.pVector[29]
-          + Ay[2] * cache.pVector[30];  // dL1/dThe
-      cache.jacobian[9] = Ay[0] * cache.pVector[35] + Ay[1] * cache.pVector[36]
-          + Ay[2] * cache.pVector[37];  // dL1/dCM
-      cache.jacobian[10]
-          = P3 * cache.pVector[11] - P4 * cache.pVector[10];  // dPhi/dL0
-      cache.jacobian[11]
-          = P3 * cache.pVector[18] - P4 * cache.pVector[17];  // dPhi/dL1
-      cache.jacobian[12]
-          = P3 * cache.pVector[25] - P4 * cache.pVector[24];  // dPhi/dPhi
-      cache.jacobian[13]
-          = P3 * cache.pVector[32] - P4 * cache.pVector[31];  // dPhi/dThe
-      cache.jacobian[14]
-          = P3 * cache.pVector[39] - P4 * cache.pVector[38];  // dPhi/dCM
-      cache.jacobian[15] = C * cache.pVector[12];             // dThe/dL0
-      cache.jacobian[16] = C * cache.pVector[19];             // dThe/dL1
-      cache.jacobian[17] = C * cache.pVector[26];             // dThe/dPhi
-      cache.jacobian[18] = C * cache.pVector[33];             // dThe/dThe
-      cache.jacobian[19] = C * cache.pVector[40];             // dThe/dCM
-      cache.jacobian[20] = 0;                                 // dCM /dL0
-      cache.jacobian[21] = 0;                                 // dCM /dL1
-      cache.jacobian[22] = 0;                                 // dCM /dPhi
-      cache.jacobian[23] = 0;                                 // dCM /dTheta
-      cache.jacobian[24] = cache.pVector[41];                 // dCM /dCM
-      Eigen::Map<Eigen::Matrix<double, 5, 5>> J(cache.jacobian);
-
-      std::cout << "jac = " << J << std::endl;
+      cache.jacobian[0] = Ax[0] * P[7] + Ax[1] * P[8];    // dL0/dL0
+      cache.jacobian[1] = Ax[0] * P[14] + Ax[1] * P[15];  // dL0/dL1
+      cache.jacobian[2] = Ax[0] * P[21] + Ax[1] * P[22];  // dL0/dPhi
+      cache.jacobian[3] = Ax[0] * P[28] + Ax[1] * P[29];  // dL0/dThe
+      cache.jacobian[4] = Ax[0] * P[35] + Ax[1] * P[36];  // dL0/dCM
+      cache.jacobian[5]
+          = Ay[0] * P[7] + Ay[1] * P[8] + Ay[2] * P[9];  // dL1/dL0
+      cache.jacobian[6]
+          = Ay[0] * P[14] + Ay[1] * P[15] + Ay[2] * P[16];  // dL1/dL1
+      cache.jacobian[7]
+          = Ay[0] * P[21] + Ay[1] * P[22] + Ay[2] * P[23];  // dL1/dPhi
+      cache.jacobian[8]
+          = Ay[0] * P[28] + Ay[1] * P[29] + Ay[2] * P[30];  // dL1/dThe
+      cache.jacobian[9]
+          = Ay[0] * P[35] + Ay[1] * P[36] + Ay[2] * P[37];  // dL1/dCM
+      cache.jacobian[10] = P3 * P[11] - P4 * P[10];         // dPhi/dL0
+      cache.jacobian[11] = P3 * P[18] - P4 * P[17];         // dPhi/dL1
+      cache.jacobian[12] = P3 * P[25] - P4 * P[24];         // dPhi/dPhi
+      cache.jacobian[13] = P3 * P[32] - P4 * P[31];         // dPhi/dThe
+      cache.jacobian[14] = P3 * P[39] - P4 * P[38];         // dPhi/dCM
+      cache.jacobian[15] = C * P[12];                       // dThe/dL0
+      cache.jacobian[16] = C * P[19];                       // dThe/dL1
+      cache.jacobian[17] = C * P[26];                       // dThe/dPhi
+      cache.jacobian[18] = C * P[33];                       // dThe/dThe
+      cache.jacobian[19] = C * P[40];                       // dThe/dCM
+      cache.jacobian[20] = 0;                               // dCM /dL0
+      cache.jacobian[21] = 0;                               // dCM /dL1
+      cache.jacobian[22] = 0;                               // dCM /dPhi
+      cache.jacobian[23] = 0;                               // dCM /dTheta
+      cache.jacobian[24] = P[41];                           // dCM /dCM
+      Eigen::Map<Eigen::Matrix<double, 5, 5, Eigen::RowMajor>> J(
+          cache.jacobian);
 
       cov = std::make_unique<ActsSymMatrixD<5>>(J * (*cache.covariance)
                                                 * J.transpose());
@@ -429,9 +413,8 @@ public:
       cache.jacobian[22] = 0;                                 // dCM /dPhi
       cache.jacobian[23] = 0;                                 // dCM /dTheta
       cache.jacobian[24] = cache.pVector[41];                 // dCM /dCM
-      Eigen::Map<Eigen::Matrix<double, 5, 5>> J(cache.jacobian);
-
-      std::cout << "jac = " << J << std::endl;
+      Eigen::Map<Eigen::Matrix<double, 5, 5, Eigen::RowMajor>> J(
+          cache.jacobian);
 
       cov = std::make_unique<ActsSymMatrixD<5>>(J * (*cache.covariance)
                                                 * J.transpose());
@@ -458,8 +441,8 @@ public:
     double* A  = &(cache.pVector[3]);  // Directions
     double* sA = &(cache.pVector[42]);
     // Invert mometum/2.
-    double Pi   = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / cache.pVector[6]);
-    double dltm = 0.0002 * .03;
+    double Pi = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / cache.pVector[6]);
+    //    double dltm = 0.0002 * .03;
 
     double f0[3], f[3];
 
@@ -536,7 +519,7 @@ public:
           + fabs((C1 + C6) - (C3 + C4));
       if (EST > 0.0002) {
         stepMax *= .5;
-        dltm = 0.;
+        //        dltm = 0.;
         continue;
       }
 
