@@ -42,7 +42,7 @@ namespace Seeding {
       , m_phi(Acts::detail::radian_sym(phi))
       , m_theta(theta)
       , m_curvature(curvature)
-      , m_ids{p0.identifier(), ps.identifier()...}
+      , m_ids{{p0.identifier(), ps.identifier()}...}
     {
       static_assert((sizeof...(ps) + 1) == N,
                     "Number of input points must be N");
