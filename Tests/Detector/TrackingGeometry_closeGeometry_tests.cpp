@@ -150,13 +150,13 @@ namespace Test {
       for (auto lay : cVol->confinedLayers()->arrayObjects()){
         BOOST_CHECK_EQUAL(0, lay->geoID().value());
         // check the approach surfaces  
-        
+        for (auto asf : lay->approachDescriptor()->containedSurfaces() )
+            BOOST_CHECK_EQUAL(0, asf->geoID().value());
         // check the layer surface array
-        
-      }
-      
+        for (auto ssf : lay->surfaceArray()->arrayObjects())
+             BOOST_CHECK_EQUAL(0, ssf->geoID().value());
+      }      
     }
-     
   }     
   
 
