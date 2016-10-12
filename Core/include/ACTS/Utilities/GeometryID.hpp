@@ -74,9 +74,8 @@ public:
   GeometryID&
   operator=(const GeometryID& tddID)
   {
-    if (&tddID != this) {
+    if (&tddID != this)
       m_value = tddID.m_value;
-    }
     return (*this);
   }
 

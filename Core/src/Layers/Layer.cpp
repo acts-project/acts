@@ -30,10 +30,7 @@ Acts::Layer::Layer()
   , m_representingVolume(nullptr)
   , m_layerType(Acts::passive)
   , m_materialSurface(nullptr)
-{
-  /// @TODO temporary - until GeoID service is in place
-  assignGeoID(GeometryID(1));
-}
+{}
 
 Acts::Layer::Layer(std::unique_ptr<Acts::SurfaceArray> surfaceArray,
                    double                              thickness,
@@ -51,10 +48,7 @@ Acts::Layer::Layer(std::unique_ptr<Acts::SurfaceArray> surfaceArray,
   , m_representingVolume(nullptr)
   , m_layerType(laytyp)
   , m_materialSurface(nullptr)
-{
-  /// @TODO temporary - until GeoID service is in place
-  assignGeoID(GeometryID(1));
-}
+{}
 
 Acts::Layer::Layer(const Acts::Layer& lay)
   : m_nextLayers(NextLayers(nullptr, nullptr))

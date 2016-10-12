@@ -60,7 +60,7 @@ TrackingVolumePtr constructCylinderVolume(double surfaceHalfLengthZ,
   auto layer0bounds                       = std::make_shared<CylinderBounds>(surfaceRadius, bUmax);
   auto layer0                             = CylinderLayer::create(nullptr,layer0bounds,std::move(bArray),surfaceRstagger+2*layerEnvelope) ;
   std::unique_ptr<LayerArray> layerArray  = std::make_unique< BinnedArrayXD<LayerPtr> >(layer0); 
-  
+    
   ///  create the volume
   auto   volumeBounds      = std::make_shared<CylinderVolumeBounds>(innerVolumeR,outerVolumeR,bUmax+volumeEnvelope);
   TrackingVolumePtr volume = TrackingVolume::create(nullptr,
@@ -106,8 +106,24 @@ namespace Test {
                                          0.,     
                                          iv_volumeRadius,
                                          "InnerVolume");
-                                         
-
+  
+  BOOST_AUTO_TEST_CASE(GeometryID_innervolume_before_closure_test){
+    BOOST_CHECK_EQUAL(0, iVolume->geoID().value());
+    // check the boundary surfaces
+    for (auto bSf : iVolume->boundarySurfaces()){
+      BOOST_CHECK_EQUAL(0, bSf->surfaceRepresentation().geoID().value());
+      for (auto lay : iVolume->confinedLayers()->arrayObjects()){
+        BOOST_CHECK_EQUAL(0, lay->geoID().value());
+        // check the approach surfaces  
+        for (auto asf : lay->approachDescriptor()->containedSurfaces() )
+            BOOST_CHECK_EQUAL(0, asf->geoID().value());
+        // check the layer surface array
+        for (auto ssf : lay->surfaceArray()->arrayObjects())
+             BOOST_CHECK_EQUAL(0, ssf->geoID().value());
+      }      
+    }                                       
+  }
+  
   ///  outer volume 
   auto oVolume = constructCylinderVolume(ov_surfaceHalfLengthZ,
                                          ov_surfaceRadius,     
@@ -120,7 +136,22 @@ namespace Test {
                                          "OuterVolume");
                                          
                                          
-                                        
+  BOOST_AUTO_TEST_CASE(GeometryID_outervolume_before_closure_test){
+    BOOST_CHECK_EQUAL(0, oVolume->geoID().value());
+    // check the boundary surfaces
+    for (auto bSf : iVolume->boundarySurfaces()){
+      BOOST_CHECK_EQUAL(0, bSf->surfaceRepresentation().geoID().value());
+      for (auto lay : oVolume->confinedLayers()->arrayObjects()){
+        BOOST_CHECK_EQUAL(0, lay->geoID().value());
+        // check the approach surfaces  
+        for (auto asf : lay->approachDescriptor()->containedSurfaces() )
+            BOOST_CHECK_EQUAL(0, asf->geoID().value());
+        // check the layer surface array
+        for (auto ssf : lay->surfaceArray()->arrayObjects())
+             BOOST_CHECK_EQUAL(0, ssf->geoID().value());
+      }      
+    }                                       
+  }                                      
                                          
   ///  create the volume array
   typedef std::pair<TrackingVolumePtr, Vector3D> VAP;
@@ -143,8 +174,8 @@ namespace Test {
     for (auto cVol : hVolume->confinedVolumes()->arrayObjects()){
       /// let's check everything is set to 0
       BOOST_CHECK_EQUAL(0, cVol->geoID().value());
+      // check the boundary surfaces
       for (auto bSf : cVol->boundarySurfaces()){
-        // check the boundary surfaces
         BOOST_CHECK_EQUAL(0, bSf->surfaceRepresentation().geoID().value());
       }  
       for (auto lay : cVol->confinedLayers()->arrayObjects()){
@@ -159,6 +190,17 @@ namespace Test {
     }
   }     
   
+  /// creating a TrackingGeometry closes the geometry
+  TrackingGeometry trackingGeometry(hVolume);
+  
+  ///  after-check on GeometryID
+  BOOST_AUTO_TEST_CASE(GeometryID_after_closure_test){
+    ///  let's check that the geometry ID values are all 0
+    BOOST_CHECK_EQUAL(0, hVolume->geoID().value());
+
+  }  
+ 
+
 
 
 }  //  end of namespace Test
