@@ -8,6 +8,7 @@ if (BUILD_TESTS)
    if (Boost_FOUND)
       message (STATUS "enable ACTS unit tests")
       # delegate
+      add_subdirectory (Detector)
       add_subdirectory (EventData)
       add_subdirectory (Fitter)
       add_subdirectory (Seeding)

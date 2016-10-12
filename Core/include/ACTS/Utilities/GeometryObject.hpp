@@ -31,24 +31,42 @@ class GeometryObject
 {
 public:
   /// constructor from a ready-made value
+  ///
+  /// @param geoID the geometry identifier of the object
   GeometryObject(const GeometryID& geoID = GeometryID()) : m_geoID() {}
+  
   /// return the value
   const GeometryID&
   geoID() const;
 
-  /// set the value
-  void
-  assignGeoID(const GeometryID& geoID) const;
-
   /// force a binning position method
+  ///
+  /// @param bValue is the value in which you want to bin
   virtual const Vector3D
   binningPosition(BinningValue bValue) const = 0;
 
   /// implement the binningValue
+  ///
+  /// @param bValue is the dobule in which you want to bin
   double
   binningPositionValue(BinningValue bValue) const;
 
+  /// set the value - assigns a mutable object
+  ///
+  /// @param geoID the geometry identifier to be assigned
+  /// @note changes a mutable member
+  void
+  assignGeoID(const GeometryID& geoID) const;
+
+  /// set the value - assigns a mutable object
+  ///
+  /// @param geoID the geometry identifier to be added
+  /// @note changes a mutable member
+  void
+  aadGeoID(const GeometryID& geoID) const;
+
 protected:
+  
   mutable GeometryID m_geoID;
 };
 

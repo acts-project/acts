@@ -44,8 +44,8 @@ std::unique_ptr<Acts::TrackingGeometry>
 Acts::TrackingGeometryBuilder::trackingGeometry() const
 {
   // the return geometry -- and the highest volume
-  std::unique_ptr<Acts::TrackingGeometry> trackingGeometry;
-  TrackingVolumePtr                       highestVolume = nullptr;
+  std::unique_ptr<TrackingGeometry> trackingGeometry;
+  TrackingVolumePtr                 highestVolume = nullptr;
   // loop over the builders and wrap one around the other
   // -----------------------------
   for (auto& volumeBuilder : m_cfg.trackingVolumeBuilders) {
@@ -56,7 +56,7 @@ Acts::TrackingGeometryBuilder::trackingGeometry() const
 
   // create the TrackingGeoemtry
   if (highestVolume)
-    trackingGeometry.reset(new Acts::TrackingGeometry(highestVolume));
+      trackingGeometry.reset(new TrackingGeometry(highestVolume));
   // return the geometry to the service
   return (trackingGeometry);
 }

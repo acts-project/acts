@@ -177,11 +177,13 @@ public:
                          bool                 resolveSubSurfaces = false) const;
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
+  ///
   /// @param gpos is the glboal position associated with that search
   const TrackingVolume*
   trackingVolume(const Vector3D& gpos) const;
 
   /// Return the next volume along the navigation stream
+  ///
   /// @param gpos is the glboal position associated with that search
   /// @param dir is the direction for this search
   /// @param pDir is an additional direction prescription
@@ -192,6 +194,7 @@ public:
              PropDirection   pDir = alongMomentum) const;
 
   /// Return the dynamically created vector of detached sub volumes
+  ///           
   /// @param gpos  is the glboal position associated with that search
   /// @return the list of associated detached tracking volumes, nullptr if it
   /// does not exist
