@@ -29,6 +29,7 @@ using namespace propagation;
 
 namespace Test {
 
+  /// test forward propagation in constant magnetic field
   BOOST_DATA_TEST_CASE(constant_bfield_forward_propagation,
                        bdata::random(0.4 * units::_GeV, 10. * units::_GeV)
                            ^ bdata::random(0., 2 * M_PI)
@@ -122,6 +123,7 @@ namespace Test {
     // clang-format on
   }
 
+  /// test consistency of forward-backward propagation in constant field
   BOOST_DATA_TEST_CASE(forward_backward_propagation,
                        bdata::random(0.4 * units::_GeV, 10. * units::_GeV)
                            ^ bdata::random(0., 2 * M_PI)
@@ -183,12 +185,13 @@ namespace Test {
     // clang-format on
   }
 
-  BOOST_DATA_TEST_CASE(covariance_transport,
-                       bdata::random(0.4 * units::_GeV, 10. * units::_GeV)
+  /// test correct covariance transport for curvilinear parameters
+  BOOST_DATA_TEST_CASE(covariance_transport_curvilinear,
+                       bdata::random(2. * units::_GeV, 10. * units::_GeV)
                            ^ bdata::random(0., 2 * M_PI)
                            ^ bdata::random(0., M_PI)
                            ^ bdata::random(-1, 1)
-                           ^ bdata::xrange(1),
+                           ^ bdata::xrange(100),
                        pT,
                        phi,
                        theta,
@@ -218,15 +221,15 @@ namespace Test {
     double            x  = 0;
     double            y  = 0;
     double            z  = 0;
-    double            px = 0;                 // pT * cos(phi);
-    double            py = 50 * units::_GeV;  // pT * sin(phi);
-    double            pz = 0;                 // pT / tan(theta);
+    double            px = pT * cos(phi);
+    double            py = pT * sin(phi);
+    double            pz = pT / tan(theta);
     double            q  = (charge != 0) ? charge : +1;
     Vector3D          pos(x, y, z);
     Vector3D          mom(px, py, pz);
     ActsSymMatrixD<5> cov;
-    cov << 10, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0,
-        0, 0, 0.1;
+    cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 1, 0,
+        0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
 
     auto                  cov_ptr = std::make_unique<ActsSymMatrixD<5>>(cov);
     CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
@@ -234,25 +237,22 @@ namespace Test {
     // do propagation
     const auto& tp = propagator.propagate(start, options).endParameters;
 
+    // get numerically propagated covariance matrix
     ActsSymMatrixD<5> calculated_cov
         = fixture.calculateCovariance(start, options);
 
-    std::cout << *start.covariance() << std::endl;
-    std::cout << *tp->covariance() << std::endl;
+    if ((calculated_cov - *tp->covariance()).norm()
+            / std::min(calculated_cov.norm(), tp->covariance()->norm())
+        > 1e-7) {
+      std::cout << "calculated = " << calculated_cov << std::endl << std::endl;
+      std::cout << "obtained = " << *tp->covariance() << std::endl;
+    }
 
-    //    std::array<double, 3> x = {-1, 1, 2};
-    //    std::vector<ActsVectorD<5>> values;
-    //    ActsVectorD<5>              one;
-    //    one << -1, -2, 3, 0, 4;
-    //    ActsVectorD<5> two;
-    //    two << 1, 2, -1, 1, -2;
-    //    ActsVectorD<5> three;
-    //    three << 2, 4, -3, 1.5, -5;
-    //    values.push_back(one);
-    //    values.push_back(two);
-    //    values.push_back(three);
-    //
-    //    std::cout << fixture.fitLinear(values, x) << std::endl;
+    BOOST_TEST(
+        (calculated_cov - *tp->covariance()).norm()
+                / std::min(calculated_cov.norm(), tp->covariance()->norm())
+            == 0.,
+        tt::tolerance(1e-7));
   }
 }  // namespace Test
 

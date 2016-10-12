@@ -2,7 +2,6 @@
 #define ACTS_COVARIANCE_VALIDATION_FIXTURE_HPP 1
 
 #include <array>
-#include <iostream>
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 
@@ -34,6 +33,34 @@ namespace Test {
 
       U var_options = options;
       var_options.max_path_length *= 2;
+
+      // variation in x
+      std::vector<ActsVectorD<5>> x_derivatives;
+      x_derivatives.reserve(h_steps.size());
+      for (double h : h_steps) {
+        Vector3D pos;
+        Vector2D loc_pos(h, 0);
+        trackPars.associatedSurface().localToGlobal(
+            loc_pos, trackPars.momentum(), pos);
+        CurvilinearParameters tp(
+            nullptr, pos, trackPars.momentum(), trackPars.charge());
+        const auto& r = m_propagator.propagate(tp, dest, var_options);
+        x_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
+      }
+
+      // variation in y
+      std::vector<ActsVectorD<5>> y_derivatives;
+      y_derivatives.reserve(h_steps.size());
+      for (double h : h_steps) {
+        Vector3D pos;
+        Vector2D loc_pos(0, h);
+        trackPars.associatedSurface().localToGlobal(
+            loc_pos, trackPars.momentum(), pos);
+        CurvilinearParameters tp(
+            nullptr, pos, trackPars.momentum(), trackPars.charge());
+        const auto& r = m_propagator.propagate(tp, dest, var_options);
+        y_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
+      }
 
       // variation in phi
       std::vector<ActsVectorD<5>> phi_derivatives;
@@ -70,11 +97,12 @@ namespace Test {
 
       ActsSymMatrixD<5> jacobian;
       jacobian.setIdentity();
+      jacobian.col(Acts::eLOC_1) = fitLinear(x_derivatives, h_steps);
+      jacobian.col(Acts::eLOC_2) = fitLinear(y_derivatives, h_steps);
       jacobian.col(Acts::ePHI)   = fitLinear(phi_derivatives, h_steps);
       jacobian.col(Acts::eTHETA) = fitLinear(theta_derivatives, h_steps);
       jacobian.col(Acts::eQOP)   = fitLinear(qop_derivatives, h_steps);
 
-      std::cout << "J = " << jacobian << std::endl;
       return jacobian * (*trackPars.covariance()) * jacobian.transpose();
     }
 
