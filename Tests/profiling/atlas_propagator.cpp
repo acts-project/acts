@@ -13,17 +13,17 @@ using namespace Acts;
 int
 main(int argc, char* argv[])
 {
-  int    toys    = 1;
-  double pT      = 1;
-  double Bz      = 1;
-  double maxPath = 1;
+  unsigned int toys    = 1;
+  double       pT      = 1;
+  double       Bz      = 1;
+  double       maxPath = 1;
 
   try {
     po::options_description desc("Allowed options");
     // clang-format off
   desc.add_options()
       ("help", "produce help message")
-      ("toys",po::value<int>(&toys)->default_value(10000),"number of tracks to propagate")
+      ("toys",po::value<unsigned int>(&toys)->default_value(10000),"number of tracks to propagate")
       ("pT",po::value<double>(&pT)->default_value(1 * units::_GeV),"transverse momentum in GeV")
       ("B",po::value<double>(&Bz)->default_value(2),"z-component of B-field in T")
       ("path",po::value<double>(&maxPath)->default_value(5 * units::_m),"maximum path length in m");
@@ -61,7 +61,7 @@ main(int argc, char* argv[])
   CylinderSurface surface(nullptr, 100 * units::_m, 30 * units::_m);
 
   Vector3D                           pos(0, 0, 0);
-  Vector3D                           mom(pT * 1000, 0, 0);
+  Vector3D                           mom(pT, 0, 0);
   CurvilinearParameters              pars(nullptr, pos, mom, +1);
   ExtrapolationCell<TrackParameters> exCell(pars);
   exCell.addConfigurationMode(ExtrapolationMode::StopWithPathLimit);
