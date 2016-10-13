@@ -504,21 +504,29 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
     // now loop over the surfaces:
     // the surfaces will be sorted
     for (auto& csf : cSurfaces) {
+      // get the surface
+      auto surface = csf.object;
+      geo_id_value sensitiveID  = surface->geoID().value(GeometryID::sensitive_mask,
+                                                        GeometryID::sensitive_shift);
+      geo_id_value surfaceID     = sensitiveID ? 0 :
+                                   surface->geoID().value(GeometryID::approach_mask,
+                                                         GeometryID::approach_shift);
+                                  
       // the surface to try
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "surface",
-                     layerValue,
+                     surfaceID,
                      "trying candidate surfaces with straight line path length "
                          << csf.intersection.pathLength);
       // indicate if the surface is active or not
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "surface",
-                     layerValue,
-                     (csf.object->associatedDetectorElement() ? "is active"
-                                                              : "is passive"));
+                     surfaceID,
+                     (surface->associatedDetectorElement() ? "is active"
+                                                          : "is passive"));
       // record the parameters as sensitive or passive depending on the surface
       Acts::ExtrapolationMode::eMode emode
-          = csf.object->associatedDetectorElement()
+          = surface->associatedDetectorElement()
           ? Acts::ExtrapolationMode::CollectSensitive
           : Acts::ExtrapolationMode::CollectPassive;
       // propagate to the compatible surface, return types are
@@ -540,7 +548,7 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
                        "layer",
                        layerValue,
                        "successfully hit "
-                           << (csf.object->associatedDetectorElement()
+                           << (surface->associatedDetectorElement()
                                    ? "active"
                                    : "passive")
                            << " sub structure surface.");
@@ -549,7 +557,7 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
           // screen output
           EX_MSG_VERBOSE(eCell.navigationStep,
                          "surface",
-                         csf.object->geoID().value(),
+                         surfaceID,
                          "applying material effects.");
           // set the material surface
           eCell.materialSurface = csf.object;
