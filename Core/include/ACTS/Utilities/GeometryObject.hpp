@@ -30,27 +30,24 @@ namespace Acts {
 class GeometryObject
 {
 public:
-  /// default constructor 
+  /// default constructor
   ///
   /// @param geoID the geometry identifier of the object
   GeometryObject() : m_geoID(0) {}
-
   /// constructor from a ready-made value
   ///
   /// @param geoID the geometry identifier of the object
   GeometryObject(const GeometryID& geoID) : m_geoID(geoID) {}
-  
-  /// assignment operator 
+  /// assignment operator
   ///
   /// @param geoID the source geoID
   GeometryObject&
   operator=(const GeometryObject& geoID)
   {
-    if (&geoID != this)
-      m_geoID  = geoID.m_geoID;
+    if (&geoID != this) m_geoID = geoID.m_geoID;
     return *this;
   }
-  
+
   /// return the value
   const GeometryID&
   geoID() const;
@@ -82,7 +79,6 @@ public:
   aadGeoID(const GeometryID& geoID) const;
 
 protected:
-  
   mutable GeometryID m_geoID;
 };
 

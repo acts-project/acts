@@ -56,8 +56,7 @@ Acts::CylinderLayer::CylinderLayer(
     const std::vector<const Surface*>& approachSurfaces
         = m_approachDescriptor->containedSurfaces();
     for (auto& aSurface : approachSurfaces)
-      if (aSurface->associatedMaterial()) 
-        m_materialSurface = aSurface;
+      if (aSurface->associatedMaterial()) m_materialSurface = aSurface;
   }
   if (surfaceRepresentation().associatedMaterial())
     m_materialSurface = &surfaceRepresentation();
