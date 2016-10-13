@@ -113,32 +113,19 @@ namespace Test {
                 BOOST_CHECK_EQUAL(++asurface_id, asf_asf_id);
             }
             // get the sub surfaces
-            for (auto ssf : lay->surfaceArray()->arrayObjects())
-                BOOST_CHECK_EQUAL(0, ssf->geoID().value());
-            
+            geo_id_value ssurface_id = 0;
+            for (auto ssf : lay->surfaceArray()->arrayObjects()){
+                // check the approach volume id, approach layer id, approach approach id
+                geo_id_value ssf_vol_id = ssf->geoID().value(GeometryID::volume_mask, GeometryID::volume_shift);
+                geo_id_value ssf_lay_id = ssf->geoID().value(GeometryID::layer_mask, GeometryID::layer_shift);
+                geo_id_value ssf_ssf_id = ssf->geoID().value(GeometryID::sensitive_mask, GeometryID::sensitive_shift);
+                BOOST_CHECK_EQUAL(layer_id, ssf_lay_id);
+                BOOST_CHECK_EQUAL(c_vol_id, ssf_vol_id);
+                BOOST_CHECK_EQUAL(++ssurface_id, ssf_ssf_id);
+            }
         }
     }
   }    
-    /**for (auto cVol : hVolume->confinedVolumes()->arrayObjects()){
-      /// let's check everything is set to 0
-      BOOST_CHECK_EQUAL(0, cVol->geoID().value());
-      // check the boundary surfaces
-      for (auto bSf : cVol->boundarySurfaces()){
-        BOOST_CHECK_EQUAL(0, bSf->surfaceRepresentation().geoID().value());
-      }  
-      for (auto lay : cVol->confinedLayers()->arrayObjects()){
-        BOOST_CHECK_EQUAL(0, lay->geoID().value());
-        // check the approach surfaces  
-        for (auto asf : lay->approachDescriptor()->containedSurfaces() )
-            BOOST_CHECK_EQUAL(0, asf->geoID().value());
-        // check the layer surface array
-        for (auto ssf : lay->surfaceArray()->arrayObjects())
-             BOOST_CHECK_EQUAL(0, ssf->geoID().value());
-      }      
-    }
-     **/
-  
-
 }  //  end of namespace Test
 }  //  end of namespace Acts
   
