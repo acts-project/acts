@@ -26,7 +26,7 @@ Acts::Surface::Surface(std::shared_ptr<Acts::Transform3D> tform)
 }
 
 Acts::Surface::Surface(const Acts::DetectorElementBase& detelement,
-                       const Identifier&  id)
+                       const Identifier&                id)
   : GeometryObject()
   , m_transform(nullptr)
   , m_associatedDetElement(&detelement)
@@ -60,7 +60,8 @@ Acts::Surface::Surface(const Surface& sf, const Acts::Transform3D& shift)
 }
 
 Acts::Surface::~Surface()
-{}
+{
+}
 
 Acts::Surface&
 Acts::Surface::operator=(const Surface& sf)

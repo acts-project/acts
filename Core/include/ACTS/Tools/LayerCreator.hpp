@@ -55,7 +55,7 @@ public:
 
   /// Constructor
   /// @param lcConfig is the configuration lo
-  LayerCreator(const Config& lcConfig,
+  LayerCreator(const Config&           lcConfig,
                std::unique_ptr<Logger> logger
                = getDefaultLogger("LayerCreator", Logging::INFO));
 

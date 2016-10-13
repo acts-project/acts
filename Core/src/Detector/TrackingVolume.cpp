@@ -442,55 +442,53 @@ Acts::TrackingVolume::closeGeometry(
     const GeometryID& volumeID,
     std::map<std::string, const TrackingVolume*>& volumeMap) const
 {
-
-  
   // insert the volume into the map
   volumeMap[volumeName()] = this;
 
   // A) this is NOT a container volume, volumeID is already incremented
-  if (!m_confinedVolumes){
-      // assign the Volume ID to the volume itself 
-      assignGeoID(volumeID);
-      // loop over the boundary surfaces
-      geo_id_value iboundary = 0;
-      for (auto& bSurfIter : boundarySurfaces()) {
-        // get the intersection soltuion
-        auto& bSurface = bSurfIter->surfaceRepresentation();
-        // create the boundary surface id
-        GeometryID boundaryID = volumeID;
-        boundaryID += (++iboundary << GeometryID::boundary_shift);
-        // now assign to the boundary surface
-        bSurface.assignGeoID(boundaryID);
+  if (!m_confinedVolumes) {
+    // assign the Volume ID to the volume itself
+    assignGeoID(volumeID);
+    // loop over the boundary surfaces
+    geo_id_value iboundary = 0;
+    for (auto& bSurfIter : boundarySurfaces()) {
+      // get the intersection soltuion
+      auto& bSurface = bSurfIter->surfaceRepresentation();
+      // create the boundary surface id
+      GeometryID boundaryID = volumeID;
+      boundaryID += (++iboundary << GeometryID::boundary_shift);
+      // now assign to the boundary surface
+      bSurface.assignGeoID(boundaryID);
+    }
+
+    // loop over the confined layers
+    if (m_confinedLayers) {
+      geo_id_value ilayer = 0;
+      // loop over the layers
+      for (auto& layerPtr : m_confinedLayers->arrayObjects()) {
+        // create the layer identification
+        GeometryID layerID = volumeID;
+        layerID += (++ilayer << GeometryID::layer_shift);
+        // now close the geometry
+        layerPtr->closeGeometry(layerID);
       }
-      
-      // loop over the confined layers
-      if (m_confinedLayers) {
-        geo_id_value ilayer = 0;
-        // loop over the layers
-        for (auto& layerPtr : m_confinedLayers->arrayObjects()) {
-          // create the layer identification
-          GeometryID layerID = volumeID;
-          layerID += (++ilayer << GeometryID::layer_shift);
-          // now close the geometry
-          layerPtr->closeGeometry(layerID);
-        }
-      }
+    }
   } else {
     // B) this is a container volume, go through sub volume
     // the counter upwards
     geo_id_value ivolume = 0;
     // do the loop
     for (auto& volumesIter : m_confinedVolumes->arrayObjects()) {
-        GeometryID   currentID = volumeID;
-        // only increase the counter if it's not a container volume
-        if (!volumesIter->confinedVolumes()){
-          /// we count the volume ID up
-          currentID += (++ivolume << GeometryID::volume_shift);           
-        }
-        volumesIter->closeGeometry(currentID, volumeMap);
-     }
+      GeometryID currentID = volumeID;
+      // only increase the counter if it's not a container volume
+      if (!volumesIter->confinedVolumes()) {
+        /// we count the volume ID up
+        currentID += (++ivolume << GeometryID::volume_shift);
+      }
+      volumesIter->closeGeometry(currentID, volumeMap);
+    }
   }
-  
+
   // @TODO update that
   // auto confinedDenseVolumes= tvol.confinedDenseVolumes();
   // if (!confinedDenseVolumes.empty()) {
@@ -508,4 +506,3 @@ Acts::TrackingVolume::closeGeometry(
   // }
   //
 }
-

@@ -298,7 +298,7 @@ protected:
 
   /// Copy Constructor
   Layer(const Layer& lay);
-  
+
   /// Constructor with pointer to SurfaceArray (passing ownership)
   /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the normal thickness of the Layer
@@ -364,14 +364,15 @@ protected:
   /// the previous Layer according to BinGenUtils
   mutable NextLayers m_nextLayers;
   /// A binutility to find the next layer
-  mutable const BinUtility* m_nextLayerUtility; // @TODO check if next layer utility is needed
-  
+  mutable const BinUtility*
+      m_nextLayerUtility;  // @TODO check if next layer utility is needed
+
   /// SurfaceArray on this layer Surface
   std::unique_ptr<SurfaceArray> m_surfaceArray;
   /// thickness of the Layer
   double m_layerThickness;
   /// descriptor for overlap/next surface
-  ///@TODO 
+  ///@TODO
   OverlapDescriptor* m_overlapDescriptor;
   /// descriptor for surface on approach
   /// @note this is a mutable member, since resize may trigger recreation
@@ -389,7 +390,7 @@ protected:
   /// make a passive/active divisio
   LayerType m_layerType;
   /// pointer to the approach surface carrying the material
-  /// nullptr if no material set 
+  /// nullptr if no material set
   /// @TODO remove this concept
   const Surface* m_materialSurface;
 
