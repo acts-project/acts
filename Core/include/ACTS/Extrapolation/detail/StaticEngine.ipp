@@ -71,7 +71,8 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
     // screen output for startLayer == endLayer
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "layer",
-                   eCell.leadLayer->geoID().value(),
+                   eCell.leadLayer->geoID().value(GeometryID::layer_mask, 
+                                                  GeometryID::layer_shift),
                    "start and destination layer are identical -> jumping to "
                    "final propagation.");
     // set the leadLayerSurface to the parameters surface
@@ -155,7 +156,8 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
     EX_MSG_VERBOSE(
         eCell.navigationStep,
         "layer",
-        layerCandidate.object->geoID().value(),
+        layerCandidate.object->geoID().value(GeometryID::layer_mask, 
+                                             GeometryID::layer_shift),
         "handleLayerT returned extrapolation code : " << eCode.toString());
     // Possibilities are:
     // - SuccessX  -> return (via handleReturnT)
@@ -411,13 +413,12 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
     // limit
     // - Recovered        : layer was not hit, so can be ignored in the layer to
     // layer loop
-    eCode
-        = m_cfg.propagationEngine->propagate(eCell,
-                                             *eCell.leadLayerSurface,
-                                             pDir,
-                                             ExtrapolationMode::CollectPassive,
-                                             true,
-                                             eCell.sensitiveCurvilinear);
+    eCode = m_cfg.propagationEngine->propagate(eCell,
+                                               *eCell.leadLayerSurface,
+                                               pDir,
+                                               ExtrapolationMode::CollectPassive,
+                                               true,
+                                               eCell.sensitiveCurvilinear);
     CHECK_ECODE_SUCCESS_NODEST(eCell, eCode);
     // the extrapolation to the initial layer did not succeed - skip this layer
     // in the layer-to-layer loop
@@ -625,7 +626,7 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
   return Acts::ExtrapolationCode::InProgress;
 }
 
-/** handle the failure - as configured */
+/// handle the failure - as configured 
 template <class T>
 Acts::ExtrapolationCode
 Acts::StaticEngine::handleReturnT(ExtrapolationCode     eCode,
