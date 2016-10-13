@@ -67,7 +67,7 @@ Acts::Layer::Layer(const Acts::Layer& lay)
 
 Acts::Layer::~Layer()
 {
-  /// @TODO witch to std::unique_ptr
+  /// @TODO witch to std::unique_ptr, remove overlap descriptor business
   delete m_overlapDescriptor;
   delete m_approachDescriptor;
   delete m_representingVolume;
@@ -184,7 +184,7 @@ Acts::Layer::closeGeometry(const GeometryID& layerID) const
     geo_id_value iasurface = 0;
     for (auto& aSurface : m_approachDescriptor->containedSurfaces()) {
       GeometryID asurfaceID = layerID;
-      asurfaceID += (iasurface++ << GeometryID::approach_shift);
+      asurfaceID += (++iasurface << GeometryID::approach_shift);
       aSurface->assignGeoID(asurfaceID);
     }
   }
@@ -194,7 +194,7 @@ Acts::Layer::closeGeometry(const GeometryID& layerID) const
     geo_id_value issurface = 0;
     for (auto& sSurface : m_surfaceArray->arrayObjects()) {
       GeometryID ssurfaceID = layerID;
-      ssurfaceID += (issurface++ << GeometryID::sensitive_shift);
+      ssurfaceID += (++issurface << GeometryID::sensitive_shift);
       sSurface->assignGeoID(ssurfaceID);
     }
   }

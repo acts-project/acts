@@ -10,69 +10,9 @@
 #define BOOST_TEST_MODULE GeometryID Tests
 #include <boost/test/included/unit_test.hpp>
 #include "ACTS/Utilities/Units.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/BinUtility.hpp"
-#include "ACTS/Utilities/BinnedArrayXD.hpp"
-#include "ACTS/Surfaces/CylinderSurface.hpp"
-#include "ACTS/Surfaces/CylinderBounds.hpp"
-#include "ACTS/Layers/CylinderLayer.hpp"
-#include "ACTS/Volumes/CylinderVolumeBounds.hpp"
-#include "ACTS/Detector/TrackingVolume.hpp"
-#include "ACTS/Detector/TrackingGeometry.hpp"
+#include "GeometryCreation.hpp"
 
 namespace Acts {
-
-///  helper function 
-TrackingVolumePtr constructCylinderVolume(double surfaceHalfLengthZ,
-                                          double surfaceRadius,
-                                          double surfaceRstagger,
-                                          double surfaceZoverlap,
-                                          double layerEnvelope,
-                                          double volumeEnvelope,
-                                          double innerVolumeR,
-                                          double outerVolumeR,
-                                          const std::string& name){
-  
-  ///  the surface transforms
-  auto sfnPosition  = Vector3D(0., 0., -3*surfaceHalfLengthZ-surfaceZoverlap);
-  auto sfnTransform = std::make_shared<Transform3D>(Translation3D(sfnPosition));
-  auto sfcTransform = nullptr;
-  auto sfpPosition  = Vector3D(0., 0., 3*surfaceHalfLengthZ-surfaceZoverlap);
-  auto sfpTransform = std::make_shared<Transform3D>(Translation3D(sfpPosition));
-  ///  the surfaces
-  auto sfn = new CylinderSurface(sfnTransform,surfaceRadius-0.5*surfaceRstagger,surfaceHalfLengthZ);
-  auto sfc = new CylinderSurface(sfcTransform,surfaceRadius+0.5*surfaceRstagger,surfaceHalfLengthZ);
-  auto sfp = new CylinderSurface(sfpTransform,surfaceRadius-0.5*surfaceRstagger,surfaceHalfLengthZ);
-  
-  ///  prepare the surfaces
-  typedef std::pair<const Surface*, Vector3D> TAP;
-  std::vector<TAP> surfaces = { {sfn, sfn->binningPosition(binZ)},
-                                {sfc, sfc->binningPosition(binZ)},
-                                {sfp, sfp->binningPosition(binZ)} };
-  
-  ///  make the binned array
-  double bUmin  = sfnPosition.z()-surfaceHalfLengthZ;
-  double bUmax  = sfpPosition.z()+surfaceHalfLengthZ;                              
-  auto bUtility = std::make_unique<BinUtility>(surfaces.size(),bUmin,bUmax,open,binZ);
-  std::unique_ptr<SurfaceArray> bArray = std::make_unique<BinnedArrayXD<const Surface*> >(surfaces, std::move(bUtility));
-  
-  ///  now create the Layer
-  auto layer0bounds                       = std::make_shared<CylinderBounds>(surfaceRadius, bUmax);
-  auto layer0                             = CylinderLayer::create(nullptr,layer0bounds,std::move(bArray),surfaceRstagger+2*layerEnvelope) ;
-  std::unique_ptr<LayerArray> layerArray  = std::make_unique< BinnedArrayXD<LayerPtr> >(layer0); 
-    
-  ///  create the volume
-  auto   volumeBounds      = std::make_shared<CylinderVolumeBounds>(innerVolumeR,outerVolumeR,bUmax+volumeEnvelope);
-  TrackingVolumePtr volume = TrackingVolume::create(nullptr,
-                                                    volumeBounds,
-                                                    nullptr,
-                                                    std::move(layerArray),
-                                                    {}, {}, {},
-                                                    name);
-  ///  return the volume
-  return volume;
-  
-}
 
 
 namespace Test {
@@ -106,24 +46,6 @@ namespace Test {
                                          0.,     
                                          iv_volumeRadius,
                                          "InnerVolume");
-  
-  BOOST_AUTO_TEST_CASE(GeometryID_innervolume_before_closure_test){
-    BOOST_CHECK_EQUAL(0, iVolume->geoID().value());
-    // check the boundary surfaces
-    for (auto bSf : iVolume->boundarySurfaces()){
-      BOOST_CHECK_EQUAL(0, bSf->surfaceRepresentation().geoID().value());
-      for (auto lay : iVolume->confinedLayers()->arrayObjects()){
-        BOOST_CHECK_EQUAL(0, lay->geoID().value());
-        // check the approach surfaces  
-        for (auto asf : lay->approachDescriptor()->containedSurfaces() )
-            BOOST_CHECK_EQUAL(0, asf->geoID().value());
-        // check the layer surface array
-        for (auto ssf : lay->surfaceArray()->arrayObjects())
-             BOOST_CHECK_EQUAL(0, ssf->geoID().value());
-      }      
-    }                                       
-  }
-  
   ///  outer volume 
   auto oVolume = constructCylinderVolume(ov_surfaceHalfLengthZ,
                                          ov_surfaceRadius,     
@@ -134,44 +56,70 @@ namespace Test {
                                          iv_volumeRadius,
                                          ov_volumeRadius,
                                          "OuterVolume");
-                                         
-                                         
-  BOOST_AUTO_TEST_CASE(GeometryID_outervolume_before_closure_test){
-    BOOST_CHECK_EQUAL(0, oVolume->geoID().value());
-    // check the boundary surfaces
-    for (auto bSf : iVolume->boundarySurfaces()){
-      BOOST_CHECK_EQUAL(0, bSf->surfaceRepresentation().geoID().value());
-      for (auto lay : oVolume->confinedLayers()->arrayObjects()){
-        BOOST_CHECK_EQUAL(0, lay->geoID().value());
-        // check the approach surfaces  
-        for (auto asf : lay->approachDescriptor()->containedSurfaces() )
-            BOOST_CHECK_EQUAL(0, asf->geoID().value());
-        // check the layer surface array
-        for (auto ssf : lay->surfaceArray()->arrayObjects())
-             BOOST_CHECK_EQUAL(0, ssf->geoID().value());
-      }      
-    }                                       
-  }                                      
-                                         
-  ///  create the volume array
-  typedef std::pair<TrackingVolumePtr, Vector3D> VAP;
-  std::vector<VAP> volumes = { {iVolume, iVolume->binningPosition(binR)},
-                               {oVolume, oVolume->binningPosition(binR)} };
-  ///  the bounds for the container
-  double hVolumeHalflength = (4*iv_surfaceHalfLengthZ-iv_surfaceZoverlap+iv_volumeEnvelope);
-  auto hVolumeBounds = std::make_shared<CylinderVolumeBounds>(0.,ov_volumeRadius,hVolumeHalflength);
-  ///  create the BinUtility & the BinnedArray                                         
-  auto vUtility =  std::make_unique<BinUtility>(volumes.size(),0.,ov_volumeRadius,open,binR);                                       
-  std::shared_ptr<const TrackingVolumeArray> vArray 
-    = std::make_shared<const BinnedArrayXD<TrackingVolumePtr> >(volumes,std::move(vUtility));
-  ///  create the container volume
-  auto hVolume = TrackingVolume::create(nullptr, hVolumeBounds, vArray, "Container");
+                                                     
+  // now create the container volume
+  double ov_volumeHalfZ = (4*ov_surfaceHalfLengthZ-ov_surfaceZoverlap)+ov_volumeEnvelope;                                       
+  auto hVolume = constructContainerVolume(iVolume,oVolume,ov_volumeRadius,ov_volumeHalfZ,"Container");
   
-  ///  pre-check on GeometryID
-  BOOST_AUTO_TEST_CASE(GeometryID_before_closure_test){
-    ///  let's check that the geometry ID values are all 0
-    BOOST_CHECK_EQUAL(0, hVolume->geoID().value());
+  // creating a TrackingGeometry closs the geometry
+  TrackingGeometry tGeometry(hVolume);
+  // get the world back
+  auto world = tGeometry.highestTrackingVolume();
+    
+  BOOST_AUTO_TEST_CASE(GeometryID_closeGeometry_test){
+    std::cout << "-> Testing Container Volume '" << world->volumeName() << std::endl;
+    ///  world and containers have to have geoID values 0
+    BOOST_CHECK_EQUAL(0, world->geoID().value());
+    /// check the boundaries of the world, should also be 0
+     std::cout << "-[o] Testing Boundary Surfaces." << std::endl;
+    for (auto wbsf : world->boundarySurfaces()){
+        BOOST_CHECK_EQUAL(0, wbsf->surfaceRepresentation().geoID().value());
+    }
+    /// go through the sub volumes
+    geo_id_value vol_id = 0;
     for (auto cVol : hVolume->confinedVolumes()->arrayObjects()){
+        /// let's check everything is set to 0
+        std::cout << "--> Testing Volume '" << cVol->volumeName() << std::endl;
+        geo_id_value c_vol_id = cVol->geoID().value(GeometryID::volume_mask, GeometryID::volume_shift);
+        BOOST_CHECK_EQUAL(++vol_id, c_vol_id);
+        // check the boundary surfaces
+        geo_id_value bsurface_id = 0;
+        std::cout << "--[o] Testing Boundary Surfaces." << std::endl;
+        for (auto bSf : cVol->boundarySurfaces()){
+            // check the bsurface volume id
+            geo_id_value bs_vol_id = bSf->surfaceRepresentation().geoID().value(GeometryID::volume_mask, GeometryID::volume_shift);
+            geo_id_value bs_bsf_id = bSf->surfaceRepresentation().geoID().value(GeometryID::boundary_mask, GeometryID::boundary_shift);
+            BOOST_CHECK_EQUAL(++bsurface_id, bs_bsf_id);
+            BOOST_CHECK_EQUAL(c_vol_id, bs_vol_id);
+        }
+        // testing the layer and it's approach surfaces
+        geo_id_value layer_id = 0;
+        std::cout << "--[o] Testing Layer, the approach and sub surfaces." << std::endl;
+        for (auto lay : cVol->confinedLayers()->arrayObjects()){
+            // check the layer volume id and layer layer id
+            geo_id_value lay_vol_id = lay->geoID().value(GeometryID::volume_mask, GeometryID::volume_shift);
+            geo_id_value lay_lay_id = lay->geoID().value(GeometryID::layer_mask, GeometryID::layer_shift);
+            BOOST_CHECK_EQUAL(++layer_id, lay_lay_id);
+            BOOST_CHECK_EQUAL(c_vol_id, lay_vol_id);
+            // test the layer approach surfaces
+            geo_id_value asurface_id = 0;
+            for (auto asf : lay->approachDescriptor()->containedSurfaces()){
+                // check the approach volume id, approach layer id, approach approach id
+                geo_id_value asf_vol_id = asf->geoID().value(GeometryID::volume_mask, GeometryID::volume_shift);
+                geo_id_value asf_lay_id = asf->geoID().value(GeometryID::layer_mask, GeometryID::layer_shift);
+                geo_id_value asf_asf_id = asf->geoID().value(GeometryID::approach_mask, GeometryID::approach_shift);
+                BOOST_CHECK_EQUAL(layer_id, asf_lay_id);
+                BOOST_CHECK_EQUAL(c_vol_id, asf_vol_id);
+                BOOST_CHECK_EQUAL(++asurface_id, asf_asf_id);
+            }
+            // get the sub surfaces
+            for (auto ssf : lay->surfaceArray()->arrayObjects())
+                BOOST_CHECK_EQUAL(0, ssf->geoID().value());
+            
+        }
+    }
+  }    
+    /**for (auto cVol : hVolume->confinedVolumes()->arrayObjects()){
       /// let's check everything is set to 0
       BOOST_CHECK_EQUAL(0, cVol->geoID().value());
       // check the boundary surfaces
@@ -188,20 +136,8 @@ namespace Test {
              BOOST_CHECK_EQUAL(0, ssf->geoID().value());
       }      
     }
-  }     
+     **/
   
-  /// creating a TrackingGeometry closes the geometry
-  TrackingGeometry trackingGeometry(hVolume);
-  
-  ///  after-check on GeometryID
-  BOOST_AUTO_TEST_CASE(GeometryID_after_closure_test){
-    ///  let's check that the geometry ID values are all 0
-    BOOST_CHECK_EQUAL(0, hVolume->geoID().value());
-
-  }  
- 
-
-
 
 }  //  end of namespace Test
 }  //  end of namespace Acts

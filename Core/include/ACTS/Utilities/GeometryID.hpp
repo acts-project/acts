@@ -51,11 +51,15 @@ public:
   const static geo_id_value channel_range   = sensitive_shift;
 
 
+  /// default constructor
+  ///
+  GeometryID() : m_value(0) {}
 
+    
   /// constructor from a ready-made value
   ///
   /// @param id_value is the full decoded value of the identifier
-  GeometryID(geo_id_value id_value = 0) : m_value(id_value) {}
+  GeometryID(geo_id_value id_value) : m_value(id_value) {}
   
   // constructor from a shift and a value
   ///
