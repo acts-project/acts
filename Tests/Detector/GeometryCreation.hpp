@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #include "ACTS/Detector/TrackingGeometry.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Layers/CylinderLayer.hpp"
@@ -12,14 +20,14 @@ namespace Acts {
 
 ///  helper function to create a cylinder
 TrackingVolumePtr
-constructCylinderVolume(double             surfaceHalfLengthZ,
-                        double             surfaceRadius,
-                        double             surfaceRstagger,
-                        double             surfaceZoverlap,
-                        double             layerEnvelope,
-                        double             volumeEnvelope,
-                        double             innerVolumeR,
-                        double             outerVolumeR,
+constructCylinderVolume(double surfaceHalfLengthZ,
+                        double surfaceRadius,
+                        double surfaceRstagger,
+                        double surfaceZoverlap,
+                        double layerEnvelope,
+                        double volumeEnvelope,
+                        double innerVolumeR,
+                        double outerVolumeR,
                         const std::string& name)
 {
   ///  the surface transforms
