@@ -361,32 +361,37 @@ protected:
   void
   encloseDetachedTrackingVolume(const DetachedTrackingVolume& tvol) const;
 
-  //// the previous Layer according to BinGenUtils
+  /// the previous Layer according to BinGenUtils
   mutable NextLayers m_nextLayers;
-  //// A binutility to find the next layer
-  mutable const BinUtility* m_nextLayerUtility;
-  //// SurfaceArray on this layer Surface
+  /// A binutility to find the next layer
+  mutable const BinUtility*
+      m_nextLayerUtility;  // @TODO check if next layer utility is needed
+
+  /// SurfaceArray on this layer Surface
   std::unique_ptr<SurfaceArray> m_surfaceArray;
-  //// thickness of the Layer
+  /// thickness of the Layer
   double m_layerThickness;
-  //// descriptor for overlap/next surface
+  /// descriptor for overlap/next surface
+  ///@TODO
   OverlapDescriptor* m_overlapDescriptor;
-  //// descriptor for surface on approach
-  //// @note this is a mutable member, since resize may trigger to
+  /// descriptor for surface on approach
+  /// @note this is a mutable member, since resize may trigger recreation
   mutable ApproachDescriptor* m_approachDescriptor;
-  //// the enclosing TrackingVolume
-  //// @note this is a mutable member since it's set after the layer creation
+  /// the enclosing TrackingVolume
+  /// @note this is a mutable member since it's set after the layer creation
   mutable const TrackingVolume* m_enclosingTrackingVolume;
-  //// the eventual enclosing detached Tracking volume
-  //// @note this is a mutable member since it is set after layer creation
+  /// the eventual enclosing detached Tracking volume
+  /// @note this is a mutable member since it is set after layer creation
   mutable const DetachedTrackingVolume* m_enclosingDetachedTrackingVolume;
-  //// Representing Volume
-  //// can be used as appraoch suraces
+  /// Representing Volume
+  /// can be used as appraoch suraces
+  /// @note this is a mutable member since it is can be recreated
   mutable const AbstractVolume* m_representingVolume;
-  //// make a passive/active divisio
+  /// make a passive/active divisio
   LayerType m_layerType;
   /// pointer to the approach surface carrying the material
   /// nullptr if no material set
+  /// @TODO remove this concept
   const Surface* m_materialSurface;
 
 private:

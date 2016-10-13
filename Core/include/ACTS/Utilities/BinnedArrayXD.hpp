@@ -41,7 +41,8 @@ public:
   /// Constructor for single object
   BinnedArrayXD(T object)
     : BinnedArray<T>()
-    , m_objectGrid()
+    , m_objectGrid(1,
+                   std::vector<std::vector<T>>(1, std::vector<T>(1, nullptr)))
     , m_arrayObjects({object})
     , m_binUtility(nullptr)
   {

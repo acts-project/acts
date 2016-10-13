@@ -15,7 +15,8 @@
 #include <iostream>
 
 Acts::Surface::Surface(std::shared_ptr<Acts::Transform3D> tform)
-  : m_transform(tform)
+  : GeometryObject()
+  , m_transform(tform)
   , m_associatedDetElement(nullptr)
   , m_associatedDetElementId()
   , m_associatedLayer(nullptr)
@@ -26,7 +27,8 @@ Acts::Surface::Surface(std::shared_ptr<Acts::Transform3D> tform)
 
 Acts::Surface::Surface(const Acts::DetectorElementBase& detelement,
                        const Identifier&                id)
-  : m_transform(nullptr)
+  : GeometryObject()
+  , m_transform(nullptr)
   , m_associatedDetElement(&detelement)
   , m_associatedDetElementId(id)
   , m_associatedLayer(nullptr)
@@ -36,7 +38,8 @@ Acts::Surface::Surface(const Acts::DetectorElementBase& detelement,
 }
 
 Acts::Surface::Surface(const Surface& sf)
-  : m_transform(sf.m_transform)
+  : GeometryObject()
+  , m_transform(sf.m_transform)
   , m_associatedDetElement(nullptr)
   , m_associatedDetElementId()
   , m_associatedLayer(nullptr)
@@ -46,7 +49,8 @@ Acts::Surface::Surface(const Surface& sf)
 }
 
 Acts::Surface::Surface(const Surface& sf, const Acts::Transform3D& shift)
-  : m_transform(std::make_shared<Acts::Transform3D>(
+  : GeometryObject()
+  , m_transform(std::make_shared<Acts::Transform3D>(
         Acts::Transform3D(shift * sf.transform())))
   , m_associatedDetElement(nullptr)
   , m_associatedDetElementId()
@@ -63,6 +67,7 @@ Acts::Surface&
 Acts::Surface::operator=(const Surface& sf)
 {
   if (&sf != this) {
+    GeometryObject::operator=(sf);
     // detector element, identifier & layer association are unique
     m_transform              = m_transform;
     m_associatedDetElement   = nullptr;

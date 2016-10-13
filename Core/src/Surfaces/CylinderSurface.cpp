@@ -170,8 +170,8 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
 {
   bool needsTransform = (m_transform || m_associatedDetElement) ? true : false;
   // create the hep points
-  Acts::Vector3D point1    = gpos;
-  Acts::Vector3D direction = dir;
+  Vector3D point1    = gpos;
+  Vector3D direction = dir;
   if (needsTransform) {
     Acts::Transform3D invTrans = transform().inverse();
     point1                     = invTrans * gpos;
@@ -188,7 +188,7 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
     double d = (point2.x() * point1.y() - point1.x() * point2.y())
         / (point2.x() - point1.x());
     // and solve the qaudratic equation
-    Acts::RealQuadraticEquation pquad(1 + k * k, 2 * k * d, d * d - R * R);
+    RealQuadraticEquation pquad(1 + k * k, 2 * k * d, d * d - R * R);
     if (pquad.solutions != Acts::none) {
       // the solutions in the 3D frame of the cylinder
       t1 = (pquad.first - point1.x()) / direction.x();
@@ -210,10 +210,10 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
     t1 = (y - point1.y()) / direction.y();
     t2 = (-y - point1.y()) / direction.y();
   }
-  Acts::Vector3D sol1raw(point1 + t1 * direction);
-  Acts::Vector3D sol2raw(point1 + t2 * direction);
+  Vector3D sol1raw(point1 + t1 * direction);
+  Vector3D sol2raw(point1 + t2 * direction);
   // now reorder and return
-  Acts::Vector3D solution(0, 0, 0);
+  Vector3D       solution(0, 0, 0);
   double         path = 0.;
 
   // first check the validity of the direction

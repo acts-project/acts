@@ -33,6 +33,7 @@ Acts::CylinderLayer::CylinderLayer(
   , Layer(std::move(surfaceArray), thickness, olap, ades, laytyp)
 {
   // just create a generic overlap descriptor if none is there
+  // @TODO remove overlap descriptor business
   if (!Layer::m_overlapDescriptor)
     Layer::m_overlapDescriptor = new GenericOverlapDescriptor();
   // create the representing volume

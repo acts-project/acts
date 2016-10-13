@@ -1,0 +1,6 @@
+add_executable (TrackingGeometry_geoID_tests TrackingGeometry_geoID_tests.cpp)
+add_executable (TrackingGeometry_closeGeometry_tests TrackingGeometry_closeGeometry_tests.cpp)
+target_link_libraries (TrackingGeometry_geoID_tests PRIVATE ACTSCore)
+target_link_libraries (TrackingGeometry_closeGeometry_tests PRIVATE ACTSCore)
+add_test(NAME TrackingGeometry_geoID_tests COMMAND TrackingGeometry_geoID_tests)
+add_test(NAME TrackingGeometry_closeGeometry_tests COMMAND TrackingGeometry_closeGeometry_tests)
