@@ -17,17 +17,17 @@ using namespace Acts::propagation;
 int
 main(int argc, char* argv[])
 {
-  int    toys    = 1;
-  double pT      = 1;
-  double Bz      = 1;
-  double maxPath = 1;
+  unsigned int toys    = 1;
+  double       pT      = 1;
+  double       Bz      = 1;
+  double       maxPath = 1;
 
   try {
     po::options_description desc("Allowed options");
     // clang-format off
   desc.add_options()
       ("help", "produce help message")
-      ("toys",po::value<int>(&toys)->default_value(10000),"number of tracks to propagate")
+      ("toys",po::value<unsigned int>(&toys)->default_value(10000),"number of tracks to propagate")
       ("pT",po::value<double>(&pT)->default_value(1 * units::_GeV),"transverse momentum in GeV")
       ("B",po::value<double>(&Bz)->default_value(2 * units::_T),"z-component of B-field in T")
       ("path",po::value<double>(&maxPath)->default_value(5 * units::_m),"maximum path length in m");
@@ -60,20 +60,16 @@ main(int argc, char* argv[])
   Stepper_type    atlas_stepper(std::move(bField));
   Propagator_type propagator(std::move(atlas_stepper));
 
-  typedef ObserverList<PathLengthObserver> ObsList_type;
-  typedef AbortList<MaxPathLength>         AbortConditions_type;
-
-  Propagator_type::Options<ObsList_type, AbortConditions_type> options;
-  AbortConditions_type& al              = options.stop_conditions;
-  al.get<MaxPathLength>().maxPathLength = maxPath;
+  Propagator_type::Options<> options;
+  options.max_path_length = maxPath;
 
   Vector3D              pos(0, 0, 0);
   Vector3D              mom(pT, 0, 0);
   CurvilinearParameters pars(nullptr, pos, mom, +1);
   double                totalPathLength = 0;
-  for (unsigned int i = 0; i < 10000; ++i) {
+  for (unsigned int i = 0; i < toys; ++i) {
     auto r = propagator.propagate(pars, options);
-    totalPathLength += r.get<PathLengthObserver::result_type>().pathLength;
+    totalPathLength += r.pathLength;
   }
 
   std::cout << "average path length = " << totalPathLength / toys / units::_mm
