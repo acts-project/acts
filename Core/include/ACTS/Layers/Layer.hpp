@@ -21,7 +21,6 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/GeometryObject.hpp"
 #include "ACTS/Utilities/Intersection.hpp"
-#include "ACTS/Utilities/OverlapDescriptor.hpp"
 #include "ACTS/Volumes/AbstractVolume.hpp"
 
 namespace Acts {
@@ -61,7 +60,6 @@ enum LayerType { navigation = -1, passive = 0, active = 1 };
 /// - a SurfaceArray of Surfaces holding the actual detector elements or
 /// subSurfaces.
 /// - SurfaceMaterial for Surface-based materialUpdates
-/// - an OverlapDescriptor (mainly used for blind extrapolation)
 /// - a pointer to the TrackingVolume (can only be set by such)
 /// - an active/passive code :
 /// 0      - activ
@@ -76,7 +74,6 @@ enum LayerType { navigation = -1, passive = 0, active = 1 };
 ///                 will be increased to 0 if endSurface is given
 ///               - debug mode only !
 ///  0     - test all on intersection and provide to the extrapolation engine
-/// --------- Overlap descriptor --------------------------------------------
 ///  1     - provide bin surface and registered neighbours and bin mates
 ///               - does not work with endSurface,
 ///                 will be increased to 2 if endSurface is given
@@ -140,10 +137,6 @@ public:
   /// @param bchk is the boundary check directive
   virtual bool
   isOnLayer(const Vector3D& gp, const BoundaryCheck& bchk = true) const;
-
-  /// Return method for the overlap descriptor, can be nullptr
-  const OverlapDescriptor*
-  overlapDescriptor() const;
 
   /// Return method for the approach descriptor, can be nullptr
   const ApproachDescriptor*
@@ -302,12 +295,10 @@ protected:
   /// Constructor with pointer to SurfaceArray (passing ownership)
   /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the normal thickness of the Layer
-  /// @param od overlap descriptor (@TODO change to unique_ptr)
   /// @param ad approach descriptor (@TODO change to unique_ptr)
   ///
   Layer(std::unique_ptr<SurfaceArray> surfaceArray,
         double                        thickness = 0.,
-        OverlapDescriptor*            od        = nullptr,
         ApproachDescriptor*           ad        = nullptr,
         LayerType                     ltype     = Acts::passive);
 
@@ -371,9 +362,6 @@ protected:
   std::unique_ptr<SurfaceArray> m_surfaceArray;
   /// thickness of the Layer
   double m_layerThickness;
-  /// descriptor for overlap/next surface
-  ///@TODO
-  OverlapDescriptor* m_overlapDescriptor;
   /// descriptor for surface on approach
   /// @note this is a mutable member, since resize may trigger recreation
   mutable ApproachDescriptor* m_approachDescriptor;
@@ -418,12 +406,6 @@ inline LayerType
 Layer::layerType() const
 {
   return m_layerType;
-}
-
-inline const OverlapDescriptor*
-Layer::overlapDescriptor() const
-{
-  return m_overlapDescriptor;
 }
 
 inline const TrackingVolume*

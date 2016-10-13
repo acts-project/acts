@@ -21,7 +21,6 @@
 namespace Acts {
 
 class ConeBounds;
-class OverlapDescriptor;
 class ApproachDescriptor;
 
 ///
@@ -50,7 +49,6 @@ public:
          std::shared_ptr<const ConeBounds> cbounds,
          std::unique_ptr<SurfaceArray>     surfaceArray,
          double                            thickness = 0.,
-         OverlapDescriptor*                od        = nullptr,
          ApproachDescriptor*               ad        = nullptr,
          LayerType                         laytyp    = Acts::active)
   {
@@ -58,7 +56,6 @@ public:
                                   cbounds,
                                   std::move(surfaceArray),
                                   thickness,
-                                  od,
                                   ad,
                                   laytyp));
   }
@@ -118,7 +115,6 @@ protected:
             std::shared_ptr<const ConeBounds> cbounds,
             std::unique_ptr<SurfaceArray>     surfaceArray,
             double                            thickness = 0.,
-            OverlapDescriptor*                od        = nullptr,
             ApproachDescriptor*               ad        = nullptr,
             LayerType                         laytyp    = Acts::active);
 

@@ -33,7 +33,7 @@ Layer::getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
   bool intersectionTest = !(searchType % 2);
 
   // fast exit - nothing to do
-  if (!m_surfaceArray || !m_overlapDescriptor || !m_approachDescriptor)
+  if (!m_surfaceArray || !m_approachDescriptor)
     return false;
 
   // position and momentum/dir

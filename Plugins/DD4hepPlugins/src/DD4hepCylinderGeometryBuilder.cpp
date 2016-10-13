@@ -355,7 +355,6 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
                                                     cylinderBounds,
                                                     nullptr,
                                                     thickness,
-                                                    nullptr,
                                                     approachDescriptor,
                                                     Acts::passive);
         // assign layer to approach surfaces if approach descriptor is given
@@ -380,7 +379,6 @@ Acts::DD4hepCylinderGeometryBuilder::createCylinderLayers(
                                                     cylinderBounds,
                                                     std::move(surfaceArray),
                                                     thickness,
-                                                    nullptr,
                                                     approachDescriptor,
                                                     Acts::active);
         // assign layer to approach surfaces if approach descriptor is given
@@ -523,7 +521,6 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
                                                  discBounds,
                                                  nullptr,
                                                  thickness,
-                                                 nullptr,
                                                  approachDescriptor,
                                                  Acts::passive);
         // assign layer to approach surfaces if approach descriptor is given
@@ -547,7 +544,6 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
                                                  discBounds,
                                                  std::move(surfaceArray),
                                                  thickness,
-                                                 nullptr,
                                                  approachDescriptor,
                                                  Acts::active);
         // assign layer to approach surfaces if approach descriptor is given

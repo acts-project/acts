@@ -19,11 +19,10 @@ Acts::ConeLayer::ConeLayer(std::shared_ptr<Transform3D>      transform,
                            std::shared_ptr<const ConeBounds> cbounds,
                            std::unique_ptr<SurfaceArray>     surfaceArray,
                            double                            thickness,
-                           OverlapDescriptor*                olap,
                            ApproachDescriptor*               ade,
                            LayerType                         laytyp)
   : ConeSurface(transform, cbounds)
-  , Layer(std::move(surfaceArray), thickness, olap, ade, laytyp)
+  , Layer(std::move(surfaceArray), thickness, ade, laytyp)
 {
   // set the material if present
   // material can be on any approach surface or on the representing surface

@@ -24,7 +24,6 @@ namespace Acts {
 
 class DiscBounds;
 class SurfaceMaterial;
-class OverlapDescriptor;
 class ApproachDescriptor;
 
 /// @class DiscLayer
@@ -47,13 +46,12 @@ public:
   /// @param ad is the approach descriptor that provides the approach surface
   /// @param laytyp is the layer type
   ///
-  /// @TODO move OverlapDescriptor and ApproachDescriptor to unqique_ptr
+  /// @TODO move ApproachDescriptor to unqique_ptr
   static LayerPtr
   create(std::shared_ptr<Transform3D>      transform,
          std::shared_ptr<const DiscBounds> dbounds,
          std::unique_ptr<SurfaceArray>     surfaceArray = nullptr,
          double                            thickness    = 0.,
-         OverlapDescriptor*                od           = nullptr,
          ApproachDescriptor*               ad           = nullptr,
          LayerType                         laytyp       = Acts::passive)
   {
@@ -61,7 +59,6 @@ public:
                                   dbounds,
                                   std::move(surfaceArray),
                                   thickness,
-                                  od,
                                   ad,
                                   laytyp));
   }
@@ -121,7 +118,6 @@ protected:
             std::shared_ptr<const DiscBounds> dbounds,
             std::unique_ptr<SurfaceArray>     surfaceArray = nullptr,
             double                            thickness    = 0.,
-            OverlapDescriptor*                od           = nullptr,
             ApproachDescriptor*               ad           = nullptr,
             LayerType                         laytyp       = Acts::active);
 
