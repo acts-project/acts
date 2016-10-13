@@ -423,7 +423,7 @@ public:
     return BoundParameters(std::move(cov), gp, mom, charge, s);
   }
 
-  AtlasStepper(BField&& bField = BField()) : m_bField(std::move(bField)){};
+  AtlasStepper(BField bField = BField()) : m_bField(std::move(bField)){};
 
   static double
   distance(const Surface& s, const Vector3D& pos, const Vector3D& dir)
