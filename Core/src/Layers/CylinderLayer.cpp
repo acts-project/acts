@@ -78,9 +78,9 @@ Acts::CylinderLayer::buildApproachDescriptor() const
   // take the boundary surfaces of the representving volume if they exist
   if (m_representingVolume) {
     // get teh boundary surfaces
-    const std::
-        vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>&
-            bSurfaces  = m_representingVolume->boundarySurfaces();
+    const std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>&
+        bSurfaces
+        = m_representingVolume->boundarySurfaces();
     // fill in the surfaces into the vector
     std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>
         aSurfaces;
@@ -88,20 +88,18 @@ Acts::CylinderLayer::buildApproachDescriptor() const
       aSurfaces.push_back(bSurfaces.at(tubeInnerCover));
     aSurfaces.push_back(bSurfaces.at(tubeOuterCover));
     // create an ApproachDescriptor with Boundary surfaces
-    m_approachDescriptor = new 
-        GenericApproachDescriptor<const BoundarySurfaceT<AbstractVolume>>(
+    m_approachDescriptor
+        = new GenericApproachDescriptor<const BoundarySurfaceT<AbstractVolume>>(
             aSurfaces);
   } else {
     // create the new surfaces
     std::vector<const Acts::Surface*> aSurfaces;
-    aSurfaces.push_back(
-        new CylinderSurface(m_transform,
-                            m_bounds->r() - 0.5 * thickness(),
-                            m_bounds->halflengthZ()));
-    aSurfaces.push_back(
-        new CylinderSurface(m_transform,
-                            m_bounds->r() + 0.5 * thickness(),
-                            m_bounds->halflengthZ()));
+    aSurfaces.push_back(new CylinderSurface(m_transform,
+                                            m_bounds->r() - 0.5 * thickness(),
+                                            m_bounds->halflengthZ()));
+    aSurfaces.push_back(new CylinderSurface(m_transform,
+                                            m_bounds->r() + 0.5 * thickness(),
+                                            m_bounds->halflengthZ()));
     // create an ApproachDescriptor with standard surfaces surfaces - these will
     // be deleted by the approach descriptor
     m_approachDescriptor

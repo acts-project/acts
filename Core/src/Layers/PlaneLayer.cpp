@@ -12,8 +12,8 @@
 
 // Geometry module
 #include "ACTS/Layers/PlaneLayer.hpp"
-#include "ACTS/Layers/GenericApproachDescriptor.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
+#include "ACTS/Layers/GenericApproachDescriptor.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
 
@@ -43,7 +43,7 @@ Acts::PlaneLayer::PlaneLayer(std::shared_ptr<Transform3D>         transform,
       if (aSurface->associatedMaterial()) m_materialSurface = aSurface;
   }
   if (surfaceRepresentation().associatedMaterial())
-      m_materialSurface = &surfaceRepresentation();
+    m_materialSurface = &surfaceRepresentation();
 }
 
 Acts::PlaneLayer::PlaneLayer(const PlaneLayer& play, const Transform3D& transf)
@@ -70,21 +70,15 @@ Acts::PlaneLayer::buildApproachDescriptor() const
   const Vector3D&    lCenter    = PlaneSurface::center();
   const Vector3D&    lVector    = PlaneSurface::normal();
   // create new surfaces
-  Transform3D* apnTransform
-      = new Transform3D(getTransformFromRotTransl(
-          lRotation,
-          (lCenter - 0.5 * Layer::m_layerThickness * lVector)));
-  Transform3D* appTransform
-      = new Transform3D(getTransformFromRotTransl(
-          lRotation,
-          (lCenter + 0.5 * Layer::m_layerThickness * lVector)));
+  Transform3D* apnTransform = new Transform3D(getTransformFromRotTransl(
+      lRotation, (lCenter - 0.5 * Layer::m_layerThickness * lVector)));
+  Transform3D* appTransform = new Transform3D(getTransformFromRotTransl(
+      lRotation, (lCenter + 0.5 * Layer::m_layerThickness * lVector)));
   // create the new surfaces
-  aSurfaces.push_back(
-      new Acts::PlaneSurface(std::shared_ptr<Transform3D>(apnTransform),
-                             PlaneSurface::m_bounds));
-  aSurfaces.push_back(
-      new PlaneSurface(std::shared_ptr<Transform3D>(appTransform),
-                             PlaneSurface::m_bounds));
+  aSurfaces.push_back(new Acts::PlaneSurface(
+      std::shared_ptr<Transform3D>(apnTransform), PlaneSurface::m_bounds));
+  aSurfaces.push_back(new PlaneSurface(
+      std::shared_ptr<Transform3D>(appTransform), PlaneSurface::m_bounds));
   // set the layer and make TrackingGeometry
   for (auto& sIter : aSurfaces) {
     sIter->associateLayer(*this);
