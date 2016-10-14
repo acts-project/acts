@@ -13,12 +13,10 @@
 #include "ACTS/Tools/LayerCreator.hpp"
 #include "ACTS/Layers/CylinderLayer.hpp"
 #include "ACTS/Layers/DiscLayer.hpp"
-#include "ACTS/Layers/GenericOverlapDescriptor.hpp"
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/OverlapDescriptor.hpp"
 
 Acts::LayerCreator::LayerCreator(const Acts::LayerCreator::Config& lcConfig,
                                  std::unique_ptr<Logger>           logger)
@@ -100,7 +98,6 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
                                           cBounds,
                                           std::move(sArray),
                                           layerThickness,
-                                          new GenericOverlapDescriptor(),
                                           nullptr,
                                           active);
 
@@ -168,7 +165,6 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>& surfaces,
                                       dBounds,
                                       std::move(sArray),
                                       layerThickness,
-                                      new GenericOverlapDescriptor(),
                                       nullptr,
                                       active);
   // return the layer

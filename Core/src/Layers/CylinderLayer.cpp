@@ -12,7 +12,6 @@
 
 #include "ACTS/Layers/CylinderLayer.hpp"
 #include "ACTS/Layers/GenericApproachDescriptor.hpp"
-#include "ACTS/Layers/GenericOverlapDescriptor.hpp"
 #include "ACTS/Material/SurfaceMaterial.hpp"
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
@@ -26,16 +25,11 @@ Acts::CylinderLayer::CylinderLayer(
     std::shared_ptr<const CylinderBounds> cBounds,
     std::unique_ptr<SurfaceArray>         surfaceArray,
     double                                thickness,
-    OverlapDescriptor*                    olap,
     ApproachDescriptor*                   ades,
     LayerType                             laytyp)
   : CylinderSurface(transform, cBounds)
-  , Layer(std::move(surfaceArray), thickness, olap, ades, laytyp)
+  , Layer(std::move(surfaceArray), thickness, ades, laytyp)
 {
-  // just create a generic overlap descriptor if none is there
-  // @TODO remove overlap descriptor business
-  if (!Layer::m_overlapDescriptor)
-    Layer::m_overlapDescriptor = new GenericOverlapDescriptor();
   // create the representing volume
   CylinderVolumeBounds* cvBounds
       = new CylinderVolumeBounds(cBounds->r() - 0.5 * thickness,
@@ -84,37 +78,32 @@ Acts::CylinderLayer::buildApproachDescriptor() const
   // take the boundary surfaces of the representving volume if they exist
   if (m_representingVolume) {
     // get teh boundary surfaces
-    const std::
-        vector<std::shared_ptr<const Acts::
-                                   BoundarySurfaceT<Acts::AbstractVolume>>>&
-            bSurfaces
+    const std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>&
+        bSurfaces
         = m_representingVolume->boundarySurfaces();
     // fill in the surfaces into the vector
-    std::vector<std::shared_ptr<const Acts::
-                                    BoundarySurfaceT<Acts::AbstractVolume>>>
+    std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>
         aSurfaces;
     if (bSurfaces.size() > size_t(tubeOuterCover))
       aSurfaces.push_back(bSurfaces.at(tubeInnerCover));
     aSurfaces.push_back(bSurfaces.at(tubeOuterCover));
     // create an ApproachDescriptor with Boundary surfaces
-    m_approachDescriptor = new Acts::
-        GenericApproachDescriptor<const BoundarySurfaceT<AbstractVolume>>(
+    m_approachDescriptor
+        = new GenericApproachDescriptor<const BoundarySurfaceT<AbstractVolume>>(
             aSurfaces);
   } else {
     // create the new surfaces
     std::vector<const Acts::Surface*> aSurfaces;
-    aSurfaces.push_back(
-        new Acts::CylinderSurface(m_transform,
-                                  m_bounds->r() - 0.5 * thickness(),
-                                  m_bounds->halflengthZ()));
-    aSurfaces.push_back(
-        new Acts::CylinderSurface(m_transform,
-                                  m_bounds->r() + 0.5 * thickness(),
-                                  m_bounds->halflengthZ()));
+    aSurfaces.push_back(new CylinderSurface(m_transform,
+                                            m_bounds->r() - 0.5 * thickness(),
+                                            m_bounds->halflengthZ()));
+    aSurfaces.push_back(new CylinderSurface(m_transform,
+                                            m_bounds->r() + 0.5 * thickness(),
+                                            m_bounds->halflengthZ()));
     // create an ApproachDescriptor with standard surfaces surfaces - these will
     // be deleted by the approach descriptor
     m_approachDescriptor
-        = new Acts::GenericApproachDescriptor<const Acts::Surface>(aSurfaces);
+        = new GenericApproachDescriptor<const Surface>(aSurfaces);
   }
   for (auto& sIter : (m_approachDescriptor->containedSurfaces())) {
     if (sIter) sIter->associateLayer(*this);

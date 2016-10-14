@@ -20,9 +20,7 @@
 
 namespace Acts {
 
-class OverlapDescriptor;
 class ApproachDescriptor;
-
 /// @class PlaneLayer
 ///
 /// Class to describe a planar detector layer for tracking,
@@ -48,12 +46,11 @@ public:
          std::shared_ptr<const PlanarBounds> pbounds,
          std::unique_ptr<SurfaceArray>       surfaces  = nullptr,
          double                              thickness = 0.,
-         OverlapDescriptor*                  od        = nullptr,
          ApproachDescriptor*                 ad        = nullptr,
          LayerType                           laytyp    = Acts::active)
   {
     return LayerPtr(new PlaneLayer(
-        transform, pbounds, std::move(surfaces), thickness, od, ad, laytyp));
+        transform, pbounds, std::move(surfaces), thickness, ad, laytyp));
   }
 
   /// Factory for a shared plane layer
@@ -113,7 +110,6 @@ protected:
              std::shared_ptr<const PlanarBounds>& pbounds,
              std::unique_ptr<SurfaceArray>        surfaceArray = nullptr,
              double                               thickness    = 0.,
-             OverlapDescriptor*                   od           = nullptr,
              ApproachDescriptor*                  ad           = nullptr,
              LayerType                            laytyp       = Acts::active);
 

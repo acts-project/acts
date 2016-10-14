@@ -12,7 +12,6 @@
 
 #include "ACTS/Layers/DiscLayer.hpp"
 #include "ACTS/Layers/GenericApproachDescriptor.hpp"
-#include "ACTS/Layers/GenericOverlapDescriptor.hpp"
 #include "ACTS/Material/SurfaceMaterial.hpp"
 #include "ACTS/Surfaces/DiscBounds.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
@@ -26,18 +25,14 @@ Acts::DiscLayer::DiscLayer(std::shared_ptr<Acts::Transform3D>      transform,
                            std::shared_ptr<const Acts::DiscBounds> dbounds,
                            std::unique_ptr<SurfaceArray>           surfaceArray,
                            double                                  thickness,
-                           Acts::OverlapDescriptor*                olap,
-                           Acts::ApproachDescriptor*               ades,
+                           ApproachDescriptor*                     ades,
                            LayerType                               laytyp)
   : DiscSurface(transform, dbounds)
-  , Layer(std::move(surfaceArray), thickness, olap, ades, laytyp)
+  , Layer(std::move(surfaceArray), thickness, ades, laytyp)
 {
-  // just create a generic overlap descriptor if none is there
-  if (!Layer::m_overlapDescriptor)
-    Layer::m_overlapDescriptor = new GenericOverlapDescriptor();
   // create the representing volume
-  const Acts::RadialBounds* rBounds
-      = dynamic_cast<const Acts::RadialBounds*>(dbounds.get());
+  const RadialBounds* rBounds
+      = dynamic_cast<const RadialBounds*>(dbounds.get());
   if (rBounds) {
     // @TODO make a trapezoidal volume when you have DiscTrapezoidalBounds
     CylinderVolumeBounds* cvBounds = new CylinderVolumeBounds(

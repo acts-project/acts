@@ -23,7 +23,6 @@ Acts::Layer::Layer()
   , m_nextLayerUtility(nullptr)
   , m_surfaceArray(nullptr)
   , m_layerThickness(0.)
-  , m_overlapDescriptor(nullptr)
   , m_approachDescriptor(nullptr)
   , m_enclosingTrackingVolume(nullptr)
   , m_enclosingDetachedTrackingVolume(nullptr)
@@ -33,16 +32,14 @@ Acts::Layer::Layer()
 {
 }
 
-Acts::Layer::Layer(std::unique_ptr<Acts::SurfaceArray> surfaceArray,
-                   double                              thickness,
-                   Acts::OverlapDescriptor*            olap,
-                   Acts::ApproachDescriptor*           ades,
-                   LayerType                           laytyp)
+Acts::Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray,
+                   double                        thickness,
+                   ApproachDescriptor*           ades,
+                   LayerType                     laytyp)
   : m_nextLayers(NextLayers(nullptr, nullptr))
   , m_nextLayerUtility(nullptr)
   , m_surfaceArray(std::move(surfaceArray))
   , m_layerThickness(thickness)
-  , m_overlapDescriptor(olap)
   , m_approachDescriptor(ades)
   , m_enclosingTrackingVolume(nullptr)
   , m_enclosingDetachedTrackingVolume(nullptr)
@@ -52,12 +49,11 @@ Acts::Layer::Layer(std::unique_ptr<Acts::SurfaceArray> surfaceArray,
 {
 }
 
-Acts::Layer::Layer(const Acts::Layer& lay)
+Acts::Layer::Layer(const Layer& lay)
   : m_nextLayers(NextLayers(nullptr, nullptr))
   , m_nextLayerUtility(nullptr)
   , m_surfaceArray()
   , m_layerThickness(lay.m_layerThickness)
-  , m_overlapDescriptor(nullptr)
   , m_approachDescriptor(nullptr)
   , m_enclosingTrackingVolume(nullptr)
   , m_enclosingDetachedTrackingVolume(nullptr)
@@ -69,8 +65,7 @@ Acts::Layer::Layer(const Acts::Layer& lay)
 
 Acts::Layer::~Layer()
 {
-  /// @TODO witch to std::unique_ptr, remove overlap descriptor business
-  delete m_overlapDescriptor;
+  /// @TODO witch to std::unique_ptr
   delete m_approachDescriptor;
   delete m_representingVolume;
 }

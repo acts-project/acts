@@ -23,7 +23,6 @@ namespace Acts {
 
 class CylinderBounds;
 class SurfaceMaterial;
-class OverlapDescriptor;
 class ApproachDescriptor;
 
 /// @class CylinderLayer
@@ -47,23 +46,19 @@ public:
   /// @param ad is the approach descriptor for approaching the layer
   /// @param laytyp is the layer type
   ///
-  /// @TODO change OverlapDescriptor and ApproachDescriptor to unique_ptr
-  ///
   /// @return The return object is a shared poiter to the layer.
   static LayerPtr
   create(std::shared_ptr<Transform3D>          transform,
          std::shared_ptr<const CylinderBounds> cbounds,
          std::unique_ptr<SurfaceArray>         surfaceArray = nullptr,
          double                                thickness    = 0.,
-         OverlapDescriptor*                    od           = nullptr,
          ApproachDescriptor*                   ad           = nullptr,
-         LayerType                             laytyp       = Acts::passive)
+         LayerType                             laytyp       = passive)
   {
     return LayerPtr(new CylinderLayer(transform,
                                       cbounds,
                                       std::move(surfaceArray),
                                       thickness,
-                                      od,
                                       ad,
                                       laytyp));
   }
@@ -126,16 +121,13 @@ protected:
   /// @param ad is the approach descriptor for approaching the layer
   /// @param laytyp is the layer type
   ///
-  /// @TODO change OverlapDescriptor and ApproachDescriptor to unique_ptr
-  ///
   /// @return The return object is a shared poiter to the layer.
   CylinderLayer(std::shared_ptr<Transform3D>          transform,
                 std::shared_ptr<const CylinderBounds> cbounds,
                 std::unique_ptr<SurfaceArray>         surfaceArray = nullptr,
                 double                                thickness    = 0.,
-                OverlapDescriptor*                    od           = nullptr,
                 ApproachDescriptor*                   ad           = nullptr,
-                LayerType                             laytyp = Acts::passive);
+                LayerType                             laytyp       = passive);
 
   /// Private copy constructor with shift, called by create(args*)
   ///
