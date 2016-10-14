@@ -43,8 +43,8 @@ Acts::DigitizationModule::segmentationSurfaces(
 {
   SurfacePtrVector sSurfaces;
 
-  int startbinX = entryCids.first;
-  int endbinX   = exitCids.first;
+  auto startbinX = entryCids.first;
+  auto endbinX   = exitCids.first;
   // swap if needed
   if (startbinX > endbinX) std::swap(startbinX, endbinX);
   // now cash in the rest
@@ -52,8 +52,8 @@ Acts::DigitizationModule::segmentationSurfaces(
     sSurfaces.push_back(m_segmentationSurfacesX[startbinX]);
 
   // start bin, end bin
-  int startbinY = entryCids.second;
-  int endbinY   = exitCids.second;
+  auto startbinY = entryCids.second;
+  auto endbinY   = exitCids.second;
   // swap if needed
   if (startbinY > endbinY) std::swap(startbinY, endbinY);
   // now cash in the rest
