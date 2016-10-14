@@ -46,7 +46,7 @@ public:
   /// @param rmin is the inner radius of the disc surface
   /// @param rmax is the outer radius of the disc surface
   /// @param hphisec is the opening angle of the disc surface and is optional
-  ///        the default is a full disc 
+  ///        the default is a full disc
   DiscSurface(std::shared_ptr<Transform3D> htrans,
               double                       rmin,
               double                       rmax,
