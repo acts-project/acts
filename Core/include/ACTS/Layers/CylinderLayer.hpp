@@ -122,15 +122,7 @@ protected:
   /// @param od is the overlap descriptor for sensitive surfaces
   /// @param ad is the approach descriptor for approaching the layer
   /// @param laytyp is the layer type
-  ///
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> 8cbcd2a... global replacements for doxygen warning updates
-  /// @todo change OverlapDescriptor and ApproachDescriptor to unique_ptr
-  ///
->>>>>>> d944692... global replacements for doxygen warning updates
+  /// @todo change ApproachDescriptor to unique_ptr
   /// @return The return object is a shared poiter to the layer.
   CylinderLayer(std::shared_ptr<Transform3D>          transform,
                 std::shared_ptr<const CylinderBounds> cbounds,

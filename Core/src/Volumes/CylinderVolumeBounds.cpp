@@ -87,7 +87,6 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
   Transform3D transform = (transformPtr == nullptr) ? Transform3D::Identity()
                                                     : (*transformPtr.get());
   Transform3D*     tTransform = nullptr;
-  RotationMatrix3D discRot(transform.rotation());
   Vector3D         cylCenter(transform.translation());
 
   std::shared_ptr<const DiscBounds> dBounds = discBounds();

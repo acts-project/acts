@@ -171,11 +171,7 @@ private:
   /// and the last boundaries are calculated from the vertices of the first and
   /// last surface.
   /// @note currently implemented for phi, r and z bining
-<<<<<<< HEAD
-  /// @TODD implement for x,y binning
-=======
   /// @todo implement for x,y binning
->>>>>>> f789ca2... fixed doxygen warnings in SurfaceArrayCreator
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the BinningValue in which direction should be binned
   /// (currently possible: binPhi, binR, binZ)
