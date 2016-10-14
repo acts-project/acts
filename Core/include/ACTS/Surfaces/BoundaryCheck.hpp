@@ -279,7 +279,7 @@ BoundaryCheck::ComputeKDOP(std::vector<Vector2D> v,
                            std::vector<KDOP>&    kdop) const
 {
   // initialize KDOP to first point
-  unsigned int k = KDOPAxes.size();
+  size_t k = KDOPAxes.size();
   for (unsigned int i = 0; i < k; i++) {
     kdop.at(i).max = KDOPAxes.at(i)(0, 0) * v.at(0)(0, 0)
         + KDOPAxes.at(i)(1, 0) * v.at(0)(1, 0);
@@ -304,7 +304,7 @@ BoundaryCheck::ComputeKDOP(std::vector<Vector2D> v,
 inline bool
 BoundaryCheck::TestKDOPKDOP(std::vector<KDOP>& a, std::vector<KDOP>& b) const
 {
-  int k = a.size();
+  size_t k = a.size();
   // check if any intervals are non-overlapping, return if so
   for (int i = 0; i < k; i++)
     if (a.at(i).min > b.at(i).max || a.at(i).max < b.at(i).min) return false;

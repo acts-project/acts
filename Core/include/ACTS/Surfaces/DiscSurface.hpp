@@ -25,9 +25,15 @@ class DetectorElementBase;
 
 /// @class DiscSurface
 ///
-/// Class for a DiscSurface in the TrackingGEometry.
-/// It inherits from Surface.
+/// Class for a DiscSurface in the, it inherits from Surface.
 ///
+/// The DiscSurface has a polar local coordinate system, with
+/// (r,phi) describing the coordinates.
+///
+/// The surface transform positions the disc such, that the origin
+/// is at r=0, independent of the provided DiscBounds. The z-axis
+/// is the normal vector of the Disc, being perpenticular to the
+/// radial direction.
 class DiscSurface : public Surface
 {
 public:
@@ -40,10 +46,11 @@ public:
   /// @param rmin is the inner radius of the disc surface
   /// @param rmax is the outer radius of the disc surface
   /// @param hphisec is the opening angle of the disc surface and is optional
+  ///        the default is a full disc
   DiscSurface(std::shared_ptr<Transform3D> htrans,
               double                       rmin,
               double                       rmax,
-              double                       hphisec = 0.);
+              double                       hphisec = M_PI);
 
   /// Constructor for Discs from Transform3D, \f$ r_{min}, r_{max}, hx_{min},
   /// hx_{max} \f$
