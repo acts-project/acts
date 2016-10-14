@@ -124,7 +124,10 @@ protected:
   /// @param laytyp is the layer type
   ///
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 8cbcd2a... global replacements for doxygen warning updates
   /// @todo change OverlapDescriptor and ApproachDescriptor to unique_ptr
   ///
 >>>>>>> d944692... global replacements for doxygen warning updates
