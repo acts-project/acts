@@ -269,7 +269,7 @@ Acts::TrackingVolume::createBoundarySurfaces()
 
   // counter to flip the inner/outer position for Cylinders
   int sfCounter = 0;
-  int sfNumber  = surfaces.size();
+  size_t sfNumber  = surfaces.size();
 
   for (auto& sf : surfaces) {
     // flip inner/outer for cylinders
