@@ -58,12 +58,10 @@ Acts::Layer::Layer(const Layer& lay)
   , m_representingVolume(lay.m_representingVolume)
   , m_layerType(lay.m_layerType)
   , m_materialSurface(nullptr)
-{
-}
+{}
 
 Acts::Layer::~Layer()
 {
-  /// @TODO witch to std::unique_ptr
   delete m_approachDescriptor;
   delete m_representingVolume;
 }

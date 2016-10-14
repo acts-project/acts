@@ -29,7 +29,7 @@ void
 Acts::TrackingGeometryBuilder::setConfiguration(
     const Acts::TrackingGeometryBuilder::Config& cgbConfig)
 {
-  // @TODO check consistency
+  // @todo check consistency
   // copy the configuration
   m_cfg = cgbConfig;
 }
