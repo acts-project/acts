@@ -184,17 +184,22 @@ public:
   const Vector2D
   globalToLocalCartesian(const Vector3D& gpos, double tol = 0.) const;
 
-  /// Path correction method
-  /// @copydoc Surface::pathCorrection
+  /// Path correction due to incident of the track
+  /// @param gpos is the global position as a starting point
+  /// @param mom is the global momentum at the starting point
+  /// @return is the correction factor due to incident    
   double
   pathCorrection(const Vector3D& gpos, const Vector3D& mom) const override;
 
-  /// @copydoc Surface::intersectionEstimate
-  ///
   /// fast straight line intersection schema - standard: provides closest
   /// intersection and (signed) path length
   ///  forceDir is to provide the closest forward solution
   ///
+  /// @param gpos is the global position as a starting point
+  /// @param dir is the global direction at the starting point
+  /// @param forceDir is a boolean forcing a solution along direction 
+  /// @param bchk is the boundary check
+  /// 
   ///  <b>mathematical motivation:</b>
   ///
   ///  the equation of the plane is given by: <br>
@@ -212,6 +217,7 @@ public:
   ///  - either in the plane
   ///  - perpenticular to the normal of the plane
   ///
+  /// @return is the intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,

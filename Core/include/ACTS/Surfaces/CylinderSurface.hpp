@@ -129,31 +129,41 @@ public:
   virtual const CylinderBounds&
   bounds() const override;
 
-  /// @copydoc Surface::localToGlobal
-  /// @note momentum is ignored int he calculation
+  /// Local to global transformation
+  /// @param lpos is the local position to be transformed
+  /// @param mom is the global momentum (ignored in this operation)
+  /// @param gpos is the global position shich is filled
   virtual void
   localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
                 Vector3D&       gpos) const override;
 
-  /// @copydoc Surface::globalToLocal
-  /// @note momentum is ignored int he calculation
+  /// Global to local transfomration
+  /// @param gpos is the global position to be transformed
+  /// @param mom is the global momentum (ignored in this operation)
+  /// @param lpos is hte local position to be filled
+  /// @return is a boolean indicating if the transformation succeeded
   virtual bool
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
                 Vector2D&       lpos) const override;
 
-  /// @copydoc Surface::isOnSurface
+  /// Check for position on surface
+  /// @param gpos is the global position to be checked
+  /// @bhck is the boundary check object
+  /// @rreturn is a boolean indicating if the position is on surface
   virtual bool
   isOnSurface(const Vector3D&      gpos,
               const BoundaryCheck& bchk = true) const override;
 
-  ///  fast straight line intersection schema - provides closest intersection
-  ///  and
-  /// (signed) path length
+  /// Fast straight line intersection schema - provides closest intersection
+  ///  and (signed) path length
   ///
-  /// @copydoc Surface::intersectionEstimate
-  ///
+  /// @param gpos is the global position as a starting point
+  /// @param dir is the global direction at the starting point
+  /// @param forceDir is a boolean forcing a solution along direction 
+  /// @param bchk is the boundary check
+  ///                       
   ///  <b>mathematical motivation:</b>
   ///
   ///  The calculation will be done in the 3-dim frame of the cylinder,
@@ -175,13 +185,17 @@ public:
   ///  The solutions can then be found by a simple quadratic equation and
   /// reinsertion into the line equation.
   ///
+  /// @return is the intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir = false,
                        const BoundaryCheck& bchk     = false) const override;
 
-  /// Path correction due to incident
+  /// Path correction due to incident of the track
+  /// @param gpos is the global position as a starting point
+  /// @param mom is the global momentum at the starting point
+  /// @return is the correction factor due to incident    
   virtual double
   pathCorrection(const Vector3D& gpos, const Vector3D& mom) const override;
 

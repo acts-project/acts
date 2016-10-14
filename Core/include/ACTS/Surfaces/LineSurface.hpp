@@ -92,7 +92,10 @@ public:
   virtual const RotationMatrix3D
   measurementFrame(const Vector3D& gpos, const Vector3D& mom) const override;
 
-  /// @copydoc Surface::localToGlobal
+  /// Local to global transformation
+  /// @param lpos is the local position to be transformed
+  /// @param mom is the global momentum (used to sign the closest approach)
+  /// @param gpos is the global position shich is filled
   virtual void
   localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
@@ -139,6 +142,11 @@ public:
   ///  intersection and (signed) path length
   ///   forceDir is to provide the closest forward solution
   ///
+  /// @param gpos is the global position as a starting point
+  /// @param dir is the global direction at the starting point
+  /// @param forceDir is a boolean forcing a solution along direction 
+  /// @param bchk is the boundary check
+  ///
   ///   b>mathematical motivation:</b>
   ///   Given two lines in parameteric form:<br>
   ///   - @f$ \vec l_{a}(\lambda) = \vec m_a + \lambda \cdot \vec e_{a} @f$ <br>
@@ -165,6 +173,8 @@ public:
   ///  e_b)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
   ///   - @f$ \mu_0 = - \frac{(\vec m_ab \cdot \vec e_b)-(\vec m_ab \cdot \vec
   ///  e_a)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
+  ///
+  /// @return is the intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,

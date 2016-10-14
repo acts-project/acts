@@ -50,8 +50,7 @@ public:
   LayerArrayCreator(std::unique_ptr<Logger> logger
                     = getDefaultLogger("LayerArrayCreator", Logging::INFO))
     : m_logger(std::move(logger))
-  {
-  }
+  {}
 
   /// Destructor
   virtual ~LayerArrayCreator() = default;

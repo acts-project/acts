@@ -128,13 +128,20 @@ public:
   virtual const ConeBounds&
   bounds() const override;
 
-  /// @copydoc Surface::localToGloabl
+  /// Local to global transformation
+  /// @param lpos is the local position to be transformed
+  /// @param mom is the global momentum (ignored in this operation)
+  /// @param gpos is the global position shich is filled
   virtual void
   localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
                 Vector3D&       gpos) const override;
 
-  /// @copydoc Surface::globalToLocel
+  /// Global to local transfomration
+  /// @param gpos is the global position to be transformed
+  /// @param mom is the global momentum (ignored in this operation)
+  /// @param lpos is hte local position to be filled
+  /// @return is a boolean indicating if the transformation succeeded
   virtual bool
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
@@ -179,6 +186,7 @@ public:
   ///   is also the length of the path, since we normalized @f$x_d@f$
   ///   to be unit length.
   ///
+  /// @return is the Intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
