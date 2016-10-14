@@ -41,7 +41,7 @@ public:
   /// @param minPhi is the minimal phi position of the surfaces
   /// @param maxPhi is the maximal phi position of the surfaces
   /// @param halfZ is the half length in z of the cylinder
-  /// @param binsRPhi is the number of bins in phi for the surfaces
+  /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsZ is the number of bin in Z for the surfaces
   /// @param transform is the (optional) additional transform applied
   ///

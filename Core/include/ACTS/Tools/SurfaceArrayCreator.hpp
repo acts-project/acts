@@ -171,11 +171,15 @@ private:
   /// and the last boundaries are calculated from the vertices of the first and
   /// last surface.
   /// @note currently implemented for phi, r and z bining
+<<<<<<< HEAD
   /// @TODD implement for x,y binning
+=======
+  /// @todo implement for x,y binning
+>>>>>>> f789ca2... fixed doxygen warnings in SurfaceArrayCreator
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the BinningValue in which direction should be binned
   /// (currently possible: binPhi, binR, binZ)
-  /// @param bType the BinningType (equidistant or arbitrary binning)
+  /// @param transform is the (optional) additional transform applied
   /// @return a unique pointer a one dimensional BinUtility
   Acts::BinUtility
   createArbitraryBinUtility(const std::vector<const Acts::Surface*>& surfaces,
@@ -192,11 +196,11 @@ private:
   /// subtracting/adding half of a bin size to the center position (in the
   /// binning direction) to the first/last surface.
   /// @note currently implemented for phi, r and z bining
-  /// @TODD implement for x,y binning
+  /// @todo implement for x,y binning
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the BinningValue in which direction should be binned
   /// (currently possible: binPhi, binR, binZ)
-  /// @param bType the BinningType (equidistant or arbitrary binning)
+  /// @param transform is the (optional) additional transform applied
   /// @return a unique pointer a one dimensional BinUtility
   Acts::BinUtility
   createEquidistantBinUtility(const std::vector<const Acts::Surface*>& surfaces,
@@ -207,7 +211,7 @@ private:
   /// - create an equidistant BinUtility with all parameters given
   /// - if parameters are known this function is preferred
   /// currently implemented for phi, r and z bining
-  /// @TODD implement for x,y binning
+  /// @todo implement for x,y binning
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the BinningValue in which direction should be binned
   /// (currently possible: binPhi, binR, binZ)
@@ -217,6 +221,7 @@ private:
   /// direction
   /// @param max is the maximal position of the surfaces in the binning
   /// direction
+  /// @param transform is the (optional) additional transform applied
   /// @return a unique pointer a one dimensional BinUtility
   Acts::BinUtility
   createBinUtility(const std::vector<const Acts::Surface*>& surfaces,
