@@ -42,8 +42,8 @@ Acts::AbstractVolume::createBoundarySurfaces()
       = Volume::volumeBounds().decomposeToSurfaces(m_transform);
 
   // counter to flip the inner/outer position for Cylinders
-  int sfCounter = 0;
-  int sfNumber  = surfaces.size();
+  int    sfCounter = 0;
+  size_t sfNumber  = surfaces.size();
 
   for (auto& sf : surfaces) {
     // flip inner/outer for cylinders
