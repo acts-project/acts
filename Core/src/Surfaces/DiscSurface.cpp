@@ -10,9 +10,9 @@
 // DiscSurface.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
+#include "ACTS/Surfaces/DiscSurface.hpp"
 #include <iomanip>
 #include <iostream>
-#include "ACTS/Surfaces/DiscSurface.hpp"
 #include "ACTS/Surfaces/DiscTrapezoidalBounds.hpp"
 #include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
