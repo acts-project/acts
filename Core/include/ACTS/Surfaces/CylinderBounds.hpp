@@ -52,17 +52,20 @@ public:
   CylinderBounds() = delete;
 
   /// Constructor - full cylinder
+  ///
   /// @param radius is the radius of the cylinder
   /// @param halez is the half length in z
   CylinderBounds(double radius, double halez);
 
   /// Constructor - open cylinder
+  ///
   /// @param radius is the radius of the cylinder
   /// @param halfphi is the half opening angle
   /// @param halez is the half length in z
   CylinderBounds(double radius, double halfphi, double halez);
 
   /// Constructor - open cylinder
+  ///
   /// @param radius is the radius of the cylinder
   /// @param avphi is the middle phi position of the segment
   /// @param halfphi is the half opening angle
@@ -70,7 +73,10 @@ public:
   CylinderBounds(double radius, double avphi, double halfphi, double halez);
 
   /// Copy Constructor
+  ///
+  /// @param cylbo is the source object
   CylinderBounds(const CylinderBounds& cylbo) : SurfaceBounds(cylbo) {}
+
   /// Destructor
   virtual ~CylinderBounds();
 
@@ -89,26 +95,52 @@ public:
     return SurfaceBounds::Cylinder;
   }
 
-  /// @copydoc SurfaceBounds::inside
+  /// Inside check for the bounds object driven by the boundary check directive
+  /// Each Bounds has a method inside, which checks if a LocalPosition is inside
+  /// the bounds  Inside can be called without/with tolerances.
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param bchk boundary check directive
+  ///
+  /// @return boolean indicator for the success of this operation
   bool
   inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
-  /// specialized method for CylinderBounds
+  /// Specialized method for CylinderBounds that checks if a global position
+  /// is within the the cylinder cover
+  ///
+  /// @param pos is the position in the cylinder frame
+  /// @param bchk is the boundary check directive
+  /// 
+  /// return boolean indicator for operation success
   bool
-  inside3D(const Vector3D& gp, const BoundaryCheck& bchk = true) const;
+  inside3D(const Vector3D& pos, const BoundaryCheck& bchk = true) const;
 
-  /// @copydoc Surface::insideLoc0
+  /// Inside method for the second local parameter
+  ///
+  /// @param lpos is the local position to be checked
+  /// @param tol0 is the absolute tolerance on the first parameter
+  ///
+  /// @return is a boolean indicating if the position is insideLoc0
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
-  /// @copydoc Surface::insideLoc1
+  /// Inside method for the second local parameter
+  ///
+  /// @param lpos is the local position to be checked
+  /// @param tol1 is the absolute tolerance on the first parameter
+  ///
+  /// @return is a boolean indicating if the position is insideLoc1
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /// Minimal distance to boundary
-  /// return minimal distance to boundary ( > 0 if outside and <=0 if inside)
+  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
+  ///
+  /// @param lpos is the local position to check for the distance
+  ///
+  /// @return is a signed distance parameter
   virtual double
-  minDistance(const Vector2D& pos) const override;
+  distanceToBoundary(const Vector2D& pos) const override;
 
   /// This method returns the radius
   virtual double

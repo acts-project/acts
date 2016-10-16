@@ -31,17 +31,23 @@ public:
   enum BoundValues { bv_radius = 0, bv_halfZ = 1, bv_length = 2 };
 
   /// Constructor
+  ///
   /// @param radius is the radius of the cylinder, default = 0.
   /// @param halez is the half length in z, defualt = 0.
   LineBounds(double radius = 0., double halez = 0.);
 
   /// Copy constructor
   /// calls teh base copy constructor
-  LineBounds(const LineBounds& lbo) : SurfaceBounds(lbo) {}
+  ///
+  /// @param libo are the source bounds
+  LineBounds(const LineBounds& libo) : SurfaceBounds(lbo) {}
+  
   /// Destructor
   virtual ~LineBounds();
 
   /// Assignment operator
+  ///
+  /// @param libo are the source bounds
   LineBounds&
   operator=(const LineBounds& libo);
 
@@ -56,22 +62,44 @@ public:
     return SurfaceBounds::Line;
   }
 
-  /// @copydoc SurfaceBounds::inside
+  /// Inside check for the bounds object driven by the boundary check directive
+  /// Each Bounds has a method inside, which checks if a LocalPosition is inside
+  /// the bounds  Inside can be called without/with tolerances.
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param bchk boundary check directive
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
-  /// @copydoc Surface::insideLoc0
+  /// Inside check for the bounds object with tolerance
+  /// checks for first coordinate only.
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 absolute tolerance parameter
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
-  /// @copydoc Surface::insideLoc1
+  /// Inside check for the bounds object with tolerance
+  /// checks for second coordinate only.
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol1 absulote tolerance parameter
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /// Minimal distance to boundary
-  /// return minimal distance to boundary ( > 0 if outside and <=0 if inside)
+  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
+  ///
+  /// @param lpos is the local position to check for the distance
+  ///
+  /// @return is a signed distance parameter
   virtual double
-  minDistance(const Vector2D& lpos) const override;
+  distanceToBoundary(const Vector2D& lpos) const override;
 
   /// This method returns the radius
   virtual double
@@ -82,19 +110,37 @@ public:
   halflengthZ() const;
 
   /// Output Method for std::ostream
+  ///
+  /// @param sl is the ostream to be dumped into
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
 private:
   /// private helper method
+  ///
+  /// @param r is the radius to be checked
+  /// @param tol0 is the tolerance on the radius
+  ///
+  /// @return is a boolean indicating the operation success
   bool
   insideLocR(double r, double tol0) const;
 
   /// private helper method
+  ///
+  /// @param z is the a position to be checked
+  /// @param tol1 is the tolerance on z
+  ///
+  /// @return is a boolean indicating the operation success
   bool
   insideLocZ(double z, double tol1) const;
 
   /// private method for inside check
+  ///
+  /// @param lpos is the local position to check for the distance
+  /// @param r is the radius to be checked
+  /// @param tol1 is the tolerance on z
+  ///
+  /// @return is a boolean indicating the operation success
   bool
   inside(const Vector2D& lpos, double tol0, double tol1) const;
 };

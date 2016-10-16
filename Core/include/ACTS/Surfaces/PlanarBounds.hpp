@@ -26,9 +26,13 @@ class PlanarBounds : public SurfaceBounds
 {
 public:
   /// Default Constructor
+  ///
+  /// @param sStore is the store size for the initialisation
   PlanarBounds(size_t sStore = 0) : SurfaceBounds(sStore) {}
+  
   /// Destructor
   virtual ~PlanarBounds() {}
+  
   /// Virtual Constructor
   virtual PlanarBounds*
   clone() const = 0;

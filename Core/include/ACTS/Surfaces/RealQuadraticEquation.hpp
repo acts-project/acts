@@ -17,8 +17,7 @@
 #include <utility>
 
 namespace Acts {
-/** @enum RQESolutionType
-  */
+/// @enum RQESolutionType
 
 enum RQESolutionType { none = 0, one = 1, two = 2 };
 
@@ -55,6 +54,11 @@ struct RealQuadraticEquation
   double          second;
   RQESolutionType solutions;
 
+  /// Constructor
+  /// 
+  /// @param alpha is the first parameter of the quad equation
+  /// @param beta is the second parameter of the quad equation
+  /// @param gamma is the third parameter of the quad equation
   RealQuadraticEquation(double alpha, double beta, double gamma)
     : first(0.), second(0.)
   {

@@ -67,7 +67,7 @@ Acts::ConeBounds::operator=(const Acts::ConeBounds& conebo)
 }
 
 double
-Acts::ConeBounds::minDistance(const Acts::Vector2D& pos) const
+Acts::ConeBounds::distanceToBoundary(const Acts::Vector2D& pos) const
 {
   // This needs to be split based on where pos is with respect to the
   // cone. Inside, its easy, inside the z-region or inside the phi

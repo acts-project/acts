@@ -44,16 +44,20 @@ public:
   TriangleBounds() = delete;
 
   /// Constructor with coordinates of vertices
+  ///
   /// @param vertices is the vector of vertices
   TriangleBounds(const std::vector<Vector2D>& vertices);
 
   /// Copy constructor
+  ///
   /// @param tribo are the source bounds for assignment
   TriangleBounds(const TriangleBounds& tribo) : PlanarBounds(tribo) {}
+  
   /// Destructor
   virtual ~TriangleBounds();
 
   /// Assignment Operator
+  ///
   /// @param tribo are the source bounds for assignment
   TriangleBounds&
   operator=(const TriangleBounds& tribo);
@@ -71,41 +75,60 @@ public:
 
   /// This method checks if the provided local coordinates are inside the
   /// surface bounds
+  ///
   /// @param lpos local position in 2D local carthesian frame
   /// @param bchk is the boundary check directive
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
   /// This method checks if the provided local coordinate 1 is inside the
   /// surface bounds
+  ///
   /// @param lpos local position in 2D local carthesian frame
-  /// @param bchk is the boundary check directive
+  /// @param tol0 is the absolute tolerance on the local first coordinate
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
   /// This method checks if the provided local coordinate 2 is inside the
   /// surface bounds
+  ///  
   /// @param lpos local position in 2D local carthesian frame
-  /// @param bchk is the boundary check directive
+  /// @param tol1 is the absolute tolerance on the local first coordinate
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /// Minimal distance to boundary
-  /// @param lpos is the local position in 2D local carthesian frame
-  /// @return the distance ( > 0 if outside and <=0 if inside)
+  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
+  ///
+  /// @param lpos is the local position to check for the distance
+  ///
+  /// @return is a signed distance parameter
   virtual double
-  minDistance(const Vector2D& lpos) const override;
+  distanceToBoundary(const Vector2D& lpos) const override;
 
   /// This method returns the coordinates of vertices
   const std::vector<Vector2D>
   vertices() const override;
 
   /// Output Method for std::ostream
+  ///
+  /// @param sl is the ostream to be dumped into
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
 private:
-  /// private helper method for inside check
+  /// Private helper method
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 absulote tolerance parameter on the first coordinate
+  /// @param tol1 absulote tolerance parameter on the second coordinate
+  ///
+  /// @return boolean indicator for the success of this operation
   bool
   inside(const Vector2D& lpos, double tol0, double tol2) const;
 };

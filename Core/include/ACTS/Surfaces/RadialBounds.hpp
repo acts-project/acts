@@ -45,6 +45,7 @@ public:
   RadialBounds();
 
   /// Constructor for full disc of symmetric disc around phi=0
+  ///
   /// @param minrad is the inner radius of the disc (0 for full disc)
   /// @param maxrad is the outer radius of the disc
   /// @param hphisec is the half opening angle of the disc (Pi for full angular
@@ -52,6 +53,7 @@ public:
   RadialBounds(double minrad, double maxrad, double hphisec = M_PI);
 
   /// Constructor for full disc of symmetric disc around phi!=0
+  ///
   /// @param minrad is the inner radius of the disc (0 for full disc)
   /// @param maxrad is the outer radius of the disc
   /// @param avephi is the phi value of the local x-axis in the local 3D frame
@@ -60,8 +62,10 @@ public:
   RadialBounds(double minrad, double maxrad, double avephi, double hphisec);
 
   /// Copy constructor
+  ///
   /// @param rbounds is the source bounds for assignment
-  RadialBounds(const RadialBounds& dbounds) : DiscBounds(dbounds) {}
+  RadialBounds(const RadialBounds& rbounds) : DiscBounds(dbounds) {}
+  
   /// Destructor
   virtual ~RadialBounds();
 
@@ -81,31 +85,41 @@ public:
     return SurfaceBounds::Disc;
   }
 
-  /// @copydoc SurfaceBounds::inside
-  ///
   /// For disc surfaces the local position in (r,phi) is checked
+  ///
   /// @param lpos local position to be checked
   /// @param bchk boundary check directive
+  ///
+  /// @return is a boolean indicating the operation success
   virtual bool
   inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
-  /// @copydoc SurfaceBounds::insideLoc0
+  /// Inside check for the first coordinate
   ///
-  /// For disc surfaces the local position in (r,phi) is checked
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 absolute tolerance parameter
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
-  /// @copydoc SurfaceBounds::insideLoc1
+  /// Inside check for the bounds object with tolerance
+  /// checks for second coordinate only.
   ///
-  /// For disc surfaces the local position in (r,phi) is checked
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol1 absulote tolerance parameter
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
   /// Minimal distance to boundary calculation
-  /// @param local 2D position in surface coordinate frame
+  ///
+  /// @param lpos local 2D position in surface coordinate frame
+  ///
   /// @return distance to boundary ( > 0 if outside and <=0 if inside)
   virtual double
-  minDistance(const Vector2D& pos) const override;
+  distanceToBoundary(const Vector2D& lpos) const override;
 
   /// Return method for inner Radius
   double
@@ -115,8 +129,8 @@ public:
   double
   rMax() const;
 
-  /// Return method for the central phi value (i.e. phi value of x-axis of local
-  /// 3D frame)
+  /// Return method for the central phi value 
+  ///(i.e. phi value of x-axis of local 3D frame)
   double
   averagePhi() const;
 
@@ -125,11 +139,24 @@ public:
   halfPhiSector() const;
 
   /// Outstream operator
+  ///
+  /// @param sl is the ostream to be dumped into
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
 private:
   /// private helper method for inside
+  ///
+  /// @param lpos is the local position to be checked
+  /// @param tol0 is the absolute tolerance on the first parameter
+  /// @param tol1 is the absoltue tolerance on the second parameter
+  /// Inside check for the bounds object with tolerance
+  /// checks for second coordinate only.
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol1 absulote tolerance parameter
+  ///
+  /// @return boolean indicator for the success of this operation
   bool
   inside(const Vector2D& lpos, double tol0, double tol1) const;
 };

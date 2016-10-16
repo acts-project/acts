@@ -37,6 +37,7 @@ public:
   LineSurface() = delete;
 
   /// Constructor from Transform3D and bounds
+  ///
   /// @param htrans is the transform that positions the surface in the global
   /// frame
   /// @param radius is the straw radius
@@ -44,6 +45,7 @@ public:
   LineSurface(std::shared_ptr<Transform3D> htrans, double radius, double halez);
 
   /// Constructor from Transform3D and a shared bounds object
+  ///
   /// @param htrans is the transform that positions the surface in the global
   /// frame
   /// @param lbounds are teh bounds describing the straw dimensions, can be
@@ -52,19 +54,22 @@ public:
               std::shared_ptr<const LineBounds> lbounds = nullptr);
 
   /// Constructor from DetectorElementBase and Element identifier
+  ///            
   /// @param lbounds are teh bounds describing the straw dimensions, they must
   /// not be nullptr
   /// @param detelement for which this surface is (at least) one representation
-  /// @param identifier
+  /// @param identifier is the identifier associated with this surface
   LineSurface(std::shared_ptr<const LineBounds> lbounds,
               const DetectorElementBase&        detelement,
               const Identifier&                 identifier = Identifier());
 
   /// Copy constructor
+  ///            
   /// @param slsf is teh source surface for copying
   LineSurface(const LineSurface& slsf);
 
   /// Copy constructor with shift
+  ///
   /// @param slsf is the source surface dor copying
   /// @param transf is the additional transform applied after copying
   LineSurface(const LineSurface& slsf, const Transform3D& transf);
@@ -73,26 +78,43 @@ public:
   virtual ~LineSurface();
 
   /// Assignment operator
+  ///
+  /// @param slsf is the source surface dor copying
   LineSurface&
   operator=(const LineSurface& slsf);
 
   /// Normal vector return
+  ///
   /// @param lpos is the local position is ignored
+  ///
   /// return a Vector3D by value
   const Vector3D
   normal(const Vector2D& lpos = s_origin2D) const override;
 
-  /// @copydoc Surface::biningPosition
+  /// The binning position is the position calcualted
+  /// for a certain binning type
+  ///
+  /// @param bValue is the binning type to be used
+  ///
+  /// @return position that can beused for this binning
   virtual const Vector3D
   binningPosition(BinningValue bValue) const final;
 
   /// Return the measurement frame - this is needed for alignment, in particular
+  ///
   /// for StraightLine and Perigee Surface
   ///  - the default implementation is the the RotationMatrix3D of the transform
+  ///
+  /// @param gpos is the global position where the measurement frame is constructed
+  /// @param mom is the momentum used for the measurement frame construction
+  ///
+  /// @return is a rotation matrix that indicates the measurement frame
   virtual const RotationMatrix3D
   measurementFrame(const Vector3D& gpos, const Vector3D& mom) const override;
 
   /// Local to global transformation
+  /// for line surfaces the momentum is used in order to interpret the drift radius
+  /// 
   /// @param lpos is the local position to be transformed
   /// @param mom is the global momentum (used to sign the closest approach)
   /// @param gpos is the global position shich is filled
@@ -128,6 +150,14 @@ public:
   /// \f$ sign = -sign(\vec{d} \cdot \vec{measX}) \f$
   ///
   /// \image html SignOfDriftCircleD0.gif
+  /// @param gpos global 3D position - considered to be on surface but not
+  /// inside bounds (check is done)
+  /// @param gmom global 3D momentum representation (optionally ignored)
+  /// @param lpos local 2D position to be filled (given by reference for method
+  /// symmetry)
+  ///              
+  /// @return boolean indication if operation was successful (fail means global
+  /// position was not on surface)
   virtual bool
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
@@ -183,6 +213,9 @@ public:
 
   /// the pathCorrection for derived classes with thickness
   /// is by definition 1 for LineSurfaces
+  ///
+  /// input parameters are ignored
+  ///                                          
   /// @note there's no material associated to the line surface
   virtual double
   pathCorrection(const Vector3D&, const Vector3D&) const override
@@ -191,10 +224,14 @@ public:
   }
 
   /// This method checks if the provided GlobalPosition is inside the assigned
-  ///  straw radius, but
-  ///  no check is done whether the GlobalPosition is inside bounds or not.
-  ///  It overwrites isOnSurface from Base Class as it saves the time of sign
-  ///  determination.
+  /// straw radius, but no check is done whether the GlobalPosition is 
+  /// inside bounds or not. It overwrites isOnSurface from Base Class 
+  /// as it saves the time of sign determination.
+  ///
+  /// @param gpos is the global position to be checked
+  /// @param bchk is the boundary check directive
+  ///
+  /// @return bollean that indicates if the position is on surface
   virtual bool
   isOnSurface(const Vector3D&      gpos,
               const BoundaryCheck& bchk = true) const override;
@@ -215,6 +252,10 @@ protected:
 
 private:
   /// helper function to apply the globalToLocal with out transform
+  /// 
+  /// @param pos is the global position
+  /// @param mom is the momentum
+  /// @param is the local position to be filled
   bool
   globalToLocalPlain(const Vector3D& pos,
                      const Vector3D& mom,

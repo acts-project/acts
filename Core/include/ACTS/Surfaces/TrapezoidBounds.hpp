@@ -43,22 +43,25 @@ public:
   TrapezoidBounds() = delete;
 
   /// Constructor for symmetric Trapezoid
-  /// @param minhalex minimal half lenght X - definition at negative halflength
-  /// Y
-  /// @param maxhalex maximal half length X - definition at maximum halflength Y
+  ///
+  /// @param minhalex minimal half lenght X, definition at negative halflength Y
+  /// @param maxhalex maximal half length X, definition at maximum halflength Y
   /// @param haley maximal half length Y - defined at x=0
   TrapezoidBounds(double minhalex, double maxhalex, double haley);
 
   /// Constructor for arbitrary Trapezoid
-  /// @param minhalex minimal half lenght - definition at negative halflength Y
-  /// @param maxhalex maximal half length - definition at maximum halflength Y
+  ///
+  /// @param minhalex minimal half lenght X, definition at negative halflength Y
+  /// @param maxhalex maximal half length X, definition at maximum halflength Y
   /// @param alpha opening angle at @todo check
   /// @param beta opentin angle at @todo check
   TrapezoidBounds(double minhalex, double haley, double alpha, double beta);
 
   /// Copy constructor
+  ///
   /// @param trabo are the source bounds for assignment
   TrapezoidBounds(const TrapezoidBounds& trabo) : PlanarBounds(trabo) {}
+  
   /// Destructor
   virtual ~TrapezoidBounds();
 
@@ -102,7 +105,7 @@ public:
   double
   beta() const;
 
-  ///  The orientation of the Trapezoid is according to the figure above,
+  /// The orientation of the Trapezoid is according to the figure above,
   /// in words: the shorter of the two parallel sides of the trapezoid
   /// intersects
   /// with the negative @f$ y @f$ - axis of the local frame.
@@ -141,7 +144,12 @@ public:
   /// @f$
   /// <br>
   /// and   @f$  \delta_{I} = \delta_{II} = - \frac{1}{2}\kappa_{I}(x_{max} +
-  /// x_{min}) @f$  */
+  /// x_{min}) @f$  
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param bchk boundary check directive
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
@@ -149,8 +157,11 @@ public:
   /// @note loc0/loc1 correspond to the natural coordinates of the surface
   /// @note As loc0/loc1 are correlated the single check doesn't make sense :
   ///       check is done on enclosing Rectangle !
+  ///
   /// @param lpos is the local position to be checked
   /// @param tol0 is the tolerance applied
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
@@ -158,41 +169,75 @@ public:
   /// @note loc0/loc1 correspond to the natural coordinates of the surface
   /// @note As loc0/loc1 are correlated the single check doesn't make sense :
   ///   -> check is done on enclosing Rectangle !
+  ///
   /// @param lpos is the local position to be checked
   /// @param tol1 is the tolerance applied
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /// Minimal distance to boundary
-  /// @param lpos is the local position to be checked
-  /// @return minimal distance ( > 0 if outside and <=0 if inside)
+  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
+  ///
+  /// @param lpos is the local position to check for the distance
+  ///
+  /// @return is a signed distance parameter
   virtual double
-  minDistance(const Vector2D& lpos) const override;
+  distanceToBoundary(const Vector2D& lpos) const override;
 
   /// Return the vertices - or, the points of the extremas
   virtual const std::vector<Vector2D>
   vertices() const override;
 
   /// Output Method for std::ostream
+  ///
+  /// @param sl is the ostream to be dumped into
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
 private:
   /// private helper method for inside check
+  ///
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 absulote tolerance parameter on the first coordinate
+  /// @param tol1 absulote tolerance parameter on the second coordinate
+  ///
+  /// @return boolean indicator for the success of this operation
   bool
   inside(const Vector2D& lpos, double tol0, double tol2) const;
 
   /// private helper method inside() method for a full symmetric trapezoid
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 absulote tolerance parameter on the first coordinate
+  /// @param tol1 absulote tolerance parameter on the second coordinate
+  ///
+  /// @return boolean indicator for the success of this operation
   bool
   insideFull(const Vector2D& lpos, double tol0 = 0., double tol1 = 0.) const;
 
-  /// private inside() method for the triangular exclude area for an arbitrary
-  /// trapezoid
+  /// private inside() method for the triangular exclude 
+  /// area for an arbitrary trapezoid
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 absulote tolerance parameter on the first coordinate
+  /// @param tol1 absulote tolerance parameter on the second coordinate
+  ///
+  /// @return boolean indicator for the success of this operation
   bool
   insideExclude(const Vector2D& lpos, double tol0 = 0., double tol1 = 0.) const;
 
-  /// private isAbove() method for checking whether a point lies above or under
-  /// a straight line
+  /// private isAbove() method for checking whether a point 
+  /// lies above or under a straight line
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 absulote tolerance parameter on the first coordinate
+  /// @param tol1 absulote tolerance parameter on the second coordinate
+  /// @param k is the first parameter of the parametric line equation
+  /// @param d is the second parameter of the parameteric line equation
+  ///
+  /// @return boolean indicator for the success of this operation
   bool
   isAbove(const Vector2D& lpos, double tol0, double tol1, double k, double d)
       const;

@@ -58,7 +58,7 @@ Acts::CylinderBounds::operator=(const Acts::CylinderBounds& cylbo)
 }
 
 double
-Acts::CylinderBounds::minDistance(const Acts::Vector2D& pos) const
+Acts::CylinderBounds::distanceToBoundary(const Acts::Vector2D& pos) const
 {
   const double pi2 = 2. * M_PI;
 

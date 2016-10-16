@@ -33,16 +33,23 @@ public:
   PerigeeSurface() = delete;
 
   /// Constructor from GlobalPosition
+  ///
   /// @param gpos position where the perigee is centered
   PerigeeSurface(const Vector3D& gpos);
 
   /// Constructor with a Transform - needed for tilt
+  ///
+  /// @param tTransform is the transform for position and tilting
   PerigeeSurface(std::shared_ptr<Transform3D> tTransform);
 
   /// Copy constructor
+  ///
+  /// @param pesf is the source surface to be copied
   PerigeeSurface(const PerigeeSurface& pesf);
 
   /// Copy constructor with shift
+  ///
+  /// @param pesf is the source surface to be copied
   /// @param transf is the transformed applied after copying
   PerigeeSurface(const PerigeeSurface& pesf, const Transform3D& transf);
 
@@ -50,12 +57,16 @@ public:
   virtual ~PerigeeSurface();
 
   /// Virtual constructor
+  ///
+  /// @aram shift is the potential shift that is applied after cloning
   virtual PerigeeSurface*
   clone(const Transform3D* shift = nullptr) const override;
 
   /// Assignment operator
+  ///
+  /// @param pesf is the source surface to be assigned
   PerigeeSurface&
-  operator=(const PerigeeSurface& slsf);
+  operator=(const PerigeeSurface& pesf);
 
   /// Return the surface type
   virtual SurfaceType
@@ -71,7 +82,9 @@ public:
     return "Acts::PerigeeSurface";
   }
 
-  /// Output Method for std::ostream*/
+  /// Output Method for std::ostream
+  ///
+  /// @param sl is the ostream to be dumped into
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 };

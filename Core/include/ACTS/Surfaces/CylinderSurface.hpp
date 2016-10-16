@@ -37,6 +37,7 @@ public:
   CylinderSurface() = delete;
 
   /// Constructor from Transform3D, radius and halflenght
+  ///
   /// @param htrans transform to position the surface, can be nullptr
   /// @note if htrans == nullptr, the cylinder is positioned around (0.,0.,0.)
   /// @param radius is the radius of the cylinder
@@ -46,6 +47,7 @@ public:
                   double                       hlength);
 
   /// Constructor from Transform3D, radius halfphi, and halflenght
+  ///                
   /// @param htrans transform to position the surface, can be nullptr
   /// @note if htrans == nullptr, the cylinder is positioned around (0.,0.,0.)
   /// @param radius is the radius of the cylinder
@@ -57,6 +59,7 @@ public:
                   double                       hlength);
 
   /// Constructor from Transform3D and CylinderBounds
+  ///                
   /// @param htrans transform to position the surface, can be nullptr
   /// @note if htrans == nullptr, the cylinder is positioned around (0.,0.,0.)
   /// @param cbounds is a shared pointer to a cylindeer bounds object, must
@@ -65,10 +68,12 @@ public:
                   std::shared_ptr<const CylinderBounds> cbounds);
 
   /// Copy constructor
+  ///                
   /// @param csf is the source cylinder for the copy
   CylinderSurface(const CylinderSurface& csf);
 
   /// Copy constructor with shift
+  ///
   /// @param csf is the source cylinder for the copy
   /// @param htrans is the additional transform applied after copying the
   /// cylinder
@@ -78,24 +83,33 @@ public:
   virtual ~CylinderSurface();
 
   /// Assignment operator
+  ///
+  /// @param csf is the source cylinder for the copy
   CylinderSurface&
   operator=(const CylinderSurface& csf);
 
   /// Implicit Constructor - optionally with a shift
+  ///
   /// @param shift is an optional transform for a shift applied after coping
   virtual CylinderSurface*
   clone(const Transform3D* shift = nullptr) const override;
 
   /// The binning position method - is overloaded for r-type binning
+  ///
   /// @param bValue is the type of global binning to be done
+  ///
+  /// @return is the global position to be used for binning
   virtual const Vector3D
   binningPosition(BinningValue bValue) const override;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   /// The measurement frame of a cylinder is the tangential plane at a given
   /// position
+  ///
   /// @param gpos is the position where the measurement frame is defined
   /// @param mom is the momentum vector (ignored)
+  ///
+  /// @return rotation matrix that defines the measurement frame
   virtual const RotationMatrix3D
   measurementFrame(const Vector3D& gpos, const Vector3D& mom) const override;
 
@@ -109,19 +123,25 @@ public:
   /// Return method for surface normal information
   /// @note for a Cylinder a local position is always required for the normal
   /// vector
+  ///
   /// @param lpos is the local postion for which the normal vector is requested
+  ///
+  /// @return normal vector at the local position
   virtual const Vector3D
   normal(const Vector2D& lpos) const override;
 
   /// Return method for surface normal information
   /// @note for a Cylinder a local position is always required for the normal
   /// vector
+  ///
   /// @param gpos is the global postion for which the normal vector is requested
+  ///
+  /// @return normal vector at the global position
   virtual const Vector3D
   normal(const Vector3D& gpos) const override;
 
-  ///  Return method for the rotational symmetry axis - the z-Axis of the
-  ///  HepTransform
+  /// Return method for the rotational symmetry axis 
+  /// @return  the z-Axis of transform
   virtual const Vector3D
   rotSymmetryAxis() const;
 
@@ -130,6 +150,7 @@ public:
   bounds() const override;
 
   /// Local to global transformation
+  ///
   /// @param lpos is the local position to be transformed
   /// @param mom is the global momentum (ignored in this operation)
   /// @param gpos is the global position shich is filled
@@ -139,9 +160,11 @@ public:
                 Vector3D&       gpos) const override;
 
   /// Global to local transfomration
+  ///              
   /// @param gpos is the global position to be transformed
   /// @param mom is the global momentum (ignored in this operation)
   /// @param lpos is hte local position to be filled
+  ///              
   /// @return is a boolean indicating if the transformation succeeded
   virtual bool
   globalToLocal(const Vector3D& gpos,
@@ -149,9 +172,11 @@ public:
                 Vector2D&       lpos) const override;
 
   /// Check for position on surface
+  ///              
   /// @param gpos is the global position to be checked
-  /// @bhck is the boundary check object
-  /// @rreturn is a boolean indicating if the position is on surface
+  /// @param bhck is the boundary check object
+  ///              
+  /// @return is a boolean indicating if the position is on surface
   virtual bool
   isOnSurface(const Vector3D&      gpos,
               const BoundaryCheck& bchk = true) const override;
@@ -193,8 +218,10 @@ public:
                        const BoundaryCheck& bchk     = false) const override;
 
   /// Path correction due to incident of the track
+  ///                     
   /// @param gpos is the global position as a starting point
   /// @param mom is the global momentum at the starting point
+  ///                     
   /// @return is the correction factor due to incident    
   virtual double
   pathCorrection(const Vector3D& gpos, const Vector3D& mom) const override;

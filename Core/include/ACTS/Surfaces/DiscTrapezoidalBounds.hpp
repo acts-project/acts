@@ -113,7 +113,7 @@ public:
   /// @param lpos is the local position to be checked (in polar coordinates)
   /// @return is the minimal distance ( > 0 if outside and <=0 if inside)
   virtual double
-  minDistance(const Vector2D& lpos) const override;
+  distanceToBoundary(const Vector2D& lpos) const override;
 
   /// This method returns inner radius
   double

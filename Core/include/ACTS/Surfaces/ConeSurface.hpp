@@ -38,6 +38,7 @@ public:
   ConeSurface() = delete;
 
   /// Constructor form HepTransform and an opening angle
+  ///
   /// @param htrans is the transform to place to cone in a 3D frame
   /// @param alpha is the opening angle of the cone
   /// @param symmetric indicates if the cones are built to +/1 z
@@ -46,6 +47,7 @@ public:
               bool                         symmetric = false);
 
   /// Constructor form HepTransform and an opening angle
+  ///            
   /// @param htrans is the transform that places the cone in the global frame
   /// @param alpha is the opening angle of the cone
   /// @param locZmin is the z range over which the cone spans
@@ -58,16 +60,19 @@ public:
               double                       halfPhi = M_PI);
 
   /// Constructor from HepTransform and ConeBounds
+  ///            
   /// @param htrans is the transform that places the cone in the global frame
   /// @param cbounds is the boundary class, the bounds must exit
   ConeSurface(std::shared_ptr<Transform3D>      htrans,
               std::shared_ptr<const ConeBounds> cbounds);
 
   /// Copy constructor
+  ///
   /// @param csf is the source cone surface
   ConeSurface(const ConeSurface& csf);
 
   /// Copy constructor - with shift
+  ///
   /// @param csf is the source cone surface
   /// @param htrans is the additional transfrom applied after copying
   ConeSurface(const ConeSurface& csf, const Transform3D& htrans);
@@ -76,18 +81,22 @@ public:
   virtual ~ConeSurface();
 
   /// Assignment operator
+  ///
   /// @param csf is the source surface for the assignment
   ConeSurface&
   operator=(const ConeSurface& csf);
 
   /// Implicit Constructor
+  ///
   /// @param shift is the optional shift applied after cloning
   virtual ConeSurface*
   clone(const Transform3D* shift = nullptr) const override;
 
   /// The binning position method - is overloaded for r-type binning
+  ///
   /// @param bValue defines the type of binning to be applied in the global
   /// frame
+  ///
   /// @return The return type is a vector for positioning in the global frame
   virtual const Vector3D
   binningPosition(BinningValue bValue) const override;
@@ -102,24 +111,34 @@ public:
   /// Return the measurement frame - this is needed for alignment, in particular
   ///  for StraightLine and Perigee Surface
   ///  - the default implementation is the the RotationMatrix3D of the transform
+  /// 
+  /// @param gpos is the global position where the measurement frame is constructed
+  /// @param mom is the momentum used for the measurement frame construction
+  ///
+  /// @return matrix that indicates the measurement frame
   const RotationMatrix3D
   measurementFrame(const Vector3D& gpos, const Vector3D& mom) const final;
 
   /// Return method for surface normal information
+  ///
   /// @param lpos is the local position on the cone for which the normal vector
   /// is requested
+  ///
   /// @return Vector3D normal vector in global frame
   const Vector3D
   normal(const Vector2D& lpos) const final;
 
   /// Return method for surface normal information
+  ///
   /// @param gpos is the global position on the cone for which the normal vector
   /// is requested
+  ///
   /// @return Vector3D normal vector in global frame
   const Vector3D
   normal(const Vector3D& gpos) const final;
 
   // Return method for the rotational symmetry axis
+  ///
   // @return This returns the local z axis
   virtual const Vector3D
   rotSymmetryAxis() const;
@@ -129,6 +148,7 @@ public:
   bounds() const override;
 
   /// Local to global transformation
+  ///
   /// @param lpos is the local position to be transformed
   /// @param mom is the global momentum (ignored in this operation)
   /// @param gpos is the global position shich is filled
@@ -138,9 +158,11 @@ public:
                 Vector3D&       gpos) const override;
 
   /// Global to local transfomration
+  ///              
   /// @param gpos is the global position to be transformed
   /// @param mom is the global momentum (ignored in this operation)
   /// @param lpos is hte local position to be filled
+  ///              
   /// @return is a boolean indicating if the transformation succeeded
   virtual bool
   globalToLocal(const Vector3D& gpos,
@@ -193,9 +215,12 @@ public:
                        bool                 forceDir = false,
                        const BoundaryCheck& bchk     = false) const override;
 
-  // the pathCorrection for derived classes with thickness
-  // @param gpos is the global potion at the correction point
-  // @param mom is the momentum at the correction point
+  /// the pathCorrection for derived classes with thickness
+  ///                     
+  /// @param gpos is the global potion at the correction point
+  /// @param mom is the momentum at the correction point
+  ///
+  /// @return is the path correction due to incident angle                     
   virtual double
   pathCorrection(const Vector3D& gpos, const Vector3D& mom) const override;
 

@@ -45,6 +45,7 @@ public:
   EllipseBounds() = delete;
 
   /// Constructor for full of an ellipsoid disc
+  ///
   /// @param minrad1
   /// @param minrad2
   /// @param maxrad1
@@ -59,18 +60,23 @@ public:
                 double hphisec = M_PI);
 
   /// Copy constructor
+  ///              
   /// @param ebo is the source bounds for the copy
   EllipseBounds(const EllipseBounds& ebo) : PlanarBounds(ebo) {}
   /// Destructor
   virtual ~EllipseBounds();
 
   /// Assignment operator
+  ///
+  /// @param ebo is the source bounds for the copy  
   EllipseBounds&
-  operator=(const EllipseBounds& discbo);
+  operator=(const EllipseBounds& ebo);
 
   /// Move assignment operator
+  ///
+  /// @param ebo is the source bounds for the copy
   EllipseBounds&
-  operator=(EllipseBounds&& discbo);
+  operator=(EllipseBounds&& ebo);
 
   /// Virtual constructor
   virtual EllipseBounds*
@@ -86,22 +92,40 @@ public:
   /// This method checks if the point given in the local coordinates is between
   /// two ellipsoids if only tol0 is given and additional in the phi sector is
   /// tol1 is given
-  /// @copydoc SurfaceBounds::inside
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param bchk boundary check directive
+  
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
   /// Check for inside first local coordinate
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 absolute tolerance parameter
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
   /// Check for inside second local coordinate
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol1 absolute tolerance parameter
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /// Minimal distance to boundary
-  /// return minimal distance ( > 0 if outside and <=0 if inside)
+  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
+  ///
+  /// @param lpos is the local position to check for the distance
+  ///
+  /// @return is a signed distance parameter
   virtual double
-  minDistance(const Vector2D& lpos) const override;
+  distanceToBoundary(const Vector2D& lpos) const override;
 
   /// This method returns first inner radius
   double
@@ -137,10 +161,16 @@ public:
 
 private:
   /// private helper function
+  /// 
+  /// @param lpos is the local position for checking
+  /// @param tol0 is the absolute tolerance on the first parameter
+  /// @param tol1 is the absolute tolerance on the second parameter
   bool
   inside(const Vector2D& lpos, double tol0, double tol1) const;
 
   /// helper function for squaring
+  ///
+  /// @param x is the input for squaring
   inline double
   square(double x) const
   {

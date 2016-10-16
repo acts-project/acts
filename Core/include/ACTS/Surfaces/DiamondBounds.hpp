@@ -41,6 +41,7 @@ public:
   DiamondBounds() = delete;
 
   /// Constructor for symmetric Diamond
+  ///
   /// @param minhalex is the halflength in x at minimal y
   /// @param medhalex is the halflength in x at y = 0
   /// @param maxhalex is the halflength in x at maximal y
@@ -53,6 +54,7 @@ public:
                 double haley2);
 
   /// Copy constructor
+  ///
   /// @param diabo are the source bounds for the copy
   DiamondBounds(const DiamondBounds& diabo);
 
@@ -64,11 +66,13 @@ public:
   clone() const override;
 
   /// Assignment operator
+  ///
   /// @param diabo are the source bounds for the copy
   DiamondBounds&
   operator=(const DiamondBounds& diabo);
 
   /// Comparison (Equality) operator
+  ///
   /// @param sbo are the source bounds for check
   virtual bool
   operator==(const SurfaceBounds& sbo) const override;
@@ -111,7 +115,14 @@ public:
   double
   alpha2() const;
 
-  /// @copydoc Surface::inside
+  /// Inside check for the bounds object driven by the boundary check directive
+  /// Each Bounds has a method inside, which checks if a LocalPosition is inside
+  /// the bounds  Inside can be called without/with tolerances.
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param bchk boundary check directive
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
 
@@ -119,6 +130,9 @@ public:
   /// - loc1/loc2 correspond to the natural coordinates of the surface
   /// - As loc1/loc2 are correlated the single check doesn't make sense :
   /// -> check is done on enclosing Rectangle !
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 is the absolute tolerance
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
@@ -126,18 +140,27 @@ public:
   /// - loc1/loc2 correspond to the natural coordinates of the surface
   /// - As loc1/loc2 are correlated the single check doesn't make sense :
   /// -> check is done on enclosing Rectangle !
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 is the absolute tolerance
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
+  ///
+  /// @param lpos is the local position to check for the distance
+  ///
+  /// @return is a signed distance parameter
   virtual double
-  minDistance(const Vector2D& pos) const override;
+  distanceToBoundary(const Vector2D& pos) const override;
 
   /// Return the vertices - or, the points of the extremas
   virtual const std::vector<Vector2D>
   vertices() const override;
 
   /// Output Method for std::ostream
+  ///
+  /// @param sl is the ostream in which it is dumped
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 

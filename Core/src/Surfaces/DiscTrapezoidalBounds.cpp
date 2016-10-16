@@ -69,7 +69,7 @@ Acts::DiscTrapezoidalBounds::operator=(const DiscTrapezoidalBounds& disctrbo)
 }
 
 double
-Acts::DiscTrapezoidalBounds::minDistance(const Acts::Vector2D& pos) const
+Acts::DiscTrapezoidalBounds::distanceToBoundary(const Acts::Vector2D& pos) const
 {
   const double pi2        = 2. * M_PI;
   double       alpha      = fabs(pos[Acts::eLOC_PHI]);
