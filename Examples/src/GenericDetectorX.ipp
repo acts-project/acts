@@ -10,6 +10,8 @@
 // Pixel volume
 //-------------------------------------------------------------------------------------
 
+// THIS FILE is auto-generated for 
+
 // configure pixel layer builder
 GenericLayerBuilder::Config layerBuilderConfigPixel;
 layerBuilderConfigPixel.layerCreator        = layerCreator;
