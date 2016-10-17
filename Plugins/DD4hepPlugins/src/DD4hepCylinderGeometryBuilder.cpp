@@ -430,7 +430,7 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
           << " / "
           << rMax
           << " / "
-          << thickness
+          << thickness * 0.5
           << " )");
       // if necessary receive the modules contained by the layer and create the
       // layer, otherwise create empty layer
