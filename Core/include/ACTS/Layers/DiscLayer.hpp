@@ -47,6 +47,8 @@ public:
   /// @param laytyp is the layer type
   ///
   /// @todo move ApproachDescriptor to unqique_ptr
+  ///
+  /// @return a sharted pointer to the new layer
   static LayerPtr
   create(std::shared_ptr<Transform3D>      transform,
          std::shared_ptr<const DiscBounds> dbounds,
@@ -64,8 +66,11 @@ public:
   }
 
   /// Factory constructor as copy with shift
+  ///
   /// @param dla is the disc laye to be cloned
   /// @param shift is the additional transform to be applied after copying
+  ///
+  /// @return a sharted pointer to the new layer
   static LayerPtr
   create(const DiscLayer& dla, const Transform3D& shift)
   {
@@ -73,7 +78,10 @@ public:
   }
 
   /// Clone with a shift - only cloning that is allowed
+  ///
   /// @param shift is the additional transform to be applied after cloning
+  ///
+  /// @return a sharted pointer to the new layer
   LayerPtr
   cloneWithShift(const Transform3D& shift) const override
   {
@@ -93,6 +101,7 @@ public:
 
   /// Destructor
   virtual ~DiscLayer() {}
+  
   /// Transforms the layer into a Surface representation for extrapolation
   /// @return This method returns a surface reference
   const DiscSurface&

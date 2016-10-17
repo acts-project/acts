@@ -102,6 +102,7 @@ public:
 
   /// Destructor
   virtual ~CylinderLayer() {}
+  
   /// Transforms the layer into a Surface representation
   /// This is for positioning and extrapolation
   const CylinderSurface&
@@ -123,6 +124,7 @@ protected:
   /// @param ad is the approach descriptor for approaching the layer
   /// @param laytyp is the layer type
   /// @todo change ApproachDescriptor to unique_ptr
+  ///
   /// @return The return object is a shared poiter to the layer.
   CylinderLayer(std::shared_ptr<Transform3D>          transform,
                 std::shared_ptr<const CylinderBounds> cbounds,

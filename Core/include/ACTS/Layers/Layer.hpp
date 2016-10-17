@@ -97,6 +97,7 @@ class Layer : public virtual GeometryObject
 
 public:
   /// Clone at a with a shift - this is the only clone allowed
+  ///
   /// @param shift is the additional transform applied after cloning
   virtual LayerPtr
   cloneWithShift(const Transform3D& shift) const = 0;
@@ -105,6 +106,8 @@ public:
   virtual ~Layer();
 
   /// Assignment operator - forbidden, layer assignment must not be ambiguous
+  ///
+  /// @param lay is the source layer for assignment
   Layer&
   operator=(const Layer& lay)
       = delete;
@@ -125,16 +128,22 @@ public:
   thickness() const;
 
   /// templated onLayer() method
+  ///
   /// @tparam parameters are the templated (charged/neutral) on layer check
   /// @param bchk is the boundary check directive
+  ///
+  /// @return boolean that indicates success of the operation
   template <class T>
   bool
   onLayer(const T& parameters, const BoundaryCheck& bchk = true) const;
 
   /// geometrical isOnLayer() method
+  ///
   /// @note using isOnSurface() with Layer specific tolerance
   /// @param gpos is the gobal position to be checked
   /// @param bchk is the boundary check directive
+  ///
+  /// @return boolean that indicates success of the operation
   virtual bool
   isOnLayer(const Vector3D& gp, const BoundaryCheck& bchk = true) const;
 
@@ -179,10 +188,12 @@ public:
   /// @param searchType is the level of depth for the search
   /// @param startSurface is an (optional) start surface for the search:
   /// excluded in return
-  /// @param endSurface is an (optional) end surface for the search: excluded in
+  /// @param endSurface is an (optional) end surface for the search: excluded in                    
   /// return
   /// @ice is a (future) compatibility estimator that could be used to modify
   /// the straight line approach
+  ///
+  /// @return boolean that indicates if a compatible surface exists at all
   virtual bool
   compatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
                      const TrackParameters&            pars,
@@ -216,6 +227,8 @@ public:
   /// return
   /// @ice is a (future) compatibility estimator that could be used to modify
   /// the straight line approach
+  ///
+  /// @return boolean that indicates if a compatible surface exists at all
   virtual bool
   compatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
                      const NeutralParameters&          pars,
@@ -232,18 +245,27 @@ public:
   /// @note sub-structure depending on :
   ///   (a) only when required to resolve sub surfaces for sensitive hits
   ///   (b) also material is ordered with sub structure
+  ///
+  /// @param resolveSensitive is a directive whether 
+  /// one should look for sensitive surfaces in the surface array
+  ///
+  /// @return bollean that indicates if sub structure exitst                                                        
   virtual bool
   hasSubStructure(bool resolveSensitive = false) const;
 
   //  Boolean check method if layer has material:
   // - checks if any of the layer surfaces has material:
   // - can be approach surfaces or layer surface
+  ///
+  /// @return bollean that indicates if material exists                                                        
   virtual bool
   hasMaterial() const;
 
   /// method returning a pointer to the surface material of the layer
   /// @note not the layer itself holds the material but one of its
   /// approachsurfaces
+  ///
+  /// @return the surface material
   const SurfaceMaterial*
   material() const;
 
@@ -251,33 +273,48 @@ public:
   /// @note can be either inner, outer BoundarySurface or the surface
   /// representation (central)
   /// return nullptr if layer has not material
+  ///
+  /// @todo remove this concept
   const Surface*
   materialSurface() const;
 
   /// Boolean check method if layer has sensitive surfaces
   /// @note checks if a surfaceArray is present
+  ///
+  /// @todo reemove this concept
   virtual bool
   hasSensitive() const;
 
   /// Fast navigation to next layer
+  ///
   /// @param gpos is the start position for the search
   /// @param dir is the direction for the search
+  ///
+  /// @return the pointer to the next layer
   const Layer*
   nextLayer(const Vector3D& pos, const Vector3D& dir) const;
 
   /// get the confining TrackingVolume
+  ///
+  /// @return the pointer to the enclosing volume
   const TrackingVolume*
   enclosingTrackingVolume() const;
 
   /// get the confining DetachedTrackingVolume
+  ///
+  /// @return the pointer to the detached volume
   const DetachedTrackingVolume*
   enclosingDetachedTrackingVolume() const;
 
   /// register Volume associated to the layer - if you want to do that by hand
+  /// 
+  /// @param avol is the provided volume
   void
-  registerRepresentingVolume(const AbstractVolume* theVol) const;
+  registerRepresentingVolume(const AbstractVolume* avol) const;
 
   ///  return the abstract volume that represents the layer
+  ///
+  /// @return the representing volume of the layer
   const AbstractVolume*
   representingVolume() const;
 
@@ -290,6 +327,8 @@ protected:
   Layer();
 
   /// Copy Constructor
+  ///
+  /// @param lay is the sourc3 layer for the copye
   Layer(const Layer& lay);
 
   /// Constructor with pointer to SurfaceArray (passing ownership)
@@ -304,6 +343,22 @@ protected:
 
   /// get compatible surfaces starting from charged parameters - forward call
   /// from explicit methods
+  ///      
+  /// @param cSurfaces are the retrun surface intersections
+  /// @tparam pars are the (charged) track parameters for the search
+  /// @param pdir is the propagation direction prescription
+  /// @param bchk is the boundary check directive
+  /// @param collectSensitive is the prescription to find the sensitive surfaces
+  /// @param collectPassive is the prescription to find all passive surfaces
+  /// @param searchType is the level of depth for the search
+  /// @param startSurface is an (optional) start surface for the search:
+  /// excluded in return
+  /// @param endSurface is an (optional) end surface for the search: excluded in                    
+  /// return
+  /// @ice is a (future) compatibility estimator that could be used to modify
+  /// the straight line approach
+  ///
+  /// @return boolean that indicates if a compatible surface exists at all                
   template <class T>
   bool
   getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
@@ -313,12 +368,29 @@ protected:
                         bool                              collectSensitive,
                         bool                              collectPassive,
                         int                               searchType,
-                        const Surface*                 startSurface = nullptr,
-                        const Surface*                 endSurface   = nullptr,
-                        const ICompatibilityEstimator* ice = nullptr) const;
+                        const Surface*                    startSurface = nullptr,
+                        const Surface*                    endSurface   = nullptr,
+                        const ICompatibilityEstimator*    ice = nullptr) const;
 
   /// test compatible surface - checking directly for intersection & collection
+  ///                      
   /// geometrical test compatible surface method
+  /// @param cSurfaces are the retrun surface intersections
+  /// @param gpos is the resolved global position
+  /// @param dir is themomentum direction
+  /// @param pdir is the propagation direction prescription
+  /// @param bchk is the boundary check directive
+  /// @param collectSensitive is the prescription to find the sensitive surfaces
+  /// @param collectPassive is the prescription to find all passive surfaces
+  /// @param searchType is the level of depth for the search
+  /// @param startSurface is an (optional) start surface for the search:
+  /// excluded in return
+  /// @param endSurface is an (optional) end surface for the search: excluded in                    
+  /// return
+  /// @ice is a (future) compatibility estimator that could be used to modify
+  /// the straight line approach
+  ///
+  /// @return boolean that indicates if a compatible surface exists at all                        
   void
   testCompatibleSurface(std::vector<SurfaceIntersection>& cSurfaces,
                         const Surface&                    surface,
@@ -348,6 +420,7 @@ protected:
 
   ///  private method to set the enclosed detached TV,
   /// called by friend class only
+  /// 
   /// @param dtvol is the detached tracking volume the layer is confined
   void
   encloseDetachedTrackingVolume(const DetachedTrackingVolume& tvol) const;

@@ -31,6 +31,8 @@ class GenericApproachDescriptor : public ApproachDescriptor
 public:
   /// A generic approach descriptor for new Acts::Surface objects
   /// passing ownership
+  ///
+  /// @param aSurfaces are the approach surfaces
   GenericApproachDescriptor(const std::vector<T*>& aSurfaces)
     : ApproachDescriptor(), m_surfaces(), m_surfacesCache(aSurfaces)
   {
@@ -40,6 +42,8 @@ public:
 
   /// A generic approach descriptor with shared surfaces to test
   /// can not be sed with Acts::Surfaces obejcts
+  ///
+  /// @param aSurfaces are the approach surfaces
   GenericApproachDescriptor(std::vector<std::shared_ptr<T>> aSurfaces)
     : ApproachDescriptor(), m_surfaces(aSurfaces), m_surfacesCache()
   {
@@ -51,18 +55,21 @@ public:
 
   /// A generic approach descriptor with n surfaces to test
   ~GenericApproachDescriptor() {}
+  
   /// register the Layer to the surfaces
+  /// 
+  /// @param lay is the layer to be registerd
   void
   registerLayer(const Layer& lay) override;
 
   /// get the compatible surfaces
-  /// - return : a boolean indicating if an actual intersection had been tried
-  /// - fill vector of intersections
-  /// - primary bin surface : sf
+  ///
   /// @param gpos is the global posoition to start the approach from
   /// @param dir is the direction in which you approach the layer
   /// @param bchk is the boundary check presrcition
   /// @param ice is a (future) compatibility estimater if needed
+  ///
+  /// @return : a boolean indicating if an actual intersection had been tried
   const SurfaceIntersection
   approachSurface(const Vector3D&                gpos,
                   const Vector3D&                dir,

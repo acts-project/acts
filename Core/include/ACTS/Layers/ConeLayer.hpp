@@ -23,7 +23,6 @@ namespace Acts {
 class ConeBounds;
 class ApproachDescriptor;
 
-///
 /// @class ConeLayer
 ///
 /// Class to describe a conical detector layer for tracking, it inhertis from

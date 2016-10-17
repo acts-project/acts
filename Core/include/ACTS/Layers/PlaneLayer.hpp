@@ -57,6 +57,8 @@ public:
   ///
   /// @param pla is the plain layer to be coped
   /// @param shift is the additional shift applied after copying
+  ///
+  /// @return a shared pointer to a layer
   static LayerPtr
   create(const PlaneLayer& pla, const Transform3D& shift)
   {
@@ -64,6 +66,8 @@ public:
   }
 
   /// Clone with a shift - only cloning that is allowed
+  ///
+  /// @param shift additional shift applied after cloning
   LayerPtr
   cloneWithShift(const Transform3D& shift) const
   {
@@ -83,6 +87,7 @@ public:
 
   /// Destructor
   virtual ~PlaneLayer() {}
+  
   /// Transforms the layer into a Surface representation for extrapolation
   /// @return returns a reference to a PlaneSurface
   const PlaneSurface&
