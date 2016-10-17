@@ -53,23 +53,25 @@ public:
   /// default constructor
   ///
   GeometryID() : m_value(0) {}
+  
   /// constructor from a ready-made value
   ///
   /// @param id_value is the full decoded value of the identifier
   GeometryID(geo_id_value id_value) : m_value(id_value) {}
+  
   // constructor from a shift and a value
   ///
   /// @param id is numbered object
   /// @param type_shift is the shift necessary for the object type
   GeometryID(geo_id_value id, geo_id_value type_shift)
     : m_value((id << type_shift))
-  {
-  }
+  {}
 
   /// Copy constructor
   ///
   /// @param tddID is the geometry ID that will be copied
   GeometryID(const GeometryID& tddID) : m_value(tddID.m_value) {}
+  
   /// Assignement operator
   ///
   /// @param tddID is the geometry ID that will be assigned

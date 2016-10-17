@@ -34,10 +34,12 @@ public:
   ///
   /// @param geoID the geometry identifier of the object
   GeometryObject() : m_geoID(0) {}
+  
   /// constructor from a ready-made value
   ///
   /// @param geoID the geometry identifier of the object
   GeometryObject(const GeometryID& geoID) : m_geoID(geoID) {}
+  
   /// assignment operator
   ///
   /// @param geoID the source geoID
@@ -48,23 +50,28 @@ public:
     return *this;
   }
 
-  /// return the value
+  /// Return the value
+  /// @return the geometry id by reference
   const GeometryID&
   geoID() const;
 
-  /// force a binning position method
+  /// Force a binning position method
   ///
   /// @param bValue is the value in which you want to bin
+  ///
+  /// @return vector 3D used for the binning schema
   virtual const Vector3D
   binningPosition(BinningValue bValue) const = 0;
 
-  /// implement the binningValue
+  /// Implement the binningValue
   ///
   /// @param bValue is the dobule in which you want to bin
+  ///
+  /// @return float to be used for the binning schema  
   double
   binningPositionValue(BinningValue bValue) const;
 
-  /// set the value - assigns a mutable object
+  /// Set the value - assigns a mutable object
   ///
   /// @param geoID the geometry identifier to be assigned
   /// @note changes a mutable member

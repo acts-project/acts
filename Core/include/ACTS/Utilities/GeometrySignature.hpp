@@ -22,8 +22,6 @@ namespace Acts {
 ///
 /// @todo will be in the future be replace by GeometryID mechanism
 ///
-///
-
 enum GeometrySignature {
   Global             = 0,
   ID                 = 1,

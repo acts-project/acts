@@ -56,11 +56,8 @@ public:
   /// Constructor for 0D binning
   ///
   /// @param bValue is the binning value: binX, binY, etc.
-  /// @param bBins is number of equidistant bins
   /// @param bMin is the minum value
   /// @param bMax is the maxmimum value
-  /// @param sBinData is (optional) sub structure
-  /// @param sBinAdditive is the prescription for the sub structure
   BinningData(BinningValue bValue, float bMin, float bMax)
     : type(equidistant)
     , option(open)
@@ -224,15 +221,18 @@ public:
 
   /// Destructor
   ~BinningData() {}
-  /// return the number of bins - including sub bins
+  
+  /// Return the number of bins - including sub bins
   size_t
   bins() const
   {
     return m_totalBins;
   }
 
-  // decrement
-  // - boolean indicates if decrement actually worked
+  /// Decrement the bin
+  /// - boolean indicates if decrement actually worked
+  ///
+  /// @param bin is the bin to be decremented
   bool
   decrement(size_t& bin) const
   {
@@ -241,8 +241,10 @@ public:
     return (sbin != bin);
   }
 
-  // increment
-  // - boolean indicates if decrement actually worked
+  /// Increment the bin
+  /// - boolean indicates if decrement actually worked
+  ///
+  /// @param bin the bin to be incremented
   bool
   increment(size_t& bin) const
   {
@@ -251,7 +253,8 @@ public:
     return (sbin != bin);
   }
 
-  /// return the boundaries  - including sub boundaries
+  /// Return the boundaries  - including sub boundaries
+  /// @return vector of floats indicating the boundary values
   const std::vector<float>&
   boundaries() const
   {
@@ -259,9 +262,11 @@ public:
     return m_boundaries;
   }
 
-  /// take the right float value
+  /// Take the right float value
   ///
   /// @param lposition assumes the correct local position expression
+  ///
+  /// @return float value according to the binning setup
   float
   value(const Vector2D& lposition) const
   {
@@ -273,9 +278,11 @@ public:
     return lposition[1];
   }
 
-  /// take the right float value
+  /// Take the right float value
   ///
-  /// @param position ais the global position
+  /// @param position is the global position
+  ///
+  /// @return float value according to the binning setup
   float
   value(const Vector3D& position) const
   {
@@ -288,7 +295,11 @@ public:
     return gaugePhi(position.phi());
   }
 
-  /// get the center value of a bin
+  /// Get the center value of a bin
+  ///
+  /// @param bin is the bin for which the center value is requested
+  ///
+  /// @return float value according to the bin center
   float
   center(size_t bin) const
   {
@@ -298,7 +309,11 @@ public:
     return value;
   }
 
-  /// gauge phi for phi boundary
+  /// Gauge phi for phi boundary
+  ///
+  /// @param phi is phi value to be gauged
+  ///
+  /// @return float the gauged phi 
   float
   gaugePhi(float phi) const
   {
@@ -311,6 +326,8 @@ public:
   /// Check if bin is inside from Vector3D
   ///
   /// @param position is the search position in global coordinated
+  ///
+  /// @return boolen if this is inside() method is true
   bool
   inside(const Vector3D& position) const
   {
@@ -325,6 +342,8 @@ public:
   /// Check if bin is inside from Vector2D
   ///
   /// @param lposition is the search position in global coordinated
+  ///
+  /// @return boolen if this is inside() method is true
   bool
   inside(const Vector2D& lposition) const
   {
@@ -336,8 +355,11 @@ public:
     return (val > min - 0.001 && val < max + 0.001);
   }
 
-  /// generic search from a 2D position
+  /// Generic search from a 2D position
   /// -- corresponds to local coordinate schema
+  /// @param lposition is the search position in local coordinated
+  ///
+  /// @return bin according tot this
   size_t
   searchLocal(const Vector2D& lposition) const
   {
@@ -345,8 +367,11 @@ public:
     return search(value(lposition));
   }
 
-  /// generic search from a 3D position
+  /// Generic search from a 3D position
   /// -- corresponds to global coordinate schema
+  /// @param position is the search position in global coordinated
+  ///
+  /// @return bin according tot this
   size_t
   searchGlobal(const Vector3D& position) const
   {
@@ -354,7 +379,11 @@ public:
     return search(value(position));
   }
 
-  /// generic search - forwards to correct function pointer
+  /// Generic search - forwards to correct function pointer
+  /// 
+  /// @param value is the searchvalue as float
+  ///
+  /// @return bin according tot this
   size_t
   search(float value) const
   {
@@ -364,8 +393,12 @@ public:
                              : searchWithSubStructure(value);
   }
 
-  ///  generic search  sub structure
+  ///  Generic search with sub structure
   /// - forwards to correct function pointer
+  /// 
+  /// @param value is the searchvalue as float
+  ///
+  /// @return bin according tot this
   size_t
   searchWithSubStructure(float value) const
   {
@@ -385,10 +418,12 @@ public:
     return masterbin * subBinningData->bins() + subbin;
   }
 
-  /// layer next direction is needed
+  /// Layer next direction is needed
   ///
   /// @param position is the start search position
   /// @param dir is the direction
+  ///
+  /// @return integer that indicates which direction to move
   int
   nextDirection(const Vector3D& position, const Vector3D& dir) const
   {
@@ -403,6 +438,8 @@ public:
   ///
   /// @param position is the start search position
   /// @param dir is the direction
+  /// 
+  /// @return next bin to try
   size_t
   next(const Vector3D& position, const Vector3D& dir) const
   {

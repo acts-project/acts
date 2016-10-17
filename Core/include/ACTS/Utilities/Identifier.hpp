@@ -53,44 +53,67 @@ public:
   Identifier();
 
   /// Constructor from value_type
+  /// 
+  /// @param value is the identifier value
   explicit Identifier(value_type value);
 
   /// Copy constructor
+  ///
+  /// @param other is the source identifier
   Identifier(const Identifier& other);
 
   ///----------------------------------------------------------------
   /// Modifications
   ///----------------------------------------------------------------
+  ///
+  /// @param value is the modification parameter
   Identifier&
   operator|=(value_type value);
+
+  /// @param value is the modification parameter
   Identifier&
   operator&=(value_type value);
 
   ///----------------------------------------------------------------
   /// Assignment operator
   ///----------------------------------------------------------------
+  /// @param old is the assigment parameter
   Identifier&
   operator=(const Identifier& old);
+  
+  /// @param value is the assigment parameter
   Identifier&
   operator=(value_type value);
 
   ///----------------------------------------------------------------
   /// Comparison operators
   ///----------------------------------------------------------------
+  /// @param other is the comparison parameter
   bool
   operator==(const Identifier& other) const;
+
+  /// @param other is the comparison parameter
   bool
   operator!=(const Identifier& other) const;
+
+  /// @param other is the comparison parameter
   bool
   operator<(const Identifier& other) const;
+
+  /// @param other is the comparison parameter
   bool
   operator>(const Identifier& other) const;
+
+  /// @param other is the comparison parameter
   bool
   operator<=(const Identifier& other) const;
+
+  /// @param other is the comparison parameter
   bool
   operator>=(const Identifier& other) const;
 
   /// Check if id is in a valid state
+  /// @return boolen for the valid state
   bool
   is_valid() const;
 

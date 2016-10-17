@@ -27,20 +27,26 @@ struct Intersection
   double   distance;
   bool     valid;
 
+  /// Constructor with argoments
+  ///
+  /// @param sinter is the position of the intersection
+  /// @param slength is the path length to the intersection
+  /// @param svalid is a boolean indicating if intersection is valid
+  /// @param dist is the distance to the surface, e.g. when outside bounds
   Intersection(const Vector3D& sinter,
                double          slenght,
                bool            svalid,
                double          dist = 0.)
     : position(sinter), pathLength(slenght), distance(dist), valid(svalid)
-  {
-  }
+  {}
 
   Intersection()
     : position(Vector3D(0., 0., 0.)), pathLength(0.), distance(0.), valid(false)
-  {
-  }
+  {}
 
-  // smaller operator for sorting
+  /// Smaller operator for sorting
+  ///
+  /// @param si is the intersection for testing    
   bool
   operator<(const Intersection& si) const
   {
@@ -59,7 +65,12 @@ public:
 
   /// Default constructor
   ObjectIntersection() : intersection(), object(nullptr), pDirection(0) {}
+  
   /// Object intersection
+  ///
+  /// @param sInter is the intersection
+  /// @tparam sObject is the object to be instersected
+  /// @param dir is the direction of the intersection
   ObjectIntersection(const Intersection& sInter, const T* sObject, int dir = 1)
     : intersection(sInter), object(sObject), pDirection(dir)
   {
@@ -108,11 +119,13 @@ public:
   {
   }
 
-  /// smaller operator for ordering & sorting
+  /// Smaller operator for ordering & sorting
+  ///
+  /// @param fi is the full intersection to be tested 
   bool
-  operator<(const FullIntersection<T, R, S>& oi) const
+  operator<(const FullIntersection<T, R, S>& fi) const
   {
-    return (intersection < oi.intersection);
+    return (intersection < fi.intersection);
   }
 };
 }

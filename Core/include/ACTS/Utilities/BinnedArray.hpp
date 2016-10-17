@@ -34,16 +34,24 @@ class BinnedArray
 public:
   /// Default Constructor - needed for inherited classes
   BinnedArray() {}
+  
   /// Virtual Destructor
   virtual ~BinnedArray() {}
+  
   /// Returns the object in the associated bin according the local position
   ///
   /// @param lposition is the local position for the object retrieval
+  /// @param bins is the bin triple to filled
+  ///
   /// @return the object according to the estimated bin
   virtual T
   object(const Vector2D& lposition, std::array<size_t, 3>& bins) const = 0;
 
-  /// same method without bins for backward compatibility
+  /// Same method without bins for backward compatibility
+  /// 
+  /// @param lposition is the local position for finding the obect
+  ///
+  /// @return the object according to the estimated bin
   virtual T
   object(const Vector2D& lposition) const
   {
@@ -54,11 +62,16 @@ public:
   /// Returns the object in the associated bin according the local position
   ///
   /// @param position is the global position for the object retrieval
+  ///
   /// @return the object according to the estimated bin
   virtual T
   object(const Vector3D& position, std::array<size_t, 3>& bin) const = 0;
 
-  /// same method without bins for backward compatibility
+  /// Same method without bins for backward compatibility
+  ///
+  /// @param position is the global position for the object finding
+  ///
+  /// @return the object according to the estimated bin
   virtual T
   object(const Vector3D& position) const
   {
@@ -69,22 +82,28 @@ public:
   /// Returns the object found through global position search
   /// and their neighbor objects
   ///
+  /// @todo check if this needs connectivity directive
+  ///
   /// @param bin is the binning
+  /// 
   /// @return a vector of unique objects
   virtual std::vector<T>
   objectCluster(const std::array<size_t, 3>& bin) const = 0;
 
   /// Return all unqiue object
+  /// @note this is the accessor to the 
+  /// @return the vector of all array objects
   virtual const std::vector<T>&
   arrayObjects() const = 0;
 
-  /// Return the object grid
-  /// multiple entries are allowed
+  /// Return the object grid multiple entries are allowed
+  /// @return the object grid 
   virtual const std::vector<std::vector<std::vector<T>>>&
   objectGrid() const = 0;
 
   /// Return the BinUtility
   /// - if returned 0 it is a 0D array
+  /// @return plain pointer to the bin utility
   virtual const BinUtility*
   binUtility() const = 0;
 };
