@@ -71,6 +71,7 @@ public:
   };
 
   /// Constructor
+  ///
   /// @param eeConfig is the configuration struct for this engine
   /// @param logger logging instance
   ExtrapolationEngine(const Config&           eeConfig,
@@ -81,33 +82,41 @@ public:
   ~ExtrapolationEngine();
 
   using IExtrapolationEngine::extrapolate;
-
-  /// charged extrapolation - public interface
+  /// Charged extrapolation - public interface
+  /// 
   /// @param ecCharged is the charged extrapolation cell that holds the cache
   /// @param sf is the (optional) destinaton surface
   /// @param bchk is the boudnary check directive @todo shift to cell after
   /// splitting
+  ///
+  /// @return extrapolation code to indicate outcome
   ExtrapolationCode
   extrapolate(ExCellCharged&       ecCharged,
               const Surface*       sf   = nullptr,
               const BoundaryCheck& bchk = true) const final;
 
-  /// neutral extrapolation - public interface
+  /// Neutral extrapolation - public interface
+  ///
   /// @param ecNeutral is the neutral extrapolation cell that holds the cache
   /// @param sf is the (optional) destinaton surface
   /// @param bchk is the boudnary check directive @todo shift to cell after
   /// splitting
+  ///
+  /// @return extrapolation code to indicate outcome
   ExtrapolationCode
   extrapolate(ExCellNeutral&       ecNeutral,
               const Surface*       sf   = nullptr,
               const BoundaryCheck& bchk = true) const final;
 
-  /// define for which GeometrySignature this extrapolator is valid
+  /// define for which geometry type this extrapolator is valid
   ///  - this is GLOBAL
+  /// @return the Geometry type for navigation            
   GeometryType
   geometryType() const final;
 
   /// Set configuration method
+  ///
+  /// @param eeConfig is the configuration struct 
   void
   setConfiguration(const Config& eeConfig);
 
@@ -115,7 +124,9 @@ public:
   Config
   getConfiguration() const;
 
-  /// set logging instance
+  /// Set logging instance
+  ///
+  /// @param logger is the logging instance 
   void
   setLogger(std::unique_ptr<Logger> logger);
 
@@ -134,12 +145,15 @@ private:
   /// logger instance
   std::unique_ptr<Logger> m_logger;
 
-  /// main extrapolation method, templated to chared/neutral
+  /// Main extrapolation method, templated to chared/neutral
+  ///
   /// @tparam eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param dir is the additional direction prescription
   /// @param bchk is the boudnary check directive @todo shift to cell after
   /// splitting
+  ///
+  /// @return extrapolation code to indicate outcome
   template <class T>
   ExtrapolationCode
   extrapolateT(ExtrapolationCell<T>& eCell,
@@ -147,10 +161,13 @@ private:
                PropDirection         dir    = alongMomentum,
                const BoundaryCheck&  bcheck = true) const;
 
-  /// main extrapolation method, templated to chared/neutral
+  /// Main extrapolation method, templated to chared/neutral
+  ///
   /// @tparam eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param dir is the additional direction prescription
+  ///
+  /// @return extrapolation code to indicate outcome
   template <class T>
   ExtrapolationCode
   initNavigation(ExtrapolationCell<T>& eCell,

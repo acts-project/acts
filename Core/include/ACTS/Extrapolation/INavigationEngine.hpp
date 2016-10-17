@@ -35,34 +35,47 @@ class INavigationEngine
 public:
   /// Virtual destructor
   virtual ~INavigationEngine() {}
-  /// resolve the boundary situation - for charged particles
+  
+  /// Resolve the boundary situation - for charged particles
+  ///
   /// @param ecCell is the charged extrapolation cell
   /// @param dir is the additional direction prescription
+  ///
   /// @return is a extrapolation code indication
   virtual ExtrapolationCode
   resolveBoundary(ExCellCharged& ecCell,
                   PropDirection  dir = alongMomentum) const = 0;
 
-  /// resolve the boundary situation - for neutral particles
+  /// Resolve the boundary situation - for neutral particles
+  ///
   /// @param ecCell is the neutral extrapolation cell
   /// @param dir is the additional direction prescription
+  /// 
   /// @return is a extrapolation code indication
   virtual ExtrapolationCode
   resolveBoundary(ExCellNeutral& enCell,
                   PropDirection  dir = alongMomentum) const = 0;
 
-  /// resolve the boundary situation - for charged particles
+  /// Resolve the boundary situation - for charged particles
+  ///
   /// @param ecCell is the charged extrapolation cell
   /// @param dir is the additional direction prescription
+  ///
+  /// @todo check with sharka where this is used
+  ///                
   /// @return is a extrapolation code indication
   virtual ExtrapolationCode
   resolvePosition(ExCellCharged& ecCell,
                   PropDirection  dir    = alongMomentum,
                   bool           noLoop = false) const = 0;
 
-  /// resolve the boundary situation - for neutral particles
-  /// @param ecCell is the neutral extrapolation cell
+  /// Resolve the boundary situation - for neutral particles
+  ///
+  /// @param ecCell is the charged extrapolation cell
   /// @param dir is the additional direction prescription
+  ///
+  /// @todo check with sharka where this is used
+  ///                
   /// @return is a extrapolation code indication
   virtual ExtrapolationCode
   resolvePosition(ExCellNeutral& enCell,

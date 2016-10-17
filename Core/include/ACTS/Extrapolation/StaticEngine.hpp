@@ -80,6 +80,7 @@ public:
   };
 
   /// Constructor
+  ///
   /// @param seConfig is the configuration struct
   /// @param logger logging instance
   StaticEngine(const Config&           seConfig,
@@ -91,40 +92,51 @@ public:
 
   using IExtrapolationEngine::extrapolate;
 
-  /// main extrapolation method, templated to chared/neutral
+  /// Main extrapolation method, templated to chared/neutral
+  ///
   /// @tparam eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param dir is the additional direction prescription
   /// @param bchk is the boudnary check directive @todo shift to cell after
   /// splitting
+  ///
+  /// @return is a extrapolation code indication
   ExtrapolationCode
   extrapolate(ExCellCharged&       ecCharged,
               const Surface*       sf     = 0,
               const BoundaryCheck& bcheck = true) const final;
 
-  /// main extrapolation method, templated to chared/neutral
+  /// Main extrapolation method, templated to chared/neutral
+  ///
   /// @tparam eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param dir is the additional direction prescription
+  ///
+  /// @return is a extrapolation code indication
   ExtrapolationCode
   extrapolate(ExCellNeutral&       ecNeutral,
               const Surface*       sf     = 0,
               const BoundaryCheck& bcheck = true) const final;
 
-  /// define for which GeometrySignature this extrapolator is valid
+  /// Define for which geometry type this extrapolator is valid
+  ///
   /// @return this retursn static for this engine
   GeometryType
   geometryType() const final;
 
   /// Set configuration method
+  ///
+  /// @param seConfig the configuration object to be set
   void
-  setConfiguration(const Config& meConfig);
+  setConfiguration(const Config& seConfig);
 
   /// Get configuration method
   Config
   getConfiguration() const;
 
-  /// set logging instance
+  /// Set logging instance
+  ///
+  /// @param logger is the logging instance to be set
   void
   setLogger(std::unique_ptr<Logger> logger);
 
@@ -142,7 +154,15 @@ private:
 
   std::unique_ptr<Logger> m_logger;
 
-  /// main loop extrapolation method
+  /// Main loop extrapolation method
+  ///
+  /// @tparam eCell ist he extrapolaiton cell
+  /// @param sf is the (optional) destinaton surface
+  /// @param dir is the additional direction prescription
+  /// @param bcheck is the boudnary check directive @todo shift to cell after
+  /// splitting
+  ///
+  /// @return is a extrapolation code indication
   template <class T>
   ExtrapolationCode
   extrapolateT(ExtrapolationCell<T>& eCell,
@@ -150,7 +170,15 @@ private:
                PropDirection         dir    = alongMomentum,
                const BoundaryCheck&  bcheck = true) const;
 
-  /// init Navigation for static setup
+  /// Init Navigation for static setup
+  ///
+  /// @tparam eCell ist he extrapolaiton cell
+  /// @param sf is the (optional) destinaton surface
+  /// @param dir is the additional direction prescription
+  /// @param bcheck is the boudnary check directive @todo shift to cell after
+  /// splitting
+  ///
+  /// @return is a extrapolation code indication
   template <class T>
   ExtrapolationCode
   initNavigationT(ExtrapolationCell<T>& eCell,
@@ -158,7 +186,15 @@ private:
                   PropDirection         dir    = alongMomentum,
                   const BoundaryCheck&  bcheck = true) const;
 
-  /// main static layer handling
+  /// Main static layer handling
+  ///
+  /// @tparam eCell ist he extrapolaiton cell
+  /// @param sf is the (optional) destinaton surface
+  /// @param dir is the additional direction prescription
+  /// @param bcheck is the boudnary check directive @todo shift to cell after
+  /// splitting
+  ///
+  /// @return is a extrapolation code indication
   template <class T>
   ExtrapolationCode
   handleLayerT(ExtrapolationCell<T>& eCell,
@@ -166,7 +202,21 @@ private:
                PropDirection         dir    = alongMomentum,
                const BoundaryCheck&  bcheck = true) const;
 
-  /// main sub structure layer handling
+  /// Main sub structure layer handling
+  ///
+  /// @tparam eCell ist he extrapolaiton cell
+  /// @param sf is the (optional) destinaton surface
+  /// @param dir is the additional direction prescription
+  /// @param bcheck is the boudnary check directive @todo shift to cell after
+  /// splitting
+  /// @param hasSubStructure is an indicator whether the layer has sub structure
+  /// which needs to be resolved
+  /// @param isStartLayer is and indicator whether the layer 
+  /// is the start layer  
+  /// @param isDestinationLayer is and indicator whether the layer 
+  /// is the destination layer             
+  ///
+  /// @return is a extrapolation code indication
   template <class T>
   ExtrapolationCode
   resolveLayerT(ExtrapolationCell<T>& eCell,
@@ -177,7 +227,16 @@ private:
                 bool                  isStartLayer       = false,
                 bool                  isDestinationLayer = false) const;
 
-  /// handle the failure - as configured
+  /// Handle the failure - as configured
+  ///
+  /// @param eCode is the extrapolation code at entry                              
+  /// @tparam eCell ist he extrapolaiton cell
+  /// @param sf is the (optional) destinaton surface
+  /// @param dir is the additional direction prescription
+  /// @param bcheck is the boudnary check directive @todo shift to cell after
+  /// splitting
+  ///
+  /// @return is a extrapolation code indication at exit
   template <class T>
   ExtrapolationCode
   handleReturnT(ExtrapolationCode     eCode,

@@ -53,6 +53,7 @@ public:
   };
 
   /// Constructor
+  ///
   /// @param snConfig is the configuration struct to steer behaviour
   /// @param logger logging instance
   StaticNavigationEngine(const Config&           snConfig,
@@ -67,34 +68,42 @@ public:
   using INavigationEngine::resolveBoundary;
   using INavigationEngine::resolvePosition;
 
-  /// resolve the boundary situation - for charged particles
+  /// Resolve the boundary situation - for charged particles
+  ///
   /// @param ecCell is the charged extrapolation cell
   /// @param dir is the additional direction prescription
+  ///
   /// @return is a extrapolation code indication
   ExtrapolationCode
   resolveBoundary(ExCellCharged& eCell,
                   PropDirection  dir = alongMomentum) const final;
 
-  /// resolve the boundary situation - for neutral particles
+  /// Resolve the boundary situation - for neutral particles
+  ///
   /// @param ecCell is the neutral extrapolation cell
   /// @param dir is the additional direction prescription
+  ///
   /// @return is a extrapolation code indication
   ExtrapolationCode
   resolveBoundary(ExCellNeutral& eCelll,
                   PropDirection  dir = alongMomentum) const final;
 
-  /// resolve the boundary situation - for charged particles
+  /// Resolve the boundary situation - for charged particles
+  ///
   /// @param ecCell is the charged extrapolation cell
   /// @param dir is the additional direction prescription
+  ///
   /// @return is a extrapolation code indication
   ExtrapolationCode
   resolvePosition(ExCellCharged& eCell,
                   PropDirection  dir    = alongMomentum,
                   bool           noLoop = false) const final;
 
-  /// resolve the boundary situation - for neutral particles
+  /// Resolve the boundary situation - for neutral particles
+  ///
   /// @param ecCell is the neutral extrapolation cell
   /// @param dir is the additional direction prescription
+  ///
   /// @return is a extrapolation code indication
   ExtrapolationCode
   resolvePosition(ExCellNeutral& eCelll,
@@ -102,14 +111,18 @@ public:
                   bool           noLoop = false) const final;
 
   /// Set configuration method
+  ///
+  /// @param snConfig the configuration object to be set                  
   void
-  setConfiguration(const Config& meConfig);
+  setConfiguration(const Config& snConfig);
 
   /// Get configuration method
   Config
   getConfiguration() const;
 
-  /// set logging instance
+  /// Set logging instance
+  ///
+  /// @param logger the logging instance to be seet
   void
   setLogger(std::unique_ptr<Logger> logger);
 
@@ -127,20 +140,38 @@ private:
 
   std::unique_ptr<Logger> m_logger;
 
-  /// resolve the boundary situation
+  /// Resolve the boundary situation
+  ///
+  /// @param eCell the extrapolation 
+  /// @param dir the propagation direction
+  ///
+  /// @return is a extrapolation code indication
   template <class T>
   ExtrapolationCode
   resolveBoundaryT(ExtrapolationCell<T>& eCell,
                    PropDirection         dir = alongMomentum) const;
 
-  /// resolve position
+  /// Resolve position
+  ///
+  /// @param eCell the extrapolation 
+  /// @param dir the propagation direction
+  /// @param noLoop @todo check with sharka                 
+  ///
+  /// @return is a extrapolation code indication
   template <class T>
   ExtrapolationCode
   resolvePositionT(ExtrapolationCell<T>& eCell,
                    PropDirection         dir    = alongMomentum,
                    bool                  noLoop = false) const;
 
-  /// deal with the boundary Surface - called by resolveBoundary
+  /// Deal with the boundary Surface - called by resolveBoundary
+  ///
+  /// @param eCell the extrapolation 
+  /// @paramn bSurfaceTV the boundary surface                 
+  /// @param dir the propagation direction
+  /// @param noLoop @todo check with sharka                 
+  ///
+  /// @return is a extrapolation code indication
   template <class T>
   ExtrapolationCode
   handleBoundaryT(ExtrapolationCell<T>&                   eCell,

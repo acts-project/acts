@@ -64,13 +64,23 @@ class ExtrapolationConfig
 {
 public:
   /// Constructor
-  ExtrapolationConfig(unsigned int evalue = 0) : value(evalue) {}
+  /// 
+  /// @param eval is the vonfiguration value
+  ExtrapolationConfig(unsigned int evalue = 0) : value(evalue) 
+  {
+  }
+  
   /// Copy Constructor
+  ///
+  /// @param eConfig is the source object for the copy
   ExtrapolationConfig(const ExtrapolationConfig& eConfig) : value(eConfig.value)
   {
   }
 
-  /// add a configuration mode
+  /// Add a configuration mode
+  /// - this sets the bit corresponding to the given mode
+  ///
+  /// @param the mode that is to be set
   void
   addMode(ExtrapolationMode::eMode em)
   {
@@ -78,7 +88,12 @@ public:
     value |= (1 << int(em));
   }
 
-  /// check the configuration mode
+  /// Check the configuration mode
+  /// - this checks the bit corresponding to the configuration mode 
+  ///
+  /// @param the mode that is to be checks
+  ///
+  /// @return boolean indicator if the mode was set 
   bool
   checkMode(ExtrapolationMode::eMode em) const
   {
@@ -87,6 +102,7 @@ public:
   }
 
   /// int operator
+  /// @return the value of the ExtrapolationConfig as integer
   operator int() const { return value; }
 private:
   unsigned int value;
@@ -105,19 +121,24 @@ public:
     SuccessMaterialLimit   = 5,  // successful : material limit reached
     Recovered              = 6,  // successful : recovered
     FailureDestination     = 7,  // failure    : could not reach destination
-    FailureLoop       = 8,   // failure    : loop or oscillation between volumes
-    FailureNavigation = 9,   // failure    : general navigation failure
-    FailureUpdateKill = 10,  // failure    : updated track under threshold
-    FailureConfiguration = 11,  // failure    : general configuration failure
-    LeftKnownWorld       = 12   // successful ? failure ? if we just knew ...
+    FailureLoop            = 8,  // failure    : loop or oscillation between volumes
+    FailureNavigation      = 9,  // failure    : general navigation failure
+    FailureUpdateKill      = 10, // failure    : updated track under threshold
+    FailureConfiguration   = 11, // failure    : general configuration failure
+    LeftKnownWorld         = 12  // successful ? failure ? if we just knew ...
   };
 
   /// the actual code
   eCode code;
 
   /// create a simple extrapolation code
+  /// 
+  /// @param c is the code enum
   ExtrapolationCode(eCode c) : code(c) {}
-  /// assigment operator - because we can
+
+  /// Assigment operator
+  ///
+  /// @param ec is the source eCode for the assignment
   ExtrapolationCode&
   operator=(const eCode& ec)
   {
@@ -125,63 +146,73 @@ public:
     return (*this);
   }
 
-  /// == operator to eCode
+  /// Equals operator
+  ///
+  /// @param ec is the source eCode for the check
   bool
   operator==(const eCode& ec) const
   {
     return (ec == code);
   }
 
-  /// != operator to eCode
+  /// Non-Equals operator
+  ///
+  /// @param ec is the source eCode for the check
   bool
   operator!=(const eCode& ec) const
   {
     return (ec != code);
   }
 
-  /** return inProgress */
+  /// Check return inProgress
+  /// @return boolean if the extrapolation is still ongoing
   bool
   inProgress() const
   {
     return (code == InProgress);
   }
 
-  /** return success */
+  /// Check return Success
+  /// @return boolean if the extrapolation was successful
   bool
   isSuccess() const
   {
     return (code > InProgress && code < Recovered);
   }
 
-  /** return sucess other than destination reached */
+  /// Check return Sucess before destination 
+  /// @return boolean if the extrapolation is successfu
   bool
   isSuccessBeforeDestination() const
   {
     return (code > SuccessDestination && code < Recovered);
   }
 
-  /** return success or recovered */
+  /// Check return Sucess or Recovered 
+  /// @return boolean if the extrapolation is successful/recovered
   bool
   isSuccessOrRecovered() const
   {
     return (code > InProgress && code <= FailureDestination);
   }
 
-  /** return failure */
+  /// Check return Failure
+  /// @return boolean if the extrapolation was a failure
   bool
   isFailure() const
   {
     return (code > Recovered);
   }
 
-  /** return failure or recovered */
+  /// Check return Failure/Recovered
+  /// @return boolean if the extrapolation was a failure/recovered
   bool
   isFailureOrRecovered() const
   {
     return (code > SuccessMaterialLimit);
   };
 
-  /** toString */
+  /// String screen formatting output
   const std::string&
   toString() const
   {
@@ -192,15 +223,12 @@ private:
   static std::vector<std::string> s_ecodeNames;
 };
 
-/** @class ExtrapolationStep
-
-    templated class to record the different possible entities during
-   extrapolation,
-    the newly created objects are unique pointers and have to be checked out via
-   std::move()
-    by the client caller/
-
-    */
+///  @class ExtrapolationStep
+/// 
+/// templated class to record the different possible entities during
+/// extrapolation, the newly created objects are unique pointers and 
+/// have to be checked out via std::move() by the client caller
+/// 
 template <class T>
 class ExtrapolationStep
 {
@@ -227,6 +255,14 @@ public:
   /// the converted timing info
   float time;
 
+  /// Constructor for an extrapolation step
+  /// 
+  /// @param pars are the parameters of the step
+  /// @param sf the surface the step is associated to
+  /// @param eConfig the extrapolation configuration
+  /// @param mprop the material properties associated
+  /// @param tjac the transport jacobian
+  /// @param pLength the path length of the step
   ExtrapolationStep(std::unique_ptr<const T>  pars    = nullptr,
                     const Surface*            sf      = nullptr,
                     ExtrapolationConfig       eConfig = ExtrapolationConfig(),
@@ -246,13 +282,11 @@ public:
   }
 };
 
-/** @class ExtrapolationCell
-
-    templated class as an input-output object of the extrapolation,
-    only public members, since it is a container class
-
-*/
-
+///  @class ExtrapolationCell
+/// 
+///  templated class as an input-output object of the extrapolation,
+///  only public members, since it is a container class
+/// 
 template <class T>
 class ExtrapolationCell
 {
@@ -343,7 +377,11 @@ public:
   float zOaTrX;  //!< z/A*rho*dInX0 (for average calculations)
   float zX;      //!< z*dInX0 (for average calculations)
 
-  /** start parameters are compulsory  */
+  /// Constructor of the Extrapolaton cell
+  /// start parameters are compulsory
+  ///
+  /// @param pDir is the propagatio direction
+  /// @param econfig is the extrapolation config as value
   ExtrapolationCell(const T&      sParameters,
                     PropDirection pDir    = alongMomentum,
                     unsigned int  econfig = 1)
@@ -387,7 +425,9 @@ public:
     extrapolationSteps.reserve(50);
   }
 
-  /** add a configuration mode */
+  ///  Add a configuration mode
+  /// 
+  /// @param em is the extrapolation mode to be added
   void
   addConfigurationMode(ExtrapolationMode::eMode em)
   {
@@ -395,7 +435,9 @@ public:
     extrapolationConfiguration.addMode(em);
   }
 
-  /** check the configuration mode */
+  ///  Check a configuration mode
+  /// 
+  /// @param em is the extrapolation mode to be checked
   bool
   checkConfigurationMode(ExtrapolationMode::eMode em) const
   {
@@ -403,41 +445,73 @@ public:
     return extrapolationConfiguration.checkMode(em);
   }
 
-  /** check if you are still at the last boundary surface */
+  /// Check if you are still at the last boundary surface
   bool
   onLastBoundary() const
   {
     return (leadParameters == lastBoundaryParameters);
   }
 
-  /** turn the last step's parameters into the final parameters */
+  /// Final checkout method
+  /// - turn the last step's parameters into the final parameters
   void
   checkoutLastStep();
 
-  /** fill or attach the parameters from a step */
+  /// Fill or attach the parameters from a step 
+  /// - if the surface of the step does not yet exists a new new step
+  ///   is created
+  /// - if the surface is already in the step vector, the new parameters
+  ///   are atached
+  ///
+  /// @param stepParamters are the parameters of the step
+  /// @param fillMode is the mode under which these parameters are
+  /// considered
   void
   step(std::unique_ptr<const T> stepParameters,
        ExtrapolationMode::eMode fillMode = ExtrapolationMode::Propagation);
 
-  /** fill transport information - path length and TransportJacobian
-      - jacobians need to be cleared */
+  /// Fill transport information - path length and TransportJacobian
+  ///    - jacobians need to be cleared
+  /// @param sf the end surface of the step
+  /// @param pathLength is the path length of this step
+  /// @param tjac is the transport jacobian of the step     
   void
   stepTransport(const Surface&                           sf,
                 double                                   pathLength = 0.,
                 std::unique_ptr<const TransportJacobian> tjac       = nullptr);
 
-  /** fill or attach material
-      - material is just a pointer copy */
+  /// Fill or attach material
+  /// - if the surface of the step does not yet exists a new new step
+  ///   is created
+  /// - if the surface is already in the step vector, the new parameters
+  ///   are atached
+  /// - material is just a pointer copy 
+  ///
+  /// @param sfactor is the scale factor 
+  /// @param mprot is the material properties associated with the step                
   void
   addMaterial(double sfactor, const MaterialProperties* mprop = nullptr);
 
-  /** fill the material *
-     - material is just a pointer copy */
+  ///  Fill the material 
+  /// - if the surface of the step does not yet exists a new new step
+  ///   is created
+  /// - if the surface is already in the step vector, the new parameters
+  ///   are atached
+  /// - material is just a pointer copy 
+  ///
+  /// @param step is the step length
+  /// @param mat is the material passed               
   void
   addMaterial(double step, const Material* mat = nullptr);
 
-  /** fill or attach material, jacobian, step length
-      - material is just a pointer copy */
+  /// fill or attach material, jacobian, step length
+  ///    - material is just a pointer copy 
+  ///
+  /// @param sf is the surface of the step
+  /// @param lay is the layer associated to this step
+  /// @param position is the step end position
+  /// @param sfactor is the scaling factor
+  /// @param mprop are the material properties associated
   void
   stepMaterial(const Surface&            sf,
                const Layer*              lay,
@@ -445,21 +519,26 @@ public:
                double                    sfactor,
                const MaterialProperties* mprop = nullptr);
 
-  /** check if this is the initial volume */
+  /// Check if this is the initial volume
   bool
   initialVolume() const
   {
     return (leadVolume == startVolume);
   }
 
-  /** trigger for final volume */
+  /// Check if this is the final volume
   bool
   finalVolumeReached() const
   {
     return (leadVolume == endVolume && endVolume);
   }
 
-  /** the materialLimitReached */
+  /// Check if this is the path limit is reached
+  ///
+  /// @param tolerance is the tolerance (absulote for the path limit)
+  /// @param checkout indicates if this turns it into a final step
+  ///
+  /// @return boolean indicator
   bool
   pathLimitReached(double tolerance = 0.001, bool checkout = true)
   {
@@ -471,7 +550,11 @@ public:
     return reached;
   }
 
-  /** the materialLimitReached */
+  /// Check if this is the material limit is reached
+  ///
+  /// @param tolerance is the tolerance (absulote for the path limit)
+  ///
+  /// @return boolean indicator
   bool
   materialLimitReached(double tolerance = 0.001) const
   {
@@ -483,18 +566,20 @@ public:
                 && reachedLimit(materialL0, materialLimitL0, tolerance)));
   }
 
-  /** prepare destination as new start point - optimised for Kalman filtering */
+  /// Prepare destination as new start point - optimised for Kalman filtering
   void
   restartAtDestination();
 
-  /** set ParticleType */
+  /// Set ParticleType 
+  /// 
+  /// @param hypo is the particle type
   void
   setParticleType(const ParticleType& hypo)
   {
     particleType = hypo;
   }
 
-  /** estimate the radial direction of the extrapolation cell */
+  /// Estimate the radial direction of the extrapolation cell 
   void
   setRadialDirection()
   {
@@ -512,8 +597,8 @@ public:
     }
   }
 
-  /** check whether the propagation stays compatible with initial radial
-   * direction */
+  // check whether the propagation stays compatible with initial radial
+  // direction
   bool
   checkRadialCompatibility() const
   {
@@ -681,7 +766,6 @@ ExtrapolationCell<T>::stepMaterial(const Surface&            sf,
         = sfactor;
   }
 }
-
 }  // end of namespace
 
 #endif  // TRKEXUTILS_SOLUTIONSELECTOR_H

@@ -39,7 +39,9 @@ class IPropagationEngine
 public:
   /// Virtual destructor
   virtual ~IPropagationEngine() {}
+  
   /// Main Charged extrapolation method
+  ///
   /// @param ecCell is the charged extrapolation cell
   /// @param sf is the destination surface
   /// @param dir is the additional direction prescription
@@ -62,6 +64,7 @@ public:
             bool                     returnCurvilinear = true) const = 0;
 
   /// Main Neutral extrapolation method
+  ///
   /// @param ecCell is the neutral extrapolation cell
   /// @param sf is the destination surface
   /// @param dir is the additional direction prescription
