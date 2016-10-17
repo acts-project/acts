@@ -33,10 +33,12 @@ typedef std::vector<V3Vector> V3Matrix;
 ///
 /// It is designed create sub surface arrays to be ordered on Surfaces
 ///
+/// @todo write more documentation on how this is done
 class SurfaceArrayCreator : virtual public ISurfaceArrayCreator
 {
 public:
   /// Constructor
+  ///
   /// @param logger logging instance
   SurfaceArrayCreator(std::unique_ptr<Logger> logger
                       = getDefaultLogger("SurfaceArrayCreator", Logging::INFO))
@@ -48,6 +50,7 @@ public:
   virtual ~SurfaceArrayCreator() = default;
 
   /// SurfaceArrayCreator interface method
+  ///
   /// - create an array in a cylinder, binned in phi, z when extremas and
   /// bin numbers are known
   /// @param surfaces are the sensitive surfaces to be ordered on the cylinder
@@ -58,6 +61,7 @@ public:
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsZ is the number of bin in Z for the surfaces
   /// @param transform is the (optional) additional transform applied
+  ///
   /// @return a unique pointer to a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
@@ -91,6 +95,7 @@ public:
   /// SurfaceArrayCreator interface method
   /// - create an array on a disc, binned in r, phi when extremas and
   /// bin numbers are known
+  ///                       
   /// @param surfaces are the sensitive surfaces to be
   /// @param rMin is the minimimal radius of the disc
   /// @param rMax is the maximal radius of the disc
@@ -99,6 +104,7 @@ public:
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsR is the number of bin in R for the surfaces
   /// @param transform is the (optional) additional transform applied
+  ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
@@ -130,12 +136,14 @@ public:
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
+  ///                   
   /// @param surfaces are the sensitive surfaces to be
   /// @param halflengthX is the half length in X
   /// @param halflengthY is the half length in Y
   /// @param binsX is the number of bins in X
   /// @param binsY is the number of bins in Y
   /// @param transform is the (optional) additional transform applied
+  ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnPlane(const std::vector<const Surface*>& surfaces,
@@ -146,7 +154,8 @@ public:
                       std::shared_ptr<Transform3D>       transform
                       = nullptr) const final;
 
-  /// set logging instance
+  /// Set logging instance
+  /// @param logger is the logging instance to be set                    
   void
   setLogger(std::unique_ptr<Logger> logger)
   {

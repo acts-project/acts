@@ -54,6 +54,7 @@ public:
   };
 
   /// Constructor
+  ///
   /// @param lcConfig is the configuration object
   /// @param logger logging instance
   LayerCreator(const Config&           lcConfig,
@@ -64,12 +65,15 @@ public:
   ~LayerCreator() = default;
 
   /// ILayerCreator interface method - returning a cylindrical layer
+  ///
   /// @param surfaces is the vector of sensitive surfaces represented by this
   /// layer
   /// @param envelopeR is the additional envelope applied in R
   /// @param envelopeZ is the additional envelope applied in z
   /// @param binsPhi is number of bins the sensitive surfaces are ordered in phi
   /// @param binsZ is number of bins the sensitive surfaces are ordered in Z
+  ///
+  /// @return shared pointer to a newly created layer
   LayerPtr
   cylinderLayer(const std::vector<const Surface*>& surfaces,
                 double                             envelopeR,
@@ -78,6 +82,7 @@ public:
                 size_t                             binsZ) const override;
 
   /// ILayerCreator interface method - returning a cylindrical layer
+  ///              
   /// @param surfaces is the vector of sensitive surfaces represented by this
   /// layer
   /// @param envelopeMinR is the additional envelope applied in R at Rmin
@@ -85,6 +90,8 @@ public:
   /// @param envelopeZ is the additional envelope applied in z
   /// @param binsR is number of bins the sensitive surfaces are ordered in R
   /// @param binsPhi is number of bins the sensitive surfaces are ordered in Phi
+  ///
+  /// @return shared pointer to a newly created layer
   LayerPtr
   discLayer(const std::vector<const Surface*>& surfaces,
             double                             envelopeMinR,
@@ -94,12 +101,15 @@ public:
             size_t                             binsPhi) const override;
 
   /// ILayerCreator interface method - returning a cylindrical layer
+  ///          
   /// @param surfaces is the vector of sensitive surfaces represented by this
   /// layer
   /// @param envelopeXY is the additional envelope applied in XY
   /// @param envelopeZ is the additional envelope applied in Z
   /// @param binsX is number of bins the sensitive surfaces are ordered in X
   /// @param binsY is number of bins the sensitive surfaces are ordered in Y
+  ///
+  /// @return shared pointer to a newly created layer
   LayerPtr
   planeLayer(const std::vector<const Surface*>& surfaces,
              double                             envelopeXY,
@@ -107,12 +117,12 @@ public:
              size_t                             binsX,
              size_t                             binsY) const override;
 
-  /// set the configuration object
+  /// Set the configuration object
   /// @param lcConfig is the configuration struct
   void
   setConfiguration(const Config& lcConfig);
 
-  /// access th configuration object
+  /// Access th configuration object
   Config
   getConfiguration() const;
 
@@ -121,8 +131,16 @@ public:
   setLogger(std::unique_ptr<Logger> logger);
 
 private:
-  /// method to get the global extends in space for the module
+  /// Method to get the global extends in space for the module
   /// @todo shift to vertices of surfaces
+  ///
+  /// @param sf is the surface to be examinated
+  /// @param minR minimal R extend 
+  /// @param maxR maximal R extend 
+  /// @param minPhi minimal phi extend 
+  /// @param maxPhi maximal phi extend
+  /// @param minZ minimal z extend 
+  /// @param maxZ maximal z extend
   void
   moduleExtend(const Surface& sf,
                double&        minR,
@@ -132,7 +150,12 @@ private:
                double&        minZ,
                double&        maxZ) const;
 
-  /// calculates the closest radial distance of a line
+  /// Calculates the closest radial distance of a line
+  /// 
+  /// @param pos1 is the first position on the line
+  /// @param pos2 is the second position on the line
+  ///
+  /// @return is the closest distance                                                    
   double
   radialDistance(const Vector3D& pos1, const Vector3D& pos2) const;
 

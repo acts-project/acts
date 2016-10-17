@@ -53,6 +53,7 @@ public:
   };
 
   /// Constructor
+  ///
   /// @param plConfig is the ocnfiguration struct that steers behavior
   /// @param logger logging instance
   PassiveLayerBuilder(const Config&           plConfig,
@@ -86,6 +87,7 @@ public:
   }
 
   /// Set configuration method
+  ///
   /// @param plConfig is a configuration struct
   /// it overwrites the current configuration
   void
@@ -95,7 +97,9 @@ public:
   Config
   getConfiguration() const;
 
-  /// set logging instance
+  /// Set logging instance
+  ///
+  /// @param logger is the logging instance to be set
   void
   setLogger(std::unique_ptr<Logger> logger);
 

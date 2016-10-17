@@ -32,6 +32,7 @@ class ISurfaceArrayCreator
 public:
   /// Virtual destructor
   virtual ~ISurfaceArrayCreator() {}
+  
   /// SurfaceArrayCreator interface method
   ///
   /// - create an array in a cylinder, binned in phi, z when extremas and

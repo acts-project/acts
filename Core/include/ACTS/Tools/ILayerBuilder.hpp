@@ -34,6 +34,7 @@ class ILayerBuilder
 public:
   /// Virtual destructor
   virtual ~ILayerBuilder() {}
+  
   /// LayerBuilder interface method
   /// @return  the layers at negative side
   virtual const LayerVector
