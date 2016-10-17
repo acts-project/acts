@@ -64,14 +64,14 @@ Acts::DetachedTrackingVolume::clone(std::string        name,
                                     Acts::Transform3D& shift) const
 {
   // create the new base tracking volume
-  std::shared_ptr<const Acts::TrackingVolume> shiftedTrackingVolume
-      = m_trkVolume->cloneWithShift(shift);
+  std::shared_ptr<const TrackingVolume> shiftedTrackingVolume
+    = TrackingVolume::create(*m_trkVolume,shift);
 
   // create and shift the layers if there are any
-  std::shared_ptr<const Acts::Layer> layerRepresentation = m_layerRepresentation
+  std::shared_ptr<const Layer> layerRepresentation = m_layerRepresentation
       ? m_layerRepresentation->cloneWithShift(shift)
       : nullptr;
-  std::vector<std::shared_ptr<const Acts::Layer>> multiLayerRepresentation;
+  std::vector<std::shared_ptr<const Layer>> multiLayerRepresentation;
 
   // create and shift the multi layer
   if (!m_multilayerRepresentation.empty()) {
