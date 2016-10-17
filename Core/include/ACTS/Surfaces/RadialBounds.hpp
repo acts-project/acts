@@ -64,7 +64,7 @@ public:
   /// Copy constructor
   ///
   /// @param rbounds is the source bounds for assignment
-  RadialBounds(const RadialBounds& rbounds) : DiscBounds(dbounds) {}
+  RadialBounds(const RadialBounds& rbounds) : DiscBounds(rbounds) {}
   
   /// Destructor
   virtual ~RadialBounds();

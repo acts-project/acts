@@ -40,7 +40,7 @@ public:
   /// calls teh base copy constructor
   ///
   /// @param libo are the source bounds
-  LineBounds(const LineBounds& libo) : SurfaceBounds(lbo) {}
+  LineBounds(const LineBounds& libo) : SurfaceBounds(libo) {}
   
   /// Destructor
   virtual ~LineBounds();
