@@ -54,20 +54,25 @@ public:
   CuboidVolumeBounds();
 
   /// Constructor - the box boundaries
+  ///
   /// @param hlengthx is the half length of the cube in x
   /// @param hlengthy is the half length of the cube in y
   /// @param hlengthz is the half length of the cube in z
   CuboidVolumeBounds(double hlenghtx, double hlenghty, double hlengthz);
 
   /// Copy Constructor
-  CuboidVolumeBounds(const CuboidVolumeBounds& bobo);
+  ///
+  /// @param cubo is the source volume bounds to be copied
+  CuboidVolumeBounds(const CuboidVolumeBounds& cubo);
 
   /// Destructor
   virtual ~CuboidVolumeBounds();
 
   /// Assignment operator
+  ///
+  /// @param cubo is the source volume bounds to be assigned
   CuboidVolumeBounds&
-  operator=(const CuboidVolumeBounds& bobo);
+  operator=(const CuboidVolumeBounds& cubo);
 
   /// Virtual constructor
   CuboidVolumeBounds*
@@ -75,12 +80,17 @@ public:
 
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
+  ///
+  /// @param pos is the position in volume frame to be checked
+  /// @param tol is the absolute tolerance to be applied
   bool
-  inside(const Vector3D&, double tol = 0.) const override;
+  inside(const Vector3D& pos, double tol = 0.) const override;
 
   /// Method to decompose the Bounds into boundarySurfaces
   /// @note this method is a pure factory the volume is resposible
   /// for the memory management
+  ///
+  /// @param transformPtr is the transfrom of the volume 
   const std::vector<const Surface*>
   decomposeToSurfaces(std::shared_ptr<Transform3D> transformPtr) const override;
 
@@ -97,6 +107,8 @@ public:
   halflengthZ() const;
 
   /// Output Method for std::ostream
+  ///
+  /// @param sl is ostream operator to be dumped into
   std::ostream&
   dump(std::ostream& sl) const override;
 

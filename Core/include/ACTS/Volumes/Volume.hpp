@@ -36,12 +36,14 @@ public:
   ///  Default constructor
   Volume();
 
-  /// Expizit constructor with shared arguments
+  /// Explicit constructor with shared arguments
+  ///
   /// @param htrans is the transform to position the volume in 3D space
   /// @param volBounds is the volume boundary definitions
   Volume(std::shared_ptr<Transform3D> htrans, VolumeBoundsPtr volBounds);
 
   /// Copy Constructor - with optional shift
+  ///
   /// @param vol is the source volume for the copy
   /// @param shift is the optional shift applied after copying
   Volume(const Volume& vol, const Transform3D* shift = nullptr);
@@ -50,6 +52,8 @@ public:
   virtual ~Volume();
 
   /// Assignment operator
+  ///
+  /// @param vol is the source volume to be copied
   Volume&
   operator=(const Volume& vol);
 
@@ -57,7 +61,7 @@ public:
   virtual Volume*
   clone() const;
 
-  //// Return methods for geometry transform */
+  //// Return methods for geometry transform 
   const Transform3D&
   transform() const;
 
@@ -70,13 +74,20 @@ public:
   volumeBounds() const;
 
   /// Inside() method for checks
+  ///
   /// @param gpos is the position to be checked
   /// @param tol is the tolerance parameter
+  ///
+  /// @return boolean indicator if the position is inside
   bool
   inside(const Vector3D& gpos, double tol = 0.) const;
 
   /// The binning position method
   /// - as default the center is given, but may be overloaded
+  ///
+  /// @param bValue is the binning value schema 
+  ///
+  /// @return vector 3D that can be used for the binning
   virtual const Vector3D
   binningPosition(BinningValue bValue) const override;
 

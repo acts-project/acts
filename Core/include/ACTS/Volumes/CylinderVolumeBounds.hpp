@@ -30,51 +30,38 @@ class PlanarBounds;
 ///
 /// case A) 3 Surfaces (full cylindrical tube):
 ///  BoundarySurfaceFace [index]:
-///      - negativeFaceXY [0] : Acts::DiscSurface with \f$ r_{inner}=0 \f$,
-///                             parallel to \f$ xy \f$ plane at negative \f$ z
-///                             \f$
-///      - positiveFaceXY [1] : Acts::DiscSurface with \f$ r_{inner}=0 \f$,
-///                             parallel to \f$ xy \f$ plane at positive \f$ z
-///                             \f$
-///      - cylinderCover  [2] : Acts::CylinderSurface confining the Acts::Volume
+///  - negativeFaceXY [0] : Acts::DiscSurface with \f$ r_{inner}=0 \f$,
+///                         parallel to \f$ xy \f$ plane at negative \f$ z\f$
+///  - positiveFaceXY [1] : Acts::DiscSurface with \f$ r_{inner}=0 \f$,
+///                         parallel to \f$ xy \f$ plane at positive \f$ z\f$
+///  - cylinderCover  [2] : Acts::CylinderSurface confining the Acts::Volume
 ///
 /// case B) 4 Surfaces (tube with inner and outer radius):
 ///  BoundarySurfaceFace [index]:
-///      - negativeFaceXY [0] : Acts::DiscSurface with \f$ r_{inner}>0 \f$,
-///                             parallel to \f$ xy \f$ plane at negative \f$ z
-///                             \f$
-///      - positiveFaceXY [1] : Acts::DiscSurface with \f$ r_{inner}>0 \f$,
-///                             parallel to \f$ xy \f$ plane at positive \f$ z
-///                             \f$
-///      - tubeOuterCover [2] : Acts::CylinderSurface with \f$ r = r_{outer} \f$
-///      - tubeInnerCover [3] : Acts::CylinderSurface with \f$ r = r_{inner} \f$
+///  - negativeFaceXY [0] : Acts::DiscSurface with \f$ r_{inner}>0 \f$,
+///                         parallel to \f$ xy \f$ plane at negative \f$ z\f$
+///  - positiveFaceXY [1] : Acts::DiscSurface with \f$ r_{inner}>0 \f$,
+///                         parallel to \f$ xy \f$ plane at positive \f$ z\f$
+///  - tubeOuterCover [2] : Acts::CylinderSurface with \f$ r = r_{outer} \f$
+///  - tubeInnerCover [3] : Acts::CylinderSurface with \f$ r = r_{inner} \f$
 ///
 /// case C) 6 Surfaces (sectoral tube with inner and outer radius):
 ///  BoundarySurfaceFace [index]:
-///      - negativeFaceXY        [0] : Acts::DiscSurface with \f$ r_{inner}>0
-///      \f$
-/// and \f$ \phi < \pi \f$,
-///                                    parallel to \f$ xy \f$ plane at negative
-///                                    \f$
-/// z \f$
-///      - positiveFaceXY        [1] : Acts::DiscSurface with \f$ r_{inner}>0
-///      \f$
-/// and \f$ \phi < \pi \f$,
-///                                    parallel to \f$ xy \f$ plane at positive
-///                                    \f$
-/// z \f$
-///      - tubeSectorOuterCover  [2] : Acts::CylinderSurface with \f$ r =
-///      r_{outer}
-/// \f$
-///      - tubeSectorInnerCover  [3] : Acts::CylinderSurface with \f$ r =
-///      r_{inner}
-/// \f$
-///      - tubeSectorNegativePhi [4] : Rectangular Acts::PlaneSurface attached
-///      to
-/// [0] and [1] at negative \f$ \phi \f$
-///      - tubeSectorNegativePhi [5] : Rectangular Acts::PlaneSurface attached
-///      to
-/// [0] and [1] at positive \f$ \phi \f$
+///   - negativeFaceXY  [0] : Acts::DiscSurface with \f$ r_{inner}>0\f$
+///                           and \f$ \phi < \pi \f$,
+///                           parallel to \f$ xy \f$ plane at negative \f$z\f$
+///   - positiveFaceXY  [1] : Acts::DiscSurface with \f$ r_{inner}>0 \f$
+///                           and \f$ \phi < \pi \f$,
+///                           parallel to \f$ xy \f$ plane at positive \f$z\f$
+///   - tubeSectorOuterCover  [2] : Acts::CylinderSurface with 
+///                                 \f$ r = r_{outer}\f$
+///   - tubeSectorInnerCover  [3] : Acts::CylinderSurface with 
+///                                 \f$ r = r_{inner} \f$
+///   - tubeSectorNegativePhi [4] : Rectangular Acts::PlaneSurface attached to
+///                 [0] and [1] at negative \f$ \phi \f$
+///                      - tubeSectorNegativePhi [5] : 
+//                          Rectangular Acts::PlaneSurface attached to
+///                 [0] and [1] at positive \f$ \phi \f$
 ///
 ///  @image html CylinderVolumeBounds_decomp.gif
 
@@ -94,17 +81,20 @@ public:
   CylinderVolumeBounds();
 
   /// Constructor - full cylinder
+  ///
   /// @param is the outer radius of the cylinder
   /// @param halez is the half length in z
   CylinderVolumeBounds(double radius, double halez);
 
   /// Constructor - extruded cylinder
+  ///
   /// @param rinner is the inner radius of the cylinder
   /// @param router is the outer radius of the cylinder
   /// @param halez is the half length in z
   CylinderVolumeBounds(double rinner, double router, double halez);
 
   /// Constructor - extruded cylinder
+  ///
   /// @param rinner is the inner radius of the cylinder
   /// @param router is the outer radius of the cylinder
   /// @param halfPhiSector is the half opening angle
@@ -115,6 +105,7 @@ public:
                        double halez);
 
   /// Copy Constructor
+  ///                     
   /// @param cylbo is the source cylinder volume bounds for the copy
   CylinderVolumeBounds(const CylinderVolumeBounds& cylbo);
 
@@ -131,6 +122,7 @@ public:
 
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
+  ///
   /// @param gpos is a global position to be checked
   /// @param tol is the tolerance for the check
   bool
@@ -144,11 +136,13 @@ public:
   decomposeToSurfaces(std::shared_ptr<Transform3D> transformPtr) const override;
 
   /// Binning offset - overloaded for some R-binning types
+  ///
   /// @param bValue is the type used for the binning
   virtual Vector3D
   binningOffset(BinningValue bValue) const override;
 
   /// Binning borders in double
+  ///
   /// @param bValue is the type used for the binning
   virtual double
   binningBorder(BinningValue bValue) const override;

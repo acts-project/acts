@@ -34,6 +34,7 @@ class Surface;
 /// @note inside/outside definitions are given by the normal vector of the
 /// surface
 ///
+/// @todo change to one schema with BinnedArray0D and along/opposite nominclature
 
 template <class T>
 class BoundarySurfaceT
@@ -57,6 +58,7 @@ public:
 
   /// Constructor for a Boundary with exact two Volumes attached to it
   /// - usually used in a volume constructor
+  ///
   /// @param surface is the unqiue surface the boundary represents
   /// @tparam inside is the inside volume the bounday surface points to
   /// @tparam outside is the outside volume the boundary surface points to
@@ -73,6 +75,7 @@ public:
 
   /// Constructor for a Boundary with exact two Volumes attached to it
   /// - usually used in a volume constructor
+  ///
   /// @param surface is the unqiue surface the boundary represents
   /// @tparam inside is the inside volume the bounday surface points to
   /// @tparam outside is the outside volume the boundary surface points to
@@ -89,6 +92,7 @@ public:
 
   /// Constructor for a Boundary with exact multiple Volumes attached to it
   /// - usually used in a volume constructor
+  ///
   /// @param surface is the unqiue surface the boundary represents
   /// @param inside is the inside volume array the bounday surface points to
   /// @param outside is the outside volume array the boundary surface points to
@@ -105,9 +109,11 @@ public:
 
   /// Get the next Volume depending on GlobalPosition, GlobalMomentum, dir on
   /// the TrackParameters and the requested direction
+  ///
   /// @param gpos is the global position on surface
   /// @param mom is the direction on the surface
   /// @param dir is an aditional direction corrective
+  ///
   /// @return is the attached volume at that position
   virtual const T*
   attachedVolume(const Vector3D& gpos,
@@ -115,7 +121,8 @@ public:
                  PropDirection   dir) const;
 
   /// templated onBoundary method
-
+  ///
+  /// @tparam pars are the parameters to be checked
   template <class P>
   bool
   onBoundary(const P& pars) const
@@ -133,12 +140,18 @@ protected:
   /// Helper metho: attach a Volume to this BoundarySurfaceT
   /// this si done during the geometry construction and only called by
   /// the friend templated volume
+  ///
+  /// @param volume is the volume to be attached
+  /// @param inout is the boundary orientation @todo update to along/opposite
   void
   attachVolume(VolumePtr volume, BoundaryOrientation inout) const;
 
   /// Helper metho: attach a Volume to this BoundarySurfaceT
   /// this si done during the geometry construction and only called by
   /// the friend templated volume
+  ///
+  /// @param volumes is the volume array to be attached
+  /// @param inout is the boundary orientation @todo update to along/opposite
   void
   attachVolumeArray(std::shared_ptr<const VolumeArray> volumes,
                     BoundaryOrientation                inout) const;

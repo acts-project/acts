@@ -32,38 +32,26 @@ class DiamondBounds;
 ///
 ///  BoundarySurfaceFace [index]:
 ///
-///      - negativeFaceXY     [0] : Diamond Acts::PlaneSurface,
-///                                 parallel to \f$ xy \f$ plane at negative \f$
-///                                 z
-/// \f$
-///      - positiveFaceXY     [1] : Diamond Acts::PlaneSurface,
-///                                 parallel to \f$ xy \f$ plane at positive \f$
-///                                 z
-/// \f$
-///      - trapezoidFaceAlpha1 [2] : Rectangular  Acts::PlaneSurface,
-///                                 attached to [0] and [1] at negative \f$ x
-///                                 \f$
+///  - negativeFaceXY     [0] : Diamond Acts::PlaneSurface,
+///                             parallel to \f$ xy \f$ plane at negative \f$z\f$
+///  - positiveFaceXY     [1] : Diamond Acts::PlaneSurface,
+///                             parallel to \f$ xy \f$ plane at positive \f$z\f$
+///  - trapezoidFaceAlpha1 [2] : Rectangular  Acts::PlaneSurface,
+///                              attached to [0] and [1] at negative \f$ x \f$
 /// (associated to alpha1)
-///      - trapezoidFaceBeta1  [3] : Rectangular  Acts::PlaneSurface,
-///                                 attached to [0] and [1] at positive \f$ x
-///                                 \f$
+///  - trapezoidFaceBeta1  [3] : Rectangular  Acts::PlaneSurface,
+///                             attached to [0] and [1] at positive \f$ x \f$
 /// (associated to beta1)
-///      - trapezoidFaceAlpha2 [5] : Rectangular  Acts::PlaneSurface,
-///                                 attached to [0] and [1] at negative \f$ x
-///                                 \f$
+///  - trapezoidFaceAlpha2 [5] : Rectangular  Acts::PlaneSurface,
+///                              attached to [0] and [1] at negative \f$ x \f$
 /// (associated to alpha2)
-///      - trapezoidFaceBeta2  [6] : Rectangular  Acts::PlaneSurface,
-///                                 attached to [0] and [1] at positive \f$ x
-///                                 \f$
+///  - trapezoidFaceBeta2  [6] : Rectangular  Acts::PlaneSurface,
+///                              attached to [0] and [1] at positive \f$ x \f$
 /// (associated to beta2)
-///      - negativeFaceZX     [4] : Rectangular  Acts::PlaneSurface,
-///                                 parallel to \f$ zx \f$ plane at negative \f$
-///                                 y
-/// \f$
-///      - positiveFaceZX     [5] : Rectangular  Acts::PlaneSurface,
-///                                 parallel to \f$ zx \f$ plane at positive \f$
-///                                 y
-/// \f$
+///  - negativeFaceZX     [4] : Rectangular  Acts::PlaneSurface,
+///                             parallel to \f$ zx \f$ plane at negative \f$y\f$
+///  - positiveFaceZX     [5] : Rectangular  Acts::PlaneSurface,
+///                             parallel to \f$ zx \f$ plane at positive \f$y\f$
 ///
 ///  @image html DoubleTrapezoidVolumeBounds_decomp.gif
 
@@ -88,6 +76,7 @@ public:
 
   /// Constructor - the double trapezoid boundaries (
   /// symmetric trapezoid/diamond
+  ///
   /// @param minhlenghtx half length in x at minimum y
   /// @param medhlengthx half length in x aty = 0
   /// @param maxhlengthx half length in x at maximum x
@@ -102,6 +91,7 @@ public:
                               double hlengthz);
 
   /// Copy Constructor
+  ///
   /// @param dtbo is the source bounds
   DoubleTrapezoidVolumeBounds(const DoubleTrapezoidVolumeBounds& dtbo);
 
@@ -109,6 +99,7 @@ public:
   virtual ~DoubleTrapezoidVolumeBounds();
 
   /// Assignment operator
+  ///
   /// @param dtbo is the source bounds
   DoubleTrapezoidVolumeBounds&
   operator=(const DoubleTrapezoidVolumeBounds& dtbo);
@@ -119,12 +110,17 @@ public:
 
   /// This method checks if position in the 3D volume frame
   /// is inside the cylinder
+  ///
   /// @param gpos is the global position to be checked for inside
   /// @param tol is the tolerance parametere
   bool
   inside(const Vector3D& gpos, double tol = 0.) const override;
 
-  /// @copydoc decomposeToSurfaces
+  /// decompose into boundary surfaces
+  ///
+  /// @param transformPtr is the transform applied by the volume
+  ///
+  /// @return a vector of surfaces to be used as boundary surfaces
   const std::vector<const Surface*>
   decomposeToSurfaces(std::shared_ptr<Transform3D> transformPtr) const override;
 
@@ -165,6 +161,9 @@ public:
   dump(std::ostream& sl) const override;
 
 private:
+  /// dump method
+  ///
+  /// @tparam dT is the output stream to be dumped into 
   template <class T>
   T&
   dumpT(T& dT) const;
