@@ -44,43 +44,71 @@ class DetectorElementBase
 public:
   /// Constructor
   DetectorElementBase() {}
+  
   /// virtual Destructor
   virtual ~DetectorElementBase() {}
+  
   /// Identifier
   virtual Identifier
   identify() const = 0;
 
   ///  Return local to global transform
   /// (optionally associated with an identifier)
+  /// 
+  /// @param identifier is an identifier in case more transform hare held
+  /// 
+  /// @return is the requested transform of the DetectorElementBase
   virtual const Transform3D&
   transform(const Identifier& identifier = Identifier()) const = 0;
 
   ///  Return surface association
   /// (optionally associated with an identifier)
+  ///
+  /// @param identifeir is an identifier in case more surfaces hare held 
+  ///
+  /// @return the surface associated with this detector element (and id)
   virtual const Surface&
   surface(const Identifier& identifier = Identifier()) const = 0;
 
-  ///  Return full list of associated surfaces
+  /// Return full list of associated surfaces
+  /// @return contained surfaces
   virtual const std::vector<std::shared_ptr<const Surface>>&
   surfaces() const = 0;
 
   /// Returns the thickness of the module
+  /// @return double that indicates the thickness of the module
   virtual double
   thickness() const = 0;
 
   /// Fast access to bin members
+  /// Bin members are elements that are in the same geometric binning cell,
+  /// such, e.g. backside modules in a doublet/triplet detector
+  ///
+  /// @return vector of DetectorElementBase pointers
   const std::vector<const DetectorElementBase*>&
   binmembers() const;
 
   /// Reigster the bin members
+  /// Bin members are elements that are in the same geometric binning cell,
+  /// such, e.g. backside modules in a doublet/triplet detector
+  ///
+  /// @param binmembers are DetectorElementBase objects that are in the same cell
   void
   registerBinmembers(std::vector<const DetectorElementBase*>& binmembers) const;
 
   /// Fast access to neighbours
+  /// Neighbours are elements that are in an neighbouring geometric binning cell,
+  /// such, e.g. next in phi, next in eta modules
+  ///
+  /// @return vector of DetectorElementBase pointers
   const std::vector<const DetectorElementBase*>&
   neighbours() const;
 
   /// Reigster the neighbours
+  /// Neighbours are elements that are in an neighbouring geometric binning cell,
+  /// such, e.g. next in phi, next in eta modules
+  ///
+  /// @param neighbours are DetectorElementBase objects that are neighbours
   void
   registerNeighbours(std::vector<const DetectorElementBase*>& neighbours) const;
 
