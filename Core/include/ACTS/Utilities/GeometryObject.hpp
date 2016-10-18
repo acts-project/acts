@@ -31,13 +31,13 @@ class GeometryObject
 {
 public:
   /// default constructor
-  ///
-  /// @param geoID the geometry identifier of the object
   GeometryObject() : m_geoID(0) {}
+
   /// constructor from a ready-made value
   ///
   /// @param geoID the geometry identifier of the object
   GeometryObject(const GeometryID& geoID) : m_geoID(geoID) {}
+
   /// assignment operator
   ///
   /// @param geoID the source geoID

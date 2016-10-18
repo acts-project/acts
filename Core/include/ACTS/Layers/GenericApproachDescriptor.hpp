@@ -65,14 +65,14 @@ public:
   ///
   /// @param gpos is the global posoition to start the approach from
   /// @param dir is the direction in which you approach the layer
-  /// @param bchk is the boundary check presrcition
+  /// @param bcheck is the boundary check presrcition
   /// @param ice is a (future) compatibility estimater if needed
   ///
   /// @return : a boolean indicating if an actual intersection had been tried
   const SurfaceIntersection
   approachSurface(const Vector3D&                gpos,
                   const Vector3D&                dir,
-                  const BoundaryCheck&           bchk,
+                  const BoundaryCheck&           bcheck,
                   const ICompatibilityEstimator* ice = nullptr) const override;
 
   /// return all containes surfaces of this approach descriptor
@@ -99,7 +99,7 @@ const SurfaceIntersection
 GenericApproachDescriptor<T>::approachSurface(
     const Vector3D&      pos,
     const Vector3D&      dir,
-    const BoundaryCheck& bchk,
+    const BoundaryCheck& bcheck,
     const ICompatibilityEstimator*) const
 {
   // prepare the return surface
@@ -109,7 +109,7 @@ GenericApproachDescriptor<T>::approachSurface(
   // get the surfaces
   for (auto& sfIter : m_surfacesCache) {
     // get the intersection with the surface
-    sIntersection = sfIter->intersectionEstimate(pos, dir, true, bchk);
+    sIntersection = sfIter->intersectionEstimate(pos, dir, true, bcheck);
     // validatie if it's ok and take the closest
     if (sIntersection.valid && sIntersection.pathLength < aPathLength) {
       aPathLength = sIntersection.pathLength;

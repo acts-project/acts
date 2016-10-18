@@ -87,11 +87,11 @@ public:
   /// For disc surfaces the local position in (r,phi) is checked
   ///
   /// @param lpos local position to be checked
-  /// @param bchk boundary check directive
+  /// @param bcheck boundary check directive
   ///
   /// @return is a boolean indicating the operation success
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const override;
 
   /// Inside check for the first coordinate
   ///
@@ -180,22 +180,22 @@ RadialBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 }
 
 inline bool
-RadialBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
+RadialBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
-  if (bchk.bcType == 0 || bchk.nSigmas == 0
+  if (bcheck.bcType == 0 || bcheck.nSigmas == 0
       || m_valueStore[RadialBounds::bv_rMin] != 0
       || m_valueStore[RadialBounds::bv_halfPhiSector] != M_PI)
-    return RadialBounds::inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
+    return RadialBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 
   // a fast FALSE
-  sincosCache scResult = bchk.FastSinCos(lpos(1, 0));
-  double      dx       = bchk.nSigmas * sqrt((*bchk.lCovariance)(0, 0));
-  double      dy       = bchk.nSigmas
-      * sqrt(scResult.sinC * scResult.sinC * (*bchk.lCovariance)(0, 0)
+  sincosCache scResult = bcheck.FastSinCos(lpos(1, 0));
+  double      dx       = bcheck.nSigmas * sqrt((*bcheck.lCovariance)(0, 0));
+  double      dy       = bcheck.nSigmas
+      * sqrt(scResult.sinC * scResult.sinC * (*bcheck.lCovariance)(0, 0)
              + lpos(0, 0) * lpos(0, 0) * scResult.cosC * scResult.cosC
-                 * (*bchk.lCovariance)(1, 1)
+                 * (*bcheck.lCovariance)(1, 1)
              + 2 * scResult.cosC * scResult.sinC * lpos(0, 0)
-                 * (*bchk.lCovariance)(0, 1));
+                 * (*bcheck.lCovariance)(0, 1));
   double max_ell = dx > dy ? dx : dy;
   if (lpos(0, 0) > (m_valueStore[RadialBounds::bv_rMax] + max_ell))
     return false;
@@ -346,22 +346,22 @@ RadialBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   covRotMatrix << scResult.cosC, -lpos(0, 0) * scResult.sinC, scResult.sinC,
       lpos(0, 0) * scResult.cosC;
   ActsMatrixD<2, 2> lCovarianceCar
-      = covRotMatrix * (*bchk.lCovariance) * covRotMatrix.transpose();
+      = covRotMatrix * (*bcheck.lCovariance) * covRotMatrix.transpose();
   Vector2D lposCar(covRotMatrix(1, 1), -covRotMatrix(0, 1));
 
   // ellipse is always at (0,0), surface is moved to ellipse position and then
   // rotated
-  double w     = bchk.nSigmas * sqrt(lCovarianceCar(0, 0));
-  double h     = bchk.nSigmas * sqrt(lCovarianceCar(1, 1));
+  double w     = bcheck.nSigmas * sqrt(lCovarianceCar(0, 0));
+  double h     = bcheck.nSigmas * sqrt(lCovarianceCar(1, 1));
   double x0    = 0;
   double y0    = 0;
   float  theta = (lCovarianceCar(1, 0) != 0
                  && (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)) != 0)
       ? .5
-          * bchk.FastArcTan(2 * lCovarianceCar(1, 0)
+          * bcheck.FastArcTan(2 * lCovarianceCar(1, 0)
                             / (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)))
       : 0.;
-  scResult = bchk.FastSinCos(theta);
+  scResult = bcheck.FastSinCos(theta);
   ActsMatrixD<2, 2> rotMatrix;
   rotMatrix << scResult.cosC, scResult.sinC, -scResult.sinC, scResult.cosC;
   Vector2D tmp = rotMatrix * (-lposCar);

@@ -130,22 +130,22 @@ public:
   /// templated onLayer() method
   ///
   /// @tparam parameters are the templated (charged/neutral) on layer check
-  /// @param bchk is the boundary check directive
+  /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates success of the operation
   template <class T>
   bool
-  onLayer(const T& parameters, const BoundaryCheck& bchk = true) const;
+  onLayer(const T& parameters, const BoundaryCheck& bcheck = true) const;
 
   /// geometrical isOnLayer() method
   ///
   /// @note using isOnSurface() with Layer specific tolerance
-  /// @param gpos is the gobal position to be checked
-  /// @param bchk is the boundary check directive
+  /// @param pos is the gobal position to be checked
+  /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates success of the operation
   virtual bool
-  isOnLayer(const Vector3D& gp, const BoundaryCheck& bchk = true) const;
+  isOnLayer(const Vector3D& pos, const BoundaryCheck& bcheck = true) const;
 
   /// Return method for the approach descriptor, can be nullptr
   const ApproachDescriptor*
@@ -156,18 +156,18 @@ public:
   /// @param gpos is the global position to start the approach from
   /// @param dir is the direction from where to attempt the approach
   /// @param pdir is the direction prescription
-  /// @param bhck is the boundary check directive
+  /// @param bcheck is the boundary check directive
   /// @param resolveSubSurfaces is a boolean directive whether to resolve
   /// structure or not
   /// @note reasons for resolving are: collect & find material, collect & find
   /// sensitivex
-  /// @ice is a (future) compatibility estimator that could be used to modify
+  /// @param ice is a (future) compatibility estimator that could be used to modify
   /// the straight line approach
   virtual const SurfaceIntersection
   surfaceOnApproach(const Vector3D&                gpos,
                     const Vector3D&                dir,
                     PropDirection                  pdir,
-                    const BoundaryCheck&           bchk,
+                    const BoundaryCheck&           bcheck,
                     bool                           resolveSubSurfaces = false,
                     const ICompatibilityEstimator* ice = nullptr) const;
 
@@ -182,7 +182,7 @@ public:
   /// @param cSurfaces are the retrun surface intersections
   /// @param pars are the (charged) track parameters for the search
   /// @param pdir is the propagation direction prescription
-  /// @param bchk is the boundary check directive
+  /// @param bcheck is the boundary check directive
   /// @param collectSensitive is the prescription to find the sensitive surfaces
   /// @param collectPassive is the prescription to find all passive surfaces
   /// @param searchType is the level of depth for the search
@@ -190,7 +190,7 @@ public:
   /// excluded in return
   /// @param endSurface is an (optional) end surface for the search: excluded in
   /// return
-  /// @ice is a (future) compatibility estimator that could be used to modify
+  /// @param ice is a (future) compatibility estimator that could be used to modify
   /// the straight line approach
   ///
   /// @return boolean that indicates if a compatible surface exists at all
@@ -198,7 +198,7 @@ public:
   compatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
                      const TrackParameters&            pars,
                      PropDirection                     pdir,
-                     const BoundaryCheck&              bchk,
+                     const BoundaryCheck&              bcheck,
                      bool                              collectSensitive,
                      bool                              collectPassive,
                      int                               searchType,
@@ -217,7 +217,7 @@ public:
   /// @param cSurfaces are the retrun surface intersections
   /// @param pars are the (charged) track parameters for the search
   /// @param pdir is the propagation direction prescription
-  /// @param bchk is the boundary check directive
+  /// @param bcheck is the boundary check directive
   /// @param collectSensitive is the prescription to find the sensitive surfaces
   /// @param collectPassive is the prescription to find all passive surfaces
   /// @param searchType is the level of depth for the search
@@ -225,7 +225,7 @@ public:
   /// excluded in return
   /// @param endSurface is an (optional) end surface for the search: excluded in
   /// return
-  /// @ice is a (future) compatibility estimator that could be used to modify
+  /// @param ice is a (future) compatibility estimator that could be used to modify
   /// the straight line approach
   ///
   /// @return boolean that indicates if a compatible surface exists at all
@@ -233,7 +233,7 @@ public:
   compatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
                      const NeutralParameters&          pars,
                      PropDirection                     pdir,
-                     const BoundaryCheck&              bchk,
+                     const BoundaryCheck&              bcheck,
                      bool                              collectSensitive,
                      bool                              collectPassive,
                      int                               searchType,
@@ -287,7 +287,7 @@ public:
 
   /// Fast navigation to next layer
   ///
-  /// @param gpos is the start position for the search
+  /// @param pos is the start position for the search
   /// @param dir is the direction for the search
   ///
   /// @return the pointer to the next layer
@@ -328,18 +328,19 @@ protected:
 
   /// Copy Constructor
   ///
-  /// @param lay is the sourc3 layer for the copye
+  /// @param lay is the source layer for the copye
   Layer(const Layer& lay);
 
   /// Constructor with pointer to SurfaceArray (passing ownership)
   ///
   /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the normal thickness of the Layer
-  /// @param od overlap descriptor (@todo change to unique_ptr)
+  /// @param ad oapproach descriptor
+  /// @param ltype is the layer type if active or passive
   Layer(std::unique_ptr<SurfaceArray> surfaceArray,
         double                        thickness = 0.,
         ApproachDescriptor*           ad        = nullptr,
-        LayerType                     ltype     = Acts::passive);
+        LayerType                     ltype     = passive);
 
   /// get compatible surfaces starting from charged parameters - forward call
   /// from explicit methods
@@ -347,7 +348,7 @@ protected:
   /// @param cSurfaces are the retrun surface intersections
   /// @tparam pars are the (charged) track parameters for the search
   /// @param pdir is the propagation direction prescription
-  /// @param bchk is the boundary check directive
+  /// @param bcheck is the boundary check directive
   /// @param collectSensitive is the prescription to find the sensitive surfaces
   /// @param collectPassive is the prescription to find all passive surfaces
   /// @param searchType is the level of depth for the search
@@ -355,7 +356,7 @@ protected:
   /// excluded in return
   /// @param endSurface is an (optional) end surface for the search: excluded in
   /// return
-  /// @ice is a (future) compatibility estimator that could be used to modify
+  /// @param ice is a (future) compatibility estimator that could be used to modify
   /// the straight line approach
   ///
   /// @return boolean that indicates if a compatible surface exists at all
@@ -364,13 +365,13 @@ protected:
   getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
                         const T&                          pars,
                         PropDirection                     pdir,
-                        const BoundaryCheck&              bchk,
+                        const BoundaryCheck&              bcheck,
                         bool                              collectSensitive,
                         bool                              collectPassive,
                         int                               searchType,
-                        const Surface*                 startSurface = nullptr,
-                        const Surface*                 endSurface   = nullptr,
-                        const ICompatibilityEstimator* ice = nullptr) const;
+                        const Surface*                    startSurface = nullptr,
+                        const Surface*                    endSurface   = nullptr,
+                        const ICompatibilityEstimator*    ice = nullptr) const;
 
   /// test compatible surface - checking directly for intersection & collection
   ///
@@ -379,15 +380,16 @@ protected:
   /// @param gpos is the resolved global position
   /// @param dir is themomentum direction
   /// @param pdir is the propagation direction prescription
-  /// @param bchk is the boundary check directive
+  /// @param bcheck is the boundary check directive
+  /// @param maxPathLength is the maximal path length allowed to the surface                      
   /// @param collectSensitive is the prescription to find the sensitive surfaces
   /// @param collectPassive is the prescription to find all passive surfaces
-  /// @param searchType is the level of depth for the search
+  /// @param intersectionTest is a boolean idicating if intersection is done
   /// @param startSurface is an (optional) start surface for the search:
   /// excluded in return
   /// @param endSurface is an (optional) end surface for the search: excluded in
   /// return
-  /// @ice is a (future) compatibility estimator that could be used to modify
+  /// @param ice is a (future) compatibility estimator that could be used to modify
   /// the straight line approach
   ///
   /// @return boolean that indicates if a compatible surface exists at all
@@ -397,14 +399,14 @@ protected:
                         const Vector3D&                   gpos,
                         const Vector3D&                   dir,
                         PropDirection                     pdir,
-                        const BoundaryCheck&              bchk,
+                        const BoundaryCheck&              bcheck,
                         double                            maxPathLength,
                         bool                              collectSensitive,
                         bool                              collectPassive,
                         bool                              intersectionTest,
-                        const Surface*                 startSurface = nullptr,
-                        const Surface*                 endSurface   = nullptr,
-                        const ICompatibilityEstimator* ice = nullptr) const;
+                        const Surface*                    startSurface = nullptr,
+                        const Surface*                    endSurface   = nullptr,
+                        const ICompatibilityEstimator*    ice = nullptr) const;
 
   ///  private method to set enclosing TrackingVolume, called by friend class
   /// only
@@ -423,7 +425,7 @@ protected:
   ///
   /// @param dtvol is the detached tracking volume the layer is confined
   void
-  encloseDetachedTrackingVolume(const DetachedTrackingVolume& tvol) const;
+  encloseDetachedTrackingVolume(const DetachedTrackingVolume& dtvol) const;
 
   /// the previous Layer according to BinGenUtils
   mutable NextLayers m_nextLayers;
@@ -452,7 +454,7 @@ protected:
   LayerType m_layerType;
   /// pointer to the approach surface carrying the material
   /// nullptr if no material set
-  /// @TODO remove this concept
+  /// @todo remove this concept
   const Surface* m_materialSurface;
 
 private:

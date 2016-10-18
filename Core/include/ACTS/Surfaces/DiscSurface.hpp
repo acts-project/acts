@@ -153,12 +153,12 @@ public:
   /// or not
   ///
   /// @param gpos is the global position to be checked
-  /// @param bchk is the boundary check directive
+  /// @param bcheck is the boundary check directive
   ///
   /// @return bollean that indicates if the position is on surface
   virtual bool
   isOnSurface(const Vector3D&      gpos,
-              const BoundaryCheck& bchk = true) const override;
+              const BoundaryCheck& bcheck = true) const override;
 
   /// Local to global transformation
   /// For planar surfaces the momentum is ignroed in the local to global
@@ -252,7 +252,7 @@ public:
   /// @param gpos is the global position as a starting point
   /// @param dir is the global direction at the starting point
   /// @param forceDir is a boolean forcing a solution along direction
-  /// @param bchk is the boundary check
+  /// @param bcheck is the boundary check
   ///
   ///  <b>mathematical motivation:</b>
   ///
@@ -276,7 +276,7 @@ public:
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir = false,
-                       const BoundaryCheck& bchk     = false) const override;
+                       const BoundaryCheck& bcheck     = false) const override;
 
   /// Return properly formatted class name for screen output
   virtual std::string
@@ -342,7 +342,7 @@ inline Intersection
 DiscSurface::intersectionEstimate(const Vector3D&      gpos,
                                   const Vector3D&      dir,
                                   bool                 forceDir,
-                                  const BoundaryCheck& bchk) const
+                                  const BoundaryCheck& bcheck) const
 {
   double denom = dir.dot(normal());
   if (denom) {
@@ -351,7 +351,7 @@ DiscSurface::intersectionEstimate(const Vector3D&      gpos,
     // evaluate the intersection in terms of direction
     bool isValid = forceDir ? (u > 0.) : true;
     // evaluate (if necessary in terms of boundaries)
-    isValid = bchk ? (isValid && isOnSurface(intersectPoint, bchk)) : isValid;
+    isValid = bcheck ? (isValid && isOnSurface(intersectPoint, bcheck)) : isValid;
     // return the result
     return Intersection(intersectPoint, u, isValid);
   }

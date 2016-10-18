@@ -40,13 +40,13 @@ class IExtrapolationEngine
 public:
   /// Virtual destructor
   virtual ~IExtrapolationEngine() {}
+
   /// Main extrapolation method, templated to chared/neutral
   ///
-  /// @tparam eCell ist he extrapolaiton cell
+  /// @tparam ecCharged ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
-  /// @param dir is the additional direction prescription
-  /// @param bchk is the boudnary check directive @todo shift to cell after
-  /// splitting
+  /// @param bcheck is the boudnary check directive
+  /// @todo shift to cell after splitting
   ///
   /// @return extrapolation code to indicate outcome
   virtual ExtrapolationCode
@@ -56,9 +56,9 @@ public:
 
   /// Main extrapolation method, templated to chared/neutral
   ///
-  /// @tparam eCell ist he extrapolaiton cell
+  /// @param ecNeutral ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
-  /// @param dir is the additional direction prescription
+  /// @param bcheck is the boudnary check directive
   ///
   /// @return extrapolation code to indicate outcome
   virtual ExtrapolationCode

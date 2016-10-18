@@ -76,11 +76,11 @@ public:
   /// surface bounds
   ///
   /// @param lpos local position in 2D local carthesian frame
-  /// @param bchk is the boundary check directive
+  /// @param bcheck is the boundary check directive
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const override;
 
   /// This method checks if the provided local coordinate 1 is inside the
   /// surface bounds
@@ -182,31 +182,31 @@ TriangleBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 }
 
 inline bool
-TriangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
+TriangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
-  if (bchk.bcType == 0)
-    return TriangleBounds::inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
+  if (bcheck.bcType == 0)
+    return TriangleBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 
   /// @todo check for quick limit test
-  /// double max_ell = (*bchk.lCovariance)(0, 0) > (*bchk.lCovariance)(1, 1)
-  ///    ? (*bchk.lCovariance)(0, 0)
-  ///    : (*bchk.lCovariance)(1, 1);
+  /// double max_ell = (*bcheck.lCovariance)(0, 0) > (*bcheck.lCovariance)(1, 1)
+  ///    ? (*bcheck.lCovariance)(0, 0)
+  ///    : (*bcheck.lCovariance)(1, 1);
   /// a fast FALSE
   /// double fabsR = sqrt(lpos[Acts::eLOC_X] * lpos[Acts::eLOC_X]
   ///                    + lpos[Acts::eLOC_Y] * lpos[Acts::eLOC_Y]);
-  /// double limit = bchk.nSigmas * sqrt(max_ell);
+  /// double limit = bcheck.nSigmas * sqrt(max_ell);
   /// double r_max = TriangleBounds::r();
   /// if (fabsR > (r_max + limit)) return false;
   // compute KDOP and axes for surface polygon
   std::vector<KDOP>     elementKDOP(3);
   std::vector<Vector2D> elementP(3);
-  double                theta = ((*bchk.lCovariance)(1, 0) != 0
-                  && ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)) != 0)
+  double                theta = ((*bcheck.lCovariance)(1, 0) != 0
+                  && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
       ? .5
-          * bchk.FastArcTan(2 * (*bchk.lCovariance)(1, 0)
-                            / ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)))
+          * bcheck.FastArcTan(2 * (*bcheck.lCovariance)(1, 0)
+                            / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
-  sincosCache scResult = bchk.FastSinCos(theta);
+  sincosCache scResult = bcheck.FastSinCos(theta);
   ActsMatrixD<2, 2> rotMatrix;
   rotMatrix << scResult.cosC, scResult.sinC, -scResult.sinC, scResult.cosC;
   ActsMatrixD<2, 2> normal;
@@ -226,12 +226,12 @@ TriangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   std::vector<Vector2D> axis = {normal * (elementP.at(1) - elementP.at(0)),
                                 normal * (elementP.at(2) - elementP.at(1)),
                                 normal * (elementP.at(2) - elementP.at(0))};
-  bchk.ComputeKDOP(elementP, axis, elementKDOP);
+  bcheck.ComputeKDOP(elementP, axis, elementKDOP);
   // compute KDOP for error ellipse
   std::vector<KDOP> errelipseKDOP(3);
-  bchk.ComputeKDOP(bchk.EllipseToPoly(3), axis, errelipseKDOP);
+  bcheck.ComputeKDOP(bcheck.EllipseToPoly(3), axis, errelipseKDOP);
   // check if KDOPs overlap and return result
-  return bchk.TestKDOPKDOP(elementKDOP, errelipseKDOP);
+  return bcheck.TestKDOPKDOP(elementKDOP, errelipseKDOP);
 }
 
 inline bool

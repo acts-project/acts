@@ -95,7 +95,7 @@ Acts::Surface::operator==(const Surface& sf) const
 
 bool
 Acts::Surface::isOnSurface(const Acts::Vector3D& gpos,
-                           const BoundaryCheck&  bchk) const
+                           const BoundaryCheck&  bcheck) const
 {
   // create the local position
   Acts::Vector2D lpos;
@@ -103,9 +103,9 @@ Acts::Surface::isOnSurface(const Acts::Vector3D& gpos,
   bool g2L = globalToLocal(gpos, Acts::Vector3D::UnitX(), lpos);
   if (g2L) {
     // no boundary check, then return true
-    if (!bchk) return true;
+    if (!bcheck) return true;
     // return what ever the bounds tell you
-    return bounds().inside(lpos, bchk);
+    return bounds().inside(lpos, bcheck);
   }
   // did not succeed
   return false;

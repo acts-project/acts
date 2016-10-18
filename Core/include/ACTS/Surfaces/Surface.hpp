@@ -211,32 +211,32 @@ public:
   /// If that check fails, it calls the geometrical check isOnSurface
   ///
   /// @tparam parameters TrackParameters to be checked
-  /// @param bchk BoundaryCheck directive for this onSurface check
+  /// @param bcheck BoundaryCheck directive for this onSurface check
   ///
   /// @return boolean indication if operation was successful
   template <class T>
   bool
   onSurface(const T&             parameters,
-            const BoundaryCheck& bchk = BoundaryCheck(true)) const;
+            const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
 
   /// The insideBounds method for local positions
   ///
   /// @param lpos local position to check
-  /// @param bchk  BoundaryCheck directive for this onSurface check
+  /// @param bcheck  BoundaryCheck directive for this onSurface check
   ///
   /// @return boolean indication if operation was successful
   virtual bool
-  insideBounds(const Vector2D& lpos, const BoundaryCheck& bchk = true) const;
+  insideBounds(const Vector2D& lpos, const BoundaryCheck& bcheck = true) const;
 
   /// The geometric onSurface method
   /// Geometrical check whether position is on Surface
   ///
   /// @param gpos global position to be evaludated
-  /// @param bchk BoundaryCheck directive for this onSurface check
+  /// @param bcheck BoundaryCheck directive for this onSurface check
   ///
   /// @return boolean indication if operation was successful
   virtual bool
-  isOnSurface(const Vector3D& gpos, const BoundaryCheck& bchk = true) const;
+  isOnSurface(const Vector3D& gpos, const BoundaryCheck& bcheck = true) const;
 
   /// Local to global transformation
   /// Generalized local to global transformation for the surface types. Since
@@ -300,17 +300,17 @@ public:
   /// @param pars TrackParameters to start from
   /// @param forceDir boolean indication whether to force the direction given by
   /// the TrackParameters to hold
-  /// @param bchk boundary check directive for this operation
+  /// @param bcheck boundary check directive for this operation
   ///
   /// @return Intersection class
   template <class T>
   Intersection
   intersectionEstimate(const T&             pars,
                        bool                 forceDir = false,
-                       const BoundaryCheck& bchk     = false) const
+                       const BoundaryCheck& bcheck     = false) const
   {
     return intersectionEstimate(
-        pars.position(), pars.momentum().unit(), forceDir, bchk);
+        pars.position(), pars.momentum().unit(), forceDir, bcheck);
   }
 
   /// Straight line intersection schema from parameters
@@ -322,14 +322,14 @@ public:
   /// @param gdir global 3D direction representation
   /// @param forceDir boolean indication whether to force the direction given by
   /// the TrackParameters to hold
-  /// @param bchk boundary check directive for this operation
+  /// @param bcheck boundary check directive for this operation
   ///
   /// @return Intersection class
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      gdir,
                        bool                 forceDir = false,
-                       const BoundaryCheck& bchk = false) const = 0;
+                       const BoundaryCheck& bcheck = false) const = 0;
 
   /// Returns 'true' if this surface is 'free'
   /// i.e. it does not belong to a detector element, a layer or a tracking
@@ -412,9 +412,9 @@ Surface::onSurface(const T& pars, const BoundaryCheck& bcheck) const
 }
 
 inline bool
-Surface::insideBounds(const Vector2D& locpos, const BoundaryCheck& bchk) const
+Surface::insideBounds(const Vector2D& locpos, const BoundaryCheck& bcheck) const
 {
-  return bounds().inside(locpos, bchk);
+  return bounds().inside(locpos, bcheck);
 }
 
 inline const DetectorElementBase*

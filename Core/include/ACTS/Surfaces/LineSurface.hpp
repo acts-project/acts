@@ -41,7 +41,7 @@ public:
   /// @param htrans is the transform that positions the surface in the global
   /// frame
   /// @param radius is the straw radius
-  /// @param halex is the half length in z
+  /// @param halez is the half length in z
   LineSurface(std::shared_ptr<Transform3D> htrans, double radius, double halez);
 
   /// Constructor from Transform3D and a shared bounds object
@@ -154,7 +154,7 @@ public:
   /// \image html SignOfDriftCircleD0.gif
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param gmom global 3D momentum representation (optionally ignored)
+  /// @param mom global 3D momentum representation (optionally ignored)
   /// @param lpos local 2D position to be filled (given by reference for method
   /// symmetry)
   ///
@@ -177,9 +177,9 @@ public:
   /// @param gpos is the global position as a starting point
   /// @param dir is the global direction at the starting point
   /// @param forceDir is a boolean forcing a solution along direction
-  /// @param bchk is the boundary check
+  /// @param bcheck is the boundary check
   ///
-  ///   b>mathematical motivation:</b>
+  ///   <b>mathematical motivation:</b>
   ///   Given two lines in parameteric form:<br>
   ///   - @f$ \vec l_{a}(\lambda) = \vec m_a + \lambda \cdot \vec e_{a} @f$ <br>
   ///   - @f$ \vec l_{b}(\mu) = \vec m_b + \mu \cdot \vec e_{b} @f$ <br>
@@ -211,7 +211,7 @@ public:
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir,
-                       const BoundaryCheck& bchk = true) const override;
+                       const BoundaryCheck& bcheck = true) const override;
 
   /// the pathCorrection for derived classes with thickness
   /// is by definition 1 for LineSurfaces
@@ -231,12 +231,12 @@ public:
   /// as it saves the time of sign determination.
   ///
   /// @param gpos is the global position to be checked
-  /// @param bchk is the boundary check directive
+  /// @param bcheck is the boundary check directive
   ///
   /// @return bollean that indicates if the position is on surface
   virtual bool
   isOnSurface(const Vector3D&      gpos,
-              const BoundaryCheck& bchk = true) const override;
+              const BoundaryCheck& bcheck = true) const override;
 
   /// This method returns the bounds of the Surface by reference */
   virtual const SurfaceBounds&
@@ -257,7 +257,7 @@ private:
   ///
   /// @param pos is the global position
   /// @param mom is the momentum
-  /// @param is the local position to be filled
+  /// @param lpos is the local position to be filled
   bool
   globalToLocalPlain(const Vector3D& pos,
                      const Vector3D& mom,

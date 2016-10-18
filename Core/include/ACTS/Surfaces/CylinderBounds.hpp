@@ -99,21 +99,21 @@ public:
   /// the bounds  Inside can be called without/with tolerances.
   ///
   /// @param lpos Local position (assumed to be in right surface frame)
-  /// @param bchk boundary check directive
+  /// @param bcheck boundary check directive
   ///
   /// @return boolean indicator for the success of this operation
   bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const override;
 
   /// Specialized method for CylinderBounds that checks if a global position
   /// is within the the cylinder cover
   ///
   /// @param pos is the position in the cylinder frame
-  /// @param bchk is the boundary check directive
+  /// @param bcheck is the boundary check directive
   ///
   /// return boolean indicator for operation success
   bool
-  inside3D(const Vector3D& pos, const BoundaryCheck& bchk = true) const;
+  inside3D(const Vector3D& pos, const BoundaryCheck& bcheck = true) const;
 
   /// Inside method for the second local parameter
   ///
@@ -203,34 +203,34 @@ CylinderBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 }
 
 inline bool
-CylinderBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
+CylinderBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
-  if (bchk.bcType == 0 || bchk.nSigmas == 0
+  if (bcheck.bcType == 0 || bcheck.nSigmas == 0
       || m_valueStore.at(CylinderBounds::bv_halfPhiSector) != M_PI)
-    return CylinderBounds::inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
+    return CylinderBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 
-  float theta = ((*bchk.lCovariance)(1, 0) != 0
-                 && ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)) != 0)
+  float theta = ((*bcheck.lCovariance)(1, 0) != 0
+                 && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
       ? .5
-          * bchk.FastArcTan(2 * (*bchk.lCovariance)(1, 0)
-                            / ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)))
+          * bcheck.FastArcTan(2 * (*bcheck.lCovariance)(1, 0)
+                            / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
-  sincosCache scResult = bchk.FastSinCos(theta);
-  double      dphi     = scResult.sinC * scResult.sinC * (*bchk.lCovariance)(0, 0);
-  double      dz       = scResult.cosC * scResult.cosC * (*bchk.lCovariance)(0, 1);
+  sincosCache scResult = bcheck.FastSinCos(theta);
+  double      dphi     = scResult.sinC * scResult.sinC * (*bcheck.lCovariance)(0, 0);
+  double      dz       = scResult.cosC * scResult.cosC * (*bcheck.lCovariance)(0, 1);
   double      max_ell  = dphi > dz ? dphi : dz;
-  double      limit    = bchk.nSigmas * sqrt(max_ell);
+  double      limit    = bcheck.nSigmas * sqrt(max_ell);
   return insideLocZ(lpos[Acts::eLOC_Z], limit);
 }
 
 inline bool
-CylinderBounds::inside3D(const Vector3D& glopo, const BoundaryCheck& bchk) const
+CylinderBounds::inside3D(const Vector3D& glopo, const BoundaryCheck& bcheck) const
 {
   return inside(glopo.perp(),
                 glopo.phi(),
                 glopo.z(),
-                bchk.toleranceLoc0,
-                bchk.toleranceLoc0);
+                bcheck.toleranceLoc0,
+                bcheck.toleranceLoc0);
 }
 
 //!< @todo integrate tol0

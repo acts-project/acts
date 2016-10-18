@@ -72,9 +72,9 @@ Acts::Layer::~Layer()
 
 bool
 Acts::Layer::isOnLayer(const Acts::Vector3D& gp,
-                       const BoundaryCheck&  bchk) const
+                       const BoundaryCheck&  bcheck) const
 {
-  return (surfaceRepresentation()).isOnSurface(gp, bchk);
+  return (surfaceRepresentation()).isOnSurface(gp, bcheck);
 }
 
 const Acts::SurfaceIntersection

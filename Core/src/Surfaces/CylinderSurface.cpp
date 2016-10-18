@@ -155,18 +155,18 @@ Acts::CylinderSurface::globalToLocal(const Vector3D& gpos,
 
 bool
 Acts::CylinderSurface::isOnSurface(const Acts::Vector3D& gpos,
-                                   const BoundaryCheck&  bchk) const
+                                   const BoundaryCheck&  bcheck) const
 {
   Acts::Vector3D loc3Dframe
       = Acts::Surface::m_transform ? (transform().inverse()) * gpos : gpos;
-  return (bchk ? bounds().inside3D(loc3Dframe, bchk) : true);
+  return (bcheck ? bounds().inside3D(loc3Dframe, bcheck) : true);
 }
 
 Acts::Intersection
 Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
                                             const Acts::Vector3D& dir,
                                             bool                  forceDir,
-                                            const BoundaryCheck&  bchk) const
+                                            const BoundaryCheck&  bcheck) const
 {
   bool needsTransform = (m_transform || m_associatedDetElement) ? true : false;
   // create the hep points
@@ -242,7 +242,7 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
     }
   }
   // the solution is still in the local 3D frame, direct check
-  isValid = bchk ? (isValid && bounds().inside3D(solution, bchk)) : isValid;
+  isValid = bcheck ? (isValid && bounds().inside3D(solution, bcheck)) : isValid;
 
   // now return
   return needsTransform ? Intersection(transform() * solution, path, isValid)

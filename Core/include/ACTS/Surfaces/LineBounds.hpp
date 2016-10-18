@@ -66,11 +66,11 @@ public:
   /// the bounds  Inside can be called without/with tolerances.
   ///
   /// @param lpos Local position (assumed to be in right surface frame)
-  /// @param bchk boundary check directive
+  /// @param bcheck boundary check directive
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const override;
 
   /// Inside check for the bounds object with tolerance
   /// checks for first coordinate only.
@@ -136,7 +136,7 @@ private:
   /// private method for inside check
   ///
   /// @param lpos is the local position to check for the distance
-  /// @param r is the radius to be checked
+  /// @param tol0 is the tolerance on the radius
   /// @param tol1 is the tolerance on z
   ///
   /// @return is a boolean indicating the operation success
@@ -151,25 +151,25 @@ LineBounds::clone() const
 }
 
 inline bool
-LineBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
+LineBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
   // fast exit - this is a public interface method
   if (!m_valueStore.size()) return true;
   // check with tolerance
-  if (bchk.bcType == 0 || bchk.nSigmas == 0)
-    return LineBounds::inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
+  if (bcheck.bcType == 0 || bcheck.nSigmas == 0)
+    return LineBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
   // ellipsoid check
-  float theta = ((*bchk.lCovariance)(1, 0) != 0
-                 && ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)) != 0)
+  float theta = ((*bcheck.lCovariance)(1, 0) != 0
+                 && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
       ? .5
-          * bchk.FastArcTan(2 * (*bchk.lCovariance)(1, 0)
-                            / ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)))
+          * bcheck.FastArcTan(2 * (*bcheck.lCovariance)(1, 0)
+                            / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
-  sincosCache scResult = bchk.FastSinCos(theta);
-  double      dphi     = scResult.sinC * scResult.sinC * (*bchk.lCovariance)(0, 0);
-  double      dz       = scResult.cosC * scResult.cosC * (*bchk.lCovariance)(0, 1);
+  sincosCache scResult = bcheck.FastSinCos(theta);
+  double      dphi     = scResult.sinC * scResult.sinC * (*bcheck.lCovariance)(0, 0);
+  double      dz       = scResult.cosC * scResult.cosC * (*bcheck.lCovariance)(0, 1);
   double      max_ell  = dphi > dz ? dphi : dz;
-  double      limit    = bchk.nSigmas * sqrt(max_ell);
+  double      limit    = bcheck.nSigmas * sqrt(max_ell);
   return insideLocZ(lpos[Acts::eLOC_Z], limit);
 }
 

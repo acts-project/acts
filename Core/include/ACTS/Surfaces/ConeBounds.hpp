@@ -105,11 +105,11 @@ public:
   /// inside method for local position
   ///
   /// @param lpos is the local position to be checked
-  /// @param bchk is the boundary check directive
+  /// @param bcheck is the boundary check directive
   ///
   /// @return is a boolean indicating if the position is inside
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bchk = true) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck = true) const override;
 
   /// Inside method for the first local parameter
   ///
@@ -241,9 +241,9 @@ ConeBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 }
 
 inline bool
-ConeBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
+ConeBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
-  return ConeBounds::inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
+  return ConeBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 }
 
 inline bool

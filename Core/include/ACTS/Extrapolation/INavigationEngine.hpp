@@ -47,7 +47,7 @@ public:
 
   /// Resolve the boundary situation - for neutral particles
   ///
-  /// @param ecCell is the neutral extrapolation cell
+  /// @param enCell is the neutral extrapolation cell
   /// @param dir is the additional direction prescription
   ///
   /// @return is a extrapolation code indication
@@ -59,7 +59,7 @@ public:
   ///
   /// @param ecCell is the charged extrapolation cell
   /// @param dir is the additional direction prescription
-  ///
+  /// @param noLoop is a loop protection                
   /// @todo check with sharka where this is used
   ///
   /// @return is a extrapolation code indication
@@ -72,7 +72,7 @@ public:
   ///
   /// @param ecCell is the charged extrapolation cell
   /// @param dir is the additional direction prescription
-  ///
+  /// @param noLoop is a loop protection                
   /// @todo check with sharka where this is used
   ///
   /// @return is a extrapolation code indication

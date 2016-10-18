@@ -166,7 +166,7 @@ public:
   /// returned)
   /// @tparam parameters are the templated parameters for searching
   /// @param pDir is an additional direction prescription
-  /// @param bchk is a boundary check directive
+  /// @param bcheck is a boundary check directive
   /// @param resolveMaterial is the prescription how to deal with material
   /// @param resolveSubSurfaces is the prescription on how to deal with
   /// sensitive surfaces
@@ -178,7 +178,7 @@ public:
                          const Layer*         eLayer,
                          const T&             parameters,
                          PropDirection        pDir            = alongMomentum,
-                         const BoundaryCheck& bchk            = true,
+                         const BoundaryCheck& bcheck            = true,
                          bool                 resolveMaterial = true,
                          bool                 resolveSubSurfaces = false) const;
 
@@ -559,7 +559,7 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
                                        const Layer*         eLayer,
                                        const T&             pars,
                                        PropDirection        pDir,
-                                       const BoundaryCheck& bchk,
+                                       const BoundaryCheck& bcheck,
                                        bool                 resolveMaterial,
                                        bool resolveSensitive) const
 {
@@ -595,7 +595,7 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
           const Surface& tSurface = tLayer->surfaceRepresentation();
           // intersect the layer @todo should probably be surface on approach
           Intersection lIntersection
-              = tSurface.intersectionEstimate(gp, dir, true, bchk);
+              = tSurface.intersectionEstimate(gp, dir, true, bcheck);
           // (a) if the current layer is NOT the start layer - intersection is
           // ok
           if (tLayer != sLayer && lIntersection.valid) {
@@ -634,7 +634,7 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
       // intersections
       Intersection lIntersection
           = layer->surfaceRepresentation().intersectionEstimate(
-              gp, dir, true, bchk);
+              gp, dir, true, bcheck);
       if (lIntersection.valid)
         lIntersections.push_back(
             LayerIntersection<T>(lIntersection,

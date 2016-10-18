@@ -107,11 +107,11 @@ Acts::PlaneSurface::globalToLocal(const Vector3D& gpos,
 
 bool
 Acts::PlaneSurface::isOnSurface(const Vector3D&      glopo,
-                                const BoundaryCheck& bchk) const
+                                const BoundaryCheck& bcheck) const
 {
   /// the chance that there is no transform is almost 0, let's apply it
   Vector3D loc3Dframe = (transform().inverse()) * glopo;
   if (fabs(loc3Dframe.z()) > s_onSurfaceTolerance) return false;
-  return (bchk ? bounds().inside(Vector2D(loc3Dframe.x(), loc3Dframe.y()), bchk)
+  return (bcheck ? bounds().inside(Vector2D(loc3Dframe.x(), loc3Dframe.y()), bcheck)
                : true);
 }

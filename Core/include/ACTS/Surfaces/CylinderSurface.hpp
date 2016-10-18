@@ -175,6 +175,7 @@ public:
   ///
   /// @param gpos is the global position to be checked
   /// @param bcheck is the boundary check object
+  ///
   /// @return is a boolean indicating if the position is on surface
   virtual bool
   isOnSurface(const Vector3D&      gpos,
@@ -186,7 +187,7 @@ public:
   /// @param gpos is the global position as a starting point
   /// @param dir is the global direction at the starting point
   /// @param forceDir is a boolean forcing a solution along direction
-  /// @param bchk is the boundary check
+  /// @param bcheck is the boundary check
   ///
   ///  <b>mathematical motivation:</b>
   ///
@@ -214,7 +215,7 @@ public:
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir = false,
-                       const BoundaryCheck& bchk     = false) const override;
+                       const BoundaryCheck& bcheck     = false) const override;
 
   /// Path correction due to incident of the track
   ///

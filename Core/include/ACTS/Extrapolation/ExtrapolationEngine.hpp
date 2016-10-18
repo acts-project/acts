@@ -86,27 +86,27 @@ public:
   ///
   /// @param ecCharged is the charged extrapolation cell that holds the cache
   /// @param sf is the (optional) destinaton surface
-  /// @param bchk is the boudnary check directive @todo shift to cell after
+  /// @param bcheck is the boudnary check directive @todo shift to cell after
   /// splitting
   ///
   /// @return extrapolation code to indicate outcome
   ExtrapolationCode
   extrapolate(ExCellCharged&       ecCharged,
               const Surface*       sf   = nullptr,
-              const BoundaryCheck& bchk = true) const final;
+              const BoundaryCheck& bcheck = true) const final;
 
   /// Neutral extrapolation - public interface
   ///
   /// @param ecNeutral is the neutral extrapolation cell that holds the cache
   /// @param sf is the (optional) destinaton surface
-  /// @param bchk is the boudnary check directive @todo shift to cell after
+  /// @param bcheck is the boudnary check directive @todo shift to cell after
   /// splitting
   ///
   /// @return extrapolation code to indicate outcome
   ExtrapolationCode
   extrapolate(ExCellNeutral&       ecNeutral,
               const Surface*       sf   = nullptr,
-              const BoundaryCheck& bchk = true) const final;
+              const BoundaryCheck& bcheck = true) const final;
 
   /// define for which geometry type this extrapolator is valid
   ///  - this is GLOBAL

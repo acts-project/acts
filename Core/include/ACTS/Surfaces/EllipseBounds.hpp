@@ -95,12 +95,12 @@ public:
   /// tol1 is given
   ///
   /// @param lpos Local position (assumed to be in right surface frame)
-  /// @param bchk boundary check directive
+  /// @param bcheck boundary check directive
 
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const override;
 
   /// Check for inside first local coordinate
   ///
@@ -211,9 +211,9 @@ EllipseBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 }
 
 inline bool
-EllipseBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
+EllipseBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
-  return EllipseBounds::inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
+  return EllipseBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 }
 
 inline bool

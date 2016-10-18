@@ -97,7 +97,7 @@ public:
   /// @tparam eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param dir is the additional direction prescription
-  /// @param bchk is the boudnary check directive @todo shift to cell after
+  /// @param bcheck is the boudnary check directive @todo shift to cell after
   /// splitting
   ///
   /// @return is a extrapolation code indication

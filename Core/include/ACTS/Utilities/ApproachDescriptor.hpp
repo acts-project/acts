@@ -54,14 +54,14 @@ public:
   ///
   /// @param pos is the position from start of the search
   /// @param dir is the direction
-  /// @param bchk is the boundary check directive
+  /// @param bcheck is the boundary check directive
   /// @param ice is a (future) compatibility estimator
   ///
   /// @return is a surface isntersection
   virtual const SurfaceIntersection
   approachSurface(const Vector3D&                pos,
                   const Vector3D&                dir,
-                  const BoundaryCheck&           bchk,
+                  const BoundaryCheck&           bcheck,
                   const ICompatibilityEstimator* ice = nullptr) const = 0;
 
   /// Tet to all the contained surfaces

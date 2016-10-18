@@ -110,7 +110,7 @@ public:
   /// with the negative @f$ y @f$ - axis of the local frame.
   ///
   /// @param lpos is the local position to be checked (carthesian local frame)
-  /// @param bchk is the boundary check directive
+  /// @param bcheck is the boundary check directive
   ///
   /// <br>
   /// The cases are:<br>
@@ -146,11 +146,11 @@ public:
   /// x_{min}) @f$
   ///
   /// @param lpos Local position (assumed to be in right surface frame)
-  /// @param bchk boundary check directive
+  /// @param bcheck boundary check directive
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const override;
 
   /// This method checks inside bounds in loc0
   /// @note loc0/loc1 correspond to the natural coordinates of the surface
@@ -282,17 +282,17 @@ TrapezoidBounds::beta() const
 }
 
 inline bool
-TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
+TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
-  if (bchk.bcType == 0)
-    return inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
+  if (bcheck.bcType == 0)
+    return inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 
   // a fast FALSE
   double fabsY   = fabs(lpos[Acts::eLOC_Y]);
-  double max_ell = (*bchk.lCovariance)(0, 0) > (*bchk.lCovariance)(1, 1)
-      ? (*bchk.lCovariance)(0, 0)
-      : (*bchk.lCovariance)(1, 1);
-  double limit = bchk.nSigmas * sqrt(max_ell);
+  double max_ell = (*bcheck.lCovariance)(0, 0) > (*bcheck.lCovariance)(1, 1)
+      ? (*bcheck.lCovariance)(0, 0)
+      : (*bcheck.lCovariance)(1, 1);
+  double limit = bcheck.nSigmas * sqrt(max_ell);
   if (fabsY > (m_valueStore.at(TrapezoidBounds::bv_halfY) + limit))
     return false;
   // a fast FALSE
@@ -300,10 +300,10 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   if (fabsX > (m_valueStore.at(TrapezoidBounds::bv_maxHalfX) + limit))
     return false;
   // a fast TRUE
-  double min_ell = (*bchk.lCovariance)(0, 0) < (*bchk.lCovariance)(1, 1)
-      ? (*bchk.lCovariance)(0, 0)
-      : (*bchk.lCovariance)(1, 1);
-  limit = bchk.nSigmas * sqrt(min_ell);
+  double min_ell = (*bcheck.lCovariance)(0, 0) < (*bcheck.lCovariance)(1, 1)
+      ? (*bcheck.lCovariance)(0, 0)
+      : (*bcheck.lCovariance)(1, 1);
+  limit = bcheck.nSigmas * sqrt(min_ell);
   if (fabsX < (m_valueStore.at(TrapezoidBounds::bv_minHalfX) + limit)
       && fabsY < (m_valueStore.at(TrapezoidBounds::bv_halfY) + limit))
     return true;
@@ -311,13 +311,13 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   // compute KDOP and axes for surface polygon
   std::vector<KDOP>     elementKDOP(3);
   std::vector<Vector2D> elementP(4);
-  float                 theta = ((*bchk.lCovariance)(1, 0) != 0
-                 && ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)) != 0)
+  float                 theta = ((*bcheck.lCovariance)(1, 0) != 0
+                 && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
       ? .5
-          * bchk.FastArcTan(2 * (*bchk.lCovariance)(1, 0)
-                            / ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)))
+          * bcheck.FastArcTan(2 * (*bcheck.lCovariance)(1, 0)
+                            / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
-  sincosCache scResult = bchk.FastSinCos(theta);
+  sincosCache scResult = bcheck.FastSinCos(theta);
   ActsMatrixD<2, 2> rotMatrix;
   rotMatrix << scResult.cosC, scResult.sinC, -scResult.sinC, scResult.cosC;
   ActsMatrixD<2, 2> normal;
@@ -331,13 +331,13 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   p << -m_valueStore.at(TrapezoidBounds::bv_minHalfX),
       -m_valueStore.at(TrapezoidBounds::bv_halfY);
   elementP.at(1) = (rotMatrix * (p - lpos));
-  scResult       = bchk.FastSinCos(m_beta);
+  scResult       = bcheck.FastSinCos(m_beta);
   p << m_valueStore.at(TrapezoidBounds::bv_minHalfX)
           + (2. * m_valueStore.at(TrapezoidBounds::bv_halfY))
               * (scResult.sinC / scResult.cosC),
       m_valueStore.at(TrapezoidBounds::bv_halfY);
   elementP.at(2) = (rotMatrix * (p - lpos));
-  scResult       = bchk.FastSinCos(m_alpha);
+  scResult       = bcheck.FastSinCos(m_alpha);
   p << -(m_valueStore.at(TrapezoidBounds::bv_minHalfX)
          + (2. * m_valueStore[TrapezoidBounds::bv_halfY])
              * (scResult.sinC / scResult.cosC)),
@@ -346,12 +346,12 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   std::vector<Vector2D> axis = {normal * (elementP.at(1) - elementP.at(0)),
                                 normal * (elementP.at(3) - elementP.at(1)),
                                 normal * (elementP.at(2) - elementP.at(0))};
-  bchk.ComputeKDOP(elementP, axis, elementKDOP);
+  bcheck.ComputeKDOP(elementP, axis, elementKDOP);
   // compute KDOP for error ellipse
   std::vector<KDOP> errelipseKDOP(3);
-  bchk.ComputeKDOP(bchk.EllipseToPoly(3), axis, errelipseKDOP);
+  bcheck.ComputeKDOP(bcheck.EllipseToPoly(3), axis, errelipseKDOP);
   // check if KDOPs overlap and return result
-  return bchk.TestKDOPKDOP(elementKDOP, errelipseKDOP);
+  return bcheck.TestKDOPKDOP(elementKDOP, errelipseKDOP);
 }
 
 inline bool

@@ -113,11 +113,11 @@ public:
   /// the bounds  Inside can be called without/with tolerances.
   ///
   /// @param lpos Local position (assumed to be in right surface frame)
-  /// @param bchk boundary check directive
+  /// @param bcheck boundary check directive
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const = 0;
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const = 0;
 
   /// Inside check for the bounds object with tolerance
   /// checks for first coordinate only.

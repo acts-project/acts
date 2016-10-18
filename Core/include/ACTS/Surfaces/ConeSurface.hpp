@@ -176,7 +176,7 @@ public:
   /// @param gpos is the start position for the intersection
   /// @param dir is the start direction for the intersection
   /// @param forceDir is the flag to force to go along the forward direction
-  /// @param bchk is the boundary check to be used in this directive
+  /// @param bcheck is the boundary check to be used in this directive
   ///              
   /// <b>mathematical motivation:</b>
   ///
@@ -215,7 +215,7 @@ public:
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir = false,
-                       const BoundaryCheck& bchk     = false) const override;
+                       const BoundaryCheck& bcheck     = false) const override;
 
   /// the pathCorrection for derived classes with thickness
   ///

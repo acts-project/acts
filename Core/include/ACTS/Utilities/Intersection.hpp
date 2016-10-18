@@ -34,7 +34,7 @@ struct Intersection
   /// @param svalid is a boolean indicating if intersection is valid
   /// @param dist is the distance to the surface, e.g. when outside bounds
   Intersection(const Vector3D& sinter,
-               double          slenght,
+               double          slength,
                bool            svalid,
                double          dist = 0.)
     : position(sinter), pathLength(slenght), distance(dist), valid(svalid)
@@ -101,9 +101,9 @@ public:
   /// Full intersection constructor
   ///
   /// @param sInter is the intersection struct
-  /// @param sObject is the intersected object
-  /// @param sReprensentation is the surface representation of the object
-  /// @param sResult is the type of result: neutral, charged TP e.g.
+  /// @tparam sObject is the intersected object
+  /// @tparam sRepresentation is the surface representation of the object
+  /// @tparam sResult is the type of result: neutral, charged TP e.g.
   /// @param dir is the direction
   ///
   /// @todo use unique_ptr for result !
