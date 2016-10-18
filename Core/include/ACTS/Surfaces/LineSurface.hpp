@@ -54,7 +54,7 @@ public:
               std::shared_ptr<const LineBounds> lbounds = nullptr);
 
   /// Constructor from DetectorElementBase and Element identifier
-  ///            
+  ///
   /// @param lbounds are teh bounds describing the straw dimensions, they must
   /// not be nullptr
   /// @param detelement for which this surface is (at least) one representation
@@ -64,7 +64,7 @@ public:
               const Identifier&                 identifier = Identifier());
 
   /// Copy constructor
-  ///            
+  ///
   /// @param slsf is teh source surface for copying
   LineSurface(const LineSurface& slsf);
 
@@ -105,7 +105,8 @@ public:
   /// for StraightLine and Perigee Surface
   ///  - the default implementation is the the RotationMatrix3D of the transform
   ///
-  /// @param gpos is the global position where the measurement frame is constructed
+  /// @param gpos is the global position where the measurement frame is
+  /// constructed
   /// @param mom is the momentum used for the measurement frame construction
   ///
   /// @return is a rotation matrix that indicates the measurement frame
@@ -113,8 +114,9 @@ public:
   measurementFrame(const Vector3D& gpos, const Vector3D& mom) const override;
 
   /// Local to global transformation
-  /// for line surfaces the momentum is used in order to interpret the drift radius
-  /// 
+  /// for line surfaces the momentum is used in order to interpret the drift
+  /// radius
+  ///
   /// @param lpos is the local position to be transformed
   /// @param mom is the global momentum (used to sign the closest approach)
   /// @param gpos is the global position shich is filled
@@ -155,7 +157,7 @@ public:
   /// @param gmom global 3D momentum representation (optionally ignored)
   /// @param lpos local 2D position to be filled (given by reference for method
   /// symmetry)
-  ///              
+  ///
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
   virtual bool
@@ -174,7 +176,7 @@ public:
   ///
   /// @param gpos is the global position as a starting point
   /// @param dir is the global direction at the starting point
-  /// @param forceDir is a boolean forcing a solution along direction 
+  /// @param forceDir is a boolean forcing a solution along direction
   /// @param bchk is the boundary check
   ///
   ///   b>mathematical motivation:</b>
@@ -215,7 +217,7 @@ public:
   /// is by definition 1 for LineSurfaces
   ///
   /// input parameters are ignored
-  ///                                          
+  ///
   /// @note there's no material associated to the line surface
   virtual double
   pathCorrection(const Vector3D&, const Vector3D&) const override
@@ -224,8 +226,8 @@ public:
   }
 
   /// This method checks if the provided GlobalPosition is inside the assigned
-  /// straw radius, but no check is done whether the GlobalPosition is 
-  /// inside bounds or not. It overwrites isOnSurface from Base Class 
+  /// straw radius, but no check is done whether the GlobalPosition is
+  /// inside bounds or not. It overwrites isOnSurface from Base Class
   /// as it saves the time of sign determination.
   ///
   /// @param gpos is the global position to be checked
@@ -252,7 +254,7 @@ protected:
 
 private:
   /// helper function to apply the globalToLocal with out transform
-  /// 
+  ///
   /// @param pos is the global position
   /// @param mom is the momentum
   /// @param is the local position to be filled

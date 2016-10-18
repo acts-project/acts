@@ -40,7 +40,6 @@ class IExtrapolationEngine
 public:
   /// Virtual destructor
   virtual ~IExtrapolationEngine() {}
-  
   /// Main extrapolation method, templated to chared/neutral
   ///
   /// @tparam eCell ist he extrapolaiton cell
@@ -56,7 +55,7 @@ public:
               const BoundaryCheck& bcheck = true) const = 0;
 
   /// Main extrapolation method, templated to chared/neutral
-  ///            
+  ///
   /// @tparam eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param dir is the additional direction prescription

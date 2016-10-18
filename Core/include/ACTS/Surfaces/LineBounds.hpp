@@ -41,7 +41,6 @@ public:
   ///
   /// @param libo are the source bounds
   LineBounds(const LineBounds& libo) : SurfaceBounds(libo) {}
-  
   /// Destructor
   virtual ~LineBounds();
 

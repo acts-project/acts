@@ -87,20 +87,20 @@ public:
   clone(std::string name, Transform3D& shift) const;
 
   /// Returns a layer representation
-  /// 
+  ///
   /// @return pointer to a representation as a layer
   const Layer*
   layerRepresentation() const;
 
   /// Returns (multi)layer representation
-  /// 
+  ///
   /// @return vector to representations as layers
   const LayerVector
   multilayerRepresentation() const;
 
   /// Sign the volume - the geometry builder has to do that
-  /// 
-  /// @param signat is the volume signature 
+  ///
+  /// @param signat is the volume signature
   /// @param geotype is the volume navigation type
   void
   sign(GeometrySignature signat, GeometryType geotype) const;
@@ -117,13 +117,13 @@ public:
 
   /// Set the simplified calculable components
   /// @todo check with Sharka
-  /// 
+  ///
   /// @param sonsts are the consituents to be saved
   void
   saveConstituents(std::vector<std::pair<const Volume*, float>>* consts) const;
 
   /// Get the simplified calculable components
-  /// 
+  ///
   /// @return the consituents
   std::vector<std::pair<const Acts::Volume*, float>>*
   constituents() const;

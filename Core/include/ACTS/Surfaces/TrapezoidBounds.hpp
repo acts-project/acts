@@ -61,7 +61,6 @@ public:
   ///
   /// @param trabo are the source bounds for assignment
   TrapezoidBounds(const TrapezoidBounds& trabo) : PlanarBounds(trabo) {}
-  
   /// Destructor
   virtual ~TrapezoidBounds();
 
@@ -144,7 +143,7 @@ public:
   /// @f$
   /// <br>
   /// and   @f$  \delta_{I} = \delta_{II} = - \frac{1}{2}\kappa_{I}(x_{max} +
-  /// x_{min}) @f$  
+  /// x_{min}) @f$
   ///
   /// @param lpos Local position (assumed to be in right surface frame)
   /// @param bchk boundary check directive
@@ -217,7 +216,7 @@ private:
   bool
   insideFull(const Vector2D& lpos, double tol0 = 0., double tol1 = 0.) const;
 
-  /// private inside() method for the triangular exclude 
+  /// private inside() method for the triangular exclude
   /// area for an arbitrary trapezoid
   ///
   /// @param lpos Local position (assumed to be in right surface frame)
@@ -228,7 +227,7 @@ private:
   bool
   insideExclude(const Vector2D& lpos, double tol0 = 0., double tol1 = 0.) const;
 
-  /// private isAbove() method for checking whether a point 
+  /// private isAbove() method for checking whether a point
   /// lies above or under a straight line
   ///
   /// @param lpos Local position (assumed to be in right surface frame)

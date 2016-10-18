@@ -46,18 +46,19 @@ class LayerArrayCreator : public ILayerArrayCreator
 {
 public:
   /// Constructor
-  /// 
+  ///
   /// @param logger logging instance
   LayerArrayCreator(std::unique_ptr<Logger> logger
                     = getDefaultLogger("LayerArrayCreator", Logging::INFO))
     : m_logger(std::move(logger))
-  {}
+  {
+  }
 
   /// Destructor
   virtual ~LayerArrayCreator() = default;
 
   /// LayerArrayCreator interface method
-  /// 
+  ///
   /// @param layers are the layers to be moved into an array
   /// @param min is the minimum value for binning
   /// @param max is the maximum value for binning

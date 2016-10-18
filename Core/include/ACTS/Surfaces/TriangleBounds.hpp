@@ -52,7 +52,6 @@ public:
   ///
   /// @param tribo are the source bounds for assignment
   TriangleBounds(const TriangleBounds& tribo) : PlanarBounds(tribo) {}
-  
   /// Destructor
   virtual ~TriangleBounds();
 
@@ -95,7 +94,7 @@ public:
 
   /// This method checks if the provided local coordinate 2 is inside the
   /// surface bounds
-  ///  
+  ///
   /// @param lpos local position in 2D local carthesian frame
   /// @param tol1 is the absolute tolerance on the local first coordinate
   ///

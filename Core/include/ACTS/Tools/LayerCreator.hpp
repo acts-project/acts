@@ -82,7 +82,7 @@ public:
                 size_t                             binsZ) const override;
 
   /// ILayerCreator interface method - returning a cylindrical layer
-  ///              
+  ///
   /// @param surfaces is the vector of sensitive surfaces represented by this
   /// layer
   /// @param envelopeMinR is the additional envelope applied in R at Rmin
@@ -101,7 +101,7 @@ public:
             size_t                             binsPhi) const override;
 
   /// ILayerCreator interface method - returning a cylindrical layer
-  ///          
+  ///
   /// @param surfaces is the vector of sensitive surfaces represented by this
   /// layer
   /// @param envelopeXY is the additional envelope applied in XY
@@ -135,11 +135,11 @@ private:
   /// @todo shift to vertices of surfaces
   ///
   /// @param sf is the surface to be examinated
-  /// @param minR minimal R extend 
-  /// @param maxR maximal R extend 
-  /// @param minPhi minimal phi extend 
+  /// @param minR minimal R extend
+  /// @param maxR maximal R extend
+  /// @param minPhi minimal phi extend
   /// @param maxPhi maximal phi extend
-  /// @param minZ minimal z extend 
+  /// @param minZ minimal z extend
   /// @param maxZ maximal z extend
   void
   moduleExtend(const Surface& sf,
@@ -151,11 +151,11 @@ private:
                double&        maxZ) const;
 
   /// Calculates the closest radial distance of a line
-  /// 
+  ///
   /// @param pos1 is the first position on the line
   /// @param pos2 is the second position on the line
   ///
-  /// @return is the closest distance                                                    
+  /// @return is the closest distance
   double
   radialDistance(const Vector3D& pos1, const Vector3D& pos2) const;
 

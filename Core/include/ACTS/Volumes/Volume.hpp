@@ -61,7 +61,7 @@ public:
   virtual Volume*
   clone() const;
 
-  //// Return methods for geometry transform 
+  //// Return methods for geometry transform
   const Transform3D&
   transform() const;
 
@@ -85,7 +85,7 @@ public:
   /// The binning position method
   /// - as default the center is given, but may be overloaded
   ///
-  /// @param bValue is the binning value schema 
+  /// @param bValue is the binning value schema
   ///
   /// @return vector 3D that can be used for the binning
   virtual const Vector3D

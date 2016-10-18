@@ -53,7 +53,8 @@ public:
   /// @param alpha is the opening angle of the cone
   /// @param symm is the boolean indicating if the cone is symmetric in +/- z
   /// @param halfphi is the half opening angle (default is pi)
-  /// @param avphi is the phi value around which the bounds are opened (default=0)
+  /// @param avphi is the phi value around which the bounds are opened
+  /// (default=0)
   ConeBounds(double alpha, bool symm, double halfphi = M_PI, double avphi = 0.);
 
   /// Constructor - open cone with alpha, minz and maxz, by
@@ -63,7 +64,8 @@ public:
   /// @param zmin cone expanding from minimal z
   /// @param zmax cone expanding to maximal z
   /// @param halfphi is the half opening angle (default is pi)
-  /// @param avphi is the phi value around which the bounds are opened (default=0)
+  /// @param avphi is the phi value around which the bounds are opened
+  /// (default=0)
   ConeBounds(double alpha,
              double zmin,
              double zmax,

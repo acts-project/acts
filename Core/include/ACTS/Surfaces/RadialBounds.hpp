@@ -65,7 +65,6 @@ public:
   ///
   /// @param rbounds is the source bounds for assignment
   RadialBounds(const RadialBounds& rbounds) : DiscBounds(rbounds) {}
-  
   /// Destructor
   virtual ~RadialBounds();
 
@@ -129,7 +128,7 @@ public:
   double
   rMax() const;
 
-  /// Return method for the central phi value 
+  /// Return method for the central phi value
   ///(i.e. phi value of x-axis of local 3D frame)
   double
   averagePhi() const;

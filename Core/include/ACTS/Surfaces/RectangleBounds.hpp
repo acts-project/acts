@@ -47,7 +47,6 @@ public:
   ///
   /// @param recbo are the source bounds
   RectangleBounds(const RectangleBounds& recbo) : PlanarBounds(recbo) {}
-  
   /// Destructor
   virtual ~RectangleBounds();
 

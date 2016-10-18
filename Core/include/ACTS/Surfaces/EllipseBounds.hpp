@@ -60,7 +60,7 @@ public:
                 double hphisec = M_PI);
 
   /// Copy constructor
-  ///              
+  ///
   /// @param ebo is the source bounds for the copy
   EllipseBounds(const EllipseBounds& ebo) : PlanarBounds(ebo) {}
   /// Destructor
@@ -68,7 +68,7 @@ public:
 
   /// Assignment operator
   ///
-  /// @param ebo is the source bounds for the copy  
+  /// @param ebo is the source bounds for the copy
   EllipseBounds&
   operator=(const EllipseBounds& ebo);
 
@@ -95,7 +95,7 @@ public:
   ///
   /// @param lpos Local position (assumed to be in right surface frame)
   /// @param bchk boundary check directive
-  
+
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
@@ -161,7 +161,7 @@ public:
 
 private:
   /// private helper function
-  /// 
+  ///
   /// @param lpos is the local position for checking
   /// @param tol0 is the absolute tolerance on the first parameter
   /// @param tol1 is the absolute tolerance on the second parameter

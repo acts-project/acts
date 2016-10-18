@@ -35,7 +35,6 @@ class INavigationEngine
 public:
   /// Virtual destructor
   virtual ~INavigationEngine() {}
-  
   /// Resolve the boundary situation - for charged particles
   ///
   /// @param ecCell is the charged extrapolation cell
@@ -50,7 +49,7 @@ public:
   ///
   /// @param ecCell is the neutral extrapolation cell
   /// @param dir is the additional direction prescription
-  /// 
+  ///
   /// @return is a extrapolation code indication
   virtual ExtrapolationCode
   resolveBoundary(ExCellNeutral& enCell,
@@ -62,7 +61,7 @@ public:
   /// @param dir is the additional direction prescription
   ///
   /// @todo check with sharka where this is used
-  ///                
+  ///
   /// @return is a extrapolation code indication
   virtual ExtrapolationCode
   resolvePosition(ExCellCharged& ecCell,
@@ -75,7 +74,7 @@ public:
   /// @param dir is the additional direction prescription
   ///
   /// @todo check with sharka where this is used
-  ///                
+  ///
   /// @return is a extrapolation code indication
   virtual ExtrapolationCode
   resolvePosition(ExCellNeutral& enCell,

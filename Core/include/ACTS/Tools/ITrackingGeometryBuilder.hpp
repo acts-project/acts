@@ -32,7 +32,6 @@ class TrackingGeometry;
 class ITrackingGeometryBuilder
 {
 public:
-  
   /// Virtual destructor
   virtual ~ITrackingGeometryBuilder() = default;
 

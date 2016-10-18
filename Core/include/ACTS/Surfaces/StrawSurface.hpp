@@ -34,14 +34,15 @@ public:
   StrawSurface() = delete;
 
   /// Constructor from Transform3D and bounds
-  /// 
+  ///
   /// @param htrans is the transform that positions the surface in the global
   /// frame
   /// @param radius is the straw radius
   /// @param halex is the half length in z
   StrawSurface(std::shared_ptr<Transform3D> htrans, double radius, double halez)
     : LineSurface(htrans, radius, halez)
-  {}
+  {
+  }
 
   /// Constructor from Transform3D and a shared bounds object
   ///
@@ -53,7 +54,7 @@ public:
                std::shared_ptr<const LineBounds> lbounds = nullptr);
 
   /// Constructor from DetectorElementBase and Element identifier
-  ///             
+  ///
   /// @param lbounds are teh bounds describing the straw dimensions, they must
   /// not be nullptr
   /// @param detelement for which this surface is (at least) one representation
@@ -66,7 +67,6 @@ public:
   ///
   /// @param slsf is the source surface for copying
   StrawSurface(const StrawSurface& slsf) : LineSurface(slsf) {}
-  
   /// Copy constructor with shift
   ///
   /// @param slsf is the source surface dor copying

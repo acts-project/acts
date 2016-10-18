@@ -53,13 +53,13 @@ class PlanarBounds;
 ///   - positiveFaceXY  [1] : Acts::DiscSurface with \f$ r_{inner}>0 \f$
 ///                           and \f$ \phi < \pi \f$,
 ///                           parallel to \f$ xy \f$ plane at positive \f$z\f$
-///   - tubeSectorOuterCover  [2] : Acts::CylinderSurface with 
+///   - tubeSectorOuterCover  [2] : Acts::CylinderSurface with
 ///                                 \f$ r = r_{outer}\f$
-///   - tubeSectorInnerCover  [3] : Acts::CylinderSurface with 
+///   - tubeSectorInnerCover  [3] : Acts::CylinderSurface with
 ///                                 \f$ r = r_{inner} \f$
 ///   - tubeSectorNegativePhi [4] : Rectangular Acts::PlaneSurface attached to
 ///                 [0] and [1] at negative \f$ \phi \f$
-///                      - tubeSectorNegativePhi [5] : 
+///                      - tubeSectorNegativePhi [5] :
 //                          Rectangular Acts::PlaneSurface attached to
 ///                 [0] and [1] at positive \f$ \phi \f$
 ///
@@ -105,7 +105,7 @@ public:
                        double halez);
 
   /// Copy Constructor
-  ///                     
+  ///
   /// @param cylbo is the source cylinder volume bounds for the copy
   CylinderVolumeBounds(const CylinderVolumeBounds& cylbo);
 

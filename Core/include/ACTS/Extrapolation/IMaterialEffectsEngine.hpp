@@ -37,9 +37,8 @@ class IMaterialEffectsEngine
 public:
   /// Virtual destructor
   virtual ~IMaterialEffectsEngine() {}
-  
   /// Public charged material effects interface
-  /// 
+  ///
   /// @param ecCharged is the charged extrapolaiton cell
   /// @param dir is the additional direction prescription
   /// @param matupstage is the update stage (pre/full/post)
@@ -51,7 +50,7 @@ public:
                  MaterialUpdateStage matupstage = fullUpdate) const = 0;
 
   /// Public neutral material effects interface
-  ///               
+  ///
   /// @param ecCharged is the neutral extrapolaiton cell
   /// @param dir is the additional direction prescription
   /// @param matupstage is the update stage (pre/full/post)

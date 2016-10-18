@@ -56,7 +56,7 @@ public:
   /// Constructor for Discs from Transform3D, \f$ r_{min}, r_{max}, hx_{min},
   /// hx_{max} \f$
   /// This is n this case you have DiscTrapezoidalBounds
-  ///            
+  ///
   /// @param minhalfx is the half length in x at minimal r
   /// @param minhalfx is the half length in x at maximal r
   /// @param rmin is the inner radius of the disc surface
@@ -72,7 +72,7 @@ public:
               double                       stereo = 0.);
 
   /// Constructor for Discs from Transform3D and shared DiscBounds
-  ///            
+  ///
   /// @param htrans is the transform that positions the disc in the global 3D
   /// frame
   /// @param dbounds are the disc bounds describing the surface coverage
@@ -81,7 +81,7 @@ public:
 
   /// Constructor from detector element and identifier
   /// @note the surface only acts as a proxy of the detector element
-  ///            
+  ///
   /// @param dbounds are the disc bounds associated to this surface, must not be
   /// nullptr
   /// @param detelement is the detector element that is represented by this
@@ -93,7 +93,7 @@ public:
               const Identifier&                 identifier = Identifier());
 
   /// Copy Constructor
-  ///            
+  ///
   /// @param dsf is the source surface for the copy
   DiscSurface(const DiscSurface& dsf);
 
@@ -129,7 +129,7 @@ public:
   ///
   /// @param lpos the local position where the normal is requested (ignored)
   ///
-  /// @return is a normal vector 
+  /// @return is a normal vector
   const Vector3D
   normal(const Vector2D& lpos = s_origin2D) const final;
 
@@ -147,7 +147,8 @@ public:
   bounds() const override;
 
   /// This method returns true if the GlobalPosition is on the Surface for both,
-  /// within or without check of whether the local position is inside boundaries or not
+  /// within or without check of whether the local position is inside boundaries
+  /// or not
   ///
   /// @param gpos is the global position to be checked
   /// @param bchk is the boundary check directive
@@ -165,7 +166,7 @@ public:
   /// @param gmom global 3D momentum representation (optionally ignored)
   /// @param gpos global 3D position to be filled (given by reference for method
   /// symmetry)
-  ///            
+  ///
   /// @note the momentum is ignored for Disc surfaces in this calculateion
   virtual void
   localToGlobal(const Vector2D& lpos,
@@ -174,13 +175,13 @@ public:
 
   /// Global to local transformation
   /// @note the momentum is ignored for Disc surfaces in this calculateion
-  ///              
+  ///
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param gmom global 3D momentum representation (optionally ignored)
   /// @param lpos local 2D position to be filled (given by reference for method
   /// symmetry)
-  ///              
+  ///
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
   virtual bool
@@ -190,7 +191,7 @@ public:
 
   /// Special method for DiscSurface : local<->local transformations polar <->
   /// cartesian
-  ///              
+  ///
   /// @param lpolar is a local position in polar coordinates
   ///
   /// @return values is local 2D position in carthesian coordinates  @todo check
@@ -238,7 +239,7 @@ public:
   /// @param gpos is the global position as a starting point
   /// @param mom is the global momentum at the starting point
   ///
-  /// @return is the correction factor due to incident    
+  /// @return is the correction factor due to incident
   double
   pathCorrection(const Vector3D& gpos, const Vector3D& mom) const override;
 
@@ -248,9 +249,9 @@ public:
   ///
   /// @param gpos is the global position as a starting point
   /// @param dir is the global direction at the starting point
-  /// @param forceDir is a boolean forcing a solution along direction 
+  /// @param forceDir is a boolean forcing a solution along direction
   /// @param bchk is the boundary check
-  /// 
+  ///
   ///  <b>mathematical motivation:</b>
   ///
   ///  the equation of the plane is given by: <br>

@@ -83,7 +83,7 @@ public:
 
   using IExtrapolationEngine::extrapolate;
   /// Charged extrapolation - public interface
-  /// 
+  ///
   /// @param ecCharged is the charged extrapolation cell that holds the cache
   /// @param sf is the (optional) destinaton surface
   /// @param bchk is the boudnary check directive @todo shift to cell after
@@ -110,13 +110,13 @@ public:
 
   /// define for which geometry type this extrapolator is valid
   ///  - this is GLOBAL
-  /// @return the Geometry type for navigation            
+  /// @return the Geometry type for navigation
   GeometryType
   geometryType() const final;
 
   /// Set configuration method
   ///
-  /// @param eeConfig is the configuration struct 
+  /// @param eeConfig is the configuration struct
   void
   setConfiguration(const Config& eeConfig);
 
@@ -126,7 +126,7 @@ public:
 
   /// Set logging instance
   ///
-  /// @param logger is the logging instance 
+  /// @param logger is the logging instance
   void
   setLogger(std::unique_ptr<Logger> logger);
 

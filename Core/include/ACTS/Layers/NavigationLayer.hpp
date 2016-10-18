@@ -97,7 +97,7 @@ public:
 protected:
   /// Private Constructor
   /// - this is called by the creat(args*) method
-  /// passed spacer layer if needed 
+  /// passed spacer layer if needed
   ///
   /// @param surfaceRepresentation is the surface of the layer
   /// @param thickness ithe layer thickness

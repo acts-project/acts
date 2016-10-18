@@ -186,7 +186,7 @@ public:
   ///
   /// @param gpos is the global position associated with that search
   ///
-  /// @return plain pointer to associated with the position   
+  /// @return plain pointer to associated with the position
   const TrackingVolume*
   trackingVolume(const Vector3D& gpos) const;
 
@@ -205,7 +205,7 @@ public:
   /// Return the dynamically created vector of detached sub volumes
   ///
   /// @param gpos  is the glboal position associated with that search
-  ///           
+  ///
   /// @return the list of associated detached tracking volumes, nullptr if it
   /// does not exist
   const DetachedVolumeVector*
@@ -261,7 +261,7 @@ public:
   ///
   /// @tparam pars is the type of track parameters
   ///
-  /// @return boolean indicator if the parameters are on boundary                      
+  /// @return boolean indicator if the parameters are on boundary
   template <class T>
   bool
   onVolumeBoundary(const T& pars) const;
@@ -269,7 +269,7 @@ public:
   /// Glue another tracking volume to this one
   ///  - if common face is set the glued volumes are sharing the boundary, down
   /// to the last navigation volume
-  /// 
+  ///
   /// @param bsfMine is the boundary face indicater where to glue
   /// @param heighbor is the TrackingVolume to be glued
   /// @param bsfNeighbor is the boudnary surface of the neighbor
@@ -282,7 +282,7 @@ public:
   ///  - if common face is set the glued volumes are sharing the boundary, down
   /// to the last navigation volume
   ///
-  /// 
+  ///
   /// @param bsfMine is the boundary face indicater where to glue
   /// @param heighbors are the TrackingVolumes to be glued
   /// @param bsfNeighbors are the boudnary surface of the neighbors
@@ -293,9 +293,9 @@ public:
 
   /// Provide a new BoundarySurface from the glueing
   ///
-  /// 
+  ///
   /// @param bsfMine is the boundary face indicater where to glue
-  /// @param bsSurface is the new boudnary surface                       
+  /// @param bsSurface is the new boudnary surface
   void
   updateBoundarySurface(
       BoundarySurfaceFace                                     bsfMine,
@@ -307,7 +307,7 @@ public:
   ///  - (faces YZ, ZY, radial faces)
   ///  - positiveFaceXY
   ///
-  /// @param gvd register a new GlueVolumeDescriptor    
+  /// @param gvd register a new GlueVolumeDescriptor
   /// @todo update to shared/unique ptr
   void
   registerGlueVolumeDescriptor(GlueVolumesDescriptor* gvd) const;
@@ -321,8 +321,8 @@ public:
   glueVolumesDescriptor() const;
 
   /// Sign the volume - the geometry builder has to do that
-  /// 
-  /// @param signat is the volume signature 
+  ///
+  /// @param signat is the volume signature
   /// @param geotype is the volume navigation type
   void
   sign(GeometrySignature signat, GeometryType geotype = Static) const;
@@ -390,7 +390,7 @@ protected:
   /// @param cVolumeVector is the confined arbitrary volume vector
   /// @param dVolumeVector is the confined arbeitrary detached volume vector
   /// @param volumeName is a string identifier
-      TrackingVolume(std::shared_ptr<Transform3D>      htrans,
+  TrackingVolume(std::shared_ptr<Transform3D>      htrans,
                  VolumeBoundsPtr                   volbounds,
                  std::shared_ptr<Material>         matprop,
                  std::unique_ptr<const LayerArray> cLayerArray  = nullptr,
@@ -419,7 +419,7 @@ private:
 
   /// method to synchronize the layers with potentially updated volume bounds:
   /// - adapts the layer dimensions to the new volumebounds + envelope
-  /// 
+  ///
   /// @param envelope is the clearance between volume boundary and layer
   void
   synchronizeLayers(double envelope = 1.) const;

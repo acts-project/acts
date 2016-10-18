@@ -38,15 +38,17 @@ struct Intersection
                bool            svalid,
                double          dist = 0.)
     : position(sinter), pathLength(slenght), distance(dist), valid(svalid)
-  {}
+  {
+  }
 
   Intersection()
     : position(Vector3D(0., 0., 0.)), pathLength(0.), distance(0.), valid(false)
-  {}
+  {
+  }
 
   /// Smaller operator for sorting
   ///
-  /// @param si is the intersection for testing    
+  /// @param si is the intersection for testing
   bool
   operator<(const Intersection& si) const
   {
@@ -65,7 +67,6 @@ public:
 
   /// Default constructor
   ObjectIntersection() : intersection(), object(nullptr), pDirection(0) {}
-  
   /// Object intersection
   ///
   /// @param sInter is the intersection
@@ -121,7 +122,7 @@ public:
 
   /// Smaller operator for ordering & sorting
   ///
-  /// @param fi is the full intersection to be tested 
+  /// @param fi is the full intersection to be tested
   bool
   operator<(const FullIntersection<T, R, S>& fi) const
   {

@@ -39,10 +39,8 @@ class ApproachDescriptor
 public:
   /// Default constructor
   ApproachDescriptor() {}
-  
   /// Virtual destructor
   virtual ~ApproachDescriptor() {}
-  
   /// Register Layer
   /// this gives the approach surfaces the link to the layer
   ///

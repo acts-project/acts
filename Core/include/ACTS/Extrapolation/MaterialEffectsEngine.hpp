@@ -80,7 +80,7 @@ public:
                  MaterialUpdateStage matupstage = fullUpdate) const final;
 
   /// Public neutral material effects interface
-  ///               
+  ///
   /// @param ecCharged is the neutral extrapolaiton cell
   /// @param dir is the additional direction prescription
   /// @param matupstage is the update stage (pre/full/post)
@@ -93,7 +93,7 @@ public:
 
   /// Set configuration method
   ///
-  /// @param meConfig is the configuraiton to be set 
+  /// @param meConfig is the configuraiton to be set
   void
   setConfiguration(const Config& meConfig);
 

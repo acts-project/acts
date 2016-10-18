@@ -50,7 +50,7 @@ public:
   virtual ~ITrackingVolumeBuilder() = default;
 
   /// ITrackingVolumeBuilder interface method
-  /// 
+  ///
   /// @param insideVolume is an (optional) volume to be wrapped
   /// @param outsideBounds is an (optional) outside confinement
   /// @param layerTriple is an (optional) triplet of layers

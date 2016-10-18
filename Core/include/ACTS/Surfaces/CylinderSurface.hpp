@@ -47,7 +47,7 @@ public:
                   double                       hlength);
 
   /// Constructor from Transform3D, radius halfphi, and halflenght
-  ///                
+  ///
   /// @param htrans transform to position the surface, can be nullptr
   /// @note if htrans == nullptr, the cylinder is positioned around (0.,0.,0.)
   /// @param radius is the radius of the cylinder
@@ -59,7 +59,7 @@ public:
                   double                       hlength);
 
   /// Constructor from Transform3D and CylinderBounds
-  ///                
+  ///
   /// @param htrans transform to position the surface, can be nullptr
   /// @note if htrans == nullptr, the cylinder is positioned around (0.,0.,0.)
   /// @param cbounds is a shared pointer to a cylindeer bounds object, must
@@ -68,7 +68,7 @@ public:
                   std::shared_ptr<const CylinderBounds> cbounds);
 
   /// Copy constructor
-  ///                
+  ///
   /// @param csf is the source cylinder for the copy
   CylinderSurface(const CylinderSurface& csf);
 
@@ -140,7 +140,7 @@ public:
   virtual const Vector3D
   normal(const Vector3D& gpos) const override;
 
-  /// Return method for the rotational symmetry axis 
+  /// Return method for the rotational symmetry axis
   /// @return  the z-Axis of transform
   virtual const Vector3D
   rotSymmetryAxis() const;
@@ -160,11 +160,11 @@ public:
                 Vector3D&       gpos) const override;
 
   /// Global to local transfomration
-  ///              
+  ///
   /// @param gpos is the global position to be transformed
   /// @param mom is the global momentum (ignored in this operation)
   /// @param lpos is hte local position to be filled
-  ///              
+  ///
   /// @return is a boolean indicating if the transformation succeeded
   virtual bool
   globalToLocal(const Vector3D& gpos,
@@ -172,23 +172,22 @@ public:
                 Vector2D&       lpos) const override;
 
   /// Check for position on surface
-  ///              
+  ///
   /// @param gpos is the global position to be checked
-  /// @param bchk is the boundary check object
-  ///              
+  /// @param bcheck is the boundary check object
   /// @return is a boolean indicating if the position is on surface
   virtual bool
   isOnSurface(const Vector3D&      gpos,
-              const BoundaryCheck& bchk = true) const override;
+              const BoundaryCheck& bcheck = true) const override;
 
   /// Fast straight line intersection schema - provides closest intersection
   ///  and (signed) path length
   ///
   /// @param gpos is the global position as a starting point
   /// @param dir is the global direction at the starting point
-  /// @param forceDir is a boolean forcing a solution along direction 
+  /// @param forceDir is a boolean forcing a solution along direction
   /// @param bchk is the boundary check
-  ///                       
+  ///
   ///  <b>mathematical motivation:</b>
   ///
   ///  The calculation will be done in the 3-dim frame of the cylinder,
@@ -218,11 +217,11 @@ public:
                        const BoundaryCheck& bchk     = false) const override;
 
   /// Path correction due to incident of the track
-  ///                     
+  ///
   /// @param gpos is the global position as a starting point
   /// @param mom is the global momentum at the starting point
-  ///                     
-  /// @return is the correction factor due to incident    
+  ///
+  /// @return is the correction factor due to incident
   virtual double
   pathCorrection(const Vector3D& gpos, const Vector3D& mom) const override;
 

@@ -78,5 +78,5 @@ namespace units {
     static const double conversion = 1. / (_c * _c * _GeV_per_J);
     return m * conversion;
   }
-}  // namespace units    
+}  // namespace units
 }  // namespace Acts

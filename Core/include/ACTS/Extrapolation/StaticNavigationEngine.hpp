@@ -112,7 +112,7 @@ public:
 
   /// Set configuration method
   ///
-  /// @param snConfig the configuration object to be set                  
+  /// @param snConfig the configuration object to be set
   void
   setConfiguration(const Config& snConfig);
 
@@ -142,7 +142,7 @@ private:
 
   /// Resolve the boundary situation
   ///
-  /// @param eCell the extrapolation 
+  /// @param eCell the extrapolation
   /// @param dir the propagation direction
   ///
   /// @return is a extrapolation code indication
@@ -153,9 +153,9 @@ private:
 
   /// Resolve position
   ///
-  /// @param eCell the extrapolation 
+  /// @param eCell the extrapolation
   /// @param dir the propagation direction
-  /// @param noLoop @todo check with sharka                 
+  /// @param noLoop @todo check with sharka
   ///
   /// @return is a extrapolation code indication
   template <class T>
@@ -166,10 +166,10 @@ private:
 
   /// Deal with the boundary Surface - called by resolveBoundary
   ///
-  /// @param eCell the extrapolation 
-  /// @paramn bSurfaceTV the boundary surface                 
+  /// @param eCell the extrapolation
+  /// @paramn bSurfaceTV the boundary surface
   /// @param dir the propagation direction
-  /// @param noLoop @todo check with sharka                 
+  /// @param noLoop @todo check with sharka
   ///
   /// @return is a extrapolation code indication
   template <class T>

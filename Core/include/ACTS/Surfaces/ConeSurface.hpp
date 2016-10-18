@@ -47,7 +47,7 @@ public:
               bool                         symmetric = false);
 
   /// Constructor form HepTransform and an opening angle
-  ///            
+  ///
   /// @param htrans is the transform that places the cone in the global frame
   /// @param alpha is the opening angle of the cone
   /// @param locZmin is the z range over which the cone spans
@@ -60,7 +60,7 @@ public:
               double                       halfPhi = M_PI);
 
   /// Constructor from HepTransform and ConeBounds
-  ///            
+  ///
   /// @param htrans is the transform that places the cone in the global frame
   /// @param cbounds is the boundary class, the bounds must exit
   ConeSurface(std::shared_ptr<Transform3D>      htrans,
@@ -111,8 +111,9 @@ public:
   /// Return the measurement frame - this is needed for alignment, in particular
   ///  for StraightLine and Perigee Surface
   ///  - the default implementation is the the RotationMatrix3D of the transform
-  /// 
-  /// @param gpos is the global position where the measurement frame is constructed
+  ///
+  /// @param gpos is the global position where the measurement frame is
+  /// constructed
   /// @param mom is the momentum used for the measurement frame construction
   ///
   /// @return matrix that indicates the measurement frame
@@ -158,11 +159,11 @@ public:
                 Vector3D&       gpos) const override;
 
   /// Global to local transfomration
-  ///              
+  ///
   /// @param gpos is the global position to be transformed
   /// @param mom is the global momentum (ignored in this operation)
   /// @param lpos is hte local position to be filled
-  ///              
+  ///
   /// @return is a boolean indicating if the transformation succeeded
   virtual bool
   globalToLocal(const Vector3D& gpos,
@@ -217,11 +218,11 @@ public:
                        const BoundaryCheck& bchk     = false) const override;
 
   /// the pathCorrection for derived classes with thickness
-  ///                     
+  ///
   /// @param gpos is the global potion at the correction point
   /// @param mom is the momentum at the correction point
   ///
-  /// @return is the path correction due to incident angle                     
+  /// @return is the path correction due to incident angle
   virtual double
   pathCorrection(const Vector3D& gpos, const Vector3D& mom) const override;
 
@@ -260,7 +261,7 @@ inline const Vector3D
 ConeSurface::normal(const Vector3D& gpos) const
 {
   // get it into the cylinder frame if needed
-  // @todo respect opening angle 
+  // @todo respect opening angle
   Vector3D pos3D = gpos;
   if (m_transform || m_associatedDetElement) {
     pos3D     = transform().inverse() * gpos;

@@ -54,7 +54,7 @@ public:
 
   /// Constructor with std::vector and a BinUtility
   /// - fills the internal data structur
-  /// 
+  ///
   /// @param tapvector is a vector of object and binning position
   /// @param bu is the unique bin utility for this binned array
   BinnedArrayXD(const std::vector<TAP>&     tapvector,
@@ -127,7 +127,6 @@ public:
 
   /// Destructor
   ~BinnedArrayXD() {}
-
   /// Returns the object in the array from a local position
   ///
   /// @todo check if we can change to triple return at once

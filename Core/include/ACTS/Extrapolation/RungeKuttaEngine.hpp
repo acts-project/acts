@@ -217,7 +217,7 @@ public:
             bool                     returnCurvilinear = true) const final;
 
   /// Main Neutral extrapolation method
-  ///          
+  ///
   /// @param ecCell is the neutral extrapolation cell
   /// @param sf is the destination surface
   /// @param dir is the additional direction prescription
@@ -241,7 +241,7 @@ public:
 
   /// Set configuration method
   ///
-  /// @param rkConfig the runge kutta configuration object to be set                     
+  /// @param rkConfig the runge kutta configuration object to be set
   void
   setConfiguration(const Config& rkConfig);
 
@@ -270,10 +270,10 @@ private:
   std::unique_ptr<Logger> m_logger;
 
   /// Templated RungeKutta propagation method - charged/neutral
-  /// 
+  ///
   /// @param eCell the extrapolation cell that holds the configuration
-  /// @param pCache the progation chache 
-  /// @tparam tParameters the parameters 
+  /// @param pCache the progation chache
+  /// @tparam tParameters the parameters
   /// @param sf the destination surace
   template <class T>
   bool
@@ -283,11 +283,11 @@ private:
                        const Surface&        sf) const;
 
   /// Internal RungeKutta propagation method for propation with jacobian
-  /// 
+  ///
   /// @param navigationStep the step parameter for screen output
-  /// @param pCache the progation chache 
+  /// @param pCache the progation chache
   /// @param surfaceType an integer to indicate which surface type is presen
-  /// @param sVector a double array holding propagation information                                                                 
+  /// @param sVector a double array holding propagation information
   bool
   propagateWithJacobian(int               navigationStep,
                         PropagationCache& pCache,
@@ -297,7 +297,7 @@ private:
   /// Propagation methods runge kutta step - returns the step length
   ///
   /// @param navigationStep the step parameter for screen output
-  /// @param pCache the progation chache 
+  /// @param pCache the progation chache
   double
   rungeKuttaStep(int               navigationStep,
                  PropagationCache& pCache,
@@ -307,7 +307,7 @@ private:
   /// Propagation methods runge kutta step - returns the step length
   ///
   /// @param navigationStep the step parameter for screen output
-  /// @param pCache the progation chache 
+  /// @param pCache the progation chache
   double
   rungeKuttaStepWithGradient(int               navigationStep,
                              PropagationCache& pCache,
@@ -317,13 +317,13 @@ private:
   /// Propagation methods straight line step
   ///
   /// @param navigationStep the step parameter for screen output
-  /// @param pCache the progation chache 
+  /// @param pCache the progation chache
   double
   straightLineStep(int navigationStep, PropagationCache& pCache, double) const;
 
   /// Step estimator with directions correction
   ///
-  /// @param pCache the progation chache 
+  /// @param pCache the progation chache
   double
   stepEstimatorWithCurvature(PropagationCache& pCache,
                              int,

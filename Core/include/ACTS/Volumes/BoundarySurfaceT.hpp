@@ -34,7 +34,8 @@ class Surface;
 /// @note inside/outside definitions are given by the normal vector of the
 /// surface
 ///
-/// @todo change to one schema with BinnedArray0D and along/opposite nominclature
+/// @todo change to one schema with BinnedArray0D and along/opposite
+/// nominclature
 
 template <class T>
 class BoundarySurfaceT

@@ -90,7 +90,7 @@ public:
   /// @note this method is a pure factory the volume is resposible
   /// for the memory management
   ///
-  /// @param transformPtr is the transfrom of the volume 
+  /// @param transformPtr is the transfrom of the volume
   const std::vector<const Surface*>
   decomposeToSurfaces(std::shared_ptr<Transform3D> transformPtr) const override;
 

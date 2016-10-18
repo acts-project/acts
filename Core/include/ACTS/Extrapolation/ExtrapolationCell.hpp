@@ -64,12 +64,9 @@ class ExtrapolationConfig
 {
 public:
   /// Constructor
-  /// 
+  ///
   /// @param eval is the vonfiguration value
-  ExtrapolationConfig(unsigned int evalue = 0) : value(evalue) 
-  {
-  }
-  
+  ExtrapolationConfig(unsigned int evalue = 0) : value(evalue) {}
   /// Copy Constructor
   ///
   /// @param eConfig is the source object for the copy
@@ -89,11 +86,11 @@ public:
   }
 
   /// Check the configuration mode
-  /// - this checks the bit corresponding to the configuration mode 
+  /// - this checks the bit corresponding to the configuration mode
   ///
   /// @param the mode that is to be checks
   ///
-  /// @return boolean indicator if the mode was set 
+  /// @return boolean indicator if the mode was set
   bool
   checkMode(ExtrapolationMode::eMode em) const
   {
@@ -121,21 +118,20 @@ public:
     SuccessMaterialLimit   = 5,  // successful : material limit reached
     Recovered              = 6,  // successful : recovered
     FailureDestination     = 7,  // failure    : could not reach destination
-    FailureLoop            = 8,  // failure    : loop or oscillation between volumes
-    FailureNavigation      = 9,  // failure    : general navigation failure
-    FailureUpdateKill      = 10, // failure    : updated track under threshold
-    FailureConfiguration   = 11, // failure    : general configuration failure
-    LeftKnownWorld         = 12  // successful ? failure ? if we just knew ...
+    FailureLoop       = 8,   // failure    : loop or oscillation between volumes
+    FailureNavigation = 9,   // failure    : general navigation failure
+    FailureUpdateKill = 10,  // failure    : updated track under threshold
+    FailureConfiguration = 11,  // failure    : general configuration failure
+    LeftKnownWorld       = 12   // successful ? failure ? if we just knew ...
   };
 
   /// the actual code
   eCode code;
 
   /// create a simple extrapolation code
-  /// 
+  ///
   /// @param c is the code enum
   ExtrapolationCode(eCode c) : code(c) {}
-
   /// Assigment operator
   ///
   /// @param ec is the source eCode for the assignment
@@ -180,7 +176,7 @@ public:
     return (code > InProgress && code < Recovered);
   }
 
-  /// Check return Sucess before destination 
+  /// Check return Sucess before destination
   /// @return boolean if the extrapolation is successfu
   bool
   isSuccessBeforeDestination() const
@@ -188,7 +184,7 @@ public:
     return (code > SuccessDestination && code < Recovered);
   }
 
-  /// Check return Sucess or Recovered 
+  /// Check return Sucess or Recovered
   /// @return boolean if the extrapolation is successful/recovered
   bool
   isSuccessOrRecovered() const
@@ -224,11 +220,11 @@ private:
 };
 
 ///  @class ExtrapolationStep
-/// 
+///
 /// templated class to record the different possible entities during
-/// extrapolation, the newly created objects are unique pointers and 
+/// extrapolation, the newly created objects are unique pointers and
 /// have to be checked out via std::move() by the client caller
-/// 
+///
 template <class T>
 class ExtrapolationStep
 {
@@ -256,7 +252,7 @@ public:
   float time;
 
   /// Constructor for an extrapolation step
-  /// 
+  ///
   /// @param pars are the parameters of the step
   /// @param sf the surface the step is associated to
   /// @param eConfig the extrapolation configuration
@@ -283,10 +279,10 @@ public:
 };
 
 ///  @class ExtrapolationCell
-/// 
+///
 ///  templated class as an input-output object of the extrapolation,
 ///  only public members, since it is a container class
-/// 
+///
 template <class T>
 class ExtrapolationCell
 {
@@ -426,7 +422,7 @@ public:
   }
 
   ///  Add a configuration mode
-  /// 
+  ///
   /// @param em is the extrapolation mode to be added
   void
   addConfigurationMode(ExtrapolationMode::eMode em)
@@ -436,7 +432,7 @@ public:
   }
 
   ///  Check a configuration mode
-  /// 
+  ///
   /// @param em is the extrapolation mode to be checked
   bool
   checkConfigurationMode(ExtrapolationMode::eMode em) const
@@ -457,7 +453,7 @@ public:
   void
   checkoutLastStep();
 
-  /// Fill or attach the parameters from a step 
+  /// Fill or attach the parameters from a step
   /// - if the surface of the step does not yet exists a new new step
   ///   is created
   /// - if the surface is already in the step vector, the new parameters
@@ -474,7 +470,7 @@ public:
   ///    - jacobians need to be cleared
   /// @param sf the end surface of the step
   /// @param pathLength is the path length of this step
-  /// @param tjac is the transport jacobian of the step     
+  /// @param tjac is the transport jacobian of the step
   void
   stepTransport(const Surface&                           sf,
                 double                                   pathLength = 0.,
@@ -485,27 +481,27 @@ public:
   ///   is created
   /// - if the surface is already in the step vector, the new parameters
   ///   are atached
-  /// - material is just a pointer copy 
+  /// - material is just a pointer copy
   ///
-  /// @param sfactor is the scale factor 
-  /// @param mprot is the material properties associated with the step                
+  /// @param sfactor is the scale factor
+  /// @param mprot is the material properties associated with the step
   void
   addMaterial(double sfactor, const MaterialProperties* mprop = nullptr);
 
-  ///  Fill the material 
+  ///  Fill the material
   /// - if the surface of the step does not yet exists a new new step
   ///   is created
   /// - if the surface is already in the step vector, the new parameters
   ///   are atached
-  /// - material is just a pointer copy 
+  /// - material is just a pointer copy
   ///
   /// @param step is the step length
-  /// @param mat is the material passed               
+  /// @param mat is the material passed
   void
   addMaterial(double step, const Material* mat = nullptr);
 
   /// fill or attach material, jacobian, step length
-  ///    - material is just a pointer copy 
+  ///    - material is just a pointer copy
   ///
   /// @param sf is the surface of the step
   /// @param lay is the layer associated to this step
@@ -570,8 +566,8 @@ public:
   void
   restartAtDestination();
 
-  /// Set ParticleType 
-  /// 
+  /// Set ParticleType
+  ///
   /// @param hypo is the particle type
   void
   setParticleType(const ParticleType& hypo)
@@ -579,7 +575,7 @@ public:
     particleType = hypo;
   }
 
-  /// Estimate the radial direction of the extrapolation cell 
+  /// Estimate the radial direction of the extrapolation cell
   void
   setRadialDirection()
   {

@@ -28,10 +28,8 @@ class InfiniteBounds : public SurfaceBounds
 public:
   /// Default Constructor
   InfiniteBounds() {}
-  
   /// Destructor
   ~InfiniteBounds() {}
-  
   /// Return SurfaceBounds type for persistency mainly
   virtual SurfaceBounds::BoundsType
   type() const final
@@ -62,9 +60,9 @@ public:
   }
 
   /// Method inside() returns true for loc 1
-  /// 
+  ///
   /// ignores input parameters
-  /// 
+  ///
   /// @return always true
   virtual bool
   insideLoc1(const Vector2D&, double tol1 = 0.) const final

@@ -53,7 +53,7 @@ public:
   Identifier();
 
   /// Constructor from value_type
-  /// 
+  ///
   /// @param value is the identifier value
   explicit Identifier(value_type value);
 
@@ -80,7 +80,7 @@ public:
   /// @param old is the assigment parameter
   Identifier&
   operator=(const Identifier& old);
-  
+
   /// @param value is the assigment parameter
   Identifier&
   operator=(value_type value);

@@ -221,7 +221,6 @@ public:
 
   /// Destructor
   ~BinningData() {}
-  
   /// Return the number of bins - including sub bins
   size_t
   bins() const
@@ -313,7 +312,7 @@ public:
   ///
   /// @param phi is phi value to be gauged
   ///
-  /// @return float the gauged phi 
+  /// @return float the gauged phi
   float
   gaugePhi(float phi) const
   {
@@ -380,7 +379,7 @@ public:
   }
 
   /// Generic search - forwards to correct function pointer
-  /// 
+  ///
   /// @param value is the searchvalue as float
   ///
   /// @return bin according tot this
@@ -395,7 +394,7 @@ public:
 
   ///  Generic search with sub structure
   /// - forwards to correct function pointer
-  /// 
+  ///
   /// @param value is the searchvalue as float
   ///
   /// @return bin according tot this
@@ -438,7 +437,7 @@ public:
   ///
   /// @param position is the start search position
   /// @param dir is the direction
-  /// 
+  ///
   /// @return next bin to try
   size_t
   next(const Vector3D& position, const Vector3D& dir) const

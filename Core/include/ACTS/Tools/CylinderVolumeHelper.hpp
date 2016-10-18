@@ -75,7 +75,6 @@ public:
   /// Destructor
   virtual ~CylinderVolumeHelper() = default;
 
-
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
   /// @param layers vector of static layers confined by the TrackingVolume
@@ -97,7 +96,7 @@ public:
                        std::shared_ptr<Transform3D> transform = nullptr,
                        const std::string& volumeName = "UndefinedVolume",
                        BinningType        btype      = arbitrary) const;
-                       
+
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
   /// @param layers vector of static layers confined by the TrackingVolume
@@ -119,7 +118,7 @@ public:
                        double                    loc2Max,
                        const std::string&        volumeName = "UndefinedVolume",
                        BinningType               btype      = arbitrary) const;
-                       
+
   /// Create a gap volume from dimensions and
   ///
   /// @param matprop dense material properties for this TrackingVolume
@@ -129,7 +128,7 @@ public:
   /// @param cylinder type of layers
   /// @param volumeName  volume name to be given
   ///
-  /// @return shared pointer to a new TrackingVolume                       
+  /// @return shared pointer to a new TrackingVolume
   TrackingVolumePtr
   createGapTrackingVolume(std::shared_ptr<Material> matprop,
                           double                    loc1Min,
@@ -140,7 +139,7 @@ public:
                           bool                      cylinder = true,
                           const std::string&        volumeName
                           = "UndefinedVolume") const;
-                          
+
   /// Create a gap volume from dimensions and
   ///
   /// @param matprop dense material properties for this TrackingVolume
@@ -163,17 +162,17 @@ public:
                           BinningType        btype      = arbitrary) const;
 
   /// Create a container volumes from sub volumes, input volumes are ordered in
-  /// R or Z by convention 
+  /// R or Z by convention
   ///
   /// @param volumes the volumes to be contained
   ///
   ///
-  /// @return shared pointer to a new TrackingVolume                          
+  /// @return shared pointer to a new TrackingVolume
   TrackingVolumePtr
   createContainerTrackingVolume(const TrackingVolumeVector& volumes) const;
 
   /// Set configuration method
-  /// 
+  ///
   /// @param cvbConfig is the configurtion struct assigned
   void
   setConfiguration(const Config& cvbConfig);
@@ -216,19 +215,19 @@ private:
   /// @param bValue the binning value in which the binning works
   /// @param bType is the type of binning: equidistant, arbitrary
   bool
-  estimateAndCheckDimension(const LayerVector&             layers,
-                            const CylinderVolumeBounds*&   cylBounds,
-                            std::shared_ptr<Transform3D>&  transform,
-                            double&                        rMinClean,
-                            double&                        rMaxClean,
-                            double&                        zMinClean,
-                            double&                        zMaxClean,
-                            BinningValue&                  bValue,
-                            BinningType                    bType = arbitrary) const;
+  estimateAndCheckDimension(const LayerVector&            layers,
+                            const CylinderVolumeBounds*&  cylBounds,
+                            std::shared_ptr<Transform3D>& transform,
+                            double&                       rMinClean,
+                            double&                       rMaxClean,
+                            double&                       zMinClean,
+                            double&                       zMaxClean,
+                            BinningValue&                 bValue,
+                            BinningType bType = arbitrary) const;
 
   /// Private method - interglue all volumes contained by a TrackingVolume
   /// and set the outside glue volumes in the descriptor
-  /// 
+  ///
   /// @param tVolume the tracking volume that is glued together
   /// @param rBinned a boolean indicating if it is binned in r
   /// @param rMin the minimum radius of the volume
@@ -245,7 +244,7 @@ private:
                           double            zMin,
                           double            zMax) const;
 
-  /// Private method - glue volume to the other 
+  /// Private method - glue volume to the other
   ///
   /// @param volumeOne is the first volume in the glue process
   /// @param faceOne is the first boundary face of the glue process
@@ -271,11 +270,11 @@ private:
   ///
   /// @param tVolume is the volume to which faces are added
   /// @param bsf is the boundary surface to which faces are added
-  /// @param vols are the voluems which are added                                                             
+  /// @param vols are the voluems which are added
   void
-  addFaceVolumes(TrackingVolumePtr      tVolume,
-                 BoundarySurfaceFace    bsf,
-                 TrackingVolumeVector&  vols) const;
+  addFaceVolumes(TrackingVolumePtr     tVolume,
+                 BoundarySurfaceFace   bsf,
+                 TrackingVolumeVector& vols) const;
 
   /// Private method - helper method to save some code
   ///

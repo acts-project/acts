@@ -95,7 +95,7 @@ public:
   /// SurfaceArrayCreator interface method
   /// - create an array on a disc, binned in r, phi when extremas and
   /// bin numbers are known
-  ///                       
+  ///
   /// @param surfaces are the sensitive surfaces to be
   /// @param rMin is the minimimal radius of the disc
   /// @param rMax is the maximal radius of the disc
@@ -136,7 +136,7 @@ public:
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
-  ///                   
+  ///
   /// @param surfaces are the sensitive surfaces to be
   /// @param halflengthX is the half length in X
   /// @param halflengthY is the half length in Y
@@ -155,7 +155,7 @@ public:
                       = nullptr) const final;
 
   /// Set logging instance
-  /// @param logger is the logging instance to be set                    
+  /// @param logger is the logging instance to be set
   void
   setLogger(std::unique_ptr<Logger> logger)
   {

@@ -95,7 +95,7 @@ public:
   /// Forward the associated Layer information
   ///
   /// @param gpos is the global position fo the call
-  /// 
+  ///
   /// @return plain pointer to assocaiated layer
   const Layer*
   associatedLayer(const Vector3D& gpos) const;
@@ -107,7 +107,7 @@ public:
   /// @param tol is the tolerance parameter
   ///
   /// @todo check if this concept is still used
-  /// 
+  ///
   /// @return boolean indicating if this is at a volume boundary
   bool
   atVolumeBoundary(const Vector3D&       gpos,
@@ -115,17 +115,17 @@ public:
                    double                tol) const;
 
   /// Check position at volume boundary + navigation link
-  /// 
+  ///
   /// @param gpos is the global position fo the call
   /// @param mom is the momentum fo the call
   /// @param vol is the volume to be cheked
   /// @param nextVol is the next tracking volume (filled)
-  /// @param dir is the propagation direction 
+  /// @param dir is the propagation direction
   /// @param tol is the tolerance parameter
   ///
   /// @todo check if this concept is still used
-  /// 
-  /// @return boolean indicating if this is at a volume boundary                   
+  ///
+  /// @return boolean indicating if this is at a volume boundary
   bool
   atVolumeBoundary(const Vector3D&        gpos,
                    const Vector3D&        mom,
@@ -135,8 +135,8 @@ public:
                    double                 tol) const;
 
   /// Register the beam tube
-  ///  
-  /// @param beam is the beam line surface                                 
+  ///
+  /// @param beam is the beam line surface
   void
   registerBeamTube(std::unique_ptr<const PerigeeSurface> beam) const;
 
@@ -151,8 +151,8 @@ public:
 
 private:
   /// Geometry Builder busineess: the geometry builder has to sign
-  /// 
-  /// @param signat is the volume signature 
+  ///
+  /// @param signat is the volume signature
   /// @param geotype is the volume navigation type
   void
   sign(GeometrySignature geosit, GeometryType geotype = Static) const;

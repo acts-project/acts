@@ -34,12 +34,10 @@ public:
   ///
   /// @param geoID the geometry identifier of the object
   GeometryObject() : m_geoID(0) {}
-  
   /// constructor from a ready-made value
   ///
   /// @param geoID the geometry identifier of the object
   GeometryObject(const GeometryID& geoID) : m_geoID(geoID) {}
-  
   /// assignment operator
   ///
   /// @param geoID the source geoID
@@ -67,7 +65,7 @@ public:
   ///
   /// @param bValue is the dobule in which you want to bin
   ///
-  /// @return float to be used for the binning schema  
+  /// @return float to be used for the binning schema
   double
   binningPositionValue(BinningValue bValue) const;
 

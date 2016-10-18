@@ -188,7 +188,7 @@ public:
   /// @param searchType is the level of depth for the search
   /// @param startSurface is an (optional) start surface for the search:
   /// excluded in return
-  /// @param endSurface is an (optional) end surface for the search: excluded in                    
+  /// @param endSurface is an (optional) end surface for the search: excluded in
   /// return
   /// @ice is a (future) compatibility estimator that could be used to modify
   /// the straight line approach
@@ -246,10 +246,10 @@ public:
   ///   (a) only when required to resolve sub surfaces for sensitive hits
   ///   (b) also material is ordered with sub structure
   ///
-  /// @param resolveSensitive is a directive whether 
+  /// @param resolveSensitive is a directive whether
   /// one should look for sensitive surfaces in the surface array
   ///
-  /// @return bollean that indicates if sub structure exitst                                                        
+  /// @return bollean that indicates if sub structure exitst
   virtual bool
   hasSubStructure(bool resolveSensitive = false) const;
 
@@ -257,7 +257,7 @@ public:
   // - checks if any of the layer surfaces has material:
   // - can be approach surfaces or layer surface
   ///
-  /// @return bollean that indicates if material exists                                                        
+  /// @return bollean that indicates if material exists
   virtual bool
   hasMaterial() const;
 
@@ -307,7 +307,7 @@ public:
   enclosingDetachedTrackingVolume() const;
 
   /// register Volume associated to the layer - if you want to do that by hand
-  /// 
+  ///
   /// @param avol is the provided volume
   void
   registerRepresentingVolume(const AbstractVolume* avol) const;
@@ -343,7 +343,7 @@ protected:
 
   /// get compatible surfaces starting from charged parameters - forward call
   /// from explicit methods
-  ///      
+  ///
   /// @param cSurfaces are the retrun surface intersections
   /// @tparam pars are the (charged) track parameters for the search
   /// @param pdir is the propagation direction prescription
@@ -353,12 +353,12 @@ protected:
   /// @param searchType is the level of depth for the search
   /// @param startSurface is an (optional) start surface for the search:
   /// excluded in return
-  /// @param endSurface is an (optional) end surface for the search: excluded in                    
+  /// @param endSurface is an (optional) end surface for the search: excluded in
   /// return
   /// @ice is a (future) compatibility estimator that could be used to modify
   /// the straight line approach
   ///
-  /// @return boolean that indicates if a compatible surface exists at all                
+  /// @return boolean that indicates if a compatible surface exists at all
   template <class T>
   bool
   getCompatibleSurfaces(std::vector<SurfaceIntersection>& cSurfaces,
@@ -368,12 +368,12 @@ protected:
                         bool                              collectSensitive,
                         bool                              collectPassive,
                         int                               searchType,
-                        const Surface*                    startSurface = nullptr,
-                        const Surface*                    endSurface   = nullptr,
-                        const ICompatibilityEstimator*    ice = nullptr) const;
+                        const Surface*                 startSurface = nullptr,
+                        const Surface*                 endSurface   = nullptr,
+                        const ICompatibilityEstimator* ice = nullptr) const;
 
   /// test compatible surface - checking directly for intersection & collection
-  ///                      
+  ///
   /// geometrical test compatible surface method
   /// @param cSurfaces are the retrun surface intersections
   /// @param gpos is the resolved global position
@@ -385,12 +385,12 @@ protected:
   /// @param searchType is the level of depth for the search
   /// @param startSurface is an (optional) start surface for the search:
   /// excluded in return
-  /// @param endSurface is an (optional) end surface for the search: excluded in                    
+  /// @param endSurface is an (optional) end surface for the search: excluded in
   /// return
   /// @ice is a (future) compatibility estimator that could be used to modify
   /// the straight line approach
   ///
-  /// @return boolean that indicates if a compatible surface exists at all                        
+  /// @return boolean that indicates if a compatible surface exists at all
   void
   testCompatibleSurface(std::vector<SurfaceIntersection>& cSurfaces,
                         const Surface&                    surface,
@@ -420,7 +420,7 @@ protected:
 
   ///  private method to set the enclosed detached TV,
   /// called by friend class only
-  /// 
+  ///
   /// @param dtvol is the detached tracking volume the layer is confined
   void
   encloseDetachedTrackingVolume(const DetachedTrackingVolume& tvol) const;

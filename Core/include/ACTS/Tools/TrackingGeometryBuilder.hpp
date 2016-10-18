@@ -40,7 +40,7 @@ public:
   {
     /// the list of trackign volume builders
     std::list<std::shared_ptr<ITrackingVolumeBuilder>> trackingVolumeBuilders{};
-    
+
     /// the tracking volume helper for detector construction
     std::shared_ptr<ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
   };

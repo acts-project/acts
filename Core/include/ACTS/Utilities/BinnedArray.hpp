@@ -34,10 +34,8 @@ class BinnedArray
 public:
   /// Default Constructor - needed for inherited classes
   BinnedArray() {}
-  
   /// Virtual Destructor
   virtual ~BinnedArray() {}
-  
   /// Returns the object in the associated bin according the local position
   ///
   /// @param lposition is the local position for the object retrieval
@@ -48,7 +46,7 @@ public:
   object(const Vector2D& lposition, std::array<size_t, 3>& bins) const = 0;
 
   /// Same method without bins for backward compatibility
-  /// 
+  ///
   /// @param lposition is the local position for finding the obect
   ///
   /// @return the object according to the estimated bin
@@ -86,19 +84,19 @@ public:
   /// @todo check if this needs connectivity directive
   ///
   /// @param bin is the binning
-  /// 
+  ///
   /// @return a vector of unique objects
   virtual std::vector<T>
   objectCluster(const std::array<size_t, 3>& bin) const = 0;
 
   /// Return all unqiue object
-  /// @note this is the accessor to the 
+  /// @note this is the accessor to the
   /// @return the vector of all array objects
   virtual const std::vector<T>&
   arrayObjects() const = 0;
 
   /// Return the object grid multiple entries are allowed
-  /// @return the object grid 
+  /// @return the object grid
   virtual const std::vector<std::vector<std::vector<T>>>&
   objectGrid() const = 0;
 

@@ -163,7 +163,7 @@ public:
 private:
   /// dump method
   ///
-  /// @tparam dT is the output stream to be dumped into 
+  /// @tparam dT is the output stream to be dumped into
   template <class T>
   T&
   dumpT(T& dT) const;

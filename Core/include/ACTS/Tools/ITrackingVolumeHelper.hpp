@@ -104,7 +104,7 @@ public:
   /// @param cylinder type of layers
   /// @param volumeName  volume name to be given
   ///
-  /// @return shared pointer to a new TrackingVolume                       
+  /// @return shared pointer to a new TrackingVolume
   virtual TrackingVolumePtr
   createGapTrackingVolume(std::shared_ptr<Material> matprop,
                           double                    loc1Min,

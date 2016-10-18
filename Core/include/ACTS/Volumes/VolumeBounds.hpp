@@ -46,10 +46,8 @@ class VolumeBounds
 public:
   /// Default Constructor*/
   VolumeBounds() {}
-  
   /// Destructor
   virtual ~VolumeBounds() {}
-  
   ///  clone() method to make deep copy in Volume copy constructor and for
   /// assigment operator  of the Surface class.
   virtual VolumeBounds*

@@ -76,7 +76,6 @@ public:
   ///
   /// @param cylbo is the source object
   CylinderBounds(const CylinderBounds& cylbo) : SurfaceBounds(cylbo) {}
-
   /// Destructor
   virtual ~CylinderBounds();
 
@@ -111,7 +110,7 @@ public:
   ///
   /// @param pos is the position in the cylinder frame
   /// @param bchk is the boundary check directive
-  /// 
+  ///
   /// return boolean indicator for operation success
   bool
   inside3D(const Vector3D& pos, const BoundaryCheck& bchk = true) const;

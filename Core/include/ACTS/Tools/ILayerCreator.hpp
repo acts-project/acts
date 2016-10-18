@@ -33,7 +33,6 @@ class ILayerCreator
 public:
   /// Virtual destructor
   virtual ~ILayerCreator() {}
-  
   /// ILayerCreator interface method - returning a cylindrical layer
   ///
   /// @param surfaces is the vector of sensitive surfaces represented by this
@@ -72,7 +71,7 @@ public:
             size_t                             binsPhi) const = 0;
 
   /// ILayerCreator interface method - returning a plane layer
-  ///          
+  ///
   /// @param surfaces is the vector of sensitive surfaces represented by this
   /// layer
   /// @param envelopeXY is the additional envelope applied in XY

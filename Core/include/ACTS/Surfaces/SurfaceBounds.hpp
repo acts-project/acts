@@ -61,20 +61,17 @@ public:
   /// @param sSize is the size of the data store
   /// @note the value Store is initialized to the given size
   SurfaceBounds(size_t sSize = 0) : m_valueStore(sSize, 0.) {}
-  
   /// Copy constructor
   /// It copies the value store
   ///
   /// @param sb is the source bounds to be copied
   SurfaceBounds(const SurfaceBounds& sb) : m_valueStore(sb.m_valueStore) {}
-  
   /// Destructor
   virtual ~SurfaceBounds() {}
-  
   /// clone() method to make deep copy in Surface copy constructor and for
   /// assigment operator of the Surface class
   ///
-  /// @return is a newly created object 
+  /// @return is a newly created object
   virtual SurfaceBounds*
   clone() const = 0;
 
@@ -88,7 +85,7 @@ public:
   /// checks first on the pointer equality
   /// then it cheks on the type lastly it checks on the data store
   ///
-  /// @param sb is the source bounds to be copied  
+  /// @param sb is the source bounds to be copied
   virtual bool
   operator==(const SurfaceBounds& sb) const;
 

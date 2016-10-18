@@ -55,7 +55,7 @@ struct RealQuadraticEquation
   RQESolutionType solutions;
 
   /// Constructor
-  /// 
+  ///
   /// @param alpha is the first parameter of the quad equation
   /// @param beta is the second parameter of the quad equation
   /// @param gamma is the third parameter of the quad equation

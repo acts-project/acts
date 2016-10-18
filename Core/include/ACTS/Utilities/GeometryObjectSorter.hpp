@@ -22,7 +22,6 @@ template <class T>
 class GeometryObjectSorterT : public std::binary_function<T, T, bool>
 {
 public:
-  
   /// Constructor from a binning value
   ///
   /// @param bValue is the value in which the binning is done
@@ -34,7 +33,7 @@ public:
   }
 
   /// Comparison operator
-  /// 
+  ///
   /// @tparam one first object
   /// @tparam two second object
   ///

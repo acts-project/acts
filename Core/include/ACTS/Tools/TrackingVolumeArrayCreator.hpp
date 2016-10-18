@@ -44,7 +44,7 @@ public:
     : m_logger(std::move(logger))
   {
   }
-  
+
   /// Destructor
   virtual ~TrackingVolumeArrayCreator() = default;
 
@@ -60,7 +60,7 @@ public:
 
   /// Set logging instance
   ///
-  /// @param logger is the logging instance to be set                                        
+  /// @param logger is the logging instance to be set
   void
   setLogger(std::unique_ptr<Logger> logger)
   {

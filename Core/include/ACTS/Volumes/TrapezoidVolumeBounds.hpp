@@ -41,7 +41,7 @@ class TrapezoidBounds;
 ///  (associated to beta)
 ///  - negativeFaceZX     [4] : Rectangular  Acts::PlaneSurface,
 ///                             parallel to \f$ zx \f$ plane at negative \f$y\f$
-///  - positiveFaceZX     [5] : Rectangular  Acts::PlaneSurface, 
+///  - positiveFaceZX     [5] : Rectangular  Acts::PlaneSurface,
 ///                             parallel to \f$ zx \f$ plane at positive \f$y\f$
 ///
 ///  @image html TrapezoidVolumeBounds_decomp.gif
@@ -76,7 +76,7 @@ public:
                         double hlengthz);
 
   /// Constructor - the trapezoid boundaries (arbitrary trapezoid)
-  ///                      
+  ///
   /// @param minhlenghtx is the half length in x at minimal y
   /// @param hlenghty is the half length in y
   /// @param hlengthz is the half length in z

@@ -63,7 +63,7 @@ public:
   };
 
   /// Constructor with Transform3D as a shared object
-  /// 
+  ///
   /// @param htrans Transform3D positions the surface in 3D global space
   /// @note also acts as default constructor
   Surface(std::shared_ptr<Transform3D> htrans = nullptr);
@@ -199,7 +199,7 @@ public:
   /// Set Associated SurfaceMaterial
   /// The material is usually derived in a complicated way and loaded from
   /// a framework given source. As various srufaces may share the same
-  /// 
+  ///
   /// @param material Material description this given and stored as a shared
   /// pointer
   void
@@ -220,7 +220,7 @@ public:
             const BoundaryCheck& bchk = BoundaryCheck(true)) const;
 
   /// The insideBounds method for local positions
-  ///          
+  ///
   /// @param lpos local position to check
   /// @param bchk  BoundaryCheck directive for this onSurface check
   ///
@@ -240,7 +240,7 @@ public:
 
   /// Local to global transformation
   /// Generalized local to global transformation for the surface types. Since
-  /// some surface types need the global momentum/direction to resolve sign 
+  /// some surface types need the global momentum/direction to resolve sign
   /// ambiguity this is also provided
   ///
   /// @param lpos local 2D posittion in specialized surface frame
@@ -254,15 +254,15 @@ public:
 
   /// Global to local transformation
   /// Generalized global to local transformation for the surface types. Since
-  /// some surface types need the global momentum/direction to resolve sign 
+  /// some surface types need the global momentum/direction to resolve sign
   /// ambiguity this is also provided
-  ///              
+  ///
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param gmom global 3D momentum representation (optionally ignored)
   /// @param lpos local 2D position to be filled (given by reference for method
   /// symmetry)
-  ///              
+  ///
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
   virtual bool
@@ -273,7 +273,7 @@ public:
   /// Return mehtod for the measurement frame
   /// This is the frame in which the covariance matrix is defined (specialized
   /// by all surfaces)
-  ///              
+  ///
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param gmom global 3D momentum representation (optionally ignored)

@@ -39,7 +39,6 @@ class IPropagationEngine
 public:
   /// Virtual destructor
   virtual ~IPropagationEngine() {}
-  
   /// Main Charged extrapolation method
   ///
   /// @param ecCell is the charged extrapolation cell

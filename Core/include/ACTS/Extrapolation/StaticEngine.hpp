@@ -211,10 +211,10 @@ private:
   /// splitting
   /// @param hasSubStructure is an indicator whether the layer has sub structure
   /// which needs to be resolved
-  /// @param isStartLayer is and indicator whether the layer 
-  /// is the start layer  
-  /// @param isDestinationLayer is and indicator whether the layer 
-  /// is the destination layer             
+  /// @param isStartLayer is and indicator whether the layer
+  /// is the start layer
+  /// @param isDestinationLayer is and indicator whether the layer
+  /// is the destination layer
   ///
   /// @return is a extrapolation code indication
   template <class T>
@@ -229,7 +229,7 @@ private:
 
   /// Handle the failure - as configured
   ///
-  /// @param eCode is the extrapolation code at entry                              
+  /// @param eCode is the extrapolation code at entry
   /// @tparam eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param dir is the additional direction prescription

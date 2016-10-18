@@ -97,7 +97,7 @@ struct VolumeSetup
 
   /// Compatibility check radially
   ///
-  /// @param vSetup is the setup against which is checked  
+  /// @param vSetup is the setup against which is checked
   bool
   wrapsInR(const VolumeSetup& vSetup) const
   {
@@ -107,7 +107,7 @@ struct VolumeSetup
 
   /// Compatibility check longitudinally
   ///
-  /// @param vSetup is the setup against which is checked  
+  /// @param vSetup is the setup against which is checked
   bool
   wrapsInZ(const VolumeSetup& vSetup) const
   {
@@ -133,7 +133,7 @@ struct VolumeSetup
   {
     return (containesInR(vSetup) && containesInZ(vSetup));
   }
-  
+
   /// Check if contained radially
   ///
   /// @param vSetup is the setup against which is checked
@@ -249,7 +249,7 @@ public:
                  const LayerTriple* layerTriple   = nullptr) const override;
 
   /// Set configuration method
-  ///               
+  ///
   /// @param cvbConfig is the new configuration to be set
   void
   setConfiguration(const Config& cvbConfig);

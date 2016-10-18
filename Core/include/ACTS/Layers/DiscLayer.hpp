@@ -101,7 +101,6 @@ public:
 
   /// Destructor
   virtual ~DiscLayer() {}
-  
   /// Transforms the layer into a Surface representation for extrapolation
   /// @return This method returns a surface reference
   const DiscSurface&

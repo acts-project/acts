@@ -65,7 +65,7 @@ Acts::DetachedTrackingVolume::clone(std::string        name,
 {
   // create the new base tracking volume
   std::shared_ptr<const TrackingVolume> shiftedTrackingVolume
-    = TrackingVolume::create(*m_trkVolume,shift);
+      = TrackingVolume::create(*m_trkVolume, shift);
 
   // create and shift the layers if there are any
   std::shared_ptr<const Layer> layerRepresentation = m_layerRepresentation

@@ -66,10 +66,10 @@ public:
                const Identifier&                   identifier = Identifier());
 
   /// Constructor for Planes with (optional) shared bounds object
-  ///             
+  ///
   /// @param htrans transform in 3D that positions this surface
   /// @param pbounds bounds object to describe the actual surface area
-  ///             
+  ///
   /// @attention the pointer to pbounds must not be a nullptr
   PlaneSurface(std::shared_ptr<Transform3D>        htrans,
                std::shared_ptr<const PlanarBounds> pbounds);
@@ -130,7 +130,6 @@ public:
   isOnSurface(const Vector3D&      gpos,
               const BoundaryCheck& bchk = true) const override;
 
-    
   /// Local to global transformation
   /// For planar surfaces the momentum is ignroed in the local to global
   /// transformation
@@ -147,13 +146,13 @@ public:
   /// Global to local transformation
   /// For planar surfaces the momentum is ignroed in the global to local
   /// transformation
-  ///              
+  ///
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param gmom global 3D momentum representation (optionally ignored)
   /// @param lpos local 2D position to be filled (given by reference for method
   /// symmetry)
-  ///              
+  ///
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
   virtual bool

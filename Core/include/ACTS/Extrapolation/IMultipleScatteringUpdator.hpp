@@ -26,7 +26,6 @@ class IMultipleScatteringUpdator
 public:
   /// Virtual destructor
   virtual ~IMultipleScatteringUpdator() {}
-  
   /// Calculate the sigma on theta introduced by multiple scattering
   ///
   /// @param mat are the material properties for this update
