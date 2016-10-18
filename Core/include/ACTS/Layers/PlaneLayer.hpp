@@ -48,7 +48,7 @@ public:
          LayerType                           laytyp    = Acts::active)
   {
     return LayerPtr(new PlaneLayer(
-        transform, pbounds, std::move(surfaces), thickness, ad, laytyp));
+        transform, pbounds, std::move(surfaceArray), thickness, ad, laytyp));
   }
 
   /// Factory for a shared plane layer
