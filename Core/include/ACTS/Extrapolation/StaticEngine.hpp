@@ -92,11 +92,10 @@ public:
 
   using IExtrapolationEngine::extrapolate;
 
-  /// Main extrapolation method, templated to chared/neutral
+  /// Main extrapolation method, templated to chared
   ///
-  /// @tparam eCell ist he extrapolaiton cell
+  /// @param ecCharged ist he extrapolation cell for charged parameters
   /// @param sf is the (optional) destinaton surface
-  /// @param dir is the additional direction prescription
   /// @param bcheck is the boudnary check directive @todo shift to cell after
   /// splitting
   ///
@@ -106,11 +105,12 @@ public:
               const Surface*       sf     = 0,
               const BoundaryCheck& bcheck = true) const final;
 
-  /// Main extrapolation method, templated to chared/neutral
+  /// Main extrapolation method, templated to neutral
   ///
-  /// @tparam eCell ist he extrapolaiton cell
+  /// @param ecNeutral ist he extrapolation cell for neutral parameters
   /// @param sf is the (optional) destinaton surface
-  /// @param dir is the additional direction prescription
+  /// @param bcheck is the boudnary check directive @todo shift to cell after
+  /// splitting
   ///
   /// @return is a extrapolation code indication
   ExtrapolationCode
@@ -156,7 +156,7 @@ private:
 
   /// Main loop extrapolation method
   ///
-  /// @tparam eCell ist he extrapolaiton cell
+  /// @param eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param dir is the additional direction prescription
   /// @param bcheck is the boudnary check directive @todo shift to cell after
@@ -172,7 +172,7 @@ private:
 
   /// Init Navigation for static setup
   ///
-  /// @tparam eCell ist he extrapolaiton cell
+  /// @param eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param dir is the additional direction prescription
   /// @param bcheck is the boudnary check directive @todo shift to cell after
@@ -188,7 +188,7 @@ private:
 
   /// Main static layer handling
   ///
-  /// @tparam eCell ist he extrapolaiton cell
+  /// @param eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param dir is the additional direction prescription
   /// @param bcheck is the boudnary check directive @todo shift to cell after

@@ -46,6 +46,10 @@ public:
   /// @param segmentationSurfacesX are the segmetation boundaries in X
   /// @param segmentationSurfacesY are the segmetation boundaries in Y
   /// @param halfThickness is the half thickness in z of the module
+  /// @param readoutDirection is the direction w.r.t normal vector 
+  /// where the readout is given : -1, 0, 1 possible
+  /// @param lorentzAngle is the lorentz angle measured from the local z
+  /// towards x axis
   virtual void
   createSegmenationSurfaces(SurfacePtrVector& boundarySurfaces,
                             SurfacePtrVector& segmentationSurfacesX,

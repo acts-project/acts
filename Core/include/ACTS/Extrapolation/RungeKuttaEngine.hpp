@@ -184,7 +184,7 @@ public:
 
   /// Constructor
   ///
-  /// @param meConfig is an instance of the configuration struct
+  /// @param rkConfig is an instance of the configuration struct
   /// @param logger logging instance
   RungeKuttaEngine(const Config&           rkConfig,
                    std::unique_ptr<Logger> logger
@@ -218,7 +218,7 @@ public:
 
   /// Main Neutral extrapolation method
   ///
-  /// @param ecCell is the neutral extrapolation cell
+  /// @param enCell is the neutral extrapolation cell
   /// @param sf is the destination surface
   /// @param dir is the additional direction prescription
   /// @param purpose steers whether to set the final parameter or not
@@ -273,7 +273,7 @@ private:
   ///
   /// @param eCell the extrapolation cell that holds the configuration
   /// @param pCache the progation chache
-  /// @tparam tParameters the parameters
+  /// @param tParameters the parameters
   /// @param sf the destination surace
   template <class T>
   bool

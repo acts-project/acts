@@ -53,7 +53,7 @@ public:
   /// This is for curvilinear surfaces which are by definition boundless
   ///
   /// @param center is the center position of the surface
-  /// @param htrans is the transformation that positions the surface in space
+  /// @param normal is thenormal vector of the plane surface
   PlaneSurface(const Vector3D& center, const Vector3D& normal);
 
   /// Constructor from DetectorElementBase
@@ -135,7 +135,7 @@ public:
   /// transformation
   ///
   /// @param lpos local 2D posittion in specialized surface frame
-  /// @param gmom global 3D momentum representation (optionally ignored)
+  /// @param mom global 3D momentum representation (optionally ignored)
   /// @param gpos global 3D position to be filled (given by reference for method
   /// symmetry)
   virtual void
@@ -149,7 +149,7 @@ public:
   ///
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param gmom global 3D momentum representation (optionally ignored)
+  /// @param mom global 3D momentum representation (optionally ignored)
   /// @param lpos local 2D position to be filled (given by reference for method
   /// symmetry)
   ///
@@ -160,8 +160,15 @@ public:
                 const Vector3D& mom,
                 Vector2D&       lpos) const override;
 
-  /// @copydoc Surface::pathCorrection
+  /// Method that calculates the correction due to incident angle
+  ///
+  /// @param gpos global 3D position - considered to be on surface but not
+  /// inside bounds (check is done)
+  /// @param mom global 3D momentum representation (optionally ignored)
+  ///
   /// @note this is the final implementation of the pathCorrection function
+  ///
+  /// @return a double representing the scaling factor
   double
   pathCorrection(const Vector3D& gpos, const Vector3D& mom) const final;
 

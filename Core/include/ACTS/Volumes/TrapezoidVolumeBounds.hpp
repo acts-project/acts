@@ -70,7 +70,7 @@ public:
   /// @param maxhalengthx is the half length in x at maximal y
   /// @param hlenghty is the half length in y
   /// @param hlengthz is the half length in z
-  TrapezoidVolumeBounds(double minhlenghtx,
+  TrapezoidVolumeBounds(double minhlengthx,
                         double maxhlengthx,
                         double hlenghty,
                         double hlengthz);
@@ -82,7 +82,7 @@ public:
   /// @param hlengthz is the half length in z
   /// @param alpha is the openeing angle at -x,-y
   /// @param beta is the openeing angle at +x,-y
-  TrapezoidVolumeBounds(double minhlenghtx,
+  TrapezoidVolumeBounds(double minhlengthx,
                         double hlenghty,
                         double hlengthz,
                         double alpha,

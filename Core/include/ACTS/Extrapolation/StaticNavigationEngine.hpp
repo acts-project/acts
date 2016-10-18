@@ -70,7 +70,7 @@ public:
 
   /// Resolve the boundary situation - for charged particles
   ///
-  /// @param ecCell is the charged extrapolation cell
+  /// @param eCell is the charged extrapolation cell
   /// @param dir is the additional direction prescription
   ///
   /// @return is a extrapolation code indication
@@ -80,7 +80,7 @@ public:
 
   /// Resolve the boundary situation - for neutral particles
   ///
-  /// @param ecCell is the neutral extrapolation cell
+  /// @param eCell is the neutral extrapolation cell
   /// @param dir is the additional direction prescription
   ///
   /// @return is a extrapolation code indication
@@ -90,8 +90,9 @@ public:
 
   /// Resolve the boundary situation - for charged particles
   ///
-  /// @param ecCell is the charged extrapolation cell
+  /// @param eCell is the charged extrapolation cell
   /// @param dir is the additional direction prescription
+  /// @param noLoop is a loop protection @todo check with ST                
   ///
   /// @return is a extrapolation code indication
   ExtrapolationCode
@@ -103,6 +104,7 @@ public:
   ///
   /// @param ecCell is the neutral extrapolation cell
   /// @param dir is the additional direction prescription
+  /// @param noLoop is a loop protection @todo check with ST                
   ///
   /// @return is a extrapolation code indication
   ExtrapolationCode
@@ -169,7 +171,7 @@ private:
   /// @param eCell the extrapolation
   /// @paramn bSurfaceTV the boundary surface
   /// @param dir the propagation direction
-  /// @param noLoop @todo check with sharka
+  /// @param stepout  is a prescription to step out the volume
   ///
   /// @return is a extrapolation code indication
   template <class T>
@@ -177,7 +179,7 @@ private:
   handleBoundaryT(ExtrapolationCell<T>&                   eCell,
                   const BoundarySurfaceT<TrackingVolume>& bSurfaceTV,
                   PropDirection                           dir = alongMomentum,
-                  bool stepout                                = false) const;
+                  bool stepout                             = false) const;
 };
 
 inline StaticNavigationEngine::Config

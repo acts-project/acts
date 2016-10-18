@@ -52,6 +52,7 @@ public:
   ///
   /// @param tribo are the source bounds for assignment
   TriangleBounds(const TriangleBounds& tribo) : PlanarBounds(tribo) {}
+  
   /// Destructor
   virtual ~TriangleBounds();
 
@@ -129,7 +130,7 @@ private:
   ///
   /// @return boolean indicator for the success of this operation
   bool
-  inside(const Vector2D& lpos, double tol0, double tol2) const;
+  inside(const Vector2D& lpos, double tol0, double tol1) const;
 };
 
 inline TriangleBounds*

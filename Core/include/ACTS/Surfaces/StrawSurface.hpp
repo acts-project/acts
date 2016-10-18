@@ -38,7 +38,7 @@ public:
   /// @param htrans is the transform that positions the surface in the global
   /// frame
   /// @param radius is the straw radius
-  /// @param halex is the half length in z
+  /// @param halez is the half length in z
   StrawSurface(std::shared_ptr<Transform3D> htrans, double radius, double halez)
     : LineSurface(htrans, radius, halez)
   {

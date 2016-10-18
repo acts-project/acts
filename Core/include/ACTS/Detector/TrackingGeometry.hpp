@@ -86,7 +86,7 @@ public:
 
   /// return the lowest tracking Volume
   ///
-  /// @param gpos is the global position fo the call
+  /// @param name is the name for the volume search
   ///
   /// @return plain pointer to the lowest TrackingVolume
   const TrackingVolume*
@@ -155,7 +155,7 @@ private:
   /// @param signat is the volume signature
   /// @param geotype is the volume navigation type
   void
-  sign(GeometrySignature geosit, GeometryType geotype = Static) const;
+  sign(GeometrySignature signat, GeometryType geotype = Static) const;
 
   /// The known world - and the beamline
   TrackingVolumePtr                             m_world;

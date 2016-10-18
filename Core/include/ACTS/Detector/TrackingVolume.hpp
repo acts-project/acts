@@ -164,7 +164,7 @@ public:
   /// returned)
   /// @param eLayer is the end layer for the search (@todo docu: check if
   /// returned)
-  /// @tparam parameters are the templated parameters for searching
+  /// @param parameters are the templated parameters for searching
   /// @param pDir is an additional direction prescription
   /// @param bcheck is a boundary check directive
   /// @param resolveMaterial is the prescription how to deal with material
@@ -192,24 +192,25 @@ public:
 
   /// Return the next volume along the navigation stream
   ///
-  /// @param gpos is the glboal position associated with that search
+  /// @param pos is the glboal position associated with that search
   /// @param dir is the direction for this search
   /// @param pDir is an additional direction prescription
   ///
   /// @return the next associated tracking volume, nullptr if it does not exist
   const TrackingVolume*
-  nextVolume(const Vector3D& gp,
+  nextVolume(const Vector3D& pos,
              const Vector3D& dir,
              PropDirection   pDir = alongMomentum) const;
 
   /// Return the dynamically created vector of detached sub volumes
   ///
-  /// @param gpos  is the glboal position associated with that search
+  /// @param pos is the glboal position associated with that search
+  /// @param tol is the absolute tolerance for the search           
   ///
   /// @return the list of associated detached tracking volumes, nullptr if it
   /// does not exist
   const DetachedVolumeVector*
-  detachedTrackingVolumes(const Vector3D& gpos, double tol) const;
+  detachedTrackingVolumes(const Vector3D& pos, double tol) const;
 
   /// Return the confined static layer array - if it exists
   /// @return the BinnedArray of static layers if exists
@@ -248,7 +249,7 @@ public:
   /// Returns the boundary surfaces ordered in probability to hit them based
   /// on straight line intersection
   ///
-  /// @tparam parameters are the templated tracking parameters
+  /// @param parameters are the templated tracking parameters
   /// @param pDir is the additional direction presciprion
   ///
   /// @return is the templated boundary intersection
@@ -271,7 +272,7 @@ public:
   /// to the last navigation volume
   ///
   /// @param bsfMine is the boundary face indicater where to glue
-  /// @param heighbor is the TrackingVolume to be glued
+  /// @param neighbor is the TrackingVolume to be glued
   /// @param bsfNeighbor is the boudnary surface of the neighbor
   void
   glueTrackingVolume(BoundarySurfaceFace bsfMine,
@@ -284,7 +285,7 @@ public:
   ///
   ///
   /// @param bsfMine is the boundary face indicater where to glue
-  /// @param heighbors are the TrackingVolumes to be glued
+  /// @param neighbors are the TrackingVolumes to be glued
   /// @param bsfNeighbors are the boudnary surface of the neighbors
   void
   glueTrackingVolumes(BoundarySurfaceFace                        bsfMine,
@@ -387,11 +388,12 @@ protected:
   /// @param matprop is are materials of the tracking volume
   /// @param cLayerArray is the confined layer array (optional)
   /// @param cLayerVector is the confined arbitrary layer vector
+  /// @param cVolumeArray is the confined volume array
   /// @param cVolumeVector is the confined arbitrary volume vector
   /// @param dVolumeVector is the confined arbeitrary detached volume vector
   /// @param volumeName is a string identifier
   TrackingVolume(std::shared_ptr<Transform3D>      htrans,
-                 VolumeBoundsPtr                   volbounds,
+                 VolumeBoundsPtr                   volumeBounds,
                  std::shared_ptr<Material>         matprop,
                  std::unique_ptr<const LayerArray> cLayerArray  = nullptr,
                  const LayerVector                 cLayerVector = {},
@@ -403,7 +405,7 @@ protected:
 
   /// Copy Constructor with a shift
   ///
-  /// @param trVol is the source tracking volume
+  /// @param tvol is the source tracking volume
   /// @param shift is the additional shift applied after copying
   /// @param volumeName is a string identifier
   ///
@@ -432,7 +434,7 @@ private:
   ///        by a given name
   void
   closeGeometry(const GeometryID& volumeID,
-                std::map<std::string, const TrackingVolume*>& volumMap) const;
+                std::map<std::string, const TrackingVolume*>& volumeMap) const;
 
   /// interlink the layers in this TrackingVolume
   void

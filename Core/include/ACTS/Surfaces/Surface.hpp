@@ -147,7 +147,7 @@ public:
   /// The normal vector can only be generally defined at a given local position
   /// It requires a local position to be given (in general)
   ///
-  /// @lpos is the local position where the normal verctor is constructed
+  /// @param lpos is the local position where the normal verctor is constructed
   ///
   /// @return normal vector by value
   virtual const Vector3D
@@ -157,11 +157,11 @@ public:
   /// The normal vector can only be generally defined at a given local position
   /// It requires a local position to be given (in general)
   ///
-  /// @param gpos is the global position where the normal vector is constructed
+  /// @param pos is the global position where the normal vector is constructed
   ///
   /// @return normal vector by value
   virtual const Vector3D
-  normal(const Vector3D& gpos) const;
+  normal(const Vector3D& pos) const;
 
   /// Return method for SurfaceBounds
   /// @return SurfaceBounds by reference
@@ -210,7 +210,7 @@ public:
   /// surface pointer first.
   /// If that check fails, it calls the geometrical check isOnSurface
   ///
-  /// @tparam parameters TrackParameters to be checked
+  /// @param parameters TrackParameters to be checked
   /// @param bcheck BoundaryCheck directive for this onSurface check
   ///
   /// @return boolean indication if operation was successful

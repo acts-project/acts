@@ -46,13 +46,13 @@ public:
   ///
   /// @param minhalex minimal half lenght X, definition at negative halflength Y
   /// @param maxhalex maximal half length X, definition at maximum halflength Y
-  /// @param haley maximal half length Y - defined at x=0
+  /// @param haley half length Y - defined at x=0
   TrapezoidBounds(double minhalex, double maxhalex, double haley);
 
   /// Constructor for arbitrary Trapezoid
   ///
   /// @param minhalex minimal half lenght X, definition at negative halflength Y
-  /// @param maxhalex maximal half length X, definition at maximum halflength Y
+  /// @param haley half length Y - defined at x=0
   /// @param alpha opening angle at @todo check
   /// @param beta opentin angle at @todo check
   TrapezoidBounds(double minhalex, double haley, double alpha, double beta);
@@ -61,6 +61,7 @@ public:
   ///
   /// @param trabo are the source bounds for assignment
   TrapezoidBounds(const TrapezoidBounds& trabo) : PlanarBounds(trabo) {}
+  
   /// Destructor
   virtual ~TrapezoidBounds();
 
@@ -204,7 +205,7 @@ private:
   ///
   /// @return boolean indicator for the success of this operation
   bool
-  inside(const Vector2D& lpos, double tol0, double tol2) const;
+  inside(const Vector2D& lpos, double tol0, double tol1) const;
 
   /// private helper method inside() method for a full symmetric trapezoid
   ///
