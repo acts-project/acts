@@ -26,7 +26,9 @@ namespace Acts {
 /// i.e. the surface between two ellipses.
 /// By providing an argument for hphisec, the bounds can
 /// be restricted to a phirange around the center position.
-///
+///   
+/// @image html EllipseBounds.png
+///  
 class EllipseBounds : public PlanarBounds
 {
 public:

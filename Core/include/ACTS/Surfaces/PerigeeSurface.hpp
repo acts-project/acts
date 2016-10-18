@@ -25,7 +25,8 @@ namespace Acts {
 /// Class describing the Line to which the Perigee refers to.
 /// The Surface axis is fixed to be the z-axis of the Tracking frame.
 /// It inherits from StraingLineSurface.
-
+///
+/// @image html LineSurface.png
 class PerigeeSurface : public LineSurface
 {
 public:

@@ -34,6 +34,9 @@ class DetectorElementBase;
 /// is at r=0, independent of the provided DiscBounds. The z-axis
 /// is the normal vector of the Disc, being perpenticular to the
 /// radial direction.
+///
+/// @image html DiscSurface.png
+///
 class DiscSurface : public Surface
 {
 public:

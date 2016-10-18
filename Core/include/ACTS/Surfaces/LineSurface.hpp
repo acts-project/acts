@@ -29,7 +29,8 @@ class LineBounds;
 ///  It inherits from Surface.
 ///
 ///  @note It leaves the type() method virtual, so it can not be instantiated
-
+///
+/// @image html LineSurface.png
 class LineSurface : public Surface
 {
 public:

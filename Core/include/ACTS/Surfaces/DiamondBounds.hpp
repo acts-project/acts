@@ -20,10 +20,11 @@
 
 namespace Acts {
 
-//
-//@class DiamondBounds
-// Bounds for a double trapezoidal ("diamond"), planar Surface.
-//
+///
+/// @class DiamondBounds
+///  
+/// Bounds for a double trapezoidal ("diamond"), planar Surface.
+///
 class DiamondBounds : public PlanarBounds
 {
 public:
