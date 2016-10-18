@@ -53,7 +53,7 @@ public:
   /// Constructor for a symmetric Trapezoid giving min X lenght, max X lenght,
   /// Rmin and R max
   /// @param minhalfx half length in X at min radius
-  /// @param minhalfx half length in X at maximum radius
+  /// @param maxhalfx half length in X at maximum radius
   /// @param rMin inner radius
   /// @param rMax outer radius
   /// @param avephi average phi value
@@ -105,7 +105,7 @@ public:
 
   /// This method checks inside bounds in loc0
   /// @param lpos is the local position to be checked (in polar coordinates)
-  /// @param tol0 is the tolerance applied
+  /// @param tol1 is the tolerance applied
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 

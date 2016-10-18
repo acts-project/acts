@@ -62,7 +62,7 @@ public:
   ///  Return surface association
   /// (optionally associated with an identifier)
   ///
-  /// @param identifeir is an identifier in case more surfaces hare held
+  /// @param identifier is an identifier in case more surfaces hare held
   ///
   /// @return the surface associated with this detector element (and id)
   virtual const Surface&

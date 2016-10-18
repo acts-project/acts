@@ -118,7 +118,7 @@ public:
   /// Set the simplified calculable components
   /// @todo check with Sharka
   ///
-  /// @param sonsts are the consituents to be saved
+  /// @param consts are the constituents to be saved
   void
   saveConstituents(std::vector<std::pair<const Volume*, float>>* consts) const;
 
@@ -154,7 +154,7 @@ protected:
   DetachedTrackingVolume(const std::string&    name,
                          TrackingVolumePtr     vol,
                          LayerPtr              layer,
-                         std::vector<LayerPtr> multilayer);
+                         std::vector<LayerPtr> multiLayer);
 
 private:
   const std::string     m_name;

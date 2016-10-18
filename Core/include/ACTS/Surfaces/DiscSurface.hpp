@@ -57,8 +57,10 @@ public:
   /// hx_{max} \f$
   /// This is n this case you have DiscTrapezoidalBounds
   ///
+  /// @param htrans is transform that places the disc in the global 3D space
+  /// (can be nullptr)           
   /// @param minhalfx is the half length in x at minimal r
-  /// @param minhalfx is the half length in x at maximal r
+  /// @param maxhalfx is the half length in x at maximal r
   /// @param rmin is the inner radius of the disc surface
   /// @param rmax is the outer radius of the disc surface
   /// @param avephi is the position in phi (default is 0.)
@@ -163,7 +165,7 @@ public:
   /// transformation
   ///
   /// @param lpos local 2D posittion in specialized surface frame
-  /// @param gmom global 3D momentum representation (optionally ignored)
+  /// @param mom global 3D momentum representation (optionally ignored)
   /// @param gpos global 3D position to be filled (given by reference for method
   /// symmetry)
   ///
@@ -178,7 +180,7 @@ public:
   ///
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param gmom global 3D momentum representation (optionally ignored)
+  /// @param mom global 3D momentum representation (optionally ignored)
   /// @param lpos local 2D position to be filled (given by reference for method
   /// symmetry)
   ///

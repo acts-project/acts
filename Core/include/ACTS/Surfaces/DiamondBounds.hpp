@@ -133,6 +133,8 @@ public:
   ///
   /// @param lpos Local position (assumed to be in right surface frame)
   /// @param tol0 is the absolute tolerance
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
@@ -142,7 +144,9 @@ public:
   /// -> check is done on enclosing Rectangle !
   ///
   /// @param lpos Local position (assumed to be in right surface frame)
-  /// @param tol0 is the absolute tolerance
+  /// @param to1 is the absolute tolerance
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
@@ -152,7 +156,7 @@ public:
   ///
   /// @return is a signed distance parameter
   virtual double
-  distanceToBoundary(const Vector2D& pos) const override;
+  distanceToBoundary(const Vector2D& lpos) const override;
 
   /// Return the vertices - or, the points of the extremas
   virtual const std::vector<Vector2D>

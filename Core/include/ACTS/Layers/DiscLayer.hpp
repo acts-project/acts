@@ -41,8 +41,6 @@ public:
   /// @param dbounds are the disc bounds that describe the layer dimensions
   /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the layer thickness (along the normal vector)
-  /// @param od is the overlap descriptor that describes sensitive surface
-  /// neighbours
   /// @param ad is the approach descriptor that provides the approach surface
   /// @param laytyp is the layer type
   ///
@@ -118,8 +116,6 @@ protected:
   /// @param dbounds are the disc bounds that describe the layer dimensions
   /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the layer thickness (along the normal vector)
-  /// @param od is the overlap descriptor that describes sensitive surface
-  /// neighbours
   /// @param ad is the approach descriptor that provides the approach surface
   /// @param laytyp is the layer taype
   DiscLayer(std::shared_ptr<Transform3D>      transform,

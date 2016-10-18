@@ -55,7 +55,7 @@ public:
   /// @param moduleSegmentation is the segmentation descriptions
   /// @param halfThickness is the half thickness of the module
   /// @param readoutDirection is the readout drift direction
-  /// lorentz angle is the lorentz drift angle
+  /// @param lorentzAngle is the lorentz drift angle
   DigitizationModule(std::shared_ptr<const Segmentation> moduleSegmentation,
                      double                              halfThickness,
                      int                                 readoutDirection,
