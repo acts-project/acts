@@ -60,9 +60,14 @@ main(int argc, char* argv[])
 
   CylinderSurface surface(nullptr, 100 * units::_m, 30 * units::_m);
 
-  Vector3D                           pos(0, 0, 0);
-  Vector3D                           mom(pT, 0, 0);
-  CurvilinearParameters              pars(nullptr, pos, mom, +1);
+  Vector3D          pos(0, 0, 0);
+  Vector3D          mom(pT, 0, 0);
+  ActsSymMatrixD<5> cov;
+  cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 1, 0,
+      0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
+
+  CurvilinearParameters pars(
+      std::make_unique<ActsSymMatrixD<5>>(cov), pos, mom, +1);
   ExtrapolationCell<TrackParameters> exCell(pars);
   exCell.addConfigurationMode(ExtrapolationMode::StopWithPathLimit);
 

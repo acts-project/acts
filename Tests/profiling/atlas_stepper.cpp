@@ -63,10 +63,16 @@ main(int argc, char* argv[])
   Propagator_type::Options<> options;
   options.max_path_length = maxPath;
 
-  Vector3D              pos(0, 0, 0);
-  Vector3D              mom(pT, 0, 0);
-  CurvilinearParameters pars(nullptr, pos, mom, +1);
-  double                totalPathLength = 0;
+  Vector3D          pos(0, 0, 0);
+  Vector3D          mom(pT, 0, 0);
+  ActsSymMatrixD<5> cov;
+  cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 1, 0,
+      0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
+
+  CurvilinearParameters pars(
+      std::make_unique<ActsSymMatrixD<5>>(cov), pos, mom, +1);
+  //  CurvilinearParameters pars(nullptr, pos, mom, +1);
+  double totalPathLength = 0;
   for (unsigned int i = 0; i < toys; ++i) {
     auto r = propagator.propagate(pars, options);
     totalPathLength += r.pathLength;
