@@ -37,7 +37,7 @@ struct Intersection
                double          slength,
                bool            svalid,
                double          dist = 0.)
-    : position(sinter), pathLength(slenght), distance(dist), valid(svalid)
+    : position(sinter), pathLength(slength), distance(dist), valid(svalid)
   {
   }
 
