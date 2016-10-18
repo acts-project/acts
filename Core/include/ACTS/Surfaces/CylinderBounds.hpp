@@ -224,11 +224,11 @@ CylinderBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 }
 
 inline bool
-CylinderBounds::inside3D(const Vector3D& glopo, const BoundaryCheck& bcheck) const
+CylinderBounds::inside3D(const Vector3D& pos, const BoundaryCheck& bcheck) const
 {
-  return inside(glopo.perp(),
-                glopo.phi(),
-                glopo.z(),
+  return inside(pos.perp(),
+                pos.phi(),
+                pos.z(),
                 bcheck.toleranceLoc0,
                 bcheck.toleranceLoc0);
 }

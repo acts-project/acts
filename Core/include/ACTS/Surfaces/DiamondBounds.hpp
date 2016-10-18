@@ -127,9 +127,9 @@ public:
   virtual bool
   inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const override;
 
-  ///  This method checks inside bounds in loc1
-  /// - loc1/loc2 correspond to the natural coordinates of the surface
-  /// - As loc1/loc2 are correlated the single check doesn't make sense :
+  ///  This method checks inside bounds in loc0
+  /// - loc0/loc1 correspond to the natural coordinates of the surface
+  /// - As loc0/loc1 are correlated the single check doesn't make sense :
   /// -> check is done on enclosing Rectangle !
   ///
   /// @param lpos Local position (assumed to be in right surface frame)
@@ -139,13 +139,13 @@ public:
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
-  ///  This method checks inside bounds in loc2
-  /// - loc1/loc2 correspond to the natural coordinates of the surface
-  /// - As loc1/loc2 are correlated the single check doesn't make sense :
+  ///  This method checks inside bounds in loc1
+  /// - loc0/loc1 correspond to the natural coordinates of the surface
+  /// - As loc0/loc1 are correlated the single check doesn't make sense :
   /// -> check is done on enclosing Rectangle !
   ///
   /// @param lpos Local position (assumed to be in right surface frame)
-  /// @param to1 is the absolute tolerance
+  /// @param tol1 is the absolute tolerance
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool

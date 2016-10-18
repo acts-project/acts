@@ -78,11 +78,11 @@ public:
 
   /// Calculate the cell Position from the Id
   ///
-  /// @param dCell is the digitization cell 
+  /// @param cId is the digitization cell 
   ///
   /// @return the center position of the associated cell
   virtual const Vector2D
-  cellPosition(const DigitizationCell& dCell) const = 0;
+  cellPosition(const DigitizationCell& cId) const = 0;
 
   /// Fill the associated digitsation cell from the start and end position in 3D
   /// correct for lorentz effect if needed

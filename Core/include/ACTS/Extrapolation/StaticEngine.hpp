@@ -204,7 +204,7 @@ private:
 
   /// Main sub structure layer handling
   ///
-  /// @tparam eCell ist he extrapolaiton cell
+  /// @param eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param dir is the additional direction prescription
   /// @param bcheck is the boudnary check directive @todo shift to cell after
@@ -230,7 +230,7 @@ private:
   /// Handle the failure - as configured
   ///
   /// @param eCode is the extrapolation code at entry
-  /// @tparam eCell ist he extrapolaiton cell
+  /// @param eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param dir is the additional direction prescription
   /// @param bcheck is the boudnary check directive @todo shift to cell after

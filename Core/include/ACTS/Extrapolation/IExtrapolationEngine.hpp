@@ -43,7 +43,7 @@ public:
 
   /// Main extrapolation method, templated to chared/neutral
   ///
-  /// @tparam ecCharged ist he extrapolaiton cell
+  /// @param ecCharged ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param bcheck is the boudnary check directive
   /// @todo shift to cell after splitting

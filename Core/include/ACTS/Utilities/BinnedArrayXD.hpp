@@ -151,7 +151,7 @@ public:
   /// Returns the object in the array from a global position
   ///
   /// @param position is the global position for the bin search
-  /// @todo bins is the bins triple filled during access
+  /// @param bins is the bins triple filled during access
   ///
   /// @return is the object in that bin
   T

@@ -70,45 +70,45 @@ public:
 
   /// Resolve the boundary situation - for charged particles
   ///
-  /// @param eCell is the charged extrapolation cell
+  /// @param ecCell is the charged extrapolation cell
   /// @param dir is the additional direction prescription
   ///
   /// @return is a extrapolation code indication
   ExtrapolationCode
-  resolveBoundary(ExCellCharged& eCell,
+  resolveBoundary(ExCellCharged& ecCell,
                   PropDirection  dir = alongMomentum) const final;
 
   /// Resolve the boundary situation - for neutral particles
   ///
-  /// @param eCell is the neutral extrapolation cell
+  /// @param enCell is the neutral extrapolation cell
   /// @param dir is the additional direction prescription
   ///
   /// @return is a extrapolation code indication
   ExtrapolationCode
-  resolveBoundary(ExCellNeutral& eCelll,
+  resolveBoundary(ExCellNeutral& enCell,
                   PropDirection  dir = alongMomentum) const final;
 
   /// Resolve the boundary situation - for charged particles
   ///
-  /// @param eCell is the charged extrapolation cell
+  /// @param ecCell is the charged extrapolation cell
   /// @param dir is the additional direction prescription
   /// @param noLoop is a loop protection @todo check with ST                
   ///
   /// @return is a extrapolation code indication
   ExtrapolationCode
-  resolvePosition(ExCellCharged& eCell,
+  resolvePosition(ExCellCharged& ecCell,
                   PropDirection  dir    = alongMomentum,
                   bool           noLoop = false) const final;
 
   /// Resolve the boundary situation - for neutral particles
   ///
-  /// @param ecCell is the neutral extrapolation cell
+  /// @param enCell is the neutral extrapolation cell
   /// @param dir is the additional direction prescription
   /// @param noLoop is a loop protection @todo check with ST                
   ///
   /// @return is a extrapolation code indication
   ExtrapolationCode
-  resolvePosition(ExCellNeutral& eCelll,
+  resolvePosition(ExCellNeutral& enCell,
                   PropDirection  dir    = alongMomentum,
                   bool           noLoop = false) const final;
 
@@ -169,7 +169,7 @@ private:
   /// Deal with the boundary Surface - called by resolveBoundary
   ///
   /// @param eCell the extrapolation
-  /// @paramn bSurfaceTV the boundary surface
+  /// @param bSurfaceTV the boundary surface
   /// @param dir the propagation direction
   /// @param stepout  is a prescription to step out the volume
   ///

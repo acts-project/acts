@@ -101,9 +101,9 @@ public:
   /// Full intersection constructor
   ///
   /// @param sInter is the intersection struct
-  /// @tparam sObject is the intersected object
-  /// @tparam sRepresentation is the surface representation of the object
-  /// @tparam sResult is the type of result: neutral, charged TP e.g.
+  /// @param sObject is the intersected object
+  /// @param sRepresentation is the surface representation of the object
+  /// @param sResult is the type of result: neutral, charged TP e.g.
   /// @param dir is the direction
   ///
   /// @todo use unique_ptr for result !

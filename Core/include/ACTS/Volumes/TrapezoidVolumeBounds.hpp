@@ -66,8 +66,8 @@ public:
 
   /// Constructor - the trapezoid boundaries (symmetric trapezoid)
   ///
-  /// @param minhalengthx is the half length in x at minimal y
-  /// @param maxhalengthx is the half length in x at maximal y
+  /// @param minhlengthx is the half length in x at minimal y
+  /// @param maxhlengthx is the half length in x at maximal y
   /// @param hlenghty is the half length in y
   /// @param hlengthz is the half length in z
   TrapezoidVolumeBounds(double minhlengthx,
@@ -77,7 +77,7 @@ public:
 
   /// Constructor - the trapezoid boundaries (arbitrary trapezoid)
   ///
-  /// @param minhlenghtx is the half length in x at minimal y
+  /// @param minhlengthx is the half length in x at minimal y
   /// @param hlenghty is the half length in y
   /// @param hlengthz is the half length in z
   /// @param alpha is the openeing angle at -x,-y

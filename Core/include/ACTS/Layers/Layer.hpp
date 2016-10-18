@@ -129,7 +129,7 @@ public:
 
   /// templated onLayer() method
   ///
-  /// @tparam parameters are the templated (charged/neutral) on layer check
+  /// @param parameters are the templated (charged/neutral) on layer check
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates success of the operation
@@ -346,7 +346,7 @@ protected:
   /// from explicit methods
   ///
   /// @param cSurfaces are the retrun surface intersections
-  /// @tparam pars are the (charged) track parameters for the search
+  /// @param pars are the (charged) track parameters for the search
   /// @param pdir is the propagation direction prescription
   /// @param bcheck is the boundary check directive
   /// @param collectSensitive is the prescription to find the sensitive surfaces
@@ -375,8 +375,10 @@ protected:
 
   /// test compatible surface - checking directly for intersection & collection
   ///
-  /// geometrical test compatible surface method
+  /// geometrical test compatible surface method                        
   /// @param cSurfaces are the retrun surface intersections
+  /// @param surface is the parameter surface 
+  /// @todo how is this different from the start surface
   /// @param gpos is the resolved global position
   /// @param dir is themomentum direction
   /// @param pdir is the propagation direction prescription

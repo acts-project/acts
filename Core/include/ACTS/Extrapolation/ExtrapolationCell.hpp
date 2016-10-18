@@ -377,7 +377,7 @@ public:
   /// Constructor of the Extrapolaton cell
   /// start parameters are compulsory
   ///
-  /// @tparam sParameters are the templated parameters
+  /// @param sParameters are the templated parameters
   /// @param pDir is the propagatio direction
   /// @param econfig is the extrapolation config as value
   ExtrapolationCell(const T&      sParameters,

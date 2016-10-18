@@ -255,17 +255,17 @@ public:
   /// @return is the templated boundary intersection
   template <class T>
   std::vector<BoundaryIntersection<T>>
-  boundarySurfacesOrdered(const T&      parameters,
+  boundarySurfacesOrdered(const T& parameters,
                           PropDirection pDir = alongMomentum) const;
 
   /// check if you are on a boundary surface
   ///
-  /// @tparam pars is the type of track parameters
+  /// @param parameters is the type of track parameters
   ///
   /// @return boolean indicator if the parameters are on boundary
   template <class T>
   bool
-  onVolumeBoundary(const T& pars) const;
+  onVolumeBoundary(const T& parameters) const;
 
   /// Glue another tracking volume to this one
   ///  - if common face is set the glued volumes are sharing the boundary, down
@@ -653,8 +653,8 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
   return lIntersections;
 }
 
-/** Returns the boundary surfaces ordered in probability to hit them based on
- * straight line intersection @todo change hard-coded default */
+// Returns the boundary surfaces ordered in probability to hit them based on
+// straight line intersection @todo change hard-coded default 
 template <class T>
 std::vector<BoundaryIntersection<T>>
 TrackingVolume::boundarySurfacesOrdered(const T& pars, PropDirection pDir) const
