@@ -260,7 +260,7 @@ private:
   glueTrackingVolumes(TrackingVolumePtr   volumeOne,
                       BoundarySurfaceFace faceOne,
                       TrackingVolumePtr   volumeTwo,
-                      BoundarySurfaceFace faceTwod,
+                      BoundarySurfaceFace faceTwo,
                       double              rMin,
                       double              rGlueMin,
                       double              rMax,

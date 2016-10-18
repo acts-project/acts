@@ -126,7 +126,7 @@ public:
 
   /// Operator++ to make multidimensional BinUtility
   ///
-  /// @param sbu is the additional BinUtility to be chosen
+  /// @param gbu is the additional BinUtility to be chosen
   BinUtility&
   operator+=(const BinUtility& gbu) throw(std::string)
   {

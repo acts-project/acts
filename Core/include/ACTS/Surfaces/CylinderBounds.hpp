@@ -140,7 +140,7 @@ public:
   ///
   /// @return is a signed distance parameter
   virtual double
-  distanceToBoundary(const Vector2D& pos) const override;
+  distanceToBoundary(const Vector2D& lpos) const override;
 
   /// This method returns the radius
   virtual double

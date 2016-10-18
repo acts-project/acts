@@ -133,6 +133,7 @@ public:
   /// @todo check if we can change to triple return at once
   ///
   /// @param lposition is the local position for the bin search
+  /// @param bins is the bin triple filled during this access
   /// 
   /// @return is the object in that bin
   T
@@ -150,9 +151,9 @@ public:
 
   /// Returns the object in the array from a global position
   ///
-  /// @todo check if we can change to triple return at once
-  ///
   /// @param position is the global position for the bin search
+  /// @todo bins is the bins triple filled during access
+  ///
   /// @return is the object in that bin
   T
   object(const Vector3D& position, std::array<size_t, 3>& bins) const final

@@ -60,8 +60,8 @@ public:
   /// - usually used in a volume constructor
   ///
   /// @param surface is the unqiue surface the boundary represents
-  /// @tparam inside is the inside volume the bounday surface points to
-  /// @tparam outside is the outside volume the boundary surface points to
+  /// @param inside is the inside volume the bounday surface points to
+  /// @param outside is the outside volume the boundary surface points to
   BoundarySurfaceT(std::unique_ptr<const Surface> surface,
                    const T*                       inside,
                    const T*                       outside)
@@ -77,8 +77,8 @@ public:
   /// - usually used in a volume constructor
   ///
   /// @param surface is the unqiue surface the boundary represents
-  /// @tparam inside is the inside volume the bounday surface points to
-  /// @tparam outside is the outside volume the boundary surface points to
+  /// @param inside is the inside volume the bounday surface points to
+  /// @param outside is the outside volume the boundary surface points to
   BoundarySurfaceT(std::unique_ptr<const Surface> surface,
                    VolumePtr                      inside,
                    VolumePtr                      outside)
@@ -94,8 +94,8 @@ public:
   /// - usually used in a volume constructor
   ///
   /// @param surface is the unqiue surface the boundary represents
-  /// @param inside is the inside volume array the bounday surface points to
-  /// @param outside is the outside volume array the boundary surface points to
+  /// @param insideArray is the inside volume array the bounday surface points to
+  /// @param outsideArray is the outside volume array the boundary surface points to
   BoundarySurfaceT(std::unique_ptr<const Surface>     surface,
                    std::shared_ptr<const VolumeArray> insideArray,
                    std::shared_ptr<const VolumeArray> outsideArray)

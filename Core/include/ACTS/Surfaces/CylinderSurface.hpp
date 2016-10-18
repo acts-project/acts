@@ -174,7 +174,7 @@ public:
   /// Check for position on surface
   ///              
   /// @param gpos is the global position to be checked
-  /// @param bhck is the boundary check object
+  /// @param bchk is the boundary check object
   ///              
   /// @return is a boolean indicating if the position is on surface
   virtual bool
@@ -199,10 +199,10 @@ public:
   ///  Therefore the two points describing the line have to be first
   ///  recalculated
   /// into the new frame.
-  ///  Suppose, this is done, the intersection is straight forward:<br>
-  ///  may @f$p_{1}=(p_{1x}, p_{1y}, p_{1z}), p_{2}=(p_{2x}, p_{2y}, p_{2z})
-  /// @f$the two points describing the 3D-line,
-  ///  then the line in the \f$x-y@f$plane can be written as
+  ///  Suppose, this is done, the intersection is straight forward:
+  ///  @f$p_{1}=(p_{1x}, p_{1y}, p_{1z}), p_{2}=(p_{2x}, p_{2y}, p_{2z}) @f$ 
+  ///  are the two points describing the 3D-line,
+  ///  then the line in the \f$x-y@f$ plane can be written as
   ///  @f$y=kx+d\f$, where @f$k =\frac{p_{2y}-p_{1y}}{p_{2x}-p_{1x}}@f$such as
   /// @f$d=\frac{p_{2x}p_{1y}-p_{1x}p_{2y}}{p_{2x}-p_{1x}},\f$<br>
   ///  and intersects with the corresponding circle @f$x^{2}+y^{2} = R^{2}.

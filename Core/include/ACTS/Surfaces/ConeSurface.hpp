@@ -174,8 +174,9 @@ public:
   ///
   /// @param gpos is the start position for the intersection
   /// @param dir is the start direction for the intersection
-  /// @param forcDir is the flag to force to go along the forward direction
+  /// @param forceDir is the flag to force to go along the forward direction
   /// @param bchk is the boundary check to be used in this directive
+  ///              
   /// <b>mathematical motivation:</b>
   ///
   ///   The calculation will be done in the 3-dim frame of the cone,

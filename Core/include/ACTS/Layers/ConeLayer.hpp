@@ -35,8 +35,8 @@ public:
   ///
   /// @param transform is the 3D transform that poisitions the layer in 3D frame
   /// @param cbounds is the conical bound description
+  /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the layer thickness along the normal axis
-  /// @param od is the overlap description for the sensitive layers
   /// @param ad is the approach descriptor for navigation towards the layer
   /// @param laytyp is the layer type
   ///
@@ -104,8 +104,8 @@ protected:
   ///
   /// @param transform is the 3D transform that poisitions the layer in 3D frame
   /// @param cbounds is the conical bound description
+  /// @param surfaceArray is the array of sensitive surfaces 
   /// @param thickness is the layer thickness along the normal axis
-  /// @param od is the overlap description for the sensitive layers
   /// @param ad is the approach descriptor for navigation towards the layer
   /// @param laytyp is the layer type
   ///

@@ -82,7 +82,7 @@ public:
 
   /// Constructor - full cylinder
   ///
-  /// @param is the outer radius of the cylinder
+  /// @param radius is the outer radius of the cylinder
   /// @param halez is the half length in z
   CylinderVolumeBounds(double radius, double halez);
 

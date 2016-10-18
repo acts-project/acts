@@ -58,7 +58,7 @@ public:
   /// @param hlengthx is the half length of the cube in x
   /// @param hlengthy is the half length of the cube in y
   /// @param hlengthz is the half length of the cube in z
-  CuboidVolumeBounds(double hlenghtx, double hlenghty, double hlengthz);
+  CuboidVolumeBounds(double hlengthx, double hlengthy, double hlengthz);
 
   /// Copy Constructor
   ///

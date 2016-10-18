@@ -137,7 +137,7 @@ public:
 
   /// Return the radius at a specific z values
   ///
-  /// @param is the z value for which r is requested
+  /// @param z is the z value for which r is requested
   ///
   /// @return is the r value associated with z
   double

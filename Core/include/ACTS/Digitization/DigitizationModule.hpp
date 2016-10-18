@@ -68,6 +68,7 @@ public:
   ///
   /// @param entryCids are the entry digitisation cell ids
   /// @param exitCids are the exit digitisation cell ids
+  ///
   /// @return object is a vector of shared surfaces
   const SurfacePtrVector
   segmentationSurfaces(const DigitizationCell& entryCids,
@@ -77,15 +78,15 @@ public:
   const DigitizationCell
   cell(const Vector2D& position) const;
 
-  /// module thickness
+  /// Return the module thickness
   double
   halfThickness() const;
 
-  /// return the readout direction
+  /// Return the readout direction
   int
   readoutDirection() const;
 
-  /// return the lorentz Angle */
+  /// Return the lorentz Angle
   double
   lorentzAngle() const;
 
@@ -93,10 +94,11 @@ public:
   const Segmentation&
   segmentation() const;
 
-  /// return the test surfaces between these points
+  /// Return the test surfaces between these points
   ///
   /// @param start is the start position of the step
   /// @param end is the end position of the step
+  ///
   /// @return stepSurfaces are the surfaces to test
   const SurfacePtrVector
   stepSurfaces(const Vector3D& start, const Vector3D& end) const;
@@ -106,15 +108,15 @@ public:
   const DigitizationStep
   digitizationStep(const Vector3D& start, const Vector3D& end) const;
 
-  /// return the bounding surfaces inlcuding top and bottom
+  /// Return the bounding surfaces inlcuding top and bottom
   const SurfacePtrVector&
   boundarySurfaces() const;
 
-  /// return all surfaces in X - excluding the boundaries
+  /// Return all surfaces in X - excluding the boundaries
   const SurfacePtrVector&
   segmentationSurfacesX() const;
 
-  /// return all surfaces in Y - excluding the boundaries
+  /// Return all surfaces in Y - excluding the boundaries
   const SurfacePtrVector&
   segmentationSurfacesY() const;
 
