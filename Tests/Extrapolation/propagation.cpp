@@ -14,6 +14,7 @@
 #include <boost/test/data/test_case.hpp>
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Extrapolation/AtlasStepper.hpp"
+#include "ACTS/Extrapolation/EigenStepper.hpp"
 #include "ACTS/Extrapolation/Propagator.hpp"
 #include "ACTS/MagneticField/ConstantFieldSvc.hpp"
 #include "ACTS/Utilities/Units.hpp"
@@ -43,7 +44,7 @@ namespace Test {
                        index)
   {
     typedef ConstantFieldSvc          BField_type;
-    typedef AtlasStepper<BField_type> Stepper_type;
+    typedef EigenStepper<BField_type> Stepper_type;
     typedef Propagator<Stepper_type>  Propagator_type;
 
     // setup propagator with constant B-field
@@ -137,7 +138,7 @@ namespace Test {
                        index)
   {
     typedef ConstantFieldSvc          BField_type;
-    typedef AtlasStepper<BField_type> Stepper_type;
+    typedef EigenStepper<BField_type> Stepper_type;
     typedef Propagator<Stepper_type>  Propagator_type;
 
     // setup propagator with constant B-field
