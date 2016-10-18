@@ -46,11 +46,11 @@ public:
 
   /// Constructor for full of an ellipsoid disc
   ///
-  /// @param minrad1
-  /// @param minrad2
-  /// @param maxrad1
-  /// @param maxrad2
-  /// @param hphisec average phi (is set to 0. as default)
+  /// @param minrad1 is the minimum radius at coorindate 1
+  /// @param minrad2 is the minimum radius at coorindate 2
+  /// @param maxrad1 is the minimum radius at coorindate 1
+  /// @param maxrad2 is the minimum radius at coorindate 2
+  /// @param avphi average phi (is set to 0. as default)
   /// @param hphisec spanning phi sector (is set to pi as default)
   EllipseBounds(double minrad1,
                 double minrad2,
@@ -63,6 +63,7 @@ public:
   ///
   /// @param ebo is the source bounds for the copy
   EllipseBounds(const EllipseBounds& ebo) : PlanarBounds(ebo) {}
+  
   /// Destructor
   virtual ~EllipseBounds();
 

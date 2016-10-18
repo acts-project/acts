@@ -65,8 +65,9 @@ class ExtrapolationConfig
 public:
   /// Constructor
   ///
-  /// @param eval is the vonfiguration value
+  /// @param evalue is the vonfiguration value
   ExtrapolationConfig(unsigned int evalue = 0) : value(evalue) {}
+
   /// Copy Constructor
   ///
   /// @param eConfig is the source object for the copy
@@ -77,7 +78,7 @@ public:
   /// Add a configuration mode
   /// - this sets the bit corresponding to the given mode
   ///
-  /// @param the mode that is to be set
+  /// @param em the mode that is to be set
   void
   addMode(ExtrapolationMode::eMode em)
   {
@@ -88,7 +89,7 @@ public:
   /// Check the configuration mode
   /// - this checks the bit corresponding to the configuration mode
   ///
-  /// @param the mode that is to be checks
+  /// @param em the mode that is to be checks
   ///
   /// @return boolean indicator if the mode was set
   bool
@@ -369,13 +370,14 @@ public:
   /// The process vertices that occured (for FATRAS)
   std::vector<ProcessVertex> interactionVertices;
 
-  float time;    //!< timing info
-  float zOaTrX;  //!< z/A*rho*dInX0 (for average calculations)
-  float zX;      //!< z*dInX0 (for average calculations)
+  float time;    ///< timing info
+  float zOaTrX;  ///< z/A*rho*dInX0 (for average calculations)
+  float zX;      ///< z*dInX0 (for average calculations)
 
   /// Constructor of the Extrapolaton cell
   /// start parameters are compulsory
   ///
+  /// @tparam sParameters are the templated parameters
   /// @param pDir is the propagatio direction
   /// @param econfig is the extrapolation config as value
   ExtrapolationCell(const T&      sParameters,
@@ -459,7 +461,7 @@ public:
   /// - if the surface is already in the step vector, the new parameters
   ///   are atached
   ///
-  /// @param stepParamters are the parameters of the step
+  /// @param stepParameters are the parameters of the step
   /// @param fillMode is the mode under which these parameters are
   /// considered
   void
@@ -484,7 +486,7 @@ public:
   /// - material is just a pointer copy
   ///
   /// @param sfactor is the scale factor
-  /// @param mprot is the material properties associated with the step
+  /// @param mprop is the material properties associated with the step
   void
   addMaterial(double sfactor, const MaterialProperties* mprop = nullptr);
 
