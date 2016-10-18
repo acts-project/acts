@@ -70,7 +70,7 @@ public:
   /// Object intersection
   ///
   /// @param sInter is the intersection
-  /// @tparam sObject is the object to be instersected
+  /// @param sObject is the object to be instersected
   /// @param dir is the direction of the intersection
   ObjectIntersection(const Intersection& sInter, const T* sObject, int dir = 1)
     : intersection(sInter), object(sObject), pDirection(dir)

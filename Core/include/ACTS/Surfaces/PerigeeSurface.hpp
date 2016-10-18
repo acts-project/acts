@@ -58,7 +58,7 @@ public:
 
   /// Virtual constructor
   ///
-  /// @aram shift is the potential shift that is applied after cloning
+  /// @param shift is the potential shift that is applied after cloning
   virtual PerigeeSurface*
   clone(const Transform3D* shift = nullptr) const override;
 

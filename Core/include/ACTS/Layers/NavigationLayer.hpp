@@ -34,7 +34,7 @@ public:
   ///  Factory Constructor - the surface representation is given by pointer
   /// (ownership passed)
   ///
-  /// @param sRepresenation is the represenation for extrapolation
+  /// @param sRepresentation is the represenation for extrapolation
   /// @param thickness is the thickness for the binning
   static LayerPtr
   create(std::unique_ptr<const Surface> sRepresentation, double thickness = 0.)
