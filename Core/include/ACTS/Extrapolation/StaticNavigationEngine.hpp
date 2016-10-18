@@ -157,7 +157,8 @@ private:
   ///
   /// @param eCell the extrapolation
   /// @param dir the propagation direction
-  /// @param noLoop @todo check with sharka
+  /// @param noLoop
+  /// @todo check with sharka
   ///
   /// @return is a extrapolation code indication
   template <class T>
