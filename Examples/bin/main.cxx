@@ -82,9 +82,9 @@ public:
     exCell->addConfigurationMode(ExtrapolationMode::CollectJacobians);
     const Surface& sf = getSurface(m);
 
-    ExtrapolationCode eCode = m_exEngine->extrapolate(*exCell, &sf);
-    MyCache           c;
-    auto j = exCell->extrapolationSteps.back().transportJacobian.release();
+    m_exEngine->extrapolate(*exCell, &sf);
+    MyCache c;
+    auto    j = exCell->extrapolationSteps.back().transportJacobian.release();
     c.jacobian.reset(new KF::Step<long int>::JacobianMatrix(*j));
     auto pars
         = static_cast<const BoundParameters*>(exCell->leadParameters->clone());
@@ -166,10 +166,10 @@ main()
 {
   // options are stage = 0, 1, 2
   std::shared_ptr<const Acts::TrackingGeometry> geo
-    = Acts::buildGenericDetector(Acts::Logging::VERBOSE,
-                                 Acts::Logging::VERBOSE,
-                                 Acts::Logging::VERBOSE,
-                                 0);
+      = Acts::buildGenericDetector(Acts::Logging::VERBOSE,
+                                   Acts::Logging::VERBOSE,
+                                   Acts::Logging::VERBOSE,
+                                   0);
   ActsVector<ParValue_t, NGlobalPars> pars;
   pars << 0, 0, M_PI / 2, M_PI / 2, 0.0001;
   auto startCov = std::make_unique<ActsSymMatrix<ParValue_t, NGlobalPars>>(
@@ -236,6 +236,6 @@ main()
     std::cout << *p->getCalibratedMeasurement() << std::endl;
     std::cout << *p->getSmoothedState() << std::endl;
   }
-    
+
   return 0;
 }

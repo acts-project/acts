@@ -427,7 +427,7 @@ Acts::GenericLayerBuilder::constructLayers()
       }
       size_t layerBinsPhi = 0;
       // take the maximum phi bins in that layer
-      for (auto& phiBins : m_cfg.posnegModulePhiBins.at(ipnl)) {
+      for (unsigned int phiBins : m_cfg.posnegModulePhiBins.at(ipnl)) {
         layerBinsPhi = phiBins > layerBinsPhi ? phiBins : layerBinsPhi;
         layerBinsPhi *= m_cfg.posnegLayerBinMultipliers.second;
       }

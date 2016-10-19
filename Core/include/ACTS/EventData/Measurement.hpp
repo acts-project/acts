@@ -334,6 +334,7 @@ protected:
   {
     out << sizeof...(params) << "D measurement: ";
     int dummy[sizeof...(params)] = {(out << params << ", ", 0)...};
+    dummy[0]                     = dummy[0];
     out << std::endl;
     out << "measured values:" << std::endl;
     out << parameters() << std::endl;
