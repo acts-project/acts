@@ -177,7 +177,7 @@ public:
   /// @param dir is the start direction for the intersection
   /// @param forceDir is the flag to force to go along the forward direction
   /// @param bcheck is the boundary check to be used in this directive
-  ///              
+  ///
   /// <b>mathematical motivation:</b>
   ///
   ///   The calculation will be done in the 3-dim frame of the cone,
@@ -201,7 +201,7 @@ public:
   ///   equation of the cone. Inserting the expression for the points
   ///   on the line into the equation of the cone and rearranging to
   ///   the form of a  gives (letting @f$ \vec x_d = \frac{\vec x_2 - \vec
-  ///   x_1}{\abs{\vec x_2 - \vec x_1}} @f$):
+  ///   x_1}{|\vec x_2 - \vec x_1|} @f$):
   ///   @f$t^2 (x_d^2 + y_d^2 - z_d^2 \tan^2 \alpha) + 2 t (x_1 x_d +
   ///   y_1 y_d - z_1 z_d \tan^2 \alpha) + (x_1^2 + y_1^2 - z_1^2
   ///   \tan^2 \alpha) = 0 @f$
@@ -215,7 +215,7 @@ public:
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir = false,
-                       const BoundaryCheck& bcheck     = false) const override;
+                       const BoundaryCheck& bcheck   = false) const override;
 
   /// the pathCorrection for derived classes with thickness
   ///
