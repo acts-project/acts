@@ -51,7 +51,7 @@ namespace detail {
   /// Estimate the distance of closest approach to the origin.
   ///
   /// @param p0     Initial circle position (must provide `.x()`, `.y()`)
-  /// @param phi    Initial azimuthal direction angle
+  /// @param phi0   Initial azimuthal direction angle
   /// @param kappa  Signed circle curvature
   ///
   /// A first order approximation in the curvature of the analytical expression

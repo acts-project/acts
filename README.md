@@ -1,7 +1,5 @@
 # A Common Tracking Software (ACTS) Project {#mainpage}
 
-[![Build Status](http://acts-ci:8080/job/ACTS-CI/badge/icon)](http://acts-ci:8080/job/ACTS-CI)
-
 1. [Introduction](#intro)
 2. [Mailing list](#mailing-list)
 3. [Getting started](#getting-started)

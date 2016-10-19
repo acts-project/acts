@@ -50,7 +50,7 @@ Acts::TrapezoidSegmentation::~TrapezoidSegmentation()
 }
 
 void
-Acts::TrapezoidSegmentation::createSegmenationSurfaces(
+Acts::TrapezoidSegmentation::createSegmentationSurfaces(
     std::vector<std::shared_ptr<const Surface>>& boundarySurfaces,
     std::vector<std::shared_ptr<const Surface>>& segmentationSurfacesX,
     std::vector<std::shared_ptr<const Surface>>& segmentationSurfacesY,

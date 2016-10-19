@@ -28,12 +28,12 @@ Acts::DigitizationModule::DigitizationModule(
   , m_segmentationSurfacesX()
   , m_segmentationSurfacesY()
 {
-  m_segmentation->createSegmenationSurfaces(m_boundarySurfaces,
-                                            m_segmentationSurfacesX,
-                                            m_segmentationSurfacesY,
-                                            halfThickness,
-                                            readoutDirection,
-                                            lorentzAngle);
+  m_segmentation->createSegmentationSurfaces(m_boundarySurfaces,
+                                             m_segmentationSurfacesX,
+                                             m_segmentationSurfacesY,
+                                             halfThickness,
+                                             readoutDirection,
+                                             lorentzAngle);
 }
 
 const Acts::SurfacePtrVector

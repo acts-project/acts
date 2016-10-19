@@ -161,7 +161,8 @@ public:
   /// structure or not
   /// @note reasons for resolving are: collect & find material, collect & find
   /// sensitivex
-  /// @param ice is a (future) compatibility estimator that could be used to modify
+  /// @param ice is a (future) compatibility estimator that could be used to
+  /// modify
   /// the straight line approach
   virtual const SurfaceIntersection
   surfaceOnApproach(const Vector3D&                gpos,
@@ -190,7 +191,8 @@ public:
   /// excluded in return
   /// @param endSurface is an (optional) end surface for the search: excluded in
   /// return
-  /// @param ice is a (future) compatibility estimator that could be used to modify
+  /// @param ice is a (future) compatibility estimator that could be used to
+  /// modify
   /// the straight line approach
   ///
   /// @return boolean that indicates if a compatible surface exists at all
@@ -225,7 +227,8 @@ public:
   /// excluded in return
   /// @param endSurface is an (optional) end surface for the search: excluded in
   /// return
-  /// @param ice is a (future) compatibility estimator that could be used to modify
+  /// @param ice is a (future) compatibility estimator that could be used to
+  /// modify
   /// the straight line approach
   ///
   /// @return boolean that indicates if a compatible surface exists at all
@@ -356,7 +359,8 @@ protected:
   /// excluded in return
   /// @param endSurface is an (optional) end surface for the search: excluded in
   /// return
-  /// @param ice is a (future) compatibility estimator that could be used to modify
+  /// @param ice is a (future) compatibility estimator that could be used to
+  /// modify
   /// the straight line approach
   ///
   /// @return boolean that indicates if a compatible surface exists at all
@@ -369,21 +373,21 @@ protected:
                         bool                              collectSensitive,
                         bool                              collectPassive,
                         int                               searchType,
-                        const Surface*                    startSurface = nullptr,
-                        const Surface*                    endSurface   = nullptr,
-                        const ICompatibilityEstimator*    ice = nullptr) const;
+                        const Surface*                 startSurface = nullptr,
+                        const Surface*                 endSurface   = nullptr,
+                        const ICompatibilityEstimator* ice = nullptr) const;
 
   /// test compatible surface - checking directly for intersection & collection
   ///
-  /// geometrical test compatible surface method                        
+  /// geometrical test compatible surface method
   /// @param cSurfaces are the retrun surface intersections
-  /// @param surface is the parameter surface 
+  /// @param surface is the parameter surface
   /// @todo how is this different from the start surface
   /// @param gpos is the resolved global position
   /// @param dir is themomentum direction
   /// @param pdir is the propagation direction prescription
   /// @param bcheck is the boundary check directive
-  /// @param maxPathLength is the maximal path length allowed to the surface                      
+  /// @param maxPathLength is the maximal path length allowed to the surface
   /// @param collectSensitive is the prescription to find the sensitive surfaces
   /// @param collectPassive is the prescription to find all passive surfaces
   /// @param intersectionTest is a boolean idicating if intersection is done
@@ -391,7 +395,8 @@ protected:
   /// excluded in return
   /// @param endSurface is an (optional) end surface for the search: excluded in
   /// return
-  /// @param ice is a (future) compatibility estimator that could be used to modify
+  /// @param ice is a (future) compatibility estimator that could be used to
+  /// modify
   /// the straight line approach
   ///
   /// @return boolean that indicates if a compatible surface exists at all
@@ -406,9 +411,9 @@ protected:
                         bool                              collectSensitive,
                         bool                              collectPassive,
                         bool                              intersectionTest,
-                        const Surface*                    startSurface = nullptr,
-                        const Surface*                    endSurface   = nullptr,
-                        const ICompatibilityEstimator*    ice = nullptr) const;
+                        const Surface*                 startSurface = nullptr,
+                        const Surface*                 endSurface   = nullptr,
+                        const ICompatibilityEstimator* ice = nullptr) const;
 
   ///  private method to set enclosing TrackingVolume, called by friend class
   /// only
@@ -531,12 +536,12 @@ Layer::registerRepresentingVolume(const AbstractVolume* theVol) const
   m_representingVolume = theVol;
 }
 
-#include "ACTS/Layers/detail/Layer.ipp"
-
 /// Layers are constructedd with shared_ptr factories, hence the layer array is
 /// describes as:
 typedef BinnedArray<LayerPtr> LayerArray;
 
 }  // end of namespace
+
+#include "ACTS/Layers/detail/Layer.ipp"
 
 #endif  // ACTS_DETECTOR_LAYER_H

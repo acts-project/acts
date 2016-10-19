@@ -14,15 +14,15 @@
 
 namespace Acts {
 
-/// @typedef of a pair of ints for definition of a cell
+/// @brief pair of ints for definition of a cell
 typedef std::pair<size_t, size_t> DigitizationCell;
 
-/// @struct DigitizationStep for further handling
+/// @brief DigitizationStep for further handling
 struct DigitizationStep
 {
-  double stepLength;              /// this is the path length within the cell
-  double driftLength;             /// this is the path length of the setp center to the
-                                  /// readout surface
+  double stepLength;   /// this is the path length within the cell
+  double driftLength;  /// this is the path length of the setp center to the
+                       /// readout surface
   DigitizationCell stepCell;      /// this is the cell identifier of the segment
   Vector3D         stepEntry;     /// this is the Entry point into the segment
   Vector3D         stepExit;      /// this is the Exit point from the segment

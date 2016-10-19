@@ -18,7 +18,7 @@
 
 namespace Acts {
 
-/// @class Segmentation Base class
+/// @brief Segmentation Base class
 ///
 /// Segementation class for generic pixel, strixels and strip segmentations on a
 /// rectangle shape
@@ -43,16 +43,16 @@ public:
   /// Virtual Destructor */
   virtual ~RectangularSegmentation();
 
-  /// @copydoc Segmentation::createSegmenationSurfaces
+  /// @copydoc Acts::Segmentation::createSegmentationSurfaces
   ///
   /// Create the segmentation surfaces in X and Y for rectangular shapes
   void
-  createSegmenationSurfaces(SurfacePtrVector& boundarySurfaces,
-                            SurfacePtrVector& segmentationSurfacesX,
-                            SurfacePtrVector& segmentationSurfacesY,
-                            double            halfThickness,
-                            int               readoutDirection = 1.,
-                            double            lorentzAngle = 0.) const override;
+  createSegmentationSurfaces(SurfacePtrVector& boundarySurfaces,
+                             SurfacePtrVector& segmentationSurfacesX,
+                             SurfacePtrVector& segmentationSurfacesY,
+                             double            halfThickness,
+                             int               readoutDirection = 1.,
+                             double lorentzAngle = 0.) const override;
 
   /// @copydoc Segmentation::cell
   const DigitizationCell
