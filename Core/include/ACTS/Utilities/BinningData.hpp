@@ -138,9 +138,9 @@ public:
     , zdim(bBoundaries.size() == 2 ? true : false)
     , subBinningData(std::move(sBinData))
     , subBinningAdditive(true)
-    , m_bins(bBoundaries.size() - 1)
+    , m_bins(bBoundaries.size()-1)
     , m_boundaries(bBoundaries)
-    , m_totalBins(bBoundaries.size())
+    , m_totalBins(bBoundaries.size()-1)
     , m_totalBoundaries(bBoundaries)
     , m_functionPtr(nullptr)
   {
