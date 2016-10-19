@@ -26,6 +26,8 @@ namespace Test {
   Vector2D rphizPosition(0.1,2.5);
   Vector2D rphiPosition(3.5,M_PI/8.);
 
+
+
   // the binnings - equidistant
   /// x/y/zData
   BinningData xData_eq(open,binX,10,0.,10.);
@@ -46,6 +48,17 @@ namespace Test {
   BinningData yData_arb(open,binY,values);  
   BinningData phiData_arb(closed,binPhi,phiValues);
 
+  // the binning - substructure
+  std::vector<float> sstr = { 0., 1., 1.5, 2., 3.};
+  /// multiplicative
+  auto xData_sstr_mult = std::make_unique<BinningData>(open,binX,sstr);
+  BinningData xData_mult(open,binX,3,0.,9.,std::move(xData_sstr_mult));
+  /// additive
+  std::vector<float> main_sstr = { 0., 3., 4., 5.};
+  auto xData_sstr_add = std::make_unique<BinningData>(open,binX,sstr);
+  BinningData xData_add(open,binX,main_sstr,std::move(xData_sstr_add));
+  
+
   // enum BinningValue { binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta }
   //
   // test the different binning values
@@ -55,17 +68,24 @@ namespace Test {
     /// check the global position requests
     BOOST_CHECK_EQUAL(xData_eq.bins(), 10);
     BOOST_CHECK_EQUAL(xData_arb.bins(), 5);
-    
+    BOOST_CHECK_EQUAL(xData_mult.bins(), 12);
+    BOOST_CHECK_EQUAL(xData_add.bins(), 6); 
+      
     /// check the global position requests
     BOOST_CHECK_EQUAL(xData_eq.value(xyzPosition), 0.5);
     BOOST_CHECK_EQUAL(yData_eq.value(xyzPosition), 1.5);
     BOOST_CHECK_EQUAL(zData_eq.value(xyzPosition), 2.5);
     BOOST_CHECK_EQUAL(xData_arb.value(xyzPosition), 0.5);
+    BOOST_CHECK_EQUAL(xData_mult.value(xyzPosition), 0.5);
+    BOOST_CHECK_EQUAL(xData_add.value(xyzPosition), 0.5);
+    
     /// check the local position requests
     BOOST_CHECK_EQUAL(xData_eq.value(xyPosition), 0.5);
     BOOST_CHECK_EQUAL(yData_eq.value(xyPosition), 1.5);
     BOOST_CHECK_EQUAL(zData_eq.value(rphizPosition), 2.5);
     BOOST_CHECK_EQUAL(xData_arb.value(xyPosition), 0.5);
+    BOOST_CHECK_EQUAL(xData_mult.value(xyPosition), 0.5);
+    BOOST_CHECK_EQUAL(xData_add.value(xyPosition), 0.5);
     // r/phi/rphiData
     BOOST_CHECK_CLOSE(rData_eq.value(xyzPosition), sqrt(0.5*0.5+1.5*1.5),10e-5);
     BOOST_CHECK_EQUAL(rData_eq.value(rphiPosition), 3.5);
@@ -90,16 +110,21 @@ namespace Test {
     BOOST_CHECK_EQUAL(yData_eq.searchGlobal(xyzPosition), 1);
     BOOST_CHECK_EQUAL(zData_eq.searchGlobal(xyzPosition), 2);
     BOOST_CHECK_EQUAL(xData_arb.searchGlobal(xyzPosition), 0);
+    BOOST_CHECK_EQUAL(xData_add.searchGlobal(xyzPosition), 0);    
+    BOOST_CHECK_EQUAL(xData_mult.searchGlobal(xyzPosition), 0);
+    
     /// check the local position requests
     BOOST_CHECK_EQUAL(xData_eq.searchLocal(xyPosition), 0);
     BOOST_CHECK_EQUAL(yData_eq.searchLocal(xyPosition), 1);
     BOOST_CHECK_EQUAL(zData_eq.searchLocal(rphizPosition), 2);
     BOOST_CHECK_EQUAL(xData_arb.searchLocal(xyPosition), 0);
+    
     // r/phi/rphiData
     BOOST_CHECK_EQUAL(rData_eq.searchGlobal(xyzPosition), 1);
     BOOST_CHECK_EQUAL(rData_eq.searchLocal(rphiPosition), 3);
     BOOST_CHECK_EQUAL(phiData_eq.searchGlobal(phi0Position),2);
     BOOST_CHECK_EQUAL(phiData_eq.searchGlobal(phiPihPosition),3);
+    
     // h/etaData
     BOOST_CHECK_EQUAL(etaData_eq.searchGlobal(eta0Position), 2);
   }
@@ -112,11 +137,17 @@ namespace Test {
     BOOST_CHECK_EQUAL(yData_eq.inside(xyzPosition), true);
     BOOST_CHECK_EQUAL(zData_eq.inside(xyzPosition), true);
     BOOST_CHECK_EQUAL(xData_arb.inside(xyzPosition), true);
+    BOOST_CHECK_EQUAL(xData_add.inside(xyzPosition), true);
+    BOOST_CHECK_EQUAL(xData_mult.inside(xyzPosition), true);
+    
     // check the global outside
     BOOST_CHECK_EQUAL(xData_eq.inside(xyzPositionOutside), false);
     BOOST_CHECK_EQUAL(yData_eq.inside(xyzPositionOutside), false);
     BOOST_CHECK_EQUAL(zData_eq.inside(xyzPositionOutside), false);
     BOOST_CHECK_EQUAL(xData_arb.inside(xyzPositionOutside), false);
+    BOOST_CHECK_EQUAL(xData_add.inside(xyzPositionOutside), true);
+    BOOST_CHECK_EQUAL(xData_mult.inside(xyzPositionOutside), true);
+    
     // cthe local inside
     BOOST_CHECK_EQUAL(xData_eq.inside(xyPosition), true);
     BOOST_CHECK_EQUAL(yData_eq.inside(xyPosition), true);

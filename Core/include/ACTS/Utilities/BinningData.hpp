@@ -29,10 +29,10 @@ namespace Acts {
 ///   phi has a very particular behaviour:
 ///   - there's the change around +/- PI
 ///
-///   @todo add description of convention for sub structure
 ///   - it can be multiplicative or additive
-///   multiplicative : each bin has the same sub structure
+///   multiplicative : each major bin has the same sub structure
 ///                    i.e. first binnning
+///
 /// structure is equidistant
 ///   additive : sub structure replaces one bin (and one bin only)
 ///
