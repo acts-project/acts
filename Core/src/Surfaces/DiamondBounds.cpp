@@ -143,7 +143,7 @@ Acts::DiamondBounds::alpha2() const
 }
 
 double
-Acts::DiamondBounds::minDistance(const Acts::Vector2D& pos) const
+Acts::DiamondBounds::distanceToBoundary(const Acts::Vector2D& pos) const
 {
   const int Np = 6;
 

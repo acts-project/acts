@@ -23,7 +23,6 @@ namespace Acts {
 class ConeBounds;
 class ApproachDescriptor;
 
-///
 /// @class ConeLayer
 ///
 /// Class to describe a conical detector layer for tracking, it inhertis from
@@ -36,12 +35,12 @@ public:
   ///
   /// @param transform is the 3D transform that poisitions the layer in 3D frame
   /// @param cbounds is the conical bound description
+  /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the layer thickness along the normal axis
-  /// @param od is the overlap description for the sensitive layers
   /// @param ad is the approach descriptor for navigation towards the layer
   /// @param laytyp is the layer type
   ///
-  /// @TODO chage od and ad to unique_ptr
+  /// @todo chage od and ad to unique_ptr
   ///
   /// @return is a shared pointer to a layer
   static LayerPtr
@@ -105,12 +104,12 @@ protected:
   ///
   /// @param transform is the 3D transform that poisitions the layer in 3D frame
   /// @param cbounds is the conical bound description
+  /// @param surfaceArray is the array of sensitive surfaces 
   /// @param thickness is the layer thickness along the normal axis
-  /// @param od is the overlap description for the sensitive layers
   /// @param ad is the approach descriptor for navigation towards the layer
   /// @param laytyp is the layer type
   ///
-  /// @TODO chage od and ad to unique_ptr
+  /// @todo chage od and ad to unique_ptr
   ConeLayer(std::shared_ptr<Transform3D>      transform,
             std::shared_ptr<const ConeBounds> cbounds,
             std::unique_ptr<SurfaceArray>     surfaceArray,

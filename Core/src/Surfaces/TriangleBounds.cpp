@@ -36,7 +36,7 @@ Acts::TriangleBounds::operator=(const TriangleBounds& tribo)
 }
 
 double
-Acts::TriangleBounds::minDistance(const Acts::Vector2D& lpos) const
+Acts::TriangleBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 {
   const int Np = 3;
 

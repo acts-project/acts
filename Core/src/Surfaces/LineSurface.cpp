@@ -97,15 +97,15 @@ Acts::LineSurface::globalToLocal(const Vector3D& gpos,
 
 bool
 Acts::LineSurface::isOnSurface(const Vector3D&      gpos,
-                               const BoundaryCheck& bchk) const
+                               const BoundaryCheck& bcheck) const
 {
-  if (!bchk) return true;
+  if (!bcheck) return true;
   // check whether this is a boundless surface
   if (!m_bounds && !Surface::m_associatedDetElement) return true;
   // get the standard bounds
   Vector3D loc3Dframe = (transform().inverse()) * gpos;
   Vector2D locCand(loc3Dframe.perp(), loc3Dframe.z());
-  return bounds().inside(locCand, bchk);
+  return bounds().inside(locCand, bcheck);
 }
 
 const Acts::RotationMatrix3D
@@ -128,7 +128,7 @@ Acts::Intersection
 Acts::LineSurface::intersectionEstimate(const Vector3D&      gpos,
                                         const Vector3D&      dir,
                                         bool                 forceDir,
-                                        const BoundaryCheck& bchk) const
+                                        const BoundaryCheck& bcheck) const
 {
   // following nominclature found in header file and doxygen documentation
   // line one is the straight track
@@ -147,7 +147,7 @@ Acts::LineSurface::intersectionEstimate(const Vector3D&      gpos,
     bool isValid = forceDir ? (lambda0 > 0.) : true;
     // evaluate validaty in terms of bounds
     Vector3D result = (ma + lambda0 * ea);
-    isValid         = bchk ? (isValid && isOnSurface(result, bchk)) : isValid;
+    isValid         = bcheck ? (isValid && isOnSurface(result, bcheck)) : isValid;
     // return the result
     return Intersection(result, lambda0, isValid);
   }

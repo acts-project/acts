@@ -161,7 +161,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
     //    eCell.addMaterial(pathCorrection, materialProperties);
     // }
 
-    // @TODO sort out interface of track parameter update
+    // @todo sort out interface of track parameter update
     // eCell.stepParameters =
     //
     // updateTrackParameters(eCell.leadParameters,eCell,dir,matupstage);
@@ -258,7 +258,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
       double sinTheta          = sin(parameters.parameters()[eTHETA]);
       double sigmaDeltaPhiSq   = sigmaMS * sigmaMS / (sinTheta * sinTheta);
       double sigmaDeltaThetaSq = sigmaMS * sigmaMS;
-      // add or remove @TODO implement check for covariance matrix -> 0
+      // add or remove @todo implement check for covariance matrix -> 0
       (*uCovariance)(ePHI, ePHI) += sign * sigmaDeltaPhiSq;
       (*uCovariance)(eTHETA, eTHETA) += sign * sigmaDeltaThetaSq;
     }
@@ -270,7 +270,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
                      "layer",
                      mLayer->geoID().value(),
                      "material update on non-initial parameters.");
-      // @TODO how to update parameters
+      // @todo how to update parameters
       // parameters.updateParameters(uParameters,uCovariance);
     } else {
       EX_MSG_VERBOSE(

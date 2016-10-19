@@ -23,7 +23,6 @@ namespace Acts {
 
 class DetectorElementBase;
 
-///
 /// @class PlaneSurface
 ///
 /// Class for a planaer in the TrackingGeometry.
@@ -31,7 +30,7 @@ class DetectorElementBase;
 /// The PlaneSurface extends the Surface class with the possibility to
 /// convert local to global positions (vice versa).
 ///
-/// @image html PlaneSurface.gif
+/// @image html PlaneSurface.png
 ///
 class PlaneSurface : public Surface
 {
@@ -40,28 +39,37 @@ public:
   PlaneSurface();
 
   /// Copy Constructor
+  ///
   /// @param psf is the source surface for the copy
   PlaneSurface(const PlaneSurface& psf);
 
   /// Copy Constructor with shift
+  ///
   /// @param psf is the source surface for the copy
   /// @param htrans is the transformation that positions the surface in space
   PlaneSurface(const PlaneSurface& psf, const Transform3D& htrans);
 
   /// Dedicated Constructor with normal vector
   /// This is for curvilinear surfaces which are by definition boundless
+  ///
   /// @param center is the center position of the surface
-  /// @param htrans is the transformation that positions the surface in space
+  /// @param normal is thenormal vector of the plane surface
   PlaneSurface(const Vector3D& center, const Vector3D& normal);
 
   /// Constructor from DetectorElementBase
+  ///
+  /// @param pbounds are the provided planar bounds (shared)
+  /// @param detelement is the linked detector element to this surface
+  /// @param identifier is the identifier of associated to this surfacex
   PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
                const DetectorElementBase&          detelement,
                const Identifier&                   identifier = Identifier());
 
   /// Constructor for Planes with (optional) shared bounds object
+  ///
   /// @param htrans transform in 3D that positions this surface
   /// @param pbounds bounds object to describe the actual surface area
+  ///
   /// @attention the pointer to pbounds must not be a nullptr
   PlaneSurface(std::shared_ptr<Transform3D>        htrans,
                std::shared_ptr<const PlanarBounds> pbounds);
@@ -70,23 +78,31 @@ public:
   virtual ~PlaneSurface();
 
   /// Assignment operator
+  ///
   /// @param psf source PlaneSurface for assignment
   PlaneSurface&
   operator=(const PlaneSurface& psf);
 
   /// Virtual constructor with optional shift
   /// ownership of the shift transform is not given !!
-  /// @copydoc Surface::clone
+  ///
+  /// @param shift is a potential shift after cloning
   virtual PlaneSurface*
   clone(const Transform3D* shift = nullptr) const override;
 
   /// Normal vector return
+  ///
   /// @param lpos is the local position is ignored
   /// return a Vector3D by value
   const Vector3D
   normal(const Vector2D& lpos = s_origin2D) const final;
 
-  /// @copydoc Surface::biningPosition
+  /// The binning position is the position calcualted
+  /// for a certain binning type
+  ///
+  /// @param bValue is the binning type to be used
+  ///
+  /// @return position that can beused for this binning
   virtual const Vector3D
   binningPosition(BinningValue bValue) const final;
 
@@ -105,30 +121,54 @@ public:
   /// This method returns true if the GlobalPosition is on the Surface for both,
   /// within or without check of whether the local position is inside boundaries
   /// or not
+  ///
   /// @param gpos global position to be checked
-  /// @param bchk gboundary check directive
+  /// @param bcheck gboundary check directive
+  ///
+  /// @return is a boolean indicator if the position is on surface
   virtual bool
   isOnSurface(const Vector3D&      gpos,
-              const BoundaryCheck& bchk = true) const override;
+              const BoundaryCheck& bcheck = true) const override;
 
-  /// @copydoc Surface::localToGlobal
+  /// Local to global transformation
   /// For planar surfaces the momentum is ignroed in the local to global
   /// transformation
+  ///
+  /// @param lpos local 2D posittion in specialized surface frame
+  /// @param mom global 3D momentum representation (optionally ignored)
+  /// @param gpos global 3D position to be filled (given by reference for method
+  /// symmetry)
   virtual void
   localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
                 Vector3D&       gpos) const override;
 
-  /// @copydoc Surface::globalToLocal
-  /// For planar surfaces the momentum is ignroed in the gloabl to l
+  /// Global to local transformation
+  /// For planar surfaces the momentum is ignroed in the global to local
   /// transformation
+  ///
+  /// @param gpos global 3D position - considered to be on surface but not
+  /// inside bounds (check is done)
+  /// @param mom global 3D momentum representation (optionally ignored)
+  /// @param lpos local 2D position to be filled (given by reference for method
+  /// symmetry)
+  ///
+  /// @return boolean indication if operation was successful (fail means global
+  /// position was not on surface)
   virtual bool
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
                 Vector2D&       lpos) const override;
 
-  /// @copydoc Surface::pathCorrection
+  /// Method that calculates the correction due to incident angle
+  ///
+  /// @param gpos global 3D position - considered to be on surface but not
+  /// inside bounds (check is done)
+  /// @param mom global 3D momentum representation (optionally ignored)
+  ///
   /// @note this is the final implementation of the pathCorrection function
+  ///
+  /// @return a double representing the scaling factor
   double
   pathCorrection(const Vector3D& gpos, const Vector3D& mom) const final;
 
@@ -140,7 +180,7 @@ public:
   ///  @param dir is the direction of the interesection attempt
   ///  @param forceDir is the directive whether to force only foward solution
   ///  (w.r.t dir)
-  ///  @param bhck is the boundary check directive
+  ///  @param bcheck is the boundary check directive
   ///
   ///  <b>mathematical motivation:</b>
   ///
@@ -162,7 +202,7 @@ public:
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir,
-                       const BoundaryCheck& bchk = true) const override;
+                       const BoundaryCheck& bcheck = true) const override;
 
   /// Return properly formatted class name for screen output
   virtual std::string
@@ -214,7 +254,7 @@ inline Intersection
 PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
                                    const Vector3D&      dir,
                                    bool                 forceDir,
-                                   const BoundaryCheck& bchk) const
+                                   const BoundaryCheck& bcheck) const
 {
   double denom = dir.dot(normal());
   if (denom) {
@@ -223,7 +263,7 @@ PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
     // evaluate the intersection in terms of direction
     bool isValid = forceDir ? (u > 0.) : true;
     // evaluate (if necessary in terms of boundaries)
-    isValid = bchk ? (isValid && isOnSurface(intersectPoint, bchk)) : isValid;
+    isValid = bcheck ? (isValid && isOnSurface(intersectPoint, bcheck)) : isValid;
     // return the result
     return Intersection(intersectPoint, u, isValid);
   }

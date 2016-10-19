@@ -43,22 +43,25 @@ public:
   TrapezoidBounds() = delete;
 
   /// Constructor for symmetric Trapezoid
-  /// @param minhalex minimal half lenght X - definition at negative halflength
-  /// Y
-  /// @param maxhalex maximal half length X - definition at maximum halflength Y
-  /// @param haley maximal half length Y - defined at x=0
+  ///
+  /// @param minhalex minimal half lenght X, definition at negative halflength Y
+  /// @param maxhalex maximal half length X, definition at maximum halflength Y
+  /// @param haley half length Y - defined at x=0
   TrapezoidBounds(double minhalex, double maxhalex, double haley);
 
   /// Constructor for arbitrary Trapezoid
-  /// @param minhalex minimal half lenght - definition at negative halflength Y
-  /// @param maxhalex maximal half length - definition at maximum halflength Y
-  /// @param alpha opening angle at @TODO check
-  /// @param beta opentin angle at @TODO check
+  ///
+  /// @param minhalex minimal half lenght X, definition at negative halflength Y
+  /// @param haley half length Y - defined at x=0
+  /// @param alpha opening angle at @todo check
+  /// @param beta opentin angle at @todo check
   TrapezoidBounds(double minhalex, double haley, double alpha, double beta);
 
   /// Copy constructor
+  ///
   /// @param trabo are the source bounds for assignment
   TrapezoidBounds(const TrapezoidBounds& trabo) : PlanarBounds(trabo) {}
+  
   /// Destructor
   virtual ~TrapezoidBounds();
 
@@ -102,13 +105,13 @@ public:
   double
   beta() const;
 
-  ///  The orientation of the Trapezoid is according to the figure above,
+  /// The orientation of the Trapezoid is according to the figure above,
   /// in words: the shorter of the two parallel sides of the trapezoid
   /// intersects
   /// with the negative @f$ y @f$ - axis of the local frame.
   ///
   /// @param lpos is the local position to be checked (carthesian local frame)
-  /// @param bchk is the boundary check directive
+  /// @param bcheck is the boundary check directive
   ///
   /// <br>
   /// The cases are:<br>
@@ -141,16 +144,24 @@ public:
   /// @f$
   /// <br>
   /// and   @f$  \delta_{I} = \delta_{II} = - \frac{1}{2}\kappa_{I}(x_{max} +
-  /// x_{min}) @f$  */
+  /// x_{min}) @f$
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param bcheck boundary check directive
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const override;
 
   /// This method checks inside bounds in loc0
   /// @note loc0/loc1 correspond to the natural coordinates of the surface
   /// @note As loc0/loc1 are correlated the single check doesn't make sense :
   ///       check is done on enclosing Rectangle !
+  ///
   /// @param lpos is the local position to be checked
   /// @param tol0 is the tolerance applied
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
@@ -158,41 +169,75 @@ public:
   /// @note loc0/loc1 correspond to the natural coordinates of the surface
   /// @note As loc0/loc1 are correlated the single check doesn't make sense :
   ///   -> check is done on enclosing Rectangle !
+  ///
   /// @param lpos is the local position to be checked
   /// @param tol1 is the tolerance applied
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /// Minimal distance to boundary
-  /// @param lpos is the local position to be checked
-  /// @return minimal distance ( > 0 if outside and <=0 if inside)
+  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
+  ///
+  /// @param lpos is the local position to check for the distance
+  ///
+  /// @return is a signed distance parameter
   virtual double
-  minDistance(const Vector2D& lpos) const override;
+  distanceToBoundary(const Vector2D& lpos) const override;
 
   /// Return the vertices - or, the points of the extremas
   virtual const std::vector<Vector2D>
   vertices() const override;
 
   /// Output Method for std::ostream
+  ///
+  /// @param sl is the ostream to be dumped into
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
 private:
   /// private helper method for inside check
+  ///
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 absulote tolerance parameter on the first coordinate
+  /// @param tol1 absulote tolerance parameter on the second coordinate
+  ///
+  /// @return boolean indicator for the success of this operation
   bool
-  inside(const Vector2D& lpos, double tol0, double tol2) const;
+  inside(const Vector2D& lpos, double tol0, double tol1) const;
 
   /// private helper method inside() method for a full symmetric trapezoid
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 absulote tolerance parameter on the first coordinate
+  /// @param tol1 absulote tolerance parameter on the second coordinate
+  ///
+  /// @return boolean indicator for the success of this operation
   bool
   insideFull(const Vector2D& lpos, double tol0 = 0., double tol1 = 0.) const;
 
-  /// private inside() method for the triangular exclude area for an arbitrary
-  /// trapezoid
+  /// private inside() method for the triangular exclude
+  /// area for an arbitrary trapezoid
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 absulote tolerance parameter on the first coordinate
+  /// @param tol1 absulote tolerance parameter on the second coordinate
+  ///
+  /// @return boolean indicator for the success of this operation
   bool
   insideExclude(const Vector2D& lpos, double tol0 = 0., double tol1 = 0.) const;
 
-  /// private isAbove() method for checking whether a point lies above or under
-  /// a straight line
+  /// private isAbove() method for checking whether a point
+  /// lies above or under a straight line
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 absulote tolerance parameter on the first coordinate
+  /// @param tol1 absulote tolerance parameter on the second coordinate
+  /// @param k is the first parameter of the parametric line equation
+  /// @param d is the second parameter of the parameteric line equation
+  ///
+  /// @return boolean indicator for the success of this operation
   bool
   isAbove(const Vector2D& lpos, double tol0, double tol1, double k, double d)
       const;
@@ -238,17 +283,17 @@ TrapezoidBounds::beta() const
 }
 
 inline bool
-TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
+TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
-  if (bchk.bcType == 0)
-    return inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
+  if (bcheck.bcType == 0)
+    return inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 
   // a fast FALSE
   double fabsY   = fabs(lpos[Acts::eLOC_Y]);
-  double max_ell = (*bchk.lCovariance)(0, 0) > (*bchk.lCovariance)(1, 1)
-      ? (*bchk.lCovariance)(0, 0)
-      : (*bchk.lCovariance)(1, 1);
-  double limit = bchk.nSigmas * sqrt(max_ell);
+  double max_ell = (*bcheck.lCovariance)(0, 0) > (*bcheck.lCovariance)(1, 1)
+      ? (*bcheck.lCovariance)(0, 0)
+      : (*bcheck.lCovariance)(1, 1);
+  double limit = bcheck.nSigmas * sqrt(max_ell);
   if (fabsY > (m_valueStore.at(TrapezoidBounds::bv_halfY) + limit))
     return false;
   // a fast FALSE
@@ -256,10 +301,10 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   if (fabsX > (m_valueStore.at(TrapezoidBounds::bv_maxHalfX) + limit))
     return false;
   // a fast TRUE
-  double min_ell = (*bchk.lCovariance)(0, 0) < (*bchk.lCovariance)(1, 1)
-      ? (*bchk.lCovariance)(0, 0)
-      : (*bchk.lCovariance)(1, 1);
-  limit = bchk.nSigmas * sqrt(min_ell);
+  double min_ell = (*bcheck.lCovariance)(0, 0) < (*bcheck.lCovariance)(1, 1)
+      ? (*bcheck.lCovariance)(0, 0)
+      : (*bcheck.lCovariance)(1, 1);
+  limit = bcheck.nSigmas * sqrt(min_ell);
   if (fabsX < (m_valueStore.at(TrapezoidBounds::bv_minHalfX) + limit)
       && fabsY < (m_valueStore.at(TrapezoidBounds::bv_halfY) + limit))
     return true;
@@ -267,13 +312,13 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   // compute KDOP and axes for surface polygon
   std::vector<KDOP>     elementKDOP(3);
   std::vector<Vector2D> elementP(4);
-  float                 theta = ((*bchk.lCovariance)(1, 0) != 0
-                 && ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)) != 0)
+  float                 theta = ((*bcheck.lCovariance)(1, 0) != 0
+                 && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
       ? .5
-          * bchk.FastArcTan(2 * (*bchk.lCovariance)(1, 0)
-                            / ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)))
+          * bcheck.FastArcTan(2 * (*bcheck.lCovariance)(1, 0)
+                            / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
-  sincosCache scResult = bchk.FastSinCos(theta);
+  sincosCache scResult = bcheck.FastSinCos(theta);
   ActsMatrixD<2, 2> rotMatrix;
   rotMatrix << scResult.cosC, scResult.sinC, -scResult.sinC, scResult.cosC;
   ActsMatrixD<2, 2> normal;
@@ -287,13 +332,13 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   p << -m_valueStore.at(TrapezoidBounds::bv_minHalfX),
       -m_valueStore.at(TrapezoidBounds::bv_halfY);
   elementP.at(1) = (rotMatrix * (p - lpos));
-  scResult       = bchk.FastSinCos(m_beta);
+  scResult       = bcheck.FastSinCos(m_beta);
   p << m_valueStore.at(TrapezoidBounds::bv_minHalfX)
           + (2. * m_valueStore.at(TrapezoidBounds::bv_halfY))
               * (scResult.sinC / scResult.cosC),
       m_valueStore.at(TrapezoidBounds::bv_halfY);
   elementP.at(2) = (rotMatrix * (p - lpos));
-  scResult       = bchk.FastSinCos(m_alpha);
+  scResult       = bcheck.FastSinCos(m_alpha);
   p << -(m_valueStore.at(TrapezoidBounds::bv_minHalfX)
          + (2. * m_valueStore[TrapezoidBounds::bv_halfY])
              * (scResult.sinC / scResult.cosC)),
@@ -302,12 +347,12 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   std::vector<Vector2D> axis = {normal * (elementP.at(1) - elementP.at(0)),
                                 normal * (elementP.at(3) - elementP.at(1)),
                                 normal * (elementP.at(2) - elementP.at(0))};
-  bchk.ComputeKDOP(elementP, axis, elementKDOP);
+  bcheck.ComputeKDOP(elementP, axis, elementKDOP);
   // compute KDOP for error ellipse
   std::vector<KDOP> errelipseKDOP(3);
-  bchk.ComputeKDOP(bchk.EllipseToPoly(3), axis, errelipseKDOP);
+  bcheck.ComputeKDOP(bcheck.EllipseToPoly(3), axis, errelipseKDOP);
   // check if KDOPs overlap and return result
-  return bchk.TestKDOPKDOP(elementKDOP, errelipseKDOP);
+  return bcheck.TestKDOPKDOP(elementKDOP, errelipseKDOP);
 }
 
 inline bool

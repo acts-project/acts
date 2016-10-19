@@ -146,12 +146,12 @@ Acts::DiscSurface::globalToLocalCartesian(const Vector3D& gpos, double) const
 
 bool
 Acts::DiscSurface::isOnSurface(const Vector3D&      glopo,
-                               const BoundaryCheck& bchk) const
+                               const BoundaryCheck& bcheck) const
 {
   Vector3D loc3Dframe = (transform().inverse()) * glopo;
   if (fabs(loc3Dframe.z()) > (s_onSurfaceTolerance)) return false;
   return (
-      bchk
-          ? bounds().inside(Vector2D(loc3Dframe.perp(), loc3Dframe.phi()), bchk)
+      bcheck
+          ? bounds().inside(Vector2D(loc3Dframe.perp(), loc3Dframe.phi()), bcheck)
           : true);
 }

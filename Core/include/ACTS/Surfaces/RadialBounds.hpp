@@ -45,6 +45,7 @@ public:
   RadialBounds();
 
   /// Constructor for full disc of symmetric disc around phi=0
+  ///
   /// @param minrad is the inner radius of the disc (0 for full disc)
   /// @param maxrad is the outer radius of the disc
   /// @param hphisec is the half opening angle of the disc (Pi for full angular
@@ -52,6 +53,7 @@ public:
   RadialBounds(double minrad, double maxrad, double hphisec = M_PI);
 
   /// Constructor for full disc of symmetric disc around phi!=0
+  ///
   /// @param minrad is the inner radius of the disc (0 for full disc)
   /// @param maxrad is the outer radius of the disc
   /// @param avephi is the phi value of the local x-axis in the local 3D frame
@@ -60,8 +62,9 @@ public:
   RadialBounds(double minrad, double maxrad, double avephi, double hphisec);
 
   /// Copy constructor
+  ///
   /// @param rbounds is the source bounds for assignment
-  RadialBounds(const RadialBounds& dbounds) : DiscBounds(dbounds) {}
+  RadialBounds(const RadialBounds& rbounds) : DiscBounds(rbounds) {}
   /// Destructor
   virtual ~RadialBounds();
 
@@ -81,31 +84,41 @@ public:
     return SurfaceBounds::Disc;
   }
 
-  /// @copydoc SurfaceBounds::inside
-  ///
   /// For disc surfaces the local position in (r,phi) is checked
+  ///
   /// @param lpos local position to be checked
-  /// @param bchk boundary check directive
-  virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
-
-  /// @copydoc SurfaceBounds::insideLoc0
+  /// @param bcheck boundary check directive
   ///
-  /// For disc surfaces the local position in (r,phi) is checked
+  /// @return is a boolean indicating the operation success
+  virtual bool
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const override;
+
+  /// Inside check for the first coordinate
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 absolute tolerance parameter
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
-  /// @copydoc SurfaceBounds::insideLoc1
+  /// Inside check for the bounds object with tolerance
+  /// checks for second coordinate only.
   ///
-  /// For disc surfaces the local position in (r,phi) is checked
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol1 absulote tolerance parameter
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
   /// Minimal distance to boundary calculation
-  /// @param local 2D position in surface coordinate frame
+  ///
+  /// @param lpos local 2D position in surface coordinate frame
+  ///
   /// @return distance to boundary ( > 0 if outside and <=0 if inside)
   virtual double
-  minDistance(const Vector2D& pos) const override;
+  distanceToBoundary(const Vector2D& lpos) const override;
 
   /// Return method for inner Radius
   double
@@ -115,8 +128,8 @@ public:
   double
   rMax() const;
 
-  /// Return method for the central phi value (i.e. phi value of x-axis of local
-  /// 3D frame)
+  /// Return method for the central phi value
+  ///(i.e. phi value of x-axis of local 3D frame)
   double
   averagePhi() const;
 
@@ -125,11 +138,24 @@ public:
   halfPhiSector() const;
 
   /// Outstream operator
+  ///
+  /// @param sl is the ostream to be dumped into
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
 private:
   /// private helper method for inside
+  ///
+  /// @param lpos is the local position to be checked
+  /// @param tol0 is the absolute tolerance on the first parameter
+  /// @param tol1 is the absoltue tolerance on the second parameter
+  /// Inside check for the bounds object with tolerance
+  /// checks for second coordinate only.
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol1 absulote tolerance parameter
+  ///
+  /// @return boolean indicator for the success of this operation
   bool
   inside(const Vector2D& lpos, double tol0, double tol1) const;
 };
@@ -154,22 +180,22 @@ RadialBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 }
 
 inline bool
-RadialBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
+RadialBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
-  if (bchk.bcType == 0 || bchk.nSigmas == 0
+  if (bcheck.bcType == 0 || bcheck.nSigmas == 0
       || m_valueStore[RadialBounds::bv_rMin] != 0
       || m_valueStore[RadialBounds::bv_halfPhiSector] != M_PI)
-    return RadialBounds::inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
+    return RadialBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 
   // a fast FALSE
-  sincosCache scResult = bchk.FastSinCos(lpos(1, 0));
-  double      dx       = bchk.nSigmas * sqrt((*bchk.lCovariance)(0, 0));
-  double      dy       = bchk.nSigmas
-      * sqrt(scResult.sinC * scResult.sinC * (*bchk.lCovariance)(0, 0)
+  sincosCache scResult = bcheck.FastSinCos(lpos(1, 0));
+  double      dx       = bcheck.nSigmas * sqrt((*bcheck.lCovariance)(0, 0));
+  double      dy       = bcheck.nSigmas
+      * sqrt(scResult.sinC * scResult.sinC * (*bcheck.lCovariance)(0, 0)
              + lpos(0, 0) * lpos(0, 0) * scResult.cosC * scResult.cosC
-                 * (*bchk.lCovariance)(1, 1)
+                 * (*bcheck.lCovariance)(1, 1)
              + 2 * scResult.cosC * scResult.sinC * lpos(0, 0)
-                 * (*bchk.lCovariance)(0, 1));
+                 * (*bcheck.lCovariance)(0, 1));
   double max_ell = dx > dy ? dx : dy;
   if (lpos(0, 0) > (m_valueStore[RadialBounds::bv_rMax] + max_ell))
     return false;
@@ -320,22 +346,22 @@ RadialBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   covRotMatrix << scResult.cosC, -lpos(0, 0) * scResult.sinC, scResult.sinC,
       lpos(0, 0) * scResult.cosC;
   ActsMatrixD<2, 2> lCovarianceCar
-      = covRotMatrix * (*bchk.lCovariance) * covRotMatrix.transpose();
+      = covRotMatrix * (*bcheck.lCovariance) * covRotMatrix.transpose();
   Vector2D lposCar(covRotMatrix(1, 1), -covRotMatrix(0, 1));
 
   // ellipse is always at (0,0), surface is moved to ellipse position and then
   // rotated
-  double w     = bchk.nSigmas * sqrt(lCovarianceCar(0, 0));
-  double h     = bchk.nSigmas * sqrt(lCovarianceCar(1, 1));
+  double w     = bcheck.nSigmas * sqrt(lCovarianceCar(0, 0));
+  double h     = bcheck.nSigmas * sqrt(lCovarianceCar(1, 1));
   double x0    = 0;
   double y0    = 0;
   float  theta = (lCovarianceCar(1, 0) != 0
                  && (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)) != 0)
       ? .5
-          * bchk.FastArcTan(2 * lCovarianceCar(1, 0)
+          * bcheck.FastArcTan(2 * lCovarianceCar(1, 0)
                             / (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)))
       : 0.;
-  scResult = bchk.FastSinCos(theta);
+  scResult = bcheck.FastSinCos(theta);
   ActsMatrixD<2, 2> rotMatrix;
   rotMatrix << scResult.cosC, scResult.sinC, -scResult.sinC, scResult.cosC;
   Vector2D tmp = rotMatrix * (-lposCar);

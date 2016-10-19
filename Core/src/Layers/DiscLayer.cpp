@@ -34,7 +34,7 @@ Acts::DiscLayer::DiscLayer(std::shared_ptr<Acts::Transform3D>      transform,
   const RadialBounds* rBounds
       = dynamic_cast<const RadialBounds*>(dbounds.get());
   if (rBounds) {
-    // @TODO make a trapezoidal volume when you have DiscTrapezoidalBounds
+    // @todo make a trapezoidal volume when you have DiscTrapezoidalBounds
     CylinderVolumeBounds* cvBounds = new CylinderVolumeBounds(
         rBounds->rMin(), rBounds->rMax(), 0.5 * thickness);
     Layer::m_representingVolume

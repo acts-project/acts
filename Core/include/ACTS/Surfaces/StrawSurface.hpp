@@ -26,7 +26,9 @@ class DetectorElementBase;
 ///
 ///  Class for a StrawSurface in the TrackingGeometry
 ///  to describe dirft tube and straw like detectors.
-
+///  
+/// @image html LineSurface.png
+///
 class StrawSurface : public LineSurface
 {
 public:
@@ -34,16 +36,18 @@ public:
   StrawSurface() = delete;
 
   /// Constructor from Transform3D and bounds
+  ///
   /// @param htrans is the transform that positions the surface in the global
   /// frame
   /// @param radius is the straw radius
-  /// @param halex is the half length in z
+  /// @param halez is the half length in z
   StrawSurface(std::shared_ptr<Transform3D> htrans, double radius, double halez)
     : LineSurface(htrans, radius, halez)
   {
   }
 
   /// Constructor from Transform3D and a shared bounds object
+  ///
   /// @param htrans is the transform that positions the surface in the global
   /// frame
   /// @param lbounds are teh bounds describing the straw dimensions, can be
@@ -52,6 +56,7 @@ public:
                std::shared_ptr<const LineBounds> lbounds = nullptr);
 
   /// Constructor from DetectorElementBase and Element identifier
+  ///
   /// @param lbounds are teh bounds describing the straw dimensions, they must
   /// not be nullptr
   /// @param detelement for which this surface is (at least) one representation
@@ -61,9 +66,11 @@ public:
                const Identifier&                 identifier = Identifier());
 
   /// Copy constructor
-  /// @param slsf is teh source surface for copying
+  ///
+  /// @param slsf is the source surface for copying
   StrawSurface(const StrawSurface& slsf) : LineSurface(slsf) {}
   /// Copy constructor with shift
+  ///
   /// @param slsf is the source surface dor copying
   /// @param htrans is the additional transform applied after copying
   StrawSurface(const StrawSurface& slsf, const Transform3D& htrans)
@@ -74,10 +81,14 @@ public:
   virtual ~StrawSurface();
 
   /// Assignment operator
+  ///
+  /// @param slsf is the source surface for copying
   StrawSurface&
   operator=(const StrawSurface& slsf);
 
-  /// Implicit constructor - shift can be provided */
+  /// Implicit constructor - shift can be provided
+  ///
+  /// @param shift is an optional shift to be applied
   virtual StrawSurface*
   clone(const Transform3D* shift = nullptr) const override;
 

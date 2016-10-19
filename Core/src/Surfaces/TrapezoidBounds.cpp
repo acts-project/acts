@@ -131,7 +131,7 @@ Acts::TrapezoidBounds::isAbove(const Acts::Vector2D& lpos,
 }
 
 double
-Acts::TrapezoidBounds::minDistance(const Acts::Vector2D& lpos) const
+Acts::TrapezoidBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 {
   const int Np = 4;
 

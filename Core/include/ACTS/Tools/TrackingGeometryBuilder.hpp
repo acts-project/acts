@@ -40,12 +40,14 @@ public:
   {
     /// the list of trackign volume builders
     std::list<std::shared_ptr<ITrackingVolumeBuilder>> trackingVolumeBuilders{};
+
     /// the tracking volume helper for detector construction
     std::shared_ptr<ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
   };
 
   /// Constructor
-  /// @param cgb is the configuration struct for this builder
+  ///
+  /// @param cgbConfig is the configuration struct for this builder
   /// @param logger logging instance
   TrackingGeometryBuilder(const Config&           cgbConfig,
                           std::unique_ptr<Logger> logger
@@ -56,11 +58,12 @@ public:
   virtual ~TrackingGeometryBuilder() = default;
 
   /// TrackingGeometry Interface method
-  /// returns a unique pointer to a TrackingGeometry
+  /// @return a unique pointer to a TrackingGeometry
   virtual std::unique_ptr<TrackingGeometry>
   trackingGeometry() const final;
 
   /// Set configuration method
+  ///
   /// @param cgbConfig is the new configuration struct
   void
   setConfiguration(const Config& cgbConfig);

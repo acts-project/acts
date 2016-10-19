@@ -42,7 +42,7 @@ public:
   /// @param maxPhi is the maximal phi position of the surfaces
   /// @param halfZ is the half length in z of the cylinder
   /// @param binsPhi is the number of bins in phi for the surfaces
-  /// @param binsX is the number of bin in Z for the surfaces
+  /// @param binsZ is the number of bin in Z for the surfaces
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
@@ -84,7 +84,8 @@ public:
   /// @param rMax is the maximal radius of the disc
   /// @param minPhi is the minimal phi position of the surfaces
   /// @param maxPhi is the maximal phi position of the surfaces
-  /// @param rBoundaries are the optional boundaris of the r rings
+  /// @param binsR is the number of bins in r for the surfaces
+  /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
@@ -123,6 +124,8 @@ public:
   /// @param halflengthY is the half length in Y
   /// @param binsX is the number of bins in X
   /// @param binsY is the number of bins in Y
+  /// @param transform is the (optional) additional transform applied
+  ///
   /// @return a unique pointer a new SurfaceArray
   virtual std::unique_ptr<SurfaceArray>
   surfaceArrayOnPlane(const std::vector<const Surface*>& surfaces,

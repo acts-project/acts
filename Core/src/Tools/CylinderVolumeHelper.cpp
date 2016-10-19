@@ -40,7 +40,7 @@ void
 Acts::CylinderVolumeHelper::setConfiguration(
     const Acts::CylinderVolumeHelper::Config& cvhConfig)
 {
-  // @TODO check consistency
+  // @todo check consistency
   // copy the configuration
   m_cfg = cvhConfig;
 }
@@ -972,7 +972,7 @@ Acts::CylinderVolumeHelper::createCylinderLayer(double z,
         " -> Preparing the binned material with " << binsPhi << " / " << binsZ
                                                   << " bins in phi / Z. ");
   }
-  // @TODO create the SurfaceMaterial
+  // @todo create the SurfaceMaterial
   // bounds for cylinderical surface
   CylinderBounds* cylinderBounds = new CylinderBounds(r, halflengthZ);
   // create the cylinder
@@ -1014,7 +1014,7 @@ Acts::CylinderVolumeHelper::createDiscLayer(double z,
                                                   << " bins in phi / R. ");
   }
 
-  // @TODO create the SurfaceMaterial
+  // @todo create the SurfaceMaterial
   // bounds for disk-like surface
   RadialBounds* discBounds = new RadialBounds(rMin, rMax);
   // create the disc

@@ -132,7 +132,7 @@ private:
   /// logging instance
   std::unique_ptr<Logger> m_logger;
 
-  /// @TODO make clear where the TGeoDetectorElement lives
+  /// @todo make clear where the TGeoDetectorElement lives
   mutable std::vector<std::shared_ptr<TGeoDetectorElement>> m_elementStore;
 
   /// Private helper function to parse the geometry tree

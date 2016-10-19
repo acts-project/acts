@@ -36,6 +36,7 @@ class TrackingVolumeArrayCreator : public ITrackingVolumeArrayCreator
 {
 public:
   /// Constructor
+  ///
   /// @param logger logging instance
   TrackingVolumeArrayCreator(std::unique_ptr<Logger> logger
                              = getDefaultLogger("LayerArrayCreator",
@@ -43,17 +44,23 @@ public:
     : m_logger(std::move(logger))
   {
   }
+
   /// Destructor
   virtual ~TrackingVolumeArrayCreator() = default;
 
   /// create a tracking volume array
+  ///
   /// @param vols is the vector of TrackingVolumes to be
-  /// @param bVals is the binning value
+  /// @param bVal is the binning value
+  ///
+  /// @return new created volume array
   std::shared_ptr<const TrackingVolumeArray>
   trackingVolumeArray(const TrackingVolumeVector& vols,
                       BinningValue                bVal) const;
 
-  /// set logging instance
+  /// Set logging instance
+  ///
+  /// @param logger is the logging instance to be set
   void
   setLogger(std::unique_ptr<Logger> logger)
   {

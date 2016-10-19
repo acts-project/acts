@@ -28,7 +28,7 @@ Acts::LayerCreator::LayerCreator(const Acts::LayerCreator::Config& lcConfig,
 void
 Acts::LayerCreator::setConfiguration(const Acts::LayerCreator::Config& lcConfig)
 {
-  // @TODO check consistency
+  // @todo check consistency
   // copy the configuration
   m_cfg = lcConfig;
 }
@@ -65,7 +65,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   double layerThickness = (maxR - minR) + 2 * envelopeR;
 
   // harmonize the phi boundaries (1st step)
-  // @TODO - allow for sectorally filled arrrays
+  // @todo - allow for sectorally filled arrrays
   double phiStep = (maxPhi - minPhi) / (binsPhi - 1);
   minPhi -= 0.5 * phiStep;
   maxPhi += 0.5 * phiStep;
@@ -125,7 +125,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>& surfaces,
   for (auto& surface : surfaces)
     moduleExtend(*surface, minR, maxR, minPhi, maxPhi, minZ, maxZ);
 
-  // harmonize the phi boundaries @TODO - allow for sectorally filled arrrays
+  // harmonize the phi boundaries @todo - allow for sectorally filled arrrays
   // later
   double phiStep = (maxPhi - minPhi) / (binsPhi - 1);
   minPhi -= 0.5 * phiStep;
@@ -178,7 +178,7 @@ Acts::LayerCreator::planeLayer(const std::vector<const Surface*>& /**surfaces*/,
                                size_t /**binsX*/,
                                size_t /**binsY*/) const
 {
-  //@TODO implement
+  //@todo implement
   return nullptr;
 }
 

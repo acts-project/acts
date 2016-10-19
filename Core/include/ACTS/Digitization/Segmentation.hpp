@@ -39,12 +39,17 @@ class Segmentation
 public:
   /// Virtual Destructor
   virtual ~Segmentation() {}
+  
   /// Create the segmentation surfaces in X
   ///
   /// @param boundarySurfaces vector to be filled
   /// @param segmentationSurfacesX are the segmetation boundaries in X
   /// @param segmentationSurfacesY are the segmetation boundaries in Y
   /// @param halfThickness is the half thickness in z of the module
+  /// @param readoutDirection is the direction w.r.t normal vector 
+  /// where the readout is given : -1, 0, 1 possible
+  /// @param lorentzAngle is the lorentz angle measured from the local z
+  /// towards x axis
   virtual void
   createSegmenationSurfaces(SurfacePtrVector& boundarySurfaces,
                             SurfacePtrVector& segmentationSurfacesX,
@@ -57,6 +62,7 @@ public:
   /// - ignores the shift, i.e. assumenes in to be in cell frame
   ///
   /// @param position is the position for which the cell is requested
+  ///                          
   /// @return is a cell with cell ids
   virtual const DigitizationCell
   cell(const Vector3D& position) const = 0;
@@ -65,13 +71,18 @@ public:
   /// - ignores the shift, i.e. assumenes in to be in cell frame
   ///
   /// @param position is the position for which the cell is requested
+  ///
   /// @return is a cell with cell ids
   virtual const DigitizationCell
   cell(const Vector2D& position) const = 0;
 
-  /// calculate the cell Position from the Id
+  /// Calculate the cell Position from the Id
+  ///
+  /// @param cId is the digitization cell 
+  ///
+  /// @return the center position of the associated cell
   virtual const Vector2D
-  cellPosition(const DigitizationCell& dCell) const = 0;
+  cellPosition(const DigitizationCell& cId) const = 0;
 
   /// Fill the associated digitsation cell from the start and end position in 3D
   /// correct for lorentz effect if needed
@@ -81,6 +92,7 @@ public:
   /// @param halfThickness is the half thickness in z
   /// @param readoutDirection is the readout direction with respect to local z
   /// @param lorentzAngle is the lorentz angle measured from local z towards x
+  ///
   /// @return is a fully calculated digitzation step
   virtual const DigitizationStep
   digitizationStep(const Vector3D& start,

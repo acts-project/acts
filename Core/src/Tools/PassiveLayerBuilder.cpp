@@ -36,7 +36,7 @@ void
 Acts::PassiveLayerBuilder::setConfiguration(
     const PassiveLayerBuilder::Config& plConfig)
 {
-  //!< @TODO add configuration check
+  //!< @todo add configuration check
   m_cfg = plConfig;
 }
 

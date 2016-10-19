@@ -52,17 +52,20 @@ public:
   CylinderBounds() = delete;
 
   /// Constructor - full cylinder
+  ///
   /// @param radius is the radius of the cylinder
   /// @param halez is the half length in z
   CylinderBounds(double radius, double halez);
 
   /// Constructor - open cylinder
+  ///
   /// @param radius is the radius of the cylinder
   /// @param halfphi is the half opening angle
   /// @param halez is the half length in z
   CylinderBounds(double radius, double halfphi, double halez);
 
   /// Constructor - open cylinder
+  ///
   /// @param radius is the radius of the cylinder
   /// @param avphi is the middle phi position of the segment
   /// @param halfphi is the half opening angle
@@ -70,6 +73,8 @@ public:
   CylinderBounds(double radius, double avphi, double halfphi, double halez);
 
   /// Copy Constructor
+  ///
+  /// @param cylbo is the source object
   CylinderBounds(const CylinderBounds& cylbo) : SurfaceBounds(cylbo) {}
   /// Destructor
   virtual ~CylinderBounds();
@@ -89,26 +94,52 @@ public:
     return SurfaceBounds::Cylinder;
   }
 
-  /// @copydoc SurfaceBounds::inside
+  /// Inside check for the bounds object driven by the boundary check directive
+  /// Each Bounds has a method inside, which checks if a LocalPosition is inside
+  /// the bounds  Inside can be called without/with tolerances.
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param bcheck boundary check directive
+  ///
+  /// @return boolean indicator for the success of this operation
   bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const override;
 
-  /// specialized method for CylinderBounds
+  /// Specialized method for CylinderBounds that checks if a global position
+  /// is within the the cylinder cover
+  ///
+  /// @param pos is the position in the cylinder frame
+  /// @param bcheck is the boundary check directive
+  ///
+  /// return boolean indicator for operation success
   bool
-  inside3D(const Vector3D& gp, const BoundaryCheck& bchk = true) const;
+  inside3D(const Vector3D& pos, const BoundaryCheck& bcheck = true) const;
 
-  /// @copydoc Surface::insideLoc0
+  /// Inside method for the second local parameter
+  ///
+  /// @param lpos is the local position to be checked
+  /// @param tol0 is the absolute tolerance on the first parameter
+  ///
+  /// @return is a boolean indicating if the position is insideLoc0
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
-  /// @copydoc Surface::insideLoc1
+  /// Inside method for the second local parameter
+  ///
+  /// @param lpos is the local position to be checked
+  /// @param tol1 is the absolute tolerance on the first parameter
+  ///
+  /// @return is a boolean indicating if the position is insideLoc1
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /// Minimal distance to boundary
-  /// return minimal distance to boundary ( > 0 if outside and <=0 if inside)
+  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
+  ///
+  /// @param lpos is the local position to check for the distance
+  ///
+  /// @return is a signed distance parameter
   virtual double
-  minDistance(const Vector2D& pos) const override;
+  distanceToBoundary(const Vector2D& lpos) const override;
 
   /// This method returns the radius
   virtual double
@@ -172,37 +203,37 @@ CylinderBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 }
 
 inline bool
-CylinderBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
+CylinderBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
-  if (bchk.bcType == 0 || bchk.nSigmas == 0
+  if (bcheck.bcType == 0 || bcheck.nSigmas == 0
       || m_valueStore.at(CylinderBounds::bv_halfPhiSector) != M_PI)
-    return CylinderBounds::inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
+    return CylinderBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 
-  float theta = ((*bchk.lCovariance)(1, 0) != 0
-                 && ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)) != 0)
+  float theta = ((*bcheck.lCovariance)(1, 0) != 0
+                 && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
       ? .5
-          * bchk.FastArcTan(2 * (*bchk.lCovariance)(1, 0)
-                            / ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)))
+          * bcheck.FastArcTan(2 * (*bcheck.lCovariance)(1, 0)
+                            / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
-  sincosCache scResult = bchk.FastSinCos(theta);
-  double      dphi     = scResult.sinC * scResult.sinC * (*bchk.lCovariance)(0, 0);
-  double      dz       = scResult.cosC * scResult.cosC * (*bchk.lCovariance)(0, 1);
+  sincosCache scResult = bcheck.FastSinCos(theta);
+  double      dphi     = scResult.sinC * scResult.sinC * (*bcheck.lCovariance)(0, 0);
+  double      dz       = scResult.cosC * scResult.cosC * (*bcheck.lCovariance)(0, 1);
   double      max_ell  = dphi > dz ? dphi : dz;
-  double      limit    = bchk.nSigmas * sqrt(max_ell);
+  double      limit    = bcheck.nSigmas * sqrt(max_ell);
   return insideLocZ(lpos[Acts::eLOC_Z], limit);
 }
 
 inline bool
-CylinderBounds::inside3D(const Vector3D& glopo, const BoundaryCheck& bchk) const
+CylinderBounds::inside3D(const Vector3D& pos, const BoundaryCheck& bcheck) const
 {
-  return inside(glopo.perp(),
-                glopo.phi(),
-                glopo.z(),
-                bchk.toleranceLoc0,
-                bchk.toleranceLoc0);
+  return inside(pos.perp(),
+                pos.phi(),
+                pos.z(),
+                bcheck.toleranceLoc0,
+                bcheck.toleranceLoc0);
 }
 
-//!< @TODO integrate tol0
+//!< @todo integrate tol0
 inline bool
 CylinderBounds::inside(double r,
                        double phi,

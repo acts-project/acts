@@ -40,21 +40,27 @@ class IExtrapolationEngine
 public:
   /// Virtual destructor
   virtual ~IExtrapolationEngine() {}
-  /// main extrapolation method, templated to chared/neutral
-  /// @paramt eCell ist he extrapolaiton cell
+
+  /// Main extrapolation method, templated to chared/neutral
+  ///
+  /// @param ecCharged ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
-  /// @param dir is the additional direction prescription
-  /// @param bchk is the boudnary check directive @TODO shift to cell after
-  /// splitting
+  /// @param bcheck is the boudnary check directive
+  /// @todo shift to cell after splitting
+  ///
+  /// @return extrapolation code to indicate outcome
   virtual ExtrapolationCode
   extrapolate(ExCellCharged&       ecCharged,
               const Surface*       sf     = 0,
               const BoundaryCheck& bcheck = true) const = 0;
 
-  /// main extrapolation method, templated to chared/neutral
-  /// @paramt eCell ist he extrapolaiton cell
+  /// Main extrapolation method, templated to chared/neutral
+  ///
+  /// @param ecNeutral ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
-  /// @param dir is the additional direction prescription
+  /// @param bcheck is the boudnary check directive
+  ///
+  /// @return extrapolation code to indicate outcome
   virtual ExtrapolationCode
   extrapolate(ExCellNeutral&       ecNeutral,
               const Surface*       sf     = 0,
@@ -65,8 +71,8 @@ public:
   geometryType() const = 0;
 
 protected:
-  std::string m_sopPrefix;   //< prefix for screen output
-  std::string m_sopPostfix;  //< prefix for screen output
+  std::string m_sopPrefix;   /// prefix for screen output
+  std::string m_sopPostfix;  /// prefix for screen output
 };
 
 }  // end of namespace

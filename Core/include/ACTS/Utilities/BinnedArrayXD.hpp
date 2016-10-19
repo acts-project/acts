@@ -39,6 +39,8 @@ class BinnedArrayXD : public BinnedArray<T>
 
 public:
   /// Constructor for single object
+  ///
+  /// @tparam object is the single object
   BinnedArrayXD(T object)
     : BinnedArray<T>()
     , m_objectGrid(1,
@@ -52,6 +54,9 @@ public:
 
   /// Constructor with std::vector and a BinUtility
   /// - fills the internal data structur
+  ///
+  /// @param tapvector is a vector of object and binning position
+  /// @param bu is the unique bin utility for this binned array
   BinnedArrayXD(const std::vector<TAP>&     tapvector,
                 std::unique_ptr<BinUtility> bu)
     : BinnedArray<T>()
@@ -82,6 +87,9 @@ public:
   }
 
   /// Constructor with a grid and a BinUtility
+  ///
+  /// @param grid is the prepared object grid
+  /// @param bu is the unique bin utility for this binned array
   BinnedArrayXD(const std::vector<std::vector<std::vector<T>>>& grid,
                 std::unique_ptr<BinUtility>                     bu)
     : BinnedArray<T>()
@@ -121,9 +129,11 @@ public:
   ~BinnedArrayXD() {}
   /// Returns the object in the array from a local position
   ///
-  /// @TODO check if we can change to triple return at once
+  /// @todo check if we can change to triple return at once
   ///
   /// @param lposition is the local position for the bin search
+  /// @param bins is the bin triple filled during this access
+  /// 
   /// @return is the object in that bin
   T
   object(const Vector2D& lposition, std::array<size_t, 3>& bins) const final
@@ -140,9 +150,9 @@ public:
 
   /// Returns the object in the array from a global position
   ///
-  /// @TODO check if we can change to triple return at once
-  ///
   /// @param position is the global position for the bin search
+  /// @param bins is the bins triple filled during access
+  ///
   /// @return is the object in that bin
   T
   object(const Vector3D& position, std::array<size_t, 3>& bins) const final
@@ -158,6 +168,7 @@ public:
   }
 
   /// Return all unqiue object
+  /// @return vector of unique array objects
   const std::vector<T>&
   arrayObjects() const final
   {
@@ -166,6 +177,7 @@ public:
 
   /// Return the object grid
   /// multiple entries are allowed and wanted
+  /// @return internal object grid
   const std::vector<std::vector<std::vector<T>>>&
   objectGrid() const final
   {
@@ -176,6 +188,7 @@ public:
   /// and their neighbour objects (if different)
   ///
   /// @param binTriple is the binning
+  ///
   /// @return a vector of unique objects
   std::vector<T>
   objectCluster(const std::array<size_t, 3>& binTriple) const
@@ -216,6 +229,7 @@ public:
   }
 
   /// Return the BinUtility
+  /// @return plain pointer to the bin utility of this array
   const BinUtility*
   binUtility() const final
   {

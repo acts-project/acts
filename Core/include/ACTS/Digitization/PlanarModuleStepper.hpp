@@ -36,7 +36,9 @@ public:
   };
 
   /// Constructor
-  /// @param pmsConfig is the configuration lo
+  ///
+  /// @param pmsConfig is the configuration 
+  /// @param logger is the logging istance
   PlanarModuleStepper(const Config&           pmsConfig,
                       std::unique_ptr<Logger> logger
                       = getDefaultLogger("LayerCreator", Logging::INFO));
@@ -44,19 +46,33 @@ public:
   /// Destructor
   ~PlanarModuleStepper() = default;
 
-  /// calculate the steps caused by this track - full simulation interface
+  /// Calculate the steps caused by this track - full simulation interface
+  /// 
+  /// @param dmodule is the digitization module
+  /// @param startPosition is the starting position of the stepping
+  /// @param endPosition is the end postion of the stepping
+  ///
+  /// @return is the vector of digitization steps
   std::vector<DigitizationStep>
   cellSteps(const DigitizationModule& dmodule,
             const Vector3D&           startPosition,
             const Vector3D&           endPosition) const;
 
-  /// calculate the steps caused by this track - fast simulation interface */
+  /// Calculate the steps caused by this track - fast simulation interface 
+  /// 
+  /// @param dmodule is the digitization module
+  /// @param intersection is the 2d intersection at the module surface
+  /// @param direction is the track direction at the instersection
+  ///
+  /// @return is the vector of digitization steps
   std::vector<DigitizationStep>
   cellSteps(const DigitizationModule& dmodule,
             const Vector2D&           intersection,
             const Vector3D&           direction) const;
 
-  /// set logging instance
+  /// Set logging instance
+  ///
+  /// @param logger is the logging instance to be set          
   void
   setLogger(std::unique_ptr<Logger> logger)
   {

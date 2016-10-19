@@ -72,6 +72,8 @@ struct VolumeSetup
   }
 
   /// Overlap check radially
+  ///
+  /// @param vSetup is the setup against which is checked
   bool
   overlapsInR(const VolumeSetup& vSetup) const
   {
@@ -82,6 +84,8 @@ struct VolumeSetup
   }
 
   /// Overlap check longitudinally
+  ///
+  /// @param vSetup is the setup against which is checked
   bool
   overlapsInZ(const VolumeSetup& vSetup) const
   {
@@ -92,6 +96,8 @@ struct VolumeSetup
   }
 
   /// Compatibility check radially
+  ///
+  /// @param vSetup is the setup against which is checked
   bool
   wrapsInR(const VolumeSetup& vSetup) const
   {
@@ -100,6 +106,8 @@ struct VolumeSetup
   }
 
   /// Compatibility check longitudinally
+  ///
+  /// @param vSetup is the setup against which is checked
   bool
   wrapsInZ(const VolumeSetup& vSetup) const
   {
@@ -108,6 +116,8 @@ struct VolumeSetup
   }
 
   /// Compatibility check full set
+  ///
+  /// @param vSetup is the setup against which is checked
   bool
   wraps(const VolumeSetup& vSetup) const
   {
@@ -116,12 +126,17 @@ struct VolumeSetup
   }
 
   /// Check if contained full set
+  ///
+  /// @param vSetup is the setup against which is checked
   bool
   containes(const VolumeSetup& vSetup) const
   {
     return (containesInR(vSetup) && containesInZ(vSetup));
   }
+
   /// Check if contained radially
+  ///
+  /// @param vSetup is the setup against which is checked
   bool
   containesInR(const VolumeSetup& vSetup) const
   {
@@ -130,6 +145,8 @@ struct VolumeSetup
   }
 
   /// Check if contained longitudinally
+  ///
+  /// @param vSetup is the setup against which is checked
   bool
   containesInZ(const VolumeSetup& vSetup) const
   {
@@ -137,7 +154,7 @@ struct VolumeSetup
     return false;
   }
 
-  /// toString
+  /// Method for output formatting
   std::string
   toString() const
   {
@@ -210,6 +227,7 @@ public:
   };
 
   /// Constructor
+  ///
   /// @param cvbConfig is the configuraiton struct to steer the builder
   /// @param logger logging instance
   CylinderVolumeBuilder(const Config&           cvbConfig,
@@ -225,13 +243,13 @@ public:
   /// @param insideVolume is an (optional) volume to be wrapped
   /// @param outsideBounds is an (optional) outside confinement
   /// @param layerTriple is an (optional) triplet of layers
-  /// @param volumeTriple is an (optional) triplet of volumes
   TrackingVolumePtr
   trackingVolume(TrackingVolumePtr  insideVolume  = nullptr,
                  VolumeBoundsPtr    outsideBounds = nullptr,
                  const LayerTriple* layerTriple   = nullptr) const override;
 
   /// Set configuration method
+  ///
   /// @param cvbConfig is the new configuration to be set
   void
   setConfiguration(const Config& cvbConfig);
@@ -241,6 +259,8 @@ public:
   getConfiguration() const;
 
   /// set logging instance
+  ///
+  /// @param logger is the logging istance to be set
   void
   setLogger(std::unique_ptr<Logger> logger);
 
@@ -274,6 +294,7 @@ private:
   ///        check the wrapping
   /// @param volumeSetup is the volume to be tested
   /// @param sign distinguishes inside/outside testing
+  ///
   /// @return boolean that indicates the test result
   bool
   checkLayerContainment(VolumeSetup&       layerSetup,
@@ -281,7 +302,7 @@ private:
                         const VolumeSetup& volumeSetup,
                         int                sign) const;
 
-  /// Wynchronize the layer setups with given
+  /// Synchronize the layer setups with given
   /// inside / outside constraints.
   ///
   /// This is the last method to be called in the building
@@ -291,12 +312,12 @@ private:
   /// @param nSetup the setup of negative EC layers (if present)
   /// @param cSetup the setup of the barrel layers
   /// @param pSetup the setup of positive EC layers (if present)
-  /// @param is the inside volume setup/dimensions
-  /// @param is the outside and final volume setup/dimensions
+  /// @param insideSetup is the inside volume setup/dimensions
+  /// @param outsideBoundSetup is the outside and final volume setup/dimensions
   ///
   /// @note non-const references may be changed
   ///
-  /// @return a wrapping condition @TODO check if needed
+  /// @return a wrapping condition @todo check if needed
   WrappingCondition
   synchronizeVolumeSetups(VolumeSetup&       nSetup,
                           VolumeSetup&       cSetup,

@@ -38,7 +38,7 @@ public:
                           size_t numCellsX,
                           size_t numCellsY = 1);
 
-  /// @TODO contructor from BinUtilities for more complex readouts
+  /// @todo contructor from BinUtilities for more complex readouts
 
   /// Virtual Destructor */
   virtual ~RectangularSegmentation();

@@ -41,14 +41,13 @@ class Layer;
 /// easily in the
 ///  Navigation of the Extrapolation process.
 ///
-/// @TODO Julia: make private tools private again after Gaudi update (bug in
-/// Gaudi), marked with //b
 
 class LayerArrayCreator : public ILayerArrayCreator
 {
 public:
   /// Constructor
-  /// @param cfg is the configuration struct that steers the behavoir
+  ///
+  /// @param logger logging instance
   LayerArrayCreator(std::unique_ptr<Logger> logger
                     = getDefaultLogger("LayerArrayCreator", Logging::INFO))
     : m_logger(std::move(logger))
@@ -59,11 +58,14 @@ public:
   virtual ~LayerArrayCreator() = default;
 
   /// LayerArrayCreator interface method
+  ///
   /// @param layers are the layers to be moved into an array
-  /// @min is the minimul value for binning
-  /// @max is the maximum value for binning
-  /// @btype is the binning type
-  /// @bvalue is the value in which the binning should be done
+  /// @param min is the minimum value for binning
+  /// @param max is the maximum value for binning
+  /// @param btype is the binning type
+  /// @param bvalue is the value in which the binning should be done
+  ///
+  /// @return unique pointer to a newly created LayerArray
   std::unique_ptr<const LayerArray>
   layerArray(const LayerVector& layers,
              double             min,

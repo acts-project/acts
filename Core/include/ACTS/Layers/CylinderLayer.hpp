@@ -42,9 +42,10 @@ public:
   /// @param cbounds are the cylindrical bounds of the layer
   /// @param surfaceArray is the Binned Array that holds the sensitive surfaces
   /// @param thickness is the layer thickness (along the normal)
-  /// @param od is the overlap descriptor for sensitive surfaces
   /// @param ad is the approach descriptor for approaching the layer
   /// @param laytyp is the layer type
+  ///
+  /// @todo ApproachDescriptor to unique_ptr
   ///
   /// @return The return object is a shared poiter to the layer.
   static LayerPtr
@@ -66,7 +67,7 @@ public:
   /// Factory copy constructor with shift
   ///
   /// @param cla is the source cylinder layer for the copy
-  /// @shift is the additional transform applied after cloning
+  /// @param shift is the additional transform applied after cloning
   ///
   /// @return The return object is a shared poiter to the layer.
   static LayerPtr
@@ -77,8 +78,7 @@ public:
 
   /// Factory clone constructor with shift
   ///
-  /// @param cla is the source cylinder layer for the clone
-  /// @shift is the additional transform applied after cloning
+  /// @param shift is the additional transform applied after cloning
   ///
   /// @return The return object is a shared poiter to the layer.
   LayerPtr
@@ -117,9 +117,9 @@ protected:
   /// @param cbounds are the cylindrical bounds of the layer
   /// @param surfaceArray is the Binned Array that holds the sensitive surfaces
   /// @param thickness is the layer thickness (along the normal)
-  /// @param od is the overlap descriptor for sensitive surfaces
   /// @param ad is the approach descriptor for approaching the layer
   /// @param laytyp is the layer type
+  /// @todo change ApproachDescriptor to unique_ptr
   ///
   /// @return The return object is a shared poiter to the layer.
   CylinderLayer(std::shared_ptr<Transform3D>          transform,
@@ -132,10 +132,10 @@ protected:
   /// Private copy constructor with shift, called by create(args*)
   ///
   /// @param cla is the source cylinder layer for the copy
-  /// @shift is the additional transform applied after cloning
+  /// @param shift is the additional transform applied after cloning
   ///
   /// @return The return object is a shared poiter to the layer.
-  CylinderLayer(const CylinderLayer& cla, const Transform3D& tr);
+  CylinderLayer(const CylinderLayer& cla, const Transform3D& shift);
 };
 
 }  // end of namespace

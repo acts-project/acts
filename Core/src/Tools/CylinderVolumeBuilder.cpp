@@ -36,7 +36,7 @@ void
 Acts::CylinderVolumeBuilder::setConfiguration(
     const Acts::CylinderVolumeBuilder::Config& cvbConfig)
 {
-  // @TODO check consistency
+  // @todo check consistency
   // copy the configuration
   m_cfg = cvbConfig;
 }
@@ -581,7 +581,7 @@ Acts::CylinderVolumeBuilder::analyzeLayers(const LayerVector& lVector) const
         takeBigger(lSetup.rMax, rMaxD + m_cfg.layerEnvelopeR.second);
         takeSmaller(lSetup.zMin, zMinD - m_cfg.layerEnvelopeZ);
         takeBigger(lSetup.zMax, zMaxD + m_cfg.layerEnvelopeZ);
-        //!< @TODO check for Endcap Ring setup
+        //!< @todo check for Endcap Ring setup
       }
     }
   }

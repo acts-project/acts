@@ -126,7 +126,7 @@ public:
 
   /// Operator++ to make multidimensional BinUtility
   ///
-  /// @param sbu is the additional BinUtility to be chosen
+  /// @param gbu is the additional BinUtility to be chosen
   BinUtility&
   operator+=(const BinUtility& gbu) throw(std::string)
   {
@@ -165,6 +165,7 @@ public:
   /// - calculate the bin triple with one transform
   ///
   /// @param position is the 3D position to be evaluated
+  ///
   /// @return is the bin value in 3D
   std::array<size_t, 3>
   binTriple(const Vector3D& position) const
@@ -187,6 +188,7 @@ public:
   ///
   /// @param position is the 3D position to be evaluated
   /// @param ba is the bin dimension
+  ///
   /// @return is the bin value
   size_t
   bin(const Vector3D& position, size_t ba = 0) const
@@ -200,6 +202,10 @@ public:
 
   /// Bin neighbour range
   ///
+  /// @param position is the position for the neighbour Range test
+  /// @param ba is the binning ba
+  ///
+  /// @return a vector of neighbour sizes
   std::vector<size_t>
   neighbourRange(const Vector3D& position, size_t ba = 0) const
   {
@@ -219,7 +225,7 @@ public:
   ///
   /// @param position is the position to evaluate
   /// @param direction is the direction for the next
-  /// @param ba is the bin dimension
+  /// @param ba is the bin accessor
   ///
   /// @return the next bin
   size_t
@@ -233,6 +239,14 @@ public:
   }
 
   /// Return the oder direciton for fast interlinking
+  ///
+  /// @param position is the global position for the next search
+  /// @param direction is the global position for the next search
+  /// @param ba is the bin accessor
+  ///
+  /// @todo the
+  ///
+  /// @return the next bin
   int
   nextDirection(const Vector3D& position,
                 const Vector3D& direction,
@@ -252,7 +266,7 @@ public:
   /// @param lposition is the local position to be set
   /// @param ba is the bin dimension
   ///
-  ///  @return bin calculated from local
+  /// @return bin calculated from local
   size_t
   bin(const Vector2D& lposition, size_t ba = 0) const
   {
@@ -291,6 +305,7 @@ public:
   }
 
   /// First bin maximal value
+  /// @return the dimenstion of the binning data
   size_t
   dimensions() const
   {
@@ -298,6 +313,10 @@ public:
   }
 
   /// First bin maximal value
+  ///
+  /// @param ba is the binaccessor
+  ///
+  /// @return size_t is the maximal bin of the accessor entry
   size_t
   max(size_t ba = 0) const
   {
@@ -306,6 +325,10 @@ public:
   }
 
   /// Number of bins
+  ///
+  /// @param ba is the binaccessor
+  ///
+  /// @return size_t is the bins of the accessor entry
   size_t
   bins(size_t ba) const
   {
@@ -314,6 +337,10 @@ public:
   }
 
   /// The type/value of the binning
+  ///
+  /// @param ba is the binaccessor
+  ///
+  /// @return the binning value of the accessor entry
   BinningValue
   binningValue(size_t ba = 0) const throw(std::string)
   {
@@ -322,6 +349,8 @@ public:
   }
 
   /// Output Method for std::ostream, to be overloaded by child classes
+  ///
+  /// @param sl is the ostream to be dumped into
   std::ostream&
   dump(std::ostream& sl) const
   {

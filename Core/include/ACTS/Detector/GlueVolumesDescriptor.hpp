@@ -32,13 +32,13 @@ typedef BinnedArray<TrackingVolumePtr>        TrackingVolumeArray;
 /// Detector
 /// by another one.
 ///
-
 class GlueVolumesDescriptor
 {
 public:
   /// Constructor
   GlueVolumesDescriptor() {}
   /// Constructor - with arguments
+  ///
   /// @param gvs are the glue volume arrays mapped to the volume faces
   GlueVolumesDescriptor(
       const std::map<BoundarySurfaceFace,
@@ -46,25 +46,29 @@ public:
 
   /// Desctructor
   ~GlueVolumesDescriptor() {}
-  /// register the volumes
+  /// Register the volumes
+  ///
   /// @param bsf is the boundary surface face where the volume array is attached
   /// @param gvs is the array of volumes to be attached
   void
   registerGlueVolumes(Acts::BoundarySurfaceFace                  bsf,
                       std::shared_ptr<const TrackingVolumeArray> gvs) const;
 
-  /// retrieve them again
+  /// Retrieve the glue volumes
+  ///
   /// @param bsf is the boundary surface face for which you want to get the
   /// array
+  ///
+  /// @return the shared pointer to the TrackingVolume array
   std::shared_ptr<const TrackingVolumeArray>
   glueVolumes(BoundarySurfaceFace bsf) const;
 
-  /// retrieve the available Glue Faces
+  /// Retrieve the available Glue Faces
   /// @return the list of faces for which glue information is there
   const std::vector<BoundarySurfaceFace>&
   glueFaces() const;
 
-  /// dump it to the screen
+  /// Dump it to the screen
   std::string
   screenOutput() const;
 

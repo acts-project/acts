@@ -49,19 +49,23 @@ public:
 
   /// Constructor - open cone with alpha, by default a full cone
   /// but optionally can make a conical section
+  ///
   /// @param alpha is the opening angle of the cone
   /// @param symm is the boolean indicating if the cone is symmetric in +/- z
   /// @param halfphi is the half opening angle (default is pi)
-  /// @param alpha is angle of the local 3D x axis (default is 0)
+  /// @param avphi is the phi value around which the bounds are opened
+  /// (default=0)
   ConeBounds(double alpha, bool symm, double halfphi = M_PI, double avphi = 0.);
 
   /// Constructor - open cone with alpha, minz and maxz, by
   /// default a full cone but can optionally make it a conical section
+  ///
   /// @param alpha is the opening angle of the cone
   /// @param zmin cone expanding from minimal z
   /// @param zmax cone expanding to maximal z
   /// @param halfphi is the half opening angle (default is pi)
-  /// @param alpha is angle of the local 3D x axis (default is 0)
+  /// @param avphi is the phi value around which the bounds are opened
+  /// (default=0)
   ConeBounds(double alpha,
              double zmin,
              double zmax,
@@ -69,6 +73,7 @@ public:
              double avphi   = 0.);
 
   /// Copy Constructor
+  ///
   /// @param cobo is the source bounds for the assignment
   ConeBounds(const ConeBounds& cobo)
     : SurfaceBounds(cobo)
@@ -82,7 +87,7 @@ public:
   virtual ~ConeBounds();
 
   /// Assignment operator
-  /// @param cylbo is the source bounds for the assignment
+  /// @param cobo is the source bounds for the assignment
   ConeBounds&
   operator=(const ConeBounds& cobo);
 
@@ -97,23 +102,46 @@ public:
     return SurfaceBounds::Cone;
   }
 
-  /// @copydoc SurfaceBounds::inside
+  /// inside method for local position
+  ///
+  /// @param lpos is the local position to be checked
+  /// @param bcheck is the boundary check directive
+  ///
+  /// @return is a boolean indicating if the position is inside
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bchk = true) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck = true) const override;
 
-  /// @copydoc SurfaceBounds::insideLoc0
+  /// Inside method for the first local parameter
+  ///
+  /// @param lpos is the local position to be checked
+  /// @param tol0 is the absolute tolerance on the first parameter
+  ///
+  /// @return is a boolean indicating if the position is insideLoc0
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
-  /// @copydoc SurfaceBounds::insideLoc1
+  /// Inside method for the second local parameter
+  ///
+  /// @param lpos is the local position to be checked
+  /// @param tol1 is the absolute tolerance on the first parameter
+  ///
+  /// @return is a boolean indicating if the position is insideLoc1
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /// @copydoc SurfaceBounds::minDistance
+  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
+  ///
+  /// @param lpos is the local position to check for the distance
+  ///
+  /// @return is a signed distance parameter
   virtual double
-  minDistance(const Vector2D& gpos) const override;
+  distanceToBoundary(const Vector2D& lpos) const override;
 
   /// Return the radius at a specific z values
+  ///
+  /// @param z is the z value for which r is requested
+  ///
+  /// @return is the r value associated with z
   double
   r(double z) const;
 
@@ -154,6 +182,10 @@ public:
   halfPhiSector() const;
 
   /// Output Method for std::ostream
+  ///
+  /// @param sl is the ostrea into which the dump is done
+  ///
+  /// @return is the input obect
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
@@ -209,9 +241,9 @@ ConeBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 }
 
 inline bool
-ConeBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
+ConeBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
-  return ConeBounds::inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
+  return ConeBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 }
 
 inline bool

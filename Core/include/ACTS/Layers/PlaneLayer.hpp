@@ -33,10 +33,8 @@ public:
   ///
   /// @param transform which places the layer in the global frame
   /// @param pbounds the planar bounds that define the layer dimensions
-  /// @param surfaces is the surface array that holds the sensitive surfaces
+  /// @param surfaceArray is the surface array that holds the sensitive surfaces
   /// @param thickness is the thickness of the layer (normal direction to plane)
-  /// @param od is the overlap descriptor for describing sensitive surface
-  /// overlaps
   /// @param ad is the approach descriptor for describing the approach surface
   /// @param laytyp is the layer type
   ///
@@ -44,19 +42,21 @@ public:
   static LayerPtr
   create(std::shared_ptr<Transform3D>        transform,
          std::shared_ptr<const PlanarBounds> pbounds,
-         std::unique_ptr<SurfaceArray>       surfaces  = nullptr,
+         std::unique_ptr<SurfaceArray>       surfaceArray  = nullptr,
          double                              thickness = 0.,
          ApproachDescriptor*                 ad        = nullptr,
          LayerType                           laytyp    = Acts::active)
   {
     return LayerPtr(new PlaneLayer(
-        transform, pbounds, std::move(surfaces), thickness, ad, laytyp));
+        transform, pbounds, std::move(surfaceArray), thickness, ad, laytyp));
   }
 
   /// Factory for a shared plane layer
   ///
   /// @param pla is the plain layer to be coped
   /// @param shift is the additional shift applied after copying
+  ///
+  /// @return a shared pointer to a layer
   static LayerPtr
   create(const PlaneLayer& pla, const Transform3D& shift)
   {
@@ -64,6 +64,8 @@ public:
   }
 
   /// Clone with a shift - only cloning that is allowed
+  ///
+  /// @param shift additional shift applied after cloning
   LayerPtr
   cloneWithShift(const Transform3D& shift) const
   {
@@ -98,10 +100,8 @@ protected:
   ///
   /// @param transform which places the layer in the global frame
   /// @param pbounds the planar bounds that define the layer dimensions
-  /// @param surfaces is the surface array that holds the sensitive surfaces
+  /// @param surfaceArray is the surface array that holds the sensitive surfaces
   /// @param thickness is the thickness of the layer (normal direction to plane)
-  /// @param od is the overlap descriptor for describing sensitive surface
-  /// overlaps
   /// @param ad is the approach descriptor for describing the approach surface
   /// @param laytyp is the layer type
   ///
@@ -117,7 +117,7 @@ protected:
   ///
   /// @param pla is the plain layer to be coped
   /// @param shift is the additional shift applied after copying
-  PlaneLayer(const PlaneLayer& pla, const Transform3D& tr);
+  PlaneLayer(const PlaneLayer& pla, const Transform3D& shift);
 };
 
 }  // end of namespace

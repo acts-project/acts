@@ -32,19 +32,15 @@ typedef std::shared_ptr<const VolumeBounds> VolumeBoundsPtr;
 /// Pure Absract Base Class for Volume bounds.
 ///
 /// Acts::VolumeBounds are a set of up to six confining Surfaces that are stored
-/// in
-/// a std::vector.
+/// in a std::vector.
 /// Each type of Acts::VolumeBounds has to implement a decomposeToSurfaces() and
-/// a
-/// inside() method.
+/// a inside() method.
 ///
 /// The orientation of the Surfaces are in a way that the normal vector points
-/// to
-/// the oustide world.
+/// to the outside world.
 ///
 /// The Volume, retrieving a set of Surfaces from the VolumeBounds, can turn the
 /// Surfaces into BoundarySurfaces.
-
 class VolumeBounds
 {
 public:
@@ -58,29 +54,44 @@ public:
   clone() const = 0;
 
   /// Checking if position given in volume frame is inside
+  ///
   /// @param gpos is the global position to be checked
   /// @param tol is the tolerance applied for the inside check
+  ///
+  /// @return boolean indicating if the position is inside
   virtual bool
   inside(const Vector3D& gpos, double tol = 0.) const = 0;
 
   /// Method to decompose the Bounds into Surfaces
   /// the Volume can turn them into BoundarySurfaces
+  ///
   /// @param transform is the 3D transform to be applied to the boundary
-  /// surfaces
-  ///        to position them in 3D space
+  /// surfaces to position them in 3D space
   /// @note this is factory method
+  ///
+  /// @return a vector of surfaces bounding this volume
   virtual const std::vector<const Surface*>
   decomposeToSurfaces(std::shared_ptr<Transform3D> transform) const = 0;
 
   /// Binning offset - overloaded for some R-binning types
+  ///
+  /// @param bValue is the binning schema used
+  ///
+  /// @return vector 3D to be used for the binning
   virtual Vector3D
   binningOffset(BinningValue bValue) const;
 
   /// Binning borders in double
+  ///
+  /// @param bValue is the binning schema used
+  ///
+  /// @return float offset to be used for the binning
   virtual double
   binningBorder(BinningValue bValue) const;
 
   /// Output Method for std::ostream, to be overloaded by child classes
+  ///
+  /// @param sl is the output stream to be dumped into
   virtual std::ostream&
   dump(std::ostream& sl) const = 0;
 };

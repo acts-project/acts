@@ -65,16 +65,16 @@ Acts::Layer::Layer(const Layer& lay)
 
 Acts::Layer::~Layer()
 {
-  /// @TODO witch to std::unique_ptr
+  // @todo move to std::unique_ptr
   delete m_approachDescriptor;
   delete m_representingVolume;
 }
 
 bool
 Acts::Layer::isOnLayer(const Acts::Vector3D& gp,
-                       const BoundaryCheck&  bchk) const
+                       const BoundaryCheck&  bcheck) const
 {
-  return (surfaceRepresentation()).isOnSurface(gp, bchk);
+  return (surfaceRepresentation()).isOnSurface(gp, bcheck);
 }
 
 const Acts::SurfaceIntersection

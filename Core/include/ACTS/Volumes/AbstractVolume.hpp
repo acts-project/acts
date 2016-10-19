@@ -55,6 +55,7 @@ class AbstractVolume : public Volume
 {
 public:
   /// Constructor with shared Transform3D*, VolumeBounds*
+  ///
   /// @param htrans is the transform 3D the positions the volume in global frame
   /// @param volbounds is the boundary definition
   AbstractVolume(std::shared_ptr<Transform3D> htrans,
@@ -75,6 +76,8 @@ public:
       = delete;
 
   /// Method to return the BoundarySurfaces
+  ///
+  /// @return the vector of boundary surfaces
   const std::vector<BoundarySurfacePtr>&
   boundarySurfaces() const;
 

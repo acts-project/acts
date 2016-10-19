@@ -38,7 +38,9 @@ public:
   }
 
   /// Method inside() returns true for any case
+  ///
   /// ignores input parameters
+  ///
   /// @return always true
   virtual bool
   inside(const Vector2D&, const BoundaryCheck&) const final
@@ -47,19 +49,23 @@ public:
   }
 
   /// Method inside() returns true for loc 0
+  ///
   /// ignores input parameters
+  ///
   /// @return always true
   virtual bool
-  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const final
+  insideLoc0(const Vector2D&, double tol0 = 0.) const final
   {
     return true;
   }
 
   /// Method inside() returns true for loc 1
+  ///
   /// ignores input parameters
+  ///
   /// @return always true
   virtual bool
-  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const final
+  insideLoc1(const Vector2D&, double tol1 = 0.) const final
   {
     return true;
   }
@@ -68,7 +74,7 @@ public:
   /// ignores input parameter
   /// @return always 0. (should be -NaN)
   virtual double
-  minDistance(const Vector2D& pos) const final
+  distanceToBoundary(const Vector2D& pos) const final
   {
     return 0.;
   }

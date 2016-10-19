@@ -99,7 +99,7 @@ Acts::ConeSurface::measurementFrame(const Vector3D& pos, const Vector3D&) const
   mFrame.col(1) = measY;
   mFrame.col(2) = measDepth;
   // return the rotation matrix
-  //!< @TODO fold in alpha
+  //!< @todo fold in alpha
   // return it
   return mFrame;
 }
@@ -137,7 +137,7 @@ Acts::Intersection
 Acts::ConeSurface::intersectionEstimate(const Vector3D&      gpos,
                                         const Vector3D&      dir,
                                         bool                 forceDir,
-                                        const BoundaryCheck& bchk) const
+                                        const BoundaryCheck& bcheck) const
 {
   // transform to a frame with the cone along z, with the tip at 0
   Acts::Vector3D tpos1 = m_transform ? transform().inverse() * gpos : gpos;
@@ -192,7 +192,7 @@ Acts::ConeSurface::intersectionEstimate(const Vector3D&      gpos,
   }
   if (m_transform) solution = transform() * solution;
 
-  isValid = bchk ? (isValid && isOnSurface(solution, bchk)) : isValid;
+  isValid = bcheck ? (isValid && isOnSurface(solution, bcheck)) : isValid;
   return Intersection(solution, path, isValid);
 }
 

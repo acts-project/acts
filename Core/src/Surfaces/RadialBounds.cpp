@@ -55,7 +55,7 @@ Acts::RadialBounds::operator=(const RadialBounds& rbo)
 }
 
 double
-Acts::RadialBounds::minDistance(const Acts::Vector2D& lpos) const
+Acts::RadialBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 {
   const double pi2 = 2. * M_PI;
 

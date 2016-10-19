@@ -63,23 +63,26 @@ public:
   };
 
   /// Constructor with Transform3D as a shared object
-  /// @param htrans Transform3D defines the position of the surface in 3D global
-  /// space
+  ///
+  /// @param htrans Transform3D positions the surface in 3D global space
   /// @note also acts as default constructor
   Surface(std::shared_ptr<Transform3D> htrans = nullptr);
 
   /// Copy constructor
   /// - invalidates the association to detector element and identifier
+  ///
   /// @param sf Source surface for copy.
   Surface(const Surface& sf);
 
   /// Copy constructor with shift
   /// - invalidates the association to detector element and identifier
+  ///
   /// @param sf Source surface for copy
   /// @param transf Additional transform applied after copying from the source
   Surface(const Surface& sf, const Transform3D& transf);
 
   /// Constructor fromt DetectorElementBase and (optional) Identifier
+  ///
   /// @param detelement Detector element which is represented by this surface
   /// @param id Optional identifier if more than one surface are associated to a
   /// detector element
@@ -93,6 +96,8 @@ public:
   /// @note handle with care !
   // The alssignment invalidates the link to detector element, identifier, layer
   // or tracking volume.
+  ///
+  /// @param sf Source surface for the assignment
   Surface&
   operator=(const Surface& sf);
 
@@ -102,19 +107,22 @@ public:
   /// (b) then type comparison
   /// (c) then bounds comparison
   /// (d) then transform comparison
+  ///
   /// @param sf source surface for the comparison
   virtual bool
   operator==(const Surface& sf) const;
 
   /// Comparison (non-equality) operator
+  ///
   /// @param sf Source surface for the comparison
   virtual bool
   operator!=(const Surface& sf) const;
 
   /// Implicit constructor
   /// uses the copy constructor a new position can optionally be given
-  /// @param shift An additional (optional shift can be given) shift after
-  /// cloning
+  ///
+  /// @param shift is an additional (optional shift can be given)
+  /// shift after cloning
   virtual Surface*
   clone(const Transform3D* shift = nullptr) const = 0;
 
@@ -138,6 +146,9 @@ public:
   /// Return method for the normal vector of the surface
   /// The normal vector can only be generally defined at a given local position
   /// It requires a local position to be given (in general)
+  ///
+  /// @param lpos is the local position where the normal verctor is constructed
+  ///
   /// @return normal vector by value
   virtual const Vector3D
   normal(const Vector2D& lpos) const = 0;
@@ -145,9 +156,12 @@ public:
   /// Return method for the normal vector of the surface
   /// The normal vector can only be generally defined at a given local position
   /// It requires a local position to be given (in general)
+  ///
+  /// @param pos is the global position where the normal vector is constructed
+  ///
   /// @return normal vector by value
   virtual const Vector3D
-  normal(const Vector3D& gpos) const;
+  normal(const Vector3D& pos) const;
 
   /// Return method for SurfaceBounds
   /// @return SurfaceBounds by reference
@@ -177,13 +191,15 @@ public:
   /// Set Associated Layer
   /// Many surfaces can be associated to a Layer, but it might not be known yet
   /// during construction of the layer, this can be set afterwards
-  /// @param Layer by reference
+  ///
+  /// @param lay the assignment Layer by reference
   void
-  associateLayer(const Layer&) const;
+  associateLayer(const Layer& lay) const;
 
   /// Set Associated SurfaceMaterial
   /// The material is usually derived in a complicated way and loaded from
   /// a framework given source. As various srufaces may share the same
+  ///
   /// @param material Material description this given and stored as a shared
   /// pointer
   void
@@ -193,34 +209,40 @@ public:
   /// In order to avoid unneccessary geometrical operations, it checks on the
   /// surface pointer first.
   /// If that check fails, it calls the geometrical check isOnSurface
-  /// @tparam parameters TrackParameters to be checked
-  /// @param bchk BoundaryCheck directive for this onSurface check
+  ///
+  /// @param parameters TrackParameters to be checked
+  /// @param bcheck BoundaryCheck directive for this onSurface check
+  ///
   /// @return boolean indication if operation was successful
   template <class T>
   bool
   onSurface(const T&             parameters,
-            const BoundaryCheck& bchk = BoundaryCheck(true)) const;
+            const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
 
   /// The insideBounds method for local positions
+  ///
   /// @param lpos local position to check
-  /// @param bchk  BoundaryCheck directive for this onSurface check
+  /// @param bcheck  BoundaryCheck directive for this onSurface check
+  ///
   /// @return boolean indication if operation was successful
   virtual bool
-  insideBounds(const Vector2D& lpos, const BoundaryCheck& bchk = true) const;
+  insideBounds(const Vector2D& lpos, const BoundaryCheck& bcheck = true) const;
 
   /// The geometric onSurface method
   /// Geometrical check whether position is on Surface
+  ///
   /// @param gpos global position to be evaludated
-  /// @param bchk BoundaryCheck directive for this onSurface check
+  /// @param bcheck BoundaryCheck directive for this onSurface check
+  ///
   /// @return boolean indication if operation was successful
   virtual bool
-  isOnSurface(const Vector3D& gpos, const BoundaryCheck& bchk = true) const;
+  isOnSurface(const Vector3D& gpos, const BoundaryCheck& bcheck = true) const;
 
   /// Local to global transformation
   /// Generalized local to global transformation for the surface types. Since
-  /// some surface
-  /// types need the global momentum/direction to resolve sign ambiguity this is
-  /// also provided
+  /// some surface types need the global momentum/direction to resolve sign
+  /// ambiguity this is also provided
+  ///
   /// @param lpos local 2D posittion in specialized surface frame
   /// @param gmom global 3D momentum representation (optionally ignored)
   /// @param gpos global 3D position to be filled (given by reference for method
@@ -232,14 +254,15 @@ public:
 
   /// Global to local transformation
   /// Generalized global to local transformation for the surface types. Since
-  /// some surface
-  /// types need the global momentum/direction to resolve sign ambiguity this is
-  /// also provided
+  /// some surface types need the global momentum/direction to resolve sign
+  /// ambiguity this is also provided
+  ///
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param gmom global 3D momentum representation (optionally ignored)
   /// @param lpos local 2D position to be filled (given by reference for method
   /// symmetry)
+  ///
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
   virtual bool
@@ -250,55 +273,63 @@ public:
   /// Return mehtod for the measurement frame
   /// This is the frame in which the covariance matrix is defined (specialized
   /// by all surfaces)
+  ///
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param gmom global 3D momentum representation (optionally ignored)
+  ///
   /// @return RotationMatrix3D which defines the three axes of the measurement
   /// frame
   virtual const Acts::RotationMatrix3D
   measurementFrame(const Vector3D& gpos, const Vector3D& gmom) const;
 
   /// Calucation of the path correction for incident
+  ///
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param gmom global 3D momentum representation
+  ///
   /// @return Path correction with respect to the nominal incident.
   virtual double
   pathCorrection(const Vector3D& gpos, const Vector3D& gmom) const = 0;
 
   /// Straight line intersection schema from parameters
   /// Templated for charged and neutral
-  /// @TODO include intersector
+  ///
+  /// @todo include intersector
   /// @param pars TrackParameters to start from
   /// @param forceDir boolean indication whether to force the direction given by
   /// the TrackParameters to hold
-  /// @param bchk boundary check directive for this operation
+  /// @param bcheck boundary check directive for this operation
+  ///
   /// @return Intersection class
   template <class T>
   Intersection
   intersectionEstimate(const T&             pars,
                        bool                 forceDir = false,
-                       const BoundaryCheck& bchk     = false) const
+                       const BoundaryCheck& bcheck     = false) const
   {
     return intersectionEstimate(
-        pars.position(), pars.momentum().unit(), forceDir, bchk);
+        pars.position(), pars.momentum().unit(), forceDir, bcheck);
   }
 
   /// Straight line intersection schema from parameters
   /// Templated for charged and neutral
-  /// @TODO include intersector
+  /// @todo include intersector
+  ///
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param gdir global 3D direction representation
   /// @param forceDir boolean indication whether to force the direction given by
   /// the TrackParameters to hold
-  /// @param bchk boundary check directive for this operation
+  /// @param bcheck boundary check directive for this operation
+  ///
   /// @return Intersection class
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      gdir,
                        bool                 forceDir = false,
-                       const BoundaryCheck& bchk = false) const = 0;
+                       const BoundaryCheck& bcheck = false) const = 0;
 
   /// Returns 'true' if this surface is 'free'
   /// i.e. it does not belong to a detector element, a layer or a tracking
@@ -307,6 +338,8 @@ public:
   isFree() const;
 
   /// Output Method for std::ostream, to be overloaded by child classes
+  ///
+  /// @param sl is the ostream to be dumped into
   virtual std::ostream&
   dump(std::ostream& sl) const;
 
@@ -379,9 +412,9 @@ Surface::onSurface(const T& pars, const BoundaryCheck& bcheck) const
 }
 
 inline bool
-Surface::insideBounds(const Vector2D& locpos, const BoundaryCheck& bchk) const
+Surface::insideBounds(const Vector2D& locpos, const BoundaryCheck& bcheck) const
 {
-  return bounds().inside(locpos, bchk);
+  return bounds().inside(locpos, bcheck);
 }
 
 inline const DetectorElementBase*

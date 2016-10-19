@@ -34,6 +34,9 @@ class DetectorElementBase;
 /// is at r=0, independent of the provided DiscBounds. The z-axis
 /// is the normal vector of the Disc, being perpenticular to the
 /// radial direction.
+///
+/// @image html DiscSurface.png
+///
 class DiscSurface : public Surface
 {
 public:
@@ -41,6 +44,7 @@ public:
   DiscSurface() = delete;
 
   /// Constructor for Discs from Transform3D, \f$ r_{min}, r_{max} \f$
+  ///
   /// @param htrans is transform that places the disc in the global 3D space
   /// (can be nullptr)
   /// @param rmin is the inner radius of the disc surface
@@ -55,12 +59,15 @@ public:
   /// Constructor for Discs from Transform3D, \f$ r_{min}, r_{max}, hx_{min},
   /// hx_{max} \f$
   /// This is n this case you have DiscTrapezoidalBounds
+  ///
+  /// @param htrans is transform that places the disc in the global 3D space
+  /// (can be nullptr)           
   /// @param minhalfx is the half length in x at minimal r
-  /// @param minhalfx is the half length in x at maximal r
+  /// @param maxhalfx is the half length in x at maximal r
   /// @param rmin is the inner radius of the disc surface
   /// @param rmax is the outer radius of the disc surface
-  /// @param is the position in phi (default is 0.)
-  /// @param is the optional stereo angle
+  /// @param avephi is the position in phi (default is 0.)
+  /// @param stereo is the optional stereo angle
   DiscSurface(std::shared_ptr<Transform3D> htrans,
               double                       minhalfx,
               double                       maxhalfx,
@@ -70,6 +77,7 @@ public:
               double                       stereo = 0.);
 
   /// Constructor for Discs from Transform3D and shared DiscBounds
+  ///
   /// @param htrans is the transform that positions the disc in the global 3D
   /// frame
   /// @param dbounds are the disc bounds describing the surface coverage
@@ -78,6 +86,7 @@ public:
 
   /// Constructor from detector element and identifier
   /// @note the surface only acts as a proxy of the detector element
+  ///
   /// @param dbounds are the disc bounds associated to this surface, must not be
   /// nullptr
   /// @param detelement is the detector element that is represented by this
@@ -89,10 +98,12 @@ public:
               const Identifier&                 identifier = Identifier());
 
   /// Copy Constructor
+  ///
   /// @param dsf is the source surface for the copy
   DiscSurface(const DiscSurface& dsf);
 
   /// Copy Constructor with shift
+  ///
   /// @param dsf is the source sourface for the copy
   /// @param transf is the additional transform applied to the surface
   DiscSurface(const DiscSurface& dsf, const Transform3D& transf);
@@ -101,10 +112,13 @@ public:
   virtual ~DiscSurface();
 
   /// Assignement operator
+  ///
+  /// @param dsf is the source sourface for the assignment
   DiscSurface&
   operator=(const DiscSurface& dsf);
 
   /// Virtual constructor - shift can be given optionally
+  ///
   /// @param shift the otional transform applied after cloning
   virtual DiscSurface*
   clone(const Transform3D* shift = nullptr) const override;
@@ -117,11 +131,19 @@ public:
   }
 
   /// Normal vector
+  ///
   /// @param lpos the local position where the normal is requested (ignored)
+  ///
+  /// @return is a normal vector
   const Vector3D
   normal(const Vector2D& lpos = s_origin2D) const final;
 
-  /// @copydoc Surface::biningPosition
+  /// The binning position is the position calcualted
+  /// for a certain binning type
+  ///
+  /// @param bValue is the binning type to be used
+  ///
+  /// @return position that can beused for this binning
   virtual const Vector3D
   binningPosition(BinningValue bValue) const final;
 
@@ -130,21 +152,43 @@ public:
   bounds() const override;
 
   /// This method returns true if the GlobalPosition is on the Surface for both,
-  /// within
-  /// or without check of whether the local position is inside boundaries or not
+  /// within or without check of whether the local position is inside boundaries
+  /// or not
+  ///
+  /// @param gpos is the global position to be checked
+  /// @param bcheck is the boundary check directive
+  ///
+  /// @return bollean that indicates if the position is on surface
   virtual bool
   isOnSurface(const Vector3D&      gpos,
-              const BoundaryCheck& bchk = true) const override;
+              const BoundaryCheck& bcheck = true) const override;
 
-  /// @copydoc Surface::localToGlobal
+  /// Local to global transformation
+  /// For planar surfaces the momentum is ignroed in the local to global
+  /// transformation
+  ///
+  /// @param lpos local 2D posittion in specialized surface frame
+  /// @param mom global 3D momentum representation (optionally ignored)
+  /// @param gpos global 3D position to be filled (given by reference for method
+  /// symmetry)
+  ///
   /// @note the momentum is ignored for Disc surfaces in this calculateion
   virtual void
   localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
                 Vector3D&       gpos) const override;
 
-  /// @copydoc Surface::globalToLocal
+  /// Global to local transformation
   /// @note the momentum is ignored for Disc surfaces in this calculateion
+  ///
+  /// @param gpos global 3D position - considered to be on surface but not
+  /// inside bounds (check is done)
+  /// @param mom global 3D momentum representation (optionally ignored)
+  /// @param lpos local 2D position to be filled (given by reference for method
+  /// symmetry)
+  ///
+  /// @return boolean indication if operation was successful (fail means global
+  /// position was not on surface)
   virtual bool
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
@@ -152,48 +196,66 @@ public:
 
   /// Special method for DiscSurface : local<->local transformations polar <->
   /// cartesian
+  ///
   /// @param lpolar is a local position in polar coordinates
-  /// @return values is local 2D position in carthesian coordinates  @TODO check
+  ///
+  /// @return values is local 2D position in carthesian coordinates  @todo check
   const Vector2D
   localPolarToCartesian(const Vector2D& lpolar) const;
 
   /// Special method for Disc surface : local<->local transformations polar <->
   /// cartesian
+  ///
   /// @param lcart is local 2D position in carthesian coordinates
+  ///
   /// @return value is a local position in polar coordinates
   const Vector2D
   localCartesianToPolar(const Vector2D& lcart) const;
 
   /// Special method for DiscSurface : local<->local transformations polar <->
   /// cartesian
+  ///
   /// @param lpolar is a local position in polar coordinates
+  ///
   /// @return values is local 2D position in carthesian coordinates
   const Vector2D
   localPolarToLocalCartesian(const Vector2D& lpolar) const;
 
   /// Special method for DiscSurface :  local<->global transformation when
   /// provided cartesian coordinates
+  ///
   /// @param lcart is local 2D position in carthesian coordinates
+  ///
   /// @return value is a global carthesian 3D position
   const Vector3D
   localCartesianToGlobal(const Vector2D& lcart) const;
 
   /// Special method for DiscSurface : global<->local from cartesian coordinates
+  ///
   /// @param gpos is a global carthesian 3D position
+  /// @param tol is the absoltue tolerance parameter
+  ///
   /// @return value is a local polar
   const Vector2D
   globalToLocalCartesian(const Vector3D& gpos, double tol = 0.) const;
 
-  /// Path correction method
-  /// @copydoc Surface::pathCorrection
+  /// Path correction due to incident of the track
+  ///
+  /// @param gpos is the global position as a starting point
+  /// @param mom is the global momentum at the starting point
+  ///
+  /// @return is the correction factor due to incident
   double
   pathCorrection(const Vector3D& gpos, const Vector3D& mom) const override;
 
-  /// @copydoc Surface::intersectionEstimate
-  ///
   /// fast straight line intersection schema - standard: provides closest
   /// intersection and (signed) path length
   ///  forceDir is to provide the closest forward solution
+  ///
+  /// @param gpos is the global position as a starting point
+  /// @param dir is the global direction at the starting point
+  /// @param forceDir is a boolean forcing a solution along direction
+  /// @param bcheck is the boundary check
   ///
   ///  <b>mathematical motivation:</b>
   ///
@@ -212,11 +274,12 @@ public:
   ///  - either in the plane
   ///  - perpenticular to the normal of the plane
   ///
+  /// @return is the intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir = false,
-                       const BoundaryCheck& bchk     = false) const override;
+                       const BoundaryCheck& bcheck     = false) const override;
 
   /// Return properly formatted class name for screen output
   virtual std::string
@@ -282,7 +345,7 @@ inline Intersection
 DiscSurface::intersectionEstimate(const Vector3D&      gpos,
                                   const Vector3D&      dir,
                                   bool                 forceDir,
-                                  const BoundaryCheck& bchk) const
+                                  const BoundaryCheck& bcheck) const
 {
   double denom = dir.dot(normal());
   if (denom) {
@@ -291,7 +354,7 @@ DiscSurface::intersectionEstimate(const Vector3D&      gpos,
     // evaluate the intersection in terms of direction
     bool isValid = forceDir ? (u > 0.) : true;
     // evaluate (if necessary in terms of boundaries)
-    isValid = bchk ? (isValid && isOnSurface(intersectPoint, bchk)) : isValid;
+    isValid = bcheck ? (isValid && isOnSurface(intersectPoint, bcheck)) : isValid;
     // return the result
     return Intersection(intersectPoint, u, isValid);
   }

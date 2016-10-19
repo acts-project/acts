@@ -26,6 +26,8 @@ class DiscBounds : public SurfaceBounds
 {
 public:
   /// Default Constructor
+  ///
+  /// @param sSize is the size of the store
   DiscBounds(size_t sSize = 0) : SurfaceBounds(sSize) {}
   /// Destructor
   virtual ~DiscBounds() {}

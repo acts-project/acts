@@ -41,12 +41,12 @@ public:
   /// @param dbounds are the disc bounds that describe the layer dimensions
   /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the layer thickness (along the normal vector)
-  /// @param od is the overlap descriptor that describes sensitive surface
-  /// neighbours
   /// @param ad is the approach descriptor that provides the approach surface
   /// @param laytyp is the layer type
   ///
-  /// @TODO move ApproachDescriptor to unqique_ptr
+  /// @todo move ApproachDescriptor to unqique_ptr
+  ///
+  /// @return a sharted pointer to the new layer
   static LayerPtr
   create(std::shared_ptr<Transform3D>      transform,
          std::shared_ptr<const DiscBounds> dbounds,
@@ -64,8 +64,11 @@ public:
   }
 
   /// Factory constructor as copy with shift
+  ///
   /// @param dla is the disc laye to be cloned
   /// @param shift is the additional transform to be applied after copying
+  ///
+  /// @return a sharted pointer to the new layer
   static LayerPtr
   create(const DiscLayer& dla, const Transform3D& shift)
   {
@@ -73,7 +76,10 @@ public:
   }
 
   /// Clone with a shift - only cloning that is allowed
+  ///
   /// @param shift is the additional transform to be applied after cloning
+  ///
+  /// @return a sharted pointer to the new layer
   LayerPtr
   cloneWithShift(const Transform3D& shift) const override
   {
@@ -110,8 +116,6 @@ protected:
   /// @param dbounds are the disc bounds that describe the layer dimensions
   /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the layer thickness (along the normal vector)
-  /// @param od is the overlap descriptor that describes sensitive surface
-  /// neighbours
   /// @param ad is the approach descriptor that provides the approach surface
   /// @param laytyp is the layer taype
   DiscLayer(std::shared_ptr<Transform3D>      transform,

@@ -33,7 +33,7 @@ Acts::RectangleBounds::operator=(const RectangleBounds& recbo)
 }
 
 double
-Acts::RectangleBounds::minDistance(const Acts::Vector2D& lpos) const
+Acts::RectangleBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 {
   double dx = fabs(lpos[0]) - m_valueStore.at(RectangleBounds::bv_halfX);
   double dy = fabs(lpos[1]) - m_valueStore.at(RectangleBounds::bv_halfY);

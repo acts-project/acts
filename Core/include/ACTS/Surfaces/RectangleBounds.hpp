@@ -38,16 +38,21 @@ public:
   RectangleBounds() = delete;
 
   /// Constructor with halflength in x and y
+  ///
   /// @param halfX halflength in X
   /// @param halfY halflength in Y
   RectangleBounds(double halfX, double halfY);
 
   /// Copy constructor
+  ///
+  /// @param recbo are the source bounds
   RectangleBounds(const RectangleBounds& recbo) : PlanarBounds(recbo) {}
   /// Destructor
   virtual ~RectangleBounds();
 
   /// Assignment Operator
+  ///
+  /// @param recbo are the source bounds
   RectangleBounds&
   operator=(const RectangleBounds& recbo);
 
@@ -62,21 +67,44 @@ public:
     return SurfaceBounds::Rectangle;
   }
 
-  /// @copydoc SurfaceBounds::inside
+  /// Inside check for the bounds object driven by the boundary check directive
+  /// Each Bounds has a method inside, which checks if a LocalPosition is inside
+  /// the bounds  Inside can be called without/with tolerances.
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param bcheck boundary check directive
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const override;
 
-  /// @copydoc SurfaceBounds::insideLoc0
+  /// Inside check for the bounds object with tolerance
+  /// checks for first coordinate only.
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 absolute tolerance parameter
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
-  /// @copydoc SurfaceBounds::insideLoc1
+  /// Inside check for the bounds object with tolerance
+  /// checks for second coordinate only.
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol1 absulote tolerance parameter
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /// @copydoc SurfaceBounds::minDistance
+  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
+  ///
+  /// @param lpos is the local position to check for the distance
+  ///
+  /// @return is a signed distance parameter
   virtual double
-  minDistance(const Vector2D& lpos) const override;
+  distanceToBoundary(const Vector2D& lpos) const override;
 
   /// Return method for the half length in X
   double
@@ -91,11 +119,19 @@ public:
   vertices() const override;
 
   /// Output Method for std::ostream
+  ///
+  /// @param sl is the ostream for the dump
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
 private:
   /// Private helper method
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 absulote tolerance parameter on the first coordinate
+  /// @param tol1 absulote tolerance parameter on the second coordinate
+  ///
+  /// @return boolean indicator for the success of this operation
   bool
   inside(const Vector2D& lpos, double tol0 = 0., double tol1 = 0.) const;
 };
@@ -107,35 +143,35 @@ RectangleBounds::clone() const
 }
 
 inline bool
-RectangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
+RectangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
-  if (bchk.bcType == 0)
-    return RectangleBounds::insideLoc0(lpos, bchk.toleranceLoc0)
-        && RectangleBounds::insideLoc1(lpos, bchk.toleranceLoc1);
+  if (bcheck.bcType == 0)
+    return RectangleBounds::insideLoc0(lpos, bcheck.toleranceLoc0)
+        && RectangleBounds::insideLoc1(lpos, bcheck.toleranceLoc1);
 
   // a fast FALSE
-  double max_ell = (*bchk.lCovariance)(0, 0) > (*bchk.lCovariance)(1, 1)
-      ? (*bchk.lCovariance)(0, 0)
-      : (*bchk.lCovariance)(1, 1);
-  double limit = bchk.nSigmas * sqrt(max_ell);
+  double max_ell = (*bcheck.lCovariance)(0, 0) > (*bcheck.lCovariance)(1, 1)
+      ? (*bcheck.lCovariance)(0, 0)
+      : (*bcheck.lCovariance)(1, 1);
+  double limit = bcheck.nSigmas * sqrt(max_ell);
   if (!RectangleBounds::inside(lpos, limit, limit)) return false;
   // a fast TRUE
-  double min_ell = (*bchk.lCovariance)(0, 0) < (*bchk.lCovariance)(1, 1)
-      ? (*bchk.lCovariance)(0, 0)
-      : (*bchk.lCovariance)(1, 1);
-  limit = bchk.nSigmas * sqrt(min_ell);
+  double min_ell = (*bcheck.lCovariance)(0, 0) < (*bcheck.lCovariance)(1, 1)
+      ? (*bcheck.lCovariance)(0, 0)
+      : (*bcheck.lCovariance)(1, 1);
+  limit = bcheck.nSigmas * sqrt(min_ell);
   if (RectangleBounds::inside(lpos, limit, limit)) return true;
 
   // compute KDOP and axes for surface polygon
   std::vector<KDOP>     elementKDOP(4);
   std::vector<Vector2D> elementP(4);
-  float                 theta = ((*bchk.lCovariance)(1, 0) != 0
-                 && ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)) != 0)
+  float                 theta = ((*bcheck.lCovariance)(1, 0) != 0
+                 && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
       ? .5
-          * bchk.FastArcTan(2 * (*bchk.lCovariance)(1, 0)
-                            / ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)))
+          * bcheck.FastArcTan(2 * (*bcheck.lCovariance)(1, 0)
+                            / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
-  sincosCache scResult = bchk.FastSinCos(theta);
+  sincosCache scResult = bcheck.FastSinCos(theta);
   ActsMatrixD<2, 2> rotMatrix;
   rotMatrix << scResult.cosC, scResult.sinC, -scResult.sinC, scResult.cosC;
   // ellipse is always at (0,0), surface is moved to ellipse position and then
@@ -157,12 +193,12 @@ RectangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
                                 elementP.at(0) - elementP.at(2),
                                 elementP.at(0) - elementP.at(3),
                                 elementP.at(1) - elementP.at(2)};
-  bchk.ComputeKDOP(elementP, axis, elementKDOP);
+  bcheck.ComputeKDOP(elementP, axis, elementKDOP);
   // compute KDOP for error ellipse
   std::vector<KDOP> errelipseKDOP(4);
-  bchk.ComputeKDOP(bchk.EllipseToPoly(3), axis, errelipseKDOP);
+  bcheck.ComputeKDOP(bcheck.EllipseToPoly(3), axis, errelipseKDOP);
   // check if KDOPs overlap and return result
-  return bchk.TestKDOPKDOP(elementKDOP, errelipseKDOP);
+  return bcheck.TestKDOPKDOP(elementKDOP, errelipseKDOP);
 }
 
 inline bool

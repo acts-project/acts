@@ -90,6 +90,7 @@ public:
   /// @param containedVolumes are the static volumes that fill this volume
   /// @param volumeName is a string identifier
   ///
+  /// @return shared pointer to a new TrackingVolume
   static TrackingVolumePtr
   create(std::shared_ptr<Transform3D>               htrans,
          VolumeBoundsPtr                            volumeBounds,
@@ -105,8 +106,14 @@ public:
   ///
   /// @param htrans is the global 3D transform to position the volume ins pace
   /// @param volumeBounds is the description of the volume boundaries
-  /// @param volumeBane is a string identifier
+  /// @param matprop is are materials of the tracking volume
+  /// @param cLayerArray is the confined layer array (optional)
+  /// @param cLayerVector is the confined arbitrary layer vector
+  /// @param cVolumeVector is the confined arbitrary volume vector
+  /// @param dVolumeVector is the confined arbeitrary detached volume vector
+  /// @param volumeName is a string identifier
   ///
+  /// @return shared pointer to a new TrackingVolume
   static TrackingVolumePtr
   create(std::shared_ptr<Transform3D>      htrans,
          VolumeBoundsPtr                   volumeBounds,
@@ -128,9 +135,12 @@ public:
                                                 volumeName));
   }
   /// Factory constructor with a shift
+  ///
   /// @param trVol is the source tracking volume
   /// @param shift is the additional shift applied after copying
   /// @param volumeName is a string identifier
+  ///
+  /// @return shared pointer to a new TrackingVolume
   static TrackingVolumePtr
   create(const TrackingVolume& trVol,
          const Transform3D&    shift,
@@ -139,67 +149,68 @@ public:
     return TrackingVolumePtr(new TrackingVolume(trVol, shift, volumeName));
   }
 
-  /// Virtual constructor clone at new position
-  /// @param shift is the additional shift applied after cloning
-  /// @param volumeName is a string identifier for the volume
-  TrackingVolumePtr
-  cloneWithShift(const Transform3D& shift,
-                 const std::string& volumeName = "undefined") const
-  {
-    return TrackingVolume::create(*this, shift, volumeName);
-  }
-
-  /// Return the associated Layer
+  /// Return the associated Layer to the global position
+  ///
+  /// @param gpos is the associated global position
+  ///
+  /// @return plain pointer to layer object
   const Layer*
-  associatedLayer(const Vector3D& gp) const;
+  associatedLayer(const Vector3D& gpos) const;
 
   /// Return the material layers ordered based on straight line intersections:
   ///
   /// - startLayer and endLayer are included in the list
-  /// @param sLayer is the start layer for the search (@TODO docu: check if
+  /// @param sLayer is the start layer for the search (@todo docu: check if
   /// returned)
-  /// @param eLayer is the end layer for the search (@TODO docu: check if
+  /// @param eLayer is the end layer for the search (@todo docu: check if
   /// returned)
-  /// @paramt parameters are the templated parameters for searching
+  /// @param parameters are the templated parameters for searching
   /// @param pDir is an additional direction prescription
-  /// @param bchk is a boundary check directive
+  /// @param bcheck is a boundary check directive
   /// @param resolveMaterial is the prescription how to deal with material
   /// @param resolveSubSurfaces is the prescription on how to deal with
   /// sensitive surfaces
+  ///
+  /// @return intersection wiht the layer
   template <class T>
   std::vector<LayerIntersection<T>>
   layerCandidatesOrdered(const Layer*         sLayer,
                          const Layer*         eLayer,
                          const T&             parameters,
                          PropDirection        pDir            = alongMomentum,
-                         const BoundaryCheck& bchk            = true,
+                         const BoundaryCheck& bcheck            = true,
                          bool                 resolveMaterial = true,
                          bool                 resolveSubSurfaces = false) const;
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   ///
-  /// @param gpos is the glboal position associated with that search
+  /// @param gpos is the global position associated with that search
+  ///
+  /// @return plain pointer to associated with the position
   const TrackingVolume*
   trackingVolume(const Vector3D& gpos) const;
 
   /// Return the next volume along the navigation stream
   ///
-  /// @param gpos is the glboal position associated with that search
+  /// @param pos is the glboal position associated with that search
   /// @param dir is the direction for this search
   /// @param pDir is an additional direction prescription
+  ///
   /// @return the next associated tracking volume, nullptr if it does not exist
   const TrackingVolume*
-  nextVolume(const Vector3D& gp,
+  nextVolume(const Vector3D& pos,
              const Vector3D& dir,
              PropDirection   pDir = alongMomentum) const;
 
   /// Return the dynamically created vector of detached sub volumes
   ///
-  /// @param gpos  is the glboal position associated with that search
+  /// @param pos is the glboal position associated with that search
+  /// @param tol is the absolute tolerance for the search           
+  ///
   /// @return the list of associated detached tracking volumes, nullptr if it
   /// does not exist
   const DetachedVolumeVector*
-  detachedTrackingVolumes(const Vector3D& gpos, double tol) const;
+  detachedTrackingVolumes(const Vector3D& pos, double tol) const;
 
   /// Return the confined static layer array - if it exists
   /// @return the BinnedArray of static layers if exists
@@ -237,43 +248,59 @@ public:
 
   /// Returns the boundary surfaces ordered in probability to hit them based
   /// on straight line intersection
-  /// @paramt parameters are the templated tracking parameters
+  ///
+  /// @param parameters are the templated tracking parameters
   /// @param pDir is the additional direction presciprion
-  /// @param startOffBoundary is a flag telling that you are already on a
-  /// boundary
+  ///
+  /// @return is the templated boundary intersection
   template <class T>
   std::vector<BoundaryIntersection<T>>
-  boundarySurfacesOrdered(const T&      parameters,
+  boundarySurfacesOrdered(const T& parameters,
                           PropDirection pDir = alongMomentum) const;
 
   /// check if you are on a boundary surface
+  ///
+  /// @param parameters is the type of track parameters
+  ///
+  /// @return boolean indicator if the parameters are on boundary
   template <class T>
   bool
-  onVolumeBoundary(const T& pars) const;
+  onVolumeBoundary(const T& parameters) const;
 
-  /// glue another tracking volume to this one
+  /// Glue another tracking volume to this one
   ///  - if common face is set the glued volumes are sharing the boundary, down
   /// to the last navigation volume
   ///
+  /// @param bsfMine is the boundary face indicater where to glue
+  /// @param neighbor is the TrackingVolume to be glued
+  /// @param bsfNeighbor is the boudnary surface of the neighbor
   void
   glueTrackingVolume(BoundarySurfaceFace bsfMine,
                      TrackingVolumePtr   neighbor,
                      BoundarySurfaceFace bsfNeighbor) const;
 
-  /// glue another tracking volume to this one
+  /// Glue another tracking volume to this one
   ///  - if common face is set the glued volumes are sharing the boundary, down
   /// to the last navigation volume
   ///
+  ///
+  /// @param bsfMine is the boundary face indicater where to glue
+  /// @param neighbors are the TrackingVolumes to be glued
+  /// @param bsfNeighbors are the boudnary surface of the neighbors
   void
   glueTrackingVolumes(BoundarySurfaceFace                        bsfMine,
                       std::shared_ptr<const TrackingVolumeArray> neighbors,
                       BoundarySurfaceFace bsfNeighbors) const;
 
-  /// provide a new BoundarySurface from the glueing
+  /// Provide a new BoundarySurface from the glueing
+  ///
+  ///
+  /// @param bsfMine is the boundary face indicater where to glue
+  /// @param bsSurface is the new boudnary surface
   void
   updateBoundarySurface(
-      BoundarySurfaceFace                                     bf,
-      std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs) const;
+      BoundarySurfaceFace                                     bsfMine,
+      std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bsSurface) const;
 
   /// Register the outside glue volumes -
   /// ordering is in the TrackingVolume Frame:
@@ -281,6 +308,8 @@ public:
   ///  - (faces YZ, ZY, radial faces)
   ///  - positiveFaceXY
   ///
+  /// @param gvd register a new GlueVolumeDescriptor
+  /// @todo update to shared/unique ptr
   void
   registerGlueVolumeDescriptor(GlueVolumesDescriptor* gvd) const;
 
@@ -292,9 +321,12 @@ public:
   const GlueVolumesDescriptor&
   glueVolumesDescriptor() const;
 
-  /// sign the volume - the geometry builder has to do that
+  /// Sign the volume - the geometry builder has to do that
+  ///
+  /// @param signat is the volume signature
+  /// @param geotype is the volume navigation type
   void
-  sign(GeometrySignature signat, GeometryType gtype = Static) const;
+  sign(GeometrySignature signat, GeometryType geotype = Static) const;
 
   /// return the Signature
   GeometrySignature
@@ -305,6 +337,8 @@ public:
   geometryType() const;
 
   /// Register the color code
+  ///
+  /// @param icolor is a color number
   void
   registerColorCode(unsigned int icolor) const;
 
@@ -317,10 +351,15 @@ public:
   motherVolume() const;
 
   /// Return the MotherVolume - if it exists
+  ///
+  /// @param mvol is the mother volume
   void
   setMotherVolume(const TrackingVolume* mvol) const;
 
-  /// add Material
+  /// Add Material
+  ///
+  /// @param mat is the materiall to be added
+  /// @param fact is the fraction factor
   void
   addMaterial(std::shared_ptr<const Material> mat, float fact = 1.);
 
@@ -343,8 +382,18 @@ protected:
       const std::string& volumeName = "undefined");
 
   /// Constructor for a full equipped Tracking Volume
+  ///
+  /// @param htrans is the global 3D transform to position the volume ins pace
+  /// @param volumeBounds is the description of the volume boundaries
+  /// @param matprop is are materials of the tracking volume
+  /// @param cLayerArray is the confined layer array (optional)
+  /// @param cLayerVector is the confined arbitrary layer vector
+  /// @param cVolumeArray is the confined volume array
+  /// @param cVolumeVector is the confined arbitrary volume vector
+  /// @param dVolumeVector is the confined arbeitrary detached volume vector
+  /// @param volumeName is a string identifier
   TrackingVolume(std::shared_ptr<Transform3D>      htrans,
-                 VolumeBoundsPtr                   volbounds,
+                 VolumeBoundsPtr                   volumeBounds,
                  std::shared_ptr<Material>         matprop,
                  std::unique_ptr<const LayerArray> cLayerArray  = nullptr,
                  const LayerVector                 cLayerVector = {},
@@ -355,6 +404,12 @@ protected:
                  const std::string&         volumeName    = "undefined");
 
   /// Copy Constructor with a shift
+  ///
+  /// @param tvol is the source tracking volume
+  /// @param shift is the additional shift applied after copying
+  /// @param volumeName is a string identifier
+  ///
+  /// @return shared pointer to a new TrackingVolume
   TrackingVolume(const TrackingVolume& tvol,
                  const Transform3D&    shift,
                  const std::string&    volumeName = "undefined");
@@ -366,6 +421,8 @@ private:
 
   /// method to synchronize the layers with potentially updated volume bounds:
   /// - adapts the layer dimensions to the new volumebounds + envelope
+  ///
+  /// @param envelope is the clearance between volume boundary and layer
   void
   synchronizeLayers(double envelope = 1.) const;
 
@@ -377,7 +434,7 @@ private:
   ///        by a given name
   void
   closeGeometry(const GeometryID& volumeID,
-                std::map<std::string, const TrackingVolume*>& volumMap) const;
+                std::map<std::string, const TrackingVolume*>& volumeMap) const;
 
   /// interlink the layers in this TrackingVolume
   void
@@ -504,7 +561,7 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
                                        const Layer*         eLayer,
                                        const T&             pars,
                                        PropDirection        pDir,
-                                       const BoundaryCheck& bchk,
+                                       const BoundaryCheck& bcheck,
                                        bool                 resolveMaterial,
                                        bool resolveSensitive) const
 {
@@ -538,9 +595,9 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
           // taking the layer representation, not the approach surface, latter
           // is resolved in the navigation stream
           const Surface& tSurface = tLayer->surfaceRepresentation();
-          // intersect the layer @TODO should probably be surface on approach
+          // intersect the layer @todo should probably be surface on approach
           Intersection lIntersection
-              = tSurface.intersectionEstimate(gp, dir, true, bchk);
+              = tSurface.intersectionEstimate(gp, dir, true, bcheck);
           // (a) if the current layer is NOT the start layer - intersection is
           // ok
           if (tLayer != sLayer && lIntersection.valid) {
@@ -579,7 +636,7 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
       // intersections
       Intersection lIntersection
           = layer->surfaceRepresentation().intersectionEstimate(
-              gp, dir, true, bchk);
+              gp, dir, true, bcheck);
       if (lIntersection.valid)
         lIntersections.push_back(
             LayerIntersection<T>(lIntersection,
@@ -596,8 +653,8 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
   return lIntersections;
 }
 
-/** Returns the boundary surfaces ordered in probability to hit them based on
- * straight line intersection @TODO change hard-coded default */
+// Returns the boundary surfaces ordered in probability to hit them based on
+// straight line intersection @todo change hard-coded default 
 template <class T>
 std::vector<BoundaryIntersection<T>>
 TrackingVolume::boundarySurfacesOrdered(const T& pars, PropDirection pDir) const

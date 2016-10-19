@@ -36,6 +36,7 @@ public:
   virtual ~ITrackingGeometryBuilder() = default;
 
   /// TrackingGeometry Interface methode
+  /// @return unique pointer to a newly created TrackingGeometry
   virtual std::unique_ptr<TrackingGeometry>
   trackingGeometry() const = 0;
 };

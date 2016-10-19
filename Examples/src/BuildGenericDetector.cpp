@@ -54,11 +54,8 @@ buildGenericDetector(Logging::Level surfaceLLevel,
   //-------------------------------------------------------------------------------------
   // list the volume builders
   std::list<std::shared_ptr<ITrackingVolumeBuilder>> volumeBuilders;
-
 // a hash include for the Generic Detector : a bit ugly but effective
 #include "GenericDetector.ipp"
-
-  //-------------------------------------------------------------------------------------
   //-------------------------------------------------------------------------------------
   // create the tracking geometry
   TrackingGeometryBuilder::Config tgConfig;

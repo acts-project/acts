@@ -44,7 +44,7 @@ namespace Acts {
 /// and
 /// phi, e.g. end caps) are both described as a ROOT TGeoConeSeg one needs to
 /// distinguish between these volume types by setting the shape.
-/// @TODO find replacement for Gaudi exeption and message stream
+/// @todo find replacement for Gaudi exeption and message stream
 
 class Module;
 

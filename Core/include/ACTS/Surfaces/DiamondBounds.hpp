@@ -20,10 +20,11 @@
 
 namespace Acts {
 
-//
-//@class DiamondBounds
-// Bounds for a double trapezoidal ("diamond"), planar Surface.
-//
+///
+/// @class DiamondBounds
+///  
+/// Bounds for a double trapezoidal ("diamond"), planar Surface.
+///
 class DiamondBounds : public PlanarBounds
 {
 public:
@@ -41,6 +42,7 @@ public:
   DiamondBounds() = delete;
 
   /// Constructor for symmetric Diamond
+  ///
   /// @param minhalex is the halflength in x at minimal y
   /// @param medhalex is the halflength in x at y = 0
   /// @param maxhalex is the halflength in x at maximal y
@@ -53,6 +55,7 @@ public:
                 double haley2);
 
   /// Copy constructor
+  ///
   /// @param diabo are the source bounds for the copy
   DiamondBounds(const DiamondBounds& diabo);
 
@@ -64,11 +67,13 @@ public:
   clone() const override;
 
   /// Assignment operator
+  ///
   /// @param diabo are the source bounds for the copy
   DiamondBounds&
   operator=(const DiamondBounds& diabo);
 
   /// Comparison (Equality) operator
+  ///
   /// @param sbo are the source bounds for check
   virtual bool
   operator==(const SurfaceBounds& sbo) const override;
@@ -111,33 +116,56 @@ public:
   double
   alpha2() const;
 
-  /// @copydoc Surface::inside
+  /// Inside check for the bounds object driven by the boundary check directive
+  /// Each Bounds has a method inside, which checks if a LocalPosition is inside
+  /// the bounds  Inside can be called without/with tolerances.
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param bcheck boundary check directive
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const override;
 
-  ///  This method checks inside bounds in loc1
-  /// - loc1/loc2 correspond to the natural coordinates of the surface
-  /// - As loc1/loc2 are correlated the single check doesn't make sense :
+  ///  This method checks inside bounds in loc0
+  /// - loc0/loc1 correspond to the natural coordinates of the surface
+  /// - As loc0/loc1 are correlated the single check doesn't make sense :
   /// -> check is done on enclosing Rectangle !
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 is the absolute tolerance
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
-  ///  This method checks inside bounds in loc2
-  /// - loc1/loc2 correspond to the natural coordinates of the surface
-  /// - As loc1/loc2 are correlated the single check doesn't make sense :
+  ///  This method checks inside bounds in loc1
+  /// - loc0/loc1 correspond to the natural coordinates of the surface
+  /// - As loc0/loc1 are correlated the single check doesn't make sense :
   /// -> check is done on enclosing Rectangle !
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol1 is the absolute tolerance
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
+  ///
+  /// @param lpos is the local position to check for the distance
+  ///
+  /// @return is a signed distance parameter
   virtual double
-  minDistance(const Vector2D& pos) const override;
+  distanceToBoundary(const Vector2D& lpos) const override;
 
   /// Return the vertices - or, the points of the extremas
   virtual const std::vector<Vector2D>
   vertices() const override;
 
   /// Output Method for std::ostream
+  ///
+  /// @param sl is the ostream in which it is dumped
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
@@ -196,16 +224,16 @@ DiamondBounds::halflengthY2() const
 }
 
 inline bool
-DiamondBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
+DiamondBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
-  if (bchk.bcType == 0)
-    return DiamondBounds::inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
+  if (bcheck.bcType == 0)
+    return DiamondBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 
   // a fast FALSE
-  double max_ell = (*bchk.lCovariance)(0, 0) > (*bchk.lCovariance)(1, 1)
-      ? (*bchk.lCovariance)(0, 0)
-      : (*bchk.lCovariance)(1, 1);
-  double limit = bchk.nSigmas * sqrt(max_ell);
+  double max_ell = (*bcheck.lCovariance)(0, 0) > (*bcheck.lCovariance)(1, 1)
+      ? (*bcheck.lCovariance)(0, 0)
+      : (*bcheck.lCovariance)(1, 1);
+  double limit = bcheck.nSigmas * sqrt(max_ell);
   if (lpos[Acts::eLOC_Y]
       < -2 * m_valueStore.at(DiamondBounds::bv_halfY1) - limit)
     return false;
@@ -217,10 +245,10 @@ DiamondBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   if (fabsX > (m_valueStore.at(DiamondBounds::bv_medHalfX) + limit))
     return false;
   // a fast TRUE
-  double min_ell = (*bchk.lCovariance)(0, 0) < (*bchk.lCovariance)(1, 1)
-      ? (*bchk.lCovariance)(0, 0)
-      : (*bchk.lCovariance)(1, 1);
-  limit = bchk.nSigmas * sqrt(min_ell);
+  double min_ell = (*bcheck.lCovariance)(0, 0) < (*bcheck.lCovariance)(1, 1)
+      ? (*bcheck.lCovariance)(0, 0)
+      : (*bcheck.lCovariance)(1, 1);
+  limit = bcheck.nSigmas * sqrt(min_ell);
   if (fabsX < (fmin(m_valueStore.at(DiamondBounds::bv_minHalfX),
                     m_valueStore.at(DiamondBounds::bv_maxHalfX))
                - limit))
@@ -235,13 +263,13 @@ DiamondBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   // compute KDOP and axes for surface polygon
   std::vector<KDOP>     elementKDOP(5);
   std::vector<Vector2D> elementP(6);
-  float                 theta = ((*bchk.lCovariance)(1, 0) != 0
-                 && ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)) != 0)
+  float                 theta = ((*bcheck.lCovariance)(1, 0) != 0
+                 && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
       ? .5
-          * bchk.FastArcTan(2 * (*bchk.lCovariance)(1, 0)
-                            / ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)))
+          * bcheck.FastArcTan(2 * (*bcheck.lCovariance)(1, 0)
+                            / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
-  sincosCache scResult = bchk.FastSinCos(theta);
+  sincosCache scResult = bcheck.FastSinCos(theta);
   ActsMatrixD<2, 2> rotMatrix;
   rotMatrix << scResult.cosC, scResult.sinC, -scResult.sinC, scResult.cosC;
   ActsMatrixD<2, 2> normal;
@@ -270,12 +298,12 @@ DiamondBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
                                 normal * (elementP.at(3) - elementP.at(2)),
                                 normal * (elementP.at(4) - elementP.at(3)),
                                 normal * (elementP.at(5) - elementP.at(4))};
-  bchk.ComputeKDOP(elementP, axis, elementKDOP);
+  bcheck.ComputeKDOP(elementP, axis, elementKDOP);
   // compute KDOP for error ellipse
   std::vector<KDOP> errelipseKDOP(5);
-  bchk.ComputeKDOP(bchk.EllipseToPoly(3), axis, errelipseKDOP);
+  bcheck.ComputeKDOP(bcheck.EllipseToPoly(3), axis, errelipseKDOP);
   // check if KDOPs overlap and return result
-  return bchk.TestKDOPKDOP(elementKDOP, errelipseKDOP);
+  return bcheck.TestKDOPKDOP(elementKDOP, errelipseKDOP);
 }
 
 inline bool

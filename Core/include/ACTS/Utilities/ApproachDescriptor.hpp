@@ -41,27 +41,30 @@ public:
   ApproachDescriptor() {}
   /// Virtual destructor
   virtual ~ApproachDescriptor() {}
-  /// register Layer
+  /// Register Layer
   /// this gives the approach surfaces the link to the layer
+  ///
+  /// @param lay is the layer to be assigned
   virtual void
   registerLayer(const Layer& lay)
       = 0;
 
-  // get the surface on approach
+  // Get the surface on approach
   // - nullptr means that there's no surface on approach
   ///
   /// @param pos is the position from start of the search
   /// @param dir is the direction
-  /// @param bchk is the boundary check directive
+  /// @param bcheck is the boundary check directive
   /// @param ice is a (future) compatibility estimator
+  ///
   /// @return is a surface isntersection
   virtual const SurfaceIntersection
   approachSurface(const Vector3D&                pos,
                   const Vector3D&                dir,
-                  const BoundaryCheck&           bchk,
+                  const BoundaryCheck&           bcheck,
                   const ICompatibilityEstimator* ice = nullptr) const = 0;
 
-  /// get to all the contained surfaces
+  /// Tet to all the contained surfaces
   /// @return all contained surfaces of this approach descriptor
   virtual const std::vector<const Surface*>&
   containedSurfaces() const = 0;

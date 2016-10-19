@@ -44,16 +44,20 @@ public:
   TriangleBounds() = delete;
 
   /// Constructor with coordinates of vertices
+  ///
   /// @param vertices is the vector of vertices
   TriangleBounds(const std::vector<Vector2D>& vertices);
 
   /// Copy constructor
+  ///
   /// @param tribo are the source bounds for assignment
   TriangleBounds(const TriangleBounds& tribo) : PlanarBounds(tribo) {}
+  
   /// Destructor
   virtual ~TriangleBounds();
 
   /// Assignment Operator
+  ///
   /// @param tribo are the source bounds for assignment
   TriangleBounds&
   operator=(const TriangleBounds& tribo);
@@ -71,43 +75,62 @@ public:
 
   /// This method checks if the provided local coordinates are inside the
   /// surface bounds
+  ///
   /// @param lpos local position in 2D local carthesian frame
-  /// @param bchk is the boundary check directive
+  /// @param bcheck is the boundary check directive
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bchk) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const override;
 
   /// This method checks if the provided local coordinate 1 is inside the
   /// surface bounds
+  ///
   /// @param lpos local position in 2D local carthesian frame
-  /// @param bchk is the boundary check directive
+  /// @param tol0 is the absolute tolerance on the local first coordinate
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
 
   /// This method checks if the provided local coordinate 2 is inside the
   /// surface bounds
+  ///
   /// @param lpos local position in 2D local carthesian frame
-  /// @param bchk is the boundary check directive
+  /// @param tol1 is the absolute tolerance on the local first coordinate
+  ///
+  /// @return boolean indicator for the success of this operation
   virtual bool
   insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
 
-  /// Minimal distance to boundary
-  /// @param lpos is the local position in 2D local carthesian frame
-  /// @return the distance ( > 0 if outside and <=0 if inside)
+  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
+  ///
+  /// @param lpos is the local position to check for the distance
+  ///
+  /// @return is a signed distance parameter
   virtual double
-  minDistance(const Vector2D& lpos) const override;
+  distanceToBoundary(const Vector2D& lpos) const override;
 
   /// This method returns the coordinates of vertices
   const std::vector<Vector2D>
   vertices() const override;
 
   /// Output Method for std::ostream
+  ///
+  /// @param sl is the ostream to be dumped into
   virtual std::ostream&
   dump(std::ostream& sl) const override;
 
 private:
-  /// private helper method for inside check
+  /// Private helper method
+  ///
+  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param tol0 absulote tolerance parameter on the first coordinate
+  /// @param tol1 absulote tolerance parameter on the second coordinate
+  ///
+  /// @return boolean indicator for the success of this operation
   bool
-  inside(const Vector2D& lpos, double tol0, double tol2) const;
+  inside(const Vector2D& lpos, double tol0, double tol1) const;
 };
 
 inline TriangleBounds*
@@ -160,31 +183,31 @@ TriangleBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 }
 
 inline bool
-TriangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
+TriangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
-  if (bchk.bcType == 0)
-    return TriangleBounds::inside(lpos, bchk.toleranceLoc0, bchk.toleranceLoc1);
+  if (bcheck.bcType == 0)
+    return TriangleBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 
-  /// @TODO check for quick limit test
-  /// double max_ell = (*bchk.lCovariance)(0, 0) > (*bchk.lCovariance)(1, 1)
-  ///    ? (*bchk.lCovariance)(0, 0)
-  ///    : (*bchk.lCovariance)(1, 1);
+  /// @todo check for quick limit test
+  /// double max_ell = (*bcheck.lCovariance)(0, 0) > (*bcheck.lCovariance)(1, 1)
+  ///    ? (*bcheck.lCovariance)(0, 0)
+  ///    : (*bcheck.lCovariance)(1, 1);
   /// a fast FALSE
   /// double fabsR = sqrt(lpos[Acts::eLOC_X] * lpos[Acts::eLOC_X]
   ///                    + lpos[Acts::eLOC_Y] * lpos[Acts::eLOC_Y]);
-  /// double limit = bchk.nSigmas * sqrt(max_ell);
+  /// double limit = bcheck.nSigmas * sqrt(max_ell);
   /// double r_max = TriangleBounds::r();
   /// if (fabsR > (r_max + limit)) return false;
   // compute KDOP and axes for surface polygon
   std::vector<KDOP>     elementKDOP(3);
   std::vector<Vector2D> elementP(3);
-  double                theta = ((*bchk.lCovariance)(1, 0) != 0
-                  && ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)) != 0)
+  double                theta = ((*bcheck.lCovariance)(1, 0) != 0
+                  && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
       ? .5
-          * bchk.FastArcTan(2 * (*bchk.lCovariance)(1, 0)
-                            / ((*bchk.lCovariance)(1, 1) - (*bchk.lCovariance)(0, 0)))
+          * bcheck.FastArcTan(2 * (*bcheck.lCovariance)(1, 0)
+                            / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
-  sincosCache scResult = bchk.FastSinCos(theta);
+  sincosCache scResult = bcheck.FastSinCos(theta);
   ActsMatrixD<2, 2> rotMatrix;
   rotMatrix << scResult.cosC, scResult.sinC, -scResult.sinC, scResult.cosC;
   ActsMatrixD<2, 2> normal;
@@ -204,12 +227,12 @@ TriangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bchk) const
   std::vector<Vector2D> axis = {normal * (elementP.at(1) - elementP.at(0)),
                                 normal * (elementP.at(2) - elementP.at(1)),
                                 normal * (elementP.at(2) - elementP.at(0))};
-  bchk.ComputeKDOP(elementP, axis, elementKDOP);
+  bcheck.ComputeKDOP(elementP, axis, elementKDOP);
   // compute KDOP for error ellipse
   std::vector<KDOP> errelipseKDOP(3);
-  bchk.ComputeKDOP(bchk.EllipseToPoly(3), axis, errelipseKDOP);
+  bcheck.ComputeKDOP(bcheck.EllipseToPoly(3), axis, errelipseKDOP);
   // check if KDOPs overlap and return result
-  return bchk.TestKDOPKDOP(elementKDOP, errelipseKDOP);
+  return bcheck.TestKDOPKDOP(elementKDOP, errelipseKDOP);
 }
 
 inline bool

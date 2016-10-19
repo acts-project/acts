@@ -25,7 +25,7 @@ namespace Acts {
 ///   The PassiveLayerBuilder is able to build cylinder & disc layers with given
 ///  detector
 ///
-///   @TODO Julia: make private tools private again after Gaudi update (bug in
+///   @todo Julia: make private tools private again after Gaudi update (bug in
 ///  Gaudi), marked with //b
 
 class PassiveLayerBuilder : public ILayerBuilder
@@ -53,6 +53,7 @@ public:
   };
 
   /// Constructor
+  ///
   /// @param plConfig is the ocnfiguration struct that steers behavior
   /// @param logger logging instance
   PassiveLayerBuilder(const Config&           plConfig,
@@ -86,6 +87,7 @@ public:
   }
 
   /// Set configuration method
+  ///
   /// @param plConfig is a configuration struct
   /// it overwrites the current configuration
   void
@@ -95,7 +97,9 @@ public:
   Config
   getConfiguration() const;
 
-  /// set logging instance
+  /// Set logging instance
+  ///
+  /// @param logger is the logging instance to be set
   void
   setLogger(std::unique_ptr<Logger> logger);
 

@@ -79,5 +79,4 @@ namespace units {
     return m * conversion;
   }
 }  // namespace units
-
 }  // namespace Acts

@@ -200,7 +200,7 @@ Acts::TGeoLayerBuilder::collectSensitive(
                                                           &tgTransform,
                                                           layerConfig.localAxes,
                                                           m_cfg.unit);
-        // record the element @TODO solve with provided cache
+        // record the element @todo solve with provided cache
         m_elementStore.push_back(tgElement);
         // record the surface
         layerSurfaces.push_back(&(tgElement->surface()));

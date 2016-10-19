@@ -56,7 +56,7 @@ Acts::EllipseBounds::operator=(const EllipseBounds& ebo)
 // m_valueStore.at(EllipseBounds::bv_rMaxY)
 //
 double
-Acts::EllipseBounds::minDistance(const Vector2D& lpos) const
+Acts::EllipseBounds::distanceToBoundary(const Vector2D& lpos) const
 {
   const double pi2 = 2. * M_PI;
 

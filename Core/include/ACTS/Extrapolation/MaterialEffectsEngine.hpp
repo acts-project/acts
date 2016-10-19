@@ -56,6 +56,7 @@ public:
   };
 
   /// Constructor
+  ///
   /// @param meConfig is an instance of the configuration struct
   /// @param logger logging instance
   MaterialEffectsEngine(const Config&           meConfig,
@@ -67,24 +68,32 @@ public:
   ~MaterialEffectsEngine();
 
   /// Public charged material effects interface
+  ///
   /// @param ecCharged is the charged extrapolaiton cell
   /// @param dir is the additional direction prescription
   /// @param matupstage is the update stage (pre/full/post)
+  ///
+  /// @return extrapolation code to indicate progress
   ExtrapolationCode
   handleMaterial(ExCellCharged&      ecCharged,
                  PropDirection       dir        = alongMomentum,
                  MaterialUpdateStage matupstage = fullUpdate) const final;
 
   /// Public neutral material effects interface
-  /// @param ecCharged is the neutral extrapolaiton cell
+  ///
+  /// @param ecNeutral is the neutral extrapolaiton cell
   /// @param dir is the additional direction prescription
   /// @param matupstage is the update stage (pre/full/post)
+  ///
+  /// @return extrapolation code to indicate progress
   ExtrapolationCode
   handleMaterial(ExCellNeutral&      ecNeutral,
                  PropDirection       dir        = alongMomentum,
                  MaterialUpdateStage matupstage = fullUpdate) const final;
 
   /// Set configuration method
+  ///
+  /// @param meConfig is the configuraiton to be set
   void
   setConfiguration(const Config& meConfig);
 
@@ -92,7 +101,9 @@ public:
   Config
   getConfiguration() const;
 
-  /// set logging instance
+  /// Set logging instance
+  ///
+  /// @param logger the logging instance to be set
   void
   setLogger(std::unique_ptr<Logger> logger);
 

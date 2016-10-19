@@ -106,7 +106,7 @@ Acts::TrackingVolume::TrackingVolume(const TrackingVolume& tvol,
   , m_name(volumeName)
   , m_colorCode(20)
 {
-  //< @TODO implement - requires cloneWithShift for BinUtility and an
+  //< @todo implement - requires cloneWithShift for BinUtility and an
   // orderPosition() addon to GeometryObjects
 }
 
@@ -300,8 +300,8 @@ Acts::TrackingVolume::glueTrackingVolume(
   // glue to the face
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine
       = boundarySurfaces().at(bsfMine);
-  // @TODO - complex glueing could be possible
-  // with actual intersection for the normal vector
+  // @todo - complex glueing could be possible with actual intersection for the
+  // normal vector
   Vector3D normal = bSurfaceMine->surfaceRepresentation().normal(bPosition);
   // estimate the orientation
   BoundaryOrientation bOrientation
@@ -333,7 +333,7 @@ Acts::TrackingVolume::glueTrackingVolumes(
   // take the normal at the binning positio
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine
       = boundarySurfaces().at(bsfMine);
-  // @TODO - complex glueing could be possible with actual intersection for the
+  // @todo - complex glueing could be possible with actual intersection for the
   // normal vector
   Vector3D normal = bSurfaceMine->surfaceRepresentation().normal(bPosition);
   // estimate the orientation
@@ -388,7 +388,7 @@ Acts::TrackingVolume::synchronizeLayers(double envelope) const
     // layers." << endreq;
     for (auto& clayIter : m_confinedLayers->arrayObjects())
       if (clayIter) {
-        // @TODO implement syncrhonize layer
+        // @todo implement syncrhonize layer
         //  if (clayIter->surfaceRepresentation().type() == Surface::Cylinder &&
         //  !(center().isApprox(clayIter->surfaceRepresentation().center())) )
         //      clayIter->resizeAndRepositionLayer(volumeBounds(),center(),envelope);
@@ -489,7 +489,7 @@ Acts::TrackingVolume::closeGeometry(
     }
   }
 
-  // @TODO update that
+  // @todo update that
   // auto confinedDenseVolumes= tvol.confinedDenseVolumes();
   // if (!confinedDenseVolumes.empty()) {
   //   for (auto& volumesIter : confinedDenseVolumes)

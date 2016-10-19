@@ -43,6 +43,7 @@ class DetachedTrackingVolume
 
 public:
   /// Factory Constructor
+  ///
   /// @param name is name identifier
   /// @param vol is the contained TrackingVolume
   /// @param layer is the contained layer
@@ -60,56 +61,83 @@ public:
   /// Destructor
   ~DetachedTrackingVolume();
 
-  /// returns the TrackingVolume
+  /// Returns the TrackingVolume
+  /// @return a plain pointer to the representing TrackingVolume
   const TrackingVolume*
   trackingVolume() const;
 
-  /// returns the Name
+  /// Returns the Name
+  /// @return string identification of this DetachedTrackingVolume
   const std::string
   name() const;
 
-  /// moving object around
+  /// Moving object around post creation
+  ///
+  /// @note needs transform to be mutable
+  /// @todo check if this needed
+  /// @param shift is the applied transform to the detached volume
   void
   move(Transform3D& shift) const;
 
-  /// clone with shift
+  /// Clone with shift
+  ///
+  /// @param name is the new name of the clone detached volume
+  /// @param shift is the applid shift
   DetachedTrackingVolumePtr
   clone(std::string name, Transform3D& shift) const;
 
-  /// returns layer representation
+  /// Returns a layer representation
+  ///
+  /// @return pointer to a representation as a layer
   const Layer*
   layerRepresentation() const;
 
-  /// returns (multi)layer representation
+  /// Returns (multi)layer representation
+  ///
+  /// @return vector to representations as layers
   const LayerVector
   multilayerRepresentation() const;
 
-  /// sign the volume - the geometry builder has to do that
+  /// Sign the volume - the geometry builder has to do that
+  ///
+  /// @param signat is the volume signature
+  /// @param geotype is the volume navigation type
   void
   sign(GeometrySignature signat, GeometryType geotype) const;
 
-  /// return the Signature
+  /// Return the Signature
+  /// @return geometry signature
   GeometrySignature
   geometrySignature() const;
 
-  /// return the Type
+  /// Return the Type
+  /// @return geometry navigation type
   GeometryType
   geometryType() const;
 
-  /// set the simplified calculable components
+  /// Set the simplified calculable components
+  /// @todo check with Sharka
+  ///
+  /// @param consts are the constituents to be saved
   void
-  saveConstituents(std::vector<std::pair<const Acts::Volume*, float>>*) const;
+  saveConstituents(std::vector<std::pair<const Volume*, float>>* consts) const;
 
-  /// get the simplified calculable components
+  /// Get the simplified calculable components
+  ///
+  /// @return the consituents
   std::vector<std::pair<const Acts::Volume*, float>>*
   constituents() const;
 
-  ///  alignment methods: set base transform
+  /// Alignment methods: set base transform
   /// default argument to current transform
+  ///
+  /// @param transf is the relative transform for the alingment
   void
   setBaseTransform(Transform3D* transf = 0) const;
 
-  /// alignment methods: realign  / default argument to base transform
+  /// Alignment methods: realign  / default argument to base transform
+  ///
+  /// @param transf is the relative transform for the alingment
   void
   realign(Transform3D* transf = 0) const;
 
@@ -118,10 +146,15 @@ protected:
   DetachedTrackingVolume();
 
   /// Constructor with name & layer representation
+  ///
+  /// @param name is name identifier
+  /// @param vol is the contained TrackingVolume
+  /// @param layer is the contained layer
+  /// @param multiLayer is the multi layer representation
   DetachedTrackingVolume(const std::string&    name,
                          TrackingVolumePtr     vol,
                          LayerPtr              layer,
-                         std::vector<LayerPtr> multilayer);
+                         std::vector<LayerPtr> multiLayer);
 
 private:
   const std::string     m_name;

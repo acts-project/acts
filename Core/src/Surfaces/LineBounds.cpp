@@ -34,7 +34,7 @@ Acts::LineBounds::operator=(const Acts::LineBounds& libo)
 }
 
 double
-Acts::LineBounds::minDistance(const Acts::Vector2D& lpos) const
+Acts::LineBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 {
   // per definition the min Distance of a correct local position on the line is
   // r

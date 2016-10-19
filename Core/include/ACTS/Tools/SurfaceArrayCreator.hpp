@@ -33,10 +33,12 @@ typedef std::vector<V3Vector> V3Matrix;
 ///
 /// It is designed create sub surface arrays to be ordered on Surfaces
 ///
+/// @todo write more documentation on how this is done
 class SurfaceArrayCreator : virtual public ISurfaceArrayCreator
 {
 public:
   /// Constructor
+  ///
   /// @param logger logging instance
   SurfaceArrayCreator(std::unique_ptr<Logger> logger
                       = getDefaultLogger("SurfaceArrayCreator", Logging::INFO))
@@ -48,6 +50,7 @@ public:
   virtual ~SurfaceArrayCreator() = default;
 
   /// SurfaceArrayCreator interface method
+  ///
   /// - create an array in a cylinder, binned in phi, z when extremas and
   /// bin numbers are known
   /// @param surfaces are the sensitive surfaces to be ordered on the cylinder
@@ -56,8 +59,9 @@ public:
   /// @param maxPhi is the maximal phi position of the surfaces
   /// @param halfZ is the half length in z of the cylinder
   /// @param binsPhi is the number of bins in phi for the surfaces
-  /// @param binsX is the number of bin in Z for the surfaces
+  /// @param binsZ is the number of bin in Z for the surfaces
   /// @param transform is the (optional) additional transform applied
+  ///
   /// @return a unique pointer to a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
@@ -91,12 +95,16 @@ public:
   /// SurfaceArrayCreator interface method
   /// - create an array on a disc, binned in r, phi when extremas and
   /// bin numbers are known
+  ///
   /// @param surfaces are the sensitive surfaces to be
   /// @param rMin is the minimimal radius of the disc
   /// @param rMax is the maximal radius of the disc
   /// @param minPhi is the minimal phi position of the surfaces
   /// @param maxPhi is the maximal phi position of the surfaces
+  /// @param binsPhi is the number of bins in phi for the surfaces
+  /// @param binsR is the number of bin in R for the surfaces
   /// @param transform is the (optional) additional transform applied
+  ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
@@ -128,11 +136,14 @@ public:
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
+  ///
   /// @param surfaces are the sensitive surfaces to be
   /// @param halflengthX is the half length in X
   /// @param halflengthY is the half length in Y
   /// @param binsX is the number of bins in X
   /// @param binsY is the number of bins in Y
+  /// @param transform is the (optional) additional transform applied
+  ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnPlane(const std::vector<const Surface*>& surfaces,
@@ -143,7 +154,8 @@ public:
                       std::shared_ptr<Transform3D>       transform
                       = nullptr) const final;
 
-  /// set logging instance
+  /// Set logging instance
+  /// @param logger is the logging instance to be set
   void
   setLogger(std::unique_ptr<Logger> logger)
   {
@@ -168,11 +180,11 @@ private:
   /// and the last boundaries are calculated from the vertices of the first and
   /// last surface.
   /// @note currently implemented for phi, r and z bining
-  /// @TODD implement for x,y binning
+  /// @todo implement for x,y binning
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the BinningValue in which direction should be binned
   /// (currently possible: binPhi, binR, binZ)
-  /// @param bType the BinningType (equidistant or arbitrary binning)
+  /// @param transform is the (optional) additional transform applied
   /// @return a unique pointer a one dimensional BinUtility
   Acts::BinUtility
   createArbitraryBinUtility(const std::vector<const Acts::Surface*>& surfaces,
@@ -189,11 +201,11 @@ private:
   /// subtracting/adding half of a bin size to the center position (in the
   /// binning direction) to the first/last surface.
   /// @note currently implemented for phi, r and z bining
-  /// @TODD implement for x,y binning
+  /// @todo implement for x,y binning
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the BinningValue in which direction should be binned
   /// (currently possible: binPhi, binR, binZ)
-  /// @param bType the BinningType (equidistant or arbitrary binning)
+  /// @param transform is the (optional) additional transform applied
   /// @return a unique pointer a one dimensional BinUtility
   Acts::BinUtility
   createEquidistantBinUtility(const std::vector<const Acts::Surface*>& surfaces,
@@ -204,7 +216,7 @@ private:
   /// - create an equidistant BinUtility with all parameters given
   /// - if parameters are known this function is preferred
   /// currently implemented for phi, r and z bining
-  /// @TODD implement for x,y binning
+  /// @todo implement for x,y binning
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the BinningValue in which direction should be binned
   /// (currently possible: binPhi, binR, binZ)
@@ -214,6 +226,7 @@ private:
   /// direction
   /// @param max is the maximal position of the surfaces in the binning
   /// direction
+  /// @param transform is the (optional) additional transform applied
   /// @return a unique pointer a one dimensional BinUtility
   Acts::BinUtility
   createBinUtility(const std::vector<const Acts::Surface*>& surfaces,
@@ -230,7 +243,7 @@ private:
 
   /// Private helper method to complete the binning
   ///
-  /// @TODO implement closest neighbour search
+  /// @todo implement closest neighbour search
   ///
   ///  given a grid point o
   ///    |  0  |  1 |  2  |  3 |  4  |
@@ -242,20 +255,21 @@ private:
   /// This is being called when you chose to use more bins thans surfaces
   /// I.e. to put a finer granularity binning onto your surface
   /// Neighbour bins are then filled to contain pointers as well
-  /// @param surfaces are the contained surfaces of the layer
   /// @param binUtility is the unitility class that describes the binning
-  /// sVector is the filled vector of Surface and binning position
+  /// @param v3Matrix the corresponding 3D positions filled for every grid point
+  /// @param sVector is the filled vector of Surface and binning position
+  /// @param sGrid the surfaces filled for every grid point
   /// binSystem is the full system of bins
   void
-  completeBinning(const BinUtility& binUtility,
-                  const V3Matrix&,
+  completeBinning(const BinUtility&    binUtility,
+                  const V3Matrix&      v3Matrix,
                   const SurfaceVector& sVector,
                   SurfaceGrid&         sGrid) const;
 
   /// Private helper method to complete the binning
   ///
   ///
-  /// @TODO write documentation
+  /// @todo write documentation
   ///
   void
   registerNeighbourHood(const SurfaceArray& sArray) const;

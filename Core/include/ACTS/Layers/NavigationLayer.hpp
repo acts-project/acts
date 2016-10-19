@@ -33,7 +33,8 @@ class NavigationLayer : public Layer
 public:
   ///  Factory Constructor - the surface representation is given by pointer
   /// (ownership passed)
-  /// @param sRepresenation is the represenation for extrapolation
+  ///
+  /// @param sRepresentation is the represenation for extrapolation
   /// @param thickness is the thickness for the binning
   static LayerPtr
   create(std::unique_ptr<const Surface> sRepresentation, double thickness = 0.)
@@ -42,6 +43,7 @@ public:
   }
 
   /// Clone with a shift
+  ///
   /// @param shift is the addition transform applied after cloning
   LayerPtr
   cloneWithShift(const Transform3D& shift) const override;
@@ -73,7 +75,11 @@ public:
 
   /// Geometric isOnLayer() method
   /// using isOnSurface() with Layer specific tolerance
+  ///
   /// @param gpos is the global position for the check
+  /// @param bcheck is the boundary check directive
+  ///
+  /// @return boolean that indicates if the poisiton is on surface
   bool
   isOnLayer(const Vector3D&      gpos,
             const BoundaryCheck& bcheck = true) const override;
@@ -91,7 +97,10 @@ public:
 protected:
   /// Private Constructor
   /// - this is called by the creat(args*) method
-  /// passed spacer layer if needed  */
+  /// passed spacer layer if needed
+  ///
+  /// @param surfaceRepresentation is the surface of the layer
+  /// @param thickness ithe layer thickness
   NavigationLayer(std::unique_ptr<const Surface> surfaceRepresentation,
                   double                         thickness);
 

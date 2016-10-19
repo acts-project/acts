@@ -25,36 +25,24 @@ class TrapezoidBounds;
 /// @class TrapezoidVolumeBounds
 ///
 /// Bounds for a trapezoidal shaped Volume, the decomposeToSurfaces method
-/// creates
-/// a
-/// vector of 6 surfaces:
+/// creates a vector of 6 surfaces:
 ///
 ///  BoundarySurfaceFace [index]:
 ///
-///      - negativeFaceXY     [0] : Trazpezoidal Acts::PlaneSurface,
-///                                 parallel to \f$ xy \f$ plane at negative \f$
-///                                 z
-/// \f$
-///      - positiveFaceXY     [1] : Trazpezoidal Acts::PlaneSurface,
-///                                 parallel to \f$ xy \f$ plane at positive \f$
-///                                 z
-/// \f$
-///      - trapezoidFaceAlpha [2] : Rectangular  Acts::PlaneSurface,
-///                                 attached to [0] and [1] at negative \f$ x
-///                                 \f$
-/// (associated to alpha)
-///      - trapezoidFaceBeta  [3] : Rectangular  Acts::PlaneSurface,
-///                                 attached to [0] and [1] at positive \f$ x
-///                                 \f$
-/// (associated to beta)
-///      - negativeFaceZX     [4] : Rectangular  Acts::PlaneSurface,
-///                                 parallel to \f$ zx \f$ plane at negative \f$
-///                                 y
-/// \f$
-///      - positiveFaceZX     [5] : Rectangular  Acts::PlaneSurface,
-///                                 parallel to \f$ zx \f$ plane at positive \f$
-///                                 y
-/// \f$
+///  - negativeFaceXY     [0] : Trazpezoidal Acts::PlaneSurface,
+///                             parallel to \f$ xy \f$ plane at negative \f$z\f$
+///  - positiveFaceXY     [1] : Trazpezoidal Acts::PlaneSurface,
+///                             parallel to \f$ xy \f$ plane at positive \f$z\f$
+///  - trapezoidFaceAlpha [2] : Rectangular  Acts::PlaneSurface,
+///                             attached to [0] and [1] at negative \f$x\f$
+///  (associated to alpha)
+///  - trapezoidFaceBeta  [3] : Rectangular  Acts::PlaneSurface,
+///                             attached to [0] and [1] at positive \f$ x\f$
+///  (associated to beta)
+///  - negativeFaceZX     [4] : Rectangular  Acts::PlaneSurface,
+///                             parallel to \f$ zx \f$ plane at negative \f$y\f$
+///  - positiveFaceZX     [5] : Rectangular  Acts::PlaneSurface,
+///                             parallel to \f$ zx \f$ plane at positive \f$y\f$
 ///
 ///  @image html TrapezoidVolumeBounds_decomp.gif
 
@@ -77,22 +65,24 @@ public:
   TrapezoidVolumeBounds();
 
   /// Constructor - the trapezoid boundaries (symmetric trapezoid)
-  /// @param minhalengthx is the half length in x at minimal y
-  /// @param maxhalengthx is the half length in x at maximal y
+  ///
+  /// @param minhlengthx is the half length in x at minimal y
+  /// @param maxhlengthx is the half length in x at maximal y
   /// @param hlenghty is the half length in y
   /// @param hlengthz is the half length in z
-  TrapezoidVolumeBounds(double minhlenghtx,
+  TrapezoidVolumeBounds(double minhlengthx,
                         double maxhlengthx,
                         double hlenghty,
                         double hlengthz);
 
   /// Constructor - the trapezoid boundaries (arbitrary trapezoid)
-  /// @param minhlenghtx is the half length in x at minimal y
+  ///
+  /// @param minhlengthx is the half length in x at minimal y
   /// @param hlenghty is the half length in y
   /// @param hlengthz is the half length in z
   /// @param alpha is the openeing angle at -x,-y
   /// @param beta is the openeing angle at +x,-y
-  TrapezoidVolumeBounds(double minhlenghtx,
+  TrapezoidVolumeBounds(double minhlengthx,
                         double hlenghty,
                         double hlengthz,
                         double alpha,
@@ -114,14 +104,20 @@ public:
 
   /// This method checks if position in the 3D volume frame
   /// is inside the cylinder
+  ///
   /// @param gpos is the global position to be checked
   /// @param tol is the tolerance applied
+  ///
+  /// @return boolean indicator if position is inside
   bool
   inside(const Vector3D& gpos, double tol = 0.) const override;
 
   /// Method to decompose the Bounds into Surfaces
+  ///
   /// @param transformPtr is the transform to position the surfaces in 3D space
   /// @note this is a factory method
+  ///
+  /// @return vector of surfaces from the decopmosition
   const std::vector<const Surface*>
   decomposeToSurfaces(std::shared_ptr<Transform3D> transformPtr) const override;
 

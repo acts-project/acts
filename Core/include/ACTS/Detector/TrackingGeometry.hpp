@@ -55,51 +55,88 @@ public:
   /// Destructor
   ~TrackingGeometry();
 
-  /// return the world
+  /// Access to the world volume
+  /// @return plain pointer to the world volume
   const TrackingVolume*
   highestTrackingVolume() const;
 
   /// return the lowest tracking Volume
+  ///
   /// @param gpos is the global position fo the call
+  ///
+  /// @return plain pointer to the lowest TrackingVolume
   const TrackingVolume*
   lowestTrackingVolume(const Vector3D& gpos) const;
 
   /// return the vector of lowest detached tracking Volume(->overlaps)
+  ///
   /// @param gpos is the global position fo the call
+  ///
+  /// @return plain pointer to the the lowest DetachedTrackingVolume
   const DetachedVolumeVector*
   lowestDetachedTrackingVolumes(const Vector3D& gpos) const;
 
   /// return the lowest static volume
+  ///
   /// @param gpos is the global position fo the call
+  ///
+  /// @return plain pointer to the the lowest static tracking volume
   const TrackingVolume*
   lowestStaticTrackingVolume(const Vector3D& gpos) const;
 
-  /// return the tracking Volume by name, 0 if it doesn't exist
+  /// return the lowest tracking Volume
+  ///
+  /// @param name is the name for the volume search
+  ///
+  /// @return plain pointer to the lowest TrackingVolume
   const TrackingVolume*
   trackingVolume(const std::string& name) const;
 
   /// Forward the associated Layer information
+  ///
   /// @param gpos is the global position fo the call
+  ///
+  /// @return plain pointer to assocaiated layer
   const Layer*
   associatedLayer(const Vector3D& gpos) const;
 
   /// check position at volume boundary
+  ///
   /// @param gpos is the global position fo the call
+  /// @param vol is the volume to be cheked
+  /// @param tol is the tolerance parameter
+  ///
+  /// @todo check if this concept is still used
+  ///
+  /// @return boolean indicating if this is at a volume boundary
   bool
   atVolumeBoundary(const Vector3D&       gpos,
                    const TrackingVolume* vol,
                    double                tol) const;
 
-  /// check position at volume boundary + navigation link
+  /// Check position at volume boundary + navigation link
+  ///
+  /// @param gpos is the global position fo the call
+  /// @param mom is the momentum fo the call
+  /// @param vol is the volume to be cheked
+  /// @param nextVol is the next tracking volume (filled)
+  /// @param dir is the propagation direction
+  /// @param tol is the tolerance parameter
+  ///
+  /// @todo check if this concept is still used
+  ///
+  /// @return boolean indicating if this is at a volume boundary
   bool
   atVolumeBoundary(const Vector3D&        gpos,
                    const Vector3D&        mom,
                    const TrackingVolume*  vol,
                    const TrackingVolume*& nextVol,
-                   Acts::PropDirection    dir,
+                   PropDirection          dir,
                    double                 tol) const;
 
-  /// register the beam tube
+  /// Register the beam tube
+  ///
+  /// @param beam is the beam line surface
   void
   registerBeamTube(std::unique_ptr<const PerigeeSurface> beam) const;
 
@@ -114,8 +151,11 @@ public:
 
 private:
   /// Geometry Builder busineess: the geometry builder has to sign
+  ///
+  /// @param signat is the volume signature
+  /// @param geotype is the volume navigation type
   void
-  sign(GeometrySignature geosit, GeometryType geotype = Static) const;
+  sign(GeometrySignature signat, GeometryType geotype = Static) const;
 
   /// The known world - and the beamline
   TrackingVolumePtr                             m_world;

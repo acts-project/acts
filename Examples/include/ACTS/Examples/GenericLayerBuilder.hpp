@@ -54,7 +54,7 @@ public:
     std::vector<std::pair<double, double>> centralLayerEnvelopes;
     /// the material concentration: -1 inner, 0 central, 1 outer
     std::vector<int> centralLayerMaterialConcentration;
-    /// the assigned material propertis @TODO change to surface material
+    /// the assigned material propertis @todo change to surface material
     std::vector<MaterialProperties> centralLayerMaterialProperties;
     /// teh binning schema: nPhi x nZ
     std::vector<std::pair<int, int>> centralModuleBinningSchema;
@@ -68,7 +68,7 @@ public:
     std::vector<double> centralModuleHalfY;
     /// the module bounds: local z -> thickness
     std::vector<double> centralModuleThickness;
-    /// the module material @TODO change to surface material
+    /// the module material @todo change to surface material
     std::vector<Material> centralModuleMaterial;
     /// the module front side stereo (if exists)
     std::vector<double> centralModuleFrontsideStereo;
@@ -86,7 +86,7 @@ public:
     std::vector<double> posnegLayerEnvelopeR;
     /// the material concentration: -1 inner, 0 central, 1 outer
     std::vector<int> posnegLayerMaterialConcentration;
-    /// the material prooperties @TODO change to surface material
+    /// the material prooperties @todo change to surface material
     std::vector<MaterialProperties> posnegLayerMaterialProperties;
     /// the module center positions
     std::vector<std::vector<std::vector<Vector3D>>> posnegModulePositions;
@@ -100,7 +100,7 @@ public:
     std::vector<std::vector<double>> posnegModuleHalfY;
     /// the module bounds: local z -> thickness
     std::vector<std::vector<double>> posnegModuleThickness;
-    /// the module material @TODO change to surface material
+    /// the module material @todo change to surface material
     std::vector<std::vector<Material>> posnegModuleMaterial;
     /// the module front side stereo (if exists)
     std::vector<std::vector<double>> posnegModuleFrontsideStereo;
