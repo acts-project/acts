@@ -291,7 +291,8 @@ The following steps explain on how to setup and configure a Jenkins server for c
         sudo apt-get install cmake
         # doxygen
         sudo apt-get install doxygen
-        sudo apt-get install graphviz        
+        sudo apt-get install graphviz
+        sudo apt-get install texlive
         # Eigen algebra library
         wget http://bitbucket.org/eigen/eigen/get/3.2.9.tar.gz
         tar xf 3.2.9.tar.gz
