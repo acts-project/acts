@@ -118,7 +118,7 @@ where `compX` are the required components from the ACTS project.
 
 # <a name="documentation">Documentation</a>
 
-You can find a complete documentation of the ACTS functionality and the class reference guide at [http://acts.web.cern.ch/ACTS/latest/index.html](http://acts.web.cern.ch/ACTS/latest/index.html).
+You can find a complete documentation of the ACTS functionality and the class reference guide at [http://acts.web.cern.ch/ACTS/latest/doc/index.html](http://acts.web.cern.ch/ACTS/latest/doc/index.html).
 
 # <a name="license-authors">License and authors</a>
 
