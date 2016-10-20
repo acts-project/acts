@@ -42,12 +42,12 @@ typedef typename detail::full_parset::type FullParameterSet;
  * @pre
  * The template parameter @c ParameterPolicy must fulfill the following
  * requirements:
- *  -# It must contain a <tt>typedef #par_id_type</tt> specifying an integral
+ *  -# It must contain a <tt>typedef #ParID_t</tt> specifying an integral
  * type used to identify different
  *     parameters. This could for example be an @c enum, @c short, or
  * <tt>unsigned int</tt>.
  *     This @c typedef must be convertible to an <tt>unsigned int</tt>
- *  -# It must contain a <tt>typedef #par_value_type</tt> specifying the type of
+ *  -# It must contain a <tt>typedef #ParValue_t</tt> specifying the type of
  * the parameter values. This could for
  *     instance be @c double, or @c float.
  *  -# It must contain a definition of an integral constant named @c N which is
@@ -121,7 +121,8 @@ public:
    * it is symmetric).
    *
    * @param cov unique pointer to covariance matrix (nullptr is accepted)
-   * @param values parameter pack with values for the stored parameters
+   * @param head value for first parameter
+   * @param values values for the remaining stored parameters
    */
   template <typename... Tail>
   ParameterSet(CovPtr_t cov,

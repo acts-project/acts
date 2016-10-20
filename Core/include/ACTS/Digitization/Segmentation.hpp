@@ -21,7 +21,7 @@ class Surface;
 typedef std::shared_ptr<const Surface> SurfacePtr;
 typedef std::vector<SurfacePtr>        SurfacePtrVector;
 
-/// @class Segmentation Base class
+/// @brief Segmentation Base class
 ///
 /// This helper class allows to define an arbitrary readout
 /// segmentation for the geoemtric digitization, provided a shape of the module,
@@ -39,30 +39,29 @@ class Segmentation
 public:
   /// Virtual Destructor
   virtual ~Segmentation() {}
-  
   /// Create the segmentation surfaces in X
   ///
   /// @param boundarySurfaces vector to be filled
   /// @param segmentationSurfacesX are the segmetation boundaries in X
   /// @param segmentationSurfacesY are the segmetation boundaries in Y
   /// @param halfThickness is the half thickness in z of the module
-  /// @param readoutDirection is the direction w.r.t normal vector 
+  /// @param readoutDirection is the direction w.r.t normal vector
   /// where the readout is given : -1, 0, 1 possible
   /// @param lorentzAngle is the lorentz angle measured from the local z
   /// towards x axis
   virtual void
-  createSegmenationSurfaces(SurfacePtrVector& boundarySurfaces,
-                            SurfacePtrVector& segmentationSurfacesX,
-                            SurfacePtrVector& segmentationSurfacesY,
-                            double            halfThickness,
-                            int               readoutDirection,
-                            double            lorentzAngle) const = 0;
+  createSegmentationSurfaces(SurfacePtrVector& boundarySurfaces,
+                             SurfacePtrVector& segmentationSurfacesX,
+                             SurfacePtrVector& segmentationSurfacesY,
+                             double            halfThickness,
+                             int               readoutDirection,
+                             double            lorentzAngle) const = 0;
 
   /// Get the digitization cell fropm a 3D position
   /// - ignores the shift, i.e. assumenes in to be in cell frame
   ///
   /// @param position is the position for which the cell is requested
-  ///                          
+  ///
   /// @return is a cell with cell ids
   virtual const DigitizationCell
   cell(const Vector3D& position) const = 0;
@@ -78,7 +77,7 @@ public:
 
   /// Calculate the cell Position from the Id
   ///
-  /// @param cId is the digitization cell 
+  /// @param cId is the digitization cell
   ///
   /// @return the center position of the associated cell
   virtual const Vector2D

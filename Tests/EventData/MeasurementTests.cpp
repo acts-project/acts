@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /**
- * @file MeasurementTests.cxx
+ * @file MeasurementTests.cpp
  */
 
 // Boost include(s)

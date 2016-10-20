@@ -43,14 +43,14 @@ public:
   /// Virtual Destructor
   virtual ~TrapezoidSegmentation();
 
-  /// @copydoc Segmentation::createSemgentationSurfaces
+  /// @copydoc Acts::Segmentation::createSegmentationSurfaces
   void
-  createSegmenationSurfaces(SurfacePtrVector& boundarySurfaces,
-                            SurfacePtrVector& segmentationSurfacesX,
-                            SurfacePtrVector& segmentationSurfacesY,
-                            double            halfThickness,
-                            int               readoutDirection = 1.,
-                            double            lorentzAngle = 0.) const override;
+  createSegmentationSurfaces(SurfacePtrVector& boundarySurfaces,
+                             SurfacePtrVector& segmentationSurfacesX,
+                             SurfacePtrVector& segmentationSurfacesY,
+                             double            halfThickness,
+                             int               readoutDirection = 1.,
+                             double lorentzAngle = 0.) const override;
 
   /// @copydoc Segmentation::cell
   const DigitizationCell

@@ -50,7 +50,7 @@ Acts::RectangularSegmentation::~RectangularSegmentation()
 }
 
 void
-Acts::RectangularSegmentation::createSegmenationSurfaces(
+Acts::RectangularSegmentation::createSegmentationSurfaces(
     SurfacePtrVector& boundarySurfaces,
     SurfacePtrVector& segmentationSurfacesX,
     SurfacePtrVector& segmentationSurfacesY,

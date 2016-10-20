@@ -47,7 +47,7 @@ The instructions below should help you getting started with development process 
 
 ### <a name="setting-up-your-fork">Setting up your fork</a>
 
-The ACTS project uses a git repository which is hosted on the CERN GitLab server. In order to be able to create merge requests (and thus, contribute to the development of ACTS), you need to create a fork on the CERN GitLab server. A general introduction to the GitLab web interface can be found [here](https://gitlab.cern.ch/help/gitlab-basics/README.md). Very nice tutorials as well as explanations for concepts and workflows with git can be found on [Atlassian](https://www.atlassian.com/git/). For a shorter introduction and the full git documentation have a look at the [git tutorial](https://git-scm.com/docs/gittutorial).
+The ACTS project uses a git repository which is hosted on the CERN GitLab server. In order to be able to create merge requests (and thus, contribute to the development of ACTS), you need to create a fork on the CERN GitLab server. A general introduction to the GitLab web interface can be found [here](http://gitlab.cern.ch/help/gitlab-basics/README). Very nice tutorials as well as explanations for concepts and workflows with git can be found on [Atlassian](http://www.atlassian.com/git/). For a shorter introduction and the full git documentation have a look at the [git tutorial](http://git-scm.com/docs/gittutorial).
 
 #### Configuring git
 
@@ -68,7 +68,7 @@ Further recommended settings are:
 
 #### Creating your fork
 
-As a first step, you need to create your own fork of the ACTS project. For doing this, please go to the [ACTS GitLab page](https://gitlab.cern.ch/acts/a-common-tracking-sw), click on the fork button, and follow the instructions ([GitLab Help "How to fork a project"](https://gitlab.cern.ch/help/gitlab-basics/fork-project.md)).
+As a first step, you need to create your own fork of the ACTS project. For doing this, please go to the [ACTS GitLab page](https://gitlab.cern.ch/acts/a-common-tracking-sw), click on the fork button, and follow the instructions ([GitLab Help "How to fork a project"](https://gitlab.cern.ch/help/gitlab-basics/fork-project)).
 
 #### Configuring your fork
 
@@ -103,7 +103,7 @@ At certain points you may want to sync your fork with the latest updates from th
 
 ### <a name="creating-a-merge-request">Creating a merge request</a>
 
-Once your development is ready for integration, you should open a merge request at the [ACTS project](https://gitlab.cern.ch/acts/a-common-tracking-sw) ([GitLab Help: Create a merge request](https://gitlab.cern.ch/help/gitlab-basics/add-merge-request.md)). The target branch should usually be _master_ for feature requests and _releas-X,Y,Z_ for bugfixes. The ACTS projects accepts only fast-foward merges which means that your branch must have been rebased on the target branch. This can be achieved by updating your fork as described above and then run:
+Once your development is ready for integration, you should open a merge request at the [ACTS project](https://gitlab.cern.ch/acts/a-common-tracking-sw) ([GitLab Help: Create a merge request](https://gitlab.cern.ch/help/gitlab-basics/add-merge-request)). The target branch should usually be _master_ for feature requests and _releas-X,Y,Z_ for bugfixes. The ACTS projects accepts only fast-foward merges which means that your branch must have been rebased on the target branch. This can be achieved by updating your fork as described above and then run:
 
     git checkout <my_feature_branch>
     git rebase -i origin/<target_branch>
@@ -179,7 +179,7 @@ In addition, the following conventions are used in ACTS code:
     - Put all documentation in the header files. 
     - Use `///` as block comment (instead of `/* ... */`).
     - Doxygen documentation goes in front of the documented entity (class, function, (member) variable).
-    - Use the \@<cmd> notation.
+    - Use the \@&lt;cmd&gt; notation.
     - Functions and classes must have the \@brief description.
     - Document all (template) parameters using \@(t)param and explain the return value for non-void functions. Mention important conditions which may affect the return value.
     - Use `@remark` to specify pre-conditions.
@@ -291,7 +291,8 @@ The following steps explain on how to setup and configure a Jenkins server for c
         sudo apt-get install cmake
         # doxygen
         sudo apt-get install doxygen
-        sudo apt-get install graphviz        
+        sudo apt-get install graphviz
+        sudo apt-get install texlive
         # Eigen algebra library
         wget http://bitbucket.org/eigen/eigen/get/3.2.9.tar.gz
         tar xf 3.2.9.tar.gz

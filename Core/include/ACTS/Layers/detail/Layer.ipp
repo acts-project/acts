@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+namespace Acts {
+
 template <class T>
 bool
 Layer::onLayer(const T& pars, const BoundaryCheck& bcheck) const
@@ -217,3 +219,4 @@ Layer::testCompatibleSurface(std::vector<SurfaceIntersection>& cSurfaces,
       cSurfaces.push_back(SurfaceIntersection(sfIntersection, &surface, rDir));
   }
 }
+}  // end of namespace Acts

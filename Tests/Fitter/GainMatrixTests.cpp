@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /**
- * @file GainMatrixUpdatorTests.cxx
+ * @file GainMatrixTests.cpp
  */
 
 // STL include(s)
