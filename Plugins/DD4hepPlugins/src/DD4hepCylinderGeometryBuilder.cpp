@@ -411,9 +411,9 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
       if (!disc)
         throw "Cylinder layer has wrong shape - needs to be TGeoConeSeg!";
       // extract the boundaries
-      double rMin      = disc->GetRmin1() * _cm;
-      double rMax      = disc->GetRmax1() * _cm;
-      double thickness = 2. * disc->GetDz() * _cm;
+      double rMin        = disc->GetRmin1() * _cm;
+      double rMax        = disc->GetRmax1() * _cm;
+      double thickness   = 2. * disc->GetDz() * _cm;
       auto discBounds  = std::make_shared<const Acts::RadialBounds>(rMin, rMax);
 
       ACTS_DEBUG(
