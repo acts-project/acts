@@ -97,14 +97,12 @@ Acts::DD4hepCylinderGeometryBuilder::trackingGeometry() const
     } else {
       // assign a new highest volume (and potentially wrap around the given
       // highest volume so far)
-      LayerTriple  layerTriple;
-      VolumeTriple volumeTriple;
-      createSubVolumes(detElement, layerTriple, volumeTriple);
+      LayerTriple layerTriple;
+      createSubVolumes(detElement, layerTriple);
       highestVolume
           = m_cfg.volumeBuilder->trackingVolume(highestVolume,
                                                 extractVolumeBounds(detElement),
-                                                new LayerTriple(layerTriple),
-                                                new VolumeTriple(volumeTriple));
+                                                new LayerTriple(layerTriple));
     }
   }
   // if you have a highest volume, stuff it into a TrackingGeometry
@@ -163,15 +161,8 @@ Acts::DD4hepCylinderGeometryBuilder::extractVolumeBounds(
 void
 Acts::DD4hepCylinderGeometryBuilder::createSubVolumes(
     DD4hep::Geometry::DetElement& detElement,
-    LayerTriple&                  layerTriple,
-    VolumeTriple&                 volumeTriple) const
+    LayerTriple&                  layerTriple) const
 {
-  // the negative endcap volume of the current hierarchy
-  VolumePtr nEndcapVolume = nullptr;
-  // the barrel volume of the current hierarchy
-  VolumePtr barrelVolume = nullptr;
-  // the positive endcap volume of the current hierarchy
-  VolumePtr pEndcapVolume = nullptr;
   // possible layers of the negative end cap
   Acts::LayerVector negativeLayers;
   // possible layers of the central barrel
@@ -205,21 +196,15 @@ Acts::DD4hepCylinderGeometryBuilder::createSubVolumes(
 
         if (actsTransform->translation().z() < 0.) {
           ACTS_VERBOSE("[V]       ->is negative endcap");
-          nEndcapVolume = std::make_shared<const Volume>(
-              actsTransform, extractVolumeBounds(compoundDetElement));
           createDiscLayers(compoundDetElement, negativeLayers, transform);
         } else {
           ACTS_VERBOSE("[V]       ->is positive endcap");
-          pEndcapVolume = std::make_shared<const Volume>(
-              actsTransform, extractVolumeBounds(compoundDetElement));
           createDiscLayers(compoundDetElement, positiveLayers, transform);
         }
       } else {
         ACTS_VERBOSE("[V] Subvolume : "
                      << compoundDetElement.name()
                      << " is a cylinder volume -> handling as a barrel");
-        barrelVolume = std::make_shared<const Volume>(
-            actsTransform, extractVolumeBounds(compoundDetElement));
         createCylinderLayers(compoundDetElement, centralLayers, transform);
       }
     }  // compoundchildren
@@ -233,7 +218,6 @@ Acts::DD4hepCylinderGeometryBuilder::createSubVolumes(
     createCylinderLayers(
         detElement, centralLayers, detElement.placement().ptr()->GetMatrix());
   }
-  volumeTriple = VolumeTriple(nEndcapVolume, barrelVolume, pEndcapVolume);
   // set the triples
   layerTriple = LayerTriple(Acts::LayerVector(negativeLayers),
                             Acts::LayerVector(centralLayers),
@@ -427,9 +411,9 @@ Acts::DD4hepCylinderGeometryBuilder::createDiscLayers(
       if (!disc)
         throw "Cylinder layer has wrong shape - needs to be TGeoConeSeg!";
       // extract the boundaries
-      double rMin        = disc->GetRmin1() * _cm;
-      double rMax        = disc->GetRmax1() * _cm;
-      double thickness   = 2. * disc->GetDz() * _cm;
+      double rMin      = disc->GetRmin1() * _cm;
+      double rMax      = disc->GetRmax1() * _cm;
+      double thickness = 2. * disc->GetDz() * _cm;
       auto discBounds  = std::make_shared<const Acts::RadialBounds>(rMin, rMax);
 
       ACTS_DEBUG(

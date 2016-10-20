@@ -114,8 +114,7 @@ private:
   /// @param volumeTriple The volume triple which whould get filled
   void
   createSubVolumes(DD4hep::Geometry::DetElement& motherDetElement,
-                   LayerTriple&                  layerTriple,
-                   VolumeTriple&                 volumeTriple) const;
+                   LayerTriple&                  layerTriple) const;
 
   /// Creates the cylindrical shaped layers
   /// @param motherDetElement the DD4hep detector element containing the layers
