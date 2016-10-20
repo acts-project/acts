@@ -77,11 +77,11 @@ namespace Test {
     std::cout << "-> Testing Container Volume '" << world->volumeName()
               << std::endl;
     ///  world and containers have to have geoID values 0
-    BOOST_CHECK_EQUAL(0, world->geoID().value());
+    BOOST_CHECK_EQUAL(0ul, world->geoID().value());
     /// check the boundaries of the world, should also be 0
     std::cout << "-[o] Testing Boundary Surfaces." << std::endl;
     for (auto wbsf : world->boundarySurfaces()) {
-      BOOST_CHECK_EQUAL(0, wbsf->surfaceRepresentation().geoID().value());
+      BOOST_CHECK_EQUAL(0ul, wbsf->surfaceRepresentation().geoID().value());
     }
     /// go through the sub volumes
     geo_id_value vol_id = 0;

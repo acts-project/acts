@@ -78,18 +78,20 @@ namespace Test {
       cid += channelID;
       // now check the cid
       BOOST_CHECK_EQUAL(
-          1, cid.value(GeometryID::volume_mask, GeometryID::volume_shift));
+          1lu, cid.value(GeometryID::volume_mask, GeometryID::volume_shift));
       BOOST_CHECK_EQUAL(
-          2, cid.value(GeometryID::boundary_mask, GeometryID::boundary_shift));
+          2lu,
+          cid.value(GeometryID::boundary_mask, GeometryID::boundary_shift));
       BOOST_CHECK_EQUAL(
-          3, cid.value(GeometryID::layer_mask, GeometryID::layer_shift));
+          3lu, cid.value(GeometryID::layer_mask, GeometryID::layer_shift));
       BOOST_CHECK_EQUAL(
-          4, cid.value(GeometryID::approach_mask, GeometryID::approach_shift));
+          4lu,
+          cid.value(GeometryID::approach_mask, GeometryID::approach_shift));
       BOOST_CHECK_EQUAL(
-          5,
+          5lu,
           cid.value(GeometryID::sensitive_mask, GeometryID::sensitive_shift));
       BOOST_CHECK_EQUAL(
-          6, cid.value(GeometryID::channel_mask, GeometryID::channel_shift));
+          6lu, cid.value(GeometryID::channel_mask, GeometryID::channel_shift));
     }
   }
 

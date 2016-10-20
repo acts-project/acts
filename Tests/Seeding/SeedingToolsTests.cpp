@@ -32,8 +32,8 @@ BOOST_AUTO_TEST_CASE(ContainerSizeOnePhiCyclicRangeTest)
   {
     auto range = makeRangePhi(points, -M_PI + eps, M_PI - eps);
     BOOST_TEST(!range.empty());
-    BOOST_TEST(range.begin().index == 0);
-    BOOST_TEST(range.end().index == 1);
+    BOOST_TEST(range.begin().index == 0lu);
+    BOOST_TEST(range.end().index == 1lu);
     BOOST_TEST(std::distance(range.begin(), range.end()) == 1);
   }
   BOOST_TEST_CONTEXT("linear w/o first element")
@@ -69,56 +69,56 @@ BOOST_DATA_TEST_CASE(VariableContainerSizePhiCyclicRangeTest,
   {
     auto range = makeRangePhi(points, low, high);
     BOOST_TEST(!range.empty());
-    BOOST_TEST(range.begin().index == 0);
-    BOOST_TEST(range.end().index == n);
+    BOOST_TEST(range.begin().index == 0lu);
+    BOOST_TEST(range.end().index == (unsigned int)n);
     BOOST_TEST(std::distance(range.begin(), range.end()) == n);
   }
   BOOST_TEST_CONTEXT("linear range w/o first element")
   {
     auto range = makeRangePhi(points, low + delta, high);
     BOOST_TEST(!range.empty());
-    BOOST_TEST(range.begin().index == 1);
-    BOOST_TEST(range.end().index == n);
+    BOOST_TEST(range.begin().index == 1lu);
+    BOOST_TEST(range.end().index == (unsigned int)n);
     BOOST_TEST(std::distance(range.begin(), range.end()) == (n - 1));
   }
   BOOST_TEST_CONTEXT("linear range w/o last element")
   {
     auto range = makeRangePhi(points, low, high - delta);
     BOOST_TEST(!range.empty());
-    BOOST_TEST(range.begin().index == 0);
-    BOOST_TEST(range.end().index == (n - 1));
+    BOOST_TEST(range.begin().index == 0ul);
+    BOOST_TEST(range.end().index == (unsigned int)(n - 1));
     BOOST_TEST(std::distance(range.begin(), range.end()) == (n - 1));
   }
   BOOST_TEST_CONTEXT("wrap-around full range w/ one element after wrap")
   {
     auto range = makeRangePhi(points, low + delta, high + delta);
     BOOST_TEST(!range.empty());
-    BOOST_TEST(range.begin().index == 1);
-    BOOST_TEST(range.end().index == (1 + n));
+    BOOST_TEST(range.begin().index == 1ul);
+    BOOST_TEST(range.end().index == (unsigned int)(1 + n));
     BOOST_TEST(std::distance(range.begin(), range.end()) == n);
   }
   BOOST_TEST_CONTEXT("wrap-around full range w/ one element before wrap")
   {
     auto range = makeRangePhi(points, low - delta, high - delta);
     BOOST_TEST(!range.empty());
-    BOOST_TEST(range.begin().index == (n - 1));
-    BOOST_TEST(range.end().index == (n - 1 + n));
+    BOOST_TEST(range.begin().index == (unsigned int)(n - 1));
+    BOOST_TEST(range.end().index == (unsigned int)(n - 1 + n));
     BOOST_TEST(std::distance(range.begin(), range.end()) == n);
   }
   BOOST_TEST_CONTEXT("wrap-around w/ only last and first element")
   {
     auto range = makeRangePhi(points, high - delta, low + delta);
     BOOST_TEST(!range.empty());
-    BOOST_TEST(range.begin().index == (n - 1));
-    BOOST_TEST(range.end().index == (n + 1));
+    BOOST_TEST(range.begin().index == (unsigned int)(n - 1));
+    BOOST_TEST(range.end().index == (unsigned int)(n + 1));
     BOOST_TEST(std::distance(range.begin(), range.end()) == 2);
   }
   BOOST_TEST_CONTEXT("wrap-around boundaries but only 1 element after wrap")
   {
     auto range = makeRangePhi(points, high, low + delta);
     BOOST_TEST(!range.empty());
-    BOOST_TEST(range.begin().index == 0);
-    BOOST_TEST(range.end().index == 1);
+    BOOST_TEST(range.begin().index == 0ul);
+    BOOST_TEST(range.end().index == 1ul);
     BOOST_TEST(std::distance(range.begin(), range.end()) == 1);
   }
 }
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(ExampleContainerPhiCyclicRangeTest)
     auto range = layer.rangeDeltaPhi(0, M_PI - 0.1 * dphi);
     BOOST_TEST(!range.empty());
     BOOST_TEST(std::distance(range.begin(), range.end())
-               == layer.points.size());
+               == (int)layer.points.size());
     BOOST_TEST(std::equal(
         range.begin(), range.end(), layer.points.begin(), compSpacePoints));
   }

@@ -280,7 +280,7 @@ BoundaryCheck::ComputeKDOP(std::vector<Vector2D> v,
 {
   // initialize KDOP to first point
   size_t k = KDOPAxes.size();
-  for (unsigned int i = 0; i < k; i++) {
+  for (size_t i = 0; i < k; i++) {
     kdop.at(i).max = KDOPAxes.at(i)(0, 0) * v.at(0)(0, 0)
         + KDOPAxes.at(i)(1, 0) * v.at(0)(1, 0);
     kdop.at(i).min = KDOPAxes.at(i)(0, 0) * v.at(0)(0, 0)
@@ -288,8 +288,8 @@ BoundaryCheck::ComputeKDOP(std::vector<Vector2D> v,
   }
   // now for each additional point, update KDOP bounds if necessary
   float value;
-  for (unsigned int i = 1; i < v.size(); i++) {
-    for (unsigned int j = 0; j < k; j++) {
+  for (size_t i = 1; i < v.size(); i++) {
+    for (size_t j = 0; j < k; j++) {
       value = KDOPAxes.at(j)(0, 0) * v.at(i)(0, 0)
           + KDOPAxes.at(j)(1, 0) * v.at(i)(1, 0);
       if (value < kdop.at(j).min)
@@ -306,7 +306,7 @@ BoundaryCheck::TestKDOPKDOP(std::vector<KDOP>& a, std::vector<KDOP>& b) const
 {
   size_t k = a.size();
   // check if any intervals are non-overlapping, return if so
-  for (int i = 0; i < k; i++)
+  for (size_t i = 0; i < k; i++)
     if (a.at(i).min > b.at(i).max || a.at(i).max < b.at(i).min) return false;
   // all intervals are overlapping, so KDOPs must intersect
   return true;
