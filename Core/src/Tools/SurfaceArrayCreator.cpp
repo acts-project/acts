@@ -340,16 +340,13 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
         if (vertices.empty()) ACTS_ERROR("Vertices of current surface empty!");
         if (surface == *(keys.begin())) {
           // get the minimum vertex
-          double minBValue  = 0.;
-          double prevVertex = 0.;
+          double minBValue = 10e12;
           // get the minimum position in the binning direction
           for (auto& vertex : vertices) {
             Acts::Vector3D globVertex;
             // get the global position of the vertices
             surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
-            minBValue                             = globVertex.phi();
-            if (prevVertex < minBValue) minBValue = prevVertex;
-            prevVertex                            = globVertex.phi();
+            if (globVertex.phi() < minBValue) minBValue = globVertex.phi();
           }
           // phi correction
           if (surface->center().phi() < minBValue) minBValue = -M_PI;
@@ -357,16 +354,13 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
         }
         if (surface == *(keys.end() - 1)) {
           bValues.push_back(0.5 * (previous + surface->center().phi()));
-          double maxBValue  = 0.;
-          double prevVertex = 0.;
+          double maxBValue = 10e-12;
           // get the maximum position in the binning direction
           for (auto& vertex : vertices) {
             Acts::Vector3D globVertex;
             // get the global position of the vertices
             surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
-            maxBValue                             = globVertex.phi();
-            if (prevVertex > maxBValue) maxBValue = prevVertex;
-            prevVertex                            = globVertex.phi();
+            if (globVertex.phi() > maxBValue) maxBValue = globVertex.phi();
           }
           // phi correction
           if (surface->center().phi() > maxBValue) maxBValue = M_PI;
@@ -421,31 +415,25 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
         if (vertices.empty()) ACTS_ERROR("Vertices of current surface empty!");
         if (surface == *(keys.begin())) {
           // get the minimum vertex
-          double minBValue  = 0.;
-          double prevVertex = 0.;
+          double minBValue = 10e12 * units::_mm;
           // get the minimum position in the binning direction
           for (auto& vertex : vertices) {
             Acts::Vector3D globVertex;
             // get the global position of the vertices
             surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
-            minBValue                             = globVertex.z();
-            if (prevVertex < minBValue) minBValue = prevVertex;
-            prevVertex                            = globVertex.z();
+            if (globVertex.z() < minBValue) minBValue = globVertex.z();
           }
           bValues.push_back(minBValue);
         }
         if (surface == *(keys.end() - 1)) {
           bValues.push_back(0.5 * (previous + surface->center().z()));
-          double maxBValue  = 0.;
-          double prevVertex = 0.;
+          double maxBValue = 10e-12 * units::_mm;
           // get the maximum position in the binning direction
           for (auto& vertex : vertices) {
             Acts::Vector3D globVertex;
             // get the global position of the vertices
             surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
-            maxBValue                             = globVertex.z();
-            if (prevVertex > maxBValue) maxBValue = prevVertex;
-            prevVertex                            = globVertex.z();
+            if (globVertex.z() > maxBValue) maxBValue = globVertex.z();
           }
           bValues.push_back(maxBValue);
         }
@@ -498,31 +486,25 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
         if (vertices.empty()) ACTS_ERROR("Vertices of current surface empty!");
         if (surface == *(keys.begin())) {
           // get the minimum vertex
-          double minBValue  = 0.;
-          double prevVertex = 0.;
+          double minBValue = 10e12 * units::_mm;
           // get the minimum position in the binning direction
           for (auto& vertex : vertices) {
             Acts::Vector3D globVertex;
             // get the global position of the vertices
             surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
-            minBValue                             = globVertex.perp();
-            if (prevVertex < minBValue) minBValue = prevVertex;
-            prevVertex                            = globVertex.perp();
+            if (globVertex.perp() < minBValue) minBValue = globVertex.perp();
           }
           bValues.push_back(minBValue);
         }
         if (surface == *(keys.end() - 1)) {
           bValues.push_back(0.5 * (previous + surface->center().perp()));
-          double maxBValue  = 0.;
-          double prevVertex = 0.;
+          double maxBValue = 10e-12 * units::_mm;
           // get the maximum position in the binning direction
           for (auto& vertex : vertices) {
             Acts::Vector3D globVertex;
             // get the global position of the vertices
             surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
-            maxBValue                             = globVertex.perp();
-            if (prevVertex > maxBValue) maxBValue = prevVertex;
-            prevVertex                            = globVertex.perp();
+            if (globVertex.perp() > maxBValue) maxBValue = globVertex.perp();
           }
           bValues.push_back(maxBValue);
         }
