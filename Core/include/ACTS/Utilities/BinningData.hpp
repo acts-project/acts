@@ -138,9 +138,9 @@ public:
     , zdim(bBoundaries.size() == 2 ? true : false)
     , subBinningData(std::move(sBinData))
     , subBinningAdditive(true)
-    , m_bins(bBoundaries.size()-1)
+    , m_bins(bBoundaries.size() - 1)
     , m_boundaries(bBoundaries)
-    , m_totalBins(bBoundaries.size()-1)
+    , m_totalBins(bBoundaries.size() - 1)
     , m_totalBoundaries(bBoundaries)
     , m_functionPtr(nullptr)
   {
@@ -407,7 +407,7 @@ public:
   ///
   /// @param position is the start search position
   /// @param dir is the direction
-  /// @todo check if this can be changed 
+  /// @todo check if this can be changed
   ///
   /// @return integer that indicates which direction to move
   int
@@ -533,7 +533,7 @@ private:
                       : ((bData.option == open) ? (bData.m_bins - 1) : 0));
   }
 
-  // Linear search in arbitrary vector 
+  // Linear search in arbitrary vector
   // - superior in O(10) searches
   static size_t
   searchInVectorWithBoundary(float value, const BinningData& bData)
@@ -546,7 +546,7 @@ private:
     if (value >= bData.max)
       return (bData.option == closed) ? 0 : (bData.m_bins - 1);
     // search
-    auto  vIter = bData.m_boundaries.begin();
+    auto   vIter = bData.m_boundaries.begin();
     size_t bin   = 0;
     for (; vIter != bData.m_boundaries.end(); ++vIter, ++bin)
       if ((*vIter) > value) break;

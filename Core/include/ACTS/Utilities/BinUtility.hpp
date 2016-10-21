@@ -139,7 +139,6 @@ public:
 
   /// Virtual Destructor
   ~BinUtility() {}
-  
   /// Implizit Constructor
   BinUtility*
   clone() const
@@ -208,7 +207,7 @@ public:
   ///  | n | c | p |
   ///
   /// @param position is the position for the neighbour Range test
-  /// @param ba is the binning accessor 
+  /// @param ba is the binning accessor
   ///
   /// @return a vector of neighbour sizes
   std::vector<size_t>
@@ -219,11 +218,10 @@ public:
     size_t              cbin = bin(position, ba);
     size_t              pbin = cbin;
     size_t              nbin = cbin;
-    if (m_binningData[ba].decrement(pbin))
-        neighbourRange.push_back(pbin);
+    if (m_binningData[ba].decrement(pbin)) neighbourRange.push_back(pbin);
     neighbourRange.push_back(cbin);
     if (m_binningData[ba].increment(nbin) && nbin != pbin)
-        neighbourRange.push_back(nbin);
+      neighbourRange.push_back(nbin);
     return neighbourRange;
   }
 
