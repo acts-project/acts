@@ -15,6 +15,8 @@
 namespace Acts {
 namespace Test {
 
+  namespace tt = boost::test_tools;
+    
   // the test positions in 3D
   Vector3D xyzPosition(0.5,1.5,2.5);
   Vector3D xyzPositionOutside(15.,-15.,200.);
@@ -26,35 +28,47 @@ namespace Test {
   Vector2D rphizPosition(0.1,2.5);
   Vector2D rphiPosition(3.5,M_PI/8.);
 
-
-
   // the binnings - equidistant
-  /// x/y/zData
+  // x/y/zData  
+  // bin boundaries
+  // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
   BinningData xData_eq(open,binX,10,0.,10.);
   BinningData yData_eq(open,binY,10,0.,10.);
   BinningData zData_eq(open,binZ,10,0.,10.);
   // r/phi/rphiData
+  // bin boundaries
+  // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
   BinningData rData_eq(open,binR,10,0.,10.);
+  // bin boundaries
+  // > -M_PI | -3/5 M_PI | -1/5 M_PI | 1/5 M_PI | 3/5 M_PI | M_PI <
   BinningData phiData_eq(closed,binPhi,5,-M_PI,M_PI);
   BinningData rPhiData_eq(closed,binRPhi,5,-M_PI,M_PI);
   // h/etaData
+  // bin boundaries
+  // | 0 | 2 | 4 | 6 | 8 | 10 |
   BinningData hData_eq(open, binH, 5, 0., 10.);
-  BinningData etaData_eq(open, binEta, 5, -4, 4.);
+  // | -2.5 | -1.5 | -0.5 | 0.5 | 1.5 | 2.5 |
+  BinningData etaData_eq(open, binEta, 5, -2.5, 2.5);
 
   // the binnings - arbitrary
   std::vector<float> values    = { 0., 1., 2., 3., 4., 10. };
-  std::vector<float> phiValues = { -M_PI, -2., -1., 1., 2., M_PI};
+  // bin boundaries
+  // | 0 | 1 | 2 | 3 | 4 | 10 |
   BinningData xData_arb(open,binX,values);  
   BinningData yData_arb(open,binY,values);  
+  // | -M_PI |  -2 |  -1 |  1 |  2 |  M_PI |
+  std::vector<float> phiValues = { -M_PI, -2., -1., 1., 2., M_PI};
   BinningData phiData_arb(closed,binPhi,phiValues);
 
   // the binning - substructure
   std::vector<float> sstr = { 0., 1., 1.5, 2., 3.};
-  /// multiplicative
+  // multiplicative
   auto xData_sstr_mult = std::make_unique<BinningData>(open,binX,sstr);
+  // | 0 | 1 | 1.5 | 2 |  3 | 4 | 4.5 | 5 | 6 | 7 | 7.5 | 8 | 9 |
   BinningData xData_mult(open,binX,3,0.,9.,std::move(xData_sstr_mult));
   /// additive
-  std::vector<float> main_sstr = { 0., 3., 4., 5.};
+  // | 0 | 1 | 1.5 | 2 |  3 | 4 | 5 |
+  std::vector<float> main_sstr = { 0., 3., 4., 5.};  
   auto xData_sstr_add = std::make_unique<BinningData>(open,binX,sstr);
   BinningData xData_add(open,binX,main_sstr,std::move(xData_sstr_add));
   
@@ -66,9 +80,13 @@ namespace Test {
   {
     /// x/y/zData
     /// check the global position requests
+    // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
     BOOST_CHECK_EQUAL(xData_eq.bins(), 10);
+    // | 0 | 1 | 2 | 3 | 4 | 10 |
     BOOST_CHECK_EQUAL(xData_arb.bins(), 5);
+    // | 0 | 1 | 1.5 | 2 | 3 | 4 | 4.5 | 5 | 6 | 7 | 7.5 | 8 | 9 |
     BOOST_CHECK_EQUAL(xData_mult.bins(), 12);
+    // | 0 | 1 | 1.5 | 2 |  3 | 4 | 5 |
     BOOST_CHECK_EQUAL(xData_add.bins(), 6); 
       
     /// check the global position requests
@@ -86,6 +104,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(xData_arb.value(xyPosition), 0.5);
     BOOST_CHECK_EQUAL(xData_mult.value(xyPosition), 0.5);
     BOOST_CHECK_EQUAL(xData_add.value(xyPosition), 0.5);
+    
     // r/phi/rphiData
     BOOST_CHECK_CLOSE(rData_eq.value(xyzPosition), sqrt(0.5*0.5+1.5*1.5),10e-5);
     BOOST_CHECK_EQUAL(rData_eq.value(rphiPosition), 3.5);
@@ -106,12 +125,37 @@ namespace Test {
   {
     /// x/y/zData
     /// check the global position requests
+    // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
     BOOST_CHECK_EQUAL(xData_eq.searchGlobal(xyzPosition), 0);
     BOOST_CHECK_EQUAL(yData_eq.searchGlobal(xyzPosition), 1);
     BOOST_CHECK_EQUAL(zData_eq.searchGlobal(xyzPosition), 2);
+    // | 0 | 1 | 2 | 3 | 4 | 10 |
     BOOST_CHECK_EQUAL(xData_arb.searchGlobal(xyzPosition), 0);
-    BOOST_CHECK_EQUAL(xData_add.searchGlobal(xyzPosition), 0);    
+    BOOST_CHECK_EQUAL(xData_arb.search(6.), 4);
+    // | 0 | 1 | 1.5 | 2 |  3 | 4 | 5 |      
+    BOOST_CHECK_EQUAL(xData_add.searchGlobal(xyzPosition), 0);  
+    BOOST_CHECK_EQUAL(xData_add.searchGlobal(xyzPosition), 0);
+    BOOST_CHECK_EQUAL(xData_add.search(0.2), 0);
+    BOOST_CHECK_EQUAL(xData_add.search(1.2), 1);
+    BOOST_CHECK_EQUAL(xData_add.search(1.7), 2);
+    BOOST_CHECK_EQUAL(xData_add.search(2.5), 3);
+    BOOST_CHECK_EQUAL(xData_add.search(3.5), 4);    
+    BOOST_CHECK_EQUAL(xData_add.search(4.2), 5);    
+    BOOST_CHECK_EQUAL(xData_add.search(7.), 5);    
+    // | 0 | 1 | 1.5 | 2 | 3 | 4 | 4.5 | 5 | 6 | 7 | 7.5 | 8 | 9 |
     BOOST_CHECK_EQUAL(xData_mult.searchGlobal(xyzPosition), 0);
+    BOOST_CHECK_EQUAL(xData_mult.search(0.2), 0);
+    BOOST_CHECK_EQUAL(xData_mult.search(1.2), 1);
+    BOOST_CHECK_EQUAL(xData_mult.search(1.7), 2);
+    BOOST_CHECK_EQUAL(xData_mult.search(2.5), 3);
+    BOOST_CHECK_EQUAL(xData_mult.search(3.5), 4);    
+    BOOST_CHECK_EQUAL(xData_mult.search(4.2), 5);    
+    BOOST_CHECK_EQUAL(xData_mult.search(4.7), 6);
+    BOOST_CHECK_EQUAL(xData_mult.search(5.7), 7);
+    BOOST_CHECK_EQUAL(xData_mult.search(6.5), 8);
+    BOOST_CHECK_EQUAL(xData_mult.search(7.2), 9);
+    BOOST_CHECK_EQUAL(xData_mult.search(7.7), 10);
+    BOOST_CHECK_EQUAL(xData_mult.search(8.1), 11);
     
     /// check the local position requests
     BOOST_CHECK_EQUAL(xData_eq.searchLocal(xyPosition), 0);
@@ -145,8 +189,8 @@ namespace Test {
     BOOST_CHECK_EQUAL(yData_eq.inside(xyzPositionOutside), false);
     BOOST_CHECK_EQUAL(zData_eq.inside(xyzPositionOutside), false);
     BOOST_CHECK_EQUAL(xData_arb.inside(xyzPositionOutside), false);
-    BOOST_CHECK_EQUAL(xData_add.inside(xyzPositionOutside), true);
-    BOOST_CHECK_EQUAL(xData_mult.inside(xyzPositionOutside), true);
+    BOOST_CHECK_EQUAL(xData_add.inside(xyzPositionOutside), false);
+    BOOST_CHECK_EQUAL(xData_mult.inside(xyzPositionOutside), false);
     
     // cthe local inside
     BOOST_CHECK_EQUAL(xData_eq.inside(xyPosition), true);
@@ -207,6 +251,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(bin, 4);
     
   }
+  
   // test boundaries
   BOOST_AUTO_TEST_CASE(BinningData_boundaries)
   {
@@ -226,25 +271,44 @@ namespace Test {
       BOOST_CHECK_CLOSE(phiData_eq.boundaries()[ib], phiBoundaries_eq[ib],10e-5);                                            
   }
   
-  // test center
-  BOOST_AUTO_TEST_CASE(BinningData_center)
+  // test bin center values
+  // test boundaries
+  BOOST_AUTO_TEST_CASE(BinningData_bincenter)
   {
+    /// check the global position requests
+    // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+    BOOST_CHECK_EQUAL(xData_eq.center(3), 3.5);
+    // | 0 | 1 | 2 | 3 | 4 | 10 |
+    BOOST_CHECK_EQUAL(xData_arb.center(4), 7.);
+    // | 0 | 1 | 1.5 | 2 |  3 | 4 | 5 |      
+    BOOST_CHECK_EQUAL(xData_add.center(0), 0.5);
+    BOOST_CHECK_EQUAL(xData_add.center(1), 1.25);
+    BOOST_CHECK_EQUAL(xData_add.center(4), 3.5);
+    // | 0 | 1 | 1.5 | 2 | 3 | 4 | 4.5 | 5 | 6 | 7 | 7.5 | 8 | 9 |
+    BOOST_CHECK_EQUAL(xData_mult.center(0), 0.5);
+    BOOST_CHECK_EQUAL(xData_mult.center(1), 1.25);
+    BOOST_CHECK_EQUAL(xData_mult.center(4), 3.5);
+    BOOST_CHECK_EQUAL(xData_mult.center(10), 7.75);
+    BOOST_CHECK_EQUAL(xData_mult.center(11), 8.5);
+    
     // open values
     std::vector<float> center = {0.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5,8.5,9.5};
     for (size_t ib = 0; ib < center.size(); ++ib)
          BOOST_CHECK_EQUAL(xData_eq.center(ib), center[ib]);
     
-    ///float phiStep = M_PI*2./5.;
-    ///std::vector<float> phiCenters_eq = { float(-M_PI+0.5*phiStep),
-    ///                                     float(-M_PI+1.5*phiStep),
-    ///                                     float(-M_PI+2.5*phiStep),
-    ///                                     float(-M_PI+3.5*phiStep),
-    ///                                     float(-M_PI+4.5*phiStep)};
-    ///for (size_t ib = 0; ib < phiCenters_eq.size(); ++ib)
-    ///     BOOST_CHECK_CLOSE(phiData_eq.center(ib), phiCenters_eq[ib],1.);                                            
+    // running into rounding errors here
+    float phiStep = M_PI*2./5.;
+    std::vector<float> phiCenters_eq = { float(-M_PI+0.5*phiStep),
+                                         float(-M_PI+1.5*phiStep),
+                                         float(-M_PI+2.5*phiStep),
+                                         float(-M_PI+3.5*phiStep),
+                                         float(-M_PI+4.5*phiStep)};
+                                         
+    for (size_t ib = 0; ib < phiCenters_eq.size(); ++ib)
+         BOOST_TEST(fabs(phiData_eq.center(ib)-phiCenters_eq[ib])<1e-3);
+
   } 
   
-
 
 } // end of namespace Test
 } // end of namespace Acts
