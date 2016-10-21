@@ -116,8 +116,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(phiData_arb.bins(),5);
     
     // h/etaData
-    // @todo check why this test is not running
-    // BOOST_CHECK_CLOSE(etaData_eq.value(eta0Position), 0., 0.01);
+    BOOST_TEST((fabs(etaData_eq.value(eta0Position)-0.)<1e-5));
   }
   
   // test bin values
@@ -305,7 +304,7 @@ namespace Test {
                                          float(-M_PI+4.5*phiStep)};
                                          
     for (size_t ib = 0; ib < phiCenters_eq.size(); ++ib)
-         BOOST_TEST(fabs(phiData_eq.center(ib)-phiCenters_eq[ib])<1e-3);
+         BOOST_TEST((fabs(phiData_eq.center(ib)-phiCenters_eq[ib])<1e-3));
 
   } 
   

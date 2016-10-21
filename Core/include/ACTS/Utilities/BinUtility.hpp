@@ -139,6 +139,7 @@ public:
 
   /// Virtual Destructor
   ~BinUtility() {}
+  
   /// Implizit Constructor
   BinUtility*
   clone() const
@@ -184,7 +185,7 @@ public:
   }
 
   /// Bin from a 3D vector (already in binning frame)
-  /// - optionally the itransform is applied
+  /// @todo - optionally the itransform is applied
   ///
   /// @param position is the 3D position to be evaluated
   /// @param ba is the bin dimension
@@ -201,23 +202,28 @@ public:
   }
 
   /// Bin neighbour range
+  /// this method calls the increment/decreement methods
+  /// the bin itself is also contained, so if not an edge-case
+  /// this would be
+  ///  | n | c | p |
   ///
   /// @param position is the position for the neighbour Range test
-  /// @param ba is the binning ba
+  /// @param ba is the binning accessor 
   ///
   /// @return a vector of neighbour sizes
   std::vector<size_t>
   neighbourRange(const Vector3D& position, size_t ba = 0) const
   {
+    if (ba >= m_binningData.size()) return {0};
     std::vector<size_t> neighbourRange;
     size_t              cbin = bin(position, ba);
-    size_t pbin = cbin ? cbin - 1 : ((m_binningData[ba].option == open)
-                                         ? cbin
-                                         : m_binningData[ba].bins() - 1);
-    size_t nbin = (cbin < m_binningData[ba].bins() - 1) ? cbin + 1 : 0;
-    if (pbin != cbin) neighbourRange.push_back(pbin);
+    size_t              pbin = cbin;
+    size_t              nbin = cbin;
+    if (m_binningData[ba].decrement(pbin))
+        neighbourRange.push_back(pbin);
     neighbourRange.push_back(cbin);
-    if (nbin != cbin) neighbourRange.push_back(nbin);
+    if (m_binningData[ba].increment(nbin) && nbin != pbin)
+        neighbourRange.push_back(nbin);
     return neighbourRange;
   }
 
