@@ -18,11 +18,11 @@ namespace Test {
   
   namespace tt = boost::test_tools;
     
-  // equidistant binning tests 
+  // OPEN - equidistant binning tests 
   BOOST_AUTO_TEST_CASE(BinUtility_equidistant_binning)
   {
     Vector3D xyzPosition(1.5,2.5,3.5);
-    Vector3D xyzPositionOutside(15.,-15.,200.);
+    Vector3D edgePosition(0.5,0.5,0.5);
     
     // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
     BinUtility xUtil_eq(10, 0.,10.,open,binX);
@@ -59,6 +59,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(xyzTriple[1],2);
     BOOST_CHECK_EQUAL(xyzTriple[2],3);
     
+    // Full range
     std::vector<size_t> xRangeCheck0 = { 0, 1, 2};
     std::vector<size_t> xyRangeCheck1 = { 1, 2, 3};
     std::vector<size_t> xyzRangeCheck2 = { 2, 3, 4};
@@ -79,7 +80,15 @@ namespace Test {
     BOOST_CHECK_EQUAL_COLLECTIONS(xyNrange1.begin(),xyNrange1.end(),
                                   xyRangeCheck1.begin(),xyRangeCheck1.end());
     
-    
+    auto xyzNrange2 = xyzUtil_eq.neighbourRange(xyzPosition,2);
+    BOOST_CHECK_EQUAL_COLLECTIONS(xyzNrange2.begin(),xyzNrange2.end(),
+                                  xyzRangeCheck2.begin(),xyzRangeCheck2.end());
+                                  
+    // Partial range
+    std::vector<size_t> xEdgeCheck = { 0, 1 };
+    auto xEdgeRange =  xUtil_eq.neighbourRange(edgePosition,0);
+    BOOST_CHECK_EQUAL_COLLECTIONS(xEdgeRange.begin(),xEdgeRange.end(),
+                                  xEdgeCheck.begin(),xEdgeCheck.end());
 
   }
   

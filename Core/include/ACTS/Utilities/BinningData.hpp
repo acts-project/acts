@@ -273,7 +273,7 @@ public:
     if (binvalue == binR || binvalue == binRPhi || binvalue == binX
         || binvalue == binH)
       return lposition[0];
-    if (binvalue == binPhi) return gaugePhi(lposition[1]);
+    if (binvalue == binPhi) return lposition[1];
     return lposition[1];
   }
 
@@ -291,7 +291,7 @@ public:
     if (binvalue == binEta) return (position.eta());
     if (binvalue < 3) return (position[binvalue]);
     // phi gauging
-    return gaugePhi(position.phi());
+    return position.phi();
   }
 
   /// Get the center value of a bin
@@ -306,20 +306,6 @@ public:
     // take the center between bin boundaries
     float value = bin < bvals.size() ? 0.5 * (bvals[bin] + bvals[bin + 1]) : 0.;
     return value;
-  }
-
-  /// Gauge phi for phi boundary
-  ///
-  /// @param phi is phi value to be gauged
-  ///
-  /// @return float the gauged phi
-  float
-  gaugePhi(float phi) const
-  {
-    if (max > M_PI && phi < min && phi < 0.) {
-      phi += 2. * M_PI;
-    }
-    return phi;
   }
 
   /// Check if bin is inside from Vector3D

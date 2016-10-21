@@ -259,7 +259,7 @@ namespace Test {
     BOOST_CHECK_EQUAL_COLLECTIONS( xData_eq.boundaries().begin(),  xData_eq.boundaries().end(), 
                                    boundaries.begin(), boundaries.end());
     
-                                  float phiStep = M_PI*2./5.;
+    float phiStep = M_PI*2./5.;
     std::vector<float> phiBoundaries_eq = { -M_PI,
                                             float(-M_PI+1*phiStep),
                                             float(-M_PI+2*phiStep),
@@ -308,6 +308,49 @@ namespace Test {
 
   } 
   
+  // special test for phi binning
+  BOOST_AUTO_TEST_CASE(BinningData_phi_modules)
+  {
+    // n phi modules with phi boundary at -M_Pi/+M_PI are checked above
+    // one module expands over -M_Pi/+M_PI
+    float deltaPhi = 0.1;    
+    BinningData phiData_mod(closed,binPhi,5,-M_PI+deltaPhi,M_PI+deltaPhi);
+    float phiStep = M_PI*2./5.;
+    std::vector<float> phiBoundaries_mod = {float(-M_PI+deltaPhi),
+                                            float(-M_PI+1*phiStep)+deltaPhi,
+                                            float(-M_PI+2*phiStep)+deltaPhi,
+                                            float(-M_PI+3*phiStep)+deltaPhi,
+                                            float(-M_PI+4*phiStep)+deltaPhi,
+                                            float(-M_PI+5*phiStep)+deltaPhi};
+    // this is the boundary test                                        
+    for (size_t ib = 0; ib < phiData_mod.boundaries().size(); ++ib)
+         BOOST_CHECK_CLOSE(phiData_mod.boundaries()[ib], phiBoundaries_mod[ib],10e-5);
+
+    // now test the bin jump 0/maxbin
+    
+    float firstAngle = (-M_PI+1.5*deltaPhi);
+    Vector3D firstBin(cos(firstAngle),sin(firstAngle),0.);
+    BOOST_CHECK_EQUAL(phiData_mod.search(firstAngle), 0);
+    BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(firstBin), 0);
+           
+    float firstAngleNeg = (-M_PI+0.5*deltaPhi);
+    Vector3D lastBinNeg(cos(firstAngleNeg),sin(firstAngleNeg),0.);
+    BOOST_CHECK_EQUAL(phiData_mod.search(firstAngleNeg), 4);
+    BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(lastBinNeg), 4);
+                                            
+    float lastAnglePos = (M_PI+0.5*deltaPhi);
+    Vector3D lastBinPos(cos(lastAnglePos),sin(lastAnglePos),0.);
+    BOOST_CHECK_EQUAL(phiData_mod.search(lastAnglePos), 4);
+    BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(lastBinPos), 4);
+     
+    // now test the (remaining) phi scaling
+    float underscaledAngle= -M_PI - 0.5*deltaPhi;
+    Vector3D underscaledPos(cos(underscaledAngle),sin(underscaledAngle),0.);
+    BOOST_CHECK_EQUAL(phiData_mod.search(underscaledAngle), 4);
+    BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(underscaledPos), 4);    
+      
+  
+  }
 
 } // end of namespace Test
 } // end of namespace Acts
