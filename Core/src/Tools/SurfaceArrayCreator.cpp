@@ -342,7 +342,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
           // get the minimum vertex
           double minBValue = 10e12;
           // get the minimum position in the binning direction
-          for (auto& vertex : vertices) {
+          for (const auto& vertex : vertices) {
             Acts::Vector3D globVertex;
             // get the global position of the vertices
             surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
@@ -356,7 +356,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
           bValues.push_back(0.5 * (previous + surface->center().phi()));
           double maxBValue = 10e-12;
           // get the maximum position in the binning direction
-          for (auto& vertex : vertices) {
+          for (const auto& vertex : vertices) {
             Acts::Vector3D globVertex;
             // get the global position of the vertices
             surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
@@ -417,7 +417,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
           // get the minimum vertex
           double minBValue = 10e12 * units::_mm;
           // get the minimum position in the binning direction
-          for (auto& vertex : vertices) {
+          for (const auto& vertex : vertices) {
             Acts::Vector3D globVertex;
             // get the global position of the vertices
             surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
@@ -429,7 +429,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
           bValues.push_back(0.5 * (previous + surface->center().z()));
           double maxBValue = 10e-12 * units::_mm;
           // get the maximum position in the binning direction
-          for (auto& vertex : vertices) {
+          for (const auto& vertex : vertices) {
             Acts::Vector3D globVertex;
             // get the global position of the vertices
             surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
@@ -488,7 +488,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
           // get the minimum vertex
           double minBValue = 10e12 * units::_mm;
           // get the minimum position in the binning direction
-          for (auto& vertex : vertices) {
+          for (const auto& vertex : vertices) {
             Acts::Vector3D globVertex;
             // get the global position of the vertices
             surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
@@ -500,7 +500,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
           bValues.push_back(0.5 * (previous + surface->center().perp()));
           double maxBValue = 10e-12 * units::_mm;
           // get the maximum position in the binning direction
-          for (auto& vertex : vertices) {
+          for (const auto& vertex : vertices) {
             Acts::Vector3D globVertex;
             // get the global position of the vertices
             surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
