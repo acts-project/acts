@@ -221,23 +221,6 @@ public:
     return neighbourRange;
   }
 
-  /// Next bin from a 3D vector (already in binning frame)
-  ///
-  /// @param position is the position to evaluate
-  /// @param direction is the direction for the next
-  /// @param ba is the bin accessor
-  ///
-  /// @return the next bin
-  size_t
-  next(const Vector3D& position, const Vector3D& direction, size_t ba = 0) const
-  {
-    if (ba >= m_binningData.size()) return 0;
-    return (m_itransform
-                ? m_binningData[ba].next((*m_itransform) * position,
-                                         (m_itransform->linear()) * direction)
-                : m_binningData[ba].next(position, direction));
-  }
-
   /// Return the oder direciton for fast interlinking
   ///
   /// @param position is the global position for the next search
