@@ -72,8 +72,8 @@ namespace Test {
     double negDiscPosZ
         = (transformPtr->inverse() * boundarySurfaces.at(0)->center()).z();
     // check if center of disc boundaries lies in the middle in z
-    BOOST_REQUIRE(centerPosZ < posDiscPosZ);
-    BOOST_REQUIRE(centerPosZ > negDiscPosZ);
+    BOOST_TEST((centerPosZ < posDiscPosZ));
+    BOOST_TEST((centerPosZ > negDiscPosZ));
     // check positions of disc boundarysurfaces
     BOOST_TEST(negDiscPosZ + cylBounds.halflengthZ()
                    == (transformPtr->inverse() * pos).z(),
