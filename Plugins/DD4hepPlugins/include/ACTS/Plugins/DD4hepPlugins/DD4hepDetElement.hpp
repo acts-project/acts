@@ -42,14 +42,9 @@ public:
   /// Constructor
   /// @param detElement The DD4hep DetElement which should be linked to a
   /// surface
-  /// @param segmentation The segmentation for the readout of the detector
-  /// element
-  /// @param motherTransform global transformation matrix of the mother detector
-  /// element
   DD4hepDetElement(const DD4hep::Geometry::DetElement detElement,
-                   const TGeoMatrix*                  mtoglobal = nullptr,
-                   const std::string&                 axes      = "xyz",
-                   double                             scalor    = 1.);
+                   const std::string&                 axes   = "xyz",
+                   double                             scalor = 1.);
   /// Desctructor
   virtual ~DD4hepDetElement() = default;
 

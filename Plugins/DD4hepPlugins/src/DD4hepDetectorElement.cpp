@@ -7,15 +7,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ACTS/Plugins/DD4hepPlugins/DD4hepDetElement.hpp"
+#include "ACTS/Utilities/Units.hpp"
 
 Acts::DD4hepDetElement::DD4hepDetElement(
     const DD4hep::Geometry::DetElement detElement,
-    const TGeoMatrix*                  mGlobal,
     const std::string&                 axes,
     double                             scalor)
   : Acts::TGeoDetectorElement(Identifier(detElement.volumeID()),
+                              detElement.worldTransformation(),
                               detElement.placement().ptr(),
-                              mGlobal,
                               axes,
                               scalor)
   , m_detElement(std::move(detElement))
