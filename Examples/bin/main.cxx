@@ -14,7 +14,7 @@
 #include "ACTS/Extrapolation/StaticNavigationEngine.hpp"
 #include "ACTS/Fitter/KalmanFitter.hpp"
 #include "ACTS/Fitter/KalmanUpdator.hpp"
-#include "ACTS/MagneticField/IMagneticFieldSvc.hpp"
+#include "ACTS/MagneticField/ConstantBField.hpp"
 #include "ACTS/Surfaces/PerigeeSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
@@ -24,36 +24,6 @@ using namespace Acts;
 typedef FittableMeasurement<long int> FitMeas_t;
 template <ParID_t... pars>
 using Meas_t = Measurement<long int, pars...>;
-
-class ConstantField : public IMagneticFieldSvc
-{
-public:
-  ConstantField(double bx, double by, double bz) : m_field()
-  {
-    m_field[0] = bx;
-    m_field[1] = by;
-    m_field[2] = bz;
-  }
-
-  void
-  getField(const double*, double* bxyz, double* = nullptr) const override
-  {
-    bxyz[0] = m_field[0];
-    bxyz[1] = m_field[1];
-    bxyz[2] = m_field[2];
-  }
-
-  void
-  getFieldZR(const double* xyz,
-             double*       bxyz,
-             double*       deriv = nullptr) const override
-  {
-    return getField(xyz, bxyz, deriv);
-  }
-
-private:
-  double m_field[3];
-};
 
 struct MyCache
 {
@@ -124,9 +94,9 @@ public:
 std::shared_ptr<IExtrapolationEngine>
 initExtrapolator(const std::shared_ptr<const TrackingGeometry>& geo)
 {
-  auto propConfig         = RungeKuttaEngine::Config();
-  propConfig.fieldService = std::make_shared<ConstantField>(0, 0, 0.002);
-  auto propEngine         = std::make_shared<RungeKuttaEngine>(propConfig);
+  auto propConfig         = RungeKuttaEngine<>::Config();
+  propConfig.fieldService = std::make_shared<ConstantBField>(0, 0, 0.002);
+  auto propEngine         = std::make_shared<RungeKuttaEngine<>>(propConfig);
 
   auto matConfig      = MaterialEffectsEngine::Config();
   auto materialEngine = std::make_shared<MaterialEffectsEngine>(matConfig);
