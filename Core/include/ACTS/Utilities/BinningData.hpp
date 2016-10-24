@@ -29,10 +29,10 @@ namespace Acts {
 ///   phi has a very particular behaviour:
 ///   - there's the change around +/- PI
 ///
-///   @todo add description of convention for sub structure
 ///   - it can be multiplicative or additive
-///   multiplicative : each bin has the same sub structure
+///   multiplicative : each major bin has the same sub structure
 ///                    i.e. first binnning
+///
 /// structure is equidistant
 ///   additive : sub structure replaces one bin (and one bin only)
 ///
@@ -140,7 +140,7 @@ public:
     , subBinningAdditive(true)
     , m_bins(bBoundaries.size() - 1)
     , m_boundaries(bBoundaries)
-    , m_totalBins(bBoundaries.size())
+    , m_totalBins(bBoundaries.size() - 1)
     , m_totalBoundaries(bBoundaries)
     , m_functionPtr(nullptr)
   {
@@ -273,7 +273,7 @@ public:
     if (binvalue == binR || binvalue == binRPhi || binvalue == binX
         || binvalue == binH)
       return lposition[0];
-    if (binvalue == binPhi) return gaugePhi(lposition[1]);
+    if (binvalue == binPhi) return lposition[1];
     return lposition[1];
   }
 
@@ -291,7 +291,7 @@ public:
     if (binvalue == binEta) return (position.eta());
     if (binvalue < 3) return (position[binvalue]);
     // phi gauging
-    return gaugePhi(position.phi());
+    return position.phi();
   }
 
   /// Get the center value of a bin
@@ -306,20 +306,6 @@ public:
     // take the center between bin boundaries
     float value = bin < bvals.size() ? 0.5 * (bvals[bin] + bvals[bin + 1]) : 0.;
     return value;
-  }
-
-  /// Gauge phi for phi boundary
-  ///
-  /// @param phi is phi value to be gauged
-  ///
-  /// @return float the gauged phi
-  float
-  gaugePhi(float phi) const
-  {
-    if (max > M_PI && phi < min && phi < 0.) {
-      phi += 2. * M_PI;
-    }
-    return phi;
   }
 
   /// Check if bin is inside from Vector3D
@@ -421,6 +407,7 @@ public:
   ///
   /// @param position is the start search position
   /// @param dir is the direction
+  /// @todo check if this can be changed
   ///
   /// @return integer that indicates which direction to move
   int
@@ -431,30 +418,6 @@ public:
     Vector3D probe   = position + dir.normalized();
     float    nextval = value(probe);
     return (nextval > val) ? 1 : -1;
-  }
-
-  /// the next bin : gives -1 if the next one is outside
-  ///
-  /// @param position is the start search position
-  /// @param dir is the direction
-  ///
-  /// @return next bin to try
-  size_t
-  next(const Vector3D& position, const Vector3D& dir) const
-  {
-    if (zdim) return 0;
-    float    val     = value(position);
-    Vector3D probe   = position + 0.5 * step * dir.normalized();
-    float    nextval = value(probe);
-    int      bin     = search(val);
-    bin = (nextval > val && bin != int(m_bins - 1)) ? bin + 1 : (bin) ? bin - 1
-                                                                      : 0;
-    // closed setup
-    if (option == closed)
-      return (bin < 0 || bin + 1 > int(m_bins)) ? ((bin < 0) ? m_bins - 1 : 0)
-                                                : bin;
-    // open setup
-    return bin;
   }
 
   /// access to the center value
@@ -552,7 +515,8 @@ private:
     }
   }
 
-  /// Equidistant search : equidist 0
+  // Equidistant search
+  // - fastest method
   static size_t
   searchEquidstantWithBoundary(float value, const BinningData& bData)
   {
@@ -569,14 +533,11 @@ private:
                       : ((bData.option == open) ? (bData.m_bins - 1) : 0));
   }
 
-  /// Linear search in vector - superior in O(10) searches: arbitraty 2
+  // Linear search in arbitrary vector
+  // - superior in O(10) searches
   static size_t
   searchInVectorWithBoundary(float value, const BinningData& bData)
   {
-    if (bData.binvalue == binPhi)
-      while (value < bData.m_boundaries[0]) value += 2 * M_PI;
-    if (bData.binvalue == binPhi)
-      while (value > bData.max) value -= 2 * M_PI;
     // lower boundary
     if (value <= bData.m_boundaries[0]) {
       return (bData.option == closed) ? (bData.m_bins - 1) : 0;
@@ -592,18 +553,12 @@ private:
     return (bin - 1);
   }
 
-  /// A binary search with underflow/overflow
-  ///    - faster than vector search for O(50) objects
+  // A binary search with in an arbitrary vector
+  //    - faster than vector search for O(50) objects
   static size_t
   binarySearchWithBoundary(float value, const BinningData& bData)
   {
     // Binary search in an array of n values to locate value
-    //!< @todo exchange acos(-1) with a const value
-    if (bData.binvalue == binPhi)
-      while (value < bData.m_boundaries[0]) value += 2 * acos(-1.);
-    if (bData.binvalue == binPhi)
-      while (value > bData.max) value -= 2 * acos(-1.);
-    // underflow
     if (value <= bData.m_boundaries[0])
       return (bData.option == closed) ? (bData.m_bins - 1) : 0;
     size_t nabove, nbelow, middle;
