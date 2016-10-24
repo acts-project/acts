@@ -20,6 +20,14 @@ include (GNUInstallDirs)
 # include ACTS specific compilation options
 include (cmake/ACTSCompilerOptions.cmake)
 
+# Configure CCache if available
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+  message (STATUS "${Yellow}use ccache${ColorReset}")
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+endif(CCACHE_FOUND)
+
 # set the current version of ACTS
 set (ACTS_VERSION 0.02.00)
 
