@@ -19,7 +19,7 @@
 #include "ACTS/Extrapolation/IPropagationEngine.hpp"
 #include "ACTS/Extrapolation/detail/ExtrapolationMacros.hpp"
 #include "ACTS/Extrapolation/detail/RungeKuttaUtils.hpp"
-#include "ACTS/MagneticField/IMagneticFieldSvc.hpp"
+#include "ACTS/MagneticField/ConstantBField.hpp"
 #include "ACTS/Surfaces/BoundaryCheck.hpp"
 #include "ACTS/Surfaces/ConeSurface.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
@@ -152,8 +152,9 @@ class Surface;
 ///       parameters and jacobian of transformation according straight line
 ///       model
 ///
+/// @tparam MagneticField class for accessing the magnetic field map
 ///
-///
+template <class MagneticField = ConstantBField>
 class RungeKuttaEngine : virtual public IPropagationEngine
 {
 public:
@@ -165,7 +166,7 @@ public:
   struct Config
   {
     /// the field service
-    std::shared_ptr<IMagneticFieldSvc> fieldService = nullptr;
+    std::shared_ptr<MagneticField> fieldService = nullptr;
     /// accuracy parameter
     double dlt = 0.0002;
     /// max step whith helix model
@@ -188,10 +189,11 @@ public:
   /// @param logger logging instance
   RungeKuttaEngine(const Config&           rkConfig,
                    std::unique_ptr<Logger> logger
-                   = getDefaultLogger("RungeKuttaEngine", Logging::INFO));
-
-  /// Destructor
-  virtual ~RungeKuttaEngine();
+                   = getDefaultLogger("RungeKuttaEngine", Logging::INFO))
+    : m_cfg(), m_rkUtils(), m_logger(std::move(logger))
+  {
+    setConfiguration(rkConfig);
+  }
 
   /// Main Charged extrapolation method
   ///
@@ -243,17 +245,30 @@ public:
   ///
   /// @param rkConfig the runge kutta configuration object to be set
   void
-  setConfiguration(const Config& rkConfig);
+  setConfiguration(const Config& rkConfig)
+  {
+    // steering of the screen outoput (SOP)
+    IPropagationEngine::m_sopPrefix  = rkConfig.prefix;
+    IPropagationEngine::m_sopPostfix = rkConfig.postfix;
+    // copy the configuration
+    m_cfg = rkConfig;
+  }
 
   /// Get configuration method
   Config
-  getConfiguration() const;
+  getConfiguration() const
+  {
+    return m_cfg;
+  }
 
   /// Set logging instance
   ///
   /// @param logger the logging class to be set
   void
-  setLogger(std::unique_ptr<Logger> logger);
+  setLogger(std::unique_ptr<Logger> logger)
+  {
+    m_logger = std::move(logger);
+  }
 
 protected:
   Config m_cfg;  ///< configuration class
@@ -298,37 +313,47 @@ private:
   ///
   /// @param navigationStep the step parameter for screen output
   /// @param pCache the progation chache
+  /// @param S step size
+  /// @param inS flag whether the step was performed along the given direction
   double
   rungeKuttaStep(int               navigationStep,
                  PropagationCache& pCache,
-                 double,
-                 bool&) const;
+                 double            S,
+                 bool&             inS) const;
 
   /// Propagation methods runge kutta step - returns the step length
   ///
   /// @param navigationStep the step parameter for screen output
   /// @param pCache the progation chache
+  /// @param S step size
+  /// @param inS flag whether the step was performed along the given direction
   double
   rungeKuttaStepWithGradient(int               navigationStep,
                              PropagationCache& pCache,
-                             double,
-                             bool&) const;
+                             double            S,
+                             bool&             inS) const;
 
   /// Propagation methods straight line step
   ///
   /// @param navigationStep the step parameter for screen output
   /// @param pCache the progation chache
+  /// @param S step size
   double
-  straightLineStep(int navigationStep, PropagationCache& pCache, double) const;
+  straightLineStep(int               navigationStep,
+                   PropagationCache& pCache,
+                   double            S) const;
 
   /// Step estimator with directions correction
   ///
   /// @param pCache the progation chache
+  /// @param kind identifier for surface type
+  /// @param Su transformation matrix of surface
+  /// @param Q quality of step estimation
   double
   stepEstimatorWithCurvature(PropagationCache& pCache,
-                             int,
-                             double*,
-                             bool&) const;
+                             int               kind,
+                             double*           Su,
+                             bool&             Q) const;
 
   /// Build new track parameters without propagation
   std::unique_ptr<const TrackParameters>
@@ -345,32 +370,17 @@ private:
 
   /// get the field - with the fast option
   void
-  getField(double*, double*) const;
+  getField(const double* R, double* H) const
+  {
+    m_cfg.fieldService->getField(R, H);
+  }
+
   void
-  getFieldGradient(double*, double*, double*) const;
+  getFieldGradient(const double* R, double* H, double* dH) const
+  {
+    m_cfg.fieldService->getField(R, H, dH);
+  }
 };
-
-/////////////////////////////////////////////////////////////////////////////////
-// Inline methods for magnetic field information
-/////////////////////////////////////////////////////////////////////////////////
-
-inline void
-RungeKuttaEngine::getField(double* R, double* H) const
-{
-  m_cfg.fieldService->getField(R, H);
-}
-
-inline void
-RungeKuttaEngine::getFieldGradient(double* R, double* H, double* dH) const
-{
-  m_cfg.fieldService->getField(R, H, dH);
-}
-
-inline RungeKuttaEngine::Config
-RungeKuttaEngine::getConfiguration() const
-{
-  return m_cfg;
-}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
