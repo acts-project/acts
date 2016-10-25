@@ -21,6 +21,25 @@
 #include <string>
 #include <thread>
 
+// clang-format off
+#define ACTS_LOCAL_LOGGER(logger)                                              \
+  namespace {                                                                  \
+  struct local_logger                                                          \
+  {                                                                            \
+    log_helper():                                                              \
+      m_logger(std::move(logger))                                              \
+    {}                                                                         \
+                                                                               \
+    const Logger& operator()() const                                           \
+    {                                                                          \
+      return *m_logger;                                                        \
+    }                                                                          \
+                                                                               \
+    std::unique_ptr<Logger> m_logger;                                          \
+  };                                                                           \
+  }                                                                            \
+  local_logger logger;
+
 #define ACTS_VERBOSE(x)                                                        \
   if (logger().print(Acts::Logging::VERBOSE))                                  \
     logger().log(Acts::Logging::VERBOSE) << x;
@@ -39,6 +58,7 @@
 #define ACTS_FATAL(x)                                                          \
   if (logger().print(Acts::Logging::FATAL))                                    \
     logger().log(Acts::Logging::FATAL) << x;
+// clang-format on
 
 namespace Acts {
 ///
