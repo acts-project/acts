@@ -58,8 +58,12 @@ namespace Test {
 2 2 1 9 9 8\n\
 2 2 2 9 9 9\n";
 
+  /// @brief helper class for unit testing InterpolatedBFieldMap
+  ///
+  /// In order to unit test private methods, a friend helper class is needed.
   struct InterpolatedBFieldTester
   {
+    /// @cond
     InterpolatedBFieldTester(const std::string& inFile)
     {
       InterpolatedBFieldMap::Config c;
@@ -112,26 +116,17 @@ namespace Test {
       return BField->insideGrid(pos);
     }
 
-    void
-    dump() const
-    {
-      std::cout << "x values:" << std::endl;
-      for (auto x : BField->m_xPoints) std::cout << x << " ";
-      std::cout << std::endl;
-
-      std::cout << "y values:" << std::endl;
-      for (auto y : BField->m_yPoints) std::cout << y << " ";
-      std::cout << std::endl;
-
-      std::cout << "z values:" << std::endl;
-      for (auto z : BField->m_zPoints) std::cout << z << " ";
-      std::cout << std::endl;
-    }
-
     std::unique_ptr<InterpolatedBFieldMap> BField = nullptr;
+    /// @endcond
   };
 
-  BOOST_AUTO_TEST_CASE(MappedBField_1Point)
+  /// @brief unit test for interpolated BField from map with a single point
+  ///
+  /// Tests the correct behaviour and consistency of
+  /// -# InterpolatedBFieldMap::InterpolatedBFieldMap
+  /// -# InterpolatedBFieldMap::initialize
+  /// -# InterpolatedBFieldMap::insideGrid
+  BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_1Point)
   {
     std::ofstream map_file("TmpField.txt", std::ios::out | std::ios::trunc);
     map_file << Points1;
@@ -151,7 +146,18 @@ namespace Test {
     BOOST_TEST(not t.insideGrid(Vector3D(-1e-5, 0, 0)));
   }
 
-  BOOST_AUTO_TEST_CASE(MappedBField_8Points)
+  /// @brief unit test for interpolated BField from map with a single bin
+  ///
+  /// A single bin in 3D requires eight grid points.
+  ///
+  /// Tests the correct behaviour and consistency of
+  /// -# InterpolatedBFieldMap::InterpolatedBFieldMap
+  /// -# InterpolatedBFieldMap::getBinNumbers
+  /// -# InterpolatedBFieldMap::getField
+  /// -# InterpolatedBFieldMap::globalIndex
+  /// -# InterpolatedBFieldMap::initialize
+  /// -# InterpolatedBFieldMap::insideGrid
+  BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_8Points)
   {
     std::ofstream map_file("TmpField.txt", std::ios::out | std::ios::trunc);
     map_file << Points8;
@@ -203,7 +209,18 @@ namespace Test {
     // clang-format on
   }
 
-  BOOST_AUTO_TEST_CASE(MappedBField_27Points)
+  /// @brief unit test for interpolated BField from map with 8 bins
+  ///
+  /// Eight bins in 3D requires 3x3x3 = 27 grid points.
+  ///
+  /// Tests the correct behaviour and consistency of
+  /// -# InterpolatedBFieldMap::InterpolatedBFieldMap
+  /// -# InterpolatedBFieldMap::getBinNumbers
+  /// -# InterpolatedBFieldMap::getField
+  /// -# InterpolatedBFieldMap::globalIndex
+  /// -# InterpolatedBFieldMap::initialize
+  /// -# InterpolatedBFieldMap::insideGrid
+  BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_27Points)
   {
     std::ofstream map_file("TmpField.txt", std::ios::out | std::ios::trunc);
     map_file << Points27;

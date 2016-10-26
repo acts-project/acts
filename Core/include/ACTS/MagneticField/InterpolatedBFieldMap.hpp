@@ -32,7 +32,7 @@ namespace Test {
 /// You can find example field maps in the "Additional data" section on the <a
 /// href="http://acts.web.cern.ch/ACTS/">ACTS webpage</a> (e.g. an ATLAS
 /// magnetic field map).
-class InterpolatedBFieldMap
+class InterpolatedBFieldMap final
 {
   /// unit test helper class
   friend struct Test::InterpolatedBFieldTester;

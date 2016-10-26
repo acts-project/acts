@@ -28,7 +28,7 @@ namespace Test {
   /// Tests the correct behavior and consistency of
   /// -# ConstantBField::ConstantBField(double Bx,double By,double Bz)
   /// -# ConstantBField::ConstantBField(Vector3D B)
-  /// -# ConstantBField::getField(const double[3] xyz, double[3] B) const
+  /// -# ConstantBField::getField(const double* xyz, double* B) const
   /// -# ConstantBField::getField(const Vector3D& pos) const
   BOOST_DATA_TEST_CASE(ConstantBField_components,
                        bdata::random(-2. * units::_T, 2. * units::_T)
@@ -110,7 +110,7 @@ namespace Test {
   /// Tests the correct behavior and consistency of
   /// -# ConstantBField::setField(double Bx, double By, double Bz)
   /// -# ConstantBField::setField(const Vector3D& B)
-  /// -# ConstantBField::getField(const double[3] xyz, double[3] B) const
+  /// -# ConstantBField::getField(const double* xyz, double* B) const
   /// -# ConstantBField::getField(const Vector3D& pos) const
   BOOST_DATA_TEST_CASE(ConstantBField_update,
                        bdata::random(-2. * units::_T, 2. * units::_T)
