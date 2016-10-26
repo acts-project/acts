@@ -123,8 +123,8 @@ public:
     Vector3D    pos(xyz[0], xyz[1], xyz[2]);
     const auto& B = getField(pos);
     bxyz[0]       = B.x();
-    bxyz[0]       = B.y();
-    bxyz[0]       = B.z();
+    bxyz[1]       = B.y();
+    bxyz[2]       = B.z();
   }
 
   /// @brief retrieve magnetic field value

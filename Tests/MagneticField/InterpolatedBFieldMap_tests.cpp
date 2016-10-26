@@ -17,6 +17,8 @@
 #include <ACTS/MagneticField/InterpolatedBFieldMap.hpp>
 #include "ACTS/Utilities/Units.hpp"
 
+namespace tt = boost::test_tools;
+
 namespace Acts {
 
 namespace Test {
@@ -206,6 +208,13 @@ namespace Test {
     BOOST_TEST((t.BField->getField(Vector3D(0, 0.6, 0)) / units::_T).isApprox(Vector3D(1, 0.6, 0.6)));
     BOOST_TEST((t.BField->getField(Vector3D(0, 0, 0.7)) / units::_T).isApprox(Vector3D(1, 0.7, 0)));
     BOOST_TEST((t.BField->getField(Vector3D(0.5, 0.5, 0.5)) / units::_T).isApprox(Vector3D(1.875, 1.5, 1.125)));
+
+    const double xyz[3] = {0,0.6,0};
+    double       bxyz[3] = {0,0,0};
+    t.BField->getField(xyz,bxyz);
+    BOOST_TEST(bxyz[0] / units::_T - 1.  == 0., tt::tolerance(1e-15));
+    BOOST_TEST(bxyz[1] / units::_T - 0.6 == 0., tt::tolerance(1e-15));
+    BOOST_TEST(bxyz[2] / units::_T - 0.6 == 0., tt::tolerance(1e-15));
     // clang-format on
   }
 
@@ -331,6 +340,13 @@ namespace Test {
     BOOST_TEST((t.BField->getField(Vector3D(1.2, 1, 1)) / units::_T).isApprox(Vector3D(5.6, 5.6, 4.6)));
     BOOST_TEST((t.BField->getField(Vector3D(0, 1.6, 0)) / units::_T).isApprox(Vector3D(2.6, 1.6, 1.6)));
     BOOST_TEST((t.BField->getField(Vector3D(1, 0, 0.7)) / units::_T).isApprox(Vector3D(4, 3.7, 3)));
+
+    const double xyz[3] = {1,0,0.7};
+    double       bxyz[3] = {0,0,0};
+    t.BField->getField(xyz,bxyz);
+    BOOST_TEST(bxyz[0] / units::_T - 4.  == 0., tt::tolerance(1e-15));
+    BOOST_TEST(bxyz[1] / units::_T - 3.7 == 0., tt::tolerance(1e-15));
+    BOOST_TEST(bxyz[2] / units::_T - 3.  == 0., tt::tolerance(1e-15));
     // clang-format on
   }
 }  // namespace Test
