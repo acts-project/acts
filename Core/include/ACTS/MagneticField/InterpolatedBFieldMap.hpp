@@ -82,7 +82,9 @@ public:
     double        x = 0, y = 0, z = 0;
     double        bx, by, bz;
     while (std::getline(map_file, line)) {
-      if (line.empty() || line[0] == '#') continue;
+      if (line.empty() || line[0] == '#'
+          || line.find_first_not_of(' ') == std::string::npos)
+        continue;
 
       std::istringstream tmp(line);
       tmp >> x >> y >> z >> bx >> by >> bz;

@@ -39,6 +39,7 @@ namespace Test {
 0 2 1 3 3 2\n\
 0 2 2 3 3 3\n\
 1 0 0 4 3 3\n\
+    \n\
 1 0 1 4 4 3\n\
 1 0 2 4 4 4\n\
 1 1 0 5 4 4\n\
@@ -155,7 +156,7 @@ namespace Test {
     map_file.close();
 
     InterpolatedBFieldTester t("TmpField.txt");
-    size_t             xBin = 99, yBin = 99, zBin = 99;
+    size_t                   xBin = 99, yBin = 99, zBin = 99;
 
     BOOST_TEST(t.NPointsX() == 2u);
     BOOST_TEST(t.NPointsY() == 2u);
@@ -207,7 +208,7 @@ namespace Test {
     map_file.close();
 
     InterpolatedBFieldTester t("TmpField.txt");
-    size_t             xBin = 99, yBin = 99, zBin = 99;
+    size_t                   xBin = 99, yBin = 99, zBin = 99;
 
     BOOST_TEST(t.NPointsX() == 3u);
     BOOST_TEST(t.NPointsY() == 3u);
