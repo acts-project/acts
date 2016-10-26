@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/// @file MappedBField_tests.cpp
+/// @file InterpolatedBFieldMap_tests.cpp
 
 #define BOOST_TEST_MODULE Mapped magnetic field tests
 #include <boost/test/included/unit_test.hpp>
@@ -62,7 +62,9 @@ namespace Test {
   {
     InterpolatedBFieldTester(const std::string& inFile)
     {
-      BField = std::make_unique<InterpolatedBFieldMap>("TmpField.txt");
+      InterpolatedBFieldMap::Config c;
+      c.fieldMapFile = inFile;
+      BField         = std::make_unique<InterpolatedBFieldMap>(std::move(c));
     }
 
     size_t

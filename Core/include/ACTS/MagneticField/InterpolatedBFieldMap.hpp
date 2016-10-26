@@ -28,21 +28,53 @@ namespace Test {
 /// at points inside the provided field map region are calculated from the
 /// magnetic field at the eight surrounding grid points using tri-linear
 /// interpolation.
+///
+/// You can find example field maps in the "Additional data" section on the <a
+/// href="http://acts.web.cern.ch/ACTS/">ACTS webpage</a> (e.g. an ATLAS
+/// magnetic field map).
 class InterpolatedBFieldMap
 {
+  /// unit test helper class
   friend struct Test::InterpolatedBFieldTester;
 
 public:
+  /// @brief configuration object for InterpolatedBFieldMap class
+  struct Config
+  {
+    /// @brief global B-field scaling factor
+    ///
+    /// @note Negative values for @p scale are accepted and will invert the
+    ///       direction of the magnetic field.
+    double scale = 1.;
+
+    /// @brief path to file containing field map
+    ///
+    /// @note For the description of the format of such a file, please refer to
+    /// the documentation for InterpolatedBFieldMap::InterpolatedBFieldMap.
+    std::string fieldMapFile = "";
+
+    /// length unit used in field map
+    double lengthUnit = units::_mm;
+
+    /// magnetic field unit used in field map
+    double BFieldUnit = units::_T;
+
+    /// @brief number of grid points in field map
+    ///
+    /// @note This information is only used as a hint for the required size of
+    ///       the internal vectors. A correct value is not needed, but will help
+    ///       to speed up the field map initialization process.
+    size_t nPoints = 1000;
+  };
+
   /// @brief construct from magnetic field map
   ///
-  /// @param [in] sFieldMapFile path to file containing field map
-  /// @param [in] scale         global scaling factor
-  /// @param [in] lengthUnit    length unit used in field map file
-  /// @param [in] BFieldUnit    magnetic field unit used in field map file
+  /// @param [in] config configuration object
   ///
   /// Initialize the object with information read from the field map file.
   ///
-  /// @note The format of the field map file must be the following:
+  /// @note The format of the field map file specified by Config::fieldMapFile
+  ///       must be the following:
   /// - Every row contains the coordinates of a point and the magnetic field
   ///   vector at this point.
   /// - The delimiter between numbers is a whitespace and the dot is used as
@@ -67,50 +99,18 @@ public:
   /// 2 1 2 ...
   /// ...
   /// @endcode
-  InterpolatedBFieldMap(const std::string& sFieldMapFile,
-                        double             scale      = 1.,
-                        double             lengthUnit = units::_mm,
-                        double             BFieldUnit = units::_T)
-    : m_dScale(scale)
+  InterpolatedBFieldMap(Config config) : m_config(std::move(config))
   {
-    m_xPoints.reserve(1000);
-    m_yPoints.reserve(1000);
-    m_zPoints.reserve(1000);
+    initialize(config);
+  }
 
-    std::ifstream map_file(sFieldMapFile.c_str(), std::ios::in);
-    std::string   line;
-    double        x = 0, y = 0, z = 0;
-    double        bx, by, bz;
-    while (std::getline(map_file, line)) {
-      if (line.empty() || line[0] == '#'
-          || line.find_first_not_of(' ') == std::string::npos)
-        continue;
-
-      std::istringstream tmp(line);
-      tmp >> x >> y >> z >> bx >> by >> bz;
-      m_xPoints.push_back(x * lengthUnit);
-      m_yPoints.push_back(y * lengthUnit);
-      m_zPoints.push_back(z * lengthUnit);
-      m_BField.push_back(bx * BFieldUnit);
-      m_BField.push_back(by * BFieldUnit);
-      m_BField.push_back(bz * BFieldUnit);
-    }
-    map_file.close();
-
-    std::sort(m_xPoints.begin(), m_xPoints.end());
-    std::sort(m_yPoints.begin(), m_yPoints.end());
-    std::sort(m_zPoints.begin(), m_zPoints.end());
-
-    m_xPoints.erase(std::unique(m_xPoints.begin(), m_xPoints.end()),
-                    m_xPoints.end());
-    m_yPoints.erase(std::unique(m_yPoints.begin(), m_yPoints.end()),
-                    m_yPoints.end());
-    m_zPoints.erase(std::unique(m_zPoints.begin(), m_zPoints.end()),
-                    m_zPoints.end());
-
-    m_NPointsX = m_xPoints.size();
-    m_NPointsY = m_yPoints.size();
-    m_NPointsZ = m_zPoints.size();
+  /// @brief get configuration object
+  ///
+  /// @return copy of the internal configuration object
+  Config
+  getConfiguration() const
+  {
+    return m_config;
   }
 
   /// @brief retrieve magnetic field value
@@ -146,23 +146,25 @@ public:
   double
   getScale() const
   {
-    return m_dScale;
+    return m_config.scale;
   }
 
-  /// @brief update global scaling factor for magnetic field
+  /// @brief update configuration
   ///
-  /// @param scale new global scaling factor for magnetic field
+  /// @param config new configuration object
   ///
-  /// @note Negative values for @p scale are accepted and will invert the
-  ///       direction of the magnetic field.
+  /// Reset the configuration of this object.
+  ///
+  /// @note Calling this function will trigger a re-initialization of the
+  ///       magnetic field map.
   void
-  setScale(double scale)
+  setConfiguration(const Config& config)
   {
-    m_dScale = scale;
+    m_config = config;
   }
 
 private:
-  /// @brief determine bin numbers along each axis
+  /// @brief determine bin numbers for given position along each axis
   ///
   /// @param [in]  pos  global position
   /// @param [out] xBin bin number along global x-axis
@@ -200,9 +202,9 @@ private:
 
   /// @brief calculate global index for accessing internal storage
   ///
-  /// @param xBin bin along global x-axis within given field map (starts at 0)
-  /// @param yBin bin along global y-axis within given field map (starts at 0)
-  /// @param zBin bin along global z-axis within given field map (starts at 0)
+  /// @param [in] xBin bin along global x-axis within given field map
+  /// @param [in] yBin bin along global y-axis within given field map
+  /// @param [in] zBin bin along global z-axis within given field map
   ///
   /// @pre 0 <= @p xBin < #m_NPointsX
   /// @pre 0 <= @p yBin < #m_NPointsY
@@ -226,9 +228,70 @@ private:
     return 3 * (xBin * (m_NPointsY * m_NPointsZ) + yBin * m_NPointsZ + zBin);
   }
 
-  /// @brief check that point is inside the 3d field map grid
+  /// @brief initialize internal field map
   ///
-  /// @param pos global position
+  /// @param [in] config configuration object
+  ///
+  /// The internal storage for the field map is cleared and re-initialized with
+  /// the information from the configuration object provided. Please refer to
+  /// InterpolatedBFieldMap::InterpolatedBFieldMap for a documentation of the
+  /// format for the file specified in Config::fieldMapFile.
+  void
+  initialize(const Config& config)
+  {
+    m_xPoints.clear();
+    m_yPoints.clear();
+    m_zPoints.clear();
+    m_BField.clear();
+
+    m_xPoints.reserve(m_config.nPoints);
+    m_yPoints.reserve(m_config.nPoints);
+    m_zPoints.reserve(m_config.nPoints);
+    m_BField.reserve(3 * m_config.nPoints);
+
+    std::ifstream map_file(m_config.fieldMapFile.c_str(), std::ios::in);
+    std::string   line;
+    double        x = 0, y = 0, z = 0;
+    double        bx, by, bz;
+    while (std::getline(map_file, line)) {
+      if (line.empty() || line[0] == '#'
+          || line.find_first_not_of(' ') == std::string::npos)
+        continue;
+
+      std::istringstream tmp(line);
+      tmp >> x >> y >> z >> bx >> by >> bz;
+      m_xPoints.push_back(x * m_config.lengthUnit);
+      m_yPoints.push_back(y * m_config.lengthUnit);
+      m_zPoints.push_back(z * m_config.lengthUnit);
+      m_BField.push_back(bx * m_config.BFieldUnit);
+      m_BField.push_back(by * m_config.BFieldUnit);
+      m_BField.push_back(bz * m_config.BFieldUnit);
+    }
+    map_file.close();
+
+    std::sort(m_xPoints.begin(), m_xPoints.end());
+    std::sort(m_yPoints.begin(), m_yPoints.end());
+    std::sort(m_zPoints.begin(), m_zPoints.end());
+
+    m_xPoints.erase(std::unique(m_xPoints.begin(), m_xPoints.end()),
+                    m_xPoints.end());
+    m_yPoints.erase(std::unique(m_yPoints.begin(), m_yPoints.end()),
+                    m_yPoints.end());
+    m_zPoints.erase(std::unique(m_zPoints.begin(), m_zPoints.end()),
+                    m_zPoints.end());
+
+    m_xPoints.shrink_to_fit();
+    m_yPoints.shrink_to_fit();
+    m_zPoints.shrink_to_fit();
+
+    m_NPointsX = m_xPoints.size();
+    m_NPointsY = m_yPoints.size();
+    m_NPointsZ = m_zPoints.size();
+  }
+
+  /// @brief check that point is inside the 3D field map grid
+  ///
+  /// @param [in] pos global position
   ///
   /// This function checks whether the given position is inside the 3D region
   /// covered by the magnetic field map. A point is considered inside if
@@ -248,6 +311,20 @@ private:
             && pos.z() < m_zPoints.at(m_NPointsZ - 1));
   }
 
+  /// @brief perform trilinear interpolation of magnetic field vectors
+  ///
+  /// @param [in] pos global position
+  ///
+  /// @pre #insideGrid(@p pos) must be @c true
+  ///
+  /// This function performs the trilinear interpolation using information from
+  /// the magnetic field map to obtain an estimate of the magnetic field vector
+  /// at the given position. In a first step, the corresponding @a bin in the
+  /// field map is determined. As a second step, the magnetic field vectors of
+  /// the eight corner points of this point are used for the trilinear
+  /// interpolation.
+  ///
+  /// @return magnetic field vector at given position
   Vector3D
   interpolate(const Vector3D& pos) const
   {
@@ -280,11 +357,11 @@ private:
     const auto W1 = (1 - yd) * V1 + yd * V2;
     const auto W2 = (1 - yd) * V3 + yd * V4;
 
-    return m_dScale * ((1 - xd) * W1 + xd * W2);
+    return m_config.scale * ((1 - xd) * W1 + xd * W2);
   }
 
-  /// global B-field scaling factor
-  double m_dScale;
+  /// @brief configuration object
+  Config m_config;
   /// number of grid points along global x-axis
   size_t m_NPointsX;
   /// number of grid points along global y-axis
