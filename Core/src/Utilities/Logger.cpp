@@ -19,9 +19,9 @@ getDefaultLogger(const std::string&    name,
   auto output = std::make_unique<LevelOutputDecorator>(
       std::make_unique<NamedOutputDecorator>(
           std::make_unique<TimedOutputDecorator>(
-              std::make_unique<DefaultOutputPolicy>(log_stream)),
+              std::make_unique<DefaultPrintPolicy>(log_stream)),
           name));
-  auto print = std::make_unique<DefaultPrintPolicy>(lvl);
+  auto print = std::make_unique<DefaultFilterPolicy>(lvl);
   return std::make_unique<Logger>(std::move(output), std::move(print));
 }
 }  // end of namespace Acts
