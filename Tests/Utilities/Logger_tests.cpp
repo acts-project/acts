@@ -1,0 +1,203 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+/// @file Logger_tests.cpp
+
+#define BOOST_TEST_MODULE Logger Tests
+#include "ACTS/Utilities/Logger.hpp"
+#include <boost/test/included/unit_test.hpp>
+#include <ostream>
+#include <string>
+
+namespace Acts {
+namespace Test {
+
+  using namespace Acts::Logging;
+
+  /// @cond
+  namespace detail {
+    std::unique_ptr<Logger>
+    create_logger(const std::string& logger_name,
+                  std::ostream*      logfile,
+                  Logging::Level     lvl)
+    {
+      auto output = std::make_unique<LevelOutputDecorator>(
+          std::make_unique<NamedOutputDecorator>(
+              std::make_unique<DefaultOutputPolicy>(logfile), logger_name));
+      auto print = std::make_unique<DefaultPrintPolicy>(lvl);
+      return std::make_unique<Logger>(std::move(output), std::move(print));
+    }
+
+    std::string
+    failure_msg(const std::string& expected, const std::string& found)
+    {
+      return std::string("'") + expected + "' != '" + found + "'";
+    }
+  }  // end of namespace detail
+  /// @endcond
+
+  BOOST_AUTO_TEST_CASE(FATAL_test)
+  {
+    std::ofstream logfile("fatal_log.txt");
+
+    auto log = detail::create_logger("TestLogger", &logfile, FATAL);
+    ACTS_LOCAL_LOGGER(log);
+    ACTS_FATAL("fatal level");
+    ACTS_ERROR("error level");
+    ACTS_WARNING("warning level");
+    ACTS_INFO("info level");
+    ACTS_DEBUG("debug level");
+    ACTS_VERBOSE("verbose level");
+    logfile.close();
+
+    std::vector<std::string> lines;
+    lines.push_back("TestLogger     FATAL     fatal level");
+
+    std::ifstream infile("fatal_log.txt", std::ios::in);
+    size_t        i = 0;
+    for (std::string line; std::getline(infile, line); ++i) {
+      BOOST_TEST(line == lines.at(i), detail::failure_msg(line, lines.at(i)));
+    }
+  }
+
+  BOOST_AUTO_TEST_CASE(ERROR_test)
+  {
+    std::ofstream logfile("error_log.txt");
+
+    auto log = detail::create_logger("TestLogger", &logfile, ERROR);
+    ACTS_LOCAL_LOGGER(log);
+    ACTS_FATAL("fatal level");
+    ACTS_ERROR("error level");
+    ACTS_WARNING("warning level");
+    ACTS_INFO("info level");
+    ACTS_DEBUG("debug level");
+    ACTS_VERBOSE("verbose level");
+    logfile.close();
+
+    std::vector<std::string> lines;
+    lines.push_back("TestLogger     FATAL     fatal level");
+    lines.push_back("TestLogger     ERROR     error level");
+
+    std::ifstream infile("error_log.txt", std::ios::in);
+    size_t        i = 0;
+    for (std::string line; std::getline(infile, line); ++i) {
+      BOOST_TEST(line == lines.at(i), detail::failure_msg(line, lines.at(i)));
+    }
+  }
+
+  BOOST_AUTO_TEST_CASE(WARNING_test)
+  {
+    std::ofstream logfile("warning_log.txt");
+
+    auto log = detail::create_logger("TestLogger", &logfile, WARNING);
+    ACTS_LOCAL_LOGGER(log);
+    ACTS_FATAL("fatal level");
+    ACTS_ERROR("error level");
+    ACTS_WARNING("warning level");
+    ACTS_INFO("info level");
+    ACTS_DEBUG("debug level");
+    ACTS_VERBOSE("verbose level");
+    logfile.close();
+
+    std::vector<std::string> lines;
+    lines.push_back("TestLogger     FATAL     fatal level");
+    lines.push_back("TestLogger     ERROR     error level");
+    lines.push_back("TestLogger     WARNING   warning level");
+
+    std::ifstream infile("warning_log.txt", std::ios::in);
+    size_t        i = 0;
+    for (std::string line; std::getline(infile, line); ++i) {
+      BOOST_TEST(line == lines.at(i), detail::failure_msg(line, lines.at(i)));
+    }
+  }
+
+  BOOST_AUTO_TEST_CASE(INFO_test)
+  {
+    std::ofstream logfile("info_log.txt");
+
+    auto log = detail::create_logger("TestLogger", &logfile, INFO);
+    ACTS_LOCAL_LOGGER(log);
+    ACTS_FATAL("fatal level");
+    ACTS_ERROR("error level");
+    ACTS_WARNING("warning level");
+    ACTS_INFO("info level");
+    ACTS_DEBUG("debug level");
+    ACTS_VERBOSE("verbose level");
+    logfile.close();
+
+    std::vector<std::string> lines;
+    lines.push_back("TestLogger     FATAL     fatal level");
+    lines.push_back("TestLogger     ERROR     error level");
+    lines.push_back("TestLogger     WARNING   warning level");
+    lines.push_back("TestLogger     INFO      info level");
+
+    std::ifstream infile("info_log.txt", std::ios::in);
+    size_t        i = 0;
+    for (std::string line; std::getline(infile, line); ++i) {
+      BOOST_TEST(line == lines.at(i), detail::failure_msg(line, lines.at(i)));
+    }
+  }
+
+  BOOST_AUTO_TEST_CASE(DEBUG_test)
+  {
+    std::ofstream logfile("debug_log.txt");
+
+    auto log = detail::create_logger("TestLogger", &logfile, DEBUG);
+    ACTS_LOCAL_LOGGER(log);
+    ACTS_FATAL("fatal level");
+    ACTS_ERROR("error level");
+    ACTS_WARNING("warning level");
+    ACTS_INFO("info level");
+    ACTS_DEBUG("debug level");
+    ACTS_VERBOSE("verbose level");
+    logfile.close();
+
+    std::vector<std::string> lines;
+    lines.push_back("TestLogger     FATAL     fatal level");
+    lines.push_back("TestLogger     ERROR     error level");
+    lines.push_back("TestLogger     WARNING   warning level");
+    lines.push_back("TestLogger     INFO      info level");
+    lines.push_back("TestLogger     DEBUG     debug level");
+
+    std::ifstream infile("debug_log.txt", std::ios::in);
+    size_t        i = 0;
+    for (std::string line; std::getline(infile, line); ++i) {
+      BOOST_TEST(line == lines.at(i), detail::failure_msg(line, lines.at(i)));
+    }
+  }
+
+  BOOST_AUTO_TEST_CASE(VERBOSE_test)
+  {
+    std::ofstream logfile("verbose_log.txt");
+
+    auto log = detail::create_logger("TestLogger", &logfile, VERBOSE);
+    ACTS_LOCAL_LOGGER(log);
+    ACTS_FATAL("fatal level");
+    ACTS_ERROR("error level");
+    ACTS_WARNING("warning level");
+    ACTS_INFO("info level");
+    ACTS_DEBUG("debug level");
+    ACTS_VERBOSE("verbose level");
+    logfile.close();
+
+    std::vector<std::string> lines;
+    lines.push_back("TestLogger     FATAL     fatal level");
+    lines.push_back("TestLogger     ERROR     error level");
+    lines.push_back("TestLogger     WARNING   warning level");
+    lines.push_back("TestLogger     INFO      info level");
+    lines.push_back("TestLogger     DEBUG     debug level");
+    lines.push_back("TestLogger     VERBOSE   verbose level");
+
+    std::ifstream infile("verbose_log.txt", std::ios::in);
+    size_t        i = 0;
+    for (std::string line; std::getline(infile, line); ++i) {
+      BOOST_TEST(line == lines.at(i), detail::failure_msg(line, lines.at(i)));
+    }
+  }
+}  // end of namespace Test
+}  // end of namespace Acts
