@@ -11,7 +11,7 @@
 #define BOOST_TEST_MODULE Logger Tests
 #include "ACTS/Utilities/Logger.hpp"
 #include <boost/test/included/unit_test.hpp>
-#include <ostream>
+#include <fstream>
 #include <string>
 
 namespace Acts {
@@ -28,8 +28,8 @@ namespace Test {
     {
       auto output = std::make_unique<LevelOutputDecorator>(
           std::make_unique<NamedOutputDecorator>(
-              std::make_unique<DefaultOutputPolicy>(logfile), logger_name));
-      auto print = std::make_unique<DefaultPrintPolicy>(lvl);
+              std::make_unique<DefaultPrintPolicy>(logfile), logger_name));
+      auto print = std::make_unique<DefaultFilterPolicy>(lvl);
       return std::make_unique<Logger>(std::move(output), std::move(print));
     }
 
@@ -41,6 +41,12 @@ namespace Test {
   }  // end of namespace detail
   /// @endcond
 
+  /// @brief unit test for FATAL debug level
+  ///
+  /// This test checks for the expected output when using the
+  /// Acts::Logging::FATAL debug level as threshold. It also tests
+  /// - #ACTS_LOCAL_LOGGER
+  /// - Acts::getDefaultLogger
   BOOST_AUTO_TEST_CASE(FATAL_test)
   {
     std::ofstream logfile("fatal_log.txt");
@@ -65,6 +71,12 @@ namespace Test {
     }
   }
 
+  /// @brief unit test for ERROR debug level
+  ///
+  /// This test checks for the expected output when using the
+  /// Acts::Logging::ERROR debug level as threshold. It also tests
+  /// - #ACTS_LOCAL_LOGGER
+  /// - Acts::getDefaultLogger
   BOOST_AUTO_TEST_CASE(ERROR_test)
   {
     std::ofstream logfile("error_log.txt");
@@ -90,6 +102,12 @@ namespace Test {
     }
   }
 
+  /// @brief unit test for WARNING debug level
+  ///
+  /// This test checks for the expected output when using the
+  /// Acts::Logging::WARNING debug level as threshold. It also tests
+  /// - #ACTS_LOCAL_LOGGER
+  /// - Acts::getDefaultLogger
   BOOST_AUTO_TEST_CASE(WARNING_test)
   {
     std::ofstream logfile("warning_log.txt");
@@ -116,6 +134,12 @@ namespace Test {
     }
   }
 
+  /// @brief unit test for INFO debug level
+  ///
+  /// This test checks for the expected output when using the
+  /// Acts::Logging::INFO debug level as threshold. It also tests
+  /// - #ACTS_LOCAL_LOGGER
+  /// - Acts::getDefaultLogger
   BOOST_AUTO_TEST_CASE(INFO_test)
   {
     std::ofstream logfile("info_log.txt");
@@ -143,6 +167,12 @@ namespace Test {
     }
   }
 
+  /// @brief unit test for DEBUG debug level
+  ///
+  /// This test checks for the expected output when using the
+  /// Acts::Logging::DEBUG debug level as threshold. It also tests
+  /// - #ACTS_LOCAL_LOGGER
+  /// - Acts::getDefaultLogger
   BOOST_AUTO_TEST_CASE(DEBUG_test)
   {
     std::ofstream logfile("debug_log.txt");
@@ -171,6 +201,12 @@ namespace Test {
     }
   }
 
+  /// @brief unit test for VERBOSE debug level
+  ///
+  /// This test checks for the expected output when using the
+  /// Acts::Logging::VERBOSE debug level as threshold. It also tests
+  /// - #ACTS_LOCAL_LOGGER
+  /// - Acts::getDefaultLogger
   BOOST_AUTO_TEST_CASE(VERBOSE_test)
   {
     std::ofstream logfile("verbose_log.txt");
