@@ -309,7 +309,10 @@ private:
 };
 
 std::unique_ptr<Logger>
-getDefaultLogger(const std::string& name, const Logging::Level& lvl);
+getDefaultLogger(const std::string&    name,
+                 const Logging::Level& lvl,
+                 std::ostream*         log_stream = &std::cout);
+
 }  // end of namespace Acts
 
 #endif  // ACTS_LOGGER_H
