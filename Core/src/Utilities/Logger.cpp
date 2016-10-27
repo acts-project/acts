@@ -16,7 +16,7 @@ getDefaultLogger(const std::string& name, const Logging::Level& lvl)
   auto output = std::make_unique<LevelOutputDecorator>(
       std::make_unique<NamedOutputDecorator>(
           std::make_unique<TimedOutputDecorator>(
-              std::make_unique<DefaultOutputPolicy>(stdout)),
+              std::make_unique<DefaultOutputPolicy>()),
           name));
   auto print = std::make_unique<DefaultPrintPolicy>(lvl);
   return std::make_unique<Logger>(std::move(output), std::move(print));

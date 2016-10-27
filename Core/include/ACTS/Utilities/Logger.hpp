@@ -10,13 +10,11 @@
 #define ACTS_LOGGER_H 1
 
 // STL include(s)
-#include <cstdio>
 #include <ctime>
 #include <functional>
 #include <iomanip>
-#include <ios>
+#include <iostream>
 #include <memory>
-#include <ostream>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -266,16 +264,15 @@ namespace Logging {
   class DefaultOutputPolicy : public OutputPolicy
   {
   public:
-    DefaultOutputPolicy(std::FILE* out = stdout) : m_out(out) {}
+    DefaultOutputPolicy(std::ostream* out = &std::cout) : m_out(out) {}
     void
     flush(const Level&, const std::ostringstream& input) final
     {
-      fprintf(m_out, "%s\n", input.str().c_str());
-      fflush(m_out);
+      (*m_out) << input.str() << std::endl;
     }
 
   private:
-    std::FILE* m_out;
+    std::ostream* m_out;
   };
 }  // end of namespace Logging
 
