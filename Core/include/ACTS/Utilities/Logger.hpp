@@ -23,10 +23,9 @@
 
 // clang-format off
 #define ACTS_LOCAL_LOGGER(logger)                                              \
-  namespace {                                                                  \
-  struct local_logger                                                          \
+  struct __local_acts_logger                                                   \
   {                                                                            \
-    log_helper():                                                              \
+    __local_acts_logger(std::unique_ptr<Logger> logger):                       \
       m_logger(std::move(logger))                                              \
     {}                                                                         \
                                                                                \
@@ -37,7 +36,6 @@
                                                                                \
     std::unique_ptr<Logger> m_logger;                                          \
   };                                                                           \
-  }                                                                            \
   local_logger logger;
 
 #define ACTS_VERBOSE(x)                                                        \
