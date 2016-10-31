@@ -43,7 +43,7 @@ public:
   /// @param detElement The DD4hep DetElement which should be linked to a
   /// surface
   DD4hepDetElement(const DD4hep::Geometry::DetElement detElement,
-                   const std::string&                 axes   = "xyz",
+                   const std::string&                 axes   = "XYZ",
                    double                             scalor = 1.);
   /// Desctructor
   virtual ~DD4hepDetElement() = default;
