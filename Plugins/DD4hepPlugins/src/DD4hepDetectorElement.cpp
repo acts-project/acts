@@ -30,5 +30,5 @@ Acts::DD4hepDetElement::DD4hepDetElement(
   } else
     throw "Detector element is not declared sensitive, can not "
           "access segmentation";
-  // @TODO when sensitive detector is component
+  // @todo when sensitive detector is component
 }
