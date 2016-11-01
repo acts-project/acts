@@ -115,20 +115,6 @@ public:
 
   /// @brief retrieve magnetic field value
   ///
-  /// @param [in]  xyz   global position
-  /// @param [out] bxyz  magnetic field vector at given position
-  void
-  getField(const double* xyz, double* bxyz) const
-  {
-    Vector3D    pos(xyz[0], xyz[1], xyz[2]);
-    const auto& B = getField(pos);
-    bxyz[0]       = B.x();
-    bxyz[1]       = B.y();
-    bxyz[2]       = B.z();
-  }
-
-  /// @brief retrieve magnetic field value
-  ///
   /// @param [in] pos global position
   ///
   /// @return magnetic field vector at given position
