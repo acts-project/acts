@@ -54,6 +54,27 @@ public:
                 size_t                             binsZ,
                 std::shared_ptr<Transform3D> transform = nullptr) const = 0;
 
+  /// ILayerCreator interface method - returning a cylindrical layer
+  ///
+  /// @param surfaces is the vector of sensitive surfaces represented by this
+  /// layer
+  /// @param layerRmin is the inner radius of the layer
+  /// @param layerRmax is the outer radius of the layer
+  /// @param layerHalfZ is the half length in z of the layer
+  /// @param bTypePhi binning type in phi (equidistant/arbitrary)
+  /// @param bTypeZ binning type in z (equidistant/arbitrary)
+  /// @param transform is the (optional) transform of the layer
+  ///
+  /// @return shared pointer to a newly created layer
+  virtual LayerPtr
+  cylinderLayer(const std::vector<const Surface*>& surfaces,
+                double                             layerRmin,
+                double                             layerRmax,
+                double                             layerHalfZ,
+                BinningType                        bTypePhi,
+                BinningType                        bTypeZ,
+                std::shared_ptr<Transform3D> transform = nullptr) const = 0;
+
   /// ILayerCreator interface method - returning a disc layer
   ///
   /// @param surfaces is the vector of sensitive surfaces represented by this
@@ -73,6 +94,29 @@ public:
             double                             envelopeZ,
             size_t                             binsR,
             size_t                             binsPhi,
+            std::shared_ptr<Transform3D>       transform = nullptr) const = 0;
+
+  /// ILayerCreator interface method - returning a disc layer
+  ///
+  /// @param surfaces is the vector of sensitive surfaces represented by this
+  /// layer
+  /// @param layerRmin is the inner radius of the layer
+  /// @param layerRmax is the outer radius of the layer
+  /// @param layerZmin is the minimum in z of the layer
+  /// @param layerZmax is the maximum in z of the layer
+  /// @param bTypeR binning type in r (equidistant/arbitrary)
+  /// @param bTypePhi binning type in phi (equidistant/arbitrary)
+  /// @param transform is the (optional) transform of the layer
+  ///
+  /// @return shared pointer to a newly created layer
+  virtual LayerPtr
+  discLayer(const std::vector<const Surface*>& surfaces,
+            double                             layerZmin,
+            double                             layerZmax,
+            double                             layerRmin,
+            double                             layerRmax,
+            BinningType                        bTypeR,
+            BinningType                        bTypePhi,
             std::shared_ptr<Transform3D>       transform = nullptr) const = 0;
 
   /// ILayerCreator interface method - returning a plane layer
