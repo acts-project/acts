@@ -29,7 +29,7 @@ if(CCACHE_FOUND)
 endif(CCACHE_FOUND)
 
 # set the current version of ACTS
-set (ACTS_VERSION 0.02.00)
+set (ACTS_VERSION dev)
 
 # convert the version into a plain number to be used in the version header file
 string (REPLACE "." "" ACTS_VERSION_NUMBER ${ACTS_VERSION})
