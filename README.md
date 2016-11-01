@@ -122,12 +122,11 @@ You can find a complete documentation of the ACTS functionality and the class re
 
 # <a name="license-authors">License and authors</a>
 
-This project is published under the Mozilla Public License, v. 2.0. Details of this license can be found in the [LICENSE](LICENSE) file or at http://mozilla.org/MPL/2.0/.
+This project is published under the Mozilla Public License, v. 2.0. Details of
+this license can be found in the [LICENSE](LICENSE) file or at
+http://mozilla.org/MPL/2.0/.
 
-The authors of this project are (in alphabetical order):
-- Noemi Calace
-- Christian Gumpert
-- Julia Hrdinka
-- Andreas Salzburger
+Contributors to the ACTS project are listed in [AUTHORS](AUTHORS).
 
-Some of the code was originally written for the ATLAS software. A list of contributors for this portion of the code will be added shortly.
+The ACTS project is based on the ATLAS tracking software. A list of contributors
+to the ATLAS tracking repository can be found <a href="http://acts.web.cern.ch/ACTS/ATLAS_authors.html">here</a>.
