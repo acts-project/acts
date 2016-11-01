@@ -115,7 +115,8 @@ public:
   surfaceArrayOnDisc(const std::vector<const Acts::Surface*>& surfaces,
                      Acts::BinningType                        bTypeR,
                      Acts::BinningType                        bTypePhi,
-                     std::shared_ptr<Acts::Transform3D> transform) const = 0;
+                     std::shared_ptr<Acts::Transform3D>       transform
+                     = nullptr) const = 0;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane

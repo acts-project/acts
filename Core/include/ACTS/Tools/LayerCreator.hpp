@@ -72,6 +72,7 @@ public:
   /// @param envelopeZ is the additional envelope applied in z
   /// @param binsPhi is number of bins the sensitive surfaces are ordered in phi
   /// @param binsZ is number of bins the sensitive surfaces are ordered in Z
+  /// @param transform is the (optional) transform of the layer
   ///
   /// @return shared pointer to a newly created layer
   LayerPtr
@@ -79,7 +80,9 @@ public:
                 double                             envelopeR,
                 double                             envelopeZ,
                 size_t                             binsPhi,
-                size_t                             binsZ) const override;
+                size_t                             binsZ,
+                std::shared_ptr<Transform3D>       transform
+                = nullptr) const override;
 
   /// ILayerCreator interface method - returning a cylindrical layer
   ///
@@ -90,6 +93,7 @@ public:
   /// @param envelopeZ is the additional envelope applied in z
   /// @param binsR is number of bins the sensitive surfaces are ordered in R
   /// @param binsPhi is number of bins the sensitive surfaces are ordered in Phi
+  /// @param transform is the (optional) transform of the layer
   ///
   /// @return shared pointer to a newly created layer
   LayerPtr
@@ -98,7 +102,8 @@ public:
             double                             envelopeMaxR,
             double                             envelopeZ,
             size_t                             binsR,
-            size_t                             binsPhi) const override;
+            size_t                             binsPhi,
+            std::shared_ptr<Transform3D> transform = nullptr) const override;
 
   /// ILayerCreator interface method - returning a cylindrical layer
   ///
@@ -108,6 +113,7 @@ public:
   /// @param envelopeZ is the additional envelope applied in Z
   /// @param binsX is number of bins the sensitive surfaces are ordered in X
   /// @param binsY is number of bins the sensitive surfaces are ordered in Y
+  /// @param transform is the (optional) transform of the layer
   ///
   /// @return shared pointer to a newly created layer
   LayerPtr
@@ -115,7 +121,8 @@ public:
              double                             envelopeXY,
              double                             envelopeZ,
              size_t                             binsX,
-             size_t                             binsY) const override;
+             size_t                             binsY,
+             std::shared_ptr<Transform3D> transform = nullptr) const override;
 
   /// Set the configuration object
   /// @param lcConfig is the configuration struct
