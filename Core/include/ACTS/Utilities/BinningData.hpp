@@ -460,7 +460,7 @@ public:
 private:
   size_t             m_bins;        ///< number of bins
   std::vector<float> m_boundaries;  ///< vector of holding the bin boundaries
-  size_t             m_totalBins;        ///< including potential substructure
+  size_t             m_totalBins;   ///< including potential substructure
   std::vector<float> m_totalBoundaries;  ///< including potential substructure
 
   size_t (*m_functionPtr)(float, const BinningData&);  /// function pointer
@@ -563,7 +563,7 @@ private:
       return (bData.option == closed) ? (bData.m_bins - 1) : 0;
     size_t nabove, nbelow, middle;
     // overflow
-    nabove = bData.m_boundaries.size() + 1;
+    nabove = bData.m_boundaries.size();
     if (value >= bData.max) return (bData.option == closed) ? 0 : nabove - 2;
     // binary search
     nbelow = 0;
