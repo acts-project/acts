@@ -17,6 +17,7 @@
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Units.hpp"
 
 Acts::LayerCreator::LayerCreator(const Acts::LayerCreator::Config& lcConfig,
                                  std::unique_ptr<Logger>           logger)
@@ -44,7 +45,8 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
                                   double                             envelopeR,
                                   double                             envelopeZ,
                                   size_t                             binsPhi,
-                                  size_t binsZ) const
+                                  size_t                             binsZ,
+                                  std::shared_ptr<Transform3D> transform) const
 {
   // fist loop over the surfaces and estimate the dimensions
   double minR   = 10e10;
@@ -86,20 +88,61 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
 
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray
-      = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-          surfaces, layerR, minPhi, maxPhi, layerHalfZ, binsPhi, binsZ);
+      = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(surfaces,
+                                                          layerR,
+                                                          minPhi,
+                                                          maxPhi,
+                                                          layerHalfZ,
+                                                          binsPhi,
+                                                          binsZ,
+                                                          transform);
 
   // create the layer and push it back
   std::shared_ptr<const CylinderBounds> cBounds(
       new CylinderBounds(layerR, layerHalfZ + envelopeZ));
 
   // create the layer
-  LayerPtr cLayer = CylinderLayer::create(nullptr,
-                                          cBounds,
-                                          std::move(sArray),
-                                          layerThickness,
-                                          nullptr,
-                                          active);
+  LayerPtr cLayer = CylinderLayer::create(
+      transform, cBounds, std::move(sArray), layerThickness, nullptr, active);
+
+  // now return
+  return cLayer;
+}
+
+Acts::LayerPtr
+Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
+                                  double                             layerRmin,
+                                  double                             layerRmax,
+                                  double                             layerHalfZ,
+                                  BinningType                        bTypePhi,
+                                  BinningType                        bTypeZ,
+                                  std::shared_ptr<Transform3D> transform) const
+{
+
+  // remaining layer parameters
+  double layerR         = 0.5 * (layerRmin + layerRmax);
+  double layerThickness = layerRmax - layerRmin;
+
+  // adjust the layer radius
+  ACTS_VERBOSE("Creating a cylindrical Layer:");
+  ACTS_VERBOSE(" - with layer R    = " << layerR);
+  ACTS_VERBOSE(" - from R min/max  = " << layerRmin << " / " << layerRmax);
+  ACTS_VERBOSE(" - with z min/max  = " << -layerHalfZ << " / " << layerHalfZ);
+  ACTS_VERBOSE(" - with thickness  = " << layerThickness);
+  ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
+
+  // create the surface array
+  std::unique_ptr<SurfaceArray> sArray
+      = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
+          surfaces, bTypePhi, bTypeZ, transform);
+
+  // create the layer and push it back
+  std::shared_ptr<const CylinderBounds> cBounds(
+      new CylinderBounds(layerR, layerHalfZ));
+
+  // create the layer
+  LayerPtr cLayer = CylinderLayer::create(
+      transform, cBounds, std::move(sArray), layerThickness, nullptr, active);
 
   // now return
   return cLayer;
@@ -111,7 +154,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>& surfaces,
                               double                             envelopeMaxR,
                               double                             envelopeZ,
                               size_t                             binsR,
-                              size_t                             binsPhi) const
+                              size_t                             binsPhi,
+                              std::shared_ptr<Transform3D> transform) const
 {
   // loop over the surfaces and estimate
   double minR   = 10e10;
@@ -150,33 +194,75 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>& surfaces,
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-          surfaces, minR, maxR, minPhi, maxPhi, binsR, binsPhi);
+          surfaces, minR, maxR, minPhi, maxPhi, binsR, binsPhi, transform);
 
   // create the share disc bounds
   auto dBounds = std::make_shared<RadialBounds>(minR - envelopeMinR,
                                                 maxR + envelopeMaxR);
 
-  // create the layer transforms
-  Transform3D* transform   = new Transform3D(Transform3D::Identity());
-  transform->translation() = Vector3D(0., 0., layerZ);
+  // create the layer transforms if not given
+  if (!transform) {
+    transform = std::make_shared<Transform3D>(Transform3D::Identity());
+    transform->translation() = Vector3D(0., 0., layerZ);
+  }
 
   // create the layers
-  LayerPtr dLayer = DiscLayer::create(std::shared_ptr<Transform3D>(transform),
-                                      dBounds,
-                                      std::move(sArray),
-                                      layerThickness,
-                                      nullptr,
-                                      active);
+  LayerPtr dLayer = DiscLayer::create(
+      transform, dBounds, std::move(sArray), layerThickness, nullptr, active);
   // return the layer
   return dLayer;
 }
 
 Acts::LayerPtr
-Acts::LayerCreator::planeLayer(const std::vector<const Surface*>& /**surfaces*/,
-                               double /**envelopeXY*/,
-                               double /**envelopeZ*/,
-                               size_t /**binsX*/,
-                               size_t /**binsY*/) const
+Acts::LayerCreator::discLayer(const std::vector<const Surface*>& surfaces,
+                              double                             layerZmin,
+                              double                             layerZmax,
+                              double                             layerRmin,
+                              double                             layerRmax,
+                              BinningType                        bTypeR,
+                              BinningType                        bTypePhi,
+                              std::shared_ptr<Transform3D> transform) const
+{
+  // layer parametres
+  double layerZ         = 0.5 * (layerZmin + layerZmax);
+  double layerThickness = fabs(layerZmax - layerZmin);
+
+  // adjust the layer radius
+  ACTS_VERBOSE("Creating a disk Layer:");
+  ACTS_VERBOSE(" - at Z position   = " << layerZ);
+  ACTS_VERBOSE(" - from R min/max  = " << layerRmin << " / " << layerRmax);
+  ACTS_VERBOSE(" - with thickness  = " << layerThickness);
+  ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
+
+  // create the surface array
+  std::unique_ptr<SurfaceArray> sArray
+      = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
+          surfaces, bTypeR, bTypePhi, transform);
+
+  // create the shared disc bounds
+  auto dBounds = std::make_shared<RadialBounds>(layerRmin, layerRmax);
+
+  // create the layer transforms if not given
+  if (!transform) {
+    transform = std::make_shared<Transform3D>(Transform3D::Identity());
+    transform->translation() = Vector3D(0., 0., layerZ);
+  }
+
+  // create the layers
+  LayerPtr dLayer = DiscLayer::create(
+      transform, dBounds, std::move(sArray), layerThickness, nullptr, active);
+  // return the layer
+  return dLayer;
+}
+
+Acts::LayerPtr
+Acts::LayerCreator::planeLayer(
+    const std::vector<const Surface*>& /**surfaces*/,
+    double /**envelopeXY*/,
+    double /**envelopeZ*/,
+    size_t /**binsX*/,
+    size_t /**binsY*/,
+    std::shared_ptr<Transform3D> /**transform*/) const
 {
   //@todo implement
   return nullptr;
