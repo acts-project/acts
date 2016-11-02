@@ -8,8 +8,8 @@
 
 // Boost include(s)
 #define BOOST_TEST_MODULE BinningData Tests
-#include "ACTS/Utilities/BinningData.hpp"
 #include <boost/test/included/unit_test.hpp>
+#include "ACTS/Utilities/BinningData.hpp"
 #include "ACTS/Utilities/BinningType.hpp"
 
 namespace Acts {
@@ -19,7 +19,7 @@ namespace Test {
 
   // the test positions in 3D
   Vector3D xyzPosition(0.5, 1.5, 2.5);
-  Vector3D xyzPositionOutside(15., -15., 200.);
+  Vector3D xyzPositionOutside(30., -30., 200.);
   Vector3D phi0Position(0.5, 0., 2.5);
   Vector3D phiPihPosition(0., 1.5, 2.5);
   Vector3D eta0Position(0.5, 1.5, 0.);
@@ -60,6 +60,14 @@ namespace Test {
   std::vector<float> phiValues = {-M_PI, -2., -1., 1., 2., M_PI};
   BinningData        phiData_arb(closed, binPhi, phiValues);
 
+  // the binnings - arbitrary when switching to binary search - for boundary
+  // sizes >= 50
+  size_t nBins_binary = 59;
+  double valueMin     = 0.;
+  double phiMin       = -M_PI;
+  double delta        = 0.5;
+  double phiDelta     = 0.1064;
+
   // the binning - substructure
   std::vector<float> sstr = {0., 1., 1.5, 2., 3.};
   // multiplicative
@@ -77,6 +85,17 @@ namespace Test {
   // test the different binning values
   BOOST_AUTO_TEST_CASE(BinningData_BinningValue)
   {
+    // the binnings - arbitrary when switching to binary search - for boundary
+    // sizes >= 50
+    std::vector<float> values_binary;
+    std::vector<float> phiValues_binary;
+    for (size_t i = 0; i <= nBins_binary; i++) {
+      values_binary.push_back(valueMin + i * delta);
+      phiValues_binary.push_back(phiMin + i * phiDelta);
+    }
+    // bin boundaries when switching to binary search - for boundary sizes >= 50
+    BinningData xData_arb_binary(open, binX, values_binary);
+    BinningData phiData_arb_binary(closed, binPhi, phiValues_binary);
     /// x/y/zData
     /// check the global position requests
     // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
@@ -87,6 +106,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(xData_mult.bins(), 12);
     // | 0 | 1 | 1.5 | 2 |  3 | 4 | 5 |
     BOOST_CHECK_EQUAL(xData_add.bins(), 6);
+    BOOST_CHECK_EQUAL(xData_arb_binary.bins(), nBins_binary);
 
     /// check the global position requests
     BOOST_CHECK_EQUAL(xData_eq.value(xyzPosition), 0.5);
@@ -95,6 +115,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(xData_arb.value(xyzPosition), 0.5);
     BOOST_CHECK_EQUAL(xData_mult.value(xyzPosition), 0.5);
     BOOST_CHECK_EQUAL(xData_add.value(xyzPosition), 0.5);
+    BOOST_CHECK_EQUAL(xData_arb_binary.value(xyzPosition), 0.5);
 
     /// check the local position requests
     BOOST_CHECK_EQUAL(xData_eq.value(xyPosition), 0.5);
@@ -103,6 +124,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(xData_arb.value(xyPosition), 0.5);
     BOOST_CHECK_EQUAL(xData_mult.value(xyPosition), 0.5);
     BOOST_CHECK_EQUAL(xData_add.value(xyPosition), 0.5);
+    BOOST_CHECK_EQUAL(xData_arb_binary.value(xyPosition), 0.5);
 
     // r/phi/rphiData
     BOOST_CHECK_CLOSE(
@@ -114,6 +136,7 @@ namespace Test {
 
     BOOST_CHECK_EQUAL(phiData_eq.bins(), 5);
     BOOST_CHECK_EQUAL(phiData_arb.bins(), 5);
+    BOOST_CHECK_EQUAL(phiData_arb_binary.bins(), nBins_binary);
 
     // h/etaData
     BOOST_TEST((fabs(etaData_eq.value(eta0Position) - 0.) < 1e-5));
@@ -122,6 +145,17 @@ namespace Test {
   // test bin values
   BOOST_AUTO_TEST_CASE(BinningData_bins)
   {
+    // the binnings - arbitrary when switching to binary search - for boundary
+    // sizes >= 50
+    std::vector<float> values_binary;
+    std::vector<float> phiValues_binary;
+    for (size_t i = 0; i <= nBins_binary; i++) {
+      values_binary.push_back(valueMin + i * delta);
+      phiValues_binary.push_back(phiMin + i * phiDelta);
+    }
+    // bin boundaries when switching to binary search - for boundary sizes >= 50
+    BinningData xData_arb_binary(open, binX, values_binary);
+    BinningData phiData_arb_binary(closed, binPhi, phiValues_binary);
     /// x/y/zData
     /// check the global position requests
     // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
@@ -131,6 +165,8 @@ namespace Test {
     // | 0 | 1 | 2 | 3 | 4 | 10 |
     BOOST_CHECK_EQUAL(xData_arb.searchGlobal(xyzPosition), 0);
     BOOST_CHECK_EQUAL(xData_arb.search(6.), 4);
+    BOOST_CHECK_EQUAL(xData_arb_binary.searchGlobal(xyzPosition), 1);
+    BOOST_CHECK_EQUAL(xData_arb_binary.search(50.), (nBins_binary - 1));
     // | 0 | 1 | 1.5 | 2 |  3 | 4 | 5 |
     BOOST_CHECK_EQUAL(xData_add.searchGlobal(xyzPosition), 0);
     BOOST_CHECK_EQUAL(xData_add.searchGlobal(xyzPosition), 0);
@@ -161,12 +197,14 @@ namespace Test {
     BOOST_CHECK_EQUAL(yData_eq.searchLocal(xyPosition), 1);
     BOOST_CHECK_EQUAL(zData_eq.searchLocal(rphizPosition), 2);
     BOOST_CHECK_EQUAL(xData_arb.searchLocal(xyPosition), 0);
+    BOOST_CHECK_EQUAL(xData_arb_binary.searchLocal(xyPosition), 1);
 
     // r/phi/rphiData
     BOOST_CHECK_EQUAL(rData_eq.searchGlobal(xyzPosition), 1);
     BOOST_CHECK_EQUAL(rData_eq.searchLocal(rphiPosition), 3);
     BOOST_CHECK_EQUAL(phiData_eq.searchGlobal(phi0Position), 2);
     BOOST_CHECK_EQUAL(phiData_eq.searchGlobal(phiPihPosition), 3);
+    BOOST_CHECK_EQUAL(phiData_arb_binary.search(M_PI), 0);
 
     // h/etaData
     BOOST_CHECK_EQUAL(etaData_eq.searchGlobal(eta0Position), 2);
@@ -175,6 +213,17 @@ namespace Test {
   // test inside/outside
   BOOST_AUTO_TEST_CASE(BinningData_inside_outside)
   {
+    // the binnings - arbitrary when switching to binary search - for boundary
+    // sizes >= 50
+    std::vector<float> values_binary;
+    std::vector<float> phiValues_binary;
+    for (size_t i = 0; i <= nBins_binary; i++) {
+      values_binary.push_back(valueMin + i * delta);
+      phiValues_binary.push_back(phiMin + i * phiDelta);
+    }
+    // bin boundaries when switching to binary search - for boundary sizes >= 50
+    BinningData xData_arb_binary(open, binX, values_binary);
+    BinningData phiData_arb_binary(closed, binPhi, phiValues_binary);
     // check the global inside
     BOOST_CHECK_EQUAL(xData_eq.inside(xyzPosition), true);
     BOOST_CHECK_EQUAL(yData_eq.inside(xyzPosition), true);
@@ -182,6 +231,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(xData_arb.inside(xyzPosition), true);
     BOOST_CHECK_EQUAL(xData_add.inside(xyzPosition), true);
     BOOST_CHECK_EQUAL(xData_mult.inside(xyzPosition), true);
+    BOOST_CHECK_EQUAL(xData_arb_binary.inside(xyzPosition), true);
 
     // check the global outside
     BOOST_CHECK_EQUAL(xData_eq.inside(xyzPositionOutside), false);
@@ -190,6 +240,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(xData_arb.inside(xyzPositionOutside), false);
     BOOST_CHECK_EQUAL(xData_add.inside(xyzPositionOutside), false);
     BOOST_CHECK_EQUAL(xData_mult.inside(xyzPositionOutside), false);
+    BOOST_CHECK_EQUAL(xData_arb_binary.inside(xyzPositionOutside), false);
 
     // cthe local inside
     BOOST_CHECK_EQUAL(xData_eq.inside(xyPosition), true);
@@ -206,12 +257,25 @@ namespace Test {
   // test open/close
   BOOST_AUTO_TEST_CASE(BinningData_open_close)
   {
+    // the binnings - arbitrary when switching to binary search - for boundary
+    // sizes >= 50
+    std::vector<float> values_binary;
+    std::vector<float> phiValues_binary;
+    for (size_t i = 0; i <= nBins_binary; i++) {
+      values_binary.push_back(valueMin + i * delta);
+      phiValues_binary.push_back(phiMin + i * phiDelta);
+    }
+    // bin boundaries when switching to binary search - for boundary sizes >= 50
+    BinningData xData_arb_binary(open, binX, values_binary);
+    BinningData phiData_arb_binary(closed, binPhi, phiValues_binary);
     // open values
     BOOST_CHECK_EQUAL(xData_eq.searchGlobal(xyzPositionOutside), 9);
     BOOST_CHECK_EQUAL(yData_eq.searchGlobal(xyzPositionOutside), 0);
     BOOST_CHECK_EQUAL(zData_eq.searchGlobal(xyzPositionOutside), 9);
     BOOST_CHECK_EQUAL(xData_arb.searchGlobal(xyzPositionOutside) + 1,
                       xData_arb.bins());
+    BOOST_CHECK_EQUAL(xData_arb_binary.searchGlobal(xyzPositionOutside) + 1,
+                      xData_arb_binary.bins());
     BOOST_CHECK_EQUAL(yData_arb.searchGlobal(xyzPositionOutside), 0);
 
     // increment an open bin
@@ -230,11 +294,20 @@ namespace Test {
     xData_arb.decrement(bin);
     BOOST_CHECK_EQUAL(bin, 0);
 
+    bin = nBins_binary;
+    xData_arb_binary.increment(bin);
+    BOOST_CHECK_EQUAL(bin, nBins_binary);
+    bin = 0;
+    xData_arb_binary.decrement(bin);
+    BOOST_CHECK_EQUAL(bin, 0);
+
     // closed values
     BOOST_CHECK_EQUAL(phiData_eq.search(-4.), 4);
     BOOST_CHECK_EQUAL(phiData_eq.search(4.), 0);
     BOOST_CHECK_EQUAL(phiData_arb.search(-4.), 4);
     BOOST_CHECK_EQUAL(phiData_arb.search(4.), 0);
+    BOOST_CHECK_EQUAL(phiData_arb_binary.search(-4.), (nBins_binary - 1));
+    BOOST_CHECK_EQUAL(phiData_arb_binary.search(4.), 0);
 
     bin = 4;
     phiData_eq.increment(bin);
@@ -249,6 +322,13 @@ namespace Test {
     bin = 0;
     phiData_arb.decrement(bin);
     BOOST_CHECK_EQUAL(bin, 4);
+
+    bin = nBins_binary;
+    phiData_arb_binary.increment(bin);
+    BOOST_CHECK_EQUAL(bin, 0);
+    bin = 0;
+    phiData_arb_binary.decrement(bin);
+    BOOST_CHECK_EQUAL(bin, (nBins_binary - 1));
   }
 
   // test boundaries
@@ -278,6 +358,17 @@ namespace Test {
   // test boundaries
   BOOST_AUTO_TEST_CASE(BinningData_bincenter)
   {
+    // the binnings - arbitrary when switching to binary search - for boundary
+    // sizes >= 50
+    std::vector<float> values_binary;
+    std::vector<float> phiValues_binary;
+    for (size_t i = 0; i <= nBins_binary; i++) {
+      values_binary.push_back(valueMin + i * delta);
+      phiValues_binary.push_back(phiMin + i * phiDelta);
+    }
+    // bin boundaries when switching to binary search - for boundary sizes >= 50
+    BinningData xData_arb_binary(open, binX, values_binary);
+    BinningData phiData_arb_binary(closed, binPhi, phiValues_binary);
     /// check the global position requests
     // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
     BOOST_CHECK_EQUAL(xData_eq.center(3), 3.5);
@@ -293,6 +384,8 @@ namespace Test {
     BOOST_CHECK_EQUAL(xData_mult.center(4), 3.5);
     BOOST_CHECK_EQUAL(xData_mult.center(10), 7.75);
     BOOST_CHECK_EQUAL(xData_mult.center(11), 8.5);
+
+    BOOST_CHECK_EQUAL(xData_arb_binary.center(0), 0.5 * delta);
 
     // open values
     std::vector<float> center
