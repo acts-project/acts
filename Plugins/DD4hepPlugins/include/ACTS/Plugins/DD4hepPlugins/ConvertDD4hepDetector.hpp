@@ -21,7 +21,7 @@ namespace Acts {
 ///
 /// This method returns a std::unique_ptr of the Acts::TrackingGeometry from the
 /// World DD4hep \a DetElement.
-/// @Pre Before using this method make sure, that the preconditions described in
+/// @pre Before using this method make sure, that the preconditions described in
 /// @ref DD4hepPlugins are met.
 ///
 ///

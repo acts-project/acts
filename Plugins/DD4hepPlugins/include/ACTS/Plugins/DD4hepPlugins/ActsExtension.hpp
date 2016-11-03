@@ -21,43 +21,61 @@ namespace Acts {
 
 /// @class ActsExtension
 ///
-/// @brief Extension of the DD4hep::DetElement needed for translation into ACTS
+/// @brief Extension of the \a %DD4hep \a DetElement needed for translation into
+/// the
+/// ACTS
 /// tracking geometry
 ///
-/// Implementation of the IActsExtension class, which uses the extension
-/// mechanism of DD4hep for the DD4hep::DetElement.
-/// This extensions are needed for the translation from the DD4hep geometry into
+/// Implementation of the Acts::IActsExtension class, which uses the extension
+/// mechanism of DD4hep for the \a %DD4hep \a DetElement.
+/// This extensions are needed for the translation from the \a %DD4hep geometry
+/// into
 /// the tracking geometry of the ACTS package.
 ///
 /// This extensions are necessary in order to distinguish in the translation if
-/// a DD4hep::DetElement is
+/// a \a %DD4hep \a DetElement is
 /// 	- the beampipe
-///     - a barrel volume
+///		- a barrel volume
 ///		- an endcap volume
 /// 	- a layer
+///
 /// and to hand over needed parameters.
 ///
-/// Every DD4hep::DetElement containing sensitive DD4hep::DetElements has to be
+/// Every \a %DD4hep \a DetElement containing sensitive \a %DD4hep \a
+/// DetElements
+/// has to
+/// be
 /// declared as a layer. However the layer does not need to be the direct mother
-/// of these sensitive DD4hep::DetElements - they can also be nested in other
-/// DD4hep::DetElement substructures. Moreover every DD4hep::DetElement layer
+/// of these sensitive \a DD4hep \a DetElements - they can also be nested in
+/// other
+/// \a %DD4hep \a DetElement substructures. Moreover every DD4hep \a DetElement
+/// layer
 /// which should carry material should also be declared as a layer and the
 /// specific parameters needed for material mapping should be handed over.
 /// In case the sensitive modules/components contained by a layer have a
 /// different orientation in respect to the local tracking frame of ACTS, the
 /// axes orientation of these modules can be set for the layer.
-/// In DD4hep cylinder and disc volumes are both described with the underlying
-/// ROOT TGeoConeSeg class. In ACTS one needs to distinguish these two volume
+///
+/// In \a %DD4hep cylinder and disc volumes are both described with the
+/// underlying
+/// \a ROOT \c TGeoConeSeg class. In ACTS one needs to distinguish these two
+/// volume
 /// types. Therefore volumes which are endcaps or barrels should be indicated as
 /// these.
-/// The ActsExtension should also be used to indicate that a DetElement is the
+/// The ActsExtension should also be used to indicate that a \a DetElement is
+/// the
 /// beampipe.
 ///
-/// If one wants to build the ACTS Tracking Geometry with DD4hep input these
-/// extension should be used during the construction of DD4hep i.e. in the
-/// DD4hep detector constructors. First the ActsExtension configuration object
-/// should be created and then attached to the DD4hep::DetElement
-/// (layer_detElement), e.g. for a layer:
+/// If one wants to build the ACTS Tracking Geometry with \a %DD4hep input these
+/// extension should be used during the construction of the \a %DD4hep geometry
+/// i.e. in the
+/// \a %DD4hep detector constructors. First the ActsExtension configuration
+/// object
+/// should be created and then attached to the \a %DD4hep \a DetElement.
+///
+/// Example for a layer \a DetElement (\c layer_detElement) where also
+/// parameters
+/// for material mapping are handed over:
 ///
 /// @code
 /// Acts::ActsExtension::Config layConfig;
@@ -103,23 +121,25 @@ public:
     /// outer surface of the layer
     /// @note this extension should be set for a layer
     LayerMaterialPos layerMaterialPosition;
-    /// orientation of the modules contained by a layer in respect to the
+    /// Orientation of the modules contained by a layer in respect to the
     /// tracking frame. A different orientation can occur because in TGeo (which
-    /// is the underlying geometry model of DD4hep) all shapes are 3D volumes
+    /// is the underlying geometry model of %DD4hep) all shapes are 3D volumes
     /// also the sensitive components of a detector. In the ACTS tracking
     /// geometry these sensitive components are described as 2D surfaces, which
     /// have their local 2D coordinate system. Therefore one needs to know which
     /// coordinates should be taken as the local coordinates.
-    /// it is a string of the three characters x, y and z (standing for the
-    /// three axes). There is a distinction between capital and lower case
+    /// A string of the three characters x, y and z (standing for the
+    /// three axes) needs to be handed over. There is a distinction between
+    /// capital and lower case
     /// characters :
     /// 	- capital      -> positive orientation of the axis
-    ///     - lower case   -> negative oriantation of the axis
-    ///        example options are "XYZ" -> identical frame definition (default
-    ///        value)
-    ///                            "YZX" -> node y axis is tracking x axis, etc.
-    ///                            "XzY" -> negative node z axis is tracking y
-    ///                            axis, etc.
+    ///		- lower case   -> negative oriantation of the axis
+    ///
+    ///
+    /// Example options are:
+    /// 	- "XYZ" -> identical frame definition (default value)
+    /// 	- "YZX" -> node y axis is tracking x axis, etc.
+    ///		- "XzY" -> negative node z axis is tracking y axis, etc.
     /// @note if the modules have a different orientation in respect to the
     /// tracking frame the axes should be set for the layer containing these
     /// modules
@@ -144,7 +164,7 @@ public:
   /// Destructor
   ~ActsExtension() = default;
   /// Set configuration method
-  /// @param cgbConfig is the new configuration struct
+  /// @param config is the new configuration struct
   void
   setConfiguration(const Config& config);
   /// Indicates if the DD4hep::DetElement is the beampipe

@@ -82,6 +82,7 @@ public:
 
   /// Constructor
   /// @param cfg is the configuration struct
+  /// @param logger the local logging instance
   TGeoLayerBuilder(const Config&           cfg,
                    std::unique_ptr<Logger> logger
                    = getDefaultLogger("LayerArrayCreator", Logging::INFO));

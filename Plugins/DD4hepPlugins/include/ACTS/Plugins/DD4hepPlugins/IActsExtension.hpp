@@ -28,42 +28,47 @@ namespace Acts {
 
 /// @class IActsExtension
 ///
-/// @brief Interface for Extension of the DD4hep::DetElement needed for
+/// @brief Interface for Extension of the DD4hep \a DetElement needed for
 /// translation into ACTS tracking geometry
 ///
-/// Interface class for making extensions to the DD4hep::DetElement class,
+/// Interface class for making extensions to the DD4hep \a DetElement class,
 /// needed  for the translation from the DD4hep geometry into the tracking
 /// geometry of the ACTS package.
 ///
 /// This extensions are necessary in order to distinguish in the translation if
-/// a DD4hep::DetElement is
+/// a DD4hep \a DetElement is
 /// 	- the beampipe
-///     - a barrel volume
+///		- a barrel volume
 ///		- an endcap volume
 /// 	- a layer
 /// and to hand over needed parameters.
 ///
-/// Every DD4hep::DetElement containing sensitive DD4hep::DetElements has to be
+/// Every DD4hep \a DetElement containing sensitive DD4hep \a DetElements has to
+/// be
 /// declared as a layer. However the layer does not need to be the direct mother
-/// of these sensitive DD4hep::DetElements - they can also be nested in other
-/// DD4hep::DetElement substructures. Moreover every DD4hep::DetElement layer
+/// of these sensitive DD4hep \a DetElements - they can also be nested in other
+/// DD4hep \a DetElement substructures. Moreover every DD4hep \a DetElement
+/// layer
 /// which should carry material should also be declared as a layer and the
 /// specific parameters needed for material mapping should be handed over.
 /// In case the sensitive modules/components contained by a layer have a
 /// different orientation in respect to the local tracking frame of ACTS, the
 /// axes orientation of these modules can be set for the layer.
+///
 /// In DD4hep cylinder and disc volumes are both described with the underlying
 /// ROOT TGeoConeSeg class. In ACTS one needs to distinguish these two volume
 /// types. Therefore volumes which are endcaps or barrels should be indicated as
 /// these.
-/// The ActsExtension should also be used to indicate that a DetElement is the
+/// The ActsExtension should also be used to indicate that a \a DetElement is
+/// the
 /// beampipe.
 ///
 /// @note see Acts::ActsExtension for implementation.
 
 class Module;
 
-/// @enum The LayerMaterialPos enumeration is foreseen to mark on which surface
+/// @enum LayerMaterialPos The LayerMaterialPos enumeration is foreseen to mark
+/// on which surface
 /// the two dimensional material of the layer sits. Either on the inner or
 /// the other boundary surface of the layer or at the representing (center)
 /// surface of the layer

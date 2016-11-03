@@ -26,7 +26,7 @@ namespace Acts {
 /// shapes, therefore the DD4hepDetElement inherits from TGeoDetectorElement.
 /// The
 /// full geometrical information is provided by the TGeoDetectorElement. The
-/// DD4hepDetrElement ectends the TGeoDetectorElement by containing a
+/// DD4hepDetElement extends the TGeoDetectorElement by containing a
 /// segmentation
 /// for the readout.
 
@@ -42,6 +42,21 @@ public:
   /// Constructor
   /// @param detElement The DD4hep DetElement which should be linked to a
   /// surface
+  /// @param axes is the axis orientation with respect to the tracking frame
+  ///        it is a string of the three characters x, y and z (standing for the
+  ///        three axes)
+  ///        There is a distinction between
+  /// capital and lower case
+  /// characters :
+  /// 	- capital      -> positive orientation of the axis
+  ///		- lower case   -> negative oriantation of the axis
+  ///
+  ///
+  /// Example options are:
+  /// 	- "XYZ" -> identical frame definition (default value)
+  /// 	- "YZX" -> node y axis is tracking x axis, etc.
+  ///		- "XzY" -> negative node z axis is tracking y axis, etc.
+  /// @param scalor is the scale factor for unit conversion if needed
   DD4hepDetElement(const DD4hep::Geometry::DetElement detElement,
                    const std::string&                 axes   = "XYZ",
                    double                             scalor = 1.);
