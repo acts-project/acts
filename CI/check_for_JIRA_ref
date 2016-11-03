@@ -1,0 +1,77 @@
+#! /usr/bin/env python
+import requests
+import argparse
+import subprocess
+from gitlab_helpers import *
+
+def get_closed_issues(args):
+    r = requests.get(args.mr_url + "/closes_issues",headers={"PRIVATE-TOKEN":args.token})
+    test_response(r)
+    closed_issues = r.json()
+    return closed_issues
+
+def main():
+    parser = argparse.ArgumentParser(description="GitLab merge request JIRA checker",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("--project",required=True,help="GitLab project with namespace (e.g. user/my-project)")
+    parser.add_argument("--url",default="https://gitlab.cern.ch",help="URL of GitLab instance")
+    parser.add_argument("--merge-request-id",dest="mr_id",required=True,type=int,help="(unique) ID of merge request (not the project specific IID)")
+    parser.add_argument("--token",required=True,help="private GitLab user token")
+
+    args = parser.parse_args()
+
+    # turn GitLab instance url into API access point
+    if args.url[-1] != "/":
+        args.url += "/"
+    args.url += "api/v3/"
+
+    # get unique project and MR id
+    args.project_id = get_project_id(args.url,args.project,args.token)
+    args.mr_url = args.url + "projects/{0}/merge_request/{1}".format(args.project_id,args.mr_id)
+
+    closed_issues = get_closed_issues(args)
+    print "merge request will close",len(closed_issues),"JIRA issues"
+    if len(closed_issues) < 1:
+        note = "This merge request does not close a JIRA ticket. Please consider creating a \
+JIRA ticket to describe your changes. This is important for generating a \
+complete ChangeLog for the next release."
+        cmd = "comment_merge_request add \"{0}\" --project {1} --merge-request-id {2} --token {3}".format(note,args.project,args.mr_id,args.token)
+        print cmd
+        subprocess.call(cmd,shell=True)
+        
+if __name__ == "__main__":
+    main()
+
+
+##! /usr/bin/env bash
+#
+## abort on error
+#set -e
+#
+## check for correct number of arguments
+#if [ $# -ne 1 ]
+#then
+#    echo "wrong number of arguments"
+#    echo "usage: check_for_JIRA_ref <PROJECT_KEY>"
+#    exit 1
+#fi
+#
+## set parameters
+#PROJECT_KEY=$1
+#
+## check for required environment variables
+#: ${gitlabToken:?"'gitlabToken' not set or empty"}
+#: ${gitlabTargetNamespace:?"'gitlabTargetNamespace' not set or empty"}
+#: ${gitlabTargetRepoName:?"'gitlabTargetRepoName' not set or empty"}
+#: ${gitlabMergeRequestId:?"'gitlabMergeRequestId' not set or empty"}
+#
+## look for JIRA reference
+#if [ ! "$gitlabMergeRequestDescription" =~ "" ]
+#then
+#    COMMENT="description of merge request"
+#    # add comment and mark MR as WIP
+#    comment_merge_request add "$COMMENT" --project $gitlabTargetNamespace/$gitlabTargetRepoName --merge-request-id $gitlabMergeRequestId --token $gitlabToken
+#    comment_merge_request mark_wip --project $gitlabTargetNamespace/$gitlabTargetRepoName --merge-request-id $gitlabMergeRequestId --token $gitlabToken
+#else
+#    echo "found reference"
+#fi

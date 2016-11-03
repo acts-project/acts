@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+# abort on error
+set -ex
+
+# check for correct number of arguments
+if [ $# -ne 3 ]
+then
+    echo "wrong number of arguments"
+    echo "usage: deploy_tag <ACTS_DIR> <DOC_DIR> <ACTS_MAIL>"
+    exit 1
+fi
+
+# check for required environment variables
+: ${gitlabSourceBranch:?"'gitlabSourceBranch' not set or empty"}
+
+# check for ACTS
+ACTS_DIR=`readlink -f $1`
+if [ ! -d "$ACTS_DIR" ]
+then
+    echo "ACTS_DIR='$ACTS_DIR' not found -> aborting"
+    exit 1
+fi
+
+# check for doxygen documentation
+DOC_DIR=`readlink -f $2`
+if [ ! -d "$DOC_DIR" ]
+then
+    echo "DOC_DIR='$DOC_DIR' not found -> aborting"
+    exit 1
+fi
+
+# get ACTS version tag
+VERSION=`basename $gitlabSourceBranch`
+
+# create tarball with source and copy it to server
+tar -C $ACTS_DIR -czf ACTS-$VERSION.tar.gz .
+ssh -o StrictHostKeyChecking=no atsjenkins@lxplus.cern.ch "mkdir -p ~/www/ACTS/$VERSION"
+scp ACTS-$VERSION.tar.gz atsjenkins@lxplus.cern.ch:~/www/ACTS/$VERSION
+rm ACTS-$VERSION.tar.gz
+
+# copy doxygen documentation to server
+scp -r $DOC_DIR atsjenkins@lxplus.cern.ch:~/www/ACTS/$VERSION/doc
+
+# update latest link on webpage
+#ssh -o StrictHostKeyChecking=no atsjenkins@lxplus.cern.ch 'rm -f ~/www/ACTS/latest; ln -s $(basename `ls -1dr ~/www/ACTS/v[0-9].[0-9][0-9].[0-9][0-9] | head -n 1`) ~/www/ACTS/latest;'
+
+# send notification email
+mail -s "New tag ACTS-$VERSION" -a"From:atsjenkins@cern.ch" $3 <<EOF
+Dear ACTS enthusiasts,
+
+a new tag "$VERSION" of the ACTS project has been released. You can get the source code from git using
+
+git clone https://gitlab.cern.ch/acts/a-common-tracking-sw.git acts
+cd acts/
+git checkout $VERSION
+
+or you can download a tarball with the source from 
+
+https://acts.web.cern.ch/ACTS/$VERSION/ACTS-$VERSION.tar.gz
+
+Detailed documentation can be found at
+
+https://acts.web.cern.ch/ACTS/$VERSION/doc/index.html
+
+Cheers,
+your friendly ACTS robot
+EOF

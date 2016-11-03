@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+# abort on error
+set -ex
+
+# check for required environment variables
+: ${gitlabTargetBranch:?"'gitlabTargetBranch' not set or empty"}
+: ${gitlabSourceRepoName:?"'gitlabSourceRepoName' not set or empty"}
+: ${gitlabSourceBranch:?"'gitlabSourceBranch' not set or empty"}
+
+# check for ACTS
+ACTS_DIR=`readlink -f $1`
+if [ ! -d "$ACTS_DIR" ]
+then
+    echo "ACTS_DIR='$ACTS_DIR' not found -> aborting"
+    exit 1
+fi
+cd $ACTS_DIR
+
+# apply reformat
+original_hash=`git rev-parse HEAD`
+git checkout $gitlabSourceBranch
+git fetch $gitlabSourceRepoName $gitlabSourceBranch
+git reset --hard FETCH_HEAD
+git diff -U0 origin/$gitlabTargetBranch $gitlabSourceRepoName/$gitlabSourceBranch | clang-format-diff -i -p1 -regex ".*(hpp|cpp|ipp)" -style=file
+
+# check whether we introduced some changes
+set +e
+git diff --exit-code > /dev/null
+status=$?
+set -e 
+
+if [ $status -ne 0 ]
+then
+    git commit --author "ATS Jenkins <ats.jenkins@cern.ch>" -m "clang-format: enforce code style [ci-skip]" .
+    git push $gitlabSourceRepoName $gitlabSourceBranch
+    # we pushed a new commit so there merge request will be rebuild
+    # -> abort this build
+    exit 10
+else
+    git checkout -f $original_hash
+fi

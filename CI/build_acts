@@ -1,0 +1,92 @@
+#! /usr/bin/env python
+import argparse
+import os,sys
+
+def main():
+    plugins = ['TGEO','DD4HEP','MATERIAL']
+    parser = argparse.ArgumentParser(description='ACTS build wrapper',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('ACTS_DIR',help='path to ACTS repository')
+    parser.add_argument('--analyze',action='store_true',default=False,help='run static code analyzer')
+    parser.add_argument('--analyze-out',dest='analyze_out',default='sca',help='output directory for reports from static code analyzer')
+    parser.add_argument('--build-dir',dest='build_dir',default='build',help='cmake build directory')
+    parser.add_argument('--build-doc',dest='build_doc',action='store_true',default=False,help='build doxygen documentation')
+    parser.add_argument('--build-plugins',dest='plugins',nargs='*',default=[],choices=plugins,help='ACTS plugins to build')
+    parser.add_argument('--build-type',dest='build_type',default="debug",choices=["debug","release"],help='cmake build type')
+    parser.add_argument('--compiler',default='`which g++`',help='path to compiler to be used')
+    parser.add_argument('--compile-options',dest='compile_options',default='',help='compiler options')
+    parser.add_argument('--install-dir',dest='install_dir',default="",help='install target directory (leave empty to skip "make install")')
+    parser.add_argument('--linker-options',dest='linker_options',default='',help='linker options')
+    parser.add_argument('--make-options',dest='make_options',default='',help='make options')
+    args = parser.parse_args()
+
+    # convert ACTS directory to absolute path
+    args.ACTS_DIR = os.path.abspath(args.ACTS_DIR)
+    # convert directories to absolute paths
+    if not os.path.isabs(args.build_dir):
+        args.build_dir = os.path.abspath(args.build_dir)
+    if args.install_dir and not os.path.isabs(args.install_dir):
+        args.install_dir = os.path.abspath(args.install_dir)
+
+    # create build directory and move to it
+    if not os.path.isdir(args.build_dir):
+        os.makedirs(args.build_dir)
+    os.chdir(args.build_dir)
+
+    # assemble cmake command
+    cmake_cmd = 'cmake ' + args.ACTS_DIR
+    # not for static code analysis as this would override hooking in the analyzer
+    if not args.analyze:
+        cmake_cmd += ' -DCMAKE_CXX_COMPILER=' + args.compiler
+    if args.compile_options:
+        cmake_cmd += ' -DCMAKE_CXX_FLAGS="' + args.compile_options + '"'
+    if args.linker_options:
+        cmake_cmd += ' -DCMAKE_EXE_LINKER_FLAGS="' + args.linker_options + '"'
+    if args.install_dir:
+        cmake_cmd += ' -DCMAKE_INSTALL_PREFIX=' + args.install_dir
+    cmake_cmd += ' -DCMAKE_BUILD_TYPE=' + args.build_type
+    cmake_cmd += ' -DEIGEN_INCLUDE_DIR=/opt/eigen/3.2.8'
+    cmake_cmd += ' -DBOOST_ROOT=/opt/boost/1.61.0/'
+    cmake_cmd += ' -DCMAKE_PREFIX_PATH="/opt/root/6.06.04;/opt/DD4hep/latest"'
+    cmake_cmd += ' -DBUILD_DOC=' + ('ON' if args.build_doc else 'OFF')
+    for p in plugins:
+        if p in args.plugins:
+            cmake_cmd += ' -DBUILD_' + p + '_PLUGIN=ON'
+
+    # wrap it for static code analysis
+    if args.analyze:
+        cmake_cmd = 'scan-build --use-c++=' + args.compiler + ' ' + cmake_cmd
+
+    # assemble cmake command
+    make_cmd = 'make'
+    if args.make_options:
+        make_cmd += ' ' + args.make_options
+    if args.install_dir:
+        make_cmd +='; make install'
+
+    # wrap it for static code analysis
+    if args.analyze:
+        scan_cmd = 'scan-build -v --keep-empty -analyzer-config "stable-report-filename=true"'
+        scan_cmd += ' --use-c++=' + args.compiler
+        scan_cmd += ' -o ' + args.analyze_out
+        scan_cmd += ' -enable-checker alpha.core.BoolAssignment'
+        scan_cmd += ' -enable-checker alpha.core.DynamicTypeChecker'
+        scan_cmd += ' -enable-checker alpha.core.IdenticalExpr'
+        scan_cmd += ' -enable-checker alpha.cplusplus.VirtualCall'
+        scan_cmd += ' -enable-checker alpha.deadcode.UnreachableCode'
+
+        make_cmd = scan_cmd + ' ' + make_cmd
+
+
+    print 'running in "' + os.getcwd() + '"'
+    print 'cmake command: "' + cmake_cmd + '"'
+    status = os.system(cmake_cmd)
+
+    if status == 0:
+        print 'make command: "' + make_cmd + '"'
+        status = os.system(make_cmd)
+
+    # propagate return status
+    sys.exit(status != 0)
+    
+if __name__ == '__main__':
+    main()
