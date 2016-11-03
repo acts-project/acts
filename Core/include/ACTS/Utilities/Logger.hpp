@@ -54,7 +54,6 @@
                                                                                \
     std::unique_ptr<Logger> m_logger;                                          \
   };                                                                           \
-<<<<<<< HEAD
   __local_acts_logger logger(std::move(log_object));
 
 /// @brief macro for verbose debug output
@@ -67,11 +66,6 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::VERBOSE.
-=======
-  }                                                                            \
-  local_logger logger;
-
->>>>>>> provide macro for using logger objects with ACTS logging macros
 #define ACTS_VERBOSE(x)                                                        \
   if (logger().doPrint(Acts::Logging::VERBOSE))                                \
     logger().log(Acts::Logging::VERBOSE) << x;
