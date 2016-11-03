@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+# abort on error
+set -ex
+
+# check for correct number of arguments
+if [ $# -ne 1 ]
+then
+    echo "wrong number of arguments"
+    echo "usage: check_license <ACTS_DIR>"
+    exit 1
+fi
+
+# check for required environment variables
+: ${gitlabToken:?"'gitlabToken' not set or empty"}
+: ${gitlabTargetNamespace:?"'gitlabTargetNamespace' not set or empty"}
+: ${gitlabTargetRepoName:?"'gitlabTargetRepoName' not set or empty"}
+: ${gitlabMergeRequestId:?"'gitlabMergeRequestId' not set or empty"}
+
+# check for ACTS
+ACTS_DIR=`readlink -f $1`
+if [ ! -d "$ACTS_DIR" ]
+then
+    echo "ACTS_DIR='$ACTS_DIR' not found -> aborting"
+    exit 1
+fi
+
+# license template
+MPLv2="// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/."
+
+# look for files not starting with above license template
+COMMENT=""
+COUNT=0
+SRC_FILES=`find $ACTS_DIR -regextype egrep -regex ".*\.(hpp|cpp|ipp)"`
+for f in $SRC_FILES
+do
+    HEAD=`head -n 7 $f`
+    if [ "$HEAD" != "$MPLv2" ]
+    then
+	COUNT=$(($COUNT + 1))
+	f=${f##$ACTS_DIR/}
+	COMMENT="$COMMENT$f<br />";
+    fi
+done
+
+# publish result as comment only if files without license statement are found
+if [ $COUNT -gt 0 ]
+then
+    COMMENT="Found $COUNT files with missing MPLv2 license statement:<br />$COMMENT"
+    comment_merge_request add "$COMMENT" --project $gitlabTargetNamespace/$gitlabTargetRepoName --merge-request-id $gitlabMergeRequestId --token $gitlabToken
+fi
