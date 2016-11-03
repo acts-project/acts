@@ -237,11 +237,12 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                                                        ddmaterial.density());
       // the configuration object of the volume builder
       Acts::CylinderVolumeBuilder::Config cvbConfig;
-      cvbConfig.volumeSignature   = 0;
-      cvbConfig.volumeName        = subDetector.name();
-      cvbConfig.buildToRadiusZero = true;
-      cvbConfig.volumeMaterial    = volumeMaterial;
-      cvbConfig.volumeDimension   = {rMin, rMax, halfZ};
+      cvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
+      cvbConfig.volumeSignature      = 0;
+      cvbConfig.volumeName           = subDetector.name();
+      cvbConfig.buildToRadiusZero    = true;
+      cvbConfig.volumeMaterial       = volumeMaterial;
+      cvbConfig.volumeDimension      = {rMin, rMax, -halfZ, halfZ};
       auto cylinderVolumeBuilder
           = std::make_shared<Acts::CylinderVolumeBuilder>(
               cvbConfig,
@@ -296,7 +297,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
               Acts::getDefaultLogger("CylinderVolumeBuilder", loggingLevel));
 
     } else {
-      if (!(subDetector.type() == "compound")) {
+      if (subDetector.type() != "compound") {
         ACTS_INFO(
             "[D] Subdetector with name : '"
             << subDetector.name()
@@ -309,16 +310,6 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                "needs to be set to 'compound'.");
         continue;
       }
-      ACTS_INFO(
-          "[D] Subdetector with name : '"
-          << subDetector.name()
-          << "' has no ActsExtension for translation and is not of type "
-             "'compound'. If you want to have this DetElement be translated "
-             "into the tracking geometry you need add the right "
-             "ActsExtension (at this stage the subvolume needs to be "
-             "declared as beampipe or barrel) or if it is a compound "
-             "DetElement (containing a barrel-endcap hierarchy), the type "
-             "needs to be set to 'compound'.");
       continue;
     }
   }
