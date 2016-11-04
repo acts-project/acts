@@ -133,7 +133,7 @@ public:
   ///
   /// @param lposition is the local position for the bin search
   /// @param bins is the bin triple filled during this access
-  /// 
+  ///
   /// @return is the object in that bin
   T
   object(const Vector2D& lposition, std::array<size_t, 3>& bins) const final
@@ -225,7 +225,7 @@ public:
             rvector.push_back(object);
         }
     // return the ones you found
-    return std::move(rvector);
+    return rvector;
   }
 
   /// Return the BinUtility

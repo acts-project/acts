@@ -66,12 +66,13 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   // complete the Binning @todo switch on when we have a faster method for this
   completeBinning(*arrayUtility, v3Matrix, surfaces, sGrid);
   // create the surfaceArray
-  auto sArray = std::make_unique<BinnedArrayXD<const Surface*>>(
-      sGrid, std::move(arrayUtility));
+  std::unique_ptr<Acts::SurfaceArray> sArray
+      = std::make_unique<BinnedArrayXD<const Surface*>>(
+          sGrid, std::move(arrayUtility));
   // define neigbourhood
   registerNeighbourHood(*sArray);
   // return the surface array
-  return std::move(sArray);
+  return sArray;
 }
 
 std::unique_ptr<Acts::SurfaceArray>
@@ -131,12 +132,13 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   // complete the Binning @TODO switch on when we have a faster method for this
   completeBinning(arrayUtility, v3Matrix, surfaces, sGrid);
   // create the surfaceArray
-  auto sArray = std::make_unique<BinnedArrayXD<const Surface*>>(
-      sGrid, std::make_unique<Acts::BinUtility>(arrayUtility));
+  std::unique_ptr<Acts::SurfaceArray> sArray
+      = std::make_unique<BinnedArrayXD<const Surface*>>(
+          sGrid, std::make_unique<Acts::BinUtility>(arrayUtility));
   // define neigbourhood
   registerNeighbourHood(*sArray);
   // return the surface array
-  return std::move(sArray);
+  return sArray;
 }
 
 std::unique_ptr<Acts::SurfaceArray>
@@ -195,12 +197,13 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // complete the Binning
   completeBinning(*arrayUtility, v3Matrix, surfaces, sGrid);
   // create the surfaceArray
-  auto sArray = std::make_unique<BinnedArrayXD<const Surface*>>(
-      sGrid, std::move(arrayUtility));
+  std::unique_ptr<Acts::SurfaceArray> sArray
+      = std::make_unique<BinnedArrayXD<const Surface*>>(
+          sGrid, std::move(arrayUtility));
   // define neigbourhood
   registerNeighbourHood(*sArray);
   // return the surface array
-  return std::move(sArray);
+  return sArray;
 }
 
 std::unique_ptr<Acts::SurfaceArray>
@@ -260,12 +263,13 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // complete the Binning
   completeBinning(arrayUtility, v3Matrix, surfaces, sGrid);
   // create the surfaceArray
-  auto sArray = std::make_unique<BinnedArrayXD<const Surface*>>(
-      sGrid, std::make_unique<Acts::BinUtility>(arrayUtility));
+  std::unique_ptr<Acts::SurfaceArray> sArray
+      = std::make_unique<BinnedArrayXD<const Surface*>>(
+          sGrid, std::make_unique<Acts::BinUtility>(arrayUtility));
   // define neigbourhood
   registerNeighbourHood(*sArray);
   // return the surface array
-  return std::move(sArray);
+  return sArray;
 }
 
 /// SurfaceArrayCreator interface method - create an array on a plane
