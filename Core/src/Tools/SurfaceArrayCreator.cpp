@@ -71,7 +71,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   // define neigbourhood
   registerNeighbourHood(*sArray);
   // return the surface array
-  return std::move(sArray);
+  return sArray;
 }
 
 std::unique_ptr<Acts::SurfaceArray>
@@ -136,7 +136,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   // define neigbourhood
   registerNeighbourHood(*sArray);
   // return the surface array
-  return std::move(sArray);
+  return sArray;
 }
 
 std::unique_ptr<Acts::SurfaceArray>
@@ -200,7 +200,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // define neigbourhood
   registerNeighbourHood(*sArray);
   // return the surface array
-  return std::move(sArray);
+  return sArray;
 }
 
 std::unique_ptr<Acts::SurfaceArray>
@@ -265,7 +265,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // define neigbourhood
   registerNeighbourHood(*sArray);
   // return the surface array
-  return std::move(sArray);
+  return sArray;
 }
 
 /// SurfaceArrayCreator interface method - create an array on a plane

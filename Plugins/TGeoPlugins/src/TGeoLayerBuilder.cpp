@@ -43,7 +43,7 @@ Acts::TGeoLayerBuilder::negativeLayers() const
 {
   LayerVector nVector;
   buildLayers(nVector, -1);
-  return std::move(nVector);
+  return nVector;
 }
 
 const Acts::LayerVector
@@ -51,7 +51,7 @@ Acts::TGeoLayerBuilder::centralLayers() const
 {
   LayerVector cVector;
   buildLayers(cVector, 0);
-  return std::move(cVector);
+  return cVector;
 }
 
 const Acts::LayerVector
@@ -59,7 +59,7 @@ Acts::TGeoLayerBuilder::positiveLayers() const
 {
   LayerVector pVector;
   buildLayers(pVector, -1);
-  return std::move(pVector);
+  return pVector;
 }
 
 void
