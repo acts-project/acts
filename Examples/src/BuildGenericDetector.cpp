@@ -25,7 +25,7 @@
 
 namespace Acts {
 
-std::unique_ptr<const Acts::TrackingGeometry>
+std::unique_ptr<Acts::TrackingGeometry>
 buildGenericDetector(Logging::Level surfaceLLevel,
                      Logging::Level layerLLevel,
                      Logging::Level volumeLLevel,
