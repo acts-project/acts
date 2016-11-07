@@ -319,7 +319,8 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
                                < 10e-12);
                      });
     // the phi-center position of the previous surface
-    double previous = 0.;
+    double previous     = 0.;
+    bool   phiCorrected = false;
     // go through key surfaces
     for (auto& surface : keys) {
       if (surface != *(keys.begin()) && surface != *(keys.end() - 1)) {
@@ -354,8 +355,9 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
           }
           // phi correction
           if (surface->center().phi() < minBValue) {
-            minBValue = -M_PI;
+            bValues.push_back(-M_PI);
             bValues.push_back(M_PI);
+            phiCorrected = true;
           }
           bValues.push_back(minBValue);
         }
@@ -370,8 +372,8 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
             if (globVertex.phi() > maxBValue) maxBValue = globVertex.phi();
           }
           // phi correction
-          if (surface->center().phi() > maxBValue) {
-            maxBValue = M_PI;
+          if (surface->center().phi() > maxBValue && !phiCorrected) {
+            bValues.push_back(M_PI);
             bValues.push_back(-M_PI);
           }
           bValues.push_back(maxBValue);
