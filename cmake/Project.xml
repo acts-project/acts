@@ -1,0 +1,17 @@
+<Project name="ACTS">
+  <SubProject name="ACore">
+  </SubProject>
+  <SubProject name="Examples">
+    <Dependency name="ACore"/>
+  </SubProject>
+  <SubProject name="DD4hepPlugin">
+   <Dependency name="ACore"/>
+   <Dependency name="TGeoPlugin"/>
+  </SubProject>
+  <SubProject name="MaterialPlugin">
+   <Dependency name="ACore"/>
+  </SubProject>
+  <SubProject name="TGeoPlugin">
+   <Dependency name="ACore"/>
+  </SubProject>
+</Project>
