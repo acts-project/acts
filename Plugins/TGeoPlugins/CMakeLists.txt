@@ -10,18 +10,18 @@ if (BUILD_TGEO_PLUGIN)
     file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 
     # define library target
-    add_library (ACTSTGeoPlugin SHARED ${src_files})
+    add_library (TGeoPlugin SHARED ${src_files})
 
     # setup include directories
-    target_include_directories (ACTSTGeoPlugin PUBLIC ${ROOT_INCLUDE_DIRS})
-    target_include_directories (ACTSTGeoPlugin PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
+    target_include_directories (TGeoPlugin PUBLIC ${ROOT_INCLUDE_DIRS})
+    target_include_directories (TGeoPlugin PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
 
     # setup linker dependencies
-    target_link_libraries (ACTSTGeoPlugin PUBLIC ACTSCore)
-    target_link_libraries (ACTSTGeoPlugin PUBLIC Geom)
+    target_link_libraries (TGeoPlugin PUBLIC ACore)
+    target_link_libraries (TGeoPlugin PUBLIC Geom)
 
     # set installation directories
-    install (TARGETS ACTSTGeoPlugin EXPORT ACTSTGeoPluginTargets
+    install (TARGETS TGeoPlugin EXPORT TGeoPluginTargets
              LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
     install (DIRECTORY include/ACTS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
@@ -29,6 +29,10 @@ if (BUILD_TGEO_PLUGIN)
     # add to list of supported components
     list (APPEND _supported_components TGeoPlugin)
     set (_supported_components "${_supported_components}" PARENT_SCOPE)
+    
+    add_custom_target(TGeoPluginProject)
+    add_dependencies(TGeoPluginProject TGeoPlugin)
+    
   # do not fail if ROOT is not available, just inform and continue
   else (ROOT_FOUND)
     message (STATUS "${Red}ROOT was not found -> skip build of TGeoPlugins${ColorReset}")

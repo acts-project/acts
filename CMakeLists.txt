@@ -50,7 +50,9 @@ add_subdirectory (Plugins)
 add_subdirectory (Examples)
 
 # add unit tests
-enable_testing ()
+#enable_testing ()
+include (CTest)
+configure_file (cmake/run_all.ctest.in ${CMAKE_CURRENT_BINARY_DIR}/run_all.ctest @ONLY)
 add_subdirectory (Tests)
 
 # add version header

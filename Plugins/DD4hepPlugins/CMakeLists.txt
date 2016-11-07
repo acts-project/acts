@@ -13,18 +13,18 @@ if (BUILD_DD4HEP_PLUGIN)
     file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 
     # define library target
-    add_library (ACTSDD4hepPlugin SHARED ${src_files})
+    add_library (DD4hepPlugin SHARED ${src_files})
 
     # setup include directories
-    target_include_directories (ACTSDD4hepPlugin PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
-    target_include_directories (ACTSDD4hepPlugin PUBLIC ${DD4hep_INCLUDE_DIRS})
+    target_include_directories (DD4hepPlugin PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
+    target_include_directories (DD4hepPlugin PUBLIC ${DD4hep_INCLUDE_DIRS})
 
     # setup linker dependencies
-    target_link_libraries (ACTSDD4hepPlugin PUBLIC ACTSCore)
-    target_link_libraries (ACTSDD4hepPlugin PUBLIC ACTSTGeoPlugin)
+    target_link_libraries (DD4hepPlugin PUBLIC ACore)
+    target_link_libraries (DD4hepPlugin PUBLIC TGeoPlugin)
 
     # set installation directories
-    install (TARGETS ACTSDD4hepPlugin EXPORT ACTSDD4hepPluginTargets
+    install (TARGETS DD4hepPlugin EXPORT DD4hepPluginTargets
              LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
     install (DIRECTORY include/ACTS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
@@ -32,6 +32,9 @@ if (BUILD_DD4HEP_PLUGIN)
     # add to list of supported components
     list (APPEND _supported_components DD4hepPlugin)
     set (_supported_components "${_supported_components}" PARENT_SCOPE)
+    
+    add_custom_target(DD4hepPluginProject)
+    add_dependencies(DD4hepPluginProject DD4hepPlugin)
   # do not fail if ROOT is not available, just inform and continue
   else (DD4hep_FOUND)
     message (STATUS "${Red}DD4hep was not found -> skip build of DD4hepPlugins${ColorReset}")

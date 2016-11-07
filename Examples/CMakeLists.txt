@@ -2,26 +2,29 @@
 file (GLOB_RECURSE src_files "*/*.*pp")
 
 # define library target
-add_library (ACTSExamples SHARED ${src_files})
-target_include_directories (ACTSExamples PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
-target_link_libraries (ACTSExamples PUBLIC ACTSCore)
+add_library (ExamplesLib SHARED ${src_files})
+target_include_directories (ExamplesLib PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
+target_link_libraries (ExamplesLib PUBLIC ACore)
 
 # define executables
-add_executable (ACTSGenericDetector bin/main.cxx)
-target_include_directories (ACTSGenericDetector PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
-target_link_libraries (ACTSGenericDetector PRIVATE ACTSCore ACTSExamples)
+add_executable (GenericDetector bin/main.cxx)
+target_include_directories (GenericDetector PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
+target_link_libraries (GenericDetector PRIVATE ACore ExamplesLib)
 
 # set installation directories
-install (TARGETS ACTSExamples
-	 EXPORT ACTSExamplesTargets
-	 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-	 COMPONENT Examples)
+install (TARGETS ExamplesLib
+         EXPORT ExamplesTargets
+         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+         COMPONENT ExamplesLib)
 
-install (TARGETS ACTSGenericDetector
-	 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install (TARGETS GenericDetector
+         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 install (DIRECTORY include/ACTS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-	 COMPONENT Examples)
+         COMPONENT ExamplesLib)
+
+add_custom_target (ExamplesProject)
+add_dependencies (ExamplesProject ExamplesLib GenericDetector)
 
 # add to list of supported components
 list (APPEND _supported_components Examples)
