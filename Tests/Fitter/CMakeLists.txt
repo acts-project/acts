@@ -1,5 +1,5 @@
 add_executable (GainMatrixTest GainMatrixTests.cpp)
 target_include_directories (GainMatrixTest PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (GainMatrixTest PRIVATE ACore)
+target_link_libraries (GainMatrixTest PRIVATE ACTSCore)
 add_test(NAME GainMatrixUnitTest COMMAND GainMatrixTest)
-
+add_dependencies(ACoreProject GainMatrixTest)

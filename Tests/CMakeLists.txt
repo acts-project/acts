@@ -7,8 +7,6 @@ if (BUILD_TESTS)
 
    if (Boost_FOUND)
       message (STATUS "enable ACTS unit tests")
-      add_custom_target(Tests)
-      add_dependencies(ACoreProject Tests)
       # delegate
       add_subdirectory (Detector)
       add_subdirectory (EventData)

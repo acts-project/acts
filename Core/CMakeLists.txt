@@ -12,28 +12,29 @@ find_package (Boost 1.59 REQUIRED)
 file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp" "include/*.ipp")
 
 # define library target
-add_library (ACore SHARED ${src_files})
+add_library (ACTSCore SHARED ${src_files})
 
 # setup include directories
-target_include_directories (ACore PUBLIC ${EIGEN_INCLUDE_DIR})
-target_include_directories (ACore PUBLIC ${Boost_INCLUDE_DIRS})
-target_include_directories (ACore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
+target_include_directories (ACTSCore PUBLIC ${EIGEN_INCLUDE_DIR})
+target_include_directories (ACTSCore PUBLIC ${Boost_INCLUDE_DIRS})
+target_include_directories (ACTSCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
 
 # set compiler flags
-target_compile_definitions (ACore PUBLIC -DACTS_PARAMETER_DEFINITIONS_PLUGIN="${ACTS_PARAMETER_DEFINITIONS_PLUGIN}")
+target_compile_definitions (ACTSCore PUBLIC -DACTS_PARAMETER_DEFINITIONS_PLUGIN="${ACTS_PARAMETER_DEFINITIONS_PLUGIN}")
 
 # set installation directories
-install (TARGETS ACore EXPORT ACoreTargets
-         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-         COMPONENT ACore)
+install (TARGETS ACTSCore EXPORT ACTSCoreTargets
+	 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	 COMPONENT Core)
 
 install (DIRECTORY include/ACTS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-         COMPONENT ACore)
+	 COMPONENT Core)
 
 # add to list of supported components
-list (APPEND _supported_components ACore)
+list (APPEND _supported_components Core)
 set (_supported_components "${_supported_components}" PARENT_SCOPE)
 
+# add dummy project capturing all targets for the CDash ACore subproject
 add_custom_target(ACoreProject)
-add_dependencies(ACoreProject ACore)
+add_dependencies(ACoreProject ACTSCore)

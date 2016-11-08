@@ -1,6 +1,5 @@
 add_executable (plane_surface_tests plane_surface_tests.cpp)
 target_include_directories (plane_surface_tests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (plane_surface_tests PRIVATE ACore)
+target_link_libraries (plane_surface_tests PRIVATE ACTSCore)
 add_test(NAME plane_surface_tests COMMAND plane_surface_tests)
-set_property (TEST plane_surface_tests PROPERTY LABELS ACore)
-add_dependencies(Tests plane_surface_tests)
+add_dependencies(ACoreProject plane_surface_tests)
