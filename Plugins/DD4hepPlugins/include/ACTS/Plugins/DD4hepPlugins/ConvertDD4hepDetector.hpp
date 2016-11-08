@@ -66,10 +66,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                       Logging::Level loggingLevel = Logging::Level::INFO,
                       BinningType    bTypePhi     = equidistant,
                       BinningType    bTypeR       = equidistant,
-                      BinningType    bTypeZ       = equidistant,
-                      std::pair<double, double> layerEnvelopeR
-                      = {5. * Acts::units::_mm, 5. * Acts::units::_mm},
-                      double layerEnvelopeZ = 10. * Acts::units::_mm);
+                      BinningType    bTypeZ       = equidistant);
 
 /// Method internally used by convertDD4hepDetector
 /// @param [in] detElement the DD4hep::DetElement of the volume of which the
