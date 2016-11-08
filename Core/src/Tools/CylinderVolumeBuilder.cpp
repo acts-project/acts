@@ -117,19 +117,74 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       outsideBoundSetup.zMax    = ocvBounds->halflengthZ();
     }
   }
-
-  // (A) LAYER ANALYIS ---------------------------------------------
-  // analyze the layers
-  VolumeSetup nVolumeSetup = analyzeLayers(negativeLayers);
-  VolumeSetup cVolumeSetup = analyzeLayers(centralLayers);
-  VolumeSetup pVolumeSetup = analyzeLayers(positiveLayers);
-  // layer configuration
+  // ---------------------------------------------
+  // The Volume Setup of the SubVolumes
+  // ---------------------------------------------
+  // sub volume / layer configuration (subVolumes only build of layers are
+  // present)
   // --------------------------------------------------------------------------
   // possbile configurations are:
   //
-  // | Negagive Endcap | Barrel | Positive Endcap | -  all layers present
+  // | Negative Endcap | Barrel | Positive Endcap | -  all layers present
   //                   | Barrel |                   -  barrel present
   //                                                -  no layer present
+  VolumeSetup nVolumeSetup;
+  VolumeSetup cVolumeSetup;
+  VolumeSetup pVolumeSetup;
+  // Check if already given
+  if (m_cfg.subVolumeSetup) {
+    if (!negativeLayers.empty()) {
+      if (m_cfg.subVolumeSetup.zBoundaries.size() < 4) {
+        ACTS_ERROR("Only " << m_cfg.subVolumeSetup.zBoundaries.size()
+                           << " zBoundaries are given for the subVolumeSetup, "
+                              "but negative Layers are present and 4 "
+                              "zBoundaries need to be given in this case - "
+                              "Please check the configuration!"
+                              "The negative Volume will not be built now.");
+        nVolumeSetup.present = false;
+      } else {
+        // we have layers
+        nVolumeSetup.present = true;
+        nVolumeSetup.rMin    = m_cfg.subVolumeSetup.rMin;
+        nVolumeSetup.rMax    = m_cfg.subVolumeSetup.rMax;
+        nVolumeSetup.zMin    = m_cfg.subVolumeSetup.zBoundaries.at(0);
+        nVolumeSetup.zMax    = m_cfg.subVolumeSetup.zBoundaries.at(1);
+      }
+    }
+    if (!centralLayers.empty()) {
+      // we have layers
+      cVolumeSetup.present = true;
+      cVolumeSetup.rMin    = m_cfg.subVolumeSetup.rMin;
+      cVolumeSetup.rMax    = m_cfg.subVolumeSetup.rMax;
+      cVolumeSetup.zMin    = m_cfg.subVolumeSetup.zBoundaries.at(1);
+      cVolumeSetup.zMax    = m_cfg.subVolumeSetup.zBoundaries.at(2);
+    }
+    if (!positiveLayers.empty()) {
+      if (m_cfg.subVolumeSetup.zBoundaries.size() < 4) {
+        ACTS_ERROR("Only " << m_cfg.subVolumeSetup.zBoundaries.size()
+                           << " zBoundaries are given for the subVolumeSetup, "
+                              "but positive Layers are present and 4 "
+                              "zBoundaries need to be given in this case - "
+                              "Please check the configuration!"
+                              "The positive Volume will not be built now.");
+        pVolumeSetup.present = false;
+      } else {
+        // we have layers
+        pVolumeSetup.present = true;
+        pVolumeSetup.rMin    = m_cfg.subVolumeSetup.rMin;
+        pVolumeSetup.rMax    = m_cfg.subVolumeSetup.rMax;
+        pVolumeSetup.zMin    = m_cfg.subVolumeSetup.zBoundaries.at(2);
+        pVolumeSetup.zMax    = m_cfg.subVolumeSetup.zBoundaries.at(3);
+      }
+    }
+  } else {
+    // Find out with Layer analysis
+    // (A) LAYER ANALYIS ---------------------------------------------
+    // analyze the layers
+    nVolumeSetup = analyzeLayers(negativeLayers);
+    cVolumeSetup = analyzeLayers(centralLayers);
+    pVolumeSetup = analyzeLayers(positiveLayers);
+  }
   std::string layerConfiguration = "|";
   if (nVolumeSetup) {
     // negative layers are present
@@ -365,6 +420,13 @@ Acts::CylinderVolumeBuilder::synchronizeVolumeSetups(
       }
     // indicate the method
     outsideMethod = "configuration";
+  } else if (m_cfg.subVolumeSetup) {
+    volumeSetup.present = true;
+    // get the bounds from teh sub volumes
+    volumeSetup.rMin = m_cfg.subVolumeSetup.rMin;
+    volumeSetup.rMax = m_cfg.subVolumeSetup.rMax;
+    volumeSetup.zMin = m_cfg.subVolumeSetup.zBoundaries.front();
+    volumeSetup.zMax = m_cfg.subVolumeSetup.zBoundaries.back();
   } else {
     // get it from layer parsing
     for (auto lSetup : lsVector) volumeSetup.adapt(lSetup);

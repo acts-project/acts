@@ -168,6 +168,45 @@ struct VolumeSetup
   operator bool() const { return present; }
 };
 
+/// Sub Volume struct
+/// @brief The sub volume struct gives the possibility to hand over the
+/// dimensions of the sub volumes (i.e. barrel,endcaps)
+/// For the sub volume setup the minimum and maximum radius of all the sub
+/// volumes (i.e. barrel,endcaps) need to be set. Furthermore two (if only
+/// barrel layers are given) or four boundaries (if barrel and endcap layers are
+/// given) can be set.
+
+struct SubVolumeSetup
+{
+  /// indicates if the sub volume setup was set during the configuration
+  /// is automatically set if rMin, rMax and zBoundaries are given and therefore
+  /// does not need to be set by hand
+  bool present;
+  /// the minimum radius of the sub volume setup
+  double rMin;
+  /// the maximum radius of the sub volume setup
+  double rMax;
+  /// possible cases for zBounadries:
+  ///| Negative Endcap | Barrel | Positive Endcap |	=> four boundaries needed in
+  /// z
+  ///                  | Barrel |				    => two boundaries needed in z
+  /// the zBoundaries do not need to be handed over sorted, they will be sorted
+  /// in ascending order automatically
+  std::vector<double> zBoundaries;
+
+  /// Default constructor
+  SubVolumeSetup() : present(false), rMin(10e10), rMax(10e-10), zBoundaries()
+  {
+    if (zBoundaries.size() > 1 && rMin >= 0. && rMax > 0.) present = true;
+    // make sure the zBoundaries are sorted in ascending order
+    std::sort(zBoundaries.begin(), zBoundaries.end());
+  }
+
+  /// Conversion operator to bool needed for checks if the sub volume setup is
+  /// given
+  operator bool() const { return present; }
+};
+
 /// @class CylinderVolumeBuilder
 ///
 /// A volume builder to be used for building a concentrical cylindrical volumes
@@ -202,13 +241,17 @@ public:
     std::shared_ptr<Material> volumeMaterial = nullptr;
     /// build the volume to the beam line
     bool buildToRadiusZero = false;
-    /// needed to build layers within the volume
+    /// needed to build layers within the volume if no SubVolumeSetup is given
     std::shared_ptr<ILayerBuilder> layerBuilder = nullptr;
-    /// the envelope covering the potential layers rMin, rMax
+    /// the envelope covering the potential layers rMin, rMax if no
+    /// SubVolumeSetup is given
     std::pair<double, double> layerEnvelopeR
         = {5. * Acts::units::_mm, 5. * Acts::units::_mm};
     /// the envelope covering the potential layers inner/outer
     double layerEnvelopeZ = 10. * Acts::units::_mm;
+    /// possible SubVoumeSetup - it can provide the boundaries for the sub
+    /// volumes and replaces the layerEnvelope configuration in that case
+    SubVolumeSetup subVolumeSetup;
     /// the volume signature
     int volumeSignature = -1;
   };
