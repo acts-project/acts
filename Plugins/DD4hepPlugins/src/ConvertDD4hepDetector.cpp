@@ -26,9 +26,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                       Logging::Level               loggingLevel,
                       BinningType                  bTypePhi,
                       BinningType                  bTypeR,
-                      BinningType                  bTypeZ,
-                      std::pair<double, double> layerEnvelopeR,
-                      double layerEnvelopeZ)
+                      BinningType                  bTypeZ)
 {
   // create local logger for conversion
   auto DD4hepConverterlogger
@@ -69,6 +67,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
 
   // the volume builders of the subdetectors
   std::list<std::shared_ptr<ITrackingVolumeBuilder>> volumeBuilders;
+  bool                                               beampipe = false;
   // loop over the sub detectors
   for (auto& subDetector : subDetectors) {
     Acts::IActsExtension* subDetExtension = nullptr;
@@ -95,9 +94,24 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
         // go through sub volumes
         const DD4hep::Geometry::DetElement::Children& subDetectorChildren
             = subDetector.children();
+        // flags to catch if sub volumes have been set already
+        bool nEndCap = false;
+        bool pEndCap = false;
+        bool barrel  = false;
         for (auto& subDetectorChild : subDetectorChildren) {
           DD4hep::Geometry::DetElement volumeDetElement
               = subDetectorChild.second;
+
+          // get the dimensions of the volume
+          TGeoShape* geoShape
+              = subDetector.placement().ptr()->GetVolume()->GetShape();
+          TGeoConeSeg* tube = dynamic_cast<TGeoConeSeg*>(geoShape);
+          if (!tube)
+            throw std::logic_error(
+                "Volume of DetElement "
+                << subDetectorChild.name()
+                << " has wrong shape - needs to be TGeoConeSeg!");
+
           ACTS_VERBOSE(
               "[V] Volume : '"
               << volumeDetElement.name()
@@ -107,12 +121,12 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
           try {
             volumeExtension = volumeDetElement.extension<IActsExtension>();
           } catch (std::runtime_error& e) {
-            ACTS_ERROR("[V] Current DetElement: "
-                       << volumeDetElement.name()
-                       << " has no ActsExtension! At this stage it should be a "
-                          "detector volume declared as Barrel or Endcap. Please"
-                          "check your detector construction.");
-            return nullptr;
+            throw std::logic_error(
+                "[V] Current DetElement: "
+                << volumeDetElement.name()
+                << " has no ActsExtension! At this stage it should be a "
+                   "detector volume declared as Barrel or Endcap. Please"
+                   "check your detector construction.");
           }
           if (volumeExtension->isEndcap()) {
             ACTS_VERBOSE("[V] Subvolume : '"
@@ -124,25 +138,46 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                     ->GetMatrix()
                     ->GetTranslation()[2]
                 < 0.) {
+              if (nEndCap)
+                throw std::logic_error(
+                    "[V] Negative Endcap was already given for this "
+                    "hierachy! Please create a new "
+                    "DD4hep_SubDetectorAssembly for the next "
+                    "hierarchy.");
+              nEndCap = true;
               ACTS_VERBOSE("[V]       ->is negative endcap");
               collectLayers(volumeDetElement, negativeLayers);
+
             } else {
+              if (pEndCap)
+                throw std::logic_error(
+                    "[V] Positive Endcap was already given for this "
+                    "hierachy! Please create a new "
+                    "DD4hep_SubDetectorAssembly for the next "
+                    "hierarchy.");
+              pEndCap = true;
               ACTS_VERBOSE("[V]       ->is positive endcap");
               collectLayers(volumeDetElement, positiveLayers);
             }
           } else if (volumeExtension->isBarrel()) {
+            if (barrel)
+              throw std::logic_error("[V] Barrel was already given for this "
+                                     "hierachy! Please create a new "
+                                     "DD4hep_SubDetectorAssembly for the next "
+                                     "hierarchy.");
+            barrel = true;
             ACTS_VERBOSE("[V] Subvolume : "
                          << volumeDetElement.name()
                          << " is a cylinder volume -> handling as a barrel");
             collectLayers(volumeDetElement, centralLayers);
+
           } else {
-            ACTS_ERROR(
+            throw std::logic_error(
                 "[V] Current DetElement: "
                 << volumeDetElement.name()
                 << " has wrong ActsExtension! At this stage it should be a "
                    "detector volume declared as Barrel or Endcap. Please "
                    "check your detector construction.");
-            return nullptr;
           }
         }
 
@@ -175,6 +210,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                                                          ddmaterial.A(),
                                                          ddmaterial.Z(),
                                                          ddmaterial.density());
+
         // the configuration object of the volume builder
         Acts::CylinderVolumeBuilder::Config cvbConfig;
         cvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
@@ -204,6 +240,11 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
       }
     }
     if (subDetExtension && subDetExtension->isBeampipe()) {
+      if (beampipe)
+        throw std::logic_error("Beampipe has already been set! There can only "
+                               "exist one beam pipe. Please check your "
+                               "geometry setup and ActsExtensions.");
+      beampipe = true;
       ACTS_VERBOSE("[D] Subdetector : "
                    << subDetector.name()
                    << " is the beampipe - building beam pipe.");
@@ -211,10 +252,9 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
       TGeoShape* geoShape
           = subDetector.placement().ptr()->GetVolume()->GetShape();
       TGeoConeSeg* tube = dynamic_cast<TGeoConeSeg*>(geoShape);
-      if (!tube) {
-        ACTS_ERROR("Beampipe has wrong shape - needs to be TGeoConeSeg!");
-        return nullptr;
-      }
+      if (!tube)
+        throw std::logic_error(
+            "Beampipe has wrong shape - needs to be TGeoConeSeg!");
       // get the dimension of TGeo and convert lengths
       double rMin  = tube->GetRmin1() * units::_cm;
       double rMax  = tube->GetRmax1() * units::_cm;
