@@ -16,7 +16,7 @@ set(CTEST_DROP_LOCATION "/submit.php?project=ACTS")
 set(CTEST_DROP_SITE_CDASH TRUE)
 
 # sub projects
-set(CTEST_PROJECT_SUBPROJECTS ACore Examples TGeoPlugin MaterialPlugin)
+set(CTEST_PROJECT_SUBPROJECTS ACore Examples DD4hepPlugin MaterialPlugin TGeoPlugin)
 
 # site name
 execute_process(COMMAND hostname OUTPUT_VARIABLE HOSTNAME OUTPUT_STRIP_TRAILING_WHITESPACE)
