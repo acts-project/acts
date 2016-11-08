@@ -25,12 +25,8 @@ class Layer;
 class Volume;
 typedef std::shared_ptr<const TrackingVolume> TrackingVolumePtr;
 typedef std::shared_ptr<const VolumeBounds>   VolumeBoundsPtr;
-typedef std::shared_ptr<const Volume>         VolumePtr;
 typedef std::shared_ptr<const Layer>          LayerPtr;
 typedef std::vector<LayerPtr>                 LayerVector;
-typedef std::tuple<LayerVector, LayerVector, LayerVector> LayerTriple;
-typedef std::tuple<VolumePtr, VolumePtr, VolumePtr>       VolumeTriple;
-
 ///  @class ITrackingVolumeBuilder
 ///
 /// Interface class ITrackingVolumeBuilders
@@ -53,13 +49,11 @@ public:
   ///
   /// @param insideVolume is an (optional) volume to be wrapped
   /// @param outsideBounds is an (optional) outside confinement
-  /// @param layerTriple is an (optional) triplet of layers
   ///
   /// @return shared pointer to a newly created TrackingVolume
   virtual TrackingVolumePtr
-  trackingVolume(TrackingVolumePtr  insideVolume  = nullptr,
-                 VolumeBoundsPtr    outsideBounds = nullptr,
-                 const LayerTriple* layerTriple = nullptr) const = 0;
+  trackingVolume(TrackingVolumePtr insideVolume  = nullptr,
+                 VolumeBoundsPtr   outsideBounds = nullptr) const = 0;
 };
 
 }  // end of namespace
