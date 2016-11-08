@@ -18,7 +18,7 @@ install(FILES "${PROJECT_BINARY_DIR}/ACTSConfigVersion.cmake" "${PROJECT_BINARY_
 	DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/cmake/ACTS")
 
 foreach (_comp ${_supported_components})
-  install (EXPORT ${_comp}Targets NAMESPACE ACTS:: DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/cmake/ACTS")
+  install (EXPORT ACTS${_comp}Targets NAMESPACE ACTS:: DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/cmake/ACTS")
 endforeach ()
 
 # hack to fix INTERFACE_COMPILE_DEFINITIONS
