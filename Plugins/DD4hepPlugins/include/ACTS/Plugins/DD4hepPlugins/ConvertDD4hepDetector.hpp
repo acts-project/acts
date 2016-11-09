@@ -57,10 +57,9 @@ namespace Acts {
 /// 	- equidistant - if the sensitive surfaces are placed euqidistant
 /// @note equidistant binningtype is recommended because it is faster not only
 /// while building of the geometry  but also for look up during extrapolation
-/// @param [in] layerEnvelopeR the envelope covering the potential layers rMin,
-/// rMax
-/// @param [in] layerEnvelopeZ the envelope covering the potential layers
 /// inner/outer
+/// @exception std::logic_error if an error in the translation occurs
+/// @return std::unique_ptr to the full Acts::TrackingGeometry
 std::unique_ptr<Acts::TrackingGeometry>
 convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                       Logging::Level loggingLevel = Logging::Level::INFO,

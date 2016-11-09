@@ -232,7 +232,8 @@
 ///	    - sensitive detector modules
 ///		  @note the sensitive detector modules need to be placed in a layer however it can be nested in substructures (can be a component of a modules) i.e. it does not need to be a direct child of the layer
 ///
-/// * The numbering of the id's of the sub detectors need to be ascending
+/// * The numbering of the id's of the sub detectors needs to be ascending.
+///	  This is needed because the Tracking geometry is built from bottom to top to ensure Navigation.
 ///
 /// * The Acts::ActsExtension's need to be used during the detector construction
 ///    indicating if a \a DetElement
