@@ -1,5 +1,5 @@
 # get list of all source files
-file (GLOB_RECURSE src_files "*/*.*pp")
+file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 
 # define library target
 add_library (ACTSExamples SHARED ${src_files})
@@ -7,26 +7,26 @@ target_include_directories (ACTSExamples PUBLIC $<BUILD_INTERFACE:${CMAKE_CURREN
 target_link_libraries (ACTSExamples PUBLIC ACTSCore)
 
 # define executables
-add_executable (ACTSGenericDetector bin/main.cxx)
-target_include_directories (ACTSGenericDetector PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
+add_executable (ACTSGenericDetector bin/main.cpp)
+target_include_directories (ACTSGenericDetector PRIVATE include/)
 target_link_libraries (ACTSGenericDetector PRIVATE ACTSCore ACTSExamples)
 
 # set installation directories
 install (TARGETS ACTSExamples
-	 EXPORT ACTSExamplesTargets
-	 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-	 COMPONENT Examples)
+         EXPORT ACTSExamplesTargets
+         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+         COMPONENT Examples)
 
 install (TARGETS ACTSGenericDetector
-	 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-install (DIRECTORY include/ACTS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-	 COMPONENT Examples)
+install (DIRECTORY include/ACTS 
+         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+         COMPONENT Examples)
 
 # add to list of supported components
 list (APPEND _supported_components Examples)
 set (_supported_components "${_supported_components}" PARENT_SCOPE)
 
-# add dummy project capturing all targets for the CDash Examples subproject
-add_custom_target (ExamplesProject)
-add_dependencies (ExamplesProject ACTSExamples ACTSGenericDetector)
+# add to CDash Examples subproject
+acts_add_targets_to_cdash_project(PROJECT Examples TARGETS ACTSExamples ACTSGenericDetector)

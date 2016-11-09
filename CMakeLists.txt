@@ -20,6 +20,9 @@ include (GNUInstallDirs)
 # include ACTS specific compilation options
 include (cmake/ACTSCompilerOptions.cmake)
 
+# include ACTS specific macros
+include (cmake/ACTSFunctions.cmake)
+
 # Configure CCache if available
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)

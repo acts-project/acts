@@ -30,10 +30,8 @@ if (BUILD_TGEO_PLUGIN)
     list (APPEND _supported_components TGeoPlugin)
     set (_supported_components "${_supported_components}" PARENT_SCOPE)
     
-    # add dummy project capturing all targets for the CDash TGeoPlugin subproject
-    add_custom_target(TGeoPluginProject)
-    add_dependencies(TGeoPluginProject ACTSTGeoPlugin)
-    
+    # add to CDash TGeoPlugin subproject
+    acts_add_targets_to_cdash_project(PROJECT TGeoPlugin TARGETS ACTSTGeoPlugin)
   # do not fail if ROOT is not available, just inform and continue
   else (ROOT_FOUND)
     message (STATUS "${Red}ROOT was not found -> skip build of TGeoPlugins${ColorReset}")

@@ -24,7 +24,8 @@ if (BUILD_DD4HEP_PLUGIN)
     target_link_libraries (ACTSDD4hepPlugin PUBLIC ACTSTGeoPlugin)
 
     # set installation directories
-    install (TARGETS ACTSDD4hepPlugin EXPORT ACTSDD4hepPluginTargets
+    install (TARGETS ACTSDD4hepPlugin 
+             EXPORT ACTSDD4hepPluginTargets
              LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
     install (DIRECTORY include/ACTS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
@@ -33,9 +34,8 @@ if (BUILD_DD4HEP_PLUGIN)
     list (APPEND _supported_components DD4hepPlugin)
     set (_supported_components "${_supported_components}" PARENT_SCOPE)
     
-    # add dummy project capturing all targets for the CDash DD4hepPlugin subproject
-    add_custom_target(DD4hepPluginProject)
-    add_dependencies(DD4hepPluginProject ACTSDD4hepPlugin)
+    # add to CDash DD4hepPlugin subproject
+    acts_add_targets_to_cdash_project(PROJECT DD4hepPlugin TARGETS ACTSDD4hepPlugin)
     
   # do not fail if ROOT is not available, just inform and continue
   else (DD4hep_FOUND)
