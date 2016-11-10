@@ -242,10 +242,10 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                                                          ddmaterial.Z(),
                                                          ddmaterial.density());
         // Create the sub volume setup
-        Acts::SubVolumeSetup subVolumeSetup;
-        subVolumeSetup.rMin        = rMin;
-        subVolumeSetup.rMax        = rMax;
-        subVolumeSetup.zBoundaries = finalZBoundaries;
+        Acts::SubVolumeConfig subVolumeConfig;
+        subVolumeConfig.rMin        = rMin;
+        subVolumeConfig.rMax        = rMax;
+        subVolumeConfig.zBoundaries = finalZBoundaries;
         // the configuration object of the volume builder
         Acts::CylinderVolumeBuilder::Config cvbConfig;
         cvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
@@ -253,7 +253,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
         cvbConfig.volumeName           = subDetector.name();
         cvbConfig.volumeMaterial       = volumeMaterial;
         cvbConfig.layerBuilder         = dd4hepLayerBuilder;
-        cvbConfig.subVolumeSetup       = subVolumeSetup;
+        cvbConfig.subVolumeConfig       = subVolumeConfig;
         auto cylinderVolumeBuilder
             = std::make_shared<Acts::CylinderVolumeBuilder>(
                 cvbConfig,
@@ -365,10 +365,10 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
       zBoundaries.push_back(zPos - halfZ);
       zBoundaries.push_back(zPos + halfZ);
       // create the sub volume setup
-      Acts::SubVolumeSetup subVolumeSetup;
-      subVolumeSetup.rMin        = tube->GetRmin1() * units::_cm;
-      subVolumeSetup.rMax        = tube->GetRmax1() * units::_cm;
-      subVolumeSetup.zBoundaries = zBoundaries;
+      Acts::SubVolumeConfig subVolumeConfig;
+      subVolumeConfig.rMin        = tube->GetRmin1() * units::_cm;
+      subVolumeConfig.rMax        = tube->GetRmax1() * units::_cm;
+      subVolumeConfig.zBoundaries = zBoundaries;
       // get the possible material
       DD4hep::Geometry::Material ddmaterial = subDetector.volume().material();
       auto volumeMaterial = std::make_shared<Material>(ddmaterial.radLength(),
@@ -383,7 +383,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
       cvbConfig.volumeName           = subDetector.name();
       cvbConfig.volumeMaterial       = volumeMaterial;
       cvbConfig.layerBuilder         = dd4hepLayerBuilder;
-      cvbConfig.subVolumeSetup       = subVolumeSetup;
+      cvbConfig.subVolumeConfig       = subVolumeConfig;
       auto cylinderVolumeBuilder
           = std::make_shared<Acts::CylinderVolumeBuilder>(
               cvbConfig,
