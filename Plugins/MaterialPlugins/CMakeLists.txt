@@ -2,9 +2,9 @@
 option (BUILD_MATERIAL_PLUGIN "build Material plugins" OFF)
 
 if (BUILD_MATERIAL_PLUGIN)
-
   # get list of all source files
   file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
+  
   # define library target
   add_library (ACTSMaterialPlugin SHARED ${src_files})
 
@@ -15,15 +15,18 @@ if (BUILD_MATERIAL_PLUGIN)
   target_link_libraries (ACTSMaterialPlugin PUBLIC ACTSCore)
 
   # set installation directories
-  install (TARGETS ACTSMaterialPlugin EXPORT ACTSMaterialPluginTargets
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  install (TARGETS ACTSMaterialPlugin 
+           EXPORT ACTSMaterialPluginTargets
+           LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
   install (DIRECTORY include/ACTS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
   # add to list of supported components
   list (APPEND _supported_components MaterialPlugin)
   set (_supported_components "${_supported_components}" PARENT_SCOPE)
-   
+
+  # add to CDash MaterialPlugin subproject
+  acts_add_targets_to_cdash_project(PROJECT MaterialPlugin TARGETS ACTSMaterialPlugin)
 else (BUILD_MATERIAL_PLUGIN)
     message (STATUS "${Blue}disable build of MaterialPlugins${ColorReset}")
 endif (BUILD_MATERIAL_PLUGIN)

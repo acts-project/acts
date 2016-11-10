@@ -1,9 +1,11 @@
 add_executable (ParameterSetTest ParameterSetTests.cpp)
 target_include_directories (ParameterSetTest PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (ParameterSetTest PRIVATE ACTSCore)
-add_test(NAME ParSetUnitTest COMMAND ParameterSetTest)
+add_test (NAME ParSetUnitTest COMMAND ParameterSetTest)
+acts_add_test_to_cdash_project (PROJECT ACore TEST ParSetUnitTest TARGETS ParameterSetTest)
 
 add_executable (MeasurementTest MeasurementTests.cpp)
 target_include_directories (MeasurementTest PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (MeasurementTest PRIVATE ACTSCore)
-add_test(NAME MeasurementUnitTest COMMAND MeasurementTest)
+add_test (NAME MeasurementUnitTest COMMAND MeasurementTest)
+acts_add_test_to_cdash_project (PROJECT ACore TEST MeasurementUnitTest TARGETS MeasurementTest)

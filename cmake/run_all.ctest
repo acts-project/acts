@@ -1,0 +1,121 @@
+function(build_name CXX_COMPILER BOOST_ROOT EIGEN_INCLUDE_DIR)
+  execute_process(COMMAND basename ${CXX_COMPILER} OUTPUT_VARIABLE COMPILER_TYPE OUTPUT_STRIP_TRAILING_WHITESPACE)
+  execute_process(COMMAND ${CXX_COMPILER} -dumpversion OUTPUT_VARIABLE COMPILER_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+  
+  execute_process(COMMAND grep "#define BOOST_LIB_VERSION" ${BOOST_ROOT}/include/boost/version.hpp COMMAND awk "{print $3}" OUTPUT_VARIABLE BOOST_VERSION)
+  execute_process(COMMAND echo ${BOOST_VERSION} COMMAND sed -e s/\"//g -e s/_/./g OUTPUT_VARIABLE BOOST_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+  
+  execute_process(COMMAND grep "#define EIGEN_WORLD_VERSION" ${EIGEN_INCLUDE_DIR}/Eigen/src/Core/util/Macros.h COMMAND awk "{print $3}" OUTPUT_VARIABLE EIGEN_WORLD_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+  execute_process(COMMAND grep "#define EIGEN_MAJOR_VERSION" ${EIGEN_INCLUDE_DIR}/Eigen/src/Core/util/Macros.h COMMAND awk "{print $3}" OUTPUT_VARIABLE EIGEN_MAJOR_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+  execute_process(COMMAND grep "#define EIGEN_MINOR_VERSION" ${EIGEN_INCLUDE_DIR}/Eigen/src/Core/util/Macros.h COMMAND awk "{print $3}" OUTPUT_VARIABLE EIGEN_MINOR_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(EIGEN_VERSION "${EIGEN_WORLD_VERSION}.${EIGEN_MAJOR_VERSION}.${EIGEN_MINOR_VERSION}")
+
+  set(BUILD_NAME
+  "${CMAKE_SYSTEM_NAME}_${COMPILER_TYPE}-${COMPILER_VERSION}_boost-${BOOST_VERSION}_eigen-${EIGEN_VERSION}" PARENT_SCOPE)
+endfunction()
+
+# check required command line input
+if(NOT SOURCE_DIR)
+  message (FATAL_ERROR "SOURCE_DIR must be set")
+endif()
+
+if(NOT BUILD_DIR)
+  message (FATAL_ERROR "BUILD_DIR must be set")
+endif()
+
+if(NOT EIGEN_INCLUDE_DIR)
+  message (FATAL_ERROR "EIGEN_INCLUDE_DIR must be set")
+endif()
+
+if(NOT BOOST_ROOT)
+  message (FATAL_ERROR "BOOST_ROOT must be set")
+endif()
+
+if(NOT CMAKE_CXX_COMPILER)
+  set(CMAKE_CXX_COMPILER "g++")
+endif()
+
+if(NOT CMAKE_ADDITIONAL_OPTIONS)
+  set(CMAKE_ADDITIONAL_OPTIONS "")
+endif()
+
+if(NOT BUILD_NAME_PREFIX)
+  set(BUILD_NAME_PREFIX "")
+endif()
+
+
+set(CTEST_SOURCE_DIRECTORY ${SOURCE_DIR})
+set(CTEST_BINARY_DIRECTORY ${BUILD_DIR})
+
+set(CTEST_CMAKE_GENERATOR "Unix Makefiles")
+set(CTEST_BUILD_CONFIGURATION ${CMAKE_BUILD_TYPE})
+
+build_name(${CMAKE_CXX_COMPILER} ${BOOST_ROOT} ${EIGEN_INCLUDE_DIR})
+set(CTEST_BUILD_NAME ${BUILD_NAME_PREFIX}${BUILD_NAME})
+
+set(WITH_MEMCHECK FALSE)
+set(WITH_COVERAGE TRUE)
+
+find_program(CTEST_COVERAGE_COMMAND NAMES gcov)
+find_program(CTEST_MEMORYCHECK_COMMAND NAMES valgrind)
+
+set(CTEST_CONFIGURE_COMMAND "${CMAKE_COMMAND} -DBOOST_ROOT:PATH=${BOOST_ROOT}")
+set(CTEST_CONFIGURE_COMMAND "${CTEST_CONFIGURE_COMMAND} -DEIGEN_INCLUDE_DIR:PATH=${EIGEN_INCLUDE_DIR}")
+set(CTEST_CONFIGURE_COMMAND "${CTEST_CONFIGURE_COMMAND} ${CMAKE_ADDITIONAL_OPTIONS}")
+set(CTEST_CONFIGURE_COMMAND "${CTEST_CONFIGURE_COMMAND} ${CTEST_SOURCE_DIRECTORY}")
+
+# flag indicating build/test errors
+set(CTEST_FAILURE FALSE)
+
+ctest_start("Experimental")
+ctest_configure(RETURN_VALUE res)
+
+if(NOT res EQUAL 0)
+  message(WARNING "configuration failed")
+  set(CTEST_FAILURE TRUE)
+endif()
+
+ctest_submit(PARTS Configure Notes FILES ${CTEST_SOURCE_DIRECTORY}/cmake/Project.xml)
+
+foreach(subproject ${CTEST_PROJECT_SUBPROJECTS})
+  message("building: ${subproject}")
+  set_property(GLOBAL PROPERTY SubProject ${subproject})
+  set_property (GLOBAL PROPERTY Label ${subproject})
+  
+  ctest_build(TARGET ${subproject}Project RETURN_VALUE res)
+  if(NOT res EQUAL 0)
+    message(WARNING "build failed for '${subproject}'")
+    set(CTEST_FAILURE TRUE)
+  endif()
+
+  ctest_submit(PARTS Build)
+  ctest_test(INCLUDE_LABEL ${subproject} RETURN_VALUE res)
+  if(NOT res EQUAL 0)
+    message(WARNING "tests failed for '${subproject}'")
+    set(CTEST_FAILURE TRUE)
+  endif()
+  ctest_submit(PARTS Test)
+  if (WITH_COVERAGE AND CTEST_COVERAGE_COMMAND)
+    ctest_coverage(LABELS ${subproject} RETURN_VALUE res)
+    if(NOT res EQUAL 0)
+      message(WARNING "test coverage failed for '${subproject}'")
+      set(CTEST_FAILURE TRUE)
+    endif()
+    ctest_submit(PARTS Coverage)
+  endif (WITH_COVERAGE AND CTEST_COVERAGE_COMMAND)
+
+  if (WITH_MEMCHECK AND CTEST_MEMORYCHECK_COMMAND)
+    ctest_memcheck(INCLUDE_LABEL ${subproject} RETURN_VALUE res)
+    if(NOT res EQUAL 0)
+      message(WARNING "memory check failed for '${subproject}'")
+      set(CTEST_FAILURE TRUE)
+    endif()
+    ctest_submit(PARTS MemCheck)
+  endif (WITH_MEMCHECK AND CTEST_MEMORYCHECK_COMMAND)
+endforeach()
+
+if(CTEST_FAILURE)
+  message(STATUS "ctest result: FAILURE")
+else()
+  message(STATUS "ctest result: SUCCESS")
+endif()
