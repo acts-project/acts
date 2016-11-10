@@ -448,7 +448,7 @@ public:
 
     // if new field is required get it
     if (cache.newfield)
-      m_bField(R, f0);
+      m_bField.getField(R, f0);
     else {
       f0[0] = cache.field[0];
       f0[1] = cache.field[1];
@@ -478,7 +478,7 @@ public:
       //
       if (!Helix) {
         double gP[3] = {R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4};
-        m_bField(gP, f);
+        m_bField.getField(gP, f);
       } else {
         f[0] = f0[0];
         f[1] = f0[1];
@@ -501,7 +501,7 @@ public:
       if (!Helix) {
         double gP[3]
             = {R[0] + stepMax * A4, R[1] + stepMax * B4, R[2] + stepMax * C4};
-        m_bField(gP, f);
+        m_bField.getField(gP, f);
       } else {
         f[0] = f0[0];
         f[1] = f0[1];

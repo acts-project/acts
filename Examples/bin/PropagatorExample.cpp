@@ -8,7 +8,7 @@
 #include "ACTS/Extrapolation/AtlasStepper.hpp"
 #include "ACTS/Extrapolation/ObserverList.hpp"
 #include "ACTS/Extrapolation/Observers.hpp"
-#include "ACTS/MagneticField/ConstantFieldSvc.hpp"
+#include "ACTS/MagneticField/ConstantBField.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
 using namespace Acts;
@@ -17,13 +17,11 @@ using namespace Acts::propagation;
 int
 main()
 {
-  typedef ConstantFieldSvc          BField_type;
+  typedef ConstantBField            BField_type;
   typedef AtlasStepper<BField_type> Stepper_type;
   typedef Propagator<Stepper_type>  Propagator_type;
 
-  BField_type::Config c;
-  c.field = {0, 0, 2 * units::_T};
-  BField_type     bField(std::move(c));
+  BField_type     bField(0, 0, 2 * units::_T);
   Stepper_type    gsl_stepper(std::move(bField));
   Propagator_type propagator(std::move(gsl_stepper));
 

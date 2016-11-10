@@ -125,7 +125,7 @@ public:
     Vector3D B_first(0, 0, 0);
     Vector3D B_middle(0, 0, 0);
     Vector3D B_last(0, 0, 0);
-    m_bField(c.pos.data(), B_first.data());
+    m_bField.getField(c.pos.data(), B_first.data());
 
     // first point
     const Vector3D& k1 = qop * c.dir.cross(B_first);
@@ -135,7 +135,7 @@ public:
       const double& half_h = h / 2;
       // second point
       const Vector3D& pos1 = c.pos + half_h * c.dir + h2 / 8 * k1;
-      m_bField(pos1.data(), B_middle.data());
+      m_bField.getField(pos1.data(), B_middle.data());
       const Vector3D& k2 = qop * (c.dir + half_h * k1).cross(B_middle);
 
       // third point
@@ -143,7 +143,7 @@ public:
 
       // last point
       const Vector3D& pos2 = c.pos + h * c.dir + h2 / 2 * k3;
-      m_bField(pos2.data(), B_last.data());
+      m_bField.getField(pos2.data(), B_last.data());
       const Vector3D& k4 = qop * (c.dir + h * k3).cross(B_last);
 
       // local error estimate

@@ -7,7 +7,7 @@
 #include "ACTS/Extrapolation/ObserverList.hpp"
 #include "ACTS/Extrapolation/Observers.hpp"
 #include "ACTS/Extrapolation/Propagator.hpp"
-#include "ACTS/MagneticField/ConstantFieldSvc.hpp"
+#include "ACTS/MagneticField/ConstantBField.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
 namespace po = boost::program_options;
@@ -49,7 +49,7 @@ main(int argc, char* argv[])
             << " tracks with pT = " << pT / units::_GeV << "GeV in a "
             << Bz / units::_T << "T B-field" << std::endl;
 
-  typedef ConstantFieldSvc         BField_type;
+  typedef ConstantBField           BField_type;
   typedef GSLStepper<BField_type>  Stepper_type;
   typedef Propagator<Stepper_type> Propagator_type;
 

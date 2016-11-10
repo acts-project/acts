@@ -2,7 +2,7 @@
 #include <iostream>
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Extrapolation/RungeKuttaEngine.hpp"
-#include "ACTS/MagneticField/ConstantFieldSvc.hpp"
+#include "ACTS/MagneticField/ConstantBField.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Utilities/Logger.hpp"
 #include "ACTS/Utilities/Units.hpp"
@@ -46,17 +46,15 @@ main(int argc, char* argv[])
             << " tracks with pT = " << pT / units::_GeV << "GeV in a " << Bz
             << "T B-field" << std::endl;
 
-  typedef ConstantFieldSvc BField_type;
-  BField_type::Config      b_config;
-  b_config.field = {0, 0, Bz / 1000};
+  typedef ConstantBField       BField_type;
   std::unique_ptr<BField_type> magnetic_field
-      = std::make_unique<BField_type>(b_config);
+      = std::make_unique<BField_type>(0, 0, Bz);
 
-  RungeKuttaEngine::Config c;
+  RungeKuttaEngine<>::Config c;
   c.fieldService  = std::move(magnetic_field);
   c.maxPathLength = maxPath;
 
-  RungeKuttaEngine propagator(c);
+  RungeKuttaEngine<> propagator(c);
 
   CylinderSurface surface(nullptr, 100 * units::_m, 30 * units::_m);
 

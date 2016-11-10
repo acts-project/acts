@@ -16,7 +16,7 @@
 #include "ACTS/Extrapolation/AtlasStepper.hpp"
 #include "ACTS/Extrapolation/EigenStepper.hpp"
 #include "ACTS/Extrapolation/Propagator.hpp"
-#include "ACTS/MagneticField/ConstantFieldSvc.hpp"
+#include "ACTS/MagneticField/ConstantBField.hpp"
 #include "ACTS/Utilities/Units.hpp"
 #include "covariance_validation_fixture.hpp"
 
@@ -43,15 +43,13 @@ namespace Test {
                        charge,
                        index)
   {
-    typedef ConstantFieldSvc          BField_type;
+    typedef ConstantBField            BField_type;
     typedef EigenStepper<BField_type> Stepper_type;
     typedef Propagator<Stepper_type>  Propagator_type;
 
     // setup propagator with constant B-field
-    const double        Bz = 2 * units::_T;
-    BField_type::Config c;
-    c.field = {0, 0, Bz};
-    BField_type     bField(std::move(c));
+    const double    Bz = 2 * units::_T;
+    BField_type     bField(0, 0, Bz);
     Stepper_type    stepper(std::move(bField));
     Propagator_type propagator(std::move(stepper));
 
@@ -137,15 +135,13 @@ namespace Test {
                        charge,
                        index)
   {
-    typedef ConstantFieldSvc          BField_type;
+    typedef ConstantBField            BField_type;
     typedef EigenStepper<BField_type> Stepper_type;
     typedef Propagator<Stepper_type>  Propagator_type;
 
     // setup propagator with constant B-field
-    const double        Bz = 2 * units::_T;
-    BField_type::Config c;
-    c.field = {0, 0, Bz};
-    BField_type     bField(std::move(c));
+    const double    Bz = 2 * units::_T;
+    BField_type     bField(0, 0, Bz);
     Stepper_type    stepper(std::move(bField));
     Propagator_type propagator(std::move(stepper));
 
@@ -199,15 +195,13 @@ namespace Test {
                        charge,
                        index)
   {
-    typedef ConstantFieldSvc          BField_type;
+    typedef ConstantBField            BField_type;
     typedef AtlasStepper<BField_type> Stepper_type;
     typedef Propagator<Stepper_type>  Propagator_type;
 
     // setup propagator with constant B-field
-    const double        Bz = 2 * units::_T;
-    BField_type::Config c;
-    c.field = {0, 0, Bz};
-    BField_type     bField(std::move(c));
+    const double    Bz = 2 * units::_T;
+    BField_type     bField(0, 0, Bz);
     Stepper_type    stepper(std::move(bField));
     Propagator_type propagator(std::move(stepper));
 
