@@ -22,6 +22,7 @@ if (BUILD_DD4HEP_PLUGIN)
     # setup linker dependencies
     target_link_libraries (ACTSDD4hepPlugin PUBLIC ACTSCore)
     target_link_libraries (ACTSDD4hepPlugin PUBLIC ACTSTGeoPlugin)
+    target_link_libraries (ACTSDD4hepPlugin PUBLIC ${DD4hep_DDCORE_LIBRARY} ${DD4hep_DDSEGMENTATION_LIBRARY})
 
     # set installation directories
     install (TARGETS ACTSDD4hepPlugin 
