@@ -168,14 +168,13 @@ struct VolumeSetup
   operator bool() const { return present; }
 };
 
-/// Sub Volume struct
 /// @brief The sub volume struct gives the possibility to hand over the
 /// dimensions of the sub volumes (i.e. barrel,endcaps)
+///
 /// For the sub volume setup the minimum and maximum radius of all the sub
 /// volumes (i.e. barrel,endcaps) need to be set. Furthermore two (if only
 /// barrel layers are given) or four boundaries (if barrel and endcap layers are
 /// given) can be set.
-
 struct SubVolumeSetup
 {
   /// indicates if the sub volume setup was set during the configuration
