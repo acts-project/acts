@@ -36,8 +36,8 @@ namespace Acts {
 class TrackingVolume;
 class VolumeBounds;
 
-/// VolumeSetup struct to understand the layer setup
-struct VolumeSetup
+/// VolumeConfig struct to understand the layer config
+struct VolumeConfig
 {
   bool        present;   ///< layers are present
   bool        wrapping;  ///< in what way they are binned
@@ -48,7 +48,7 @@ struct VolumeSetup
   LayerVector layers;    ///< the layers you have
 
   /// Default constructor
-  VolumeSetup()
+  VolumeConfig()
     : present(false)
     , wrapping(false)
     , rMin(10e10)
@@ -59,98 +59,98 @@ struct VolumeSetup
   {
   }
 
-  /// Adapt to the dimensions of another setup
+  /// Adapt to the dimensions of another config
   ///
-  /// @param lSetup is the setup to which it should be adapded
+  /// @param lConfig is the config to which it should be adapded
   void
-  adapt(const VolumeSetup& lSetup)
+  adapt(const VolumeConfig& lConfig)
   {
-    takeSmaller(rMin, lSetup.rMin);
-    takeBigger(rMax, lSetup.rMax);
-    takeSmaller(zMin, lSetup.zMin);
-    takeBigger(zMax, lSetup.zMax);
+    takeSmaller(rMin, lConfig.rMin);
+    takeBigger(rMax, lConfig.rMax);
+    takeSmaller(zMin, lConfig.zMin);
+    takeBigger(zMax, lConfig.zMax);
   }
 
   /// Overlap check radially
   ///
-  /// @param vSetup is the setup against which is checked
+  /// @param vConfig is the config against which is checked
   bool
-  overlapsInR(const VolumeSetup& vSetup) const
+  overlapsInR(const VolumeConfig& vConfig) const
   {
     if (!present) return false;
-    if (rMin < vSetup.rMax && rMax > vSetup.rMax) return true;
-    if (vSetup.rMin < rMax && vSetup.rMax > rMin) return true;
+    if (rMin < vConfig.rMax && rMax > vConfig.rMax) return true;
+    if (vConfig.rMin < rMax && vConfig.rMax > rMin) return true;
     return false;
   }
 
   /// Overlap check longitudinally
   ///
-  /// @param vSetup is the setup against which is checked
+  /// @param vConfig is the config against which is checked
   bool
-  overlapsInZ(const VolumeSetup& vSetup) const
+  overlapsInZ(const VolumeConfig& vConfig) const
   {
     if (!present) return false;
-    if (zMin < vSetup.zMax && zMax > vSetup.zMax) return true;
-    if (vSetup.zMin < zMax && vSetup.zMax > zMin) return true;
+    if (zMin < vConfig.zMax && zMax > vConfig.zMax) return true;
+    if (vConfig.zMin < zMax && vConfig.zMax > zMin) return true;
     return false;
   }
 
   /// Compatibility check radially
   ///
-  /// @param vSetup is the setup against which is checked
+  /// @param vConfig is the config against which is checked
   bool
-  wrapsInR(const VolumeSetup& vSetup) const
+  wrapsInR(const VolumeConfig& vConfig) const
   {
-    if (vSetup.rMax > rMin) return false;
+    if (vConfig.rMax > rMin) return false;
     return true;
   }
 
   /// Compatibility check longitudinally
   ///
-  /// @param vSetup is the setup against which is checked
+  /// @param vConfig is the config against which is checked
   bool
-  wrapsInZ(const VolumeSetup& vSetup) const
+  wrapsInZ(const VolumeConfig& vConfig) const
   {
-    if (vSetup.zMin < zMin || vSetup.zMax > zMax) return false;
+    if (vConfig.zMin < zMin || vConfig.zMax > zMax) return false;
     return true;
   }
 
   /// Compatibility check full set
   ///
-  /// @param vSetup is the setup against which is checked
+  /// @param vConfig is the config against which is checked
   bool
-  wraps(const VolumeSetup& vSetup) const
+  wraps(const VolumeConfig& vConfig) const
   {
     // it wraps
-    return (wrapsInR(vSetup) && wrapsInZ(vSetup));
+    return (wrapsInR(vConfig) && wrapsInZ(vConfig));
   }
 
   /// Check if contained full set
   ///
-  /// @param vSetup is the setup against which is checked
+  /// @param vConfig is the config against which is checked
   bool
-  containes(const VolumeSetup& vSetup) const
+  containes(const VolumeConfig& vConfig) const
   {
-    return (containesInR(vSetup) && containesInZ(vSetup));
+    return (containesInR(vConfig) && containesInZ(vConfig));
   }
 
   /// Check if contained radially
   ///
-  /// @param vSetup is the setup against which is checked
+  /// @param vConfig is the config against which is checked
   bool
-  containesInR(const VolumeSetup& vSetup) const
+  containesInR(const VolumeConfig& vConfig) const
   {
-    if (vSetup.rMin > rMin && vSetup.rMax < rMax) return true;
+    if (vConfig.rMin > rMin && vConfig.rMax < rMax) return true;
     return false;
   }
 
   /// Check if contained longitudinally
   ///
-  /// @param vSetup is the setup against which is checked
+  /// @param vConfig is the config against which is checked
   bool
-  containesInZ(const VolumeSetup& vSetup) const
+  containesInZ(const VolumeConfig& vConfig) const
   {
-    if (vSetup.zMin > zMin && vSetup.zMax < zMax) return true;
+    if (vConfig.zMin > zMin && vConfig.zMax < zMax) return true;
     return false;
   }
 
@@ -168,11 +168,49 @@ struct VolumeSetup
   operator bool() const { return present; }
 };
 
+/// @brief The sub volume struct gives the possibility to hand over the
+/// dimensions of the sub volumes (i.e. barrel,endcaps)
+///
+/// For the sub volume config the minimum and maximum radius of all the sub
+/// volumes (i.e. barrel,endcaps) need to be set. Furthermore two (if only
+/// barrel layers are given) or four boundaries (if barrel and endcap layers are
+/// given) can be set.
+struct SubVolumeConfig
+{
+  /// indicates if the sub volume config was set during the configuration
+  /// is automatically set if rMin, rMax and zBoundaries are given and therefore
+  /// does not need to be set by hand
+  bool present;
+  /// the minimum radius of the sub volume config
+  double rMin;
+  /// the maximum radius of the sub volume config
+  double rMax;
+  /// possible cases for zBounadries:
+  ///| Negative Endcap | Barrel | Positive Endcap |	=> four boundaries needed in
+  /// z
+  ///                  | Barrel |				    => two boundaries needed in z
+  /// the zBoundaries do not need to be handed over sorted, they will be sorted
+  /// in ascending order automatically
+  std::vector<double> zBoundaries;
+
+  /// Default constructor
+  SubVolumeConfig() : present(false), rMin(10e10), rMax(10e-10), zBoundaries()
+  {
+    if (zBoundaries.size() > 1 && rMin >= 0. && rMax > 0.) present = true;
+    // make sure the zBoundaries are sorted in ascending order
+    std::sort(zBoundaries.begin(), zBoundaries.end());
+  }
+
+  /// Conversion operator to bool needed for checks if the sub volume config is
+  /// given
+  operator bool() const { return present; }
+};
+
 /// @class CylinderVolumeBuilder
 ///
 /// A volume builder to be used for building a concentrical cylindrical volumes
 ///  - a) configured volume
-///  - b) wrapping around a cylindrical/disk layer setup
+///  - b) wrapping around a cylindrical/disk layer config
 ///
 ///  All are optionally wrapped around a given volume which has to by a cylinder
 /// volume and which has to be center at z == 0
@@ -202,13 +240,17 @@ public:
     std::shared_ptr<Material> volumeMaterial = nullptr;
     /// build the volume to the beam line
     bool buildToRadiusZero = false;
-    /// needed to build layers within the volume
+    /// needed to build layers within the volume if no SubVolumeConfig is given
     std::shared_ptr<ILayerBuilder> layerBuilder = nullptr;
-    /// the envelope covering the potential layers rMin, rMax
+    /// the envelope covering the potential layers rMin, rMax if no
+    /// SubVolumeConfig is given
     std::pair<double, double> layerEnvelopeR
         = {5. * Acts::units::_mm, 5. * Acts::units::_mm};
     /// the envelope covering the potential layers inner/outer
     double layerEnvelopeZ = 10. * Acts::units::_mm;
+    /// possible SubVoumeConfig - it can provide the boundaries for the sub
+    /// volumes and replaces the layerEnvelope configuration in that case
+    SubVolumeConfig subVolumeConfig;
     /// the volume signature
     int volumeSignature = -1;
   };
@@ -278,52 +320,53 @@ private:
   /// the logging instance
   std::unique_ptr<Logger> m_logger;
 
-  /// Analyze the layer setup to gather needed dimension
+  /// Analyze the layer config to gather needed dimension
   ///
   /// @param lVector is the vector of layers that are parsed
-  /// @return a VolumeSetup representing this layer
-  VolumeSetup
+  /// @return a VolumeConfig representing this layer
+  VolumeConfig
   analyzeLayers(const LayerVector& lVector) const;
 
   /// Helper method check the layer containment,
   /// both for inside / outside.
   ///
-  /// @param layerSetup is the VolumeSetup to be tested
+  /// @param layerConfig is the VolumeConfig to be tested
   ///        the wrapping flag may be set
-  /// @param insideSetup is the inside volume in order to
+  /// @param insideConfig is the inside volume in order to
   ///        check the wrapping
-  /// @param volumeSetup is the volume to be tested
+  /// @param VolumeConfig is the volume to be tested
   /// @param sign distinguishes inside/outside testing
   ///
   /// @return boolean that indicates the test result
   bool
-  checkLayerContainment(VolumeSetup&       layerSetup,
-                        const VolumeSetup& insideSetup,
-                        const VolumeSetup& volumeSetup,
-                        int                sign) const;
+  checkLayerContainment(VolumeConfig&       layerConfig,
+                        const VolumeConfig& insideConfig,
+                        const VolumeConfig& volumeConfig,
+                        int                 sign) const;
 
-  /// Synchronize the layer setups with given
+  /// Synchronize the layer configs with given
   /// inside / outside constraints.
   ///
   /// This is the last method to be called in the building
-  /// chain. It adapts the setups accordingly and sets the
+  /// chain. It adapts the configs accordingly and sets the
   /// right boundaries.
   ///
-  /// @param nSetup the setup of negative EC layers (if present)
-  /// @param cSetup the setup of the barrel layers
-  /// @param pSetup the setup of positive EC layers (if present)
-  /// @param insideSetup is the inside volume setup/dimensions
-  /// @param outsideBoundSetup is the outside and final volume setup/dimensions
+  /// @param nConfig the config of negative EC layers (if present)
+  /// @param cConfig the config of the barrel layers
+  /// @param pConfig the config of positive EC layers (if present)
+  /// @param insideConfig is the inside volume config/dimensions
+  /// @param outsideBoundConfig is the outside and final volume
+  /// config/dimensions
   ///
   /// @note non-const references may be changed
   ///
   /// @return a wrapping condition @todo check if needed
   WrappingCondition
-  synchronizeVolumeSetups(VolumeSetup&       nSetup,
-                          VolumeSetup&       cSetup,
-                          VolumeSetup&       pSetup,
-                          const VolumeSetup& insideSetup,
-                          VolumeSetup&       outsideBoundSetup) const;
+  synchronizeVolumeConfigs(VolumeConfig&       nConfig,
+                           VolumeConfig&       cConfig,
+                           VolumeConfig&       pConfig,
+                           const VolumeConfig& insideConfig,
+                           VolumeConfig&       outsideBoundConfig) const;
 };
 
 /// Return the configuration object
