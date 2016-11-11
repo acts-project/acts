@@ -117,7 +117,7 @@
 /// @defgroup Plugins Plugins
 /// @brief ACTS extensions
 
-/// @defgroup DD4hepPlugins
+/// @defgroup DD4hepPlugins DD4hepPlugins
 /// @ingroup Plugins
 /// @brief Build ACTS tracking geometry from \a %DD4hep input.
 ///
