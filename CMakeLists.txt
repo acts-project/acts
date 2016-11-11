@@ -31,6 +31,9 @@ if(CCACHE_FOUND)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
 endif(CCACHE_FOUND)
 
+# silence warning about missing RPATH on Mac OSX
+set (CMAKE_MACOSX_RAPTH 1)
+
 # set the current version of ACTS
 set (ACTS_VERSION dev)
 
