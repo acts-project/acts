@@ -34,7 +34,8 @@ class EigenStepper
 private:
   struct Cache
   {
-    explicit Cache(const CurvilinearParameters& par)
+    template <typename T>
+    explicit Cache(const T& par)
       : pos(par.position())
       , dir(par.momentum().normalized())
       , qop(par.charge() / par.momentum().norm())
