@@ -253,7 +253,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
         cvbConfig.volumeName           = subDetector.name();
         cvbConfig.volumeMaterial       = volumeMaterial;
         cvbConfig.layerBuilder         = dd4hepLayerBuilder;
-        cvbConfig.subVolumeConfig       = subVolumeConfig;
+        cvbConfig.subVolumeConfig      = subVolumeConfig;
         auto cylinderVolumeBuilder
             = std::make_shared<Acts::CylinderVolumeBuilder>(
                 cvbConfig,
@@ -383,7 +383,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
       cvbConfig.volumeName           = subDetector.name();
       cvbConfig.volumeMaterial       = volumeMaterial;
       cvbConfig.layerBuilder         = dd4hepLayerBuilder;
-      cvbConfig.subVolumeConfig       = subVolumeConfig;
+      cvbConfig.subVolumeConfig      = subVolumeConfig;
       auto cylinderVolumeBuilder
           = std::make_shared<Acts::CylinderVolumeBuilder>(
               cvbConfig,
