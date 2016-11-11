@@ -37,12 +37,12 @@ public:
   /// @param tGeoDetElement is the TGeoNode which should be represented
   /// @param mtoglobal to global is the (optional) transform applied to the
   /// TGeoNode
-  /// @param axis is the axis orientation with respect to the tracking frame
+  /// @param axes is the axis orientation with respect to the tracking frame
   ///        it is a string of the three characters x, y and z (standing for the
   ///        three axes)
   ///        there is a distinction between capital and lower case characters :
   ///        - capital      -> positive orientation of the axis
-  ///        - lower case   -> negative oriantation of the axis
+  ///        - lower case   -> negative orientation of the axis
   ///        example options are "XYZ" -> identical frame definition (default
   ///        value)
   ///                            "YZX" -> node y axis is tracking x axis, etc.
@@ -55,6 +55,34 @@ public:
                       const std::string& axes      = "XYZ",
                       double             scalor    = 1.);
 
+  /// Alternative Constructor
+  /// when the localToGlobal transform is already known for the detector element
+  /// (e.g. usage in DD4hepPlugin)
+  /// @param identifier is the detector identifier
+  /// @param transform the full transformation matrix of the detector element
+  /// (local to global)
+  /// @param tGeoDetElement is the TGeoNode which should be represented
+  /// @param axes is the axis orientation with respect to the tracking frame
+  ///        it is a string of the three characters x, y and z (standing for the
+  ///        three axes)
+  ///        There is a distinction between
+  /// capital and lower case
+  /// characters :
+  /// 	- capital      -> positive orientation of the axis
+  ///		- lower case   -> negative oriantation of the axis
+  ///
+  ///
+  /// Example options are:
+  /// 	- "XYZ" -> identical frame definition (default value)
+  /// 	- "YZX" -> node y axis is tracking x axis, etc.
+  ///		- "XzY" -> negative node z axis is tracking y axis, etc.
+  /// @param scalor is the scale factor for unit conversion if needed
+  TGeoDetectorElement(const Identifier&  identifier,
+                      const TGeoMatrix&  transform,
+                      TGeoNode*          tGeoDetElement,
+                      const std::string& axes   = "XYZ",
+                      double             scalor = 1.);
+
   ///  Destructor
   virtual ~TGeoDetectorElement();
 
@@ -64,7 +92,7 @@ public:
 
   /// Return local to global transform associated with this identifier
   virtual const Transform3D&
-  transform(const Identifier& identifier = Identifier()) const final;
+  transform(const Identifier& identifier = Identifier()) const override;
 
   /// Return surface associated with this identifier, which should come from the
   virtual const Surface&

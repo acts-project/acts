@@ -48,10 +48,8 @@ Acts::CylinderVolumeBuilder::setLogger(std::unique_ptr<Logger> newLogger)
 }
 
 std::shared_ptr<const Acts::TrackingVolume>
-Acts::CylinderVolumeBuilder::trackingVolume(
-    TrackingVolumePtr  insideVolume,
-    VolumeBoundsPtr    outsideBounds,
-    const LayerTriple* layerTriple) const
+Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr insideVolume,
+                                            VolumeBoundsPtr outsideBounds) const
 {
   ACTS_DEBUG("Configured to build volume : " << m_cfg.volumeName);
 
@@ -65,24 +63,14 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   LayerVector centralLayers;
   LayerVector positiveLayers;
 
-  // - get the layers from a provided layer triple or from the layer builder
-  if (layerTriple) {
+  // the layers are built by the layer builder
+  if (m_cfg.layerBuilder) {
     // the negative Layers
-    negativeLayers = std::get<0>(*layerTriple);
+    negativeLayers = m_cfg.layerBuilder->negativeLayers();
     // the central Layers
-    centralLayers = std::get<1>(*layerTriple);
+    centralLayers = m_cfg.layerBuilder->centralLayers();
     // the positive Layer
-    positiveLayers = std::get<2>(*layerTriple);
-  } else {
-    // the layers are built by the layer builder
-    if (m_cfg.layerBuilder) {
-      // the negative Layers
-      negativeLayers = m_cfg.layerBuilder->negativeLayers();
-      // the central Layers
-      centralLayers = m_cfg.layerBuilder->centralLayers();
-      // the positive Layer
-      positiveLayers = m_cfg.layerBuilder->positiveLayers();
-    }
+    positiveLayers = m_cfg.layerBuilder->positiveLayers();
   }
   // (0) PREP WORK ------------------------------------------------
   //

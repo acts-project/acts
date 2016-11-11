@@ -284,11 +284,9 @@ public:
   ///
   /// @param insideVolume is an (optional) volume to be wrapped
   /// @param outsideBounds is an (optional) outside confinement
-  /// @param layerTriple is an (optional) triplet of layers
   TrackingVolumePtr
-  trackingVolume(TrackingVolumePtr  insideVolume  = nullptr,
-                 VolumeBoundsPtr    outsideBounds = nullptr,
-                 const LayerTriple* layerTriple   = nullptr) const override;
+  trackingVolume(TrackingVolumePtr insideVolume  = nullptr,
+                 VolumeBoundsPtr   outsideBounds = nullptr) const override;
 
   /// Set configuration method
   ///
