@@ -33,7 +33,7 @@ fi
 # clean up old files and run new tests
 cd $BUILD_DIR
 lcov -z -d .
-make test
+make test CTEST_OUTPUT_ON_FAILURE=TRUE
 
 # run lcov
 lcov -c -t ACTS -o coverage.info --no-external -d `pwd` -d $ACTS_DIR
