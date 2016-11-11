@@ -32,7 +32,7 @@ if(CCACHE_FOUND)
 endif(CCACHE_FOUND)
 
 # silence warning about missing RPATH on Mac OSX
-set (CMAKE_MACOSX_RAPTH 1)
+set (CMAKE_MACOSX_RPATH 1)
 
 # set the current version of ACTS
 set (ACTS_VERSION dev)
