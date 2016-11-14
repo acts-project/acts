@@ -15,25 +15,19 @@
 namespace Acts {
 /// @cond detail
 namespace detail {
-  /**
-   * @brief  initialize projection matrices
-   *
-   * This struct provides an initialization method for a projection matrix M
-   * such that only
-   * the entries with the given indices are selected from a full parameter
-   * vector. That means,
-   * M is a mapping M: (Nx1) --> (Sx1) if N is the total number of parameters
-   * and S is the
-   * number of given indices.
-   *
-   * @tparam columns number of columns (= dimension of full parameter space)
-   * @tparam rows template parameter pack containing the indices of the
-   * parameters to be projected
-   *
-   * @return `make_projection_matrix<columns,rows...>::init()` returns a matrix
-   * with dimensions
-   *         (`sizeof...(rows)` x columns)
-   */
+  /// @brief  initialize projection matrices
+  ///
+  /// @tparam columns number of columns (= dimension of full parameter space)
+  /// @tparam rows template parameter pack containing the indices of the
+  ///         parameters to be projected
+  ///
+  /// This struct provides an initialization method for a projection matrix M
+  /// such that only the entries with the given indices are selected from a full
+  /// parameter vector. That means, M is a mapping M: (Nx1) --> (Sx1) if N is
+  /// the total number of parameters and S is the number of given indices.
+  ///
+  /// @return make_projection_matrix<columns,rows...>::init() returns a matrix
+  ///         with dimensions (`sizeof...(rows)` x columns)
   template <unsigned int columns, unsigned int... rows>
   struct make_projection_matrix;
 

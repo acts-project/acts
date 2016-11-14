@@ -16,20 +16,16 @@
 namespace Acts {
 /// @cond detail
 namespace detail {
-  /**
-   * @brief calculate residuals from two parameter vectors
-   *
-   * Calculate the difference between the two given vectors with parameter
-   * values. Possible
-   * corrections for bounded or cyclic parameters are applied.
-   *
-   * @tparam params template parameter pack containing the multiple parameter
-   * identifiers
-   *
-   * @return `residual_calculator<params...>::result(first,second)` yields the
-   * residuals of
-   *         `first` with respect to `second`
-   */
+  /// @brief calculate residuals from two parameter vectors
+  ///
+  /// @tparam params template parameter pack containing the multiple parameter
+  ///                identifiers
+  ///
+  /// Calculate the difference between the two given vectors with parameter
+  /// values. Possible corrections for bounded or cyclic parameters are applied.
+  ///
+  /// @return residual_calculator<params...>::result(first,second) yields the
+  ///         residuals of `first` with respect to `second`
   template <ParID_t... params>
   struct residual_calculator;
 

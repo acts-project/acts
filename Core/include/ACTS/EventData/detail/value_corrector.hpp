@@ -16,25 +16,21 @@
 namespace Acts {
 /// @cond detail
 namespace detail {
-  /**
-   * @brief check and correct parameter values
-   *
-   * Values in the given vector are interpreted as values for the given
-   * parameters. As those
-   * they are checked whether they are inside the allowed range and corrected if
-   * necessary.
-   *
-   * Invocation:
-   *   - `value_corrector<params...>::result(parVector)` where `parVector`
-   * contains
-   *     `sizeof...(params)` elements
-   *
-   * @post All values in the argument `parVector` are within the valid parameter
-   * range.
-   *
-   * @tparam params template parameter pack containing the multiple parameter
-   * identifiers
-   */
+  /// @brief check and correct parameter values
+  ///
+  /// @tparam params template parameter pack containing the multiple parameter
+  ///                identifiers
+  ///
+  /// Values in the given vector are interpreted as values for the given
+  /// parameters. As those they are checked whether they are inside the allowed
+  /// range and corrected if necessary.
+  ///
+  /// Invocation:
+  ///   - value_corrector<params...>::result(parVector) where `parVector`
+  ///     contains `sizeof...(params)` elements
+  ///
+  /// @post All values in the argument `parVector` are within the valid
+  ///       parameter range.
   template <ParID_t... params>
   struct value_corrector;
 
