@@ -328,6 +328,8 @@ public:
   /// geometry signature is updated to the next volume
   GeometrySignature nextGeometrySignature;
 
+  /// number of Runge-Kutta propagation steps
+  unsigned int nSteps = 0;
   /// a counter of the navigation steps done in that extrapolation
   int navigationStep;
   /// the accumulated path legnth

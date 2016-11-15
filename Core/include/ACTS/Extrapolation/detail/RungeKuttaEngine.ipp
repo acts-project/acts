@@ -120,6 +120,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateRungeKuttaT(
                  "<T> ",
                  "surface type determined and localToGlobal performed.");
 
+  eCell.nSteps = pCache.niter;
   // check if the direction solution was ok
   if (pCache.direction != 0. && (pCache.direction * pCache.step) < 0.)
     return false;
@@ -490,13 +491,12 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
 
   // Rkuta extrapolation
   //
-  int niter       = 0;
   pCache.newfield = true;
 
   // whie loop over the steps
   while (fabs(step) > m_cfg.straightStep) {
     // maximum number of steps
-    if (++niter > 10000) {
+    if (++pCache.niter > 10000) {
       //!< @todo make max number configurable
       EX_MSG_DEBUG(navigationStep,
                    "propagate",
