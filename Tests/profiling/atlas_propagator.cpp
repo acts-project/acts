@@ -17,6 +17,7 @@ main(int argc, char* argv[])
   double       pT      = 1;
   double       Bz      = 1;
   double       maxPath = 1;
+  unsigned int lvl     = Acts::Logging::INFO;
 
   try {
     po::options_description desc("Allowed options");
@@ -24,9 +25,10 @@ main(int argc, char* argv[])
   desc.add_options()
       ("help", "produce help message")
       ("toys",po::value<unsigned int>(&toys)->default_value(10000),"number of tracks to propagate")
-      ("pT",po::value<double>(&pT)->default_value(1 * units::_GeV),"transverse momentum in GeV")
+      ("pT",po::value<double>(&pT)->default_value(1),"transverse momentum in GeV")
       ("B",po::value<double>(&Bz)->default_value(2),"z-component of B-field in T")
-      ("path",po::value<double>(&maxPath)->default_value(5 * units::_m),"maximum path length in m");
+      ("path",po::value<double>(&maxPath)->default_value(5),"maximum path length in m")
+      ("verbose",po::value<unsigned int>(&lvl)->default_value(Acts::Logging::INFO),"logging level");
     // clang-format on
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -41,25 +43,28 @@ main(int argc, char* argv[])
     return 1;
   }
 
+  auto myLogger = getDefaultLogger("ATLAS_Stepper", Acts::Logging::Level(lvl));
+  ACTS_LOCAL_LOGGER(std::move(myLogger));
+
   // print information about profiling setup
-  std::cout << "propagating " << toys
-            << " tracks with pT = " << pT / units::_GeV << "GeV in a " << Bz
-            << "T B-field" << std::endl;
+  ACTS_INFO("propagating " << toys << " tracks with pT = " << pT << "GeV in a "
+                           << Bz
+                           << "T B-field");
 
   typedef ConstantBField       BField_type;
   std::unique_ptr<BField_type> magnetic_field
-      = std::make_unique<BField_type>(0, 0, Bz);
+      = std::make_unique<BField_type>(0, 0, Bz / 1000.);
 
   RungeKuttaEngine<>::Config c;
   c.fieldService  = std::move(magnetic_field);
-  c.maxPathLength = maxPath;
+  c.maxPathLength = maxPath * units::_m;
 
   RungeKuttaEngine<> propagator(c);
 
   CylinderSurface surface(nullptr, 100 * units::_m, 30 * units::_m);
 
   Vector3D          pos(0, 0, 0);
-  Vector3D          mom(pT, 0, 0);
+  Vector3D          mom(pT * units::_GeV, 0, 0);
   ActsSymMatrixD<5> cov;
   cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 1, 0,
       0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
@@ -75,10 +80,19 @@ main(int argc, char* argv[])
     exCell.leadParameters     = &pars;
     exCell.lastLeadParameters = 0;
     propagator.propagate(exCell, surface);
+    ACTS_DEBUG("reached position (" << exCell.leadParameters->position().x()
+                                    << ", "
+                                    << exCell.leadParameters->position().y()
+                                    << ", "
+                                    << exCell.leadParameters->position().z()
+                                    << ") in "
+                                    << exCell.nSteps
+                                    << " steps");
     totalPathLength += exCell.pathLength;
   }
 
-  std::cout << "average path length = " << totalPathLength / toys / units::_mm
-            << "mm" << std::endl;
+  ACTS_INFO("average path length = " << totalPathLength / toys / units::_mm
+                                     << "mm");
+
   return 0;
 }
