@@ -196,7 +196,7 @@ namespace Test {
                        index)
   {
     typedef ConstantBField            BField_type;
-    typedef AtlasStepper<BField_type> Stepper_type;
+    typedef EigenStepper<BField_type> Stepper_type;
     typedef Propagator<Stepper_type>  Propagator_type;
 
     // setup propagator with constant B-field

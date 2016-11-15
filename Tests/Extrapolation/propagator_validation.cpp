@@ -7,7 +7,7 @@
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Extrapolation/AbortConditions.hpp"
 #include "ACTS/Extrapolation/AbortList.hpp"
-#include "ACTS/Extrapolation/AtlasStepper.hpp"
+#include "ACTS/Extrapolation/EigenStepper.hpp"
 #include "ACTS/Extrapolation/GSLStepper.hpp"
 #include "ACTS/Extrapolation/ObserverList.hpp"
 #include "ACTS/Extrapolation/Observers.hpp"
@@ -50,7 +50,7 @@ namespace Test {
       index)
   {
     typedef ConstantBField            BField_type;
-    typedef AtlasStepper<BField_type> Stepper_type;
+    typedef EigenStepper<BField_type> Stepper_type;
     typedef Propagator<Stepper_type>  Propagator_type;
 
     BField_type     bField(0, 0, 2 * units::_T);
