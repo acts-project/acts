@@ -2,6 +2,7 @@
 #define ACTS_EIGEN_STEPPER_HPP 1
 
 #include "ACTS/EventData/TrackParameters.hpp"
+#include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
@@ -75,21 +76,48 @@ private:
     Vector3D pos = Vector3D(0, 0, 0);
     Vector3D dir = Vector3D(1, 0, 0);
     double   qop = 1;
-    ActsMatrixD<7, 5> jacobian = ActsMatrixD<7, 5>::Identity();
-    const ActsSymMatrixD<5>* cov = nullptr;
+    ActsMatrixD<7, 5> jacobian = ActsMatrixD<7, 5>::Zero();
+    ActsVectorD<7>           derivative = ActsVectorD<7>::Zero();
+    const ActsSymMatrixD<5>* cov        = nullptr;
   };
 
-public:
+  template <typename T, typename S>
+  struct s
+  {
+    typedef BoundParameters type;
+  };
+
   template <typename T>
+  struct s<T, int>
+  {
+    typedef CurvilinearParameters type;
+  };
+
+  static ActsMatrixD<3, 3>
+  dLocaldGlobal(const Surface& p, const Vector3D& gpos)
+  {
+    ActsMatrixD<3, 3> j = ActsMatrixD<3, 3>::Zero();
+    j.block<1, 3>(0, 0) = p.transform().matrix().block<3, 1>(0, 0).transpose();
+    j.block<1, 3>(1, 0) = p.transform().matrix().block<3, 1>(0, 1).transpose();
+    j.block<1, 3>(2, 0) = p.transform().matrix().block<3, 1>(0, 2).transpose();
+
+    return j;
+  }
+
+public:
+  template <typename T, typename S = int>
   using cache_type = Cache;
 
+  template <typename T>
+  using step_parameter_type = CurvilinearParameters;
+
   template <typename T, typename S = int>
-  using return_parameter_type = CurvilinearParameters;
+  using return_parameter_type = typename s<T, S>::type;
 
   EigenStepper(BField bField = BField()) : m_bField(std::move(bField)){};
 
-  CurvilinearParameters
-  convert(const Cache& c) const
+  static CurvilinearParameters
+  convert(const Cache& c)
   {
     double                             charge = c.qop > 0. ? 1. : -1.;
     std::unique_ptr<ActsSymMatrixD<5>> cov    = nullptr;
@@ -108,7 +136,25 @@ public:
       J(3, 5)             = -1. / sin(theta);
       J(4, 6)             = 1;
 
-      auto jac = J * c.jacobian;
+      ActsRowVectorD<3> norm_vec(
+          cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));
+
+      norm_vec /= (norm_vec * c.dir);
+      ActsRowVectorD<5> scale_factors
+          = (c.jacobian.template block<3, 5>(0, 0).array().colwise()
+             * norm_vec.transpose().array())
+                .colwise()
+                .sum();
+      ActsMatrixD<7, 5> tmp;
+      tmp.col(0) = c.derivative;
+      tmp.col(1) = c.derivative;
+      tmp.col(2) = c.derivative;
+      tmp.col(3) = c.derivative;
+      tmp.col(4) = c.derivative;
+      tmp *= scale_factors.asDiagonal();
+      auto jacobian = c.jacobian;
+      jacobian -= tmp;
+      auto jac = J * jacobian;
 
       cov = std::make_unique<ActsSymMatrixD<5>>(jac * (*c.cov)
                                                 * jac.transpose());
@@ -116,6 +162,56 @@ public:
 
     return CurvilinearParameters(
         std::move(cov), c.pos, c.dir / fabs(c.qop), charge);
+  }
+
+  template <typename S>
+  static BoundParameters
+  convert(Cache& c, const S& surface)
+  {
+    double                             charge = c.qop > 0. ? 1. : -1.;
+    std::unique_ptr<ActsSymMatrixD<5>> cov    = nullptr;
+    if (c.cov) {
+      const double phi   = c.dir.phi();
+      const double theta = c.dir.theta();
+
+      ActsMatrixD<5, 7> J = ActsMatrixD<5, 7>::Zero();
+      const auto& dLdG = dLocaldGlobal(surface, c.pos);
+      J.block<2, 3>(0, 0) = dLdG.template block<2, 3>(0, 0);
+      J(2, 3) = -sin(phi) / sin(theta);
+      J(2, 4) = cos(phi) / sin(theta);
+      J(3, 5) = -1. / sin(theta);
+      J(4, 6) = 1;
+
+      ActsRowVectorD<3> norm_vec = dLdG.template block<1, 3>(2, 0);
+      norm_vec /= (norm_vec * c.dir);
+      ActsRowVectorD<5> scale_factors
+          = (c.jacobian.template block<3, 5>(0, 0).array().colwise()
+             * norm_vec.transpose().array())
+                .colwise()
+                .sum();
+      ActsMatrixD<7, 5> tmp;
+      tmp.col(0) = c.derivative;
+      tmp.col(1) = c.derivative;
+      tmp.col(2) = c.derivative;
+      tmp.col(3) = c.derivative;
+      tmp.col(4) = c.derivative;
+      tmp *= scale_factors.asDiagonal();
+      c.jacobian -= tmp;
+      auto jac = J * c.jacobian;
+
+      cov = std::make_unique<ActsSymMatrixD<5>>(jac * (*c.cov)
+                                                * jac.transpose());
+    }
+
+    return BoundParameters(
+        std::move(cov), c.pos, c.dir / fabs(c.qop), charge, surface);
+  }
+
+  static double
+  distance(const Surface& s, const Vector3D& pos, const Vector3D& dir)
+  {
+    const Intersection& i = s.intersectionEstimate(pos, dir);
+    return i.pathLength;
   }
 
   double
@@ -154,23 +250,35 @@ public:
         continue;
       }
 
-      c.pos += h * c.dir + h2 / 6 * (k1 + k2 + k3);
-      c.dir += h / 6 * (k1 + 2 * k2 + 2 * k3 + k4);
-      c.dir /= c.dir.norm();
-
       if (c.cov) {
         ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Zero();
         D(6, 6)             = 1;
 
+        const double conv = units::SI2Nat<units::MOMENTUM>(1);
+
         auto dFdx = D.block<3, 3>(0, 0);
         auto dFdT = D.block<3, 3>(0, 3);
+        auto dFdL = D.block<3, 1>(0, 6);
         auto dGdx = D.block<3, 3>(3, 0);
         auto dGdT = D.block<3, 3>(3, 3);
+        auto dGdL = D.block<3, 1>(3, 6);
 
         ActsMatrixD<3, 3> dk1dT = ActsMatrixD<3, 3>::Zero();
         ActsMatrixD<3, 3> dk2dT = ActsMatrixD<3, 3>::Identity();
         ActsMatrixD<3, 3> dk3dT = ActsMatrixD<3, 3>::Identity();
         ActsMatrixD<3, 3> dk4dT = ActsMatrixD<3, 3>::Identity();
+
+        ActsVectorD<3> dk1dL = ActsVectorD<3>::Zero();
+        ActsVectorD<3> dk2dL = ActsVectorD<3>::Zero();
+        ActsVectorD<3> dk3dL = ActsVectorD<3>::Zero();
+        ActsVectorD<3> dk4dL = ActsVectorD<3>::Zero();
+
+        dk1dL = c.dir.cross(B_first);
+        dk2dL = (c.dir + half_h * k1).cross(B_middle)
+            + qop * half_h * dk1dL.cross(B_middle);
+        dk3dL = (c.dir + half_h * k2).cross(B_middle)
+            + qop * half_h * dk2dL.cross(B_middle);
+        dk4dL = (c.dir + h * k3).cross(B_last) + qop * h * dk3dL.cross(B_last);
 
         dk1dT(0, 1) = B_first.z();
         dk1dT(0, 2) = -B_first.y();
@@ -191,16 +299,27 @@ public:
 
         dFdx.setIdentity();
 
+        dFdT.setIdentity();
         dFdT += h / 6 * (dk1dT + dk2dT + dk3dT);
         dFdT *= h;
+
+        dFdL = conv * h2 / 6 * (dk1dL + dk2dL + dk3dL);
 
         dGdx.setZero();
 
         dGdT.setIdentity();
         dGdT += h / 6 * (dk1dT + 2 * (dk2dT + dk3dT) + dk4dT);
 
+        dGdL = conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
+
         c.jacobian = D * c.jacobian;
       }
+
+      c.pos += h * c.dir + h2 / 6 * (k1 + k2 + k3);
+      c.dir += h / 6 * (k1 + 2 * k2 + 2 * k3 + k4);
+      c.dir /= c.dir.norm();
+      c.derivative.template head<3>()     = c.dir;
+      c.derivative.template segment<3>(3) = k4;
 
       return h;
     }
