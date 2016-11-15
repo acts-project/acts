@@ -253,12 +253,14 @@ class ParticleProperties
 {
 public:
   /** constructor */
-  ParticleProperties(const Vector3D& momentum,
+  ParticleProperties(const Vector3D& vertex,
+                     const Vector3D& momentum,
                      double          mass    = 0.,
                      double          charge  = 0.,
                      pdg_type        pID     = 0.,
                      barcode_type    barcode = 0)
-    : m_momentum(momentum)
+    : m_vertex(vertex)
+    , m_momentum(momentum)
     , m_mass(mass)
     , m_charge(charge)
     , m_pdgID(pID)
@@ -271,7 +273,8 @@ public:
 
   /** constructor */
   ParticleProperties(const ParticleProperties& pProperties)
-    : m_momentum(pProperties.m_momentum)
+    : m_vertex(pProperties.m_vertex)
+    , m_momentum(pProperties.m_momentum)
     , m_mass(pProperties.m_mass)
     , m_charge(pProperties.m_charge)
     , m_pdgID(pProperties.m_pdgID)
@@ -282,11 +285,13 @@ public:
 
   /** destructor */
   ~ParticleProperties() {}
+    
   /** assignment operator */
   ParticleProperties&
   operator=(const ParticleProperties& pProperties)
   {
     if (this != &pProperties) {
+      m_vertex       = pProperties.m_vertex;
       m_momentum     = pProperties.m_momentum;
       m_mass         = pProperties.m_mass;
       m_charge       = pProperties.m_charge;
@@ -297,6 +302,18 @@ public:
     return (*this);
   }
 
+  /** shift the particle */
+  void
+  shift(const Vector3D& shift)
+  { m_vertex += shift; }
+
+  /** return the momentum */
+  const Vector3D&
+  vertex() const
+  {
+    return m_vertex;
+  }
+    
   /** return the momentum */
   const Vector3D&
   momentum() const
@@ -340,6 +357,7 @@ public:
   }
 
 private:
+    Vector3D     m_vertex;
   Vector3D     m_momentum;
   double       m_mass;
   double       m_charge;

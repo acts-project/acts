@@ -370,6 +370,7 @@ public:
   /// the configuration concentrated
   ExtrapolationConfig extrapolationConfiguration;
   /// The process vertices that occured (for FATRAS)
+  /// @todo move to templated extension 
   std::vector<ProcessVertex> interactionVertices;
 
   float time;    ///< timing info

@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_MAGNETICFIELDINTERFACES_CONSTANTFIELDSVC_H
-#define ACTS_MAGNETICFIELDINTERFACES_CONSTANTFIELDSVC_H 1
+#ifndef ACTS_MAGNETICFIELD_CONSTANTBFIELD_H
+#define ACTS_MAGNETICFIELD_CONSTANTBFIELD_H 1
 
 #include "ACTS/Utilities/Definitions.hpp"
 
@@ -115,4 +115,4 @@ private:
 };
 }  // end of namespace Acts
 
-#endif  //> ! ACTS_MAGNETICFIELDINTERFACES_CONSTANTFIELDSVC_H
+#endif  //> ! ACTS_MAGNETICFIELD_CONSTANTBFIELD_H
