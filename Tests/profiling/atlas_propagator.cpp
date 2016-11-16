@@ -18,6 +18,7 @@ main(int argc, char* argv[])
   double       Bz      = 1;
   double       maxPath = 1;
   unsigned int lvl     = Acts::Logging::INFO;
+  bool         withCov = true;
 
   try {
     po::options_description desc("Allowed options");
@@ -28,6 +29,7 @@ main(int argc, char* argv[])
       ("pT",po::value<double>(&pT)->default_value(1),"transverse momentum in GeV")
       ("B",po::value<double>(&Bz)->default_value(2),"z-component of B-field in T")
       ("path",po::value<double>(&maxPath)->default_value(5),"maximum path length in m")
+      ("cov",po::value<bool>(&withCov)->default_value(true),"propagation with covariance matrix")
       ("verbose",po::value<unsigned int>(&lvl)->default_value(Acts::Logging::INFO),"logging level");
     // clang-format on
     po::variables_map vm;
@@ -69,8 +71,10 @@ main(int argc, char* argv[])
   cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 1, 0,
       0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
 
-  CurvilinearParameters pars(
-      std::make_unique<ActsSymMatrixD<5>>(cov), pos, mom, +1);
+  std::unique_ptr<ActsSymMatrixD<5>> covPtr = nullptr;
+  if (withCov) covPtr = std::make_unique<ActsSymMatrixD<5>>(cov);
+  CurvilinearParameters pars(std::move(covPtr), pos, mom, +1);
+
   ExtrapolationCell<TrackParameters> exCell(pars);
   exCell.addConfigurationMode(ExtrapolationMode::StopWithPathLimit);
 
