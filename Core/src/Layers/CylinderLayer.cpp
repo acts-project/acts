@@ -25,10 +25,10 @@ Acts::CylinderLayer::CylinderLayer(
     std::shared_ptr<const CylinderBounds> cBounds,
     std::unique_ptr<SurfaceArray>         surfaceArray,
     double                                thickness,
-    ApproachDescriptor*                   ades,
+    std::unique_ptr<ApproachDescriptor>   ades,
     LayerType                             laytyp)
   : CylinderSurface(transform, cBounds)
-  , Layer(std::move(surfaceArray), thickness, ades, laytyp)
+  , Layer(std::move(surfaceArray), thickness, std::move(ades), laytyp)
 {
   // create the representing volume
   CylinderVolumeBounds* cvBounds
@@ -73,7 +73,7 @@ void
 Acts::CylinderLayer::buildApproachDescriptor() const
 {
   // delete it
-  delete m_approachDescriptor;
+  m_approachDescriptor = nullptr;
   // delete the surfaces
   // take the boundary surfaces of the representving volume if they exist
   if (m_representingVolume) {
@@ -88,8 +88,8 @@ Acts::CylinderLayer::buildApproachDescriptor() const
       aSurfaces.push_back(bSurfaces.at(tubeInnerCover));
     aSurfaces.push_back(bSurfaces.at(tubeOuterCover));
     // create an ApproachDescriptor with Boundary surfaces
-    m_approachDescriptor
-        = new GenericApproachDescriptor<const BoundarySurfaceT<AbstractVolume>>(
+    m_approachDescriptor = std::
+        make_unique<GenericApproachDescriptor<const BoundarySurfaceT<AbstractVolume>>>(
             aSurfaces);
   } else {
     // create the new surfaces
@@ -103,7 +103,7 @@ Acts::CylinderLayer::buildApproachDescriptor() const
     // create an ApproachDescriptor with standard surfaces surfaces - these will
     // be deleted by the approach descriptor
     m_approachDescriptor
-        = new GenericApproachDescriptor<const Surface>(aSurfaces);
+        = std::make_unique<GenericApproachDescriptor<const Surface>>(aSurfaces);
   }
   for (auto& sIter : (m_approachDescriptor->containedSurfaces())) {
     if (sIter) sIter->associateLayer(*this);

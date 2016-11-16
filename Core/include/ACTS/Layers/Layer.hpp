@@ -340,10 +340,10 @@ protected:
   /// @param thickness is the normal thickness of the Layer
   /// @param ad oapproach descriptor
   /// @param ltype is the layer type if active or passive
-  Layer(std::unique_ptr<SurfaceArray> surfaceArray,
-        double                        thickness = 0.,
-        ApproachDescriptor*           ad        = nullptr,
-        LayerType                     ltype     = passive);
+  Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
+        double                              thickness = 0.,
+        std::unique_ptr<ApproachDescriptor> ad        = nullptr,
+        LayerType                           ltype     = passive);
 
   /// get compatible surfaces starting from charged parameters - forward call
   /// from explicit methods
@@ -446,7 +446,7 @@ protected:
   double m_layerThickness;
   /// descriptor for surface on approach
   /// @note this is a mutable member, since resize may trigger recreation
-  mutable ApproachDescriptor* m_approachDescriptor;
+  mutable std::unique_ptr<ApproachDescriptor> m_approachDescriptor;
   /// the enclosing TrackingVolume
   /// @note this is a mutable member since it's set after the layer creation
   mutable const TrackingVolume* m_enclosingTrackingVolume;

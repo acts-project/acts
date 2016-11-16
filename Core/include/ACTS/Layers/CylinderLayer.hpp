@@ -53,14 +53,14 @@ public:
          std::shared_ptr<const CylinderBounds> cbounds,
          std::unique_ptr<SurfaceArray>         surfaceArray = nullptr,
          double                                thickness    = 0.,
-         ApproachDescriptor*                   ad           = nullptr,
+         std::unique_ptr<ApproachDescriptor>   ad           = nullptr,
          LayerType                             laytyp       = passive)
   {
     return LayerPtr(new CylinderLayer(transform,
                                       cbounds,
                                       std::move(surfaceArray),
                                       thickness,
-                                      ad,
+                                      std::move(ad),
                                       laytyp));
   }
 
@@ -92,6 +92,7 @@ public:
 
   /// Assignment operator for CylinderLayers - deleted
   CylinderLayer&
+
   operator=(const CylinderLayer&)
       = delete;
 
@@ -126,7 +127,7 @@ protected:
                 std::shared_ptr<const CylinderBounds> cbounds,
                 std::unique_ptr<SurfaceArray>         surfaceArray = nullptr,
                 double                                thickness    = 0.,
-                ApproachDescriptor*                   ad           = nullptr,
+                std::unique_ptr<ApproachDescriptor>   ad           = nullptr,
                 LayerType                             laytyp       = passive);
 
   /// Private copy constructor with shift, called by create(args*)

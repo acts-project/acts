@@ -48,18 +48,18 @@ public:
   ///
   /// @return a sharted pointer to the new layer
   static LayerPtr
-  create(std::shared_ptr<Transform3D>      transform,
-         std::shared_ptr<const DiscBounds> dbounds,
-         std::unique_ptr<SurfaceArray>     surfaceArray = nullptr,
-         double                            thickness    = 0.,
-         ApproachDescriptor*               ad           = nullptr,
-         LayerType                         laytyp       = Acts::passive)
+  create(std::shared_ptr<Transform3D>        transform,
+         std::shared_ptr<const DiscBounds>   dbounds,
+         std::unique_ptr<SurfaceArray>       surfaceArray = nullptr,
+         double                              thickness    = 0.,
+         std::unique_ptr<ApproachDescriptor> ad           = nullptr,
+         LayerType                           laytyp       = Acts::passive)
   {
     return LayerPtr(new DiscLayer(transform,
                                   dbounds,
                                   std::move(surfaceArray),
                                   thickness,
-                                  ad,
+                                  std::move(ad),
                                   laytyp));
   }
 
@@ -118,12 +118,12 @@ protected:
   /// @param thickness is the layer thickness (along the normal vector)
   /// @param ad is the approach descriptor that provides the approach surface
   /// @param laytyp is the layer taype
-  DiscLayer(std::shared_ptr<Transform3D>      transform,
-            std::shared_ptr<const DiscBounds> dbounds,
-            std::unique_ptr<SurfaceArray>     surfaceArray = nullptr,
-            double                            thickness    = 0.,
-            ApproachDescriptor*               ad           = nullptr,
-            LayerType                         laytyp       = Acts::active);
+  DiscLayer(std::shared_ptr<Transform3D>        transform,
+            std::shared_ptr<const DiscBounds>   dbounds,
+            std::unique_ptr<SurfaceArray>       surfaceArray = nullptr,
+            double                              thickness    = 0.,
+            std::unique_ptr<ApproachDescriptor> ad           = nullptr,
+            LayerType                           laytyp       = Acts::active);
 
   /// Copy constructor with shift
   DiscLayer(const DiscLayer& cla, const Transform3D& tr);

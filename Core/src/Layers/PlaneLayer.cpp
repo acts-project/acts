@@ -21,10 +21,10 @@ Acts::PlaneLayer::PlaneLayer(std::shared_ptr<Transform3D>         transform,
                              std::shared_ptr<const PlanarBounds>& pbounds,
                              std::unique_ptr<SurfaceArray>        surfaceArray,
                              double                               thickness,
-                             ApproachDescriptor*                  ades,
+                             std::unique_ptr<ApproachDescriptor>  ades,
                              LayerType                            laytyp)
   : PlaneSurface(transform, pbounds)
-  , Layer(std::move(surfaceArray), thickness, ades, laytyp)
+  , Layer(std::move(surfaceArray), thickness, std::move(ades), laytyp)
 {
   // @todo create representing volume
   // register the layer to the surface
@@ -61,7 +61,7 @@ void
 Acts::PlaneLayer::buildApproachDescriptor() const
 {
   // delete it
-  delete m_approachDescriptor;
+  m_approachDescriptor = nullptr;
   // delete the surfaces
   std::vector<const Acts::Surface*> aSurfaces;
   // get the appropriate transform, the center and the normal vector
@@ -84,5 +84,5 @@ Acts::PlaneLayer::buildApproachDescriptor() const
     sIter->associateLayer(*this);
   }
   m_approachDescriptor
-      = new GenericApproachDescriptor<const Surface>(aSurfaces);
+      = std::make_unique<GenericApproachDescriptor<const Surface>>(aSurfaces);
 }

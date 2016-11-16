@@ -42,13 +42,17 @@ public:
   static LayerPtr
   create(std::shared_ptr<Transform3D>        transform,
          std::shared_ptr<const PlanarBounds> pbounds,
-         std::unique_ptr<SurfaceArray>       surfaceArray  = nullptr,
-         double                              thickness = 0.,
-         ApproachDescriptor*                 ad        = nullptr,
-         LayerType                           laytyp    = Acts::active)
+         std::unique_ptr<SurfaceArray>       surfaceArray = nullptr,
+         double                              thickness    = 0.,
+         std::unique_ptr<ApproachDescriptor> ad           = nullptr,
+         LayerType                           laytyp       = Acts::active)
   {
-    return LayerPtr(new PlaneLayer(
-        transform, pbounds, std::move(surfaceArray), thickness, ad, laytyp));
+    return LayerPtr(new PlaneLayer(transform,
+                                   pbounds,
+                                   std::move(surfaceArray),
+                                   thickness,
+                                   std::move(ad),
+                                   laytyp));
   }
 
   /// Factory for a shared plane layer
@@ -110,7 +114,7 @@ protected:
              std::shared_ptr<const PlanarBounds>& pbounds,
              std::unique_ptr<SurfaceArray>        surfaceArray = nullptr,
              double                               thickness    = 0.,
-             ApproachDescriptor*                  ad           = nullptr,
+             std::unique_ptr<ApproachDescriptor>  ad           = nullptr,
              LayerType                            laytyp       = Acts::active);
 
   /// Private constructor for a PlaneLAyer, is called by create(arge*

@@ -32,15 +32,15 @@ Acts::Layer::Layer()
 {
 }
 
-Acts::Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray,
-                   double                        thickness,
-                   ApproachDescriptor*           ades,
-                   LayerType                     laytyp)
+Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
+                   double                              thickness,
+                   std::unique_ptr<ApproachDescriptor> ades,
+                   LayerType                           laytyp)
   : m_nextLayers(NextLayers(nullptr, nullptr))
   , m_nextLayerUtility(nullptr)
   , m_surfaceArray(std::move(surfaceArray))
   , m_layerThickness(thickness)
-  , m_approachDescriptor(ades)
+  , m_approachDescriptor(std::move(ades))
   , m_enclosingTrackingVolume(nullptr)
   , m_enclosingDetachedTrackingVolume(nullptr)
   , m_representingVolume(nullptr)
@@ -65,8 +65,6 @@ Acts::Layer::Layer(const Layer& lay)
 
 Acts::Layer::~Layer()
 {
-  // @todo move to std::unique_ptr
-  delete m_approachDescriptor;
   delete m_representingVolume;
 }
 
@@ -167,7 +165,7 @@ Acts::Layer::hasMaterial() const
 const Acts::ApproachDescriptor*
 Acts::Layer::approachDescriptor() const
 {
-  return m_approachDescriptor;
+  return m_approachDescriptor.get();
 }
 
 void
