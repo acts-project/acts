@@ -17,6 +17,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "ACTS/Utilities/ApproachDescriptor.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
 
 namespace Acts {
@@ -47,12 +48,13 @@ public:
   ///
   /// @return shared pointer to a newly created layer
   virtual LayerPtr
-  cylinderLayer(const std::vector<const Surface*>& surfaces,
-                double                             envelopeR,
-                double                             envelopeZ,
-                size_t                             binsRPhi,
-                size_t                             binsZ,
-                std::shared_ptr<Transform3D> transform = nullptr) const = 0;
+  cylinderLayer(const std::vector<const Surface*>&  surfaces,
+                double                              envelopeR,
+                double                              envelopeZ,
+                size_t                              binsRPhi,
+                size_t                              binsZ,
+                std::shared_ptr<Transform3D>        transform = nullptr,
+                std::unique_ptr<ApproachDescriptor> ad = nullptr) const = 0;
 
   /// ILayerCreator interface method - returning a cylindrical layer
   ///
@@ -67,13 +69,14 @@ public:
   ///
   /// @return shared pointer to a newly created layer
   virtual LayerPtr
-  cylinderLayer(const std::vector<const Surface*>& surfaces,
-                double                             layerRmin,
-                double                             layerRmax,
-                double                             layerHalfZ,
-                BinningType                        bTypePhi,
-                BinningType                        bTypeZ,
-                std::shared_ptr<Transform3D> transform = nullptr) const = 0;
+  cylinderLayer(const std::vector<const Surface*>&  surfaces,
+                double                              layerRmin,
+                double                              layerRmax,
+                double                              layerHalfZ,
+                BinningType                         bTypePhi,
+                BinningType                         bTypeZ,
+                std::shared_ptr<Transform3D>        transform = nullptr,
+                std::unique_ptr<ApproachDescriptor> ad = nullptr) const = 0;
 
   /// ILayerCreator interface method - returning a disc layer
   ///
@@ -88,13 +91,14 @@ public:
   ///
   /// @return shared pointer to a newly created layer
   virtual LayerPtr
-  discLayer(const std::vector<const Surface*>& surfaces,
-            double                             envelopeMinR,
-            double                             envelopeMaxR,
-            double                             envelopeZ,
-            size_t                             binsR,
-            size_t                             binsPhi,
-            std::shared_ptr<Transform3D>       transform = nullptr) const = 0;
+  discLayer(const std::vector<const Surface*>&  surfaces,
+            double                              envelopeMinR,
+            double                              envelopeMaxR,
+            double                              envelopeZ,
+            size_t                              binsR,
+            size_t                              binsPhi,
+            std::shared_ptr<Transform3D>        transform = nullptr,
+            std::unique_ptr<ApproachDescriptor> ad = nullptr) const = 0;
 
   /// ILayerCreator interface method - returning a disc layer
   ///
@@ -110,14 +114,15 @@ public:
   ///
   /// @return shared pointer to a newly created layer
   virtual LayerPtr
-  discLayer(const std::vector<const Surface*>& surfaces,
-            double                             layerZmin,
-            double                             layerZmax,
-            double                             layerRmin,
-            double                             layerRmax,
-            BinningType                        bTypeR,
-            BinningType                        bTypePhi,
-            std::shared_ptr<Transform3D>       transform = nullptr) const = 0;
+  discLayer(const std::vector<const Surface*>&  surfaces,
+            double                              layerZmin,
+            double                              layerZmax,
+            double                              layerRmin,
+            double                              layerRmax,
+            BinningType                         bTypeR,
+            BinningType                         bTypePhi,
+            std::shared_ptr<Transform3D>        transform = nullptr,
+            std::unique_ptr<ApproachDescriptor> ad = nullptr) const = 0;
 
   /// ILayerCreator interface method - returning a plane layer
   ///
@@ -131,12 +136,13 @@ public:
   ///
   /// @return shared pointer to a newly created layer
   virtual LayerPtr
-  planeLayer(const std::vector<const Surface*>& surfaces,
-             double                             envelopeXY,
-             double                             envelopeZ,
-             size_t                             binsX,
-             size_t                             binsY,
-             std::shared_ptr<Transform3D>       transform = nullptr) const = 0;
+  planeLayer(const std::vector<const Surface*>&  surfaces,
+             double                              envelopeXY,
+             double                              envelopeZ,
+             size_t                              binsX,
+             size_t                              binsY,
+             std::shared_ptr<Transform3D>        transform = nullptr,
+             std::unique_ptr<ApproachDescriptor> ad = nullptr) const = 0;
 };
 
 }  // end of namespace
