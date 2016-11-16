@@ -249,7 +249,7 @@ namespace Test {
   /// @endcond
 
   /**
-   * @brief Unit test for Acts::anonymous_namespace{ParameterSet.h}::are_sorted
+   * @brief Unit test for Acts::detail::are_sorted
    * helper
    *
    * The test checks for correct behavior in the following cases (always using
@@ -289,7 +289,7 @@ namespace Test {
   }
 
   /**
-   * @brief Unit test for Acts::anonymous_namespace{ParameterSet.h}::are_within
+   * @brief Unit test for Acts::detail::are_within
    * helper
    *
    * The test checks for correct behavior in the following cases (always using
@@ -317,7 +317,7 @@ namespace Test {
   }
 
   /**
-   * @brief Unit test for Acts::details::at_index helper
+   * @brief Unit test for Acts::detail::at_index helper
    */
   BOOST_AUTO_TEST_CASE(at_index_helper_tests)
   {
@@ -339,7 +339,7 @@ namespace Test {
    * -# ParameterSet::getCovariance
    * -# ParameterSet::setCovariance
    * -# ParameterSet::setParameter
-   * -# ParameterSet::uncertainty
+   * -# ParameterSet::getUncertainty
    */
   BOOST_AUTO_TEST_CASE(parset_consistency_tests)
   {

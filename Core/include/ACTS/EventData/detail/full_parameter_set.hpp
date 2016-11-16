@@ -25,14 +25,12 @@ class ParameterSet;
 
 /// @cond detail
 namespace detail {
-  /**
-   * @brief generate ParameterSet type containing all defined parameters
-   *
-   * @return `full_parset<Policy>::type` is equivalent to
-   * `ParameterSet<Policy,ID_t(0),ID_t(1),...,ID_t(N-1)>`
-   *         where @c ID_t is a @c typedef to `Policy::par_id_type` and @c N is
-   * the total number of parameters
-   */
+  /// @brief generate ParameterSet type containing all defined parameters
+  ///
+  /// @return full_parset<Policy>::type is equivalent to
+  ///         `ParameterSet<Policy,ID_t(0),ID_t(1),...,ID_t(N-1)>` where @c ID_t
+  ///         is a @c typedef to `Policy::par_id_type` and @c N is the total
+  ///         number of parameters
   struct full_parset
   {
     template <ParID_t v, typename C>

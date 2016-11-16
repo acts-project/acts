@@ -12,25 +12,22 @@
 namespace Acts {
 /// @cond detail
 namespace detail {
-  /**
-   * @brief initialize parameter set with given parameter values
-   *
-   * @note uses the templated ParameterSet::set method for assigning the
-   * individual components
-   *
-   * Possible invocations are:
-   * * `initialize<T,params...>::init(parSet,values...)` where `parSet` is the
-   * ParameterSet object to be
-   *    initialized and `values` are a consistent number of parameter values
-   * (with compatible type)
-   * * `initialize<T,params...>::init(parSet,values)` where `parSet` is the
-   * ParameterSet object to be
-   *    initialized and `values` is an Eigen vector of consistent size
-   *
-   * @tparam T type of the parameters stored in the corresponding @c
-   * ParameterSet class
-   * @tparam params template parameter pack containing the multiple identifiers
-   */
+  /// @brief initialize parameter set with given parameter values
+  ///
+  /// @tparam T type of the parameters stored in the corresponding @c
+  ///           ParameterSet class
+  /// @tparam params template parameter pack containing the multiple identifiers
+  ///
+  /// @note uses the templated ParameterSet::setParameter method for assigning
+  ///       the individual components
+  ///
+  /// Possible invocations are:
+  /// * initialize<T,params...>::init(parSet,values...) where `parSet` is the
+  ///   ParameterSet object to be initialized and `values` are a consistent
+  ///   number of parameter values (with compatible type)
+  /// * initialize<T,params...>::init(parSet,values) where `parSet` is the
+  ///   ParameterSet object to be initialized and `values` is an Eigen vector of
+  ///   consistent size
   template <typename T, T... params>
   struct initialize_parset;
 
