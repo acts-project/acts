@@ -508,7 +508,6 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
           = surface->geoID().value(GeometryID::sensitive_mask);
       geo_id_value surfaceID
           = sensitiveID ? 0 : surface->geoID().value(GeometryID::approach_mask);
-
       // the surface to try
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "surface",
