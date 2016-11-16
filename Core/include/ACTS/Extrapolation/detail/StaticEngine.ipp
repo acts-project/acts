@@ -71,8 +71,7 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
     // screen output for startLayer == endLayer
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "layer",
-                   eCell.leadLayer->geoID().value(GeometryID::layer_mask, 
-                                                  GeometryID::layer_shift),
+                   eCell.leadLayer->geoID().value(GeometryID::layer_mask),
                    "start and destination layer are identical -> jumping to "
                    "final propagation.");
     // set the leadLayerSurface to the parameters surface
@@ -156,8 +155,7 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
     EX_MSG_VERBOSE(
         eCell.navigationStep,
         "layer",
-        layerCandidate.object->geoID().value(GeometryID::layer_mask, 
-                                             GeometryID::layer_shift),
+        layerCandidate.object->geoID().value(GeometryID::layer_mask),
         "handleLayerT returned extrapolation code : " << eCode.toString());
     // Possibilities are:
     // - SuccessX  -> return (via handleReturnT)
@@ -266,8 +264,7 @@ Acts::StaticEngine::handleLayerT(Acts::ExtrapolationCell<T>& eCell,
   Acts::ExtrapolationCode eCode = Acts::ExtrapolationCode::InProgress;
 
   /// prepare the layer output number
-  auto layerValue = eCell.leadLayer->geoID().value(GeometryID::layer_mask,
-                                                   GeometryID::layer_shift);
+  auto layerValue = eCell.leadLayer->geoID().value(GeometryID::layer_mask);
   // screen output
   EX_MSG_DEBUG(++eCell.navigationStep,
                "layer",
@@ -378,8 +375,7 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
 {
   ExtrapolationCode eCode = ExtrapolationCode::InProgress;
   /// prepare the layer output number
-  auto layerValue = eCell.leadLayer->geoID().value(GeometryID::layer_mask,
-                                                   GeometryID::layer_shift);
+  auto layerValue = eCell.leadLayer->geoID().value(GeometryID::layer_mask);
   // screen output
   EX_MSG_DEBUG(
       ++eCell.navigationStep,
@@ -506,11 +502,9 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
     for (auto& csf : cSurfaces) {
       // get the surface
       auto surface = csf.object;
-      geo_id_value sensitiveID  = surface->geoID().value(GeometryID::sensitive_mask,
-                                                        GeometryID::sensitive_shift);
+      geo_id_value sensitiveID  = surface->geoID().value(GeometryID::sensitive_mask);
       geo_id_value surfaceID     = sensitiveID ? 0 :
-                                   surface->geoID().value(GeometryID::approach_mask,
-                                                         GeometryID::approach_shift);
+                                  surface->geoID().value(GeometryID::approach_mask);
                                   
       // the surface to try
       EX_MSG_VERBOSE(eCell.navigationStep,

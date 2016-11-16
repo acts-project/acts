@@ -9,44 +9,43 @@
 // Boost include(s)
 #define BOOST_TEST_MODULE GeometryID Tests
 #include "ACTS/Utilities/GeometryID.hpp"
+#include "ACTS/Utilities/Helpers.hpp"
 #include <boost/test/included/unit_test.hpp>
 
 namespace Acts {
 namespace Test {
 
   /// prepare all the masks and shifts
-  std::vector<std::vector<geo_id_value>> masks_shifts_range
-      = {{GeometryID::volume_mask,
-          GeometryID::volume_shift,
-          GeometryID::volume_range},
-         {GeometryID::boundary_mask,
-          GeometryID::boundary_shift,
-          GeometryID::boundary_range},
-         {GeometryID::layer_mask,
-          GeometryID::layer_shift,
-          GeometryID::layer_range},
-         {GeometryID::approach_mask,
-          GeometryID::approach_shift,
-          GeometryID::approach_range},
-         {GeometryID::sensitive_mask,
-          GeometryID::sensitive_shift,
-          GeometryID::sensitive_range},
+  std::vector<std::pair<geo_id_value,geo_id_value>> masks_range
+      = { {GeometryID::volume_mask,
+          64-ACTS_BIT_SHIFT(GeometryID::volume_mask)},
+          {GeometryID::boundary_mask,
+          ACTS_BIT_SHIFT(GeometryID::volume_mask-
+          ACTS_BIT_SHIFT(GeometryID::boundary_mask)},
+          {GeometryID::layer_mask,
+          ACTS_BIT_SHIFT(GeometryID::boundary_mask-
+          ACTS_BIT_SHIFT(GeometryID::layer_mask)},          
+          {GeometryID::approach_mask,
+          ACTS_BIT_SHIFT(GeometryID::layer_mask)-
+          ACTS_BIT_SHIFT(GeometryID::approach_mask)},    
+          {GeometryID::sensitive_mask,
+          ACTS_BIT_SHIFT(GeometryID::layer_mask)-
+          ACTS_BIT_SHIFT(GeometryID::sensitive_mask)},    
          {GeometryID::channel_mask,
-          GeometryID::channel_shift,
-          GeometryID::channel_range}};
+          ACTS_BIT_SHIFT(GeometryID::sensitive_mask)-
+          ACTS_BIT_SHIFT(GeometryID::channel_mask)}};
 
   /// test of the geometry ID creation and consistency of the ranges
   BOOST_AUTO_TEST_CASE(GeometryID_test)
   {
-    for (auto msr : masks_shifts_range) {
-      auto mask  = msr[0];
-      auto shift = msr[1];
-      auto range = msr[2];
+    for (auto msr : masks_range) {
+      auto mask  = msr.first;
+      auto range = msr.second;
       /// test the full range of ids
       for (geo_id_value idv = 0; idv < pow(2, range); ++idv) {
         /// create the geometry ID
-        GeometryID geoID(idv, shift);
-        BOOST_CHECK_EQUAL(idv, geoID.value(mask, shift));
+        GeometryID geoID(idv, mask);
+        BOOST_CHECK_EQUAL(idv, geoID.value(mask));
       }
     }
   }
@@ -55,12 +54,12 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(FullGeometryID_test)
   {
     // decode the IDs
-    GeometryID volumeID(1, GeometryID::volume_shift);
-    GeometryID boundaryID(2, GeometryID::boundary_shift);
-    GeometryID layerID(3, GeometryID::layer_shift);
-    GeometryID approachID(4, GeometryID::approach_shift);
-    GeometryID sensitiveID(5, GeometryID::sensitive_shift);
-    GeometryID channelID(6, GeometryID::channel_shift);
+    GeometryID volumeID(1, GeometryID::volume_mask);
+    GeometryID boundaryID(2, GeometryID::boundary_mask);
+    GeometryID layerID(3, GeometryID::layer_mask);
+    GeometryID approachID(4, GeometryID::approach_mask);
+    GeometryID sensitiveID(5, GeometryID::sensitive_mask);
+    GeometryID channelID(6, GeometryID::channel_mask);
     // now create a compound ones
     GeometryID compoundID_dconst;
     compoundID_dconst += volumeID;
@@ -78,20 +77,21 @@ namespace Test {
       cid += channelID;
       // now check the cid
       BOOST_CHECK_EQUAL(
-          1lu, cid.value(GeometryID::volume_mask, GeometryID::volume_shift));
+          1lu, 
+          cid.value(GeometryID::volume_mask));
       BOOST_CHECK_EQUAL(
           2lu,
-          cid.value(GeometryID::boundary_mask, GeometryID::boundary_shift));
+          cid.value(GeometryID::boundary_mask));
       BOOST_CHECK_EQUAL(
-          3lu, cid.value(GeometryID::layer_mask, GeometryID::layer_shift));
+          3lu, cid.value(GeometryID::layer_mask));
       BOOST_CHECK_EQUAL(
           4lu,
-          cid.value(GeometryID::approach_mask, GeometryID::approach_shift));
+          cid.value(GeometryID::approach_mask));
       BOOST_CHECK_EQUAL(
           5lu,
-          cid.value(GeometryID::sensitive_mask, GeometryID::sensitive_shift));
+          cid.value(GeometryID::sensitive_mask));
       BOOST_CHECK_EQUAL(
-          6lu, cid.value(GeometryID::channel_mask, GeometryID::channel_shift));
+          6lu, cid.value(GeometryID::channel_mask));
     }
   }
 

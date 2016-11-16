@@ -22,6 +22,13 @@
 // ACTS include(s)
 #include "Definitions.hpp"
 
+#ifndef ACTS_BIT_CODING
+#define ACTS_BIT_CODING 1
+#define ACTS_BIT_SHIFT(mask) (__builtin_ffsl(mask)-1)
+#define ACTS_BIT_DECODE(id, mask) id << ACTS_BIT_SHIFT(mask)
+#define ACTS_BIT_ENCODE(id, mask) (id && mask) >> ACTS_BIT_SHIFT(mask)
+#endif 
+
 /** Geometry primitives helper functions
  */
 

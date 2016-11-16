@@ -14,6 +14,7 @@
 #define ACTS_GEOMETRYUTILS_GEOMETRYID_H 1
 
 #include <iostream>
+#include "ACTS/Utilities/Helpers.h"
 
 namespace Acts {
 
@@ -32,23 +33,11 @@ class GeometryID
 {
 public:
   const static geo_id_value volume_mask     = 0xff00000000000000;
-  const static geo_id_value volume_shift    = 56;
-  const static geo_id_value volume_range    = 64 - volume_shift;
   const static geo_id_value boundary_mask   = 0x00ff000000000000;
-  const static geo_id_value boundary_shift  = 48;
-  const static geo_id_value boundary_range  = volume_shift - boundary_shift;
   const static geo_id_value layer_mask      = 0x0000ff0000000000;
-  const static geo_id_value layer_shift     = 40;
-  const static geo_id_value layer_range     = boundary_shift - layer_shift;
   const static geo_id_value approach_mask   = 0x000000ff00000000;
-  const static geo_id_value approach_shift  = 32;
-  const static geo_id_value approach_range  = layer_shift - approach_shift;
   const static geo_id_value sensitive_mask  = 0x00000000ffff0000;
-  const static geo_id_value sensitive_shift = 16;
-  const static geo_id_value sensitive_range = approach_shift - sensitive_shift;
   const static geo_id_value channel_mask    = 0x000000000000ffff;
-  const static geo_id_value channel_shift   = 0;
-  const static geo_id_value channel_range   = sensitive_shift;
 
   /// default constructor
   ///
@@ -60,9 +49,9 @@ public:
   // constructor from a shift and a value
   ///
   /// @param id is numbered object
-  /// @param type_shift is the shift necessary for the object type
-  GeometryID(geo_id_value id, geo_id_value type_shift)
-    : m_value((id << type_shift))
+  /// @param type_mask is necessary for the decoding
+  GeometryID(geo_id_value type_id, geo_id_mask type_mask)
+    : m_value(ACTS_BIT_DECODE(type_id,type_mask))
   {
   }
 
@@ -99,22 +88,28 @@ public:
     m_value += add_value;
     return (*this);
   }
+  
+  /// Add sine stuff - a new 
+  void add(geo_id_value type_id, geo_id_mask type_mask)
+  {
+    m_value += ACTS_BIT_DECODE(type_id,type_mask);
+  }
 
   /// return the value
   ///
   /// @param mask is the mask to be applied
   /// @param shift is the according shift to be applied
   geo_id_value
-  value(geo_id_value mask = 0, geo_id_value shift = 0) const;
+  value(geo_id_value mask = 0) const;
 
 private:
   geo_id_value m_value;
 };
 
 inline geo_id_value
-GeometryID::value(geo_id_value mask, geo_id_value shift) const
+GeometryID::value(geo_id_value mask) const
 {
-  if (mask) return ((m_value & mask) >> shift);
+  if (mask) return ACTS_ENCODE(m_value, mask);
   return m_value;
 }
 

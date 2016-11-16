@@ -456,7 +456,7 @@ Acts::TrackingVolume::closeGeometry(
       auto& bSurface = bSurfIter->surfaceRepresentation();
       // create the boundary surface id
       GeometryID boundaryID = volumeID;
-      boundaryID += (++iboundary << GeometryID::boundary_shift);
+      boundaryID.add(++iboundary, GeometryID::boundary_mask);
       // now assign to the boundary surface
       bSurface.assignGeoID(boundaryID);
     }
@@ -468,7 +468,7 @@ Acts::TrackingVolume::closeGeometry(
       for (auto& layerPtr : m_confinedLayers->arrayObjects()) {
         // create the layer identification
         GeometryID layerID = volumeID;
-        layerID += (++ilayer << GeometryID::layer_shift);
+        layerID.add(++ilayer, GeometryID::layer_mask);
         // now close the geometry
         layerPtr->closeGeometry(layerID);
       }
@@ -483,7 +483,7 @@ Acts::TrackingVolume::closeGeometry(
       // only increase the counter if it's not a container volume
       if (!volumesIter->confinedVolumes()) {
         /// we count the volume ID up
-        currentID += (++ivolume << GeometryID::volume_shift);
+        currentID.add(++ivolume, GeometryID::volume_mask);
       }
       volumesIter->closeGeometry(currentID, volumeMap);
     }

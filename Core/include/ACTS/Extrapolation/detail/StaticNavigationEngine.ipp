@@ -51,16 +51,14 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
     // the surface of the
     const BoundarySurfaceT<TrackingVolume>* bSurfaceTV
         = boundaryCandidate.object;
-    
+
     const Surface& bSurface = bSurfaceTV->surfaceRepresentation();
     // skip if it's the last boundary surface
-    if (eCell.onLastBoundary()
-        && &bSurface == eCell.lastBoundarySurface) {
+    if (eCell.onLastBoundary() && &bSurface == eCell.lastBoundarySurface) {
       EX_MSG_VERBOSE(
           eCell.navigationStep,
           "navigation",
-          bSurface.geoID().value(GeometryID::boundary_mask, 
-                                 GeometryID::boundary_shift),
+          bSurface.geoID().value(GeometryID::boundary_mask),
           "skipping this candidate boundary - identical to last boundary.");
       continue;
     }
@@ -80,8 +78,7 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
     if (!eCode.inProgress()) {
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "navigation",
-                     bSurface.geoID().value(GeometryID::boundary_mask, 
-                                            GeometryID::boundary_shift),
+                     bSurface.geoID().value(GeometryID::boundary_mask),
                      "boundary surface not reached with " << eCode.toString()
                                                           << ", skipping.");
       // book keeping for the slow access not to try again the same stuff
@@ -91,8 +88,7 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
     }
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "navigation",
-                   bSurface.geoID().value(GeometryID::boundary_mask, 
-                                          GeometryID::boundary_shift),
+                   bSurface.geoID().value(GeometryID::boundary_mask),
                    "boundary surface handling yielded code "
                        << eCode.toString());
     // set that this was the last boundary surface
@@ -116,13 +112,11 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
       continue;
     // skip if it's the last boundary surface
     const Surface& bSurface = bSurfaceTV->surfaceRepresentation();
-    if (&bSurface == eCell.lastBoundarySurface)
-      continue;
-    // screen output 
-    EX_MSG_VERBOSE(eCell.navigationStep, 
-                   "navigation", 
-                   bSurface.geoID().value(GeometryID::boundary_mask, 
-                                          GeometryID::boundary_shift),
+    if (&bSurface == eCell.lastBoundarySurface) continue;
+    // screen output
+    EX_MSG_VERBOSE(eCell.navigationStep,
+                   "navigation",
+                   bSurface.geoID().value(GeometryID::boundary_mask),
                    "trying a boundary surface.");
     // there is now loop protection in the slow access, needs to be done by hand
     // check this boudnary, possible return codes are:
@@ -140,8 +134,7 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
     if (!eCode.inProgress()) {
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "navigation",
-                     bSurface.geoID().value(GeometryID::boundary_mask, 
-                                            GeometryID::boundary_shift),
+                     bSurface.geoID().value(GeometryID::boundary_mask),
                      "boundary surface not reached with " << eCode.toString()
                                                           << ", skipping.");
       // skip to the next surface if there's one
@@ -188,8 +181,7 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
     if (!eCode.inProgress()) {
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "navigation",
-                     bSurface.geoID().value(GeometryID::boundary_mask, 
-                                            GeometryID::boundary_shift),
+                     bSurface.geoID().value(GeometryID::boundary_mask),
                      "boundary surface not reached with " << eCode.toString()
                                                           << ", skipping.");
       // skip to the next surface if there's one
@@ -240,8 +232,7 @@ Acts::StaticNavigationEngine::handleBoundaryT(
   CHECK_ECODE_SUCCESS(eCell, eCode);
   EX_MSG_VERBOSE(eCell.navigationStep,
                  "navigation",
-                 bSurface.geoID().value(GeometryID::boundary_mask, 
-                                        GeometryID::boundary_shift),
+                 bSurface.geoID().value(GeometryID::boundary_mask),
                  "propagation with eCode " << eCode.toString());
   // check for progress
   if (eCode.inProgress()) {
@@ -251,8 +242,7 @@ Acts::StaticNavigationEngine::handleBoundaryT(
       // screen output for the radial compatibility check
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "navigation",
-                     bSurface.geoID().value(GeometryID::boundary_mask, 
-                                            GeometryID::boundary_shift),
+                     bSurface.geoID().value(GeometryID::boundary_mask),
                      "radial compatbility check failed, radial direction is: "
                          << eCell.radialDirection);
       // if it's not jump back to the last valid lead parameters and return
@@ -263,8 +253,7 @@ Acts::StaticNavigationEngine::handleBoundaryT(
     EX_MSG_VERBOSE(
         eCell.navigationStep,
         "navigation",
-        bSurface.geoID().value(GeometryID::boundary_mask, 
-                               GeometryID::boundary_shift),
+        bSurface.geoID().value(GeometryID::boundary_mask),
         "parameters on boundary surface created, moving to next volume.");
     // get the nextVolume - modify the position in case you have a step out
     // trial, take attachment otherwise
@@ -280,8 +269,7 @@ Acts::StaticNavigationEngine::handleBoundaryT(
     if (!nextVolume) {
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "navigation",
-                     bSurface.geoID().value(GeometryID::boundary_mask, 
-                                            GeometryID::boundary_shift),
+                     bSurface.geoID().value(GeometryID::boundary_mask),
                      "No next volume found of '"
                          << eCell.leadVolume->volumeName()
                          << "'. End of known world ?");
@@ -304,10 +292,8 @@ Acts::StaticNavigationEngine::handleBoundaryT(
       // give some screen output as of why this happens
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "navigation",
-                     bSurface.geoID().value(GeometryID::boundary_mask,
-                                            GeometryID::boundary_shift),
-                     " loop in volume '"
-                     << nextVolume->volumeName() << "'.")
+                     bSurface.geoID().value(GeometryID::boundary_mask),
+                     " loop in volume '" << nextVolume->volumeName() << "'.")
       // return a loop failure, parameter deletion will be done by cache
       return ExtrapolationCode::FailureLoop;
     }
@@ -319,15 +305,15 @@ Acts::StaticNavigationEngine::handleBoundaryT(
       // on material)
       // - SuccessMaterialLimit  : material limit reached & configured to stop
       // there
-      eCode = m_cfg.materialEffectsEngine->handleMaterial(eCell, pDir, fullUpdate);
+      eCode = m_cfg.materialEffectsEngine->handleMaterial(
+          eCell, pDir, fullUpdate);
       CHECK_ECODE_SUCCESS(eCell, eCode);
     }
     // break if configured to break at volume boundary and signature change
     if (stopAtThisBoundary) {
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "navigation",
-                     bSurface.geoID().value(GeometryID::boundary_mask, 
-                                            GeometryID::boundary_shift),
+                     bSurface.geoID().value(GeometryID::boundary_mask),
                      "geometry signature change from "
                          << eCell.leadVolume->geometrySignature()
                          << " to "
