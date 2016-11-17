@@ -414,6 +414,7 @@ Acts::TrackingVolume::interlinkLayers()
 {
   if (m_confinedLayers) {
     auto& layers = m_confinedLayers->arrayObjects();
+      
     // forward register the last one as the previous one
     //  first <- | -> second, first <- | -> second, first <- | -> second
     const Layer* lastLayer = nullptr;

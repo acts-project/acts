@@ -14,7 +14,7 @@
 #define ACTS_GEOMETRYUTILS_GEOMETRYID_H 1
 
 #include <iostream>
-#include "ACTS/Utilities/Helpers.h"
+#include "ACTS/Utilities/Helpers.hpp"
 
 namespace Acts {
 
@@ -31,27 +31,30 @@ typedef uint64_t geo_id_value;
 
 class GeometryID
 {
+    
 public:
-  const static geo_id_value volume_mask     = 0xff00000000000000;
-  const static geo_id_value boundary_mask   = 0x00ff000000000000;
-  const static geo_id_value layer_mask      = 0x0000ff0000000000;
-  const static geo_id_value approach_mask   = 0x000000ff00000000;
-  const static geo_id_value sensitive_mask  = 0x00000000ffff0000;
-  const static geo_id_value channel_mask    = 0x000000000000ffff;
+  const static geo_id_value volume_mask    = 0xff00000000000000;
+  const static geo_id_value boundary_mask  = 0x00ff000000000000;
+  const static geo_id_value layer_mask     = 0x0000ff0000000000;
+  const static geo_id_value approach_mask  = 0x000000ff00000000;
+  const static geo_id_value sensitive_mask = 0x00000000ffff0000;
+  const static geo_id_value channel_mask   = 0x000000000000ffff;
 
   /// default constructor
   ///
   GeometryID() : m_value(0) {}
+
   /// constructor from a ready-made value
   ///
   /// @param id_value is the full decoded value of the identifier
   GeometryID(geo_id_value id_value) : m_value(id_value) {}
+
   // constructor from a shift and a value
   ///
   /// @param id is numbered object
   /// @param type_mask is necessary for the decoding
-  GeometryID(geo_id_value type_id, geo_id_mask type_mask)
-    : m_value(ACTS_BIT_DECODE(type_id,type_mask))
+  GeometryID(geo_id_value type_id, geo_id_value type_mask)
+    : m_value(ACTS_BIT_ENCODE(type_id, type_mask))
   {
   }
 
@@ -59,6 +62,7 @@ public:
   ///
   /// @param tddID is the geometry ID that will be copied
   GeometryID(const GeometryID& tddID) : m_value(tddID.m_value) {}
+
   /// Assignement operator
   ///
   /// @param tddID is the geometry ID that will be assigned
@@ -88,11 +92,12 @@ public:
     m_value += add_value;
     return (*this);
   }
-  
-  /// Add sine stuff - a new 
-  void add(geo_id_value type_id, geo_id_mask type_mask)
+
+  /// Add some stuff - a new
+  void
+  add(geo_id_value type_id, geo_id_value type_mask)
   {
-    m_value += ACTS_BIT_DECODE(type_id,type_mask);
+    m_value += ACTS_BIT_ENCODE(type_id, type_mask);
   }
 
   /// return the value
@@ -109,7 +114,8 @@ private:
 inline geo_id_value
 GeometryID::value(geo_id_value mask) const
 {
-  if (mask) return ACTS_ENCODE(m_value, mask);
+  if (mask)
+      return ACTS_BIT_DECODE(m_value, mask);
   return m_value;
 }
 
