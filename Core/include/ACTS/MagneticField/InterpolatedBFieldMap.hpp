@@ -9,6 +9,7 @@
 #pragma once
 
 #include <algorithm>
+#include <fstream>
 #include <sstream>
 #include <string>
 #include "ACTS/Utilities/Definitions.hpp"
