@@ -25,10 +25,10 @@ Acts::DiscLayer::DiscLayer(std::shared_ptr<Acts::Transform3D>      transform,
                            std::shared_ptr<const Acts::DiscBounds> dbounds,
                            std::unique_ptr<SurfaceArray>           surfaceArray,
                            double                                  thickness,
-                           ApproachDescriptor*                     ades,
+                           std::unique_ptr<ApproachDescriptor>     ades,
                            LayerType                               laytyp)
   : DiscSurface(transform, dbounds)
-  , Layer(std::move(surfaceArray), thickness, ades, laytyp)
+  , Layer(std::move(surfaceArray), thickness, std::move(ades), laytyp)
 {
   // create the representing volume
   const RadialBounds* rBounds
@@ -76,7 +76,7 @@ void
 Acts::DiscLayer::buildApproachDescriptor() const
 {
   // delete it
-  delete m_approachDescriptor;
+  m_approachDescriptor = nullptr;
   // delete the surfaces
   // take the boundary surfaces of the representving volume if they exist
   if (m_representingVolume) {
@@ -90,8 +90,8 @@ Acts::DiscLayer::buildApproachDescriptor() const
     aSurfaces.push_back(bSurfaces.at(negativeFaceXY));
     aSurfaces.push_back(bSurfaces.at(positiveFaceXY));
     // create an ApproachDescriptor with Boundary surfaces
-    m_approachDescriptor
-        = new GenericApproachDescriptor<const BoundarySurfaceT<AbstractVolume>>(
+    m_approachDescriptor = std::
+        make_unique<GenericApproachDescriptor<const BoundarySurfaceT<AbstractVolume>>>(
             aSurfaces);
   } else {
     // create the new surfaces - positions first
@@ -108,7 +108,7 @@ Acts::DiscLayer::buildApproachDescriptor() const
     // create an ApproachDescriptor with standard surfaces surfaces - these will
     // be deleted by the approach descriptor
     m_approachDescriptor
-        = new GenericApproachDescriptor<const Surface>(aSurfaces);
+        = std::make_unique<GenericApproachDescriptor<const Surface>>(aSurfaces);
   }
   for (auto& sIter : (m_approachDescriptor->containedSurfaces())) {
     sIter->associateLayer(*this);

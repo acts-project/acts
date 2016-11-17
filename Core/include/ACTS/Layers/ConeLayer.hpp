@@ -44,18 +44,18 @@ public:
   ///
   /// @return is a shared pointer to a layer
   static LayerPtr
-  create(std::shared_ptr<Transform3D>      transform,
-         std::shared_ptr<const ConeBounds> cbounds,
-         std::unique_ptr<SurfaceArray>     surfaceArray,
-         double                            thickness = 0.,
-         ApproachDescriptor*               ad        = nullptr,
-         LayerType                         laytyp    = Acts::active)
+  create(std::shared_ptr<Transform3D>        transform,
+         std::shared_ptr<const ConeBounds>   cbounds,
+         std::unique_ptr<SurfaceArray>       surfaceArray,
+         double                              thickness = 0.,
+         std::unique_ptr<ApproachDescriptor> ad        = nullptr,
+         LayerType                           laytyp    = Acts::active)
   {
     return LayerPtr(new ConeLayer(transform,
                                   cbounds,
                                   std::move(surfaceArray),
                                   thickness,
-                                  ad,
+                                  std::move(ad),
                                   laytyp));
   }
 
@@ -104,18 +104,18 @@ protected:
   ///
   /// @param transform is the 3D transform that poisitions the layer in 3D frame
   /// @param cbounds is the conical bound description
-  /// @param surfaceArray is the array of sensitive surfaces 
+  /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the layer thickness along the normal axis
   /// @param ad is the approach descriptor for navigation towards the layer
   /// @param laytyp is the layer type
   ///
   /// @todo chage od and ad to unique_ptr
-  ConeLayer(std::shared_ptr<Transform3D>      transform,
-            std::shared_ptr<const ConeBounds> cbounds,
-            std::unique_ptr<SurfaceArray>     surfaceArray,
-            double                            thickness = 0.,
-            ApproachDescriptor*               ad        = nullptr,
-            LayerType                         laytyp    = Acts::active);
+  ConeLayer(std::shared_ptr<Transform3D>        transform,
+            std::shared_ptr<const ConeBounds>   cbounds,
+            std::unique_ptr<SurfaceArray>       surfaceArray,
+            double                              thickness = 0.,
+            std::unique_ptr<ApproachDescriptor> ad        = nullptr,
+            LayerType                           laytyp    = Acts::active);
 
   /// Private copy constructor with shift, called by create(args*)
   ///
