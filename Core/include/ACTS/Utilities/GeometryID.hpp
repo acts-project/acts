@@ -92,11 +92,12 @@ public:
     m_value += add_value;
     return (*this);
   }
-  
-  /// Add sine stuff - a new 
-  void add(geo_id_value type_id, geo_id_mask type_mask)
+
+  /// Add some stuff - a new
+  void
+  add(geo_id_value type_id, geo_id_value type_mask)
   {
-    m_value += ACTS_BIT_DECODE(type_id,type_mask);
+    m_value += ACTS_BIT_ENCODE(type_id, type_mask);
   }
 
   /// Add some stuff - a new
@@ -120,7 +121,8 @@ private:
 inline geo_id_value
 GeometryID::value(geo_id_value mask) const
 {
-  if (mask) return ACTS_ENCODE(m_value, mask);
+  if (mask)
+      return ACTS_BIT_DECODE(m_value, mask);
   return m_value;
 }
 
