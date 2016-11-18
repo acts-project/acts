@@ -22,3 +22,8 @@ add_executable (Logger_tests Logger_tests.cpp)
 target_link_libraries (Logger_tests PRIVATE ACTSCore)
 add_test (NAME Logger_tests COMMAND Logger_tests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST Logger_tests TARGETS Logger_tests)
+
+add_executable (MPL_tests MPL_checks.cpp)
+target_link_libraries (MPL_tests PRIVATE ACTSCore)
+add_test (NAME MPL_tests COMMAND MPL_tests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST MPL_tests TARGETS MPL_tests)
