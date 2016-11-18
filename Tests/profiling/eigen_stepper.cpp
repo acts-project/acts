@@ -1,11 +1,7 @@
 #include <boost/program_options.hpp>
 #include <iostream>
 #include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Extrapolation/AbortConditions.hpp"
-#include "ACTS/Extrapolation/AbortList.hpp"
 #include "ACTS/Extrapolation/EigenStepper.hpp"
-#include "ACTS/Extrapolation/ObserverList.hpp"
-#include "ACTS/Extrapolation/Observers.hpp"
 #include "ACTS/Extrapolation/Propagator.hpp"
 #include "ACTS/MagneticField/ConstantBField.hpp"
 #include "ACTS/Utilities/Logger.hpp"

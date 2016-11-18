@@ -5,10 +5,7 @@
 #include <fstream>
 #include <random>
 #include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Extrapolation/AbortConditions.hpp"
-#include "ACTS/Extrapolation/AbortList.hpp"
 #include "ACTS/Extrapolation/EigenStepper.hpp"
-#include "ACTS/Extrapolation/GSLStepper.hpp"
 #include "ACTS/Extrapolation/ObserverList.hpp"
 #include "ACTS/Extrapolation/Observers.hpp"
 #include "ACTS/Extrapolation/Propagator.hpp"
@@ -58,11 +55,9 @@ namespace Test {
     Propagator_type test_propagator(std::move(gsl_stepper));
 
     typedef ObserverList<PathLengthObserver> ObsList_type;
-    typedef AbortList<MaxPathLength>         AbortConditions_type;
 
-    Propagator_type::Options<ObsList_type, AbortConditions_type> options;
-    AbortConditions_type& al              = options.stop_conditions;
-    al.get<MaxPathLength>().maxPathLength = 5 * units::_m;
+    Propagator_type::Options<ObsList_type> options;
+    options.max_path_length = 5 * units::_m;
 
     std::ofstream out("gsl_stepper_validation.txt",
                       std::ios::out | std::ios::app);
