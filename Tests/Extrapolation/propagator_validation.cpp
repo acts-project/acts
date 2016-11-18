@@ -7,7 +7,6 @@
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Extrapolation/EigenStepper.hpp"
 #include "ACTS/Extrapolation/ObserverList.hpp"
-#include "ACTS/Extrapolation/Observers.hpp"
 #include "ACTS/Extrapolation/Propagator.hpp"
 #include "ACTS/MagneticField/ConstantBField.hpp"
 #include "ACTS/Utilities/Units.hpp"
@@ -54,9 +53,7 @@ namespace Test {
     Stepper_type    gsl_stepper(std::move(bField));
     Propagator_type test_propagator(std::move(gsl_stepper));
 
-    typedef ObserverList<PathLengthObserver> ObsList_type;
-
-    Propagator_type::Options<ObsList_type> options;
+    Propagator_type::Options<> options;
     options.max_path_length = 5 * units::_m;
 
     std::ofstream out("gsl_stepper_validation.txt",
@@ -111,8 +108,7 @@ namespace Test {
         << " " << (*val->covariance())(2, 2) << " "
         << (*val->covariance())(3, 3) << " " << (*val->covariance())(4, 4);
 
-    out << " " << r.get<PathLengthObserver::result_type>().pathLength << " "
-        << exCell.pathLength << std::endl;
+    out << " " << r.pathLength << " " << exCell.pathLength << std::endl;
   }
 
   BOOST_AUTO_TEST_SUITE_END();
