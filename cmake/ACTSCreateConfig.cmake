@@ -23,6 +23,6 @@ foreach (_comp ${_supported_components})
 endforeach ()
 
 # hack to fix INTERFACE_COMPILE_DEFINITIONS
-add_custom_target (fix python ${PROJECT_SOURCE_DIR}/cmake/fix-cmake-target-file.py ACoreTargets.cmake
+add_custom_target (fix python ${PROJECT_SOURCE_DIR}/cmake/fix-cmake-target-file.py ACTSCoreTargets.cmake
                    WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/cmake/ACTS VERBATIM)
 install (CODE "execute_process(COMMAND \"${CMAKE_COMMAND}\" --build \"${CMAKE_BINARY_DIR}\" --target fix)")
