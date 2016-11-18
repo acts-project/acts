@@ -2,7 +2,7 @@
 #define ACTS_ABORT_LIST_IMPLEMENTATION_HPP 1
 
 #include <algorithm>
-#include "ACTS/Extrapolation/detail/condition_uses_result_type.hpp"
+#include "ACTS/Propagator/detail/condition_uses_result_type.hpp"
 #include "ACTS/Utilities/detail/MPL/type_collector.hpp"
 
 namespace Acts {

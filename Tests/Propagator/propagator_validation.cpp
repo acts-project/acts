@@ -5,10 +5,10 @@
 #include <fstream>
 #include <random>
 #include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Extrapolation/EigenStepper.hpp"
-#include "ACTS/Extrapolation/ObserverList.hpp"
-#include "ACTS/Extrapolation/Propagator.hpp"
 #include "ACTS/MagneticField/ConstantBField.hpp"
+#include "ACTS/Propagator/EigenStepper.hpp"
+#include "ACTS/Propagator/ObserverList.hpp"
+#include "ACTS/Propagator/Propagator.hpp"
 #include "ACTS/Utilities/Units.hpp"
 #include "atlas_propagator_fixture.hpp"
 #include "covariance_validation_fixture.hpp"

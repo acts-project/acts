@@ -1,9 +1,9 @@
 #ifndef ACTS_OBSERVER_LIST_HPP
 #define ACTS_OBSERVER_LIST_HPP 1
 
-#include "ACTS/Extrapolation/detail/Extendable.hpp"
-#include "ACTS/Extrapolation/detail/observer_list_implementation.hpp"
-#include "ACTS/Extrapolation/detail/observer_signature_check.hpp"
+#include "ACTS/Propagator/detail/Extendable.hpp"
+#include "ACTS/Propagator/detail/observer_list_implementation.hpp"
+#include "ACTS/Propagator/detail/observer_signature_check.hpp"
 #include "ACTS/Utilities/detail/MPL/all_of.hpp"
 #include "ACTS/Utilities/detail/MPL/has_duplicates.hpp"
 #include "ACTS/Utilities/detail/MPL/type_collector.hpp"

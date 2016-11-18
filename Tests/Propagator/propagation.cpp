@@ -12,13 +12,13 @@
 #include <cmath>
 
 #include <boost/test/data/test_case.hpp>
+#include "../Propagator/covariance_validation_fixture.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Extrapolation/AtlasStepper.hpp"
-#include "ACTS/Extrapolation/EigenStepper.hpp"
-#include "ACTS/Extrapolation/Propagator.hpp"
 #include "ACTS/MagneticField/ConstantBField.hpp"
+#include "ACTS/Propagator/AtlasStepper.hpp"
+#include "ACTS/Propagator/EigenStepper.hpp"
+#include "ACTS/Propagator/Propagator.hpp"
 #include "ACTS/Utilities/Units.hpp"
-#include "covariance_validation_fixture.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

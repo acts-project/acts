@@ -2,7 +2,7 @@
 #define ACTS_ABORT_CONDITION_SIGNATURE_CHECK_HPP 1
 
 #include <type_traits>
-#include "ACTS/Extrapolation/detail/condition_uses_result_type.hpp"
+#include "ACTS/Propagator/detail/condition_uses_result_type.hpp"
 #include "ACTS/Utilities/detail/MPL/type_collector.hpp"
 
 namespace Acts {

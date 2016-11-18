@@ -11,9 +11,9 @@
 
 #include <memory>
 #include <type_traits>
-#include "ACTS/Extrapolation/AbortList.hpp"
-#include "ACTS/Extrapolation/ObserverList.hpp"
-#include "ACTS/Extrapolation/detail/Extendable.hpp"
+#include "ACTS/Propagator/AbortList.hpp"
+#include "ACTS/Propagator/ObserverList.hpp"
+#include "ACTS/Propagator/detail/Extendable.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
 namespace Acts {

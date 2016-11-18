@@ -1,9 +1,9 @@
 #include <boost/program_options.hpp>
 #include <iostream>
 #include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Extrapolation/AtlasStepper.hpp"
-#include "ACTS/Extrapolation/Propagator.hpp"
 #include "ACTS/MagneticField/ConstantBField.hpp"
+#include "ACTS/Propagator/AtlasStepper.hpp"
+#include "ACTS/Propagator/Propagator.hpp"
 #include "ACTS/Utilities/Logger.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
