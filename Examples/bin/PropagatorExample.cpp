@@ -1,3 +1,4 @@
+#include "ACTS/Propagator/Propagator.hpp"
 #include <cstdio>
 #include <fstream>
 #include <list>
@@ -8,7 +9,6 @@
 #include "ACTS/Propagator/AbortList.hpp"
 #include "ACTS/Propagator/AtlasStepper.hpp"
 #include "ACTS/Propagator/ObserverList.hpp"
-#include "ACTS/Propagator/Propagator.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
 using namespace Acts;
