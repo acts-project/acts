@@ -1,8 +1,3 @@
 add_executable (constant_bfield_propagation_test propagation.cpp)
 target_link_libraries (constant_bfield_propagation_test PRIVATE ACTSCore)
 add_test(NAME constant_bfield_propagation_test COMMAND constant_bfield_propagation_test)
-
-add_executable (propagator_validation propagator_validation.cpp)
-target_link_libraries (propagator_validation PRIVATE ACTSCore)
-target_link_libraries (propagator_validation PRIVATE gsl gslcblas)
-add_test(NAME propagator_validation COMMAND propagator_validation)
