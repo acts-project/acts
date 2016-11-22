@@ -41,7 +41,7 @@ Only few dependencies are required to build the Core library of ACTS. A list of 
 The following dependencies are required:
 
 + [clang](http://clang.llvm.org/) (>= 3.8.0) or [gcc](https://gcc.gnu.org/) (>= 4.9.3)
-+ [cmake](https://cmake.org/) (>= 2.8)
++ [cmake](https://cmake.org/) (>= 3.5)
 + [boost](http://boost.org/) (>= 1.60)
 + [Eigen](http://eigen.tuxfamily.org/) (>= 3.2.8)
 
