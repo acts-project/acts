@@ -42,7 +42,7 @@ The following dependencies are required:
 
 + [clang](http://clang.llvm.org/) (>= 3.8.0) or [gcc](https://gcc.gnu.org/) (>= 4.9.3)
 + [cmake](https://cmake.org/) (>= 3.5)
-+ [boost](http://boost.org/) (>= 1.60)
++ [boost](http://boost.org/) (>= 1.61)
 + [Eigen](http://eigen.tuxfamily.org/) (>= 3.2.8)
 
 The following dependencies are optional and are only needed for some of the plugins

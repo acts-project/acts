@@ -23,6 +23,9 @@ include (cmake/ACTSCompilerOptions.cmake)
 # include ACTS specific macros
 include (cmake/ACTSFunctions.cmake)
 
+# include versions for dependencies of ACTS
+include (cmake/ACTSDependencies.cmake)
+
 # Configure CCache if available
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
