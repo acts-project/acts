@@ -52,6 +52,14 @@ The following dependencies are optional and are only needed for some of the plug
 + [ROOT](https://root.cern.ch/) (>= 6.06.04) for TGeo plugin & for DD4hep plugin
 + [DD4Hep](https://github.com/AIDASoft/DD4hep) for DD4Hep plugin
 
+### Using recent CMake releases from CVMFS
+
+Recent releases of CMake can be found on CVMFS at `/cvmfs/sft.cern.ch/lcg/contrib/CMake/`. These builds are self-contained and intended to work even on non-Redhat linux distributions. In particular, they have been successfully used on Ubuntu 14.04.
+
+To use the CMake release x.y.z from this source, do...
+
+    export PATH=/cvmfs/sft.cern.ch/lcg/contrib/CMake/x.y.z/Linux-x86_64/bin:${PATH}
+
 ## <a name="installation">Installation</a>
 
 The ACTS repository is hosted on the GitLab instance at CERN. For the time being you need to have a full CERN account in order to access the repository. We are working on a solution for non-CERN users. Cmake is used as build system for compiling and installing ACTS libraries. For a complete description of the available cmake options please see below.
