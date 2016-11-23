@@ -85,7 +85,10 @@ namespace Test {
       std::vector<ActsVectorD<5>> theta_derivatives;
       theta_derivatives.reserve(h_steps.size());
       for (double h : h_steps) {
-        CurvilinearParameters tp = trackPars;
+        CurvilinearParameters tp            = trackPars;
+        const double          current_theta = tp.get<Acts::eTHETA>();
+        if (current_theta + h > M_PI) h     = M_PI - current_theta;
+        if (current_theta + h < 0) h        = -current_theta;
         tp.set<Acts::eTHETA>(tp.get<Acts::eTHETA>() + h);
         const auto& r = m_propagator.propagate(tp, dest, var_options);
         theta_derivatives.push_back((r.endParameters->parameters() - nominal)
