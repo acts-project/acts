@@ -15,18 +15,18 @@
 #include <utility>
 
 // ACTS includes
-#include "ACTS/EventData/detail/are_sorted.hpp"
-#include "ACTS/EventData/detail/are_within.hpp"
-#include "ACTS/EventData/detail/at_index.hpp"
 #include "ACTS/EventData/detail/full_parameter_set.hpp"
-#include "ACTS/EventData/detail/get_position.hpp"
 #include "ACTS/EventData/detail/initialize_parameter_set.hpp"
-#include "ACTS/EventData/detail/is_contained.hpp"
 #include "ACTS/EventData/detail/make_projection_matrix.hpp"
 #include "ACTS/EventData/detail/residual_calculator.hpp"
 #include "ACTS/EventData/detail/value_corrector.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
+#include "ACTS/Utilities/detail/MPL/are_sorted.hpp"
+#include "ACTS/Utilities/detail/MPL/are_within.hpp"
+#include "ACTS/Utilities/detail/MPL/at_index.hpp"
+#include "ACTS/Utilities/detail/MPL/get_position.hpp"
+#include "ACTS/Utilities/detail/MPL/is_contained.hpp"
 
 namespace Acts {
 /// @cond

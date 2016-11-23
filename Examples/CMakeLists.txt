@@ -1,5 +1,5 @@
 # get list of all source files
-file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
+file (GLOB_RECURSE src_files "src/*.cpp")
 
 # define library target
 add_library (ACTSExamples SHARED ${src_files})
@@ -11,14 +11,22 @@ add_executable (ACTSGenericDetector bin/main.cpp)
 target_include_directories (ACTSGenericDetector PRIVATE include/)
 target_link_libraries (ACTSGenericDetector PRIVATE ACTSCore ACTSExamples)
 
+add_executable (PropagatorExample bin/PropagatorExample.cpp)
+target_compile_options (PropagatorExample PRIVATE -g)
+target_link_libraries (PropagatorExample PRIVATE ACTSCore)
+target_link_libraries (PropagatorExample PRIVATE gsl gslcblas)
+
 # set installation directories
 install (TARGETS ACTSExamples
          EXPORT ACTSExamplesTargets
          LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
          COMPONENT Examples)
 
-install (TARGETS ACTSGenericDetector
-         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install (TARGETS ACTSGenericDetector PropagatorExample
+         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/Examples)
+
+install (FILES scripts/plot_hits.gp scripts/plot_track.gp
+         DESTINATION ${CMAKE_INSTALL_BINDIR}/Examples)
 
 install (DIRECTORY include/ACTS 
          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}

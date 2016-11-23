@@ -31,3 +31,5 @@ build*
 #root output
 *.root
 *.pyc
+/cmake_cmd
+/cleanup.sh

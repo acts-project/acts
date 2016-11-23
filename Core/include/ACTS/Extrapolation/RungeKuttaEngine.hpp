@@ -52,6 +52,7 @@ struct PropagationCache
   double             parameters[5] = {0., 0., 0., 0., 0.};
   ActsSymMatrixD<5>* covariance;
   double             jacobian[25];
+  unsigned int       niter = 0;
 
   PropagationCache()
     : direction(alongMomentum)

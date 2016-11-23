@@ -115,7 +115,7 @@ public:
 
   virtual ~SingleBoundTrackParameters()
   {
-    if (m_pSurface->isFree()) delete m_pSurface;
+    if (m_pSurface && m_pSurface->isFree()) delete m_pSurface;
   }
 
   /**

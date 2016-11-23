@@ -120,6 +120,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateRungeKuttaT(
                  "<T> ",
                  "surface type determined and localToGlobal performed.");
 
+  eCell.nSteps = pCache.niter;
   // check if the direction solution was ok
   if (pCache.direction != 0. && (pCache.direction * pCache.step) < 0.)
     return false;
@@ -469,7 +470,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
   SA[0] = SA[1] = SA[2] = 0.;
   pCache.maxPathLimit   = false;
 
-  if (pCache.mcondition && fabs(pCache.pVector[6]) > .1) return false;
+  if (pCache.mcondition && fabs(pCache.pVector[6]) > 100.) return false;
 
   // Step estimation until surface
   bool   Q;
@@ -490,13 +491,12 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
 
   // Rkuta extrapolation
   //
-  int niter       = 0;
   pCache.newfield = true;
 
   // whie loop over the steps
   while (fabs(step) > m_cfg.straightStep) {
     // maximum number of steps
-    if (++niter > 10000) {
+    if (++pCache.niter > 10000) {
       //!< @todo make max number configurable
       EX_MSG_DEBUG(navigationStep,
                    "propagate",
@@ -615,7 +615,7 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
   double* R    = &(pCache.pVector[0]);  // Coordinates
   double* A    = &(pCache.pVector[3]);  // Directions
   double* sA   = &(pCache.pVector[42]);
-  double  Pi   = 149.89626 * pCache.pVector[6];  // Invert mometum/2.
+  double  Pi   = 0.14989626 * pCache.pVector[6];  // Invert mometum/2.
   double  dltm = m_cfg.dlt * .03;
 
   double f0[3], f[3];
@@ -843,7 +843,7 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStepWithGradient(
   double*      R    = &(pCache.pVector[0]);  // Coordinates
   double*      A    = &(pCache.pVector[3]);  // Directions
   double*      sA   = &(pCache.pVector[42]);
-  double       Pi   = 149.89626 * pCache.pVector[6];  // Invert mometum/2.
+  double       Pi   = 0.14989626 * pCache.pVector[6];  // Invert mometum/2.
   double       dltm = m_cfg.dlt * .03;
 
   double f0[3], f1[3], f2[3], g0[9], g1[9], g2[9], H0[12], H1[12], H2[12];

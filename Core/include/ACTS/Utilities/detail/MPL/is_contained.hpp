@@ -12,15 +12,17 @@
 namespace Acts {
 /// @cond detail
 namespace detail {
-  /// @brief check whether given integral constant is contained in a template
-  /// parameter pack
-  ///
-  /// @tparam T integral type of the values to be checked
-  /// @tparam target target value to be looked for
-  /// @tparam values template parameter pack containing the list of values
-  ///
-  /// @return is_contained<T,target,values...>::value is @c true if `target`
-  ///         is among `values`, otherwise @c false
+  /**
+   * @brief check whether given integral constant is contained in a template
+   * parameter pack
+   *
+   * @tparam T integral type of the values to be checked
+   * @tparam target target value to be looked for
+   * @tparam values template parameter pack containing the list of values
+   *
+   * @return `is_contained<T,target,values...>::value` is @c true if `target` is
+   * among `values`, otherwise @c false
+   */
   template <typename T, T target, T... values>
   struct is_contained;
 
