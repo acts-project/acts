@@ -134,15 +134,25 @@ public:
       const double theta = c.dir.theta();
 
       ActsMatrixD<5, 7> J = ActsMatrixD<5, 7>::Zero();
-      J(0, 0)             = -sin(phi);
-      J(0, 1)             = cos(phi);
-      J(1, 0)             = -cos(phi) * cos(theta);
-      J(1, 1)             = -sin(phi) * cos(theta);
-      J(1, 2)             = sin(theta);
-      J(2, 3)             = -sin(phi) / sin(theta);
-      J(2, 4)             = cos(phi) / sin(theta);
-      J(3, 5)             = -1. / sin(theta);
-      J(4, 6)             = 1;
+      if (fabs(cos(theta)) < 0.99) {
+        J(0, 0) = -sin(phi);
+        J(0, 1) = cos(phi);
+        J(1, 0) = -cos(phi) * cos(theta);
+        J(1, 1) = -sin(phi) * cos(theta);
+        J(1, 2) = sin(theta);
+      } else {
+        const double c
+            = sqrt(pow(cos(theta), 2) + pow(sin(phi) * sin(theta), 2));
+        J(0, 1) = -cos(theta) / c;
+        J(0, 2) = sin(phi) * sin(theta) / c;
+        J(1, 0) = c;
+        J(1, 1) = -cos(phi) * sin(phi) * pow(sin(theta), 2) / c;
+        J(1, 2) = -cos(phi) * sin(theta) * cos(theta) / c;
+      }
+      J(2, 3) = -sin(phi) / sin(theta);
+      J(2, 4) = cos(phi) / sin(theta);
+      J(3, 5) = -1. / sin(theta);
+      J(4, 6) = 1;
 
       ActsRowVectorD<3> norm_vec(
           cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));

@@ -186,7 +186,7 @@ namespace Test {
   BOOST_DATA_TEST_CASE(covariance_transport_curvilinear,
                        bdata::random(2. * units::_GeV, 10. * units::_GeV)
                            ^ bdata::random(0., 2 * M_PI)
-                           ^ bdata::random(0.15, M_PI - 0.15)
+                           ^ bdata::random(0., M_PI)
                            ^ bdata::random(-1, 1)
                            ^ bdata::xrange(100),
                        pT,
