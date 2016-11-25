@@ -107,6 +107,10 @@ public:
   thickness() const final;
 
 
+  /// Returning the digitization module
+  std::shared_ptr<const DigitizationModule>
+  digitizationModule() const;
+
 private:
   /// the element representation
   /// identifier
@@ -170,7 +174,6 @@ GenericDetectorElement::thickness() const
 {
   return m_elementThickness;
 }
-
 
 }  // end of ns
 
