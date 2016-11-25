@@ -21,7 +21,8 @@ Acts::EllipseBounds::EllipseBounds(double minradX,
                                    double maxradY,
                                    double avephi,
                                    double hphisec)
-  : Acts::PlanarBounds(EllipseBounds::bv_length)
+  : PlanarBounds(EllipseBounds::bv_length),
+    m_boundingBox(0.,0.)
 {
   m_valueStore.at(EllipseBounds::bv_rMinX)         = minradX;
   m_valueStore.at(EllipseBounds::bv_rMinY)         = minradY;
@@ -29,14 +30,10 @@ Acts::EllipseBounds::EllipseBounds(double minradX,
   m_valueStore.at(EllipseBounds::bv_rMaxY)         = maxradY;
   m_valueStore.at(EllipseBounds::bv_averagePhi)    = avephi;
   m_valueStore.at(EllipseBounds::bv_halfPhiSector) = hphisec;
-  if (m_valueStore.at(EllipseBounds::bv_rMinX)
-      > m_valueStore.at(EllipseBounds::bv_rMaxX))
-    std::swap(m_valueStore.at(EllipseBounds::bv_rMinX),
-              m_valueStore.at(EllipseBounds::bv_rMaxX));
-  if (m_valueStore.at(EllipseBounds::bv_rMinY)
-      > m_valueStore.at(EllipseBounds::bv_rMaxY))
-    std::swap(m_valueStore.at(EllipseBounds::bv_rMinY),
-              m_valueStore.at(EllipseBounds::bv_rMaxY));
+  double mx = minradX > maxradX ? minradX : maxradX;
+  double my = minradY > maxradY ? minradY : maxradY;
+  m_boundingBox = RectangleBounds(mx,my);
+
 }
 
 Acts::EllipseBounds::~EllipseBounds()
@@ -46,7 +43,10 @@ Acts::EllipseBounds::~EllipseBounds()
 Acts::EllipseBounds&
 Acts::EllipseBounds::operator=(const EllipseBounds& ebo)
 {
-  if (this != &ebo) PlanarBounds::operator=(ebo);
+  if (this != &ebo) {
+    PlanarBounds::operator=(ebo);
+    m_boundingBox = ebo.m_boundingBox;
+  }
   return *this;
 }
 

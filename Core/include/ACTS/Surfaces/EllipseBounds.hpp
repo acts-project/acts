@@ -16,6 +16,7 @@
 #include <cmath>
 #include <cstdlib>
 #include "ACTS/Surfaces/PlanarBounds.hpp"
+#include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -64,7 +65,10 @@ public:
   /// Copy constructor
   ///
   /// @param ebo is the source bounds for the copy
-  EllipseBounds(const EllipseBounds& ebo) : PlanarBounds(ebo) {}
+  EllipseBounds(const EllipseBounds& ebo)
+   : PlanarBounds(ebo),
+     m_boundingBox(0.,0.)
+  {}
   
   /// Destructor
   virtual ~EllipseBounds();
@@ -153,6 +157,10 @@ public:
   /// Return the vertices - or, the points of the extremas
   virtual const std::vector<Vector2D>
   vertices() const override;
+  
+  // Bounding box representation
+  virtual const RectangleBounds& 
+  boundingBox() const final; 
 
   /// This method returns the halfPhiSector which is covered by the disc
   double
@@ -173,12 +181,15 @@ private:
 
   /// helper function for squaring
   ///
-  /// @param x is the input for squaring
+  /// @param x is the input for squaring ? Why do we need this ?
   inline double
   square(double x) const
   {
     return x * x;
   };
+  
+  RectangleBounds         m_boundingBox;  ///< internal bounding box cache
+  
 };
 
 inline EllipseBounds*
@@ -302,6 +313,12 @@ EllipseBounds::vertices() const
       Vector2D(0., -m_valueStore.at(EllipseBounds::bv_rMaxY)));  // [3]
   return vertices;
 }
+
+inline const RectangleBounds& 
+EllipseBounds::boundingBox() const
+{
+  return m_boundingBox;
+} 
 
 }  // end of namespace
 

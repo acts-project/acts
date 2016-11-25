@@ -10,8 +10,8 @@
 // TrapezoidSegmentation.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Digitization/TrapezoidSegmentation.hpp"
-#include <cmath>
+/*
+#include "ACTS/Digitization/PolarSegmentation.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
@@ -182,8 +182,7 @@ Acts::TrapezoidSegmentation::cellPosition(const DigitizationCell& dCell) const
   return Vector2D(bX, bY);
 }
 
-/** Get the digitization cell from 3D position, it used the projection to the
- * readout surface to estimate the 2D positon */
+// Get the digitization cell from 3D position, it used the projection to the readout surface to estimate the 2D positon
 const Acts::DigitizationStep
 Acts::TrapezoidSegmentation::digitizationStep(const Vector3D& startStep,
                                               const Vector3D& endStep,
@@ -211,3 +210,4 @@ Acts::TrapezoidSegmentation::digitizationStep(const Vector3D& startStep,
                           stepCenterProjected,
                           cellCenter);
 }
+*/

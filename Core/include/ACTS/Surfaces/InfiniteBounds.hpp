@@ -28,8 +28,10 @@ class InfiniteBounds : public SurfaceBounds
 public:
   /// Default Constructor
   InfiniteBounds() {}
+  
   /// Destructor
   ~InfiniteBounds() {}
+  
   /// Return SurfaceBounds type for persistency mainly
   virtual SurfaceBounds::BoundsType
   type() const final

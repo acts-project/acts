@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include "ACTS/Surfaces/PlanarBounds.hpp"
+#include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
 
@@ -115,7 +116,7 @@ public:
   /// This method returns the opening angle alpha in point A'
   double
   alpha2() const;
-
+  
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
   /// the bounds  Inside can be called without/with tolerances.
@@ -163,6 +164,10 @@ public:
   virtual const std::vector<Vector2D>
   vertices() const override;
 
+  // Bounding box representation
+  virtual const RectangleBounds& 
+  boundingBox() const final; 
+  
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream in which it is dumped
@@ -183,8 +188,9 @@ private:
   initCache();
 
   std::vector<TDD_real_t> m_valueStore;  ///< internal parameter store
-  TDD_real_t              m_alpha1;  ///< internal parameter cache for alpha1
-  TDD_real_t              m_alpha2;  ///< internal parameter cahce for alpha2
+  TDD_real_t              m_alpha1;      ///< internal parameter cache for alpha1
+  TDD_real_t              m_alpha2;      ///< internal parameter cache for alpha2
+  RectangleBounds         m_boundingBox; ///< internal bounding box cache
 };
 
 inline DiamondBounds*
@@ -357,6 +363,12 @@ DiamondBounds::vertices() const
       Vector2D(-m_valueStore.at(DiamondBounds::bv_minHalfX),
                -m_valueStore.at(DiamondBounds::bv_halfY1)));  // [5]
   return vertices;
+}
+
+inline const RectangleBounds& 
+DiamondBounds::boundingBox() const
+{
+  return m_boundingBox;
 }
 
 }  // end of namespace

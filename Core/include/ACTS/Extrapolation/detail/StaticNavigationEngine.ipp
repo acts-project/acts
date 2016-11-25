@@ -96,6 +96,16 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
     // and return the code yielded by the handleBoundaryT
     return eCode;
   }
+  // bail-out in case no boundary has been found for Fatras mode
+  if (eCell.checkConfigurationMode(ExtrapolationMode::FATRAS)){
+    EX_MSG_VERBOSE(eCell.navigationStep,
+                   "navigation",
+                   "",
+                   "Fatras loop protection.");
+    // get out of this, we will not simulate loopers  
+    return ExtrapolationCode::SuccessPathLimit;
+  }
+  
   // [2] ------------------------ slow boundary access : take all boundary
   // surfaces and simply try --------------
   EX_MSG_VERBOSE(eCell.navigationStep,

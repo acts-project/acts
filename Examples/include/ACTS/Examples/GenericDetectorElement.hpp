@@ -13,10 +13,8 @@
 #ifndef AGD_GENERICDETECTORELEMENT_GENERICDETECTORELEMENT
 #define AGD_GENERICDETECTORELEMENT_GENERICDETECTORELEMENT 1
 
-// Algebra and Identifier
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
-// Geometry module
 #include "ACTS/Detector/DetectorElementBase.hpp"
 
 namespace Acts {
@@ -25,6 +23,7 @@ class Surface;
 class PlanarBounds;
 class DiscBounds;
 class SurfaceMaterial;
+class DigitizationModule;
 
 /// @class GenericDetectorElement
 ///
@@ -47,6 +46,8 @@ public:
                          std::shared_ptr<const PlanarBounds>    pBounds,
                          double                                 thickness,
                          std::shared_ptr<const SurfaceMaterial> material
+                         = nullptr,
+                         std::shared_ptr<const DigitizationModule> dModule
                          = nullptr);
 
   /// Constructor for single sided detector element
@@ -96,6 +97,10 @@ public:
   double
   thickness() const override;
 
+  /// Returning the digitization module
+  std::shared_ptr<const DigitizationModule>
+  digitizationModule() const;
+
 private:
   /// the element representation
   /// identifier
@@ -104,6 +109,7 @@ private:
   std::shared_ptr<Transform3D> m_elementTransform;
   /// the surface represented by it
   std::shared_ptr<const Surface> m_elementSurface;
+
   /// the element thickness
   double m_elementThickness;
 
@@ -112,6 +118,9 @@ private:
   /// store either
   std::shared_ptr<const PlanarBounds> m_elementPlanarBounds;
   std::shared_ptr<const DiscBounds>   m_elementDiscBounds;
+
+  // the digitization module
+  std::shared_ptr<const DigitizationModule> m_digitizationModule;
 };
 
 inline Identifier
@@ -142,6 +151,12 @@ inline double
 GenericDetectorElement::thickness() const
 {
   return m_elementThickness;
+}
+
+inline std::shared_ptr<const DigitizationModule>
+GenericDetectorElement::digitizationModule() const
+{
+  return m_digitizationModule;
 }
 
 }  // end of ns

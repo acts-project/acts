@@ -41,8 +41,8 @@ class ExtrapolationMode
 {
 public:
   enum eMode {
-    Destination = 1,  // try to hit the destination, if not other means to stop
-    Propagation = 2,  // any propagation but the final one to destinaion
+    Destination             = 1,  // try to hit the destination, if not other means to stop
+    Propagation             = 2,  // any propagation but the final one to destinaion
     StopWithPathLimit       = 3,   // stop when the path limit is reached
     StopWithMaterialLimitX0 = 4,   // stop when  material limit is reached in X0
     StopWithMaterialLimitL0 = 5,   // stop when material limit is reached in L0
@@ -119,11 +119,11 @@ public:
     SuccessMaterialLimit   = 5,  // successful : material limit reached
     Recovered              = 6,  // successful : recovered
     FailureDestination     = 7,  // failure    : could not reach destination
-    FailureLoop       = 8,   // failure    : loop or oscillation between volumes
-    FailureNavigation = 9,   // failure    : general navigation failure
-    FailureUpdateKill = 10,  // failure    : updated track under threshold
-    FailureConfiguration = 11,  // failure    : general configuration failure
-    LeftKnownWorld       = 12   // successful ? failure ? if we just knew ...
+    FailureLoop            = 8,   // failure    : loop or oscillation between volumes
+    FailureNavigation      = 9,   // failure    : general navigation failure
+    FailureUpdateKill      = 10,  // failure    : updated track under threshold
+    FailureConfiguration   = 11,  // failure    : general configuration failure
+    LeftKnownWorld         = 12   // successful ? failure ? if we just knew ...
   };
 
   /// the actual code

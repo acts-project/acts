@@ -16,6 +16,9 @@
 #include "ACTS/Surfaces/SurfaceBounds.hpp"
 
 namespace Acts {
+  
+/// forward declare rectangle bounds as boundary box
+class RectangleBounds;
 ///
 /// @class PlanarBounds
 ///
@@ -29,8 +32,10 @@ public:
   ///
   /// @param sStore is the store size for the initialisation
   PlanarBounds(size_t sStore = 0) : SurfaceBounds(sStore) {}
+  
   /// Destructor
   virtual ~PlanarBounds() {}
+  
   /// Virtual Constructor
   virtual PlanarBounds*
   clone() const = 0;
@@ -38,6 +43,11 @@ public:
   /// Return the vertices - or, the points of the extremas
   virtual const std::vector<Vector2D>
   vertices() const = 0;
+  
+  // Bounding box parameters
+  virtual const RectangleBounds& 
+  boundingBox() const = 0; 
+  
 };
 
 }  // end of namespace

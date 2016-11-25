@@ -68,7 +68,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
     EX_MSG_DEBUG(
         ++eCell.navigationStep,
         "layer",
-        mLayer->geoID().value(),
+        mLayer->geoID().value(GeometryID::layer_mask),
         "handleMaterial for neutral parameters called - collect material.");
     // path correction
     double pathCorrection
@@ -82,7 +82,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
     if (mFactor == 0.) {
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "layer",
-                     mLayer->geoID().value(),
+                     mLayer->geoID().value(GeometryID::layer_mask),
                      "material collection with "
                          << (matupstage > 0. ? "pre " : "post ")
                          << "factor 0.");
@@ -93,7 +93,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
     // screen output
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "layer",
-                   mLayer->geoID().value(),
+                   mLayer->geoID().value(GeometryID::layer_mask),
                    "material update with corr factor = " << pathCorrection);
     // get the actual material bin
     const MaterialProperties* materialProperties
@@ -107,7 +107,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
       if (eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial)) {
         EX_MSG_VERBOSE(eCell.navigationStep,
                        "layer",
-                       mLayer->geoID().value(),
+                       mLayer->geoID().value(GeometryID::layer_mask),
                        "collecting material of [t/X0] = " << thicknessInX0);
         eCell.stepMaterial(*mSurface,
                            eCell.leadLayer,
@@ -117,7 +117,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
       } else {
         EX_MSG_VERBOSE(eCell.navigationStep,
                        "layer",
-                       mLayer->geoID().value(),
+                       mLayer->geoID().value(GeometryID::layer_mask),
                        "adding material of [t/X0] = " << thicknessInX0);
         eCell.addMaterial(pathCorrection, materialProperties);
       }
@@ -142,21 +142,21 @@ Acts::MaterialEffectsEngine::handleMaterial(
   if (mSurface && mSurface->associatedMaterial()) {
     EX_MSG_DEBUG(++eCell.navigationStep,
                  "layer",
-                 mLayer->geoID().value(),
-                 "handleMaterial for charged parameters called.");
+                 mLayer->geoID().value(GeometryID::layer_mask),
+                 "handleMaterial for charged parameters called - apply correction.");
     // update the track parameters
     updateTrackParameters(*eCell.leadParameters, eCell, dir, matupstage);
 
     // check if material filling was requested
     // if (eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial)){
     //    EX_MSG_VERBOSE(eCell.navigationStep, "layer",
-    //    mLayer->geoID().value(), "collecting material of [t/X0] = " <<
+    //    mLayer->geoID().value(GeometryID::layer_mask), "collecting material of [t/X0] = " <<
     //    thicknessInX0);
     //    eCell.stepMaterial(*mSurface, eCell.leadLayer,
     //    eCell.leadParameters->position(), pathCorrection, materialProperties);
     //} else {
     //    EX_MSG_VERBOSE(eCell.navigationStep, "layer",
-    //    mLayer->geoID().value(), "adding material of [t/X0] = " <<
+    //    mLayer->geoID().value(GeometryID::layer_mask), "adding material of [t/X0] = " <<
     //    thicknessInX0);
     //    eCell.addMaterial(pathCorrection, materialProperties);
     // }
@@ -195,7 +195,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
   if (mFactor == 0.) {
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "layer",
-                   mLayer->geoID().value(),
+                   mLayer->geoID().value(GeometryID::layer_mask),
                    "material update with "
                        << (matupstage > 0. ? "pre " : "post ")
                        << "factor 0. No update done.");
@@ -206,7 +206,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
   // screen output
   EX_MSG_VERBOSE(eCell.navigationStep,
                  "layer",
-                 mLayer->geoID().value(),
+                 mLayer->geoID().value(GeometryID::layer_mask),
                  "material update with corr factor = " << pathCorrection);
   // get the actual material bin
   const MaterialProperties* materialProperties
@@ -270,7 +270,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     if (eCell.leadParameters != &eCell.startParameters) {
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "layer",
-                     mLayer->geoID().value(),
+                     mLayer->geoID().value(GeometryID::layer_mask),
                      "material update on non-initial parameters.");
       // @todo how to update parameters
       // parameters.updateParameters(uParameters,uCovariance);
@@ -278,7 +278,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
       EX_MSG_VERBOSE(
           eCell.navigationStep,
           "layer",
-          mLayer->geoID().value(),
+          mLayer->geoID().value(GeometryID::layer_mask),
           "material update on initial parameters, creating new ones.");
       // create new parameters
       const Surface& tSurface = parameters.associatedSurface();
@@ -292,7 +292,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     if (eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial)) {
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "layer",
-                     mLayer->geoID().value(),
+                     mLayer->geoID().value(GeometryID::layer_mask),
                      "collecting material of [t/X0] = " << thicknessInX0);
       eCell.stepMaterial(*mSurface,
                          mLayer,
@@ -302,7 +302,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     } else {
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "layer",
-                     mLayer->geoID().value(),
+                     mLayer->geoID().value(GeometryID::layer_mask),
                      "adding material of [t/X0] = " << thicknessInX0);
       eCell.addMaterial(pathCorrection, materialProperties);
     }

@@ -27,7 +27,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateRungeKuttaT(
   EX_MSG_VERBOSE(eCell.navigationStep,
                  "propagate",
                  "<T> ",
-                 "propagateRungeKuttaT called.");
+                 "propagateRungeKuttaT called");
 
   // bail out if you can't transform into global frame
   if (!m_rkUtils.transformLocalToGlobal(

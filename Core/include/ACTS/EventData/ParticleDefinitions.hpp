@@ -307,6 +307,11 @@ public:
   shift(const Vector3D& shift)
   { m_vertex += shift; }
 
+  /// assign the barcode
+  void
+  assign(barcode_type barcode)
+  { m_barcode = barcode; }
+    
   /** return the momentum */
   const Vector3D&
   vertex() const

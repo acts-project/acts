@@ -47,6 +47,7 @@ public:
   ///
   /// @param recbo are the source bounds
   RectangleBounds(const RectangleBounds& recbo) : PlanarBounds(recbo) {}
+  
   /// Destructor
   virtual ~RectangleBounds();
 
@@ -116,13 +117,17 @@ public:
 
   /// Return the vertices - or, the points of the extremas
   virtual const std::vector<Vector2D>
-  vertices() const override;
+  vertices() const final;
+
+  // Bounding box representation
+  virtual const RectangleBounds& 
+  boundingBox() const final;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream for the dump
   virtual std::ostream&
-  dump(std::ostream& sl) const override;
+  dump(std::ostream& sl) const final;
 
 private:
   /// Private helper method
@@ -254,6 +259,12 @@ RectangleBounds::vertices() const
                -m_valueStore.at(RectangleBounds::bv_halfY)));  // [3]
   return vertices;
 }
+
+inline const RectangleBounds& 
+RectangleBounds::boundingBox() const
+{
+  return (*this);
+} 
 
 }  // end of namespace
 

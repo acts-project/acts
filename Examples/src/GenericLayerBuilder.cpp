@@ -27,6 +27,8 @@
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/BinnedArray.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
+#include "ACTS/Digitization/CartesianSegmentation.hpp"
+#include "ACTS/Digitization/DigitizationModule.hpp"
 
 Acts::GenericLayerBuilder::GenericLayerBuilder(
     const Acts::GenericLayerBuilder::Config& glbConfig,
@@ -104,6 +106,26 @@ Acts::GenericLayerBuilder::constructLayers()
                  << " )");
 
       sVector.reserve(nCetralModules);
+
+      // prepartion :
+      // create digitizaiton module
+      std::shared_ptr<const DigitizationModule> moduleDigitizationPtr = nullptr;
+      if (m_cfg.centralModuleReadoutBinsX.size()) {
+        // create the CartesianSegmentation
+        std::shared_ptr<const Segmentation> moduleSegmentation
+            = std::make_shared<const CartesianSegmentation>(
+                moduleBounds,
+                m_cfg.centralModuleReadoutBinsX.at(icl),
+                m_cfg.centralModuleReadoutBinsY.at(icl));
+        // now create the digitzation module
+        moduleDigitizationPtr = std::make_shared<const DigitizationModule>(
+            moduleSegmentation,
+            m_cfg.centralModuleThickness.at(icl),
+            m_cfg.centralModuleReadoutSide.at(icl),
+            m_cfg.centralModuleLorentzAngle.at(icl));
+      }
+
+      // prepartation :
       // create the Module material from input
       std::shared_ptr<const SurfaceMaterial> moduleMaterialPtr = nullptr;
       if (m_cfg.centralModuleMaterial.size()) {
@@ -161,7 +183,8 @@ Acts::GenericLayerBuilder::constructLayers()
                                          moduleTransform,
                                          moduleBounds,
                                          moduleThickness,
-                                         moduleMaterialPtr);
+                                         moduleMaterialPtr,
+                                         moduleDigitizationPtr);
         // register the surface
         sVector.push_back(&module->surface());
         // store the module
@@ -191,7 +214,8 @@ Acts::GenericLayerBuilder::constructLayers()
                                            moduleTransform,
                                            moduleBounds,
                                            moduleThickness,
-                                           moduleMaterialPtr);
+                                           moduleMaterialPtr,
+                                           moduleDigitizationPtr);
           // register the backside as bin member
           std::vector<const DetectorElementBase*> bsbinmember = {module};
           std::vector<const DetectorElementBase*> binmember   = {bsmodule};
@@ -275,14 +299,40 @@ Acts::GenericLayerBuilder::constructLayers()
       for (auto& discModulePositions : m_cfg.posnegModulePositions.at(ipnl)) {
         ACTS_VERBOSE("- building ring " << ipnR << " for this pair.");
         // now prepare all the shared stuff
-        // (1) module specifications
+        // (0) module specifications
         double moduleThickness = m_cfg.posnegModuleThickness.at(ipnl).at(ipnR);
         double moduleMinHalfX  = m_cfg.posnegModuleMinHalfX.at(ipnl).at(ipnR);
         double moduleMaxHalfX  = m_cfg.posnegModuleMaxHalfX.size()
             ? m_cfg.posnegModuleMaxHalfX.at(ipnl).at(ipnR)
             : 0.;
         double moduleHalfY = m_cfg.posnegModuleHalfY.at(ipnl).at(ipnR);
-        // (2) module material
+        // (1) module bounds
+        // create the bounds
+        PlanarBounds* pBounds = nullptr;
+        if (moduleMaxHalfX != 0. && moduleMinHalfX != moduleMaxHalfX)
+        pBounds = new TrapezoidBounds(
+                                      moduleMinHalfX, moduleMaxHalfX, moduleHalfY);
+        else
+        pBounds = new RectangleBounds(moduleMinHalfX, moduleHalfY);
+        // now create the shared bounds from it
+        std::shared_ptr<const PlanarBounds> moduleBounds(pBounds);
+        // (2) create digitizaiton module
+        std::shared_ptr<const DigitizationModule> moduleDigitizationPtr = nullptr;
+        if (m_cfg.posnegModuleReadoutBinsX.size()) {
+          // create the CartesianSegmentation
+          std::shared_ptr<const Segmentation> moduleSegmentation
+              = std::make_shared<const CartesianSegmentation>(
+                  moduleBounds,
+                  m_cfg.posnegModuleReadoutBinsX.at(ipnl).at(ipnR),
+                  m_cfg.posnegModuleReadoutBinsY.at(ipnl).at(ipnR));
+          // now create the digitzation module
+          moduleDigitizationPtr = std::make_shared<const DigitizationModule>(
+              moduleSegmentation,
+              moduleThickness,
+              m_cfg.posnegModuleReadoutSide.at(ipnl).at(ipnR),
+              m_cfg.posnegModuleLorentzAngle.at(ipnl).at(ipnR));
+        }
+        // (3) module material
         // create the Module material from input
         std::shared_ptr<const SurfaceMaterial> moduleMaterialPtr = nullptr;
         if (m_cfg.posnegModuleMaterial.size()) {
@@ -292,16 +342,7 @@ Acts::GenericLayerBuilder::constructLayers()
           moduleMaterialPtr = std::shared_ptr<const SurfaceMaterial>(
               new HomogeneousSurfaceMaterial(moduleMaterialProperties));
         }
-        // (3) module bounds
-        // create the bounds
-        PlanarBounds* pBounds = nullptr;
-        if (moduleMaxHalfX != 0. && moduleMinHalfX != moduleMaxHalfX)
-          pBounds = new TrapezoidBounds(
-              moduleMinHalfX, moduleMaxHalfX, moduleHalfY);
-        else
-          pBounds = new RectangleBounds(moduleMinHalfX, moduleHalfY);
-        // now create the shared bounds from it
-        std::shared_ptr<const PlanarBounds> moduleBounds(pBounds);
+
         // low loop over the phi positions and build the stuff
         for (auto& ringModulePosition : discModulePositions) {
           // the module transform from the position
@@ -346,13 +387,15 @@ Acts::GenericLayerBuilder::constructLayers()
                                            nModuleTransform,
                                            moduleBounds,
                                            moduleThickness,
-                                           moduleMaterialPtr);
+                                           moduleMaterialPtr,
+                                           moduleDigitizationPtr);
           GenericDetectorElement* pmodule
               = new GenericDetectorElement(pModuleIdentifier,
                                            pModuleTransform,
                                            moduleBounds,
                                            moduleThickness,
-                                           moduleMaterialPtr);
+                                           moduleMaterialPtr,
+                                           moduleDigitizationPtr);
           // memory management - we need a detector store to hold them somewhere
           // @todo add detector store facility
           m_posnegModule.push_back(nmodule);
@@ -390,13 +433,15 @@ Acts::GenericLayerBuilder::constructLayers()
                                              nModuleTransform,
                                              moduleBounds,
                                              moduleThickness,
-                                             moduleMaterialPtr);
+                                             moduleMaterialPtr,
+                                             moduleDigitizationPtr);
             GenericDetectorElement* bspmodule
                 = new GenericDetectorElement(pModuleIdentifier,
                                              pModuleTransform,
                                              moduleBounds,
                                              moduleThickness,
-                                             moduleMaterialPtr);
+                                             moduleMaterialPtr,
+                                             moduleDigitizationPtr);
             // register the backside of the binmembers
             std::vector<const DetectorElementBase*> bspbinmember = {pmodule};
             std::vector<const DetectorElementBase*> pbinmember   = {bspmodule};
