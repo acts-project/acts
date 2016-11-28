@@ -264,10 +264,10 @@ In order to release a new version of ACTS the following steps need to be taken:
 4. Pushing this commit to the remote repository should trigger a CI build. Make sure that everything compiles without any warnings and all tests look fine.
 5. Create a new annotated tag locally. The tag should have the format <tt>vX.YY.ZZ</tt> and an associated tag message 'version vX.YY.ZZ'.
 6. Push the tag to the remote repository. This should trigger a CI job which rebuilds to documentation and deploys it together with a tar file of the source code to the ACTS webpage. Make sure that the new release appears under the **Releases** section on the <a href="http://acts.web.cern.ch/ACTS/">ACTS webpage</a>.
-7. Got to the <a href="https://its.cern.ch/jira/projects/ACTS/versions/">ACTS Releases page in JIRA</a> and release the version. Make sure that a correct release data is set and that all open issues get moved to the next major/minor release.
-8. From the JIRA release page, copy (all) the HTML code for the release notes. Login to lxplus using the service account <tt>atsjenkins</tt> (<tt>ssh atsjenkins@lxplus.cern.ch</tt>). Create the file <tt>~/www/ACTS/vX.YY.ZZ/ReleaseNotes.html</tt> with the copied HTML code for the release notes. Please make sure that _sub_-tasks appear as nested lists (JIRA unfortunately puts them all on one level in alphabetical order).
-9. Check that the release notes appear on the <a href="http://acts.web.cern.ch/ACTS/">ACTS webpage</a> and are available from the respective link in the **Releases** section.
-10. If there is not yet a JIRA version for the next minor release, create it (e.g. if 1.23.02 was just released, version 1.23.03 should exist in JIRA for the next minor release for bug fixes).
+7. If there is not yet a JIRA version for the next minor release, create it in the <a href="https://its.cern.ch/jira/plugins/servlet/project-config/ACTS/versions">JIRA project administration</a> area (e.g. if 1.23.02 was just released, version 1.23.03 should exist in JIRA for the next minor release for bug fixes).
+8. Got to the <a href="https://its.cern.ch/jira/projects/ACTS/versions/">ACTS Releases page in JIRA</a> and release the version. Make sure that a correct release data is set and that all open issues get moved to the next major/minor release.
+9. From the JIRA release page, copy (all) the HTML code for the release notes. Login to lxplus using the service account <tt>atsjenkins</tt> (<tt>ssh atsjenkins@lxplus.cern.ch</tt>). Create the file <tt>~/www/ACTS/vX.YY.ZZ/ReleaseNotes.html</tt> with the copied HTML code for the release notes. Please make sure that _sub_-tasks appear as nested lists (JIRA unfortunately puts them all on one level in alphabetical order).
+10. Check that the release notes appear on the <a href="http://acts.web.cern.ch/ACTS/">ACTS webpage</a> and are available from the respective link in the **Releases** section.
 
 ### <a name="setup-jenkins">Setting up a Jenkins CI server</a>
 
