@@ -34,7 +34,7 @@ fi
 VERSION=`basename $gitlabSourceBranch`
 
 # create tarball with source and copy it to server
-tar -C $ACTS_DIR -czf ACTS-$VERSION.tar.gz .
+tar -C $ACTS_DIR -czf ACTS-$VERSION.tar.gz --exclude=.git --exclude=build --exclude=installed --exclude=CI --transform="s,^./,ACTS-$VERSION/," .
 ssh -o StrictHostKeyChecking=no atsjenkins@lxplus.cern.ch "mkdir -p ~/www/ACTS/$VERSION"
 scp ACTS-$VERSION.tar.gz atsjenkins@lxplus.cern.ch:~/www/ACTS/$VERSION
 rm ACTS-$VERSION.tar.gz
