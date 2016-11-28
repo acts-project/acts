@@ -10,7 +10,6 @@
 #define ACTS_DIGITIZATION_DIGITIZATIONCELL_H
 
 #include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Logger.hpp"
 
 namespace Acts {
 
@@ -29,6 +28,8 @@ struct DigitizationStep
   Vector2D stepReadoutProjected;  /// this is the projected position at the
                                   /// readout surface
   Vector2D stepCellCenter;        /// this is the cell position
+  
+  
 
   /// Standard constructor
   DigitizationStep()
