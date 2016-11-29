@@ -13,6 +13,7 @@
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include <iomanip>
 #include <iostream>
+#include <cmath>
 #include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
@@ -37,7 +38,7 @@ Acts::PlaneSurface::PlaneSurface(const Vector3D& center, const Vector3D& normal)
   /// U = Z x T if T not parallel to Z otherwise U = X x T
   /// V = T x U
   Vector3D T = normal.normalized();
-  Vector3D U = fabs(T.dot(Vector3D::UnitZ())) < 0.99
+  Vector3D U = std::abs(T.dot(Vector3D::UnitZ())) < 0.99
       ? Vector3D::UnitZ().cross(T).normalized()
       : Vector3D::UnitX().cross(T).normalized();
   Vector3D         V = T.cross(U);
@@ -111,7 +112,7 @@ Acts::PlaneSurface::isOnSurface(const Vector3D&      glopo,
 {
   /// the chance that there is no transform is almost 0, let's apply it
   Vector3D loc3Dframe = (transform().inverse()) * glopo;
-  if (fabs(loc3Dframe.z()) > s_onSurfaceTolerance) return false;
+  if (std::abs(loc3Dframe.z()) > s_onSurfaceTolerance) return false;
   return (bcheck ? bounds().inside(Vector2D(loc3Dframe.x(), loc3Dframe.y()), bcheck)
                : true);
 }

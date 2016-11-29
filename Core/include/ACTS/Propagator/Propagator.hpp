@@ -10,6 +10,7 @@
 #define ACTS_EXTRAPOLATION_PROPAGATOR_H 1
 
 #include <memory>
+#include <cmath>
 #include <type_traits>
 #include "ACTS/Propagator/AbortList.hpp"
 #include "ACTS/Propagator/ObserverList.hpp"
@@ -181,7 +182,7 @@ namespace propagation {
         r.pathLength += m_impl.step(propagation_cache, stepMax);
         return_parameter_type current = m_impl.convert(propagation_cache);
         options.observer_list(current, previous, r);
-        if (fabs(r.pathLength) >= options.max_path_length
+        if (std::abs(r.pathLength) >= options.max_path_length
             || options.stop_conditions(r, current, stepMax)) {
           r.endParameters = std::make_unique<return_parameter_type>(
               m_impl.convert(propagation_cache));
@@ -189,7 +190,7 @@ namespace propagation {
           break;
         }
 
-        if (fabs(stepMax) > fabs(signed_pathLimit - r.pathLength))
+        if (std::abs(stepMax) > std::abs(signed_pathLimit - r.pathLength))
           stepMax = signed_pathLimit - r.pathLength;
 
         previous = current;
@@ -237,15 +238,15 @@ namespace propagation {
       }
 
       double stepMax = options.direction * options.max_step_size;
-      if (fabs(stepMax) > fabs(distance)) stepMax = distance;
+      if (std::abs(stepMax) > std::abs(distance)) stepMax = distance;
 
       for (; r.steps < options.max_steps; ++r.steps) {
         r.pathLength += m_impl.step(cache, stepMax);
         step_parameter_type current = m_impl.convert(cache);
         options.observer_list(current, previous, r);
         distance = m_impl.distance(target, cache.position(), cache.direction());
-        if (fabs(distance) < 1 * units::_um
-            || fabs(r.pathLength) >= options.max_path_length
+        if (std::abs(distance) < 1 * units::_um
+            || std::abs(r.pathLength) >= options.max_path_length
             || options.stop_conditions(r, current, stepMax)) {
           r.endParameters = std::make_unique<return_parameter_type>(
               m_impl.convert(cache, target));
@@ -253,10 +254,10 @@ namespace propagation {
           break;
         }
 
-        if (fabs(stepMax) > fabs(signed_pathLimit - r.pathLength))
+        if (std::abs(stepMax) > std::abs(signed_pathLimit - r.pathLength))
           stepMax = signed_pathLimit - r.pathLength;
 
-        if (fabs(stepMax) > fabs(distance)) stepMax = distance;
+        if (std::abs(stepMax) > std::abs(distance)) stepMax = distance;
 
         previous = current;
       }

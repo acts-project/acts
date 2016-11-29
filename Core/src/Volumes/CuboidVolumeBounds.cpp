@@ -12,7 +12,7 @@
 
 #include "ACTS/Volumes/CuboidVolumeBounds.hpp"
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"

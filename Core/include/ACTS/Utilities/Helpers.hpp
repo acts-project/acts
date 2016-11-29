@@ -43,7 +43,7 @@ namespace Acts {
 inline double
 roundWithPrecision(double val, int precision)
 {
-  if (val < 0 && fabs(val) * std::pow(10, precision) < 1.) return -val;
+  if (val < 0 && std::abs(val) * std::pow(10, precision) < 1.) return -val;
   return val;
 }
 

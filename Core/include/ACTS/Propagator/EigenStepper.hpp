@@ -13,6 +13,7 @@
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
+#include <cmath>
 
 namespace Acts {
 
@@ -134,7 +135,7 @@ public:
       const double theta = c.dir.theta();
 
       ActsMatrixD<5, 7> J = ActsMatrixD<5, 7>::Zero();
-      if (fabs(cos(theta)) < 0.99) {
+      if (std::abs(cos(theta)) < 0.99) {
         J(0, 0) = -sin(phi);
         J(0, 1) = cos(phi);
         J(1, 0) = -cos(phi) * cos(theta);
@@ -179,7 +180,7 @@ public:
     }
 
     return CurvilinearParameters(
-        std::move(cov), c.pos, c.dir / fabs(c.qop), charge);
+        std::move(cov), c.pos, c.dir / std::abs(c.qop), charge);
   }
 
   template <typename S>
@@ -222,7 +223,7 @@ public:
     }
 
     return BoundParameters(
-        std::move(cov), c.pos, c.dir / fabs(c.qop), charge, surface);
+        std::move(cov), c.pos, c.dir / std::abs(c.qop), charge, surface);
   }
 
   static double

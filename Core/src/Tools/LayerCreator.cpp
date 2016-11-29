@@ -18,6 +18,7 @@
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
+#include <cmath>
 
 Acts::LayerCreator::LayerCreator(const Acts::LayerCreator::Config& lcConfig,
                                  std::unique_ptr<Logger>           logger)
@@ -241,7 +242,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
 {
   // layer parametres
   double layerZ         = 0.5 * (layerZmin + layerZmax);
-  double layerThickness = fabs(layerZmax - layerZmin);
+  double layerThickness = std::abs(layerZmax - layerZmin);
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a disk Layer:");
@@ -352,7 +353,7 @@ Acts::LayerCreator::radialDistance(const Vector3D& pos1,
   Vector3D mab(mb - ma);
   double   eaTeb = ea.dot(eb);
   double   denom = 1 - eaTeb * eaTeb;
-  if (fabs(denom) > 10e-7) {
+  if (std::abs(denom) > 10e-7) {
     double lambda0 = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
     // evaluate validaty in terms of bounds
     if (lambda0 < 1. && lambda0 > 0.) return (ma + lambda0 * ea).perp();

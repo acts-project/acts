@@ -13,7 +13,7 @@
 #ifndef ACTS_SURFACES_DIAMONDDBOUNDS_H
 #define ACTS_SURFACES_DIAMONDDBOUNDS_H 1
 
-#include <math.h>
+#include <cmath>
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
@@ -241,7 +241,7 @@ DiamondBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
       > 2 * m_valueStore.at(DiamondBounds::bv_halfY2) + limit)
     return false;
   // a fast FALSE
-  double fabsX = fabs(lpos[Acts::eLOC_X]);
+  double fabsX = std::abs(lpos[Acts::eLOC_X]);
   if (fabsX > (m_valueStore.at(DiamondBounds::bv_medHalfX) + limit))
     return false;
   // a fast TRUE
@@ -254,7 +254,7 @@ DiamondBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
                - limit))
     return true;
   // a fast TRUE
-  if (fabs(lpos[Acts::eLOC_Y])
+  if (std::abs(lpos[Acts::eLOC_Y])
       < (fmin(m_valueStore.at(DiamondBounds::bv_halfY1),
               m_valueStore.at(DiamondBounds::bv_halfY2))
          - limit))
@@ -309,7 +309,7 @@ DiamondBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 inline bool
 DiamondBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 {
-  return (fabs(lpos[Acts::eLOC_X])
+  return (std::abs(lpos[Acts::eLOC_X])
           < m_valueStore.at(DiamondBounds::bv_medHalfX) + tol0);
 }
 

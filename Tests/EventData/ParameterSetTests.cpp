@@ -210,36 +210,36 @@ namespace Test {
         residual               = parSet_1.residual(parSet_2);
 
         // local parameters are unbound -> check for usual difference
-        if (fabs(residual(0) - delta_loc1) > tol) {
+        if (std::abs(residual(0) - delta_loc1) > tol) {
           BOOST_CHECK(false);
           break;
         }
-        if (fabs(residual(1) - delta_loc2) > tol) {
+        if (std::abs(residual(1) - delta_loc2) > tol) {
           BOOST_CHECK(false);
           break;
         }
         // phi is a cyclic parameter -> check that (unsigned) difference is not
         // larger than half period
         // check that corrected(corrected(phi_2) + residual) == corrected(phi_1)
-        if (fabs(get_cyclic_value(get_cyclic_value(phi_2, phi_min, phi_max)
+        if (std::abs(get_cyclic_value(get_cyclic_value(phi_2, phi_min, phi_max)
                                       + residual(2),
                                   phi_min,
                                   phi_max)
                  - get_cyclic_value(phi_1, phi_min, phi_max))
                 > tol
-            or fabs(residual(2)) > (phi_max - phi_min) / 2) {
+            or std::abs(residual(2)) > (phi_max - phi_min) / 2) {
           BOOST_CHECK(false);
           break;
         }
         // theta is bound -> check that (unsigned) difference is not larger then
         // allowed range, check corrected difference
-        if (fabs(residual(3) - delta_theta) > tol
-            or fabs(residual(3)) > (theta_max - theta_min)) {
+        if (std::abs(residual(3) - delta_theta) > tol
+            or std::abs(residual(3)) > (theta_max - theta_min)) {
           BOOST_CHECK(false);
           break;
         }
         // qop is unbound -> check usual difference
-        if (fabs(residual(4) - delta_qop) > tol) {
+        if (std::abs(residual(4) - delta_qop) > tol) {
           BOOST_CHECK(false);
           break;
         }
@@ -573,21 +573,21 @@ namespace Test {
         = (cyclic.getParameter<ParID_t::ePHI>() - small_number) / (max - min);
     BOOST_CHECK(cyclic.getParameter<ParID_t::ePHI>() >= min);
     BOOST_CHECK(cyclic.getParameter<ParID_t::ePHI>() < max);
-    BOOST_CHECK(fabs(multiple - std::floor(multiple + 0.5)) < tol);
+    BOOST_CHECK(std::abs(multiple - std::floor(multiple + 0.5)) < tol);
 
     cyclic.setParameter<ParID_t::ePHI>(large_number);
     multiple
         = (cyclic.getParameter<ParID_t::ePHI>() - large_number) / (max - min);
     BOOST_CHECK(cyclic.getParameter<ParID_t::ePHI>() >= min);
     BOOST_CHECK(cyclic.getParameter<ParID_t::ePHI>() < max);
-    BOOST_CHECK(fabs(multiple - std::floor(multiple + 0.5)) < tol);
+    BOOST_CHECK(std::abs(multiple - std::floor(multiple + 0.5)) < tol);
 
     cyclic.setParameter<ParID_t::ePHI>(normal_number);
     multiple
         = (cyclic.getParameter<ParID_t::ePHI>() - normal_number) / (max - min);
     BOOST_CHECK(cyclic.getParameter<ParID_t::ePHI>() >= min);
     BOOST_CHECK(cyclic.getParameter<ParID_t::ePHI>() < max);
-    BOOST_CHECK(fabs(multiple - std::floor(multiple + 0.5)) < tol);
+    BOOST_CHECK(std::abs(multiple - std::floor(multiple + 0.5)) < tol);
 
     // check residual calculation
 

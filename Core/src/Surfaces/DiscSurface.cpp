@@ -13,6 +13,7 @@
 #include "ACTS/Surfaces/DiscSurface.hpp"
 #include <iomanip>
 #include <iostream>
+#include <cmath>
 #include "ACTS/Surfaces/DiscTrapezoidalBounds.hpp"
 #include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
@@ -104,7 +105,7 @@ Acts::DiscSurface::globalToLocal(const Acts::Vector3D& gpos,
   // transport it to the globalframe (very unlikely that this is not needed)
   Vector3D loc3Dframe = (transform().inverse()) * gpos;
   lpos                = Acts::Vector2D(loc3Dframe.perp(), loc3Dframe.phi());
-  return ((fabs(loc3Dframe.z()) > s_onSurfaceTolerance) ? false : true);
+  return ((std::abs(loc3Dframe.z()) > s_onSurfaceTolerance) ? false : true);
 }
 
 const Acts::Vector2D
@@ -149,7 +150,7 @@ Acts::DiscSurface::isOnSurface(const Vector3D&      glopo,
                                const BoundaryCheck& bcheck) const
 {
   Vector3D loc3Dframe = (transform().inverse()) * glopo;
-  if (fabs(loc3Dframe.z()) > (s_onSurfaceTolerance)) return false;
+  if (std::abs(loc3Dframe.z()) > (s_onSurfaceTolerance)) return false;
   return (
       bcheck
           ? bounds().inside(Vector2D(loc3Dframe.perp(), loc3Dframe.phi()), bcheck)

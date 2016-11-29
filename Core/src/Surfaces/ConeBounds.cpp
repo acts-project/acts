@@ -13,7 +13,7 @@
 #include "ACTS/Surfaces/ConeBounds.hpp"
 #include <iomanip>
 #include <iostream>
-#include <math.h>
+#include <cmath>
 
 Acts::ConeBounds::ConeBounds(double alpha,
                              bool   symm,
@@ -84,7 +84,7 @@ Acts::ConeBounds::distanceToBoundary(const Acts::Vector2D& pos) const
   // find the minimum distance along the z direction
   double toMinZ = m_valueStore.at(ConeBounds::bv_minZ) - pos[Acts::eLOC_Z];
   double toMaxZ = pos[Acts::eLOC_Z] - m_valueStore.at(ConeBounds::bv_maxZ);
-  double toZ    = (fabs(toMinZ) < fabs(toMaxZ)) ? toMinZ : toMaxZ;
+  double toZ    = (std::abs(toMinZ) < std::abs(toMaxZ)) ? toMinZ : toMaxZ;
 
   // NB this works only if the localPos is in the same hemisphere as
   // the cone (i.e. if the localPos has z < 0 and the cone only

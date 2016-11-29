@@ -14,7 +14,6 @@
 #define ACTS_SURFACES_DISCTRAPEZOIDALBOUNDS_H
 
 #include <cmath>
-#include <math.h>
 #include "ACTS/Surfaces/DiscBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
@@ -184,14 +183,14 @@ DiscTrapezoidalBounds::inside(const Vector2D& lpos, double, double) const
                     Pos[Acts::eLOC_Y] * sin(phi)
                         + Pos[Acts::eLOC_X] * cos(phi));
 
-  bool insideX = (fabs(DeltaPos[Acts::eLOC_X])
+  bool insideX = (std::abs(DeltaPos[Acts::eLOC_X])
                   < m_valueStore.at(DiscTrapezoidalBounds::bv_maxHalfX));
-  bool insideY = (fabs(DeltaPos[Acts::eLOC_Y])
+  bool insideY = (std::abs(DeltaPos[Acts::eLOC_Y])
                   < m_valueStore.at(DiscTrapezoidalBounds::bv_halfY));
 
   if (!insideX || !insideY) return false;
 
-  if (fabs(DeltaPos[Acts::eLOC_X])
+  if (std::abs(DeltaPos[Acts::eLOC_X])
       < m_valueStore.at(DiscTrapezoidalBounds::bv_minHalfX))
     return true;
 
@@ -206,7 +205,7 @@ DiscTrapezoidalBounds::inside(const Vector2D& lpos, double, double) const
          - m_valueStore.at(DiscTrapezoidalBounds::bv_maxHalfX));
 
   bool inside
-      = (DeltaPos[Acts::eLOC_Y] > (m * fabs(DeltaPos[Acts::eLOC_X]) + q));
+      = (DeltaPos[Acts::eLOC_Y] > (m * std::abs(DeltaPos[Acts::eLOC_X]) + q));
 
   return inside;
 }
@@ -219,7 +218,7 @@ DiscTrapezoidalBounds::inside(const Vector2D&      lpos,
       || m_valueStore.at(DiscTrapezoidalBounds::bv_rMin) != 0)
     return DiscTrapezoidalBounds::inside(
         lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
-  double alpha = fabs(lpos[Acts::eLOC_PHI]
+  double alpha = std::abs(lpos[Acts::eLOC_PHI]
                       - m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi));
   if (alpha > M_PI) alpha = 2 * M_PI - alpha;
   // a fast FALSE
@@ -357,8 +356,8 @@ DiscTrapezoidalBounds::inside(const Vector2D&      lpos,
             double y1,
             double r) const
     {
-      double x = fabs(x1 - x0);
-      double y = fabs(y1 - y0);
+      double x = std::abs(x1 - x0);
+      double y = std::abs(y1 - y0);
       if (x * x + (h - y) * (h - y) <= r * r
           || (w - x) * (w - x) + y * y <= r * r
           || x * h + y * w <= w * h  // collision with (0, h)
@@ -419,7 +418,7 @@ DiscTrapezoidalBounds::inside(const Vector2D&      lpos,
 inline bool
 DiscTrapezoidalBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 {
-  double alpha = fabs(lpos[Acts::eLOC_PHI]
+  double alpha = std::abs(lpos[Acts::eLOC_PHI]
                       - m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi));
   if (alpha > M_PI) alpha = 2 * M_PI - alpha;
 
@@ -439,7 +438,7 @@ DiscTrapezoidalBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 inline bool
 DiscTrapezoidalBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 {
-  double alpha = fabs(lpos[Acts::eLOC_PHI]
+  double alpha = std::abs(lpos[Acts::eLOC_PHI]
                       - m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi));
   if (alpha > M_PI) alpha = 2. * M_PI - alpha;
   return (alpha

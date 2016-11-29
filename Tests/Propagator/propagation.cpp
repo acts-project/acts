@@ -81,7 +81,7 @@ namespace Test {
     // clang-format on
 
     // calculate bending radius
-    double r = fabs(Nat2SI<units::MOMENTUM>(pT) / (q * Bz));
+    double r = std::abs(Nat2SI<units::MOMENTUM>(pT) / (q * Bz));
     // calculate number of turns of helix
     double turns = options.max_path_length / (2 * M_PI * r) * sin(theta);
     // respect direction of curl
@@ -93,7 +93,7 @@ namespace Test {
     if (exp_phi > M_PI) exp_phi -= 2 * M_PI;
 
     // calculate expected position
-    double exp_z = z + pz / pT * 2 * M_PI * r * fabs(turns);
+    double exp_z = z + pz / pT * 2 * M_PI * r * std::abs(turns);
 
     // calculate center of bending circle in transverse plane
     double xc, yc;

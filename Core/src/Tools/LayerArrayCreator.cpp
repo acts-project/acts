@@ -25,6 +25,7 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/GeometryObjectSorter.hpp"
 #include "ACTS/Utilities/GeometryStatics.hpp"
+#include <cmath>
 
 std::unique_ptr<const Acts::LayerArray>
 Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
@@ -93,7 +94,7 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
       if (navigationValue != (layerValue - 0.5 * layerThickness)) {
         // create the navigation layer surface from the layer
         std::unique_ptr<const Surface> navLayerSurface(createNavigationSurface(
-            *layIter, bValue, -fabs(layerValue - navigationValue)));
+            *layIter, bValue, -std::abs(layerValue - navigationValue)));
         ACTS_VERBOSE("arbitrary : creating a  NavigationLayer at "
                      << (navLayerSurface->binningPosition(bValue)).x()
                      << ", "

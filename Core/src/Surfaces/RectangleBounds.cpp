@@ -13,6 +13,7 @@
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include <iomanip>
 #include <iostream>
+#include <cmath>
 
 Acts::RectangleBounds::RectangleBounds(double halex, double haley)
   : Acts::PlanarBounds(RectangleBounds::bv_length)
@@ -35,8 +36,8 @@ Acts::RectangleBounds::operator=(const RectangleBounds& recbo)
 double
 Acts::RectangleBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 {
-  double dx = fabs(lpos[0]) - m_valueStore.at(RectangleBounds::bv_halfX);
-  double dy = fabs(lpos[1]) - m_valueStore.at(RectangleBounds::bv_halfY);
+  double dx = std::abs(lpos[0]) - m_valueStore.at(RectangleBounds::bv_halfX);
+  double dy = std::abs(lpos[1]) - m_valueStore.at(RectangleBounds::bv_halfY);
 
   if (dx <= 0. || dy <= 0.) {
     if (dx > dy)
@@ -44,7 +45,7 @@ Acts::RectangleBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
     else
       return dy;
   }
-  return sqrt(dx * dx + dy * dy);
+  return std::sqrt(dx * dx + dy * dy);
 }
 
 // ostream operator overload

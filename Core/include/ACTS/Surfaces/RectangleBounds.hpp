@@ -210,14 +210,14 @@ RectangleBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 inline bool
 RectangleBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 {
-  return (fabs(lpos[Acts::eLOC_X])
+  return (std::abs(lpos[Acts::eLOC_X])
           < m_valueStore.at(RectangleBounds::bv_halfX) + tol0);
 }
 
 inline bool
 RectangleBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 {
-  return (fabs(lpos[Acts::eLOC_Y])
+  return (std::abs(lpos[Acts::eLOC_Y])
           < m_valueStore.at(RectangleBounds::bv_halfY) + tol1);
 }
 

@@ -486,7 +486,7 @@ private:
         std::vector<float>::const_iterator mbvalue = m_boundaries.begin();
         for (; mbvalue != m_boundaries.end(); ++mbvalue) {
           // should define numerically stable
-          if (fabs((*mbvalue) - sBinMin) < 10e-10) {
+          if (std::abs((*mbvalue) - sBinMin) < 10e-10) {
             // copy the sub bin boundaries into the vector
             m_totalBoundaries.insert(m_totalBoundaries.begin(),
                                      subBinBoundaries.begin(),

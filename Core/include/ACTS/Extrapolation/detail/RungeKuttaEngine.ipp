@@ -13,6 +13,7 @@
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/StrawSurface.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
+#include <cmath>
 
 template <class MagneticField>
 template <class T>
@@ -258,7 +259,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
           pCache.pVector[0], pCache.pVector[1], pCache.pVector[2]);
       Acts::Vector3D mom(
           pCache.pVector[3], pCache.pVector[4], pCache.pVector[5]);
-      mom /= fabs(pCache.parameters[4]);
+      mom /= std::abs(pCache.parameters[4]);
       nParameters = std::make_unique<NeutralCurvilinearParameters>(
           std::move(cov), gp, mom);
     }
@@ -470,7 +471,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
   SA[0] = SA[1] = SA[2] = 0.;
   pCache.maxPathLimit   = false;
 
-  if (pCache.mcondition && fabs(pCache.pVector[6]) > 100.) return false;
+  if (pCache.mcondition && std::abs(pCache.pVector[6]) > 100.) return false;
 
   // Step estimation until surface
   bool   Q;
@@ -484,7 +485,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
   }
 
   step > Smax ? S = Smax : step < -Smax ? S = -Smax : S = step;
-  double So                                             = fabs(S);
+  double So                                             = std::abs(S);
   int    iS                                             = 0;
 
   bool InS = false;
@@ -494,7 +495,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
   pCache.newfield = true;
 
   // whie loop over the steps
-  while (fabs(step) > m_cfg.straightStep) {
+  while (std::abs(step) > m_cfg.straightStep) {
     // maximum number of steps
     if (++pCache.niter > 10000) {
       //!< @todo make max number configurable
@@ -541,14 +542,14 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
     }
 
     // check if the step made sense
-    double aS    = fabs(S);
-    double aStep = fabs(step);
+    double aS    = std::abs(S);
+    double aStep = std::abs(step);
     if (aS > aStep)
       S = step;
     else if (!iS && InS && aS * 2. < aStep)
       S *= 2.;
 
-    if (!dir && fabs(pCache.step) > Wwrong) {
+    if (!dir && std::abs(pCache.step) > Wwrong) {
       EX_MSG_DEBUG(navigationStep,
                    "propagate",
                    "<T> ",
@@ -556,20 +557,20 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
       return false;
     }
 
-    if (iS > 10 || (iS > 3 && fabs(S) >= So)) {
+    if (iS > 10 || (iS > 3 && std::abs(S) >= So)) {
       if (!kind) break;
       EX_MSG_DEBUG(navigationStep, "propagate", "<T> ", "Abort triggered.");
       return false;
     }
 
-    double dW = pCache.maxPathLength - fabs(pCache.step);
-    if (fabs(S) > dW) {
+    double dW = pCache.maxPathLength - std::abs(pCache.step);
+    if (std::abs(S) > dW) {
       S > 0. ? S = dW : S = -dW;
       step                = S;
       pCache.maxPathLimit = true;
     }
 
-    So = fabs(S);
+    So = std::abs(S);
 
   }  // end of while loop
 
@@ -579,7 +580,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
   // Output track parameteres
   pCache.step += step;
 
-  if (fabs(step) < .001) return true;
+  if (std::abs(step) < .001) return true;
 
   A[0] += (SA[0] * step);
   A[1] += (SA[1] * step);
@@ -630,7 +631,7 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
   }
 
   bool Helix                           = false;
-  if (fabs(S) < m_cfg.helixStep) Helix = true;
+  if (std::abs(S) < m_cfg.helixStep) Helix = true;
 
   while (S != 0.) {
     double S3 = (1. / 3.) * S, S4 = .25 * S, PS2 = Pi * S;
@@ -688,8 +689,8 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
 
     // Test approximation quality on give step and possible step reduction
     //
-    double EST = fabs((A1 + A6) - (A3 + A4)) + fabs((B1 + B6) - (B3 + B4))
-        + fabs((C1 + C6) - (C3 + C4));
+    double EST = std::abs((A1 + A6) - (A3 + A4)) + std::abs((B1 + B6) - (B3 + B4))
+        + std::abs((C1 + C6) - (C3 + C4));
     if (EST > m_cfg.dlt) {
       S *= .5;
       dltm = 0.;
@@ -899,8 +900,8 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStepWithGradient(
 
     // Test approximation quality on give step and possible step reduction
     //
-    double EST = fabs((A1 + A6) - (A3 + A4)) + fabs((B1 + B6) - (B3 + B4))
-        + fabs((C1 + C6) - (C3 + C4));
+    double EST = std::abs((A1 + A6) - (A3 + A4)) + std::abs((B1 + B6) - (B3 + B4))
+        + std::abs((C1 + C6) - (C3 + C4));
     if (EST > m_cfg.dlt) {
       S *= .5;
       dltm = 0.;
@@ -1073,7 +1074,7 @@ Acts::RungeKuttaEngine<MagneticField>::newCrossPoint(const CylinderSurface& Su,
   z               = P[2] - T(2, 3);
   RC              = x * Ax[0] + y * Ax[1] + z * Ax[2];
   RS              = x * Ay[0] + y * Ay[1] + z * Ay[2];
-  double dF       = fabs(atan2(RS, RC) - Su.bounds().averagePhi());
+  double dF       = std::abs(atan2(RS, RC) - Su.bounds().averagePhi());
   if (dF > pi) dF = pi2 - pi;
   if (dF <= Su.bounds().halfPhiSector()) return false;
   return true;
@@ -1180,7 +1181,7 @@ Acts::RungeKuttaEngine<MagneticField>::stepEstimatorWithCurvature(
   // Straight step estimation
   double Step = m_rkUtils.stepEstimator(kind, Su, pCache.pVector, Q);
   if (!Q) return 0.;
-  double AStep = fabs(Step);
+  double AStep = std::abs(Step);
   if (kind || AStep < m_cfg.straightStep || !pCache.mcondition) return Step;
 
   const double* SA = &(pCache.pVector[42]);  // Start direction
@@ -1202,6 +1203,6 @@ Acts::RungeKuttaEngine<MagneticField>::stepEstimatorWithCurvature(
     Q = true;
     return Step;
   }
-  if (fabs(StepN) < AStep) return StepN;
+  if (std::abs(StepN) < AStep) return StepN;
   return Step;
 }

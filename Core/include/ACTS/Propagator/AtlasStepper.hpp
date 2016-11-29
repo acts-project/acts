@@ -80,7 +80,7 @@ class AtlasStepper
       pVector[4] = Sf * Se;  // Ay
       pVector[5] = Ce;       // Az
       pVector[6] = Vp[4];    // CM
-      if (fabs(pVector[6]) < .000000000000001) {
+      if (std::abs(pVector[6]) < .000000000000001) {
         pVector[6] < 0. ? pVector[6] = -.000000000000001 : pVector[6]
             = .000000000000001;
       }
@@ -156,7 +156,7 @@ public:
     double         charge = cache.pVector[6] > 0. ? 1. : -1.;
     Acts::Vector3D gp(cache.pVector[0], cache.pVector[1], cache.pVector[2]);
     Acts::Vector3D mom(cache.pVector[3], cache.pVector[4], cache.pVector[5]);
-    mom /= fabs(cache.pVector[6]);
+    mom /= std::abs(cache.pVector[6]);
 
     double P[45];
     for (unsigned int i = 0; i < 45; ++i) P[i] = cache.pVector[i];
@@ -289,7 +289,7 @@ public:
     double         charge = cache.pVector[6] > 0. ? 1. : -1.;
     Acts::Vector3D gp(cache.pVector[0], cache.pVector[1], cache.pVector[2]);
     Acts::Vector3D mom(cache.pVector[3], cache.pVector[4], cache.pVector[5]);
-    mom /= fabs(cache.pVector[6]);
+    mom /= std::abs(cache.pVector[6]);
 
     std::unique_ptr<ActsSymMatrixD<5>> cov = nullptr;
     if (cache.covariance) {
@@ -464,7 +464,7 @@ public:
     }
 
     bool Helix = false;
-    // if (fabs(S) < m_cfg.helixStep) Helix = true;
+    // if (std::abs(S) < m_cfg.helixStep) Helix = true;
 
     while (stepMax != 0.) {
       double S3 = (1. / 3.) * stepMax, S4 = .25 * stepMax, PS2 = Pi * stepMax;
@@ -523,8 +523,8 @@ public:
 
       // Test approximation quality on give step and possible step reduction
       //
-      double EST = fabs((A1 + A6) - (A3 + A4)) + fabs((B1 + B6) - (B3 + B4))
-          + fabs((C1 + C6) - (C3 + C4));
+      double EST = std::abs((A1 + A6) - (A3 + A4)) + std::abs((B1 + B6) - (B3 + B4))
+          + std::abs((C1 + C6) - (C3 + C4));
       if (EST > 0.0002) {
         stepMax *= .5;
         //        dltm = 0.;

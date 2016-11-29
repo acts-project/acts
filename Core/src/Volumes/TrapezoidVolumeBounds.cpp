@@ -13,7 +13,7 @@
 #include "ACTS/Volumes/TrapezoidVolumeBounds.hpp"
 #include <iomanip>
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
@@ -215,8 +215,8 @@ Acts::TrapezoidVolumeBounds::faceZXRectangleBoundsTop() const
 bool
 Acts::TrapezoidVolumeBounds::inside(const Vector3D& pos, double tol) const
 {
-  if (fabs(pos.z()) > m_valueStore.at(bv_halfZ) + tol) return false;
-  if (fabs(pos.y()) > m_valueStore.at(bv_halfY) + tol) return false;
+  if (std::abs(pos.z()) > m_valueStore.at(bv_halfZ) + tol) return false;
+  if (std::abs(pos.y()) > m_valueStore.at(bv_halfY) + tol) return false;
   TrapezoidBounds* faceXYBounds = faceXYTrapezoidBounds();
   Vector2D         locp(pos.x(), pos.y());
   bool inside(faceXYBounds->inside(locp, BoundaryCheck(true, true, tol, tol)));

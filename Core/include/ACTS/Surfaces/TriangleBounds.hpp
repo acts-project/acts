@@ -159,7 +159,7 @@ TriangleBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 
   // special case : lies on base ?
   double db = locB.first * locV.second - locB.second * locV.first;
-  if (fabs(db) < tol0) {
+  if (std::abs(db) < tol0) {
     double a = (locB.first != 0) ? -locV.first / locB.first
                                  : -locV.second / locB.second;
     if (a > -tol1 && a - 1. < tol1) return true;
@@ -168,7 +168,7 @@ TriangleBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 
   double dn = locB.first * locT.second - locB.second * locT.first;
 
-  if (fabs(dn) > fabs(tol0)) {
+  if (std::abs(dn) > std::abs(tol0)) {
     double t = (locB.first * locV.second - locB.second * locV.first) / dn;
     if (t > 0.) return false;
 

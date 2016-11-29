@@ -13,8 +13,8 @@
 #ifndef ACTS_SURFACES_ELLIPSEBOUNDS_H
 #define ACTS_SURFACES_ELLIPSEBOUNDS_H 1
 
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 

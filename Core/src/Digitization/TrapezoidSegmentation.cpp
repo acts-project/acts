@@ -15,6 +15,7 @@
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
+#include <cmath>
 
 Acts::TrapezoidSegmentation::TrapezoidSegmentation(
     std::shared_ptr<const TrapezoidBounds> mBounds,
@@ -195,7 +196,7 @@ Acts::TrapezoidSegmentation::digitizationStep(const Vector3D& startStep,
   double lorentzDeltaX = -readoutDirection * stepCenter.z() * tan(lorentzAngle);
   // take the full drift length
   double driftInZ    = (halfThickness - readoutDirection * stepCenter.z());
-  double driftLength = fabs(driftInZ / cos(lorentzAngle));
+  double driftLength = std::abs(driftInZ / cos(lorentzAngle));
   // the projected center
   Vector2D stepCenterProjected(stepCenter.x() + lorentzDeltaX, stepCenter.y());
   // the cell & its center

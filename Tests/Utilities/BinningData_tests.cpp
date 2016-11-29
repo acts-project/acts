@@ -11,6 +11,7 @@
 #include "ACTS/Utilities/BinningData.hpp"
 #include <boost/test/included/unit_test.hpp>
 #include "ACTS/Utilities/BinningType.hpp"
+#include <cmath>
 
 namespace Acts {
 namespace Test {
@@ -139,7 +140,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(phiData_arb_binary.bins(), size_t(nBins_binary));
 
     // h/etaData
-    BOOST_TEST((fabs(etaData_eq.value(eta0Position) - 0.) < 1e-5));
+    BOOST_TEST((std::abs(etaData_eq.value(eta0Position) - 0.) < 1e-5));
   }
 
   // test bin values
@@ -402,7 +403,7 @@ namespace Test {
                                         float(-M_PI + 4.5 * phiStep)};
 
     for (size_t ib = 0; ib < phiCenters_eq.size(); ++ib)
-      BOOST_TEST((fabs(phiData_eq.center(ib) - phiCenters_eq[ib]) < 1e-3));
+      BOOST_TEST((std::abs(phiData_eq.center(ib) - phiCenters_eq[ib]) < 1e-3));
   }
 
   // special test for phi binning

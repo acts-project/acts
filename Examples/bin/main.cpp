@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include <memory>
 #include <random>
 #include "ACTS/Detector/TrackingGeometry.hpp"

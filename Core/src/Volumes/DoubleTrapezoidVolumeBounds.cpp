@@ -13,7 +13,7 @@
 #include "ACTS/Volumes/DoubleTrapezoidVolumeBounds.hpp"
 #include <iomanip>
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include "ACTS/Surfaces/DiamondBounds.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
@@ -245,7 +245,7 @@ Acts::DoubleTrapezoidVolumeBounds::faceZXRectangleBoundsTop() const
 bool
 Acts::DoubleTrapezoidVolumeBounds::inside(const Vector3D& pos, double tol) const
 {
-  if (fabs(pos.z()) > m_valueStore.at(bv_halfZ) + tol) return false;
+  if (std::abs(pos.z()) > m_valueStore.at(bv_halfZ) + tol) return false;
   if (pos.y() < -2 * m_valueStore.at(bv_halfY1) - tol) return false;
   if (pos.y() > 2 * m_valueStore.at(bv_halfY2) - tol) return false;
   DiamondBounds* faceXYBounds = faceXYDiamondBounds();

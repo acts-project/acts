@@ -13,22 +13,22 @@
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include <iomanip>
 #include <iostream>
-#include <math.h>
+#include <cmath>
 
 Acts::CylinderBounds::CylinderBounds(double radius, double halez)
   : SurfaceBounds(CylinderBounds::bv_length), m_checkPhi(false)
 {
-  m_valueStore.at(CylinderBounds::bv_radius)        = fabs(radius);
+  m_valueStore.at(CylinderBounds::bv_radius)        = std::abs(radius);
   m_valueStore.at(CylinderBounds::bv_halfPhiSector) = M_PI;
-  m_valueStore.at(CylinderBounds::bv_halfZ)         = fabs(halez);
+  m_valueStore.at(CylinderBounds::bv_halfZ)         = std::abs(halez);
 }
 
 Acts::CylinderBounds::CylinderBounds(double radius, double haphi, double halez)
   : SurfaceBounds(CylinderBounds::bv_length), m_checkPhi(true)
 {
-  m_valueStore.at(CylinderBounds::bv_radius)        = fabs(radius);
+  m_valueStore.at(CylinderBounds::bv_radius)        = std::abs(radius);
   m_valueStore.at(CylinderBounds::bv_halfPhiSector) = haphi;
-  m_valueStore.at(CylinderBounds::bv_halfZ)         = fabs(halez);
+  m_valueStore.at(CylinderBounds::bv_halfZ)         = std::abs(halez);
 }
 
 Acts::CylinderBounds::CylinderBounds(double radius,
@@ -37,10 +37,10 @@ Acts::CylinderBounds::CylinderBounds(double radius,
                                      double halez)
   : SurfaceBounds(CylinderBounds::bv_length), m_checkPhi(true)
 {
-  m_valueStore.at(CylinderBounds::bv_radius)        = fabs(radius);
+  m_valueStore.at(CylinderBounds::bv_radius)        = std::abs(radius);
   m_valueStore.at(CylinderBounds::bv_averagePhi)    = averagephi;
   m_valueStore.at(CylinderBounds::bv_halfPhiSector) = haphi;
-  m_valueStore.at(CylinderBounds::bv_halfZ)         = fabs(halez);
+  m_valueStore.at(CylinderBounds::bv_halfZ)         = std::abs(halez);
 }
 
 Acts::CylinderBounds::~CylinderBounds()
@@ -63,11 +63,11 @@ Acts::CylinderBounds::distanceToBoundary(const Acts::Vector2D& pos) const
   const double pi2 = 2. * M_PI;
 
   double sZ
-      = fabs(pos[Acts::eLOC_Z]) - m_valueStore.at(CylinderBounds::bv_halfZ);
+      = std::abs(pos[Acts::eLOC_Z]) - m_valueStore.at(CylinderBounds::bv_halfZ);
   double wF = m_valueStore.at(CylinderBounds::bv_halfPhiSector);
   if (wF >= M_PI) return sZ;
   double dF
-      = fabs(pos[Acts::eLOC_RPHI] / m_valueStore.at(CylinderBounds::bv_radius)
+      = std::abs(pos[Acts::eLOC_RPHI] / m_valueStore.at(CylinderBounds::bv_radius)
              - m_valueStore.at(CylinderBounds::bv_averagePhi));
   if (dF > M_PI) dF = pi2 - dF;
   double sF

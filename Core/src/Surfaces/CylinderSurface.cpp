@@ -11,9 +11,10 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/CylinderSurface.hpp"
-#include <assert.h>
+#include <cassert>
 #include <iomanip>
 #include <iostream>
+#include <cmath>
 #include "ACTS/Surfaces/RealQuadraticEquation.hpp"
 
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface& csf)
@@ -150,7 +151,7 @@ Acts::CylinderSurface::globalToLocal(const Vector3D& gpos,
     radius = gpos.perp();
   }
   // return true or false
-  return ((fabs(radius - bounds().r()) > inttol) ? false : true);
+  return ((std::abs(radius - bounds().r()) > inttol) ? false : true);
 }
 
 bool
