@@ -11,9 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Volumes/DoubleTrapezoidVolumeBounds.hpp"
+#include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <cmath>
 #include "ACTS/Surfaces/DiamondBounds.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"

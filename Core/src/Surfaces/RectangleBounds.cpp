@@ -11,9 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/RectangleBounds.hpp"
+#include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <cmath>
 
 Acts::RectangleBounds::RectangleBounds(double halex, double haley)
   : Acts::PlanarBounds(RectangleBounds::bv_length)

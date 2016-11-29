@@ -218,8 +218,9 @@ DiscTrapezoidalBounds::inside(const Vector2D&      lpos,
       || m_valueStore.at(DiscTrapezoidalBounds::bv_rMin) != 0)
     return DiscTrapezoidalBounds::inside(
         lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
-  double alpha = std::abs(lpos[Acts::eLOC_PHI]
-                      - m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi));
+  double alpha
+      = std::abs(lpos[Acts::eLOC_PHI]
+                 - m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi));
   if (alpha > M_PI) alpha = 2 * M_PI - alpha;
   // a fast FALSE
   sincosCache scResult = bcheck.FastSinCos(lpos(1, 0));
@@ -418,8 +419,9 @@ DiscTrapezoidalBounds::inside(const Vector2D&      lpos,
 inline bool
 DiscTrapezoidalBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 {
-  double alpha = std::abs(lpos[Acts::eLOC_PHI]
-                      - m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi));
+  double alpha
+      = std::abs(lpos[Acts::eLOC_PHI]
+                 - m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi));
   if (alpha > M_PI) alpha = 2 * M_PI - alpha;
 
   return (
@@ -438,8 +440,9 @@ DiscTrapezoidalBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 inline bool
 DiscTrapezoidalBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 {
-  double alpha = std::abs(lpos[Acts::eLOC_PHI]
-                      - m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi));
+  double alpha
+      = std::abs(lpos[Acts::eLOC_PHI]
+                 - m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi));
   if (alpha > M_PI) alpha = 2. * M_PI - alpha;
   return (alpha
           <= (m_valueStore.at(DiscTrapezoidalBounds::bv_halfPhiSector) + tol1));

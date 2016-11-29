@@ -168,8 +168,8 @@ RadialBounds::clone() const
 inline bool
 RadialBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 {
-  double alpha
-      = std::abs(lpos[Acts::eLOC_PHI] - m_valueStore[RadialBounds::bv_averagePhi]);
+  double alpha = std::abs(lpos[Acts::eLOC_PHI]
+                          - m_valueStore[RadialBounds::bv_averagePhi]);
   if (alpha > M_PI) alpha = 2 * M_PI - alpha;
   bool insidePhi
       = (alpha <= (m_valueStore[RadialBounds::bv_halfPhiSector] + tol1));
@@ -381,8 +381,8 @@ RadialBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 inline bool
 RadialBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 {
-  double alpha
-      = std::abs(lpos[Acts::eLOC_PHI] - m_valueStore[RadialBounds::bv_averagePhi]);
+  double alpha = std::abs(lpos[Acts::eLOC_PHI]
+                          - m_valueStore[RadialBounds::bv_averagePhi]);
   if (alpha > M_PI) alpha = 2. * M_PI - alpha;
   // alpha -= alpha > M_PI ? 2.*M_PI : 0.;
   // alpha += alpha < -M_PI ? 2.*M_PI : 0.;

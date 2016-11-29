@@ -11,9 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/CylinderBounds.hpp"
+#include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <cmath>
 
 Acts::CylinderBounds::CylinderBounds(double radius, double halez)
   : SurfaceBounds(CylinderBounds::bv_length), m_checkPhi(false)
@@ -66,9 +66,9 @@ Acts::CylinderBounds::distanceToBoundary(const Acts::Vector2D& pos) const
       = std::abs(pos[Acts::eLOC_Z]) - m_valueStore.at(CylinderBounds::bv_halfZ);
   double wF = m_valueStore.at(CylinderBounds::bv_halfPhiSector);
   if (wF >= M_PI) return sZ;
-  double dF
-      = std::abs(pos[Acts::eLOC_RPHI] / m_valueStore.at(CylinderBounds::bv_radius)
-             - m_valueStore.at(CylinderBounds::bv_averagePhi));
+  double dF = std::abs(pos[Acts::eLOC_RPHI]
+                           / m_valueStore.at(CylinderBounds::bv_radius)
+                       - m_valueStore.at(CylinderBounds::bv_averagePhi));
   if (dF > M_PI) dF = pi2 - dF;
   double sF
       = 2. * m_valueStore.at(CylinderBounds::bv_radius) * sin(.5 * (dF - wF));

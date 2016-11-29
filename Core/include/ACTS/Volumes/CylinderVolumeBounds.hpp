@@ -13,9 +13,9 @@
 #ifndef ACTS_VOLUMES_CYLINDERVOLUMESBOUNDS_H
 #define ACTS_VOLUMES_CYLINDERVOLUMESBOUNDS_H 1
 
+#include <cmath>
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Volumes/VolumeBounds.hpp"
-#include <cmath>
 
 namespace Acts {
 

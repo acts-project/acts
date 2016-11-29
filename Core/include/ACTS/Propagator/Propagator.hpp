@@ -9,8 +9,8 @@
 #ifndef ACTS_EXTRAPOLATION_PROPAGATOR_H
 #define ACTS_EXTRAPOLATION_PROPAGATOR_H 1
 
-#include <memory>
 #include <cmath>
+#include <memory>
 #include <type_traits>
 #include "ACTS/Propagator/AbortList.hpp"
 #include "ACTS/Propagator/ObserverList.hpp"

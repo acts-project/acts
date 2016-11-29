@@ -8,9 +8,9 @@
 
 #include "ACTS/Examples/BuildGenericDetector.hpp"
 #include <array>
+#include <cmath>
 #include <iostream>
 #include <vector>
-#include <cmath>
 #include "ACTS/Detector/TrackingGeometry.hpp"
 #include "ACTS/Examples/GenericLayerBuilder.hpp"
 #include "ACTS/Material/Material.hpp"

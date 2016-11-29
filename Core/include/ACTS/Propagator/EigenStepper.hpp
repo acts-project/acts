@@ -9,11 +9,11 @@
 #ifndef ACTS_EIGEN_STEPPER_HPP
 #define ACTS_EIGEN_STEPPER_HPP 1
 
+#include <cmath>
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
-#include <cmath>
 
 namespace Acts {
 

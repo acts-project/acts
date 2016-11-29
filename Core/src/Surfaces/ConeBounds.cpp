@@ -11,9 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/ConeBounds.hpp"
+#include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <cmath>
 
 Acts::ConeBounds::ConeBounds(double alpha,
                              bool   symm,

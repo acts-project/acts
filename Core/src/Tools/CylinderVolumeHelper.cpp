@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Tools/CylinderVolumeHelper.hpp"
+#include <cmath>
 #include "ACTS/Detector/GlueVolumesDescriptor.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Layers/CylinderLayer.hpp"
@@ -26,7 +27,6 @@
 #include "ACTS/Volumes/AbstractVolume.hpp"
 #include "ACTS/Volumes/BoundarySurfaceT.hpp"
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
-#include <cmath>
 
 Acts::CylinderVolumeHelper::CylinderVolumeHelper(
     const Acts::CylinderVolumeHelper::Config& cvhConfig,
@@ -274,12 +274,13 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
       double zMinLayer = zMin;
       double zMaxLayer = zMax;
       // create the layer
-      layers.push_back(createCylinderLayer(0.5 * (zMinLayer + zMaxLayer),
-                                           (*layerPropIter),
-                                           std::abs(0.5 * (zMaxLayer - zMinLayer)),
-                                           m_cfg.passiveLayerThickness,
-                                           m_cfg.passiveLayerPhiBins,
-                                           m_cfg.passiveLayerRzBins));
+      layers.push_back(
+          createCylinderLayer(0.5 * (zMinLayer + zMaxLayer),
+                              (*layerPropIter),
+                              std::abs(0.5 * (zMaxLayer - zMinLayer)),
+                              m_cfg.passiveLayerThickness,
+                              m_cfg.passiveLayerPhiBins,
+                              m_cfg.passiveLayerRzBins));
 
     } else {
       // take the envelopes into account
@@ -356,8 +357,8 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
     return nullptr;
   }
   // check whether it is a r-binned case or a z-binned case
-  bool rCase
-      = std::abs(firstVolumeBounds->innerRadius() - lastVolumeBounds->innerRadius())
+  bool rCase = std::abs(firstVolumeBounds->innerRadius()
+                        - lastVolumeBounds->innerRadius())
       > 0.1;
 
   // fill these ones depending on the rCase though assignment - no parsing at

@@ -10,11 +10,11 @@
 // RectangularSegmentation.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
+#include <cmath>
 #include "ACTS/Digitization/RectangularSegmentation.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
-#include <cmath>
 
 Acts::RectangularSegmentation::RectangularSegmentation(
     std::shared_ptr<const Acts::RectangleBounds> mBounds,

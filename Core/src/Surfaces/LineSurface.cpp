@@ -11,9 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/LineSurface.hpp"
+#include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <cmath>
 
 Acts::LineSurface::LineSurface(std::shared_ptr<Transform3D> htrans,
                                double                       radius,

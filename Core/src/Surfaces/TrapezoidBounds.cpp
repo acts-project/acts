@@ -11,9 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
+#include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <cmath>
 
 Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
                                        double maxhalex,
@@ -93,8 +93,9 @@ Acts::TrapezoidBounds::insideFull(const Acts::Vector2D& lpos,
       / (m_valueStore.at(TrapezoidBounds::bv_maxHalfX)
          - m_valueStore.at(TrapezoidBounds::bv_minHalfX))
       * ((lpos[Acts::eLOC_X] > 0.) ? 1.0 : -1.0);
-  double d = -std::abs(k) * 0.5 * (m_valueStore.at(TrapezoidBounds::bv_maxHalfX)
-                               + m_valueStore.at(TrapezoidBounds::bv_minHalfX));
+  double d
+      = -std::abs(k) * 0.5 * (m_valueStore.at(TrapezoidBounds::bv_maxHalfX)
+                              + m_valueStore.at(TrapezoidBounds::bv_minHalfX));
   return (isAbove(lpos, tol0, tol1, k, d));
 }
 

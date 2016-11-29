@@ -12,9 +12,9 @@
 
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include <cassert>
+#include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <cmath>
 #include "ACTS/Surfaces/RealQuadraticEquation.hpp"
 
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface& csf)

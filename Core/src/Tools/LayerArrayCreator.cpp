@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Tools/LayerArrayCreator.hpp"
+#include <cmath>
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Layers/NavigationLayer.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
@@ -25,7 +26,6 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/GeometryObjectSorter.hpp"
 #include "ACTS/Utilities/GeometryStatics.hpp"
-#include <cmath>
 
 std::unique_ptr<const Acts::LayerArray>
 Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,

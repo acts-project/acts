@@ -12,9 +12,9 @@
 
 #include "ACTS/Surfaces/ConeSurface.hpp"
 #include <cassert>
+#include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <cmath>
 #include "ACTS/Surfaces/RealQuadraticEquation.hpp"
 
 Acts::ConeSurface::ConeSurface(const ConeSurface& csf)

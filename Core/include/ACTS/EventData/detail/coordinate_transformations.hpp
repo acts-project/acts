@@ -10,9 +10,9 @@
 #define ACTS_COORDINATE_TRANSFORMATIONS_H 1
 
 // ACTS includes
+#include <cmath>
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
-#include <cmath>
 
 #ifdef ACTS_COORDINATE_TRANSFORM_PLUGIN
 

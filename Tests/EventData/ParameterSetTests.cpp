@@ -222,10 +222,10 @@ namespace Test {
         // larger than half period
         // check that corrected(corrected(phi_2) + residual) == corrected(phi_1)
         if (std::abs(get_cyclic_value(get_cyclic_value(phi_2, phi_min, phi_max)
-                                      + residual(2),
-                                  phi_min,
-                                  phi_max)
-                 - get_cyclic_value(phi_1, phi_min, phi_max))
+                                          + residual(2),
+                                      phi_min,
+                                      phi_max)
+                     - get_cyclic_value(phi_1, phi_min, phi_max))
                 > tol
             or std::abs(residual(2)) > (phi_max - phi_min) / 2) {
           BOOST_CHECK(false);

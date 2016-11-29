@@ -11,13 +11,13 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Extrapolation/detail/RungeKuttaUtils.hpp"
+#include <cmath>
 #include "ACTS/Surfaces/ConeSurface.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Surfaces/DiscSurface.hpp"
 #include "ACTS/Surfaces/PerigeeSurface.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/StrawSurface.hpp"
-#include <cmath>
 
 #ifndef __USE_GNU
 void

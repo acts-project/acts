@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <cmath>
 #include "ACTS/EventData/TransportJacobian.hpp"
 #include "ACTS/EventData/detail/coordinate_transformations.hpp"
 #include "ACTS/Surfaces/DiscSurface.hpp"
@@ -13,7 +14,6 @@
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/StrawSurface.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
-#include <cmath>
 
 template <class MagneticField>
 template <class T>
@@ -689,8 +689,8 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
 
     // Test approximation quality on give step and possible step reduction
     //
-    double EST = std::abs((A1 + A6) - (A3 + A4)) + std::abs((B1 + B6) - (B3 + B4))
-        + std::abs((C1 + C6) - (C3 + C4));
+    double EST = std::abs((A1 + A6) - (A3 + A4))
+        + std::abs((B1 + B6) - (B3 + B4)) + std::abs((C1 + C6) - (C3 + C4));
     if (EST > m_cfg.dlt) {
       S *= .5;
       dltm = 0.;
@@ -900,8 +900,8 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStepWithGradient(
 
     // Test approximation quality on give step and possible step reduction
     //
-    double EST = std::abs((A1 + A6) - (A3 + A4)) + std::abs((B1 + B6) - (B3 + B4))
-        + std::abs((C1 + C6) - (C3 + C4));
+    double EST = std::abs((A1 + A6) - (A3 + A4))
+        + std::abs((B1 + B6) - (B3 + B4)) + std::abs((C1 + C6) - (C3 + C4));
     if (EST > m_cfg.dlt) {
       S *= .5;
       dltm = 0.;
