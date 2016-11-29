@@ -10,6 +10,7 @@
 #define ACTS_COORDINATE_TRANSFORMATIONS_H 1
 
 // ACTS includes
+#include <cmath>
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
 
@@ -43,7 +44,7 @@ namespace detail {
     parameters2globalMomentum(const ParVector_t& pars)
     {
       ActsVectorD<3> momentum;
-      double         p     = fabs(1. / pars(Acts::eQOP));
+      double         p     = std::abs(1. / pars(Acts::eQOP));
       double         phi   = pars(Acts::ePHI);
       double         theta = pars(Acts::eTHETA);
       momentum << p * sin(theta) * cos(phi), p * sin(theta) * sin(phi),
@@ -59,7 +60,7 @@ namespace detail {
     {
       ParVector_t parameters;
       parameters << 0, 0, mom.phi(), mom.theta(),
-          ((fabs(charge) < 1e-4) ? 1. : charge) / mom.mag();
+          ((std::abs(charge) < 1e-4) ? 1. : charge) / mom.mag();
 
       return parameters;
     }
@@ -74,7 +75,7 @@ namespace detail {
       s.globalToLocal(pos, mom, localPosition);
       ParVector_t result;
       result << localPosition(0), localPosition(1), mom.phi(), mom.theta(),
-          ((fabs(charge) < 1e-4) ? 1. : charge) / mom.mag();
+          ((std::abs(charge) < 1e-4) ? 1. : charge) / mom.mag();
       return result;
     }
 

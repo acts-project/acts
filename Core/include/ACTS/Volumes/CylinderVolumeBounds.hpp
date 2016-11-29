@@ -13,6 +13,7 @@
 #ifndef ACTS_VOLUMES_CYLINDERVOLUMESBOUNDS_H
 #define ACTS_VOLUMES_CYLINDERVOLUMESBOUNDS_H 1
 
+#include <cmath>
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Volumes/VolumeBounds.hpp"
 
@@ -224,7 +225,7 @@ CylinderVolumeBounds::inside(const Vector3D& pos, double tol) const
                               && (ros <= m_valueStore[bv_outerRadius] + tol))
                            : false;
   bool insideZ
-      = insideR ? (fabs(pos.z()) <= m_valueStore[bv_halfZ] + tol) : false;
+      = insideR ? (std::abs(pos.z()) <= m_valueStore[bv_halfZ] + tol) : false;
   return (insideZ && insideR && insidePhi);
 }
 

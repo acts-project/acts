@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Tools/LayerArrayCreator.hpp"
+#include <cmath>
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Layers/NavigationLayer.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
@@ -93,7 +94,7 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
       if (navigationValue != (layerValue - 0.5 * layerThickness)) {
         // create the navigation layer surface from the layer
         std::unique_ptr<const Surface> navLayerSurface(createNavigationSurface(
-            *layIter, bValue, -fabs(layerValue - navigationValue)));
+            *layIter, bValue, -std::abs(layerValue - navigationValue)));
         ACTS_VERBOSE("arbitrary : creating a  NavigationLayer at "
                      << (navLayerSurface->binningPosition(bValue)).x()
                      << ", "

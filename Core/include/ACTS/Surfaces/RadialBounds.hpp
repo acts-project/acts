@@ -14,7 +14,6 @@
 #define ACTS_SURFACES_RADIALBOUNDS_H 1
 
 #include <cmath>
-#include <math.h>
 #include "ACTS/Surfaces/DiscBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
@@ -169,8 +168,8 @@ RadialBounds::clone() const
 inline bool
 RadialBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 {
-  double alpha
-      = fabs(lpos[Acts::eLOC_PHI] - m_valueStore[RadialBounds::bv_averagePhi]);
+  double alpha = std::abs(lpos[Acts::eLOC_PHI]
+                          - m_valueStore[RadialBounds::bv_averagePhi]);
   if (alpha > M_PI) alpha = 2 * M_PI - alpha;
   bool insidePhi
       = (alpha <= (m_valueStore[RadialBounds::bv_halfPhiSector] + tol1));
@@ -313,8 +312,8 @@ RadialBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
             double y1,
             double r) const
     {
-      double x = fabs(x1 - x0);
-      double y = fabs(y1 - y0);
+      double x = std::abs(x1 - x0);
+      double y = std::abs(y1 - y0);
       if (x * x + (h - y) * (h - y) <= r * r
           || (w - x) * (w - x) + y * y <= r * r
           || x * h + y * w <= w * h  // collision with (0, h)
@@ -382,8 +381,8 @@ RadialBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 inline bool
 RadialBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 {
-  double alpha
-      = fabs(lpos[Acts::eLOC_PHI] - m_valueStore[RadialBounds::bv_averagePhi]);
+  double alpha = std::abs(lpos[Acts::eLOC_PHI]
+                          - m_valueStore[RadialBounds::bv_averagePhi]);
   if (alpha > M_PI) alpha = 2. * M_PI - alpha;
   // alpha -= alpha > M_PI ? 2.*M_PI : 0.;
   // alpha += alpha < -M_PI ? 2.*M_PI : 0.;

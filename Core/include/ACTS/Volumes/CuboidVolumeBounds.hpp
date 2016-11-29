@@ -13,6 +13,7 @@
 #ifndef ACTS_VOLUMES_CUBOIDVOLUMESBOUNDS_H
 #define ACTS_VOLUMES_CUBOIDVOLUMESBOUNDS_H 1
 
+#include <cmath>
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Volumes/VolumeBounds.hpp"
 
@@ -149,9 +150,9 @@ CuboidVolumeBounds::clone() const
 inline bool
 CuboidVolumeBounds::inside(const Vector3D& pos, double tol) const
 {
-  return (fabs(pos.x()) <= m_valueStore.at(bv_halfX) + tol
-          && fabs(pos.y()) <= m_valueStore.at(bv_halfY) + tol
-          && fabs(pos.z()) <= m_valueStore.at(bv_halfZ) + tol);
+  return (std::abs(pos.x()) <= m_valueStore.at(bv_halfX) + tol
+          && std::abs(pos.y()) <= m_valueStore.at(bv_halfY) + tol
+          && std::abs(pos.z()) <= m_valueStore.at(bv_halfZ) + tol);
 }
 
 inline double

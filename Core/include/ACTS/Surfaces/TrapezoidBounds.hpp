@@ -13,7 +13,7 @@
 #ifndef ACTS_SURFACES_TRAPEZOIDBOUNDS_H
 #define ACTS_SURFACES_TRAPEZOIDBOUNDS_H 1
 
-#include <math.h>
+#include <cmath>
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
@@ -289,7 +289,7 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
     return inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 
   // a fast FALSE
-  double fabsY   = fabs(lpos[Acts::eLOC_Y]);
+  double fabsY   = std::abs(lpos[Acts::eLOC_Y]);
   double max_ell = (*bcheck.lCovariance)(0, 0) > (*bcheck.lCovariance)(1, 1)
       ? (*bcheck.lCovariance)(0, 0)
       : (*bcheck.lCovariance)(1, 1);
@@ -297,7 +297,7 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
   if (fabsY > (m_valueStore.at(TrapezoidBounds::bv_halfY) + limit))
     return false;
   // a fast FALSE
-  double fabsX = fabs(lpos[Acts::eLOC_X]);
+  double fabsX = std::abs(lpos[Acts::eLOC_X]);
   if (fabsX > (m_valueStore.at(TrapezoidBounds::bv_maxHalfX) + limit))
     return false;
   // a fast TRUE
@@ -358,14 +358,14 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 inline bool
 TrapezoidBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 {
-  return (fabs(lpos[Acts::eLOC_X])
+  return (std::abs(lpos[Acts::eLOC_X])
           < m_valueStore.at(TrapezoidBounds::bv_maxHalfX) + tol0);
 }
 
 inline bool
 TrapezoidBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 {
-  return (fabs(lpos[Acts::eLOC_Y])
+  return (std::abs(lpos[Acts::eLOC_Y])
           < m_valueStore.at(TrapezoidBounds::bv_halfY) + tol1);
 }
 

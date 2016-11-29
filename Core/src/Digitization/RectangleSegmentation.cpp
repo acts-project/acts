@@ -10,6 +10,7 @@
 // RectangularSegmentation.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
+#include <cmath>
 #include "ACTS/Digitization/RectangularSegmentation.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
@@ -91,7 +92,7 @@ Acts::RectangularSegmentation::createSegmentationSurfaces(
   } else {
     // lorentz reduced Bounds
     double lorentzReducedHalfX
-        = m_activeBounds->halflengthX() - fabs(lorentzPlaneShiftX);
+        = m_activeBounds->halflengthX() - std::abs(lorentzPlaneShiftX);
     std::shared_ptr<const PlanarBounds> lorentzReducedBounds(
         new RectangleBounds(lorentzReducedHalfX,
                             m_activeBounds->halflengthY()));
@@ -118,7 +119,7 @@ Acts::RectangularSegmentation::createSegmentationSurfaces(
   std::shared_ptr<const PlanarBounds> xBinBounds(
       new RectangleBounds(m_activeBounds->halflengthY(), halfThickness));
   // now, let's create the shared bounds of all surfaces marking lorentz planes
-  double lorentzPlaneHalfX = fabs(halfThickness / cos(lorentzAngle));
+  double lorentzPlaneHalfX = std::abs(halfThickness / cos(lorentzAngle));
   // teh bounds of the lorentz plane
   std::shared_ptr<const PlanarBounds> lorentzPlaneBounds = (lorentzAngle == 0.)
       ? xBinBounds

@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/EllipseBounds.hpp"
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 
@@ -77,7 +78,7 @@ Acts::EllipseBounds::distanceToBoundary(const Vector2D& lpos) const
   if (m_valueStore.at(EllipseBounds::bv_halfPhiSector) < M_PI) {
     dF = atan2(cs, sn) - m_valueStore.at(EllipseBounds::bv_averagePhi);
     dF += (dF > M_PI) ? -pi2 : (dF < -M_PI) ? pi2 : 0;
-    double df = fabs(dF) - m_valueStore.at(EllipseBounds::bv_halfPhiSector);
+    double df = std::abs(dF) - m_valueStore.at(EllipseBounds::bv_halfPhiSector);
     sf        = r * sin(df);
     if (df > 0.) r *= cos(df);
   } else {

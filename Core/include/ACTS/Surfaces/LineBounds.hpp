@@ -199,13 +199,13 @@ LineBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 inline bool
 LineBounds::insideLocR(double r, double tol0) const
 {
-  return fabs(m_valueStore.at(LineBounds::bv_radius) - r) < tol0;
+  return std::abs(m_valueStore.at(LineBounds::bv_radius) - r) < tol0;
 }
 
 inline bool
 LineBounds::insideLocZ(double z, double tol1) const
 {
-  return (m_valueStore.at(LineBounds::bv_halfZ) + tol1) - fabs(z) > 0.;
+  return (m_valueStore.at(LineBounds::bv_halfZ) + tol1) - std::abs(z) > 0.;
 }
 
 inline double

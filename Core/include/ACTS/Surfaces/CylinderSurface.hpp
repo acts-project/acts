@@ -13,6 +13,7 @@
 #ifndef ACTS_SURFACES_CYLINDERSURFACE_H
 #define ACTS_SURFACES_CYLINDERSURFACE_H 1
 
+#include <cmath>
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
@@ -270,7 +271,7 @@ CylinderSurface::pathCorrection(const Vector3D& gpos, const Vector3D& mom) const
 {
   Vector3D normalT  = normal(gpos);
   double   cosAlpha = normalT.dot(mom.unit());
-  return fabs(1. / cosAlpha);
+  return std::abs(1. / cosAlpha);
 }
 
 inline const CylinderBounds&

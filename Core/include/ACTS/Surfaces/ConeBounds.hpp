@@ -266,7 +266,7 @@ ConeBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 inline double
 ConeBounds::r(double z) const
 {
-  return fabs(z * m_tanAlpha);
+  return std::abs(z * m_tanAlpha);
 }
 
 inline double

@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/DiscTrapezoidalBounds.hpp"
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 
@@ -72,7 +73,7 @@ double
 Acts::DiscTrapezoidalBounds::distanceToBoundary(const Acts::Vector2D& pos) const
 {
   const double pi2        = 2. * M_PI;
-  double       alpha      = fabs(pos[Acts::eLOC_PHI]);
+  double       alpha      = std::abs(pos[Acts::eLOC_PHI]);
   if (alpha > M_PI) alpha = pi2 - alpha;
 
   double r = pos[Acts::eLOC_R];
@@ -95,8 +96,8 @@ Acts::DiscTrapezoidalBounds::distanceToBoundary(const Acts::Vector2D& pos) const
 
   // check if it is external in phi
   if ((alpha - m_valueStore.at(DiscTrapezoidalBounds::bv_halfPhiSector)) > 0.)
-    return r
-        * fabs(sin(alpha
+    return r * std::abs(sin(
+                   alpha
                    - m_valueStore.at(DiscTrapezoidalBounds::bv_halfPhiSector)));
 
   // if here it is inside:

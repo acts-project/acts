@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/RadialBounds.hpp"
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 
@@ -65,8 +66,8 @@ Acts::RadialBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
   double dF = 0.;
 
   if (m_valueStore.at(RadialBounds::bv_halfPhiSector) < M_PI) {
-    dF = fabs(lpos[Acts::eLOC_PHI]
-              - m_valueStore.at(RadialBounds::bv_averagePhi));
+    dF = std::abs(lpos[Acts::eLOC_PHI]
+                  - m_valueStore.at(RadialBounds::bv_averagePhi));
     if (dF > M_PI) dF = pi2 - dF;
     dF -= m_valueStore.at(RadialBounds::bv_halfPhiSector);
     sf = r * sin(dF);

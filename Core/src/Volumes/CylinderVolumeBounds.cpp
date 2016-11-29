@@ -11,8 +11,8 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
+#include <cmath>
 #include <iostream>
-#include <math.h>
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Surfaces/DiscSurface.hpp"
@@ -31,9 +31,9 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(double radius, double halez)
   : VolumeBounds(), m_valueStore(4, 0.)
 {
   m_valueStore.at(bv_innerRadius)   = 0.;
-  m_valueStore.at(bv_outerRadius)   = fabs(radius);
+  m_valueStore.at(bv_outerRadius)   = std::abs(radius);
   m_valueStore.at(bv_halfPhiSector) = M_PI;
-  m_valueStore.at(bv_halfZ)         = fabs(halez);
+  m_valueStore.at(bv_halfZ)         = std::abs(halez);
 }
 
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(double rinner,
@@ -41,10 +41,10 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(double rinner,
                                                  double halez)
   : VolumeBounds(), m_valueStore(4, 0.)
 {
-  m_valueStore.at(bv_innerRadius)   = fabs(rinner);
-  m_valueStore.at(bv_outerRadius)   = fabs(router);
+  m_valueStore.at(bv_innerRadius)   = std::abs(rinner);
+  m_valueStore.at(bv_outerRadius)   = std::abs(router);
   m_valueStore.at(bv_halfPhiSector) = M_PI;
-  m_valueStore.at(bv_halfZ)         = fabs(halez);
+  m_valueStore.at(bv_halfZ)         = std::abs(halez);
 }
 
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(double rinner,
@@ -53,10 +53,10 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(double rinner,
                                                  double halez)
   : VolumeBounds(), m_valueStore(4, 0.)
 {
-  m_valueStore.at(bv_innerRadius)   = fabs(rinner);
-  m_valueStore.at(bv_outerRadius)   = fabs(router);
-  m_valueStore.at(bv_halfPhiSector) = fabs(haphi);
-  m_valueStore.at(bv_halfZ)         = fabs(halez);
+  m_valueStore.at(bv_innerRadius)   = std::abs(rinner);
+  m_valueStore.at(bv_outerRadius)   = std::abs(router);
+  m_valueStore.at(bv_halfPhiSector) = std::abs(haphi);
+  m_valueStore.at(bv_halfZ)         = std::abs(halez);
 }
 
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(
@@ -111,7 +111,7 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
         new CylinderSurface(transformPtr, innerCylinderBounds()));
 
   // the cylinder is sectoral
-  if (fabs(halfPhiSector() - M_PI) > s_numericalStable) {
+  if (std::abs(halfPhiSector() - M_PI) > s_numericalStable) {
     std::shared_ptr<const PlanarBounds> sp12Bounds = sectorPlaneBounds();
     // sectorPlane 1 (negative phi)
     Transform3D* sp1Transform = new Transform3D(

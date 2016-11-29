@@ -11,18 +11,18 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
+#include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <math.h>
 
 Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
                                        double maxhalex,
                                        double haley)
   : Acts::PlanarBounds(TrapezoidBounds::bv_length), m_alpha(0.), m_beta(0.)
 {
-  m_valueStore.at(TrapezoidBounds::bv_minHalfX) = fabs(minhalex);
-  m_valueStore.at(TrapezoidBounds::bv_maxHalfX) = fabs(maxhalex);
-  m_valueStore.at(TrapezoidBounds::bv_halfY)    = fabs(haley);
+  m_valueStore.at(TrapezoidBounds::bv_minHalfX) = std::abs(minhalex);
+  m_valueStore.at(TrapezoidBounds::bv_maxHalfX) = std::abs(maxhalex);
+  m_valueStore.at(TrapezoidBounds::bv_halfY)    = std::abs(haley);
   if (m_valueStore.at(TrapezoidBounds::bv_minHalfX)
       > m_valueStore.at(TrapezoidBounds::bv_maxHalfX))
     std::swap(m_valueStore.at(TrapezoidBounds::bv_minHalfX),
@@ -37,10 +37,10 @@ Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
 {
   double gamma = (alpha > beta) ? (alpha - 0.5 * M_PI) : (beta - 0.5 * M_PI);
   // now fill them
-  m_valueStore.at(TrapezoidBounds::bv_minHalfX) = fabs(minhalex);
+  m_valueStore.at(TrapezoidBounds::bv_minHalfX) = std::abs(minhalex);
   m_valueStore.at(TrapezoidBounds::bv_maxHalfX) = minhalex
       + (2. * m_valueStore.at(TrapezoidBounds::bv_halfY)) * tan(gamma);
-  m_valueStore.at(TrapezoidBounds::bv_halfY) = fabs(haley);
+  m_valueStore.at(TrapezoidBounds::bv_halfY) = std::abs(haley);
 }
 
 Acts::TrapezoidBounds::~TrapezoidBounds()
@@ -74,8 +74,8 @@ Acts::TrapezoidBounds::insideFull(const Acts::Vector2D& lpos,
 {
   // the cases:
   // the cases:
-  double fabsX = fabs(lpos[Acts::eLOC_X]);
-  double fabsY = fabs(lpos[Acts::eLOC_Y]);
+  double fabsX = std::abs(lpos[Acts::eLOC_X]);
+  double fabsY = std::abs(lpos[Acts::eLOC_Y]);
   // (1) a fast FALSE
   if (fabsY > (m_valueStore.at(TrapezoidBounds::bv_halfY) + tol1)) return false;
   // (2) a fast FALSE
@@ -93,8 +93,9 @@ Acts::TrapezoidBounds::insideFull(const Acts::Vector2D& lpos,
       / (m_valueStore.at(TrapezoidBounds::bv_maxHalfX)
          - m_valueStore.at(TrapezoidBounds::bv_minHalfX))
       * ((lpos[Acts::eLOC_X] > 0.) ? 1.0 : -1.0);
-  double d = -fabs(k) * 0.5 * (m_valueStore.at(TrapezoidBounds::bv_maxHalfX)
-                               + m_valueStore.at(TrapezoidBounds::bv_minHalfX));
+  double d
+      = -std::abs(k) * 0.5 * (m_valueStore.at(TrapezoidBounds::bv_maxHalfX)
+                              + m_valueStore.at(TrapezoidBounds::bv_minHalfX));
   return (isAbove(lpos, tol0, tol1, k, d));
 }
 

@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Tools/SurfaceArrayCreator.hpp"
+#include <cmath>
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
@@ -315,7 +316,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
                      end(surf),
                      back_inserter(keys),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (fabs(a->center().phi() - b->center().phi())
+                       return (std::abs(a->center().phi() - b->center().phi())
                                < 10e-12);
                      });
     // the phi-center position of the previous surface
@@ -398,7 +399,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
                      end(surf),
                      back_inserter(keys),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (fabs(a->center().z() - b->center().z())
+                       return (std::abs(a->center().z() - b->center().z())
                                < Acts::units::_um);
                      });
     // the z-center position of the previous surface
@@ -469,7 +470,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
                      end(surf),
                      back_inserter(keys),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (fabs(a->center().perp() - b->center().perp())
+                       return (std::abs(a->center().perp() - b->center().perp())
                                < Acts::units::_um);
                      });
     // the r-center position of the previous surface
@@ -566,13 +567,13 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                      end(surf),
                      back_inserter(keys),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (fabs(a->center().phi() - b->center().phi())
+                       return (std::abs(a->center().phi() - b->center().phi())
                                < 10e-12);
                      });
     // set minimum and maximum
     double min  = keys.front()->center().phi();
     double max  = keys.back()->center().phi();
-    double step = fabs(max - min) / (keys.size() - 1);
+    double step = std::abs(max - min) / (keys.size() - 1);
     minimum     = min - 0.5 * step;
     maximum     = max + 0.5 * step;
     // phi correction
@@ -598,13 +599,13 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                      end(surf),
                      back_inserter(keys),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (fabs(a->center().z() - b->center().z())
+                       return (std::abs(a->center().z() - b->center().z())
                                < Acts::units::_um);
                      });
     // set minimum and maximum
     double min  = keys.front()->center().z();
     double max  = keys.back()->center().z();
-    double step = fabs(max - min) / (keys.size() - 1);
+    double step = std::abs(max - min) / (keys.size() - 1);
     minimum     = min - 0.5 * step;
     maximum     = max + 0.5 * step;
   } else {
@@ -620,13 +621,13 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                      end(surf),
                      back_inserter(keys),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (fabs(a->center().perp() - b->center().perp())
+                       return (std::abs(a->center().perp() - b->center().perp())
                                < Acts::units::_um);
                      });
     // set the minimum and maximum
     double min  = keys.front()->center().perp();
     double max  = keys.back()->center().perp();
-    double step = fabs(max - min) / (keys.size() - 1);
+    double step = std::abs(max - min) / (keys.size() - 1);
     minimum     = min - 0.5 * step;
     maximum     = max + 0.5 * step;
   }

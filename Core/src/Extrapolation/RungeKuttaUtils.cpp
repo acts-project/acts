@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Extrapolation/detail/RungeKuttaUtils.hpp"
+#include <cmath>
 #include "ACTS/Surfaces/ConeSurface.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Surfaces/DiscSurface.hpp"
@@ -644,7 +645,7 @@ Acts::RungeKuttaUtils::stepEstimatorToCylinder(double*       S,
       Smax += Sq;
     }
   } else {
-    if (fabs(Smax) < .1) {
+    if (std::abs(Smax) < .1) {
       Q = false;
       return 0.;
     }
@@ -673,7 +674,7 @@ Acts::RungeKuttaUtils::stepEstimatorToCylinder(double*       S,
     return Smax;
   }
 
-  // if(fabs(Smin) < .001) {S[8]=-1.; return Smax;}
+  // if(std::abs(Smin) < .001) {S[8]=-1.; return Smax;}
 
   S[8] = 1.;
   return Smin;
@@ -1092,7 +1093,7 @@ Acts::RungeKuttaUtils::transformLocalToGlobal(bool                 useJac,
   P[4] = Sf * Se;  // Ay
   P[5] = Ce;       // Az
   P[6] = p[4];     // CM
-  if (fabs(P[6]) < .000000000000001) {
+  if (std::abs(P[6]) < .000000000000001) {
     P[6] < 0. ? P[6] = -.000000000000001 : P[6] = .000000000000001;
   }
 

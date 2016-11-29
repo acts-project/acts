@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/LineSurface.hpp"
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 
@@ -141,7 +142,7 @@ Acts::LineSurface::intersectionEstimate(const Vector3D&      gpos,
   Vector3D mab(mb - ma);
   double   eaTeb = ea.dot(eb);
   double   denom = 1 - eaTeb * eaTeb;
-  if (fabs(denom) > 10e-7) {
+  if (std::abs(denom) > 10e-7) {
     double lambda0 = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
     // evaluate in terms of direction
     bool isValid = forceDir ? (lambda0 > 0.) : true;

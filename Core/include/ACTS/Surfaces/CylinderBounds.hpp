@@ -13,6 +13,7 @@
 #ifndef ACTS_SURFACES_CYLINDERBOUNDS_H
 #define ACTS_SURFACES_CYLINDERBOUNDS_H 1
 
+#include <cmath>
 #include "ACTS/Surfaces/SurfaceBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
@@ -259,16 +260,16 @@ CylinderBounds::inside(double r,
 inline bool
 CylinderBounds::insideLocZ(double z, double tol1) const
 {
-  return (m_valueStore.at(CylinderBounds::bv_halfZ) + tol1) - fabs(z) > 0.;
+  return (m_valueStore.at(CylinderBounds::bv_halfZ) + tol1) - std::abs(z) > 0.;
 }
 
 inline bool
 CylinderBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 {
   bool insideRphi = false;
-  if (fabs(m_valueStore.at(CylinderBounds::bv_averagePhi)) < 10e-7)
-    insideRphi = (fabs(lpos[Acts::eLOC_RPHI]
-                       / m_valueStore.at(CylinderBounds::bv_radius))
+  if (std::abs(m_valueStore.at(CylinderBounds::bv_averagePhi)) < 10e-7)
+    insideRphi = (std::abs(lpos[Acts::eLOC_RPHI]
+                           / m_valueStore.at(CylinderBounds::bv_radius))
                   < (m_valueStore.at(CylinderBounds::bv_halfPhiSector) + tol0));
   else {
     double localPhi

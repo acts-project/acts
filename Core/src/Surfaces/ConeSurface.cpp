@@ -11,7 +11,8 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/ConeSurface.hpp"
-#include <assert.h>
+#include <cassert>
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include "ACTS/Surfaces/RealQuadraticEquation.hpp"
@@ -130,7 +131,7 @@ Acts::ConeSurface::globalToLocal(const Vector3D& gpos,
   // now decide on the quility of the transformation
   double inttol = r * 0.0001;
   inttol        = (inttol < 0.01) ? 0.01 : 0.01;  // ?
-  return ((fabs(loc3Dframe.perp() - r) > inttol) ? false : true);
+  return ((std::abs(loc3Dframe.perp() - r) > inttol) ? false : true);
 }
 
 Acts::Intersection
@@ -210,5 +211,5 @@ Acts::ConeSurface::pathCorrection(const Vector3D& gpos,
   if (m_transform) normalC = transform() * normalC;
   // back in global frame
   double cAlpha = normalC.dot(mom.unit());
-  return fabs(1. / cAlpha);
+  return std::abs(1. / cAlpha);
 }

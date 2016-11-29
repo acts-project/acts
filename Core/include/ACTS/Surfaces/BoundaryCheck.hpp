@@ -153,7 +153,7 @@ BoundaryCheck::FastArcTan(double x) const
     x          = 1. / x;  // keep arg between 0 and 1
     complement = true;
   }
-  y = M_PI_4 * x - x * (fabs(x) - 1) * (0.2447 + 0.0663 * fabs(x));
+  y = M_PI_4 * x - x * (std::abs(x) - 1) * (0.2447 + 0.0663 * std::abs(x));
   if (complement) y = M_PI_2 - y;  // correct for 1/x if we did that
   if (sign) y       = -y;          // correct for negative arg
   return y;

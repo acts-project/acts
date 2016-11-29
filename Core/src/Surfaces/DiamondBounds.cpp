@@ -11,9 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/DiamondBounds.hpp"
+#include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <math.h>
 
 Acts::DiamondBounds::DiamondBounds(double minhalex,
                                    double medhalex,
@@ -98,11 +98,11 @@ Acts::DiamondBounds::insideFull(const Acts::Vector2D& locpo,
       > 2. * m_valueStore.at(DiamondBounds::bv_halfY2) + tol2)
     return false;
   // (2)
-  if (fabs(locpo[Acts::eLOC_X])
+  if (std::abs(locpo[Acts::eLOC_X])
       > (m_valueStore.at(DiamondBounds::bv_medHalfX) + tol1))
     return false;
   // (3)
-  if (fabs(locpo[Acts::eLOC_X])
+  if (std::abs(locpo[Acts::eLOC_X])
       < (fmin(m_valueStore.at(DiamondBounds::bv_minHalfX),
               m_valueStore.at(DiamondBounds::bv_maxHalfX))
          - tol1))
@@ -115,18 +115,18 @@ Acts::DiamondBounds::insideFull(const Acts::Vector2D& locpo,
            - m_valueStore.at(DiamondBounds::bv_minHalfX))
             / 2 / m_valueStore.at(DiamondBounds::bv_halfY1)
         : 0.;
-    return (fabs(locpo[Acts::eLOC_X])
+    return (std::abs(locpo[Acts::eLOC_X])
             <= m_valueStore.at(DiamondBounds::bv_medHalfX)
-                - k * fabs(locpo[Acts::eLOC_Y]));
+                - k * std::abs(locpo[Acts::eLOC_Y]));
   } else {
     double k = m_valueStore.at(DiamondBounds::bv_halfY2) > 0.
         ? (m_valueStore.at(DiamondBounds::bv_medHalfX)
            - m_valueStore.at(DiamondBounds::bv_maxHalfX))
             / 2 / m_valueStore.at(DiamondBounds::bv_halfY2)
         : 0.;
-    return (fabs(locpo[Acts::eLOC_X])
+    return (std::abs(locpo[Acts::eLOC_X])
             <= m_valueStore.at(DiamondBounds::bv_medHalfX)
-                - k * fabs(locpo[Acts::eLOC_Y]));
+                - k * std::abs(locpo[Acts::eLOC_Y]));
   }
 }
 

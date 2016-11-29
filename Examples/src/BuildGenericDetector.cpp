@@ -8,6 +8,7 @@
 
 #include "ACTS/Examples/BuildGenericDetector.hpp"
 #include <array>
+#include <cmath>
 #include <iostream>
 #include <vector>
 #include "ACTS/Detector/TrackingGeometry.hpp"
@@ -84,7 +85,7 @@ modulePositionsCylinder(double radius,
   double phiStep = 2 * M_PI / (nPhiBins);
   double minPhi  = -M_PI + 0.5 * phiStep;
   double zStart  = -0.5 * (nZbins - 1) * (2 * moduleHalfLength - lOverlap);
-  double zStep   = 2 * fabs(zStart) / (nZbins - 1);
+  double zStep   = 2 * std::abs(zStart) / (nZbins - 1);
   // loop over the bins
   for (size_t zBin = 0; zBin < size_t(nZbins); ++zBin) {
     // prepare z and r

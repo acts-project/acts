@@ -338,7 +338,7 @@ inline double
 DiscSurface::pathCorrection(const Vector3D&, const Vector3D& mom) const
 {
   /// we can ignore the global position here
-  return 1. / fabs(normal().dot(mom.unit()));
+  return 1. / std::abs(normal().dot(mom.unit()));
 }
 
 inline Intersection

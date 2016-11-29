@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Tools/CylinderVolumeHelper.hpp"
+#include <cmath>
 #include "ACTS/Detector/GlueVolumesDescriptor.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Layers/CylinderLayer.hpp"
@@ -185,7 +186,7 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
   // create a Transform3D and VolumeBounds out of the zMin/zMax
   double halflengthZ = 0.5 * (zMax - zMin);
   double zPosition   = 0.5 * (zMin + zMax);
-  zPosition          = fabs(zPosition) < 0.1 ? 0. : zPosition;
+  zPosition          = std::abs(zPosition) < 0.1 ? 0. : zPosition;
 
   // now create the cylinder volume bounds
   cBounds = rMin > 0.1 ? new CylinderVolumeBounds(rMin, rMax, halflengthZ)
@@ -273,12 +274,13 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
       double zMinLayer = zMin;
       double zMaxLayer = zMax;
       // create the layer
-      layers.push_back(createCylinderLayer(0.5 * (zMinLayer + zMaxLayer),
-                                           (*layerPropIter),
-                                           fabs(0.5 * (zMaxLayer - zMinLayer)),
-                                           m_cfg.passiveLayerThickness,
-                                           m_cfg.passiveLayerPhiBins,
-                                           m_cfg.passiveLayerRzBins));
+      layers.push_back(
+          createCylinderLayer(0.5 * (zMinLayer + zMaxLayer),
+                              (*layerPropIter),
+                              std::abs(0.5 * (zMaxLayer - zMinLayer)),
+                              m_cfg.passiveLayerThickness,
+                              m_cfg.passiveLayerPhiBins,
+                              m_cfg.passiveLayerRzBins));
 
     } else {
       // take the envelopes into account
@@ -355,8 +357,8 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
     return nullptr;
   }
   // check whether it is a r-binned case or a z-binned case
-  bool rCase
-      = fabs(firstVolumeBounds->innerRadius() - lastVolumeBounds->innerRadius())
+  bool rCase = std::abs(firstVolumeBounds->innerRadius()
+                        - lastVolumeBounds->innerRadius())
       > 0.1;
 
   // fill these ones depending on the rCase though assignment - no parsing at
@@ -388,12 +390,12 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
   double zPos = 0.5 * (zMin + zMax);
   // create the HEP transform from the stuff known so far
   std::shared_ptr<Transform3D> topVolumeTransform
-      = fabs(zPos) > 0.1 ? std::make_shared<Transform3D>() : nullptr;
+      = std::abs(zPos) > 0.1 ? std::make_shared<Transform3D>() : nullptr;
   if (topVolumeTransform) (*topVolumeTransform) = Translation3D(0., 0., zPos);
   // create the bounds from the information gathered so far
-  CylinderVolumeBounds* topVolumeBounds = fabs(rMin) > 0.1
-      ? new CylinderVolumeBounds(rMin, rMax, 0.5 * fabs(zMax - zMin))
-      : new CylinderVolumeBounds(rMax, 0.5 * fabs(zMax - zMin));
+  CylinderVolumeBounds* topVolumeBounds = std::abs(rMin) > 0.1
+      ? new CylinderVolumeBounds(rMin, rMax, 0.5 * std::abs(zMax - zMin))
+      : new CylinderVolumeBounds(rMax, 0.5 * std::abs(zMax - zMin));
 
   // some screen output
   ACTS_VERBOSE("Container voume bounds are " << (*topVolumeBounds));
@@ -521,7 +523,7 @@ Acts::CylinderVolumeHelper::estimateAndCheckDimension(
                "layers + envelope covers");
   // the z from the layers w and w/o envelopes
   double zEstFromLayerEnv    = 0.5 * ((layerZmax) + (layerZmin));
-  double halflengthFromLayer = 0.5 * fabs((layerZmax) - (layerZmin));
+  double halflengthFromLayer = 0.5 * std::abs((layerZmax) - (layerZmin));
 
   bool concentric = (zEstFromLayerEnv * zEstFromLayerEnv < 0.001);
 
@@ -538,7 +540,7 @@ Acts::CylinderVolumeHelper::estimateAndCheckDimension(
     (*transform) = Translation3D(0., 0., zEstFromLayerEnv);
   } else if (transform && !cylinderVolumeBounds) {
     // create the CylinderBounds from parsed layer inputs
-    double halflengthFromLayer = 0.5 * fabs((layerZmax) - (layerZmin));
+    double halflengthFromLayer = 0.5 * std::abs((layerZmax) - (layerZmin));
     cylinderVolumeBounds
         = new CylinderVolumeBounds(layerRmin, layerRmax, halflengthFromLayer);
   }
@@ -864,7 +866,7 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
 
     // the transform of the new boundary surface
     std::shared_ptr<Transform3D> transform = nullptr;
-    if (fabs(zMin + zMax) > 0.1) {
+    if (std::abs(zMin + zMax) > 0.1) {
       // it's not a concentric cylinder, so create a transform
       auto pTransform = std::make_shared<Transform3D>();
       (*pTransform)   = Translation3D(Vector3D(0., 0., 0.5 * (zMin + zMax)));
@@ -950,7 +952,7 @@ Acts::CylinderVolumeHelper::createCylinderLayer(double z,
                                                        << r);
   // positioning
   std::shared_ptr<Transform3D> transform = 0;
-  transform = (fabs(z) > 0.1) ? std::make_shared<Transform3D>() : 0;
+  transform = (std::abs(z) > 0.1) ? std::make_shared<Transform3D>() : 0;
   if (transform) (*transform) = Translation3D(0., 0., z);
 
   // z-binning
@@ -998,7 +1000,7 @@ Acts::CylinderVolumeHelper::createDiscLayer(double z,
 
   // positioning
   std::shared_ptr<Transform3D> transform
-      = fabs(z) > 0.1 ? std::make_shared<Transform3D>() : 0;
+      = std::abs(z) > 0.1 ? std::make_shared<Transform3D>() : 0;
   if (transform) (*transform) = Translation3D(0., 0., z);
 
   // R is the primary binning for the material
