@@ -43,8 +43,8 @@ Acts::DigitizationModule::segmentationSurfaces(
 {
   SurfacePtrVector sSurfaces;
 
-  auto startbinX = entryCids.first;
-  auto endbinX   = exitCids.first;
+  auto startbinX = entryCids.channel0;
+  auto endbinX   = exitCids.channel0;
   // swap if needed
   if (startbinX > endbinX) std::swap(startbinX, endbinX);
   // now cash in the rest
@@ -52,8 +52,8 @@ Acts::DigitizationModule::segmentationSurfaces(
     sSurfaces.push_back(m_segmentationSurfacesX[startbinX]);
 
   // start bin, end bin
-  auto startbinY = entryCids.second;
-  auto endbinY   = exitCids.second;
+  auto startbinY = entryCids.channel1;
+  auto endbinY   = exitCids.channel1;
   // swap if needed
   if (startbinY > endbinY) std::swap(startbinY, endbinY);
   // now cash in the rest
@@ -75,15 +75,15 @@ Acts::DigitizationModule::stepSurfaces(const Vector3D& start,
   const DigitizationCell endCell   = m_segmentation->cell(end);
 
   // go along x - first with the naive binning (i.e. w.o lorentz angle)
-  size_t sCellX = startCell.first;
-  size_t eCellX = endCell.first;
+  size_t sCellX = startCell.channel0;
+  size_t eCellX = endCell.channel0;
   if (sCellX > eCellX) std::swap(sCellX, eCellX);
   // now take the boundaries as well
   if (sCellX > 0) --sCellX;
   ++eCellX;  // @TODO check : safe because we can assume to have eCell+1
   // the surfaces along Y are easy, just the bin surfaces
-  size_t sCellY = startCell.second;
-  size_t eCellY = endCell.second;
+  size_t sCellY = startCell.channel1;
+  size_t eCellY = endCell.channel1;
   if (sCellY > eCellY) std::swap(sCellY, eCellY);
   // reserve - be safe
   stepSurfaces.reserve((eCellY - sCellY) + (eCellX - sCellX) + 2);

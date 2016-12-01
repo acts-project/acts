@@ -14,7 +14,25 @@
 namespace Acts {
 
 /// @brief pair of ints for definition of a cell
-typedef std::pair<size_t, size_t> DigitizationCell;
+struct DigitizationCell {
+  // identification and data
+  size_t channel0 = 0;
+  size_t channel1 = 1;
+  float  data     = 0.; 
+  // connstruct them
+  DigitizationCell(size_t ch0, size_t ch1, float d = 0.)
+     : channel0(ch0)
+     , channel1(ch1)
+     , data(d)
+  {}
+  // copy them
+  DigitizationCell(const DigitizationCell& dc)
+     : channel0(dc.channel0)
+     , channel1(dc.channel1)
+     , data(dc.data)
+  {}
+  
+};
 
 /// @brief DigitizationStep for further handling
 struct DigitizationStep
@@ -35,7 +53,7 @@ struct DigitizationStep
   DigitizationStep()
     : stepLength(0.)
     , driftLength(0.)
-    , stepCell(std::pair<size_t, size_t>(0, 0))
+    , stepCell(0, 0)
     , stepEntry(0., 0., 0.)
     , stepExit(0., 0., 0.)
     , stepReadoutProjected(0., 0.)

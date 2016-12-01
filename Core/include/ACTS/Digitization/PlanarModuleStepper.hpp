@@ -13,6 +13,7 @@
 #include <vector>
 #include "ACTS/Digitization/DigitizationCell.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Logger.hpp"
 
 namespace Acts {
 
@@ -41,7 +42,7 @@ public:
   /// @param logger is the logging istance
   PlanarModuleStepper(const Config&           pmsConfig,
                       std::unique_ptr<Logger> logger
-                      = getDefaultLogger("LayerCreator", Logging::INFO));
+                      = getDefaultLogger("PlanarModuleStepper", Logging::INFO));
 
   /// Destructor
   ~PlanarModuleStepper() = default;
@@ -86,6 +87,9 @@ private:
   {
     return *m_logger;
   }
+
+  /// the config class
+  Config                  m_cfg;
 
   /// logging instance
   std::unique_ptr<Logger> m_logger;

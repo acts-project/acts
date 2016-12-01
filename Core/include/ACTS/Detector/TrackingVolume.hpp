@@ -433,7 +433,7 @@ private:
   /// @param volumeMap is a map to find the a volume
   ///        by a given name
   void
-  closeGeometry(const GeometryID& volumeID,
+  closeGeometry(GeometryID& volumeID,
                 std::map<std::string, const TrackingVolume*>& volumeMap) const;
 
   /// interlink the layers in this TrackingVolume

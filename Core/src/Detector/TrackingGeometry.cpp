@@ -19,12 +19,13 @@
 
 Acts::TrackingGeometry::TrackingGeometry(TrackingVolumePtr highestVolume)
   : m_world(highestVolume)
-  , m_beam(std::make_unique<const Acts::PerigeeSurface>(s_origin))
+  , m_beam(std::make_unique<const PerigeeSurface>(s_origin))
 {
   // create the GeometryID for this
   GeometryID geoID(0);
-  // close up the geometry
-  if (m_world) m_world->closeGeometry(geoID, m_trackingVolumes);
+  // close up the geometry 
+  if (m_world) 
+      m_world->closeGeometry(geoID, m_trackingVolumes);
 }
 
 Acts::TrackingGeometry::~TrackingGeometry()
@@ -34,8 +35,8 @@ Acts::TrackingGeometry::~TrackingGeometry()
 const Acts::TrackingVolume*
 Acts::TrackingGeometry::lowestTrackingVolume(const Acts::Vector3D& gp) const
 {
-  const Acts::TrackingVolume* searchVolume  = m_world.get();
-  const Acts::TrackingVolume* currentVolume = nullptr;
+  const TrackingVolume* searchVolume  = m_world.get();
+  const TrackingVolume* currentVolume = nullptr;
   while (currentVolume != searchVolume && searchVolume) {
     currentVolume = searchVolume;
     searchVolume  = searchVolume->trackingVolume(gp);
@@ -44,21 +45,19 @@ Acts::TrackingGeometry::lowestTrackingVolume(const Acts::Vector3D& gp) const
 }
 
 const Acts::DetachedVolumeVector*
-Acts::TrackingGeometry::lowestDetachedTrackingVolumes(
-    const Acts::Vector3D& gp) const
+Acts::TrackingGeometry::lowestDetachedTrackingVolumes(const Vector3D& gp) const
 {
   double                      tol           = 0.001;
-  const Acts::TrackingVolume* currentVolume = lowestStaticTrackingVolume(gp);
+  const TrackingVolume* currentVolume = lowestStaticTrackingVolume(gp);
   if (currentVolume) return currentVolume->detachedTrackingVolumes(gp, tol);
   return nullptr;
 }
 
 const Acts::TrackingVolume*
-Acts::TrackingGeometry::lowestStaticTrackingVolume(
-    const Acts::Vector3D& gp) const
+Acts::TrackingGeometry::lowestStaticTrackingVolume(const Vector3D& gp) const
 {
-  const Acts::TrackingVolume* searchVolume  = m_world.get();
-  const Acts::TrackingVolume* currentVolume = nullptr;
+  const TrackingVolume* searchVolume  = m_world.get();
+  const TrackingVolume* currentVolume = nullptr;
   while (currentVolume != searchVolume && searchVolume) {
     currentVolume = searchVolume;
     if ((searchVolume->confinedDetachedVolumes()).empty())
@@ -95,10 +94,10 @@ Acts::TrackingGeometry::atVolumeBoundary(const Vector3D&        gp,
   nextVol           = 0;
   if (!vol) return isAtBoundary;
   for (auto& bSurface : vol->boundarySurfaces()) {
-    const Acts::Surface& surf = bSurface->surfaceRepresentation();
+    const Surface& surf = bSurface->surfaceRepresentation();
     if (surf.isOnSurface(gp, true)) {
       isAtBoundary = true;
-      const Acts::TrackingVolume* attachedVol
+      const TrackingVolume* attachedVol
           = bSurface->attachedVolume(gp, mom, dir);
       if (!nextVol && attachedVol) nextVol = attachedVol;
     }
@@ -137,7 +136,7 @@ Acts::TrackingGeometry::associatedLayer(const Acts::Vector3D& gp) const
 
 void
 Acts::TrackingGeometry::registerBeamTube(
-    std::unique_ptr<const Acts::PerigeeSurface> beam) const
+    std::unique_ptr<const PerigeeSurface> beam) const
 {
   m_beam = std::move(beam);
 }

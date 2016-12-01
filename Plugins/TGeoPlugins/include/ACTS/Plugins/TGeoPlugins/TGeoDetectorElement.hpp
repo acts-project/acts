@@ -94,6 +94,10 @@ public:
   virtual const Transform3D&
   transform(const Identifier& identifier = Identifier()) const override;
 
+  /// Set the identifier after construction (sometimes needed)
+  virtual void
+  assignIdentifier(const Identifier& identifier) const final;
+  
   /// Return surface associated with this identifier, which should come from the
   virtual const Surface&
   surface(const Identifier& identifier = Identifier()) const final;
@@ -117,7 +121,7 @@ private:
   /// Normal vector to the detector element
   mutable std::shared_ptr<const Vector3D> m_normal;
   /// Identifier of the detector element
-  const Identifier m_identifier;
+  mutable Identifier m_identifier;
   /// Boundaries of the detector element
   std::shared_ptr<const SurfaceBounds> m_bounds;
   ///  Thickness of this detector element
@@ -134,6 +138,12 @@ TGeoDetectorElement::identify() const
   return m_identifier;
 }
 
+inline void
+TGeoDetectorElement::assignIdentifier(const Identifier& identifier) const
+{
+    m_identifier = identifier;
+}
+  
 inline const Transform3D&
 TGeoDetectorElement::transform(const Identifier&) const
 {

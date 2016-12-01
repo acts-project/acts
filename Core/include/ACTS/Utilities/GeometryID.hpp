@@ -16,9 +16,9 @@
 #include <iostream>
 #include "ACTS/Utilities/Helpers.hpp"
 
-namespace Acts {
-
 typedef uint64_t geo_id_value;
+
+namespace Acts {
 
 /// @class GeometryID
 ///
@@ -36,10 +36,10 @@ public:
   const static geo_id_value volume_mask    = 0xff00000000000000;
   const static geo_id_value boundary_mask  = 0x00ff000000000000;
   const static geo_id_value layer_mask     = 0x0000ff0000000000;
-  const static geo_id_value approach_mask  = 0x000000ff00000000;
-  const static geo_id_value sensitive_mask = 0x00000000ffff0000;
-  const static geo_id_value channel_mask   = 0x000000000000ffff;
-
+  const static geo_id_value approach_mask  = 0x000000f000000000;
+  const static geo_id_value sensitive_mask = 0x0000000ffff00000;
+  const static geo_id_value channel_mask   = 0x00000000000fffff;
+  
   /// default constructor
   ///
   GeometryID() : m_value(0) {}

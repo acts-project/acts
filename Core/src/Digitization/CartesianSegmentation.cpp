@@ -218,10 +218,10 @@ const Acts::Vector2D
 Acts::CartesianSegmentation::cellPosition(const DigitizationCell& dCell) const
 {
   double bX = m_binUtility->bins(0) > 1
-      ? m_binUtility->binningData()[0].center(dCell.first)
+      ? m_binUtility->binningData()[0].center(dCell.channel0)
       : 0.;
   double bY = m_binUtility->bins(1) > 1
-      ? m_binUtility->binningData()[1].center(dCell.second)
+      ? m_binUtility->binningData()[1].center(dCell.channel1)
       : 0.;
   return Vector2D(bX, bY);
 }

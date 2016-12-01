@@ -335,6 +335,24 @@ public:
     return (m_binningData[ba].binvalue);
   }
 
+  /// Serialize the bin triple
+  /// - this creates a simple size_t from a triple object
+  /// 
+  /// @param bin is the bin to be serialized
+  size_t
+  serialize(const std::array<size_t, 3>&  bin) const
+  {
+    size_t serializedBin = bin[0];
+    if (m_binningData.size() == 2) {
+      serializedBin += bin[1]*m_binningData[0].bins();
+    } else if (m_binningData.size() == 3){
+      serializedBin += (bin[1]*m_binningData[0].bins()
+                       *bin[2]*m_binningData[1].bins());
+    }
+    return bin[0];
+    
+  } 
+
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param sl is the ostream to be dumped into

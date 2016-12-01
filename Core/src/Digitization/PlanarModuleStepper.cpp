@@ -16,6 +16,14 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Intersection.hpp"
 
+Acts::PlanarModuleStepper::PlanarModuleStepper(const Config&           pmsConfig,
+                                               std::unique_ptr<Logger> mlogger) 
+                                                 : m_cfg(pmsConfig)
+                                                , m_logger(std::move(mlogger)) 
+{
+    
+}
+
 std::vector<Acts::DigitizationStep>
 Acts::PlanarModuleStepper::cellSteps(const DigitizationModule& dmodule,
                                      const Vector3D&           startPoint,
