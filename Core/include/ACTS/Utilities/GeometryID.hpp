@@ -33,6 +33,7 @@ class GeometryID
 {
     
 public:
+
   const static geo_id_value volume_mask    = 0xff00000000000000;
   const static geo_id_value boundary_mask  = 0x00ff000000000000;
   const static geo_id_value layer_mask     = 0x0000ff0000000000;

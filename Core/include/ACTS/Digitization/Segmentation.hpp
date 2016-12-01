@@ -111,6 +111,7 @@ public:
   virtual const BinUtility&
   binUtility() const = 0;
   
+  
 };
 }  // end of namespace Acts
 

@@ -105,11 +105,11 @@ public:
   /// The maximal thickness of the detector element wrt normal axis
   double
   thickness() const final;
+<<<<<<< HEAD
 
+=======
+>>>>>>> 275f5da... First full chain for ML detector working
 
-  /// Returning the digitization module
-  std::shared_ptr<const DigitizationModule>
-  digitizationModule() const;
 
 private:
   /// the element representation
