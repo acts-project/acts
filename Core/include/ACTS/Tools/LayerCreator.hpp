@@ -112,6 +112,27 @@ public:
   ///
   /// @param surfaces is the vector of sensitive surfaces represented by this
   /// layer
+  /// @param envelopeR is the additional envelope applied in R
+  /// @param envelopeZ is the additional envelope applied in z
+  /// @param bTypePhi binning type in phi (equidistant/arbitrary)
+  /// @param bTypeZ binning type in z (equidistant/arbitrary)
+  /// @param transform is the (optional) transform of the layer
+  ///
+  /// @return shared pointer to a newly created layer
+  LayerPtr
+  cylinderLayer(const std::vector<const Surface*>&  surfaces,
+                double                              envelopeR,
+                double                              envelopeZ,
+                BinningType                         bTypePhi,
+                BinningType                         bTypeZ,
+                std::shared_ptr<Transform3D>        transform = nullptr,
+                std::unique_ptr<ApproachDescriptor> ad
+                = nullptr) const override;
+
+  /// ILayerCreator interface method - returning a cylindrical layer
+  ///
+  /// @param surfaces is the vector of sensitive surfaces represented by this
+  /// layer
   /// @param envelopeMinR is the additional envelope applied in R at Rmin
   /// @param envelopeMaxR is the additional envelope applied in R in Rmax
   /// @param envelopeZ is the additional envelope applied in z
@@ -149,6 +170,28 @@ public:
             double                              layerZmax,
             double                              layerRmin,
             double                              layerRmax,
+            BinningType                         bTypeR,
+            BinningType                         bTypePhi,
+            std::shared_ptr<Transform3D>        transform = nullptr,
+            std::unique_ptr<ApproachDescriptor> ad = nullptr) const override;
+
+  /// ILayerCreator interface method - returning a cylindrical layer
+  ///
+  /// @param surfaces is the vector of sensitive surfaces represented by this
+  /// layer
+  /// @param envelopeMinR is the additional envelope applied in R at Rmin
+  /// @param envelopeMaxR is the additional envelope applied in R in Rmax
+  /// @param envelopeZ is the additional envelope applied in z
+  /// @param bTypeR binning type in r (equidistant/arbitrary)
+  /// @param bTypePhi binning type in phi (equidistant/arbitrary)
+  /// @param transform is the (optional) transform of the layer
+  ///
+  /// @return shared pointer to a newly created layer
+  LayerPtr
+  discLayer(const std::vector<const Surface*>&  surfaces,
+            double                              envelopeMinR,
+            double                              envelopeMaxR,
+            double                              envelopeZ,
             BinningType                         bTypeR,
             BinningType                         bTypePhi,
             std::shared_ptr<Transform3D>        transform = nullptr,
