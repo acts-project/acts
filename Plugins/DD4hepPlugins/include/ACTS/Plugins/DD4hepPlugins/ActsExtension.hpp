@@ -66,6 +66,13 @@ namespace Acts {
 /// the
 /// beampipe.
 ///
+/// In case the layers containing the sensitive modules are DD4hep::Assemblies
+/// which have neither a shape nor a material/medium the two parameters
+/// envelopeR and envelopeZ need to be set to a DetElement representing a layer.
+/// In this case the geometrical extremities of the contained sensitive modules
+/// are calculated and a tolerances (envelopeR & envelopeZ) are added to build
+/// the envelope of the layer around the surfaces.
+///
 /// If one wants to build the ACTS Tracking Geometry with \a %DD4hep input these
 /// extension should be used during the construction of the \a %DD4hep geometry
 /// i.e. in the
@@ -82,7 +89,7 @@ namespace Acts {
 /// layConfig.isLayer               = true;
 /// layConfig.axes                  = "XZy";
 /// layConfig.materialBins1         = 50;
-/// layConfig.materialBins2 	    = 100;
+/// layConfig.materialBins2			= 100;
 /// layConfig.layerMaterialPosition = Acts::LayerMaterialPos::inner
 ///
 /// Acts::ActsExtension* layerExtension = new Acts::ActsExtension(layConfig);
@@ -144,6 +151,24 @@ public:
     /// tracking frame the axes should be set for the layer containing these
     /// modules
     std::string axes;
+    /// In case the Layers of the TrackingGeometry holding the sensitive
+    /// modules should be build automatically by the TrackingGeometry tools,
+    /// e.g. if Layers are only helper structs holding the detector modules
+    /// without any specific shape (Assemblies), or only sensitive detector
+    /// modules are handed over and the user wants automatic adaption of
+    /// surrounding Layers, these two tolerances (evelopeR & envelopeZ) should
+    /// be set for a layer. A tolerance added to the geometrical expansion of
+    /// the contained geometrical objects in r
+    double envelopeR;
+    /// In case the Layers of the TrackingGeometry holding the sensitive
+    /// modules should be build automatically by the TrackingGeometry tools,
+    /// e.g. if Layers are only helper structs holding the detector modules
+    /// without any specific shape (Assemblies), or only sensitive detector
+    /// modules are handed over and the user wants automatic adaption of
+    /// surrounding Layers, these two tolerances (evelopeR & envelopeZ) should
+    /// be set for a layer. A tolerance added to the geometrical expansion of
+    /// the contained geometrical objects in z
+    double envelopeZ;
 
     // default configuration
     Config()
@@ -154,6 +179,8 @@ public:
       , materialBins2(0)
       , layerMaterialPosition(LayerMaterialPos::inner)
       , axes("XYZ")
+      , envelopeR(0.)
+      , envelopeZ(0.)
     {
     }
   };
@@ -197,6 +224,21 @@ public:
   /// @return string describing the orientation of the axes
   const std::string
   axes() const final;
+  /// @return states if the geometrical boundaries of the current object should
+  /// be built automatically by adding given tolerances to the expansion of the
+  /// contained modules
+  bool
+  buildEnvelope() const final;
+  /// @return the tolerance which should be added in r to the geometrical
+  /// expansion of the contained surfaces (sensituive DetElements) of this
+  /// DetElement to automatically create the layer envelope
+  double
+  envelopeR() const final;
+  /// @return the tolerance which should be added in z to the geometrical
+  /// expansion of the contained surfaces (sensituive DetElements) of this
+  /// DetElement to automatically create the layer envelope
+  double
+  envelopeZ() const final;
 
 private:
   /// The configuration object
@@ -252,6 +294,24 @@ inline const std::string
 ActsExtension::axes() const
 {
   return m_cfg.axes;
+}
+
+inline bool
+ActsExtension::buildEnvelope() const
+{
+  return ((m_cfg.envelopeR > 0.) && (m_cfg.envelopeZ > 0.));
+}
+
+inline double
+ActsExtension::envelopeR() const
+{
+  return (m_cfg.envelopeR);
+}
+
+inline double
+ActsExtension::envelopeZ() const
+{
+  return (m_cfg.envelopeR);
 }
 }
 

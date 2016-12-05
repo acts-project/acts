@@ -113,6 +113,21 @@ public:
   /// @return string describing the orientation of the axes
   virtual const std::string
   axes() const = 0;
+  /// @return states if the geometrical boundaries of the current object should
+  /// be built automatically by adding given tolerances to the expansion of the
+  /// contained modules
+  virtual bool
+  buildEnvelope() const = 0;
+  /// @return the tolerance which should be added in r to the geometrical
+  /// expansion of the contained surfaces (sensituive DetElements) of this
+  /// DetElement to automatically create the layer envelope
+  virtual double
+  envelopeR() const = 0;
+  /// @return the tolerance which should be added in z to the geometrical
+  /// expansion of the contained surfaces (sensituive DetElements) of this
+  /// DetElement to automatically create the layer envelope
+  virtual double
+  envelopeZ() const = 0;
 
 protected:
   /// Protected constructor
