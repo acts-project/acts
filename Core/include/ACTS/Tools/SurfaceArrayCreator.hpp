@@ -274,6 +274,15 @@ private:
   ///
   void
   registerNeighbourHood(const SurfaceArray& sArray) const;
+
+  /// Private helper method to transform the  vertices of surface bounds into
+  /// global coordinates
+  /// @param surface the surface associated with the given vertices
+  /// @param locVertices a vector of the vertices in local coordinates
+  /// @return a vector of the vertices in global coordinates
+  std::vector<Acts::Vector3D>
+  makeGlobalVertices(const Acts::Surface*               surface,
+                     const std::vector<Acts::Vector2D>& locVertices) const;
 };
 
 }  // end of namespace
