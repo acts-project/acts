@@ -585,19 +585,42 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                                < 10e-12);
                      });
     // set minimum and maximum
-    double min  = keys.front()->center().phi();
-    double max  = keys.back()->center().phi();
-    double step = std::abs(max - min) / (keys.size() - 1);
-    minimum     = min - 0.5 * step;
-    maximum     = max + 0.5 * step;
-    // phi correction
-    if (minimum < -M_PI) {
-      minimum += step;
-      maximum += step;
-    }
-    if (maximum > M_PI) {
-      minimum -= step;
-      maximum -= step;
+    double min = keys.front()->center().phi();
+    double max = keys.back()->center().phi();
+
+    // if only one surface is given
+    if (keys.size() > 1) {
+      double step = std::abs(max - min) / (keys.size() - 1);
+      minimum     = min - 0.5 * step;
+      maximum     = max + 0.5 * step;
+      // phi correction
+      if (minimum < -M_PI) {
+        minimum += step;
+        maximum += step;
+      }
+      if (maximum > M_PI) {
+        minimum -= step;
+        maximum -= step;
+      }
+    } else {
+      // calculate minimum and maximum in case only one surface is given
+      // first get the bounds
+      const Acts::PlanarBounds* planarBounds
+          = dynamic_cast<const Acts::PlanarBounds*>(&(keys.front()->bounds()));
+      if (!planarBounds)
+        ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
+                   "other bounds yet! ");
+      // get the vertices
+      std::vector<Acts::Vector3D> globVertices
+          = makeGlobalVertices(keys.front(), planarBounds->vertices());
+      auto minmax = std::minmax_element(
+          globVertices.begin(),
+          globVertices.end(),
+          [](const Acts::Vector3D& a, const Acts::Vector3D& b) {
+            return (a.phi() < b.phi());
+          });
+      minimum = minmax.first->phi();
+      maximum = minmax.second->phi();
     }
 
   } else if (bValue == Acts::binZ) {
@@ -617,48 +640,92 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                                < Acts::units::_um);
                      });
     // set minimum and maximum
-    double min  = keys.front()->center().z();
-    double max  = keys.back()->center().z();
-    double step = std::abs(max - min) / (keys.size() - 1);
-    minimum     = min - 0.5 * step;
-    maximum     = max + 0.5 * step;
+    double min = keys.front()->center().z();
+    double max = keys.back()->center().z();
+
+    // if only one surface is given
+    if (keys.size() > 1) {
+      double step = fabs(max - min) / (keys.size() - 1);
+      minimum     = min - 0.5 * step;
+      maximum     = max + 0.5 * step;
+
+    } else {
+      // calculate minimum and maximum in case only one surface is given
+      // first get the bounds
+      const Acts::PlanarBounds* planarBounds
+          = dynamic_cast<const Acts::PlanarBounds*>(&(keys.front()->bounds()));
+      if (!planarBounds)
+        ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
+                   "other bounds yet! ");
+      // get the vertices
+      std::vector<Acts::Vector3D> globVertices
+          = makeGlobalVertices(keys.front(), planarBounds->vertices());
+      auto minmax = std::minmax_element(
+          globVertices.begin(),
+          globVertices.end(),
+          [](const Acts::Vector3D& a, const Acts::Vector3D& b) {
+            return (a.z() < b.z());
+          });
+      minimum = minmax.first->z();
+      maximum = minmax.second->z();
+    }
+  } else {
+    // R binning
+    // sort first in r
+    std::stable_sort(surf.begin(),
+                     surf.end(),
+                     [](const Acts::Surface* a, const Acts::Surface* b) {
+                       return (a->center().perp() < b->center().perp());
+                     });
+    // fill the key surfaces at the different r positions
+    std::unique_copy(begin(surf),
+                     end(surf),
+                     back_inserter(keys),
+                     [](const Acts::Surface* a, const Acts::Surface* b) {
+                       return (std::abs(a->center().perp() - b->center().perp())
+                               < Acts::units::_um);
+                     });
+    // set the minimum and maximum
+    double min = keys.front()->center().perp();
+    double max = keys.back()->center().perp();
+
+    // if only one surface is given
+    if (keys.size() > 1) {
+      double step = std::abs(max - min) / (keys.size() - 1);
+      minimum     = min - 0.5 * step;
+      maximum     = max + 0.5 * step;
+
+    } else {
+      // calculate minimum and maximum in case only one surface is given
+      // first get the bounds
+      const Acts::PlanarBounds* planarBounds
+          = dynamic_cast<const Acts::PlanarBounds*>(&(keys.front()->bounds()));
+      if (!planarBounds)
+        ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
+                   "other bounds yet! ");
+      // get the vertices
+      std::vector<Acts::Vector3D> globVertices
+          = makeGlobalVertices(keys.front(), planarBounds->vertices());
+      auto minmax = std::minmax_element(
+          globVertices.begin(),
+          globVertices.end(),
+          [](const Acts::Vector3D& a, const Acts::Vector3D& b) {
+            return (a.perp() < b.perp());
+          });
+      minimum = minmax.first->perp();
+      maximum = minmax.second->perp();
+    }
   }
-}
-else
-{
-  // R binning
-  // sort first in r
-  std::stable_sort(surf.begin(),
-                   surf.end(),
-                   [](const Acts::Surface* a, const Acts::Surface* b) {
-                     return (a->center().perp() < b->center().perp());
-                   });
-  // fill the key surfaces at the different r positions
-  std::unique_copy(begin(surf),
-                   end(surf),
-                   back_inserter(keys),
-                   [](const Acts::Surface* a, const Acts::Surface* b) {
-                     return (std::abs(a->center().perp() - b->center().perp())
-                             < Acts::units::_um);
-                   });
-  // set the minimum and maximum
-  double min  = keys.front()->center().perp();
-  double max  = keys.back()->center().perp();
-  double step = std::abs(max - min) / (keys.size() - 1);
-  minimum     = min - 0.5 * step;
-  maximum     = max + 0.5 * step;
-}
-}
-// assign the bin size
-double binNumber = keys.size();
-ACTS_DEBUG("Create BinUtility for BinnedSurfaceArray with equidistant1 "
-           "BinningType");
-ACTS_DEBUG("	BinningValue: " << bValue);
-ACTS_DEBUG("	(binX = 0, binY = 1, binZ = 2, binR = 3, binPhi = 4, "
-           "binRPhi = 5, binH = 6, binEta = 7)");
-ACTS_DEBUG("	Number of bins: " << binNumber);
-ACTS_DEBUG("	(Min/Max) = (" << minimum << "/" << maximum << ")");
-return (Acts::BinUtility(binNumber, minimum, maximum, bOption, bValue));
+  // assign the bin size
+  double binNumber = keys.size();
+  ACTS_DEBUG("Create BinUtility for BinnedSurfaceArray with equidistant1 "
+             "BinningType");
+  ACTS_DEBUG("	BinningValue: " << bValue);
+  ACTS_DEBUG("	(binX = 0, binY = 1, binZ = 2, binR = 3, binPhi = 4, "
+             "binRPhi = 5, binH = 6, binEta = 7)");
+  ACTS_DEBUG("	Number of bins: " << binNumber);
+  ACTS_DEBUG("	(Min/Max) = (" << minimum << "/" << maximum << ")");
+  return (Acts::BinUtility(binNumber, minimum, maximum, bOption, bValue));
 }
 
 Acts::BinUtility
@@ -704,7 +771,7 @@ Acts::SurfaceArrayCreator::registerNeighbourHood(
   // then go through, will respect a non-regular matrix
   size_t io2 = 0;
   for (auto& v210 : objectGrid) {
-    size_t   io1 = 0;
+    size_t io1 = 0;
     for (auto& v10 : v210) {
       size_t io0 = 0;
       for (auto& bSurface : v10) {
@@ -790,7 +857,7 @@ Acts::SurfaceArrayCreator::makeGlobalVertices(
     const std::vector<Acts::Vector2D>& locVertices) const
 {
   std::vector<Acts::Vector3D> globVertices;
-  for (auto&       vertex : locVertices) {
+  for (auto& vertex : locVertices) {
     Acts::Vector3D globVertex(0., 0., 0.);
     surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
     globVertices.push_back(globVertex);
