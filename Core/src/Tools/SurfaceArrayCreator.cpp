@@ -293,6 +293,9 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
     Acts::BinningValue                       bValue,
     std::shared_ptr<Acts::Transform3D>       transform) const
 {
+  if (!surfaces.size())
+    throw std::logic_error(
+        "No surfaces handed over for creating arbitrary bin utility!");
   // BinningOption is open for z and r, in case of phi binning reset later
   Acts::BinningOption bOption = Acts::open;
   // the vector with the binning Values (boundaries for each bin)
@@ -319,6 +322,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
                        return (std::abs(a->center().phi() - b->center().phi())
                                < 10e-12);
                      });
+
     // the phi-center position of the previous surface
     bool phiCorrected = false;
 
@@ -336,7 +340,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
                  "other bounds yet! ");
     // get the global vertices
     std::vector<Acts::Vector3D> frontVertices
-        = makeGlobalVertices(frontSurface, frontBounds->vertices());
+        = makeGlobalVertices(*frontSurface, frontBounds->vertices());
     double minBValue = std::min_element(frontVertices.begin(),
                                         frontVertices.end(),
                                         [](const Acts::Vector3D& a,
@@ -361,7 +365,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
                  "other bounds yet! ");
     // get the global vertices
     std::vector<Acts::Vector3D> backVertices
-        = makeGlobalVertices(backSurface, backBounds->vertices());
+        = makeGlobalVertices(*backSurface, backBounds->vertices());
     double maxBValue = std::max_element(backVertices.begin(),
                                         backVertices.end(),
                                         [](const Acts::Vector3D& a,
@@ -420,7 +424,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
                  "other bounds yet! ");
     // get the global vertices
     std::vector<Acts::Vector3D> frontVertices
-        = makeGlobalVertices(frontSurface, frontBounds->vertices());
+        = makeGlobalVertices(*frontSurface, frontBounds->vertices());
     double minBValue = std::min_element(frontVertices.begin(),
                                         frontVertices.end(),
                                         [](const Acts::Vector3D& a,
@@ -440,7 +444,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
                  "other bounds yet! ");
     // get the global vertices
     std::vector<Acts::Vector3D> backVertices
-        = makeGlobalVertices(backSurface, backBounds->vertices());
+        = makeGlobalVertices(*backSurface, backBounds->vertices());
     double maxBValue = std::max_element(backVertices.begin(),
                                         backVertices.end(),
                                         [](const Acts::Vector3D& a,
@@ -496,7 +500,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
                  "other bounds yet! ");
     // get the global vertices
     std::vector<Acts::Vector3D> frontVertices
-        = makeGlobalVertices(frontSurface, frontBounds->vertices());
+        = makeGlobalVertices(*frontSurface, frontBounds->vertices());
     double minBValue = std::min_element(frontVertices.begin(),
                                         frontVertices.end(),
                                         [](const Acts::Vector3D& a,
@@ -516,7 +520,7 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
                  "other bounds yet! ");
     // get the global vertices
     std::vector<Acts::Vector3D> backVertices
-        = makeGlobalVertices(backSurface, backBounds->vertices());
+        = makeGlobalVertices(*backSurface, backBounds->vertices());
     double maxBValue = std::max_element(backVertices.begin(),
                                         backVertices.end(),
                                         [](const Acts::Vector3D& a,
@@ -555,7 +559,11 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
     const std::vector<const Acts::Surface*>& surfaces,
     Acts::BinningValue                       bValue,
     std::shared_ptr<Acts::Transform3D>       transform) const
-{  // check the binning type first
+{
+  if (!surfaces.size())
+    throw std::logic_error(
+        "No surfaces handed over for creating equidistant bin utility!");
+  // check the binning type first
   double minimum = 0.;
   double maximum = 0.;
   // binning option is open for z and r, in case of phi binning reset later
@@ -612,7 +620,7 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                    "other bounds yet! ");
       // get the vertices
       std::vector<Acts::Vector3D> globVertices
-          = makeGlobalVertices(keys.front(), planarBounds->vertices());
+          = makeGlobalVertices(*keys.front(), planarBounds->vertices());
       auto minmax = std::minmax_element(
           globVertices.begin(),
           globVertices.end(),
@@ -659,7 +667,7 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                    "other bounds yet! ");
       // get the vertices
       std::vector<Acts::Vector3D> globVertices
-          = makeGlobalVertices(keys.front(), planarBounds->vertices());
+          = makeGlobalVertices(*keys.front(), planarBounds->vertices());
       auto minmax = std::minmax_element(
           globVertices.begin(),
           globVertices.end(),
@@ -705,7 +713,7 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                    "other bounds yet! ");
       // get the vertices
       std::vector<Acts::Vector3D> globVertices
-          = makeGlobalVertices(keys.front(), planarBounds->vertices());
+          = makeGlobalVertices(*keys.front(), planarBounds->vertices());
       auto minmax = std::minmax_element(
           globVertices.begin(),
           globVertices.end(),
@@ -853,13 +861,13 @@ Acts::SurfaceArrayCreator::completeBinning(const BinUtility&    binUtility,
 
 std::vector<Acts::Vector3D>
 Acts::SurfaceArrayCreator::makeGlobalVertices(
-    const Acts::Surface*               surface,
+    const Acts::Surface&               surface,
     const std::vector<Acts::Vector2D>& locVertices) const
 {
   std::vector<Acts::Vector3D> globVertices;
   for (auto& vertex : locVertices) {
     Acts::Vector3D globVertex(0., 0., 0.);
-    surface->localToGlobal(vertex, Acts::Vector3D(), globVertex);
+    surface.localToGlobal(vertex, Acts::Vector3D(), globVertex);
     globVertices.push_back(globVertex);
   }
   return globVertices;
