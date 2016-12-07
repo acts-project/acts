@@ -242,6 +242,19 @@
 ///		- is the beampipe
 ///		- is a layer
 ///
+/// There are two modes building the layers around the sensitive detector modules:
+/// * The \a DetElements containing the sensitive modules have a geometrical shape
+/// 	- the boundaries of the layers in ACTS are taken directly from the given shape
+/// * The \a DetElements containing the sensitive modules have no specific shape (assembliy)
+/// 	- the boundaries of the layers are calculated automatically by adding a tolerance to the geometric extension of the contained surfaces
+///		- the tolerances in r and z need to be set for every \a DetElement representing layer using envelopeR and envelopeZ in the Acts::ActsExtension's
+///
+/// There are two modes building the volumes arounnd the layers:
+/// * The DetElements containing the layers have a geometrical shape
+/// 	- the boundaries for the volumes and layers in the ACTS geometry are taken directly from these shapes
+/// * The DetElements containing the layers have no specific shape
+/// 	- the boundaries for the volumes are calculated automatically by adding a tolerance to the geometric extension of the contained layers
+///		- in this case the parameters layerEnvelopeR and layerEnvelopeZ (tolerances) need to be set in the Acts::convertDD4hepDetector() function
 ///
 /// Furthermore parameters can be handed over for material mapping or the axes
 ///   orientation of modules.

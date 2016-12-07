@@ -58,6 +58,14 @@ namespace Acts {
 /// @note equidistant binningtype is recommended because it is faster not only
 /// while building of the geometry  but also for look up during extrapolation
 /// inner/outer
+/// @param layerEnvelopeR the tolerance added to the geometrical extension in r
+/// of the layers contained to build the volume envelope around
+/// @note this parameter only needs to be set if the volumes containing the
+/// layers (e.g. barrel, endcap volumes) have no specific shape (assemblies)
+/// @param layerEnvelopeZ the tolerance added to the geometrical extension in z
+/// of the layers contained to build the volume envelope around
+/// @note this parameter only needs to be set if the volumes containing the
+/// layers (e.g. barrel, endcap volumes) have no specific shape (assemblies)
 /// @exception std::logic_error if an error in the translation occurs
 /// @return std::unique_ptr to the full Acts::TrackingGeometry
 std::unique_ptr<Acts::TrackingGeometry>

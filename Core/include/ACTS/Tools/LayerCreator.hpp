@@ -73,6 +73,9 @@ public:
   /// @param binsPhi is number of bins the sensitive surfaces are ordered in phi
   /// @param binsZ is number of bins the sensitive surfaces are ordered in Z
   /// @param transform is the (optional) transform of the layer
+  /// @param ad possibility to hand over a specific ApproachDescriptor, which is
+  /// needed for material mapping. Otherwise the default ApproachDescriptor will
+  /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
   LayerPtr
@@ -95,6 +98,9 @@ public:
   /// @param bTypePhi binning type in phi (equidistant/arbitrary)
   /// @param bTypeZ binning type in z (equidistant/arbitrary)
   /// @param transform is the (optional) transform of the layer
+  /// @param ad possibility to hand over a specific ApproachDescriptor, which is
+  /// needed for material mapping. Otherwise the default ApproachDescriptor will
+  /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
   LayerPtr
@@ -117,6 +123,9 @@ public:
   /// @param bTypePhi binning type in phi (equidistant/arbitrary)
   /// @param bTypeZ binning type in z (equidistant/arbitrary)
   /// @param transform is the (optional) transform of the layer
+  /// @param ad possibility to hand over a specific ApproachDescriptor, which is
+  /// needed for material mapping. Otherwise the default ApproachDescriptor will
+  /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
   LayerPtr
@@ -139,6 +148,9 @@ public:
   /// @param binsR is number of bins the sensitive surfaces are ordered in R
   /// @param binsPhi is number of bins the sensitive surfaces are ordered in Phi
   /// @param transform is the (optional) transform of the layer
+  /// @param ad possibility to hand over a specific ApproachDescriptor, which is
+  /// needed for material mapping. Otherwise the default ApproachDescriptor will
+  /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
   LayerPtr
@@ -162,6 +174,9 @@ public:
   /// @param bTypeR binning type in r (equidistant/arbitrary)
   /// @param bTypePhi binning type in phi (equidistant/arbitrary)
   /// @param transform is the (optional) transform of the layer
+  /// @param ad possibility to hand over a specific ApproachDescriptor, which is
+  /// needed for material mapping. Otherwise the default ApproachDescriptor will
+  /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
   LayerPtr
@@ -185,6 +200,9 @@ public:
   /// @param bTypeR binning type in r (equidistant/arbitrary)
   /// @param bTypePhi binning type in phi (equidistant/arbitrary)
   /// @param transform is the (optional) transform of the layer
+  /// @param ad possibility to hand over a specific ApproachDescriptor, which is
+  /// needed for material mapping. Otherwise the default ApproachDescriptor will
+  /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
   LayerPtr
@@ -206,6 +224,9 @@ public:
   /// @param binsX is number of bins the sensitive surfaces are ordered in X
   /// @param binsY is number of bins the sensitive surfaces are ordered in Y
   /// @param transform is the (optional) transform of the layer
+  /// @param ad possibility to hand over a specific ApproachDescriptor, which is
+  /// needed for material mapping. Otherwise the default ApproachDescriptor will
+  /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
   LayerPtr
