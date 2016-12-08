@@ -53,7 +53,10 @@ public:
   ///
   /// - create an array in a cylinder, binned in phi, z when extremas and
   /// bin numbers are known
-  /// @param surfaces are the sensitive surfaces to be ordered on the cylinder
+  /// @param surfaces is the vector of pointers to sensitive surfaces
+  /// to be ordered on the cylinder
+  /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
+  /// need to be valid, since no check is performed
   /// @param R is the radius of the cylinder
   /// @param minPhi is the minimal phi position of the surfaces
   /// @param maxPhi is the maximal phi position of the surfaces
@@ -79,7 +82,10 @@ public:
   /// - create an array in a cylinder, binned in phi, z when extremas and bin
   /// numbers are unknown - this method goes through the surfaces and finds out
   /// the needed information
-  /// @param surfaces are the sensitive surfaces to be ordered on the cylinder
+  /// @param surfaces is the vector of pointers to sensitive surfaces
+  /// to be ordered on the cylinder
+  /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
+  /// need to be valid, since no check is performed
   /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
   /// @param bTypeZ the binning type in z direction (equidistant/aribtrary)
   /// @param transform is the (optional) additional transform applied
@@ -96,7 +102,10 @@ public:
   /// - create an array on a disc, binned in r, phi when extremas and
   /// bin numbers are known
   ///
-  /// @param surfaces are the sensitive surfaces to be
+  /// @param surfaces is the vector of pointers to sensitive surfaces
+  /// to be ordered on the disc
+  /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
+  /// need to be valid, since no check is performed
   /// @param rMin is the minimimal radius of the disc
   /// @param rMax is the maximal radius of the disc
   /// @param minPhi is the minimal phi position of the surfaces
@@ -122,7 +131,10 @@ public:
   /// - create an array in a cylinder, binned in phi, r when extremas and bin
   /// numbers are unknown - this method goes through the surfaces and finds out
   /// the needed information
-  /// @param surfaces are the sensitive surfaces to be ordered on the cylinder
+  /// @param surfaces is the vector of pointers to sensitive surfaces
+  /// to be ordered on the disc
+  /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
+  /// need to be valid, since no check is performed
   /// @param bTypeR the binning type in r direction (equidistant/aribtrary)
   /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
   /// @param transform is the (optional) additional transform applied
@@ -138,7 +150,10 @@ public:
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
   ///
-  /// @param surfaces are the sensitive surfaces to be
+  /// @param surfaces is the vector of pointers to sensitive surfaces
+  /// to be ordered on the plane
+  /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
+  /// need to be valid, since no check is performed
   /// @param halflengthX is the half length in X
   /// @param halflengthY is the half length in Y
   /// @param binsX is the number of bins in X
@@ -274,6 +289,15 @@ private:
   ///
   void
   registerNeighbourHood(const SurfaceArray& sArray) const;
+
+  /// Private helper method to transform the  vertices of surface bounds into
+  /// global coordinates
+  /// @param surface the surface associated with the given vertices
+  /// @param locVertices a vector of the vertices in local coordinates
+  /// @return a vector of the vertices in global coordinates
+  std::vector<Acts::Vector3D>
+  makeGlobalVertices(const Acts::Surface&               surface,
+                     const std::vector<Acts::Vector2D>& locVertices) const;
 };
 
 }  // end of namespace

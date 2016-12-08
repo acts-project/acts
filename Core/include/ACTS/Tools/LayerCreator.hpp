@@ -66,8 +66,10 @@ public:
 
   /// ILayerCreator interface method - returning a cylindrical layer
   ///
-  /// @param surfaces is the vector of sensitive surfaces represented by this
-  /// layer
+  /// @param surfaces is the vector of pointers to sensitive surfaces
+  /// represented by this layer
+  /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
+  /// need to be valid, since no check is performed
   /// @param envelopeR is the additional envelope applied in R
   /// @param envelopeZ is the additional envelope applied in z
   /// @param binsPhi is number of bins the sensitive surfaces are ordered in phi
@@ -90,8 +92,10 @@ public:
 
   /// ILayerCreator interface method - returning a cylindrical layer
   ///
-  /// @param surfaces is the vector of sensitive surfaces represented by this
-  /// layer
+  /// @param surfaces is the vector of pointers to sensitive surfaces
+  /// represented by this layer
+  /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
+  /// need to be valid, since no check is performed
   /// @param layerRmin is the inner radius of the layer
   /// @param layerRmax is the outer radius of the layer
   /// @param layerHalfZ is the half length in z of the layer
@@ -116,6 +120,10 @@ public:
 
   /// ILayerCreator interface method - returning a cylindrical layer
   ///
+  /// @param surfaces is the vector of pointers to sensitive surfaces
+  /// represented by this layer
+  /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
+  /// need to be valid, since no check is performed
   /// @param surfaces is the vector of sensitive surfaces represented by this
   /// layer
   /// @param envelopeR is the additional envelope applied in R
@@ -140,8 +148,10 @@ public:
 
   /// ILayerCreator interface method - returning a cylindrical layer
   ///
-  /// @param surfaces is the vector of sensitive surfaces represented by this
-  /// layer
+  /// @param surfaces is the vector of pointers to sensitive surfaces
+  /// represented by this layer
+  /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
+  /// need to be valid, since no check is performed
   /// @param envelopeMinR is the additional envelope applied in R at Rmin
   /// @param envelopeMaxR is the additional envelope applied in R in Rmax
   /// @param envelopeZ is the additional envelope applied in z
@@ -165,8 +175,10 @@ public:
 
   /// ILayerCreator interface method - returning a cylindrical layer
   ///
-  /// @param surfaces is the vector of sensitive surfaces represented by this
-  /// layer
+  /// @param surfaces is the vector of pointers to sensitive surfaces
+  /// represented by this layer
+  /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
+  /// need to be valid, since no check is performed
   /// @param layerRmin is the inner radius of the layer
   /// @param layerRmax is the outer radius of the layer
   /// @param layerZmin is the minimum in z of the layer
@@ -192,8 +204,10 @@ public:
 
   /// ILayerCreator interface method - returning a cylindrical layer
   ///
-  /// @param surfaces is the vector of sensitive surfaces represented by this
-  /// layer
+  /// @param surfaces is the vector of pointers to sensitive surfaces
+  /// represented by this layer
+  /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
+  /// need to be valid, since no check is performed
   /// @param envelopeMinR is the additional envelope applied in R at Rmin
   /// @param envelopeMaxR is the additional envelope applied in R in Rmax
   /// @param envelopeZ is the additional envelope applied in z
@@ -217,8 +231,10 @@ public:
 
   /// ILayerCreator interface method - returning a cylindrical layer
   ///
-  /// @param surfaces is the vector of sensitive surfaces represented by this
-  /// layer
+  /// @param surfaces is the vector of pointers to sensitive surfaces
+  /// represented by this layer
+  /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
+  /// need to be valid, since no check is performed
   /// @param envelopeXY is the additional envelope applied in XY
   /// @param envelopeZ is the additional envelope applied in Z
   /// @param binsX is number of bins the sensitive surfaces are ordered in X
