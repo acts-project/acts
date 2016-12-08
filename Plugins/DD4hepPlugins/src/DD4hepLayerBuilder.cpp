@@ -62,29 +62,46 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
       // get the shape of the layer
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
-      TGeoConeSeg* tube = dynamic_cast<TGeoConeSeg*>(geoShape);
-      if (!tube)
-        ACTS_ERROR("[L] Disc layer has wrong shape - needs to be TGeoConeSeg!");
-      // extract the boundaries
-      double rMin = tube->GetRmin1() * units::_cm;
-      double rMax = tube->GetRmax1() * units::_cm;
-      double zMin
-          = (transform->translation()
-             - transform->rotation().col(2) * tube->GetDz() * units::_cm)
-                .z();
-      double zMax
-          = (transform->translation()
-             + transform->rotation().col(2) * tube->GetDz() * units::_cm)
-                .z();
-      if (zMin > zMax) std::swap(zMin, zMax);
-      layers.push_back(m_cfg.layerCreator->discLayer(layerSurfaces,
-                                                     zMin,
-                                                     zMax,
-                                                     rMin,
-                                                     rMax,
-                                                     m_cfg.bTypeR,
-                                                     m_cfg.bTypePhi,
-                                                     transform));
+      if (geoShape) {
+        TGeoConeSeg* tube = dynamic_cast<TGeoConeSeg*>(geoShape);
+        if (!tube)
+          ACTS_ERROR(
+              "[L] Disc layer has wrong shape - needs to be TGeoConeSeg!");
+        // extract the boundaries
+        double rMin = tube->GetRmin1() * units::_cm;
+        double rMax = tube->GetRmax1() * units::_cm;
+        double zMin
+            = (transform->translation()
+               - transform->rotation().col(2) * tube->GetDz() * units::_cm)
+                  .z();
+        double zMax
+            = (transform->translation()
+               + transform->rotation().col(2) * tube->GetDz() * units::_cm)
+                  .z();
+        if (zMin > zMax) std::swap(zMin, zMax);
+        layers.push_back(m_cfg.layerCreator->discLayer(layerSurfaces,
+                                                       zMin,
+                                                       zMax,
+                                                       rMin,
+                                                       rMax,
+                                                       m_cfg.bTypeR,
+                                                       m_cfg.bTypePhi,
+                                                       transform));
+      } else if (detExtension->buildEnvelope()) {
+        layers.push_back(
+            m_cfg.layerCreator->discLayer(layerSurfaces,
+                                          detExtension->envelopeR(),
+                                          detExtension->envelopeR(),
+                                          detExtension->envelopeZ(),
+                                          m_cfg.bTypeR,
+                                          m_cfg.bTypePhi,
+                                          transform));
+      } else
+        throw std::logic_error(
+            std::string("Layer DetElement: ") + detElement.name()
+            + std::string(" has neither a shape nor tolerances for envelopes "
+                          "added to it¥s extension. Please check your detector "
+                          "constructor!"));
     }
   }
   return layers;
@@ -117,21 +134,37 @@ Acts::DD4hepLayerBuilder::centralLayers() const
       // get the shape of the layer
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
-      TGeoConeSeg* tube = dynamic_cast<TGeoConeSeg*>(geoShape);
-      if (!tube)
-        ACTS_ERROR(
-            "[L] Cylinder layer has wrong shape - needs to be TGeoConeSeg!");
-      // extract the boundaries
-      double rMin  = tube->GetRmin1() * units::_cm;
-      double rMax  = tube->GetRmax1() * units::_cm;
-      double halfZ = tube->GetDz() * units::_cm;
-      layers.push_back(m_cfg.layerCreator->cylinderLayer(layerSurfaces,
-                                                         rMin,
-                                                         rMax,
-                                                         halfZ,
-                                                         m_cfg.bTypePhi,
-                                                         m_cfg.bTypeZ,
-                                                         transform));
+
+      if (detExtension->buildEnvelope()) {
+        layers.push_back(
+            m_cfg.layerCreator->cylinderLayer(layerSurfaces,
+                                              detExtension->envelopeR(),
+                                              detExtension->envelopeZ(),
+                                              m_cfg.bTypePhi,
+                                              m_cfg.bTypeZ,
+                                              transform));
+      } else if (geoShape) {
+        TGeoConeSeg* tube = dynamic_cast<TGeoConeSeg*>(geoShape);
+        if (!tube)
+          ACTS_ERROR(
+              "[L] Cylinder layer has wrong shape - needs to be TGeoConeSeg!");
+        // extract the boundaries
+        double rMin  = tube->GetRmin1() * units::_cm;
+        double rMax  = tube->GetRmax1() * units::_cm;
+        double halfZ = tube->GetDz() * units::_cm;
+        layers.push_back(m_cfg.layerCreator->cylinderLayer(layerSurfaces,
+                                                           rMin,
+                                                           rMax,
+                                                           halfZ,
+                                                           m_cfg.bTypePhi,
+                                                           m_cfg.bTypeZ,
+                                                           transform));
+      } else
+        throw std::logic_error(
+            std::string("Layer DetElement: ") + detElement.name()
+            + std::string(" has neither a shape nor tolerances for envelopes "
+                          "added to it¥s extension. Please check your detector "
+                          "constructor!"));
     }
   }
   return layers;
@@ -164,29 +197,46 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
       // get the shape of the layer
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
-      TGeoConeSeg* tube = dynamic_cast<TGeoConeSeg*>(geoShape);
-      if (!tube)
-        ACTS_ERROR("[L] Disc layer has wrong shape - needs to be TGeoConeSeg!");
-      // extract the boundaries
-      double rMin = tube->GetRmin1() * units::_cm;
-      double rMax = tube->GetRmax1() * units::_cm;
-      double zMin
-          = (transform->translation()
-             - transform->rotation().col(2) * tube->GetDz() * units::_cm)
-                .z();
-      double zMax
-          = (transform->translation()
-             + transform->rotation().col(2) * tube->GetDz() * units::_cm)
-                .z();
-      if (zMin > zMax) std::swap(zMin, zMax);
-      layers.push_back(m_cfg.layerCreator->discLayer(layerSurfaces,
-                                                     zMin,
-                                                     zMax,
-                                                     rMin,
-                                                     rMax,
-                                                     m_cfg.bTypeR,
-                                                     m_cfg.bTypePhi,
-                                                     transform));
+      if (geoShape) {
+        TGeoConeSeg* tube = dynamic_cast<TGeoConeSeg*>(geoShape);
+        if (!tube)
+          ACTS_ERROR(
+              "[L] Disc layer has wrong shape - needs to be TGeoConeSeg!");
+        // extract the boundaries
+        double rMin = tube->GetRmin1() * units::_cm;
+        double rMax = tube->GetRmax1() * units::_cm;
+        double zMin
+            = (transform->translation()
+               - transform->rotation().col(2) * tube->GetDz() * units::_cm)
+                  .z();
+        double zMax
+            = (transform->translation()
+               + transform->rotation().col(2) * tube->GetDz() * units::_cm)
+                  .z();
+        if (zMin > zMax) std::swap(zMin, zMax);
+        layers.push_back(m_cfg.layerCreator->discLayer(layerSurfaces,
+                                                       zMin,
+                                                       zMax,
+                                                       rMin,
+                                                       rMax,
+                                                       m_cfg.bTypeR,
+                                                       m_cfg.bTypePhi,
+                                                       transform));
+      } else if (detExtension->buildEnvelope()) {
+        layers.push_back(
+            m_cfg.layerCreator->discLayer(layerSurfaces,
+                                          detExtension->envelopeR(),
+                                          detExtension->envelopeR(),
+                                          detExtension->envelopeZ(),
+                                          m_cfg.bTypeR,
+                                          m_cfg.bTypePhi,
+                                          transform));
+      } else
+        throw std::logic_error(
+            std::string("Layer DetElement: ") + detElement.name()
+            + std::string(" has neither a shape nor tolerances for envelopes "
+                          "added to it¥s extension. Please check your detector "
+                          "constructor!"));
     }
   }
   return layers;
