@@ -102,12 +102,15 @@ If you are logged in to lxplus at CERN, you can run the following commands to in
 > git clone ssh://git@gitlab.cern.ch:7999/acts/a-common-tracking-sw.git acts<br />
 > mkdir acts/build<br />
 > cd acts/build<br />
-> source /afs/cern.ch/sw/lcg/contrib/gcc/4.9.3/x86_64-slc6/setup.sh<br />
+> export PATH=/afs/cern.ch/sw/lcg/releases/LCG_86/doxygen/1.8.11/x86_64-slc6-gcc62-dbg/bin/:${PATH} <br />
+> source /afs/cern.ch/sw/lcg/releases/LCG_86/gcc/6.2.0/x86_64-slc6/setup.sh <br />
+> source /afs/cern.ch/sw/lcg/releases/LCG_86/CMake/3.5.2/x86_64-slc6-gcc62-dbg/CMake-env.sh <br />
 > cmake .. \\ <br />
->   -DEIGEN_INCLUDE_DIR=/afs/cern.ch/sw/lcg/releases/eigen/3.2.7-292e1/x86_64-slc6-gcc49-opt/include/eigen3/ \\ <br />
->   -DBOOST_ROOT=/afs/cern.ch/sw/lcg/releases/LCG_83/Boost/1.59.0_python2.7/x86_64-slc6-gcc49-opt/include/boost-1_59/ \\ <br />
+>   -DEIGEN_INCLUDE_DIR=/afs/cern.ch/sw/lcg/releases/LCG_86/eigen/3.2.9/x86_64-slc6-gcc62-dbg/include/eigen3/ \\ <br />
+>   -DBOOST_ROOT=/afs/cern.ch/sw/lcg/releases/LCG_86/Boost/1.62.0/x86_64-slc6-gcc62-dbg/include/boost-1_62/ \\ <br />
+>   -DBOOST_LIBRARYDIR=/afs/cern.ch/sw/lcg/releases/LCG_86/Boost/1.62.0/x86_64-slc6-gcc62-dbg/lib/ \\ <br />
 >   -DBUILD_DOC=ON \\ <br />
->   -DCMAKE_PREFIX_PATH="/afs/cern.ch/exp/fcc/sw/0.7/DD4hep/20161003/x86_64-slc6-gcc49-opt/;/afs/cern.ch/sw/lcg/releases/LCG_83/ROOT/6.06.00/x86_64-slc6-gcc49-opt/cmake" \\ <br />
+>   -DCMAKE_PREFIX_PATH="/afs/cern.ch/sw/lcg/releases/LCG_86/ROOT/6.08.00/x86_64-slc6-gcc62-dbg/cmake" \\ <br />
 >   -DCMAKE_INSTALL_PREFIX=\`pwd\`/installed <br />
 > make<br />
 > make doc<br />
