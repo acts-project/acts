@@ -1,5 +1,5 @@
 # we need boost
-find_package (Boost 1.61 REQUIRED COMPONENTS program_options)
+find_package (Boost ${ACTS_BOOST_VERSION} REQUIRED COMPONENTS program_options)
 
 # define executables
 add_executable (profile_atlas_stepper atlas_stepper.cpp)
