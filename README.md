@@ -40,7 +40,7 @@ Only few dependencies are required to build the Core library of ACTS. A list of 
 
 The following dependencies are required:
 
-+ [clang](http://clang.llvm.org/) (>= 3.8.0) or [gcc](https://gcc.gnu.org/) (>= 4.9.3)
++ [clang](http://clang.llvm.org/) (>= 3.8.0) or [gcc](https://gcc.gnu.org/) (>= 5.4.0)
 + [cmake](https://cmake.org/) (>= 3.5)
 + [boost](http://boost.org/) (>= 1.61, with <tt>program_options</tt>)
 + [Eigen](http://eigen.tuxfamily.org/) (>= 3.2.8)
@@ -102,12 +102,14 @@ If you are logged in to lxplus at CERN, you can run the following commands to in
 > git clone ssh://git@gitlab.cern.ch:7999/acts/a-common-tracking-sw.git acts<br />
 > mkdir acts/build<br />
 > cd acts/build<br />
-> source /afs/cern.ch/sw/lcg/contrib/gcc/4.9.3/x86_64-slc6/setup.sh<br />
+> export PATH=/afs/cern.ch/sw/lcg/releases/LCG_87/doxygen/1.8.11/x86_64-slc6-gcc62-opt/bin/:${PATH} <br />
+> source /afs/cern.ch/sw/lcg/releases/LCG_87/gcc/6.2.0/x86_64-slc6/setup.sh <br />
+> source /afs/cern.ch/sw/lcg/releases/LCG_87/CMake/3.5.2/x86_64-slc6-gcc62-opt/CMake-env.sh <br />
 > cmake .. \\ <br />
->   -DEIGEN_INCLUDE_DIR=/afs/cern.ch/sw/lcg/releases/eigen/3.2.7-292e1/x86_64-slc6-gcc49-opt/include/eigen3/ \\ <br />
->   -DBOOST_ROOT=/afs/cern.ch/sw/lcg/releases/LCG_83/Boost/1.59.0_python2.7/x86_64-slc6-gcc49-opt/include/boost-1_59/ \\ <br />
+>   -DEIGEN_INCLUDE_DIR=/afs/cern.ch/sw/lcg/releases/LCG_87/eigen/3.2.9/x86_64-slc6-gcc62-opt/include/eigen3/ \\ <br />
+>   -DBOOST_ROOT=/afs/cern.ch/sw/lcg/releases/LCG_87/Boost/1.62.0/x86_64-slc6-gcc62-opt/include/boost-1_62/ \\ <br />
+>   -DBOOST_LIBRARYDIR=/afs/cern.ch/sw/lcg/releases/LCG_87/Boost/1.62.0/x86_64-slc6-gcc62-opt/lib/ \\ <br />
 >   -DBUILD_DOC=ON \\ <br />
->   -DCMAKE_PREFIX_PATH="/afs/cern.ch/exp/fcc/sw/0.7/DD4hep/20161003/x86_64-slc6-gcc49-opt/;/afs/cern.ch/sw/lcg/releases/LCG_83/ROOT/6.06.00/x86_64-slc6-gcc49-opt/cmake" \\ <br />
 >   -DCMAKE_INSTALL_PREFIX=\`pwd\`/installed <br />
 > make<br />
 > make doc<br />
