@@ -342,9 +342,8 @@ The following steps explain on how to setup and configure a Jenkins server for c
         + timestamper
         + conditional build step
         + parametrized trigger
-        + workspace cleanup
-        + environment script
-    3. Create a Jenkins admin user with name `atsjenkins`, select a password and use `ats.jenkins@cern.ch` as email.
+	+ build blocker
+    3. Create a Jenkins admin user with name `actsjenkins`, select a password and use `acts.jenkins@cern.ch` as email.
     4. Configure Jenkins instance:
         + Manage Jenkins -> Configure Global Security: enable "Allow anonymous read access"
         + Manage Jenkins -> Configure System 
@@ -357,11 +356,11 @@ The following steps explain on how to setup and configure a Jenkins server for c
                 + under advanced: tick "Ignore SSL certificate errors"
                 + hit "Test Connection" which should return "success"
             + Jenkins location:
-                + URL: http://<VM-name>.cern.ch:8080
-                + email: ats.jenkins@cern.ch
+                + URL: http://&lt;VM-name&gt;.cern.ch:8080
+                + email: acts.jenkins@cern.ch
             + Git plugin:
-                + user.name: ATS Jenkins
-                + user.email: ats.jenkins@cern.ch
+                + user.name: ACTS Jenkins
+                + user.email: acts.jenkins@cern.ch
 8. Configure the Jenkins CI jobs:
 
         # checkout the job configuration and helper scripts
