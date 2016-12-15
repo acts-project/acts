@@ -332,7 +332,7 @@ The following steps explain on how to setup and configure a Jenkins server for c
         sudo firewall-cmd --reload
 
 7. Configure the Jenkins instance through the web interface:
-    1. Open the Jenkins Dashboard under http://<VM-name>:8080 in your browser and follow the instructions to unlock the Jenkins instance.
+    1. Open the Jenkins Dashboard under http://&lt;VM-name&gt;:8080 in your browser and follow the instructions to unlock the Jenkins instance.
     2. Install the following Jenkins plugins:
         + git
         + gitlab
