@@ -318,6 +318,7 @@ The following steps explain on how to setup and configure a Jenkins server for c
         > EOF
         source ~/.bash_aliases
         # copy atsjenkins SSH credentials
+	asjenkins mkdir /var/lib/jenkins/.ssh
         sudo cp ~/.ssh/id_rsa ~/.ssh/id_rsa.pub /var/lib/jenkins/.ssh
         sudo chown jenkins /var/lib/jenkins/.ssh/id_rsa /var/lib/jenkins/.ssh/id_rsa.pub
         sudo chgrp jenkins /var/lib/jenkins/.ssh/id_rsa /var/lib/jenkins/.ssh/id_rsa.pub
