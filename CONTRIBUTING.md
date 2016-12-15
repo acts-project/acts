@@ -298,9 +298,13 @@ The following steps explain on how to setup and configure a Jenkins server for c
         ssh-keygen -t rsa
         # add the public key from '~/.ssh/id_rsa.pub' to the GitLab atsjenkins account (under Profile Settings -> SSH keys)
 
-3. Install docker:
+3. Install docker and other required software:
 
         sudo apt-get install docker.io
+        sudo apt-get install clang-format
+	sudo apt install python-pip
+	pip install --upgrade pip
+	pip install requests
 
 4. Install Jenkins (taken from [here](https://wiki.jenkins-ci.org/display/JENKINS/Installing+Jenkins+on+Ubuntu)):
 
@@ -308,7 +312,10 @@ The following steps explain on how to setup and configure a Jenkins server for c
         sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
         sudo apt-get update
         sudo apt-get install jenkins
+	# allow jenkins to run docker without sudo
+	sudo usermod -aG docker jenkins
         sudo service jenkins start
+	sudo service docker restart
         
 5. Setup a convenience alias and SSH credentials:
 
