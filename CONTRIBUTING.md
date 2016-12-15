@@ -298,43 +298,10 @@ The following steps explain on how to setup and configure a Jenkins server for c
         ssh-keygen -t rsa
         # add the public key from '~/.ssh/id_rsa.pub' to the GitLab atsjenkins account (under Profile Settings -> SSH keys)
 
-3. Install required software:
+3. Install docker:
 
-        # compilers
-        sudo apt-get install g++
-        sudo apt-get install clang
-        sudo apt-get install clang-format
-        # cmake
-        sudo apt-get install cmake
-        # doxygen
-        sudo apt-get install doxygen
-        sudo apt-get install graphviz
-        sudo apt-get install texlive
-        # Eigen algebra library
-        wget http://bitbucket.org/eigen/eigen/get/3.2.9.tar.gz
-        tar xf 3.2.9.tar.gz
-        sudo mkdir -p /opt/eigen/
-        sudo mv eigen-eigen-dc6cfdf9bcec/ /opt/eigen/3.2.9
-        rm 3.2.9.tar.gz
-        # Boost library
-        wget -O boost-1_61_0.tar.gz http://downloads.sourceforge.net/project/boost/boost/1.61.0/boost_1_61_0.tar.gz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fboost%2Ffiles%2Fboost%2F1.61.0%2F&ts=1474572837&use_mirror=freefr
-        tar xf boost-1_61_0.tar.gz
-        cd boost_1_61_0/
-        ./bootstrap.sh --prefix=/opt/boost/1.61.0
-        sudo ./b2 install
-        cd .. && rm boost-1_61_0.tar.gz && rm -r boost_1_61_0
-        # ROOT
-        wget https://root.cern.ch/download/root_v6.06.08.source.tar.gz
-        tar xf root_v6.06.08.source.tar.gz
-        mkdir build && cd build
-        sudo apt-get install -y libx11-dev libxpm-dev libxft-dev libxext-dev libfftw3-dev libxml2-dev libgsl-dev
-        cmake ../root-6.06.08/ -DCMAKE_INSTALL_PREFIX=/opt/root/6.06.08 -Dcxx14=ON -Dminuit2=ON -Droofit=ON -Dxml=ON -Dfftw3=ON -Dgdml=ON -Dopengl=ON -DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=0
-        sudo cmake --build . --target install -- -j 4
-        cd .. && rm -rf build/ && rm -rf root-6.06.08/ && rm root_v6.06.08.source.tar.gz
-        # Python stuff
-        sudo apt install python-pip
-        sudo pip install requests
-        
+        sudo apt-get install docker.io
+
 4. Install Jenkins (taken from [here](https://wiki.jenkins-ci.org/display/JENKINS/Installing+Jenkins+on+Ubuntu)):
 
         wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -
