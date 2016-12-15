@@ -293,6 +293,7 @@ The following steps explain on how to setup and configure a Jenkins server for c
         # to enable password authentication:
         # change PasswordAuthentication to 'yes' in '/etc/ssh/sshd_config'
         sudo service ssh restart
+	# log out and re-log in as 'atsjenkins'
         # generate public-private key pair
         ssh-keygen -t rsa
         # add the public key from '~/.ssh/id_rsa.pub' to the GitLab atsjenkins account (under Profile Settings -> SSH keys)
