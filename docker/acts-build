@@ -1,0 +1,42 @@
+#!/bin/bash
+
+if [[ "$1" == "-h" || "$1" == "--help" || "$#" -gt "4" ]]
+then
+    echo "usage: acts-build <ACTS_DIR> <BUILD_DIR> <BUILD_TYPE> <NCORES>"
+    echo
+    echo "  ACTS_DIR   ... directory containing the ACTS source code"
+    echo "                 (where the top-level CMakeLists.txt is)"
+    echo "                 path must be absolute or relative to BUILD_DIR"
+    echo "                 default: '../'"
+    echo                 
+    echo "  BUILD_DIR  ... cmake build directory (will be created if needed)"
+    echo "                 default: 'build'"
+    echo
+    echo "  BUILD_TYPE ... cmake build type (e.g. release)"
+    echo "                 default: 'debug'"
+    echo
+    echo "  NCORES     ... number of parallel make processes (passed to make -j N)"
+    echo "                 default: 1"
+    exit 1
+fi
+
+ACTS_DIR=${1:-"../"}
+BUILD_DIR=${2:-"build"}
+BUILD_TYPE=${3:-"debug"}
+NJOBS=${4:-1}
+
+CWD=`pwd`
+mkdir -p ${BUILD_DIR}
+cd ${BUILD_DIR}
+source /opt/dd4hep/bin/thisdd4hep.sh
+cmake -DEIGEN_INCLUDE_DIR=/opt/eigen/ \
+      -DBOOST_ROOT=/opt/boost/ \
+      -DCMAKE_PREFIX_PATH="/opt/root/;/opt/dd4hep/" \
+      -DBUILD_TGEO_PLUGIN=ON \
+      -DBUILD_MATERIAL_PLUGIN=ON \
+      -DBUILD_DD4HEP_PLUGIN=ON \
+      -DBUILD_DOC=ON \
+      -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+      ${ACTS_DIR}
+make -j ${NJOBS}
+cd ${CWD}
