@@ -71,10 +71,10 @@ public:
   operator=(const Acts::MaterialStep& mstep);
   /// return method for the position of the step
   const Position
-  position();
+  position() const;
   /// return method for the material properties
   const MaterialProperties
-  material();
+  material() const;
 
 private:
   /// the global three dimensional position of the material step
@@ -86,13 +86,13 @@ private:
 }
 
 inline const Acts::MaterialStep::Position
-Acts::MaterialStep::position()
+Acts::MaterialStep::position() const
 {
   return m_position;
 }
 /// return method for the material properties
 inline const Acts::MaterialProperties
-Acts::MaterialStep::material()
+Acts::MaterialStep::material() const
 {
   return m_material;
 }
