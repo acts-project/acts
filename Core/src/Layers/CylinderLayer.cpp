@@ -40,9 +40,9 @@ Acts::CylinderLayer::CylinderLayer(
   // associate teh layer
   CylinderSurface::associateLayer(*this);
   // an approach descriptor is automatically created if there's a surface array
-  if (!ades && Layer::m_surfaceArray) buildApproachDescriptor();
+  if (!m_approachDescriptor && Layer::m_surfaceArray) buildApproachDescriptor();
   // register the layer if the approach descriptor was provided
-  if (ades) m_approachDescriptor->registerLayer(*this);
+  if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
   // set the material surface if present
   // material can be on any approach surface or on the representing surface
   if (m_approachDescriptor) {
