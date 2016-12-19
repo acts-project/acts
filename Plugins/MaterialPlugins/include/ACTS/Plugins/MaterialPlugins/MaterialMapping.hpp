@@ -14,8 +14,11 @@
 #define ACTS_MATERIALPLUGINS_MATERIALMAPPIN_H
 
 #include <map>
+#include <utility>
 #include "ACTS/Extrapolation/IExtrapolationEngine.hpp"
+#include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
 #include "ACTS/Plugins/MaterialPlugins/MaterialTrackRecord.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -76,8 +79,10 @@ public:
   /// return the layer records
   const std::map<const Layer*, LayerMaterialRecord>
   layerRecords() const;
-  /// return the material step positions per layer
-  const std::multimap<const Acts::Layer*, const MaterialStep>
+  /// return the material step positions and their assigned position per layer
+  const std::map<const Acts::Layer*,
+                 std::vector<std::pair<const Acts::MaterialStep,
+                                       const Acts::Vector3D>>>
   layerMaterialSteps() const;
 
   /// set logging instance
@@ -113,12 +118,27 @@ private:
     return *m_logger;
   }
 
-  Config                  m_cnf;
+  /// the configuration object
+  Config m_cnf;
+  /// the logging instance
   std::unique_ptr<Logger> m_logger;
+  /// object which connects the layer with its LayerMaterialRecord
   std::map<const Layer*, LayerMaterialRecord> m_layerRecords;
-  /// create object which connects layer with the original material step
-  /// positions
-  std::multimap<const Acts::Layer*, const MaterialStep> m_layersAndSteps;
+  /// create object which connects layer with the original material step and its
+  /// assigned position on the layer
+  /// @note this object is a multimap which is used to internally collect all
+  /// the entries
+  std::multimap<const Acts::Layer*,
+                std::pair<const MaterialStep, const Acts::Vector3D>>
+      m_layersAndSteps;
+  // create object which connects layer with the original material step and its
+  /// assigned position on the layer
+  /// @note this object is the final version of m_layersAndSteps, where all the
+  /// entries are collected for each layer
+  std::map<const Acts::Layer*,
+           std::vector<std::pair<const Acts::MaterialStep,
+                                 const Acts::Vector3D>>>
+      m_finalLayersAndSteps;
 };
 }
 
@@ -128,10 +148,12 @@ Acts::MaterialMapping::layerRecords() const
   return m_layerRecords;
 }
 
-inline const std::multimap<const Acts::Layer*, const Acts::MaterialStep>
-Acts::MaterialMapping::layerMaterialSteps() const
+inline const std::
+    map<const Acts::Layer*,
+        std::vector<std::pair<const Acts::MaterialStep, const Acts::Vector3D>>>
+    Acts::MaterialMapping::layerMaterialSteps() const
 {
-  return m_layersAndSteps;
+  return m_finalLayersAndSteps;
 }
 
 #endif  // ACTS_MATERIALPLUGINS_MATERIALMAPPIN_Hr
