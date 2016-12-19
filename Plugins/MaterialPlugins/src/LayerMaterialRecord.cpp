@@ -90,8 +90,8 @@ Acts::LayerMaterialRecord::addLayerMaterialProperties(
   rho += newRho * newThickness;
   x0 += newMaterial->x0() * newThickness;
   l0 += newMaterial->l0() * newThickness;
-  A += newMaterial->averageA() * newRho;
-  Z += newMaterial->averageZ() * newRho;
+  A += newMaterial->averageA() * newRho * newThickness;
+  Z += newMaterial->averageZ() * newRho * newThickness;
   // set the new current material (not averaged yet)
   const Acts::Material updatedMaterial(x0, l0, A, Z, rho);
   // pick the number of entries for the next material entry
