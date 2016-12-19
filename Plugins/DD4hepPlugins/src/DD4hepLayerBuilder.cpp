@@ -7,10 +7,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ACTS/Plugins/DD4hepPlugins/DD4hepLayerBuilder.hpp"
+#include "ACTS/Layers/CylinderLayer.hpp"
+#include "ACTS/Layers/GenericApproachDescriptor.hpp"
+#include "ACTS/Layers/Layer.hpp"
+#include "ACTS/Material/SurfaceMaterialProxy.hpp"
 #include "ACTS/Plugins/DD4hepPlugins/DD4hepDetElement.hpp"
 #include "ACTS/Plugins/DD4hepPlugins/IActsExtension.hpp"
+#include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Tools/ILayerCreator.hpp"
+#include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/Units.hpp"
 #include "DD4hep/Detector.h"
 #include "TGeoManager.h"
@@ -134,9 +140,12 @@ Acts::DD4hepLayerBuilder::centralLayers() const
       // get the shape of the layer
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
+      // the boundaries of the layer
+
+      std::shared_ptr<const CylinderLayer> layer = nullptr;
 
       if (detExtension->buildEnvelope()) {
-        layers.push_back(
+        layer = std::dynamic_pointer_cast<const CylinderLayer>(
             m_cfg.layerCreator->cylinderLayer(layerSurfaces,
                                               detExtension->envelopeR(),
                                               detExtension->envelopeZ(),
@@ -149,22 +158,105 @@ Acts::DD4hepLayerBuilder::centralLayers() const
           ACTS_ERROR(
               "[L] Cylinder layer has wrong shape - needs to be TGeoConeSeg!");
         // extract the boundaries
-        double rMin  = tube->GetRmin1() * units::_cm;
-        double rMax  = tube->GetRmax1() * units::_cm;
-        double halfZ = tube->GetDz() * units::_cm;
-        layers.push_back(m_cfg.layerCreator->cylinderLayer(layerSurfaces,
-                                                           rMin,
-                                                           rMax,
-                                                           halfZ,
-                                                           m_cfg.bTypePhi,
-                                                           m_cfg.bTypeZ,
-                                                           transform));
+        layer = std::dynamic_pointer_cast<const CylinderLayer>(
+            m_cfg.layerCreator->cylinderLayer(layerSurfaces,
+                                              tube->GetRmin1() * units::_cm,
+                                              tube->GetRmax1() * units::_cm,
+                                              tube->GetDz() * units::_cm,
+                                              m_cfg.bTypePhi,
+                                              m_cfg.bTypeZ,
+                                              transform));
       } else
         throw std::logic_error(
             std::string("Layer DetElement: ") + detElement.name()
             + std::string(" has neither a shape nor tolerances for envelopes "
                           "added to it¥s extension. Please check your detector "
                           "constructor!"));
+      // get the boundaries needed to build the approach descriptor
+      double rMin
+          = layer->surfaceRepresentation().bounds().r() - layer->thickness();
+      double rMax
+          = layer->surfaceRepresentation().bounds().r() + layer->thickness();
+      double halfZ = layer->surfaceRepresentation().bounds().halflengthZ();
+
+      // create the two dimensional BinUtility for the material map of the layer
+      Acts::BinUtility* materialBinUtil = nullptr;
+      // if the layer should carry material it will be marked by assigning a
+      // SurfaceMaterialProxy
+      std::shared_ptr<const SurfaceMaterialProxy> materialProxy(nullptr);
+      // the approachdescriptor telling where the material sits on the layer
+      // (inner, middle, outer) Surface
+      std::unique_ptr<Acts::ApproachDescriptor> approachDescriptor = nullptr;
+      // material position on the layer can be inner, outer or center and will
+      // be accessed from the ActsExtensions
+      Acts::LayerMaterialPos layerPos = LayerMaterialPos::inner;
+      // check if layer should have material
+      if (detExtension->hasSupportMaterial()) {
+        std::pair<size_t, size_t> materialBins = detExtension->materialBins();
+        size_t bins1    = materialBins.first;
+        size_t bins2    = materialBins.second;
+        materialBinUtil = new Acts::BinUtility(
+            bins1, -M_PI, M_PI, Acts::closed, Acts::binPhi);
+        (*materialBinUtil) += Acts::BinUtility(
+            bins2, -halfZ, halfZ, Acts::open, Acts::binZ, transform);
+        // and create material proxy to mark layer for material mapping
+        materialProxy
+            = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
+        // access the material position
+        Acts::LayerMaterialPos layerPos = detExtension->layerMaterialPosition();
+        ACTS_VERBOSE(
+            "[L] Layer is marked to carry support material on Surface ( "
+            "inner=0 / center=1 / outer=2 ) :   "
+            << layerPos
+            << "    with binning: ["
+            << bins1
+            << ", "
+            << bins2
+            << "]");
+        // Create an approachdescriptor for the layer
+        // create the new surfaces for the approachdescriptor
+        std::vector<const Acts::Surface*> aSurfaces;
+        // create the inner boundary surface
+        Acts::CylinderSurface* innerBoundary
+            = new Acts::CylinderSurface(transform, rMin, halfZ);
+        // create outer boundary surface
+        Acts::CylinderSurface* outerBoundary
+            = new Acts::CylinderSurface(transform, rMax, halfZ);
+        // check if the material should be set to the inner or outer boundary
+        // and set it in case
+        if (layerPos == Acts::LayerMaterialPos::inner) {
+          innerBoundary->setAssociatedMaterial(materialProxy);
+        }
+        if (layerPos == Acts::LayerMaterialPos::outer) {
+          outerBoundary->setAssociatedMaterial(materialProxy);
+        }
+        // collect the surfaces
+        aSurfaces.push_back(innerBoundary);
+        aSurfaces.push_back(outerBoundary);
+        // create an ApproachDescriptor with standard surfaces - these
+        // will be deleted by the approach descriptor
+        approachDescriptor = std::
+            make_unique<Acts::GenericApproachDescriptor<const Acts::Surface>>(
+                aSurfaces);
+      }
+
+      auto centralLayer
+          = m_cfg.layerCreator->cylinderLayer(layerSurfaces,
+                                              rMin,
+                                              rMax,
+                                              halfZ,
+                                              m_cfg.bTypePhi,
+                                              m_cfg.bTypeZ,
+                                              transform,
+                                              std::move(approachDescriptor));
+
+      // hand over the possible material if it should be in the center
+      if (layerPos == Acts::LayerMaterialPos::central)
+        centralLayer->surfaceRepresentation().setAssociatedMaterial(
+            materialProxy);
+
+      // push back created layer
+      layers.push_back(centralLayer);
     }
   }
   return layers;
