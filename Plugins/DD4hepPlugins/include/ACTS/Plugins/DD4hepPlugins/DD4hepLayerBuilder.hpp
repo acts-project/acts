@@ -9,6 +9,7 @@
 #ifndef ACTS_DD4HEPPLUGIN_DD4HEPLAYERBUILDER_H
 #define ACTS_DD4HEPPLUGIN_DD4HEPLAYERBUILDER_H 1
 
+#include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Tools/ILayerBuilder.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
@@ -25,7 +26,6 @@ namespace Geometry {
 namespace Acts {
 
 class ILayerCreator;
-class Surface;
 
 /// @brief build layers of one cylinder-endcap setup from DD4hep input
 ///
