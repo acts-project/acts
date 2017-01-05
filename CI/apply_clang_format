@@ -19,7 +19,7 @@ cd $ACTS_DIR
 
 # apply reformat
 original_hash=`git rev-parse HEAD`
-git checkout $gitlabSourceBranch
+git fetch origin $gitlabTargetBranch
 git fetch $gitlabSourceRepoName $gitlabSourceBranch
 git reset --hard FETCH_HEAD
 git diff -U0 origin/$gitlabTargetBranch $gitlabSourceRepoName/$gitlabSourceBranch | clang-format-diff -i -p1 -regex ".*(hpp|cpp|ipp)" -style=file
