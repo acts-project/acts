@@ -47,7 +47,7 @@ Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
   , m_layerType(laytyp)
   , m_materialSurface(nullptr)
 {
-  m_approachDescriptor->registerLayer(*this);
+  if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
 }
 
 Acts::Layer::Layer(const Layer& lay)
