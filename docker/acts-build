@@ -58,7 +58,7 @@ if __name__ == "__main__":
     logging.info("running cmake configuration")
 
     try:
-        result = subprocess.check_output(configure_cmd,shell=True,stderr=subprocess.STDOUT)
+        result = subprocess.check_output(configure_cmd,shell=True,stderr=subprocess.STDOUT,executable="/bin/bash")
         print result
     except subprocess.CalledProcessError as e:
         logging.critical("cmake configuration step failed with return code %d" % e.returncode)
