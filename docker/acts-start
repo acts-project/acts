@@ -21,6 +21,7 @@ GCC_VERSION=`g++ -dumpversion 2> /dev/null`
 GEANT4_VERSION=`geant4-config --version 2> /dev/null`
 GIT_VERSION=`git --version 2> /dev/null | awk '{print $3}'`
 MAKE_VERSION=`make --version  2> /dev/null | head -n 1 | awk '{print $3}'`
+PYTHON_VERSION=`python --version  2>&1 | awk '{print $2}'`
 ROOT_VERSION=`root-config --version 2> /dev/null`
 
 BOOST_VERSION=${BOOST_VERSION:-"not found"}
@@ -34,6 +35,7 @@ GCC_VERSION=${GCC_VERSION:-"not found"}
 GEANT4_VERSION=${GEANT4_VERSION:-"not found"}
 GIT_VERSION=${GIT_VERSION:-"not found"}
 MAKE_VERSION=${MAKE_VERSION:-"not found"}
+PYTHON_VERSION=${PYTHON_VERSION:-"not found"}
 ROOT_VERSION=${ROOT_VERSION:-"not found"}
 
 echo ' *   __ *   __  ____* __ '
@@ -56,6 +58,7 @@ echo "g++            $GCC_VERSION"
 echo "geant4         $GEANT4_VERSION"
 echo "git            $GIT_VERSION"
 echo "make           $MAKE_VERSION"
+echo "python         $PYTHON_VERSION"
 echo "root           $ROOT_VERSION"
 echo "****************************"
 
