@@ -20,6 +20,7 @@ RUN apt-get -y update && \
       git \
       graphviz \
       make \
+      sudo \
       wget && \
     update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 20 && \
     update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 20 && \
