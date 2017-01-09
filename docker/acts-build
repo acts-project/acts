@@ -1,42 +1,80 @@
-#!/bin/bash
+#!/usr/bin/env python
+import argparse, errno, logging, os, subprocess, sys
 
-if [[ "$1" == "-h" || "$1" == "--help" || "$#" -gt "4" ]]
-then
-    echo "usage: acts-build <ACTS_DIR> <BUILD_DIR> <BUILD_TYPE> <NCORES>"
-    echo
-    echo "  ACTS_DIR   ... directory containing the ACTS source code"
-    echo "                 (where the top-level CMakeLists.txt is)"
-    echo "                 path must be absolute or relative to BUILD_DIR"
-    echo "                 default: '../'"
-    echo                 
-    echo "  BUILD_DIR  ... cmake build directory (will be created if needed)"
-    echo "                 default: 'build'"
-    echo
-    echo "  BUILD_TYPE ... cmake build type (e.g. release)"
-    echo "                 default: 'debug'"
-    echo
-    echo "  NCORES     ... number of parallel make processes (passed to make -j N)"
-    echo "                 default: 1"
-    exit 1
-fi
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="ACTS build helper",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("ACTS_DIR",help="path to ACTS source directory")
+    parser.add_argument("BUILD_DIR",help="cmake build directory")
+    parser.add_argument("-v","--verbose",default="INFO",choices=["DEBUG","INFO","WARNING","ERROR","CRITICAL"],help="verbosity level")
+    parser.add_argument("--cmake-options",dest="cmake_options",type=str,default="",help="additional cmake options")
+    parser.add_argument("--make-options",dest="make_options",type=str,default="",help="additional make options")
 
-ACTS_DIR=${1:-"../"}
-BUILD_DIR=${2:-"build"}
-BUILD_TYPE=${3:-"debug"}
-NJOBS=${4:-1}
+    args = parser.parse_args()
 
-CWD=`pwd`
-mkdir -p ${BUILD_DIR}
-cd ${BUILD_DIR}
-source /opt/dd4hep/bin/thisdd4hep.sh
-cmake -DEIGEN_INCLUDE_DIR=/opt/eigen/ \
+    # set log level
+    logging.basicConfig(format='%(asctime)s %(levelname)-10s %(message)s',
+                        datefmt='%H:%M:%S',
+                        level=eval("logging." + args.verbose))
+
+    # convert to absolute paths
+    args.acts_dir  = os.path.abspath(args.ACTS_DIR)
+    args.build_dir = os.path.abspath(args.BUILD_DIR)
+    
+    if not os.path.isdir(args.acts_dir):
+        logging.critical("ACTS source directory '%s' does not exist" % args.acts_dir)
+        sys.exit(1)
+
+    # create build directory
+    logging.info("checking build directory")
+    try:
+        os.makedirs(args.build_dir)
+        logging.debug("creating build directory '%s'" % args.build_dir)
+    except OSError as exc: 
+        if exc.errno == errno.EEXIST and os.path.isdir(args.build_dir):
+            logging.debug("re-using existing build directory '%s'" % args.build_dir)
+        else:
+            raise
+
+    os.chdir(args.build_dir)
+    
+    # assemble shell commands
+    dd4hep_cmd = "source /opt/dd4hep/bin/thisdd4hep.sh"
+    cmake_cmd  = "cmake %s -DEIGEN_INCLUDE_DIR=/opt/eigen/ \
       -DBOOST_ROOT=/opt/boost/ \
-      -DCMAKE_PREFIX_PATH="/opt/root/;/opt/dd4hep/" \
+      -DCMAKE_PREFIX_PATH=\"/opt/root/;/opt/dd4hep/\" \
       -DBUILD_TGEO_PLUGIN=ON \
       -DBUILD_MATERIAL_PLUGIN=ON \
       -DBUILD_DD4HEP_PLUGIN=ON \
-      -DBUILD_DOC=ON \
-      -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-      ${ACTS_DIR}
-make -j ${NJOBS}
-cd ${CWD}
+      -DBUILD_DOC=ON ".format(args.acts_dir)
+    cmake_cmd += args.cmake_options
+    make_cmd = "make " + args.make_options
+
+    configure_cmd = dd4hep_cmd + " && " + cmake_cmd
+    build_cmd = make_cmd
+
+    # running configuration
+    logging.verbose("running configuration command '%s'" % configure_cmd)
+    logging.info("running cmake configuration")
+
+    try:
+        result = subprocess.check_output(configure_cmd,shell=True,stderr=subprocess.STDOUT)
+        print result
+    except CalledProcessError as e:
+        logging.critical("cmake configuration step failed with return code %d" % e.returncode)
+        logging.critical(e.output)
+        sys.exit(1)
+
+    # build it
+    logging.verbose("running build command '%s'" % build_cmd)
+    logging.info("running build step")
+
+    try:
+        result = subprocess.check_output(build_cmd,shell=True,stderr=subprocess.STDOUT)
+        print result
+    except CalledProcessError as e:
+        logging.critical("build step failed with return code %d" % e.returncode)
+        logging.critical(e.output)
+        sys.exit(1)
+
+    logging.info("build successful")
