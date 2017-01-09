@@ -60,7 +60,7 @@ if __name__ == "__main__":
     try:
         result = subprocess.check_output(configure_cmd,shell=True,stderr=subprocess.STDOUT)
         print result
-    except CalledProcessError as e:
+    except subprocess.CalledProcessError as e:
         logging.critical("cmake configuration step failed with return code %d" % e.returncode)
         logging.critical(e.output)
         sys.exit(1)
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     try:
         result = subprocess.check_output(build_cmd,shell=True,stderr=subprocess.STDOUT)
         print result
-    except CalledProcessError as e:
+    except subprocess.CalledProcessError as e:
         logging.critical("build step failed with return code %d" % e.returncode)
         logging.critical(e.output)
         sys.exit(1)
