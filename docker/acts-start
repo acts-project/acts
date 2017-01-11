@@ -65,7 +65,7 @@ echo "****************************"
 echo "Starting with UID : $USER_ID and GID: $GROUP_ID"
 groupadd -g $GROUP_ID acts_user
 useradd -s /bin/bash -u $USER_ID -g $GROUP_ID -m acts_user
-adduser acts_user sudo
+adduser acts_user sudo &> /dev/null
 echo "acts_user:go_acts" | chpasswd
 export HOME=/home/acts_user
 chown acts_user .
