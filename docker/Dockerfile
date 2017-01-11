@@ -130,7 +130,7 @@ RUN export DD4HEP_VERSION="00-17" && \
 	  -DCLHEP_ROOT_DIR=/opt/clhep \
 	  -DGeant4_DIR=/opt/geant4/lib/Geant4-10.2.2/ \
 	  ../DD4hep-${DD4HEP_VERSION}/ && \
-    make && \
+    make -j 4 && \
     make install && \
     cd .. && rm -rf build/ && rm -rf DD4hep-${DD4HEP_VERSION}/ && rm v${DD4HEP_VERSION}.tar.gz
     
