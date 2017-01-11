@@ -28,7 +28,7 @@ RUN apt-get -y update && \
     update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-3.8 20
 
 # Eigen
-RUN export EIGEN_VERSION="3.2.8" && \
+RUN export EIGEN_VERSION="3.2.10" && \
     wget http://bitbucket.org/eigen/eigen/get/${EIGEN_VERSION}.tar.gz && \
     tar xf ${EIGEN_VERSION}.tar.gz && \
     mkdir -p /opt/ && \
