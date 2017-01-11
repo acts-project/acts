@@ -12,7 +12,6 @@ def run_cmd(cmd):
 
     popen.stdout.close()
     return_code = popen.wait()
-    logging.info("return code = ",return_code)
     if return_code:
         raise subprocess.CalledProcessError(return_code, cmd)
     
