@@ -40,7 +40,7 @@ if __name__ == "__main__":
     
     # assemble shell commands
     dd4hep_cmd = "source /opt/dd4hep/bin/thisdd4hep.sh"
-    cmake_cmd  = "cmake %s -DEIGEN_INCLUDE_DIR=/opt/eigen/ \
+    cmake_cmd  = "cmake {0:s} -DEIGEN_INCLUDE_DIR=/opt/eigen/ \
       -DBOOST_ROOT=/opt/boost/ \
       -DCMAKE_PREFIX_PATH=\"/opt/root/;/opt/dd4hep/\" \
       -DBUILD_TGEO_PLUGIN=ON \
