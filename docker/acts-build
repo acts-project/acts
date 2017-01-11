@@ -1,6 +1,21 @@
 #!/usr/bin/env python
 import argparse, errno, logging, os, subprocess, sys
 
+def run_cmd(cmd):
+    popen = subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             shell=True,
+                             executable="/bin/bash")
+    for stdout_line in iter(popen.stdout.readline, ""):
+        print stdout_line,
+
+    popen.stdout.close()
+    return_code = popen.wait()
+    logging.info("return code = ",return_code)
+    if return_code:
+        raise subprocess.CalledProcessError(return_code, cmd)
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ACTS build helper",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -58,8 +73,7 @@ if __name__ == "__main__":
     logging.info("running cmake configuration")
 
     try:
-        result = subprocess.check_output(configure_cmd,shell=True,stderr=subprocess.STDOUT,executable="/bin/bash")
-        print result
+        run_cmd(configure_cmd)
     except subprocess.CalledProcessError as e:
         logging.critical("cmake configuration step failed with return code %d" % e.returncode)
         logging.critical(e.output)
@@ -70,8 +84,7 @@ if __name__ == "__main__":
     logging.info("running build step")
 
     try:
-        result = subprocess.check_output(build_cmd,shell=True,stderr=subprocess.STDOUT)
-        print result
+        run_cmd(build_cmd)
     except subprocess.CalledProcessError as e:
         logging.critical("build step failed with return code %d" % e.returncode)
         logging.critical(e.output)
