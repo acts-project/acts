@@ -304,7 +304,7 @@ The following steps explain on how to setup and configure a Jenkins server for c
         sudo apt-get install clang-format
 	sudo apt install python-pip
 	pip install --upgrade pip
-	pip install requests
+	pip install --user requests
 
 4. Install Jenkins (taken from [here](https://wiki.jenkins-ci.org/display/JENKINS/Installing+Jenkins+on+Ubuntu)):
 
@@ -386,9 +386,6 @@ The following steps explain on how to setup and configure a Jenkins server for c
         
         # allow passing undefined parameters:
         # add '-Dhudson.model.ParametersAction.keepUndefinedParameters=true' to JAVA_ARGS in /etc/default/jenkins
-        
-        # set some symlinks
-        sudo sh create_symlinks.sh
         
         # restart the jenkins server
         sudo service jenkins restart
