@@ -30,4 +30,4 @@ else
 fi
 
 # publish result as comment
-comment_merge_request add "$COMMENT" --project $gitlabTargetNamespace/$gitlabTargetRepoName --merge-request-id $gitlabMergeRequestId --token $gitlabToken
+./comment_merge_request add "$COMMENT" --project $gitlabTargetNamespace/$gitlabTargetRepoName --merge-request-id $gitlabMergeRequestId --token $gitlabToken
