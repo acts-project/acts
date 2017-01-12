@@ -20,11 +20,12 @@ fi
 
 # parse doxygen logfile
 DOXY_LOG=$1
+ARTEFACT=$(basename $DOXY_LOG)
 if [ -e $DOXY_LOG ]
 then
     WARNINGS=`grep -i warning $DOXY_LOG | wc -l`
     ERRORS=`grep -i error $DOXY_LOG | wc -l`
-    COMMENT="doxygen output:<br />$ERRORS errors<br />$WARNINGS warnings<br />full doxygen output can be found [here]($BUILD_URL/artifact/$DOXY_LOG)"
+    COMMENT="doxygen output:<br />$ERRORS errors<br />$WARNINGS warnings<br />full doxygen output can be found [here]($BUILD_URL/artifact/$ARTEFACT)"
 else
     COMMENT="<b>FATAL</b>: no logfile from doxygen found"
 fi
