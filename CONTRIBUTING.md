@@ -302,6 +302,7 @@ The following steps explain on how to setup and configure a Jenkins server for c
 
         sudo apt-get install docker.io
         sudo apt-get install clang-format
+        sudo apt-get install lcov
 	sudo apt install python-pip
 	pip install --upgrade pip
 	pip install --user requests
@@ -420,5 +421,12 @@ The following steps explain on how to setup and configure a Jenkins server for c
         
         # install mailutils for sending notifications
         sudo apt-get install mailutils
-        
+
+10. Some preparations for the CI jobs
+
+    	sudo mkdir /build
+	sudo chown jenkins /build
+	sudo chgrp jenkins /build
+	sudo ln -s /var/lib/jenkins/workspace/ACTS-MERGE /acts
+	
 /// @ingroup Contributing
