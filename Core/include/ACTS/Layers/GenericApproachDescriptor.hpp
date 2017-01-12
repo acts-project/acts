@@ -104,6 +104,7 @@ GenericApproachDescriptor<T>::approachSurface(
 {
   // prepare the return surface
   Intersection   sIntersection;
+  Intersection   returnIntersection;
   const Surface* aSurface    = nullptr;
   double         aPathLength = 10e10;
   // get the surfaces
@@ -112,12 +113,13 @@ GenericApproachDescriptor<T>::approachSurface(
     sIntersection = sfIter->intersectionEstimate(pos, dir, true, bcheck);
     // validatie if it's ok and take the closest
     if (sIntersection.valid && sIntersection.pathLength < aPathLength) {
-      aPathLength = sIntersection.pathLength;
-      aSurface    = sfIter;
+      aPathLength        = sIntersection.pathLength;
+      aSurface           = sfIter;
+      returnIntersection = sIntersection;
     }
   }
   // return what you have
-  return SurfaceIntersection(sIntersection, aSurface, alongMomentum);
+  return SurfaceIntersection(returnIntersection, aSurface, alongMomentum);
 }
 
 template <class T>
