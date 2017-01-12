@@ -60,7 +60,7 @@ RUN export GOSU_VERSION="1.10" && \
 # ROOT
 RUN export ROOT_VERSION="6.08.00" && \
     apt-get update && \
-    apt-get upgrade && \
+    apt-get -y upgrade && \
     apt-get -y --no-install-recommends install \
       libfftw3-dev \
       libgsl-dev \
@@ -101,7 +101,7 @@ RUN export CLHEP_VERSION="2.3.3.2" && \
 # GEANT4
 RUN export GEANT4_VERSION="4.10.02.p02" && \
     apt-get update && \
-    apt-get upgrade && \
+    apt-get -y upgrade && \
     apt-get -y --no-install-recommends install libxerces-c-dev && \    
     wget http://geant4.cern.ch/support/source/geant${GEANT4_VERSION}.tar.gz && \
     tar xf geant${GEANT4_VERSION}.tar.gz && \
