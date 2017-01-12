@@ -31,12 +31,10 @@ then
 fi
 
 # clean up old files and run new tests
-cd $BUILD_DIR
-lcov -z -d .
-make test CTEST_OUTPUT_ON_FAILURE=TRUE || echo "Done running unit tests"
+rm -rf $OUTDIR
 
 # run lcov
-lcov -c -t ACTS -o coverage.info --no-external -d `pwd` -d $ACTS_DIR
+lcov -c -t ACTS -o coverage.info --no-external -d $BUILD_DIR -d $ACTS_DIR
 # remove test source files
 lcov -r coverage.info "Tests/*" > tmp.info
 mv tmp.info coverage.info
@@ -49,4 +47,4 @@ COMMENT="$COMMENT"`tail -n 1 coverage.log`"<br />"
 COMMENT="$COMMENT<br />full test results can be found [here]($BUILD_URL/artifact/MERGE/$OUTDIR/index.html)"
 
 # publish result as comment
-comment_merge_request add "$COMMENT" --project $gitlabTargetNamespace/$gitlabTargetRepoName --merge-request-id $gitlabMergeRequestId --token $gitlabToken
+$ACTS_DIR/CI/comment_merge_request add "$COMMENT" --project $gitlabTargetNamespace/$gitlabTargetRepoName --merge-request-id $gitlabMergeRequestId --token $gitlabToken
