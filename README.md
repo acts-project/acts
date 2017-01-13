@@ -124,7 +124,7 @@ When using ACTS in your own cmake-based project, you need to include the followi
 
 > find_package (ACTS COMPONENTS comp1 comp2 ...)
 
-where `compX` are the required components from the ACTS project.
+where `compX` are the required components from the ACTS project. See the `cmake` output for more information about which components are available.
 
 # <a name="documentation">Documentation</a>
 
