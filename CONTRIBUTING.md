@@ -351,6 +351,7 @@ The following steps explain on how to setup and configure a Jenkins server for c
         + conditional build step
         + parametrized trigger
 	+ build blocker
+	+ credentials binder
     3. Create a Jenkins admin user with name `actsjenkins`, select a password and use `acts.jenkins@cern.ch` as email.
     4. Configure Jenkins instance:
         + Manage Jenkins -> Configure Global Security: enable "Allow anonymous read access"
