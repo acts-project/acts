@@ -16,7 +16,7 @@
 
 // external include(s)
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include <Eigen/Dense>
 #pragma GCC diagnostic pop
 

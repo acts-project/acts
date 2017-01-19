@@ -40,16 +40,16 @@ Only few dependencies are required to build the Core library of ACTS. A list of 
 
 The following dependencies are required:
 
-+ [clang](http://clang.llvm.org/) (>= 3.8.0) or [gcc](https://gcc.gnu.org/) (>= 5.4.0)
++ [clang](http://clang.llvm.org/) (>= 3.8.0) or [gcc](https://gcc.gnu.org/) (>= 6.2)
 + [cmake](https://cmake.org/) (>= 3.5)
-+ [boost](http://boost.org/) (>= 1.61, with <tt>program_options</tt>)
-+ [Eigen](http://eigen.tuxfamily.org/) (>= 3.2.8)
++ [boost](http://boost.org/) (>= 1.62, with <tt>program_options</tt>)
++ [Eigen](http://eigen.tuxfamily.org/) (>= 3.2.10)
 
 The following dependencies are optional and are only needed for some of the plugins
 
 + [doxygen](http://doxygen.org) (>= 1.8.11) for the documentation
 + [graphviz](http://www.graphviz.org/) (>= 2.26.00) for the documentation
-+ [ROOT](https://root.cern.ch/) (>= 6.06.04) for TGeo plugin & for DD4hep plugin
++ [ROOT](https://root.cern.ch/) (>= 6.08.00) for TGeo plugin & for DD4hep plugin
 + [DD4Hep](https://github.com/AIDASoft/DD4hep) for DD4Hep plugin
 
 ### Using recent CMake releases from CVMFS
