@@ -293,54 +293,30 @@ The following steps explain on how to setup and configure a Jenkins server for c
         # to enable password authentication:
         # change PasswordAuthentication to 'yes' in '/etc/ssh/sshd_config'
         sudo service ssh restart
+	# log out and re-log in as 'atsjenkins'
         # generate public-private key pair
         ssh-keygen -t rsa
         # add the public key from '~/.ssh/id_rsa.pub' to the GitLab atsjenkins account (under Profile Settings -> SSH keys)
 
-3. Install required software:
+3. Install docker and other required software:
 
-        # compilers
-        sudo apt-get install g++
-        sudo apt-get install clang
+        sudo apt-get install docker.io
         sudo apt-get install clang-format
-        # cmake
-        sudo apt-get install cmake
-        # doxygen
-        sudo apt-get install doxygen
-        sudo apt-get install graphviz
-        sudo apt-get install texlive
-        # Eigen algebra library
-        wget http://bitbucket.org/eigen/eigen/get/3.2.9.tar.gz
-        tar xf 3.2.9.tar.gz
-        sudo mkdir -p /opt/eigen/
-        sudo mv eigen-eigen-dc6cfdf9bcec/ /opt/eigen/3.2.9
-        rm 3.2.9.tar.gz
-        # Boost library
-        wget -O boost-1_61_0.tar.gz http://downloads.sourceforge.net/project/boost/boost/1.61.0/boost_1_61_0.tar.gz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fboost%2Ffiles%2Fboost%2F1.61.0%2F&ts=1474572837&use_mirror=freefr
-        tar xf boost-1_61_0.tar.gz
-        cd boost_1_61_0/
-        ./bootstrap.sh --prefix=/opt/boost/1.61.0
-        sudo ./b2 install
-        cd .. && rm boost-1_61_0.tar.gz && rm -r boost_1_61_0
-        # ROOT
-        wget https://root.cern.ch/download/root_v6.06.08.source.tar.gz
-        tar xf root_v6.06.08.source.tar.gz
-        mkdir build && cd build
-        sudo apt-get install -y libx11-dev libxpm-dev libxft-dev libxext-dev libfftw3-dev libxml2-dev libgsl-dev
-        cmake ../root-6.06.08/ -DCMAKE_INSTALL_PREFIX=/opt/root/6.06.08 -Dcxx14=ON -Dminuit2=ON -Droofit=ON -Dxml=ON -Dfftw3=ON -Dgdml=ON -Dopengl=ON -DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=0
-        sudo cmake --build . --target install -- -j 4
-        cd .. && rm -rf build/ && rm -rf root-6.06.08/ && rm root_v6.06.08.source.tar.gz
-        # Python stuff
-        sudo apt install python-pip
-        sudo pip install requests
-        
+        sudo apt-get install lcov
+	sudo apt install python-pip
+	pip install --upgrade pip
+	pip install --user requests
+
 4. Install Jenkins (taken from [here](https://wiki.jenkins-ci.org/display/JENKINS/Installing+Jenkins+on+Ubuntu)):
 
         wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -
         sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
         sudo apt-get update
         sudo apt-get install jenkins
+	# allow jenkins to run docker without sudo
+	sudo usermod -aG docker jenkins
         sudo service jenkins start
+	sudo service docker restart
         
 5. Setup a convenience alias and SSH credentials:
 
@@ -350,6 +326,7 @@ The following steps explain on how to setup and configure a Jenkins server for c
         > EOF
         source ~/.bash_aliases
         # copy atsjenkins SSH credentials
+	asjenkins mkdir /var/lib/jenkins/.ssh
         sudo cp ~/.ssh/id_rsa ~/.ssh/id_rsa.pub /var/lib/jenkins/.ssh
         sudo chown jenkins /var/lib/jenkins/.ssh/id_rsa /var/lib/jenkins/.ssh/id_rsa.pub
         sudo chgrp jenkins /var/lib/jenkins/.ssh/id_rsa /var/lib/jenkins/.ssh/id_rsa.pub
@@ -363,7 +340,7 @@ The following steps explain on how to setup and configure a Jenkins server for c
         sudo firewall-cmd --reload
 
 7. Configure the Jenkins instance through the web interface:
-    1. Open the Jenkins Dashboard under http://<VM-name>:8080 in your browser and follow the instructions to unlock the Jenkins instance.
+    1. Open the Jenkins Dashboard under http://&lt;VM-name&gt;:8080 in your browser and follow the instructions to unlock the Jenkins instance.
     2. Install the following Jenkins plugins:
         + git
         + gitlab
@@ -373,9 +350,9 @@ The following steps explain on how to setup and configure a Jenkins server for c
         + timestamper
         + conditional build step
         + parametrized trigger
-        + workspace cleanup
-        + environment script
-    3. Create a Jenkins admin user with name `atsjenkins`, select a password and use `ats.jenkins@cern.ch` as email.
+	+ build blocker
+	+ credentials binder
+    3. Create a Jenkins admin user with name `actsjenkins`, select a password and use `acts.jenkins@cern.ch` as email.
     4. Configure Jenkins instance:
         + Manage Jenkins -> Configure Global Security: enable "Allow anonymous read access"
         + Manage Jenkins -> Configure System 
@@ -388,11 +365,11 @@ The following steps explain on how to setup and configure a Jenkins server for c
                 + under advanced: tick "Ignore SSL certificate errors"
                 + hit "Test Connection" which should return "success"
             + Jenkins location:
-                + URL: http://<VM-name>.cern.ch:8080
-                + email: ats.jenkins@cern.ch
+                + URL: http://&lt;VM-name&gt;.cern.ch:8080
+                + email: acts.jenkins@cern.ch
             + Git plugin:
-                + user.name: ATS Jenkins
-                + user.email: ats.jenkins@cern.ch
+                + user.name: ACTS Jenkins
+                + user.email: acts.jenkins@cern.ch
 8. Configure the Jenkins CI jobs:
 
         # checkout the job configuration and helper scripts
@@ -411,9 +388,6 @@ The following steps explain on how to setup and configure a Jenkins server for c
         
         # allow passing undefined parameters:
         # add '-Dhudson.model.ParametersAction.keepUndefinedParameters=true' to JAVA_ARGS in /etc/default/jenkins
-        
-        # set some symlinks
-        sudo sh create_symlinks.sh
         
         # restart the jenkins server
         sudo service jenkins restart
@@ -448,5 +422,12 @@ The following steps explain on how to setup and configure a Jenkins server for c
         
         # install mailutils for sending notifications
         sudo apt-get install mailutils
-        
+
+10. Some preparations for the CI jobs
+
+    	sudo mkdir /build
+	sudo chown jenkins /build
+	sudo chgrp jenkins /build
+	sudo ln -s /var/lib/jenkins/workspace/ACTS-MERGE /acts
+	
 /// @ingroup Contributing

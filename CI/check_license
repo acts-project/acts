@@ -53,5 +53,5 @@ done
 if [ $COUNT -gt 0 ]
 then
     COMMENT="Found $COUNT files with missing MPLv2 license statement:<br />$COMMENT"
-    comment_merge_request add "$COMMENT" --project $gitlabTargetNamespace/$gitlabTargetRepoName --merge-request-id $gitlabMergeRequestId --token $gitlabToken
+    ./comment_merge_request add "$COMMENT" --project $gitlabTargetNamespace/$gitlabTargetRepoName --merge-request-id $gitlabMergeRequestId --token $gitlabToken
 fi

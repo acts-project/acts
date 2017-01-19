@@ -50,4 +50,4 @@ fi
 
 # add comment about results from static code analysis
 COMMENT="static code checker found $NBUGS problems<br />tarball with results can be downloaded from [here]($BUILD_URL/artifact/sca.tar.gz)"
-comment_merge_request add "$COMMENT" --project $gitlabTargetNamespace/$gitlabTargetRepoName --merge-request-id $gitlabMergeRequestId --token $gitlabToken
+./comment_merge_request add "$COMMENT" --project $gitlabTargetNamespace/$gitlabTargetRepoName --merge-request-id $gitlabMergeRequestId --token $gitlabToken

@@ -6,7 +6,7 @@
     1. [Prerequisites](#prerequisites)
     2. [Installation](#installation)
     3. [cmake options](#cmake-options)
-    4. [Example build on lxplus at CERN](#example-build)
+    4. [Using docker](#using-docker)
 4. [Using ACTS in your own cmake project](#using-acts)
 5. [Documentation](#documentation)
 6. [License and authors](#license-authors)
@@ -95,28 +95,58 @@ Important options relevant for the ACTS project are given below. They can be set
 |CMAKE_CXX_COMPILER     | empty                 | set C++ compiler (e.g. g++ or clang++)         |    
 |CMAKE_BUILD_TYPE       | None                  | build type (e.g. Debug, Release) affects compiler flags |
 
-## <a name="example-build">Example build on lxplus at CERN</a>
+## <a name="using-docker">Build ACTS using docker</a>
 
-If you are logged in to lxplus at CERN, you can run the following commands to install the core components of ACTS and run an example. Please note the long cmake command which spans several lines.
+The ACTS team provides you with a [docker](https://en.wikipedia.org/wiki/Docker_(software)) image with all required software already pre-installed. This is the very same image used in our continuous integration system. Hence, it is very well tested and should be the easiest way to get you started. In order to use it, you need to have docker installed. On Ubuntu systems one could achieve this by running
 
-> git clone ssh://git@gitlab.cern.ch:7999/acts/a-common-tracking-sw.git acts<br />
-> mkdir acts/build<br />
-> cd acts/build<br />
-> export PATH=/afs/cern.ch/sw/lcg/releases/LCG_87/doxygen/1.8.11/x86_64-slc6-gcc62-opt/bin/:${PATH} <br />
-> source /afs/cern.ch/sw/lcg/releases/LCG_87/gcc/6.2.0/x86_64-slc6/setup.sh <br />
-> source /afs/cern.ch/sw/lcg/releases/LCG_87/CMake/3.5.2/x86_64-slc6-gcc62-opt/CMake-env.sh <br />
-> cmake .. \\ <br />
->   -DEIGEN_INCLUDE_DIR=/afs/cern.ch/sw/lcg/releases/LCG_87/eigen/3.2.9/x86_64-slc6-gcc62-opt/include/eigen3/ \\ <br />
->   -DBOOST_ROOT=/afs/cern.ch/sw/lcg/releases/LCG_87/Boost/1.62.0/x86_64-slc6-gcc62-opt/include/boost-1_62/ \\ <br />
->   -DBOOST_LIBRARYDIR=/afs/cern.ch/sw/lcg/releases/LCG_87/Boost/1.62.0/x86_64-slc6-gcc62-opt/lib/ \\ <br />
->   -DBUILD_DOC=ON \\ <br />
->   -DCMAKE_INSTALL_PREFIX=\`pwd\`/installed <br />
-> make<br />
-> make doc<br />
-> make install<br />
-> cd installed <br />
-> source bin/setup.sh <br />
-> ./bin/ACTSGenericDetector
+> sudo apt-get install docker.io
+
+While the docker image provides you with the environment for building ACTS, it does not contain the source code itself. The reasoning behind this is that you can develop ACTS on your host machine using your preferred development tools/editors/GUIs and use the docker container only for compiling/testing. Therefore, you need to clone the ACTS repository first
+
+> git clone https://gitlab.cern.ch/acts/a-common-tracking-sw.git acts
+
+As a second step you need to pull the ACTS docker image
+
+> docker pull gitlab-registry.cern.ch/acts/a-common-tracking-sw
+
+Before starting the docker container, you can create a shorter tag for this image to avoid a lot of typing
+
+> docker tag gitlab-registry.cern.ch/acts/a-common-tracking-sw acts
+
+Now spin up the docker container with the mysterious command
+
+> docker run -d -t -i -v acts:/acts -e LOCAL_USER_ID=\`id -u\` -e LOCAL_GROUP_ID=\`id -g\` --name acts acts
+
+Here is what it means:
+
+- -d runs the container in the background (detached state)
+- -t gives you acces to a shell (bash)
+- -i stands for interactive and allows you to attach
+- -v maps the directory `acts` from your host machine to `/acts` inside the container
+- -e sets some environment variables which are used to map the current user to the user inside the container
+- --name gives a name to the container
+- the last argument is a reference to the docker image used for creating this container
+
+You can attach to the container using
+
+> docker attach acts
+
+You can then go ahead like you would on your host machine and start building ACTS using `cmake ... && make`. Remember that the ACTS source code is located under `/acts` inside the container. There is also a simple python wrapper script called `acts-build` in case you do not remember the longish cmake command. Running `acts-build --help` gives you a (short) list of available options.  
+
+For instance you could compile and install ACTS using
+
+> acts-build /acts/ /workdir/build --make-options "install" --cmake-options " -DCMAKE_INSTALL_PREFIX=/workdir/install"<br />
+> cd /workdir/build && make test<br />
+> cd /workdir/install/bin<br />
+> source setup.sh<br />
+> ./Examples/ACTSGenericDetector
+
+You can detach from the container again pressing the key sequence `CTRL+P CTRL+Q`.  
+If you just want to test the compilation non-interactively, you could also execute (from the host machine)
+
+> docker exec acts acts-start acts-build /acts /workdir/build
+
+This command could, for instance, be used as custom build command in IDEs.
 
 # <a name="using-acts">Using ACTS in your own cmake project</a>
 
@@ -124,7 +154,7 @@ When using ACTS in your own cmake-based project, you need to include the followi
 
 > find_package (ACTS COMPONENTS comp1 comp2 ...)
 
-where `compX` are the required components from the ACTS project.
+where `compX` are the required components from the ACTS project. See the `cmake` output for more information about which components are available.
 
 # <a name="documentation">Documentation</a>
 

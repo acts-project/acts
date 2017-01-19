@@ -1,0 +1,92 @@
+#!/usr/bin/env python
+import argparse, errno, logging, os, subprocess, sys
+
+def run_cmd(cmd):
+    popen = subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             shell=True,
+                             executable="/bin/bash")
+    for stdout_line in iter(popen.stdout.readline, ""):
+        print stdout_line,
+
+    popen.stdout.close()
+    return_code = popen.wait()
+    if return_code:
+        raise subprocess.CalledProcessError(return_code, cmd)
+    
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="ACTS build helper",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("ACTS_DIR",help="path to ACTS source directory")
+    parser.add_argument("BUILD_DIR",help="cmake build directory")
+    parser.add_argument("-v","--verbose",default="INFO",choices=["DEBUG","INFO","WARNING","ERROR","CRITICAL"],help="verbosity level")
+    parser.add_argument("--cmake-options",dest="cmake_options",type=str,default="",help="additional cmake options")
+    parser.add_argument("--make-options",dest="make_options",type=str,default="",help="additional make options")
+
+    args = parser.parse_args()
+
+    # set log level
+    logging.basicConfig(format='%(asctime)s %(levelname)-10s %(message)s',
+                        datefmt='%H:%M:%S',
+                        level=eval("logging." + args.verbose))
+
+    # convert to absolute paths
+    args.acts_dir  = os.path.abspath(args.ACTS_DIR)
+    args.build_dir = os.path.abspath(args.BUILD_DIR)
+    
+    if not os.path.isdir(args.acts_dir):
+        logging.critical("ACTS source directory '%s' does not exist" % args.acts_dir)
+        sys.exit(1)
+
+    # create build directory
+    logging.info("checking build directory")
+    try:
+        os.makedirs(args.build_dir)
+        logging.debug("creating build directory '%s'" % args.build_dir)
+    except OSError as exc: 
+        if exc.errno == errno.EEXIST and os.path.isdir(args.build_dir):
+            logging.debug("re-using existing build directory '%s'" % args.build_dir)
+        else:
+            raise
+
+    os.chdir(args.build_dir)
+    
+    # assemble shell commands
+    dd4hep_cmd = "source /opt/dd4hep/bin/thisdd4hep.sh"
+    cmake_cmd  = "cmake {0:s} -DEIGEN_INCLUDE_DIR=/opt/eigen/ \
+      -DBOOST_ROOT=/opt/boost/ \
+      -DCMAKE_PREFIX_PATH=\"/opt/root/;/opt/dd4hep/\" \
+      -DBUILD_TGEO_PLUGIN=ON \
+      -DBUILD_MATERIAL_PLUGIN=ON \
+      -DBUILD_DD4HEP_PLUGIN=ON \
+      -DBUILD_DOC=ON ".format(args.acts_dir)
+    cmake_cmd += args.cmake_options
+    make_cmd = "make " + args.make_options
+
+    configure_cmd = dd4hep_cmd + " && " + cmake_cmd
+    build_cmd = make_cmd
+
+    # running configuration
+    logging.debug("running configuration command '%s'" % configure_cmd)
+    logging.info("running cmake configuration")
+
+    try:
+        run_cmd(configure_cmd)
+    except subprocess.CalledProcessError as e:
+        logging.critical("cmake configuration step failed with return code %d" % e.returncode)
+        logging.critical(e.output)
+        sys.exit(1)
+
+    # build it
+    logging.debug("running build command '%s'" % build_cmd)
+    logging.info("running build step")
+
+    try:
+        run_cmd(build_cmd)
+    except subprocess.CalledProcessError as e:
+        logging.critical("build step failed with return code %d" % e.returncode)
+        logging.critical(e.output)
+        sys.exit(1)
+
+    logging.info("build successful")
