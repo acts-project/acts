@@ -49,7 +49,7 @@ Acts::MaterialMapping::mapMaterial(const MaterialTrackRecord& matTrackRec)
 {
   // create object which connects layer with hits
   std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>> layersAndHits;
-  // associate the m material to the layer only if hits have been collected
+  // associate the material to the layer only if hits have been collected
   if (collectLayersAndHits(matTrackRec, layersAndHits))
     associateLayerMaterial(matTrackRec, layersAndHits);
 }
@@ -204,9 +204,11 @@ Acts::MaterialMapping::associateLayerMaterial(
     const Acts::MaterialProperties* layerMaterialProperties
         = new MaterialProperties(step.material().material(),
                                  step.material().thickness() / pathCorrection);
+    // correct also the thickness of the material step
+    Acts::MaterialStep updatedStep(*layerMaterialProperties, step.position());
     // fill the step pos of the current material step
     m_layersAndSteps.emplace(assignedLayer,
-                             std::make_pair(step, assignedPosition));
+                             std::make_pair(updatedStep, assignedPosition));
     // associate the hit
     ACTS_VERBOSE("[L] Now associate hit at " << Acts::toString(pos));
     associateHit(assignedLayer, assignedPosition, layerMaterialProperties);
