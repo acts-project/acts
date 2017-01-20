@@ -13,6 +13,7 @@
 #ifndef ACTS_DETECTOR_GENERICAPPROPACHDESCRIPTOR_H
 #define ACTS_DETECTOR_GENERICAPPROPACHDESCRIPTOR_H 1
 
+#include <algorithm>
 #include "ACTS/Utilities/ApproachDescriptor.hpp"
 
 namespace Acts {
@@ -102,24 +103,27 @@ GenericApproachDescriptor<T>::approachSurface(
     const BoundaryCheck& bcheck,
     const ICompatibilityEstimator*) const
 {
-  // prepare the return surface
-  Intersection   sIntersection;
-  Intersection   returnIntersection;
-  const Surface* aSurface    = nullptr;
-  double         aPathLength = 10e10;
-  // get the surfaces
-  for (auto& sfIter : m_surfacesCache) {
-    // get the intersection with the surface
-    sIntersection = sfIter->intersectionEstimate(pos, dir, true, bcheck);
-    // validatie if it's ok and take the closest
-    if (sIntersection.valid && sIntersection.pathLength < aPathLength) {
-      aPathLength        = sIntersection.pathLength;
-      aSurface           = sfIter;
-      returnIntersection = sIntersection;
-    }
-  }
+
+  std::vector<std::pair<const Surface*, Intersection>> vIntersections;
+  vIntersections.reserve(m_surfacesCache.size());
+  // intersect all approach surfaces
+  std::transform(m_surfacesCache.begin(),
+                 m_surfacesCache.end(),
+                 vIntersections.begin(),
+                 [&](const auto& s) {
+                   return std::make_pair(
+                       s, s->intersectionEstimate(pos, dir, true, bcheck));
+                 });
+  // find nearest intersection
+  auto returnIntersection
+      = std::min_element(vIntersections.begin(),
+                         vIntersections.end(),
+                         [](const auto& a, const auto& b) {
+                           return a.second.pathLength < b.second.pathLength;
+                         });
   // return what you have
-  return SurfaceIntersection(returnIntersection, aSurface, alongMomentum);
+  return SurfaceIntersection(
+      returnIntersection->second, returnIntersection->first, alongMomentum);
 }
 
 template <class T>
