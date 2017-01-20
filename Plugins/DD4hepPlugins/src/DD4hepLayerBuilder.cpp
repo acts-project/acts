@@ -374,7 +374,7 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
   if (m_cfg.positiveLayers.empty()) {
     ACTS_VERBOSE("[L] No layers handed over for negative volume!");
   } else {
-    ACTS_VERBOSE("[L] Received layers for negative volume -> creating "
+    ACTS_VERBOSE("[L] Received layers for positive volume -> creating "
                  "disc layers");
     // go through layers
     for (auto& detElement : m_cfg.positiveLayers) {
@@ -561,7 +561,7 @@ Acts::DD4hepLayerBuilder::collectSensitive(
         // add surface to surface vector
         surfaces.push_back(&(dd4hepDetElement->surface()));
       }
-      collectSensitive(childDetElement, surfaces);
+      collectSensitive(childDetElement, surfaces, axes);
     }
   }
 }
