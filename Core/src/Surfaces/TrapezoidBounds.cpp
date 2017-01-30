@@ -88,16 +88,15 @@ Acts::TrapezoidBounds::insideFull(const Acts::Vector2D& lpos,
                                   double                tol1) const
 {
   // the cases:
-  // the cases:
-  double std::absX = std::abs(lpos[Acts::eLOC_X]);
-  double std::absY = std::abs(lpos[Acts::eLOC_Y]);
+  double absX = std::abs(lpos[Acts::eLOC_X]);
+  double absY = std::abs(lpos[Acts::eLOC_Y]);
   // (1) a fast FALSE
-  if (std::absY > (m_valueStore.at(TrapezoidBounds::bv_halfY) + tol1)) return false;
+  if (absY > (m_valueStore.at(TrapezoidBounds::bv_halfY) + tol1)) return false;
   // (2) a fast FALSE
-  if (std::absX > (m_valueStore.at(TrapezoidBounds::bv_maxHalfX) + tol0))
+  if (absX > (m_valueStore.at(TrapezoidBounds::bv_maxHalfX) + tol0))
     return false;
   // (3) a fast TRUE
-  if (std::absX < (m_valueStore.at(TrapezoidBounds::bv_minHalfX) - tol0))
+  if (absX < (m_valueStore.at(TrapezoidBounds::bv_minHalfX) - tol0))
     return true;
   // (4) particular case - a rectangle
   if (m_valueStore.at(TrapezoidBounds::bv_maxHalfX)

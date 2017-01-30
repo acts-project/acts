@@ -126,6 +126,8 @@ Acts::PlanarModuleStepper::cellSteps(const Acts::DigitizationModule& dmodule,
     else
       boundaryIntersections.erase(boundaryIntersections.begin());
   }
+  // if for some reason the intersection does not work
+  if (!boundaryIntersections.size()) return std::vector<Acts::DigitizationStep>();
   // return
   return cellSteps(dmodule,
                    boundaryIntersections[0].position,
