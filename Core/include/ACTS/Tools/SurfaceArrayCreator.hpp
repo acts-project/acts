@@ -288,7 +288,7 @@ private:
   /// @todo write documentation
   ///
   void
-  registerNeighbourHood(const SurfaceArray& sArray) const;
+  registerNeighbourHood(SurfaceArray& sArray) const;
 
   /// Private helper method to transform the  vertices of surface bounds into
   /// global coordinates
