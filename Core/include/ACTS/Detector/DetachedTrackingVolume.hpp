@@ -77,7 +77,7 @@ public:
   /// @todo check if this needed
   /// @param shift is the applied transform to the detached volume
   void
-  move(Transform3D& shift) const;
+  move(Transform3D& shift);
 
   /// Clone with shift
   ///
@@ -120,7 +120,7 @@ public:
   ///
   /// @param consts are the constituents to be saved
   void
-  saveConstituents(std::vector<std::pair<const Volume*, float>>* consts) const;
+  saveConstituents(std::vector<std::pair<const Volume*, float>>* consts);
 
   /// Get the simplified calculable components
   ///
@@ -133,13 +133,13 @@ public:
   ///
   /// @param transf is the relative transform for the alingment
   void
-  setBaseTransform(Transform3D* transf = 0) const;
+  setBaseTransform(Transform3D* transf = 0);
 
   /// Alignment methods: realign  / default argument to base transform
   ///
   /// @param transf is the relative transform for the alingment
   void
-  realign(Transform3D* transf = 0) const;
+  realign(Transform3D* transf = 0);
 
 protected:
   /// Default Constructor
@@ -161,8 +161,8 @@ private:
   TrackingVolumePtr     m_trkVolume;
   LayerPtr              m_layerRepresentation;
   std::vector<LayerPtr> m_multilayerRepresentation;
-  mutable Transform3D*  m_baseTransform;
-  mutable std::vector<std::pair<const Volume*, float>>* m_constituents;
+  Transform3D*          m_baseTransform;
+  std::vector<std::pair<const Volume*, float>>* m_constituents;
 };
 
 inline const TrackingVolume*
@@ -191,7 +191,7 @@ DetachedTrackingVolume::multilayerRepresentation() const
 
 inline void
 DetachedTrackingVolume::saveConstituents(
-    std::vector<std::pair<const Acts::Volume*, float>>* constituents) const
+    std::vector<std::pair<const Acts::Volume*, float>>* constituents)
 {
   m_constituents = constituents;
 }

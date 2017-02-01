@@ -45,7 +45,7 @@ Acts::DetachedTrackingVolume::~DetachedTrackingVolume()
 }
 
 void
-Acts::DetachedTrackingVolume::move(Acts::Transform3D&) const
+Acts::DetachedTrackingVolume::move(Acts::Transform3D&)
 {
   //!< @todo implement
   //// move the volume
@@ -110,7 +110,7 @@ Acts::DetachedTrackingVolume::geometryType() const
 }
 
 void
-Acts::DetachedTrackingVolume::setBaseTransform(Acts::Transform3D* transf) const
+Acts::DetachedTrackingVolume::setBaseTransform(Acts::Transform3D* transf)
 {
   if (transf)
     m_baseTransform = transf;
@@ -122,7 +122,7 @@ Acts::DetachedTrackingVolume::setBaseTransform(Acts::Transform3D* transf) const
 }
 
 void
-Acts::DetachedTrackingVolume::realign(Acts::Transform3D* transf) const
+Acts::DetachedTrackingVolume::realign(Acts::Transform3D* transf)
 {
   if (transf) {
     Acts::Transform3D shift
