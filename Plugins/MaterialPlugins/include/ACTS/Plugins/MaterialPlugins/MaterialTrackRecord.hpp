@@ -20,17 +20,17 @@ namespace Acts {
 
 /// @class MaterialTrackRecord
 ///
-/// @brief holds the material steps along a track, the direction and the
-/// starting point of the track
+/// @brief Holds the material steps along a track, the direction and the
+/// starting point of the track.
 ///
 /// The class MaterialTrackRecord holds a collection of material steps (containg
-/// the material in one step and the
-/// position) along a track through the detector, the three dimensional global
-/// starting point of the track and the
+/// the material of one step and the  position) along a track through the
+/// detector, the three dimensional global starting point of the track and the
 /// direction expressed in pseudorapidity eta and azimuthal angle phi.
 ///
-/// For this class a ROOT dictionary is created in order to store it in a ROOT
-/// tree.
+/// This class should be used to create material maps consisting of a collection
+/// of MaterialTrackRecords through the detector.
+///
 
 class MaterialTrackRecord
 {
@@ -60,16 +60,16 @@ public:
   /// Assignment operator
   MaterialTrackRecord&
   operator=(const MaterialTrackRecord& mtrecord);
-  /// Return method for the polar angle theta
+  ///@return the polar angle theta for the track
   double
   theta() const;
-  /// Return method for the azimuthal angle phi
+  ///@return returns the azimuthal angle phi for the track
   double
   phi() const;
-  /// Return method for the start position of the track
+  ///@returns the start position of the track
   const MaterialStep::Position
   position() const;
-  /// Return method for the material step
+  ///@return returns the accumalted material steps along the track
   std::vector<MaterialStep>
   materialSteps() const;
 
@@ -82,7 +82,7 @@ private:
   /// azimuthal angle phi indicating the second coordinate of the direction of
   /// the material track
   double m_phi;
-  /// the collection material steps along the track
+  /// the collected material steps along the track
   std::vector<MaterialStep> m_materialSteps;
 };
 }

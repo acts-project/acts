@@ -151,7 +151,7 @@ protected:
                  m_zOaTrTd;  //!< @f$ \frac{Z}{A}\cdot\rho\cdot d @f$ - in ATLAS units
   mutable size_t m_entries;  //!< number of different material entries of an
                              //! averaged material
-  //!< @Note set one per default, but can be set otherwise
+  //!< @note set one per default, but can be set otherwise
 };
 
 /** Return method for the full material */

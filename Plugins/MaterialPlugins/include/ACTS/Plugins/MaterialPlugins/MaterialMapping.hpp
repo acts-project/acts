@@ -29,7 +29,12 @@ class LayerMaterialRecord;
 
 /// @class MaterialMapping
 ///
-/// @brief
+/// @brief Class for material mapping
+///
+/// This class should be used to map material from the full and detailed
+/// detector geometry onto the simplified ACTS geometry. It offers options to
+/// map, average and finalize the material and to access the assigned and
+/// original material per layer for testing.
 ///
 
 class MaterialMapping
@@ -48,38 +53,35 @@ public:
     std::shared_ptr<IExtrapolationEngine> extrapolationEngine = nullptr;
   };
 
-  ///@brief default constructor
+  /// @brief default constructor
+  /// @param cnf the internal configuration object
+  /// @param logger the logging instance
   MaterialMapping(const Config&           cnf,
                   std::unique_ptr<Logger> logger
                   = getDefaultLogger("MaterialMapping", Logging::INFO));
 
-  ///@brief destructor
+  /// @brief destructor
   ~MaterialMapping();
 
   /// maps the material for the given direction(eta,phi) onto the layers of the
   /// given tracking geometry
-  /// @param stepCollection is a shared_ptr to the MaterialStepCollection object
-  /// which is a vector of MaterialSteps including the material on a certain
-  /// position
-  /// @param eta pseudorapidity - first dimension of the direction in which the
-  /// material was collected
-  /// @param phi the phi angle  - second dimension of the direction in which the
-  /// material was collected
-  /// @param startPoint optionally the start point can be given, if the point
-  /// from where the material collection started is not origin
+  /// @param matTrackRec the Acts::MaterialTrackRecord to be mapped
   void
   mapMaterial(const MaterialTrackRecord& matTrackRec);
-  /// averages the material of the layer records collected so far
+  /// averages the material of the layer records collected so far (for each bin)
   void
   averageLayerMaterial();
   /// after all step collections have been mapped this method needs to be called
   /// it sets the created material to the layers
   void
   finalizeLayerMaterial();
-  /// return the layer records
+  /// @return hands back all layers carrying material with their corresponding
+  /// Acts::LayerMaterialRecord
   const std::map<const Layer*, LayerMaterialRecord>
   layerRecords() const;
-  /// return the material step positions and their assigned position per layer
+  /// @return returns all layers carrying material and their corresponding
+  /// material steps (original position) with their assigned material positions
+  /// on the layer
   const std::map<const Acts::Layer*,
                  std::vector<std::pair<const Acts::MaterialStep,
                                        const Acts::Vector3D>>>

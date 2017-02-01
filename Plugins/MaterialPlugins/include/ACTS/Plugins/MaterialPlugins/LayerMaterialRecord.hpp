@@ -21,17 +21,17 @@ namespace Acts {
 
 /// @class LayerMaterialRecord
 ///
-/// @brief records the material per layer during the material mapping
+/// @brief Records the material per layer during material mapping.
 ///
-/// The LayerMaterialRecord class is used as a cache during the material mapping
-/// process for the layers
-/// and hands back the layer material.
-/// It stores the current material in a matrix binned in a given BinUtility. It
-/// is possible to add material
-/// at a certain position which is transformed into the corresponding bin. It is
-/// possible to average
-/// the material during the mapping process material whenever wanted (e.g. after
-/// run). In the end before handing
+/// The Acts::LayerMaterialRecord class is used as a cache during the material
+/// mapping process for the layers and hands back the final layer material.
+/// The user will never directly inderact with this class.
+/// It stores the current material of a certain
+/// layer in a matrix binned in a given Acts::BinUtility. It is possible to add
+/// material at a certain position on the layer which is transformed into the
+/// corresponding bin of the grid. It is possible to average the material for
+/// each bin of the layer during the mapping process whenever wanted
+/// (e.g. after each run, after every event). In the end before handing
 /// back the complete layer material an averaging needs to be done.
 ///
 
@@ -41,7 +41,7 @@ public:
   /// Default constructor
   LayerMaterialRecord();
   /// Constructor with BinUtility input
-  /// @param binUtility the 2D grid in which the material is binned on the layer
+  /// @param binutility the 2D grid in which the material is binned on the layer
   LayerMaterialRecord(const BinUtility* binutility);
   /// Default destructor
   ~LayerMaterialRecord() = default;
@@ -63,10 +63,10 @@ public:
   addLayerMaterialProperties(const Acts::Vector3D&           pos,
                              const Acts::MaterialProperties* newMaterial);
   /// Possibility to average over the material given so far
-  /// resets the sums and the counter
+  /// resets the sums and the counter of how often a certain bin was hit
   void
   averageMaterial();
-  /// Return method for the final layer material
+  /// @return method for the final layer material
   /// given as a binned surface material
   std::shared_ptr<const Acts::BinnedSurfaceMaterial>
   layerMaterial() const;
