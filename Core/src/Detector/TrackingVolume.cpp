@@ -361,14 +361,14 @@ Acts::TrackingVolume::updateBoundarySurface(
 
 void
 Acts::TrackingVolume::registerGlueVolumeDescriptor(
-    GlueVolumesDescriptor* gvd) const
+    GlueVolumesDescriptor* gvd)
 {
   delete m_glueVolumeDescriptor;
   m_glueVolumeDescriptor = gvd;
 }
 
-const Acts::GlueVolumesDescriptor&
-Acts::TrackingVolume::glueVolumesDescriptor() const
+Acts::GlueVolumesDescriptor&
+Acts::TrackingVolume::glueVolumesDescriptor()
 {
   if (!m_glueVolumeDescriptor)
     m_glueVolumeDescriptor = new GlueVolumesDescriptor;

@@ -38,6 +38,7 @@ typedef std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>
 
 // master typedefs
 typedef std::shared_ptr<const TrackingVolume>         TrackingVolumePtr;
+typedef std::shared_ptr<TrackingVolume>               MutableTrackingVolumePtr;
 typedef std::shared_ptr<const DetachedTrackingVolume> DetachedTrackingVolumePtr;
 
 // possible contained
@@ -91,13 +92,13 @@ public:
   /// @param volumeName is a string identifier
   ///
   /// @return shared pointer to a new TrackingVolume
-  static TrackingVolumePtr
+  static MutableTrackingVolumePtr
   create(std::shared_ptr<Transform3D>               htrans,
          VolumeBoundsPtr                            volumeBounds,
          std::shared_ptr<const TrackingVolumeArray> containedVolumes = nullptr,
          const std::string&                         volumeName = "undefined")
   {
-    return TrackingVolumePtr(
+    return MutableTrackingVolumePtr(
         new TrackingVolume(htrans, volumeBounds, containedVolumes, volumeName));
   }
 
@@ -311,15 +312,15 @@ public:
   /// @param gvd register a new GlueVolumeDescriptor
   /// @todo update to shared/unique ptr
   void
-  registerGlueVolumeDescriptor(GlueVolumesDescriptor* gvd) const;
+  registerGlueVolumeDescriptor(GlueVolumesDescriptor* gvd);
 
   /// Register the outside glue volumes -
   /// ordering is in the TrackingVolume Frame:
   ///  - negativeFaceXY
   ///  - (faces YZ, ZY, radial faces)
   ///  - positiveFaceXY
-  const GlueVolumesDescriptor&
-  glueVolumesDescriptor() const;
+  GlueVolumesDescriptor&
+  glueVolumesDescriptor();
 
   /// Sign the volume - the geometry builder has to do that
   ///
@@ -473,7 +474,7 @@ private:
   const LayerVector m_confinedArbitraryLayers;
 
   /// Volumes to glue Volumes from the outside
-  mutable GlueVolumesDescriptor* m_glueVolumeDescriptor;
+  GlueVolumesDescriptor* m_glueVolumeDescriptor;
 
   /// The Signature done by the GeometryBuilder
   mutable GeometrySignature m_geometrySignature;

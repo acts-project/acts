@@ -25,7 +25,7 @@ Acts::GlueVolumesDescriptor::GlueVolumesDescriptor(
 void
 Acts::GlueVolumesDescriptor::registerGlueVolumes(
     Acts::BoundarySurfaceFace                  bsf,
-    std::shared_ptr<const TrackingVolumeArray> gvs) const
+    std::shared_ptr<const TrackingVolumeArray> gvs)
 {
   // register the face
   auto searchIter = m_glueVolumes.find(bsf);
