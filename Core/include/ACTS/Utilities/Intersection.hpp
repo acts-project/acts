@@ -61,9 +61,9 @@ template <class T>
 class ObjectIntersection
 {
 public:
-  Intersection     intersection;
-  mutable const T* object;
-  int              pDirection;
+  Intersection intersection;
+  const T*     object;
+  int          pDirection;
 
   /// Default constructor
   ObjectIntersection() : intersection(), object(nullptr), pDirection(0) {}
@@ -92,11 +92,11 @@ template <class T, class R, class S>
 class FullIntersection
 {
 public:
-  Intersection     intersection;
-  mutable const T* object;
-  mutable const R* representation;
-  mutable const S* result;
-  int              pDirection;
+  Intersection intersection;
+  const T*     object;
+  const R*     representation;
+  const S*     result;
+  int          pDirection;
 
   /// Full intersection constructor
   ///
