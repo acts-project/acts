@@ -145,7 +145,7 @@ protected:
   /// @param volume is the volume to be attached
   /// @param inout is the boundary orientation @todo update to along/opposite
   void
-  attachVolume(VolumePtr volume, BoundaryOrientation inout) const;
+  attachVolume(VolumePtr volume, BoundaryOrientation inout);
 
   /// Helper metho: attach a Volume to this BoundarySurfaceT
   /// this si done during the geometry construction and only called by
@@ -155,18 +155,18 @@ protected:
   /// @param inout is the boundary orientation @todo update to along/opposite
   void
   attachVolumeArray(std::shared_ptr<const VolumeArray> volumes,
-                    BoundaryOrientation                inout) const;
+                    BoundaryOrientation                inout);
 
   /// the represented surface by this
   std::unique_ptr<const Surface> m_surface;
   /// the inside (w.r.t. normal vector) volume to point to if only one exists
-  mutable const T* m_insideVolume;
+  const T* m_insideVolume;
   /// the outside (w.r.t. normal vector) volume to point to if only one exists
-  mutable const T* m_outsideVolume;
+  const T* m_outsideVolume;
   /// the inside (w.r.t. normal vector) volume array to point to
-  mutable std::shared_ptr<const VolumeArray> m_insideVolumeArray;
+  std::shared_ptr<const VolumeArray> m_insideVolumeArray;
   /// the outside (w.r.t. normal vector) volume array to point to
-  mutable std::shared_ptr<const VolumeArray> m_outsideVolumeArray;
+  std::shared_ptr<const VolumeArray> m_outsideVolumeArray;
 };
 
 template <class T>
@@ -179,7 +179,7 @@ BoundarySurfaceT<T>::surfaceRepresentation() const
 template <class T>
 void
 BoundarySurfaceT<T>::attachVolume(VolumePtr           volume,
-                                  BoundaryOrientation inout) const
+                                  BoundaryOrientation inout)
 {
   if (inout == insideVolume)
     m_insideVolume = volume.get();
@@ -191,7 +191,7 @@ template <class T>
 void
 BoundarySurfaceT<T>::attachVolumeArray(
     const std::shared_ptr<const VolumeArray> volumes,
-    BoundaryOrientation                      inout) const
+    BoundaryOrientation                      inout)
 {
   if (inout == insideVolume)
     m_insideVolumeArray = volumes;

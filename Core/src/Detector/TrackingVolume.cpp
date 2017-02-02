@@ -297,7 +297,7 @@ void
 Acts::TrackingVolume::glueTrackingVolume(
     BoundarySurfaceFace             bsfMine,
     std::shared_ptr<TrackingVolume> neighbor,
-    BoundarySurfaceFace             bsfNeighbor) const
+    BoundarySurfaceFace             bsfNeighbor)
 {
   // find the connection of the two tracking volumes : binR returns the center
   // except for cylindrical volumes
@@ -317,7 +317,10 @@ Acts::TrackingVolume::glueTrackingVolume(
   if (!m_glueVolumeDescriptor
       || !m_glueVolumeDescriptor->glueVolumes(bsfMine)) {
     // the boundary orientation
-    bSurfaceMine->attachVolume(neighbor, bOrientation);
+    auto mutableBSurfaceMine = std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(
+      bSurfaceMine
+    );
+    mutableBSurfaceMine->attachVolume(neighbor, bOrientation);
     // now set it to the neighbor volume - the optised way
     (neighbor->m_boundarySurfaces).at(bsfNeighbor) = bSurfaceMine;
   }
@@ -327,7 +330,7 @@ void
 Acts::TrackingVolume::glueTrackingVolumes(
     BoundarySurfaceFace                  bsfMine,
     std::shared_ptr<TrackingVolumeArray> neighbors,
-    BoundarySurfaceFace                  bsfNeighbor) const
+    BoundarySurfaceFace                  bsfNeighbor)
 {
   // find the connection of the two tracking volumes : binR returns the center
   // except for cylindrical volumes
@@ -350,7 +353,10 @@ Acts::TrackingVolume::glueTrackingVolumes(
   if (!m_glueVolumeDescriptor
       || !m_glueVolumeDescriptor->glueVolumes(bsfMine)) {
     // the boundary orientation
-    bSurfaceMine->attachVolumeArray(neighbors, bOrientation);
+    auto mutableBSurfaceMine = std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(
+      bSurfaceMine
+    );
+    mutableBSurfaceMine->attachVolumeArray(neighbors, bOrientation);
     // now set it to the neighbor volumes - the optised way
     for (auto& nVolume : neighbors->arrayObjects()) {
       auto mutableNVolume = std::const_pointer_cast<TrackingVolume>( nVolume );

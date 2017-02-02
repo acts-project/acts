@@ -278,7 +278,7 @@ public:
   void
   glueTrackingVolume(BoundarySurfaceFace      bsfMine,
                      MutableTrackingVolumePtr neighbor,
-                     BoundarySurfaceFace      bsfNeighbor) const;
+                     BoundarySurfaceFace      bsfNeighbor);
 
   /// Glue another tracking volume to this one
   ///  - if common face is set the glued volumes are sharing the boundary, down
@@ -291,7 +291,7 @@ public:
   void
   glueTrackingVolumes(BoundarySurfaceFace                  bsfMine,
                       std::shared_ptr<TrackingVolumeArray> neighbors,
-                      BoundarySurfaceFace bsfNeighbors) const;
+                      BoundarySurfaceFace bsfNeighbors);
 
   /// Provide a new BoundarySurface from the glueing
   ///

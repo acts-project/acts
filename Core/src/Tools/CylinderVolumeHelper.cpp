@@ -820,6 +820,7 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
       : tvolTwo;
 
   // We'll need to mutate those volumes in order to glue them together
+  auto mutableGlueVolOne = std::const_pointer_cast<TrackingVolume>( glueVolOne );
   auto mutableGlueVolTwo = std::const_pointer_cast<TrackingVolume>( glueVolTwo );
       
   // check the cases
@@ -833,7 +834,7 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
                                       << faceTwo
                                       << " ]");
     // one to one is easy
-    glueVolOne->glueTrackingVolume(faceOne, mutableGlueVolTwo, faceTwo);
+    mutableGlueVolOne->glueTrackingVolume(faceOne, mutableGlueVolTwo, faceTwo);
 
   } else if (volOneGlueVols <= 1) {
     // (ii) one -> many
@@ -847,7 +848,7 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
     auto mutableFaceTwoVolumes = std::const_pointer_cast<TrackingVolumeArray>(
       gvDescriptorTwo.glueVolumes(faceTwo)
     );
-    glueVolOne->glueTrackingVolumes(faceOne, mutableFaceTwoVolumes, faceTwo);
+    mutableGlueVolOne->glueTrackingVolumes(faceOne, mutableFaceTwoVolumes, faceTwo);
   } else if (volTwoGlueVols <= 1) {
     // (iii) many -> one
     ACTS_VERBOSE("      glue : many[ " << tvolOne->volumeName() << " @ "
@@ -860,7 +861,7 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
     auto mutableFaceOneVolumes = std::const_pointer_cast<TrackingVolumeArray>(
       gvDescriptorOne.glueVolumes(faceOne)
     );
-    glueVolTwo->glueTrackingVolumes(faceTwo, mutableFaceOneVolumes, faceOne);
+    mutableGlueVolTwo->glueTrackingVolumes(faceTwo, mutableFaceOneVolumes, faceOne);
   } else {
     // (iv) glue array to array
     ACTS_VERBOSE("      glue : many[ " << tvolOne->volumeName() << " @ "
