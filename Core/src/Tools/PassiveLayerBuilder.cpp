@@ -66,7 +66,7 @@ Acts::PassiveLayerBuilder::constructLayers() const
       auto cBounds = std::make_shared<CylinderBounds>(
           m_cfg.centralLayerRadii[icl], m_cfg.centralLayerHalflengthZ.at(icl));
       // create the layer
-      LayerPtr cLayer = CylinderLayer::create(
+      MutableLayerPtr cLayer = CylinderLayer::create(
           nullptr, cBounds, nullptr, m_cfg.centralLayerThickness.at(icl));
       // assign the material to the layer surface
       std::shared_ptr<const SurfaceMaterial> material = nullptr;
@@ -116,12 +116,12 @@ Acts::PassiveLayerBuilder::constructLayers() const
       pTransform->translation()
           = Vector3D(0., 0., m_cfg.posnegLayerPositionZ.at(ipnl));
       // create the layers
-      LayerPtr nLayer
+      MutableLayerPtr nLayer
           = DiscLayer::create(std::shared_ptr<Transform3D>(nTransform),
                               dBounds,
                               nullptr,
                               m_cfg.posnegLayerThickness.at(ipnl));
-      LayerPtr pLayer
+      MutableLayerPtr pLayer
           = DiscLayer::create(std::shared_ptr<Transform3D>(pTransform),
                               dBounds,
                               nullptr,

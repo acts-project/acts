@@ -39,7 +39,7 @@ public:
   /// @param laytyp is the layer type
   ///
   /// @return shared pointer to a PlaneLayer
-  static LayerPtr
+  static MutableLayerPtr
   create(std::shared_ptr<Transform3D>        transform,
          std::shared_ptr<const PlanarBounds> pbounds,
          std::unique_ptr<SurfaceArray>       surfaceArray = nullptr,
@@ -47,12 +47,12 @@ public:
          std::unique_ptr<ApproachDescriptor> ad           = nullptr,
          LayerType                           laytyp       = Acts::active)
   {
-    return LayerPtr(new PlaneLayer(transform,
-                                   pbounds,
-                                   std::move(surfaceArray),
-                                   thickness,
-                                   std::move(ad),
-                                   laytyp));
+    return MutableLayerPtr(new PlaneLayer(transform,
+                                          pbounds,
+                                          std::move(surfaceArray),
+                                          thickness,
+                                          std::move(ad),
+                                          laytyp));
   }
 
   /// Factory for a shared plane layer
@@ -61,10 +61,10 @@ public:
   /// @param shift is the additional shift applied after copying
   ///
   /// @return a shared pointer to a layer
-  static LayerPtr
+  static MutableLayerPtr
   create(const PlaneLayer& pla, const Transform3D& shift)
   {
-    return LayerPtr(new PlaneLayer(pla, shift));
+    return MutableLayerPtr(new PlaneLayer(pla, shift));
   }
 
   /// Clone with a shift - only cloning that is allowed
@@ -89,10 +89,15 @@ public:
 
   /// Destructor
   virtual ~PlaneLayer() {}
+  
   /// Transforms the layer into a Surface representation for extrapolation
   /// @return returns a reference to a PlaneSurface
   const PlaneSurface&
-  surfaceRepresentation() const;
+  surfaceRepresentation() const override;
+  
+  // Non-const version
+  PlaneSurface&
+  surfaceRepresentation() override;
 
 private:
   /// private helper method to build approach surfaces

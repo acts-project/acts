@@ -57,6 +57,12 @@ Acts::PlaneLayer::surfaceRepresentation() const
   return (*this);
 }
 
+Acts::PlaneSurface&
+Acts::PlaneLayer::surfaceRepresentation()
+{
+  return (*this);
+}
+
 void
 Acts::PlaneLayer::buildApproachDescriptor()
 {
@@ -80,8 +86,9 @@ Acts::PlaneLayer::buildApproachDescriptor()
   aSurfaces.push_back(new PlaneSurface(
       std::shared_ptr<Transform3D>(appTransform), PlaneSurface::m_bounds));
   // set the layer and make TrackingGeometry
-  for (auto& sIter : aSurfaces) {
-    sIter->associateLayer(*this);
+  for (auto& sfPtr : aSurfaces) {
+    auto & mutableSf = *( const_cast<Surface*>( sfPtr ) );
+    mutableSf.associateLayer(*this);
   }
   m_approachDescriptor
       = std::make_unique<GenericApproachDescriptor<const Surface>>(aSurfaces);

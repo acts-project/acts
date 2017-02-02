@@ -41,7 +41,7 @@ Acts::LayerCreator::setLogger(std::unique_ptr<Logger> newLogger)
   m_logger = std::move(newLogger);
 }
 
-Acts::LayerPtr
+Acts::MutableLayerPtr
 Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
                                   double                              envelopeR,
                                   double                              envelopeZ,
@@ -104,12 +104,12 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
       new CylinderBounds(layerR, layerHalfZ + envelopeZ));
 
   // create the layer
-  LayerPtr cLayer = CylinderLayer::create(transform,
-                                          cBounds,
-                                          std::move(sArray),
-                                          layerThickness,
-                                          std::move(ad),
-                                          active);
+  MutableLayerPtr cLayer = CylinderLayer::create(transform,
+                                                 cBounds,
+                                                 std::move(sArray),
+                                                layerThickness,
+                                                std::move(ad),
+                                                active);
 
   if (!cLayer) ACTS_ERROR("Creation of cylinder layer did not succeed!");
   associateSurfacesToLayer(*cLayer);
@@ -118,7 +118,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
   return cLayer;
 }
 
-Acts::LayerPtr
+Acts::MutableLayerPtr
 Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
                                   double                             layerRmin,
                                   double                             layerRmax,
@@ -151,12 +151,12 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
       new CylinderBounds(layerR, layerHalfZ));
 
   // create the layer
-  LayerPtr cLayer = CylinderLayer::create(transform,
-                                          cBounds,
-                                          std::move(sArray),
-                                          layerThickness,
-                                          std::move(ad),
-                                          active);
+  MutableLayerPtr cLayer = CylinderLayer::create(transform,
+                                                 cBounds,
+                                                 std::move(sArray),
+                                                 layerThickness,
+                                                 std::move(ad),
+                                                 active);
 
   if (!cLayer) ACTS_ERROR("Creation of cylinder layer did not succeed!");
   associateSurfacesToLayer(*cLayer);
@@ -165,7 +165,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   return cLayer;
 }
 
-Acts::LayerPtr
+Acts::MutableLayerPtr
 Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
                                   double                              envelopeR,
                                   double                              envelopeZ,
@@ -212,12 +212,12 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
       new CylinderBounds(layerR, layerHalfZ + envelopeZ));
 
   // create the layer
-  LayerPtr cLayer = CylinderLayer::create(transform,
-                                          cBounds,
-                                          std::move(sArray),
-                                          layerThickness,
-                                          std::move(ad),
-                                          active);
+  MutableLayerPtr cLayer = CylinderLayer::create(transform,
+                                                 cBounds,
+                                                 std::move(sArray),
+                                                 layerThickness,
+                                                 std::move(ad),
+                                                 active);
 
   if (!cLayer) ACTS_ERROR("Creation of cylinder layer did not succeed!");
   associateSurfacesToLayer(*cLayer);
@@ -226,7 +226,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
   return cLayer;
 }
 
-Acts::LayerPtr
+Acts::MutableLayerPtr
 Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                               double                              envelopeMinR,
                               double                              envelopeMaxR,
@@ -286,12 +286,12 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   }
 
   // create the layers
-  LayerPtr dLayer = DiscLayer::create(transform,
-                                      dBounds,
-                                      std::move(sArray),
-                                      layerThickness,
-                                      std::move(ad),
-                                      active);
+  MutableLayerPtr dLayer = DiscLayer::create(transform,
+                                             dBounds,
+                                             std::move(sArray),
+                                             layerThickness,
+                                             std::move(ad),
+                                             active);
 
   if (!dLayer) ACTS_ERROR("Creation of disc layer did not succeed!");
   associateSurfacesToLayer(*dLayer);
@@ -299,7 +299,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   return dLayer;
 }
 
-Acts::LayerPtr
+Acts::MutableLayerPtr
 Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                               double                              layerZmin,
                               double                              layerZmax,
@@ -336,19 +336,19 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   }
 
   // create the layers
-  LayerPtr dLayer = DiscLayer::create(transform,
-                                      dBounds,
-                                      std::move(sArray),
-                                      layerThickness,
-                                      std::move(ad),
-                                      active);
+  MutableLayerPtr dLayer = DiscLayer::create(transform,
+                                             dBounds,
+                                             std::move(sArray),
+                                             layerThickness,
+                                             std::move(ad),
+                                             active);
   if (!dLayer) ACTS_ERROR("Creation of disc layer did not succeed!");
   associateSurfacesToLayer(*dLayer);
   // return the layer
   return dLayer;
 }
 
-Acts::LayerPtr
+Acts::MutableLayerPtr
 Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                               double                              envelopeMinR,
                               double                              envelopeMaxR,
@@ -400,19 +400,19 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   }
 
   // create the layers
-  LayerPtr dLayer = DiscLayer::create(transform,
-                                      dBounds,
-                                      std::move(sArray),
-                                      layerThickness,
-                                      std::move(ad),
-                                      active);
+  MutableLayerPtr dLayer = DiscLayer::create(transform,
+                                             dBounds,
+                                             std::move(sArray),
+                                             layerThickness,
+                                             std::move(ad),
+                                             active);
   if (!dLayer) ACTS_ERROR("Creation of disc layer did not succeed!");
   associateSurfacesToLayer(*dLayer);
   // return the layer
   return dLayer;
 }
 
-Acts::LayerPtr
+Acts::MutableLayerPtr
 Acts::LayerCreator::planeLayer(
     const std::vector<const Surface*>& /**surfaces*/,
     double /**envelopeXY*/,
@@ -499,11 +499,12 @@ Acts::LayerCreator::radialDistance(const Vector3D& pos1,
 }
 
 void
-Acts::LayerCreator::associateSurfacesToLayer(const Layer& layer) const
+Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const
 {
   auto surfaces = layer.surfaceArray()->arrayObjects();
 
   for (auto& surface : surfaces) {
-    surface->associateLayer(layer);
+    auto mutableSurface = const_cast<Surface*>( surface );
+    mutableSurface->associateLayer(layer);
   }
 }

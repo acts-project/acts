@@ -25,6 +25,7 @@ namespace Acts {
 class Surface;
 class Layer;
 typedef std::shared_ptr<const Layer> LayerPtr;
+typedef std::shared_ptr<Layer>       MutableLayerPtr;
 
 /// @class ILayerCreator
 ///
@@ -52,7 +53,7 @@ public:
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  virtual LayerPtr
+  virtual MutableLayerPtr
   cylinderLayer(const std::vector<const Surface*>&  surfaces,
                 double                              envelopeR,
                 double                              envelopeZ,
@@ -78,7 +79,7 @@ public:
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  virtual LayerPtr
+  virtual MutableLayerPtr
   cylinderLayer(const std::vector<const Surface*>&  surfaces,
                 double                              layerRmin,
                 double                              layerRmax,
@@ -102,7 +103,7 @@ public:
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  virtual LayerPtr
+  virtual MutableLayerPtr
   cylinderLayer(const std::vector<const Surface*>&  surfaces,
                 double                              envelopeR,
                 double                              envelopeZ,
@@ -128,7 +129,7 @@ public:
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  virtual LayerPtr
+  virtual MutableLayerPtr
   discLayer(const std::vector<const Surface*>&  surfaces,
             double                              envelopeMinR,
             double                              envelopeMaxR,
@@ -156,7 +157,7 @@ public:
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  virtual LayerPtr
+  virtual MutableLayerPtr
   discLayer(const std::vector<const Surface*>&  surfaces,
             double                              layerZmin,
             double                              layerZmax,
@@ -182,7 +183,7 @@ public:
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  virtual LayerPtr
+  virtual MutableLayerPtr
   discLayer(const std::vector<const Surface*>&  surfaces,
             double                              envelopeMinR,
             double                              envelopeMaxR,
@@ -208,7 +209,7 @@ public:
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  virtual LayerPtr
+  virtual MutableLayerPtr
   planeLayer(const std::vector<const Surface*>&  surfaces,
              double                              envelopeXY,
              double                              envelopeZ,

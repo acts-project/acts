@@ -48,7 +48,7 @@ public:
   /// @todo ApproachDescriptor to unique_ptr
   ///
   /// @return The return object is a shared poiter to the layer.
-  static LayerPtr
+  static MutableLayerPtr
   create(std::shared_ptr<Transform3D>          transform,
          std::shared_ptr<const CylinderBounds> cbounds,
          std::unique_ptr<SurfaceArray>         surfaceArray = nullptr,
@@ -56,12 +56,12 @@ public:
          std::unique_ptr<ApproachDescriptor>   ad           = nullptr,
          LayerType                             laytyp       = passive)
   {
-    return LayerPtr(new CylinderLayer(transform,
-                                      cbounds,
-                                      std::move(surfaceArray),
-                                      thickness,
-                                      std::move(ad),
-                                      laytyp));
+    return MutableLayerPtr(new CylinderLayer(transform,
+                                             cbounds,
+                                             std::move(surfaceArray),
+                                             thickness,
+                                             std::move(ad),
+                                             laytyp));
   }
 
   /// Factory copy constructor with shift
@@ -70,10 +70,10 @@ public:
   /// @param shift is the additional transform applied after cloning
   ///
   /// @return The return object is a shared poiter to the layer.
-  static LayerPtr
+  static MutableLayerPtr
   create(const CylinderLayer& cla, const Transform3D& shift)
   {
-    return LayerPtr(new CylinderLayer(cla, shift));
+    return MutableLayerPtr(new CylinderLayer(cla, shift));
   }
 
   /// Factory clone constructor with shift
@@ -101,10 +101,15 @@ public:
 
   /// Destructor
   virtual ~CylinderLayer() {}
+  
   /// Transforms the layer into a Surface representation
   /// This is for positioning and extrapolation
   const CylinderSurface&
   surfaceRepresentation() const override;
+  
+  // Non-const version
+  CylinderSurface&
+  surfaceRepresentation() override;
 
 private:
   /// build approach surfaces */

@@ -169,6 +169,12 @@ Acts::Layer::approachDescriptor() const
   return m_approachDescriptor.get();
 }
 
+Acts::ApproachDescriptor*
+Acts::Layer::approachDescriptor()
+{
+  return const_cast<ApproachDescriptor*>( m_approachDescriptor.get() );
+}
+
 void
 Acts::Layer::closeGeometry(const GeometryID& layerID) const
 {
@@ -207,4 +213,10 @@ const Acts::Surface*
 Acts::Layer::materialSurface() const
 {
   return m_materialSurface;
+}
+
+Acts::Surface*
+Acts::Layer::materialSurface()
+{
+  return const_cast<Acts::Surface*>( m_materialSurface );
 }

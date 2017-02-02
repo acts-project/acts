@@ -47,7 +47,7 @@ public:
   /// @todo move ApproachDescriptor to unqique_ptr
   ///
   /// @return a sharted pointer to the new layer
-  static LayerPtr
+  static MutableLayerPtr
   create(std::shared_ptr<Transform3D>        transform,
          std::shared_ptr<const DiscBounds>   dbounds,
          std::unique_ptr<SurfaceArray>       surfaceArray = nullptr,
@@ -55,12 +55,12 @@ public:
          std::unique_ptr<ApproachDescriptor> ad           = nullptr,
          LayerType                           laytyp       = Acts::passive)
   {
-    return LayerPtr(new DiscLayer(transform,
-                                  dbounds,
-                                  std::move(surfaceArray),
-                                  thickness,
-                                  std::move(ad),
-                                  laytyp));
+    return MutableLayerPtr(new DiscLayer(transform,
+                                         dbounds,
+                                         std::move(surfaceArray),
+                                         thickness,
+                                         std::move(ad),
+                                         laytyp));
   }
 
   /// Factory constructor as copy with shift
@@ -69,10 +69,10 @@ public:
   /// @param shift is the additional transform to be applied after copying
   ///
   /// @return a sharted pointer to the new layer
-  static LayerPtr
+  static MutableLayerPtr
   create(const DiscLayer& dla, const Transform3D& shift)
   {
-    return LayerPtr(new DiscLayer(dla, shift));
+    return MutableLayerPtr(new DiscLayer(dla, shift));
   }
 
   /// Clone with a shift - only cloning that is allowed
@@ -99,10 +99,15 @@ public:
 
   /// Destructor
   virtual ~DiscLayer() {}
+  
   /// Transforms the layer into a Surface representation for extrapolation
   /// @return This method returns a surface reference
   const DiscSurface&
   surfaceRepresentation() const override;
+  
+  // Non-const version
+  DiscSurface&
+  surfaceRepresentation() override;
 
 private:
   /// build approach surfaces

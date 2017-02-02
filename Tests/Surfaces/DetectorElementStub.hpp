@@ -61,7 +61,8 @@ public:
     , m_elementDiscBounds(nullptr)
     , m_elementLineBounds(nullptr)
   {
-    m_elementSurface->setAssociatedMaterial(material);
+    auto mutableSurface = std::const_pointer_cast<Surface>( m_elementSurface );
+    mutableSurface->setAssociatedMaterial(material);
   }
 
   /// Constructor for single sided detector element
@@ -87,7 +88,8 @@ public:
     , m_elementDiscBounds(nullptr)
     , m_elementLineBounds(std::move(lBounds))
   {
-    m_elementSurface->setAssociatedMaterial(material);
+    auto mutableSurface = std::const_pointer_cast<Surface>( m_elementSurface );
+    mutableSurface->setAssociatedMaterial(material);
   }
 
   void

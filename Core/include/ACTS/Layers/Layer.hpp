@@ -41,6 +41,7 @@ typedef ObjectIntersection<Surface> SurfaceIntersection;
 // master typedef
 class Layer;
 typedef std::shared_ptr<const Layer> LayerPtr;
+typedef std::shared_ptr<Layer>       MutableLayerPtr;
 typedef std::pair<const Layer*, const Layer*> NextLayers;
 
 ///
@@ -121,6 +122,10 @@ public:
   /// one to which one can extrapolate
   virtual const Surface&
   surfaceRepresentation() const = 0;
+  
+  // Non-const version
+  virtual Surface&
+  surfaceRepresentation() = 0;
 
   /// Return the Thickness of the Layer
   /// this is by definition along the normal vector of the surfaceRepresentation
@@ -150,6 +155,10 @@ public:
   /// Return method for the approach descriptor, can be nullptr
   const ApproachDescriptor*
   approachDescriptor() const;
+  
+  /// Non-const version
+  ApproachDescriptor*
+  approachDescriptor();
 
   ///  Surface seen on approach
   /// for surcfaces without sub structure, this is the surfaceRepresentation
@@ -280,6 +289,10 @@ public:
   /// @todo remove this concept
   const Surface*
   materialSurface() const;
+  
+  // Non-const version
+  Surface*
+  materialSurface();
 
   /// Boolean check method if layer has sensitive surfaces
   /// @note checks if a surfaceArray is present

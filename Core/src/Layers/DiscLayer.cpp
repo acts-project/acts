@@ -72,6 +72,12 @@ Acts::DiscLayer::surfaceRepresentation() const
   return (*this);
 }
 
+Acts::DiscSurface&
+Acts::DiscLayer::surfaceRepresentation()
+{
+  return (*this);
+}
+
 void
 Acts::DiscLayer::buildApproachDescriptor()
 {
@@ -110,7 +116,10 @@ Acts::DiscLayer::buildApproachDescriptor()
     m_approachDescriptor
         = std::make_unique<GenericApproachDescriptor<const Surface>>(aSurfaces);
   }
-  for (auto& sIter : (m_approachDescriptor->containedSurfaces())) {
-    sIter->associateLayer(*this);
+  for (auto& sfPtr : (m_approachDescriptor->containedSurfaces())) {
+    if (sfPtr) {
+      auto & mutableSf = *( const_cast<Surface*>( sfPtr ) );
+      mutableSf.associateLayer(*this);
+    }
   }
 }
