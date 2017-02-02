@@ -116,15 +116,12 @@ private:
   /// logging instance
   std::unique_ptr<Logger> m_logger;
 
-  bool
-  constructLayers() const;
+  void constructLayers();
 
-  mutable LayerVector m_nLayers;  ///< layers on negative side
-  mutable LayerVector m_cLayers;  ///< layers on central side
-  mutable LayerVector m_pLayers;  ///< layers on positive side
+  LayerVector m_nLayers;  ///< layers on negative side
+  LayerVector m_cLayers;  ///< layers on central side
+  LayerVector m_pLayers;  ///< layers on positive side
 
-  mutable bool m_constructionFlag;  ///< indicator if the layer construction has
-                                    /// been done already
 };
 
 inline PassiveLayerBuilder::Config
@@ -136,21 +133,18 @@ PassiveLayerBuilder::getConfiguration() const
 inline const LayerVector
 PassiveLayerBuilder::positiveLayers() const
 {
-  if (not m_constructionFlag) constructLayers();
   return m_pLayers;
 }
 
 inline const LayerVector
 PassiveLayerBuilder::negativeLayers() const
 {
-  if (not m_constructionFlag) constructLayers();
   return m_nLayers;
 }
 
 inline const LayerVector
 PassiveLayerBuilder::centralLayers() const
 {
-  if (not m_constructionFlag) constructLayers();
   return m_cLayers;
 }
 

@@ -27,7 +27,6 @@ Acts::PassiveLayerBuilder::PassiveLayerBuilder(
   , m_nLayers()
   , m_cLayers()
   , m_pLayers()
-  , m_constructionFlag(false)
 {
   setConfiguration(plConfig);
 }
@@ -38,6 +37,7 @@ Acts::PassiveLayerBuilder::setConfiguration(
 {
   //!< @todo add configuration check
   m_cfg = plConfig;
+  constructLayers();
 }
 
 void
@@ -46,9 +46,13 @@ Acts::PassiveLayerBuilder::setLogger(std::unique_ptr<Logger> newLogger)
   m_logger = std::move(newLogger);
 }
 
-bool
-Acts::PassiveLayerBuilder::constructLayers() const
+void Acts::PassiveLayerBuilder::constructLayers()
 {
+  // DEBUG: Flush layers in case the class was already initialized before
+  m_nLayers.clear();
+  m_cLayers.clear();
+  m_pLayers.clear();
+  
   // the central layers
   size_t numcLayers = m_cfg.centralLayerRadii.size();
   if (numcLayers) {
@@ -144,7 +148,4 @@ Acts::PassiveLayerBuilder::constructLayers() const
       m_pLayers.push_back(pLayer);
     }
   }
-
-  m_constructionFlag = true;
-  return true;
 }
