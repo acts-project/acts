@@ -135,7 +135,7 @@ Acts::TrackingGeometry::associatedLayer(const Acts::Vector3D& gp) const
 
 void
 Acts::TrackingGeometry::registerBeamTube(
-    std::unique_ptr<const PerigeeSurface> beam) const
+    std::unique_ptr<const PerigeeSurface> beam)
 {
   m_beam = std::move(beam);
 }
