@@ -176,7 +176,7 @@ Acts::Layer::approachDescriptor()
 }
 
 void
-Acts::Layer::closeGeometry(const GeometryID& layerID) const
+Acts::Layer::closeGeometry(const GeometryID& layerID)
 {
   // set the volumeID of this
   assignGeoID(layerID);
@@ -187,7 +187,8 @@ Acts::Layer::closeGeometry(const GeometryID& layerID) const
     for (auto& aSurface : m_approachDescriptor->containedSurfaces()) {
       GeometryID asurfaceID = layerID;
       asurfaceID.add(++iasurface, GeometryID::approach_mask);
-      aSurface->assignGeoID(asurfaceID);
+      auto mutableASurface = const_cast<Surface*>( aSurface );
+      mutableASurface->assignGeoID(asurfaceID);
     }
   }
   // check if you have sensitive surfaces
@@ -197,7 +198,8 @@ Acts::Layer::closeGeometry(const GeometryID& layerID) const
     for (auto& sSurface : m_surfaceArray->arrayObjects()) {
       GeometryID ssurfaceID = layerID;
       ssurfaceID.add(++issurface, GeometryID::sensitive_mask);
-      sSurface->assignGeoID(ssurfaceID);
+      auto mutableSSurface = const_cast<Surface*>( sSurface );
+      mutableSSurface->assignGeoID(ssurfaceID);
     }
   }
 }

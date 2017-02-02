@@ -452,7 +452,7 @@ Acts::TrackingVolume::interlinkLayers()
 void
 Acts::TrackingVolume::closeGeometry(
     GeometryID& volumeID,
-    std::map<std::string, const TrackingVolume*>& volumeMap) const
+    std::map<std::string, const TrackingVolume*>& volumeMap)
 {
   // insert the volume into the map
   volumeMap[volumeName()] = this;
@@ -471,7 +471,8 @@ Acts::TrackingVolume::closeGeometry(
       GeometryID boundaryID = volumeID;
       boundaryID.add(++iboundary, GeometryID::boundary_mask);
       // now assign to the boundary surface
-      bSurface.assignGeoID(boundaryID);
+      auto & mutableBSurface = *( const_cast<Surface*>(&bSurface) );
+      mutableBSurface.assignGeoID(boundaryID);
     }
 
     // loop over the confined layers
@@ -483,7 +484,8 @@ Acts::TrackingVolume::closeGeometry(
         GeometryID layerID = volumeID;
         layerID.add(++ilayer, GeometryID::layer_mask);
         // now close the geometry
-        layerPtr->closeGeometry(layerID);
+        auto mutableLayerPtr = std::const_pointer_cast<Layer>( layerPtr );
+        mutableLayerPtr->closeGeometry(layerID);
       }
     }
   } else {
@@ -498,7 +500,8 @@ Acts::TrackingVolume::closeGeometry(
         /// we count the volume ID up
         currentID.add(++ivolume, GeometryID::volume_mask);
       }
-      volumesIter->closeGeometry(currentID, volumeMap);
+      auto mutableVolumesIter = std::const_pointer_cast<TrackingVolume>( volumesIter );
+      mutableVolumesIter->closeGeometry(currentID, volumeMap);
     }
   }
 

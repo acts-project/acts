@@ -477,7 +477,7 @@ private:
   /// @param layerID is the geometry id of the volume
   ///                as calculated by the TrackingGeometry
   void
-  closeGeometry(const GeometryID& layerID) const;
+  closeGeometry(const GeometryID& layerID);
 };
 
 inline const SurfaceArray*

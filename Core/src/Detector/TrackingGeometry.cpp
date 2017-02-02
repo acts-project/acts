@@ -17,14 +17,14 @@
 #include "ACTS/Surfaces/PerigeeSurface.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 
-Acts::TrackingGeometry::TrackingGeometry(TrackingVolumePtr highestVolume)
+Acts::TrackingGeometry::TrackingGeometry(MutableTrackingVolumePtr highestVolume)
   : m_world(highestVolume)
   , m_beam(std::make_unique<const PerigeeSurface>(s_origin))
 {
   // create the GeometryID for this
   GeometryID geoID(0);
   // close up the geometry
-  if (m_world) m_world->closeGeometry(geoID, m_trackingVolumes);
+  if (highestVolume) highestVolume->closeGeometry(geoID, m_trackingVolumes);
 }
 
 Acts::TrackingGeometry::~TrackingGeometry()

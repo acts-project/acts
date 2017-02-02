@@ -278,7 +278,7 @@ public:
   ///
   /// @param insideVolume is an (optional) volume to be wrapped
   /// @param outsideBounds is an (optional) outside confinement
-  TrackingVolumePtr
+  MutableTrackingVolumePtr
   trackingVolume(TrackingVolumePtr insideVolume  = nullptr,
                  VolumeBoundsPtr   outsideBounds = nullptr) const override;
 

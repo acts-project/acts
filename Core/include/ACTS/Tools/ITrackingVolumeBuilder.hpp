@@ -24,6 +24,7 @@ class TrackingVolume;
 class Layer;
 class Volume;
 typedef std::shared_ptr<const TrackingVolume> TrackingVolumePtr;
+typedef std::shared_ptr<TrackingVolume>       MutableTrackingVolumePtr;
 typedef std::shared_ptr<const VolumeBounds>   VolumeBoundsPtr;
 typedef std::shared_ptr<const Layer>          LayerPtr;
 typedef std::vector<LayerPtr>                 LayerVector;
@@ -51,7 +52,7 @@ public:
   /// @param outsideBounds is an (optional) outside confinement
   ///
   /// @return shared pointer to a newly created TrackingVolume
-  virtual TrackingVolumePtr
+  virtual MutableTrackingVolumePtr
   trackingVolume(TrackingVolumePtr insideVolume  = nullptr,
                  VolumeBoundsPtr   outsideBounds = nullptr) const = 0;
 };

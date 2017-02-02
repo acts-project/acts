@@ -29,6 +29,7 @@ class PerigeeSurface;
 class Layer;
 
 typedef std::shared_ptr<const TrackingVolume>         TrackingVolumePtr;
+typedef std::shared_ptr<TrackingVolume>               MutableTrackingVolumePtr;
 typedef std::shared_ptr<const DetachedTrackingVolume> DetachedTrackingVolumePtr;
 typedef std::vector<DetachedTrackingVolumePtr>        DetachedVolumeVector;
 
@@ -50,7 +51,7 @@ public:
   /// Constructor
   ///
   /// @param highestVolume is the world volume
-  TrackingGeometry(TrackingVolumePtr highestVolume);
+  TrackingGeometry(MutableTrackingVolumePtr highestVolume);
 
   /// Destructor
   ~TrackingGeometry();

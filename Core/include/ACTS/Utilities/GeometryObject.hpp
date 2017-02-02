@@ -69,22 +69,14 @@ public:
   double
   binningPositionValue(BinningValue bValue) const;
 
-  /// Set the value - assigns a mutable object
+  /// Set the value
   ///
   /// @param geoID the geometry identifier to be assigned
-  /// @note changes a mutable member
   void
-  assignGeoID(const GeometryID& geoID) const;
-
-  /// set the value - assigns a mutable object
-  ///
-  /// @param geoID the geometry identifier to be added
-  /// @note changes a mutable member
-  void
-  aadGeoID(const GeometryID& geoID) const;
+  assignGeoID(const GeometryID& geoID);
 
 protected:
-  mutable GeometryID m_geoID;
+  GeometryID m_geoID;
 };
 
 inline const GeometryID&
@@ -94,7 +86,7 @@ GeometryObject::geoID() const
 }
 
 inline void
-GeometryObject::assignGeoID(const GeometryID& geoID) const
+GeometryObject::assignGeoID(const GeometryID& geoID)
 {
   m_geoID = geoID;
 }
