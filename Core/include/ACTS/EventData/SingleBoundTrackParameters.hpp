@@ -174,7 +174,7 @@ public:
   }
 
   virtual const Surface&
-  referenceSurface() const final
+  referenceSurface() const final override
   {
     return *m_pSurface;
   }
