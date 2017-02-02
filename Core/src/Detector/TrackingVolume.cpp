@@ -231,7 +231,7 @@ Acts::TrackingVolume::addMaterial(std::shared_ptr<const Material> mprop,
 
 void
 Acts::TrackingVolume::sign(GeometrySignature geosign,
-                           GeometryType      geotype) const
+                           GeometryType      geotype)
 {
   // never overwrite what is already signed, that's a crime
   if (m_geometrySignature == Unsigned) m_geometrySignature = geosign;
@@ -239,18 +239,24 @@ Acts::TrackingVolume::sign(GeometrySignature geosign,
 
   // confined static volumes
   if (m_confinedVolumes)
-    for (auto& volumesIter : (m_confinedVolumes->arrayObjects()))
-      volumesIter->sign(geosign, geotype);
+    for (auto& volumesIter : (m_confinedVolumes->arrayObjects())) {
+      auto mutableVolumesIter = std::const_pointer_cast<TrackingVolume>( volumesIter );
+      mutableVolumesIter->sign(geosign, geotype);
+    }
 
   // same procedure for the detached volumes
   if (!m_confinedDetachedVolumes.empty())
-    for (auto& volumesIter : m_confinedDetachedVolumes)
-      volumesIter->sign(geosign, geotype);
+    for (auto& volumesIter : m_confinedDetachedVolumes) {
+      auto mutableVolumesIter = std::const_pointer_cast<DetachedTrackingVolume>( volumesIter );
+      mutableVolumesIter->sign(geosign, geotype);
+    }
 
   // finally for confined dense volumes
   if (!m_confinedDenseVolumes.empty())
-    for (auto& volumesIter : m_confinedDenseVolumes)
-      volumesIter->sign(geosign, geotype);
+    for (auto& volumesIter : m_confinedDenseVolumes) {
+      auto mutableVolumesIter = std::const_pointer_cast<TrackingVolume>( volumesIter );
+      mutableVolumesIter->sign(geosign, geotype);
+    }
 }
 
 const std::
@@ -289,9 +295,9 @@ Acts::TrackingVolume::createBoundarySurfaces()
 
 void
 Acts::TrackingVolume::glueTrackingVolume(
-    BoundarySurfaceFace                   bsfMine,
-    std::shared_ptr<const TrackingVolume> neighbor,
-    BoundarySurfaceFace                   bsfNeighbor) const
+    BoundarySurfaceFace             bsfMine,
+    std::shared_ptr<TrackingVolume> neighbor,
+    BoundarySurfaceFace             bsfNeighbor) const
 {
   // find the connection of the two tracking volumes : binR returns the center
   // except for cylindrical volumes
@@ -319,9 +325,9 @@ Acts::TrackingVolume::glueTrackingVolume(
 
 void
 Acts::TrackingVolume::glueTrackingVolumes(
-    BoundarySurfaceFace                        bsfMine,
-    std::shared_ptr<const TrackingVolumeArray> neighbors,
-    BoundarySurfaceFace                        bsfNeighbor) const
+    BoundarySurfaceFace                  bsfMine,
+    std::shared_ptr<TrackingVolumeArray> neighbors,
+    BoundarySurfaceFace                  bsfNeighbor) const
 {
   // find the connection of the two tracking volumes : binR returns the center
   // except for cylindrical volumes
@@ -346,15 +352,17 @@ Acts::TrackingVolume::glueTrackingVolumes(
     // the boundary orientation
     bSurfaceMine->attachVolumeArray(neighbors, bOrientation);
     // now set it to the neighbor volumes - the optised way
-    for (auto& nVolume : neighbors->arrayObjects())
-      (nVolume->m_boundarySurfaces).at(bsfNeighbor) = bSurfaceMine;
+    for (auto& nVolume : neighbors->arrayObjects()) {
+      auto mutableNVolume = std::const_pointer_cast<TrackingVolume>( nVolume );
+      (mutableNVolume->m_boundarySurfaces).at(bsfNeighbor) = bSurfaceMine;
+    }
   }
 }
 
 void
 Acts::TrackingVolume::updateBoundarySurface(
     BoundarySurfaceFace                                     bsf,
-    std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs) const
+    std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs)
 {
   m_boundarySurfaces.at(bsf) = bs;
 }

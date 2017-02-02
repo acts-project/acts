@@ -103,7 +103,7 @@ public:
   /// @param signat is the volume signature
   /// @param geotype is the volume navigation type
   void
-  sign(GeometrySignature signat, GeometryType geotype) const;
+  sign(GeometrySignature signat, GeometryType geotype);
 
   /// Return the Signature
   /// @return geometry signature

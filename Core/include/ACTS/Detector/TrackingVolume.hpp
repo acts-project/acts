@@ -115,7 +115,7 @@ public:
   /// @param volumeName is a string identifier
   ///
   /// @return shared pointer to a new TrackingVolume
-  static TrackingVolumePtr
+  static MutableTrackingVolumePtr
   create(std::shared_ptr<Transform3D>      htrans,
          VolumeBoundsPtr                   volumeBounds,
          std::shared_ptr<Material>         matprop,
@@ -125,15 +125,15 @@ public:
          const DetachedVolumeVector        dVolumeVector = {},
          const std::string&                volumeName    = "undefined")
   {
-    return TrackingVolumePtr(new TrackingVolume(htrans,
-                                                volumeBounds,
-                                                matprop,
-                                                std::move(cLayerArray),
-                                                cLayerVector,
-                                                nullptr,
-                                                cVolumeVector,
-                                                dVolumeVector,
-                                                volumeName));
+    return MutableTrackingVolumePtr(new TrackingVolume(htrans,
+                                                       volumeBounds,
+                                                       matprop,
+                                                       std::move(cLayerArray),
+                                                       cLayerVector,
+                                                       nullptr,
+                                                       cVolumeVector,
+                                                       dVolumeVector,
+                                                       volumeName));
   }
   /// Factory constructor with a shift
   ///
@@ -276,9 +276,9 @@ public:
   /// @param neighbor is the TrackingVolume to be glued
   /// @param bsfNeighbor is the boudnary surface of the neighbor
   void
-  glueTrackingVolume(BoundarySurfaceFace bsfMine,
-                     TrackingVolumePtr   neighbor,
-                     BoundarySurfaceFace bsfNeighbor) const;
+  glueTrackingVolume(BoundarySurfaceFace      bsfMine,
+                     MutableTrackingVolumePtr neighbor,
+                     BoundarySurfaceFace      bsfNeighbor) const;
 
   /// Glue another tracking volume to this one
   ///  - if common face is set the glued volumes are sharing the boundary, down
@@ -289,8 +289,8 @@ public:
   /// @param neighbors are the TrackingVolumes to be glued
   /// @param bsfNeighbors are the boudnary surface of the neighbors
   void
-  glueTrackingVolumes(BoundarySurfaceFace                        bsfMine,
-                      std::shared_ptr<const TrackingVolumeArray> neighbors,
+  glueTrackingVolumes(BoundarySurfaceFace                  bsfMine,
+                      std::shared_ptr<TrackingVolumeArray> neighbors,
                       BoundarySurfaceFace bsfNeighbors) const;
 
   /// Provide a new BoundarySurface from the glueing
@@ -301,7 +301,7 @@ public:
   void
   updateBoundarySurface(
       BoundarySurfaceFace                                     bsfMine,
-      std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bsSurface) const;
+      std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bsSurface);
 
   /// Register the outside glue volumes -
   /// ordering is in the TrackingVolume Frame:
@@ -327,7 +327,7 @@ public:
   /// @param signat is the volume signature
   /// @param geotype is the volume navigation type
   void
-  sign(GeometrySignature signat, GeometryType geotype = Static) const;
+  sign(GeometrySignature signat, GeometryType geotype = Static);
 
   /// return the Signature
   GeometrySignature
@@ -341,7 +341,7 @@ public:
   ///
   /// @param icolor is a color number
   void
-  registerColorCode(unsigned int icolor) const;
+  registerColorCode(unsigned int icolor);
 
   /// Get the color code
   unsigned int
@@ -351,11 +351,11 @@ public:
   const TrackingVolume*
   motherVolume() const;
 
-  /// Return the MotherVolume - if it exists
+  /// Set the MotherVolume
   ///
   /// @param mvol is the mother volume
   void
-  setMotherVolume(const TrackingVolume* mvol) const;
+  setMotherVolume(const TrackingVolume* mvol);
 
   /// Add Material
   ///
@@ -453,17 +453,17 @@ private:
   std::shared_ptr<Material> m_material;
 
   /// Remember the mother volume
-  mutable const TrackingVolume* m_motherVolume;
+  const TrackingVolume* m_motherVolume;
 
   // the boundary surfaces
-  mutable std::vector<TrackingVolumeBoundaryPtr> m_boundarySurfaces;
+  std::vector<TrackingVolumeBoundaryPtr> m_boundarySurfaces;
 
   ///(a) static configuration ordered by Binned arrays
   /// static layers
-  mutable std::unique_ptr<const LayerArray> m_confinedLayers;
+  std::unique_ptr<const LayerArray> m_confinedLayers;
 
   /// Array of Volumes inside the Volume
-  mutable std::shared_ptr<const TrackingVolumeArray> m_confinedVolumes;
+  std::shared_ptr<const TrackingVolumeArray> m_confinedVolumes;
 
   /// (b)  non-static setups
   /// detacathd
@@ -477,16 +477,16 @@ private:
   GlueVolumesDescriptor* m_glueVolumeDescriptor;
 
   /// The Signature done by the GeometryBuilder
-  mutable GeometrySignature m_geometrySignature;
+  GeometrySignature m_geometrySignature;
 
   /// The gometry type for the navigation schema
-  mutable GeometryType m_geometryType;
+  GeometryType m_geometryType;
 
   //// Volume name for debug reasons & screen output
   std::string m_name;
 
   /// color code for displaying
-  mutable unsigned int m_colorCode;
+  unsigned int m_colorCode;
 };
 
 inline const std::string&
@@ -699,7 +699,7 @@ TrackingVolume::geometryType() const
 }
 
 inline void
-TrackingVolume::registerColorCode(unsigned int icolor) const
+TrackingVolume::registerColorCode(unsigned int icolor)
 {
   m_colorCode = icolor;
 }
@@ -717,7 +717,7 @@ TrackingVolume::motherVolume() const
 }
 
 inline void
-TrackingVolume::setMotherVolume(const TrackingVolume* mvol) const
+TrackingVolume::setMotherVolume(const TrackingVolume* mvol)
 {
   m_motherVolume = mvol;
 }

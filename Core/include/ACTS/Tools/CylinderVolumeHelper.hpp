@@ -89,13 +89,13 @@ public:
   /// @param btype (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
-  TrackingVolumePtr
+  MutableTrackingVolumePtr
   createTrackingVolume(const LayerVector&           layers,
                        std::shared_ptr<Material>    matprop,
                        VolumeBoundsPtr              volBounds,
                        std::shared_ptr<Transform3D> transform = nullptr,
                        const std::string& volumeName = "UndefinedVolume",
-                       BinningType        btype      = arbitrary) const;
+                       BinningType        btype      = arbitrary) const override;
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
@@ -109,7 +109,7 @@ public:
   /// @param btype (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
-  TrackingVolumePtr
+  MutableTrackingVolumePtr
   createTrackingVolume(const LayerVector&        layers,
                        std::shared_ptr<Material> matprop,
                        double                    loc0Min,
@@ -117,7 +117,7 @@ public:
                        double                    loc1Min,
                        double                    loc1Max,
                        const std::string&        volumeName = "UndefinedVolume",
-                       BinningType               btype      = arbitrary) const;
+                       BinningType               btype      = arbitrary) const override;
 
   /// Create a gap volume from dimensions and
   ///
@@ -129,7 +129,7 @@ public:
   /// @param volumeName  volume name to be given
   ///
   /// @return shared pointer to a new TrackingVolume
-  TrackingVolumePtr
+  MutableTrackingVolumePtr
   createGapTrackingVolume(std::shared_ptr<Material> matprop,
                           double                    loc0Min,
                           double                    loc0Max,
@@ -138,7 +138,7 @@ public:
                           unsigned int              materialLayers,
                           bool                      cylinder = true,
                           const std::string&        volumeName
-                          = "UndefinedVolume") const;
+                          = "UndefinedVolume") const override;
 
   /// Create a gap volume from dimensions and
   ///
@@ -150,7 +150,7 @@ public:
   /// @param btype (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
-  TrackingVolumePtr
+  MutableTrackingVolumePtr
   createGapTrackingVolume(std::shared_ptr<Material>  matprop,
                           double                     loc0Min,
                           double                     loc0Max,
@@ -159,7 +159,7 @@ public:
                           const std::vector<double>& layerPositions,
                           bool                       cylinder = true,
                           const std::string& volumeName = "UndefinedVolume",
-                          BinningType        btype      = arbitrary) const;
+                          BinningType        btype      = arbitrary) const override;
 
   /// Create a container volumes from sub volumes, input volumes are ordered in
   /// R or Z by convention
@@ -168,8 +168,8 @@ public:
   ///
   ///
   /// @return shared pointer to a new TrackingVolume
-  TrackingVolumePtr
-  createContainerTrackingVolume(const TrackingVolumeVector& volumes) const;
+  MutableTrackingVolumePtr
+  createContainerTrackingVolume(const TrackingVolumeVector& volumes) const override;
 
   /// Set configuration method
   ///

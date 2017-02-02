@@ -112,9 +112,10 @@ Acts::TrackingGeometry::highestTrackingVolume() const
 
 void
 Acts::TrackingGeometry::sign(GeometrySignature geosit,
-                             GeometryType      geotype) const
+                             GeometryType      geotype)
 {
-  m_world->sign(geosit, geotype);
+  auto mutableWorld = std::const_pointer_cast<TrackingVolume>( m_world );
+  mutableWorld->sign(geosit, geotype);
 }
 
 const Acts::TrackingVolume*

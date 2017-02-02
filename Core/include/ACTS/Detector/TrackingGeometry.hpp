@@ -155,7 +155,7 @@ private:
   /// @param signat is the volume signature
   /// @param geotype is the volume navigation type
   void
-  sign(GeometrySignature signat, GeometryType geotype = Static) const;
+  sign(GeometrySignature signat, GeometryType geotype = Static);
 
   /// The known world - and the beamline
   TrackingVolumePtr                     m_world;

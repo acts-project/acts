@@ -30,6 +30,7 @@ class Material;
 
 typedef std::shared_ptr<const Layer>          LayerPtr;
 typedef std::shared_ptr<const TrackingVolume> TrackingVolumePtr;
+typedef std::shared_ptr<TrackingVolume>       MutableTrackingVolumePtr;
 typedef std::shared_ptr<const VolumeBounds>   VolumeBoundsPtr;
 
 typedef std::vector<LayerPtr>          LayerVector;
@@ -65,7 +66,7 @@ public:
   /// @param btype (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
-  virtual TrackingVolumePtr
+  virtual MutableTrackingVolumePtr
   createTrackingVolume(const LayerVector&           layers,
                        std::shared_ptr<Material>    matprop,
                        VolumeBoundsPtr              volBounds,
@@ -85,7 +86,7 @@ public:
   /// @param btype (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
-  virtual TrackingVolumePtr
+  virtual MutableTrackingVolumePtr
   createTrackingVolume(const LayerVector&        layers,
                        std::shared_ptr<Material> matprop,
                        double                    loc0Min,
@@ -105,7 +106,7 @@ public:
   /// @param volumeName  volume name to be given
   ///
   /// @return shared pointer to a new TrackingVolume
-  virtual TrackingVolumePtr
+  virtual MutableTrackingVolumePtr
   createGapTrackingVolume(std::shared_ptr<Material> matprop,
                           double                    loc0Min,
                           double                    loc0Max,
@@ -126,7 +127,7 @@ public:
   /// @param btype (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
-  virtual TrackingVolumePtr
+  virtual MutableTrackingVolumePtr
   createGapTrackingVolume(std::shared_ptr<Material>  matprop,
                           double                     loc0Min,
                           double                     loc0Max,
@@ -142,7 +143,7 @@ public:
   /// @param volumes the volumes to be contained
   ///
   /// @return shared pointer to a new TrackingVolume
-  virtual TrackingVolumePtr
+  virtual MutableTrackingVolumePtr
   createContainerTrackingVolume(const TrackingVolumeVector& volumes) const = 0;
 };
 
