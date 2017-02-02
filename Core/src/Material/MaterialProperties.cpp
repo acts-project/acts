@@ -92,7 +92,7 @@ Acts::MaterialProperties::operator*=(float scale)
 
 void
 Acts::MaterialProperties::addMaterial(const Acts::Material& mat,
-                                      float                 dInX0) const
+                                      float                 dInX0)
 {
   // averaging factors based on thickness
   float fnew = dInX0 * mat.X0 / (m_dInX0 * m_material.X0 + dInX0 * mat.X0);
@@ -120,7 +120,7 @@ Acts::MaterialProperties::addMaterial(const Acts::Material& mat,
 void
 Acts::MaterialProperties::setMaterial(const Acts::Material& mat,
                                       float                 thickness,
-                                      size_t                entries) const
+                                      size_t                entries)
 {
   // just overwrite what you have
   m_material                   = mat;
@@ -134,7 +134,7 @@ Acts::MaterialProperties::setMaterial(const Acts::Material& mat,
 }
 
 void
-Acts::MaterialProperties::setDeDx(float dEdX) const
+Acts::MaterialProperties::setDeDx(float dEdX)
 {
   // set the DE/DX value
   m_material.dEdX = dEdX;
