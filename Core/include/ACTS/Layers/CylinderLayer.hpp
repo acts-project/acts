@@ -109,7 +109,7 @@ public:
 private:
   /// build approach surfaces */
   void
-  buildApproachDescriptor() const;
+  buildApproachDescriptor();
 
 protected:
   /// Private constructor for CylinderLayer, called by create(args*) factory

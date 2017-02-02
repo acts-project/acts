@@ -313,7 +313,7 @@ public:
   ///
   /// @param avol is the provided volume
   void
-  registerRepresentingVolume(const AbstractVolume* avol) const;
+  registerRepresentingVolume(const AbstractVolume* avol);
 
   ///  return the abstract volume that represents the layer
   ///
@@ -425,38 +425,33 @@ protected:
   ///
   /// @param tvol is the tracking volume the layer is confined
   void
-  encloseTrackingVolume(const TrackingVolume& tvol) const;
+  encloseTrackingVolume(const TrackingVolume& tvol);
 
   ///  private method to set the enclosed detached TV,
   /// called by friend class only
   ///
   /// @param dtvol is the detached tracking volume the layer is confined
   void
-  encloseDetachedTrackingVolume(const DetachedTrackingVolume& dtvol) const;
+  encloseDetachedTrackingVolume(const DetachedTrackingVolume& dtvol);
 
   /// the previous Layer according to BinGenUtils
-  mutable NextLayers m_nextLayers;
+  NextLayers m_nextLayers;
   /// A binutility to find the next layer
-  mutable const BinUtility*
-      m_nextLayerUtility;  // @TODO check if next layer utility is needed
+  const BinUtility* m_nextLayerUtility;  // @TODO check if this is needed
 
   /// SurfaceArray on this layer Surface
   std::unique_ptr<SurfaceArray> m_surfaceArray;
   /// thickness of the Layer
   double m_layerThickness;
   /// descriptor for surface on approach
-  /// @note this is a mutable member, since resize may trigger recreation
-  mutable std::unique_ptr<ApproachDescriptor> m_approachDescriptor;
+  std::unique_ptr<ApproachDescriptor> m_approachDescriptor;
   /// the enclosing TrackingVolume
-  /// @note this is a mutable member since it's set after the layer creation
-  mutable const TrackingVolume* m_enclosingTrackingVolume;
+  const TrackingVolume* m_enclosingTrackingVolume;
   /// the eventual enclosing detached Tracking volume
-  /// @note this is a mutable member since it is set after layer creation
-  mutable const DetachedTrackingVolume* m_enclosingDetachedTrackingVolume;
+  const DetachedTrackingVolume* m_enclosingDetachedTrackingVolume;
   /// Representing Volume
   /// can be used as appraoch suraces
-  /// @note this is a mutable member since it is can be recreated
-  mutable const AbstractVolume* m_representingVolume;
+  const AbstractVolume* m_representingVolume;
   /// make a passive/active divisio
   LayerType m_layerType;
   /// pointer to the approach surface carrying the material
@@ -497,7 +492,7 @@ Layer::enclosingTrackingVolume() const
 }
 
 inline void
-Layer::encloseTrackingVolume(const TrackingVolume& tvol) const
+Layer::encloseTrackingVolume(const TrackingVolume& tvol)
 {
   m_enclosingTrackingVolume = &(tvol);
 }
@@ -509,7 +504,7 @@ Layer::enclosingDetachedTrackingVolume() const
 }
 
 inline void
-Layer::encloseDetachedTrackingVolume(const DetachedTrackingVolume& tvol) const
+Layer::encloseDetachedTrackingVolume(const DetachedTrackingVolume& tvol)
 {
   m_enclosingDetachedTrackingVolume = &(tvol);
 }
@@ -530,7 +525,7 @@ Layer::nextLayer(const Vector3D& gp, const Vector3D& mom) const
 }
 
 inline void
-Layer::registerRepresentingVolume(const AbstractVolume* theVol) const
+Layer::registerRepresentingVolume(const AbstractVolume* theVol)
 {
   delete m_representingVolume;
   m_representingVolume = theVol;

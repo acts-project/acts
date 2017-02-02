@@ -73,7 +73,7 @@ Acts::DiscLayer::surfaceRepresentation() const
 }
 
 void
-Acts::DiscLayer::buildApproachDescriptor() const
+Acts::DiscLayer::buildApproachDescriptor()
 {
   // delete it
   m_approachDescriptor = nullptr;

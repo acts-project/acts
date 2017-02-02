@@ -427,21 +427,24 @@ Acts::TrackingVolume::interlinkLayers()
     //  first <- | -> second, first <- | -> second, first <- | -> second
     const Layer* lastLayer = nullptr;
     for (auto& layerPtr : layers) {
+      // we'll need to mutate our confined layers to perform this operation
+      Layer & mutableLayer = *( std::const_pointer_cast<Layer>( layerPtr ) );
       // register the layers
-      (*layerPtr).m_nextLayerUtility = m_confinedLayers->binUtility();
-      (*layerPtr).m_nextLayers.first = lastLayer;
+      mutableLayer.m_nextLayerUtility = m_confinedLayers->binUtility();
+      mutableLayer.m_nextLayers.first = lastLayer;
       // register the volume
-      (*layerPtr).encloseTrackingVolume(*this);
+      mutableLayer.encloseTrackingVolume(*this);
       // remember the last layer
-      lastLayer = layerPtr.get();
+      lastLayer = &mutableLayer;
     }
     // backward loop
     lastLayer = nullptr;
     for (auto layerIter = layers.rbegin(); layerIter != layers.rend();
          ++layerIter) {
       // set the other next volume
-      (**layerIter).m_nextLayers.second = lastLayer;
-      lastLayer                         = (*layerIter).get();
+      Layer & mutableLayer = *( std::const_pointer_cast<Layer>( *layerIter ) );
+      mutableLayer.m_nextLayers.second = lastLayer;
+      lastLayer                        = &mutableLayer;
     }
   }
 }

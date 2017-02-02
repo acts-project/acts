@@ -97,7 +97,7 @@ public:
 private:
   /// private helper method to build approach surfaces
   void
-  buildApproachDescriptor() const;
+  buildApproachDescriptor();
 
 protected:
   /// Private constructor for a PlaneLayer is called by create(args*)

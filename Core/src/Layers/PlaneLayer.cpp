@@ -58,7 +58,7 @@ Acts::PlaneLayer::surfaceRepresentation() const
 }
 
 void
-Acts::PlaneLayer::buildApproachDescriptor() const
+Acts::PlaneLayer::buildApproachDescriptor()
 {
   // delete it
   m_approachDescriptor = nullptr;

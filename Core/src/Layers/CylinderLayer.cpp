@@ -70,7 +70,7 @@ Acts::CylinderLayer::surfaceRepresentation() const
 }
 
 void
-Acts::CylinderLayer::buildApproachDescriptor() const
+Acts::CylinderLayer::buildApproachDescriptor()
 {
   // delete it
   m_approachDescriptor = nullptr;

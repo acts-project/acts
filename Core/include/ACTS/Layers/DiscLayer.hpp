@@ -107,7 +107,7 @@ public:
 private:
   /// build approach surfaces
   void
-  buildApproachDescriptor() const;
+  buildApproachDescriptor();
 
 protected:
   // Constructor with DiscSurface components and pointer to SurfaceArray
