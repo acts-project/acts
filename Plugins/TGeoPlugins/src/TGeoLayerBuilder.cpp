@@ -41,29 +41,35 @@ Acts::TGeoLayerBuilder::setLogger(std::unique_ptr<Logger> newLogger)
 const Acts::LayerVector
 Acts::TGeoLayerBuilder::negativeLayers() const
 {
+  // @todo Remove this hack once the m_elementStore mess is sorted out
+  auto mutableThis = const_cast<TGeoLayerBuilder*>( this );
   LayerVector nVector;
-  buildLayers(nVector, -1);
+  mutableThis->buildLayers(nVector, -1);
   return nVector;
 }
 
 const Acts::LayerVector
 Acts::TGeoLayerBuilder::centralLayers() const
 {
+  // @todo Remove this hack once the m_elementStore mess is sorted out
+  auto mutableThis = const_cast<TGeoLayerBuilder*>( this );
   LayerVector cVector;
-  buildLayers(cVector, 0);
+  mutableThis->buildLayers(cVector, 0);
   return cVector;
 }
 
 const Acts::LayerVector
 Acts::TGeoLayerBuilder::positiveLayers() const
 {
+  // @todo Remove this hack once the m_elementStore mess is sorted out
+  auto mutableThis = const_cast<TGeoLayerBuilder*>( this );
   LayerVector pVector;
-  buildLayers(pVector, -1);
+  mutableThis->buildLayers(pVector, -1);
   return pVector;
 }
 
 void
-Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type) const
+Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type)
 {
   // bail out if you have no gGeoManager
   if (!gGeoManager) return;
@@ -133,7 +139,7 @@ Acts::TGeoLayerBuilder::collectSensitive(
     const LayerConfig&                 layerConfig,
     int                                type,
     bool                               correctBranch,
-    const std::string&                 offset) const
+    const std::string&                 offset)
 {
   /// some screen output for disk debugging
   if (type) {
