@@ -93,9 +93,9 @@ public:
   }
 
   void
-  assignIdentifier(const Identifier& /*identifier*/) const
+  assignIdentifier(const Identifier& identifier)
   {
-    // m_elementIdentifier=identifier; would not be const
+    m_elementIdentifier=identifier;
   }
 
   ///  Destructor
