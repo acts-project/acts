@@ -33,7 +33,7 @@ set -e
 if [ $status -ne 0 ]
 then
     git commit --author "ATS Jenkins <ats.jenkins@cern.ch>" -m "clang-format: enforce code style [ci-skip]" .
-    git push $gitlabSourceRepoName $gitlabSourceBranch
+    git push $gitlabSourceRepoName HEAD:$gitlabSourceBranch
     # we pushed a new commit so there merge request will be rebuild
     # -> abort this build
     exit 10
