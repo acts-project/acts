@@ -485,7 +485,7 @@ Acts::TrackingVolume::closeGeometry(
       // only increase the counter if it's not a container volume
       if (!volumesIter->confinedVolumes()) {
         /// we count the volume ID up
-        currentID.add(++ivolume,GeometryID::volume_mask);
+        currentID.add(++ivolume, GeometryID::volume_mask);
       }
       volumesIter->closeGeometry(currentID, volumeMap);
     }
