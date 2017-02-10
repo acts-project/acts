@@ -113,7 +113,7 @@ public:
     /// the central volume readout schema
     std::vector<std::vector<size_t>> posnegModuleReadoutBinsY;
     /// the central volume readout schema
-    std::vector<std::vector<int>>    posnegModuleReadoutSide;
+    std::vector<std::vector<int>> posnegModuleReadoutSide;
     /// the central volume readout schema
     std::vector<std::vector<double>> posnegModuleLorentzAngle;
     /// the module material @todo change to surface material

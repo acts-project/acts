@@ -47,7 +47,7 @@ public:
   ///
   /// @param recbo are the source bounds
   RectangleBounds(const RectangleBounds& recbo) : PlanarBounds(recbo) {}
-  
+
   /// Destructor
   virtual ~RectangleBounds();
 
@@ -120,7 +120,7 @@ public:
   vertices() const final;
 
   // Bounding box representation
-  virtual const RectangleBounds& 
+  virtual const RectangleBounds&
   boundingBox() const final;
 
   /// Output Method for std::ostream
@@ -260,11 +260,11 @@ RectangleBounds::vertices() const
   return vertices;
 }
 
-inline const RectangleBounds& 
+inline const RectangleBounds&
 RectangleBounds::boundingBox() const
 {
   return (*this);
-} 
+}
 
 }  // end of namespace
 

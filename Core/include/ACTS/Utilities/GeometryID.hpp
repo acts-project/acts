@@ -31,9 +31,8 @@ namespace Acts {
 
 class GeometryID
 {
-    
-public:
 
+public:
   const static geo_id_value volume_mask    = 0xff00000000000000;
   const static geo_id_value boundary_mask  = 0x00ff000000000000;
   const static geo_id_value layer_mask     = 0x0000ff0000000000;
@@ -115,8 +114,7 @@ private:
 inline geo_id_value
 GeometryID::value(geo_id_value mask) const
 {
-  if (mask)
-      return ACTS_BIT_DECODE(m_value, mask);
+  if (mask) return ACTS_BIT_DECODE(m_value, mask);
   return m_value;
 }
 

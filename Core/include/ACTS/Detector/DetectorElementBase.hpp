@@ -45,10 +45,10 @@ class DetectorElementBase
 public:
   /// Constructor
   DetectorElementBase() {}
-  
+
   /// virtual Destructor
   virtual ~DetectorElementBase() {}
-  
+
   /// Identifier
   virtual Identifier
   identify() const = 0;
@@ -79,7 +79,7 @@ public:
   /// Return the DigitizationModule
   /// @return optionally the DigitizationModule
   virtual std::shared_ptr<const DigitizationModule>
-  digitizationModule() const;  
+  digitizationModule() const;
 
   /// Returns the thickness of the module
   /// @return double that indicates the thickness of the module
@@ -87,7 +87,7 @@ public:
   thickness() const = 0;
 
   /// Set the identifier after construction (sometimes needed)
-  virtual void 
+  virtual void
   assignIdentifier(const Identifier& identifier) const = 0;
 
   /// Fast access to bin members
@@ -124,19 +124,17 @@ public:
   /// @param neighbours are DetectorElementBase objects that are neighbours
   void
   registerNeighbours(std::vector<const DetectorElementBase*>& neighbours) const;
-  
 
 private:
   mutable std::vector<const DetectorElementBase*> m_binmembers;
   mutable std::vector<const DetectorElementBase*> m_neighbours;
-  
 };
 
 inline std::shared_ptr<const DigitizationModule>
 DetectorElementBase::digitizationModule() const
 {
   return nullptr;
-}  
+}
 
 inline const std::vector<const DetectorElementBase*>&
 DetectorElementBase::binmembers() const

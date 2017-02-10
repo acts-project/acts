@@ -15,16 +15,15 @@
 #include <iostream>
 
 Acts::TriangleBounds::TriangleBounds(const std::vector<Vector2D>& vertices)
-  : PlanarBounds()
-  , m_boundingBox(0.,0.)
+  : PlanarBounds(), m_boundingBox(0., 0.)
 {
   m_valueStore.reserve(6);
   double mx, my = 0.;
   for (auto& v : vertices) {
     m_valueStore.push_back(v.x());
     m_valueStore.push_back(v.y());
-    mx =  (fabs(v.x()) > mx)? fabs(v.x()) : mx;
-    my =  (fabs(v.y()) > my)? fabs(v.y()) : my;
+    mx = (fabs(v.x()) > mx) ? fabs(v.x()) : mx;
+    my = (fabs(v.y()) > my) ? fabs(v.y()) : my;
   }
   m_boundingBox = RectangleBounds(mx, my);
 }
@@ -38,7 +37,7 @@ Acts::TriangleBounds::operator=(const TriangleBounds& tribo)
 {
   if (this != &tribo) {
     PlanarBounds::operator=(tribo);
-    m_boundingBox = tribo.m_boundingBox;
+    m_boundingBox         = tribo.m_boundingBox;
   }
   return *this;
 }

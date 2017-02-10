@@ -66,10 +66,10 @@ public:
   ///
   /// @param ebo is the source bounds for the copy
   EllipseBounds(const EllipseBounds& ebo)
-   : PlanarBounds(ebo),
-     m_boundingBox(0.,0.)
-  {}
-  
+    : PlanarBounds(ebo), m_boundingBox(0., 0.)
+  {
+  }
+
   /// Destructor
   virtual ~EllipseBounds();
 
@@ -157,10 +157,10 @@ public:
   /// Return the vertices - or, the points of the extremas
   virtual const std::vector<Vector2D>
   vertices() const override;
-  
+
   // Bounding box representation
-  virtual const RectangleBounds& 
-  boundingBox() const final; 
+  virtual const RectangleBounds&
+  boundingBox() const final;
 
   /// This method returns the halfPhiSector which is covered by the disc
   double
@@ -187,9 +187,8 @@ private:
   {
     return x * x;
   };
-  
-  RectangleBounds         m_boundingBox;  ///< internal bounding box cache
-  
+
+  RectangleBounds m_boundingBox;  ///< internal bounding box cache
 };
 
 inline EllipseBounds*
@@ -314,11 +313,11 @@ EllipseBounds::vertices() const
   return vertices;
 }
 
-inline const RectangleBounds& 
+inline const RectangleBounds&
 EllipseBounds::boundingBox() const
 {
   return m_boundingBox;
-} 
+}
 
 }  // end of namespace
 

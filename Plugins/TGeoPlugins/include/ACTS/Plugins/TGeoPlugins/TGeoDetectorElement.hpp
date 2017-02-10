@@ -97,7 +97,7 @@ public:
   /// Set the identifier after construction (sometimes needed)
   virtual void
   assignIdentifier(const Identifier& identifier) const final;
-  
+
   /// Return surface associated with this identifier, which should come from the
   virtual const Surface&
   surface(const Identifier& identifier = Identifier()) const final;
@@ -141,9 +141,9 @@ TGeoDetectorElement::identify() const
 inline void
 TGeoDetectorElement::assignIdentifier(const Identifier& identifier) const
 {
-    m_identifier = identifier;
+  m_identifier = identifier;
 }
-  
+
 inline const Transform3D&
 TGeoDetectorElement::transform(const Identifier&) const
 {

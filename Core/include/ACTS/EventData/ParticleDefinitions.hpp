@@ -33,7 +33,7 @@ namespace Acts {
 ///
 enum ParticleType {
 
-    nonInteracting = 0,  //!< for non-interacting extrapolation
+  nonInteracting = 0,  //!< for non-interacting extrapolation
   geantino       = 0,  //!< for non-interacting extrapolation
   electron = 1,  //!< reconstruction + fatras : type as electron hypothesis
   muon     = 2,  //!< reconstruction + fatras : type as muon hypothesis
@@ -44,7 +44,8 @@ enum ParticleType {
   neutron  = 7,  //!< for fatras usage
   pi0      = 8,  //!< for fatras usage
   k0       = 9,  //!< for fatras usage
-  nonInteractingMuon = 10,  //!< for material collection @todo check if this is still needed
+  nonInteractingMuon
+  = 10,  //!< for material collection @todo check if this is still needed
   noHypothesis = 99,
   undefined    = 99
 };
@@ -81,7 +82,7 @@ struct ParticleMasses
   }
 };
 
-/// Static method : convert to ParticleType from pdg 
+/// Static method : convert to ParticleType from pdg
 static ParticleType
 convertToParticleType(pdg_type pdg, bool& stable, bool& exiting, double charge)
 {
@@ -278,9 +279,9 @@ public:
   {
   }
 
-  /// destructor 
+  /// destructor
   ~ParticleProperties() {}
-    
+
   /** assignment operator */
   ParticleProperties&
   operator=(const ParticleProperties& pProperties)
@@ -297,59 +298,63 @@ public:
     return (*this);
   }
 
-  /// shift the particle 
+  /// shift the particle
   void
   shift(const Vector3D& shift)
-  { m_vertex += shift; }
+  {
+    m_vertex += shift;
+  }
 
   /// assign the barcode
   void
   assign(barcode_type barcode)
-  { m_barcode = barcode; }
-    
-  /// return the momentum 
+  {
+    m_barcode = barcode;
+  }
+
+  /// return the momentum
   const Vector3D&
   vertex() const
   {
     return m_vertex;
   }
-    
-  /// return the momentum 
+
+  /// return the momentum
   const Vector3D&
   momentum() const
   {
     return m_momentum;
   }
 
-  /// return the mass 
+  /// return the mass
   double
   mass() const
   {
     return m_mass;
   }
 
-  /// return the charge 
+  /// return the charge
   double
   charge() const
   {
     return m_charge;
   }
 
-  /// return the particle ID 
+  /// return the particle ID
   pdg_type
   pdgID() const
   {
     return m_pdgID;
   }
 
-  /// return the particle type 
+  /// return the particle type
   ParticleType
   particleType() const
   {
     return m_particleType;
   }
 
-  /// return the particle barcode 
+  /// return the particle barcode
   barcode_type
   barcode() const
   {
@@ -357,7 +362,7 @@ public:
   }
 
 private:
-    Vector3D     m_vertex;
+  Vector3D     m_vertex;
   Vector3D     m_momentum;
   double       m_mass;
   double       m_charge;
@@ -374,7 +379,7 @@ private:
 class ProcessVertex
 {
 public:
-  /// constructor 
+  /// constructor
   ProcessVertex(const Vector3D&                        pVertex,
                 double                                 pTime,
                 process_type                           pType,
@@ -383,35 +388,35 @@ public:
   {
   }
 
-  /// destructor 
+  /// destructor
   ~ProcessVertex() {}
-  
-  /// Add a particle 
+
+  /// Add a particle
   void
   addOutgoing(const ParticleProperties& pProperties);
 
-  /// Return the vertex position 
+  /// Return the vertex position
   const Vector3D&
   vertex() const
   {
     return m_vertex;
   }
 
-  /// Return the time of production 
+  /// Return the time of production
   double
   interactionTime() const
   {
     return m_time;
   }
 
-  /// Return the type of production 
+  /// Return the type of production
   process_type
   processType() const
   {
     return m_type;
   }
 
-  /// Return the outgoing properties 
+  /// Return the outgoing properties
   const std::vector<ParticleProperties>&
   outgoingParticles() const
   {
@@ -432,4 +437,4 @@ ProcessVertex::addOutgoing(const ParticleProperties& pProperties)
 }
 }
 
-#endif // ACTS_EVENTDATA_PARTICLEDEFINITIONS_H
+#endif  // ACTS_EVENTDATA_PARTICLEDEFINITIONS_H

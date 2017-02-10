@@ -89,7 +89,7 @@ private:
   }
 
   /// the config class
-  Config                  m_cfg;
+  Config m_cfg;
 
   /// logging instance
   std::unique_ptr<Logger> m_logger;

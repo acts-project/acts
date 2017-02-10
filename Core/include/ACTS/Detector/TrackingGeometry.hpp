@@ -48,9 +48,9 @@ class TrackingGeometry
 
 public:
   /// Constructor
-  /// 
-  /// @param assignIdentifiers is a boolean to assign the 
-  /// geometryID sensitive has as an identifier 
+  ///
+  /// @param assignIdentifiers is a boolean to assign the
+  /// geometryID sensitive has as an identifier
   TrackingGeometry(TrackingVolumePtr highestVolume);
 
   /// Destructor

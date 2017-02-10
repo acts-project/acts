@@ -23,20 +23,19 @@ Acts::DiamondBounds::DiamondBounds(double minhalex,
   : PlanarBounds(DiamondBounds::bv_length)
   , m_alpha1(0.)
   , m_alpha2(0.)
-  , m_boundingBox(0.,0.)
+  , m_boundingBox(0., 0.)
 {
   m_valueStore.at(DiamondBounds::bv_minHalfX) = minhalex;
   m_valueStore.at(DiamondBounds::bv_medHalfX) = medhalex;
   m_valueStore.at(DiamondBounds::bv_maxHalfX) = maxhalex;
   m_valueStore.at(DiamondBounds::bv_halfY1)   = haley1;
   m_valueStore.at(DiamondBounds::bv_halfY2)   = haley2;
-  double mx = minhalex > medhalex ? 
-              ( minhalex > maxhalex ? minhalex : maxhalex ) :
-  ( medhalex > maxhalex ? medhalex : maxhalex );
+  double mx = minhalex > medhalex ? (minhalex > maxhalex ? minhalex : maxhalex)
+                                  : (medhalex > maxhalex ? medhalex : maxhalex);
   double my = haley1 > haley2 ? haley1 : haley2;
   // the boundary box is being set
-  m_boundingBox = RectangleBounds(mx,my);
-  // init the cache 
+  m_boundingBox = RectangleBounds(mx, my);
+  // init the cache
   initCache();
 }
 
@@ -73,8 +72,7 @@ Acts::DiamondBounds::operator==(const SurfaceBounds& sbo) const
   // fast exit
   if (&sbo == this) return true;
   // check the type first not to compare apples with oranges
-  const DiamondBounds* diabo
-      = dynamic_cast<const DiamondBounds*>(&sbo);
+  const DiamondBounds* diabo = dynamic_cast<const DiamondBounds*>(&sbo);
   if (!diabo) return false;
   return (m_valueStore == diabo->m_valueStore);
 }
@@ -95,7 +93,7 @@ Acts::DiamondBounds::insideFull(const Vector2D& locpo,
                                 double          tol1) const
 {
   // @todo updat with bounding box
-  
+
   // the cases:
   // (0)
   if (!m_valueStore.at(DiamondBounds::bv_halfY1)

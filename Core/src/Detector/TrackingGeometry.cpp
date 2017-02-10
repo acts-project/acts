@@ -23,9 +23,8 @@ Acts::TrackingGeometry::TrackingGeometry(TrackingVolumePtr highestVolume)
 {
   // create the GeometryID for this
   GeometryID geoID(0);
-  // close up the geometry 
-  if (m_world) 
-      m_world->closeGeometry(geoID, m_trackingVolumes);
+  // close up the geometry
+  if (m_world) m_world->closeGeometry(geoID, m_trackingVolumes);
 }
 
 Acts::TrackingGeometry::~TrackingGeometry()
@@ -48,7 +47,7 @@ const Acts::DetachedVolumeVector*
 Acts::TrackingGeometry::lowestDetachedTrackingVolumes(const Vector3D& gp) const
 {
   double                      tol           = 0.001;
-  const TrackingVolume* currentVolume = lowestStaticTrackingVolume(gp);
+  const TrackingVolume*       currentVolume = lowestStaticTrackingVolume(gp);
   if (currentVolume) return currentVolume->detachedTrackingVolumes(gp, tol);
   return nullptr;
 }

@@ -22,7 +22,6 @@
 #include <Eigen/Dense>
 #pragma GCC diagnostic pop
 
-
 #ifdef TRKDETDESCR_USEFLOATPRECISON
 typedef float TDD_real_t;
 #else

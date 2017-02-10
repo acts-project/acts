@@ -14,24 +14,22 @@
 namespace Acts {
 
 /// @brief pair of ints for definition of a cell
-struct DigitizationCell {
+struct DigitizationCell
+{
   // identification and data
   size_t channel0 = 0;
   size_t channel1 = 1;
-  float  data     = 0.; 
+  float  data     = 0.;
   // connstruct them
   DigitizationCell(size_t ch0, size_t ch1, float d = 0.)
-     : channel0(ch0)
-     , channel1(ch1)
-     , data(d)
-  {}
+    : channel0(ch0), channel1(ch1), data(d)
+  {
+  }
   // copy them
   DigitizationCell(const DigitizationCell& dc)
-     : channel0(dc.channel0)
-     , channel1(dc.channel1)
-     , data(dc.data)
-  {}
-  
+    : channel0(dc.channel0), channel1(dc.channel1), data(dc.data)
+  {
+  }
 };
 
 /// @brief DigitizationStep for further handling
@@ -46,8 +44,6 @@ struct DigitizationStep
   Vector2D stepReadoutProjected;  /// this is the projected position at the
                                   /// readout surface
   Vector2D stepCellCenter;        /// this is the cell position
-  
-  
 
   /// Standard constructor
   DigitizationStep()

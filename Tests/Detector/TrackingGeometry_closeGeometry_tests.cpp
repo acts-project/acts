@@ -9,8 +9,8 @@
 ///  Boost include(s)
 #define BOOST_TEST_MODULE GeometryID Tests
 #include <boost/test/included/unit_test.hpp>
-#include "ACTS/Utilities/Units.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
+#include "ACTS/Utilities/Units.hpp"
 #include "GeometryCreation.hpp"
 
 namespace Acts {
@@ -120,7 +120,8 @@ namespace Test {
           // id
           geo_id_value asf_vol_id = asf->geoID().value(GeometryID::volume_mask);
           geo_id_value asf_lay_id = asf->geoID().value(GeometryID::layer_mask);
-          geo_id_value asf_asf_id = asf->geoID().value(GeometryID::approach_mask);
+          geo_id_value asf_asf_id
+              = asf->geoID().value(GeometryID::approach_mask);
           BOOST_CHECK_EQUAL(layer_id, asf_lay_id);
           BOOST_CHECK_EQUAL(c_vol_id, asf_vol_id);
           BOOST_CHECK_EQUAL(++asurface_id, asf_asf_id);
@@ -132,7 +133,8 @@ namespace Test {
           // id
           geo_id_value ssf_vol_id = ssf->geoID().value(GeometryID::volume_mask);
           geo_id_value ssf_lay_id = ssf->geoID().value(GeometryID::layer_mask);
-          geo_id_value ssf_ssf_id = ssf->geoID().value(GeometryID::sensitive_mask);
+          geo_id_value ssf_ssf_id
+              = ssf->geoID().value(GeometryID::sensitive_mask);
           BOOST_CHECK_EQUAL(layer_id, ssf_lay_id);
           BOOST_CHECK_EQUAL(c_vol_id, ssf_vol_id);
           BOOST_CHECK_EQUAL(++ssurface_id, ssf_ssf_id);

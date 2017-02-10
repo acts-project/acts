@@ -62,15 +62,14 @@ Acts::MaterialEffectsEngine::handleMaterial(
   const Surface& mSurface = eCell.leadParameters->referenceSurface();
   // go on if you have material associated
   if (mSurface.associatedMaterial()) {
-      EX_MSG_DEBUG(
+    EX_MSG_DEBUG(
         ++eCell.navigationStep,
         "layer",
         mSurface.geoID().value(GeometryID::layer_mask),
         "handleMaterial for neutral parameters called - collect material.");
     // path correction
-    double pathCorrection
-        = fabs(mSurface.pathCorrection(eCell.leadParameters->position(),
-                                       eCell.leadParameters->momentum()));
+    double pathCorrection = fabs(mSurface.pathCorrection(
+        eCell.leadParameters->position(), eCell.leadParameters->momentum()));
     // screen output
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "layer",
@@ -115,16 +114,17 @@ Acts::MaterialEffectsEngine::handleMaterial(
     PropDirection       dir,
     MaterialUpdateStage matupstage) const
 {
-  
+
   // parameters are the lead parameters
   // by definition the material surface is the one the parametrs are on
   const Surface& mSurface = eCell.leadParameters->referenceSurface();
-  // go on if you have material to deal with   
+  // go on if you have material to deal with
   if (mSurface.associatedMaterial()) {
-    EX_MSG_DEBUG(++eCell.navigationStep,
-                 "layer",
-                 mSurface.geoID().value(GeometryID::layer_mask),
-                 "handleMaterial for charged parameters called - apply correction.");
+    EX_MSG_DEBUG(
+        ++eCell.navigationStep,
+        "layer",
+        mSurface.geoID().value(GeometryID::layer_mask),
+        "handleMaterial for charged parameters called - apply correction.");
     // update the track parameters
     updateTrackParameters(*eCell.leadParameters, eCell, dir, matupstage);
   }
@@ -136,9 +136,9 @@ Acts::MaterialEffectsEngine::handleMaterial(
 void
 Acts::MaterialEffectsEngine::updateTrackParameters(
     const TrackParameters& parameters,
-     ExCellCharged&         eCell,
-     PropDirection          dir,
-     MaterialUpdateStage    matupstage) const
+    ExCellCharged&         eCell,
+    PropDirection          dir,
+    MaterialUpdateStage    matupstage) const
 {
   // parameters are the lead parameters
   // by definition the material surface is the one the parametrs are on
@@ -147,8 +147,8 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
   if (!mSurface.associatedMaterial()) return;
 
   // path correction
-  double pathCorrection = fabs(mSurface.pathCorrection(
-      parameters.position(), parameters.momentum()));
+  double pathCorrection = fabs(
+      mSurface.pathCorrection(parameters.position(), parameters.momentum()));
 
   // screen output
   EX_MSG_VERBOSE(eCell.navigationStep,
@@ -159,8 +159,9 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
   const MaterialProperties* materialProperties
       = mSurface.associatedMaterial()->material(parameters.position());
   // check if anything should be done
-  bool corrConfig = (m_cfg.eLossCorrection || m_cfg.mscCorrection ||
-       eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial));
+  bool corrConfig
+      = (m_cfg.eLossCorrection || m_cfg.mscCorrection
+         || eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial));
   // and let's check if there's acutally something to do
   if (materialProperties && corrConfig) {
     // and add them
@@ -185,7 +186,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     if (m_cfg.eLossCorrection) {
       double sigmaP = 0.;
       double kazl   = 0.;
-      // dE/dl ionization energy loss per path unit 
+      // dE/dl ionization energy loss per path unit
       double dEdl = sign * dir
           * m_interactionFormulae.dEdl_ionization(
                 p, &material, eCell.particleType, sigmaP, kazl);
@@ -202,7 +203,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     }
     // (B) - update the covariance if needed
     if (uCovariance && m_cfg.mscCorrection) {
-      // multiple scattering as function of dInX0 
+      // multiple scattering as function of dInX0
       double sigmaMS = m_interactionFormulae.sigmaMS(
           thicknessInX0 * pathCorrection, p, beta);
       double sinTheta          = sin(parameters.parameters()[eTHETA]);
@@ -228,15 +229,15 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
           "layer",
           mSurface.geoID().value(GeometryID::layer_mask),
           "material update on initial parameters, creating new ones.");
-          // these are newly created
-          auto stepParameters = std::make_unique<const BoundParameters>(
-              std::move(uCovariance), uParameters, mSurface);
-          // this should change the leadParameters to the new stepParameters
-          eCell.step(std::move(stepParameters), ExtrapolationMode::CollectMaterial);
+      // these are newly created
+      auto stepParameters = std::make_unique<const BoundParameters>(
+          std::move(uCovariance), uParameters, mSurface);
+      // this should change the leadParameters to the new stepParameters
+      eCell.step(std::move(stepParameters), ExtrapolationMode::CollectMaterial);
     }
 
-    // check if material filling was requested, 
-    // then fill it into the extrapolation cache 
+    // check if material filling was requested,
+    // then fill it into the extrapolation cache
     if (eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial)) {
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "layer",

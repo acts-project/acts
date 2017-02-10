@@ -21,17 +21,18 @@ Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
   : PlanarBounds(TrapezoidBounds::bv_length)
   , m_alpha(0.)
   , m_beta(0.)
-  , m_boundingBox(0.,0.)
+  , m_boundingBox(0., 0.)
 {
   m_valueStore.at(TrapezoidBounds::bv_minHalfX) = std::abs(minhalex);
   m_valueStore.at(TrapezoidBounds::bv_maxHalfX) = std::abs(maxhalex);
   m_valueStore.at(TrapezoidBounds::bv_halfY)    = std::abs(haley);
-  // find the maximum at for the bounding box  
-  double mx = m_valueStore.at(TrapezoidBounds::bv_minHalfX) > 
-              m_valueStore.at(TrapezoidBounds::bv_maxHalfX) ?
-              m_valueStore.at(TrapezoidBounds::bv_minHalfX) :
-              m_valueStore.at(TrapezoidBounds::bv_maxHalfX);
-  m_boundingBox = RectangleBounds(mx, m_valueStore.at(TrapezoidBounds::bv_halfY));
+  // find the maximum at for the bounding box
+  double mx = m_valueStore.at(TrapezoidBounds::bv_minHalfX)
+          > m_valueStore.at(TrapezoidBounds::bv_maxHalfX)
+      ? m_valueStore.at(TrapezoidBounds::bv_minHalfX)
+      : m_valueStore.at(TrapezoidBounds::bv_maxHalfX);
+  m_boundingBox
+      = RectangleBounds(mx, m_valueStore.at(TrapezoidBounds::bv_halfY));
 }
 
 Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
@@ -41,7 +42,7 @@ Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
   : PlanarBounds(TrapezoidBounds::bv_length)
   , m_alpha(alpha)
   , m_beta(beta)
-  , m_boundingBox(0.,0.)
+  , m_boundingBox(0., 0.)
 {
   double gamma = (alpha > beta) ? (alpha - 0.5 * M_PI) : (beta - 0.5 * M_PI);
   // now fill them
@@ -50,11 +51,12 @@ Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
       + (2. * m_valueStore.at(TrapezoidBounds::bv_halfY)) * tan(gamma);
   m_valueStore.at(TrapezoidBounds::bv_halfY) = std::abs(haley);
   // find the maximum for the bounding box
-  double mx = m_valueStore.at(TrapezoidBounds::bv_minHalfX) > 
-              m_valueStore.at(TrapezoidBounds::bv_maxHalfX) ?
-              m_valueStore.at(TrapezoidBounds::bv_minHalfX) :
-              m_valueStore.at(TrapezoidBounds::bv_maxHalfX);
-  m_boundingBox = RectangleBounds(mx, m_valueStore.at(TrapezoidBounds::bv_halfY));
+  double mx = m_valueStore.at(TrapezoidBounds::bv_minHalfX)
+          > m_valueStore.at(TrapezoidBounds::bv_maxHalfX)
+      ? m_valueStore.at(TrapezoidBounds::bv_minHalfX)
+      : m_valueStore.at(TrapezoidBounds::bv_maxHalfX);
+  m_boundingBox
+      = RectangleBounds(mx, m_valueStore.at(TrapezoidBounds::bv_halfY));
 }
 
 Acts::TrapezoidBounds::~TrapezoidBounds()

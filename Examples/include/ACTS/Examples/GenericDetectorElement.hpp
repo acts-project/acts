@@ -96,10 +96,10 @@ public:
   /// Return the DigitizationModule
   /// @return optionally the DigitizationModule
   std::shared_ptr<const DigitizationModule>
-  digitizationModule() const final;  
+  digitizationModule() const final;
 
   /// Set the identifier after construction (sometimes needed)
-  virtual void 
+  virtual void
   assignIdentifier(const Identifier& identifier) const final;
 
   /// The maximal thickness of the detector element wrt normal axis
@@ -132,11 +132,11 @@ inline std::shared_ptr<const DigitizationModule>
 GenericDetectorElement::digitizationModule() const
 {
   return m_digitizationModule;
-} 
+}
 
-inline void 
+inline void
 GenericDetectorElement::assignIdentifier(const Identifier& identifier) const
-{ 
+{
   m_elementIdentifier = identifier;
 }
 

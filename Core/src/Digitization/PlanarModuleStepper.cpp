@@ -16,12 +16,10 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Intersection.hpp"
 
-Acts::PlanarModuleStepper::PlanarModuleStepper(const Config&           pmsConfig,
-                                               std::unique_ptr<Logger> mlogger) 
-                                                 : m_cfg(pmsConfig)
-                                                , m_logger(std::move(mlogger)) 
+Acts::PlanarModuleStepper::PlanarModuleStepper(const Config& pmsConfig,
+                                               std::unique_ptr<Logger> mlogger)
+  : m_cfg(pmsConfig), m_logger(std::move(mlogger))
 {
-    
 }
 
 std::vector<Acts::DigitizationStep>
@@ -84,7 +82,7 @@ Acts::PlanarModuleStepper::cellSteps(const Acts::DigitizationModule& dmodule,
 {
   // first, intersect the boundary surfaces
   auto boundarySurfaces = dmodule.boundarySurfaces();
-  // intersect them - fast exit for cases where 
+  // intersect them - fast exit for cases where
   // readout and counter readout are hit
   Vector3D intersection3D(moduleIntersection.x(), moduleIntersection.y(), 0.);
   size_t   attempts = 0;
@@ -127,7 +125,8 @@ Acts::PlanarModuleStepper::cellSteps(const Acts::DigitizationModule& dmodule,
       boundaryIntersections.erase(boundaryIntersections.begin());
   }
   // if for some reason the intersection does not work
-  if (!boundaryIntersections.size()) return std::vector<Acts::DigitizationStep>();
+  if (!boundaryIntersections.size())
+    return std::vector<Acts::DigitizationStep>();
   // return
   return cellSteps(dmodule,
                    boundaryIntersections[0].position,

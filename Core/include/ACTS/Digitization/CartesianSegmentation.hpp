@@ -20,14 +20,16 @@ namespace Acts {
 
 /// @brief Segmentation Base class
 ///
-/// Segementation class for generic pixel, strixels and strip segmentations 
-/// in a cartesian frame, this uses a cartesian X/Y local surface definition  
-/// 
-/// The calculation can be done in full 3D, i.e. the segments of the path through
-/// the planar module are calculated in a 3D model - or in 2D, when the entire 
+/// Segementation class for generic pixel, strixels and strip segmentations
+/// in a cartesian frame, this uses a cartesian X/Y local surface definition
+///
+/// The calculation can be done in full 3D, i.e. the segments of the path
+/// through
+/// the planar module are calculated in a 3D model - or in 2D, when the entire
 /// calculation is done on the projective surface. When the 2D option is used,
 /// segmentation surfaces are not created. The 2D calculation is faster and uses
-/// less memory, however, effects witin the sensor volume can not be easily integrated  
+/// less memory, however, effects witin the sensor volume can not be easily
+/// integrated
 ///
 /// Conventions:
 ///   - 3D positions are within the 3D frame of the module
@@ -38,41 +40,43 @@ namespace Acts {
 class CartesianSegmentation : public Segmentation
 {
 public:
-  /// Constructor for all same-size pixels or strips 
+  /// Constructor for all same-size pixels or strips
   /// (in cas numCellsY is set to 1)
   ///
   /// @param rBounds are the rectangle bounds of the sensitive volume
-  /// @param numCellsX is the number of cells in X 
+  /// @param numCellsX is the number of cells in X
   /// @param numCellsY is the number of cells in Y
   CartesianSegmentation(std::shared_ptr<const PlanarBounds> rBounds,
-                        size_t numCellsX,
-                        size_t numCellsY = 1);
+                        size_t                              numCellsX,
+                        size_t                              numCellsY = 1);
 
   /// @todo contructor from BinUtilities for more complex readouts
-  /// 
-  /// @param bUtility is the bin Utility, 
-  //  it will define the RectangleBounds if none are provided
-  /// @param rBounds are the rectangle bounds if provided for memory optimisation
   ///
-  /// @note if both RectangleBounds and BinUtility are provided, no check is done
+  /// @param bUtility is the bin Utility,
+  //  it will define the RectangleBounds if none are provided
+  /// @param rBounds are the rectangle bounds if provided for memory
+  /// optimisation
+  ///
+  /// @note if both RectangleBounds and BinUtility are provided, no check is
+  /// done
   /// for consitency
-  CartesianSegmentation(std::shared_ptr<BinUtility> bUtility,
+  CartesianSegmentation(std::shared_ptr<BinUtility>         bUtility,
                         std::shared_ptr<const PlanarBounds> rBounds = nullptr);
-                            
-  /// Virtual Destructor 
+
+  /// Virtual Destructor
   virtual ~CartesianSegmentation();
 
   /// @copydoc Acts::Segmentation::createSegmentationSurfaces
   ///
   /// Create the segmentation surfaces in X and Y for rectangular shapes
-  /// These are needed for a full three dimensional module 
+  /// These are needed for a full three dimensional module
   void
   createSegmentationSurfaces(SurfacePtrVector& boundarySurfaces,
                              SurfacePtrVector& segmentationSurfacesX,
                              SurfacePtrVector& segmentationSurfacesY,
                              double            halfThickness,
                              int               readoutDirection = 1.,
-                             double lorentzAngle = 0.) const final;
+                             double            lorentzAngle = 0.) const final;
 
   /// @copydoc Segmentation::cell
   const DigitizationCell
@@ -101,9 +105,9 @@ public:
   /// specialization for Rectangle Bounds
   const PlanarBounds&
   moduleBounds() const final;
-  
+
   /// return the bin utility that defines the
-  /// readout segmentation 
+  /// readout segmentation
   const BinUtility&
   binUtility() const final;
 
@@ -114,7 +118,6 @@ private:
 
   std::shared_ptr<const PlanarBounds> m_activeBounds;  /// active area size
   std::shared_ptr<BinUtility>         m_binUtility;    /// bin Utility
-  
 };
 
 inline const PlanarBounds&
@@ -126,9 +129,8 @@ CartesianSegmentation::moduleBounds() const
 inline const BinUtility&
 CartesianSegmentation::binUtility() const
 {
-    return (*(m_binUtility.get()));
+  return (*(m_binUtility.get()));
 }
-
 
 template <class T>
 const DigitizationCell

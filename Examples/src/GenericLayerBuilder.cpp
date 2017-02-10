@@ -13,6 +13,8 @@
 #include "ACTS/Examples/GenericLayerBuilder.hpp"
 #include <iostream>
 #include "ACTS/Detector/DetectorElementBase.hpp"
+#include "ACTS/Digitization/CartesianSegmentation.hpp"
+#include "ACTS/Digitization/DigitizationModule.hpp"
 #include "ACTS/Examples/GenericDetectorElement.hpp"
 #include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
 #include "ACTS/Material/Material.hpp"
@@ -27,8 +29,6 @@
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/BinnedArray.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
-#include "ACTS/Digitization/CartesianSegmentation.hpp"
-#include "ACTS/Digitization/DigitizationModule.hpp"
 
 Acts::GenericLayerBuilder::GenericLayerBuilder(
     const Acts::GenericLayerBuilder::Config& glbConfig,
@@ -310,14 +310,15 @@ Acts::GenericLayerBuilder::constructLayers()
         // create the bounds
         PlanarBounds* pBounds = nullptr;
         if (moduleMaxHalfX != 0. && moduleMinHalfX != moduleMaxHalfX)
-        pBounds = new TrapezoidBounds(
-                                      moduleMinHalfX, moduleMaxHalfX, moduleHalfY);
+          pBounds = new TrapezoidBounds(
+              moduleMinHalfX, moduleMaxHalfX, moduleHalfY);
         else
-        pBounds = new RectangleBounds(moduleMinHalfX, moduleHalfY);
+          pBounds = new RectangleBounds(moduleMinHalfX, moduleHalfY);
         // now create the shared bounds from it
         std::shared_ptr<const PlanarBounds> moduleBounds(pBounds);
         // (2) create digitizaiton module
-        std::shared_ptr<const DigitizationModule> moduleDigitizationPtr = nullptr;
+        std::shared_ptr<const DigitizationModule> moduleDigitizationPtr
+            = nullptr;
         if (m_cfg.posnegModuleReadoutBinsX.size()) {
           // create the CartesianSegmentation
           std::shared_ptr<const Segmentation> moduleSegmentation

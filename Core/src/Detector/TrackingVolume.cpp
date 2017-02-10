@@ -414,7 +414,7 @@ Acts::TrackingVolume::interlinkLayers()
 {
   if (m_confinedLayers) {
     auto& layers = m_confinedLayers->arrayObjects();
-      
+
     // forward register the last one as the previous one
     //  first <- | -> second, first <- | -> second, first <- | -> second
     const Layer* lastLayer = nullptr;
@@ -446,15 +446,13 @@ Acts::TrackingVolume::closeGeometry(
   // insert the volume into the map
   volumeMap[volumeName()] = this;
 
- 
-
   // A) this is NOT a container volume, volumeID is already incremented
   if (!m_confinedVolumes) {
     // assign the Volume ID to the volume itself
     assignGeoID(volumeID);
     // loop over the boundary surfaces
     geo_id_value iboundary = 0;
-    // loop over the boundary surfaces 
+    // loop over the boundary surfaces
     for (auto& bSurfIter : boundarySurfaces()) {
       // get the intersection soltuion
       auto& bSurface = bSurfIter->surfaceRepresentation();

@@ -30,8 +30,9 @@ typedef std::vector<SurfacePtr>        SurfacePtrVector;
 /// module
 ///
 /// Since the segmentation description might be identical for many elements
-/// while the lorentz angle may change, lorentzAngle and readoutDirection 
-/// are provided and th the segmenation class only creates the surfaces for the module,
+/// while the lorentz angle may change, lorentzAngle and readoutDirection
+/// are provided and th the segmenation class only creates the surfaces for the
+/// module,
 /// but hosts the binning information.
 ///
 class Segmentation
@@ -39,7 +40,7 @@ class Segmentation
 public:
   /// Virtual Destructor
   virtual ~Segmentation() {}
-  
+
   /// Create the segmentation surfaces in X
   ///
   /// This method is only used if the full 3D digitization is done
@@ -106,12 +107,10 @@ public:
   /// return the surface bounds by reference
   virtual const SurfaceBounds&
   moduleBounds() const = 0;
-  
+
   /// return the bin utility that defines the readout
   virtual const BinUtility&
   binUtility() const = 0;
-  
-  
 };
 }  // end of namespace Acts
 

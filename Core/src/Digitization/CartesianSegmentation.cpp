@@ -21,11 +21,12 @@ Acts::CartesianSegmentation::CartesianSegmentation(
     size_t                              numCellsY)
   : m_activeBounds(mBounds), m_binUtility(nullptr)
 {
-  m_binUtility = std::make_shared<BinUtility>(numCellsX,
-                                              -mBounds->boundingBox().halflengthX(),
-                                              mBounds->boundingBox().halflengthX(),
-                                              Acts::open,
-                                              Acts::binX);
+  m_binUtility
+      = std::make_shared<BinUtility>(numCellsX,
+                                     -mBounds->boundingBox().halflengthX(),
+                                     mBounds->boundingBox().halflengthX(),
+                                     Acts::open,
+                                     Acts::binX);
   (*m_binUtility) += BinUtility(numCellsY,
                                 -mBounds->boundingBox().halflengthY(),
                                 mBounds->boundingBox().halflengthY(),
@@ -34,7 +35,7 @@ Acts::CartesianSegmentation::CartesianSegmentation(
 }
 
 Acts::CartesianSegmentation::CartesianSegmentation(
-    std::shared_ptr<BinUtility>            bUtility,
+    std::shared_ptr<BinUtility>         bUtility,
     std::shared_ptr<const PlanarBounds> mBounds)
   : m_activeBounds(mBounds), m_binUtility(bUtility)
 {
@@ -67,8 +68,9 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
   // there are some things to consider
   // - they share the RectangleBounds only if the lorentzAngle is 0
   // otherwise only the readout surface has full length bounds like the module
-  std::shared_ptr<const PlanarBounds> moduleBounds(new RectangleBounds(
-      m_activeBounds->boundingBox().halflengthX(), m_activeBounds->boundingBox().halflengthY()));
+  std::shared_ptr<const PlanarBounds> moduleBounds(
+      new RectangleBounds(m_activeBounds->boundingBox().halflengthX(),
+                          m_activeBounds->boundingBox().halflengthY()));
   // - they are separated by half a thickness in z
   auto readoutPlaneTransform
       = std::make_shared<Transform3D>(Transform3D::Identity());
@@ -88,8 +90,8 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
         = Vector3D(0., 0., -readoutDirection * halfThickness);
   } else {
     // lorentz reduced Bounds
-    double lorentzReducedHalfX
-        = m_activeBounds->boundingBox().halflengthX() - fabs(lorentzPlaneShiftX);
+    double lorentzReducedHalfX = m_activeBounds->boundingBox().halflengthX()
+        - fabs(lorentzPlaneShiftX);
     std::shared_ptr<const PlanarBounds> lorentzReducedBounds(
         new RectangleBounds(lorentzReducedHalfX,
                             m_activeBounds->boundingBox().halflengthY()));
@@ -109,12 +111,13 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
   // (B) - bin X and lorentz surfaces
   // -----------------------------------------------------------
   // easy stuff first, constant pitch size and
-  double pitchX = 2. * m_activeBounds->boundingBox().halflengthX() / m_binUtility->bins(0);
+  double pitchX = 2. * m_activeBounds->boundingBox().halflengthX()
+      / m_binUtility->bins(0);
 
   // now, let's create the shared bounds of all surfaces marking x bins - choice
   // fixes orientation of the matrix
-  std::shared_ptr<const PlanarBounds> xBinBounds(
-      new RectangleBounds(m_activeBounds->boundingBox().halflengthY(), halfThickness));
+  std::shared_ptr<const PlanarBounds> xBinBounds(new RectangleBounds(
+      m_activeBounds->boundingBox().halflengthY(), halfThickness));
   // now, let's create the shared bounds of all surfaces marking lorentz planes
   double lorentzPlaneHalfX = std::abs(halfThickness / cos(lorentzAngle));
   // teh bounds of the lorentz plane
@@ -140,7 +143,8 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
   // create and fill them
   for (size_t ibinx = 0; ibinx <= m_binUtility->bins(0); ++ibinx) {
     // the current step x position
-    double cPosX = -m_activeBounds->boundingBox().halflengthX() + ibinx * pitchX;
+    double cPosX
+        = -m_activeBounds->boundingBox().halflengthX() + ibinx * pitchX;
     // (i) this is the low/high boundary --- ( ibin == 0/m_binUtility->bins(0) )
     if (!ibinx || ibinx == m_binUtility->bins(0)) {
       // check if it a straight boundary or not: always straight for no lorentz
@@ -190,16 +194,18 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
   yBinRotationMatrix.col(1) = Vector3D::UnitZ();
   yBinRotationMatrix.col(2) = Vector3D(0., -1., 0.);
   // easy stuff first, constant pitch in Y
-  double pitchY = 2. * m_activeBounds->boundingBox().halflengthY() / m_binUtility->bins(1);
+  double pitchY = 2. * m_activeBounds->boundingBox().halflengthY()
+      / m_binUtility->bins(1);
   // let's create the shared bounds of all surfaces marking y bins
-  std::shared_ptr<const PlanarBounds> yBinBounds(
-      new RectangleBounds(m_activeBounds->boundingBox().halflengthX(), halfThickness));
+  std::shared_ptr<const PlanarBounds> yBinBounds(new RectangleBounds(
+      m_activeBounds->boundingBox().halflengthX(), halfThickness));
   // reserve, it's always (number of bins-1) as the boundaries are within the
   // boundarySurfaces
   segmentationSurfacesY.reserve(m_binUtility->bins(1));
   for (size_t ibiny = 0; ibiny <= m_binUtility->bins(1); ++ibiny) {
     // the position of the bin surface
-    double   binPosY = -m_activeBounds->boundingBox().halflengthY() + ibiny * pitchY;
+    double binPosY
+        = -m_activeBounds->boundingBox().halflengthY() + ibiny * pitchY;
     Vector3D binSurfaceCenter(0., binPosY, 0.);
     // the binning transform
     auto binTransform = std::make_shared<Transform3D>(

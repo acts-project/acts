@@ -116,7 +116,7 @@ public:
   /// This method returns the opening angle alpha in point A'
   double
   alpha2() const;
-  
+
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
   /// the bounds  Inside can be called without/with tolerances.
@@ -165,9 +165,9 @@ public:
   vertices() const override;
 
   // Bounding box representation
-  virtual const RectangleBounds& 
-  boundingBox() const final; 
-  
+  virtual const RectangleBounds&
+  boundingBox() const final;
+
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream in which it is dumped
@@ -188,9 +188,9 @@ private:
   initCache();
 
   std::vector<TDD_real_t> m_valueStore;  ///< internal parameter store
-  TDD_real_t              m_alpha1;      ///< internal parameter cache for alpha1
-  TDD_real_t              m_alpha2;      ///< internal parameter cache for alpha2
-  RectangleBounds         m_boundingBox; ///< internal bounding box cache
+  TDD_real_t              m_alpha1;  ///< internal parameter cache for alpha1
+  TDD_real_t              m_alpha2;  ///< internal parameter cache for alpha2
+  RectangleBounds         m_boundingBox;  ///< internal bounding box cache
 };
 
 inline DiamondBounds*
@@ -365,7 +365,7 @@ DiamondBounds::vertices() const
   return vertices;
 }
 
-inline const RectangleBounds& 
+inline const RectangleBounds&
 DiamondBounds::boundingBox() const
 {
   return m_boundingBox;

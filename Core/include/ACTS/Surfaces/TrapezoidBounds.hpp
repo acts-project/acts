@@ -62,10 +62,10 @@ public:
   ///
   /// @param trabo are the source bounds for assignment
   TrapezoidBounds(const TrapezoidBounds& trabo)
-   : PlanarBounds(trabo),
-     m_boundingBox(0.,0.)
-  {}
-  
+    : PlanarBounds(trabo), m_boundingBox(0., 0.)
+  {
+  }
+
   /// Destructor
   virtual ~TrapezoidBounds();
 
@@ -192,9 +192,9 @@ public:
   /// Return the vertices - or, the points of the extremas
   virtual const std::vector<Vector2D>
   vertices() const final;
-  
+
   // Bounding box representation
-  virtual const RectangleBounds& 
+  virtual const RectangleBounds&
   boundingBox() const final;
 
   /// Output Method for std::ostream
@@ -250,10 +250,9 @@ private:
   isAbove(const Vector2D& lpos, double tol0, double tol1, double k, double d)
       const;
 
-  TDD_real_t              m_alpha;        ///< private cache of angle alpha
-  TDD_real_t              m_beta;         ///< private cache of angle beta
-  RectangleBounds         m_boundingBox;  ///< internal bounding box cache
-  
+  TDD_real_t      m_alpha;        ///< private cache of angle alpha
+  TDD_real_t      m_beta;         ///< private cache of angle beta
+  RectangleBounds m_boundingBox;  ///< internal bounding box cache
 };
 
 inline TrapezoidBounds*
@@ -401,12 +400,11 @@ TrapezoidBounds::vertices() const
   return vertices;
 }
 
-inline const RectangleBounds& 
+inline const RectangleBounds&
 TrapezoidBounds::boundingBox() const
 {
   return m_boundingBox;
-} 
-
+}
 
 }  // end of namespace
 

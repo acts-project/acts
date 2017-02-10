@@ -53,10 +53,10 @@ public:
   ///
   /// @param tribo are the source bounds for assignment
   TriangleBounds(const TriangleBounds& tribo)
-    : PlanarBounds(tribo)
-    , m_boundingBox(0.,0.)
-  {}
-  
+    : PlanarBounds(tribo), m_boundingBox(0., 0.)
+  {
+  }
+
   /// Destructor
   virtual ~TriangleBounds();
 
@@ -76,7 +76,7 @@ public:
   {
     return SurfaceBounds::Triangle;
   }
-  
+
   /// This method checks if the provided local coordinates are inside the
   /// surface bounds
   ///
@@ -118,10 +118,10 @@ public:
   /// This method returns the coordinates of vertices
   const std::vector<Vector2D>
   vertices() const final;
-  
+
   // Bounding box representation
-  virtual const RectangleBounds& 
-  boundingBox() const final; 
+  virtual const RectangleBounds&
+  boundingBox() const final;
 
   /// Output Method for std::ostream
   ///
@@ -139,9 +139,8 @@ private:
   /// @return boolean indicator for the success of this operation
   bool
   inside(const Vector2D& lpos, double tol0, double tol1) const;
-  
-  RectangleBounds         m_boundingBox; ///< internal bounding box cache
 
+  RectangleBounds m_boundingBox;  ///< internal bounding box cache
 };
 
 inline TriangleBounds*
@@ -269,7 +268,7 @@ TriangleBounds::vertices() const
   return vertices;
 }
 
-inline const RectangleBounds& 
+inline const RectangleBounds&
 TriangleBounds::boundingBox() const
 {
   return m_boundingBox;

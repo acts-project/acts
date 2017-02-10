@@ -17,11 +17,11 @@
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 
 Acts::GenericDetectorElement::GenericDetectorElement(
-    const Identifier                       identifier,
-    std::shared_ptr<Transform3D>           transform,
-    std::shared_ptr<const PlanarBounds>    pBounds,
-    double                                 thickness,
-    std::shared_ptr<const SurfaceMaterial> material,
+    const Identifier                          identifier,
+    std::shared_ptr<Transform3D>              transform,
+    std::shared_ptr<const PlanarBounds>       pBounds,
+    double                                    thickness,
+    std::shared_ptr<const SurfaceMaterial>    material,
     std::shared_ptr<const DigitizationModule> dModule)
   : DetectorElementBase()
   , m_elementIdentifier(std::move(identifier))

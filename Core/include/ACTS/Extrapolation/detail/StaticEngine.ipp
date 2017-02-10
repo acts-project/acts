@@ -32,8 +32,7 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
   //
   //  obviously need a surface to exercise the fallback & need to be configured
   //  to do so
-  if (sf
-      && eCell.checkConfigurationMode(ExtrapolationMode::Destination)) {
+  if (sf && eCell.checkConfigurationMode(ExtrapolationMode::Destination)) {
     EX_MSG_DEBUG(
         ++eCell.navigationStep,
         "extrapolate",
@@ -121,7 +120,7 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
                  "layer",
                  "loop",
                  "found " << layerIntersections.size()
-                 << " layers for the layer-to-layer loop.");
+                          << " layers for the layer-to-layer loop.");
 
   // layer-to-layer loop starts here
   for (auto& layerCandidate : layerIntersections) {
@@ -165,7 +164,7 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
     if (!eCode.inProgress())
       return handleReturnT<T>(eCode, eCell, sf, pDir, bcheck);
   }
-  // the layer-to-layer loop is done, 
+  // the layer-to-layer loop is done,
   // the lead parameters are at the last valid option
   // ----- [3] now resolve the boundary situation, call includes information
   // wheather one is alreay at a boundary
