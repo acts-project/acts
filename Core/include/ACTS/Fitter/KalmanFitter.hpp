@@ -195,7 +195,7 @@ public:
       pSmoothed = std::make_unique<BoundParameters>(
           std::make_unique<decltype(smoothedCov)>(std::move(smoothedCov)),
           smoothedPars,
-          (*it)->getFilteredState()->associatedSurface());
+          (*it)->getFilteredState()->referenceSurface());
       (*it)->setSmoothedState(std::move(pSmoothed));
     }
   }

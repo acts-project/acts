@@ -37,7 +37,7 @@ namespace Test {
       // nominal propagation
       const auto&    r_nominal = m_propagator.propagate(trackPars, options);
       const auto&    nominal   = r_nominal.endParameters->parameters();
-      const Surface& dest      = r_nominal.endParameters->associatedSurface();
+      const Surface& dest      = r_nominal.endParameters->referenceSurface();
 
       U var_options = options;
       var_options.max_path_length *= 2;
@@ -48,7 +48,7 @@ namespace Test {
       for (double h : h_steps) {
         Vector3D pos;
         Vector2D loc_pos(h, 0);
-        trackPars.associatedSurface().localToGlobal(
+        trackPars.referenceSurface().localToGlobal(
             loc_pos, trackPars.momentum(), pos);
         CurvilinearParameters tp(
             nullptr, pos, trackPars.momentum(), trackPars.charge());
@@ -62,7 +62,7 @@ namespace Test {
       for (double h : h_steps) {
         Vector3D pos;
         Vector2D loc_pos(0, h);
-        trackPars.associatedSurface().localToGlobal(
+        trackPars.referenceSurface().localToGlobal(
             loc_pos, trackPars.momentum(), pos);
         CurvilinearParameters tp(
             nullptr, pos, trackPars.momentum(), trackPars.charge());

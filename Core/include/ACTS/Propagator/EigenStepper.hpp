@@ -55,7 +55,7 @@ private:
       const double theta = dir.theta();
 
       if (cov) {
-        const auto& transform = par.associatedSurface().transform().matrix();
+        const auto& transform = par.referenceSurface().transform().matrix();
         jacobian(0, eLOC_1) = transform(0, eLOC_1);
         jacobian(0, eLOC_2) = transform(0, eLOC_2);
         jacobian(1, eLOC_1) = transform(1, eLOC_1);

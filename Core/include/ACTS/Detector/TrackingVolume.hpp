@@ -535,7 +535,7 @@ bool
 TrackingVolume::onVolumeBoundary(const T& pars) const
 {
   // get the associated Surface
-  const Surface* pSurface  = &pars.associatedSurface();
+  const Surface* pSurface  = &pars.referenceSurface();
   auto&          bSurfaces = boundarySurfaces();
   // fast loop pointer comparison of the surfaces
   for (auto& bsIter : bSurfaces) {

@@ -106,7 +106,7 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
   // initialize the start parameters - try association first
   eCell.startLayer = eCell.startLayer
       ? eCell.startLayer
-      : eCell.leadParameters->associatedSurface().associatedLayer();
+      : eCell.leadParameters->referenceSurface().associatedLayer();
   eCell.startVolume = eCell.startVolume
       ? eCell.startVolume
       : (eCell.startLayer ? eCell.startLayer->enclosingTrackingVolume()

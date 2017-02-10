@@ -77,7 +77,7 @@ private:
       return std::make_unique<BoundParameters>(
           std::make_unique<BoundParameters::CovMatrix_t>(std::move(newCov)),
           newParValues,
-          m_pParameters->associatedSurface());
+          m_pParameters->referenceSurface());
     }
 
   private:

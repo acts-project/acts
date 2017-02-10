@@ -209,7 +209,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
 
   // if the desination surface is the start surface -> bail out and build
   // parameters directly
-  if (sf == sParameters->associatedSurface()) {
+  if (sf == sParameters->referenceSurface()) {
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "propagate",
                    "neut",
@@ -348,7 +348,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
 
   // if the desination surface is the start surface -> bail out and build
   // parameters directly
-  if (&sf == &(eCell.leadParameters->associatedSurface())) {
+  if (&sf == &(eCell.leadParameters->referenceSurface())) {
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "propagate",
                    "neut",
@@ -1138,7 +1138,7 @@ Acts::RungeKuttaEngine<MagneticField>::buildTrackParametersWithoutPropagation(
   return std::make_unique<const BoundParameters>(
       std::move(cov),
       tParameters.parameters(),
-      tParameters.associatedSurface());
+      tParameters.referenceSurface());
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -1164,7 +1164,7 @@ Acts::RungeKuttaEngine<MagneticField>::buildNeutralParametersWithoutPropagation(
   return std::make_unique<const NeutralBoundParameters>(
       std::move(cov),
       nParameters.parameters(),
-      nParameters.associatedSurface());
+      nParameters.referenceSurface());
 }
 
 /////////////////////////////////////////////////////////////////////////////////

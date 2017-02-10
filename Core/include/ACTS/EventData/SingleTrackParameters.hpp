@@ -248,7 +248,7 @@ protected:
   updateGlobalCoordinates(const local_parameter&)
   {
     m_vPosition = detail::coordinate_transformation::parameters2globalPosition(
-        getParameterSet().getParameters(), this->associatedSurface());
+        getParameterSet().getParameters(), this->referenceSurface());
   }
 
   ChargePolicy m_oChargePolicy;    ///< charge policy object distinguishing

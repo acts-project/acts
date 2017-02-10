@@ -174,7 +174,7 @@ public:
   }
 
   virtual const Surface&
-  associatedSurface() const final
+  referenceSurface() const final
   {
     return *m_pSurface;
   }

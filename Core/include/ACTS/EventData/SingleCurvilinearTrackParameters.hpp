@@ -125,7 +125,7 @@ public:
   }
 
   virtual const Surface&
-  associatedSurface() const final
+  referenceSurface() const final
   {
     m_upSurface.reset(new PlaneSurface(this->position(), this->momentum()));
 

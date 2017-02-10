@@ -652,7 +652,7 @@ ExtrapolationCell<T>::step(std::unique_ptr<const T>       stepParameters,
   // and set them to the new lead parameters
   leadParameters = stepParameters.get();
   // current step surface
-  const Surface* cssf = &(stepParameters->associatedSurface());
+  const Surface* cssf = &(stepParameters->referenceSurface());
   // get the last step surface - if it is identical with the current one ->
   // attach information
   const Surface* lssf = extrapolationSteps.size()

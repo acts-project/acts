@@ -50,7 +50,7 @@ Acts::RungeKuttaUtils::transformLocalToGlobal(bool useJac,
   p[3] = Vp[3];
   p[4] = Vp[4];
 
-  return transformLocalToGlobal(useJac, &Tp.associatedSurface(), p, P);
+  return transformLocalToGlobal(useJac, &Tp.referenceSurface(), p, P);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +75,7 @@ Acts::RungeKuttaUtils::transformLocalToGlobal(bool useJac,
   p[3] = Vp[3];
   p[4] = Vp[4];
 
-  return transformLocalToGlobal(useJac, &Tp.associatedSurface(), p, P);
+  return transformLocalToGlobal(useJac, &Tp.referenceSurface(), p, P);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -1330,7 +1330,7 @@ Acts::RungeKuttaUtils::jacobianTransformCurvilinearToLocal(
   P[1] = Vp[1];
   P[2] = Vp[2];
   P[3] = Vp[3];
-  jacobianTransformCurvilinearToLocal(P, &Tp.associatedSurface(), Jac);
+  jacobianTransformCurvilinearToLocal(P, &Tp.referenceSurface(), Jac);
 }
 
 /////////////////////////////////////////////////////////////////////////////////

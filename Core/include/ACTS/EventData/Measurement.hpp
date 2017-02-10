@@ -249,7 +249,7 @@ public:
    * @return reference to surface at which the measurement took place
    */
   const Acts::Surface&
-  associatedSurface() const
+  referenceSurface() const
   {
     return *m_pSurface;
   }
@@ -340,9 +340,9 @@ protected:
     out << parameters() << std::endl;
     out << "covariance matrix:" << std::endl;
     out << covariance() << std::endl;
-    out << "at " << (associatedSurface().isFree() ? "free" : "non-free")
+    out << "at " << (referenceSurface().isFree() ? "free" : "non-free")
         << " surface:" << std::endl;
-    out << associatedSurface();
+    out << referenceSurface();
 
     return out;
   }
@@ -367,7 +367,7 @@ public:
   const Surface&
   operator()(const Meas_t& m) const
   {
-    return m.associatedSurface();
+    return m.referenceSurface();
   }
 };
 

@@ -181,7 +181,7 @@ main()
   double std1, std2, l1, l2;
   for (const auto& step : exCell.extrapolationSteps) {
     const auto& tp = step.parameters;
-    if (tp->associatedSurface().type() != Surface::Cylinder) continue;
+    if (tp->referenceSurface().type() != Surface::Cylinder) continue;
 
     std1 = std_loc1(e);
     std2 = std_loc2(e);
@@ -190,7 +190,7 @@ main()
     ActsSymMatrixD<2> cov;
     cov << std1 * std1, 0, 0, std2 * std2;
     vMeasurements.push_back(Meas_t<eLOC_1, eLOC_2>(
-        tp->associatedSurface(), id, std::move(cov), l1, l2));
+        tp->referenceSurface(), id, std::move(cov), l1, l2));
     ++id;
   }
 

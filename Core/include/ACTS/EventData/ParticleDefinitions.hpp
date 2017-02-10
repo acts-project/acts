@@ -10,8 +10,8 @@
 // ParticleDefinitions.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_EVENTUTILS_PARTICLEDEFINITIONS_H
-#define ACTS_EVENTUTILS_PARTICLEDEFINITIONS_H
+#ifndef ACTS_EVENTDATA_PARTICLEDEFINITIONS_H
+#define ACTS_EVENTDATA_PARTICLEDEFINITIONS_H 1
 
 #include "ACTS/Utilities/Definitions.hpp"
 #include <vector>
@@ -31,8 +31,12 @@ namespace Acts {
 /// Enumeration for Particle type respecting
 /// the interaction with the material
 ///
+<<<<<<< HEAD
 ///
 enum ParticleType {
+=======
+  enum ParticleType {
+>>>>>>> 5d694a1... Change of associated surface to reference Surface
   nonInteracting = 0,  //!< for non-interacting extrapolation
   geantino       = 0,  //!< for non-interacting extrapolation
   electron = 1,  //!< reconstruction + fatras : type as electron hypothesis
@@ -432,4 +436,4 @@ ProcessVertex::addOutgoing(const ParticleProperties& pProperties)
 }
 }
 
-#endif
+#endif // ACTS_EVENTDATA_PARTICLEDEFINITIONS_H

@@ -10,9 +10,7 @@
 // MaterialEffectsEngine.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-// STL
 #include <sstream>
-// Extrapolation module
 #include "ACTS/Extrapolation/MaterialEffectsEngine.hpp"
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Material/SurfaceMaterial.hpp"
@@ -55,49 +53,32 @@ Acts::MaterialEffectsEngine::setLogger(std::unique_ptr<Logger> newLogger)
 // neutral extrapolation - just collect material /
 Acts::ExtrapolationCode
 Acts::MaterialEffectsEngine::handleMaterial(
-    Acts::ExCellNeutral&      eCell,
-    Acts::PropDirection       dir,
-    Acts::MaterialUpdateStage matupstage) const
+    ExCellNeutral&      eCell,
+    PropDirection       dir,
+    MaterialUpdateStage matupstage) const
 {
-  // for readability
-  const Surface* mSurface = eCell.materialSurface;
-  const Layer*   mLayer   = eCell.leadLayer;
-  // the Extrapolator made sure that the layer is the lead layer && the
   // parameters are the lead parameters
-  if (mSurface && mSurface->associatedMaterial()) {
-    EX_MSG_DEBUG(
+  // by definition the material surface is the one the parametrs are on
+  const Surface& mSurface = eCell.leadParameters->referenceSurface();
+  // go on if you have material associated
+  if (mSurface.associatedMaterial()) {
+      EX_MSG_DEBUG(
         ++eCell.navigationStep,
         "layer",
-        mLayer->geoID().value(GeometryID::layer_mask),
+        mSurface.geoID().value(GeometryID::layer_mask),
         "handleMaterial for neutral parameters called - collect material.");
     // path correction
     double pathCorrection
-        = mSurface->pathCorrection(eCell.leadParameters->position(),
-                                   dir * (eCell.leadParameters->momentum()));
-    // the relative direction wrt with the layer
-    PropDirection rlDir
-        = (pathCorrection > 0. ? alongMomentum : oppositeMomentum);
-    // multiply by the pre-and post-update factor
-    double mFactor = mSurface->associatedMaterial()->factor(rlDir, matupstage);
-    if (mFactor == 0.) {
-      EX_MSG_VERBOSE(eCell.navigationStep,
-                     "layer",
-                     mLayer->geoID().value(GeometryID::layer_mask),
-                     "material collection with "
-                         << (matupstage > 0. ? "pre " : "post ")
-                         << "factor 0.");
-      // return the parameters untouched -
-      return ExtrapolationCode::InProgress;
-    }
-    pathCorrection = mFactor * pathCorrection;
+        = fabs(mSurface.pathCorrection(eCell.leadParameters->position(),
+                                       eCell.leadParameters->momentum()));
     // screen output
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "layer",
-                   mLayer->geoID().value(GeometryID::layer_mask),
+                   mSurface.geoID().value(GeometryID::layer_mask),
                    "material update with corr factor = " << pathCorrection);
     // get the actual material bin
     const MaterialProperties* materialProperties
-        = mSurface->associatedMaterial()->material(
+        = mSurface.associatedMaterial()->material(
             eCell.leadParameters->position());
     // and let's check if there's acutally something to do
     if (materialProperties) {
@@ -107,9 +88,9 @@ Acts::MaterialEffectsEngine::handleMaterial(
       if (eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial)) {
         EX_MSG_VERBOSE(eCell.navigationStep,
                        "layer",
-                       mLayer->geoID().value(GeometryID::layer_mask),
+                       mSurface.geoID().value(GeometryID::layer_mask),
                        "collecting material of [t/X0] = " << thicknessInX0);
-        eCell.stepMaterial(*mSurface,
+        eCell.stepMaterial(mSurface,
                            eCell.leadLayer,
                            eCell.leadParameters->position(),
                            pathCorrection,
@@ -117,7 +98,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
       } else {
         EX_MSG_VERBOSE(eCell.navigationStep,
                        "layer",
-                       mLayer->geoID().value(GeometryID::layer_mask),
+                       mSurface.geoID().value(GeometryID::layer_mask),
                        "adding material of [t/X0] = " << thicknessInX0);
         eCell.addMaterial(pathCorrection, materialProperties);
       }
@@ -130,91 +111,58 @@ Acts::MaterialEffectsEngine::handleMaterial(
 // charged extrapolation
 Acts::ExtrapolationCode
 Acts::MaterialEffectsEngine::handleMaterial(
-    Acts::ExCellCharged&      eCell,
-    Acts::PropDirection       dir,
-    Acts::MaterialUpdateStage matupstage) const
+    ExCellCharged&      eCell,
+    PropDirection       dir,
+    MaterialUpdateStage matupstage) const
 {
-  // the material surface
-  const Surface* mSurface = eCell.materialSurface;
-  const Layer*   mLayer   = eCell.leadLayer;
-  // the Extrapolator made sure that the layer is the lead layer && the
+  
   // parameters are the lead parameters
-  if (mSurface && mSurface->associatedMaterial()) {
+  // by definition the material surface is the one the parametrs are on
+  const Surface& mSurface = eCell.leadParameters->referenceSurface();
+  // go on if you have material to deal with   
+  if (mSurface.associatedMaterial()) {
     EX_MSG_DEBUG(++eCell.navigationStep,
                  "layer",
-                 mLayer->geoID().value(GeometryID::layer_mask),
+                 mSurface.geoID().value(GeometryID::layer_mask),
                  "handleMaterial for charged parameters called - apply correction.");
     // update the track parameters
     updateTrackParameters(*eCell.leadParameters, eCell, dir, matupstage);
-
-    // check if material filling was requested
-    // if (eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial)){
-    //    EX_MSG_VERBOSE(eCell.navigationStep, "layer",
-    //    mLayer->geoID().value(GeometryID::layer_mask), "collecting material of [t/X0] = " <<
-    //    thicknessInX0);
-    //    eCell.stepMaterial(*mSurface, eCell.leadLayer,
-    //    eCell.leadParameters->position(), pathCorrection, materialProperties);
-    //} else {
-    //    EX_MSG_VERBOSE(eCell.navigationStep, "layer",
-    //    mLayer->geoID().value(GeometryID::layer_mask), "adding material of [t/X0] = " <<
-    //    thicknessInX0);
-    //    eCell.addMaterial(pathCorrection, materialProperties);
-    // }
-
-    // @todo sort out interface of track parameter update
-    // eCell.stepParameters =
-    //
-    // updateTrackParameters(eCell.leadParameters,eCell,dir,matupstage);
   }
   // only in case of post update it should not return InProgress
   return ExtrapolationCode::InProgress;
 }
 
-/** charged extrapolation */
+// update method for charged extrapolation
 void
 Acts::MaterialEffectsEngine::updateTrackParameters(
-    const Acts::TrackParameters& parameters,
-    Acts::ExCellCharged&         eCell,
-    Acts::PropDirection          dir,
-    Acts::MaterialUpdateStage    matupstage) const
+    const TrackParameters& parameters,
+     ExCellCharged&         eCell,
+     PropDirection          dir,
+     MaterialUpdateStage    matupstage) const
 {
-  // the material surface & it's material
-  const Surface* mSurface = eCell.materialSurface;
-  const Layer*   mLayer   = eCell.leadLayer;
+  // parameters are the lead parameters
+  // by definition the material surface is the one the parametrs are on
+  const Surface& mSurface = eCell.leadParameters->referenceSurface();
   // return if you have nothing to do
-  if (!mSurface || !mSurface->associatedMaterial()) return;
+  if (!mSurface.associatedMaterial()) return;
 
   // path correction
-  double pathCorrection = mSurface->pathCorrection(
-      parameters.position(), dir * (parameters.momentum()));
-  // the relative direction wrt with the layer
-  PropDirection rlDir
-      = (pathCorrection > 0. ? alongMomentum : oppositeMomentum);
-  // multiply by the pre-and post-update factor
-  double mFactor = mSurface->associatedMaterial()->factor(rlDir, matupstage);
-  if (mFactor == 0.) {
-    EX_MSG_VERBOSE(eCell.navigationStep,
-                   "layer",
-                   mLayer->geoID().value(GeometryID::layer_mask),
-                   "material update with "
-                       << (matupstage > 0. ? "pre " : "post ")
-                       << "factor 0. No update done.");
-    // return the parameters untouched -
-    return;
-  }
-  pathCorrection = mFactor * pathCorrection;
+  double pathCorrection = fabs(mSurface.pathCorrection(
+      parameters.position(), parameters.momentum()));
+
   // screen output
   EX_MSG_VERBOSE(eCell.navigationStep,
                  "layer",
-                 mLayer->geoID().value(GeometryID::layer_mask),
+                 mSurface.geoID().value(GeometryID::layer_mask),
                  "material update with corr factor = " << pathCorrection);
   // get the actual material bin
   const MaterialProperties* materialProperties
-      = mSurface->associatedMaterial()->material(parameters.position());
+      = mSurface.associatedMaterial()->material(parameters.position());
+  // check if anything should be done
+  bool corrConfig = (m_cfg.eLossCorrection || m_cfg.mscCorrection ||
+       eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial));
   // and let's check if there's acutally something to do
-  if (materialProperties && (m_cfg.eLossCorrection || m_cfg.mscCorrection
-                             || eCell.checkConfigurationMode(
-                                    ExtrapolationMode::CollectMaterial))) {
+  if (materialProperties && corrConfig) {
     // and add them
     int sign = int(eCell.materialUpdateMode);
     // a simple cross-check if the parameters are the initial ones
@@ -237,7 +185,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     if (m_cfg.eLossCorrection) {
       double sigmaP = 0.;
       double kazl   = 0.;
-      /** dE/dl ionization energy loss per path unit */
+      // dE/dl ionization energy loss per path unit 
       double dEdl = sign * dir
           * m_interactionFormulae.dEdl_ionization(
                 p, &material, eCell.particleType, sigmaP, kazl);
@@ -254,7 +202,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     }
     // (B) - update the covariance if needed
     if (uCovariance && m_cfg.mscCorrection) {
-      /** multiple scattering as function of dInX0 */
+      // multiple scattering as function of dInX0 
       double sigmaMS = m_interactionFormulae.sigmaMS(
           thicknessInX0 * pathCorrection, p, beta);
       double sinTheta          = sin(parameters.parameters()[eTHETA]);
@@ -270,7 +218,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     if (eCell.leadParameters != &eCell.startParameters) {
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "layer",
-                     mLayer->geoID().value(GeometryID::layer_mask),
+                     mSurface.geoID().value(GeometryID::layer_mask),
                      "material update on non-initial parameters.");
       // @todo how to update parameters
       // parameters.updateParameters(uParameters,uCovariance);
@@ -278,31 +226,31 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
       EX_MSG_VERBOSE(
           eCell.navigationStep,
           "layer",
-          mLayer->geoID().value(GeometryID::layer_mask),
+          mSurface.geoID().value(GeometryID::layer_mask),
           "material update on initial parameters, creating new ones.");
-      // create new parameters
-      const Surface& tSurface = parameters.associatedSurface();
-      // these are newly created
-      auto stepParameters = std::make_unique<const BoundParameters>(
-          std::move(uCovariance), uParameters, tSurface);
-      eCell.step(std::move(stepParameters), ExtrapolationMode::CollectMaterial);
+          // these are newly created
+          auto stepParameters = std::make_unique<const BoundParameters>(
+              std::move(uCovariance), uParameters, mSurface);
+          // this should change the leadParameters to the new stepParameters
+          eCell.step(std::move(stepParameters), ExtrapolationMode::CollectMaterial);
     }
 
-    // check if material filling was requested
+    // check if material filling was requested, 
+    // then fill it into the extrapolation cache 
     if (eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial)) {
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "layer",
-                     mLayer->geoID().value(GeometryID::layer_mask),
+                     mSurface.geoID().value(GeometryID::layer_mask),
                      "collecting material of [t/X0] = " << thicknessInX0);
-      eCell.stepMaterial(*mSurface,
-                         mLayer,
+      eCell.stepMaterial(mSurface,
+                         mSurface.associatedLayer(),
                          parameters.position(),
                          pathCorrection,
                          materialProperties);
     } else {
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "layer",
-                     mLayer->geoID().value(GeometryID::layer_mask),
+                     mSurface.geoID().value(GeometryID::layer_mask),
                      "adding material of [t/X0] = " << thicknessInX0);
       eCell.addMaterial(pathCorrection, materialProperties);
     }
