@@ -26,41 +26,22 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(GeometryID_test)
   {
     // create the volume shift and range
-    geo_id_value volume_shift = ACTS_BIT_SHIFT(volume_mask);
     geo_id_value volume_range = 64 - ACTS_BIT_SHIFT(volume_mask);
 
-    geo_id_value boundary_shift = ACTS_BIT_SHIFT(boundary_mask);
     geo_id_value boundary_range
         = ACTS_BIT_SHIFT(volume_mask) - ACTS_BIT_SHIFT(boundary_mask);
 
-    geo_id_value layer_shift = ACTS_BIT_SHIFT(layer_mask);
     geo_id_value layer_range
         = ACTS_BIT_SHIFT(boundary_mask) - ACTS_BIT_SHIFT(layer_mask);
 
-    geo_id_value approach_shift = ACTS_BIT_SHIFT(approach_mask);
     geo_id_value approach_range
         = ACTS_BIT_SHIFT(layer_mask) - ACTS_BIT_SHIFT(approach_mask);
 
-    geo_id_value sensitive_shift = ACTS_BIT_SHIFT(sensitive_mask);
     geo_id_value sensitive_range
         = ACTS_BIT_SHIFT(approach_mask) - ACTS_BIT_SHIFT(sensitive_mask);
 
-    geo_id_value channel_shift = ACTS_BIT_SHIFT(channel_mask);
     geo_id_value channel_range = ACTS_BIT_SHIFT(sensitive_mask)
         - ACTS_BIT_SHIFT(GeometryID::channel_mask);
-
-    BOOST_CHECK_EQUAL(56lu, volume_shift);
-    BOOST_CHECK_EQUAL(8lu, volume_range);
-    BOOST_CHECK_EQUAL(48lu, boundary_shift);
-    BOOST_CHECK_EQUAL(8lu, boundary_range);
-    BOOST_CHECK_EQUAL(40lu, layer_shift);
-    BOOST_CHECK_EQUAL(8lu, layer_range);
-    BOOST_CHECK_EQUAL(32lu, approach_shift);
-    BOOST_CHECK_EQUAL(8lu, approach_range);
-    BOOST_CHECK_EQUAL(16lu, sensitive_shift);
-    BOOST_CHECK_EQUAL(16lu, sensitive_range);
-    BOOST_CHECK_EQUAL(0lu, channel_shift);
-    BOOST_CHECK_EQUAL(16lu, channel_range);
 
     /// prepare all the masks and shifts
     std::vector<std::pair<geo_id_value, geo_id_value>> masks_range
@@ -71,13 +52,10 @@ namespace Test {
            {sensitive_mask, sensitive_range},
            {channel_mask, channel_range}};
 
-    size_t test = 0;
     for (auto msr : masks_range) {
 
       auto mask  = msr.first;
       auto range = msr.second;
-      ///
-
       /// test the full range of ids
       for (geo_id_value idv = 0; idv < pow(2, range); ++idv) {
         // create the geometry ID
