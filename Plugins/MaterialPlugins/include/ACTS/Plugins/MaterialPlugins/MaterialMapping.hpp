@@ -33,8 +33,7 @@ class LayerMaterialRecord;
 ///
 /// This class should be used to map material from the full and detailed
 /// detector geometry onto the simplified ACTS geometry. It offers options to
-/// map, average and finalize the material and to access the assigned and
-/// original material per layer for testing.
+/// map, average and finalize the material.
 ///
 
 class MaterialMapping
@@ -79,14 +78,6 @@ public:
   /// Acts::LayerMaterialRecord
   const std::map<const Layer*, LayerMaterialRecord>
   layerRecords() const;
-  /// @return returns all layers carrying material and their corresponding
-  /// material steps (original position) with their assigned material positions
-  /// on the layer
-  const std::map<const Acts::Layer*,
-                 std::vector<std::pair<const Acts::MaterialStep,
-                                       const Acts::Vector3D>>>
-  layerMaterialSteps() const;
-
   /// set logging instance
   void
   setLogger(std::unique_ptr<Logger> logger);
@@ -97,21 +88,19 @@ private:
   bool
   collectLayersAndHits(
       const MaterialTrackRecord& matTrackRec,
-      std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>&
-          layersAndHits);
+      std::map<const Acts::Layer*, Acts::Vector3D>& layersAndHits);
   /// internally used method to associate the material to the right layer in the
   /// tracking geometry
   void
   associateLayerMaterial(
       const MaterialTrackRecord& matTrackRec,
-      std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>&
-          layersAndHits);
+      std::map<const Acts::Layer*, Acts::Vector3D>& layersAndHits);
   /// internally used method to associate a hit to a given layer by recording it
   /// in the layer records map
   void
-  associateHit(const Layer*                    layer,
-               const Acts::Vector3D&           position,
-               const Acts::MaterialProperties* layerMaterialProperties);
+  associateHit(const Layer*                           layer,
+               const Acts::Vector3D&                  position,
+               const std::vector<Acts::MaterialStep>& layerMaterialSteps);
   /// configuration object
 
   const Logger&
@@ -126,21 +115,6 @@ private:
   std::unique_ptr<Logger> m_logger;
   /// object which connects the layer with its LayerMaterialRecord
   std::map<const Layer*, LayerMaterialRecord> m_layerRecords;
-  /// create object which connects layer with the original material step and its
-  /// assigned position on the layer
-  /// @note this object is a multimap which is used to internally collect all
-  /// the entries
-  std::multimap<const Acts::Layer*,
-                std::pair<const MaterialStep, const Acts::Vector3D>>
-      m_layersAndSteps;
-  // create object which connects layer with the original material step and its
-  /// assigned position on the layer
-  /// @note this object is the final version of m_layersAndSteps, where all the
-  /// entries are collected for each layer
-  std::map<const Acts::Layer*,
-           std::vector<std::pair<const Acts::MaterialStep,
-                                 const Acts::Vector3D>>>
-      m_finalLayersAndSteps;
 };
 }
 
@@ -148,14 +122,6 @@ inline const std::map<const Acts::Layer*, Acts::LayerMaterialRecord>
 Acts::MaterialMapping::layerRecords() const
 {
   return m_layerRecords;
-}
-
-inline const std::
-    map<const Acts::Layer*,
-        std::vector<std::pair<const Acts::MaterialStep, const Acts::Vector3D>>>
-    Acts::MaterialMapping::layerMaterialSteps() const
-{
-  return m_finalLayersAndSteps;
 }
 
 #endif  // ACTS_MATERIALPLUGINS_MATERIALMAPPIN_Hr

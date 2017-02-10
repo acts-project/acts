@@ -24,7 +24,7 @@
 
 Acts::MaterialMapping::MaterialMapping(const Config&           cnf,
                                        std::unique_ptr<Logger> log)
-  : m_cnf(cnf), m_logger(std::move(log)), m_layerRecords(), m_layersAndSteps()
+  : m_cnf(cnf), m_logger(std::move(log)), m_layerRecords()
 
 {
   // check if extrapolation engine is given
@@ -48,7 +48,7 @@ void
 Acts::MaterialMapping::mapMaterial(const MaterialTrackRecord& matTrackRec)
 {
   // create object which connects layer with hits
-  std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>> layersAndHits;
+  std::map<const Acts::Layer*, Acts::Vector3D> layersAndHits;
   // associate the material to the layer only if hits have been collected
   if (collectLayersAndHits(matTrackRec, layersAndHits))
     associateLayerMaterial(matTrackRec, layersAndHits);
@@ -57,7 +57,7 @@ Acts::MaterialMapping::mapMaterial(const MaterialTrackRecord& matTrackRec)
 bool
 Acts::MaterialMapping::collectLayersAndHits(
     const MaterialTrackRecord& matTrackRec,
-    std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>& layersAndHits)
+    std::map<const Acts::Layer*, Acts::Vector3D>& layersAndHits)
 {
   // access the parameters
   double                    theta         = matTrackRec.theta();
@@ -82,13 +82,9 @@ Acts::MaterialMapping::collectLayersAndHits(
     std::unique_ptr<Acts::ActsSymMatrixD<Acts::NGlobalPars>> cov;
     Acts::NeutralCurvilinearParameters       startParameters(
         std::move(cov), startPos, direction);
-    // c        Acts::CurvilinearParameters
-    // startParameters(std::move(cov),startPos,direction,1.);
     // create a neutral extrapolation cell and configure it to only collect
     // layer and surfaces with a SurfaceMaterialProxy
     Acts::ExtrapolationCell<Acts::NeutralParameters> ecc(startParameters);
-    // c        Acts::ExtrapolationCell<Acts::TrackParameters>
-    // ecc(startParameters);
     ecc.addConfigurationMode(Acts::ExtrapolationMode::StopAtBoundary);
     ecc.addConfigurationMode(Acts::ExtrapolationMode::FATRAS);
     ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectSensitive);
@@ -106,7 +102,6 @@ Acts::MaterialMapping::collectLayersAndHits(
       ACTS_VERBOSE("[+] Extrapolation to layers did succeed and found "
                    << nLayersHit
                    << " layers.");
-      layersAndHits.reserve(nLayersHit);
       // find all the intersected material - remember the last parameters
       std::unique_ptr<const Acts::NeutralParameters> parameters = nullptr;
       // loop over the collected information
@@ -114,8 +109,7 @@ Acts::MaterialMapping::collectLayersAndHits(
         if (es.stepConfiguration.checkMode(
                 Acts::ExtrapolationMode::CollectMaterial)) {
           // CHECK now different than original, & raw pointer to layer
-          layersAndHits.push_back(
-              std::make_pair(es.layer, es.materialPosition));
+          layersAndHits.emplace(es.layer, es.materialPosition);
         }
         // continue if we have parameters
       }  // loop over extrapolationsteps
@@ -127,19 +121,23 @@ Acts::MaterialMapping::collectLayersAndHits(
 void
 Acts::MaterialMapping::associateLayerMaterial(
     const MaterialTrackRecord& matTrackRec,
-    std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>& layersAndHits)
+    std::map<const Acts::Layer*, Acts::Vector3D>& layersAndHits)
 {
   // now go through the material step collection and find best fitting layer
   // layers are ordered, hence you can move the starting point along
   // CHECK if Pre-Post-Update needs to be done - Here!
-  size_t                    nLayersHit    = layersAndHits.size();
-  size_t                    currentLayer  = 0;
+  std::map<const Acts::Layer*, Acts::Vector3D>::iterator currentLayer
+      = layersAndHits.begin();
   std::vector<MaterialStep> materialSteps = matTrackRec.materialSteps();
+
+  /// create object which connects layer with the original material step and its
+  /// assigned position on the layer
+  std::multimap<const Acts::Layer*, const MaterialStep> layersAndSteps;
   // loop through hits and find the closest layer, the start point moves
   // outwards as we go
   for (auto& step : materialSteps) {
     ACTS_VERBOSE("[L] starting from layer "
-                 << currentLayer
+                 << std::distance(layersAndHits.begin(), currentLayer)
                  << " from layer collection for this step.");
     // step length and position
     Acts::Vector3D pos(step.position().x, step.position().y, step.position().z);
@@ -147,37 +145,37 @@ Acts::MaterialMapping::associateLayerMaterial(
     // if the currentlayer is the last layer and the hit is still inside ->
     // assign & check if the layers before have been assigned the right way -
     // reassign in case another layer fits better
-    if (currentLayer < nLayersHit - 1) {
+    if (currentLayer != std::prev(layersAndHits.end())) {
       // search through the layers - this is the reference distance for
       // projection
-      double currentDistance
-          = (pos - layersAndHits.at(currentLayer).second).mag();
-      ACTS_VERBOSE("  - current distance is "
-                   << currentDistance
-                   << " from "
-                   << Acts::toString(pos)
-                   << " and "
-                   << Acts::toString(layersAndHits.at(currentLayer).second));
+      double currentDistance = (pos - currentLayer->second).mag();
+      ACTS_VERBOSE(
+          "  - current distance is " << currentDistance << " from "
+                                     << Acts::toString(pos)
+                                     << " and "
+                                     << Acts::toString(currentLayer->second));
       // check if other layer is more suitable
-      for (size_t testLayer = (currentLayer + 1); testLayer < nLayersHit;
+      for (std::map<const Acts::Layer*, Acts::Vector3D>::iterator testLayer
+           = std::next(currentLayer);
+           testLayer != layersAndHits.end();
            ++testLayer) {
         // calculate the distance to the testlayer
-        double testDistance = (pos - layersAndHits.at(testLayer).second).mag();
+        double testDistance = (pos - testLayer->second).mag();
         ACTS_VERBOSE("[L] Testing layer "
-                     << testLayer
+                     << std::distance(layersAndHits.begin(), testLayer)
                      << " from layer collection for this step.");
-        ACTS_VERBOSE(" - test distance is "
-                     << testDistance
-                     << " from "
-                     << Acts::toString(pos)
-                     << " and "
-                     << Acts::toString(layersAndHits.at(testLayer).second));
+        ACTS_VERBOSE(
+            " - test distance is " << testDistance << " from "
+                                   << Acts::toString(pos)
+                                   << " and "
+                                   << Acts::toString(testLayer->second));
         if (testDistance < currentDistance) {
-          ACTS_VERBOSE(
-              "[L] Skipping over to current layer " << testLayer << " because "
-                                                    << testDistance
-                                                    << " < "
-                                                    << currentDistance);
+          ACTS_VERBOSE("[L] Skipping over to current layer "
+                       << std::distance(layersAndHits.begin(), testLayer)
+                       << " because "
+                       << testDistance
+                       << " < "
+                       << currentDistance);
           // the test distance did shrink - update currentlayer
           currentLayer    = testLayer;
           currentDistance = testDistance;
@@ -187,9 +185,8 @@ Acts::MaterialMapping::associateLayerMaterial(
       }           // check for better fitting layers
     }             // if last layer
     // the current layer *should* be correct now
-    const Acts::Layer*   assignedLayer = layersAndHits.at(currentLayer).first;
-    const Acts::Vector3D assignedPosition
-        = layersAndHits.at(currentLayer).second;
+    const Acts::Layer*   assignedLayer    = currentLayer->first;
+    const Acts::Vector3D assignedPosition = currentLayer->second;
     // correct material thickness with pathcorrection
     double theta = matTrackRec.theta();
     double phi   = matTrackRec.phi();
@@ -207,19 +204,55 @@ Acts::MaterialMapping::associateLayerMaterial(
     // correct also the thickness of the material step
     Acts::MaterialStep updatedStep(*layerMaterialProperties, step.position());
     // fill the step pos of the current material step
-    m_layersAndSteps.emplace(assignedLayer,
-                             std::make_pair(updatedStep, assignedPosition));
+    layersAndSteps.emplace(assignedLayer, updatedStep);
     // associate the hit
     ACTS_VERBOSE("[L] Now associate hit at " << Acts::toString(pos));
-    associateHit(assignedLayer, assignedPosition, layerMaterialProperties);
+
   }  // go through material step collection
+
+  // get all steps per layer
+  std::vector<std::pair<const Acts::Layer*, const MaterialStep>> layers;
+  // get layer keys
+  std::unique_copy(
+      begin(layersAndSteps),
+      end(layersAndSteps),
+      back_inserter(layers),
+      [](const std::pair<const Acts::Layer*, const MaterialStep>& entry1,
+         const std::pair<const Acts::Layer*, const MaterialStep>& entry2) {
+        return (entry1.first == entry2.first);
+      });
+  // loop through the different layers
+  for (auto& layer : layers) {
+    // now access all the material steps assigned to one layer
+    std::pair<std::multimap<const Acts::Layer*,
+                            const MaterialStep>::const_iterator,
+              std::multimap<const Acts::Layer*,
+                            const MaterialStep>::const_iterator>
+        layerRange;
+    layerRange = layersAndSteps.equal_range(layer.first);
+    // write out the steps per layer
+    std::vector<Acts::MaterialStep> steps;
+    // get steps per layer
+    for (auto step = layerRange.first; step != layerRange.second; ++step) {
+      steps.push_back((*step).second);
+    }
+    // assigned position is the same for all steps on one layer
+    Acts::MaterialStep::Position assignedPos(layersAndHits.at(layer.first).x(),
+                                             layersAndHits.at(layer.first).y(),
+                                             layersAndHits.at(layer.first).z());
+    // get steps per layer
+    // asssociate the steps to a hit in the layer
+    associateHit(layer.first,
+                 Acts::Vector3D(assignedPos.x, assignedPos.y, assignedPos.z),
+                 steps);
+  }
 }
 
 void
 Acts::MaterialMapping::associateHit(
-    const Layer*                    layer,
-    const Acts::Vector3D&           position,
-    const Acts::MaterialProperties* layerMaterialProperties)
+    const Layer*                           layer,
+    const Acts::Vector3D&                  position,
+    const std::vector<Acts::MaterialStep>& layerMaterialSteps)
 {
   auto layerRecord = m_layerRecords.find(layer);
   // if layer was not present already create new Material Record
@@ -235,10 +268,9 @@ Acts::MaterialMapping::associateHit(
   }
   ACTS_VERBOSE("[L] Add new layer material properties  at position "
                << Acts::toString(position));
-  ACTS_VERBOSE(*layerMaterialProperties);
   // add material to record, if record exists already
   m_layerRecords[layer].addLayerMaterialProperties(position,
-                                                   layerMaterialProperties);
+                                                   layerMaterialSteps);
 }
 
 void
@@ -260,44 +292,5 @@ Acts::MaterialMapping::finalizeLayerMaterial()
   for (auto& layRecord : m_layerRecords) {
     layRecord.first->materialSurface()->setAssociatedMaterial(
         layRecord.second.layerMaterial());
-  }
-
-  // finalize the layers and Steps
-  std::vector<std::pair<const Acts::Layer*,
-                        std::pair<const Acts::MaterialStep,
-                                  const Acts::Vector3D&>>>
-      layers;
-  unique_copy(begin(m_layersAndSteps),
-              end(m_layersAndSteps),
-              back_inserter(layers),
-              [](const std::pair<const Acts::Layer*,
-                                 std::pair<const Acts::MaterialStep,
-                                           const Acts::Vector3D&>>& entry1,
-                 const std::pair<const Acts::Layer*,
-                                 std::pair<const Acts::MaterialStep,
-                                           const Acts::Vector3D&>>& entry2) {
-                return (entry1.first == entry2.first);
-              });
-
-  for (auto& layer : layers) {
-    // now access all the material steps assigned to one layer
-    std::pair<std::multimap<const Acts::Layer*,
-                            std::pair<const Acts::MaterialStep,
-                                      const Acts::Vector3D>>::const_iterator,
-              std::multimap<const Acts::Layer*,
-                            std::pair<const Acts::MaterialStep,
-                                      const Acts::Vector3D>>::const_iterator>
-        layerRange;
-    layerRange = m_layersAndSteps.equal_range(layer.first);
-    // write out the steps per layer
-    std::vector<std::pair<const Acts::MaterialStep, const Acts::Vector3D>>
-        stepsAndLayerPos;
-
-    for (auto step = layerRange.first; step != layerRange.second; ++step) {
-      stepsAndLayerPos.push_back(
-          std::make_pair((*step).second.first, (*step).second.second));
-    }
-
-    m_finalLayersAndSteps.emplace(layer.first, stepsAndLayerPos);
   }
 }

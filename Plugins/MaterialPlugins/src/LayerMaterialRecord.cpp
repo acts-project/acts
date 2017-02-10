@@ -13,12 +13,12 @@
 #include "ACTS/Plugins/MaterialPlugins/LayerMaterialRecord.hpp"
 
 Acts::LayerMaterialRecord::LayerMaterialRecord()
-  : m_binUtility(nullptr), m_materialMatrix()
+  : m_binUtility(nullptr), m_materialMatrix(), m_matStepsAndAssignedPos()
 {
 }
 
 Acts::LayerMaterialRecord::LayerMaterialRecord(const BinUtility* binutility)
-  : m_binUtility(binutility), m_materialMatrix()
+  : m_binUtility(binutility), m_materialMatrix(), m_matStepsAndAssignedPos()
 {
   // reserve
   m_materialMatrix.reserve(m_binUtility->max(1) + 1);
@@ -38,6 +38,7 @@ Acts::LayerMaterialRecord::LayerMaterialRecord(
     const LayerMaterialRecord& lmrecord)
   : m_binUtility(lmrecord.m_binUtility)
   , m_materialMatrix(lmrecord.m_materialMatrix)
+  , m_matStepsAndAssignedPos(lmrecord.m_matStepsAndAssignedPos)
 {
 }
 
@@ -53,30 +54,59 @@ Acts::LayerMaterialRecord::operator=(const LayerMaterialRecord& lmrecord)
   if (this != &lmrecord) {
     m_binUtility     = lmrecord.m_binUtility;
     m_materialMatrix = lmrecord.m_materialMatrix;
+    m_matStepsAndAssignedPos.clear();
   }
   return (*this);
 }
 
 void
 Acts::LayerMaterialRecord::addLayerMaterialProperties(
-    const Acts::Vector3D&           pos,
-    const Acts::MaterialProperties* newMaterial)
+    const Acts::Vector3D&                  pos,
+    const std::vector<Acts::MaterialStep>& layerMaterialSteps)
 {
+  // sum up all material at this point for this layer
+  float newThickness = 0.;
+  float newRho       = 0.;
+  float newX0        = 0.;
+  float newL0        = 0.;
+  float newA         = 0.;
+  float newZ         = 0.;
+
+  for (auto& layerStep : layerMaterialSteps) {
+    float t       = layerStep.material().thickness();
+    float density = layerStep.material().averageRho();
+    newThickness += t;
+    newRho += density * t;
+    newX0 += layerStep.material().x0() * t;
+    newL0 += layerStep.material().l0() * t;
+    newA += layerStep.material().averageA() * density * t;
+    newZ += layerStep.material().averageZ() * density * t;
+  }
+
+  if (newRho != 0.) {
+    newA /= newRho;
+    newZ /= newRho;
+  }
+  if (newThickness != 0.) {
+    newX0 /= newThickness;
+    newL0 /= newThickness;
+    newRho /= newThickness;
+  }
+
+  // now add it at the corresponding assigned position
   // get the bins corresponding to the position
   size_t bin0 = m_binUtility->bin(pos, 0);
   size_t bin1 = m_binUtility->bin(pos, 1);
   // get the material which might be there already, add new material and
   // weigh it
-  const Acts::MaterialProperties* material = m_materialMatrix.at(bin1).at(bin0);
-  float                           newThickness = newMaterial->thickness();
-  float                           newRho       = newMaterial->averageRho();
-  float                           thickness    = 0.;
-  float                           rho          = 0.;
-  float                           x0           = 0.;
-  float                           l0           = 0.;
-  float                           A            = 0.;
-  float                           Z            = 0.;
-  // access the new material properties
+  const Acts::MaterialProperties* material = m_materialMatrix.at(bin2).at(bin1);
+  float                           thickness = 0.;
+  float                           rho       = 0.;
+  float                           x0        = 0.;
+  float                           l0        = 0.;
+  float                           A         = 0.;
+  float                           Z         = 0.;
+  // access the old material properties
   if (material) {
     thickness += material->thickness();
     rho += material->averageRho();
@@ -88,10 +118,10 @@ Acts::LayerMaterialRecord::addLayerMaterialProperties(
   // add the new material properties and weigh them
   thickness += newThickness;
   rho += newRho * newThickness;
-  x0 += newMaterial->x0() * newThickness;
-  l0 += newMaterial->l0() * newThickness;
-  A += newMaterial->averageA() * newRho * newThickness;
-  Z += newMaterial->averageZ() * newRho * newThickness;
+  x0 += newX0 * newThickness;
+  l0 += newL0 * newThickness;
+  A += newA * newRho * newThickness;
+  Z += newZ * newRho * newThickness;
   // set the new current material (not averaged yet)
   const Acts::Material updatedMaterial(x0, l0, A, Z, rho);
   // pick the number of entries for the next material entry
