@@ -101,13 +101,6 @@ public:
     m_value += ACTS_BIT_ENCODE(type_id, type_mask);
   }
 
-  /// Add some stuff - a new
-  void
-  add(geo_id_value type_id, geo_id_value type_mask)
-  {
-    m_value += ACTS_BIT_ENCODE(type_id, type_mask);
-  }
-
   /// return the value
   ///
   /// @param mask is the mask to be applied

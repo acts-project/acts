@@ -31,13 +31,9 @@ namespace Acts {
 /// Enumeration for Particle type respecting
 /// the interaction with the material
 ///
-<<<<<<< HEAD
-///
 enum ParticleType {
-=======
-  enum ParticleType {
->>>>>>> 5d694a1... Change of associated surface to reference Surface
-  nonInteracting = 0,  //!< for non-interacting extrapolation
+
+    nonInteracting = 0,  //!< for non-interacting extrapolation
   geantino       = 0,  //!< for non-interacting extrapolation
   electron = 1,  //!< reconstruction + fatras : type as electron hypothesis
   muon     = 2,  //!< reconstruction + fatras : type as muon hypothesis
