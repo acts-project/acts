@@ -181,15 +181,23 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
             rMin,
             rMax);
 
+        Acts::DiscSurface* centralSurface
+            = new Acts::DiscSurface(transform, rMin, rMax);
+
         // set material surface
         if (layerPos == Acts::LayerMaterialPos::inner)
           innerBoundary->setAssociatedMaterial(materialProxy);
 
         if (layerPos == Acts::LayerMaterialPos::outer)
           outerBoundary->setAssociatedMaterial(materialProxy);
+
+        if (layerPos == Acts::LayerMaterialPos::central)
+          centralSurface->setAssociatedMaterial(materialProxy);
+
         // collect approach surfaces
         aSurfaces.push_back(innerBoundary);
         aSurfaces.push_back(outerBoundary);
+        aSurfaces.push_back(centralSurface);
         // create an ApproachDescriptor with standard surfaces - these
         // will be deleted by the approach descriptor
         approachDescriptor = std::
@@ -207,10 +215,6 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
                                           m_cfg.bTypePhi,
                                           transform,
                                           std::move(approachDescriptor));
-      // hand over the possible material if it should be in the center
-      if (layerPos == Acts::LayerMaterialPos::central)
-        negativeLayer->surfaceRepresentation().setAssociatedMaterial(
-            materialProxy);
       // push back created layer
       layers.push_back(negativeLayer);
     }
@@ -327,6 +331,10 @@ Acts::DD4hepLayerBuilder::centralLayers() const
         // create outer boundary surface
         Acts::CylinderSurface* outerBoundary
             = new Acts::CylinderSurface(transform, rMax, halfZ);
+        // create the central surface
+        Acts::CylinderSurface* centralSurface
+            = new Acts::CylinderSurface(transform, (rMin + rMax) * 0.5, halfZ);
+
         // check if the material should be set to the inner or outer boundary
         // and set it in case
         if (layerPos == Acts::LayerMaterialPos::inner)
@@ -335,8 +343,12 @@ Acts::DD4hepLayerBuilder::centralLayers() const
         if (layerPos == Acts::LayerMaterialPos::outer)
           outerBoundary->setAssociatedMaterial(materialProxy);
 
+        if (layerPos == Acts::LayerMaterialPos::central)
+          centralSurface->setAssociatedMaterial(materialProxy);
+
         // collect the surfaces
         aSurfaces.push_back(innerBoundary);
+        aSurfaces.push_back(centralSurface);
         aSurfaces.push_back(outerBoundary);
         // create an ApproachDescriptor with standard surfaces - these
         // will be deleted by the approach descriptor
@@ -354,11 +366,6 @@ Acts::DD4hepLayerBuilder::centralLayers() const
                                               m_cfg.bTypeZ,
                                               transform,
                                               std::move(approachDescriptor));
-
-      // hand over the possible material if it should be in the center
-      if (layerPos == Acts::LayerMaterialPos::central)
-        centralLayer->surfaceRepresentation().setAssociatedMaterial(
-            materialProxy);
 
       // push back created layer
       layers.push_back(centralLayer);
@@ -506,14 +513,21 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
             rMin,
             rMax);
 
+        Acts::DiscSurface* centralSurface
+            = new Acts::DiscSurface(transform, rMin, rMax);
+
         // set material surface
         if (layerPos == Acts::LayerMaterialPos::inner)
           innerBoundary->setAssociatedMaterial(materialProxy);
 
         if (layerPos == Acts::LayerMaterialPos::outer)
           outerBoundary->setAssociatedMaterial(materialProxy);
+
+        if (layerPos == Acts::LayerMaterialPos::central)
+          centralSurface->setAssociatedMaterial(materialProxy);
         // collect approach surfaces
         aSurfaces.push_back(innerBoundary);
+        aSurfaces.push_back(centralSurface);
         aSurfaces.push_back(outerBoundary);
         // create an ApproachDescriptor with standard surfaces - these
         // will be deleted by the approach descriptor
@@ -532,10 +546,6 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
                                           m_cfg.bTypePhi,
                                           transform,
                                           std::move(approachDescriptor));
-      // hand over the possible material if it should be in the center
-      if (layerPos == Acts::LayerMaterialPos::central)
-        positiveLayer->surfaceRepresentation().setAssociatedMaterial(
-            materialProxy);
       // push back created layer
       layers.push_back(positiveLayer);
     }
