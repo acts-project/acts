@@ -61,9 +61,10 @@ Acts::LayerMaterialRecord::operator=(const LayerMaterialRecord& lmrecord)
 
 void
 Acts::LayerMaterialRecord::addLayerMaterialProperties(
-    const Acts::Vector3D&                  pos,
-    const std::vector<Acts::MaterialStep>& layerMaterialSteps)
+    const Acts::Vector3D&                 pos,
+    const std::vector<Acts::MaterialStep> layerMaterialSteps)
 {
+  m_matStepsAndAssignedPos.push_back(std::make_pair(layerMaterialSteps, pos));
   // sum up all material at this point for this layer
   float newThickness = 0.;
   float newRho       = 0.;

@@ -66,8 +66,8 @@ public:
   /// added at the given position
   void
   addLayerMaterialProperties(
-      const Acts::Vector3D&                  pos,
-      const std::vector<Acts::MaterialStep>& layerMaterialSteps);
+      const Acts::Vector3D&                 pos,
+      const std::vector<Acts::MaterialStep> layerMaterialSteps);
   /// @return returns all material steps per Track (original position) with
   /// their assigned material positions on the layer
   ///  @note this function is intended to be used to create material maps for
@@ -85,15 +85,15 @@ public:
   layerMaterial() const;
 
 private:
-  /// a vector of all material steps assigned to one layer per track and its
-  /// corresponding assigned position
-  std::vector<std::pair<const std::vector<MaterialStep>, const Acts::Vector3D>>
-      m_matStepsAndAssignedPos;
   /// two dimensional grid on which the material is binned
   const BinUtility* m_binUtility;
   /// two dimensional material matrix describing the material binned according
   /// to the binUtility
   std::vector<std::vector<const Acts::MaterialProperties*>> m_materialMatrix;
+  /// a vector of all material steps assigned to one layer per track and its
+  /// corresponding assigned position
+  std::vector<std::pair<const std::vector<MaterialStep>, const Acts::Vector3D>>
+      m_matStepsAndAssignedPos;
 };
 
 inline const std::vector<std::pair<const std::vector<MaterialStep>,
