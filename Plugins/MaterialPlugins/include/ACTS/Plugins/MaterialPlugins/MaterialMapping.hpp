@@ -88,13 +88,15 @@ private:
   bool
   collectLayersAndHits(
       const MaterialTrackRecord& matTrackRec,
-      std::map<const Acts::Layer*, Acts::Vector3D>& layersAndHits);
+      std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>&
+          layersAndHits);
   /// internally used method to associate the material to the right layer in the
   /// tracking geometry
   void
   associateLayerMaterial(
       const MaterialTrackRecord& matTrackRec,
-      std::map<const Acts::Layer*, Acts::Vector3D>& layersAndHits);
+      std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>&
+          layersAndHits);
   /// internally used method to associate a hit to a given layer by recording it
   /// in the layer records map
   void

@@ -48,7 +48,7 @@ void
 Acts::MaterialMapping::mapMaterial(const MaterialTrackRecord& matTrackRec)
 {
   // create object which connects layer with hits
-  std::map<const Acts::Layer*, Acts::Vector3D> layersAndHits;
+  std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>> layersAndHits;
   // associate the material to the layer only if hits have been collected
   if (collectLayersAndHits(matTrackRec, layersAndHits))
     associateLayerMaterial(matTrackRec, layersAndHits);
@@ -57,7 +57,7 @@ Acts::MaterialMapping::mapMaterial(const MaterialTrackRecord& matTrackRec)
 bool
 Acts::MaterialMapping::collectLayersAndHits(
     const MaterialTrackRecord& matTrackRec,
-    std::map<const Acts::Layer*, Acts::Vector3D>& layersAndHits)
+    std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>& layersAndHits)
 {
   // access the parameters
   double                    theta         = matTrackRec.theta();
@@ -109,7 +109,8 @@ Acts::MaterialMapping::collectLayersAndHits(
         if (es.stepConfiguration.checkMode(
                 Acts::ExtrapolationMode::CollectMaterial)) {
           // CHECK now different than original, & raw pointer to layer
-          layersAndHits.emplace(es.layer, es.materialPosition);
+          layersAndHits.push_back(
+              std::make_pair(es.layer, es.materialPosition));
         }
         // continue if we have parameters
       }  // loop over extrapolationsteps
@@ -121,18 +122,22 @@ Acts::MaterialMapping::collectLayersAndHits(
 void
 Acts::MaterialMapping::associateLayerMaterial(
     const MaterialTrackRecord& matTrackRec,
-    std::map<const Acts::Layer*, Acts::Vector3D>& layersAndHits)
+    std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>& layersAndHits)
 {
   // now go through the material step collection and find best fitting layer
   // layers are ordered, hence you can move the starting point along
-  // CHECK if Pre-Post-Update needs to be done - Here!
-  std::map<const Acts::Layer*, Acts::Vector3D>::iterator currentLayer
+  std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>::iterator
+      currentLayer
       = layersAndHits.begin();
+  // access the material steps of this track record
   std::vector<MaterialStep> materialSteps = matTrackRec.materialSteps();
 
-  /// create object which connects layer with the original material step and its
-  /// assigned position on the layer
-  std::multimap<const Acts::Layer*, const MaterialStep> layersAndSteps;
+  // create object which connects layer with the original material step and its
+  // assigned position on the layer
+  std::map<const Acts::Layer*,
+           std::pair<const Vector3D, std::vector<MaterialStep>>>
+      layersPosAndSteps;
+
   // loop through hits and find the closest layer, the start point moves
   // outwards as we go
   for (auto& step : materialSteps) {
@@ -155,7 +160,8 @@ Acts::MaterialMapping::associateLayerMaterial(
                                      << " and "
                                      << Acts::toString(currentLayer->second));
       // check if other layer is more suitable
-      for (std::map<const Acts::Layer*, Acts::Vector3D>::iterator testLayer
+      for (std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>::iterator
+               testLayer
            = std::next(currentLayer);
            testLayer != layersAndHits.end();
            ++testLayer) {
@@ -185,8 +191,7 @@ Acts::MaterialMapping::associateLayerMaterial(
       }           // check for better fitting layers
     }             // if last layer
     // the current layer *should* be correct now
-    const Acts::Layer*   assignedLayer    = currentLayer->first;
-    const Acts::Vector3D assignedPosition = currentLayer->second;
+    const Acts::Layer* assignedLayer = currentLayer->first;
     // correct material thickness with pathcorrection
     double theta = matTrackRec.theta();
     double phi   = matTrackRec.phi();
@@ -203,48 +208,27 @@ Acts::MaterialMapping::associateLayerMaterial(
                                  step.material().thickness() / pathCorrection);
     // correct also the thickness of the material step
     Acts::MaterialStep updatedStep(*layerMaterialProperties, step.position());
-    // fill the step pos of the current material step
-    layersAndSteps.emplace(assignedLayer, updatedStep);
+    // fill the current material step and its assigned position
+    // first check if layer is already there
+    auto layerPosSteps = layersPosAndSteps.find(assignedLayer);
+    // just fill in material step if layer is already there
+    // otherwise create new entry
+    if (layerPosSteps != layersPosAndSteps.end())
+      layerPosSteps->second.second.push_back(updatedStep);
+    else
+      layersPosAndSteps.emplace(
+          assignedLayer,
+          std::make_pair(currentLayer->second,
+                         std::vector<MaterialStep>{updatedStep}));
+
     // associate the hit
-    ACTS_VERBOSE("[L] Now associate hit at " << Acts::toString(pos));
+    ACTS_VERBOSE("[L] Now associate hit " << Acts::toString(pos) << " at "
+                                          << currentLayer->second);
+  }
 
-  }  // go through material step collection
-
-  // get all steps per layer
-  std::vector<std::pair<const Acts::Layer*, const MaterialStep>> layers;
-  // get layer keys
-  std::unique_copy(
-      begin(layersAndSteps),
-      end(layersAndSteps),
-      back_inserter(layers),
-      [](const std::pair<const Acts::Layer*, const MaterialStep>& entry1,
-         const std::pair<const Acts::Layer*, const MaterialStep>& entry2) {
-        return (entry1.first == entry2.first);
-      });
-  // loop through the different layers
-  for (auto& layer : layers) {
-    // now access all the material steps assigned to one layer
-    std::pair<std::multimap<const Acts::Layer*,
-                            const MaterialStep>::const_iterator,
-              std::multimap<const Acts::Layer*,
-                            const MaterialStep>::const_iterator>
-        layerRange;
-    layerRange = layersAndSteps.equal_range(layer.first);
-    // write out the steps per layer
-    std::vector<Acts::MaterialStep> steps;
-    // get steps per layer
-    for (auto step = layerRange.first; step != layerRange.second; ++step) {
-      steps.push_back((*step).second);
-    }
-    // assigned position is the same for all steps on one layer
-    Acts::MaterialStep::Position assignedPos(layersAndHits.at(layer.first).x(),
-                                             layersAndHits.at(layer.first).y(),
-                                             layersAndHits.at(layer.first).z());
-    // get steps per layer
-    // asssociate the steps to a hit in the layer
-    associateHit(layer.first,
-                 Acts::Vector3D(assignedPos.x, assignedPos.y, assignedPos.z),
-                 steps);
+  // associate the steps
+  for (auto& layer : layersPosAndSteps) {
+    associateHit(layer.first, layer.second.first, layer.second.second);
   }
 }
 
