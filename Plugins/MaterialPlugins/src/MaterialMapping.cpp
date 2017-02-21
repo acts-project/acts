@@ -79,7 +79,7 @@ Acts::MaterialMapping::collectLayersAndHits(
     Acts::Vector3D direction(cos(phi), sin(phi), sinh(eta));
     // create the beginning neutral parameters to extrapolate through the
     // geometry
-    std::unique_ptr<Acts::ActsSymMatrixD<5>> cov;
+    std::unique_ptr<Acts::ActsSymMatrixD<Acts::NGlobalPars>> cov;
     Acts::NeutralCurvilinearParameters       startParameters(
         std::move(cov), startPos, direction);
     // c        Acts::CurvilinearParameters

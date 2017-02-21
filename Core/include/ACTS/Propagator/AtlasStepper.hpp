@@ -32,9 +32,9 @@ class AtlasStepper
     double field[3] = {0., 0., 0.};
     double pVector[64];
     // result
-    double             parameters[5] = {0., 0., 0., 0., 0.};
-    ActsSymMatrixD<5>* covariance;
-    double             jacobian[25];
+    double                       parameters[NGlobalPars] = {0., 0., 0., 0., 0.};
+    ActsSymMatrixD<NGlobalPars>* covariance;
+    double                       jacobian[NGlobalPars * NGlobalPars];
 
     Vector3D
     position() const
@@ -59,12 +59,12 @@ class AtlasStepper
       , covariance(nullptr)
     {
       if (pars.covariance()) {
-        covariance  = new ActsSymMatrixD<5>(*pars.covariance());
+        covariance  = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
         useJacobian = true;
       }
 
       const ActsVectorD<3> pos = pars.position();
-      ActsVectorD<5>       Vp  = pars.parameters();
+      ActsVectorD<NGlobalPars> Vp  = pars.parameters();
 
       double Sf, Cf, Ce, Se;
       sincos(Vp(2), &Sf, &Cf);
@@ -161,7 +161,7 @@ public:
     double P[45];
     for (unsigned int i = 0; i < 45; ++i) P[i] = cache.pVector[i];
 
-    std::unique_ptr<ActsSymMatrixD<5>> cov = nullptr;
+    std::unique_ptr<ActsSymMatrixD<NGlobalPars>> cov = nullptr;
     if (cache.covariance) {
       double p = 1. / P[6];
       P[35] *= p;
@@ -273,11 +273,12 @@ public:
       cache.jacobian[22] = 0;                               // dCM /dPhi
       cache.jacobian[23] = 0;                               // dCM /dTheta
       cache.jacobian[24] = P[41];                           // dCM /dCM
-      Eigen::Map<Eigen::Matrix<double, 5, 5, Eigen::RowMajor>> J(
-          cache.jacobian);
+      Eigen::
+          Map<Eigen::Matrix<double, NGlobalPars, NGlobalPars, Eigen::RowMajor>>
+              J(cache.jacobian);
 
-      cov = std::make_unique<ActsSymMatrixD<5>>(J * (*cache.covariance)
-                                                * J.transpose());
+      cov = std::make_unique<ActsSymMatrixD<NGlobalPars>>(
+          J * (*cache.covariance) * J.transpose());
     }
 
     return CurvilinearParameters(std::move(cov), gp, mom, charge);
@@ -421,11 +422,12 @@ public:
       cache.jacobian[22] = 0;                                 // dCM /dPhi
       cache.jacobian[23] = 0;                                 // dCM /dTheta
       cache.jacobian[24] = cache.pVector[41];                 // dCM /dCM
-      Eigen::Map<Eigen::Matrix<double, 5, 5, Eigen::RowMajor>> J(
-          cache.jacobian);
+      Eigen::
+          Map<Eigen::Matrix<double, NGlobalPars, NGlobalPars, Eigen::RowMajor>>
+              J(cache.jacobian);
 
-      cov = std::make_unique<ActsSymMatrixD<5>>(J * (*cache.covariance)
-                                                * J.transpose());
+      cov = std::make_unique<ActsSymMatrixD<NGlobalPars>>(
+          J * (*cache.covariance) * J.transpose());
     }
 
     return BoundParameters(std::move(cov), gp, mom, charge, s);
