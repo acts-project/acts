@@ -218,9 +218,11 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     // and add them
     int sign = int(eCell.materialUpdateMode);
     // a simple cross-check if the parameters are the initial ones
-    ActsVectorD<NGlobalPars>  uParameters = parameters.parameters();
-    std::unique_ptr<ActsSymMatrixD<NGlobalPars>> uCovariance = parameters.covariance()
-        ? std::make_unique<ActsSymMatrixD<NGlobalPars>>(*parameters.covariance())
+    ActsVectorD<NGlobalPars> uParameters = parameters.parameters();
+    std::unique_ptr<ActsSymMatrixD<NGlobalPars>> uCovariance
+        = parameters.covariance()
+        ? std::make_unique<ActsSymMatrixD<NGlobalPars>>(
+              *parameters.covariance())
         : nullptr;
     // get the material itself & its parameters
     const Material& material      = materialProperties->material();
