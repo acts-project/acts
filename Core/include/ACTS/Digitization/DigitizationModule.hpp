@@ -61,7 +61,7 @@ public:
 
   /// Virtual Destructor
   virtual ~DigitizationModule() {}
-  
+
   /// Return the internal test segmentation surfaces to test between entry
   /// and exit given by their cell id's - the boundaries are not given
   ///

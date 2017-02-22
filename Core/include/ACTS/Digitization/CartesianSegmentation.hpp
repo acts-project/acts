@@ -76,7 +76,7 @@ public:
                              SurfacePtrVector& segmentationSurfacesY,
                              double            halfThickness,
                              int               readoutDirection = 1.,
-                             double            lorentzAngle = 0.) const final override;
+                             double lorentzAngle = 0.) const final override;
 
   /// @copydoc Segmentation::cell
   const DigitizationCell
