@@ -104,12 +104,12 @@ public:
   /// return the surface bounds by reference
   /// specialization for Rectangle Bounds
   const PlanarBounds&
-  moduleBounds() const final;
+  moduleBounds() const final override;
 
   /// return the bin utility that defines the
   /// readout segmentation
   const BinUtility&
-  binUtility() const final;
+  binUtility() const final override;
 
 private:
   template <class T>

@@ -64,7 +64,7 @@ public:
 
 private:
   std::vector<DigitizationCell> m_digitizationCells;  /// the digitization cells
-  std::vector<barcode_type>     m_barcodes;           /// barcode types
+  std::vector<barcode_type>     m_barcodes;           /// barcodes of particles 
 };
 
 inline const std::vector<DigitizationCell>&
