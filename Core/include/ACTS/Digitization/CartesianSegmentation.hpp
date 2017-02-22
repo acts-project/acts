@@ -76,19 +76,19 @@ public:
                              SurfacePtrVector& segmentationSurfacesY,
                              double            halfThickness,
                              int               readoutDirection = 1.,
-                             double            lorentzAngle = 0.) const final;
+                             double            lorentzAngle = 0.) const final override;
 
   /// @copydoc Segmentation::cell
   const DigitizationCell
-  cell(const Vector3D& position) const final;
+  cell(const Vector3D& position) const final override;
 
   /// @copydoc Segmentation::cell
   const DigitizationCell
-  cell(const Vector2D& position) const final;
+  cell(const Vector2D& position) const final override;
 
   /// @copydoc Segmentation::cellPosition
   const Vector2D
-  cellPosition(const DigitizationCell& cId) const final;
+  cellPosition(const DigitizationCell& cId) const final override;
 
   /// Fill the associated digitsation cell from this start and end position
   /// correct for lorentz effect if needed
@@ -99,7 +99,7 @@ public:
                    const Vector3D& end,
                    double          halfThickness,
                    int             readoutDirection = 1,
-                   double          lorentzAngle     = 0.) const final;
+                   double          lorentzAngle     = 0.) const final override;
 
   /// return the surface bounds by reference
   /// specialization for Rectangle Bounds

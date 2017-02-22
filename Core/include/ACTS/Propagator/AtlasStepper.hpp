@@ -68,10 +68,6 @@ class AtlasStepper
       ActsVectorD<NGlobalPars> Vp  = pars.parameters();
 
       double Sf, Cf, Ce, Se;
-      // AS : __sincos vs sincos trouble in gcc vs. clang
-      // __sincos(Vp(2), &Sf, &Cf);
-      // __sincos(Vp(3), &Se, &Ce);
-      // @TODO fix later accordingly
       Sf = sin(Vp(2));
       Cf = cos(Vp(2));
       Se = sin(Vp(3));
@@ -91,7 +87,6 @@ class AtlasStepper
         pVector[6] < 0. ? pVector[6] = -.000000000000001 : pVector[6]
             = .000000000000001;
       }
-
       //   /dL1     |   /dL2       |    /dPhi     |    /dThe     |    /dCM     |
       //
       pVector[7]  = Ax[0];
