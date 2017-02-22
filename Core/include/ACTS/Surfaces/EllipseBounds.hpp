@@ -16,6 +16,7 @@
 #include <cmath>
 #include <cstdlib>
 #include "ACTS/Surfaces/PlanarBounds.hpp"
+#include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -64,8 +65,11 @@ public:
   /// Copy constructor
   ///
   /// @param ebo is the source bounds for the copy
-  EllipseBounds(const EllipseBounds& ebo) : PlanarBounds(ebo) {}
-  
+  EllipseBounds(const EllipseBounds& ebo)
+    : PlanarBounds(ebo), m_boundingBox(0., 0.)
+  {
+  }
+
   /// Destructor
   virtual ~EllipseBounds();
 
@@ -83,7 +87,7 @@ public:
 
   /// Virtual constructor
   virtual EllipseBounds*
-  clone() const override;
+  clone() const final override;
 
   /// Return the type of the bounds for persistency
   virtual BoundsType
@@ -102,7 +106,8 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const override;
+  inside(const Vector2D&      lpos,
+         const BoundaryCheck& bcheck) const final override;
 
   /// Check for inside first local coordinate
   ///
@@ -111,7 +116,7 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
+  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const final override;
 
   /// Check for inside second local coordinate
   ///
@@ -120,7 +125,7 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
+  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const final override;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
@@ -128,7 +133,7 @@ public:
   ///
   /// @return is a signed distance parameter
   virtual double
-  distanceToBoundary(const Vector2D& lpos) const override;
+  distanceToBoundary(const Vector2D& lpos) const final override;
 
   /// This method returns first inner radius
   double
@@ -152,7 +157,11 @@ public:
 
   /// Return the vertices - or, the points of the extremas
   virtual const std::vector<Vector2D>
-  vertices() const override;
+  vertices() const final override;
+
+  // Bounding box representation
+  virtual const RectangleBounds&
+  boundingBox() const final;
 
   /// This method returns the halfPhiSector which is covered by the disc
   double
@@ -160,7 +169,7 @@ public:
 
   /// Output Method for std::ostream
   virtual std::ostream&
-  dump(std::ostream& sl) const override;
+  dump(std::ostream& sl) const final override;
 
 private:
   /// private helper function
@@ -173,12 +182,14 @@ private:
 
   /// helper function for squaring
   ///
-  /// @param x is the input for squaring
+  /// @param x is the input for squaring ? Why do we need this ?
   inline double
   square(double x) const
   {
     return x * x;
   };
+
+  RectangleBounds m_boundingBox;  ///< internal bounding box cache
 };
 
 inline EllipseBounds*
@@ -301,6 +312,12 @@ EllipseBounds::vertices() const
   vertices.push_back(
       Vector2D(0., -m_valueStore.at(EllipseBounds::bv_rMaxY)));  // [3]
   return vertices;
+}
+
+inline const RectangleBounds&
+EllipseBounds::boundingBox() const
+{
+  return m_boundingBox;
 }
 
 }  // end of namespace

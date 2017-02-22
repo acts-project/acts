@@ -405,7 +405,7 @@ bool
 Surface::onSurface(const T& pars, const BoundaryCheck& bcheck) const
 {
   // surface pointer comparison as a first fast check (w/o transform)
-  if ((&pars.associatedSurface() == this)) {
+  if ((&pars.referenceSurface() == this)) {
     return (bcheck ? insideBounds(pars.localPosition(), bcheck) : true);
   }
   return isOnSurface(pars.position(), bcheck);

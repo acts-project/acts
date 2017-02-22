@@ -74,7 +74,7 @@ public:
 
   /// Implicit constructor
   virtual RadialBounds*
-  clone() const override;
+  clone() const final override;
 
   /// Return of sourface bounds
   virtual SurfaceBounds::BoundsType
@@ -90,7 +90,8 @@ public:
   ///
   /// @return is a boolean indicating the operation success
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const override;
+  inside(const Vector2D&      lpos,
+         const BoundaryCheck& bcheck) const final override;
 
   /// Inside check for the first coordinate
   ///
@@ -99,7 +100,7 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
+  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const final override;
 
   /// Inside check for the bounds object with tolerance
   /// checks for second coordinate only.
@@ -109,7 +110,7 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
+  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const final override;
 
   /// Minimal distance to boundary calculation
   ///
@@ -117,7 +118,7 @@ public:
   ///
   /// @return distance to boundary ( > 0 if outside and <=0 if inside)
   virtual double
-  distanceToBoundary(const Vector2D& lpos) const override;
+  distanceToBoundary(const Vector2D& lpos) const final override;
 
   /// Return method for inner Radius
   double
@@ -140,7 +141,7 @@ public:
   ///
   /// @param sl is the ostream to be dumped into
   virtual std::ostream&
-  dump(std::ostream& sl) const override;
+  dump(std::ostream& sl) const final override;
 
 private:
   /// private helper method for inside

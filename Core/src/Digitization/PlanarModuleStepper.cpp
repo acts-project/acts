@@ -16,6 +16,12 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Intersection.hpp"
 
+Acts::PlanarModuleStepper::PlanarModuleStepper(const Config& pmsConfig,
+                                               std::unique_ptr<Logger> mlogger)
+  : m_cfg(pmsConfig), m_logger(std::move(mlogger))
+{
+}
+
 std::vector<Acts::DigitizationStep>
 Acts::PlanarModuleStepper::cellSteps(const DigitizationModule& dmodule,
                                      const Vector3D&           startPoint,
@@ -76,8 +82,8 @@ Acts::PlanarModuleStepper::cellSteps(const Acts::DigitizationModule& dmodule,
 {
   // first, intersect the boundary surfaces
   auto boundarySurfaces = dmodule.boundarySurfaces();
-  // intersect them - fast exit for cases where readout and counter readout are
-  // hit
+  // intersect them - fast exit for cases where
+  // readout and counter readout are hit
   Vector3D intersection3D(moduleIntersection.x(), moduleIntersection.y(), 0.);
   size_t   attempts = 0;
   // the collected intersections
@@ -105,8 +111,8 @@ Acts::PlanarModuleStepper::cellSteps(const Acts::DigitizationModule& dmodule,
     else if (attempts > 2 && boundaryIntersections.size() == 3)
       break;
   }
-  // post-process if we have more than 2 intersections, only first or last can
-  // be wrong after resorting
+  // post-process if we have more than 2 intersections
+  // only first or last can be wrong after resorting
   if (boundaryIntersections.size() > 2) {
     ACTS_VERBOSE("More than 2 Boundary Surfaces intersected, this is an edge "
                  "case, resolving ... ");
@@ -118,6 +124,9 @@ Acts::PlanarModuleStepper::cellSteps(const Acts::DigitizationModule& dmodule,
     else
       boundaryIntersections.erase(boundaryIntersections.begin());
   }
+  // if for some reason the intersection does not work
+  if (!boundaryIntersections.size())
+    return std::vector<Acts::DigitizationStep>();
   // return
   return cellSteps(dmodule,
                    boundaryIntersections[0].position,

@@ -179,7 +179,7 @@ Acts::Layer::closeGeometry(const GeometryID& layerID) const
     geo_id_value iasurface = 0;
     for (auto& aSurface : m_approachDescriptor->containedSurfaces()) {
       GeometryID asurfaceID = layerID;
-      asurfaceID += (++iasurface << GeometryID::approach_shift);
+      asurfaceID.add(++iasurface, GeometryID::approach_mask);
       aSurface->assignGeoID(asurfaceID);
     }
   }
@@ -189,7 +189,7 @@ Acts::Layer::closeGeometry(const GeometryID& layerID) const
     geo_id_value issurface = 0;
     for (auto& sSurface : m_surfaceArray->arrayObjects()) {
       GeometryID ssurfaceID = layerID;
-      ssurfaceID += (++issurface << GeometryID::sensitive_shift);
+      ssurfaceID.add(++issurface, GeometryID::sensitive_mask);
       sSurface->assignGeoID(ssurfaceID);
     }
   }

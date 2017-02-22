@@ -24,10 +24,8 @@ Acts::RungeKuttaEngine<MagneticField>::propagateRungeKuttaT(
     const T&              parametersT,
     const Surface&        dSurface) const
 {
-  EX_MSG_VERBOSE(eCell.navigationStep,
-                 "propagate",
-                 "<T> ",
-                 "propagateRungeKuttaT called.");
+  EX_MSG_VERBOSE(
+      eCell.navigationStep, "propagate", "<T> ", "propagateRungeKuttaT called");
 
   // bail out if you can't transform into global frame
   if (!m_rkUtils.transformLocalToGlobal(
@@ -209,7 +207,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
 
   // if the desination surface is the start surface -> bail out and build
   // parameters directly
-  if (sf == sParameters->associatedSurface()) {
+  if (sf == sParameters->referenceSurface()) {
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "propagate",
                    "neut",
@@ -348,7 +346,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
 
   // if the desination surface is the start surface -> bail out and build
   // parameters directly
-  if (&sf == &(eCell.leadParameters->associatedSurface())) {
+  if (&sf == &(eCell.leadParameters->referenceSurface())) {
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "propagate",
                    "neut",
@@ -1136,9 +1134,7 @@ Acts::RungeKuttaEngine<MagneticField>::buildTrackParametersWithoutPropagation(
     // fix - how to copy a covariance ?
   }
   return std::make_unique<const BoundParameters>(
-      std::move(cov),
-      tParameters.parameters(),
-      tParameters.associatedSurface());
+      std::move(cov), tParameters.parameters(), tParameters.referenceSurface());
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -1162,9 +1158,7 @@ Acts::RungeKuttaEngine<MagneticField>::buildNeutralParametersWithoutPropagation(
     // fix - how to copy a covariance ?
   }
   return std::make_unique<const NeutralBoundParameters>(
-      std::move(cov),
-      nParameters.parameters(),
-      nParameters.associatedSurface());
+      std::move(cov), nParameters.parameters(), nParameters.referenceSurface());
 }
 
 /////////////////////////////////////////////////////////////////////////////////

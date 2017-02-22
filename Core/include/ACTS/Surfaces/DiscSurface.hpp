@@ -121,7 +121,7 @@ public:
   ///
   /// @param shift the otional transform applied after cloning
   virtual DiscSurface*
-  clone(const Transform3D* shift = nullptr) const override;
+  clone(const Transform3D* shift = nullptr) const final override;
 
   /// Return the surface type
   virtual SurfaceType
@@ -149,7 +149,7 @@ public:
 
   /// This method returns the bounds by reference
   const SurfaceBounds&
-  bounds() const override;
+  bounds() const final override;
 
   /// This method returns true if the GlobalPosition is on the Surface for both,
   /// within or without check of whether the local position is inside boundaries
@@ -161,7 +161,7 @@ public:
   /// @return bollean that indicates if the position is on surface
   virtual bool
   isOnSurface(const Vector3D&      gpos,
-              const BoundaryCheck& bcheck = true) const override;
+              const BoundaryCheck& bcheck = true) const final override;
 
   /// Local to global transformation
   /// For planar surfaces the momentum is ignroed in the local to global
@@ -176,7 +176,7 @@ public:
   virtual void
   localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
-                Vector3D&       gpos) const override;
+                Vector3D&       gpos) const final override;
 
   /// Global to local transformation
   /// @note the momentum is ignored for Disc surfaces in this calculateion
@@ -192,7 +192,7 @@ public:
   virtual bool
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
-                Vector2D&       lpos) const override;
+                Vector2D&       lpos) const final override;
 
   /// Special method for DiscSurface : local<->local transformations polar <->
   /// cartesian
@@ -246,7 +246,8 @@ public:
   ///
   /// @return is the correction factor due to incident
   double
-  pathCorrection(const Vector3D& gpos, const Vector3D& mom) const override;
+  pathCorrection(const Vector3D& gpos,
+                 const Vector3D& mom) const final override;
 
   /// fast straight line intersection schema - standard: provides closest
   /// intersection and (signed) path length
@@ -279,7 +280,8 @@ public:
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir = false,
-                       const BoundaryCheck& bcheck     = false) const override;
+                       const BoundaryCheck& bcheck
+                       = false) const final override;
 
   /// Return properly formatted class name for screen output
   virtual std::string

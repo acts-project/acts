@@ -26,6 +26,7 @@ namespace Acts {
 
 class Surface;
 class SurfaceBounds;
+class DigitizationModule;
 
 /// @class DetectorElementBase
 ///
@@ -44,13 +45,15 @@ class DetectorElementBase
 public:
   /// Constructor
   DetectorElementBase() {}
+
   /// virtual Destructor
   virtual ~DetectorElementBase() {}
+
   /// Identifier
   virtual Identifier
   identify() const = 0;
 
-  ///  Return local to global transform
+  /// Return local to global transform
   /// (optionally associated with an identifier)
   ///
   /// @param identifier is an identifier in case more transform hare held
@@ -59,7 +62,7 @@ public:
   virtual const Transform3D&
   transform(const Identifier& identifier = Identifier()) const = 0;
 
-  ///  Return surface association
+  /// Return surface association
   /// (optionally associated with an identifier)
   ///
   /// @param identifier is an identifier in case more surfaces hare held
@@ -73,10 +76,19 @@ public:
   virtual const std::vector<std::shared_ptr<const Surface>>&
   surfaces() const = 0;
 
+  /// Return the DigitizationModule
+  /// @return optionally the DigitizationModule
+  virtual std::shared_ptr<const DigitizationModule>
+  digitizationModule() const;
+
   /// Returns the thickness of the module
   /// @return double that indicates the thickness of the module
   virtual double
   thickness() const = 0;
+
+  /// Set the identifier after construction (sometimes needed)
+  virtual void
+  assignIdentifier(const Identifier& identifier) const = 0;
 
   /// Fast access to bin members
   /// Bin members are elements that are in the same geometric binning cell,
@@ -117,6 +129,12 @@ private:
   mutable std::vector<const DetectorElementBase*> m_binmembers;
   mutable std::vector<const DetectorElementBase*> m_neighbours;
 };
+
+inline std::shared_ptr<const DigitizationModule>
+DetectorElementBase::digitizationModule() const
+{
+  return nullptr;
+}
 
 inline const std::vector<const DetectorElementBase*>&
 DetectorElementBase::binmembers() const

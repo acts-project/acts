@@ -15,6 +15,7 @@
 
 #include <utility>
 #include "ACTS/Surfaces/PlanarBounds.hpp"
+#include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
 
@@ -51,8 +52,11 @@ public:
   /// Copy constructor
   ///
   /// @param tribo are the source bounds for assignment
-  TriangleBounds(const TriangleBounds& tribo) : PlanarBounds(tribo) {}
-  
+  TriangleBounds(const TriangleBounds& tribo)
+    : PlanarBounds(tribo), m_boundingBox(0., 0.)
+  {
+  }
+
   /// Destructor
   virtual ~TriangleBounds();
 
@@ -64,11 +68,11 @@ public:
 
   /// Virtual constructor
   virtual TriangleBounds*
-  clone() const override;
+  clone() const final override;
 
   /// Return the type of the bounds for persistency
   virtual BoundsType
-  type() const override
+  type() const final
   {
     return SurfaceBounds::Triangle;
   }
@@ -81,7 +85,8 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const override;
+  inside(const Vector2D&      lpos,
+         const BoundaryCheck& bcheck) const final override;
 
   /// This method checks if the provided local coordinate 1 is inside the
   /// surface bounds
@@ -91,7 +96,7 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
+  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const final override;
 
   /// This method checks if the provided local coordinate 2 is inside the
   /// surface bounds
@@ -101,7 +106,7 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
+  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const final override;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
@@ -109,17 +114,21 @@ public:
   ///
   /// @return is a signed distance parameter
   virtual double
-  distanceToBoundary(const Vector2D& lpos) const override;
+  distanceToBoundary(const Vector2D& lpos) const final override;
 
   /// This method returns the coordinates of vertices
   const std::vector<Vector2D>
-  vertices() const override;
+  vertices() const final override;
+
+  // Bounding box representation
+  virtual const RectangleBounds&
+  boundingBox() const final override;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
   virtual std::ostream&
-  dump(std::ostream& sl) const override;
+  dump(std::ostream& sl) const final override;
 
 private:
   /// Private helper method
@@ -131,6 +140,8 @@ private:
   /// @return boolean indicator for the success of this operation
   bool
   inside(const Vector2D& lpos, double tol0, double tol1) const;
+
+  RectangleBounds m_boundingBox;  ///< internal bounding box cache
 };
 
 inline TriangleBounds*
@@ -256,6 +267,12 @@ TriangleBounds::vertices() const
     vertices.push_back(
         Vector2D(m_valueStore.at(2 * iv), m_valueStore.at(2 * iv + 1)));
   return vertices;
+}
+
+inline const RectangleBounds&
+TriangleBounds::boundingBox() const
+{
+  return m_boundingBox;
 }
 
 }  // end of namespace

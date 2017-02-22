@@ -7,51 +7,49 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// RectangularSegmentation.cpp, ACTS project
+// CartesianSegmentation.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include <cmath>
-#include "ACTS/Digitization/RectangularSegmentation.hpp"
+#include "ACTS/Digitization/CartesianSegmentation.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
 
-Acts::RectangularSegmentation::RectangularSegmentation(
-    std::shared_ptr<const Acts::RectangleBounds> mBounds,
-    size_t                                       numCellsX,
-    size_t                                       numCellsY)
-  : m_activeBounds(mBounds)
-  , m_binUtility(nullptr)
-  , m_binsX(numCellsX)
-  , m_binsY(numCellsY)
+Acts::CartesianSegmentation::CartesianSegmentation(
+    std::shared_ptr<const PlanarBounds> mBounds,
+    size_t                              numCellsX,
+    size_t                              numCellsY)
+  : m_activeBounds(mBounds), m_binUtility(nullptr)
 {
-  // first the x dimension if needed
-  if (numCellsX > 1)
-    m_binUtility = std::make_unique<BinUtility>(numCellsX,
-                                                -mBounds->halflengthX(),
-                                                mBounds->halflengthX(),
-                                                Acts::open,
-                                                Acts::binX);
-  // use y dimension if needed
-  if (numCellsY > 1) {
-    BinUtility yBinUtility(numCellsY,
-                           -mBounds->halflengthY(),
-                           mBounds->halflengthY(),
-                           Acts::open,
-                           Acts::binY);
-    if (m_binUtility)
-      (*m_binUtility) += yBinUtility;
-    else
-      m_binUtility = std::make_unique<BinUtility>(yBinUtility);
-  }
+  m_binUtility
+      = std::make_shared<BinUtility>(numCellsX,
+                                     -mBounds->boundingBox().halflengthX(),
+                                     mBounds->boundingBox().halflengthX(),
+                                     Acts::open,
+                                     Acts::binX);
+  (*m_binUtility) += BinUtility(numCellsY,
+                                -mBounds->boundingBox().halflengthY(),
+                                mBounds->boundingBox().halflengthY(),
+                                Acts::open,
+                                Acts::binY);
 }
 
-Acts::RectangularSegmentation::~RectangularSegmentation()
+Acts::CartesianSegmentation::CartesianSegmentation(
+    std::shared_ptr<BinUtility>         bUtility,
+    std::shared_ptr<const PlanarBounds> mBounds)
+  : m_activeBounds(mBounds), m_binUtility(bUtility)
+{
+  if (!m_activeBounds)
+    m_activeBounds = std::make_shared<const RectangleBounds>(
+        m_binUtility->max(0), m_binUtility->max(1));
+}
+
+Acts::CartesianSegmentation::~CartesianSegmentation()
 {
 }
 
 void
-Acts::RectangularSegmentation::createSegmentationSurfaces(
+Acts::CartesianSegmentation::createSegmentationSurfaces(
     SurfacePtrVector& boundarySurfaces,
     SurfacePtrVector& segmentationSurfacesX,
     SurfacePtrVector& segmentationSurfacesY,
@@ -70,8 +68,9 @@ Acts::RectangularSegmentation::createSegmentationSurfaces(
   // there are some things to consider
   // - they share the RectangleBounds only if the lorentzAngle is 0
   // otherwise only the readout surface has full length bounds like the module
-  std::shared_ptr<const PlanarBounds> moduleBounds(new RectangleBounds(
-      m_activeBounds->halflengthX(), m_activeBounds->halflengthY()));
+  std::shared_ptr<const PlanarBounds> moduleBounds(
+      new RectangleBounds(m_activeBounds->boundingBox().halflengthX(),
+                          m_activeBounds->boundingBox().halflengthY()));
   // - they are separated by half a thickness in z
   auto readoutPlaneTransform
       = std::make_shared<Transform3D>(Transform3D::Identity());
@@ -91,11 +90,11 @@ Acts::RectangularSegmentation::createSegmentationSurfaces(
         = Vector3D(0., 0., -readoutDirection * halfThickness);
   } else {
     // lorentz reduced Bounds
-    double lorentzReducedHalfX
-        = m_activeBounds->halflengthX() - std::abs(lorentzPlaneShiftX);
+    double lorentzReducedHalfX = m_activeBounds->boundingBox().halflengthX()
+        - fabs(lorentzPlaneShiftX);
     std::shared_ptr<const PlanarBounds> lorentzReducedBounds(
         new RectangleBounds(lorentzReducedHalfX,
-                            m_activeBounds->halflengthY()));
+                            m_activeBounds->boundingBox().halflengthY()));
     counterPlaneBounds = lorentzReducedBounds;
     // now we shift the counter plane in position - this depends on lorentz
     // angle
@@ -112,19 +111,20 @@ Acts::RectangularSegmentation::createSegmentationSurfaces(
   // (B) - bin X and lorentz surfaces
   // -----------------------------------------------------------
   // easy stuff first, constant pitch size and
-  double pitchX = 2. * m_activeBounds->halflengthX() / m_binsX;
+  double pitchX = 2. * m_activeBounds->boundingBox().halflengthX()
+      / m_binUtility->bins(0);
 
   // now, let's create the shared bounds of all surfaces marking x bins - choice
   // fixes orientation of the matrix
-  std::shared_ptr<const PlanarBounds> xBinBounds(
-      new RectangleBounds(m_activeBounds->halflengthY(), halfThickness));
+  std::shared_ptr<const PlanarBounds> xBinBounds(new RectangleBounds(
+      m_activeBounds->boundingBox().halflengthY(), halfThickness));
   // now, let's create the shared bounds of all surfaces marking lorentz planes
   double lorentzPlaneHalfX = std::abs(halfThickness / cos(lorentzAngle));
   // teh bounds of the lorentz plane
   std::shared_ptr<const PlanarBounds> lorentzPlaneBounds = (lorentzAngle == 0.)
       ? xBinBounds
       : std::shared_ptr<const PlanarBounds>(new RectangleBounds(
-            m_activeBounds->halflengthY(), lorentzPlaneHalfX));
+            m_activeBounds->boundingBox().halflengthY(), lorentzPlaneHalfX));
 
   // now the rotation matrix for the xBins
   RotationMatrix3D xBinRotationMatrix;
@@ -139,13 +139,14 @@ Acts::RectangularSegmentation::createSegmentationSurfaces(
 
   // reserve, it's always (number of bins-1) as the boundaries are within the
   // boundarySurfaces
-  segmentationSurfacesX.reserve(m_binsX);
+  segmentationSurfacesX.reserve(m_binUtility->bins(0));
   // create and fill them
-  for (size_t ibinx = 0; ibinx <= m_binsX; ++ibinx) {
+  for (size_t ibinx = 0; ibinx <= m_binUtility->bins(0); ++ibinx) {
     // the current step x position
-    double cPosX = -m_activeBounds->halflengthX() + ibinx * pitchX;
-    // (i) this is the low/high boundary --- ( ibin == 0/m_binsX )
-    if (!ibinx || ibinx == m_binsX) {
+    double cPosX
+        = -m_activeBounds->boundingBox().halflengthX() + ibinx * pitchX;
+    // (i) this is the low/high boundary --- ( ibin == 0/m_binUtility->bins(0) )
+    if (!ibinx || ibinx == m_binUtility->bins(0)) {
       // check if it a straight boundary or not: always straight for no lorentz
       // angle,
       // and either the first boundary or the last dependening on lorentz &
@@ -153,7 +154,8 @@ Acts::RectangularSegmentation::createSegmentationSurfaces(
       bool boundaryStraight
           = (lorentzAngle == 0.
              || (!ibinx && readoutDirection * lorentzAngle > 0.)
-             || (ibinx == m_binsX && readoutDirection * lorentzAngle < 0));
+             || (ibinx == m_binUtility->bins(0)
+                 && readoutDirection * lorentzAngle < 0));
       // set the low boundary parameters : position & rotation
       Vector3D boundaryXPosition = boundaryStraight
           ? Vector3D(cPosX, 0., 0.)
@@ -192,22 +194,24 @@ Acts::RectangularSegmentation::createSegmentationSurfaces(
   yBinRotationMatrix.col(1) = Vector3D::UnitZ();
   yBinRotationMatrix.col(2) = Vector3D(0., -1., 0.);
   // easy stuff first, constant pitch in Y
-  double pitchY = 2. * m_activeBounds->halflengthY() / m_binsY;
+  double pitchY = 2. * m_activeBounds->boundingBox().halflengthY()
+      / m_binUtility->bins(1);
   // let's create the shared bounds of all surfaces marking y bins
-  std::shared_ptr<const PlanarBounds> yBinBounds(
-      new RectangleBounds(m_activeBounds->halflengthX(), halfThickness));
+  std::shared_ptr<const PlanarBounds> yBinBounds(new RectangleBounds(
+      m_activeBounds->boundingBox().halflengthX(), halfThickness));
   // reserve, it's always (number of bins-1) as the boundaries are within the
   // boundarySurfaces
-  segmentationSurfacesY.reserve(m_binsY);
-  for (size_t ibiny = 0; ibiny <= m_binsY; ++ibiny) {
+  segmentationSurfacesY.reserve(m_binUtility->bins(1));
+  for (size_t ibiny = 0; ibiny <= m_binUtility->bins(1); ++ibiny) {
     // the position of the bin surface
-    double   binPosY = -m_activeBounds->halflengthY() + ibiny * pitchY;
+    double binPosY
+        = -m_activeBounds->boundingBox().halflengthY() + ibiny * pitchY;
     Vector3D binSurfaceCenter(0., binPosY, 0.);
     // the binning transform
     auto binTransform = std::make_shared<Transform3D>(
         getTransformFromRotTransl(yBinRotationMatrix, binSurfaceCenter));
     // these are the boundaries
-    if (ibiny == 0 || ibiny == m_binsY)
+    if (ibiny == 0 || ibiny == m_binUtility->bins(1))
       boundarySurfaces.push_back(std::shared_ptr<PlaneSurface>(
           new PlaneSurface(binTransform, yBinBounds)));
     else  // these are the bin boundaries
@@ -217,26 +221,25 @@ Acts::RectangularSegmentation::createSegmentationSurfaces(
 }
 
 const Acts::Vector2D
-Acts::RectangularSegmentation::cellPosition(const DigitizationCell& dCell) const
+Acts::CartesianSegmentation::cellPosition(const DigitizationCell& dCell) const
 {
-  // @TODO add protection agains 1D binUtility for Y
-  double bX
-      = m_binsX > 1 ? m_binUtility->binningData()[0].center(dCell.first) : 0.;
-  double bY
-      = m_binsY > 1 ? m_binUtility->binningData()[1].center(dCell.second) : 0.;
-  return Vector2D(bX, bY);
-
+  double bX = m_binUtility->bins(0) > 1
+      ? m_binUtility->binningData()[0].center(dCell.channel0)
+      : 0.;
+  double bY = m_binUtility->bins(1) > 1
+      ? m_binUtility->binningData()[1].center(dCell.channel1)
+      : 0.;
   return Vector2D(bX, bY);
 }
 
 /** Get the digitization cell from 3D position, it used the projection to the
  * readout surface to estimate the 2D positon */
 const Acts::DigitizationStep
-Acts::RectangularSegmentation::digitizationStep(const Vector3D& startStep,
-                                                const Vector3D& endStep,
-                                                double          halfThickness,
-                                                int    readoutDirection,
-                                                double lorentzAngle) const
+Acts::CartesianSegmentation::digitizationStep(const Vector3D& startStep,
+                                              const Vector3D& endStep,
+                                              double          halfThickness,
+                                              int             readoutDirection,
+                                              double lorentzAngle) const
 {
   Vector3D stepCenter = 0.5 * (startStep + endStep);
   // take the full drift length

@@ -93,7 +93,7 @@ public:
 
   /// Virtual constructor
   virtual ConeBounds*
-  clone() const override;
+  clone() const final override;
 
   /// Return the bounds type
   virtual BoundsType
@@ -109,7 +109,8 @@ public:
   ///
   /// @return is a boolean indicating if the position is inside
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck = true) const override;
+  inside(const Vector2D&      lpos,
+         const BoundaryCheck& bcheck = true) const final override;
 
   /// Inside method for the first local parameter
   ///
@@ -118,7 +119,7 @@ public:
   ///
   /// @return is a boolean indicating if the position is insideLoc0
   virtual bool
-  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
+  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const final override;
 
   /// Inside method for the second local parameter
   ///
@@ -127,7 +128,7 @@ public:
   ///
   /// @return is a boolean indicating if the position is insideLoc1
   virtual bool
-  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
+  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const final override;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
@@ -135,7 +136,7 @@ public:
   ///
   /// @return is a signed distance parameter
   virtual double
-  distanceToBoundary(const Vector2D& lpos) const override;
+  distanceToBoundary(const Vector2D& lpos) const final override;
 
   /// Return the radius at a specific z values
   ///
@@ -187,7 +188,7 @@ public:
   ///
   /// @return is the input obect
   virtual std::ostream&
-  dump(std::ostream& sl) const override;
+  dump(std::ostream& sl) const final override;
 
 private:
   /// private helper method

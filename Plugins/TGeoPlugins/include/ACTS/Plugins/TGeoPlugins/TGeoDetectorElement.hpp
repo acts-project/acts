@@ -88,24 +88,28 @@ public:
 
   /// Identifier
   virtual Identifier
-  identify() const override;
+  identify() const final override;
 
   /// Return local to global transform associated with this identifier
   virtual const Transform3D&
-  transform(const Identifier& identifier = Identifier()) const override;
+  transform(const Identifier& identifier = Identifier()) const final override;
+
+  /// Set the identifier after construction (sometimes needed)
+  virtual void
+  assignIdentifier(const Identifier& identifier) const final override;
 
   /// Return surface associated with this identifier, which should come from the
   virtual const Surface&
-  surface(const Identifier& identifier = Identifier()) const final;
+  surface(const Identifier& identifier = Identifier()) const final override;
 
   /// Returns the full list of all detection surfaces associated
   /// to this detector element
   virtual const std::vector<std::shared_ptr<const Surface>>&
-  surfaces() const override;
+  surfaces() const final override;
 
   /// Returns the thickness of the module
   virtual double
-  thickness() const override;
+  thickness() const final override;
 
 private:
   /// DD4hep detector element, just linked - not owned
@@ -117,7 +121,7 @@ private:
   /// Normal vector to the detector element
   mutable std::shared_ptr<const Vector3D> m_normal;
   /// Identifier of the detector element
-  const Identifier m_identifier;
+  mutable Identifier m_identifier;
   /// Boundaries of the detector element
   std::shared_ptr<const SurfaceBounds> m_bounds;
   ///  Thickness of this detector element
@@ -132,6 +136,12 @@ inline Identifier
 TGeoDetectorElement::identify() const
 {
   return m_identifier;
+}
+
+inline void
+TGeoDetectorElement::assignIdentifier(const Identifier& identifier) const
+{
+  m_identifier = identifier;
 }
 
 inline const Transform3D&

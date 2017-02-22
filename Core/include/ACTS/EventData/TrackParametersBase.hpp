@@ -171,7 +171,7 @@ public:
    * @return associated surface
    */
   virtual const Surface&
-  associatedSurface() const = 0;
+  referenceSurface() const = 0;
 
   /**
    * @brief output stream operator

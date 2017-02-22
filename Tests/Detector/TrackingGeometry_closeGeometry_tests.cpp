@@ -9,6 +9,7 @@
 ///  Boost include(s)
 #define BOOST_TEST_MODULE GeometryID Tests
 #include <boost/test/included/unit_test.hpp>
+#include "ACTS/Utilities/Helpers.hpp"
 #include "ACTS/Utilities/Units.hpp"
 #include "GeometryCreation.hpp"
 
@@ -88,8 +89,7 @@ namespace Test {
     for (auto cVol : hVolume->confinedVolumes()->arrayObjects()) {
       /// let's check everything is set to 0
       std::cout << "--> Testing Volume '" << cVol->volumeName() << std::endl;
-      geo_id_value c_vol_id = cVol->geoID().value(GeometryID::volume_mask,
-                                                  GeometryID::volume_shift);
+      geo_id_value c_vol_id = cVol->geoID().value(GeometryID::volume_mask);
       BOOST_CHECK_EQUAL(++vol_id, c_vol_id);
       // check the boundary surfaces
       geo_id_value bsurface_id = 0;
@@ -97,9 +97,9 @@ namespace Test {
       for (auto bSf : cVol->boundarySurfaces()) {
         // check the bsurface volume id
         geo_id_value bs_vol_id = bSf->surfaceRepresentation().geoID().value(
-            GeometryID::volume_mask, GeometryID::volume_shift);
+            GeometryID::volume_mask);
         geo_id_value bs_bsf_id = bSf->surfaceRepresentation().geoID().value(
-            GeometryID::boundary_mask, GeometryID::boundary_shift);
+            GeometryID::boundary_mask);
         BOOST_CHECK_EQUAL(++bsurface_id, bs_bsf_id);
         BOOST_CHECK_EQUAL(c_vol_id, bs_vol_id);
       }
@@ -109,10 +109,8 @@ namespace Test {
                 << std::endl;
       for (auto lay : cVol->confinedLayers()->arrayObjects()) {
         // check the layer volume id and layer layer id
-        geo_id_value lay_vol_id = lay->geoID().value(GeometryID::volume_mask,
-                                                     GeometryID::volume_shift);
-        geo_id_value lay_lay_id = lay->geoID().value(GeometryID::layer_mask,
-                                                     GeometryID::layer_shift);
+        geo_id_value lay_vol_id = lay->geoID().value(GeometryID::volume_mask);
+        geo_id_value lay_lay_id = lay->geoID().value(GeometryID::layer_mask);
         BOOST_CHECK_EQUAL(++layer_id, lay_lay_id);
         BOOST_CHECK_EQUAL(c_vol_id, lay_vol_id);
         // test the layer approach surfaces
@@ -120,12 +118,10 @@ namespace Test {
         for (auto asf : lay->approachDescriptor()->containedSurfaces()) {
           // check the approach volume id, approach layer id, approach approach
           // id
-          geo_id_value asf_vol_id = asf->geoID().value(
-              GeometryID::volume_mask, GeometryID::volume_shift);
-          geo_id_value asf_lay_id = asf->geoID().value(GeometryID::layer_mask,
-                                                       GeometryID::layer_shift);
-          geo_id_value asf_asf_id = asf->geoID().value(
-              GeometryID::approach_mask, GeometryID::approach_shift);
+          geo_id_value asf_vol_id = asf->geoID().value(GeometryID::volume_mask);
+          geo_id_value asf_lay_id = asf->geoID().value(GeometryID::layer_mask);
+          geo_id_value asf_asf_id
+              = asf->geoID().value(GeometryID::approach_mask);
           BOOST_CHECK_EQUAL(layer_id, asf_lay_id);
           BOOST_CHECK_EQUAL(c_vol_id, asf_vol_id);
           BOOST_CHECK_EQUAL(++asurface_id, asf_asf_id);
@@ -135,12 +131,10 @@ namespace Test {
         for (auto ssf : lay->surfaceArray()->arrayObjects()) {
           // check the approach volume id, approach layer id, approach approach
           // id
-          geo_id_value ssf_vol_id = ssf->geoID().value(
-              GeometryID::volume_mask, GeometryID::volume_shift);
-          geo_id_value ssf_lay_id = ssf->geoID().value(GeometryID::layer_mask,
-                                                       GeometryID::layer_shift);
-          geo_id_value ssf_ssf_id = ssf->geoID().value(
-              GeometryID::sensitive_mask, GeometryID::sensitive_shift);
+          geo_id_value ssf_vol_id = ssf->geoID().value(GeometryID::volume_mask);
+          geo_id_value ssf_lay_id = ssf->geoID().value(GeometryID::layer_mask);
+          geo_id_value ssf_ssf_id
+              = ssf->geoID().value(GeometryID::sensitive_mask);
           BOOST_CHECK_EQUAL(layer_id, ssf_lay_id);
           BOOST_CHECK_EQUAL(c_vol_id, ssf_vol_id);
           BOOST_CHECK_EQUAL(++ssurface_id, ssf_ssf_id);

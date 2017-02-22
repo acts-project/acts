@@ -414,6 +414,7 @@ Acts::TrackingVolume::interlinkLayers()
 {
   if (m_confinedLayers) {
     auto& layers = m_confinedLayers->arrayObjects();
+
     // forward register the last one as the previous one
     //  first <- | -> second, first <- | -> second, first <- | -> second
     const Layer* lastLayer = nullptr;
@@ -439,7 +440,7 @@ Acts::TrackingVolume::interlinkLayers()
 
 void
 Acts::TrackingVolume::closeGeometry(
-    const GeometryID& volumeID,
+    GeometryID& volumeID,
     std::map<std::string, const TrackingVolume*>& volumeMap) const
 {
   // insert the volume into the map
@@ -451,12 +452,13 @@ Acts::TrackingVolume::closeGeometry(
     assignGeoID(volumeID);
     // loop over the boundary surfaces
     geo_id_value iboundary = 0;
+    // loop over the boundary surfaces
     for (auto& bSurfIter : boundarySurfaces()) {
       // get the intersection soltuion
       auto& bSurface = bSurfIter->surfaceRepresentation();
       // create the boundary surface id
       GeometryID boundaryID = volumeID;
-      boundaryID += (++iboundary << GeometryID::boundary_shift);
+      boundaryID.add(++iboundary, GeometryID::boundary_mask);
       // now assign to the boundary surface
       bSurface.assignGeoID(boundaryID);
     }
@@ -468,7 +470,7 @@ Acts::TrackingVolume::closeGeometry(
       for (auto& layerPtr : m_confinedLayers->arrayObjects()) {
         // create the layer identification
         GeometryID layerID = volumeID;
-        layerID += (++ilayer << GeometryID::layer_shift);
+        layerID.add(++ilayer, GeometryID::layer_mask);
         // now close the geometry
         layerPtr->closeGeometry(layerID);
       }
@@ -483,7 +485,7 @@ Acts::TrackingVolume::closeGeometry(
       // only increase the counter if it's not a container volume
       if (!volumesIter->confinedVolumes()) {
         /// we count the volume ID up
-        currentID += (++ivolume << GeometryID::volume_shift);
+        currentID.add(++ivolume, GeometryID::volume_mask);
       }
       volumesIter->closeGeometry(currentID, volumeMap);
     }

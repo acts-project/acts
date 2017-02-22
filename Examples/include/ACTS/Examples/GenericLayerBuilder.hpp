@@ -68,6 +68,14 @@ public:
     std::vector<double> centralModuleHalfY;
     /// the module bounds: local z -> thickness
     std::vector<double> centralModuleThickness;
+    /// the central volume readout schema
+    std::vector<size_t> centralModuleReadoutBinsX;
+    /// the central volume readout schema
+    std::vector<size_t> centralModuleReadoutBinsY;
+    /// the central volume readout schema
+    std::vector<int> centralModuleReadoutSide;
+    /// the central volume readout schema
+    std::vector<double> centralModuleLorentzAngle;
     /// the module material @todo change to surface material
     std::vector<Material> centralModuleMaterial;
     /// the module front side stereo (if exists)
@@ -100,6 +108,14 @@ public:
     std::vector<std::vector<double>> posnegModuleHalfY;
     /// the module bounds: local z -> thickness
     std::vector<std::vector<double>> posnegModuleThickness;
+    /// the central volume readout schema
+    std::vector<std::vector<size_t>> posnegModuleReadoutBinsX;
+    /// the central volume readout schema
+    std::vector<std::vector<size_t>> posnegModuleReadoutBinsY;
+    /// the central volume readout schema
+    std::vector<std::vector<int>> posnegModuleReadoutSide;
+    /// the central volume readout schema
+    std::vector<std::vector<double>> posnegModuleLorentzAngle;
     /// the module material @todo change to surface material
     std::vector<std::vector<Material>> posnegModuleMaterial;
     /// the module front side stereo (if exists)

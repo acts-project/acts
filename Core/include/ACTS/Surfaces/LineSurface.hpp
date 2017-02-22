@@ -90,7 +90,7 @@ public:
   ///
   /// return a Vector3D by value
   const Vector3D
-  normal(const Vector2D& lpos = s_origin2D) const override;
+  normal(const Vector2D& lpos = s_origin2D) const final override;
 
   /// The binning position is the position calcualted
   /// for a certain binning type
@@ -99,7 +99,7 @@ public:
   ///
   /// @return position that can beused for this binning
   virtual const Vector3D
-  binningPosition(BinningValue bValue) const final;
+  binningPosition(BinningValue bValue) const final override;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   ///
@@ -112,7 +112,8 @@ public:
   ///
   /// @return is a rotation matrix that indicates the measurement frame
   virtual const RotationMatrix3D
-  measurementFrame(const Vector3D& gpos, const Vector3D& mom) const override;
+  measurementFrame(const Vector3D& gpos,
+                   const Vector3D& mom) const final override;
 
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift
@@ -124,7 +125,7 @@ public:
   virtual void
   localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
-                Vector3D&       gpos) const override;
+                Vector3D&       gpos) const final override;
 
   /// Specified for LineSurface: global to local method without dynamic
   /// memory allocation
@@ -164,7 +165,7 @@ public:
   virtual bool
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
-                Vector2D&       lpos) const override;
+                Vector2D&       lpos) const final override;
 
   /// Special method for LineSurface
   /// provides the Line direction from cache: speedup
@@ -212,7 +213,7 @@ public:
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir,
-                       const BoundaryCheck& bcheck = true) const override;
+                       const BoundaryCheck& bcheck = true) const final override;
 
   /// the pathCorrection for derived classes with thickness
   /// is by definition 1 for LineSurfaces
@@ -237,11 +238,11 @@ public:
   /// @return bollean that indicates if the position is on surface
   virtual bool
   isOnSurface(const Vector3D&      gpos,
-              const BoundaryCheck& bcheck = true) const override;
+              const BoundaryCheck& bcheck = true) const final override;
 
   /// This method returns the bounds of the Surface by reference */
   virtual const SurfaceBounds&
-  bounds() const final;
+  bounds() const final override;
 
   /// Return properly formatted class name for screen output */
   virtual std::string

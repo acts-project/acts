@@ -20,16 +20,22 @@ Acts::DiamondBounds::DiamondBounds(double minhalex,
                                    double maxhalex,
                                    double haley1,
                                    double haley2)
-  : PlanarBounds(DiamondBounds::bv_length), m_alpha1(0.), m_alpha2(0.)
+  : PlanarBounds(DiamondBounds::bv_length)
+  , m_alpha1(0.)
+  , m_alpha2(0.)
+  , m_boundingBox(0., 0.)
 {
   m_valueStore.at(DiamondBounds::bv_minHalfX) = minhalex;
   m_valueStore.at(DiamondBounds::bv_medHalfX) = medhalex;
   m_valueStore.at(DiamondBounds::bv_maxHalfX) = maxhalex;
   m_valueStore.at(DiamondBounds::bv_halfY1)   = haley1;
   m_valueStore.at(DiamondBounds::bv_halfY2)   = haley2;
-  if (minhalex > maxhalex)
-    std::swap(m_valueStore.at(DiamondBounds::bv_minHalfX),
-              m_valueStore.at(DiamondBounds::bv_maxHalfX));
+  double mx = minhalex > medhalex ? (minhalex > maxhalex ? minhalex : maxhalex)
+                                  : (medhalex > maxhalex ? medhalex : maxhalex);
+  double my = haley1 > haley2 ? haley1 : haley2;
+  // the boundary box is being set
+  m_boundingBox = RectangleBounds(mx, my);
+  // init the cache
   initCache();
 }
 
@@ -39,6 +45,7 @@ Acts::DiamondBounds::DiamondBounds(const DiamondBounds& diabo)
   , m_valueStore(diabo.m_valueStore)
   , m_alpha1(diabo.m_alpha1)
   , m_alpha2(diabo.m_alpha2)
+  , m_boundingBox(diabo.m_boundingBox)
 {
 }
 
@@ -51,40 +58,42 @@ Acts::DiamondBounds&
 Acts::DiamondBounds::operator=(const DiamondBounds& diabo)
 {
   if (this != &diabo) {
-    m_valueStore = diabo.m_valueStore;
-    m_alpha1     = diabo.m_alpha1;
-    m_alpha2     = diabo.m_alpha2;
+    m_valueStore  = diabo.m_valueStore;
+    m_alpha1      = diabo.m_alpha1;
+    m_alpha2      = diabo.m_alpha2;
+    m_boundingBox = diabo.m_boundingBox;
   }
   return *this;
 }
 
 bool
-Acts::DiamondBounds::operator==(const Acts::SurfaceBounds& sbo) const
+Acts::DiamondBounds::operator==(const SurfaceBounds& sbo) const
 {
   // fast exit
   if (&sbo == this) return true;
   // check the type first not to compare apples with oranges
-  const Acts::DiamondBounds* diabo
-      = dynamic_cast<const Acts::DiamondBounds*>(&sbo);
+  const DiamondBounds* diabo = dynamic_cast<const DiamondBounds*>(&sbo);
   if (!diabo) return false;
   return (m_valueStore == diabo->m_valueStore);
 }
 
 // checking if inside bounds (Full symmetrical Diamond)
 bool
-Acts::DiamondBounds::inside(const Acts::Vector2D& locpo,
-                            double                tol1,
-                            double                tol2) const
+Acts::DiamondBounds::inside(const Vector2D& locpo,
+                            double          tol0,
+                            double          tol1) const
 {
-  return insideFull(locpo, tol1, tol2);
+  return insideFull(locpo, tol0, tol1);
 }
 
 // checking if inside bounds (Full symmetrical Diamond)
 bool
-Acts::DiamondBounds::insideFull(const Acts::Vector2D& locpo,
-                                double                tol1,
-                                double                tol2) const
+Acts::DiamondBounds::insideFull(const Vector2D& locpo,
+                                double          tol0,
+                                double          tol1) const
 {
+  // @todo updat with bounding box
+
   // the cases:
   // (0)
   if (!m_valueStore.at(DiamondBounds::bv_halfY1)
@@ -92,20 +101,20 @@ Acts::DiamondBounds::insideFull(const Acts::Vector2D& locpo,
     return false;
   // (1)
   if (locpo[Acts::eLOC_Y]
-      < -2. * m_valueStore.at(DiamondBounds::bv_halfY1) - tol2)
+      < -2. * m_valueStore.at(DiamondBounds::bv_halfY1) - tol1)
     return false;
   if (locpo[Acts::eLOC_Y]
-      > 2. * m_valueStore.at(DiamondBounds::bv_halfY2) + tol2)
+      > 2. * m_valueStore.at(DiamondBounds::bv_halfY2) + tol1)
     return false;
   // (2)
-  if (std::abs(locpo[Acts::eLOC_X])
-      > (m_valueStore.at(DiamondBounds::bv_medHalfX) + tol1))
+  if (fabs(locpo[Acts::eLOC_X])
+      > (m_valueStore.at(DiamondBounds::bv_medHalfX) + tol0))
     return false;
   // (3)
   if (std::abs(locpo[Acts::eLOC_X])
       < (fmin(m_valueStore.at(DiamondBounds::bv_minHalfX),
               m_valueStore.at(DiamondBounds::bv_maxHalfX))
-         - tol1))
+         - tol0))
     return true;
   // (4)
   /** use basic calculation of a straight line */

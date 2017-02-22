@@ -44,7 +44,6 @@ Acts::ExtrapolationEngine::setLogger(std::unique_ptr<Logger> newLogger)
   m_logger = std::move(newLogger);
 }
 
-/** charged extrapolation */
 Acts::ExtrapolationCode
 Acts::ExtrapolationEngine::extrapolate(ExCellCharged&       ecCharged,
                                        const Surface*       sf,

@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 //-------------------------------------------------------------------------------------
 // beam pipe
 //-------------------------------------------------------------------------------------
@@ -67,7 +66,10 @@ if (stage == 0) {
   plbConfig.centralModuleHalfX                = {8.4};
   plbConfig.centralModuleHalfY                = {32.};
   plbConfig.centralModuleThickness            = {0.15};
-  plbConfig.centralModuleMaterial             = {pcMaterial};
+  plbConfig.centralModuleReadoutBinsX         = {336};
+  plbConfig.centralModuleReadoutBinsY         = {1280};
+  plbConfig.centralModuleReadoutSide          = {-1};
+  plbConfig.centralModuleLorentzAngle         = {0.12};
 } else {
   // configure the central barrel
   plbConfig.centralLayerBinMultipliers = {1, 1};
@@ -86,6 +88,11 @@ if (stage == 0) {
   plbConfig.centralModuleThickness = {0.15, 0.15, 0.15, 0.15};
   plbConfig.centralModuleMaterial
       = {pcMaterial, pcMaterial, pcMaterial, pcMaterial};
+
+  plbConfig.centralModuleReadoutBinsX = {336, 336, 336, 336};
+  plbConfig.centralModuleReadoutBinsY = {1280, 1280, 1280, 1280};
+  plbConfig.centralModuleReadoutSide  = {-1, -1, -1, -1};
+  plbConfig.centralModuleLorentzAngle = {0.12, 0.12, 0.12, 0.12};
 }
 // no frontside/backside
 plbConfig.centralModuleFrontsideStereo = {};
@@ -116,6 +123,10 @@ if (stage == 0) {
   plbConfig.posnegModuleHalfY                = {{42.}};
   plbConfig.posnegModulePhiBins              = {{48}};
   plbConfig.posnegModuleThickness            = {{0.15}};
+  plbConfig.posnegModuleReadoutBinsX         = {{336}};
+  plbConfig.posnegModuleReadoutBinsY         = {{1680}};
+  plbConfig.posnegModuleReadoutSide          = {{-1}};
+  plbConfig.posnegModuleLorentzAngle         = {{0.12}};
   plbConfig.posnegModuleMaterial             = {{pcMaterial}};
 } else {
   // STAGE > 0 - pixel endcap detector
@@ -126,11 +137,15 @@ if (stage == 0) {
   plbConfig.posnegLayerMaterialConcentration = {1, 1, 1, 1};
   plbConfig.posnegLayerMaterialProperties
       = {pcmProperties, pcmProperties, pcmProperties, pcmProperties};
-  plbConfig.posnegModuleMinHalfX  = {{8.4}, {8.4}, {8.4}, {8.4}};
-  plbConfig.posnegModuleMaxHalfX  = {};
-  plbConfig.posnegModuleHalfY     = {{42.}, {42.}, {42.}, {42.}};
-  plbConfig.posnegModulePhiBins   = {{48}, {48}, {48}, {48}};
+  plbConfig.posnegModuleMinHalfX     = {{8.4}, {8.4}, {8.4}, {8.4}};
+  plbConfig.posnegModuleMaxHalfX     = {};
+  plbConfig.posnegModuleHalfY        = {{42.}, {42.}, {42.}, {42.}};
+  plbConfig.posnegModulePhiBins      = {{48}, {48}, {48}, {48}};
   plbConfig.posnegModuleThickness = {{0.15}, {0.15}, {0.15}, {0.15}};
+  plbConfig.posnegModuleReadoutBinsX = {{336}, {336}, {336}, {336}};
+  plbConfig.posnegModuleReadoutBinsY = {{1680}, {1680}, {1680}, {1680}};
+  plbConfig.posnegModuleReadoutSide  = {{-1}, {-1}, {-1}, {-1}};
+  plbConfig.posnegModuleLorentzAngle = {{0.}, {0.}, {0.}, {0.}};
   plbConfig.posnegModuleMaterial
       = {{pcMaterial}, {pcMaterial}, {pcMaterial}, {pcMaterial}};
 }
@@ -187,7 +202,7 @@ if (stage > 1) {
   pstConfig.centralLayerHalflengthZ = std::vector<double>(1, 1200.);
   pstConfig.centralLayerThickness   = std::vector<double>(1, 1.8);
   pstConfig.centralLayerMaterial = {Material(352.8, 407., 9.012, 4., 1.848e-3)};
-  auto pstBuilder                = std::make_shared<PassiveLayerBuilder>(
+  auto pstBuilder                   = std::make_shared<PassiveLayerBuilder>(
       pstConfig, getDefaultLogger("PstBuilder", layerLLevel));
   // create the volume for the beam pipe
   CylinderVolumeBuilder::Config pstvolConfig;
@@ -230,6 +245,12 @@ if (stage > 1) {
   sslbConfig.centralModuleHalfX         = {18.2, 18.2, 18.2};
   sslbConfig.centralModuleHalfY         = {68., 68., 68.};
   sslbConfig.centralModuleThickness     = {0.25, 0.25, 0.25};
+
+  sslbConfig.centralModuleReadoutBinsX = {728, 728, 728};  // 50 um pitch
+  sslbConfig.centralModuleReadoutBinsY = {85, 85, 85};     // 1.6 mm strixels
+  sslbConfig.centralModuleReadoutSide  = {1, 1, 1};
+  sslbConfig.centralModuleLorentzAngle = {0.12, 0.12, 0.12};
+
   sslbConfig.centralModuleMaterial
       = {ssMaterial, ssMaterial, ssMaterial, ssMaterial};
   sslbConfig.centralModuleFrontsideStereo = {-0.02, -0.02, -0.02};
@@ -249,9 +270,16 @@ if (stage > 1) {
   sslbConfig.centralModulePositions = centralModulePositions;
 
   // configure the endcaps
-  std::vector<double>   mrMinHx    = {16.4, 24.2, 32.2};
-  std::vector<double>   mrMaxHx    = {24.2, 32.2, 40.0};
-  std::vector<double>   mrHy       = {48., 48., 48.};
+  std::vector<double> mrMinHx = {16.4, 24.2, 32.2};
+  std::vector<double> mrMaxHx = {24.2, 32.2, 40.0};
+  std::vector<double> mrHy    = {48., 48., 48.};
+
+  // simplified strixels readout
+  std::vector<size_t> mrReadoutBinsX = {968, 1288, 1600};  // 50 um pitch
+  std::vector<size_t> mrReadoutBinsY = {60, 60, 60};       // 1.6 mm strixels
+  std::vector<int>    mrReadoutSide  = {1, 1, 1};
+  std::vector<double> mrLorentzAngle = {0., 0., 0.};
+
   std::vector<int>      mPhiBins   = {42, 58, 72};
   std::vector<double>   mThickness = {0.2, 0.2, 0.2};
   std::vector<Material> mMaterial  = {ssMaterial, ssMaterial, ssMaterial};
@@ -276,6 +304,16 @@ if (stage > 1) {
       = std::vector<std::vector<int>>(nposnegs, mPhiBins);
   sslbConfig.posnegModuleThickness
       = std::vector<std::vector<double>>(nposnegs, mThickness);
+
+  sslbConfig.posnegModuleReadoutBinsX
+      = std::vector<std::vector<size_t>>(nposnegs, mrReadoutBinsX);
+  sslbConfig.posnegModuleReadoutBinsY
+      = std::vector<std::vector<size_t>>(nposnegs, mrReadoutBinsY);
+  sslbConfig.posnegModuleReadoutSide
+      = std::vector<std::vector<int>>(nposnegs, mrReadoutSide);
+  sslbConfig.posnegModuleLorentzAngle
+      = std::vector<std::vector<double>>(nposnegs, mrLorentzAngle);
+
   sslbConfig.posnegModuleMaterial
       = std::vector<std::vector<Material>>(nposnegs, mMaterial);
   sslbConfig.posnegModuleFrontsideStereo
@@ -350,6 +388,12 @@ if (stage > 2) {
   lslbConfig.centralModuleThickness            = {0.25, 0.25, 0.25};
   lslbConfig.centralModuleMaterial
       = {lsMaterial, lsMaterial, lsMaterial, lsMaterial};
+
+  lslbConfig.centralModuleReadoutBinsX = {840, 840};  // 100 um pitch
+  lslbConfig.centralModuleReadoutBinsY = {2, 2};      // 2 strips
+  lslbConfig.centralModuleReadoutSide  = {1, 1};
+  lslbConfig.centralModuleLorentzAngle = {0.08, 0.08};
+
   lslbConfig.centralModuleFrontsideStereo = {-0.02, -0.02};
   lslbConfig.centralModuleBacksideStereo  = {0.02, 0.02};
   lslbConfig.centralModuleBacksideGap     = {2., 2.};
@@ -375,7 +419,12 @@ if (stage > 2) {
   std::vector<Material> mMaterial  = {lsMaterial, lsMaterial, lsMaterial};
   std::vector<double>   mfStereo   = {-0.02, -0.02, -0.02};
   std::vector<double>   mbStereo   = {0.02, 0.02, 0.02};
-  std::vector<double>   mfbGap     = {2., 2., 2.};
+  std::vector<double>   mfbGap     = {4., 4., 4.};
+
+  std::vector<size_t> mrReadoutBinsX = {1120, 1120, 1120};  // 100 um pitch
+  std::vector<size_t> mrReadoutBinsY = {2, 2, 2};           // 2 strips
+  std::vector<int>    mrReadoutSide  = {1, 1, 1};
+  std::vector<double> mrLorentzAngle = {0., 0., 0.};
 
   // endcap
   lslbConfig.posnegLayerBinMultipliers = {1, 2};
@@ -395,6 +444,16 @@ if (stage > 2) {
       = std::vector<std::vector<int>>(nposnegs, mPhiBins);
   lslbConfig.posnegModuleThickness
       = std::vector<std::vector<double>>(nposnegs, mThickness);
+
+  lslbConfig.posnegModuleReadoutBinsX
+      = std::vector<std::vector<size_t>>(nposnegs, mrReadoutBinsX);
+  lslbConfig.posnegModuleReadoutBinsY
+      = std::vector<std::vector<size_t>>(nposnegs, mrReadoutBinsY);
+  lslbConfig.posnegModuleReadoutSide
+      = std::vector<std::vector<int>>(nposnegs, mrReadoutSide);
+  lslbConfig.posnegModuleLorentzAngle
+      = std::vector<std::vector<double>>(nposnegs, mrLorentzAngle);
+
   lslbConfig.posnegModuleMaterial
       = std::vector<std::vector<Material>>(nposnegs, mMaterial);
   lslbConfig.posnegModuleFrontsideStereo

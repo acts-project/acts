@@ -38,10 +38,8 @@ typedef std::vector<DetachedTrackingVolumePtr>        DetachedVolumeVector;
 ///
 ///  It enables both, a global search for an asociatedVolume
 ///  (respectively, if existing, a global search of an associated Layer or the
-///  next
-///  associated Layer), such as a continous navigation by BoundarySurfaces
-///  between
-///  the confined TrackingVolumes.
+///  next associated Layer), such as a continous navigation by BoundarySurfaces
+///  between the confined TrackingVolumes.
 
 class TrackingGeometry
 {
@@ -50,6 +48,9 @@ class TrackingGeometry
 
 public:
   /// Constructor
+  ///
+  /// @param assignIdentifiers is a boolean to assign the
+  /// geometryID sensitive has as an identifier
   TrackingGeometry(TrackingVolumePtr highestVolume);
 
   /// Destructor

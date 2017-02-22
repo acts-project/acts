@@ -18,22 +18,31 @@
 Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
                                        double maxhalex,
                                        double haley)
-  : Acts::PlanarBounds(TrapezoidBounds::bv_length), m_alpha(0.), m_beta(0.)
+  : PlanarBounds(TrapezoidBounds::bv_length)
+  , m_alpha(0.)
+  , m_beta(0.)
+  , m_boundingBox(0., 0.)
 {
   m_valueStore.at(TrapezoidBounds::bv_minHalfX) = std::abs(minhalex);
   m_valueStore.at(TrapezoidBounds::bv_maxHalfX) = std::abs(maxhalex);
   m_valueStore.at(TrapezoidBounds::bv_halfY)    = std::abs(haley);
-  if (m_valueStore.at(TrapezoidBounds::bv_minHalfX)
-      > m_valueStore.at(TrapezoidBounds::bv_maxHalfX))
-    std::swap(m_valueStore.at(TrapezoidBounds::bv_minHalfX),
-              m_valueStore.at(TrapezoidBounds::bv_maxHalfX));
+  // find the maximum at for the bounding box
+  double mx = m_valueStore.at(TrapezoidBounds::bv_minHalfX)
+          > m_valueStore.at(TrapezoidBounds::bv_maxHalfX)
+      ? m_valueStore.at(TrapezoidBounds::bv_minHalfX)
+      : m_valueStore.at(TrapezoidBounds::bv_maxHalfX);
+  m_boundingBox
+      = RectangleBounds(mx, m_valueStore.at(TrapezoidBounds::bv_halfY));
 }
 
 Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
                                        double haley,
                                        double alpha,
                                        double beta)
-  : Acts::PlanarBounds(TrapezoidBounds::bv_length), m_alpha(alpha), m_beta(beta)
+  : PlanarBounds(TrapezoidBounds::bv_length)
+  , m_alpha(alpha)
+  , m_beta(beta)
+  , m_boundingBox(0., 0.)
 {
   double gamma = (alpha > beta) ? (alpha - 0.5 * M_PI) : (beta - 0.5 * M_PI);
   // now fill them
@@ -41,6 +50,13 @@ Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
   m_valueStore.at(TrapezoidBounds::bv_maxHalfX) = minhalex
       + (2. * m_valueStore.at(TrapezoidBounds::bv_halfY)) * tan(gamma);
   m_valueStore.at(TrapezoidBounds::bv_halfY) = std::abs(haley);
+  // find the maximum for the bounding box
+  double mx = m_valueStore.at(TrapezoidBounds::bv_minHalfX)
+          > m_valueStore.at(TrapezoidBounds::bv_maxHalfX)
+      ? m_valueStore.at(TrapezoidBounds::bv_minHalfX)
+      : m_valueStore.at(TrapezoidBounds::bv_maxHalfX);
+  m_boundingBox
+      = RectangleBounds(mx, m_valueStore.at(TrapezoidBounds::bv_halfY));
 }
 
 Acts::TrapezoidBounds::~TrapezoidBounds()
@@ -54,6 +70,7 @@ Acts::TrapezoidBounds::operator=(const TrapezoidBounds& trabo)
     PlanarBounds::operator=(trabo);
     m_alpha               = trabo.m_alpha;
     m_beta                = trabo.m_beta;
+    m_boundingBox         = trabo.m_boundingBox;
   }
   return *this;
 }
@@ -73,16 +90,15 @@ Acts::TrapezoidBounds::insideFull(const Acts::Vector2D& lpos,
                                   double                tol1) const
 {
   // the cases:
-  // the cases:
-  double fabsX = std::abs(lpos[Acts::eLOC_X]);
-  double fabsY = std::abs(lpos[Acts::eLOC_Y]);
+  double absX = std::abs(lpos[Acts::eLOC_X]);
+  double absY = std::abs(lpos[Acts::eLOC_Y]);
   // (1) a fast FALSE
-  if (fabsY > (m_valueStore.at(TrapezoidBounds::bv_halfY) + tol1)) return false;
+  if (absY > (m_valueStore.at(TrapezoidBounds::bv_halfY) + tol1)) return false;
   // (2) a fast FALSE
-  if (fabsX > (m_valueStore.at(TrapezoidBounds::bv_maxHalfX) + tol0))
+  if (absX > (m_valueStore.at(TrapezoidBounds::bv_maxHalfX) + tol0))
     return false;
   // (3) a fast TRUE
-  if (fabsX < (m_valueStore.at(TrapezoidBounds::bv_minHalfX) - tol0))
+  if (absX < (m_valueStore.at(TrapezoidBounds::bv_minHalfX) - tol0))
     return true;
   // (4) particular case - a rectangle
   if (m_valueStore.at(TrapezoidBounds::bv_maxHalfX)

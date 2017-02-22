@@ -24,16 +24,14 @@ typedef std::vector<SurfacePtr>        SurfacePtrVector;
 ///
 /// Class that holds the surfaces for a planar digitization detector module.
 ///
-/// It needs a descriptor to design different pixel/strixels/strip setups (with
-/// a segmentation class)
+/// It needs a descriptor to design different pixel/strixels/strip setups
+/// (with a segmentation class) in order to define the readout segmentation
 ///
-/// The digitizaiton is done in the local frame of the surface and binning can
-/// be done
-/// in local x and local y direction.
+/// The digitizaiton is done in the local frame of the surface.
 ///
 /// The lorentz angle is assumed to be only in x-direction and constant for the
-/// module,
-/// it is measured from the local z-direction towards the local x-direction.
+/// module, it is measured from the local z-direction towards the local
+/// x-direction.
 ///
 /// The readout direction defines the charge drift either:
 /// a) towards the surface at -halfThickness if readout is defined at -1
@@ -63,6 +61,7 @@ public:
 
   /// Virtual Destructor
   virtual ~DigitizationModule() {}
+
   /// Return the internal test segmentation surfaces to test between entry
   /// and exit given by their cell id's - the boundaries are not given
   ///
@@ -121,10 +120,9 @@ public:
   segmentationSurfacesY() const;
 
 private:
-  double m_halfThickness;
-  int m_readoutDirection;  ///< defines if the readout is along (+1) / (-1) wrt
-                           /// the z axis
-  double m_lorentzAngle;   ///< the lorentz angle
+  double m_halfThickness;     ///< half thickness of the module
+  int    m_readoutDirection;  ///< readout is along (+1) / (-1) wrt local z axis
+  double m_lorentzAngle;      ///< the lorentz angle
   double m_tanLorentzAngle;  ///< and the tangent of it
 
   std::shared_ptr<const Segmentation>

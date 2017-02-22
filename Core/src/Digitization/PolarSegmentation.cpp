@@ -10,8 +10,8 @@
 // TrapezoidSegmentation.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Digitization/TrapezoidSegmentation.hpp"
-#include <cmath>
+/*
+#include "ACTS/Digitization/PolarSegmentation.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
@@ -175,15 +175,16 @@ Acts::TrapezoidSegmentation::cellPosition(const DigitizationCell& dCell) const
   // @TODO add protection agains 1D binUtility for Y
   double bX = m_binsX > 1
       ? m_binUtility->binningData()[0].center(
-            projectLocX(Vector2D(dCell.first, dCell.second)))
+            projectLocX(Vector2D(dCell.channel0, dCell.channel1)))
       : 0.;
   double bY
-      = m_binsY > 1 ? m_binUtility->binningData()[1].center(dCell.second) : 0.;
+      = m_binsY > 1 ? m_binUtility->binningData()[1].center(dCell.channel1) :
+0.;
   return Vector2D(bX, bY);
 }
 
-/** Get the digitization cell from 3D position, it used the projection to the
- * readout surface to estimate the 2D positon */
+// Get the digitization cell from 3D position, it used the projection to the
+readout surface to estimate the 2D positon
 const Acts::DigitizationStep
 Acts::TrapezoidSegmentation::digitizationStep(const Vector3D& startStep,
                                               const Vector3D& endStep,
@@ -211,3 +212,4 @@ Acts::TrapezoidSegmentation::digitizationStep(const Vector3D& startStep,
                           stepCenterProjected,
                           cellCenter);
 }
+*/

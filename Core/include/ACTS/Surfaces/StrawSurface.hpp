@@ -90,18 +90,18 @@ public:
   ///
   /// @param shift is an optional shift to be applied
   virtual StrawSurface*
-  clone(const Transform3D* shift = nullptr) const override;
+  clone(const Transform3D* shift = nullptr) const final override;
 
   /// Return the surface type
   virtual SurfaceType
-  type() const override
+  type() const final override
   {
     return Surface::Straw;
   }
 
   /// Return properly formatted class name for screen output */
   virtual std::string
-  name() const override
+  name() const final override
   {
     return "Acts::StrawSurface";
   };

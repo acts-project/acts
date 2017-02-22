@@ -9,6 +9,7 @@
 #ifndef ACTS_ATLAS_STEPPER_HPP
 #define ACTS_ATLAS_STEPPER_HPP 1
 
+#include <cmath>
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Units.hpp"
@@ -67,8 +68,10 @@ class AtlasStepper
       ActsVectorD<NGlobalPars> Vp  = pars.parameters();
 
       double Sf, Cf, Ce, Se;
-      sincos(Vp(2), &Sf, &Cf);
-      sincos(Vp(3), &Se, &Ce);
+      Sf = sin(Vp(2));
+      Cf = cos(Vp(2));
+      Se = sin(Vp(3));
+      Ce = cos(Vp(3));
 
       double Ax[3] = {-Sf, Cf, 0.};
       double Ay[3] = {-Cf * Ce, -Sf * Ce, Se};
@@ -84,7 +87,6 @@ class AtlasStepper
         pVector[6] < 0. ? pVector[6] = -.000000000000001 : pVector[6]
             = .000000000000001;
       }
-
       //   /dL1     |   /dL2       |    /dPhi     |    /dThe     |    /dCM     |
       //
       pVector[7]  = Ax[0];

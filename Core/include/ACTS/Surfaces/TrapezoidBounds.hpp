@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include "ACTS/Surfaces/PlanarBounds.hpp"
+#include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
 
@@ -60,18 +61,21 @@ public:
   /// Copy constructor
   ///
   /// @param trabo are the source bounds for assignment
-  TrapezoidBounds(const TrapezoidBounds& trabo) : PlanarBounds(trabo) {}
-  
+  TrapezoidBounds(const TrapezoidBounds& trabo)
+    : PlanarBounds(trabo), m_boundingBox(0., 0.)
+  {
+  }
+
   /// Destructor
   virtual ~TrapezoidBounds();
 
   /// Virtual constructor
   virtual TrapezoidBounds*
-  clone() const override;
+  clone() const final override;
 
   /// Return the type of the bounds for persistency
   virtual BoundsType
-  type() const override
+  type() const final
   {
     return SurfaceBounds::Trapezoid;
   }
@@ -151,7 +155,8 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const override;
+  inside(const Vector2D&      lpos,
+         const BoundaryCheck& bcheck) const final override;
 
   /// This method checks inside bounds in loc0
   /// @note loc0/loc1 correspond to the natural coordinates of the surface
@@ -163,7 +168,7 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
+  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const final override;
 
   /// This method checks inside bounds in loc0
   /// @note loc0/loc1 correspond to the natural coordinates of the surface
@@ -175,7 +180,7 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
+  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const final override;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
@@ -183,17 +188,21 @@ public:
   ///
   /// @return is a signed distance parameter
   virtual double
-  distanceToBoundary(const Vector2D& lpos) const override;
+  distanceToBoundary(const Vector2D& lpos) const final override;
 
   /// Return the vertices - or, the points of the extremas
   virtual const std::vector<Vector2D>
-  vertices() const override;
+  vertices() const final override;
+
+  // Bounding box representation
+  virtual const RectangleBounds&
+  boundingBox() const final override;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
   virtual std::ostream&
-  dump(std::ostream& sl) const override;
+  dump(std::ostream& sl) const final override;
 
 private:
   /// private helper method for inside check
@@ -242,8 +251,9 @@ private:
   isAbove(const Vector2D& lpos, double tol0, double tol1, double k, double d)
       const;
 
-  TDD_real_t m_alpha;  ///< private cache of angle alpha
-  TDD_real_t m_beta;   ///< private cahce of angle beta
+  TDD_real_t      m_alpha;        ///< private cache of angle alpha
+  TDD_real_t      m_beta;         ///< private cache of angle beta
+  RectangleBounds m_boundingBox;  ///< internal bounding box cache
 };
 
 inline TrapezoidBounds*
@@ -389,6 +399,12 @@ TrapezoidBounds::vertices() const
       Vector2D(-m_valueStore.at(TrapezoidBounds::bv_minHalfX),
                -m_valueStore.at(TrapezoidBounds::bv_halfY)));  // [3]
   return vertices;
+}
+
+inline const RectangleBounds&
+TrapezoidBounds::boundingBox() const
+{
+  return m_boundingBox;
 }
 
 }  // end of namespace

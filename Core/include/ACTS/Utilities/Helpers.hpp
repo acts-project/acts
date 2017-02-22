@@ -11,7 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #ifndef ACTS_HELPERS_H
-#define ACTS_HELPERS_H
+#define ACTS_HELPERS_H 1
 
 // STL include(s)
 #include <cmath>
@@ -22,10 +22,18 @@
 // ACTS include(s)
 #include "Definitions.hpp"
 
+#ifndef ACTS_BIT_CODING
+#define ACTS_BIT_CODING 1
+#define ACTS_BIT_SHIFT(mask) (__builtin_ffsl(mask) - 1)
+#define ACTS_BIT_ENCODE(value, mask) (value << ACTS_BIT_SHIFT(mask))
+#define ACTS_BIT_DECODE(code, mask) ((code & mask) >> ACTS_BIT_SHIFT(mask))
+#endif
+
 /** Geometry primitives helper functions
  */
 
 namespace Acts {
+
 /** EventPrimitvesToStringConverter
 
     inline methods for conversion of EventPrimitives (Matrix)

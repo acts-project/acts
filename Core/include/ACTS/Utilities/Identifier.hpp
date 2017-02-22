@@ -86,6 +86,15 @@ public:
   operator=(value_type value);
 
   ///----------------------------------------------------------------
+  /// Cast operators to value @todo to bool
+  operator value_type() const { return m_id; }
+  value_type
+  value() const
+  {
+    return m_id;
+  }
+
+  ///----------------------------------------------------------------
   /// Comparison operators
   ///----------------------------------------------------------------
   /// @param other is the comparison parameter

@@ -16,7 +16,9 @@
 
 // external include(s)
 #pragma GCC diagnostic push
+#if defined(__USE_GNU)
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
+#endif
 #include <Eigen/Dense>
 #pragma GCC diagnostic pop
 

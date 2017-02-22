@@ -433,7 +433,7 @@ private:
   /// @param volumeMap is a map to find the a volume
   ///        by a given name
   void
-  closeGeometry(const GeometryID& volumeID,
+  closeGeometry(GeometryID& volumeID,
                 std::map<std::string, const TrackingVolume*>& volumeMap) const;
 
   /// interlink the layers in this TrackingVolume
@@ -535,7 +535,7 @@ bool
 TrackingVolume::onVolumeBoundary(const T& pars) const
 {
   // get the associated Surface
-  const Surface* pSurface  = &pars.associatedSurface();
+  const Surface* pSurface  = &pars.referenceSurface();
   auto&          bSurfaces = boundarySurfaces();
   // fast loop pointer comparison of the surfaces
   for (auto& bsIter : bSurfaces) {

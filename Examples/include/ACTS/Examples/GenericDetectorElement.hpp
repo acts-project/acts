@@ -13,10 +13,8 @@
 #ifndef AGD_GENERICDETECTORELEMENT_GENERICDETECTORELEMENT
 #define AGD_GENERICDETECTORELEMENT_GENERICDETECTORELEMENT 1
 
-// Algebra and Identifier
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
-// Geometry module
 #include "ACTS/Detector/DetectorElementBase.hpp"
 
 namespace Acts {
@@ -25,6 +23,7 @@ class Surface;
 class PlanarBounds;
 class DiscBounds;
 class SurfaceMaterial;
+class DigitizationModule;
 
 /// @class GenericDetectorElement
 ///
@@ -47,6 +46,8 @@ public:
                          std::shared_ptr<const PlanarBounds>    pBounds,
                          double                                 thickness,
                          std::shared_ptr<const SurfaceMaterial> material
+                         = nullptr,
+                         std::shared_ptr<const DigitizationModule> dModule
                          = nullptr);
 
   /// Constructor for single sided detector element
@@ -69,7 +70,7 @@ public:
 
   /// Identifier
   Identifier
-  identify() const override;
+  identify() const final override;
 
   /// Return local to global transform associated with this identifier
   ///
@@ -77,7 +78,7 @@ public:
   ///
   /// @param identifier is ignored for this simple detector element
   const Transform3D&
-  transform(const Identifier& identifier = Identifier()) const override;
+  transform(const Identifier& identifier = Identifier()) const final override;
 
   /// Return surface associated with this identifier,
   ///
@@ -85,25 +86,35 @@ public:
   ///
   /// @param identifier is ignored for this simple detector element
   const Surface&
-  surface(const Identifier& identifier = Identifier()) const override;
+  surface(const Identifier& identifier = Identifier()) const final override;
 
   /// Returns the full list of all detection surfaces associated
   /// to this detector element
   const std::vector<std::shared_ptr<const Surface>>&
-  surfaces() const override;
+  surfaces() const final override;
+
+  /// Return the DigitizationModule
+  /// @return optionally the DigitizationModule
+  std::shared_ptr<const DigitizationModule>
+  digitizationModule() const final override;
+
+  /// Set the identifier after construction (sometimes needed)
+  virtual void
+  assignIdentifier(const Identifier& identifier) const final override;
 
   /// The maximal thickness of the detector element wrt normal axis
   double
-  thickness() const override;
+  thickness() const final override;
 
 private:
   /// the element representation
   /// identifier
-  Identifier m_elementIdentifier;
+  mutable Identifier m_elementIdentifier;
   /// the transform for positioning in 3D space
   std::shared_ptr<Transform3D> m_elementTransform;
   /// the surface represented by it
   std::shared_ptr<const Surface> m_elementSurface;
+
   /// the element thickness
   double m_elementThickness;
 
@@ -112,7 +123,22 @@ private:
   /// store either
   std::shared_ptr<const PlanarBounds> m_elementPlanarBounds;
   std::shared_ptr<const DiscBounds>   m_elementDiscBounds;
+
+  // the digitization module
+  std::shared_ptr<const DigitizationModule> m_digitizationModule;
 };
+
+inline std::shared_ptr<const DigitizationModule>
+GenericDetectorElement::digitizationModule() const
+{
+  return m_digitizationModule;
+}
+
+inline void
+GenericDetectorElement::assignIdentifier(const Identifier& identifier) const
+{
+  m_elementIdentifier = identifier;
+}
 
 inline Identifier
 GenericDetectorElement::identify() const
