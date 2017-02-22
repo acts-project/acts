@@ -93,7 +93,7 @@ public:
   ///
   /// @param shift is an optional transform for a shift applied after coping
   virtual CylinderSurface*
-  clone(const Transform3D* shift = nullptr) const override;
+  clone(const Transform3D* shift = nullptr) const final override;
 
   /// The binning position method - is overloaded for r-type binning
   ///
@@ -101,7 +101,7 @@ public:
   ///
   /// @return is the global position to be used for binning
   virtual const Vector3D
-  binningPosition(BinningValue bValue) const override;
+  binningPosition(BinningValue bValue) const final override;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   /// The measurement frame of a cylinder is the tangential plane at a given
@@ -112,7 +112,7 @@ public:
   ///
   /// @return rotation matrix that defines the measurement frame
   virtual const RotationMatrix3D
-  measurementFrame(const Vector3D& gpos, const Vector3D& mom) const override;
+  measurementFrame(const Vector3D& gpos, const Vector3D& mom) const final override;
 
   /// Return the surface type
   virtual SurfaceType
@@ -129,7 +129,7 @@ public:
   ///
   /// @return normal vector at the local position
   virtual const Vector3D
-  normal(const Vector2D& lpos) const override;
+  normal(const Vector2D& lpos) const final override;
 
   /// Return method for surface normal information
   /// @note for a Cylinder a local position is always required for the normal
@@ -139,7 +139,7 @@ public:
   ///
   /// @return normal vector at the global position
   virtual const Vector3D
-  normal(const Vector3D& gpos) const override;
+  normal(const Vector3D& gpos) const final override;
 
   /// Return method for the rotational symmetry axis
   /// @return  the z-Axis of transform
@@ -148,7 +148,7 @@ public:
 
   /// This method returns the CylinderBounds by reference
   virtual const CylinderBounds&
-  bounds() const override;
+  bounds() const final override;
 
   /// Local to global transformation
   ///
@@ -158,7 +158,7 @@ public:
   virtual void
   localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
-                Vector3D&       gpos) const override;
+                Vector3D&       gpos) const final override;
 
   /// Global to local transfomration
   ///
@@ -170,7 +170,7 @@ public:
   virtual bool
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
-                Vector2D&       lpos) const override;
+                Vector2D&       lpos) const final override;
 
   /// Check for position on surface
   ///
@@ -180,7 +180,7 @@ public:
   /// @return is a boolean indicating if the position is on surface
   virtual bool
   isOnSurface(const Vector3D&      gpos,
-              const BoundaryCheck& bcheck = true) const override;
+              const BoundaryCheck& bcheck = true) const final override;
 
   /// Fast straight line intersection schema - provides closest intersection
   ///  and (signed) path length
@@ -216,7 +216,7 @@ public:
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir = false,
-                       const BoundaryCheck& bcheck     = false) const override;
+                       const BoundaryCheck& bcheck     = false) const final override;
 
   /// Path correction due to incident of the track
   ///
@@ -225,7 +225,7 @@ public:
   ///
   /// @return is the correction factor due to incident
   virtual double
-  pathCorrection(const Vector3D& gpos, const Vector3D& mom) const override;
+  pathCorrection(const Vector3D& gpos, const Vector3D& mom) const final override;
 
   /// Return method for properly formatted output string
   virtual std::string

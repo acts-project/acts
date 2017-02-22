@@ -79,7 +79,7 @@ public:
 
   /// Virtual constructor
   virtual DiscTrapezoidalBounds*
-  clone() const override;
+  clone() const final override;
 
   /// Return the type - mainly for persistency
   virtual SurfaceBounds::BoundsType
@@ -94,25 +94,25 @@ public:
   /// @param lpos is the local position to be checked (in polar coordinates)
   /// @param bcheck is the boundary check directive
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck = true) const override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck = true) const final override;
 
   /// This method checks inside bounds in loc0
   /// @param lpos is the local position to be checked (in polar coordinates)
   /// @param tol0 is the tolerance applied
   virtual bool
-  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const override;
+  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const final override;
 
   /// This method checks inside bounds in loc0
   /// @param lpos is the local position to be checked (in polar coordinates)
   /// @param tol1 is the tolerance applied
   virtual bool
-  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const override;
+  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const final override;
 
   /// Minimal distance to boundary
   /// @param lpos is the local position to be checked (in polar coordinates)
   /// @return is the minimal distance ( > 0 if outside and <=0 if inside)
   virtual double
-  distanceToBoundary(const Vector2D& lpos) const override;
+  distanceToBoundary(const Vector2D& lpos) const final override;
 
   /// This method returns inner radius
   double
@@ -152,7 +152,7 @@ public:
 
   /// Output Method for std::ostream
   virtual std::ostream&
-  dump(std::ostream& sl) const override;
+  dump(std::ostream& sl) const final override;
 
 private:
   /// private helper method

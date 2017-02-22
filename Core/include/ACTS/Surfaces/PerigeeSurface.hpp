@@ -61,7 +61,7 @@ public:
   ///
   /// @param shift is the potential shift that is applied after cloning
   virtual PerigeeSurface*
-  clone(const Transform3D* shift = nullptr) const override;
+  clone(const Transform3D* shift = nullptr) const final override;
 
   /// Assignment operator
   ///
@@ -71,14 +71,14 @@ public:
 
   /// Return the surface type
   virtual SurfaceType
-  type() const override
+  type() const final override
   {
     return Surface::Perigee;
   }
 
   /// Return properly formatted class name for screen output */
   virtual std::string
-  name() const override
+  name() const final override
   {
     return "Acts::PerigeeSurface";
   }
@@ -87,7 +87,7 @@ public:
   ///
   /// @param sl is the ostream to be dumped into
   virtual std::ostream&
-  dump(std::ostream& sl) const override;
+  dump(std::ostream& sl) const final override;
 };
 
 inline PerigeeSurface*

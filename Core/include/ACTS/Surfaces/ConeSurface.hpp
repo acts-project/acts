@@ -90,7 +90,7 @@ public:
   ///
   /// @param shift is the optional shift applied after cloning
   virtual ConeSurface*
-  clone(const Transform3D* shift = nullptr) const override;
+  clone(const Transform3D* shift = nullptr) const final override;
 
   /// The binning position method - is overloaded for r-type binning
   ///
@@ -99,7 +99,7 @@ public:
   ///
   /// @return The return type is a vector for positioning in the global frame
   virtual const Vector3D
-  binningPosition(BinningValue bValue) const override;
+  binningPosition(BinningValue bValue) const final override;
 
   /// Return the surface type
   virtual SurfaceType
@@ -146,7 +146,7 @@ public:
 
   /// This method returns the ConeBounds by reference
   virtual const ConeBounds&
-  bounds() const override;
+  bounds() const final override;
 
   /// Local to global transformation
   ///
@@ -156,7 +156,7 @@ public:
   virtual void
   localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
-                Vector3D&       gpos) const override;
+                Vector3D&       gpos) const final override;
 
   /// Global to local transfomration
   ///
@@ -168,7 +168,7 @@ public:
   virtual bool
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
-                Vector2D&       lpos) const override;
+                Vector2D&       lpos) const final override;
 
   /// straight line intersection schema - provides closest intersection and
   /// (signed) path length
@@ -215,7 +215,7 @@ public:
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir = false,
-                       const BoundaryCheck& bcheck   = false) const override;
+                       const BoundaryCheck& bcheck   = false) const final override;
 
   /// the pathCorrection for derived classes with thickness
   ///
@@ -224,7 +224,7 @@ public:
   ///
   /// @return is the path correction due to incident angle
   virtual double
-  pathCorrection(const Vector3D& gpos, const Vector3D& mom) const override;
+  pathCorrection(const Vector3D& gpos, const Vector3D& mom) const final override;
 
   /// Return properly formatted class name for screen output
   virtual std::string

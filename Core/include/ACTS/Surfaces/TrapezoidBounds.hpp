@@ -71,7 +71,7 @@ public:
 
   /// Virtual constructor
   virtual TrapezoidBounds*
-  clone() const final;
+  clone() const final override;
 
   /// Return the type of the bounds for persistency
   virtual BoundsType
@@ -155,7 +155,7 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final override;
 
   /// This method checks inside bounds in loc0
   /// @note loc0/loc1 correspond to the natural coordinates of the surface
@@ -167,7 +167,7 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const final;
+  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const final override;
 
   /// This method checks inside bounds in loc0
   /// @note loc0/loc1 correspond to the natural coordinates of the surface
@@ -179,7 +179,7 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const final;
+  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const final override;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
@@ -187,21 +187,21 @@ public:
   ///
   /// @return is a signed distance parameter
   virtual double
-  distanceToBoundary(const Vector2D& lpos) const final;
+  distanceToBoundary(const Vector2D& lpos) const final override;
 
   /// Return the vertices - or, the points of the extremas
   virtual const std::vector<Vector2D>
-  vertices() const final;
+  vertices() const final override;
 
   // Bounding box representation
   virtual const RectangleBounds&
-  boundingBox() const final;
+  boundingBox() const final override;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
   virtual std::ostream&
-  dump(std::ostream& sl) const final;
+  dump(std::ostream& sl) const final override;
 
 private:
   /// private helper method for inside check
