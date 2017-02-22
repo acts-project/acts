@@ -68,31 +68,32 @@ Acts::LayerMaterialRecord::addLayerMaterialProperties(
   // sum up all material at this point for this layer
   float newThickness = 0.;
   float newRho       = 0.;
-  float newX0        = 0.;
-  float newL0        = 0.;
   float newA         = 0.;
   float newZ         = 0.;
+  float newtInX0     = 0.;
+  float newtInL0     = 0.;
 
   for (auto& layerStep : layerMaterialSteps) {
     float t       = layerStep.material().thickness();
     float density = layerStep.material().averageRho();
     newThickness += t;
+
     newRho += density * t;
-    newX0 += layerStep.material().x0() * t;
-    newL0 += layerStep.material().l0() * t;
     newA += layerStep.material().averageA() * density * t;
     newZ += layerStep.material().averageZ() * density * t;
+    newtInX0 += (layerStep.material().x0() != 0.)
+        ? t / layerStep.material().x0()
+        : 0.;
+
+    newtInL0 += (layerStep.material().l0() != 0.)
+        ? t / layerStep.material().l0()
+        : 0.;
   }
 
-  if (newRho != 0.) {
-    newA /= newRho;
-    newZ /= newRho;
-  }
-  if (newThickness != 0.) {
-    newX0 /= newThickness;
-    newL0 /= newThickness;
-    newRho /= newThickness;
-  }
+  newA /= (newRho != 0.) ? newRho : 1.;
+  newZ /= (newRho != 0.) ? newRho : 1.;
+
+  newRho /= (newThickness != 0.) ? newThickness : 1.;
 
   // now add it at the corresponding assigned position
   // get the bins corresponding to the position
@@ -103,26 +104,30 @@ Acts::LayerMaterialRecord::addLayerMaterialProperties(
   const Acts::MaterialProperties* material = m_materialMatrix.at(bin2).at(bin1);
   float                           thickness = 0.;
   float                           rho       = 0.;
-  float                           x0        = 0.;
-  float                           l0        = 0.;
+  float                           tInX0     = 0.;
+  float                           tInL0     = 0.;
   float                           A         = 0.;
   float                           Z         = 0.;
   // access the old material properties
   if (material) {
     thickness += material->thickness();
     rho += material->averageRho();
-    x0 += material->x0();
-    l0 += material->l0();
     A += material->averageA();
     Z += material->averageZ();
+    tInX0 += material->thicknessInX0();
+    tInL0 += material->thicknessInL0();
   }
   // sum up material properties (different MaterialTracks)
   thickness += newThickness;
   rho += newRho;
-  x0 += newX0;
-  l0 += newL0;
   A += newA;
   Z += newZ;
+  tInX0 += newtInX0;
+  tInL0 += newtInL0;
+
+  float x0 = (thickness != 0. && tInX0 != 0.) ? thickness / tInX0 : 0.;
+  float l0 = (thickness != 0. && tInL0 != 0.) ? thickness / tInL0 : 0.;
+
   // set the new current material (not averaged yet)
   const Acts::Material updatedMaterial(x0, l0, A, Z, rho);
   // pick the number of entries for the next material entry
@@ -148,21 +153,24 @@ Acts::LayerMaterialRecord::averageMaterial()
 
       float thickness = material->thickness();
       float rho       = material->averageRho();
-      float x0        = material->x0();
-      float l0        = material->l0();
+      float tInX0     = material->thicknessInX0();
+      float tInL0     = material->thicknessInL0();
       float A         = material->averageA();
       float Z         = material->averageZ();
       // caclulate mean value by dividing summed up material of all track
       // records through the number of track record for each bin
       size_t n = material->entries();
       if (n != 0) {
-        x0 /= n;
-        l0 /= n;
+        tInX0 /= n;
+        tInL0 /= n;
         A /= n;
         Z /= n;
         rho /= n;
         thickness /= n;
       }
+
+      float x0 = (thickness != 0. && tInX0 != 0.) ? thickness / tInX0 : 0.;
+      float l0 = (thickness != 0. && tInL0 != 0.) ? thickness / tInL0 : 0.;
       // set the new current material (resetting number of entries)
       const Acts::Material updatedMaterial(x0, l0, A, Z, rho);
       m_materialMatrix.at(bin1).at(bin0)->setMaterial(updatedMaterial,
