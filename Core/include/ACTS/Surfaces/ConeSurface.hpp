@@ -215,7 +215,8 @@ public:
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir = false,
-                       const BoundaryCheck& bcheck   = false) const final override;
+                       const BoundaryCheck& bcheck
+                       = false) const final override;
 
   /// the pathCorrection for derived classes with thickness
   ///
@@ -224,7 +225,8 @@ public:
   ///
   /// @return is the path correction due to incident angle
   virtual double
-  pathCorrection(const Vector3D& gpos, const Vector3D& mom) const final override;
+  pathCorrection(const Vector3D& gpos,
+                 const Vector3D& mom) const final override;
 
   /// Return properly formatted class name for screen output
   virtual std::string

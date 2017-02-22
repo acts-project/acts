@@ -90,7 +90,8 @@ public:
   ///
   /// @return is a boolean indicating the operation success
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final override;
+  inside(const Vector2D&      lpos,
+         const BoundaryCheck& bcheck) const final override;
 
   /// Inside check for the first coordinate
   ///

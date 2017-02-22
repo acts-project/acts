@@ -106,7 +106,8 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final override;
+  inside(const Vector2D&      lpos,
+         const BoundaryCheck& bcheck) const final override;
 
   /// Check for inside first local coordinate
   ///

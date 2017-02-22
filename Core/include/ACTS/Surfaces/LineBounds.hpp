@@ -70,7 +70,8 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final override;
+  inside(const Vector2D&      lpos,
+         const BoundaryCheck& bcheck) const final override;
 
   /// Inside check for the bounds object with tolerance
   /// checks for first coordinate only.

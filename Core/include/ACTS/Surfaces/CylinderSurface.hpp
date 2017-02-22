@@ -112,7 +112,8 @@ public:
   ///
   /// @return rotation matrix that defines the measurement frame
   virtual const RotationMatrix3D
-  measurementFrame(const Vector3D& gpos, const Vector3D& mom) const final override;
+  measurementFrame(const Vector3D& gpos,
+                   const Vector3D& mom) const final override;
 
   /// Return the surface type
   virtual SurfaceType
@@ -216,7 +217,8 @@ public:
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir = false,
-                       const BoundaryCheck& bcheck     = false) const final override;
+                       const BoundaryCheck& bcheck
+                       = false) const final override;
 
   /// Path correction due to incident of the track
   ///
@@ -225,7 +227,8 @@ public:
   ///
   /// @return is the correction factor due to incident
   virtual double
-  pathCorrection(const Vector3D& gpos, const Vector3D& mom) const final override;
+  pathCorrection(const Vector3D& gpos,
+                 const Vector3D& mom) const final override;
 
   /// Return method for properly formatted output string
   virtual std::string

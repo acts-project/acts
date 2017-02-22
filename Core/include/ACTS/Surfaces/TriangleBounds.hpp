@@ -85,7 +85,8 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final override;
+  inside(const Vector2D&      lpos,
+         const BoundaryCheck& bcheck) const final override;
 
   /// This method checks if the provided local coordinate 1 is inside the
   /// surface bounds

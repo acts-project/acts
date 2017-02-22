@@ -94,7 +94,8 @@ public:
   /// @param lpos is the local position to be checked (in polar coordinates)
   /// @param bcheck is the boundary check directive
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck = true) const final override;
+  inside(const Vector2D&      lpos,
+         const BoundaryCheck& bcheck = true) const final override;
 
   /// This method checks inside bounds in loc0
   /// @param lpos is the local position to be checked (in polar coordinates)

@@ -104,7 +104,8 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final override;
+  inside(const Vector2D&      lpos,
+         const BoundaryCheck& bcheck) const final override;
 
   /// Specialized method for CylinderBounds that checks if a global position
   /// is within the the cylinder cover

@@ -155,7 +155,8 @@ public:
   ///
   /// @return boolean indicator for the success of this operation
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final override;
+  inside(const Vector2D&      lpos,
+         const BoundaryCheck& bcheck) const final override;
 
   /// This method checks inside bounds in loc0
   /// @note loc0/loc1 correspond to the natural coordinates of the surface

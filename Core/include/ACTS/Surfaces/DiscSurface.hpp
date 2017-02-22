@@ -246,7 +246,8 @@ public:
   ///
   /// @return is the correction factor due to incident
   double
-  pathCorrection(const Vector3D& gpos, const Vector3D& mom) const final override;
+  pathCorrection(const Vector3D& gpos,
+                 const Vector3D& mom) const final override;
 
   /// fast straight line intersection schema - standard: provides closest
   /// intersection and (signed) path length
@@ -279,7 +280,8 @@ public:
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
                        bool                 forceDir = false,
-                       const BoundaryCheck& bcheck     = false) const final override;
+                       const BoundaryCheck& bcheck
+                       = false) const final override;
 
   /// Return properly formatted class name for screen output
   virtual std::string

@@ -91,7 +91,6 @@ public:
   /// Output Method for std::ostream
   virtual std::ostream&
   dump(std::ostream& sl) const final override;
-  
 };
 
 inline std::ostream&

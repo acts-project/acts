@@ -109,7 +109,8 @@ public:
   ///
   /// @return is a boolean indicating if the position is inside
   virtual bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck = true) const final override;
+  inside(const Vector2D&      lpos,
+         const BoundaryCheck& bcheck = true) const final override;
 
   /// Inside method for the first local parameter
   ///
