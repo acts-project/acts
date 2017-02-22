@@ -116,13 +116,13 @@ Acts::LayerMaterialRecord::addLayerMaterialProperties(
     A += material->averageA();
     Z += material->averageZ();
   }
-  // add the new material properties and weigh them
+  // sum up material properties (different MaterialTracks)
   thickness += newThickness;
-  rho += newRho * newThickness;
-  x0 += newX0 * newThickness;
-  l0 += newL0 * newThickness;
-  A += newA * newRho * newThickness;
-  Z += newZ * newRho * newThickness;
+  rho += newRho;
+  x0 += newX0;
+  l0 += newL0;
+  A += newA;
+  Z += newZ;
   // set the new current material (not averaged yet)
   const Acts::Material updatedMaterial(x0, l0, A, Z, rho);
   // pick the number of entries for the next material entry
@@ -152,15 +152,18 @@ Acts::LayerMaterialRecord::averageMaterial()
       float l0        = material->l0();
       float A         = material->averageA();
       float Z         = material->averageZ();
-      // divide
-      if (x0 != 0.) x0 /= thickness;
-      if (l0 != 0.) l0 /= thickness;
-      if (A != 0.) A /= rho;
-      if (Z != 0.) Z /= rho;
-      if (rho != 0.) rho /= thickness;
-      if (thickness != 0. && material->entries() != 0)
-        thickness /= material->entries();
-      // set the new current material
+      // caclulate mean value by dividing summed up material of all track
+      // records through the number of track record for each bin
+      size_t n = material->entries();
+      if (n != 0) {
+        x0 /= n;
+        l0 /= n;
+        A /= n;
+        Z /= n;
+        rho /= n;
+        thickness /= n;
+      }
+      // set the new current material (resetting number of entries)
       const Acts::Material updatedMaterial(x0, l0, A, Z, rho);
       m_materialMatrix.at(bin1).at(bin0)->setMaterial(updatedMaterial,
                                                       thickness);
