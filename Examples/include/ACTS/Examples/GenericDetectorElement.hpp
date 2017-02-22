@@ -70,7 +70,7 @@ public:
 
   /// Identifier
   Identifier
-  identify() const final;
+  identify() const final override;
 
   /// Return local to global transform associated with this identifier
   ///
@@ -78,7 +78,7 @@ public:
   ///
   /// @param identifier is ignored for this simple detector element
   const Transform3D&
-  transform(const Identifier& identifier = Identifier()) const final;
+  transform(const Identifier& identifier = Identifier()) const final override;
 
   /// Return surface associated with this identifier,
   ///
@@ -86,25 +86,25 @@ public:
   ///
   /// @param identifier is ignored for this simple detector element
   const Surface&
-  surface(const Identifier& identifier = Identifier()) const final;
+  surface(const Identifier& identifier = Identifier()) const final override;
 
   /// Returns the full list of all detection surfaces associated
   /// to this detector element
   const std::vector<std::shared_ptr<const Surface>>&
-  surfaces() const final;
+  surfaces() const final override;
 
   /// Return the DigitizationModule
   /// @return optionally the DigitizationModule
   std::shared_ptr<const DigitizationModule>
-  digitizationModule() const final;
+  digitizationModule() const final override;
 
   /// Set the identifier after construction (sometimes needed)
   virtual void
-  assignIdentifier(const Identifier& identifier) const final;
+  assignIdentifier(const Identifier& identifier) const final override;
 
   /// The maximal thickness of the detector element wrt normal axis
   double
-  thickness() const final;
+  thickness() const final override;
 
 private:
   /// the element representation
