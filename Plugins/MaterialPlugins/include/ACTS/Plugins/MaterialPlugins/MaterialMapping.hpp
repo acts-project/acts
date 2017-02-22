@@ -34,7 +34,23 @@ class LayerMaterialRecord;
 /// This class should be used to map material from the full and detailed
 /// detector geometry onto the simplified ACTS geometry. It offers options to
 /// map, average and finalize the material.
-///
+/// One MaterialTrackRecord (containing all the MaterialSteps along a Track) is
+/// mapped by using the function Acts::MaterialMapping::mapMaterial(). The
+/// mapping process then extrapolates into the same direction starting from the
+/// same point as the MaterialTrackRecord through the ACTS geometry and finds
+/// the closest surface of a layer which is marked to carry support material.
+/// The material is assigned to the closest layer (forward or backward) to the
+/// bin at the assigned position on the layer.
+/// Along one track in one bin of a layer the material is averaged:
+/// \image html MaterialAveraging.jpeg
+/// When the material mapping is done many MaterialTrackRecords will be mapped.
+/// Everytime the same bin is hit, the material parameters are summed up. If the
+/// user uses the function Acts::MaterialMapping::averageLayerMaterial() (e.g.
+/// after every run) the  mean is calculated by dividing the sums by the number
+/// of entries. Afterwards the number of entries is reset.
+/// In the end after all the material is mapped the user should use
+/// Acts::MaterialMapping::finalizeLayerMaterial() which sets assignes the
+/// finalized material to the layers.
 
 class MaterialMapping
 {

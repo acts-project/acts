@@ -309,9 +309,6 @@
 /// During the material mapping the user can decide to average the material whenever he/she prefers by using
 /// the function Acts::MaterialMapping::averageLayerMaterial(). In the end when all material track records have been mapped one
 /// should use the function Acts::MaterialMapping::finalizeLayerMaterial() in order to finalize the process.
-/// The averaging is done for each bin of a layer according to the following formulas:
-///
-/// \image html MaterialAveraging.jpeg
 ///
 ///
 /// The full material mapping process should be done in the framework of the user.
@@ -320,8 +317,7 @@
 /// * Create material map(s) of full detector geometry using Acts::MaterialTrackRecord
 /// * Read in material map(s) and go through all collected material track records
 ///		- use Acts::MaterialMapping::mapMaterial() for each material track record
-/// 	- use Acts::MaterialMapping::averageLayerMaterial() - once per event
-/// * Use Acts::MaterialMapping::averageMaterial() - once per run
+/// * Use Acts::MaterialMapping::averageLayerMaterial() - once per run
 /// * In the end of the process use Acts::MaterialMapping::finalizeLayerMaterial() which assigns the final material to the layers
 
 /// @defgroup Contributing Contribution guide
