@@ -23,8 +23,8 @@ Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(Acts::BinUtility& binutility)
 {
   // reserve
   m_fullMaterial.reserve(binutility.max(1) + 1);
-  for (unsigned int ibin0 = 0; ibin0 < (unsigned int)binutility.max(1) + 1;
-       ++ibin0) {
+  for (unsigned int ibin1 = 0; ibin1 < (unsigned int)binutility.max(1) + 1;
+       ++ibin1) {
     // create the vector for the push_back
     Acts::MaterialPropertiesVector matVec;
     matVec.reserve(binutility.max(0) + 1);
