@@ -108,8 +108,8 @@ namespace Test {
 
       ActsSymMatrixD<5> jacobian;
       jacobian.setIdentity();
-      jacobian.col(Acts::eLOC_1) = fitLinear(x_derivatives, h_steps);
-      jacobian.col(Acts::eLOC_2) = fitLinear(y_derivatives, h_steps);
+      jacobian.col(Acts::eLOC_0) = fitLinear(x_derivatives, h_steps);
+      jacobian.col(Acts::eLOC_1) = fitLinear(y_derivatives, h_steps);
       jacobian.col(Acts::ePHI)   = fitLinear(phi_derivatives, h_steps);
       jacobian.col(Acts::eTHETA) = fitLinear(theta_derivatives, h_steps);
       jacobian.col(Acts::eQOP)   = fitLinear(qop_derivatives, h_steps);

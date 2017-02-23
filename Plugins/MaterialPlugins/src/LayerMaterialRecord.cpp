@@ -22,8 +22,8 @@ Acts::LayerMaterialRecord::LayerMaterialRecord(const BinUtility* binutility)
 {
   // reserve
   m_materialMatrix.reserve(m_binUtility->max(1) + 1);
-  for (unsigned int ibin2 = 0; ibin2 < (unsigned int)m_binUtility->max(1) + 1;
-       ++ibin2) {
+  for (unsigned int ibin1 = 0; ibin1 < (unsigned int)m_binUtility->max(1) + 1;
+       ++ibin1) {
     // create the vector for the push_back
     Acts::MaterialPropertiesVector matVec;
     matVec.reserve(m_binUtility->max(0) + 1);
@@ -63,11 +63,11 @@ Acts::LayerMaterialRecord::addLayerMaterialProperties(
     const Acts::MaterialProperties* newMaterial)
 {
   // get the bins corresponding to the position
-  size_t bin1 = m_binUtility->bin(pos, 0);
-  size_t bin2 = m_binUtility->bin(pos, 1);
+  size_t bin0 = m_binUtility->bin(pos, 0);
+  size_t bin1 = m_binUtility->bin(pos, 1);
   // get the material which might be there already, add new material and
   // weigh it
-  const Acts::MaterialProperties* material = m_materialMatrix.at(bin2).at(bin1);
+  const Acts::MaterialProperties* material = m_materialMatrix.at(bin1).at(bin0);
   float                           newThickness = newMaterial->thickness();
   float                           newRho       = newMaterial->averageRho();
   float                           thickness    = 0.;
@@ -94,20 +94,20 @@ Acts::LayerMaterialRecord::addLayerMaterialProperties(
   Z += newMaterial->averageZ() * newRho;
   // set the new current material (not averaged yet)
   const Acts::Material updatedMaterial(x0, l0, A, Z, rho);
-  m_materialMatrix.at(bin2).at(bin1)->setMaterial(updatedMaterial, thickness);
+  m_materialMatrix.at(bin1).at(bin0)->setMaterial(updatedMaterial, thickness);
 }
 
 void
 Acts::LayerMaterialRecord::averageMaterial()
 {
   // access the bins
-  size_t bins1 = m_binUtility->bins(0);
-  size_t bins2 = m_binUtility->bins(1);
+  size_t bins0 = m_binUtility->bins(0);
+  size_t bins1 = m_binUtility->bins(1);
   // loop through the material properties matrix and average
-  for (size_t bin1 = 0; bin1 < bins1; bin1++) {
-    for (size_t bin2 = 0; bin2 < bins2; bin2++) {
+  for (size_t bin0 = 0; bin0 < bins0; bin0++) {
+    for (size_t bin1 = 0; bin1 < bins1; bin1++) {
       const Acts::MaterialProperties* material
-          = m_materialMatrix.at(bin2).at(bin1);
+          = m_materialMatrix.at(bin1).at(bin0);
 
       float thickness = material->thickness();
       float rho       = material->averageRho();
@@ -124,7 +124,7 @@ Acts::LayerMaterialRecord::averageMaterial()
       if (thickness != 0.) thickness /= material->entries();
       // set the new current material
       const Acts::Material updatedMaterial(x0, l0, A, Z, rho);
-      m_materialMatrix.at(bin2).at(bin1)->setMaterial(updatedMaterial,
+      m_materialMatrix.at(bin1).at(bin0)->setMaterial(updatedMaterial,
                                                       thickness);
     }  // b2
   }    // b1

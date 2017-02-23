@@ -32,7 +32,7 @@ namespace Test {
     CylinderSurface   cylinder(nullptr, 3, 10);
     ActsSymMatrixD<2> cov;
     cov << 0.04, 0, 0, 0.1;
-    Measurement_t<ParDef::eLOC_1, ParDef::eLOC_2> m(
+    Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1> m(
         cylinder, 0, std::move(cov), -0.1, 0.45);
   }
 }  // end of namespace Test

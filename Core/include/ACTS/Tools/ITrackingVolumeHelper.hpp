@@ -79,7 +79,7 @@ public:
   /// if no bounds or HepTransform is given, they define the size
   /// together with the volume enevlope parameters
   /// @param matprop dense material properties for this TrackingVolume
-  /// @param loc1Min, loc1Max, loc2Min, loc2Max : local position in space,
+  /// @param loc0Min, loc0Max, loc1Min, loc1Max : local position in space,
   /// this TrackingVolume is restricted to Translation only
   /// @param volumeName  volume name to be given
   /// @param btype (optional) BinningType - arbitrary(default) or equidistant
@@ -88,17 +88,17 @@ public:
   virtual TrackingVolumePtr
   createTrackingVolume(const LayerVector&        layers,
                        std::shared_ptr<Material> matprop,
+                       double                    loc0Min,
+                       double                    loc0Max,
                        double                    loc1Min,
                        double                    loc1Max,
-                       double                    loc2Min,
-                       double                    loc2Max,
                        const std::string&        volumeName = "UndefinedVolume",
                        BinningType               btype = arbitrary) const = 0;
 
   /// Create a gap volume from dimensions and
   ///
   /// @param matprop dense material properties for this TrackingVolume
-  /// @param loc1Min, loc1Max, loc2Min, loc2Max : local position in space,
+  /// @param loc0Min, loc0Max, loc1Min, loc1Max : local position in space,
   /// this TrackingVolume is restricted to Translation only
   /// @param materialLayers number of material layers (aequidistant binning)
   /// @param cylinder type of layers
@@ -107,10 +107,10 @@ public:
   /// @return shared pointer to a new TrackingVolume
   virtual TrackingVolumePtr
   createGapTrackingVolume(std::shared_ptr<Material> matprop,
+                          double                    loc0Min,
+                          double                    loc0Max,
                           double                    loc1Min,
                           double                    loc1Max,
-                          double                    loc2Min,
-                          double                    loc2Max,
                           unsigned int              materialLayers,
                           bool                      cylinder = true,
                           const std::string&        volumeName
@@ -119,7 +119,7 @@ public:
   /// Create a gap volume from dimensions and
   ///
   /// @param matprop dense material properties for this TrackingVolume
-  /// @param loc1Min, loc1Max, loc2Min, loc2Max local position in space,
+  /// @param loc0Min, loc0Max, loc1Min, loc1Max local position in space,
   /// @param layerPositions custom layer positions
   /// @param cylinder type of layers
   /// @param volumeName  : volume name to be given
@@ -128,10 +128,10 @@ public:
   /// @return shared pointer to a new TrackingVolume
   virtual TrackingVolumePtr
   createGapTrackingVolume(std::shared_ptr<Material>  matprop,
+                          double                     loc0Min,
+                          double                     loc0Max,
                           double                     loc1Min,
                           double                     loc1Max,
-                          double                     loc2Min,
-                          double                     loc2Max,
                           const std::vector<double>& layerPositions,
                           bool                       cylinder = true,
                           const std::string& volumeName = "UndefinedVolume",
@@ -140,7 +140,6 @@ public:
   /// Create a one level higher TrackingVolue
   ///
   /// @param volumes the volumes to be contained
-  ///
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual TrackingVolumePtr
