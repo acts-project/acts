@@ -332,7 +332,7 @@ private:
   ///        the wrapping flag may be set
   /// @param insideConfig is the inside volume in order to
   ///        check the wrapping
-  /// @param VolumeConfig is the volume to be tested
+  /// @param volumeConfig is the volume to be tested
   /// @param sign distinguishes inside/outside testing
   ///
   /// @return boolean that indicates the test result

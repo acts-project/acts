@@ -28,7 +28,7 @@ public:
   /// Constructor from DigitizationCells
   ///
   /// @param mSurface is the module surface
-  /// @param cIendifier is the channel identifier of the local position
+  /// @param cIdentifier is the channel identifier of the local position
   /// @param cov is the covariance matrix
   /// @param loc0 is the local position in the first coordinate
   /// @param loc1 is the local position in the second coordinate

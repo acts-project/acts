@@ -51,7 +51,7 @@ public:
 
   // constructor from a shift and a value
   ///
-  /// @param id is numbered object
+  /// @param id type_id numbered object
   /// @param type_mask is necessary for the decoding
   GeometryID(geo_id_value type_id, geo_id_value type_mask)
     : m_value(ACTS_BIT_ENCODE(type_id, type_mask))
@@ -103,7 +103,6 @@ public:
   /// return the value
   ///
   /// @param mask is the mask to be applied
-  /// @param shift is the according shift to be applied
   geo_id_value
   value(geo_id_value mask = 0) const;
 

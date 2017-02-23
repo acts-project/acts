@@ -49,11 +49,11 @@ class TransportJacobian : public ActsMatrixD<5, 5>
 public:
   /// Constructor
   ///
-  /// @param tdada is the double array for containing the jacobian entries
+  /// @param tdata is the double array for containing the jacobian entries
   TransportJacobian(const double* tdata);
   /// Constructor
   ///
-  /// @param tdada is the double array for containing the jacobian entries
+  /// @param tdata is the matrix containing the jacobian entries
   TransportJacobian(const ActsMatrixD<5, 5>& tdata);
 
   /// Destructor
