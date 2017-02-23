@@ -67,9 +67,8 @@ buildGenericDetector(Logging::Level surfaceLLevel,
           tgConfig, getDefaultLogger("TrackerGeometryBuilder", volumeLLevel));
   // get the geometry
   auto trackingGeometry = cylinderGeometryBuilder->trackingGeometry();
-  // let's assign the identifiers
-  // @todo recursive stepping through geometry with identifier assignment
-  return std::move(trackingGeometry);
+  /// return the tracking geometry
+  return trackingGeometry;
 }
 
 /// helper method for cylinder
