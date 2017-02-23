@@ -70,7 +70,7 @@ public:
   CylinderVolumeHelper(const Config&           cvhConfig,
                        std::unique_ptr<Logger> logger
                        = getDefaultLogger("CylinderVolumeHelper",
-                       Logging::INFO));
+                                          Logging::INFO));
 
   /// Destructor
   virtual ~CylinderVolumeHelper() = default;

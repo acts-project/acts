@@ -47,20 +47,20 @@ namespace Acts {
 class TransportJacobian : public ActsMatrixD<5, 5>
 {
 public:
-  /// Constructor 
+  /// Constructor
   ///
   /// @param tdada is the double array for containing the jacobian entries
   TransportJacobian(const double* tdata);
-  /// Constructor 
+  /// Constructor
   ///
   /// @param tdada is the double array for containing the jacobian entries
-  TransportJacobian(const ActsMatrixD<5, 5>& tdata );
+  TransportJacobian(const ActsMatrixD<5, 5>& tdata);
 
-  /// Destructor 
+  /// Destructor
   virtual ~TransportJacobian(){};
 };
 
-/// Overload of << operator for std::ostream 
+/// Overload of << operator for std::ostream
 std::ostream&
 operator<<(std::ostream& sl, const TransportJacobian& jac);
 
