@@ -7,6 +7,7 @@
     2. [Installation](#installation)
     3. [cmake options](#cmake-options)
     4. [Using docker](#using-docker)
+    5. [Building on lxplus](#lxplus-build)
 4. [Using ACTS in your own cmake project](#using-acts)
 5. [Documentation](#documentation)
 6. [License and authors](#license-authors)
@@ -64,7 +65,7 @@ To use the CMake release x.y.z from this source, do...
 
 The ACTS repository is hosted on the GitLab instance at CERN. For the time being you need to have a full CERN account in order to access the repository. We are working on a solution for non-CERN users. Cmake is used as build system for compiling and installing ACTS libraries. For a complete description of the available cmake options please see below.
 
-In order to install the latest version, you can follow the instructions below where \<DIR\> refers to some directory which needs to be set depending on your configuration.
+In order to install the latest version, you can follow the instructions below where \<DIR\> refers to some directory which needs to be set depending on your local system configuration.
 
 > git clone https://gitlab.cern.ch/acts/a-common-tracking-sw.git \<ACTS_DIR\><br />
 > mkdir \<BUILD_DIR\><br />
@@ -147,6 +148,25 @@ If you just want to test the compilation non-interactively, you could also execu
 > docker exec acts acts-start acts-build /acts /workdir/build
 
 This command could, for instance, be used as custom build command in IDEs.
+
+## <a name="lxplus-build">Build ACTS on lxplus</a>
+
+On lxplus many of the dependencies are provided by the LCG releases. A possible setup is the following:
+
+> export actsbase=${PWD}<br />
+> export lcgversion=LCG_87<br />
+> export platform=x86_64-slc6-gcc62-opt<br />
+> export lcgdir=/cvmfs/sft.cern.ch/lcg/views/${lcgversion}/${platform}<br />
+> source /cvmfs/sft.cern.ch/lcg/views/${lcgversion}/${platform}/setup.sh<br />
+> cd /cvmfs/sft.cern.ch/lcg/releases/${lcgversion}/DD4hep/00-17/${platform} && source bin/thisdd4hep.sh && cd ${actsbase}<br />
+> <br />
+> mkdir build && cd build<br />
+> cmake .. -DCMAKE_INSTALL_PREFIX=<path you want> \<br />
+>	 -DEIGEN_INCLUDE_DIR=${lcgdir}/include/eigen3/ \<br />
+>	-DBOOST_INCLUDEDIR=${lcgdir}/include/boost-1_59/ \<br />
+>	-DBUILD_TGEO_PLUGIN=ON \<br />
+>	-DBUILD_DD4HEP_PLUGIN=ON<br />
+> make install
 
 # <a name="using-acts">Using ACTS in your own cmake project</a>
 
