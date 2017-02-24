@@ -36,7 +36,7 @@ namespace Test {
     ActsSymMatrixD<2> cov;
     cov << 0.04, 0, 0, 0.1;
     FittableMeasurement<unsigned long int> m
-        = Measurement_t<ParDef::eLOC_1, ParDef::eLOC_2>(
+        = Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>(
             cylinder, 0, std::move(cov), -0.1, 0.45);
 
     // make dummy track parameter

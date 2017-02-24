@@ -56,12 +56,12 @@ private:
 
       if (cov) {
         const auto& transform = par.referenceSurface().transform().matrix();
+        jacobian(0, eLOC_0) = transform(0, eLOC_0);
         jacobian(0, eLOC_1) = transform(0, eLOC_1);
-        jacobian(0, eLOC_2) = transform(0, eLOC_2);
+        jacobian(1, eLOC_0) = transform(1, eLOC_0);
         jacobian(1, eLOC_1) = transform(1, eLOC_1);
-        jacobian(1, eLOC_2) = transform(1, eLOC_2);
+        jacobian(2, eLOC_0) = transform(2, eLOC_0);
         jacobian(2, eLOC_1) = transform(2, eLOC_1);
-        jacobian(2, eLOC_2) = transform(2, eLOC_2);
         jacobian(3, ePHI)   = -sin(theta) * sin(phi);
         jacobian(3, eTHETA) = cos(theta) * cos(phi);
         jacobian(4, ePHI)   = sin(theta) * cos(phi);

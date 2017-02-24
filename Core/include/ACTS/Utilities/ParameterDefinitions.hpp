@@ -31,28 +31,28 @@ static_assert(Acts::NGlobalPars > 1,
               "total number of global parameters must be >= 2");
 
 /// several constants for the local parameters need to be defined
-static_assert(Acts::eLOC_1 != Acts::eLOC_2,
+static_assert(Acts::eLOC_0 != Acts::eLOC_1,
               "local parameters must have different IDs");
-static_assert(Acts::eLOC_R == Acts::eLOC_1 or Acts::eLOC_R == Acts::eLOC_2,
+static_assert(Acts::eLOC_R == Acts::eLOC_0 or Acts::eLOC_R == Acts::eLOC_1,
               "local radius must be a local parameter");
-static_assert(Acts::eLOC_PHI == Acts::eLOC_1 or Acts::eLOC_PHI == Acts::eLOC_2,
+static_assert(Acts::eLOC_PHI == Acts::eLOC_0 or Acts::eLOC_PHI == Acts::eLOC_1,
               "local phi must be a local parameter");
-static_assert(Acts::eLOC_RPHI == Acts::eLOC_1
-                  or Acts::eLOC_RPHI == Acts::eLOC_2,
+static_assert(Acts::eLOC_RPHI == Acts::eLOC_0
+                  or Acts::eLOC_RPHI == Acts::eLOC_1,
               "local r x phi must be a local parameter");
-static_assert(Acts::eLOC_Z == Acts::eLOC_1 or Acts::eLOC_Z == Acts::eLOC_2,
+static_assert(Acts::eLOC_Z == Acts::eLOC_0 or Acts::eLOC_Z == Acts::eLOC_1,
               "local z must be a local parameter");
-static_assert(Acts::eLOC_X == Acts::eLOC_1 or Acts::eLOC_X == Acts::eLOC_2,
+static_assert(Acts::eLOC_X == Acts::eLOC_0 or Acts::eLOC_X == Acts::eLOC_1,
               "local x must be a local parameter");
-static_assert(Acts::eLOC_Y == Acts::eLOC_1 or Acts::eLOC_Y == Acts::eLOC_2,
+static_assert(Acts::eLOC_Y == Acts::eLOC_0 or Acts::eLOC_Y == Acts::eLOC_1,
               "local y must be a local parameter");
-static_assert(Acts::eLOC_D0 == Acts::eLOC_1 or Acts::eLOC_D0 == Acts::eLOC_2,
+static_assert(Acts::eLOC_D0 == Acts::eLOC_0 or Acts::eLOC_D0 == Acts::eLOC_1,
               "d0 must be a local parameter");
-static_assert(Acts::eLOC_Z0 == Acts::eLOC_1 or Acts::eLOC_Z0 == Acts::eLOC_2,
+static_assert(Acts::eLOC_Z0 == Acts::eLOC_0 or Acts::eLOC_Z0 == Acts::eLOC_1,
               "z0 must be a local parameter");
 
 /// check for par_type_t definition
-static_assert(sizeof(Acts::par_type_t<Acts::eLOC_1>) > 0,
+static_assert(sizeof(Acts::par_type_t<Acts::eLOC_0>) > 0,
               "'par_type_t' is not defined");
 
 #endif  //  ACTS_PARAMETERDEFINITIONS_H

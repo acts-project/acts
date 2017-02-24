@@ -14,13 +14,15 @@
 #define EIGEN_MATRIX_PLUGIN "ACTS/Utilities/detail/MatrixPlugin.hpp"
 #define EIGEN_TRANSFORM_PLUGIN "ACTS/Utilities/detail/TransformPlugin.hpp"
 
-// external include(s)
+// for GNU: ignore this specific warning, otherwise just include Eigen/Dense
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__INTEL_COMPILER)
 #pragma GCC diagnostic push
-#if defined(__USE_GNU)
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
-#endif
 #include <Eigen/Dense>
 #pragma GCC diagnostic pop
+#else
+#include <Eigen/Dense>
+#endif
 
 #ifdef TRKDETDESCR_USEFLOATPRECISON
 typedef float TDD_real_t;

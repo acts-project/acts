@@ -174,8 +174,8 @@ main()
   long int id = 0;
   // random numbers for smearing measurements
   std::default_random_engine             e;
-  std::uniform_real_distribution<double> std_loc1(1, 5);
-  std::uniform_real_distribution<double> std_loc2(0.1, 2);
+  std::uniform_real_distribution<double> std_loc0(1, 5);
+  std::uniform_real_distribution<double> std_loc1(0.1, 2);
   std::normal_distribution<double>       g(0, 1);
 
   double std1, std2, l1, l2;
@@ -183,13 +183,13 @@ main()
     const auto& tp = step.parameters;
     if (tp->referenceSurface().type() != Surface::Cylinder) continue;
 
-    std1 = std_loc1(e);
-    std2 = std_loc2(e);
-    l1   = tp->get<eLOC_1>() + std1 * g(e);
-    l2   = tp->get<eLOC_2>() + std2 * g(e);
+    std1 = std_loc0(e);
+    std2 = std_loc1(e);
+    l1   = tp->get<eLOC_0>() + std1 * g(e);
+    l2   = tp->get<eLOC_1>() + std2 * g(e);
     ActsSymMatrixD<2> cov;
     cov << std1 * std1, 0, 0, std2 * std2;
-    vMeasurements.push_back(Meas_t<eLOC_1, eLOC_2>(
+    vMeasurements.push_back(Meas_t<eLOC_0, eLOC_1>(
         tp->referenceSurface(), id, std::move(cov), l1, l2));
     ++id;
   }

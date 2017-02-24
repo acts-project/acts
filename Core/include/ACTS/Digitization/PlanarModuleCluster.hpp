@@ -22,29 +22,29 @@ namespace Acts {
 template <ParID_t... params>
 using Measurement_t = Measurement<Identifier, params...>;
 
-class PlanarModuleCluster : public Measurement_t<ParDef::eLOC_1, ParDef::eLOC_2>
+class PlanarModuleCluster : public Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>
 {
 public:
   /// Constructor from DigitizationCells
   ///
   /// @param mSurface is the module surface
-  /// @param cIendifier is the channel identifier of the local position
+  /// @param cIdentifier is the channel identifier of the local position
   /// @param cov is the covariance matrix
-  /// @param loc1 is the local position in the first coordinate
-  /// @param loc2 is the local position in the second coordinate
+  /// @param loc0 is the local position in the first coordinate
+  /// @param loc1 is the local position in the second coordinate
   /// @param dCells is the vector of digitization cells
   PlanarModuleCluster(const Surface&                mSurface,
                       const Identifier&             cIdentifier,
                       ActsSymMatrixD<2>             cov,
+                      double                        loc0,
                       double                        loc1,
-                      double                        loc2,
                       std::vector<DigitizationCell> dCells,
                       std::vector<barcode_type>     barcodes = {})
-    : Measurement_t<ParDef::eLOC_1, ParDef::eLOC_2>(mSurface,
+    : Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>(mSurface,
                                                     cIdentifier,
                                                     std::move(cov),
-                                                    loc1,
-                                                    loc2)
+                                                    loc0,
+                                                    loc1)
     , m_digitizationCells(dCells)
     , m_barcodes(barcodes)
   {
