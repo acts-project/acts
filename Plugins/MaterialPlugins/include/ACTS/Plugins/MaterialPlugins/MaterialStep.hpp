@@ -39,7 +39,6 @@ public:
   /// @struct Position
   /// the global three dimensional position of the material step
   /// @todo replace by Acts::Vector3D
-
   struct Position
   {
     /// X Coordinate of the material step
@@ -51,40 +50,51 @@ public:
 
     /// Default constructor creating a position at the origin
     Position() : x(0.), y(0.), z(0.) {}
+    
     /// Constructor to set the three coordinates
     Position(double x, double y, double z) : x(x), y(y), z(z) {}
+    
     /// Copy Constructor
     Position(const Position& pos) : x(pos.x), y(pos.y), z(pos.z) {}
   };
+  
   /// Default constructor
   /// setting the position to the origin and making default material properties
   MaterialStep();
+  
   /// Constructor to set th material properties at a certain position
   /// @param mat the material properties (material + step length) at the given
   /// position
   /// @param pos three dimensional global position of the step
   MaterialStep(const MaterialProperties& mat, const Position& pos);
+  
   /// Copy Constructor
   MaterialStep(const MaterialStep& mstep);
+  
   /// Implicit contructor
   /// - uses the copy constructor
   MaterialStep*
   clone() const;
+  
   /// Default Destructor
   ~MaterialStep() = default;
+  
   /// Assignment operator
   MaterialStep&
   operator=(const Acts::MaterialStep& mstep);
-  /// @return returns the position of the material of this step
+  
+  /// return method for the position of the step
   const Position
-  position() const;
-  /// return returns the material porperties of this step
+  position();
+  
+  /// return method for the material properties
   const MaterialProperties
   material() const;
 
 private:
   /// the global three dimensional position of the material step
   Position m_position;
+  
   /// the accumulated material of the step containing the material and the step
   /// length
   MaterialProperties m_material;

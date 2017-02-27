@@ -37,30 +37,24 @@ Acts::CylinderLayer::CylinderLayer(
                                  cBounds->halflengthZ());
   Layer::m_representingVolume
       = new AbstractVolume(transform, VolumeBoundsPtr(cvBounds));
-  // associate teh layer
+  // associate the layer to the surface
   CylinderSurface::associateLayer(*this);
   // an approach descriptor is automatically created if there's a surface array
   if (!m_approachDescriptor && Layer::m_surfaceArray) buildApproachDescriptor();
-  // register the layer if the approach descriptor was provided
+  // register the layer to the approach descriptor surfaces
   if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
-  // set the material surface if present
-  // material can be on any approach surface or on the representing surface
-  if (m_approachDescriptor) {
-    // the approach surfaces
-    const std::vector<const Surface*>& approachSurfaces
-        = m_approachDescriptor->containedSurfaces();
-    for (auto& aSurface : approachSurfaces)
-      if (aSurface->associatedMaterial()) m_materialSurface = aSurface;
-  }
-  if (surfaceRepresentation().associatedMaterial())
-    m_materialSurface = &surfaceRepresentation();
 }
 
 Acts::CylinderLayer::CylinderLayer(const CylinderLayer& clay,
                                    const Transform3D&   transf)
   : CylinderSurface(clay, transf), Layer(clay)
 {
+  // associate the layer to the surface
+  CylinderSurface::associateLayer(*this);
+  // build an approach descriptor if a surface array is present
   if (m_surfaceArray) buildApproachDescriptor();
+  // register the layer to the approach descriptor surfaces
+  if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
 }
 
 const Acts::CylinderSurface&

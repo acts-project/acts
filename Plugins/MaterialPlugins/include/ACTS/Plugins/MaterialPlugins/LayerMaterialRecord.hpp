@@ -45,20 +45,26 @@ class LayerMaterialRecord
 public:
   /// Default constructor
   LayerMaterialRecord();
+  
   /// Constructor with BinUtility input
   /// @param binutility the 2D grid in which the material is binned on the layer
   LayerMaterialRecord(const BinUtility* binutility);
+  
   /// Default destructor
   ~LayerMaterialRecord() = default;
+  
   /// Copy Constructor
   LayerMaterialRecord(const LayerMaterialRecord& lmrecord);
+  
   /// Implicit contructor
   /// - uses the copy constructor
   LayerMaterialRecord*
   clone() const;
+  
   /// Assignment operator
   LayerMaterialRecord&
   operator=(const LayerMaterialRecord& lmrecord);
+  
   /// Adds MaterialProperties and weighs them over the steplength at a given
   /// position
   /// @param pos global position at which the material should be added
@@ -79,6 +85,7 @@ public:
   /// resets the sums and the counter of how often a certain bin was hit
   void
   averageMaterial();
+
   /// @return method for the final layer material
   /// given as a binned surface material
   std::shared_ptr<const Acts::BinnedSurfaceMaterial>
@@ -87,6 +94,7 @@ public:
 private:
   /// two dimensional grid on which the material is binned
   const BinUtility* m_binUtility;
+  
   /// two dimensional material matrix describing the material binned according
   /// to the binUtility
   std::vector<std::vector<const Acts::MaterialProperties*>> m_materialMatrix;

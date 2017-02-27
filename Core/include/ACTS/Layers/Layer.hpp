@@ -275,27 +275,6 @@ public:
   virtual bool
   hasMaterial() const;
 
-  /// method returning a pointer to the surface material of the layer
-  /// @note not the layer itself holds the material but one of its
-  /// approachsurfaces
-  ///
-  /// @return the surface material
-  const SurfaceMaterial*
-  material() const;
-
-  /// Returns a pointer to the surface which carries the surface material
-  /// @note can be either inner, outer BoundarySurface or the surface
-  /// representation (central)
-  /// return nullptr if layer has not material
-  ///
-  /// @todo remove this concept
-  const Surface*
-  materialSurface() const;
-
-  // Non-const version
-  Surface*
-  materialSurface();
-
   /// Boolean check method if layer has sensitive surfaces
   /// @note checks if a surfaceArray is present
   ///
@@ -474,10 +453,6 @@ protected:
   const AbstractVolume* m_representingVolume;
   /// make a passive/active divisio
   LayerType m_layerType;
-  /// pointer to the approach surface carrying the material
-  /// nullptr if no material set
-  /// @todo remove this concept
-  const Surface* m_materialSurface;
 
 private:
   /// Private helper method to close the geometry

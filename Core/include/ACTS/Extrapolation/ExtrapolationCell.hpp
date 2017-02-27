@@ -336,9 +336,6 @@ public:
   double pathLength;
   /// the given path limit (-1 if no limit)
   double pathLimit;
-  ///  the surface for the next material update
-  /// @todo devel : this concept could be omitted in the future
-  const Surface* materialSurface;
   /// the accumulated material in X0 at this stage
   double materialX0;
   /// the material limit in X0 (-1 if no limit)
@@ -406,7 +403,6 @@ public:
     , navigationStep(0)
     , pathLength(0.)
     , pathLimit(-1)
-    , materialSurface(nullptr)
     , materialX0(0.)
     , materialLimitX0(-1.)
     , materialL0(0.)

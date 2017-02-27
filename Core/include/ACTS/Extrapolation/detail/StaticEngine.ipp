@@ -431,15 +431,12 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
     // the correct material layer needs to be assigned - in case of the approach
     // surface not being hit, his can be the layer surface
     if (eCell.leadLayerSurface->associatedMaterial()) {
-      // set the material surface for the update
-      eCell.materialSurface = eCell.leadLayerSurface;
       // now handle the material (full update when passing approach surface),
       // return codes are:
       // - SuccessMaterialLimit : material limit reached, return back
       // - InProgress           : material update done or not (depending on the
       // material description)
-      eCode = m_cfg.materialEffectsEngine->handleMaterial(
-          eCell, pDir, Acts::fullUpdate);
+      eCode = m_cfg.materialEffectsEngine->handleMaterial(eCell, pDir, fullUpdate);
       CHECK_ECODE_CONTINUE(eCell, eCode);
     }
   } else if (isStartLayer) {
@@ -452,14 +449,11 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
         "start layer (with sub structure), no propagation to be done.");
     // the start surface could have a material layer attached
     if (eCell.leadParameters->referenceSurface().associatedMaterial()) {
-      // set the material surface
-      eCell.materialSurface = &(eCell.leadParameters->referenceSurface());
       // now handle the material (post update on start layer), return codes are:
       // - SuccessMaterialLimit : material limit reached, return back
       // - InProgress           : material update done or not (depending on the
       // material description)
-      eCode = m_cfg.materialEffectsEngine->handleMaterial(
-          eCell, pDir, Acts::postUpdate);
+      eCode = m_cfg.materialEffectsEngine->handleMaterial(eCell, pDir, postUpdate);
       CHECK_ECODE_CONTINUE(eCell, eCode);
       // let's reset the lead layer
       eCell.leadLayer = initialLayer;
@@ -553,14 +547,11 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
                          "surface",
                          surfaceID,
                          "applying material effects.");
-          // set the material surface
-          eCell.materialSurface = csf.object;
           // now handle the material, return codes are:
           // - SuccessMaterialLimit : material limit reached,return back
           // - InProgress           : material update done or not (depending on
           // the material description)
-          eCode = m_cfg.materialEffectsEngine->handleMaterial(
-              eCell, pDir, Acts::fullUpdate);
+          eCode = m_cfg.materialEffectsEngine->handleMaterial(eCell, pDir, fullUpdate);
           CHECK_ECODE_CONTINUE(eCell, eCode);
         }
         // if the search mode returns unordered surfaces :
@@ -608,11 +599,9 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
     // check for a potential preUpdate
     // - in case teh destination surface has material and the surface was hit
     if (sf->associatedMaterial() && eCode.isSuccess()) {
-      // set the material surface for the update
-      eCell.materialSurface = sf;
       // finally do the material update, but even as this is the final call
       //  - still check for SuccessMaterialLimit
-      m_cfg.materialEffectsEngine->handleMaterial(eCell, pDir, Acts::preUpdate);
+      m_cfg.materialEffectsEngine->handleMaterial(eCell, pDir, preUpdate);
       // check if success was triggered through path limit reached on the way to
       // the layer
       CHECK_ECODE_SUCCESS(eCell, eCode);
