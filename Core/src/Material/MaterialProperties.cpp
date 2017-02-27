@@ -18,7 +18,7 @@ Acts::MaterialProperties::MaterialProperties()
 {
 }
 
-Acts::MaterialProperties::MaterialProperties(float  path,
+Acts::MaterialProperties::MaterialProperties(float  thickness,
                                              float  Xo,
                                              float  Lo,
                                              float  averageA,
@@ -27,10 +27,10 @@ Acts::MaterialProperties::MaterialProperties(float  path,
                                              float  dEdX,
                                              size_t entries)
   : m_material(Xo, Lo, averageA, averageZ, averageRho, dEdX)
-  , m_dInX0(Xo * Xo > 10e-10 ? path / Xo : 0.)
-  , m_dInL0(Lo * Lo > 10e-10 ? path / Lo : 0.)
+  , m_dInX0(Xo * Xo > 10e-10 ? thickness / Xo : 0.)
+  , m_dInL0(Lo * Lo > 10e-10 ? thickness / Lo : 0.)
   , m_zOaTrTd(averageA * averageA > 10e-10
-                  ? averageZ / averageA * averageRho * path
+                  ? averageZ / averageA * averageRho * thickness
                   : 0.)
   , m_entries(entries)
 {
@@ -39,12 +39,12 @@ Acts::MaterialProperties::MaterialProperties(float  path,
 // TODO add constructor with element composition
 
 Acts::MaterialProperties::MaterialProperties(const Acts::Material& material,
-                                             float                 path)
+                                             float                 thickness)
   : m_material(material)
-  , m_dInX0(material.X0 * material.X0 > 10e-10 ? path / material.X0 : 0.)
-  , m_dInL0(material.L0 * material.L0 > 10e-10 ? path / material.L0 : 0.)
+  , m_dInX0(material.X0 * material.X0 > 10e-10 ? thickness / material.X0 : 0.)
+  , m_dInL0(material.L0 * material.L0 > 10e-10 ? thickness / material.L0 : 0.)
   , m_zOaTrTd(material.A * material.A > 10e-10
-                  ? path * material.Z / material.A * material.rho
+                  ? thickness * material.Z / material.A * material.rho
                   : 0.)
   , m_entries(1)
 {

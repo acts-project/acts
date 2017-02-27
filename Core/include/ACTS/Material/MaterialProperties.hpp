@@ -41,7 +41,7 @@ public:
   MaterialProperties();
 
   /** Constructor - for averaged material */
-  MaterialProperties(float  path,
+  MaterialProperties(float  thickness,
                      float  Xo,
                      float  Lo,
                      float  averageA,
@@ -51,7 +51,7 @@ public:
                      size_t entries = 1);
 
   /** Constructor - for full Material class */
-  MaterialProperties(const Material& material, float path);
+  MaterialProperties(const Material& material, float thickness);
 
   /** Copy Constructor */
   MaterialProperties(const MaterialProperties& mprop);
