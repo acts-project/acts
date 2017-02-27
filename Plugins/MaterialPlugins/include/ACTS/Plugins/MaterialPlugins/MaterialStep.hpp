@@ -20,19 +20,25 @@ namespace Acts {
 
 /// @class MaterialStep
 ///
-/// @brief class holding the material properties at a certain point
+/// @brief Class holding the material properties at a certain point
 ///
 /// The MaterialStep class is needed to store the material properties (material
-/// + step length) at a given
-/// global position for the material mapping process.
-/// For this class a ROOT dictionary is created in order to store it in a ROOT
-/// tree.
+/// and step length) at a given global position for the material mapping
+/// process.
+///
+/// @todo Currently a specific Position struct is used instead of the
+/// Acts::Vector3D
+/// to simplify the creation of a ROOT dictionary for this class, since
+/// Acts::Vector3D
+/// is an Eigen class. In future the Acts::Vector3D should be used to guarantee
+/// consitency and avoid conversions.
 
 class MaterialStep
 {
 public:
   /// @struct Position
   /// the global three dimensional position of the material step
+  /// @todo replace by Acts::Vector3D
 
   struct Position
   {
@@ -47,6 +53,8 @@ public:
     Position() : x(0.), y(0.), z(0.) {}
     /// Constructor to set the three coordinates
     Position(double x, double y, double z) : x(x), y(y), z(z) {}
+    /// Copy Constructor
+    Position(const Position& pos) : x(pos.x), y(pos.y), z(pos.z) {}
   };
   /// Default constructor
   /// setting the position to the origin and making default material properties
@@ -67,12 +75,12 @@ public:
   /// Assignment operator
   MaterialStep&
   operator=(const Acts::MaterialStep& mstep);
-  /// return method for the position of the step
+  /// @return returns the position of the material of this step
   const Position
-  position();
-  /// return method for the material properties
+  position() const;
+  /// return returns the material porperties of this step
   const MaterialProperties
-  material();
+  material() const;
 
 private:
   /// the global three dimensional position of the material step
@@ -84,13 +92,13 @@ private:
 }
 
 inline const Acts::MaterialStep::Position
-Acts::MaterialStep::position()
+Acts::MaterialStep::position() const
 {
   return m_position;
 }
 /// return method for the material properties
 inline const Acts::MaterialProperties
-Acts::MaterialStep::material()
+Acts::MaterialStep::material() const
 {
   return m_material;
 }

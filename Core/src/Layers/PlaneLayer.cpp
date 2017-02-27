@@ -30,9 +30,9 @@ Acts::PlaneLayer::PlaneLayer(std::shared_ptr<Transform3D>         transform,
   // register the layer to the surface
   Acts::PlaneSurface::associateLayer(*this);
   // deal with the approach descriptor
-  if (!ades && surfaceArray) buildApproachDescriptor();
+  if (!m_approachDescriptor && surfaceArray) buildApproachDescriptor();
   // register the layer if the approach descriptor was provided
-  if (ades) m_approachDescriptor->registerLayer(*this);
+  if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
   // set the material if present
   // material can be on any approach surface or on the representing surface
   if (m_approachDescriptor) {

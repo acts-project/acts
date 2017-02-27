@@ -14,8 +14,11 @@
 #define ACTS_MATERIALPLUGINS_MATERIALMAPPIN_H
 
 #include <map>
+#include <utility>
 #include "ACTS/Extrapolation/IExtrapolationEngine.hpp"
+#include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
 #include "ACTS/Plugins/MaterialPlugins/MaterialTrackRecord.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -26,8 +29,28 @@ class LayerMaterialRecord;
 
 /// @class MaterialMapping
 ///
-/// @brief
+/// @brief Class for material mapping
 ///
+/// This class should be used to map material from the full and detailed
+/// detector geometry onto the simplified ACTS geometry. It offers options to
+/// map, average and finalize the material.
+/// One MaterialTrackRecord (containing all the MaterialSteps along a Track) is
+/// mapped by using the function Acts::MaterialMapping::mapMaterial(). The
+/// mapping process then extrapolates into the same direction starting from the
+/// same point as the MaterialTrackRecord through the ACTS geometry and finds
+/// the closest surface of a layer which is marked to carry support material.
+/// The material is assigned to the closest layer (forward or backward) to the
+/// bin at the assigned position on the layer.
+/// Along one track in one bin of a layer the material is averaged:
+/// \image html MaterialAveraging.jpeg
+/// When the material mapping is done many MaterialTrackRecords will be mapped.
+/// Everytime the same bin is hit, the material parameters are summed up. If the
+/// user uses the function Acts::MaterialMapping::averageLayerMaterial() (e.g.
+/// after every run) the  mean is calculated by dividing the sums by the number
+/// of entries. Afterwards the number of entries is reset.
+/// In the end after all the material is mapped the user should use
+/// Acts::MaterialMapping::finalizeLayerMaterial() which sets assignes the
+/// finalized material to the layers.
 
 class MaterialMapping
 {
@@ -45,41 +68,32 @@ public:
     std::shared_ptr<IExtrapolationEngine> extrapolationEngine = nullptr;
   };
 
-  ///@brief default constructor
+  /// @brief default constructor
+  /// @param cnf the internal configuration object
+  /// @param logger the logging instance
   MaterialMapping(const Config&           cnf,
                   std::unique_ptr<Logger> logger
                   = getDefaultLogger("MaterialMapping", Logging::INFO));
 
-  ///@brief destructor
+  /// @brief destructor
   ~MaterialMapping();
 
   /// maps the material for the given direction(eta,phi) onto the layers of the
   /// given tracking geometry
-  /// @param stepCollection is a shared_ptr to the MaterialStepCollection object
-  /// which is a vector of MaterialSteps including the material on a certain
-  /// position
-  /// @param eta pseudorapidity - first dimension of the direction in which the
-  /// material was collected
-  /// @param phi the phi angle  - second dimension of the direction in which the
-  /// material was collected
-  /// @param startPoint optionally the start point can be given, if the point
-  /// from where the material collection started is not origin
+  /// @param matTrackRec the Acts::MaterialTrackRecord to be mapped
   void
   mapMaterial(const MaterialTrackRecord& matTrackRec);
-  /// averages the material of the layer records collected so far
+  /// averages the material of the layer records collected so far (for each bin)
   void
   averageLayerMaterial();
   /// after all step collections have been mapped this method needs to be called
   /// it sets the created material to the layers
   void
   finalizeLayerMaterial();
-  /// return the layer records
+  /// @return hands back all layers carrying material with their corresponding
+  /// Acts::LayerMaterialRecord
   const std::map<const Layer*, LayerMaterialRecord>
   layerRecords() const;
-  /// return the material step positions per layer
-  const std::multimap<const Acts::Layer*, const MaterialStep>
-  layerMaterialSteps() const;
-
   /// set logging instance
   void
   setLogger(std::unique_ptr<Logger> logger);
@@ -102,9 +116,9 @@ private:
   /// internally used method to associate a hit to a given layer by recording it
   /// in the layer records map
   void
-  associateHit(const Layer*                    layer,
-               const Acts::Vector3D&           position,
-               const Acts::MaterialProperties* layerMaterialProperties);
+  associateHit(const Layer*                           layer,
+               const Acts::Vector3D&                  position,
+               const std::vector<Acts::MaterialStep>& layerMaterialSteps);
   /// configuration object
 
   const Logger&
@@ -113,12 +127,12 @@ private:
     return *m_logger;
   }
 
-  Config                  m_cnf;
+  /// the configuration object
+  Config m_cnf;
+  /// the logging instance
   std::unique_ptr<Logger> m_logger;
+  /// object which connects the layer with its LayerMaterialRecord
   std::map<const Layer*, LayerMaterialRecord> m_layerRecords;
-  /// create object which connects layer with the original material step
-  /// positions
-  std::multimap<const Acts::Layer*, const MaterialStep> m_layersAndSteps;
 };
 }
 
@@ -126,12 +140,6 @@ inline const std::map<const Acts::Layer*, Acts::LayerMaterialRecord>
 Acts::MaterialMapping::layerRecords() const
 {
   return m_layerRecords;
-}
-
-inline const std::multimap<const Acts::Layer*, const Acts::MaterialStep>
-Acts::MaterialMapping::layerMaterialSteps() const
-{
-  return m_layersAndSteps;
 }
 
 #endif  // ACTS_MATERIALPLUGINS_MATERIALMAPPIN_Hr

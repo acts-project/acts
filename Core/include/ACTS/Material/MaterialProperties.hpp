@@ -41,16 +41,17 @@ public:
   MaterialProperties();
 
   /** Constructor - for averaged material */
-  MaterialProperties(float path,
-                     float Xo,
-                     float Lo,
-                     float averageA,
-                     float averageZ,
-                     float averageRho,
-                     float dEdX = 0.);
+  MaterialProperties(float  thickness,
+                     float  Xo,
+                     float  Lo,
+                     float  averageA,
+                     float  averageZ,
+                     float  averageRho,
+                     float  dEdX    = 0.,
+                     size_t entries = 1);
 
   /** Constructor - for full Material class */
-  MaterialProperties(const Material& material, float path);
+  MaterialProperties(const Material& material, float thickness);
 
   /** Copy Constructor */
   MaterialProperties(const MaterialProperties& mprop);
@@ -129,7 +130,13 @@ public:
 
   /** Set Material */
   void
-  setMaterial(const Material& mp, float thickness = 1.) const;
+  setMaterial(const Material& mp,
+              float           thickness = 1.,
+              size_t          entries   = 1) const;
+
+  /** Increase the number of entries by one*/
+  void
+  addEntry() const;
 
 protected:
   /** Set dEdX       - important for material calibarion */
@@ -144,6 +151,7 @@ protected:
                  m_zOaTrTd;  //!< @f$ \frac{Z}{A}\cdot\rho\cdot d @f$ - in ATLAS units
   mutable size_t m_entries;  //!< number of different material entries of an
                              //! averaged material
+  //!< @note set one per default, but can be set otherwise
 };
 
 /** Return method for the full material */
@@ -235,6 +243,12 @@ inline size_t
 MaterialProperties::entries() const
 {
   return m_entries;
+}
+
+inline void
+MaterialProperties::addEntry() const
+{
+  ++m_entries;
 }
 
 /**Overload of << operator for std::ostream for debug output*/

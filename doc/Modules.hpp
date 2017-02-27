@@ -273,6 +273,53 @@
 /// described above are met and that the right
 /// Acts::ActsExtension's are added during the \a %DD4hep construction.
 
+
+/// @defgroup MaterialPlugins MaterialPlugins
+/// @ingroup Plugins
+/// @brief Map material onto the ACTS geometry.
+///
+/// The MaterialPlugins allow to map material from a detailed full detector geometry onto the simplfied ACTS geometry.
+/// The material is mapped onto layers of the tracking geometry which are marked to carry support material. The marking
+/// is done during the geometry building process. The material can be mapped onto either, the inner, the outer
+/// boundary surface or the central (representing) Acts::Surface of the Acts::Layer. The Acts::Material is described on a two dimensional
+/// grid for each layer (Acts::BinnedSurfaceMaterial). The user defines the granularity of the grid during the geometry building process.
+/// @note The DD4hepPlugin offers the possiility to mark layers which should carry material and to determine the
+/// grid granularity, using the class Acts::ActsExtension.
+///
+/// Following the ACTS philosophy the material mapping is agnostic to any file format and software used to create or store
+/// the material maps. The material should be stored in instances of the class Acts::MaterialTrackRecord. This material track record
+/// represents a track starting from a certain position, in a certain direction, containing all material along this
+/// track. The material along the material track record ist stored as a container of Acts::MaterialStep instances. Each material
+/// step contains the material and its thickness at a certain position.
+///
+/// The material mapping process can be split into two subprocesses:
+/// * material assignment
+/// * material averaging
+///
+/// <B>Material Assignment</B>
+/// During the material assignment process the decision onto which layer each material step will be assigned is done.
+/// To assign a Acts::MaterialTrackRecord the function Acts::MaterialMapping::mapMaterial() should be used.
+/// This function extrapolates through the tracking detector, with the start position and direction given by the
+/// material track record and collects all layers marked to carry material. Then it loops through all material steps
+/// of the material track record and assigns the material of each step to the closest layer :
+///
+/// \image html MaterialAssignment.jpeg"Example of material assignment onto the inner boundary surface of the layers. The green points are assigned to the current inner layer, the red to the next inner layer."
+///
+/// <B>Material Averaging</B>
+/// During the material mapping the user can decide to average the material whenever he/she prefers by using
+/// the function Acts::MaterialMapping::averageLayerMaterial(). In the end when all material track records have been mapped one
+/// should use the function Acts::MaterialMapping::finalizeLayerMaterial() in order to finalize the process.
+///
+///
+/// The full material mapping process should be done in the framework of the user.
+///
+/// Possible workflow:
+/// * Create material map(s) of full detector geometry using Acts::MaterialTrackRecord
+/// * Read in material map(s) and go through all collected material track records
+///		- use Acts::MaterialMapping::mapMaterial() for each material track record
+/// * Use Acts::MaterialMapping::averageLayerMaterial() - once per run
+/// * In the end of the process use Acts::MaterialMapping::finalizeLayerMaterial() which assigns the final material to the layers
+
 /// @defgroup Contributing Contribution guide
 
 // clang-format on

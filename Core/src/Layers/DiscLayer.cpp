@@ -42,9 +42,9 @@ Acts::DiscLayer::DiscLayer(std::shared_ptr<Acts::Transform3D>      transform,
   }
   // associate teh layer to this
   DiscSurface::associateLayer(*this);
-  if (!ades && Layer::m_surfaceArray) buildApproachDescriptor();
+  if (!m_approachDescriptor && Layer::m_surfaceArray) buildApproachDescriptor();
   // register the layer
-  if (ades) m_approachDescriptor->registerLayer(*this);
+  if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
   // set the material if present
   // material can be on any approach surface or on the representing surface
   if (m_approachDescriptor) {
