@@ -27,8 +27,8 @@ Acts::LayerMaterialRecord::LayerMaterialRecord(const BinUtility* binutility)
     // create the vector for the push_back
     Acts::MaterialPropertiesVector matVec;
     matVec.reserve(m_binUtility->max(0) + 1);
-    for (unsigned int ibin = 0; ibin < (unsigned int)m_binUtility->max(0) + 1;
-         ++ibin)
+    for (unsigned int ibin0 = 0; ibin0 < (unsigned int)m_binUtility->max(0) + 1;
+         ++ibin0)
       matVec.push_back(new MaterialProperties(0., 0., 0., 0., 0., 0., 0., 0));
     m_materialMatrix.push_back(matVec);
   }
@@ -101,7 +101,7 @@ Acts::LayerMaterialRecord::addLayerMaterialProperties(
   size_t bin1 = m_binUtility->bin(pos, 1);
   // get the material which might be there already, add new material and
   // weigh it
-  const Acts::MaterialProperties* material = m_materialMatrix.at(bin2).at(bin1);
+  const Acts::MaterialProperties* material = m_materialMatrix.at(bin1).at(bin0);
   float                           thickness = 0.;
   float                           rho       = 0.;
   float                           tInX0     = 0.;
@@ -131,12 +131,12 @@ Acts::LayerMaterialRecord::addLayerMaterialProperties(
   // set the new current material (not averaged yet)
   const Acts::Material updatedMaterial(x0, l0, A, Z, rho);
   // pick the number of entries for the next material entry
-  size_t entries = m_materialMatrix.at(bin2).at(bin1)->entries();
+  size_t entries = m_materialMatrix.at(bin1).at(bin0)->entries();
   // set the material with the right number of entries
-  m_materialMatrix.at(bin2).at(bin1)->setMaterial(
+  m_materialMatrix.at(bin1).at(bin0)->setMaterial(
       updatedMaterial, thickness, entries);
   // increase the number of entries for this material
-  m_materialMatrix.at(bin2).at(bin1)->addEntry();
+  m_materialMatrix.at(bin1).at(bin0)->addEntry();
 }
 
 void
@@ -146,8 +146,8 @@ Acts::LayerMaterialRecord::averageMaterial()
   size_t bins0 = m_binUtility->bins(0);
   size_t bins1 = m_binUtility->bins(1);
   // loop through the material properties matrix and average
-  for (size_t bin0 = 0; bin0 < bins0; bin0++) {
-    for (size_t bin1 = 0; bin1 < bins1; bin1++) {
+  for (size_t bin1 = 0; bin1 < bins1; bin1++) {
+    for (size_t bin0 = 0; bin0 < bins0; bin0++) {
       const Acts::MaterialProperties* material
           = m_materialMatrix.at(bin1).at(bin0);
 
