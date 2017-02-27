@@ -157,7 +157,9 @@ Acts::Layer::hasSensitive() const
 bool
 Acts::Layer::hasMaterial() const
 {
-  return bool(material());
+  // will need to be done
+  // with substructure type 
+  return true;
 }
 
 const Acts::ApproachDescriptor*
