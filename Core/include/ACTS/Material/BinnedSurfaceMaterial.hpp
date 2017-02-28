@@ -13,123 +13,118 @@
 #ifndef ACTS_MATERIAL_BINNEDSURFACEMATERIAL_H
 #define ACTS_MATERIAL_BINNEDSURFACEMATERIAL_H 1
 
-// Geometry module
 #include "ACTS/Material/MaterialProperties.hpp"
 #include "ACTS/Material/SurfaceMaterial.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-// Core module
 
 namespace Acts {
 
-/**
- @class BinnedSurfaceMaterial
-
- It extends the SurfaceMaterial base class and is just an array of it
-
- */
+/// @class BinnedSurfaceMaterial
+///
+/// It extends the SurfaceMaterial base class and is an array pf
+/// MaterialProperties. This is not memory optimised as every bin
+/// holds one material property object.
 
 class BinnedSurfaceMaterial : public SurfaceMaterial
 {
 public:
-  /** Default Constructor - needed by POOL*/
-  BinnedSurfaceMaterial();
+  /// Default Constructor - deleted
+  BinnedSurfaceMaterial() = delete;
 
-  /** Default Constructor for emptly material */
-  BinnedSurfaceMaterial(BinUtility& binutility);
-
-  /**Explizit constructor with only full MaterialProperties,
-     and split factors:
-      - 1. : oppositePre
-      - 0. : alongPre
-    ===> 1 Dimensional array
-
-    ATTENTION: Ownership of MaterialProperties objects is given!
-   */
-  BinnedSurfaceMaterial(const Acts::BinUtility&         binutility,
+  /// Explizit constructor with only full MaterialProperties,
+  /// for one-dimensional binning.
+  /// 
+  /// The split factors:
+  ///    - 1. : oppositePre
+  ///    - 0. : alongPre
+  ///  ===> 1 Dimensional array
+  ///
+  /// @param binUtility defines the binning structure on the surface
+  /// @param fullProperties is the vector of properties as recorded
+  BinnedSurfaceMaterial(const BinUtility&               binUtility,
                         const MaterialPropertiesVector& fullProperties,
                         double                          splitFactor = 0.);
 
-  /**Explizit constructor with only full MaterialProperties,
-     and split factors:
-      - 1. : oppositePre
-      - 0. : alongPre
-    ===> 2 Dimensional array
-
-    ATTENTION: Ownership of MaterialProperties objects is given!
-   */
-  BinnedSurfaceMaterial(const Acts::BinUtility&         binutility,
+  /// Explizit constructor with only full MaterialProperties,
+  /// for two-dimensional binning.
+  /// 
+  /// The split factors:
+  ///    - 1. : oppositePre
+  ///    - 0. : alongPre
+  ///  ===> 1 Dimensional array
+  ///
+  /// @param binUtility defines the binning structure on the surface
+  /// @param fullProperties is the vector of properties as recorded
+  BinnedSurfaceMaterial(const BinUtility&               binutility,
                         const MaterialPropertiesMatrix& fullProperties,
                         double                          splitFactor = 0.);
 
-  /**Copy Constructor */
-  BinnedSurfaceMaterial(const BinnedSurfaceMaterial& mprop);
+  /// Copy Constructor 
+  ///
+  /// @param bsm is the source object to be copied                                              
+  BinnedSurfaceMaterial(const BinnedSurfaceMaterial& bsm);
 
-  /**Destructor*/
+  /// Destructor 
   virtual ~BinnedSurfaceMaterial();
 
-  /**Pseudo-Constructor clone()*/
+  /// Pseudo-Constructor clone()
   BinnedSurfaceMaterial*
-  clone() const override;
+  clone() const final override;
 
-  /** Assignment operator */
+  /// Assignment operator 
   BinnedSurfaceMaterial&
   operator=(const BinnedSurfaceMaterial& lmp);
 
-  /** Scale operator */
+  /// Scale operator 
+  ///
+  /// @param scale is the scale factor for the full material
   BinnedSurfaceMaterial&
-  operator*=(double scale) override;
+  operator*=(double scale)final override;
 
-  /** Return the BinUtility */
-  const BinUtility*
-  binUtility() const override;
+  /// Return the BinUtility 
+  const BinUtility&
+  binUtility() const;
 
-  /** Update the BinUtility if necessary - passing ownership of the utility
-   * class*/
-  void
-  updateBinning(BinUtility* bu) override;
-
-  /**Return method for full material description of the Layer - for all bins*/
+  /// @copydoc SurfaceMaterial::fullMaterial
   const MaterialPropertiesMatrix&
   fullMaterial() const;
 
-  /**Return method for full material description of the Layer - local
-   * coordinates */
+  /// @copydoc SurfaceMaterial::material(const Vector2D&)
   const MaterialProperties*
-  material(const Vector2D& lp) const override;
+  material(const Vector2D& lp) const final override;
 
-  /**Return method for full material description of the Layer - global
-   * coordinates */
+  /// @copydoc SurfaceMaterial::material(const Vector3D&)
   const MaterialProperties*
-  material(const Vector3D& gp) const override;
+  material(const Vector3D& gp) const final override;
 
-  /** Access the single bin */
+  /// @copydoc SurfaceMaterial::material(size_t, size_t)
   const MaterialProperties*
-  material(size_t bin0, size_t bin1) const override;
+  material(size_t bin0, size_t bin1) const final override;
 
-  /** Output Method for std::ostream, to be overloaded by child classes */
+  /// Output Method for std::ostream, to be overloaded by child classes 
   std::ostream&
-  dump(std::ostream& sl) const override;
+  dump(std::ostream& sl) const final override;
 
 private:
-  BinUtility* m_binUtility;  //!< the helper for the bin finding
+  BinUtility  m_binUtility;//!< the helper for the bin finding
 
-  /** The five different MaterialProperties */
+  /// The five different MaterialProperties 
   MaterialPropertiesMatrix m_fullMaterial;
 
-  /** helper method - to clear the material*/
+  /// helper method - to clear the material
   void
   clearMaterial();
 
-  /** helper method - to refill the material  */
+  /// helper method - to refill the material  
   void
   fillMaterial(const MaterialPropertiesMatrix& matMatrix);
 };
 
-inline const BinUtility*
+inline const BinUtility&
 BinnedSurfaceMaterial::binUtility() const
 {
-  return m_binUtility;
+  return (m_binUtility);
 }
 
 inline const MaterialPropertiesMatrix&
@@ -144,14 +139,6 @@ BinnedSurfaceMaterial::material(size_t bin0, size_t bin1) const
   return m_fullMaterial.at(bin1).at(bin0);
 }
 
-inline void
-BinnedSurfaceMaterial::updateBinning(BinUtility* bu)
-{
-  if (bu) {
-    delete m_binUtility;
-    m_binUtility = bu;
-  }
-}
 }
 
 #endif

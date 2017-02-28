@@ -13,59 +13,53 @@
 #include "ACTS/Material/BinnedSurfaceMaterial.hpp"
 #include "ACTS/Material/MaterialProperties.hpp"
 
-Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial()
-  : Acts::SurfaceMaterial(), m_binUtility(nullptr)
+Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(BinUtility& binutility)
+  : SurfaceMaterial()
+  , m_binUtility(binutility)
 {
-}
-
-Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(Acts::BinUtility& binutility)
-  : Acts::SurfaceMaterial(), m_binUtility(binutility.clone())
-{
-  // reserve
+  // reserve 
   m_fullMaterial.reserve(binutility.max(1) + 1);
-  for (unsigned int ibin1 = 0; ibin1 < (unsigned int)binutility.max(1) + 1;
-       ++ibin1) {
+  // loop and fill
+  for (size_t ibin1 = 0; ibin1 < binutility.max(1) + 1; ++ibin1) {
     // create the vector for the push_back
-    Acts::MaterialPropertiesVector matVec;
+    MaterialPropertiesVector matVec;
     matVec.reserve(binutility.max(0) + 1);
-    for (unsigned int ibin0 = 0; ibin0 < (unsigned int)binutility.max(0) + 1;
-         ++ibin0)
+    for (size_t ibin0 = 0; ibin0 < size_t binutility.max(0) + 1; ++ibin0)
       matVec.push_back(nullptr);
     m_fullMaterial.push_back(matVec);
   }
 }
 
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
-    const Acts::BinUtility&         binutility,
+    const BinUtility&               binUtility,
     const MaterialPropertiesVector& fullProperties,
     double                          splitFactor)
-  : Acts::SurfaceMaterial(splitFactor), m_binUtility(binutility.clone())
+  : SurfaceMaterial(splitFactor)
+  , m_binUtility(binUtility)
 {
-  // constructor from a single vector
-  clearMaterial();
   // fill the material with deep copy
   m_fullMaterial.push_back(fullProperties);
 }
 
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
-    const Acts::BinUtility&         binutility,
+    const BinUtility&               binUtility,
     const MaterialPropertiesMatrix& fullProperties,
     double                          splitFactor)
   : Acts::SurfaceMaterial(splitFactor)
-  , m_binUtility(binutility.clone())
+  , m_binUtility(binUtility)
   , m_fullMaterial(fullProperties)
 {
 }
 
 Acts::BinnedSurfaceMaterial::~BinnedSurfaceMaterial()
 {
-  delete m_binUtility;
   clearMaterial();
 }
 
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
-    const Acts::BinnedSurfaceMaterial& lmp)
-  : Acts::SurfaceMaterial(lmp), m_binUtility(lmp.m_binUtility->clone())
+    const BinnedSurfaceMaterial& lmp)
+  : SurfaceMaterial(lmp)
+  , m_binUtility(lmp.m_binUtility)
 {
   // clear the material
   clearMaterial();
@@ -74,16 +68,15 @@ Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
 }
 
 Acts::BinnedSurfaceMaterial&
-Acts::BinnedSurfaceMaterial::operator=(const Acts::BinnedSurfaceMaterial& lmp)
+Acts::BinnedSurfaceMaterial::operator=(const BinnedSurfaceMaterial& lmp)
 {
   if (this != &lmp) {
-    Acts::SurfaceMaterial::operator=(lmp);
-    // first delete everything
-    delete m_binUtility;
     // reassign
-    m_binUtility = lmp.binUtility()->clone();
+    SurfaceMaterial::operator=(lmp);
+    m_binUtility = lmp.binUtility();
+    // clear
     clearMaterial();
-    // reassign teh material
+    // reassign the material
     fillMaterial(lmp.m_fullMaterial);
   }
   return (*this);
@@ -92,7 +85,7 @@ Acts::BinnedSurfaceMaterial::operator=(const Acts::BinnedSurfaceMaterial& lmp)
 Acts::BinnedSurfaceMaterial*
 Acts::BinnedSurfaceMaterial::clone() const
 {
-  return new Acts::BinnedSurfaceMaterial(*this);
+  return new BinnedSurfaceMaterial(*this);
 }
 
 void
@@ -100,9 +93,9 @@ Acts::BinnedSurfaceMaterial::clearMaterial()
 {
   // clear the full material
   for (auto& matMatrixIter : m_fullMaterial) {
-    for (auto& matIter : matMatrixIter) delete matIter;
+    for (auto& matIter : matMatrixIter) 
+        delete matIter;
   }
-
   m_fullMaterial.clear();
 }
 
@@ -110,11 +103,11 @@ void
 Acts::BinnedSurfaceMaterial::fillMaterial(
     const Acts::MaterialPropertiesMatrix& matMatrix)
 {
-  m_fullMaterial.reserve(m_binUtility->max(1) + 1);
+  m_fullMaterial.reserve(m_binUtility.max(1) + 1);
   for (auto& matMatrixIter : matMatrix) {
     // the vector to be copied
     Acts::MaterialPropertiesVector matVector;
-    matVector.reserve(m_binUtility->max(0) + 1);
+    matVector.reserve(m_binUtility.max(0) + 1);
     // reassign
     for (auto& matIter : matMatrixIter)
       matVector.push_back(matIter ? matIter->clone() : nullptr);
@@ -145,12 +138,12 @@ Acts::BinnedSurfaceMaterial::operator*=(double scale)
 }
 
 const Acts::MaterialProperties*
-Acts::BinnedSurfaceMaterial::material(const Acts::Vector2D& lp) const
+Acts::BinnedSurfaceMaterial::material(const Vector2D& lp) const
 {
   if (!m_fullMaterial.size() || !m_binUtility) return nullptr;
   // the first bin
-  size_t ibin0 = m_binUtility->bin(lp, 0);
-  size_t ibin1 = m_binUtility->max(1) ? m_binUtility->bin(lp, 1) : 0;
+  size_t ibin0 = m_binUtility.bin(lp, 0);
+  size_t ibin1 = m_binUtility.max(1) ? m_binUtility.bin(lp, 1) : 0;
   return m_fullMaterial[ibin1][ibin0];
 }
 
@@ -159,8 +152,8 @@ Acts::BinnedSurfaceMaterial::material(const Acts::Vector3D& gp) const
 {
   if (!m_fullMaterial.size() || !m_binUtility) return nullptr;
   // the first bin
-  size_t ibin0 = m_binUtility->bin(gp, 0);
-  size_t ibin1 = m_binUtility->max(1) ? m_binUtility->bin(gp, 1) : 0;
+  size_t ibin0 = m_binUtility.bin(gp, 0);
+  size_t ibin1 = m_binUtility.max(1) ? m_binUtility.bin(gp, 1) : 0;
   return m_fullMaterial[ibin1][ibin0];
 }
 
@@ -168,8 +161,8 @@ std::ostream&
 Acts::BinnedSurfaceMaterial::dump(std::ostream& sl) const
 {
   sl << "Acts::BinnedSurfaceMaterial : " << std::endl;
-  sl << "   - Number of Material bins (1/2) : " << m_binUtility->max(0) + 1
-     << " / " << m_binUtility->max(1) + 1 << std::endl;
+  sl << "   - Number of Material bins [0,1] : " << m_binUtility.max(0) + 1
+     << " / " << m_binUtility.max(1) + 1 << std::endl;
   sl << "   - Parse full update material    : " << std::endl;  //
   // output  the full material
   unsigned int imat1 = 0;

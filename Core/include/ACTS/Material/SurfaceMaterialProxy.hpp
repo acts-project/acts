@@ -25,7 +25,7 @@ namespace Acts {
 /// The SurfaceMaterialProxy class acts as a proxy to the SurfaceMaterial
 /// to mark the layers and surfaces on which the material should be mapped on
 /// at construction time of the geometry and to hand over the granularity of
-/// of the material map with the bin utility.
+/// of the material map with the bin Utility.
 
 class SurfaceMaterialProxy : public SurfaceMaterial
 {
@@ -34,83 +34,73 @@ public:
   /// @param binutility two dimensional BinUtility determining the granularity
   /// and binning of the material on the surface/layer
   SurfaceMaterialProxy(BinUtility& binutility);
+  
   /// Copy constuctor
   SurfaceMaterialProxy(const SurfaceMaterialProxy& smproxy);
+  
   /// Destructor
   virtual ~SurfaceMaterialProxy() = default;
-  /// Implicit contructor
+  
+  /// Implicit constructor
   /// - uses the copy constructor
   SurfaceMaterialProxy*
-  clone() const override;
+  clone() const final override;
+  
   /// Scale operator
   virtual SurfaceMaterial&
-  operator*=(double scale) override;
+  operator*=(double scale) final override;
+
+  /// Return the BinUtility 
+  const BinUtility&
+  binUtility() const;
 
   /// Return method for full material description of the Surface - from local
   /// coordinates
   virtual const MaterialProperties*
-  material(const Vector2D& lp) const override;
+  material(const Vector2D& lp) const final override;
 
   /// Return method for full material description of the Surface - from the
   /// global coordinates
   virtual const MaterialProperties*
-  material(const Vector3D& gp) const override;
+  material(const Vector3D& gp) const final override;
 
   /// Direct access via bins to the MaterialProperties
   virtual const MaterialProperties*
-  material(size_t ib0, size_t ib1) const override;
-
-  /// Return the BinUtility
-  virtual const BinUtility*
-  binUtility() const override;
-
-  /// Update the BinUtility if necessary - passing ownership of the utility
-  /// class
-  virtual void
-  updateBinning(BinUtility* bu) override;
+  material(size_t ib0, size_t ib1) const final override;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   virtual std::ostream&
-  dump(std::ostream& sl) const override;
-
+  dump(std::ostream& sl) const final override;
+  
 private:
   /// two dimensional BinUtility determining the granularity and binning of the
   /// material on the surface/layer
-  BinUtility* m_binUtility;
+  BinUtility m_binUtility;
 };
 }
 
 inline const Acts::MaterialProperties*
 Acts::SurfaceMaterialProxy::material(const Vector2D&) const
 {
-  return new MaterialProperties();
+  return nullptr;
 }
 
 inline const Acts::MaterialProperties*
 Acts::SurfaceMaterialProxy::material(const Vector3D&) const
 {
-  return new MaterialProperties();
+  return nullptr;
 }
 
 inline const Acts::MaterialProperties*
     Acts::SurfaceMaterialProxy::material(size_t, size_t) const
 {
-  return new MaterialProperties();
+  return nullptr;
 }
 
-inline const Acts::BinUtility*
+inline const Acts::BinUtility&
 Acts::SurfaceMaterialProxy::binUtility() const
 {
   return m_binUtility;
-}
-
-inline void
-Acts::SurfaceMaterialProxy::updateBinning(BinUtility* bu)
-{
-  if (bu) {
-    delete m_binUtility;
-    m_binUtility = bu;
-  }
 }
 
 #endif  // ACTS_MATERIAL_SURFACEMATERIALPROXY_H

@@ -20,216 +20,214 @@
 
 namespace Acts {
 
-/**
- @class MaterialProperties
-
- Material with information associated to a thickness of material
-
- the units are :
-  - thickness [mm] ( only used for layer description)
-  - X0  [mm]
-  - L0  [mm]
-  - A   [g/mole]
-  - Z
-  - rho [g/mm3]
- */
-
-class MaterialProperties
+/// @class MaterialProperties
+///
+/// Material with information associated to a thickness of material
+///
+/// the units are :
+///  - thickness [mm] (only used for layer description)
+///  - X0  [mm]
+///  - L0  [mm]
+///  - A   [g/mole]
+///  - Z
+///  - rho [g/mm3]
+  class MaterialProperties
 {
 public:
-  /** Default Constructor */
+  /// Default Constructor
   MaterialProperties();
 
-  /** Constructor - for averaged material */
+  /// Constructor - for averaged material 
+  ///
+  /// @param thickness is the thickness of the material
+  /// @param X0 is the radiation length in mm
+  /// @param L0 is the nuclear interaction length in mm
+  /// @param averageA is the average atomic weight
+  /// @param averageZ is the average atomic number
+  /// @param averageRho is the average density in g/mm3
   MaterialProperties(float  thickness,
-                     float  Xo,
-                     float  Lo,
+                     float  X0,
+                     float  L0,
                      float  averageA,
                      float  averageZ,
-                     float  averageRho,
-                     float  dEdX    = 0.,
-                     size_t entries = 1);
+                     float  averageRho);
 
-  /** Constructor - for full Material class */
-  MaterialProperties(const Material& material, float thickness);
+  /// Constructor - for full Material class 
+  /// 
+  /// @param mat is the material
+  /// @param thickness is the thickness of the material                                                         
+  MaterialProperties(const Material& mat, float thickness);
+  
+  /// Constructor - for different layers of Material
+  ///
+  /// @param matLayers is the vector of pairs of material and associated thickness 
+  MaterialProperties(const std::vector<std::pair<const Material, float> >& matLayers);
 
-  /** Copy Constructor */
+  /// Copy Constructor
+  ///
+  /// @param mprop is the source material properties to be copied 
   MaterialProperties(const MaterialProperties& mprop);
 
-  /** Destructor */
+  /// Destructor 
   virtual ~MaterialProperties() {}
-  /** Pseudo-Constructor clone() */
+
+  /// Pseudo-Constructor clone() 
   virtual MaterialProperties*
   clone() const;
 
-  /** Assignment Operator */
+  /// Assignment Operator 
+  ///
+  /// @param mprop is the source material properties object
   MaterialProperties&
   operator=(const MaterialProperties& mprop);
 
-  /** Scale operator - scales the material thickness */
+  /// Scale operator - scales the material thickness 
+  /// 
+  /// @param sclae is the material scaling parameter
   MaterialProperties&
   operator*=(float scale);
 
-  /** Return the stored Material */
+  /// Return the stored Material 
   const Material&
   material() const;
 
-  /** Return the radiation length */
-  float
-  x0() const;
-
-  /** Return the nuclear interaction length */
-  float
-  l0() const;
-
-  /** Return the thickness in mm */
+  /// Return the thickness in mm
   float
   thickness() const;
 
-  /** Return the radiationlength fraction */
+  /// Return the radiationlength fraction 
   float
   thicknessInX0() const;
 
-  /** Return the nuclear interaction length fraction */
+  /// Return the nuclear interaction length fraction 
   float
   thicknessInL0() const;
 
-  /** Returns the average Z of the material */
+  /// Returns the average Z of the material 
   float
   averageZ() const;
 
-  /** Return the average A of the material [gram/mole] */
+  /// Return the average A of the material [gram/mole] 
   float
   averageA() const;
 
-  /** Return the average density of the material
-     - in [g/mm^3]
-    */
+  /// Return the average density of the material
+  /// - in [g/mm^3]
   float
   averageRho() const;
 
-  /** Return the @f$ Z/A * rho @f$ */
+  /// Return the @f$ Z/A * rho @f$ 
   float
   zOverAtimesRho() const;
 
-  /** Return the @f$ d* Z/A * rho @f$ */
+  /// Return the @f$ d* Z/A * rho @f$ 
   float
   zOverAtimesRhoTimesD() const;
 
-  /** Return method for @f$ dE/dX @f$*/
-  float
-  dEdX() const;
-
-  /** Return the number of material entries */
-  size_t
-  entries() const;
-
-  /** Material averaging */
+  /// Material averaging 
+  ///
+  /// This is the averaging of material along a track,
+  /// it is additive according to the following formulas
+  ///
+  /// \image html MaterialAveraging.jpeg
+  ///
+  /// @param mat is the material seen by this step
+  /// @param dInX0 is the thickness in X0 of this step
   void
-  addMaterial(const Material& mp, float dInX0);
+  addMaterial(const Material& mat, float thickness);
 
-  /** Set Material */
+  /// Record material view
+  ///
+  /// This is for averaging of material when
+  /// having one view of this material component
+  /// - it will increase the entries counter
+  ///
+  /// @param mat 
+  /// @thickness thickness of this material 
   void
-  setMaterial(const Material& mp, float thickness = 1., size_t entries = 1);
+  recordMaterial(const Material& mat, float thickness = 1.);
 
-  /** Increase the number of entries by one*/
-  void
-  addEntry();
 
 protected:
-  /** Set dEdX       - important for material calibarion */
-  virtual void
-  setDeDx(float dEdX);
 
-  Material m_material;
+  Material      m_material;  ///< the material 
+  float         m_dInX0;     ///< thickness in units of radiation length
+  float         m_dInL0;     ///< thickness in units of nuclear interaction length
+  float         m_zOaTrTd;   ///< @f$ \frac{Z}{A}\cdot\rho\cdot d @f$ - in ATLAS units
 
-  float  m_dInX0;    //!< thickness in units of radiation length
-  float  m_dInL0;    //!< thickness in units of nuclear interaction length
-  float  m_zOaTrTd;  //!< @f$ \frac{Z}{A}\cdot\rho\cdot d @f$ - in ATLAS units
-  size_t m_entries;  //!< number of different material entries of an
-                     //! averaged material
-  //!< @note set one per default, but can be set otherwise
+  size_t        m_entries;   ///< number of different material entries of an
+                             /// averaged material
 };
 
-/** Return method for the full material */
 inline const Material&
 MaterialProperties::material() const
 {
   return m_material;
 }
 
-/** Return method for thicknes in units of radiation length - dimensionless */
 inline float
 MaterialProperties::thicknessInX0() const
 {
   return m_dInX0;
 }
 
-/** Return method for thickness in units of nuclear interaction length -
- * dimensionless */
 inline float
 MaterialProperties::thicknessInL0() const
 {
   return m_dInL0;
 }
 
-/** Return method for thickness in mm */
 inline float
 MaterialProperties::thickness() const
 {
   return m_dInX0 * m_material.X0;
 }
 
-/** Return method for radiation length - in [mm] */
 inline float
 MaterialProperties::x0() const
 {
   return m_material.X0;
 }
 
-/** Return method for nuclear interaction length - in [mm] */
 inline float
 MaterialProperties::l0() const
 {
   return m_material.L0;
 }
 
-/** Return method for @f$ \frac{A}{Z}\cdot\rho @f$ */
 inline float
 MaterialProperties::zOverAtimesRho() const
 {
   return m_material.zOaTr;
 }
 
-/** Return method for @f$ \frac{A}{Z}\cdot\rho\cdot d @f$ */
 inline float
 MaterialProperties::zOverAtimesRhoTimesD() const
 {
   return m_zOaTrTd;
 }
 
-/** Return method for @f$ A @f$ */
 inline float
 MaterialProperties::averageA() const
 {
   return m_material.A;
 }
 
-/** Return method for @f$ Z @f$ */
+// Return method for @f$ Z @f$ 
 inline float
 MaterialProperties::averageZ() const
 {
   return m_material.Z;
 }
 
-/** Return method for @f$ Z @f$ */
+// Return method for @f$ Z @f$ 
 inline float
 MaterialProperties::averageRho() const
 {
   return m_material.rho;
 }
 
-/** Return method for @f$ dE/dX @f$ */
+// Return method for @f$ dE/dX @f$ 
 inline float
 MaterialProperties::dEdX() const
 {
@@ -248,11 +246,11 @@ MaterialProperties::addEntry()
   ++m_entries;
 }
 
-/**Overload of << operator for std::ostream for debug output*/
+//Overload of << operator for std::ostream for debug output
 std::ostream&
 operator<<(std::ostream& sl, const MaterialProperties& mprop);
 
-/** Useful typedefs */
+// Useful typedefs 
 
 typedef std::vector<const MaterialProperties*> MaterialPropertiesVector;
 typedef std::vector<MaterialPropertiesVector>  MaterialPropertiesMatrix;

@@ -14,7 +14,11 @@
 #include <climits>
 
 Acts::MaterialProperties::MaterialProperties()
-  : m_material(), m_dInX0(0.), m_dInL0(0.), m_zOaTrTd(0.), m_entries(1)
+  : m_material()
+  , m_dInX0(0.)
+  , m_dInL0(0.)
+  , m_zOaTrTd(0.)
+  , m_entries(1)
 {
 }
 
@@ -24,7 +28,6 @@ Acts::MaterialProperties::MaterialProperties(float  thickness,
                                              float  averageA,
                                              float  averageZ,
                                              float  averageRho,
-                                             float  dEdX,
                                              size_t entries)
   : m_material(Xo, Lo, averageA, averageZ, averageRho, dEdX)
   , m_dInX0(Xo * Xo > 10e-10 ? thickness / Xo : 0.)
@@ -35,8 +38,6 @@ Acts::MaterialProperties::MaterialProperties(float  thickness,
   , m_entries(entries)
 {
 }
-
-// TODO add constructor with element composition
 
 Acts::MaterialProperties::MaterialProperties(const Acts::Material& material,
                                              float                 thickness)
@@ -130,13 +131,6 @@ Acts::MaterialProperties::setMaterial(const Acts::Material& mat,
   if (thickness != 0.) m_dInL0 = thickness / mat.L0;
   if (mat.A != 0.) m_zOaTrTd   = mat.Z / mat.A * mat.rho * thickness;
   m_entries                    = entries;
-}
-
-void
-Acts::MaterialProperties::setDeDx(float dEdX)
-{
-  // set the DE/DX value
-  m_material.dEdX = dEdX;
 }
 
 std::ostream&

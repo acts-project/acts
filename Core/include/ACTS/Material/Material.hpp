@@ -25,25 +25,33 @@ namespace Acts {
 
 static double s_oneOverUcharMax = 1. / double(UCHAR_MAX);
 
-/** @class ElementFraction */
+/// @class ElementFraction 
 class ElementFraction : public std::pair<unsigned char, unsigned char>
 {
 public:
-  /** Default Constructor */
+  /// Default Constructor 
   ElementFraction() : std::pair<unsigned char, unsigned char>(0, 0) {}
-  /** Copy Constructor from base class */
+  
+  /// Copy Constructor from base class 
+  ///
+  /// @param ef is the element fraction source object
   ElementFraction(const std::pair<unsigned char, unsigned char>& ef)
     : std::pair<unsigned char, unsigned char>(ef)
   {
   }
 
-  /**Constructor from arguments */
+  /// Constructor from arguments
+  ///
+  /// @param iz is the z value of the element
+  /// @param ifrac is the associated fraction of that element
   ElementFraction(unsigned char iz, unsigned char ifrac)
     : std::pair<unsigned char, unsigned char>(iz, ifrac)
   {
   }
 
-  /** assignment operator from base class */
+  /// assignment operator from base class 
+  ///
+  /// @param ef is the element fraction source object
   ElementFraction&
   operator=(const std::pair<unsigned char, unsigned char>& ef)
   {
@@ -53,14 +61,16 @@ public:
     return (*this);
   }
 
-  /** Return in a nice format */
+  /// Return in a nice format 
+  /// - casts back to an unsigned integer
   unsigned int
   element() const
   {
     return static_cast<unsigned int>((*this).first);
   }
 
-  /** Return in a nice format */
+  /// Return in a nice format 
+  /// - casts char to an unsigned int and then into double
   double
   fraction() const
   {
@@ -68,23 +78,20 @@ public:
   }
 };
 
-/** @struct MaterialComposition */
+/// @struct MaterialComposition 
+///
+/// This helper struct allows to create a material composition
+/// as terms of element fraction objects
 class MaterialComposition : public std::vector<ElementFraction>
 {
 public:
-  /** default constructor*/
+  /// Default constructor
   MaterialComposition() : std::vector<ElementFraction>() {}
   ~MaterialComposition() {}
-  /** constructor for persistency (1), size optimized */
-  MaterialComposition(const std::vector<unsigned char>& iel,
-                      const std::vector<unsigned char>& ifrac)
-  {
-    reserve(iel.size());
-    for (std::size_t elvc = 0; elvc < iel.size() && ifrac.size(); ++elvc)
-      push_back(ElementFraction(iel.at(elvc), ifrac.at(elvc)));
-  }
 
-  /** constructor for persistency (2), size optimized */
+  /// Constructor from vector of pairs
+  ///
+  /// @param efracs are the element fractions
   MaterialComposition(
       const std::vector<std::pair<unsigned char, unsigned char>>& efracs)
   {
@@ -92,13 +99,17 @@ public:
     for (auto& efracIt : efracs) push_back(efracIt);
   }
 
-  /** Copy constructor from base class */
+  /// Copy constructor from base class 
+  /// 
+  /// @param mc is the elment fraction vector
   MaterialComposition(const std::vector<ElementFraction>& mc)
     : std::vector<ElementFraction>(mc)
   {
   }
 
-  /** assignment operator from base class */
+  /// Assignment operator from base class 
+  ///
+  /// @param mc is the source object
   MaterialComposition&
   operator=(const std::vector<ElementFraction>& mc)
   {
@@ -108,25 +119,15 @@ public:
     return (*this);
   }
 
-  /** assignment operator for persistency (2) */
-  MaterialComposition&
-  operator=(const std::vector<std::pair<unsigned char, unsigned char>>& efracs)
-  {
-    clear();
-    reserve(efracs.size());
-    for (auto& efracIt : efracs) push_back(efracIt);
-    return (*this);
-  }
 };
 
-/** @class Material
-
- A common object to be contained by
- - MaterialStep ( for mapping)
- - MaterialProperties ( for reconstruction )
- - it is optimized for T/P split
-
-*/
+/// @class Material
+/// 
+/// A common object to be contained by
+/// - MaterialStep ( for mapping)
+/// - MaterialProperties ( for reconstruction )
+/// - it is optimized for T/P split
+/// 
 class Material
 {
 public:
@@ -141,10 +142,10 @@ public:
   MaterialComposition*
       composition;  //! transient member to ROOT (for the moment)
 
-  /** Default Constructor needed for POOL */
+  /// Default Constructor - vacuum material
   Material()
-    : X0(10.e10)
-    , L0(10.e10)
+    : X0(10e10)
+    , L0(10e10)
     , A(0.)
     , Z(0.)
     , rho(0.)
@@ -154,42 +155,50 @@ public:
   {
   }
 
-  /** Constructor with arguments */
+  /// Constructor with arguments 
+  ///
+  /// @param iX0 is the radiation length parameter
+  /// @param iL0 is the nuclear interaction length
+  /// @param iA is the average atomic weight
+  /// @param iZ is the average atomic number
+  /// @param iRho is the average density
+  /// @param imc is the material composition
   Material(float                iX0,
            float                iL0,
            float                iA,
            float                iZ,
            float                iRho,
-           float                idEdX = 0.,
-           MaterialComposition* mc    = 0)
+           MaterialComposition  imc = {})
     : X0(iX0)
     , L0(iL0)
     , A(iA)
     , Z(iZ)
     , rho(iRho)
-    , dEdX(idEdX)
-    , zOaTr(iA > 0 ? iZ / iA * iRho : 0.)
+    , zOaTr(iA > 0 ? iZ/iA * iRho : 0.)
     , composition(mc)
   {
   }
 
-  /** Copy Constructor */
-  Material(const Material& amc)
+  /// Copy Constructor 
+  ///
+  /// @param material copy constructor
+  Material(const Material& mat)
     : X0(amc.X0)
     , L0(amc.L0)
     , A(amc.A)
     , Z(amc.Z)
     , rho(amc.rho)
-    , dEdX(amc.dEdX)
     , zOaTr(amc.zOaTr)
-    , composition(amc.composition ? new MaterialComposition(*amc.composition)
-                                  : 0)
+    , composition(amc.composition)
   {
   }
 
-  /** Desctructor - delete the composition if there */
-  ~Material() { delete composition; }
-  /** Assignment operator */
+  /// Desctructor 
+  ~Material() {}
+  
+  /// Assignment operator
+  ///
+  /// @param mat is the source material
   Material&
   operator=(const Material& amc)
   {
@@ -199,37 +208,34 @@ public:
       A     = amc.A;
       Z     = amc.Z;
       rho   = amc.rho;
-      dEdX  = amc.dEdX;
       zOaTr = amc.zOaTr;
-      delete composition;
-      composition
-          = amc.composition ? new MaterialComposition(*amc.composition) : 0;
+      composition = amc.composition;
     }
     return (*this);
   }
 
-  /** scaling method */
-  Material*
-  scale(float sf) const;
-
-  /** access to members */
+  /// access to methods z/A*tho
   float
   zOverAtimesRho() const
   {
     return (*this).zOaTr;
   }
+  
+  /// access to methods x0
   float
   x0() const
   {
     return (*this).X0;
   }
+
+  /// access to methods x0
   float
   averageZ() const
   {
     return (*this).Z;
   }
 
-  /** spit out as a string */
+  /// spit out as a string 
   std::string
   toString() const
   {
@@ -241,11 +247,6 @@ public:
   }
 };
 
-inline Material*
-Material::scale(float sf) const
-{
-  return new Material(X0 / sf, L0 / sf, sf * A, sf * Z, sf * rho);
-}
 }
 
 #endif
