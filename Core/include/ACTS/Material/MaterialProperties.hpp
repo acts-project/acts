@@ -1,4 +1,4 @@
-// This file is part of the ACTS project.
+Core/src/Material/MaterialProperties.cpp// This file is part of the ACTS project.
 //
 // Copyright (C) 2016 ACTS project team
 //
@@ -103,6 +103,14 @@ public:
   float
   thicknessInL0() const;
 
+  /// Returns the average X0 of the material 
+  float
+  averageX0() const;
+
+  /// Return the average L0 of the material
+  float
+  averageL0() const;
+
   /// Returns the average Z of the material 
   float
   averageZ() const;
@@ -120,43 +128,11 @@ public:
   float
   zOverAtimesRho() const;
 
-  /// Return the @f$ d* Z/A * rho @f$ 
-  float
-  zOverAtimesRhoTimesD() const;
-
-  /// Material averaging 
-  ///
-  /// This is the averaging of material along a track,
-  /// it is additive according to the following formulas
-  ///
-  /// \image html MaterialAveraging.jpeg
-  ///
-  /// @param mat is the material seen by this step
-  /// @param dInX0 is the thickness in X0 of this step
-  void
-  addMaterial(const Material& mat, float thickness);
-
-  /// Record material view
-  ///
-  /// This is for averaging of material when
-  /// having one view of this material component
-  /// - it will increase the entries counter
-  ///
-  /// @param mat 
-  /// @thickness thickness of this material 
-  void
-  recordMaterial(const Material& mat, float thickness = 1.);
-
-
 protected:
+  Material      m_material;  //!< the material 
+  float         m_dInX0;     //!< thickness in units of radiation length
+  float         m_dInL0;     //!< thickness in units of nuclear interaction length
 
-  Material      m_material;  ///< the material 
-  float         m_dInX0;     ///< thickness in units of radiation length
-  float         m_dInL0;     ///< thickness in units of nuclear interaction length
-  float         m_zOaTrTd;   ///< @f$ \frac{Z}{A}\cdot\rho\cdot d @f$ - in ATLAS units
-
-  size_t        m_entries;   ///< number of different material entries of an
-                             /// averaged material
 };
 
 inline const Material&
@@ -184,27 +160,21 @@ MaterialProperties::thickness() const
 }
 
 inline float
-MaterialProperties::x0() const
-{
-  return m_material.X0;
-}
-
-inline float
-MaterialProperties::l0() const
-{
-  return m_material.L0;
-}
-
-inline float
 MaterialProperties::zOverAtimesRho() const
 {
   return m_material.zOaTr;
 }
 
 inline float
-MaterialProperties::zOverAtimesRhoTimesD() const
+MaterialProperties::averageX0() const
 {
-  return m_zOaTrTd;
+  return m_material.X0;
+}
+
+inline float
+MaterialProperties::averageL0() const
+{
+  return m_material.L0;
 }
 
 inline float
@@ -213,7 +183,6 @@ MaterialProperties::averageA() const
   return m_material.A;
 }
 
-// Return method for @f$ Z @f$ 
 inline float
 MaterialProperties::averageZ() const
 {
@@ -227,32 +196,13 @@ MaterialProperties::averageRho() const
   return m_material.rho;
 }
 
-// Return method for @f$ dE/dX @f$ 
-inline float
-MaterialProperties::dEdX() const
-{
-  return m_material.dEdX;
-}
-
-inline size_t
-MaterialProperties::entries() const
-{
-  return m_entries;
-}
-
-inline void
-MaterialProperties::addEntry()
-{
-  ++m_entries;
-}
-
 //Overload of << operator for std::ostream for debug output
 std::ostream&
 operator<<(std::ostream& sl, const MaterialProperties& mprop);
 
 // Useful typedefs 
 
-typedef std::vector<const MaterialProperties*> MaterialPropertiesVector;
+typedef std::vector<MaterialProperties*>       MaterialPropertiesVector;
 typedef std::vector<MaterialPropertiesVector>  MaterialPropertiesMatrix;
 
 }  // end of namespace

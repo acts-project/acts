@@ -1,4 +1,4 @@
-// This file is part of the ACTS project.
+Core/include/ACTS/Material/MaterialProperties.hpp// This file is part of the ACTS project.
 //
 // Copyright (C) 2016 ACTS project team
 //
@@ -17,8 +17,6 @@ Acts::MaterialProperties::MaterialProperties()
   : m_material()
   , m_dInX0(0.)
   , m_dInL0(0.)
-  , m_zOaTrTd(0.)
-  , m_entries(1)
 {
 }
 
@@ -27,15 +25,10 @@ Acts::MaterialProperties::MaterialProperties(float  thickness,
                                              float  Lo,
                                              float  averageA,
                                              float  averageZ,
-                                             float  averageRho,
-                                             size_t entries)
-  : m_material(Xo, Lo, averageA, averageZ, averageRho, dEdX)
+                                             float  averageRho)
+  : m_material(Xo, Lo, averageA, averageZ, averageRho)
   , m_dInX0(Xo * Xo > 10e-10 ? thickness / Xo : 0.)
   , m_dInL0(Lo * Lo > 10e-10 ? thickness / Lo : 0.)
-  , m_zOaTrTd(averageA * averageA > 10e-10
-                  ? averageZ / averageA * averageRho * thickness
-                  : 0.)
-  , m_entries(entries)
 {
 }
 
@@ -44,10 +37,6 @@ Acts::MaterialProperties::MaterialProperties(const Acts::Material& material,
   : m_material(material)
   , m_dInX0(material.X0 * material.X0 > 10e-10 ? thickness / material.X0 : 0.)
   , m_dInL0(material.L0 * material.L0 > 10e-10 ? thickness / material.L0 : 0.)
-  , m_zOaTrTd(material.A * material.A > 10e-10
-                  ? thickness * material.Z / material.A * material.rho
-                  : 0.)
-  , m_entries(1)
 {
 }
 
@@ -56,8 +45,6 @@ Acts::MaterialProperties::MaterialProperties(
   : m_material(mprop.m_material)
   , m_dInX0(mprop.m_dInX0)
   , m_dInL0(mprop.m_dInL0)
-  , m_zOaTrTd(mprop.m_zOaTrTd)
-  , m_entries(mprop.m_entries)
 {
 }
 
@@ -74,8 +61,6 @@ Acts::MaterialProperties::operator=(const Acts::MaterialProperties& mprop)
     m_material = mprop.m_material;
     m_dInX0    = mprop.m_dInX0;
     m_dInL0    = mprop.m_dInL0;
-    m_zOaTrTd  = mprop.m_zOaTrTd;
-    m_entries  = mprop.m_entries;
   }
   return (*this);
 }
@@ -86,51 +71,7 @@ Acts::MaterialProperties::operator*=(float scale)
   // assuming rescaling of the material thickness
   m_dInX0 *= scale;
   m_dInL0 *= scale;
-  m_zOaTrTd *= scale;
-
   return (*this);
-}
-
-void
-Acts::MaterialProperties::addMaterial(const Acts::Material& mat, float dInX0)
-{
-  // averaging factors based on thickness
-  float fnew = dInX0 * mat.X0 / (m_dInX0 * m_material.X0 + dInX0 * mat.X0);
-  float fold = 1. - fnew;
-
-  // updated material thickness
-  m_dInX0 += dInX0;
-
-  // updated material
-  m_material = Acts::Material(1. / (fnew / mat.X0 + fold / m_material.X0),
-                              1. / (fnew / mat.L0 + fold / m_material.L0),
-                              fnew * mat.A + fold * m_material.A,
-                              fnew * mat.Z + fold * m_material.Z,
-                              fnew * mat.rho + fold * m_material.rho);
-
-  // updated derived members
-  m_dInL0   = m_dInX0 * m_material.X0 / m_material.L0;
-  m_zOaTrTd = m_material.A > 0
-      ? m_dInX0 * m_material.X0 * m_material.Z / m_material.A * m_material.rho
-      : 0;
-  // update number of entries
-  ++m_entries;
-}
-
-void
-Acts::MaterialProperties::setMaterial(const Acts::Material& mat,
-                                      float                 thickness,
-                                      size_t                entries)
-{
-  // just overwrite what you have
-  m_material                   = mat;
-  m_dInX0                      = 0.;
-  m_dInL0                      = 0.;
-  m_zOaTrTd                    = 0.;
-  if (thickness != 0.) m_dInX0 = thickness / mat.X0;
-  if (thickness != 0.) m_dInL0 = thickness / mat.L0;
-  if (mat.A != 0.) m_zOaTrTd   = mat.Z / mat.A * mat.rho * thickness;
-  m_entries                    = entries;
 }
 
 std::ostream&
@@ -141,9 +82,9 @@ Acts::operator<<(std::ostream& sl, const MaterialProperties& mprop)
      << std::endl;
   sl << "   - thickness                       [mm]  = " << mprop.thickness()
      << std::endl;
-  sl << "   - radiation length X0             [mm]  = " << mprop.x0()
+  sl << "   - radiation length X0             [mm]  = " << mprop.averageX0()
      << std::endl;
-  sl << "   - nuclear interaction length L0   [mm]  = " << mprop.l0()
+  sl << "   - nuclear interaction length L0   [mm]  = " << mprop.averageL0()
      << std::endl;
   sl << "   - average material Z/A*rho [gram/mm^3]  = "
      << mprop.zOverAtimesRho() << std::endl;

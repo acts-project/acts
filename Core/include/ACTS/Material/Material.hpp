@@ -86,7 +86,10 @@ class MaterialComposition : public std::vector<ElementFraction>
 {
 public:
   /// Default constructor
-  MaterialComposition() : std::vector<ElementFraction>() {}
+  MaterialComposition()
+  : std::vector<ElementFraction>() {}
+  
+  /// Destructor
   ~MaterialComposition() {}
 
   /// Constructor from vector of pairs
@@ -139,8 +142,7 @@ public:
   float rho;
   float dEdX;
   float zOaTr;
-  MaterialComposition*
-      composition;  //! transient member to ROOT (for the moment)
+  MaterialComposition composition;
 
   /// Default Constructor - vacuum material
   Material()
@@ -151,7 +153,7 @@ public:
     , rho(0.)
     , dEdX(0.)
     , zOaTr(0.)
-    , composition(0)
+  , composition()
   {
   }
 
@@ -175,7 +177,7 @@ public:
     , Z(iZ)
     , rho(iRho)
     , zOaTr(iA > 0 ? iZ/iA * iRho : 0.)
-    , composition(mc)
+    , composition(imc)
   {
   }
 
@@ -183,13 +185,13 @@ public:
   ///
   /// @param material copy constructor
   Material(const Material& mat)
-    : X0(amc.X0)
-    , L0(amc.L0)
-    , A(amc.A)
-    , Z(amc.Z)
-    , rho(amc.rho)
-    , zOaTr(amc.zOaTr)
-    , composition(amc.composition)
+    : X0(mat.X0)
+    , L0(mat.L0)
+    , A(mat.A)
+    , Z(mat.Z)
+    , rho(mat.rho)
+    , zOaTr(mat.zOaTr)
+    , composition(mat.composition)
   {
   }
 

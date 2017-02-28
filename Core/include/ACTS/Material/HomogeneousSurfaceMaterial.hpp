@@ -29,7 +29,7 @@ class HomogeneousSurfaceMaterial : public SurfaceMaterial
 {
 public:
   /// Default Constructor - deleted 
-  HomogeneousSurfaceMaterial() = deleted;
+  HomogeneousSurfaceMaterial() = delete;
 
   /// Explizit constructor 
   ///
