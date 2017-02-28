@@ -7,17 +7,17 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// LayerMaterialRecord.cpp, ACTS project
+// SurfaceMaterialRecord.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Plugins/MaterialPlugins/LayerMaterialRecord.hpp"
+#include "ACTS/Plugins/MaterialPlugins/SurfaceMaterialRecord.hpp"
 
-Acts::LayerMaterialRecord::LayerMaterialRecord()
+Acts::SurfaceMaterialRecord::SurfaceMaterialRecord()
   : m_binUtility(nullptr), m_materialMatrix(), m_matStepsAndAssignedPos()
 {
 }
 
-Acts::LayerMaterialRecord::LayerMaterialRecord(const BinUtility* binutility)
+Acts::SurfaceMaterialRecord::SurfaceMaterialRecord(const BinUtility* binutility)
   : m_binUtility(binutility), m_materialMatrix(), m_matStepsAndAssignedPos()
 {
   // reserve
@@ -34,22 +34,22 @@ Acts::LayerMaterialRecord::LayerMaterialRecord(const BinUtility* binutility)
   }
 }
 
-Acts::LayerMaterialRecord::LayerMaterialRecord(
-    const LayerMaterialRecord& lmrecord)
+Acts::SurfaceMaterialRecord::SurfaceMaterialRecord(
+    const SurfaceMaterialRecord& lmrecord)
   : m_binUtility(lmrecord.m_binUtility)
   , m_materialMatrix(lmrecord.m_materialMatrix)
   , m_matStepsAndAssignedPos(lmrecord.m_matStepsAndAssignedPos)
 {
 }
 
-Acts::LayerMaterialRecord*
-Acts::LayerMaterialRecord::clone() const
+Acts::SurfaceMaterialRecord*
+Acts::SurfaceMaterialRecord::clone() const
 {
-  return (new LayerMaterialRecord(*this));
+  return (new SurfaceMaterialRecord(*this));
 }
 
-Acts::LayerMaterialRecord&
-Acts::LayerMaterialRecord::operator=(const LayerMaterialRecord& lmrecord)
+Acts::SurfaceMaterialRecord&
+Acts::SurfaceMaterialRecord::operator=(const SurfaceMaterialRecord& lmrecord)
 {
   if (this != &lmrecord) {
     m_binUtility     = lmrecord.m_binUtility;
@@ -60,7 +60,7 @@ Acts::LayerMaterialRecord::operator=(const LayerMaterialRecord& lmrecord)
 }
 
 void
-Acts::LayerMaterialRecord::addLayerMaterialProperties(
+Acts::SurfaceMaterialRecord::addLayerMaterialProperties(
     const Acts::Vector3D&                 pos,
     const std::vector<Acts::MaterialStep> layerMaterialSteps)
 {
@@ -141,7 +141,7 @@ Acts::LayerMaterialRecord::addLayerMaterialProperties(
 }
 
 void
-Acts::LayerMaterialRecord::averageMaterial()
+Acts::SurfaceMaterialRecord::averageMaterial()
 {
   // access the bins
   size_t bins0 = m_binUtility->bins(0);
@@ -182,7 +182,7 @@ Acts::LayerMaterialRecord::averageMaterial()
 }
 
 std::shared_ptr<const Acts::BinnedSurfaceMaterial>
-Acts::LayerMaterialRecord::layerMaterial() const
+Acts::SurfaceMaterialRecord::layerMaterial() const
 {
   // return the binned surface material
   return (std::make_shared<const Acts::BinnedSurfaceMaterial>(

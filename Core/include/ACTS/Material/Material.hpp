@@ -42,6 +42,17 @@ public:
 
   /// Constructor from arguments
   ///
+  /// @param iz is the z value of the element as an unsigned int
+  /// @param ifrac is the associated fraction of that element
+  ElementFraction(unsigned int iz, float ifrac)
+    : std::pair<unsigned char, unsigned char>(
+          (unsigned char)iz,
+          (unsigned char)(ifrac * double(UCHAR_MAX)))
+  {
+  }
+
+  /// Constructor from arguments
+  ///
   /// @param iz is the z value of the element
   /// @param ifrac is the associated fraction of that element
   ElementFraction(unsigned char iz, unsigned char ifrac)
@@ -76,6 +87,22 @@ public:
   {
     return (static_cast<unsigned int>((*this).second)) * s_oneOverUcharMax;
   }
+
+  /// Define the equality operator
+  bool
+  operator==(const ElementFraction& ef) const
+  {
+    return ((*this).first == ef.first && (*this).second == ef.second);
+  }
+
+  /// Define smaller operator for sorting
+  /// we always sort by fraction for fastest access to the
+  /// most probable fraction
+  bool
+  operator<(const ElementFraction& ef) const
+  {
+    return ((*this).second < ef.second);
+  }
 };
 
 /// @struct MaterialComposition 
@@ -100,14 +127,16 @@ public:
   {
     reserve(efracs.size());
     for (auto& efracIt : efracs) push_back(efracIt);
+    std::sort(begin(), end());
   }
 
-  /// Copy constructor from base class 
-  /// 
+  /// Constructor from ElementFraction
+  ///
   /// @param mc is the elment fraction vector
   MaterialComposition(const std::vector<ElementFraction>& mc)
     : std::vector<ElementFraction>(mc)
   {
+    std::sort(begin(), end());
   }
 
   /// Assignment operator from base class 
@@ -119,9 +148,20 @@ public:
     if (this != &mc) {
       std::vector<ElementFraction>::operator=(mc);
     }
+    std::sort(begin(), end());
     return (*this);
   }
 
+  /// Euality operator
+  bool
+  operator==(const std::vector<ElementFraction>& mc) const
+  {
+    if (mc.size() != size()) return false;
+    for (size_t ef = 0; ef < mc.size(); ++ef) {
+      if (!(mc[ef] == (*this)[ef])) return false;
+    }
+    return true;
+  }
 };
 
 /// @class Material

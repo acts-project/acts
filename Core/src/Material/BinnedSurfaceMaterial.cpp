@@ -13,23 +13,6 @@
 #include "ACTS/Material/BinnedSurfaceMaterial.hpp"
 #include "ACTS/Material/MaterialProperties.hpp"
 
-Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(BinUtility& binutility)
-  : SurfaceMaterial()
-  , m_binUtility(binutility)
-{
-  // reserve 
-  m_fullMaterial.reserve(binutility.max(1) + 1);
-  // loop and fill
-  for (size_t ibin1 = 0; ibin1 < binutility.max(1) + 1; ++ibin1) {
-    // create the vector for the push_back
-    MaterialPropertiesVector matVec;
-    matVec.reserve(binutility.max(0) + 1);
-    for (size_t ibin0 = 0; ibin0 < size_t binutility.max(0) + 1; ++ibin0)
-      matVec.push_back(nullptr);
-    m_fullMaterial.push_back(matVec);
-  }
-}
-
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     const BinUtility&               binUtility,
     const MaterialPropertiesVector& fullProperties,
@@ -140,7 +123,7 @@ Acts::BinnedSurfaceMaterial::operator*=(double scale)
 const Acts::MaterialProperties*
 Acts::BinnedSurfaceMaterial::material(const Vector2D& lp) const
 {
-  if (!m_fullMaterial.size() || !m_binUtility) return nullptr;
+  if (!m_fullMaterial.size()) return nullptr;
   // the first bin
   size_t ibin0 = m_binUtility.bin(lp, 0);
   size_t ibin1 = m_binUtility.max(1) ? m_binUtility.bin(lp, 1) : 0;
@@ -150,7 +133,7 @@ Acts::BinnedSurfaceMaterial::material(const Vector2D& lp) const
 const Acts::MaterialProperties*
 Acts::BinnedSurfaceMaterial::material(const Acts::Vector3D& gp) const
 {
-  if (!m_fullMaterial.size() || !m_binUtility) return nullptr;
+  if (!m_fullMaterial.size()) return nullptr;
   // the first bin
   size_t ibin0 = m_binUtility.bin(gp, 0);
   size_t ibin1 = m_binUtility.max(1) ? m_binUtility.bin(gp, 1) : 0;

@@ -357,13 +357,6 @@ public:
   void
   setMotherVolume(const TrackingVolume* mvol);
 
-  /// Add Material
-  ///
-  /// @param mat is the materiall to be added
-  /// @param fact is the fraction factor
-  void
-  addMaterial(std::shared_ptr<const Material> mat, float fact = 1.);
-
 protected:
   /// Default constructor
   TrackingVolume();

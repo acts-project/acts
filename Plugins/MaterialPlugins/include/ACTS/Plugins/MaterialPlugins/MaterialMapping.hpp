@@ -41,8 +41,10 @@ class LayerMaterialRecord;
 /// the closest surface of a layer which is marked to carry support material.
 /// The material is assigned to the closest layer (forward or backward) to the
 /// bin at the assigned position on the layer.
+///
 /// Along one track in one bin of a layer the material is averaged:
 /// \image html MaterialAveraging.jpeg
+///
 /// When the material mapping is done many MaterialTrackRecords will be mapped.
 /// Everytime the same bin is hit, the material parameters are summed up. If the
 /// user uses the function Acts::MaterialMapping::averageLayerMaterial() (e.g.

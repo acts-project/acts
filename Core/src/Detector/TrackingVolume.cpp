@@ -202,39 +202,8 @@ Acts::TrackingVolume::detachedTrackingVolumes(const Vector3D& gp,
 }
 
 void
-Acts::TrackingVolume::addMaterial(std::shared_ptr<const Material> mprop,
-                                  float                           fact)
-{
-  // assume the scaling factor refers to the volume scaling
-  float flin = pow(fact, 0.33);
-  // average X0
-  double invX0     = m_material->X0 > 0. ? 1. / m_material->X0 : 0.;
-  double sum_invX0 = invX0 + flin / mprop->X0;
-  float  X0        = 1. / sum_invX0;
-  // average L0
-  double invL0     = m_material->L0 > 0. ? 1. / m_material->L0 : 0.;
-  double sum_invL0 = invL0 + flin / mprop->L0;
-  float  L0        = 1. / sum_invL0;
-  // add density
-  float rho1 = m_material->rho;
-  float rho  = rho1 + fact * mprop->rho;
-  // averageZ
-  float n1 = m_material->Z > 0. ? rho1 / m_material->Z : 0.;
-  float n2 = fact * mprop->rho / mprop->Z;
-  float Z  = rho / (n1 + n2);
-  // averageA
-  n1      = m_material->A > 0. ? rho1 / m_material->A : 0.;
-  n2      = fact * mprop->rho / mprop->A;
-  float A = rho / (n1 + n2);
-  // mean energy loss (linear scaling)
-  float dEdX = m_material->dEdX + flin * mprop->dEdX;
-
-  m_material.reset(new Material(X0, L0, A, Z, rho, dEdX));
-  // m_material.reset(std::make_shared<Material>(X0,L0,A,Z,rho,dEdX));
-}
-
-void
-Acts::TrackingVolume::sign(GeometrySignature geosign, GeometryType geotype)
+Acts::TrackingVolume::sign(GeometrySignature geosign,
+                           GeometryType      geotype) const
 {
   // never overwrite what is already signed, that's a crime
   if (m_geometrySignature == Unsigned) m_geometrySignature = geosign;
