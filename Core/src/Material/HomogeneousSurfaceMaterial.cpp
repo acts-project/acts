@@ -29,9 +29,7 @@ Acts::HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(
 }
 
 Acts::HomogeneousSurfaceMaterial::~HomogeneousSurfaceMaterial()
-{
-  delete m_fullMaterial;
-}
+{}
 
 Acts::HomogeneousSurfaceMaterial&
 Acts::HomogeneousSurfaceMaterial::
@@ -57,9 +55,7 @@ std::ostream&
 Acts::HomogeneousSurfaceMaterial::dump(std::ostream& sl) const
 {
   sl << "Acts::HomogeneousSurfaceMaterial : " << std::endl;
-  if (m_fullMaterial) {
-    sl << "   - fullMaterial         : " << m_fullMaterial << std::endl;
-  }
-  sl << "   - split factor         : " << m_splitFactor << std::endl;
+  sl << "   - fullMaterial : " << m_fullMaterial << std::endl;
+  sl << "   - split factor : " << m_splitFactor << std::endl;
   return sl;
 }
