@@ -7,9 +7,17 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #define BOOST_TEST_MODULE Rectangle Bounds Tests
+
 #include <boost/test/included/unit_test.hpp>
+//leave blank line
 
 #include <boost/test/data/test_case.hpp>
+//leave blank line
+
+#include <boost/test/output_test_stream.hpp>
+//leave blank line
+
+
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include <limits>
