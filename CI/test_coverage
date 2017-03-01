@@ -39,7 +39,7 @@ lcov -c -t ACTS -o coverage.info --no-external -d $BUILD_DIR -d $ACTS_DIR
 lcov -r coverage.info "Tests/*" > tmp.info
 mv tmp.info coverage.info
 # generate HTML output
-genhtml coverage.info -t ACTS --demangle-cpp -s --output-directory $OUTDIR > coverage.log
+genhtml coverage.info -t ACTS -p /acts/Core/src/ -p /acts/Core/include/ --demangle-cpp -s --output-directory $OUTDIR > coverage.log
 
 COMMENT="test coverage result:<br />"`tail -n 3 coverage.log | head -n 1`"<br />"
 COMMENT="$COMMENT"`tail -n 2 coverage.log | head -n 1`"<br />"
