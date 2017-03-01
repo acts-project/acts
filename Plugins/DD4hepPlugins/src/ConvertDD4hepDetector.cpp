@@ -364,6 +364,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
           = subDetector.placement().ptr()->GetMatrix()->GetTranslation()[2];
       zBoundaries.push_back(zPos - halfZ);
       zBoundaries.push_back(zPos + halfZ);
+      std::sort(zBoundaries.begin(), zBoundaries.end());
       // create the sub volume setup
       Acts::SubVolumeConfig subVolumeConfig;
       subVolumeConfig.rMin        = tube->GetRmin1() * units::_cm;

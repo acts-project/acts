@@ -177,10 +177,6 @@ struct VolumeConfig
 /// given) can be set.
 struct SubVolumeConfig
 {
-  /// indicates if the sub volume config was set during the configuration
-  /// is automatically set if rMin, rMax and zBoundaries are given and therefore
-  /// does not need to be set by hand
-  bool present;
   /// the minimum radius of the sub volume config
   double rMin;
   /// the maximum radius of the sub volume config
@@ -189,21 +185,19 @@ struct SubVolumeConfig
   ///| Negative Endcap | Barrel | Positive Endcap |	=> four boundaries needed in
   /// z
   ///                  | Barrel |				    => two boundaries needed in z
-  /// the zBoundaries do not need to be handed over sorted, they will be sorted
-  /// in ascending order automatically
+  /// @note the zBoundaries need to be handed over sorted in ascending order
   std::vector<double> zBoundaries;
 
   /// Default constructor
-  SubVolumeConfig() : present(false), rMin(10e10), rMax(10e-10), zBoundaries()
-  {
-    if (zBoundaries.size() > 1 && rMin >= 0. && rMax > 0.) present = true;
-    // make sure the zBoundaries are sorted in ascending order
-    std::sort(zBoundaries.begin(), zBoundaries.end());
-  }
+  /// Per default the SubVolumeConfig is not set
+  SubVolumeConfig() : rMin(-1.), rMax(-1.), zBoundaries() {}
 
   /// Conversion operator to bool needed for checks if the sub volume config is
-  /// given
-  operator bool() const { return present; }
+  /// set by the user
+  operator bool() const
+  {
+    return (zBoundaries.size() > 1 && rMin >= 0. && rMax > 0. && rMin < rMax);
+  }
 };
 
 /// @class CylinderVolumeBuilder
