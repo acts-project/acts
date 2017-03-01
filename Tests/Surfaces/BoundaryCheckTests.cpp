@@ -162,8 +162,8 @@ namespace Test {
     ActsSymMatrixD<2> cov;
     // numbers chosen for ease!
     cov << 0.16, 0., 0., 0.81;
-    const double          nSigma            = 1.5;  // what if this is -ve, zero, inf or NaN?
-    const int             pointsPerQuadrant = 1;  // what if this is -ve, zero, inf or NaN?
+    const double nSigma = 1.5;        // what if this is -ve, zero, inf or NaN?
+    const int pointsPerQuadrant = 1;  // what if this is -ve, zero, inf or NaN?
     BoundaryCheck         bc{cov, nSigma, true, true};
     std::vector<Vector2D> convertedEllipsePoints
         = bc.EllipseToPoly(pointsPerQuadrant);
