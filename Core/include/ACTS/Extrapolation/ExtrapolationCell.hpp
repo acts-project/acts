@@ -241,9 +241,6 @@ public:
   ExtrapolationConfig stepConfiguration;
   /// the material properties found in this step
   const MaterialProperties* material;
-  /// the position where the material was estimated
-  /// @todo clean: can be removed
-  Vector3D materialPosition;
   /// the applied material scaling due to incident
   double materialScaling;
   /// uniquely associated transprt jacobian matrix
@@ -271,7 +268,6 @@ public:
     , layer(nullptr)
     , stepConfiguration(eConfig)
     , material(mprop)
-    , materialPosition(Vector3D(0., 0., 0.))
     , materialScaling(1.)
     , transportJacobian(std::move(tjac))
     , pathLength(pLength)
@@ -345,7 +341,7 @@ public:
   /// the material limit in L0 (-1 if no limit)
   double materialLimitL0;
 
-  /// the occured interaction type (for FATRAS)
+  /// the occured interaction type (for FATRAS) - try to outsource
   process_type interactionProcess;
   ParticleType particleType;
   /// how to deal with the material
@@ -357,7 +353,7 @@ public:
   /// default is false (loses layer binding)
   bool sensitiveCurvilinear;
   /// stay with curvilinear parameters for destination
-  /// default is false
+  /// default is false (loses layer binding)
   bool destinationCurvilinear;
   /// depth of search applied
   /// @todo docu : write documetnation
@@ -512,7 +508,7 @@ public:
   void
   stepMaterial(const Surface&            sf,
                const Layer*              lay,
-               const Vector3D&           position,
+               const T*                  parameters,
                double                    sfactor,
                const MaterialProperties* mprop = nullptr);
 
@@ -673,8 +669,8 @@ ExtrapolationCell<T>::stepTransport(
   // find out if you want to attach or you need a new one
   // current step surface
   const Surface* cssf = &sf;
-  // get the last step surface - if it is identical with the current one ->
-  // attach information
+  /// get the last step surface 
+  // - if it is identical with the current one -> attach information
   const Surface* lssf = extrapolationSteps.size()
       ? extrapolationSteps.at(extrapolationSteps.size() - 1).surface
       : nullptr;
@@ -732,7 +728,7 @@ template <class T>
 void
 ExtrapolationCell<T>::stepMaterial(const Surface&            sf,
                                    const Layer*              lay,
-                                   const Vector3D&           mposition,
+                                   const T*                  parameters,
                                    double                    sfactor,
                                    const MaterialProperties* mprop)
 {
@@ -741,26 +737,24 @@ ExtrapolationCell<T>::stepMaterial(const Surface&            sf,
   // find out if you want to attach or you need a new one
   // current step surface
   const Surface* cssf = &sf;
+  // size of the current step cache 
+  size_t ssteps = extrapolationSteps.size();
   // get the last step surface - if it is identical with the current one ->
   // attach information
-  const Surface* lssf = extrapolationSteps.size()
-      ? extrapolationSteps.at(extrapolationSteps.size() - 1).surface
+  const Surface* lssf = ssteps
+      ? extrapolationSteps[ssteps - 1].surface
       : nullptr;
   // create a new step
   if (cssf != lssf) extrapolationSteps.push_back(ExtrapolationStep<T>());
   // set the surface
-  extrapolationSteps.at(extrapolationSteps.size() - 1).surface = cssf;
-  extrapolationSteps.at(extrapolationSteps.size() - 1).layer   = lay;
+  extrapolationSteps[ssteps - 1].surface = cssf;
+  extrapolationSteps[ssteps - 1].layer   = lay;
   // fill the material if there
   if (mprop) {
     // record the step information
-    extrapolationSteps.at(extrapolationSteps.size() - 1).material = mprop;
-    extrapolationSteps.at(extrapolationSteps.size() - 1)
-        .stepConfiguration.addMode(Acts::ExtrapolationMode::CollectMaterial);
-    extrapolationSteps.at(extrapolationSteps.size() - 1).materialPosition
-        = mposition;
-    extrapolationSteps.at(extrapolationSteps.size() - 1).materialScaling
-        = sfactor;
+    extrapolationSteps[ssteps - 1].material = mprop;
+    extrapolationSteps[ssteps - 1].stepConfiguration.addMode(ExtrapolationMode::CollectMaterial);
+    extrapolationSteps[ssteps - 1].materialScaling = sfactor;
   }
 }
 }  // end of namespace

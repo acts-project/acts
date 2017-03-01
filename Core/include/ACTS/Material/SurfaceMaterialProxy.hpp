@@ -31,9 +31,13 @@ class SurfaceMaterialProxy : public SurfaceMaterial
 {
 public:
   /// Constructor with BinUtility
-  /// @param binutility two dimensional BinUtility determining the granularity
-  /// and binning of the material on the surface/layer
-  SurfaceMaterialProxy(BinUtility& binutility);
+  ///
+  /// If no binUtility is given, the surface material proxy stands
+  /// in for a homogenous material 
+  ///
+  /// @param binUtility a BinUtility determining the granularity
+  ///        and binning of the material on the surface/layer
+  SurfaceMaterialProxy(std::shared_ptr<const BinUtility> binUtility = nullptr);
   
   /// Copy constuctor
   SurfaceMaterialProxy(const SurfaceMaterialProxy& smproxy);
@@ -51,7 +55,7 @@ public:
   operator*=(double scale) final override;
 
   /// Return the BinUtility 
-  const BinUtility&
+  std::shared_ptr<const BinUtility>
   binUtility() const;
 
   /// Return method for full material description of the Surface - from local
@@ -75,29 +79,32 @@ public:
 private:
   /// two dimensional BinUtility determining the granularity and binning of the
   /// material on the surface/layer
-  BinUtility m_binUtility;
+  std::shared_ptr<const BinUtility>     m_binUtility;
+  /// Dummy material properties
+  MaterialProperties                    m_materialProperties;
+
 };
 }
 
 inline const Acts::MaterialProperties*
 Acts::SurfaceMaterialProxy::material(const Vector2D&) const
 {
-  return nullptr;
+  return (&m_materialProperties);
 }
 
 inline const Acts::MaterialProperties*
 Acts::SurfaceMaterialProxy::material(const Vector3D&) const
 {
-  return nullptr;
+  return (&m_materialProperties);
 }
 
 inline const Acts::MaterialProperties*
     Acts::SurfaceMaterialProxy::material(size_t, size_t) const
 {
-  return nullptr;
+  return (&m_materialProperties);
 }
 
-inline const Acts::BinUtility&
+inline std::shared_ptr<const Acts::BinUtility>
 Acts::SurfaceMaterialProxy::binUtility() const
 {
   return m_binUtility;

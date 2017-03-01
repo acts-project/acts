@@ -128,8 +128,7 @@ private:
   /// nullptr
   ///   nothing to do (e.g. no material) : return nullptr */
   void
-  updateTrackParameters(const TrackParameters& parameters,
-                        ExCellCharged&         eCell,
+  updateTrackParameters(ExCellCharged&         eCell,
                         PropDirection          dir,
                         MaterialUpdateStage    matupstage) const;
 

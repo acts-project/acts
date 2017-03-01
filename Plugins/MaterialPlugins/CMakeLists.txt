@@ -1,5 +1,5 @@
 # manually trigger build of Material plugin
-option (BUILD_MATERIAL_PLUGIN "build Material plugins" OFF)
+option (BUILD_MATERIAL_PLUGIN "build Material plugins" ON)
 
 if (BUILD_MATERIAL_PLUGIN)
   # get list of all source files

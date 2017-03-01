@@ -12,9 +12,9 @@
 
 #include "ACTS/Material/SurfaceMaterialProxy.hpp"
 
-Acts::SurfaceMaterialProxy::SurfaceMaterialProxy(BinUtility& binutility)
+Acts::SurfaceMaterialProxy::SurfaceMaterialProxy(std::shared_ptr<const BinUtility> binUtility)
   : Acts::SurfaceMaterial()
-  , m_binUtility(binutility)
+  , m_binUtility(binUtility)
 {
 }
 
@@ -41,7 +41,10 @@ std::ostream&
 Acts::SurfaceMaterialProxy::dump(std::ostream& sl) const
 {
   sl << "Acts::SurfaceMaterialProxy : " << std::endl;
-  sl << "   - Number of Material bins [0,1] : " << m_binUtility.max(0) + 1
-     << " / " << m_binUtility.max(1) + 1 << std::endl;
+  if (m_binUtility)
+    sl << "   - Number of Material bins [0,1] : " << m_binUtility->max(0) + 1
+      << " / " << m_binUtility->max(1) + 1 << std::endl;
+  else
+    sl << "   - Homogeneous Material" << std::endl;
   return sl;
 }

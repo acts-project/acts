@@ -25,7 +25,7 @@ namespace Acts {
 
 class Layer;
 class MaterialProperties;
-class LayerMaterialRecord;
+class SurfaceMaterialRecord;
 
 /// @class MaterialMapping
 ///
@@ -34,25 +34,35 @@ class LayerMaterialRecord;
 /// This class should be used to map material from the full and detailed
 /// detector geometry onto the simplified ACTS geometry. It offers options to
 /// map, average and finalize the material.
+///
+/// Preconditions are: 
+/// - material steps recorded from the detailed geometry
+/// - a prepared Acts::TrackingGeometry with Acts::SurfaceMaterialProxy ob
+///   surfaces when the mapping should be done  
+/// 
+/// In a first step all surfaces in the TrackingGeometry with a material proxy
+/// are identified and SurfaceMaterialRecords are created.
+///
 /// One MaterialTrackRecord (containing all the MaterialSteps along a Track) is
 /// mapped by using the function Acts::MaterialMapping::mapMaterial(). The
-/// mapping process then extrapolates into the same direction starting from the
-/// same point as the MaterialTrackRecord through the ACTS geometry and finds
-/// the closest surface of a layer which is marked to carry support material.
-/// The material is assigned to the closest layer (forward or backward) to the
-/// bin at the assigned position on the layer.
+/// mapping process starts by extrapolating from the same starting
+/// point and direction as the MaterialTrackRecord through the ACTS geometry.
+/// The extrapolation engine then finds  the closest surface marked to carry  
+/// material (by carrying a SurfaceMaterialProxy).
+/// The material steps are then assigned to the corresponding surfaces 
+/// (and the according bin) at the assigned position.
 ///
 /// Along one track in one bin of a layer the material is averaged:
 /// \image html MaterialAveraging.jpeg
 ///
 /// When the material mapping is done many MaterialTrackRecords will be mapped.
-/// Everytime the same bin is hit, the material parameters are summed up. If the
-/// user uses the function Acts::MaterialMapping::averageLayerMaterial() (e.g.
-/// after every run) the  mean is calculated by dividing the sums by the number
-/// of entries. Afterwards the number of entries is reset.
-/// In the end after all the material is mapped the user should use
-/// Acts::MaterialMapping::finalizeLayerMaterial() which sets assignes the
-/// finalized material to the layers.
+/// Everytime the same bin is hit, the material parameters are summed up.
+/// This information is cached in the corresponding
+/// SurfaceMaterialRecord object.
+/// 
+/// In a finalization step, the SurfaceMaterialRecord bins are averaged
+/// by the number of hits per bin and the final BinnedSufaceMaterial
+/// are created.
 
 class MaterialMapping
 {
@@ -70,6 +80,15 @@ public:
     std::shared_ptr<IExtrapolationEngine> extrapolationEngine = nullptr;
   };
 
+  /// @struct Cache 
+  /// 
+  /// This is the cache object used for calling the mapping method
+  struct Cache {
+    /// object which connects the layer with its SurfaceMaterialRecord
+    std::map<GeometryID, SurfaceMaterialRecord> surfaceMaterialRecords;
+    
+  };
+
   /// @brief default constructor
   /// @param cnf the internal configuration object
   /// @param logger the logging instance
@@ -82,20 +101,14 @@ public:
 
   /// maps the material for the given direction(eta,phi) onto the layers of the
   /// given tracking geometry
+  /// 
   /// @param matTrackRec the Acts::MaterialTrackRecord to be mapped
-  void
-  mapMaterial(const MaterialTrackRecord& matTrackRec);
-  /// averages the material of the layer records collected so far (for each bin)
-  void
-  averageLayerMaterial();
-  /// after all step collections have been mapped this method needs to be called
-  /// it sets the created material to the layers
-  void
-  finalizeLayerMaterial();
-  /// @return hands back all layers carrying material with their corresponding
-  /// Acts::LayerMaterialRecord
-  const std::map<const Layer*, LayerMaterialRecord>
-  layerRecords() const;
+  ///
+  /// @return if the mapping was successful
+  bool
+  mapMaterialTrackRecord(Cache& mappingCache, 
+                         const MaterialTrackRecord& matTrackRec) const;
+
   /// set logging instance
   void
   setLogger(std::unique_ptr<Logger> logger);
@@ -106,21 +119,23 @@ private:
   bool
   collectLayersAndHits(
       const MaterialTrackRecord& matTrackRec,
-      std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>&
-          layersAndHits);
+      std::vector<std::pair<GeometryID, Acts::Vector3D>>&
+          surfacesAndHits);
+      
   /// internally used method to associate the material to the right layer in the
   /// tracking geometry
   void
   associateLayerMaterial(
       const MaterialTrackRecord& matTrackRec,
-      std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>&
-          layersAndHits);
+      std::vector<std::pair<GeometryID, Vector3D>>&
+          surfacesAndHits);
+      
   /// internally used method to associate a hit to a given layer by recording it
   /// in the layer records map
   void
-  associateHit(const Layer*                           layer,
-               const Acts::Vector3D&                  position,
-               const std::vector<Acts::MaterialStep>& layerMaterialSteps);
+  associateHit(const Layer*                     layer,
+               const Vector3D&                  position,
+               const std::vector<MaterialStep>& layerMaterialSteps);
   /// configuration object
 
   const Logger&
@@ -131,14 +146,14 @@ private:
 
   /// the configuration object
   Config m_cnf;
+  
   /// the logging instance
   std::unique_ptr<Logger> m_logger;
-  /// object which connects the layer with its LayerMaterialRecord
-  std::map<const Layer*, LayerMaterialRecord> m_layerRecords;
+  
 };
 }
 
-inline const std::map<const Acts::Layer*, Acts::LayerMaterialRecord>
+inline const std::map<const Acts::Layer*, Acts::SurfaceMaterialRecord>
 Acts::MaterialMapping::layerRecords() const
 {
   return m_layerRecords;

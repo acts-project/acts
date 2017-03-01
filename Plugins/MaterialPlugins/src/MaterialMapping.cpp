@@ -15,7 +15,7 @@
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Extrapolation/ExtrapolationCell.hpp"
 #include "ACTS/Layers/Layer.hpp"
-#include "ACTS/Plugins/MaterialPlugins/LayerMaterialRecord.hpp"
+#include "ACTS/Plugins/MaterialPlugins/SurfaceMaterialRecord.hpp"
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
@@ -24,7 +24,9 @@
 
 Acts::MaterialMapping::MaterialMapping(const Config&           cnf,
                                        std::unique_ptr<Logger> log)
-  : m_cnf(cnf), m_logger(std::move(log)), m_layerRecords()
+  : m_cnf(cnf)
+  , m_logger(std::move(log))
+  , m_surfaceMaterialRecords()
 
 {
   // check if extrapolation engine is given
@@ -45,29 +47,19 @@ Acts::MaterialMapping::setLogger(std::unique_ptr<Logger> newLogger)
 }
 
 void
-Acts::MaterialMapping::mapMaterial(const MaterialTrackRecord& matTrackRec)
-{
-  // create object which connects layer with hits
-  std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>> layersAndHits;
-  // associate the material to the layer only if hits have been collected
-  if (collectLayersAndHits(matTrackRec, layersAndHits))
-    associateLayerMaterial(matTrackRec, layersAndHits);
-}
-
-bool
-Acts::MaterialMapping::collectLayersAndHits(
-    const MaterialTrackRecord& matTrackRec,
-    std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>& layersAndHits)
+Acts::MaterialMapping::mapMaterialTrackRecord(const MaterialTrackRecord& matTrackRec)
 {
   // access the parameters
-  double                    theta         = matTrackRec.theta();
-  double                    phi           = matTrackRec.phi();
+  double   theta  = matTrackRec.theta();
+  double   phi    = matTrackRec.phi();
+  auto     spos   = matTrackRec.position();
+  Vector3D vertex(spos.x,spos.y,spos.z);
+  // get the steps
   std::vector<MaterialStep> materialSteps = matTrackRec.materialSteps();
-  Acts::Vector3D            startPos(matTrackRec.position().x,
-                          matTrackRec.position().y,
-                          matTrackRec.position().z);
-  // let's extrapolate through the detector and remember which layers(with
-  // material) should have been hit
+  
+  
+  // let's extrapolate through the ACTS detector and record all surfaces
+  // that have a material proxy
   if (materialSteps.size()) {
     // get the number of materialsteps
     ACTS_DEBUG("Successfuly retrieved " << materialSteps.size()
@@ -81,15 +73,16 @@ Acts::MaterialMapping::collectLayersAndHits(
     // geometry
     std::unique_ptr<Acts::ActsSymMatrixD<Acts::NGlobalPars>> cov;
     Acts::NeutralCurvilinearParameters       startParameters(
-        std::move(cov), startPos, direction);
-    // create a neutral extrapolation cell and configure it to only collect
-    // layer and surfaces with a SurfaceMaterialProxy
+        std::move(cov), vertex, direction);
+    // create a neutral extrapolation cell and configure it:
+    // - to collect surfaces with a SurfaceMaterialProxy
+    // - to step at the detector boundary 
+    // - to run in a FATRAS type approach 
     Acts::ExtrapolationCell<Acts::NeutralParameters> ecc(startParameters);
     ecc.addConfigurationMode(Acts::ExtrapolationMode::StopAtBoundary);
     ecc.addConfigurationMode(Acts::ExtrapolationMode::FATRAS);
     ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectSensitive);
     ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectMaterial);
-
     // call the extrapolation engine
     // screen output
     ACTS_DEBUG("===> forward extrapolation - collecting material layers <<===");
@@ -98,7 +91,7 @@ Acts::MaterialMapping::collectLayersAndHits(
     // end parameter, if there
     if (eCode.isSuccess()) {
       // number of layers hit
-      size_t nLayersHit = ecc.extrapolationSteps.size();
+      size_t nSurfacesHit = ecc.extrapolationSteps.size();
       ACTS_VERBOSE("[+] Extrapolation to layers did succeed and found "
                    << nLayersHit
                    << " layers.");
@@ -106,11 +99,10 @@ Acts::MaterialMapping::collectLayersAndHits(
       std::unique_ptr<const Acts::NeutralParameters> parameters = nullptr;
       // loop over the collected information
       for (auto& es : ecc.extrapolationSteps) {
-        if (es.stepConfiguration.checkMode(
-                Acts::ExtrapolationMode::CollectMaterial)) {
-          // CHECK now different than original, & raw pointer to layer
-          layersAndHits.push_back(
-              std::make_pair(es.layer, es.materialPosition));
+        if (es.stepConfiguration.checkMode(ExtrapolationMode::CollectMaterial)){
+          // get the parameters
+          auto parameters = es.parameters;          
+
         }
         // continue if we have parameters
       }  // loop over extrapolationsteps
@@ -238,9 +230,9 @@ Acts::MaterialMapping::associateHit(
     const Acts::Vector3D&                  position,
     const std::vector<Acts::MaterialStep>& layerMaterialSteps)
 {
-  auto layerRecord = m_layerRecords.find(layer);
+  auto layerRecord = m_surfaceMaterialRecords.find(layer);
   // if layer was not present already create new Material Record
-  if (layerRecord == m_layerRecords.end()) {
+  if (layerRecord == m_surfaceMaterialRecords.end()) {
     // get the bin utility
     const Acts::BinUtility* binUtility = layer->material()->binUtility();
     // create the material record
@@ -248,21 +240,21 @@ Acts::MaterialMapping::associateHit(
                  << layer->geoID()
                  << " at position "
                  << Acts::toString(position));
-    m_layerRecords[layer] = LayerMaterialRecord(binUtility);
+    m_surfaceMaterialRecords[layer] = SurfaceMaterialRecord(binUtility);
   }
   ACTS_VERBOSE("[L] Add new layer material properties  at position "
                << Acts::toString(position));
   // add material to record, if record exists already
-  m_layerRecords[layer].addLayerMaterialProperties(position,
+  m_surfaceMaterialRecords[layer].addLayerMaterialProperties(position,
                                                    layerMaterialSteps);
 }
 
 void
 Acts::MaterialMapping::averageLayerMaterial()
 {
-  ACTS_VERBOSE(m_layerRecords.size() << " LayerMaterialRecords to be averaged");
+  ACTS_VERBOSE(m_surfaceMaterialRecords.size() << " SurfaceMaterialRecords to be averaged");
   // average over the layer material
-  for (auto& layRecord : m_layerRecords) {
+  for (auto& layRecord : m_surfaceMaterialRecords) {
     layRecord.second.averageMaterial();
   }
 }
@@ -270,12 +262,12 @@ Acts::MaterialMapping::averageLayerMaterial()
 void
 Acts::MaterialMapping::finalizeLayerMaterial()
 {
-  ACTS_VERBOSE(m_layerRecords.size()
-               << " LayerMaterialRecords to be finalized");
+  ACTS_VERBOSE(m_surfaceMaterialRecords.size()
+               << " SurfaceMaterialRecords to be finalized");
   // finally set the material of the layers
-  for (auto& layRecord : m_layerRecords) {
-    auto mutableLayer = const_cast<Layer*>(layRecord.first);
-    mutableLayer->materialSurface()->setAssociatedMaterial(
-        layRecord.second.layerMaterial());
+  for (auto& layRecord : m_surfaceMaterialRecords) {
+    // @todo check with Julia how to fix this
+    //layRecord.first->materialSurface()->setAssociatedMaterial(
+    //    layRecord.second.layerMaterial());
   }
 }

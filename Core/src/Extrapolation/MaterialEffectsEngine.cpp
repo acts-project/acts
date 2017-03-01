@@ -91,7 +91,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
                        "collecting material of [t/X0] = " << thicknessInX0);
         eCell.stepMaterial(mSurface,
                            eCell.leadLayer,
-                           eCell.leadParameters->position(),
+                           eCell.leadParameters,
                            pathCorrection,
                            materialProperties);
       } else {
@@ -126,7 +126,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
         mSurface.geoID().value(GeometryID::layer_mask),
         "handleMaterial for charged parameters called - apply correction.");
     // update the track parameters
-    updateTrackParameters(*eCell.leadParameters, eCell, dir, matupstage);
+    updateTrackParameters(eCell, dir, matupstage);
   }
   // only in case of post update it should not return InProgress
   return ExtrapolationCode::InProgress;
@@ -135,29 +135,28 @@ Acts::MaterialEffectsEngine::handleMaterial(
 // update method for charged extrapolation
 void
 Acts::MaterialEffectsEngine::updateTrackParameters(
-    const TrackParameters& parameters,
     ExCellCharged&         eCell,
     PropDirection          dir,
     MaterialUpdateStage    matupstage) const
 {
   // parameters are the lead parameters
-  // by definition the material surface is the one the parametrs are on
-  const Surface& mSurface = eCell.leadParameters->referenceSurface();
+  auto& mParameters = (*eCell.leadParameters);
+  // by definition the material surface is the one the parametrs are on  
+  const Surface& mSurface = mParameters.referenceSurface();
   // return if you have nothing to do
   if (!mSurface.associatedMaterial()) return;
-
   // path correction
   double pathCorrection = fabs(
-      mSurface.pathCorrection(parameters.position(), parameters.momentum()));
-
+      mSurface.pathCorrection(mParameters.position(), mParameters.momentum()));
   // screen output
   EX_MSG_VERBOSE(eCell.navigationStep,
                  "layer",
                  mSurface.geoID().value(GeometryID::layer_mask),
                  "material update with corr factor = " << pathCorrection);
   // get the actual material bin
+  // @todo - check consistency/speed for local 2D lookup rather than 3D                
   const MaterialProperties* materialProperties
-      = mSurface.associatedMaterial()->material(parameters.position());
+      = mSurface.associatedMaterial()->material(mParameters.position());
   // check if anything should be done
   bool corrConfig
       = (m_cfg.eLossCorrection || m_cfg.mscCorrection
@@ -167,18 +166,18 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     // and add them
     int sign = int(eCell.materialUpdateMode);
     // a simple cross-check if the parameters are the initial ones
-    ActsVectorD<NGlobalPars> uParameters = parameters.parameters();
+    ActsVectorD<NGlobalPars> uParameters = mParameters.parameters();
     std::unique_ptr<ActsSymMatrixD<NGlobalPars>> uCovariance
-        = parameters.covariance()
+        = mParameters.covariance()
         ? std::make_unique<ActsSymMatrixD<NGlobalPars>>(
-              *parameters.covariance())
+              *mParameters.covariance())
         : nullptr;
     // get the material itself & its parameters
     const Material& material      = materialProperties->material();
     double          thicknessInX0 = materialProperties->thicknessInX0();
     double          thickness     = materialProperties->thickness();
     // calculate energy loss and multiple scattering
-    double p    = parameters.momentum().mag();
+    double p    = mParameters.momentum().mag();
     double m    = m_particleMasses.mass.at(eCell.particleType);
     double E    = sqrt(p * p + m * m);
     double beta = p / E;
@@ -194,7 +193,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
       sigmaP *= thickness * pathCorrection;
       // calcuate the new momentum
       double newP        = sqrt((E + dE) * (E + dE) - m * m);
-      uParameters[eQOP]  = parameters.charge() / newP;
+      uParameters[eQOP]  = mParameters.charge() / newP;
       double sigmaDeltaE = thickness * pathCorrection * sigmaP;
       double sigmaQoverP = sigmaDeltaE / std::pow(beta * p, 2);
       // update the covariance if needed
@@ -206,36 +205,24 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
       // multiple scattering as function of dInX0
       double sigmaMS = m_interactionFormulae.sigmaMS(
           thicknessInX0 * pathCorrection, p, beta);
-      double sinTheta          = sin(parameters.parameters()[eTHETA]);
+      double sinTheta          = sin(mParameters.parameters()[eTHETA]);
       double sigmaDeltaPhiSq   = sigmaMS * sigmaMS / (sinTheta * sinTheta);
       double sigmaDeltaThetaSq = sigmaMS * sigmaMS;
       // add or remove @todo implement check for covariance matrix -> 0
       (*uCovariance)(ePHI, ePHI) += sign * sigmaDeltaPhiSq;
       (*uCovariance)(eTHETA, eTHETA) += sign * sigmaDeltaThetaSq;
     }
-
-    // now either create new ones or update - only start parameters can not be
-    // updated
-    if (eCell.leadParameters != &eCell.startParameters) {
-      EX_MSG_VERBOSE(eCell.navigationStep,
-                     "layer",
-                     mSurface.geoID().value(GeometryID::layer_mask),
-                     "material update on non-initial parameters.");
-      // @todo how to update parameters
-      // parameters.updateParameters(uParameters,uCovariance);
-    } else {
-      EX_MSG_VERBOSE(
-          eCell.navigationStep,
-          "layer",
-          mSurface.geoID().value(GeometryID::layer_mask),
-          "material update on initial parameters, creating new ones.");
-      // these are newly created
-      auto stepParameters = std::make_unique<const BoundParameters>(
-          std::move(uCovariance), uParameters, mSurface);
-      // this should change the leadParameters to the new stepParameters
-      eCell.step(std::move(stepParameters), ExtrapolationMode::CollectMaterial);
-    }
-
+    // 
+    EX_MSG_VERBOSE(
+        eCell.navigationStep,
+        "layer",
+        mSurface.geoID().value(GeometryID::layer_mask),
+        "material update needed create new parameters.");
+    // these are newly created
+    auto stepParameters = std::make_unique<const BoundParameters>(
+        std::move(uCovariance), uParameters, mSurface);
+    // this should change the leadParameters to the new stepParameters
+    eCell.step(std::move(stepParameters), ExtrapolationMode::CollectMaterial);
     // check if material filling was requested,
     // then fill it into the extrapolation cache
     if (eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial)) {
@@ -245,7 +232,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
                      "collecting material of [t/X0] = " << thicknessInX0);
       eCell.stepMaterial(mSurface,
                          mSurface.associatedLayer(),
-                         parameters.position(),
+                         stepParameters.get(),
                          pathCorrection,
                          materialProperties);
     } else {

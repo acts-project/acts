@@ -85,7 +85,7 @@ public:
   
   /// return method for the position of the step
   const Position
-  position();
+  position() const;
   
   /// return method for the material properties
   const MaterialProperties
@@ -106,6 +106,7 @@ Acts::MaterialStep::position() const
 {
   return m_position;
 }
+
 /// return method for the material properties
 inline const Acts::MaterialProperties
 Acts::MaterialStep::material() const

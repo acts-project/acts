@@ -20,6 +20,9 @@
 
 namespace Acts {
 
+typedef std::pair< std::unique_ptr<MaterialProperties>, size_t > RecordEntry;
+typedef std::vector< std::vector<RecordEntry> >                  MaterialRecord;
+
 /// @class SurfaceMaterialRecord
 ///
 /// @brief Records the material per layer during material mapping.
@@ -43,23 +46,19 @@ namespace Acts {
 class SurfaceMaterialRecord
 {
 public:
-  /// Default constructor
-  SurfaceMaterialRecord();
+  /// Default constructor - deleted
+  SurfaceMaterialRecord() = delete;
   
   /// Constructor with BinUtility input
-  /// @param binutility the 2D grid in which the material is binned on the layer
-  SurfaceMaterialRecord(const BinUtility* binutility);
+  /// @param surface is the according surface of this recrd
+  /// @param BinUtility for the the grid in which the material is binned on the layer
+  SurfaceMaterialRecord(const Surface& surface);
   
-  /// Default destructor
+  /// Default destructor 
   ~SurfaceMaterialRecord() = default;
   
   /// Copy Constructor
   SurfaceMaterialRecord(const SurfaceMaterialRecord& lmrecord);
-  
-  /// Implicit contructor
-  /// - uses the copy constructor
-  SurfaceMaterialRecord*
-  clone() const;
   
   /// Assignment operator
   SurfaceMaterialRecord&
@@ -67,51 +66,48 @@ public:
   
   /// Adds MaterialProperties and weighs them over the steplength at a given
   /// position
+  ///
   /// @param pos global position at which the material should be added
-  /// @param layerMaterialSteps the material steps of a track which should be
+  /// @param materialSteps the material steps of a track which should be
   /// added at the given position
   void
   assignMaterialSteps(
-      const Vector3D&                 pos,
+      const Vector3D&  pos,
       const std::vector<MaterialStep> materialSteps);
-      
-  /// @return returns all material steps per Track (original position) with
-  /// their assigned material positions on the layer
-  ///  @note this function is intended to be used to create material maps for
-  ///  single layers if needed
-  const std::vector<std::pair<const std::vector<MaterialStep>,
-                              const Vector3D>>
-  assignedMaterialSteps() const;
-                              
-  /// Possibility to average over the material given so far
-  /// resets the sums and the counter of how often a certain bin was hit
-  void
-  averageMaterial();
 
-  /// @return method for the final layer material
-  /// given as a binned surface material
-  std::shared_ptr<const Acts::BinnedSurfaceMaterial>
-  surfaceMaterial() const;
+  /// @return the bin utility
+  const BinUtility& binUtility() const;
+      
+  /// @return the surface pointer
+  const Surface& surface() const;
+
+  /// @return the full MaterialRecord
+  const MaterialRecord& mappedMaterial() const; 
 
 private:
   /// two dimensional grid on which the material is binned
   const BinUtility* m_binUtility;
   
-  /// two dimensional material matrix describing the material binned according
-  /// to the binUtility
-  std::vector<std::vector<const MaterialProperties*>> m_materialMatrix;
+  /// remember the Surface
+  const Surface*    m_surface;
   
-  /// the collection of assigned material steps per track, this collection
-  std::vector<std::pair<const vector<MaterialStep>, const Vector3D>>
-      m_matStepsAndAssignedPos;
+  /// the material record 
+  MaterialRecord    m_mappedMaterial;
+ 
 };
 
-inline const std::vector<std::pair<const std::vector<MaterialStep>,
-                                   const Acts::Vector3D>>
-SurfaceMaterialRecord::layerMaterialSteps() const
+inline const Surface& 
+SurfaceMaterialRecord::surface() const
 {
-  return m_matStepsAndAssignedPos;
+  return (*m_surface);
 }
+
+inline const MaterialRecord&
+SurfaceMaterialRecord::mappedMaterial() const
+{
+  return m_mappedMaterial;
+}
+
 }
 
 #endif  // ACTS_MATERIALPLUGINS_LAYERMATERIALRECORD_H
