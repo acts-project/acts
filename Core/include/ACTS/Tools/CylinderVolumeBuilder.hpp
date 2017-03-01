@@ -189,13 +189,14 @@ struct SubVolumeConfig
   std::vector<double> zBoundaries;
 
   /// Default constructor
-  SubVolumeConfig() : rMin(10e10), rMax(10e-10), zBoundaries() {}
+  /// Per default the SubVolumeConfig is not set
+  SubVolumeConfig() : rMin(-1.), rMax(-1.), zBoundaries() {}
 
   /// Conversion operator to bool needed for checks if the sub volume config is
-  /// given
+  /// set by the user
   operator bool() const
   {
-    return (zBoundaries.size() > 1 && rMin >= 0. && rMax > 0.);
+    return (zBoundaries.size() > 1 && rMin >= 0. && rMax > 0. && rMin < rMax);
   }
 };
 
