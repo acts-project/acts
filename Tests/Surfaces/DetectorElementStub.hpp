@@ -47,24 +47,23 @@ public:
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
   DetectorElementStub(const Identifier                       identifier,
-                         std::shared_ptr<Transform3D>           transform,
-                         std::shared_ptr<const PlanarBounds>    pBounds,
-                         double                                 thickness,
-                         std::shared_ptr<const SurfaceMaterial> material
-                         = nullptr): DetectorElementBase()
-  , m_elementIdentifier(std::move(identifier))
-  , m_elementTransform(std::move(transform))
-  , m_elementSurface(new PlaneSurface(pBounds, *this))
-  , m_elementThickness(thickness)
-  , m_elementSurfaces({m_elementSurface})
-  , m_elementPlanarBounds(std::move(pBounds))
-  , m_elementDiscBounds(nullptr)
-  , m_elementLineBounds(nullptr)
-{
-  m_elementSurface->setAssociatedMaterial(material);
-}
+                      std::shared_ptr<Transform3D>           transform,
+                      std::shared_ptr<const PlanarBounds>    pBounds,
+                      double                                 thickness,
+                      std::shared_ptr<const SurfaceMaterial> material = nullptr)
+    : DetectorElementBase()
+    , m_elementIdentifier(std::move(identifier))
+    , m_elementTransform(std::move(transform))
+    , m_elementSurface(new PlaneSurface(pBounds, *this))
+    , m_elementThickness(thickness)
+    , m_elementSurfaces({m_elementSurface})
+    , m_elementPlanarBounds(std::move(pBounds))
+    , m_elementDiscBounds(nullptr)
+    , m_elementLineBounds(nullptr)
+  {
+    m_elementSurface->setAssociatedMaterial(material);
+  }
 
-  
   /// Constructor for single sided detector element
   /// - bound to a Line Surface
   ///
@@ -74,30 +73,31 @@ public:
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
   DetectorElementStub(const Identifier                       identifier,
-                         std::shared_ptr<Transform3D>           transform,
-                         std::shared_ptr<const LineBounds>      lBounds,
-                         double                                 thickness,
-                         std::shared_ptr<const SurfaceMaterial> material
-                         = nullptr):DetectorElementBase()
-  , m_elementIdentifier(std::move(identifier))
-  , m_elementTransform(std::move(transform))
-  , m_elementSurface(new LineSurfaceStub(lBounds, *this))
-  , m_elementThickness(thickness)
-  , m_elementSurfaces({m_elementSurface})
-  , m_elementPlanarBounds(nullptr)
-  , m_elementDiscBounds(nullptr)
-  , m_elementLineBounds(std::move(lBounds))
+                      std::shared_ptr<Transform3D>           transform,
+                      std::shared_ptr<const LineBounds>      lBounds,
+                      double                                 thickness,
+                      std::shared_ptr<const SurfaceMaterial> material = nullptr)
+    : DetectorElementBase()
+    , m_elementIdentifier(std::move(identifier))
+    , m_elementTransform(std::move(transform))
+    , m_elementSurface(new LineSurfaceStub(lBounds, *this))
+    , m_elementThickness(thickness)
+    , m_elementSurfaces({m_elementSurface})
+    , m_elementPlanarBounds(nullptr)
+    , m_elementDiscBounds(nullptr)
+    , m_elementLineBounds(std::move(lBounds))
   {
-      m_elementSurface->setAssociatedMaterial(material);                
-  }
-  
-  void assignIdentifier(const Identifier& /*identifier*/) const {
-    //m_elementIdentifier=identifier; would not be const
+    m_elementSurface->setAssociatedMaterial(material);
   }
 
+  void
+  assignIdentifier(const Identifier& /*identifier*/) const
+  {
+    // m_elementIdentifier=identifier; would not be const
+  }
 
   ///  Destructor
-  ~DetectorElementStub(){ /*nop */}
+  ~DetectorElementStub() { /*nop */}
 
   /// Identifier
   Identifier
