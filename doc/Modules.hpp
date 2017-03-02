@@ -216,7 +216,8 @@
 /// The DD4hepPlugin is only build on demand. The DD4hepPlugin depends on the TGeoPlugin
 /// therefore both Plugins need to be installed.
 /// During the cmake configuration the flags \c BUILD_DD4HEP_PLUGIN and \c BUILD_TGEO_PLUGIN need to be set \a ON.
-/// In addition \a ROOT and \a %DD4hep need to be added to the \c CMAKE_PREFIX_PATH.
+/// In addition \a ROOT and \a %DD4hep need to be added to the \c CMAKE_PREFIX_PATH. When using the DD4hepPlugin
+/// both the TGeoPlugin and the DD4hepPlugin components need to be loaded in the user's CMake configuration.
 ///
 /// <B>Prerequisites</B>
 ///
