@@ -405,7 +405,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
             = subDetector.placement().ptr()->GetMatrix()->GetTranslation()[2];
         zBoundaries.push_back(zPos - halfZ);
         zBoundaries.push_back(zPos + halfZ);
-
+        std::sort(zBoundaries.begin(), zBoundaries.end());
         subVolumeConfig.rMin        = tube->GetRmin1() * units::_cm;
         subVolumeConfig.rMax        = tube->GetRmax1() * units::_cm;
         subVolumeConfig.zBoundaries = zBoundaries;
@@ -416,6 +416,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
             + std::string(" has neither a shape nor tolerances added to it's "
                           "extension. Please check your detector "
                           "constructor!"));
+
       // get the possible material
       DD4hep::Geometry::Material ddmaterial = subDetector.volume().material();
       auto volumeMaterial = std::make_shared<Material>(ddmaterial.radLength(),
