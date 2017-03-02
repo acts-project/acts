@@ -179,7 +179,7 @@ public:
     // remember the previous step cache and move on
     decltype(it) pLast = it++;
     // loop over the remaining caches
-    for (; it != cache.rend(); ++it) {
+    for (; it != cache.rend(); ++it, ++pLast) {
       G = (*(*it)->getFilteredState()->covariance())
           * (*(*it)->getJacobian()).transpose()
           * (*(*pLast)->getPredictedState()->covariance()).inverse();
