@@ -105,6 +105,8 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   LayerPtr cLayer = CylinderLayer::create(
       transform, cBounds, std::move(sArray), layerThickness, nullptr, active);
 
+  if (!cLayer) ACTS_ERROR("Creation of cylinder layer did not succeed!");
+  associateSurfacesToLayer(*cLayer);
   // now return
   return cLayer;
 }
@@ -144,6 +146,8 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   LayerPtr cLayer = CylinderLayer::create(
       transform, cBounds, std::move(sArray), layerThickness, nullptr, active);
 
+  if (!cLayer) ACTS_ERROR("Creation of cylinder layer did not succeed!");
+  associateSurfacesToLayer(*cLayer);
   // now return
   return cLayer;
 }
@@ -209,6 +213,9 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>& surfaces,
   // create the layers
   LayerPtr dLayer = DiscLayer::create(
       transform, dBounds, std::move(sArray), layerThickness, nullptr, active);
+
+  if (!dLayer) ACTS_ERROR("Creation of disc layer did not succeed!");
+  associateSurfacesToLayer(*dLayer);
   // return the layer
   return dLayer;
 }
@@ -251,6 +258,9 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>& surfaces,
   // create the layers
   LayerPtr dLayer = DiscLayer::create(
       transform, dBounds, std::move(sArray), layerThickness, nullptr, active);
+
+  if (!dLayer) ACTS_ERROR("Creation of disc layer did not succeed!");
+  associateSurfacesToLayer(*dLayer);
   // return the layer
   return dLayer;
 }
@@ -338,4 +348,15 @@ Acts::LayerCreator::radialDistance(const Vector3D& pos1,
     return lambda0 < 0. ? pos1.perp() : pos2.perp();
   }
   return 10e101;
+}
+
+void
+
+Acts::LayerCreator::associateSurfacesToLayer(const Layer& layer) const
+{
+  auto surfaces = layer.surfaceArray()->arrayObjects();
+
+  for (auto& surface : surfaces) {
+    surface->associateLayer(layer);
+  }
 }

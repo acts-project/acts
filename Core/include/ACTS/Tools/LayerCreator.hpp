@@ -182,6 +182,10 @@ public:
   void
   setLogger(std::unique_ptr<Logger> logger);
 
+  // associate surfaces contained by this layer to this layer
+  void
+  associateSurfacesToLayer(const Layer& layer) const;
+
 private:
   /// Method to get the global extends in space for the module
   /// @todo shift to vertices of surfaces
