@@ -62,6 +62,45 @@
 ///    logfile.close();
 /// }
 /// @endcode
+///
+/// In case you are using ACTS in another framework which comes with its own
+/// logging facility (e.g. Gaudi) you can pipe the logging output from ACTS
+/// tools and algorithms to your framework's logging system by supplying different
+/// implementations of:
+/// - Acts::Logging::OutputFilterPolicy (for mapping logging levels)
+/// - Acts::Logging::OutputPrintPolicy (for passing the ACTS output to your internal logging system)
+///
+/// Since ACTS makes extensive use of Acts::getDefaultLogger to provide
+/// sufficient information for debugging, you would need to provide a modified
+/// implementation of this function (using your output filter and printing
+/// policies) to also pipe this output to your framework.
+///
+/// Changing the implementation of an already defined function is a non-trivial
+/// task C++. We recommend the following approach using the possibility to inject
+/// custom code by pre-loading shared libraries with <tt>LD_PRELOAD</tt>. You
+/// need to provide an appropriate implementation for a function of the following
+/// signature into a separate and compile it in a shared library
+///
+/// @code{.cpp}
+/// namespace Acts {
+///   std::unique_ptr<Logger> getDefaultLogger(const std::string&, const Logging::Level&, std::ostream*);
+/// }
+/// @endcode
+///
+/// Then you can run your executable, which uses ACTS tools and algorithms, in
+/// the following way (tested under Unix)
+///
+/// @code{bash}
+/// LD_PRELOAD=<YOUR_SHARED_LIBRARY> path/to/your/exectuable
+/// @endcode
+///
+/// For an example have a look at CustomDefaultLogger.cpp which you can use as follows:
+///
+/// @code{bash}
+/// cd <ACTS/INSTALL/DIRECTORY>
+/// source bin/setup.sh
+/// LD_PRELOAD=lib/libACTSCustomLogger.so bin/Examples/ACTSGenericDetector
+/// @endcode
 
 /// @defgroup Core Core classes
 /// @brief ACTS core classes
