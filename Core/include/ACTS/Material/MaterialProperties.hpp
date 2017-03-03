@@ -39,18 +39,18 @@ public:
 
   /// Constructor - for averaged material 
   ///
-  /// @param thickness is the thickness of the material
   /// @param X0 is the radiation length in mm
   /// @param L0 is the nuclear interaction length in mm
   /// @param averageA is the average atomic weight
   /// @param averageZ is the average atomic number
   /// @param averageRho is the average density in g/mm3
-  MaterialProperties(float  thickness,
-                     float  X0,
+  /// @param thickness is the thickness of the material
+  MaterialProperties(float  X0,
                      float  L0,
                      float  averageA,
                      float  averageZ,
-                     float  averageRho);
+                     float  averageRho,
+                     float  thickness);
 
   /// Constructor - for full Material class 
   /// 

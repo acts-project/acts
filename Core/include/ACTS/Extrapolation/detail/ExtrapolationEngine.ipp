@@ -175,7 +175,7 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
           = m_cfg.propagationEngine->propagate(navCell,
                                                *eCell.endSurface,
                                                anyDirection,
-                                               ExtrapolationMode::Destination,
+                                               {ExtrapolationMode::Destination},
                                                false,
                                                eCell.navigationCurvilinear);
       // check for sucess to the destination

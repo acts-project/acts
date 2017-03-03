@@ -41,19 +41,19 @@ class ExtrapolationMode
 {
 public:
   enum eMode {
-    Destination = 1,  // try to hit the destination, if not other means to stop
-    Propagation = 2,  // any propagation but the final one to destinaion
-    StopWithPathLimit       = 3,   // stop when the path limit is reached
-    StopWithMaterialLimitX0 = 4,   // stop when  material limit is reached in X0
-    StopWithMaterialLimitL0 = 5,   // stop when material limit is reached in L0
-    StopAtBoundary          = 6,   // stop at the next ID / Calo / MS boundary
-    CollectSensitive        = 7,   // collect parameters on sensitive elements
-    CollectPassive          = 8,   // collect parameters on passive layers
-    CollectBoundary         = 9,   // collect parameters on boundary parameters
-    CollectMaterial         = 10,  // collect all material on the way
-    CollectJacobians        = 11,  // collect the transport jacobians
-    CollectPathSteps        = 12,  // collect the single path steps
-    AvoidFallback           = 13,  // don't fallback to propagation
+    Destination             = 1,  // try to hit the destination
+    Propagation             = 2,  // any propagation but destination
+    StopWithPathLimit       = 3,  // stop when the path limit is reached
+    StopWithMaterialLimitX0 = 4,  // stop when  material limit is reached in X0
+    StopWithMaterialLimitL0 = 5,  // stop when material limit is reached in L0
+    StopAtBoundary          = 6,  // stop at the next ID / Calo / MS boundary
+    CollectSensitive        = 7,  // collect parameters on sensitive elements
+    CollectPassive          = 8,  // collect parameters on passive layers
+    CollectBoundary         = 9,  // collect parameters on boundary parameters
+    CollectMaterial         = 10, // collect all material on the way
+    CollectJacobians        = 11, // collect the transport jacobians
+    CollectPathSteps        = 12, // collect the single path steps
+    AvoidFallback           = 13, // don't fallback to propagation
     FATRAS                  = 14  // force initial radialDirection to be outward
   };
 };
@@ -64,17 +64,28 @@ class ExtrapolationConfig
 {
 public:
   /// Constructor
+  /// - from bitpacked value
   ///
   /// @param evalue is the vonfiguration value
-  ExtrapolationConfig(unsigned int evalue = 0) : value(evalue) {}
+  ExtrapolationConfig(unsigned int evalue = 0)
+     : value(evalue) {}
+
+  /// Constructor
+  /// - from list of extrapolation modes
+  ExtrapolationConfig(const std::vector<ExtrapolationMode::eMode>& eModes )
+    : value(0)
+  {
+    for (auto& em: eModes) addMode(em);
+  } 
 
   /// Copy Constructor
   ///
   /// @param eConfig is the source object for the copy
-  ExtrapolationConfig(const ExtrapolationConfig& eConfig) : value(eConfig.value)
+  ExtrapolationConfig(const ExtrapolationConfig& eConfig)
+     : value(eConfig.value)
   {
   }
-
+ 
   /// Add a configuration mode
   /// - this sets the bit corresponding to the given mode
   ///
@@ -226,28 +237,33 @@ private:
 /// extrapolation, the newly created objects are unique pointers and
 /// have to be checked out via std::move() by the client caller
 ///
+/// It is not guaranteed that a step has parameters,
+/// e.g. the final step never has parameters as they are provided
+/// as endParameters of the ExtrapolationCell
+///
+/// for this reason a position is given
 template <class T>
 class ExtrapolationStep
 {
 public:
   /// the unique parameter associated to this step
-  std::unique_ptr<const T> parameters;
+  std::unique_ptr<const T>  parameters;
+  /// the step position - incase parameters = nullptr
+  Vector3D                  position;
   /// the surface for this step
-  const Surface* surface;
-  /// the associated layer where this step was done
-  const Layer* layer;
-  /// the present step configuration
-  /// can be sensitive, passive, boundary, material
-  ExtrapolationConfig stepConfiguration;
+  const Surface*            surface;
+  /// the bitset configuration of this step
+  ExtrapolationConfig       configuration;
   /// the material properties found in this step
   const MaterialProperties* material;
   /// the applied material scaling due to incident
-  double materialScaling;
+  double                    materialScaling;
   /// uniquely associated transprt jacobian matrix
-  std::unique_ptr<const TransportJacobian> transportJacobian;
-  double                                   pathLength;
+  std::unique_ptr<const TransportJacobian> 
+                            transportJacobian;
+  double                    pathLength;
   /// the converted timing info
-  float time;
+  float                     time;
 
   /// Constructor for an extrapolation step
   ///
@@ -257,21 +273,25 @@ public:
   /// @param mprop the material properties associated
   /// @param tjac the transport jacobian
   /// @param pLength the path length of the step
-  ExtrapolationStep(std::unique_ptr<const T>  pars    = nullptr,
-                    const Surface*            sf      = nullptr,
-                    ExtrapolationConfig       eConfig = ExtrapolationConfig(),
-                    const MaterialProperties* mprop   = nullptr,
+  ExtrapolationStep(std::unique_ptr<const T>  pars                   = nullptr,
+                    const Surface*            sf                     = nullptr,
+                    ExtrapolationConfig       eConfig                = ExtrapolationConfig(),
+                    const MaterialProperties* mprop                  = nullptr,
                     std::unique_ptr<const TransportJacobian> tjac    = nullptr,
-                    double                                   pLength = -1.)
+                    double pLength = 0.)
     : parameters(std::move(pars))
+    , position()                  
     , surface(sf)
-    , layer(nullptr)
-    , stepConfiguration(eConfig)
+    , configuration(eConfig)
     , material(mprop)
     , materialScaling(1.)
     , transportJacobian(std::move(tjac))
     , pathLength(pLength)
+    , time(0.)                
   {
+    // fill the position if you can
+    if (parameters) 
+      position = parameters->position();
   }
 };
 
@@ -367,8 +387,6 @@ public:
   std::vector<ProcessVertex> interactionVertices;
 
   float time;    ///< timing info
-  float zOaTrX;  ///< z/A*rho*dInX0 (for average calculations)
-  float zX;      ///< z*dInX0 (for average calculations)
 
   /// Constructor of the Extrapolaton cell
   /// start parameters are compulsory
@@ -411,8 +429,6 @@ public:
     , destinationCurvilinear(false)
     , searchMode(0)
     , extrapolationConfiguration(econfig)
-    , zOaTrX(0.)
-    , zX(0.)
   {
     // make a standard allocation of 50 possible steps
     extrapolationSteps.reserve(50);
@@ -443,73 +459,39 @@ public:
   onLastBoundary() const
   {
     return (leadParameters == lastBoundaryParameters);
-  }
-
-  /// Final checkout method
-  /// - turn the last step's parameters into the final parameters
-  void
-  checkoutLastStep();
-
-  /// Fill or attach the parameters from a step
-  /// - if the surface of the step does not yet exists a new new step
-  ///   is created
-  /// - if the surface is already in the step vector, the new parameters
-  ///   are atached
-  ///
-  /// @param stepParameters are the parameters of the step
-  /// @param fillMode is the mode under which these parameters are
-  /// considered
-  void
-  step(std::unique_ptr<const T> stepParameters,
-       ExtrapolationMode::eMode fillMode = ExtrapolationMode::Propagation);
-
-  /// Fill transport information - path length and TransportJacobian
-  ///    - jacobians need to be cleared
-  /// @param sf the end surface of the step
+  }  
+  /// Fill a step with transport
+  /// -> attach parameter of a transport step
+  /// -> jacobians need to be cleared
+  ///      
+  /// @param stepParamters is the new unique parameter of the step     
+  /// @param fillModes are the different indications of the step
   /// @param pathLength is the path length of this step
   /// @param tjac is the transport jacobian of the step
   void
-  stepTransport(const Surface&                           sf,
-                double                                   pathLength = 0.,
+  stepTransport(std::unique_ptr<const T>                 stepParameters,
+                std::vector<ExtrapolationMode::eMode>    fillModes  = {},
+                double                                   stepLength = 0.,
                 std::unique_ptr<const TransportJacobian> tjac       = nullptr);
 
-  /// Fill or attach material
-  /// - if the surface of the step does not yet exists a new new step
-  ///   is created
-  /// - if the surface is already in the step vector, the new parameters
-  ///   are atached
-  /// - material is just a pointer copy
+  /// Fill a step without transport
+  /// -> desinged for material               
+  /// -> attach material parameters                
   ///
-  /// @param sfactor is the scale factor
-  /// @param mprop is the material properties associated with the step
+  /// @param stepParameters are the (new) created parameters 
+  ///        this is to be set as a nullptr if material update
+  ///        is not performed
+  /// @param stepPosition is the poistion where the material update
+  ///        is performed (localisation if stepParameters are nullptr)                                          
+  /// @param stepSurface is the surface where the material update
+  ///        is perfomred              
+  /// @param stepFactor is the scaling factor due to incidnet
+  /// @param mprop are the material properties recorded
   void
-  addMaterial(double sfactor, const MaterialProperties* mprop = nullptr);
-
-  ///  Fill the material
-  /// - if the surface of the step does not yet exists a new new step
-  ///   is created
-  /// - if the surface is already in the step vector, the new parameters
-  ///   are atached
-  /// - material is just a pointer copy
-  ///
-  /// @param step is the step length
-  /// @param mat is the material passed
-  void
-  addMaterial(double step, const Material* mat = nullptr);
-
-  /// fill or attach material, jacobian, step length
-  ///    - material is just a pointer copy
-  ///
-  /// @param sf is the surface of the step
-  /// @param lay is the layer associated to this step
-  /// @param position is the step end position
-  /// @param sfactor is the scaling factor
-  /// @param mprop are the material properties associated
-  void
-  stepMaterial(const Surface&            sf,
-               const Layer*              lay,
-               const T*                  parameters,
-               double                    sfactor,
+  stepMaterial(std::unique_ptr<const T>  stepParameters,
+               const Vector3D&           stepPosition,
+               const Surface&            stepSurface,
+               double                    stepFactor,
                const MaterialProperties* mprop = nullptr);
 
   /// Check if this is the initial volume
@@ -559,10 +541,6 @@ public:
                 && reachedLimit(materialL0, materialLimitL0, tolerance)));
   }
 
-  /// Prepare destination as new start point - optimised for Kalman filtering
-  void
-  restartAtDestination();
-
   /// Set ParticleType
   ///
   /// @param hypo is the particle type
@@ -590,8 +568,8 @@ public:
     }
   }
 
-  // check whether the propagation stays compatible with initial radial
-  // direction
+  // check whether the propagation stays compatible 
+  // with the initial radial direction
   bool
   checkRadialCompatibility() const
   {
@@ -607,156 +585,8 @@ public:
     return false;
   }
 };
-
-template <class T>
-void
-ExtrapolationCell<T>::restartAtDestination()
-{
-  /** set end to start - and reset the rest */
-  startParameters        = endParameters;
-  startVolume            = endVolume;
-  startLayer             = endLayer;
-  endParameters          = nullptr;
-  endVolume              = nullptr;
-  endLayer               = nullptr;
-  endSurface             = nullptr;
-  leadParameters         = startParameters;
-  leadVolume             = nullptr;
-  leadLayer              = nullptr;
-  leadLayerSurface       = nullptr;
-  lastBoundaryParameters = startParameters;
-  lastBoundarySurface    = nullptr;
-  lastLeadParameters     = startParameters;
-  navigationStep         = 0;
-  pathLength             = 0.;
-  materialX0             = 0.;
-  materialL0             = 0.;
-  // clear the vector
-  extrapolationSteps.clear();
-}
-
-template <class T>
-void
-ExtrapolationCell<T>::step(std::unique_ptr<const T>       stepParameters,
-                           Acts::ExtrapolationMode::eMode fillMode)
-{
-  // move the step parameters into the step cache
-  // and set them to the new lead parameters
-  leadParameters = stepParameters.get();
-  // current step surface
-  const Surface* cssf = &(stepParameters->referenceSurface());
-  // get the last step surface - if it is identical with the current one ->
-  // attach information
-  const Surface* lssf = extrapolationSteps.size()
-      ? extrapolationSteps.at(extrapolationSteps.size() - 1).surface
-      : nullptr;
-  // create a new step
-  if (cssf != lssf) extrapolationSteps.push_back(ExtrapolationStep<T>());
-  // fill the parameters (memory membership goes to the steps), the surface and
-  // add the mode
-  extrapolationSteps.back().parameters = std::move(stepParameters);
-  extrapolationSteps.back().surface    = cssf;
-  extrapolationSteps.back().stepConfiguration.addMode(fillMode);
-}
-
-template <class T>
-void
-ExtrapolationCell<T>::stepTransport(
-    const Surface&                           sf,
-    double                                   pLength,
-    std::unique_ptr<const TransportJacobian> tjac)
-{
-  // find out if you want to attach or you need a new one
-  // current step surface
-  const Surface* cssf = &sf;
-  /// get the last step surface 
-  // - if it is identical with the current one -> attach information
-  const Surface* lssf = extrapolationSteps.size()
-      ? extrapolationSteps.at(extrapolationSteps.size() - 1).surface
-      : nullptr;
-  // only create a new step for a transport jacobian
-  if (tjac) {
-    // create a new step
-    if (cssf != lssf) extrapolationSteps.push_back(ExtrapolationStep<T>());
-    // set the surface
-    extrapolationSteps.back().surface = cssf;
-    // set the the transport information
-    extrapolationSteps.back().transportJacobian = std::move(tjac);
-    extrapolationSteps.back().stepConfiguration.addMode(
-        Acts::ExtrapolationMode::CollectJacobians);
-    // fill the step path length
-    if (pLength > 0.) {
-      extrapolationSteps.back().pathLength = pLength;
-      extrapolationSteps.back().stepConfiguration.addMode(
-          Acts::ExtrapolationMode::CollectPathSteps);
-    }
-  }
-  // also update the global pathLength information
-  pathLength += pLength;
-}
-
-template <class T>
-void
-ExtrapolationCell<T>::addMaterial(double                    sfactor,
-                                  const MaterialProperties* mprop)
-{
-  // fill the material if there
-  if (mprop) {
-    // the overal material
-    materialX0 += sfactor * mprop->thicknessInX0();
-    materialL0 += sfactor * mprop->thicknessInL0();
-    zOaTrX += mprop->zOverAtimesRho() * sfactor * mprop->thicknessInX0();
-    zX += mprop->averageZ() * sfactor * mprop->thicknessInX0();
-  }
-}
-
-template <class T>
-void
-ExtrapolationCell<T>::addMaterial(double step, const Material* mat)
-{
-  // fill the material if there
-  if (mat && step > 0.) {
-    // the overal material
-    materialX0 += step / mat->X0;
-    materialL0 += step / mat->L0;
-    zOaTrX += mat->zOverAtimesRho() * step / mat->X0;
-    zX += mat->averageZ() * step / mat->X0;
-  }
-}
-
-template <class T>
-void
-ExtrapolationCell<T>::stepMaterial(const Surface&            sf,
-                                   const Layer*              lay,
-                                   const T*                  parameters,
-                                   double                    sfactor,
-                                   const MaterialProperties* mprop)
-{
-  // add material to the global counter
-  addMaterial(sfactor, mprop);
-  // find out if you want to attach or you need a new one
-  // current step surface
-  const Surface* cssf = &sf;
-  // size of the current step cache 
-  size_t ssteps = extrapolationSteps.size();
-  // get the last step surface - if it is identical with the current one ->
-  // attach information
-  const Surface* lssf = ssteps
-      ? extrapolationSteps[ssteps - 1].surface
-      : nullptr;
-  // create a new step
-  if (cssf != lssf) extrapolationSteps.push_back(ExtrapolationStep<T>());
-  // set the surface
-  extrapolationSteps[ssteps - 1].surface = cssf;
-  extrapolationSteps[ssteps - 1].layer   = lay;
-  // fill the material if there
-  if (mprop) {
-    // record the step information
-    extrapolationSteps[ssteps - 1].material = mprop;
-    extrapolationSteps[ssteps - 1].stepConfiguration.addMode(ExtrapolationMode::CollectMaterial);
-    extrapolationSteps[ssteps - 1].materialScaling = sfactor;
-  }
-}
 }  // end of namespace
+
+#include "ACTS/Extrapolation/detail/ExtrapolationCell.ipp"
 
 #endif  // TRKEXUTILS_SOLUTIONSELECTOR_H

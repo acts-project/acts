@@ -234,7 +234,7 @@ Acts::StaticNavigationEngine::handleBoundaryT(
       = m_cfg.propagationEngine->propagate(eCell,
                                            bSurface,
                                            pDir,
-                                           ExtrapolationMode::CollectBoundary,
+                                           {ExtrapolationMode::CollectBoundary},
                                            !stepout,
                                            eCell.destinationCurvilinear);
   CHECK_ECODE_SUCCESS(eCell, eCode);
@@ -254,7 +254,7 @@ Acts::StaticNavigationEngine::handleBoundaryT(
                      "radial compatbility check failed, radial direction is: "
                          << eCell.radialDirection);
       // if it's not jump back to the last valid lead parameters and return
-      // Unset as a trigger
+      // ExtrapolationCode::Unset as a trigger
       eCell.leadParameters = eCell.lastLeadParameters;
       return ExtrapolationCode::Unset;
     }

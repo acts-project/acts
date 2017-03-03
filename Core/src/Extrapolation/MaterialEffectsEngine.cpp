@@ -83,24 +83,17 @@ Acts::MaterialEffectsEngine::handleMaterial(
     if (materialProperties) {
       // thickness in X0
       double thicknessInX0 = materialProperties->thicknessInX0();
-      // check if material filling was requested
-      if (eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial)) {
-        EX_MSG_VERBOSE(eCell.navigationStep,
-                       "layer",
-                       mSurface.geoID().value(GeometryID::layer_mask),
-                       "collecting material of [t/X0] = " << thicknessInX0);
-        eCell.stepMaterial(mSurface,
-                           eCell.leadLayer,
-                           eCell.leadParameters,
-                           pathCorrection,
-                           materialProperties);
-      } else {
-        EX_MSG_VERBOSE(eCell.navigationStep,
-                       "layer",
-                       mSurface.geoID().value(GeometryID::layer_mask),
-                       "adding material of [t/X0] = " << thicknessInX0);
-        eCell.addMaterial(pathCorrection, materialProperties);
-      }
+      EX_MSG_VERBOSE(eCell.navigationStep,
+                     "layer",
+                     mSurface.geoID().value(GeometryID::layer_mask),
+                     "collecting material of [t/X0] = " << thicknessInX0);
+      // fill in the step material
+      eCell.stepMaterial(nullptr,
+                         eCell.leadParameters->position(),
+                         mSurface,
+                         pathCorrection,
+                         materialProperties);
+      
     }
   }
   // only in case of post update it should not return InProgress
@@ -221,27 +214,22 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     // these are newly created
     auto stepParameters = std::make_unique<const BoundParameters>(
         std::move(uCovariance), uParameters, mSurface);
-    // this should change the leadParameters to the new stepParameters
-    eCell.step(std::move(stepParameters), ExtrapolationMode::CollectMaterial);
-    // check if material filling was requested,
-    // then fill it into the extrapolation cache
-    if (eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial)) {
-      EX_MSG_VERBOSE(eCell.navigationStep,
-                     "layer",
-                     mSurface.geoID().value(GeometryID::layer_mask),
-                     "collecting material of [t/X0] = " << thicknessInX0);
-      eCell.stepMaterial(mSurface,
-                         mSurface.associatedLayer(),
-                         stepParameters.get(),
-                         pathCorrection,
-                         materialProperties);
-    } else {
-      EX_MSG_VERBOSE(eCell.navigationStep,
-                     "layer",
-                     mSurface.geoID().value(GeometryID::layer_mask),
-                     "adding material of [t/X0] = " << thicknessInX0);
-      eCell.addMaterial(pathCorrection, materialProperties);
-    }
+    // fill in th step material
+    // - will update thea leadParameters to the step parameters
+    const Vector3D& stepPosition = stepParameters->position();
+    eCell.stepMaterial(std::move(stepParameters),
+                       stepPosition,
+                       mSurface,
+                       pathCorrection,
+                       materialProperties);
+                       
+    // fill it into the extrapolation cache
+    EX_MSG_VERBOSE(eCell.navigationStep,
+                   "layer",
+                   mSurface.geoID().value(GeometryID::layer_mask),
+                   "collecting material of [t/X0] = " << thicknessInX0);
+
+    
   }
   return;
 }

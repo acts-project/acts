@@ -20,20 +20,20 @@ Acts::MaterialProperties::MaterialProperties()
 {
 }
 
-Acts::MaterialProperties::MaterialProperties(float  thickness,
-                                             float  Xo,
-                                             float  Lo,
-                                             float  averageA,
-                                             float  averageZ,
-                                             float  averageRho)
+Acts::MaterialProperties::MaterialProperties(float Xo,
+                                             float Lo,
+                                             float averageA,
+                                             float averageZ,
+                                             float averageRho,
+                                             float thickness)
   : m_material(Xo, Lo, averageA, averageZ, averageRho)
   , m_dInX0(Xo * Xo > 10e-10 ? thickness / Xo : 0.)
   , m_dInL0(Lo * Lo > 10e-10 ? thickness / Lo : 0.)
 {
 }
 
-Acts::MaterialProperties::MaterialProperties(const Acts::Material& material,
-                                             float                 thickness)
+Acts::MaterialProperties::MaterialProperties(const Material& material,
+                                             float thickness)
   : m_material(material)
   , m_dInX0(material.X0 * material.X0 > 10e-10 ? thickness / material.X0 : 0.)
   , m_dInL0(material.L0 * material.L0 > 10e-10 ? thickness / material.L0 : 0.)

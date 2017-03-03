@@ -57,7 +57,6 @@ Acts::MaterialMapping::mapMaterialTrackRecord(const MaterialTrackRecord& matTrac
   // get the steps
   std::vector<MaterialStep> materialSteps = matTrackRec.materialSteps();
   
-  
   // let's extrapolate through the ACTS detector and record all surfaces
   // that have a material proxy
   if (materialSteps.size()) {
@@ -67,22 +66,21 @@ Acts::MaterialMapping::mapMaterialTrackRecord(const MaterialTrackRecord& matTrac
     // propagate through the detector and collect the layers hit in the given
     // direction eta phi
     // calculate the direction in cartesian coordinates
-    Acts::Vector3D direction(
-        cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));
+    Vector3D direction(cos(phi)*sin(theta), sin(phi)*sin(theta),cos(theta));
     // create the beginning neutral parameters to extrapolate through the
     // geometry
-    std::unique_ptr<Acts::ActsSymMatrixD<Acts::NGlobalPars>> cov;
-    Acts::NeutralCurvilinearParameters       startParameters(
-        std::move(cov), vertex, direction);
+    // std::unique_ptr<ActsSymMatrixD<NGlobalPars>> cov;
+    Acts::NeutralCurvilinearParameters startParameters(
+        nullptr, vertex, direction);
     // create a neutral extrapolation cell and configure it:
     // - to collect surfaces with a SurfaceMaterialProxy
     // - to step at the detector boundary 
     // - to run in a FATRAS type approach 
-    Acts::ExtrapolationCell<Acts::NeutralParameters> ecc(startParameters);
-    ecc.addConfigurationMode(Acts::ExtrapolationMode::StopAtBoundary);
-    ecc.addConfigurationMode(Acts::ExtrapolationMode::FATRAS);
-    ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectSensitive);
-    ecc.addConfigurationMode(Acts::ExtrapolationMode::CollectMaterial);
+    ExtrapolationCell<NeutralParameters> ecc(startParameters);
+    ecc.addConfigurationMode(ExtrapolationMode::StopAtBoundary);
+    ecc.addConfigurationMode(ExtrapolationMode::FATRAS);
+    ecc.addConfigurationMode(ExtrapolationMode::CollectSensitive);
+    ecc.addConfigurationMode(ExtrapolationMode::CollectMaterial);
     // call the extrapolation engine
     // screen output
     ACTS_DEBUG("===> forward extrapolation - collecting material layers <<===");
@@ -99,7 +97,7 @@ Acts::MaterialMapping::mapMaterialTrackRecord(const MaterialTrackRecord& matTrac
       std::unique_ptr<const Acts::NeutralParameters> parameters = nullptr;
       // loop over the collected information
       for (auto& es : ecc.extrapolationSteps) {
-        if (es.stepConfiguration.checkMode(ExtrapolationMode::CollectMaterial)){
+        if (es.configuration.checkMode(ExtrapolationMode::CollectMaterial)){
           // get the parameters
           auto parameters = es.parameters;          
 
