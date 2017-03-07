@@ -621,8 +621,12 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
   double f0[3], f[3];
 
   // if new field is required get it
-  if (pCache.newfield)
-    getField(R, f0);
+  if (pCache.newfield) {
+    Vector3D bField = getField(Vector3D(R[0],R[1],R[2]));
+    f0[0] = bField.x();
+    f0[1] = bField.y();
+    f0[2] = bField.z();
+    }
   else {
     f0[0] = pCache.field[0];
     f0[1] = pCache.field[1];
@@ -652,7 +656,10 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
     //
     if (!Helix) {
       double gP[3] = {R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4};
-      getField(gP, f);
+      Vector3D bField = getField(Vector3D(gP[0],gP[1],gP[2]));
+      f[0] = bField.x();
+      f[1] = bField.y();
+      f[2] = bField.z();
     } else {
       f[0] = f0[0];
       f[1] = f0[1];
@@ -674,7 +681,10 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
     //
     if (!Helix) {
       double gP[3] = {R[0] + S * A4, R[1] + S * B4, R[2] + S * C4};
-      getField(gP, f);
+      Vector3D bField = getField(Vector3D(gP[0],gP[1],gP[2]));
+      f[0] = bField.x();
+      f[1] = bField.y();
+      f[2] = bField.z();
     } else {
       f[0] = f0[0];
       f[1] = f0[1];
