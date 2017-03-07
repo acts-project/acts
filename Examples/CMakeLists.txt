@@ -1,10 +1,12 @@
-# get list of all source files
-file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
-
 # define library target
-add_library (ACTSExamples SHARED ${src_files})
+add_library (ACTSExamples SHARED src/BuildGenericDetector.cpp 
+                                 src/GenericDetectorElement.cpp
+                                 src/GenericLayerBuilder.cpp)
 target_include_directories (ACTSExamples PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
 target_link_libraries (ACTSExamples PUBLIC ACTSCore)
+
+add_library (ACTSCustomLogger SHARED src/CustomDefaultLogger.cpp)
+target_include_directories (ACTSCustomLogger PRIVATE ${CMAKE_SOURCE_DIR}/Core/include)
 
 # define executables
 add_executable (ACTSGenericDetector bin/main.cpp)
@@ -12,7 +14,7 @@ target_include_directories (ACTSGenericDetector PRIVATE include/)
 target_link_libraries (ACTSGenericDetector PRIVATE ACTSCore ACTSExamples)
 
 # set installation directories
-install (TARGETS ACTSExamples
+install (TARGETS ACTSExamples ACTSCustomLogger
          EXPORT ACTSExamplesTargets
          LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
          COMPONENT Examples)

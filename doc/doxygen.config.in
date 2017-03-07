@@ -775,6 +775,7 @@ INPUT                  = @PROJECT_SOURCE_DIR@/Core/include \
                          @PROJECT_SOURCE_DIR@/Plugins/DD4hepPlugins/include \
                          @PROJECT_SOURCE_DIR@/Plugins/TGeoPlugins/include \
 						 @PROJECT_SOURCE_DIR@/Tests \
+						 @PROJECT_SOURCE_DIR@/Examples \
                          @PROJECT_SOURCE_DIR@/README.md \
                          @PROJECT_SOURCE_DIR@/CONTRIBUTING.md \
                          @PROJECT_SOURCE_DIR@/doc/Modules.hpp 
