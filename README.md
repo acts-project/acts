@@ -75,16 +75,16 @@ Important options relevant for the ACTS project are given below. They can be set
 
 |option|default|description|
 |------|-------|-----------|
-|BOOST_ROOT             | empty                 | path to the ROOT installation                  |
-|EIGEN_INCLUDE_DIR      | empty                 | path to the Eigen installation                 |
-|BUILD_DD4HEP_PLUGIN    | OFF                   | build DD4Hep plugin (requires DD4hep)          |
-|BUILD_DOC              | OFF                   | build doxygen documentation (requires doxygen) |
-|BUILD_TESTS            | ON                    | build unit tests                               |
-|BUILD_TGEO_PLUGIN      | OFF                   | build TGeo plugin (requires ROOT)              |
-|BUILD_MATERIAL_PLUGIN  | OFF                   | build material mapping plugin                  |
-|CMAKE_INSTALL_PREFIX   | empty                 | target installation directory                  |
-|CMAKE_PREFIX_PATH      | empty                 | search path for external packages              |     
-|CMAKE_CXX_COMPILER     | empty                 | set C++ compiler (e.g. g++ or clang++)         |    
+|BOOST_ROOT             | empty                 | path to the ROOT installation                           |
+|EIGEN_INCLUDE_DIR      | empty                 | path to the Eigen installation                          |
+|BUILD_DD4HEP_PLUGIN    | OFF                   | build DD4Hep plugin (requires TGeoPlugin, ROOT, DD4hep) |
+|BUILD_DOC              | OFF                   | build doxygen documentation (requires doxygen)          |
+|BUILD_TESTS            | ON                    | build unit tests                                        |
+|BUILD_TGEO_PLUGIN      | OFF                   | build TGeo plugin (requires ROOT)                       |
+|BUILD_MATERIAL_PLUGIN  | OFF                   | build material mapping plugin                           |
+|CMAKE_INSTALL_PREFIX   | empty                 | target installation directory                           |
+|CMAKE_PREFIX_PATH      | empty                 | search path for external packages                       |
+|CMAKE_CXX_COMPILER     | empty                 | set C++ compiler (e.g. g++ or clang++)                  |
 |CMAKE_BUILD_TYPE       | None                  | build type (e.g. Debug, Release) affects compiler flags |
 
 ## <a name="example-build">Example build on lxplus at CERN</a>
