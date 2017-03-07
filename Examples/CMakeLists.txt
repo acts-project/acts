@@ -1,6 +1,3 @@
-# get list of all source files
-file (GLOB_RECURSE src_files "")
-
 # define library target
 add_library (ACTSExamples SHARED src/BuildGenericDetector.cpp 
                                  src/GenericDetectorElement.cpp
