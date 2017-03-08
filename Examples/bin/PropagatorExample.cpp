@@ -86,7 +86,7 @@ struct HitSimulator
       double zmax = std::get<2>(t);
       if ((r1 - r) * (r2 - r) < 0) {
         double s   = (r - r1) / (r2 - r1);
-        auto   pos = s * current.position() + (1 - s) * previous.position();
+        Vector3D   pos = s * current.position() + (1 - s) * previous.position();
         if ((zmin - pos.z()) * (zmax - pos.z()) < 0) result.hits.push_back(pos);
       }
     }
@@ -98,7 +98,7 @@ struct HitSimulator
       double rmax = std::get<2>(t);
       if ((z1 - z) * (z2 - z) < 0) {
         double s   = (z - z1) / (z2 - z1);
-        auto   pos = s * current.position() + (1 - s) * previous.position();
+        Vector3D   pos = s * current.position() + (1 - s) * previous.position();
         if ((rmin - pos.perp()) * (rmax - pos.perp()) < 0)
           result.hits.push_back(pos);
       }
