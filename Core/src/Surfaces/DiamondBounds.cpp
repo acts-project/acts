@@ -30,9 +30,9 @@ Acts::DiamondBounds::DiamondBounds(double minhalex,
   PlanarBounds::m_valueStore[DiamondBounds::bv_maxHalfX] = maxhalex;
   PlanarBounds::m_valueStore[DiamondBounds::bv_halfY1]   = haley1;
   PlanarBounds::m_valueStore[DiamondBounds::bv_halfY2]   = haley2;
-  double mx = minhalex > medhalex ? (std::max( minhalex , maxhalex))
-                                  : (std::max( medhalex , maxhalex));
-  double my = std::max(haley1 , haley2);
+  double mx = minhalex > medhalex ? (std::max(minhalex, maxhalex))
+                                  : (std::max(medhalex, maxhalex));
+  double my = std::max(haley1, haley2);
   // the boundary box is being set
   m_boundingBox = RectangleBounds(mx, my);
   // init the cache
@@ -57,7 +57,7 @@ Acts::DiamondBounds&
 Acts::DiamondBounds::operator=(const DiamondBounds& diabo)
 {
   if (this != &diabo) {
-    PlanarBounds::m_valueStore  = diabo.m_valueStore;
+    PlanarBounds::m_valueStore = diabo.m_valueStore;
     m_alpha1      = diabo.m_alpha1;
     m_alpha2      = diabo.m_alpha2;
     m_boundingBox = diabo.m_boundingBox;
