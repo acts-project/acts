@@ -123,11 +123,9 @@ Acts::ConeSurface::globalToLocal(const Vector3D& gpos,
                                  const Vector3D&,
                                  Vector2D& lpos) const
 {
-  Vector3D loc3Dframe
-      = m_transform ? (transform().inverse() * gpos) : gpos;
-  double r = loc3Dframe.z() * bounds().tanAlpha();
-  lpos     = Vector2D(r * atan2(loc3Dframe.y(), loc3Dframe.x()),
-                        loc3Dframe.z());
+  Vector3D loc3Dframe = m_transform ? (transform().inverse() * gpos) : gpos;
+  double   r          = loc3Dframe.z() * bounds().tanAlpha();
+  lpos = Vector2D(r * atan2(loc3Dframe.y(), loc3Dframe.x()), loc3Dframe.z());
   // now decide on the quility of the transformation
   double inttol = r * 0.0001;
   inttol        = (inttol < 0.01) ? 0.01 : 0.01;  // ?

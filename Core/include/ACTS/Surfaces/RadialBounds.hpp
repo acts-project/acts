@@ -185,7 +185,8 @@ RadialBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
   if (bcheck.bcType == 0 || bcheck.nSigmas == 0
       || m_valueStore[RadialBounds::bv_rMin] != 0
       || m_valueStore[RadialBounds::bv_halfPhiSector] != M_PI)
-    return RadialBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
+    return RadialBounds::inside(
+        lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 
   // a fast FALSE
   sincosCache scResult = bcheck.FastSinCos(lpos(1, 0));
@@ -359,7 +360,7 @@ RadialBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
                  && (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)) != 0)
       ? .5
           * bcheck.FastArcTan(2 * lCovarianceCar(1, 0)
-                            / (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)))
+                              / (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)))
       : 0.;
   scResult = bcheck.FastSinCos(theta);
   ActsMatrixD<2, 2> rotMatrix;

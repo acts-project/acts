@@ -58,9 +58,9 @@ Acts::DiamondBounds::operator=(const DiamondBounds& diabo)
 {
   if (this != &diabo) {
     PlanarBounds::m_valueStore = diabo.m_valueStore;
-    m_alpha1      = diabo.m_alpha1;
-    m_alpha2      = diabo.m_alpha2;
-    m_boundingBox = diabo.m_boundingBox;
+    m_alpha1                   = diabo.m_alpha1;
+    m_alpha2                   = diabo.m_alpha2;
+    m_boundingBox              = diabo.m_boundingBox;
   }
   return *this;
 }

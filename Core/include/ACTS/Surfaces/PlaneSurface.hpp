@@ -235,7 +235,7 @@ PlaneSurface::normal(const Vector2D&) const
 {
   // fast access via tranform matrix (and not rotation())
   auto tMatrix = transform().matrix();
-  return Vector3D(tMatrix(0,2),tMatrix(1,2),tMatrix(2,2));
+  return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
 inline const Vector3D PlaneSurface::binningPosition(BinningValue) const
@@ -263,7 +263,8 @@ PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
     // evaluate the intersection in terms of direction
     bool isValid = forceDir ? (u > 0.) : true;
     // evaluate (if necessary in terms of boundaries)
-    isValid = bcheck ? (isValid && isOnSurface(intersectPoint, bcheck)) : isValid;
+    isValid
+        = bcheck ? (isValid && isOnSurface(intersectPoint, bcheck)) : isValid;
     // return the result
     return Intersection(intersectPoint, u, isValid);
   }

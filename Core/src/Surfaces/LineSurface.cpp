@@ -148,7 +148,7 @@ Acts::LineSurface::intersectionEstimate(const Vector3D&      gpos,
     bool isValid = forceDir ? (lambda0 > 0.) : true;
     // evaluate validaty in terms of bounds
     Vector3D result = (ma + lambda0 * ea);
-    isValid         = bcheck ? (isValid && isOnSurface(result, bcheck)) : isValid;
+    isValid = bcheck ? (isValid && isOnSurface(result, bcheck)) : isValid;
     // return the result
     return Intersection(result, lambda0, isValid);
   }

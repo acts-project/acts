@@ -202,7 +202,7 @@ public:
   ///  recalculated
   /// into the new frame.
   ///  Suppose, this is done, the intersection is straight forward:
-  ///  @f$p_{1}=(p_{1x}, p_{1y}, p_{1z}), p_{2}=(p_{2x}, p_{2y}, p_{2z}) @f$ 
+  ///  @f$p_{1}=(p_{1x}, p_{1y}, p_{1z}), p_{2}=(p_{2x}, p_{2y}, p_{2z}) @f$
   ///  are the two points describing the 3D-line,
   ///  then the line in the \f$x-y@f$ plane can be written as
   ///  @f$y=kx+d\f$, where @f$k =\frac{p_{2y}-p_{1y}}{p_{2x}-p_{1x}}@f$such as

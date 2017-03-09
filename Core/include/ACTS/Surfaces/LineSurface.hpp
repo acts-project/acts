@@ -291,7 +291,7 @@ LineSurface::lineDirection() const
 {
   // fast access via tranform matrix (and not rotation())
   auto tMatrix = transform().matrix();
-  return Vector3D(tMatrix(0,2),tMatrix(1,2),tMatrix(2,2));
+  return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
 }  // end of namespace

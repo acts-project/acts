@@ -307,7 +307,7 @@ public:
   Intersection
   intersectionEstimate(const T&             pars,
                        bool                 forceDir = false,
-                       const BoundaryCheck& bcheck     = false) const
+                       const BoundaryCheck& bcheck   = false) const
   {
     return intersectionEstimate(
         pars.position(), pars.momentum().unit(), forceDir, bcheck);

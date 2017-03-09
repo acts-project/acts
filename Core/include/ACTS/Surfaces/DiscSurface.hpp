@@ -61,7 +61,7 @@ public:
   /// This is n this case you have DiscTrapezoidalBounds
   ///
   /// @param htrans is transform that places the disc in the global 3D space
-  /// (can be nullptr)           
+  /// (can be nullptr)
   /// @param minhalfx is the half length in x at minimal r
   /// @param maxhalfx is the half length in x at maximal r
   /// @param rmin is the inner radius of the disc surface
@@ -313,7 +313,7 @@ DiscSurface::normal(const Vector2D&) const
 {
   // fast access via tranform matrix (and not rotation())
   auto tMatrix = transform().matrix();
-  return Vector3D(tMatrix(0,2),tMatrix(1,2),tMatrix(2,2));
+  return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
 inline const Vector3D DiscSurface::binningPosition(BinningValue) const
@@ -332,8 +332,8 @@ inline const Vector2D
 DiscSurface::localCartesianToPolar(const Vector2D& lcart) const
 {
   return Vector2D(sqrt(lcart[Acts::eLOC_X] * lcart[Acts::eLOC_X]
-                    + lcart[Acts::eLOC_Y] * lcart[Acts::eLOC_Y]),
-                   atan2(lcart[Acts::eLOC_Y], lcart[Acts::eLOC_X]));
+                       + lcart[Acts::eLOC_Y] * lcart[Acts::eLOC_Y]),
+                  atan2(lcart[Acts::eLOC_Y], lcart[Acts::eLOC_X]));
 }
 
 inline double
@@ -356,7 +356,8 @@ DiscSurface::intersectionEstimate(const Vector3D&      gpos,
     // evaluate the intersection in terms of direction
     bool isValid = forceDir ? (u > 0.) : true;
     // evaluate (if necessary in terms of boundaries)
-    isValid = bcheck ? (isValid && isOnSurface(intersectPoint, bcheck)) : isValid;
+    isValid
+        = bcheck ? (isValid && isOnSurface(intersectPoint, bcheck)) : isValid;
     // return the result
     return Intersection(intersectPoint, u, isValid);
   }

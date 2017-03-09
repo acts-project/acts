@@ -214,8 +214,8 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
   Vector3D sol1raw(point1 + t1 * direction);
   Vector3D sol2raw(point1 + t2 * direction);
   // now reorder and return
-  Vector3D       solution(0, 0, 0);
-  double         path = 0.;
+  Vector3D solution(0, 0, 0);
+  double   path = 0.;
 
   // first check the validity of the direction
   bool isValid = true;

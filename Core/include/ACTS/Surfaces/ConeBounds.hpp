@@ -22,7 +22,7 @@ namespace Acts {
 
 ///  @class ConeBounds
 ///
-///  Bounds for a conical Surface,
+///  Bounds for a conical surface,
 ///  the opening angle is stored in \f$ \tan(\alpha) \f$ and always positively
 /// defined.
 ///  The cone can open to both sides, steered by \f$ z_min \f$ and \f$ z_max
@@ -195,11 +195,9 @@ private:
   bool
   inside(const Vector2D& lpos, double tol0, double tol1) const;
 
-  std::vector<TDD_real_t>
-             m_valueStore;  ///< internal storage for the bound values
-  TDD_real_t m_tanAlpha;    ///< internal cache
-  TDD_real_t m_sinAlpha;    ///< internal cache
-  TDD_real_t m_cosAlpha;    ///< internal cache
+  TDD_real_t m_tanAlpha;  ///< internal cache
+  TDD_real_t m_sinAlpha;  ///< internal cache
+  TDD_real_t m_cosAlpha;  ///< internal cache
 
   /// Helper function for angle parameter initialization
   virtual void
@@ -209,14 +207,14 @@ private:
   inline double
   minPhi() const
   {
-    return m_valueStore.at(ConeBounds::bv_averagePhi)
-        - m_valueStore.at(ConeBounds::bv_halfPhiSector);
+    return m_valueStore[ConeBounds::bv_averagePhi]
+        - m_valueStore[ConeBounds::bv_halfPhiSector];
   }
   inline double
   maxPhi() const
   {
-    return m_valueStore.at(ConeBounds::bv_averagePhi)
-        + m_valueStore.at(ConeBounds::bv_halfPhiSector);
+    return m_valueStore[ConeBounds::bv_averagePhi]
+        + m_valueStore[ConeBounds::bv_halfPhiSector];
   }
 };
 
@@ -230,8 +228,8 @@ inline bool
 ConeBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 {
   double z       = lpos[Acts::eLOC_Z];
-  bool   insideZ = z > (m_valueStore.at(ConeBounds::bv_minZ) - tol1)
-      && z < (m_valueStore.at(ConeBounds::bv_maxZ) + tol1);
+  bool   insideZ = z > (m_valueStore[ConeBounds::bv_minZ] - tol1)
+      && z < (m_valueStore[ConeBounds::bv_maxZ] + tol1);
   if (!insideZ) return false;
   // TODO: Do we need some sort of "R" tolerance also here (take
   // it off the z tol1 in that case?) or does the rphi tol0 cover
@@ -260,8 +258,8 @@ inline bool
 ConeBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 {
   double z = lpos[Acts::eLOC_Z];
-  return (z > (m_valueStore.at(ConeBounds::bv_minZ) - tol1)
-          && z < (m_valueStore.at(ConeBounds::bv_maxZ) + tol1));
+  return (z > (m_valueStore[ConeBounds::bv_minZ] - tol1)
+          && z < (m_valueStore[ConeBounds::bv_maxZ] + tol1));
 }
 
 inline double
@@ -291,45 +289,45 @@ ConeBounds::cosAlpha() const
 inline double
 ConeBounds::alpha() const
 {
-  return m_valueStore.at(ConeBounds::bv_alpha);
+  return m_valueStore[ConeBounds::bv_alpha];
 }
 
 inline double
 ConeBounds::minZ() const
 {
-  return m_valueStore.at(ConeBounds::bv_minZ);
+  return m_valueStore[ConeBounds::bv_minZ];
 }
 
 inline double
 ConeBounds::maxZ() const
 {
-  return m_valueStore.at(ConeBounds::bv_maxZ);
+  return m_valueStore[ConeBounds::bv_maxZ];
 }
 
 inline double
 ConeBounds::averagePhi() const
 {
-  return m_valueStore.at(ConeBounds::bv_averagePhi);
+  return m_valueStore[ConeBounds::bv_averagePhi];
 }
 
 inline double
 ConeBounds::halfPhiSector() const
 {
-  return m_valueStore.at(ConeBounds::bv_halfPhiSector);
+  return m_valueStore[ConeBounds::bv_halfPhiSector];
 }
 
 inline void
 ConeBounds::initCache()
 {
-  m_tanAlpha = tan(m_valueStore.at(ConeBounds::bv_alpha));
-  m_sinAlpha = sin(m_valueStore.at(ConeBounds::bv_alpha));
-  m_cosAlpha = cos(m_valueStore.at(ConeBounds::bv_alpha));
+  m_tanAlpha = tan(m_valueStore[ConeBounds::bv_alpha]);
+  m_sinAlpha = sin(m_valueStore[ConeBounds::bv_alpha]);
+  m_cosAlpha = cos(m_valueStore[ConeBounds::bv_alpha]);
   // validate the halfphi
-  if (m_valueStore.at(ConeBounds::bv_halfPhiSector) < 0.)
-    m_valueStore.at(ConeBounds::bv_halfPhiSector)
-        = -m_valueStore.at(ConeBounds::bv_halfPhiSector);
-  if (m_valueStore.at(ConeBounds::bv_halfPhiSector) > M_PI)
-    m_valueStore.at(ConeBounds::bv_halfPhiSector) = M_PI;
+  if (m_valueStore[ConeBounds::bv_halfPhiSector] < 0.)
+    m_valueStore[ConeBounds::bv_halfPhiSector]
+        = -m_valueStore[ConeBounds::bv_halfPhiSector];
+  if (m_valueStore[ConeBounds::bv_halfPhiSector] > M_PI)
+    m_valueStore[ConeBounds::bv_halfPhiSector] = M_PI;
 }
 }
 
