@@ -32,7 +32,7 @@ namespace Acts {
 
 namespace Test {
   BOOST_AUTO_TEST_SUITE(Surfaces);
-  ///Unit test for creating compliant/non-compliant EllipseBounds object
+  /// Unit test for creating compliant/non-compliant EllipseBounds object
   BOOST_AUTO_TEST_CASE(EllipseBoundsConstruction)
   {
     double minRad1(10.), minRad2(15.), maxRad1(15.), maxRad2(20.),
@@ -46,14 +46,14 @@ namespace Test {
             .type()
         == SurfaceBounds::Ellipse);
     //
-    ///Copy constructor
+    /// Copy constructor
     EllipseBounds original(
         minRad1, minRad2, maxRad1, maxRad2, averagePhi, phiSector);
     EllipseBounds copied(original);
     BOOST_TEST(copied.type() == SurfaceBounds::Ellipse);
   }
-  
-  ///Unit tests for EllipseBounds properties
+
+  /// Unit tests for EllipseBounds properties
   BOOST_AUTO_TEST_CASE(EllipseBoundsProperties)
   {
     double minRad1(10.), minRad2(15.), maxRad1(15.), maxRad2(20.),
@@ -128,7 +128,7 @@ namespace Test {
     BOOST_TEST(ellipseBoundsObject.insideLoc1(inRectangle) == true);
     //
   }
-  ///Unit test for testing EllipseBounds assignment
+  /// Unit test for testing EllipseBounds assignment
   BOOST_AUTO_TEST_CASE(EllipseBoundsAssignment)
   {
     double minRad1(10.), minRad2(15.), maxRad1(15.), maxRad2(20.),

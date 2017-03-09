@@ -50,8 +50,8 @@ namespace Test {
     BOOST_TEST(copyConstructedLineBounds.type() == SurfaceBounds::Line,
                "Test trivial method on copy constructed object");
   }
-  
-  ///Unit tests for LineBounds properties
+
+  /// Unit tests for LineBounds properties
   BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(LineBoundsProperties, 1);
   BOOST_AUTO_TEST_CASE(LineBoundsProperties)
   {

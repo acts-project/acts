@@ -50,7 +50,7 @@ namespace Test {
     DiamondBounds copied(original);
     BOOST_TEST(copied.type() == SurfaceBounds::Diamond);
   }
-  ///Unit tests for DiamondBounds properties
+  /// Unit tests for DiamondBounds properties
   BOOST_AUTO_TEST_CASE(DiamondBoundsProperties)
   {
     double minHalfX(30.), midHalfX(10.), maxHalfX(50.), halfY1(10.),

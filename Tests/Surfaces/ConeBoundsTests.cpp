@@ -68,7 +68,7 @@ namespace Test {
     BOOST_TEST(*pClonedConeBounds == fiveParamConstructedConeBounds);
     delete pClonedConeBounds;
   }
-  ///Unit tests for properties of ConeBounds object
+  /// Unit tests for properties of ConeBounds object
   BOOST_AUTO_TEST_CASE(ConeBoundsProperties)
   {
     double alpha(M_PI / 8.0), zMin(3.), zMax(6.), halfPhi(M_PI / 4.0),
@@ -91,7 +91,7 @@ namespace Test {
     BOOST_TEST(coneBoundsObject.insideLoc1(origin) == false);
     //
     /// test for distanceToBoundary
-    //std::cout << coneBoundsObject.distanceToBoundary(origin) << std::endl;
+    // std::cout << coneBoundsObject.distanceToBoundary(origin) << std::endl;
     //
     /// test for r
     BOOST_TEST(coneBoundsObject.r(zMin) == zMin * std::tan(alpha));
@@ -124,7 +124,7 @@ namespace Test {
         "Acts::ConeBounds: (tanAlpha, minZ, maxZ, averagePhi, halfPhiSector) = "
         "(0.4142136, 3.0000000, 6.0000000, 0.0000000, 0.7853982)"));
   }
-  ///Unit test for testing ConeBounds assignment
+  /// Unit test for testing ConeBounds assignment
   BOOST_AUTO_TEST_CASE(ConeBoundsAssignment)
   {
     double alpha(M_PI / 8.0), zMin(3.), zMax(6.), halfPhi(M_PI / 4.0),

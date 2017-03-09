@@ -50,8 +50,8 @@ namespace Test {
     BOOST_TEST(copyConstructedCylinderBounds.type() == SurfaceBounds::Cylinder,
                "Test trivial method on copy constructed object");
   }
-  
-  ///Unit tests for CylinderBounds properties
+
+  /// Unit tests for CylinderBounds properties
   BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(CylinderBoundsProperties, 4);
   BOOST_AUTO_TEST_CASE(CylinderBoundsProperties)
   {

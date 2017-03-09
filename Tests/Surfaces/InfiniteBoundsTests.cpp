@@ -44,7 +44,7 @@ namespace Test {
     BOOST_TEST(v.type() == SurfaceBounds::Boundless,
                "Test trivial method on copy constructed object");
   }
-  ///Unit tests for InfiniteBounds properties
+  /// Unit tests for InfiniteBounds properties
   BOOST_AUTO_TEST_CASE(InfiniteBoundsProperties)
   {
     InfiniteBounds infiniteBoundsObject;
@@ -79,7 +79,7 @@ namespace Test {
     BOOST_TEST(
         dumpOuput.is_equal("Acts::InfiniteBounds ... boundless surface\n"));
   }
- 
+
   BOOST_AUTO_TEST_SUITE_END();
 
 }  // end of namespace Test
