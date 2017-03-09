@@ -69,7 +69,6 @@ Acts::CylinderLayer::surfaceRepresentation() const
   return (*this);
 }
 
-
 Acts::CylinderSurface&
 Acts::CylinderLayer::surfaceRepresentation()
 {
@@ -114,7 +113,7 @@ Acts::CylinderLayer::buildApproachDescriptor()
   }
   for (auto& sfPtr : (m_approachDescriptor->containedSurfaces())) {
     if (sfPtr) {
-      auto & mutableSf = *( const_cast<Surface*>( sfPtr ) );
+      auto& mutableSf = *(const_cast<Surface*>(sfPtr));
       mutableSf.associateLayer(*this);
     }
   }

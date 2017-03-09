@@ -88,7 +88,8 @@ public:
 
   /// Set the identifier after construction (sometimes needed)
   virtual void
-  assignIdentifier(const Identifier& identifier) = 0;
+  assignIdentifier(const Identifier& identifier)
+      = 0;
 
   /// Fast access to bin members
   /// Bin members are elements that are in the same geometric binning cell,

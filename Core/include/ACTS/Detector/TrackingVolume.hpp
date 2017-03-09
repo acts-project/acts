@@ -291,7 +291,7 @@ public:
   void
   glueTrackingVolumes(BoundarySurfaceFace                  bsfMine,
                       std::shared_ptr<TrackingVolumeArray> neighbors,
-                      BoundarySurfaceFace bsfNeighbors);
+                      BoundarySurfaceFace                  bsfNeighbors);
 
   /// Provide a new BoundarySurface from the glueing
   ///

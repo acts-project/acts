@@ -101,12 +101,12 @@ public:
 
   /// Destructor
   virtual ~CylinderLayer() {}
-  
+
   /// Transforms the layer into a Surface representation
   /// This is for positioning and extrapolation
   const CylinderSurface&
   surfaceRepresentation() const override;
-  
+
   // Non-const version
   CylinderSurface&
   surfaceRepresentation() override;

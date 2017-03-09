@@ -46,13 +46,14 @@ Acts::PassiveLayerBuilder::setLogger(std::unique_ptr<Logger> newLogger)
   m_logger = std::move(newLogger);
 }
 
-void Acts::PassiveLayerBuilder::constructLayers()
+void
+Acts::PassiveLayerBuilder::constructLayers()
 {
   // DEBUG: Flush layers in case the class was already initialized before
   m_nLayers.clear();
   m_cLayers.clear();
   m_pLayers.clear();
-  
+
   // the central layers
   size_t numcLayers = m_cfg.centralLayerRadii.size();
   if (numcLayers) {

@@ -42,7 +42,7 @@ const Acts::LayerVector
 Acts::TGeoLayerBuilder::negativeLayers() const
 {
   // @todo Remove this hack once the m_elementStore mess is sorted out
-  auto mutableThis = const_cast<TGeoLayerBuilder*>( this );
+  auto        mutableThis = const_cast<TGeoLayerBuilder*>(this);
   LayerVector nVector;
   mutableThis->buildLayers(nVector, -1);
   return nVector;
@@ -52,7 +52,7 @@ const Acts::LayerVector
 Acts::TGeoLayerBuilder::centralLayers() const
 {
   // @todo Remove this hack once the m_elementStore mess is sorted out
-  auto mutableThis = const_cast<TGeoLayerBuilder*>( this );
+  auto        mutableThis = const_cast<TGeoLayerBuilder*>(this);
   LayerVector cVector;
   mutableThis->buildLayers(cVector, 0);
   return cVector;
@@ -62,7 +62,7 @@ const Acts::LayerVector
 Acts::TGeoLayerBuilder::positiveLayers() const
 {
   // @todo Remove this hack once the m_elementStore mess is sorted out
-  auto mutableThis = const_cast<TGeoLayerBuilder*>( this );
+  auto        mutableThis = const_cast<TGeoLayerBuilder*>(this);
   LayerVector pVector;
   mutableThis->buildLayers(pVector, -1);
   return pVector;

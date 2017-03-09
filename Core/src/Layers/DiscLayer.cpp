@@ -118,7 +118,7 @@ Acts::DiscLayer::buildApproachDescriptor()
   }
   for (auto& sfPtr : (m_approachDescriptor->containedSurfaces())) {
     if (sfPtr) {
-      auto & mutableSf = *( const_cast<Surface*>( sfPtr ) );
+      auto& mutableSf = *(const_cast<Surface*>(sfPtr));
       mutableSf.associateLayer(*this);
     }
   }

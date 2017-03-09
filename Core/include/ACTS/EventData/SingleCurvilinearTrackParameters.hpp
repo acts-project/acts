@@ -38,7 +38,7 @@ public:
                                                                 dCharge),
           position,
           momentum)
-    , m_upSurface( new PlaneSurface(position, momentum) )
+    , m_upSurface(new PlaneSurface(position, momentum))
   {
   }
 
@@ -54,7 +54,7 @@ public:
                                                                 0),
           position,
           momentum)
-    , m_upSurface( new PlaneSurface(position, momentum) )
+    , m_upSurface(new PlaneSurface(position, momentum))
   {
   }
 
@@ -64,7 +64,7 @@ public:
   SingleCurvilinearTrackParameters(
       const SingleCurvilinearTrackParameters<ChargePolicy>& copy)
     : SingleTrackParameters<ChargePolicy>(copy)
-    , m_upSurface( new PlaneSurface( this->position(), this->momentum() ) )
+    , m_upSurface(new PlaneSurface(this->position(), this->momentum()))
   {
   }
 
@@ -89,7 +89,7 @@ public:
     // check for self-assignment
     if (this != &rhs) {
       SingleTrackParameters<ChargePolicy>::operator=(rhs);
-      m_upSurface.reset( new PlaneSurface(this->position(), this->momentum()) );
+      m_upSurface.reset(new PlaneSurface(this->position(), this->momentum()));
     }
 
     return *this;

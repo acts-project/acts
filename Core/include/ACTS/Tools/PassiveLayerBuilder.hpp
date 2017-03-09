@@ -116,12 +116,12 @@ private:
   /// logging instance
   std::unique_ptr<Logger> m_logger;
 
-  void constructLayers();
+  void
+  constructLayers();
 
   LayerVector m_nLayers;  ///< layers on negative side
   LayerVector m_cLayers;  ///< layers on central side
   LayerVector m_pLayers;  ///< layers on positive side
-
 };
 
 inline PassiveLayerBuilder::Config

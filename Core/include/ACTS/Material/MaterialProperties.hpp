@@ -130,9 +130,7 @@ public:
 
   /** Set Material */
   void
-  setMaterial(const Material& mp,
-              float           thickness = 1.,
-              size_t          entries = 1);
+  setMaterial(const Material& mp, float thickness = 1., size_t entries = 1);
 
   /** Increase the number of entries by one*/
   void
@@ -145,9 +143,9 @@ protected:
 
   Material m_material;
 
-  float m_dInX0;  //!< thickness in units of radiation length
-  float m_dInL0;  //!< thickness in units of nuclear interaction length
-  float m_zOaTrTd;  //!< @f$ \frac{Z}{A}\cdot\rho\cdot d @f$ - in ATLAS units
+  float  m_dInX0;    //!< thickness in units of radiation length
+  float  m_dInL0;    //!< thickness in units of nuclear interaction length
+  float  m_zOaTrTd;  //!< @f$ \frac{Z}{A}\cdot\rho\cdot d @f$ - in ATLAS units
   size_t m_entries;  //!< number of different material entries of an
                      //! averaged material
   //!< @note set one per default, but can be set otherwise

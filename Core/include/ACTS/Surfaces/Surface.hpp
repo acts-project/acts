@@ -450,8 +450,7 @@ Surface::associatedMaterial() const
 }
 
 inline void
-Surface::setAssociatedMaterial(
-    std::shared_ptr<const SurfaceMaterial> material)
+Surface::setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial> material)
 {
   m_associatedMaterial = material;
 }

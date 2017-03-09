@@ -95,7 +95,7 @@ public:
                        VolumeBoundsPtr              volBounds,
                        std::shared_ptr<Transform3D> transform = nullptr,
                        const std::string& volumeName = "UndefinedVolume",
-                       BinningType        btype      = arbitrary) const override;
+                       BinningType        btype = arbitrary) const override;
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
@@ -117,7 +117,7 @@ public:
                        double                    loc1Min,
                        double                    loc1Max,
                        const std::string&        volumeName = "UndefinedVolume",
-                       BinningType               btype      = arbitrary) const override;
+                       BinningType btype = arbitrary) const override;
 
   /// Create a gap volume from dimensions and
   ///
@@ -159,7 +159,7 @@ public:
                           const std::vector<double>& layerPositions,
                           bool                       cylinder = true,
                           const std::string& volumeName = "UndefinedVolume",
-                          BinningType        btype      = arbitrary) const override;
+                          BinningType        btype = arbitrary) const override;
 
   /// Create a container volumes from sub volumes, input volumes are ordered in
   /// R or Z by convention
@@ -169,7 +169,8 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
-  createContainerTrackingVolume(const TrackingVolumeVector& volumes) const override;
+  createContainerTrackingVolume(
+      const TrackingVolumeVector& volumes) const override;
 
   /// Set configuration method
   ///

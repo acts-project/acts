@@ -61,7 +61,7 @@ public:
     , m_elementDiscBounds(nullptr)
     , m_elementLineBounds(nullptr)
   {
-    auto mutableSurface = std::const_pointer_cast<Surface>( m_elementSurface );
+    auto mutableSurface = std::const_pointer_cast<Surface>(m_elementSurface);
     mutableSurface->setAssociatedMaterial(material);
   }
 
@@ -88,14 +88,14 @@ public:
     , m_elementDiscBounds(nullptr)
     , m_elementLineBounds(std::move(lBounds))
   {
-    auto mutableSurface = std::const_pointer_cast<Surface>( m_elementSurface );
+    auto mutableSurface = std::const_pointer_cast<Surface>(m_elementSurface);
     mutableSurface->setAssociatedMaterial(material);
   }
 
   void
   assignIdentifier(const Identifier& identifier)
   {
-    m_elementIdentifier=identifier;
+    m_elementIdentifier = identifier;
   }
 
   ///  Destructor

@@ -99,7 +99,7 @@ public:
   /// Transforms the layer into a Surface representation for extrapolation
   const ConeSurface&
   surfaceRepresentation() const override;
-  
+
   // Non-const version
   ConeSurface&
   surfaceRepresentation() override;

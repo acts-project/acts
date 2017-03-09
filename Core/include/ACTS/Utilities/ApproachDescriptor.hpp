@@ -68,10 +68,11 @@ public:
   /// @return all contained surfaces of this approach descriptor
   virtual const std::vector<const Surface*>&
   containedSurfaces() const = 0;
-  
+
   /// Non-const version
   virtual std::vector<const Surface*>&
-  containedSurfaces() = 0;
+  containedSurfaces()
+      = 0;
 };
 }
 

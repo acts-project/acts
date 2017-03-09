@@ -33,7 +33,7 @@ Acts::GenericDetectorElement::GenericDetectorElement(
   , m_elementDiscBounds(nullptr)
   , m_digitizationModule(dModule)
 {
-  auto mutableSurface = std::const_pointer_cast<Surface>( m_elementSurface );
+  auto mutableSurface = std::const_pointer_cast<Surface>(m_elementSurface);
   mutableSurface->setAssociatedMaterial(material);
 }
 
@@ -52,7 +52,7 @@ Acts::GenericDetectorElement::GenericDetectorElement(
   , m_elementPlanarBounds(nullptr)
   , m_elementDiscBounds(std::move(dBounds))
 {
-  auto mutableSurface = std::const_pointer_cast<Surface>( m_elementSurface );
+  auto mutableSurface = std::const_pointer_cast<Surface>(m_elementSurface);
   mutableSurface->setAssociatedMaterial(material);
 }
 

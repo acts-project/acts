@@ -172,7 +172,7 @@ Acts::Layer::approachDescriptor() const
 Acts::ApproachDescriptor*
 Acts::Layer::approachDescriptor()
 {
-  return const_cast<ApproachDescriptor*>( m_approachDescriptor.get() );
+  return const_cast<ApproachDescriptor*>(m_approachDescriptor.get());
 }
 
 void
@@ -187,7 +187,7 @@ Acts::Layer::closeGeometry(const GeometryID& layerID)
     for (auto& aSurface : m_approachDescriptor->containedSurfaces()) {
       GeometryID asurfaceID = layerID;
       asurfaceID.add(++iasurface, GeometryID::approach_mask);
-      auto mutableASurface = const_cast<Surface*>( aSurface );
+      auto mutableASurface = const_cast<Surface*>(aSurface);
       mutableASurface->assignGeoID(asurfaceID);
     }
   }
@@ -198,7 +198,7 @@ Acts::Layer::closeGeometry(const GeometryID& layerID)
     for (auto& sSurface : m_surfaceArray->arrayObjects()) {
       GeometryID ssurfaceID = layerID;
       ssurfaceID.add(++issurface, GeometryID::sensitive_mask);
-      auto mutableSSurface = const_cast<Surface*>( sSurface );
+      auto mutableSSurface = const_cast<Surface*>(sSurface);
       mutableSSurface->assignGeoID(ssurfaceID);
     }
   }
@@ -220,5 +220,5 @@ Acts::Layer::materialSurface() const
 Acts::Surface*
 Acts::Layer::materialSurface()
 {
-  return const_cast<Acts::Surface*>( m_materialSurface );
+  return const_cast<Acts::Surface*>(m_materialSurface);
 }

@@ -99,12 +99,12 @@ public:
 
   /// Destructor
   virtual ~DiscLayer() {}
-  
+
   /// Transforms the layer into a Surface representation for extrapolation
   /// @return This method returns a surface reference
   const DiscSurface&
   surfaceRepresentation() const override;
-  
+
   // Non-const version
   DiscSurface&
   surfaceRepresentation() override;

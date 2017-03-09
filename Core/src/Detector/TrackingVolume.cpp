@@ -230,8 +230,7 @@ Acts::TrackingVolume::addMaterial(std::shared_ptr<const Material> mprop,
 }
 
 void
-Acts::TrackingVolume::sign(GeometrySignature geosign,
-                           GeometryType      geotype)
+Acts::TrackingVolume::sign(GeometrySignature geosign, GeometryType geotype)
 {
   // never overwrite what is already signed, that's a crime
   if (m_geometrySignature == Unsigned) m_geometrySignature = geosign;
@@ -240,21 +239,24 @@ Acts::TrackingVolume::sign(GeometrySignature geosign,
   // confined static volumes
   if (m_confinedVolumes)
     for (auto& volumesIter : (m_confinedVolumes->arrayObjects())) {
-      auto mutableVolumesIter = std::const_pointer_cast<TrackingVolume>( volumesIter );
+      auto mutableVolumesIter
+          = std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->sign(geosign, geotype);
     }
 
   // same procedure for the detached volumes
   if (!m_confinedDetachedVolumes.empty())
     for (auto& volumesIter : m_confinedDetachedVolumes) {
-      auto mutableVolumesIter = std::const_pointer_cast<DetachedTrackingVolume>( volumesIter );
+      auto mutableVolumesIter
+          = std::const_pointer_cast<DetachedTrackingVolume>(volumesIter);
       mutableVolumesIter->sign(geosign, geotype);
     }
 
   // finally for confined dense volumes
   if (!m_confinedDenseVolumes.empty())
     for (auto& volumesIter : m_confinedDenseVolumes) {
-      auto mutableVolumesIter = std::const_pointer_cast<TrackingVolume>( volumesIter );
+      auto mutableVolumesIter
+          = std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->sign(geosign, geotype);
     }
 }
@@ -317,9 +319,9 @@ Acts::TrackingVolume::glueTrackingVolume(
   if (!m_glueVolumeDescriptor
       || !m_glueVolumeDescriptor->glueVolumes(bsfMine)) {
     // the boundary orientation
-    auto mutableBSurfaceMine = std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(
-      bSurfaceMine
-    );
+    auto mutableBSurfaceMine
+        = std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(
+            bSurfaceMine);
     mutableBSurfaceMine->attachVolume(neighbor, bOrientation);
     // now set it to the neighbor volume - the optised way
     (neighbor->m_boundarySurfaces).at(bsfNeighbor) = bSurfaceMine;
@@ -353,13 +355,13 @@ Acts::TrackingVolume::glueTrackingVolumes(
   if (!m_glueVolumeDescriptor
       || !m_glueVolumeDescriptor->glueVolumes(bsfMine)) {
     // the boundary orientation
-    auto mutableBSurfaceMine = std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(
-      bSurfaceMine
-    );
+    auto mutableBSurfaceMine
+        = std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(
+            bSurfaceMine);
     mutableBSurfaceMine->attachVolumeArray(neighbors, bOrientation);
     // now set it to the neighbor volumes - the optised way
     for (auto& nVolume : neighbors->arrayObjects()) {
-      auto mutableNVolume = std::const_pointer_cast<TrackingVolume>( nVolume );
+      auto mutableNVolume = std::const_pointer_cast<TrackingVolume>(nVolume);
       (mutableNVolume->m_boundarySurfaces).at(bsfNeighbor) = bSurfaceMine;
     }
   }
@@ -374,8 +376,7 @@ Acts::TrackingVolume::updateBoundarySurface(
 }
 
 void
-Acts::TrackingVolume::registerGlueVolumeDescriptor(
-    GlueVolumesDescriptor* gvd)
+Acts::TrackingVolume::registerGlueVolumeDescriptor(GlueVolumesDescriptor* gvd)
 {
   delete m_glueVolumeDescriptor;
   m_glueVolumeDescriptor = gvd;
@@ -434,7 +435,7 @@ Acts::TrackingVolume::interlinkLayers()
     const Layer* lastLayer = nullptr;
     for (auto& layerPtr : layers) {
       // we'll need to mutate our confined layers to perform this operation
-      Layer & mutableLayer = *( std::const_pointer_cast<Layer>( layerPtr ) );
+      Layer& mutableLayer = *(std::const_pointer_cast<Layer>(layerPtr));
       // register the layers
       mutableLayer.m_nextLayerUtility = m_confinedLayers->binUtility();
       mutableLayer.m_nextLayers.first = lastLayer;
@@ -448,7 +449,7 @@ Acts::TrackingVolume::interlinkLayers()
     for (auto layerIter = layers.rbegin(); layerIter != layers.rend();
          ++layerIter) {
       // set the other next volume
-      Layer & mutableLayer = *( std::const_pointer_cast<Layer>( *layerIter ) );
+      Layer& mutableLayer = *(std::const_pointer_cast<Layer>(*layerIter));
       mutableLayer.m_nextLayers.second = lastLayer;
       lastLayer                        = &mutableLayer;
     }
@@ -477,7 +478,7 @@ Acts::TrackingVolume::closeGeometry(
       GeometryID boundaryID = volumeID;
       boundaryID.add(++iboundary, GeometryID::boundary_mask);
       // now assign to the boundary surface
-      auto & mutableBSurface = *( const_cast<Surface*>(&bSurface) );
+      auto& mutableBSurface = *(const_cast<Surface*>(&bSurface));
       mutableBSurface.assignGeoID(boundaryID);
     }
 
@@ -490,7 +491,7 @@ Acts::TrackingVolume::closeGeometry(
         GeometryID layerID = volumeID;
         layerID.add(++ilayer, GeometryID::layer_mask);
         // now close the geometry
-        auto mutableLayerPtr = std::const_pointer_cast<Layer>( layerPtr );
+        auto mutableLayerPtr = std::const_pointer_cast<Layer>(layerPtr);
         mutableLayerPtr->closeGeometry(layerID);
       }
     }
@@ -506,7 +507,8 @@ Acts::TrackingVolume::closeGeometry(
         /// we count the volume ID up
         currentID.add(++ivolume, GeometryID::volume_mask);
       }
-      auto mutableVolumesIter = std::const_pointer_cast<TrackingVolume>( volumesIter );
+      auto mutableVolumesIter
+          = std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->closeGeometry(currentID, volumeMap);
     }
   }

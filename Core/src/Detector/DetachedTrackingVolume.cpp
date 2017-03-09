@@ -94,7 +94,7 @@ void
 Acts::DetachedTrackingVolume::sign(GeometrySignature signat,
                                    GeometryType      geotype)
 {
-  auto mutableTrkVolume = std::const_pointer_cast<TrackingVolume>( m_trkVolume );
+  auto mutableTrkVolume = std::const_pointer_cast<TrackingVolume>(m_trkVolume);
   mutableTrkVolume->sign(signat, geotype);
 }
 

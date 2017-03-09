@@ -91,8 +91,7 @@ Acts::MaterialProperties::operator*=(float scale)
 }
 
 void
-Acts::MaterialProperties::addMaterial(const Acts::Material& mat,
-                                      float                 dInX0)
+Acts::MaterialProperties::addMaterial(const Acts::Material& mat, float dInX0)
 {
   // averaging factors based on thickness
   float fnew = dInX0 * mat.X0 / (m_dInX0 * m_material.X0 + dInX0 * mat.X0);

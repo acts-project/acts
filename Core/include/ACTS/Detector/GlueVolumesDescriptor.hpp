@@ -73,9 +73,8 @@ public:
   screenOutput() const;
 
 private:
-  std::map<BoundarySurfaceFace,
-           std::shared_ptr<const TrackingVolumeArray>>
-                                           m_glueVolumes;
+  std::map<BoundarySurfaceFace, std::shared_ptr<const TrackingVolumeArray>>
+                                   m_glueVolumes;
   std::vector<BoundarySurfaceFace> m_glueFaces;
 };
 

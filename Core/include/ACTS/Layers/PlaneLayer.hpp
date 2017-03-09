@@ -89,12 +89,12 @@ public:
 
   /// Destructor
   virtual ~PlaneLayer() {}
-  
+
   /// Transforms the layer into a Surface representation for extrapolation
   /// @return returns a reference to a PlaneSurface
   const PlaneSurface&
   surfaceRepresentation() const override;
-  
+
   // Non-const version
   PlaneSurface&
   surfaceRepresentation() override;

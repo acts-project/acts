@@ -133,7 +133,8 @@ Acts::LayerMaterialRecord::addLayerMaterialProperties(
   // pick the number of entries for the next material entry
   size_t entries = m_materialMatrix.at(bin1).at(bin0)->entries();
   // set the material with the right number of entries
-  auto mutableMaterial = const_cast<MaterialProperties*>( m_materialMatrix.at(bin1).at(bin0) );
+  auto mutableMaterial
+      = const_cast<MaterialProperties*>(m_materialMatrix.at(bin1).at(bin0));
   mutableMaterial->setMaterial(updatedMaterial, thickness, entries);
   // increase the number of entries for this material
   mutableMaterial->addEntry();
@@ -173,8 +174,8 @@ Acts::LayerMaterialRecord::averageMaterial()
       float l0 = (thickness != 0. && tInL0 != 0.) ? thickness / tInL0 : 0.;
       // set the new current material (resetting number of entries)
       const Acts::Material updatedMaterial(x0, l0, A, Z, rho);
-      auto mutableMaterial = const_cast<MaterialProperties*>(
-        m_materialMatrix.at(bin1).at(bin0) );
+      auto                 mutableMaterial
+          = const_cast<MaterialProperties*>(m_materialMatrix.at(bin1).at(bin0));
       mutableMaterial->setMaterial(updatedMaterial, thickness);
     }  // b2
   }    // b1

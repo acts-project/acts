@@ -258,11 +258,13 @@ Acts::GenericLayerBuilder::constructLayers()
           auto approachSurfaces
               = cLayer->approachDescriptor()->containedSurfaces();
           if (m_cfg.centralLayerMaterialConcentration.at(icl) > 0) {
-            auto mutableOuterSurface = const_cast<Surface*>( approachSurfaces.at(1) );
+            auto mutableOuterSurface
+                = const_cast<Surface*>(approachSurfaces.at(1));
             mutableOuterSurface->setAssociatedMaterial(layerMaterialPtr);
             ACTS_VERBOSE("- and material at outer approach surface");
           } else {
-            auto mutableInnerSurface = const_cast<Surface*>( approachSurfaces.at(0) );
+            auto mutableInnerSurface
+                = const_cast<Surface*>(approachSurfaces.at(0));
             mutableInnerSurface->setAssociatedMaterial(layerMaterialPtr);
             ACTS_VERBOSE("- and material at inner approach surface");
           }
@@ -517,14 +519,18 @@ Acts::GenericLayerBuilder::constructLayers()
           auto pApproachSurfaces
               = pLayer->approachDescriptor()->containedSurfaces();
           if (m_cfg.posnegLayerMaterialConcentration.at(ipnl) > 0.) {
-            auto mutableInnerNSurface = const_cast<Surface*>( nApproachSurfaces.at(0) );
+            auto mutableInnerNSurface
+                = const_cast<Surface*>(nApproachSurfaces.at(0));
             mutableInnerNSurface->setAssociatedMaterial(layerMaterialPtr);
-            auto mutableOuterPSurface = const_cast<Surface*>( pApproachSurfaces.at(1) );
+            auto mutableOuterPSurface
+                = const_cast<Surface*>(pApproachSurfaces.at(1));
             mutableOuterPSurface->setAssociatedMaterial(layerMaterialPtr);
           } else {
-            auto mutableOuterNSurface = const_cast<Surface*>( nApproachSurfaces.at(1) );
+            auto mutableOuterNSurface
+                = const_cast<Surface*>(nApproachSurfaces.at(1));
             mutableOuterNSurface->setAssociatedMaterial(layerMaterialPtr);
-            auto mutableInnerPSurface = const_cast<Surface*>( pApproachSurfaces.at(0) );
+            auto mutableInnerPSurface
+                = const_cast<Surface*>(pApproachSurfaces.at(0));
             mutableInnerPSurface->setAssociatedMaterial(layerMaterialPtr);
           }
         }

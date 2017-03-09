@@ -107,9 +107,9 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
   MutableLayerPtr cLayer = CylinderLayer::create(transform,
                                                  cBounds,
                                                  std::move(sArray),
-                                                layerThickness,
-                                                std::move(ad),
-                                                active);
+                                                 layerThickness,
+                                                 std::move(ad),
+                                                 active);
 
   if (!cLayer) ACTS_ERROR("Creation of cylinder layer did not succeed!");
   associateSurfacesToLayer(*cLayer);
@@ -504,7 +504,7 @@ Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const
   auto surfaces = layer.surfaceArray()->arrayObjects();
 
   for (auto& surface : surfaces) {
-    auto mutableSurface = const_cast<Surface*>( surface );
+    auto mutableSurface = const_cast<Surface*>(surface);
     mutableSurface->associateLayer(layer);
   }
 }

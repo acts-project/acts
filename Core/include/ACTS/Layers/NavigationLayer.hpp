@@ -72,7 +72,7 @@ public:
   /// In general, extrapolation to a surface should be avoided
   const Surface&
   surfaceRepresentation() const override;
-  
+
   // Non-const version
   Surface&
   surfaceRepresentation() override;
@@ -121,7 +121,7 @@ NavigationLayer::surfaceRepresentation() const
 inline Surface&
 NavigationLayer::surfaceRepresentation()
 {
-  return *( const_cast<Surface*>( m_surfaceRepresentation.get() ) );
+  return *(const_cast<Surface*>(m_surfaceRepresentation.get()));
 }
 
 inline const Vector3D

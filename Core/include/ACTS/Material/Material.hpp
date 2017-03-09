@@ -138,7 +138,8 @@ public:
   float rho;
   float dEdX;
   float zOaTr;
-  MaterialComposition* composition;  //! transient member to ROOT (for the moment)
+  MaterialComposition*
+      composition;  //! transient member to ROOT (for the moment)
 
   /** Default Constructor needed for POOL */
   Material()

@@ -648,7 +648,8 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
         // screen output
         ACTS_VERBOSE("r-binning: Processing volume [" << ivol++ << "]");
         // for the first one
-        std::shared_ptr<TrackingVolume> tVol = std::const_pointer_cast<TrackingVolume>(*tVolIter);
+        std::shared_ptr<TrackingVolume> tVol
+            = std::const_pointer_cast<TrackingVolume>(*tVolIter);
         if (tVolIter == tVolFirst) {
           addFaceVolumes(tVol, tubeInnerCover, glueVolumesInnerTube);
         }
@@ -659,8 +660,10 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
           addFaceVolumes(tVol, tubeOuterCover, glueVolumesOuterTube);
           ++tVolIter;
         } else {
-          std::shared_ptr<TrackingVolume> tVol1 = std::const_pointer_cast<TrackingVolume>(*tVolIter);
-          std::shared_ptr<TrackingVolume> tVol2 = std::const_pointer_cast<TrackingVolume>(*(++tVolIter));
+          std::shared_ptr<TrackingVolume> tVol1
+              = std::const_pointer_cast<TrackingVolume>(*tVolIter);
+          std::shared_ptr<TrackingVolume> tVol2
+              = std::const_pointer_cast<TrackingVolume>(*(++tVolIter));
           glueTrackingVolumes(tVol1,
                               tubeOuterCover,
                               tVol2,
@@ -680,7 +683,8 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
         ACTS_VERBOSE("z-binning: Processing volume '"
                      << (*tVolIter)->volumeName()
                      << "'.");
-        std::shared_ptr<TrackingVolume> tVol = std::const_pointer_cast<TrackingVolume>(*tVolIter);
+        std::shared_ptr<TrackingVolume> tVol
+            = std::const_pointer_cast<TrackingVolume>(*tVolIter);
         if (tVolIter == tVolFirst) {
           addFaceVolumes(tVol, negativeFaceXY, glueVolumesNegativeFace);
         }
@@ -690,8 +694,10 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
           addFaceVolumes(tVol, positiveFaceXY, glueVolumesPositiveFace);
           ++tVolIter;
         } else {
-          std::shared_ptr<TrackingVolume> tVol1 = std::const_pointer_cast<TrackingVolume>(*tVolIter);
-          std::shared_ptr<TrackingVolume> tVol2 = std::const_pointer_cast<TrackingVolume>(*(++tVolIter));
+          std::shared_ptr<TrackingVolume> tVol1
+              = std::const_pointer_cast<TrackingVolume>(*tVolIter);
+          std::shared_ptr<TrackingVolume> tVol2
+              = std::const_pointer_cast<TrackingVolume>(*(++tVolIter));
           glueTrackingVolumes(tVol1,
                               positiveFaceXY,
                               tVol2,
@@ -820,9 +826,9 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
       : tvolTwo;
 
   // We'll need to mutate those volumes in order to glue them together
-  auto mutableGlueVolOne = std::const_pointer_cast<TrackingVolume>( glueVolOne );
-  auto mutableGlueVolTwo = std::const_pointer_cast<TrackingVolume>( glueVolTwo );
-      
+  auto mutableGlueVolOne = std::const_pointer_cast<TrackingVolume>(glueVolOne);
+  auto mutableGlueVolTwo = std::const_pointer_cast<TrackingVolume>(glueVolTwo);
+
   // check the cases
   if (volOneGlueVols <= 1 && volTwoGlueVols <= 1) {
     // (i) one -> one
@@ -846,9 +852,9 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
                                       << faceTwo
                                       << " ]");
     auto mutableFaceTwoVolumes = std::const_pointer_cast<TrackingVolumeArray>(
-      gvDescriptorTwo.glueVolumes(faceTwo)
-    );
-    mutableGlueVolOne->glueTrackingVolumes(faceOne, mutableFaceTwoVolumes, faceTwo);
+        gvDescriptorTwo.glueVolumes(faceTwo));
+    mutableGlueVolOne->glueTrackingVolumes(
+        faceOne, mutableFaceTwoVolumes, faceTwo);
   } else if (volTwoGlueVols <= 1) {
     // (iii) many -> one
     ACTS_VERBOSE("      glue : many[ " << tvolOne->volumeName() << " @ "
@@ -859,9 +865,9 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
                                        << faceTwo
                                        << " ]");
     auto mutableFaceOneVolumes = std::const_pointer_cast<TrackingVolumeArray>(
-      gvDescriptorOne.glueVolumes(faceOne)
-    );
-    mutableGlueVolTwo->glueTrackingVolumes(faceTwo, mutableFaceOneVolumes, faceOne);
+        gvDescriptorOne.glueVolumes(faceOne));
+    mutableGlueVolTwo->glueTrackingVolumes(
+        faceTwo, mutableFaceOneVolumes, faceOne);
   } else {
     // (iv) glue array to array
     ACTS_VERBOSE("      glue : many[ " << tvolOne->volumeName() << " @ "
@@ -914,12 +920,16 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
     }
     // update the volume with the boundary surface accordingly
     // it's safe to access directly, they can not be nullptr
-    for (auto& oneVolume : gvDescriptorOne.glueVolumes(faceOne)->arrayObjects()) {
-      auto mutableOneVolume = std::const_pointer_cast<TrackingVolume>( oneVolume );
+    for (auto& oneVolume :
+         gvDescriptorOne.glueVolumes(faceOne)->arrayObjects()) {
+      auto mutableOneVolume
+          = std::const_pointer_cast<TrackingVolume>(oneVolume);
       mutableOneVolume->updateBoundarySurface(faceOne, boundarySurface);
     }
-    for (auto& twoVolume : gvDescriptorTwo.glueVolumes(faceTwo)->arrayObjects()) {
-      auto mutableTwoVolume = std::const_pointer_cast<TrackingVolume>( twoVolume );
+    for (auto& twoVolume :
+         gvDescriptorTwo.glueVolumes(faceTwo)->arrayObjects()) {
+      auto mutableTwoVolume
+          = std::const_pointer_cast<TrackingVolume>(twoVolume);
       mutableTwoVolume->updateBoundarySurface(faceTwo, boundarySurface);
     }
   }  // end of case (iv)
@@ -927,10 +937,9 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
 
 /** Private method - helper method not to duplicate code */
 void
-Acts::CylinderVolumeHelper::addFaceVolumes(
-    std::shared_ptr<TrackingVolume> tvol,
-    BoundarySurfaceFace             glueFace,
-    TrackingVolumeVector&           vols) const
+Acts::CylinderVolumeHelper::addFaceVolumes(std::shared_ptr<TrackingVolume> tvol,
+                                           BoundarySurfaceFace   glueFace,
+                                           TrackingVolumeVector& vols) const
 {
   ACTS_VERBOSE("Adding face volumes of face " << glueFace << " for the volume '"
                                               << tvol->volumeName()

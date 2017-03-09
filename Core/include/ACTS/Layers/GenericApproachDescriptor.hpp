@@ -79,7 +79,7 @@ public:
   /// return all containes surfaces of this approach descriptor
   const std::vector<const Surface*>&
   containedSurfaces() const override;
-  
+
   /// Non-const version
   std::vector<const Surface*>&
   containedSurfaces() override;
@@ -97,7 +97,7 @@ GenericApproachDescriptor<T>::registerLayer(const Layer& lay)
 {
   // go through the surfaces
   for (auto& sf : m_surfacesCache) {
-    auto mutableSf = const_cast<Surface*>( sf );
+    auto mutableSf = const_cast<Surface*>(sf);
     mutableSf->associateLayer(lay);
   }
 }
@@ -146,7 +146,6 @@ GenericApproachDescriptor<T>::containedSurfaces()
 {
   return m_surfacesCache;
 }
-
 }
 
 #endif

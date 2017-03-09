@@ -178,8 +178,7 @@ BoundarySurfaceT<T>::surfaceRepresentation() const
 
 template <class T>
 void
-BoundarySurfaceT<T>::attachVolume(VolumePtr           volume,
-                                  BoundaryOrientation inout)
+BoundarySurfaceT<T>::attachVolume(VolumePtr volume, BoundaryOrientation inout)
 {
   if (inout == insideVolume)
     m_insideVolume = volume.get();

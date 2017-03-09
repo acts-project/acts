@@ -49,7 +49,7 @@ Acts::CylinderVolumeBuilder::setLogger(std::unique_ptr<Logger> newLogger)
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr insideVolume,
-                                            VolumeBoundsPtr   outsideBounds) const
+                                            VolumeBoundsPtr outsideBounds) const
 {
   ACTS_DEBUG("Configured to build volume : " << m_cfg.volumeName);
 

@@ -122,10 +122,11 @@ public:
   /// one to which one can extrapolate
   virtual const Surface&
   surfaceRepresentation() const = 0;
-  
+
   // Non-const version
   virtual Surface&
-  surfaceRepresentation() = 0;
+  surfaceRepresentation()
+      = 0;
 
   /// Return the Thickness of the Layer
   /// this is by definition along the normal vector of the surfaceRepresentation
@@ -155,7 +156,7 @@ public:
   /// Return method for the approach descriptor, can be nullptr
   const ApproachDescriptor*
   approachDescriptor() const;
-  
+
   /// Non-const version
   ApproachDescriptor*
   approachDescriptor();
@@ -289,7 +290,7 @@ public:
   /// @todo remove this concept
   const Surface*
   materialSurface() const;
-  
+
   // Non-const version
   Surface*
   materialSurface();

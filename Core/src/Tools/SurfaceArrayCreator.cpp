@@ -768,8 +768,7 @@ Acts::SurfaceArrayCreator::createBinUtility(
 
 /// Register the neigbourhood
 void
-Acts::SurfaceArrayCreator::registerNeighbourHood(
-    SurfaceArray& sArray) const
+Acts::SurfaceArrayCreator::registerNeighbourHood(SurfaceArray& sArray) const
 {
   ACTS_DEBUG("Register neighbours to the elements.");
   // get the grid first
