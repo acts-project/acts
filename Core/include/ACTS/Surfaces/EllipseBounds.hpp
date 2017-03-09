@@ -27,9 +27,9 @@ namespace Acts {
 /// i.e. the surface between two ellipses.
 /// By providing an argument for hphisec, the bounds can
 /// be restricted to a phirange around the center position.
-///   
+///
 /// @image html EllipseBounds.png
-///  
+///
 class EllipseBounds : public PlanarBounds
 {
 public:
@@ -226,7 +226,8 @@ EllipseBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
 inline bool
 EllipseBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
-  return EllipseBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
+  return EllipseBounds::inside(
+      lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 }
 
 inline bool

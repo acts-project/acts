@@ -404,7 +404,7 @@ DiscTrapezoidalBounds::inside(const Vector2D&      lpos,
                  && (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)) != 0)
       ? .5
           * bcheck.FastArcTan(2 * lCovarianceCar(1, 0)
-                            / (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)))
+                              / (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)))
       : 0.;
   scResult = bcheck.FastSinCos(theta);
   ActsMatrixD<2, 2> rotMatrix;

@@ -151,8 +151,8 @@ Acts::DiscSurface::isOnSurface(const Vector3D&      glopo,
 {
   Vector3D loc3Dframe = (transform().inverse()) * glopo;
   if (std::abs(loc3Dframe.z()) > (s_onSurfaceTolerance)) return false;
-  return (
-      bcheck
-          ? bounds().inside(Vector2D(loc3Dframe.perp(), loc3Dframe.phi()), bcheck)
-          : true);
+  return (bcheck
+              ? bounds().inside(Vector2D(loc3Dframe.perp(), loc3Dframe.phi()),
+                                bcheck)
+              : true);
 }

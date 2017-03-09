@@ -160,17 +160,19 @@ LineBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
   if (bcheck.bcType == 0 || bcheck.nSigmas == 0)
     return LineBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
   // ellipsoid check
-  float theta = ((*bcheck.lCovariance)(1, 0) != 0
-                 && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
+  float theta
+      = ((*bcheck.lCovariance)(1, 0) != 0
+         && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
       ? .5
-          * bcheck.FastArcTan(2 * (*bcheck.lCovariance)(1, 0)
-                            / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
+          * bcheck.FastArcTan(
+                2 * (*bcheck.lCovariance)(1, 0)
+                / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
   sincosCache scResult = bcheck.FastSinCos(theta);
-  double      dphi     = scResult.sinC * scResult.sinC * (*bcheck.lCovariance)(0, 0);
-  double      dz       = scResult.cosC * scResult.cosC * (*bcheck.lCovariance)(0, 1);
-  double      max_ell  = dphi > dz ? dphi : dz;
-  double      limit    = bcheck.nSigmas * sqrt(max_ell);
+  double dphi    = scResult.sinC * scResult.sinC * (*bcheck.lCovariance)(0, 0);
+  double dz      = scResult.cosC * scResult.cosC * (*bcheck.lCovariance)(0, 1);
+  double max_ell = dphi > dz ? dphi : dz;
+  double limit   = bcheck.nSigmas * sqrt(max_ell);
   return insideLocZ(lpos[Acts::eLOC_Z], limit);
 }
 

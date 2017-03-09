@@ -113,6 +113,7 @@ Acts::PlaneSurface::isOnSurface(const Vector3D&      glopo,
   /// the chance that there is no transform is almost 0, let's apply it
   Vector3D loc3Dframe = (transform().inverse()) * glopo;
   if (std::abs(loc3Dframe.z()) > s_onSurfaceTolerance) return false;
-  return (bcheck ? bounds().inside(Vector2D(loc3Dframe.x(), loc3Dframe.y()), bcheck)
-               : true);
+  return (
+      bcheck ? bounds().inside(Vector2D(loc3Dframe.x(), loc3Dframe.y()), bcheck)
+             : true);
 }

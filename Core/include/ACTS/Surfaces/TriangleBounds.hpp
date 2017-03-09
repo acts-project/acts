@@ -197,7 +197,8 @@ inline bool
 TriangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
   if (bcheck.bcType == 0)
-    return TriangleBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
+    return TriangleBounds::inside(
+        lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 
   /// @todo check for quick limit test
   /// double max_ell = (*bcheck.lCovariance)(0, 0) > (*bcheck.lCovariance)(1, 1)
@@ -212,11 +213,13 @@ TriangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
   // compute KDOP and axes for surface polygon
   std::vector<KDOP>     elementKDOP(3);
   std::vector<Vector2D> elementP(3);
-  double                theta = ((*bcheck.lCovariance)(1, 0) != 0
-                  && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
+  double                theta
+      = ((*bcheck.lCovariance)(1, 0) != 0
+         && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
       ? .5
-          * bcheck.FastArcTan(2 * (*bcheck.lCovariance)(1, 0)
-                            / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
+          * bcheck.FastArcTan(
+                2 * (*bcheck.lCovariance)(1, 0)
+                / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
   sincosCache scResult = bcheck.FastSinCos(theta);
   ActsMatrixD<2, 2> rotMatrix;

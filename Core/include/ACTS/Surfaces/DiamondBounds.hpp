@@ -23,7 +23,7 @@ namespace Acts {
 
 ///
 /// @class DiamondBounds
-///  
+///
 /// Bounds for a double trapezoidal ("diamond"), planar Surface.
 ///
 class DiamondBounds : public PlanarBounds
@@ -190,9 +190,9 @@ private:
   initCache();
 
   // std::vector<TDD_real_t> m_valueStore;  ///< internal parameter store
-  TDD_real_t              m_alpha1;  ///< internal parameter cache for alpha1
-  TDD_real_t              m_alpha2;  ///< internal parameter cache for alpha2
-  RectangleBounds         m_boundingBox;  ///< internal bounding box cache
+  TDD_real_t      m_alpha1;       ///< internal parameter cache for alpha1
+  TDD_real_t      m_alpha2;       ///< internal parameter cache for alpha2
+  RectangleBounds m_boundingBox;  ///< internal bounding box cache
 };
 
 inline DiamondBounds*
@@ -235,7 +235,8 @@ inline bool
 DiamondBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
   if (bcheck.bcType == 0)
-    return DiamondBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
+    return DiamondBounds::inside(
+        lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 
   // a fast FALSE
   double max_ell = (*bcheck.lCovariance)(0, 0) > (*bcheck.lCovariance)(1, 1)
@@ -271,11 +272,13 @@ DiamondBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
   // compute KDOP and axes for surface polygon
   std::vector<KDOP>     elementKDOP(5);
   std::vector<Vector2D> elementP(6);
-  float                 theta = ((*bcheck.lCovariance)(1, 0) != 0
-                 && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
+  float                 theta
+      = ((*bcheck.lCovariance)(1, 0) != 0
+         && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
       ? .5
-          * bcheck.FastArcTan(2 * (*bcheck.lCovariance)(1, 0)
-                            / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
+          * bcheck.FastArcTan(
+                2 * (*bcheck.lCovariance)(1, 0)
+                / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
   sincosCache scResult = bcheck.FastSinCos(theta);
   ActsMatrixD<2, 2> rotMatrix;
