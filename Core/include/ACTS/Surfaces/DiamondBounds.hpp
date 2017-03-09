@@ -42,7 +42,8 @@ public:
   /// Default Constructor is deleted
   DiamondBounds() = delete;
 
-  /// Constructor for symmetric Diamond
+  /// Constructor for symmetric concave or convex hexagon, symmetric about the y
+  /// axis
   ///
   /// @param minhalex is the halflength in x at minimal y
   /// @param medhalex is the halflength in x at y = 0
@@ -188,7 +189,7 @@ private:
   virtual void
   initCache();
 
-  std::vector<TDD_real_t> m_valueStore;  ///< internal parameter store
+  // std::vector<TDD_real_t> m_valueStore;  ///< internal parameter store
   TDD_real_t              m_alpha1;  ///< internal parameter cache for alpha1
   TDD_real_t              m_alpha2;  ///< internal parameter cache for alpha2
   RectangleBounds         m_boundingBox;  ///< internal bounding box cache
@@ -284,27 +285,27 @@ DiamondBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
   // ellipse is always at (0,0), surface is moved to ellipse position and then
   // rotated
   Vector2D p;
-  p << -m_valueStore.at(DiamondBounds::bv_minHalfX),
-      -2. * m_valueStore.at(DiamondBounds::bv_halfY1);
+  p << -m_valueStore[DiamondBounds::bv_minHalfX],
+      -2. * m_valueStore[DiamondBounds::bv_halfY1];
   elementP.at(0) = (rotMatrix * (p - lpos));
-  p << -m_valueStore.at(DiamondBounds::bv_medHalfX), 0.;
+  p << -m_valueStore[DiamondBounds::bv_medHalfX], 0.;
   elementP.at(1) = (rotMatrix * (p - lpos));
-  p << -m_valueStore.at(DiamondBounds::bv_maxHalfX),
-      2. * m_valueStore.at(DiamondBounds::bv_halfY2);
+  p << -m_valueStore[DiamondBounds::bv_maxHalfX],
+      2. * m_valueStore[DiamondBounds::bv_halfY2];
   elementP.at(2) = (rotMatrix * (p - lpos));
-  p << m_valueStore.at(DiamondBounds::bv_maxHalfX),
-      2. * m_valueStore.at(DiamondBounds::bv_halfY2);
+  p << m_valueStore[DiamondBounds::bv_maxHalfX],
+      2. * m_valueStore[DiamondBounds::bv_halfY2];
   elementP.at(3) = (rotMatrix * (p - lpos));
-  p << m_valueStore.at(DiamondBounds::bv_medHalfX), 0.;
+  p << m_valueStore[DiamondBounds::bv_medHalfX], 0.;
   elementP.at(4) = (rotMatrix * (p - lpos));
-  p << m_valueStore.at(DiamondBounds::bv_minHalfX),
-      -2. * m_valueStore.at(DiamondBounds::bv_halfY1);
+  p << m_valueStore[DiamondBounds::bv_minHalfX],
+      -2. * m_valueStore[DiamondBounds::bv_halfY1];
   elementP.at(5)             = (rotMatrix * (p - lpos));
-  std::vector<Vector2D> axis = {normal * (elementP.at(1) - elementP.at(0)),
-                                normal * (elementP.at(2) - elementP.at(1)),
-                                normal * (elementP.at(3) - elementP.at(2)),
-                                normal * (elementP.at(4) - elementP.at(3)),
-                                normal * (elementP.at(5) - elementP.at(4))};
+  std::vector<Vector2D> axis = {normal * (elementP[1] - elementP[0]),
+                                normal * (elementP[2] - elementP[1]),
+                                normal * (elementP[3] - elementP[2]),
+                                normal * (elementP[4] - elementP[3]),
+                                normal * (elementP[5] - elementP[4])};
   bcheck.ComputeKDOP(elementP, axis, elementKDOP);
   // compute KDOP for error ellipse
   std::vector<KDOP> errelipseKDOP(5);
@@ -317,27 +318,27 @@ inline bool
 DiamondBounds::insideLoc0(const Vector2D& lpos, double tol0) const
 {
   return (std::abs(lpos[Acts::eLOC_X])
-          < m_valueStore.at(DiamondBounds::bv_medHalfX) + tol0);
+          < m_valueStore[DiamondBounds::bv_medHalfX] + tol0);
 }
 
 inline bool
 DiamondBounds::insideLoc1(const Vector2D& lpos, double tol1) const
 {
-  return ((lpos[Acts::eLOC_Y]
-           > -2. * m_valueStore.at(DiamondBounds::bv_halfY1) - tol1)
-          && (lpos[Acts::eLOC_Y]
-              < 2. * m_valueStore.at(DiamondBounds::bv_halfY2) + tol1));
+  return (
+      (lpos[Acts::eLOC_Y] > -2. * m_valueStore[DiamondBounds::bv_halfY1] - tol1)
+      && (lpos[Acts::eLOC_Y]
+          < 2. * m_valueStore[DiamondBounds::bv_halfY2] + tol1));
 }
 
 inline void
 DiamondBounds::initCache()
 {
-  m_alpha1 = atan2(m_valueStore.at(DiamondBounds::bv_medHalfX)
-                       - m_valueStore.at(DiamondBounds::bv_minHalfX),
-                   2. * m_valueStore.at(DiamondBounds::bv_halfY1));
-  m_alpha2 = atan2(m_valueStore.at(DiamondBounds::bv_medHalfX)
-                       - m_valueStore.at(DiamondBounds::bv_maxHalfX),
-                   2. * m_valueStore.at(DiamondBounds::bv_halfY2));
+  m_alpha1 = atan2(m_valueStore[DiamondBounds::bv_medHalfX]
+                       - m_valueStore[DiamondBounds::bv_minHalfX],
+                   2. * m_valueStore[DiamondBounds::bv_halfY1]);
+  m_alpha2 = atan2(m_valueStore[DiamondBounds::bv_medHalfX]
+                       - m_valueStore[DiamondBounds::bv_maxHalfX],
+                   2. * m_valueStore[DiamondBounds::bv_halfY2]);
 }
 
 inline const std::vector<Vector2D>
@@ -347,22 +348,18 @@ DiamondBounds::vertices() const
   std::vector<Vector2D> vertices;
   // fill the vertices
   vertices.reserve(6);
+  vertices.push_back(Vector2D(m_valueStore[DiamondBounds::bv_minHalfX],
+                              -m_valueStore[DiamondBounds::bv_halfY1]));  // [0]
   vertices.push_back(
-      Vector2D(m_valueStore.at(DiamondBounds::bv_minHalfX),
-               -m_valueStore.at(DiamondBounds::bv_halfY1)));  // [0]
+      Vector2D(m_valueStore[DiamondBounds::bv_medHalfX], 0.));  // [1]
+  vertices.push_back(Vector2D(m_valueStore[DiamondBounds::bv_maxHalfX],
+                              m_valueStore[DiamondBounds::bv_halfY2]));  // [2]
+  vertices.push_back(Vector2D(-m_valueStore[DiamondBounds::bv_maxHalfX],
+                              m_valueStore[DiamondBounds::bv_halfY2]));  // [3]
   vertices.push_back(
-      Vector2D(m_valueStore.at(DiamondBounds::bv_medHalfX), 0.));  // [1]
-  vertices.push_back(
-      Vector2D(m_valueStore.at(DiamondBounds::bv_maxHalfX),
-               m_valueStore.at(DiamondBounds::bv_halfY2)));  // [2]
-  vertices.push_back(
-      Vector2D(-m_valueStore.at(DiamondBounds::bv_maxHalfX),
-               m_valueStore.at(DiamondBounds::bv_halfY2)));  // [3]
-  vertices.push_back(
-      Vector2D(-m_valueStore.at(DiamondBounds::bv_medHalfX), 0.));  // [4]
-  vertices.push_back(
-      Vector2D(-m_valueStore.at(DiamondBounds::bv_minHalfX),
-               -m_valueStore.at(DiamondBounds::bv_halfY1)));  // [5]
+      Vector2D(-m_valueStore[DiamondBounds::bv_medHalfX], 0.));  // [4]
+  vertices.push_back(Vector2D(-m_valueStore[DiamondBounds::bv_minHalfX],
+                              -m_valueStore[DiamondBounds::bv_halfY1]));  // [5]
   return vertices;
 }
 
