@@ -80,7 +80,7 @@ public:
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  LayerPtr
+  MutableLayerPtr
   cylinderLayer(const std::vector<const Surface*>&  surfaces,
                 double                              envelopeR,
                 double                              envelopeZ,
@@ -107,7 +107,7 @@ public:
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  LayerPtr
+  MutableLayerPtr
   cylinderLayer(const std::vector<const Surface*>&  surfaces,
                 double                              layerRmin,
                 double                              layerRmax,
@@ -136,7 +136,7 @@ public:
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  LayerPtr
+  MutableLayerPtr
   cylinderLayer(const std::vector<const Surface*>&  surfaces,
                 double                              envelopeR,
                 double                              envelopeZ,
@@ -163,7 +163,7 @@ public:
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  LayerPtr
+  MutableLayerPtr
   discLayer(const std::vector<const Surface*>&  surfaces,
             double                              envelopeMinR,
             double                              envelopeMaxR,
@@ -191,7 +191,7 @@ public:
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  LayerPtr
+  MutableLayerPtr
   discLayer(const std::vector<const Surface*>&  surfaces,
             double                              layerZmin,
             double                              layerZmax,
@@ -219,7 +219,7 @@ public:
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  LayerPtr
+  MutableLayerPtr
   discLayer(const std::vector<const Surface*>&  surfaces,
             double                              envelopeMinR,
             double                              envelopeMaxR,
@@ -245,7 +245,7 @@ public:
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  LayerPtr
+  MutableLayerPtr
   planeLayer(const std::vector<const Surface*>&  surfaces,
              double                              envelopeXY,
              double                              envelopeZ,
@@ -269,7 +269,7 @@ public:
 
   // associate surfaces contained by this layer to this layer
   void
-  associateSurfacesToLayer(const Layer& layer) const;
+  associateSurfacesToLayer(Layer& layer) const;
 
 private:
   /// Method to get the global extends in space for the module

@@ -274,7 +274,8 @@ Acts::MaterialMapping::finalizeLayerMaterial()
                << " LayerMaterialRecords to be finalized");
   // finally set the material of the layers
   for (auto& layRecord : m_layerRecords) {
-    layRecord.first->materialSurface()->setAssociatedMaterial(
+    auto mutableLayer = const_cast<Layer*>(layRecord.first);
+    mutableLayer->materialSurface()->setAssociatedMaterial(
         layRecord.second.layerMaterial());
   }
 }

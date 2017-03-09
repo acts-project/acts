@@ -52,7 +52,7 @@ public:
   /// @param gvs is the array of volumes to be attached
   void
   registerGlueVolumes(Acts::BoundarySurfaceFace                  bsf,
-                      std::shared_ptr<const TrackingVolumeArray> gvs) const;
+                      std::shared_ptr<const TrackingVolumeArray> gvs);
 
   /// Retrieve the glue volumes
   ///
@@ -73,10 +73,9 @@ public:
   screenOutput() const;
 
 private:
-  mutable std::map<BoundarySurfaceFace,
-                   std::shared_ptr<const TrackingVolumeArray>>
-                                           m_glueVolumes;
-  mutable std::vector<BoundarySurfaceFace> m_glueFaces;
+  std::map<BoundarySurfaceFace, std::shared_ptr<const TrackingVolumeArray>>
+                                   m_glueVolumes;
+  std::vector<BoundarySurfaceFace> m_glueFaces;
 };
 
 inline const std::vector<BoundarySurfaceFace>&

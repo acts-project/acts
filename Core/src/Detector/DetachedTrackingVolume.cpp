@@ -45,7 +45,7 @@ Acts::DetachedTrackingVolume::~DetachedTrackingVolume()
 }
 
 void
-Acts::DetachedTrackingVolume::move(Acts::Transform3D&) const
+Acts::DetachedTrackingVolume::move(Acts::Transform3D&)
 {
   //!< @todo implement
   //// move the volume
@@ -92,9 +92,10 @@ Acts::DetachedTrackingVolume::clone(std::string        name,
 
 void
 Acts::DetachedTrackingVolume::sign(GeometrySignature signat,
-                                   GeometryType      geotype) const
+                                   GeometryType      geotype)
 {
-  m_trkVolume->sign(signat, geotype);
+  auto mutableTrkVolume = std::const_pointer_cast<TrackingVolume>(m_trkVolume);
+  mutableTrkVolume->sign(signat, geotype);
 }
 
 Acts::GeometrySignature
@@ -110,7 +111,7 @@ Acts::DetachedTrackingVolume::geometryType() const
 }
 
 void
-Acts::DetachedTrackingVolume::setBaseTransform(Acts::Transform3D* transf) const
+Acts::DetachedTrackingVolume::setBaseTransform(Acts::Transform3D* transf)
 {
   if (transf)
     m_baseTransform = transf;
@@ -122,7 +123,7 @@ Acts::DetachedTrackingVolume::setBaseTransform(Acts::Transform3D* transf) const
 }
 
 void
-Acts::DetachedTrackingVolume::realign(Acts::Transform3D* transf) const
+Acts::DetachedTrackingVolume::realign(Acts::Transform3D* transf)
 {
   if (transf) {
     Acts::Transform3D shift

@@ -17,14 +17,14 @@
 #include "ACTS/Surfaces/PerigeeSurface.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 
-Acts::TrackingGeometry::TrackingGeometry(TrackingVolumePtr highestVolume)
+Acts::TrackingGeometry::TrackingGeometry(MutableTrackingVolumePtr highestVolume)
   : m_world(highestVolume)
   , m_beam(std::make_unique<const PerigeeSurface>(s_origin))
 {
   // create the GeometryID for this
   GeometryID geoID(0);
   // close up the geometry
-  if (m_world) m_world->closeGeometry(geoID, m_trackingVolumes);
+  if (highestVolume) highestVolume->closeGeometry(geoID, m_trackingVolumes);
 }
 
 Acts::TrackingGeometry::~TrackingGeometry()
@@ -111,10 +111,10 @@ Acts::TrackingGeometry::highestTrackingVolume() const
 }
 
 void
-Acts::TrackingGeometry::sign(GeometrySignature geosit,
-                             GeometryType      geotype) const
+Acts::TrackingGeometry::sign(GeometrySignature geosit, GeometryType geotype)
 {
-  m_world->sign(geosit, geotype);
+  auto mutableWorld = std::const_pointer_cast<TrackingVolume>(m_world);
+  mutableWorld->sign(geosit, geotype);
 }
 
 const Acts::TrackingVolume*
@@ -135,7 +135,7 @@ Acts::TrackingGeometry::associatedLayer(const Acts::Vector3D& gp) const
 
 void
 Acts::TrackingGeometry::registerBeamTube(
-    std::unique_ptr<const PerigeeSurface> beam) const
+    std::unique_ptr<const PerigeeSurface> beam)
 {
   m_beam = std::move(beam);
 }

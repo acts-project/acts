@@ -47,7 +47,7 @@ Acts::CylinderVolumeBuilder::setLogger(std::unique_ptr<Logger> newLogger)
   m_logger = std::move(newLogger);
 }
 
-std::shared_ptr<const Acts::TrackingVolume>
+std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr insideVolume,
                                             VolumeBoundsPtr outsideBounds) const
 {
@@ -55,7 +55,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr insideVolume,
 
   // the return volume
   // -----------------------------------------------------------------------------
-  TrackingVolumePtr volume = nullptr;
+  MutableTrackingVolumePtr volume = nullptr;
 
   // now analyize the layers that are provided
   // -----------------------------------------------------

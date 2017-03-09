@@ -80,6 +80,10 @@ public:
   const std::vector<const Surface*>&
   containedSurfaces() const override;
 
+  /// Non-const version
+  std::vector<const Surface*>&
+  containedSurfaces() override;
+
 private:
   /// approach surfaces with ownership control
   std::vector<std::shared_ptr<T>> m_surfaces;
@@ -92,7 +96,10 @@ void
 GenericApproachDescriptor<T>::registerLayer(const Layer& lay)
 {
   // go through the surfaces
-  for (auto& sf : (m_surfacesCache)) sf->associateLayer(lay);
+  for (auto& sf : m_surfacesCache) {
+    auto mutableSf = const_cast<Surface*>(sf);
+    mutableSf->associateLayer(lay);
+  }
 }
 
 template <class T>
@@ -129,6 +136,13 @@ GenericApproachDescriptor<T>::approachSurface(
 template <class T>
 const std::vector<const Surface*>&
 GenericApproachDescriptor<T>::containedSurfaces() const
+{
+  return m_surfacesCache;
+}
+
+template <class T>
+std::vector<const Surface*>&
+GenericApproachDescriptor<T>::containedSurfaces()
 {
   return m_surfacesCache;
 }

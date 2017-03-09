@@ -238,7 +238,7 @@ public:
   }
 
 protected:
-  mutable std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
+  std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
 };
 
 inline CylinderSurface*

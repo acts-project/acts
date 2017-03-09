@@ -89,13 +89,13 @@ public:
   /// @param btype (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
-  TrackingVolumePtr
+  MutableTrackingVolumePtr
   createTrackingVolume(const LayerVector&           layers,
                        std::shared_ptr<Material>    matprop,
                        VolumeBoundsPtr              volBounds,
                        std::shared_ptr<Transform3D> transform = nullptr,
                        const std::string& volumeName = "UndefinedVolume",
-                       BinningType        btype      = arbitrary) const;
+                       BinningType        btype = arbitrary) const override;
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
@@ -109,7 +109,7 @@ public:
   /// @param btype (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
-  TrackingVolumePtr
+  MutableTrackingVolumePtr
   createTrackingVolume(const LayerVector&        layers,
                        std::shared_ptr<Material> matprop,
                        double                    loc0Min,
@@ -117,7 +117,7 @@ public:
                        double                    loc1Min,
                        double                    loc1Max,
                        const std::string&        volumeName = "UndefinedVolume",
-                       BinningType               btype      = arbitrary) const;
+                       BinningType btype = arbitrary) const override;
 
   /// Create a gap volume from dimensions and
   ///
@@ -129,7 +129,7 @@ public:
   /// @param volumeName  volume name to be given
   ///
   /// @return shared pointer to a new TrackingVolume
-  TrackingVolumePtr
+  MutableTrackingVolumePtr
   createGapTrackingVolume(std::shared_ptr<Material> matprop,
                           double                    loc0Min,
                           double                    loc0Max,
@@ -138,7 +138,7 @@ public:
                           unsigned int              materialLayers,
                           bool                      cylinder = true,
                           const std::string&        volumeName
-                          = "UndefinedVolume") const;
+                          = "UndefinedVolume") const override;
 
   /// Create a gap volume from dimensions and
   ///
@@ -150,7 +150,7 @@ public:
   /// @param btype (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
-  TrackingVolumePtr
+  MutableTrackingVolumePtr
   createGapTrackingVolume(std::shared_ptr<Material>  matprop,
                           double                     loc0Min,
                           double                     loc0Max,
@@ -159,7 +159,7 @@ public:
                           const std::vector<double>& layerPositions,
                           bool                       cylinder = true,
                           const std::string& volumeName = "UndefinedVolume",
-                          BinningType        btype      = arbitrary) const;
+                          BinningType        btype = arbitrary) const override;
 
   /// Create a container volumes from sub volumes, input volumes are ordered in
   /// R or Z by convention
@@ -168,8 +168,9 @@ public:
   ///
   ///
   /// @return shared pointer to a new TrackingVolume
-  TrackingVolumePtr
-  createContainerTrackingVolume(const TrackingVolumeVector& volumes) const;
+  MutableTrackingVolumePtr
+  createContainerTrackingVolume(
+      const TrackingVolumeVector& volumes) const override;
 
   /// Set configuration method
   ///
@@ -236,13 +237,13 @@ private:
   /// @param zMin the minimum z extend of the volume
   /// @param zMax the maximum z extend of the volume
   bool
-  interGlueTrackingVolume(TrackingVolumePtr tVolume,
-                          bool              rBinned,
-                          double            rMin,
-                          double            rGlueMin,
-                          double            rMax,
-                          double            zMin,
-                          double            zMax) const;
+  interGlueTrackingVolume(MutableTrackingVolumePtr tVolume,
+                          bool                     rBinned,
+                          double                   rMin,
+                          double                   rGlueMin,
+                          double                   rMax,
+                          double                   zMin,
+                          double                   zMax) const;
 
   /// Private method - glue volume to the other
   ///
@@ -256,15 +257,15 @@ private:
   /// @param zMin the minimum z extend of the volume
   /// @param zMax the maximum z extend of the volume
   void
-  glueTrackingVolumes(TrackingVolumePtr   volumeOne,
-                      BoundarySurfaceFace faceOne,
-                      TrackingVolumePtr   volumeTwo,
-                      BoundarySurfaceFace faceTwo,
-                      double              rMin,
-                      double              rGlueMin,
-                      double              rMax,
-                      double              zMin,
-                      double              zMax) const;
+  glueTrackingVolumes(MutableTrackingVolumePtr volumeOne,
+                      BoundarySurfaceFace      faceOne,
+                      MutableTrackingVolumePtr volumeTwo,
+                      BoundarySurfaceFace      faceTwo,
+                      double                   rMin,
+                      double                   rGlueMin,
+                      double                   rMax,
+                      double                   zMin,
+                      double                   zMax) const;
 
   /// Private method - helper method not to duplicate code
   ///
@@ -272,9 +273,9 @@ private:
   /// @param bsf is the boundary surface to which faces are added
   /// @param vols are the voluems which are added
   void
-  addFaceVolumes(TrackingVolumePtr     tVolume,
-                 BoundarySurfaceFace   bsf,
-                 TrackingVolumeVector& vols) const;
+  addFaceVolumes(MutableTrackingVolumePtr tVolume,
+                 BoundarySurfaceFace      bsf,
+                 TrackingVolumeVector&    vols) const;
 
   /// Private method - helper method to save some code
   ///

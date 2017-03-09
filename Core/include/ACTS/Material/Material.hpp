@@ -131,14 +131,14 @@ class Material
 {
 public:
   // standard x0, l0, A, Z, rho description
-  mutable float X0;
-  mutable float L0;
-  mutable float A;
-  mutable float Z;
-  mutable float rho;
-  mutable float dEdX;
-  mutable float zOaTr;
-  mutable MaterialComposition*
+  float X0;
+  float L0;
+  float A;
+  float Z;
+  float rho;
+  float dEdX;
+  float zOaTr;
+  MaterialComposition*
       composition;  //! transient member to ROOT (for the moment)
 
   /** Default Constructor needed for POOL */

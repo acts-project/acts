@@ -768,8 +768,7 @@ Acts::SurfaceArrayCreator::createBinUtility(
 
 /// Register the neigbourhood
 void
-Acts::SurfaceArrayCreator::registerNeighbourHood(
-    const SurfaceArray& sArray) const
+Acts::SurfaceArrayCreator::registerNeighbourHood(SurfaceArray& sArray) const
 {
   ACTS_DEBUG("Register neighbours to the elements.");
   // get the grid first
@@ -801,8 +800,9 @@ Acts::SurfaceArrayCreator::registerNeighbourHood(
               // increase the counter
               ++neighboursSet;
             }
-            // now register the neighbours
-            bElement->registerNeighbours(neighbourElements);
+            // now, mutate bElement to register the neighbours
+            auto mutableBElement = const_cast<DetectorElementBase*>(bElement);
+            mutableBElement->registerNeighbours(neighbourElements);
           }
         }
         ++io0;

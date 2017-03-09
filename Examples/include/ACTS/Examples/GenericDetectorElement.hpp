@@ -100,7 +100,7 @@ public:
 
   /// Set the identifier after construction (sometimes needed)
   virtual void
-  assignIdentifier(const Identifier& identifier) const final override;
+  assignIdentifier(const Identifier& identifier) final override;
 
   /// The maximal thickness of the detector element wrt normal axis
   double
@@ -109,7 +109,7 @@ public:
 private:
   /// the element representation
   /// identifier
-  mutable Identifier m_elementIdentifier;
+  Identifier m_elementIdentifier;
   /// the transform for positioning in 3D space
   std::shared_ptr<Transform3D> m_elementTransform;
   /// the surface represented by it
@@ -135,7 +135,7 @@ GenericDetectorElement::digitizationModule() const
 }
 
 inline void
-GenericDetectorElement::assignIdentifier(const Identifier& identifier) const
+GenericDetectorElement::assignIdentifier(const Identifier& identifier)
 {
   m_elementIdentifier = identifier;
 }

@@ -29,6 +29,7 @@ class PerigeeSurface;
 class Layer;
 
 typedef std::shared_ptr<const TrackingVolume>         TrackingVolumePtr;
+typedef std::shared_ptr<TrackingVolume>               MutableTrackingVolumePtr;
 typedef std::shared_ptr<const DetachedTrackingVolume> DetachedTrackingVolumePtr;
 typedef std::vector<DetachedTrackingVolumePtr>        DetachedVolumeVector;
 
@@ -50,7 +51,7 @@ public:
   /// Constructor
   ///
   /// @param highestVolume is the world volume
-  TrackingGeometry(TrackingVolumePtr highestVolume);
+  TrackingGeometry(MutableTrackingVolumePtr highestVolume);
 
   /// Destructor
   ~TrackingGeometry();
@@ -138,7 +139,7 @@ public:
   ///
   /// @param beam is the beam line surface
   void
-  registerBeamTube(std::unique_ptr<const PerigeeSurface> beam) const;
+  registerBeamTube(std::unique_ptr<const PerigeeSurface> beam);
 
   /// @brief surface representing the beam pipe
   ///
@@ -155,11 +156,11 @@ private:
   /// @param signat is the volume signature
   /// @param geotype is the volume navigation type
   void
-  sign(GeometrySignature signat, GeometryType geotype = Static) const;
+  sign(GeometrySignature signat, GeometryType geotype = Static);
 
   /// The known world - and the beamline
-  TrackingVolumePtr                             m_world;
-  mutable std::unique_ptr<const PerigeeSurface> m_beam;
+  TrackingVolumePtr                     m_world;
+  std::unique_ptr<const PerigeeSurface> m_beam;
 
   /// The Volumes in a map for string based search
   std::map<std::string, const TrackingVolume*> m_trackingVolumes;

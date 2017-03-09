@@ -79,7 +79,7 @@ constructCylinderVolume(double surfaceHalfLengthZ,
 }
 
 ///  helper function to create a container
-TrackingVolumePtr
+MutableTrackingVolumePtr
 constructContainerVolume(TrackingVolumePtr  iVolume,
                          TrackingVolumePtr  oVolume,
                          double             hVolumeRadius,

@@ -43,7 +43,7 @@ public:
   /// @todo chage od and ad to unique_ptr
   ///
   /// @return is a shared pointer to a layer
-  static LayerPtr
+  static MutableLayerPtr
   create(std::shared_ptr<Transform3D>        transform,
          std::shared_ptr<const ConeBounds>   cbounds,
          std::unique_ptr<SurfaceArray>       surfaceArray,
@@ -51,12 +51,12 @@ public:
          std::unique_ptr<ApproachDescriptor> ad        = nullptr,
          LayerType                           laytyp    = Acts::active)
   {
-    return LayerPtr(new ConeLayer(transform,
-                                  cbounds,
-                                  std::move(surfaceArray),
-                                  thickness,
-                                  std::move(ad),
-                                  laytyp));
+    return MutableLayerPtr(new ConeLayer(transform,
+                                         cbounds,
+                                         std::move(surfaceArray),
+                                         thickness,
+                                         std::move(ad),
+                                         laytyp));
   }
 
   /// Factory for shared layer with shift
@@ -65,10 +65,10 @@ public:
   /// @param shift is the additional shift applied after copying
   ///
   /// @return is a shared pointer to a layer
-  static LayerPtr
+  static MutableLayerPtr
   create(const ConeLayer& cla, const Transform3D& shift)
   {
-    return LayerPtr(new ConeLayer(cla, shift));
+    return MutableLayerPtr(new ConeLayer(cla, shift));
   }
 
   /// Factory for shared layer with shift - clone
@@ -95,9 +95,14 @@ public:
 
   /// Destructor
   virtual ~ConeLayer() {}
+
   /// Transforms the layer into a Surface representation for extrapolation
   const ConeSurface&
   surfaceRepresentation() const override;
+
+  // Non-const version
+  ConeSurface&
+  surfaceRepresentation() override;
 
 protected:
   /// Private constructor with arguments

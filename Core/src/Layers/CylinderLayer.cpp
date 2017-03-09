@@ -69,8 +69,14 @@ Acts::CylinderLayer::surfaceRepresentation() const
   return (*this);
 }
 
+Acts::CylinderSurface&
+Acts::CylinderLayer::surfaceRepresentation()
+{
+  return (*this);
+}
+
 void
-Acts::CylinderLayer::buildApproachDescriptor() const
+Acts::CylinderLayer::buildApproachDescriptor()
 {
   // delete it
   m_approachDescriptor = nullptr;
@@ -105,7 +111,10 @@ Acts::CylinderLayer::buildApproachDescriptor() const
     m_approachDescriptor
         = std::make_unique<GenericApproachDescriptor<const Surface>>(aSurfaces);
   }
-  for (auto& sIter : (m_approachDescriptor->containedSurfaces())) {
-    if (sIter) sIter->associateLayer(*this);
+  for (auto& sfPtr : (m_approachDescriptor->containedSurfaces())) {
+    if (sfPtr) {
+      auto& mutableSf = *(const_cast<Surface*>(sfPtr));
+      mutableSf.associateLayer(*this);
+    }
   }
 }

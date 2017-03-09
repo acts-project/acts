@@ -47,3 +47,9 @@ Acts::ConeLayer::surfaceRepresentation() const
 {
   return (*this);
 }
+
+Acts::ConeSurface&
+Acts::ConeLayer::surfaceRepresentation()
+{
+  return (*this);
+}

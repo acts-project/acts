@@ -194,7 +194,7 @@ public:
   ///
   /// @param lay the assignment Layer by reference
   void
-  associateLayer(const Layer& lay) const;
+  associateLayer(const Layer& lay);
 
   /// Set Associated SurfaceMaterial
   /// The material is usually derived in a complicated way and loaded from
@@ -203,7 +203,7 @@ public:
   /// @param material Material description this given and stored as a shared
   /// pointer
   void
-  setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial> material) const;
+  setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial> material);
 
   /// The templated Parameters onSurface method
   /// In order to avoid unneccessary geometrical operations, it checks on the
@@ -360,14 +360,14 @@ protected:
 
   /// The associated layer Layer - layer in which the Surface is be embedded,
   /// nullptr if not associated
-  mutable const Layer* m_associatedLayer;
+  const Layer* m_associatedLayer;
 
   /// The assoicated TrackingVolume - tracking volume in case the surface is a
   /// boundary surface, nullptr if not
-  mutable const TrackingVolume* m_associatedTrackingVolume;
+  const TrackingVolume* m_associatedTrackingVolume;
 
   /// Possibility to attach a material descrption
-  mutable std::shared_ptr<const SurfaceMaterial> m_associatedMaterial;
+  std::shared_ptr<const SurfaceMaterial> m_associatedMaterial;
 };
 
 inline bool
@@ -450,14 +450,13 @@ Surface::associatedMaterial() const
 }
 
 inline void
-Surface::setAssociatedMaterial(
-    std::shared_ptr<const SurfaceMaterial> material) const
+Surface::setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial> material)
 {
   m_associatedMaterial = material;
 }
 
 inline void
-Surface::associateLayer(const Layer& lay) const
+Surface::associateLayer(const Layer& lay)
 {
   m_associatedLayer = (&lay);
 }

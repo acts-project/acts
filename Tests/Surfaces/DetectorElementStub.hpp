@@ -61,7 +61,8 @@ public:
     , m_elementDiscBounds(nullptr)
     , m_elementLineBounds(nullptr)
   {
-    m_elementSurface->setAssociatedMaterial(material);
+    auto mutableSurface = std::const_pointer_cast<Surface>(m_elementSurface);
+    mutableSurface->setAssociatedMaterial(material);
   }
 
   /// Constructor for single sided detector element
@@ -87,13 +88,14 @@ public:
     , m_elementDiscBounds(nullptr)
     , m_elementLineBounds(std::move(lBounds))
   {
-    m_elementSurface->setAssociatedMaterial(material);
+    auto mutableSurface = std::const_pointer_cast<Surface>(m_elementSurface);
+    mutableSurface->setAssociatedMaterial(material);
   }
 
   void
-  assignIdentifier(const Identifier& /*identifier*/) const
+  assignIdentifier(const Identifier& identifier)
   {
-    // m_elementIdentifier=identifier; would not be const
+    m_elementIdentifier = identifier;
   }
 
   ///  Destructor

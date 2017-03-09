@@ -134,7 +134,7 @@ private:
   std::unique_ptr<Logger> m_logger;
 
   /// @todo make clear where the TGeoDetectorElement lives
-  mutable std::vector<std::shared_ptr<TGeoDetectorElement>> m_elementStore;
+  std::vector<std::shared_ptr<TGeoDetectorElement>> m_elementStore;
 
   /// Private helper function to parse the geometry tree
   void
@@ -145,13 +145,13 @@ private:
                    const LayerConfig&           layerConfig,
                    int                          type,
                    bool                         correctVolume = false,
-                   const std::string&           offset        = "") const;
+                   const std::string&           offset        = "");
 
   // Private helper mehtod : build layers
   // @param layers is goint to be filled
   // @param type is the indication which ones to build -1 | 0 | 1
   void
-  buildLayers(LayerVector& layers, int type = 0) const;
+  buildLayers(LayerVector& layers, int type = 0);
 };
 
 inline TGeoLayerBuilder::Config

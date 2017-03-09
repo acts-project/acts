@@ -27,7 +27,6 @@ Acts::PassiveLayerBuilder::PassiveLayerBuilder(
   , m_nLayers()
   , m_cLayers()
   , m_pLayers()
-  , m_constructionFlag(false)
 {
   setConfiguration(plConfig);
 }
@@ -38,6 +37,7 @@ Acts::PassiveLayerBuilder::setConfiguration(
 {
   //!< @todo add configuration check
   m_cfg = plConfig;
+  constructLayers();
 }
 
 void
@@ -46,9 +46,14 @@ Acts::PassiveLayerBuilder::setLogger(std::unique_ptr<Logger> newLogger)
   m_logger = std::move(newLogger);
 }
 
-bool
-Acts::PassiveLayerBuilder::constructLayers() const
+void
+Acts::PassiveLayerBuilder::constructLayers()
 {
+  // DEBUG: Flush layers in case the class was already initialized before
+  m_nLayers.clear();
+  m_cLayers.clear();
+  m_pLayers.clear();
+
   // the central layers
   size_t numcLayers = m_cfg.centralLayerRadii.size();
   if (numcLayers) {
@@ -66,7 +71,7 @@ Acts::PassiveLayerBuilder::constructLayers() const
       auto cBounds = std::make_shared<CylinderBounds>(
           m_cfg.centralLayerRadii[icl], m_cfg.centralLayerHalflengthZ.at(icl));
       // create the layer
-      LayerPtr cLayer = CylinderLayer::create(
+      MutableLayerPtr cLayer = CylinderLayer::create(
           nullptr, cBounds, nullptr, m_cfg.centralLayerThickness.at(icl));
       // assign the material to the layer surface
       std::shared_ptr<const SurfaceMaterial> material = nullptr;
@@ -116,12 +121,12 @@ Acts::PassiveLayerBuilder::constructLayers() const
       pTransform->translation()
           = Vector3D(0., 0., m_cfg.posnegLayerPositionZ.at(ipnl));
       // create the layers
-      LayerPtr nLayer
+      MutableLayerPtr nLayer
           = DiscLayer::create(std::shared_ptr<Transform3D>(nTransform),
                               dBounds,
                               nullptr,
                               m_cfg.posnegLayerThickness.at(ipnl));
-      LayerPtr pLayer
+      MutableLayerPtr pLayer
           = DiscLayer::create(std::shared_ptr<Transform3D>(pTransform),
                               dBounds,
                               nullptr,
@@ -144,7 +149,4 @@ Acts::PassiveLayerBuilder::constructLayers() const
       m_pLayers.push_back(pLayer);
     }
   }
-
-  m_constructionFlag = true;
-  return true;
 }

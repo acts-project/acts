@@ -126,31 +126,28 @@ public:
 
   /** Material averaging */
   void
-  addMaterial(const Material& mp, float dInX0) const;
+  addMaterial(const Material& mp, float dInX0);
 
   /** Set Material */
   void
-  setMaterial(const Material& mp,
-              float           thickness = 1.,
-              size_t          entries   = 1) const;
+  setMaterial(const Material& mp, float thickness = 1., size_t entries = 1);
 
   /** Increase the number of entries by one*/
   void
-  addEntry() const;
+  addEntry();
 
 protected:
   /** Set dEdX       - important for material calibarion */
   virtual void
-  setDeDx(float dEdX) const;
+  setDeDx(float dEdX);
 
-  mutable Material m_material;
+  Material m_material;
 
-  mutable float m_dInX0;  //!< thickness in units of radiation length
-  mutable float m_dInL0;  //!< thickness in units of nuclear interaction length
-  mutable float
-                 m_zOaTrTd;  //!< @f$ \frac{Z}{A}\cdot\rho\cdot d @f$ - in ATLAS units
-  mutable size_t m_entries;  //!< number of different material entries of an
-                             //! averaged material
+  float  m_dInX0;    //!< thickness in units of radiation length
+  float  m_dInL0;    //!< thickness in units of nuclear interaction length
+  float  m_zOaTrTd;  //!< @f$ \frac{Z}{A}\cdot\rho\cdot d @f$ - in ATLAS units
+  size_t m_entries;  //!< number of different material entries of an
+                     //! averaged material
   //!< @note set one per default, but can be set otherwise
 };
 
@@ -246,7 +243,7 @@ MaterialProperties::entries() const
 }
 
 inline void
-MaterialProperties::addEntry() const
+MaterialProperties::addEntry()
 {
   ++m_entries;
 }

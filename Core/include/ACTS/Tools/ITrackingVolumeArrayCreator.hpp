@@ -24,6 +24,7 @@ class TrackingVolume;
 
 /// A std::shared_ptr to a tracking volume
 typedef std::shared_ptr<const TrackingVolume> TrackingVolumePtr;
+typedef std::shared_ptr<TrackingVolume>       MutableTrackingVolumePtr;
 
 /// A BinnedArray of a std::shared_tr to a TrackingVolume
 typedef BinnedArray<TrackingVolumePtr> TrackingVolumeArray;

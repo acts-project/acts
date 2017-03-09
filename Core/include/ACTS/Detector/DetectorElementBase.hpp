@@ -88,7 +88,8 @@ public:
 
   /// Set the identifier after construction (sometimes needed)
   virtual void
-  assignIdentifier(const Identifier& identifier) const = 0;
+  assignIdentifier(const Identifier& identifier)
+      = 0;
 
   /// Fast access to bin members
   /// Bin members are elements that are in the same geometric binning cell,
@@ -105,7 +106,7 @@ public:
   /// @param binmembers are DetectorElementBase objects that are in the same
   /// cell
   void
-  registerBinmembers(std::vector<const DetectorElementBase*>& binmembers) const;
+  registerBinmembers(std::vector<const DetectorElementBase*>& binmembers);
 
   /// Fast access to neighbours
   /// Neighbours are elements that are in an neighbouring geometric binning
@@ -123,11 +124,11 @@ public:
   ///
   /// @param neighbours are DetectorElementBase objects that are neighbours
   void
-  registerNeighbours(std::vector<const DetectorElementBase*>& neighbours) const;
+  registerNeighbours(std::vector<const DetectorElementBase*>& neighbours);
 
 private:
-  mutable std::vector<const DetectorElementBase*> m_binmembers;
-  mutable std::vector<const DetectorElementBase*> m_neighbours;
+  std::vector<const DetectorElementBase*> m_binmembers;
+  std::vector<const DetectorElementBase*> m_neighbours;
 };
 
 inline std::shared_ptr<const DigitizationModule>
@@ -150,7 +151,7 @@ DetectorElementBase::neighbours() const
 
 inline void
 DetectorElementBase::registerBinmembers(
-    std::vector<const DetectorElementBase*>& binmembers) const
+    std::vector<const DetectorElementBase*>& binmembers)
 {
   for (auto& bmember : binmembers) {
     // only fill if it's not yet registered
@@ -162,7 +163,7 @@ DetectorElementBase::registerBinmembers(
 
 inline void
 DetectorElementBase::registerNeighbours(
-    std::vector<const DetectorElementBase*>& neighbours) const
+    std::vector<const DetectorElementBase*>& neighbours)
 {
   for (auto& neighbour : neighbours) {
     // only fill if it's not yet registered

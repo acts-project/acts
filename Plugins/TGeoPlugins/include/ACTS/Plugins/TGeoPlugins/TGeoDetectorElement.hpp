@@ -96,7 +96,7 @@ public:
 
   /// Set the identifier after construction (sometimes needed)
   virtual void
-  assignIdentifier(const Identifier& identifier) const final override;
+  assignIdentifier(const Identifier& identifier) final override;
 
   /// Return surface associated with this identifier, which should come from the
   virtual const Surface&
@@ -117,11 +117,11 @@ private:
   /// Transformation of the detector element
   std::shared_ptr<const Acts::Transform3D> m_transform;
   /// Center position of the detector element
-  mutable std::shared_ptr<const Vector3D> m_center;
+  std::shared_ptr<const Vector3D> m_center;
   /// Normal vector to the detector element
-  mutable std::shared_ptr<const Vector3D> m_normal;
+  std::shared_ptr<const Vector3D> m_normal;
   /// Identifier of the detector element
-  mutable Identifier m_identifier;
+  Identifier m_identifier;
   /// Boundaries of the detector element
   std::shared_ptr<const SurfaceBounds> m_bounds;
   ///  Thickness of this detector element
@@ -139,7 +139,7 @@ TGeoDetectorElement::identify() const
 }
 
 inline void
-TGeoDetectorElement::assignIdentifier(const Identifier& identifier) const
+TGeoDetectorElement::assignIdentifier(const Identifier& identifier)
 {
   m_identifier = identifier;
 }
