@@ -167,11 +167,12 @@ LineBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
                  2 * (*bcheck.lCovariance)(1, 0)
                  / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
-  sincosCache scResult = bcheck.FastSinCos(theta);
-  double dphi    = scResult.sinC * scResult.sinC * (*bcheck.lCovariance)(0, 0);
-  double dz      = scResult.cosC * scResult.cosC * (*bcheck.lCovariance)(0, 1);
-  double max_ell = dphi > dz ? dphi : dz;
-  double limit   = bcheck.nSigmas * sqrt(max_ell);
+  double sinTheta = std::sin(theta);
+  double cosTheta = std::cos(theta);
+  double dphi     = sinTheta * sinTheta * (*bcheck.lCovariance)(0, 0);
+  double dz       = cosTheta * cosTheta * (*bcheck.lCovariance)(0, 1);
+  double max_ell  = dphi > dz ? dphi : dz;
+  double limit    = bcheck.nSigmas * sqrt(max_ell);
   return insideLocZ(lpos[Acts::eLOC_Z], limit);
 }
 

@@ -325,10 +325,9 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
   float                 theta
       = ((*bcheck.lCovariance)(1, 0) != 0
          && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
-      ? .5
-          * std::atan(
-                2 * (*bcheck.lCovariance)(1, 0)
-                / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
+      ? .5 * std::atan(
+                 2 * (*bcheck.lCovariance)(1, 0)
+                 / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
   auto rotMatrix = Eigen::Rotation2D<double>(theta).toRotationMatrix();
   ActsMatrixD<2, 2> normal;
@@ -341,17 +340,14 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
   elementP.at(0) = (rotMatrix * (p - lpos));
   p << -m_valueStore.at(TrapezoidBounds::bv_minHalfX),
       -m_valueStore.at(TrapezoidBounds::bv_halfY);
-  elementP.at(1)       = (rotMatrix * (p - lpos));
-  sincosCache scResult = bcheck.FastSinCos(m_beta);
+  elementP.at(1) = (rotMatrix * (p - lpos));
   p << m_valueStore.at(TrapezoidBounds::bv_minHalfX)
           + (2. * m_valueStore.at(TrapezoidBounds::bv_halfY))
-              * (scResult.sinC / scResult.cosC),
+              * std::tan(m_beta),
       m_valueStore.at(TrapezoidBounds::bv_halfY);
   elementP.at(2) = (rotMatrix * (p - lpos));
-  scResult       = bcheck.FastSinCos(m_alpha);
   p << -(m_valueStore.at(TrapezoidBounds::bv_minHalfX)
-         + (2. * m_valueStore[TrapezoidBounds::bv_halfY])
-             * (scResult.sinC / scResult.cosC)),
+         + (2. * m_valueStore[TrapezoidBounds::bv_halfY]) * std::tan(m_alpha)),
       m_valueStore.at(TrapezoidBounds::bv_halfY);
   elementP.at(3)             = (rotMatrix * (p - lpos));
   std::vector<Vector2D> axis = {normal * (elementP.at(1) - elementP.at(0)),

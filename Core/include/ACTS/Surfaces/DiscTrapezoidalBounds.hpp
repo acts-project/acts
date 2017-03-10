@@ -224,14 +224,14 @@ DiscTrapezoidalBounds::inside(const Vector2D&      lpos,
                  - m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi));
   if (alpha > M_PI) alpha = 2 * M_PI - alpha;
   // a fast FALSE
-  sincosCache scResult = bcheck.FastSinCos(lpos(1, 0));
-  double      dx       = bcheck.nSigmas * sqrt((*bcheck.lCovariance)(0, 0));
-  double      dy       = bcheck.nSigmas
-      * sqrt(scResult.sinC * scResult.sinC * (*bcheck.lCovariance)(0, 0)
-             + lpos(0, 0) * lpos(0, 0) * scResult.cosC * scResult.cosC
+  double sinPhi = std::sin(lpos[1]);
+  double cosPhi = std::cos(lpos[1]);
+  double dx     = bcheck.nSigmas * sqrt((*bcheck.lCovariance)(0, 0));
+  double dy     = bcheck.nSigmas
+      * sqrt(sinPhi * sinPhi * (*bcheck.lCovariance)(0, 0)
+             + lpos(0, 0) * lpos(0, 0) * cosPhi * cosPhi
                  * (*bcheck.lCovariance)(1, 1)
-             + 2 * scResult.cosC * scResult.sinC * lpos(0, 0)
-                 * (*bcheck.lCovariance)(0, 1));
+             + 2 * cosPhi * sinPhi * lpos(0, 0) * (*bcheck.lCovariance)(0, 1));
   double max_ell = dx > dy ? dx : dy;
   if (lpos(0, 0)
       > (m_valueStore.at(DiscTrapezoidalBounds::bv_rMax)
@@ -388,8 +388,7 @@ DiscTrapezoidalBounds::inside(const Vector2D&      lpos,
   EllipseCollisionTest test(4);
   // convert to cartesian coordinates
   ActsMatrixD<2, 2> covRotMatrix;
-  covRotMatrix << scResult.cosC, -lpos(0, 0) * scResult.sinC, scResult.sinC,
-      lpos(0, 0) * scResult.cosC;
+  covRotMatrix << cosPhi, -lpos(0, 0) * sinPhi, sinPhi, lpos(0, 0) * cosPhi;
   ActsMatrixD<2, 2> lCovarianceCar
       = covRotMatrix * (*bcheck.lCovariance) * covRotMatrix.transpose();
   Vector2D lposCar(covRotMatrix(1, 1), -covRotMatrix(0, 1));
