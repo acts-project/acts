@@ -11,7 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #ifndef ACTS_SURFACES_BOUNDARYCHECK_H
-#define ACTS_SURFACES_BOUNDARYCHECK_H 1
+#define ACTS_SURFACES_BOUNDARYCHECK_H
 
 #include <cfloat>
 #include <cmath>
@@ -23,44 +23,41 @@
 
 namespace Acts {
 
-///  @class BoundaryCheck
+/// @class BoundaryCheck
 ///
-///  The BoundaryCheck class allows to steer the way surface
-///  boundaries are used for inside/outside checks of
-///  parameters.
+/// The BoundaryCheck class provides boundary checks and distance calculations
+/// for aligned box-like and polygonal boundaries on local surfaces.
+/// Different types of boundary checks are supported and are transparently
+/// selected when calling the `isInside(...)` and `distance(...)` methods:
 ///
-///  These checks are performed in the local 2D frame of the
-///  surface and can either be:
-///  - inside/outside with and without tolerance
-///  - inside/outside according to a given chi2 value
+/// -   Hard checks w/o any tolerances
+/// -   Tolerance-based checks in one or in both local coordinates
+/// -   Chi2-based checks based on a covariance matrix. Non-vanishing
+///     correlations are correctly taken into account.
 ///
-/// It also provides all the necessary tools for the individual implementations
-/// in
-/// the different SurfaceBounds classes.
-///
-/// @todo check if fast Sin/Cos ArcTan is necessary in field test
-///
-/// @todo Move the Covariance away from this into the method signature of the
-/// call
-/// @todo (short term) protect against lCovariance = nullptr acess
-
+/// With a defined covariance matrix, the closest point and the distance are
+/// not defined along the usual Euclidean metric, but by the Mahalanobis
+/// distance induced by the the covariance.
 class BoundaryCheck
 {
 public:
-  /// Constructor for single boolean behavious
-  BoundaryCheck(bool sCheck);
-
-  /// Constructor for tolerance based check
-  /// @param chkL0 boolean directive to check first coordinate
-  /// @param chkL1 boolean directive to check second coordinate
-  /// @param tloc0 tolereance on the first parameter
-  /// @param tloc1 tolereance on the second parameter
-  BoundaryCheck(bool chkL0, bool chkL1, double tloc0 = 0., double tloc1 = 0.);
-
-  /// Constructor for chi2 based check
-  /// @param lCov  the coverance matrix to be checked
-  /// @param nsig  number of sigma checked checked for the compatibility test
-  BoundaryCheck(const ActsSymMatrixD<2>& lCov, double nsig = 1);
+  /// Construct either hard cut in both dimensions or no cut at all.
+  BoundaryCheck(bool check);
+  /// Construct a tolerance based check.
+  ///
+  /// @param checkLocal0 Boolean directive to check coordinate 0
+  /// @param checkLocal1 Boolean directive to check coordinate 1
+  /// @param tolerance0 Tolerance along coordinate 0
+  /// @param tolerance1 Tolerance along coordinate 1
+  BoundaryCheck(bool   checkLocal0,
+                bool   checkLocal1,
+                double tolerance0 = 0,
+                double tolerance1 = 0);
+  /// Construct a chi2-based check.
+  ///
+  /// @param localCovariance Coverance matrix in local coordinates
+  /// @param sigmaMax  Significance for the compatibility test
+  BoundaryCheck(const ActsSymMatrixD<2>& localCovariance, double sigmaMax = 1);
 
   /// Return a new BoundaryCheck with updated covariance.
   /// @param jacobian Tranform Jacobian for the covariance
@@ -129,14 +126,13 @@ public:
            double          loc1Max) const;
 
 private:
-  /// @brief nested enumerator for the boundary check Type
   enum class Type {
     eNone,      ///< disable boundary check
     eAbsolute,  ///< absolute cut
     eChi2       ///< chi2-based cut with full correlations
   };
 
-  /// metric matrix: identity for absolute or inverse covariance
+  /// metric weight matrix: identity for absolute mode or inverse covariance
   ActsSymMatrixD<2> m_weight;
   /// dual use: absolute tolerances or relative chi2/ sigma cut.
   Vector2D m_tolerance;
@@ -165,27 +161,30 @@ private:
 
 }  // namespace Acts
 
-inline Acts::BoundaryCheck::BoundaryCheck(bool sCheck)
+inline Acts::BoundaryCheck::BoundaryCheck(bool check)
   : m_weight(ActsSymMatrixD<2>::Identity())
   , m_tolerance(0, 0)
-  , m_type(sCheck ? Type::eAbsolute : Type::eNone)
+  , m_type(check ? Type::eAbsolute : Type::eNone)
 {
 }
 
-inline Acts::BoundaryCheck::BoundaryCheck(bool   chkL0,
-                                          bool   chkL1,
-                                          double tloc0,
-                                          double tloc1)
+inline Acts::BoundaryCheck::BoundaryCheck(bool   checkLocal0,
+                                          bool   checkLocal1,
+                                          double tolerance0,
+                                          double tolerance1)
   : m_weight(ActsSymMatrixD<2>::Identity())
-  , m_tolerance(chkL0 ? tloc0 : DBL_MAX,
-                chkL1 ? tloc1 : DBL_MAX)
+  , m_tolerance(checkLocal0 ? tolerance0 : DBL_MAX,
+                checkLocal1 ? tolerance1 : DBL_MAX)
   , m_type(Type::eAbsolute)
 {
 }
 
-inline Acts::BoundaryCheck::BoundaryCheck(const ActsSymMatrixD<2>& lCov,
-                                          double                   nsig)
-  : m_weight(lCov.inverse()), m_tolerance(nsig, 0), m_type(Type::eChi2)
+inline Acts::BoundaryCheck::BoundaryCheck(
+    const ActsSymMatrixD<2>& localCovariance,
+    double                   sigmaMax)
+  : m_weight(localCovariance.inverse())
+  , m_tolerance(sigmaMax, 0)
+  , m_type(Type::eChi2)
 {
 }
 
@@ -197,6 +196,7 @@ Acts::BoundaryCheck::transformed(const ActsMatrixD<2, 2>& jacobian) const
     // project tolerances to the new system. depending on the jacobian we need
     // to check both tolerances, even when the initial check does not.
     bc.m_tolerance = (jacobian * m_tolerance).cwiseAbs();
+    bc.m_type      = Type::eAbsolute;
   } else /* Type::eChi2 */ {
     bc.m_weight
         = (jacobian * m_weight.inverse() * jacobian.transpose()).inverse();
