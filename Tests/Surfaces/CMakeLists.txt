@@ -42,6 +42,28 @@ add_executable (EllipseBoundsTests EllipseBoundsTests.cpp)
 target_link_libraries (EllipseBoundsTests PRIVATE ACTSCore)
 add_test (NAME EllipseBoundsTests COMMAND EllipseBoundsTests)
 
+add_executable (TriangleBoundsTests TriangleBoundsTests.cpp)
+target_link_libraries (TriangleBoundsTests PRIVATE ACTSCore)
+add_test (NAME TriangleBoundsTests COMMAND TriangleBoundsTests)
+
 add_executable (RectangleBoundsTests RectangleBoundsTests.cpp)
 target_link_libraries (RectangleBoundsTests PRIVATE ACTSCore)
 add_test (NAME RectangleBoundsTests COMMAND RectangleBoundsTests)
+
+add_executable (TrapezoidBoundsTests TrapezoidBoundsTests.cpp)
+target_link_libraries (TrapezoidBoundsTests PRIVATE ACTSCore)
+add_test (NAME TrapezoidBoundsTests COMMAND TrapezoidBoundsTests)
+
+add_executable (RadialBoundsTests RadialBoundsTests.cpp)
+target_link_libraries (RadialBoundsTests PRIVATE ACTSCore)
+add_test (NAME RadialBoundsTests COMMAND RadialBoundsTests)
+
+add_executable (DiscTrapezoidalBoundsTests DiscTrapezoidalBoundsTests.cpp)
+target_link_libraries (DiscTrapezoidalBoundsTests PRIVATE ACTSCore)
+add_test (NAME DiscTrapezoidalBoundsTests COMMAND DiscTrapezoidalBoundsTests)
+
+add_executable (RealQuadraticEquationTests RealQuadraticEquationTests.cpp)
+target_link_libraries (RealQuadraticEquationTests PRIVATE ACTSCore)
+add_test (NAME RealQuadraticEquationTests COMMAND RealQuadraticEquationTests)
+
+
