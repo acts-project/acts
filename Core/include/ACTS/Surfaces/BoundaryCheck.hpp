@@ -194,4 +194,43 @@ BoundaryCheck::TestKDOPKDOP(std::vector<KDOP>& a, std::vector<KDOP>& b) const
 }
 }
 
+inline Acts::BoundaryCheck::BoundaryCheck(bool sCheck)
+  : checkLoc0(sCheck)
+  , checkLoc1(sCheck)
+  , toleranceLoc0(0.)
+  , toleranceLoc1(0.)
+  , nSigmas(-1)
+  , lCovariance(ActsSymMatrixD<2>::Identity())
+  , bcType(absolute)
+{
+}
+
+inline Acts::BoundaryCheck::BoundaryCheck(bool   chkL0,
+                                          bool   chkL1,
+                                          double tloc0,
+                                          double tloc1)
+  : checkLoc0(chkL0)
+  , checkLoc1(chkL1)
+  , toleranceLoc0(tloc0)
+  , toleranceLoc1(tloc1)
+  , nSigmas(-1)
+  , lCovariance(ActsSymMatrixD<2>::Identity())
+  , bcType(absolute)
+{
+}
+
+inline Acts::BoundaryCheck::BoundaryCheck(const ActsSymMatrixD<2>& lCov,
+                                          double                   nsig,
+                                          bool                     chkL0,
+                                          bool                     chkL1)
+  : checkLoc0(chkL0)
+  , checkLoc1(chkL1)
+  , toleranceLoc0(0.)
+  , toleranceLoc1(0.)
+  , nSigmas(nsig)
+  , lCovariance(lCov)
+  , bcType(chi2corr)
+{
+}
+
 #endif  // ACTS_SURFACES_BOUNDARYCHECK_H
