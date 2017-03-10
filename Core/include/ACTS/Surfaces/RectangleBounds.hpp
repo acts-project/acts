@@ -175,9 +175,8 @@ RectangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
       = ((*bcheck.lCovariance)(1, 0) != 0
          && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
       ? .5
-          * bcheck.FastArcTan(
-                2 * (*bcheck.lCovariance)(1, 0)
-                / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
+          * std::atan(2 * (*bcheck.lCovariance)(1, 0)
+                            / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
   auto rotMatrix = Eigen::Rotation2D<double>(theta).toRotationMatrix();
   // ellipse is always at (0,0), surface is moved to ellipse position and then

@@ -141,20 +141,6 @@ namespace Test {
     BOOST_CHECK_SMALL(fastCos - cosValue,
                       0.001);  // claimed max difference in code
   }
-  /// Unit test for FastArcTan
-  BOOST_DATA_TEST_CASE(BoundaryCheckFastArcTanAccuracy,
-                       bdata::xrange(0., 200., 10.))
-  {
-    BoundaryCheck b(true);
-    // NOTE: Naming violation
-    double       fastArctan = b.FastArcTan(sample);
-    const double atanValue  = std::atan(sample);
-    // NOTE: Use CHECK_SMALL on the difference to check within absolute
-    // tolerance
-    // because BOOST_TEST(a==b, tolerance) checks the relative tolerance.
-    BOOST_CHECK_SMALL(fastArctan - atanValue,
-                      0.0015);  // claimed max difference in code
-  }
 
   /// Unit test for conversion of smooth ellipse to 4 + 4*n point polygon
   BOOST_AUTO_TEST_CASE(BoundaryCheckEllipseToPoly)

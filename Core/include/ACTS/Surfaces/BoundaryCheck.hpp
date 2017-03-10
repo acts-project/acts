@@ -125,9 +125,6 @@ public:
   bool
   TestKDOPKDOP(std::vector<KDOP>& a, std::vector<KDOP>& b) const;
 
-  double
-  FastArcTan(double x) const;
-
   sincosCache
   FastSinCos(double x) const;
 
@@ -136,28 +133,6 @@ private:
   static double s_cos45;
   static double s_cos67;
 };
-
-/// should have maximum (average) error of 0.0015 (0.00089) radians or 0.0859
-/// (0.0509) degrees, fine for us and much faster (>4 times)
-inline double
-BoundaryCheck::FastArcTan(double x) const
-{
-  double y;
-  bool   complement = false;  // true if arg was >1
-  bool   sign       = false;  // true if arg was < 0
-  if (x < 0.) {
-    x    = -x;
-    sign = true;  // arctan(-x)=-arctan(x)
-  }
-  if (x > 1.) {
-    x          = 1. / x;  // keep arg between 0 and 1
-    complement = true;
-  }
-  y = M_PI_4 * x - x * (std::abs(x) - 1) * (0.2447 + 0.0663 * std::abs(x));
-  if (complement) y = M_PI_2 - y;  // correct for 1/x if we did that
-  if (sign) y       = -y;          // correct for negative arg
-  return y;
-}
 
 /// should have maximum (average) error of 0.001 (0.0005) radians or 0.0573
 /// (0.029) degrees, fine for us and much faster (>8 times)

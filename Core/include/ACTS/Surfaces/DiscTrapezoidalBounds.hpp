@@ -402,9 +402,8 @@ DiscTrapezoidalBounds::inside(const Vector2D&      lpos,
   double y0    = 0;
   float  theta = (lCovarianceCar(1, 0) != 0
                  && (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)) != 0)
-      ? .5
-          * bcheck.FastArcTan(2 * lCovarianceCar(1, 0)
-                              / (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)))
+      ? .5 * std::atan(2 * lCovarianceCar(1, 0)
+                       / (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)))
       : 0.;
   auto     rotMatrix = Eigen::Rotation2D<double>(theta).toRotationMatrix();
   Vector2D tmp       = rotMatrix * (-lposCar);

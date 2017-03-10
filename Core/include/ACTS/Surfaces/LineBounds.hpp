@@ -163,10 +163,9 @@ LineBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
   float theta
       = ((*bcheck.lCovariance)(1, 0) != 0
          && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
-      ? .5
-          * bcheck.FastArcTan(
-                2 * (*bcheck.lCovariance)(1, 0)
-                / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
+      ? .5 * std::atan(
+                 2 * (*bcheck.lCovariance)(1, 0)
+                 / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
   sincosCache scResult = bcheck.FastSinCos(theta);
   double dphi    = scResult.sinC * scResult.sinC * (*bcheck.lCovariance)(0, 0);

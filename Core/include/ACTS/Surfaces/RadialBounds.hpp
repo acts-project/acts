@@ -358,15 +358,14 @@ RadialBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
   double y0    = 0;
   float  theta = (lCovarianceCar(1, 0) != 0
                  && (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)) != 0)
-      ? .5
-          * bcheck.FastArcTan(2 * lCovarianceCar(1, 0)
-                              / (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)))
+      ? .5 * std::atan(2 * lCovarianceCar(1, 0)
+                       / (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)))
       : 0.;
-  auto rotMatrix = Eigen::Rotation2D<double>(theta).toRotationMatrix();
-  Vector2D tmp = rotMatrix * (-lposCar);
-  double   x1  = tmp(0, 0);
-  double   y1  = tmp(1, 0);
-  double   r   = m_valueStore[RadialBounds::bv_rMax];
+  auto     rotMatrix = Eigen::Rotation2D<double>(theta).toRotationMatrix();
+  Vector2D tmp       = rotMatrix * (-lposCar);
+  double   x1        = tmp(0, 0);
+  double   y1        = tmp(1, 0);
+  double   r         = m_valueStore[RadialBounds::bv_rMax];
   // check if ellipse and circle overlap and return result
   return test.collide(x0, y0, w, h, x1, y1, r);
 }

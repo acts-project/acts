@@ -326,7 +326,7 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
       = ((*bcheck.lCovariance)(1, 0) != 0
          && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
       ? .5
-          * bcheck.FastArcTan(
+          * std::atan(
                 2 * (*bcheck.lCovariance)(1, 0)
                 / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
