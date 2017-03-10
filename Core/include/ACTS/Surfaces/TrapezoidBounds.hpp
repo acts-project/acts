@@ -330,9 +330,7 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
                 2 * (*bcheck.lCovariance)(1, 0)
                 / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
-  sincosCache scResult = bcheck.FastSinCos(theta);
-  ActsMatrixD<2, 2> rotMatrix;
-  rotMatrix << scResult.cosC, scResult.sinC, -scResult.sinC, scResult.cosC;
+  auto rotMatrix = Eigen::Rotation2D<double>(theta).toRotationMatrix();
   ActsMatrixD<2, 2> normal;
   normal << 0, -1, 1, 0;
   // ellipse is always at (0,0), surface is moved to ellipse position and then
@@ -343,8 +341,8 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
   elementP.at(0) = (rotMatrix * (p - lpos));
   p << -m_valueStore.at(TrapezoidBounds::bv_minHalfX),
       -m_valueStore.at(TrapezoidBounds::bv_halfY);
-  elementP.at(1) = (rotMatrix * (p - lpos));
-  scResult       = bcheck.FastSinCos(m_beta);
+  elementP.at(1)       = (rotMatrix * (p - lpos));
+  sincosCache scResult = bcheck.FastSinCos(m_beta);
   p << m_valueStore.at(TrapezoidBounds::bv_minHalfX)
           + (2. * m_valueStore.at(TrapezoidBounds::bv_halfY))
               * (scResult.sinC / scResult.cosC),

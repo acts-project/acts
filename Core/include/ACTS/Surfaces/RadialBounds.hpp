@@ -362,9 +362,7 @@ RadialBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
           * bcheck.FastArcTan(2 * lCovarianceCar(1, 0)
                               / (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)))
       : 0.;
-  scResult = bcheck.FastSinCos(theta);
-  ActsMatrixD<2, 2> rotMatrix;
-  rotMatrix << scResult.cosC, scResult.sinC, -scResult.sinC, scResult.cosC;
+  auto rotMatrix = Eigen::Rotation2D<double>(theta).toRotationMatrix();
   Vector2D tmp = rotMatrix * (-lposCar);
   double   x1  = tmp(0, 0);
   double   y1  = tmp(1, 0);

@@ -280,9 +280,7 @@ DiamondBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
                 2 * (*bcheck.lCovariance)(1, 0)
                 / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
       : 0.;
-  sincosCache scResult = bcheck.FastSinCos(theta);
-  ActsMatrixD<2, 2> rotMatrix;
-  rotMatrix << scResult.cosC, scResult.sinC, -scResult.sinC, scResult.cosC;
+  auto rotMatrix = Eigen::Rotation2D<double>(theta).toRotationMatrix();
   ActsMatrixD<2, 2> normal;
   normal << 0, -1, 1, 0;
   // ellipse is always at (0,0), surface is moved to ellipse position and then

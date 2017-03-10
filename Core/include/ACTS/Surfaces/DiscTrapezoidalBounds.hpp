@@ -406,13 +406,11 @@ DiscTrapezoidalBounds::inside(const Vector2D&      lpos,
           * bcheck.FastArcTan(2 * lCovarianceCar(1, 0)
                               / (lCovarianceCar(1, 1) - lCovarianceCar(0, 0)))
       : 0.;
-  scResult = bcheck.FastSinCos(theta);
-  ActsMatrixD<2, 2> rotMatrix;
-  rotMatrix << scResult.cosC, scResult.sinC, -scResult.sinC, scResult.cosC;
-  Vector2D tmp = rotMatrix * (-lposCar);
-  double   x1  = tmp(0, 0);
-  double   y1  = tmp(1, 0);
-  double   r   = m_valueStore.at(DiscTrapezoidalBounds::bv_rMax);
+  auto     rotMatrix = Eigen::Rotation2D<double>(theta).toRotationMatrix();
+  Vector2D tmp       = rotMatrix * (-lposCar);
+  double   x1        = tmp(0, 0);
+  double   y1        = tmp(1, 0);
+  double   r         = m_valueStore.at(DiscTrapezoidalBounds::bv_rMax);
   // check if ellipse and circle overlap and return result
   return test.collide(x0, y0, w, h, x1, y1, r);
 }
