@@ -61,6 +61,12 @@ isInside(const Vector2D& point, const BoundaryCheck& check)
   return check.TestKDOPKDOP(limits, limitsErr);
 }
 
+inline bool
+isInsideNew(const Vector2D& point, const BoundaryCheck& check)
+{
+  return check.isInside(point, POLY);
+}
+
 struct StopWatch
 {
   using Clock     = std::chrono::high_resolution_clock;
@@ -113,6 +119,19 @@ main(int argc, char* argv[])
       n_inside += (isInside(point, check) ? 1 : 0);
     }
     watch.finish(points.size(), "check w/ covariance");
+  }
+  // check w/ covariance
+  {
+    auto              points = make_random_points();
+    ActsSymMatrixD<2> cov;
+    cov << 0.2, 0.02, 0.15, 0.02;
+    BoundaryCheck check(cov, 3.0);  // 3-sigma cut
+    int           n_inside;
+    StopWatch     watch;
+    for (const auto& point : points) {
+      n_inside += (isInsideNew(point, check) ? 1 : 0);
+    }
+    watch.finish(points.size(), "new check w/ covariance");
   }
 
   return 0;

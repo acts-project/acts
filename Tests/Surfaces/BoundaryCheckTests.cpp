@@ -28,7 +28,6 @@ const double inf = std::numeric_limits<double>::infinity();
 const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
-
 namespace Test {
 
   bool
@@ -172,6 +171,63 @@ namespace Test {
     BOOST_TEST(assigned.toleranceLoc1 == original.toleranceLoc1);
     BOOST_TEST(assigned.nSigmas == original.nSigmas);
     BOOST_TEST(assigned.lCovariance == original.lCovariance);
+  }
+  // Aligned box w/ simple check
+  BOOST_AUTO_TEST_CASE(BoundaryCheckBoxSimple)
+  {
+    BoundaryCheck check(true);
+    BOOST_TEST(check.isInside({0, 0}, -1, 1, -1, 1) == true);
+    BOOST_TEST(check.isInside({2, 2}, -1, 1, -1, 1) == false);
+    BOOST_TEST(check.isInside({0, 2}, -1, 1, -1, 1) == false);
+    BOOST_TEST(check.isInside({2, 0}, -1, 1, -1, 1) == false);
+  }
+  // Aligned box w/ tolerance check along first axis
+  BOOST_AUTO_TEST_CASE(BoundaryCheckBoxToleranceLoc0)
+  {
+    BoundaryCheck check(true, false, 1.5, 0.0);
+    BOOST_TEST(check.isInside({0, 0}, -1, 1, -1, 1) == true);
+    BOOST_TEST(check.isInside({2, 2}, -1, 1, -1, 1) == true);
+    BOOST_TEST(check.isInside({4, 4}, -1, 1, -1, 1) == false);
+    BOOST_TEST(check.isInside({0, 2}, -1, 1, -1, 1) == true);
+    BOOST_TEST(check.isInside({2, 0}, -1, 1, -1, 1) == true);
+  }
+  // Aligned box w/ covariance check
+  BOOST_AUTO_TEST_CASE(BoundaryCheckBoxCovariance)
+  {
+    ActsSymMatrixD<2> cov;
+    cov <<   1, 0.5,
+           0.5,   2;
+    BoundaryCheck check(cov, 3.0);
+    BOOST_TEST(check.isInside({0, 0}, -1, 1, -1, 1) == true);
+    BOOST_TEST(check.isInside({2, 2}, -1, 1, -1, 1) == true);
+    BOOST_TEST(check.isInside({4, 4}, -1, 1, -1, 1) == false);
+    BOOST_TEST(check.isInside({0, 3}, -1, 1, -1, 1) == true);
+    BOOST_TEST(check.isInside({3, 0}, -1, 1, -1, 1) == true);
+  }
+  // Triangle w/ simple check
+  BOOST_AUTO_TEST_CASE(BoundaryCheckTriangleSimple)
+  {
+    Vector2D vertices[] = {{-2, 0}, {2, 0}, {0, 2}};
+    BoundaryCheck check(true);
+    BOOST_TEST(check.isInside({0, 0}, vertices) == true);
+    BOOST_TEST(check.isInside({0, 1}, vertices) == true);
+    BOOST_TEST(check.isInside({2, 2}, vertices) == false);
+    BOOST_TEST(check.isInside({0, -1}, vertices) == false);
+  }
+  // Triangle w/ covariance check
+  BOOST_AUTO_TEST_CASE(BoundaryCheckTriangleCovariance)
+  {
+    Vector2D vertices[] = {{-2, 0}, {2, 0}, {0, 2}};
+    ActsSymMatrixD<2> cov;
+    cov << 0.5,   0,
+             0, 0.5;
+    BoundaryCheck check(cov, 4.1);
+    BOOST_TEST(check.isInside({0, 0}, vertices) == true);
+    BOOST_TEST(check.isInside({0, 1}, vertices) == true);
+    BOOST_TEST(check.isInside({0, 2}, vertices) == true);
+    BOOST_TEST(check.isInside({0, 3}, vertices) == true);
+    BOOST_TEST(check.isInside({0, 4}, vertices) == true);
+    BOOST_TEST(check.isInside({0, 5}, vertices) == false);
   }
   BOOST_AUTO_TEST_SUITE_END();
 }  // end of namespace Test
