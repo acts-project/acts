@@ -38,31 +38,31 @@ make_random_points()
   return points;
 }
 
+// inline bool
+// isInsideOld(const Vector2D& point, const BoundaryCheck& check)
+//{
+//  // reproduce most of the steps e.g. in TrapezoidBounds::inside
+
+//  // rotate to a vector normal to the input
+//  ActsMatrixD<2, 2> toNormal;
+//  toNormal << 0, -1, 1, 0;
+
+//  // compute KDOP and axes for surface polygon
+//  std::vector<Vector2D> points = {POLY[0], POLY[1], POLY[2], POLY[3]};
+//  std::vector<Vector2D> axes   = {toNormal * (POLY[1] - POLY[0]),
+//                                toNormal * (POLY[2] - POLY[1]),
+//                                toNormal * (POLY[3] - POLY[2])};
+//  std::vector<KDOP> limits(3);
+//  std::vector<KDOP> limitsErr(3);
+
+//  check.ComputeKDOP(points, axes, limits);
+//  check.ComputeKDOP(check.EllipseToPoly(3), axes, limitsErr);
+//  // check if KDOPs overlap and return result
+//  return check.TestKDOPKDOP(limits, limitsErr);
+//}
+
 inline bool
 isInside(const Vector2D& point, const BoundaryCheck& check)
-{
-  // reproduce most of the steps e.g. in TrapezoidBounds::inside
-
-  // rotate to a vector normal to the input
-  ActsMatrixD<2, 2> toNormal;
-  toNormal << 0, -1, 1, 0;
-
-  // compute KDOP and axes for surface polygon
-  std::vector<Vector2D> points = {POLY[0], POLY[1], POLY[2], POLY[3]};
-  std::vector<Vector2D> axes   = {toNormal * (POLY[1] - POLY[0]),
-                                toNormal * (POLY[2] - POLY[1]),
-                                toNormal * (POLY[3] - POLY[2])};
-  std::vector<KDOP> limits(3);
-  std::vector<KDOP> limitsErr(3);
-
-  check.ComputeKDOP(points, axes, limits);
-  check.ComputeKDOP(check.EllipseToPoly(3), axes, limitsErr);
-  // check if KDOPs overlap and return result
-  return check.TestKDOPKDOP(limits, limitsErr);
-}
-
-inline bool
-isInsideNew(const Vector2D& point, const BoundaryCheck& check)
 {
   return check.isInside(point, POLY);
 }
@@ -100,7 +100,7 @@ main(int argc, char* argv[])
   {
     auto          points = make_random_points();
     BoundaryCheck check(true);
-    int           n_inside;
+    int           n_inside = 0;
     StopWatch     watch;
     for (const auto& point : points) {
       n_inside += (isInside(point, check) ? 1 : 0);
@@ -109,11 +109,11 @@ main(int argc, char* argv[])
   }
   // check w/ covariance
   {
-    auto          points = make_random_points();
+    auto              points = make_random_points();
     ActsSymMatrixD<2> cov;
     cov << 0.2, 0.02, 0.15, 0.02;
-    BoundaryCheck check(cov, 3.0); // 3-sigma cut
-    int           n_inside;
+    BoundaryCheck check(cov, 3.0);  // 3-sigma cut
+    int           n_inside = 0;
     StopWatch     watch;
     for (const auto& point : points) {
       n_inside += (isInside(point, check) ? 1 : 0);
@@ -121,18 +121,18 @@ main(int argc, char* argv[])
     watch.finish(points.size(), "check w/ covariance");
   }
   // check w/ covariance
-  {
-    auto              points = make_random_points();
-    ActsSymMatrixD<2> cov;
-    cov << 0.2, 0.02, 0.15, 0.02;
-    BoundaryCheck check(cov, 3.0);  // 3-sigma cut
-    int           n_inside;
-    StopWatch     watch;
-    for (const auto& point : points) {
-      n_inside += (isInsideNew(point, check) ? 1 : 0);
-    }
-    watch.finish(points.size(), "new check w/ covariance");
-  }
+  //  {
+  //    auto              points = make_random_points();
+  //    ActsSymMatrixD<2> cov;
+  //    cov << 0.2, 0.02, 0.15, 0.02;
+  //    BoundaryCheck check(cov, 3.0);  // 3-sigma cut
+  //    int           n_inside = 0;
+  //    StopWatch     watch;
+  //    for (const auto& point : points) {
+  //      n_inside += (isInsideOld(point, check) ? 1 : 0);
+  //    }
+  //    watch.finish(points.size(), "old check w/ covariance");
+  //  }
 
   return 0;
 }
