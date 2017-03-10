@@ -121,27 +121,6 @@ namespace Test {
     BOOST_TEST(not b.TestKDOPKDOP(box, nonOverlappingBounds));
   }
 
-  /// Unit test for testing BoundaryCheck FastSinCos accuracy
-  /// with a data set of 20 steps from -pi to pi
-  BOOST_DATA_TEST_CASE(BoundaryCheckFastSinCosAccuracy,
-                       bdata::xrange(-M_PI, M_PI, 2. * M_PI / 20.0))
-  {
-    BoundaryCheck b(true);
-    // NOTE: Naming violation
-    sincosCache  sc       = b.FastSinCos(sample);
-    const double sinValue = std::sin(sample);
-    const double cosValue = std::cos(sample);
-    const double fastSin  = sc.sinC;
-    const double fastCos  = sc.cosC;
-    // NOTE: Use CHECK_SMALL on the difference to check within absolute
-    // tolerance
-    // BOOST_TEST(a==b, tolerance) checks the relative tolerance is within range
-    BOOST_CHECK_SMALL(fastSin - sinValue,
-                      0.001);  // claimed max difference in code
-    BOOST_CHECK_SMALL(fastCos - cosValue,
-                      0.001);  // claimed max difference in code
-  }
-
   /// Unit test for conversion of smooth ellipse to 4 + 4*n point polygon
   BOOST_AUTO_TEST_CASE(BoundaryCheckEllipseToPoly)
   {

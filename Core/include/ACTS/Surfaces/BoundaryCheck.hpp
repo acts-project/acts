@@ -32,13 +32,6 @@ struct KDOP
   // Maximum distance (from origin) along axes
 };
 
-// struct needed for FastSinCos method (see below)
-struct sincosCache
-{
-  double sinC;
-  double cosC;
-};
-
 ///  @class BoundaryCheck
 ///
 ///  The BoundaryCheck class allows to steer the way surface
@@ -124,61 +117,7 @@ public:
 
   bool
   TestKDOPKDOP(std::vector<KDOP>& a, std::vector<KDOP>& b) const;
-
-  sincosCache
-  FastSinCos(double x) const;
 };
-
-/// should have maximum (average) error of 0.001 (0.0005) radians or 0.0573
-/// (0.029) degrees, fine for us and much faster (>8 times)
-inline sincosCache
-BoundaryCheck::FastSinCos(double x) const
-{
-  sincosCache tmp;
-  // always wrap input angle to -PI..PI
-  if (x < -M_PI)
-    x += 2. * M_PI;
-  else if (x > M_PI)
-    x -= 2. * M_PI;
-
-  // compute sine
-  if (x < 0.) {
-    tmp.sinC = 1.27323954 * x + .405284735 * x * x;
-
-    if (tmp.sinC < 0.)
-      tmp.sinC = .225 * (tmp.sinC * -tmp.sinC - tmp.sinC) + tmp.sinC;
-    else
-      tmp.sinC = .225 * (tmp.sinC * tmp.sinC - tmp.sinC) + tmp.sinC;
-  } else {
-    tmp.sinC = 1.27323954 * x - 0.405284735 * x * x;
-
-    if (tmp.sinC < 0.)
-      tmp.sinC = .225 * (tmp.sinC * -tmp.sinC - tmp.sinC) + tmp.sinC;
-    else
-      tmp.sinC = .225 * (tmp.sinC * tmp.sinC - tmp.sinC) + tmp.sinC;
-  }
-
-  // compute cosine: sin(x + PI/2) = cos(x)
-  x += M_PI_2;
-  if (x > M_PI) x -= 2. * M_PI;
-
-  if (x < 0.) {
-    tmp.cosC = 1.27323954 * x + 0.405284735 * x * x;
-
-    if (tmp.cosC < 0.)
-      tmp.cosC = .225 * (tmp.cosC * -tmp.cosC - tmp.cosC) + tmp.cosC;
-    else
-      tmp.cosC = .225 * (tmp.cosC * tmp.cosC - tmp.cosC) + tmp.cosC;
-  } else {
-    tmp.cosC = 1.27323954 * x - 0.405284735 * x * x;
-
-    if (tmp.cosC < 0.)
-      tmp.cosC = .225 * (tmp.cosC * -tmp.cosC - tmp.cosC) + tmp.cosC;
-    else
-      tmp.cosC = .225 * (tmp.cosC * tmp.cosC - tmp.cosC) + tmp.cosC;
-  }
-  return tmp;
-}
 
 // does the conversion of an ellipse of height h and width w to an polygon with
 // 4 + 4*resolution points
