@@ -12,10 +12,6 @@
 
 #include "ACTS/Surfaces/BoundaryCheck.hpp"
 
-double Acts::BoundaryCheck::s_cos22 = cos(0.125 * M_PI);
-double Acts::BoundaryCheck::s_cos45 = cos(0.25 * M_PI);
-double Acts::BoundaryCheck::s_cos67 = cos(0.375 * M_PI);
-
 Acts::BoundaryCheck::BoundaryCheck(bool sCheck)
   : checkLoc0(sCheck)
   , checkLoc1(sCheck)

@@ -127,11 +127,6 @@ public:
 
   sincosCache
   FastSinCos(double x) const;
-
-private:
-  static double s_cos22;
-  static double s_cos45;
-  static double s_cos67;
 };
 
 /// should have maximum (average) error of 0.001 (0.0005) radians or 0.0573
@@ -217,32 +212,13 @@ BoundaryCheck::EllipseToPoly(int resolution) const
   t2 << -1, 0, 0, -1;
   ActsSymMatrixD<2> t3;
   t3 << -1, 0, 0, 1;
-  if (resolution != 3) {
-    sincosCache scResult;
-    for (int i = 1; i <= resolution; i++) {
-      scResult = FastSinCos(M_PI_2 * i / (resolution + 1));
-      t << w * scResult.sinC, h * scResult.cosC;
-      v.at(i * 4 + 0) = t;
-      v.at(i * 4 + 1) = t1 * t;
-      v.at(i * 4 + 2) = t2 * t;
-      v.at(i * 4 + 3) = t3 * t;
-    }
-  } else {
-    t << w * s_cos22, h * s_cos67;
-    v.at(4) = t;
-    v.at(5) = t1 * t;
-    v.at(6) = t2 * t;
-    v.at(7) = t3 * t;
-    t << w * s_cos45, h * s_cos45;
-    v.at(8)  = t;
-    v.at(9)  = t1 * t;
-    v.at(10) = t2 * t;
-    v.at(11) = t3 * t;
-    t << w * s_cos67, h * s_cos22;
-    v.at(12) = t;
-    v.at(13) = t1 * t;
-    v.at(14) = t2 * t;
-    v.at(15) = t3 * t;
+  for (int i = 1; i <= resolution; i++) {
+    double angle = M_PI_2 * i / (resolution + 1);
+    t << w * std::sin(angle), h * std::cos(angle);
+    v.at(i * 4 + 0) = t;
+    v.at(i * 4 + 1) = t1 * t;
+    v.at(i * 4 + 2) = t2 * t;
+    v.at(i * 4 + 3) = t3 * t;
   }
   return v;
 }
