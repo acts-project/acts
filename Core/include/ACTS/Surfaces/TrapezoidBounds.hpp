@@ -300,9 +300,9 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 
   // a fast FALSE
   double fabsY   = std::abs(lpos[Acts::eLOC_Y]);
-  double max_ell = (*bcheck.lCovariance)(0, 0) > (*bcheck.lCovariance)(1, 1)
-      ? (*bcheck.lCovariance)(0, 0)
-      : (*bcheck.lCovariance)(1, 1);
+  double max_ell = bcheck.lCovariance(0, 0) > bcheck.lCovariance(1, 1)
+      ? bcheck.lCovariance(0, 0)
+      : bcheck.lCovariance(1, 1);
   double limit = bcheck.nSigmas * sqrt(max_ell);
   if (fabsY > (m_valueStore.at(TrapezoidBounds::bv_halfY) + limit))
     return false;
@@ -311,9 +311,9 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
   if (fabsX > (m_valueStore.at(TrapezoidBounds::bv_maxHalfX) + limit))
     return false;
   // a fast TRUE
-  double min_ell = (*bcheck.lCovariance)(0, 0) < (*bcheck.lCovariance)(1, 1)
-      ? (*bcheck.lCovariance)(0, 0)
-      : (*bcheck.lCovariance)(1, 1);
+  double min_ell = bcheck.lCovariance(0, 0) < bcheck.lCovariance(1, 1)
+      ? bcheck.lCovariance(0, 0)
+      : bcheck.lCovariance(1, 1);
   limit = bcheck.nSigmas * sqrt(min_ell);
   if (fabsX < (m_valueStore.at(TrapezoidBounds::bv_minHalfX) + limit)
       && fabsY < (m_valueStore.at(TrapezoidBounds::bv_halfY) + limit))
@@ -323,11 +323,11 @@ TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
   std::vector<KDOP>     elementKDOP(3);
   std::vector<Vector2D> elementP(4);
   float                 theta
-      = ((*bcheck.lCovariance)(1, 0) != 0
-         && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
+      = (bcheck.lCovariance(1, 0) != 0
+         && (bcheck.lCovariance(1, 1) - bcheck.lCovariance(0, 0)) != 0)
       ? .5 * std::atan(
-                 2 * (*bcheck.lCovariance)(1, 0)
-                 / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
+                 2 * bcheck.lCovariance(1, 0)
+                 / (bcheck.lCovariance(1, 1) - bcheck.lCovariance(0, 0)))
       : 0.;
   auto rotMatrix = Eigen::Rotation2D<double>(theta).toRotationMatrix();
   ActsMatrixD<2, 2> normal;

@@ -161,16 +161,16 @@ LineBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
     return LineBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
   // ellipsoid check
   float theta
-      = ((*bcheck.lCovariance)(1, 0) != 0
-         && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
+      = (bcheck.lCovariance(1, 0) != 0
+         && (bcheck.lCovariance(1, 1) - bcheck.lCovariance(0, 0)) != 0)
       ? .5 * std::atan(
-                 2 * (*bcheck.lCovariance)(1, 0)
-                 / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
+                 2 * bcheck.lCovariance(1, 0)
+                 / (bcheck.lCovariance(1, 1) - bcheck.lCovariance(0, 0)))
       : 0.;
   double sinTheta = std::sin(theta);
   double cosTheta = std::cos(theta);
-  double dphi     = sinTheta * sinTheta * (*bcheck.lCovariance)(0, 0);
-  double dz       = cosTheta * cosTheta * (*bcheck.lCovariance)(0, 1);
+  double dphi     = sinTheta * sinTheta * bcheck.lCovariance(0, 0);
+  double dz       = cosTheta * cosTheta * bcheck.lCovariance(0, 1);
   double max_ell  = dphi > dz ? dphi : dz;
   double limit    = bcheck.nSigmas * sqrt(max_ell);
   return insideLocZ(lpos[Acts::eLOC_Z], limit);

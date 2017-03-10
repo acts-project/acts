@@ -62,8 +62,8 @@ namespace Test {
     BoundaryCheck boundaryCheckWithCovariance{cov, nSigma, true, true};
     BOOST_TEST(boundaryCheckWithCovariance.checkLoc1 == true);
     BoundaryCheck copyConstructedBoundaryCheck(boundaryCheckWithCovariance);
-    const auto& originalCovariance = *(boundaryCheckWithCovariance.lCovariance);
-    const auto& copiedCovariance = *(copyConstructedBoundaryCheck.lCovariance);
+    auto originalCovariance = boundaryCheckWithCovariance.lCovariance;
+    auto copiedCovariance = copyConstructedBoundaryCheck.lCovariance;
     BOOST_TEST(originalCovariance == copiedCovariance);
     // corner cases (NaN, inf, in tolerance and covariance) are not tested.
   }
@@ -157,7 +157,6 @@ namespace Test {
   }
 
   /// Unit test for assignment
-  BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(BoundaryCheckAssignment, 1);
   BOOST_AUTO_TEST_CASE(BoundaryCheckAssignment)
   {
     //
@@ -172,16 +171,7 @@ namespace Test {
     BOOST_TEST(assigned.toleranceLoc0 == original.toleranceLoc0);
     BOOST_TEST(assigned.toleranceLoc1 == original.toleranceLoc1);
     BOOST_TEST(assigned.nSigmas == original.nSigmas);
-    BOOST_TEST((bool(original.lCovariance)),
-               "Original object pointer to covariance should not be null");
-    // the following will fail
-    BOOST_TEST((bool(assigned.lCovariance)),
-               "Assigned object pointer to covariance should not be null");
-    if (original.lCovariance and assigned.lCovariance) {
-      auto& originalCovariance{*(original.lCovariance)};
-      auto& assignedCovariance{*(assigned.lCovariance)};
-      BOOST_TEST(originalCovariance == assignedCovariance);
-    }
+    BOOST_TEST(assigned.lCovariance == original.lCovariance);
   }
   BOOST_AUTO_TEST_SUITE_END();
 }  // end of namespace Test

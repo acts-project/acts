@@ -201,9 +201,9 @@ TriangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
         lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
 
   /// @todo check for quick limit test
-  /// double max_ell = (*bcheck.lCovariance)(0, 0) > (*bcheck.lCovariance)(1, 1)
-  ///    ? (*bcheck.lCovariance)(0, 0)
-  ///    : (*bcheck.lCovariance)(1, 1);
+  /// double max_ell = bcheck.lCovariance(0, 0) > bcheck.lCovariance(1, 1)
+  ///    ? bcheck.lCovariance(0, 0)
+  ///    : bcheck.lCovariance(1, 1);
   /// a fast FALSE
   /// double fabsR = sqrt(lpos[Acts::eLOC_X] * lpos[Acts::eLOC_X]
   ///                    + lpos[Acts::eLOC_Y] * lpos[Acts::eLOC_Y]);
@@ -213,12 +213,10 @@ TriangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
   // compute KDOP and axes for surface polygon
   std::vector<KDOP>     elementKDOP(3);
   std::vector<Vector2D> elementP(3);
-  double                theta
-      = ((*bcheck.lCovariance)(1, 0) != 0
-         && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
-      ? .5
-          * std::atan(2 * (*bcheck.lCovariance)(1, 0)
-                            / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
+  double                theta = (bcheck.lCovariance(1, 0) != 0
+                  && (bcheck.lCovariance(1, 1) - bcheck.lCovariance(0, 0)) != 0)
+      ? .5 * std::atan(2 * bcheck.lCovariance(1, 0)
+                       / (bcheck.lCovariance(1, 1) - bcheck.lCovariance(0, 0)))
       : 0.;
   auto rotMatrix = Eigen::Rotation2D<double>(theta).toRotationMatrix();
   ActsMatrixD<2, 2> normal;

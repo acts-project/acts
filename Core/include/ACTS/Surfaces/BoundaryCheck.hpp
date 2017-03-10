@@ -14,7 +14,7 @@
 #define ACTS_SURFACES_BOUNDARYCHECK_H 1
 
 #include <cmath>
-#include <memory>
+#include <limits>
 #include <vector>
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
@@ -62,13 +62,13 @@ public:
     chi2corr = 1   ///< relative (chi2 based) with full correlations
   };
 
-  bool   checkLoc0;      ///< check local 1 coordinate
-  bool   checkLoc1;      ///< check local 2 coordinate
-  double toleranceLoc0;  ///< absolute tolerance in local 1 coordinate
-  double toleranceLoc1;  ///< absolute tolerance in local 2 coordinate
-  double nSigmas;        ///< allowed sigmas for chi2 boundary check
-  std::unique_ptr<ActsSymMatrixD<2>> lCovariance;  ///< local covariance matrix
-  BoundaryCheckType bcType;  ///< the type how we check the boundary
+  bool   checkLoc0;               ///< check local 1 coordinate
+  bool   checkLoc1;               ///< check local 2 coordinate
+  double toleranceLoc0;           ///< absolute tolerance in local 1 coordinate
+  double toleranceLoc1;           ///< absolute tolerance in local 2 coordinate
+  double nSigmas;                 ///< allowed sigmas for chi2 boundary check
+  ActsSymMatrixD<2> lCovariance;  ///< local covariance matrix
+  BoundaryCheckType bcType;       ///< the type how we check the boundary
 
   /// Constructor for single boolean behavious
   BoundaryCheck(bool sCheck);
@@ -89,17 +89,6 @@ public:
                 double                   nsig  = 1.,
                 bool                     chkL0 = true,
                 bool                     chkL1 = true);
-
-  /// Copy Constructor
-  ///
-  /// @param bCheck is the source class
-  BoundaryCheck(const BoundaryCheck& bCheck);
-
-  /// Assignment operator
-  ///
-  /// @param bCheck is the source class
-  BoundaryCheck&
-  operator=(const BoundaryCheck& bCheck);
 
   /// Overwriting of the
   /// Conversion operator to bool
@@ -125,8 +114,10 @@ public:
 inline std::vector<Vector2D>
 BoundaryCheck::EllipseToPoly(int resolution) const
 {
-  const double h = lCovariance ? nSigmas * sqrt((*lCovariance)(1, 1)) : 0.;
-  const double w = lCovariance ? nSigmas * sqrt((*lCovariance)(0, 0)) : 0.;
+  const double h
+      = (bcType == chi2corr) ? nSigmas * sqrt(lCovariance(1, 1)) : 0.;
+  const double w
+      = (bcType == chi2corr) ? nSigmas * sqrt(lCovariance(0, 0)) : 0.;
 
   // first add the four vertices
   std::vector<Vector2D> v((1 + resolution) * 4);

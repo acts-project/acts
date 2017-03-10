@@ -191,12 +191,12 @@ RadialBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
   // a fast FALSE
   double sinPhi = std::sin(lpos[1]);
   double cosPhi = std::cos(lpos[1]);
-  double dx     = bcheck.nSigmas * sqrt((*bcheck.lCovariance)(0, 0));
+  double dx     = bcheck.nSigmas * sqrt(bcheck.lCovariance(0, 0));
   double dy     = bcheck.nSigmas
-      * sqrt(sinPhi * sinPhi * (*bcheck.lCovariance)(0, 0)
+      * sqrt(sinPhi * sinPhi * bcheck.lCovariance(0, 0)
              + lpos(0, 0) * lpos(0, 0) * cosPhi * cosPhi
-                 * (*bcheck.lCovariance)(1, 1)
-             + 2 * cosPhi * sinPhi * lpos(0, 0) * (*bcheck.lCovariance)(0, 1));
+                 * bcheck.lCovariance(1, 1)
+             + 2 * cosPhi * sinPhi * lpos(0, 0) * bcheck.lCovariance(0, 1));
   double max_ell = dx > dy ? dx : dy;
   if (lpos(0, 0) > (m_valueStore[RadialBounds::bv_rMax] + max_ell))
     return false;
@@ -346,7 +346,7 @@ RadialBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
   ActsMatrixD<2, 2> covRotMatrix;
   covRotMatrix << cosPhi, -lpos(0, 0) * sinPhi, sinPhi, lpos(0, 0) * cosPhi;
   ActsMatrixD<2, 2> lCovarianceCar
-      = covRotMatrix * (*bcheck.lCovariance) * covRotMatrix.transpose();
+      = covRotMatrix * bcheck.lCovariance * covRotMatrix.transpose();
   Vector2D lposCar(covRotMatrix(1, 1), -covRotMatrix(0, 1));
 
   // ellipse is always at (0,0), surface is moved to ellipse position and then

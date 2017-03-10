@@ -156,27 +156,25 @@ RectangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
         && RectangleBounds::insideLoc1(lpos, bcheck.toleranceLoc1);
 
   // a fast FALSE
-  double max_ell = (*bcheck.lCovariance)(0, 0) > (*bcheck.lCovariance)(1, 1)
-      ? (*bcheck.lCovariance)(0, 0)
-      : (*bcheck.lCovariance)(1, 1);
+  double max_ell = bcheck.lCovariance(0, 0) > bcheck.lCovariance(1, 1)
+      ? bcheck.lCovariance(0, 0)
+      : bcheck.lCovariance(1, 1);
   double limit = bcheck.nSigmas * sqrt(max_ell);
   if (!RectangleBounds::inside(lpos, limit, limit)) return false;
   // a fast TRUE
-  double min_ell = (*bcheck.lCovariance)(0, 0) < (*bcheck.lCovariance)(1, 1)
-      ? (*bcheck.lCovariance)(0, 0)
-      : (*bcheck.lCovariance)(1, 1);
+  double min_ell = bcheck.lCovariance(0, 0) < bcheck.lCovariance(1, 1)
+      ? bcheck.lCovariance(0, 0)
+      : bcheck.lCovariance(1, 1);
   limit = bcheck.nSigmas * sqrt(min_ell);
   if (RectangleBounds::inside(lpos, limit, limit)) return true;
 
   // compute KDOP and axes for surface polygon
   std::vector<KDOP>     elementKDOP(4);
   std::vector<Vector2D> elementP(4);
-  float                 theta
-      = ((*bcheck.lCovariance)(1, 0) != 0
-         && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
-      ? .5
-          * std::atan(2 * (*bcheck.lCovariance)(1, 0)
-                            / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
+  float                 theta = (bcheck.lCovariance(1, 0) != 0
+                 && (bcheck.lCovariance(1, 1) - bcheck.lCovariance(0, 0)) != 0)
+      ? .5 * std::atan(2 * bcheck.lCovariance(1, 0)
+                       / (bcheck.lCovariance(1, 1) - bcheck.lCovariance(0, 0)))
       : 0.;
   auto rotMatrix = Eigen::Rotation2D<double>(theta).toRotationMatrix();
   // ellipse is always at (0,0), surface is moved to ellipse position and then
