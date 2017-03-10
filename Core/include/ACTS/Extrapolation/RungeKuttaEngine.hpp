@@ -375,10 +375,10 @@ private:
     return m_cfg.fieldService->getField(R);
   }
 
-  void
-  getFieldGradient(const double* R, double* H, double* dH) const
+  Vector3D
+  getFieldGradient(const Vector3D& R, Vector3D& dH) const
   {
-    m_cfg.fieldService->getField(R, H, dH);
+    return m_cfg.fieldService->getFieldGradient(R, dH);
   }
 };
 }

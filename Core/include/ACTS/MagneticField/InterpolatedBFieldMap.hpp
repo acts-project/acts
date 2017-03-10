@@ -127,6 +127,22 @@ public:
     return interpolate(pos);
   }
 
+  /// @brief retrieve magnetic field value
+  ///
+  /// @param [in]  pos  global position
+  /// @param [out] deriv gradient of magnetic field vector as (3x3) matrix
+  /// @return magnetic field vector
+  ///
+  /// @note currently the derivative is not calculated
+  /// @todo return derivative
+  Vector3D
+  getFieldGradient(const Vector3D& pos, Vector3D& deriv) const
+  {
+    if (!insideGrid(pos)) return Vector3D(0, 0, 0);
+
+    return interpolate(pos);
+  }
+
   /// @brief get global scaling factor for magnetic field
   ///
   /// @return global factor for scaling the magnetic field
