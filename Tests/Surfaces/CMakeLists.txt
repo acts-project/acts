@@ -10,6 +10,22 @@ add_executable (LineSurfaceTests LineSurfaceTests.cpp)
 target_link_libraries (LineSurfaceTests PRIVATE ACTSCore)
 add_test (NAME LineSurfaceTests COMMAND LineSurfaceTests)
 
+add_executable (PerigeeSurfaceTests PerigeeSurfaceTests.cpp)
+target_link_libraries (PerigeeSurfaceTests PRIVATE ACTSCore)
+add_test (NAME PerigeeSurfaceTests COMMAND PerigeeSurfaceTests)
+
+add_executable (StrawSurfaceTests StrawSurfaceTests.cpp)
+target_link_libraries (StrawSurfaceTests PRIVATE ACTSCore)
+add_test (NAME StrawSurfaceTests COMMAND StrawSurfaceTests)
+
+add_executable (CylinderSurfaceTests CylinderSurfaceTests.cpp)
+target_link_libraries (CylinderSurfaceTests PRIVATE ACTSCore)
+add_test (NAME CylinderSurfaceTests COMMAND CylinderSurfaceTests)
+
+add_executable (ConeSurfaceTests ConeSurfaceTests.cpp)
+target_link_libraries (ConeSurfaceTests PRIVATE ACTSCore)
+add_test (NAME ConeSurfaceTests COMMAND ConeSurfaceTests)
+
 add_executable (DiscSurfaceTests DiscSurfaceTests.cpp)
 target_link_libraries (DiscSurfaceTests PRIVATE ACTSCore)
 add_test (NAME DiscSurfaceTests COMMAND DiscSurfaceTests)
