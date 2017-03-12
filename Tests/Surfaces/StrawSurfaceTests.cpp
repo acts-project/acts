@@ -21,10 +21,10 @@
 #include <limits>
 #include "ACTS/Layers/PlaneLayer.hpp"
 #include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
+#include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Surfaces/StrawSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "DetectorElementStub.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
 
 using boost::test_tools::output_test_stream;
 namespace utf    = boost::unit_test;
@@ -38,34 +38,37 @@ namespace Test {
   /// Unit test for creating compliant/non-compliant StrawSurface object
   BOOST_AUTO_TEST_CASE(StrawSurfaceConstruction)
   {
-    //StrawSurface default constructor is deleted
+    // StrawSurface default constructor is deleted
     //
-    ///Constructor with transform pointer, null or valid, radius and halfZ
-    double radius(1.0), halfZ(10.);
+    /// Constructor with transform pointer, null or valid, radius and halfZ
+    double        radius(1.0), halfZ(10.);
     Translation3D translation{0., 1., 2.};
-    auto pTransform = std::make_shared<Transform3D>(translation);
-    auto pNullTransform = std::make_shared<Transform3D>();
-    BOOST_TEST(StrawSurface(pNullTransform, radius,halfZ).type() == Surface::Straw);
-    BOOST_TEST(StrawSurface(pTransform, radius, halfZ).type() == Surface::Straw);
+    auto          pTransform     = std::make_shared<Transform3D>(translation);
+    auto          pNullTransform = std::make_shared<Transform3D>();
+    BOOST_TEST(StrawSurface(pNullTransform, radius, halfZ).type()
+               == Surface::Straw);
+    BOOST_TEST(StrawSurface(pTransform, radius, halfZ).type()
+               == Surface::Straw);
     //
-    ///Constructor with transform and LineBounds pointer
+    /// Constructor with transform and LineBounds pointer
     auto pLineBounds = std::make_shared<LineBounds>(radius, halfZ);
     BOOST_TEST(StrawSurface(pTransform, pLineBounds).type() == Surface::Straw);
     //
-    ///Constructor with LineBounds ptr, DetectorElement and Identifier
-    Identifier id{1};
+    /// Constructor with LineBounds ptr, DetectorElement and Identifier
+    Identifier                                id{1};
     std::shared_ptr<const Acts::PlanarBounds> p
         = std::make_shared<const RectangleBounds>(1., 10.);
     DetectorElementStub detElement{id, pTransform, p, 1.0, nullptr};
-    BOOST_TEST(StrawSurface(pLineBounds, detElement, id).type() == Surface::Straw);
+    BOOST_TEST(StrawSurface(pLineBounds, detElement, id).type()
+               == Surface::Straw);
     //
-    ///Copy constructor
+    /// Copy constructor
     StrawSurface strawSurfaceObject(pTransform, radius, halfZ);
     StrawSurface copiedStrawSurface(strawSurfaceObject);
     BOOST_TEST(copiedStrawSurface.type() == Surface::Straw);
     BOOST_TEST(copiedStrawSurface == strawSurfaceObject);
     //
-    ///Copied and transformed
+    /// Copied and transformed
     StrawSurface copiedTransformedStrawSurface(strawSurfaceObject, *pTransform);
     BOOST_TEST(copiedTransformedStrawSurface.type() == Surface::Straw);
   }
@@ -73,24 +76,24 @@ namespace Test {
   /// Unit test for testing StrawSurface properties
   BOOST_AUTO_TEST_CASE(StrawSurfaceProperties)
   {
-    ///Test clone method
-    double radius(1.0), halfZ(10.);
+    /// Test clone method
+    double        radius(1.0), halfZ(10.);
     Translation3D translation{0., 1., 2.};
-    auto pTransform = std::make_shared<Transform3D>(translation);
-    //auto pNullTransform = std::make_shared<Transform3D>();
+    auto          pTransform = std::make_shared<Transform3D>(translation);
+    // auto pNullTransform = std::make_shared<Transform3D>();
     StrawSurface strawSurfaceObject(pTransform, radius, halfZ);
     //
     auto pClonedStrawSurface = strawSurfaceObject.clone();
     BOOST_TEST(pClonedStrawSurface->type() == Surface::Straw);
     delete pClonedStrawSurface;
     //
-    ///Test type (redundant)
-    BOOST_TEST(strawSurfaceObject.type()  == Surface::Straw);
+    /// Test type (redundant)
+    BOOST_TEST(strawSurfaceObject.type() == Surface::Straw);
     //
-    ///Test name
+    /// Test name
     BOOST_TEST(strawSurfaceObject.name() == std::string("Acts::StrawSurface"));
     //
-    ///Test dump
+    /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
     strawSurfaceObject.dump(dumpOuput);
     BOOST_TEST(dumpOuput.is_equal("Acts::StrawSurface\n\
@@ -103,21 +106,22 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(EqualityOperators, *utf::expected_failures(1))
   {
-    double radius(1.0), halfZ(10.);
+    double        radius(1.0), halfZ(10.);
     Translation3D translation{0., 1., 2.};
-    auto pTransform = std::make_shared<Transform3D>(translation);
-    StrawSurface strawSurfaceObject(pTransform, radius, halfZ);
+    auto          pTransform = std::make_shared<Transform3D>(translation);
+    StrawSurface  strawSurfaceObject(pTransform, radius, halfZ);
     //
     StrawSurface strawSurfaceObject2(pTransform, radius, halfZ);
     //
-    ///Test equality operator
+    /// Test equality operator
     BOOST_TEST(strawSurfaceObject == strawSurfaceObject2);
     //
-    BOOST_TEST_CHECKPOINT("Create and then assign a StrawSurface object to the existing one");
-    ///Test assignment (will fail at the equality test)
+    BOOST_TEST_CHECKPOINT(
+        "Create and then assign a StrawSurface object to the existing one");
+    /// Test assignment (will fail at the equality test)
     StrawSurface assignedStrawSurface(nullptr, NaN, NaN);
     assignedStrawSurface = strawSurfaceObject;
-    ///Test equality of assigned to original
+    /// Test equality of assigned to original
     BOOST_TEST(assignedStrawSurface == strawSurfaceObject);
   }
   BOOST_AUTO_TEST_SUITE_END();
