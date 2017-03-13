@@ -10,6 +10,26 @@ add_executable (LineSurfaceTests LineSurfaceTests.cpp)
 target_link_libraries (LineSurfaceTests PRIVATE ACTSCore)
 add_test (NAME LineSurfaceTests COMMAND LineSurfaceTests)
 
+add_executable (PerigeeSurfaceTests PerigeeSurfaceTests.cpp)
+target_link_libraries (PerigeeSurfaceTests PRIVATE ACTSCore)
+add_test (NAME PerigeeSurfaceTests COMMAND PerigeeSurfaceTests)
+
+add_executable (StrawSurfaceTests StrawSurfaceTests.cpp)
+target_link_libraries (StrawSurfaceTests PRIVATE ACTSCore)
+add_test (NAME StrawSurfaceTests COMMAND StrawSurfaceTests)
+
+add_executable (CylinderSurfaceTests CylinderSurfaceTests.cpp)
+target_link_libraries (CylinderSurfaceTests PRIVATE ACTSCore)
+add_test (NAME CylinderSurfaceTests COMMAND CylinderSurfaceTests)
+
+add_executable (ConeSurfaceTests ConeSurfaceTests.cpp)
+target_link_libraries (ConeSurfaceTests PRIVATE ACTSCore)
+add_test (NAME ConeSurfaceTests COMMAND ConeSurfaceTests)
+
+add_executable (DiscSurfaceTests DiscSurfaceTests.cpp)
+target_link_libraries (DiscSurfaceTests PRIVATE ACTSCore)
+add_test (NAME DiscSurfaceTests COMMAND DiscSurfaceTests)
+
 add_executable (plane_surface_tests plane_surface_tests.cpp)
 target_link_libraries (plane_surface_tests PRIVATE ACTSCore)
 add_test (NAME plane_surface_tests COMMAND plane_surface_tests)
@@ -42,6 +62,28 @@ add_executable (EllipseBoundsTests EllipseBoundsTests.cpp)
 target_link_libraries (EllipseBoundsTests PRIVATE ACTSCore)
 add_test (NAME EllipseBoundsTests COMMAND EllipseBoundsTests)
 
+add_executable (TriangleBoundsTests TriangleBoundsTests.cpp)
+target_link_libraries (TriangleBoundsTests PRIVATE ACTSCore)
+add_test (NAME TriangleBoundsTests COMMAND TriangleBoundsTests)
+
 add_executable (RectangleBoundsTests RectangleBoundsTests.cpp)
 target_link_libraries (RectangleBoundsTests PRIVATE ACTSCore)
 add_test (NAME RectangleBoundsTests COMMAND RectangleBoundsTests)
+
+add_executable (TrapezoidBoundsTests TrapezoidBoundsTests.cpp)
+target_link_libraries (TrapezoidBoundsTests PRIVATE ACTSCore)
+add_test (NAME TrapezoidBoundsTests COMMAND TrapezoidBoundsTests)
+
+add_executable (RadialBoundsTests RadialBoundsTests.cpp)
+target_link_libraries (RadialBoundsTests PRIVATE ACTSCore)
+add_test (NAME RadialBoundsTests COMMAND RadialBoundsTests)
+
+add_executable (DiscTrapezoidalBoundsTests DiscTrapezoidalBoundsTests.cpp)
+target_link_libraries (DiscTrapezoidalBoundsTests PRIVATE ACTSCore)
+add_test (NAME DiscTrapezoidalBoundsTests COMMAND DiscTrapezoidalBoundsTests)
+
+add_executable (RealQuadraticEquationTests RealQuadraticEquationTests.cpp)
+target_link_libraries (RealQuadraticEquationTests PRIVATE ACTSCore)
+add_test (NAME RealQuadraticEquationTests COMMAND RealQuadraticEquationTests)
+
+
