@@ -376,7 +376,7 @@ private:
   }
 
   Vector3D
-  getFieldGradient(const Vector3D& R, Vector3D& dH) const
+  getFieldGradient(const Vector3D& R, ActsMatrixD<3, 3> dH) const
   {
     return m_cfg.fieldService->getFieldGradient(R, dH);
   }

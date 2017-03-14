@@ -100,7 +100,7 @@ public:
   /// @note currently the derivative is not calculated
   /// @todo return derivative
   Vector3D
-  getFieldGradient(const Vector3D& pos, Vector3D& deriv) const
+  getFieldGradient(const Vector3D& pos, ActsMatrixD<3, 3>& deriv) const
   {
     return m_BField;
   }
