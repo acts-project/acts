@@ -370,16 +370,16 @@ private:
   newCrossPoint(const CylinderSurface&, const double*, const double*) const;
 
   /// get the field - with the fast option
-  void
-  getField(const double* R, double* H) const
+  Vector3D
+  getField(const Vector3D& R) const
   {
-    m_cfg.fieldService->getField(R, H);
+    return m_cfg.fieldService->getField(R);
   }
 
-  void
-  getFieldGradient(const double* R, double* H, double* dH) const
+  Vector3D
+  getFieldGradient(const Vector3D& R, ActsMatrixD<3, 3> dH) const
   {
-    m_cfg.fieldService->getField(R, H, dH);
+    return m_cfg.fieldService->getFieldGradient(R, dH);
   }
 };
 }
