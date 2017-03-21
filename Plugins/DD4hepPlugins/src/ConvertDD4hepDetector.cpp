@@ -243,6 +243,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                                                          ddmaterial.Z(),
                                                          ddmaterial.density());
         // Create the sub volume setup
+        std::sort(finalZBoundaries.begin(), finalZBoundaries.end());
         Acts::SubVolumeConfig subVolumeConfig;
         subVolumeConfig.rMin        = rMin;
         subVolumeConfig.rMax        = rMax;
