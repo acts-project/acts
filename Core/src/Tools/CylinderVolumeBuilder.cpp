@@ -137,6 +137,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr insideVolume,
         nVolumeConfig.rMax    = m_cfg.subVolumeConfig.rMax;
         nVolumeConfig.zMin    = m_cfg.subVolumeConfig.zBoundaries.at(0);
         nVolumeConfig.zMax    = m_cfg.subVolumeConfig.zBoundaries.at(1);
+        nVolumeConfig.layers  = negativeLayers;
       }
     }
     if (!centralLayers.empty()) {
@@ -146,6 +147,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr insideVolume,
       cVolumeConfig.rMax    = m_cfg.subVolumeConfig.rMax;
       cVolumeConfig.zMin    = m_cfg.subVolumeConfig.zBoundaries.at(1);
       cVolumeConfig.zMax    = m_cfg.subVolumeConfig.zBoundaries.at(2);
+      cVolumeConfig.layers  = centralLayers;
     }
     if (!positiveLayers.empty()) {
       if (m_cfg.subVolumeConfig.zBoundaries.size() < 4) {
@@ -163,6 +165,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr insideVolume,
         pVolumeConfig.rMax    = m_cfg.subVolumeConfig.rMax;
         pVolumeConfig.zMin    = m_cfg.subVolumeConfig.zBoundaries.at(2);
         pVolumeConfig.zMax    = m_cfg.subVolumeConfig.zBoundaries.at(3);
+        pVolumeConfig.layers  = positiveLayers;
       }
     }
   } else {
