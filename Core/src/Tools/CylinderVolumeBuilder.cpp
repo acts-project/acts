@@ -350,8 +350,7 @@ Acts::CylinderVolumeBuilder::synchronizeVolumeConfigs(
   if (insideConfig) {
     // check for potential overlap
     for (auto lConfig : lsVector)
-      if (lConfig && (lConfig.overlapsInZ(insideConfig)
-                      && lConfig.overlapsInR(insideConfig))) {
+      if (lConfig && !lConfig.wraps(insideConfig)) {
         /// give an ERROR and bail out
         ACTS_ERROR(
             "Given layer dimensions do not fit outside the provided volume "
