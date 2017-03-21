@@ -126,7 +126,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
 
           ACTS_VERBOSE(
               "[V] Volume : '"
-              << volumeDetElement.name()
+              << subDetector.name()
               << "'is a compound volume -> resolve now the sub volumes");
 
           IActsExtension* volumeExtension = nullptr;
@@ -358,7 +358,9 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
       if (!tube)
         throw std::logic_error(
             std::string("Volume of DetElement: ") + subDetector.name()
-            + std::string(" has wrong shape - needs to be TGeoConeSeg!"));
+            + std::string(" has wrong shape - needs to be TGeoConeSeg! If "
+                          "you use assemblies please set the layer "
+                          "envelopes!"));
       // get the dimension of TGeo and convert lengths
       std::vector<double> zBoundaries;
       double              halfZ = tube->GetDz() * units::_cm;
