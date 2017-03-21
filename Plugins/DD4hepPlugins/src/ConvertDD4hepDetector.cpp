@@ -121,7 +121,8 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
           double zPos  = volumeDetElement.placement()
                             .ptr()
                             ->GetMatrix()
-                            ->GetTranslation()[2];
+                            ->GetTranslation()[2]
+              * units::_cm;
 
           ACTS_VERBOSE(
               "[V] Volume : '"
@@ -361,7 +362,8 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
       std::vector<double> zBoundaries;
       double              halfZ = tube->GetDz() * units::_cm;
       double              zPos
-          = subDetector.placement().ptr()->GetMatrix()->GetTranslation()[2];
+          = subDetector.placement().ptr()->GetMatrix()->GetTranslation()[2]
+          * units::_cm;
       zBoundaries.push_back(zPos - halfZ);
       zBoundaries.push_back(zPos + halfZ);
       std::sort(zBoundaries.begin(), zBoundaries.end());
