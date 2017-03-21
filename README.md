@@ -163,7 +163,7 @@ On lxplus many of the dependencies are provided by the LCG releases. A possible 
 > mkdir build && cd build<br />
 > cmake .. -DCMAKE_INSTALL_PREFIX=<path you want> \<br />
 >	 -DEIGEN_INCLUDE_DIR=${lcgdir}/include/eigen3/ \<br />
->	-DBOOST_INCLUDEDIR=${lcgdir}/include/boost-1_59/ \<br />
+>	-DBOOST_INCLUDEDIR=${lcgdir}/include/boost-1_62/ \<br />
 >	-DBUILD_TGEO_PLUGIN=ON \<br />
 >	-DBUILD_DD4HEP_PLUGIN=ON<br />
 > make install
