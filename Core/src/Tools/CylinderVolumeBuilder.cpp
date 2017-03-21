@@ -145,9 +145,14 @@ Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr insideVolume,
       cVolumeConfig.present = true;
       cVolumeConfig.rMin    = m_cfg.subVolumeConfig.rMin;
       cVolumeConfig.rMax    = m_cfg.subVolumeConfig.rMax;
-      cVolumeConfig.zMin    = m_cfg.subVolumeConfig.zBoundaries.at(1);
-      cVolumeConfig.zMax    = m_cfg.subVolumeConfig.zBoundaries.at(2);
-      cVolumeConfig.layers  = centralLayers;
+      cVolumeConfig.zMin    = (m_cfg.subVolumeConfig.zBoundaries.size() < 4)
+          ? m_cfg.subVolumeConfig.zBoundaries.at(0)
+          : m_cfg.subVolumeConfig.zBoundaries.at(1);
+      cVolumeConfig.zMax = (m_cfg.subVolumeConfig.zBoundaries.size() < 4)
+          ? m_cfg.subVolumeConfig.zBoundaries.at(1)
+          : m_cfg.subVolumeConfig.zBoundaries.at(2);
+      cVolumeConfig.layers = centralLayers;
+      cVolumeConfig.layers = centralLayers;
     }
     if (!positiveLayers.empty()) {
       if (m_cfg.subVolumeConfig.zBoundaries.size() < 4) {
