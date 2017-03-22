@@ -174,28 +174,21 @@ public:
 class Material
 {
 public:
-  // standard x0, l0, A, Z, rho description
-  float X0;
-  float L0;
-  float A;
-  float Z;
-  float rho;
-  float dEdX;
-  float zOaTr;
-  MaterialComposition composition;
-
+  /// Accessor enums
+  enum Param {
+    matX0    = 0, ///< Z0
+    matL0    = 1, ///< L0
+    matA     = 2, ///< A
+    matZ     = 3, ///< Z
+    matrho   = 4, ///< rho
+    matZ_AR  = 5  ///< Z/A*rho
+  };
+  
   /// Default Constructor - vacuum material
   Material()
-    : X0(10e10)
-    , L0(10e10)
-    , A(0.)
-    , Z(0.)
-    , rho(0.)
-    , dEdX(0.)
-    , zOaTr(0.)
-  , composition()
-  {
-  }
+   : m_store()
+   , m_composition()
+  {}
 
   /// Constructor with arguments 
   ///
@@ -211,32 +204,28 @@ public:
            float                iZ,
            float                iRho,
            MaterialComposition  imc = {})
-    : X0(iX0)
-    , L0(iL0)
-    , A(iA)
-    , Z(iZ)
-    , rho(iRho)
-    , zOaTr(iA > 0 ? iZ/iA * iRho : 0.)
-    , composition(imc)
+    : m_store({iX0,iL0,iA,iZ,iRho})
+    , m_composition(imc)
   {
+    float zOaTr = (iA > 0 ? iZ/iA * iRho : 0.);
+    m_store.push_back(zOaTr);
   }
 
   /// Copy Constructor 
   ///
   /// @param material copy constructor
   Material(const Material& mat)
-    : X0(mat.X0)
-    , L0(mat.L0)
-    , A(mat.A)
-    , Z(mat.Z)
-    , rho(mat.rho)
-    , zOaTr(mat.zOaTr)
-    , composition(mat.composition)
+    : m_store(mat.m_store)
+    , m_composition(mat.m_composition)
   {
   }
 
   /// Desctructor 
   ~Material() {}
+  
+  /// boolean operator to check if this is 
+  /// vacuum has 0 zero size and will indicate false
+  operator bool() const { return m_store.size(); } 
   
   /// Assignment operator
   ///
@@ -245,48 +234,90 @@ public:
   operator=(const Material& amc)
   {
     if (this != &amc) {
-      X0    = amc.X0;
-      L0    = amc.L0;
-      A     = amc.A;
-      Z     = amc.Z;
-      rho   = amc.rho;
-      zOaTr = amc.zOaTr;
-      composition = amc.composition;
+      m_store     = amc.m_store;
+      m_composition = amc.m_composition;
     }
     return (*this);
   }
 
-  /// access to methods z/A*tho
+  /// access to X0 
+  /// if it's vacuum, infinity
+  float
+  X0() const
+  {
+    if (m_store.size())
+      return m_store[matX0];
+    else 
+      return std::numeric_limits<float>::infinity();
+  }
+
+  /// access to l0 
+  /// if it's vacuum, infinity
+  float
+  L0() const
+  {
+    if (m_store.size())
+      return m_store[matL0];
+    else 
+      return std::numeric_limits<float>::infinity();
+  }
+
+  /// access to A
+  float
+  A() const
+  {
+    if (m_store.size())
+      return m_store[matA];
+    else 
+      return 0.;
+  }
+
+  /// access to Z
+  float
+  Z() const
+  {
+    if (m_store.size())
+      return m_store[matZ];
+    else 
+      return 0.;
+  }
+  /// access to rho
+  float
+  rho() const
+  {
+    if (m_store.size())
+      return m_store[matrho];
+    else 
+      return 0.;
+  }
+  
+  /// access to z/A*tho
   float
   zOverAtimesRho() const
   {
-    return (*this).zOaTr;
+    if (m_store.size() > 4)
+      return m_store[matZ_AR];
+    return 0.;
   }
   
-  /// access to methods x0
-  float
-  x0() const
-  {
-    return (*this).X0;
-  }
-
-  /// access to methods x0
-  float
-  averageZ() const
-  {
-    return (*this).Z;
-  }
-
   /// spit out as a string 
   std::string
   toString() const
   {
     std::ostringstream sout;
     sout << std::setiosflags(std::ios::fixed) << std::setprecision(4);
-    sout << "(" << X0 << " | " << L0 << " | " << A << " | " << Z << " | " << rho
-         << ")";
+    sout << " | ";
+    for (auto& mat : m_store) sout << mat << " | ";
     return sout.str();
   }
+  
+  private :
+    /// standard x0, l0, A, Z, rho description
+    std::vector<float>  m_store;
+    
+    /// optional composition parameter
+    MaterialComposition m_composition;
+  
 };
 
 }

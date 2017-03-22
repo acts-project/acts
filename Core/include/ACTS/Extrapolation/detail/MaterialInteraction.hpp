@@ -21,51 +21,77 @@ namespace Acts {
 
 /// @class MaterialInteraction
 ///
-/// Collection of parametrizations used in the Tracking realm
+/// Collection of parametrizations used for
+/// energy loss and scattering
 ///
-
 class MaterialInteraction
 {
 public:
-  /// Default Constructor needed for POOL
+  /// Default Constructor
   MaterialInteraction() {}
+  
   /// Descructor
   ~MaterialInteraction() {}
+  
   /// dE/dl ionization energy loss per path unit
   ///
   /// calculate mean ionization that is pathlentgh INDEPENDENT
   ///
-  /// sigma = sigmaL = landau sigma is pathlentgh DEPENDENT (here calculated for
-  /// 1 mm)
+  /// sigma = sigmaL = landau sigma is pathlentgh
+  /// DEPENDENT (here calculated for 1 mm)
   /// sigma(length) =  sigma - kazL*log(pathlength)
   /// kazL is calculated in this function for later use.
   ///
   /// For a Landau: MOP value = Mean + 3.59524*sigmaL
   ///
+  ///
+  /// @param p is the particle momentum
+  /// @param mat is the material
+  /// @param particle is the particle type
+  /// @param sigma is the addition to the energy noise
+  /// @param kazl is an internal parameter
   double
   dEdl_ionization(double          p,
-                  const Material* mat,
+                  const Material& mat,
                   ParticleType    particle,
                   double&         sigma,
                   double&         kazL) const;
 
   /// ionization energy loss from PDG
+  ///
+  ///
+  /// @param p is the particle momentum
+  /// @param mat is the material
+  /// @param particle is the particle type
+  /// @param sigma is the addition to the energy noise
+  /// @param kazl is an internal parameter
+  /// @param path is the path length through the material
+  ///
+  /// @return deltaE from ionization according to PDG
   double
-  PDG_energyLoss_ionization(double                p,
-                            const Acts::Material* mat,
-                            Acts::ParticleType    particle,
-                            double&               sigma,
-                            double&               kazL,
-                            double                path) const;
+  PDG_energyLoss_ionization(double          p,
+                            const Material& mat,
+                            ParticleType    particle,
+                            double&         sigma,
+                            double&         kazL,
+                            double          path) const;
 
   /// dE/dl radiation energy loss per path unit
+  ///
+  /// @param p is the particle momentum
+  /// @param mat is the material
+  /// @param sigma is the addition to the energy noise
+  ///
+  /// @return dEdx from radiation
   double
   dEdl_radiation(double          p,
-                 const Material* mat,
+                 const Material& mat,
                  ParticleType    particle,
                  double&         sigma) const;
 
-  /** multiple scattering as function of dInX0 */
+  /// multiple scattering as function of dInX0
+  ///
+  ///
   double
   sigmaMS(double dInX0, double p, double beta) const;
 
@@ -75,17 +101,20 @@ private:
 
 inline double
 Acts::MaterialInteraction::dEdl_ionization(double                p,
-                                           const Acts::Material* mat,
-                                           Acts::ParticleType    particle,
+                                           const Material&       mat,
+                                           ParticleType          particle,
                                            double&               sigma,
                                            double&               kazL) const
 {
+  
+  if (!(mat)) return 0.;
+
   const double factor = (1. / 3.59524);  // the compiler will evaulate this
 
   double path = 1.;  // this is a scaling factor for the landau convolution
 
   sigma = 0.;
-  if (mat->averageZ() < 1) return 0.;
+  if (mat.Z() < 1.) return 0.;
 
   double Ionization = 0.;
 
@@ -100,10 +129,10 @@ Acts::MaterialInteraction::dEdl_ionization(double                p,
 
   // Ionization - Bethe-Bloch
   double I = 16.e-6
-      * std::pow(mat->averageZ(), 0.9);  // 16 eV * Z**0.9 - bring to MeV
+      * std::pow(mat.Z(), 0.9);  // 16 eV * Z**0.9 - bring to MeV
 
   // K/A*Z = 0.5 * 30.7075MeV/(g/mm2) * Z/A * rho[g/mm3]  / scale to mm by this
-  double kaz = 0.5 * 30.7075 * mat->zOverAtimesRho();
+  double kaz = 0.5 * 30.7075 * mat.zOverAtimesRho();
 
   //  sigmaL of Landau
   sigma = 4 * kaz * beta / beta;  // dsigma/dl
@@ -122,7 +151,7 @@ Acts::MaterialInteraction::dEdl_ionization(double                p,
     // muons)
     double delta = 0.;
     if (gamma > 10.) {
-      double eplasma = 28.816e-6 * sqrt(1000. * mat->zOverAtimesRho());
+      double eplasma = 28.816e-6 * sqrt(1000. * mat.zOverAtimesRho());
       delta          = 2. * log(eplasma / I) + log(eta2) - 1.;
     }
     // tmax - cut off energy
@@ -147,15 +176,15 @@ Acts::MaterialInteraction::dEdl_ionization(double                p,
   return Ionization;
 }
 
-/** dE/dl radiation energy loss per path unit */
+/// dE/dl radiation energy loss per path unit
 inline double
 Acts::MaterialInteraction::dEdl_radiation(double                p,
-                                          const Acts::Material* mat,
-                                          Acts::ParticleType    particle,
+                                          const Material&       mat,
+                                          ParticleType          particle,
                                           double&               sigma) const
 {
   sigma = 0.;
-  if (mat->x0() == 0.) return 0.;
+  if (!(mat)) return 0.;
 
   // preparation of kinetic constants
   double m     = s_particleMasses.mass[particle];
@@ -184,12 +213,12 @@ Acts::MaterialInteraction::dEdl_radiation(double                p,
     }
   }
 
-  sigma = sigma / mat->x0();
+  sigma = sigma / mat.X0();
 
-  return Radiation / mat->x0();
+  return Radiation / mat.X0();
 }
 
-/** multiple scattering as function of dInX0 */
+/// multiple scattering as function of dInX0
 inline double
 Acts::MaterialInteraction::sigmaMS(double dInX0, double p, double beta) const
 {
@@ -201,15 +230,15 @@ Acts::MaterialInteraction::sigmaMS(double dInX0, double p, double beta) const
   return sig_ms;
 }
 
-/** Ionization energy loss from the PDG */
-/** PDG formula 32.11 for MOP value from
- * http://http://pdg.lbl.gov/2014/reviews/rpp2014-rev-passage-particles-matter.pdf
- */
+/// Ionization energy loss from the PDG */
+/// PDG formula 32.11 for MOP value from
+ ///
+/// http://http://pdg.lbl.gov/2014/reviews/rpp2014-rev-passage-particles-matter.pdf
 inline double
 Acts::MaterialInteraction::PDG_energyLoss_ionization(
     double                p,
-    const Acts::Material* mat,
-    Acts::ParticleType    particle,
+    const Material&       mat,
+    ParticleType          particle,
     double&               sigma,
     double&               kazL,
     double                path) const
@@ -219,23 +248,23 @@ Acts::MaterialInteraction::PDG_energyLoss_ionization(
 
   double m     = s_particleMasses.mass[particle];
   double E     = sqrt(p * p + m * m);
-  double me    = s_particleMasses.mass[Acts::electron];
+  double me    = s_particleMasses.mass[electron];
   double beta  = p / E;
   double gamma = E / m;
 
   // Ionization - Bethe-Bloch
   double I = 16.e-6
-      * std::pow(mat->averageZ(), 0.9);  // 16 eV * Z**0.9 - bring to MeV
+      * std::pow(mat.Z(), 0.9);  // 16 eV * Z**0.9 - bring to MeV
 
   // K/A*Z = 0.5 * 30.7075MeV/(g/mm2) * Z/A * rho[g/mm3]  / scale to mm by this
-  double kaz  = 0.5 * 30.7075 * mat->zOverAtimesRho();
+  double kaz  = 0.5 * 30.7075 * mat.zOverAtimesRho();
   double eta2 = beta * gamma;
   eta2 *= eta2;
   // density effect, only valid for high energies (gamma > 10 -> p > 1GeV for
   // muons)
   double delta = 0.;
   if (gamma > 10.) {
-    double eplasma = 28.816e-6 * sqrt(1000. * mat->zOverAtimesRho());
+    double eplasma = 28.816e-6 * sqrt(1000. * mat.zOverAtimesRho());
     delta          = 2. * log(eplasma / I) + log(eta2) - 1.;
   }
 

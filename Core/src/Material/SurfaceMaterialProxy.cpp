@@ -31,7 +31,7 @@ Acts::SurfaceMaterialProxy::clone() const
   return (new SurfaceMaterialProxy(*this));
 }
 
-Acts::SurfaceMaterial&
+Acts::SurfaceMaterialProxy&
 Acts::SurfaceMaterialProxy::operator*=(double)
 {
   return (*this);
@@ -42,8 +42,8 @@ Acts::SurfaceMaterialProxy::dump(std::ostream& sl) const
 {
   sl << "Acts::SurfaceMaterialProxy : " << std::endl;
   if (m_binUtility)
-    sl << "   - Number of Material bins [0,1] : " << m_binUtility->max(0) + 1
-      << " / " << m_binUtility->max(1) + 1 << std::endl;
+    sl << "   - Number of Material bins [0,1] : " << m_binUtility->bins(0)
+      << " / " << m_binUtility->bins(1) << std::endl;
   else
     sl << "   - Homogeneous Material" << std::endl;
   return sl;

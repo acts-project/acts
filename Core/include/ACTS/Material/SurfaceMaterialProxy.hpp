@@ -51,7 +51,7 @@ public:
   clone() const final override;
   
   /// Scale operator
-  virtual SurfaceMaterial&
+  virtual SurfaceMaterialProxy&
   operator*=(double scale) final override;
 
   /// Return the BinUtility 
@@ -80,6 +80,7 @@ private:
   /// two dimensional BinUtility determining the granularity and binning of the
   /// material on the surface/layer
   std::shared_ptr<const BinUtility>     m_binUtility;
+  
   /// Dummy material properties
   MaterialProperties                    m_materialProperties;
 

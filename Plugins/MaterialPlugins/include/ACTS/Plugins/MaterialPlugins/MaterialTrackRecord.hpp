@@ -31,7 +31,6 @@ namespace Acts {
 /// This class should be used to create material maps consisting of a collection
 /// of MaterialTrackRecords through the detector.
 ///
-
 class MaterialTrackRecord
 {
 public:

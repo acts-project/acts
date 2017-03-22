@@ -10,8 +10,8 @@
 // SurfaceMaterialRecord.h, ACTS project MaterialPlugins
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_MATERIALPLUGINS_LAYERMATERIALRECORD_H
-#define ACTS_MATERIALPLUGINS_LAYERMATERIALRECORD_H
+#ifndef ACTS_MATERIALPLUGINS_SURFACEMATERIALRECORD_H
+#define ACTS_MATERIALPLUGINS_SURFACEMATERIALRECORD_H 1
 
 #include "ACTS/Material/BinnedSurfaceMaterial.hpp"
 #include "ACTS/Material/MaterialProperties.hpp"
@@ -20,8 +20,11 @@
 
 namespace Acts {
 
-typedef std::pair< std::unique_ptr<MaterialProperties>, size_t > RecordEntry;
-typedef std::vector< std::vector<RecordEntry> >                  MaterialRecord;
+class Surface;
+
+typedef std::pair<MaterialProperties, size_t> RecordBin;
+typedef std::vector<RecordBin>                RecordVector;
+typedef std::vector<std::vector<RecordBin>>   MaterialRecord;
 
 /// @class SurfaceMaterialRecord
 ///
@@ -46,24 +49,25 @@ typedef std::vector< std::vector<RecordEntry> >                  MaterialRecord;
 class SurfaceMaterialRecord
 {
 public:
-  /// Default constructor - deleted
-  SurfaceMaterialRecord() = delete;
-  
+  /// Default constructor - default
+  SurfaceMaterialRecord(){}
+
   /// Constructor with BinUtility input
   /// @param surface is the according surface of this recrd
-  /// @param BinUtility for the the grid in which the material is binned on the layer
-  SurfaceMaterialRecord(const Surface& surface);
-  
-  /// Default destructor 
+  /// @param binUtility for the the grid in which the material is binned on the
+  /// layer
+  SurfaceMaterialRecord(const Surface& surface, const BinUtility& binUtility);
+
+  /// Default destructor
   ~SurfaceMaterialRecord() = default;
-  
+
   /// Copy Constructor
   SurfaceMaterialRecord(const SurfaceMaterialRecord& lmrecord);
-  
+
   /// Assignment operator
   SurfaceMaterialRecord&
   operator=(const SurfaceMaterialRecord& lmrecord);
-  
+
   /// Adds MaterialProperties and weighs them over the steplength at a given
   /// position
   ///
@@ -71,35 +75,45 @@ public:
   /// @param materialSteps the material steps of a track which should be
   /// added at the given position
   void
-  assignMaterialSteps(
-      const Vector3D&  pos,
-      const std::vector<MaterialStep> materialSteps);
+  assignMaterialSteps(const Vector3D&                  pos,
+                      const std::vector<MaterialStep>& materialSteps);
+
+  /// @return the surface pointer
+  const Surface&
+  surface() const;
 
   /// @return the bin utility
-  const BinUtility& binUtility() const;
-      
-  /// @return the surface pointer
-  const Surface& surface() const;
+  const BinUtility&
+  binUtility() const;
 
+  /// this is the material without being averaged
+  /// the averaging still has to be done in the mapper
+  /// 
   /// @return the full MaterialRecord
-  const MaterialRecord& mappedMaterial() const; 
+  const MaterialRecord&
+  mappedMaterial() const;
 
 private:
-  /// two dimensional grid on which the material is binned
-  const BinUtility* m_binUtility;
-  
   /// remember the Surface
-  const Surface*    m_surface;
-  
-  /// the material record 
-  MaterialRecord    m_mappedMaterial;
- 
+  const Surface* m_surface;
+
+  /// two dimensional grid on which the material is binned
+  std::unique_ptr<BinUtility> m_binUtility;
+
+  /// the material record
+  MaterialRecord m_mappedMaterial;
 };
 
-inline const Surface& 
+inline const Surface&
 SurfaceMaterialRecord::surface() const
 {
   return (*m_surface);
+}
+
+inline const BinUtility&
+SurfaceMaterialRecord::binUtility() const
+{
+  return (*m_binUtility);
 }
 
 inline const MaterialRecord&
@@ -107,7 +121,6 @@ SurfaceMaterialRecord::mappedMaterial() const
 {
   return m_mappedMaterial;
 }
-
 }
 
-#endif  // ACTS_MATERIALPLUGINS_LAYERMATERIALRECORD_H
+#endif  // ACTS_MATERIALPLUGINS_SURFACEMATERIALRECORD_H

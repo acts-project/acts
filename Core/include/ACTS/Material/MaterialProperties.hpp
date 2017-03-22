@@ -87,6 +87,10 @@ public:
   MaterialProperties&
   operator*=(float scale);
 
+  /// Boolean operator 
+  /// false indicates it's vacuum
+  operator bool() const { return bool(m_material); } 
+
   /// Return the stored Material 
   const Material&
   material() const;
@@ -156,44 +160,44 @@ MaterialProperties::thicknessInL0() const
 inline float
 MaterialProperties::thickness() const
 {
-  return m_dInX0 * m_material.X0;
+  return m_dInX0 * m_material.X0();
 }
 
 inline float
 MaterialProperties::zOverAtimesRho() const
 {
-  return m_material.zOaTr;
+  return m_material.zOverAtimesRho();
 }
 
 inline float
 MaterialProperties::averageX0() const
 {
-  return m_material.X0;
+  return m_material.X0();
 }
 
 inline float
 MaterialProperties::averageL0() const
 {
-  return m_material.L0;
+  return m_material.L0();
 }
 
 inline float
 MaterialProperties::averageA() const
 {
-  return m_material.A;
+  return m_material.A();
 }
 
 inline float
 MaterialProperties::averageZ() const
 {
-  return m_material.Z;
+  return m_material.Z();
 }
 
 // Return method for @f$ Z @f$ 
 inline float
 MaterialProperties::averageRho() const
 {
-  return m_material.rho;
+  return m_material.rho();
 }
 
 //Overload of << operator for std::ostream for debug output

@@ -181,7 +181,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
       // dE/dl ionization energy loss per path unit
       double dEdl = sign * dir
           * m_interactionFormulae.dEdl_ionization(
-                p, &material, eCell.particleType, sigmaP, kazl);
+                p, material, eCell.particleType, sigmaP, kazl);
       double dE = thickness * pathCorrection * dEdl;
       sigmaP *= thickness * pathCorrection;
       // calcuate the new momentum
