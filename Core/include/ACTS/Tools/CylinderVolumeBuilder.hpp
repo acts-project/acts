@@ -101,7 +101,7 @@ struct VolumeConfig
   bool
   wrapsInR(const VolumeConfig& vConfig) const
   {
-    if (vConfig.rMax > rMax) return false;
+    if (vConfig.rMax > rMin) return false;
     return true;
   }
 
@@ -111,7 +111,7 @@ struct VolumeConfig
   bool
   wrapsInZ(const VolumeConfig& vConfig) const
   {
-    if (vConfig.zMin < zMin && vConfig.zMax > zMax) return false;
+    if (vConfig.zMin < zMin || vConfig.zMax > zMax) return false;
     return true;
   }
 
@@ -121,8 +121,12 @@ struct VolumeConfig
   bool
   wraps(const VolumeConfig& vConfig) const
   {
+    if (((zMax < vConfig.zMin) && (zMin < vConfig.zMin))
+        || ((zMin > vConfig.zMax) && (zMax > vConfig.zMax)))
+      return true;
+
     // it wraps
-    return (wrapsInR(vConfig) && wrapsInZ(vConfig));
+    return wrapsInR(vConfig);
   }
 
   /// Check if contained full set
