@@ -50,9 +50,7 @@ Acts::SurfaceMaterialRecord::operator=(const SurfaceMaterialRecord& lmrecord)
 }
 
 void
-Acts::SurfaceMaterialRecord::assignMaterialSteps(
-    const Vector3D&                  pos,
-    const std::vector<MaterialStep>& materialSteps)
+Acts::SurfaceMaterialRecord::assignMaterialSteps( const AssignedSteps& aSteps)
 {
   // sum up all material at this point for this surface
   float tThickness = 0.;
@@ -62,8 +60,22 @@ Acts::SurfaceMaterialRecord::assignMaterialSteps(
   float ttInX0     = 0.;
   float ttInL0     = 0.;
 
+  
+  // now add it at the corresponding assigned position
+  // get the bins corresponding to the position
+  size_t bin0 = m_binUtility->bin(aSteps.assignedPosition, 0);
+  size_t bin1 = m_binUtility->bin(aSteps.assignedPosition, 1);
+  
+  // increase the number of entries for this material
+  // always do that, also for empty assignments
+  // as they will play into the average
+  m_mappedMaterial[bin1][bin0].second++;
+  
+  // bail out if no steps where assigned 
+  if (!aSteps.assignedSteps.size()) return;
+  
   // loop over the steps and add it up
-  for (auto& layerStep : materialSteps) {
+  for (auto& layerStep : aSteps.assignedSteps) {
     // thickness and density
     float t       = layerStep.materialProperties().thickness();
     float density = layerStep.materialProperties().averageRho();
@@ -82,10 +94,7 @@ Acts::SurfaceMaterialRecord::assignMaterialSteps(
   tZ /= (tRho != 0.) ? tRho : 1.;
   tRho /= (tThickness != 0.) ? tThickness : 1.;
 
-  // now add it at the corresponding assigned position
-  // get the bins corresponding to the position
-  size_t bin0 = m_binUtility->bin(pos, 0);
-  size_t bin1 = m_binUtility->bin(pos, 1);
+
   
   // get the material which might be there already, add new material and
   // weigh it

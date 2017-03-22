@@ -49,7 +49,7 @@ typedef std::vector<std::vector<RecordBin>>   MaterialRecord;
 class SurfaceMaterialRecord
 {
 public:
-  /// Default constructor - default
+  /// Default constructor - deleted
   SurfaceMaterialRecord(){}
 
   /// Constructor with BinUtility input
@@ -75,8 +75,7 @@ public:
   /// @param materialSteps the material steps of a track which should be
   /// added at the given position
   void
-  assignMaterialSteps(const Vector3D&                  pos,
-                      const std::vector<MaterialStep>& materialSteps);
+  assignMaterialSteps(const AssignedSteps& aSteps);
 
   /// @return the surface pointer
   const Surface&

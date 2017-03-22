@@ -23,7 +23,9 @@
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
+#include "ACTS/Utilities/GeometryObjectSorter.hpp"
 #include "ACTS/Material/SurfaceMaterialProxy.hpp"
+#include <climits>
 
 Acts::MaterialMapping::MaterialMapping(const Config&           cfg,
                                        std::unique_ptr<Logger> log)
@@ -75,7 +77,7 @@ Acts::MaterialMapping::mapMaterialTrackRecord(Cache& mappingCache,
   std::vector<MaterialStep> materialSteps = trackRecord.materialSteps();
   
   // get the steps from the tracking geometry
-  std::vector< std::pair< GeometryID, Vector3D > > assignSteps;
+  std::vector< AssignedSteps > assignedSteps;
   
   // let's extrapolate through the ACTS detector and record all surfaces
   // that have a material proxy
@@ -116,17 +118,77 @@ Acts::MaterialMapping::mapMaterialTrackRecord(Cache& mappingCache,
       // loop over the collected information
       for (auto& es : ecc.extrapolationSteps) {
         if (es.configuration.checkMode(ExtrapolationMode::CollectMaterial)){
+          // geo ID from the surface
           GeometryID      assignID = es.parameters->referenceSurface().geoID();
+          // the position corrected by the start position
           const Vector3D& position = es.parameters->position();
           // collect the assigned ones
-          assignSteps.push_back(std::pair<GeometryID,Vector3D>(assignID,position));
+          assignedSteps.push_back(AssignedSteps(assignID,position));
         }
         // continue if we have parameters
       }  // loop over extrapolationsteps
     }    // extrapolation success
   }      // stepCollection
+  
+  // run the step assignment
+  assignSteps(materialSteps, assignedSteps);
+  
+  // and now we fill it into the record
+  for (auto& aSteps : assignedSteps)
+  {
+    mappingCache.surfaceMaterialRecords[aSteps.assignedGeoID].assignMaterialSteps(aSteps);
+  }
+  //
   return true;
 }
+
+
+
+void
+Acts::MaterialMapping::assignSteps(const std::vector<MaterialStep>& materialSteps,
+                                   std::vector< AssignedSteps >& assignedSteps) const
+{
+  
+  // we will rely on the fact that the material steps are ordered
+  // and so are the assigned steps
+
+  // the iterators
+  std::vector< AssignedSteps >::iterator asIter      = assignedSteps.begin();
+  std::vector< AssignedSteps >::iterator asIterFlush = assignedSteps.begin();
+  std::vector< AssignedSteps >::iterator asIterEnd   = assignedSteps.end();
+  
+  // loop over the steps
+  for (auto& mStep :  materialSteps ){
+    // start with infinity distance
+    double lDist2 = std::numeric_limits<double>::infinity();
+    // the material position as a Vector3D
+    Vector3D mPosition(mStep.position().x,
+                       mStep.position().y,
+                       mStep.position().z);
+    // now assign to a step
+    asIter = asIterFlush;
+    for ( ; asIter != asIterEnd; ++asIter){
+      // the currentDist
+      double cDist2 = (mPosition-asIter->assignedPosition).mag2();
+      if (cDist2 < lDist2){
+        // set the new closest distance
+        lDist2 = cDist2;
+        // remember where you are
+        asIterFlush = asIter;
+      } else if (asIter != assignedSteps.begin()){
+        // distance increase detected and it is not the first step
+        // the last iteration point wins the step
+        asIterFlush->assignedSteps.push_back(mStep);
+        // we set the new start iterator to be the Flush iterator
+        asIter = asIterFlush;
+        // and break the inner loop, this jumps to the next material
+        // step which will try assignment from the new start position
+        break;
+      }
+    }
+  }
+}
+
 
 void
 Acts::MaterialMapping::collectMaterialSurfaces(std::map<GeometryID, SurfaceMaterialRecord>& sMap,

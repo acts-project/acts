@@ -38,10 +38,10 @@ enum BinningType { equidistant, arbitrary };
 enum BinningOption { open, closed };
 
 /// @enum BinningValue how to take the global / local position
-enum BinningValue { binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta };
+enum BinningValue { binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta, binMag };
 
 /// @brief screen output option
 static std::vector<std::string> binningValueNames
-    = {"binX", "binY", "binZ", "binR", "binPhi", "binRPhi", "binH", "binEta"};
+    = {"binX", "binY", "binZ", "binR", "binPhi", "binRPhi", "binH", "binEta", "binMag" };
 }
 #endif  // ACTS_UTILITIES_BINNINGTYPE_H

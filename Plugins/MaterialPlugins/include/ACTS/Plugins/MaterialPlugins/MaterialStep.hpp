@@ -15,6 +15,7 @@
 
 #include <memory>
 #include "ACTS/Material/MaterialProperties.hpp"
+#include "ACTS/Utilities/GeometryID.hpp"
 
 namespace Acts {
 
@@ -29,9 +30,8 @@ namespace Acts {
 /// @todo Currently a specific Position struct is used instead of the
 /// Acts::Vector3D
 /// to simplify the creation of a ROOT dictionary for this class, since
-/// Acts::Vector3D
-/// is an Eigen class. In future the Acts::Vector3D should be used to guarantee
-/// consitency and avoid conversions.
+/// Acts::Vector3D is an Eigen class. In future the Vector3D should be used
+/// to guarantee consitency and avoid conversions.
 
 class MaterialStep
 {
@@ -98,6 +98,27 @@ private:
   /// length
   MaterialProperties m_material;
 };
+
+
+/// This struct is used to assign a MaterialStep to a mapped position
+///
+struct AssignedSteps {
+
+  GeometryID                assignedGeoID;     ///!< this is the geo ID of the assigned surface
+  Vector3D                  assignedPosition;  ///!< this is the position of intersection
+  std::vector<MaterialStep> assignedSteps;     ///!< this is step information
+  
+  // simple constructor
+  AssignedSteps(GeometryID geoID = GeometryID(),
+                Vector3D position = Vector3D(0.,0.,0),
+                std::vector<MaterialStep> steps = {})
+  : assignedGeoID(geoID)
+  , assignedPosition(position)
+  , assignedSteps(steps)
+  {}
+  
+};
+
 }
 
 inline const Acts::MaterialStep::Position

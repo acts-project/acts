@@ -116,11 +116,23 @@ public:
   mapMaterialTrackRecord(Cache& mappingCache, 
                          const MaterialTrackRecord& matTrackRec) const;
 
+  /// finds the TrackingGeometry steps associated to the material steps
+  ///
+  /// @param materialSteps are the full geometry steps
+  /// @param assignedSteps are the Tracking geometry associated points
+  void
+  assignSteps(const std::vector<MaterialStep>& materialSteps,
+              std::vector< AssignedSteps >& assignedSteps) const;
+  
   /// set logging instance
+  ///
+  /// @param logger is the unique logger instance
   void
   setLogger(std::unique_ptr<Logger> logger);
 
 private:
+  
+  
   /// finds all surfaces with SurfaceMaterialProxy of a volume
   ///
   /// @param sMap is the map to be filled
