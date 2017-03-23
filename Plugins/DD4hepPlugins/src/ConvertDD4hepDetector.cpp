@@ -116,7 +116,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
               = subDetectorChild.second;
           ACTS_VERBOSE(
               "[V] Volume : '"
-              << volumeDetElement.name()
+              << subDetector.name()
               << "'is a compound volume -> resolve now the sub volumes");
 
           // get the dimensions of the volume
@@ -138,7 +138,8 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
             zPos  = volumeDetElement.placement()
                        .ptr()
                        ->GetMatrix()
-                       ->GetTranslation()[2];
+                       ->GetTranslation()[2]
+                * units::_cm;
           }
           IActsExtension* volumeExtension = nullptr;
           try {
@@ -243,6 +244,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                                                          ddmaterial.A(),
                                                          ddmaterial.Z(),
                                                          ddmaterial.density());
+
         // the configuration object of the volume builder
         Acts::CylinderVolumeBuilder::Config cvbConfig;
 
@@ -268,6 +270,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
             finalZBoundaries.push_back(
                 0.5 * (zBoundaries.at(3) + zBoundaries.at(4)));
           }
+          std::sort(finalZBoundaries.begin(), finalZBoundaries.end());
           Acts::SubVolumeConfig subVolumeConfig;
           subVolumeConfig.rMin        = rMin;
           subVolumeConfig.rMax        = rMax;
@@ -402,7 +405,9 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
         std::vector<double> zBoundaries;
         double              halfZ = tube->GetDz() * units::_cm;
         double              zPos
-            = subDetector.placement().ptr()->GetMatrix()->GetTranslation()[2];
+            = subDetector.placement().ptr()->GetMatrix()->GetTranslation()[2]
+            * units::_cm;
+        ;
         zBoundaries.push_back(zPos - halfZ);
         zBoundaries.push_back(zPos + halfZ);
         std::sort(zBoundaries.begin(), zBoundaries.end());
