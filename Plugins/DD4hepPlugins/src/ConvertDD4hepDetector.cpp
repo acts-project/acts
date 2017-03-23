@@ -121,11 +121,12 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
           double zPos  = volumeDetElement.placement()
                             .ptr()
                             ->GetMatrix()
-                            ->GetTranslation()[2];
+                            ->GetTranslation()[2]
+              * units::_cm;
 
           ACTS_VERBOSE(
               "[V] Volume : '"
-              << volumeDetElement.name()
+              << subDetector.name()
               << "'is a compound volume -> resolve now the sub volumes");
 
           IActsExtension* volumeExtension = nullptr;
@@ -242,6 +243,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                                                          ddmaterial.Z(),
                                                          ddmaterial.density());
         // Create the sub volume setup
+        std::sort(finalZBoundaries.begin(), finalZBoundaries.end());
         Acts::SubVolumeConfig subVolumeConfig;
         subVolumeConfig.rMin        = rMin;
         subVolumeConfig.rMax        = rMax;
@@ -356,12 +358,15 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
       if (!tube)
         throw std::logic_error(
             std::string("Volume of DetElement: ") + subDetector.name()
-            + std::string(" has wrong shape - needs to be TGeoConeSeg!"));
+            + std::string(" has wrong shape - needs to be TGeoConeSeg! If "
+                          "you use assemblies please set the layer "
+                          "envelopes!"));
       // get the dimension of TGeo and convert lengths
       std::vector<double> zBoundaries;
       double              halfZ = tube->GetDz() * units::_cm;
       double              zPos
-          = subDetector.placement().ptr()->GetMatrix()->GetTranslation()[2];
+          = subDetector.placement().ptr()->GetMatrix()->GetTranslation()[2]
+          * units::_cm;
       zBoundaries.push_back(zPos - halfZ);
       zBoundaries.push_back(zPos + halfZ);
       std::sort(zBoundaries.begin(), zBoundaries.end());
