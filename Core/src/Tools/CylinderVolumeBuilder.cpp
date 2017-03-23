@@ -380,7 +380,7 @@ Acts::CylinderVolumeBuilder::synchronizeVolumeConfigs(
   std::string outsideMethod = "";
   if (volumeConfig) {
     for (auto lConfig : lsVector)
-      if (lConfig && !volumeConfig.containes(lConfig)) {
+      if (lConfig && !lConfig.containes(volumeConfig)) {
         /// give an ERROR and bail out
         ACTS_ERROR(
             "Given layer dimensions do not fit inside the provided volume "
@@ -405,7 +405,7 @@ Acts::CylinderVolumeBuilder::synchronizeVolumeConfigs(
     volumeConfig.zMax = m_cfg.volumeDimension.at(3);
     // check for potential overlap
     for (auto lConfig : lsVector)
-      if (lConfig && !volumeConfig.containes(lConfig)) {
+      if (lConfig && !lConfig.containes(volumeConfig)) {
         /// give an ERROR and bail out
         ACTS_ERROR(
             "Given layer dimensions do not fit inside the provided volume "
@@ -501,8 +501,7 @@ Acts::CylinderVolumeBuilder::synchronizeVolumeConfigs(
 
     // Case 1 - there is an inside volume
     // 1a: the inside volume is fully wrapped by the barrel
-    if (cVolumeConfig.wrapsInR(insideConfig)
-        && cVolumeConfig.wrapsInZ(insideConfig)) {
+    if (cVolumeConfig.containes(insideConfig)) {
       // the inside volume can be fully contained in the barrel
       // the outside volumes are pushed down to the inside inner radius
       nVolumeConfig.rMin = insideConfig.rMin;  // n3

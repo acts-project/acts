@@ -95,38 +95,14 @@ struct VolumeConfig
     return false;
   }
 
-  /// Compatibility check radially
-  ///
-  /// @param vConfig is the config against which is checked
-  bool
-  wrapsInR(const VolumeConfig& vConfig) const
-  {
-    if (vConfig.rMax > rMin) return false;
-    return true;
-  }
-
-  /// Compatibility check longitudinally
-  ///
-  /// @param vConfig is the config against which is checked
-  bool
-  wrapsInZ(const VolumeConfig& vConfig) const
-  {
-    if (vConfig.zMin < zMin || vConfig.zMax > zMax) return false;
-    return true;
-  }
-
   /// Compatibility check full set
   ///
   /// @param vConfig is the config against which is checked
   bool
   wraps(const VolumeConfig& vConfig) const
   {
-    if (((zMax < vConfig.zMin) && (zMin < vConfig.zMin))
-        || ((zMin > vConfig.zMax) && (zMax > vConfig.zMax)))
-      return true;
-
-    // it wraps
-    return wrapsInR(vConfig);
+    if ((zMax < vConfig.zMin) || (zMin > vConfig.zMax)) return true;
+    return containesInR(vConfig);
   }
 
   /// Check if contained full set
@@ -144,8 +120,7 @@ struct VolumeConfig
   bool
   containesInR(const VolumeConfig& vConfig) const
   {
-    if (vConfig.rMin > rMin && vConfig.rMax < rMax) return true;
-    return false;
+    return (rMin > vConfig.rMax);
   }
 
   /// Check if contained longitudinally
@@ -154,8 +129,7 @@ struct VolumeConfig
   bool
   containesInZ(const VolumeConfig& vConfig) const
   {
-    if (vConfig.zMin > zMin && vConfig.zMax < zMax) return true;
-    return false;
+    return (vConfig.zMin > zMin && vConfig.zMax < zMax);
   }
 
   /// Method for output formatting
