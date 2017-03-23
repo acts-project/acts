@@ -29,8 +29,7 @@
 
 Acts::MaterialMapping::MaterialMapping(const Config&           cfg,
                                        std::unique_ptr<Logger> log)
-  : m_cfg(cfg)
-  , m_logger(std::move(log))
+  : m_cfg(cfg), m_logger(std::move(log))
 {
   // check if extrapolation engine is given
   if (!m_cfg.extrapolationEngine) {
@@ -49,36 +48,37 @@ Acts::MaterialMapping::setLogger(std::unique_ptr<Logger> newLogger)
   m_logger = std::move(newLogger);
 }
 
-std::map<Acts::GeometryID, Acts::SurfaceMaterialRecord >
-Acts::MaterialMapping::materialMappingCache(const TrackingGeometry& tGeometry) const
+std::map<Acts::GeometryID, Acts::SurfaceMaterialRecord>
+Acts::MaterialMapping::materialMappingCache(
+    const TrackingGeometry& tGeometry) const
 {
   // parse the geometry and find all surfaces with material proxies
   auto world = tGeometry.highestTrackingVolume();
   // create the map
-  std::map<Acts::GeometryID, SurfaceMaterialRecord > sMap;
+  std::map<Acts::GeometryID, SurfaceMaterialRecord> sMap;
   // fill it
-  collectMaterialSurfaces(sMap,*world);
+  collectMaterialSurfaces(sMap, *world);
   // return it
   return sMap;
 }
 
-
 bool
-Acts::MaterialMapping::mapMaterialTrackRecord(Cache& mappingCache,
-                                              const MaterialTrackRecord& trackRecord) const
+Acts::MaterialMapping::mapMaterialTrackRecord(
+    Cache&                     mappingCache,
+    const MaterialTrackRecord& trackRecord) const
 {
   // access the parameters
-  double   theta  = trackRecord.theta();
-  double   phi    = trackRecord.phi();
-  auto     spos   = trackRecord.position();
-  Vector3D vertex(spos.x,spos.y,spos.z);
-  
+  double   theta = trackRecord.theta();
+  double   phi   = trackRecord.phi();
+  auto     spos  = trackRecord.position();
+  Vector3D vertex(spos.x, spos.y, spos.z);
+
   // get the steps from the detailed geometry
   std::vector<MaterialStep> materialSteps = trackRecord.materialSteps();
-  
+
   // get the steps from the tracking geometry
-  std::vector< AssignedSteps > assignedSteps;
-  
+  std::vector<AssignedSteps> assignedSteps;
+
   // let's extrapolate through the ACTS detector and record all surfaces
   // that have a material proxy
   if (materialSteps.size()) {
@@ -88,7 +88,8 @@ Acts::MaterialMapping::mapMaterialTrackRecord(Cache& mappingCache,
     // propagate through the detector and collect the layers hit in the given
     // direction eta phi
     // calculate the direction in cartesian coordinates
-    Vector3D direction(cos(phi)*sin(theta), sin(phi)*sin(theta),cos(theta));
+    Vector3D direction(
+        cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));
     // create the beginning neutral parameters to extrapolate through the
     // geometry
     // std::unique_ptr<ActsSymMatrixD<NGlobalPars>> cov;
@@ -96,8 +97,8 @@ Acts::MaterialMapping::mapMaterialTrackRecord(Cache& mappingCache,
         nullptr, vertex, direction);
     // create a neutral extrapolation cell and configure it:
     // - to collect surfaces with a SurfaceMaterialProxy
-    // - to step at the detector boundary 
-    // - to run in a FATRAS type approach 
+    // - to step at the detector boundary
+    // - to run in a FATRAS type approach
     ExtrapolationCell<NeutralParameters> ecc(startParameters);
     ecc.addConfigurationMode(ExtrapolationMode::StopAtBoundary);
     ecc.addConfigurationMode(ExtrapolationMode::FATRAS);
@@ -117,65 +118,63 @@ Acts::MaterialMapping::mapMaterialTrackRecord(Cache& mappingCache,
                    << " layers.");
       // loop over the collected information
       for (auto& es : ecc.extrapolationSteps) {
-        if (es.configuration.checkMode(ExtrapolationMode::CollectMaterial)){
+        if (es.configuration.checkMode(ExtrapolationMode::CollectMaterial)) {
           // geo ID from the surface
-          GeometryID      assignID = es.parameters->referenceSurface().geoID();
+          GeometryID assignID = es.parameters->referenceSurface().geoID();
           // the position corrected by the start position
           const Vector3D& position = es.parameters->position();
           // collect the assigned ones
-          assignedSteps.push_back(AssignedSteps(assignID,position));
+          assignedSteps.push_back(AssignedSteps(assignID, position));
         }
         // continue if we have parameters
       }  // loop over extrapolationsteps
     }    // extrapolation success
   }      // stepCollection
-  
+
   // run the step assignment
   assignSteps(materialSteps, assignedSteps);
-  
+
   // and now we fill it into the record
-  for (auto& aSteps : assignedSteps)
-  {
-    mappingCache.surfaceMaterialRecords[aSteps.assignedGeoID].assignMaterialSteps(aSteps);
+  for (auto& aSteps : assignedSteps) {
+    mappingCache.surfaceMaterialRecords[aSteps.assignedGeoID]
+        .assignMaterialSteps(aSteps);
   }
   //
   return true;
 }
 
-
-
 void
-Acts::MaterialMapping::assignSteps(const std::vector<MaterialStep>& materialSteps,
-                                   std::vector< AssignedSteps >& assignedSteps) const
+Acts::MaterialMapping::assignSteps(
+    const std::vector<MaterialStep>& materialSteps,
+    std::vector<AssignedSteps>&      assignedSteps) const
 {
-  
+
   // we will rely on the fact that the material steps are ordered
   // and so are the assigned steps
 
   // the iterators
-  std::vector< AssignedSteps >::iterator asIter      = assignedSteps.begin();
-  std::vector< AssignedSteps >::iterator asIterFlush = assignedSteps.begin();
-  std::vector< AssignedSteps >::iterator asIterEnd   = assignedSteps.end();
-  
+  std::vector<AssignedSteps>::iterator asIter      = assignedSteps.begin();
+  std::vector<AssignedSteps>::iterator asIterFlush = assignedSteps.begin();
+  std::vector<AssignedSteps>::iterator asIterEnd   = assignedSteps.end();
+
   // loop over the steps
-  for (auto& mStep :  materialSteps ){
+  for (auto& mStep : materialSteps) {
     // start with infinity distance
     double lDist2 = std::numeric_limits<double>::infinity();
     // the material position as a Vector3D
-    Vector3D mPosition(mStep.position().x,
-                       mStep.position().y,
-                       mStep.position().z);
+    Vector3D mPosition(
+        mStep.position().x, mStep.position().y, mStep.position().z);
     // now assign to a step
     asIter = asIterFlush;
-    for ( ; asIter != asIterEnd; ++asIter){
+    for (; asIter != asIterEnd; ++asIter) {
       // the currentDist
-      double cDist2 = (mPosition-asIter->assignedPosition).mag2();
-      if (cDist2 < lDist2){
+      double cDist2 = (mPosition - asIter->assignedPosition).mag2();
+      if (cDist2 < lDist2) {
         // set the new closest distance
         lDist2 = cDist2;
         // remember where you are
         asIterFlush = asIter;
-      } else if (asIter != assignedSteps.begin()){
+      } else if (asIter != assignedSteps.begin()) {
         // distance increase detected and it is not the first step
         // the last iteration point wins the step
         asIterFlush->assignedSteps.push_back(mStep);
@@ -189,67 +188,66 @@ Acts::MaterialMapping::assignSteps(const std::vector<MaterialStep>& materialStep
   }
 }
 
-
 void
-Acts::MaterialMapping::collectMaterialSurfaces(std::map<GeometryID, SurfaceMaterialRecord>& sMap,
-                                               const TrackingVolume& tVolume) const
+Acts::MaterialMapping::collectMaterialSurfaces(
+    std::map<GeometryID, SurfaceMaterialRecord>& sMap,
+    const TrackingVolume& tVolume) const
 {
   // check the boundary surfaces
-  for (auto& bSurface : tVolume.boundarySurfaces() )
+  for (auto& bSurface : tVolume.boundarySurfaces())
     checkAndInsert(sMap, bSurface->surfaceRepresentation());
-  
+
   // check the confined layers
-  if ( tVolume.confinedLayers() ){
-    for (auto& cLayer : tVolume.confinedLayers()->arrayObjects()){
+  if (tVolume.confinedLayers()) {
+    for (auto& cLayer : tVolume.confinedLayers()->arrayObjects()) {
       // take only layers that are not navigation layers
-      if (cLayer->layerType() != navigation){
+      if (cLayer->layerType() != navigation) {
         // check the representing surface
         checkAndInsert(sMap, cLayer->surfaceRepresentation());
         // get the approach surfaces if present
-        if (cLayer->approachDescriptor()){
-          for (auto& aSurface : cLayer->approachDescriptor()->containedSurfaces())
-            if (aSurface)
-              checkAndInsert(sMap,*aSurface);
+        if (cLayer->approachDescriptor()) {
+          for (auto& aSurface :
+               cLayer->approachDescriptor()->containedSurfaces())
+            if (aSurface) checkAndInsert(sMap, *aSurface);
         }
         // get the sensitive surface is present
-        if (cLayer->surfaceArray()){
+        if (cLayer->surfaceArray()) {
           // sensitive surface loop
           for (auto& sSurface : cLayer->surfaceArray()->arrayObjects())
-            if(sSurface)
-              checkAndInsert(sMap, *sSurface);
+            if (sSurface) checkAndInsert(sMap, *sSurface);
         }
       }
     }
   }
-  
+
   // step down into the sub volume
-  if (tVolume.confinedVolumes()){
-    for (auto& sVolume : tVolume.confinedVolumes()->arrayObjects() ){
+  if (tVolume.confinedVolumes()) {
+    for (auto& sVolume : tVolume.confinedVolumes()->arrayObjects()) {
       // recursive call
-      collectMaterialSurfaces(sMap,*sVolume);
+      collectMaterialSurfaces(sMap, *sVolume);
     }
   }
 }
 
 void
-Acts::MaterialMapping::checkAndInsert(std::map<GeometryID, SurfaceMaterialRecord>& sMap,
-                                      const Surface& surface) const
+Acts::MaterialMapping::checkAndInsert(
+    std::map<GeometryID, SurfaceMaterialRecord>& sMap,
+    const Surface& surface) const
 {
-  
+
   // check if the surface has a proxy
-  if (surface.associatedMaterial()){
+  if (surface.associatedMaterial()) {
     // we need a dynamic_cast to a surface material proxy
-    const SurfaceMaterialProxy* smp
-    = dynamic_cast<const SurfaceMaterialProxy*>(surface.associatedMaterial());
+    const SurfaceMaterialProxy* smp = dynamic_cast<const SurfaceMaterialProxy*>(
+        surface.associatedMaterial());
     if (smp)
-      sMap[surface.geoID()] = SurfaceMaterialRecord(surface, *smp->binUtility());
+      sMap[surface.geoID()]
+          = SurfaceMaterialRecord(surface, *smp->binUtility());
   }
 }
 
-
-
-//void
-//Acts::MaterialMapping::associateLayerMaterial(
+// void
+// Acts::MaterialMapping::associateLayerMaterial(
 //    const MaterialTrackRecord& trackRecord,
 //    std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>& layersAndHits)
 //{
@@ -261,7 +259,8 @@ Acts::MaterialMapping::checkAndInsert(std::map<GeometryID, SurfaceMaterialRecord
 //  // access the material steps of this track record
 //  std::vector<MaterialStep> materialSteps = trackRecord.materialSteps();
 //
-//  // create object which connects layer with the original material step and its
+//  // create object which connects layer with the original material step and
+//  its
 //  // assigned position on the layer
 //  std::map<const Acts::Layer*,
 //           std::pair<const Vector3D, std::vector<MaterialStep>>>
@@ -274,7 +273,8 @@ Acts::MaterialMapping::checkAndInsert(std::map<GeometryID, SurfaceMaterialRecord
 //                 << std::distance(layersAndHits.begin(), currentLayer)
 //                 << " from layer collection for this step.");
 //    // step length and position
-//    Acts::Vector3D pos(step.position().x, step.position().y, step.position().z);
+//    Acts::Vector3D pos(step.position().x, step.position().y,
+//    step.position().z);
 //    // now find the closest layer
 //    // if the currentlayer is the last layer and the hit is still inside ->
 //    // assign & check if the layers before have been assigned the right way -
@@ -289,7 +289,8 @@ Acts::MaterialMapping::checkAndInsert(std::map<GeometryID, SurfaceMaterialRecord
 //                                     << " and "
 //                                     << Acts::toString(currentLayer->second));
 //      // check if other layer is more suitable
-//      for (std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>::iterator
+//      for (std::vector<std::pair<const Acts::Layer*,
+//      Acts::Vector3D>>::iterator
 //               testLayer
 //           = std::next(currentLayer);
 //           testLayer != layersAndHits.end();
@@ -334,7 +335,8 @@ Acts::MaterialMapping::checkAndInsert(std::map<GeometryID, SurfaceMaterialRecord
 //    // create material Properties
 //    const Acts::MaterialProperties* layerMaterialProperties
 //        = new MaterialProperties(step.material().material(),
-//                                 step.material().thickness() / pathCorrection);
+//                                 step.material().thickness() /
+//                                 pathCorrection);
 //    // correct also the thickness of the material step
 //    Acts::MaterialStep updatedStep(*layerMaterialProperties, step.position());
 //    // fill the current material step and its assigned position
@@ -385,17 +387,18 @@ Acts::MaterialMapping::checkAndInsert(std::map<GeometryID, SurfaceMaterialRecord
 ///   m_surfaceMaterialRecords[layer].addLayerMaterialProperties(position,
 ///                                                    layerMaterialSteps);
 /// }
-/// 
+///
 /// void
 /// Acts::MaterialMapping::averageLayerMaterial()
 /// {
-///   ACTS_VERBOSE(m_surfaceMaterialRecords.size() << " SurfaceMaterialRecords to be averaged");
+///   ACTS_VERBOSE(m_surfaceMaterialRecords.size() << " SurfaceMaterialRecords
+///   to be averaged");
 ///   // average over the layer material
 ///   for (auto& layRecord : m_surfaceMaterialRecords) {
 ///     layRecord.second.averageMaterial();
 ///   }
 /// }
-/// 
+///
 /// void
 /// Acts::MaterialMapping::finalizeLayerMaterial()
 /// {

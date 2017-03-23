@@ -56,6 +56,14 @@ public:
     
     /// Copy Constructor
     Position(const Position& pos) : x(pos.x), y(pos.y), z(pos.z) {}
+    
+    /// Constructor from Vector3D
+    Position(const Vector3D& pos) : x(pos.x()), y(pos.y()), z(pos.z()) {}
+       
+    /// assignment operator from Vector3D
+    Position& operator=(const Vector3D& pos)
+    { x = pos.x(); y = pos.y(); z = pos.z(); return (*this); }
+    
   };
   
   /// Default constructor
@@ -81,7 +89,7 @@ public:
   
   /// Assignment operator
   MaterialStep&
-  operator=(const Acts::MaterialStep& mstep);
+  operator=(const MaterialStep& mstep);
   
   /// return method for the position of the step
   const Position
@@ -110,8 +118,8 @@ struct AssignedSteps {
   
   // simple constructor
   AssignedSteps(GeometryID geoID = GeometryID(),
-                Vector3D position = Vector3D(0.,0.,0),
-                std::vector<MaterialStep> steps = {})
+                const Vector3D& position = Vector3D(0.,0.,0),
+                const std::vector<MaterialStep>& steps = {})
   : assignedGeoID(geoID)
   , assignedPosition(position)
   , assignedSteps(steps)

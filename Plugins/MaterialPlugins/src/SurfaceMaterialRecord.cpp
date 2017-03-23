@@ -12,7 +12,7 @@
 
 #include "ACTS/Plugins/MaterialPlugins/SurfaceMaterialRecord.hpp"
 
-Acts::SurfaceMaterialRecord::SurfaceMaterialRecord(const Surface& surface,
+Acts::SurfaceMaterialRecord::SurfaceMaterialRecord(const Surface&    surface,
                                                    const BinUtility& binUtility)
   : m_surface(&surface)
   , m_binUtility(std::make_unique<BinUtility>(binUtility))
@@ -25,7 +25,7 @@ Acts::SurfaceMaterialRecord::SurfaceMaterialRecord(const Surface& surface,
     RecordVector mappedVector;
     mappedVector.reserve(m_binUtility->bins(0));
     for (size_t ibin0 = 0; ibin0 < m_binUtility->bins(0); ++ibin0)
-      mappedVector.push_back(RecordBin(MaterialProperties(),0));
+      mappedVector.push_back(RecordBin(MaterialProperties(), 0));
     m_mappedMaterial.push_back(mappedVector);
   }
 }
@@ -42,15 +42,15 @@ Acts::SurfaceMaterialRecord&
 Acts::SurfaceMaterialRecord::operator=(const SurfaceMaterialRecord& lmrecord)
 {
   if (this != &lmrecord) {
-    m_surface = lmrecord.m_surface;
-    m_binUtility = std::make_unique<BinUtility>(*lmrecord.m_binUtility);
+    m_surface        = lmrecord.m_surface;
+    m_binUtility     = std::make_unique<BinUtility>(*lmrecord.m_binUtility);
     m_mappedMaterial = lmrecord.m_mappedMaterial;
   }
   return (*this);
 }
 
 void
-Acts::SurfaceMaterialRecord::assignMaterialSteps( const AssignedSteps& aSteps)
+Acts::SurfaceMaterialRecord::assignMaterialSteps(const AssignedSteps& aSteps)
 {
   // sum up all material at this point for this surface
   float tThickness = 0.;
@@ -60,26 +60,25 @@ Acts::SurfaceMaterialRecord::assignMaterialSteps( const AssignedSteps& aSteps)
   float ttInX0     = 0.;
   float ttInL0     = 0.;
 
-  
   // now add it at the corresponding assigned position
   // get the bins corresponding to the position
   size_t bin0 = m_binUtility->bin(aSteps.assignedPosition, 0);
   size_t bin1 = m_binUtility->bin(aSteps.assignedPosition, 1);
-  
+
   // increase the number of entries for this material
   // always do that, also for empty assignments
   // as they will play into the average
   m_mappedMaterial[bin1][bin0].second++;
-  
-  // bail out if no steps where assigned 
+
+  // bail out if no steps where assigned
   if (!aSteps.assignedSteps.size()) return;
-  
+
   // loop over the steps and add it up
   for (auto& layerStep : aSteps.assignedSteps) {
     // thickness and density
     float t       = layerStep.materialProperties().thickness();
     float density = layerStep.materialProperties().averageRho();
-    
+
     // sum it up
     tThickness += t;
     tRho += density * t;
@@ -94,17 +93,15 @@ Acts::SurfaceMaterialRecord::assignMaterialSteps( const AssignedSteps& aSteps)
   tZ /= (tRho != 0.) ? tRho : 1.;
   tRho /= (tThickness != 0.) ? tThickness : 1.;
 
-
-  
   // get the material which might be there already, add new material and
   // weigh it
-  auto materialBin = m_mappedMaterial[bin1][bin0];
-  float                    thickness = 0.;
-  float                    rho       = 0.;
-  float                    tInX0     = 0.;
-  float                    tInL0     = 0.;
-  float                    A         = 0.;
-  float                    Z         = 0.;
+  auto  materialBin = m_mappedMaterial[bin1][bin0];
+  float thickness   = 0.;
+  float rho         = 0.;
+  float tInX0       = 0.;
+  float tInL0       = 0.;
+  float A           = 0.;
+  float Z           = 0.;
   // access the old material properties
   if (materialBin.first) {
     thickness += materialBin.first.thickness();
@@ -116,11 +113,11 @@ Acts::SurfaceMaterialRecord::assignMaterialSteps( const AssignedSteps& aSteps)
   }
   // sum up material properties (different MaterialTracks)
   thickness += tThickness;
-  rho       += tRho;
-  A         += tA;
-  Z         += tZ;
-  tInX0     += ttInX0;
-  tInL0     += ttInL0;
+  rho += tRho;
+  A += tA;
+  Z += tZ;
+  tInX0 += ttInX0;
+  tInL0 += ttInL0;
 
   // x0 and l0
   float x0 = (thickness != 0. && tInX0 != 0.) ? thickness / tInX0 : 0.;
@@ -129,8 +126,7 @@ Acts::SurfaceMaterialRecord::assignMaterialSteps( const AssignedSteps& aSteps)
   // set the new current material (not averaged yet)
   Material updatedMaterial(x0, l0, A, Z, rho);
   m_mappedMaterial[bin1][bin0].first = MaterialProperties(updatedMaterial, thickness);
-  // increase the number of entries for this material
-  m_mappedMaterial[bin1][bin0].second++;
+
 
 }
 
