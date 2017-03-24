@@ -133,7 +133,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr insideVolume,
       } else {
         // we have layers
         nVolumeConfig.present = true;
-        nVolumeConfig.rMin    = m_cfg.subVolumeConfig.rMin;
+        nVolumeConfig.rMin    = m_cfg.subVolumeConfig.outerRmin;
         nVolumeConfig.rMax    = m_cfg.subVolumeConfig.rMax;
         nVolumeConfig.zMin    = m_cfg.subVolumeConfig.zBoundaries.at(0);
         nVolumeConfig.zMax    = m_cfg.subVolumeConfig.zBoundaries.at(1);
@@ -143,7 +143,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr insideVolume,
     if (!centralLayers.empty()) {
       // we have layers
       cVolumeConfig.present = true;
-      cVolumeConfig.rMin    = m_cfg.subVolumeConfig.rMin;
+      cVolumeConfig.rMin    = m_cfg.subVolumeConfig.centralRmin;
       cVolumeConfig.rMax    = m_cfg.subVolumeConfig.rMax;
       cVolumeConfig.zMin    = (m_cfg.subVolumeConfig.zBoundaries.size() < 4)
           ? m_cfg.subVolumeConfig.zBoundaries.at(0)
@@ -166,7 +166,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr insideVolume,
       } else {
         // we have layers
         pVolumeConfig.present = true;
-        pVolumeConfig.rMin    = m_cfg.subVolumeConfig.rMin;
+        pVolumeConfig.rMin    = m_cfg.subVolumeConfig.outerRmin;
         pVolumeConfig.rMax    = m_cfg.subVolumeConfig.rMax;
         pVolumeConfig.zMin    = m_cfg.subVolumeConfig.zBoundaries.at(2);
         pVolumeConfig.zMax    = m_cfg.subVolumeConfig.zBoundaries.at(3);
@@ -421,7 +421,10 @@ Acts::CylinderVolumeBuilder::synchronizeVolumeConfigs(
   } else if (m_cfg.subVolumeConfig) {
     volumeConfig.present = true;
     // get the bounds from teh sub volumes
-    volumeConfig.rMin = m_cfg.subVolumeConfig.rMin;
+    volumeConfig.rMin
+        = (m_cfg.subVolumeConfig.centralRmin > m_cfg.subVolumeConfig.outerRmin)
+        ? m_cfg.subVolumeConfig.outerRmin
+        : m_cfg.subVolumeConfig.centralRmin;
     volumeConfig.rMax = m_cfg.subVolumeConfig.rMax;
     volumeConfig.zMin = m_cfg.subVolumeConfig.zBoundaries.front();
     volumeConfig.zMax = m_cfg.subVolumeConfig.zBoundaries.back();

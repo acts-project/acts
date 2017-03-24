@@ -100,10 +100,12 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
         const DD4hep::Geometry::DetElement::Children& subDetectorChildren
             = subDetector.children();
         // get rMin, rMax and zBoundaries of the sub Volumes
-        double              rMin  = 10e12;
-        double              rMax  = 10e-12;
-        double              halfZ = 0.;
-        double              zPos  = 0.;
+        double              endCapRmin = 0.;
+        double              barrelRmin = 0.;
+        double              rMin       = 0.;
+        double              rMax       = 10e-12;
+        double              halfZ      = 0.;
+        double              zPos       = 0.;
         std::vector<double> zBoundaries;
         // flags to catch if sub volumes have been set already
         bool nEndCap = false;
@@ -132,7 +134,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                   + volumeDetElement.name()
                   + std::string(" has wrong shape - needs to be TGeoConeSeg!"));
             // get the dimension of TGeo and convert lengths
-            rMin  = std::min(rMin, tube->GetRmin1() * units::_cm);
+            rMin  = tube->GetRmin1() * units::_cm;
             rMax  = std::max(rMax, tube->GetRmax1() * units::_cm);
             halfZ = tube->GetDz() * units::_cm;
             zPos  = volumeDetElement.placement()
@@ -155,6 +157,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
           }
 
           if (volumeExtension->isEndcap()) {
+            endCapRmin = rMin;
             ACTS_VERBOSE(
                 std::string("[V] Subvolume : '") + volumeDetElement.name()
                 + std::string("' is a disc volume -> handling as an endcap"));
@@ -185,6 +188,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
               collectLayers(volumeDetElement, positiveLayers);
             }
           } else if (volumeExtension->isBarrel()) {
+            barrelRmin = rMin;
             // add the zBoundaries
             zBoundaries.push_back(zPos - halfZ);
             zBoundaries.push_back(zPos + halfZ);
@@ -272,7 +276,8 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
           }
           std::sort(finalZBoundaries.begin(), finalZBoundaries.end());
           Acts::SubVolumeConfig subVolumeConfig;
-          subVolumeConfig.rMin        = rMin;
+          subVolumeConfig.centralRmin = barrelRmin;
+          subVolumeConfig.outerRmin   = endCapRmin;
           subVolumeConfig.rMax        = rMax;
           subVolumeConfig.zBoundaries = finalZBoundaries;
           cvbConfig.subVolumeConfig   = subVolumeConfig;
@@ -411,7 +416,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
         zBoundaries.push_back(zPos - halfZ);
         zBoundaries.push_back(zPos + halfZ);
         std::sort(zBoundaries.begin(), zBoundaries.end());
-        subVolumeConfig.rMin        = tube->GetRmin1() * units::_cm;
+        subVolumeConfig.centralRmin = tube->GetRmin1() * units::_cm;
         subVolumeConfig.rMax        = tube->GetRmax1() * units::_cm;
         subVolumeConfig.zBoundaries = zBoundaries;
         cvbConfig.subVolumeConfig   = subVolumeConfig;
