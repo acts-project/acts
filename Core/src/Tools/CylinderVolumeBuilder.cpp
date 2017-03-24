@@ -137,6 +137,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr insideVolume,
         nVolumeConfig.rMax    = m_cfg.subVolumeConfig.rMax;
         nVolumeConfig.zMin    = m_cfg.subVolumeConfig.zBoundaries.at(0);
         nVolumeConfig.zMax    = m_cfg.subVolumeConfig.zBoundaries.at(1);
+        nVolumeConfig.layers  = negativeLayers;
       }
     }
     if (!centralLayers.empty()) {
@@ -144,8 +145,14 @@ Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr insideVolume,
       cVolumeConfig.present = true;
       cVolumeConfig.rMin    = m_cfg.subVolumeConfig.rMin;
       cVolumeConfig.rMax    = m_cfg.subVolumeConfig.rMax;
-      cVolumeConfig.zMin    = m_cfg.subVolumeConfig.zBoundaries.at(1);
-      cVolumeConfig.zMax    = m_cfg.subVolumeConfig.zBoundaries.at(2);
+      cVolumeConfig.zMin    = (m_cfg.subVolumeConfig.zBoundaries.size() < 4)
+          ? m_cfg.subVolumeConfig.zBoundaries.at(0)
+          : m_cfg.subVolumeConfig.zBoundaries.at(1);
+      cVolumeConfig.zMax = (m_cfg.subVolumeConfig.zBoundaries.size() < 4)
+          ? m_cfg.subVolumeConfig.zBoundaries.at(1)
+          : m_cfg.subVolumeConfig.zBoundaries.at(2);
+      cVolumeConfig.layers = centralLayers;
+      cVolumeConfig.layers = centralLayers;
     }
     if (!positiveLayers.empty()) {
       if (m_cfg.subVolumeConfig.zBoundaries.size() < 4) {
@@ -163,6 +170,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr insideVolume,
         pVolumeConfig.rMax    = m_cfg.subVolumeConfig.rMax;
         pVolumeConfig.zMin    = m_cfg.subVolumeConfig.zBoundaries.at(2);
         pVolumeConfig.zMax    = m_cfg.subVolumeConfig.zBoundaries.at(3);
+        pVolumeConfig.layers  = positiveLayers;
       }
     }
   } else {
@@ -350,8 +358,7 @@ Acts::CylinderVolumeBuilder::synchronizeVolumeConfigs(
   if (insideConfig) {
     // check for potential overlap
     for (auto lConfig : lsVector)
-      if (lConfig && (lConfig.overlapsInZ(insideConfig)
-                      && lConfig.overlapsInR(insideConfig))) {
+      if (lConfig && !lConfig.wraps(insideConfig)) {
         /// give an ERROR and bail out
         ACTS_ERROR(
             "Given layer dimensions do not fit outside the provided volume "
@@ -373,7 +380,7 @@ Acts::CylinderVolumeBuilder::synchronizeVolumeConfigs(
   std::string outsideMethod = "";
   if (volumeConfig) {
     for (auto lConfig : lsVector)
-      if (lConfig && !volumeConfig.containes(lConfig)) {
+      if (lConfig && !lConfig.containes(volumeConfig)) {
         /// give an ERROR and bail out
         ACTS_ERROR(
             "Given layer dimensions do not fit inside the provided volume "
@@ -398,7 +405,7 @@ Acts::CylinderVolumeBuilder::synchronizeVolumeConfigs(
     volumeConfig.zMax = m_cfg.volumeDimension.at(3);
     // check for potential overlap
     for (auto lConfig : lsVector)
-      if (lConfig && !volumeConfig.containes(lConfig)) {
+      if (lConfig && !lConfig.containes(volumeConfig)) {
         /// give an ERROR and bail out
         ACTS_ERROR(
             "Given layer dimensions do not fit inside the provided volume "
@@ -494,7 +501,7 @@ Acts::CylinderVolumeBuilder::synchronizeVolumeConfigs(
 
     // Case 1 - there is an inside volume
     // 1a: the inside volume is fully wrapped by the barrel
-    if (cVolumeConfig.wraps(insideConfig)) {
+    if (cVolumeConfig.containes(insideConfig)) {
       // the inside volume can be fully contained in the barrel
       // the outside volumes are pushed down to the inside inner radius
       nVolumeConfig.rMin = insideConfig.rMin;  // n3
