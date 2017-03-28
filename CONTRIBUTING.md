@@ -297,6 +297,7 @@ The following steps explain on how to setup and configure a Jenkins server for c
         sudo apt-get install docker.io
         sudo apt-get install clang-format
         sudo apt-get install lcov
+	sudo apt-get install mailutils
 	sudo apt install python-pip
 	pip install --upgrade pip
 	pip install --user requests
