@@ -59,7 +59,7 @@ namespace Test {
     ActsSymMatrixD<2> cov;
     cov << 0.04, 0, 0, 0.1;
     const double  nSigma = 1.2;
-    BoundaryCheck boundaryCheckWithCovariance{cov, nSigma, true, true};
+    BoundaryCheck boundaryCheckWithCovariance{cov, nSigma};
     BOOST_TEST(boundaryCheckWithCovariance.checkLoc1 == true);
     BoundaryCheck copyConstructedBoundaryCheck(boundaryCheckWithCovariance);
     auto originalCovariance = boundaryCheckWithCovariance.lCovariance;
@@ -129,7 +129,7 @@ namespace Test {
     cov << 0.16, 0., 0., 0.81;
     const double nSigma = 1.5;        // what if this is -ve, zero, inf or NaN?
     const int pointsPerQuadrant = 1;  // what if this is -ve, zero, inf or NaN?
-    BoundaryCheck         bc{cov, nSigma, true, true};
+    BoundaryCheck         bc{cov, nSigma};
     std::vector<Vector2D> convertedEllipsePoints
         = bc.EllipseToPoly(pointsPerQuadrant);
     // points at (0.6,0), (0.,1.35) and, by plugging in y=(1.35/0.6)*x,
@@ -163,7 +163,7 @@ namespace Test {
     ActsSymMatrixD<2> cov;
     cov << 0.04, 0, 0, 0.1;
     const double  nSigma = 1.2;
-    BoundaryCheck original{cov, nSigma, false, true};
+    BoundaryCheck original{cov, nSigma};
     BoundaryCheck assigned(true);
     assigned = original;
     BOOST_TEST(assigned.checkLoc0 == original.checkLoc0);

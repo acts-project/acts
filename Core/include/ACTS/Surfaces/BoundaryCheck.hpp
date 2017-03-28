@@ -62,12 +62,13 @@ public:
     chi2corr = 1   ///< relative (chi2 based) with full correlations
   };
 
-  bool   checkLoc0;               ///< check local 1 coordinate
-  bool   checkLoc1;               ///< check local 2 coordinate
+  ActsSymMatrixD<2> lCovariance;  ///< local covariance matrix
+  ActsSymMatrixD<2> m_weight;     ///< Weight matrix for metric
   double toleranceLoc0;           ///< absolute tolerance in local 1 coordinate
   double toleranceLoc1;           ///< absolute tolerance in local 2 coordinate
   double nSigmas;                 ///< allowed sigmas for chi2 boundary check
-  ActsSymMatrixD<2> lCovariance;  ///< local covariance matrix
+  bool   checkLoc0;               ///< check local 1 coordinate
+  bool   checkLoc1;               ///< check local 2 coordinate
   BoundaryCheckType bcType;       ///< the type how we check the boundary
 
   /// Constructor for single boolean behavious
@@ -81,14 +82,9 @@ public:
   BoundaryCheck(bool chkL0, bool chkL1, double tloc0 = 0., double tloc1 = 0.);
 
   /// Constructor for chi2 based check
-  /// @param lCov the coverance matrix to be checked
-  /// @param nsig number of sigma checked checked for the compatibility test
-  /// @param chkL0 directive wheter the first coordinate is being checked
-  /// @param chkL1 directive wheter the first coordinate is being checked
-  BoundaryCheck(const ActsSymMatrixD<2>& lCov,
-                double                   nsig  = 1.,
-                bool                     chkL0 = true,
-                bool                     chkL1 = true);
+  /// @param lCov  the coverance matrix to be checked
+  /// @param nsig  number of sigma checked checked for the compatibility test
+  BoundaryCheck(const ActsSymMatrixD<2>& lCov, double nsig = 1);
 
   /// Overwriting of the
   /// Conversion operator to bool
@@ -195,12 +191,13 @@ BoundaryCheck::TestKDOPKDOP(std::vector<KDOP>& a, std::vector<KDOP>& b) const
 }
 
 inline Acts::BoundaryCheck::BoundaryCheck(bool sCheck)
-  : checkLoc0(sCheck)
-  , checkLoc1(sCheck)
+  : lCovariance(ActsSymMatrixD<2>::Identity())
+  , m_weight(ActsSymMatrixD<2>::Identity())
   , toleranceLoc0(0.)
   , toleranceLoc1(0.)
   , nSigmas(-1)
-  , lCovariance(ActsSymMatrixD<2>::Identity())
+  , checkLoc0(sCheck)
+  , checkLoc1(sCheck)
   , bcType(absolute)
 {
 }
@@ -209,26 +206,26 @@ inline Acts::BoundaryCheck::BoundaryCheck(bool   chkL0,
                                           bool   chkL1,
                                           double tloc0,
                                           double tloc1)
-  : checkLoc0(chkL0)
-  , checkLoc1(chkL1)
+  : lCovariance(ActsSymMatrixD<2>::Identity())
+  , m_weight(ActsSymMatrixD<2>::Identity())
   , toleranceLoc0(tloc0)
   , toleranceLoc1(tloc1)
   , nSigmas(-1)
-  , lCovariance(ActsSymMatrixD<2>::Identity())
+  , checkLoc0(chkL0)
+  , checkLoc1(chkL1)
   , bcType(absolute)
 {
 }
 
 inline Acts::BoundaryCheck::BoundaryCheck(const ActsSymMatrixD<2>& lCov,
-                                          double                   nsig,
-                                          bool                     chkL0,
-                                          bool                     chkL1)
-  : checkLoc0(chkL0)
-  , checkLoc1(chkL1)
+                                          double                   nsig)
+  : lCovariance(lCov)
+  , m_weight(lCov.inverse())
   , toleranceLoc0(0.)
   , toleranceLoc1(0.)
   , nSigmas(nsig)
-  , lCovariance(lCov)
+  , checkLoc0(true)
+  , checkLoc1(true)
   , bcType(chi2corr)
 {
 }
