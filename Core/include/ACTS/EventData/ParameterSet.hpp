@@ -595,7 +595,7 @@ private:
 
 // initialize static class members
 template <ParID_t... params>
-decltype(ParameterSet<params...>::NPars) ParameterSet<params...>::NPars;
+constexpr unsigned int ParameterSet<params...>::NPars;
 
 template <ParID_t... params>
 const typename ParameterSet<params...>::Projection_t
