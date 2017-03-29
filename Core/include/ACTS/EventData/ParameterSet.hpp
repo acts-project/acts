@@ -592,7 +592,11 @@ private:
                                          /// vector onto local parameter space
 };
 
+
 // initialize static class members
+template <ParID_t... params>
+decltype(ParameterSet<params...>::NPars) ParameterSet<params...>::NPars;
+
 template <ParID_t... params>
 const typename ParameterSet<params...>::Projection_t
     ParameterSet<params...>::sProjector
