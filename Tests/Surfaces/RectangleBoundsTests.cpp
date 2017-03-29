@@ -22,7 +22,6 @@
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
-// namespace bdata = boost::unit_test::data;
 namespace utf    = boost::unit_test;
 const double inf = std::numeric_limits<double>::infinity();
 const double NaN = std::numeric_limits<double>::quiet_NaN();
@@ -97,10 +96,6 @@ namespace Test {
     // the name of the method)
     BOOST_TEST(rect.distanceToBoundary(pointA) == -4.0);
     BOOST_TEST(rect.distanceToBoundary(pointB) == -1.0);
-    BOOST_TEST(not rect.insideLoc0(outside));
-    BOOST_TEST(not rect.insideLoc1(outside));
-    BOOST_TEST(rect.insideLoc0(pointA));
-    BOOST_TEST(rect.insideLoc1(pointA));
     BoundaryCheck bcheck(true, true);
     BOOST_TEST(rect.inside(pointA, bcheck));
   }
