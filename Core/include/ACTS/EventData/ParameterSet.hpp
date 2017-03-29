@@ -594,6 +594,9 @@ private:
 
 // initialize static class members
 template <ParID_t... params>
+constexpr unsigned int ParameterSet<params...>::NPars;
+
+template <ParID_t... params>
 const typename ParameterSet<params...>::Projection_t
     ParameterSet<params...>::sProjector
     = detail::make_projection_matrix<Acts::NGlobalPars,
