@@ -14,6 +14,7 @@
 #define ACTS_SURFACES_CYLINDERSURFACE_H 1
 
 #include <cmath>
+
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
