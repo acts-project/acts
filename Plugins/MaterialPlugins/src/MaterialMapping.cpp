@@ -155,8 +155,10 @@ Acts::MaterialMapping::assignSteps(
   // the iterators
   std::vector<AssignedSteps>::iterator asIter      = assignedSteps.begin();
   std::vector<AssignedSteps>::iterator asIterFlush = assignedSteps.begin();
+  std::vector<AssignedSteps>::iterator asIterLast  = assignedSteps.end()-1;
   std::vector<AssignedSteps>::iterator asIterEnd   = assignedSteps.end();
 
+  size_t is = 0;
   // loop over the steps
   for (auto& mStep : materialSteps) {
     // start with infinity distance
@@ -174,6 +176,12 @@ Acts::MaterialMapping::assignSteps(
         lDist2 = cDist2;
         // remember where you are
         asIterFlush = asIter;
+        if (asIterFlush == asIterLast){
+          // the last iteration point wins the step
+          asIterFlush->assignedSteps.push_back(mStep);
+          // just to avoid the next if
+          break;
+        }
       } else if (asIter != assignedSteps.begin()) {
         // distance increase detected and it is not the first step
         // the last iteration point wins the step
