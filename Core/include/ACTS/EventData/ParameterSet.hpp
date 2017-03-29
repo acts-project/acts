@@ -592,7 +592,6 @@ private:
                                          /// vector onto local parameter space
 };
 
-
 // initialize static class members
 template <ParID_t... params>
 constexpr unsigned int ParameterSet<params...>::NPars;
