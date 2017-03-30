@@ -36,17 +36,12 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(TrapezoidBoundsConstruction)
   {
     double minHalfX(1.), maxHalfX(6.), halfY(2.);
-    double alpha(std::atan(5. / 4.)), beta(std::atan(1.));
     //
     // default construction  deleted
     // TrapezoidBounds defaultConstructedTrapezoidBounds;
     //
     /// Test construction with defining half lengths
     BOOST_TEST(TrapezoidBounds(minHalfX, maxHalfX, halfY).type()
-               == SurfaceBounds::Trapezoid);
-    //
-    /// Test construction with lengths and angles
-    BOOST_TEST(TrapezoidBounds(minHalfX, halfY, alpha, beta).type()
                == SurfaceBounds::Trapezoid);
     /// Copy constructor
     TrapezoidBounds original(minHalfX, maxHalfX, halfY);
@@ -58,11 +53,8 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties, *utf::expected_failures(3))
   {
     double minHalfX(1.), maxHalfX(6.), halfY(2.);
-    double alpha(std::atan(5. / 4.)), beta(std::atan(1.));
     //
     TrapezoidBounds trapezoidBoundsObject(minHalfX, maxHalfX, halfY);
-    TrapezoidBounds asymmetricTrapezoidBoundsObject(
-        minHalfX, halfY, alpha, beta);
     /// Test clone
     auto pClonedTrapezoidBounds = trapezoidBoundsObject.clone();
     BOOST_TEST(bool(pClonedTrapezoidBounds));
@@ -77,23 +69,8 @@ namespace Test {
     /// Test maxHalfLengthX
     BOOST_TEST(trapezoidBoundsObject.maxHalflengthX() == maxHalfX);
     //
-    /// Test maxHalfLengthX for asymmetric trapezoid, fails
-    BOOST_TEST(asymmetricTrapezoidBoundsObject.maxHalflengthX() == maxHalfX);
-    //
     /// Test halflengthY
     BOOST_TEST(trapezoidBoundsObject.halflengthY() == halfY);
-    //
-    /// Test alpha for symmetric trapezoid, will fail
-    BOOST_TEST(trapezoidBoundsObject.alpha() == std::atan(5. / 4.));
-    //
-    /// Test alpha for asymmetric trapezoid
-    BOOST_TEST(asymmetricTrapezoidBoundsObject.alpha() == alpha);
-    //
-    /// Test beta for symmetric trapezoid, will fail
-    BOOST_TEST(trapezoidBoundsObject.beta() == std::atan(5. / 4.));
-    //
-    /// Test beta for asymmetric trapezoid
-    BOOST_TEST(asymmetricTrapezoidBoundsObject.beta() == beta);
     //
     /// Test distanceToBoundary
     Vector2D origin(0., 0.);
@@ -147,7 +124,7 @@ namespace Test {
     //
     /// Test assignment
     TrapezoidBounds assignedTrapezoidBoundsObject(
-        NaN, NaN, NaN, NaN);  // invalid object, in some sense
+        NaN, NaN, NaN);  // invalid object, in some sense
     assignedTrapezoidBoundsObject = trapezoidBoundsObject;
     BOOST_TEST(assignedTrapezoidBoundsObject == trapezoidBoundsObject);
   }
