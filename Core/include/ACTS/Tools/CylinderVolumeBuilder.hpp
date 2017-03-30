@@ -101,7 +101,7 @@ struct VolumeConfig
   bool
   wraps(const VolumeConfig& vConfig) const
   {
-    if ((zMax < vConfig.zMin) || (zMin > vConfig.zMax)) return true;
+    if ((zMax <= vConfig.zMin) || (zMin >= vConfig.zMax)) return true;
     return containesInR(vConfig);
   }
 
@@ -155,9 +155,13 @@ struct VolumeConfig
 /// given) can be set.
 struct SubVolumeConfig
 {
-  /// the minimum radius of the sub volume config
-  double rMin;
-  /// the maximum radius of the sub volume config
+  /// the minimum radius of the sub volume config in the central barrel region
+  double centralRmin;
+  /// the minimum radius of the sub volume config in the outer endcap region
+  /// which can differ from the barrel rmin and be smaller
+  double outerRmin;
+  /// the maximum radius of the sub volume config - for both regions use the
+  /// bigger one
   double rMax;
   /// possible cases for zBounadries:
   ///| Negative Endcap | Barrel | Positive Endcap |	=> four boundaries needed in
@@ -168,13 +172,17 @@ struct SubVolumeConfig
 
   /// Default constructor
   /// Per default the SubVolumeConfig is not set
-  SubVolumeConfig() : rMin(-1.), rMax(-1.), zBoundaries() {}
+  SubVolumeConfig() : centralRmin(-1.), outerRmin(-1.), rMax(-1.), zBoundaries()
+  {
+  }
 
   /// Conversion operator to bool needed for checks if the sub volume config is
   /// set by the user
   operator bool() const
   {
-    return (zBoundaries.size() > 1 && rMin >= 0. && rMax > 0. && rMin < rMax);
+    return (zBoundaries.size() > 1 && centralRmin >= 0. && rMax > 0.
+            && centralRmin < rMax
+            && outerRmin < rMax);
   }
 };
 

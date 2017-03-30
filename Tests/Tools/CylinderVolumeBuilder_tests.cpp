@@ -78,6 +78,13 @@ namespace Test {
     outerConfig5.zMin = -length;
     outerConfig5.zMax = length;
 
+    // volume around inner volume with same z boundaries
+    VolumeConfig outerConfig6;
+    outerConfig6.rMin = outer;
+    outerConfig6.rMax = outer + 5.;
+    outerConfig6.zMin = -10.;
+    outerConfig6.zMax = 10.;
+
     // check if first volume wraps around the inner volume (wrapping in z)
     BOOST_TEST(outerConfig1.wraps(innerConfig));
     // check if second volume wraps around the inner volume (wrapping in z)
@@ -89,9 +96,11 @@ namespace Test {
     // check if outside volume can not be wrapped around inside volume
     BOOST_TEST(!innerConfig.wraps(outerConfig3));
     // check if outside volume containes inside volume
-    BOOST_TEST(outerConfig5.containes(innerConfig));
+    BOOST_TEST(outerConfig5.wraps(innerConfig));
     // check if inside volume is not contained by outside volume
-    BOOST_TEST(!innerConfig.containes(outerConfig5));
+    BOOST_TEST(!innerConfig.wraps(outerConfig5));
+    // check if outside volume wraps around the inside volume
+    BOOST_TEST(outerConfig6.wraps(innerConfig));
   }
 
   /// Unit test for testing the containes(), containesInR() and containesInZ()
@@ -153,6 +162,13 @@ namespace Test {
     outerConfig5.zMin = -length;
     outerConfig5.zMax = length;
 
+    // volume around inner volume with same z boundaries
+    VolumeConfig outerConfig6;
+    outerConfig6.rMin = outer;
+    outerConfig6.rMax = outer + 5.;
+    outerConfig6.zMin = -10.;
+    outerConfig6.zMax = 10.;
+
     // volume inside the inner volume config in z
     VolumeConfig innerConfig1;
     innerConfig1.rMin = outer;
@@ -172,6 +188,8 @@ namespace Test {
     BOOST_TEST(outerConfig5.containes(innerConfig));
     // check if inside volume is not contained by outside volume
     BOOST_TEST(!innerConfig.containes(outerConfig5));
+    // check if inside volume is not contained by outside volume
+    BOOST_TEST(!outerConfig6.containes(innerConfig));
 
     // containment checks in r and z for volumes which either contain in r or z
     BOOST_TEST(innerConfig.containesInZ(innerConfig1));
