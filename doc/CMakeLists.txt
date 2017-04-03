@@ -3,7 +3,7 @@ option (BUILD_DOC "build documentation" OFF)
 
 if (BUILD_DOC)
   # we need doxygen
-  find_package (Doxygen ${ACTS_DOXYGEN_VERSION} QUIET)
+  find_package (Doxygen ${ACTS_DOXYGEN_VERSION} ${ACTS_FIND_QUIET_TEXT})
 
   if (DOXYGEN_FOUND)
     configure_file (${CMAKE_CURRENT_SOURCE_DIR}/doxygen.config.in ${CMAKE_CURRENT_BINARY_DIR}/doxygen.config @ONLY)

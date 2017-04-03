@@ -6,7 +6,7 @@ if (BUILD_DD4HEP_PLUGIN)
   set (BUILD_TGEO_PLUGIN ON PARENT_SCOPE)
 
   # we need DD4Hep
-  find_package (DD4hep QUIET COMPONENTS DDCore DDSegmentation)
+  find_package (DD4hep ${ACTS_FIND_QUIET_TEXT} COMPONENTS DDCore DDSegmentation)
 
   if (DD4hep_FOUND)
     # get list of all source files
