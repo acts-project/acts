@@ -15,6 +15,10 @@ namespace Acts {
 
 namespace detail {
 
+  /// @cond
+  /// @brief helper struct to calculate number of bins inside a grid
+  ///
+  /// @tparam N number of axes to consider
   template <size_t N>
   struct get_nbins_helper_impl;
 
@@ -25,7 +29,8 @@ namespace detail {
     static size_t
     getNBins(const std::tuple<Axes...>& axes)
     {
-      size_t thisAxisNBins = std::get<N>(axes).getNBins();
+      // by convention getNBins does not include under-/overflow bins
+      size_t thisAxisNBins = std::get<N>(axes).getNBins() + 2;
       return thisAxisNBins * get_nbins_helper_impl<N - 1>::getNBins(axes);
     }
   };
@@ -37,13 +42,23 @@ namespace detail {
     static size_t
     getNBins(const std::tuple<Axes...>& axes)
     {
-      size_t thisAxisNBins = std::get<0u>(axes).getNBins();
+      // by convention getNBins does not include under-/overflow bins
+      size_t thisAxisNBins = std::get<0u>(axes).getNBins() + 2;
       return thisAxisNBins;
     }
   };
+  /// @endcond
 
+  /// @brief calculate total number of bins in a grid defined by a set of axes
   struct get_nbins_helper
   {
+    /// @brief calculate total number of bins in a grid defined by a set of axes
+    ///
+    /// @tparam Axes parameter pack of axis types defining the grid
+    /// @param  [in] axes actual axis objects spanning the grid
+    /// @return total number of bins in the grid
+    ///
+    /// @note This includes under-/overflow bins along each axis.
     template <class... Axes>
     static size_t
     getNBins(const std::tuple<Axes...>& axes)

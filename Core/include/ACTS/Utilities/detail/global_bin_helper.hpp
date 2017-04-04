@@ -15,6 +15,7 @@ namespace Acts {
 
 namespace detail {
 
+  /// @cond
   template <size_t N, size_t MAX>
   struct global_bin_helper_impl;
 
@@ -30,7 +31,8 @@ namespace detail {
     {
       const auto& thisAxis = std::get<N>(axes);
       bin += area * thisAxis.getBin(point[N]);
-      area *= thisAxis.getNBins();
+      // make sure to account for under-/overflow bins
+      area *= (thisAxis.getNBins() + 2);
       global_bin_helper_impl<N + 1, MAX>::getGlobalBin(point, axes, bin, area);
     }
   };
@@ -49,9 +51,22 @@ namespace detail {
       bin += area * thisAxis.getBin(point[MAX]);
     }
   };
+  /// @endcond
 
+  /// @brief determine global bin index in grid defined by a set of axes
   struct global_bin_helper
   {
+    /// @brief determine global bin index in grid defined by a set of axes
+    ///
+    /// @tparam Point any type with point semantics supporting component access
+    ///               through @c operator[]
+    /// @tparam Axes parameter pack of axis types defining the grid
+    ///
+    /// @param  [in] point point to look up in the grid
+    /// @param  [in] axes  actual axis objects spanning the grid
+    /// @return global index for bin containing the given point
+    ///
+    /// @note This could be a under-/overflow bin along one or more axes.
     template <class Point, class... Axes>
     static size_t
     getGlobalBin(const Point& point, const std::tuple<Axes...>& axes)
