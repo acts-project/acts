@@ -34,10 +34,10 @@ namespace detail {
     size_t
     getBin(double x) const
     {
-      if (x <= getMin()) return 0u;
-      if (x >= getMax()) return getNBins() - 1;
+      if (x < getMin()) return 0u;
+      if (x >= getMax()) return getNBins() + 1;
 
-      return std::floor((x - getMin()) / getBinWidth());
+      return std::floor((x - getMin()) / getBinWidth()) + 1;
     }
 
     double
@@ -61,7 +61,7 @@ namespace detail {
     size_t
     getNBins() const
     {
-      return m_bins + 1;
+      return m_bins;
     }
 
   private:
@@ -80,12 +80,12 @@ namespace detail {
     size_t
     getBin(double x) const
     {
-      if (x <= getMin()) return 0u;
-      if (x >= getMax()) return getNBins() - 1;
+      if (x < getMin()) return 0u;
+      if (x >= getMax()) return getNBins() + 1;
 
       const auto it
           = std::upper_bound(std::begin(m_binEdges), std::end(m_binEdges), x);
-      return std::distance(std::begin(m_binEdges), it) - 1;
+      return std::distance(std::begin(m_binEdges), it);
     }
 
     double
@@ -103,7 +103,7 @@ namespace detail {
     size_t
     getNBins() const
     {
-      return m_binEdges.size();
+      return m_binEdges.size() - 1;
     }
 
   private:
