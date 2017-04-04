@@ -20,12 +20,9 @@
 //
 #include "ACTS/Surfaces/DiscTrapezoidalBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-//
+
 #include <limits>
 
-// namespace bdata = boost::unit_test::data;
-namespace utf    = boost::unit_test;
-const double inf = std::numeric_limits<double>::infinity();
 const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
@@ -78,10 +75,8 @@ namespace Test {
     Vector2D origin(0., 0.);
     Vector2D outside(30., 0.);
     Vector2D inSurface(2., 0.0);
-    BOOST_TEST(discTrapezoidalBoundsObject.distanceToBoundary(origin)
-               == 1.1055415967851332);  // empirically
-    BOOST_TEST(discTrapezoidalBoundsObject.distanceToBoundary(outside)
-               == 26.683375209644602);  // empirically
+    BOOST_TEST(discTrapezoidalBoundsObject.distanceToBoundary(origin) == 2.0);
+    BOOST_TEST(discTrapezoidalBoundsObject.distanceToBoundary(outside) == 24.0);
     //
     /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
@@ -98,12 +93,6 @@ namespace Test {
         == true);
     BOOST_TEST(discTrapezoidalBoundsObject.inside(outside, BoundaryCheck(true))
                == false);
-    //
-    /// Test insideLoc0
-    BOOST_TEST(discTrapezoidalBoundsObject.insideLoc0(inSurface) == true);
-    //
-    /// Test insideLoc1
-    BOOST_TEST(discTrapezoidalBoundsObject.insideLoc1(inSurface) == true);
     //
     /// Test rMin
     BOOST_TEST(discTrapezoidalBoundsObject.rMin() == rMin);
