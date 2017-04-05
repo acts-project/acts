@@ -43,14 +43,14 @@ namespace detail {
     reference
     at(const Point& point)
     {
-      return m_values.at(getGlobalBin(point));
+      return m_values.at(getGlobalBinIndex(point));
     }
 
     template <class Point>
     const_reference
     at(const Point& point) const
     {
-      return m_values.at(getGlobalBin(point));
+      return m_values.at(getGlobalBinIndex(point));
     }
 
     size_t
@@ -62,7 +62,7 @@ namespace detail {
   private:
     template <class Point>
     size_t
-    getGlobalBin(const Point& point) const
+    getGlobalBinIndex(const Point& point) const
     {
       return global_bin_helper::getGlobalBin(point, m_axes);
     }
