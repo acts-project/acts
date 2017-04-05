@@ -47,7 +47,8 @@ namespace detail {
     /// @param [in] xmax upper boundary of axis range
     /// @param [in] nBins number of bins to divide the axis range into
     ///
-    /// Divide the range \f$[xmin,xmax)\f$ into \f$nBins\f$ equidistant bins.
+    /// Divide the range \f$[\text{xmin},\text{xmax})\f$ into \f$\text{nBins}\f$
+    /// equidistant bins.
     Axis(double xmin, double xmax, size_t nBins)
       : m_min(xmin), m_max(xmax), m_width((xmax - xmin) / nBins), m_bins(nBins)
     {
@@ -74,11 +75,52 @@ namespace detail {
 
     /// @brief get bin width
     ///
-    /// @return constant bin width for all bins
+    /// @return constant width for all bins
+    double getBinWidth(size_t = 0) const { return m_width; }
+
+    /// @brief get lower bound of bin
+    ///
+    /// @param  [in] bin index of bin
+    /// @return lower bin boundary
+    ///
+    /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
+    ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
+    ///
+    /// @note Bin intervals have a closed lower bound, i.e. the lower boundary
+    ///       belongs to the bin with the given bin index.
     double
-    getBinWidth() const
+    getBinLowerBound(size_t bin) const
     {
-      return m_width;
+      return getMin() + (bin - 1) * getBinWidth();
+    }
+
+    /// @brief get upper bound of bin
+    ///
+    /// @param  [in] bin index of bin
+    /// @return upper bin boundary
+    ///
+    /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
+    ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
+    ///
+    /// @note Bin intervals have an open upper bound, i.e. the upper boundary
+    ///       does @b not belong to the bin with the given bin index.
+    double
+    getBinUpperBound(size_t bin) const
+    {
+      return getMin() + bin * getBinWidth();
+    }
+
+    /// @brief get bin center
+    ///
+    /// @param  [in] bin index of bin
+    /// @return bin center position
+    ///
+    /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
+    ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
+    double
+    getBinCenter(size_t bin) const
+    {
+      return getMin() + (bin - 0.5) * getBinWidth();
     }
 
     /// @brief get maximum of binning range
@@ -157,6 +199,64 @@ namespace detail {
       const auto it
           = std::upper_bound(std::begin(m_binEdges), std::end(m_binEdges), x);
       return std::distance(std::begin(m_binEdges), it);
+    }
+
+    /// @brief get bin width
+    ///
+    /// @param  [in] bin index of bin
+    /// @return width of given bin
+    ///
+    /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
+    ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
+    double
+    getBinWidth(size_t bin) const
+    {
+      return m_binEdges.at(bin) - m_binEdges.at(bin - 1);
+    }
+
+    /// @brief get lower bound of bin
+    ///
+    /// @param  [in] bin index of bin
+    /// @return lower bin boundary
+    ///
+    /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
+    ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
+    ///
+    /// @note Bin intervals have a closed lower bound, i.e. the lower boundary
+    ///       belongs to the bin with the given bin index.
+    double
+    getBinLowerBound(size_t bin) const
+    {
+      return m_binEdges.at(bin - 1);
+    }
+
+    /// @brief get upper bound of bin
+    ///
+    /// @param  [in] bin index of bin
+    /// @return upper bin boundary
+    ///
+    /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
+    ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
+    ///
+    /// @note Bin intervals have an open upper bound, i.e. the upper boundary
+    ///       does @b not belong to the bin with the given bin index.
+    double
+    getBinUpperBound(size_t bin) const
+    {
+      return m_binEdges.at(bin);
+    }
+
+    /// @brief get bin center
+    ///
+    /// @param  [in] bin index of bin
+    /// @return bin center position
+    ///
+    /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
+    ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
+    double
+    getBinCenter(size_t bin) const
+    {
+      return 0.5 * (getBinLowerBound(bin) + getBinUpperBound(bin));
     }
 
     /// @brief get maximum of binning range

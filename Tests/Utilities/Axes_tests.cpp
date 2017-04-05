@@ -21,10 +21,13 @@ namespace Test {
   {
     EquidistantAxis a(0.0, 10.0, 10u);
 
+    // general binning properties
     BOOST_TEST(a.getNBins() == 10u);
     BOOST_TEST(a.getMax() == 10.);
     BOOST_TEST(a.getMin() == 0.);
     BOOST_TEST(a.getBinWidth() == 1.);
+
+    // bin index calculation
     BOOST_TEST(a.getBin(-0.3) == 0u);
     BOOST_TEST(a.getBin(-0.) == 1u);
     BOOST_TEST(a.getBin(0.) == 1u);
@@ -49,15 +52,54 @@ namespace Test {
     BOOST_TEST(a.getBin(9.999) == 10u);
     BOOST_TEST(a.getBin(10.) == 11u);
     BOOST_TEST(a.getBin(100.3) == 11u);
+
+    // lower bin boundaries
+    BOOST_TEST(a.getBinLowerBound(1) == 0.);
+    BOOST_TEST(a.getBinLowerBound(2) == 1.);
+    BOOST_TEST(a.getBinLowerBound(3) == 2.);
+    BOOST_TEST(a.getBinLowerBound(4) == 3.);
+    BOOST_TEST(a.getBinLowerBound(5) == 4.);
+    BOOST_TEST(a.getBinLowerBound(6) == 5.);
+    BOOST_TEST(a.getBinLowerBound(7) == 6.);
+    BOOST_TEST(a.getBinLowerBound(8) == 7.);
+    BOOST_TEST(a.getBinLowerBound(9) == 8.);
+    BOOST_TEST(a.getBinLowerBound(10) == 9.);
+
+    // upper bin boundaries
+    BOOST_TEST(a.getBinUpperBound(1) == 1.);
+    BOOST_TEST(a.getBinUpperBound(2) == 2.);
+    BOOST_TEST(a.getBinUpperBound(3) == 3.);
+    BOOST_TEST(a.getBinUpperBound(4) == 4.);
+    BOOST_TEST(a.getBinUpperBound(5) == 5.);
+    BOOST_TEST(a.getBinUpperBound(6) == 6.);
+    BOOST_TEST(a.getBinUpperBound(7) == 7.);
+    BOOST_TEST(a.getBinUpperBound(8) == 8.);
+    BOOST_TEST(a.getBinUpperBound(9) == 9.);
+    BOOST_TEST(a.getBinUpperBound(10) == 10.);
+
+    // bin centers
+    BOOST_TEST(a.getBinCenter(1) == 0.5);
+    BOOST_TEST(a.getBinCenter(2) == 1.5);
+    BOOST_TEST(a.getBinCenter(3) == 2.5);
+    BOOST_TEST(a.getBinCenter(4) == 3.5);
+    BOOST_TEST(a.getBinCenter(5) == 4.5);
+    BOOST_TEST(a.getBinCenter(6) == 5.5);
+    BOOST_TEST(a.getBinCenter(7) == 6.5);
+    BOOST_TEST(a.getBinCenter(8) == 7.5);
+    BOOST_TEST(a.getBinCenter(9) == 8.5);
+    BOOST_TEST(a.getBinCenter(10) == 9.5);
   }
 
   BOOST_AUTO_TEST_CASE(variable_axis)
   {
     VariableAxis a({0, 0.5, 3, 4.5, 6});
 
+    // general binning properties
     BOOST_TEST(a.getNBins() == 4u);
     BOOST_TEST(a.getMax() == 6.);
     BOOST_TEST(a.getMin() == 0.);
+
+    // bin index calculation
     BOOST_TEST(a.getBin(-0.3) == 0u);
     BOOST_TEST(a.getBin(-0.) == 1u);
     BOOST_TEST(a.getBin(0.) == 1u);
@@ -72,6 +114,24 @@ namespace Test {
     BOOST_TEST(a.getBin(6.) == 5u);
     BOOST_TEST(a.getBin(6.00001) == 5u);
     BOOST_TEST(a.getBin(7.5) == 5u);
+
+    // lower bin boundaries
+    BOOST_TEST(a.getBinLowerBound(1) == 0.);
+    BOOST_TEST(a.getBinLowerBound(2) == 0.5);
+    BOOST_TEST(a.getBinLowerBound(3) == 3.);
+    BOOST_TEST(a.getBinLowerBound(4) == 4.5);
+
+    // upper bin boundaries
+    BOOST_TEST(a.getBinUpperBound(1) == 0.5);
+    BOOST_TEST(a.getBinUpperBound(2) == 3.);
+    BOOST_TEST(a.getBinUpperBound(3) == 4.5);
+    BOOST_TEST(a.getBinUpperBound(4) == 6.);
+
+    // bin centers
+    BOOST_TEST(a.getBinCenter(1) == 0.25);
+    BOOST_TEST(a.getBinCenter(2) == 1.75);
+    BOOST_TEST(a.getBinCenter(3) == 3.75);
+    BOOST_TEST(a.getBinCenter(4) == 5.25);
   }
 }  // namespace Test
 
