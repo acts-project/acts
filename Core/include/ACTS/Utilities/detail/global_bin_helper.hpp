@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <array>
 #include <tuple>
 #include <utility>
 
@@ -35,6 +36,22 @@ namespace detail {
       area *= (thisAxis.getNBins() + 2);
       global_bin_helper_impl<N + 1, MAX>::getGlobalBin(point, axes, bin, area);
     }
+
+    template <class... Axes>
+    static void
+    getLocalBinIndices(size_t&                    bin,
+                       const std::tuple<Axes...>& axes,
+                       size_t&                    area,
+                       std::array<size_t, sizeof...(Axes)>& indices)
+    {
+      const auto& thisAxis = std::get<N>(axes);
+      // make sure to account for under-/overflow bins
+      size_t new_area = area * (thisAxis.getNBins() + 2);
+      global_bin_helper_impl<N + 1, MAX>::getLocalBinIndices(
+          bin, axes, new_area, indices);
+      indices.at(N) = bin / area;
+      bin %= area;
+    }
   };
 
   template <size_t MAX>
@@ -49,6 +66,18 @@ namespace detail {
     {
       const auto& thisAxis = std::get<MAX>(axes);
       bin += area * thisAxis.getBin(point[MAX]);
+    }
+
+    template <class... Axes>
+    static void
+    getLocalBinIndices(size_t&                    bin,
+                       const std::tuple<Axes...>& axes,
+                       size_t&                    area,
+                       std::array<size_t, sizeof...(Axes)>& indices)
+    {
+      // make sure to account for under-/overflow bins
+      indices.at(MAX) = bin / area;
+      bin %= area;
     }
   };
   /// @endcond
@@ -78,6 +107,30 @@ namespace detail {
       global_bin_helper_impl<0, MAX>::getGlobalBin(point, axes, bin, area);
 
       return bin;
+    }
+
+    /// @brief determine local bin index for each axis from global bin index
+    ///
+    /// @tparam Axes parameter pack of axis types defining the grid
+    ///
+    /// @param  [in] bin  global bin index
+    /// @param  [in] axes actual axis objects spanning the grid
+    /// @return array with local bin indices along each axis (in same order as
+    ///         given @c axes object)
+    ///
+    /// @note Local bin indices could be a under-/overflow bin along this axis.
+    template <class... Axes>
+    static std::array<size_t, sizeof...(Axes)>
+    getLocalBinIndices(size_t bin, const std::tuple<Axes...>& axes)
+    {
+      constexpr size_t MAX  = sizeof...(Axes)-1;
+      size_t           area = 1;
+      std::array<size_t, sizeof...(Axes)> indices;
+
+      global_bin_helper_impl<0, MAX>::getLocalBinIndices(
+          bin, axes, area, indices);
+
+      return indices;
     }
   };
 

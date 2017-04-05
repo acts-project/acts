@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <array>
 #include <tuple>
 #include "ACTS/Utilities/detail/get_nbins_helper.hpp"
 #include "ACTS/Utilities/detail/global_bin_helper.hpp"
@@ -65,6 +66,12 @@ namespace detail {
     getGlobalBinIndex(const Point& point) const
     {
       return global_bin_helper::getGlobalBin(point, m_axes);
+    }
+
+    std::array<size_t, dimension>
+    getLocalBinIndices(size_t bin) const
+    {
+      return global_bin_helper::getLocalBinIndices(bin, m_axes);
     }
 
     std::tuple<Axes...> m_axes;

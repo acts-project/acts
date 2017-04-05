@@ -36,6 +36,12 @@ namespace Test {
       return m_grid.getGlobalBinIndex(point);
     }
 
+    std::array<size_t, sizeof...(Axes)>
+    getLocalBinIndices(size_t bin) const
+    {
+      return m_grid.getLocalBinIndices(bin);
+    }
+
     size_t
     size() const
     {
@@ -55,6 +61,7 @@ namespace Test {
     // test general properties
     BOOST_TEST(g.size() == 6u);
 
+    // global bin index
     BOOST_TEST(g.getGlobalBinIndex({-0.3}) == 0u);
     BOOST_TEST(g.getGlobalBinIndex({-0.}) == 1u);
     BOOST_TEST(g.getGlobalBinIndex({0.}) == 1u);
@@ -67,6 +74,18 @@ namespace Test {
     BOOST_TEST(g.getGlobalBinIndex({3.9999}) == 4u);
     BOOST_TEST(g.getGlobalBinIndex({4.}) == 5u);
     BOOST_TEST(g.getGlobalBinIndex({4.98}) == 5u);
+
+    // global bin index -> local bin indices
+    typedef std::array<size_t, 1> indices_t;
+    BOOST_TEST(g.getLocalBinIndices(0) == indices_t({0}));
+    BOOST_TEST(g.getLocalBinIndices(1) == indices_t({1}));
+    BOOST_TEST(g.getLocalBinIndices(2) == indices_t({2}));
+    BOOST_TEST(g.getLocalBinIndices(3) == indices_t({3}));
+    BOOST_TEST(g.getLocalBinIndices(4) == indices_t({4}));
+    BOOST_TEST(g.getLocalBinIndices(5) == indices_t({5}));
+
+    BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex({2.7}))
+               == indices_t({3}));
   }
 
   BOOST_AUTO_TEST_CASE(grid_test_2d_equidistant)
@@ -79,7 +98,7 @@ namespace Test {
     // test general properties
     BOOST_TEST(g.size() == 30u);
 
-    // test grid points
+    // global bin index
     BOOST_TEST(g.getGlobalBinIndex({-1, -1}) == 0u);
     BOOST_TEST(g.getGlobalBinIndex({0, -1}) == 1u);
     BOOST_TEST(g.getGlobalBinIndex({1, -1}) == 2u);
@@ -125,6 +144,42 @@ namespace Test {
     BOOST_TEST(g.getGlobalBinIndex({-2, 7}) == 24u);
     BOOST_TEST(g.getGlobalBinIndex({12, -1}) == 5u);
     BOOST_TEST(g.getGlobalBinIndex({12, 11}) == 29u);
+
+    // global bin index -> local bin indices
+    typedef std::array<size_t, 2> indices_t;
+    BOOST_TEST(g.getLocalBinIndices(0) == indices_t({0, 0}));
+    BOOST_TEST(g.getLocalBinIndices(1) == indices_t({1, 0}));
+    BOOST_TEST(g.getLocalBinIndices(2) == indices_t({2, 0}));
+    BOOST_TEST(g.getLocalBinIndices(3) == indices_t({3, 0}));
+    BOOST_TEST(g.getLocalBinIndices(4) == indices_t({4, 0}));
+    BOOST_TEST(g.getLocalBinIndices(5) == indices_t({5, 0}));
+    BOOST_TEST(g.getLocalBinIndices(6) == indices_t({0, 1}));
+    BOOST_TEST(g.getLocalBinIndices(7) == indices_t({1, 1}));
+    BOOST_TEST(g.getLocalBinIndices(8) == indices_t({2, 1}));
+    BOOST_TEST(g.getLocalBinIndices(9) == indices_t({3, 1}));
+    BOOST_TEST(g.getLocalBinIndices(10) == indices_t({4, 1}));
+    BOOST_TEST(g.getLocalBinIndices(11) == indices_t({5, 1}));
+    BOOST_TEST(g.getLocalBinIndices(12) == indices_t({0, 2}));
+    BOOST_TEST(g.getLocalBinIndices(13) == indices_t({1, 2}));
+    BOOST_TEST(g.getLocalBinIndices(14) == indices_t({2, 2}));
+    BOOST_TEST(g.getLocalBinIndices(15) == indices_t({3, 2}));
+    BOOST_TEST(g.getLocalBinIndices(16) == indices_t({4, 2}));
+    BOOST_TEST(g.getLocalBinIndices(17) == indices_t({5, 2}));
+    BOOST_TEST(g.getLocalBinIndices(18) == indices_t({0, 3}));
+    BOOST_TEST(g.getLocalBinIndices(19) == indices_t({1, 3}));
+    BOOST_TEST(g.getLocalBinIndices(20) == indices_t({2, 3}));
+    BOOST_TEST(g.getLocalBinIndices(21) == indices_t({3, 3}));
+    BOOST_TEST(g.getLocalBinIndices(22) == indices_t({4, 3}));
+    BOOST_TEST(g.getLocalBinIndices(23) == indices_t({5, 3}));
+    BOOST_TEST(g.getLocalBinIndices(24) == indices_t({0, 4}));
+    BOOST_TEST(g.getLocalBinIndices(25) == indices_t({1, 4}));
+    BOOST_TEST(g.getLocalBinIndices(26) == indices_t({2, 4}));
+    BOOST_TEST(g.getLocalBinIndices(27) == indices_t({3, 4}));
+    BOOST_TEST(g.getLocalBinIndices(28) == indices_t({4, 4}));
+    BOOST_TEST(g.getLocalBinIndices(29) == indices_t({5, 4}));
+
+    BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex({1.2, 0.7}))
+               == indices_t({2, 1}));
   }
 
   BOOST_AUTO_TEST_CASE(grid_test_3d_equidistant)
@@ -175,6 +230,36 @@ namespace Test {
     BOOST_TEST(g.getGlobalBinIndex({0, 3, 2}) == 77u);
     BOOST_TEST(g.getGlobalBinIndex({1, 3, 2}) == 78u);
     BOOST_TEST(g.getGlobalBinIndex({2, 3, 2}) == 79u);
+
+    // global bin index -> local bin indices
+    typedef std::array<size_t, 3> indices_t;
+    BOOST_TEST(g.getLocalBinIndices(0) == indices_t({0, 0, 0}));
+    BOOST_TEST(g.getLocalBinIndices(1) == indices_t({1, 0, 0}));
+    BOOST_TEST(g.getLocalBinIndices(2) == indices_t({2, 0, 0}));
+    BOOST_TEST(g.getLocalBinIndices(3) == indices_t({3, 0, 0}));
+    BOOST_TEST(g.getLocalBinIndices(4) == indices_t({0, 1, 0}));
+    BOOST_TEST(g.getLocalBinIndices(5) == indices_t({1, 1, 0}));
+    BOOST_TEST(g.getLocalBinIndices(6) == indices_t({2, 1, 0}));
+    BOOST_TEST(g.getLocalBinIndices(7) == indices_t({3, 1, 0}));
+    BOOST_TEST(g.getLocalBinIndices(24) == indices_t({0, 1, 1}));
+    BOOST_TEST(g.getLocalBinIndices(25) == indices_t({1, 1, 1}));
+    BOOST_TEST(g.getLocalBinIndices(26) == indices_t({2, 1, 1}));
+    BOOST_TEST(g.getLocalBinIndices(27) == indices_t({3, 1, 1}));
+    BOOST_TEST(g.getLocalBinIndices(52) == indices_t({0, 3, 2}));
+    BOOST_TEST(g.getLocalBinIndices(53) == indices_t({1, 3, 2}));
+    BOOST_TEST(g.getLocalBinIndices(54) == indices_t({2, 3, 2}));
+    BOOST_TEST(g.getLocalBinIndices(55) == indices_t({3, 3, 2}));
+    BOOST_TEST(g.getLocalBinIndices(60) == indices_t({0, 0, 3}));
+    BOOST_TEST(g.getLocalBinIndices(61) == indices_t({1, 0, 3}));
+    BOOST_TEST(g.getLocalBinIndices(62) == indices_t({2, 0, 3}));
+    BOOST_TEST(g.getLocalBinIndices(63) == indices_t({3, 0, 3}));
+    BOOST_TEST(g.getLocalBinIndices(76) == indices_t({0, 4, 3}));
+    BOOST_TEST(g.getLocalBinIndices(77) == indices_t({1, 4, 3}));
+    BOOST_TEST(g.getLocalBinIndices(78) == indices_t({2, 4, 3}));
+    BOOST_TEST(g.getLocalBinIndices(79) == indices_t({3, 4, 3}));
+
+    BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex({1.2, 0.7, 1.4}))
+               == indices_t({2, 1, 2}));
   }
 
   BOOST_AUTO_TEST_CASE(grid_test_1d_variable)
@@ -185,6 +270,7 @@ namespace Test {
     // test general properties
     BOOST_TEST(g.size() == 4u);
 
+    // global bin index
     BOOST_TEST(g.getGlobalBinIndex({-0.3}) == 0u);
     BOOST_TEST(g.getGlobalBinIndex({0.}) == 1u);
     BOOST_TEST(g.getGlobalBinIndex({0.7}) == 1u);
@@ -193,6 +279,16 @@ namespace Test {
     BOOST_TEST(g.getGlobalBinIndex({2.7}) == 2u);
     BOOST_TEST(g.getGlobalBinIndex({4.}) == 3u);
     BOOST_TEST(g.getGlobalBinIndex({4.98}) == 3u);
+
+    // global bin index -> local bin indices
+    typedef std::array<size_t, 1> indices_t;
+    BOOST_TEST(g.getLocalBinIndices(0) == indices_t({0}));
+    BOOST_TEST(g.getLocalBinIndices(1) == indices_t({1}));
+    BOOST_TEST(g.getLocalBinIndices(2) == indices_t({2}));
+    BOOST_TEST(g.getLocalBinIndices(3) == indices_t({3}));
+
+    BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex({0.8}))
+               == indices_t({1}));
   }
 
   BOOST_AUTO_TEST_CASE(grid_test_2d_variable)
@@ -230,6 +326,28 @@ namespace Test {
     BOOST_TEST(g.getGlobalBinIndex({-2, 7}) == 12u);
     BOOST_TEST(g.getGlobalBinIndex({12, -1}) == 3u);
     BOOST_TEST(g.getGlobalBinIndex({12, 11}) == 15u);
+
+    // global bin index -> local bin indices
+    typedef std::array<size_t, 2> indices_t;
+    BOOST_TEST(g.getLocalBinIndices(0) == indices_t({0, 0}));
+    BOOST_TEST(g.getLocalBinIndices(1) == indices_t({1, 0}));
+    BOOST_TEST(g.getLocalBinIndices(2) == indices_t({2, 0}));
+    BOOST_TEST(g.getLocalBinIndices(3) == indices_t({3, 0}));
+    BOOST_TEST(g.getLocalBinIndices(4) == indices_t({0, 1}));
+    BOOST_TEST(g.getLocalBinIndices(5) == indices_t({1, 1}));
+    BOOST_TEST(g.getLocalBinIndices(6) == indices_t({2, 1}));
+    BOOST_TEST(g.getLocalBinIndices(7) == indices_t({3, 1}));
+    BOOST_TEST(g.getLocalBinIndices(8) == indices_t({0, 2}));
+    BOOST_TEST(g.getLocalBinIndices(9) == indices_t({1, 2}));
+    BOOST_TEST(g.getLocalBinIndices(10) == indices_t({2, 2}));
+    BOOST_TEST(g.getLocalBinIndices(11) == indices_t({3, 2}));
+    BOOST_TEST(g.getLocalBinIndices(12) == indices_t({0, 3}));
+    BOOST_TEST(g.getLocalBinIndices(13) == indices_t({1, 3}));
+    BOOST_TEST(g.getLocalBinIndices(14) == indices_t({2, 3}));
+    BOOST_TEST(g.getLocalBinIndices(15) == indices_t({3, 3}));
+
+    BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex({1.8, 3.2}))
+               == indices_t({2, 3}));
   }
 
   BOOST_AUTO_TEST_CASE(grid_test_3d_variable)
@@ -268,6 +386,27 @@ namespace Test {
     BOOST_TEST(g.getGlobalBinIndex({1, 0.5, 3.3}) == 56u);
     BOOST_TEST(g.getGlobalBinIndex({0, 3, 3.3}) == 58u);
     BOOST_TEST(g.getGlobalBinIndex({1, 3, 3.3}) == 59u);
+
+    // global bin index -> local bin indices
+    typedef std::array<size_t, 3> indices_t;
+    BOOST_TEST(g.getLocalBinIndices(0) == indices_t({0, 0, 0}));
+    BOOST_TEST(g.getLocalBinIndices(1) == indices_t({1, 0, 0}));
+    BOOST_TEST(g.getLocalBinIndices(2) == indices_t({2, 0, 0}));
+    BOOST_TEST(g.getLocalBinIndices(3) == indices_t({0, 1, 0}));
+    BOOST_TEST(g.getLocalBinIndices(4) == indices_t({1, 1, 0}));
+    BOOST_TEST(g.getLocalBinIndices(5) == indices_t({2, 1, 0}));
+    BOOST_TEST(g.getLocalBinIndices(21) == indices_t({0, 3, 1}));
+    BOOST_TEST(g.getLocalBinIndices(22) == indices_t({1, 3, 1}));
+    BOOST_TEST(g.getLocalBinIndices(23) == indices_t({2, 3, 1}));
+    BOOST_TEST(g.getLocalBinIndices(24) == indices_t({0, 0, 2}));
+    BOOST_TEST(g.getLocalBinIndices(25) == indices_t({1, 0, 2}));
+    BOOST_TEST(g.getLocalBinIndices(26) == indices_t({2, 0, 2}));
+    BOOST_TEST(g.getLocalBinIndices(57) == indices_t({0, 3, 4}));
+    BOOST_TEST(g.getLocalBinIndices(58) == indices_t({1, 3, 4}));
+    BOOST_TEST(g.getLocalBinIndices(59) == indices_t({2, 3, 4}));
+
+    BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex({1.8, 0.7, 3.2}))
+               == indices_t({2, 2, 3}));
   }
 
   BOOST_AUTO_TEST_CASE(grid_test_2d_mixed)
@@ -311,6 +450,36 @@ namespace Test {
     BOOST_TEST(g.getGlobalBinIndex({-2, 7}) == 18u);
     BOOST_TEST(g.getGlobalBinIndex({12, -1}) == 5u);
     BOOST_TEST(g.getGlobalBinIndex({12, 11}) == 23u);
+
+    // global bin index -> local bin indices
+    typedef std::array<size_t, 2> indices_t;
+    BOOST_TEST(g.getLocalBinIndices(0) == indices_t({0, 0}));
+    BOOST_TEST(g.getLocalBinIndices(1) == indices_t({1, 0}));
+    BOOST_TEST(g.getLocalBinIndices(2) == indices_t({2, 0}));
+    BOOST_TEST(g.getLocalBinIndices(3) == indices_t({3, 0}));
+    BOOST_TEST(g.getLocalBinIndices(4) == indices_t({4, 0}));
+    BOOST_TEST(g.getLocalBinIndices(5) == indices_t({5, 0}));
+    BOOST_TEST(g.getLocalBinIndices(6) == indices_t({0, 1}));
+    BOOST_TEST(g.getLocalBinIndices(7) == indices_t({1, 1}));
+    BOOST_TEST(g.getLocalBinIndices(8) == indices_t({2, 1}));
+    BOOST_TEST(g.getLocalBinIndices(9) == indices_t({3, 1}));
+    BOOST_TEST(g.getLocalBinIndices(10) == indices_t({4, 1}));
+    BOOST_TEST(g.getLocalBinIndices(11) == indices_t({5, 1}));
+    BOOST_TEST(g.getLocalBinIndices(12) == indices_t({0, 2}));
+    BOOST_TEST(g.getLocalBinIndices(13) == indices_t({1, 2}));
+    BOOST_TEST(g.getLocalBinIndices(14) == indices_t({2, 2}));
+    BOOST_TEST(g.getLocalBinIndices(15) == indices_t({3, 2}));
+    BOOST_TEST(g.getLocalBinIndices(16) == indices_t({4, 2}));
+    BOOST_TEST(g.getLocalBinIndices(17) == indices_t({5, 2}));
+    BOOST_TEST(g.getLocalBinIndices(18) == indices_t({0, 3}));
+    BOOST_TEST(g.getLocalBinIndices(19) == indices_t({1, 3}));
+    BOOST_TEST(g.getLocalBinIndices(20) == indices_t({2, 3}));
+    BOOST_TEST(g.getLocalBinIndices(21) == indices_t({3, 3}));
+    BOOST_TEST(g.getLocalBinIndices(22) == indices_t({4, 3}));
+    BOOST_TEST(g.getLocalBinIndices(23) == indices_t({5, 3}));
+
+    BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex({1.1, 1.7}))
+               == indices_t({5, 2}));
   }
 
   BOOST_AUTO_TEST_CASE(grid_test_2d_mixed_at)
