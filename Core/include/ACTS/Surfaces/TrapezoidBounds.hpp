@@ -191,7 +191,7 @@ public:
   distanceToBoundary(const Vector2D& lpos) const final override;
 
   /// Return the vertices - or, the points of the extremas
-  virtual const std::vector<Vector2D>
+  virtual std::vector<Vector2D>
   vertices() const final override;
 
   // Bounding box representation

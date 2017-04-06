@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016 ACTS project team
+// Copyright (C) 2016-2017 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,12 +13,15 @@
 #ifndef ACTS_SURFACES_PLANARBOUNDS_H
 #define ACTS_SURFACES_PLANARBOUNDS_H 1
 
+#include <vector>
+
 #include "ACTS/Surfaces/SurfaceBounds.hpp"
 
 namespace Acts {
 
 /// forward declare rectangle bounds as boundary box
 class RectangleBounds;
+
 ///
 /// @class PlanarBounds
 ///
@@ -28,20 +31,8 @@ class RectangleBounds;
 class PlanarBounds : public SurfaceBounds
 {
 public:
-  /// Default Constructor
-  ///
-  /// @param sStore is the store size for the initialisation
-  PlanarBounds(size_t sStore = 0) : SurfaceBounds(sStore) {}
-
-  /// Destructor
-  virtual ~PlanarBounds() {}
-
-  /// Virtual Constructor
-  virtual PlanarBounds*
-  clone() const = 0;
-
   /// Return the vertices - or, the points of the extremas
-  virtual const std::vector<Vector2D>
+  virtual std::vector<Vector2D>
   vertices() const = 0;
 
   // Bounding box parameters

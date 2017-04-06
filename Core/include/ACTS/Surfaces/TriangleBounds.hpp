@@ -117,7 +117,7 @@ public:
   distanceToBoundary(const Vector2D& lpos) const final override;
 
   /// This method returns the coordinates of vertices
-  const std::vector<Vector2D>
+  std::vector<Vector2D>
   vertices() const final override;
 
   // Bounding box representation
