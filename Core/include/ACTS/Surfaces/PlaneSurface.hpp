@@ -41,13 +41,13 @@ public:
   /// Copy Constructor
   ///
   /// @param psf is the source surface for the copy
-  PlaneSurface(const PlaneSurface& psf);
+  PlaneSurface(const PlaneSurface& other);
 
   /// Copy Constructor with shift
   ///
   /// @param psf is the source surface for the copy
   /// @param htrans is the transformation that positions the surface in space
-  PlaneSurface(const PlaneSurface& psf, const Transform3D& htrans);
+  PlaneSurface(const PlaneSurface& other, const Transform3D& htrans);
 
   /// Dedicated Constructor with normal vector
   /// This is for curvilinear surfaces which are by definition boundless
@@ -74,14 +74,13 @@ public:
   PlaneSurface(std::shared_ptr<Transform3D>        htrans,
                std::shared_ptr<const PlanarBounds> pbounds);
 
-  /// Destructor
   virtual ~PlaneSurface();
 
   /// Assignment operator
   ///
   /// @param psf source PlaneSurface for assignment
   PlaneSurface&
-  operator=(const PlaneSurface& psf);
+  operator=(const PlaneSurface& other);
 
   /// Virtual constructor with optional shift
   /// ownership of the shift transform is not given !!
@@ -108,10 +107,7 @@ public:
 
   /// Return the surface type
   virtual SurfaceType
-  type() const override
-  {
-    return Surface::Plane;
-  }
+  type() const override;
 
   /// Return method for bounds object of this surfrace
   virtual const SurfaceBounds&
@@ -206,70 +202,12 @@ public:
 
   /// Return properly formatted class name for screen output
   virtual std::string
-  name() const override
-  {
-    return "Acts::PlaneSurface";
-  }
+  name() const override;
 
 protected:
   /// the bounds of this surface
   std::shared_ptr<const PlanarBounds> m_bounds;
 };
-
-inline PlaneSurface*
-PlaneSurface::clone(const Transform3D* shift) const
-{
-  if (shift) new PlaneSurface(*this, *shift);
-  return new PlaneSurface(*this);
-}
-
-inline const SurfaceBounds&
-PlaneSurface::bounds() const
-{
-  if (m_bounds) return (*m_bounds.get());
-  return s_noBounds;
-}
-
-inline const Vector3D
-PlaneSurface::normal(const Vector2D&) const
-{
-  // fast access via tranform matrix (and not rotation())
-  auto tMatrix = transform().matrix();
-  return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
-}
-
-inline const Vector3D PlaneSurface::binningPosition(BinningValue) const
-{
-  return center();
-}
-
-inline double
-PlaneSurface::pathCorrection(const Vector3D&, const Vector3D& mom) const
-{
-  /// we can ignore the global position here
-  return 1. / std::abs(normal().dot(mom.unit()));
-}
-
-inline Intersection
-PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
-                                   const Vector3D&      dir,
-                                   bool                 forceDir,
-                                   const BoundaryCheck& bcheck) const
-{
-  double denom = dir.dot(normal());
-  if (denom) {
-    double   u = (normal().dot((center() - gpos))) / (denom);
-    Vector3D intersectPoint(gpos + u * dir);
-    // evaluate the intersection in terms of direction
-    bool isValid = forceDir ? (u > 0.) : true;
-    // evaluate (if necessary in terms of boundaries)
-    isValid
-        = bcheck ? (isValid && isOnSurface(intersectPoint, bcheck)) : isValid;
-    // return the result
-    return Intersection(intersectPoint, u, isValid);
-  }
-  return Intersection(gpos, 0., false);
-}
 
 }  // end of namespace
 
