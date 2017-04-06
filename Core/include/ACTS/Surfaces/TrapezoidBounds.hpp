@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016 ACTS project team
+// Copyright (C) 2016-2017 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,6 +14,7 @@
 #define ACTS_SURFACES_TRAPEZOIDBOUNDS_H 1
 
 #include <cmath>
+
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
@@ -50,46 +51,16 @@ public:
   /// @param haley half length Y - defined at x=0
   TrapezoidBounds(double minhalex, double maxhalex, double haley);
 
-  /// Copy constructor
-  ///
-  /// @param trabo are the source bounds for assignment
-  TrapezoidBounds(const TrapezoidBounds& trabo)
-    : PlanarBounds(trabo), m_boundingBox(0., 0.)
-  {
-  }
-
-  /// Destructor
   virtual ~TrapezoidBounds();
 
-  /// Virtual constructor
   virtual TrapezoidBounds*
   clone() const final override;
 
-  /// Return the type of the bounds for persistency
   virtual BoundsType
-  type() const final
-  {
-    return SurfaceBounds::Trapezoid;
-  }
+  type() const final override;
 
-  /// Assignment operator
-  TrapezoidBounds&
-  operator=(const TrapezoidBounds& sbo);
-
-  ///  This method returns the minimal halflength in X
-  /// (first coordinate of local surface frame)
-  double
-  minHalflengthX() const;
-
-  /// This method returns the maximal halflength in X
-  /// (first coordinate of local surface frame)
-  double
-  maxHalflengthX() const;
-
-  /// This method returns the halflength in Y
-  /// (second coordinate of local surface frame)
-  double
-  halflengthY() const;
+  virtual std::vector<TDD_real_t>
+  valueStore() const final override;
 
   /// The orientation of the Trapezoid is according to the figure above,
   /// in words: the shorter of the two parallel sides of the trapezoid
@@ -134,40 +105,14 @@ public:
   ///
   /// @param lpos Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
-  ///
   /// @return boolean indicator for the success of this operation
   virtual bool
   inside(const Vector2D&      lpos,
          const BoundaryCheck& bcheck) const final override;
 
-  /// This method checks inside bounds in loc0
-  /// @note loc0/loc1 correspond to the natural coordinates of the surface
-  /// @note As loc0/loc1 are correlated the single check doesn't make sense :
-  ///       check is done on enclosing Rectangle !
-  ///
-  /// @param lpos is the local position to be checked
-  /// @param tol0 is the tolerance applied
-  ///
-  /// @return boolean indicator for the success of this operation
-  virtual bool
-  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const final override;
-
-  /// This method checks inside bounds in loc0
-  /// @note loc0/loc1 correspond to the natural coordinates of the surface
-  /// @note As loc0/loc1 are correlated the single check doesn't make sense :
-  ///   -> check is done on enclosing Rectangle !
-  ///
-  /// @param lpos is the local position to be checked
-  /// @param tol1 is the tolerance applied
-  ///
-  /// @return boolean indicator for the success of this operation
-  virtual bool
-  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const final override;
-
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lpos is the local position to check for the distance
-  ///
   /// @return is a signed distance parameter
   virtual double
   distanceToBoundary(const Vector2D& lpos) const final override;
@@ -186,54 +131,44 @@ public:
   virtual std::ostream&
   dump(std::ostream& sl) const final override;
 
-private:
-  RectangleBounds m_boundingBox;  ///< internal bounding box cache
-};
+  ///  This method returns the minimal halflength in X
+  /// (first coordinate of local surface frame)
+  double
+  minHalflengthX() const;
 
-inline TrapezoidBounds*
-TrapezoidBounds::clone() const
-{
-  return new TrapezoidBounds(*this);
-}
+  /// This method returns the maximal halflength in X
+  /// (first coordinate of local surface frame)
+  double
+  maxHalflengthX() const;
+
+  /// This method returns the halflength in Y
+  /// (second coordinate of local surface frame)
+  double
+  halflengthY() const;
+
+private:
+  double          m_minHalfX;
+  double          m_maxHalfX;
+  double          m_halfY;
+  RectangleBounds m_boundingBox;
+};
 
 inline double
 TrapezoidBounds::minHalflengthX() const
 {
-  return m_valueStore[TrapezoidBounds::bv_minHalfX];
+  return m_minHalfX;
 }
 
 inline double
 TrapezoidBounds::maxHalflengthX() const
 {
-  return m_valueStore[TrapezoidBounds::bv_maxHalfX];
+  return m_maxHalfX;
 }
 
 inline double
 TrapezoidBounds::halflengthY() const
 {
-  return m_valueStore[TrapezoidBounds::bv_halfY];
-}
-
-inline bool
-TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
-{
-  return bcheck.isInsidePolygon(lpos, vertices());
-}
-
-inline const std::vector<Vector2D>
-TrapezoidBounds::vertices() const
-{
-  // counter-clockwise from bottom-right corner
-  return {{minHalflengthX(), -halflengthY()},
-          {maxHalflengthX(), halflengthY()},
-          {-maxHalflengthX(), halflengthY()},
-          {-minHalflengthX(), -halflengthY()}};
-}
-
-inline const RectangleBounds&
-TrapezoidBounds::boundingBox() const
-{
-  return m_boundingBox;
+  return m_halfY;
 }
 
 }  // end of namespace
