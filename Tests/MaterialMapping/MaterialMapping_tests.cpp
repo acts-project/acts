@@ -13,6 +13,7 @@
 #include "ACTS/Material/MaterialProperties.hpp"
 #include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
 #include "ACTS/Plugins/MaterialPlugins/MaterialMapping.hpp"
+#include "ACTS/Plugins/MaterialPlugins/AssignedMaterialSteps.hpp"
 
 namespace Acts {
 
@@ -35,10 +36,10 @@ namespace Test {
     /// quick check on length
     BOOST_CHECK_EQUAL(5ul, detPositions.size());
     /// now create the assigned steps
-    std::vector<AssignedSteps> assignedStepsVector;
+    std::vector<AssignedMaterialSteps> assignedStepsVector;
     for (size_t ias = 0; ias < detPositions.size(); ++ias)
       assignedStepsVector.push_back(
-          AssignedSteps(assignID[ias], detPositions[ias]));
+          AssignedMaterialSteps(assignID[ias], detPositions[ias]));
 
     ///
     /// (b) material
@@ -80,6 +81,9 @@ namespace Test {
     BOOST_CHECK_EQUAL(110ul, assignedStepsVector[3].assignedSteps.size());
     /// 201 to 350
     BOOST_CHECK_EQUAL(150ul, assignedStepsVector[4].assignedSteps.size());
+
+
+    
   }
 
 }  // end of namespace Test

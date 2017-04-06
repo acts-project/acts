@@ -21,10 +21,9 @@ Acts::TrackingGeometry::TrackingGeometry(MutableTrackingVolumePtr highestVolume)
   : m_world(highestVolume)
   , m_beam(std::make_unique<const PerigeeSurface>(s_origin))
 {
-  // create the GeometryID for this
-  GeometryID geoID(0);
   // close up the geometry
-  if (highestVolume) highestVolume->closeGeometry(geoID, m_trackingVolumes);
+  size_t volumeID = 0;
+  if (m_world) m_world->closeGeometry(m_trackingVolumes, volumeID);
 }
 
 Acts::TrackingGeometry::~TrackingGeometry()

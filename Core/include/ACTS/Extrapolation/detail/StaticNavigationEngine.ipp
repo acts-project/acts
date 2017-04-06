@@ -314,7 +314,7 @@ Acts::StaticNavigationEngine::handleBoundaryT(
       // - SuccessMaterialLimit  : material limit reached & configured to stop
       // there
       eCode = m_cfg.materialEffectsEngine->handleMaterial(
-          eCell, pDir, fullUpdate);
+          eCell, &bSurface, pDir, fullUpdate);
       CHECK_ECODE_SUCCESS(eCell, eCode);
     }
     // break if configured to break at volume boundary and signature change

@@ -16,6 +16,7 @@
 #include "ACTS/Material/BinnedSurfaceMaterial.hpp"
 #include "ACTS/Material/MaterialProperties.hpp"
 #include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
+#include "ACTS/Plugins/MaterialPlugins/AssignedMaterialSteps.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
 
 namespace Acts {
@@ -24,7 +25,7 @@ class Surface;
 
 typedef std::pair<MaterialProperties, size_t> RecordBin;
 typedef std::vector<RecordBin>                RecordVector;
-typedef std::vector<std::vector<RecordBin>>   MaterialRecord;
+typedef std::vector<RecordVector>             MaterialRecord;
 
 /// @class SurfaceMaterialRecord
 ///
@@ -75,7 +76,7 @@ public:
   /// @param materialSteps the material steps of a track which should be
   /// added at the given position
   void
-  assignMaterialSteps(const AssignedSteps& aSteps);
+  assignMaterialSteps(const AssignedMaterialSteps& aSteps);
 
   /// @return the surface pointer
   const Surface&
@@ -91,7 +92,7 @@ public:
   /// @return the full MaterialRecord
   const MaterialRecord&
   mappedMaterial() const;
-
+  
 private:
   /// remember the Surface
   const Surface* m_surface;

@@ -12,17 +12,25 @@
 
 #include "ACTS/Material/SurfaceMaterialProxy.hpp"
 
-Acts::SurfaceMaterialProxy::SurfaceMaterialProxy(std::shared_ptr<const BinUtility> binUtility)
-  : Acts::SurfaceMaterial()
-  , m_binUtility(binUtility)
+Acts::SurfaceMaterialProxy::SurfaceMaterialProxy()
+  : SurfaceMaterial()
+  , m_binUtility(nullptr)
+{
+}
+
+Acts::SurfaceMaterialProxy::SurfaceMaterialProxy(const BinUtility& binUtility)
+  : SurfaceMaterial()
+  , m_binUtility(std::make_unique<BinUtility>(binUtility))
 {
 }
 
 Acts::SurfaceMaterialProxy::SurfaceMaterialProxy(
     const SurfaceMaterialProxy& smproxy)
-  : Acts::SurfaceMaterial()
-  , m_binUtility(smproxy.m_binUtility)
+  : SurfaceMaterial()
+  , m_binUtility(nullptr)
 {
+  if (smproxy.m_binUtility)
+    m_binUtility = std::make_unique<BinUtility>(*smproxy.m_binUtility);
 }
 
 Acts::SurfaceMaterialProxy*

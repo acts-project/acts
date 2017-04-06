@@ -10,14 +10,16 @@
 // MaterialMapping.h, ACTS project MaterialPlugins
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_MATERIALPLUGINS_MATERIALMAPPIN_H
-#define ACTS_MATERIALPLUGINS_MATERIALMAPPIN_H 1
+#ifndef ACTS_MATERIALPLUGINS_MATERIALMAPPING_H
+#define ACTS_MATERIALPLUGINS_MATERIALMAPPING_H 1
 
 #include <map>
 #include <utility>
 #include "ACTS/Extrapolation/IExtrapolationEngine.hpp"
 #include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
 #include "ACTS/Plugins/MaterialPlugins/MaterialTrackRecord.hpp"
+#include "ACTS/Plugins/MaterialPlugins/AssignedMaterialSteps.hpp"
+#include "ACTS/Plugins/MaterialPlugins/SurfaceMaterialRecord.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
 
@@ -26,7 +28,6 @@ namespace Acts {
 class Surface;
 class TrackingGeometry;
 class MaterialProperties;
-class SurfaceMaterialRecord;
 
 /// @class MaterialMapping
 ///
@@ -83,8 +84,18 @@ public:
   /// 
   /// This is the cache object used for calling the mapping method
   struct Cache {
+    
     /// object which connects the layer with its SurfaceMaterialRecord
     std::map<GeometryID, SurfaceMaterialRecord> surfaceMaterialRecords;
+    
+    // counter in case one wants to combine output from several jobs
+    size_t trackRecordCounter;
+    
+    /// Constructor from a new map
+    Cache(std::map<GeometryID, SurfaceMaterialRecord> smr)
+      : surfaceMaterialRecords(std::move(smr))
+      , trackRecordCounter(0)
+    {}
     
   };
 
@@ -101,9 +112,10 @@ public:
 
   /// @brief helper method that creates the cache for the mapping
   ///
-  /// This method takes a TrackingGeometry, finds all surfaces with
-  /// material proxis 
-  std::map<GeometryID, SurfaceMaterialRecord >
+  /// This method takes a TrackingGeometry, 
+  /// finds all surfaces with material proxis 
+  /// and returns you a Cache object ot be used 
+  Cache
   materialMappingCache(const TrackingGeometry& tGeometry) const;
   
   /// maps the material for the given direction(eta,phi) onto the layers of the
@@ -122,7 +134,14 @@ public:
   /// @param assignedSteps are the Tracking geometry associated points
   void
   assignSteps(const std::vector<MaterialStep>& materialSteps,
-              std::vector< AssignedSteps >& assignedSteps) const;
+              std::vector< AssignedMaterialSteps >& assignedSteps) const;
+  
+  /// creates the final surface material records
+  ///
+  /// @param mappingCache
+  std::map<GeometryID, SurfaceMaterial*> 
+  createSurfaceMaterial(Cache& mappingCache) const;
+  
   
   /// set logging instance
   ///

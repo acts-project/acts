@@ -25,6 +25,8 @@
 #include "ACTS/Utilities/Helpers.hpp"
 #include "ACTS/Utilities/GeometryObjectSorter.hpp"
 #include "ACTS/Material/SurfaceMaterialProxy.hpp"
+#include "ACTS/Material/SurfaceMaterial.hpp"
+#include "ACTS/Material/BinnedSurfaceMaterial.hpp"
 #include <climits>
 
 Acts::MaterialMapping::MaterialMapping(const Config&           cfg,
@@ -48,18 +50,27 @@ Acts::MaterialMapping::setLogger(std::unique_ptr<Logger> newLogger)
   m_logger = std::move(newLogger);
 }
 
-std::map<Acts::GeometryID, Acts::SurfaceMaterialRecord>
+Acts::MaterialMapping::Cache
 Acts::MaterialMapping::materialMappingCache(
     const TrackingGeometry& tGeometry) const
 {
   // parse the geometry and find all surfaces with material proxies
   auto world = tGeometry.highestTrackingVolume();
   // create the map
-  std::map<Acts::GeometryID, SurfaceMaterialRecord> sMap;
+  std::map<GeometryID, SurfaceMaterialRecord> sMap;
   // fill it
   collectMaterialSurfaces(sMap, *world);
+  
+  ACTS_DEBUG(sMap.size() <<  " Surfaces with PROXIES collected ... ");
+  for (auto& smg : sMap) {
+    //print out the information
+    size_t volumeID  = smg.first.value(GeometryID::volume_mask);
+    size_t layerID   = smg.first.value(GeometryID::layer_mask);
+    ACTS_VERBOSE(" -> Surface in volume " << volumeID 
+                         << " for layer " << layerID);
+  }  
   // return it
-  return sMap;
+  return MaterialMapping::Cache(sMap);
 }
 
 bool
@@ -73,18 +84,21 @@ Acts::MaterialMapping::mapMaterialTrackRecord(
   auto     spos  = trackRecord.position();
   Vector3D vertex(spos.x, spos.y, spos.z);
 
+  // counter for track reconrds
+  mappingCache.trackRecordCounter++;
+
   // get the steps from the detailed geometry
   std::vector<MaterialStep> materialSteps = trackRecord.materialSteps();
 
   // get the steps from the tracking geometry
-  std::vector<AssignedSteps> assignedSteps;
+  std::vector<AssignedMaterialSteps> assignedSteps;
 
   // let's extrapolate through the ACTS detector and record all surfaces
   // that have a material proxy
   if (materialSteps.size()) {
     // get the number of materialsteps
     ACTS_DEBUG("Successfuly retrieved " << materialSteps.size()
-                                        << "materialSteps");
+                                        << " materialSteps");
     // propagate through the detector and collect the layers hit in the given
     // direction eta phi
     // calculate the direction in cartesian coordinates
@@ -92,9 +106,7 @@ Acts::MaterialMapping::mapMaterialTrackRecord(
         cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));
     // create the beginning neutral parameters to extrapolate through the
     // geometry
-    // std::unique_ptr<ActsSymMatrixD<NGlobalPars>> cov;
-    Acts::NeutralCurvilinearParameters startParameters(
-        nullptr, vertex, direction);
+    NeutralCurvilinearParameters startParameters(nullptr, vertex, direction);
     // create a neutral extrapolation cell and configure it:
     // - to collect surfaces with a SurfaceMaterialProxy
     // - to step at the detector boundary
@@ -106,59 +118,138 @@ Acts::MaterialMapping::mapMaterialTrackRecord(
     ecc.addConfigurationMode(ExtrapolationMode::CollectMaterial);
     // call the extrapolation engine
     // screen output
-    ACTS_DEBUG("===> forward extrapolation - collecting material layers <<===");
+    ACTS_DEBUG("===> forward extrapolation - collecting intersections <<===");
     // call the extrapolation engine
     ExtrapolationCode eCode = m_cfg.extrapolationEngine->extrapolate(ecc);
     // end parameter, if there
     if (eCode.isSuccess()) {
       // number of layers hit
       size_t nSurfacesHit = ecc.extrapolationSteps.size();
-      ACTS_VERBOSE("[+] Extrapolation to layers did succeed and found "
+      ACTS_VERBOSE("[+] Extrapolation succeeded resulting in "
                    << nSurfacesHit
-                   << " layers.");
+                   << " intersected surfaces.");
       // loop over the collected information
       for (auto& es : ecc.extrapolationSteps) {
         if (es.configuration.checkMode(ExtrapolationMode::CollectMaterial)) {
           // geo ID from the surface
-          GeometryID assignID = es.parameters->referenceSurface().geoID();
-          // the position corrected by the start position
-          const Vector3D& position = es.parameters->position();
+          GeometryID assignID = es.surface->geoID();
+          // more screen output for debugging
+          ACTS_VERBOSE("Material proxy found on surface with ID " << assignID.value());
           // collect the assigned ones
-          assignedSteps.push_back(AssignedSteps(assignID, position));
+          assignedSteps.push_back(AssignedMaterialSteps(assignID, es.position));
         }
-        // continue if we have parameters
-      }  // loop over extrapolationsteps
-    }    // extrapolation success
-  }      // stepCollection
+      } // loop over extrapolationsteps
+    } // extrapolation success
+
+    // now check how many have been assigned
+    ACTS_VERBOSE("[+] Selected " << assignedSteps.size() << " for mapping.")
+    
+  } // stepCollection
 
   // run the step assignment
   assignSteps(materialSteps, assignedSteps);
 
   // and now we fill it into the record
   for (auto& aSteps : assignedSteps) {
-    mappingCache.surfaceMaterialRecords[aSteps.assignedGeoID]
-        .assignMaterialSteps(aSteps);
+    /// panic if the assignedGeoID is not in the mappingCache
+    if (mappingCache.surfaceMaterialRecords.find(aSteps.assignedGeoID)
+        == mappingCache.surfaceMaterialRecords.end()){
+      // that deserves a WARNING
+      ACTS_WARNING("[-] Material surface with " 
+                   <<  aSteps.assignedGeoID.value() << " not found in cache.");
+      continue;
+      
+    } else
+    mappingCache.surfaceMaterialRecords[aSteps.assignedGeoID].assignMaterialSteps(aSteps);
   }
-  //
+
+  
   return true;
+}
+
+std::map<Acts::GeometryID, Acts::SurfaceMaterial*> 
+Acts::MaterialMapping::createSurfaceMaterial(Cache& mappingCache) const 
+{
+  // the return map for the surface material
+  std::map<GeometryID, SurfaceMaterial*> surfaceMaterialMap;
+  ACTS_DEBUG("Creating material maps for surfaces");
+  // let's loop over the surface material records and create the corresponding maps
+  for (auto& smr : mappingCache.surfaceMaterialRecords){
+    // get the corresponding GeometryID
+    GeometryID surfaceID = smr.first;
+    // some more screen output
+    ACTS_DEBUG(" -> Volume | Layer | Approach | Sensitive  "
+               << surfaceID.value(GeometryID::volume_mask) << " | "
+               << surfaceID.value(GeometryID::layer_mask)  << " | "
+               << surfaceID.value(GeometryID::approach_mask) << " | "
+               << surfaceID.value(GeometryID::sensitive_mask));
+    // get the BinUtility
+    const BinUtility& bUtility = smr.second.binUtility();
+    // get the mapped material
+    const MaterialRecord& mMaterial = smr.second.mappedMaterial();
+    // the size of the map to be created
+    size_t bins0 = bUtility.bins(0);
+    size_t bins1 = bUtility.bins(1);
+    // even more screen output
+    ACTS_VERBOSE(" -> Material matrix with [ " << bins0 << " x " <<  bins1 << " ] bins" );
+    // prepare the matrix
+    MaterialPropertiesVector mVector(bins0,nullptr);
+    MaterialPropertiesMatrix mMatrix(bins1,mVector);
+    // fill the matrix
+    for (size_t i1 = 0; i1 < bins1; ++i1){
+      for (size_t i0 = 0; i0 < bins0; ++i0 ){
+        // default is nullptr
+        MaterialProperties* binMaterial = nullptr;
+        // get what you have
+        size_t mappingHits = mMaterial[i1][i0].second;
+        if (mappingHits){
+          // the statistical scalor
+          double statScalor = 1./double(mappingHits);
+          // very verbose screen output
+          ACTS_VERBOSE(" --[ " << i0 << " x " << i1 << " ] has " << mappingHits << " entries");
+          // take the mapped material 
+          MaterialProperties matProperties = mMaterial[i1][i0].first;
+          double thickness = statScalor*matProperties.thickness();
+          double rho       = statScalor*matProperties.averageRho();
+          double A         = statScalor*matProperties.averageA();
+          double Z         = statScalor*matProperties.averageZ();
+          double tInX0     = statScalor*matProperties.thicknessInX0();
+          double tInL0     = statScalor*matProperties.thicknessInL0();
+          // recreate X0, L0 
+          float x0 = (thickness != 0. && tInX0 != 0.) ? thickness / tInX0 : 0.;
+          float l0 = (thickness != 0. && tInL0 != 0.) ? thickness / tInL0 : 0.;
+          // create the new material (with statistical weights)
+          binMaterial = new MaterialProperties(x0, l0, A, Z, rho, thickness);
+        }
+        mMatrix[i1][i0] = binMaterial;
+      }
+    }
+    // create surface material
+    surfaceMaterialMap[surfaceID] 
+      = new BinnedSurfaceMaterial(bUtility,
+                                  mMatrix,
+                                  0.,
+                                  mappingCache.trackRecordCounter);
+  }
+  // now return the material map  
+  return surfaceMaterialMap;
 }
 
 void
 Acts::MaterialMapping::assignSteps(
     const std::vector<MaterialStep>& materialSteps,
-    std::vector<AssignedSteps>&      assignedSteps) const
+    std::vector<AssignedMaterialSteps>& assignedSteps) const
 {
 
   // we will rely on the fact that the material steps are ordered
   // and so are the assigned steps
 
   // the iterators
-  std::vector<AssignedSteps>::iterator asIter      = assignedSteps.begin();
-  std::vector<AssignedSteps>::iterator asIterFlush = assignedSteps.begin();
-  std::vector<AssignedSteps>::iterator asIterLast  = assignedSteps.end()-1;
-  std::vector<AssignedSteps>::iterator asIterEnd   = assignedSteps.end();
+  std::vector<AssignedMaterialSteps>::iterator asIter      = assignedSteps.begin();
+  std::vector<AssignedMaterialSteps>::iterator asIterFlush = assignedSteps.begin();
+  std::vector<AssignedMaterialSteps>::iterator asIterLast  = assignedSteps.end()-1;
+  std::vector<AssignedMaterialSteps>::iterator asIterEnd   = assignedSteps.end();
 
-  size_t is = 0;
   // loop over the steps
   for (auto& mStep : materialSteps) {
     // start with infinity distance
@@ -201,6 +292,9 @@ Acts::MaterialMapping::collectMaterialSurfaces(
     std::map<GeometryID, SurfaceMaterialRecord>& sMap,
     const TrackingVolume& tVolume) const
 {
+  
+  ACTS_VERBOSE("Checking volume '" << tVolume.volumeName() 
+               << "' for material surfaces.")
   // check the boundary surfaces
   for (auto& bSurface : tVolume.boundarySurfaces())
     checkAndInsert(sMap, bSurface->surfaceRepresentation());
@@ -246,11 +340,18 @@ Acts::MaterialMapping::checkAndInsert(
   // check if the surface has a proxy
   if (surface.associatedMaterial()) {
     // we need a dynamic_cast to a surface material proxy
-    const SurfaceMaterialProxy* smp = dynamic_cast<const SurfaceMaterialProxy*>(
+    auto smp = dynamic_cast<const SurfaceMaterialProxy*>(
         surface.associatedMaterial());
-    if (smp)
-      sMap[surface.geoID()]
+    if (smp){
+      // get the geo id
+      auto geoID = surface.geoID();
+      size_t volumeID = geoID.value(GeometryID::volume_mask);
+      ACTS_VERBOSE("Material surface found with volumeID " << volumeID);
+      ACTS_VERBOSE("       - surfaceID is " << geoID.value());
+      sMap[geoID]
           = SurfaceMaterialRecord(surface, *smp->binUtility());
+
+      }
   }
 }
 

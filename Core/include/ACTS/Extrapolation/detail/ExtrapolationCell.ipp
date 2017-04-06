@@ -61,9 +61,6 @@ Acts::ExtrapolationCell<T>::stepMaterial(std::unique_ptr<const T>  stepParameter
     materialX0 += stepFactor * mprop->thicknessInX0();
     materialL0 += stepFactor * mprop->thicknessInL0();
   }  
-  // complete the step information
-  extrapolationSteps.back().position         = stepPosition;                                                  
-  extrapolationSteps.back().materialScaling  = stepFactor;
   // prepare the extrapolation mode
   std::vector<ExtrapolationMode::eMode> emode = {ExtrapolationMode::CollectMaterial};
   // check the last step if this is a potential update on
@@ -84,6 +81,10 @@ Acts::ExtrapolationCell<T>::stepMaterial(std::unique_ptr<const T>  stepParameter
                                                     stepConfig,
                                                     mprop,
                                                     nullptr));
+  // complete the step information
+  extrapolationSteps.back().position         = stepPosition;                                                  
+  extrapolationSteps.back().materialScaling  = stepFactor;                                                    
+                                                    
 
 }
 

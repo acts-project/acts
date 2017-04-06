@@ -16,9 +16,11 @@
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     const BinUtility&               binUtility,
     const MaterialPropertiesVector& fullProperties,
-    double                          splitFactor)
+    double                          splitFactor,
+    size_t                          entries)
   : SurfaceMaterial(splitFactor)
   , m_binUtility(binUtility)
+  , m_entries(entries)
 {
   // fill the material with deep copy
   m_fullMaterial.push_back(fullProperties);
@@ -27,10 +29,12 @@ Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     const BinUtility&               binUtility,
     const MaterialPropertiesMatrix& fullProperties,
-    double                          splitFactor)
+    double                          splitFactor,
+    size_t                          entries)
   : Acts::SurfaceMaterial(splitFactor)
   , m_binUtility(binUtility)
   , m_fullMaterial(fullProperties)
+  , m_entries(entries)
 {
 }
 
@@ -43,6 +47,7 @@ Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     const BinnedSurfaceMaterial& lmp)
   : SurfaceMaterial(lmp)
   , m_binUtility(lmp.m_binUtility)
+  , m_entries(lmp.m_entries)
 {
   // clear the material
   clearMaterial();
@@ -57,6 +62,7 @@ Acts::BinnedSurfaceMaterial::operator=(const BinnedSurfaceMaterial& lmp)
     // reassign
     SurfaceMaterial::operator=(lmp);
     m_binUtility = lmp.binUtility();
+    m_entries = lmp.m_entries;
     // clear
     clearMaterial();
     // reassign the material

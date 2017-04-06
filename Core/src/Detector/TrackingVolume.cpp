@@ -430,12 +430,14 @@ Acts::TrackingVolume::interlinkLayers()
 }
 
 void
-Acts::TrackingVolume::closeGeometry(
-    GeometryID& volumeID,
-    std::map<std::string, const TrackingVolume*>& volumeMap)
+Acts::TrackingVolume::closeGeometry(std::map<std::string, const TrackingVolume*>& volumeMap, size_t& vol) const
 {
-  // insert the volume into the map
+  // insert the volume into the map 
   volumeMap[volumeName()] = this;
+  
+  // we can construct the volume ID from this
+  GeometryID  volumeID(0);
+  volumeID.add(++vol, GeometryID::volume_mask);
 
   // A) this is NOT a container volume, volumeID is already incremented
   if (!m_confinedVolumes) {
@@ -473,20 +475,9 @@ Acts::TrackingVolume::closeGeometry(
     }
   } else {
     // B) this is a container volume, go through sub volume
-    // the counter upwards
-    geo_id_value ivolume = 0;
     // do the loop
-    for (auto& volumesIter : m_confinedVolumes->arrayObjects()) {
-      GeometryID currentID = volumeID;
-      // only increase the counter if it's not a container volume
-      if (!volumesIter->confinedVolumes()) {
-        /// we count the volume ID up
-        currentID.add(++ivolume, GeometryID::volume_mask);
-      }
-      auto mutableVolumesIter
-          = std::const_pointer_cast<TrackingVolume>(volumesIter);
-      mutableVolumesIter->closeGeometry(currentID, volumeMap);
-    }
+  for (auto& volumesIter : m_confinedVolumes->arrayObjects())
+      volumesIter->closeGeometry(volumeMap, vol);
   }
 
   // @todo update that

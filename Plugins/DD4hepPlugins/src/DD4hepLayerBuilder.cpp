@@ -128,14 +128,13 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
                         .z();
 
       // create the two dimensional BinUtility for the material map of the layer
-      Acts::BinUtility* materialBinUtil = nullptr;
       // if the layer should carry material it will be marked by assigning a
       // SurfaceMaterialProxy
       std::shared_ptr<const SurfaceMaterialProxy> materialProxy(nullptr);
       // the approachdescriptor telling where the material sits on the layer
       // (inner, middle, outer) Surface
       std::unique_ptr<Acts::ApproachDescriptor> approachDescriptor = nullptr;
-      // material position on the layer can be inner, outer or center and will
+      // material position on the layer canbe inner, outer or center and will
       // be accessed from the ActsExtensions
       Acts::LayerMaterialPos layerPos = LayerMaterialPos::inner;
       // check if layer should have material
@@ -143,13 +142,13 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
         std::pair<size_t, size_t> materialBins = detExtension->materialBins();
         size_t bins1    = materialBins.first;
         size_t bins2    = materialBins.second;
-        materialBinUtil = new Acts::BinUtility(
+        Acts::BinUtility materialBinUtil(
             bins1, -M_PI, M_PI, Acts::closed, Acts::binPhi);
-        (*materialBinUtil) += Acts::BinUtility(
+        materialBinUtil += Acts::BinUtility(
             bins2, rMin, rMax, Acts::open, Acts::binR, transform);
         // and create material proxy to mark layer for material mapping
         materialProxy
-            = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
+        = std::make_shared<const SurfaceMaterialProxy>(materialBinUtil);
         // access the material position
         layerPos = detExtension->layerMaterialPosition();
         ACTS_VERBOSE(

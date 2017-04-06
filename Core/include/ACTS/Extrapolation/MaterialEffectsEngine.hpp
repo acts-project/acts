@@ -70,24 +70,30 @@ public:
   /// Public charged material effects interface
   ///
   /// @param ecCharged is the charged extrapolaiton cell
+  /// @param msurface is the (optional) material surface
+  ///        - this is for curvilinear parameters
   /// @param dir is the additional direction prescription
   /// @param matupstage is the update stage (pre/full/post)
   ///
   /// @return extrapolation code to indicate progress
   ExtrapolationCode
   handleMaterial(ExCellCharged&      ecCharged,
+                 const Surface*      msurface   = nullptr, 
                  PropDirection       dir        = alongMomentum,
                  MaterialUpdateStage matupstage = fullUpdate) const final;
 
   /// Public neutral material effects interface
   ///
   /// @param ecNeutral is the neutral extrapolaiton cell
+  /// @param msurface is the (optional) material surface
+  ///        - this is for curvilinear parameters
   /// @param dir is the additional direction prescription
   /// @param matupstage is the update stage (pre/full/post)
   ///
   /// @return extrapolation code to indicate progress
   ExtrapolationCode
   handleMaterial(ExCellNeutral&      ecNeutral,
+                 const Surface*      msurface   = nullptr, 
                  PropDirection       dir        = alongMomentum,
                  MaterialUpdateStage matupstage = fullUpdate) const final;
 
@@ -122,6 +128,9 @@ private:
 
   ///  charged extrapolation
   ///  depending on the MaterialUpdateStage:
+  /// 
+  /// @param eCell the charged estrapolation cell
+  /// @param mSurface the surface 
   ///    - postUpdate : creates a new unique_ptr and stores them as step
   /// parameters
   ///    - preUpdate | fullUpdate : manipulates the parameters and returns a
@@ -129,8 +138,11 @@ private:
   ///   nothing to do (e.g. no material) : return nullptr */
   void
   updateTrackParameters(ExCellCharged&         eCell,
+                        const Surface&         mSurface,
                         PropDirection          dir,
-                        MaterialUpdateStage    matupstage) const;
+                        MaterialUpdateStage    matupstage,
+                        const std::string&     surfaceType,
+                        size_t                 surfaceID) const;
 
   MaterialInteraction m_interactionFormulae;  //!< the formulas concentrated
   ParticleMasses      m_particleMasses;       //!< struct of Particle masses

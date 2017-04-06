@@ -87,5 +87,18 @@ namespace Test {
     //  totalFraction += eFraction.fraction();
     // BOOST_CHECK_CLOSE(1., totalFraction, 2*elMaxTolerance);
   }
+  
+  BOOST_AUTO_TEST_CASE(Material_boolean_test)
+  {
+    
+    Material vacuum;
+    BOOST_CHECK_EQUAL(bool(vacuum), false);
+    
+    Material something(1.,2.,3.,4.,5);
+    BOOST_CHECK_EQUAL(bool(something), true);
+    
+    
+  }
+  
 }
 }

@@ -18,7 +18,7 @@
                         << std::setw(12)                                       \
                         << step                                                \
                         << m_sopPostfix                                        \
-                        << std::setw(4)                                        \
+                        << std::setw(6)                                        \
                         << idx                                                 \
                         << m_sopPostfix                                        \
                         << x)
@@ -27,7 +27,7 @@
                          << std::setw(12)                                      \
                          << step                                               \
                          << m_sopPostfix                                       \
-                         << std::setw(4)                                       \
+                         << std::setw(6)                                       \
                          << idx                                                \
                          << m_sopPostfix                                       \
                          << x)
@@ -36,7 +36,7 @@
                            << std::setw(12)                                    \
                            << step                                             \
                            << m_sopPostfix                                     \
-                           << std::setw(4)                                     \
+                           << std::setw(6)                                     \
                            << idx                                              \
                            << m_sopPostfix                                     \
                            << x)
@@ -45,7 +45,7 @@
                            << std::setw(12)                                    \
                            << step                                             \
                            << m_sopPostfix                                     \
-                           << std::setw(4)                                     \
+                           << std::setw(6)                                     \
                            << idx                                              \
                            << m_sopPostfix                                     \
                            << x)
@@ -54,7 +54,7 @@
                          << std::setw(12)                                      \
                          << step                                               \
                          << m_sopPostfix                                       \
-                         << std::setw(4)                                       \
+                         << std::setw(6)                                       \
                          << idx                                                \
                          << m_sopPostfix                                       \
                          << x)

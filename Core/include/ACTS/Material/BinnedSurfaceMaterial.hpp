@@ -42,9 +42,12 @@ public:
   ///
   /// @param binUtility defines the binning structure on the surface
   /// @param fullProperties is the vector of properties as recorded
+  /// @param splitFactor is the pre/post splitting directive
+  /// @param entries is the (optional) number of mapping entries
   BinnedSurfaceMaterial(const BinUtility&               binUtility,
                         const MaterialPropertiesVector& fullProperties,
-                        double                          splitFactor = 0.);
+                        double                          splitFactor = 0.,
+                        size_t entries = 1);
 
   /// Explizit constructor with only full MaterialProperties,
   /// for two-dimensional binning.
@@ -56,9 +59,12 @@ public:
   ///
   /// @param binUtility defines the binning structure on the surface
   /// @param fullProperties is the vector of properties as recorded
+  /// @param splitFactor is the pre/post splitting directive
+  /// @param entries is the (optional) number of mapping entries
   BinnedSurfaceMaterial(const BinUtility&               binutility,
                         const MaterialPropertiesMatrix& fullProperties,
-                        double                          splitFactor = 0.);
+                        double                          splitFactor = 0.,
+                        size_t entries = 1);
 
   /// Copy Constructor 
   ///
@@ -101,16 +107,24 @@ public:
   /// @copydoc SurfaceMaterial::material(size_t, size_t)
   const MaterialProperties*
   material(size_t bin0, size_t bin1) const final override;
+  
+  /// access to the entries
+  /// this is needed for averageing mapps
+  const size_t entries() const;
 
   /// Output Method for std::ostream, to be overloaded by child classes 
   std::ostream&
   dump(std::ostream& sl) const final override;
 
 private:
-  BinUtility  m_binUtility;//!< the helper for the bin finding
+  /// The helper for the bin finding
+  BinUtility               m_binUtility;
 
   /// The five different MaterialProperties 
   MaterialPropertiesMatrix m_fullMaterial;
+  
+  /// The number of entries used
+  size_t                   m_entries;
 
   /// helper method - to clear the material
   void
@@ -136,7 +150,13 @@ BinnedSurfaceMaterial::fullMaterial() const
 inline const MaterialProperties*
 BinnedSurfaceMaterial::material(size_t bin0, size_t bin1) const
 {
-  return m_fullMaterial.at(bin1).at(bin0);
+  return m_fullMaterial[bin1][bin0];
+}
+
+inline const size_t 
+BinnedSurfaceMaterial::entries() const
+{
+  return m_entries;
 }
 
 }

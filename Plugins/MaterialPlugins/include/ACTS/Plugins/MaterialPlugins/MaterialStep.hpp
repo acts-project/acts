@@ -15,7 +15,10 @@
 
 #include <memory>
 #include "ACTS/Material/MaterialProperties.hpp"
-#include "ACTS/Utilities/GeometryID.hpp"
+
+#if !defined(__CLING__)
+#include "ACTS/Utilities/Definitions.hpp"
+#endif
 
 namespace Acts {
 
@@ -56,13 +59,15 @@ public:
     
     /// Copy Constructor
     Position(const Position& pos) : x(pos.x), y(pos.y), z(pos.z) {}
-    
+
+#if !defined(__CLING__)
     /// Constructor from Vector3D
     Position(const Vector3D& pos) : x(pos.x()), y(pos.y()), z(pos.z()) {}
        
     /// assignment operator from Vector3D
     Position& operator=(const Vector3D& pos)
     { x = pos.x(); y = pos.y(); z = pos.z(); return (*this); }
+#endif
     
   };
   
@@ -107,27 +112,7 @@ private:
   MaterialProperties m_material;
 };
 
-
-/// This struct is used to assign a MaterialStep to a mapped position
-///
-struct AssignedSteps {
-
-  GeometryID                assignedGeoID;     ///!< this is the geo ID of the assigned surface
-  Vector3D                  assignedPosition;  ///!< this is the position of intersection
-  std::vector<MaterialStep> assignedSteps;     ///!< this is step information
-  
-  // simple constructor
-  AssignedSteps(GeometryID geoID = GeometryID(),
-                const Vector3D& position = Vector3D(0.,0.,0),
-                const std::vector<MaterialStep>& steps = {})
-  : assignedGeoID(geoID)
-  , assignedPosition(position)
-  , assignedSteps(steps)
-  {}
-  
-};
-
-}
+} /// end of namespace
 
 inline const Acts::MaterialStep::Position
 Acts::MaterialStep::position() const
