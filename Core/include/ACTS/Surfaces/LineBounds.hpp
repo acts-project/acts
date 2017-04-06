@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016 ACTS project team
+// Copyright (C) 2016-2017 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -36,30 +36,16 @@ public:
   /// @param halez is the half length in z, defualt = 0.
   LineBounds(double radius = 0., double halez = 0.);
 
-  /// Copy constructor
-  /// calls teh base copy constructor
-  ///
-  /// @param libo are the source bounds
-  LineBounds(const LineBounds& libo) : SurfaceBounds(libo) {}
-  /// Destructor
   virtual ~LineBounds();
 
-  /// Assignment operator
-  ///
-  /// @param libo are the source bounds
-  LineBounds&
-  operator=(const LineBounds& libo);
-
-  /// Virtual constructor
   virtual LineBounds*
   clone() const final override;
 
-  /// Return of the bounds type
   virtual BoundsType
-  type() const final override
-  {
-    return SurfaceBounds::Line;
-  }
+  type() const final override;
+
+  virtual std::vector<TDD_real_t>
+  valueStore() const final override;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -72,26 +58,6 @@ public:
   virtual bool
   inside(const Vector2D&      lpos,
          const BoundaryCheck& bcheck) const final override;
-
-  /// Inside check for the bounds object with tolerance
-  /// checks for first coordinate only.
-  ///
-  /// @param lpos Local position (assumed to be in right surface frame)
-  /// @param tol0 absolute tolerance parameter
-  ///
-  /// @return boolean indicator for the success of this operation
-  virtual bool
-  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const final override;
-
-  /// Inside check for the bounds object with tolerance
-  /// checks for second coordinate only.
-  ///
-  /// @param lpos Local position (assumed to be in right surface frame)
-  /// @param tol1 absulote tolerance parameter
-  ///
-  /// @return boolean indicator for the success of this operation
-  virtual bool
-  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const final override;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
@@ -116,111 +82,19 @@ public:
   dump(std::ostream& sl) const final override;
 
 private:
-  /// private helper method
-  ///
-  /// @param r is the radius to be checked
-  /// @param tol0 is the tolerance on the radius
-  ///
-  /// @return is a boolean indicating the operation success
-  bool
-  insideLocR(double r, double tol0) const;
-
-  /// private helper method
-  ///
-  /// @param z is the a position to be checked
-  /// @param tol1 is the tolerance on z
-  ///
-  /// @return is a boolean indicating the operation success
-  bool
-  insideLocZ(double z, double tol1) const;
-
-  /// private method for inside check
-  ///
-  /// @param lpos is the local position to check for the distance
-  /// @param tol0 is the tolerance on the radius
-  /// @param tol1 is the tolerance on z
-  ///
-  /// @return is a boolean indicating the operation success
-  bool
-  inside(const Vector2D& lpos, double tol0, double tol1) const;
+  double m_radius, m_halfZ;
 };
-
-inline LineBounds*
-LineBounds::clone() const
-{
-  return new LineBounds(*this);
-}
-
-inline bool
-LineBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
-{
-  // fast exit - this is a public interface method
-  if (!m_valueStore.size()) return true;
-  // check with tolerance
-  if (bcheck.bcType == 0 || bcheck.nSigmas == 0)
-    return LineBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
-  // ellipsoid check
-  float theta
-      = (bcheck.lCovariance(1, 0) != 0
-         && (bcheck.lCovariance(1, 1) - bcheck.lCovariance(0, 0)) != 0)
-      ? .5 * std::atan(
-                 2 * bcheck.lCovariance(1, 0)
-                 / (bcheck.lCovariance(1, 1) - bcheck.lCovariance(0, 0)))
-      : 0.;
-  double sinTheta = std::sin(theta);
-  double cosTheta = std::cos(theta);
-  double dphi     = sinTheta * sinTheta * bcheck.lCovariance(0, 0);
-  double dz       = cosTheta * cosTheta * bcheck.lCovariance(0, 1);
-  double max_ell  = dphi > dz ? dphi : dz;
-  double limit    = bcheck.nSigmas * sqrt(max_ell);
-  return insideLocZ(lpos[Acts::eLOC_Z], limit);
-}
-
-inline bool
-LineBounds::insideLoc0(const Vector2D& lpos, double tol0) const
-{
-  // fast exit - this is a public interface method
-  if (!m_valueStore.size()) return true;
-  return insideLocR(lpos[Acts::eLOC_R], tol0);
-}
-
-inline bool
-LineBounds::insideLoc1(const Vector2D& lpos, double tol1) const
-{
-  // fast exit - this is a public interface method
-  if (!m_valueStore.size()) return true;
-  return insideLocZ(lpos[Acts::eLOC_Z], tol1);
-}
-
-inline bool
-LineBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
-{
-  return insideLocR(lpos[Acts::eLOC_R], tol0)
-      && insideLocZ(lpos[Acts::eLOC_Z], tol1);
-}
-
-inline bool
-LineBounds::insideLocR(double r, double tol0) const
-{
-  return std::abs(m_valueStore.at(LineBounds::bv_radius) - r) < tol0;
-}
-
-inline bool
-LineBounds::insideLocZ(double z, double tol1) const
-{
-  return (m_valueStore.at(LineBounds::bv_halfZ) + tol1) - std::abs(z) > 0.;
-}
 
 inline double
 LineBounds::r() const
 {
-  return m_valueStore.at(LineBounds::bv_radius);
+  return m_radius;
 }
 
 inline double
 LineBounds::halflengthZ() const
 {
-  return m_valueStore.at(LineBounds::bv_halfZ);
+  return m_halfZ;
 }
 
 }  // end of namespace

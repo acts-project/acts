@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016 ACTS project team
+// Copyright (C) 2016-2017 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,33 +11,51 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/LineBounds.hpp"
+
 #include <iomanip>
 #include <iostream>
 
-Acts::LineBounds::LineBounds(double radius, double halez) : SurfaceBounds()
+Acts::LineBounds::LineBounds(double radius, double halez)
+  : m_radius(std::abs(radius)), m_halfZ(std::abs(halez))
 {
-  if (radius != 0. || halez != 0.) {
-    m_valueStore.push_back(radius);
-    m_valueStore.push_back(halez);
-  }
 }
 
 Acts::LineBounds::~LineBounds()
 {
 }
 
-Acts::LineBounds&
-Acts::LineBounds::operator=(const Acts::LineBounds& libo)
+Acts::LineBounds*
+Acts::LineBounds::clone() const
 {
-  if (this != &libo) SurfaceBounds::operator=(libo);
-  return *this;
+  return new LineBounds(*this);
+}
+
+Acts::SurfaceBounds::BoundsType
+Acts::LineBounds::type() const
+{
+  return SurfaceBounds::Line;
+}
+
+std::vector<TDD_real_t>
+Acts::LineBounds::valueStore() const
+{
+  std::vector<TDD_real_t> values(LineBounds::bv_length);
+  values[LineBounds::bv_radius] = r();
+  values[LineBounds::bv_halfZ]  = halflengthZ();
+  return values;
+}
+
+bool
+Acts::LineBounds::inside(const Acts::Vector2D&      lpos,
+                         const Acts::BoundaryCheck& bcheck) const
+{
+  return bcheck.isInside(lpos, 0, r(), -halflengthZ(), halflengthZ());
 }
 
 double
 Acts::LineBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 {
-  // per definition the min Distance of a correct local position on the line is
-  // r
+  // per definition the min Distance of a correct local position is r
   return lpos[Acts::eLOC_R];
 }
 
