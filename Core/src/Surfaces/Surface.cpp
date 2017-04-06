@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/Surface.hpp"
+
 #include <iomanip>
 #include <iostream>
 
@@ -37,25 +38,25 @@ Acts::Surface::Surface(const Acts::DetectorElementBase& detelement,
 {
 }
 
-Acts::Surface::Surface(const Surface& sf)
+Acts::Surface::Surface(const Surface& other)
   : GeometryObject()
-  , m_transform(sf.m_transform)
+  , m_transform(other.m_transform)
   , m_associatedDetElement(nullptr)
   , m_associatedDetElementId()
   , m_associatedLayer(nullptr)
   , m_associatedTrackingVolume(nullptr)
-  , m_associatedMaterial(sf.m_associatedMaterial)
+  , m_associatedMaterial(other.m_associatedMaterial)
 {
 }
 
-Acts::Surface::Surface(const Surface& sf, const Acts::Transform3D& shift)
+Acts::Surface::Surface(const Surface& other, const Acts::Transform3D& shift)
   : GeometryObject()
   , m_transform(std::make_shared<Acts::Transform3D>(
-        Acts::Transform3D(shift * sf.transform())))
+        Acts::Transform3D(shift * other.transform())))
   , m_associatedDetElement(nullptr)
   , m_associatedDetElementId()
-  , m_associatedLayer(sf.m_associatedLayer)
-  , m_associatedMaterial(sf.m_associatedMaterial)
+  , m_associatedLayer(other.m_associatedLayer)
+  , m_associatedMaterial(other.m_associatedMaterial)
 {
 }
 
@@ -64,31 +65,31 @@ Acts::Surface::~Surface()
 }
 
 Acts::Surface&
-Acts::Surface::operator=(const Surface& sf)
+Acts::Surface::operator=(const Surface& other)
 {
-  if (&sf != this) {
-    GeometryObject::operator=(sf);
+  if (&other != this) {
+    GeometryObject::operator=(other);
     // detector element, identifier & layer association are unique
     m_transform              = m_transform;
     m_associatedDetElement   = nullptr;
     m_associatedDetElementId = Identifier();
     m_associatedLayer        = nullptr;
-    m_associatedMaterial     = sf.m_associatedMaterial;
+    m_associatedMaterial     = other.m_associatedMaterial;
   }
   return *this;
 }
 
 bool
-Acts::Surface::operator==(const Surface& sf) const
+Acts::Surface::operator==(const Surface& other) const
 {
   // (a) fast exit for pointer comparison
-  if (&sf == this) return true;
+  if (&other == this) return true;
   // (b) fast exit for type
-  if (sf.type() != type()) return false;
+  if (other.type() != type()) return false;
   // (c) fast exit for bounds
-  if (sf.bounds() != bounds()) return false;
+  if (other.bounds() != bounds()) return false;
   // (d) comapre transform
-  if (!sf.transform().isApprox(transform(), 10e-9)) return false;
+  if (!other.transform().isApprox(transform(), 10e-9)) return false;
   // we should be good
   return true;
 }
@@ -148,4 +149,41 @@ std::ostream&
 Acts::operator<<(std::ostream& sl, const Acts::Surface& sf)
 {
   return sf.dump(sl);
+}
+
+bool
+Acts::Surface::operator!=(const Acts::Surface& sf) const
+{
+  return !(operator==(sf));
+}
+
+const Acts::Transform3D&
+Acts::Surface::transform() const
+{
+  if (m_transform) return (*(m_transform.get()));
+  if (m_associatedDetElement && m_associatedDetElementId.is_valid())
+    return m_associatedDetElement->transform(m_associatedDetElementId);
+  if (m_associatedDetElement) return m_associatedDetElement->transform();
+  return s_idTransform;
+}
+
+const Acts::Vector3D
+Acts::Surface::center() const
+{
+  // fast access via tranform matrix (and not translation())
+  auto tMatrix = transform().matrix();
+  return Vector3D(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
+}
+
+const Acts::Vector3D
+Acts::Surface::normal(const Acts::Vector3D&) const
+{
+  return normal(s_origin2D);
+}
+
+bool
+Acts::Surface::insideBounds(const Acts::Vector2D&      locpos,
+                            const Acts::BoundaryCheck& bcheck) const
+{
+  return bounds().inside(locpos, bcheck);
 }
