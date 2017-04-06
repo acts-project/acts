@@ -11,20 +11,22 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/ConeSurface.hpp"
+
 #include <cassert>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+
 #include "ACTS/Surfaces/RealQuadraticEquation.hpp"
 
-Acts::ConeSurface::ConeSurface(const ConeSurface& csf)
-  : Surface(csf), m_bounds(csf.m_bounds)
+Acts::ConeSurface::ConeSurface(const ConeSurface& other)
+  : Surface(other), m_bounds(other.m_bounds)
 {
 }
 
-Acts::ConeSurface::ConeSurface(const ConeSurface& csf,
+Acts::ConeSurface::ConeSurface(const ConeSurface& other,
                                const Transform3D& transf)
-  : Surface(csf, transf), m_bounds(csf.m_bounds)
+  : Surface(other, transf), m_bounds(other.m_bounds)
 {
 }
 
@@ -68,12 +70,18 @@ Acts::ConeSurface::binningPosition(Acts::BinningValue bValue) const
   return center();
 }
 
-Acts::ConeSurface&
-Acts::ConeSurface::operator=(const ConeSurface& csf)
+Acts::Surface::SurfaceType
+Acts::ConeSurface::type() const
 {
-  if (this != &csf) {
-    Surface::operator=(csf);
-    m_bounds         = csf.m_bounds;
+  return Surface::Cone;
+}
+
+Acts::ConeSurface&
+Acts::ConeSurface::operator=(const ConeSurface& other)
+{
+  if (this != &other) {
+    Surface::operator=(other);
+    m_bounds         = other.m_bounds;
   }
   return *this;
 }
@@ -210,4 +218,50 @@ Acts::ConeSurface::pathCorrection(const Vector3D& gpos,
   // back in global frame
   double cAlpha = normalC.dot(mom.unit());
   return std::abs(1. / cAlpha);
+}
+
+std::string
+Acts::ConeSurface::name() const
+{
+  return "Acts::ConeSurface";
+}
+
+Acts::ConeSurface*
+Acts::ConeSurface::clone(const Acts::Transform3D* shift) const
+{
+  if (shift) new ConeSurface(*this, *shift);
+  return new ConeSurface(*this);
+}
+
+const Acts::Vector3D
+Acts::ConeSurface::normal(const Acts::Vector2D& lp) const
+{
+  // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
+  double phi = lp[Acts::eLOC_RPHI] / (bounds().r(lp[Acts::eLOC_Z])),
+         sgn = lp[Acts::eLOC_Z] > 0 ? -1. : +1.;
+  Vector3D localNormal(cos(phi) * bounds().cosAlpha(),
+                       sin(phi) * bounds().cosAlpha(),
+                       sgn * bounds().sinAlpha());
+  return m_transform ? Vector3D(transform().linear() * localNormal)
+                     : localNormal;
+}
+
+const Acts::Vector3D
+Acts::ConeSurface::normal(const Acts::Vector3D& gpos) const
+{
+  // get it into the cylinder frame if needed
+  // @todo respect opening angle
+  Vector3D pos3D = gpos;
+  if (m_transform || m_associatedDetElement) {
+    pos3D     = transform().inverse() * gpos;
+    pos3D.z() = 0;
+  }
+  return pos3D.unit();
+}
+
+const Acts::ConeBounds&
+Acts::ConeSurface::bounds() const
+{
+  // is safe because no constructor w/o bounds exists
+  return (*m_bounds.get());
 }

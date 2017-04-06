@@ -34,7 +34,6 @@ namespace Acts {
 class ConeSurface : public Surface
 {
 public:
-  /// Default constructor is deleted
   ConeSurface() = delete;
 
   /// Constructor form HepTransform and an opening angle
@@ -68,23 +67,22 @@ public:
 
   /// Copy constructor
   ///
-  /// @param csf is the source cone surface
-  ConeSurface(const ConeSurface& csf);
+  /// @param other is the source cone surface
+  ConeSurface(const ConeSurface& other);
 
   /// Copy constructor - with shift
   ///
-  /// @param csf is the source cone surface
+  /// @param other is the source cone surface
   /// @param htrans is the additional transfrom applied after copying
-  ConeSurface(const ConeSurface& csf, const Transform3D& htrans);
+  ConeSurface(const ConeSurface& other, const Transform3D& htrans);
 
-  /// Destructor
   virtual ~ConeSurface();
 
   /// Assignment operator
   ///
-  /// @param csf is the source surface for the assignment
+  /// @param other is the source surface for the assignment
   ConeSurface&
-  operator=(const ConeSurface& csf);
+  operator=(const ConeSurface& other);
 
   /// Implicit Constructor
   ///
@@ -94,19 +92,14 @@ public:
 
   /// The binning position method - is overloaded for r-type binning
   ///
-  /// @param bValue defines the type of binning to be applied in the global
-  /// frame
-  ///
+  /// @param bValue defines the type of binning applied in the global frame
   /// @return The return type is a vector for positioning in the global frame
   virtual const Vector3D
   binningPosition(BinningValue bValue) const final override;
 
   /// Return the surface type
   virtual SurfaceType
-  type() const override
-  {
-    return Surface::Cone;
-  }
+  type() const override;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   ///  for StraightLine and Perigee Surface
@@ -115,7 +108,6 @@ public:
   /// @param gpos is the global position where the measurement frame is
   /// constructed
   /// @param mom is the momentum used for the measurement frame construction
-  ///
   /// @return matrix that indicates the measurement frame
   const RotationMatrix3D
   measurementFrame(const Vector3D& gpos, const Vector3D& mom) const final;
@@ -124,7 +116,6 @@ public:
   ///
   /// @param lpos is the local position on the cone for which the normal vector
   /// is requested
-  ///
   /// @return Vector3D normal vector in global frame
   const Vector3D
   normal(const Vector2D& lpos) const final;
@@ -133,7 +124,6 @@ public:
   ///
   /// @param gpos is the global position on the cone for which the normal vector
   /// is requested
-  ///
   /// @return Vector3D normal vector in global frame
   const Vector3D
   normal(const Vector3D& gpos) const final;
@@ -163,7 +153,6 @@ public:
   /// @param gpos is the global position to be transformed
   /// @param mom is the global momentum (ignored in this operation)
   /// @param lpos is hte local position to be filled
-  ///
   /// @return is a boolean indicating if the transformation succeeded
   virtual bool
   globalToLocal(const Vector3D& gpos,
@@ -222,7 +211,6 @@ public:
   ///
   /// @param gpos is the global potion at the correction point
   /// @param mom is the momentum at the correction point
-  ///
   /// @return is the path correction due to incident angle
   virtual double
   pathCorrection(const Vector3D& gpos,
@@ -230,54 +218,11 @@ public:
 
   /// Return properly formatted class name for screen output
   virtual std::string
-  name() const override
-  {
-    return "Acts::ConeSurface";
-  }
+  name() const override;
 
 protected:
   std::shared_ptr<const ConeBounds> m_bounds;  ///< bounds (shared)
 };
-
-inline ConeSurface*
-ConeSurface::clone(const Transform3D* shift) const
-{
-  if (shift) new ConeSurface(*this, *shift);
-  return new ConeSurface(*this);
-}
-
-inline const Vector3D
-ConeSurface::normal(const Vector2D& lp) const
-{
-  // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
-  double phi = lp[Acts::eLOC_RPHI] / (bounds().r(lp[Acts::eLOC_Z])),
-         sgn = lp[Acts::eLOC_Z] > 0 ? -1. : +1.;
-  Vector3D localNormal(cos(phi) * bounds().cosAlpha(),
-                       sin(phi) * bounds().cosAlpha(),
-                       sgn * bounds().sinAlpha());
-  return m_transform ? Vector3D(transform().linear() * localNormal)
-                     : localNormal;
-}
-
-inline const Vector3D
-ConeSurface::normal(const Vector3D& gpos) const
-{
-  // get it into the cylinder frame if needed
-  // @todo respect opening angle
-  Vector3D pos3D = gpos;
-  if (m_transform || m_associatedDetElement) {
-    pos3D     = transform().inverse() * gpos;
-    pos3D.z() = 0;
-  }
-  return pos3D.unit();
-}
-
-inline const ConeBounds&
-ConeSurface::bounds() const
-{
-  // is safe because no constructor w/o bounds exists
-  return (*m_bounds.get());
-}
 
 }  // end of namespace
 
