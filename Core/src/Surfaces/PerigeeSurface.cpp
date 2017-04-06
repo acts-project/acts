@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/PerigeeSurface.hpp"
+
 #include <iomanip>
 #include <iostream>
 
@@ -25,14 +26,14 @@ Acts::PerigeeSurface::PerigeeSurface(std::shared_ptr<Transform3D> tTransform)
 {
 }
 
-Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& pesf)
-  : LineSurface(pesf)
+Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& other)
+  : LineSurface(other)
 {
 }
 
-Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& pesf,
+Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& other,
                                      const Transform3D&    shift)
-  : LineSurface(pesf, shift)
+  : LineSurface(other, shift)
 {
 }
 
@@ -41,12 +42,31 @@ Acts::PerigeeSurface::~PerigeeSurface()
 }
 
 Acts::PerigeeSurface&
-Acts::PerigeeSurface::operator=(const PerigeeSurface& pesf)
+Acts::PerigeeSurface::operator=(const PerigeeSurface& other)
 {
-  if (this != &pesf) {
-    LineSurface::operator=(pesf);
+  if (this != &other) {
+    LineSurface::operator=(other);
   }
   return *this;
+}
+
+Acts::PerigeeSurface*
+Acts::PerigeeSurface::clone(const Acts::Transform3D* shift) const
+{
+  if (shift) return new PerigeeSurface(*this, *shift);
+  return new PerigeeSurface(*this);
+}
+
+Acts::Surface::SurfaceType
+Acts::PerigeeSurface::type() const
+{
+  return Surface::Perigee;
+}
+
+std::string
+Acts::PerigeeSurface::name() const
+{
+  return "Acts::PerigeeSurface";
 }
 
 std::ostream&
