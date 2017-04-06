@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016 ACTS project team
+// Copyright (C) 2016-2017 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -26,17 +26,25 @@ namespace Acts {
 class InfiniteBounds : public SurfaceBounds
 {
 public:
-  /// Default Constructor
-  InfiniteBounds() {}
-
-  /// Destructor
+  InfiniteBounds() = default;
   ~InfiniteBounds() {}
 
-  /// Return SurfaceBounds type for persistency mainly
+  virtual InfiniteBounds*
+  clone() const final override
+  {
+    return new InfiniteBounds();
+  }
+
   virtual SurfaceBounds::BoundsType
   type() const final override
   {
     return SurfaceBounds::Boundless;
+  }
+
+  virtual std::vector<TDD_real_t>
+  valueStore() const final override
+  {
+    return {};
   }
 
   /// Method inside() returns true for any case
@@ -50,57 +58,25 @@ public:
     return true;
   }
 
-  /// Method inside() returns true for loc 0
-  ///
-  /// ignores input parameters
-  ///
-  /// @return always true
-  virtual bool
-  insideLoc0(const Vector2D&, double tol0 = 0.) const final override
-  {
-    return true;
-  }
-
-  /// Method inside() returns true for loc 1
-  ///
-  /// ignores input parameters
-  ///
-  /// @return always true
-  virtual bool
-  insideLoc1(const Vector2D&, double tol1 = 0.) const final override
-  {
-    return true;
-  }
-
   /// Minimal distance calculation
   /// ignores input parameter
   /// @return always 0. (should be -NaN)
   virtual double
   distanceToBoundary(const Vector2D& pos) const final override
   {
-    return 0.;
-  }
-
-  /// Clone method to complete inherited interface
-  virtual InfiniteBounds*
-  clone() const final override
-  {
-    return new InfiniteBounds();
+    return 0;
   }
 
   /// Output Method for std::ostream
   virtual std::ostream&
-  dump(std::ostream& sl) const final override;
+  dump(std::ostream& os) const final override
+  {
+    os << "Acts::InfiniteBounds ... boundless surface" << std::endl;
+    return os;
+  }
 };
 
-inline std::ostream&
-InfiniteBounds::dump(std::ostream& sl) const
-{
-  sl << "Acts::InfiniteBounds ... boundless surface" << std::endl;
-  return sl;
-}
-
-static InfiniteBounds s_noBounds = InfiniteBounds();
+static const InfiniteBounds s_noBounds{};
 
 }  // end of namespace
 
