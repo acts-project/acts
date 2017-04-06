@@ -38,7 +38,7 @@ namespace detail {
   /// This class provides some basic functionality for calculating bin indices
   /// for a given equidistant binning.
   template <>
-  class Axis<true>
+  class Axis<true> final
   {
   public:
     /// @brief default constructor
@@ -166,7 +166,7 @@ namespace detail {
   /// This class provides some basic functionality for calculating bin indices
   /// for a given binning with variable bin sizes.
   template <>
-  class Axis<false>
+  class Axis<false> final
   {
   public:
     /// @brief default constructor

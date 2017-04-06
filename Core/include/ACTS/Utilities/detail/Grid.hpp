@@ -33,7 +33,7 @@ namespace detail {
   ///
   /// @note @c T must be default-constructible.
   template <typename T, class... Axes>
-  class Grid
+  class Grid final
   {
     /// unit test helper class
     friend struct Test::GridTester<T, Axes...>;
