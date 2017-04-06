@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/LineSurface.hpp"
+
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -36,14 +37,14 @@ Acts::LineSurface::LineSurface(std::shared_ptr<const LineBounds> lbounds,
   assert(lbounds);
 }
 
-Acts::LineSurface::LineSurface(const LineSurface& slsf)
-  : Surface(slsf), m_bounds(slsf.m_bounds)
+Acts::LineSurface::LineSurface(const LineSurface& other)
+  : Surface(other), m_bounds(other.m_bounds)
 {
 }
 
-Acts::LineSurface::LineSurface(const LineSurface& csf,
+Acts::LineSurface::LineSurface(const LineSurface& other,
                                const Transform3D& transf)
-  : Surface(csf, transf), m_bounds(csf.m_bounds)
+  : Surface(other, transf), m_bounds(other.m_bounds)
 {
 }
 
@@ -52,11 +53,11 @@ Acts::LineSurface::~LineSurface()
 }
 
 Acts::LineSurface&
-Acts::LineSurface::operator=(const LineSurface& slsf)
+Acts::LineSurface::operator=(const LineSurface& other)
 {
-  if (this != &slsf) {
-    Surface::operator=(slsf);
-    m_bounds         = slsf.m_bounds;
+  if (this != &other) {
+    Surface::operator=(other);
+    m_bounds         = other.m_bounds;
   }
   return *this;
 }
@@ -109,6 +110,12 @@ Acts::LineSurface::isOnSurface(const Vector3D&      gpos,
   return bounds().inside(locCand, bcheck);
 }
 
+std::string
+Acts::LineSurface::name() const
+{
+  return "Acts::LineSurface";
+}
+
 const Acts::RotationMatrix3D
 Acts::LineSurface::measurementFrame(const Vector3D&, const Vector3D& mom) const
 {
@@ -153,4 +160,31 @@ Acts::LineSurface::intersectionEstimate(const Vector3D&      gpos,
     return Intersection(result, lambda0, isValid);
   }
   return Intersection(gpos, 0., false);
+}
+
+double
+Acts::LineSurface::pathCorrection(const Acts::Vector3D&,
+                                  const Acts::Vector3D&) const
+{
+  return 1.;
+}
+
+const Acts::Vector3D
+Acts::LineSurface::binningPosition(Acts::BinningValue bValue) const
+{
+  return center();
+}
+
+const Acts::Vector3D
+Acts::LineSurface::normal(const Acts::Vector2D& lpos) const
+{
+  // the normal is conceptionally closest to the line direction
+  return lineDirection();
+}
+
+const Acts::SurfaceBounds&
+Acts::LineSurface::bounds() const
+{
+  if (m_bounds) return (*m_bounds.get());
+  return s_noBounds;
 }
