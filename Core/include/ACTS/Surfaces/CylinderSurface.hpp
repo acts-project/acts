@@ -35,7 +35,6 @@ namespace Acts {
 class CylinderSurface : public Surface
 {
 public:
-  /// Default Constructor - deleted*/
   CylinderSurface() = delete;
 
   /// Constructor from Transform3D, radius and halflenght
@@ -71,24 +70,23 @@ public:
 
   /// Copy constructor
   ///
-  /// @param csf is the source cylinder for the copy
-  CylinderSurface(const CylinderSurface& csf);
+  /// @param other is the source cylinder for the copy
+  CylinderSurface(const CylinderSurface& other);
 
   /// Copy constructor with shift
   ///
-  /// @param csf is the source cylinder for the copy
+  /// @param other is the source cylinder for the copy
   /// @param htrans is the additional transform applied after copying the
   /// cylinder
-  CylinderSurface(const CylinderSurface& csf, const Transform3D& htrans);
+  CylinderSurface(const CylinderSurface& other, const Transform3D& htrans);
 
-  /// Destructor
   virtual ~CylinderSurface();
 
   /// Assignment operator
   ///
-  /// @param csf is the source cylinder for the copy
+  /// @param other is the source cylinder for the copy
   CylinderSurface&
-  operator=(const CylinderSurface& csf);
+  operator=(const CylinderSurface& other);
 
   /// Implicit Constructor - optionally with a shift
   ///
@@ -110,7 +108,6 @@ public:
   ///
   /// @param gpos is the position where the measurement frame is defined
   /// @param mom is the momentum vector (ignored)
-  ///
   /// @return rotation matrix that defines the measurement frame
   virtual const RotationMatrix3D
   measurementFrame(const Vector3D& gpos,
@@ -118,17 +115,13 @@ public:
 
   /// Return the surface type
   virtual SurfaceType
-  type() const override
-  {
-    return Surface::Cylinder;
-  }
+  type() const override;
 
   /// Return method for surface normal information
   /// @note for a Cylinder a local position is always required for the normal
   /// vector
   ///
   /// @param lpos is the local postion for which the normal vector is requested
-  ///
   /// @return normal vector at the local position
   virtual const Vector3D
   normal(const Vector2D& lpos) const final override;
@@ -138,12 +131,12 @@ public:
   /// vector
   ///
   /// @param gpos is the global postion for which the normal vector is requested
-  ///
   /// @return normal vector at the global position
   virtual const Vector3D
   normal(const Vector3D& gpos) const final override;
 
   /// Return method for the rotational symmetry axis
+  ///
   /// @return  the z-Axis of transform
   virtual const Vector3D
   rotSymmetryAxis() const;
@@ -167,7 +160,6 @@ public:
   /// @param gpos is the global position to be transformed
   /// @param mom is the global momentum (ignored in this operation)
   /// @param lpos is hte local position to be filled
-  ///
   /// @return is a boolean indicating if the transformation succeeded
   virtual bool
   globalToLocal(const Vector3D& gpos,
@@ -178,7 +170,6 @@ public:
   ///
   /// @param gpos is the global position to be checked
   /// @param bcheck is the boundary check object
-  ///
   /// @return is a boolean indicating if the position is on surface
   virtual bool
   isOnSurface(const Vector3D&      gpos,
@@ -225,7 +216,6 @@ public:
   ///
   /// @param gpos is the global position as a starting point
   /// @param mom is the global momentum at the starting point
-  ///
   /// @return is the correction factor due to incident
   virtual double
   pathCorrection(const Vector3D& gpos,
@@ -233,56 +223,11 @@ public:
 
   /// Return method for properly formatted output string
   virtual std::string
-  name() const override
-  {
-    return "Acts::CylinderSurface";
-  }
+  name() const override;
 
 protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
 };
-
-inline CylinderSurface*
-CylinderSurface::clone(const Transform3D* shift) const
-{
-  if (shift) return new CylinderSurface(*this, *shift);
-  return new CylinderSurface(*this);
-}
-
-inline const Vector3D
-CylinderSurface::normal(const Vector2D& lpos) const
-{
-  double   phi = lpos[Acts::eLOC_RPHI] / m_bounds->r();
-  Vector3D localNormal(cos(phi), sin(phi), 0.);
-  return Vector3D(transform().rotation() * localNormal);
-}
-
-inline const Vector3D
-CylinderSurface::normal(const Vector3D& gpos) const
-{
-  // get it into the cylinder frame if needed
-  Vector3D pos3D = gpos;
-  if (m_transform || m_associatedDetElement) {
-    pos3D = transform().inverse() * gpos;
-  }
-  // set the z coordinate to 0
-  pos3D.z() = 0.;
-  return pos3D.unit();
-}
-
-inline double
-CylinderSurface::pathCorrection(const Vector3D& gpos, const Vector3D& mom) const
-{
-  Vector3D normalT  = normal(gpos);
-  double   cosAlpha = normalT.dot(mom.unit());
-  return std::abs(1. / cosAlpha);
-}
-
-inline const CylinderBounds&
-CylinderSurface::bounds() const
-{
-  return (*m_bounds.get());
-}
 
 }  // end of namespace
 
