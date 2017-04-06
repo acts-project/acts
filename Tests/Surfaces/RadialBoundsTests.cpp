@@ -23,9 +23,6 @@
 //
 #include <limits>
 
-// namespace bdata = boost::unit_test::data;
-namespace utf    = boost::unit_test;
-const double inf = std::numeric_limits<double>::infinity();
 const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
@@ -86,12 +83,6 @@ namespace Test {
                == true);
     BOOST_TEST(radialBoundsObject.inside(outside, BoundaryCheck(true))
                == false);
-    //
-    /// Test insideLoc0
-    BOOST_TEST(radialBoundsObject.insideLoc0(inSurface) == true);
-    //
-    /// Test insideLoc1
-    BOOST_TEST(radialBoundsObject.insideLoc1(inSurface) == true);
     //
     /// Test rMin
     BOOST_TEST(radialBoundsObject.rMin() == minRadius);
