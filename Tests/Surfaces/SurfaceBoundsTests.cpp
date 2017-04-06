@@ -20,13 +20,6 @@
 //
 #include "ACTS/Surfaces/SurfaceBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-//
-#include <limits>
-
-// namespace bdata = boost::unit_test::data;
-namespace utf    = boost::unit_test;
-const double inf = std::numeric_limits<double>::infinity();
-const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
 
@@ -35,14 +28,12 @@ class SurfaceBoundsStub : public SurfaceBounds
 {
 public:
   /// Implement ctor and pure virtual methods of SurfaceBounds
-  SurfaceBoundsStub(size_t sSize = 0) : SurfaceBounds(sSize)
+  explicit SurfaceBoundsStub(size_t nValues = 0) : m_values(nValues)
   {
-    int j(0);
-    for (auto& i : m_valueStore) {
-      i = j++;
+    for (size_t i = 0; i < nValues; ++i) {
+      m_values[i] = i;
     }
   }
-  SurfaceBoundsStub(const SurfaceBoundsStub& s) : SurfaceBounds(s) { /*nop*/}
   virtual ~SurfaceBoundsStub() { /*nop*/}
   SurfaceBounds*
   clone() const final
@@ -54,18 +45,13 @@ public:
   {
     return SurfaceBounds::Other;
   }
+  std::vector<TDD_real_t>
+  valueStore() const
+  {
+    return m_values;
+  }
   bool
   inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final
-  {
-    return true;
-  }
-  bool
-  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const final
-  {
-    return true;
-  }
-  bool
-  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const final
   {
     return true;
   }
@@ -80,6 +66,9 @@ public:
     sl << "SurfaceBoundsStub";
     return sl;
   }
+
+private:
+  std::vector<TDD_real_t> m_values;
 };
 
 namespace Test {
@@ -94,8 +83,8 @@ namespace Test {
   }
   BOOST_AUTO_TEST_CASE(SurfaceBoundsProperties)
   {
-    SurfaceBoundsStub             surface(5);
-    const std::vector<TDD_real_t> reference{0, 1, 2, 3, 4};
+    SurfaceBoundsStub       surface(5);
+    std::vector<TDD_real_t> reference{0, 1, 2, 3, 4};
     BOOST_TEST(reference == surface.valueStore());
   }
   /// Unit test for testing SurfaceBounds properties
