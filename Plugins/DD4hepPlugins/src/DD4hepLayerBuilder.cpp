@@ -74,6 +74,7 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
       std::shared_ptr<const DiscLayer> layer = nullptr;
 
       if (detExtension->buildEnvelope()) {
+
         layer = std::dynamic_pointer_cast<const DiscLayer>(
             m_cfg.layerCreator->discLayer(layerSurfaces,
                                           detExtension->envelopeR(),
@@ -119,8 +120,12 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
 
       double rMin = discBounds->rMin();
       double rMax = discBounds->rMax();
-      double zMin = 0.;
-      double zMax = 0.;
+      double zMin = (transform->translation()
+                     - transform->rotation().col(2) * layer->thickness() * 0.5)
+                        .z();
+      double zMax = (transform->translation()
+                     + transform->rotation().col(2) * layer->thickness() * 0.5)
+                        .z();
 
       // create the two dimensional BinUtility for the material map of the layer
       Acts::BinUtility* materialBinUtil = nullptr;
@@ -451,8 +456,12 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
 
       double rMin = discBounds->rMin();
       double rMax = discBounds->rMax();
-      double zMin = 0.;
-      double zMax = 0.;
+      double zMin = (transform->translation()
+                     - transform->rotation().col(2) * layer->thickness() * 0.5)
+                        .z();
+      double zMax = (transform->translation()
+                     + transform->rotation().col(2) * layer->thickness() * 0.5)
+                        .z();
 
       // create the two dimensional BinUtility for the material map of the layer
       Acts::BinUtility* materialBinUtil = nullptr;
