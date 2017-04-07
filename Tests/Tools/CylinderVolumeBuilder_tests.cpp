@@ -198,17 +198,11 @@ namespace Test {
     BOOST_TEST(!innerConfig1.containesInZ(innerConfig));
   }
 
-  /// Unit test for testing the coverlapsInZ()
+  /// Unit test for testing the coverlapsInR()
   /// function of the CylinderVolumeBuilder
   BOOST_DATA_TEST_CASE(CylinderVolumeBuilder_overlapsInR,
-                       bdata::random(-11., -15.) ^ bdata::random(11., 15.)
-                           ^ bdata::random(-10., 10.)
-                           ^ bdata::random(0., 4.)
-                           ^ bdata::random(11., 15.)
+                       bdata::random(0., 4.) ^ bdata::random(11., 15.)
                            ^ bdata::xrange(100),
-                       left,
-                       right,
-                       central,
                        inner,
                        outer,
                        index)
@@ -268,19 +262,15 @@ namespace Test {
     BOOST_TEST(Config0.overlapsInR(Config5));
   }
 
-  /// Unit test for testing the coverlapsInR()
+  /// Unit test for testing the coverlapsInZ()
   /// function of the CylinderVolumeBuilder
   BOOST_DATA_TEST_CASE(CylinderVolumeBuilder_overlapsInZ,
                        bdata::random(-11., -15.) ^ bdata::random(11., 15.)
-                           ^ bdata::random(-10., 10.)
                            ^ bdata::random(0., 4.)
-                           ^ bdata::random(10., 15.)
                            ^ bdata::xrange(100),
                        left,
                        right,
-                       central,
                        inner,
-                       outer,
                        index)
   {
     // inner volume
@@ -293,50 +283,50 @@ namespace Test {
 
     // volume to the left of volume0
     VolumeConfig Config1;
-    Config1.rMin = inner;
-    Config1.rMax = inner + 5.;
+    Config1.rMin = 10.;
+    Config1.rMax = 20.;
     Config1.zMin = left - 5.;
     Config1.zMax = left;
 
     // volume to the right of volume0
     VolumeConfig Config2;
-    Config2.rMin = inner;
-    Config2.rMax = inner + 5.;
+    Config2.rMin = 10.;
+    Config2.rMax = 20.;
     Config2.zMin = right;
     Config2.zMax = right + 5.;
 
     // volume around volume0 with same z boundaries
     VolumeConfig Config3;
-    Config3.rMin = outer;
-    Config3.rMax = outer + 5.;
+    Config3.rMin = 10.;
+    Config3.rMax = 20.;
     Config3.zMin = -10.;
     Config3.zMax = 10.;
 
     // volume inside volume0 config in z
     VolumeConfig Config4;
-    Config4.rMin = outer;
-    Config4.rMax = outer + 5.;
+    Config4.rMin = 10.;
+    Config4.rMax = 20.;
     Config4.zMin = inner - 5.;
     Config4.zMax = inner + 5.;
 
     // volume around volume0 config in z
     VolumeConfig Config5;
-    Config5.rMin = outer;
-    Config5.rMax = outer + 5.;
+    Config5.rMin = 10.;
+    Config5.rMax = 20.;
     Config5.zMin = left;
     Config5.zMax = right;
 
     // volume overlapping on the left
     VolumeConfig Config6;
-    Config6.rMin = outer;
-    Config6.rMax = outer + 5.;
+    Config6.rMin = 10.;
+    Config6.rMax = 20.;
     Config6.zMin = left;
     Config6.zMax = left + 10.;
 
     // volume overlapping on the right
     VolumeConfig Config7;
-    Config7.rMin = outer;
-    Config7.rMax = outer + 5.;
+    Config7.rMin = 10.;
+    Config7.rMax = 20.;
     Config7.zMin = right - 10.;
     Config7.zMax = right;
 
