@@ -151,7 +151,7 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
         materialProxy
             = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
         // access the material position
-        Acts::LayerMaterialPos layerPos = detExtension->layerMaterialPosition();
+        layerPos = detExtension->layerMaterialPosition();
         ACTS_VERBOSE(
             "[L] Layer is marked to carry support material on Surface ( "
             "inner=0 / center=1 / outer=2 ) :   "
@@ -317,7 +317,7 @@ Acts::DD4hepLayerBuilder::centralLayers() const
         materialProxy
             = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
         // access the material position
-        Acts::LayerMaterialPos layerPos = detExtension->layerMaterialPosition();
+        layerPos = detExtension->layerMaterialPosition();
         ACTS_VERBOSE(
             "[L] Layer is marked to carry support material on Surface ( "
             "inner=0 / center=1 / outer=2 ) :   "
@@ -487,7 +487,7 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
         materialProxy
             = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
         // access the material position
-        Acts::LayerMaterialPos layerPos = detExtension->layerMaterialPosition();
+        layerPos = detExtension->layerMaterialPosition();
         ACTS_VERBOSE(
             "[L] Layer is marked to carry support material on Surface ( "
             "inner=0 / center=1 / outer=2 ) :   "
