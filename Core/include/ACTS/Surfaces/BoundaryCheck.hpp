@@ -86,6 +86,13 @@ public:
   /// @param nsig  number of sigma checked checked for the compatibility test
   BoundaryCheck(const ActsSymMatrixD<2>& lCov, double nsig = 1);
 
+  /// Return a new BoundaryCheck with updated covariance.
+  /// @param jacobian Tranform Jacobian for the covariance
+  /// @warning This currently only transforms the covariance and does not work
+  ///          for the tolerance based check.
+  BoundaryCheck
+  transformed(const ActsMatrixD<2, 2>& jacobian) const;
+
   /// Check if the point is inside a polygon.
   ///
   /// @param point    Test point
@@ -301,6 +308,20 @@ inline Acts::BoundaryCheck::BoundaryCheck(const ActsSymMatrixD<2>& lCov,
   , checkLoc1(true)
   , bcType(chi2corr)
 {
+}
+
+inline Acts::BoundaryCheck
+Acts::BoundaryCheck::transformed(const ActsMatrixD<2, 2>& jacobian) const
+{
+  if (bcType == chi2corr) {
+    return BoundaryCheck(jacobian * m_weight.inverse() * jacobian.transpose(),
+                         nSigmas);
+  } else {
+    // project tolerances to the new system. depending on the jacobian we need
+    // to check both tolerances, even when the initial check does not.
+    Vector2D tol = jacobian * Vector2D(toleranceLoc0, toleranceLoc1);
+    return BoundaryCheck(true, true, std::abs(tol[0]), std::abs(tol[1]));
+  }
 }
 
 template <typename Vector2DContainer>
