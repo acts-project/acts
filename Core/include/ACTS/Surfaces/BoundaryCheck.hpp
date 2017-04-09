@@ -13,8 +13,9 @@
 #ifndef ACTS_SURFACES_BOUNDARYCHECK_H
 #define ACTS_SURFACES_BOUNDARYCHECK_H 1
 
-#include <iterator>
+#include <cfloat>
 #include <cmath>
+#include <iterator>
 #include <vector>
 
 #include "ACTS/Utilities/Definitions.hpp"
@@ -46,21 +47,6 @@ namespace Acts {
 class BoundaryCheck
 {
 public:
-  /// @brief nested enumerator for the boundary check Type
-  enum BoundaryCheckType {
-    absolute = 0,  ///< absolute check including tolerances
-    chi2corr = 1   ///< relative (chi2 based) with full correlations
-  };
-
-  ActsSymMatrixD<2> lCovariance;  ///< local covariance matrix
-  ActsSymMatrixD<2> m_weight;     ///< Weight matrix for metric
-  double toleranceLoc0;           ///< absolute tolerance in local 1 coordinate
-  double toleranceLoc1;           ///< absolute tolerance in local 2 coordinate
-  double nSigmas;                 ///< allowed sigmas for chi2 boundary check
-  bool   checkLoc0;               ///< check local 1 coordinate
-  bool   checkLoc1;               ///< check local 2 coordinate
-  BoundaryCheckType bcType;       ///< the type how we check the boundary
-
   /// Constructor for single boolean behavious
   BoundaryCheck(bool sCheck);
 
@@ -83,8 +69,8 @@ public:
   BoundaryCheck
   transformed(const ActsMatrixD<2, 2>& jacobian) const;
 
-  operator bool() const { return (checkLoc0 || checkLoc1); }
-  bool operator!() const { return (!checkLoc0 && !checkLoc1); }
+  operator bool() const { return (m_type != Type::eNone); }
+  bool operator!() const { return (m_type == Type::eNone); }
 
   /// Check if the point is inside a polygon.
   ///
@@ -143,6 +129,19 @@ public:
            double          loc1Max) const;
 
 private:
+  /// @brief nested enumerator for the boundary check Type
+  enum class Type {
+    eNone,      ///< disable boundary check
+    eAbsolute,  ///< absolute cut
+    eChi2       ///< chi2-based cut with full correlations
+  };
+
+  /// metric matrix: identity for absolute or inverse covariance
+  ActsSymMatrixD<2> m_weight;
+  /// dual use: absolute tolerances or relative chi2/ sigma cut.
+  Vector2D m_tolerance;
+  Type     m_type;
+
   /// Check if the point is inside the polygon w/o any tolerances.
   template <typename Vector2DContainer>
   bool
@@ -159,19 +158,17 @@ private:
   Vector2D
   computeClosestPointOnPolygon(const Vector2D&          point,
                                const Vector2DContainer& vertices) const;
+
+  // EllipseBounds needs a custom implementation
+  friend class EllipseBounds;
 };
 
 }  // namespace Acts
 
 inline Acts::BoundaryCheck::BoundaryCheck(bool sCheck)
-  : lCovariance(ActsSymMatrixD<2>::Identity())
-  , m_weight(ActsSymMatrixD<2>::Identity())
-  , toleranceLoc0(0.)
-  , toleranceLoc1(0.)
-  , nSigmas(-1)
-  , checkLoc0(sCheck)
-  , checkLoc1(sCheck)
-  , bcType(absolute)
+  : m_weight(ActsSymMatrixD<2>::Identity())
+  , m_tolerance(0, 0)
+  , m_type(sCheck ? Type::eAbsolute : Type::eNone)
 {
 }
 
@@ -179,42 +176,32 @@ inline Acts::BoundaryCheck::BoundaryCheck(bool   chkL0,
                                           bool   chkL1,
                                           double tloc0,
                                           double tloc1)
-  : lCovariance(ActsSymMatrixD<2>::Identity())
-  , m_weight(ActsSymMatrixD<2>::Identity())
-  , toleranceLoc0(tloc0)
-  , toleranceLoc1(tloc1)
-  , nSigmas(-1)
-  , checkLoc0(chkL0)
-  , checkLoc1(chkL1)
-  , bcType(absolute)
+  : m_weight(ActsSymMatrixD<2>::Identity())
+  , m_tolerance(chkL0 ? tloc0 : DBL_MAX,
+                chkL1 ? tloc1 : DBL_MAX)
+  , m_type(Type::eAbsolute)
 {
 }
 
 inline Acts::BoundaryCheck::BoundaryCheck(const ActsSymMatrixD<2>& lCov,
                                           double                   nsig)
-  : lCovariance(lCov)
-  , m_weight(lCov.inverse())
-  , toleranceLoc0(0.)
-  , toleranceLoc1(0.)
-  , nSigmas(nsig)
-  , checkLoc0(true)
-  , checkLoc1(true)
-  , bcType(chi2corr)
+  : m_weight(lCov.inverse()), m_tolerance(nsig, 0), m_type(Type::eChi2)
 {
 }
 
 inline Acts::BoundaryCheck
 Acts::BoundaryCheck::transformed(const ActsMatrixD<2, 2>& jacobian) const
 {
-  if (bcType == chi2corr) {
-    return BoundaryCheck(jacobian * m_weight.inverse() * jacobian.transpose(),
-                         nSigmas);
-  } else {
+  BoundaryCheck bc = *this;
+  if (m_type == Type::eAbsolute) {
     // project tolerances to the new system. depending on the jacobian we need
     // to check both tolerances, even when the initial check does not.
-    Vector2D tol = jacobian * Vector2D(toleranceLoc0, toleranceLoc1);
-    return BoundaryCheck(true, true, std::abs(tol[0]), std::abs(tol[1]));
+    bc.m_tolerance = (jacobian * m_tolerance).cwiseAbs();
+  } else /* Type::eChi2 */ {
+    bc.m_weight
+        = (jacobian * m_weight.inverse() * jacobian.transpose()).inverse();
   }
+  return bc;
 }
 
 template <typename Vector2DContainer>
@@ -277,7 +264,6 @@ Acts::BoundaryCheck::isInside(const Vector2D& point,
                               double          loc1Min,
                               double          loc1Max) const
 {
-  // TODO 2017-03-29 msmk: check open/close policy
   if ((loc0Min <= point[0]) && (point[0] < loc0Max) && (loc1Min <= point[1])
       && (point[1] < loc1Max)) {
     return true;
@@ -292,25 +278,6 @@ Acts::BoundaryCheck::isInside(const Vector2D& point,
   }
 }
 
-inline bool
-Acts::BoundaryCheck::isTolerated(const Vector2D& delta) const
-{
-  if (bcType == absolute) {
-    bool insideLoc0 = !checkLoc0 || (std::abs(delta[0]) < toleranceLoc0);
-    bool insideLoc1 = !checkLoc1 || (std::abs(delta[1]) < toleranceLoc1);
-    return insideLoc0 && insideLoc1;
-  } else {
-    // 2d-Mahalanobis distance has an expectation value of 2
-    return (squaredNorm(delta) < (2 * nSigmas));
-  }
-}
-
-inline double
-Acts::BoundaryCheck::squaredNorm(const Vector2D& x) const
-{
-  return (x.transpose() * lCovariance.inverse() * x).value();
-}
-
 template <typename Vector2DContainer>
 inline double
 Acts::BoundaryCheck::distance(const Acts::Vector2D&    point,
@@ -319,7 +286,7 @@ Acts::BoundaryCheck::distance(const Acts::Vector2D&    point,
   // TODO 2017-04-06 msmk: this should be calculable directly
   double d = squaredNorm(point - computeClosestPointOnPolygon(point, vertices));
   d        = std::sqrt(d);
-  return isInsidePolygonHard(point, vertices) ? -d : d;
+  return isInsidePolygon(point, vertices) ? -d : d;
 }
 
 inline double
@@ -335,6 +302,26 @@ Acts::BoundaryCheck::distance(const Acts::Vector2D& point,
                          {loc0Max, loc1Max},
                          {loc0Min, loc1Max}};
   return distance(point, vertices);
+}
+
+inline bool
+Acts::BoundaryCheck::isTolerated(const Vector2D& delta) const
+{
+  if (m_type == Type::eNone) {
+    return true;
+  } else if (m_type == Type::eAbsolute) {
+    return (std::abs(delta[0]) <= m_tolerance[0])
+        && (std::abs(delta[1]) <= m_tolerance[1]);
+  } else /* Type::eChi2 */ {
+    // Mahalanobis distances mean is 2 in 2-dim. cut is 1-d sigma.
+    return (squaredNorm(delta) < (2 * m_tolerance[0]));
+  }
+}
+
+inline double
+Acts::BoundaryCheck::squaredNorm(const Vector2D& x) const
+{
+  return (x.transpose() * m_weight * x).value();
 }
 
 template <typename Vector2DContainer>

@@ -17,67 +17,15 @@
 #include <boost/test/output_test_stream.hpp>
 // leave blank line
 
-#include <limits>
 #include "ACTS/Surfaces/BoundaryCheck.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
-namespace bdata  = boost::unit_test::data;
-namespace utf    = boost::unit_test;
-const double inf = std::numeric_limits<double>::infinity();
-const double NaN = std::numeric_limits<double>::quiet_NaN();
-
 namespace Acts {
 namespace Test {
-
-  bool
-  approximatelyEqual(const double& a, const double& b, const double& tol)
-  {
-    const double dif0 = std::abs(a - b);
-    return (dif0 < tol);
-  }
   BOOST_AUTO_TEST_SUITE(Surfaces);
   // See: https://en.wikipedia.org/wiki/Bounding_volume
   //
-  /// Unit test for creating compliant/non-compliant BoundaryCheck object
-  BOOST_AUTO_TEST_CASE(BoundaryCheckConstruction)
-  {
-    // BoundaryCheck boundaryCheckDefault; no default constructor, doesn't
-    // compile
-    // BOOST_TEST(boundaryCheckDefault.checkLoc1 == false);
-    // all constructors simply set member variables
-    // so first we check the simplest case
-    BoundaryCheck boundaryCheckTrue{true};
-    BOOST_TEST(boundaryCheckTrue.checkLoc1 == true);
-    //..and then the most complicated
-    ActsSymMatrixD<2> cov;
-    cov << 0.04, 0, 0, 0.1;
-    const double  nSigma = 1.2;
-    BoundaryCheck boundaryCheckWithCovariance{cov, nSigma};
-    BOOST_TEST(boundaryCheckWithCovariance.checkLoc1 == true);
-    BoundaryCheck copyConstructedBoundaryCheck(boundaryCheckWithCovariance);
-    auto originalCovariance = boundaryCheckWithCovariance.lCovariance;
-    auto copiedCovariance = copyConstructedBoundaryCheck.lCovariance;
-    BOOST_TEST(originalCovariance == copiedCovariance);
-    // corner cases (NaN, inf, in tolerance and covariance) are not tested.
-  }
-  /// Unit test for assignment
-  BOOST_AUTO_TEST_CASE(BoundaryCheckAssignment)
-  {
-    //
-    ActsSymMatrixD<2> cov;
-    cov << 0.04, 0, 0, 0.1;
-    const double  nSigma = 1.2;
-    BoundaryCheck original{cov, nSigma};
-    BoundaryCheck assigned(true);
-    assigned = original;
-    BOOST_TEST(assigned.checkLoc0 == original.checkLoc0);
-    BOOST_TEST(assigned.checkLoc1 == original.checkLoc1);
-    BOOST_TEST(assigned.toleranceLoc0 == original.toleranceLoc0);
-    BOOST_TEST(assigned.toleranceLoc1 == original.toleranceLoc1);
-    BOOST_TEST(assigned.nSigmas == original.nSigmas);
-    BOOST_TEST(assigned.lCovariance == original.lCovariance);
-  }
   // Aligned box w/ simple check
   BOOST_AUTO_TEST_CASE(BoundaryCheckBoxSimple)
   {
@@ -135,5 +83,4 @@ namespace Test {
   }
   BOOST_AUTO_TEST_SUITE_END();
 }  // end of namespace Test
-
 }  // end of namespace Acts
