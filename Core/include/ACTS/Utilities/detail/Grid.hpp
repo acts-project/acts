@@ -39,7 +39,7 @@ namespace detail {
     friend struct Test::GridTester<T, Axes...>;
 
     /// number of dimensions of the grid
-    static constexpr size_t dimension = sizeof...(Axes);
+    static constexpr size_t DIM = sizeof...(Axes);
 
   public:
     typedef T                 value_type;
@@ -80,6 +80,15 @@ namespace detail {
       return m_values.at(getGlobalBinIndex(point));
     }
 
+    /// @brief dimensionality of grid
+    ///
+    /// @return number of axes spanning the grid
+    static constexpr size_t
+    dimension()
+    {
+      return DIM;
+    }
+
     /// @brief total number of bins
     ///
     /// @return total number of bins in the grid
@@ -115,7 +124,7 @@ namespace detail {
     ///         given @c axes object)
     ///
     /// @note Local bin indices could be a under-/overflow bin along this axis.
-    std::array<size_t, dimension>
+    std::array<size_t, DIM>
     getLocalBinIndices(size_t bin) const
     {
       return global_bin_helper::getLocalBinIndices(bin, m_axes);
