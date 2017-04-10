@@ -78,9 +78,7 @@ struct VolumeConfig
   overlapsInR(const VolumeConfig& vConfig) const
   {
     if (!present) return false;
-    if (rMin < vConfig.rMax && rMax > vConfig.rMax) return true;
-    if (vConfig.rMin < rMax && vConfig.rMax > rMin) return true;
-    return false;
+    return std::max(rMin, vConfig.rMin) <= std::min(rMax, vConfig.rMax);
   }
 
   /// Overlap check longitudinally
@@ -90,9 +88,7 @@ struct VolumeConfig
   overlapsInZ(const VolumeConfig& vConfig) const
   {
     if (!present) return false;
-    if (zMin < vConfig.zMax && zMax > vConfig.zMax) return true;
-    if (vConfig.zMin < zMax && vConfig.zMax > zMin) return true;
-    return false;
+    return std::max(zMin, vConfig.zMin) <= std::min(zMax, vConfig.zMax);
   }
 
   /// Compatibility check full set
@@ -120,7 +116,7 @@ struct VolumeConfig
   bool
   containesInR(const VolumeConfig& vConfig) const
   {
-    return (rMin > vConfig.rMax);
+    return (rMin >= vConfig.rMax);
   }
 
   /// Check if contained longitudinally
