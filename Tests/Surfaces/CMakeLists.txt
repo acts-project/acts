@@ -84,9 +84,3 @@ add_test (NAME RadialBoundsTests COMMAND RadialBoundsTests)
 add_executable (DiscTrapezoidalBoundsTests DiscTrapezoidalBoundsTests.cpp)
 target_link_libraries (DiscTrapezoidalBoundsTests PRIVATE ACTSCore)
 add_test (NAME DiscTrapezoidalBoundsTests COMMAND DiscTrapezoidalBoundsTests)
-
-add_executable (RealQuadraticEquationTests RealQuadraticEquationTests.cpp)
-target_link_libraries (RealQuadraticEquationTests PRIVATE ACTSCore)
-add_test (NAME RealQuadraticEquationTests COMMAND RealQuadraticEquationTests)
-
-

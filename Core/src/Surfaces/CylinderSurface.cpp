@@ -17,7 +17,7 @@
 #include <iomanip>
 #include <iostream>
 
-#include "ACTS/Surfaces/RealQuadraticEquation.hpp"
+#include "ACTS/Utilities/detail/RealQuadraticEquation.hpp"
 
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
   : Surface(other), m_bounds(other.m_bounds)
@@ -197,13 +197,14 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
     double d = (point2.x() * point1.y() - point1.x() * point2.y())
         / (point2.x() - point1.x());
     // and solve the qaudratic equation
-    RealQuadraticEquation pquad(1 + k * k, 2 * k * d, d * d - R * R);
-    if (pquad.solutions != Acts::none) {
+    detail::RealQuadraticEquation pquad(1 + k * k, 2 * k * d, d * d - R * R);
+    if (pquad.solutions == 2) {
       // the solutions in the 3D frame of the cylinder
       t1 = (pquad.first - point1.x()) / direction.x();
       t2 = (pquad.second - point1.x()) / direction.x();
-    } else  // bail out if no solution exists
+    } else {  // bail out if no solution exists
       return Intersection(gpos, 0., false);
+    }
   } else {
     // bail out if no solution exists
     if (!direction.y()) return Intersection(gpos, 0., false);

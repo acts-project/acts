@@ -11,8 +11,8 @@
 
 #include <cmath>
 
-#include <ACTS/Surfaces/RealQuadraticEquation.hpp>
 #include <ACTS/Utilities/Definitions.hpp>
+#include <ACTS/Utilities/detail/RealQuadraticEquation.hpp>
 
 namespace Acts {
 namespace detail {
@@ -110,9 +110,9 @@ namespace detail {
     double u     = 0;
 
     RealQuadraticEquation eq(alpha, beta, gamma);
-    if (eq.solutions == two) {
+    if (eq.solutions == 2) {
       u = (std::abs(eq.first) < std::abs(eq.second)) ? eq.first : eq.second;
-    } else if (eq.solutions == one) {
+    } else if (eq.solutions == 1) {
       u = eq.first;
     } else {
       // fall-back: closest approach to the circle, (x + d * u) . d = 0

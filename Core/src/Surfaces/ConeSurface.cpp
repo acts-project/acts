@@ -17,7 +17,7 @@
 #include <iomanip>
 #include <iostream>
 
-#include "ACTS/Surfaces/RealQuadraticEquation.hpp"
+#include "ACTS/Utilities/detail/RealQuadraticEquation.hpp"
 
 Acts::ConeSurface::ConeSurface(const ConeSurface& other)
   : Surface(other), m_bounds(other.m_bounds)
@@ -161,17 +161,17 @@ Acts::ConeSurface::intersectionEstimate(const Vector3D&      gpos,
   if (A == 0.) A += 1e-16;  // avoid div by zero
 
   // use Andreas' quad solver, much more stable than what I wrote
-  Acts::RealQuadraticEquation solns(A, B, C);
+  Acts::detail::RealQuadraticEquation solns(A, B, C);
 
   Acts::Vector3D solution(0., 0., 0.);
   double         path    = 0.;
   bool           isValid = false;
-  if (solns.solutions != Acts::none) {
+  if (solns.solutions != 0) {
     double         t1 = solns.first;
     Acts::Vector3D soln1Loc(tpos1 + t1 * dir);
     isValid = forceDir ? (t1 > 0.) : true;
     // there's only one solution
-    if (solns.solutions == Acts::one) {
+    if (solns.solutions == 1) {
       solution = soln1Loc;
       path     = t1;
     } else {

@@ -27,3 +27,7 @@ add_executable (MPL_tests MPL_checks.cpp)
 target_link_libraries (MPL_tests PRIVATE ACTSCore)
 add_test (NAME MPL_tests COMMAND MPL_tests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST MPL_tests TARGETS MPL_tests)
+
+add_executable (RealQuadraticEquationTests RealQuadraticEquationTests.cpp)
+target_link_libraries (RealQuadraticEquationTests PRIVATE ACTSCore)
+add_test (NAME RealQuadraticEquationTests COMMAND RealQuadraticEquationTests)
