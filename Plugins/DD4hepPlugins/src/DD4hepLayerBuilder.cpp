@@ -74,6 +74,7 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
       std::shared_ptr<const DiscLayer> layer = nullptr;
 
       if (detExtension->buildEnvelope()) {
+
         layer = std::dynamic_pointer_cast<const DiscLayer>(
             m_cfg.layerCreator->discLayer(layerSurfaces,
                                           detExtension->envelopeR(),
@@ -119,8 +120,12 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
 
       double rMin = discBounds->rMin();
       double rMax = discBounds->rMax();
-      double zMin = 0.;
-      double zMax = 0.;
+      double zMin = (transform->translation()
+                     - transform->rotation().col(2) * layer->thickness() * 0.5)
+                        .z();
+      double zMax = (transform->translation()
+                     + transform->rotation().col(2) * layer->thickness() * 0.5)
+                        .z();
 
       // create the two dimensional BinUtility for the material map of the layer
       Acts::BinUtility* materialBinUtil = nullptr;
@@ -146,7 +151,7 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
         materialProxy
             = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
         // access the material position
-        Acts::LayerMaterialPos layerPos = detExtension->layerMaterialPosition();
+        layerPos = detExtension->layerMaterialPosition();
         ACTS_VERBOSE(
             "[L] Layer is marked to carry support material on Surface ( "
             "inner=0 / center=1 / outer=2 ) :   "
@@ -312,7 +317,7 @@ Acts::DD4hepLayerBuilder::centralLayers() const
         materialProxy
             = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
         // access the material position
-        Acts::LayerMaterialPos layerPos = detExtension->layerMaterialPosition();
+        layerPos = detExtension->layerMaterialPosition();
         ACTS_VERBOSE(
             "[L] Layer is marked to carry support material on Surface ( "
             "inner=0 / center=1 / outer=2 ) :   "
@@ -451,8 +456,12 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
 
       double rMin = discBounds->rMin();
       double rMax = discBounds->rMax();
-      double zMin = 0.;
-      double zMax = 0.;
+      double zMin = (transform->translation()
+                     - transform->rotation().col(2) * layer->thickness() * 0.5)
+                        .z();
+      double zMax = (transform->translation()
+                     + transform->rotation().col(2) * layer->thickness() * 0.5)
+                        .z();
 
       // create the two dimensional BinUtility for the material map of the layer
       Acts::BinUtility* materialBinUtil = nullptr;
@@ -478,7 +487,7 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
         materialProxy
             = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
         // access the material position
-        Acts::LayerMaterialPos layerPos = detExtension->layerMaterialPosition();
+        layerPos = detExtension->layerMaterialPosition();
         ACTS_VERBOSE(
             "[L] Layer is marked to carry support material on Surface ( "
             "inner=0 / center=1 / outer=2 ) :   "
