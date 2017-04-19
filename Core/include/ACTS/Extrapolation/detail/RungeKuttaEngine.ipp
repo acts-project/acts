@@ -352,7 +352,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
                    "neut",
                    "parameters are already on the surface, returning.");
     pParameters
-        = buildTrackParametersWithoutPropagation(*pParameters, pCache.jacobian);
+        = buildTrackParametersWithoutPropagation(*sParameters, pCache.jacobian);
     // record the parameters as a step
     eCell.step(std::move(pParameters), purpose);
     // return success or in progress
