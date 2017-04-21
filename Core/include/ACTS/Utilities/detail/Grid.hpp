@@ -15,11 +15,6 @@
 
 namespace Acts {
 
-namespace Test {
-  template <typename T, class... Axes>
-  struct GridTester;
-}
-
 namespace detail {
 
   /// @brief class for describing a regular multi-dimensional grid
@@ -35,9 +30,6 @@ namespace detail {
   template <typename T, class... Axes>
   class Grid final
   {
-    /// unit test helper class
-    friend struct Test::GridTester<T, Axes...>;
-
     /// number of dimensions of the grid
     static constexpr size_t DIM = sizeof...(Axes);
 
@@ -80,6 +72,53 @@ namespace detail {
       return m_values.at(getGlobalBinIndex(point));
     }
 
+    /// @brief access value stored in bin with given global bin number
+    ///
+    /// @param  [in] bin global bin number
+    /// @return reference to value stored in bin containing the given
+    ///         point
+    reference
+    at(size_t bin)
+    {
+      return m_values.at(bin);
+    }
+
+    /// @brief access value stored in bin with given global bin number
+    ///
+    /// @param  [in] bin global bin number
+    /// @return const-reference to value stored in bin containing the given
+    ///         point
+    const_reference
+    at(size_t bin) const
+    {
+      return m_values.at(bin);
+    }
+
+    /// @brief access value stored in bin with given local bin numbers
+    ///
+    /// @param  [in] localBins local bin indices along each axis
+    /// @return reference to value stored in bin containing the given
+    ///         point
+    reference
+    at(const std::array<size_t, DIM>& localBins)
+    {
+      return m_values.at(getGlobalBinIndex(localBins));
+    }
+
+    /// @brief access value stored in bin with given local bin numbers
+    ///
+    /// @param  [in] localBins local bin indices along each axis
+    /// @return const-reference to value stored in bin containing the given
+    ///         point
+    ///
+    /// @pre All local bin indices must be a valid index for the corresponding
+    ///      axis (including the under-/overflow bin for this axis).
+    const_reference
+    at(const std::array<size_t, DIM>& localBins) const
+    {
+      return m_values.at(getGlobalBinIndex(localBins));
+    }
+
     /// @brief dimensionality of grid
     ///
     /// @return number of axes spanning the grid
@@ -89,19 +128,7 @@ namespace detail {
       return DIM;
     }
 
-    /// @brief total number of bins
-    ///
-    /// @return total number of bins in the grid
-    ///
-    /// @note This number contains under-/overflow bins along one or more axes.
-    size_t
-    size() const
-    {
-      return get_nbins_helper::getNBins(m_axes);
-    }
-
-  private:
-    /// @brief determine global bin index in grid defined by a set of axes
+    /// @brief determine global index for bin containing the given point
     ///
     /// @tparam Point any type with point semantics supporting component access
     ///               through @c operator[]
@@ -117,19 +144,45 @@ namespace detail {
       return global_bin_helper::getGlobalBin(point, m_axes);
     }
 
+    /// @brief determine global bin index from local bin indices along each axis
+    ///
+    /// @param  [in] localBins local bin indices along each axis
+    /// @return global index for bin defined by the local bin indices
+    ///
+    /// @pre All local bin indices must be a valid index for the corresponding
+    ///      axis (including the under-/overflow bin for this axis).
+    size_t
+    getGlobalBinIndex(const std::array<size_t, DIM>& localBins) const
+    {
+      return global_bin_helper::getGlobalBin(localBins, m_axes);
+    }
+
     /// @brief determine local bin index for each axis from global bin index
     ///
     /// @param  [in] bin global bin index
     /// @return array with local bin indices along each axis (in same order as
     ///         given @c axes object)
     ///
-    /// @note Local bin indices could be a under-/overflow bin along this axis.
+    /// @note Local bin indices can contain under-/overflow bins along the
+    ///       corresponding axis.
     std::array<size_t, DIM>
     getLocalBinIndices(size_t bin) const
     {
       return global_bin_helper::getLocalBinIndices(bin, m_axes);
     }
 
+    /// @brief total number of bins
+    ///
+    /// @return total number of bins in the grid
+    ///
+    /// @note This number contains under-and overflow bins along all axes.
+    size_t
+    size() const
+    {
+      return get_nbins_helper::getNBins(m_axes);
+    }
+
+  private:
     /// set of axis defining the multi-dimensional grid
     std::tuple<Axes...> m_axes;
     /// linear value store for each bin
