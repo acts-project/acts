@@ -64,6 +64,12 @@ namespace Test {
     // initialize grid
     for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
 
+    // test some bin centers
+    BOOST_TEST(g.getBinCenter({1}) == Point({0.5}));
+    BOOST_TEST(g.getBinCenter({2}) == Point({1.5}));
+    BOOST_TEST(g.getBinCenter({3}) == Point({2.5}));
+    BOOST_TEST(g.getBinCenter({4}) == Point({3.5}));
+
     // consistency of access
     const auto& point     = Point({0.7});
     size_t      globalBin = g.getGlobalBinIndex(point);
@@ -199,6 +205,12 @@ namespace Test {
     BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex(Point({1.2, 0.7})))
                == indices({2, 1}));
 
+    // test some bin centers
+    BOOST_TEST(g.getBinCenter({1, 1}) == Point({0.5, 0.5}));
+    BOOST_TEST(g.getBinCenter({2, 3}) == Point({1.5, 2.5}));
+    BOOST_TEST(g.getBinCenter({3, 1}) == Point({2.5, 0.5}));
+    BOOST_TEST(g.getBinCenter({4, 2}) == Point({3.5, 1.5}));
+
     // initialize grid
     for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
 
@@ -317,6 +329,12 @@ namespace Test {
     BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex(Point({1.2, 0.7, 1.4})))
                == indices({2, 1, 2}));
 
+    // test some bin centers
+    BOOST_TEST(g.getBinCenter({1, 1, 1}) == Point({0.5, 0.5, 0.5}));
+    BOOST_TEST(g.getBinCenter({2, 3, 2}) == Point({1.5, 2.5, 1.5}));
+    BOOST_TEST(g.getBinCenter({1, 1, 2}) == Point({0.5, 0.5, 1.5}));
+    BOOST_TEST(g.getBinCenter({2, 2, 1}) == Point({1.5, 1.5, 0.5}));
+
     // initialize grid
     for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
 
@@ -363,6 +381,10 @@ namespace Test {
 
     BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex(Point({0.8})))
                == indices({1}));
+
+    // test some bin centers
+    BOOST_TEST(g.getBinCenter({1}) == Point({0.5}));
+    BOOST_TEST(g.getBinCenter({2}) == Point({2.5}));
 
     // initialize grid
     for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
@@ -453,6 +475,12 @@ namespace Test {
     BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex(Point({1.8, 3.2})))
                == indices({2, 3}));
 
+    // test some bin centers
+    BOOST_TEST(g.getBinCenter({1, 1}) == Point({0.5, 0.25}));
+    BOOST_TEST(g.getBinCenter({1, 2}) == Point({0.5, 1.75}));
+    BOOST_TEST(g.getBinCenter({2, 1}) == Point({2.5, 0.25}));
+    BOOST_TEST(g.getBinCenter({2, 2}) == Point({2.5, 1.75}));
+
     // initialize grid
     for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
 
@@ -540,6 +568,14 @@ namespace Test {
 
     BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex(Point({1.8, 0.7, 3.2})))
                == indices({2, 2, 3}));
+
+    // test some bin centers
+    BOOST_TEST(g.getBinCenter({1, 1, 1}) == Point({0.5, 0.25, 0.25}));
+    BOOST_TEST(g.getBinCenter({1, 1, 2}) == Point({0.5, 0.25, 1.75}));
+    BOOST_TEST(g.getBinCenter({1, 1, 3}) == Point({0.5, 0.25, 3.15}));
+    BOOST_TEST(g.getBinCenter({1, 2, 1}) == Point({0.5, 1.75, 0.25}));
+    BOOST_TEST(g.getBinCenter({1, 2, 2}) == Point({0.5, 1.75, 1.75}));
+    BOOST_TEST(g.getBinCenter({1, 2, 3}) == Point({0.5, 1.75, 3.15}));
 
     // initialize grid
     for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
@@ -652,6 +688,16 @@ namespace Test {
 
     BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex(Point({1.1, 1.7})))
                == indices({5, 2}));
+
+    // test some bin centers
+    BOOST_TEST(g.getBinCenter({1, 1}) == Point({0.125, 0.25}));
+    BOOST_TEST(g.getBinCenter({1, 2}) == Point({0.125, 1.75}));
+    BOOST_TEST(g.getBinCenter({2, 1}) == Point({0.375, 0.25}));
+    BOOST_TEST(g.getBinCenter({2, 2}) == Point({0.375, 1.75}));
+    BOOST_TEST(g.getBinCenter({3, 1}) == Point({0.625, 0.25}));
+    BOOST_TEST(g.getBinCenter({3, 2}) == Point({0.625, 1.75}));
+    BOOST_TEST(g.getBinCenter({4, 1}) == Point({0.875, 0.25}));
+    BOOST_TEST(g.getBinCenter({4, 2}) == Point({0.875, 1.75}));
 
     // initialize grid
     for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;

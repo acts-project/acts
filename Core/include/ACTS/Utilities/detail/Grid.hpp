@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include <ACTS/Utilities/detail/grid_bins_helper.hpp>
 #include <array>
 #include <tuple>
-#include "ACTS/Utilities/detail/get_nbins_helper.hpp"
 #include "ACTS/Utilities/detail/global_bin_helper.hpp"
 
 namespace Acts {
@@ -128,6 +128,33 @@ namespace detail {
       return DIM;
     }
 
+    /// @brief get center position of bin with given global bin number
+    ///
+    /// @param  [in] bin global bin number
+    /// @return center position of bin
+    ///
+    /// @pre The specified global bin must not be an under- or overflow bin
+    ///      along any axis.
+    std::array<double, DIM>
+    getBinCenter(size_t bin) const
+    {
+      const auto& localIndices = getLocalBinIndices(bin);
+      return getBinCenter(localIndices);
+    }
+
+    /// @brief get center position of bin with given local bin numbers
+    ///
+    /// @param  [in] localBins local bin indices along each axis
+    /// @return center position of bin
+    ///
+    /// @pre All local bin indices must be a valid index for the corresponding
+    ///      axis (excluding the under-/overflow bins for each axis).
+    std::array<double, DIM>
+    getBinCenter(const std::array<size_t, DIM>& localBins) const
+    {
+      return grid_bins_helper::getBinCenter(localBins, m_axes);
+    }
+
     /// @brief determine global index for bin containing the given point
     ///
     /// @tparam Point any type with point semantics supporting component access
@@ -179,7 +206,7 @@ namespace detail {
     size_t
     size() const
     {
-      return get_nbins_helper::getNBins(m_axes);
+      return grid_bins_helper::getNBins(m_axes);
     }
 
   private:
