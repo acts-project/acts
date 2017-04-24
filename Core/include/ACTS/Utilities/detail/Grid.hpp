@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include <ACTS/Utilities/detail/grid_bins_helper.hpp>
 #include <array>
 #include <tuple>
 #include "ACTS/Utilities/detail/global_bin_helper.hpp"
+#include "ACTS/Utilities/detail/grid_bins_helper.hpp"
 
 namespace Acts {
 
@@ -128,20 +128,6 @@ namespace detail {
       return DIM;
     }
 
-    /// @brief get center position of bin with given global bin number
-    ///
-    /// @param  [in] bin global bin number
-    /// @return center position of bin
-    ///
-    /// @pre The specified global bin must not be an under- or overflow bin
-    ///      along any axis.
-    std::array<double, DIM>
-    getBinCenter(size_t bin) const
-    {
-      const auto& localIndices = getLocalBinIndices(bin);
-      return getBinCenter(localIndices);
-    }
-
     /// @brief get center position of bin with given local bin numbers
     ///
     /// @param  [in] localBins local bin indices along each axis
@@ -196,6 +182,32 @@ namespace detail {
     getLocalBinIndices(size_t bin) const
     {
       return global_bin_helper::getLocalBinIndices(bin, m_axes);
+    }
+
+    /// @brief retrieve lower-left bin edge from set of local bin indices
+    ///
+    /// @param  [in] localBins local bin indices along each axis
+    /// @return generalized lower-left bin edge position
+    ///
+    /// @pre @c localBins must only contain valid bin indices (i.e. excluding
+    ///      under-/overflow bins).
+    std::array<double, DIM>
+    getLowerLeftBinEdge(const std::array<size_t, DIM>& localBins) const
+    {
+      return grid_bins_helper::getLowerLeftBinEdge(localBins, m_axes);
+    }
+
+    /// @brief retrieve upper-right bin edge from set of local bin indices
+    ///
+    /// @param  [in] localBins local bin indices along each axis
+    /// @return generalized upper-right bin edge position
+    ///
+    /// @pre @c localBins must only contain valid bin indices (i.e. excluding
+    ///      under-/overflow bins).
+    std::array<double, DIM>
+    getUpperRightBinEdge(const std::array<size_t, DIM>& localBins) const
+    {
+      return grid_bins_helper::getUpperRightBinEdge(localBins, m_axes);
     }
 
     /// @brief total number of bins

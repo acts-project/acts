@@ -70,6 +70,18 @@ namespace Test {
     BOOST_TEST(g.getBinCenter({3}) == Point({2.5}));
     BOOST_TEST(g.getBinCenter({4}) == Point({3.5}));
 
+    // test some lower-left bin edges
+    BOOST_TEST(g.getLowerLeftBinEdge({1}) == Point({0.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({2}) == Point({1.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({3}) == Point({2.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({4}) == Point({3.}));
+
+    // test some upper right-bin edges
+    BOOST_TEST(g.getUpperRightBinEdge({1}) == Point({1.}));
+    BOOST_TEST(g.getUpperRightBinEdge({2}) == Point({2.}));
+    BOOST_TEST(g.getUpperRightBinEdge({3}) == Point({3.}));
+    BOOST_TEST(g.getUpperRightBinEdge({4}) == Point({4.}));
+
     // consistency of access
     const auto& point     = Point({0.7});
     size_t      globalBin = g.getGlobalBinIndex(point);
@@ -211,6 +223,18 @@ namespace Test {
     BOOST_TEST(g.getBinCenter({3, 1}) == Point({2.5, 0.5}));
     BOOST_TEST(g.getBinCenter({4, 2}) == Point({3.5, 1.5}));
 
+    // test some lower-left bin edges
+    BOOST_TEST(g.getLowerLeftBinEdge({1, 1}) == Point({0., 0.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({2, 3}) == Point({1., 2.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({3, 1}) == Point({2., 0.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({4, 2}) == Point({3., 1.}));
+
+    // test some upper right-bin edges
+    BOOST_TEST(g.getUpperRightBinEdge({1, 1}) == Point({1., 1.}));
+    BOOST_TEST(g.getUpperRightBinEdge({2, 3}) == Point({2., 3.}));
+    BOOST_TEST(g.getUpperRightBinEdge({3, 1}) == Point({3., 1.}));
+    BOOST_TEST(g.getUpperRightBinEdge({4, 2}) == Point({4., 2.}));
+
     // initialize grid
     for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
 
@@ -335,6 +359,18 @@ namespace Test {
     BOOST_TEST(g.getBinCenter({1, 1, 2}) == Point({0.5, 0.5, 1.5}));
     BOOST_TEST(g.getBinCenter({2, 2, 1}) == Point({1.5, 1.5, 0.5}));
 
+    // test some lower-left bin edges
+    BOOST_TEST(g.getLowerLeftBinEdge({1, 1, 1}) == Point({0., 0., 0.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({2, 3, 2}) == Point({1., 2., 1.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({1, 1, 2}) == Point({0., 0., 1.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({2, 2, 1}) == Point({1., 1., 0.}));
+
+    // test some upper right-bin edges
+    BOOST_TEST(g.getUpperRightBinEdge({1, 1, 1}) == Point({1., 1., 1.}));
+    BOOST_TEST(g.getUpperRightBinEdge({2, 3, 2}) == Point({2., 3., 2.}));
+    BOOST_TEST(g.getUpperRightBinEdge({1, 1, 2}) == Point({1., 1., 2.}));
+    BOOST_TEST(g.getUpperRightBinEdge({2, 2, 1}) == Point({2., 2., 1.}));
+
     // initialize grid
     for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
 
@@ -385,6 +421,14 @@ namespace Test {
     // test some bin centers
     BOOST_TEST(g.getBinCenter({1}) == Point({0.5}));
     BOOST_TEST(g.getBinCenter({2}) == Point({2.5}));
+
+    // test some lower-left bin edges
+    BOOST_TEST(g.getLowerLeftBinEdge({1}) == Point({0.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({2}) == Point({1.}));
+
+    // test some upper right-bin edges
+    BOOST_TEST(g.getUpperRightBinEdge({1}) == Point({1.}));
+    BOOST_TEST(g.getUpperRightBinEdge({2}) == Point({4.}));
 
     // initialize grid
     for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
@@ -481,6 +525,18 @@ namespace Test {
     BOOST_TEST(g.getBinCenter({2, 1}) == Point({2.5, 0.25}));
     BOOST_TEST(g.getBinCenter({2, 2}) == Point({2.5, 1.75}));
 
+    // test some lower-left bin edges
+    BOOST_TEST(g.getLowerLeftBinEdge({1, 1}) == Point({0., 0.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({1, 2}) == Point({0., 0.5}));
+    BOOST_TEST(g.getLowerLeftBinEdge({2, 1}) == Point({1., 0.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({2, 2}) == Point({1., 0.5}));
+
+    // test some upper right-bin edges
+    BOOST_TEST(g.getUpperRightBinEdge({1, 1}) == Point({1., 0.5}));
+    BOOST_TEST(g.getUpperRightBinEdge({1, 2}) == Point({1., 3.}));
+    BOOST_TEST(g.getUpperRightBinEdge({2, 1}) == Point({4., 0.5}));
+    BOOST_TEST(g.getUpperRightBinEdge({2, 2}) == Point({4., 3.}));
+
     // initialize grid
     for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
 
@@ -576,6 +632,22 @@ namespace Test {
     BOOST_TEST(g.getBinCenter({1, 2, 1}) == Point({0.5, 1.75, 0.25}));
     BOOST_TEST(g.getBinCenter({1, 2, 2}) == Point({0.5, 1.75, 1.75}));
     BOOST_TEST(g.getBinCenter({1, 2, 3}) == Point({0.5, 1.75, 3.15}));
+
+    // test some lower-left bin edges
+    BOOST_TEST(g.getLowerLeftBinEdge({1, 1, 1}) == Point({0., 0., 0.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({1, 1, 2}) == Point({0., 0., 0.5}));
+    BOOST_TEST(g.getLowerLeftBinEdge({1, 1, 3}) == Point({0., 0., 3.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({1, 2, 1}) == Point({0., 0.5, 0.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({1, 2, 2}) == Point({0., 0.5, 0.5}));
+    BOOST_TEST(g.getLowerLeftBinEdge({1, 2, 3}) == Point({0., 0.5, 3.}));
+
+    // test some upper right-bin edges
+    BOOST_TEST(g.getUpperRightBinEdge({1, 1, 1}) == Point({1., 0.5, 0.5}));
+    BOOST_TEST(g.getUpperRightBinEdge({1, 1, 2}) == Point({1., 0.5, 3.}));
+    BOOST_TEST(g.getUpperRightBinEdge({1, 1, 3}) == Point({1., 0.5, 3.3}));
+    BOOST_TEST(g.getUpperRightBinEdge({1, 2, 1}) == Point({1., 3., 0.5}));
+    BOOST_TEST(g.getUpperRightBinEdge({1, 2, 2}) == Point({1., 3., 3.}));
+    BOOST_TEST(g.getUpperRightBinEdge({1, 2, 3}) == Point({1., 3., 3.3}));
 
     // initialize grid
     for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
@@ -698,6 +770,26 @@ namespace Test {
     BOOST_TEST(g.getBinCenter({3, 2}) == Point({0.625, 1.75}));
     BOOST_TEST(g.getBinCenter({4, 1}) == Point({0.875, 0.25}));
     BOOST_TEST(g.getBinCenter({4, 2}) == Point({0.875, 1.75}));
+
+    // test some lower-left bin edges
+    BOOST_TEST(g.getLowerLeftBinEdge({1, 1}) == Point({0., 0.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({1, 2}) == Point({0., 0.5}));
+    BOOST_TEST(g.getLowerLeftBinEdge({2, 1}) == Point({0.25, 0.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({2, 2}) == Point({0.25, 0.5}));
+    BOOST_TEST(g.getLowerLeftBinEdge({3, 1}) == Point({0.5, 0.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({3, 2}) == Point({0.5, 0.5}));
+    BOOST_TEST(g.getLowerLeftBinEdge({4, 1}) == Point({0.75, 0.}));
+    BOOST_TEST(g.getLowerLeftBinEdge({4, 2}) == Point({0.75, 0.5}));
+
+    // test some upper-right bin edges
+    BOOST_TEST(g.getUpperRightBinEdge({1, 1}) == Point({0.25, 0.5}));
+    BOOST_TEST(g.getUpperRightBinEdge({1, 2}) == Point({0.25, 3.}));
+    BOOST_TEST(g.getUpperRightBinEdge({2, 1}) == Point({0.5, 0.5}));
+    BOOST_TEST(g.getUpperRightBinEdge({2, 2}) == Point({0.5, 3.}));
+    BOOST_TEST(g.getUpperRightBinEdge({3, 1}) == Point({0.75, 0.5}));
+    BOOST_TEST(g.getUpperRightBinEdge({3, 2}) == Point({0.75, 3.}));
+    BOOST_TEST(g.getUpperRightBinEdge({4, 1}) == Point({1., 0.5}));
+    BOOST_TEST(g.getUpperRightBinEdge({4, 2}) == Point({1., 3.}));
 
     // initialize grid
     for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;

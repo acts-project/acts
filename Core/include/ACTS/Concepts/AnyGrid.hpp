@@ -21,6 +21,8 @@ BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_dimension), dimension, 0);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_getBinCenter), getBinCenter, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_getGlobalBinIndex), getGlobalBinIndex, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_getLocalBinIndices), getLocalBinIndices, 1);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_getLowerLeftBinEdge), getLowerLeftBinEdge, 1);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_getUpperRightBinEdge), getUpperRightBinEdge, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_size), size, 0);
 // clang-format on
 
@@ -52,10 +54,11 @@ namespace concept {
         = mpl::vector<grid_concept<T, Point>,
                       has_at<const T& (const std::array<size_t, DIM>&), const bte::_self>,
                       has_at<T& (const std::array<size_t, DIM>&)>,
-                      has_getBinCenter<std::array<double, DIM>(size_t), const bte::_self>,
                       has_getBinCenter<std::array<double, DIM>(const std::array<size_t, DIM>&), const bte::_self>,
                       has_getGlobalBinIndex<size_t(const std::array<size_t, DIM>&), const bte::_self>,
-                      has_getLocalBinIndices<std::array<size_t, DIM>(size_t), const bte::_self>
+                      has_getLocalBinIndices<std::array<size_t, DIM>(size_t), const bte::_self>,
+                      has_getLowerLeftBinEdge<std::array<double, DIM>(const std::array<size_t, DIM>&), const bte::_self>,
+                      has_getUpperRightBinEdge<std::array<double, DIM>(const std::array<size_t, DIM>&), const bte::_self>
                       >;
     // clang-format off
   }  // namespace detail
