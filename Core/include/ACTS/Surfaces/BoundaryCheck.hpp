@@ -59,13 +59,6 @@ public:
   /// @param sigmaMax  Significance for the compatibility test
   BoundaryCheck(const ActsSymMatrixD<2>& localCovariance, double sigmaMax = 1);
 
-  /// Return a new BoundaryCheck with updated covariance.
-  /// @param jacobian Tranform Jacobian for the covariance
-  /// @warning This currently only transforms the covariance and does not work
-  ///          for the tolerance based check.
-  BoundaryCheck
-  transformed(const ActsMatrixD<2, 2>& jacobian) const;
-
   operator bool() const { return (m_type != Type::eNone); }
   bool operator!() const { return (m_type == Type::eNone); }
 
@@ -132,11 +125,12 @@ private:
     eChi2       ///< chi2-based cut with full correlations
   };
 
-  /// metric weight matrix: identity for absolute mode or inverse covariance
-  ActsSymMatrixD<2> m_weight;
-  /// dual use: absolute tolerances or relative chi2/ sigma cut.
-  Vector2D m_tolerance;
-  Type     m_type;
+  /// Return a new BoundaryCheck with updated covariance.
+  /// @param jacobian Tranform Jacobian for the covariance
+  /// @warning This currently only transforms the covariance and does not work
+  ///          for the tolerance based check.
+  BoundaryCheck
+  transformed(const ActsMatrixD<2, 2>& jacobian) const;
 
   /// Check if the point is inside the polygon w/o any tolerances.
   template <typename Vector2DContainer>
@@ -155,6 +149,15 @@ private:
   computeClosestPointOnPolygon(const Vector2D&          point,
                                const Vector2DContainer& vertices) const;
 
+  /// metric weight matrix: identity for absolute mode or inverse covariance
+  ActsSymMatrixD<2> m_weight;
+  /// dual use: absolute tolerances or relative chi2/ sigma cut.
+  Vector2D m_tolerance;
+  Type     m_type;
+
+  // To be able to use `transformed`
+  friend class CylinderBounds;
+  friend class DiscTrapezoidalBounds;
   // EllipseBounds needs a custom implementation
   friend class EllipseBounds;
 };
