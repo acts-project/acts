@@ -60,7 +60,7 @@ public:
   BoundaryCheck(const ActsSymMatrixD<2>& localCovariance, double sigmaMax = 1);
 
   operator bool() const { return (m_type != Type::eNone); }
-  bool operator!() const { return (m_type == Type::eNone); }
+  bool operator!() const { return !bool(*this); }
 
   /// Check if the point is inside a polygon.
   ///
