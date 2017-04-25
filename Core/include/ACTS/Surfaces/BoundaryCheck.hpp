@@ -65,7 +65,10 @@ public:
   /// Check if the point is inside a polygon.
   ///
   /// @param point    Test point
-  /// @param vertices Forward iterable container of convex polygon vertices
+  /// @param vertices Forward iterable container of convex polygon vertices.
+  ///                 Calling `std::begin`/ `std::end` on the container must
+  ///                 return an iterator where `*it` must be convertible to
+  ///                 an `Acts::Vector2D`.
   ///
   /// The check takes into account whether tolerances or covariances are defined
   /// for the boundary check.
@@ -92,7 +95,10 @@ public:
   /// Calculate the signed, weighted, closest distance to a polygonal boundary.
   ///
   /// @param point Test point
-  /// @param vertices Forward iterable container of convex polygon vertices
+  /// @param vertices Forward iterable container of convex polygon vertices.
+  ///                 Calling `std::begin`/ `std::end` on the container must
+  ///                 return an iterator where `*it` must be convertible to
+  ///                 an `Acts::Vector2D`.
   /// @return Negative value if inside, positive if outside
   ///
   /// If a covariance is defined, the distance is the corresponding Mahalanobis
