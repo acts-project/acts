@@ -199,7 +199,6 @@ Acts::BoundaryCheck::transformed(const ActsMatrixD<2, 2>& jacobian) const
     // project tolerances to the new system. depending on the jacobian we need
     // to check both tolerances, even when the initial check does not.
     bc.m_tolerance = (jacobian * m_tolerance).cwiseAbs();
-    bc.m_type      = Type::eAbsolute;
   } else /* Type::eChi2 */ {
     bc.m_weight
         = (jacobian * m_weight.inverse() * jacobian.transpose()).inverse();
