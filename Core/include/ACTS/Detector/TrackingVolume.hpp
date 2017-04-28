@@ -179,7 +179,7 @@ public:
                          const Layer*         eLayer,
                          const T&             parameters,
                          PropDirection        pDir            = alongMomentum,
-                         const BoundaryCheck& bcheck            = true,
+                         const BoundaryCheck& bcheck          = true,
                          bool                 resolveMaterial = true,
                          bool                 resolveSubSurfaces = false) const;
 
@@ -206,7 +206,7 @@ public:
   /// Return the dynamically created vector of detached sub volumes
   ///
   /// @param pos is the glboal position associated with that search
-  /// @param tol is the absolute tolerance for the search           
+  /// @param tol is the absolute tolerance for the search
   ///
   /// @return the list of associated detached tracking volumes, nullptr if it
   /// does not exist
@@ -256,7 +256,7 @@ public:
   /// @return is the templated boundary intersection
   template <class T>
   std::vector<BoundaryIntersection<T>>
-  boundarySurfacesOrdered(const T& parameters,
+  boundarySurfacesOrdered(const T&      parameters,
                           PropDirection pDir = alongMomentum) const;
 
   /// check if you are on a boundary surface
@@ -415,6 +415,11 @@ protected:
                  const Transform3D&    shift,
                  const std::string&    volumeName = "undefined");
 
+  /// @return a map of all contained detector elements and their corresponding
+  /// identifier
+  std::map<Identifier, const DetectorElementBase*>
+  detectorElements() const;
+
 private:
   /// Create Boundary Surface
   void
@@ -487,6 +492,10 @@ private:
 
   /// color code for displaying
   unsigned int m_colorCode;
+
+  /// map which collects all detector elements and connects them with their
+  /// Identfier
+  std::map<Identifier, const DetectorElementBase*> m_detectorElements;
 };
 
 inline const std::string&
@@ -655,7 +664,7 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
 }
 
 // Returns the boundary surfaces ordered in probability to hit them based on
-// straight line intersection @todo change hard-coded default 
+// straight line intersection @todo change hard-coded default
 template <class T>
 std::vector<BoundaryIntersection<T>>
 TrackingVolume::boundarySurfacesOrdered(const T& pars, PropDirection pDir) const
@@ -720,6 +729,12 @@ inline void
 TrackingVolume::setMotherVolume(const TrackingVolume* mvol)
 {
   m_motherVolume = mvol;
+}
+
+inline std::map<Identifier, const DetectorElementBase*>
+TrackingVolume::detectorElements() const
+{
+  return m_detectorElements;
 }
 
 }  // end of namespace

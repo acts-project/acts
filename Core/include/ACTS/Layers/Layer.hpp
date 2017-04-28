@@ -14,6 +14,7 @@
 #define ACTS_DETECTOR_LAYER_H 1
 
 // Core module
+#include <map>
 #include "ACTS/EventData/NeutralParameters.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Utilities/ApproachDescriptor.hpp"
@@ -339,6 +340,11 @@ public:
   LayerType
   layerType() const;
 
+  /// @return a map of all contained detector elements and their corresponding
+  /// identifier
+  std::map<Identifier, const DetectorElementBase*>
+  detectorElements() const;
+
 protected:
   /// Default Constructor
   Layer();
@@ -479,6 +485,10 @@ private:
   ///                as calculated by the TrackingGeometry
   void
   closeGeometry(const GeometryID& layerID);
+
+  /// map which collects all detector elements and connects them with their
+  /// Identfier
+  std::map<Identifier, const DetectorElementBase*> m_detectorElements;
 };
 
 inline const SurfaceArray*
@@ -543,6 +553,12 @@ Layer::registerRepresentingVolume(const AbstractVolume* theVol)
 {
   delete m_representingVolume;
   m_representingVolume = theVol;
+}
+
+inline std::map<Identifier, const DetectorElementBase*>
+Layer::detectorElements() const
+{
+  return m_detectorElements;
 }
 
 /// Layers are constructedd with shared_ptr factories, hence the layer array is
