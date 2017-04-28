@@ -573,21 +573,31 @@ Acts::DD4hepLayerBuilder::collectSensitive(
     std::vector<const Acts::Surface*>&  surfaces,
     const std::string&                  axes) const
 {
+  std::string                                   axes1 = axes;
   const DD4hep::Geometry::DetElement::Children& children
       = detElement.children();
   if (!children.empty()) {
     for (auto& child : children) {
       DD4hep::Geometry::DetElement childDetElement = child.second;
       if (childDetElement.volume().isSensitive()) {
-        // create the corresponding detector element
-        Acts::DD4hepDetElement* dd4hepDetElement
-            = new Acts::DD4hepDetElement(childDetElement, axes, units::_cm);
-        // add surface to surface vector
-        surfaces.push_back(&(dd4hepDetElement->surface()));
+        // access the possibly shared DigitizationModule
+        std::shared_ptr<const DigitizationModule> digiModule = nullptr;
+        Acts::IActsExtension*                     detExtension
+            = childDetElement.extension<Acts::IActsExtension>();
+        if (detExtension) {
+          digiModule = detExtension->digitizationModule();
+          axes1      = detExtension->axes();
+        }
       }
-      collectSensitive(childDetElement, surfaces, axes);
+      // create the corresponding detector element
+      Acts::DD4hepDetElement* dd4hepDetElement = new Acts::DD4hepDetElement(
+          childDetElement, axes1, units::_cm, digiModule);
+      // add surface to surface vector
+      surfaces.push_back(&(dd4hepDetElement->surface()));
     }
+    collectSensitive(childDetElement, surfaces, axes);
   }
+}
 }
 
 std::shared_ptr<const Acts::Transform3D>

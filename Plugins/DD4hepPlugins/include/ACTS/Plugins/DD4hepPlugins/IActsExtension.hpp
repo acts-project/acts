@@ -14,6 +14,7 @@
 #define ACTS_DD4HEPDETECTORELEMENT_IACTSEXTENSION_H 1
 
 // Algebra
+#include <memory>
 #include <vector>
 #include "ACTS/Utilities/Definitions.hpp"
 
@@ -21,6 +22,7 @@ namespace DD4hep {
 namespace Geometry {
   class DetElement;
   class Segmentation;
+  class Volume;
 }
 }
 
@@ -54,6 +56,10 @@ namespace Acts {
 /// In case the sensitive modules/components contained by a layer have a
 /// different orientation in respect to the local tracking frame of ACTS, the
 /// axes orientation of these modules can be set for the layer.
+/// In case the segmentation is set for the module (by using the second
+/// constructor setting the segmentation or using the setSegmentation()
+/// function), the axes do not need to be set for the layer, which containes
+/// the modules.
 ///
 /// In DD4hep cylinder and disc volumes are both described with the underlying
 /// ROOT TGeoConeSeg class. In ACTS one needs to distinguish these two volume
@@ -65,7 +71,7 @@ namespace Acts {
 ///
 /// @note see Acts::ActsExtension for implementation.
 
-class Module;
+class DigitizationModule;
 
 /// @enum LayerMaterialPos The LayerMaterialPos enumeration is foreseen to mark
 /// on which surface
@@ -128,6 +134,41 @@ public:
   /// DetElement to automatically create the layer envelope
   virtual double
   envelopeZ() const = 0;
+  /// In case several sensitive modules have the same segmentation function can
+  /// to set the segmentation of this extension, which can than be attached to
+  /// the different modules. In this way the Acts::DigitizationModule will
+  /// be shared amongst these modules which saves memory.
+  /// In case this function is used for the module, the axes do not need
+  /// to be set for the layer, which containes this module.
+  /// @param segmentation The DD4hep segmentation object
+  /// @param volume The DD4hep logical volume
+  /// @param axes The orientation of the axes in respect to the tracking frame
+  ///  A different orientation can occur because in TGeo (which
+  /// is the underlying geometry model of %DD4hep) all shapes are 3D volumes
+  /// also the sensitive components of a detector. In the ACTS tracking
+  /// geometry these sensitive components are described as 2D surfaces, which
+  /// have their local 2D coordinate system. Therefore one needs to know which
+  /// coordinates should be taken as the local coordinates.
+  /// A string of the three characters x, y and z (standing for the
+  /// three axes) needs to be handed over. There is a distinction between
+  /// capital and lower case
+  /// characters :
+  /// 	- capital      -> positive orientation of the axis
+  ///		- lower case   -> negative oriantation of the axis
+  ///
+  ///
+  /// Example options are:
+  /// 	- "XYZ" -> identical frame definition (default value)
+  /// 	- "YZX" -> node y axis is tracking x axis, etc.
+  ///		- "XzY" -> negative node z axis is tracking y axis, etc.
+  virtual void
+  setSegmentation(DD4hep::Geometry::Segmentation segmentation,
+                  DD4hep::Geometry::Volume       volume,
+                  std::string                    axes)
+      = 0;
+  /// @return the Acts::DigitizationModule
+  virtual std::shared_ptr<const DigitizationModule>
+  digitizationModule() const = 0;
 
 protected:
   /// Protected constructor

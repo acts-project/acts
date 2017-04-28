@@ -95,6 +95,17 @@ namespace Acts {
 /// Acts::ActsExtension* layerExtension = new Acts::ActsExtension(layConfig);
 /// layer_detElement.addExtension<Acts::IActsExtension>(layerExtension);
 ///
+/// In case several sensitive detector modules have the same segmentation an
+/// extension using the second constructor (with the segmentation as
+/// parameter)
+/// (or the function setSegmentation())
+/// should be created once and then be attached to all the DetElements which
+/// have that same segmentation. In this way only one Acts::DigitizationModule
+/// is
+/// created and shared between all detector elements with the same segmentation
+/// which saves memory and time. If this extension is not set and the DetElement
+/// is sensitive and has a readout, a unique Acts::DigitizationModule will be
+/// created for this DetElement.
 /// @endcode
 
 class ActsExtension : public IActsExtension
@@ -186,6 +197,36 @@ public:
   };
   /// Constructor
   ActsExtension(const Config& cfg);
+  /// Constructor for module with segmentation
+  /// In case several sensitive modules have the same segmentation the same
+  /// extension can be attached to them. In this way the
+  /// Acts::DigitizationModule will be shared amongst these modules which saves
+  /// memory. In case this function is used for the module, the axes do not need
+  /// to be set for the layer, which containes this module.
+  /// @param segmentation The DD4hep segmentation object
+  /// @param volume The DD4hep logical volume
+  /// @param axes The orientation of the axes in respect to the tracking frame
+  ///  A different orientation can occur because in TGeo (which
+  /// is the underlying geometry model of %DD4hep) all shapes are 3D volumes
+  /// also the sensitive components of a detector. In the ACTS tracking
+  /// geometry these sensitive components are described as 2D surfaces, which
+  /// have their local 2D coordinate system. Therefore one needs to know which
+  /// coordinates should be taken as the local coordinates.
+  /// A string of the three characters x, y and z (standing for the
+  /// three axes) needs to be handed over. There is a distinction between
+  /// capital and lower case
+  /// characters :
+  /// 	- capital      -> positive orientation of the axis
+  ///		- lower case   -> negative oriantation of the axis
+  ///
+  ///
+  /// Example options are:
+  /// 	- "XYZ" -> identical frame definition (default value)
+  /// 	- "YZX" -> node y axis is tracking x axis, etc.
+  ///		- "XzY" -> negative node z axis is tracking y axis, etc.
+  ActsExtension(DD4hep::Geometry::Segmentation segmentation,
+                DD4hep::Geometry::Volume       volume,
+                std::string                    axes);
   /// Copy constructor
   ActsExtension(const ActsExtension&, const DD4hep::Geometry::DetElement&);
   /// Destructor
@@ -194,55 +235,57 @@ public:
   /// @param config is the new configuration struct
   void
   setConfiguration(const Config& config);
-  /// Indicates if the DD4hep::DetElement is the beampipe
+  /// @copydoc IActsExtension::isBeampipe()
   bool
   isBeampipe() const final;
-  /// Indicates that the DD4hep::DetElement is a barrel
+  /// @copydoc IActsExtension::isBarrel()
   bool
   isBarrel() const final;
-  /// Indicates that the DD4hep::DetElement is an endcap
+  /// @copydoc IActsExtension::isEndcap()
   bool
   isEndcap() const final;
-  /// Indicates that the DD4hep::DetElement is a layer
+  /// @copydoc IActsExtension::isLayer()
   bool
   isLayer() const final;
-  /// Bool returning true if the layers should carry material
-  /// @note automatically set when the material bins are set
+  /// @copydoc IActsExtension::hasSupportMaterial()
   bool
   hasSupportMaterial() const final;
-  /// Access to the two bin numbers determining the granularity of the two
-  /// dimensional grid on which the material of the layer should be mapped on
-  /// @return std::pair with the number of bins in th first and the second
-  /// direction
+  /// @copydoc IActsExtension::materialBins()
   std::pair<size_t, size_t>
   materialBins() const final;
-  /// @return states if the material should be mapped on the inner,
-  /// the center or the outer surface of the layer
+  /// @copydoc IActsExtension::layerMaterialPosition()
   Acts::LayerMaterialPos
   layerMaterialPosition() const final;
-  /// Access the orientation of the module in respect to the tracking frame
-  /// @return string describing the orientation of the axes
+  /// @copydoc IActsExtension::axes()
   const std::string
   axes() const final;
-  /// @return states if the geometrical boundaries of the current object should
-  /// be built automatically by adding given tolerances to the expansion of the
-  /// contained modules
+  /// @copydoc IActsExtension::buildEnvelope()
   bool
   buildEnvelope() const final;
-  /// @return the tolerance which should be added in r to the geometrical
-  /// expansion of the contained surfaces (sensituive DetElements) of this
-  /// DetElement to automatically create the layer envelope
+  /// @copydoc IActsExtension::envelopeZ()
   double
   envelopeR() const final;
-  /// @return the tolerance which should be added in z to the geometrical
-  /// expansion of the contained surfaces (sensituive DetElements) of this
-  /// DetElement to automatically create the layer envelope
+  /// @copydoc IActsExtension::envelopeZ()
   double
   envelopeZ() const final;
+  // clang-format off
+  /// @copydoc IActsExtension::setSegmentation(DD4hep::Geometry::Segmentation,DD4hep::Geometry::Volume,std::string)
+  //   clang-format on
+  void
+  setSegmentation(DD4hep::Geometry::Segmentation segmentation,
+                  DD4hep::Geometry::Volume       volume,
+                  std::string                    axes) final;
+  /// @copydoc IActsExtension::digitizationModule()
+  std::shared_ptr<const DigitizationModule>
+  digitizationModule() const final;
 
 private:
   /// The configuration object
   Config m_cfg;
+  // The Acts DigitizaionModule
+  std::shared_ptr<const DigitizationModule> m_digiModule;
+  // The DD4hep Segmentation object
+  DD4hep::Geometry::Segmentation m_segmentation;
 };
 
 inline bool
@@ -312,6 +355,12 @@ inline double
 ActsExtension::envelopeZ() const
 {
   return (m_cfg.envelopeR);
+}
+
+inline std::shared_ptr<const DigitizationModule>
+Acts::ActsExtension::digitizationModule() const
+{
+  return (m_digiModule);
 }
 }
 
