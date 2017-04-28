@@ -14,6 +14,49 @@ namespace Acts {
 
 namespace detail {
 
+  /// @brief check types for requirements needed by interpolation
+  ///
+  /// @tparam Point type for specifying geometric positions
+  /// @tparam Value type of values to be interpolated
+  ///
+  /// This helper struct provides compile-time information whether the provided
+  /// @c Point and @c Value types can be used in the Acts::interpolate function.
+  ///
+  /// The following boolean variable
+  /// @code{.cpp}
+  /// Acts::detail::can_interpolate<Point,Value>::value
+  /// @endcode
+  ///
+  /// is @c true if both @c Point and @c Value fulfill the type requirements
+  /// for being used in the interpolation function, otherwise it is @c false.
+  /// This expression can be employed in @c std::enable_if_t to use SFINAE
+  /// patterns to enable/disable (member) functions.
+  template <typename Point, typename Value>
+  struct can_interpolate
+  {
+    template <typename C>
+    static auto
+    value_type_test(C* c)
+        -> decltype(C(std::declval<double>() * std::declval<C>()
+                      + std::declval<double>() * std::declval<C>()),
+                    std::true_type());
+    template <typename C>
+    static std::false_type value_type_test(...);
+
+    template <typename C>
+    static auto
+    point_type_test(C* c)
+        -> decltype(double(std::declval<C>()[0]), std::true_type());
+    template <typename C>
+    static std::false_type point_type_test(...);
+
+    static const bool value
+        = std::is_same<std::true_type,
+                       decltype(value_type_test<Value>(nullptr))>::value
+        and std::is_same<std::true_type,
+                         decltype(point_type_test<Point>(nullptr))>::value;
+  };
+
   /// @brief helper struct for performing multi-dimensional linear interpolation
   ///
   /// @tparam T     type of values to be interpolated

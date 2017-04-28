@@ -9,6 +9,7 @@
 #pragma once
 
 #include <array>
+#include <type_traits>
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/detail/interpolation_impl.hpp"
 
@@ -41,7 +42,8 @@ namespace Acts {
 /// @c b, then the following must be a valid expression <tt>a * U + b * V</tt>
 /// yielding an object which is (implicitly) convertible to @c T.
 /// - @c Point must represent a D-dimensional position and support coordinate
-/// access using @c operator[]. Coordinate indices must start at 0.
+/// access using @c operator[] which should return a @c double (or a value which
+/// is implicitly convertible). Coordinate indices must start at 0.
 /// - @c N is the number of hyper box corners which is \f$2^D\f$ where \f$D\f$
 /// is the dimensionality of the hyper box. The dimensionality must be
 /// consistent with the provided @c Point type.
@@ -66,7 +68,10 @@ namespace Acts {
 ///    - (4,2,6): 101 = 5
 ///    - (1,5,6): 110 = 6
 ///    - (4,5,6): 111 = 7
-template <typename T, class Point, size_t N>
+template <typename T,
+          class Point,
+          size_t N,
+          typename = std::enable_if_t<detail::can_interpolate<Point, T>::value>>
 inline T
 interpolate(const Point& position,
             const Point& lowerCorner,
