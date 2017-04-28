@@ -79,7 +79,7 @@ public:
   /// Return the DigitizationModule
   /// @return optionally the DigitizationModule
   virtual std::shared_ptr<const DigitizationModule>
-  digitizationModule() const;
+  digitizationModule() const = 0;
 
   /// Returns the thickness of the module
   /// @return double that indicates the thickness of the module
@@ -130,12 +130,6 @@ private:
   std::vector<const DetectorElementBase*> m_binmembers;
   std::vector<const DetectorElementBase*> m_neighbours;
 };
-
-inline std::shared_ptr<const DigitizationModule>
-DetectorElementBase::digitizationModule() const
-{
-  return nullptr;
-}
 
 inline const std::vector<const DetectorElementBase*>&
 DetectorElementBase::binmembers() const
