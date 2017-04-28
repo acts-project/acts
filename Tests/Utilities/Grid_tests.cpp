@@ -839,6 +839,47 @@ namespace Test {
     BOOST_TEST(g.at(Point({0.4, 2.3})) == 5.);
   }
 
+  BOOST_AUTO_TEST_CASE(grid_interpolation)
+  {
+    typedef std::array<double, 3> Point;
+    EquidistantAxis a(1.0, 3.0, 2u);
+    EquidistantAxis b(1.0, 5.0, 2u);
+    EquidistantAxis c(1.0, 7.0, 2u);
+    Grid<double, EquidistantAxis, EquidistantAxis, EquidistantAxis> g(
+        std::make_tuple(std::move(a), std::move(b), std::move(c)));
+
+    g.at(Point({1., 1., 1.})) = 10.;
+    g.at(Point({2., 1., 1.})) = 20.;
+    g.at(Point({1., 3., 1.})) = 30.;
+    g.at(Point({2., 3., 1.})) = 40.;
+    g.at(Point({1., 1., 4.})) = 50.;
+    g.at(Point({2., 1., 4.})) = 60.;
+    g.at(Point({1., 3., 4.})) = 70.;
+    g.at(Point({2., 3., 4.})) = 80.;
+
+    BOOST_TEST(g.interpolate(Point({1., 1., 1.})) == 10.);
+    BOOST_TEST(g.interpolate(Point({2., 1., 1.})) == 20.);
+    BOOST_TEST(g.interpolate(Point({1., 3., 1.})) == 30.);
+    BOOST_TEST(g.interpolate(Point({2., 3., 1.})) == 40.);
+    BOOST_TEST(g.interpolate(Point({1., 1., 4.})) == 50.);
+    BOOST_TEST(g.interpolate(Point({2., 1., 4.})) == 60.);
+    BOOST_TEST(g.interpolate(Point({1., 3., 4.})) == 70.);
+    BOOST_TEST(g.interpolate(Point({2., 3., 4.})) == 80.);
+    BOOST_TEST(g.interpolate(Point({1.5, 1., 1.})) == 15.);
+    BOOST_TEST(g.interpolate(Point({1.5, 3., 1.})) == 35.);
+    BOOST_TEST(g.interpolate(Point({1., 2., 1.})) == 20.);
+    BOOST_TEST(g.interpolate(Point({2., 2., 1.})) == 30.);
+    BOOST_TEST(g.interpolate(Point({1.5, 1., 4.})) == 55.);
+    BOOST_TEST(g.interpolate(Point({1.5, 3., 4.})) == 75.);
+    BOOST_TEST(g.interpolate(Point({1., 2., 4.})) == 60.);
+    BOOST_TEST(g.interpolate(Point({2., 2., 4.})) == 70.);
+    BOOST_TEST(g.interpolate(Point({1., 1., 2.5})) == 30.);
+    BOOST_TEST(g.interpolate(Point({1., 3., 2.5})) == 50.);
+    BOOST_TEST(g.interpolate(Point({2., 1., 2.5})) == 40.);
+    BOOST_TEST(g.interpolate(Point({2., 3., 2.5})) == 60.);
+    BOOST_TEST(g.interpolate(Point({1.5, 2., 2.5})) == 360. / 8);
+    BOOST_TEST(g.interpolate(Point({1.3, 2.1, 1.6})) == 32.);
+  }
 }  // namespace Test
 
 }  // namespace Acts

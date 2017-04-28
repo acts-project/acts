@@ -74,7 +74,7 @@ namespace detail {
                             const std::tuple<Axes...>& axes)
     {
       size_t thisAxisNBins = std::get<N>(axes).getNBins();
-      localIndices.at(N)   = std::min(thisAxisNBins, ++localIndices.at(N));
+      localIndices.at(N)   = std::min(thisAxisNBins + 1, ++localIndices.at(N));
       grid_bins_helper_impl<N - 1>::getUpperRightBinIndices(localIndices, axes);
     }
   };
@@ -125,7 +125,7 @@ namespace detail {
                             const std::tuple<Axes...>& axes)
     {
       size_t thisAxisNBins = std::get<0u>(axes).getNBins();
-      localIndices.at(0u)  = std::min(thisAxisNBins, ++localIndices.at(0u));
+      localIndices.at(0u)  = std::min(thisAxisNBins + 1, ++localIndices.at(0u));
     }
   };
   /// @endcond
@@ -186,15 +186,9 @@ namespace detail {
     /// @pre @c localIndices must only contain valid bin indices (i.e. excluding
     ///      under-/overflow bins).
     ///
-    /// @note The returned bin indices will not contain any under- or overflow
-    ///       bins. If the given local indices point to the first bin along an
-    ///       axis, this bin index is not decremented. The idea behind this
-    ///       behavior is that the generalized lower-left bin is usually needed
-    ///       when doing some interpolation calculations. Since values in the
-    ///       under-/overflow bins have no well-defined location/boundaries, an
-    ///       interpolation using those values is ill-defined. With the
-    ///       convention above, no interpolation along those axis is performed
-    ///       (since the bin index remains unchanged).
+    /// This function returns the local bin indices for the generalized
+    /// lower-left neighbor which simply means that all local bin indices are
+    /// decremented by one.
     template <class... Axes>
     static std::array<size_t, sizeof...(Axes)>
     getLowerLeftBinIndices(
@@ -202,9 +196,7 @@ namespace detail {
         const std::tuple<Axes...>&)
     {
       auto llIndices = localIndices;
-      for (size_t i = 0; i < sizeof...(Axes); ++i) {
-        if (llIndices.at(i) > 1) --llIndices.at(i);
-      }
+      for (size_t i = 0; i < sizeof...(Axes); ++i) --llIndices.at(i);
 
       return llIndices;
     }
@@ -253,20 +245,14 @@ namespace detail {
     /// @tparam Axes parameter pack of axis types defining the grid
     /// @param  [in] localIndices local bin indices along each axis
     /// @param  [in] axes         actual axis objects spanning the grid
-    /// @return array with local bin indices of upper-right nighbor bin
+    /// @return array with local bin indices of upper-right neighbor bin
     ///
     /// @pre @c localIndices must only contain valid bin indices (i.e. excluding
     ///      under-/overflow bins).
     ///
-    /// @note The returned bin indices will not contain any under- or overflow
-    ///       bins. If the given local indices point to the last bin along an
-    ///       axis, this bin index is not incremented. The idea behind this
-    ///       behavior is that the generalized upper-right bin is usually needed
-    ///       when doing some interpolation calculations. Since values in the
-    ///       under-/overflow bins have no well-defined location/boundaries, an
-    ///       interpolation using those values is ill-defined. With the
-    ///       convention above, no interpolation along those axis is performed
-    ///       (since the bin index remains unchanged).
+    /// This function returns the local bin indices for the generalized
+    /// upper-right neighbor which simply means that all local bin indices are
+    /// incremented by one.
     template <class... Axes>
     static std::array<size_t, sizeof...(Axes)>
     getUpperRightBinIndices(

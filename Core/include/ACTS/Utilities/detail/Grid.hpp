@@ -10,6 +10,8 @@
 
 #include <array>
 #include <tuple>
+#include <type_traits>
+#include "ACTS/Utilities/Interpolation.hpp"
 #include "ACTS/Utilities/detail/global_bin_helper.hpp"
 #include "ACTS/Utilities/detail/grid_bins_helper.hpp"
 
@@ -208,6 +210,63 @@ namespace detail {
     getUpperRightBinEdge(const std::array<size_t, DIM>& localBins) const
     {
       return grid_bins_helper::getUpperRightBinEdge(localBins, m_axes);
+    }
+
+    /// @brief interpolate grid values to given position
+    ///
+    /// @tparam Point type specifying geometric positions
+    /// @tparam U     dummy template parameter identical to @c T
+    ///
+    /// @param [in] point location to which to interpolate grid values. The
+    ///                   position must be within the grid dimensions and not
+    ///                   lie in an under-/overflow bin along any axis.
+    ///
+    /// @return interpolated value at given position
+    ///
+    /// @note This function is available only if the following conditions are
+    /// fulfilled:
+    /// - Given @c U and @c V of value type @c T as well as two @c double @c a
+    /// and @c b, then the following must be a valid expression <tt>a * U + b *
+    /// V</tt> yielding an object which is (implicitly) convertible to @c T.
+    /// - @c Point must represent a D-dimensional position and support
+    /// coordinate access using @c operator[] which should return a @c double
+    /// (or a value which is implicitly convertible). Coordinate indices must
+    /// start at 0.
+    template <class Point,
+              typename U = T,
+              typename   = std::enable_if_t<can_interpolate<Point, U>::value>>
+    T
+    interpolate(const Point& point) const
+    {
+      // there are 2^DIM corner points used during the interpolation
+      constexpr size_t nCorners = 1 << DIM;
+
+      // construct vector of pairs of adjacent bin centers and values
+      std::array<value_type, nCorners> neighbors;
+
+      // get local indices for current bin
+      // value of bin is interpreted as being the field value at its lower left
+      // corner
+      const auto& llIndices = getLocalBinIndices(getGlobalBinIndex(point));
+
+      // get local indices for "upper right" bin (i.e. all local indices
+      // incremented by one but avoid overflows)
+      auto urIndices
+          = grid_bins_helper::getUpperRightBinIndices(llIndices, m_axes);
+
+      // loop through all corner points
+      for (size_t i = 0; i < nCorners; ++i) {
+        auto indices = llIndices;
+        for (size_t dimension = 0; dimension < DIM; ++dimension) {
+          if (i & (1 << dimension)) indices.at(dimension) += 1;
+        }
+        neighbors.at(i) = at(indices);
+      }
+
+      return Acts::interpolate(point,
+                               getLowerLeftBinEdge(llIndices),
+                               getLowerLeftBinEdge(urIndices),
+                               neighbors);
     }
 
     /// @brief total number of bins
