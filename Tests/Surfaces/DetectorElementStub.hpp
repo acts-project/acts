@@ -113,6 +113,11 @@ public:
   const Transform3D&
   transform(const Identifier& identifier = Identifier()) const override;
 
+  /// Return the DigitizationModule
+  /// @return optionally the DigitizationModule
+  virtual std::shared_ptr<const DigitizationModule>
+  digitizationModule() const final override;
+
   /// Return surface associated with this identifier,
   ///
   /// @param identifier is ignored in this case
@@ -159,6 +164,12 @@ inline const Transform3D&
 DetectorElementStub::transform(const Identifier&) const
 {
   return *m_elementTransform;
+}
+
+inline std::shared_ptr<const DigitizationModule>
+DetectorElementStub::digitizationModule() const
+{
+  return nullptr;
 }
 
 inline const Surface&

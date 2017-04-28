@@ -19,6 +19,8 @@
 
 namespace Acts {
 
+class DigitizationModule;
+
 /// @class TGeoDetectorElement
 ///
 /// DetectorElement plugin for ROOT TGeo shapes. Added possibility to hand over
@@ -106,6 +108,11 @@ public:
   /// to this detector element
   virtual const std::vector<std::shared_ptr<const Surface>>&
   surfaces() const final override;
+
+  /// Return the DigitizationModule
+  /// @return optionally the DigitizationModule
+  virtual std::shared_ptr<const DigitizationModule>
+  digitizationModule() const override;
 
   /// Returns the thickness of the module
   virtual double
