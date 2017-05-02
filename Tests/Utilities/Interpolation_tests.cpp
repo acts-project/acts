@@ -9,6 +9,7 @@
 #define BOOST_TEST_MODULE interpolation tests
 #include <boost/test/included/unit_test.hpp>
 
+#include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Interpolation.hpp"
 #include "ACTS/Utilities/detail/interpolation_impl.hpp"
 
@@ -99,6 +100,27 @@ namespace Test {
     BOOST_TEST(interpolate(Point({2., 3., 2.5}), low, high, v) == 60.);
     BOOST_TEST(interpolate(Point({1.5, 2., 2.5}), low, high, v) == 360. / 8);
     BOOST_TEST(interpolate(Point({1.3, 2.1, 1.6}), low, high, v) == 32.);
+  }
+
+  BOOST_AUTO_TEST_CASE(interpolation_mixed_point_values)
+  {
+    typedef ActsVectorD<1> Point1;
+    typedef std::array<double, 1u> Point2;
+    typedef std::vector<double> Point3;
+    typedef std::array<double, 2u> Values;
+
+    Point2 low  = {1.};
+    Point3 high = {2.};
+    Values v    = {10., 20.};
+
+    Point1 p;
+    BOOST_TEST(interpolate((p << 0.5).finished(), low, high, v) == 5.);
+    BOOST_TEST(interpolate((p << 1.).finished(), low, high, v) == 10.);
+    BOOST_TEST(interpolate((p << 1.3).finished(), low, high, v) == 13.);
+    BOOST_TEST(interpolate((p << 1.5).finished(), low, high, v) == 15.);
+    BOOST_TEST(interpolate((p << 1.8).finished(), low, high, v) == 18.);
+    BOOST_TEST(interpolate((p << 2.).finished(), low, high, v) == 20.);
+    BOOST_TEST(interpolate((p << 2.3).finished(), low, high, v) == 23.);
   }
 }  // namespace Test
 
