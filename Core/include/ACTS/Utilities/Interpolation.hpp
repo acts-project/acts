@@ -17,9 +17,11 @@ namespace Acts {
 
 /// @brief performs linear interpolation inside a hyper box
 ///
-/// @tparam T     type of values to be interpolated
-/// @tparam Point type specifying geometric positions
-/// @tparam N     number of hyper box corners
+/// @tparam T      type of values to be interpolated
+/// @tparam N      number of hyper box corners
+/// @tparam Point1 type specifying geometric positions
+/// @tparam Point2 type specifying geometric positions
+/// @tparam Point3 type specifying geometric positions
 ///
 /// @param [in] position    position to which to interpolate
 /// @param [in] lowerCorner generalized lower-left corner of hyper box
@@ -41,15 +43,15 @@ namespace Acts {
 /// - Given @c U and @c V of value type @c T as well as two @c double @c a and
 /// @c b, then the following must be a valid expression <tt>a * U + b * V</tt>
 /// yielding an object which is (implicitly) convertible to @c T.
-/// - @c Point must represent a D-dimensional position and support coordinate
-/// access using @c operator[] which should return a @c double (or a value which
-/// is implicitly convertible). Coordinate indices must start at 0.
-/// - @c N is the number of hyper box corners which is \f$2^D\f$ where \f$D\f$
+/// - All @c Point types must represent d-dimensional positions and support
+/// coordinate access using @c operator[] which should return a @c double (or a
+/// value which is implicitly convertible). Coordinate indices must start at 0.
+/// - @c N is the number of hyper box corners which is \f$2^d\f$ where \f$d\f$
 /// is the dimensionality of the hyper box. The dimensionality must be
-/// consistent with the provided @c Point type.
+/// consistent with the provided @c Point types.
 /// - Definition of the canonical order for sorting the field values: The hyper
 /// box corners are numbered according to the following scheme. Each corner is
-/// defined by the set of lower/upper boundary limits in each dimension @c d.
+/// defined by the set of lower/upper boundary limits in each dimension @c i.
 /// This can be represented by a binary code (from right to left) where a @c 0
 /// stands for a lower bound along this axis and a @c 1 stand for the upper
 /// bound along this axis. The right most bit corresponds to the first dimension
@@ -68,17 +70,21 @@ namespace Acts {
 ///    - (4,2,6): 101 = 5
 ///    - (1,5,6): 110 = 6
 ///    - (4,5,6): 111 = 7
-template <typename T,
-          class Point,
-          size_t N,
-          typename = std::enable_if_t<detail::can_interpolate<Point, T>::value>>
+template <
+    typename T,
+    size_t N,
+    class Point1,
+    class Point2 = Point1,
+    class Point3 = Point2,
+    typename     = std::
+        enable_if_t<detail::can_interpolate<Point1, Point2, Point3, T>::value>>
 inline T
-interpolate(const Point& position,
-            const Point& lowerCorner,
-            const Point& upperCorner,
+interpolate(const Point1& position,
+            const Point2& lowerCorner,
+            const Point3& upperCorner,
             const std::array<T, N>& values)
 {
-  return detail::interpolate_impl<T, Point, 0u, N>::run(
+  return detail::interpolate_impl<T, Point1, Point2, Point3, 0u, N>::run(
       position, lowerCorner, upperCorner, values);
 }
 

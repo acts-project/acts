@@ -228,13 +228,17 @@ namespace detail {
     /// - Given @c U and @c V of value type @c T as well as two @c double @c a
     /// and @c b, then the following must be a valid expression <tt>a * U + b *
     /// V</tt> yielding an object which is (implicitly) convertible to @c T.
-    /// - @c Point must represent a D-dimensional position and support
+    /// - @c Point must represent a d-dimensional position and support
     /// coordinate access using @c operator[] which should return a @c double
     /// (or a value which is implicitly convertible). Coordinate indices must
     /// start at 0.
     template <class Point,
               typename U = T,
-              typename   = std::enable_if_t<can_interpolate<Point, U>::value>>
+              typename
+              = std::enable_if_t<can_interpolate<Point,
+                                                 std::array<double, DIM>,
+                                                 std::array<double, DIM>,
+                                                 U>::value>>
     T
     interpolate(const Point& point) const
     {
