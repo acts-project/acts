@@ -164,7 +164,7 @@ public:
   virtual void
   setSegmentation(DD4hep::Geometry::Segmentation segmentation,
                   DD4hep::Geometry::Volume       volume,
-                  std::string                    axes)
+                  std::string                    axes = "XYZ")
       = 0;
   /// @return the Acts::DigitizationModule
   virtual std::shared_ptr<const DigitizationModule>

@@ -226,7 +226,7 @@ public:
   ///		- "XzY" -> negative node z axis is tracking y axis, etc.
   ActsExtension(DD4hep::Geometry::Segmentation segmentation,
                 DD4hep::Geometry::Volume       volume,
-                std::string                    axes);
+                std::string                    axes = "XYZ");
   /// Copy constructor
   ActsExtension(const ActsExtension&, const DD4hep::Geometry::DetElement&);
   /// Destructor
@@ -274,7 +274,7 @@ public:
   void
   setSegmentation(DD4hep::Geometry::Segmentation segmentation,
                   DD4hep::Geometry::Volume       volume,
-                  std::string                    axes) final;
+                  std::string                    axes = "XYZ") final;
   /// @copydoc IActsExtension::digitizationModule()
   std::shared_ptr<const DigitizationModule>
   digitizationModule() const final;
