@@ -7,10 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// MaterialMapping.cpp, ACTS project
+// MaterialMapper.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Plugins/MaterialPlugins/MaterialMapping.hpp"
+#include "ACTS/Plugins/MaterialPlugins/MaterialMapper.hpp"
 #include "ACTS/EventData/NeutralParameters.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Extrapolation/ExtrapolationCell.hpp"
@@ -29,7 +29,7 @@
 #include "ACTS/Material/BinnedSurfaceMaterial.hpp"
 #include <climits>
 
-Acts::MaterialMapping::MaterialMapping(const Config&           cfg,
+Acts::MaterialMapper::MaterialMapper(const Config&           cfg,
                                        std::unique_ptr<Logger> log)
   : m_cfg(cfg), m_logger(std::move(log))
 {
@@ -40,18 +40,18 @@ Acts::MaterialMapping::MaterialMapping(const Config&           cfg,
     ACTS_INFO("Extrapolation engine successfully retrieved!");
 }
 
-Acts::MaterialMapping::~MaterialMapping()
+Acts::MaterialMapper::~MaterialMapper()
 {
 }
 
 void
-Acts::MaterialMapping::setLogger(std::unique_ptr<Logger> newLogger)
+Acts::MaterialMapper::setLogger(std::unique_ptr<Logger> newLogger)
 {
   m_logger = std::move(newLogger);
 }
 
-Acts::MaterialMapping::Cache
-Acts::MaterialMapping::materialMappingCache(
+Acts::MaterialMapper::Cache
+Acts::MaterialMapper::materialMappingCache(
     const TrackingGeometry& tGeometry) const
 {
   // parse the geometry and find all surfaces with material proxies
@@ -70,11 +70,11 @@ Acts::MaterialMapping::materialMappingCache(
                          << " for layer " << layerID);
   }  
   // return it
-  return MaterialMapping::Cache(sMap);
+  return MaterialMapper::Cache(sMap);
 }
 
 bool
-Acts::MaterialMapping::mapMaterialTrackRecord(
+Acts::MaterialMapper::mapMaterialTrackRecord(
     Cache&                     mappingCache,
     const MaterialTrackRecord& trackRecord) const
 {
@@ -162,13 +162,12 @@ Acts::MaterialMapping::mapMaterialTrackRecord(
     } else
     mappingCache.surfaceMaterialRecords[aSteps.assignedGeoID].assignMaterialSteps(aSteps);
   }
-
   
   return true;
 }
 
 std::map<Acts::GeometryID, Acts::SurfaceMaterial*> 
-Acts::MaterialMapping::createSurfaceMaterial(Cache& mappingCache) const 
+Acts::MaterialMapper::createSurfaceMaterial(Cache& mappingCache) const 
 {
   // the return map for the surface material
   std::map<GeometryID, SurfaceMaterial*> surfaceMaterialMap;
@@ -236,7 +235,7 @@ Acts::MaterialMapping::createSurfaceMaterial(Cache& mappingCache) const
 }
 
 void
-Acts::MaterialMapping::assignSteps(
+Acts::MaterialMapper::assignSteps(
     const std::vector<MaterialStep>& materialSteps,
     std::vector<AssignedMaterialSteps>& assignedSteps) const
 {
@@ -288,7 +287,7 @@ Acts::MaterialMapping::assignSteps(
 }
 
 void
-Acts::MaterialMapping::collectMaterialSurfaces(
+Acts::MaterialMapper::collectMaterialSurfaces(
     std::map<GeometryID, SurfaceMaterialRecord>& sMap,
     const TrackingVolume& tVolume) const
 {
@@ -332,7 +331,7 @@ Acts::MaterialMapping::collectMaterialSurfaces(
 }
 
 void
-Acts::MaterialMapping::checkAndInsert(
+Acts::MaterialMapper::checkAndInsert(
     std::map<GeometryID, SurfaceMaterialRecord>& sMap,
     const Surface& surface) const
 {
@@ -356,7 +355,7 @@ Acts::MaterialMapping::checkAndInsert(
 }
 
 // void
-// Acts::MaterialMapping::associateLayerMaterial(
+// Acts::MaterialMapper::associateLayerMaterial(
 //    const MaterialTrackRecord& trackRecord,
 //    std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>& layersAndHits)
 //{
@@ -473,7 +472,7 @@ Acts::MaterialMapping::checkAndInsert(
 //}
 
 /// void
-/// Acts::MaterialMapping::associateHit(
+/// Acts::MaterialMapper::associateHit(
 ///     const Layer*                           layer,
 ///     const Acts::Vector3D&                  position,
 ///     const std::vector<Acts::MaterialStep>& layerMaterialSteps)
@@ -498,7 +497,7 @@ Acts::MaterialMapping::checkAndInsert(
 /// }
 ///
 /// void
-/// Acts::MaterialMapping::averageLayerMaterial()
+/// Acts::MaterialMapper::averageLayerMaterial()
 /// {
 ///   ACTS_VERBOSE(m_surfaceMaterialRecords.size() << " SurfaceMaterialRecords
 ///   to be averaged");
@@ -509,7 +508,7 @@ Acts::MaterialMapping::checkAndInsert(
 /// }
 ///
 /// void
-/// Acts::MaterialMapping::finalizeLayerMaterial()
+/// Acts::MaterialMapper::finalizeLayerMaterial()
 /// {
 ///   ACTS_VERBOSE(m_surfaceMaterialRecords.size()
 ///                << " SurfaceMaterialRecords to be finalized");

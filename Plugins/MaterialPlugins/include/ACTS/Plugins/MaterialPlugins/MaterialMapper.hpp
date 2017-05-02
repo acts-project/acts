@@ -7,11 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// MaterialMapping.h, ACTS project MaterialPlugins
+// MaterialMapper.h, ACTS project MaterialPlugins
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_MATERIALPLUGINS_MATERIALMAPPING_H
-#define ACTS_MATERIALPLUGINS_MATERIALMAPPING_H 1
+#ifndef ACTS_MATERIALPLUGINS_MATERIALMAPPER_H
+#define ACTS_MATERIALPLUGINS_MATERIALMAPPER_H 1
 
 #include <map>
 #include <utility>
@@ -29,7 +29,7 @@ class Surface;
 class TrackingGeometry;
 class MaterialProperties;
 
-/// @class MaterialMapping
+/// @class MaterialMapper
 ///
 /// @brief Class for material mapping
 ///
@@ -46,7 +46,7 @@ class MaterialProperties;
 /// are identified and SurfaceMaterialRecords are created.
 ///
 /// One MaterialTrackRecord (containing all the MaterialSteps along a Track) is
-/// mapped by using the function Acts::MaterialMapping::mapMaterial(). The
+/// mapped by using the function Acts::MaterialMapper::mapMaterial(). The
 /// mapping process starts by extrapolating from the same starting
 /// point and direction as the MaterialTrackRecord through the ACTS geometry.
 /// The extrapolation engine then finds  the closest surface marked to carry  
@@ -66,12 +66,12 @@ class MaterialProperties;
 /// by the number of hits per bin and the final BinnedSufaceMaterial
 /// are created.
 
-class MaterialMapping
+class MaterialMapper
 {
 public:
   /// @struct Config
   ///
-  /// Configuration for the MaterialMapping
+  /// Configuration for the MaterialMapper
   struct Config
   {
     /// ignore events with eta bigger than the cutoff value
@@ -103,12 +103,12 @@ public:
   ///
   /// @param cfg the internal configuration object
   /// @param logger the logging instance
-  MaterialMapping(const Config&           cfg,
+  MaterialMapper(const Config&           cfg,
                   std::unique_ptr<Logger> logger
-                  = getDefaultLogger("MaterialMapping", Logging::INFO));
+                  = getDefaultLogger("MaterialMapper", Logging::INFO));
 
   /// @brief destructor
-  ~MaterialMapping();
+  ~MaterialMapper();
 
   /// @brief helper method that creates the cache for the mapping
   ///
