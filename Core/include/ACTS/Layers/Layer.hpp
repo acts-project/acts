@@ -342,7 +342,7 @@ public:
 
   /// @return a map of all contained detector elements and their corresponding
   /// identifier
-  std::map<Identifier, const DetectorElementBase*>
+  const std::map<Identifier, const DetectorElementBase*>&
   detectorElements() const;
 
 protected:
@@ -555,7 +555,7 @@ Layer::registerRepresentingVolume(const AbstractVolume* theVol)
   m_representingVolume = theVol;
 }
 
-inline std::map<Identifier, const DetectorElementBase*>
+inline const std::map<Identifier, const DetectorElementBase*>&
 Layer::detectorElements() const
 {
   return m_detectorElements;

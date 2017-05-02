@@ -417,7 +417,7 @@ protected:
 
   /// @return a map of all contained detector elements and their corresponding
   /// identifier
-  std::map<Identifier, const DetectorElementBase*>
+  const std::map<Identifier, const DetectorElementBase*>&
   detectorElements() const;
 
 private:
@@ -731,7 +731,7 @@ TrackingVolume::setMotherVolume(const TrackingVolume* mvol)
   m_motherVolume = mvol;
 }
 
-inline std::map<Identifier, const DetectorElementBase*>
+inline const std::map<Identifier, const DetectorElementBase*>&
 TrackingVolume::detectorElements() const
 {
   return m_detectorElements;
