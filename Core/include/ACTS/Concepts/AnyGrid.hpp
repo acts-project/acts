@@ -23,6 +23,7 @@ BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_getGlobalBinIndex), getGlo
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_getLocalBinIndices), getLocalBinIndices, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_getLowerLeftBinEdge), getLowerLeftBinEdge, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_getUpperRightBinEdge), getUpperRightBinEdge, 1);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_interpolate), interpolate, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_size), size, 0);
 // clang-format on
 
@@ -44,6 +45,7 @@ namespace concept {
                                      has_at<T& (size_t)>,
                                      has_dimension<size_t(), const bte::_self>,
                                      has_getGlobalBinIndex<size_t(const Point&), const bte::_self>,
+                                     has_interpolate<T(const Point&), const bte::_self>,
                                      has_size<size_t(), const bte::_self>,
                                      bte::copy_constructible<>,
                                      bte::assignable<>,
