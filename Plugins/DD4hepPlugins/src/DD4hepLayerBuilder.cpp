@@ -588,16 +588,15 @@ Acts::DD4hepLayerBuilder::collectSensitive(
           digiModule = detExtension->digitizationModule();
           axes1      = detExtension->axes();
         }
+        // create the corresponding detector element
+        Acts::DD4hepDetElement* dd4hepDetElement = new Acts::DD4hepDetElement(
+            childDetElement, axes1, units::_cm, digiModule);
+        // add surface to surface vector
+        surfaces.push_back(&(dd4hepDetElement->surface()));
       }
-      // create the corresponding detector element
-      Acts::DD4hepDetElement* dd4hepDetElement = new Acts::DD4hepDetElement(
-          childDetElement, axes1, units::_cm, digiModule);
-      // add surface to surface vector
-      surfaces.push_back(&(dd4hepDetElement->surface()));
+      collectSensitive(childDetElement, surfaces, axes);
     }
-    collectSensitive(childDetElement, surfaces, axes);
   }
-}
 }
 
 std::shared_ptr<const Acts::Transform3D>
