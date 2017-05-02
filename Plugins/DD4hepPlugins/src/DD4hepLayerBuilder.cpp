@@ -581,9 +581,12 @@ Acts::DD4hepLayerBuilder::collectSensitive(
       DD4hep::Geometry::DetElement childDetElement = child.second;
       if (childDetElement.volume().isSensitive()) {
         // access the possibly shared DigitizationModule
-        std::shared_ptr<const DigitizationModule> digiModule = nullptr;
-        Acts::IActsExtension*                     detExtension
-            = childDetElement.extension<Acts::IActsExtension>();
+        std::shared_ptr<const DigitizationModule> digiModule   = nullptr;
+        Acts::IActsExtension*                     detExtension = nullptr;
+        try {
+          detExtension = childDetElement.extension<Acts::IActsExtension>();
+        } catch (std::runtime_error& e) {
+        }
         if (detExtension) {
           digiModule = detExtension->digitizationModule();
           axes1      = detExtension->axes();
