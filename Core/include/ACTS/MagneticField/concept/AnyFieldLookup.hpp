@@ -22,6 +22,7 @@ namespace Acts {
 
 namespace concept {
 
+  /// @cond
   namespace detail {
 
     namespace mpl = boost::mpl;
@@ -33,7 +34,22 @@ namespace concept {
   }  // namespace detail
 
   namespace bte = boost::type_erasure;
+  /// @endcond
 
+  /// @ingroup MagneticField
+  /// @brief any-type for field look-up interface
+  ///
+  /// @tparam T placeholder specifying how the value is stored
+  ///
+  /// @c any type for all types @c U providing the following interface:
+  /// @code{.cpp}
+  /// Acts::Vector3D U::getField(const Acts::Vector3D&) const;
+  /// @endcode
+  ///
+  /// @note By default, the contained object is stored by-value (= copied) into
+  /// the @c boost::type_erasure::any object. In order to store the value by (@c
+  /// const) reference, pass <tt>(const) boost::type_erasure::_self&</tt> as
+  /// template parameter.
   template <typename T = bte::_self>
   using AnyFieldLookup = bte::any<detail::field_lookup_concept, T>;
 
