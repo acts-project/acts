@@ -11,41 +11,83 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/EllipseBounds.hpp"
+
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 
-Acts::EllipseBounds::EllipseBounds(double minradX,
-                                   double minradY,
-                                   double maxradX,
-                                   double maxradY,
-                                   double avephi,
-                                   double hphisec)
-  : PlanarBounds(EllipseBounds::bv_length), m_boundingBox(0., 0.)
+#include "ACTS/Utilities/detail/periodic.hpp"
+
+Acts::EllipseBounds::EllipseBounds(double minRadius0,
+                                   double minRadius1,
+                                   double maxRadius0,
+                                   double maxRadius1,
+                                   double averagePhi,
+                                   double halfPhi)
+  : m_rMinX(std::abs(minRadius0))
+  , m_rMinY(std::abs(minRadius1))
+  , m_rMaxX(std::abs(maxRadius0))
+  , m_rMaxY(std::abs(maxRadius1))
+  , m_avgPhi(detail::radian_sym(averagePhi))
+  , m_halfPhi(std::abs(halfPhi))
+  , m_boundingBox(std::max(minRadius0, maxRadius0),
+                  std::max(minRadius1, maxRadius1))
 {
-  m_valueStore.at(EllipseBounds::bv_rMinX)         = minradX;
-  m_valueStore.at(EllipseBounds::bv_rMinY)         = minradY;
-  m_valueStore.at(EllipseBounds::bv_rMaxX)         = maxradX;
-  m_valueStore.at(EllipseBounds::bv_rMaxY)         = maxradY;
-  m_valueStore.at(EllipseBounds::bv_averagePhi)    = avephi;
-  m_valueStore.at(EllipseBounds::bv_halfPhiSector) = hphisec;
-  double mx     = minradX > maxradX ? minradX : maxradX;
-  double my     = minradY > maxradY ? minradY : maxradY;
-  m_boundingBox = RectangleBounds(mx, my);
 }
 
 Acts::EllipseBounds::~EllipseBounds()
 {
 }
 
-Acts::EllipseBounds&
-Acts::EllipseBounds::operator=(const EllipseBounds& ebo)
+Acts::EllipseBounds*
+Acts::EllipseBounds::clone() const
 {
-  if (this != &ebo) {
-    PlanarBounds::operator=(ebo);
-    m_boundingBox         = ebo.m_boundingBox;
-  }
-  return *this;
+  return new EllipseBounds(*this);
+}
+
+Acts::SurfaceBounds::BoundsType
+Acts::EllipseBounds::type() const
+{
+  return SurfaceBounds::Ellipse;
+}
+
+std::vector<TDD_real_t>
+Acts::EllipseBounds::valueStore() const
+{
+  std::vector<TDD_real_t> values(EllipseBounds::bv_length);
+  values[EllipseBounds::bv_rMinX]         = m_rMinX;
+  values[EllipseBounds::bv_rMinY]         = m_rMinY;
+  values[EllipseBounds::bv_rMaxX]         = m_rMaxX;
+  values[EllipseBounds::bv_rMaxY]         = m_rMaxY;
+  values[EllipseBounds::bv_averagePhi]    = m_avgPhi;
+  values[EllipseBounds::bv_halfPhiSector] = m_halfPhi;
+  return values;
+}
+
+static inline double
+square(double x)
+{
+  return x * x;
+}
+
+/// @warning This **only** works for tolerance-based checks
+bool
+Acts::EllipseBounds::inside(const Acts::Vector2D&      lpos,
+                            const Acts::BoundaryCheck& bcheck) const
+{
+  double tol0    = bcheck.m_tolerance[0];
+  double tol1    = bcheck.m_tolerance[1];
+  double phi     = detail::radian_sym(lpos.phi() - averagePhi());
+  double phiHalf = halfPhiSector() + tol1;
+
+  bool insidePhi   = (-phiHalf <= phi) && (phi < phiHalf);
+  bool insideInner = (rMinX() <= tol0) || (rMinY() <= tol0)
+      || (1 < (square(lpos[Acts::eLOC_X] / (rMinX() - tol0))
+               + square(lpos[Acts::eLOC_Y] / (rMinY() - tol0))));
+  bool insideOuter = ((square(lpos[Acts::eLOC_X] / (rMaxX() + tol0))
+                       + square(lpos[Acts::eLOC_Y] / (rMaxY() + tol0)))
+                      < 1);
+  return (insidePhi && insideInner && insideOuter);
 }
 
 // For ellipse bound this is only approximation which is valid
@@ -57,63 +99,72 @@ Acts::EllipseBounds::operator=(const EllipseBounds& ebo)
 double
 Acts::EllipseBounds::distanceToBoundary(const Vector2D& lpos) const
 {
-  const double pi2 = 2. * M_PI;
-
-  double r = sqrt(lpos[0] * lpos[0] + lpos[1] * lpos[1]);
-  if (r == 0.) {
-    if (m_valueStore.at(EllipseBounds::bv_rMinX)
-        <= m_valueStore.at(EllipseBounds::bv_rMinY))
-      return m_valueStore.at(EllipseBounds::bv_rMinX);
-    return m_valueStore.at(EllipseBounds::bv_rMinY);
+  double r = lpos.perp();
+  if (r == 0) {
+    return std::min(rMinX(), rMinY());
   }
 
-  const double inv_r = 1. / r;
-  double       sn    = lpos[1] * inv_r;
-  double       cs    = lpos[0] * inv_r;
-  double       sf    = 0.;
-  double       dF    = 0.;
+  double sn = lpos[eLOC_X] / r;
+  double cs = lpos[eLOC_Y] / r;
+  double dF = detail::radian_sym(lpos.phi() - m_avgPhi);
+  double sf = 0.;
 
-  if (m_valueStore.at(EllipseBounds::bv_halfPhiSector) < M_PI) {
-    dF = atan2(cs, sn) - m_valueStore.at(EllipseBounds::bv_averagePhi);
-    dF += (dF > M_PI) ? -pi2 : (dF < -M_PI) ? pi2 : 0;
-    double df = std::abs(dF) - m_valueStore.at(EllipseBounds::bv_halfPhiSector);
-    sf        = r * sin(df);
-    if (df > 0.) r *= cos(df);
+  if (m_halfPhi < M_PI) {
+    double df = std::abs(dF) - m_halfPhi;
+    sf        = r * std::sin(df);
+    if (df > 0.) r *= std::cos(df);
   } else {
     sf = -1.e+10;
   }
 
   if (sf <= 0.) {
-    double a   = cs / m_valueStore.at(EllipseBounds::bv_rMaxX);
-    double b   = sn / m_valueStore.at(EllipseBounds::bv_rMaxY);
-    double sr0 = r - 1. / sqrt(a * a + b * b);
-    if (sr0 >= 0.) return sr0;
-    a          = cs / m_valueStore.at(EllipseBounds::bv_rMinX);
-    b          = sn / m_valueStore.at(EllipseBounds::bv_rMinY);
-    double sr1 = 1. / sqrt(a * a + b * b) - r;
-    if (sr1 >= 0.) return sr1;
+    double a   = cs / m_rMaxX;
+    double b   = sn / m_rMaxY;
+    double sr0 = r - 1. / std::hypot(a, b);
+    if (sr0 >= 0.) {
+      return sr0;
+    }
+    a          = cs / m_rMinX;
+    b          = sn / m_rMinY;
+    double sr1 = 1. / std::hypot(a, b) - r;
+    if (sr1 >= 0.) {
+      return sr1;
+    }
     if (sf < sr0) sf = sr0;
     if (sf < sr1) sf = sr1;
     return sf;
   }
 
   double fb;
-  fb = (dF > 0.)
-      ? m_valueStore.at(EllipseBounds::bv_averagePhi)
-          + m_valueStore.at(EllipseBounds::bv_halfPhiSector)
-      : m_valueStore.at(EllipseBounds::bv_averagePhi)
-          - m_valueStore.at(EllipseBounds::bv_halfPhiSector);
+  fb         = (dF > 0.) ? (m_avgPhi + m_halfPhi) : (m_avgPhi - m_halfPhi);
   sn         = sin(fb);
   cs         = cos(fb);
-  double a   = cs / m_valueStore.at(EllipseBounds::bv_rMaxX);
-  double b   = sn / m_valueStore.at(EllipseBounds::bv_rMaxY);
-  double sr0 = r - 1. / sqrt(a * a + b * b);
-  if (sr0 >= 0.) return sqrt(sr0 * sr0 + sf * sf);
-  a          = cs / m_valueStore.at(EllipseBounds::bv_rMinX);
-  b          = sn / m_valueStore.at(EllipseBounds::bv_rMinY);
-  double sr1 = 1. / sqrt(a * a + b * b) - r;
-  if (sr1 >= 0.) return sqrt(sr1 * sr1 + sf * sf);
+  double a   = cs / m_rMaxX;
+  double b   = sn / m_rMaxY;
+  double sr0 = r - 1. / std::hypot(a, b);
+  if (sr0 >= 0.) {
+    return std::hypot(sr0, sf);
+  }
+  a          = cs / m_rMinX;
+  b          = sn / m_rMinY;
+  double sr1 = (1. / std::hypot(a, b)) - r;
+  if (sr1 >= 0.) {
+    return std::hypot(sr1, sf);
+  }
   return sf;
+}
+
+std::vector<Acts::Vector2D>
+Acts::EllipseBounds::vertices() const
+{
+  // 2017-04-08 msmk: this is definitely too coarse
+  return {{rMaxX(), 0}, {0, rMaxY()}, {-rMaxX(), 0}, {0, -rMaxY()}};
+}
+
+const Acts::RectangleBounds&
+Acts::EllipseBounds::boundingBox() const
+{
+  return m_boundingBox;
 }
 
 // ostream operator overload

@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016 ACTS project team
+// Copyright (C) 2016-2017 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,6 +14,7 @@
 #define ACTS_SURFACES_TRAPEZOIDBOUNDS_H 1
 
 #include <cmath>
+
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
@@ -50,64 +51,16 @@ public:
   /// @param haley half length Y - defined at x=0
   TrapezoidBounds(double minhalex, double maxhalex, double haley);
 
-  /// Constructor for arbitrary Trapezoid
-  ///
-  /// @param minhalex minimal half lenght X, definition at negative halflength Y
-  /// @param haley half length Y - defined at x=0
-  /// @param alpha opening angle at @todo check
-  /// @param beta opentin angle at @todo check
-  TrapezoidBounds(double minhalex, double haley, double alpha, double beta);
-
-  /// Copy constructor
-  ///
-  /// @param trabo are the source bounds for assignment
-  TrapezoidBounds(const TrapezoidBounds& trabo)
-    : PlanarBounds(trabo), m_boundingBox(0., 0.)
-  {
-  }
-
-  /// Destructor
   virtual ~TrapezoidBounds();
 
-  /// Virtual constructor
   virtual TrapezoidBounds*
   clone() const final override;
 
-  /// Return the type of the bounds for persistency
   virtual BoundsType
-  type() const final
-  {
-    return SurfaceBounds::Trapezoid;
-  }
+  type() const final override;
 
-  /// Assignment operator
-  TrapezoidBounds&
-  operator=(const TrapezoidBounds& sbo);
-
-  ///  This method returns the minimal halflength in X
-  /// (first coordinate of local surface frame)
-  double
-  minHalflengthX() const;
-
-  /// This method returns the maximal halflength in X
-  /// (first coordinate of local surface frame)
-  double
-  maxHalflengthX() const;
-
-  /// This method returns the halflength in Y
-  /// (second coordinate of local surface frame)
-  double
-  halflengthY() const;
-
-  /// This method returns the opening angle alpha in point A
-  // (negative local phi)
-  double
-  alpha() const;
-
-  /// This method returns the opening angle beta in point B
-  /// (positive local phi)
-  double
-  beta() const;
+  virtual std::vector<TDD_real_t>
+  valueStore() const final override;
 
   /// The orientation of the Trapezoid is according to the figure above,
   /// in words: the shorter of the two parallel sides of the trapezoid
@@ -152,46 +105,20 @@ public:
   ///
   /// @param lpos Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
-  ///
   /// @return boolean indicator for the success of this operation
   virtual bool
   inside(const Vector2D&      lpos,
          const BoundaryCheck& bcheck) const final override;
 
-  /// This method checks inside bounds in loc0
-  /// @note loc0/loc1 correspond to the natural coordinates of the surface
-  /// @note As loc0/loc1 are correlated the single check doesn't make sense :
-  ///       check is done on enclosing Rectangle !
-  ///
-  /// @param lpos is the local position to be checked
-  /// @param tol0 is the tolerance applied
-  ///
-  /// @return boolean indicator for the success of this operation
-  virtual bool
-  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const final override;
-
-  /// This method checks inside bounds in loc0
-  /// @note loc0/loc1 correspond to the natural coordinates of the surface
-  /// @note As loc0/loc1 are correlated the single check doesn't make sense :
-  ///   -> check is done on enclosing Rectangle !
-  ///
-  /// @param lpos is the local position to be checked
-  /// @param tol1 is the tolerance applied
-  ///
-  /// @return boolean indicator for the success of this operation
-  virtual bool
-  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const final override;
-
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lpos is the local position to check for the distance
-  ///
   /// @return is a signed distance parameter
   virtual double
   distanceToBoundary(const Vector2D& lpos) const final override;
 
   /// Return the vertices - or, the points of the extremas
-  virtual const std::vector<Vector2D>
+  virtual std::vector<Vector2D>
   vertices() const final override;
 
   // Bounding box representation
@@ -204,209 +131,44 @@ public:
   virtual std::ostream&
   dump(std::ostream& sl) const final override;
 
+  ///  This method returns the minimal halflength in X
+  /// (first coordinate of local surface frame)
+  double
+  minHalflengthX() const;
+
+  /// This method returns the maximal halflength in X
+  /// (first coordinate of local surface frame)
+  double
+  maxHalflengthX() const;
+
+  /// This method returns the halflength in Y
+  /// (second coordinate of local surface frame)
+  double
+  halflengthY() const;
+
 private:
-  /// private helper method for inside check
-  ///
-  ///
-  /// @param lpos Local position (assumed to be in right surface frame)
-  /// @param tol0 absulote tolerance parameter on the first coordinate
-  /// @param tol1 absulote tolerance parameter on the second coordinate
-  ///
-  /// @return boolean indicator for the success of this operation
-  bool
-  inside(const Vector2D& lpos, double tol0, double tol1) const;
-
-  /// private helper method inside() method for a full symmetric trapezoid
-  ///
-  /// @param lpos Local position (assumed to be in right surface frame)
-  /// @param tol0 absulote tolerance parameter on the first coordinate
-  /// @param tol1 absulote tolerance parameter on the second coordinate
-  ///
-  /// @return boolean indicator for the success of this operation
-  bool
-  insideFull(const Vector2D& lpos, double tol0 = 0., double tol1 = 0.) const;
-
-  /// private inside() method for the triangular exclude
-  /// area for an arbitrary trapezoid
-  ///
-  /// @param lpos Local position (assumed to be in right surface frame)
-  /// @param tol0 absulote tolerance parameter on the first coordinate
-  /// @param tol1 absulote tolerance parameter on the second coordinate
-  ///
-  /// @return boolean indicator for the success of this operation
-  bool
-  insideExclude(const Vector2D& lpos, double tol0 = 0., double tol1 = 0.) const;
-
-  /// private isAbove() method for checking whether a point
-  /// lies above or under a straight line
-  ///
-  /// @param lpos Local position (assumed to be in right surface frame)
-  /// @param tol0 absulote tolerance parameter on the first coordinate
-  /// @param tol1 absulote tolerance parameter on the second coordinate
-  /// @param k is the first parameter of the parametric line equation
-  /// @param d is the second parameter of the parameteric line equation
-  ///
-  /// @return boolean indicator for the success of this operation
-  bool
-  isAbove(const Vector2D& lpos, double tol0, double tol1, double k, double d)
-      const;
-
-  TDD_real_t      m_alpha;        ///< private cache of angle alpha
-  TDD_real_t      m_beta;         ///< private cache of angle beta
-  RectangleBounds m_boundingBox;  ///< internal bounding box cache
+  double          m_minHalfX;
+  double          m_maxHalfX;
+  double          m_halfY;
+  RectangleBounds m_boundingBox;
 };
-
-inline TrapezoidBounds*
-TrapezoidBounds::clone() const
-{
-  return new TrapezoidBounds(*this);
-}
 
 inline double
 TrapezoidBounds::minHalflengthX() const
 {
-  return m_valueStore.at(TrapezoidBounds::bv_minHalfX);
+  return m_minHalfX;
 }
 
 inline double
 TrapezoidBounds::maxHalflengthX() const
 {
-  return m_valueStore.at(TrapezoidBounds::bv_maxHalfX);
+  return m_maxHalfX;
 }
 
 inline double
 TrapezoidBounds::halflengthY() const
 {
-  return m_valueStore.at(TrapezoidBounds::bv_halfY);
-}
-
-inline double
-TrapezoidBounds::alpha() const
-{
-  return m_alpha;
-}
-
-inline double
-TrapezoidBounds::beta() const
-{
-  return m_beta;
-}
-
-inline bool
-TrapezoidBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
-{
-  if (bcheck.bcType == 0)
-    return inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
-
-  // a fast FALSE
-  double fabsY   = std::abs(lpos[Acts::eLOC_Y]);
-  double max_ell = (*bcheck.lCovariance)(0, 0) > (*bcheck.lCovariance)(1, 1)
-      ? (*bcheck.lCovariance)(0, 0)
-      : (*bcheck.lCovariance)(1, 1);
-  double limit = bcheck.nSigmas * sqrt(max_ell);
-  if (fabsY > (m_valueStore.at(TrapezoidBounds::bv_halfY) + limit))
-    return false;
-  // a fast FALSE
-  double fabsX = std::abs(lpos[Acts::eLOC_X]);
-  if (fabsX > (m_valueStore.at(TrapezoidBounds::bv_maxHalfX) + limit))
-    return false;
-  // a fast TRUE
-  double min_ell = (*bcheck.lCovariance)(0, 0) < (*bcheck.lCovariance)(1, 1)
-      ? (*bcheck.lCovariance)(0, 0)
-      : (*bcheck.lCovariance)(1, 1);
-  limit = bcheck.nSigmas * sqrt(min_ell);
-  if (fabsX < (m_valueStore.at(TrapezoidBounds::bv_minHalfX) + limit)
-      && fabsY < (m_valueStore.at(TrapezoidBounds::bv_halfY) + limit))
-    return true;
-
-  // compute KDOP and axes for surface polygon
-  std::vector<KDOP>     elementKDOP(3);
-  std::vector<Vector2D> elementP(4);
-  float                 theta
-      = ((*bcheck.lCovariance)(1, 0) != 0
-         && ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)) != 0)
-      ? .5
-          * bcheck.FastArcTan(
-                2 * (*bcheck.lCovariance)(1, 0)
-                / ((*bcheck.lCovariance)(1, 1) - (*bcheck.lCovariance)(0, 0)))
-      : 0.;
-  sincosCache scResult = bcheck.FastSinCos(theta);
-  ActsMatrixD<2, 2> rotMatrix;
-  rotMatrix << scResult.cosC, scResult.sinC, -scResult.sinC, scResult.cosC;
-  ActsMatrixD<2, 2> normal;
-  normal << 0, -1, 1, 0;
-  // ellipse is always at (0,0), surface is moved to ellipse position and then
-  // rotated
-  Vector2D p;
-  p << m_valueStore.at(TrapezoidBounds::bv_minHalfX),
-      -m_valueStore.at(TrapezoidBounds::bv_halfY);
-  elementP.at(0) = (rotMatrix * (p - lpos));
-  p << -m_valueStore.at(TrapezoidBounds::bv_minHalfX),
-      -m_valueStore.at(TrapezoidBounds::bv_halfY);
-  elementP.at(1) = (rotMatrix * (p - lpos));
-  scResult       = bcheck.FastSinCos(m_beta);
-  p << m_valueStore.at(TrapezoidBounds::bv_minHalfX)
-          + (2. * m_valueStore.at(TrapezoidBounds::bv_halfY))
-              * (scResult.sinC / scResult.cosC),
-      m_valueStore.at(TrapezoidBounds::bv_halfY);
-  elementP.at(2) = (rotMatrix * (p - lpos));
-  scResult       = bcheck.FastSinCos(m_alpha);
-  p << -(m_valueStore.at(TrapezoidBounds::bv_minHalfX)
-         + (2. * m_valueStore[TrapezoidBounds::bv_halfY])
-             * (scResult.sinC / scResult.cosC)),
-      m_valueStore.at(TrapezoidBounds::bv_halfY);
-  elementP.at(3)             = (rotMatrix * (p - lpos));
-  std::vector<Vector2D> axis = {normal * (elementP.at(1) - elementP.at(0)),
-                                normal * (elementP.at(3) - elementP.at(1)),
-                                normal * (elementP.at(2) - elementP.at(0))};
-  bcheck.ComputeKDOP(elementP, axis, elementKDOP);
-  // compute KDOP for error ellipse
-  std::vector<KDOP> errelipseKDOP(3);
-  bcheck.ComputeKDOP(bcheck.EllipseToPoly(3), axis, errelipseKDOP);
-  // check if KDOPs overlap and return result
-  return bcheck.TestKDOPKDOP(elementKDOP, errelipseKDOP);
-}
-
-inline bool
-TrapezoidBounds::insideLoc0(const Vector2D& lpos, double tol0) const
-{
-  return (std::abs(lpos[Acts::eLOC_X])
-          < m_valueStore.at(TrapezoidBounds::bv_maxHalfX) + tol0);
-}
-
-inline bool
-TrapezoidBounds::insideLoc1(const Vector2D& lpos, double tol1) const
-{
-  return (std::abs(lpos[Acts::eLOC_Y])
-          < m_valueStore.at(TrapezoidBounds::bv_halfY) + tol1);
-}
-
-inline const std::vector<Vector2D>
-TrapezoidBounds::vertices() const
-{
-  // create the return vector
-  std::vector<Vector2D> vertices;
-  // fill the vertices
-  vertices.reserve(4);
-  vertices.push_back(
-      Vector2D(m_valueStore.at(TrapezoidBounds::bv_minHalfX),
-               -m_valueStore.at(TrapezoidBounds::bv_halfY)));  // [0]
-  vertices.push_back(
-      Vector2D(m_valueStore.at(TrapezoidBounds::bv_maxHalfX),
-               m_valueStore.at(TrapezoidBounds::bv_halfY)));  // [1]
-  vertices.push_back(
-      Vector2D(-m_valueStore.at(TrapezoidBounds::bv_maxHalfX),
-               m_valueStore.at(TrapezoidBounds::bv_halfY)));  // [1]
-  vertices.push_back(
-      Vector2D(-m_valueStore.at(TrapezoidBounds::bv_minHalfX),
-               -m_valueStore.at(TrapezoidBounds::bv_halfY)));  // [3]
-  return vertices;
-}
-
-inline const RectangleBounds&
-TrapezoidBounds::boundingBox() const
-{
-  return m_boundingBox;
+  return m_halfY;
 }
 
 }  // end of namespace

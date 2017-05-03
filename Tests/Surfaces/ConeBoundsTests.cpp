@@ -23,9 +23,6 @@
 //
 #include <limits>
 
-// namespace bdata = boost::unit_test::data;
-namespace utf    = boost::unit_test;
-const double inf = std::numeric_limits<double>::infinity();
 const double NaN = std::numeric_limits<double>::quiet_NaN();
 /* Note on nomenclature:
   alpha = cone opening half angle
@@ -83,12 +80,6 @@ namespace Test {
     //
     /// test for inside
     BOOST_TEST(coneBoundsObject.inside(origin) == false);
-    //
-    /// test for insideLoc0
-    BOOST_TEST(coneBoundsObject.insideLoc0(origin) == false);
-    //
-    /// test for insideLoc1
-    BOOST_TEST(coneBoundsObject.insideLoc1(origin) == false);
     //
     /// test for distanceToBoundary
     // std::cout << coneBoundsObject.distanceToBoundary(origin) << std::endl;

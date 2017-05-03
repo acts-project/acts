@@ -11,75 +11,109 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/CylinderBounds.hpp"
+
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 
-Acts::CylinderBounds::CylinderBounds(double radius, double halez)
-  : SurfaceBounds(CylinderBounds::bv_length), m_checkPhi(false)
-{
-  m_valueStore.at(CylinderBounds::bv_radius)        = std::abs(radius);
-  m_valueStore.at(CylinderBounds::bv_halfPhiSector) = M_PI;
-  m_valueStore.at(CylinderBounds::bv_halfZ)         = std::abs(halez);
-}
+#include "ACTS/Utilities/detail/periodic.hpp"
 
-Acts::CylinderBounds::CylinderBounds(double radius, double haphi, double halez)
-  : SurfaceBounds(CylinderBounds::bv_length), m_checkPhi(true)
+Acts::CylinderBounds::CylinderBounds(double radius, double halfZ)
+  : CylinderBounds(radius, 0, M_PI, halfZ)
 {
-  m_valueStore.at(CylinderBounds::bv_radius)        = std::abs(radius);
-  m_valueStore.at(CylinderBounds::bv_halfPhiSector) = haphi;
-  m_valueStore.at(CylinderBounds::bv_halfZ)         = std::abs(halez);
 }
 
 Acts::CylinderBounds::CylinderBounds(double radius,
-                                     double haphi,
-                                     double averagephi,
-                                     double halez)
-  : SurfaceBounds(CylinderBounds::bv_length), m_checkPhi(true)
+                                     double halfPhi,
+                                     double halfZ)
+  : CylinderBounds(radius, 0, halfPhi, halfZ)
 {
-  m_valueStore.at(CylinderBounds::bv_radius)        = std::abs(radius);
-  m_valueStore.at(CylinderBounds::bv_averagePhi)    = averagephi;
-  m_valueStore.at(CylinderBounds::bv_halfPhiSector) = haphi;
-  m_valueStore.at(CylinderBounds::bv_halfZ)         = std::abs(halez);
+}
+
+Acts::CylinderBounds::CylinderBounds(double radius,
+                                     double averagePhi,
+                                     double halfPhi,
+                                     double halfZ)
+  : m_radius(std::abs(radius))
+  , m_avgPhi(detail::radian_sym(averagePhi))
+  , m_halfPhi(std::abs(halfPhi))
+  , m_halfZ(std::abs(halfZ))
+{
 }
 
 Acts::CylinderBounds::~CylinderBounds()
 {
 }
 
-Acts::CylinderBounds&
-Acts::CylinderBounds::operator=(const Acts::CylinderBounds& cylbo)
+Acts::CylinderBounds*
+Acts::CylinderBounds::clone() const
 {
-  if (this != &cylbo) {
-    m_valueStore = cylbo.m_valueStore;
-    m_checkPhi   = cylbo.m_checkPhi;
+  return new CylinderBounds(*this);
+}
+
+Acts::SurfaceBounds::BoundsType
+Acts::CylinderBounds::type() const
+{
+  return SurfaceBounds::Cylinder;
+}
+
+std::vector<TDD_real_t>
+Acts::CylinderBounds::valueStore() const
+{
+  std::vector<TDD_real_t> values(CylinderBounds::bv_length);
+  values[CylinderBounds::bv_radius]        = m_radius;
+  values[CylinderBounds::bv_averagePhi]    = m_avgPhi;
+  values[CylinderBounds::bv_halfPhiSector] = m_halfPhi;
+  values[CylinderBounds::bv_halfZ]         = m_halfZ;
+  return values;
+}
+
+// Convert from (r*phi,z) to (phi,z) centered around phi0
+Acts::Vector2D
+Acts::CylinderBounds::shifted(const Acts::Vector2D& lpos) const
+{
+  return {
+      Acts::detail::radian_sym((lpos[Acts::eLOC_RPHI] / m_radius) - m_avgPhi),
+      lpos[Acts::eLOC_Z]};
+}
+
+// Jacobian from (r*phi,z) to (phi,z)
+Acts::ActsSymMatrixD<2>
+Acts::CylinderBounds::jacobian() const
+{
+  ActsSymMatrixD<2> j;
+  j(0, eLOC_RPHI) = 1 / m_radius;
+  j(0, eLOC_Z)    = 0;
+  j(1, eLOC_RPHI) = 0;
+  j(1, eLOC_Z)    = 1;
+  return j;
+}
+
+bool
+Acts::CylinderBounds::inside(const Acts::Vector2D&      lpos,
+                             const Acts::BoundaryCheck& bcheck) const
+{
+  return bcheck.transformed(jacobian())
+      .isInside(shifted(lpos), -m_halfPhi, m_halfPhi, -m_halfZ, m_halfZ);
+}
+
+bool
+Acts::CylinderBounds::inside3D(const Acts::Vector3D&      pos,
+                               const Acts::BoundaryCheck& bcheck) const
+{
+  if (s_onSurfaceTolerance <= std::abs(pos.perp() - m_radius)) {
+    return false;
   }
-  return *this;
+  Vector2D lpos(detail::radian_sym(pos.phi() - m_avgPhi), pos.z());
+  return bcheck.transformed(jacobian())
+      .isInside(lpos, -m_halfPhi, m_halfPhi, -m_halfZ, m_halfZ);
 }
 
 double
-Acts::CylinderBounds::distanceToBoundary(const Acts::Vector2D& pos) const
+Acts::CylinderBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 {
-  const double pi2 = 2. * M_PI;
-
-  double sZ
-      = std::abs(pos[Acts::eLOC_Z]) - m_valueStore.at(CylinderBounds::bv_halfZ);
-  double wF = m_valueStore.at(CylinderBounds::bv_halfPhiSector);
-  if (wF >= M_PI) return sZ;
-  double dF = std::abs(pos[Acts::eLOC_RPHI]
-                           / m_valueStore.at(CylinderBounds::bv_radius)
-                       - m_valueStore.at(CylinderBounds::bv_averagePhi));
-  if (dF > M_PI) dF = pi2 - dF;
-  double sF
-      = 2. * m_valueStore.at(CylinderBounds::bv_radius) * sin(.5 * (dF - wF));
-
-  if (sF <= 0. || sZ <= 0.) {
-    if (sF > sZ)
-      return sF;
-    else
-      return sZ;
-  }
-  return sqrt(sF * sF + sZ * sZ);
+  return BoundaryCheck(true).distance(
+      shifted(lpos), -m_halfPhi, m_halfPhi, -m_halfZ, m_halfZ);
 }
 
 // ostream operator overload
@@ -90,8 +124,8 @@ Acts::CylinderBounds::dump(std::ostream& sl) const
   sl << std::setprecision(7);
   sl << "Acts::CylinderBounds: (radius, averagePhi, halfPhiSector, "
         "halflengthInZ) = ";
-  sl << "(" << this->r() << ", " << this->averagePhi() << ", ";
-  sl << this->halfPhiSector() << ", " << this->halflengthZ() << ")";
+  sl << "(" << m_radius << ", " << m_avgPhi << ", ";
+  sl << m_halfPhi << ", " << m_halfZ << ")";
   sl << std::setprecision(-1);
   return sl;
 }

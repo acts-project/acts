@@ -20,13 +20,6 @@
 //
 #include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-//
-#include <limits>
-
-// namespace bdata = boost::unit_test::data;
-namespace utf    = boost::unit_test;
-const double inf = std::numeric_limits<double>::infinity();
-const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
 
@@ -55,13 +48,6 @@ namespace Test {
     const Vector2D      anyVector{0., 1.};
     const BoundaryCheck anyBoundaryCheck(true);
     BOOST_TEST(infiniteBoundsObject.inside(anyVector, anyBoundaryCheck)
-               == true);
-
-    /// test for insideLoc0 and insideLoc1
-    double anyTolerance(999.);
-    BOOST_TEST(infiniteBoundsObject.insideLoc0(anyVector, anyTolerance)
-               == true);
-    BOOST_TEST(infiniteBoundsObject.insideLoc1(anyVector, anyTolerance)
                == true);
 
     /// test for distanceToBoundary

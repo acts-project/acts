@@ -30,7 +30,6 @@ namespace Acts {
 class PerigeeSurface : public LineSurface
 {
 public:
-  /// Default Constructor - deleted */
   PerigeeSurface() = delete;
 
   /// Constructor from GlobalPosition
@@ -45,16 +44,15 @@ public:
 
   /// Copy constructor
   ///
-  /// @param pesf is the source surface to be copied
-  PerigeeSurface(const PerigeeSurface& pesf);
+  /// @param other is the source surface to be copied
+  PerigeeSurface(const PerigeeSurface& other);
 
   /// Copy constructor with shift
   ///
-  /// @param pesf is the source surface to be copied
+  /// @param other is the source surface to be copied
   /// @param transf is the transformed applied after copying
-  PerigeeSurface(const PerigeeSurface& pesf, const Transform3D& transf);
+  PerigeeSurface(const PerigeeSurface& other, const Transform3D& transf);
 
-  /// Destructor
   virtual ~PerigeeSurface();
 
   /// Virtual constructor
@@ -65,23 +63,17 @@ public:
 
   /// Assignment operator
   ///
-  /// @param pesf is the source surface to be assigned
+  /// @param other is the source surface to be assigned
   PerigeeSurface&
-  operator=(const PerigeeSurface& pesf);
+  operator=(const PerigeeSurface& other);
 
   /// Return the surface type
   virtual SurfaceType
-  type() const final override
-  {
-    return Surface::Perigee;
-  }
+  type() const final override;
 
   /// Return properly formatted class name for screen output */
   virtual std::string
-  name() const final override
-  {
-    return "Acts::PerigeeSurface";
-  }
+  name() const final override;
 
   /// Output Method for std::ostream
   ///
@@ -89,13 +81,6 @@ public:
   virtual std::ostream&
   dump(std::ostream& sl) const final override;
 };
-
-inline PerigeeSurface*
-PerigeeSurface::clone(const Transform3D* shift) const
-{
-  if (shift) return new PerigeeSurface(*this, *shift);
-  return new PerigeeSurface(*this);
-}
 
 }  // end of namespace
 

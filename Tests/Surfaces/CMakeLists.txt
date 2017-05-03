@@ -2,6 +2,9 @@ add_executable (BoundaryCheckTests BoundaryCheckTests.cpp)
 target_link_libraries (BoundaryCheckTests PRIVATE ACTSCore)
 add_test (NAME BoundaryCheckTests COMMAND BoundaryCheckTests)
 
+add_executable (BoundaryCheckBenchmark BoundaryCheckBenchmark.cpp)
+target_link_libraries (BoundaryCheckBenchmark PRIVATE ACTSCore)
+
 add_executable (SurfaceTests SurfaceTests.cpp)
 target_link_libraries (SurfaceTests PRIVATE ACTSCore)
 add_test (NAME SurfaceTests COMMAND SurfaceTests)
@@ -81,9 +84,3 @@ add_test (NAME RadialBoundsTests COMMAND RadialBoundsTests)
 add_executable (DiscTrapezoidalBoundsTests DiscTrapezoidalBoundsTests.cpp)
 target_link_libraries (DiscTrapezoidalBoundsTests PRIVATE ACTSCore)
 add_test (NAME DiscTrapezoidalBoundsTests COMMAND DiscTrapezoidalBoundsTests)
-
-add_executable (RealQuadraticEquationTests RealQuadraticEquationTests.cpp)
-target_link_libraries (RealQuadraticEquationTests PRIVATE ACTSCore)
-add_test (NAME RealQuadraticEquationTests COMMAND RealQuadraticEquationTests)
-
-

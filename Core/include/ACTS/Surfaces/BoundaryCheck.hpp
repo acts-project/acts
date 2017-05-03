@@ -1,316 +1,373 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016 ACTS project team
+// Copyright (C) 2016-2017 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// BoundaryCheck.h, ACTS project
+// BoundaryCheck.hpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
 #ifndef ACTS_SURFACES_BOUNDARYCHECK_H
-#define ACTS_SURFACES_BOUNDARYCHECK_H 1
+#define ACTS_SURFACES_BOUNDARYCHECK_H
 
+#include <cfloat>
 #include <cmath>
-#include <memory>
+#include <iterator>
 #include <vector>
+
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
 
-/// @struct KDOP
-/// maint struct for comparing the extent of arbitrary convex polygons relative
-/// to prefixed axes
-struct KDOP
-{
-  float min;
-  // Minimum distance (from origin) along axes
-  float max;
-  // Maximum distance (from origin) along axes
-};
-
-// struct needed for FastSinCos method (see below)
-struct sincosCache
-{
-  double sinC;
-  double cosC;
-};
-
-///  @class BoundaryCheck
+/// @class BoundaryCheck
 ///
-///  The BoundaryCheck class allows to steer the way surface
-///  boundaries are used for inside/outside checks of
-///  parameters.
+/// The BoundaryCheck class provides boundary checks and distance calculations
+/// for aligned box-like and polygonal boundaries on local surfaces.
+/// Different types of boundary checks are supported and are transparently
+/// selected when calling the `isInside(...)` and `distance(...)` methods:
 ///
-///  These checks are performed in the local 2D frame of the
-///  surface and can either be:
-///  - inside/outside with and without tolerance
-///  - inside/outside according to a given chi2 value
+/// -   Hard checks w/o any tolerances
+/// -   Tolerance-based checks in one or in both local coordinates
+/// -   Chi2-based checks based on a covariance matrix. Non-vanishing
+///     correlations are correctly taken into account.
 ///
-/// It also provides all the necessary tools for the individual implementations
-/// in
-/// the different SurfaceBounds classes.
-///
-/// @todo check if fast Sin/Cos ArcTan is necessary in field test
-///
-/// @todo Move the Covariance away from this into the method signature of the
-/// call
-/// @todo (short term) protect against lCovariance = nullptr acess
-
+/// With a defined covariance matrix, the closest point and the distance are
+/// not defined along the usual Euclidean metric, but by the Mahalanobis
+/// distance induced by the the covariance.
 class BoundaryCheck
 {
 public:
-  /// @brief nested enumerator for the boundary check Type
-  enum BoundaryCheckType {
-    absolute = 0,  ///< absolute check including tolerances
-    chi2corr = 1   ///< relative (chi2 based) with full correlations
-  };
-
-  bool   checkLoc0;      ///< check local 1 coordinate
-  bool   checkLoc1;      ///< check local 2 coordinate
-  double toleranceLoc0;  ///< absolute tolerance in local 1 coordinate
-  double toleranceLoc1;  ///< absolute tolerance in local 2 coordinate
-  double nSigmas;        ///< allowed sigmas for chi2 boundary check
-  std::unique_ptr<ActsSymMatrixD<2>> lCovariance;  ///< local covariance matrix
-  BoundaryCheckType bcType;  ///< the type how we check the boundary
-
-  /// Constructor for single boolean behavious
-  BoundaryCheck(bool sCheck);
-
-  /// Constructor for tolerance based check
-  /// @param chkL0 boolean directive to check first coordinate
-  /// @param chkL1 boolean directive to check second coordinate
-  /// @param tloc0 tolereance on the first parameter
-  /// @param tloc1 tolereance on the second parameter
-  BoundaryCheck(bool chkL0, bool chkL1, double tloc0 = 0., double tloc1 = 0.);
-
-  /// Constructor for chi2 based check
-  /// @param lCov the coverance matrix to be checked
-  /// @param nsig number of sigma checked checked for the compatibility test
-  /// @param chkL0 directive wheter the first coordinate is being checked
-  /// @param chkL1 directive wheter the first coordinate is being checked
-  BoundaryCheck(const ActsSymMatrixD<2>& lCov,
-                double                   nsig  = 1.,
-                bool                     chkL0 = true,
-                bool                     chkL1 = true);
-
-  /// Copy Constructor
+  /// Construct either hard cut in both dimensions or no cut at all.
+  BoundaryCheck(bool check);
+  /// Construct a tolerance based check.
   ///
-  /// @param bCheck is the source class
-  BoundaryCheck(const BoundaryCheck& bCheck);
-
-  /// Assignment operator
+  /// @param checkLocal0 Boolean directive to check coordinate 0
+  /// @param checkLocal1 Boolean directive to check coordinate 1
+  /// @param tolerance0 Tolerance along coordinate 0
+  /// @param tolerance1 Tolerance along coordinate 1
+  BoundaryCheck(bool   checkLocal0,
+                bool   checkLocal1,
+                double tolerance0 = 0,
+                double tolerance1 = 0);
+  /// Construct a chi2-based check.
   ///
-  /// @param bCheck is the source class
-  BoundaryCheck&
-  operator=(const BoundaryCheck& bCheck);
+  /// @param localCovariance Coverance matrix in local coordinates
+  /// @param sigmaMax  Significance for the compatibility test
+  BoundaryCheck(const ActsSymMatrixD<2>& localCovariance, double sigmaMax = 1);
 
-  /// Overwriting of the
-  /// Conversion operator to bool
-  operator bool() const { return (checkLoc0 || checkLoc1); }
-  ///  Each Bounds has a method inside, which checks if a LocalPosition is
-  ///  inside the bounds.
-  ///  Inside can be called without/with boundary check */
-  void
-  ComputeKDOP(std::vector<Vector2D> v,
-              std::vector<Vector2D> KDOPAxes,
-              std::vector<KDOP>&    kdop) const;
+  operator bool() const { return (m_type != Type::eNone); }
+  bool operator!() const { return !bool(*this); }
 
-  std::vector<Vector2D>
-  EllipseToPoly(int resolution = 3) const;
-
+  /// Check if the point is inside a polygon.
+  ///
+  /// @param point    Test point
+  /// @param vertices Forward iterable container of convex polygon vertices.
+  ///                 Calling `std::begin`/ `std::end` on the container must
+  ///                 return an iterator where `*it` must be convertible to
+  ///                 an `Acts::Vector2D`.
+  ///
+  /// The check takes into account whether tolerances or covariances are defined
+  /// for the boundary check.
+  template <typename Vector2DContainer>
   bool
-  TestKDOPKDOP(std::vector<KDOP>& a, std::vector<KDOP>& b) const;
+  isInside(const Vector2D& point, const Vector2DContainer& vertices) const;
+  /// Check if the point is inside a box aligned with the local axes.
+  ///
+  /// @param point   Test point
+  /// @param loc0Min Lower bound along first axis
+  /// @param loc0Max Upper bound along first axis
+  /// @param loc1Min Lower bound along second axis
+  /// @param loc1Max Upper bound along second axis
+  ///
+  /// The check takes into account whether tolerances or covariances are defined
+  /// for the boundary check.
+  bool
+  isInside(const Vector2D& point,
+           double          loc0Min,
+           double          loc0Max,
+           double          loc1Min,
+           double          loc1Max) const;
 
+  /// Calculate the signed, weighted, closest distance to a polygonal boundary.
+  ///
+  /// @param point Test point
+  /// @param vertices Forward iterable container of convex polygon vertices.
+  ///                 Calling `std::begin`/ `std::end` on the container must
+  ///                 return an iterator where `*it` must be convertible to
+  ///                 an `Acts::Vector2D`.
+  /// @return Negative value if inside, positive if outside
+  ///
+  /// If a covariance is defined, the distance is the corresponding Mahalanobis
+  /// distance. Otherwise, it is the Eucleadian distance.
+  template <typename Vector2DContainer>
   double
-  FastArcTan(double x) const;
-
-  sincosCache
-  FastSinCos(double x) const;
+  distance(const Vector2D& point, const Vector2DContainer& vertices) const;
+  /// Calculate the signed, weighted, closest distance to an aligned box.
+  ///
+  /// @param point Test point
+  /// @param loc0Min Minimal value along the first local axis
+  /// @param loc0Max Maximal value along the first local axis
+  /// @param loc1Min Minimal value along the first local axis
+  /// @param loc1Max Maximal value along the first local axis
+  /// @return Negative value if inside, positive if outside
+  ///
+  /// If a covariance is defined, the distance is the corresponding Mahalanobis
+  /// distance. Otherwise, it is the Eucleadian distance.
+  double
+  distance(const Vector2D& point,
+           double          loc0Min,
+           double          loc0Max,
+           double          loc1Min,
+           double          loc1Max) const;
 
 private:
-  static double s_cos22;
-  static double s_cos45;
-  static double s_cos67;
+  enum class Type {
+    eNone,      ///< disable boundary check
+    eAbsolute,  ///< absolute cut
+    eChi2       ///< chi2-based cut with full correlations
+  };
+
+  /// Return a new BoundaryCheck with updated covariance.
+  /// @param jacobian Tranform Jacobian for the covariance
+  /// @warning This currently only transforms the covariance and does not work
+  ///          for the tolerance based check.
+  BoundaryCheck
+  transformed(const ActsMatrixD<2, 2>& jacobian) const;
+
+  /// Check if the point is inside the polygon w/o any tolerances.
+  template <typename Vector2DContainer>
+  bool
+  isInsidePolygon(const Vector2D&          point,
+                  const Vector2DContainer& vertices) const;
+  /// Check if the distance vector is within the absolute or relative limits.
+  bool
+  isTolerated(const Vector2D& delta) const;
+  /// Compute vector norm based on the covariance.
+  double
+  squaredNorm(const Vector2D& x) const;
+  /// Calculate the closest point on the polygon.
+  template <typename Vector2DContainer>
+  Vector2D
+  computeClosestPointOnPolygon(const Vector2D&          point,
+                               const Vector2DContainer& vertices) const;
+
+  /// metric weight matrix: identity for absolute mode or inverse covariance
+  ActsSymMatrixD<2> m_weight;
+  /// dual use: absolute tolerances or relative chi2/ sigma cut.
+  Vector2D m_tolerance;
+  Type     m_type;
+
+  // To be able to use `transformed`
+  friend class CylinderBounds;
+  friend class DiscTrapezoidalBounds;
+  // EllipseBounds needs a custom implementation
+  friend class EllipseBounds;
 };
 
-/// should have maximum (average) error of 0.0015 (0.00089) radians or 0.0859
-/// (0.0509) degrees, fine for us and much faster (>4 times)
-inline double
-BoundaryCheck::FastArcTan(double x) const
+}  // namespace Acts
+
+inline Acts::BoundaryCheck::BoundaryCheck(bool check)
+  : m_weight(ActsSymMatrixD<2>::Identity())
+  , m_tolerance(0, 0)
+  , m_type(check ? Type::eAbsolute : Type::eNone)
 {
-  double y;
-  bool   complement = false;  // true if arg was >1
-  bool   sign       = false;  // true if arg was < 0
-  if (x < 0.) {
-    x    = -x;
-    sign = true;  // arctan(-x)=-arctan(x)
-  }
-  if (x > 1.) {
-    x          = 1. / x;  // keep arg between 0 and 1
-    complement = true;
-  }
-  y = M_PI_4 * x - x * (std::abs(x) - 1) * (0.2447 + 0.0663 * std::abs(x));
-  if (complement) y = M_PI_2 - y;  // correct for 1/x if we did that
-  if (sign) y       = -y;          // correct for negative arg
-  return y;
 }
 
-/// should have maximum (average) error of 0.001 (0.0005) radians or 0.0573
-/// (0.029) degrees, fine for us and much faster (>8 times)
-inline sincosCache
-BoundaryCheck::FastSinCos(double x) const
+inline Acts::BoundaryCheck::BoundaryCheck(bool   checkLocal0,
+                                          bool   checkLocal1,
+                                          double tolerance0,
+                                          double tolerance1)
+  : m_weight(ActsSymMatrixD<2>::Identity())
+  , m_tolerance(checkLocal0 ? tolerance0 : DBL_MAX,
+                checkLocal1 ? tolerance1 : DBL_MAX)
+  , m_type(Type::eAbsolute)
 {
-  sincosCache tmp;
-  // always wrap input angle to -PI..PI
-  if (x < -M_PI)
-    x += 2. * M_PI;
-  else if (x > M_PI)
-    x -= 2. * M_PI;
-
-  // compute sine
-  if (x < 0.) {
-    tmp.sinC = 1.27323954 * x + .405284735 * x * x;
-
-    if (tmp.sinC < 0.)
-      tmp.sinC = .225 * (tmp.sinC * -tmp.sinC - tmp.sinC) + tmp.sinC;
-    else
-      tmp.sinC = .225 * (tmp.sinC * tmp.sinC - tmp.sinC) + tmp.sinC;
-  } else {
-    tmp.sinC = 1.27323954 * x - 0.405284735 * x * x;
-
-    if (tmp.sinC < 0.)
-      tmp.sinC = .225 * (tmp.sinC * -tmp.sinC - tmp.sinC) + tmp.sinC;
-    else
-      tmp.sinC = .225 * (tmp.sinC * tmp.sinC - tmp.sinC) + tmp.sinC;
-  }
-
-  // compute cosine: sin(x + PI/2) = cos(x)
-  x += M_PI_2;
-  if (x > M_PI) x -= 2. * M_PI;
-
-  if (x < 0.) {
-    tmp.cosC = 1.27323954 * x + 0.405284735 * x * x;
-
-    if (tmp.cosC < 0.)
-      tmp.cosC = .225 * (tmp.cosC * -tmp.cosC - tmp.cosC) + tmp.cosC;
-    else
-      tmp.cosC = .225 * (tmp.cosC * tmp.cosC - tmp.cosC) + tmp.cosC;
-  } else {
-    tmp.cosC = 1.27323954 * x - 0.405284735 * x * x;
-
-    if (tmp.cosC < 0.)
-      tmp.cosC = .225 * (tmp.cosC * -tmp.cosC - tmp.cosC) + tmp.cosC;
-    else
-      tmp.cosC = .225 * (tmp.cosC * tmp.cosC - tmp.cosC) + tmp.cosC;
-  }
-  return tmp;
 }
 
-// does the conversion of an ellipse of height h and width w to an polygon with
-// 4 + 4*resolution points
-// @todo clean this code  & write documentation
-inline std::vector<Vector2D>
-BoundaryCheck::EllipseToPoly(int resolution) const
+inline Acts::BoundaryCheck::BoundaryCheck(
+    const ActsSymMatrixD<2>& localCovariance,
+    double                   sigmaMax)
+  : m_weight(localCovariance.inverse())
+  , m_tolerance(sigmaMax, 0)
+  , m_type(Type::eChi2)
 {
-  const double h = lCovariance ? nSigmas * sqrt((*lCovariance)(1, 1)) : 0.;
-  const double w = lCovariance ? nSigmas * sqrt((*lCovariance)(0, 0)) : 0.;
-
-  // first add the four vertices
-  std::vector<Vector2D> v((1 + resolution) * 4);
-  Vector2D              p;
-  p << w, 0;
-  v.at(0) = p;
-  p << -w, 0;
-  v.at(1) = p;
-  p << 0, h;
-  v.at(2) = p;
-  p << 0, -h;
-  v.at(3) = p;
-
-  // now add a number, equal to the resolution, of equidistant points  in each
-  // quadrant
-  // resolution == 3 seems to be a solid working point, but possibility open to
-  // change to any number in the future
-  Vector2D          t(1, 1);
-  ActsSymMatrixD<2> t1;
-  t1 << 1, 0, 0, -1;
-  ActsSymMatrixD<2> t2;
-  t2 << -1, 0, 0, -1;
-  ActsSymMatrixD<2> t3;
-  t3 << -1, 0, 0, 1;
-  if (resolution != 3) {
-    sincosCache scResult;
-    for (int i = 1; i <= resolution; i++) {
-      scResult = FastSinCos(M_PI_2 * i / (resolution + 1));
-      t << w * scResult.sinC, h * scResult.cosC;
-      v.at(i * 4 + 0) = t;
-      v.at(i * 4 + 1) = t1 * t;
-      v.at(i * 4 + 2) = t2 * t;
-      v.at(i * 4 + 3) = t3 * t;
-    }
-  } else {
-    t << w * s_cos22, h * s_cos67;
-    v.at(4) = t;
-    v.at(5) = t1 * t;
-    v.at(6) = t2 * t;
-    v.at(7) = t3 * t;
-    t << w * s_cos45, h * s_cos45;
-    v.at(8)  = t;
-    v.at(9)  = t1 * t;
-    v.at(10) = t2 * t;
-    v.at(11) = t3 * t;
-    t << w * s_cos67, h * s_cos22;
-    v.at(12) = t;
-    v.at(13) = t1 * t;
-    v.at(14) = t2 * t;
-    v.at(15) = t3 * t;
-  }
-  return v;
 }
 
-// calculates KDOP object from given polygon and set of axes
-inline void
-BoundaryCheck::ComputeKDOP(std::vector<Vector2D> v,
-                           std::vector<Vector2D> KDOPAxes,
-                           std::vector<KDOP>&    kdop) const
+inline Acts::BoundaryCheck
+Acts::BoundaryCheck::transformed(const ActsMatrixD<2, 2>& jacobian) const
 {
-  // initialize KDOP to first point
-  size_t k = KDOPAxes.size();
-  for (size_t i = 0; i < k; i++) {
-    kdop.at(i).max = KDOPAxes.at(i)(0, 0) * v.at(0)(0, 0)
-        + KDOPAxes.at(i)(1, 0) * v.at(0)(1, 0);
-    kdop.at(i).min = KDOPAxes.at(i)(0, 0) * v.at(0)(0, 0)
-        + KDOPAxes.at(i)(1, 0) * v.at(0)(1, 0);
+  BoundaryCheck bc = *this;
+  if (m_type == Type::eAbsolute) {
+    // project tolerances to the new system. depending on the jacobian we need
+    // to check both tolerances, even when the initial check does not.
+    bc.m_tolerance = (jacobian * m_tolerance).cwiseAbs();
+  } else /* Type::eChi2 */ {
+    bc.m_weight
+        = (jacobian * m_weight.inverse() * jacobian.transpose()).inverse();
   }
-  // now for each additional point, update KDOP bounds if necessary
-  float value;
-  for (size_t i = 1; i < v.size(); i++) {
-    for (size_t j = 0; j < k; j++) {
-      value = KDOPAxes.at(j)(0, 0) * v.at(i)(0, 0)
-          + KDOPAxes.at(j)(1, 0) * v.at(i)(1, 0);
-      if (value < kdop.at(j).min)
-        kdop.at(j).min = value;
-      else if (value > kdop.at(j).max)
-        kdop.at(j).max = value;
-    }
-  }
+  return bc;
 }
 
-// this is the method to actually check if two KDOPs overlap
+template <typename Vector2DContainer>
 inline bool
-BoundaryCheck::TestKDOPKDOP(std::vector<KDOP>& a, std::vector<KDOP>& b) const
+Acts::BoundaryCheck::isInside(const Vector2D&          point,
+                              const Vector2DContainer& vertices) const
 {
-  size_t k = a.size();
-  // check if any intervals are non-overlapping, return if so
-  for (size_t i = 0; i < k; i++)
-    if (a.at(i).min > b.at(i).max || a.at(i).max < b.at(i).min) return false;
-  // all intervals are overlapping, so KDOPs must intersect
+  // a compatible point must be either completely in the polygon or on the
+  // outside but within the defined tolerance relative to the closest point
+  if (isInsidePolygon(point, vertices)) {
+    return true;
+  } else {
+    auto closestPoint = computeClosestPointOnPolygon(point, vertices);
+    return isTolerated(closestPoint - point);
+  }
+}
+
+template <typename Vector2DContainer>
+inline bool
+Acts::BoundaryCheck::isInsidePolygon(const Vector2D&          point,
+                                     const Vector2DContainer& vertices) const
+{
+  // when we move along the edges of a convex polygon, a point on the inside of
+  // the polygon will always appear on the same side of each edge.
+  // a point on the outside will switch sides at least once.
+
+  // returns which side of the connecting line between `l0` and `l1` the point
+  // `p` is on. computes the sign of the z-component of the cross-product
+  // between the line normal vector and the vector from `l0` to `p`.
+  auto lineSide = [&](auto&& l0, auto&& l1) {
+    auto normal = l1 - l0;
+    auto delta  = point - l0;
+    return std::signbit((normal[0] * delta[1]) - (normal[1] * delta[0]));
+  };
+
+  auto     iv = std::begin(vertices);
+  Vector2D l0 = *iv;
+  Vector2D l1 = *(++iv);
+  // use vertex0 to vertex1 to define reference sign and compare w/ all edges
+  auto reference = lineSide(l0, l1);
+  for (++iv; iv != std::end(vertices); ++iv) {
+    l0 = l1;
+    l1 = *iv;
+    if (lineSide(l0, l1) != reference) {
+      return false;
+    }
+  }
+  // manual check for last edge from last vertex back to the first vertex
+  if (lineSide(l1, *std::begin(vertices)) != reference) {
+    return false;
+  }
+  // point was always on the same side. point must be inside.
   return true;
 }
+
+inline bool
+Acts::BoundaryCheck::isInside(const Vector2D& point,
+                              double          loc0Min,
+                              double          loc0Max,
+                              double          loc1Min,
+                              double          loc1Max) const
+{
+  if ((loc0Min <= point[0]) && (point[0] < loc0Max) && (loc1Min <= point[1])
+      && (point[1] < loc1Max)) {
+    return true;
+  } else {
+    // TODO 2017-03-29 msmk: direct implementation for closest point on box
+    Vector2D vertices[] = {{loc0Min, loc1Min},
+                           {loc0Max, loc1Min},
+                           {loc0Max, loc1Max},
+                           {loc0Min, loc1Max}};
+    Vector2D closestPoint = computeClosestPointOnPolygon(point, vertices);
+    return isTolerated(closestPoint - point);
+  }
+}
+
+template <typename Vector2DContainer>
+inline double
+Acts::BoundaryCheck::distance(const Acts::Vector2D&    point,
+                              const Vector2DContainer& vertices) const
+{
+  // TODO 2017-04-06 msmk: this should be calculable directly
+  double d = squaredNorm(point - computeClosestPointOnPolygon(point, vertices));
+  d        = std::sqrt(d);
+  return isInsidePolygon(point, vertices) ? -d : d;
+}
+
+inline double
+Acts::BoundaryCheck::distance(const Acts::Vector2D& point,
+                              double                loc0Min,
+                              double                loc0Max,
+                              double                loc1Min,
+                              double                loc1Max) const
+{
+  // TODO 2017-04-04 msmk: direct implementation for closest point on box
+  Vector2D vertices[] = {{loc0Min, loc1Min},
+                         {loc0Max, loc1Min},
+                         {loc0Max, loc1Max},
+                         {loc0Min, loc1Max}};
+  return distance(point, vertices);
+}
+
+inline bool
+Acts::BoundaryCheck::isTolerated(const Vector2D& delta) const
+{
+  if (m_type == Type::eNone) {
+    return true;
+  } else if (m_type == Type::eAbsolute) {
+    return (std::abs(delta[0]) <= m_tolerance[0])
+        && (std::abs(delta[1]) <= m_tolerance[1]);
+  } else /* Type::eChi2 */ {
+    // Mahalanobis distances mean is 2 in 2-dim. cut is 1-d sigma.
+    return (squaredNorm(delta) < (2 * m_tolerance[0]));
+  }
+}
+
+inline double
+Acts::BoundaryCheck::squaredNorm(const Vector2D& x) const
+{
+  return (x.transpose() * m_weight * x).value();
+}
+
+template <typename Vector2DContainer>
+inline Acts::Vector2D
+Acts::BoundaryCheck::computeClosestPointOnPolygon(
+    const Acts::Vector2D&    point,
+    const Vector2DContainer& vertices) const
+{
+  // calculate the closest position on the segment between `l0` and `l1` to
+  // the point as measured by the metric induced by the weight matrix
+  auto closestOnSegment = [&](auto&& l0, auto&& l1) {
+    // normal vector and position of the closest point along the normal
+    auto n = l1 - l0;
+    auto f = (n.transpose() * m_weight * n).value();
+    auto u = -((l0 - point).transpose() * m_weight * n).value() / f;
+    // u must be in [0, 1] to still be on the polygon segment
+    return l0 + std::min(std::max(u, 0.0), 1.0) * n;
+  };
+
+  auto     iv      = std::begin(vertices);
+  Vector2D l0      = *iv;
+  Vector2D l1      = *(++iv);
+  Vector2D closest = closestOnSegment(l0, l1);
+  // Calculate the closest point on other connecting lines and compare distances
+  for (++iv; iv != std::end(vertices); ++iv) {
+    l0               = l1;
+    l1               = *iv;
+    Vector2D current = closestOnSegment(l0, l1);
+    if (squaredNorm(current - point) < squaredNorm(closest - point)) {
+      closest = current;
+    }
+  }
+  // final edge from last vertex back to the first vertex
+  Vector2D last = closestOnSegment(l1, *std::begin(vertices));
+  if (squaredNorm(last - point) < squaredNorm(closest - point)) {
+    closest = last;
+  }
+  return closest;
 }
 
 #endif  // ACTS_SURFACES_BOUNDARYCHECK_H

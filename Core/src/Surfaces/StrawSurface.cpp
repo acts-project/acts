@@ -11,10 +11,19 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/StrawSurface.hpp"
+
 #include <iomanip>
 #include <iostream>
+
 #include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
+
+Acts::StrawSurface::StrawSurface(std::shared_ptr<Acts::Transform3D> htrans,
+                                 double                             radius,
+                                 double                             halez)
+  : LineSurface(htrans, radius, halez)
+{
+}
 
 Acts::StrawSurface::StrawSurface(std::shared_ptr<Transform3D>      htrans,
                                  std::shared_ptr<const LineBounds> lbounds)
@@ -29,16 +38,46 @@ Acts::StrawSurface::StrawSurface(std::shared_ptr<const LineBounds> lbounds,
 {
 }
 
+Acts::StrawSurface::StrawSurface(const Acts::StrawSurface& other)
+  : LineSurface(other)
+{
+}
+
+Acts::StrawSurface::StrawSurface(const Acts::StrawSurface& other,
+                                 const Acts::Transform3D&  htrans)
+  : LineSurface(other, htrans)
+{
+}
+
 Acts::StrawSurface::~StrawSurface()
 {
 }
 
 Acts::StrawSurface&
-Acts::StrawSurface::operator=(const StrawSurface& slsf)
+Acts::StrawSurface::operator=(const StrawSurface& other)
 {
-  if (this != &slsf) {
-    LineSurface::operator=(slsf);
-    m_bounds             = slsf.m_bounds;
+  if (this != &other) {
+    LineSurface::operator=(other);
+    m_bounds             = other.m_bounds;
   }
   return *this;
+}
+
+Acts::StrawSurface*
+Acts::StrawSurface::clone(const Acts::Transform3D* shift) const
+{
+  if (shift) new StrawSurface(*this, *shift);
+  return new StrawSurface(*this);
+}
+
+Acts::Surface::SurfaceType
+Acts::StrawSurface::type() const
+{
+  return Surface::Straw;
+}
+
+std::string
+Acts::StrawSurface::name() const
+{
+  return "Acts::StrawSurface";
 }

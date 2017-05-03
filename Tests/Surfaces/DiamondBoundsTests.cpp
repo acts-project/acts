@@ -23,11 +23,6 @@
 //
 #include <limits>
 
-// namespace bdata = boost::unit_test::data;
-namespace utf    = boost::unit_test;
-const double inf = std::numeric_limits<double>::infinity();
-const double NaN = std::numeric_limits<double>::quiet_NaN();
-
 namespace Acts {
 
 namespace Test {
@@ -35,7 +30,7 @@ namespace Test {
   /// Unit test for creating compliant/non-compliant DiamondBounds object
   BOOST_AUTO_TEST_CASE(DiamondBoundsConstruction)
   {
-    double minHalfX(10.), midHalfX(15.), maxHalfX(20.), halfY1(5.), halfY2(7.);
+    double minHalfX(10.), midHalfX(20.), maxHalfX(15.), halfY1(5.), halfY2(7.);
     // test default construction
     // DiamondBounds defaultConstructedDiamondBounds;  //deleted
     //
@@ -53,7 +48,7 @@ namespace Test {
   /// Unit tests for DiamondBounds properties
   BOOST_AUTO_TEST_CASE(DiamondBoundsProperties)
   {
-    double minHalfX(30.), midHalfX(10.), maxHalfX(50.), halfY1(10.),
+    double minHalfX(10.), midHalfX(50.), maxHalfX(30.), halfY1(10.),
         halfY2(20.);
     /// Test clone
     DiamondBounds diamondBoundsObject(
@@ -81,17 +76,6 @@ namespace Test {
     /// Test halflengthY2() NOTE: Naming violation
     BOOST_TEST(diamondBoundsObject.halflengthY2() == halfY2);
     //
-    //
-    BOOST_TEST_MESSAGE(
-        "The following two tests pass but do not match the documentation:");
-    /// Test alpha1()
-    // double openingAngle1 = diamondBoundsObject.alpha1();
-    BOOST_TEST(diamondBoundsObject.alpha1() == -M_PI / 4.);
-    //
-    /// Test alpha2()
-    // double openingAngle2 = diamondBoundsObject.alpha2();
-    BOOST_TEST(diamondBoundsObject.alpha2() == -M_PI / 4.);
-    //
     /// Test boundingBox
     BOOST_TEST(diamondBoundsObject.boundingBox() == RectangleBounds(50., 20.));
     //
@@ -115,36 +99,29 @@ namespace Test {
     diamondBoundsObject.dump(dumpOuput);
     BOOST_TEST(
         dumpOuput.is_equal("Acts::DiamondBounds:  (minHlengthX, medHlengthX, "
-                           "maxHlengthX, hlengthY1, hlengthY2 ) = (30.0000000, "
-                           "10.0000000, 50.0000000, 10.0000000, 20.0000000)"));
+                           "maxHlengthX, hlengthY1, hlengthY2 ) = (10.0000000, "
+                           "50.0000000, 30.0000000, 10.0000000, 20.0000000)"));
     //
     /// Test inside
     BOOST_TEST(diamondBoundsObject.inside(origin, BoundaryCheck(true)) == true);
     // dont understand why this is so:
     BOOST_TEST(diamondBoundsObject.inside(outsideBy10, BoundaryCheck(true))
-               == true);
-    //
-    /// Test insideLoc0 (only checks for inside bounding rectangle...don't
-    /// understand answer here)
-    BOOST_TEST(diamondBoundsObject.insideLoc0(inRectangle) == false);
-    //
-    /// Test insideLoc1 (only checks for inside bounding rectangle)
-    BOOST_TEST(diamondBoundsObject.insideLoc1(inRectangle) == true);
+               == false);
     //
     /// Test vertices (does this need to be implemented in this class??
     // auto v=diamondBoundsObject.vertices();
-    std::vector<Vector2D> referenceVertices{{30., -10.},
-                                            {10., 0.},
-                                            {50., 20.},
-                                            {-50., 20.},
-                                            {-10., 0.},
-                                            {-30., -10.}};
+    std::vector<Vector2D> referenceVertices{{minHalfX, -halfY1},
+                                            {midHalfX, 0.},
+                                            {maxHalfX, halfY2},
+                                            {-maxHalfX, halfY2},
+                                            {-midHalfX, 0.},
+                                            {-minHalfX, -halfY1}};
     BOOST_TEST(diamondBoundsObject.vertices() == referenceVertices);
   }
   /// Unit test for testing DiamondBounds assignment
   BOOST_AUTO_TEST_CASE(DiamondBoundsAssignment)
   {
-    double minHalfX(10.), midHalfX(15.), maxHalfX(20.), halfY1(5.), halfY2(7.);
+    double minHalfX(10.), midHalfX(20.), maxHalfX(15.), halfY1(5.), halfY2(7.);
     DiamondBounds diamondBoundsObject(
         minHalfX, midHalfX, maxHalfX, halfY1, halfY2);
     DiamondBounds similarlyConstructeDiamondBoundsObject(
@@ -153,8 +130,7 @@ namespace Test {
     BOOST_TEST(diamondBoundsObject == similarlyConstructeDiamondBoundsObject);
     //
     /// Test assignment
-    DiamondBounds assignedDiamondBoundsObject(
-        NaN, NaN, NaN, NaN, NaN);  // invalid
+    DiamondBounds assignedDiamondBoundsObject(0, 0, 0, 0, 0);  // invalid
     // object, in some sense
     assignedDiamondBoundsObject = diamondBoundsObject;
     BOOST_TEST(assignedDiamondBoundsObject == diamondBoundsObject);

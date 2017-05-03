@@ -17,15 +17,12 @@
 #include <boost/test/output_test_stream.hpp>
 // leave blank
 
-//
-#include "ACTS/Surfaces/TriangleBounds.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-//
 #include <limits>
 
-// namespace bdata = boost::unit_test::data;
+#include "ACTS/Surfaces/TriangleBounds.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
+
 namespace utf    = boost::unit_test;
-const double inf = std::numeric_limits<double>::infinity();
 const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
@@ -99,13 +96,6 @@ namespace Test {
                == true);
     BOOST_TEST(triangleBoundsObject.inside(outside, BoundaryCheck(true))
                == false);
-    //
-    /// Test insideLoc0
-    BOOST_TEST(triangleBoundsObject.insideLoc0(inTriangle) == true);
-    //
-    /// Test insideLoc1
-    BOOST_TEST(triangleBoundsObject.insideLoc1(inTriangle) == true);
-    //
   }
   /// Unit test for testing TriangleBounds assignment
   BOOST_AUTO_TEST_CASE(TriangleBoundsAssignment)

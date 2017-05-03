@@ -44,7 +44,6 @@ public:
     bv_length        = 5
   };
 
-  /// Default Constructor is deleted
   ConeBounds() = delete;
 
   /// Constructor - open cone with alpha, by default a full cone
@@ -72,93 +71,60 @@ public:
              double halfphi = M_PI,
              double avphi   = 0.);
 
-  /// Copy Constructor
-  ///
-  /// @param cobo is the source bounds for the assignment
-  ConeBounds(const ConeBounds& cobo)
-    : SurfaceBounds(cobo)
-    , m_tanAlpha(cobo.m_tanAlpha)
-    , m_sinAlpha(cobo.m_sinAlpha)
-    , m_cosAlpha(cobo.m_cosAlpha)
-  {
-  }
-
-  /// Destructor
   virtual ~ConeBounds();
 
-  /// Assignment operator
-  /// @param cobo is the source bounds for the assignment
-  ConeBounds&
-  operator=(const ConeBounds& cobo);
-
-  /// Virtual constructor
   virtual ConeBounds*
   clone() const final override;
 
-  /// Return the bounds type
   virtual BoundsType
-  type() const override
-  {
-    return SurfaceBounds::Cone;
-  }
+  type() const final override;
+
+  virtual std::vector<TDD_real_t>
+  valueStore() const final override;
 
   /// inside method for local position
   ///
   /// @param lpos is the local position to be checked
   /// @param bcheck is the boundary check directive
-  ///
   /// @return is a boolean indicating if the position is inside
   virtual bool
   inside(const Vector2D&      lpos,
          const BoundaryCheck& bcheck = true) const final override;
 
-  /// Inside method for the first local parameter
-  ///
-  /// @param lpos is the local position to be checked
-  /// @param tol0 is the absolute tolerance on the first parameter
-  ///
-  /// @return is a boolean indicating if the position is insideLoc0
-  virtual bool
-  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const final override;
-
-  /// Inside method for the second local parameter
-  ///
-  /// @param lpos is the local position to be checked
-  /// @param tol1 is the absolute tolerance on the first parameter
-  ///
-  /// @return is a boolean indicating if the position is insideLoc1
-  virtual bool
-  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const final override;
-
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lpos is the local position to check for the distance
-  ///
   /// @return is a signed distance parameter
   virtual double
   distanceToBoundary(const Vector2D& lpos) const final override;
 
+  /// Output Method for std::ostream
+  ///
+  /// @param sl is the ostrea into which the dump is done
+  /// @return is the input obect
+  virtual std::ostream&
+  dump(std::ostream& sl) const final override;
+
   /// Return the radius at a specific z values
   ///
   /// @param z is the z value for which r is requested
-  ///
   /// @return is the r value associated with z
   double
   r(double z) const;
 
-  /// Return the average values for the angles (cached)
+  /// Return the average values for the angles
   double
   tanAlpha() const;
 
-  /// Return the average values for the angles (cached)
+  /// Return the average values for the angles
   double
   sinAlpha() const;
 
-  /// Return the average values for the angles (cached)
+  /// Return the average values for the angles
   double
   cosAlpha() const;
 
-  /// Return the average values for the angles (cached)
+  /// Return the average values for the angles
   double
   alpha() const;
 
@@ -182,85 +148,14 @@ public:
   double
   halfPhiSector() const;
 
-  /// Output Method for std::ostream
-  ///
-  /// @param sl is the ostrea into which the dump is done
-  ///
-  /// @return is the input obect
-  virtual std::ostream&
-  dump(std::ostream& sl) const final override;
-
 private:
-  /// private helper method
-  bool
-  inside(const Vector2D& lpos, double tol0, double tol1) const;
+  double m_alpha, m_tanAlpha;
+  double m_zMin, m_zMax;
+  double m_avgPhi, m_halfPhi;
 
-  TDD_real_t m_tanAlpha;  ///< internal cache
-  TDD_real_t m_sinAlpha;  ///< internal cache
-  TDD_real_t m_cosAlpha;  ///< internal cache
-
-  /// Helper function for angle parameter initialization
-  virtual void
-  initCache();
-
-  /// Helpers for inside() functions
-  inline double
-  minPhi() const
-  {
-    return m_valueStore[ConeBounds::bv_averagePhi]
-        - m_valueStore[ConeBounds::bv_halfPhiSector];
-  }
-  inline double
-  maxPhi() const
-  {
-    return m_valueStore[ConeBounds::bv_averagePhi]
-        + m_valueStore[ConeBounds::bv_halfPhiSector];
-  }
+  Vector2D
+  shifted(const Vector2D& lpos) const;
 };
-
-inline ConeBounds*
-ConeBounds::clone() const
-{
-  return new ConeBounds(*this);
-}
-
-inline bool
-ConeBounds::inside(const Vector2D& lpos, double tol0, double tol1) const
-{
-  double z       = lpos[Acts::eLOC_Z];
-  bool   insideZ = z > (m_valueStore[ConeBounds::bv_minZ] - tol1)
-      && z < (m_valueStore[ConeBounds::bv_maxZ] + tol1);
-  if (!insideZ) return false;
-  // TODO: Do we need some sort of "R" tolerance also here (take
-  // it off the z tol1 in that case?) or does the rphi tol0 cover
-  // this? (Could argue either way)
-  double coneR   = z * m_tanAlpha;
-  double minRPhi = coneR * minPhi() - tol0, maxRPhi = coneR * maxPhi() + tol0;
-  return minRPhi < lpos[Acts::eLOC_RPHI] && lpos[Acts::eLOC_RPHI] < maxRPhi;
-}
-
-inline bool
-ConeBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
-{
-  return ConeBounds::inside(lpos, bcheck.toleranceLoc0, bcheck.toleranceLoc1);
-}
-
-inline bool
-ConeBounds::insideLoc0(const Vector2D& lpos, double tol0) const
-{
-  double z       = lpos[Acts::eLOC_Z];
-  double coneR   = z * m_tanAlpha;
-  double minRPhi = coneR * minPhi() - tol0, maxRPhi = coneR * maxPhi() + tol0;
-  return minRPhi < lpos[Acts::eLOC_RPHI] && lpos[Acts::eLOC_RPHI] < maxRPhi;
-}
-
-inline bool
-ConeBounds::insideLoc1(const Vector2D& lpos, double tol1) const
-{
-  double z = lpos[Acts::eLOC_Z];
-  return (z > (m_valueStore[ConeBounds::bv_minZ] - tol1)
-          && z < (m_valueStore[ConeBounds::bv_maxZ] + tol1));
-}
 
 inline double
 ConeBounds::r(double z) const
@@ -277,57 +172,43 @@ ConeBounds::tanAlpha() const
 inline double
 ConeBounds::sinAlpha() const
 {
-  return m_sinAlpha;
+  return std::sin(m_alpha);
 }
 
 inline double
 ConeBounds::cosAlpha() const
 {
-  return m_cosAlpha;
+  return std::cos(m_alpha);
 }
 
 inline double
 ConeBounds::alpha() const
 {
-  return m_valueStore[ConeBounds::bv_alpha];
+  return m_alpha;
 }
 
 inline double
 ConeBounds::minZ() const
 {
-  return m_valueStore[ConeBounds::bv_minZ];
+  return m_zMin;
 }
 
 inline double
 ConeBounds::maxZ() const
 {
-  return m_valueStore[ConeBounds::bv_maxZ];
+  return m_zMax;
 }
 
 inline double
 ConeBounds::averagePhi() const
 {
-  return m_valueStore[ConeBounds::bv_averagePhi];
+  return m_avgPhi;
 }
 
 inline double
 ConeBounds::halfPhiSector() const
 {
-  return m_valueStore[ConeBounds::bv_halfPhiSector];
-}
-
-inline void
-ConeBounds::initCache()
-{
-  m_tanAlpha = tan(m_valueStore[ConeBounds::bv_alpha]);
-  m_sinAlpha = sin(m_valueStore[ConeBounds::bv_alpha]);
-  m_cosAlpha = cos(m_valueStore[ConeBounds::bv_alpha]);
-  // validate the halfphi
-  if (m_valueStore[ConeBounds::bv_halfPhiSector] < 0.)
-    m_valueStore[ConeBounds::bv_halfPhiSector]
-        = -m_valueStore[ConeBounds::bv_halfPhiSector];
-  if (m_valueStore[ConeBounds::bv_halfPhiSector] > M_PI)
-    m_valueStore[ConeBounds::bv_halfPhiSector] = M_PI;
+  return m_halfPhi;
 }
 }
 

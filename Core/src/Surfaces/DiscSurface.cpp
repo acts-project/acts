@@ -11,22 +11,24 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/DiscSurface.hpp"
+
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+
 #include "ACTS/Surfaces/DiscTrapezoidalBounds.hpp"
 #include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
-Acts::DiscSurface::DiscSurface(const DiscSurface& dsf)
-  : Surface(dsf), m_bounds(dsf.m_bounds)
+Acts::DiscSurface::DiscSurface(const DiscSurface& other)
+  : Surface(other), m_bounds(other.m_bounds)
 {
 }
 
-Acts::DiscSurface::DiscSurface(const DiscSurface& dsf,
+Acts::DiscSurface::DiscSurface(const DiscSurface& other,
                                const Transform3D& transf)
-  : Surface(dsf, transf), m_bounds(dsf.m_bounds)
+  : Surface(other, transf), m_bounds(other.m_bounds)
 {
 }
 
@@ -75,13 +77,19 @@ Acts::DiscSurface::~DiscSurface()
 }
 
 Acts::DiscSurface&
-Acts::DiscSurface::operator=(const DiscSurface& dsf)
+Acts::DiscSurface::operator=(const DiscSurface& other)
 {
-  if (this != &dsf) {
-    Acts::Surface::operator=(dsf);
-    m_bounds               = dsf.m_bounds;
+  if (this != &other) {
+    Acts::Surface::operator=(other);
+    m_bounds               = other.m_bounds;
   }
   return *this;
+}
+
+Acts::Surface::SurfaceType
+Acts::DiscSurface::type() const
+{
+  return Surface::Disc;
 }
 
 void
@@ -145,6 +153,12 @@ Acts::DiscSurface::globalToLocalCartesian(const Vector3D& gpos, double) const
   return Vector2D(loc3Dframe.x(), loc3Dframe.y());
 }
 
+std::string
+Acts::DiscSurface::name() const
+{
+  return "Acts::DiscSurface";
+}
+
 bool
 Acts::DiscSurface::isOnSurface(const Vector3D&      glopo,
                                const BoundaryCheck& bcheck) const
@@ -155,4 +169,61 @@ Acts::DiscSurface::isOnSurface(const Vector3D&      glopo,
               ? bounds().inside(Vector2D(loc3Dframe.perp(), loc3Dframe.phi()),
                                 bcheck)
               : true);
+}
+
+Acts::DiscSurface*
+Acts::DiscSurface::clone(const Acts::Transform3D* shift) const
+{
+  if (shift) return new DiscSurface(*this, *shift);
+  return new DiscSurface(*this);
+}
+
+const Acts::SurfaceBounds&
+Acts::DiscSurface::bounds() const
+{
+  if (m_bounds) return (*(m_bounds.get()));
+  return s_noBounds;
+}
+
+const Acts::Vector3D
+Acts::DiscSurface::normal(const Acts::Vector2D&) const
+{
+  // fast access via tranform matrix (and not rotation())
+  auto tMatrix = transform().matrix();
+  return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
+}
+
+const Acts::Vector3D
+    Acts::DiscSurface::binningPosition(Acts::BinningValue) const
+{
+  return center();
+}
+
+double
+Acts::DiscSurface::pathCorrection(const Acts::Vector3D&,
+                                  const Acts::Vector3D& mom) const
+{
+  /// we can ignore the global position here
+  return 1. / std::abs(normal().dot(mom.unit()));
+}
+
+Acts::Intersection
+Acts::DiscSurface::intersectionEstimate(const Acts::Vector3D&      gpos,
+                                        const Acts::Vector3D&      dir,
+                                        bool                       forceDir,
+                                        const Acts::BoundaryCheck& bcheck) const
+{
+  double denom = dir.dot(normal());
+  if (denom) {
+    double   u = (normal().dot((center() - gpos))) / (denom);
+    Vector3D intersectPoint(gpos + u * dir);
+    // evaluate the intersection in terms of direction
+    bool isValid = forceDir ? (u > 0.) : true;
+    // evaluate (if necessary in terms of boundaries)
+    isValid
+        = bcheck ? (isValid && isOnSurface(intersectPoint, bcheck)) : isValid;
+    // return the result
+    return Intersection(intersectPoint, u, isValid);
+  }
+  return Intersection(gpos, 0., false);
 }

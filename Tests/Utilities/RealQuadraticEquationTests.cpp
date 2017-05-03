@@ -18,10 +18,12 @@
 // leave blank
 
 //
-#include "ACTS/Surfaces/RealQuadraticEquation.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/detail/RealQuadraticEquation.hpp"
 //
 #include <limits>
+
+using Acts::detail::RealQuadraticEquation;
 
 // namespace bdata = boost::unit_test::data;
 namespace utf    = boost::unit_test;
@@ -57,7 +59,7 @@ namespace Test {
     /// Test for solutions
     BOOST_TEST(equation.first == 2.);
     BOOST_TEST(equation.second == 1.);
-    BOOST_TEST(equation.solutions == RQESolutionType::two);
+    BOOST_TEST(equation.solutions == 2);
   }
 
   /// Unit test for testing RealQuadraticEquation assignment
@@ -71,10 +73,9 @@ namespace Test {
     RealQuadraticEquation assignedRealQuadraticEquationObject(
         NaN, NaN, NaN);  // invalid object, in some sense
     assignedRealQuadraticEquationObject = realQuadraticEquationObject;
-    BOOST_TEST(assignedRealQuadraticEquationObject.first = 2.);
-    BOOST_TEST(assignedRealQuadraticEquationObject.second = 1.);
-    BOOST_TEST(assignedRealQuadraticEquationObject.solutions
-               = RQESolutionType::two);
+    BOOST_TEST(assignedRealQuadraticEquationObject.first == 2.);
+    BOOST_TEST(assignedRealQuadraticEquationObject.second == 1.);
+    BOOST_TEST(assignedRealQuadraticEquationObject.solutions == 2);
     /// equality not written and not implicit
     // BOOST_TEST(assignedRealQuadraticEquationObject ==
     // realQuadraticEquationObject);

@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/DiamondBounds.hpp"
+
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -20,182 +21,75 @@ Acts::DiamondBounds::DiamondBounds(double minhalex,
                                    double maxhalex,
                                    double haley1,
                                    double haley2)
-  : PlanarBounds(DiamondBounds::bv_length)
-  , m_alpha1(0.)
-  , m_alpha2(0.)
-  , m_boundingBox(0., 0.)
+  : m_minHalfX(std::abs(minhalex))
+  , m_medHalfX(std::abs(medhalex))
+  , m_maxHalfX(std::abs(maxhalex))
+  , m_minY(std::abs(haley1))
+  , m_maxY(std::abs(haley2))
+  , m_boundingBox(std::max(std::max(minhalex, medhalex), maxhalex),
+                  std::max(haley1, haley2))
 {
-  PlanarBounds::m_valueStore[DiamondBounds::bv_minHalfX] = minhalex;
-  PlanarBounds::m_valueStore[DiamondBounds::bv_medHalfX] = medhalex;
-  PlanarBounds::m_valueStore[DiamondBounds::bv_maxHalfX] = maxhalex;
-  PlanarBounds::m_valueStore[DiamondBounds::bv_halfY1]   = haley1;
-  PlanarBounds::m_valueStore[DiamondBounds::bv_halfY2]   = haley2;
-  double mx = minhalex > medhalex ? (std::max(minhalex, maxhalex))
-                                  : (std::max(medhalex, maxhalex));
-  double my = std::max(haley1, haley2);
-  // the boundary box is being set
-  m_boundingBox = RectangleBounds(mx, my);
-  // init the cache
-  initCache();
+  assert((minhalex <= medhalex) && "Hexagon must be a convex polygon");
+  assert((maxhalex <= medhalex) && "Hexagon must be a convex polygon");
 }
 
-// copy constructor
-Acts::DiamondBounds::DiamondBounds(const DiamondBounds& diabo)
-  : PlanarBounds(diabo)
-  , m_alpha1(diabo.m_alpha1)
-  , m_alpha2(diabo.m_alpha2)
-  , m_boundingBox(diabo.m_boundingBox)
-{
-}
-
-// destructor
 Acts::DiamondBounds::~DiamondBounds()
 {
 }
 
-Acts::DiamondBounds&
-Acts::DiamondBounds::operator=(const DiamondBounds& diabo)
+Acts::DiamondBounds*
+Acts::DiamondBounds::clone() const
 {
-  if (this != &diabo) {
-    PlanarBounds::m_valueStore = diabo.m_valueStore;
-    m_alpha1                   = diabo.m_alpha1;
-    m_alpha2                   = diabo.m_alpha2;
-    m_boundingBox              = diabo.m_boundingBox;
-  }
-  return *this;
+  return new DiamondBounds(*this);
+}
+
+Acts::SurfaceBounds::BoundsType
+Acts::DiamondBounds::type() const
+{
+  return SurfaceBounds::Diamond;
+}
+
+std::vector<TDD_real_t>
+Acts::DiamondBounds::valueStore() const
+{
+  std::vector<TDD_real_t> values(DiamondBounds::bv_length);
+  values[DiamondBounds::bv_minHalfX] = minHalflengthX();
+  values[DiamondBounds::bv_medHalfX] = medHalflengthX();
+  values[DiamondBounds::bv_maxHalfX] = maxHalflengthX();
+  values[DiamondBounds::bv_halfY1]   = halflengthY1();
+  values[DiamondBounds::bv_halfY2]   = halflengthY2();
+  return values;
 }
 
 bool
-Acts::DiamondBounds::operator==(const SurfaceBounds& sbo) const
+Acts::DiamondBounds::inside(const Acts::Vector2D&      lpos,
+                            const Acts::BoundaryCheck& bcheck) const
 {
-  // fast exit
-  if (&sbo == this) return true;
-  // check the type first not to compare apples with oranges
-  const DiamondBounds* diabo = dynamic_cast<const DiamondBounds*>(&sbo);
-  if (!diabo) return false;
-  return (PlanarBounds::m_valueStore == diabo->m_valueStore);
-}
-
-// checking if inside bounds (Full symmetrical Diamond)
-bool
-Acts::DiamondBounds::inside(const Vector2D& locpo,
-                            double          tol0,
-                            double          tol1) const
-{
-  return insideFull(locpo, tol0, tol1);
-}
-
-// checking if inside bounds (Full symmetrical Diamond)
-bool
-Acts::DiamondBounds::insideFull(const Vector2D& locpo,
-                                double          tol0,
-                                double          tol1) const
-{
-  // @todo updat with bounding box
-
-  // the cases:
-  // (0)
-  if (!PlanarBounds::m_valueStore.at(DiamondBounds::bv_halfY1)
-      && !PlanarBounds::m_valueStore[DiamondBounds::bv_minHalfX])
-    return false;
-  // (1)
-  if (locpo[Acts::eLOC_Y]
-      < -2. * PlanarBounds::m_valueStore[DiamondBounds::bv_halfY1] - tol1)
-    return false;
-  if (locpo[Acts::eLOC_Y]
-      > 2. * PlanarBounds::m_valueStore[DiamondBounds::bv_halfY2] + tol1)
-    return false;
-  // (2)
-  if (fabs(locpo[Acts::eLOC_X])
-      > (PlanarBounds::m_valueStore[DiamondBounds::bv_medHalfX] + tol0))
-    return false;
-  // (3)
-  if (std::abs(locpo[Acts::eLOC_X])
-      < (fmin(PlanarBounds::m_valueStore[DiamondBounds::bv_minHalfX],
-              PlanarBounds::m_valueStore[DiamondBounds::bv_maxHalfX])
-         - tol0))
-    return true;
-  // (4)
-  /** use basic calculation of a straight line */
-  if (locpo[Acts::eLOC_Y] < 0) {
-    double k = PlanarBounds::m_valueStore[DiamondBounds::bv_halfY1] > 0.
-        ? (m_valueStore.at(DiamondBounds::bv_medHalfX)
-           - PlanarBounds::m_valueStore[DiamondBounds::bv_minHalfX])
-            / 2 / PlanarBounds::m_valueStore[DiamondBounds::bv_halfY1]
-        : 0.;
-    return (std::abs(locpo[Acts::eLOC_X])
-            <= PlanarBounds::m_valueStore[DiamondBounds::bv_medHalfX]
-                - k * std::abs(locpo[Acts::eLOC_Y]));
-  } else {
-    double k = PlanarBounds::m_valueStore[DiamondBounds::bv_halfY2] > 0.
-        ? (PlanarBounds::m_valueStore[DiamondBounds::bv_medHalfX]
-           - PlanarBounds::m_valueStore[DiamondBounds::bv_maxHalfX])
-            / 2 / PlanarBounds::m_valueStore[DiamondBounds::bv_halfY2]
-        : 0.;
-    return (std::abs(locpo[Acts::eLOC_X])
-            <= PlanarBounds::m_valueStore[DiamondBounds::bv_medHalfX]
-                - k * std::abs(locpo[Acts::eLOC_Y]));
-  }
+  return bcheck.isInside(lpos, vertices());
 }
 
 double
-Acts::DiamondBounds::alpha1() const
+Acts::DiamondBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 {
-  return m_alpha1;
+  return BoundaryCheck(true).distance(lpos, vertices());
 }
 
-double
-Acts::DiamondBounds::alpha2() const
+std::vector<Acts::Vector2D>
+Acts::DiamondBounds::vertices() const
 {
-  return m_alpha2;
+  // vertices starting from lower right in clock-wise order
+  return {{minHalflengthX(), -halflengthY1()},
+          {medHalflengthX(), 0},
+          {maxHalflengthX(), halflengthY2()},
+          {-maxHalflengthX(), halflengthY2()},
+          {-medHalflengthX(), 0},
+          {-minHalflengthX(), -halflengthY1()}};
 }
 
-double
-Acts::DiamondBounds::distanceToBoundary(const Acts::Vector2D& pos) const
+const Acts::RectangleBounds&
+Acts::DiamondBounds::boundingBox() const
 {
-  const int Np = 6;
-
-  double y1 = 2. * PlanarBounds::m_valueStore[DiamondBounds::bv_halfY1];
-  double y2 = 2. * PlanarBounds::m_valueStore[DiamondBounds::bv_halfY2];
-
-  double X[6] = {-PlanarBounds::m_valueStore[DiamondBounds::bv_minHalfX],
-                 -PlanarBounds::m_valueStore[DiamondBounds::bv_medHalfX],
-                 -PlanarBounds::m_valueStore[DiamondBounds::bv_maxHalfX],
-                 PlanarBounds::m_valueStore[DiamondBounds::bv_maxHalfX],
-                 PlanarBounds::m_valueStore[DiamondBounds::bv_medHalfX],
-                 PlanarBounds::m_valueStore[DiamondBounds::bv_minHalfX]};
-  double Y[6] = {-y1, 0., y2, y2, 0., -y1};
-
-  double dm = 1.e+20;
-  double Ao = 0.;
-  bool   in = true;
-
-  for (int i = 0; i != Np; ++i) {
-    int j          = i + 1;
-    if (j == Np) j = 0;
-
-    double x  = X[i] - pos[0];
-    double y  = Y[i] - pos[1];
-    double dx = X[j] - X[i];
-    double dy = Y[j] - Y[i];
-    double A  = x * dy - y * dx;
-    double S  = -(x * dx + y * dy);
-
-    if (S <= 0.) {
-      double d       = x * x + y * y;
-      if (d < dm) dm = d;
-    } else {
-      double a = dx * dx + dy * dy;
-      if (S <= a) {
-        double d       = (A * A) / a;
-        if (d < dm) dm = d;
-      }
-    }
-    if (i && in && Ao * A < 0.) in = false;
-    Ao                             = A;
-  }
-  if (in) return -std::sqrt(dm);
-  return std::sqrt(dm);
+  return m_boundingBox;
 }
 
 // ostream operator overload
@@ -206,11 +100,9 @@ Acts::DiamondBounds::dump(std::ostream& sl) const
   sl << std::setprecision(7);
   sl << "Acts::DiamondBounds:  (minHlengthX, medHlengthX, maxHlengthX, "
         "hlengthY1, hlengthY2 ) = ";
-  sl << "(" << m_valueStore[DiamondBounds::bv_minHalfX] << ", "
-     << PlanarBounds::m_valueStore[DiamondBounds::bv_medHalfX] << ", "
-     << PlanarBounds::m_valueStore[DiamondBounds::bv_maxHalfX] << ", "
-     << PlanarBounds::m_valueStore[DiamondBounds::bv_halfY1] << ", "
-     << PlanarBounds::m_valueStore[DiamondBounds::bv_halfY2] << ")";
+  sl << "(" << minHalflengthX() << ", " << medHalflengthX() << ", "
+     << maxHalflengthX() << ", " << halflengthY1() << ", " << halflengthY2()
+     << ")";
   sl << std::setprecision(-1);
   return sl;
 }

@@ -20,13 +20,6 @@
 //
 #include "ACTS/Surfaces/LineBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-//
-#include <limits>
-
-// namespace bdata = boost::unit_test::data;
-namespace utf    = boost::unit_test;
-const double inf = std::numeric_limits<double>::infinity();
-const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
 
@@ -77,15 +70,6 @@ namespace Test {
     const BoundaryCheck trueBoundaryCheckWithTolerance(true, true, 0.1, 0.1);
     BOOST_TEST(lineBoundsObject.inside(atRadius, trueBoundaryCheckWithTolerance)
                == true);
-
-    /// test for insideLoc0 and insideLoc1
-    double oneTenthTolerance(0.1);
-    BOOST_TEST(lineBoundsObject.insideLoc0(origin, oneTenthTolerance)
-               == true);  // fail
-    BOOST_TEST(lineBoundsObject.insideLoc1(unitZ, oneTenthTolerance) == true);
-    BOOST_TEST(lineBoundsObject.insideLoc0(unitR, oneTenthTolerance) == false);
-    BOOST_TEST(lineBoundsObject.insideLoc1(beyondEnd, oneTenthTolerance)
-               == false);
 
     /// test for distanceToBoundary
     BOOST_TEST(lineBoundsObject.distanceToBoundary(unitR) == 1.);  // why?

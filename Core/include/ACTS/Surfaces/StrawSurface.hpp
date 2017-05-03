@@ -41,10 +41,9 @@ public:
   /// frame
   /// @param radius is the straw radius
   /// @param halez is the half length in z
-  StrawSurface(std::shared_ptr<Transform3D> htrans, double radius, double halez)
-    : LineSurface(htrans, radius, halez)
-  {
-  }
+  StrawSurface(std::shared_ptr<Transform3D> htrans,
+               double                       radius,
+               double                       halez);
 
   /// Constructor from Transform3D and a shared bounds object
   ///
@@ -68,24 +67,20 @@ public:
   /// Copy constructor
   ///
   /// @param slsf is the source surface for copying
-  StrawSurface(const StrawSurface& slsf) : LineSurface(slsf) {}
+  StrawSurface(const StrawSurface& other);
   /// Copy constructor with shift
   ///
-  /// @param slsf is the source surface dor copying
+  /// @param other is the source surface dor copying
   /// @param htrans is the additional transform applied after copying
-  StrawSurface(const StrawSurface& slsf, const Transform3D& htrans)
-    : LineSurface(slsf, htrans)
-  {
-  }
+  StrawSurface(const StrawSurface& other, const Transform3D& htrans);
 
-  /// Destructor
   virtual ~StrawSurface();
 
   /// Assignment operator
   ///
-  /// @param slsf is the source surface for copying
+  /// @param other is the source surface for copying
   StrawSurface&
-  operator=(const StrawSurface& slsf);
+  operator=(const StrawSurface& other);
 
   /// Implicit constructor - shift can be provided
   ///
@@ -95,25 +90,12 @@ public:
 
   /// Return the surface type
   virtual SurfaceType
-  type() const final override
-  {
-    return Surface::Straw;
-  }
+  type() const final override;
 
   /// Return properly formatted class name for screen output */
   virtual std::string
-  name() const final override
-  {
-    return "Acts::StrawSurface";
-  };
+  name() const final override;
 };
-
-inline StrawSurface*
-StrawSurface::clone(const Transform3D* shift) const
-{
-  if (shift) new StrawSurface(*this, *shift);
-  return new StrawSurface(*this);
-}
 
 }  // end of namespace
 

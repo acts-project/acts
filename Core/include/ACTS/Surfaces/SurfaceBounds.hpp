@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016 ACTS project team
+// Copyright (C) 2016-2017 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,11 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #ifndef ACTS_SURFACES_SURFACEBOUNDS_H
-#define ACTS_SURFACES_SURFACEBOUNDS_H 1
+#define ACTS_SURFACES_SURFACEBOUNDS_H
 
-// STD/STL
-#include <iomanip>
-#include <iostream>
+#include <ostream>
 
 #include "ACTS/Surfaces/BoundaryCheck.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
@@ -24,13 +22,12 @@ namespace Acts {
 
 /// @class SurfaceBounds
 ///
-/// Abstract base class for surface bounds to be specified.
+/// Interface for surface bounds.
 ///
 /// Surface bounds provide:
 /// - inside() checks
-/// - the BoundsType return type to avoid dynamic casting
-///
-/// @todo for easy persistency access, force Constructor from ValueStore
+/// - distance to boundary calculations
+/// - the BoundsType and a set of parameters to simplify persistency
 ///
 class SurfaceBounds
 {
@@ -56,45 +53,14 @@ public:
     Other            = 12
   };
 
-  /// Default Constructor
-  ///
-  /// @param sSize is the size of the data store
-  /// @note the value Store is initialized to the given size
-  SurfaceBounds(size_t sSize = 0) : m_valueStore(sSize, 0.) {}
-  /// Copy constructor
-  /// It copies the value store
-  ///
-  /// @param sb is the source bounds to be copied
-  SurfaceBounds(const SurfaceBounds& sb) : m_valueStore(sb.m_valueStore) {}
-  /// Destructor
   virtual ~SurfaceBounds() {}
+
   /// clone() method to make deep copy in Surface copy constructor and for
   /// assigment operator of the Surface class
   ///
   /// @return is a newly created object
   virtual SurfaceBounds*
   clone() const = 0;
-
-  /// Assignment operator
-  ///
-  /// @param sb is the source bounds to be copied
-  SurfaceBounds&
-  operator=(const SurfaceBounds& sb);
-
-  /// Comparison (equality) operator
-  /// checks first on the pointer equality
-  /// then it cheks on the type lastly it checks on the data store
-  ///
-  /// @param sb is the source bounds to be copied
-  virtual bool
-  operator==(const SurfaceBounds& sb) const;
-
-  /// Comparison (non-equality) operator
-  /// checks first on the pointer equality, inverts operator==
-  ///
-  /// @param sb is the source bounds to be copied
-  bool
-  operator!=(const SurfaceBounds& sb) const;
 
   /// Return the bounds type - for persistency optimization
   ///
@@ -105,8 +71,8 @@ public:
   /// Access method for bound variable store
   ///
   /// @return of the stored values for the boundary object
-  virtual const std::vector<TDD_real_t>&
-  valueStore() const;
+  virtual std::vector<TDD_real_t>
+  valueStore() const = 0;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -114,35 +80,13 @@ public:
   ///
   /// @param lpos Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
-  ///
   /// @return boolean indicator for the success of this operation
   virtual bool
   inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const = 0;
 
-  /// Inside check for the bounds object with tolerance
-  /// checks for first coordinate only.
-  ///
-  /// @param lpos Local position (assumed to be in right surface frame)
-  /// @param tol0 absolute tolerance parameter
-  ///
-  /// @return boolean indicator for the success of this operation
-  virtual bool
-  insideLoc0(const Vector2D& lpos, double tol0 = 0.) const = 0;
-
-  /// Inside check for the bounds object with tolerance
-  /// checks for second coordinate only.
-  ///
-  /// @param lpos Local position (assumed to be in right surface frame)
-  /// @param tol1 absulote tolerance parameter
-  ///
-  /// @return boolean indicator for the success of this operation
-  virtual bool
-  insideLoc1(const Vector2D& lpos, double tol1 = 0.) const = 0;
-
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lpos is the local position to check for the distance
-  ///
   /// @return is a signed distance parameter
   virtual double
   distanceToBoundary(const Vector2D& lpos) const = 0;
@@ -151,27 +95,28 @@ public:
   ///
   /// @param sl is the outstream in which the string dump is done
   virtual std::ostream&
-  dump(std::ostream& sl) const = 0;
-
-protected:
-  std::vector<TDD_real_t> m_valueStore;  ///< internal data store
+  dump(std::ostream& os) const = 0;
 };
 
 inline bool
-SurfaceBounds::operator!=(const SurfaceBounds& sb) const
+operator==(const SurfaceBounds& lhs, const SurfaceBounds& rhs)
 {
-  return !((*this) == sb);
+  if (&lhs == &rhs) return true;
+  return (lhs.type() == rhs.type()) && (lhs.valueStore() == rhs.valueStore());
 }
 
-inline const std::vector<TDD_real_t>&
-SurfaceBounds::valueStore() const
+inline bool
+operator!=(const SurfaceBounds& lhs, const SurfaceBounds& rhs)
 {
-  return m_valueStore;
+  return !(lhs == rhs);
 }
 
-std::ostream&
-operator<<(std::ostream& sl, const SurfaceBounds& sb);
+inline std::ostream&
+operator<<(std::ostream& os, const SurfaceBounds& sb)
+{
+  return sb.dump(os);
+}
 
-}  // end of namespace
+}  // namespace Acts
 
 #endif  // ACTS_SURFACES_SURFACEBOUNDS_H

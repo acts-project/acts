@@ -34,7 +34,6 @@ class LineBounds;
 class LineSurface : public Surface
 {
 public:
-  /// Default Constructor - deleted
   LineSurface() = delete;
 
   /// Constructor from Transform3D and bounds
@@ -66,29 +65,27 @@ public:
 
   /// Copy constructor
   ///
-  /// @param slsf is teh source surface for copying
-  LineSurface(const LineSurface& slsf);
+  /// @param other is teh source surface for copying
+  LineSurface(const LineSurface& other);
 
   /// Copy constructor with shift
   ///
-  /// @param slsf is the source surface dor copying
+  /// @param other is the source surface dor copying
   /// @param transf is the additional transform applied after copying
-  LineSurface(const LineSurface& slsf, const Transform3D& transf);
+  LineSurface(const LineSurface& other, const Transform3D& transf);
 
-  /// Destructor
   virtual ~LineSurface();
 
   /// Assignment operator
   ///
   /// @param slsf is the source surface dor copying
   LineSurface&
-  operator=(const LineSurface& slsf);
+  operator=(const LineSurface& other);
 
   /// Normal vector return
   ///
   /// @param lpos is the local position is ignored
-  ///
-  /// return a Vector3D by value
+  /// @return a Vector3D by value
   const Vector3D
   normal(const Vector2D& lpos = s_origin2D) const final override;
 
@@ -96,7 +93,6 @@ public:
   /// for a certain binning type
   ///
   /// @param bValue is the binning type to be used
-  ///
   /// @return position that can beused for this binning
   virtual const Vector3D
   binningPosition(BinningValue bValue) const final override;
@@ -109,7 +105,6 @@ public:
   /// @param gpos is the global position where the measurement frame is
   /// constructed
   /// @param mom is the momentum used for the measurement frame construction
-  ///
   /// @return is a rotation matrix that indicates the measurement frame
   virtual const RotationMatrix3D
   measurementFrame(const Vector3D& gpos,
@@ -222,10 +217,7 @@ public:
   ///
   /// @note there's no material associated to the line surface
   virtual double
-  pathCorrection(const Vector3D&, const Vector3D&) const override
-  {
-    return 1.;
-  }
+  pathCorrection(const Vector3D&, const Vector3D&) const override;
 
   /// This method checks if the provided GlobalPosition is inside the assigned
   /// straw radius, but no check is done whether the GlobalPosition is
@@ -234,7 +226,6 @@ public:
   ///
   /// @param gpos is the global position to be checked
   /// @param bcheck is the boundary check directive
-  ///
   /// @return bollean that indicates if the position is on surface
   virtual bool
   isOnSurface(const Vector3D&      gpos,
@@ -246,10 +237,7 @@ public:
 
   /// Return properly formatted class name for screen output */
   virtual std::string
-  name() const override
-  {
-    return "Acts::LineSurface";
-  };
+  name() const override;
 
 protected:
   std::shared_ptr<const LineBounds> m_bounds;  ///< bounds (shared)
@@ -265,26 +253,6 @@ private:
                      const Vector3D& mom,
                      Vector2D&       lpos) const;
 };
-
-inline const Vector3D
-LineSurface::binningPosition(BinningValue bValue) const
-{
-  return center();
-}
-
-inline const Vector3D
-LineSurface::normal(const Vector2D& lpos) const
-{
-  // the normal is conceptionally closest to the line direction
-  return lineDirection();
-}
-
-inline const SurfaceBounds&
-LineSurface::bounds() const
-{
-  if (m_bounds) return (*m_bounds.get());
-  return s_noBounds;
-}
 
 inline const Vector3D
 LineSurface::lineDirection() const

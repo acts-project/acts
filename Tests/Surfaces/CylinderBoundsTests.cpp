@@ -23,9 +23,6 @@
 //
 #include <limits>
 
-// namespace bdata = boost::unit_test::data;
-namespace utf    = boost::unit_test;
-const double inf = std::numeric_limits<double>::infinity();
 const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
@@ -56,12 +53,10 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(CylinderBoundsProperties)
   {
     // CylinderBounds object of radius 0.5 and halfz 20
-    double nominalRadius{0.5};
-    // double r=nominalRadius;
+    double         nominalRadius{0.5};
     double         nominalHalfLength{20.};
     double         averagePhi(0.0);
     double         halfphi(M_PI / 4.0);
-    double         oneTenthTolerance(0.1);
     CylinderBounds cylinderBoundsObject(nominalRadius, nominalHalfLength);
     CylinderBounds cylinderBoundsSegment(
         nominalRadius, averagePhi, halfphi, nominalHalfLength);
@@ -87,20 +82,9 @@ namespace Test {
     BOOST_TEST(
         cylinderBoundsSegment.inside(unitPhi, trueBoundaryCheckWithTolerance)
         == false);
-
     BOOST_TEST(
         cylinderBoundsObject.inside(origin, trueBoundaryCheckWithTolerance)
         == true);
-
-    /// test for insideLoc0 and insideLoc1
-    BOOST_TEST(cylinderBoundsObject.insideLoc0(origin, oneTenthTolerance)
-               == true);
-    BOOST_TEST(cylinderBoundsObject.insideLoc0(unitZ, oneTenthTolerance)
-               == true);
-    BOOST_TEST(cylinderBoundsObject.insideLoc1(unitPhi, oneTenthTolerance)
-               == true);
-    BOOST_TEST(cylinderBoundsObject.insideLoc0(beyondEnd, oneTenthTolerance)
-               == false);
 
     /// test for inside3D() with Vector3D argument
     const Vector3D origin3D{0., 0., 0.};

@@ -11,25 +11,24 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/ConeBounds.hpp"
+
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <limits>
+
+#include "ACTS/Utilities/detail/periodic.hpp"
 
 Acts::ConeBounds::ConeBounds(double alpha,
                              bool   symm,
                              double halfphi,
                              double avphi)
-  : SurfaceBounds(ConeBounds::bv_length)
-  , m_tanAlpha(0.)
-  , m_sinAlpha(0.)
-  , m_cosAlpha(0.)
+  : ConeBounds(alpha,
+               symm ? -std::numeric_limits<double>::infinity() : 0,
+               std::numeric_limits<double>::infinity(),
+               halfphi,
+               avphi)
 {
-  m_valueStore[ConeBounds::bv_alpha]         = alpha;
-  m_valueStore[ConeBounds::bv_minZ]          = symm ? -TDD_max_bound_value : 0.;
-  m_valueStore[ConeBounds::bv_maxZ]          = TDD_max_bound_value;
-  m_valueStore[ConeBounds::bv_averagePhi]    = avphi;
-  m_valueStore[ConeBounds::bv_halfPhiSector] = halfphi;
-  initCache();
 }
 
 Acts::ConeBounds::ConeBounds(double alpha,
@@ -37,97 +36,71 @@ Acts::ConeBounds::ConeBounds(double alpha,
                              double zmax,
                              double halfphi,
                              double avphi)
-  : SurfaceBounds(ConeBounds::bv_length)
-  , m_tanAlpha(0.)
-  , m_sinAlpha(0.)
-  , m_cosAlpha(0.)
+  : m_alpha(alpha)
+  , m_tanAlpha(std::tan(alpha))
+  , m_zMin(zmin)
+  , m_zMax(zmax)
+  , m_avgPhi(detail::radian_sym(avphi))
+  , m_halfPhi(std::abs(halfphi))
 {
-  m_valueStore[ConeBounds::bv_alpha]         = alpha;
-  m_valueStore[ConeBounds::bv_minZ]          = zmin;
-  m_valueStore[ConeBounds::bv_maxZ]          = zmax;
-  m_valueStore[ConeBounds::bv_averagePhi]    = avphi;
-  m_valueStore[ConeBounds::bv_halfPhiSector] = halfphi;
-  initCache();
 }
 
 Acts::ConeBounds::~ConeBounds()
 {
 }
 
-Acts::ConeBounds&
-Acts::ConeBounds::operator=(const Acts::ConeBounds& conebo)
+Acts::ConeBounds*
+Acts::ConeBounds::clone() const
 {
-  if (this != &conebo) {
-    SurfaceBounds::operator=(conebo);
-    m_tanAlpha             = conebo.m_tanAlpha;
-    m_sinAlpha             = conebo.m_sinAlpha;
-    m_cosAlpha             = conebo.m_cosAlpha;
-  }
-  return *this;
+  return new ConeBounds(*this);
+}
+
+Acts::SurfaceBounds::BoundsType
+Acts::ConeBounds::type() const
+{
+  return SurfaceBounds::Cone;
+}
+
+std::vector<TDD_real_t>
+Acts::ConeBounds::valueStore() const
+{
+  std::vector<TDD_real_t> values(ConeBounds::bv_length);
+  values[ConeBounds::bv_alpha]         = alpha();
+  values[ConeBounds::bv_minZ]          = minZ();
+  values[ConeBounds::bv_maxZ]          = maxZ();
+  values[ConeBounds::bv_averagePhi]    = averagePhi();
+  values[ConeBounds::bv_halfPhiSector] = halfPhiSector();
+  return values;
+}
+
+/// Shift r-phi coordinate to be centered around the average phi.
+Acts::Vector2D
+Acts::ConeBounds::shifted(const Acts::Vector2D& lpos) const
+{
+  using Acts::detail::radian_sym;
+
+  auto     x = r(lpos[eLOC_RPHI]);  // cone radius at the local position
+  Vector2D shifted;
+  shifted[eLOC_Z] = lpos[eLOC_Z];
+  // TODO 2017-04-08 msmk: this has undefined behaviour at z -> 0
+  shifted[eLOC_RPHI] = x * radian_sym((lpos[eLOC_RPHI] / x) - averagePhi());
+  return shifted;
+}
+
+bool
+Acts::ConeBounds::inside(const Acts::Vector2D&      lpos,
+                         const Acts::BoundaryCheck& bcheck) const
+{
+  auto rphiHalf = r(lpos[eLOC_Z]) * halfPhiSector();
+  return bcheck.isInside(shifted(lpos), -rphiHalf, rphiHalf, minZ(), maxZ());
 }
 
 double
-Acts::ConeBounds::distanceToBoundary(const Acts::Vector2D& pos) const
+Acts::ConeBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 {
-  // This needs to be split based on where pos is with respect to the
-  // cone. Inside, its easy, inside the z-region or inside the phi
-  // region, just get the difference from the outside quantity, for
-  // outside both the z and dphi regions, need to get the distance to
-  // the cone corner, but remember, the cone piece will be symmetric
-  // about the center of phi
-
-  // TODO: The whole scheme here assumes that the local position is in
-  // a half of R^3 where the cone is defined. If the local position is
-  // in say the z < 0 half, and the cone is only defined for z > 0,
-  // then it won't work
-
-  // find the minimum distance along the z direction
-  double toMinZ = m_valueStore[ConeBounds::bv_minZ] - pos[Acts::eLOC_Z];
-  double toMaxZ = pos[Acts::eLOC_Z] - m_valueStore[ConeBounds::bv_maxZ];
-  double toZ    = (std::abs(toMinZ) < std::abs(toMaxZ)) ? toMinZ : toMaxZ;
-
-  // NB this works only if the localPos is in the same hemisphere as
-  // the cone (i.e. if the localPos has z < 0 and the cone only
-  // defined for z > z_min where z_min > 0, this is wrong)
-  double zDist = std::sqrt(toZ * toZ * (1. + m_tanAlpha * m_tanAlpha));
-  if (toZ < 0.)  // positive if outside the cone only
-    zDist = -zDist;
-
-  // if the cone is complete, or pos is in the same phi range as the
-  // cone piece then its just the distance along the cone.
-  if (m_valueStore[ConeBounds::bv_halfPhiSector] >= M_PI) return zDist;
-
-  // we have a conical segment, so find also the phi distance
-  // Note that here we take the phi distance as the distance from
-  // going to the correct phi by a straight line at the point that was
-  // input by the user (not at the point of closest approach to the
-  // cone)
-  double posR     = pos[Acts::eLOC_Z] * m_tanAlpha;
-  double deltaPhi = pos[Acts::eLOC_RPHI] / posR
-      - m_valueStore[ConeBounds::bv_averagePhi];  // from center
-  if (deltaPhi > M_PI) deltaPhi  = 2 * M_PI - deltaPhi;
-  if (deltaPhi < -M_PI) deltaPhi = 2 * M_PI + deltaPhi;
-
-  // straight line distance (goes off cone)
-  double phiDist = 2 * posR
-      * sin(.5 * (deltaPhi - m_valueStore[ConeBounds::bv_halfPhiSector]));
-
-  // if inside the cone, return the smaller length (since both are
-  // negative, the *larger* of the 2 is the *smaller* distance)
-  if (phiDist <= 0. && zDist <= 0) {
-    if (phiDist > zDist)
-      return phiDist;
-    else
-      return zDist;
-  }
-
-  // if inside the phi or z boundary, return the other
-  if (phiDist <= 0.) return zDist;
-  if (zDist <= 0.) return phiDist;
-
-  // otherwise, return both (this should be the distance to the corner
-  // closest to the cone
-  return std::sqrt(zDist * zDist + phiDist * phiDist);
+  auto rphiHalf = r(lpos[eLOC_Z]) * halfPhiSector();
+  return BoundaryCheck(true).distance(
+      shifted(lpos), -rphiHalf, rphiHalf, minZ(), maxZ());
 }
 
 std::ostream&
@@ -137,8 +110,8 @@ Acts::ConeBounds::dump(std::ostream& sl) const
   sl << std::setprecision(7);
   sl << "Acts::ConeBounds: (tanAlpha, minZ, maxZ, averagePhi, halfPhiSector) "
         "= ";
-  sl << "(" << this->tanAlpha() << ", " << this->minZ() << ", " << this->maxZ()
-     << ", " << this->averagePhi() << ", " << this->halfPhiSector() << ")";
+  sl << "(" << m_tanAlpha << ", " << m_zMin << ", " << m_zMax << ", "
+     << m_avgPhi << ", " << m_halfPhi << ")";
   sl << std::setprecision(-1);
   return sl;
 }

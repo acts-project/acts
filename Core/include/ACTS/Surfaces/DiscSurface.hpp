@@ -99,23 +99,22 @@ public:
 
   /// Copy Constructor
   ///
-  /// @param dsf is the source surface for the copy
-  DiscSurface(const DiscSurface& dsf);
+  /// @param other is the source surface for the copy
+  DiscSurface(const DiscSurface& other);
 
   /// Copy Constructor with shift
   ///
-  /// @param dsf is the source sourface for the copy
+  /// @param other is the source sourface for the copy
   /// @param transf is the additional transform applied to the surface
-  DiscSurface(const DiscSurface& dsf, const Transform3D& transf);
+  DiscSurface(const DiscSurface& other, const Transform3D& transf);
 
-  /// Destructor
   virtual ~DiscSurface();
 
   /// Assignement operator
   ///
-  /// @param dsf is the source sourface for the assignment
+  /// @param other is the source sourface for the assignment
   DiscSurface&
-  operator=(const DiscSurface& dsf);
+  operator=(const DiscSurface& other);
 
   /// Virtual constructor - shift can be given optionally
   ///
@@ -125,15 +124,11 @@ public:
 
   /// Return the surface type
   virtual SurfaceType
-  type() const override
-  {
-    return Surface::Disc;
-  }
+  type() const override;
 
   /// Normal vector
   ///
   /// @param lpos the local position where the normal is requested (ignored)
-  ///
   /// @return is a normal vector
   const Vector3D
   normal(const Vector2D& lpos = s_origin2D) const final;
@@ -142,7 +137,6 @@ public:
   /// for a certain binning type
   ///
   /// @param bValue is the binning type to be used
-  ///
   /// @return position that can beused for this binning
   virtual const Vector3D
   binningPosition(BinningValue bValue) const final;
@@ -157,7 +151,6 @@ public:
   ///
   /// @param gpos is the global position to be checked
   /// @param bcheck is the boundary check directive
-  ///
   /// @return bollean that indicates if the position is on surface
   virtual bool
   isOnSurface(const Vector3D&      gpos,
@@ -186,7 +179,6 @@ public:
   /// @param mom global 3D momentum representation (optionally ignored)
   /// @param lpos local 2D position to be filled (given by reference for method
   /// symmetry)
-  ///
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
   virtual bool
@@ -198,7 +190,6 @@ public:
   /// cartesian
   ///
   /// @param lpolar is a local position in polar coordinates
-  ///
   /// @return values is local 2D position in carthesian coordinates  @todo check
   const Vector2D
   localPolarToCartesian(const Vector2D& lpolar) const;
@@ -207,7 +198,6 @@ public:
   /// cartesian
   ///
   /// @param lcart is local 2D position in carthesian coordinates
-  ///
   /// @return value is a local position in polar coordinates
   const Vector2D
   localCartesianToPolar(const Vector2D& lcart) const;
@@ -216,7 +206,6 @@ public:
   /// cartesian
   ///
   /// @param lpolar is a local position in polar coordinates
-  ///
   /// @return values is local 2D position in carthesian coordinates
   const Vector2D
   localPolarToLocalCartesian(const Vector2D& lpolar) const;
@@ -225,7 +214,6 @@ public:
   /// provided cartesian coordinates
   ///
   /// @param lcart is local 2D position in carthesian coordinates
-  ///
   /// @return value is a global carthesian 3D position
   const Vector3D
   localCartesianToGlobal(const Vector2D& lcart) const;
@@ -234,7 +222,6 @@ public:
   ///
   /// @param gpos is a global carthesian 3D position
   /// @param tol is the absoltue tolerance parameter
-  ///
   /// @return value is a local polar
   const Vector2D
   globalToLocalCartesian(const Vector3D& gpos, double tol = 0.) const;
@@ -243,7 +230,6 @@ public:
   ///
   /// @param gpos is the global position as a starting point
   /// @param mom is the global momentum at the starting point
-  ///
   /// @return is the correction factor due to incident
   double
   pathCorrection(const Vector3D& gpos,
@@ -285,41 +271,11 @@ public:
 
   /// Return properly formatted class name for screen output
   virtual std::string
-  name() const override
-  {
-    return "Acts::DiscSurface";
-  }
+  name() const override;
 
 protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
 };
-
-inline DiscSurface*
-DiscSurface::clone(const Transform3D* shift) const
-{
-  if (shift) return new DiscSurface(*this, *shift);
-  return new DiscSurface(*this);
-}
-
-inline const SurfaceBounds&
-DiscSurface::bounds() const
-{
-  if (m_bounds) return (*(m_bounds.get()));
-  return s_noBounds;
-}
-
-inline const Vector3D
-DiscSurface::normal(const Vector2D&) const
-{
-  // fast access via tranform matrix (and not rotation())
-  auto tMatrix = transform().matrix();
-  return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
-}
-
-inline const Vector3D DiscSurface::binningPosition(BinningValue) const
-{
-  return center();
-}
 
 inline const Vector2D
 DiscSurface::localPolarToCartesian(const Vector2D& lpolar) const
@@ -334,34 +290,6 @@ DiscSurface::localCartesianToPolar(const Vector2D& lcart) const
   return Vector2D(sqrt(lcart[Acts::eLOC_X] * lcart[Acts::eLOC_X]
                        + lcart[Acts::eLOC_Y] * lcart[Acts::eLOC_Y]),
                   atan2(lcart[Acts::eLOC_Y], lcart[Acts::eLOC_X]));
-}
-
-inline double
-DiscSurface::pathCorrection(const Vector3D&, const Vector3D& mom) const
-{
-  /// we can ignore the global position here
-  return 1. / std::abs(normal().dot(mom.unit()));
-}
-
-inline Intersection
-DiscSurface::intersectionEstimate(const Vector3D&      gpos,
-                                  const Vector3D&      dir,
-                                  bool                 forceDir,
-                                  const BoundaryCheck& bcheck) const
-{
-  double denom = dir.dot(normal());
-  if (denom) {
-    double   u = (normal().dot((center() - gpos))) / (denom);
-    Vector3D intersectPoint(gpos + u * dir);
-    // evaluate the intersection in terms of direction
-    bool isValid = forceDir ? (u > 0.) : true;
-    // evaluate (if necessary in terms of boundaries)
-    isValid
-        = bcheck ? (isValid && isOnSurface(intersectPoint, bcheck)) : isValid;
-    // return the result
-    return Intersection(intersectPoint, u, isValid);
-  }
-  return Intersection(gpos, 0., false);
 }
 
 }  // end of namespace

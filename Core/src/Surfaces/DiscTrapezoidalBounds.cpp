@@ -11,9 +11,12 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/DiscTrapezoidalBounds.hpp"
+
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+
+#include "ACTS/Utilities/detail/periodic.hpp"
 
 Acts::DiscTrapezoidalBounds::DiscTrapezoidalBounds(double minhalfx,
                                                    double maxhalfx,
@@ -21,96 +24,83 @@ Acts::DiscTrapezoidalBounds::DiscTrapezoidalBounds(double minhalfx,
                                                    double minR,
                                                    double avephi,
                                                    double stereo)
-  : DiscBounds(DiscTrapezoidalBounds::bv_length)
+  : m_rMin(std::min(std::abs(minR), std::abs(maxR)))
+  , m_rMax(std::max(std::abs(minR), std::abs(maxR)))
+  , m_minHalfX(std::abs(minhalfx))
+  , m_maxHalfX(std::abs(maxhalfx))
+  , m_avgPhi(detail::radian_sym(avephi))
+  , m_stereo(stereo)
 {
-  m_valueStore.at(DiscTrapezoidalBounds::bv_averagePhi) = avephi;
-  m_valueStore.at(DiscTrapezoidalBounds::bv_stereo)     = stereo;
-
-  m_valueStore.at(DiscTrapezoidalBounds::bv_minHalfX) = minhalfx;
-  m_valueStore.at(DiscTrapezoidalBounds::bv_maxHalfX) = maxhalfx;
-  if (m_valueStore.at(DiscTrapezoidalBounds::bv_minHalfX)
-      > m_valueStore.at(DiscTrapezoidalBounds::bv_maxHalfX))
-    std::swap(m_valueStore.at(DiscTrapezoidalBounds::bv_minHalfX),
-              m_valueStore.at(DiscTrapezoidalBounds::bv_maxHalfX));
-
-  m_valueStore.at(DiscTrapezoidalBounds::bv_rMax) = minR;
-  m_valueStore.at(DiscTrapezoidalBounds::bv_rMin) = maxR;
-  if (m_valueStore.at(DiscTrapezoidalBounds::bv_rMin)
-      > m_valueStore.at(DiscTrapezoidalBounds::bv_rMax))
-    std::swap(m_valueStore.at(DiscTrapezoidalBounds::bv_rMin),
-              m_valueStore.at(DiscTrapezoidalBounds::bv_rMax));
-
-  m_valueStore.at(DiscTrapezoidalBounds::bv_halfPhiSector)
-      = asin(m_valueStore.at(DiscTrapezoidalBounds::bv_maxHalfX)
-             / m_valueStore.at(DiscTrapezoidalBounds::bv_rMax));
-
-  double hmax = sqrt(m_valueStore.at(DiscTrapezoidalBounds::bv_rMax)
-                         * m_valueStore.at(DiscTrapezoidalBounds::bv_rMax)
-                     - m_valueStore.at(DiscTrapezoidalBounds::bv_maxHalfX)
-                         * m_valueStore.at(DiscTrapezoidalBounds::bv_maxHalfX));
-
-  double hmin = sqrt(m_valueStore.at(DiscTrapezoidalBounds::bv_rMin)
-                         * m_valueStore.at(DiscTrapezoidalBounds::bv_rMin)
-                     - m_valueStore.at(DiscTrapezoidalBounds::bv_minHalfX)
-                         * m_valueStore.at(DiscTrapezoidalBounds::bv_minHalfX));
-
-  m_valueStore.at(DiscTrapezoidalBounds::bv_rCenter) = (hmax + hmin) / 2.;
-  m_valueStore.at(DiscTrapezoidalBounds::bv_halfY)   = (hmax - hmin) / 2.;
 }
 
 Acts::DiscTrapezoidalBounds::~DiscTrapezoidalBounds()
 {
 }
 
-Acts::DiscTrapezoidalBounds&
-Acts::DiscTrapezoidalBounds::operator=(const DiscTrapezoidalBounds& disctrbo)
+Acts::DiscTrapezoidalBounds*
+Acts::DiscTrapezoidalBounds::clone() const
 {
-  if (this != &disctrbo) DiscBounds::operator=(disctrbo);
-  return *this;
+  return new DiscTrapezoidalBounds(*this);
+}
+
+Acts::SurfaceBounds::BoundsType
+Acts::DiscTrapezoidalBounds::type() const
+{
+  return SurfaceBounds::DiscTrapezoidal;
+}
+
+std::vector<TDD_real_t>
+Acts::DiscTrapezoidalBounds::valueStore() const
+{
+  std::vector<TDD_real_t> values(DiscTrapezoidalBounds::bv_length);
+  values[bv_rMin]       = rMin();
+  values[bv_rMax]       = rMax();
+  values[bv_minHalfX]   = minHalflengthX();
+  values[bv_maxHalfX]   = maxHalflengthX();
+  values[bv_averagePhi] = averagePhi();
+  values[bv_stereo]     = m_stereo;
+  return values;
+}
+
+Acts::Vector2D
+Acts::DiscTrapezoidalBounds::toLocalXY(const Acts::Vector2D& lpos) const
+{
+  return {lpos[eLOC_R] * std::sin(lpos[eLOC_PHI] - m_avgPhi),
+          lpos[eLOC_R] * std::cos(lpos[eLOC_PHI] - m_avgPhi)};
+}
+
+Acts::ActsMatrixD<2, 2>
+Acts::DiscTrapezoidalBounds::jacobianToLocalXY(const Acts::Vector2D& lpos) const
+{
+  ActsMatrixD<2, 2> jacobian;
+  jacobian(0, eLOC_R)   = std::sin(lpos[eLOC_PHI] - m_avgPhi);
+  jacobian(1, eLOC_R)   = std::cos(lpos[eLOC_PHI] - m_avgPhi);
+  jacobian(0, eLOC_PHI) = lpos[eLOC_R] * std::cos(lpos[eLOC_PHI]);
+  jacobian(1, eLOC_PHI) = lpos[eLOC_R] * -std::sin(lpos[eLOC_PHI]);
+  return jacobian;
+}
+
+bool
+Acts::DiscTrapezoidalBounds::inside(const Acts::Vector2D&      lpos,
+                                    const Acts::BoundaryCheck& bcheck) const
+{
+  Vector2D vertices[] = {{minHalflengthX(), rMin()},
+                         {maxHalflengthX(), rMax()},
+                         {-maxHalflengthX(), rMax()},
+                         {-minHalflengthX(), rMin()}};
+  auto jacobian = jacobianToLocalXY(lpos);
+  return bcheck.transformed(jacobian).isInside(toLocalXY(lpos), vertices);
 }
 
 double
-Acts::DiscTrapezoidalBounds::distanceToBoundary(const Acts::Vector2D& pos) const
+Acts::DiscTrapezoidalBounds::distanceToBoundary(
+    const Acts::Vector2D& lpos) const
 {
-  const double pi2        = 2. * M_PI;
-  double       alpha      = std::abs(pos[Acts::eLOC_PHI]);
-  if (alpha > M_PI) alpha = pi2 - alpha;
-
-  double r = pos[Acts::eLOC_R];
-  if (r == 0.)
-    return m_valueStore.at(DiscTrapezoidalBounds::bv_rMin)
-        * cos(m_valueStore.at(DiscTrapezoidalBounds::bv_halfPhiSector))
-        / cos(alpha);
-
-  // check if it is external in R
-  double sr0 = m_valueStore.at(DiscTrapezoidalBounds::bv_rMin)
-          * cos(m_valueStore.at(DiscTrapezoidalBounds::bv_halfPhiSector))
-          / cos(alpha)
-      - r;
-  if (sr0 > 0.) return sr0;
-  double sr1 = r
-      - m_valueStore.at(DiscTrapezoidalBounds::bv_rMax)
-          * cos(m_valueStore.at(DiscTrapezoidalBounds::bv_halfPhiSector))
-          / cos(alpha);
-  if (sr1 > 0.) return sr1;
-
-  // check if it is external in phi
-  if ((alpha - m_valueStore.at(DiscTrapezoidalBounds::bv_halfPhiSector)) > 0.)
-    return r * std::abs(sin(
-                   alpha
-                   - m_valueStore.at(DiscTrapezoidalBounds::bv_halfPhiSector)));
-
-  // if here it is inside:
-  // Evaluate the distance from the 4 segments
-  double dist[4]
-      = {sr0,
-         sr1,
-         -r * sin(m_valueStore.at(DiscTrapezoidalBounds::bv_halfPhiSector)
-                  - alpha),
-         -r * sin(m_valueStore.at(DiscTrapezoidalBounds::bv_halfPhiSector)
-                  + alpha)};
-
-  return *std::max_element(dist, dist + 4);
+  Vector2D vertices[] = {{minHalflengthX(), rMin()},
+                         {maxHalflengthX(), rMax()},
+                         {-maxHalflengthX(), rMax()},
+                         {-minHalflengthX(), rMin()}};
+  return BoundaryCheck(true).distance(toLocalXY(lpos), vertices);
 }
 
 // ostream operator overload

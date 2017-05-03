@@ -11,20 +11,22 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/CylinderSurface.hpp"
+
 #include <cassert>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include "ACTS/Surfaces/RealQuadraticEquation.hpp"
 
-Acts::CylinderSurface::CylinderSurface(const CylinderSurface& csf)
-  : Surface(csf), m_bounds(csf.m_bounds)
+#include "ACTS/Utilities/detail/RealQuadraticEquation.hpp"
+
+Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
+  : Surface(other), m_bounds(other.m_bounds)
 {
 }
 
-Acts::CylinderSurface::CylinderSurface(const CylinderSurface&   csf,
+Acts::CylinderSurface::CylinderSurface(const CylinderSurface&   other,
                                        const Acts::Transform3D& transf)
-  : Surface(csf, transf), m_bounds(csf.m_bounds)
+  : Surface(other, transf), m_bounds(other.m_bounds)
 {
 }
 
@@ -59,11 +61,11 @@ Acts::CylinderSurface::~CylinderSurface()
 }
 
 Acts::CylinderSurface&
-Acts::CylinderSurface::operator=(const CylinderSurface& csf)
+Acts::CylinderSurface::operator=(const CylinderSurface& other)
 {
-  if (this != &csf) {
-    Surface::operator=(csf);
-    m_bounds         = csf.m_bounds;
+  if (this != &other) {
+    Surface::operator=(other);
+    m_bounds         = other.m_bounds;
   }
   return *this;
 }
@@ -103,6 +105,12 @@ Acts::CylinderSurface::measurementFrame(const Vector3D& gpos,
   mFrame.col(2) = measDepth;
   // return the rotation matrix
   return mFrame;
+}
+
+Acts::Surface::SurfaceType
+Acts::CylinderSurface::type() const
+{
+  return Surface::Cylinder;
 }
 
 const Acts::Vector3D
@@ -189,13 +197,14 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
     double d = (point2.x() * point1.y() - point1.x() * point2.y())
         / (point2.x() - point1.x());
     // and solve the qaudratic equation
-    RealQuadraticEquation pquad(1 + k * k, 2 * k * d, d * d - R * R);
-    if (pquad.solutions != Acts::none) {
+    detail::RealQuadraticEquation pquad(1 + k * k, 2 * k * d, d * d - R * R);
+    if (pquad.solutions == 2) {
       // the solutions in the 3D frame of the cylinder
       t1 = (pquad.first - point1.x()) / direction.x();
       t2 = (pquad.second - point1.x()) / direction.x();
-    } else  // bail out if no solution exists
+    } else {  // bail out if no solution exists
       return Intersection(gpos, 0., false);
+    }
   } else {
     // bail out if no solution exists
     if (!direction.y()) return Intersection(gpos, 0., false);
@@ -248,4 +257,53 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
   // now return
   return needsTransform ? Intersection(transform() * solution, path, isValid)
                         : Intersection(solution, path, isValid);
+}
+
+std::string
+Acts::CylinderSurface::name() const
+{
+  return "Acts::CylinderSurface";
+}
+
+Acts::CylinderSurface*
+Acts::CylinderSurface::clone(const Acts::Transform3D* shift) const
+{
+  if (shift) return new CylinderSurface(*this, *shift);
+  return new CylinderSurface(*this);
+}
+
+const Acts::Vector3D
+Acts::CylinderSurface::normal(const Acts::Vector2D& lpos) const
+{
+  double   phi = lpos[Acts::eLOC_RPHI] / m_bounds->r();
+  Vector3D localNormal(cos(phi), sin(phi), 0.);
+  return Vector3D(transform().rotation() * localNormal);
+}
+
+const Acts::Vector3D
+Acts::CylinderSurface::normal(const Acts::Vector3D& gpos) const
+{
+  // get it into the cylinder frame if needed
+  Vector3D pos3D = gpos;
+  if (m_transform || m_associatedDetElement) {
+    pos3D = transform().inverse() * gpos;
+  }
+  // set the z coordinate to 0
+  pos3D.z() = 0.;
+  return pos3D.unit();
+}
+
+double
+Acts::CylinderSurface::pathCorrection(const Acts::Vector3D& gpos,
+                                      const Acts::Vector3D& mom) const
+{
+  Vector3D normalT  = normal(gpos);
+  double   cosAlpha = normalT.dot(mom.unit());
+  return std::abs(1. / cosAlpha);
+}
+
+const Acts::CylinderBounds&
+Acts::CylinderSurface::bounds() const
+{
+  return (*m_bounds.get());
 }

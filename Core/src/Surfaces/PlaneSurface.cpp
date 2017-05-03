@@ -11,21 +11,23 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/PlaneSurface.hpp"
+
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+
 #include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
 
-Acts::PlaneSurface::PlaneSurface(const PlaneSurface& psf)
-  : Surface(psf), m_bounds(psf.m_bounds)
+Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
+  : Surface(other), m_bounds(other.m_bounds)
 {
 }
 
-Acts::PlaneSurface::PlaneSurface(const PlaneSurface& psf,
+Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other,
                                  const Transform3D&  transf)
-  : Surface(psf, transf), m_bounds(psf.m_bounds)
+  : Surface(other, transf), m_bounds(other.m_bounds)
 {
 }
 
@@ -73,13 +75,19 @@ Acts::PlaneSurface::~PlaneSurface()
 }
 
 Acts::PlaneSurface&
-Acts::PlaneSurface::operator=(const PlaneSurface& psf)
+Acts::PlaneSurface::operator=(const PlaneSurface& other)
 {
-  if (this != &psf) {
-    Surface::operator=(psf);
-    m_bounds         = psf.m_bounds;
+  if (this != &other) {
+    Surface::operator=(other);
+    m_bounds         = other.m_bounds;
   }
   return *this;
+}
+
+Acts::Surface::SurfaceType
+Acts::PlaneSurface::type() const
+{
+  return Surface::Plane;
 }
 
 void
@@ -106,6 +114,12 @@ Acts::PlaneSurface::globalToLocal(const Vector3D& gpos,
               : true);
 }
 
+std::string
+Acts::PlaneSurface::name() const
+{
+  return "Acts::PlaneSurface";
+}
+
 bool
 Acts::PlaneSurface::isOnSurface(const Vector3D&      glopo,
                                 const BoundaryCheck& bcheck) const
@@ -116,4 +130,62 @@ Acts::PlaneSurface::isOnSurface(const Vector3D&      glopo,
   return (
       bcheck ? bounds().inside(Vector2D(loc3Dframe.x(), loc3Dframe.y()), bcheck)
              : true);
+}
+
+Acts::PlaneSurface*
+Acts::PlaneSurface::clone(const Acts::Transform3D* shift) const
+{
+  if (shift) new PlaneSurface(*this, *shift);
+  return new PlaneSurface(*this);
+}
+
+const Acts::SurfaceBounds&
+Acts::PlaneSurface::bounds() const
+{
+  if (m_bounds) return (*m_bounds.get());
+  return s_noBounds;
+}
+
+const Acts::Vector3D
+Acts::PlaneSurface::normal(const Acts::Vector2D&) const
+{
+  // fast access via tranform matrix (and not rotation())
+  auto tMatrix = transform().matrix();
+  return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
+}
+
+const Acts::Vector3D
+    Acts::PlaneSurface::binningPosition(Acts::BinningValue) const
+{
+  return center();
+}
+
+double
+Acts::PlaneSurface::pathCorrection(const Acts::Vector3D&,
+                                   const Acts::Vector3D& mom) const
+{
+  /// we can ignore the global position here
+  return 1. / std::abs(normal().dot(mom.unit()));
+}
+
+Acts::Intersection
+Acts::PlaneSurface::intersectionEstimate(
+    const Acts::Vector3D&      gpos,
+    const Acts::Vector3D&      dir,
+    bool                       forceDir,
+    const Acts::BoundaryCheck& bcheck) const
+{
+  double denom = dir.dot(normal());
+  if (denom) {
+    double   u = (normal().dot((center() - gpos))) / (denom);
+    Vector3D intersectPoint(gpos + u * dir);
+    // evaluate the intersection in terms of direction
+    bool isValid = forceDir ? (u > 0.) : true;
+    // evaluate (if necessary in terms of boundaries)
+    isValid
+        = bcheck ? (isValid && isOnSurface(intersectPoint, bcheck)) : isValid;
+    // return the result
+    return Intersection(intersectPoint, u, isValid);
+  }
+  return Intersection(gpos, 0., false);
 }
