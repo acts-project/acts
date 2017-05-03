@@ -13,6 +13,7 @@
 
 namespace Acts {
 
+/// @ingroup MagneticField
 /// @brief returns a given constant field value at every point
 ///
 /// This class implements a simple constant magnetic field. The
