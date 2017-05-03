@@ -116,7 +116,7 @@ RUN export GEANT4_VERSION="4.10.02.p02" && \
     cd .. && rm -rf build/ && rm -rf geant${GEANT4_VERSION}/ && rm geant${GEANT4_VERSION}.tar.gz
 
 # DD4HEP
-RUN export DD4HEP_VERSION="00-17" && \
+RUN export DD4HEP_VERSION="00-20" && \
     wget http://github.com/AIDASoft/DD4hep/archive/v${DD4HEP_VERSION}.tar.gz && \
     tar xf v${DD4HEP_VERSION}.tar.gz && \
     mkdir -p build && cd build && \

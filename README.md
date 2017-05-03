@@ -51,7 +51,7 @@ The following dependencies are optional and are only needed for some of the plug
 + [doxygen](http://doxygen.org) (>= 1.8.11) for the documentation
 + [graphviz](http://www.graphviz.org/) (>= 2.26.00) for the documentation
 + [ROOT](https://root.cern.ch/) (>= 6.08.00) for TGeo plugin & for DD4hep plugin
-+ [DD4Hep](https://github.com/AIDASoft/DD4hep) for DD4Hep plugin
++ [DD4Hep](https://github.com/AIDASoft/DD4hep) (>= 0.20) for DD4Hep plugin
 
 ### Using recent CMake releases from CVMFS
 
