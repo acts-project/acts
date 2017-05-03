@@ -9,11 +9,12 @@
 #pragma once
 
 #include "ACTS/Concepts/AnyGrid.hpp"
-#include "ACTS/MagneticField/concept/AnyFieldMapper.hpp"
+#include "ACTS/MagneticField/concept/AnyFieldLookup.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
 
+/// @ingroup MagneticField
 /// @brief interpolate magnetic field value from a given grid
 ///
 /// This class implements a magnetic field service which is initialized by a
@@ -66,8 +67,12 @@ public:
     ///       direction of the magnetic field.
     double scale = 1.;
 
-    /// object defining mapping of 3D global coordinates onto grid
-    concept::AnyFieldMapper<> mapper;
+    /// @brief object for global coordinate transformation and interpolation
+    ///
+    /// This object performs the mapping of the global 3D coordinates onto the
+    /// field grid and the interpolation of the field values on close-by grid
+    /// points.
+    concept::AnyFieldLookup<> mapper;
   };
 
   /// @brief create interpolated magnetic field map

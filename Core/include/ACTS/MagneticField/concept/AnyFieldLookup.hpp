@@ -26,7 +26,7 @@ namespace concept {
 
     namespace mpl = boost::mpl;
 
-    using field_mapper_concept
+    using field_lookup_concept
         = mpl::vector<has_getField<Vector3D(const Vector3D&), const bte::_self>,
                       bte::copy_constructible<>,
                       bte::relaxed>;
@@ -35,7 +35,7 @@ namespace concept {
   namespace bte = boost::type_erasure;
 
   template <typename T = bte::_self>
-  using AnyFieldMapper = bte::any<detail::field_mapper_concept, T>;
+  using AnyFieldLookup = bte::any<detail::field_lookup_concept, T>;
 
 }  // namespace concept
 }  // namespace Acts
