@@ -9,5 +9,5 @@ endif()
 # specify version numbers for dependencies of ACTS
 set (ACTS_BOOST_VERSION "1.62")
 set (ACTS_DOXYGEN_VERSION "1.8.11")
-set (ACTS_ROOT_VERSION "6.06.04")
+set (ACTS_ROOT_VERSION "6.08.00")
 set (ACTS_DD4HEP_VERSION "0.20")
