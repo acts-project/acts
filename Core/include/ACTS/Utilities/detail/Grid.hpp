@@ -12,8 +12,8 @@
 #include <tuple>
 #include <type_traits>
 #include "ACTS/Utilities/Interpolation.hpp"
-#include "ACTS/Utilities/detail/global_bin_helper.hpp"
-#include "ACTS/Utilities/detail/grid_bins_helper.hpp"
+#include "ACTS/Utilities/detail/grid_helper.hpp"
+#include "ACTS/Utilities/detail/grid_helper.hpp"
 
 namespace Acts {
 
@@ -140,7 +140,7 @@ namespace detail {
     std::array<double, DIM>
     getBinCenter(const std::array<size_t, DIM>& localBins) const
     {
-      return grid_bins_helper::getBinCenter(localBins, m_axes);
+      return grid_helper::getBinCenter(localBins, m_axes);
     }
 
     /// @brief determine global index for bin containing the given point
@@ -156,7 +156,7 @@ namespace detail {
     size_t
     getGlobalBinIndex(const Point& point) const
     {
-      return global_bin_helper::getGlobalBin(point, m_axes);
+      return grid_helper::getGlobalBin(point, m_axes);
     }
 
     /// @brief determine global bin index from local bin indices along each axis
@@ -169,7 +169,7 @@ namespace detail {
     size_t
     getGlobalBinIndex(const std::array<size_t, DIM>& localBins) const
     {
-      return global_bin_helper::getGlobalBin(localBins, m_axes);
+      return grid_helper::getGlobalBin(localBins, m_axes);
     }
 
     /// @brief determine local bin index for each axis from global bin index
@@ -183,7 +183,7 @@ namespace detail {
     std::array<size_t, DIM>
     getLocalBinIndices(size_t bin) const
     {
-      return global_bin_helper::getLocalBinIndices(bin, m_axes);
+      return grid_helper::getLocalBinIndices(bin, m_axes);
     }
 
     /// @brief retrieve lower-left bin edge from set of local bin indices
@@ -196,7 +196,7 @@ namespace detail {
     std::array<double, DIM>
     getLowerLeftBinEdge(const std::array<size_t, DIM>& localBins) const
     {
-      return grid_bins_helper::getLowerLeftBinEdge(localBins, m_axes);
+      return grid_helper::getLowerLeftBinEdge(localBins, m_axes);
     }
 
     /// @brief retrieve upper-right bin edge from set of local bin indices
@@ -209,7 +209,7 @@ namespace detail {
     std::array<double, DIM>
     getUpperRightBinEdge(const std::array<size_t, DIM>& localBins) const
     {
-      return grid_bins_helper::getUpperRightBinEdge(localBins, m_axes);
+      return grid_helper::getUpperRightBinEdge(localBins, m_axes);
     }
 
     /// @brief interpolate grid values to given position
@@ -255,8 +255,7 @@ namespace detail {
 
       // get local indices for "upper right" bin (i.e. all local indices
       // incremented by one but avoid overflows)
-      auto urIndices
-          = grid_bins_helper::getUpperRightBinIndices(llIndices, m_axes);
+      auto urIndices = grid_helper::getUpperRightBinIndices(llIndices, m_axes);
 
       // loop through all corner points
       for (size_t i = 0; i < nCorners; ++i) {
@@ -281,7 +280,7 @@ namespace detail {
     size_t
     size() const
     {
-      return grid_bins_helper::getNBins(m_axes);
+      return grid_helper::getNBins(m_axes);
     }
 
   private:
