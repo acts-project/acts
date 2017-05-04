@@ -61,8 +61,12 @@ namespace Test {
     BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex(Point({2.7})))
                == indices({3}));
 
-    // initialize grid
-    for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
+    // inside checks
+    BOOST_TEST(not g.isInside(Point({-2.})));
+    BOOST_TEST(g.isInside(Point({0.})));
+    BOOST_TEST(g.isInside(Point({2.5})));
+    BOOST_TEST(not g.isInside(Point({4.})));
+    BOOST_TEST(not g.isInside(Point({6.})));
 
     // test some bin centers
     BOOST_TEST(g.getBinCenter({1}) == Point({0.5}));
@@ -81,6 +85,9 @@ namespace Test {
     BOOST_TEST(g.getUpperRightBinEdge({2}) == Point({2.}));
     BOOST_TEST(g.getUpperRightBinEdge({3}) == Point({3.}));
     BOOST_TEST(g.getUpperRightBinEdge({4}) == Point({4.}));
+
+    // initialize grid
+    for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
 
     // consistency of access
     const auto& point     = Point({0.7});
@@ -216,6 +223,20 @@ namespace Test {
 
     BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex(Point({1.2, 0.7})))
                == indices({2, 1}));
+
+    // inside checks
+    BOOST_TEST(not g.isInside(Point({-2., -1})));
+    BOOST_TEST(not g.isInside(Point({-2., 1.})));
+    BOOST_TEST(not g.isInside(Point({-2., 5.})));
+    BOOST_TEST(not g.isInside(Point({1., -1.})));
+    BOOST_TEST(not g.isInside(Point({6., -1.})));
+    BOOST_TEST(g.isInside(Point({0.5, 1.3})));
+    BOOST_TEST(not g.isInside(Point({4., -1.})));
+    BOOST_TEST(not g.isInside(Point({4., 0.3})));
+    BOOST_TEST(not g.isInside(Point({4., 3.})));
+    BOOST_TEST(not g.isInside(Point({-1., 3.})));
+    BOOST_TEST(not g.isInside(Point({2., 3.})));
+    BOOST_TEST(not g.isInside(Point({5., 3.})));
 
     // test some bin centers
     BOOST_TEST(g.getBinCenter({1, 1}) == Point({0.5, 0.5}));
@@ -353,6 +374,20 @@ namespace Test {
     BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex(Point({1.2, 0.7, 1.4})))
                == indices({2, 1, 2}));
 
+    // inside checks
+    BOOST_TEST(not g.isInside(Point({-2., -1, -2})));
+    BOOST_TEST(not g.isInside(Point({-2., 1., 0.})));
+    BOOST_TEST(not g.isInside(Point({-2., 5., -1})));
+    BOOST_TEST(not g.isInside(Point({1., -1., 1.})));
+    BOOST_TEST(not g.isInside(Point({6., -1., 4.})));
+    BOOST_TEST(g.isInside(Point({0.5, 1.3, 1.7})));
+    BOOST_TEST(not g.isInside(Point({2., -1., -0.4})));
+    BOOST_TEST(not g.isInside(Point({2., 0.3, 3.4})));
+    BOOST_TEST(not g.isInside(Point({2., 3., 0.8})));
+    BOOST_TEST(not g.isInside(Point({-1., 3., 5.})));
+    BOOST_TEST(not g.isInside(Point({2., 3., -1.})));
+    BOOST_TEST(not g.isInside(Point({5., 3., 0.5})));
+
     // test some bin centers
     BOOST_TEST(g.getBinCenter({1, 1, 1}) == Point({0.5, 0.5, 0.5}));
     BOOST_TEST(g.getBinCenter({2, 3, 2}) == Point({1.5, 2.5, 1.5}));
@@ -417,6 +452,13 @@ namespace Test {
 
     BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex(Point({0.8})))
                == indices({1}));
+
+    // inside checks
+    BOOST_TEST(not g.isInside(Point({-2.})));
+    BOOST_TEST(g.isInside(Point({0.})));
+    BOOST_TEST(g.isInside(Point({2.5})));
+    BOOST_TEST(not g.isInside(Point({4.})));
+    BOOST_TEST(not g.isInside(Point({6.})));
 
     // test some bin centers
     BOOST_TEST(g.getBinCenter({1}) == Point({0.5}));
@@ -518,6 +560,20 @@ namespace Test {
 
     BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex(Point({3.2, 1.8})))
                == indices({3, 2}));
+
+    // inside checks
+    BOOST_TEST(not g.isInside(Point({-2., -1})));
+    BOOST_TEST(not g.isInside(Point({-2., 1.})));
+    BOOST_TEST(not g.isInside(Point({-2., 5.})));
+    BOOST_TEST(not g.isInside(Point({1., -1.})));
+    BOOST_TEST(not g.isInside(Point({6., -1.})));
+    BOOST_TEST(g.isInside(Point({0.5, 1.3})));
+    BOOST_TEST(not g.isInside(Point({3., -1.})));
+    BOOST_TEST(not g.isInside(Point({3., 0.3})));
+    BOOST_TEST(not g.isInside(Point({3., 4.})));
+    BOOST_TEST(not g.isInside(Point({-1., 4.})));
+    BOOST_TEST(not g.isInside(Point({2., 4.})));
+    BOOST_TEST(not g.isInside(Point({5., 4.})));
 
     // test some bin centers
     BOOST_TEST(g.getBinCenter({1, 1}) == Point({0.25, 0.5}));
@@ -624,6 +680,20 @@ namespace Test {
 
     BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex(Point({1.8, 0.7, 3.2})))
                == indices({2, 2, 3}));
+
+    // inside checks
+    BOOST_TEST(not g.isInside(Point({-2., -1, -2})));
+    BOOST_TEST(not g.isInside(Point({-2., 1., 0.})));
+    BOOST_TEST(not g.isInside(Point({-2., 5., -1})));
+    BOOST_TEST(not g.isInside(Point({1., -1., 1.})));
+    BOOST_TEST(not g.isInside(Point({6., -1., 4.})));
+    BOOST_TEST(g.isInside(Point({0.5, 1.3, 1.7})));
+    BOOST_TEST(not g.isInside(Point({1., -1., -0.4})));
+    BOOST_TEST(not g.isInside(Point({1., 0.3, 3.4})));
+    BOOST_TEST(not g.isInside(Point({1., 3., 0.8})));
+    BOOST_TEST(not g.isInside(Point({-1., 3., 5.})));
+    BOOST_TEST(not g.isInside(Point({2., 3., -1.})));
+    BOOST_TEST(not g.isInside(Point({5., 3., 0.5})));
 
     // test some bin centers
     BOOST_TEST(g.getBinCenter({1, 1, 1}) == Point({0.5, 0.25, 0.25}));
@@ -760,6 +830,20 @@ namespace Test {
 
     BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex(Point({1.1, 1.7})))
                == indices({5, 2}));
+
+    // inside checks
+    BOOST_TEST(not g.isInside(Point({-2., -1})));
+    BOOST_TEST(not g.isInside(Point({-2., 1.})));
+    BOOST_TEST(not g.isInside(Point({-2., 5.})));
+    BOOST_TEST(not g.isInside(Point({0.1, -1.})));
+    BOOST_TEST(not g.isInside(Point({6., -1.})));
+    BOOST_TEST(g.isInside(Point({0.5, 1.3})));
+    BOOST_TEST(not g.isInside(Point({1., -1.})));
+    BOOST_TEST(not g.isInside(Point({1., 0.3})));
+    BOOST_TEST(not g.isInside(Point({1., 3.})));
+    BOOST_TEST(not g.isInside(Point({-1., 3.})));
+    BOOST_TEST(not g.isInside(Point({0.2, 3.})));
+    BOOST_TEST(not g.isInside(Point({5., 3.})));
 
     // test some bin centers
     BOOST_TEST(g.getBinCenter({1, 1}) == Point({0.125, 0.25}));

@@ -118,6 +118,15 @@ namespace detail {
       localIndices.at(N)   = std::min(thisAxisNBins + 1, ++localIndices.at(N));
       grid_helper_impl<N - 1>::getUpperRightBinIndices(localIndices, axes);
     }
+
+    template <class Point, class... Axes>
+    static bool
+    isInside(const Point& position, const std::tuple<Axes...>& axes)
+    {
+      bool insideThisAxis = std::get<N>(axes).isInside(position[N]);
+      return insideThisAxis
+          && grid_helper_impl<N - 1>::isInside(position, axes);
+    }
   };
 
   template <>
@@ -200,6 +209,13 @@ namespace detail {
     {
       size_t thisAxisNBins = std::get<0u>(axes).getNBins();
       localIndices.at(0u)  = std::min(thisAxisNBins + 1, ++localIndices.at(0u));
+    }
+
+    template <class Point, class... Axes>
+    static bool
+    isInside(const Point& position, const std::tuple<Axes...>& axes)
+    {
+      return std::get<0u>(axes).isInside(position[0u]);
     }
   };
   /// @endcond
@@ -407,6 +423,24 @@ namespace detail {
       grid_helper_impl<MAX>::getUpperRightBinIndices(urIndices, axes);
 
       return urIndices;
+    }
+
+    /// @brief check whether given point is inside axes limits
+    ///
+    /// @tparam Point any type with point semantics supporting component access
+    ///               through @c operator[]
+    /// @tparam Axes parameter pack of axis types defining the grid
+    ///
+    /// @param  [in] point point to look up in the grid
+    /// @param  [in] axes  actual axis objects spanning the grid
+    /// @return @c true if \f$\text{xmin_i} \le x_i < \text{xmax}_i \forall i=0,
+    ///         \dots, d-1\f$, otherwise @c false
+    template <class Point, class... Axes>
+    static bool
+    isInside(const Point& position, const std::tuple<Axes...>& axes)
+    {
+      constexpr size_t MAX = sizeof...(Axes)-1;
+      return grid_helper_impl<MAX>::isInside(position, axes);
     }
   };
 

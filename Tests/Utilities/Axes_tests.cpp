@@ -88,6 +88,13 @@ namespace Test {
     BOOST_TEST(a.getBinCenter(8) == 7.5);
     BOOST_TEST(a.getBinCenter(9) == 8.5);
     BOOST_TEST(a.getBinCenter(10) == 9.5);
+
+    // inside check
+    BOOST_TEST(not a.isInside(-0.2));
+    BOOST_TEST(a.isInside(0.));
+    BOOST_TEST(a.isInside(3.));
+    BOOST_TEST(not a.isInside(10.));
+    BOOST_TEST(not a.isInside(12.));
   }
 
   BOOST_AUTO_TEST_CASE(variable_axis)
@@ -132,6 +139,13 @@ namespace Test {
     BOOST_TEST(a.getBinCenter(2) == 1.75);
     BOOST_TEST(a.getBinCenter(3) == 3.75);
     BOOST_TEST(a.getBinCenter(4) == 5.25);
+
+    // inside check
+    BOOST_TEST(not a.isInside(-0.2));
+    BOOST_TEST(a.isInside(0.));
+    BOOST_TEST(a.isInside(3.));
+    BOOST_TEST(not a.isInside(6.));
+    BOOST_TEST(not a.isInside(12.));
   }
 }  // namespace Test
 

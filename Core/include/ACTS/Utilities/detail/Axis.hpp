@@ -150,6 +150,19 @@ namespace detail {
       return m_bins;
     }
 
+    /// @brief check whether value is inside axis limits
+    ///
+    /// @return @c true if \f$\text{xmin} \le x < \text{xmax}\f$, otherwise
+    ///         @c false
+    ///
+    /// @post If @c true is returned, the bin containing the given value is a
+    ///       valid bin, i.e. it is neither the underflow nor the overflow bin.
+    bool
+    isInside(double x) const
+    {
+      return (m_min <= x) && (x < m_max);
+    }
+
   private:
     /// minimum of binning range
     double m_min;
@@ -284,6 +297,19 @@ namespace detail {
     getNBins() const
     {
       return m_binEdges.size() - 1;
+    }
+
+    /// @brief check whether value is inside axis limits
+    ///
+    /// @return @c true if \f$\text{xmin} \le x < \text{xmax}\f$, otherwise
+    ///         @c false
+    ///
+    /// @post If @c true is returned, the bin containing the given value is a
+    ///       valid bin, i.e. it is neither the underflow nor the overflow bin.
+    bool
+    isInside(double x) const
+    {
+      return (m_binEdges.front() <= x) && (x < m_binEdges.back());
     }
 
   private:

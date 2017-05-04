@@ -13,7 +13,6 @@
 #include <type_traits>
 #include "ACTS/Utilities/Interpolation.hpp"
 #include "ACTS/Utilities/detail/grid_helper.hpp"
-#include "ACTS/Utilities/detail/grid_helper.hpp"
 
 namespace Acts {
 
@@ -270,6 +269,21 @@ namespace detail {
                                getLowerLeftBinEdge(llIndices),
                                getLowerLeftBinEdge(urIndices),
                                neighbors);
+    }
+
+    /// @brief check whether given point is inside grid limits
+    ///
+    /// @return @c true if \f$\text{xmin_i} \le x_i < \text{xmax}_i \forall i=0,
+    ///         \dots, d-1\f$, otherwise @c false
+    ///
+    /// @post If @c true is returned, the global bin containing the given point
+    ///       is a valid bin, i.e. it is neither a underflow nor an overflow bin
+    ///       along any axis.
+    template <class Point>
+    bool
+    isInside(const Point& position) const
+    {
+      return grid_helper::isInside(position, m_axes);
     }
 
     /// @brief total number of bins
