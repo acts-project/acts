@@ -13,9 +13,9 @@
 #ifndef ACTS_MATERIALPLUGINS_ASSIGNEDMATERIALSTEPS_H
 #define ACTS_MATERIALPLUGINS_ASSIGNEDMATERIALSTEPS_H
 
+#include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/GeometryID.hpp"
-#include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
 
 namespace Acts {
 
@@ -38,4 +38,4 @@ struct AssignedMaterialSteps
 };
 }
 
-#endif // ACTS_MATERIALPLUGINS_ASSIGNEDMATERIALSTEPS_H
+#endif  // ACTS_MATERIALPLUGINS_ASSIGNEDMATERIALSTEPS_H
