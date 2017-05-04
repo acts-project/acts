@@ -439,26 +439,26 @@ Acts::TrackingVolume::closeGeometry(
   // we can construct the volume ID from this
   GeometryID volumeID(0);
   volumeID.add(++vol, GeometryID::volume_mask);
+  // assign the Volume ID to the volume itself
+  auto thisVolume = const_cast<TrackingVolume*>(this);
+  thisVolume->assignGeoID(volumeID);
 
+  // loop over the boundary surfaces
+  geo_id_value iboundary = 0;
+  // loop over the boundary surfaces
+  for (auto& bSurfIter : boundarySurfaces()) {
+    // get the intersection soltuion
+    auto& bSurface = bSurfIter->surfaceRepresentation();
+    // create the boundary surface id
+    GeometryID boundaryID = volumeID;
+    boundaryID.add(++iboundary, GeometryID::boundary_mask);
+    // now assign to the boundary surface
+    auto& mutableBSurface = *(const_cast<Surface*>(&bSurface));
+    mutableBSurface.assignGeoID(boundaryID);
+  }
+  
   // A) this is NOT a container volume, volumeID is already incremented
   if (!m_confinedVolumes) {
-    // assign the Volume ID to the volume itself
-    auto thisVolume = const_cast<TrackingVolume*>(this);
-    thisVolume->assignGeoID(volumeID);
-    // loop over the boundary surfaces
-    geo_id_value iboundary = 0;
-    // loop over the boundary surfaces
-    for (auto& bSurfIter : boundarySurfaces()) {
-      // get the intersection soltuion
-      auto& bSurface = bSurfIter->surfaceRepresentation();
-      // create the boundary surface id
-      GeometryID boundaryID = volumeID;
-      boundaryID.add(++iboundary, GeometryID::boundary_mask);
-      // now assign to the boundary surface
-      auto& mutableBSurface = *(const_cast<Surface*>(&bSurface));
-      mutableBSurface.assignGeoID(boundaryID);
-    }
-
     // loop over the confined layers
     if (m_confinedLayers) {
       geo_id_value ilayer = 0;
