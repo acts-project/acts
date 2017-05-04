@@ -348,7 +348,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
     pParameters
         = buildTrackParametersWithoutPropagation(*sParameters, pCache.jacobian);
     // record the parameters as a step
-    eCell.step(std::move(pParameters), purpose);
+    eCell.stepTransport(std::move(pParameters), {purpose});
     // return success or in progress
     return (finalPropagation ? ExtrapolationCode::SuccessDestination
                              : ExtrapolationCode::InProgress);

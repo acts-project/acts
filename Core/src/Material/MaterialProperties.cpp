@@ -1,4 +1,4 @@
-Core/include/ACTS/Material/MaterialProperties.hpp// This file is part of the ACTS project.
+// This file is part of the ACTS project.
 //
 // Copyright (C) 2016 ACTS project team
 //

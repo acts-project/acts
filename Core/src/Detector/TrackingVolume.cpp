@@ -203,7 +203,7 @@ Acts::TrackingVolume::detachedTrackingVolumes(const Vector3D& gp,
 
 void
 Acts::TrackingVolume::sign(GeometrySignature geosign,
-                           GeometryType      geotype) const
+                           GeometryType      geotype)
 {
   // never overwrite what is already signed, that's a crime
   if (m_geometrySignature == Unsigned) m_geometrySignature = geosign;
@@ -442,7 +442,8 @@ Acts::TrackingVolume::closeGeometry(std::map<std::string, const TrackingVolume*>
   // A) this is NOT a container volume, volumeID is already incremented
   if (!m_confinedVolumes) {
     // assign the Volume ID to the volume itself
-    assignGeoID(volumeID);
+    auto thisVolume = const_cast<TrackingVolume*>(this);
+    thisVolume->assignGeoID(volumeID);
     // loop over the boundary surfaces
     geo_id_value iboundary = 0;
     // loop over the boundary surfaces
