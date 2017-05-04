@@ -13,11 +13,11 @@
 #ifndef ACTS_MATERIAL_MATERIAL_H
 #define ACTS_MATERIAL_MATERIAL_H
 
-#include <climits>
-#include <limits>
 #include <algorithm>
+#include <climits>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <utility>
