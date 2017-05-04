@@ -179,12 +179,12 @@ Acts::RungeKuttaEngine<MagneticField>::propagateRungeKuttaT(
 template <class MagneticField>
 Acts::ExtrapolationCode
 Acts::RungeKuttaEngine<MagneticField>::propagate(
-    ExCellNeutral&           eCell,
-    const Surface&           sf,
-    PropDirection            pDir,
+    ExCellNeutral&                        eCell,
+    const Surface&                        sf,
+    PropDirection                         pDir,
     std::vector<ExtrapolationMode::eMode> purpose,
-    const BoundaryCheck&     bcheck,
-    bool                     returnCurvilinear) const
+    const BoundaryCheck&                  bcheck,
+    bool                                  returnCurvilinear) const
 {
   EX_MSG_DEBUG(++eCell.navigationStep,
                "propagate",
@@ -227,7 +227,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
   pCache.returnCurvilinear = returnCurvilinear;
   pCache.useJacobian       = eCell.leadParameters->covariance();
   // neutral transport sets mconditions to false
-  pCache.mcondition        = false;
+  pCache.mcondition = false;
 
   // the result through propagation
   if (propagateRungeKuttaT<NeutralParameters>(
@@ -260,16 +260,14 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
           std::move(cov), gp, mom);
     }
     // this is a new transport step, collect it
-    // create the jacobian only when requested 
+    // create the jacobian only when requested
     std::unique_ptr<const TransportJacobian> tJacobian = nullptr;
     if (eCell.checkConfigurationMode(ExtrapolationMode::CollectJacobians))
-        tJacobian = std::make_unique<const TransportJacobian>(pCache.jacobian);
+      tJacobian = std::make_unique<const TransportJacobian>(pCache.jacobian);
     // now fill the transportStep
     // record the parameters as a step
-    eCell.stepTransport(std::move(nParameters),
-                        purpose,
-                        pCache.step,
-                        std::move(tJacobian));
+    eCell.stepTransport(
+        std::move(nParameters), purpose, pCache.step, std::move(tJacobian));
     // create the new curvilinear tparamers at the surface intersection -
     // -> if so, trigger the success
     // now check if it is valid it's further away than the pathLimit
@@ -282,21 +280,21 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
                                       << " reached. Stopping extrapolation.");
       return ExtrapolationCode::SuccessPathLimit;
     }
-    // standard screen output  
+    // standard screen output
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "propagate",
                    "neut",
                    "path length of "
-                   << pCache.step
-                   << " added to the extrapolation cell (limit = "
-                   << eCell.pathLimit
-                   << ")");
+                       << pCache.step
+                       << " added to the extrapolation cell (limit = "
+                       << eCell.pathLimit
+                       << ")");
     // return success for the final destination or in progress
     return (finalPropagation ? ExtrapolationCode::SuccessDestination
                              : ExtrapolationCode::InProgress);
   } else {
     // give some screen output
-    // propagation did not succeed 
+    // propagation did not succeed
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "propagate",
                    "neut",
@@ -313,12 +311,12 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
 template <class MagneticField>
 Acts::ExtrapolationCode
 Acts::RungeKuttaEngine<MagneticField>::propagate(
-    ExCellCharged&           eCell,
-    const Surface&           sf,
-    PropDirection            pDir,
+    ExCellCharged&                        eCell,
+    const Surface&                        sf,
+    PropDirection                         pDir,
     std::vector<ExtrapolationMode::eMode> purpose,
-    const BoundaryCheck&     bcheck,
-    bool                     returnCurvilinear) const
+    const BoundaryCheck&                  bcheck,
+    bool                                  returnCurvilinear) const
 {
   // screen output
   EX_MSG_DEBUG(++eCell.navigationStep,
@@ -326,7 +324,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
                "char",
                "propagation engine called with charged parameters with "
                "propagation direction "
-                << pDir);
+                   << pDir);
 
   // it is the final propagation if it is the endSurface
   bool finalPropagation = (eCell.endSurface == (&sf));
@@ -341,10 +339,11 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
   // if the desination surface is the start surface -> bail out and build
   // parameters directly
   if (&sf == &(eCell.leadParameters->referenceSurface())) {
-    EX_MSG_VERBOSE(eCell.navigationStep,
-                   "propagate",
-                   "char",
-                   "parameters are already on the surface, rebuild and return.");
+    EX_MSG_VERBOSE(
+        eCell.navigationStep,
+        "propagate",
+        "char",
+        "parameters are already on the surface, rebuild and return.");
     pParameters
         = buildTrackParametersWithoutPropagation(*sParameters, pCache.jacobian);
     // record the parameters as a step
@@ -367,8 +366,8 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
       = (pCache.useJacobian && m_cfg.usegradient) ? true : false;
 
   // propagate with templated helper function
-  if (propagateRungeKuttaT<TrackParameters>(eCell, pCache, *sParameters, sf)){
-    // some screen output 
+  if (propagateRungeKuttaT<TrackParameters>(eCell, pCache, *sParameters, sf)) {
+    // some screen output
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "propagate",
                    "char",
@@ -380,7 +379,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
     // create the parameter vector and stream the result in
     ActsVectorD<5> pars;
     pars << pCache.parameters[0], pCache.parameters[1], pCache.parameters[2],
-            pCache.parameters[3], pCache.parameters[4];
+        pCache.parameters[3], pCache.parameters[4];
     // create the new parameters
     if (!pCache.returnCurvilinear) {
       // new parameters bound to the surface
@@ -390,45 +389,41 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
       // get the charge
       double charge = pCache.parameters[4] > 0. ? 1. : -1.;
       // new curvilinear parameters
-      Vector3D gp(
-          pCache.pVector[0], pCache.pVector[1], pCache.pVector[2]);
+      Vector3D gp(pCache.pVector[0], pCache.pVector[1], pCache.pVector[2]);
       pParameters = std::make_unique<const CurvilinearParameters>(
           std::move(cov),
           gp,
           detail::coordinate_transformation::parameters2globalMomentum(pars),
           charge);
-    }    
+    }
     // this is a new transport step, collect it
-    // create the jacobian only when requested 
+    // create the jacobian only when requested
     std::unique_ptr<const TransportJacobian> tJacobian = nullptr;
     if (eCell.checkConfigurationMode(ExtrapolationMode::CollectJacobians))
-        tJacobian = std::make_unique<const TransportJacobian>(pCache.jacobian);
+      tJacobian = std::make_unique<const TransportJacobian>(pCache.jacobian);
     // now fill the transportStep
     // record the parameters as a step
-    eCell.stepTransport(std::move(pParameters),
-                        purpose,
-                        pCache.step,
-                        std::move(tJacobian));
+    eCell.stepTransport(
+        std::move(pParameters), purpose, pCache.step, std::move(tJacobian));
     // check what to do with the path Length
     if (eCell.checkConfigurationMode(ExtrapolationMode::StopWithPathLimit)
         && eCell.pathLimitReached(m_cfg.dlt, true)) {
-        EX_MSG_VERBOSE(eCell.navigationStep,
-                       "propagate",
-                       "char",
-                       "path limit of "
-                       << eCell.pathLimit
-                       << " successfully reached -> stopping.");
-        return ExtrapolationCode::SuccessPathLimit;
+      EX_MSG_VERBOSE(eCell.navigationStep,
+                     "propagate",
+                     "char",
+                     "path limit of " << eCell.pathLimit
+                                      << " successfully reached -> stopping.");
+      return ExtrapolationCode::SuccessPathLimit;
     }
-    // standard screen output  
+    // standard screen output
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "propagate",
                    "char",
                    "path length of "
-                   << pCache.step
-                   << " added to the extrapolation cell (limit = "
-                   << eCell.pathLimit
-                   << ")");    
+                       << pCache.step
+                       << " added to the extrapolation cell (limit = "
+                       << eCell.pathLimit
+                       << ")");
     // return Success only if it is the final propagation - the extrapolation
     // engine knows that
     return (finalPropagation ? ExtrapolationCode::SuccessDestination

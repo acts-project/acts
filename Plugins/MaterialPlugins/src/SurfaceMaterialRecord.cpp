@@ -51,7 +51,8 @@ Acts::SurfaceMaterialRecord::operator=(const SurfaceMaterialRecord& lmrecord)
 }
 
 void
-Acts::SurfaceMaterialRecord::assignMaterialSteps(const AssignedMaterialSteps& aSteps)
+Acts::SurfaceMaterialRecord::assignMaterialSteps(
+    const AssignedMaterialSteps& aSteps)
 {
   // sum up all material at this point for this surface
   float tThickness = 0.;
@@ -63,7 +64,7 @@ Acts::SurfaceMaterialRecord::assignMaterialSteps(const AssignedMaterialSteps& aS
 
   // get the local position
   Vector2D localPosition;
-  Vector3D direction(aSteps.assignedPosition.unit());  
+  Vector3D direction(aSteps.assignedPosition.unit());
   m_surface->globalToLocal(aSteps.assignedPosition, direction, localPosition);
 
   // now add it at the corresponding assigned position
@@ -73,7 +74,7 @@ Acts::SurfaceMaterialRecord::assignMaterialSteps(const AssignedMaterialSteps& aS
 
   // increase the number of entries for this material bin
   // always do that, also for empty assignments
-  // as they will take part in the average as well 
+  // as they will take part in the average as well
   m_mappedMaterial[bin1][bin0].second++;
 
   // bail out if no steps where assigned
@@ -87,9 +88,9 @@ Acts::SurfaceMaterialRecord::assignMaterialSteps(const AssignedMaterialSteps& aS
 
     // sum it up
     tThickness += t;
-    tRho   += density * t;
-    tA     += currentStep.materialProperties().averageA() * density * t;
-    tZ     += currentStep.materialProperties().averageZ() * density * t;
+    tRho += density * t;
+    tA += currentStep.materialProperties().averageA() * density * t;
+    tZ += currentStep.materialProperties().averageZ() * density * t;
     // add the thickness in x0
     ttInX0 += currentStep.materialProperties().thicknessInX0();
     ttInL0 += currentStep.materialProperties().thicknessInL0();
@@ -111,19 +112,19 @@ Acts::SurfaceMaterialRecord::assignMaterialSteps(const AssignedMaterialSteps& aS
   // access the old material properties
   if (materialBin.first) {
     thickness += materialBin.first.thickness();
-    rho       += materialBin.first.averageRho();
-    A         += materialBin.first.averageA();
-    Z         += materialBin.first.averageZ();
-    tInX0     += materialBin.first.thicknessInX0();
-    tInL0     += materialBin.first.thicknessInL0();
+    rho += materialBin.first.averageRho();
+    A += materialBin.first.averageA();
+    Z += materialBin.first.averageZ();
+    tInX0 += materialBin.first.thicknessInX0();
+    tInL0 += materialBin.first.thicknessInL0();
   }
   // sum up material properties (different MaterialTracks)
   thickness += tThickness;
-  rho       += tRho;
-  A         += tA;
-  Z         += tZ;
-  tInX0     += ttInX0;
-  tInL0     += ttInL0;
+  rho += tRho;
+  A += tA;
+  Z += tZ;
+  tInX0 += ttInX0;
+  tInL0 += ttInL0;
 
   // x0 and l0
   float x0 = (thickness != 0. && tInX0 != 0.) ? thickness / tInX0 : 0.;
@@ -131,7 +132,7 @@ Acts::SurfaceMaterialRecord::assignMaterialSteps(const AssignedMaterialSteps& aS
 
   // set the new current material (not averaged yet)
   Material updatedMaterial(x0, l0, A, Z, rho);
-  m_mappedMaterial[bin1][bin0].first = MaterialProperties(updatedMaterial, thickness);
+  m_mappedMaterial[bin1][bin0].first 
+    = MaterialProperties(updatedMaterial, thickness);
 
 }
-

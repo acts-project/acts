@@ -16,20 +16,19 @@
 Acts::HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(
     const MaterialProperties& full,
     double                    splitFactor)
-  : SurfaceMaterial(splitFactor)
-  , m_fullMaterial(full)
+  : SurfaceMaterial(splitFactor), m_fullMaterial(full)
 {
 }
 
 Acts::HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(
     const Acts::HomogeneousSurfaceMaterial& lmp)
-  : SurfaceMaterial(lmp.m_splitFactor)
-  , m_fullMaterial(lmp.m_fullMaterial)
+  : SurfaceMaterial(lmp.m_splitFactor), m_fullMaterial(lmp.m_fullMaterial)
 {
 }
 
 Acts::HomogeneousSurfaceMaterial::~HomogeneousSurfaceMaterial()
-{}
+{
+}
 
 Acts::HomogeneousSurfaceMaterial&
 Acts::HomogeneousSurfaceMaterial::
@@ -37,7 +36,7 @@ operator=(const HomogeneousSurfaceMaterial& lmp)
 {
   if (this != &lmp) {
     // now refill evertything
-    m_fullMaterial = lmp.m_fullMaterial;
+    m_fullMaterial                       = lmp.m_fullMaterial;
     Acts::SurfaceMaterial::m_splitFactor = lmp.m_splitFactor;
   }
   return (*this);

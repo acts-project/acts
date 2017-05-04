@@ -13,10 +13,10 @@
 #include "ACTS/Material/MaterialProperties.hpp"
 #include <climits>
 
-Acts::MaterialProperties::MaterialProperties()
+      Acts::MaterialProperties::MaterialProperties()
   : m_material()
-  , m_dInX0(0.)
-  , m_dInL0(0.)
+, m_dInX0(0.)
+, m_dInL0(0.)
 {
 }
 
@@ -33,10 +33,12 @@ Acts::MaterialProperties::MaterialProperties(float Xo,
 }
 
 Acts::MaterialProperties::MaterialProperties(const Material& material,
-                                             float thickness)
+                                             float           thickness)
   : m_material(material)
-  , m_dInX0(material.X0() * material.X0() > 10e-10 ? thickness / material.X0() : 0.)
-  , m_dInL0(material.L0() * material.L0() > 10e-10 ? thickness / material.L0() : 0.)
+  , m_dInX0(material.X0() * material.X0() > 10e-10 ? thickness / material.X0()
+                                                   : 0.)
+  , m_dInL0(material.L0() * material.L0() > 10e-10 ? thickness / material.L0()
+                                                   : 0.)
 {
 }
 

@@ -158,7 +158,7 @@ bool
 Acts::Layer::hasMaterial() const
 {
   // will need to be done
-  // with substructure type 
+  // with substructure type
   return true;
 }
 

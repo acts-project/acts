@@ -11,9 +11,9 @@
 #include <boost/test/included/unit_test.hpp>
 #include <climits>
 #include "ACTS/Material/MaterialProperties.hpp"
-#include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
-#include "ACTS/Plugins/MaterialPlugins/MaterialMapper.hpp"
 #include "ACTS/Plugins/MaterialPlugins/AssignedMaterialSteps.hpp"
+#include "ACTS/Plugins/MaterialPlugins/MaterialMapper.hpp"
+#include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
 
 namespace Acts {
 
@@ -64,12 +64,11 @@ namespace Test {
     MaterialMapper::Config mapperConf;
     mapperConf.extrapolationEngine = nullptr;
     auto materialMapper            = std::make_shared<MaterialMapper>(
-        mapperConf,
-        Acts::getDefaultLogger("MaterialMapper", Logging::VERBOSE));
+        mapperConf, Acts::getDefaultLogger("MaterialMapper", Logging::VERBOSE));
 
     /// now call the assignment function
     materialMapper->assignSteps(materialSteps, assignedStepsVector);
-    
+
     /// the first one should have
     // 20 to 40
     BOOST_CHECK_EQUAL(21ul, assignedStepsVector[0].assignedSteps.size());
@@ -81,8 +80,6 @@ namespace Test {
     BOOST_CHECK_EQUAL(110ul, assignedStepsVector[3].assignedSteps.size());
     /// 201 to 350
     BOOST_CHECK_EQUAL(150ul, assignedStepsVector[4].assignedSteps.size());
-
-    
   }
 
 }  // end of namespace Test

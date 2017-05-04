@@ -23,15 +23,12 @@ template <class T>
 class ObjectSorterT : public std::binary_function<T, T, bool>
 {
 public:
-  
   /// Constructor from a binning value
   ///
   /// @param bValue is the value in which the binning is done
   /// @param transform is an optional transform to be performed
-  ObjectSorterT(BinningValue                 bValue)
-    : m_binningValue(bValue)
-  {}
-  
+  ObjectSorterT(BinningValue bValue) : m_binningValue(bValue) {}
+
   /// Comparison operator
   ///
   /// @tparam one first object
@@ -74,15 +71,16 @@ public:
     }
     }
   }
-  
-  BinningValue binningValue() const { return m_binningValue; }
 
+  BinningValue
+  binningValue() const
+  {
+    return m_binningValue;
+  }
 
 private:
-  BinningValue                 m_binningValue; ///< the binning value
-    
-
-};  
+  BinningValue m_binningValue;  ///< the binning value
+};
 
 /// @class DistanceSorterT
 ///
@@ -95,15 +93,15 @@ public:
   ///
   /// @param bValue is the value in which the binning is done
   /// @param reference is the reference point
-  DistanceSorterT(BinningValue bValue,
-                  Vector3D reference)
+  DistanceSorterT(BinningValue bValue, Vector3D reference)
     : m_binningValue(bValue)
     , m_reference(reference)
     , m_refR(reference.perp())
     , m_refPhi(reference.phi())
     , m_refEta(reference.eta())
-  {}
-  
+  {
+  }
+
   /// Comparison operator
   ///
   /// @tparam one first object
@@ -120,56 +118,55 @@ public:
     case binX: {
       double diffOneX = one.x() - m_reference.x();
       double diffTwoX = two.x() - m_reference.x();
-      return (diffOneX*diffOneX < diffTwoX*diffTwoX);
+      return (diffOneX * diffOneX < diffTwoX * diffTwoX);
     }
     // compare on diff y
     case binY: {
       double diffOneY = one.y() - m_reference.y();
       double diffTwoY = two.y() - m_reference.y();
-      return (diffOneY*diffOneY < diffTwoY*diffTwoY);
+      return (diffOneY * diffOneY < diffTwoY * diffTwoY);
     }
     // compare on diff z
     case binZ: {
       double diffOneZ = one.z() - m_reference.z();
       double diffTwoZ = two.z() - m_reference.z();
-      return (diffOneZ*diffOneZ < diffTwoZ*diffTwoZ);
+      return (diffOneZ * diffOneZ < diffTwoZ * diffTwoZ);
     }
     // compare on r
     case binR: {
       double diffOneR = one.perp() - m_refR;
       double diffTwoR = two.perp() - m_refR;
-      return (diffOneR*diffOneR < diffTwoR*diffTwoR);
+      return (diffOneR * diffOneR < diffTwoR * diffTwoR);
     }
     // compare on phi /// @todo add cyclic value
     case binPhi: {
       double diffOnePhi = one.phi() - m_refPhi;
       double diffTwoPhi = two.phi() - m_refPhi;
-      return (diffOnePhi*diffOnePhi < diffTwoPhi*diffTwoPhi);
+      return (diffOnePhi * diffOnePhi < diffTwoPhi * diffTwoPhi);
     }
     // compare on eta
     case binEta: {
       double diffOneEta = one.eta() - m_refEta;
       double diffTwoEta = two.eta() - m_refEta;
-      return (diffOneEta*diffOneEta < diffTwoEta*diffTwoEta);
+      return (diffOneEta * diffOneEta < diffTwoEta * diffTwoEta);
     }
     // default for the moment
     default: {
-      T diffOne(one-m_reference);
-      T diffTwo(two-m_reference);
+      T diffOne(one - m_reference);
+      T diffTwo(two - m_reference);
       return (diffOne.mag2() < diffTwo.mag2());
     }
     }
   }
-  
+
 private:
-  BinningValue                 m_binningValue; ///< the binning value
-  T                            m_reference;
-  double                       m_refR;
-  double                       m_refPhi;
-  double                       m_refEta;
-  
-};  
-  
+  BinningValue m_binningValue;  ///< the binning value
+  T            m_reference;
+  double       m_refR;
+  double       m_refPhi;
+  double       m_refEta;
+};
+
 /// @class GeometryObjectSorter
 ///
 template <class T>
@@ -182,9 +179,9 @@ public:
   /// @param transform is an optional transform to be performed
   GeometryObjectSorterT(BinningValue                 bValue,
                         std::shared_ptr<Transform3D> transform = nullptr)
-    : m_objectSorter(bValue)
-    , m_transform(transform)
-  {}
+    : m_objectSorter(bValue), m_transform(transform)
+  {
+  }
 
   /// Comparison operator
   ///
@@ -197,18 +194,20 @@ public:
   {
     // get the pos one / pos two
     Vector3D posOne = m_transform
-        ? m_transform->inverse() * one->binningPosition(m_objectSorter.binningValue())
+        ? m_transform->inverse()
+            * one->binningPosition(m_objectSorter.binningValue())
         : one->binningPosition(m_objectSorter.binningValue());
     Vector3D posTwo = m_transform
-        ? m_transform->inverse() * two->binningPosition(m_objectSorter.binningValue())
+        ? m_transform->inverse()
+            * two->binningPosition(m_objectSorter.binningValue())
         : two->binningPosition(m_objectSorter.binningValue());
     // now call the distance sorter
-    return m_objectSorter.operator()(posOne,posTwo);
+    return m_objectSorter.operator()(posOne, posTwo);
   }
 
 protected:
-  ObjectSorterT<Vector3D>       m_objectSorter;
-  std::shared_ptr<Transform3D>  m_transform;
+  ObjectSorterT<Vector3D>      m_objectSorter;
+  std::shared_ptr<Transform3D> m_transform;
 };
 }
 

@@ -34,7 +34,7 @@ public:
 
   /// Explizit constructor with only full MaterialProperties,
   /// for one-dimensional binning.
-  /// 
+  ///
   /// The split factors:
   ///    - 1. : oppositePre
   ///    - 0. : alongPre
@@ -47,11 +47,11 @@ public:
   BinnedSurfaceMaterial(const BinUtility&               binUtility,
                         const MaterialPropertiesVector& fullProperties,
                         double                          splitFactor = 0.,
-                        size_t entries = 1);
+                        size_t                          entries     = 1);
 
   /// Explizit constructor with only full MaterialProperties,
   /// for two-dimensional binning.
-  /// 
+  ///
   /// The split factors:
   ///    - 1. : oppositePre
   ///    - 0. : alongPre
@@ -64,31 +64,31 @@ public:
   BinnedSurfaceMaterial(const BinUtility&               binutility,
                         const MaterialPropertiesMatrix& fullProperties,
                         double                          splitFactor = 0.,
-                        size_t entries = 1);
+                        size_t                          entries     = 1);
 
-  /// Copy Constructor 
+  /// Copy Constructor
   ///
-  /// @param bsm is the source object to be copied                                              
+  /// @param bsm is the source object to be copied
   BinnedSurfaceMaterial(const BinnedSurfaceMaterial& bsm);
 
-  /// Destructor 
+  /// Destructor
   virtual ~BinnedSurfaceMaterial();
 
   /// Pseudo-Constructor clone()
   BinnedSurfaceMaterial*
   clone() const final override;
 
-  /// Assignment operator 
+  /// Assignment operator
   BinnedSurfaceMaterial&
   operator=(const BinnedSurfaceMaterial& lmp);
 
-  /// Scale operator 
+  /// Scale operator
   ///
   /// @param scale is the scale factor for the full material
   BinnedSurfaceMaterial&
-  operator*=(double scale)final override;
+  operator*=(double scale) final override;
 
-  /// Return the BinUtility 
+  /// Return the BinUtility
   const BinUtility&
   binUtility() const;
 
@@ -107,30 +107,31 @@ public:
   /// @copydoc SurfaceMaterial::material(size_t, size_t)
   const MaterialProperties*
   material(size_t bin0, size_t bin1) const final override;
-  
+
   /// access to the entries
   /// this is needed for averageing mapps
-  const size_t entries() const;
+  const size_t
+  entries() const;
 
-  /// Output Method for std::ostream, to be overloaded by child classes 
+  /// Output Method for std::ostream, to be overloaded by child classes
   std::ostream&
   dump(std::ostream& sl) const final override;
 
 private:
   /// The helper for the bin finding
-  BinUtility               m_binUtility;
+  BinUtility m_binUtility;
 
-  /// The five different MaterialProperties 
+  /// The five different MaterialProperties
   MaterialPropertiesMatrix m_fullMaterial;
-  
+
   /// The number of entries used
-  size_t                   m_entries;
+  size_t m_entries;
 
   /// helper method - to clear the material
   void
   clearMaterial();
 
-  /// helper method - to refill the material  
+  /// helper method - to refill the material
   void
   fillMaterial(const MaterialPropertiesMatrix& matMatrix);
 };
@@ -153,12 +154,11 @@ BinnedSurfaceMaterial::material(size_t bin0, size_t bin1) const
   return m_fullMaterial[bin1][bin0];
 }
 
-inline const size_t 
+inline const size_t
 BinnedSurfaceMaterial::entries() const
 {
   return m_entries;
 }
-
 }
 
 #endif

@@ -25,14 +25,14 @@ namespace Acts {
 
 static double s_oneOverUcharMax = 1. / double(UCHAR_MAX);
 
-/// @class ElementFraction 
+/// @class ElementFraction
 class ElementFraction : public std::pair<unsigned char, unsigned char>
 {
 public:
-  /// Default Constructor 
+  /// Default Constructor
   ElementFraction() : std::pair<unsigned char, unsigned char>(0, 0) {}
-  
-  /// Copy Constructor from base class 
+
+  /// Copy Constructor from base class
   ///
   /// @param ef is the element fraction source object
   ElementFraction(const std::pair<unsigned char, unsigned char>& ef)
@@ -60,7 +60,7 @@ public:
   {
   }
 
-  /// assignment operator from base class 
+  /// assignment operator from base class
   ///
   /// @param ef is the element fraction source object
   ElementFraction&
@@ -72,7 +72,7 @@ public:
     return (*this);
   }
 
-  /// Return in a nice format 
+  /// Return in a nice format
   /// - casts back to an unsigned integer
   unsigned int
   element() const
@@ -80,7 +80,7 @@ public:
     return static_cast<unsigned int>((*this).first);
   }
 
-  /// Return in a nice format 
+  /// Return in a nice format
   /// - casts char to an unsigned int and then into double
   double
   fraction() const
@@ -105,7 +105,7 @@ public:
   }
 };
 
-/// @struct MaterialComposition 
+/// @struct MaterialComposition
 ///
 /// This helper struct allows to create a material composition
 /// as terms of element fraction objects
@@ -113,9 +113,8 @@ class MaterialComposition : public std::vector<ElementFraction>
 {
 public:
   /// Default constructor
-  MaterialComposition()
-  : std::vector<ElementFraction>() {}
-  
+  MaterialComposition() : std::vector<ElementFraction>() {}
+
   /// Destructor
   ~MaterialComposition() {}
 
@@ -139,7 +138,7 @@ public:
     std::sort(begin(), end());
   }
 
-  /// Assignment operator from base class 
+  /// Assignment operator from base class
   ///
   /// @param mc is the source object
   MaterialComposition&
@@ -165,32 +164,29 @@ public:
 };
 
 /// @class Material
-/// 
+///
 /// A common object to be contained by
 /// - MaterialStep ( for mapping)
 /// - MaterialProperties ( for reconstruction )
 /// - it is optimized for T/P split
-/// 
+///
 class Material
 {
 public:
   /// Accessor enums
   enum Param {
-    matX0    = 0, ///< Z0
-    matL0    = 1, ///< L0
-    matA     = 2, ///< A
-    matZ     = 3, ///< Z
-    matrho   = 4, ///< rho
-    matZ_AR  = 5  ///< Z/A*rho
+    matX0   = 0,  ///< Z0
+    matL0   = 1,  ///< L0
+    matA    = 2,  ///< A
+    matZ    = 3,  ///< Z
+    matrho  = 4,  ///< rho
+    matZ_AR = 5   ///< Z/A*rho
   };
-  
-  /// Default Constructor - vacuum material
-  Material()
-   : m_store()
-   , m_composition()
-  {}
 
-  /// Constructor with arguments 
+  /// Default Constructor - vacuum material
+  Material() : m_store(), m_composition() {}
+
+  /// Constructor with arguments
   ///
   /// @param iX0 is the radiation length parameter
   /// @param iL0 is the nuclear interaction length
@@ -198,35 +194,33 @@ public:
   /// @param iZ is the average atomic number
   /// @param iRho is the average density
   /// @param imc is the material composition
-  Material(float                iX0,
-           float                iL0,
-           float                iA,
-           float                iZ,
-           float                iRho,
-           MaterialComposition  imc = {})
-    : m_store({iX0,iL0,iA,iZ,iRho})
-    , m_composition(imc)
+  Material(float               iX0,
+           float               iL0,
+           float               iA,
+           float               iZ,
+           float               iRho,
+           MaterialComposition imc = {})
+    : m_store({iX0, iL0, iA, iZ, iRho}), m_composition(imc)
   {
-    float zOaTr = (iA > 0 ? iZ/iA * iRho : 0.);
+    float zOaTr = (iA > 0 ? iZ / iA * iRho : 0.);
     m_store.push_back(zOaTr);
   }
 
-  /// Copy Constructor 
+  /// Copy Constructor
   ///
   /// @param material copy constructor
   Material(const Material& mat)
-    : m_store(mat.m_store)
-    , m_composition(mat.m_composition)
+    : m_store(mat.m_store), m_composition(mat.m_composition)
   {
   }
 
-  /// Desctructor 
+  /// Desctructor
   ~Material() {}
-  
-  /// boolean operator to check if this is 
+
+  /// boolean operator to check if this is
   /// vacuum has 0 zero size and will indicate false
-  operator bool() const { return m_store.size(); } 
-  
+  operator bool() const { return m_store.size(); }
+
   /// Assignment operator
   ///
   /// @param mat is the source material
@@ -234,31 +228,31 @@ public:
   operator=(const Material& amc)
   {
     if (this != &amc) {
-      m_store     = amc.m_store;
+      m_store       = amc.m_store;
       m_composition = amc.m_composition;
     }
     return (*this);
   }
 
-  /// access to X0 
+  /// access to X0
   /// if it's vacuum, infinity
   float
   X0() const
   {
     if (m_store.size())
       return m_store[matX0];
-    else 
+    else
       return std::numeric_limits<float>::infinity();
   }
 
-  /// access to l0 
+  /// access to l0
   /// if it's vacuum, infinity
   float
   L0() const
   {
     if (m_store.size())
       return m_store[matL0];
-    else 
+    else
       return std::numeric_limits<float>::infinity();
   }
 
@@ -268,7 +262,7 @@ public:
   {
     if (m_store.size())
       return m_store[matA];
-    else 
+    else
       return 0.;
   }
 
@@ -278,7 +272,7 @@ public:
   {
     if (m_store.size())
       return m_store[matZ];
-    else 
+    else
       return 0.;
   }
   /// access to rho
@@ -287,20 +281,19 @@ public:
   {
     if (m_store.size())
       return m_store[matrho];
-    else 
+    else
       return 0.;
   }
-  
+
   /// access to z/A*tho
   float
   zOverAtimesRho() const
   {
-    if (m_store.size() > 4)
-      return m_store[matZ_AR];
+    if (m_store.size() > 4) return m_store[matZ_AR];
     return 0.;
   }
-  
-  /// spit out as a string 
+
+  /// spit out as a string
   std::string
   toString() const
   {
@@ -310,14 +303,13 @@ public:
     for (auto& mat : m_store) sout << mat << " | ";
     return sout.str();
   }
-  
-  private :
-    /// standard x0, l0, A, Z, rho description
-    std::vector<float>  m_store;
-    
-    /// optional composition parameter
-    MaterialComposition m_composition;
-  
+
+private:
+  /// standard x0, l0, A, Z, rho description
+  std::vector<float> m_store;
+
+  /// optional composition parameter
+  MaterialComposition m_composition;
 };
 
 }

@@ -78,7 +78,7 @@ public:
   /// @return extrapolation code to indicate progress
   ExtrapolationCode
   handleMaterial(ExCellCharged&      ecCharged,
-                 const Surface*      msurface   = nullptr, 
+                 const Surface*      msurface   = nullptr,
                  PropDirection       dir        = alongMomentum,
                  MaterialUpdateStage matupstage = fullUpdate) const final;
 
@@ -93,7 +93,7 @@ public:
   /// @return extrapolation code to indicate progress
   ExtrapolationCode
   handleMaterial(ExCellNeutral&      ecNeutral,
-                 const Surface*      msurface   = nullptr, 
+                 const Surface*      msurface   = nullptr,
                  PropDirection       dir        = alongMomentum,
                  MaterialUpdateStage matupstage = fullUpdate) const final;
 
@@ -128,21 +128,21 @@ private:
 
   ///  charged extrapolation
   ///  depending on the MaterialUpdateStage:
-  /// 
+  ///
   /// @param eCell the charged estrapolation cell
-  /// @param mSurface the surface 
+  /// @param mSurface the surface
   ///    - postUpdate : creates a new unique_ptr and stores them as step
   /// parameters
   ///    - preUpdate | fullUpdate : manipulates the parameters and returns a
   /// nullptr
   ///   nothing to do (e.g. no material) : return nullptr */
   void
-  updateTrackParameters(ExCellCharged&         eCell,
-                        const Surface&         mSurface,
-                        PropDirection          dir,
-                        MaterialUpdateStage    matupstage,
-                        const std::string&     surfaceType,
-                        size_t                 surfaceID) const;
+  updateTrackParameters(ExCellCharged&      eCell,
+                        const Surface&      mSurface,
+                        PropDirection       dir,
+                        MaterialUpdateStage matupstage,
+                        const std::string&  surfaceType,
+                        size_t              surfaceID) const;
 
   MaterialInteraction m_interactionFormulae;  //!< the formulas concentrated
   ParticleMasses      m_particleMasses;       //!< struct of Particle masses

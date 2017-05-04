@@ -41,19 +41,19 @@ class ExtrapolationMode
 {
 public:
   enum eMode {
-    Destination             = 1,  // try to hit the destination
-    Propagation             = 2,  // any propagation but destination
-    StopWithPathLimit       = 3,  // stop when the path limit is reached
-    StopWithMaterialLimitX0 = 4,  // stop when  material limit is reached in X0
-    StopWithMaterialLimitL0 = 5,  // stop when material limit is reached in L0
-    StopAtBoundary          = 6,  // stop at the next ID / Calo / MS boundary
-    CollectSensitive        = 7,  // collect parameters on sensitive elements
-    CollectPassive          = 8,  // collect parameters on passive layers
-    CollectBoundary         = 9,  // collect parameters on boundary parameters
-    CollectMaterial         = 10, // collect all material on the way
-    CollectJacobians        = 11, // collect the transport jacobians
-    CollectPathSteps        = 12, // collect the single path steps
-    AvoidFallback           = 13, // don't fallback to propagation
+    Destination             = 1,   // try to hit the destination
+    Propagation             = 2,   // any propagation but destination
+    StopWithPathLimit       = 3,   // stop when the path limit is reached
+    StopWithMaterialLimitX0 = 4,   // stop when  material limit is reached in X0
+    StopWithMaterialLimitL0 = 5,   // stop when material limit is reached in L0
+    StopAtBoundary          = 6,   // stop at the next ID / Calo / MS boundary
+    CollectSensitive        = 7,   // collect parameters on sensitive elements
+    CollectPassive          = 8,   // collect parameters on passive layers
+    CollectBoundary         = 9,   // collect parameters on boundary parameters
+    CollectMaterial         = 10,  // collect all material on the way
+    CollectJacobians        = 11,  // collect the transport jacobians
+    CollectPathSteps        = 12,  // collect the single path steps
+    AvoidFallback           = 13,  // don't fallback to propagation
     FATRAS                  = 14  // force initial radialDirection to be outward
   };
 };
@@ -67,25 +67,23 @@ public:
   /// - from bitpacked value
   ///
   /// @param evalue is the vonfiguration value
-  ExtrapolationConfig(unsigned int evalue = 0)
-     : value(evalue) {}
+  ExtrapolationConfig(unsigned int evalue = 0) : value(evalue) {}
 
   /// Constructor
   /// - from list of extrapolation modes
-  ExtrapolationConfig(const std::vector<ExtrapolationMode::eMode>& eModes )
+  ExtrapolationConfig(const std::vector<ExtrapolationMode::eMode>& eModes)
     : value(0)
   {
-    for (auto& em: eModes) addMode(em);
-  } 
+    for (auto& em : eModes) addMode(em);
+  }
 
   /// Copy Constructor
   ///
   /// @param eConfig is the source object for the copy
-  ExtrapolationConfig(const ExtrapolationConfig& eConfig)
-     : value(eConfig.value)
+  ExtrapolationConfig(const ExtrapolationConfig& eConfig) : value(eConfig.value)
   {
   }
- 
+
   /// Add a configuration mode
   /// - this sets the bit corresponding to the given mode
   ///
@@ -247,23 +245,22 @@ class ExtrapolationStep
 {
 public:
   /// the unique parameter associated to this step
-  std::unique_ptr<const T>  parameters;
+  std::unique_ptr<const T> parameters;
   /// the step position - incase parameters = nullptr
-  Vector3D                  position;
+  Vector3D position;
   /// the surface for this step
-  const Surface*            surface;
+  const Surface* surface;
   /// the bitset configuration of this step
-  ExtrapolationConfig       configuration;
+  ExtrapolationConfig configuration;
   /// the material properties found in this step
   const MaterialProperties* material;
   /// the applied material scaling due to incident
-  double                    materialScaling;
+  double materialScaling;
   /// uniquely associated transprt jacobian matrix
-  std::unique_ptr<const TransportJacobian> 
-                            transportJacobian;
-  double                    pathLength;
+  std::unique_ptr<const TransportJacobian> transportJacobian;
+  double                                   pathLength;
   /// the converted timing info
-  float                     time;
+  float time;
 
   /// Constructor for an extrapolation step
   ///
@@ -273,25 +270,24 @@ public:
   /// @param mprop the material properties associated
   /// @param tjac the transport jacobian
   /// @param pLength the path length of the step
-  ExtrapolationStep(std::unique_ptr<const T>  pars                   = nullptr,
-                    const Surface*            sf                     = nullptr,
-                    ExtrapolationConfig       eConfig                = ExtrapolationConfig(),
-                    const MaterialProperties* mprop                  = nullptr,
+  ExtrapolationStep(std::unique_ptr<const T>  pars    = nullptr,
+                    const Surface*            sf      = nullptr,
+                    ExtrapolationConfig       eConfig = ExtrapolationConfig(),
+                    const MaterialProperties* mprop   = nullptr,
                     std::unique_ptr<const TransportJacobian> tjac    = nullptr,
-                    double pLength = 0.)
+                    double                                   pLength = 0.)
     : parameters(std::move(pars))
-    , position()                  
+    , position()
     , surface(sf)
     , configuration(eConfig)
     , material(mprop)
     , materialScaling(1.)
     , transportJacobian(std::move(tjac))
     , pathLength(pLength)
-    , time(0.)                
+    , time(0.)
   {
     // fill the position if you can
-    if (parameters) 
-      position = parameters->position();
+    if (parameters) position = parameters->position();
   }
 };
 
@@ -459,12 +455,12 @@ public:
   onLastBoundary() const
   {
     return (leadParameters == lastBoundaryParameters);
-  }  
+  }
   /// Fill a step with transport
   /// -> attach parameter of a transport step
   /// -> jacobians need to be cleared
-  ///      
-  /// @param stepParamters is the new unique parameter of the step     
+  ///
+  /// @param stepParamters is the new unique parameter of the step
   /// @param fillModes are the different indications of the step
   /// @param pathLength is the path length of this step
   /// @param tjac is the transport jacobian of the step
@@ -475,16 +471,16 @@ public:
                 std::unique_ptr<const TransportJacobian> tjac       = nullptr);
 
   /// Fill a step without transport
-  /// -> desinged for material               
-  /// -> attach material parameters                
+  /// -> desinged for material
+  /// -> attach material parameters
   ///
-  /// @param stepParameters are the (new) created parameters 
+  /// @param stepParameters are the (new) created parameters
   ///        this is to be set as a nullptr if material update
   ///        is not performed
   /// @param stepPosition is the poistion where the material update
-  ///        is performed (localisation if stepParameters are nullptr)                                          
+  ///        is performed (localisation if stepParameters are nullptr)
   /// @param stepSurface is the surface where the material update
-  ///        is perfomred              
+  ///        is perfomred
   /// @param stepFactor is the scaling factor due to incidnet
   /// @param mprop are the material properties recorded
   void
@@ -568,7 +564,7 @@ public:
     }
   }
 
-  // check whether the propagation stays compatible 
+  // check whether the propagation stays compatible
   // with the initial radial direction
   bool
   checkRadialCompatibility() const

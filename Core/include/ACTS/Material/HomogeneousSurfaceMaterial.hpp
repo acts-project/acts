@@ -28,35 +28,35 @@ namespace Acts {
 class HomogeneousSurfaceMaterial : public SurfaceMaterial
 {
 public:
-  /// Default Constructor - deleted 
+  /// Default Constructor - deleted
   HomogeneousSurfaceMaterial() = delete;
 
-  /// Explizit constructor 
+  /// Explizit constructor
   ///
-  /// @param fullmat are the full material properties 
+  /// @param fullmat are the full material properties
   /// @param splitFactor is the split for pre/post update
   HomogeneousSurfaceMaterial(const MaterialProperties& fullmat,
-                             double splitFactor = 1.);
+                             double                    splitFactor = 1.);
 
-  /// Copy Constructor 
+  /// Copy Constructor
   ///
-  /// @param hsm is the source material                                                       
+  /// @param hsm is the source material
   HomogeneousSurfaceMaterial(const HomogeneousSurfaceMaterial& hsm);
 
-  /// Destructor 
+  /// Destructor
   virtual ~HomogeneousSurfaceMaterial();
 
   /// Pseudo-Constructor clone(
   HomogeneousSurfaceMaterial*
   clone() const final override;
 
-  /// Assignment operator 
+  /// Assignment operator
   HomogeneousSurfaceMaterial&
   operator=(const HomogeneousSurfaceMaterial& lmp);
 
   /// Scale operator
-  /// - it is effectively a thickness scaling 
-  /// 
+  /// - it is effectively a thickness scaling
+  ///
   /// @param scale is the scale factor
   HomogeneousSurfaceMaterial&
   operator*=(double scale) final override;
@@ -75,7 +75,7 @@ public:
 
   /// @copydoc SurfaceMaterial::material(size_t, size_t)
   ///
-  /// @note the input parameter is ignored  
+  /// @note the input parameter is ignored
   virtual const MaterialProperties*
   material(size_t ib0, size_t ib1) const final override;
 

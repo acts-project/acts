@@ -54,7 +54,7 @@ Acts::DiscLayer::DiscLayer(const Acts::DiscLayer&   dlay,
 {
   // associate the layer with the layer surface
   DiscSurface::associateLayer(*this);
-  // create an approach descriptor if a surface array is present 
+  // create an approach descriptor if a surface array is present
   if (m_surfaceArray) buildApproachDescriptor();
   // register the layer to the approach descriptor
   if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
@@ -109,7 +109,7 @@ Acts::DiscLayer::buildApproachDescriptor()
     m_approachDescriptor
         = std::make_unique<GenericApproachDescriptor<const Surface>>(aSurfaces);
   }
-  // @todo check if we can give the layer at curface creation 
+  // @todo check if we can give the layer at curface creation
   for (auto& sfPtr : (m_approachDescriptor->containedSurfaces())) {
     if (sfPtr) {
       auto& mutableSf = *(const_cast<Surface*>(sfPtr));

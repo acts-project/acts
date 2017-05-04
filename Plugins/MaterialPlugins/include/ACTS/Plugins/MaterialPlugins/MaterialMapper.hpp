@@ -16,9 +16,9 @@
 #include <map>
 #include <utility>
 #include "ACTS/Extrapolation/IExtrapolationEngine.hpp"
+#include "ACTS/Plugins/MaterialPlugins/AssignedMaterialSteps.hpp"
 #include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
 #include "ACTS/Plugins/MaterialPlugins/MaterialTrackRecord.hpp"
-#include "ACTS/Plugins/MaterialPlugins/AssignedMaterialSteps.hpp"
 #include "ACTS/Plugins/MaterialPlugins/SurfaceMaterialRecord.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
@@ -37,11 +37,11 @@ class MaterialProperties;
 /// detector geometry onto the simplified ACTS geometry. It offers options to
 /// map, average and finalize the material.
 ///
-/// Preconditions are: 
+/// Preconditions are:
 /// - material steps recorded from the detailed geometry (e.g. from Geant4)
 /// - a prepared Acts::TrackingGeometry with Acts::SurfaceMaterialProxy ob
-///   surfaces when the mapping should be done  
-/// 
+///   surfaces when the mapping should be done
+///
 /// All surfaces of the TrackingGeometry with a material proxy
 /// are identified and SurfaceMaterialRecords are created.
 ///
@@ -49,9 +49,9 @@ class MaterialProperties;
 /// mapped by using the function Acts::MaterialMapper::mapMaterial(). The
 /// mapping process starts by extrapolating from the same starting
 /// point and direction as the MaterialTrackRecord through the ACTS geometry.
-/// The extrapolation engine then finds  the closest surface marked to carry  
+/// The extrapolation engine then finds  the closest surface marked to carry
 /// material (by carrying a SurfaceMaterialProxy).
-/// The material steps are then assigned to the corresponding surfaces 
+/// The material steps are then assigned to the corresponding surfaces
 /// (and the according bin) at the assigned position.
 ///
 /// Along one track in one bin of a layer the material is averaged:
@@ -61,7 +61,7 @@ class MaterialProperties;
 /// Everytime the same bin is hit, the material parameters are summed up.
 /// This information is cached in the corresponding
 /// SurfaceMaterialRecord object.
-/// 
+///
 /// In a finalization step, the SurfaceMaterialRecord bins are averaged
 /// by the number of hits per bin and the final BinnedSufaceMaterial
 /// are created.
@@ -80,23 +80,23 @@ public:
     std::shared_ptr<IExtrapolationEngine> extrapolationEngine = nullptr;
   };
 
-  /// @struct Cache 
-  /// 
+  /// @struct Cache
+  ///
   /// This is the cache object used for calling the mapping method
-  struct Cache {
-    
+  struct Cache
+  {
+
     /// object which connects the layer with its SurfaceMaterialRecord
     std::map<GeometryID, SurfaceMaterialRecord> surfaceMaterialRecords;
-    
+
     // counter in case one wants to combine output from several jobs
     size_t trackRecordCounter;
-    
+
     /// Constructor from a new map
     Cache(std::map<GeometryID, SurfaceMaterialRecord> smr)
-      : surfaceMaterialRecords(std::move(smr))
-      , trackRecordCounter(0)
-    {}
-    
+      : surfaceMaterialRecords(std::move(smr)), trackRecordCounter(0)
+    {
+    }
   };
 
   /// @brief default constructor
@@ -104,28 +104,28 @@ public:
   /// @param cfg the internal configuration object
   /// @param logger the logging instance
   MaterialMapper(const Config&           cfg,
-                  std::unique_ptr<Logger> logger
-                  = getDefaultLogger("MaterialMapper", Logging::INFO));
+                 std::unique_ptr<Logger> logger
+                 = getDefaultLogger("MaterialMapper", Logging::INFO));
 
   /// @brief destructor
   ~MaterialMapper();
 
   /// @brief helper method that creates the cache for the mapping
   ///
-  /// This method takes a TrackingGeometry, 
-  /// finds all surfaces with material proxis 
-  /// and returns you a Cache object ot be used 
+  /// This method takes a TrackingGeometry,
+  /// finds all surfaces with material proxis
+  /// and returns you a Cache object ot be used
   Cache
   materialMappingCache(const TrackingGeometry& tGeometry) const;
-  
+
   /// maps the material for the given direction(eta,phi) onto the layers of the
   /// given tracking geometry
-  /// 
+  ///
   /// @param matTrackRec the MaterialTrackRecord to be mapped
   ///
   /// @return if the mapping was successful
   bool
-  mapMaterialTrackRecord(Cache& mappingCache, 
+  mapMaterialTrackRecord(Cache&                     mappingCache,
                          const MaterialTrackRecord& matTrackRec) const;
 
   /// finds the TrackingGeometry steps associated to the material steps
@@ -133,16 +133,15 @@ public:
   /// @param materialSteps are the full geometry steps
   /// @param assignedSteps are the Tracking geometry associated points
   void
-  assignSteps(const std::vector<MaterialStep>& materialSteps,
-              std::vector< AssignedMaterialSteps >& assignedSteps) const;
-  
+  assignSteps(const std::vector<MaterialStep>&    materialSteps,
+              std::vector<AssignedMaterialSteps>& assignedSteps) const;
+
   /// creates the final surface material records
   ///
   /// @param mappingCache
-  std::map<GeometryID, SurfaceMaterial*> 
+  std::map<GeometryID, SurfaceMaterial*>
   createSurfaceMaterial(Cache& mappingCache) const;
-  
-  
+
   /// set logging instance
   ///
   /// @param logger is the unique logger instance
@@ -150,8 +149,6 @@ public:
   setLogger(std::unique_ptr<Logger> logger);
 
 private:
-  
-  
   /// finds all surfaces with SurfaceMaterialProxy of a volume
   ///
   /// @param sMap is the map to be filled
@@ -159,7 +156,7 @@ private:
   void
   collectMaterialSurfaces(std::map<GeometryID, SurfaceMaterialRecord>& sMap,
                           const TrackingVolume& tVolume) const;
-  
+
   /// check and insert
   ///
   /// @param sMap is the map to be filled
@@ -167,9 +164,7 @@ private:
   void
   checkAndInsert(std::map<GeometryID, SurfaceMaterialRecord>& sMap,
                  const Surface& surface) const;
-  
-  
-  
+
   /// standard logger method
   const Logger&
   logger() const
@@ -179,10 +174,9 @@ private:
 
   /// the configuration object
   Config m_cfg;
-  
+
   /// the logging instance
   std::unique_ptr<Logger> m_logger;
-  
 };
 }
 

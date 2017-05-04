@@ -148,7 +148,7 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
             bins2, rMin, rMax, Acts::open, Acts::binR, transform);
         // and create material proxy to mark layer for material mapping
         materialProxy
-        = std::make_shared<const SurfaceMaterialProxy>(materialBinUtil);
+            = std::make_shared<const SurfaceMaterialProxy>(materialBinUtil);
         // access the material position
         layerPos = detExtension->layerMaterialPosition();
         ACTS_VERBOSE(

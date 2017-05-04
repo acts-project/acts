@@ -191,9 +191,7 @@ public:
   RungeKuttaEngine(const Config&           rkConfig,
                    std::unique_ptr<Logger> logger
                    = getDefaultLogger("RungeKuttaEngine", Logging::INFO))
-    : m_cfg()
-    , m_rkUtils()
-    , m_logger(std::move(logger))
+    : m_cfg(), m_rkUtils(), m_logger(std::move(logger))
   {
     setConfiguration(rkConfig);
   }
@@ -214,13 +212,13 @@ public:
   ///  - InProgress (surface hit, when finalPropagation == false)
   ///  - Recovered (surface not hit, leadParameters stay untouched)
   ExtrapolationCode
-  propagate(ExCellCharged&           ecCell,
-            const Surface&           sf,
-            PropDirection            dir     = alongMomentum,
-            std::vector<ExtrapolationMode::eMode> purpose 
-              = { ExtrapolationMode::Destination },
-            const BoundaryCheck&     bcheck  = true,
-            bool                     returnCurvilinear = true) const final;
+  propagate(ExCellCharged&                        ecCell,
+            const Surface&                        sf,
+            PropDirection                         dir = alongMomentum,
+            std::vector<ExtrapolationMode::eMode> purpose
+            = {ExtrapolationMode::Destination},
+            const BoundaryCheck& bcheck            = true,
+            bool                 returnCurvilinear = true) const final;
 
   /// Main Neutral extrapolation method
   ///
@@ -238,13 +236,13 @@ public:
   ///  - InProgress (surface hit, when finalPropagation == false)
   ///  - Recovered (surface not hit, leadParameters stay untouched)
   ExtrapolationCode
-  propagate(ExCellNeutral&           enCell,
-            const Surface&           sf,
-            PropDirection            dir     = alongMomentum,
-            std::vector<ExtrapolationMode::eMode> purpose 
-              = { ExtrapolationMode::Destination },
-            const BoundaryCheck&     bcheck  = true,
-            bool                     returnCurvilinear = true) const final;
+  propagate(ExCellNeutral&                        enCell,
+            const Surface&                        sf,
+            PropDirection                         dir = alongMomentum,
+            std::vector<ExtrapolationMode::eMode> purpose
+            = {ExtrapolationMode::Destination},
+            const BoundaryCheck& bcheck            = true,
+            bool                 returnCurvilinear = true) const final;
 
   /// Set configuration method
   ///

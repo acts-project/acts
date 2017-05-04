@@ -8,9 +8,9 @@
 
 ///  Boost include(s)
 #define BOOST_TEST_MODULE Material Tests
+#include "ACTS/Material/Material.hpp"
 #include <boost/test/included/unit_test.hpp>
 #include <climits>
-#include "ACTS/Material/Material.hpp"
 
 namespace Acts {
 
@@ -87,18 +87,15 @@ namespace Test {
     //  totalFraction += eFraction.fraction();
     // BOOST_CHECK_CLOSE(1., totalFraction, 2*elMaxTolerance);
   }
-  
+
   BOOST_AUTO_TEST_CASE(Material_boolean_test)
   {
-    
+
     Material vacuum;
     BOOST_CHECK_EQUAL(bool(vacuum), false);
-    
-    Material something(1.,2.,3.,4.,5);
+
+    Material something(1., 2., 3., 4., 5);
     BOOST_CHECK_EQUAL(bool(something), true);
-    
-    
   }
-  
 }
 }

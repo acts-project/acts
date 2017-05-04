@@ -32,29 +32,29 @@ class SurfaceMaterialProxy : public SurfaceMaterial
 public:
   /// Constructor without BinUtility - homogenous material
   SurfaceMaterialProxy();
-  
+
   /// Constructor with BinUtility - multidimensional material
-  /// 
+  ///
   /// @param binUtility a BinUtility determining the granularity
   ///        and binning of the material on the surface/layer
   SurfaceMaterialProxy(const BinUtility& binUtility);
-  
+
   /// Copy constuctor
   SurfaceMaterialProxy(const SurfaceMaterialProxy& smproxy);
-  
+
   /// Destructor
   virtual ~SurfaceMaterialProxy() = default;
-  
+
   /// Implicit constructor
   /// - uses the copy constructor
   SurfaceMaterialProxy*
   clone() const final override;
-  
+
   /// Scale operator
   virtual SurfaceMaterialProxy&
   operator*=(double scale) final override;
 
-  /// Return the BinUtility - can be nullptr 
+  /// Return the BinUtility - can be nullptr
   const BinUtility*
   binUtility() const;
 
@@ -62,7 +62,7 @@ public:
   /// coordinates
   ///
   /// @param lp is local positioning vector
-  /// 
+  ///
   /// @return will return dummy material
   virtual const MaterialProperties*
   material(const Vector2D& lp) const final override;
@@ -71,16 +71,16 @@ public:
   /// global coordinates
   ///
   /// @param gp is the global positioning vector
-  /// 
+  ///
   /// @return will return dummy material
   virtual const MaterialProperties*
   material(const Vector3D& gp) const final override;
 
   /// Direct access via bins to the MaterialProperties
-  /// 
+  ///
   /// @param ib0 indicates the first bin
   /// @param ib1 indicates the seconf bin
-  /// 
+  ///
   /// @return will return dummy material
   virtual const MaterialProperties*
   material(size_t ib0, size_t ib1) const final override;
@@ -88,16 +88,15 @@ public:
   /// Output Method for std::ostream, to be overloaded by child classes
   virtual std::ostream&
   dump(std::ostream& sl) const final override;
-  
+
 private:
-  /// two dimensional BinUtility determining 
+  /// two dimensional BinUtility determining
   /// the granularity and binning of the
   /// material on the surface/layer
-  std::unique_ptr<BinUtility>   m_binUtility;
-  
-  /// Dummy material properties
-  MaterialProperties            m_materialProperties;
+  std::unique_ptr<BinUtility> m_binUtility;
 
+  /// Dummy material properties
+  MaterialProperties m_materialProperties;
 };
 }
 

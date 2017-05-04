@@ -48,7 +48,7 @@ public:
   /// @return extrapolation code to indicate the progress
   virtual ExtrapolationCode
   handleMaterial(ExCellCharged&      ecCharged,
-                 const Surface*      msurface   = nullptr, 
+                 const Surface*      msurface   = nullptr,
                  PropDirection       dir        = alongMomentum,
                  MaterialUpdateStage matupstage = fullUpdate) const = 0;
 
@@ -62,7 +62,7 @@ public:
   /// @return extrapolation code to indicate the progress
   virtual ExtrapolationCode
   handleMaterial(ExCellNeutral&      ecNeutral,
-                 const Surface*      msurface   = nullptr, 
+                 const Surface*      msurface   = nullptr,
                  PropDirection       dir        = alongMomentum,
                  MaterialUpdateStage matupstage = fullUpdate) const = 0;
 

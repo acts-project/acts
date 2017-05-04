@@ -79,7 +79,7 @@ Acts::PlaneLayer::buildApproachDescriptor()
     auto& mutableSf = *(const_cast<Surface*>(sfPtr));
     mutableSf.associateLayer(*this);
   }
-  // @todo check if we can provide the layer at surface creation 
+  // @todo check if we can provide the layer at surface creation
   m_approachDescriptor
       = std::make_unique<GenericApproachDescriptor<const Surface>>(aSurfaces);
 }

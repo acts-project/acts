@@ -53,66 +53,72 @@ public:
 
     /// Default constructor creating a position at the origin
     Position() : x(0.), y(0.), z(0.) {}
-    
+
     /// Constructor to set the three coordinates
     Position(double x, double y, double z) : x(x), y(y), z(z) {}
-    
+
     /// Copy Constructor
     Position(const Position& pos) : x(pos.x), y(pos.y), z(pos.z) {}
 
 #if !defined(__CLING__)
     /// Constructor from Vector3D
     Position(const Vector3D& pos) : x(pos.x()), y(pos.y()), z(pos.z()) {}
-       
+
     /// assignment operator from Vector3D
-    Position& operator=(const Vector3D& pos)
-    { x = pos.x(); y = pos.y(); z = pos.z(); return (*this); }
+    Position&
+    operator=(const Vector3D& pos)
+    {
+      x = pos.x();
+      y = pos.y();
+      z = pos.z();
+      return (*this);
+    }
 #endif
-    
   };
-  
+
   /// Default constructor
   /// setting the position to the origin and making default material properties
   MaterialStep();
-  
+
   /// Constructor to set th material properties at a certain position
   /// @param mat the material properties (material + step length) at the given
   /// position
   /// @param pos three dimensional global position of the step
   MaterialStep(const MaterialProperties& mat, const Position& pos);
-  
+
   /// Copy Constructor
   MaterialStep(const MaterialStep& mstep);
-  
+
   /// Implicit contructor
   /// - uses the copy constructor
   MaterialStep*
   clone() const;
-  
+
   /// Default Destructor
   ~MaterialStep() = default;
-  
+
   /// Assignment operator
   MaterialStep&
   operator=(const MaterialStep& mstep);
-  
+
   /// return method for the position of the step
   const Position
   position() const;
-  
+
   /// return method for the material properties
-  const MaterialProperties& materialProperties() const;
+  const MaterialProperties&
+  materialProperties() const;
 
 private:
   /// the global three dimensional position of the material step
   Position m_position;
-  
+
   /// the accumulated material of the step containing the material and the step
   /// length
   MaterialProperties m_material;
 };
 
-} /// end of namespace
+}  /// end of namespace
 
 inline const Acts::MaterialStep::Position
 Acts::MaterialStep::position() const

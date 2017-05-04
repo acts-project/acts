@@ -29,7 +29,8 @@ Acts::MaterialEffectsEngine::MaterialEffectsEngine(
 
 // destructor
 Acts::MaterialEffectsEngine::~MaterialEffectsEngine()
-{}
+{
+}
 
 // configuration
 void
@@ -53,32 +54,34 @@ Acts::MaterialEffectsEngine::setLogger(std::unique_ptr<Logger> newLogger)
 Acts::ExtrapolationCode
 Acts::MaterialEffectsEngine::handleMaterial(
     ExCellNeutral&      eCell,
-    const Surface*      surface,  
+    const Surface*      surface,
     PropDirection       dir,
     MaterialUpdateStage matupstage) const
 {
   // parameters are the lead parameters
   // by definition the material surface is the one the parametrs are on
-  const Surface& mSurface = surface ?
-       (*surface) : eCell.leadParameters->referenceSurface();
+  const Surface& mSurface
+      = surface ? (*surface) : eCell.leadParameters->referenceSurface();
   size_t approachID  = mSurface.geoID().value(GeometryID::approach_mask);
   size_t sensitiveID = mSurface.geoID().value(GeometryID::sensitive_mask);
   // approach of sensitive
   std::string surfaceType = sensitiveID ? "sensitive" : "surface";
-  size_t surfaceID   = sensitiveID ? sensitiveID : approachID;
+  size_t      surfaceID   = sensitiveID ? sensitiveID : approachID;
   // go on if you have material associated
   if (mSurface.associatedMaterial()) {
     // screen output
     EX_MSG_DEBUG(
         ++eCell.navigationStep,
-        surfaceType, surfaceID,
+        surfaceType,
+        surfaceID,
         "handleMaterial for neutral parameters called - collect material.");
     // path correction
     double pathCorrection = fabs(mSurface.pathCorrection(
         eCell.leadParameters->position(), eCell.leadParameters->momentum()));
     // screen output
     EX_MSG_VERBOSE(eCell.navigationStep,
-                   surfaceType, surfaceID,
+                   surfaceType,
+                   surfaceID,
                    "material update with corr factor = " << pathCorrection);
     // get the actual material bin
     const MaterialProperties* materialProperties
@@ -89,14 +92,15 @@ Acts::MaterialEffectsEngine::handleMaterial(
       // thickness in X0
       double thicknessInX0 = materialProperties->thicknessInX0();
       EX_MSG_VERBOSE(eCell.navigationStep,
-                     surfaceType, surfaceID,
+                     surfaceType,
+                     surfaceID,
                      "collecting material of [t/X0] = " << thicknessInX0);
       // fill in the step material
       eCell.stepMaterial(nullptr,
                          eCell.leadParameters->position(),
                          mSurface,
                          pathCorrection,
-                         materialProperties);      
+                         materialProperties);
     }
   }
   // only in case of post update it should not return InProgress
@@ -107,32 +111,30 @@ Acts::MaterialEffectsEngine::handleMaterial(
 Acts::ExtrapolationCode
 Acts::MaterialEffectsEngine::handleMaterial(
     ExCellCharged&      eCell,
-    const Surface*      surface,  
+    const Surface*      surface,
     PropDirection       dir,
     MaterialUpdateStage matupstage) const
 {
 
   // parameters are the lead parameters
   // by definition the material surface is the one the parametrs are on
-  const Surface& mSurface = surface ?
-       (*surface) : eCell.leadParameters->referenceSurface();
+  const Surface& mSurface
+      = surface ? (*surface) : eCell.leadParameters->referenceSurface();
   size_t approachID  = mSurface.geoID().value(GeometryID::approach_mask);
   size_t sensitiveID = mSurface.geoID().value(GeometryID::sensitive_mask);
   // approach of sensitive
   std::string surfaceType = sensitiveID ? "sensitive" : "surface";
-  size_t surfaceID   = sensitiveID ? sensitiveID : approachID;
+  size_t      surfaceID   = sensitiveID ? sensitiveID : approachID;
   // go on if you have material to deal with
   if (mSurface.associatedMaterial()) {
-      EX_MSG_DEBUG(++eCell.navigationStep,
-        surfaceType, surfaceID,
+    EX_MSG_DEBUG(
+        ++eCell.navigationStep,
+        surfaceType,
+        surfaceID,
         "handleMaterial for charged parameters called - apply correction.");
     // update the track parameters
-    updateTrackParameters(eCell,
-                          mSurface,
-                          dir,
-                          matupstage,
-                          surfaceType,
-                          surfaceID);
+    updateTrackParameters(
+        eCell, mSurface, dir, matupstage, surfaceType, surfaceID);
   }
   // only in case of post update it should not return InProgress
   return ExtrapolationCode::InProgress;
@@ -141,12 +143,12 @@ Acts::MaterialEffectsEngine::handleMaterial(
 // update method for charged extrapolation
 void
 Acts::MaterialEffectsEngine::updateTrackParameters(
-    ExCellCharged&         eCell,
-    const Surface&         mSurface, 
-    PropDirection          dir,
-    MaterialUpdateStage    matupstage,
-    const std::string&     surfaceType,
-    size_t                 surfaceID) const
+    ExCellCharged&      eCell,
+    const Surface&      mSurface,
+    PropDirection       dir,
+    MaterialUpdateStage matupstage,
+    const std::string&  surfaceType,
+    size_t              surfaceID) const
 {
   // return if you have nothing to do
   if (!mSurface.associatedMaterial()) return;
@@ -157,10 +159,11 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
       mSurface.pathCorrection(mParameters.position(), mParameters.momentum()));
   // screen output
   EX_MSG_VERBOSE(eCell.navigationStep,
-                 surfaceType, surfaceID,
+                 surfaceType,
+                 surfaceID,
                  "material update with corr factor = " << pathCorrection);
   // get the actual material bin
-  // @todo - check consistency/speed for local 2D lookup rather than 3D                
+  // @todo - check consistency/speed for local 2D lookup rather than 3D
   const MaterialProperties* materialProperties
       = mSurface.associatedMaterial()->material(mParameters.position());
   // check if anything should be done
@@ -218,11 +221,11 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
       (*uCovariance)(ePHI, ePHI) += sign * sigmaDeltaPhiSq;
       (*uCovariance)(eTHETA, eTHETA) += sign * sigmaDeltaThetaSq;
     }
-    // 
-    EX_MSG_VERBOSE(
-        eCell.navigationStep,
-        surfaceType, surfaceID,
-        "material update needed create new parameters.");
+    //
+    EX_MSG_VERBOSE(eCell.navigationStep,
+                   surfaceType,
+                   surfaceID,
+                   "material update needed create new parameters.");
     // these are newly created
     auto stepParameters = std::make_unique<const BoundParameters>(
         std::move(uCovariance), uParameters, mSurface);
@@ -234,10 +237,11 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
                        mSurface,
                        pathCorrection,
                        materialProperties);
-                       
+
     // fill it into the extrapolation cache
     EX_MSG_VERBOSE(eCell.navigationStep,
-                   surfaceType, surfaceID,
+                   surfaceType,
+                   surfaceID,
                    "collecting material of [t/X0] = " << thicknessInX0);
   }
   return;

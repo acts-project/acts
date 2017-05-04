@@ -36,7 +36,7 @@ class MaterialTrackRecord
 public:
   /// default constructor
   MaterialTrackRecord() = default;
-  
+
   /// Constructor handing over all the relevant parameters for the material
   /// track
   /// @param startPos three dimensional global start position of the track
@@ -51,33 +51,33 @@ public:
                       std::vector<MaterialStep>     materialSteps);
   /// Copy constructor
   MaterialTrackRecord(const MaterialTrackRecord& mtrecord);
-  
+
   /// Implicit contructor
   /// - uses the copy constructor
   const MaterialTrackRecord*
   clone() const;
-  
+
   /// Default destructor
   ~MaterialTrackRecord() = default;
-  
+
   /// Assignment operator
   ///
   /// @param mtrechord is the source object
   MaterialTrackRecord&
   operator=(const MaterialTrackRecord& mtrecord);
-  
+
   ///@return the polar angle theta for the track
   double
   theta() const;
-  
+
   ///@return returns the azimuthal angle phi for the track
   double
   phi() const;
-  
+
   ///@returns the start position of the track
   const MaterialStep::Position
   position() const;
-  
+
   ///@return returns the accumalted material steps along the track
   std::vector<MaterialStep>
   materialSteps() const;

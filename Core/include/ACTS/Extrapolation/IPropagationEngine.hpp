@@ -55,13 +55,13 @@ public:
   ///  - InProgress (surface hit, when finalPropagation == false)
   ///  - Recovered (surface not hit, leadParameters stay untouched)
   virtual ExtrapolationCode
-  propagate(ExCellCharged&           ecCell,
-            const Surface&           sf,
-            PropDirection            dir     = alongMomentum,
+  propagate(ExCellCharged&                        ecCell,
+            const Surface&                        sf,
+            PropDirection                         dir = alongMomentum,
             std::vector<ExtrapolationMode::eMode> purpose
-               = { ExtrapolationMode::Destination },
-            const BoundaryCheck&     bcheck    = true,
-            bool                     returnCurvilinear = true) const = 0;
+            = {ExtrapolationMode::Destination},
+            const BoundaryCheck& bcheck            = true,
+            bool                 returnCurvilinear = true) const = 0;
 
   /// Main Neutral extrapolation method
   ///
@@ -79,13 +79,13 @@ public:
   ///  - InProgress (surface hit, when finalPropagation == false)
   ///  - Recovered (surface not hit, leadParameters stay untouched)
   virtual ExtrapolationCode
-  propagate(ExCellNeutral&           enCell,
-            const Surface&           sf,
-            PropDirection            dir     = alongMomentum,
+  propagate(ExCellNeutral&                        enCell,
+            const Surface&                        sf,
+            PropDirection                         dir = alongMomentum,
             std::vector<ExtrapolationMode::eMode> purpose
-               = { ExtrapolationMode::Destination },
-            const BoundaryCheck&     bcheck  = true,
-            bool                     returnCurvilinear = true) const = 0;
+            = {ExtrapolationMode::Destination},
+            const BoundaryCheck& bcheck            = true,
+            bool                 returnCurvilinear = true) const = 0;
 
 protected:
   std::string m_sopPrefix;   ///< prefix for screen output

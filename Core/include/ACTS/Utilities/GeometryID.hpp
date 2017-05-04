@@ -105,7 +105,7 @@ public:
   /// @param mask is the mask to be applied
   geo_id_value
   value(geo_id_value mask = 0) const;
-  
+
 private:
   geo_id_value m_value;
 };

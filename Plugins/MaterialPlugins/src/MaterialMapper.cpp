@@ -11,26 +11,26 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Plugins/MaterialPlugins/MaterialMapper.hpp"
+#include <climits>
+#include "ACTS/Detector/TrackingGeometry.hpp"
+#include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/EventData/NeutralParameters.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Extrapolation/ExtrapolationCell.hpp"
 #include "ACTS/Layers/Layer.hpp"
+#include "ACTS/Material/BinnedSurfaceMaterial.hpp"
+#include "ACTS/Material/SurfaceMaterial.hpp"
+#include "ACTS/Material/SurfaceMaterialProxy.hpp"
 #include "ACTS/Plugins/MaterialPlugins/SurfaceMaterialRecord.hpp"
-#include "ACTS/Detector/TrackingGeometry.hpp"
-#include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
-#include "ACTS/Utilities/Helpers.hpp"
 #include "ACTS/Utilities/GeometryObjectSorter.hpp"
-#include "ACTS/Material/SurfaceMaterialProxy.hpp"
-#include "ACTS/Material/SurfaceMaterial.hpp"
-#include "ACTS/Material/BinnedSurfaceMaterial.hpp"
-#include <climits>
+#include "ACTS/Utilities/Helpers.hpp"
 
 Acts::MaterialMapper::MaterialMapper(const Config&           cfg,
-                                       std::unique_ptr<Logger> log)
+                                     std::unique_ptr<Logger> log)
   : m_cfg(cfg), m_logger(std::move(log))
 {
   // check if extrapolation engine is given
@@ -60,15 +60,15 @@ Acts::MaterialMapper::materialMappingCache(
   std::map<GeometryID, SurfaceMaterialRecord> sMap;
   // fill it
   collectMaterialSurfaces(sMap, *world);
-  
-  ACTS_DEBUG(sMap.size() <<  " Surfaces with PROXIES collected ... ");
+
+  ACTS_DEBUG(sMap.size() << " Surfaces with PROXIES collected ... ");
   for (auto& smg : sMap) {
-    //print out the information
-    size_t volumeID  = smg.first.value(GeometryID::volume_mask);
-    size_t layerID   = smg.first.value(GeometryID::layer_mask);
-    ACTS_VERBOSE(" -> Surface in volume " << volumeID 
-                         << " for layer " << layerID);
-  }  
+    // print out the information
+    size_t volumeID = smg.first.value(GeometryID::volume_mask);
+    size_t layerID  = smg.first.value(GeometryID::layer_mask);
+    ACTS_VERBOSE(" -> Surface in volume " << volumeID << " for layer "
+                                          << layerID);
+  }
   // return it
   return MaterialMapper::Cache(sMap);
 }
@@ -134,17 +134,18 @@ Acts::MaterialMapper::mapMaterialTrackRecord(
           // geo ID from the surface
           GeometryID assignID = es.surface->geoID();
           // more screen output for debugging
-          ACTS_VERBOSE("Material proxy found on surface with ID " << assignID.value());
+          ACTS_VERBOSE("Material proxy found on surface with ID "
+                       << assignID.value());
           // collect the assigned ones
           assignedSteps.push_back(AssignedMaterialSteps(assignID, es.position));
         }
-      } // loop over extrapolationsteps
-    } // extrapolation success
+      }  // loop over extrapolationsteps
+    }    // extrapolation success
 
     // now check how many have been assigned
     ACTS_VERBOSE("[+] Selected " << assignedSteps.size() << " for mapping.")
-    
-  } // stepCollection
+
+  }  // stepCollection
 
   // run the step assignment
   assignSteps(materialSteps, assignedSteps);
@@ -153,34 +154,39 @@ Acts::MaterialMapper::mapMaterialTrackRecord(
   for (auto& aSteps : assignedSteps) {
     /// panic if the assignedGeoID is not in the mappingCache
     if (mappingCache.surfaceMaterialRecords.find(aSteps.assignedGeoID)
-        == mappingCache.surfaceMaterialRecords.end()){
+        == mappingCache.surfaceMaterialRecords.end()) {
       // that deserves a WARNING
-      ACTS_WARNING("[-] Material surface with " 
-                   <<  aSteps.assignedGeoID.value() << " not found in cache.");
+      ACTS_WARNING("[-] Material surface with " << aSteps.assignedGeoID.value()
+                                                << " not found in cache.");
       continue;
-      
+
     } else
-    mappingCache.surfaceMaterialRecords[aSteps.assignedGeoID].assignMaterialSteps(aSteps);
+      mappingCache.surfaceMaterialRecords[aSteps.assignedGeoID]
+          .assignMaterialSteps(aSteps);
   }
-  
+
   return true;
 }
 
-std::map<Acts::GeometryID, Acts::SurfaceMaterial*> 
-Acts::MaterialMapper::createSurfaceMaterial(Cache& mappingCache) const 
+std::map<Acts::GeometryID, Acts::SurfaceMaterial*>
+Acts::MaterialMapper::createSurfaceMaterial(Cache& mappingCache) const
 {
   // the return map for the surface material
   std::map<GeometryID, SurfaceMaterial*> surfaceMaterialMap;
   ACTS_DEBUG("Creating material maps for surfaces");
-  // let's loop over the surface material records and create the corresponding maps
-  for (auto& smr : mappingCache.surfaceMaterialRecords){
+  // let's loop over the surface material records and create the corresponding
+  // maps
+  for (auto& smr : mappingCache.surfaceMaterialRecords) {
     // get the corresponding GeometryID
     GeometryID surfaceID = smr.first;
     // some more screen output
     ACTS_DEBUG(" -> Volume | Layer | Approach | Sensitive  "
-               << surfaceID.value(GeometryID::volume_mask) << " | "
-               << surfaceID.value(GeometryID::layer_mask)  << " | "
-               << surfaceID.value(GeometryID::approach_mask) << " | "
+               << surfaceID.value(GeometryID::volume_mask)
+               << " | "
+               << surfaceID.value(GeometryID::layer_mask)
+               << " | "
+               << surfaceID.value(GeometryID::approach_mask)
+               << " | "
                << surfaceID.value(GeometryID::sensitive_mask));
     // get the BinUtility
     const BinUtility& bUtility = smr.second.binUtility();
@@ -190,31 +196,33 @@ Acts::MaterialMapper::createSurfaceMaterial(Cache& mappingCache) const
     size_t bins0 = bUtility.bins(0);
     size_t bins1 = bUtility.bins(1);
     // even more screen output
-    ACTS_VERBOSE(" -> Material matrix with [ " << bins0 << " x " <<  bins1 << " ] bins" );
+    ACTS_VERBOSE(" -> Material matrix with [ " << bins0 << " x " << bins1
+                                               << " ] bins");
     // prepare the matrix
-    MaterialPropertiesVector mVector(bins0,nullptr);
-    MaterialPropertiesMatrix mMatrix(bins1,mVector);
+    MaterialPropertiesVector mVector(bins0, nullptr);
+    MaterialPropertiesMatrix mMatrix(bins1, mVector);
     // fill the matrix
-    for (size_t i1 = 0; i1 < bins1; ++i1){
-      for (size_t i0 = 0; i0 < bins0; ++i0 ){
+    for (size_t i1 = 0; i1 < bins1; ++i1) {
+      for (size_t i0 = 0; i0 < bins0; ++i0) {
         // default is nullptr
         MaterialProperties* binMaterial = nullptr;
         // get what you have
         size_t mappingHits = mMaterial[i1][i0].second;
-        if (mappingHits){
+        if (mappingHits) {
           // the statistical scalor
-          double statScalor = 1./double(mappingHits);
+          double statScalor = 1. / double(mappingHits);
           // very verbose screen output
-          ACTS_VERBOSE(" --[ " << i0 << " x " << i1 << " ] has " << mappingHits << " entries");
-          // take the mapped material 
+          ACTS_VERBOSE(" --[ " << i0 << " x " << i1 << " ] has " << mappingHits
+                               << " entries");
+          // take the mapped material
           MaterialProperties matProperties = mMaterial[i1][i0].first;
-          double thickness = statScalor*matProperties.thickness();
-          double rho       = statScalor*matProperties.averageRho();
-          double A         = statScalor*matProperties.averageA();
-          double Z         = statScalor*matProperties.averageZ();
-          double tInX0     = statScalor*matProperties.thicknessInX0();
-          double tInL0     = statScalor*matProperties.thicknessInL0();
-          // recreate X0, L0 
+          double             thickness = statScalor * matProperties.thickness();
+          double             rho   = statScalor * matProperties.averageRho();
+          double             A     = statScalor * matProperties.averageA();
+          double             Z     = statScalor * matProperties.averageZ();
+          double             tInX0 = statScalor * matProperties.thicknessInX0();
+          double             tInL0 = statScalor * matProperties.thicknessInL0();
+          // recreate X0, L0
           float x0 = (thickness != 0. && tInX0 != 0.) ? thickness / tInX0 : 0.;
           float l0 = (thickness != 0. && tInL0 != 0.) ? thickness / tInL0 : 0.;
           // create the new material (with statistical weights)
@@ -224,19 +232,16 @@ Acts::MaterialMapper::createSurfaceMaterial(Cache& mappingCache) const
       }
     }
     // create surface material
-    surfaceMaterialMap[surfaceID] 
-      = new BinnedSurfaceMaterial(bUtility,
-                                  mMatrix,
-                                  0.,
-                                  mappingCache.trackRecordCounter);
+    surfaceMaterialMap[surfaceID] = new BinnedSurfaceMaterial(
+        bUtility, mMatrix, 0., mappingCache.trackRecordCounter);
   }
-  // now return the material map  
+  // now return the material map
   return surfaceMaterialMap;
 }
 
 void
 Acts::MaterialMapper::assignSteps(
-    const std::vector<MaterialStep>& materialSteps,
+    const std::vector<MaterialStep>&    materialSteps,
     std::vector<AssignedMaterialSteps>& assignedSteps) const
 {
 
@@ -244,10 +249,12 @@ Acts::MaterialMapper::assignSteps(
   // and so are the assigned steps
 
   // the iterators
-  std::vector<AssignedMaterialSteps>::iterator asIter      = assignedSteps.begin();
-  std::vector<AssignedMaterialSteps>::iterator asIterFlush = assignedSteps.begin();
-  std::vector<AssignedMaterialSteps>::iterator asIterLast  = assignedSteps.end()-1;
-  std::vector<AssignedMaterialSteps>::iterator asIterEnd   = assignedSteps.end();
+  std::vector<AssignedMaterialSteps>::iterator asIter = assignedSteps.begin();
+  std::vector<AssignedMaterialSteps>::iterator asIterFlush
+      = assignedSteps.begin();
+  std::vector<AssignedMaterialSteps>::iterator asIterLast
+      = assignedSteps.end() - 1;
+  std::vector<AssignedMaterialSteps>::iterator asIterEnd = assignedSteps.end();
 
   // loop over the steps
   for (auto& mStep : materialSteps) {
@@ -266,7 +273,7 @@ Acts::MaterialMapper::assignSteps(
         lDist2 = cDist2;
         // remember where you are
         asIterFlush = asIter;
-        if (asIterFlush == asIterLast){
+        if (asIterFlush == asIterLast) {
           // the last iteration point wins the step
           asIterFlush->assignedSteps.push_back(mStep);
           // just to avoid the next if
@@ -291,9 +298,9 @@ Acts::MaterialMapper::collectMaterialSurfaces(
     std::map<GeometryID, SurfaceMaterialRecord>& sMap,
     const TrackingVolume& tVolume) const
 {
-  
-  ACTS_VERBOSE("Checking volume '" << tVolume.volumeName() 
-               << "' for material surfaces.")
+
+  ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
+                                   << "' for material surfaces.")
   // check the boundary surfaces
   for (auto& bSurface : tVolume.boundarySurfaces())
     checkAndInsert(sMap, bSurface->surfaceRepresentation());
@@ -341,16 +348,14 @@ Acts::MaterialMapper::checkAndInsert(
     // we need a dynamic_cast to a surface material proxy
     auto smp = dynamic_cast<const SurfaceMaterialProxy*>(
         surface.associatedMaterial());
-    if (smp){
+    if (smp) {
       // get the geo id
-      auto geoID = surface.geoID();
+      auto   geoID    = surface.geoID();
       size_t volumeID = geoID.value(GeometryID::volume_mask);
       ACTS_VERBOSE("Material surface found with volumeID " << volumeID);
       ACTS_VERBOSE("       - surfaceID is " << geoID.value());
-      sMap[geoID]
-          = SurfaceMaterialRecord(surface, *smp->binUtility());
-
-      }
+      sMap[geoID] = SurfaceMaterialRecord(surface, *smp->binUtility());
+    }
   }
 }
 

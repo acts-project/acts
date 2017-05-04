@@ -430,13 +430,15 @@ Acts::TrackingVolume::interlinkLayers()
 }
 
 void
-Acts::TrackingVolume::closeGeometry(std::map<std::string, const TrackingVolume*>& volumeMap, size_t& vol) const
+Acts::TrackingVolume::closeGeometry(
+    std::map<std::string, const TrackingVolume*>& volumeMap,
+    size_t& vol) const
 {
-  // insert the volume into the map 
+  // insert the volume into the map
   volumeMap[volumeName()] = this;
-  
+
   // we can construct the volume ID from this
-  GeometryID  volumeID(0);
+  GeometryID volumeID(0);
   volumeID.add(++vol, GeometryID::volume_mask);
 
   // A) this is NOT a container volume, volumeID is already incremented
@@ -477,7 +479,7 @@ Acts::TrackingVolume::closeGeometry(std::map<std::string, const TrackingVolume*>
   } else {
     // B) this is a container volume, go through sub volume
     // do the loop
-  for (auto& volumesIter : m_confinedVolumes->arrayObjects())
+    for (auto& volumesIter : m_confinedVolumes->arrayObjects())
       volumesIter->closeGeometry(volumeMap, vol);
   }
 

@@ -15,8 +15,8 @@
 
 #include "ACTS/Material/BinnedSurfaceMaterial.hpp"
 #include "ACTS/Material/MaterialProperties.hpp"
-#include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
 #include "ACTS/Plugins/MaterialPlugins/AssignedMaterialSteps.hpp"
+#include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
 
 namespace Acts {
@@ -24,8 +24,8 @@ namespace Acts {
 class Surface;
 
 typedef std::pair<MaterialProperties, size_t> RecordBin;
-typedef std::vector<RecordBin>                RecordVector;
-typedef std::vector<RecordVector>             MaterialRecord;
+typedef std::vector<RecordBin>    RecordVector;
+typedef std::vector<RecordVector> MaterialRecord;
 
 /// @class SurfaceMaterialRecord
 ///
@@ -51,7 +51,7 @@ class SurfaceMaterialRecord
 {
 public:
   /// Default constructor - deleted
-  SurfaceMaterialRecord(){}
+  SurfaceMaterialRecord() {}
 
   /// Constructor with BinUtility input
   /// @param surface is the according surface of this recrd
@@ -88,11 +88,11 @@ public:
 
   /// this is the material without being averaged
   /// the averaging still has to be done in the mapper
-  /// 
+  ///
   /// @return the full MaterialRecord
   const MaterialRecord&
   mappedMaterial() const;
-  
+
 private:
   /// remember the Surface
   const Surface* m_surface;
