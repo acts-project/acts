@@ -134,5 +134,4 @@ Acts::SurfaceMaterialRecord::assignMaterialSteps(
   Material updatedMaterial(x0, l0, A, Z, rho);
   m_mappedMaterial[bin1][bin0].first 
     = MaterialProperties(updatedMaterial, thickness);
-
 }

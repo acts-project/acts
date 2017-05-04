@@ -202,8 +202,7 @@ Acts::TrackingVolume::detachedTrackingVolumes(const Vector3D& gp,
 }
 
 void
-Acts::TrackingVolume::sign(GeometrySignature geosign,
-                           GeometryType      geotype)
+Acts::TrackingVolume::sign(GeometrySignature geosign, GeometryType geotype)
 {
   // never overwrite what is already signed, that's a crime
   if (m_geometrySignature == Unsigned) m_geometrySignature = geosign;
