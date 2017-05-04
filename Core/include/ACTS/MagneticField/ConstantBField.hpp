@@ -78,29 +78,30 @@ public:
 
   /// @brief retrieve magnetic field value
   ///
-  /// @param [in]  pos  global position
+  /// @param [in] position global position
   /// @return magnetic field vector
   ///
-  /// @note The position @p pos is ignored and only kept as argument to provide
+  /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
   Vector3D
-  getField(const Vector3D& pos) const
+  getField(const Vector3D& position) const
   {
     return m_BField;
   }
 
   /// @brief retrieve magnetic field value
   ///
-  /// @param [in]  pos  global position
-  /// @param [out] deriv gradient of magnetic field vector as (3x3) matrix
+  /// @param [in]  position   global position
+  /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
   /// @return magnetic field vector
   ///
-  /// @note The position @p pos is ignored and only kept as argument to provide
+  /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
   /// @note currently the derivative is not calculated
   /// @todo return derivative
   Vector3D
-  getFieldGradient(const Vector3D& pos, ActsMatrixD<3, 3>& deriv) const
+  getFieldGradient(const Vector3D& position,
+                   ActsMatrixD<3, 3>& derivative) const
   {
     return m_BField;
   }

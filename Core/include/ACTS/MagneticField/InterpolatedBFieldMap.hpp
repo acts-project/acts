@@ -15,7 +15,7 @@
 namespace Acts {
 
 /// @ingroup MagneticField
-/// @brief interpolate magnetic field value from a given grid
+/// @brief interpolate magnetic field value from field values on a given grid
 ///
 /// This class implements a magnetic field service which is initialized by a
 /// field map defined by:
@@ -91,27 +91,28 @@ public:
 
   /// @brief retrieve magnetic field value
   ///
-  /// @param [in] pos global position
+  /// @param [in] position global 3D position
   ///
   /// @return magnetic field vector at given position
   Vector3D
-  getField(const Vector3D& pos) const
+  getField(const Vector3D& position) const
   {
-    return m_config.mapper.getField(pos);
+    return m_config.mapper.getField(position);
   }
 
   /// @brief retrieve magnetic field value
   ///
-  /// @param [in]  pos   global position
-  /// @param [out] deriv gradient of magnetic field vector as (3x3) matrix
+  /// @param [in]  position   global 3D position
+  /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
   /// @return magnetic field vector
   ///
   /// @note currently the derivative is not calculated
   /// @todo return derivative
   Vector3D
-  getFieldGradient(const Vector3D& pos, ActsMatrixD<3, 3>& deriv) const
+  getFieldGradient(const Vector3D& position,
+                   ActsMatrixD<3, 3>& derivative) const
   {
-    return m_config.mapper.getField(pos);
+    return m_config.mapper.getField(position);
   }
 
   /// @brief get global scaling factor for magnetic field

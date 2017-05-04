@@ -220,7 +220,7 @@ namespace detail {
   };
   /// @endcond
 
-  /// @brief calculate total number of bins in a grid defined by a set of axes
+  /// @brief helper functions for grid-related operations
   struct grid_helper
   {
     /// @brief retrieve bin center from set of local bin indices
@@ -254,6 +254,8 @@ namespace detail {
     /// @param  [in] axes  actual axis objects spanning the grid
     /// @return global index for bin containing the given point
     ///
+    /// @pre The given @c Point type must represent a point in d (or higher)
+    ///      dimensions where d is the number of axis objects in the tuple.
     /// @note This could be a under-/overflow bin along one or more axes.
     template <class Point, class... Axes>
     static size_t
@@ -301,7 +303,7 @@ namespace detail {
     /// @return array with local bin indices along each axis (in same order as
     ///         given @c axes object)
     ///
-    /// @note Local bin indices could be a under-/overflow bin along this axis.
+    /// @note Local bin indices can contain under-/overflow bins along any axis.
     template <class... Axes>
     static std::array<size_t, sizeof...(Axes)>
     getLocalBinIndices(size_t bin, const std::tuple<Axes...>& axes)
@@ -435,6 +437,9 @@ namespace detail {
     /// @param  [in] axes  actual axis objects spanning the grid
     /// @return @c true if \f$\text{xmin_i} \le x_i < \text{xmax}_i \forall i=0,
     ///         \dots, d-1\f$, otherwise @c false
+    ///
+    /// @pre The given @c Point type must represent a point in d (or higher)
+    ///      dimensions where d is the number of axis objects in the tuple.
     template <class Point, class... Axes>
     static bool
     isInside(const Point& position, const std::tuple<Axes...>& axes)

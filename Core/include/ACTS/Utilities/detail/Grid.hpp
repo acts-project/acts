@@ -39,6 +39,9 @@ namespace detail {
     typedef value_type&       reference;
     typedef const value_type& const_reference;
 
+    /// @brief default constructor
+    ///
+    /// @param [in] axes actual axis objects spanning the grid
     Grid(std::tuple<Axes...> axes) : m_axes(std::move(axes))
     {
       m_values.resize(size());
@@ -51,6 +54,12 @@ namespace detail {
     /// @param [in] point point used to look up the corresponding bin in the
     ///                   grid
     /// @return reference to value stored in bin containing the given point
+    ///
+    /// @pre The given @c Point type must represent a point in d (or higher)
+    ///      dimensions where d is dimensionality of the grid.
+    ///
+    /// @note The look-up considers under-/overflow bins along each axis.
+    ///       Therefore, the look-up will never fail.
     template <class Point>
     reference
     at(const Point& point)
@@ -66,6 +75,12 @@ namespace detail {
     ///                   grid
     /// @return const-reference to value stored in bin containing the given
     ///         point
+    ///
+    /// @pre The given @c Point type must represent a point in d (or higher)
+    ///      dimensions where d is dimensionality of the grid.
+    ///
+    /// @note The look-up considers under-/overflow bins along each axis.
+    ///       Therefore, the look-up will never fail.
     template <class Point>
     const_reference
     at(const Point& point) const
@@ -100,6 +115,9 @@ namespace detail {
     /// @param  [in] localBins local bin indices along each axis
     /// @return reference to value stored in bin containing the given
     ///         point
+    ///
+    /// @pre All local bin indices must be a valid index for the corresponding
+    ///      axis (including the under-/overflow bin for this axis).
     reference
     at(const std::array<size_t, DIM>& localBins)
     {
@@ -150,6 +168,8 @@ namespace detail {
     /// @param  [in] point point to look up in the grid
     /// @return global index for bin containing the given point
     ///
+    /// @pre The given @c Point type must represent a point in d (or higher)
+    ///      dimensions where d is dimensionality of the grid.
     /// @note This could be a under-/overflow bin along one or more axes.
     template <class Point>
     size_t
@@ -190,7 +210,7 @@ namespace detail {
     /// @param  [in] localBins local bin indices along each axis
     /// @return generalized lower-left bin edge position
     ///
-    /// @pre @c localBins must only contain valid bin indices (i.e. excluding
+    /// @pre @c localBins must only contain valid bin indices (excluding
     ///      under-/overflow bins).
     std::array<double, DIM>
     getLowerLeftBinEdge(const std::array<size_t, DIM>& localBins) const
@@ -203,7 +223,7 @@ namespace detail {
     /// @param  [in] localBins local bin indices along each axis
     /// @return generalized upper-right bin edge position
     ///
-    /// @pre @c localBins must only contain valid bin indices (i.e. excluding
+    /// @pre @c localBins must only contain valid bin indices (excluding
     ///      under-/overflow bins).
     std::array<double, DIM>
     getUpperRightBinEdge(const std::array<size_t, DIM>& localBins) const
@@ -221,6 +241,9 @@ namespace detail {
     ///                   lie in an under-/overflow bin along any axis.
     ///
     /// @return interpolated value at given position
+    ///
+    /// @pre The given @c Point type must represent a point in d (or higher)
+    ///      dimensions where d is dimensionality of the grid.
     ///
     /// @note This function is available only if the following conditions are
     /// fulfilled:
@@ -275,6 +298,9 @@ namespace detail {
     ///
     /// @return @c true if \f$\text{xmin_i} \le x_i < \text{xmax}_i \forall i=0,
     ///         \dots, d-1\f$, otherwise @c false
+    ///
+    /// @pre The given @c Point type must represent a point in d (or higher)
+    ///      dimensions where d is dimensionality of the grid.
     ///
     /// @post If @c true is returned, the global bin containing the given point
     ///       is a valid bin, i.e. it is neither a underflow nor an overflow bin
