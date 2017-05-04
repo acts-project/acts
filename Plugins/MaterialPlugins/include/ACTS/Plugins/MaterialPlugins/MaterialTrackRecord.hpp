@@ -10,8 +10,8 @@
 // MaterialTrackRecord.hpp, ACTS project MaterialPlugins
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_MATERIAL_MATERIALTRACKRECORD_H
-#define ACTS_MATERIAL_MATERIALTRACKRECORD_H
+#ifndef ACTS_MATERIALPLUGINS_MATERIALTRACKRECORD_H
+#define ACTS_MATERIALPLUGINS_MATERIALTRACKRECORD_H
 
 #include <vector>
 #include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
@@ -120,4 +120,4 @@ Acts::MaterialTrackRecord::materialSteps() const
   return m_materialSteps;
 }
 
-#endif  // ACTS_MATERIAL_MATERIALTRACKRECORD_H
+#endif  // ACTS_MATERIALPLUGINS_MATERIALTRACKRECORD_H

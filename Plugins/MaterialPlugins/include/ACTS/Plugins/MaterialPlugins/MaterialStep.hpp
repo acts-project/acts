@@ -10,8 +10,8 @@
 // MaterialStep.hpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_MATERIAL_MATERIALSTEP_H
-#define ACTS_MATERIAL_MATERIALSTEP_H
+#ifndef ACTS_MATERIALPLUGINS_MATERIALSTEP_H
+#define ACTS_MATERIALPLUGINS_MATERIALSTEP_H
 
 #include <memory>
 #include "ACTS/Material/MaterialProperties.hpp"
@@ -133,4 +133,4 @@ Acts::MaterialStep::materialProperties() const
   return m_material;
 }
 
-#endif  // ACTS_MATERIAL_MATERIALSTEP_H
+#endif  // ACTS_MATERIALPLUGINS_MATERIALSTEP_H

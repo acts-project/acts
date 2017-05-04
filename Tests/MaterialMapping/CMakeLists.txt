@@ -1,7 +1,5 @@
 if (BUILD_MATERIAL_PLUGIN)
   
-  find_package(ACTS COMPONENTS Core MaterialPlugin)
-  
   add_executable (MaterialMapping_tests MaterialMapping_tests.cpp)
   target_include_directories (MaterialMapping_tests PRIVATE ${Boost_INCLUDE_DIRS})
   target_link_libraries(MaterialMapping_tests PRIVATE ACTSCore ACTSMaterialPlugin)

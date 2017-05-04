@@ -11,10 +11,11 @@
 ///////////////////////////////////////////////////////////////////
 
 #ifndef ACTS_MATERIALPLUGINS_ASSIGNEDMATERIALSTEPS_H
-#define ACTS_MATERIALPLUGINS_ASSIGNEDMATERIALSTEPS_H 1
+#define ACTS_MATERIALPLUGINS_ASSIGNEDMATERIALSTEPS_H
 
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/GeometryID.hpp"
+#include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
 
 namespace Acts {
 
@@ -23,9 +24,9 @@ namespace Acts {
 struct AssignedMaterialSteps
 {
 
-  GeometryID assignedGeoID;     ///!< this is the geo ID of the assigned surface
-  Vector3D   assignedPosition;  ///!< this is the position of intersection
-  std::vector<MaterialStep> assignedSteps;  ///!< this is step information
+  GeometryID assignedGeoID;     ///< this is the geo ID of the assigned surface
+  Vector3D   assignedPosition;  ///< this is the position of intersection
+  std::vector<MaterialStep> assignedSteps;  ///< this is step information
 
   // simple constructor
   AssignedMaterialSteps(GeometryID      geoID    = GeometryID(),
@@ -37,4 +38,4 @@ struct AssignedMaterialSteps
 };
 }
 
-#endif
+#endif // ACTS_MATERIALPLUGINS_ASSIGNEDMATERIALSTEPS_H

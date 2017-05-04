@@ -11,7 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #ifndef ACTS_MATERIALPLUGINS_SURFACEMATERIALRECORD_H
-#define ACTS_MATERIALPLUGINS_SURFACEMATERIALRECORD_H 1
+#define ACTS_MATERIALPLUGINS_SURFACEMATERIALRECORD_H
 
 #include "ACTS/Material/BinnedSurfaceMaterial.hpp"
 #include "ACTS/Material/MaterialProperties.hpp"

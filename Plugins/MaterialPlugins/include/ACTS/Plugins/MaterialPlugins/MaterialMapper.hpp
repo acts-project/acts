@@ -11,7 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #ifndef ACTS_MATERIALPLUGINS_MATERIALMAPPER_H
-#define ACTS_MATERIALPLUGINS_MATERIALMAPPER_H 1
+#define ACTS_MATERIALPLUGINS_MATERIALMAPPER_H
 
 #include <map>
 #include <utility>
@@ -44,6 +44,8 @@ class MaterialProperties;
 ///
 /// All surfaces of the TrackingGeometry with a material proxy
 /// are identified and SurfaceMaterialRecords are created.
+///
+/// @todo update the following description
 ///
 /// One MaterialTrackRecord (containing all the MaterialSteps along a Track) is
 /// mapped by using the function Acts::MaterialMapper::mapMaterial(). The
