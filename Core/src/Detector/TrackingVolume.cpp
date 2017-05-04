@@ -456,7 +456,7 @@ Acts::TrackingVolume::closeGeometry(
     auto& mutableBSurface = *(const_cast<Surface*>(&bSurface));
     mutableBSurface.assignGeoID(boundaryID);
   }
-  
+
   // A) this is NOT a container volume, volumeID is already incremented
   if (!m_confinedVolumes) {
     // loop over the confined layers

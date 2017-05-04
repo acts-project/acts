@@ -17,13 +17,13 @@ namespace Acts {
 
 namespace Test {
 
-  /// we test a two-level hierarchy 
+  /// we test a two-level hierarchy
   /// every deeper level hierarchy is a a derivate of this
-  /// 
+  ///
   /// WorldVolume   with volumeID       == 1
   /// - InnerVolume with volumeID       == 2
   /// -- InnerInnerVolume with volumeID == 3
-  /// -- InnerOuterVolume with volumeID == 4 
+  /// -- InnerOuterVolume with volumeID == 4
   /// - OuterVolume with volumeID       == 5
 
   // sensitive surface definitions
@@ -33,16 +33,15 @@ namespace Test {
   double layerEnvelope      = 0.5 * Acts::units::_mm;
   double volumeEnvelope     = 10. * Acts::units::_mm;
 
-
   // inner inner volume definitions
-  double iiv_surfaceRadius      = 25. * Acts::units::_mm;
-  double iiv_volumeRadius       = iiv_surfaceRadius + 0.5 * surfaceRstagger
-                                + layerEnvelope + volumeEnvelope;
+  double iiv_surfaceRadius = 25. * Acts::units::_mm;
+  double iiv_volumeRadius  = iiv_surfaceRadius + 0.5 * surfaceRstagger
+      + layerEnvelope + volumeEnvelope;
 
   ///  inner outer volume defininitions
-  double iov_surfaceRadius      = 100. * Acts::units::_mm;
-  double iov_volumeRadius       = iov_surfaceRadius + 0.5 * surfaceRstagger
-                                + layerEnvelope + volumeEnvelope;
+  double iov_surfaceRadius = 100. * Acts::units::_mm;
+  double iov_volumeRadius  = iov_surfaceRadius + 0.5 * surfaceRstagger
+      + layerEnvelope + volumeEnvelope;
 
   ///  inner inner volume
   auto iiVolume = constructCylinderVolume(surfaceHalfLengthZ,
@@ -66,18 +65,19 @@ namespace Test {
                                           "InnerOuterVolume");
 
   // now create the Inner Container volume
-  double volumeHalfZ = (4*surfaceHalfLengthZ-surfaceZoverlap) + volumeEnvelope;
+  double volumeHalfZ
+      = (4 * surfaceHalfLengthZ - surfaceZoverlap) + volumeEnvelope;
   /// the inner volume
   auto iVolume = constructContainerVolume(iiVolume,
                                           ioVolume,
                                           iov_volumeRadius,
                                           volumeHalfZ,
                                           "InnerVolume");
-                                          
+
   // outer volume definitions
-  double ov_surfaceRadius      = 150. * Acts::units::_mm;
-  double ov_volumeRadius       = ov_surfaceRadius + 0.5 * surfaceRstagger
-                               + layerEnvelope + volumeEnvelope;
+  double ov_surfaceRadius = 150. * Acts::units::_mm;
+  double ov_volumeRadius  = ov_surfaceRadius + 0.5 * surfaceRstagger
+      + layerEnvelope + volumeEnvelope;
 
   ///  inner outer volume
   auto oVolume = constructCylinderVolume(surfaceHalfLengthZ,
@@ -94,38 +94,36 @@ namespace Test {
                                          oVolume,
                                          ov_volumeRadius,
                                          volumeHalfZ,
-                                         "WorldVolume");                                         
-                                          
+                                         "WorldVolume");
 
-  // creating a TrackingGeometry 
-  // -> closs the geometry, this should set the GeometryID 
+  // creating a TrackingGeometry
+  // -> closs the geometry, this should set the GeometryID
   TrackingGeometry tGeometry(volume);
   // get the world back
   auto world = tGeometry.highestTrackingVolume();
 
   BOOST_AUTO_TEST_CASE(GeometryID_closeGeometry_test)
   {
-    
+
     // the lambda for checking
-    auto check_vol = [] (const TrackingVolume& vol, geo_id_value geoid) -> void
-    {
-      // check the geometry id of the volume 
+    auto check_vol = [](const TrackingVolume& vol, geo_id_value geoid) -> void {
+      // check the geometry id of the volume
       BOOST_CHECK_EQUAL(geoid, vol.geoID().value(GeometryID::volume_mask));
       // check the geometry id of all boundary surfaces of the volume
       // - this is strictly only possible when glueing if OFF
-      geo_id_value bsurface_id = 0;      
+      geo_id_value bsurface_id = 0;
       for (auto bSf : vol.boundarySurfaces()) {
-         // check the bsurface volume id
-         geo_id_value bs_vol_id = bSf->surfaceRepresentation().geoID().value(
-             GeometryID::volume_mask);
-         BOOST_CHECK_EQUAL(geoid, bs_vol_id);         
-         // check the bsurface boundary id
-         geo_id_value bs_bsf_id = bSf->surfaceRepresentation().geoID().value(
-             GeometryID::boundary_mask);
-         BOOST_CHECK_EQUAL(++bsurface_id, bs_bsf_id);
+        // check the bsurface volume id
+        geo_id_value bs_vol_id = bSf->surfaceRepresentation().geoID().value(
+            GeometryID::volume_mask);
+        BOOST_CHECK_EQUAL(geoid, bs_vol_id);
+        // check the bsurface boundary id
+        geo_id_value bs_bsf_id = bSf->surfaceRepresentation().geoID().value(
+            GeometryID::boundary_mask);
+        BOOST_CHECK_EQUAL(++bsurface_id, bs_bsf_id);
       }
       // testing the layer and it's approach surfaces
-      if (vol.confinedLayers()){
+      if (vol.confinedLayers()) {
         // layers start are counted from 1 - n
         geo_id_value layer_id = 0;
         for (auto lay : vol.confinedLayers()->arrayObjects()) {
@@ -135,14 +133,17 @@ namespace Test {
           BOOST_CHECK_EQUAL(++layer_id, lay_lay_id);
           BOOST_CHECK_EQUAL(geoid, lay_vol_id);
           // test the layer approach surfaces
-          if (lay->approachDescriptor()){
+          if (lay->approachDescriptor()) {
             // approach surfacesare counted from 1 - n
             geo_id_value asurface_id = 0;
             for (auto asf : lay->approachDescriptor()->containedSurfaces()) {
-              // check the approach volume id, approach layer id, approach approach
+              // check the approach volume id, approach layer id, approach
+              // approach
               // id
-              geo_id_value asf_vol_id = asf->geoID().value(GeometryID::volume_mask);
-              geo_id_value asf_lay_id = asf->geoID().value(GeometryID::layer_mask);
+              geo_id_value asf_vol_id
+                  = asf->geoID().value(GeometryID::volume_mask);
+              geo_id_value asf_lay_id
+                  = asf->geoID().value(GeometryID::layer_mask);
               geo_id_value asf_asf_id
                   = asf->geoID().value(GeometryID::approach_mask);
               BOOST_CHECK_EQUAL(layer_id, asf_lay_id);
@@ -151,14 +152,17 @@ namespace Test {
             }
           }
           // test the sensitive surfaces
-          if (lay->surfaceArray()){
+          if (lay->surfaceArray()) {
             // sensitive surfaces are counted from 1 - n
             geo_id_value ssurface_id = 0;
             for (auto ssf : lay->surfaceArray()->arrayObjects()) {
-              // check the approach volume id, approach layer id, approach approach
+              // check the approach volume id, approach layer id, approach
+              // approach
               // id
-              geo_id_value ssf_vol_id = ssf->geoID().value(GeometryID::volume_mask);
-              geo_id_value ssf_lay_id = ssf->geoID().value(GeometryID::layer_mask);
+              geo_id_value ssf_vol_id
+                  = ssf->geoID().value(GeometryID::volume_mask);
+              geo_id_value ssf_lay_id
+                  = ssf->geoID().value(GeometryID::layer_mask);
               geo_id_value ssf_ssf_id
                   = ssf->geoID().value(GeometryID::sensitive_mask);
               BOOST_CHECK_EQUAL(layer_id, ssf_lay_id);
@@ -173,22 +177,22 @@ namespace Test {
     // get the two volumes the world is built of
     auto ioVolumes = world->confinedVolumes()->arrayObjects();
     // check the size - has to be two volumes
-    BOOST_CHECK_EQUAL(2ul,ioVolumes.size());
+    BOOST_CHECK_EQUAL(2ul, ioVolumes.size());
     // get the innermost volumes
     auto iioVolumes = ioVolumes[0]->confinedVolumes()->arrayObjects();
     // check the size - has to be two volumes
-    BOOST_CHECK_EQUAL(2ul,iioVolumes.size());
-    
+    BOOST_CHECK_EQUAL(2ul, iioVolumes.size());
+
     // check the world
-    check_vol(*world,1);
+    check_vol(*world, 1);
     // - check InnerVolume
-    check_vol(*ioVolumes[0],2);
+    check_vol(*ioVolumes[0], 2);
     // -- check the InnerInnerVolume
-    check_vol(*iioVolumes[0],3);
+    check_vol(*iioVolumes[0], 3);
     // -- check the InenerOuterVolume
-    check_vol(*iioVolumes[1],4);
+    check_vol(*iioVolumes[1], 4);
     // - check the OuterVolume
-    check_vol(*ioVolumes[1],5);
+    check_vol(*ioVolumes[1], 5);
   }
 }  //  end of namespace Test
 }  //  end of namespace Acts
