@@ -14,6 +14,8 @@
 #define ACTS_MATERIAL_MATERIAL_H
 
 #include <climits>
+#include <limits>
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
