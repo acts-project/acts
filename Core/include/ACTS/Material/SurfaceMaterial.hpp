@@ -98,11 +98,11 @@ SurfaceMaterial::factor(PropDirection pDir, MaterialUpdateStage mStage) const
 {
   if (mStage == Acts::fullUpdate) return 1.;
   return (pDir * mStage > 0 ? m_splitFactor : 1. - m_splitFactor);
-  }
+}
 
-  /// Overload of << operator for std::ostream for debug output
-  std::ostream&
-  operator<<(std::ostream& sl, const SurfaceMaterial& sm);
+/// Overload of << operator for std::ostream for debug output
+std::ostream&
+operator<<(std::ostream& sl, const SurfaceMaterial& sm);
 
 }  // end of namespace
 

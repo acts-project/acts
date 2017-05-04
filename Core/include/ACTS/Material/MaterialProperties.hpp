@@ -18,7 +18,8 @@
 // STD/STL
 #include <iostream>
 
-      namespace Acts {
+      namespace Acts
+{
 
   /// @class MaterialProperties
   ///
@@ -138,68 +139,48 @@
     Material m_material;  //!< the material
     float    m_dInX0;     //!< thickness in units of radiation length
     float    m_dInL0;     //!< thickness in units of nuclear interaction length
-};
+  };
 
-inline const Material&
-MaterialProperties::material() const
-{
-  return m_material;
-}
+  inline const Material& MaterialProperties::material() const
+  {
+    return m_material;
+  }
 
-inline float
-MaterialProperties::thicknessInX0() const
-{
-  return m_dInX0;
-}
+  inline float MaterialProperties::thicknessInX0() const { return m_dInX0; }
 
-inline float
-MaterialProperties::thicknessInL0() const
-{
-  return m_dInL0;
-}
+  inline float MaterialProperties::thicknessInL0() const { return m_dInL0; }
 
-inline float
-MaterialProperties::thickness() const
-{
-  return m_dInX0 * m_material.X0();
-}
+  inline float MaterialProperties::thickness() const
+  {
+    return m_dInX0 * m_material.X0();
+  }
 
-inline float MaterialProperties::zOverAtimesRho() const
-{
-  return m_material.zOverAtimesRho();
-}
+  inline float MaterialProperties::zOverAtimesRho() const
+  {
+    return m_material.zOverAtimesRho();
+  }
 
-inline float MaterialProperties::averageX0() const { return m_material.X0(); }
+  inline float MaterialProperties::averageX0() const { return m_material.X0(); }
 
-inline float MaterialProperties::averageL0() const { return m_material.L0(); }
+  inline float MaterialProperties::averageL0() const { return m_material.L0(); }
 
-inline float
-MaterialProperties::averageA() const
-{
-  return m_material.A();
-}
+  inline float MaterialProperties::averageA() const { return m_material.A(); }
 
-inline float
-MaterialProperties::averageZ() const
-{
-  return m_material.Z();
-}
+  inline float MaterialProperties::averageZ() const { return m_material.Z(); }
 
-// Return method for @f$ Z @f$
-inline float
-MaterialProperties::averageRho() const
-{
-  return m_material.rho();
-}
+  // Return method for @f$ Z @f$
+  inline float MaterialProperties::averageRho() const
+  {
+    return m_material.rho();
+  }
 
-// Overload of << operator for std::ostream for debug output
-std::ostream&
-operator<<(std::ostream& sl, const MaterialProperties& mprop);
+  // Overload of << operator for std::ostream for debug output
+  std::ostream& operator<<(std::ostream& sl, const MaterialProperties& mprop);
 
-// Useful typedefs
+  // Useful typedefs
 
-typedef std::vector<MaterialProperties*>       MaterialPropertiesVector;
-typedef std::vector<MaterialPropertiesVector>  MaterialPropertiesMatrix;
+  typedef std::vector<MaterialProperties*>      MaterialPropertiesVector;
+  typedef std::vector<MaterialPropertiesVector> MaterialPropertiesMatrix;
 
 }  // end of namespace
 
