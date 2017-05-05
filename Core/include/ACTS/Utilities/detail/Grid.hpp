@@ -218,7 +218,7 @@ namespace detail {
     /// @return generalized lower-left bin edge position
     ///
     /// @pre @c localBins must only contain valid bin indices (excluding
-    ///      under-/overflow bins).
+    ///      underflow bins).
     point_t
     getLowerLeftBinEdge(const index_t& localBins) const
     {
@@ -245,7 +245,7 @@ namespace detail {
     /// @return generalized upper-right bin edge position
     ///
     /// @pre @c localBins must only contain valid bin indices (excluding
-    ///      under-/overflow bins).
+    ///      overflow bins).
     point_t
     getUpperRightBinEdge(const index_t& localBins) const
     {

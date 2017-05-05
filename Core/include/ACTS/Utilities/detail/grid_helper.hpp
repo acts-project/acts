@@ -324,8 +324,8 @@ namespace detail {
     /// @param  [in] axes         actual axis objects spanning the grid
     /// @return generalized lower-left bin edge
     ///
-    /// @pre @c localIndices must only contain valid bin indices (i.e. excluding
-    ///      under-/overflow bins).
+    /// @pre @c localIndices must only contain valid bin indices (excluding
+    ///      underflow bins).
     template <class... Axes>
     static std::array<double, sizeof...(Axes)>
     getLowerLeftBinEdge(const std::array<size_t, sizeof...(Axes)>& localIndices,
@@ -345,8 +345,8 @@ namespace detail {
     /// @param  [in] axes         actual axis objects spanning the grid
     /// @return array with local bin indices of lower-left neighbor bin
     ///
-    /// @pre @c localIndices must only contain valid bin indices (i.e. excluding
-    ///      under-/overflow bins).
+    /// @pre @c localIndices must only contain valid bin indices (excluding
+    ///      underflow bins).
     ///
     /// This function returns the local bin indices for the generalized
     /// lower-left neighbor which simply means that all local bin indices are
@@ -386,8 +386,8 @@ namespace detail {
     /// @param  [in] axes         actual axis objects spanning the grid
     /// @return generalized upper-right bin edge
     ///
-    /// @pre @c localIndices must only contain valid bin indices (i.e. excluding
-    ///      under-/overflow bins).
+    /// @pre @c localIndices must only contain valid bin indices (excluding
+    ///      overflow bins).
     template <class... Axes>
     static std::array<double, sizeof...(Axes)>
     getUpperRightBinEdge(
@@ -408,8 +408,8 @@ namespace detail {
     /// @param  [in] axes         actual axis objects spanning the grid
     /// @return array with local bin indices of upper-right neighbor bin
     ///
-    /// @pre @c localIndices must only contain valid bin indices (i.e. excluding
-    ///      under-/overflow bins).
+    /// @pre @c localIndices must only contain valid bin indices (excluding
+    ///      overflow bins).
     ///
     /// This function returns the local bin indices for the generalized
     /// upper-right neighbor which simply means that all local bin indices are

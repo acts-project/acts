@@ -83,8 +83,8 @@ namespace detail {
     /// @param  [in] bin index of bin
     /// @return lower bin boundary
     ///
-    /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
-    ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
+    /// @pre @c bin must be a valid bin index (excluding the underflow bin),
+    ///      i.e. \f$1 \le \text{bin} \le \text{nBins} + 1\f$
     ///
     /// @note Bin intervals have a closed lower bound, i.e. the lower boundary
     ///       belongs to the bin with the given bin index.
@@ -99,8 +99,8 @@ namespace detail {
     /// @param  [in] bin index of bin
     /// @return upper bin boundary
     ///
-    /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
-    ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
+    /// @pre @c bin must be a valid bin index (excluding the overflow bin),
+    ///      i.e. \f$0 \le \text{bin} \le \text{nBins}\f$
     ///
     /// @note Bin intervals have an open upper bound, i.e. the upper boundary
     ///       does @b not belong to the bin with the given bin index.
@@ -232,8 +232,8 @@ namespace detail {
     /// @param  [in] bin index of bin
     /// @return lower bin boundary
     ///
-    /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
-    ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
+    /// @pre @c bin must be a valid bin index (excluding the underflow bin),
+    ///      i.e. \f$1 \le \text{bin} \le \text{nBins} + 1\f$
     ///
     /// @note Bin intervals have a closed lower bound, i.e. the lower boundary
     ///       belongs to the bin with the given bin index.
@@ -248,8 +248,8 @@ namespace detail {
     /// @param  [in] bin index of bin
     /// @return upper bin boundary
     ///
-    /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
-    ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
+    /// @pre @c bin must be a valid bin index (excluding the overflow bin),
+    ///      i.e. \f$0 \le \text{bin} \le \text{nBins}\f$
     ///
     /// @note Bin intervals have an open upper bound, i.e. the upper boundary
     ///       does @b not belong to the bin with the given bin index.
