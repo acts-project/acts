@@ -24,7 +24,7 @@ namespace detail {
   /// @tparam Axes parameter pack of axis types defining the grid
   ///
   /// Class describing a multi-dimensional, regular grid which can store objects
-  /// in its multi-dimensional bins. Bins are hyper-cubes and can be accessed
+  /// in its multi-dimensional bins. Bins are hyper-boxes and can be accessed
   /// either by global bin index, local bin indices or position.
   ///
   /// @note @c T must be default-constructible.
@@ -254,6 +254,8 @@ namespace detail {
     /// coordinate access using @c operator[] which should return a @c double
     /// (or a value which is implicitly convertible). Coordinate indices must
     /// start at 0.
+    /// @note Bin values are interpreted as being the field values at the
+    /// lower-left corner of the corresponding hyper-box.
     template <class Point,
               typename U = T,
               typename
