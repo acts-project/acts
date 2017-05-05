@@ -13,8 +13,8 @@
 #include <boost/type_erasure/builtin.hpp>
 #include <boost/type_erasure/member.hpp>
 #include <boost/type_erasure/relaxed.hpp>
-#include "ACTS/Concepts/AnyGrid.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/concept/AnyGrid.hpp"
 
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_getField), getField, 1);
 
