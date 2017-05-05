@@ -16,15 +16,16 @@
 #include <boost/type_erasure/relaxed.hpp>
 
 // clang-format off
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_at), at, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_dimension), dimension, 0);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_getBinCenter), getBinCenter, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_getGlobalBinIndex), getGlobalBinIndex, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_getLocalBinIndices), getLocalBinIndices, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_getLowerLeftBinEdge), getLowerLeftBinEdge, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_getUpperRightBinEdge), getUpperRightBinEdge, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_interpolate), interpolate, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(detail)(has_size), size, 0);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_at), at, 1);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_dimension), dimension, 0);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getBinCenter), getBinCenter, 1);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getGlobalBinIndex), getGlobalBinIndex, 1);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getLocalBinIndices), getLocalBinIndices, 1);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getLowerLeftBinEdge), getLowerLeftBinEdge, 1);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getUpperRightBinEdge), getUpperRightBinEdge, 1);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_interpolate), interpolate, 1);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_isInside), isInside, 1);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_size), size, 0);
 // clang-format on
 
 namespace Acts {
@@ -33,7 +34,7 @@ namespace concept {
 
   namespace bte = boost::type_erasure;
 
-  namespace detail {
+  namespace any_grid_detail {
 
     namespace mpl = boost::mpl;
 
@@ -46,6 +47,7 @@ namespace concept {
                                      has_dimension<size_t(), const bte::_self>,
                                      has_getGlobalBinIndex<size_t(const Point&), const bte::_self>,
                                      has_interpolate<T(const Point&), const bte::_self>,
+                                     has_isInside<bool(const Point&), const bte::_self>,
                                      has_size<size_t(), const bte::_self>,
                                      bte::copy_constructible<>,
                                      bte::assignable<>,
@@ -63,12 +65,12 @@ namespace concept {
                       has_getUpperRightBinEdge<std::array<double, DIM>(const std::array<size_t, DIM>&), const bte::_self>
                       >;
     // clang-format off
-  }  // namespace detail
+  }  // namespace any_grid_detail
 
   template <typename T, class Point, typename U = bte::_self>
-  using AnyGrid = bte::any<detail::grid_concept<T, Point>, U>;
+  using AnyGrid = bte::any<any_grid_detail::grid_concept<T, Point>, U>;
 
   template <typename T, class Point, size_t DIM, typename U = bte::_self>
-  using AnyNDimGrid = bte::any<detail::ndim_grid_concept<T, Point, DIM>, U>;
+  using AnyNDimGrid = bte::any<any_grid_detail::ndim_grid_concept<T, Point, DIM>, U>;
 }  // namespace concept
 }  // namespace Acts

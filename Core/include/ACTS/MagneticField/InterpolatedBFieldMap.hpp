@@ -11,6 +11,7 @@
 #include <functional>
 #include "ACTS/MagneticField/concept/AnyFieldLookup.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/concept/AnyGrid.hpp"
 
 namespace Acts {
 
@@ -55,6 +56,17 @@ public:
     getField(const Vector3D& position) const
     {
       return grid.interpolate(transform(position));
+    }
+
+    /// @brief check whether given 3D position is inside look-up domain
+    ///
+    /// @param [in] position global 3D position
+    /// @return @c true if position is inside the defined look-up grid,
+    ///         otherwise @c false
+    bool
+    isInside(const Vector3D& position) const
+    {
+      return grid.isInside(transform(position));
     }
   };
 
