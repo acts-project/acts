@@ -27,6 +27,7 @@ namespace Test {
 
     // test general properties
     BOOST_TEST(g.size() == 6u);
+    BOOST_TEST(g.getNBins<0u>() == 4u);
 
     // global bin index
     BOOST_TEST(g.getGlobalBinIndex(Point({-0.3})) == 0u);
@@ -109,6 +110,8 @@ namespace Test {
 
     // test general properties
     BOOST_TEST(g.size() == 30u);
+    BOOST_TEST(g.getNBins<0u>() == 4u);
+    BOOST_TEST(g.getNBins<1u>() == 3u);
 
     // global bin index
     BOOST_TEST(g.getGlobalBinIndex(Point({-1, -1})) == 0u);
@@ -280,6 +283,9 @@ namespace Test {
 
     // test general properties
     BOOST_TEST(g.size() == 80u);
+    BOOST_TEST(g.getNBins<0u>() == 2u);
+    BOOST_TEST(g.getNBins<1u>() == 3u);
+    BOOST_TEST(g.getNBins<2u>() == 2u);
 
     // test grid points
     BOOST_TEST(g.getGlobalBinIndex(Point({0, 0, 0})) == 25u);
@@ -427,6 +433,7 @@ namespace Test {
 
     // test general properties
     BOOST_TEST(g.size() == 4u);
+    BOOST_TEST(g.getNBins<0u>() == 2u);
 
     // global bin index
     BOOST_TEST(g.getGlobalBinIndex(Point({-0.3})) == 0u);
@@ -495,6 +502,8 @@ namespace Test {
 
     // test general properties
     BOOST_TEST(g.size() == 16u);
+    BOOST_TEST(g.getNBins<0u>() == 2u);
+    BOOST_TEST(g.getNBins<1u>() == 2u);
 
     // test grid points
     BOOST_TEST(g.getGlobalBinIndex(Point({0, 0})) == 5u);
@@ -617,6 +626,9 @@ namespace Test {
 
     // test general properties
     BOOST_TEST(g.size() == 60u);
+    BOOST_TEST(g.getNBins<0u>() == 1u);
+    BOOST_TEST(g.getNBins<1u>() == 2u);
+    BOOST_TEST(g.getNBins<2u>() == 3u);
 
     // test grid points
     BOOST_TEST(g.getGlobalBinIndex(Point({0, 0, 0})) == 26u);
@@ -742,6 +754,8 @@ namespace Test {
 
     // test general properties
     BOOST_TEST(g.size() == 24u);
+    BOOST_TEST(g.getNBins<0u>() == 4u);
+    BOOST_TEST(g.getNBins<1u>() == 2u);
 
     // test grid points
     BOOST_TEST(g.getGlobalBinIndex(Point({0, 0})) == 5u);

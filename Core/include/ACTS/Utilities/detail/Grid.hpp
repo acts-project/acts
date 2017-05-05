@@ -225,6 +225,20 @@ namespace detail {
       return grid_helper::getLowerLeftBinEdge(localBins, m_axes);
     }
 
+    /// @brief get number of bins along a specific axis
+    ///
+    /// @tparam D index for axis of interest (must be less than the grid
+    ///           dimension)
+    /// @return number of bins along specified axis (excluding under- and
+    ///         overflow bins)
+    template <size_t D>
+    size_t
+    getNBins() const
+    {
+      static_assert(D < DIM, "requested number of bins for invalid axis index");
+      return std::get<D>(m_axes).getNBins();
+    }
+
     /// @brief retrieve upper-right bin edge from set of local bin indices
     ///
     /// @param  [in] localBins local bin indices along each axis
