@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ACTS/Concepts/AnyGrid.hpp"
+#include <functional>
 #include "ACTS/MagneticField/concept/AnyFieldLookup.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
