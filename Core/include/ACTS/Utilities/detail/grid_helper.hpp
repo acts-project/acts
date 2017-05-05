@@ -355,7 +355,7 @@ namespace detail {
     static std::array<size_t, sizeof...(Axes)>
     getLowerLeftBinIndices(
         const std::array<size_t, sizeof...(Axes)>& localIndices,
-        const std::tuple<Axes...>&)
+        const std::tuple<Axes...>& axes)
     {
       auto llIndices = localIndices;
       for (size_t i = 0; i < sizeof...(Axes); ++i) --llIndices.at(i);
@@ -433,8 +433,8 @@ namespace detail {
     ///               through @c operator[]
     /// @tparam Axes parameter pack of axis types defining the grid
     ///
-    /// @param  [in] point point to look up in the grid
-    /// @param  [in] axes  actual axis objects spanning the grid
+    /// @param  [in] position point to look up in the grid
+    /// @param  [in] axes     actual axis objects spanning the grid
     /// @return @c true if \f$\text{xmin_i} \le x_i < \text{xmax}_i \forall i=0,
     ///         \dots, d-1\f$, otherwise @c false
     ///
