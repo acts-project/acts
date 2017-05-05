@@ -35,9 +35,16 @@ namespace detail {
     static constexpr size_t DIM = sizeof...(Axes);
 
   public:
-    typedef T                 value_type;
-    typedef value_type&       reference;
+    /// type of values stored
+    typedef T value_type;
+    /// reference type to values stored
+    typedef value_type& reference;
+    /// constant reference type to values stored
     typedef const value_type& const_reference;
+    /// type for points in d-dimensional grid space
+    typedef std::array<double, DIM> point_t;
+    /// index type using local bin indices along each axis
+    typedef std::array<size_t, DIM> index_t;
 
     /// @brief default constructor
     ///
@@ -119,7 +126,7 @@ namespace detail {
     /// @pre All local bin indices must be a valid index for the corresponding
     ///      axis (including the under-/overflow bin for this axis).
     reference
-    at(const std::array<size_t, DIM>& localBins)
+    at(const index_t& localBins)
     {
       return m_values.at(getGlobalBinIndex(localBins));
     }
@@ -133,7 +140,7 @@ namespace detail {
     /// @pre All local bin indices must be a valid index for the corresponding
     ///      axis (including the under-/overflow bin for this axis).
     const_reference
-    at(const std::array<size_t, DIM>& localBins) const
+    at(const index_t& localBins) const
     {
       return m_values.at(getGlobalBinIndex(localBins));
     }
@@ -155,7 +162,7 @@ namespace detail {
     /// @pre All local bin indices must be a valid index for the corresponding
     ///      axis (excluding the under-/overflow bins for each axis).
     std::array<double, DIM>
-    getBinCenter(const std::array<size_t, DIM>& localBins) const
+    getBinCenter(const index_t& localBins) const
     {
       return grid_helper::getBinCenter(localBins, m_axes);
     }
@@ -186,7 +193,7 @@ namespace detail {
     /// @pre All local bin indices must be a valid index for the corresponding
     ///      axis (including the under-/overflow bin for this axis).
     size_t
-    getGlobalBinIndex(const std::array<size_t, DIM>& localBins) const
+    getGlobalBinIndex(const index_t& localBins) const
     {
       return grid_helper::getGlobalBin(localBins, m_axes);
     }
@@ -199,7 +206,7 @@ namespace detail {
     ///
     /// @note Local bin indices can contain under-/overflow bins along the
     ///       corresponding axis.
-    std::array<size_t, DIM>
+    index_t
     getLocalBinIndices(size_t bin) const
     {
       return grid_helper::getLocalBinIndices(bin, m_axes);
@@ -212,8 +219,8 @@ namespace detail {
     ///
     /// @pre @c localBins must only contain valid bin indices (excluding
     ///      under-/overflow bins).
-    std::array<double, DIM>
-    getLowerLeftBinEdge(const std::array<size_t, DIM>& localBins) const
+    point_t
+    getLowerLeftBinEdge(const index_t& localBins) const
     {
       return grid_helper::getLowerLeftBinEdge(localBins, m_axes);
     }
@@ -225,8 +232,8 @@ namespace detail {
     ///
     /// @pre @c localBins must only contain valid bin indices (excluding
     ///      under-/overflow bins).
-    std::array<double, DIM>
-    getUpperRightBinEdge(const std::array<size_t, DIM>& localBins) const
+    point_t
+    getUpperRightBinEdge(const index_t& localBins) const
     {
       return grid_helper::getUpperRightBinEdge(localBins, m_axes);
     }
