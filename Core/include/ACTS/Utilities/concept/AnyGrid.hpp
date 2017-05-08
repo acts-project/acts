@@ -34,6 +34,7 @@ namespace concept {
 
   namespace bte = boost::type_erasure;
 
+  /// @cond
   namespace any_grid_detail {
 
     namespace mpl = boost::mpl;
@@ -66,10 +67,96 @@ namespace concept {
                       >;
     // clang-format off
   }  // namespace any_grid_detail
+  /// @endcond
 
+  /// @ingroup Utilities
+  /// @brief any-type for grid container interface
+  ///
+  /// @tparam T     type of values stored
+  /// @tparam Point type for grid coordinates
+  /// @tparam U     placeholder specifying how to store the underlying object
+  ///
+  /// @note @c T must be default-constructible.
+  /// @note The @c Point type must represent a point in d (or higher)
+  ///       dimensions where d is dimensionality of the grid. Coordinate
+  ///       access through @c operator[] must be available and coordinate
+  ///       indices start at 0.
+  ///
+  /// This any-type provides access to all grid-like container types. It
+  /// supports index- and point-based look-up of bin values as well as
+  /// general information about the grid (e.g. dimension, bin positions,
+  /// number of bins etc). In addition, interpolation between values on grid
+  /// points is supported if both @c T and @c Point fulfill the requirements
+  /// for interpolation required by Acts::interpolate.
+  ///
+  /// The exact interface required for wrapped objects of type @c U is:
+  /// @code{.cpp}
+  /// struct U {
+  ///   // copy-constructible
+  ///   U(const U&);
+  ///   // assignable
+  ///   const U& operator(const U&);
+  ///
+  ///   // point-based look-up
+  ///   const T& at(const Point&) const;
+  ///   T& at(const Point&);
+  ///   // index-based look-up
+  ///   const T& at(size_t) const;
+  ///   T& at(size_t);
+  ///
+  ///   // dimensionality of the grid
+  ///   size_t dimension() const;
+  ///
+  ///   // point to index conversion
+  ///   size_t getGlobalIndex(const Point&) const;
+  ///
+  ///   // interpolation between values on grid points
+  ///   T interpolate(const Point&) const;
+  ///
+  ///   // check for position being inside the grid limits
+  ///   bool isInside(const Point&) const;
+  ///
+  ///   // total number of bins
+  ///   size_t size() const;
+  /// };
+  /// @endcode
   template <typename T, class Point, typename U = bte::_self>
   using AnyGrid = bte::any<any_grid_detail::grid_concept<T, Point>, U>;
 
+  /// @ingroup Utilities
+  /// @brief any-type for grid container interface with specified dimension
+  ///
+  /// @tparam T     type of values stored
+  /// @tparam Point type for grid coordinates
+  /// @tparam DIM   dimensionality of the grid
+  /// @tparam U     placeholder specifying how to store the underlying object
+  ///
+  /// @note @c T and @c Point must satisfy the same requirements as detailed in
+  /// Acts::concept::AnyGrid.
+  ///
+  /// This any-type is a specialization of the Acts::concept::AnyGrid concept.
+  /// It adds interface functionality which requires the knowledge of the
+  /// number of grid dimensions. Every object of this type also implements the
+  /// Acts::concept::AnyGrid concept.
+  ///
+  /// The exact interface required for wrapped objects of type @c U is the one
+  /// specified in Acts::concept::AnyGrid augmented with the following methods:
+  /// @code{.cpp}
+  /// struct U {
+  ///   // access bin values by local indices along each axis
+  ///   const T& at(const std::array<size_t, DIM>&) const;
+  ///   T& at(const std::array<size_t, DIM>&)>;
+  ///
+  ///   // global to local index conversions
+  ///   size_t getGlobalBinIndex(const std::array<size_t, DIM>&) const;
+  ///   std::array<size_t, DIM> getLocalBinIndices(size_t) const;
+  ///
+  ///   // bin center and edges
+  ///   std::array<double, DIM> getBinCenter(const std::array<size_t, DIM>&) const;
+  ///   std::array<double, DIM> getLowerLeftBinEdge(const std::array<size_t, DIM>&) const;
+  ///   std::array<double, DIM> getUpperRightBinEdge(const std::array<size_t, DIM>&) const;
+  /// };
+  /// @endcode
   template <typename T, class Point, size_t DIM, typename U = bte::_self>
   using AnyNDimGrid = bte::any<any_grid_detail::ndim_grid_concept<T, Point, DIM>, U>;
 }  // namespace concept

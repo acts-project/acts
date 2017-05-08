@@ -42,7 +42,7 @@ namespace concept {
   /// @ingroup MagneticField
   /// @brief any-type for field look-up interface
   ///
-  /// @tparam T placeholder specifying how the value is stored
+  /// @tparam T placeholder specifying how to store the underlying object
   ///
   /// @c any type for all types @c U providing the following interface:
   /// @code{.cpp}
