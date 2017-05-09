@@ -38,7 +38,7 @@ endif(CCACHE_FOUND)
 set (CMAKE_MACOSX_RPATH 1)
 
 # set the current version of ACTS
-set (ACTS_VERSION dev)
+set (ACTS_VERSION 0.04.00)
 
 # convert the version into a plain number to be used in the version header file
 string (REPLACE "." "" ACTS_VERSION_NUMBER ${ACTS_VERSION})
