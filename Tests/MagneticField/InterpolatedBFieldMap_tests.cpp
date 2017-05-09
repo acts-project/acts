@@ -62,7 +62,7 @@ namespace Test {
     }
 
     // create field mapping
-    InterpolatedBFieldMap::FieldMapper<2> mapper = {transform, std::move(g)};
+    InterpolatedBFieldMap::FieldMapper<2> mapper(transform, std::move(g));
     InterpolatedBFieldMap::Config         c;
     c.scale  = 1.;
     c.mapper = std::move(mapper);

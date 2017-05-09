@@ -39,11 +39,16 @@ public:
   template <unsigned int DIM>
   struct FieldMapper
   {
-    /// geometric transformation applied to global 3D positions
-    std::function<ActsVectorD<DIM>(const Vector3D&)> transform;
-
-    /// grid storing magnetic field values
-    concept::AnyGrid<Vector3D, ActsVectorD<DIM>> grid;
+  public:
+    /// @brief default constructor
+    ///
+    /// @param transform transformation to map global 3D coordinates onto grid
+    /// @param grid      grid storing magnetic field values
+    FieldMapper(std::function<ActsVectorD<DIM>(const Vector3D&)> transform,
+                concept::AnyGrid<Vector3D, ActsVectorD<DIM>> grid)
+      : m_transform(std::move(transform)), m_grid(std::move(grid))
+    {
+    }
 
     /// @brief retrieve field at given position
     ///
@@ -55,7 +60,7 @@ public:
     Vector3D
     getField(const Vector3D& position) const
     {
-      return grid.interpolate(transform(position));
+      return m_grid.interpolate(m_transform(position));
     }
 
     /// @brief check whether given 3D position is inside look-up domain
@@ -66,8 +71,15 @@ public:
     bool
     isInside(const Vector3D& position) const
     {
-      return grid.isInside(transform(position));
+      return m_grid.isInside(m_transform(position));
     }
+
+  private:
+    /// geometric transformation applied to global 3D positions
+    std::function<ActsVectorD<DIM>(const Vector3D&)> m_transform;
+
+    /// grid storing magnetic field values
+    concept::AnyGrid<Vector3D, ActsVectorD<DIM>> m_grid;
   };
 
   /// @brief configuration object for magnetic field interpolation
