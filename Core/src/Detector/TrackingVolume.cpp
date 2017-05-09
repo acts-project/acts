@@ -33,6 +33,7 @@ Acts::TrackingVolume::TrackingVolume()
   , m_geometryType(NumberOfGeometryTypes)
   , m_name("undefined")
   , m_colorCode(20)
+  , m_detectorElements()
 {
 }
 
@@ -55,6 +56,7 @@ Acts::TrackingVolume::TrackingVolume(
   , m_geometryType(NumberOfGeometryTypes)
   , m_name(volumeName)
   , m_colorCode(20)
+  , m_detectorElements()
 {
   createBoundarySurfaces();
   interlinkLayers();
@@ -84,6 +86,7 @@ Acts::TrackingVolume::TrackingVolume(
   , m_geometryType(NumberOfGeometryTypes)
   , m_name(volumeName)
   , m_colorCode(20)
+  , m_detectorElements()
 {
   createBoundarySurfaces();
   interlinkLayers();
@@ -105,6 +108,7 @@ Acts::TrackingVolume::TrackingVolume(const TrackingVolume& tvol,
   , m_geometryType(tvol.geometryType())
   , m_name(volumeName)
   , m_colorCode(20)
+  , m_detectorElements()
 {
   //< @todo implement - requires cloneWithShift for BinUtility and an
   // orderPosition() addon to GeometryObjects
@@ -276,7 +280,7 @@ Acts::TrackingVolume::createBoundarySurfaces()
       = Volume::volumeBounds().decomposeToSurfaces(m_transform);
 
   // counter to flip the inner/outer position for Cylinders
-  int sfCounter = 0;
+  int    sfCounter = 0;
   size_t sfNumber  = surfaces.size();
 
   for (auto& sf : surfaces) {
@@ -493,6 +497,9 @@ Acts::TrackingVolume::closeGeometry(
         // now close the geometry
         auto mutableLayerPtr = std::const_pointer_cast<Layer>(layerPtr);
         mutableLayerPtr->closeGeometry(layerID);
+        auto layerDetElements = layerPtr->detectorElements();
+        m_detectorElements.insert(layerDetElements.begin(),
+                                  layerDetElements.end());
       }
     }
   } else {

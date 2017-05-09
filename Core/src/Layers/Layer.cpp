@@ -29,6 +29,7 @@ Acts::Layer::Layer()
   , m_representingVolume(nullptr)
   , m_layerType(Acts::passive)
   , m_materialSurface(nullptr)
+  , m_detectorElements()
 {
 }
 
@@ -46,6 +47,7 @@ Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
   , m_representingVolume(nullptr)
   , m_layerType(laytyp)
   , m_materialSurface(nullptr)
+  , m_detectorElements()
 {
   if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
 }
@@ -61,6 +63,7 @@ Acts::Layer::Layer(const Layer& lay)
   , m_representingVolume(lay.m_representingVolume)
   , m_layerType(lay.m_layerType)
   , m_materialSurface(nullptr)
+  , m_detectorElements()
 {
 }
 
@@ -200,6 +203,9 @@ Acts::Layer::closeGeometry(const GeometryID& layerID)
       ssurfaceID.add(++issurface, GeometryID::sensitive_mask);
       auto mutableSSurface = const_cast<Surface*>(sSurface);
       mutableSSurface->assignGeoID(ssurfaceID);
+      // fill the map of detector elements
+      m_detectorElements.emplace(sSurface->associatedIdentifier(),
+                                 sSurface->associatedDetectorElement());
     }
   }
 }
