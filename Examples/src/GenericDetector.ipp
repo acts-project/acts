@@ -280,7 +280,7 @@ if (stage > 1) {
   std::vector<int>    mrReadoutSide  = {1, 1, 1};
   std::vector<double> mrLorentzAngle = {0., 0., 0.};
 
-  std::vector<int>      mPhiBins   = {42, 58, 72};
+  std::vector<int>      mPhiBins   = {42, 44, 46};
   std::vector<double>   mThickness = {0.2, 0.2, 0.2};
   std::vector<Material> mMaterial  = {ssMaterial, ssMaterial, ssMaterial};
   std::vector<double>   mfStereo   = {-0.02, -0.02, -0.02};
@@ -291,7 +291,7 @@ if (stage > 1) {
   sslbConfig.posnegLayerPositionsZ = {880., 1100., 1300., 1550., 1800., 2200.};
   size_t nposnegs                  = sslbConfig.posnegLayerPositionsZ.size();
   sslbConfig.posnegLayerEnvelopeR  = std::vector<double>(nposnegs, 5.);
-  sslbConfig.posnegLayerMaterialConcentration = std::vector<int>(nposnegs, 1);
+  sslbConfig.posnegLayerMaterialConcentration = std::vector<int>(nposnegs, 0);
   sslbConfig.posnegLayerMaterialProperties
       = std::vector<MaterialProperties>(nposnegs, ssmProperties);
   sslbConfig.posnegModuleMinHalfX
@@ -327,7 +327,7 @@ if (stage > 1) {
   for (size_t id = 0; id < sslbConfig.posnegLayerPositionsZ.size(); ++id) {
     posnegModulePositions.push_back(
         modulePositionsDisc(sslbConfig.posnegLayerPositionsZ[id],
-                            2.0,
+                            6.0,
                             0.5,
                             220.,
                             500.,
@@ -431,7 +431,7 @@ if (stage > 2) {
   lslbConfig.posnegLayerPositionsZ     = {1380., 1680., 2180.};
   size_t nposnegs                 = lslbConfig.posnegLayerPositionsZ.size();
   lslbConfig.posnegLayerEnvelopeR = std::vector<double>(nposnegs, 5.);
-  lslbConfig.posnegLayerMaterialConcentration = std::vector<int>(nposnegs, 1);
+  lslbConfig.posnegLayerMaterialConcentration = std::vector<int>(nposnegs, 0);
   lslbConfig.posnegLayerMaterialProperties
       = std::vector<MaterialProperties>(nposnegs, lsmProperties);
   lslbConfig.posnegModuleMinHalfX
@@ -467,8 +467,8 @@ if (stage > 2) {
   for (size_t id = 0; id < lslbConfig.posnegLayerPositionsZ.size(); ++id) {
     posnegModulePositions.push_back(
         modulePositionsDisc(lslbConfig.posnegLayerPositionsZ[id],
-                            2.0,
-                            0.5,
+                            8.0, // staggering of rings, we put the disk strucutre in between 
+                            0.5, // staggering in phi
                             600.,
                             980.,
                             lslbConfig.posnegModulePhiBins[id],
