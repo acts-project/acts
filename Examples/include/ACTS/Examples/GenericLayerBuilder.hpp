@@ -99,7 +99,7 @@ public:
     /// the module center positions
     std::vector<std::vector<std::vector<Vector3D>>> posnegModulePositions;
     /// the phi binning
-    std::vector<std::vector<int>> posnegModulePhiBins;
+    std::vector<std::vector<size_t>> posnegModulePhiBins;
     /// the module bounds: min halfx
     std::vector<std::vector<double>> posnegModuleMinHalfX;
     /// the module bounds: max halfx

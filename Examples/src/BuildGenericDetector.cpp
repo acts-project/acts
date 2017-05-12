@@ -56,7 +56,8 @@ buildGenericDetector(Logging::Level surfaceLLevel,
   // list the volume builders
   std::list<std::shared_ptr<ITrackingVolumeBuilder>> volumeBuilders;
 // a hash include for the Generic Detector : a bit ugly but effective
-#include "GenericDetector.ipp"
+//#include "GenericDetector.ipp"
+#include "GenericDetectorML.ipp"  
   //-------------------------------------------------------------------------------------
   // create the tracking geometry
   TrackingGeometryBuilder::Config tgConfig;
@@ -109,10 +110,11 @@ modulePositionsCylinder(double radius,
 std::vector<std::vector<Acts::Vector3D>>
 modulePositionsDisc(double                     z,
                     double                     ringStagger,
-                    double                     phiStagger,
+                    std::vector<double>        phiStagger,
+                    std::vector<double>        phiSubStagger,
                     double                     innerRadius,
                     double                     outerRadius,
-                    const std::vector<int>&    discBinning,
+                    const std::vector<size_t>& discBinning,
                     const std::vector<double>& moduleHalfLength)
 {
   // calculate the radii
@@ -152,18 +154,24 @@ modulePositionsDisc(double                     z,
   std::vector<std::vector<Vector3D>> mPositions;
   for (size_t ir = 0; ir < radii.size(); ++ir) {
     // generate the z value
-    double rz = radii.size() == 1 ? z : (ir % 2 ? z - 0.5 * ringStagger
-                                                : z + 0.5 * ringStagger);
+    // convention inner ring is closer to origin : makes sense
+    double rz = radii.size() == 1 ? z : (ir % 2 ? z + 0.5 * ringStagger
+                                                : z - 0.5 * ringStagger);
     // fill the ring positions
+    double psStagger = phiSubStagger.size() ? phiSubStagger[ir] : 0.;
     mPositions.push_back(
-        modulePositionsRing(rz, radii[ir], phiStagger, discBinning[ir]));
+        modulePositionsRing(rz, 
+                            radii[ir],
+                            phiStagger[ir],
+                            psStagger,
+                            discBinning[ir]));
   }
   return mPositions;
 }
 
 /// Helper method for positioning
 std::vector<Acts::Vector3D>
-modulePositionsRing(double z, double radius, double phiStagger, int nPhiBins)
+modulePositionsRing(double z, double radius, double phiStagger, double phiSubStagger, int nPhiBins)
 {
   // create and fill the positions
   std::vector<Vector3D> rPositions;
@@ -173,9 +181,24 @@ modulePositionsRing(double z, double radius, double phiStagger, int nPhiBins)
   double minPhi  = -M_PI + 0.5 * phiStep;
   // phi loop
   for (size_t iphi = 0; iphi < size_t(nPhiBins); ++iphi) {
+    // if we have a phi sub stagger presents
+    double rzs = 0.;
+    // phi stagger affects 0 vs 1, 2 vs 3 ... etc
+    // -> only works if it is a %4 
+    // phi sub stagger affects 2 vs 4, 1 vs 3 etc. 
+    if (phiSubStagger != 0. && !(nPhiBins%4)){
+      // switch sides
+      if (!(iphi%4)){
+        rzs = phiSubStagger;
+      } else if (!((iphi+1)%4)){
+        rzs = -phiSubStagger;
+      }
+    }
+    // the module phi 
     double phi = minPhi + iphi * phiStep;
-    double rz  = iphi % 2 ? z - 0.5 * phiStagger : z + 0.5 * phiStagger;
-    rPositions.push_back(Vector3D(radius * cos(phi), radius * sin(phi), rz));
+    // main z position depending on phi bin 
+    double rz  = iphi%2 ? z - 0.5 * phiStagger : z + 0.5 * phiStagger;
+    rPositions.push_back(Vector3D(radius * cos(phi), radius * sin(phi), rz+rzs));
   }
   return rPositions;
 }

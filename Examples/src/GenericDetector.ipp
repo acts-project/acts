@@ -62,7 +62,7 @@ if (stage == 0) {
   plbConfig.centralLayerMaterialConcentration = {1};
   plbConfig.centralLayerMaterialProperties    = {pcmProperties};
   plbConfig.centralModuleBinningSchema        = {{16, 13}};
-  plbConfig.centralModuleTiltPhi              = {0.18};
+  plbConfig.centralModuleTiltPhi              = {0.12};
   plbConfig.centralModuleHalfX                = {8.4};
   plbConfig.centralModuleHalfY                = {32.};
   plbConfig.centralModuleThickness            = {0.15};
