@@ -465,14 +465,14 @@ if (stage > 2) {
   // mPositions
   std::vector<std::vector<std::vector<Vector3D>>> posnegModulePositions;
   for (size_t id = 0; id < lslbConfig.posnegLayerPositionsZ.size(); ++id) {
-    posnegModulePositions.push_back(
-        modulePositionsDisc(lslbConfig.posnegLayerPositionsZ[id],
-                            8.0, // staggering of rings, we put the disk strucutre in between 
-                            0.5, // staggering in phi
-                            600.,
-                            980.,
-                            lslbConfig.posnegModulePhiBins[id],
-                            lslbConfig.posnegModuleHalfY[id]));
+    posnegModulePositions.push_back(modulePositionsDisc(
+        lslbConfig.posnegLayerPositionsZ[id],
+        8.0,  // staggering of rings, we put the disk strucutre in between
+        0.5,  // staggering in phi
+        600.,
+        980.,
+        lslbConfig.posnegModulePhiBins[id],
+        lslbConfig.posnegModuleHalfY[id]));
   }
   lslbConfig.posnegModulePositions = posnegModulePositions;
 

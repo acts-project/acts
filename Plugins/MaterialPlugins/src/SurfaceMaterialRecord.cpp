@@ -132,6 +132,6 @@ Acts::SurfaceMaterialRecord::assignMaterialSteps(
 
   // set the new current material (not averaged yet)
   Material updatedMaterial(x0, l0, A, Z, rho);
-  m_mappedMaterial[bin1][bin0].first 
-    = MaterialProperties(updatedMaterial, thickness);
+  m_mappedMaterial[bin1][bin0].first
+      = MaterialProperties(updatedMaterial, thickness);
 }
