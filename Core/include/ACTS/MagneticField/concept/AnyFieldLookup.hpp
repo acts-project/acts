@@ -17,6 +17,7 @@
 
 // clang-format off
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_getField), getField, 1);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_getFieldCell), getFieldCell, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_isInside), isInside, 1);
 // clang-format on
 
@@ -31,7 +32,7 @@ namespace concept {
 
     namespace mpl = boost::mpl;
 
-    using field_lookup_concept
+    using field_cell_concept
         = mpl::vector<has_getField<Vector3D(const Vector3D&), const bte::_self>,
                       has_isInside<bool(const Vector3D&), const bte::_self>,
                       bte::copy_constructible<>,
@@ -40,14 +41,47 @@ namespace concept {
   /// @endcond
 
   /// @ingroup MagneticField
+  /// @brief any-type for field cell interface
+  ///
+  /// @tparam T placeholder specifying how to store the underlying object
+  ///
+  /// @c any type for all copy-constructible types @c U providing the following
+  /// interface:
+  /// @code{.cpp}
+  /// Acts::Vector3D U::getField(const Acts::Vector3D&) const;
+  /// bool U::isInside(const Acts::Vector3D&) const;
+  /// @endcode
+  ///
+  /// @note By default, the contained object is stored by-value (= copied) into
+  /// the @c boost::type_erasure::any object. In order to store the value by (@c
+  /// const) reference, pass <tt>(const) boost::type_erasure::_self&</tt> as
+  /// template parameter.
+  template <typename T = bte::_self>
+  using AnyFieldCell   = bte::any<afl_detail::field_cell_concept, T>;
+
+  /// @cond
+  namespace afl_detail {
+    using field_lookup_concept
+        = mpl::vector<field_cell_concept,
+                      has_getFieldCell<AnyFieldCell<>(const Vector3D&),
+                                       const bte::_self>>;
+  }  // namespace afl_detail
+  /// @endcond
+
+  /// @ingroup MagneticField
   /// @brief any-type for field look-up interface
   ///
   /// @tparam T placeholder specifying how to store the underlying object
   ///
-  /// @c any type for all types @c U providing the following interface:
+  /// This any-type is a specialization of the Acts::concept::AnyFieldCell
+  /// concept. Every object of this type also implements the
+  /// Acts::concept::AnyFieldCell concept.
+  ///
+  /// The exact interface required for wrapped objects of type @c U is the one
+  /// specified in Acts::concept::AnyFieldCell augmented with the following
+  /// methods:
   /// @code{.cpp}
-  /// Acts::Vector3D U::getField(const Acts::Vector3D&) const;
-  /// bool U::isInside(const Acts::Vector3D&) const;
+  /// Acts::concept::AnyFieldCell U::getFieldCell(const Acts::Vector3D&) const;
   /// @endcode
   ///
   /// @note By default, the contained object is stored by-value (= copied) into
