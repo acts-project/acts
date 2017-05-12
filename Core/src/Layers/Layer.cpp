@@ -28,6 +28,7 @@ Acts::Layer::Layer()
   , m_enclosingDetachedTrackingVolume(nullptr)
   , m_representingVolume(nullptr)
   , m_layerType(Acts::passive)
+  , m_detectorElements()
 {
 }
 
@@ -44,6 +45,8 @@ Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
   , m_enclosingDetachedTrackingVolume(nullptr)
   , m_representingVolume(nullptr)
   , m_layerType(laytyp)
+  , m_detectorElements()
+                     
 {
   if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
 }
@@ -58,6 +61,7 @@ Acts::Layer::Layer(const Layer& lay)
   , m_enclosingDetachedTrackingVolume(nullptr)
   , m_representingVolume(lay.m_representingVolume)
   , m_layerType(lay.m_layerType)
+  , m_detectorElements() 
 {
 }
 

@@ -23,7 +23,7 @@ Acts::TrackingGeometry::TrackingGeometry(MutableTrackingVolumePtr highestVolume)
 {
   // close up the geometry
   size_t volumeID = 0;
-  if (m_world) m_world->closeGeometry(m_trackingVolumes, volumeID);
+  highestVolume->closeGeometry(m_trackingVolumes, volumeID);
 }
 
 Acts::TrackingGeometry::~TrackingGeometry()

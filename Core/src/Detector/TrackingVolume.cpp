@@ -431,7 +431,7 @@ Acts::TrackingVolume::interlinkLayers()
 void
 Acts::TrackingVolume::closeGeometry(
     std::map<std::string, const TrackingVolume*>& volumeMap,
-    size_t& vol) const
+    size_t& vol)
 {
   // insert the volume into the map
   volumeMap[volumeName()] = this;
@@ -478,8 +478,11 @@ Acts::TrackingVolume::closeGeometry(
   } else {
     // B) this is a container volume, go through sub volume
     // do the loop
-    for (auto& volumesIter : m_confinedVolumes->arrayObjects())
-      volumesIter->closeGeometry(volumeMap, vol);
+    for (auto& volumesIter : m_confinedVolumes->arrayObjects()){
+      auto mutableVolumesIter
+          = std::const_pointer_cast<TrackingVolume>(volumesIter);
+      mutableVolumesIter->closeGeometry(volumeMap, vol);
+    }
   }
 
   // @todo update that

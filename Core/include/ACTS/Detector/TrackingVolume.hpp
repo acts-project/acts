@@ -433,7 +433,7 @@ private:
   ///        by a given name
   void
   closeGeometry(std::map<std::string, const TrackingVolume*>& volumeMap,
-                size_t& vol) const;
+                size_t& vol);
 
   /// interlink the layers in this TrackingVolume
   void
