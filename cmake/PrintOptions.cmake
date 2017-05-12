@@ -8,6 +8,7 @@ message (STATUS "EIGEN_INCLUDE_DIR                   path to header files of Eig
 message (STATUS "BOOST_ROOT                          path to root directory of boost installation             (e.g. /opt/boost/1.60.0)")
 message (STATUS "")
 message (STATUS "Optional variables:")
+message (STATUS "ACTS_FIND_QUIET                     suppress output when finding packages                    [OFF]  (ON|OFF)")
 message (STATUS "ACTS_PARAMETER_DEFINITIONS_PLUGIN   path to header file with track parameter definitions     [ACTS/Utilities/detail/DefaultParameterDefinitions.h]")
 message (STATUS "BUILD_DD4HEP_PLUGIN                 build DD4hep plugin                                      [OFF]  (ON|OFF)")
 message (STATUS "BUILD_DOC                           build doxygen documentation                              [OFF]  (ON|OFF)")
