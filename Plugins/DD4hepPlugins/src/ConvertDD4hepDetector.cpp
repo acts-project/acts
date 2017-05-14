@@ -71,8 +71,8 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
           const DD4hep::Geometry::DetElement& b) { return (a.id() < b.id()); });
 
   // the volume builders of the subdetectors
-  std::list<std::shared_ptr<ITrackingVolumeBuilder>> volumeBuilders;
-  bool                                               beampipe = false;
+  std::list<std::shared_ptr<const ITrackingVolumeBuilder>> volumeBuilders;
+  bool beampipe = false;
   // loop over the sub detectors
   for (auto& subDetector : subDetectors) {
     Acts::IActsExtension* subDetExtension = nullptr;
@@ -296,7 +296,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
         cvbConfig.volumeMaterial       = volumeMaterial;
         cvbConfig.layerBuilder         = dd4hepLayerBuilder;
         auto cylinderVolumeBuilder
-            = std::make_shared<Acts::CylinderVolumeBuilder>(
+            = std::make_shared<const Acts::CylinderVolumeBuilder>(
                 cvbConfig,
                 Acts::getDefaultLogger("CylinderVolumeBuilder", loggingLevel));
         volumeBuilders.push_back(cylinderVolumeBuilder);
@@ -360,7 +360,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
       cvbConfig.volumeMaterial       = volumeMaterial;
       cvbConfig.volumeDimension      = {rMin, rMax, -halfZ, halfZ};
       auto cylinderVolumeBuilder
-          = std::make_shared<Acts::CylinderVolumeBuilder>(
+          = std::make_shared<const Acts::CylinderVolumeBuilder>(
               cvbConfig,
               Acts::getDefaultLogger("CylinderVolumeBuilder", loggingLevel));
       volumeBuilders.push_back(cylinderVolumeBuilder);
@@ -444,7 +444,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
       cvbConfig.layerBuilder         = dd4hepLayerBuilder;
       cvbConfig.subVolumeConfig      = subVolumeConfig;
       auto cylinderVolumeBuilder
-          = std::make_shared<Acts::CylinderVolumeBuilder>(
+          = std::make_shared<const Acts::CylinderVolumeBuilder>(
               cvbConfig,
               Acts::getDefaultLogger("CylinderVolumeBuilder", loggingLevel));
       volumeBuilders.push_back(cylinderVolumeBuilder);

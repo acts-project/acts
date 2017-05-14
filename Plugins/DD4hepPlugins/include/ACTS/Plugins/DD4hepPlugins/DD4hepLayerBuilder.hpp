@@ -44,7 +44,7 @@ public:
     /// string based identification
     std::string configurationName = "undefined";
     /// layer creator which is internally used to build layers
-    std::shared_ptr<ILayerCreator> layerCreator;
+    std::shared_ptr<const ILayerCreator> layerCreator;
     /// the binning type of the contained surfaces in phi
     /// (equidistant/arbitrary)
     BinningType bTypePhi;

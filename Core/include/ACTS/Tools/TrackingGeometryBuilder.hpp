@@ -39,10 +39,11 @@ public:
   struct Config
   {
     /// the list of trackign volume builders
-    std::list<std::shared_ptr<ITrackingVolumeBuilder>> trackingVolumeBuilders{};
+    std::list<std::shared_ptr<const ITrackingVolumeBuilder>>
+        trackingVolumeBuilders{};
 
     /// the tracking volume helper for detector construction
-    std::shared_ptr<ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
+    std::shared_ptr<const ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
   };
 
   /// Constructor

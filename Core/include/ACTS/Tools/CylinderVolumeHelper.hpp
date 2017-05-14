@@ -52,10 +52,10 @@ public:
   struct Config
   {
     /// a tool for coherent LayerArray creation
-    std::shared_ptr<ILayerArrayCreator> layerArrayCreator = nullptr;
+    std::shared_ptr<const ILayerArrayCreator> layerArrayCreator = nullptr;
     /// Helper Tool to create TrackingVolume
-    std::shared_ptr<ITrackingVolumeArrayCreator> trackingVolumeArrayCreator
-        = nullptr;
+    std::shared_ptr<const ITrackingVolumeArrayCreator>
+        trackingVolumeArrayCreator = nullptr;
     /// thickness of passive layers
     double passiveLayerThickness = 1;
     /// bins in phi for the passive layer

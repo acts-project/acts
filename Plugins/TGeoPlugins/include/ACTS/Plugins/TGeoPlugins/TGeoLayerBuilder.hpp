@@ -73,7 +73,7 @@ public:
     // set visibility flag
     bool setVisibility;
     // layer creator
-    std::shared_ptr<ILayerCreator> layerCreator = nullptr;
+    std::shared_ptr<const ILayerCreator> layerCreator = nullptr;
     // configurations
     std::vector<LayerConfig> negativeLayerConfigs;
     std::vector<LayerConfig> centralLayerConfigs;
@@ -134,7 +134,7 @@ private:
   std::unique_ptr<Logger> m_logger;
 
   /// @todo make clear where the TGeoDetectorElement lives
-  std::vector<std::shared_ptr<TGeoDetectorElement>> m_elementStore;
+  std::vector<std::shared_ptr<const TGeoDetectorElement>> m_elementStore;
 
   /// Private helper function to parse the geometry tree
   void

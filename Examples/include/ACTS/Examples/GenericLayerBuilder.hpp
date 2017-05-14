@@ -126,11 +126,11 @@ public:
     std::vector<std::vector<double>> posnegModuleBacksideGap;
 
     /// helper tools: layer creator
-    std::shared_ptr<ILayerCreator> layerCreator = nullptr;
+    std::shared_ptr<const ILayerCreator> layerCreator = nullptr;
     /// helper tools: central passiva layer builder
-    std::shared_ptr<ILayerBuilder> centralPassiveLayerBuilder = nullptr;
+    std::shared_ptr<const ILayerBuilder> centralPassiveLayerBuilder = nullptr;
     /// helper tools: p/n passive layer builder
-    std::shared_ptr<ILayerBuilder> posnegPassiveLayerBuilder = nullptr;
+    std::shared_ptr<const ILayerBuilder> posnegPassiveLayerBuilder = nullptr;
   };
 
   /// Constructor

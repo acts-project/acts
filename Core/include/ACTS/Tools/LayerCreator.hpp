@@ -43,7 +43,7 @@ public:
   struct Config
   {
     /// surface array helper
-    std::shared_ptr<ISurfaceArrayCreator> surfaceArrayCreator = nullptr;
+    std::shared_ptr<const ISurfaceArrayCreator> surfaceArrayCreator = nullptr;
     /// cylinder module z tolerance : it counts at same z, if ...
     double cylinderZtolerance;
     /// cylinder module phi tolerance : it counts at same phi, if ...

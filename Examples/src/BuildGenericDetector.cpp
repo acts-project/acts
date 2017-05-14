@@ -54,7 +54,7 @@ buildGenericDetector(Logging::Level surfaceLLevel,
       cvhConfig, getDefaultLogger("CylinderVolumeHelper", volumeLLevel));
   //-------------------------------------------------------------------------------------
   // list the volume builders
-  std::list<std::shared_ptr<ITrackingVolumeBuilder>> volumeBuilders;
+  std::list<std::shared_ptr<const ITrackingVolumeBuilder>> volumeBuilders;
 // a hash include for the Generic Detector : a bit ugly but effective
 //#include "GenericDetector.ipp"
 #include "GenericDetectorML.ipp"
