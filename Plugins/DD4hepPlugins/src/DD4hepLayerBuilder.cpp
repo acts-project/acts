@@ -207,7 +207,7 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
         // create an ApproachDescriptor with standard surfaces - these
         // will be deleted by the approach descriptor
         approachDescriptor = std::
-            make_unique<Acts::GenericApproachDescriptor<const Acts::Surface>>(
+            make_unique<Acts::GenericApproachDescriptor<Acts::Surface>>(
                 aSurfaces);
       }
 
@@ -359,7 +359,7 @@ Acts::DD4hepLayerBuilder::centralLayers() const
         // create an ApproachDescriptor with standard surfaces - these
         // will be deleted by the approach descriptor
         approachDescriptor = std::
-            make_unique<Acts::GenericApproachDescriptor<const Acts::Surface>>(
+            make_unique<Acts::GenericApproachDescriptor<Acts::Surface>>(
                 aSurfaces);
       }
 
@@ -544,7 +544,7 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
         // create an ApproachDescriptor with standard surfaces - these
         // will be deleted by the approach descriptor
         approachDescriptor = std::
-            make_unique<Acts::GenericApproachDescriptor<const Acts::Surface>>(
+            make_unique<Acts::GenericApproachDescriptor<Acts::Surface>>(
                 aSurfaces);
       }
 

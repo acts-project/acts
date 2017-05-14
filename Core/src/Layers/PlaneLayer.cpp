@@ -83,5 +83,5 @@ Acts::PlaneLayer::buildApproachDescriptor()
   }
   // @todo check if we can provide the layer at surface creation
   m_approachDescriptor
-      = std::make_unique<GenericApproachDescriptor<const Surface>>(aSurfaces);
+      = std::make_unique<GenericApproachDescriptor<Surface>>(aSurfaces);
 }

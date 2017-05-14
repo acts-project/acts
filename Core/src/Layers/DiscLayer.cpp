@@ -90,7 +90,7 @@ Acts::DiscLayer::buildApproachDescriptor()
     aSurfaces.push_back(bSurfaces.at(positiveFaceXY));
     // create an ApproachDescriptor with Boundary surfaces
     m_approachDescriptor = std::
-        make_unique<GenericApproachDescriptor<const BoundarySurfaceT<AbstractVolume>>>(
+        make_unique<GenericApproachDescriptor<BoundarySurfaceT<AbstractVolume>>>(
             aSurfaces);
   } else {
     // create the new surfaces - positions first
@@ -107,7 +107,7 @@ Acts::DiscLayer::buildApproachDescriptor()
     // create an ApproachDescriptor with standard surfaces surfaces - these will
     // be deleted by the approach descriptor
     m_approachDescriptor
-        = std::make_unique<GenericApproachDescriptor<const Surface>>(aSurfaces);
+        = std::make_unique<GenericApproachDescriptor<Surface>>(aSurfaces);
   }
   // @todo check if we can give the layer at curface creation
   for (auto& sfPtr : (m_approachDescriptor->containedSurfaces())) {
