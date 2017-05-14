@@ -97,15 +97,13 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
       = new Transform3D(transform * AngleAxis3D(M_PI, Vector3D(0., 1., 0.))
                         * Translation3D(Vector3D(0., 0., halflengthZ())));
 
-  rSurfaces.push_back(
-      new PlaneSurface(std::shared_ptr<const Transform3D>(tTransform),
-                       xytBounds));
+  rSurfaces.push_back(new PlaneSurface(
+      std::shared_ptr<const Transform3D>(tTransform), xytBounds));
   //   (2) - at positive local z
   tTransform = new Transform3D(
       transform * Translation3D(Vector3D(0., 0., halflengthZ())));
-  rSurfaces.push_back(
-      new PlaneSurface(std::shared_ptr<const Transform3D>(tTransform),
-                       xytBounds));
+  rSurfaces.push_back(new PlaneSurface(
+      std::shared_ptr<const Transform3D>(tTransform), xytBounds));
   // face surfaces yz
   // transmute cyclical
   //   (3) - at point A, attached to alpha opening angle
@@ -127,9 +125,8 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
   Vector3D faceAlphaPosition = transform * faceAlphaPosition0;
   tTransform = new Transform3D((trapezoidRotation * faceAlphaRotation)
                                * Translation3D(faceAlphaPosition));
-  rSurfaces.push_back(
-      new PlaneSurface(std::shared_ptr<const Transform3D>(tTransform),
-                       faceAlphaBounds));
+  rSurfaces.push_back(new PlaneSurface(
+      std::shared_ptr<const Transform3D>(tTransform), faceAlphaBounds));
   //   (4) - at point B, attached to beta opening angle
   Vector3D         B(minHalflengthX(), -halflengthY(), trapezoidCenter.z());
   RotationMatrix3D betaZRotation
@@ -149,9 +146,8 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
   Vector3D faceBetaPosition = transform * faceBetaPosition0;
   tTransform = new Transform3D(trapezoidRotation * faceBetaRotation
                                * Translation3D(faceBetaPosition));
-  rSurfaces.push_back(
-      new PlaneSurface(std::shared_ptr<const Transform3D>(tTransform),
-                       faceBetaBounds));
+  rSurfaces.push_back(new PlaneSurface(
+      std::shared_ptr<const Transform3D>(tTransform), faceBetaBounds));
   // face surfaces zx
   //   (5) - at negative local x
   tTransform

@@ -112,8 +112,7 @@ Acts::PassiveLayerBuilder::constructLayers()
       // create the share disc bounds
       std::shared_ptr<const DiscBounds> dBounds
           = std::make_shared<const RadialBounds>(
-              m_cfg.posnegLayerRmin.at(ipnl),
-              m_cfg.posnegLayerRmax.at(ipnl));
+              m_cfg.posnegLayerRmin.at(ipnl), m_cfg.posnegLayerRmax.at(ipnl));
       // create the layer transforms
       const Transform3D* nTransform = new Transform3D(
           Translation3D(0., 0., -m_cfg.posnegLayerPositionZ.at(ipnl)));

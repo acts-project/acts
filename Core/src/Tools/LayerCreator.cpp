@@ -281,8 +281,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
 
   // create the layer transforms if not given
   if (!transform) {
-    transform = std::make_shared<const Transform3D>(
-        Translation3D(0., 0., layerZ));
+    transform
+        = std::make_shared<const Transform3D>(Translation3D(0., 0., layerZ));
   }
 
   // create the layers
@@ -331,8 +331,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
 
   // create the layer transforms if not given
   if (!transform) {
-    transform = std::make_shared<const Transform3D>(
-        Translation3D(0., 0., layerZ));
+    transform
+        = std::make_shared<const Transform3D>(Translation3D(0., 0., layerZ));
   }
 
   // create the layers
@@ -395,8 +395,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
 
   // create the layer transforms if not given
   if (!transform) {
-    transform = std::make_shared<const Transform3D>(
-        Translation3D(0., 0., layerZ));
+    transform
+        = std::make_shared<const Transform3D>(Translation3D(0., 0., layerZ));
   }
 
   // create the layers

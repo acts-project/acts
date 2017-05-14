@@ -70,12 +70,12 @@ Acts::PlaneLayer::buildApproachDescriptor()
   const Transform3D* appTransform = new Transform3D(getTransformFromRotTransl(
       lRotation, (lCenter + 0.5 * Layer::m_layerThickness * lVector)));
   // create the new surfaces
-  aSurfaces.push_back(new Acts::PlaneSurface(
-      std::shared_ptr<const Transform3D>(apnTransform),
-      PlaneSurface::m_bounds));
-  aSurfaces.push_back(new PlaneSurface(
-      std::shared_ptr<const Transform3D>(appTransform),
-      PlaneSurface::m_bounds));
+  aSurfaces.push_back(
+      new Acts::PlaneSurface(std::shared_ptr<const Transform3D>(apnTransform),
+                             PlaneSurface::m_bounds));
+  aSurfaces.push_back(
+      new PlaneSurface(std::shared_ptr<const Transform3D>(appTransform),
+                       PlaneSurface::m_bounds));
   // set the layer and make TrackingGeometry
   for (auto& sfPtr : aSurfaces) {
     auto& mutableSf = *(const_cast<Surface*>(sfPtr));

@@ -117,7 +117,7 @@ public:
                        double                          loc1Min,
                        double                          loc1Max,
                        const std::string& volumeName = "UndefinedVolume",
-                       BinningType btype = arbitrary) const override;
+                       BinningType        btype = arbitrary) const override;
 
   /// Create a gap volume from dimensions and
   ///

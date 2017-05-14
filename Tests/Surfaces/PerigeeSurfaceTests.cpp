@@ -47,8 +47,8 @@ namespace Test {
     //
     /// Constructor with transform pointer, null or valid
     Translation3D translation{0., 1., 2.};
-    auto pTransform     = std::make_shared<const Transform3D>(translation);
-    auto pNullTransform = std::make_shared<const Transform3D>();
+    auto          pTransform = std::make_shared<const Transform3D>(translation);
+    auto          pNullTransform = std::make_shared<const Transform3D>();
     BOOST_TEST(PerigeeSurface(pNullTransform).type() == Surface::Perigee);
     BOOST_TEST(PerigeeSurface(pTransform).type() == Surface::Perigee);
     //

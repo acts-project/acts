@@ -43,8 +43,8 @@ namespace Test {
     /// Constructor with transform pointer, null or valid, radius and halfZ
     double        radius(1.0), halfZ(10.);
     Translation3D translation{0., 1., 2.};
-    auto pTransform     = std::make_shared<const Transform3D>(translation);
-    auto pNullTransform = std::make_shared<const Transform3D>();
+    auto          pTransform = std::make_shared<const Transform3D>(translation);
+    auto          pNullTransform = std::make_shared<const Transform3D>();
     BOOST_TEST(StrawSurface(pNullTransform, radius, halfZ).type()
                == Surface::Straw);
     BOOST_TEST(StrawSurface(pTransform, radius, halfZ).type()

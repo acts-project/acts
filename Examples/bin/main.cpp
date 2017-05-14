@@ -127,10 +127,9 @@ initExtrapolator(const std::shared_ptr<const TrackingGeometry>& geo)
   exEngineConfig.propagationEngine    = propEngine;
   exEngineConfig.navigationEngine     = navEngine;
   exEngineConfig.extrapolationEngines = {statEngine};
-  auto exEngine
-      = std::make_shared<const ExtrapolationEngine>(
-            exEngineConfig,
-            getDefaultLogger("ExtrapolationEngine", Logging::VERBOSE));
+  auto exEngine = std::make_shared<const ExtrapolationEngine>(
+      exEngineConfig,
+      getDefaultLogger("ExtrapolationEngine", Logging::VERBOSE));
 
   return exEngine;
 }

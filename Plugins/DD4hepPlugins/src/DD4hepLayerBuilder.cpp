@@ -175,17 +175,17 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
         zMin = innerPos.z();
         zMax = outerPos.z();
 
-        Acts::DiscSurface* innerBoundary = new Acts::DiscSurface(
-            std::make_shared<const Transform3D>(transform->rotation(),
-                                                innerPos),
-            rMin,
-            rMax);
+        Acts::DiscSurface* innerBoundary
+            = new Acts::DiscSurface(std::make_shared<const Transform3D>(
+                                        transform->rotation(), innerPos),
+                                    rMin,
+                                    rMax);
 
-        Acts::DiscSurface* outerBoundary = new Acts::DiscSurface(
-            std::make_shared<const Transform3D>(transform->rotation(),
-                                                outerPos),
-            rMin,
-            rMax);
+        Acts::DiscSurface* outerBoundary
+            = new Acts::DiscSurface(std::make_shared<const Transform3D>(
+                                        transform->rotation(), outerPos),
+                                    rMin,
+                                    rMax);
 
         Acts::DiscSurface* centralSurface
             = new Acts::DiscSurface(transform, rMin, rMax);
@@ -206,8 +206,8 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
         aSurfaces.push_back(centralSurface);
         // create an ApproachDescriptor with standard surfaces - these
         // will be deleted by the approach descriptor
-        approachDescriptor = std::
-            make_unique<Acts::GenericApproachDescriptor<Acts::Surface>>(
+        approachDescriptor
+            = std::make_unique<Acts::GenericApproachDescriptor<Acts::Surface>>(
                 aSurfaces);
       }
 
@@ -358,8 +358,8 @@ Acts::DD4hepLayerBuilder::centralLayers() const
         aSurfaces.push_back(outerBoundary);
         // create an ApproachDescriptor with standard surfaces - these
         // will be deleted by the approach descriptor
-        approachDescriptor = std::
-            make_unique<Acts::GenericApproachDescriptor<Acts::Surface>>(
+        approachDescriptor
+            = std::make_unique<Acts::GenericApproachDescriptor<Acts::Surface>>(
                 aSurfaces);
       }
 
@@ -513,17 +513,17 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
         zMin = innerPos.z();
         zMax = outerPos.z();
 
-        Acts::DiscSurface* innerBoundary = new Acts::DiscSurface(
-            std::make_shared<const Transform3D>(transform->rotation(),
-                                                innerPos),
-            rMin,
-            rMax);
+        Acts::DiscSurface* innerBoundary
+            = new Acts::DiscSurface(std::make_shared<const Transform3D>(
+                                        transform->rotation(), innerPos),
+                                    rMin,
+                                    rMax);
 
-        Acts::DiscSurface* outerBoundary = new Acts::DiscSurface(
-            std::make_shared<const Transform3D>(transform->rotation(),
-                                                outerPos),
-            rMin,
-            rMax);
+        Acts::DiscSurface* outerBoundary
+            = new Acts::DiscSurface(std::make_shared<const Transform3D>(
+                                        transform->rotation(), outerPos),
+                                    rMin,
+                                    rMax);
 
         Acts::DiscSurface* centralSurface
             = new Acts::DiscSurface(transform, rMin, rMax);
@@ -543,8 +543,8 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
         aSurfaces.push_back(outerBoundary);
         // create an ApproachDescriptor with standard surfaces - these
         // will be deleted by the approach descriptor
-        approachDescriptor = std::
-            make_unique<Acts::GenericApproachDescriptor<Acts::Surface>>(
+        approachDescriptor
+            = std::make_unique<Acts::GenericApproachDescriptor<Acts::Surface>>(
                 aSurfaces);
       }
 

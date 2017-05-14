@@ -50,9 +50,9 @@ Acts::PlaneSurface::PlaneSurface(const Vector3D& center, const Vector3D& normal)
   curvilinearRotation.col(2) = T;
 
   // curvilinear surfaces are boundless
-  Transform3D transform{ curvilinearRotation };
+  Transform3D transform{curvilinearRotation};
   transform.pretranslate(center);
-  Surface::m_transform    = std::make_shared<const Transform3D>(transform);
+  Surface::m_transform = std::make_shared<const Transform3D>(transform);
 }
 
 Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,

@@ -93,7 +93,8 @@ public:
   ///
   /// @param transformPtr is the transfrom of the volume
   const std::vector<const Surface*>
-  decomposeToSurfaces(std::shared_ptr<const Transform3D> transformPtr) const override;
+  decomposeToSurfaces(
+      std::shared_ptr<const Transform3D> transformPtr) const override;
 
   /// This method returns the halflength in local x
   double

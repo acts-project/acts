@@ -95,14 +95,12 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
       = new Transform3D(transform * AngleAxis3D(M_PI, Vector3D(1., 0., 0.))
                         * Translation3D(Vector3D(0., 0., halflengthZ())));
   rSurfaces.push_back(
-      new DiscSurface(std::shared_ptr<const Transform3D>(tTransform),
-                      dBounds));
+      new DiscSurface(std::shared_ptr<const Transform3D>(tTransform), dBounds));
   // top Disc (positive z)
   tTransform = new Transform3D(
       transform * Translation3D(Vector3D(0., 0., halflengthZ())));
   rSurfaces.push_back(
-      new DiscSurface(std::shared_ptr<const Transform3D>(tTransform),
-                      dBounds));
+      new DiscSurface(std::shared_ptr<const Transform3D>(tTransform), dBounds));
 
   // outer Cylinder - shares the transform
   rSurfaces.push_back(new CylinderSurface(transformPtr, outerCylinderBounds()));

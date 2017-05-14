@@ -382,7 +382,7 @@ public:
 
 private:
   std::vector<BinningData>     m_binningData;  /// vector of BinningData
-  std::shared_ptr<const Transform3D> m_transform;  /// shared transform
+  std::shared_ptr<const Transform3D> m_transform;    /// shared transform
   std::unique_ptr<const Transform3D> m_itransform;  /// unique inverse transform
 };
 

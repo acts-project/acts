@@ -18,13 +18,11 @@
 Acts::PerigeeSurface::PerigeeSurface(const Vector3D& gp) : LineSurface(nullptr)
 {
   Surface::m_transform = std::make_shared<const Transform3D>(
-      Translation3D(gp.x(), gp.y(), gp.z())
-  );
+      Translation3D(gp.x(), gp.y(), gp.z()));
 }
 
 Acts::PerigeeSurface::PerigeeSurface(
-    std::shared_ptr<const Transform3D> tTransform
-)
+    std::shared_ptr<const Transform3D> tTransform)
   : LineSurface(tTransform)
 {
 }

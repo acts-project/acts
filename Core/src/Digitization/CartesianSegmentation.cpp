@@ -104,12 +104,10 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
         = Vector3D(counterPlaneShift, 0., -readoutDirection * halfThickness);
   }
   // - finalize the transforms
-  auto readoutPlaneTransform
-        = std::const_pointer_cast<const Transform3D>(
-              mutableReadoutPlaneTransform);
-  auto counterPlaneTransform
-        = std::const_pointer_cast<const Transform3D>(
-              mutableCounterPlaneTransform);
+  auto readoutPlaneTransform = std::const_pointer_cast<const Transform3D>(
+      mutableReadoutPlaneTransform);
+  auto counterPlaneTransform = std::const_pointer_cast<const Transform3D>(
+      mutableCounterPlaneTransform);
   // - build the readout & counter readout surfaces
   boundarySurfaces.push_back(std::shared_ptr<const PlaneSurface>(
       new PlaneSurface(readoutPlaneTransform, readoutPlaneBounds)));

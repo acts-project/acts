@@ -207,10 +207,10 @@ Acts::LayerArrayCreator::createNavigationSurface(const Layer& layer,
     double navigationR = cBounds->r() + offset;
     double halflengthZ = cBounds->halflengthZ();
     // create the new layer surface
-    std::shared_ptr<const Transform3D> navTrasform =
-        (!layerSurface.transform().isApprox(s_idTransform)) ?
-        std::make_shared<const Transform3D>(layerSurface.transform()) :
-        nullptr;
+    std::shared_ptr<const Transform3D> navTrasform
+        = (!layerSurface.transform().isApprox(s_idTransform))
+        ? std::make_shared<const Transform3D>(layerSurface.transform())
+        : nullptr;
     // new navigation layer
     navigationSurface
         = new CylinderSurface(navTrasform, navigationR, halflengthZ);

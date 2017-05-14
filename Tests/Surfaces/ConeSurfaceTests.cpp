@@ -43,8 +43,8 @@ namespace Test {
     double alpha{M_PI / 8.}, halfPhiSector{M_PI / 16.}, zMin{1.0}, zMax{10.};
     bool   symmetric(false);
     Translation3D translation{0., 1., 2.};
-    auto pTransform     = std::make_shared<const Transform3D>(translation);
-    auto pNullTransform = std::make_shared<const Transform3D>();
+    auto          pTransform = std::make_shared<const Transform3D>(translation);
+    auto          pNullTransform = std::make_shared<const Transform3D>();
     BOOST_TEST(ConeSurface(pNullTransform, alpha, symmetric).type()
                == Surface::Cone);
     BOOST_TEST(ConeSurface(pTransform, alpha, symmetric).type()
@@ -58,11 +58,8 @@ namespace Test {
     /// Constructor with transform and ConeBounds pointer
     // ConeBounds (double alpha, double zmin, double zmax, double halfphi=M_PI,
     // double avphi=0.)
-    auto pConeBounds = std::make_shared<const ConeBounds>(alpha,
-                                                          zMin,
-                                                          zMax,
-                                                          halfPhiSector,
-                                                          0.);
+    auto pConeBounds = std::make_shared<const ConeBounds>(
+        alpha, zMin, zMax, halfPhiSector, 0.);
     BOOST_TEST(ConeSurface(pTransform, pConeBounds).type() == Surface::Cone);
     //
     //
