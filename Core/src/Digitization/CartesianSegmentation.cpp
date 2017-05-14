@@ -21,21 +21,22 @@ Acts::CartesianSegmentation::CartesianSegmentation(
     size_t                              numCellsY)
   : m_activeBounds(mBounds), m_binUtility(nullptr)
 {
-  m_binUtility
+  auto mutableBinUtility
       = std::make_shared<BinUtility>(numCellsX,
                                      -mBounds->boundingBox().halflengthX(),
                                      mBounds->boundingBox().halflengthX(),
                                      Acts::open,
                                      Acts::binX);
-  (*m_binUtility) += BinUtility(numCellsY,
-                                -mBounds->boundingBox().halflengthY(),
-                                mBounds->boundingBox().halflengthY(),
-                                Acts::open,
-                                Acts::binY);
+  (*mutableBinUtility) += BinUtility(numCellsY,
+                                     -mBounds->boundingBox().halflengthY(),
+                                     mBounds->boundingBox().halflengthY(),
+                                     Acts::open,
+                                     Acts::binY);
+  m_binUtility = std::const_pointer_cast<const BinUtility>(mutableBinUtility);
 }
 
 Acts::CartesianSegmentation::CartesianSegmentation(
-    std::shared_ptr<BinUtility>         bUtility,
+    std::shared_ptr<const BinUtility>   bUtility,
     std::shared_ptr<const PlanarBounds> mBounds)
   : m_activeBounds(mBounds), m_binUtility(bUtility)
 {
@@ -227,7 +228,7 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
   }
 }
 
-const Acts::Vector2D
+Acts::Vector2D
 Acts::CartesianSegmentation::cellPosition(const DigitizationCell& dCell) const
 {
   double bX = m_binUtility->bins(0) > 1
@@ -241,7 +242,7 @@ Acts::CartesianSegmentation::cellPosition(const DigitizationCell& dCell) const
 
 /** Get the digitization cell from 3D position, it used the projection to the
  * readout surface to estimate the 2D positon */
-const Acts::DigitizationStep
+Acts::DigitizationStep
 Acts::CartesianSegmentation::digitizationStep(const Vector3D& startStep,
                                               const Vector3D& endStep,
                                               double          halfThickness,
