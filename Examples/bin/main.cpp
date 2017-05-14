@@ -103,7 +103,7 @@ std::shared_ptr<const IExtrapolationEngine>
 initExtrapolator(const std::shared_ptr<const TrackingGeometry>& geo)
 {
   auto propConfig         = RungeKuttaEngine<>::Config();
-  propConfig.fieldService = std::make_shared<ConstantBField>(0, 0, 0.002);
+  propConfig.fieldService = std::make_shared<const ConstantBField>(0, 0, 0.002);
   auto propEngine         = std::make_shared<RungeKuttaEngine<>>(propConfig);
 
   auto matConfig      = MaterialEffectsEngine::Config();

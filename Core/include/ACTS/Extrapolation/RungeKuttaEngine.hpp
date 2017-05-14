@@ -167,7 +167,7 @@ public:
   struct Config
   {
     /// the field service
-    std::shared_ptr<MagneticField> fieldService = nullptr;
+    std::shared_ptr<const MagneticField> fieldService = nullptr;
     /// accuracy parameter
     double dlt = 0.0002;
     /// max step whith helix model

@@ -70,7 +70,7 @@ namespace Test {
     {
       InterpolatedBFieldMap::Config c;
       c.fieldMapFile = inFile;
-      BField         = std::make_unique<InterpolatedBFieldMap>(std::move(c));
+      BField = std::make_unique<const InterpolatedBFieldMap>(std::move(c));
     }
 
     size_t
@@ -118,7 +118,7 @@ namespace Test {
       return BField->insideGrid(pos);
     }
 
-    std::unique_ptr<InterpolatedBFieldMap> BField = nullptr;
+    std::unique_ptr<const InterpolatedBFieldMap> BField = nullptr;
     /// @endcond
   };
 
