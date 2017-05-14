@@ -41,7 +41,7 @@ public:
   struct Config
   {
     /// the used propagation engine
-    std::shared_ptr<IPropagationEngine> propagationEngine = nullptr;
+    std::shared_ptr<const IPropagationEngine> propagationEngine = nullptr;
     /// the material effects updator
     std::shared_ptr<IMaterialEffectsEngine> materialEffectsEngine = nullptr;
     /// the tracking geometry cache

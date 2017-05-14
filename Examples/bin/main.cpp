@@ -99,7 +99,7 @@ public:
   }
 };
 
-std::shared_ptr<IExtrapolationEngine>
+std::shared_ptr<const IExtrapolationEngine>
 initExtrapolator(const std::shared_ptr<const TrackingGeometry>& geo)
 {
   auto propConfig         = RungeKuttaEngine<>::Config();
@@ -126,9 +126,12 @@ initExtrapolator(const std::shared_ptr<const TrackingGeometry>& geo)
   exEngineConfig.propagationEngine    = propEngine;
   exEngineConfig.navigationEngine     = navEngine;
   exEngineConfig.extrapolationEngines = {statEngine};
-  auto exEngine = std::make_shared<ExtrapolationEngine>(exEngineConfig);
-  exEngine->setLogger(
+  auto mutableExEngine 
+      = std::make_shared<ExtrapolationEngine>(exEngineConfig);
+  mutableExEngine->setLogger(
       getDefaultLogger("ExtrapolationEngine", Logging::VERBOSE));
+  auto exEngine
+      = std::const_pointer_cast<const ExtrapolationEngine>(mutableExEngine);
 
   return exEngine;
 }

@@ -68,9 +68,9 @@ public:
   struct Config
   {
     /// the used propagation engine
-    std::shared_ptr<IPropagationEngine> propagationEngine = nullptr;
+    std::shared_ptr<const IPropagationEngine> propagationEngine = nullptr;
     /// the navigation engine to resolve the boundary
-    std::shared_ptr<INavigationEngine> navigationEngine = nullptr;
+    std::shared_ptr<const INavigationEngine> navigationEngine = nullptr;
     /// the material effects updated
     std::shared_ptr<IMaterialEffectsEngine> materialEffectsEngine = nullptr;
     /// output prefix

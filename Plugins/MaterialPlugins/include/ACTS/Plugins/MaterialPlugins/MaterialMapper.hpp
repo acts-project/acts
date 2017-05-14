@@ -79,7 +79,7 @@ public:
     /// ignore events with eta bigger than the cutoff value
     double etaCutoff;
     /// extrapolation engine
-    std::shared_ptr<IExtrapolationEngine> extrapolationEngine = nullptr;
+    std::shared_ptr<const IExtrapolationEngine> extrapolationEngine = nullptr;
   };
 
   /// @struct Cache
