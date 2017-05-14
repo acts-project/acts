@@ -91,7 +91,7 @@ public:
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
   createTrackingVolume(const LayerVector&                 layers,
-                       std::shared_ptr<Material>          matprop,
+                       std::shared_ptr<const Material>    matprop,
                        VolumeBoundsPtr                    volBounds,
                        std::shared_ptr<const Transform3D> transform = nullptr,
                        const std::string& volumeName = "UndefinedVolume",
@@ -110,13 +110,13 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
-  createTrackingVolume(const LayerVector&        layers,
-                       std::shared_ptr<Material> matprop,
-                       double                    loc0Min,
-                       double                    loc0Max,
-                       double                    loc1Min,
-                       double                    loc1Max,
-                       const std::string&        volumeName = "UndefinedVolume",
+  createTrackingVolume(const LayerVector&              layers,
+                       std::shared_ptr<const Material> matprop,
+                       double                          loc0Min,
+                       double                          loc0Max,
+                       double                          loc1Min,
+                       double                          loc1Max,
+                       const std::string& volumeName = "UndefinedVolume",
                        BinningType btype = arbitrary) const override;
 
   /// Create a gap volume from dimensions and
@@ -130,14 +130,14 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
-  createGapTrackingVolume(std::shared_ptr<Material> matprop,
-                          double                    loc0Min,
-                          double                    loc0Max,
-                          double                    loc1Min,
-                          double                    loc1Max,
-                          unsigned int              materialLayers,
-                          bool                      cylinder = true,
-                          const std::string&        volumeName
+  createGapTrackingVolume(std::shared_ptr<const Material> matprop,
+                          double                          loc0Min,
+                          double                          loc0Max,
+                          double                          loc1Min,
+                          double                          loc1Max,
+                          unsigned int                    materialLayers,
+                          bool                            cylinder = true,
+                          const std::string&              volumeName
                           = "UndefinedVolume") const override;
 
   /// Create a gap volume from dimensions and
@@ -151,13 +151,13 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
-  createGapTrackingVolume(std::shared_ptr<Material>  matprop,
-                          double                     loc0Min,
-                          double                     loc0Max,
-                          double                     loc1Min,
-                          double                     loc1Max,
-                          const std::vector<double>& layerPositions,
-                          bool                       cylinder = true,
+  createGapTrackingVolume(std::shared_ptr<const Material> matprop,
+                          double                          loc0Min,
+                          double                          loc0Max,
+                          double                          loc1Min,
+                          double                          loc1Max,
+                          const std::vector<double>&      layerPositions,
+                          bool                            cylinder = true,
                           const std::string& volumeName = "UndefinedVolume",
                           BinningType        btype = arbitrary) const override;
 

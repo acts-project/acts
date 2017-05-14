@@ -55,7 +55,7 @@ Acts::CylinderVolumeHelper::setLogger(std::unique_ptr<Logger> newLogger)
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createTrackingVolume(
     const LayerVector&                  layers,
-    std::shared_ptr<Material>           matprop,
+    std::shared_ptr<const Material>     matprop,
     std::shared_ptr<const VolumeBounds> volBounds,
     std::shared_ptr<const Transform3D>  transform,
     const std::string&                  volumeName,
@@ -150,14 +150,14 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createTrackingVolume(
-    const LayerVector&        layers,
-    std::shared_ptr<Material> matprop,
-    double                    rMin,
-    double                    rMax,
-    double                    zMin,
-    double                    zMax,
-    const std::string&        volumeName,
-    BinningType               bType) const
+    const LayerVector&              layers,
+    std::shared_ptr<const Material> matprop,
+    double                          rMin,
+    double                          rMax,
+    double                          zMin,
+    double                          zMax,
+    const std::string&              volumeName,
+    BinningType                     bType) const
 {
   // that's what is needed
   CylinderVolumeBounds* cBounds = nullptr;
@@ -203,14 +203,14 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createGapTrackingVolume(
-    std::shared_ptr<Material> matprop,
-    double                    rMin,
-    double                    rMax,
-    double                    zMin,
-    double                    zMax,
-    unsigned int              materialLayers,
-    bool                      cylinder,
-    const std::string&        volumeName) const
+    std::shared_ptr<const Material> matprop,
+    double                          rMin,
+    double                          rMax,
+    double                          zMin,
+    double                          zMax,
+    unsigned int                    materialLayers,
+    bool                            cylinder,
+    const std::string&              volumeName) const
 {
   // screen output
   ACTS_VERBOSE("Create cylindrical gap TrackingVolume '"
@@ -246,15 +246,15 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createGapTrackingVolume(
-    std::shared_ptr<Material>  matprop,
-    double                     rMin,
-    double                     rMax,
-    double                     zMin,
-    double                     zMax,
-    const std::vector<double>& layerPositions,
-    bool                       cylinder,
-    const std::string&         volumeName,
-    BinningType                bType) const
+    std::shared_ptr<const Material> matprop,
+    double                          rMin,
+    double                          rMax,
+    double                          zMin,
+    double                          zMax,
+    const std::vector<double>&      layerPositions,
+    bool                            cylinder,
+    const std::string&              volumeName,
+    BinningType                     bType) const
 {
   // screen output
   ACTS_VERBOSE("Create cylindrical gap TrackingVolume '"

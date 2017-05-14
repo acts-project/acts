@@ -63,7 +63,7 @@ namespace Test {
     /// create material mapping
     MaterialMapper::Config mapperConf;
     mapperConf.extrapolationEngine = nullptr;
-    auto materialMapper            = std::make_shared<MaterialMapper>(
+    auto materialMapper            = std::make_shared<const MaterialMapper>(
         mapperConf, Acts::getDefaultLogger("MaterialMapper", Logging::VERBOSE));
 
     /// now call the assignment function

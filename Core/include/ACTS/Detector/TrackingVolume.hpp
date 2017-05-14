@@ -118,7 +118,7 @@ public:
   static MutableTrackingVolumePtr
   create(std::shared_ptr<const Transform3D> htrans,
          VolumeBoundsPtr                    volumeBounds,
-         std::shared_ptr<Material>          matprop,
+         std::shared_ptr<const Material>    matprop,
          std::unique_ptr<const LayerArray>  cLayerArray   = nullptr,
          const LayerVector                  cLayerVector  = {},
          const TrackingVolumeVector         cVolumeVector = {},
@@ -388,7 +388,7 @@ protected:
   /// @param volumeName is a string identifier
   TrackingVolume(std::shared_ptr<const Transform3D> htrans,
                  VolumeBoundsPtr                    volumeBounds,
-                 std::shared_ptr<Material>          matprop,
+                 std::shared_ptr<const Material>    matprop,
                  std::unique_ptr<const LayerArray>  cLayerArray  = nullptr,
                  const LayerVector                  cLayerVector = {},
                  std::shared_ptr<const TrackingVolumeArray> cVolumeArray
@@ -448,7 +448,7 @@ private:
       = delete;
 
   /// The Material the TrackingVolume consists of
-  std::shared_ptr<Material> m_material;
+  std::shared_ptr<const Material> m_material;
 
   /// Remember the mother volume
   const TrackingVolume* m_motherVolume;

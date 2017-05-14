@@ -20,7 +20,7 @@
 
 Acts::TrackingVolume::TrackingVolume()
   : Volume()
-  , m_material(std::make_shared<Acts::Material>())
+  , m_material(std::make_shared<const Material>())
   , m_motherVolume()
   , m_boundarySurfaces()
   , m_confinedLayers(nullptr)
@@ -43,7 +43,7 @@ Acts::TrackingVolume::TrackingVolume(
     const std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
     const std::string&                               volumeName)
   : Volume(htrans, volbounds)
-  , m_material(std::make_shared<Acts::Material>())
+  , m_material(std::make_shared<const Material>())
   , m_motherVolume(nullptr)
   , m_boundarySurfaces()
   , m_confinedLayers(nullptr)
@@ -66,7 +66,7 @@ Acts::TrackingVolume::TrackingVolume(
 Acts::TrackingVolume::TrackingVolume(
     std::shared_ptr<const Transform3D>         htrans,
     VolumeBoundsPtr                            volbounds,
-    std::shared_ptr<Material>                  matprop,
+    std::shared_ptr<const Material>            matprop,
     std::unique_ptr<const LayerArray>          staticLayerArray,
     const LayerVector                          arbitraryLayerVector,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,

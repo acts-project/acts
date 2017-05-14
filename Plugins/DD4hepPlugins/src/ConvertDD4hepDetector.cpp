@@ -243,11 +243,12 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
 
         // get the possible material of the surounding volume
         DD4hep::Geometry::Material ddmaterial = subDetector.volume().material();
-        auto volumeMaterial = std::make_shared<Material>(ddmaterial.radLength(),
-                                                         ddmaterial.intLength(),
-                                                         ddmaterial.A(),
-                                                         ddmaterial.Z(),
-                                                         ddmaterial.density());
+        auto volumeMaterial
+            = std::make_shared<const Material>(ddmaterial.radLength(),
+                                               ddmaterial.intLength(),
+                                               ddmaterial.A(),
+                                               ddmaterial.Z(),
+                                               ddmaterial.density());
 
         // the configuration object of the volume builder
         Acts::CylinderVolumeBuilder::Config cvbConfig;
@@ -344,11 +345,12 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
 
       // get the possible material of the surounding volume
       DD4hep::Geometry::Material ddmaterial = subDetector.volume().material();
-      auto volumeMaterial = std::make_shared<Material>(ddmaterial.radLength(),
-                                                       ddmaterial.intLength(),
-                                                       ddmaterial.A(),
-                                                       ddmaterial.Z(),
-                                                       ddmaterial.density());
+      auto volumeMaterial
+          = std::make_shared<const Material>(ddmaterial.radLength(),
+                                             ddmaterial.intLength(),
+                                             ddmaterial.A(),
+                                             ddmaterial.Z(),
+                                             ddmaterial.density());
       // the configuration object of the volume builder
       Acts::CylinderVolumeBuilder::Config cvbConfig;
       cvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
@@ -429,11 +431,12 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
 
       // get the possible material
       DD4hep::Geometry::Material ddmaterial = subDetector.volume().material();
-      auto volumeMaterial = std::make_shared<Material>(ddmaterial.radLength(),
-                                                       ddmaterial.intLength(),
-                                                       ddmaterial.A(),
-                                                       ddmaterial.Z(),
-                                                       ddmaterial.density());
+      auto volumeMaterial
+          = std::make_shared<const Material>(ddmaterial.radLength(),
+                                             ddmaterial.intLength(),
+                                             ddmaterial.A(),
+                                             ddmaterial.Z(),
+                                             ddmaterial.density());
       cvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
       cvbConfig.volumeSignature      = 0;
       cvbConfig.volumeName           = subDetector.name();
