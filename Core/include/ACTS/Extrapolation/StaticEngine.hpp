@@ -72,7 +72,8 @@ public:
     /// the navigation engine to resolve the boundary
     std::shared_ptr<const INavigationEngine> navigationEngine = nullptr;
     /// the material effects updated
-    std::shared_ptr<IMaterialEffectsEngine> materialEffectsEngine = nullptr;
+    std::shared_ptr<const IMaterialEffectsEngine> materialEffectsEngine
+        = nullptr;
     /// output prefix
     std::string prefix = "[SE] - ";
     /// output postfix
