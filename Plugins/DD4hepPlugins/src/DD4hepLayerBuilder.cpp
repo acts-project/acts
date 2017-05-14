@@ -588,7 +588,7 @@ Acts::DD4hepLayerBuilder::collectSensitive(
   }
 }
 
-std::shared_ptr<const Transform3D>
+std::shared_ptr<const Acts::Transform3D>
 Acts::DD4hepLayerBuilder::convertTransform(const TGeoMatrix* tGeoTrans) const
 {
   // get the placement and orientation in respect to its mother
