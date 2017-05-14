@@ -167,10 +167,10 @@ Acts::TrapezoidSegmentation::createSegmentationSurfaces(
         getTransformFromRotTransl(yBinRotationMatrix, binSurfaceCenter));
     // these are the boundaries
     if (ibiny == 0 || ibiny == m_binsY)
-      boundarySurfaces.push_back(std::shared_ptr<PlaneSurface>(
+      boundarySurfaces.push_back(std::shared_ptr<const PlaneSurface>(
           new PlaneSurface(binTransform, yBinBounds)));
     else  // these are the bin boundaries
-      segmentationSurfacesY.push_back(std::shared_ptr<PlaneSurface>(
+      segmentationSurfacesY.push_back(std::shared_ptr<const PlaneSurface>(
           new PlaneSurface(binTransform, yBinBounds)));
   }
 }
