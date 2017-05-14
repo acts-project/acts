@@ -68,7 +68,7 @@ Acts::PassiveLayerBuilder::constructLayers()
                                     << " and halfZ = "
                                     << m_cfg.centralLayerHalflengthZ.at(icl));
       // create the layer and push it back
-      auto cBounds = std::make_shared<CylinderBounds>(
+      auto cBounds = std::make_shared<const CylinderBounds>(
           m_cfg.centralLayerRadii[icl], m_cfg.centralLayerHalflengthZ.at(icl));
       // create the layer
       MutableLayerPtr cLayer = CylinderLayer::create(
@@ -111,8 +111,9 @@ Acts::PassiveLayerBuilder::constructLayers()
                                      << m_cfg.posnegLayerRmax.at(ipnl));
       // create the share disc bounds
       std::shared_ptr<const DiscBounds> dBounds
-          = std::make_shared<RadialBounds>(m_cfg.posnegLayerRmin.at(ipnl),
-                                           m_cfg.posnegLayerRmax.at(ipnl));
+          = std::make_shared<const RadialBounds>(
+              m_cfg.posnegLayerRmin.at(ipnl),
+              m_cfg.posnegLayerRmax.at(ipnl));
       // create the layer transforms
       const Transform3D* nTransform = new Transform3D(
           Translation3D(0., 0., -m_cfg.posnegLayerPositionZ.at(ipnl)));

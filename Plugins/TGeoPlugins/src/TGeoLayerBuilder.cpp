@@ -201,11 +201,12 @@ Acts::TGeoLayerBuilder::collectSensitive(
         ACTS_VERBOSE(offset << "[>>] accepted !");
         // create the element
         auto tgElement
-            = std::make_shared<Acts::TGeoDetectorElement>(Identifier(),
-                                                          tgNode,
-                                                          &tgTransform,
-                                                          layerConfig.localAxes,
-                                                          m_cfg.unit);
+            = std::make_shared<const Acts::TGeoDetectorElement>(
+                  Identifier(),
+                  tgNode,
+                  &tgTransform,
+                  layerConfig.localAxes,
+                  m_cfg.unit);
         // record the element @todo solve with provided cache
         m_elementStore.push_back(tgElement);
         // record the surface

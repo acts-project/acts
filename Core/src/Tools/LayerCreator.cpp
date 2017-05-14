@@ -276,8 +276,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
           surfaces, minR, maxR, minPhi, maxPhi, binsR, binsPhi, transform);
 
   // create the share disc bounds
-  auto dBounds = std::make_shared<RadialBounds>(minR - envelopeMinR,
-                                                maxR + envelopeMaxR);
+  auto dBounds = std::make_shared<const RadialBounds>(minR - envelopeMinR,
+                                                      maxR + envelopeMaxR);
 
   // create the layer transforms if not given
   if (!transform) {
@@ -327,7 +327,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
           surfaces, bTypeR, bTypePhi, transform);
 
   // create the shared disc bounds
-  auto dBounds = std::make_shared<RadialBounds>(layerRmin, layerRmax);
+  auto dBounds = std::make_shared<const RadialBounds>(layerRmin, layerRmax);
 
   // create the layer transforms if not given
   if (!transform) {
@@ -390,8 +390,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
           surfaces, bTypeR, bTypePhi, transform);
 
   // create the share disc bounds
-  auto dBounds = std::make_shared<RadialBounds>(minR - envelopeMinR,
-                                                maxR + envelopeMaxR);
+  auto dBounds = std::make_shared<const RadialBounds>(minR - envelopeMinR,
+                                                      maxR + envelopeMaxR);
 
   // create the layer transforms if not given
   if (!transform) {

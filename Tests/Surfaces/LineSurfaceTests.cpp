@@ -51,7 +51,7 @@ namespace Test {
     // ctor with nullptr for LineBounds
     BOOST_CHECK(LineSurfaceStub(pTransform).constructedOk());
     // ctor with LineBounds
-    auto pLineBounds = std::make_shared<LineBounds>(10.0);
+    auto pLineBounds = std::make_shared<const LineBounds>(10.0);
     BOOST_CHECK(LineSurfaceStub(pTransform, pLineBounds).constructedOk());
     // ctor with LineBounds, detector element, Identifier
     Identifier         identifier{2};
@@ -82,7 +82,7 @@ namespace Test {
     BOOST_TEST(referencePosition == line.binningPosition(binX));
     //
     // bounds()
-    auto              pLineBounds = std::make_shared<LineBounds>(10.0);
+    auto              pLineBounds = std::make_shared<const LineBounds>(10.0);
     LineSurfaceStub   boundedLine(pTransform, pLineBounds);
     const LineBounds& bounds
         = dynamic_cast<const LineBounds&>(boundedLine.bounds());

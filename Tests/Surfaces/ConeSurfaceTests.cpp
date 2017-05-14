@@ -58,8 +58,11 @@ namespace Test {
     /// Constructor with transform and ConeBounds pointer
     // ConeBounds (double alpha, double zmin, double zmax, double halfphi=M_PI,
     // double avphi=0.)
-    auto pConeBounds
-        = std::make_shared<ConeBounds>(alpha, zMin, zMax, halfPhiSector, 0.);
+    auto pConeBounds = std::make_shared<const ConeBounds>(alpha,
+                                                          zMin,
+                                                          zMax,
+                                                          halfPhiSector,
+                                                          0.);
     BOOST_TEST(ConeSurface(pTransform, pConeBounds).type() == Surface::Cone);
     //
     //

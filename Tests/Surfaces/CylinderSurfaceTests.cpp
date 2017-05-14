@@ -54,7 +54,8 @@ namespace Test {
     //
 
     /// Constructor with transform and CylinderBounds pointer
-    auto pCylinderBounds = std::make_shared<CylinderBounds>(radius, halfZ);
+    auto pCylinderBounds = std::make_shared<const CylinderBounds>(radius,
+                                                                  halfZ);
     BOOST_TEST(CylinderSurface(pTransform, pCylinderBounds).type()
                == Surface::Cylinder);
     //

@@ -51,7 +51,7 @@ namespace Test {
                == Surface::Straw);
     //
     /// Constructor with transform and LineBounds pointer
-    auto pLineBounds = std::make_shared<LineBounds>(radius, halfZ);
+    auto pLineBounds = std::make_shared<const LineBounds>(radius, halfZ);
     BOOST_TEST(StrawSurface(pTransform, pLineBounds).type() == Surface::Straw);
     //
     /// Constructor with LineBounds ptr, DetectorElement and Identifier

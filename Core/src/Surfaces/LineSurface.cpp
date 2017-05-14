@@ -19,7 +19,7 @@
 Acts::LineSurface::LineSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             radius,
                                double                             halez)
-  : Surface(htrans), m_bounds(std::make_shared<LineBounds>(radius, halez))
+  : Surface(htrans), m_bounds(std::make_shared<const LineBounds>(radius, halez))
 {
 }
 

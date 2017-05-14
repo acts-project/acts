@@ -33,24 +33,24 @@ buildGenericDetector(Logging::Level surfaceLLevel,
                      size_t         stage)
 {
   // configure surface array creator
-  auto surfaceArrayCreator = std::make_shared<SurfaceArrayCreator>(
+  auto surfaceArrayCreator = std::make_shared<const SurfaceArrayCreator>(
       getDefaultLogger("SurfaceArrayCreator", surfaceLLevel));
   // configure the layer creator that uses the surface array creator
   LayerCreator::Config lcConfig;
   lcConfig.surfaceArrayCreator = surfaceArrayCreator;
-  auto layerCreator            = std::make_shared<LayerCreator>(
+  auto layerCreator            = std::make_shared<const LayerCreator>(
       lcConfig, getDefaultLogger("LayerCreator", layerLLevel));
   // configure the layer array creator
-  auto layerArrayCreator = std::make_shared<LayerArrayCreator>(
+  auto layerArrayCreator = std::make_shared<const LayerArrayCreator>(
       getDefaultLogger("LayerArrayCreator", layerLLevel));
   // tracking volume array creator
-  auto tVolumeArrayCreator = std::make_shared<TrackingVolumeArrayCreator>(
+  auto tVolumeArrayCreator = std::make_shared<const TrackingVolumeArrayCreator>(
       getDefaultLogger("TrackingVolumeArrayCreator", volumeLLevel));
   // configure the cylinder volume helper
   CylinderVolumeHelper::Config cvhConfig;
   cvhConfig.layerArrayCreator          = layerArrayCreator;
   cvhConfig.trackingVolumeArrayCreator = tVolumeArrayCreator;
-  auto cylinderVolumeHelper            = std::make_shared<CylinderVolumeHelper>(
+  auto cylinderVolumeHelper = std::make_shared<const CylinderVolumeHelper>(
       cvhConfig, getDefaultLogger("CylinderVolumeHelper", volumeLLevel));
   //-------------------------------------------------------------------------------------
   // list the volume builders

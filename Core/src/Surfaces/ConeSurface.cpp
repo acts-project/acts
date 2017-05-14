@@ -33,7 +33,8 @@ Acts::ConeSurface::ConeSurface(const ConeSurface& other,
 Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             alpha,
                                bool                               symmetric)
-  : Surface(htrans), m_bounds(std::make_shared<ConeBounds>(alpha, symmetric))
+  : Surface(htrans)
+  , m_bounds(std::make_shared<const ConeBounds>(alpha, symmetric))
 {
 }
 
@@ -43,7 +44,7 @@ Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             zmax,
                                double                             halfPhi)
   : Surface(htrans)
-  , m_bounds(std::make_shared<ConeBounds>(alpha, zmin, zmax, halfPhi))
+  , m_bounds(std::make_shared<const ConeBounds>(alpha, zmin, zmax, halfPhi))
 {
 }
 
