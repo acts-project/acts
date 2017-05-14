@@ -76,7 +76,7 @@ namespace Test {
     Transform3D   transform(translation);
     BOOST_TEST(Surface::Other == SurfaceStub(original, transform).type());
     // need some cruft to make the next one work
-    auto       pTransform = std::make_shared<Transform3D>(translation);
+    auto       pTransform = std::make_shared<const Transform3D>(translation);
     Identifier identifier;
     std::shared_ptr<const Acts::PlanarBounds> p
         = std::make_shared<const RectangleBounds>(5., 10.);
@@ -93,7 +93,7 @@ namespace Test {
         = std::make_shared<const RectangleBounds>(5., 10.);
     Vector3D           reference{0., 1., 2.};
     Translation3D      translation{0., 1., 2.};
-    auto               pTransform = std::make_shared<Transform3D>(translation);
+    auto pTransform = std::make_shared<const Transform3D>(translation);
     auto               pLayer = PlaneLayer::create(pTransform, pPlanarBound);
     MaterialProperties properties{0.2, 0.2, 0.2, 20., 10, 5.};
     auto               pMaterial
@@ -179,8 +179,8 @@ namespace Test {
     Vector3D      reference{0., 1., 2.};
     Translation3D translation1{0., 1., 2.};
     Translation3D translation2{1., 1., 2.};
-    auto          pTransform1 = std::make_shared<Transform3D>(translation1);
-    auto          pTransform2 = std::make_shared<Transform3D>(translation2);
+    auto pTransform1 = std::make_shared<const Transform3D>(translation1);
+    auto pTransform2 = std::make_shared<const Transform3D>(translation2);
     auto          pLayer      = PlaneLayer::create(pTransform1, pPlanarBound);
     MaterialProperties properties{1., 1., 1., 20., 10, 5.};
     auto               pMaterial

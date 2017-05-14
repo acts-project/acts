@@ -48,7 +48,7 @@ public:
   ///
   /// @return a sharted pointer to the new layer
   static MutableLayerPtr
-  create(std::shared_ptr<Transform3D>        transform,
+  create(std::shared_ptr<const Transform3D>  transform,
          std::shared_ptr<const DiscBounds>   dbounds,
          std::unique_ptr<SurfaceArray>       surfaceArray = nullptr,
          double                              thickness    = 0.,
@@ -123,7 +123,7 @@ protected:
   /// @param thickness is the layer thickness (along the normal vector)
   /// @param ad is the approach descriptor that provides the approach surface
   /// @param laytyp is the layer taype
-  DiscLayer(std::shared_ptr<Transform3D>        transform,
+  DiscLayer(std::shared_ptr<const Transform3D>  transform,
             std::shared_ptr<const DiscBounds>   dbounds,
             std::unique_ptr<SurfaceArray>       surfaceArray = nullptr,
             double                              thickness    = 0.,

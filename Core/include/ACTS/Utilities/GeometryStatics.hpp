@@ -21,26 +21,26 @@ namespace Acts {
 
 // transformations
 
-static Transform3D s_idTransform
+static const Transform3D s_idTransform
     = Transform3D::Identity();  //!< idendity transformation
-static Rotation3D s_idRotation
+static const Rotation3D s_idRotation
     = Acts::Rotation3D::Identity();  //!< idendity rotation
 
 // axis system
-static Vector3D s_xAxis(1, 0, 0);  //!< global x Axis;
-static Vector3D s_yAxis(0, 1, 0);  //!< global y Axis;
-static Vector3D s_zAxis(0, 0, 1);  //!< global z Axis;
+static const Vector3D s_xAxis(1, 0, 0);  //!< global x Axis;
+static const Vector3D s_yAxis(0, 1, 0);  //!< global y Axis;
+static const Vector3D s_zAxis(0, 0, 1);  //!< global z Axis;
 
 // unit vectors
-static Vector2D s_origin2D(0., 0.);
+static const Vector2D s_origin2D(0., 0.);
 
 // origin
 
-static Vector3D s_origin(0, 0, 0);  //!< origin position
+static const Vector3D s_origin(0, 0, 0);  //!< origin position
 
-static double helper[9] = {0., 1., 0., 1., 0., 0., 0., 0., -1.};
+static const double helper[9] = {0., 1., 0., 1., 0., 0., 0., 0., -1.};
 
-static Acts::RotationMatrix3D s_idRotationZinverse(helper);
+static const Acts::RotationMatrix3D s_idRotationZinverse(helper);
 }
 
 #endif  // ACTS_GEOMETYRUTILS_GEOMETRYSTATICS_H

@@ -138,7 +138,7 @@ private:
   // Private helper function to convert the TGeo transformation matrix into a
   // ACTS transformation matrix
   /// @param tGeoTrans TGeo transformation matrix which should be converted
-  std::shared_ptr<Acts::Transform3D>
+  std::shared_ptr<const Acts::Transform3D>
   convertTransform(const TGeoMatrix* tGeoTrans) const;
 };
 

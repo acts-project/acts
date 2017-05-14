@@ -21,7 +21,7 @@
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
 
 Acts::CylinderLayer::CylinderLayer(
-    std::shared_ptr<Transform3D>          transform,
+    std::shared_ptr<const Transform3D>    transform,
     std::shared_ptr<const CylinderBounds> cBounds,
     std::unique_ptr<SurfaceArray>         surfaceArray,
     double                                thickness,

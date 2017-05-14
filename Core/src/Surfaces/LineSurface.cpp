@@ -16,15 +16,15 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::LineSurface::LineSurface(std::shared_ptr<Transform3D> htrans,
-                               double                       radius,
-                               double                       halez)
+Acts::LineSurface::LineSurface(std::shared_ptr<const Transform3D> htrans,
+                               double                             radius,
+                               double                             halez)
   : Surface(htrans), m_bounds(std::make_shared<LineBounds>(radius, halez))
 {
 }
 
-Acts::LineSurface::LineSurface(std::shared_ptr<Transform3D>      htrans,
-                               std::shared_ptr<const LineBounds> lbounds)
+Acts::LineSurface::LineSurface(std::shared_ptr<const Transform3D> htrans,
+                               std::shared_ptr<const LineBounds>  lbounds)
   : Surface(htrans), m_bounds(lbounds)
 {
 }

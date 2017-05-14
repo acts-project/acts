@@ -27,7 +27,7 @@ class ILayerCreator;
 class TGeoDetectorElement;
 class Surface;
 
-typedef std::pair<TGeoNode*, std::shared_ptr<Transform3D>> NodeTransform;
+typedef std::pair<TGeoNode*, std::shared_ptr<const Transform3D>> NodeTransform;
 
 /// @class TGeoLayerBuilder
 /// works on the gGeoManager, as this is filled from GDML

@@ -134,7 +134,7 @@ public:
   /// situated
   /// @note this surface is a factory method, the volume handles the memory
   const std::vector<const Acts::Surface*>
-  decomposeToSurfaces(std::shared_ptr<Transform3D> transformPtr) const override;
+  decomposeToSurfaces(std::shared_ptr<const Transform3D> transformPtr) const override;
 
   /// Binning offset - overloaded for some R-binning types
   ///

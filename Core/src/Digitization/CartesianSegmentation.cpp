@@ -72,21 +72,21 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
       new RectangleBounds(m_activeBounds->boundingBox().halflengthX(),
                           m_activeBounds->boundingBox().halflengthY()));
   // - they are separated by half a thickness in z
-  auto readoutPlaneTransform
+  auto mutableReadoutPlaneTransform
       = std::make_shared<Transform3D>(Transform3D::Identity());
-  auto counterPlaneTransform
+  auto mutableCounterPlaneTransform
       = std::make_shared<Transform3D>(Transform3D::Identity());
   // readout and counter readout bounds, the bounds of the readout plane are
   // like the active ones
   std::shared_ptr<const PlanarBounds> readoutPlaneBounds = moduleBounds;
   std::shared_ptr<const PlanarBounds> counterPlaneBounds(nullptr);
   // the transform of the readout plane is always centric
-  (*readoutPlaneTransform).translation()
+  (*mutableReadoutPlaneTransform).translation()
       = Vector3D(0., 0., readoutDirection * halfThickness);
   // no lorentz angle and everything is straight-forward
   if (lorentzAngle == 0.) {
     counterPlaneBounds = moduleBounds;
-    (*counterPlaneTransform).translation()
+    (*mutableCounterPlaneTransform).translation()
         = Vector3D(0., 0., -readoutDirection * halfThickness);
   } else {
     // lorentz reduced Bounds
@@ -99,9 +99,16 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
     // now we shift the counter plane in position - this depends on lorentz
     // angle
     double counterPlaneShift = -readoutDirection * lorentzPlaneShiftX;
-    (*counterPlaneTransform).translation()
+    (*mutableCounterPlaneTransform).translation()
         = Vector3D(counterPlaneShift, 0., -readoutDirection * halfThickness);
   }
+  // - finalize the transforms
+  auto readoutPlaneTransform
+        = std::const_pointer_cast<const Transform3D>(
+              mutableReadoutPlaneTransform);
+  auto counterPlaneTransform
+        = std::const_pointer_cast<const Transform3D>(
+              mutableCounterPlaneTransform);
   // - build the readout & counter readout surfaces
   boundarySurfaces.push_back(std::shared_ptr<const PlaneSurface>(
       new PlaneSurface(readoutPlaneTransform, readoutPlaneBounds)));
@@ -164,7 +171,7 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
       const RotationMatrix3D& boundaryXRotation
           = boundaryStraight ? xBinRotationMatrix : lorentzPlaneRotationMatrix;
       // build the rotation from it
-      auto boundaryXTransform = std::make_shared<Transform3D>(
+      auto boundaryXTransform = std::make_shared<const Transform3D>(
           getTransformFromRotTransl(boundaryXRotation, boundaryXPosition));
       // the correct bounds for this
       std::shared_ptr<const PlanarBounds> boundaryXBounds
@@ -178,7 +185,7 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
       Vector3D lorentzPlanePosition(
           cPosX - readoutDirection * lorentzPlaneShiftX, 0., 0.);
       auto lorentzPlaneTransform
-          = std::make_shared<Transform3D>(getTransformFromRotTransl(
+          = std::make_shared<const Transform3D>(getTransformFromRotTransl(
               lorentzPlaneRotationMatrix, lorentzPlanePosition));
       // lorentz plane surfaces
       segmentationSurfacesX.push_back(std::shared_ptr<const PlaneSurface>(
@@ -208,7 +215,7 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
         = -m_activeBounds->boundingBox().halflengthY() + ibiny * pitchY;
     Vector3D binSurfaceCenter(0., binPosY, 0.);
     // the binning transform
-    auto binTransform = std::make_shared<Transform3D>(
+    auto binTransform = std::make_shared<const Transform3D>(
         getTransformFromRotTransl(yBinRotationMatrix, binSurfaceCenter));
     // these are the boundaries
     if (ibiny == 0 || ibiny == m_binUtility->bins(1))

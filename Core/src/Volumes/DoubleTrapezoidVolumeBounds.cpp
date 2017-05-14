@@ -65,7 +65,7 @@ operator=(const Acts::DoubleTrapezoidVolumeBounds& trabo)
 
 const std::vector<const Acts::Surface*>
 Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
-    std::shared_ptr<Transform3D> transformPtr) const
+    std::shared_ptr<const Transform3D> transformPtr) const
 {
   std::vector<const Surface*> rSurfaces;
 
@@ -80,20 +80,20 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
   Vector3D         diamondZ(diamondRotation.col(2));
   Vector3D         diamondCenter(transform.translation());
 
-  Transform3D* tTransform = nullptr;
+  const Transform3D* tTransform = nullptr;
 
   //   (1) - at negative local z
   tTransform
       = new Transform3D(transform * AngleAxis3D(M_PI, Vector3D(0., 1., 0.))
                         * Translation3D(Vector3D(0., 0., halflengthZ())));
   rSurfaces.push_back(new PlaneSurface(
-      std::shared_ptr<Transform3D>(tTransform),
+      std::shared_ptr<const Transform3D>(tTransform),
       std::shared_ptr<const PlanarBounds>(faceXYDiamondBounds())));
   //   (2) - at positive local z
   tTransform = new Transform3D(
       transform * Translation3D(Vector3D(0., 0., halflengthZ())));
   rSurfaces.push_back(new PlaneSurface(
-      std::shared_ptr<Transform3D>(tTransform),
+      std::shared_ptr<const Transform3D>(tTransform),
       std::shared_ptr<const PlanarBounds>(faceXYDiamondBounds())));
   // face surfaces yz
   // transmute cyclical
@@ -111,7 +111,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
   tTransform
       = new Transform3D(alpha1Rotation * Translation3D(faceAlpha1Position));
   rSurfaces.push_back(
-      new PlaneSurface(std::shared_ptr<Transform3D>(tTransform),
+      new PlaneSurface(std::shared_ptr<const Transform3D>(tTransform),
                        std::shared_ptr<const PlanarBounds>(faceAlpha1Bounds)));
   //   (4) - at point B, attached to beta opening angle
   Vector3D B(diamondCenter + minHalflengthX() * diamondX
@@ -127,7 +127,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
   tTransform
       = new Transform3D(beta1Rotation * Translation3D(faceBeta1Position));
   rSurfaces.push_back(
-      new PlaneSurface(std::shared_ptr<Transform3D>(tTransform),
+      new PlaneSurface(std::shared_ptr<const Transform3D>(tTransform),
                        std::shared_ptr<const PlanarBounds>(faceBeta1Bounds)));
   // face surfaces yz
   // transmute cyclical
@@ -145,7 +145,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
   tTransform
       = new Transform3D(alpha2Rotation * Translation3D(faceAlpha2Position));
   rSurfaces.push_back(
-      new PlaneSurface(std::shared_ptr<Transform3D>(tTransform),
+      new PlaneSurface(std::shared_ptr<const Transform3D>(tTransform),
                        std::shared_ptr<const PlanarBounds>(faceAlpha2Bounds)));
   //   (6) - at point B', attached to beta opening angle
   Vector3D BB(diamondCenter + maxHalflengthX() * diamondX
@@ -161,7 +161,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
   tTransform
       = new Transform3D(beta2Rotation * Translation3D(faceBeta2Position));
   rSurfaces.push_back(
-      new PlaneSurface(std::shared_ptr<Transform3D>(tTransform),
+      new PlaneSurface(std::shared_ptr<const Transform3D>(tTransform),
                        std::shared_ptr<const PlanarBounds>(faceBeta2Bounds)));
   // face surfaces zx
   //   (7) - at negative local y
@@ -171,7 +171,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
                         * AngleAxis3D(-0.5 * M_PI, Vector3D(0., 1., 0.))
                         * AngleAxis3D(-0.5 * M_PI, Vector3D(1., 0., 0.)));
   rSurfaces.push_back(new PlaneSurface(
-      std::shared_ptr<Transform3D>(tTransform),
+      std::shared_ptr<const Transform3D>(tTransform),
       std::shared_ptr<const PlanarBounds>(faceZXRectangleBoundsBottom())));
   //   (8) - at positive local y
   tTransform = new Transform3D(
@@ -179,7 +179,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
       * AngleAxis3D(-0.5 * M_PI, Vector3D(0., 1., 0.))
       * AngleAxis3D(-0.5 * M_PI, Vector3D(1., 0., 0.)));
   rSurfaces.push_back(new PlaneSurface(
-      std::shared_ptr<Transform3D>(tTransform),
+      std::shared_ptr<const Transform3D>(tTransform),
       std::shared_ptr<const PlanarBounds>(faceZXRectangleBoundsTop())));
 
   return rSurfaces;

@@ -51,10 +51,10 @@ public:
   /// @param rmax is the outer radius of the disc surface
   /// @param hphisec is the opening angle of the disc surface and is optional
   ///        the default is a full disc
-  DiscSurface(std::shared_ptr<Transform3D> htrans,
-              double                       rmin,
-              double                       rmax,
-              double                       hphisec = M_PI);
+  DiscSurface(std::shared_ptr<const Transform3D> htrans,
+              double                             rmin,
+              double                             rmax,
+              double                             hphisec = M_PI);
 
   /// Constructor for Discs from Transform3D, \f$ r_{min}, r_{max}, hx_{min},
   /// hx_{max} \f$
@@ -68,21 +68,21 @@ public:
   /// @param rmax is the outer radius of the disc surface
   /// @param avephi is the position in phi (default is 0.)
   /// @param stereo is the optional stereo angle
-  DiscSurface(std::shared_ptr<Transform3D> htrans,
-              double                       minhalfx,
-              double                       maxhalfx,
-              double                       rmin,
-              double                       rmax,
-              double                       avephi = 0.,
-              double                       stereo = 0.);
+  DiscSurface(std::shared_ptr<const Transform3D> htrans,
+              double                             minhalfx,
+              double                             maxhalfx,
+              double                             rmin,
+              double                             rmax,
+              double                             avephi = 0.,
+              double                             stereo = 0.);
 
   /// Constructor for Discs from Transform3D and shared DiscBounds
   ///
   /// @param htrans is the transform that positions the disc in the global 3D
   /// frame
   /// @param dbounds are the disc bounds describing the surface coverage
-  DiscSurface(std::shared_ptr<Transform3D>      htrans,
-              std::shared_ptr<const DiscBounds> dbounds = nullptr);
+  DiscSurface(std::shared_ptr<const Transform3D> htrans,
+              std::shared_ptr<const DiscBounds>  dbounds = nullptr);
 
   /// Constructor from detector element and identifier
   /// @note the surface only acts as a proxy of the detector element

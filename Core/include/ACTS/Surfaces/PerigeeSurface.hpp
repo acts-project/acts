@@ -40,7 +40,7 @@ public:
   /// Constructor with a Transform - needed for tilt
   ///
   /// @param tTransform is the transform for position and tilting
-  PerigeeSurface(std::shared_ptr<Transform3D> tTransform);
+  PerigeeSurface(std::shared_ptr<const Transform3D> tTransform);
 
   /// Copy constructor
   ///

@@ -50,9 +50,9 @@ Acts::PlaneSurface::PlaneSurface(const Vector3D& center, const Vector3D& normal)
   curvilinearRotation.col(2) = T;
 
   // curvilinear surfaces are boundless
-  Surface::m_transform    = std::make_shared<Transform3D>();
-  (*Surface::m_transform) = curvilinearRotation;
-  Surface::m_transform->pretranslate(center);
+  Transform3D transform{ curvilinearRotation };
+  transform.pretranslate(center);
+  Surface::m_transform    = std::make_shared<const Transform3D>(transform);
 }
 
 Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
@@ -64,7 +64,7 @@ Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
   assert(pbounds);
 }
 
-Acts::PlaneSurface::PlaneSurface(std::shared_ptr<Transform3D>        htrans,
+Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const Transform3D>  htrans,
                                  std::shared_ptr<const PlanarBounds> pbounds)
   : Surface(std::move(htrans)), m_bounds(std::move(pbounds))
 {
@@ -133,7 +133,7 @@ Acts::PlaneSurface::isOnSurface(const Vector3D&      glopo,
 }
 
 Acts::PlaneSurface*
-Acts::PlaneSurface::clone(const Acts::Transform3D* shift) const
+Acts::PlaneSurface::clone(const Transform3D* shift) const
 {
   if (shift) new PlaneSurface(*this, *shift);
   return new PlaneSurface(*this);

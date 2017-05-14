@@ -43,8 +43,8 @@ namespace Test {
     double alpha{M_PI / 8.}, halfPhiSector{M_PI / 16.}, zMin{1.0}, zMax{10.};
     bool   symmetric(false);
     Translation3D translation{0., 1., 2.};
-    auto          pTransform     = std::make_shared<Transform3D>(translation);
-    auto          pNullTransform = std::make_shared<Transform3D>();
+    auto pTransform     = std::make_shared<const Transform3D>(translation);
+    auto pNullTransform = std::make_shared<const Transform3D>();
     BOOST_TEST(ConeSurface(pNullTransform, alpha, symmetric).type()
                == Surface::Cone);
     BOOST_TEST(ConeSurface(pTransform, alpha, symmetric).type()
@@ -82,8 +82,8 @@ namespace Test {
     double alpha{M_PI / 8.} /*,halfPhiSector{M_PI/16.}, zMin{1.0}, zMax{10.}*/;
     bool   symmetric(false);
     Translation3D translation{0., 1., 2.};
-    auto          pTransform = std::make_shared<Transform3D>(translation);
-    // auto pNullTransform = std::make_shared<Transform3D>();
+    auto          pTransform = std::make_shared<const Transform3D>(translation);
+    // auto pNullTransform = std::make_shared<const Transform3D>();
     ConeSurface coneSurfaceObject(pTransform, alpha, symmetric);
     //
     auto pClonedConeSurface = coneSurfaceObject.clone();
@@ -185,7 +185,7 @@ namespace Test {
     double alpha{M_PI / 8.} /*, halfPhiSector{M_PI/16.}, zMin{1.0}, zMax{10.}*/;
     bool   symmetric(false);
     Translation3D translation{0., 1., 2.};
-    auto          pTransform = std::make_shared<Transform3D>(translation);
+    auto          pTransform = std::make_shared<const Transform3D>(translation);
     ConeSurface   coneSurfaceObject(pTransform, alpha, symmetric);
     //
     ConeSurface coneSurfaceObject2(pTransform, alpha, symmetric);

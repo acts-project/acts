@@ -17,7 +17,8 @@ namespace Acts {
 class SurfaceStub : public Surface
 {
 public:
-  SurfaceStub(std::shared_ptr<Transform3D> htrans = nullptr) : Surface(htrans)
+  SurfaceStub(std::shared_ptr<const Transform3D> htrans = nullptr)
+    : Surface(htrans)
   {
   }
   SurfaceStub(const SurfaceStub& sf, const Transform3D& transf)

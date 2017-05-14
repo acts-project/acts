@@ -71,7 +71,7 @@ public:
   /// @param pbounds bounds object to describe the actual surface area
   ///
   /// @attention the pointer to pbounds must not be a nullptr
-  PlaneSurface(std::shared_ptr<Transform3D>        htrans,
+  PlaneSurface(std::shared_ptr<const Transform3D>  htrans,
                std::shared_ptr<const PlanarBounds> pbounds);
 
   virtual ~PlaneSurface();

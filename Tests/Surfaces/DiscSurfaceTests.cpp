@@ -52,7 +52,7 @@ namespace Test {
     //
     /// Test DiscSurface constructor with a transform specified
     Translation3D translation{0., 1., 2.};
-    auto          pTransform = std::make_shared<Transform3D>(translation);
+    auto          pTransform = std::make_shared<const Transform3D>(translation);
     BOOST_CHECK_NO_THROW(DiscSurface(pTransform, rMin, rMax, halfPhiSector));
     //
     /// Copy constructed DiscSurface
@@ -71,7 +71,7 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(DiscSurface_properties_test, *utf::expected_failures(2))
   {
     Vector3D                     origin3D{0, 0, 0};
-    std::shared_ptr<Transform3D> pTransform;  // nullptr
+    std::shared_ptr<const Transform3D> pTransform;  // nullptr
     double                       rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
     DiscSurface discSurfaceObject(pTransform, rMin, rMax, halfPhiSector);
     //
@@ -192,7 +192,7 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(DiscSurface_assignment_test)
   {
     Vector3D                     origin3D{0, 0, 0};
-    std::shared_ptr<Transform3D> pTransform;  // nullptr
+    std::shared_ptr<const Transform3D> pTransform;  // nullptr
     double                       rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
     DiscSurface discSurfaceObject(pTransform, rMin, rMax, halfPhiSector);
     DiscSurface assignedDisc(nullptr, NaN, NaN, NaN);

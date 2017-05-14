@@ -18,7 +18,7 @@
 
 Acts::GenericDetectorElement::GenericDetectorElement(
     const Identifier                          identifier,
-    std::shared_ptr<Transform3D>              transform,
+    std::shared_ptr<const Transform3D>        transform,
     std::shared_ptr<const PlanarBounds>       pBounds,
     double                                    thickness,
     std::shared_ptr<const SurfaceMaterial>    material,
@@ -38,11 +38,11 @@ Acts::GenericDetectorElement::GenericDetectorElement(
 }
 
 Acts::GenericDetectorElement::GenericDetectorElement(
-    const Identifier                             identifier,
-    std::shared_ptr<Acts::Transform3D>           transform,
-    std::shared_ptr<const Acts::DiscBounds>      dBounds,
-    double                                       thickness,
-    std::shared_ptr<const Acts::SurfaceMaterial> material)
+    const Identifier                       identifier,
+    std::shared_ptr<const Transform3D>     transform,
+    std::shared_ptr<const DiscBounds>      dBounds,
+    double                                 thickness,
+    std::shared_ptr<const SurfaceMaterial> material)
   : DetectorElementBase()
   , m_elementIdentifier(std::move(identifier))
   , m_elementTransform(std::move(transform))

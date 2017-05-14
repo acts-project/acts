@@ -47,7 +47,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
                                   double                              envelopeZ,
                                   size_t                              binsPhi,
                                   size_t                              binsZ,
-                                  std::shared_ptr<Transform3D>        transform,
+                                  std::shared_ptr<const Transform3D>  transform,
                                   std::unique_ptr<ApproachDescriptor> ad) const
 {
   // fist loop over the surfaces and estimate the dimensions
@@ -125,7 +125,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
                                   double                             layerHalfZ,
                                   BinningType                        bTypePhi,
                                   BinningType                        bTypeZ,
-                                  std::shared_ptr<Transform3D>       transform,
+                                  std::shared_ptr<const Transform3D> transform,
                                   std::unique_ptr<ApproachDescriptor> ad) const
 {
 
@@ -171,7 +171,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
                                   double                              envelopeZ,
                                   BinningType                         bTypePhi,
                                   BinningType                         bTypeZ,
-                                  std::shared_ptr<Transform3D>        transform,
+                                  std::shared_ptr<const Transform3D>  transform,
                                   std::unique_ptr<ApproachDescriptor> ad) const
 {
   // fist loop over the surfaces and estimate the dimensions
@@ -233,7 +233,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                               double                              envelopeZ,
                               size_t                              binsR,
                               size_t                              binsPhi,
-                              std::shared_ptr<Transform3D>        transform,
+                              std::shared_ptr<const Transform3D>  transform,
                               std::unique_ptr<ApproachDescriptor> ad) const
 {
   // loop over the surfaces and estimate
@@ -281,8 +281,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
 
   // create the layer transforms if not given
   if (!transform) {
-    transform = std::make_shared<Transform3D>(Transform3D::Identity());
-    transform->translation() = Vector3D(0., 0., layerZ);
+    transform = std::make_shared<const Transform3D>(
+        Translation3D(0., 0., layerZ));
   }
 
   // create the layers
@@ -307,7 +307,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                               double                              layerRmax,
                               BinningType                         bTypeR,
                               BinningType                         bTypePhi,
-                              std::shared_ptr<Transform3D>        transform,
+                              std::shared_ptr<const Transform3D>  transform,
                               std::unique_ptr<ApproachDescriptor> ad) const
 {
   // layer parametres
@@ -331,8 +331,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
 
   // create the layer transforms if not given
   if (!transform) {
-    transform = std::make_shared<Transform3D>(Transform3D::Identity());
-    transform->translation() = Vector3D(0., 0., layerZ);
+    transform = std::make_shared<const Transform3D>(
+        Translation3D(0., 0., layerZ));
   }
 
   // create the layers
@@ -355,7 +355,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                               double                              envelopeZ,
                               BinningType                         bTypeR,
                               BinningType                         bTypePhi,
-                              std::shared_ptr<Transform3D>        transform,
+                              std::shared_ptr<const Transform3D>  transform,
                               std::unique_ptr<ApproachDescriptor> ad) const
 {
 
@@ -395,8 +395,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
 
   // create the layer transforms if not given
   if (!transform) {
-    transform = std::make_shared<Transform3D>(Transform3D::Identity());
-    transform->translation() = Vector3D(0., 0., layerZ);
+    transform = std::make_shared<const Transform3D>(
+        Translation3D(0., 0., layerZ));
   }
 
   // create the layers
@@ -419,7 +419,7 @@ Acts::LayerCreator::planeLayer(
     double /**envelopeZ*/,
     size_t /**binsX*/,
     size_t /**binsY*/,
-    std::shared_ptr<Transform3D> /**transform*/,
+    std::shared_ptr<const Transform3D> /**transform*/,
     std::unique_ptr<ApproachDescriptor> /**ad*/) const
 {
   //@todo implement

@@ -40,7 +40,7 @@ public:
   ///
   /// @param htrans is the transform to position the volume in 3D space
   /// @param volBounds is the volume boundary definitions
-  Volume(std::shared_ptr<Transform3D> htrans, VolumeBoundsPtr volBounds);
+  Volume(std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volBounds);
 
   /// Copy Constructor - with optional shift
   ///
@@ -92,9 +92,9 @@ public:
   binningPosition(BinningValue bValue) const override;
 
 protected:
-  std::shared_ptr<Transform3D> m_transform;
-  Vector3D                     m_center;
-  VolumeBoundsPtr              m_volumeBounds;
+  std::shared_ptr<const Transform3D> m_transform;
+  Vector3D                           m_center;
+  VolumeBoundsPtr                    m_volumeBounds;
 };
 
 inline const Transform3D&

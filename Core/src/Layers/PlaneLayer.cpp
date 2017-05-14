@@ -17,7 +17,7 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
 
-Acts::PlaneLayer::PlaneLayer(std::shared_ptr<Transform3D>         transform,
+Acts::PlaneLayer::PlaneLayer(std::shared_ptr<const Transform3D>   transform,
                              std::shared_ptr<const PlanarBounds>& pbounds,
                              std::unique_ptr<SurfaceArray>        surfaceArray,
                              double                               thickness,
@@ -65,15 +65,17 @@ Acts::PlaneLayer::buildApproachDescriptor()
   const Vector3D&    lCenter    = PlaneSurface::center();
   const Vector3D&    lVector    = PlaneSurface::normal();
   // create new surfaces
-  Transform3D* apnTransform = new Transform3D(getTransformFromRotTransl(
+  const Transform3D* apnTransform = new Transform3D(getTransformFromRotTransl(
       lRotation, (lCenter - 0.5 * Layer::m_layerThickness * lVector)));
-  Transform3D* appTransform = new Transform3D(getTransformFromRotTransl(
+  const Transform3D* appTransform = new Transform3D(getTransformFromRotTransl(
       lRotation, (lCenter + 0.5 * Layer::m_layerThickness * lVector)));
   // create the new surfaces
   aSurfaces.push_back(new Acts::PlaneSurface(
-      std::shared_ptr<Transform3D>(apnTransform), PlaneSurface::m_bounds));
+      std::shared_ptr<const Transform3D>(apnTransform),
+      PlaneSurface::m_bounds));
   aSurfaces.push_back(new PlaneSurface(
-      std::shared_ptr<Transform3D>(appTransform), PlaneSurface::m_bounds));
+      std::shared_ptr<const Transform3D>(appTransform),
+      PlaneSurface::m_bounds));
   // set the layer and make TrackingGeometry
   for (auto& sfPtr : aSurfaces) {
     auto& mutableSf = *(const_cast<Surface*>(sfPtr));

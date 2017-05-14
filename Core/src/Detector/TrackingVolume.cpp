@@ -38,7 +38,7 @@ Acts::TrackingVolume::TrackingVolume()
 }
 
 Acts::TrackingVolume::TrackingVolume(
-    std::shared_ptr<Transform3D>                     htrans,
+    std::shared_ptr<const Transform3D>               htrans,
     VolumeBoundsPtr                                  volbounds,
     const std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
     const std::string&                               volumeName)
@@ -64,7 +64,7 @@ Acts::TrackingVolume::TrackingVolume(
 
 // constructor for arguments
 Acts::TrackingVolume::TrackingVolume(
-    std::shared_ptr<Transform3D>               htrans,
+    std::shared_ptr<const Transform3D>         htrans,
     VolumeBoundsPtr                            volbounds,
     std::shared_ptr<Material>                  matprop,
     std::unique_ptr<const LayerArray>          staticLayerArray,

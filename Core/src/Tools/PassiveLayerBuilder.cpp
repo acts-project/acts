@@ -114,20 +114,18 @@ Acts::PassiveLayerBuilder::constructLayers()
           = std::make_shared<RadialBounds>(m_cfg.posnegLayerRmin.at(ipnl),
                                            m_cfg.posnegLayerRmax.at(ipnl));
       // create the layer transforms
-      Transform3D* nTransform = new Transform3D(Transform3D::Identity());
-      nTransform->translation()
-          = Vector3D(0., 0., -m_cfg.posnegLayerPositionZ.at(ipnl));
-      Transform3D* pTransform = new Transform3D(Transform3D::Identity());
-      pTransform->translation()
-          = Vector3D(0., 0., m_cfg.posnegLayerPositionZ.at(ipnl));
+      const Transform3D* nTransform = new Transform3D(
+          Translation3D(0., 0., -m_cfg.posnegLayerPositionZ.at(ipnl)));
+      const Transform3D* pTransform = new Transform3D(
+          Translation3D(0., 0., m_cfg.posnegLayerPositionZ.at(ipnl)));
       // create the layers
       MutableLayerPtr nLayer
-          = DiscLayer::create(std::shared_ptr<Transform3D>(nTransform),
+          = DiscLayer::create(std::shared_ptr<const Transform3D>(nTransform),
                               dBounds,
                               nullptr,
                               m_cfg.posnegLayerThickness.at(ipnl));
       MutableLayerPtr pLayer
-          = DiscLayer::create(std::shared_ptr<Transform3D>(pTransform),
+          = DiscLayer::create(std::shared_ptr<const Transform3D>(pTransform),
                               dBounds,
                               nullptr,
                               m_cfg.posnegLayerThickness.at(ipnl));

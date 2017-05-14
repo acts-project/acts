@@ -18,15 +18,15 @@
 #include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
 
-Acts::StrawSurface::StrawSurface(std::shared_ptr<Acts::Transform3D> htrans,
+Acts::StrawSurface::StrawSurface(std::shared_ptr<const Transform3D> htrans,
                                  double                             radius,
                                  double                             halez)
   : LineSurface(htrans, radius, halez)
 {
 }
 
-Acts::StrawSurface::StrawSurface(std::shared_ptr<Transform3D>      htrans,
-                                 std::shared_ptr<const LineBounds> lbounds)
+Acts::StrawSurface::StrawSurface(std::shared_ptr<const Transform3D> htrans,
+                                 std::shared_ptr<const LineBounds>  lbounds)
   : LineSurface(htrans, lbounds)
 {
 }
@@ -43,8 +43,8 @@ Acts::StrawSurface::StrawSurface(const Acts::StrawSurface& other)
 {
 }
 
-Acts::StrawSurface::StrawSurface(const Acts::StrawSurface& other,
-                                 const Acts::Transform3D&  htrans)
+Acts::StrawSurface::StrawSurface(const StrawSurface& other,
+                                 const Transform3D&  htrans)
   : LineSurface(other, htrans)
 {
 }
@@ -64,7 +64,7 @@ Acts::StrawSurface::operator=(const StrawSurface& other)
 }
 
 Acts::StrawSurface*
-Acts::StrawSurface::clone(const Acts::Transform3D* shift) const
+Acts::StrawSurface::clone(const Transform3D* shift) const
 {
   if (shift) new StrawSurface(*this, *shift);
   return new StrawSurface(*this);

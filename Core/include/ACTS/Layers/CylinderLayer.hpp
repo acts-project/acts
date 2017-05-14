@@ -49,7 +49,7 @@ public:
   ///
   /// @return The return object is a shared poiter to the layer.
   static MutableLayerPtr
-  create(std::shared_ptr<Transform3D>          transform,
+  create(std::shared_ptr<const Transform3D>    transform,
          std::shared_ptr<const CylinderBounds> cbounds,
          std::unique_ptr<SurfaceArray>         surfaceArray = nullptr,
          double                                thickness    = 0.,
@@ -128,7 +128,7 @@ protected:
   /// @todo change ApproachDescriptor to unique_ptr
   ///
   /// @return The return object is a shared poiter to the layer.
-  CylinderLayer(std::shared_ptr<Transform3D>          transform,
+  CylinderLayer(std::shared_ptr<const Transform3D>    transform,
                 std::shared_ptr<const CylinderBounds> cbounds,
                 std::unique_ptr<SurfaceArray>         surfaceArray = nullptr,
                 double                                thickness    = 0.,

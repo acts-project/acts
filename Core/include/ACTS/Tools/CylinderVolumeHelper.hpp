@@ -90,10 +90,10 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
-  createTrackingVolume(const LayerVector&           layers,
-                       std::shared_ptr<Material>    matprop,
-                       VolumeBoundsPtr              volBounds,
-                       std::shared_ptr<Transform3D> transform = nullptr,
+  createTrackingVolume(const LayerVector&                 layers,
+                       std::shared_ptr<Material>          matprop,
+                       VolumeBoundsPtr                    volBounds,
+                       std::shared_ptr<const Transform3D> transform = nullptr,
                        const std::string& volumeName = "UndefinedVolume",
                        BinningType        btype = arbitrary) const override;
 
@@ -216,14 +216,14 @@ private:
   /// @param bValue the binning value in which the binning works
   /// @param bType is the type of binning: equidistant, arbitrary
   bool
-  estimateAndCheckDimension(const LayerVector&            layers,
-                            const CylinderVolumeBounds*&  cylBounds,
-                            std::shared_ptr<Transform3D>& transform,
-                            double&                       rMinClean,
-                            double&                       rMaxClean,
-                            double&                       zMinClean,
-                            double&                       zMaxClean,
-                            BinningValue&                 bValue,
+  estimateAndCheckDimension(const LayerVector&                  layers,
+                            const CylinderVolumeBounds*&        cylBounds,
+                            std::shared_ptr<const Transform3D>& transform,
+                            double&                             rMinClean,
+                            double&                             rMaxClean,
+                            double&                             zMinClean,
+                            double&                             zMaxClean,
+                            BinningValue&                       bValue,
                             BinningType bType = arbitrary) const;
 
   /// Private method - interglue all volumes contained by a TrackingVolume

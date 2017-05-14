@@ -59,7 +59,7 @@ public:
                 double                              envelopeZ,
                 size_t                              binsRPhi,
                 size_t                              binsZ,
-                std::shared_ptr<Transform3D>        transform = nullptr,
+                std::shared_ptr<const Transform3D>  transform = nullptr,
                 std::unique_ptr<ApproachDescriptor> ad = nullptr) const = 0;
 
   /// ILayerCreator interface method - returning a cylindrical layer
@@ -86,7 +86,7 @@ public:
                 double                              layerHalfZ,
                 BinningType                         bTypePhi,
                 BinningType                         bTypeZ,
-                std::shared_ptr<Transform3D>        transform = nullptr,
+                std::shared_ptr<const Transform3D>  transform = nullptr,
                 std::unique_ptr<ApproachDescriptor> ad = nullptr) const = 0;
 
   /// ILayerCreator interface method - returning a cylindrical layer
@@ -109,7 +109,7 @@ public:
                 double                              envelopeZ,
                 BinningType                         bTypePhi,
                 BinningType                         bTypeZ,
-                std::shared_ptr<Transform3D>        transform = nullptr,
+                std::shared_ptr<const Transform3D>  transform = nullptr,
                 std::unique_ptr<ApproachDescriptor> ad = nullptr) const = 0;
 
   /// ILayerCreator interface method - returning a disc layer
@@ -136,7 +136,7 @@ public:
             double                              envelopeZ,
             size_t                              binsR,
             size_t                              binsPhi,
-            std::shared_ptr<Transform3D>        transform = nullptr,
+            std::shared_ptr<const Transform3D>  transform = nullptr,
             std::unique_ptr<ApproachDescriptor> ad = nullptr) const = 0;
 
   /// ILayerCreator interface method - returning a disc layer
@@ -165,7 +165,7 @@ public:
             double                              layerRmax,
             BinningType                         bTypeR,
             BinningType                         bTypePhi,
-            std::shared_ptr<Transform3D>        transform = nullptr,
+            std::shared_ptr<const Transform3D>  transform = nullptr,
             std::unique_ptr<ApproachDescriptor> ad = nullptr) const = 0;
 
   /// ILayerCreator interface method - returning a disc layer
@@ -190,7 +190,7 @@ public:
             double                              envelopeZ,
             BinningType                         bTypeR,
             BinningType                         bTypePhi,
-            std::shared_ptr<Transform3D>        transform = nullptr,
+            std::shared_ptr<const Transform3D>  transform = nullptr,
             std::unique_ptr<ApproachDescriptor> ad = nullptr) const = 0;
 
   /// ILayerCreator interface method - returning a plane layer
@@ -215,7 +215,7 @@ public:
              double                              envelopeZ,
              size_t                              binsX,
              size_t                              binsY,
-             std::shared_ptr<Transform3D>        transform = nullptr,
+             std::shared_ptr<const Transform3D>  transform = nullptr,
              std::unique_ptr<ApproachDescriptor> ad = nullptr) const = 0;
 };
 

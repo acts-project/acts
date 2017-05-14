@@ -67,10 +67,10 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr
-  createTrackingVolume(const LayerVector&           layers,
-                       std::shared_ptr<Material>    matprop,
-                       VolumeBoundsPtr              volBounds,
-                       std::shared_ptr<Transform3D> transform = nullptr,
+  createTrackingVolume(const LayerVector&                 layers,
+                       std::shared_ptr<Material>          matprop,
+                       VolumeBoundsPtr                    volBounds,
+                       std::shared_ptr<const Transform3D> transform = nullptr,
                        const std::string& volumeName = "UndefinedVolume",
                        BinningType        btype = arbitrary) const = 0;
 

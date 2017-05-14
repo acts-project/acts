@@ -15,7 +15,7 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::Surface::Surface(std::shared_ptr<Acts::Transform3D> tform)
+Acts::Surface::Surface(std::shared_ptr<const Transform3D> tform)
   : GeometryObject()
   , m_transform(tform)
   , m_associatedDetElement(nullptr)
@@ -26,8 +26,8 @@ Acts::Surface::Surface(std::shared_ptr<Acts::Transform3D> tform)
 {
 }
 
-Acts::Surface::Surface(const Acts::DetectorElementBase& detelement,
-                       const Identifier&                id)
+Acts::Surface::Surface(const DetectorElementBase& detelement,
+                       const Identifier&          id)
   : GeometryObject()
   , m_transform(nullptr)
   , m_associatedDetElement(&detelement)
@@ -49,10 +49,10 @@ Acts::Surface::Surface(const Surface& other)
 {
 }
 
-Acts::Surface::Surface(const Surface& other, const Acts::Transform3D& shift)
+Acts::Surface::Surface(const Surface& other, const Transform3D& shift)
   : GeometryObject()
-  , m_transform(std::make_shared<Acts::Transform3D>(
-        Acts::Transform3D(shift * other.transform())))
+  , m_transform(std::make_shared<const Transform3D>(
+        Transform3D(shift * other.transform())))
   , m_associatedDetElement(nullptr)
   , m_associatedDetElementId()
   , m_associatedLayer(other.m_associatedLayer)

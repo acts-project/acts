@@ -43,9 +43,9 @@ public:
   /// @note if htrans == nullptr, the cylinder is positioned around (0.,0.,0.)
   /// @param radius is the radius of the cylinder
   /// @param hlength is the half lenght of the cylinder in z
-  CylinderSurface(std::shared_ptr<Transform3D> htrans,
-                  double                       radius,
-                  double                       hlength);
+  CylinderSurface(std::shared_ptr<const Transform3D> htrans,
+                  double                             radius,
+                  double                             hlength);
 
   /// Constructor from Transform3D, radius halfphi, and halflenght
   ///
@@ -54,10 +54,10 @@ public:
   /// @param radius is the radius of the cylinder
   /// @param hphi is the half length in phi of the cylinder
   /// @param hlength is the half lenght of the cylinder in z
-  CylinderSurface(std::shared_ptr<Transform3D> htrans,
-                  double                       radius,
-                  double                       hphi,
-                  double                       hlength);
+  CylinderSurface(std::shared_ptr<const Transform3D> htrans,
+                  double                             radius,
+                  double                             hphi,
+                  double                             hlength);
 
   /// Constructor from Transform3D and CylinderBounds
   ///
@@ -65,7 +65,7 @@ public:
   /// @note if htrans == nullptr, the cylinder is positioned around (0.,0.,0.)
   /// @param cbounds is a shared pointer to a cylindeer bounds object, must
   /// exist
-  CylinderSurface(std::shared_ptr<Transform3D>          htrans,
+  CylinderSurface(std::shared_ptr<const Transform3D>    htrans,
                   std::shared_ptr<const CylinderBounds> cbounds);
 
   /// Copy constructor

@@ -78,7 +78,7 @@ Acts::CylinderVolumeBounds::operator=(const CylinderVolumeBounds& cylbo)
 
 const std::vector<const Acts::Surface*>
 Acts::CylinderVolumeBounds::decomposeToSurfaces(
-    std::shared_ptr<Transform3D> transformPtr) const
+    std::shared_ptr<const Transform3D> transformPtr) const
 {
   std::vector<const Surface*> rSurfaces;
   rSurfaces.reserve(6);
@@ -86,8 +86,8 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
   // set the transform
   Transform3D transform = (transformPtr == nullptr) ? Transform3D::Identity()
                                                     : (*transformPtr.get());
-  Transform3D*     tTransform = nullptr;
-  Vector3D         cylCenter(transform.translation());
+  const Transform3D* tTransform = nullptr;
+  Vector3D           cylCenter(transform.translation());
 
   std::shared_ptr<const DiscBounds> dBounds = discBounds();
   // bottom Disc (negative z)
@@ -95,12 +95,14 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
       = new Transform3D(transform * AngleAxis3D(M_PI, Vector3D(1., 0., 0.))
                         * Translation3D(Vector3D(0., 0., halflengthZ())));
   rSurfaces.push_back(
-      new DiscSurface(std::shared_ptr<Transform3D>(tTransform), dBounds));
+      new DiscSurface(std::shared_ptr<const Transform3D>(tTransform),
+                      dBounds));
   // top Disc (positive z)
   tTransform = new Transform3D(
       transform * Translation3D(Vector3D(0., 0., halflengthZ())));
   rSurfaces.push_back(
-      new DiscSurface(std::shared_ptr<Transform3D>(tTransform), dBounds));
+      new DiscSurface(std::shared_ptr<const Transform3D>(tTransform),
+                      dBounds));
 
   // outer Cylinder - shares the transform
   rSurfaces.push_back(new CylinderSurface(transformPtr, outerCylinderBounds()));
@@ -114,19 +116,19 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
   if (std::abs(halfPhiSector() - M_PI) > s_numericalStable) {
     std::shared_ptr<const PlanarBounds> sp12Bounds = sectorPlaneBounds();
     // sectorPlane 1 (negative phi)
-    Transform3D* sp1Transform = new Transform3D(
+    const Transform3D* sp1Transform = new Transform3D(
         transform * AngleAxis3D(-halfPhiSector(), Vector3D(0., 0., 1.))
         * Translation3D(Vector3D(mediumRadius(), 0., 0.))
         * AngleAxis3D(M_PI / 2, Vector3D(1., 0., 0.)));
     rSurfaces.push_back(new PlaneSurface(
-        std::shared_ptr<Transform3D>(sp1Transform), sp12Bounds));
+        std::shared_ptr<const Transform3D>(sp1Transform), sp12Bounds));
     // sectorPlane 2 (positive phi)
-    Transform3D* sp2Transform = new Transform3D(
+    const Transform3D* sp2Transform = new Transform3D(
         transform * AngleAxis3D(halfPhiSector(), Vector3D(0., 0., 1.))
         * Translation3D(Vector3D(mediumRadius(), 0., 0.))
         * AngleAxis3D(-M_PI / 2, Vector3D(1., 0., 0.)));
     rSurfaces.push_back(new PlaneSurface(
-        std::shared_ptr<Transform3D>(sp2Transform), sp12Bounds));
+        std::shared_ptr<const Transform3D>(sp2Transform), sp12Bounds));
   }
   return rSurfaces;
 }

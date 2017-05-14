@@ -22,7 +22,7 @@ Acts::Volume::Volume()
 {
 }
 
-Acts::Volume::Volume(std::shared_ptr<Transform3D>        htrans,
+Acts::Volume::Volume(std::shared_ptr<const Transform3D>  htrans,
                      std::shared_ptr<const VolumeBounds> volbounds)
   : GeometryObject()
   , m_transform(htrans)
@@ -40,7 +40,7 @@ Acts::Volume::Volume(const Volume& vol, const Transform3D* shift)
 {
   // applyt he shift if it exists
   if (shift)
-    m_transform = std::make_shared<Transform3D>(transform() * (*shift));
+    m_transform = std::make_shared<const Transform3D>(transform() * (*shift));
   // now set the center
   m_center = transform().translation();
 }

@@ -66,7 +66,7 @@ public:
   ///
   /// @param htrans Transform3D positions the surface in 3D global space
   /// @note also acts as default constructor
-  Surface(std::shared_ptr<Transform3D> htrans = nullptr);
+  Surface(std::shared_ptr<const Transform3D> htrans = nullptr);
 
   /// Copy constructor
   /// - invalidates the association to detector element and identifier
@@ -339,7 +339,7 @@ public:
 protected:
   /// Transform3D definition that positions (translation, rotation) the surface
   /// in global space
-  std::shared_ptr<Transform3D> m_transform;
+  std::shared_ptr<const Transform3D> m_transform;
 
   /// Pointer to the a DetectorElementBase
   const DetectorElementBase* m_associatedDetElement;

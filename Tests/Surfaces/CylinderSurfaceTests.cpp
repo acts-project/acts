@@ -41,8 +41,8 @@ namespace Test {
     /// Constructor with transform pointer, null or valid, radius and halfZ
     double        radius(1.0), halfZ(10.), halfPhiSector(M_PI / 8.);
     Translation3D translation{0., 1., 2.};
-    auto          pTransform     = std::make_shared<Transform3D>(translation);
-    auto          pNullTransform = std::make_shared<Transform3D>();
+    auto pTransform     = std::make_shared<const Transform3D>(translation);
+    auto pNullTransform = std::make_shared<const Transform3D>();
     BOOST_TEST(CylinderSurface(pNullTransform, radius, halfZ).type()
                == Surface::Cylinder);
     BOOST_TEST(CylinderSurface(pTransform, radius, halfZ).type()
@@ -77,8 +77,8 @@ namespace Test {
     /// Test clone method
     double        radius(1.0), halfZ(10.);
     Translation3D translation{0., 1., 2.};
-    auto          pTransform = std::make_shared<Transform3D>(translation);
-    // auto pNullTransform = std::make_shared<Transform3D>();
+    auto          pTransform = std::make_shared<const Transform3D>(translation);
+    // auto pNullTransform = std::make_shared<const Transform3D>();
     CylinderSurface cylinderSurfaceObject(pTransform, radius, halfZ);
     //
     auto pClonedCylinderSurface = cylinderSurfaceObject.clone();
@@ -173,7 +173,7 @@ namespace Test {
   {
     double          radius(1.0), halfZ(10.);
     Translation3D   translation{0., 1., 2.};
-    auto            pTransform = std::make_shared<Transform3D>(translation);
+    auto            pTransform = std::make_shared<const Transform3D>(translation);
     CylinderSurface cylinderSurfaceObject(pTransform, radius, halfZ);
     //
     CylinderSurface cylinderSurfaceObject2(pTransform, radius, halfZ);

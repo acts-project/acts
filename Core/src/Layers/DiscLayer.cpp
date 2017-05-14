@@ -21,12 +21,12 @@
 #include "ACTS/Volumes/BoundarySurfaceFace.hpp"
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
 
-Acts::DiscLayer::DiscLayer(std::shared_ptr<Acts::Transform3D>      transform,
-                           std::shared_ptr<const Acts::DiscBounds> dbounds,
-                           std::unique_ptr<SurfaceArray>           surfaceArray,
-                           double                                  thickness,
-                           std::unique_ptr<ApproachDescriptor>     ades,
-                           LayerType                               laytyp)
+Acts::DiscLayer::DiscLayer(std::shared_ptr<const Transform3D>  transform,
+                           std::shared_ptr<const DiscBounds>   dbounds,
+                           std::unique_ptr<SurfaceArray>       surfaceArray,
+                           double                              thickness,
+                           std::unique_ptr<ApproachDescriptor> ades,
+                           LayerType                           laytyp)
   : DiscSurface(transform, dbounds)
   , Layer(std::move(surfaceArray), thickness, std::move(ades), laytyp)
 {
@@ -97,9 +97,9 @@ Acts::DiscLayer::buildApproachDescriptor()
     Vector3D aspPosition(center() + 0.5 * thickness() * normal());
     Vector3D asnPosition(center() - 0.5 * thickness() * normal());
     auto     asnTransform
-        = std::make_shared<Transform3D>(Translation3D(asnPosition));
+        = std::make_shared<const Transform3D>(Translation3D(asnPosition));
     auto aspTransform
-        = std::make_shared<Transform3D>(Translation3D(aspPosition));
+        = std::make_shared<const Transform3D>(Translation3D(aspPosition));
     // create the vector
     std::vector<const Surface*> aSurfaces;
     aSurfaces.push_back(new DiscSurface(asnTransform, m_bounds));
