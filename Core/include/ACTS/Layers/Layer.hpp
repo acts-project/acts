@@ -443,7 +443,7 @@ protected:
   /// thickness of the Layer
   double m_layerThickness;
   /// descriptor for surface on approach
-  std::unique_ptr<ApproachDescriptor> m_approachDescriptor;
+  std::unique_ptr<const ApproachDescriptor> m_approachDescriptor;
   /// the enclosing TrackingVolume
   const TrackingVolume* m_enclosingTrackingVolume;
   /// the eventual enclosing detached Tracking volume

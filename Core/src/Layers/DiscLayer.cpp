@@ -45,7 +45,7 @@ Acts::DiscLayer::DiscLayer(std::shared_ptr<const Transform3D>  transform,
   // build an approach descriptor if none provided
   if (!m_approachDescriptor && Layer::m_surfaceArray) buildApproachDescriptor();
   // register the layer to the approach descriptor
-  if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
+  if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
 }
 
 Acts::DiscLayer::DiscLayer(const Acts::DiscLayer&   dlay,
@@ -57,7 +57,7 @@ Acts::DiscLayer::DiscLayer(const Acts::DiscLayer&   dlay,
   // create an approach descriptor if a surface array is present
   if (m_surfaceArray) buildApproachDescriptor();
   // register the layer to the approach descriptor
-  if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
+  if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
 }
 
 const Acts::DiscSurface&
@@ -89,8 +89,8 @@ Acts::DiscLayer::buildApproachDescriptor()
     aSurfaces.push_back(bSurfaces.at(negativeFaceXY));
     aSurfaces.push_back(bSurfaces.at(positiveFaceXY));
     // create an ApproachDescriptor with Boundary surfaces
-    m_approachDescriptor = std::
-        make_unique<GenericApproachDescriptor<BoundarySurfaceT<AbstractVolume>>>(
+    m_approachDescriptor
+        = std::make_unique<const GenericApproachDescriptor<BoundarySurfaceT<AbstractVolume>>>(
             aSurfaces);
   } else {
     // create the new surfaces - positions first
@@ -107,7 +107,7 @@ Acts::DiscLayer::buildApproachDescriptor()
     // create an ApproachDescriptor with standard surfaces surfaces - these will
     // be deleted by the approach descriptor
     m_approachDescriptor
-        = std::make_unique<GenericApproachDescriptor<Surface>>(aSurfaces);
+        = std::make_unique<const GenericApproachDescriptor<Surface>>(aSurfaces);
   }
   // @todo check if we can give the layer at curface creation
   for (auto& sfPtr : (m_approachDescriptor->containedSurfaces())) {

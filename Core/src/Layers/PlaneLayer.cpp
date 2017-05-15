@@ -32,7 +32,7 @@ Acts::PlaneLayer::PlaneLayer(std::shared_ptr<const Transform3D>   transform,
   // deal with the approach descriptor
   if (!m_approachDescriptor && surfaceArray) buildApproachDescriptor();
   // register the layer to the approach descriptor
-  if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
+  if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
 }
 
 Acts::PlaneLayer::PlaneLayer(const PlaneLayer& play, const Transform3D& transf)
@@ -83,5 +83,5 @@ Acts::PlaneLayer::buildApproachDescriptor()
   }
   // @todo check if we can provide the layer at surface creation
   m_approachDescriptor
-      = std::make_unique<GenericApproachDescriptor<Surface>>(aSurfaces);
+      = std::make_unique<const GenericApproachDescriptor<Surface>>(aSurfaces);
 }
