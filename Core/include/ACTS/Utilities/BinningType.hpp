@@ -51,14 +51,14 @@ enum BinningValue {
 };
 
 /// @brief screen output option
-static std::vector<std::string> binningValueNames = {"binX",
-                                                     "binY",
-                                                     "binZ",
-                                                     "binR",
-                                                     "binPhi",
-                                                     "binRPhi",
-                                                     "binH",
-                                                     "binEta",
-                                                     "binMag"};
+static const std::vector<std::string> binningValueNames = {"binX",
+                                                           "binY",
+                                                           "binZ",
+                                                           "binR",
+                                                           "binPhi",
+                                                           "binRPhi",
+                                                           "binH",
+                                                           "binEta",
+                                                           "binMag"};
 }
 #endif  // ACTS_UTILITIES_BINNINGTYPE_H

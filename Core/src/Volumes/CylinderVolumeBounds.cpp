@@ -20,7 +20,7 @@
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 
-double Acts::CylinderVolumeBounds::s_numericalStable = 10e-2;
+const double Acts::CylinderVolumeBounds::s_numericalStable = 10e-2;
 
 Acts::CylinderVolumeBounds::CylinderVolumeBounds()
   : VolumeBounds(), m_valueStore(4, 0.)

@@ -208,7 +208,7 @@ private:
 
   /// numerical stability
   /// @todo unify the numerical stability checks
-  static double s_numericalStable;
+  static const double s_numericalStable;
 };
 
 inline CylinderVolumeBounds*
