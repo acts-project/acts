@@ -108,7 +108,11 @@ protected:
   NavigationLayer(std::unique_ptr<const Surface> surfaceRepresentation,
                   double                         thickness);
 
-  //// for the navigation Volume the surface
+  /// for the navigation Volume the surface
+  ///
+  /// We will need to mutate this surface during the geometry building process,
+  /// but the C++ type system has no const-correct way of expressing this.
+  ///
   std::unique_ptr<const Surface> m_surfaceRepresentation;
 };
 

@@ -90,7 +90,12 @@ public:
 private:
   /// approach surfaces with ownership control
   std::vector<std::shared_ptr<const T>> m_surfaces;
+
   /// the surface container cache
+  ///
+  /// We will need to mutate those surfaces in registerLayer, but the C++ type
+  /// system has no const-correct way of expressing this constraint.
+  ///
   std::vector<const Surface*> m_surfacesCache;
 };
 
