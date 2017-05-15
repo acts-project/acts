@@ -20,7 +20,7 @@ class TrackingGeometry;
 /// Global method to build the generic tracking geometry
 /// @param lvl is the debug logging level
 /// @param version is the detector version
-std::unique_ptr<Acts::TrackingGeometry>
+std::unique_ptr<const Acts::TrackingGeometry>
 buildGenericDetector(Logging::Level surfaceLLevel = Logging::INFO,
                      Logging::Level layerLLevel   = Logging::INFO,
                      Logging::Level volumeLLevel  = Logging::INFO,

@@ -21,7 +21,7 @@
 #include "TGeoManager.h"
 
 namespace Acts {
-std::unique_ptr<TrackingGeometry>
+std::unique_ptr<const TrackingGeometry>
 convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                       Logging::Level               loggingLevel,
                       BinningType                  bTypePhi,
@@ -40,7 +40,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
 
   ACTS_INFO("Translating DD4hep geometry into ACTS geometry");
   // the return geometry -- and the highest volume
-  std::unique_ptr<Acts::TrackingGeometry> trackingGeometry = nullptr;
+  std::unique_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
   // create cylindervolumehelper which can be used by all instances
   // hand over LayerArrayCreator
   auto layerArrayCreator = std::make_shared<const Acts::LayerArrayCreator>(

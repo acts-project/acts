@@ -68,7 +68,7 @@ namespace Acts {
 /// layers (e.g. barrel, endcap volumes) have no specific shape (assemblies)
 /// @exception std::logic_error if an error in the translation occurs
 /// @return std::unique_ptr to the full Acts::TrackingGeometry
-std::unique_ptr<Acts::TrackingGeometry>
+std::unique_ptr<const Acts::TrackingGeometry>
 convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                       Logging::Level loggingLevel   = Logging::Level::INFO,
                       BinningType    bTypePhi       = equidistant,

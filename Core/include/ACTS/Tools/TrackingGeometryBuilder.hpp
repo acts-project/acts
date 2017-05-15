@@ -60,7 +60,7 @@ public:
 
   /// TrackingGeometry Interface method
   /// @return a unique pointer to a TrackingGeometry
-  virtual std::unique_ptr<TrackingGeometry>
+  virtual std::unique_ptr<const TrackingGeometry>
   trackingGeometry() const final;
 
   /// Set configuration method

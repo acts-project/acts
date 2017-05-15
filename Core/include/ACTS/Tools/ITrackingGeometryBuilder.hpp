@@ -37,7 +37,7 @@ public:
 
   /// TrackingGeometry Interface methode
   /// @return unique pointer to a newly created TrackingGeometry
-  virtual std::unique_ptr<TrackingGeometry>
+  virtual std::unique_ptr<const TrackingGeometry>
   trackingGeometry() const = 0;
 };
 }  // end of namespace
