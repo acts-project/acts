@@ -238,7 +238,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
                    "neut",
                    "propagation to surface was successful.");
     // create a new covariance matrix
-    std::unique_ptr<ActsSymMatrixD<5>> cov;
+    std::unique_ptr<const ActsSymMatrixD<5>> cov;
     if (pCache.covariance) cov.reset(new ActsSymMatrixD<5>(*pCache.covariance));
 
     // create the new parameters
@@ -374,7 +374,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
                    "propagation to surface was successful.");
     // create the new parameters
     // create a new covariance matrix
-    std::unique_ptr<ActsSymMatrixD<5>> cov;
+    std::unique_ptr<const ActsSymMatrixD<5>> cov;
     if (pCache.covariance) cov.reset(new ActsSymMatrixD<5>(*pCache.covariance));
     // create the parameter vector and stream the result in
     ActsVectorD<5> pars;

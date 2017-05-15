@@ -46,7 +46,7 @@ namespace Test {
     ActsVectorD<Acts::NGlobalPars> parValues;
     parValues << 0.3, 0.5, 0.5 * M_PI, 0.3 * M_PI, 0.01;
     BoundParameters pars(
-        std::make_unique<BoundParameters::CovMatrix_t>(std::move(covTrk)),
+        std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
         parValues,
         cylinder);
 

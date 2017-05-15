@@ -33,9 +33,9 @@ class AtlasStepper
     double field[3] = {0., 0., 0.};
     double pVector[64];
     // result
-    double                       parameters[NGlobalPars] = {0., 0., 0., 0., 0.};
-    ActsSymMatrixD<NGlobalPars>* covariance;
-    double                       jacobian[NGlobalPars * NGlobalPars];
+    double parameters[NGlobalPars] = {0., 0., 0., 0., 0.};
+    const ActsSymMatrixD<NGlobalPars>* covariance;
+    double jacobian[NGlobalPars * NGlobalPars];
 
     Vector3D
     position() const
@@ -163,7 +163,7 @@ public:
     double P[45];
     for (unsigned int i = 0; i < 45; ++i) P[i] = cache.pVector[i];
 
-    std::unique_ptr<ActsSymMatrixD<NGlobalPars>> cov = nullptr;
+    std::unique_ptr<const ActsSymMatrixD<NGlobalPars>> cov = nullptr;
     if (cache.covariance) {
       double p = 1. / P[6];
       P[35] *= p;
@@ -279,7 +279,7 @@ public:
           Map<Eigen::Matrix<double, NGlobalPars, NGlobalPars, Eigen::RowMajor>>
               J(cache.jacobian);
 
-      cov = std::make_unique<ActsSymMatrixD<NGlobalPars>>(
+      cov = std::make_unique<const ActsSymMatrixD<NGlobalPars>>(
           J * (*cache.covariance) * J.transpose());
     }
 
@@ -294,7 +294,7 @@ public:
     Acts::Vector3D mom(cache.pVector[3], cache.pVector[4], cache.pVector[5]);
     mom /= std::abs(cache.pVector[6]);
 
-    std::unique_ptr<ActsSymMatrixD<5>> cov = nullptr;
+    std::unique_ptr<const ActsSymMatrixD<5>> cov = nullptr;
     if (cache.covariance) {
       double p = 1. / cache.pVector[6];
       cache.pVector[35] *= p;
@@ -428,7 +428,7 @@ public:
           Map<Eigen::Matrix<double, NGlobalPars, NGlobalPars, Eigen::RowMajor>>
               J(cache.jacobian);
 
-      cov = std::make_unique<ActsSymMatrixD<NGlobalPars>>(
+      cov = std::make_unique<const ActsSymMatrixD<NGlobalPars>>(
           J * (*cache.covariance) * J.transpose());
     }
 

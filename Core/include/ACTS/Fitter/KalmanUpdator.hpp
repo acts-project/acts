@@ -68,7 +68,8 @@ private:
       BoundParameters::CovMatrix_t newCov = (unit - K * H) * (*pCov_trk);
 
       return std::make_unique<BoundParameters>(
-          std::make_unique<BoundParameters::CovMatrix_t>(std::move(newCov)),
+          std::make_unique<const BoundParameters::CovMatrix_t>(
+              std::move(newCov)),
           newParValues,
           m_pParameters->referenceSurface());
     }
