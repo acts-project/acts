@@ -99,7 +99,7 @@ class KalmanFitter
 public:
   template <typename MeasurementContainer>
   auto
-  fit(const MeasurementContainer&      vMeasurements,
+  fit(const MeasurementContainer&            vMeasurements,
       std::unique_ptr<const BoundParameters> pInitialPars = nullptr) const
   {
     typedef typename MeasurementContainer::value_type Meas_t;
@@ -117,7 +117,7 @@ public:
 
   template <typename MeasurementContainer>
   auto
-  forwardFilter(const MeasurementContainer&      vMeasurements,
+  forwardFilter(const MeasurementContainer&            vMeasurements,
                 std::unique_ptr<const BoundParameters> pInitialPars) const
   {
     // typedef to actual measurement type

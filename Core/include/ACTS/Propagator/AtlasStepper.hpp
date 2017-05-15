@@ -35,7 +35,7 @@ class AtlasStepper
     // result
     double parameters[NGlobalPars] = {0., 0., 0., 0., 0.};
     const ActsSymMatrixD<NGlobalPars>* covariance;
-    double jacobian[NGlobalPars * NGlobalPars];
+    double                             jacobian[NGlobalPars * NGlobalPars];
 
     Vector3D
     position() const

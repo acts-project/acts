@@ -73,7 +73,7 @@ public:
 
   /// Set logging instance
   ///
-  /// @param logger is the logging instance to be set          
+  /// @param logger is the logging instance to be set
   void
   setLogger(std::unique_ptr<const Logger> logger)
   {

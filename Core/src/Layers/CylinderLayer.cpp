@@ -88,8 +88,8 @@ Acts::CylinderLayer::buildApproachDescriptor()
       aSurfaces.push_back(bSurfaces.at(tubeInnerCover));
     aSurfaces.push_back(bSurfaces.at(tubeOuterCover));
     // create an ApproachDescriptor with Boundary surfaces
-    m_approachDescriptor
-        = std::make_unique<const GenericApproachDescriptor<BoundarySurfaceT<AbstractVolume>>>(
+    m_approachDescriptor = std::
+        make_unique<const GenericApproachDescriptor<BoundarySurfaceT<AbstractVolume>>>(
             aSurfaces);
   } else {
     // create the new surfaces

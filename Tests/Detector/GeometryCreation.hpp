@@ -56,11 +56,8 @@ constructCylinderVolume(double surfaceHalfLengthZ,
   ///  make the binned array
   double bUmin    = sfnPosition.z() - surfaceHalfLengthZ;
   double bUmax    = sfpPosition.z() + surfaceHalfLengthZ;
-  auto   bUtility = std::make_unique<const BinUtility>(surfaces.size(),
-                                                       bUmin,
-                                                       bUmax,
-                                                       open,
-                                                       binZ);
+  auto   bUtility = std::make_unique<const BinUtility>(
+      surfaces.size(), bUmin, bUmax, open, binZ);
   std::unique_ptr<SurfaceArray> bArray
       = std::make_unique<BinnedArrayXD<const Surface*>>(surfaces,
                                                         std::move(bUtility));

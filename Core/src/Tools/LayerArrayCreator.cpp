@@ -65,11 +65,8 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
           LayerOrderPosition(layIter, layIter->binningPosition(bValue)));
     }
     // create the binUitlity
-    binUtility = std::make_unique<const BinUtility>(layers.size(),
-                                                    min,
-                                                    max,
-                                                    open,
-                                                    bValue);
+    binUtility = std::make_unique<const BinUtility>(
+        layers.size(), min, max, open, bValue);
     ACTS_VERBOSE("equidistant : created a BinUtility as " << *binUtility);
   } break;
 

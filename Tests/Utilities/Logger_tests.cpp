@@ -30,8 +30,8 @@ namespace Test {
           std::make_unique<NamedOutputDecorator>(
               std::make_unique<DefaultPrintPolicy>(logfile), logger_name));
       auto print = std::make_unique<DefaultFilterPolicy>(lvl);
-      return std::make_unique<const Logger>(
-          std::move(output), std::move(print));
+      return std::make_unique<const Logger>(std::move(output),
+                                            std::move(print));
     }
 
     std::string

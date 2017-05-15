@@ -191,9 +191,9 @@ public:
   {
     m_vValues = rhs.m_vValues;
     m_pCovariance
-        = (rhs.m_pCovariance ?
-           std::make_unique<const CovMatrix_t>(*rhs.m_pCovariance) :
-           nullptr);
+        = (rhs.m_pCovariance
+               ? std::make_unique<const CovMatrix_t>(*rhs.m_pCovariance)
+               : nullptr);
     return *this;
   }
 

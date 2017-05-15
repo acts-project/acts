@@ -34,13 +34,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   // create the 2D bin utility
   // create the (plain) binUtility - with the transform if given
   auto mutableArrayUtility
-      = std::make_unique<Acts::BinUtility>(createBinUtility(surfaces,
-                                                            binPhi,
-                                                            equidistant,
-                                                            binsPhi,
-                                                            minPhi,
-                                                            maxPhi,
-                                                            transform));
+      = std::make_unique<Acts::BinUtility>(createBinUtility(
+          surfaces, binPhi, equidistant, binsPhi, minPhi, maxPhi, transform));
   (*mutableArrayUtility)
       += createBinUtility(surfaces, binZ, equidistant, binsZ, -halfZ, halfZ);
   std::unique_ptr<const BinUtility> arrayUtility(mutableArrayUtility.release());
@@ -163,13 +158,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   ACTS_DEBUG("Creating a SurfaceArray on a disc.");
 
   auto mutableArrayUtility
-      = std::make_unique<Acts::BinUtility>(createBinUtility(surfaces,
-                                                            binR,
-                                                            equidistant,
-                                                            binsR,
-                                                            minR,
-                                                            maxR,
-                                                            transform));
+      = std::make_unique<Acts::BinUtility>(createBinUtility(
+          surfaces, binR, equidistant, binsR, minR, maxR, transform));
   (*mutableArrayUtility) += createBinUtility(
       surfaces, binPhi, equidistant, binsPhi, minPhi, maxPhi);
   std::unique_ptr<const BinUtility> arrayUtility(mutableArrayUtility.release());

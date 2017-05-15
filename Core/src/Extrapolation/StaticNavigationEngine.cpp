@@ -18,7 +18,7 @@
 // constructor
 Acts::StaticNavigationEngine::StaticNavigationEngine(
     const Acts::StaticNavigationEngine::Config& snConfig,
-    std::unique_ptr<const Logger>                     logger)
+    std::unique_ptr<const Logger>               logger)
   : m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(snConfig);

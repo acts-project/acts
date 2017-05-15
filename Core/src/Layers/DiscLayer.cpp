@@ -89,8 +89,8 @@ Acts::DiscLayer::buildApproachDescriptor()
     aSurfaces.push_back(bSurfaces.at(negativeFaceXY));
     aSurfaces.push_back(bSurfaces.at(positiveFaceXY));
     // create an ApproachDescriptor with Boundary surfaces
-    m_approachDescriptor
-        = std::make_unique<const GenericApproachDescriptor<BoundarySurfaceT<AbstractVolume>>>(
+    m_approachDescriptor = std::
+        make_unique<const GenericApproachDescriptor<BoundarySurfaceT<AbstractVolume>>>(
             aSurfaces);
   } else {
     // create the new surfaces - positions first
