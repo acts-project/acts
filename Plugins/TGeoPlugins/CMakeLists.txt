@@ -18,7 +18,7 @@ if (BUILD_TGEO_PLUGIN)
 
     # setup linker dependencies
     target_link_libraries (ACTSTGeoPlugin PUBLIC ACTSCore)
-    target_link_libraries (ACTSTGeoPlugin PUBLIC ROOT::Geom)
+    target_link_libraries (ACTSTGeoPlugin PUBLIC Geom)
 
     # set installation directories
     install (TARGETS ACTSTGeoPlugin EXPORT ACTSTGeoPluginTargets

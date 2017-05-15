@@ -110,17 +110,13 @@ GenericApproachDescriptor<T>::approachSurface(
     const BoundaryCheck& bcheck,
     const ICompatibilityEstimator*) const
 {
-
+  // the intersection estimates
   std::vector<std::pair<const Surface*, Intersection>> vIntersections;
   vIntersections.reserve(m_surfacesCache.size());
-  // intersect all approach surfaces
-  std::transform(m_surfacesCache.begin(),
-                 m_surfacesCache.end(),
-                 vIntersections.begin(),
-                 [&](const auto& s) {
-                   return std::make_pair(
-                       s, s->intersectionEstimate(pos, dir, true, bcheck));
-                 });
+  for (auto& sf : m_surfacesCache){
+    vIntersections.push_back(std::pair<const Surface*, Intersection>
+       (sf, sf->intersectionEstimate(pos, dir, true, bcheck)));
+  }
   // find nearest intersection
   auto returnIntersection
       = std::min_element(vIntersections.begin(),
