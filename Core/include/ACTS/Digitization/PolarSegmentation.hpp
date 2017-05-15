@@ -110,7 +110,7 @@
 //   radius() const;
 //
 //   std::shared_ptr<const TrapezoidBounds> m_activeBounds;
-//   std::unique_ptr<BinUtility>            m_binUtility;
+//   std::unique_ptr<const BinUtility>      m_binUtility;
 //   size_t                                 m_binsX;
 //   size_t                                 m_binsY;
 // };

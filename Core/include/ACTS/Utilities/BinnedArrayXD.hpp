@@ -57,8 +57,8 @@ public:
   ///
   /// @param tapvector is a vector of object and binning position
   /// @param bu is the unique bin utility for this binned array
-  BinnedArrayXD(const std::vector<TAP>&     tapvector,
-                std::unique_ptr<BinUtility> bu)
+  BinnedArrayXD(const std::vector<TAP>&           tapvector,
+                std::unique_ptr<const BinUtility> bu)
     : BinnedArray<T>()
     , m_objectGrid(
           bu->bins(2),
@@ -91,7 +91,7 @@ public:
   /// @param grid is the prepared object grid
   /// @param bu is the unique bin utility for this binned array
   BinnedArrayXD(const std::vector<std::vector<std::vector<T>>>& grid,
-                std::unique_ptr<BinUtility>                     bu)
+                std::unique_ptr<const BinUtility>               bu)
     : BinnedArray<T>()
     , m_objectGrid(grid)
     , m_arrayObjects()
@@ -242,7 +242,7 @@ private:
   /// Vector of unique Array objects
   std::vector<T> m_arrayObjects;
   /// binUtility for retrieving and filling the Array
-  std::unique_ptr<BinUtility> m_binUtility;
+  std::unique_ptr<const BinUtility> m_binUtility;
 };
 
 }  // end of namespace Acts

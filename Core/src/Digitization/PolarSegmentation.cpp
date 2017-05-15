@@ -28,7 +28,7 @@ Acts::TrapezoidSegmentation::TrapezoidSegmentation(
 {
   // first the x dimension if needed
   if (numCellsX > 1) {
-    m_binUtility = std::make_unique<BinUtility>(
+    m_binUtility = std::make_unique<const BinUtility>(
         numCellsX,
         -0.5 * (mBounds->minHalflengthX() + mBounds->maxHalflengthX()),
         0.5 * (mBounds->minHalflengthX() + mBounds->maxHalflengthX()),
@@ -42,7 +42,7 @@ Acts::TrapezoidSegmentation::TrapezoidSegmentation(
     if (m_binUtility)
       (*m_binUtility) += yBinUtility;
     else
-      m_binUtility = std::make_unique<BinUtility>(yBinUtility);
+      m_binUtility = std::make_unique<const BinUtility>(yBinUtility);
   }
 }
 

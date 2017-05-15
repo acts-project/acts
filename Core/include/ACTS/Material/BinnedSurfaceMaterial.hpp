@@ -110,7 +110,7 @@ public:
 
   /// access to the entries
   /// this is needed for averageing mapps
-  const size_t
+  size_t
   entries() const;
 
   /// Output Method for std::ostream, to be overloaded by child classes
@@ -154,7 +154,7 @@ BinnedSurfaceMaterial::material(size_t bin0, size_t bin1) const
   return m_fullMaterial[bin1][bin0];
 }
 
-inline const size_t
+inline size_t
 BinnedSurfaceMaterial::entries() const
 {
   return m_entries;

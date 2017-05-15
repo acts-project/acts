@@ -295,7 +295,7 @@ Acts::DD4hepLayerBuilder::centralLayers() const
       double halfZ = layer->surfaceRepresentation().bounds().halflengthZ();
 
       // create the two dimensional BinUtility for the material map of the layer
-      Acts::BinUtility* materialBinUtil = nullptr;
+      Acts::BinUtility* mutableMaterialBinUtil = nullptr;
       // if the layer should carry material it will be marked by assigning a
       // SurfaceMaterialProxy
       std::shared_ptr<const SurfaceMaterialProxy> materialProxy(nullptr);
@@ -310,11 +310,12 @@ Acts::DD4hepLayerBuilder::centralLayers() const
         std::pair<size_t, size_t> materialBins = detExtension->materialBins();
         size_t bins1    = materialBins.first;
         size_t bins2    = materialBins.second;
-        materialBinUtil = new Acts::BinUtility(
+        mutableMaterialBinUtil = new Acts::BinUtility(
             bins1, -M_PI, M_PI, Acts::closed, Acts::binPhi);
-        (*materialBinUtil) += Acts::BinUtility(
+        (*mutableMaterialBinUtil) += Acts::BinUtility(
             bins2, -halfZ, halfZ, Acts::open, Acts::binZ, transform);
         // and create material proxy to mark layer for material mapping
+        const Acts::BinUtility* materialBinUtil = mutableMaterialBinUtil;
         materialProxy
             = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
         // access the material position
@@ -465,7 +466,7 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
                         .z();
 
       // create the two dimensional BinUtility for the material map of the layer
-      Acts::BinUtility* materialBinUtil = nullptr;
+      Acts::BinUtility* mutableMaterialBinUtil = nullptr;
       // if the layer should carry material it will be marked by assigning a
       // SurfaceMaterialProxy
       std::shared_ptr<const SurfaceMaterialProxy> materialProxy(nullptr);
@@ -480,11 +481,12 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
         std::pair<size_t, size_t> materialBins = detExtension->materialBins();
         size_t bins1    = materialBins.first;
         size_t bins2    = materialBins.second;
-        materialBinUtil = new Acts::BinUtility(
+        mutableMaterialBinUtil = new Acts::BinUtility(
             bins1, -M_PI, M_PI, Acts::closed, Acts::binPhi);
-        (*materialBinUtil) += Acts::BinUtility(
+        (*mutableMaterialBinUtil) += Acts::BinUtility(
             bins2, rMin, rMax, Acts::open, Acts::binR, transform);
         // and create material proxy to mark layer for material mapping
+        const Acts::BinUtility* materialBinUtil = mutableMaterialBinUtil;
         materialProxy
             = std::make_shared<const SurfaceMaterialProxy>(*materialBinUtil);
         // access the material position

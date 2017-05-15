@@ -107,7 +107,7 @@ private:
   const Surface* m_surface;
 
   /// two dimensional grid on which the material is binned
-  std::unique_ptr<BinUtility> m_binUtility;
+  std::unique_ptr<const BinUtility> m_binUtility;
 
   /// the material record
   MaterialRecord m_mappedMaterial;

@@ -54,10 +54,13 @@ constructCylinderVolume(double surfaceHalfLengthZ,
                                {sfp, sfp->binningPosition(binZ)}};
 
   ///  make the binned array
-  double bUmin = sfnPosition.z() - surfaceHalfLengthZ;
-  double bUmax = sfpPosition.z() + surfaceHalfLengthZ;
-  auto   bUtility
-      = std::make_unique<BinUtility>(surfaces.size(), bUmin, bUmax, open, binZ);
+  double bUmin    = sfnPosition.z() - surfaceHalfLengthZ;
+  double bUmax    = sfpPosition.z() + surfaceHalfLengthZ;
+  auto   bUtility = std::make_unique<const BinUtility>(surfaces.size(),
+                                                       bUmin,
+                                                       bUmax,
+                                                       open,
+                                                       binZ);
   std::unique_ptr<SurfaceArray> bArray
       = std::make_unique<BinnedArrayXD<const Surface*>>(surfaces,
                                                         std::move(bUtility));
@@ -97,7 +100,7 @@ constructContainerVolume(TrackingVolumePtr  iVolume,
   auto hVolumeBounds = std::make_shared<const CylinderVolumeBounds>(
       0., hVolumeRadius, hVolumeHalflength);
   ///  create the BinUtility & the BinnedArray
-  auto vUtility = std::make_unique<BinUtility>(
+  auto vUtility = std::make_unique<const BinUtility>(
       volumes.size(), 0., hVolumeRadius, open, binR);
   std::shared_ptr<const TrackingVolumeArray> vArray
       = std::make_shared<const BinnedArrayXD<TrackingVolumePtr>>(

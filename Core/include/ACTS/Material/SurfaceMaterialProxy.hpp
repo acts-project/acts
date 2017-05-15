@@ -93,7 +93,7 @@ private:
   /// two dimensional BinUtility determining
   /// the granularity and binning of the
   /// material on the surface/layer
-  std::unique_ptr<BinUtility> m_binUtility;
+  std::unique_ptr<const BinUtility> m_binUtility;
 
   /// Dummy material properties
   MaterialProperties m_materialProperties;

@@ -18,7 +18,8 @@ Acts::SurfaceMaterialProxy::SurfaceMaterialProxy()
 }
 
 Acts::SurfaceMaterialProxy::SurfaceMaterialProxy(const BinUtility& binUtility)
-  : SurfaceMaterial(), m_binUtility(std::make_unique<BinUtility>(binUtility))
+  : SurfaceMaterial()
+  , m_binUtility(std::make_unique<const BinUtility>(binUtility))
 {
 }
 
@@ -27,7 +28,7 @@ Acts::SurfaceMaterialProxy::SurfaceMaterialProxy(
   : SurfaceMaterial(), m_binUtility(nullptr)
 {
   if (smproxy.m_binUtility)
-    m_binUtility = std::make_unique<BinUtility>(*smproxy.m_binUtility);
+    m_binUtility = std::make_unique<const BinUtility>(*smproxy.m_binUtility);
 }
 
 Acts::SurfaceMaterialProxy*

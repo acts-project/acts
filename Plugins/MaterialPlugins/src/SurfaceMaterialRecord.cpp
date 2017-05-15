@@ -16,7 +16,7 @@
 Acts::SurfaceMaterialRecord::SurfaceMaterialRecord(const Surface&    surface,
                                                    const BinUtility& binUtility)
   : m_surface(&surface)
-  , m_binUtility(std::make_unique<BinUtility>(binUtility))
+  , m_binUtility(std::make_unique<const BinUtility>(binUtility))
   , m_mappedMaterial()
 {
   // reserve
@@ -34,7 +34,7 @@ Acts::SurfaceMaterialRecord::SurfaceMaterialRecord(const Surface&    surface,
 Acts::SurfaceMaterialRecord::SurfaceMaterialRecord(
     const SurfaceMaterialRecord& lmrecord)
   : m_surface(lmrecord.m_surface)
-  , m_binUtility(std::make_unique<BinUtility>(*lmrecord.m_binUtility))
+  , m_binUtility(std::make_unique<const BinUtility>(*lmrecord.m_binUtility))
   , m_mappedMaterial(lmrecord.m_mappedMaterial)
 {
 }
@@ -44,7 +44,7 @@ Acts::SurfaceMaterialRecord::operator=(const SurfaceMaterialRecord& lmrecord)
 {
   if (this != &lmrecord) {
     m_surface        = lmrecord.m_surface;
-    m_binUtility     = std::make_unique<BinUtility>(*lmrecord.m_binUtility);
+    m_binUtility = std::make_unique<const BinUtility>(*lmrecord.m_binUtility);
     m_mappedMaterial = lmrecord.m_mappedMaterial;
   }
   return (*this);
