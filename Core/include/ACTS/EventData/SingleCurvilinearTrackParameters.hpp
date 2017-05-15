@@ -134,7 +134,7 @@ public:
   }
 
 private:
-  std::unique_ptr<PlaneSurface> m_upSurface;
+  std::unique_ptr<const PlaneSurface> m_upSurface;
 };
 }  // end of namespace Acts
 

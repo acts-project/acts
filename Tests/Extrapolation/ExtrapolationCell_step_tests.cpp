@@ -43,7 +43,7 @@ namespace Test {
     // create the ExtrapolationCell from the start parameters
     ExtrapolationCell<NeutralParameters> ecc(sParameters);
     // now emulate a propagator
-    auto pParameters = std::make_unique<NeutralCurvilinearParameters>(
+    auto pParameters = std::make_unique<const NeutralCurvilinearParameters>(
         nullptr, plane, direction);
     double pathLength = 5.;
     // cache the pointer result
@@ -64,7 +64,7 @@ namespace Test {
 
     // (C) destination
     // emulate propagation to final surface
-    auto dParameters = std::make_unique<NeutralCurvilinearParameters>(
+    auto dParameters = std::make_unique<const NeutralCurvilinearParameters>(
         nullptr, destination, direction);
     // cache the pointer result
     const NeutralCurvilinearParameters* dParametersPtr = dParameters.get();
@@ -122,7 +122,7 @@ namespace Test {
     ExtrapolationCell<NeutralParameters> ecc(sParameters);
 
     // (A1) post-update emulation, creating new parameters
-    auto sMatParameters = std::make_unique<NeutralCurvilinearParameters>(
+    auto sMatParameters = std::make_unique<const NeutralCurvilinearParameters>(
         nullptr, vertex, direction);
     const NeutralCurvilinearParameters* sMatParametersPtr
         = sMatParameters.get();
@@ -149,7 +149,7 @@ namespace Test {
     // create the ExtrapolationCell from the start parameters
 
     // now emulate a propagator
-    auto pParameters = std::make_unique<NeutralCurvilinearParameters>(
+    auto pParameters = std::make_unique<const NeutralCurvilinearParameters>(
         nullptr, plane, direction);
     double pathLength = 5.;
     // cache the pointer result
@@ -171,7 +171,7 @@ namespace Test {
     BOOST_CHECK_CLOSE(thickness / X0, ecc.materialX0, 0.001);
 
     // (B1) full-update emulation, creating new parameters
-    auto pMatParameters = std::make_unique<NeutralCurvilinearParameters>(
+    auto pMatParameters = std::make_unique<const NeutralCurvilinearParameters>(
         nullptr, plane, direction);
     const NeutralCurvilinearParameters* pMatParametersPtr
         = pMatParameters.get();
@@ -197,7 +197,7 @@ namespace Test {
 
     // (C) destination
     // emulate propagation to final surface
-    auto dParameters = std::make_unique<NeutralCurvilinearParameters>(
+    auto dParameters = std::make_unique<const NeutralCurvilinearParameters>(
         nullptr, destination, direction);
     // cache the pointer result
     const NeutralCurvilinearParameters* dParametersPtr = dParameters.get();
@@ -224,7 +224,7 @@ namespace Test {
     // however, after the final propagtion we find out, there's still
     // material to be handled
     // (C1) pre-updated for final material
-    auto dMatParameters = std::make_unique<NeutralCurvilinearParameters>(
+    auto dMatParameters = std::make_unique<const NeutralCurvilinearParameters>(
         nullptr, destination, direction);
     const NeutralCurvilinearParameters* dMatParametersPtr
         = dMatParameters.get();
