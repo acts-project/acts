@@ -52,9 +52,9 @@ namespace Acts {
 /// - Definition of the canonical order for sorting the field values: The hyper
 /// box corners are numbered according to the following scheme. Each corner is
 /// defined by the set of lower/upper boundary limits in each dimension @c i.
-/// This can be represented by a binary code (from right to left) where a @c 0
+/// This can be represented by a binary code (from left to right) where a @c 0
 /// stands for a lower bound along this axis and a @c 1 stand for the upper
-/// bound along this axis. The right most bit corresponds to the first dimension
+/// bound along this axis. The left most bit corresponds to the first dimension
 /// and the bits to the left correspond to the 2nd, 3rd... dimension. The binary
 /// code can be interpreted as integer which gives the number of the
 /// corresponding hyper box corner. The field values are ordered according to
@@ -63,12 +63,12 @@ namespace Acts {
 /// upperCorner = (4,5,6). The eight corners with their bit patterns and corner
 /// numbers are:
 ///    - (1,2,3): 000 = 0
-///    - (4,2,3): 001 = 1
+///    - (1,2,6): 001 = 1
 ///    - (1,5,3): 010 = 2
-///    - (4,5,3): 011 = 3
-///    - (1,2,6): 100 = 4
+///    - (1,5,6): 011 = 3
+///    - (4,2,3): 100 = 4
 ///    - (4,2,6): 101 = 5
-///    - (1,5,6): 110 = 6
+///    - (4,5,3): 110 = 6
 ///    - (4,5,6): 111 = 7
 template <
     typename T,
@@ -84,8 +84,15 @@ interpolate(const Point1& position,
             const Point3& upperCorner,
             const std::array<T, N>& values)
 {
-  return detail::interpolate_impl<T, Point1, Point2, Point3, 0u, N>::run(
-      position, lowerCorner, upperCorner, values);
+  return detail::interpolate_impl<T,
+                                  Point1,
+                                  Point2,
+                                  Point3,
+                                  detail::get_dimension<N>::value - 1,
+                                  N>::run(position,
+                                          lowerCorner,
+                                          upperCorner,
+                                          values);
 }
 
 }  // namespace Acts

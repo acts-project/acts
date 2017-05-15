@@ -44,7 +44,7 @@ namespace Test {
 
     Point  low  = {1., 1.};
     Point  high = {2., 3.};
-    Values v    = {10., 20., 30., 40.};
+    Values v    = {10., 30., 20., 40.};
 
     BOOST_TEST(interpolate(Point({1., 1.}), low, high, v) == 10.);
     BOOST_TEST(interpolate(Point({2., 1.}), low, high, v) == 20.);
@@ -76,7 +76,7 @@ namespace Test {
 
     Point  low  = {1., 1., 1.};
     Point  high = {2., 3., 4.};
-    Values v    = {10., 20., 30., 40., 50., 60., 70., 80.};
+    Values v    = {10., 50., 30., 70., 20., 60., 40., 80.};
 
     BOOST_TEST(interpolate(Point({1., 1., 1.}), low, high, v) == 10.);
     BOOST_TEST(interpolate(Point({2., 1., 1.}), low, high, v) == 20.);

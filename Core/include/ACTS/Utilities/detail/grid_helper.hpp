@@ -28,6 +28,24 @@ namespace detail {
   {
     template <class... Axes>
     static void
+    closestPointsIndices(size_t                     bin,
+                         size_t                     area,
+                         bool                       minimum,
+                         const std::tuple<Axes...>& axes,
+                         std::set<size_t>&          closestPointsIndices)
+    {
+      if (not minimum) bin += area;
+      closestPointsIndices.insert(bin);
+      area *= (std::get<0u>(axes).getNBins() + 2);
+
+      grid_helper_impl<N - 1>::closestPointsIndices(
+          bin, area, false, axes, closestPointsIndices);
+      grid_helper_impl<N - 1>::closestPointsIndices(
+          bin, area, true, axes, closestPointsIndices);
+    }
+
+    template <class... Axes>
+    static void
     getBinCenter(std::array<double, sizeof...(Axes)>&       center,
                  const std::array<size_t, sizeof...(Axes)>& localIndices,
                  const std::tuple<Axes...>& axes)
@@ -157,6 +175,18 @@ namespace detail {
   {
     template <class... Axes>
     static void
+    closestPointsIndices(size_t                     bin,
+                         size_t                     area,
+                         bool                       minimum,
+                         const std::tuple<Axes...>& axes,
+                         std::set<size_t>&          closestPointsIndices)
+    {
+      if (not minimum) bin += area;
+      closestPointsIndices.insert(bin);
+    }
+
+    template <class... Axes>
+    static void
     getBinCenter(std::array<double, sizeof...(Axes)>&       center,
                  const std::array<size_t, sizeof...(Axes)>& localIndices,
                  const std::tuple<Axes...>& axes)
@@ -268,6 +298,32 @@ namespace detail {
   /// @brief helper functions for grid-related operations
   struct grid_helper
   {
+    /// @brief get the global indices for closest points on grid
+    ///
+    /// @tparam Axes parameter pack of axis types defining the grid
+    /// @param  [in] bin  global bin index for bin of interest
+    /// @param  [in] axes actual axis objects spanning the grid
+    /// @return set of global bin indices for bins whose lower-left corners are
+    ///         the closest points on the grid to every point in the given bin
+    ///
+    /// @note @c bin must be a valid bin index (excluding under-/overflow bins
+    ///       along any axis).
+    template <class... Axes>
+    static std::set<size_t>
+    closestPointsIndices(size_t bin, const std::tuple<Axes...>& axes)
+    {
+      constexpr size_t MAX = sizeof...(Axes)-1;
+      std::set<size_t> closestPointsIndices;
+
+      // get local bin indices for neighboring bins
+      grid_helper_impl<MAX>::closestPointsIndices(
+          bin, 1u, false, axes, closestPointsIndices);
+      grid_helper_impl<MAX>::closestPointsIndices(
+          bin, 1u, true, axes, closestPointsIndices);
+
+      return closestPointsIndices;
+    }
+
     /// @brief retrieve bin center from set of local bin indices
     ///
     /// @tparam Axes parameter pack of axis types defining the grid

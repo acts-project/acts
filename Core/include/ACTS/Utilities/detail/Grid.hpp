@@ -147,6 +147,29 @@ namespace detail {
       return m_values.at(getGlobalBinIndex(localBins));
     }
 
+    /// @brief get global bin indices for closest points on grid
+    ///
+    /// @tparam Point any type with point semantics supporting component access
+    ///               through @c operator[]
+    /// @param [in] position point of interest
+    /// @return set of global bin indices for bins whose lower-left corners are
+    ///         the closest points on the grid to the given point
+    ///
+    /// @pre The given @c Point type must represent a point in d (or higher)
+    ///      dimensions where d is dimensionality of the grid. It must lie
+    ///      within the grid range (i.e. not within a under-/overflow bin).
+    ///
+    /// @note The order of the global bin indices returned is optimal in the
+    ///       sense that sequential access in this order is considered optimal
+    ///       for the underlying memory layout of the grid values.
+    template <class Point>
+    std::set<size_t>
+    closestPointsIndices(const Point& position) const
+    {
+      return grid_helper::closestPointsIndices(getGlobalBinIndex(position),
+                                               m_axes);
+    }
+
     /// @brief dimensionality of grid
     ///
     /// @return number of axes spanning the grid
@@ -304,13 +327,14 @@ namespace detail {
       // incremented by one but avoid overflows)
       auto urIndices = grid_helper::getUpperRightBinIndices(llIndices, m_axes);
 
-      // loop through all corner points
-      for (size_t i = 0; i < nCorners; ++i) {
-        auto indices = llIndices;
-        for (size_t dimension = 0; dimension < DIM; ++dimension) {
-          if (i & (1 << dimension)) indices.at(dimension) += 1;
-        }
-        neighbors.at(i) = at(indices);
+      // get global indices for all surrounding corner points
+      const auto& closestIndices = closestPointsIndices(point);
+
+      // get values on grid points
+      size_t i = 0;
+      for (size_t index : closestIndices) {
+        neighbors.at(i) = at(index);
+        ++i;
       }
 
       return Acts::interpolate(point,

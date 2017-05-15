@@ -63,6 +63,24 @@ namespace detail {
                          decltype(point_type_test<Point3>(nullptr))>::value;
   };
 
+  /// @brief determine number of dimension from power of 2
+  ///
+  /// @tparam N power of 2
+  template <size_t N>
+  struct get_dimension
+  {
+    /// exponent @c d such that \f$2^d = N \f$
+    static constexpr size_t value = get_dimension<(N >> 1)>::value + 1u;
+  };
+
+  /// @cond
+  template <>
+  struct get_dimension<2u>
+  {
+    static constexpr size_t value = 1u;
+  };
+  /// @endcond
+
   /// @brief helper struct for performing multi-dimensional linear interpolation
   ///
   /// @tparam T      type of values to be interpolated
@@ -112,7 +130,7 @@ namespace detail {
       for (size_t i     = 0; i < N / 2; ++i)
         newFields.at(i) = (1 - f) * fields.at(2 * i) + f * fields.at(2 * i + 1);
 
-      return interpolate_impl<T, Point1, Point2, Point3, D + 1, (N >> 1)>::run(
+      return interpolate_impl<T, Point1, Point2, Point3, D - 1, (N >> 1)>::run(
           pos, lowerLeft, upperRight, newFields);
     }
   };
