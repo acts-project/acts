@@ -156,8 +156,8 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
   }
   }
   // return the binned array
-  return std::make_unique<BinnedArrayXD<LayerPtr>>(layerOrderVector,
-                                                   std::move(binUtility));
+  return std::make_unique<const BinnedArrayXD<LayerPtr>>(layerOrderVector,
+                                                         std::move(binUtility));
 }
 
 Acts::Surface*

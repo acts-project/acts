@@ -62,8 +62,7 @@ main(int argc, char* argv[])
                            << "T B-field");
 
   typedef ConstantBField       BField_type;
-  std::unique_ptr<BField_type> magnetic_field
-      = std::make_unique<BField_type>(0, 0, Bz / 1000.);
+  auto magnetic_field = std::make_unique<const BField_type>(0, 0, Bz / 1000.);
 
   RungeKuttaEngine<>::Config c;
   c.fieldService  = std::move(magnetic_field);

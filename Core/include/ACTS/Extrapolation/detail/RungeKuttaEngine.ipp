@@ -256,7 +256,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
       Acts::Vector3D mom(
           pCache.pVector[3], pCache.pVector[4], pCache.pVector[5]);
       mom /= std::abs(pCache.parameters[4]);
-      nParameters = std::make_unique<NeutralCurvilinearParameters>(
+      nParameters = std::make_unique<const NeutralCurvilinearParameters>(
           std::move(cov), gp, mom);
     }
     // this is a new transport step, collect it
