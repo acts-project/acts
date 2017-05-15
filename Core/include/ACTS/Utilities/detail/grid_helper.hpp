@@ -127,6 +127,29 @@ namespace detail {
       return insideThisAxis
           && grid_helper_impl<N - 1>::isInside(position, axes);
     }
+
+    template <class... Axes>
+    static void
+    neighborHoodIndices(
+        const std::array<size_t, sizeof...(Axes)>& localIndices,
+        size_t                     size,
+        const std::tuple<Axes...>& axes,
+        std::set<std::array<size_t, sizeof...(Axes)>>& neighborIndices)
+    {
+      // determine allowed local bin range
+      const size_t bin    = localIndices.at(N);
+      const size_t minBin = (bin <= size) ? 0u : bin - size;
+      const size_t maxBin
+          = std::min(std::get<0u>(axes).getNBins() + 1, bin + size);
+
+      // vary local bin for current axis and recurse
+      for (size_t newBin = minBin; newBin <= maxBin; ++newBin) {
+        auto indices  = localIndices;
+        indices.at(N) = newBin;
+        grid_helper_impl<N - 1>::neighborHoodIndices(
+            indices, size, axes, neighborIndices);
+      }
+    }
   };
 
   template <>
@@ -216,6 +239,28 @@ namespace detail {
     isInside(const Point& position, const std::tuple<Axes...>& axes)
     {
       return std::get<0u>(axes).isInside(position[0u]);
+    }
+
+    template <class... Axes>
+    static void
+    neighborHoodIndices(
+        const std::array<size_t, sizeof...(Axes)>& localIndices,
+        size_t                     size,
+        const std::tuple<Axes...>& axes,
+        std::set<std::array<size_t, sizeof...(Axes)>>& neighborIndices)
+    {
+      // determine allowed local bin range
+      const size_t bin    = localIndices.at(0u);
+      const size_t minBin = (bin <= size) ? 0u : bin - size;
+      const size_t maxBin
+          = std::min(std::get<0u>(axes).getNBins() + 1, bin + size);
+
+      // vary local bin and store
+      for (size_t newBin = minBin; newBin <= maxBin; ++newBin) {
+        auto indices   = localIndices;
+        indices.at(0u) = newBin;
+        neighborIndices.insert(indices);
+      }
     }
   };
   /// @endcond
@@ -425,6 +470,53 @@ namespace detail {
       grid_helper_impl<MAX>::getUpperRightBinIndices(urIndices, axes);
 
       return urIndices;
+    }
+
+    /// @brief get global bin indices for bins in specified neighborhood
+    ///
+    /// @tparam Axes parameter pack of axis types defining the grid
+    /// @param  [in] localIndices local bin indices along each axis
+    /// @param  [in] size         size of neighborhood determining how many
+    ///                           adjacent bins along each axis are considered
+    /// @param  [in] axes         actual axis objects spanning the grid
+    /// @return set of global bin indices for all bins in neighborhood
+    ///
+    /// @note Over-/underflow bins are included in the neighborhood.
+    /// @note The @c size parameter sets the range by how many units each local
+    ///       bin index is allowed to be varied. All local bin indices are
+    ///       varied independently, that is diagonal neighbors are included.
+    ///       Ignoring the truncation of the neighborhood size reaching beyond
+    ///       over-/underflow bins, the neighborhood is of size \f$2 \times
+    ///       \text{size}+1\f$ along each dimension.
+    /// @note The order of the global bin indices returned is optimal in the
+    ///       sense that sequential access in this order is considered optimal
+    ///       for the underlying memory layout of the grid values.
+    ///
+    /// @todo At the moment, this function relies on local-to-global bin index
+    ///       conversions for each neighboring bin. In principle, all
+    ///       information should be available to work directly on global bin
+    ///       indices. The problematic part is the check when going beyond
+    ///       under-/overflow bins.
+    template <class... Axes>
+    static std::set<size_t>
+    neighborHoodIndices(const std::array<size_t, sizeof...(Axes)>& localIndices,
+                        size_t                     size,
+                        const std::tuple<Axes...>& axes)
+    {
+      constexpr size_t MAX = sizeof...(Axes)-1;
+      std::set<size_t> binIndices;
+      std::set<std::array<size_t, sizeof...(Axes)>> neighborIndices;
+
+      // get local bin indices for neighboring bins
+      grid_helper_impl<MAX>::neighborHoodIndices(
+          localIndices, size, axes, neighborIndices);
+
+      // convert to global bin indices
+      for (const auto& coords : neighborIndices) {
+        binIndices.insert(getGlobalBin(coords, axes));
+      }
+
+      return binIndices;
     }
 
     /// @brief check whether given point is inside axes limits

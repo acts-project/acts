@@ -9,8 +9,10 @@
 #pragma once
 
 #include <array>
+#include <set>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 #include "ACTS/Utilities/Interpolation.hpp"
 #include "ACTS/Utilities/detail/grid_helper.hpp"
 
@@ -333,6 +335,30 @@ namespace detail {
     isInside(const Point& position) const
     {
       return grid_helper::isInside(position, m_axes);
+    }
+
+    /// @brief get global bin indices for neighborhood
+    ///
+    /// @param [in] localBins center bin defined by local bin indices along each
+    ///                       axis
+    /// @param [in] size      size of neighborhood determining how many adjacent
+    ///                       bins along each axis are considered
+    /// @return set of global bin indices for all bins in neighborhood
+    ///
+    /// @note Over-/underflow bins are included in the neighborhood.
+    /// @note The @c size parameter sets the range by how many units each local
+    ///       bin index is allowed to be varied. All local bin indices are
+    ///       varied independently, that is diagonal neighbors are included.
+    ///       Ignoring the truncation of the neighborhood size reaching beyond
+    ///       over-/underflow bins, the neighborhood is of size \f$2 \times
+    ///       \text{size}+1\f$ along each dimension.
+    /// @note The order of the global bin indices returned is optimal in the
+    ///       sense that sequential access in this order is considered optimal
+    ///       for the underlying memory layout of the grid values.
+    std::set<size_t>
+    neighborHoodIndices(const index_t& localBins, size_t size = 1u) const
+    {
+      return grid_helper::neighborHoodIndices(localBins, size, m_axes);
     }
 
     /// @brief total number of bins

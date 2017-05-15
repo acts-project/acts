@@ -978,6 +978,51 @@ namespace Test {
     BOOST_TEST(g.interpolate(Point({1.5, 2., 2.5})) == 360. / 8);
     BOOST_TEST(g.interpolate(Point({1.3, 2.1, 1.6})) == 32.);
   }
+
+  BOOST_AUTO_TEST_CASE(neighborhood)
+  {
+    typedef std::set<size_t> bins_t;
+    typedef EquidistantAxis  EAxis;
+    typedef Grid<double, EAxis> Grid1_t;
+    typedef Grid<double, EAxis, EAxis> Grid2_t;
+    typedef Grid<double, EAxis, EAxis, EAxis> Grid3_t;
+
+    EAxis   a(0.0, 1.0, 10u);
+    EAxis   b(0.0, 1.0, 10u);
+    EAxis   c(0.0, 1.0, 10u);
+    Grid1_t g1(std::make_tuple(std::move(a)));
+    Grid2_t g2(std::make_tuple(std::move(a), std::move(b)));
+    Grid3_t g3(std::make_tuple(std::move(a), std::move(b), std::move(c)));
+
+    // clang-format off
+    // 1D case
+    BOOST_TEST((g1.neighborHoodIndices({0}, 1) == bins_t({0, 1})));
+    BOOST_TEST((g1.neighborHoodIndices({0}, 2) == bins_t({0, 1, 2})));
+    BOOST_TEST((g1.neighborHoodIndices({1}, 1) == bins_t({0, 1, 2})));
+    BOOST_TEST((g1.neighborHoodIndices({1}, 3) == bins_t({0, 1, 2, 3, 4})));
+    BOOST_TEST((g1.neighborHoodIndices({4}, 2) == bins_t({2, 3, 4, 5, 6})));
+    BOOST_TEST((g1.neighborHoodIndices({9}, 2) == bins_t({7, 8, 9, 10, 11})));
+    BOOST_TEST((g1.neighborHoodIndices({10}, 2) == bins_t({8, 9, 10, 11})));
+    BOOST_TEST((g1.neighborHoodIndices({11}, 2) == bins_t({9, 10, 11})));
+
+    // 2D case
+    BOOST_TEST((g2.neighborHoodIndices({0, 0}, 1) == bins_t({0, 1, 12, 13})));
+    BOOST_TEST((g2.neighborHoodIndices({0, 1}, 1) == bins_t({0, 1, 2, 12, 13, 14})));
+    BOOST_TEST((g2.neighborHoodIndices({1, 0}, 1) == bins_t({0, 1, 12, 13, 24, 25})));
+    BOOST_TEST((g2.neighborHoodIndices({1, 1}, 1) == bins_t({0, 1, 2, 12, 13, 14, 24, 25, 26})));
+    BOOST_TEST((g2.neighborHoodIndices({5, 5}, 1) == bins_t({52, 53, 54, 64, 65, 66, 76, 77, 78})));
+    BOOST_TEST((g2.neighborHoodIndices({9, 10}, 2) == bins_t({92, 93, 94, 95, 104, 105, 106, 107, 116, 117, 118, 119, 128, 129, 130, 131, 140, 141, 142, 143})));
+
+    // 3D case
+    BOOST_TEST((g3.neighborHoodIndices({0, 0, 0}, 1) == bins_t({0, 1, 12, 13, 144, 145, 156, 157})));
+    BOOST_TEST((g3.neighborHoodIndices({0, 0, 1}, 1) == bins_t({0, 1, 2, 12, 13, 14, 144, 145, 146, 156, 157, 158})));
+    BOOST_TEST((g3.neighborHoodIndices({0, 1, 0}, 1) == bins_t({0, 1, 12, 13, 24, 25, 144, 145, 156, 157, 168, 169})));
+    BOOST_TEST((g3.neighborHoodIndices({1, 0, 0}, 1) == bins_t({0, 1, 12, 13, 144, 145, 156, 157, 288, 289, 300, 301})));
+    BOOST_TEST((g3.neighborHoodIndices({0, 1, 1}, 1) == bins_t({0, 1, 2, 12, 13, 14, 24, 25, 26, 144, 145, 146, 156, 157, 158, 168, 169, 170})));
+    BOOST_TEST((g3.neighborHoodIndices({1, 1, 1}, 1) == bins_t({0, 1, 2, 12, 13, 14, 24, 25, 26, 144, 145, 146, 156, 157, 158, 168, 169, 170, 288, 289, 290, 300, 301, 302, 312, 313, 314})));
+    BOOST_TEST((g3.neighborHoodIndices({11, 10, 9}, 1) == bins_t({1556, 1557, 1558, 1568, 1569, 1570, 1580, 1581, 1582, 1700, 1701, 1702, 1712, 1713, 1714, 1724, 1725, 1726})));
+    // clang-format on
+  }
 }  // namespace Test
 
 }  // namespace Acts
