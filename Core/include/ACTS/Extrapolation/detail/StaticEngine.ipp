@@ -142,8 +142,9 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
                                               eCell.leadParameters->momentum(),
                                               pDir,
                                               true,
-                                              true)).object;
-                                    
+                                              true))
+              .object;
+
     // handle the layer, possible returns are :
     // - InProgress               : fine, whatever happened on the lead layer
     // - SuccessWithPathLimit     : propagation towards layer exceeded limit

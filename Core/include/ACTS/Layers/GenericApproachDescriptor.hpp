@@ -113,9 +113,9 @@ GenericApproachDescriptor<T>::approachSurface(
   // the intersection estimates
   std::vector<std::pair<const Surface*, Intersection>> vIntersections;
   vIntersections.reserve(m_surfacesCache.size());
-  for (auto& sf : m_surfacesCache){
-    vIntersections.push_back(std::pair<const Surface*, Intersection>
-       (sf, sf->intersectionEstimate(pos, dir, true, bcheck)));
+  for (auto& sf : m_surfacesCache) {
+    vIntersections.push_back(std::pair<const Surface*, Intersection>(
+        sf, sf->intersectionEstimate(pos, dir, true, bcheck)));
   }
   // find nearest intersection
   auto returnIntersection
