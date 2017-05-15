@@ -148,6 +148,12 @@ public:
     return m_config.scale;
   }
 
+  bool
+  isInside(const Vector3D& position) const
+  {
+    return m_config.mapper.isInside(position);
+  }
+
   /// @brief update configuration
   ///
   /// @param [in] config new configuration object
