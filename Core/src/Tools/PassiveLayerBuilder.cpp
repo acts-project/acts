@@ -21,7 +21,7 @@
 
 Acts::PassiveLayerBuilder::PassiveLayerBuilder(
     const PassiveLayerBuilder::Config& plConfig,
-    std::unique_ptr<Logger>            logger)
+    std::unique_ptr<const Logger>      logger)
   : m_cfg()
   , m_logger(std::move(logger))
   , m_nLayers()
@@ -41,7 +41,7 @@ Acts::PassiveLayerBuilder::setConfiguration(
 }
 
 void
-Acts::PassiveLayerBuilder::setLogger(std::unique_ptr<Logger> newLogger)
+Acts::PassiveLayerBuilder::setLogger(std::unique_ptr<const Logger> newLogger)
 {
   m_logger = std::move(newLogger);
 }

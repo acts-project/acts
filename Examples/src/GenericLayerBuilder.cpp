@@ -32,7 +32,7 @@
 
 Acts::GenericLayerBuilder::GenericLayerBuilder(
     const Acts::GenericLayerBuilder::Config& glbConfig,
-    std::unique_ptr<Logger>                  log)
+    std::unique_ptr<const Logger>            log)
   : m_nLayers(), m_cLayers(), m_pLayers(), m_logger(std::move(log))
 {
   ACTS_DEBUG("initialize()");
@@ -52,7 +52,7 @@ Acts::GenericLayerBuilder::setConfiguration(
 }
 
 void
-Acts::GenericLayerBuilder::setLogger(std::unique_ptr<Logger> newLogger)
+Acts::GenericLayerBuilder::setLogger(std::unique_ptr<const Logger> newLogger)
 {
   m_logger = std::move(newLogger);
 }

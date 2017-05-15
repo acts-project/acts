@@ -18,7 +18,7 @@
 // constructor
 Acts::MaterialEffectsEngine::MaterialEffectsEngine(
     const MaterialEffectsEngine::Config& meConfig,
-    std::unique_ptr<Logger>              logger)
+    std::unique_ptr<const Logger>        logger)
   : m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(meConfig);
@@ -45,7 +45,7 @@ Acts::MaterialEffectsEngine::setConfiguration(
 }
 
 void
-Acts::MaterialEffectsEngine::setLogger(std::unique_ptr<Logger> newLogger)
+Acts::MaterialEffectsEngine::setLogger(std::unique_ptr<const Logger> newLogger)
 {
   m_logger = std::move(newLogger);
 }

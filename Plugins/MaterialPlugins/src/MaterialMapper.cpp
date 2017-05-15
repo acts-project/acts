@@ -29,8 +29,8 @@
 #include "ACTS/Utilities/GeometryObjectSorter.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
 
-Acts::MaterialMapper::MaterialMapper(const Config&           cfg,
-                                     std::unique_ptr<Logger> log)
+Acts::MaterialMapper::MaterialMapper(const Config&                 cfg,
+                                     std::unique_ptr<const Logger> log)
   : m_cfg(cfg), m_logger(std::move(log))
 {
   // check if extrapolation engine is given
@@ -45,7 +45,7 @@ Acts::MaterialMapper::~MaterialMapper()
 }
 
 void
-Acts::MaterialMapper::setLogger(std::unique_ptr<Logger> newLogger)
+Acts::MaterialMapper::setLogger(std::unique_ptr<const Logger> newLogger)
 {
   m_logger = std::move(newLogger);
 }

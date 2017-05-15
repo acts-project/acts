@@ -21,7 +21,7 @@ namespace Test {
 
   /// @cond
   namespace detail {
-    std::unique_ptr<Logger>
+    std::unique_ptr<const Logger>
     create_logger(const std::string& logger_name,
                   std::ostream*      logfile,
                   Logging::Level     lvl)
@@ -30,7 +30,8 @@ namespace Test {
           std::make_unique<NamedOutputDecorator>(
               std::make_unique<DefaultPrintPolicy>(logfile), logger_name));
       auto print = std::make_unique<DefaultFilterPolicy>(lvl);
-      return std::make_unique<Logger>(std::move(output), std::move(print));
+      return std::make_unique<const Logger>(
+          std::move(output), std::move(print));
     }
 
     std::string

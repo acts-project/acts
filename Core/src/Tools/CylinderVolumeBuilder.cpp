@@ -22,7 +22,7 @@
 
 Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(
     const Acts::CylinderVolumeBuilder::Config& cvbConfig,
-    std::unique_ptr<Logger>                    logger)
+    std::unique_ptr<const Logger>              logger)
   : Acts::ITrackingVolumeBuilder(), m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(cvbConfig);
@@ -42,7 +42,7 @@ Acts::CylinderVolumeBuilder::setConfiguration(
 }
 
 void
-Acts::CylinderVolumeBuilder::setLogger(std::unique_ptr<Logger> newLogger)
+Acts::CylinderVolumeBuilder::setLogger(std::unique_ptr<const Logger> newLogger)
 {
   m_logger = std::move(newLogger);
 }

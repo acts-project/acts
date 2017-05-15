@@ -26,7 +26,7 @@
 
 Acts::DD4hepLayerBuilder::DD4hepLayerBuilder(
     const Acts::DD4hepLayerBuilder::Config& config,
-    std::unique_ptr<Logger>                 logger)
+    std::unique_ptr<const Logger>           logger)
   : m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(config);

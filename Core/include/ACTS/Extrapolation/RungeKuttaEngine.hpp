@@ -188,8 +188,8 @@ public:
   ///
   /// @param rkConfig is an instance of the configuration struct
   /// @param logger logging instance
-  RungeKuttaEngine(const Config&           rkConfig,
-                   std::unique_ptr<Logger> logger
+  RungeKuttaEngine(const Config&                 rkConfig,
+                   std::unique_ptr<const Logger> logger
                    = getDefaultLogger("RungeKuttaEngine", Logging::INFO))
     : m_cfg(), m_rkUtils(), m_logger(std::move(logger))
   {
@@ -268,7 +268,7 @@ public:
   ///
   /// @param logger the logging class to be set
   void
-  setLogger(std::unique_ptr<Logger> logger)
+  setLogger(std::unique_ptr<const Logger> logger)
   {
     m_logger = std::move(logger);
   }
@@ -285,7 +285,7 @@ private:
     return *m_logger;
   }
 
-  std::unique_ptr<Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 
   /// Templated RungeKutta propagation method - charged/neutral
   ///

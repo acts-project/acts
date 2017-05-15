@@ -15,7 +15,7 @@
 
 Acts::TGeoLayerBuilder::TGeoLayerBuilder(
     const Acts::TGeoLayerBuilder::Config& config,
-    std::unique_ptr<Logger>               logger)
+    std::unique_ptr<const Logger>         logger)
   : m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(config);
@@ -33,7 +33,7 @@ Acts::TGeoLayerBuilder::setConfiguration(
 }
 
 void
-Acts::TGeoLayerBuilder::setLogger(std::unique_ptr<Logger> newLogger)
+Acts::TGeoLayerBuilder::setLogger(std::unique_ptr<const Logger> newLogger)
 {
   m_logger = std::move(newLogger);
 }

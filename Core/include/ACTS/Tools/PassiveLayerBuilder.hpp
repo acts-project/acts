@@ -56,8 +56,8 @@ public:
   ///
   /// @param plConfig is the ocnfiguration struct that steers behavior
   /// @param logger logging instance
-  PassiveLayerBuilder(const Config&           plConfig,
-                      std::unique_ptr<Logger> logger
+  PassiveLayerBuilder(const Config&                 plConfig,
+                      std::unique_ptr<const Logger> logger
                       = getDefaultLogger("PassiveLayerBuilder", Logging::INFO));
 
   /// Destructor
@@ -101,7 +101,7 @@ public:
   ///
   /// @param logger is the logging instance to be set
   void
-  setLogger(std::unique_ptr<Logger> logger);
+  setLogger(std::unique_ptr<const Logger> logger);
 
 protected:
   Config m_cfg;  //!< configuration
@@ -114,7 +114,7 @@ private:
   }
 
   /// logging instance
-  std::unique_ptr<Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 
   void
   constructLayers();

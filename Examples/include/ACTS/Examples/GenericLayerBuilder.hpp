@@ -135,8 +135,8 @@ public:
 
   /// Constructor
   /// @param glbConfig is the configuration class
-  GenericLayerBuilder(const Config&           glbConfig,
-                      std::unique_ptr<Logger> logger
+  GenericLayerBuilder(const Config&                 glbConfig,
+                      std::unique_ptr<const Logger> logger
                       = getDefaultLogger("GenericLayerBuilder", Logging::INFO));
 
   /// Destructor
@@ -171,7 +171,7 @@ public:
 
   /// set logging instance
   void
-  setLogger(std::unique_ptr<Logger> logger);
+  setLogger(std::unique_ptr<const Logger> logger);
 
 private:
   void
@@ -198,7 +198,7 @@ private:
   }
 
   /// the loging instance
-  std::unique_ptr<Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 };
 
 inline const LayerVector

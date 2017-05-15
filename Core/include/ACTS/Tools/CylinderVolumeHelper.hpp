@@ -67,8 +67,8 @@ public:
   /// Constructor
   /// @param cvhConfig is the configuration struct for this builder
   /// @param logger logging instance
-  CylinderVolumeHelper(const Config&           cvhConfig,
-                       std::unique_ptr<Logger> logger
+  CylinderVolumeHelper(const Config&                 cvhConfig,
+                       std::unique_ptr<const Logger> logger
                        = getDefaultLogger("CylinderVolumeHelper",
                                           Logging::INFO));
 
@@ -186,7 +186,7 @@ public:
   ///
   /// @param logger is the logger isntance to be set
   void
-  setLogger(std::unique_ptr<Logger> logger);
+  setLogger(std::unique_ptr<const Logger> logger);
 
 protected:
   /// Configuration object
@@ -201,7 +201,7 @@ private:
   }
 
   /// the looging instance
-  std::unique_ptr<Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 
   /// Private method - it estimates the CylinderBounds and Translation
   /// of layers, these are checked against the layer positions/dimensions.

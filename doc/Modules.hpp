@@ -50,7 +50,8 @@
 ///
 ///    // setup a logger instance for >= INFO messages, streaming into the log file
 ///    // make sure you do NOT call the variable 'logger'
-///    std::unique_ptr<Acts::Logger> myLogger = Acts::getDefaultLogger("MyLogger", Acts::Logging::INFO, &logfile);
+///    std::unique_ptr<const Acts::Logger> myLogger
+///        = Acts::getDefaultLogger("MyLogger", Acts::Logging::INFO, &logfile);
 ///
 ///    // make sure the ACTS debug macros can work with your logger
 ///    ACTS_LOCAL_LOGGER(myLogger);
@@ -83,7 +84,9 @@
 ///
 /// @code{.cpp}
 /// namespace Acts {
-///   std::unique_ptr<Logger> getDefaultLogger(const std::string&, const Logging::Level&, std::ostream*);
+///   std::unique_ptr<const Logger> getDefaultLogger(const std::string&,
+///                                                  const Logging::Level&,
+///                                                  std::ostream*);
 /// }
 /// @endcode
 ///

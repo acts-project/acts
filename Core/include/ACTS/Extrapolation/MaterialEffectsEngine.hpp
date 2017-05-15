@@ -59,8 +59,8 @@ public:
   ///
   /// @param meConfig is an instance of the configuration struct
   /// @param logger logging instance
-  MaterialEffectsEngine(const Config&           meConfig,
-                        std::unique_ptr<Logger> logger
+  MaterialEffectsEngine(const Config&                 meConfig,
+                        std::unique_ptr<const Logger> logger
                         = getDefaultLogger("MaterialEffectsEngine",
                                            Logging::INFO));
 
@@ -111,7 +111,7 @@ public:
   ///
   /// @param logger the logging instance to be set
   void
-  setLogger(std::unique_ptr<Logger> logger);
+  setLogger(std::unique_ptr<const Logger> logger);
 
 protected:
   Config m_cfg;  ///< configuration struct
@@ -124,7 +124,7 @@ private:
   }
 
   /// logger instance
-  std::unique_ptr<Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 
   ///  charged extrapolation
   ///  depending on the MaterialUpdateStage:

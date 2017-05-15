@@ -19,7 +19,7 @@
 
 Acts::TrackingGeometryBuilder::TrackingGeometryBuilder(
     const Acts::TrackingGeometryBuilder::Config& cgbConfig,
-    std::unique_ptr<Logger>                      logger)
+    std::unique_ptr<const Logger>                logger)
   : m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(cgbConfig);
@@ -35,7 +35,8 @@ Acts::TrackingGeometryBuilder::setConfiguration(
 }
 
 void
-Acts::TrackingGeometryBuilder::setLogger(std::unique_ptr<Logger> newLogger)
+Acts::TrackingGeometryBuilder::setLogger(
+    std::unique_ptr<const Logger> newLogger)
 {
   m_logger = std::move(newLogger);
 }

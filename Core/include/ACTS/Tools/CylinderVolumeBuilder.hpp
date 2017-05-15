@@ -248,8 +248,8 @@ public:
   ///
   /// @param cvbConfig is the configuraiton struct to steer the builder
   /// @param logger logging instance
-  CylinderVolumeBuilder(const Config&           cvbConfig,
-                        std::unique_ptr<Logger> logger
+  CylinderVolumeBuilder(const Config&                 cvbConfig,
+                        std::unique_ptr<const Logger> logger
                         = getDefaultLogger("CylinderVolumeBuilder",
                                            Logging::INFO));
 
@@ -278,7 +278,7 @@ public:
   ///
   /// @param logger is the logging istance to be set
   void
-  setLogger(std::unique_ptr<Logger> logger);
+  setLogger(std::unique_ptr<const Logger> logger);
 
 private:
   /// Configuration struct
@@ -292,7 +292,7 @@ private:
   }
 
   /// the logging instance
-  std::unique_ptr<Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 
   /// Analyze the layer config to gather needed dimension
   ///

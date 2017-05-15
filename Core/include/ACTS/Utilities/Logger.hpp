@@ -23,7 +23,8 @@
 /// @brief macro to use a local Acts::Logger object
 /// @ingroup Logging
 ///
-/// @param log_object logger instance of type <tt>std::unique_ptr<Acts::Logger></tt>
+/// @param log_object logger instance of type
+//         <tt>std::unique_ptr<const Acts::Logger></tt>
 ///
 /// @pre In the current scope, the symbol @c logger is not yet defined.
 /// @post The ownership of the given @c log_object is transferred and
@@ -34,7 +35,8 @@
 ///
 /// @code{.cpp}
 /// void myFunction() {
-///    std::unique_ptr<Acts::Logger> myLogger = /* .. your initialization .. */;
+///    std::unique_ptr<const Acts::Logger> myLogger
+///        = /* .. your initialization .. */;
 ///    ACTS_LOCAL_LOGGER(myLogger);
 ///
 ///    ACTS_VERBOSE("hello world!");
@@ -43,7 +45,7 @@
 #define ACTS_LOCAL_LOGGER(log_object)                                          \
   struct __local_acts_logger                                                   \
   {                                                                            \
-    __local_acts_logger(std::unique_ptr<Logger> logger):                       \
+    __local_acts_logger(std::unique_ptr<const Logger> logger):                 \
       m_logger(std::move(logger))                                              \
     {}                                                                         \
                                                                                \
@@ -52,7 +54,7 @@
       return *m_logger;                                                        \
     }                                                                          \
                                                                                \
-    std::unique_ptr<Logger> m_logger;                                          \
+    std::unique_ptr<const Logger> m_logger;                                    \
   };                                                                           \
   __local_acts_logger logger(std::move(log_object));
 
@@ -598,7 +600,7 @@ private:
 /// - debug level
 ///
 /// @return pointer to logging instance
-std::unique_ptr<Logger>
+std::unique_ptr<const Logger>
 getDefaultLogger(const std::string&    name,
                  const Logging::Level& lvl,
                  std::ostream*         log_stream = &std::cout);

@@ -73,7 +73,7 @@ public:
   /// @param config is the configuration struct
   /// @param logger is the logging instance
   DD4hepLayerBuilder(const Acts::DD4hepLayerBuilder::Config& config,
-                     std::unique_ptr<Logger>                 logger);
+                     std::unique_ptr<const Logger>           logger);
   /// Destructor
   ~DD4hepLayerBuilder();
 
@@ -108,14 +108,14 @@ public:
 
   /// set logging instance
   void
-  setLogger(std::unique_ptr<Logger> logger);
+  setLogger(std::unique_ptr<const Logger> logger);
 
 private:
   /// configruation object
   Config m_cfg;
 
   /// logging instance
-  std::unique_ptr<Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 
   /// Private access to the logger
   const Logger&
