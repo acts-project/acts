@@ -478,7 +478,7 @@ Acts::TrackingVolume::closeGeometry(
   } else {
     // B) this is a container volume, go through sub volume
     // do the loop
-    for (auto& volumesIter : m_confinedVolumes->arrayObjects()){
+    for (auto& volumesIter : m_confinedVolumes->arrayObjects()) {
       auto mutableVolumesIter
           = std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->closeGeometry(volumeMap, vol);

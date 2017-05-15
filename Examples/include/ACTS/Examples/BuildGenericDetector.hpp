@@ -47,13 +47,18 @@ modulePositionsCylinder(double radius,
 /// @param lOverlap is the overlap of the modules
 /// @parm nPhiBins is the number of bins in phi
 std::vector<Acts::Vector3D>
-modulePositionsRing(double z, double radius, double phiStagger, double phiSubStagger, int nPhiBins);
+modulePositionsRing(double z,
+                    double radius,
+                    double phiStagger,
+                    double phiSubStagger,
+                    int    nPhiBins);
 
 /// Helper method for positioning
 /// @param z is the nominal z posiiton of the dis
 /// @param ringStagger is the staggering of the different rings
 /// @param phiStagger is the staggering on a ring in phi : it is even/odd
-/// @param phiSubStagger is the sub staggering on a ring in phi : it affects 0/4/8 and 3/6
+/// @param phiSubStagger is the sub staggering on a ring in phi : it affects
+/// 0/4/8 and 3/6
 /// @param innerRadius is the inner Radius for the disc
 /// @param outerRadius is the outer Radius for the disc
 /// @param discBinning is the binning setup in r, phi

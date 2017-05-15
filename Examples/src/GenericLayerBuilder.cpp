@@ -308,9 +308,9 @@ Acts::GenericLayerBuilder::constructLayers()
         double moduleThickness = m_cfg.posnegModuleThickness.at(ipnl).at(ipnR);
         double moduleMinHalfX  = m_cfg.posnegModuleMinHalfX.at(ipnl).at(ipnR);
         double moduleMaxHalfX  = 0.;
-        if (m_cfg.posnegModuleMaxHalfX.size() > ipnl 
-         && m_cfg.posnegModuleMaxHalfX.at(ipnl).size() > ipnR ){
-          moduleMaxHalfX =  m_cfg.posnegModuleMaxHalfX.at(ipnl).at(ipnR);
+        if (m_cfg.posnegModuleMaxHalfX.size() > ipnl
+            && m_cfg.posnegModuleMaxHalfX.at(ipnl).size() > ipnR) {
+          moduleMaxHalfX = m_cfg.posnegModuleMaxHalfX.at(ipnl).at(ipnR);
         }
         double moduleHalfY = m_cfg.posnegModuleHalfY.at(ipnl).at(ipnR);
         // (1) module bounds
