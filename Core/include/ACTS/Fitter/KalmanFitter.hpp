@@ -100,7 +100,7 @@ public:
   template <typename MeasurementContainer>
   auto
   fit(const MeasurementContainer&      vMeasurements,
-      std::unique_ptr<BoundParameters> pInitialPars = nullptr) const
+      std::unique_ptr<const BoundParameters> pInitialPars = nullptr) const
   {
     typedef typename MeasurementContainer::value_type Meas_t;
     typedef std::result_of_t<Extrapolator(const Meas_t&,
@@ -118,7 +118,7 @@ public:
   template <typename MeasurementContainer>
   auto
   forwardFilter(const MeasurementContainer&      vMeasurements,
-                std::unique_ptr<BoundParameters> pInitialPars) const
+                std::unique_ptr<const BoundParameters> pInitialPars) const
   {
     // typedef to actual measurement type
     typedef typename MeasurementContainer::value_type Meas_t;
@@ -136,8 +136,9 @@ public:
       parValues << 0, 0, 0, 0, 0.001;
       std::cout << *std::begin(vMeasurements) << std::endl;
       getSurface(*std::begin(vMeasurements));
-      pInitialPars = std::make_unique<BoundParameters>(
-          std::make_unique<ActsSymMatrixD<Acts::NGlobalPars>>(std::move(cov)),
+      pInitialPars = std::make_unique<const BoundParameters>(
+          std::make_unique<const ActsSymMatrixD<Acts::NGlobalPars>>(
+              std::move(cov)),
           parValues,
           getSurface(*std::begin(vMeasurements)));
     }
@@ -168,7 +169,7 @@ public:
     BoundParameters::ParVector_t smoothedPars;
     BoundParameters::CovMatrix_t smoothedCov;
     // smoothed track parameters
-    std::unique_ptr<BoundParameters> pSmoothed = nullptr;
+    std::unique_ptr<const BoundParameters> pSmoothed = nullptr;
 
     auto it = cache.rbegin();
 
@@ -192,8 +193,8 @@ public:
               * G.transpose();
 
       // create smoothed track parameters
-      pSmoothed = std::make_unique<BoundParameters>(
-          std::make_unique<decltype(smoothedCov)>(std::move(smoothedCov)),
+      pSmoothed = std::make_unique<const BoundParameters>(
+          std::make_unique<const decltype(smoothedCov)>(std::move(smoothedCov)),
           smoothedPars,
           (*it)->getFilteredState()->referenceSurface());
       (*it)->setSmoothedState(std::move(pSmoothed));

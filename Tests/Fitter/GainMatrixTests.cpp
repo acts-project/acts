@@ -50,8 +50,8 @@ namespace Test {
         parValues,
         cylinder);
 
-    GainMatrixUpdator                g;
-    std::unique_ptr<BoundParameters> filtered(g(m, pars));
+    GainMatrixUpdator                      g;
+    std::unique_ptr<const BoundParameters> filtered(g(m, pars));
 
     std::cout << pars << std::endl;
     if (filtered) std::cout << *filtered << std::endl;
