@@ -72,8 +72,8 @@ constructCylinderVolume(double surfaceHalfLengthZ,
                                       layer0bounds,
                                       std::move(bArray),
                                       surfaceRstagger + 2 * layerEnvelope);
-  std::unique_ptr<LayerArray> layerArray
-      = std::make_unique<BinnedArrayXD<LayerPtr>>(layer0);
+  std::unique_ptr<const LayerArray> layerArray
+      = std::make_unique<const BinnedArrayXD<LayerPtr>>(layer0);
 
   ///  create the volume
   auto volumeBounds = std::make_shared<const CylinderVolumeBounds>(
