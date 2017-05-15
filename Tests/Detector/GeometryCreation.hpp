@@ -68,7 +68,7 @@ constructCylinderVolume(double surfaceHalfLengthZ,
   ///  now create the Layer
   auto layer0bounds
       = std::make_shared<const CylinderBounds>(surfaceRadius, bUmax);
-  auto layer0       = CylinderLayer::create(nullptr,
+  auto layer0 = CylinderLayer::create(nullptr,
                                       layer0bounds,
                                       std::move(bArray),
                                       surfaceRstagger + 2 * layerEnvelope);
