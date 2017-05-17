@@ -206,7 +206,6 @@ std::ostream&
 operator<<(std::ostream& sl, const MaterialProperties& mprop);
 
 // Useful typedefs
-
 typedef std::vector<MaterialProperties*>      MaterialPropertiesVector;
 typedef std::vector<MaterialPropertiesVector> MaterialPropertiesMatrix;
 

@@ -62,10 +62,6 @@ Acts::SurfaceMaterialRecord::assignMaterialSteps(
   float ttInX0     = 0.;
   float ttInL0     = 0.;
 
-  // get the local position
-  Vector2D localPosition;
-  Vector3D direction(aSteps.assignedPosition.unit());
-  m_surface->globalToLocal(aSteps.assignedPosition, direction, localPosition);
 
   // now add it at the corresponding assigned position
   // get the bins corresponding to the position
@@ -80,12 +76,15 @@ Acts::SurfaceMaterialRecord::assignMaterialSteps(
   // bail out if no steps where assigned
   if (!aSteps.assignedSteps.size()) return;
 
+  // get the local position
+  Vector3D direction(aSteps.assignedPosition.unit());
+  double pC = m_surface->pathCorrection(Vector3D(0.,0.,0.),direction);
+
   // loop over the steps and add it up
   for (auto& currentStep : aSteps.assignedSteps) {
-    // thickness and density
+    // thickness and density 
     float t       = currentStep.materialProperties().thickness();
     float density = currentStep.materialProperties().averageRho();
-
     // sum it up
     tThickness += t;
     tRho += density * t;
@@ -132,6 +131,10 @@ Acts::SurfaceMaterialRecord::assignMaterialSteps(
 
   // set the new current material (not averaged yet)
   Material updatedMaterial(x0, l0, A, Z, rho);
+  
+  // and now scale the thickness and correct it for the incidence
+  thickness *= 1./fabs(pC);
+  
   m_mappedMaterial[bin1][bin0].first
       = MaterialProperties(updatedMaterial, thickness);
 }

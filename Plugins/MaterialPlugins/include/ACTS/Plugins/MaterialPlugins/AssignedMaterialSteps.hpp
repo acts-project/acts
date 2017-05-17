@@ -32,7 +32,9 @@ struct AssignedMaterialSteps
   AssignedMaterialSteps(GeometryID      geoID    = GeometryID(),
                         const Vector3D& position = Vector3D(0., 0., 0),
                         const std::vector<MaterialStep>& steps = {})
-    : assignedGeoID(geoID), assignedPosition(position), assignedSteps(steps)
+    : assignedGeoID(geoID)
+    , assignedPosition(position)
+    , assignedSteps(steps)
   {
   }
 };

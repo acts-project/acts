@@ -15,6 +15,7 @@
 
 #include "ACTS/Material/MaterialProperties.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/GeometryID.hpp"
 #include <memory>
 #include <vector>
 
@@ -103,6 +104,8 @@ SurfaceMaterial::factor(PropDirection pDir, MaterialUpdateStage mStage) const
 /// Overload of << operator for std::ostream for debug output
 std::ostream&
 operator<<(std::ostream& sl, const SurfaceMaterial& sm);
+
+typedef std::pair<GeometryID,SurfaceMaterial*> IndexedSurfaceMaterial;
 
 }  // end of namespace
 

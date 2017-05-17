@@ -95,7 +95,7 @@ public:
 
 private:
   /// remember the Surface
-  const Surface* m_surface;
+  const Surface*              m_surface;
 
   /// two dimensional grid on which the material is binned
   std::unique_ptr<BinUtility> m_binUtility;
