@@ -131,6 +131,12 @@ private:
   std::vector<const DetectorElementBase*> m_neighbours;
 };
 
+inline std::shared_ptr<const DigitizationModule>
+DetectorElementBase::digitizationModule() const
+{
+  return nullptr;
+}
+
 inline const std::vector<const DetectorElementBase*>&
 DetectorElementBase::binmembers() const
 {

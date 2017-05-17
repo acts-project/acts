@@ -575,5 +575,5 @@ Acts::TGeoDetectorElement::~TGeoDetectorElement()
 std::shared_ptr<const Acts::DigitizationModule>
 Acts::TGeoDetectorElement::digitizationModule() const
 {
-  return nullptr;
+  return DetectorElementBase::digitizationModule();
 }
