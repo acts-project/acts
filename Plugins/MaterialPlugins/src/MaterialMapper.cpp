@@ -10,8 +10,8 @@
 // MaterialMapper.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include <climits>
 #include "ACTS/Plugins/MaterialPlugins/MaterialMapper.hpp"
+#include <climits>
 #include "ACTS/Detector/TrackingGeometry.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/EventData/NeutralParameters.hpp"
@@ -98,7 +98,7 @@ Acts::MaterialMapper::mapMaterialTrackRecord(
   if (materialSteps.size()) {
     // get the number of materialsteps
     ACTS_VERBOSE("Successfuly retrieved " << materialSteps.size()
-                                        << " materialSteps");
+                                          << " materialSteps");
     // propagate through the detector and collect the layers hit in the given
     // direction eta phi
     // calculate the direction in cartesian coordinates
@@ -215,12 +215,12 @@ Acts::MaterialMapper::createSurfaceMaterial(Cache& mappingCache) const
                                << " entries");
           // take the mapped material
           MaterialProperties matProperties = mMaterial[i1][i0].first;
-          double             thickness     = statScalor * matProperties.thickness();
-          double             rho           = statScalor * matProperties.averageRho();
-          double             A             = statScalor * matProperties.averageA();
-          double             Z             = statScalor * matProperties.averageZ();
-          double             tInX0         = statScalor * matProperties.thicknessInX0();
-          double             tInL0         = statScalor * matProperties.thicknessInL0();
+          double             thickness = statScalor * matProperties.thickness();
+          double             rho   = statScalor * matProperties.averageRho();
+          double             A     = statScalor * matProperties.averageA();
+          double             Z     = statScalor * matProperties.averageZ();
+          double             tInX0 = statScalor * matProperties.thicknessInX0();
+          double             tInL0 = statScalor * matProperties.thicknessInL0();
           // recreate X0, L0
           float x0 = (thickness != 0. && tInX0 != 0.) ? thickness / tInX0 : 0.;
           float l0 = (thickness != 0. && tInL0 != 0.) ? thickness / tInL0 : 0.;

@@ -13,11 +13,11 @@
 #ifndef ACTS_MATERIAL_SURFACEMATERIAL_H
 #define ACTS_MATERIAL_SURFACEMATERIAL_H
 
+#include <memory>
+#include <vector>
 #include "ACTS/Material/MaterialProperties.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/GeometryID.hpp"
-#include <memory>
-#include <vector>
 
 namespace Acts {
 
@@ -105,7 +105,7 @@ SurfaceMaterial::factor(PropDirection pDir, MaterialUpdateStage mStage) const
 std::ostream&
 operator<<(std::ostream& sl, const SurfaceMaterial& sm);
 
-typedef std::pair<GeometryID,SurfaceMaterial*> IndexedSurfaceMaterial;
+typedef std::pair<GeometryID, SurfaceMaterial*> IndexedSurfaceMaterial;
 
 }  // end of namespace
 
