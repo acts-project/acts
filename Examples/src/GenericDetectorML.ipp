@@ -16,7 +16,7 @@ bplConfig.centralLayerRadii       = std::vector<double>(1, 19.);
 bplConfig.centralLayerHalflengthZ = std::vector<double>(1, 3000.);
 bplConfig.centralLayerThickness   = std::vector<double>(1, 0.8);
 bplConfig.centralLayerMaterial = {Material(352.8, 407., 9.012, 4., 1.848e-3)};
-auto beamPipeBuilder           = std::make_shared<const PassiveLayerBuilder>(
+auto beamPipeBuilder              = std::make_shared<const PassiveLayerBuilder>(
     bplConfig,
     getDefaultLogger("BeamPipeLayerBuilder", layerLLevel));
 // create the volume for the beam pipe
@@ -191,7 +191,7 @@ pstConfig.centralLayerRadii       = std::vector<double>(1, 200.);
 pstConfig.centralLayerHalflengthZ = std::vector<double>(1, 2800.);
 pstConfig.centralLayerThickness   = std::vector<double>(1, 1.8);
 pstConfig.centralLayerMaterial = {Material(352.8, 407., 9.012, 4., 1.848e-3)};
-auto pstBuilder                = std::make_shared<const PassiveLayerBuilder>(
+auto pstBuilder                   = std::make_shared<const PassiveLayerBuilder>(
     pstConfig,
     getDefaultLogger("PSTBuilder", layerLLevel));
 // create the volume for the beam pipe
