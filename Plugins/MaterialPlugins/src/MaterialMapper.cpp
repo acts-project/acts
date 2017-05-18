@@ -74,14 +74,13 @@ Acts::MaterialMapper::materialMappingCache(
 }
 
 Acts::MaterialTrack
-Acts::MaterialMapper::mapMaterialTrack(
-    Cache& mappingCache,
-    const MaterialTrack& materialTrack) const
+Acts::MaterialMapper::mapMaterialTrack(Cache&               mappingCache,
+                                       const MaterialTrack& materialTrack) const
 {
   // access the parameters
-  double   theta = materialTrack.theta();
-  double   phi   = materialTrack.phi();
-  auto     spos  = materialTrack.position();
+  double theta = materialTrack.theta();
+  double phi   = materialTrack.phi();
+  auto   spos  = materialTrack.position();
 
   // counter for track reconrds
   mappingCache.materialTrackCounter++;
@@ -93,7 +92,7 @@ Acts::MaterialMapper::mapMaterialTrack(
   std::vector<AssignedMaterialSteps> assignedSteps;
 
   // collect for validation output
-  std::map< geo_id_value, std::pair<double, double > > collectedMaterial;  
+  std::map<geo_id_value, std::pair<double, double>> collectedMaterial;
 
   // let's extrapolate through the ACTS detector and record all surfaces
   // that have a material proxy
@@ -150,13 +149,13 @@ Acts::MaterialMapper::mapMaterialTrack(
 
   // now associate material steps and assigned steps
   assignSteps(materialSteps, assignedSteps);
-  
+
   // prepare the return values
-  double tottX0 = 0.;
-  double tottL0 = 0.;  
+  double                    tottX0 = 0.;
+  double                    tottL0 = 0.;
   std::vector<MaterialStep> mappedSteps;
-  geo_id_value geoID = 0;
-  
+  geo_id_value              geoID = 0;
+
   // and now we fill it into the record
   for (auto& aSteps : assignedSteps) {
     /// panic if the assignedGeoID is not in the mappingCache
@@ -168,31 +167,31 @@ Acts::MaterialMapper::mapMaterialTrack(
       continue;
 
     } else {
-      
+
       // get the surface material record
-      auto surfaceMaterialRecord 
-        = mappingCache.surfaceMaterialRecords[aSteps.assignedGeoID];
-      
+      auto surfaceMaterialRecord
+          = mappingCache.surfaceMaterialRecords[aSteps.assignedGeoID];
+
       // the surface to be associated
       auto& surface = surfaceMaterialRecord.surface();
-    
-      // get the geo id 
+
+      // get the geo id
       geoID = aSteps.assignedGeoID.value();
-        
+
       // assign the material
       Vector3D direction(aSteps.assignedPosition.unit());
-      double pathC = surface.pathCorrection(Vector3D(0.,0.,0.),direction);
+      double   pathC = surface.pathCorrection(Vector3D(0., 0., 0.), direction);
 
-      // loop over the steps and average the material 
-      // and collpas into one 
-      double tX0        = 0.;
-      double tL0        = 0.;
+      // loop over the steps and average the material
+      // and collpas into one
+      double tX0       = 0.;
+      double tL0       = 0.;
       double A         = 0.;
       double Z         = 0.;
       double rho       = 0.;
-      double thickness  = 0.;
+      double thickness = 0.;
       for (auto& currentStep : aSteps.assignedSteps) {
-        // thickness and density 
+        // thickness and density
         float t       = currentStep.materialProperties().thickness();
         float density = currentStep.materialProperties().averageRho();
         // sum it up
@@ -215,28 +214,24 @@ Acts::MaterialMapper::mapMaterialTrack(
       // x0 and l0
       double x0 = (thickness != 0. && tX0 != 0.) ? thickness / tX0 : 0.;
       double l0 = (thickness != 0. && tL0 != 0.) ? thickness / tL0 : 0.;
-        
-      // create 
-      // (a) the material and 
-      Material cMaterial(x0,l0,A,Z,rho);
+
+      // create
+      // (a) the material and
+      Material cMaterial(x0, l0, A, Z, rho);
       // (b) the material properties
-      MaterialProperties cMaterialProperties(cMaterial,thickness);  
+      MaterialProperties cMaterialProperties(cMaterial, thickness);
       // (c) the material step
-      MaterialStep cMaterialStep(cMaterialProperties, 
-                                 aSteps.assignedPosition,
-                                 geoID);
+      MaterialStep cMaterialStep(
+          cMaterialProperties, aSteps.assignedPosition, geoID);
       // assign the steps to the surface material reccord
       surfaceMaterialRecord.assignMaterialStep(cMaterialStep, pathC);
       // push back the material step
       mappedSteps.push_back(cMaterialStep);
-     }
+    }
   }
   // return the mapped view of the MaterialTrack
-  return MaterialTrack(materialTrack.position(), 
-                       theta, phi,
-                       mappedSteps,
-                       tottX0,
-                       tottL0);
+  return MaterialTrack(
+      materialTrack.position(), theta, phi, mappedSteps, tottX0, tottL0);
 }
 
 std::map<Acts::GeometryID, Acts::SurfaceMaterial*>
@@ -287,12 +282,12 @@ Acts::MaterialMapper::createSurfaceMaterial(Cache& mappingCache) const
                                << " entries");
           // take the mapped material
           MaterialProperties matProperties = mMaterial[i1][i0].first;
-          double             thickness     = statScalor * matProperties.thickness();
-          double             rho           = statScalor * matProperties.averageRho();
-          double             A             = statScalor * matProperties.averageA();
-          double             Z             = statScalor * matProperties.averageZ();
-          double             x0            = statScalor * matProperties.material().X0();
-          double             l0            = statScalor * matProperties.material().L0();
+          double             thickness = statScalor * matProperties.thickness();
+          double             rho = statScalor * matProperties.averageRho();
+          double             A   = statScalor * matProperties.averageA();
+          double             Z   = statScalor * matProperties.averageZ();
+          double             x0  = statScalor * matProperties.material().X0();
+          double             l0  = statScalor * matProperties.material().L0();
           // create the new material (with statistical weights)
           binMaterial = new MaterialProperties(x0, l0, A, Z, rho, thickness);
         }
@@ -313,7 +308,7 @@ Acts::MaterialMapper::assignSteps(
     std::vector<AssignedMaterialSteps>& assignedSteps) const
 {
 
-  // will rely on the fact that the 
+  // will rely on the fact that the
   // material steps are ordered
   // and so are the assigned steps
 
@@ -348,7 +343,7 @@ Acts::MaterialMapper::assignSteps(
       } else if (asIter != assignedSteps.begin()) {
         // distance increase detected and it is not the first step
         // the last iteration point wins the step
-        asIterFlush->assignedSteps.push_back(mStep);        
+        asIterFlush->assignedSteps.push_back(mStep);
         // we set the new start iterator to be the Flush iterator
         asIter = asIterFlush;
         // and break the inner loop, this jumps to the next material

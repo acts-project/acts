@@ -12,19 +12,15 @@
 
 #include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
 
-Acts::MaterialStep::MaterialStep() 
-  : m_position(Position())
-  , m_material()
-  , m_geoID(0)
+Acts::MaterialStep::MaterialStep()
+  : m_position(Position()), m_material(), m_geoID(0)
 {
 }
 
 Acts::MaterialStep::MaterialStep(const Acts::MaterialProperties& mat,
                                  const Position&                 pos,
                                  uint64_t                        geoID)
-  : m_position(pos)
-  , m_material(mat)
-  , m_geoID(geoID)
+  : m_position(pos), m_material(mat), m_geoID(geoID)
 {
 }
 

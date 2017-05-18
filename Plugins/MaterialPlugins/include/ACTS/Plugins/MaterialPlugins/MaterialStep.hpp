@@ -84,9 +84,9 @@ public:
   /// @param mat the material (+ step length) at the given position
   /// @param pos three dimensional global position of the step
   /// @param geoID is the geoId value (optional)
-  MaterialStep(const MaterialProperties& mat, 
-               const Position& pos, 
-               uint64_t geoId = 0);
+  MaterialStep(const MaterialProperties& mat,
+               const Position&           pos,
+               uint64_t                  geoId = 0);
 
   /// Copy Constructor
   MaterialStep(const MaterialStep& mstep);
@@ -101,47 +101,46 @@ public:
 #if !defined(__CLING__)
   const Vector3D
   position() const;
-#else 
+#else
   /// return method for the position of the step
   const Position
-  position() const;  
+  position() const;
 #endif
 
   /// return method for the material properties
   const MaterialProperties&
   materialProperties() const;
-  
+
   // return the value of the geometry id
   uint64_t
   geoID() const;
 
 private:
   /// the global three dimensional position of the material step
-  Position              m_position;
+  Position m_position;
 
-  /// the accumulated material of the step 
+  /// the accumulated material of the step
   /// containing the material and the step length
-  MaterialProperties    m_material;
-  
-  /// the geometry id 
-  uint64_t              m_geoID;
-    
+  MaterialProperties m_material;
+
+  /// the geometry id
+  uint64_t m_geoID;
 };
 
 }  /// end of namespace
 
 #if !defined(__CLING__)
-  inline const Acts::Vector3D
-  Acts::MaterialStep::position() const
+inline const Acts::Vector3D
+Acts::MaterialStep::position() const
 {
   return Acts::Vector3D(m_position.x, m_position.y, m_position.z);
 }
-#else 
-  inline const Acts::MaterialStep::Position
-  Acts::MaterialStep::position() const
-  {
-    return m_position;
-  }
+#else
+inline const Acts::MaterialStep::Position
+Acts::MaterialStep::position() const
+{
+  return m_position;
+}
 #endif
 
 /// return method for the material properties
@@ -156,6 +155,5 @@ Acts::MaterialStep::geoID() const
 {
   return m_geoID;
 }
-
 
 #endif  // ACTS_MATERIALPLUGINS_MATERIALSTEP_H
