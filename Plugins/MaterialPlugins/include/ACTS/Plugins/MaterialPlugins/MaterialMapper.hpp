@@ -18,7 +18,7 @@
 #include "ACTS/Extrapolation/IExtrapolationEngine.hpp"
 #include "ACTS/Plugins/MaterialPlugins/AssignedMaterialSteps.hpp"
 #include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
-#include "ACTS/Plugins/MaterialPlugins/MaterialTrackRecord.hpp"
+#include "ACTS/Plugins/MaterialPlugins/MaterialTrack.hpp"
 #include "ACTS/Plugins/MaterialPlugins/SurfaceMaterialRecord.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
@@ -47,10 +47,10 @@ class MaterialProperties;
 ///
 /// @todo update the following description
 ///
-/// One MaterialTrackRecord (containing all the MaterialSteps along a Track) is
+/// One MaterialTrack (containing all the MaterialSteps along a Track) is
 /// mapped by using the function Acts::MaterialMapper::mapMaterial(). The
 /// mapping process starts by extrapolating from the same starting
-/// point and direction as the MaterialTrackRecord through the ACTS geometry.
+/// point and direction as the MaterialTrack through the ACTS geometry.
 /// The extrapolation engine then finds  the closest surface marked to carry
 /// material (by carrying a SurfaceMaterialProxy).
 /// The material steps are then assigned to the corresponding surfaces
@@ -59,7 +59,7 @@ class MaterialProperties;
 /// Along one track in one bin of a layer the material is averaged:
 /// \image html MaterialAveraging.jpeg
 ///
-/// When the material mapping is done many MaterialTrackRecords will be mapped.
+/// When the material mapping is done many MaterialTracks will be mapped.
 /// Everytime the same bin is hit, the material parameters are summed up.
 /// This information is cached in the corresponding
 /// SurfaceMaterialRecord object.
@@ -92,11 +92,11 @@ public:
     std::map<GeometryID, SurfaceMaterialRecord> surfaceMaterialRecords;
 
     // counter in case one wants to combine output from several jobs
-    size_t trackRecordCounter;
+    size_t materialTrackCounter = 0;
 
     /// Constructor from a new map
     Cache(std::map<GeometryID, SurfaceMaterialRecord> smr)
-      : surfaceMaterialRecords(std::move(smr)), trackRecordCounter(0)
+      : surfaceMaterialRecords(std::move(smr)), materialTrackCounter(0)
     {
     }
   };
@@ -123,17 +123,20 @@ public:
   /// maps the material for the given direction(eta,phi) onto the layers of the
   /// given tracking geometry
   ///
-  /// @param matTrackRec the MaterialTrackRecord to be mapped
+  /// @param matTrackRec the MaterialTrack to be mapped
   ///
-  /// @return if the mapping was successful
-  bool
-  mapMaterialTrackRecord(Cache&                     mappingCache,
-                         const MaterialTrackRecord& matTrackRec) const;
+  /// @return is the mapped material track, i.e. it is collapsed
+  ///      onto the available  
+  MaterialTrack
+  mapMaterialTrack(Cache& mappingCache,
+                   const MaterialTrack& matTrackRec) const;
 
   /// finds the TrackingGeometry steps associated to the material steps
   ///
   /// @param materialSteps are the full geometry steps
   /// @param assignedSteps are the Tracking geometry associated points
+  ///
+  /// @note this method is currently public for Testing
   void
   assignSteps(const std::vector<MaterialStep>&    materialSteps,
               std::vector<AssignedMaterialSteps>& assignedSteps) const;

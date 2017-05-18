@@ -73,25 +73,27 @@ Acts::MaterialMapper::materialMappingCache(
   return MaterialMapper::Cache(sMap);
 }
 
-bool
-Acts::MaterialMapper::mapMaterialTrackRecord(
-    Cache&                     mappingCache,
-    const MaterialTrackRecord& trackRecord) const
+Acts::MaterialTrack
+Acts::MaterialMapper::mapMaterialTrack(
+    Cache& mappingCache,
+    const MaterialTrack& materialTrack) const
 {
   // access the parameters
-  double   theta = trackRecord.theta();
-  double   phi   = trackRecord.phi();
-  auto     spos  = trackRecord.position();
-  Vector3D vertex(spos.x, spos.y, spos.z);
+  double   theta = materialTrack.theta();
+  double   phi   = materialTrack.phi();
+  auto     spos  = materialTrack.position();
 
   // counter for track reconrds
-  mappingCache.trackRecordCounter++;
+  mappingCache.materialTrackCounter++;
 
   // get the steps from the detailed geometry
-  std::vector<MaterialStep> materialSteps = trackRecord.materialSteps();
+  std::vector<MaterialStep> materialSteps = materialTrack.materialSteps();
 
   // get the steps from the tracking geometry
   std::vector<AssignedMaterialSteps> assignedSteps;
+
+  // collect for validation output
+  std::map< geo_id_value, std::pair<double, double > > collectedMaterial;  
 
   // let's extrapolate through the ACTS detector and record all surfaces
   // that have a material proxy
@@ -106,7 +108,7 @@ Acts::MaterialMapper::mapMaterialTrackRecord(
         cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));
     // create the beginning neutral parameters to extrapolate through the
     // geometry
-    NeutralCurvilinearParameters startParameters(nullptr, vertex, direction);
+    NeutralCurvilinearParameters startParameters(nullptr, spos, direction);
     // create a neutral extrapolation cell and configure it:
     // - to collect surfaces with a SurfaceMaterialProxy
     // - to step at the detector boundary
@@ -146,9 +148,15 @@ Acts::MaterialMapper::mapMaterialTrackRecord(
     ACTS_VERBOSE("[+] Selected " << assignedSteps.size() << " for mapping.");
   }  // stepCollection
 
-  // run the step assignment
+  // now associate material steps and assigned steps
   assignSteps(materialSteps, assignedSteps);
-
+  
+  // prepare the return values
+  double tottX0 = 0.;
+  double tottL0 = 0.;  
+  std::vector<MaterialStep> mappedSteps;
+  geo_id_value geoID = 0;
+  
   // and now we fill it into the record
   for (auto& aSteps : assignedSteps) {
     /// panic if the assignedGeoID is not in the mappingCache
@@ -159,12 +167,76 @@ Acts::MaterialMapper::mapMaterialTrackRecord(
                                                 << " not found in cache.");
       continue;
 
-    } else
-      mappingCache.surfaceMaterialRecords[aSteps.assignedGeoID]
-          .assignMaterialSteps(aSteps);
-  }
+    } else {
+      
+      // get the surface material record
+      auto surfaceMaterialRecord 
+        = mappingCache.surfaceMaterialRecords[aSteps.assignedGeoID];
+      
+      // the surface to be associated
+      auto& surface = surfaceMaterialRecord.surface();
+    
+      // get the geo id 
+      geoID = aSteps.assignedGeoID.value();
+        
+      // assign the material
+      Vector3D direction(aSteps.assignedPosition.unit());
+      double pathC = surface.pathCorrection(Vector3D(0.,0.,0.),direction);
 
-  return true;
+      // loop over the steps and average the material 
+      // and collpas into one 
+      double tX0        = 0.;
+      double tL0        = 0.;
+      double A         = 0.;
+      double Z         = 0.;
+      double rho       = 0.;
+      double thickness  = 0.;
+      for (auto& currentStep : aSteps.assignedSteps) {
+        // thickness and density 
+        float t       = currentStep.materialProperties().thickness();
+        float density = currentStep.materialProperties().averageRho();
+        // sum it up
+        thickness += t;
+        rho += density * t;
+        A += currentStep.materialProperties().averageA() * density * t;
+        Z += currentStep.materialProperties().averageZ() * density * t;
+        // add the thickness in x0
+        tX0 += currentStep.materialProperties().thicknessInX0();
+        tL0 += currentStep.materialProperties().thicknessInL0();
+      }
+      // add up the material
+      tottX0 += tX0;
+      tottL0 += tL0;
+      // checks before normalisation
+      A /= (rho != 0.) ? rho : 1.;
+      Z /= (rho != 0.) ? rho : 1.;
+      rho /= (thickness != 0.) ? thickness : 1.;
+
+      // x0 and l0
+      double x0 = (thickness != 0. && tX0 != 0.) ? thickness / tX0 : 0.;
+      double l0 = (thickness != 0. && tL0 != 0.) ? thickness / tL0 : 0.;
+        
+      // create 
+      // (a) the material and 
+      Material cMaterial(x0,l0,A,Z,rho);
+      // (b) the material properties
+      MaterialProperties cMaterialProperties(cMaterial,thickness);  
+      // (c) the material step
+      MaterialStep cMaterialStep(cMaterialProperties, 
+                                 aSteps.assignedPosition,
+                                 geoID);
+      // assign the steps to the surface material reccord
+      surfaceMaterialRecord.assignMaterialStep(cMaterialStep, pathC);
+      // push back the material step
+      mappedSteps.push_back(cMaterialStep);
+     }
+  }
+  // return the mapped view of the MaterialTrack
+  return MaterialTrack(materialTrack.position(), 
+                       theta, phi,
+                       mappedSteps,
+                       tottX0,
+                       tottL0);
 }
 
 std::map<Acts::GeometryID, Acts::SurfaceMaterial*>
@@ -219,11 +291,8 @@ Acts::MaterialMapper::createSurfaceMaterial(Cache& mappingCache) const
           double             rho           = statScalor * matProperties.averageRho();
           double             A             = statScalor * matProperties.averageA();
           double             Z             = statScalor * matProperties.averageZ();
-          double             tInX0         = statScalor * matProperties.thicknessInX0();
-          double             tInL0         = statScalor * matProperties.thicknessInL0();
-          // recreate X0, L0
-          float x0 = (thickness != 0. && tInX0 != 0.) ? thickness / tInX0 : 0.;
-          float l0 = (thickness != 0. && tInL0 != 0.) ? thickness / tInL0 : 0.;
+          double             x0            = statScalor * matProperties.material().X0();
+          double             l0            = statScalor * matProperties.material().L0();
           // create the new material (with statistical weights)
           binMaterial = new MaterialProperties(x0, l0, A, Z, rho, thickness);
         }
@@ -232,7 +301,7 @@ Acts::MaterialMapper::createSurfaceMaterial(Cache& mappingCache) const
     }
     // create surface material
     surfaceMaterialMap[surfaceID] = new BinnedSurfaceMaterial(
-        bUtility, mMatrix, 0., mappingCache.trackRecordCounter);
+        bUtility, mMatrix, 0., mappingCache.materialTrackCounter);
   }
   // now return the material map
   return surfaceMaterialMap;
@@ -244,7 +313,8 @@ Acts::MaterialMapper::assignSteps(
     std::vector<AssignedMaterialSteps>& assignedSteps) const
 {
 
-  // we will rely on the fact that the material steps are ordered
+  // will rely on the fact that the 
+  // material steps are ordered
   // and so are the assigned steps
 
   // the iterators
@@ -259,14 +329,11 @@ Acts::MaterialMapper::assignSteps(
   for (auto& mStep : materialSteps) {
     // start with infinity distance
     double lDist2 = std::numeric_limits<double>::infinity();
-    // the material position as a Vector3D
-    Vector3D mPosition(
-        mStep.position().x, mStep.position().y, mStep.position().z);
     // now assign to a step
     asIter = asIterFlush;
     for (; asIter != asIterEnd; ++asIter) {
       // the currentDist
-      double cDist2 = (mPosition - asIter->assignedPosition).mag2();
+      double cDist2 = (mStep.position() - asIter->assignedPosition).mag2();
       if (cDist2 < lDist2) {
         // set the new closest distance
         lDist2 = cDist2;
@@ -281,7 +348,7 @@ Acts::MaterialMapper::assignSteps(
       } else if (asIter != assignedSteps.begin()) {
         // distance increase detected and it is not the first step
         // the last iteration point wins the step
-        asIterFlush->assignedSteps.push_back(mStep);
+        asIterFlush->assignedSteps.push_back(mStep);        
         // we set the new start iterator to be the Flush iterator
         asIter = asIterFlush;
         // and break the inner loop, this jumps to the next material
@@ -357,169 +424,3 @@ Acts::MaterialMapper::checkAndInsert(
     }
   }
 }
-
-// void
-// Acts::MaterialMapper::associateLayerMaterial(
-//    const MaterialTrackRecord& trackRecord,
-//    std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>& layersAndHits)
-//{
-//  // now go through the material step collection and find best fitting layer
-//  // layers are ordered, hence you can move the starting point along
-//  std::vector<std::pair<const Acts::Layer*, Acts::Vector3D>>::iterator
-//      currentLayer
-//      = layersAndHits.begin();
-//  // access the material steps of this track record
-//  std::vector<MaterialStep> materialSteps = trackRecord.materialSteps();
-//
-//  // create object which connects layer with the original material step and
-//  its
-//  // assigned position on the layer
-//  std::map<const Acts::Layer*,
-//           std::pair<const Vector3D, std::vector<MaterialStep>>>
-//      layersPosAndSteps;
-//
-//  // loop through hits and find the closest layer, the start point moves
-//  // outwards as we go
-//  for (auto& step : materialSteps) {
-//    ACTS_VERBOSE("[L] starting from layer "
-//                 << std::distance(layersAndHits.begin(), currentLayer)
-//                 << " from layer collection for this step.");
-//    // step length and position
-//    Acts::Vector3D pos(step.position().x, step.position().y,
-//    step.position().z);
-//    // now find the closest layer
-//    // if the currentlayer is the last layer and the hit is still inside ->
-//    // assign & check if the layers before have been assigned the right way -
-//    // reassign in case another layer fits better
-//    if (currentLayer != std::prev(layersAndHits.end())) {
-//      // search through the layers - this is the reference distance for
-//      // projection
-//      double currentDistance = (pos - currentLayer->second).mag();
-//      ACTS_VERBOSE(
-//          "  - current distance is " << currentDistance << " from "
-//                                     << Acts::toString(pos)
-//                                     << " and "
-//                                     << Acts::toString(currentLayer->second));
-//      // check if other layer is more suitable
-//      for (std::vector<std::pair<const Acts::Layer*,
-//      Acts::Vector3D>>::iterator
-//               testLayer
-//           = std::next(currentLayer);
-//           testLayer != layersAndHits.end();
-//           ++testLayer) {
-//        // calculate the distance to the testlayer
-//        double testDistance = (pos - testLayer->second).mag();
-//        ACTS_VERBOSE("[L] Testing layer "
-//                     << std::distance(layersAndHits.begin(), testLayer)
-//                     << " from layer collection for this step.");
-//        ACTS_VERBOSE(
-//            " - test distance is " << testDistance << " from "
-//                                   << Acts::toString(pos)
-//                                   << " and "
-//                                   << Acts::toString(testLayer->second));
-//        if (testDistance < currentDistance) {
-//          ACTS_VERBOSE("[L] Skipping over to current layer "
-//                       << std::distance(layersAndHits.begin(), testLayer)
-//                       << " because "
-//                       << testDistance
-//                       << " < "
-//                       << currentDistance);
-//          // the test distance did shrink - update currentlayer
-//          currentLayer    = testLayer;
-//          currentDistance = testDistance;
-//        }  // testdistance < currentDistance
-//        else
-//          break;  // stick to the layer you have
-//      }           // check for better fitting layers
-//    }             // if last layer
-//    // the current layer *should* be correct now
-//    const Acts::Layer* assignedLayer = currentLayer->first;
-//    // correct material thickness with pathcorrection
-//    double theta = trackRecord.theta();
-//    double phi   = trackRecord.phi();
-//    // calculate the direction in cartesian coordinates
-//    Acts::Vector3D direction(
-//        cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));
-//    // access the path correction of the associated material surface
-//    double pathCorrection
-//        = assignedLayer->materialSurface()->pathCorrection(pos, direction);
-//
-//    // create material Properties
-//    const Acts::MaterialProperties* layerMaterialProperties
-//        = new MaterialProperties(step.material().material(),
-//                                 step.material().thickness() /
-//                                 pathCorrection);
-//    // correct also the thickness of the material step
-//    Acts::MaterialStep updatedStep(*layerMaterialProperties, step.position());
-//    // fill the current material step and its assigned position
-//    // first check if layer is already there
-//    auto layerPosSteps = layersPosAndSteps.find(assignedLayer);
-//    // just fill in material step if layer is already there
-//    // otherwise create new entry
-//    if (layerPosSteps != layersPosAndSteps.end())
-//      layerPosSteps->second.second.push_back(updatedStep);
-//    else
-//      layersPosAndSteps.emplace(
-//          assignedLayer,
-//          std::make_pair(currentLayer->second,
-//                         std::vector<MaterialStep>{updatedStep}));
-//
-//    // associate the hit
-//    ACTS_VERBOSE("[L] Now associate hit " << Acts::toString(pos) << " at "
-//                                          << currentLayer->second);
-//  }
-//
-//  // associate the steps
-//  for (auto& layer : layersPosAndSteps) {
-//    associateHit(layer.first, layer.second.first, layer.second.second);
-//  }
-//}
-
-/// void
-/// Acts::MaterialMapper::associateHit(
-///     const Layer*                           layer,
-///     const Acts::Vector3D&                  position,
-///     const std::vector<Acts::MaterialStep>& layerMaterialSteps)
-/// {
-///   auto layerRecord = m_surfaceMaterialRecords.find(layer);
-///   // if layer was not present already create new Material Record
-///   if (layerRecord == m_surfaceMaterialRecords.end()) {
-///     // get the bin utility
-///     const Acts::BinUtility* binUtility = layer->material()->binUtility();
-///     // create the material record
-///     ACTS_VERBOSE("[L] Creating new Layer record, for layer  "
-///                  << layer->geoID()
-///                  << " at position "
-///                  << Acts::toString(position));
-///     m_surfaceMaterialRecords[layer] = SurfaceMaterialRecord(binUtility);
-///   }
-///   ACTS_VERBOSE("[L] Add new layer material properties  at position "
-///                << Acts::toString(position));
-///   // add material to record, if record exists already
-///   m_surfaceMaterialRecords[layer].addLayerMaterialProperties(position,
-///                                                    layerMaterialSteps);
-/// }
-///
-/// void
-/// Acts::MaterialMapper::averageLayerMaterial()
-/// {
-///   ACTS_VERBOSE(m_surfaceMaterialRecords.size() << " SurfaceMaterialRecords
-///   to be averaged");
-///   // average over the layer material
-///   for (auto& layRecord : m_surfaceMaterialRecords) {
-///     layRecord.second.averageMaterial();
-///   }
-/// }
-///
-/// void
-/// Acts::MaterialMapper::finalizeLayerMaterial()
-/// {
-///   ACTS_VERBOSE(m_surfaceMaterialRecords.size()
-///                << " SurfaceMaterialRecords to be finalized");
-///   // finally set the material of the layers
-///   for (auto& layRecord : m_surfaceMaterialRecords) {
-///     // @todo check with Julia how to fix this
-///     //layRecord.first->materialSurface()->setAssociatedMaterial(
-///     //    layRecord.second.layerMaterial());
-///   }
-/// }

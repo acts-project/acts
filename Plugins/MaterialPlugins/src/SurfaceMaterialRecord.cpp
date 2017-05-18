@@ -51,90 +51,64 @@ Acts::SurfaceMaterialRecord::operator=(const SurfaceMaterialRecord& lmrecord)
 }
 
 void
-Acts::SurfaceMaterialRecord::assignMaterialSteps(
-    const AssignedMaterialSteps& aSteps)
+Acts::SurfaceMaterialRecord::assignEmptyStep(
+  const Vector3D& mPosition)
 {
-  // sum up all material at this point for this surface
-  float tThickness = 0.;
-  float tRho       = 0.;
-  float tA         = 0.;
-  float tZ         = 0.;
-  float ttInX0     = 0.;
-  float ttInL0     = 0.;
-
-
-  // now add it at the corresponding assigned position
   // get the bins corresponding to the position
-  size_t bin0 = m_binUtility->bin(aSteps.assignedPosition, 0);
-  size_t bin1 = m_binUtility->bin(aSteps.assignedPosition, 1);
+  size_t bin0 = m_binUtility->bin(mPosition, 0);
+  size_t bin1 = m_binUtility->bin(mPosition, 1);
+
+  // increase the number of entries for this material bin
+  // always do that, also for empty assignments
+  // as they will take part in the average as well
+  m_mappedMaterial[bin1][bin0].second++;
+}
+
+void
+Acts::SurfaceMaterialRecord::assignMaterialStep(
+    const MaterialStep& mStep,
+    double pathCorrection)
+{
+  // get the position
+  auto mPosition = mStep.position();
+
+  // get the bins corresponding to the position
+  size_t bin0 = m_binUtility->bin(mPosition, 0);
+  size_t bin1 = m_binUtility->bin(mPosition, 1);
 
   // increase the number of entries for this material bin
   // always do that, also for empty assignments
   // as they will take part in the average as well
   m_mappedMaterial[bin1][bin0].second++;
 
-  // bail out if no steps where assigned
-  if (!aSteps.assignedSteps.size()) return;
+  // it's time to correct for the path correction
+  float thickness   = mStep.materialProperties().thickness()/fabs(pathCorrection);
+  // now simple add the material component
+  float x0          = mStep.materialProperties().material().X0();
+  float l0          = mStep.materialProperties().material().L0();
+  float A           = mStep.materialProperties().averageA();
+  float Z           = mStep.materialProperties().averageZ();
+  float rho         = mStep.materialProperties().averageRho();
 
-  // get the local position
-  Vector3D direction(aSteps.assignedPosition.unit());
-  double pC = m_surface->pathCorrection(Vector3D(0.,0.,0.),direction);
-
-  // loop over the steps and add it up
-  for (auto& currentStep : aSteps.assignedSteps) {
-    // thickness and density 
-    float t       = currentStep.materialProperties().thickness();
-    float density = currentStep.materialProperties().averageRho();
-    // sum it up
-    tThickness += t;
-    tRho += density * t;
-    tA += currentStep.materialProperties().averageA() * density * t;
-    tZ += currentStep.materialProperties().averageZ() * density * t;
-    // add the thickness in x0
-    ttInX0 += currentStep.materialProperties().thicknessInX0();
-    ttInL0 += currentStep.materialProperties().thicknessInL0();
-  }
-  // checks before normalisation
-  tA /= (tRho != 0.) ? tRho : 1.;
-  tZ /= (tRho != 0.) ? tRho : 1.;
-  tRho /= (tThickness != 0.) ? tThickness : 1.;
-
-  // get the material which might be there already, add new material and
-  // weigh it
+  // access the material collected so far already
+  // and simply add it
   auto  materialBin = m_mappedMaterial[bin1][bin0];
-  float thickness   = 0.;
-  float rho         = 0.;
-  float tInX0       = 0.;
-  float tInL0       = 0.;
-  float A           = 0.;
-  float Z           = 0.;
-  // access the old material properties
   if (materialBin.first) {
     thickness += materialBin.first.thickness();
+    x0  += materialBin.first.material().X0();
+    l0  += materialBin.first.material().L0();
+    A   += materialBin.first.averageA();
+    Z   += materialBin.first.averageZ();
     rho += materialBin.first.averageRho();
-    A += materialBin.first.averageA();
-    Z += materialBin.first.averageZ();
-    tInX0 += materialBin.first.thicknessInX0();
-    tInL0 += materialBin.first.thicknessInL0();
-  }
-  // sum up material properties (different MaterialTracks)
-  thickness += tThickness;
-  rho += tRho;
-  A += tA;
-  Z += tZ;
-  tInX0 += ttInX0;
-  tInL0 += ttInL0;
-
-  // x0 and l0
-  float x0 = (thickness != 0. && tInX0 != 0.) ? thickness / tInX0 : 0.;
-  float l0 = (thickness != 0. && tInL0 != 0.) ? thickness / tInL0 : 0.;
-
-  // set the new current material (not averaged yet)
-  Material updatedMaterial(x0, l0, A, Z, rho);
+  } 
   
-  // and now scale the thickness and correct it for the incidence
-  thickness *= 1./fabs(pC);
+  // set the new cummulated material to the bin
+  // in a final step, all parameters need to be divided
+  // by the number of bin hits
+  Material cummulatedMaterial(x0, l0, A, Z, rho);
   
   m_mappedMaterial[bin1][bin0].first
-      = MaterialProperties(updatedMaterial, thickness);
+      = MaterialProperties(cummulatedMaterial, thickness);
+  
+  
 }

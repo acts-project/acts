@@ -72,11 +72,21 @@ public:
   /// Adds MaterialProperties and weighs them over the steplength at a given
   /// position
   ///
-  /// @param pos global position at which the material should be added
-  /// @param materialSteps the material steps of a track which should be
+  /// @param mStep material step 
+  /// @param pathCorrection is the path correction
   /// added at the given position
   void
-  assignMaterialSteps(const AssignedMaterialSteps& aSteps);
+  assignMaterialStep(const MaterialStep& mStep, 
+                     double pathCorrection = 1.);
+                     
+  /// Associate an empty step
+  /// this is still needed, because the extrapolation
+  /// might hit a layer, but no material to access was there                   
+  ///
+  /// @param position is where the extrapolation
+  ///    did hit this surface                   
+  void
+  assignEmptyStep(const Vector3D& position);
 
   /// @return the surface pointer
   const Surface&

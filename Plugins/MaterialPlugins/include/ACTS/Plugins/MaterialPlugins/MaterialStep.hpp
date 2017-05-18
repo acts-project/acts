@@ -24,7 +24,7 @@ namespace Acts {
 
 /// @class MaterialStep
 ///
-/// @brief Class holding the material properties at a certain point
+/// @brief class holding the material properties of a certain step
 ///
 /// The MaterialStep class is needed to store the material properties (material
 /// and step length) at a given global position for the material mapping
@@ -81,18 +81,15 @@ public:
   MaterialStep();
 
   /// Constructor to set th material properties at a certain position
-  /// @param mat the material properties (material + step length) at the given
-  /// position
+  /// @param mat the material (+ step length) at the given position
   /// @param pos three dimensional global position of the step
-  MaterialStep(const MaterialProperties& mat, const Position& pos);
+  /// @param geoID is the geoId value (optional)
+  MaterialStep(const MaterialProperties& mat, 
+               const Position& pos, 
+               uint64_t geoId = 0);
 
   /// Copy Constructor
   MaterialStep(const MaterialStep& mstep);
-
-  /// Implicit contructor
-  /// - uses the copy constructor
-  MaterialStep*
-  clone() const;
 
   /// Default Destructor
   ~MaterialStep() = default;
@@ -101,30 +98,51 @@ public:
   MaterialStep&
   operator=(const MaterialStep& mstep);
 
+#if !defined(__CLING__)
+  const Vector3D
+  position() const;
+#else 
   /// return method for the position of the step
   const Position
-  position() const;
+  position() const;  
+#endif
 
   /// return method for the material properties
   const MaterialProperties&
   materialProperties() const;
+  
+  // return the value of the geometry id
+  uint64_t
+  geoID() const;
 
 private:
   /// the global three dimensional position of the material step
-  Position m_position;
+  Position              m_position;
 
-  /// the accumulated material of the step containing the material and the step
-  /// length
-  MaterialProperties m_material;
+  /// the accumulated material of the step 
+  /// containing the material and the step length
+  MaterialProperties    m_material;
+  
+  /// the geometry id 
+  uint64_t              m_geoID;
+    
 };
 
 }  /// end of namespace
 
-inline const Acts::MaterialStep::Position
-Acts::MaterialStep::position() const
+#if !defined(__CLING__)
+  inline const Acts::Vector3D
+  Acts::MaterialStep::position() const
 {
-  return m_position;
+  return Acts::Vector3D(m_position.x, m_position.y, m_position.z);
 }
+#else 
+  inline const Acts::MaterialStep::Position
+  Acts::MaterialStep::position() const
+  {
+    return m_position;
+  }
+#endif
 
 /// return method for the material properties
 inline const Acts::MaterialProperties&
@@ -132,5 +150,12 @@ Acts::MaterialStep::materialProperties() const
 {
   return m_material;
 }
+
+inline uint64_t
+Acts::MaterialStep::geoID() const
+{
+  return m_geoID;
+}
+
 
 #endif  // ACTS_MATERIALPLUGINS_MATERIALSTEP_H
