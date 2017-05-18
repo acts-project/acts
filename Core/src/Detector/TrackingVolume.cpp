@@ -202,38 +202,6 @@ Acts::TrackingVolume::detachedTrackingVolumes(const Vector3D& gp,
 }
 
 void
-Acts::TrackingVolume::addMaterial(std::shared_ptr<const Material> mprop,
-                                  float                           fact)
-{
-  // assume the scaling factor refers to the volume scaling
-  float flin = pow(fact, 0.33);
-  // average X0
-  double invX0     = m_material->X0 > 0. ? 1. / m_material->X0 : 0.;
-  double sum_invX0 = invX0 + flin / mprop->X0;
-  float  X0        = 1. / sum_invX0;
-  // average L0
-  double invL0     = m_material->L0 > 0. ? 1. / m_material->L0 : 0.;
-  double sum_invL0 = invL0 + flin / mprop->L0;
-  float  L0        = 1. / sum_invL0;
-  // add density
-  float rho1 = m_material->rho;
-  float rho  = rho1 + fact * mprop->rho;
-  // averageZ
-  float n1 = m_material->Z > 0. ? rho1 / m_material->Z : 0.;
-  float n2 = fact * mprop->rho / mprop->Z;
-  float Z  = rho / (n1 + n2);
-  // averageA
-  n1      = m_material->A > 0. ? rho1 / m_material->A : 0.;
-  n2      = fact * mprop->rho / mprop->A;
-  float A = rho / (n1 + n2);
-  // mean energy loss (linear scaling)
-  float dEdX = m_material->dEdX + flin * mprop->dEdX;
-
-  m_material.reset(new Material(X0, L0, A, Z, rho, dEdX));
-  // m_material.reset(std::make_shared<Material>(X0,L0,A,Z,rho,dEdX));
-}
-
-void
 Acts::TrackingVolume::sign(GeometrySignature geosign, GeometryType geotype)
 {
   // never overwrite what is already signed, that's a crime
@@ -462,30 +430,35 @@ Acts::TrackingVolume::interlinkLayers()
 
 void
 Acts::TrackingVolume::closeGeometry(
-    GeometryID& volumeID,
-    std::map<std::string, const TrackingVolume*>& volumeMap)
+    std::map<std::string, const TrackingVolume*>& volumeMap,
+    size_t& vol)
 {
   // insert the volume into the map
   volumeMap[volumeName()] = this;
 
+  // we can construct the volume ID from this
+  GeometryID volumeID(0);
+  volumeID.add(++vol, GeometryID::volume_mask);
+  // assign the Volume ID to the volume itself
+  auto thisVolume = const_cast<TrackingVolume*>(this);
+  thisVolume->assignGeoID(volumeID);
+
+  // loop over the boundary surfaces
+  geo_id_value iboundary = 0;
+  // loop over the boundary surfaces
+  for (auto& bSurfIter : boundarySurfaces()) {
+    // get the intersection soltuion
+    auto& bSurface = bSurfIter->surfaceRepresentation();
+    // create the boundary surface id
+    GeometryID boundaryID = volumeID;
+    boundaryID.add(++iboundary, GeometryID::boundary_mask);
+    // now assign to the boundary surface
+    auto& mutableBSurface = *(const_cast<Surface*>(&bSurface));
+    mutableBSurface.assignGeoID(boundaryID);
+  }
+
   // A) this is NOT a container volume, volumeID is already incremented
   if (!m_confinedVolumes) {
-    // assign the Volume ID to the volume itself
-    assignGeoID(volumeID);
-    // loop over the boundary surfaces
-    geo_id_value iboundary = 0;
-    // loop over the boundary surfaces
-    for (auto& bSurfIter : boundarySurfaces()) {
-      // get the intersection soltuion
-      auto& bSurface = bSurfIter->surfaceRepresentation();
-      // create the boundary surface id
-      GeometryID boundaryID = volumeID;
-      boundaryID.add(++iboundary, GeometryID::boundary_mask);
-      // now assign to the boundary surface
-      auto& mutableBSurface = *(const_cast<Surface*>(&bSurface));
-      mutableBSurface.assignGeoID(boundaryID);
-    }
-
     // loop over the confined layers
     if (m_confinedLayers) {
       geo_id_value ilayer = 0;
@@ -504,19 +477,11 @@ Acts::TrackingVolume::closeGeometry(
     }
   } else {
     // B) this is a container volume, go through sub volume
-    // the counter upwards
-    geo_id_value ivolume = 0;
     // do the loop
     for (auto& volumesIter : m_confinedVolumes->arrayObjects()) {
-      GeometryID currentID = volumeID;
-      // only increase the counter if it's not a container volume
-      if (!volumesIter->confinedVolumes()) {
-        /// we count the volume ID up
-        currentID.add(++ivolume, GeometryID::volume_mask);
-      }
       auto mutableVolumesIter
           = std::const_pointer_cast<TrackingVolume>(volumesIter);
-      mutableVolumesIter->closeGeometry(currentID, volumeMap);
+      mutableVolumesIter->closeGeometry(volumeMap, vol);
     }
   }
 

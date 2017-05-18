@@ -40,30 +40,24 @@ Acts::DiscLayer::DiscLayer(std::shared_ptr<Acts::Transform3D>      transform,
     Layer::m_representingVolume
         = new AbstractVolume(transform, VolumeBoundsPtr(cvBounds));
   }
-  // associate teh layer to this
+  // associate the layer to the layer surface itself
   DiscSurface::associateLayer(*this);
+  // build an approach descriptor if none provided
   if (!m_approachDescriptor && Layer::m_surfaceArray) buildApproachDescriptor();
-  // register the layer
+  // register the layer to the approach descriptor
   if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
-  // set the material if present
-  // material can be on any approach surface or on the representing surface
-  if (m_approachDescriptor) {
-    // the approach surfaces
-    const std::vector<const Surface*>& approachSurfaces
-        = m_approachDescriptor->containedSurfaces();
-    for (auto& aSurface : approachSurfaces)
-      if (aSurface->associatedMaterial()) m_materialSurface = aSurface;
-  }
-  if (surfaceRepresentation().associatedMaterial())
-    m_materialSurface = &surfaceRepresentation();
 }
 
 Acts::DiscLayer::DiscLayer(const Acts::DiscLayer&   dlay,
                            const Acts::Transform3D& transf)
   : DiscSurface(dlay, transf), Layer(dlay)
 {
+  // associate the layer with the layer surface
   DiscSurface::associateLayer(*this);
+  // create an approach descriptor if a surface array is present
   if (m_surfaceArray) buildApproachDescriptor();
+  // register the layer to the approach descriptor
+  if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
 }
 
 const Acts::DiscSurface&
@@ -83,7 +77,6 @@ Acts::DiscLayer::buildApproachDescriptor()
 {
   // delete it
   m_approachDescriptor = nullptr;
-  // delete the surfaces
   // take the boundary surfaces of the representving volume if they exist
   if (m_representingVolume) {
     // get teh boundary surfaces
@@ -116,6 +109,7 @@ Acts::DiscLayer::buildApproachDescriptor()
     m_approachDescriptor
         = std::make_unique<GenericApproachDescriptor<const Surface>>(aSurfaces);
   }
+  // @todo check if we can give the layer at curface creation
   for (auto& sfPtr : (m_approachDescriptor->containedSurfaces())) {
     if (sfPtr) {
       auto& mutableSf = *(const_cast<Surface*>(sfPtr));

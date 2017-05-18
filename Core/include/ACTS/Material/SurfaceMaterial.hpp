@@ -13,102 +13,79 @@
 #ifndef ACTS_MATERIAL_SURFACEMATERIAL_H
 #define ACTS_MATERIAL_SURFACEMATERIAL_H
 
-// Core module
-#include "ACTS/Material/MaterialProperties.hpp"
-// EventData module
-#include "ACTS/Utilities/Definitions.hpp"
-// STD/STL
 #include <memory>
 #include <vector>
+#include "ACTS/Material/MaterialProperties.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/GeometryID.hpp"
 
 namespace Acts {
 
 class BinUtility;
-class ElementTable;
 
-/**
-  @enum MaterialConcentration
-
-  Simple enum to identify when a material update on a non-structured layer
-  should be done,
-  options are alongPre and oppositePre.
-
- */
-
-enum MaterialConcentration { alongPre = 1, split = 0, oppositePre = -1 };
-
-/**
- @class SurfaceMaterial
-
- MaterialProperties that are associated to a surface,
- extended by certain special representations
-
- The SurfaceMaterial class inherits from GeometryID,
- in order to allow storing the material in a file and assigning it uniquely.
-
- */
-
+/// @class SurfaceMaterial
+///
+/// MaterialProperties that are associated to a surface,
+/// extended by certain special representations (binned, homogenous)
+///
+/// The SurfaceMaterial class inherits from GeometryID,
+/// in order to allow storing the material in a file and assigning it uniquely.
+///
 class SurfaceMaterial
 {
 public:
-  /**Constructor*/
+  /// Constructor
   SurfaceMaterial() : m_splitFactor(1.) {}
-  /**Constructor*/
+
+  /// Constructor
+  ///
+  /// @param splitFactor is the splitting ratio between pre/post update
   SurfaceMaterial(double splitFactor) : m_splitFactor(splitFactor) {}
-  /**Destructor*/
+
+  /// Destructor
   virtual ~SurfaceMaterial() {}
-  /**Pseudo-Constructor clone()*/
+
+  /// Pseudo-Constructor clone()
   virtual SurfaceMaterial*
   clone() const = 0;
 
-  /** Scale operator */
+  /// Scale operator
+  ///
+  /// @param scale is the scale factor applied
   virtual SurfaceMaterial&
   operator*=(double scale)
       = 0;
 
-  /** Return method for full material description of the Surface - from local
-   * coordinates */
+  /// Return method for full material description of the Surface
+  /// - from local coordinate on the surface
+  ///
+  /// @param lp is the local position used for the (eventual) lookup
+  ///
+  /// @retun const MaterialProperties, nullptr indicates no material
   virtual const MaterialProperties*
   material(const Vector2D& lp) const = 0;
 
-  /** Return method for full material description of the Surface - from the
-   * global coordinates */
+  /// Return method for full material description of the Surface
+  /// - from the global coordinates
+  ///
+  /// @param gp is the global position used for the (eventual) lookup
+  ///
+  /// @retun const MaterialProperties, nullptr indicates no material
   virtual const MaterialProperties*
   material(const Vector3D& gp) const = 0;
 
-  /**Direct access via bins to the MaterialProperties */
+  /// Direct access via bins to the MaterialProperties
+  ///
+  /// @param ib0 is the material bin in dimension 0
+  /// @param ib1 is the material bin in dimension 1
   virtual const MaterialProperties*
   material(size_t ib0, size_t ib1) const = 0;
 
-  /** Update the ElementTable */
-  void
-  updateElementTable(std::shared_ptr<const ElementTable>) const
-  {
-    return;
-  }
-
-  /** Get the ElementTable */
-  const ElementTable*
-  elementTable() const
-  {
-    return nullptr;
-  }
-
-  /** Update pre factor */
+  /// Update pre factor
   double
   factor(PropDirection pDir, MaterialUpdateStage mStage) const;
 
-  /** Return the BinUtility */
-  virtual const BinUtility*
-  binUtility() const = 0;
-
-  /** Update the BinUtility if necessary - passing ownership of the utility
-   * class*/
-  virtual void
-  updateBinning(BinUtility* bu)
-      = 0;
-
-  /** Output Method for std::ostream, to be overloaded by child classes */
+  /// Output Method for std::ostream, to be overloaded by child classes
   virtual std::ostream&
   dump(std::ostream& sl) const = 0;
 
@@ -116,7 +93,7 @@ protected:
   double m_splitFactor;  //!< the split factor in favour of oppositePre
 };
 
-/** inline return methods for the pre/post factors */
+/// inline return methods for the pre/post factors
 inline double
 SurfaceMaterial::factor(PropDirection pDir, MaterialUpdateStage mStage) const
 {
@@ -124,9 +101,11 @@ SurfaceMaterial::factor(PropDirection pDir, MaterialUpdateStage mStage) const
   return (pDir * mStage > 0 ? m_splitFactor : 1. - m_splitFactor);
 }
 
-//**Overload of << operator for std::ostream for debug output*/
+/// Overload of << operator for std::ostream for debug output
 std::ostream&
 operator<<(std::ostream& sl, const SurfaceMaterial& sm);
+
+typedef std::pair<GeometryID, SurfaceMaterial*> IndexedSurfaceMaterial;
 
 }  // end of namespace
 

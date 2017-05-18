@@ -12,13 +12,15 @@
 
 #include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
 
-Acts::MaterialStep::MaterialStep() : m_position(Position()), m_material()
+Acts::MaterialStep::MaterialStep()
+  : m_position(Position()), m_material(), m_geoID(0)
 {
 }
 
 Acts::MaterialStep::MaterialStep(const Acts::MaterialProperties& mat,
-                                 const Position&                 pos)
-  : m_position(pos), m_material(mat)
+                                 const Position&                 pos,
+                                 uint64_t                        geoID)
+  : m_position(pos), m_material(mat), m_geoID(geoID)
 {
 }
 
@@ -27,18 +29,13 @@ Acts::MaterialStep::MaterialStep(const MaterialStep& mstep)
 {
 }
 
-Acts::MaterialStep*
-Acts::MaterialStep::clone() const
-{
-  return (new MaterialStep(*this));
-}
-
 Acts::MaterialStep&
 Acts::MaterialStep::operator=(const Acts::MaterialStep& mstep)
 {
   if (this != &mstep) {
     m_position = mstep.m_position;
     m_material = mstep.m_material;
+    m_geoID    = mstep.m_geoID;
   }
   return (*this);
 }

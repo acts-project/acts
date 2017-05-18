@@ -299,7 +299,7 @@ Acts::CylinderSurface::pathCorrection(const Acts::Vector3D& gpos,
 {
   Vector3D normalT  = normal(gpos);
   double   cosAlpha = normalT.dot(mom.unit());
-  return std::abs(1. / cosAlpha);
+  return std::fabs(1. / cosAlpha);
 }
 
 const Acts::CylinderBounds&

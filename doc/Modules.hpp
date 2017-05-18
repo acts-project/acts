@@ -327,7 +327,7 @@
 /// grid granularity, using the class Acts::ActsExtension.
 ///
 /// Following the ACTS philosophy the material mapping is agnostic to any file format and software used to create or store
-/// the material maps. The material should be stored in instances of the class Acts::MaterialTrackRecord. This material track record
+/// the material maps. The material should be stored in instances of the class Acts::MaterialTrack. This material track record
 /// represents a track starting from a certain position, in a certain direction, containing all material along this
 /// track. The material along the material track record ist stored as a container of Acts::MaterialStep instances. Each material
 /// step contains the material and its thickness at a certain position.
@@ -338,7 +338,7 @@
 ///
 /// <B>Material Assignment</B>
 /// During the material assignment process the decision onto which layer each material step will be assigned is done.
-/// To assign a Acts::MaterialTrackRecord the function Acts::MaterialMapping::mapMaterial() should be used.
+/// To assign a Acts::MaterialTrack the function Acts::MaterialMapping::mapMaterial() should be used.
 /// This function extrapolates through the tracking detector, with the start position and direction given by the
 /// material track record and collects all layers marked to carry material. Then it loops through all material steps
 /// of the material track record and assigns the material of each step to the closest layer :
@@ -354,7 +354,7 @@
 /// The full material mapping process should be done in the framework of the user.
 ///
 /// Possible workflow:
-/// * Create material map(s) of full detector geometry using Acts::MaterialTrackRecord
+/// * Create material map(s) of full detector geometry using Acts::MaterialTrack
 /// * Read in material map(s) and go through all collected material track records
 ///		- use Acts::MaterialMapping::mapMaterial() for each material track record
 /// * Use Acts::MaterialMapping::averageLayerMaterial() - once per run

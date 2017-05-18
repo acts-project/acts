@@ -41,24 +41,28 @@ public:
   /// Public charged material effects interface
   ///
   /// @param ecCharged is the charged extrapolaiton cell
+  /// @param msurface is the material surface (for curvilinear parameters)
   /// @param dir is the additional direction prescription
   /// @param matupstage is the update stage (pre/full/post)
   ///
   /// @return extrapolation code to indicate the progress
   virtual ExtrapolationCode
   handleMaterial(ExCellCharged&      ecCharged,
+                 const Surface*      msurface   = nullptr,
                  PropDirection       dir        = alongMomentum,
                  MaterialUpdateStage matupstage = fullUpdate) const = 0;
 
   /// Public neutral material effects interface
   ///
   /// @param ecNeutral is the neutral extrapolaiton cell
+  /// @param msurface is the material surface (for curvilinear parameters)
   /// @param dir is the additional direction prescription
   /// @param matupstage is the update stage (pre/full/post)
   ///
   /// @return extrapolation code to indicate the progress
   virtual ExtrapolationCode
   handleMaterial(ExCellNeutral&      ecNeutral,
+                 const Surface*      msurface   = nullptr,
                  PropDirection       dir        = alongMomentum,
                  MaterialUpdateStage matupstage = fullUpdate) const = 0;
 

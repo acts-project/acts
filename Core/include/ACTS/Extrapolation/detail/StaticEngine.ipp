@@ -43,7 +43,7 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
     eCode = m_cfg.propagationEngine->propagate(eCell,
                                                *sf,
                                                pDir,
-                                               ExtrapolationMode::Destination,
+                                               {ExtrapolationMode::Destination},
                                                bcheck,
                                                eCell.destinationCurvilinear);
     // eCode can be directly returned
@@ -88,8 +88,8 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
         sf,
         pDir,
         bcheck,
-        eCell.leadLayer->hasSubStructure(eCell.checkConfigurationMode(
-            Acts::ExtrapolationMode::CollectSensitive)),
+        eCell.leadLayer->hasSubStructure(
+            eCell.checkConfigurationMode(ExtrapolationMode::CollectSensitive)),
         (eCell.leadLayer == eCell.startLayer
          && eCell.leadVolume == eCell.startVolume),
         true);
@@ -105,8 +105,8 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
   // - give potential start and end layer (latter only for the final volume)
   // - start and end layer will be part of the loop
   // - surface on approach is not yet resolved
-  const Acts::Layer* fLayer
-      = eCell.finalVolumeReached() ? eCell.endLayer : nullptr;
+  const Layer* fLayer = eCell.finalVolumeReached() ? eCell.endLayer : nullptr;
+  // get the layer intersections
   auto layerIntersections = eCell.leadVolume->layerCandidatesOrdered(
       eCell.leadLayer,
       fLayer,
@@ -135,7 +135,7 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
             << eCell.leadLayer->geoID().value(GeometryID::layer_mask));
     // resolve the approach surface situation
     // -  it is the approaching surface for all layers but the very first one
-    // (where it's the parameter surface)
+    //    (where it's the parameter surface)
     eCell.leadLayerSurface = (eCell.leadLayer == eCell.startLayer)
         ? &(eCell.leadParameters->referenceSurface())
         : (eCell.leadLayer->surfaceOnApproach(eCell.leadParameters->position(),
@@ -144,11 +144,10 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
                                               true,
                                               true))
               .object;
+
     // handle the layer, possible returns are :
-    // - InProgress               : fine, whatever happened on the lead layer,
-    // may also be missed
-    // - SuccessWithPathLimit     : propagation towards layer exceeded path
-    // limit
+    // - InProgress               : fine, whatever happened on the lead layer
+    // - SuccessWithPathLimit     : propagation towards layer exceeded limit
     // - SuccessWithMaterialLimit : material interaction killed track
     // - FailureDestination       : destination was not hit appropriately
     eCode = handleLayerT<T>(eCell, sf, pDir, bcheck);
@@ -230,7 +229,7 @@ Acts::StaticEngine::initNavigationT(Acts::ExtrapolationCell<T>& eCell,
                      "navigation",
                      "",
                      "this is the final volume, everything set up already.");
-      return Acts::ExtrapolationCode::InProgress;
+      return ExtrapolationCode::InProgress;
     } else {
       // make a straight line intersection
       Acts::Intersection sfI
@@ -243,11 +242,8 @@ Acts::StaticEngine::initNavigationT(Acts::ExtrapolationCell<T>& eCell,
       // validation, otherwise you need to do a fallbac
       return eCell.endLayer
           ? Acts::ExtrapolationCode::InProgress
-          : handleReturnT<T>(Acts::ExtrapolationCode::FailureNavigation,
-                             eCell,
-                             sf,
-                             pDir,
-                             bcheck);
+          : handleReturnT<T>(
+                ExtrapolationCode::FailureNavigation, eCell, sf, pDir, bcheck);
     }
   }
   // return that you're in progress
@@ -333,12 +329,13 @@ Acts::StaticEngine::handleLayerT(ExtrapolationCell<T>& eCell,
   //    - InProgress             : layer was hit successfuly,
   //                               try to handle the material and sub structure
   //    - Recovered              : layer was not hit, skip for layer-to-layer
-  eCode = m_cfg.propagationEngine->propagate(eCell,
-                                             *eCell.leadLayerSurface,
-                                             pDir,
-                                             ExtrapolationMode::CollectPassive,
-                                             true,
-                                             eCell.navigationCurvilinear);
+  eCode
+      = m_cfg.propagationEngine->propagate(eCell,
+                                           *eCell.leadLayerSurface,
+                                           pDir,
+                                           {ExtrapolationMode::CollectPassive},
+                                           true,
+                                           eCell.navigationCurvilinear);
   CHECK_ECODE_SUCCESS_NODEST(eCell, eCode);
   // check if the layer was actually hit
   if (eCode.inProgress()) {
@@ -353,7 +350,7 @@ Acts::StaticEngine::handleLayerT(ExtrapolationCell<T>& eCell,
     // - InProgress            : material update performed
     // - SuccessMaterialLimit  : material limit reached & configured to stop
     eCode = m_cfg.materialEffectsEngine->handleMaterial(
-        eCell, pDir, Acts::fullUpdate);
+        eCell, eCell.leadLayerSurface, pDir, fullUpdate);
     CHECK_ECODE_CONTINUE(eCell, eCode);
     // return the progress eCode back to the extrapolateT
     return eCode;
@@ -409,13 +406,13 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
     // limit
     // - Recovered        : layer was not hit, so can be ignored in the layer to
     // layer loop
-    eCode
-        = m_cfg.propagationEngine->propagate(eCell,
-                                             *eCell.leadLayerSurface,
-                                             pDir,
-                                             ExtrapolationMode::CollectPassive,
-                                             true,
-                                             eCell.sensitiveCurvilinear);
+    eCode = m_cfg.propagationEngine->propagate(
+        eCell,
+        *eCell.leadLayerSurface,
+        pDir,
+        {ExtrapolationMode::CollectPassive},
+        true,
+        eCell.sensitiveCurvilinear);
     CHECK_ECODE_SUCCESS_NODEST(eCell, eCode);
     // the extrapolation to the initial layer did not succeed - skip this layer
     // in the layer-to-layer loop
@@ -431,15 +428,13 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
     // the correct material layer needs to be assigned - in case of the approach
     // surface not being hit, his can be the layer surface
     if (eCell.leadLayerSurface->associatedMaterial()) {
-      // set the material surface for the update
-      eCell.materialSurface = eCell.leadLayerSurface;
       // now handle the material (full update when passing approach surface),
       // return codes are:
       // - SuccessMaterialLimit : material limit reached, return back
       // - InProgress           : material update done or not (depending on the
       // material description)
       eCode = m_cfg.materialEffectsEngine->handleMaterial(
-          eCell, pDir, Acts::fullUpdate);
+          eCell, eCell.leadLayerSurface, pDir, fullUpdate);
       CHECK_ECODE_CONTINUE(eCell, eCode);
     }
   } else if (isStartLayer) {
@@ -451,15 +446,14 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
         layerValue,
         "start layer (with sub structure), no propagation to be done.");
     // the start surface could have a material layer attached
-    if (eCell.leadParameters->referenceSurface().associatedMaterial()) {
-      // set the material surface
-      eCell.materialSurface = &(eCell.leadParameters->referenceSurface());
+    const Surface& surface = eCell.leadParameters->referenceSurface();
+    if (surface.associatedMaterial()) {
       // now handle the material (post update on start layer), return codes are:
       // - SuccessMaterialLimit : material limit reached, return back
       // - InProgress           : material update done or not (depending on the
       // material description)
       eCode = m_cfg.materialEffectsEngine->handleMaterial(
-          eCell, pDir, Acts::postUpdate);
+          eCell, &surface, pDir, postUpdate);
       CHECK_ECODE_CONTINUE(eCell, eCode);
       // let's reset the lead layer
       eCell.leadLayer = initialLayer;
@@ -484,7 +478,7 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
       eCell.searchMode,
       (isStartLayer ? &(eCell.leadParameters->referenceSurface())
                     : eCell.leadLayerSurface),
-      (isDestinationLayer ? sf : 0));
+      (isDestinationLayer ? sf : nullptr));
   // how many test surfaces do we have
   size_t ncSurfaces = cSurfaces.size();
   // some screen output for the sub structure
@@ -505,8 +499,9 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
       auto         surface = csf.object;
       geo_id_value sensitiveID
           = surface->geoID().value(GeometryID::sensitive_mask);
-      geo_id_value surfaceID
-          = sensitiveID ? 0 : surface->geoID().value(GeometryID::approach_mask);
+      geo_id_value surfaceID = sensitiveID
+          ? sensitiveID
+          : surface->geoID().value(GeometryID::approach_mask);
       // the surface to try
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "surface",
@@ -520,22 +515,17 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
           surfaceID,
           (surface->associatedDetectorElement() ? "is active" : "is passive"));
       // record the parameters as sensitive or passive depending on the surface
-      Acts::ExtrapolationMode::eMode emode
-          = surface->associatedDetectorElement()
-          ? Acts::ExtrapolationMode::CollectSensitive
-          : Acts::ExtrapolationMode::CollectPassive;
+      ExtrapolationMode::eMode emode = surface->associatedDetectorElement()
+          ? ExtrapolationMode::CollectSensitive
+          : ExtrapolationMode::CollectPassive;
       // propagate to the compatible surface, return types are
       // - InProgress       : propagation to compatible surface worked
       // - Recovered        : propagation to compatible surface did not work,
-      // leadParameters stay the same
-      // - SuccessPathLimit : propagation to compatible surface reached the path
-      // limit
-      eCode = m_cfg.propagationEngine->propagate(eCell,
-                                                 *(csf.object),
-                                                 pDir,
-                                                 emode,
-                                                 bcheck,
-                                                 eCell.sensitiveCurvilinear);
+      //                      leadParameters stay the same
+      // - SuccessPathLimit : propagation to compatible surface
+      //                      reached the path limit
+      eCode = m_cfg.propagationEngine->propagate(
+          eCell, *surface, pDir, {emode}, bcheck, eCell.sensitiveCurvilinear);
       CHECK_ECODE_SUCCESS_NODEST(eCell, eCode);
       // check if the propagation was successful
       if (eCode.inProgress()) {
@@ -547,20 +537,18 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
                 << (surface->associatedDetectorElement() ? "active" : "passive")
                 << " sub structure surface.");
         // check if the surface holds material and hence needs to be processed
-        if (csf.object->associatedMaterial()) {
+        if (surface->associatedMaterial()) {
           // screen output
           EX_MSG_VERBOSE(eCell.navigationStep,
                          "surface",
                          surfaceID,
                          "applying material effects.");
-          // set the material surface
-          eCell.materialSurface = csf.object;
           // now handle the material, return codes are:
           // - SuccessMaterialLimit : material limit reached,return back
           // - InProgress           : material update done or not (depending on
           // the material description)
           eCode = m_cfg.materialEffectsEngine->handleMaterial(
-              eCell, pDir, Acts::fullUpdate);
+              eCell, surface, pDir, fullUpdate);
           CHECK_ECODE_CONTINUE(eCell, eCode);
         }
         // if the search mode returns unordered surfaces :
@@ -595,7 +583,7 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
     eCode = m_cfg.propagationEngine->propagate(eCell,
                                                *sf,
                                                pDir,
-                                               ExtrapolationMode::Destination,
+                                               {ExtrapolationMode::Destination},
                                                false,
                                                eCell.destinationCurvilinear);
     // check for success return path limit
@@ -608,11 +596,9 @@ Acts::StaticEngine::resolveLayerT(ExtrapolationCell<T>& eCell,
     // check for a potential preUpdate
     // - in case teh destination surface has material and the surface was hit
     if (sf->associatedMaterial() && eCode.isSuccess()) {
-      // set the material surface for the update
-      eCell.materialSurface = sf;
       // finally do the material update, but even as this is the final call
       //  - still check for SuccessMaterialLimit
-      m_cfg.materialEffectsEngine->handleMaterial(eCell, pDir, Acts::preUpdate);
+      m_cfg.materialEffectsEngine->handleMaterial(eCell, sf, pDir, preUpdate);
       // check if success was triggered through path limit reached on the way to
       // the layer
       CHECK_ECODE_SUCCESS(eCell, eCode);
@@ -668,7 +654,7 @@ Acts::StaticEngine::handleReturnT(ExtrapolationCode     eCode,
     eCode = m_cfg.propagationEngine->propagate(eCell,
                                                *sf,
                                                pDir,
-                                               ExtrapolationMode::Propagation,
+                                               {ExtrapolationMode::Propagation},
                                                bcheck,
                                                eCell.destinationCurvilinear);
   }

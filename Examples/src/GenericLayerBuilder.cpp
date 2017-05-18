@@ -251,6 +251,7 @@ Acts::GenericLayerBuilder::constructLayers()
           // the layer surface is the material surface
           cLayer->surfaceRepresentation().setAssociatedMaterial(
               layerMaterialPtr);
+          ACTS_VERBOSE("- and material at central layer surface.");
         } else {
           // approach surface material
           // get the approach descriptor - at this stage we know that the
@@ -290,7 +291,7 @@ Acts::GenericLayerBuilder::constructLayers()
       // some screen output
       ACTS_VERBOSE(
           "- building layers " << ipnl << " and " << numpnLayers + ipnl
-                               << "at +/- z = "
+                               << " at +/- z = "
                                << m_cfg.posnegLayerPositionsZ.at(ipnl));
       /// some preparation work
       // define the layer envelope
@@ -306,9 +307,11 @@ Acts::GenericLayerBuilder::constructLayers()
         // (0) module specifications
         double moduleThickness = m_cfg.posnegModuleThickness.at(ipnl).at(ipnR);
         double moduleMinHalfX  = m_cfg.posnegModuleMinHalfX.at(ipnl).at(ipnR);
-        double moduleMaxHalfX  = m_cfg.posnegModuleMaxHalfX.size()
-            ? m_cfg.posnegModuleMaxHalfX.at(ipnl).at(ipnR)
-            : 0.;
+        double moduleMaxHalfX  = 0.;
+        if (m_cfg.posnegModuleMaxHalfX.size() > ipnl
+            && m_cfg.posnegModuleMaxHalfX.at(ipnl).size() > ipnR) {
+          moduleMaxHalfX = m_cfg.posnegModuleMaxHalfX.at(ipnl).at(ipnR);
+        }
         double moduleHalfY = m_cfg.posnegModuleHalfY.at(ipnl).at(ipnR);
         // (1) module bounds
         // create the bounds
@@ -510,6 +513,7 @@ Acts::GenericLayerBuilder::constructLayers()
               layerMaterialPtr);
           pLayer->surfaceRepresentation().setAssociatedMaterial(
               layerMaterialPtr);
+          ACTS_VERBOSE("- and material at central layer surface.");
         } else {
           // approach surface material
           // get the approach descriptor - at this stage we know that the
@@ -525,6 +529,7 @@ Acts::GenericLayerBuilder::constructLayers()
             auto mutableOuterPSurface
                 = const_cast<Surface*>(pApproachSurfaces.at(1));
             mutableOuterPSurface->setAssociatedMaterial(layerMaterialPtr);
+            ACTS_VERBOSE("- and material at outer approach surfaces.");
           } else {
             auto mutableOuterNSurface
                 = const_cast<Surface*>(nApproachSurfaces.at(1));
@@ -532,6 +537,7 @@ Acts::GenericLayerBuilder::constructLayers()
             auto mutableInnerPSurface
                 = const_cast<Surface*>(pApproachSurfaces.at(0));
             mutableInnerPSurface->setAssociatedMaterial(layerMaterialPtr);
+            ACTS_VERBOSE("- and material at inner approach surfaces.");
           }
         }
       }

@@ -71,7 +71,7 @@ public:
   ///
   /// @param shift additional shift applied after cloning
   LayerPtr
-  cloneWithShift(const Transform3D& shift) const
+  cloneWithShift(const Transform3D& shift) const override
   {
     return PlaneLayer::create(*this, shift);
   }

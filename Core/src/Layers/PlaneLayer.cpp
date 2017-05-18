@@ -31,19 +31,8 @@ Acts::PlaneLayer::PlaneLayer(std::shared_ptr<Transform3D>         transform,
   Acts::PlaneSurface::associateLayer(*this);
   // deal with the approach descriptor
   if (!m_approachDescriptor && surfaceArray) buildApproachDescriptor();
-  // register the layer if the approach descriptor was provided
+  // register the layer to the approach descriptor
   if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
-  // set the material if present
-  // material can be on any approach surface or on the representing surface
-  if (m_approachDescriptor) {
-    // the approach surfaces
-    const std::vector<const Surface*>& approachSurfaces
-        = m_approachDescriptor->containedSurfaces();
-    for (auto& aSurface : approachSurfaces)
-      if (aSurface->associatedMaterial()) m_materialSurface = aSurface;
-  }
-  if (surfaceRepresentation().associatedMaterial())
-    m_materialSurface = &surfaceRepresentation();
 }
 
 Acts::PlaneLayer::PlaneLayer(const PlaneLayer& play, const Transform3D& transf)
@@ -90,6 +79,7 @@ Acts::PlaneLayer::buildApproachDescriptor()
     auto& mutableSf = *(const_cast<Surface*>(sfPtr));
     mutableSf.associateLayer(*this);
   }
+  // @todo check if we can provide the layer at surface creation
   m_approachDescriptor
       = std::make_unique<GenericApproachDescriptor<const Surface>>(aSurfaces);
 }

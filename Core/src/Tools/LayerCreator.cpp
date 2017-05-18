@@ -406,7 +406,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                                              layerThickness,
                                              std::move(ad),
                                              active);
-  if (!dLayer) ACTS_ERROR("Creation of disc layer did not succeed!");
+  if (!dLayer) ACTS_ERROR("Creation of disk layer did not succeed!");
   associateSurfacesToLayer(*dLayer);
   // return the layer
   return dLayer;

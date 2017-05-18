@@ -28,7 +28,6 @@ Acts::Layer::Layer()
   , m_enclosingDetachedTrackingVolume(nullptr)
   , m_representingVolume(nullptr)
   , m_layerType(Acts::passive)
-  , m_materialSurface(nullptr)
   , m_detectorElements()
 {
 }
@@ -46,8 +45,8 @@ Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
   , m_enclosingDetachedTrackingVolume(nullptr)
   , m_representingVolume(nullptr)
   , m_layerType(laytyp)
-  , m_materialSurface(nullptr)
   , m_detectorElements()
+
 {
   if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
 }
@@ -62,7 +61,6 @@ Acts::Layer::Layer(const Layer& lay)
   , m_enclosingDetachedTrackingVolume(nullptr)
   , m_representingVolume(lay.m_representingVolume)
   , m_layerType(lay.m_layerType)
-  , m_materialSurface(nullptr)
   , m_detectorElements()
 {
 }
@@ -163,7 +161,9 @@ Acts::Layer::hasSensitive() const
 bool
 Acts::Layer::hasMaterial() const
 {
-  return bool(material());
+  // will need to be done
+  // with substructure type
+  return true;
 }
 
 const Acts::ApproachDescriptor*
@@ -208,23 +208,4 @@ Acts::Layer::closeGeometry(const GeometryID& layerID)
                                  sSurface->associatedDetectorElement());
     }
   }
-}
-
-const Acts::SurfaceMaterial*
-Acts::Layer::material() const
-{
-  if (m_materialSurface) return m_materialSurface->associatedMaterial();
-  return nullptr;
-}
-
-const Acts::Surface*
-Acts::Layer::materialSurface() const
-{
-  return m_materialSurface;
-}
-
-Acts::Surface*
-Acts::Layer::materialSurface()
-{
-  return const_cast<Acts::Surface*>(m_materialSurface);
 }
