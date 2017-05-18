@@ -44,15 +44,14 @@ public:
   /// @param phi azimuthal angle indicating of the particle direction
   /// @param materialSteps the collection material steps along the track
   /// @param totX0 is the optional total budget in X0
-  /// @param totL0 is the optional total budget in L0 
+  /// @param totL0 is the optional total budget in L0
   MaterialTrack(const MaterialStep::Position& startPos,
                 double                        theta,
                 double                        phi,
                 std::vector<MaterialStep>     materialSteps,
-                double                        totX0=0.,
-                double                        totL0=0.);
-                
-                
+                double                        totX0 = 0.,
+                double                        totL0 = 0.);
+
   /// Copy constructor
   MaterialTrack(const MaterialTrack& mtrecord);
 
@@ -84,10 +83,10 @@ public:
 #if !defined(__CLING__)
   const Vector3D
   position() const;
-#else 
+#else
   /// return method for the position of the step
   const MaterialStep::Position
-  position() const;  
+  position() const;
 #endif
 
   ///@return returns the accumalted material steps along the track
@@ -102,16 +101,16 @@ private:
   double m_theta = 0.;
   /// azimuthal angle phi indicating the second coordinate of the direction of
   /// the material track
-  double m_phi   = 0.;
+  double m_phi = 0.;
   /// total mapped material in X0 (fast access)
-  double m_tX0   = 0.;
+  double m_tX0 = 0.;
   /// total mapped material in L0 (fast access)
-  double m_tL0   = 0.;
+  double m_tL0 = 0.;
   /// the collected material steps along the track
   std::vector<MaterialStep> m_materialSteps;
 };
 
-} // end of namespace 
+}  // end of namespace
 
 inline double
 Acts::MaterialTrack::theta() const
@@ -138,19 +137,18 @@ Acts::MaterialTrack::thicknessInL0() const
 }
 
 #if !defined(__CLING__)
-  inline const Acts::Vector3D
-    Acts::MaterialTrack::position() const
-  {
-    return Acts::Vector3D(m_startPosition.x,
-                          m_startPosition.y,
-                          m_startPosition.z);
-  }
-#else 
-  inline const Acts::MaterialStep::Position
-    Acts::MaterialTrack::position() const
-  {
-    return m_startPosition;
-  }
+inline const Acts::Vector3D
+Acts::MaterialTrack::position() const
+{
+  return Acts::Vector3D(
+      m_startPosition.x, m_startPosition.y, m_startPosition.z);
+}
+#else
+inline const Acts::MaterialStep::Position
+Acts::MaterialTrack::position() const
+{
+  return m_startPosition;
+}
 #endif
 
 inline std::vector<Acts::MaterialStep>

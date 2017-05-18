@@ -126,10 +126,9 @@ public:
   /// @param matTrackRec the MaterialTrack to be mapped
   ///
   /// @return is the mapped material track, i.e. it is collapsed
-  ///      onto the available  
+  ///      onto the available
   MaterialTrack
-  mapMaterialTrack(Cache& mappingCache,
-                   const MaterialTrack& matTrackRec) const;
+  mapMaterialTrack(Cache& mappingCache, const MaterialTrack& matTrackRec) const;
 
   /// finds the TrackingGeometry steps associated to the material steps
   ///
