@@ -10,8 +10,8 @@
 // MaterialMapper.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include <climits>
 #include "ACTS/Plugins/MaterialPlugins/MaterialMapper.hpp"
+#include <climits>
 #include "ACTS/Detector/TrackingGeometry.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/EventData/NeutralParameters.hpp"
@@ -100,7 +100,7 @@ Acts::MaterialMapper::mapMaterialTrack(
   if (materialSteps.size()) {
     // get the number of materialsteps
     ACTS_VERBOSE("Successfuly retrieved " << materialSteps.size()
-                                        << " materialSteps");
+                                          << " materialSteps");
     // propagate through the detector and collect the layers hit in the given
     // direction eta phi
     // calculate the direction in cartesian coordinates

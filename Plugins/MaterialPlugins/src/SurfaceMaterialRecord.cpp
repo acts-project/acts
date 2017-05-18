@@ -106,9 +106,7 @@ Acts::SurfaceMaterialRecord::assignMaterialStep(
   // in a final step, all parameters need to be divided
   // by the number of bin hits
   Material cummulatedMaterial(x0, l0, A, Z, rho);
-  
   m_mappedMaterial[bin1][bin0].first
       = MaterialProperties(cummulatedMaterial, thickness);
-  
   
 }
