@@ -98,8 +98,8 @@ Acts::MaterialMapper::mapMaterialTrack(Cache&               mappingCache,
   // that have a material proxy
   if (materialSteps.size()) {
     // get the number of materialsteps
-    ACTS_VERBOSE(">> Retrieved " << materialSteps.size() 
-                  << " materialSteps along the track at input.");
+    ACTS_VERBOSE(">> Retrieved " << materialSteps.size()
+                                 << " materialSteps along the track at input.");
     // propagate through the detector and collect the layers hit in the given
     // direction eta phi
     // calculate the direction in cartesian coordinates
@@ -134,8 +134,8 @@ Acts::MaterialMapper::mapMaterialTrack(Cache&               mappingCache,
     }    // extrapolation success
 
     // now check how many have been assigned
-    ACTS_VERBOSE("<< to be mapped onto " << assignedSteps.size() 
-                  << " surfaces along the track.");
+    ACTS_VERBOSE("<< to be mapped onto " << assignedSteps.size()
+                                         << " surfaces along the track.");
   }  // stepCollection
 
   // now associate material steps and assigned steps
@@ -160,8 +160,8 @@ Acts::MaterialMapper::mapMaterialTrack(Cache&               mappingCache,
     } else {
 
       // get the surface material record
-      auto& surfaceMaterialRecord 
-        = mappingCache.surfaceMaterialRecords[aSteps.assignedGeoID];
+      auto& surfaceMaterialRecord
+          = mappingCache.surfaceMaterialRecords[aSteps.assignedGeoID];
       // the surface to be associated
       auto& surface = surfaceMaterialRecord.surface();
       // get the geo id
