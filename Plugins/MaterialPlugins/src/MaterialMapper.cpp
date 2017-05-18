@@ -99,8 +99,8 @@ Acts::MaterialMapper::mapMaterialTrack(
   // that have a material proxy
   if (materialSteps.size()) {
     // get the number of materialsteps
-    ACTS_VERBOSE("Successfuly retrieved " << materialSteps.size()
-                                          << " materialSteps");
+    ACTS_VERBOSE(">> Retrieved " << materialSteps.size() 
+                  << " materialSteps along the track at input.");
     // propagate through the detector and collect the layers hit in the given
     // direction eta phi
     // calculate the direction in cartesian coordinates
@@ -119,25 +119,15 @@ Acts::MaterialMapper::mapMaterialTrack(
     ecc.addConfigurationMode(ExtrapolationMode::CollectSensitive);
     ecc.addConfigurationMode(ExtrapolationMode::CollectMaterial);
     // call the extrapolation engine
-    // screen output
-    ACTS_VERBOSE("===> forward extrapolation - collecting intersections <<===");
     // call the extrapolation engine
     ExtrapolationCode eCode = m_cfg.extrapolationEngine->extrapolate(ecc);
     // end parameter, if there
     if (eCode.isSuccess()) {
-      // number of layers hit
-      size_t nSurfacesHit = ecc.extrapolationSteps.size();
-      ACTS_VERBOSE("[+] Extrapolation succeeded resulting in "
-                   << nSurfacesHit
-                   << " intersected surfaces.");
       // loop over the collected information
       for (auto& es : ecc.extrapolationSteps) {
         if (es.configuration.checkMode(ExtrapolationMode::CollectMaterial)) {
           // geo ID from the surface
           GeometryID assignID = es.surface->geoID();
-          // more screen output for debugging
-          ACTS_VERBOSE("Material proxy found on surface with ID "
-                       << assignID.value());
           // collect the assigned ones
           assignedSteps.push_back(AssignedMaterialSteps(assignID, es.position));
         }
@@ -145,7 +135,8 @@ Acts::MaterialMapper::mapMaterialTrack(
     }    // extrapolation success
 
     // now check how many have been assigned
-    ACTS_VERBOSE("[+] Selected " << assignedSteps.size() << " for mapping.");
+    ACTS_VERBOSE("<< to be mapped onto " << assignedSteps.size() 
+                  << " surfaces along the track.");
   }  // stepCollection
 
   // now associate material steps and assigned steps
@@ -170,7 +161,7 @@ Acts::MaterialMapper::mapMaterialTrack(
     } else {
       
       // get the surface material record
-      auto surfaceMaterialRecord 
+      auto& surfaceMaterialRecord 
         = mappingCache.surfaceMaterialRecords[aSteps.assignedGeoID];
       
       // the surface to be associated
@@ -181,7 +172,10 @@ Acts::MaterialMapper::mapMaterialTrack(
         
       // assign the material
       Vector3D direction(aSteps.assignedPosition.unit());
-      double pathC = surface.pathCorrection(Vector3D(0.,0.,0.),direction);
+      double pathC = surface.pathCorrection(Vector3D(0.,0.,0.), direction);
+
+      std::cout << "Path correction is " << pathC << std::endl;
+      std::cout << "Surface type is " << surface.type() << std::endl;
 
       // loop over the steps and average the material 
       // and collpas into one 

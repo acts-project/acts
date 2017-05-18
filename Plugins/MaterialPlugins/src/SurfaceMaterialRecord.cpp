@@ -82,7 +82,7 @@ Acts::SurfaceMaterialRecord::assignMaterialStep(
   m_mappedMaterial[bin1][bin0].second++;
 
   // it's time to correct for the path correction
-  float thickness   = mStep.materialProperties().thickness()/fabs(pathCorrection);
+  float thickness   = mStep.materialProperties().thickness()/std::fabs(pathCorrection);
   // now simple add the material component
   float x0          = mStep.materialProperties().material().X0();
   float l0          = mStep.materialProperties().material().L0();
