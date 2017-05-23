@@ -59,11 +59,12 @@ public:
     /// tracking geometry
     std::shared_ptr<const TrackingGeometry> trackingGeometry = nullptr;
     /// list of extrapolation engines
-    std::vector<std::shared_ptr<IExtrapolationEngine>> extrapolationEngines{};
+    std::vector<std::shared_ptr<const IExtrapolationEngine>>
+        extrapolationEngines{};
     /// helper propagator for navigation initialization
-    std::shared_ptr<IPropagationEngine> propagationEngine = nullptr;
+    std::shared_ptr<const IPropagationEngine> propagationEngine = nullptr;
     /// navigation engine
-    std::shared_ptr<INavigationEngine> navigationEngine = nullptr;
+    std::shared_ptr<const INavigationEngine> navigationEngine = nullptr;
     /// output prefix
     std::string prefix = "[ME] - ";
     /// output postfix

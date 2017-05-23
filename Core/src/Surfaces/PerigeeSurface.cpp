@@ -17,11 +17,12 @@
 
 Acts::PerigeeSurface::PerigeeSurface(const Vector3D& gp) : LineSurface(nullptr)
 {
-  Surface::m_transform            = std::make_shared<Transform3D>();
-  (*(Surface::m_transform.get())) = Translation3D(gp.x(), gp.y(), gp.z());
+  Surface::m_transform = std::make_shared<const Transform3D>(
+      Translation3D(gp.x(), gp.y(), gp.z()));
 }
 
-Acts::PerigeeSurface::PerigeeSurface(std::shared_ptr<Transform3D> tTransform)
+Acts::PerigeeSurface::PerigeeSurface(
+    std::shared_ptr<const Transform3D> tTransform)
   : LineSurface(tTransform)
 {
 }
@@ -51,7 +52,7 @@ Acts::PerigeeSurface::operator=(const PerigeeSurface& other)
 }
 
 Acts::PerigeeSurface*
-Acts::PerigeeSurface::clone(const Acts::Transform3D* shift) const
+Acts::PerigeeSurface::clone(const Transform3D* shift) const
 {
   if (shift) return new PerigeeSurface(*this, *shift);
   return new PerigeeSurface(*this);

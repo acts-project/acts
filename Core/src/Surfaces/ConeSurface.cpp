@@ -30,25 +30,26 @@ Acts::ConeSurface::ConeSurface(const ConeSurface& other,
 {
 }
 
-Acts::ConeSurface::ConeSurface(std::shared_ptr<Transform3D> htrans,
-                               double                       alpha,
-                               bool                         symmetric)
-  : Surface(htrans), m_bounds(std::make_shared<ConeBounds>(alpha, symmetric))
-{
-}
-
-Acts::ConeSurface::ConeSurface(std::shared_ptr<Transform3D> htrans,
-                               double                       alpha,
-                               double                       zmin,
-                               double                       zmax,
-                               double                       halfPhi)
+Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
+                               double                             alpha,
+                               bool                               symmetric)
   : Surface(htrans)
-  , m_bounds(std::make_shared<ConeBounds>(alpha, zmin, zmax, halfPhi))
+  , m_bounds(std::make_shared<const ConeBounds>(alpha, symmetric))
 {
 }
 
-Acts::ConeSurface::ConeSurface(std::shared_ptr<Acts::Transform3D>      htrans,
-                               std::shared_ptr<const Acts::ConeBounds> cbounds)
+Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
+                               double                             alpha,
+                               double                             zmin,
+                               double                             zmax,
+                               double                             halfPhi)
+  : Surface(htrans)
+  , m_bounds(std::make_shared<const ConeBounds>(alpha, zmin, zmax, halfPhi))
+{
+}
+
+Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
+                               std::shared_ptr<const ConeBounds>  cbounds)
   : Surface(htrans), m_bounds(cbounds)
 {
   assert(cbounds);

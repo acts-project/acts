@@ -122,7 +122,8 @@ public:
   ///
   /// @return a vector of surfaces to be used as boundary surfaces
   const std::vector<const Surface*>
-  decomposeToSurfaces(std::shared_ptr<Transform3D> transformPtr) const override;
+  decomposeToSurfaces(
+      std::shared_ptr<const Transform3D> transformPtr) const override;
 
   /// This method returns the X halflength at minimal Y
   double

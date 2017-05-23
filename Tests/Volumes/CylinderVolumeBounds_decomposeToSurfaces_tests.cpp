@@ -49,10 +49,12 @@ namespace Test {
     // create the cylinder bounds
     CylinderVolumeBounds cylBounds(1., 2., 3.);
     // create the transformation matrix
-    auto transformPtr = std::make_shared<Transform3D>(pos);
-    (*transformPtr) *= rotZ;
-    (*transformPtr) *= rotY;
-    (*transformPtr) *= rotX;
+    auto mutableTransformPtr = std::make_shared<Transform3D>(pos);
+    (*mutableTransformPtr) *= rotZ;
+    (*mutableTransformPtr) *= rotY;
+    (*mutableTransformPtr) *= rotX;
+    auto transformPtr
+        = std::const_pointer_cast<const Transform3D>(mutableTransformPtr);
     // get the boundary surfaces
     const std::vector<const Acts::Surface*> boundarySurfaces
         = cylBounds.decomposeToSurfaces(transformPtr);

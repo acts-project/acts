@@ -74,7 +74,7 @@ public:
                          double                             halfZ,
                          size_t                             binsPhi,
                          size_t                             binsZ,
-                         std::shared_ptr<Transform3D>       transform
+                         std::shared_ptr<const Transform3D> transform
                          = nullptr) const final;
 
   /// SurfaceArrayCreator interface method
@@ -92,10 +92,10 @@ public:
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<Acts::SurfaceArray>
-  surfaceArrayOnCylinder(const std::vector<const Acts::Surface*>& surfaces,
-                         Acts::BinningType bTypePhi = equidistant,
-                         Acts::BinningType bTypeZ   = equidistant,
-                         std::shared_ptr<Acts::Transform3D> transform
+  surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
+                         BinningType bTypePhi = equidistant,
+                         BinningType bTypeZ   = equidistant,
+                         std::shared_ptr<const Transform3D> transform
                          = nullptr) const final;
 
   /// SurfaceArrayCreator interface method
@@ -123,7 +123,7 @@ public:
                      double                             maxPhi,
                      size_t                             binsR,
                      size_t                             binsPhi,
-                     std::shared_ptr<Transform3D>       transform
+                     std::shared_ptr<const Transform3D> transform
                      = nullptr) const final;
 
   /// SurfaceArrayCreator interface method
@@ -141,10 +141,10 @@ public:
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<Acts::SurfaceArray>
-  surfaceArrayOnDisc(const std::vector<const Acts::Surface*>& surfaces,
-                     Acts::BinningType                        bTypeR,
-                     Acts::BinningType                        bTypePhi,
-                     std::shared_ptr<Acts::Transform3D>       transform
+  surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
+                     BinningType                        bTypeR,
+                     BinningType                        bTypePhi,
+                     std::shared_ptr<const Transform3D> transform
                      = nullptr) const final;
 
   /// SurfaceArrayCreator interface method
@@ -167,7 +167,7 @@ public:
                       double                             halflengthY,
                       size_t                             binsX,
                       size_t                             binsY,
-                      std::shared_ptr<Transform3D>       transform
+                      std::shared_ptr<const Transform3D> transform
                       = nullptr) const final;
 
   /// Set logging instance
@@ -203,9 +203,9 @@ private:
   /// @param transform is the (optional) additional transform applied
   /// @return a unique pointer a one dimensional BinUtility
   Acts::BinUtility
-  createArbitraryBinUtility(const std::vector<const Acts::Surface*>& surfaces,
-                            Acts::BinningValue                       bValue,
-                            std::shared_ptr<Acts::Transform3D>       transform
+  createArbitraryBinUtility(const std::vector<const Surface*>& surfaces,
+                            BinningValue                       bValue,
+                            std::shared_ptr<const Transform3D> transform
                             = nullptr) const;
   /// SurfaceArrayCreator internal method
   /// Creates an equidistant BinUtility when the extremas and the bin number are
@@ -224,9 +224,9 @@ private:
   /// @param transform is the (optional) additional transform applied
   /// @return a unique pointer a one dimensional BinUtility
   Acts::BinUtility
-  createEquidistantBinUtility(const std::vector<const Acts::Surface*>& surfaces,
-                              Acts::BinningValue                       bValue,
-                              std::shared_ptr<Acts::Transform3D>       transform
+  createEquidistantBinUtility(const std::vector<const Surface*>& surfaces,
+                              BinningValue                       bValue,
+                              std::shared_ptr<const Transform3D> transform
                               = nullptr) const;
   /// SurfaceArrayCreator internal method
   /// - create an equidistant BinUtility with all parameters given
@@ -245,13 +245,13 @@ private:
   /// @param transform is the (optional) additional transform applied
   /// @return a unique pointer a one dimensional BinUtility
   Acts::BinUtility
-  createBinUtility(const std::vector<const Acts::Surface*>& surfaces,
-                   Acts::BinningValue                       bValue,
-                   Acts::BinningType                        bType,
-                   size_t                                   bins,
-                   double                                   min,
-                   double                                   max,
-                   std::shared_ptr<Acts::Transform3D>       transform
+  createBinUtility(const std::vector<const Surface*>& surfaces,
+                   BinningValue                       bValue,
+                   BinningType                        bType,
+                   size_t                             bins,
+                   double                             min,
+                   double                             max,
+                   std::shared_ptr<const Transform3D> transform
                    = nullptr) const;
 
   /// logging instance

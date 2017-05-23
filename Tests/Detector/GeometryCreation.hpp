@@ -33,10 +33,12 @@ constructCylinderVolume(double surfaceHalfLengthZ,
   ///  the surface transforms
   auto sfnPosition
       = Vector3D(0., 0., -3 * surfaceHalfLengthZ - surfaceZoverlap);
-  auto sfnTransform = std::make_shared<Transform3D>(Translation3D(sfnPosition));
+  auto sfnTransform
+      = std::make_shared<const Transform3D>(Translation3D(sfnPosition));
   auto sfcTransform = nullptr;
   auto sfpPosition = Vector3D(0., 0., 3 * surfaceHalfLengthZ - surfaceZoverlap);
-  auto sfpTransform = std::make_shared<Transform3D>(Translation3D(sfpPosition));
+  auto sfpTransform
+      = std::make_shared<const Transform3D>(Translation3D(sfpPosition));
   ///  the surfaces
   auto sfn = new CylinderSurface(
       sfnTransform, surfaceRadius - 0.5 * surfaceRstagger, surfaceHalfLengthZ);
@@ -61,7 +63,8 @@ constructCylinderVolume(double surfaceHalfLengthZ,
                                                         std::move(bUtility));
 
   ///  now create the Layer
-  auto layer0bounds = std::make_shared<CylinderBounds>(surfaceRadius, bUmax);
+  auto layer0bounds
+      = std::make_shared<const CylinderBounds>(surfaceRadius, bUmax);
   auto layer0       = CylinderLayer::create(nullptr,
                                       layer0bounds,
                                       std::move(bArray),
@@ -70,7 +73,7 @@ constructCylinderVolume(double surfaceHalfLengthZ,
       = std::make_unique<BinnedArrayXD<LayerPtr>>(layer0);
 
   ///  create the volume
-  auto volumeBounds = std::make_shared<CylinderVolumeBounds>(
+  auto volumeBounds = std::make_shared<const CylinderVolumeBounds>(
       innerVolumeR, outerVolumeR, bUmax + volumeEnvelope);
   TrackingVolumePtr volume = TrackingVolume::create(
       nullptr, volumeBounds, nullptr, std::move(layerArray), {}, {}, {}, name);
@@ -91,7 +94,7 @@ constructContainerVolume(TrackingVolumePtr  iVolume,
   std::vector<VAP> volumes = {{iVolume, iVolume->binningPosition(binR)},
                               {oVolume, oVolume->binningPosition(binR)}};
   ///  the bounds for the container
-  auto hVolumeBounds = std::make_shared<CylinderVolumeBounds>(
+  auto hVolumeBounds = std::make_shared<const CylinderVolumeBounds>(
       0., hVolumeRadius, hVolumeHalflength);
   ///  create the BinUtility & the BinnedArray
   auto vUtility = std::make_unique<BinUtility>(

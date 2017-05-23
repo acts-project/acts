@@ -73,18 +73,16 @@ public:
 
   /// Moving object around post creation
   ///
-  /// @note needs transform to be mutable
-  /// @todo check if this needed
   /// @param shift is the applied transform to the detached volume
   void
-  move(Transform3D& shift);
+  move(const Transform3D& shift);
 
   /// Clone with shift
   ///
   /// @param name is the new name of the clone detached volume
   /// @param shift is the applid shift
   DetachedTrackingVolumePtr
-  clone(std::string name, Transform3D& shift) const;
+  clone(std::string name, const Transform3D& shift) const;
 
   /// Returns a layer representation
   ///
@@ -133,13 +131,13 @@ public:
   ///
   /// @param transf is the relative transform for the alingment
   void
-  setBaseTransform(Transform3D* transf = 0);
+  setBaseTransform(const Transform3D* transf = nullptr);
 
   /// Alignment methods: realign  / default argument to base transform
   ///
   /// @param transf is the relative transform for the alingment
   void
-  realign(Transform3D* transf = 0);
+  realign(const Transform3D* transf = nullptr);
 
 protected:
   /// Default Constructor
@@ -161,7 +159,7 @@ private:
   TrackingVolumePtr     m_trkVolume;
   LayerPtr              m_layerRepresentation;
   std::vector<LayerPtr> m_multilayerRepresentation;
-  Transform3D*          m_baseTransform;
+  const Transform3D*    m_baseTransform;
   std::vector<std::pair<const Volume*, float>>* m_constituents;
 };
 

@@ -67,7 +67,7 @@ public:
   /// @param position is the position for which the cell is requested
   ///
   /// @return is a cell with cell ids
-  virtual const DigitizationCell
+  virtual DigitizationCell
   cell(const Vector3D& position) const = 0;
 
   /// Get the digitization cell fropm a 2D position
@@ -76,7 +76,7 @@ public:
   /// @param position is the position for which the cell is requested
   ///
   /// @return is a cell with cell ids
-  virtual const DigitizationCell
+  virtual DigitizationCell
   cell(const Vector2D& position) const = 0;
 
   /// Calculate the cell Position from the Id
@@ -84,7 +84,7 @@ public:
   /// @param cId is the digitization cell
   ///
   /// @return the center position of the associated cell
-  virtual const Vector2D
+  virtual Vector2D
   cellPosition(const DigitizationCell& cId) const = 0;
 
   /// Fill the associated digitsation cell from the start and end position in 3D
@@ -97,7 +97,7 @@ public:
   /// @param lorentzAngle is the lorentz angle measured from local z towards x
   ///
   /// @return is a fully calculated digitzation step
-  virtual const DigitizationStep
+  virtual DigitizationStep
   digitizationStep(const Vector3D& start,
                    const Vector3D& end,
                    double          halfThickness,

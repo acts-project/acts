@@ -16,7 +16,7 @@ bplConfig.centralLayerRadii       = std::vector<double>(1, 19.);
 bplConfig.centralLayerHalflengthZ = std::vector<double>(1, 3000.);
 bplConfig.centralLayerThickness   = std::vector<double>(1, 0.8);
 bplConfig.centralLayerMaterial = {Material(352.8, 407., 9.012, 4., 1.848e-3)};
-auto beamPipeBuilder           = std::make_shared<PassiveLayerBuilder>(
+auto beamPipeBuilder              = std::make_shared<const PassiveLayerBuilder>(
     bplConfig,
     getDefaultLogger("BeamPipeLayerBuilder", layerLLevel));
 // create the volume for the beam pipe
@@ -27,7 +27,7 @@ bpvConfig.layerBuilder         = beamPipeBuilder;
 bpvConfig.layerEnvelopeR       = {1. * Acts::units::_mm, 1. * Acts::units::_mm};
 bpvConfig.buildToRadiusZero    = true;
 bpvConfig.volumeSignature      = 0;
-auto beamPipeVolumeBuilder     = std::make_shared<CylinderVolumeBuilder>(
+auto beamPipeVolumeBuilder     = std::make_shared<const CylinderVolumeBuilder>(
     bpvConfig,
     getDefaultLogger("BeamPipeVolumeBuilder", volumeLLevel));
 // add to the list of builders
@@ -163,7 +163,7 @@ for (size_t id = 0; id < plbConfig.posnegLayerPositionsZ.size(); ++id) {
 plbConfig.posnegModulePositions = plbPosnegModulePositions;
 
 // define the builder
-auto pixelLayerBuilder = std::make_shared<GenericLayerBuilder>(
+auto pixelLayerBuilder = std::make_shared<const GenericLayerBuilder>(
     plbConfig,
     getDefaultLogger("PixelLayerBuilder", layerLLevel));
 //-------------------------------------------------------------------------------------
@@ -175,7 +175,7 @@ pvbConfig.buildToRadiusZero    = false;
 pvbConfig.layerEnvelopeR       = {1. * Acts::units::_mm, 5. * Acts::units::_mm};
 pvbConfig.layerBuilder         = pixelLayerBuilder;
 pvbConfig.volumeSignature      = 0;
-auto pixelVolumeBuilder        = std::make_shared<CylinderVolumeBuilder>(
+auto pixelVolumeBuilder        = std::make_shared<const CylinderVolumeBuilder>(
     pvbConfig,
     getDefaultLogger("PixelVolumeBuilder", volumeLLevel));
 // add to the list of builders
@@ -191,7 +191,7 @@ pstConfig.centralLayerRadii       = std::vector<double>(1, 200.);
 pstConfig.centralLayerHalflengthZ = std::vector<double>(1, 2800.);
 pstConfig.centralLayerThickness   = std::vector<double>(1, 1.8);
 pstConfig.centralLayerMaterial = {Material(352.8, 407., 9.012, 4., 1.848e-3)};
-auto pstBuilder                = std::make_shared<PassiveLayerBuilder>(
+auto pstBuilder                   = std::make_shared<const PassiveLayerBuilder>(
     pstConfig,
     getDefaultLogger("PSTBuilder", layerLLevel));
 // create the volume for the beam pipe
@@ -201,7 +201,7 @@ pstvolConfig.volumeName           = "PST";
 pstvolConfig.buildToRadiusZero    = false;
 pstvolConfig.layerBuilder         = pstBuilder;
 pstvolConfig.volumeSignature      = 0;
-auto pstVolumeBuilder             = std::make_shared<CylinderVolumeBuilder>(
+auto pstVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
     pstvolConfig,
     getDefaultLogger("PSTVolumeBuilder", volumeLLevel));
 // add to the detector builds
@@ -334,7 +334,7 @@ for (size_t id = 0; id < sslbConfig.posnegLayerPositionsZ.size(); ++id) {
 sslbConfig.posnegModulePositions = sslbPosnegModulePositions;
 
 // define the builder
-auto sstripLayerBuilder = std::make_shared<GenericLayerBuilder>(
+auto sstripLayerBuilder = std::make_shared<const GenericLayerBuilder>(
     sslbConfig,
     getDefaultLogger("SStripLayerBuilder", layerLLevel));
 //-------------------------------------------------------------------------------------
@@ -345,7 +345,7 @@ ssvbConfig.volumeName           = "SStrip";
 ssvbConfig.buildToRadiusZero    = false;
 ssvbConfig.layerBuilder         = sstripLayerBuilder;
 ssvbConfig.volumeSignature      = 0;
-auto sstripVolumeBuilder        = std::make_shared<CylinderVolumeBuilder>(
+auto sstripVolumeBuilder        = std::make_shared<const CylinderVolumeBuilder>(
     ssvbConfig,
     getDefaultLogger("SStripVolumeBuilder", volumeLLevel));
 
@@ -474,7 +474,7 @@ for (size_t id = 0; id < lslbConfig.posnegLayerPositionsZ.size(); ++id) {
 lslbConfig.posnegModulePositions = lssbPosnegModulePositions;
 
 // define the builder
-auto lstripLayerBuilder = std::make_shared<GenericLayerBuilder>(
+auto lstripLayerBuilder = std::make_shared<const GenericLayerBuilder>(
     lslbConfig,
     getDefaultLogger("LStripLayerBuilder", layerLLevel));
 //-------------------------------------------------------------------------------------
@@ -485,7 +485,7 @@ lsvbConfig.volumeName           = "LStrip";
 lsvbConfig.buildToRadiusZero    = false;
 lsvbConfig.layerBuilder         = lstripLayerBuilder;
 lsvbConfig.volumeSignature      = 0;
-auto lstripVolumeBuilder        = std::make_shared<CylinderVolumeBuilder>(
+auto lstripVolumeBuilder        = std::make_shared<const CylinderVolumeBuilder>(
     lsvbConfig,
     getDefaultLogger("LStripVolumeBuilder", volumeLLevel));
 // add to the list of builders

@@ -44,7 +44,7 @@ public:
   ///
   /// @return is a shared pointer to a layer
   static MutableLayerPtr
-  create(std::shared_ptr<Transform3D>        transform,
+  create(std::shared_ptr<const Transform3D>  transform,
          std::shared_ptr<const ConeBounds>   cbounds,
          std::unique_ptr<SurfaceArray>       surfaceArray,
          double                              thickness = 0.,
@@ -115,7 +115,7 @@ protected:
   /// @param laytyp is the layer type
   ///
   /// @todo chage od and ad to unique_ptr
-  ConeLayer(std::shared_ptr<Transform3D>        transform,
+  ConeLayer(std::shared_ptr<const Transform3D>  transform,
             std::shared_ptr<const ConeBounds>   cbounds,
             std::unique_ptr<SurfaceArray>       surfaceArray,
             double                              thickness = 0.,

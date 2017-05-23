@@ -34,24 +34,27 @@ public:
   /// passing ownership
   ///
   /// @param aSurfaces are the approach surfaces
-  GenericApproachDescriptor(const std::vector<T*>& aSurfaces)
+  GenericApproachDescriptor(const std::vector<const T*>& aSurfaces)
     : ApproachDescriptor(), m_surfaces(), m_surfacesCache(aSurfaces)
   {
     // create the surface container with memory control
-    for (auto& sf : (aSurfaces)) m_surfaces.push_back(std::shared_ptr<T>(sf));
+    for (const auto& sf : aSurfaces) {
+      m_surfaces.push_back(std::shared_ptr<const T>(sf));
+    }
   }
 
   /// A generic approach descriptor with shared surfaces to test
   /// can not be sed with Acts::Surfaces obejcts
   ///
   /// @param aSurfaces are the approach surfaces
-  GenericApproachDescriptor(std::vector<std::shared_ptr<T>> aSurfaces)
+  GenericApproachDescriptor(std::vector<std::shared_ptr<const T>> aSurfaces)
     : ApproachDescriptor(), m_surfaces(aSurfaces), m_surfacesCache()
   {
     m_surfacesCache.reserve(m_surfaces.size());
     // cache the surfaces
-    for (auto& sf : (aSurfaces))
+    for (const auto& sf : aSurfaces) {
       m_surfacesCache.push_back(&(sf->surfaceRepresentation()));
+    }
   }
 
   /// A generic approach descriptor with n surfaces to test
@@ -86,7 +89,7 @@ public:
 
 private:
   /// approach surfaces with ownership control
-  std::vector<std::shared_ptr<T>> m_surfaces;
+  std::vector<std::shared_ptr<const T>> m_surfaces;
   /// the surface container cache
   std::vector<const Surface*> m_surfacesCache;
 };

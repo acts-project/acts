@@ -164,19 +164,23 @@ Acts::GenericLayerBuilder::constructLayers()
         moduleRotation.col(1) = moduleLocalY;
         moduleRotation.col(2) = moduleLocalZ;
         // get the moduleTransform
-        std::shared_ptr<Transform3D> moduleTransform(new Transform3D(
+        std::shared_ptr<Transform3D> mutableModuleTransform(new Transform3D(
             getTransformFromRotTransl(moduleRotation, moduleCenter)));
         // stereo angle if necessary
         if (m_cfg.centralModuleFrontsideStereo.size()
             && m_cfg.centralModuleFrontsideStereo.at(icl) != 0.) {
           // twist by the stereo angle
           double stereo = m_cfg.centralModuleFrontsideStereo.at(icl);
-          (*moduleTransform.get()) *= AngleAxis3D(-stereo, Vector3D::UnitZ());
+          (*mutableModuleTransform.get())
+              *= AngleAxis3D(-stereo, Vector3D::UnitZ());
         }
         // count the modules
         ++imodule;
         Identifier moduleIdentifier
             = Identifier(Identifier::value_type(imodule));
+        // Finalize the transform
+        auto moduleTransform = std::const_pointer_cast<const Transform3D>(
+            mutableModuleTransform);
         // create the module
         DetectorElementBase* module
             = new GenericDetectorElement(moduleIdentifier,
@@ -199,15 +203,18 @@ Acts::GenericLayerBuilder::constructLayers()
           moduleIdentifier = Identifier(Identifier::value_type(imodule));
           moduleCenter     = moduleCenter
               + m_cfg.centralModuleBacksideGap.at(icl) * moduleLocalZ;
-          moduleTransform = std::shared_ptr<Transform3D>(new Transform3D(
+          mutableModuleTransform = std::shared_ptr<Transform3D>(new Transform3D(
               getTransformFromRotTransl(moduleRotation, moduleCenter)));
           // apply the stereo
           if (m_cfg.centralModuleBacksideStereo.size()) {
             // twist by the stereo angle
             double stereoBackSide = m_cfg.centralModuleBacksideStereo.at(icl);
-            (*moduleTransform.get())
+            (*mutableModuleTransform.get())
                 *= AngleAxis3D(-stereoBackSide, Vector3D::UnitZ());
           }
+          // Finalize the transform
+          moduleTransform = std::const_pointer_cast<const Transform3D>(
+              mutableModuleTransform);
           // everything is set for the next module
           DetectorElementBase* bsmodule
               = new GenericDetectorElement(moduleIdentifier,
@@ -380,9 +387,9 @@ Acts::GenericLayerBuilder::constructLayers()
           pModuleRotation.col(1) = moduleLocalY;
           pModuleRotation.col(2) = pModuleLocalZ;
           // the transforms for the two modules
-          std::shared_ptr<Transform3D> nModuleTransform(new Transform3D(
+          std::shared_ptr<const Transform3D> nModuleTransform(new Transform3D(
               getTransformFromRotTransl(nModuleRotation, nModuleCenter)));
-          std::shared_ptr<Transform3D> pModuleTransform(new Transform3D(
+          std::shared_ptr<const Transform3D> pModuleTransform(new Transform3D(
               getTransformFromRotTransl(pModuleRotation, pModuleCenter)));
           // create the modules identifier @todo Idenfier service
           Identifier nModuleIdentifier
@@ -421,20 +428,27 @@ Acts::GenericLayerBuilder::constructLayers()
                 + m_cfg.posnegModuleBacksideGap.at(ipnl).at(ipnR)
                     * pModuleLocalZ;
             // the new transforms
-            nModuleTransform = std::shared_ptr<Transform3D>(new Transform3D(
-                getTransformFromRotTransl(nModuleRotation, nModuleCenter)));
-            pModuleTransform = std::shared_ptr<Transform3D>(new Transform3D(
-                getTransformFromRotTransl(pModuleRotation, pModuleCenter)));
+            auto mutableNModuleTransform
+                = std::shared_ptr<Transform3D>(new Transform3D(
+                    getTransformFromRotTransl(nModuleRotation, nModuleCenter)));
+            auto mutablePModuleTransform
+                = std::shared_ptr<Transform3D>(new Transform3D(
+                    getTransformFromRotTransl(pModuleRotation, pModuleCenter)));
             // apply the stereo
             if (m_cfg.posnegModuleBacksideStereo.size()) {
               // twist by the stereo angle
               double stereoBackSide
                   = m_cfg.posnegModuleBacksideStereo.at(ipnl).at(ipnR);
-              (*nModuleTransform.get())
+              (*mutableNModuleTransform.get())
                   *= AngleAxis3D(-stereoBackSide, Vector3D::UnitZ());
-              (*pModuleTransform.get())
+              (*mutablePModuleTransform.get())
                   *= AngleAxis3D(-stereoBackSide, Vector3D::UnitZ());
             }
+            // Finalize the transform
+            nModuleTransform = std::const_pointer_cast<const Transform3D>(
+                mutableNModuleTransform);
+            pModuleTransform = std::const_pointer_cast<const Transform3D>(
+                mutablePModuleTransform);
             // everything is set for the next module
             GenericDetectorElement* bsnmodule
                 = new GenericDetectorElement(nModuleIdentifier,

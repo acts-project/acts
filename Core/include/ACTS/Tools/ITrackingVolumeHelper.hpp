@@ -67,10 +67,10 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr
-  createTrackingVolume(const LayerVector&           layers,
-                       std::shared_ptr<Material>    matprop,
-                       VolumeBoundsPtr              volBounds,
-                       std::shared_ptr<Transform3D> transform = nullptr,
+  createTrackingVolume(const LayerVector&                 layers,
+                       std::shared_ptr<const Material>    matprop,
+                       VolumeBoundsPtr                    volBounds,
+                       std::shared_ptr<const Transform3D> transform = nullptr,
                        const std::string& volumeName = "UndefinedVolume",
                        BinningType        btype = arbitrary) const = 0;
 
@@ -87,14 +87,14 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr
-  createTrackingVolume(const LayerVector&        layers,
-                       std::shared_ptr<Material> matprop,
-                       double                    loc0Min,
-                       double                    loc0Max,
-                       double                    loc1Min,
-                       double                    loc1Max,
-                       const std::string&        volumeName = "UndefinedVolume",
-                       BinningType               btype = arbitrary) const = 0;
+  createTrackingVolume(const LayerVector&              layers,
+                       std::shared_ptr<const Material> matprop,
+                       double                          loc0Min,
+                       double                          loc0Max,
+                       double                          loc1Min,
+                       double                          loc1Max,
+                       const std::string& volumeName = "UndefinedVolume",
+                       BinningType        btype = arbitrary) const = 0;
 
   /// Create a gap volume from dimensions and
   ///
@@ -107,14 +107,14 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr
-  createGapTrackingVolume(std::shared_ptr<Material> matprop,
-                          double                    loc0Min,
-                          double                    loc0Max,
-                          double                    loc1Min,
-                          double                    loc1Max,
-                          unsigned int              materialLayers,
-                          bool                      cylinder = true,
-                          const std::string&        volumeName
+  createGapTrackingVolume(std::shared_ptr<const Material> matprop,
+                          double                          loc0Min,
+                          double                          loc0Max,
+                          double                          loc1Min,
+                          double                          loc1Max,
+                          unsigned int                    materialLayers,
+                          bool                            cylinder = true,
+                          const std::string&              volumeName
                           = "UndefinedVolume") const = 0;
 
   /// Create a gap volume from dimensions and
@@ -128,13 +128,13 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr
-  createGapTrackingVolume(std::shared_ptr<Material>  matprop,
-                          double                     loc0Min,
-                          double                     loc0Max,
-                          double                     loc1Min,
-                          double                     loc1Max,
-                          const std::vector<double>& layerPositions,
-                          bool                       cylinder = true,
+  createGapTrackingVolume(std::shared_ptr<const Material> matprop,
+                          double                          loc0Min,
+                          double                          loc0Max,
+                          double                          loc1Min,
+                          double                          loc1Max,
+                          const std::vector<double>&      layerPositions,
+                          bool                            cylinder = true,
                           const std::string& volumeName = "UndefinedVolume",
                           BinningType        btype = arbitrary) const = 0;
 

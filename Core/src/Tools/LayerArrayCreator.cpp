@@ -196,8 +196,7 @@ Acts::LayerArrayCreator::createNavigationSurface(const Layer& layer,
   // for everything else than a cylinder it's a copy with shift
   if (layerSurface.type() != Surface::Cylinder) {
     // create a transform that does the shift
-    Transform3D* shift = new Transform3D;
-    (*shift)           = Translation3D(translation);
+    const Transform3D* shift = new Transform3D(Translation3D(translation));
     navigationSurface  = layerSurface.clone(shift);
     // delete the shift again
     delete shift;
@@ -208,9 +207,10 @@ Acts::LayerArrayCreator::createNavigationSurface(const Layer& layer,
     double navigationR = cBounds->r() + offset;
     double halflengthZ = cBounds->halflengthZ();
     // create the new layer surface
-    std::shared_ptr<Transform3D> navTrasform = nullptr;
-    if (!layerSurface.transform().isApprox(s_idTransform))
-      navTrasform = std::make_shared<Transform3D>(layerSurface.transform());
+    std::shared_ptr<const Transform3D> navTrasform
+        = (!layerSurface.transform().isApprox(s_idTransform))
+        ? std::make_shared<const Transform3D>(layerSurface.transform())
+        : nullptr;
     // new navigation layer
     navigationSurface
         = new CylinderSurface(navTrasform, navigationR, halflengthZ);

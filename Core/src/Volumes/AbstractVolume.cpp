@@ -17,7 +17,7 @@
 #include "ACTS/Volumes/VolumeBounds.hpp"
 
 Acts::AbstractVolume::AbstractVolume(
-    std::shared_ptr<Transform3D>        htrans,
+    std::shared_ptr<const Transform3D>  htrans,
     std::shared_ptr<const VolumeBounds> volbounds)
   : Volume(htrans, volbounds)
 {

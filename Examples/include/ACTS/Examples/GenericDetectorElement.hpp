@@ -42,7 +42,7 @@ public:
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
   GenericDetectorElement(const Identifier                       identifier,
-                         std::shared_ptr<Transform3D>           transform,
+                         std::shared_ptr<const Transform3D>     transform,
                          std::shared_ptr<const PlanarBounds>    pBounds,
                          double                                 thickness,
                          std::shared_ptr<const SurfaceMaterial> material
@@ -59,7 +59,7 @@ public:
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
   GenericDetectorElement(const Identifier                       identifier,
-                         std::shared_ptr<Transform3D>           transform,
+                         std::shared_ptr<const Transform3D>     transform,
                          std::shared_ptr<const DiscBounds>      dBounds,
                          double                                 thickness,
                          std::shared_ptr<const SurfaceMaterial> material
@@ -111,7 +111,7 @@ private:
   /// identifier
   Identifier m_elementIdentifier;
   /// the transform for positioning in 3D space
-  std::shared_ptr<Transform3D> m_elementTransform;
+  std::shared_ptr<const Transform3D> m_elementTransform;
   /// the surface represented by it
   std::shared_ptr<const Surface> m_elementSurface;
 

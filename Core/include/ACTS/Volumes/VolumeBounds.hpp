@@ -71,7 +71,7 @@ public:
   ///
   /// @return a vector of surfaces bounding this volume
   virtual const std::vector<const Surface*>
-  decomposeToSurfaces(std::shared_ptr<Transform3D> transform) const = 0;
+  decomposeToSurfaces(std::shared_ptr<const Transform3D> transform) const = 0;
 
   /// Binning offset - overloaded for some R-binning types
   ///

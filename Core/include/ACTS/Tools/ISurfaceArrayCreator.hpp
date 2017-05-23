@@ -57,7 +57,7 @@ public:
                          double                             halfZ,
                          size_t                             binsPhi,
                          size_t                             binsZ,
-                         std::shared_ptr<Transform3D>       transform
+                         std::shared_ptr<const Transform3D> transform
                          = nullptr) const = 0;
 
   /// SurfaceArrayCreator interface method
@@ -78,7 +78,7 @@ public:
   surfaceArrayOnCylinder(const std::vector<const Acts::Surface*>& surfaces,
                          Acts::BinningType bTypePhi = equidistant,
                          Acts::BinningType bTypeZ   = equidistant,
-                         std::shared_ptr<Acts::Transform3D> transform
+                         std::shared_ptr<const Transform3D> transform
                          = nullptr) const = 0;
 
   /// SurfaceArrayCreator interface method
@@ -106,7 +106,7 @@ public:
                      double                             maxPhi,
                      size_t                             binsR,
                      size_t                             binsPhi,
-                     std::shared_ptr<Transform3D>       transform
+                     std::shared_ptr<const Transform3D> transform
                      = nullptr) const = 0;
 
   /// SurfaceArrayCreator interface method
@@ -124,10 +124,10 @@ public:
   ///
   /// @return a unique pointer a new SurfaceArray
   virtual std::unique_ptr<Acts::SurfaceArray>
-  surfaceArrayOnDisc(const std::vector<const Acts::Surface*>& surfaces,
-                     Acts::BinningType                        bTypeR,
-                     Acts::BinningType                        bTypePhi,
-                     std::shared_ptr<Acts::Transform3D>       transform
+  surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
+                     Acts::BinningType                  bTypeR,
+                     Acts::BinningType                  bTypePhi,
+                     std::shared_ptr<const Transform3D> transform
                      = nullptr) const = 0;
 
   /// SurfaceArrayCreator interface method
@@ -149,7 +149,7 @@ public:
                       double                             halflengthY,
                       size_t                             binsX,
                       size_t                             binsY,
-                      std::shared_ptr<Transform3D>       transform
+                      std::shared_ptr<const Transform3D> transform
                       = nullptr) const = 0;
 };
 

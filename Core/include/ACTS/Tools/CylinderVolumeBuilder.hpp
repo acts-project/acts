@@ -207,17 +207,17 @@ public:
   struct Config
   {
     /// the trackign volume helper for construction
-    std::shared_ptr<ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
+    std::shared_ptr<const ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
     /// the string based indenfication
     std::string volumeName = "";
     /// The dimensions of the manually created world
     std::vector<double> volumeDimension = {};
     /// the world material
-    std::shared_ptr<Material> volumeMaterial = nullptr;
+    std::shared_ptr<const Material> volumeMaterial = nullptr;
     /// build the volume to the beam line
     bool buildToRadiusZero = false;
     /// needed to build layers within the volume if no SubVolumeConfig is given
-    std::shared_ptr<ILayerBuilder> layerBuilder = nullptr;
+    std::shared_ptr<const ILayerBuilder> layerBuilder = nullptr;
     /// the envelope covering the potential layers rMin, rMax if no
     /// SubVolumeConfig is given
     std::pair<double, double> layerEnvelopeR

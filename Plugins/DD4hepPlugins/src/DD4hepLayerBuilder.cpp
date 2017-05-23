@@ -175,15 +175,17 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
         zMin = innerPos.z();
         zMax = outerPos.z();
 
-        Acts::DiscSurface* innerBoundary = new Acts::DiscSurface(
-            std::make_shared<Transform3D>(transform->rotation(), innerPos),
-            rMin,
-            rMax);
+        Acts::DiscSurface* innerBoundary
+            = new Acts::DiscSurface(std::make_shared<const Transform3D>(
+                                        transform->rotation(), innerPos),
+                                    rMin,
+                                    rMax);
 
-        Acts::DiscSurface* outerBoundary = new Acts::DiscSurface(
-            std::make_shared<Transform3D>(transform->rotation(), outerPos),
-            rMin,
-            rMax);
+        Acts::DiscSurface* outerBoundary
+            = new Acts::DiscSurface(std::make_shared<const Transform3D>(
+                                        transform->rotation(), outerPos),
+                                    rMin,
+                                    rMax);
 
         Acts::DiscSurface* centralSurface
             = new Acts::DiscSurface(transform, rMin, rMax);
@@ -204,8 +206,8 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
         aSurfaces.push_back(centralSurface);
         // create an ApproachDescriptor with standard surfaces - these
         // will be deleted by the approach descriptor
-        approachDescriptor = std::
-            make_unique<Acts::GenericApproachDescriptor<const Acts::Surface>>(
+        approachDescriptor
+            = std::make_unique<Acts::GenericApproachDescriptor<Acts::Surface>>(
                 aSurfaces);
       }
 
@@ -356,8 +358,8 @@ Acts::DD4hepLayerBuilder::centralLayers() const
         aSurfaces.push_back(outerBoundary);
         // create an ApproachDescriptor with standard surfaces - these
         // will be deleted by the approach descriptor
-        approachDescriptor = std::
-            make_unique<Acts::GenericApproachDescriptor<const Acts::Surface>>(
+        approachDescriptor
+            = std::make_unique<Acts::GenericApproachDescriptor<Acts::Surface>>(
                 aSurfaces);
       }
 
@@ -511,15 +513,17 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
         zMin = innerPos.z();
         zMax = outerPos.z();
 
-        Acts::DiscSurface* innerBoundary = new Acts::DiscSurface(
-            std::make_shared<Transform3D>(transform->rotation(), innerPos),
-            rMin,
-            rMax);
+        Acts::DiscSurface* innerBoundary
+            = new Acts::DiscSurface(std::make_shared<const Transform3D>(
+                                        transform->rotation(), innerPos),
+                                    rMin,
+                                    rMax);
 
-        Acts::DiscSurface* outerBoundary = new Acts::DiscSurface(
-            std::make_shared<Transform3D>(transform->rotation(), outerPos),
-            rMin,
-            rMax);
+        Acts::DiscSurface* outerBoundary
+            = new Acts::DiscSurface(std::make_shared<const Transform3D>(
+                                        transform->rotation(), outerPos),
+                                    rMin,
+                                    rMax);
 
         Acts::DiscSurface* centralSurface
             = new Acts::DiscSurface(transform, rMin, rMax);
@@ -539,8 +543,8 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
         aSurfaces.push_back(outerBoundary);
         // create an ApproachDescriptor with standard surfaces - these
         // will be deleted by the approach descriptor
-        approachDescriptor = std::
-            make_unique<Acts::GenericApproachDescriptor<const Acts::Surface>>(
+        approachDescriptor
+            = std::make_unique<Acts::GenericApproachDescriptor<Acts::Surface>>(
                 aSurfaces);
       }
 
@@ -584,13 +588,13 @@ Acts::DD4hepLayerBuilder::collectSensitive(
   }
 }
 
-std::shared_ptr<Acts::Transform3D>
+std::shared_ptr<const Acts::Transform3D>
 Acts::DD4hepLayerBuilder::convertTransform(const TGeoMatrix* tGeoTrans) const
 {
   // get the placement and orientation in respect to its mother
   const Double_t* rotation    = tGeoTrans->GetRotationMatrix();
   const Double_t* translation = tGeoTrans->GetTranslation();
-  auto            transform   = std::make_shared<Acts::Transform3D>(
+  auto            transform   = std::make_shared<const Transform3D>(
       Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
       Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
       Acts::Vector3D(rotation[2], rotation[5], rotation[8]),

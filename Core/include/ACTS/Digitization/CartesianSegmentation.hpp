@@ -60,7 +60,7 @@ public:
   /// @note if both RectangleBounds and BinUtility are provided, no check is
   /// done
   /// for consitency
-  CartesianSegmentation(std::shared_ptr<BinUtility>         bUtility,
+  CartesianSegmentation(std::shared_ptr<const BinUtility>   bUtility,
                         std::shared_ptr<const PlanarBounds> rBounds = nullptr);
 
   /// Virtual Destructor
@@ -79,22 +79,22 @@ public:
                              double lorentzAngle = 0.) const final override;
 
   /// @copydoc Segmentation::cell
-  const DigitizationCell
+  DigitizationCell
   cell(const Vector3D& position) const final override;
 
   /// @copydoc Segmentation::cell
-  const DigitizationCell
+  DigitizationCell
   cell(const Vector2D& position) const final override;
 
   /// @copydoc Segmentation::cellPosition
-  const Vector2D
+  Vector2D
   cellPosition(const DigitizationCell& cId) const final override;
 
   /// Fill the associated digitsation cell from this start and end position
   /// correct for lorentz effect if needed
   ///
   /// @copydoc Segmentation::digitizationStep
-  const DigitizationStep
+  DigitizationStep
   digitizationStep(const Vector3D& start,
                    const Vector3D& end,
                    double          halfThickness,
@@ -113,11 +113,11 @@ public:
 
 private:
   template <class T>
-  const DigitizationCell
+  DigitizationCell
   cellT(const T& position) const;
 
   std::shared_ptr<const PlanarBounds> m_activeBounds;  /// active area size
-  std::shared_ptr<BinUtility>         m_binUtility;    /// bin Utility
+  std::shared_ptr<const BinUtility>   m_binUtility;    /// bin Utility
 };
 
 inline const PlanarBounds&
@@ -133,20 +133,20 @@ CartesianSegmentation::binUtility() const
 }
 
 template <class T>
-const DigitizationCell
+DigitizationCell
 CartesianSegmentation::cellT(const T& position) const
 {
   return DigitizationCell(m_binUtility->bin(position, 0),
                           m_binUtility->bin(position, 1));
 }
 
-inline const DigitizationCell
+inline DigitizationCell
 CartesianSegmentation::cell(const Vector3D& position) const
 {
   return cellT<Vector3D>(position);
 }
 
-inline const DigitizationCell
+inline DigitizationCell
 CartesianSegmentation::cell(const Vector2D& position) const
 {
   return cellT<Vector2D>(position);

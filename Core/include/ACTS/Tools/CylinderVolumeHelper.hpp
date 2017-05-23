@@ -52,10 +52,10 @@ public:
   struct Config
   {
     /// a tool for coherent LayerArray creation
-    std::shared_ptr<ILayerArrayCreator> layerArrayCreator = nullptr;
+    std::shared_ptr<const ILayerArrayCreator> layerArrayCreator = nullptr;
     /// Helper Tool to create TrackingVolume
-    std::shared_ptr<ITrackingVolumeArrayCreator> trackingVolumeArrayCreator
-        = nullptr;
+    std::shared_ptr<const ITrackingVolumeArrayCreator>
+        trackingVolumeArrayCreator = nullptr;
     /// thickness of passive layers
     double passiveLayerThickness = 1;
     /// bins in phi for the passive layer
@@ -90,10 +90,10 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
-  createTrackingVolume(const LayerVector&           layers,
-                       std::shared_ptr<Material>    matprop,
-                       VolumeBoundsPtr              volBounds,
-                       std::shared_ptr<Transform3D> transform = nullptr,
+  createTrackingVolume(const LayerVector&                 layers,
+                       std::shared_ptr<const Material>    matprop,
+                       VolumeBoundsPtr                    volBounds,
+                       std::shared_ptr<const Transform3D> transform = nullptr,
                        const std::string& volumeName = "UndefinedVolume",
                        BinningType        btype = arbitrary) const override;
 
@@ -110,14 +110,14 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
-  createTrackingVolume(const LayerVector&        layers,
-                       std::shared_ptr<Material> matprop,
-                       double                    loc0Min,
-                       double                    loc0Max,
-                       double                    loc1Min,
-                       double                    loc1Max,
-                       const std::string&        volumeName = "UndefinedVolume",
-                       BinningType btype = arbitrary) const override;
+  createTrackingVolume(const LayerVector&              layers,
+                       std::shared_ptr<const Material> matprop,
+                       double                          loc0Min,
+                       double                          loc0Max,
+                       double                          loc1Min,
+                       double                          loc1Max,
+                       const std::string& volumeName = "UndefinedVolume",
+                       BinningType        btype = arbitrary) const override;
 
   /// Create a gap volume from dimensions and
   ///
@@ -130,14 +130,14 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
-  createGapTrackingVolume(std::shared_ptr<Material> matprop,
-                          double                    loc0Min,
-                          double                    loc0Max,
-                          double                    loc1Min,
-                          double                    loc1Max,
-                          unsigned int              materialLayers,
-                          bool                      cylinder = true,
-                          const std::string&        volumeName
+  createGapTrackingVolume(std::shared_ptr<const Material> matprop,
+                          double                          loc0Min,
+                          double                          loc0Max,
+                          double                          loc1Min,
+                          double                          loc1Max,
+                          unsigned int                    materialLayers,
+                          bool                            cylinder = true,
+                          const std::string&              volumeName
                           = "UndefinedVolume") const override;
 
   /// Create a gap volume from dimensions and
@@ -151,13 +151,13 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
-  createGapTrackingVolume(std::shared_ptr<Material>  matprop,
-                          double                     loc0Min,
-                          double                     loc0Max,
-                          double                     loc1Min,
-                          double                     loc1Max,
-                          const std::vector<double>& layerPositions,
-                          bool                       cylinder = true,
+  createGapTrackingVolume(std::shared_ptr<const Material> matprop,
+                          double                          loc0Min,
+                          double                          loc0Max,
+                          double                          loc1Min,
+                          double                          loc1Max,
+                          const std::vector<double>&      layerPositions,
+                          bool                            cylinder = true,
                           const std::string& volumeName = "UndefinedVolume",
                           BinningType        btype = arbitrary) const override;
 
@@ -216,14 +216,14 @@ private:
   /// @param bValue the binning value in which the binning works
   /// @param bType is the type of binning: equidistant, arbitrary
   bool
-  estimateAndCheckDimension(const LayerVector&            layers,
-                            const CylinderVolumeBounds*&  cylBounds,
-                            std::shared_ptr<Transform3D>& transform,
-                            double&                       rMinClean,
-                            double&                       rMaxClean,
-                            double&                       zMinClean,
-                            double&                       zMaxClean,
-                            BinningValue&                 bValue,
+  estimateAndCheckDimension(const LayerVector&                  layers,
+                            const CylinderVolumeBounds*&        cylBounds,
+                            std::shared_ptr<const Transform3D>& transform,
+                            double&                             rMinClean,
+                            double&                             rMaxClean,
+                            double&                             zMinClean,
+                            double&                             zMaxClean,
+                            BinningValue&                       bValue,
                             BinningType bType = arbitrary) const;
 
   /// Private method - interglue all volumes contained by a TrackingVolume

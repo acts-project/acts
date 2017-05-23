@@ -41,9 +41,9 @@ public:
   /// @param htrans is the transform to place to cone in a 3D frame
   /// @param alpha is the opening angle of the cone
   /// @param symmetric indicates if the cones are built to +/1 z
-  ConeSurface(std::shared_ptr<Transform3D> htrans,
-              double                       alpha,
-              bool                         symmetric = false);
+  ConeSurface(std::shared_ptr<const Transform3D> htrans,
+              double                             alpha,
+              bool                               symmetric = false);
 
   /// Constructor form HepTransform and an opening angle
   ///
@@ -52,18 +52,18 @@ public:
   /// @param locZmin is the z range over which the cone spans
   /// @param locZmax is the z range over which the cone spans
   /// @param halfPhi is the openen angle for cone ssectors
-  ConeSurface(std::shared_ptr<Transform3D> htrans,
-              double                       alpha,
-              double                       locZmin,
-              double                       locZmax,
-              double                       halfPhi = M_PI);
+  ConeSurface(std::shared_ptr<const Transform3D> htrans,
+              double                             alpha,
+              double                             locZmin,
+              double                             locZmax,
+              double                             halfPhi = M_PI);
 
   /// Constructor from HepTransform and ConeBounds
   ///
   /// @param htrans is the transform that places the cone in the global frame
   /// @param cbounds is the boundary class, the bounds must exit
-  ConeSurface(std::shared_ptr<Transform3D>      htrans,
-              std::shared_ptr<const ConeBounds> cbounds);
+  ConeSurface(std::shared_ptr<const Transform3D> htrans,
+              std::shared_ptr<const ConeBounds>  cbounds);
 
   /// Copy constructor
   ///

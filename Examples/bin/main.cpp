@@ -99,35 +99,36 @@ public:
   }
 };
 
-std::shared_ptr<IExtrapolationEngine>
+std::shared_ptr<const IExtrapolationEngine>
 initExtrapolator(const std::shared_ptr<const TrackingGeometry>& geo)
 {
   auto propConfig         = RungeKuttaEngine<>::Config();
-  propConfig.fieldService = std::make_shared<ConstantBField>(0, 0, 0.002);
-  auto propEngine         = std::make_shared<RungeKuttaEngine<>>(propConfig);
+  propConfig.fieldService = std::make_shared<const ConstantBField>(0, 0, 0.002);
+  auto propEngine = std::make_shared<const RungeKuttaEngine<>>(propConfig);
 
   auto matConfig      = MaterialEffectsEngine::Config();
-  auto materialEngine = std::make_shared<MaterialEffectsEngine>(matConfig);
+  auto materialEngine
+      = std::make_shared<const MaterialEffectsEngine>(matConfig);
 
   auto navConfig                  = StaticNavigationEngine::Config();
   navConfig.propagationEngine     = propEngine;
   navConfig.materialEffectsEngine = materialEngine;
   navConfig.trackingGeometry      = geo;
-  auto navEngine = std::make_shared<StaticNavigationEngine>(navConfig);
+  auto navEngine = std::make_shared<const StaticNavigationEngine>(navConfig);
 
   auto statConfig                  = StaticEngine::Config();
   statConfig.propagationEngine     = propEngine;
   statConfig.navigationEngine      = navEngine;
   statConfig.materialEffectsEngine = materialEngine;
-  auto statEngine                  = std::make_shared<StaticEngine>(statConfig);
+  auto statEngine = std::make_shared<const StaticEngine>(statConfig);
 
   auto exEngineConfig                 = ExtrapolationEngine::Config();
   exEngineConfig.trackingGeometry     = geo;
   exEngineConfig.propagationEngine    = propEngine;
   exEngineConfig.navigationEngine     = navEngine;
   exEngineConfig.extrapolationEngines = {statEngine};
-  auto exEngine = std::make_shared<ExtrapolationEngine>(exEngineConfig);
-  exEngine->setLogger(
+  auto exEngine = std::make_shared<const ExtrapolationEngine>(
+      exEngineConfig,
       getDefaultLogger("ExtrapolationEngine", Logging::VERBOSE));
 
   return exEngine;

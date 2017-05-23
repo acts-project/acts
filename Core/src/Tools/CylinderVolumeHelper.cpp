@@ -55,9 +55,9 @@ Acts::CylinderVolumeHelper::setLogger(std::unique_ptr<Logger> newLogger)
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createTrackingVolume(
     const LayerVector&                  layers,
-    std::shared_ptr<Material>           matprop,
+    std::shared_ptr<const Material>     matprop,
     std::shared_ptr<const VolumeBounds> volBounds,
-    std::shared_ptr<Transform3D>        transform,
+    std::shared_ptr<const Transform3D>  transform,
     const std::string&                  volumeName,
     BinningType                         bType) const
 {
@@ -150,14 +150,14 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createTrackingVolume(
-    const LayerVector&        layers,
-    std::shared_ptr<Material> matprop,
-    double                    rMin,
-    double                    rMax,
-    double                    zMin,
-    double                    zMax,
-    const std::string&        volumeName,
-    BinningType               bType) const
+    const LayerVector&              layers,
+    std::shared_ptr<const Material> matprop,
+    double                          rMin,
+    double                          rMax,
+    double                          zMin,
+    double                          zMax,
+    const std::string&              volumeName,
+    BinningType                     bType) const
 {
   // that's what is needed
   CylinderVolumeBounds* cBounds = nullptr;
@@ -192,9 +192,9 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
   cBounds = rMin > 0.1 ? new CylinderVolumeBounds(rMin, rMax, halflengthZ)
                        : new CylinderVolumeBounds(rMax, halflengthZ);
   // transform
-  std::shared_ptr<Transform3D> transform
-      = (zPosition != 0) ? std::make_shared<Transform3D>() : 0;
-  if (transform) (*transform) = Translation3D(0., 0., zPosition);
+  std::shared_ptr<const Transform3D> transform = (zPosition != 0)
+      ? std::make_shared<const Transform3D>(Translation3D(0., 0., zPosition))
+      : nullptr;
   // call to the creation method with Bounds & Translation3D
   return createTrackingVolume(
       layers, matprop, VolumeBoundsPtr(cBounds), transform, volumeName, bType);
@@ -202,14 +202,14 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createGapTrackingVolume(
-    std::shared_ptr<Material> matprop,
-    double                    rMin,
-    double                    rMax,
-    double                    zMin,
-    double                    zMax,
-    unsigned int              materialLayers,
-    bool                      cylinder,
-    const std::string&        volumeName) const
+    std::shared_ptr<const Material> matprop,
+    double                          rMin,
+    double                          rMax,
+    double                          zMin,
+    double                          zMax,
+    unsigned int                    materialLayers,
+    bool                            cylinder,
+    const std::string&              volumeName) const
 {
   // screen output
   ACTS_VERBOSE("Create cylindrical gap TrackingVolume '"
@@ -245,15 +245,15 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createGapTrackingVolume(
-    std::shared_ptr<Material>  matprop,
-    double                     rMin,
-    double                     rMax,
-    double                     zMin,
-    double                     zMax,
-    const std::vector<double>& layerPositions,
-    bool                       cylinder,
-    const std::string&         volumeName,
-    BinningType                bType) const
+    std::shared_ptr<const Material> matprop,
+    double                          rMin,
+    double                          rMax,
+    double                          zMin,
+    double                          zMax,
+    const std::vector<double>&      layerPositions,
+    bool                            cylinder,
+    const std::string&              volumeName,
+    BinningType                     bType) const
 {
   // screen output
   ACTS_VERBOSE("Create cylindrical gap TrackingVolume '"
@@ -389,9 +389,9 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
   // estimate the z - position
   double zPos = 0.5 * (zMin + zMax);
   // create the HEP transform from the stuff known so far
-  std::shared_ptr<Transform3D> topVolumeTransform
-      = std::abs(zPos) > 0.1 ? std::make_shared<Transform3D>() : nullptr;
-  if (topVolumeTransform) (*topVolumeTransform) = Translation3D(0., 0., zPos);
+  std::shared_ptr<const Transform3D> topVolumeTransform = (std::abs(zPos) > 0.1)
+      ? std::make_shared<const Transform3D>(Translation3D(0., 0., zPos))
+      : nullptr;
   // create the bounds from the information gathered so far
   CylinderVolumeBounds* topVolumeBounds = std::abs(rMin) > 0.1
       ? new CylinderVolumeBounds(rMin, rMax, 0.5 * std::abs(zMax - zMin))
@@ -435,14 +435,14 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
  * volume */
 bool
 Acts::CylinderVolumeHelper::estimateAndCheckDimension(
-    const LayerVector&            layers,
-    const CylinderVolumeBounds*&  cylinderVolumeBounds,
-    std::shared_ptr<Transform3D>& transform,
-    double&                       rMinClean,
-    double&                       rMaxClean,
-    double&                       zMinClean,
-    double&                       zMaxClean,
-    BinningValue&                 bValue,
+    const LayerVector&                  layers,
+    const CylinderVolumeBounds*&        cylinderVolumeBounds,
+    std::shared_ptr<const Transform3D>& transform,
+    double&                             rMinClean,
+    double&                             rMaxClean,
+    double&                             zMinClean,
+    double&                             zMaxClean,
+    BinningValue&                       bValue,
     BinningType) const
 {
   // some verbose output
@@ -533,11 +533,12 @@ Acts::CylinderVolumeHelper::estimateAndCheckDimension(
     cylinderVolumeBounds
         = new CylinderVolumeBounds(layerRmin, layerRmax, halflengthFromLayer);
     // and the transform
-    transform = concentric ? std::make_shared<Transform3D>() : 0;
-    if (transform) (*transform) = Translation3D(0., 0., zEstFromLayerEnv);
+    transform = concentric ? std::make_shared<const Transform3D>(
+                                 Translation3D(0., 0., zEstFromLayerEnv))
+                           : nullptr;
   } else if (cylinderVolumeBounds && !transform && !concentric) {
-    transform    = std::make_shared<Transform3D>();
-    (*transform) = Translation3D(0., 0., zEstFromLayerEnv);
+    transform = std::make_shared<const Transform3D>(
+        Translation3D(0., 0., zEstFromLayerEnv));
   } else if (transform && !cylinderVolumeBounds) {
     // create the CylinderBounds from parsed layer inputs
     double halflengthFromLayer = 0.5 * std::abs((layerZmax) - (layerZmin));
@@ -883,11 +884,11 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
         = nullptr;
 
     // the transform of the new boundary surface
-    std::shared_ptr<Transform3D> transform = nullptr;
+    std::shared_ptr<const Transform3D> transform = nullptr;
     if (std::abs(zMin + zMax) > 0.1) {
       // it's not a concentric cylinder, so create a transform
-      auto pTransform = std::make_shared<Transform3D>();
-      (*pTransform)   = Translation3D(Vector3D(0., 0., 0.5 * (zMin + zMax)));
+      auto pTransform = std::make_shared<const Transform3D>(
+          Translation3D(Vector3D(0., 0., 0.5 * (zMin + zMax))));
       transform       = pTransform;
     }
     // 2 cases: r-Binning and zBinning
@@ -976,9 +977,9 @@ Acts::CylinderVolumeHelper::createCylinderLayer(double z,
   ACTS_VERBOSE("Creating a CylinderLayer at position " << z << " and radius "
                                                        << r);
   // positioning
-  std::shared_ptr<Transform3D> transform = 0;
-  transform = (std::abs(z) > 0.1) ? std::make_shared<Transform3D>() : 0;
-  if (transform) (*transform) = Translation3D(0., 0., z);
+  std::shared_ptr<const Transform3D> transform = (std::abs(z) > 0.1)
+      ? std::make_shared<const Transform3D>(Translation3D(0., 0., z))
+      : nullptr;
 
   // z-binning
   BinUtility layerBinUtility(
@@ -1024,9 +1025,9 @@ Acts::CylinderVolumeHelper::createDiscLayer(double z,
                                                    << rMax);
 
   // positioning
-  std::shared_ptr<Transform3D> transform
-      = std::abs(z) > 0.1 ? std::make_shared<Transform3D>() : 0;
-  if (transform) (*transform) = Translation3D(0., 0., z);
+  std::shared_ptr<const Transform3D> transform = (std::abs(z) > 0.1)
+      ? std::make_shared<const Transform3D>(Translation3D(0., 0., z))
+      : nullptr;
 
   // R is the primary binning for the material
   BinUtility materialBinUtility(binsR, rMin, rMax, open, binR);

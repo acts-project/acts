@@ -21,14 +21,14 @@
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
-    const std::vector<const Acts::Surface*>& surfaces,
-    double                                   R,
-    double                                   minPhi,
-    double                                   maxPhi,
-    double                                   halfZ,
-    size_t                                   binsPhi,
-    size_t                                   binsZ,
-    std::shared_ptr<Acts::Transform3D>       transform) const
+    const std::vector<const Surface*>& surfaces,
+    double                             R,
+    double                             minPhi,
+    double                             maxPhi,
+    double                             halfZ,
+    size_t                             binsPhi,
+    size_t                             binsZ,
+    std::shared_ptr<const Transform3D> transform) const
 {
   ACTS_DEBUG("Creating a SurfaceArray on a cylinder.");
   // create the 2D bin utility
@@ -78,10 +78,10 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
-    const std::vector<const Acts::Surface*>& surfaces,
-    Acts::BinningType                        bTypePhi,
-    Acts::BinningType                        bTypeZ,
-    std::shared_ptr<Acts::Transform3D>       transform) const
+    const std::vector<const Surface*>& surfaces,
+    BinningType                        bTypePhi,
+    BinningType                        bTypeZ,
+    std::shared_ptr<const Transform3D> transform) const
 {
   ACTS_DEBUG("Creating a SurfaceArray on a cylinder.");
   // create the 2D bin utility
@@ -144,14 +144,14 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
-    const std::vector<const Acts::Surface*>& surfaces,
-    double                                   minR,
-    double                                   maxR,
-    double                                   minPhi,
-    double                                   maxPhi,
-    size_t                                   binsR,
-    size_t                                   binsPhi,
-    std::shared_ptr<Acts::Transform3D>       transform) const
+    const std::vector<const Surface*>& surfaces,
+    double                             minR,
+    double                             maxR,
+    double                             minPhi,
+    double                             maxPhi,
+    size_t                             binsR,
+    size_t                             binsPhi,
+    std::shared_ptr<const Transform3D> transform) const
 {
   ACTS_DEBUG("Creating a SurfaceArray on a disc.");
 
@@ -209,10 +209,10 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
-    const std::vector<const Acts::Surface*>& surfaces,
-    Acts::BinningType                        bTypeR,
-    Acts::BinningType                        bTypePhi,
-    std::shared_ptr<Acts::Transform3D>       transform) const
+    const std::vector<const Surface*>& surfaces,
+    BinningType                        bTypeR,
+    BinningType                        bTypePhi,
+    std::shared_ptr<const Transform3D> transform) const
 {
   ACTS_DEBUG("Creating a SurfaceArray on a disc.");
   Acts::BinUtility arrayUtility;
@@ -276,12 +276,12 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 /// SurfaceArrayCreator interface method - create an array on a plane
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
-    const std::vector<const Acts::Surface*>& /*surfaces*/,
+    const std::vector<const Surface*>& /*surfaces*/,
     double /*halflengthX*/,
     double /*halflengthY*/,
     size_t /*binsX*/,
     size_t /*binsY*/,
-    std::shared_ptr<Acts::Transform3D> /*transform*/) const
+    std::shared_ptr<const Transform3D> /*transform*/) const
 {
   //!< @todo implement - take from ATLAS complex TRT builder
   return nullptr;
@@ -289,9 +289,9 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
 
 Acts::BinUtility
 Acts::SurfaceArrayCreator::createArbitraryBinUtility(
-    const std::vector<const Acts::Surface*>& surfaces,
-    Acts::BinningValue                       bValue,
-    std::shared_ptr<Acts::Transform3D>       transform) const
+    const std::vector<const Surface*>& surfaces,
+    Acts::BinningValue                 bValue,
+    std::shared_ptr<const Transform3D> transform) const
 {
   if (!surfaces.size())
     throw std::logic_error(
@@ -556,9 +556,9 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
 
 Acts::BinUtility
 Acts::SurfaceArrayCreator::createEquidistantBinUtility(
-    const std::vector<const Acts::Surface*>& surfaces,
-    Acts::BinningValue                       bValue,
-    std::shared_ptr<Acts::Transform3D>       transform) const
+    const std::vector<const Surface*>& surfaces,
+    BinningValue                       bValue,
+    std::shared_ptr<const Transform3D> transform) const
 {
   if (!surfaces.size())
     throw std::logic_error(
@@ -738,13 +738,13 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
 
 Acts::BinUtility
 Acts::SurfaceArrayCreator::createBinUtility(
-    const std::vector<const Acts::Surface*>& surfaces,
-    Acts::BinningValue                       bValue,
-    Acts::BinningType                        bType,
-    size_t                                   bins,
-    double                                   min,
-    double                                   max,
-    std::shared_ptr<Acts::Transform3D>       transform) const
+    const std::vector<const Surface*>& surfaces,
+    BinningValue                       bValue,
+    BinningType                        bType,
+    size_t                             bins,
+    double                             min,
+    double                             max,
+    std::shared_ptr<const Transform3D> transform) const
 {
   // check first
   if (surfaces.empty())

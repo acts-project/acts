@@ -24,32 +24,33 @@ Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
 {
 }
 
-Acts::CylinderSurface::CylinderSurface(const CylinderSurface&   other,
-                                       const Acts::Transform3D& transf)
+Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other,
+                                       const Transform3D&     transf)
   : Surface(other, transf), m_bounds(other.m_bounds)
 {
 }
 
 Acts::CylinderSurface::CylinderSurface(
-    std::shared_ptr<Acts::Transform3D> htrans,
+    std::shared_ptr<const Transform3D> htrans,
     double                             radius,
     double                             hlength)
-  : Surface(htrans), m_bounds(std::make_shared<CylinderBounds>(radius, hlength))
+  : Surface(htrans)
+  , m_bounds(std::make_shared<const CylinderBounds>(radius, hlength))
 {
 }
 
 Acts::CylinderSurface::CylinderSurface(
-    std::shared_ptr<Acts::Transform3D> htrans,
+    std::shared_ptr<const Transform3D> htrans,
     double                             radius,
     double                             hphi,
     double                             hlength)
   : Surface(htrans)
-  , m_bounds(std::make_shared<CylinderBounds>(radius, hphi, hlength))
+  , m_bounds(std::make_shared<const CylinderBounds>(radius, hphi, hlength))
 {
 }
 
 Acts::CylinderSurface::CylinderSurface(
-    std::shared_ptr<Acts::Transform3D>    htrans,
+    std::shared_ptr<const Transform3D>    htrans,
     std::shared_ptr<const CylinderBounds> cbounds)
   : Surface(htrans), m_bounds(cbounds)
 {

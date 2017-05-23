@@ -40,7 +40,7 @@ public:
   ///
   /// @return shared pointer to a PlaneLayer
   static MutableLayerPtr
-  create(std::shared_ptr<Transform3D>        transform,
+  create(std::shared_ptr<const Transform3D>  transform,
          std::shared_ptr<const PlanarBounds> pbounds,
          std::unique_ptr<SurfaceArray>       surfaceArray = nullptr,
          double                              thickness    = 0.,
@@ -115,7 +115,7 @@ protected:
   /// @param laytyp is the layer type
   ///
   /// @return shared pointer to a PlaneLayer
-  PlaneLayer(std::shared_ptr<Transform3D>         transform,
+  PlaneLayer(std::shared_ptr<const Transform3D>   transform,
              std::shared_ptr<const PlanarBounds>& pbounds,
              std::unique_ptr<SurfaceArray>        surfaceArray = nullptr,
              double                               thickness    = 0.,

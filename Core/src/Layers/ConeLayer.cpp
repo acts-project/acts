@@ -15,7 +15,7 @@
 #include "ACTS/Surfaces/ConeBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
-Acts::ConeLayer::ConeLayer(std::shared_ptr<Transform3D>        transform,
+Acts::ConeLayer::ConeLayer(std::shared_ptr<const Transform3D>  transform,
                            std::shared_ptr<const ConeBounds>   cbounds,
                            std::unique_ptr<SurfaceArray>       surfaceArray,
                            double                              thickness,

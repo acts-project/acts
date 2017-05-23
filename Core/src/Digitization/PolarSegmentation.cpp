@@ -72,22 +72,28 @@ Acts::TrapezoidSegmentation::createSegmentationSurfaces(
                           m_activeBounds->maxHalflengthX(),
                           m_activeBounds->halflengthY()));
   // - they are separated by half a thickness in z
-  auto readoutPlaneTransform
+  auto mutableReadoutPlaneTransform
       = std::make_shared<Transform3D>(Transform3D::Identity());
-  auto counterPlaneTransform
+  auto mutableCounterPlaneTransform
       = std::make_shared<Transform3D>(Transform3D::Identity());
   // readout and counter readout bounds, the bounds of the readout plane are
   // like the active ones
   std::shared_ptr<const PlanarBounds> readoutPlaneBounds = moduleBounds;
   std::shared_ptr<const PlanarBounds> counterPlaneBounds(nullptr);
   // the transform of the readout plane is always centric
-  (*readoutPlaneTransform).translation()
+  (*mutableReadoutPlaneTransform).translation()
       = Vector3D(0., 0., readoutDirection * halfThickness);
   // no lorentz angle and everything is straight-forward
   counterPlaneBounds = moduleBounds;
-  (*counterPlaneTransform).translation()
+  (*mutableCounterPlaneTransform).translation()
       = Vector3D(0., 0., -readoutDirection * halfThickness);
-
+  // - finalize the transforms
+  auto readoutPlaneTransform
+        = std::const_pointer_cast<const Transform3D>(
+              mutableReadoutPlaneTransform);
+  auto counterPlaneTransform
+        = std::const_pointer_cast<const Transform3D>(
+              mutableCounterPlaneTransform);
   // - build the readout & counter readout surfaces
   boundarySurfaces.push_back(std::shared_ptr<const PlaneSurface>(
       new PlaneSurface(readoutPlaneTransform, readoutPlaneBounds)));
@@ -123,7 +129,7 @@ Acts::TrapezoidSegmentation::createSegmentationSurfaces(
     const RotationMatrix3D xRotation
         = xBinRotationMatrix * AngleAxis3D(stereoLocal, Vector3D::UnitY());
     // build the rotation from it
-    auto binTransform = std::make_shared<Transform3D>(
+    auto binTransform = std::make_shared<const Transform3D>(
         getTransformFromRotTransl(xRotation, xPosition));
     // the correct bounds for this
     auto xBinBounds = std::make_shared<const RectangleBounds>(
@@ -157,14 +163,14 @@ Acts::TrapezoidSegmentation::createSegmentationSurfaces(
     double   localPitchX = PitchX(Vector2D(0., binPosY));
     auto     yBinBounds  = std::make_shared<const RectangleBounds>(
         localPitchX * m_binsX * 0.5, halfThickness);
-    auto binTransform = std::make_shared<Transform3D>(
+    auto binTransform = std::make_shared<const Transform3D>(
         getTransformFromRotTransl(yBinRotationMatrix, binSurfaceCenter));
     // these are the boundaries
     if (ibiny == 0 || ibiny == m_binsY)
-      boundarySurfaces.push_back(std::shared_ptr<PlaneSurface>(
+      boundarySurfaces.push_back(std::shared_ptr<const PlaneSurface>(
           new PlaneSurface(binTransform, yBinBounds)));
     else  // these are the bin boundaries
-      segmentationSurfacesY.push_back(std::shared_ptr<PlaneSurface>(
+      segmentationSurfacesY.push_back(std::shared_ptr<const PlaneSurface>(
           new PlaneSurface(binTransform, yBinBounds)));
   }
 }

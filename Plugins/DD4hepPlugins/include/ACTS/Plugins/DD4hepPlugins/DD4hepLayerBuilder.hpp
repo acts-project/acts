@@ -44,7 +44,7 @@ public:
     /// string based identification
     std::string configurationName = "undefined";
     /// layer creator which is internally used to build layers
-    std::shared_ptr<ILayerCreator> layerCreator;
+    std::shared_ptr<const ILayerCreator> layerCreator;
     /// the binning type of the contained surfaces in phi
     /// (equidistant/arbitrary)
     BinningType bTypePhi;
@@ -138,7 +138,7 @@ private:
   // Private helper function to convert the TGeo transformation matrix into a
   // ACTS transformation matrix
   /// @param tGeoTrans TGeo transformation matrix which should be converted
-  std::shared_ptr<Acts::Transform3D>
+  std::shared_ptr<const Acts::Transform3D>
   convertTransform(const TGeoMatrix* tGeoTrans) const;
 };
 

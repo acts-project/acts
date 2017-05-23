@@ -67,12 +67,12 @@ Acts::CuboidVolumeBounds::operator=(const CuboidVolumeBounds& bobo)
 
 const std::vector<const Acts::Surface*>
 Acts::CuboidVolumeBounds::decomposeToSurfaces(
-    std::shared_ptr<Transform3D> transformPtr) const
+    std::shared_ptr<const Transform3D> transformPtr) const
 {
   // the transform - apply when given
   Transform3D transform = (transformPtr == nullptr) ? Transform3D::Identity()
                                                     : (*transformPtr.get());
-  Transform3D* tTransform = nullptr;
+  const Transform3D* tTransform = nullptr;
 
   std::vector<const Surface*> rSurfaces;
   rSurfaces.reserve(6);
@@ -81,13 +81,13 @@ Acts::CuboidVolumeBounds::decomposeToSurfaces(
   tTransform
       = new Transform3D(transform * AngleAxis3D(M_PI, Vector3D(0., 1., 0.))
                         * Translation3D(Vector3D(0., 0., halflengthZ())));
-  rSurfaces.push_back(
-      new PlaneSurface(std::shared_ptr<Transform3D>(tTransform), m_xyBounds));
+  rSurfaces.push_back(new PlaneSurface(
+      std::shared_ptr<const Transform3D>(tTransform), m_xyBounds));
   //   (2) - at positive local z
   tTransform = new Transform3D(
       transform * Translation3D(Vector3D(0., 0., halflengthZ())));
-  rSurfaces.push_back(
-      new PlaneSurface(std::shared_ptr<Transform3D>(tTransform), m_xyBounds));
+  rSurfaces.push_back(new PlaneSurface(
+      std::shared_ptr<const Transform3D>(tTransform), m_xyBounds));
   // face surfaces yz -------------------------------------
   // transmute cyclical
   //   (3) - at negative local x
@@ -96,15 +96,15 @@ Acts::CuboidVolumeBounds::decomposeToSurfaces(
                         * Translation3D(Vector3D(halflengthX(), 0., 0))
                         * AngleAxis3D(0.5 * M_PI, Vector3D(0., 1., 0))
                         * AngleAxis3D(0.5 * M_PI, Vector3D(0., 0., 1.)));
-  rSurfaces.push_back(
-      new PlaneSurface(std::shared_ptr<Transform3D>(tTransform), m_yzBounds));
+  rSurfaces.push_back(new PlaneSurface(
+      std::shared_ptr<const Transform3D>(tTransform), m_yzBounds));
   //   (4) - at positive local x
   tTransform = new Transform3D(transform
                                * Translation3D(Vector3D(halflengthX(), 0., 0.))
                                * AngleAxis3D(0.5 * M_PI, Vector3D(0., 1., 0.))
                                * AngleAxis3D(0.5 * M_PI, Vector3D(0., 0., 1.)));
-  rSurfaces.push_back(
-      new PlaneSurface(std::shared_ptr<Transform3D>(tTransform), m_yzBounds));
+  rSurfaces.push_back(new PlaneSurface(
+      std::shared_ptr<const Transform3D>(tTransform), m_yzBounds));
   // face surfaces zx -------------------------------------
   //   (5) - at negative local y
   tTransform
@@ -112,15 +112,15 @@ Acts::CuboidVolumeBounds::decomposeToSurfaces(
                         * Translation3D(Vector3D(0., halflengthY(), 0.))
                         * AngleAxis3D(-0.5 * M_PI, Vector3D(0., 1., 0.))
                         * AngleAxis3D(-0.5 * M_PI, Vector3D(1., 0., 0.)));
-  rSurfaces.push_back(
-      new PlaneSurface(std::shared_ptr<Transform3D>(tTransform), m_zxBounds));
+  rSurfaces.push_back(new PlaneSurface(
+      std::shared_ptr<const Transform3D>(tTransform), m_zxBounds));
   //   (6) - at positive local y
   tTransform = new Transform3D(
       transform * Translation3D(Vector3D(0., halflengthY(), 0.))
       * AngleAxis3D(-0.5 * M_PI, Vector3D(0., 1., 0.))
       * AngleAxis3D(-0.5 * M_PI, Vector3D(1., 0., 0.)));
-  rSurfaces.push_back(
-      new PlaneSurface(std::shared_ptr<Transform3D>(tTransform), m_zxBounds));
+  rSurfaces.push_back(new PlaneSurface(
+      std::shared_ptr<const Transform3D>(tTransform), m_zxBounds));
   // return the surfaces
   return rSurfaces;
 }

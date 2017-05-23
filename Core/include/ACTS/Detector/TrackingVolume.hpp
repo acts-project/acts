@@ -93,7 +93,7 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   static MutableTrackingVolumePtr
-  create(std::shared_ptr<Transform3D>               htrans,
+  create(std::shared_ptr<const Transform3D>         htrans,
          VolumeBoundsPtr                            volumeBounds,
          std::shared_ptr<const TrackingVolumeArray> containedVolumes = nullptr,
          const std::string&                         volumeName = "undefined")
@@ -116,14 +116,14 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   static MutableTrackingVolumePtr
-  create(std::shared_ptr<Transform3D>      htrans,
-         VolumeBoundsPtr                   volumeBounds,
-         std::shared_ptr<Material>         matprop,
-         std::unique_ptr<const LayerArray> cLayerArray   = nullptr,
-         const LayerVector                 cLayerVector  = {},
-         const TrackingVolumeVector        cVolumeVector = {},
-         const DetachedVolumeVector        dVolumeVector = {},
-         const std::string&                volumeName    = "undefined")
+  create(std::shared_ptr<const Transform3D> htrans,
+         VolumeBoundsPtr                    volumeBounds,
+         std::shared_ptr<const Material>    matprop,
+         std::unique_ptr<const LayerArray>  cLayerArray   = nullptr,
+         const LayerVector                  cLayerVector  = {},
+         const TrackingVolumeVector         cVolumeVector = {},
+         const DetachedVolumeVector         dVolumeVector = {},
+         const std::string&                 volumeName    = "undefined")
   {
     return MutableTrackingVolumePtr(new TrackingVolume(htrans,
                                                        volumeBounds,
@@ -369,7 +369,7 @@ protected:
   /// @param containedVolumes are the static volumes that fill this volume
   /// @param volumeName is a string identifier
   TrackingVolume(
-      std::shared_ptr<Transform3D>                     htrans,
+      std::shared_ptr<const Transform3D>               htrans,
       VolumeBoundsPtr                                  volumeBounds,
       const std::shared_ptr<const TrackingVolumeArray> containedVolumes
       = nullptr,
@@ -386,11 +386,11 @@ protected:
   /// @param cVolumeVector is the confined arbitrary volume vector
   /// @param dVolumeVector is the confined arbeitrary detached volume vector
   /// @param volumeName is a string identifier
-  TrackingVolume(std::shared_ptr<Transform3D>      htrans,
-                 VolumeBoundsPtr                   volumeBounds,
-                 std::shared_ptr<Material>         matprop,
-                 std::unique_ptr<const LayerArray> cLayerArray  = nullptr,
-                 const LayerVector                 cLayerVector = {},
+  TrackingVolume(std::shared_ptr<const Transform3D> htrans,
+                 VolumeBoundsPtr                    volumeBounds,
+                 std::shared_ptr<const Material>    matprop,
+                 std::unique_ptr<const LayerArray>  cLayerArray  = nullptr,
+                 const LayerVector                  cLayerVector = {},
                  std::shared_ptr<const TrackingVolumeArray> cVolumeArray
                  = nullptr,
                  const TrackingVolumeVector cVolumeVector = {},
@@ -448,7 +448,7 @@ private:
       = delete;
 
   /// The Material the TrackingVolume consists of
-  std::shared_ptr<Material> m_material;
+  std::shared_ptr<const Material> m_material;
 
   /// Remember the mother volume
   const TrackingVolume* m_motherVolume;

@@ -45,7 +45,7 @@ Acts::DetachedTrackingVolume::~DetachedTrackingVolume()
 }
 
 void
-Acts::DetachedTrackingVolume::move(Acts::Transform3D&)
+Acts::DetachedTrackingVolume::move(const Acts::Transform3D&)
 {
   //!< @todo implement
   //// move the volume
@@ -60,8 +60,8 @@ Acts::DetachedTrackingVolume::move(Acts::Transform3D&)
 }
 
 std::shared_ptr<const Acts::DetachedTrackingVolume>
-Acts::DetachedTrackingVolume::clone(std::string        name,
-                                    Acts::Transform3D& shift) const
+Acts::DetachedTrackingVolume::clone(std::string              name,
+                                    const Acts::Transform3D& shift) const
 {
   // create the new base tracking volume
   std::shared_ptr<const TrackingVolume> shiftedTrackingVolume
@@ -111,7 +111,7 @@ Acts::DetachedTrackingVolume::geometryType() const
 }
 
 void
-Acts::DetachedTrackingVolume::setBaseTransform(Acts::Transform3D* transf)
+Acts::DetachedTrackingVolume::setBaseTransform(const Acts::Transform3D* transf)
 {
   if (transf)
     m_baseTransform = transf;
@@ -123,7 +123,7 @@ Acts::DetachedTrackingVolume::setBaseTransform(Acts::Transform3D* transf)
 }
 
 void
-Acts::DetachedTrackingVolume::realign(Acts::Transform3D* transf)
+Acts::DetachedTrackingVolume::realign(const Acts::Transform3D* transf)
 {
   if (transf) {
     Acts::Transform3D shift

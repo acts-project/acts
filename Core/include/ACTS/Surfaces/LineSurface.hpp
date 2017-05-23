@@ -42,7 +42,9 @@ public:
   /// frame
   /// @param radius is the straw radius
   /// @param halez is the half length in z
-  LineSurface(std::shared_ptr<Transform3D> htrans, double radius, double halez);
+  LineSurface(std::shared_ptr<const Transform3D> htrans,
+              double                             radius,
+              double                             halez);
 
   /// Constructor from Transform3D and a shared bounds object
   ///
@@ -50,8 +52,8 @@ public:
   /// frame
   /// @param lbounds are teh bounds describing the straw dimensions, can be
   /// optionally nullptr
-  LineSurface(std::shared_ptr<Transform3D>      htrans,
-              std::shared_ptr<const LineBounds> lbounds = nullptr);
+  LineSurface(std::shared_ptr<const Transform3D> htrans,
+              std::shared_ptr<const LineBounds>  lbounds = nullptr);
 
   /// Constructor from DetectorElementBase and Element identifier
   ///

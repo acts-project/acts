@@ -45,13 +45,13 @@ namespace Test {
     // ctor with translation, radius, halfz
     Translation3D translation{0., 1., 2.};
     Transform3D   transform(translation);
-    auto          pTransform = std::make_shared<Transform3D>(translation);
+    auto          pTransform = std::make_shared<const Transform3D>(translation);
     const double  radius{2.0}, halfz{20.};
     BOOST_CHECK(LineSurfaceStub(pTransform, radius, halfz).constructedOk());
     // ctor with nullptr for LineBounds
     BOOST_CHECK(LineSurfaceStub(pTransform).constructedOk());
     // ctor with LineBounds
-    auto pLineBounds = std::make_shared<LineBounds>(10.0);
+    auto pLineBounds = std::make_shared<const LineBounds>(10.0);
     BOOST_CHECK(LineSurfaceStub(pTransform, pLineBounds).constructedOk());
     // ctor with LineBounds, detector element, Identifier
     Identifier         identifier{2};
@@ -76,13 +76,13 @@ namespace Test {
     // binningPosition()
     Translation3D   translation{0., 1., 2.};
     Transform3D     transform(translation);
-    auto            pTransform = std::make_shared<Transform3D>(translation);
+    auto pTransform = std::make_shared<const Transform3D>(translation);
     LineSurfaceStub line(pTransform, 2.0, 20.);
     Vector3D        referencePosition{0., 1., 2.};
     BOOST_TEST(referencePosition == line.binningPosition(binX));
     //
     // bounds()
-    auto              pLineBounds = std::make_shared<LineBounds>(10.0);
+    auto              pLineBounds = std::make_shared<const LineBounds>(10.0);
     LineSurfaceStub   boundedLine(pTransform, pLineBounds);
     const LineBounds& bounds
         = dynamic_cast<const LineBounds&>(boundedLine.bounds());
@@ -159,7 +159,7 @@ namespace Test {
   {
     Translation3D   translation{0., 1., 2.};
     Transform3D     transform(translation);
-    auto            pTransform = std::make_shared<Transform3D>(translation);
+    auto pTransform = std::make_shared<const Transform3D>(translation);
     LineSurfaceStub originalLine(pTransform, 2.0, 20.);
     LineSurfaceStub assignedLine(pTransform, 1.0, 1.0);
     BOOST_TEST(assignedLine != originalLine,

@@ -43,18 +43,19 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
   std::unique_ptr<Acts::TrackingGeometry> trackingGeometry = nullptr;
   // create cylindervolumehelper which can be used by all instances
   // hand over LayerArrayCreator
-  auto layerArrayCreator = std::make_shared<Acts::LayerArrayCreator>(
+  auto layerArrayCreator = std::make_shared<const Acts::LayerArrayCreator>(
       Acts::getDefaultLogger("LayArrayCreator", loggingLevel));
   // tracking volume array creator
   auto trackingVolumeArrayCreator
-      = std::make_shared<Acts::TrackingVolumeArrayCreator>(
+      = std::make_shared<const Acts::TrackingVolumeArrayCreator>(
           Acts::getDefaultLogger("TrkVolArrayCreator", loggingLevel));
   // configure the cylinder volume helper
   Acts::CylinderVolumeHelper::Config cvhConfig;
   cvhConfig.layerArrayCreator          = layerArrayCreator;
   cvhConfig.trackingVolumeArrayCreator = trackingVolumeArrayCreator;
-  auto cylinderVolumeHelper = std::make_shared<Acts::CylinderVolumeHelper>(
-      cvhConfig, Acts::getDefaultLogger("CylVolHelper", loggingLevel));
+  auto cylinderVolumeHelper
+      = std::make_shared<const Acts::CylinderVolumeHelper>(
+          cvhConfig, Acts::getDefaultLogger("CylVolHelper", loggingLevel));
 
   // get the sub detectors of the world detector e.g. beampipe, pixel detector,
   // strip detector
@@ -71,8 +72,8 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
           const DD4hep::Geometry::DetElement& b) { return (a.id() < b.id()); });
 
   // the volume builders of the subdetectors
-  std::list<std::shared_ptr<ITrackingVolumeBuilder>> volumeBuilders;
-  bool                                               beampipe = false;
+  std::list<std::shared_ptr<const ITrackingVolumeBuilder>> volumeBuilders;
+  bool                                                     beampipe = false;
   // loop over the sub detectors
   for (auto& subDetector : subDetectors) {
     Acts::IActsExtension* subDetExtension = nullptr;
@@ -220,12 +221,13 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                                  "construction.");
 
         // configure SurfaceArrayCreator
-        auto surfaceArrayCreator = std::make_shared<Acts::SurfaceArrayCreator>(
-            Acts::getDefaultLogger("SurfaceArrayCreator", loggingLevel));
+        auto surfaceArrayCreator
+            = std::make_shared<const Acts::SurfaceArrayCreator>(
+                Acts::getDefaultLogger("SurfaceArrayCreator", loggingLevel));
         // configure LayerCreator
         Acts::LayerCreator::Config lcConfig;
         lcConfig.surfaceArrayCreator = surfaceArrayCreator;
-        auto layerCreator            = std::make_shared<Acts::LayerCreator>(
+        auto layerCreator = std::make_shared<const Acts::LayerCreator>(
             lcConfig, Acts::getDefaultLogger("LayerCreator", loggingLevel));
         // configure DD4hepLayerBuilder
         Acts::DD4hepLayerBuilder::Config lbConfig;
@@ -237,17 +239,19 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
         lbConfig.bTypePhi          = bTypePhi;
         lbConfig.bTypeR            = bTypeR;
         lbConfig.bTypeZ            = bTypeZ;
-        auto dd4hepLayerBuilder    = std::make_shared<Acts::DD4hepLayerBuilder>(
-            lbConfig,
-            Acts::getDefaultLogger("DD4hepLayerBuilder", loggingLevel));
+        auto dd4hepLayerBuilder
+            = std::make_shared<const Acts::DD4hepLayerBuilder>(
+                lbConfig,
+                Acts::getDefaultLogger("DD4hepLayerBuilder", loggingLevel));
 
         // get the possible material of the surounding volume
         DD4hep::Geometry::Material ddmaterial = subDetector.volume().material();
-        auto volumeMaterial = std::make_shared<Material>(ddmaterial.radLength(),
-                                                         ddmaterial.intLength(),
-                                                         ddmaterial.A(),
-                                                         ddmaterial.Z(),
-                                                         ddmaterial.density());
+        auto                       volumeMaterial
+            = std::make_shared<const Material>(ddmaterial.radLength(),
+                                               ddmaterial.intLength(),
+                                               ddmaterial.A(),
+                                               ddmaterial.Z(),
+                                               ddmaterial.density());
 
         // the configuration object of the volume builder
         Acts::CylinderVolumeBuilder::Config cvbConfig;
@@ -295,7 +299,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
         cvbConfig.volumeMaterial       = volumeMaterial;
         cvbConfig.layerBuilder         = dd4hepLayerBuilder;
         auto cylinderVolumeBuilder
-            = std::make_shared<Acts::CylinderVolumeBuilder>(
+            = std::make_shared<const Acts::CylinderVolumeBuilder>(
                 cvbConfig,
                 Acts::getDefaultLogger("CylinderVolumeBuilder", loggingLevel));
         volumeBuilders.push_back(cylinderVolumeBuilder);
@@ -344,11 +348,12 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
 
       // get the possible material of the surounding volume
       DD4hep::Geometry::Material ddmaterial = subDetector.volume().material();
-      auto volumeMaterial = std::make_shared<Material>(ddmaterial.radLength(),
-                                                       ddmaterial.intLength(),
-                                                       ddmaterial.A(),
-                                                       ddmaterial.Z(),
-                                                       ddmaterial.density());
+      auto                       volumeMaterial
+          = std::make_shared<const Material>(ddmaterial.radLength(),
+                                             ddmaterial.intLength(),
+                                             ddmaterial.A(),
+                                             ddmaterial.Z(),
+                                             ddmaterial.density());
       // the configuration object of the volume builder
       Acts::CylinderVolumeBuilder::Config cvbConfig;
       cvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
@@ -358,7 +363,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
       cvbConfig.volumeMaterial       = volumeMaterial;
       cvbConfig.volumeDimension      = {rMin, rMax, -halfZ, halfZ};
       auto cylinderVolumeBuilder
-          = std::make_shared<Acts::CylinderVolumeBuilder>(
+          = std::make_shared<const Acts::CylinderVolumeBuilder>(
               cvbConfig,
               Acts::getDefaultLogger("CylinderVolumeBuilder", loggingLevel));
       volumeBuilders.push_back(cylinderVolumeBuilder);
@@ -372,12 +377,13 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
       collectLayers(subDetector, centralLayers);
 
       // configure SurfaceArrayCreator
-      auto surfaceArrayCreator = std::make_shared<Acts::SurfaceArrayCreator>(
-          Acts::getDefaultLogger("SurfaceArrayCreator", loggingLevel));
+      auto surfaceArrayCreator
+          = std::make_shared<const Acts::SurfaceArrayCreator>(
+              Acts::getDefaultLogger("SurfaceArrayCreator", loggingLevel));
       // configure LayerCreator
       Acts::LayerCreator::Config lcConfig;
       lcConfig.surfaceArrayCreator = surfaceArrayCreator;
-      auto layerCreator            = std::make_shared<Acts::LayerCreator>(
+      auto layerCreator            = std::make_shared<const Acts::LayerCreator>(
           lcConfig, Acts::getDefaultLogger("LayerCreator", loggingLevel));
       // configure DD4hepLayerBuilder
       Acts::DD4hepLayerBuilder::Config lbConfig;
@@ -386,8 +392,10 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
       lbConfig.centralLayers     = centralLayers;
       lbConfig.bTypePhi          = bTypePhi;
       lbConfig.bTypeZ            = bTypeZ;
-      auto dd4hepLayerBuilder    = std::make_shared<Acts::DD4hepLayerBuilder>(
-          lbConfig, Acts::getDefaultLogger("DD4hepLayerBuilder", loggingLevel));
+      auto dd4hepLayerBuilder
+          = std::make_shared<const Acts::DD4hepLayerBuilder>(
+              lbConfig,
+              Acts::getDefaultLogger("DD4hepLayerBuilder", loggingLevel));
 
       // the configuration object of the volume builder
       Acts::CylinderVolumeBuilder::Config cvbConfig;
@@ -429,11 +437,12 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
 
       // get the possible material
       DD4hep::Geometry::Material ddmaterial = subDetector.volume().material();
-      auto volumeMaterial = std::make_shared<Material>(ddmaterial.radLength(),
-                                                       ddmaterial.intLength(),
-                                                       ddmaterial.A(),
-                                                       ddmaterial.Z(),
-                                                       ddmaterial.density());
+      auto                       volumeMaterial
+          = std::make_shared<const Material>(ddmaterial.radLength(),
+                                             ddmaterial.intLength(),
+                                             ddmaterial.A(),
+                                             ddmaterial.Z(),
+                                             ddmaterial.density());
       cvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
       cvbConfig.volumeSignature      = 0;
       cvbConfig.volumeName           = subDetector.name();
@@ -441,7 +450,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
       cvbConfig.layerBuilder         = dd4hepLayerBuilder;
       cvbConfig.subVolumeConfig      = subVolumeConfig;
       auto cylinderVolumeBuilder
-          = std::make_shared<Acts::CylinderVolumeBuilder>(
+          = std::make_shared<const Acts::CylinderVolumeBuilder>(
               cvbConfig,
               Acts::getDefaultLogger("CylinderVolumeBuilder", loggingLevel));
       volumeBuilders.push_back(cylinderVolumeBuilder);
@@ -468,7 +477,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
   tgbConfig.trackingVolumeHelper   = cylinderVolumeHelper;
   tgbConfig.trackingVolumeBuilders = volumeBuilders;
   auto trackingGeometryBuilder
-      = std::make_shared<Acts::TrackingGeometryBuilder>(tgbConfig);
+      = std::make_shared<const Acts::TrackingGeometryBuilder>(tgbConfig);
   return (trackingGeometryBuilder->trackingGeometry());
 }
 
