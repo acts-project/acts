@@ -333,8 +333,7 @@ namespace detail {
       // get values on grid points
       size_t i = 0;
       for (size_t index : closestIndices) {
-        neighbors.at(i) = at(index);
-        ++i;
+        neighbors.at(i++) = at(index);
       }
 
       return Acts::interpolate(point,
