@@ -156,20 +156,20 @@ public:
     FieldCell<DIM>
     getFieldCell(const Vector3D& position) const
     {
-      size_t      bin        = m_grid.getGlobalBinIndex(m_transform(position));
-      const auto& indices    = m_grid.getLocalBinIndices(bin);
-      const auto& lowerLeft  = m_grid.getLowerLeftBinEdge(indices);
-      const auto& upperRight = m_grid.getUpperRightBinEdge(indices);
+      const auto& gridPosition = m_transform(position);
+      size_t      bin          = m_grid.getGlobalBinIndex(gridPosition);
+      const auto& indices      = m_grid.getLocalBinIndices(bin);
+      const auto& lowerLeft    = m_grid.getLowerLeftBinEdge(indices);
+      const auto& upperRight   = m_grid.getUpperRightBinEdge(indices);
 
       // loop through all corner points
       constexpr size_t nCorners = 1 << DIM;
       std::array<Vector3D, nCorners> neighbors;
-      for (size_t i = 0; i < nCorners; ++i) {
-        auto this_indices = indices;
-        for (size_t dimension = 0; dimension < DIM; ++dimension) {
-          if (i & (1 << dimension)) this_indices.at(dimension) += 1;
-        }
-        neighbors.at(i) = m_grid.at(this_indices);
+      const auto& cornerIndices = m_grid.closestPointsIndices(gridPosition);
+
+      size_t i = 0;
+      for (size_t index : cornerIndices) {
+        neighbors.at(i++) = m_grid.at(index);
       }
 
       return FieldCell<DIM>(
