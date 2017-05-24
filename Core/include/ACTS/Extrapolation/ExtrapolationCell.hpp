@@ -226,7 +226,7 @@ public:
   }
 
 private:
-  static std::vector<std::string> s_ecodeNames;
+  static const std::vector<std::string> s_ecodeNames;
 };
 
 ///  @class ExtrapolationStep

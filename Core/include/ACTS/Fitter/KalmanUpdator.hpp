@@ -34,8 +34,7 @@ public:
   return_type
   operator()(const Meas_t& m, const BoundParameters& pars) const
   {
-    static GainMatrixUpdatorImpl impl(pars);
-    impl.setParameters(pars);
+    GainMatrixUpdatorImpl impl(pars);
 
     return boost::apply_visitor(impl, m);
   }
@@ -47,12 +46,6 @@ private:
     explicit GainMatrixUpdatorImpl(const BoundParameters& pars)
       : m_pParameters(&pars)
     {
-    }
-
-    void
-    setParameters(const BoundParameters& pars)
-    {
-      m_pParameters = &pars;
     }
 
     template <typename Meas_t>

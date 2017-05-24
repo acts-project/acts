@@ -12,7 +12,7 @@
 
 #include "ACTS/Extrapolation/ExtrapolationCell.hpp"
 
-std::vector<std::string> Acts::ExtrapolationCode::s_ecodeNames
+const std::vector<std::string> Acts::ExtrapolationCode::s_ecodeNames
     = {"Unset",
        "InProgress",
        "SuccessDestination",

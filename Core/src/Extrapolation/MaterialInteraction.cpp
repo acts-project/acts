@@ -12,4 +12,4 @@
 #include "ACTS/Extrapolation/detail/MaterialInteraction.hpp"
 
 // static particle masses
-Acts::ParticleMasses Acts::MaterialInteraction::s_particleMasses;
+const Acts::ParticleMasses Acts::MaterialInteraction::s_particleMasses{};

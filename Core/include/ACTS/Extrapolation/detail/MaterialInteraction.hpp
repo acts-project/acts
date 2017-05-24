@@ -96,7 +96,7 @@ public:
   sigmaMS(double dInX0, double p, double beta) const;
 
 private:
-  static ParticleMasses s_particleMasses;  //!< Struct of Particle masses
+  static const ParticleMasses s_particleMasses;  //!< Struct of Particle masses
 };
 
 inline double
