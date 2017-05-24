@@ -36,7 +36,7 @@ namespace detail {
     {
       if (not minimum) bin += area;
       closestPointsIndices.insert(bin);
-      area *= (std::get<0u>(axes).getNBins() + 2);
+      area *= (std::get<N>(axes).getNBins() + 2);
 
       grid_helper_impl<N - 1>::closestPointsIndices(
           bin, area, false, axes, closestPointsIndices);

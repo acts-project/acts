@@ -1034,8 +1034,8 @@ namespace Test {
     typedef Grid<double, EAxis, EAxis, EAxis> Grid3_t;
 
     EAxis   a(0.0, 1.0, 10u);
-    EAxis   b(0.0, 1.0, 10u);
-    EAxis   c(0.0, 1.0, 10u);
+    EAxis   b(0.0, 1.0, 5u);
+    EAxis   c(0.0, 1.0, 3u);
     Grid1_t g1(std::make_tuple(std::move(a)));
     Grid2_t g2(std::make_tuple(std::move(a), std::move(b)));
     Grid3_t g3(std::make_tuple(std::move(a), std::move(b), std::move(c)));
@@ -1046,12 +1046,12 @@ namespace Test {
     BOOST_TEST((g1.closestPointsIndices(Point({0.98})) == bins_t({10, 11})));
 
     // 2D case
-    BOOST_TEST((g2.closestPointsIndices(Point({0.52, 0.08})) == bins_t({73, 74, 85, 86})));
-    BOOST_TEST((g2.closestPointsIndices(Point({0.05, 0.08})) == bins_t({13, 14, 25, 26})));
+    BOOST_TEST((g2.closestPointsIndices(Point({0.52, 0.08})) == bins_t({43, 44, 50, 51})));
+    BOOST_TEST((g2.closestPointsIndices(Point({0.05, 0.08})) == bins_t({8, 9, 15, 16})));
 
     // 3D case
-    BOOST_TEST((g3.closestPointsIndices(Point({0.23, 0.13, 0.61})) == bins_t({463, 464, 475, 476, 607, 608, 619, 620})));
-    BOOST_TEST((g3.closestPointsIndices(Point({0.52, 0.35, 0.71})) == bins_t({920, 921, 932, 933, 1064, 1065, 1076, 1077})));
+    BOOST_TEST((g3.closestPointsIndices(Point({0.23, 0.13, 0.61})) == bins_t({112, 113, 117, 118, 147, 148, 152, 153})));
+    BOOST_TEST((g3.closestPointsIndices(Point({0.52, 0.35, 0.71})) == bins_t({223, 224, 228, 229, 258, 259, 263, 264})));
     // clang-format on
   }
 }  // namespace Test
