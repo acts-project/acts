@@ -14,9 +14,11 @@
 #include <boost/type_erasure/concept_interface.hpp>
 #include <boost/type_erasure/member.hpp>
 #include <boost/type_erasure/relaxed.hpp>
+#include <set>
 
 // clang-format off
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_at), at, 1);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_closestPointsIndices), closestPointsIndices, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_dimension), dimension, 0);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getBinCenter), getBinCenter, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getGlobalBinIndex), getGlobalBinIndex, 1);
@@ -25,6 +27,7 @@ BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getLowerLeftBinEd
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getUpperRightBinEdge), getUpperRightBinEdge, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_interpolate), interpolate, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_isInside), isInside, 1);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_neighborHoodIndices), neighborHoodIndices, 2);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_size), size, 0);
 // clang-format on
 
@@ -45,6 +48,7 @@ namespace concept {
                                      has_at<T& (const Point&)>,
                                      has_at<const T& (size_t), const bte::_self>,
                                      has_at<T& (size_t)>,
+                                     has_closestPointsIndices<std::set<size_t> (const Point&), const bte::_self>,
                                      has_dimension<size_t(), const bte::_self>,
                                      has_getGlobalBinIndex<size_t(const Point&), const bte::_self>,
                                      has_interpolate<T(const Point&), const bte::_self>,
@@ -63,7 +67,8 @@ namespace concept {
                       has_getGlobalBinIndex<size_t(const std::array<size_t, DIM>&), const bte::_self>,
                       has_getLocalBinIndices<std::array<size_t, DIM>(size_t), const bte::_self>,
                       has_getLowerLeftBinEdge<std::array<double, DIM>(const std::array<size_t, DIM>&), const bte::_self>,
-                      has_getUpperRightBinEdge<std::array<double, DIM>(const std::array<size_t, DIM>&), const bte::_self>
+                      has_getUpperRightBinEdge<std::array<double, DIM>(const std::array<size_t, DIM>&), const bte::_self>,
+                      has_neighborHoodIndices<std::set<size_t>(const std::array<size_t, DIM>&, size_t),const bte::_self>
                       >;
     // clang-format off
   }  // namespace any_grid_detail
@@ -103,6 +108,9 @@ namespace concept {
   ///   // index-based look-up
   ///   const T& at(size_t) const;
   ///   T& at(size_t);
+  ///
+  ///   // access global indices of closest grid points
+  ///   std::set<size_t> closestPointsIndices(const Point&) const;
   ///
   ///   // dimensionality of the grid
   ///   size_t dimension() const;
@@ -155,6 +163,10 @@ namespace concept {
   ///   std::array<double, DIM> getBinCenter(const std::array<size_t, DIM>&) const;
   ///   std::array<double, DIM> getLowerLeftBinEdge(const std::array<size_t, DIM>&) const;
   ///   std::array<double, DIM> getUpperRightBinEdge(const std::array<size_t, DIM>&) const;
+  ///
+  ///   // access global bin indices for neighboring bins
+  ///   std::set<size_t> neighborHoodIndices(const std::array<size_t, DIM>&, size_t) const;
+  ///
   /// };
   /// @endcode
   template <typename T, class Point, size_t DIM, typename U = bte::_self>
