@@ -18,7 +18,7 @@
 // constructor
 Acts::MaterialEffectsEngine::MaterialEffectsEngine(
     const MaterialEffectsEngine::Config& meConfig,
-    std::unique_ptr<Logger>              logger)
+    std::unique_ptr<const Logger>        logger)
   : m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(meConfig);
@@ -45,7 +45,7 @@ Acts::MaterialEffectsEngine::setConfiguration(
 }
 
 void
-Acts::MaterialEffectsEngine::setLogger(std::unique_ptr<Logger> newLogger)
+Acts::MaterialEffectsEngine::setLogger(std::unique_ptr<const Logger> newLogger)
 {
   m_logger = std::move(newLogger);
 }
@@ -176,7 +176,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     int sign = int(eCell.materialUpdateMode);
     // a simple cross-check if the parameters are the initial ones
     ActsVectorD<NGlobalPars> uParameters = mParameters.parameters();
-    std::unique_ptr<ActsSymMatrixD<NGlobalPars>> uCovariance
+    std::unique_ptr<ActsSymMatrixD<NGlobalPars>> mutableUCovariance
         = mParameters.covariance()
         ? std::make_unique<ActsSymMatrixD<NGlobalPars>>(
               *mParameters.covariance())
@@ -206,11 +206,11 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
       double sigmaDeltaE = thickness * pathCorrection * sigmaP;
       double sigmaQoverP = sigmaDeltaE / std::pow(beta * p, 2);
       // update the covariance if needed
-      if (uCovariance)
-        (*uCovariance)(eQOP, eQOP) += sign * sigmaQoverP * sigmaQoverP;
+      if (mutableUCovariance)
+        (*mutableUCovariance)(eQOP, eQOP) += sign * sigmaQoverP * sigmaQoverP;
     }
     // (B) - update the covariance if needed
-    if (uCovariance && m_cfg.mscCorrection) {
+    if (mutableUCovariance && m_cfg.mscCorrection) {
       // multiple scattering as function of dInX0
       double sigmaMS = m_interactionFormulae.sigmaMS(
           thicknessInX0 * pathCorrection, p, beta);
@@ -218,8 +218,8 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
       double sigmaDeltaPhiSq   = sigmaMS * sigmaMS / (sinTheta * sinTheta);
       double sigmaDeltaThetaSq = sigmaMS * sigmaMS;
       // add or remove @todo implement check for covariance matrix -> 0
-      (*uCovariance)(ePHI, ePHI) += sign * sigmaDeltaPhiSq;
-      (*uCovariance)(eTHETA, eTHETA) += sign * sigmaDeltaThetaSq;
+      (*mutableUCovariance)(ePHI, ePHI) += sign * sigmaDeltaPhiSq;
+      (*mutableUCovariance)(eTHETA, eTHETA) += sign * sigmaDeltaThetaSq;
     }
     //
     EX_MSG_VERBOSE(eCell.navigationStep,
@@ -227,6 +227,8 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
                    surfaceID,
                    "material update needed create new parameters.");
     // these are newly created
+    std::unique_ptr<const ActsSymMatrixD<NGlobalPars>> uCovariance(
+        mutableUCovariance.release());
     auto stepParameters = std::make_unique<const BoundParameters>(
         std::move(uCovariance), uParameters, mSurface);
     // fill in th step material

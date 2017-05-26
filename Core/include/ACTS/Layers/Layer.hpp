@@ -118,6 +118,10 @@ public:
   const SurfaceArray*
   surfaceArray() const;
 
+  /// Non-const version
+  SurfaceArray*
+  surfaceArray();
+
   /// Transforms the layer into a Surface representation for extrapolation
   /// @note the layer can be hosting many surfaces, but this is the global
   /// one to which one can extrapolate
@@ -439,11 +443,19 @@ protected:
   const BinUtility* m_nextLayerUtility;  // @TODO check if this is needed
 
   /// SurfaceArray on this layer Surface
-  std::unique_ptr<SurfaceArray> m_surfaceArray;
+  ///
+  /// This array will be modified during signature and constant afterwards, but
+  /// the C++ type system unfortunately cannot cleanly express this.
+  ///
+  std::unique_ptr<const SurfaceArray> m_surfaceArray;
   /// thickness of the Layer
   double m_layerThickness;
   /// descriptor for surface on approach
-  std::unique_ptr<ApproachDescriptor> m_approachDescriptor;
+  ///
+  /// The descriptor may need to be modified during geometry building, and will
+  /// remain constant afterwards, but again C++ cannot currently express this.
+  ///
+  std::unique_ptr<const ApproachDescriptor> m_approachDescriptor;
   /// the enclosing TrackingVolume
   const TrackingVolume* m_enclosingTrackingVolume;
   /// the eventual enclosing detached Tracking volume
@@ -470,6 +482,12 @@ inline const SurfaceArray*
 Layer::surfaceArray() const
 {
   return m_surfaceArray.get();
+}
+
+inline SurfaceArray*
+Layer::surfaceArray()
+{
+  return const_cast<SurfaceArray*>(m_surfaceArray.get());
 }
 
 inline double

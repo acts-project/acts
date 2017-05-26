@@ -38,10 +38,10 @@ namespace propagation {
 
     using detail::Extendable<ExResult...>::get;
 
-    std::unique_ptr<TrackParameters> endParameters = nullptr;
-    Status                           status        = Status::UNSET;
-    unsigned int                     steps         = 0;
-    double                           pathLength    = 0.;
+    std::unique_ptr<const TrackParameters> endParameters = nullptr;
+    Status                                 status        = Status::UNSET;
+    unsigned int                           steps         = 0;
+    double                                 pathLength    = 0.;
 
     operator bool() const
     {
@@ -184,7 +184,7 @@ namespace propagation {
         options.observer_list(current, previous, r);
         if (std::abs(r.pathLength) >= options.max_path_length
             || options.stop_conditions(r, current, stepMax)) {
-          r.endParameters = std::make_unique<return_parameter_type>(
+          r.endParameters = std::make_unique<const return_parameter_type>(
               m_impl.convert(propagation_cache));
           r.status = Status::SUCCESS;
           break;
@@ -248,7 +248,7 @@ namespace propagation {
         if (std::abs(distance) < 1 * units::_um
             || std::abs(r.pathLength) >= options.max_path_length
             || options.stop_conditions(r, current, stepMax)) {
-          r.endParameters = std::make_unique<return_parameter_type>(
+          r.endParameters = std::make_unique<const return_parameter_type>(
               m_impl.convert(cache, target));
           r.status = Status::SUCCESS;
           break;

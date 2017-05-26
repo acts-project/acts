@@ -111,7 +111,7 @@ public:
       ParVector_t;  ///< vector type for stored parameters
   typedef ActsSymMatrix<ParValue_t, NPars>
       CovMatrix_t;  ///< type of covariance matrix
-  typedef std::unique_ptr<CovMatrix_t>
+  typedef std::unique_ptr<const CovMatrix_t>
       CovPtr_t;  ///< type for unique pointer to covariance matrix
 
   /**
@@ -161,7 +161,7 @@ public:
     : m_vValues(copy.m_vValues), m_pCovariance(nullptr)
   {
     if (copy.m_pCovariance)
-      m_pCovariance = std::make_unique<CovMatrix_t>(*copy.m_pCovariance);
+      m_pCovariance = std::make_unique<const CovMatrix_t>(*copy.m_pCovariance);
   }
 
   /**
@@ -191,8 +191,9 @@ public:
   {
     m_vValues = rhs.m_vValues;
     m_pCovariance
-        = (rhs.m_pCovariance ? std::make_unique<CovMatrix_t>(*rhs.m_pCovariance)
-                             : nullptr);
+        = (rhs.m_pCovariance
+               ? std::make_unique<const CovMatrix_t>(*rhs.m_pCovariance)
+               : nullptr);
     return *this;
   }
 

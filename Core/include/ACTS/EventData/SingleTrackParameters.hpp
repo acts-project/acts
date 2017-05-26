@@ -51,7 +51,7 @@ public:
       ParVector_t;  ///< vector type for stored track parameters
   typedef typename TrackParametersBase::CovMatrix_t
       CovMatrix_t;  ///< type of covariance matrix
-  typedef std::unique_ptr<CovMatrix_t>
+  typedef std::unique_ptr<const CovMatrix_t>
       CovPtr_t;  ///< type for unique pointer to covariance matrix
 
   /**

@@ -57,8 +57,8 @@ public:
   ///
   /// @param snConfig is the configuration struct to steer behaviour
   /// @param logger logging instance
-  StaticNavigationEngine(const Config&           snConfig,
-                         std::unique_ptr<Logger> logger
+  StaticNavigationEngine(const Config&                 snConfig,
+                         std::unique_ptr<const Logger> logger
                          = getDefaultLogger("StaticNavigationEngine",
                                             Logging::INFO));
 
@@ -127,7 +127,7 @@ public:
   ///
   /// @param logger the logging instance to be seet
   void
-  setLogger(std::unique_ptr<Logger> logger);
+  setLogger(std::unique_ptr<const Logger> logger);
 
 protected:
   /// the configuration member of the static navigation engine
@@ -141,7 +141,7 @@ private:
     return *m_logger;
   }
 
-  std::unique_ptr<Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 
   /// Resolve the boundary situation
   ///

@@ -21,7 +21,7 @@
 #include "ACTS/Utilities/Units.hpp"
 
 Acts::LayerCreator::LayerCreator(const Acts::LayerCreator::Config& lcConfig,
-                                 std::unique_ptr<Logger>           logger)
+                                 std::unique_ptr<const Logger>     logger)
   : m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(lcConfig);
@@ -36,7 +36,7 @@ Acts::LayerCreator::setConfiguration(const Acts::LayerCreator::Config& lcConfig)
 }
 
 void
-Acts::LayerCreator::setLogger(std::unique_ptr<Logger> newLogger)
+Acts::LayerCreator::setLogger(std::unique_ptr<const Logger> newLogger)
 {
   m_logger = std::move(newLogger);
 }

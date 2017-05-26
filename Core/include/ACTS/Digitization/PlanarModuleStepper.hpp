@@ -40,8 +40,8 @@ public:
   ///
   /// @param pmsConfig is the configuration 
   /// @param logger is the logging istance
-  PlanarModuleStepper(const Config&           pmsConfig,
-                      std::unique_ptr<Logger> logger
+  PlanarModuleStepper(const Config&                 pmsConfig,
+                      std::unique_ptr<const Logger> logger
                       = getDefaultLogger("PlanarModuleStepper", Logging::INFO));
 
   /// Destructor
@@ -73,9 +73,9 @@ public:
 
   /// Set logging instance
   ///
-  /// @param logger is the logging instance to be set          
+  /// @param logger is the logging instance to be set
   void
-  setLogger(std::unique_ptr<Logger> logger)
+  setLogger(std::unique_ptr<const Logger> logger)
   {
     m_logger = std::move(logger);
   }
@@ -92,7 +92,7 @@ private:
   Config m_cfg;
 
   /// logging instance
-  std::unique_ptr<Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 };
 
 }  // end of namespace

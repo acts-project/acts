@@ -48,7 +48,7 @@ public:
   /// Constructor
   ///
   /// @param logger logging instance
-  LayerArrayCreator(std::unique_ptr<Logger> logger
+  LayerArrayCreator(std::unique_ptr<const Logger> logger
                     = getDefaultLogger("LayerArrayCreator", Logging::INFO))
     : m_logger(std::move(logger))
   {
@@ -75,7 +75,7 @@ public:
 
   /// set logging instance
   void
-  setLogger(std::unique_ptr<Logger> logger)
+  setLogger(std::unique_ptr<const Logger> logger)
   {
     m_logger = std::move(logger);
   }
@@ -89,7 +89,7 @@ private:
   }
 
   /// logging instance
-  std::unique_ptr<Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 
   /// Private helper method for creating a surface for
   /// the NavigationLayer

@@ -226,7 +226,7 @@ namespace Test {
     cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 1, 0,
         0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
 
-    auto                  cov_ptr = std::make_unique<ActsSymMatrixD<5>>(cov);
+    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
     CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
 
     // do propagation

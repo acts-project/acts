@@ -10,7 +10,7 @@
 
 namespace Acts {
 
-std::unique_ptr<Logger>
+std::unique_ptr<const Logger>
 getDefaultLogger(const std::string&    name,
                  const Logging::Level& lvl,
                  std::ostream*         log_stream)
@@ -22,6 +22,6 @@ getDefaultLogger(const std::string&    name,
               std::make_unique<DefaultPrintPolicy>(log_stream)),
           name));
   auto print = std::make_unique<DefaultFilterPolicy>(lvl);
-  return std::make_unique<Logger>(std::move(output), std::move(print));
+  return std::make_unique<const Logger>(std::move(output), std::move(print));
 }
 }  // end of namespace Acts

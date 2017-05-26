@@ -100,7 +100,7 @@ public:
               typename std::enable_if<sizeof...(Tail) + 1 == sizeof...(params),
                                       ParValue_t>::type head,
               Tail... values)
-    : m_oParameters(std::make_unique<CovMatrix_t>(std::move(cov)),
+    : m_oParameters(std::make_unique<const CovMatrix_t>(std::move(cov)),
                     head,
                     values...)
     , m_pSurface(surface.isFree() ? const_cast<const Surface*>(surface.clone())

@@ -57,8 +57,8 @@ public:
   ///
   /// @param lcConfig is the configuration object
   /// @param logger logging instance
-  LayerCreator(const Config&           lcConfig,
-               std::unique_ptr<Logger> logger
+  LayerCreator(const Config&                 lcConfig,
+               std::unique_ptr<const Logger> logger
                = getDefaultLogger("LayerCreator", Logging::INFO));
 
   /// Destructor
@@ -265,7 +265,7 @@ public:
 
   /// set logging instance
   void
-  setLogger(std::unique_ptr<Logger> logger);
+  setLogger(std::unique_ptr<const Logger> logger);
 
   // associate surfaces contained by this layer to this layer
   void
@@ -322,7 +322,7 @@ private:
   }
 
   /// logging instance
-  std::unique_ptr<Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 };
 
 inline LayerCreator::Config

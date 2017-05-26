@@ -83,8 +83,8 @@ public:
   /// Constructor
   /// @param cfg is the configuration struct
   /// @param logger the local logging instance
-  TGeoLayerBuilder(const Config&           cfg,
-                   std::unique_ptr<Logger> logger
+  TGeoLayerBuilder(const Config&                 cfg,
+                   std::unique_ptr<const Logger> logger
                    = getDefaultLogger("LayerArrayCreator", Logging::INFO));
 
   /// Destructor
@@ -117,7 +117,7 @@ public:
 
   /// set logging instance
   void
-  setLogger(std::unique_ptr<Logger> logger);
+  setLogger(std::unique_ptr<const Logger> logger);
 
 private:
   /// configruation object
@@ -131,7 +131,7 @@ private:
   }
 
   /// logging instance
-  std::unique_ptr<Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 
   /// @todo make clear where the TGeoDetectorElement lives
   std::vector<std::shared_ptr<const TGeoDetectorElement>> m_elementStore;

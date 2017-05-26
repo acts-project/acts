@@ -15,7 +15,7 @@
 // constructor
 Acts::ExtrapolationEngine::ExtrapolationEngine(
     const Acts::ExtrapolationEngine::Config& eeConfig,
-    std::unique_ptr<Logger>                  logger)
+    std::unique_ptr<const Logger>            logger)
   : m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(eeConfig);
@@ -39,7 +39,7 @@ Acts::ExtrapolationEngine::setConfiguration(
 }
 
 void
-Acts::ExtrapolationEngine::setLogger(std::unique_ptr<Logger> newLogger)
+Acts::ExtrapolationEngine::setLogger(std::unique_ptr<const Logger> newLogger)
 {
   m_logger = std::move(newLogger);
 }

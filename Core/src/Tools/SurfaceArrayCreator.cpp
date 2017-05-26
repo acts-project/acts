@@ -33,10 +33,12 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   ACTS_DEBUG("Creating a SurfaceArray on a cylinder.");
   // create the 2D bin utility
   // create the (plain) binUtility - with the transform if given
-  auto arrayUtility = std::make_unique<Acts::BinUtility>(createBinUtility(
-      surfaces, binPhi, equidistant, binsPhi, minPhi, maxPhi, transform));
-  (*arrayUtility)
+  auto mutableArrayUtility
+      = std::make_unique<Acts::BinUtility>(createBinUtility(
+          surfaces, binPhi, equidistant, binsPhi, minPhi, maxPhi, transform));
+  (*mutableArrayUtility)
       += createBinUtility(surfaces, binZ, equidistant, binsZ, -halfZ, halfZ);
+  std::unique_ptr<const BinUtility> arrayUtility(mutableArrayUtility.release());
   // prepare the surface matrix
   size_t      bins1 = arrayUtility->bins(1);
   size_t      bins0 = arrayUtility->bins(0);
@@ -135,7 +137,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   // create the surfaceArray
   std::unique_ptr<Acts::SurfaceArray> sArray
       = std::make_unique<BinnedArrayXD<const Surface*>>(
-          sGrid, std::make_unique<Acts::BinUtility>(arrayUtility));
+          sGrid, std::make_unique<const Acts::BinUtility>(arrayUtility));
   // define neigbourhood
   registerNeighbourHood(*sArray);
   // return the surface array
@@ -155,10 +157,12 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 {
   ACTS_DEBUG("Creating a SurfaceArray on a disc.");
 
-  auto arrayUtility = std::make_unique<Acts::BinUtility>(createBinUtility(
-      surfaces, binR, equidistant, binsR, minR, maxR, transform));
-  (*arrayUtility) += createBinUtility(
+  auto mutableArrayUtility
+      = std::make_unique<Acts::BinUtility>(createBinUtility(
+          surfaces, binR, equidistant, binsR, minR, maxR, transform));
+  (*mutableArrayUtility) += createBinUtility(
       surfaces, binPhi, equidistant, binsPhi, minPhi, maxPhi);
+  std::unique_ptr<const BinUtility> arrayUtility(mutableArrayUtility.release());
 
   // prepare the surface matrix
   SurfaceGrid sGrid(1, SurfaceMatrix(binsPhi, SurfaceVector(binsR, nullptr)));
@@ -266,7 +270,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // create the surfaceArray
   std::unique_ptr<Acts::SurfaceArray> sArray
       = std::make_unique<BinnedArrayXD<const Surface*>>(
-          sGrid, std::make_unique<Acts::BinUtility>(arrayUtility));
+          sGrid, std::make_unique<const Acts::BinUtility>(arrayUtility));
   // define neigbourhood
   registerNeighbourHood(*sArray);
   // return the surface array
@@ -751,7 +755,6 @@ Acts::SurfaceArrayCreator::createBinUtility(
     ACTS_ERROR("No surfaces given - can not create BinUtility for "
                "BinnedSurfaceArray!");
   // introduce BinUtility to hand back
-  std::unique_ptr<Acts::BinUtility> binUtility = nullptr;
   Acts::BinningOption               bOption    = open;
   // all the information already given
   if (bValue == Acts::binPhi) bOption = closed;

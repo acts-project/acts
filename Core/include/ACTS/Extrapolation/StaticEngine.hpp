@@ -84,8 +84,8 @@ public:
   ///
   /// @param seConfig is the configuration struct
   /// @param logger logging instance
-  StaticEngine(const Config&           seConfig,
-               std::unique_ptr<Logger> logger
+  StaticEngine(const Config&                 seConfig,
+               std::unique_ptr<const Logger> logger
                = getDefaultLogger("StaticEngine", Logging::INFO));
 
   /// Destructor
@@ -139,7 +139,7 @@ public:
   ///
   /// @param logger is the logging instance to be set
   void
-  setLogger(std::unique_ptr<Logger> logger);
+  setLogger(std::unique_ptr<const Logger> logger);
 
 protected:
   /// Configuration struct
@@ -153,7 +153,7 @@ private:
     return *m_logger;
   }
 
-  std::unique_ptr<Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 
   /// Main loop extrapolation method
   ///

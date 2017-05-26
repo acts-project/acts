@@ -49,7 +49,7 @@ public:
   bool          zdim;      ///< zero dimensional binning : direct access
 
   /// sub structure: describe some sub binning
-  std::unique_ptr<BinningData> subBinningData;
+  std::unique_ptr<const BinningData> subBinningData;
   /// sub structure: additive or multipicative
   bool subBinningAdditive;
 
@@ -87,13 +87,13 @@ public:
   /// @param bMax is the maxmimum value
   /// @param sBinData is (optional) sub structure
   /// @param sBinAdditive is the prescription for the sub structure
-  BinningData(BinningOption                bOption,
-              BinningValue                 bValue,
-              size_t                       bBins,
-              float                        bMin,
-              float                        bMax,
-              std::unique_ptr<BinningData> sBinData     = nullptr,
-              bool                         sBinAdditive = false)
+  BinningData(BinningOption                      bOption,
+              BinningValue                       bValue,
+              size_t                             bBins,
+              float                              bMin,
+              float                              bMax,
+              std::unique_ptr<const BinningData> sBinData     = nullptr,
+              bool                               sBinAdditive = false)
     : type(equidistant)
     , option(bOption)
     , binvalue(bValue)
@@ -125,10 +125,10 @@ public:
   /// @param bValue is the binning value : binX, binY, etc.
   /// @param bBoundaries are teh bin boundaries
   /// @param sBinData is (optional) sub structure
-  BinningData(BinningOption                bOption,
-              BinningValue                 bValue,
-              const std::vector<float>     bBoundaries,
-              std::unique_ptr<BinningData> sBinData = nullptr)
+  BinningData(BinningOption                      bOption,
+              BinningValue                       bValue,
+              const std::vector<float>           bBoundaries,
+              std::unique_ptr<const BinningData> sBinData = nullptr)
     : type(arbitrary)
     , option(bOption)
     , binvalue(bValue)
@@ -176,7 +176,7 @@ public:
   {
     // get the binning data
     subBinningData = bdata.subBinningData
-        ? std::make_unique<BinningData>(*bdata.subBinningData)
+        ? std::make_unique<const BinningData>(*bdata.subBinningData)
         : nullptr;
     // set the pointer depending on the type
     // set the correct function pointer
@@ -203,7 +203,7 @@ public:
       zdim               = bdata.zdim;
       subBinningAdditive = bdata.subBinningAdditive;
       subBinningData     = bdata.subBinningData
-          ? std::make_unique<BinningData>(*bdata.subBinningData)
+          ? std::make_unique<const BinningData>(*bdata.subBinningData)
           : nullptr;
       m_bins            = bdata.m_bins;
       m_boundaries      = bdata.m_boundaries;

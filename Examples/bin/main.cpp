@@ -151,11 +151,12 @@ main()
                                    0);
   ActsVector<ParValue_t, NGlobalPars> pars;
   pars << 0, 0, M_PI / 2, M_PI / 2, 0.0001;
-  auto startCov = std::make_unique<ActsSymMatrix<ParValue_t, NGlobalPars>>(
-      ActsSymMatrix<ParValue_t, NGlobalPars>::Identity());
+  auto startCov
+      = std::make_unique<const ActsSymMatrix<ParValue_t, NGlobalPars>>(
+          ActsSymMatrix<ParValue_t, NGlobalPars>::Identity());
 
   const Surface* pSurf   = geo->getBeamline();
-  auto           startTP = std::make_unique<BoundParameters>(
+  auto           startTP = std::make_unique<const BoundParameters>(
       std::move(startCov), std::move(pars), *pSurf);
 
   ExtrapolationCell<TrackParameters> exCell(*startTP);
@@ -207,8 +208,8 @@ main()
   KF.m_oUpdator        = GainMatrixUpdator();
 
   std::cout << "start fit" << std::endl;
-  auto track
-      = KF.fit(vMeasurements, std::make_unique<BoundParameters>(*startTP));
+  auto track = KF.fit(vMeasurements,
+                      std::make_unique<const BoundParameters>(*startTP));
 
   // dump track
   for (const auto& p : track) {

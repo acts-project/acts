@@ -105,8 +105,8 @@ public:
   ///
   /// @param cfg the internal configuration object
   /// @param logger the logging instance
-  MaterialMapper(const Config&           cfg,
-                 std::unique_ptr<Logger> logger
+  MaterialMapper(const Config&                 cfg,
+                 std::unique_ptr<const Logger> logger
                  = getDefaultLogger("MaterialMapper", Logging::INFO));
 
   /// @brief destructor
@@ -150,7 +150,7 @@ public:
   ///
   /// @param logger is the unique logger instance
   void
-  setLogger(std::unique_ptr<Logger> logger);
+  setLogger(std::unique_ptr<const Logger> logger);
 
 private:
   /// finds all surfaces with SurfaceMaterialProxy of a volume
@@ -180,7 +180,7 @@ private:
   Config m_cfg;
 
   /// the logging instance
-  std::unique_ptr<Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 };
 }
 

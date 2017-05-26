@@ -54,10 +54,10 @@ constructCylinderVolume(double surfaceHalfLengthZ,
                                {sfp, sfp->binningPosition(binZ)}};
 
   ///  make the binned array
-  double bUmin = sfnPosition.z() - surfaceHalfLengthZ;
-  double bUmax = sfpPosition.z() + surfaceHalfLengthZ;
-  auto   bUtility
-      = std::make_unique<BinUtility>(surfaces.size(), bUmin, bUmax, open, binZ);
+  double bUmin    = sfnPosition.z() - surfaceHalfLengthZ;
+  double bUmax    = sfpPosition.z() + surfaceHalfLengthZ;
+  auto   bUtility = std::make_unique<const BinUtility>(
+      surfaces.size(), bUmin, bUmax, open, binZ);
   std::unique_ptr<SurfaceArray> bArray
       = std::make_unique<BinnedArrayXD<const Surface*>>(surfaces,
                                                         std::move(bUtility));
@@ -65,12 +65,12 @@ constructCylinderVolume(double surfaceHalfLengthZ,
   ///  now create the Layer
   auto layer0bounds
       = std::make_shared<const CylinderBounds>(surfaceRadius, bUmax);
-  auto layer0       = CylinderLayer::create(nullptr,
+  auto layer0 = CylinderLayer::create(nullptr,
                                       layer0bounds,
                                       std::move(bArray),
                                       surfaceRstagger + 2 * layerEnvelope);
-  std::unique_ptr<LayerArray> layerArray
-      = std::make_unique<BinnedArrayXD<LayerPtr>>(layer0);
+  std::unique_ptr<const LayerArray> layerArray
+      = std::make_unique<const BinnedArrayXD<LayerPtr>>(layer0);
 
   ///  create the volume
   auto volumeBounds = std::make_shared<const CylinderVolumeBounds>(
@@ -97,7 +97,7 @@ constructContainerVolume(TrackingVolumePtr  iVolume,
   auto hVolumeBounds = std::make_shared<const CylinderVolumeBounds>(
       0., hVolumeRadius, hVolumeHalflength);
   ///  create the BinUtility & the BinnedArray
-  auto vUtility = std::make_unique<BinUtility>(
+  auto vUtility = std::make_unique<const BinUtility>(
       volumes.size(), 0., hVolumeRadius, open, binR);
   std::shared_ptr<const TrackingVolumeArray> vArray
       = std::make_shared<const BinnedArrayXD<TrackingVolumePtr>>(

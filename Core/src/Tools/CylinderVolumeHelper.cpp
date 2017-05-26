@@ -30,7 +30,7 @@
 
 Acts::CylinderVolumeHelper::CylinderVolumeHelper(
     const Acts::CylinderVolumeHelper::Config& cvhConfig,
-    std::unique_ptr<Logger>                   logger)
+    std::unique_ptr<const Logger>             logger)
   : Acts::ITrackingVolumeHelper(), m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(cvhConfig);
@@ -47,7 +47,7 @@ Acts::CylinderVolumeHelper::setConfiguration(
 }
 
 void
-Acts::CylinderVolumeHelper::setLogger(std::unique_ptr<Logger> newLogger)
+Acts::CylinderVolumeHelper::setLogger(std::unique_ptr<const Logger> newLogger)
 {
   m_logger = std::move(newLogger);
 }

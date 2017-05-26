@@ -128,8 +128,8 @@ public:
   static CurvilinearParameters
   convert(const Cache& c)
   {
-    double                             charge = c.qop > 0. ? 1. : -1.;
-    std::unique_ptr<ActsSymMatrixD<5>> cov    = nullptr;
+    double                                   charge = c.qop > 0. ? 1. : -1.;
+    std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
     if (c.cov) {
       const double phi   = c.dir.phi();
       const double theta = c.dir.theta();
@@ -175,8 +175,8 @@ public:
       jacobian -= tmp;
       auto jac = J * jacobian;
 
-      cov = std::make_unique<ActsSymMatrixD<5>>(jac * (*c.cov)
-                                                * jac.transpose());
+      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * (*c.cov)
+                                                      * jac.transpose());
     }
 
     return CurvilinearParameters(
@@ -188,7 +188,7 @@ public:
   convert(Cache& c, const S& surface)
   {
     double                             charge = c.qop > 0. ? 1. : -1.;
-    std::unique_ptr<ActsSymMatrixD<5>> cov    = nullptr;
+    std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
     if (c.cov) {
       const double phi   = c.dir.phi();
       const double theta = c.dir.theta();
@@ -218,8 +218,8 @@ public:
       c.jacobian -= tmp;
       auto jac = J * c.jacobian;
 
-      cov = std::make_unique<ActsSymMatrixD<5>>(jac * (*c.cov)
-                                                * jac.transpose());
+      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * (*c.cov)
+                                                      * jac.transpose());
     }
 
     return BoundParameters(

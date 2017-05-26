@@ -49,8 +49,8 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
   // useful typedef
   typedef std::pair<std::shared_ptr<const Layer>, Vector3D> LayerOrderPosition;
   // needed for all cases
-  std::shared_ptr<const Layer>    layer      = nullptr;
-  std::unique_ptr<BinUtility>     binUtility = nullptr;
+  std::shared_ptr<const Layer>      layer      = nullptr;
+  std::unique_ptr<const BinUtility> binUtility = nullptr;
   std::vector<LayerOrderPosition> layerOrderVector;
 
   // switch the binning type
@@ -65,8 +65,8 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
           LayerOrderPosition(layIter, layIter->binningPosition(bValue)));
     }
     // create the binUitlity
-    binUtility
-        = std::make_unique<BinUtility>(layers.size(), min, max, open, bValue);
+    binUtility = std::make_unique<const BinUtility>(
+        layers.size(), min, max, open, bValue);
     ACTS_VERBOSE("equidistant : created a BinUtility as " << *binUtility);
   } break;
 
@@ -143,7 +143,7 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
     ACTS_VERBOSE(layerOrderVector.size()
                  << " Layers (material + navigation) built. ");
     // create the BinUtility
-    binUtility = std::make_unique<BinUtility>(boundaries, open, bValue);
+    binUtility = std::make_unique<const BinUtility>(boundaries, open, bValue);
     ACTS_VERBOSE("arbitrary : created a BinUtility as " << *binUtility);
 
   } break;
@@ -153,8 +153,8 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
   }
   }
   // return the binned array
-  return std::make_unique<BinnedArrayXD<LayerPtr>>(layerOrderVector,
-                                                   std::move(binUtility));
+  return std::make_unique<const BinnedArrayXD<LayerPtr>>(layerOrderVector,
+                                                         std::move(binUtility));
 }
 
 Acts::Surface*

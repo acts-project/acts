@@ -17,7 +17,7 @@
 
 // constructor
 Acts::StaticEngine::StaticEngine(const Acts::StaticEngine::Config& seConfig,
-                                 std::unique_ptr<Logger>           logger)
+                                 std::unique_ptr<const Logger>     logger)
   : m_cfg(), m_logger(std::move(logger))
 {
   setConfiguration(seConfig);
@@ -40,7 +40,7 @@ Acts::StaticEngine::setConfiguration(const Acts::StaticEngine::Config& seConfig)
 }
 
 void
-Acts::StaticEngine::setLogger(std::unique_ptr<Logger> newLogger)
+Acts::StaticEngine::setLogger(std::unique_ptr<const Logger> newLogger)
 {
   m_logger = std::move(newLogger);
 }

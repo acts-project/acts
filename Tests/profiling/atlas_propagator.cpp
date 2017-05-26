@@ -62,8 +62,7 @@ main(int argc, char* argv[])
                            << "T B-field");
 
   typedef ConstantBField       BField_type;
-  std::unique_ptr<BField_type> magnetic_field
-      = std::make_unique<BField_type>(0, 0, Bz / 1000.);
+  auto magnetic_field = std::make_unique<const BField_type>(0, 0, Bz / 1000.);
 
   RungeKuttaEngine<>::Config c;
   c.fieldService  = std::move(magnetic_field);
@@ -79,8 +78,8 @@ main(int argc, char* argv[])
   cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 1, 0,
       0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
 
-  std::unique_ptr<ActsSymMatrixD<5>> covPtr = nullptr;
-  if (withCov) covPtr = std::make_unique<ActsSymMatrixD<5>>(cov);
+  std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
+  if (withCov) covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
   CurvilinearParameters pars(std::move(covPtr), pos, mom, +1);
 
   ExtrapolationCell<TrackParameters> exCell(pars);

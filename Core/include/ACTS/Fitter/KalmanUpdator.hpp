@@ -27,7 +27,7 @@ namespace Acts {
 class GainMatrixUpdator
 {
 private:
-  typedef std::unique_ptr<BoundParameters> return_type;
+  typedef std::unique_ptr<const BoundParameters> return_type;
 
 public:
   template <typename Meas_t>
@@ -67,8 +67,9 @@ private:
           = m_pParameters->parameters() + K * m.residual(*m_pParameters);
       BoundParameters::CovMatrix_t newCov = (unit - K * H) * (*pCov_trk);
 
-      return std::make_unique<BoundParameters>(
-          std::make_unique<BoundParameters::CovMatrix_t>(std::move(newCov)),
+      return std::make_unique<const BoundParameters>(
+          std::make_unique<const BoundParameters::CovMatrix_t>(
+              std::move(newCov)),
           newParValues,
           m_pParameters->referenceSurface());
     }

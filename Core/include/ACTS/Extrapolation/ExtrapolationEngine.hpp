@@ -75,8 +75,8 @@ public:
   ///
   /// @param eeConfig is the configuration struct for this engine
   /// @param logger logging instance
-  ExtrapolationEngine(const Config&           eeConfig,
-                      std::unique_ptr<Logger> logger
+  ExtrapolationEngine(const Config&                 eeConfig,
+                      std::unique_ptr<const Logger> logger
                       = getDefaultLogger("ExtrapolationEngine", Logging::INFO));
 
   /// Destructor
@@ -129,7 +129,7 @@ public:
   ///
   /// @param logger is the logging instance
   void
-  setLogger(std::unique_ptr<Logger> logger);
+  setLogger(std::unique_ptr<const Logger> logger);
 
 protected:
   /// ExtrapolationEngine config object
@@ -144,7 +144,7 @@ private:
   }
 
   /// logger instance
-  std::unique_ptr<Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 
   /// Main extrapolation method, templated to chared/neutral
   ///

@@ -72,13 +72,13 @@ namespace Test {
   // the binning - substructure
   std::vector<float> sstr = {0., 1., 1.5, 2., 3.};
   // multiplicative
-  auto xData_sstr_mult = std::make_unique<BinningData>(open, binX, sstr);
+  auto xData_sstr_mult = std::make_unique<const BinningData>(open, binX, sstr);
   // | 0 | 1 | 1.5 | 2 |  3 | 4 | 4.5 | 5 | 6 | 7 | 7.5 | 8 | 9 |
   BinningData xData_mult(open, binX, 3, 0., 9., std::move(xData_sstr_mult));
   /// additive
   // | 0 | 1 | 1.5 | 2 |  3 | 4 | 5 |
   std::vector<float> main_sstr = {0., 3., 4., 5.};
-  auto        xData_sstr_add = std::make_unique<BinningData>(open, binX, sstr);
+  auto xData_sstr_add = std::make_unique<const BinningData>(open, binX, sstr);
   BinningData xData_add(open, binX, main_sstr, std::move(xData_sstr_add));
 
   // enum BinningValue { binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta }

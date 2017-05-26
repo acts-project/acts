@@ -50,8 +50,8 @@ public:
   ///
   /// @param cgbConfig is the configuration struct for this builder
   /// @param logger logging instance
-  TrackingGeometryBuilder(const Config&           cgbConfig,
-                          std::unique_ptr<Logger> logger
+  TrackingGeometryBuilder(const Config&                 cgbConfig,
+                          std::unique_ptr<const Logger> logger
                           = getDefaultLogger("TrackingGeometryBuilder",
                                              Logging::INFO));
 
@@ -60,7 +60,7 @@ public:
 
   /// TrackingGeometry Interface method
   /// @return a unique pointer to a TrackingGeometry
-  virtual std::unique_ptr<TrackingGeometry>
+  virtual std::unique_ptr<const TrackingGeometry>
   trackingGeometry() const final;
 
   /// Set configuration method
@@ -76,7 +76,7 @@ public:
 
   /// set logging instance
   void
-  setLogger(std::unique_ptr<Logger> logger);
+  setLogger(std::unique_ptr<const Logger> logger);
 
 private:
   /// Configuration member
@@ -90,7 +90,7 @@ private:
   }
 
   /// the logging instance
-  std::unique_ptr<Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 };
 
 inline TrackingGeometryBuilder::Config

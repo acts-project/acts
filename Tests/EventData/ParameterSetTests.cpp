@@ -269,8 +269,7 @@ namespace Test {
     // covariance matrix
     ActsSymMatrixD<3> cov;
     cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
-    std::unique_ptr<ActsSymMatrixD<3>> pCovMatrix
-        = std::make_unique<ActsSymMatrixD<3>>(cov);
+    auto pCovMatrix = std::make_unique<const ActsSymMatrixD<3>>(cov);
 
     // parameter values
     double loc0 = 0.5;
@@ -319,7 +318,8 @@ namespace Test {
                 == parSet_with_cov.getParameters());
 
     // set new covariance matrix
-    parSet_without_cov.setCovariance(std::make_unique<ActsSymMatrixD<3>>(cov));
+    parSet_without_cov.setCovariance(
+        std::make_unique<const ActsSymMatrixD<3>>(cov));
 
     BOOST_CHECK(parSet_without_cov.getCovariance() != 0);
     BOOST_CHECK(*parSet_without_cov.getCovariance() == cov);
@@ -352,8 +352,7 @@ namespace Test {
     // covariance matrix
     ActsSymMatrixD<3> cov;
     cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
-    std::unique_ptr<ActsSymMatrixD<3>> pCovMatrix
-        = std::make_unique<ActsSymMatrixD<3>>(cov);
+    auto pCovMatrix = std::make_unique<const ActsSymMatrixD<3>>(cov);
 
     // parameter values
     double loc0 = 0.5;
@@ -422,8 +421,7 @@ namespace Test {
     // covariance matrix
     ActsSymMatrixD<3> cov;
     cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
-    std::unique_ptr<ActsSymMatrixD<3>> pCovMatrix
-        = std::make_unique<ActsSymMatrixD<3>>(cov);
+    auto pCovMatrix = std::make_unique<const ActsSymMatrixD<3>>(cov);
 
     // parameter values
     double loc0 = 0.5;
@@ -464,13 +462,13 @@ namespace Test {
     BOOST_CHECK(first == second);
 
     // check that comparison fails for unequal covariance matrices
-    second.setCovariance(std::make_unique<ActsSymMatrixD<3>>(cov));
+    second.setCovariance(std::make_unique<const ActsSymMatrixD<3>>(cov));
     BOOST_CHECK(first != second);
     first = second;
     BOOST_CHECK(first == second);
 
     cov(0, 0) = 2 * cov(0, 0);
-    second.setCovariance(std::make_unique<ActsSymMatrixD<3>>(cov));
+    second.setCovariance(std::make_unique<const ActsSymMatrixD<3>>(cov));
     BOOST_CHECK(first != second);
     first = second;
     BOOST_CHECK(first == second);

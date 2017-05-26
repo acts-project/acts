@@ -38,7 +38,7 @@ public:
   /// Constructor
   ///
   /// @param logger logging instance
-  TrackingVolumeArrayCreator(std::unique_ptr<Logger> logger
+  TrackingVolumeArrayCreator(std::unique_ptr<const Logger> logger
                              = getDefaultLogger("LayerArrayCreator",
                                                 Logging::INFO))
     : m_logger(std::move(logger))
@@ -62,7 +62,7 @@ public:
   ///
   /// @param logger is the logging instance to be set
   void
-  setLogger(std::unique_ptr<Logger> logger)
+  setLogger(std::unique_ptr<const Logger> logger)
   {
     m_logger = std::move(logger);
   }
@@ -76,7 +76,7 @@ private:
   }
 
   /// logging instance
-  std::unique_ptr<Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 };
 }
 

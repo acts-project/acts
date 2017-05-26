@@ -42,7 +42,7 @@ Acts::CylinderLayer::CylinderLayer(
   // an approach descriptor is automatically created if there's a surface array
   if (!m_approachDescriptor && Layer::m_surfaceArray) buildApproachDescriptor();
   // register the layer to the approach descriptor surfaces
-  if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
+  if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
 }
 
 Acts::CylinderLayer::CylinderLayer(const CylinderLayer& clay,
@@ -54,7 +54,7 @@ Acts::CylinderLayer::CylinderLayer(const CylinderLayer& clay,
   // build an approach descriptor if a surface array is present
   if (m_surfaceArray) buildApproachDescriptor();
   // register the layer to the approach descriptor surfaces
-  if (m_approachDescriptor) m_approachDescriptor->registerLayer(*this);
+  if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
 }
 
 const Acts::CylinderSurface&
@@ -89,7 +89,7 @@ Acts::CylinderLayer::buildApproachDescriptor()
     aSurfaces.push_back(bSurfaces.at(tubeOuterCover));
     // create an ApproachDescriptor with Boundary surfaces
     m_approachDescriptor = std::
-        make_unique<GenericApproachDescriptor<BoundarySurfaceT<AbstractVolume>>>(
+        make_unique<const GenericApproachDescriptor<BoundarySurfaceT<AbstractVolume>>>(
             aSurfaces);
   } else {
     // create the new surfaces
@@ -103,7 +103,7 @@ Acts::CylinderLayer::buildApproachDescriptor()
     // create an ApproachDescriptor with standard surfaces surfaces - these will
     // be deleted by the approach descriptor
     m_approachDescriptor
-        = std::make_unique<GenericApproachDescriptor<Surface>>(aSurfaces);
+        = std::make_unique<const GenericApproachDescriptor<Surface>>(aSurfaces);
   }
   for (auto& sfPtr : (m_approachDescriptor->containedSurfaces())) {
     if (sfPtr) {
