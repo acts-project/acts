@@ -19,7 +19,7 @@
 // clang-format off
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_at), at, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_closestPointsIndices), closestPointsIndices, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_dimension), dimension, 0);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_dimensions), dimensions, 0);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getBinCenter), getBinCenter, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getGlobalBinIndex), getGlobalBinIndex, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getLocalBinIndices), getLocalBinIndices, 1);
@@ -49,7 +49,7 @@ namespace concept {
                                      has_at<const T& (size_t), const bte::_self>,
                                      has_at<T& (size_t)>,
                                      has_closestPointsIndices<std::set<size_t> (const Point&), const bte::_self>,
-                                     has_dimension<size_t(), const bte::_self>,
+                                     has_dimensions<size_t(), const bte::_self>,
                                      has_getGlobalBinIndex<size_t(const Point&), const bte::_self>,
                                      has_interpolate<T(const Point&), const bte::_self>,
                                      has_isInside<bool(const Point&), const bte::_self>,
@@ -113,7 +113,7 @@ namespace concept {
   ///   std::set<size_t> closestPointsIndices(const Point&) const;
   ///
   ///   // dimensionality of the grid
-  ///   size_t dimension() const;
+  ///   size_t dimensions() const;
   ///
   ///   // point to index conversion
   ///   size_t getGlobalIndex(const Point&) const;

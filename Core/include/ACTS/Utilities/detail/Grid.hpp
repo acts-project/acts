@@ -174,7 +174,7 @@ namespace detail {
     ///
     /// @return number of axes spanning the grid
     static constexpr size_t
-    dimension()
+    dimensions()
     {
       return DIM;
     }
