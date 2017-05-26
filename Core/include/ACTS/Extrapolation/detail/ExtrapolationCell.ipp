@@ -56,9 +56,7 @@ Acts::ExtrapolationCell<T>::stepMaterial(
   // prepare the extrapolation mode
   std::vector<ExtrapolationMode::eMode> emode
       = {ExtrapolationMode::CollectMaterial};
-  
-  std::cout << "[EC<T>] Filling the material associated with this step." << std::endl;                                               
-    
+      
   // if this is on a new surface, 
   // create a new extrapolation step
   if (extrapolationSteps.size() && 
