@@ -128,11 +128,11 @@ public:
     SuccessMaterialLimit   = 5,  // successful : material limit reached
     Recovered              = 6,  // successful : recovered
     FailureDestination     = 7,  // failure    : could not reach destination
-    FailureLoop       = 8,   // failure    : loop or oscillation between volumes
-    FailureNavigation = 9,   // failure    : general navigation failure
-    FailureUpdateKill = 10,  // failure    : updated track under threshold
-    FailureConfiguration = 11,  // failure    : general configuration failure
-    LeftKnownWorld       = 12   // successful ? failure ? if we just knew ...
+    FailureLoop            = 8,  // failure    : loop or oscillation between volumes
+    FailureNavigation      = 9,  // failure    : general navigation failure
+    FailureUpdateKill      = 10, // failure    : updated track under threshold
+    FailureConfiguration   = 11, // failure    : general configuration failure
+    LeftKnownWorld         = 12  // successful ? failure ? if we just knew ...
   };
 
   /// the actual code
@@ -246,10 +246,12 @@ class ExtrapolationStep
 public:
   /// the unique parameter associated to this step
   std::unique_ptr<const T> parameters;
+  /// the unique parameter associated to pre-updated step
+  std::unique_ptr<const T> preparameters;
   /// the step position - incase parameters = nullptr
   Vector3D position;
   /// the surface for this step
-  const Surface* surface;
+  const Surface*            surface;
   /// the bitset configuration of this step
   ExtrapolationConfig configuration;
   /// the material properties found in this step
@@ -277,6 +279,7 @@ public:
                     std::unique_ptr<const TransportJacobian> tjac    = nullptr,
                     double                                   pLength = 0.)
     : parameters(std::move(pars))
+    , preparameters(nullptr)                  
     , position()
     , surface(sf)
     , configuration(eConfig)

@@ -30,7 +30,10 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     size_t                             binsZ,
     std::shared_ptr<const Transform3D> transform) const
 {
-  ACTS_DEBUG("Creating a SurfaceArray on a cylinder.");
+  ACTS_DEBUG("Creating a SurfaceArray on a cylinder");
+  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
+  ACTS_VERBOSE(" -- with phi x z  = " << binsPhi << " x " << binsZ << " = " 
+    << binsPhi * binsZ << " bins.");
   // create the 2D bin utility
   // create the (plain) binUtility - with the transform if given
   auto mutableArrayUtility
@@ -64,7 +67,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     // get the bins and fill
     std::array<size_t, 3> bTriple = arrayUtility->binTriple(bPosition);
     // and fill into the grid
-    sGrid[bTriple.at(2)][bTriple.at(1)][bTriple.at(0)] = sf;
+    sGrid[bTriple[2]][bTriple[1]][bTriple[0]] = sf;
   }
   // complete the Binning @todo switch on when we have a faster method for this
   completeBinning(*arrayUtility, v3Matrix, surfaces, sGrid);
@@ -85,7 +88,6 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     BinningType                        bTypeZ,
     std::shared_ptr<const Transform3D> transform) const
 {
-  ACTS_DEBUG("Creating a SurfaceArray on a cylinder.");
   // create the 2D bin utility
   // create the (plain) binUtility - with the transform if given
   Acts::BinUtility arrayUtility;
@@ -101,6 +103,12 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   // get the number of bins
   size_t bins1 = arrayUtility.bins(1);
   size_t bins0 = arrayUtility.bins(0);
+  
+  ACTS_DEBUG("Creating a SurfaceArray on a cylinder");
+  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
+  ACTS_VERBOSE(" -- with phi x z  = " << bins0 << " x " << bins1 << " = " 
+    << bins0 * bins1 << " bins.");
+  
   // prepare the surface matrix
   SurfaceGrid sGrid(1, SurfaceMatrix(bins1, SurfaceVector(bins0, nullptr)));
   V3Matrix    v3Matrix(bins1, V3Vector(bins0, Vector3D(0., 0., 0.)));
@@ -132,7 +140,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
       v3Matrix[iz][iphi] = Vector3D(R * cos(phi), R * sin(phi), z);
     }
   }
-  // complete the Binning @TODO switch on when we have a faster method for this
+  // complete the Binning 
+  // @TODO switch on when we have a faster method for this
   completeBinning(arrayUtility, v3Matrix, surfaces, sGrid);
   // create the surfaceArray
   std::unique_ptr<Acts::SurfaceArray> sArray
