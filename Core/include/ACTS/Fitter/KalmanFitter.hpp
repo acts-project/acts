@@ -151,6 +151,7 @@ public:
       pPredicted = step->getPredictedState();
       step->setCalibratedMeasurement(m_oCalibrator(m, *pPredicted));
       step->setFilteredState(m_oUpdator(m, *pPredicted));
+      pUpdated = step->getFilteredState();
       c.push_back(std::move(step));
     }
 
