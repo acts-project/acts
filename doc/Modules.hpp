@@ -17,6 +17,14 @@
 /// @ingroup Design
 /// @brief description of debug output options
 ///
+/// The ACTS logging facility supports several severity levels which allow you
+/// to control the amount of information displayed at run-time. Logger objects
+/// can easily be created using the Acts::getDefaultLogger function which
+/// should be sufficient to get you started. In case you need more customized
+/// debug output, you can make use of the output decorators defined in
+/// Acts::Logging or even write your own implementation of
+/// Acts::Logging::OutputDecorator.
+///
 /// In order to add debug messages to your program, you should use the provided
 /// macros for the different severity levels:
 /// - #ACTS_VERBOSE
@@ -28,15 +36,12 @@
 ///
 /// All of these macros require that a function <tt>logger()</tt> returning a
 /// Acts::Logger object is available in the scope in which the macros are used.
-/// For your convenience, the macro #ACTS_LOCAL_LOGGER is provided which does
-/// the job for you. The ACTS logging facility supports several severity levels
-/// which
-/// allow you to control the amount of information displayed at run-time. Logger
-/// objects can easily be created using the Acts::getDefaultLogger function
-/// which should be sufficient to get you started. In case you need more
-/// customized debug output, you can make use of the output decorators defined
-/// in Acts::Logging or even write your own implementation of
-/// Acts::Logging::OutputDecorator.
+/// Inside classes containing an Acts::Logger object as member variable, this
+/// could be achieved by providing a private class method called <tt>logger()</tt>
+/// (for an example see e.g. Acts::CylinderVolumeBuilder::logger). Inside free
+/// functions or member methods with local logger objects, the same effect can
+/// be achieved by using the macro #ACTS_LOCAL_LOGGER which is provided for your
+/// convenience.
 ///
 /// @par Code example illustrating the usage
 /// @code{.cpp}
@@ -80,7 +85,7 @@
 /// task C++. We recommend the following approach using the possibility to inject
 /// custom code by pre-loading shared libraries with <tt>LD_PRELOAD</tt>. You
 /// need to provide an appropriate implementation for a function of the following
-/// signature into a separate and compile it in a shared library
+/// signature into a separate source file and compile it in a shared library
 ///
 /// @code{.cpp}
 /// namespace Acts {
