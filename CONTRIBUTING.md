@@ -126,7 +126,7 @@ step, you need to configure your fork to be compatible with the current CI
 setup:
 
 * add the user 'atsjenkins' as a developer to your fork
-* from your project page go to "Settings -> Services -> JIRA" clear the field
+* from your project page go to "Settings -> Integrations -> JIRA" clear the field
 "Username" and leave it empty
 
 **Important:** The second option is needed due to some limitations in the GitLab
