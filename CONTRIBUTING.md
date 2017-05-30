@@ -68,7 +68,7 @@ You can change those settings by either editing the `.gitconfig` file in your ho
 Further recommended settings are:
 
     git config --global push.default simple
-    git config --global pill.rebase true
+    git config --global pull.rebase true
 
 #### Getting a local working copy
 
