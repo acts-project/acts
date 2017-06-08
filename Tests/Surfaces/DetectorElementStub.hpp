@@ -169,7 +169,7 @@ DetectorElementStub::transform(const Identifier&) const
 inline std::shared_ptr<const DigitizationModule>
 DetectorElementStub::digitizationModule() const
 {
-  return nullptr;
+  return DetectorElementBase::digitizationModule();
 }
 
 inline const Surface&
