@@ -17,8 +17,13 @@ if (BUILD_TGEO_PLUGIN)
     target_include_directories (ACTSTGeoPlugin PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
 
     # setup linker dependencies
+    # temporary support for ROOT version 6.08 without CMake Namespace
     target_link_libraries (ACTSTGeoPlugin PUBLIC ACTSCore)
-    target_link_libraries (ACTSTGeoPlugin PUBLIC Geom)
+    if (${ROOT_VERSION_MINOR} MATCHES "8" )
+      target_link_libraries (ACTSTGeoPlugin PUBLIC Geom)
+    else (${ROOT_VERSION_MINOR} MATCHES "8" )
+      target_link_libraries (ACTSTGeoPlugin PUBLIC ROOT::Geom)
+    endif (${ROOT_VERSION_MINOR} MATCHES "8" )
 
     # set installation directories
     install (TARGETS ACTSTGeoPlugin EXPORT ACTSTGeoPluginTargets
