@@ -268,12 +268,12 @@ Acts::StaticEngine::handleLayerT(ExtrapolationCell<T>& eCell,
                "in volume " << eCell.leadVolume->volumeName());
   // layer has sub structure - this can be (and the layer will tell you):
   //      - sensitive surface which should be tried to hit
-  //      - material sub structure to be resolved (independent of sensitive
-  //      surface)
+  //      - material sub structure to be resolved 
   bool hasSubStructure = eCell.leadLayer->hasSubStructure(
       eCell.checkConfigurationMode(ExtrapolationMode::CollectSensitive));
-  // [A] layer is a pure navigation layer and has no sub structure -> skip it,
-  // but only if it is not the final layer
+  // [A] layer is a pure navigation layer and has no sub structure
+  // nor material:
+  // -> skip it, but only if it is not the final layer
   if (eCell.leadLayer->layerType() == navigation
       || (!hasSubStructure && eCell.leadLayer != eCell.endLayer)) {
     EX_MSG_VERBOSE(eCell.navigationStep,
