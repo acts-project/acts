@@ -19,6 +19,7 @@ Acts::DD4hepDetElement::DD4hepDetElement(
     const DD4hep::Geometry::DetElement        detElement,
     const std::string&                        axes,
     double                                    scalor,
+    bool                                      buildDigitizationModules,
     std::shared_ptr<const DigitizationModule> digiModule)
   : Acts::TGeoDetectorElement(Identifier(detElement.volumeID()),
                               detElement.worldTransformation(),
@@ -29,8 +30,10 @@ Acts::DD4hepDetElement::DD4hepDetElement(
   , m_digiModule(digiModule)
 
 {
-  // access the segmentation and create digitization module if not handed over
-  if (m_detElement.volume().isSensitive() && !m_digiModule) {
+  // if wanted access the segmentation and create digitization module if not
+  // handed over
+  if (buildDigitizationModules && m_detElement.volume().isSensitive()
+      && !m_digiModule) {
     DD4hep::Geometry::SensitiveDetector sensDet(
         m_detElement.volume().sensitiveDetector());
     sensDet.verifyObject();

@@ -140,8 +140,8 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
       // check if layer should have material
       if (detExtension->hasSupportMaterial()) {
         std::pair<size_t, size_t> materialBins = detExtension->materialBins();
-        size_t bins1    = materialBins.first;
-        size_t bins2    = materialBins.second;
+        size_t           bins1 = materialBins.first;
+        size_t           bins2 = materialBins.second;
         Acts::BinUtility materialBinUtil(
             bins1, -M_PI, M_PI, Acts::closed, Acts::binPhi);
         materialBinUtil += Acts::BinUtility(
@@ -308,8 +308,8 @@ Acts::DD4hepLayerBuilder::centralLayers() const
       // check if layer should have material
       if (detExtension->hasSupportMaterial()) {
         std::pair<size_t, size_t> materialBins = detExtension->materialBins();
-        size_t bins1    = materialBins.first;
-        size_t bins2    = materialBins.second;
+        size_t bins1           = materialBins.first;
+        size_t bins2           = materialBins.second;
         mutableMaterialBinUtil = new Acts::BinUtility(
             bins1, -M_PI, M_PI, Acts::closed, Acts::binPhi);
         (*mutableMaterialBinUtil) += Acts::BinUtility(
@@ -479,8 +479,8 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
       // check if layer should have material
       if (detExtension->hasSupportMaterial()) {
         std::pair<size_t, size_t> materialBins = detExtension->materialBins();
-        size_t bins1    = materialBins.first;
-        size_t bins2    = materialBins.second;
+        size_t bins1           = materialBins.first;
+        size_t bins2           = materialBins.second;
         mutableMaterialBinUtil = new Acts::BinUtility(
             bins1, -M_PI, M_PI, Acts::closed, Acts::binPhi);
         (*mutableMaterialBinUtil) += Acts::BinUtility(
@@ -592,8 +592,12 @@ Acts::DD4hepLayerBuilder::collectSensitive(
           axes1      = detExtension->axes();
         }
         // create the corresponding detector element
-        Acts::DD4hepDetElement* dd4hepDetElement = new Acts::DD4hepDetElement(
-            childDetElement, axes1, units::_cm, digiModule);
+        Acts::DD4hepDetElement* dd4hepDetElement
+            = new Acts::DD4hepDetElement(childDetElement,
+                                         axes1,
+                                         units::_cm,
+                                         m_cfg.buildDigitizationModules,
+                                         digiModule);
         // add surface to surface vector
         surfaces.push_back(&(dd4hepDetElement->surface()));
       }

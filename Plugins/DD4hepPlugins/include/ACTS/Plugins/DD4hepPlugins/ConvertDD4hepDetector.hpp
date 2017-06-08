@@ -66,6 +66,16 @@ namespace Acts {
 /// of the layers contained to build the volume envelope around
 /// @note this parameter only needs to be set if the volumes containing the
 /// layers (e.g. barrel, endcap volumes) have no specific shape (assemblies)
+/// @param buildDigitizationModules Flag indicating if the
+/// Acts::DigitizationModule (needed for Acts geometric digitization) will be
+/// build for every single sensitive DD4hep DetElement translating directly the
+/// DD4hep Segmentation.
+/// @attention Turning on this flag can be very time and memory consuming! If
+/// different modules are sharing the same segmentation (which will be the case
+/// most of the times) please use the
+/// Acts::ActsExtension(std::shared_ptr<const DigitizationModule>) constructor.
+/// More information on the usage can be found
+/// in the description of the Acts::ActsExtension class.
 /// @exception std::logic_error if an error in the translation occurs
 /// @return std::unique_ptr to the full Acts::TrackingGeometry
 std::unique_ptr<const Acts::TrackingGeometry>
@@ -75,7 +85,8 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                       BinningType    bTypeR         = equidistant,
                       BinningType    bTypeZ         = equidistant,
                       double         layerEnvelopeR = 0.,
-                      double         layerEnvelopeZ = 0.);
+                      double         layerEnvelopeZ = 0.,
+                      bool           buildDigitizationModules = false);
 
 /// Method internally used by convertDD4hepDetector
 /// @param [in] detElement the DD4hep::DetElement of the volume of which the

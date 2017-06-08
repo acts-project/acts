@@ -28,7 +28,8 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                       BinningType                  bTypeR,
                       BinningType                  bTypeZ,
                       double                       layerEnvelopeR,
-                      double                       layerEnvelopeZ)
+                      double                       layerEnvelopeZ,
+                      bool                         buildDigitizationModules)
 {
   // check if envelopes of the volume should be built automatically
   bool buildEnvelopes                                  = false;
@@ -231,14 +232,15 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
             lcConfig, Acts::getDefaultLogger("LayerCreator", loggingLevel));
         // configure DD4hepLayerBuilder
         Acts::DD4hepLayerBuilder::Config lbConfig;
-        lbConfig.configurationName = subDetector.name();
-        lbConfig.layerCreator      = layerCreator;
-        lbConfig.negativeLayers    = negativeLayers;
-        lbConfig.centralLayers     = centralLayers;
-        lbConfig.positiveLayers    = positiveLayers;
-        lbConfig.bTypePhi          = bTypePhi;
-        lbConfig.bTypeR            = bTypeR;
-        lbConfig.bTypeZ            = bTypeZ;
+        lbConfig.configurationName        = subDetector.name();
+        lbConfig.layerCreator             = layerCreator;
+        lbConfig.negativeLayers           = negativeLayers;
+        lbConfig.centralLayers            = centralLayers;
+        lbConfig.positiveLayers           = positiveLayers;
+        lbConfig.bTypePhi                 = bTypePhi;
+        lbConfig.bTypeR                   = bTypeR;
+        lbConfig.bTypeZ                   = bTypeZ;
+        lbConfig.buildDigitizationModules = buildDigitizationModules;
         auto dd4hepLayerBuilder
             = std::make_shared<const Acts::DD4hepLayerBuilder>(
                 lbConfig,
@@ -387,11 +389,12 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
           lcConfig, Acts::getDefaultLogger("LayerCreator", loggingLevel));
       // configure DD4hepLayerBuilder
       Acts::DD4hepLayerBuilder::Config lbConfig;
-      lbConfig.configurationName = subDetector.name();
-      lbConfig.layerCreator      = layerCreator;
-      lbConfig.centralLayers     = centralLayers;
-      lbConfig.bTypePhi          = bTypePhi;
-      lbConfig.bTypeZ            = bTypeZ;
+      lbConfig.configurationName        = subDetector.name();
+      lbConfig.layerCreator             = layerCreator;
+      lbConfig.centralLayers            = centralLayers;
+      lbConfig.bTypePhi                 = bTypePhi;
+      lbConfig.bTypeZ                   = bTypeZ;
+      lbConfig.buildDigitizationModules = buildDigitizationModules;
       auto dd4hepLayerBuilder
           = std::make_shared<const Acts::DD4hepLayerBuilder>(
               lbConfig,

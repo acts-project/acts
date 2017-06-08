@@ -65,9 +65,16 @@ public:
   /// underlying DD4hep::Geometry::DetElement object is declared sensitive and
   /// has a readout segmentation, the Acts::DigitizaionModule will be created
   /// for this DD4hepDetElement.
-  DD4hepDetElement(const DD4hep::Geometry::DetElement        detElement,
-                   const std::string&                        axes   = "XYZ",
-                   double                                    scalor = 1.,
+  /// @param buildDigitizationModules Flag indicating if the
+  /// Acts::DigitizationModule (needed for Acts geometric digitization) will be
+  /// build for every single sensitive DD4hep DetElement translating directly
+  /// the DD4hep Segmentation.
+  /// @note For more information please see Acts::convertDD4hepDetector() &
+  /// Acts::ActsExtension.
+  DD4hepDetElement(const DD4hep::Geometry::DetElement detElement,
+                   const std::string&                 axes   = "XYZ",
+                   double                             scalor = 1.,
+                   bool buildDigitizationModules             = false,
                    std::shared_ptr<const DigitizationModule> digiModule
                    = nullptr);
   /// Desctructor
