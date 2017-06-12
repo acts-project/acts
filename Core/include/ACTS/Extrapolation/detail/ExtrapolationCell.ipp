@@ -53,12 +53,10 @@ Acts::ExtrapolationCell<T>::stepMaterial(
     const MaterialProperties* mprop)
 {
   
-  // prepare the extrapolation mode
-  std::vector<ExtrapolationMode::eMode> emode
-      = {ExtrapolationMode::CollectMaterial};
+
       
   // if this is on a new surface, 
-  // create a new extrapolation step
+  // so create a new extrapolation step
   if (extrapolationSteps.size() && 
       (&stepSurface) != extrapolationSteps.back().surface){
       // if the last step was already the destination, 
@@ -74,10 +72,11 @@ Acts::ExtrapolationCell<T>::stepMaterial(
         // then set the new endParameters to the be the stepParameters
         // this sets the stepParameters to nullptr
         endParameters = std::move(stepParameters);
-        // and add Desintation to the mode
-        emode.push_back(ExtrapolationMode::Destination);
-      } else   
+      } else {
+        // create a new destination  
         extrapolationSteps.push_back(ExtrapolationStep<T>());
+      }
+      
   }   
   // we work with the last one it's either 
   // - a nelwy created one
@@ -101,10 +100,9 @@ Acts::ExtrapolationCell<T>::stepMaterial(
     materialX0 += stepFactor * mprop->thicknessInX0();
     materialL0 += stepFactor * mprop->thicknessInL0();
   }
-
-  ExtrapolationConfig stepConfig(emode);
-  // complete the step information
-  cstep.configuration   = stepConfig;
+  // simply add the material configuration
+  cstep.configuration.addMode(ExtrapolationMode::CollectMaterial);
+  // finalise the step information
   cstep.surface         = &stepSurface;
   cstep.material        = mprop;
   cstep.position        = stepPosition;
