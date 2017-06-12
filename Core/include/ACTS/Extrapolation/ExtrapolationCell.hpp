@@ -41,20 +41,20 @@ class ExtrapolationMode
 {
 public:
   enum eMode {
-    Destination             = 1,   // try to hit the destination
-    Propagation             = 2,   // any propagation but destination
-    StopWithPathLimit       = 3,   // stop when the path limit is reached
-    StopWithMaterialLimitX0 = 4,   // stop when  material limit is reached in X0
-    StopWithMaterialLimitL0 = 5,   // stop when material limit is reached in L0
-    StopAtBoundary          = 6,   // stop at the next ID / Calo / MS boundary
-    CollectSensitive        = 7,   // collect parameters on sensitive elements
-    CollectPassive          = 8,   // collect parameters on passive layers
-    CollectBoundary         = 9,   // collect parameters on boundary parameters
-    CollectMaterial         = 10,  // collect all material on the way
-    CollectJacobians        = 11,  // collect the transport jacobians
-    CollectPathSteps        = 12,  // collect the single path steps
-    AvoidFallback           = 13,  // don't fallback to propagation
-    FATRAS                  = 14  // force initial radialDirection to be outward
+    Destination             = 1,   ///< try to hit the destination
+    Propagation             = 2,   ///< any propagation but destination
+    StopWithPathLimit       = 3,   ///< stop when the path limit is reached
+    StopWithMaterialLimitX0 = 4,   ///< stop when  material limit is reached in X0
+    StopWithMaterialLimitL0 = 5,   ///< stop when material limit is reached in L0
+    StopAtBoundary          = 6,   ///< stop at the next ID / Calo / MS boundary
+    CollectSensitive        = 7,   ///< collect parameters on sensitive elements
+    CollectPassive          = 8,   ///< collect parameters on passive layers
+    CollectBoundary         = 9,   ///< collect parameters on boundary parameters
+    CollectMaterial         = 10,  ///< collect all material on the way
+    CollectJacobians        = 11,  ///< collect the transport jacobians
+    CollectPathSteps        = 12,  ///< collect the single path steps
+    AvoidFallback           = 13,  ///< don't fallback to propagation
+    FATRAS                  = 14  ///< force initial radialDirection to be outward
   };
 };
 
