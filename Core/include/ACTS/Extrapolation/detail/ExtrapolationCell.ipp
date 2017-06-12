@@ -52,10 +52,47 @@ Acts::ExtrapolationCell<T>::stepMaterial(
     double                    stepFactor,
     const MaterialProperties* mprop)
 {
+  
+
+      
+  // if this is on a new surface, 
+  // so create a new extrapolation step
+  if (extrapolationSteps.size() && 
+      (&stepSurface) != extrapolationSteps.back().surface){
+      // if the last step was already the destination, 
+      // then do not create a final step
+      // let's check the last one 
+      auto& lstep = extrapolationSteps.back();
+      if (lstep.configuration.checkMode(ExtrapolationMode::Destination)){
+        // in case the last propagation was towards a Desitination
+        // then they are written into the endParameters
+        // after additional material update, we move the endParameters
+        // into the last step, which sets endParameters to nullptr
+        extrapolationSteps.back().parameters = std::move(endParameters);
+        // then set the new endParameters to the be the stepParameters
+        // this sets the stepParameters to nullptr
+        endParameters = std::move(stepParameters);
+      } else {
+        // create a new destination  
+        extrapolationSteps.push_back(ExtrapolationStep<T>());
+      }
+      
+  }   
+  // we work with the last one it's either 
+  // - a nelwy created one
+  // - the last one 
+  auto& cstep = extrapolationSteps.back();
+
   // if there's new stepParameters then change the lead
   if (stepParameters) {
+    // store the old parameters if present
+    if (cstep.parameters) 
+        cstep.preparameters = std::move(cstep.parameters);
+    // bookkeeping    
     lastLeadParameters = leadParameters;
     leadParameters     = stepParameters.get();
+    // setting
+    cstep.parameters   = std::move(stepParameters);
   }
   // add material to the global counters
   if (mprop) {
@@ -63,25 +100,12 @@ Acts::ExtrapolationCell<T>::stepMaterial(
     materialX0 += stepFactor * mprop->thicknessInX0();
     materialL0 += stepFactor * mprop->thicknessInL0();
   }
-  // prepare the extrapolation mode
-  std::vector<ExtrapolationMode::eMode> emode
-      = {ExtrapolationMode::CollectMaterial};
-  // check the last step if this is a potential update on
-  if (stepParameters && extrapolationSteps.size()
-      && extrapolationSteps.back().configuration.checkMode(
-             ExtrapolationMode::Destination)) {
-    // we move the endParameters into the last step
-    // this should set endParameters to nullptr
-    extrapolationSteps.back().parameters = std::move(endParameters);
-    // set the new endParameters to the stepParameters
-    endParameters = std::move(stepParameters);
-    // update the current mode to also be Destination
-    emode.push_back(ExtrapolationMode::Destination);
-  }
-  ExtrapolationConfig stepConfig(emode);
-  extrapolationSteps.push_back(ExtrapolationStep<T>(
-      std::move(stepParameters), &stepSurface, stepConfig, mprop, nullptr));
-  // complete the step information
-  extrapolationSteps.back().position        = stepPosition;
-  extrapolationSteps.back().materialScaling = stepFactor;
+  // simply add the material configuration
+  cstep.configuration.addMode(ExtrapolationMode::CollectMaterial);
+  // finalise the step information
+  cstep.surface         = &stepSurface;
+  cstep.material        = mprop;
+  cstep.position        = stepPosition;
+  cstep.materialScaling = stepFactor;
+
 }

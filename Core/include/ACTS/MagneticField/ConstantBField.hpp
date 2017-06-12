@@ -45,7 +45,7 @@ public:
   {
     bxyz[0] = m_BField[0];
     bxyz[1] = m_BField[1];
-    bxyz[2] = m_BField[2];
+    bxyz[2] = m_BField[2];    
   }
 
   /// @brief retrieve magnetic field value
@@ -64,7 +64,6 @@ public:
     bxyz[0] = m_BField[0];
     bxyz[1] = m_BField[1];
     bxyz[2] = m_BField[2];
-
     deriv[0] = 0;
     deriv[1] = 0;
     deriv[2] = 0;

@@ -45,12 +45,13 @@ Acts::ExtrapolationEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
     // get the appropriate IExtrapolationEngine
     GeometryType geoType
         = eCell.leadVolume->geometrySignature() > 2 ? Dense : Static;
-
+    // the geometry signature determines which engines to be used
     std::shared_ptr<const IExtrapolationEngine> iee
         = (m_cfg.extrapolationEngines.size()
            > eCell.leadVolume->geometrySignature())
         ? m_cfg.extrapolationEngines[geoType]
         : nullptr;
+    // the extrapolation is then done
     eCode = iee ? iee->extrapolate(eCell, sf, bcheck)
                 : ExtrapolationCode::FailureConfiguration;
     // give a message about what you have
@@ -62,6 +63,7 @@ Acts::ExtrapolationEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
                        << " and geoType:"
                        << geoType);
   }
+  // debug output to screen 
   EX_MSG_DEBUG(
       eCell.navigationStep,
       "extrapolate",

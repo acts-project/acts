@@ -565,7 +565,7 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
                                        const T&             pars,
                                        PropDirection        pDir,
                                        const BoundaryCheck& bcheck,
-                                       bool                 resolveMaterial,
+                                       bool resolveMaterial,
                                        bool resolveSensitive) const
 {
   // get position and momentum from the parameters
