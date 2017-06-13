@@ -77,8 +77,8 @@ Acts::ExtrapolationCell<T>::stepMaterial(
   } else {
     // a new step is needed for the first one in any case
     extrapolationSteps.push_back(ExtrapolationStep<T>());
-  }   
-     
+  }
+
   // we work with the last one it's either 
   // - a nelwy created one
   // - the last one 
