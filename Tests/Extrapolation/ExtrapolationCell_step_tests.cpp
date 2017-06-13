@@ -243,7 +243,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(ecc.extrapolationSteps[3].parameters.get(),
                       dParametersPtr);
     // the leadParameters should be t
-    // - identical to the destination parameters
+    // - identical to the destination parameters (one but last parameters)
     BOOST_CHECK_EQUAL(dParametersPtr, ecc.leadParameters);
     // the lastLeadParameters should be the
     // - the parameter before the last transport
@@ -252,10 +252,10 @@ namespace Test {
     BOOST_CHECK_EQUAL(2 * pathLength, ecc.pathLength);
     // the thickness in X0 is still two times thickness/X0
     BOOST_CHECK_CLOSE(3. * thickness / X0, ecc.materialX0, 0.001);
-    // it *thinks* it would be the last step so
+    // the last step parameters are the destination parameters
     BOOST_CHECK_EQUAL(dParametersPtr,
                       ecc.extrapolationSteps.back().parameters.get());
-    // the end parameters should be the the dParametersPtr
+    // the end parameters are the material-updated destination parameters
     BOOST_CHECK_EQUAL(ecc.endParameters.get(), dMatParametersPtr);
   }
 }  // end of namespace Test
