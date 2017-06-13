@@ -6,29 +6,92 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ACTS/Digitization/CartesianSegmentation.hpp"
+#include "ACTS/Digitization/DigitizationModule.hpp"
 #include "ACTS/Plugins/DD4hepPlugins/DD4hepDetElement.hpp"
+#include "ACTS/Surfaces/RectangleBounds.hpp"
+#include "ACTS/Surfaces/Surface.hpp"
+#include "ACTS/Surfaces/TrapezoidBounds.hpp"
 #include "ACTS/Utilities/Units.hpp"
+#include "DD4hep/CartesianGridXY.h"
 
 Acts::DD4hepDetElement::DD4hepDetElement(
-    const DD4hep::Geometry::DetElement detElement,
-    const std::string&                 axes,
-    double                             scalor)
+    const DD4hep::Geometry::DetElement        detElement,
+    const std::string&                        axes,
+    double                                    scalor,
+    bool                                      buildDigitizationModules,
+    std::shared_ptr<const DigitizationModule> digiModule)
   : Acts::TGeoDetectorElement(Identifier(detElement.volumeID()),
                               detElement.worldTransformation(),
                               detElement.placement().ptr(),
                               axes,
                               scalor)
   , m_detElement(std::move(detElement))
+  , m_digiModule(digiModule)
 
 {
-  // access the segmentation
-  if (m_detElement.volume().isSensitive()) {
+  // if wanted access the segmentation and create digitization module if not
+  // handed over
+  if (buildDigitizationModules && m_detElement.volume().isSensitive()
+      && !m_digiModule) {
     DD4hep::Geometry::SensitiveDetector sensDet(
         m_detElement.volume().sensitiveDetector());
     sensDet.verifyObject();
+    // assign the segmentation
     m_segmentation = sensDet.readout().segmentation();
-  } else
-    throw "Detector element is not declared sensitive, can not "
-          "access segmentation";
-  // @todo when sensitive detector is component
+    // @todo when sensitive detector is component
+
+    // Now create the DigitizationModule
+    // get the grid from DD4hep
+    DD4hep::Geometry::CartesianGridXY cartesianGrid = m_segmentation;
+    if (cartesianGrid.isValid()) {
+      // the segmentation of the DigitizationModule
+      std::shared_ptr<const CartesianSegmentation> segmentation = nullptr;
+      // find out the surface bounds
+      // rectangular case
+      std::shared_ptr<const RectangleBounds> bounds(
+          dynamic_cast<const RectangleBounds*>(
+              this->surface().bounds().clone()));
+      if (bounds) {
+        // the number of bins is the total length of the module divided by the
+        // cell length
+        size_t bins0 = (cartesianGrid.gridSizeX() != 0)
+            ? (bounds->halflengthX() * 2.) / cartesianGrid.gridSizeX()
+            : 0;
+        size_t bins1 = (cartesianGrid.gridSizeY())
+            ? (bounds->halflengthY() * 2.) / cartesianGrid.gridSizeY()
+            : 0;
+        // create the segmentation
+        segmentation = std::make_shared<const CartesianSegmentation>(
+            bounds, bins0, bins1);
+      }
+      // trapezoidal case
+      std::shared_ptr<const TrapezoidBounds> tbounds(
+          dynamic_cast<const TrapezoidBounds*>(
+              this->surface().bounds().clone()));
+      if (tbounds) {
+        // the number of bins is the total length of the module divided by the
+        // cell length
+        size_t bins0 = (cartesianGrid.gridSizeX() != 0)
+            ? (tbounds->maxHalflengthX() * 2.) / cartesianGrid.gridSizeX()
+            : 0;
+        size_t bins1 = (cartesianGrid.gridSizeY() != 0)
+            ? (tbounds->halflengthY() * 2.) / cartesianGrid.gridSizeY()
+            : 0;
+        // create the segmentation
+        segmentation = std::make_shared<const CartesianSegmentation>(
+            tbounds, bins0, bins1);
+      }
+      // finally create the digitization module
+      // @todo set lorentz angle
+      m_digiModule = std::make_shared<const DigitizationModule>(
+          segmentation, this->thickness(), 1, 0);
+    }
+  }
+}
+
+std::shared_ptr<const Acts::DigitizationModule>
+Acts::DD4hepDetElement::digitizationModule() const
+{
+  return m_digiModule;
 }

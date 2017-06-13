@@ -44,16 +44,16 @@ public:
     /// string based identification
     std::string configurationName = "undefined";
     /// layer creator which is internally used to build layers
-    std::shared_ptr<const ILayerCreator> layerCreator;
+    std::shared_ptr<const ILayerCreator> layerCreator = nullptr;
     /// the binning type of the contained surfaces in phi
     /// (equidistant/arbitrary)
-    BinningType bTypePhi;
+    BinningType bTypePhi = equidistant;
     /// the binning type of the contained surfaces in r
     /// (equidistant/arbitrary)
-    BinningType bTypeR;
+    BinningType bTypeR = equidistant;
     /// the binning type of the contained surfaces in z
     /// (equidistant/arbitrary)
-    BinningType bTypeZ;
+    BinningType bTypeZ = equidistant;
     /// the DD4hep::DetElements of the layers of the negative volume (negative
     /// endcap)
     /// @note if the current volume has no endcaps or no layers this parameter
@@ -67,6 +67,13 @@ public:
     /// @note if the current volume has no endcaps or no layers this parameter
     /// will not be set
     std::vector<DD4hep::Geometry::DetElement> positiveLayers;
+    /// @param buildDigitizationModules Flag indicating if the
+    /// Acts::DigitizationModule (needed for Acts geometric digitization) will
+    /// be build for every single sensitive DD4hep DetElement translating
+    /// directly the DD4hep Segmentation.
+    /// @note For more information please see Acts::convertDD4hepDetector() &
+    /// Acts::ActsExtension.
+    bool buildDigitizationModules = false;
   };
 
   /// Constructor

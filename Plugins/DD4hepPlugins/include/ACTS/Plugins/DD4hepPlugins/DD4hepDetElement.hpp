@@ -57,17 +57,41 @@ public:
   /// 	- "YZX" -> node y axis is tracking x axis, etc.
   ///		- "XzY" -> negative node z axis is tracking y axis, etc.
   /// @param scalor is the scale factor for unit conversion if needed
+  /// @param digiModule Possibility to hand over Acrs::DigitizationModule as a
+  /// shared
+  /// pointer to allow many DD4hepDetElements to hold the same
+  /// Acts::DigitizationModule to reduce memory. In case it is not handed over
+  /// and the
+  /// underlying DD4hep::Geometry::DetElement object is declared sensitive and
+  /// has a readout segmentation, the Acts::DigitizaionModule will be created
+  /// for this DD4hepDetElement.
+  /// @param buildDigitizationModules Flag indicating if the
+  /// Acts::DigitizationModule (needed for Acts geometric digitization) will be
+  /// build for every single sensitive DD4hep DetElement translating directly
+  /// the DD4hep Segmentation.
+  /// @note For more information please see Acts::convertDD4hepDetector() &
+  /// Acts::ActsExtension.
   DD4hepDetElement(const DD4hep::Geometry::DetElement detElement,
                    const std::string&                 axes   = "XYZ",
-                   double                             scalor = 1.);
+                   double                             scalor = 1.,
+                   bool buildDigitizationModules             = false,
+                   std::shared_ptr<const DigitizationModule> digiModule
+                   = nullptr);
   /// Desctructor
   virtual ~DD4hepDetElement() = default;
+
+  /// Return the DigitizationModule
+  /// @return optionally the DigitizationModule
+  virtual std::shared_ptr<const DigitizationModule>
+  digitizationModule() const final override;
 
 private:
   /// DD4hep detector element
   DD4hep::Geometry::DetElement m_detElement;
   /// DD4hep segmentation
   DD4hep::Geometry::Segmentation m_segmentation;
+  /// The DigitizationModule
+  std::shared_ptr<const DigitizationModule> m_digiModule;
 };
 }
 

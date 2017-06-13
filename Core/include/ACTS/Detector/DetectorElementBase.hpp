@@ -79,7 +79,7 @@ public:
   /// Return the DigitizationModule
   /// @return optionally the DigitizationModule
   virtual std::shared_ptr<const DigitizationModule>
-  digitizationModule() const;
+  digitizationModule() const = 0;
 
   /// Returns the thickness of the module
   /// @return double that indicates the thickness of the module

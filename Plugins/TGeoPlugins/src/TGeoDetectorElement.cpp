@@ -7,14 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ACTS/Plugins/TGeoPlugins/TGeoDetectorElement.hpp"
+#include <boost/algorithm/string.hpp>
+#include <iostream>
+#include "ACTS/Digitization/DigitizationModule.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
-//#include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
-//#include "ACTS/Material/Material.hpp"
-//#include "ACTS/Material/MaterialProperties.hpp"
-#include <boost/algorithm/string.hpp>
-#include <iostream>
 #include "ACTS/Utilities/Definitions.hpp"
 #include "TGeoBBox.h"
 #include "TGeoTrd2.h"
@@ -572,4 +570,10 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(const Identifier& identifier,
 
 Acts::TGeoDetectorElement::~TGeoDetectorElement()
 {
+}
+
+std::shared_ptr<const Acts::DigitizationModule>
+Acts::TGeoDetectorElement::digitizationModule() const
+{
+  return DetectorElementBase::digitizationModule();
 }

@@ -14,6 +14,7 @@
 #define ACTS_DD4HEPDETECTORELEMENT_IACTSEXTENSION_H 1
 
 // Algebra
+#include <memory>
 #include <vector>
 #include "ACTS/Utilities/Definitions.hpp"
 
@@ -21,6 +22,7 @@ namespace DD4hep {
 namespace Geometry {
   class DetElement;
   class Segmentation;
+  class Volume;
 }
 }
 
@@ -54,6 +56,10 @@ namespace Acts {
 /// In case the sensitive modules/components contained by a layer have a
 /// different orientation in respect to the local tracking frame of ACTS, the
 /// axes orientation of these modules can be set for the layer.
+/// In case the segmentation is set for the module (by using the second
+/// constructor setting the segmentation or using the setSegmentation()
+/// function), the axes do not need to be set for the layer, which containes
+/// the modules.
 ///
 /// In DD4hep cylinder and disc volumes are both described with the underlying
 /// ROOT TGeoConeSeg class. In ACTS one needs to distinguish these two volume
@@ -65,7 +71,7 @@ namespace Acts {
 ///
 /// @note see Acts::ActsExtension for implementation.
 
-class Module;
+class DigitizationModule;
 
 /// @enum LayerMaterialPos The LayerMaterialPos enumeration is foreseen to mark
 /// on which surface
@@ -128,6 +134,9 @@ public:
   /// DetElement to automatically create the layer envelope
   virtual double
   envelopeZ() const = 0;
+  /// @return the Acts::DigitizationModule
+  virtual std::shared_ptr<const DigitizationModule>
+  digitizationModule() const = 0;
 
 protected:
   /// Protected constructor
