@@ -573,7 +573,6 @@ Acts::DD4hepLayerBuilder::collectSensitive(
     std::vector<const Acts::Surface*>&  surfaces,
     const std::string&                  axes) const
 {
-  std::string                                   axes1 = axes;
   const DD4hep::Geometry::DetElement::Children& children
       = detElement.children();
   if (!children.empty()) {
@@ -587,14 +586,12 @@ Acts::DD4hepLayerBuilder::collectSensitive(
           detExtension = childDetElement.extension<Acts::IActsExtension>();
         } catch (std::runtime_error& e) {
         }
-        if (detExtension) {
-          digiModule = detExtension->digitizationModule();
-          axes1      = detExtension->axes();
-        }
+        if (detExtension) digiModule = detExtension->digitizationModule();
+
         // create the corresponding detector element
         Acts::DD4hepDetElement* dd4hepDetElement
             = new Acts::DD4hepDetElement(childDetElement,
-                                         axes1,
+                                         axes,
                                          units::_cm,
                                          m_cfg.buildDigitizationModules,
                                          digiModule);
