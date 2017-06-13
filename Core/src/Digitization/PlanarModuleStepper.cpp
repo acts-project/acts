@@ -121,7 +121,7 @@ Acts::PlanarModuleStepper::cellSteps(const Acts::DigitizationModule& dmodule,
     if (boundaryIntersections[0].pathLength
             * boundaryIntersections[1].pathLength
         < 0.)
-      boundaryIntersections.erase(boundaryIntersections.end());
+      boundaryIntersections.pop_back();
     else
       boundaryIntersections.erase(boundaryIntersections.begin());
   }
