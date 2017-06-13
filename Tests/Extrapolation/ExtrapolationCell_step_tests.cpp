@@ -234,7 +234,7 @@ namespace Test {
                      dMatParametersPtr->referenceSurface(),
                      1.,
                      &siliconProperties);
-    
+
     // it's the final step:
     // - no new extrapolation step is created, the size stays at 4
     BOOST_CHECK_EQUAL(4ul, ecc.extrapolationSteps.size());
@@ -243,17 +243,18 @@ namespace Test {
     BOOST_CHECK_EQUAL(ecc.extrapolationSteps[3].parameters.get(),
                       dParametersPtr);
     // the leadParameters should be t
-    // - identical to the destination parameters                  
+    // - identical to the destination parameters
     BOOST_CHECK_EQUAL(dParametersPtr, ecc.leadParameters);
-    // the lastLeadParameters should be the 
-    // - the parameter before the last transport 
+    // the lastLeadParameters should be the
+    // - the parameter before the last transport
     BOOST_CHECK_EQUAL(pMatParametersPtr, ecc.lastLeadParameters);
     /// the step length should be the pathLength
     BOOST_CHECK_EQUAL(2 * pathLength, ecc.pathLength);
     // the thickness in X0 is still two times thickness/X0
     BOOST_CHECK_CLOSE(3. * thickness / X0, ecc.materialX0, 0.001);
     // it *thinks* it would be the last step so
-    BOOST_CHECK_EQUAL(dParametersPtr, ecc.extrapolationSteps.back().parameters.get());
+    BOOST_CHECK_EQUAL(dParametersPtr,
+                      ecc.extrapolationSteps.back().parameters.get());
     // the end parameters should be the the dParametersPtr
     BOOST_CHECK_EQUAL(ecc.endParameters.get(), dMatParametersPtr);
   }
