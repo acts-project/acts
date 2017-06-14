@@ -128,7 +128,7 @@ public:
   ///
   /// @param gbu is the additional BinUtility to be chosen
   BinUtility&
-  operator+=(const BinUtility& gbu) throw(std::string)
+  operator+=(const BinUtility& gbu)
   {
     const std::vector<BinningData>& bData = gbu.binningData();
     if (m_binningData.size() + bData.size() > 3)
@@ -329,7 +329,7 @@ public:
   ///
   /// @return the binning value of the accessor entry
   BinningValue
-  binningValue(size_t ba = 0) const throw(std::string)
+  binningValue(size_t ba = 0) const
   {
     if (ba >= m_binningData.size()) throw "dimension out of bounds";
     return (m_binningData[ba].binvalue);
