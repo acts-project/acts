@@ -53,8 +53,6 @@ Acts::ExtrapolationCell<T>::stepMaterial(
     const MaterialProperties* mprop)
 {
   
-
-      
   // if this is on a new surface, 
   // so create a new extrapolation step
   if (extrapolationSteps.size() && 
@@ -76,8 +74,11 @@ Acts::ExtrapolationCell<T>::stepMaterial(
         // create a new destination  
         extrapolationSteps.push_back(ExtrapolationStep<T>());
       }
-      
-  }   
+  } else {
+    // a new step is needed for the first one in any case
+    extrapolationSteps.push_back(ExtrapolationStep<T>());
+  }
+
   // we work with the last one it's either 
   // - a nelwy created one
   // - the last one 
