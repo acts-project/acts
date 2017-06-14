@@ -17,7 +17,6 @@
 #include <boost/test/output_test_stream.hpp>
 // leave blank line
 
-//
 #include <limits>
 #include "ACTS/Layers/PlaneLayer.hpp"
 #include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
@@ -30,8 +29,6 @@
 
 using boost::test_tools::output_test_stream;
 namespace utf    = boost::unit_test;
-const double inf = std::numeric_limits<double>::infinity();
-const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
 /// Mock track object with minimal methods implemented for compilation

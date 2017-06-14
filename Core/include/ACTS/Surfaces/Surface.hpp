@@ -69,13 +69,15 @@ public:
   Surface(std::shared_ptr<const Transform3D> htrans = nullptr);
 
   /// Copy constructor
-  /// - invalidates the association to detector element and identifier
+  /// @note copy construction invalidates the association 
+  /// to detector element and identifier
   ///
   /// @param other Source surface for copy.
   Surface(const Surface& other);
 
   /// Copy constructor with shift
-  /// - invalidates the association to detector element and identifier
+  /// @note copy construction invalidates the association 
+  /// to detector element and identifier
   ///
   /// @param other Source surface for copy
   /// @param transf Additional transform applied after copying from the source
@@ -92,9 +94,8 @@ public:
   virtual ~Surface();
 
   /// Assignment operator is not allowed
-  /// @note handle with care !
-  // The alssignment invalidates the link to detector element, identifier, layer
-  // or tracking volume.
+  /// @note copy construction invalidates the association 
+  /// to detector element and identifier
   ///
   /// @param other Source surface for the assignment
   Surface&

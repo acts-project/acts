@@ -26,7 +26,7 @@
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
 namespace utf    = boost::unit_test;
-const double inf = std::numeric_limits<double>::infinity();
+//const double inf = std::numeric_limits<double>::infinity();
 const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
@@ -170,7 +170,7 @@ namespace Test {
      Bounds  : Acts::CylinderBounds: (radius, averagePhi, halfPhiSector, halflengthInZ) = (1.0000000, 0.0000000, 3.1415927, 10.0000000)"));
   }
 
-  BOOST_AUTO_TEST_CASE(EqualityOperators, *utf::expected_failures(1))
+  BOOST_AUTO_TEST_CASE(EqualityOperators)
   {
     double          radius(1.0), halfZ(10.);
     Translation3D   translation{0., 1., 2.};
@@ -184,7 +184,7 @@ namespace Test {
     //
     BOOST_TEST_CHECKPOINT(
         "Create and then assign a CylinderSurface object to the existing one");
-    /// Test assignment (will fail at the equality test)
+    /// Test assignment 
     CylinderSurface assignedCylinderSurface(nullptr, NaN, NaN);
     assignedCylinderSurface = cylinderSurfaceObject;
     /// Test equality of assigned to original

@@ -28,7 +28,7 @@
 
 namespace utf    = boost::unit_test;
 namespace tt     = boost::test_tools;
-const double inf = std::numeric_limits<double>::infinity();
+//const double inf = std::numeric_limits<double>::infinity();
 const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {

@@ -28,7 +28,7 @@
 
 using boost::test_tools::output_test_stream;
 namespace utf    = boost::unit_test;
-const double inf = std::numeric_limits<double>::infinity();
+//const double inf = std::numeric_limits<double>::infinity();
 const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
@@ -87,7 +87,7 @@ namespace Test {
      Center position  (x, y, z) = (1.0000000, 1.0000000, 1.0000000)"));
   }
 
-  BOOST_AUTO_TEST_CASE(EqualityOperators, *utf::expected_failures(1))
+  BOOST_AUTO_TEST_CASE(EqualityOperators)
   {
     Vector3D       unitXYZ{1., 1., 1.};
     Vector3D       invalidPosition{NaN, NaN, NaN};
