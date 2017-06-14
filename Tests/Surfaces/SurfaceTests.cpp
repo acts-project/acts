@@ -108,7 +108,7 @@ namespace Test {
     BOOST_TEST(surface.associatedLayer() == pLayer.get());
     // associated Material is not set to the surface
     // it is set to the detector element surface though
-    BOOST_TEST(surface.associatedMaterial() != pMaterial.get()); 
+    BOOST_TEST(surface.associatedMaterial() != pMaterial.get());
     // center()
     BOOST_TEST(reference == surface.center());
     // stream insertion operator <<
@@ -195,12 +195,13 @@ namespace Test {
     bool equalSurface = (surface1 == surface2);
     BOOST_TEST(equalSurface, "Equality between similar surfaces");
     //
-    // remove test for the moment, 
+    // remove test for the moment,
     // surfaces do not have a concept of thickness (only detector elemetns have)
-    //bool unequalSurface
+    // bool unequalSurface
     //    = (surface1 != surface3);  // only thickness is different here;
-    //BOOST_TEST(unequalSurface,
-    //           "Different thickness surfaces should be unequal");  // will fail
+    // BOOST_TEST(unequalSurface,
+    //           "Different thickness surfaces should be unequal");  // will
+    //           fail
     //
     bool unequalSurface
         = (surface1 != surface4);  // bounds or transform must be different;

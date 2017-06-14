@@ -26,7 +26,7 @@
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
 namespace utf    = boost::unit_test;
-//const double inf = std::numeric_limits<double>::infinity();
+// const double inf = std::numeric_limits<double>::infinity();
 const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
@@ -184,7 +184,7 @@ namespace Test {
     //
     BOOST_TEST_CHECKPOINT(
         "Create and then assign a CylinderSurface object to the existing one");
-    /// Test assignment 
+    /// Test assignment
     CylinderSurface assignedCylinderSurface(nullptr, NaN, NaN);
     assignedCylinderSurface = cylinderSurfaceObject;
     /// Test equality of assigned to original

@@ -93,7 +93,7 @@ public:
   }
 
   void
-  assignIdentifier(const Identifier& identifier) override 
+  assignIdentifier(const Identifier& identifier) override
   {
     m_elementIdentifier = identifier;
   }

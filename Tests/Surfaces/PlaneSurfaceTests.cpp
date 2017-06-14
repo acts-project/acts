@@ -25,9 +25,9 @@
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
-namespace utf    = boost::unit_test;
-//const double inf = std::numeric_limits<double>::infinity();
-//const double NaN = std::numeric_limits<double>::quiet_NaN();
+namespace utf = boost::unit_test;
+// const double inf = std::numeric_limits<double>::infinity();
+// const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
 
@@ -70,7 +70,7 @@ namespace Test {
     auto          pTransform = std::make_shared<const Transform3D>(translation);
     // auto pNullTransform = std::make_shared<const Transform3D>();
     PlaneSurface PlaneSurfaceObject(pTransform, rBounds);
-    // 
+    //
     auto pClonedPlaneSurface = PlaneSurfaceObject.clone();
     BOOST_TEST(pClonedPlaneSurface->type() == Surface::Plane);
     delete pClonedPlaneSurface;
@@ -88,7 +88,7 @@ namespace Test {
     Vector3D         momentum{1.e6, 1.e6, 1.e6};
     RotationMatrix3D expectedFrame;
     expectedFrame << 1., 0., 0., 0., 1., 0., 0., 0., 1.;
-      
+
     BOOST_TEST(PlaneSurfaceObject.measurementFrame(globalPosition, momentum)
                    .isApprox(expectedFrame));
     //
@@ -98,22 +98,24 @@ namespace Test {
     //
     /// Test bounds
     BOOST_TEST(PlaneSurfaceObject.bounds().type() == SurfaceBounds::Rectangle);
-    
+
     /// Test localToGlobal
     Vector2D localPosition{1.5, 1.7};
     PlaneSurfaceObject.localToGlobal(localPosition, momentum, globalPosition);
-    // 
+    //
     // expected position is the translated one
-    Vector3D expectedPosition{1.5+translation.x(), 1.7+translation.y(), translation.z()};
+    Vector3D expectedPosition{
+        1.5 + translation.x(), 1.7 + translation.y(), translation.z()};
 
     BOOST_TEST(globalPosition.isApprox(expectedPosition, withinOnePercent));
     //
     /// Testing globalToLocal
     PlaneSurfaceObject.globalToLocal(globalPosition, momentum, localPosition);
     Vector2D expectedLocalPosition{1.5, 1.7};
-    
-    BOOST_TEST(localPosition.isApprox(expectedLocalPosition, withinOnePercent), "Testing globalToLocal");
- 
+
+    BOOST_TEST(localPosition.isApprox(expectedLocalPosition, withinOnePercent),
+               "Testing globalToLocal");
+
     /// Test isOnSurface
     Vector3D offSurface{0, 1, -2.};
     BOOST_TEST(PlaneSurfaceObject.isOnSurface(globalPosition, true) == true);
@@ -130,7 +132,7 @@ namespace Test {
     BOOST_TEST(intersect.distance == expectedIntersect.distance);
     //
     /// Test pathCorrection
-    //BOOST_TEST(PlaneSurfaceObject.pathCorrection(offSurface, momentum)
+    // BOOST_TEST(PlaneSurfaceObject.pathCorrection(offSurface, momentum)
     //               == 0.40218866453252877,
     //           tt::tolerance(0.01));
     //
@@ -150,18 +152,16 @@ namespace Test {
     //      "    Bounds  : Acts::ConeBounds: (tanAlpha, minZ, maxZ, averagePhi,
     //      halfPhiSector) = (0.4142136, 0.0000000, inf, 0.0000000,
     //      3.1415927)"));
-    
-    
   }
 
   BOOST_AUTO_TEST_CASE(EqualityOperators)
   {
     // rectangle bounds
-    auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
+    auto          rBounds = std::make_shared<const RectangleBounds>(3., 4.);
     Translation3D translation{0., 1., 2.};
     auto          pTransform = std::make_shared<const Transform3D>(translation);
     PlaneSurface  PlaneSurfaceObject(pTransform, rBounds);
-    PlaneSurface PlaneSurfaceObject2(pTransform, rBounds);
+    PlaneSurface  PlaneSurfaceObject2(pTransform, rBounds);
     //
     /// Test equality operator
     BOOST_TEST(PlaneSurfaceObject == PlaneSurfaceObject2);
