@@ -468,14 +468,21 @@ public:
   /// -> jacobians need to be cleared
   ///
   /// @param stepParamters is the new unique parameter of the step
+  /// @param stepSurface is the transport surface, it is explicitely given
+  ///        (although i.g. identical to stepParameters.referenceSurface)
+  ///        such that curvilinear parameters can profit from same step
+  ///        saving when transport + material are done successively. 
+  ///        If nullptr is provided, then the stepParameters.referenceSurface
+  ///        is taken. 
   /// @param fillModes are the different indications of the step
   /// @param pathLength is the path length of this step
   /// @param tjac is the transport jacobian of the step
   void
   stepTransport(std::unique_ptr<const T>                 stepParameters,
-                std::vector<ExtrapolationMode::eMode>    fillModes  = {},
-                double                                   stepLength = 0.,
-                std::unique_ptr<const TransportJacobian> tjac       = nullptr);
+                const Surface*                           stepSurface = nullptr,
+                std::vector<ExtrapolationMode::eMode>    fillModes   = {},
+                double                                   stepLength  = 0.,
+                std::unique_ptr<const TransportJacobian> tjac        = nullptr);
 
   /// Fill a step without transport
   /// -> desinged for material
@@ -483,7 +490,9 @@ public:
   ///
   /// @param stepParameters are the (new) created parameters
   ///        this is to be set as a nullptr if material update
-  ///        is not performed
+  ///        is not performed, if the update is performed, the 
+  ///        previous stepParameters on the same step surface are
+  ///        moved to the step.preupdateParameters 
   /// @param stepPosition is the poistion where the material update
   ///        is performed (localisation if stepParameters are nullptr)
   /// @param stepSurface is the surface where the material update

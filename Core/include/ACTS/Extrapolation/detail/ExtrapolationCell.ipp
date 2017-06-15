@@ -14,6 +14,7 @@ template <class T>
 void
 Acts::ExtrapolationCell<T>::stepTransport(
     std::unique_ptr<const T>                 stepParameters,
+    const Surface*                           stepSurface,
     std::vector<ExtrapolationMode::eMode>    stepModes,
     double                                   stepLength,
     std::unique_ptr<const TransportJacobian> stepJacobian)
@@ -25,8 +26,11 @@ Acts::ExtrapolationCell<T>::stepTransport(
   // these are new parameters created by transport/propagation
   // set them as new lead parameters
   leadParameters = stepParameters.get();
-  // current step surface
-  const Surface* stepSurface = &(stepParameters->referenceSurface());
+  // current step surface, take the explicit ones when provided
+  // to maintain step logic for curvilinear parameters
+  const Surface* sSurface = stepSurface ? 
+    stepSurface : 
+    &(stepParameters->referenceSurface());
   // create a configuration for this step holding all modes
   ExtrapolationConfig stepConfig = ExtrapolationConfig(stepModes);
   // check if we have the destination
@@ -36,7 +40,7 @@ Acts::ExtrapolationCell<T>::stepTransport(
   }
   // this is a new step with , so fill it
   extrapolationSteps.push_back(ExtrapolationStep<T>(std::move(stepParameters),
-                                                    stepSurface,
+                                                    sSurface,
                                                     stepConfig,
                                                     nullptr,
                                                     std::move(stepJacobian),
@@ -52,28 +56,30 @@ Acts::ExtrapolationCell<T>::stepMaterial(
     double                    stepFactor,
     const MaterialProperties* mprop)
 {
-  
+  // fast exit
+  if (!mprop) return;
   // if this is on a new surface, 
   // so create a new extrapolation step
-  if (extrapolationSteps.size() && 
-      (&stepSurface) != extrapolationSteps.back().surface){
-      // if the last step was already the destination, 
-      // then do not create a final step
-      // let's check the last one 
-      auto& lstep = extrapolationSteps.back();
-      if (lstep.configuration.checkMode(ExtrapolationMode::Destination)){
-        // in case the last propagation was towards a Desitination
-        // then they are written into the endParameters
-        // after additional material update, we move the endParameters
-        // into the last step, which sets endParameters to nullptr
-        extrapolationSteps.back().parameters = std::move(endParameters);
-        // then set the new endParameters to the be the stepParameters
-        // this sets the stepParameters to nullptr
-        endParameters = std::move(stepParameters);
-      } else {
-        // create a new destination  
-        extrapolationSteps.push_back(ExtrapolationStep<T>());
-      }
+  if (extrapolationSteps.size()){
+    // let's check the last one 
+    auto& lstep = extrapolationSteps.back();
+    // case it's the final step
+    // -> then do not create a final step
+    if (lstep.configuration.checkMode(ExtrapolationMode::Destination)){
+      // in case the last propagation was towards a Desitination
+      // then they are written into the endParameters
+      // after additional material update, we move the endParameters
+      // into the last step, which sets endParameters to nullptr
+      lstep.parameters = std::move(endParameters);
+      // then set the new endParameters to the be the stepParameters
+      // this sets the stepParameters to nullptr
+      endParameters = std::move(stepParameters);
+
+    // case the surfaces differ -> create a new one  
+    } else if ((&stepSurface) != extrapolationSteps.back().surface){
+      // create a new destination  
+      extrapolationSteps.push_back(ExtrapolationStep<T>());
+    }
   } else {
     // a new step is needed for the first one in any case
     extrapolationSteps.push_back(ExtrapolationStep<T>());

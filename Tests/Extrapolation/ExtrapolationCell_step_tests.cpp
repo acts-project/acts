@@ -52,7 +52,7 @@ namespace Test {
     const NeutralCurvilinearParameters* pParametersPtr = pParameters.get();
     // emulate the step
     ecc.stepTransport(
-        std::move(pParameters), {ExtrapolationMode::Propagation}, pathLength);
+        std::move(pParameters), nullptr, {ExtrapolationMode::Propagation}, pathLength);
 
     // let's do a bunch of checks
     // there should be one step
@@ -72,7 +72,7 @@ namespace Test {
     const NeutralCurvilinearParameters* dParametersPtr = dParameters.get();
     // emulate the step
     ecc.stepTransport(
-        std::move(dParameters), {ExtrapolationMode::Destination}, pathLength);
+        std::move(dParameters), nullptr, {ExtrapolationMode::Destination}, pathLength);
 
     // let's do a bunch of checks
     // there should be one step
@@ -158,7 +158,7 @@ namespace Test {
     const NeutralCurvilinearParameters* pParametersPtr = pParameters.get();
     // emulate the step
     ecc.stepTransport(
-        std::move(pParameters), {ExtrapolationMode::Propagation}, pathLength);
+        std::move(pParameters), nullptr, {ExtrapolationMode::Propagation}, pathLength);
 
     // second round of checks
     // there should be one step
@@ -205,7 +205,7 @@ namespace Test {
     const NeutralCurvilinearParameters* dParametersPtr = dParameters.get();
     // emulate the step
     ecc.stepTransport(
-        std::move(dParameters), {ExtrapolationMode::Destination}, pathLength);
+        std::move(dParameters), nullptr, {ExtrapolationMode::Destination}, pathLength);
     // the step parameters should be a nullptr
     const NeutralCurvilinearParameters* nPtr = nullptr;
     // fourth round of checks

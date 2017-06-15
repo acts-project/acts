@@ -231,6 +231,13 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
         mutableUCovariance.release());
     auto stepParameters = std::make_unique<const BoundParameters>(
         std::move(uCovariance), uParameters, mSurface);
+
+    // fill it into the extrapolation cache
+    EX_MSG_VERBOSE(eCell.navigationStep,
+                   surfaceType,
+                   surfaceID,
+                   "collecting material of [t/X0] = " << thicknessInX0);
+                   
     // fill in th step material
     // - will update thea leadParameters to the step parameters
     const Vector3D& stepPosition = stepParameters->position();
@@ -238,13 +245,8 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
                        stepPosition,
                        mSurface,
                        pathCorrection,
-                       materialProperties);
-
-    // fill it into the extrapolation cache
-    EX_MSG_VERBOSE(eCell.navigationStep,
-                   surfaceType,
-                   surfaceID,
-                   "collecting material of [t/X0] = " << thicknessInX0);
+                       materialProperties);               
+                   
   }
   return;
 }
