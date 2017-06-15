@@ -35,15 +35,15 @@ enum ParticleType {
 
   nonInteracting = 0,  //!< for non-interacting extrapolation
   geantino       = 0,  //!< for non-interacting extrapolation
-  electron       = 1,  //!< reconstruction + fatras : type as electron hypothesis
-  muon           = 2,  //!< reconstruction + fatras : type as muon hypothesis
-  pion           = 3,  //!< reconstruction + fatras : type as pion hypothesis
-  kaon           = 4,  //!< reconstruction + fatras : type as kaon hypothesis
-  proton         = 5,  //!< reconstruction + fatras : type as proton hypothesis
-  photon         = 6,  //!< for fatras usage
-  neutron        = 7,  //!< for fatras usage
-  pi0            = 8,  //!< for fatras usage
-  k0             = 9,  //!< for fatras usage
+  electron = 1,  //!< reconstruction + fatras : type as electron hypothesis
+  muon     = 2,  //!< reconstruction + fatras : type as muon hypothesis
+  pion     = 3,  //!< reconstruction + fatras : type as pion hypothesis
+  kaon     = 4,  //!< reconstruction + fatras : type as kaon hypothesis
+  proton   = 5,  //!< reconstruction + fatras : type as proton hypothesis
+  photon   = 6,  //!< for fatras usage
+  neutron  = 7,  //!< for fatras usage
+  pi0      = 8,  //!< for fatras usage
+  k0       = 9,  //!< for fatras usage
   nonInteractingMuon
   = 10,  //!< for material collection @todo check if this is still needed
   noHypothesis = 99,

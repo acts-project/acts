@@ -164,11 +164,11 @@ public:
   layerCandidatesOrdered(const Layer*         sLayer,
                          const Layer*         eLayer,
                          const T&             parameters,
-                         PropDirection        pDir            = alongMomentum,
-                         const BoundaryCheck& bcheck          = true,
-                         bool collectSensitive                = true,
-                         bool collectMaterial                 = true,
-                         bool collectPassive                  = false ) const;
+                         PropDirection        pDir             = alongMomentum,
+                         const BoundaryCheck& bcheck           = true,
+                         bool                 collectSensitive = true,
+                         bool                 collectMaterial  = true,
+                         bool                 collectPassive   = false) const;
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   ///
@@ -552,8 +552,8 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
                                        const T&             pars,
                                        PropDirection        pDir,
                                        const BoundaryCheck& bcheck,
-                                       bool collectSensitive,
-                                       bool collectMaterial,
+                                       bool                 collectSensitive,
+                                       bool                 collectMaterial,
                                        bool collectPassive) const
 {
   // get position and momentum from the parameters
@@ -577,18 +577,18 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
     const Layer* tLayer = sLayer ? sLayer : associatedLayer(gp);
     if (tLayer) {
       do {
-        // Fist: 
-        // - collect the startLayer 
+        // Fist:
+        // - collect the startLayer
         // Then:
         // - collectSensitive -> always take layer if it has a surface array
-        // - collectMaterial -> always take layer if it has material 
+        // - collectMaterial -> always take layer if it has material
         // - collectPassive -> always take, unless it's a navigation layer
         // Last:
         // - also collect the finalLayer
-        if (tLayer->resolve(collectSensitive, collectMaterial, collectPassive) 
-            || tLayer == sLayer 
+        if (tLayer->resolve(collectSensitive, collectMaterial, collectPassive)
+            || tLayer == sLayer
             || tLayer == eLayer) {
-          // layer on approach intersection    
+          // layer on approach intersection
           auto atIntersection = tLayer->surfaceOnApproach(gp,
                                                           gm,
                                                           pDir,
@@ -597,12 +597,16 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
                                                           collectMaterial,
                                                           collectPassive);
 
-          // (a) if the current layer is NOT the start layer 
+          // (a) if the current layer is NOT the start layer
           // - intersection is ok
           if (tLayer != sLayer && atIntersection.intersection.valid) {
-            // create a layer intersection 
-            lIntersections.push_back(LayerIntersection<T>(
-                atIntersection.intersection, tLayer, atIntersection.object, 0, pDir));
+            // create a layer intersection
+            lIntersections.push_back(
+                LayerIntersection<T>(atIntersection.intersection,
+                                     tLayer,
+                                     atIntersection.object,
+                                     0,
+                                     pDir));
             validPathLength = atIntersection.intersection.pathLength;
           } else if (tLayer == sLayer) {
             // (b) the current layer is the start layer - we need to cache it
@@ -613,8 +617,12 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
           } else if (tLayer == eLayer) {
             // (c) it is the end layer after all
             // - provide it and break the loop
-            lIntersections.push_back(LayerIntersection<T>(
-                atIntersection.intersection, tLayer, atIntersection.object, 0, pDir));
+            lIntersections.push_back(
+                LayerIntersection<T>(atIntersection.intersection,
+                                     tLayer,
+                                     atIntersection.object,
+                                     0,
+                                     pDir));
             break;
           }
         }

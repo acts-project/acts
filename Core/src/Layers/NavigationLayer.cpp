@@ -24,8 +24,11 @@ Acts::NavigationLayer::NavigationLayer(
 }
 
 Acts::NavigationLayer::~NavigationLayer()
-{}
+{
+}
 
-bool 
+bool
 Acts::NavigationLayer::resolve(bool, bool, bool) const
-{ return false; }     
+{
+  return false;
+}

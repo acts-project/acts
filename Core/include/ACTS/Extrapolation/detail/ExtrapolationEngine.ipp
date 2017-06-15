@@ -144,8 +144,8 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
         eCell.navigationStep,
         "navigation",
         "",
-        "start layer determined with index : " 
-        << eCell.startLayer->geoID().value(GeometryID::layer_mask));
+        "start layer determined with index : "
+            << eCell.startLayer->geoID().value(GeometryID::layer_mask));
   // the radial direction flags outwards or inwards moving directions w.r.t to
   // (0.,0.,0,)
   eCell.setRadialDirection();

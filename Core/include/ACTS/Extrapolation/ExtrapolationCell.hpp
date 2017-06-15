@@ -447,12 +447,13 @@ public:
   ///
   /// @param em is the extrapolation mode to be checked
   /// @note for the CollectMaterial also nonInteracting particle
-  ///       triggers the configuration mode 
+  ///       triggers the configuration mode
   bool
   configurationMode(ExtrapolationMode::eMode em) const
   {
-    if (em == ExtrapolationMode::CollectMaterial 
-        && particleType > Acts::nonInteracting ) return true;
+    if (em == ExtrapolationMode::CollectMaterial
+        && particleType > Acts::nonInteracting)
+      return true;
     // check if the bit is set or not
     return extrapolationConfiguration.checkMode(em);
   }
@@ -471,9 +472,9 @@ public:
   /// @param stepSurface is the transport surface, it is explicitely given
   ///        (although i.g. identical to stepParameters.referenceSurface)
   ///        such that curvilinear parameters can profit from same step
-  ///        saving when transport + material are done successively. 
+  ///        saving when transport + material are done successively.
   ///        If nullptr is provided, then the stepParameters.referenceSurface
-  ///        is taken. 
+  ///        is taken.
   /// @param fillModes are the different indications of the step
   /// @param pathLength is the path length of this step
   /// @param tjac is the transport jacobian of the step
@@ -490,9 +491,9 @@ public:
   ///
   /// @param stepParameters are the (new) created parameters
   ///        this is to be set as a nullptr if material update
-  ///        is not performed, if the update is performed, the 
+  ///        is not performed, if the update is performed, the
   ///        previous stepParameters on the same step surface are
-  ///        moved to the step.preupdateParameters 
+  ///        moved to the step.preupdateParameters
   /// @param stepPosition is the poistion where the material update
   ///        is performed (localisation if stepParameters are nullptr)
   /// @param stepSurface is the surface where the material update
@@ -529,8 +530,7 @@ public:
   bool
   pathLimitReached(double tolerance = 0.001, bool checkout = true)
   {
-    bool reached
-        = configurationMode(Acts::ExtrapolationMode::StopWithPathLimit)
+    bool reached = configurationMode(Acts::ExtrapolationMode::StopWithPathLimit)
         && reachedLimit(pathLength, pathLimit, tolerance);
     if (reached && checkout)
       endParameters = std::move(extrapolationSteps.back().parameters);
@@ -545,12 +545,11 @@ public:
   bool
   materialLimitReached(double tolerance = 0.001) const
   {
-    return ((configurationMode(
-                 Acts::ExtrapolationMode::StopWithMaterialLimitX0)
-             && reachedLimit(materialX0, materialLimitX0, tolerance))
-            || (configurationMode(
-                    Acts::ExtrapolationMode::StopWithMaterialLimitL0)
-                && reachedLimit(materialL0, materialLimitL0, tolerance)));
+    return (
+        (configurationMode(Acts::ExtrapolationMode::StopWithMaterialLimitX0)
+         && reachedLimit(materialX0, materialLimitX0, tolerance))
+        || (configurationMode(Acts::ExtrapolationMode::StopWithMaterialLimitL0)
+            && reachedLimit(materialL0, materialLimitL0, tolerance)));
   }
 
   /// Set ParticleType

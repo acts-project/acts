@@ -13,8 +13,8 @@
 #ifndef ACTS_GEOMETRYUTILS_INTERSECTION_H
 #define ACTS_GEOMETRYUTILS_INTERSECTION_H
 
-#include "Definitions.hpp"
 #include <limits>
+#include "Definitions.hpp"
 
 namespace Acts {
 

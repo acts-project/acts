@@ -237,7 +237,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
                    surfaceType,
                    surfaceID,
                    "collecting material of [t/X0] = " << thicknessInX0);
-                   
+
     // fill in th step material
     // - will update thea leadParameters to the step parameters
     const Vector3D& stepPosition = stepParameters->position();
@@ -245,8 +245,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
                        stepPosition,
                        mSurface,
                        pathCorrection,
-                       materialProperties);               
-                   
+                       materialProperties);
   }
   return;
 }

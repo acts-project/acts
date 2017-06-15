@@ -58,7 +58,7 @@ public:
                                          std::move(ad),
                                          laytyp));
   }
-  
+
   /// Default Constructor - delete
   ConeLayer() = delete;
 

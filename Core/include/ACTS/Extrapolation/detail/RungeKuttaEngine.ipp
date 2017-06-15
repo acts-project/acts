@@ -266,8 +266,11 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
       tJacobian = std::make_unique<const TransportJacobian>(pCache.jacobian);
     // now fill the transportStep
     // record the parameters as a step
-    eCell.stepTransport(
-        std::move(nParameters), &sf, purpose, pCache.step, std::move(tJacobian));
+    eCell.stepTransport(std::move(nParameters),
+                        &sf,
+                        purpose,
+                        pCache.step,
+                        std::move(tJacobian));
     // create the new curvilinear tparamers at the surface intersection -
     // -> if so, trigger the success
     // now check if it is valid it's further away than the pathLimit
@@ -403,8 +406,11 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
       tJacobian = std::make_unique<const TransportJacobian>(pCache.jacobian);
     // now fill the transportStep
     // record the parameters as a step
-    eCell.stepTransport(
-        std::move(pParameters), &sf, purpose, pCache.step, std::move(tJacobian));
+    eCell.stepTransport(std::move(pParameters),
+                        &sf,
+                        purpose,
+                        pCache.step,
+                        std::move(tJacobian));
     // check what to do with the path Length
     if (eCell.configurationMode(ExtrapolationMode::StopWithPathLimit)
         && eCell.pathLimitReached(m_cfg.dlt, true)) {

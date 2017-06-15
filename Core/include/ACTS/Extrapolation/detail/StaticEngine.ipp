@@ -49,7 +49,7 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
     // eCode can be directly returned
     return eCode;
   }
-  
+
   EX_MSG_DEBUG(++eCell.navigationStep,
                "extrapolate",
                "",
@@ -64,7 +64,7 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
   //                       fallback to directly kicked in (and worked)
   eCode = initNavigationT<T>(eCell, sf, pDir, bcheck);
   CHECK_ECODE_CONTINUE(eCell, eCode);
-  
+
   // ----- [1] handle the (leadLayer == endLayer ) case
   // this case does not need a layer to layer loop
   // - we directly resolve the layer and return
@@ -74,13 +74,13 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
                    "layer",
                    eCell.leadLayer->geoID().value(GeometryID::layer_mask),
                    "start and destination layer are identical.");
-    // set the leadLayerSurface to the parameters surface for a start point                   
+    // set the leadLayerSurface to the parameters surface for a start point
     eCell.leadLayerSurface = &(eCell.leadParameters->referenceSurface());
     // resolve the layer, it is the final extrapolation
     // - InProgress           : layer resolving went without problem
-    // - SuccessPathLimit     : path limit reached & configured to stop 
+    // - SuccessPathLimit     : path limit reached & configured to stop
     //                          (rather unlikely within a layer)
-    // - SuccessMaterialLimit : material limit successfully reached 
+    // - SuccessMaterialLimit : material limit successfully reached
     eCode = handleLayerT<T>(eCell, sf, pDir, bcheck);
     // Success triggers a return
     CHECK_ECODE_SUCCESS_NODEST(eCell, eCode);
@@ -88,46 +88,46 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
     // - handle the return as configured (e.g. fallback)
     return handleReturnT<T>(eCode, eCell, sf, pDir, bcheck);
   }
-  
+
   // ----- [2] do the (layer-to-layer) loop
   //
-  // the volume returns the layers ordered by distance 
-  // - start and end layer will be part of the loop 
+  // the volume returns the layers ordered by distance
+  // - start and end layer will be part of the loop
   // - the content of layers is given by the configuration mode
-  // -- the surface on approach is already resolved 
+  // -- the surface on approach is already resolved
   // shortcuts for the collection bools
-  bool collectSensitive 
-    = eCell.configurationMode(ExtrapolationMode::CollectSensitive);
-  bool collectMaterial  
-    = eCell.configurationMode(ExtrapolationMode::CollectMaterial);
-  bool collectPassive   
-    = eCell.configurationMode(ExtrapolationMode::CollectPassive);
+  bool collectSensitive
+      = eCell.configurationMode(ExtrapolationMode::CollectSensitive);
+  bool collectMaterial
+      = eCell.configurationMode(ExtrapolationMode::CollectMaterial);
+  bool collectPassive
+      = eCell.configurationMode(ExtrapolationMode::CollectPassive);
 
-  // check for the final volume   
+  // check for the final volume
   const Layer* fLayer = eCell.finalVolumeReached() ? eCell.endLayer : nullptr;
-  
+
   // get the layer intersections
-  // this provides already the surfaceOnApproach when needed 
-  auto layerIntersections 
-       = eCell.leadVolume->layerCandidatesOrdered(eCell.leadLayer,
-                                                  fLayer,
-                                                  *eCell.leadParameters,
-                                                  pDir,
-                                                  true,
-                                                  collectSensitive,
-                                                  collectMaterial,
-                                                  collectPassive);
-  // some screen output                                                 
+  // this provides already the surfaceOnApproach when needed
+  auto layerIntersections
+      = eCell.leadVolume->layerCandidatesOrdered(eCell.leadLayer,
+                                                 fLayer,
+                                                 *eCell.leadParameters,
+                                                 pDir,
+                                                 true,
+                                                 collectSensitive,
+                                                 collectMaterial,
+                                                 collectPassive);
+  // some screen output
   EX_MSG_VERBOSE(eCell.navigationStep,
                  "layer",
                  "loop",
                  "found " << layerIntersections.size()
                           << " layers for the layer-to-layer loop.");
-  // the actual  
+  // the actual
   // layer-to-layer loop starts here
   for (auto& layerCandidate : layerIntersections) {
     // assign the leadLayer
-    eCell.leadLayer       = layerCandidate.object;
+    eCell.leadLayer = layerCandidate.object;
     // screen output for layer-to-layer loop
     EX_MSG_VERBOSE(
         eCell.navigationStep,
@@ -137,7 +137,7 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
             << eCell.leadLayer->geoID().value(GeometryID::layer_mask));
     // we set the lead layer surface :
     // - to the start surface for the start layer
-    // - to the provided approach surface 
+    // - to the provided approach surface
     eCell.leadLayerSurface = (eCell.leadLayer == eCell.startLayer)
         ? &(eCell.leadParameters->referenceSurface())
         : layerCandidate.representation;
@@ -147,7 +147,7 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
     // - SuccessWithMaterialLimit : material interaction killed track
     // - FailureDestination       : destination was not hit appropriately
     eCode = handleLayerT<T>(eCell, sf, pDir, bcheck);
-    // some more screen output  
+    // some more screen output
     EX_MSG_VERBOSE(
         eCell.navigationStep,
         "layer",
@@ -158,9 +158,9 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
     // - FailureX  -> return (via handleReturnT that might evoke a fallback)
     // - InProgess -> continue layer-to-layer loop
     if (!eCode.inProgress())
-        return handleReturnT<T>(eCode, eCell, sf, pDir, bcheck);
+      return handleReturnT<T>(eCode, eCell, sf, pDir, bcheck);
   }
-  
+
   // ----- [3] now resolve the boundary situation, call includes information
   // wheather one is alreay at a boundary
   //
@@ -253,57 +253,59 @@ Acts::StaticEngine::handleLayerT(ExtrapolationCell<T>& eCell,
                                  PropDirection         pDir,
                                  const BoundaryCheck&  bcheck) const
 {
-  
+
   // initialize the extrapolaiton code
   ExtrapolationCode eCode = ExtrapolationCode::InProgress;
-  
+
   /// prepare the layer output number
   auto layerValue = eCell.leadLayer->geoID().value(GeometryID::layer_mask);
   // screen output
   EX_MSG_DEBUG(++eCell.navigationStep,
                "layer",
                layerValue,
-               "in volume " << eCell.leadVolume->volumeName());  
+               "in volume " << eCell.leadVolume->volumeName());
 
   // start layer, i.e. no propagation needed
-  bool isStartLayer 
-    = (eCell.leadLayerSurface == &eCell.leadParameters->referenceSurface());
-  // final layer, end propagation needed 
+  bool isStartLayer
+      = (eCell.leadLayerSurface == &eCell.leadParameters->referenceSurface());
+  // final layer, end propagation needed
   bool isFinalLayer = (eCell.leadLayer == eCell.endLayer);
-    
+
   // shortcuts for the collection bools
-  bool collectSensitive 
-    = eCell.configurationMode(ExtrapolationMode::CollectSensitive);
-  bool collectMaterial  
-    = eCell.configurationMode(ExtrapolationMode::CollectMaterial);
-  bool collectPassive   
-    = eCell.configurationMode(ExtrapolationMode::CollectPassive);
-  
-  // ----- [0] the start situation on the layer needs to be resolved 
-  // 
+  bool collectSensitive
+      = eCell.configurationMode(ExtrapolationMode::CollectSensitive);
+  bool collectMaterial
+      = eCell.configurationMode(ExtrapolationMode::CollectMaterial);
+  bool collectPassive
+      = eCell.configurationMode(ExtrapolationMode::CollectPassive);
+
+  // ----- [0] the start situation on the layer needs to be resolved
+  //
   // [A] the layer is not the start layer,
   //     - it needs propagation towards it on approach
-  //     - the surface on approach has already been sorted out in the loop 
+  //     - the surface on approach has already been sorted out in the loop
   if (!isStartLayer) {
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "layer",
                    layerValue,
                    "not the start layer, propagate to it.");
     // propagate to the representing surface of this layer
-    // - InProgress       : propagation to approaching surface worked 
+    // - InProgress       : propagation to approaching surface worked
     //                      check material update
-    // - SuccessPathLimit : propagation to approaching surface reached path limit
+    // - SuccessPathLimit : propagation to approaching surface reached path
+    // limit
     //                      limit
     // - Recovered        : layer was not hit, so can be ignored in the layer to
     //                      layer loop
-    eCode = m_cfg.propagationEngine->propagate(eCell,
-                                              *eCell.leadLayerSurface,
-                                              pDir,
-                                              {ExtrapolationMode::CollectPassive},
-                                              true,
-                                              eCell.navigationCurvilinear);
+    eCode = m_cfg.propagationEngine->propagate(
+        eCell,
+        *eCell.leadLayerSurface,
+        pDir,
+        {ExtrapolationMode::CollectPassive},
+        true,
+        eCell.navigationCurvilinear);
     CHECK_ECODE_SUCCESS_NODEST(eCell, eCode);
-    // the extrapolation to the initial layer did not succeed 
+    // the extrapolation to the initial layer did not succeed
     // -> skip this layer and continue the layer-to-layer loop
     if (eCode == ExtrapolationCode::Recovered) {
       EX_MSG_VERBOSE(eCell.navigationStep,
@@ -312,8 +314,10 @@ Acts::StaticEngine::handleLayerT(ExtrapolationCell<T>& eCell,
                      "has not been hit, return to layer-to-layer loop.");
       return ExtrapolationCode::InProgress;
     }
-    EX_MSG_VERBOSE(
-        eCell.navigationStep, "layer", layerValue, "successfuly hit on approach");
+    EX_MSG_VERBOSE(eCell.navigationStep,
+                   "layer",
+                   layerValue,
+                   "successfuly hit on approach");
     // the correct material layer needs to be assigned - in case of the approach
     // surface not being hit, his can be the layer surface
     if (eCell.leadLayerSurface->associatedMaterial()) {
@@ -330,26 +334,25 @@ Acts::StaticEngine::handleLayerT(ExtrapolationCell<T>& eCell,
     // [B] the layer is the start layer
     // - the parameters are already on the layer
     // - let's check if a post update on the start surface has to be done
-    EX_MSG_VERBOSE(
-        eCell.navigationStep,
-        "layer",
-        layerValue,
-        "is start layer, no propagation to be done.");
+    EX_MSG_VERBOSE(eCell.navigationStep,
+                   "layer",
+                   layerValue,
+                   "is start layer, no propagation to be done.");
     // the start surface could have a material layer attached
     const Surface& surface = eCell.leadParameters->referenceSurface();
     if (surface.associatedMaterial()) {
       // now handle the material (post update on start layer), return codes are:
       // - SuccessMaterialLimit : material limit reached, return back
-      // - InProgress           : material update done or not 
+      // - InProgress           : material update done or not
       //                          (depending on the material description)
       eCode = m_cfg.materialEffectsEngine->handleMaterial(
           eCell, &surface, pDir, postUpdate);
       CHECK_ECODE_CONTINUE(eCell, eCode);
     }
   }
-  
+
   // ----- [1] the sub structure of the layer needs to be resolved:
-  // this will give you the compatible surfaces of the layer 
+  // this will give you the compatible surfaces of the layer
   // - provided start and destination surface are excluded
   //   the start surface already the one of the leadParameters
   // - surfaces without material are only provided if they are active and
@@ -357,20 +360,20 @@ Acts::StaticEngine::handleLayerT(ExtrapolationCell<T>& eCell,
   // - surfaces with material are provided in order to make the necessary
   //   material update
   //
-  // the ordered surfaces are returned 
+  // the ordered surfaces are returned
   std::vector<Acts::SurfaceIntersection> cSurfaces
-       = eCell.leadLayer->compatibleSurfaces(*eCell.leadParameters,
-                                             pDir,
-                                             bcheck,
-                                             collectSensitive,
-                                             collectMaterial,
-                                             collectPassive,
-                                             eCell.searchMode,
-                                             eCell.leadLayerSurface,
-                                             (isFinalLayer ? sf : nullptr));
+      = eCell.leadLayer->compatibleSurfaces(*eCell.leadParameters,
+                                            pDir,
+                                            bcheck,
+                                            collectSensitive,
+                                            collectMaterial,
+                                            collectPassive,
+                                            eCell.searchMode,
+                                            eCell.leadLayerSurface,
+                                            (isFinalLayer ? sf : nullptr));
   // how many test surfaces do we have
   size_t ncSurfaces = cSurfaces.size();
-  
+
   // some screen output for the sub structure
   EX_MSG_VERBOSE(eCell.navigationStep,
                  "layer",

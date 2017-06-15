@@ -73,15 +73,15 @@ enum LayerType { navigation = -1, passive = 0, active = 1 };
 ///   [ the higher the number, the faster ]:
 /// --------- Layer internal ------------------------------------------------
 /// -1     - provide all intersection tested without boundary check
-///  0     - provide all intersection tested with boundary check 
+///  0     - provide all intersection tested with boundary check
 ///  1     - provide overlap descriptor based without boundary check
 ///  2     - provide overlap descriptor based with boundary check
-/// 
-/// A layer can have substructure regarding: 
+///
+/// A layer can have substructure regarding:
 /// - m_ssRepresentingSurface -> always exists (1), can have material (2)
 /// - m_ssSensitiveSurfaces   -> can or not exist (0,1), can have material (2)
 /// - m_ssApproachSurfaces    -> can or not exist (0,1) cam have material (2)
-/// 
+///
 class Layer : public virtual GeometryObject
 {
   /// Declare the TrackingVolume as a friend, to be able to register previous,
@@ -92,13 +92,12 @@ class Layer : public virtual GeometryObject
   friend class DetachedTrackingVolume;
 
 public:
-  
-  /// Default Constructor - deleted 
+  /// Default Constructor - deleted
   Layer() = delete;
-  
+
   /// Copy Constructor - deleted
   Layer(const Layer&) = delete;
-  
+
   /// Destructor
   virtual ~Layer();
 
@@ -106,7 +105,8 @@ public:
   ///
   /// @param lay is the source layer for assignment
   Layer&
-  operator=(const Layer&) = delete;
+  operator=(const Layer&)
+      = delete;
 
   /// Return the entire SurfaceArray, returns a nullptr if no SurfaceArray
   const SurfaceArray*
@@ -124,7 +124,8 @@ public:
 
   // Non-const version
   virtual Surface&
-  surfaceRepresentation() = 0;
+  surfaceRepresentation()
+      = 0;
 
   /// Return the Thickness of the Layer
   /// this is by definition along the normal vector of the surfaceRepresentation
@@ -162,23 +163,24 @@ public:
   /// Accept layer according to the following colelction directives
   ///
   /// @param collectSensitive is the prescription to find the sensitive surfaces
-  /// @param collectMaterial is the precription to find material surfaces                                        
-  /// @param collectPassive is the prescription to find all passive surfaces  
+  /// @param collectMaterial is the precription to find material surfaces
+  /// @param collectPassive is the prescription to find all passive surfaces
   ///
   /// @return a boolean whether the layer is accepted for processing
-  virtual bool 
-  resolve(bool collectSensitive, bool collectMaterial, bool collectPassive)
-  const;
-  
+  virtual bool
+  resolve(bool collectSensitive,
+          bool collectMaterial,
+          bool collectPassive) const;
+
   /// Surface seen on approach
   /// for layers without sub structure, this is the surfaceRepresentation
-  /// for layers with sub structure, this is the approachSurface 
+  /// for layers with sub structure, this is the approachSurface
   /// @param gpos is the global position to start the approach from
   /// @param dir is the direction from where to attempt the approach
   /// @param pdir is the direction prescription
   /// @param bcheck is the boundary check directive
   /// @param collectSensitive is the prescription to find the sensitive surfaces
-  /// @param collectMaterial is the precription to find material surfaces                                        
+  /// @param collectMaterial is the precription to find material surfaces
   /// @param collectPassive is the prescription to find all passive surfaces
   /// @note reasons for resolving are: collect & find material, collect & find
   /// sensitivex
@@ -196,72 +198,70 @@ public:
 
   ///  get compatible surfaces starting from neutral parameters
   ///  returns the compatible surfaces with a straight line estimation
-  ///  a future estimater is forseen                   
-  ///  
-  ///  - if start/end surface are given, surfaces are provided in between 
+  ///  a future estimater is forseen
+  ///
+  ///  - if start/end surface are given, surfaces are provided in between
   ///    (start && end excluded)
   ///
   /// @param pars are the (charged) track parameters for the search
   /// @param pdir is the propagation direction prescription
   /// @param bcheck is the boundary check directive
   /// @param collectSensitive is the prescription to find the sensitive surfaces
-  /// @param collectMaterial is the precription to find material surfaces                    
+  /// @param collectMaterial is the precription to find material surfaces
   /// @param collectPassive is the prescription to find all passive surfaces
   /// @param searchType is the level of depth for the search
   /// @param startSurface is an (optional) start surface for the search:
   ///        excluded in return
-  /// @param endSurface is an (optional) end surface for the search: 
+  /// @param endSurface is an (optional) end surface for the search:
   ///        excluded in return
-  /// @param ice is a (future) compatibility estimator 
+  /// @param ice is a (future) compatibility estimator
   ///
-  /// @return the list of possible surface interactions, 
+  /// @return the list of possible surface interactions,
   ///                  ordered according to intersection
-  virtual 
-  std::vector<SurfaceIntersection>
-  compatibleSurfaces(const TrackParameters&            pars,
-                     PropDirection                     pdir,
-                     const BoundaryCheck&              bcheck,
-                     bool                              collectSensitive,
-                     bool                              collectMaterial,
-                     bool                              collectPassive,
-                     int                               searchType,
-                     const Surface*                    startSurface = nullptr,
-                     const Surface*                    endSurface   = nullptr,
-                     const ICompatibilityEstimator*    ice = nullptr) const;
+  virtual std::vector<SurfaceIntersection>
+  compatibleSurfaces(const TrackParameters&         pars,
+                     PropDirection                  pdir,
+                     const BoundaryCheck&           bcheck,
+                     bool                           collectSensitive,
+                     bool                           collectMaterial,
+                     bool                           collectPassive,
+                     int                            searchType,
+                     const Surface*                 startSurface = nullptr,
+                     const Surface*                 endSurface   = nullptr,
+                     const ICompatibilityEstimator* ice = nullptr) const;
 
   ///  get compatible surfaces starting from neutral parameters
   ///  returns the compatible surfaces either with straight line estimation
-  ///  
-  ///  - if start/end surface are given, surfaces are provided in between 
+  ///
+  ///  - if start/end surface are given, surfaces are provided in between
   ///    (start && end excluded)
   ///
   /// @param pars are the (charged) track parameters for the search
   /// @param pdir is the propagation direction prescription
   /// @param bcheck is the boundary check directive
   /// @param collectSensitive is the prescription to find the sensitive surfaces
-  /// @param collectMaterial is the precription to find material surfaces                    
+  /// @param collectMaterial is the precription to find material surfaces
   /// @param collectPassive is the prescription to find all passive surfaces
   /// @param searchType is the level of depth for the search
   /// @param startSurface is an (optional) start surface for the search:
   ///        excluded in return
-  /// @param endSurface is an (optional) end surface for the search: 
+  /// @param endSurface is an (optional) end surface for the search:
   ///        excluded in return
-  /// @param ice is a (future) compatibility estimator 
+  /// @param ice is a (future) compatibility estimator
   ///
-  /// @return the list of possible surface interactions, 
+  /// @return the list of possible surface interactions,
   ///                  ordered according to intersection
-  virtual 
-  std::vector<SurfaceIntersection>
-  compatibleSurfaces(const NeutralParameters&          pars,
-                     PropDirection                     pdir,
-                     const BoundaryCheck&              bcheck,
-                     bool                              collectSensitive,
-                     bool                              collectMaterial,
-                     bool                              collectPassive,
-                     int                               searchType,
-                     const Surface*                    startSurface = nullptr,
-                     const Surface*                    endSurface   = nullptr,
-                     const ICompatibilityEstimator*    ice = nullptr) const;
+  virtual std::vector<SurfaceIntersection>
+  compatibleSurfaces(const NeutralParameters&       pars,
+                     PropDirection                  pdir,
+                     const BoundaryCheck&           bcheck,
+                     bool                           collectSensitive,
+                     bool                           collectMaterial,
+                     bool                           collectPassive,
+                     int                            searchType,
+                     const Surface*                 startSurface = nullptr,
+                     const Surface*                 endSurface   = nullptr,
+                     const ICompatibilityEstimator* ice = nullptr) const;
 
   /// Fast navigation to next layer
   ///
@@ -313,9 +313,9 @@ protected:
   /// @param ad oapproach descriptor
   /// @param ltype is the layer type if active or passive
   Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
-        double                              thickness    = 0.,
-        std::unique_ptr<ApproachDescriptor> ad           = nullptr,
-        LayerType                           ltype        = passive);
+        double                              thickness = 0.,
+        std::unique_ptr<ApproachDescriptor> ad        = nullptr,
+        LayerType                           ltype     = passive);
 
   /// get compatible surfaces starting from the parameters
   ///
@@ -323,7 +323,7 @@ protected:
   /// @param pdir is the propagation direction prescription
   /// @param bcheck is the boundary check directive
   /// @param collectSensitive is the prescription to find the sensitive surfaces
-  /// @param collectMaterial is the prescription to find surfaces with material      
+  /// @param collectMaterial is the prescription to find surfaces with material
   /// @param collectPassive is the prescription to find all passive surfaces
   /// @param searchType is the level of depth for the search
   /// @param startSurface is optional for the search: excluded in return
@@ -334,16 +334,16 @@ protected:
   /// @return the possible surface intersections
   template <class T>
   std::vector<SurfaceIntersection>
-  getCompatibleSurfaces(const T&                          pars,
-                        PropDirection                     pdir,
-                        const BoundaryCheck&              bcheck,
-                        bool                              collectSensitive,
-                        bool                              collectMaterial,
-                        bool                              collectPassive,
-                        int                               searchType,
-                        const Surface*                    startSurface = nullptr,
-                        const Surface*                    endSurface   = nullptr,
-                        const ICompatibilityEstimator*    ice = nullptr) const;
+  getCompatibleSurfaces(const T&                       pars,
+                        PropDirection                  pdir,
+                        const BoundaryCheck&           bcheck,
+                        bool                           collectSensitive,
+                        bool                           collectMaterial,
+                        bool                           collectPassive,
+                        int                            searchType,
+                        const Surface*                 startSurface = nullptr,
+                        const Surface*                 endSurface   = nullptr,
+                        const ICompatibilityEstimator* ice = nullptr) const;
 
   /// test compatible surface - checking directly for intersection & collection
   ///
@@ -397,48 +397,48 @@ protected:
 
   /// the previous Layer according to BinGenUtils
   NextLayers m_nextLayers;
-  
+
   /// A binutility to find the next layer
   /// @TODO check if this is needed
-  const BinUtility*                         m_nextLayerUtility; 
+  const BinUtility* m_nextLayerUtility;
 
   /// SurfaceArray on this layer Surface
   ///
   /// This array will be modified during signature and constant afterwards, but
   /// the C++ type system unfortunately cannot cleanly express this.
   ///
-  std::unique_ptr<const SurfaceArray>       m_surfaceArray;
+  std::unique_ptr<const SurfaceArray> m_surfaceArray;
   /// thickness of the Layer
-  double                                    m_layerThickness;
+  double m_layerThickness;
   /// descriptor for surface on approach
   ///
   /// The descriptor may need to be modified during geometry building, and will
   /// remain constant afterwards, but again C++ cannot currently express this.
   ///
   std::unique_ptr<const ApproachDescriptor> m_approachDescriptor;
-  
+
   /// the enclosing TrackingVolume
-  const TrackingVolume*                     m_enclosingTrackingVolume;
-  
+  const TrackingVolume* m_enclosingTrackingVolume;
+
   /// the eventual enclosing detached Tracking volume
-  const DetachedTrackingVolume*             m_enclosingDetachedTrackingVolume;
-  
+  const DetachedTrackingVolume* m_enclosingDetachedTrackingVolume;
+
   /// Representing Volume
   /// can be used as appraoch surface sources
-  const AbstractVolume*                     m_representingVolume;
-  
+  const AbstractVolume* m_representingVolume;
+
   /// make a passive/active either way
-  LayerType                                 m_layerType;
-  
-  /// sub structure indication              
-  int                                       m_ssRepresentingSurface;
-  int                                       m_ssSensitiveSurfaces;  
-  int                                       m_ssApproachSurfaces; 
-    
+  LayerType m_layerType;
+
+  /// sub structure indication
+  int m_ssRepresentingSurface;
+  int m_ssSensitiveSurfaces;
+  int m_ssApproachSurfaces;
+
 private:
   /// Private helper method to close the geometry
   /// - it will set the layer geometry ID for a unique identification
-  /// - it will also register the internal sub strucutre 
+  /// - it will also register the internal sub strucutre
   /// @param layerID is the geometry id of the volume
   ///                as calculated by the TrackingGeometry
   void
@@ -512,17 +512,16 @@ Layer::nextLayer(const Vector3D& gp, const Vector3D& mom) const
                                                           : m_nextLayers.second;
 }
 
-inline bool 
+inline bool
 Layer::resolve(bool collectSensitive,
                bool collectMaterial,
-               bool collectPassive) const 
+               bool collectPassive) const
 {
-  if (collectPassive) 
-      return true;
-  if (collectSensitive && m_surfaceArray) 
-      return true;
-  if (collectMaterial && (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1)) 
-      return true;
+  if (collectPassive) return true;
+  if (collectSensitive && m_surfaceArray) return true;
+  if (collectMaterial
+      && (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1))
+    return true;
   return false;
 }
 
