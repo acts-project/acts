@@ -20,9 +20,11 @@ namespace Acts {
 namespace Test {
 
   /// This tests emulates a propagation
-  /// start - post material update
+  /// and tests the behavior of the ExtrapolationCell
+  /// 
+  /// start           - post material update
   /// passive surface - full material update
-  /// desintaion - pre material update
+  /// desintaion      - pre material update
   BOOST_AUTO_TEST_CASE(
       ExtrapolationCell_start_passive_destination_material_test)
   {

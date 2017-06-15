@@ -92,28 +92,6 @@ Acts::TrackingVolume::TrackingVolume(
   interlinkLayers();
 }
 
-Acts::TrackingVolume::TrackingVolume(const TrackingVolume& tvol,
-                                     const Transform3D&    shift,
-                                     const std::string&    volumeName)
-  : Volume(tvol, &shift)
-  , m_material(tvol.m_material)
-  , m_motherVolume(tvol.motherVolume())
-  , m_confinedLayers(nullptr)
-  , m_confinedVolumes(nullptr)
-  , m_confinedDetachedVolumes()
-  , m_confinedDenseVolumes()
-  , m_confinedArbitraryLayers()
-  , m_glueVolumeDescriptor(nullptr)
-  , m_geometrySignature(tvol.geometrySignature())
-  , m_geometryType(tvol.geometryType())
-  , m_name(volumeName)
-  , m_colorCode(20)
-  , m_detectorElements()
-{
-  //< @todo implement - requires cloneWithShift for BinUtility and an
-  // orderPosition() addon to GeometryObjects
-}
-
 Acts::TrackingVolume::~TrackingVolume()
 {
   delete m_glueVolumeDescriptor;

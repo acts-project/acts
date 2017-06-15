@@ -134,7 +134,7 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
       eCell.navigationStep,
       "navigation",
       "",
-      "start volume termined as : " << eCell.startVolume->volumeName());
+      "start volume determined as : " << eCell.startVolume->volumeName());
   // check layer association
   eCell.startLayer = eCell.startLayer
       ? eCell.startLayer
@@ -144,7 +144,8 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
         eCell.navigationStep,
         "navigation",
         "",
-        "start layer termined with index : " << eCell.startLayer->geoID());
+        "start layer determined with index : " 
+        << eCell.startLayer->geoID().value(GeometryID::layer_mask));
   // the radial direction flags outwards or inwards moving directions w.r.t to
   // (0.,0.,0,)
   eCell.setRadialDirection();
@@ -156,7 +157,7 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
     // re-evaluate the radial direction if the end surface is given
     // should not happen in FATRAS extrapolation mode, usually Fatras has no end
     // surface though
-    if (!eCell.checkConfigurationMode(ExtrapolationMode::FATRAS))
+    if (!eCell.configurationMode(ExtrapolationMode::FATRAS))
       eCell.setRadialDirection();
     // trying association via the layer : associated layer of material layer
     eCell.endLayer = sf->associatedLayer();

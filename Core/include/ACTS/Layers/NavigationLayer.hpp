@@ -42,12 +42,6 @@ public:
     return LayerPtr(new NavigationLayer(std::move(sRepresentation), thickness));
   }
 
-  /// Clone with a shift
-  ///
-  /// @param shift is the addition transform applied after cloning
-  LayerPtr
-  cloneWithShift(const Transform3D& shift) const override;
-
   /// Destructor
   virtual ~NavigationLayer();
 
@@ -55,7 +49,7 @@ public:
   ///  - as default the center is given, but may be overloaded
   /// @return The return vector can be used for binning in a TrackingVolume
   virtual const Vector3D
-  binningPosition(BinningValue bValue) const override;
+  binningPosition(BinningValue bValue) const final override;
 
   /// Default Constructor - deleted
   NavigationLayer() = delete;
@@ -71,11 +65,11 @@ public:
   /// Transforms the layer into a Surface representation for extrapolation
   /// In general, extrapolation to a surface should be avoided
   const Surface&
-  surfaceRepresentation() const override;
+  surfaceRepresentation() const final override;
 
   // Non-const version
   Surface&
-  surfaceRepresentation() override;
+  surfaceRepresentation() final override;
 
   /// Geometric isOnLayer() method
   /// using isOnSurface() with Layer specific tolerance
@@ -86,17 +80,19 @@ public:
   /// @return boolean that indicates if the poisiton is on surface
   bool
   isOnLayer(const Vector3D&      gpos,
-            const BoundaryCheck& bcheck = true) const override;
-
-  ///  Boolean check method if layer has material:
-  /// - checks if any of the layer surfaces has material:
-  /// - can be approach surfaces or layer surface
-  bool
-  hasMaterial() const override;
-
-  ///  Boolean check method if layer has sensitive surfaces
-  bool
-  hasSensitive() const override;
+            const BoundaryCheck& bcheck = true) const final override;
+            
+ /// Accept layer according to the following colelction directives
+ ///
+ /// @param collectSensitive is the prescription to find the sensitive surfaces
+ /// @param collectMaterial is the precription to find material surfaces                                        
+ /// @param collectPassive is the prescription to find all passive surfaces 
+ ///
+ /// @note navigation layers are never accepted               
+ ///
+ /// @return a boolean whether the layer is accepted for processing
+ bool 
+ resolve(bool, bool, bool) const final override;         
 
 protected:
   /// Private Constructor
@@ -135,16 +131,12 @@ NavigationLayer::binningPosition(BinningValue bValue) const
 }
 
 inline bool
-NavigationLayer::hasMaterial() const
+NavigationLayer::isOnLayer(const Vector3D&      gp,
+                           const BoundaryCheck& bcheck) const
 {
-  return false;
+  return m_surfaceRepresentation->isOnSurface(gp, bcheck);
 }
 
-inline bool
-NavigationLayer::hasSensitive() const
-{
-  return false;
-}
 
 }  // end of namespace
 

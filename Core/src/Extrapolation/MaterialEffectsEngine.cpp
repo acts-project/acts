@@ -169,7 +169,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
   // check if anything should be done
   bool corrConfig
       = (m_cfg.eLossCorrection || m_cfg.mscCorrection
-         || eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial));
+         || eCell.configurationMode(ExtrapolationMode::CollectMaterial));
   // and let's check if there's acutally something to do
   if (materialProperties && corrConfig) {
     // and add them

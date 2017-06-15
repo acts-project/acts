@@ -58,30 +58,7 @@ public:
                                          std::move(ad),
                                          laytyp));
   }
-
-  /// Factory for shared layer with shift
-  ///
-  /// @param cla is the source clone layer
-  /// @param shift is the additional shift applied after copying
-  ///
-  /// @return is a shared pointer to a layer
-  static MutableLayerPtr
-  create(const ConeLayer& cla, const Transform3D& shift)
-  {
-    return MutableLayerPtr(new ConeLayer(cla, shift));
-  }
-
-  /// Factory for shared layer with shift - clone
-  ///
-  /// @param shift is the additional shift applied after copying
-  ///
-  /// @return is a shared pointer to a layer
-  LayerPtr
-  cloneWithShift(const Transform3D& shift) const override
-  {
-    return ConeLayer::create(*this, shift);
-  }
-
+  
   /// Default Constructor - delete
   ConeLayer() = delete;
 

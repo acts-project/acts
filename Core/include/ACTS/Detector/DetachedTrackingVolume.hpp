@@ -71,19 +71,6 @@ public:
   const std::string
   name() const;
 
-  /// Moving object around post creation
-  ///
-  /// @param shift is the applied transform to the detached volume
-  void
-  move(const Transform3D& shift);
-
-  /// Clone with shift
-  ///
-  /// @param name is the new name of the clone detached volume
-  /// @param shift is the applid shift
-  DetachedTrackingVolumePtr
-  clone(std::string name, const Transform3D& shift) const;
-
   /// Returns a layer representation
   ///
   /// @return pointer to a representation as a layer
@@ -132,12 +119,6 @@ public:
   /// @param transf is the relative transform for the alingment
   void
   setBaseTransform(const Transform3D* transf = nullptr);
-
-  /// Alignment methods: realign  / default argument to base transform
-  ///
-  /// @param transf is the relative transform for the alingment
-  void
-  realign(const Transform3D* transf = nullptr);
 
 protected:
   /// Default Constructor

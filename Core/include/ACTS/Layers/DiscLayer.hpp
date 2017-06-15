@@ -63,29 +63,6 @@ public:
                                          laytyp));
   }
 
-  /// Factory constructor as copy with shift
-  ///
-  /// @param dla is the disc laye to be cloned
-  /// @param shift is the additional transform to be applied after copying
-  ///
-  /// @return a sharted pointer to the new layer
-  static MutableLayerPtr
-  create(const DiscLayer& dla, const Transform3D& shift)
-  {
-    return MutableLayerPtr(new DiscLayer(dla, shift));
-  }
-
-  /// Clone with a shift - only cloning that is allowed
-  ///
-  /// @param shift is the additional transform to be applied after cloning
-  ///
-  /// @return a sharted pointer to the new layer
-  LayerPtr
-  cloneWithShift(const Transform3D& shift) const override
-  {
-    return DiscLayer::create(*this, shift);
-  }
-
   /// Default Constructor
   DiscLayer() = delete;
 

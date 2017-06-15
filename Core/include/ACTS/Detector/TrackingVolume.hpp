@@ -135,20 +135,6 @@ public:
                                                        dVolumeVector,
                                                        volumeName));
   }
-  /// Factory constructor with a shift
-  ///
-  /// @param trVol is the source tracking volume
-  /// @param shift is the additional shift applied after copying
-  /// @param volumeName is a string identifier
-  ///
-  /// @return shared pointer to a new TrackingVolume
-  static TrackingVolumePtr
-  create(const TrackingVolume& trVol,
-         const Transform3D&    shift,
-         const std::string&    volumeName = "undefined")
-  {
-    return TrackingVolumePtr(new TrackingVolume(trVol, shift, volumeName));
-  }
 
   /// Return the associated Layer to the global position
   ///
@@ -180,8 +166,9 @@ public:
                          const T&             parameters,
                          PropDirection        pDir            = alongMomentum,
                          const BoundaryCheck& bcheck          = true,
-                         bool                 resolveMaterial = true,
-                         bool                 resolveSubSurfaces = false) const;
+                         bool collectSensitive                = true,
+                         bool collectMaterial                 = true,
+                         bool collectPassive                  = false ) const;
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   ///
@@ -565,8 +552,9 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
                                        const T&             pars,
                                        PropDirection        pDir,
                                        const BoundaryCheck& bcheck,
-                                       bool resolveMaterial,
-                                       bool resolveSensitive) const
+                                       bool collectSensitive,
+                                       bool collectMaterial,
+                                       bool collectPassive) const
 {
   // get position and momentum from the parameters
   const Vector3D& gp = pars.position();
@@ -589,34 +577,44 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
     const Layer* tLayer = sLayer ? sLayer : associatedLayer(gp);
     if (tLayer) {
       do {
-        // collect material or sensitive layers, usually ignore navigation
-        // layers, but
-        // always provide the final layer for the navigation stop
-        if ((resolveMaterial && tLayer->hasMaterial())
-            || (resolveSensitive && tLayer->hasSensitive())
+        // Fist: 
+        // - collect the startLayer 
+        // Then:
+        // - collectSensitive -> always take layer if it has a surface array
+        // - collectMaterial -> always take layer if it has material 
+        // - collectPassive -> always take, unless it's a navigation layer
+        // Last:
+        // - also collect the finalLayer
+        if (tLayer->resolve(collectSensitive, collectMaterial, collectPassive) 
+            || tLayer == sLayer 
             || tLayer == eLayer) {
-          // taking the layer representation, not the approach surface, latter
-          // is resolved in the navigation stream
-          const Surface& tSurface = tLayer->surfaceRepresentation();
-          // intersect the layer @todo should probably be surface on approach
-          Intersection lIntersection
-              = tSurface.intersectionEstimate(gp, dir, true, bcheck);
-          // (a) if the current layer is NOT the start layer - intersection is
-          // ok
-          if (tLayer != sLayer && lIntersection.valid) {
+          // layer on approach intersection    
+          auto atIntersection = tLayer->surfaceOnApproach(gp,
+                                                          gm,
+                                                          pDir,
+                                                          bcheck,
+                                                          collectSensitive,
+                                                          collectMaterial,
+                                                          collectPassive);
+
+          // (a) if the current layer is NOT the start layer 
+          // - intersection is ok
+          if (tLayer != sLayer && atIntersection.intersection.valid) {
+            // create a layer intersection 
             lIntersections.push_back(LayerIntersection<T>(
-                lIntersection, tLayer, &tSurface, 0, pDir));
-            validPathLength = lIntersection.pathLength;
+                atIntersection.intersection, tLayer, atIntersection.object, 0, pDir));
+            validPathLength = atIntersection.intersection.pathLength;
           } else if (tLayer == sLayer) {
             // (b) the current layer is the start layer - we need to cache it
             // and check with the path length
             //     this avoids potential punch-through to other side of
-            sLayerIntersection = lIntersection;
-            sLayerSurface      = &tSurface;
+            sLayerIntersection = atIntersection.intersection;
+            sLayerSurface      = atIntersection.object;
           } else if (tLayer == eLayer) {
-            // (c) it is the end layer after all - provide it and break the loop
+            // (c) it is the end layer after all
+            // - provide it and break the loop
             lIntersections.push_back(LayerIntersection<T>(
-                lIntersection, tLayer, &tSurface, 0, pDir));
+                atIntersection.intersection, tLayer, atIntersection.object, 0, pDir));
             break;
           }
         }
@@ -632,24 +630,6 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
       lIntersections.push_back(LayerIntersection<T>(
           sLayerIntersection, sLayer, sLayerSurface, 0, pDir));
   }
-  // and the arbitraray layers
-  if (!m_confinedArbitraryLayers.empty()) {
-    // loop over the layers and intersect them
-    for (auto& layer : m_confinedArbitraryLayers) {
-      // intersections
-      Intersection lIntersection
-          = layer->surfaceRepresentation().intersectionEstimate(
-              gp, dir, true, bcheck);
-      if (lIntersection.valid)
-        lIntersections.push_back(
-            LayerIntersection<T>(lIntersection,
-                                 layer.get(),
-                                 &(layer->surfaceRepresentation()),
-                                 0,
-                                 pDir));
-    }
-  }
-
   // sort them accordingly to the path length
   std::sort(lIntersections.begin(), lIntersections.end());
   // and return

@@ -11,9 +11,10 @@
 ///////////////////////////////////////////////////////////////////
 
 #ifndef ACTS_GEOMETRYUTILS_INTERSECTION_H
-#define ACTS_GEOMETRYUTILS_INTERSECTION_H 1
+#define ACTS_GEOMETRYUTILS_INTERSECTION_H
 
 #include "Definitions.hpp"
+#include <limits>
 
 namespace Acts {
 
@@ -36,13 +37,16 @@ struct Intersection
   Intersection(const Vector3D& sinter,
                double          slength,
                bool            svalid,
-               double          dist = 0.)
+               double          dist = std::numeric_limits<double>::infinity())
     : position(sinter), pathLength(slength), distance(dist), valid(svalid)
   {
   }
 
   Intersection()
-    : position(Vector3D(0., 0., 0.)), pathLength(0.), distance(0.), valid(false)
+    : position(Vector3D(0., 0., 0.))
+    , pathLength(std::numeric_limits<double>::infinity())
+    , distance(std::numeric_limits<double>::infinity())
+    , valid(false)
   {
   }
 

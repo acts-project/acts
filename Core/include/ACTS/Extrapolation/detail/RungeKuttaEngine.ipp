@@ -262,7 +262,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
     // this is a new transport step, collect it
     // create the jacobian only when requested
     std::unique_ptr<const TransportJacobian> tJacobian = nullptr;
-    if (eCell.checkConfigurationMode(ExtrapolationMode::CollectJacobians))
+    if (eCell.configurationMode(ExtrapolationMode::CollectJacobians))
       tJacobian = std::make_unique<const TransportJacobian>(pCache.jacobian);
     // now fill the transportStep
     // record the parameters as a step
@@ -399,14 +399,14 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
     // this is a new transport step, collect it
     // create the jacobian only when requested
     std::unique_ptr<const TransportJacobian> tJacobian = nullptr;
-    if (eCell.checkConfigurationMode(ExtrapolationMode::CollectJacobians))
+    if (eCell.configurationMode(ExtrapolationMode::CollectJacobians))
       tJacobian = std::make_unique<const TransportJacobian>(pCache.jacobian);
     // now fill the transportStep
     // record the parameters as a step
     eCell.stepTransport(
         std::move(pParameters), purpose, pCache.step, std::move(tJacobian));
     // check what to do with the path Length
-    if (eCell.checkConfigurationMode(ExtrapolationMode::StopWithPathLimit)
+    if (eCell.configurationMode(ExtrapolationMode::StopWithPathLimit)
         && eCell.pathLimitReached(m_cfg.dlt, true)) {
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "propagate",

@@ -446,9 +446,13 @@ public:
   ///  Check a configuration mode
   ///
   /// @param em is the extrapolation mode to be checked
+  /// @note for the CollectMaterial also nonInteracting particle
+  ///       triggers the configuration mode 
   bool
-  checkConfigurationMode(ExtrapolationMode::eMode em) const
+  configurationMode(ExtrapolationMode::eMode em) const
   {
+    if (em == ExtrapolationMode::CollectMaterial 
+        && particleType > Acts::nonInteracting ) return true;
     // check if the bit is set or not
     return extrapolationConfiguration.checkMode(em);
   }
@@ -517,7 +521,7 @@ public:
   pathLimitReached(double tolerance = 0.001, bool checkout = true)
   {
     bool reached
-        = checkConfigurationMode(Acts::ExtrapolationMode::StopWithPathLimit)
+        = configurationMode(Acts::ExtrapolationMode::StopWithPathLimit)
         && reachedLimit(pathLength, pathLimit, tolerance);
     if (reached && checkout)
       endParameters = std::move(extrapolationSteps.back().parameters);
@@ -532,10 +536,10 @@ public:
   bool
   materialLimitReached(double tolerance = 0.001) const
   {
-    return ((checkConfigurationMode(
+    return ((configurationMode(
                  Acts::ExtrapolationMode::StopWithMaterialLimitX0)
              && reachedLimit(materialX0, materialLimitX0, tolerance))
-            || (checkConfigurationMode(
+            || (configurationMode(
                     Acts::ExtrapolationMode::StopWithMaterialLimitL0)
                 && reachedLimit(materialL0, materialLimitL0, tolerance)));
   }
@@ -554,7 +558,7 @@ public:
   setRadialDirection()
   {
     // in FATRAS extrapolation mode force radial direction to be outwards (+1)
-    if (checkConfigurationMode(ExtrapolationMode::FATRAS))
+    if (configurationMode(ExtrapolationMode::FATRAS))
       radialDirection = 1;
     else {
       // if the endSurface is given, it is used to evaluate the radial direction

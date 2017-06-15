@@ -35,11 +35,6 @@ Acts::PlaneLayer::PlaneLayer(std::shared_ptr<const Transform3D>   transform,
   if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
 }
 
-Acts::PlaneLayer::PlaneLayer(const PlaneLayer& play, const Transform3D& transf)
-  : PlaneSurface(play, transf), Layer(play)
-{
-}
-
 const Acts::PlaneSurface&
 Acts::PlaneLayer::surfaceRepresentation() const
 {

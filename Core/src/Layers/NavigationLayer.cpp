@@ -16,27 +16,16 @@
 Acts::NavigationLayer::NavigationLayer(
     std::unique_ptr<const Surface> surfaceRepresentation,
     double                         thickness)
-  : Acts::Layer(), m_surfaceRepresentation(std::move(surfaceRepresentation))
+  : Acts::Layer(nullptr)
+  , m_surfaceRepresentation(std::move(surfaceRepresentation))
 {
   Layer::m_layerThickness = thickness;
   Layer::m_layerType      = navigation;
 }
 
-std::shared_ptr<const Acts::Layer>
-Acts::NavigationLayer::cloneWithShift(const Acts::Transform3D& shift) const
-{
-  Surface* shiftedSurface = m_surfaceRepresentation->clone(&shift);
-  return std::shared_ptr<const Acts::Layer>(new Acts::NavigationLayer(
-      std::unique_ptr<const Surface>(shiftedSurface), Layer::m_layerThickness));
-}
-
 Acts::NavigationLayer::~NavigationLayer()
-{
-}
+{}
 
-bool
-Acts::NavigationLayer::isOnLayer(const Vector3D&      gp,
-                                 const BoundaryCheck& bcheck) const
-{
-  return m_surfaceRepresentation->isOnSurface(gp, bcheck);
-}
+bool 
+Acts::NavigationLayer::resolve(bool, bool, bool) const
+{ return false; }     
