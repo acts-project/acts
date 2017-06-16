@@ -33,11 +33,11 @@ struct Intersection
   /// @param sinter is the position of the intersection
   /// @param slength is the path length to the intersection
   /// @param svalid is a boolean indicating if intersection is valid
-  /// @param dist is the distance to the surface, e.g. when outside bounds
+  /// @param dist is the distance to the closes surface boundary
   Intersection(const Vector3D& sinter,
                double          slength,
                bool            svalid,
-               double          dist = std::numeric_limits<double>::infinity())
+               double          dist = 0.)
     : position(sinter), pathLength(slength), distance(dist), valid(svalid)
   {
   }
@@ -45,7 +45,7 @@ struct Intersection
   Intersection()
     : position(Vector3D(0., 0., 0.))
     , pathLength(std::numeric_limits<double>::infinity())
-    , distance(std::numeric_limits<double>::infinity())
+    , distance(0.)
     , valid(false)
   {
   }
