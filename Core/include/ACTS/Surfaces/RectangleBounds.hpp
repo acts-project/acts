@@ -109,6 +109,12 @@ RectangleBounds::halflengthY() const
   return m_halfY;
 }
 
+inline SurfaceBounds::BoundsType
+RectangleBounds::type() const
+{
+  return SurfaceBounds::Rectangle;
+}
+
 }  // end of namespace
 
 #endif  // ACTS_SURFACES_RECTANGLEBOUNDS_H

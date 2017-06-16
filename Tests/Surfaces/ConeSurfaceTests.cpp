@@ -26,7 +26,6 @@
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
 namespace utf    = boost::unit_test;
-const double inf = std::numeric_limits<double>::infinity();
 const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
@@ -180,7 +179,7 @@ namespace Test {
     //      3.1415927)"));
   }
 
-  BOOST_AUTO_TEST_CASE(EqualityOperators, *utf::expected_failures(1))
+  BOOST_AUTO_TEST_CASE(EqualityOperators)
   {
     double alpha{M_PI / 8.} /*, halfPhiSector{M_PI/16.}, zMin{1.0}, zMax{10.}*/;
     bool   symmetric(false);
@@ -195,7 +194,7 @@ namespace Test {
     //
     BOOST_TEST_CHECKPOINT(
         "Create and then assign a ConeSurface object to the existing one");
-    /// Test assignment (will fail at the equality test)
+    /// Test assignment
     ConeSurface assignedConeSurface(nullptr, NaN, NaN);
     assignedConeSurface = coneSurfaceObject;
     /// Test equality of assigned to original

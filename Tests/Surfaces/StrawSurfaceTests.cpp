@@ -17,7 +17,6 @@
 #include <boost/test/output_test_stream.hpp>
 // leave blank line
 
-//
 #include <limits>
 #include "ACTS/Layers/PlaneLayer.hpp"
 #include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
@@ -28,7 +27,6 @@
 
 using boost::test_tools::output_test_stream;
 namespace utf    = boost::unit_test;
-const double inf = std::numeric_limits<double>::infinity();
 const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
@@ -104,7 +102,7 @@ namespace Test {
      Bounds  : Acts::LineBounds: (radius, halflengthInZ) = (1.0000000, 10.0000000)"));
   }
 
-  BOOST_AUTO_TEST_CASE(EqualityOperators, *utf::expected_failures(1))
+  BOOST_AUTO_TEST_CASE(EqualityOperators)
   {
     double        radius(1.0), halfZ(10.);
     Translation3D translation{0., 1., 2.};
@@ -118,7 +116,7 @@ namespace Test {
     //
     BOOST_TEST_CHECKPOINT(
         "Create and then assign a StrawSurface object to the existing one");
-    /// Test assignment (will fail at the equality test)
+    /// Test assignment
     StrawSurface assignedStrawSurface(nullptr, NaN, NaN);
     assignedStrawSurface = strawSurfaceObject;
     /// Test equality of assigned to original

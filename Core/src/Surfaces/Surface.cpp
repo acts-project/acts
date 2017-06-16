@@ -70,11 +70,13 @@ Acts::Surface::operator=(const Surface& other)
   if (&other != this) {
     GeometryObject::operator=(other);
     // detector element, identifier & layer association are unique
-    m_transform              = m_transform;
+    m_transform          = other.m_transform;
+    m_associatedLayer    = other.m_associatedLayer;
+    m_associatedMaterial = other.m_associatedMaterial;
+    // assigning does invalidate the link to the detectore element
+    // we want to have a unique association
     m_associatedDetElement   = nullptr;
     m_associatedDetElementId = Identifier();
-    m_associatedLayer        = nullptr;
-    m_associatedMaterial     = other.m_associatedMaterial;
   }
   return *this;
 }

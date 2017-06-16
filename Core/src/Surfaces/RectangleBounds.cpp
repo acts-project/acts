@@ -31,12 +31,6 @@ Acts::RectangleBounds::clone() const
   return new RectangleBounds(*this);
 }
 
-Acts::SurfaceBounds::BoundsType
-Acts::RectangleBounds::type() const
-{
-  return SurfaceBounds::Rectangle;
-}
-
 std::vector<TDD_real_t>
 Acts::RectangleBounds::valueStore() const
 {

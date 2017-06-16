@@ -17,7 +17,6 @@
 #include <boost/test/output_test_stream.hpp>
 // leave blank line
 
-//
 #include <limits>
 #include "ACTS/Layers/PlaneLayer.hpp"
 #include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
@@ -30,8 +29,6 @@
 
 using boost::test_tools::output_test_stream;
 namespace utf    = boost::unit_test;
-const double inf = std::numeric_limits<double>::infinity();
-const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
 /// Mock track object with minimal methods implemented for compilation
@@ -85,7 +82,7 @@ namespace Test {
   }
 
   /// Unit test for testing Surface properties
-  BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(2))
+  BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1))
   {
     // build a test object , 'surface'
     Identifier                                identifier{1};
@@ -109,13 +106,11 @@ namespace Test {
     // test  associatelayer, associatedLayer
     surface.associateLayer(*pLayer);
     BOOST_TEST(surface.associatedLayer() == pLayer.get());
-    // associatedMaterial
-    BOOST_TEST(surface.associatedMaterial() == pMaterial.get());  // fails
-    // bounds() method is pure virtual, is overridden in derived classes, test
-    // there
+    // associated Material is not set to the surface
+    // it is set to the detector element surface though
+    BOOST_TEST(surface.associatedMaterial() != pMaterial.get());
     // center()
     BOOST_TEST(reference == surface.center());
-    // clone() method is pure virtual;
     // stream insertion operator <<
     output_test_stream output;
     output << surface;
@@ -168,7 +163,6 @@ namespace Test {
     // type() is pure virtual
   }
 
-  BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(EqualityOperators, 1);
   BOOST_AUTO_TEST_CASE(EqualityOperators)
   {
     // build some test objects
@@ -201,12 +195,15 @@ namespace Test {
     bool equalSurface = (surface1 == surface2);
     BOOST_TEST(equalSurface, "Equality between similar surfaces");
     //
-    bool unequalSurface
-        = (surface1 != surface3);  // only thickness is different here;
-    BOOST_TEST(unequalSurface,
-               "Different thickness surfaces should be unequal");  // will fail
+    // remove test for the moment,
+    // surfaces do not have a concept of thickness (only detector elemetns have)
+    // bool unequalSurface
+    //    = (surface1 != surface3);  // only thickness is different here;
+    // BOOST_TEST(unequalSurface,
+    //           "Different thickness surfaces should be unequal");  // will
+    //           fail
     //
-    unequalSurface
+    bool unequalSurface
         = (surface1 != surface4);  // bounds or transform must be different;
     BOOST_TEST(unequalSurface,
                "Different transform surfaces should be unequal");

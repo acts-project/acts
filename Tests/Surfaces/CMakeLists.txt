@@ -33,9 +33,9 @@ add_executable (DiscSurfaceTests DiscSurfaceTests.cpp)
 target_link_libraries (DiscSurfaceTests PRIVATE ACTSCore)
 add_test (NAME DiscSurfaceTests COMMAND DiscSurfaceTests)
 
-add_executable (plane_surface_tests plane_surface_tests.cpp)
-target_link_libraries (plane_surface_tests PRIVATE ACTSCore)
-add_test (NAME plane_surface_tests COMMAND plane_surface_tests)
+add_executable (PlaneSurfaceTests PlaneSurfaceTests.cpp)
+target_link_libraries (PlaneSurfaceTests PRIVATE ACTSCore)
+add_test (NAME PlaneSurfaceTests COMMAND PlaneSurfaceTests)
 
 add_executable (SurfaceBoundsTests SurfaceBoundsTests.cpp)
 target_link_libraries (SurfaceBoundsTests PRIVATE ACTSCore)
