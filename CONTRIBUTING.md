@@ -8,9 +8,10 @@ Contributions to the ACTS project are very welcome and feedback on the documenta
     1. [Preparation](#preparation)
     2. [New development](#new-development)
     3. [Creating a merge request](#creating-a-merge-request)
-    4. [Workflow recommendations](#workflow-recommendations)
-    5. [Coding style and guidelines](#coding-style-and-guidelines)
-    6. [git tips and tricks](#git-tips-and-tricks)
+    4. [Using forks](#using-forks)
+    5. [Workflow recommendations](#workflow-recommendations)
+    6. [Coding style and guidelines](#coding-style-and-guidelines)
+    7. [git tips and tricks](#git-tips-and-tricks)
 4. [Administrator's corner](#admin-corner)
     1. [Making a new ACTS release](#tag-release)
     2. [Setting up a Jenkins CI server](#setup-jenkins)
@@ -99,7 +100,7 @@ Let's go through the options one by one:
 
 Once your development is ready for integration, you should open a merge request at the [ACTS project](https://gitlab.cern.ch/acts/a-common-tracking-sw) ([GitLab Help: Create a merge request](https://gitlab.cern.ch/help/gitlab-basics/add-merge-request)). The target branch should usually be _master_ for feature requests and _releas-X,Y,Z_ for bugfixes. The ACTS projects accepts only fast-foward merges which means that your branch must have been rebased on the target branch. This can be achieved by fetching upstream changes and rebasing afterwards:
 
-	git fetch origin
+    git fetch origin
     git checkout <my_feature_branch>
     git rebase -i origin/<target_branch>
     git push -u origin <my_feature_branch>
@@ -108,6 +109,51 @@ At this point you should make use of the interactive rebase procedure to clean u
 Merge requests are required to close a ACTS JIRA ticket. This is achieved by adding e.g. 'fixes ACTS-XYZ' to the end of the merge request description. Please note that JIRA tickets should only be referenced by merge requests and not individual commits (since strictly there should only be one JIRA ticket per merge request). Once the merge request is opened, a continous integration job is triggered which will add multiple comments to the merge request (e.g. build status, missing license statements, doxygen errors, test coverage etc). Please have a look at them and fix them by adding more commits to your branch if needed.  
 Please find below a short checklist for merge requests.
 
+### <a name="using-forks">Using forks</a>
+
+Users or groups with git experience may prefer to use their own forks of the
+ACTS project to develop and test their changes before they are integrated back
+into the main ACTS repository. We assume that you are experienced with a
+fork-based workflow in git and only summarise the most important commands at the
+end of this section.
+
+As a first step, you need to create your own fork of the ACTS project. For doing
+this, please go to the [ACTS GitLab
+page](https://gitlab.cern.ch/acts/a-common-tracking-sw), click on the fork
+button, and follow the instructions ([GitLab Help "How to fork a
+project"](https://gitlab.cern.ch/help/gitlab-basics/fork-project)). In a second
+step, you need to configure your fork to be compatible with the current CI
+setup:
+
+* add the user 'atsjenkins' as a developer to your fork
+* from your project page go to "Settings -> Integrations -> JIRA" clear the field
+"Username" and leave it empty
+
+**Important:** The second option is needed due to some limitations in the GitLab
+JIRA integration. If you fail to do so, the ACTS JIRA project will be spammed
+with hundreds of duplicates comments and you will likely receive an angry email
+from the development team ;-).
+
+    # adding the central ACTS repository as remote
+    git remote add upstream ssh://git@gitlab.cern.ch:7999/acts/a-common-tracking-sw.git
+    # get latest upstream changes
+    git fetch upstream
+    # start a new development
+    git checkout -b <BRANCH_NAME> upstream/master --no-track
+    # code, test, document
+    # publish your changes to your fork
+    git push -u origin <BRANCH_NAME>
+    # open a merge request through the Gitlab web interface
+    
+    # sync your fork with the upstream repository
+    git fetch upstream
+    # checkout the branch you want to sync (usually 'master' or 'release-X.Y.Z')
+    git checkout <BRANCH>
+    # merge all upstream changes which must be a fast-forward merge 
+    git merge --ff-only upstream/<BRANCH>
+    # push the updates to your fork
+    git push
+    
 #### Checklist for merge requests
 
 - Your branch has been rebased on the target branch and can be integrated through a fast-forward merge.
