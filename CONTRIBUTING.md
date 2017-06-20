@@ -299,7 +299,7 @@ Now, master is pointing to B, HEAD and &lt;new\_branch\_name&gt; are pointing to
 
 Writing new code is not the only way one can contribute to the ACTS project. Another greatly appreciated contribution is looking at other proposed contributions to the project. The more eyeballs look at a piece of code before it is merged into the ACTS repository, the smaller the chances that a bug or other unwanted behaviour is accidentally introduced into the ACTS codebase. This is why we require that every ACTS merge request receives at least one human review before being merged.
 
-You can help reviewing proposed contributions by going to [the "merge requests" section of the ACTS Gitlab repository][https://gitlab.cern.ch/acts/a-common-tracking-sw/merge_requests) and having a look at the proposals that are being made here. The present contribution guide should serve as a good indication of what we expect from code submissions. In addition, please look at the merge request itself:
+You can help reviewing proposed contributions by going to [the "merge requests" section of the ACTS Gitlab repository](https://gitlab.cern.ch/acts/a-common-tracking-sw/merge_requests) and having a look at the proposals that are being made here. The present contribution guide should serve as a good indication of what we expect from code submissions. In addition, please look at the merge request itself:
 
 * Does its title and description reflect its contents?
 * Is it associated with a JIRA ticket so that we can easily document it in the release notes?
