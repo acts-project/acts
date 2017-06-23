@@ -12,7 +12,10 @@ Contributions to the ACTS project are very welcome and feedback on the documenta
     5. [Workflow recommendations](#workflow-recommendations)
     6. [Coding style and guidelines](#coding-style-and-guidelines)
     7. [git tips and tricks](#git-tips-and-tricks)
-4. [Administrator's corner](#admin-corner)
+4. [Review other contributions](#review-other-contributions)
+    1. [Approving a merge request](#approving-a-merge-request)
+    2. [Merging a merge request](#merging-a-merge-request)
+5. [Administrator's corner](#admin-corner)
     1. [Making a new ACTS release](#tag-release)
     2. [Setting up a Jenkins CI server](#setup-jenkins)
 
@@ -289,6 +292,27 @@ You can resolve this situation by running:
 which should give the following situation:  
 <img src="doc/figures/move_to_branch2.png" alt="moving commits to new branch">  
 Now, master is pointing to B, HEAD and &lt;new\_branch\_name&gt; are pointing to E and you can happily continue with your work.
+
+## <a name="review-other-contributions">Review other contributions</a>
+
+### <a name="approving-a-merge-request">Approving a merge request</a>
+
+Writing new code is not the only way one can contribute to the ACTS project. Another greatly appreciated contribution is looking at other proposed contributions to the project. The more eyeballs look at a piece of code before it is merged into the ACTS repository, the smaller the chances that a bug or other unwanted behaviour is accidentally introduced into the ACTS codebase. This is why we require that every ACTS merge request receives at least one human review before being merged.
+
+You can help reviewing proposed contributions by going to [the "merge requests" section of the ACTS Gitlab repository](https://gitlab.cern.ch/acts/a-common-tracking-sw/merge_requests) and having a look at the proposals that are being made here. The present contribution guide should serve as a good indication of what we expect from code submissions. In addition, please look at the merge request itself:
+
+* Does its title and description reflect its contents?
+* Is it associated with a JIRA ticket so that we can easily document it in the release notes?
+* Do the automated continuous integration tests pass without problems?
+* Have all the comments raised by previous reviewers been addressed?
+
+If you are confident that a merge request is ready for integration, please make it known by clicking the "Approve merge request" button of the Gitlab interface. This notifies other members of the ACTS team of your decision, and marks the merge request as ready to be merged.
+
+### <a name="merging-a-merge-request">Merging a merge request</a>
+
+If you have been granted merge rights on the ACTS repository, you can merge a merge request into the ACTS master branch after it has been approved by someone else. In order to give everyone a chance to review the merge request, please wait for at least two days (48h) after the merge request has been submitted before doing so, even if the merge request has been approved by someone before this delay has elapsed.
+
+Gitlab may warn you that a "Fast-forward merge is not possible". This warning means that the merge request has fallen behind the current ACTS master branch, and should be updated through a rebase. Please notify the merge request author in order to make sure that the latest master changes do not affect the merge request, and to have it updated as appropriate.
 
 ## <a name="admin-corner">Administrator's corner</a>
 
