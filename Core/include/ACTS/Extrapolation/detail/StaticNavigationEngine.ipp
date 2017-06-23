@@ -97,7 +97,7 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
     return eCode;
   }
   // bail-out in case no boundary has been found for Fatras mode
-  if (eCell.checkConfigurationMode(ExtrapolationMode::FATRAS)) {
+  if (eCell.configurationMode(ExtrapolationMode::FATRAS)) {
     EX_MSG_VERBOSE(
         eCell.navigationStep, "navigation", "", "Fatras loop protection.");
     // get out of this, we will not simulate loopers
@@ -300,7 +300,7 @@ Acts::StaticNavigationEngine::handleBoundaryT(
     // - geometrySignature change and configuration to stop then triggers a
     // Success
     bool stopAtThisBoundary
-        = eCell.checkConfigurationMode(ExtrapolationMode::StopAtBoundary)
+        = eCell.configurationMode(ExtrapolationMode::StopAtBoundary)
         && (nextVolume->geometrySignature()
             != eCell.leadVolume->geometrySignature());
     // fill the boundary into the cache if successfully hit boundary surface

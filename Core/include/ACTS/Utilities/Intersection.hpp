@@ -11,8 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #ifndef ACTS_GEOMETRYUTILS_INTERSECTION_H
-#define ACTS_GEOMETRYUTILS_INTERSECTION_H 1
+#define ACTS_GEOMETRYUTILS_INTERSECTION_H
 
+#include <limits>
 #include "Definitions.hpp"
 
 namespace Acts {
@@ -32,7 +33,7 @@ struct Intersection
   /// @param sinter is the position of the intersection
   /// @param slength is the path length to the intersection
   /// @param svalid is a boolean indicating if intersection is valid
-  /// @param dist is the distance to the surface, e.g. when outside bounds
+  /// @param dist is the distance to the closes surface boundary
   Intersection(const Vector3D& sinter,
                double          slength,
                bool            svalid,
@@ -42,7 +43,10 @@ struct Intersection
   }
 
   Intersection()
-    : position(Vector3D(0., 0., 0.)), pathLength(0.), distance(0.), valid(false)
+    : position(Vector3D(0., 0., 0.))
+    , pathLength(std::numeric_limits<double>::infinity())
+    , distance(0.)
+    , valid(false)
   {
   }
 

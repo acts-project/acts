@@ -45,18 +45,6 @@ Acts::CylinderLayer::CylinderLayer(
   if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
 }
 
-Acts::CylinderLayer::CylinderLayer(const CylinderLayer& clay,
-                                   const Transform3D&   transf)
-  : CylinderSurface(clay, transf), Layer(clay)
-{
-  // associate the layer to the surface
-  CylinderSurface::associateLayer(*this);
-  // build an approach descriptor if a surface array is present
-  if (m_surfaceArray) buildApproachDescriptor();
-  // register the layer to the approach descriptor surfaces
-  if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
-}
-
 const Acts::CylinderSurface&
 Acts::CylinderLayer::surfaceRepresentation() const
 {

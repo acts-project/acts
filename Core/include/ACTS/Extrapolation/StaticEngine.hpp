@@ -192,8 +192,10 @@ private:
   /// @param eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
   /// @param dir is the additional direction prescription
-  /// @param bcheck is the boudnary check directive @todo shift to cell after
-  /// splitting
+  /// @param bcheck is the boudnary check directive
+  /// @param collectSenstivie steers whether sensitive surfaces are searched
+  /// @param collectMaterial steers whether material has to be integrated
+  /// @param collectPassive steers whether all passive steps are being done
   ///
   /// @return is a extrapolation code indication
   template <class T>
@@ -202,31 +204,6 @@ private:
                const Surface*        sf     = 0,
                PropDirection         dir    = alongMomentum,
                const BoundaryCheck&  bcheck = true) const;
-
-  /// Main sub structure layer handling
-  ///
-  /// @param eCell ist he extrapolaiton cell
-  /// @param sf is the (optional) destinaton surface
-  /// @param dir is the additional direction prescription
-  /// @param bcheck is the boudnary check directive @todo shift to cell after
-  /// splitting
-  /// @param hasSubStructure is an indicator whether the layer has sub structure
-  /// which needs to be resolved
-  /// @param isStartLayer is and indicator whether the layer
-  /// is the start layer
-  /// @param isDestinationLayer is and indicator whether the layer
-  /// is the destination layer
-  ///
-  /// @return is a extrapolation code indication
-  template <class T>
-  ExtrapolationCode
-  resolveLayerT(ExtrapolationCell<T>& eCell,
-                const Acts::Surface*  sf,
-                PropDirection         dir                = alongMomentum,
-                const BoundaryCheck&  bcheck             = true,
-                bool                  hasSubStructure    = false,
-                bool                  isStartLayer       = false,
-                bool                  isDestinationLayer = false) const;
 
   /// Handle the failure - as configured
   ///

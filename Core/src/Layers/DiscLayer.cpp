@@ -48,18 +48,6 @@ Acts::DiscLayer::DiscLayer(std::shared_ptr<const Transform3D>  transform,
   if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
 }
 
-Acts::DiscLayer::DiscLayer(const Acts::DiscLayer&   dlay,
-                           const Acts::Transform3D& transf)
-  : DiscSurface(dlay, transf), Layer(dlay)
-{
-  // associate the layer with the layer surface
-  DiscSurface::associateLayer(*this);
-  // create an approach descriptor if a surface array is present
-  if (m_surfaceArray) buildApproachDescriptor();
-  // register the layer to the approach descriptor
-  if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
-}
-
 const Acts::DiscSurface&
 Acts::DiscLayer::surfaceRepresentation() const
 {

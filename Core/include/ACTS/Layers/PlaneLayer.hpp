@@ -55,27 +55,6 @@ public:
                                           laytyp));
   }
 
-  /// Factory for a shared plane layer
-  ///
-  /// @param pla is the plain layer to be coped
-  /// @param shift is the additional shift applied after copying
-  ///
-  /// @return a shared pointer to a layer
-  static MutableLayerPtr
-  create(const PlaneLayer& pla, const Transform3D& shift)
-  {
-    return MutableLayerPtr(new PlaneLayer(pla, shift));
-  }
-
-  /// Clone with a shift - only cloning that is allowed
-  ///
-  /// @param shift additional shift applied after cloning
-  LayerPtr
-  cloneWithShift(const Transform3D& shift) const override
-  {
-    return PlaneLayer::create(*this, shift);
-  }
-
   /// Default Constructor - deleted
   PlaneLayer() = delete;
 

@@ -446,9 +446,14 @@ public:
   ///  Check a configuration mode
   ///
   /// @param em is the extrapolation mode to be checked
+  /// @note for the CollectMaterial also nonInteracting particle
+  ///       triggers the configuration mode
   bool
-  checkConfigurationMode(ExtrapolationMode::eMode em) const
+  configurationMode(ExtrapolationMode::eMode em) const
   {
+    if (em == ExtrapolationMode::CollectMaterial
+        && particleType > Acts::nonInteracting)
+      return true;
     // check if the bit is set or not
     return extrapolationConfiguration.checkMode(em);
   }
@@ -464,14 +469,21 @@ public:
   /// -> jacobians need to be cleared
   ///
   /// @param stepParamters is the new unique parameter of the step
+  /// @param stepSurface is the transport surface, it is explicitely given
+  ///        (although i.g. identical to stepParameters.referenceSurface)
+  ///        such that curvilinear parameters can profit from same step
+  ///        saving when transport + material are done successively.
+  ///        If nullptr is provided, then the stepParameters.referenceSurface
+  ///        is taken.
   /// @param fillModes are the different indications of the step
   /// @param pathLength is the path length of this step
   /// @param tjac is the transport jacobian of the step
   void
   stepTransport(std::unique_ptr<const T>                 stepParameters,
-                std::vector<ExtrapolationMode::eMode>    fillModes  = {},
-                double                                   stepLength = 0.,
-                std::unique_ptr<const TransportJacobian> tjac       = nullptr);
+                const Surface*                           stepSurface = nullptr,
+                std::vector<ExtrapolationMode::eMode>    fillModes   = {},
+                double                                   stepLength  = 0.,
+                std::unique_ptr<const TransportJacobian> tjac        = nullptr);
 
   /// Fill a step without transport
   /// -> desinged for material
@@ -479,7 +491,9 @@ public:
   ///
   /// @param stepParameters are the (new) created parameters
   ///        this is to be set as a nullptr if material update
-  ///        is not performed
+  ///        is not performed, if the update is performed, the
+  ///        previous stepParameters on the same step surface are
+  ///        moved to the step.preupdateParameters
   /// @param stepPosition is the poistion where the material update
   ///        is performed (localisation if stepParameters are nullptr)
   /// @param stepSurface is the surface where the material update
@@ -516,8 +530,7 @@ public:
   bool
   pathLimitReached(double tolerance = 0.001, bool checkout = true)
   {
-    bool reached
-        = checkConfigurationMode(Acts::ExtrapolationMode::StopWithPathLimit)
+    bool reached = configurationMode(Acts::ExtrapolationMode::StopWithPathLimit)
         && reachedLimit(pathLength, pathLimit, tolerance);
     if (reached && checkout)
       endParameters = std::move(extrapolationSteps.back().parameters);
@@ -532,12 +545,11 @@ public:
   bool
   materialLimitReached(double tolerance = 0.001) const
   {
-    return ((checkConfigurationMode(
-                 Acts::ExtrapolationMode::StopWithMaterialLimitX0)
-             && reachedLimit(materialX0, materialLimitX0, tolerance))
-            || (checkConfigurationMode(
-                    Acts::ExtrapolationMode::StopWithMaterialLimitL0)
-                && reachedLimit(materialL0, materialLimitL0, tolerance)));
+    return (
+        (configurationMode(Acts::ExtrapolationMode::StopWithMaterialLimitX0)
+         && reachedLimit(materialX0, materialLimitX0, tolerance))
+        || (configurationMode(Acts::ExtrapolationMode::StopWithMaterialLimitL0)
+            && reachedLimit(materialL0, materialLimitL0, tolerance)));
   }
 
   /// Set ParticleType
@@ -554,7 +566,7 @@ public:
   setRadialDirection()
   {
     // in FATRAS extrapolation mode force radial direction to be outwards (+1)
-    if (checkConfigurationMode(ExtrapolationMode::FATRAS))
+    if (configurationMode(ExtrapolationMode::FATRAS))
       radialDirection = 1;
     else {
       // if the endSurface is given, it is used to evaluate the radial direction

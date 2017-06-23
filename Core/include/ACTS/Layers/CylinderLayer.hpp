@@ -64,35 +64,11 @@ public:
                                              laytyp));
   }
 
-  /// Factory copy constructor with shift
-  ///
-  /// @param cla is the source cylinder layer for the copy
-  /// @param shift is the additional transform applied after cloning
-  ///
-  /// @return The return object is a shared poiter to the layer.
-  static MutableLayerPtr
-  create(const CylinderLayer& cla, const Transform3D& shift)
-  {
-    return MutableLayerPtr(new CylinderLayer(cla, shift));
-  }
-
-  /// Factory clone constructor with shift
-  ///
-  /// @param shift is the additional transform applied after cloning
-  ///
-  /// @return The return object is a shared poiter to the layer.
-  LayerPtr
-  cloneWithShift(const Transform3D& shift) const override
-  {
-    return CylinderLayer::create(*this, shift);
-  }
-
   /// Copy constructor - deleted
   CylinderLayer(const CylinderLayer& cla) = delete;
 
   /// Assignment operator for CylinderLayers - deleted
   CylinderLayer&
-
   operator=(const CylinderLayer&)
       = delete;
 

@@ -169,7 +169,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
   // check if anything should be done
   bool corrConfig
       = (m_cfg.eLossCorrection || m_cfg.mscCorrection
-         || eCell.checkConfigurationMode(ExtrapolationMode::CollectMaterial));
+         || eCell.configurationMode(ExtrapolationMode::CollectMaterial));
   // and let's check if there's acutally something to do
   if (materialProperties && corrConfig) {
     // and add them
@@ -231,6 +231,13 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
         mutableUCovariance.release());
     auto stepParameters = std::make_unique<const BoundParameters>(
         std::move(uCovariance), uParameters, mSurface);
+
+    // fill it into the extrapolation cache
+    EX_MSG_VERBOSE(eCell.navigationStep,
+                   surfaceType,
+                   surfaceID,
+                   "collecting material of [t/X0] = " << thicknessInX0);
+
     // fill in th step material
     // - will update thea leadParameters to the step parameters
     const Vector3D& stepPosition = stepParameters->position();
@@ -239,12 +246,6 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
                        mSurface,
                        pathCorrection,
                        materialProperties);
-
-    // fill it into the extrapolation cache
-    EX_MSG_VERBOSE(eCell.navigationStep,
-                   surfaceType,
-                   surfaceID,
-                   "collecting material of [t/X0] = " << thicknessInX0);
   }
   return;
 }
