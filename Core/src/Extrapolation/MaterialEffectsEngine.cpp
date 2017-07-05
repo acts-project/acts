@@ -154,12 +154,12 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
   if (!mSurface.associatedMaterial()) return;
   // parameters are the lead parameters
   auto& mParameters = (*eCell.leadParameters);
-  
+
   // find out if the parameters are curvilinear
   // @todo find a better way to do this
-  const CurvilinearParameters* cParameters = 
-    dynamic_cast<const CurvilinearParameters*>(eCell.leadParameters);
-  
+  const CurvilinearParameters* cParameters
+      = dynamic_cast<const CurvilinearParameters*>(eCell.leadParameters);
+
   // path correction
   double pathCorrection = fabs(
       mSurface.pathCorrection(mParameters.position(), mParameters.momentum()));
@@ -197,7 +197,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     double E    = sqrt(p * p + m * m);
     double beta = p / E;
     //
-    double pScalor  = 1.;
+    double pScalor = 1.;
     // (A) - energy loss correction
     if (m_cfg.eLossCorrection) {
       double sigmaP = 0.;
@@ -242,19 +242,19 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     // these are newly created
     std::unique_ptr<const ActsSymMatrixD<NGlobalPars>> uCovariance(
         mutableUCovariance.release());
-    
+
     // question is if those are curvilinear or bound
     std::unique_ptr<const TrackParameters> stepParameters = nullptr;
-    if (cParameters){
+    if (cParameters) {
       // create curvilinear parameters
-      Vector3D position    = mParameters.position();      
-      Vector3D momentum    = pScalor*mParameters.momentum();
-      stepParameters  = std::make_unique<const CurvilinearParameters>(
-        std::move(uCovariance), position, momentum, mParameters.charge());      
+      Vector3D position = mParameters.position();
+      Vector3D momentum = pScalor * mParameters.momentum();
+      stepParameters    = std::make_unique<const CurvilinearParameters>(
+          std::move(uCovariance), position, momentum, mParameters.charge());
     } else {
       /// bound parameters
       stepParameters = std::make_unique<const BoundParameters>(
-        std::move(uCovariance), uParameters, mSurface);
+          std::move(uCovariance), uParameters, mSurface);
     }
     // fill it into the extrapolation cache
     EX_MSG_VERBOSE(eCell.navigationStep,
