@@ -371,18 +371,6 @@ private:
   bool
   newCrossPoint(const CylinderSurface&, const double*, const double*) const;
 
-  /// get the field - with the fast option
-  Vector3D
-  getField(const Vector3D& R) const
-  {
-    return m_cfg.fieldService->getField(R);
-  }
-
-  Vector3D
-  getFieldGradient(const Vector3D& R, ActsMatrixD<3, 3> dH) const
-  {
-    return m_cfg.fieldService->getFieldGradient(R, dH);
-  }
 };
 }
 

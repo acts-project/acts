@@ -105,9 +105,11 @@ namespace units {
 
   /// @name derived units
   /// @{
-  const double _N = _kg * _m / (_s * _s);
-  const double _J = _N * _m;
-  const double _T = _kg / (_C * _s);
+  const double _N      = _kg * _m / (_s * _s);
+  const double _J      = _N * _m;
+  const double _T      = _kg / (_C * _s);
+  const double _Gauss  = 1e-4*_T;
+  const double _kGauss = 1e-1*_T; 
   /// @}
 
   /// @name fundamental physical constants in SI units

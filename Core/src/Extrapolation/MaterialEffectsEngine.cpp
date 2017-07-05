@@ -154,6 +154,12 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
   if (!mSurface.associatedMaterial()) return;
   // parameters are the lead parameters
   auto& mParameters = (*eCell.leadParameters);
+  
+  // find out if the parameters are curvilinear
+  // @todo find a better way to do this
+  const CurvilinearParameters* cParameters = 
+    dynamic_cast<const CurvilinearParameters*>(eCell.leadParameters);
+  
   // path correction
   double pathCorrection = fabs(
       mSurface.pathCorrection(mParameters.position(), mParameters.momentum()));
@@ -190,6 +196,8 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     double m    = m_particleMasses.mass.at(eCell.particleType);
     double E    = sqrt(p * p + m * m);
     double beta = p / E;
+    //
+    double pScalor  = 1.;
     // (A) - energy loss correction
     if (m_cfg.eLossCorrection) {
       double sigmaP = 0.;
@@ -225,13 +233,24 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     EX_MSG_VERBOSE(eCell.navigationStep,
                    surfaceType,
                    surfaceID,
-                   "material update needed create new parameters.");
+                   "material update needed to create new parameters.");
     // these are newly created
     std::unique_ptr<const ActsSymMatrixD<NGlobalPars>> uCovariance(
         mutableUCovariance.release());
-    auto stepParameters = std::make_unique<const BoundParameters>(
+    
+    // question is if those are curvilinear or bound
+    std::unique_ptr<const TrackParameters> stepParameters = nullptr;
+    if (cParameters){
+      // create curvilinear parameters
+      Vector3D position    = mParameters.position();      
+      Vector3D momentum    = pScalor*mParameters.momentum();
+      stepParameters  = std::make_unique<const CurvilinearParameters>(
+        std::move(uCovariance), position, momentum, mParameters.charge());      
+    } else {
+      /// bound parameters
+      stepParameters = std::make_unique<const BoundParameters>(
         std::move(uCovariance), uParameters, mSurface);
-
+    }
     // fill it into the extrapolation cache
     EX_MSG_VERBOSE(eCell.navigationStep,
                    surfaceType,

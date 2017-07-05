@@ -23,6 +23,7 @@ namespace Acts {
 
 namespace Test {
 
+   
   /// @brief unit test for construction of constant magnetic field
   ///
   /// Tests the correct behavior and consistency of

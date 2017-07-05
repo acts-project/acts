@@ -1,3 +1,8 @@
 add_executable (constant_bfield_propagation_test propagation.cpp)
 target_link_libraries (constant_bfield_propagation_test PRIVATE ACTSCore)
 add_test(NAME constant_bfield_propagation_test COMMAND constant_bfield_propagation_test)
+
+add_executable (RungeKuttaEngineTest RungeKuttaEngineTest.cpp)
+target_link_libraries (RungeKuttaEngineTest PRIVATE ACTSCore)
+add_test(NAME RungeKuttaEngineTest COMMAND RungeKuttaEngineTest)
+
