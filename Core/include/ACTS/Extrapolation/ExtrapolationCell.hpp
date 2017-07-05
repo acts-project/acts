@@ -142,13 +142,10 @@ public:
   ///
   /// @param c is the code enum
   ExtrapolationCode(eCode c) : code(c) {}
-  
+
   // Implicit conversion
-  operator int() const 
-  { 
-    return int(code); 
-  }
-  
+  operator int() const { return int(code); }
+
   /// Assigment operator
   ///
   /// @param ec is the source eCode for the assignment
