@@ -9,8 +9,8 @@
 ///  Boost include(s)
 #define BOOST_TEST_MODULE RungeKuttaEngine Tests
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/included/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
 #include <boost/test/output_test_stream.hpp>
 
 #include "ACTS/EventData/NeutralParameters.hpp"
@@ -23,6 +23,9 @@
 #include "ACTS/Surfaces/PerigeeSurface.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
+namespace bdata = boost::unit_test::data;
+namespace tt    = boost::test_tools;
+
 namespace Acts {
 
 namespace Test {
@@ -31,7 +34,7 @@ namespace Test {
 
   /// This tests does a propagation through
   /// a magnetic field with 2 Tesla - at nominal incidence
-  BOOST_AUTO_TEST_CASE(RungeKuttaEntineTests)
+  BOOST_AUTO_TEST_CASE(RungeKuttaEngineTests)
   {
 
     // use as a test for constant versus interpolated field as well
