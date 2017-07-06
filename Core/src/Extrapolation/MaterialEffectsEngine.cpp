@@ -210,6 +210,11 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
       sigmaP *= thickness * pathCorrection;
       // calcuate the new momentum
       double newP        = sqrt((E + dE) * (E + dE) - m * m);
+      // and give some verbose output 
+      EX_MSG_VERBOSE(eCell.navigationStep,
+                   surfaceType,
+                   surfaceID,
+                   "Momentum change from p -> p' = " << p << " -> " << newP);
       uParameters[eQOP]  = mParameters.charge() / newP;
       double sigmaDeltaE = thickness * pathCorrection * sigmaP;
       double sigmaQoverP = sigmaDeltaE / std::pow(beta * p, 2);
@@ -258,10 +263,10 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
                    "collecting material of [t/X0] = " << thicknessInX0);
 
     // fill in th step material
-    // - will update thea leadParameters to the step parameters
-    const Vector3D& stepPosition = stepParameters->position();
+    // - will update the leadParameters to the step parameters
+    auto stepPosition = stepParameters->position();               
     eCell.stepMaterial(std::move(stepParameters),
-                       stepPosition,
+                       std::move(stepPosition),
                        mSurface,
                        pathCorrection,
                        materialProperties);

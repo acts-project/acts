@@ -14,6 +14,7 @@
 #define ACTS_EVENTDATA_PARTICLEDEFINITIONS_H 1
 
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Units.hpp"
 #include <vector>
 
 // barcodes
@@ -68,17 +69,17 @@ struct ParticleMasses
   {
     mass.reserve(PARTICLETYPES);
 
-    mass.push_back(0.);          // non interacting mass
-    mass.push_back(0.51099891);  // electron mass
-    mass.push_back(105.658367);  // muon mass
-    mass.push_back(139.57018);   // charged pion mass
-    mass.push_back(493.677);     // kaon mass
-    mass.push_back(938.272013);  // proton mass
-    mass.push_back(0.);          // photon rest mass
-    mass.push_back(939.565346);  // neutron rest mass
-    mass.push_back(134.9766);    // pi0 rest mass
-    mass.push_back(497.614);     // K0 rest mass
-    mass.push_back(105.658367);  // muon mass
+    mass.push_back(0.);                      // non interacting mass
+    mass.push_back(0.51099891*units::_MeV);  // electron mass
+    mass.push_back(105.658367*units::_MeV);  // muon mass
+    mass.push_back(139.57018*units::_MeV);   // charged pion mass
+    mass.push_back(493.677*units::_MeV);     // kaon mass
+    mass.push_back(938.272013*units::_MeV);  // proton mass
+    mass.push_back(0.*units::_MeV);          // photon rest mass
+    mass.push_back(939.565346*units::_MeV);  // neutron rest mass
+    mass.push_back(134.9766*units::_MeV);    // pi0 rest mass
+    mass.push_back(497.614*units::_MeV);     // K0 rest mass
+    mass.push_back(105.658367*units::_MeV);  // muon mass
   }
 };
 

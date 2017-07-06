@@ -47,7 +47,7 @@ namespace Test {
     typename RungeKuttaEngineCF::Config rkConfigCF{};
     rkConfigCF.fieldService  = constantField;
     auto rkEngineCF          = std::make_shared<RungeKuttaEngineCF>(rkConfigCF);
-    rkEngineCF->setLogger(getDefaultLogger("RungeKuttaEngineCF", Logging::INFO));
+    rkEngineCF->setLogger(getDefaultLogger("RungeKuttaEngineCF", Logging::VERBOSE));
     
     // RungeKuttaEngine - set up the RungeKuttaEngine - for interpolated field
     using RungeKuttaEngineIF = Acts::RungeKuttaEngine<InterpolatedBFieldMap>;
@@ -61,7 +61,7 @@ namespace Test {
       typename RungeKuttaEngineIF::Config rkConfigIF{};
       rkConfigIF.fieldService  = interpolatedField;
       rkEngineIF          = std::make_shared<RungeKuttaEngineIF>(rkConfigIF);
-      rkEngineIF->setLogger(getDefaultLogger("RungeKuttaEngineIF", Logging::INFO));
+      rkEngineIF->setLogger(getDefaultLogger("RungeKuttaEngineIF", Logging::VERBOSE));
     }
     
     // target surface at one meter radius, 10 meters long

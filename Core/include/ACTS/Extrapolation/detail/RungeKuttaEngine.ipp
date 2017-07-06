@@ -659,7 +659,7 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
     f0[1] = pCache.field[1];
     f0[2] = pCache.field[2];
   }
-  
+
 
   bool Helix                               = false;
   if (std::abs(S) < m_cfg.helixStep) Helix = true;
