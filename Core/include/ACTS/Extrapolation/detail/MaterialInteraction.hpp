@@ -146,7 +146,7 @@ Acts::MaterialInteraction::dEdl_ionization(double          p,
   } else {
     double eta2 = beta * gamma;
     eta2 *= eta2;
-    // density effect, only valid for high energies 
+    // density effect, only valid for high energies
     // (gamma > 10 -> p > 1GeV for muons)
     double delta = 0.;
     if (gamma > 10.) {
@@ -224,7 +224,7 @@ Acts::MaterialInteraction::sigmaMS(double dInX0, double p, double beta) const
   if (dInX0 == 0. || p == 0. || beta == 0.) return 0.;
 
   // Highland formula - projected sigma_s
-  double sig_ms = 13.6*units::_MeV * sqrt(dInX0) / (beta * p)
+  double sig_ms = 13.6 * units::_MeV * sqrt(dInX0) / (beta * p)
       * (1. + 0.038 * log(dInX0 / (beta * beta)));
   return sig_ms;
 }

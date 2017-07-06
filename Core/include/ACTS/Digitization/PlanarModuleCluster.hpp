@@ -42,7 +42,7 @@ public:
                       double                        loc0,
                       double                        loc1,
                       std::vector<DigitizationCell> dCells,
-                      std::vector<barcode_type>     barcodes = {},
+                      std::vector<barcode_type>     barcodes    = {},
                       std::vector<Vector3D>         tparameters = {})
     : Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>(mSurface,
                                                     cIdentifier,
@@ -51,7 +51,7 @@ public:
                                                     loc1)
     , m_digitizationCells(dCells)
     , m_barcodes(barcodes)
-    , m_tparameters(tparameters)                                                  
+    , m_tparameters(tparameters)
   {
   }
 
@@ -66,7 +66,7 @@ public:
   /// @return the vector of the particle barcode
   const std::vector<barcode_type>&
   barcodes() const;
-  
+
   /// access to the truth parameters (if present)
   ///
   /// @return a vector of truth parameters at the cluster
@@ -76,7 +76,7 @@ public:
 private:
   std::vector<DigitizationCell> m_digitizationCells;  /// the digitization cells
   std::vector<barcode_type>     m_barcodes;           /// barcodes of particles
-  std::vector<Vector3D>         m_tparameters;        /// truth parameters 
+  std::vector<Vector3D>         m_tparameters;        /// truth parameters
 };
 
 inline const std::vector<DigitizationCell>&
@@ -96,7 +96,6 @@ PlanarModuleCluster::truthParameters() const
 {
   return m_tparameters;
 }
-
 }
 
 #endif  // ACTS_DIGITIZATION_PLANARMODULECLUSTER_H
