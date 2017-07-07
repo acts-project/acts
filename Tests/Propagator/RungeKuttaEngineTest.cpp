@@ -97,7 +97,7 @@ namespace Test {
     auto eCode = rkEngineCF->propagate(enc, tSurface);
     /// test for SUCCESS
     int eCodeSuccess = (int)ExtrapolationCode::SuccessDestination;
-    BOOST_CHECK_EQUAL(int(eCode), eCodeSuccess);
+    BOOST_CHECK_EQUAL(eCode.code, eCodeSuccess);
 
     // positively charged
     ActsVectorD<5> pcparameters;
@@ -106,7 +106,7 @@ namespace Test {
     ExtrapolationCell<TrackParameters> epcc(pChargedParameters);
     eCode = rkEngineCF->propagate(epcc, tSurface);
     /// test for SUCCESS
-    BOOST_CHECK_EQUAL(int(eCode), eCodeSuccess);
+    BOOST_CHECK_EQUAL(eCode.code, eCodeSuccess);
 
     // negatively charged
     ActsVectorD<5> ncparameters;
@@ -115,7 +115,7 @@ namespace Test {
     ExtrapolationCell<TrackParameters> encc(nChargedParameters);
     eCode = rkEngineCF->propagate(encc, tSurface);
     /// test for SUCCESS
-    BOOST_CHECK_EQUAL(int(eCode), eCodeSuccess);
+    BOOST_CHECK_EQUAL(eCode.code, eCodeSuccess);
 
     // positively charged - interpolated field
     if (rkEngineIF) {
@@ -126,7 +126,7 @@ namespace Test {
       ExtrapolationCell<TrackParameters> epccIF(pChargedParametersIF);
       eCode = rkEngineIF->propagate(epccIF, tSurface);
       /// test for SUCCESS
-      BOOST_CHECK_EQUAL(int(eCode), eCodeSuccess);
+      BOOST_CHECK_EQUAL(eCode.code, eCodeSuccess);
     }
 
     // now check the radii
