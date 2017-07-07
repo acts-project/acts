@@ -215,9 +215,9 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
                      surfaceType,
                      surfaceID,
                      "Momentum change from p -> p' = " << p << " -> " << newP);
-   	  // curvilinear case: adapt the pScalor to actually scale the momentum
-   	  pScalor = newP/p;
-	  // bound parameter case:
+      // curvilinear case: adapt the pScalor to actually scale the momentum
+      pScalor = newP / p;
+      // bound parameter case:
       uParameters[eQOP]  = mParameters.charge() / newP;
       double sigmaDeltaE = thickness * pathCorrection * sigmaP;
       double sigmaQoverP = sigmaDeltaE / std::pow(beta * p, 2);

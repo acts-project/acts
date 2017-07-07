@@ -42,7 +42,7 @@ public:
                       double                        loc0,
                       double                        loc1,
                       std::vector<DigitizationCell> dCells,
-                      std::vector<barcode_type>     barcodes    = {})
+                      std::vector<barcode_type>     barcodes = {})
     : Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>(mSurface,
                                                     cIdentifier,
                                                     std::move(cov),
@@ -81,7 +81,6 @@ PlanarModuleCluster::barcodes() const
 {
   return m_barcodes;
 }
-
 }
 
 #endif  // ACTS_DIGITIZATION_PLANARMODULECLUSTER_H
