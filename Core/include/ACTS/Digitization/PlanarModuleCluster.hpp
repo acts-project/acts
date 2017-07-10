@@ -33,6 +33,8 @@ public:
   /// @param loc0 is the local position in the first coordinate
   /// @param loc1 is the local position in the second coordinate
   /// @param dCells is the vector of digitization cells
+  /// - optional truth information
+  /// @param barcodes particle barcodes of simulated particles
   PlanarModuleCluster(const Surface&                mSurface,
                       const Identifier&             cIdentifier,
                       ActsSymMatrixD<2>             cov,

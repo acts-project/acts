@@ -142,6 +142,7 @@ public:
   ///
   /// @param c is the code enum
   ExtrapolationCode(eCode c) : code(c) {}
+
   /// Assigment operator
   ///
   /// @param ec is the source eCode for the assignment

@@ -154,6 +154,12 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
   if (!mSurface.associatedMaterial()) return;
   // parameters are the lead parameters
   auto& mParameters = (*eCell.leadParameters);
+
+  // find out if the parameters are curvilinear
+  // @todo find a better way to do this
+  const CurvilinearParameters* cParameters
+      = dynamic_cast<const CurvilinearParameters*>(eCell.leadParameters);
+
   // path correction
   double pathCorrection = fabs(
       mSurface.pathCorrection(mParameters.position(), mParameters.momentum()));
@@ -190,6 +196,8 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     double m    = m_particleMasses.mass.at(eCell.particleType);
     double E    = sqrt(p * p + m * m);
     double beta = p / E;
+    //
+    double pScalor = 1.;
     // (A) - energy loss correction
     if (m_cfg.eLossCorrection) {
       double sigmaP = 0.;
@@ -202,6 +210,14 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
       sigmaP *= thickness * pathCorrection;
       // calcuate the new momentum
       double newP        = sqrt((E + dE) * (E + dE) - m * m);
+      // and give some verbose output
+      EX_MSG_VERBOSE(eCell.navigationStep,
+                     surfaceType,
+                     surfaceID,
+                     "Momentum change from p -> p' = " << p << " -> " << newP);
+      // curvilinear case: adapt the pScalor to actually scale the momentum
+      pScalor = newP / p;
+      // bound parameter case:
       uParameters[eQOP]  = mParameters.charge() / newP;
       double sigmaDeltaE = thickness * pathCorrection * sigmaP;
       double sigmaQoverP = sigmaDeltaE / std::pow(beta * p, 2);
@@ -225,13 +241,24 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     EX_MSG_VERBOSE(eCell.navigationStep,
                    surfaceType,
                    surfaceID,
-                   "material update needed create new parameters.");
+                   "material update needed to create new parameters.");
     // these are newly created
     std::unique_ptr<const ActsSymMatrixD<NGlobalPars>> uCovariance(
         mutableUCovariance.release());
-    auto stepParameters = std::make_unique<const BoundParameters>(
-        std::move(uCovariance), uParameters, mSurface);
 
+    // question is if those are curvilinear or bound
+    std::unique_ptr<const TrackParameters> stepParameters = nullptr;
+    if (cParameters) {
+      // create curvilinear parameters
+      Vector3D position = mParameters.position();
+      Vector3D momentum = pScalor * mParameters.momentum();
+      stepParameters    = std::make_unique<const CurvilinearParameters>(
+          std::move(uCovariance), position, momentum, mParameters.charge());
+    } else {
+      /// bound parameters
+      stepParameters = std::make_unique<const BoundParameters>(
+          std::move(uCovariance), uParameters, mSurface);
+    }
     // fill it into the extrapolation cache
     EX_MSG_VERBOSE(eCell.navigationStep,
                    surfaceType,
@@ -239,10 +266,10 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
                    "collecting material of [t/X0] = " << thicknessInX0);
 
     // fill in th step material
-    // - will update thea leadParameters to the step parameters
-    const Vector3D& stepPosition = stepParameters->position();
+    // - will update the leadParameters to the step parameters
+    auto stepPosition = stepParameters->position();
     eCell.stepMaterial(std::move(stepParameters),
-                       stepPosition,
+                       std::move(stepPosition),
                        mSurface,
                        pathCorrection,
                        materialProperties);

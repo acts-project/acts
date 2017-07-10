@@ -7,11 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /// @file ConstantBField_tests.cpp
-
 #define BOOST_TEST_MODULE Constant magnetic field tests
 #include <boost/test/included/unit_test.hpp>
-
 #include <boost/test/data/test_case.hpp>
+
 #include "ACTS/MagneticField/ConstantBField.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"

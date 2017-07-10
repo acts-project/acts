@@ -131,7 +131,7 @@ Acts::MaterialInteraction::dEdl_ionization(double          p,
   double I = 16.e-6 * std::pow(mat.Z(), 0.9);  // 16 eV * Z**0.9 - bring to MeV
 
   // K/A*Z = 0.5 * 30.7075MeV/(g/mm2) * Z/A * rho[g/mm3]  / scale to mm by this
-  double kaz = 0.5 * 30.7075 * mat.zOverAtimesRho();
+  double kaz = 0.5 * 30.7075 * units::_MeV * mat.zOverAtimesRho();
 
   //  sigmaL of Landau
   sigma = 4 * kaz * beta / beta;  // dsigma/dl
@@ -146,8 +146,8 @@ Acts::MaterialInteraction::dEdl_ionization(double          p,
   } else {
     double eta2 = beta * gamma;
     eta2 *= eta2;
-    // density effect, only valid for high energies (gamma > 10 -> p > 1GeV for
-    // muons)
+    // density effect, only valid for high energies
+    // (gamma > 10 -> p > 1GeV for muons)
     double delta = 0.;
     if (gamma > 10.) {
       double eplasma = 28.816e-6 * sqrt(1000. * mat.zOverAtimesRho());
@@ -224,7 +224,7 @@ Acts::MaterialInteraction::sigmaMS(double dInX0, double p, double beta) const
   if (dInX0 == 0. || p == 0. || beta == 0.) return 0.;
 
   // Highland formula - projected sigma_s
-  double sig_ms = 13.6 * sqrt(dInX0) / (beta * p)
+  double sig_ms = 13.6 * units::_MeV * sqrt(dInX0) / (beta * p)
       * (1. + 0.038 * log(dInX0 / (beta * beta)));
   return sig_ms;
 }
@@ -254,7 +254,7 @@ Acts::MaterialInteraction::PDG_energyLoss_ionization(double          p,
   double I = 16.e-6 * std::pow(mat.Z(), 0.9);  // 16 eV * Z**0.9 - bring to MeV
 
   // K/A*Z = 0.5 * 30.7075MeV/(g/mm2) * Z/A * rho[g/mm3]  / scale to mm by this
-  double kaz  = 0.5 * 30.7075 * mat.zOverAtimesRho();
+  double kaz  = 0.5 * 30.7075 * units::_MeV * mat.zOverAtimesRho();
   double eta2 = beta * gamma;
   eta2 *= eta2;
   // density effect, only valid for high energies (gamma > 10 -> p > 1GeV for
