@@ -665,7 +665,7 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
     f0[2] = pCache.field[2];
   }
 
-  bool Helix   = std::abs(S) < m_cfg.helixStep;
+  bool Helix = std::abs(S) < m_cfg.helixStep;
 
   while (S != 0.) {
     double S3 = (1. / 3.) * S, S4 = .25 * S, PS2 = Pi * S;
