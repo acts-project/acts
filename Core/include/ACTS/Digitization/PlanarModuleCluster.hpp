@@ -35,7 +35,6 @@ public:
   /// @param dCells is the vector of digitization cells
   /// - optional truth information
   /// @param barcodes particle barcodes of simulated particles
-  /// @param tparameters particle impact position, momentum
   PlanarModuleCluster(const Surface&                mSurface,
                       const Identifier&             cIdentifier,
                       ActsSymMatrixD<2>             cov,

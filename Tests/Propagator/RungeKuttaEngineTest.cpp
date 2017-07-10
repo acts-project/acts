@@ -9,9 +9,14 @@
 ///  Boost include(s)
 #define BOOST_TEST_MODULE RungeKuttaEngine Tests
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/included/unit_test.hpp>
+// leave blank line
+
+#include <boost/test/data/test_case.hpp>
+// leave blank line
+
 #include <boost/test/output_test_stream.hpp>
+// leave blank line
 
 #include "ACTS/EventData/NeutralParameters.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
