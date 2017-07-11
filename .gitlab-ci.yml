@@ -5,27 +5,42 @@ stages:
     - test
 
 variables:
-    BUILD_TYPE: Release
+    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Debug
 
 before_script:
     # CI executor uses fail on error by default
     # setup scripts do not like that
     - set +e && source CI/setup_slc6.sh; set -e
 
-slc6-gcc:
+check_format:
+    stage: build
+    # TODO remove once all files have been reformatted
+    allow_failure: true
+    tags:
+        - cvmfs
+    script:
+        - CI/check_format .
+
+check_license:
+    stage: build
+    before_script: []
+    script:
+        - CI/check_license_local .
+
+build-slc6-gcc:
     stage: build
     tags:
         - cvmfs
     script:
         - mkdir build_gcc
         - cd build_gcc
-        - cmake -GNinja -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DEIGEN_INCLUDE_DIR=${EIGEN_INCLUDE_DIR} ..
+        - cmake ${CMAKE_ARGS} -DCMAKE_CXX_COMPILER=g++ -DEIGEN_INCLUDE_DIR=${EIGEN_INCLUDE_DIR} ..
         - cmake --build .
     artifacts:
         paths:
             - build_gcc
 
-slc6-clang:
+build-slc6-clang:
     stage: build
     # TODO clang via cvmfs does not play with the required gcc includes
     allow_failure: true
@@ -34,20 +49,24 @@ slc6-clang:
     script:
         - mkdir build_clang
         - cd build_clang
-        - cmake -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="--gcc-toolchain=${GCC_TOOLCHAIN}" -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBoost_COMPILER=-gcc62 -DEIGEN_INCLUDE_DIR=${EIGEN_INCLUDE_DIR} ..
+        - cmake ${CMAKE_ARGS} -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="--gcc-toolchain=${GCC_TOOLCHAIN}" -DBoost_COMPILER=-gcc62 -DEIGEN_INCLUDE_DIR=${EIGEN_INCLUDE_DIR} ..
         - cmake --build .
     artifacts:
         paths:
             - build_clang
 
-doc:
+build-doc:
     stage: build
-    before_script: []
+    tags:
+        - cvmfs
     script:
         - mkdir build_doc
         - cd build_doc
-        - cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DEIGEN_INCLUDE_DIR=${EIGEN_INCLUDE_DIR} -DBUILD_DOC=on ..
+        - cmake ${CMAKE_ARGS} -DEIGEN_INCLUDE_DIR=${EIGEN_INCLUDE_DIR} -DBUILD_DOC=on ..
         - cmake --build . -- doc
+    artifacts:
+        paths:
+            - build_doc/doc/html
 
 unit_tests:
     stage: test
@@ -55,16 +74,3 @@ unit_tests:
         - cvmfs
     script:
         - cmake --build build_gcc -- test
-
-check_format:
-    stage: test
-    tags:
-        - cvmfs
-    script:
-        - CI/check_format .
-
-check_license:
-    stage: test
-    before_script: []
-    script:
-        - CI/check_license_local .
