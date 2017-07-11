@@ -2,6 +2,7 @@ image: gitlab-registry.cern.ch/acts/a-common-tracking-sw/slc6:latest
 
 stages:
     - build
+    - test
 
 variables:
     BUILD_TYPE: Release
@@ -38,3 +39,10 @@ slc6-clang:
     artifacts:
         paths:
             - build_clang
+
+unit_tests:
+    stage: test
+    tags:
+        - cvmfs
+    script:
+        - cmake --build build_gcc -- test
