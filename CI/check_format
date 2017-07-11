@@ -1,0 +1,20 @@
+#!/bin/sh
+#
+# check that all code complies w/ the clang-format specification
+#
+# if all is well, returns w/o errors and does not print anything.
+# otherwise, return an error and print offending changes
+
+set -e # abort on error
+
+if [ $# -ne 1 ]; then
+    echo "wrong number of arguments"
+    echo ""
+    echo "usage: check_format <DIR>"
+    exit 1
+fi
+
+cd $1
+find . -iname '*.cpp' -or -iname '*.hpp' -or -iname '*.ipp' \
+  | xargs clang-format -i -style=file
+exec git diff --exit-code --stat

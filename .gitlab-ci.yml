@@ -46,3 +46,10 @@ unit_tests:
         - cvmfs
     script:
         - cmake --build build_gcc -- test
+
+check_format:
+    stage: test
+    tags:
+        - cvmfs
+    script:
+        - CI/check_format .
