@@ -34,7 +34,7 @@ build-slc6-gcc:
     script:
         - mkdir build_gcc
         - cd build_gcc
-        - cmake ${CMAKE_ARGS} -DCMAKE_CXX_COMPILER=g++ -DEIGEN_INCLUDE_DIR=${EIGEN_INCLUDE_DIR} ..
+        - cmake ${CMAKE_ARGS} -DCMAKE_CXX_COMPILER=g++ ..
         - cmake --build .
     artifacts:
         paths:
@@ -49,7 +49,7 @@ build-slc6-clang:
     script:
         - mkdir build_clang
         - cd build_clang
-        - cmake ${CMAKE_ARGS} -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="--gcc-toolchain=${GCC_TOOLCHAIN}" -DBoost_COMPILER=-gcc62 -DEIGEN_INCLUDE_DIR=${EIGEN_INCLUDE_DIR} ..
+        - cmake ${CMAKE_ARGS} -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="--gcc-toolchain=${GCC_TOOLCHAIN}" -DBoost_COMPILER=-gcc62 ..
         - cmake --build .
     artifacts:
         paths:
@@ -62,7 +62,7 @@ build-doc:
     script:
         - mkdir build_doc
         - cd build_doc
-        - cmake ${CMAKE_ARGS} -DEIGEN_INCLUDE_DIR=${EIGEN_INCLUDE_DIR} -DBUILD_DOC=on ..
+        - cmake ${CMAKE_ARGS} -DBUILD_DOC=on ..
         - cmake --build . -- doc
     artifacts:
         paths:

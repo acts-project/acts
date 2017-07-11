@@ -9,9 +9,7 @@ gcc=/cvmfs/sft.cern.ch/lcg/external/gcc/6.2/${platform}
 
 source ${view}/setup.sh
 # additional variables that are not set automatically
-export BOOST_ROOT=${view}
 export GCC_TOOLCHAIN=${gcc}
-export EIGEN_INCLUDE_DIR="${view}/include/eigen3"
 export PYTHIA8_INCLUDE_DIR="${view}/include"
 export PYTHIA8_LIBRARY_DIR="${view}/lib"
 # dd4hep config is missing the config file
