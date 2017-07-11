@@ -5,7 +5,7 @@ stages:
     - test
 
 variables:
-    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Debug
+    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_DD4HEP_PLUGIN=on -DBUILD_MATERIAL_PLUGIN=on -DBUILD_TGEO_PLUGIN=on
 
 before_script:
     # CI executor uses fail on error by default
@@ -62,7 +62,7 @@ build-doc:
     script:
         - mkdir build_doc
         - cd build_doc
-        - cmake ${CMAKE_ARGS} -DBUILD_DOC=on ..
+        - cmake -GNinja -DBUILD_DOC=on -DBUILD_TESTS=off ..
         - cmake --build . -- doc
     artifacts:
         paths:
