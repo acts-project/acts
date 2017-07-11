@@ -2,6 +2,8 @@ cmake_minimum_required (VERSION 3.5)
 
 project (ACTS LANGUAGES CXX)
 
+list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
 # print all available options
 if (DEFINED PRINT_OPTIONS)
   # silence cmake

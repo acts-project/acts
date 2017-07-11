@@ -85,7 +85,7 @@ Important options relevant for the ACTS project are given below. They can be set
 |option|default|description|
 |------|-------|-----------|
 |BOOST_ROOT             | empty                 | path to the ROOT installation                           |
-|EIGEN_INCLUDE_DIR      | empty                 | path to the Eigen installation                          |
+|EIGEN_INCLUDE_DIR      | empty                 | path to the Eigen include directory                     |
 |BUILD_DD4HEP_PLUGIN    | OFF                   | build DD4Hep plugin (requires TGeoPlugin, ROOT, DD4hep) |
 |BUILD_DOC              | OFF                   | build doxygen documentation (requires doxygen)          |
 |BUILD_TESTS            | ON                    | build unit tests                                        |
