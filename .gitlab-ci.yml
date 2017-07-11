@@ -40,6 +40,15 @@ slc6-clang:
         paths:
             - build_clang
 
+doc:
+    stage: build
+    before_script: []
+    script:
+        - mkdir build_doc
+        - cd build_doc
+        - cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DEIGEN_INCLUDE_DIR=${EIGEN_INCLUDE_DIR} -DBUILD_DOC=on ..
+        - cmake --build . -- doc
+
 unit_tests:
     stage: test
     tags:
