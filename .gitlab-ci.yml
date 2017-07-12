@@ -10,7 +10,7 @@ variables:
 before_script:
     # CI executor uses fail on error by default
     # setup scripts do not like that
-    - set +e && source CI/setup_slc6.sh; set -e
+    - set +e && source CI/setup_lcg89_slc6.sh; set -e
 
 check_format:
     stage: build
