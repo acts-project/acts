@@ -309,8 +309,11 @@ public:
     const Vector3D B_first = m_bField.getField(c.pos);
     const Vector3D k1 = qop * c.dir.cross(B_first);
 
-    // Select the appropriate Runge-Kutta step size
-    do {
+    // The following functor starts to perform a Runge-Kutta step of a certain
+    // size, going up to the point where it can return an estimate of the local
+    // integration error. The results are cached in the local variables above,
+    // allowing integration to continue once the error is deemed satisfactory.
+    const auto tryRungeKuttaStep = [&](const double h) -> double {
       // Cache the square and half of the step size
       h2     = h * h;
       half_h = h / 2;
@@ -328,17 +331,16 @@ public:
       B_last = m_bField.getField(pos2);
       k4 = qop * (c.dir + h * k3).cross(B_last);
 
-      // Estimate of the local integration error
-      const double EST = h * (k1 - k2 - k3 + k4).template lpNorm<1>();
+      // Return an estimate of the local integration error
+      return h * (k1 - k2 - k3 + k4).template lpNorm<1>();
+    };
 
-      // Reduce the step size and repeat until the estimated error is low enough
-      if (EST > 0.0002) {
-        h *= 0.5;
-        continue;
-      } else {
-        break;
-      }
-    } while(true);
+    // Select the appropriate Runge-Kutta step size
+    double error_estimate = tryRungeKuttaStep(h);
+    while(error_estimate > 0.0002) {
+      h *= 0.5;
+      error_estimate = tryRungeKuttaStep(h);
+    }
 
     // When doing error propagation, update the associated Jacobian matrix
     if (c.cov) {
