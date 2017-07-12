@@ -27,35 +27,32 @@ check_license:
     script:
         - CI/check_license_local .
 
-build-slc6-gcc:
+build_slc6_gcc:
     stage: build
     tags:
         - cvmfs
     script:
-        - mkdir build_gcc
-        - cd build_gcc
+        - mkdir build_slc6_gcc
+        - cd build_slc6_gcc
         - cmake ${CMAKE_ARGS} -DCMAKE_CXX_COMPILER=g++ ..
         - cmake --build .
     artifacts:
         paths:
-            - build_gcc
+            - build_slc6_gcc
 
-build-slc6-clang:
+build_slc6_clang:
     stage: build
     # TODO clang via cvmfs does not play with the required gcc includes
     allow_failure: true
     tags:
         - cvmfs
     script:
-        - mkdir build_clang
-        - cd build_clang
+        - mkdir build_slc6_clang
+        - cd build_slc6_clang
         - cmake ${CMAKE_ARGS} -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="--gcc-toolchain=${GCC_TOOLCHAIN}" -DBoost_COMPILER=-gcc62 ..
         - cmake --build .
-    artifacts:
-        paths:
-            - build_clang
 
-build-doc:
+build_doc:
     stage: build
     tags:
         - cvmfs
@@ -73,4 +70,4 @@ unit_tests:
     tags:
         - cvmfs
     script:
-        - cmake --build build_gcc -- test
+        - cmake --build build_slc6_gcc -- test
