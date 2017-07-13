@@ -523,8 +523,8 @@ public:
 
       // Test approximation quality on give step and possible step reduction
       //
-      double EST = std::abs((A1 + A6) - (A3 + A4))
-          + std::abs((B1 + B6) - (B3 + B4)) + std::abs((C1 + C6) - (C3 + C4));
+      double EST = 2. * (std::abs((A1 + A6) - (A3 + A4))
+          + std::abs((B1 + B6) - (B3 + B4)) + std::abs((C1 + C6) - (C3 + C4)));
       if (EST > 0.0002) {
         stepMax *= .5;
         //        dltm = 0.;
