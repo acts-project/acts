@@ -446,7 +446,7 @@ public:
   }
 
   double
-  step(Cache& cache, double& stepMax) const
+  step(Cache& cache, double& h) const
   {
     bool Jac = cache.useJacobian;
 
@@ -470,8 +470,8 @@ public:
     bool Helix = false;
     // if (std::abs(S) < m_cfg.helixStep) Helix = true;
 
-    while (stepMax != 0.) {
-      double S3 = (1. / 3.) * stepMax, S4 = .25 * stepMax, PS2 = Pi * stepMax;
+    while (h != 0.) {
+      double S3 = (1. / 3.) * h, S4 = .25 * h, PS2 = Pi * h;
 
       // First point
       //
@@ -509,8 +509,7 @@ public:
       // Last point
       //
       if (!Helix) {
-        const Vector3D pos(
-            R[0] + stepMax * A4, R[1] + stepMax * B4, R[2] + stepMax * C4);
+        const Vector3D pos(R[0] + h * A4, R[1] + h * B4, R[2] + h * C4);
         f = m_bField.getField(pos);
       } else {
         f = f0;
@@ -526,12 +525,12 @@ public:
       double EST = 2. * (std::abs((A1 + A6) - (A3 + A4))
           + std::abs((B1 + B6) - (B3 + B4)) + std::abs((C1 + C6) - (C3 + C4)));
       if (EST > 0.0002) {
-        stepMax *= .5;
+        h *= .5;
         //        dltm = 0.;
         continue;
       }
 
-      //      if (EST < dltm) stepMax *= 2.;
+      //      if (EST < dltm) h *= 2.;
 
       // Parameters calculation
       //
@@ -542,7 +541,7 @@ public:
       A[2] = 2. * C3 + (C0 + C5 + C6);
 
       double D  = (A[0] * A[0] + A[1] * A[1]) + (A[2] * A[2] - 9.);
-      double Sl = 2. / stepMax;
+      double Sl = 2. / h;
       D         = (1. / 3.) - ((1. / 648.) * D) * (12. - D);
 
       R[0] += (A2 + A3 + A4) * S3;
@@ -558,8 +557,8 @@ public:
       cache.field    = f;
       cache.newfield = false;
 
-      // stepMax *= 2;
-      if (!Jac) return stepMax;
+      // h *= 2;
+      if (!Jac) return h;
 
       // Jacobian calculation
       //
@@ -647,10 +646,10 @@ public:
       d4A[0] = ((d4A0 + 2. * d4A3) + (d4A5 + d4A6 + A6)) * (1. / 3.);
       d4A[1] = ((d4B0 + 2. * d4B3) + (d4B5 + d4B6 + B6)) * (1. / 3.);
       d4A[2] = ((d4C0 + 2. * d4C3) + (d4C5 + d4C6 + C6)) * (1. / 3.);
-      return stepMax;
+      return h;
     }
 
-    return stepMax;
+    return h;
   }
 
 private:
