@@ -16,11 +16,11 @@ namespace Acts {
 class LayerStub : virtual public SurfaceStub, public Layer
 {
 public:
-  ///constructor (deleted in baseclass)
+  ///constructor (deleted in Surface baseclass)
   LayerStub() = delete;
-  ///copy constructor (deleted in baseclass)
+  ///copy constructor (deleted in Surface baseclass)
   LayerStub(const LayerStub& otherLayer) = delete;
-  ///constructor with pointer to SurfaceArray (protected in baseclass)
+  ///constructor with pointer to SurfaceArray (protected in Layer baseclass)
   LayerStub(std::unique_ptr<SurfaceArray> surfaceArray,
             double thickness=0,
             std::unique_ptr<ApproachDescriptor> ad=nullptr,
@@ -29,10 +29,11 @@ public:
   {
   }
 
-/// Destructor
+  /// Destructor
   virtual ~LayerStub() {}
 
-  ///Assignment is deleted
+  ///Assignment is deleted in the Layer baseclass
+  LayerStub & 	operator= (const LayerStub &lay) = delete;
   
   ///surfaceRepresentation is pure virtual in baseclass
   const Surface & 
@@ -46,6 +47,8 @@ public:
   }
   
   ///Other methods have implementation in baseclass
+  ///templated 'onLayer()' from baseclass ?
+  
 
   };
 }
