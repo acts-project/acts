@@ -6,3 +6,7 @@ add_executable (PlaneLayerTests PlaneLayerTests.cpp)
 target_link_libraries (PlaneLayerTests PRIVATE ACTSCore)
 add_test (NAME PlaneLayerTests COMMAND PlaneLayerTests)
 
+add_executable (DiscLayerTests DiscLayerTests.cpp)
+target_link_libraries (DiscLayerTests PRIVATE ACTSCore)
+add_test (NAME DiscLayerTests COMMAND DiscLayerTests)
+
