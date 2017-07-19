@@ -23,6 +23,8 @@
 #include "LayerStub.hpp"
 #include "ACTS/Layers/GenericApproachDescriptor.hpp"
 #include "ACTS/Tools/SurfaceArrayCreator.hpp"
+#include "ACTS/EventData/SingleTrackParameters.hpp"
+#include "ACTS/Volumes/CuboidVolumeBounds.hpp"
 
 using boost::test_tools::output_test_stream;
 namespace utf    = boost::unit_test;
@@ -30,6 +32,7 @@ namespace utf    = boost::unit_test;
 namespace Acts {
 
 namespace Test {
+namespace Layers {
   BOOST_AUTO_TEST_SUITE(Layers);
 
   /// Unit test for creating compliant/non-compliant Layer object
@@ -85,11 +88,34 @@ namespace Test {
     auto surfaceOnApproachIntersect=surfaceOnApproach.intersection;
     //(SurfaceStub uses hardcoded 20,20 dimensions)
     BOOST_TEST(surfaceOnApproachIntersect.pathLength == 20.0);
-    
+    //Need track parameters to test compatibleSurfaces
+    SingleCurvilinearTrackParameters<ChargedPolicy> par(nullptr, {0.,0.,0.}, {0.,0.,1.},-1);
+    //Need more meaningful test, but docs need updating also; this is not the signature in the doxygen documentation!
+    auto compatibleSurfaces = layerStub.compatibleSurfaces( par, PropDirection::alongMomentum, true, false, false,false, 0,nullptr,nullptr);
+    BOOST_TEST(compatibleSurfaces.size() == 0u);
+    ///nextLayer()
+    BOOST_TEST(!(layerStub.nextLayer(gpos,direction)));
+    ///enclosingTrackingVolume()
+    BOOST_TEST(!layerStub.enclosingTrackingVolume());
+    ///enclosingDetachedTrackingVolume()
+    BOOST_TEST(!layerStub.enclosingDetachedTrackingVolume());
+    ///registerRepresentingVolume(const AbstractVolume* avol)
+    //need a volume:
+    auto cubeVolumePtr=std::make_shared<CuboidVolumeBounds>(1.,2.,3.);
+    AbstractVolume * abstractVolumePtr= new AbstractVolume(nullptr,cubeVolumePtr);
+    layerStub.registerRepresentingVolume(abstractVolumePtr);
+    BOOST_TEST(layerStub.representingVolume() == abstractVolumePtr);
+    //BOOST_TEST_CHECKPOINT("Before ending test");
+    //deletion results in "memory access violation at address: 0x00000071: no mapping at fault address" 
+    //delete abstractVolumePtr;
+    ///layerType()
+    BOOST_TEST(layerStub.layerType() == LayerType::passive);
+    ///detectorElements() (needs a better test)
+    BOOST_TEST(layerStub.detectorElements().size() == 0u);
   }
 
   BOOST_AUTO_TEST_SUITE_END();
-
+} //end of namespace Layers
 }  // end of namespace Test
 
 }  // end of namespace Acts
