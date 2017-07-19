@@ -44,7 +44,7 @@ public:
   }
 
   /// A generic approach descriptor with shared surfaces to test
-  /// can not be sed with Acts::Surfaces obejcts
+  /// can not be used with Acts::Surfaces objects
   ///
   /// @param aSurfaces are the approach surfaces
   GenericApproachDescriptor(std::vector<std::shared_ptr<const T>> aSurfaces)
@@ -67,9 +67,9 @@ public:
 
   /// get the compatible surfaces
   ///
-  /// @param gpos is the global posoition to start the approach from
+  /// @param gpos is the global position to start the approach from
   /// @param dir is the direction in which you approach the layer
-  /// @param bcheck is the boundary check presrcition
+  /// @param bcheck is the boundary check prescription
   /// @param ice is a (future) compatibility estimater if needed
   ///
   /// @return : a boolean indicating if an actual intersection had been tried

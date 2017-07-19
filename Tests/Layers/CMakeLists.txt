@@ -14,4 +14,8 @@ add_executable (CylinderLayerTests CylinderLayerTests.cpp)
 target_link_libraries (CylinderLayerTests PRIVATE ACTSCore)
 add_test (NAME CylinderLayerTests COMMAND CylinderLayerTests)
 
+add_executable (ConeLayerTests ConeLayerTests.cpp)
+target_link_libraries (ConeLayerTests PRIVATE ACTSCore)
+add_test (NAME ConeLayerTests COMMAND ConeLayerTests)
+
 
