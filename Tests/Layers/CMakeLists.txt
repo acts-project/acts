@@ -10,3 +10,8 @@ add_executable (DiscLayerTests DiscLayerTests.cpp)
 target_link_libraries (DiscLayerTests PRIVATE ACTSCore)
 add_test (NAME DiscLayerTests COMMAND DiscLayerTests)
 
+add_executable (CylinderLayerTests CylinderLayerTests.cpp)
+target_link_libraries (CylinderLayerTests PRIVATE ACTSCore)
+add_test (NAME CylinderLayerTests COMMAND CylinderLayerTests)
+
+
