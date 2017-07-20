@@ -11,6 +11,7 @@
 #include "ACTS/Surfaces/InfiniteBounds.hpp"  //to get s_noBounds
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Surfaces/PlanarBounds.hpp"
 
 namespace Acts {
 /// Surface derived class stub

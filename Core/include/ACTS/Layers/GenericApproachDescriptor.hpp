@@ -79,7 +79,7 @@ public:
                   const BoundaryCheck&           bcheck,
                   const ICompatibilityEstimator* ice = nullptr) const override;
 
-  /// return all containes surfaces of this approach descriptor
+  /// return all contained surfaces of this approach descriptor
   const std::vector<const Surface*>&
   containedSurfaces() const override;
 

@@ -19,10 +19,7 @@
 
 //#include <limits>
 #include "ACTS/Layers/NavigationLayer.hpp"
-#include "ACTS/Surfaces/ConeBounds.hpp"
 //#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/EventData/SingleTrackParameters.hpp"
-#include "ACTS/Layers/GenericApproachDescriptor.hpp"
 #include "ACTS/Tools/SurfaceArrayCreator.hpp"
 #include "ACTS/Volumes/CuboidVolumeBounds.hpp"
 #include "LayerStub.hpp"
