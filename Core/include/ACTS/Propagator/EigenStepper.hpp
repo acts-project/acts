@@ -252,7 +252,9 @@ public:
       tmp.col(3) = c.derivative;
       tmp.col(4) = c.derivative;
       tmp *= scale_factors.asDiagonal();
-      c.jacobian -= tmp;
+
+      auto jacobian = c.jacobian;
+      jacobian -= tmp;
       auto jac = J * c.jacobian;
 
       cov = std::make_unique<const ActsSymMatrixD<5>>(jac * (*c.cov)
