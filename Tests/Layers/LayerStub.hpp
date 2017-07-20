@@ -13,8 +13,9 @@
 
 namespace Acts {
 /// Layer derived class stub
-///Note: Layer classes in general have a static 'create' factory method, but nothing
-///in the baseclasses mandates this.
+/// Note: Layer classes in general have a static 'create' factory method, but
+/// nothing
+/// in the baseclasses mandates this.
 class LayerStub : virtual public SurfaceStub, public Layer
 {
 public:
@@ -52,10 +53,12 @@ public:
   {
     return (*this);
   }
-  
-  /// simply return true to show a method can be called on the constructed object
+
+  /// simply return true to show a method can be called on the constructed
+  /// object
   bool
-  constructedOk() const {
+  constructedOk() const
+  {
     return true;
   }
 

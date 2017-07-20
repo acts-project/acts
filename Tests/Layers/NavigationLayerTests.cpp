@@ -37,35 +37,37 @@ namespace Test {
     BOOST_AUTO_TEST_CASE(NavigationLayerConstruction)
     {
       // default constructor, copy and assignment are all deleted
-      auto         pSurface = std::unique_ptr<const Surface> (new SurfaceStub());   
-      auto         pNavigationLayer = NavigationLayer::create(std::move(pSurface));
+      auto pSurface         = std::unique_ptr<const Surface>(new SurfaceStub());
+      auto pNavigationLayer = NavigationLayer::create(std::move(pSurface));
       BOOST_TEST(pNavigationLayer->layerType() == LayerType::navigation);
       // next level: with thickness
-      const double thickness=0.1;
-      auto         pSurface2 = std::unique_ptr<const Surface> (new SurfaceStub());
-      auto         pThickNavigationLayer = NavigationLayer::create(std::move(pSurface2),thickness);
+      const double thickness = 0.1;
+      auto pSurface2 = std::unique_ptr<const Surface>(new SurfaceStub());
+      auto pThickNavigationLayer
+          = NavigationLayer::create(std::move(pSurface2), thickness);
       BOOST_TEST(pThickNavigationLayer->layerType() == LayerType::navigation);
     }
 
     /// Unit test for testing NavigationLayer properties
-    BOOST_AUTO_TEST_CASE(NavigationLayerProperties,  *utf::expected_failures(1))
+    BOOST_AUTO_TEST_CASE(NavigationLayerProperties, *utf::expected_failures(1))
     {
-      const double thickness=0.1;
-      auto         pSurface = std::unique_ptr<const Surface> (new SurfaceStub());
-      auto rawSurfacePtr = pSurface.get();
-      auto         pNavigationLayer = NavigationLayer::create(std::move(pSurface),thickness);
+      const double thickness = 0.1;
+      auto         pSurface = std::unique_ptr<const Surface>(new SurfaceStub());
+      auto         rawSurfacePtr = pSurface.get();
+      auto         pNavigationLayer
+          = NavigationLayer::create(std::move(pSurface), thickness);
       BinningValue b{BinningValue::binZ};
-      Vector3D origin{0.,0.,0.};
-      //binningPosition(), needs a better test
+      Vector3D     origin{0., 0., 0.};
+      // binningPosition(), needs a better test
       BOOST_TEST(pNavigationLayer->binningPosition(b) == origin);
-      //surfaceRepresentation() [looks dangerous]
+      // surfaceRepresentation() [looks dangerous]
       BOOST_TEST(rawSurfacePtr == &(pNavigationLayer->surfaceRepresentation()));
-      //isOnLayer()
-      BOOST_CHECK(pNavigationLayer->isOnLayer(origin,true));
-      //isOnLayer()
-      Vector3D crazyPosition{1000.,10000.,std::nan("")};
-      BOOST_CHECK(pNavigationLayer->isOnLayer(crazyPosition,true) == false);
-      //resolve()
+      // isOnLayer()
+      BOOST_CHECK(pNavigationLayer->isOnLayer(origin, true));
+      // isOnLayer()
+      Vector3D crazyPosition{1000., 10000., std::nan("")};
+      BOOST_CHECK(pNavigationLayer->isOnLayer(crazyPosition, true) == false);
+      // resolve()
       BOOST_CHECK(pNavigationLayer->resolve(true, true, true) == false);
     }
 

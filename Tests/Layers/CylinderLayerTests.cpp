@@ -43,10 +43,10 @@ namespace Test {
       // minimally need a Transform3D and a PlanarBounds object (e.g.
       // CylinderBounds) to construct
       Translation3D translation{0., 1., 2.};
-      auto pTransform = std::make_shared<const Transform3D>(translation);
+      auto   pTransform = std::make_shared<const Transform3D>(translation);
       double radius(0.5), halfz(10.);
-      auto         pCylinder = std::make_shared<const CylinderBounds>(radius, halfz);
-      auto         pCylinderLayer = CylinderLayer::create(pTransform, pCylinder);
+      auto   pCylinder = std::make_shared<const CylinderBounds>(radius, halfz);
+      auto   pCylinderLayer = CylinderLayer::create(pTransform, pCylinder);
       BOOST_TEST(pCylinderLayer->layerType() == LayerType::passive);
       // next level: need an array of Surfaces;
       const std::vector<const Surface*> aSurfaces{new SurfaceStub(),
@@ -56,8 +56,8 @@ namespace Test {
       size_t              binsX(2), binsY(4);
       auto                pSurfaceArray
           = sac.surfaceArrayOnPlane(aSurfaces, 10, 20, binsX, binsY);
-      auto pCylinderLayerFromSurfaces
-          = CylinderLayer::create(pTransform, pCylinder, std::move(pSurfaceArray));
+      auto pCylinderLayerFromSurfaces = CylinderLayer::create(
+          pTransform, pCylinder, std::move(pSurfaceArray));
       BOOST_TEST(pCylinderLayerFromSurfaces->layerType() == LayerType::passive);
       // construct with thickness:
       auto pCylinderLayerWithThickness = CylinderLayer::create(
@@ -69,30 +69,33 @@ namespace Test {
       auto adPtr = ad.get();
       auto pCylinderLayerWithApproachDescriptor
           = CylinderLayer::create(pTransform,
-                              pCylinder,
-                              std::move(pSurfaceArray),
-                              thickness,
-                              std::move(ad));
+                                  pCylinder,
+                                  std::move(pSurfaceArray),
+                                  thickness,
+                                  std::move(ad));
       BOOST_TEST(pCylinderLayerWithApproachDescriptor->approachDescriptor()
                  == adPtr);
       // with the layerType specified...
-      auto pCylinderLayerWithLayerType = CylinderLayer::create(pTransform,
-                                                       pCylinder,
-                                                       std::move(pSurfaceArray),
-                                                       thickness,
-                                                       std::move(ad),
-                                                       LayerType::passive);
-      BOOST_TEST(pCylinderLayerWithLayerType->layerType() == LayerType::passive);
+      auto pCylinderLayerWithLayerType
+          = CylinderLayer::create(pTransform,
+                                  pCylinder,
+                                  std::move(pSurfaceArray),
+                                  thickness,
+                                  std::move(ad),
+                                  LayerType::passive);
+      BOOST_TEST(pCylinderLayerWithLayerType->layerType()
+                 == LayerType::passive);
     }
 
     /// Unit test for testing Layer properties
-    BOOST_AUTO_TEST_CASE(CylinderLayerProperties /*, *utf::expected_failures(1)*/)
+    BOOST_AUTO_TEST_CASE(
+        CylinderLayerProperties /*, *utf::expected_failures(1)*/)
     {
       Translation3D translation{0., 1., 2.};
-      auto pTransform = std::make_shared<const Transform3D>(translation);
+      auto   pTransform = std::make_shared<const Transform3D>(translation);
       double radius(0.5), halfz(10.);
-      auto         pCylinder = std::make_shared<const CylinderBounds>(radius, halfz);
-      auto         pCylinderLayer = CylinderLayer::create(pTransform, pCylinder);
+      auto   pCylinder = std::make_shared<const CylinderBounds>(radius, halfz);
+      auto   pCylinderLayer = CylinderLayer::create(pTransform, pCylinder);
       // auto planeSurface = pCylinderLayer->surfaceRepresentation();
       BOOST_TEST(pCylinderLayer->surfaceRepresentation().name()
                  == std::string("Acts::CylinderSurface"));

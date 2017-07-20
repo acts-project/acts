@@ -43,13 +43,13 @@ namespace Test {
       // minimally need a Transform3D and a PlanarBounds object (e.g.
       // ConeBounds) to construct
       Translation3D translation{0., 1., 2.};
-      auto pTransform = std::make_shared<const Transform3D>(translation);
-      double alpha(M_PI / 8.0);
+      auto       pTransform = std::make_shared<const Transform3D>(translation);
+      double     alpha(M_PI / 8.0);
       const bool symmetric(false);
-      auto         pCone = std::make_shared<const ConeBounds>(alpha, symmetric);
-      //for some reason, this one doesnt exist
-      //auto         pConeLayer = ConeLayer::create(pTransform, pCone);
-      //BOOST_TEST(pConeLayer->layerType() == LayerType::passive);
+      auto       pCone = std::make_shared<const ConeBounds>(alpha, symmetric);
+      // for some reason, this one doesnt exist
+      // auto         pConeLayer = ConeLayer::create(pTransform, pCone);
+      // BOOST_TEST(pConeLayer->layerType() == LayerType::passive);
       // next level: need an array of Surfaces;
       const std::vector<const Surface*> aSurfaces{new SurfaceStub(),
                                                   new SurfaceStub()};
@@ -91,13 +91,13 @@ namespace Test {
     BOOST_AUTO_TEST_CASE(ConeLayerProperties /*, *utf::expected_failures(1)*/)
     {
       Translation3D translation{0., 1., 2.};
-      auto pTransform = std::make_shared<const Transform3D>(translation);
-      double alpha(M_PI / 8.0);
+      auto       pTransform = std::make_shared<const Transform3D>(translation);
+      double     alpha(M_PI / 8.0);
       const bool symmetric(false);
-      auto         pCone = std::make_shared<const ConeBounds>(alpha, symmetric);
+      auto       pCone = std::make_shared<const ConeBounds>(alpha, symmetric);
       const std::vector<const Surface*> aSurfaces{new SurfaceStub(),
                                                   new SurfaceStub()};
-      //const double        thickness(1.0);
+      // const double        thickness(1.0);
       SurfaceArrayCreator sac;
       size_t              binsX(2), binsY(4);
       auto                pSurfaceArray
