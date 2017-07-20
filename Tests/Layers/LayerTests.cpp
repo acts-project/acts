@@ -43,7 +43,7 @@ namespace Test {
       //
       /// Minimum possible construction (default constructor is deleted)
       LayerStub minallyConstructed(nullptr);
-      BOOST_TEST(minallyConstructed.layerType() == passive);
+      BOOST_TEST(minallyConstructed.constructedOk());
       /// Need an approach descriptor for the next level of complexity:
       const std::vector<const Surface*> aSurfaces{new SurfaceStub(),
                                                   new SurfaceStub()};
@@ -53,7 +53,7 @@ namespace Test {
       LayerStub    approachDescriptorConstructed(
           nullptr, thickness, std::move(ad));
       /// Construction with (minimal) approach descriptor
-      BOOST_TEST(approachDescriptorConstructed.layerType() == passive);
+      BOOST_TEST(approachDescriptorConstructed.constructedOk());
       // Copy construction is deleted
     }
 

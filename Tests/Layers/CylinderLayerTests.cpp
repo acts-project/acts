@@ -86,7 +86,7 @@ namespace Test {
     }
 
     /// Unit test for testing Layer properties
-    BOOST_AUTO_TEST_CASE(LayerProperties /*, *utf::expected_failures(1)*/)
+    BOOST_AUTO_TEST_CASE(CylinderLayerProperties /*, *utf::expected_failures(1)*/)
     {
       Translation3D translation{0., 1., 2.};
       auto pTransform = std::make_shared<const Transform3D>(translation);
