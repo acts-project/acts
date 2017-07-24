@@ -17,10 +17,8 @@
 
 class TGeoMatrix;
 
-namespace DD4hep {
-namespace Geometry {
+namespace dd4hep {
   class DetElement;
-}
 }
 
 namespace Acts {
@@ -58,15 +56,15 @@ public:
     /// endcap)
     /// @note if the current volume has no endcaps or no layers this parameter
     /// will not be set
-    std::vector<DD4hep::Geometry::DetElement> negativeLayers;
+    std::vector<dd4hep::DetElement> negativeLayers;
     /// the DD4hep::DetElements of the layers of the central volume (barrel)
     /// @note if the current volume has no layers this parameter will not be set
-    std::vector<DD4hep::Geometry::DetElement> centralLayers;
+    std::vector<dd4hep::DetElement> centralLayers;
     /// the DD4hep::DetElements of the layers of the positive volume (positive
     /// endcap)
     /// @note if the current volume has no endcaps or no layers this parameter
     /// will not be set
-    std::vector<DD4hep::Geometry::DetElement> positiveLayers;
+    std::vector<dd4hep::DetElement> positiveLayers;
     /// @param buildDigitizationModules Flag indicating if the
     /// Acts::DigitizationModule (needed for Acts geometric digitization) will
     /// be build for every single sensitive DD4hep DetElement translating
@@ -138,7 +136,7 @@ private:
   /// sensitive detector elements
   /// @param axes the orientation of the modules to the ACTS frame
   void
-  collectSensitive(const DD4hep::Geometry::DetElement& detElement,
+  collectSensitive(const dd4hep::DetElement& detElement,
                    std::vector<const Acts::Surface*>&  surfaces,
                    const std::string&                  axes = "XYZ") const;
 

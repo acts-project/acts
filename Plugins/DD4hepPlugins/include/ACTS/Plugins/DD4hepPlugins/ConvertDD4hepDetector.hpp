@@ -13,7 +13,7 @@
 #include "ACTS/Utilities/BinningType.hpp"
 #include "ACTS/Utilities/Logger.hpp"
 #include "ACTS/Utilities/Units.hpp"
-#include "DD4hep/Detector.h"
+#include "DD4hep/DetElement.h"
 
 namespace Acts {
 
@@ -79,7 +79,7 @@ namespace Acts {
 /// @exception std::logic_error if an error in the translation occurs
 /// @return std::unique_ptr to the full Acts::TrackingGeometry
 std::unique_ptr<const Acts::TrackingGeometry>
-convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
+convertDD4hepDetector(dd4hep::DetElement worldDetElement,
                       Logging::Level loggingLevel   = Logging::Level::INFO,
                       BinningType    bTypePhi       = equidistant,
                       BinningType    bTypeR         = equidistant,
@@ -89,13 +89,13 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                       bool           buildDigitizationModules = false);
 
 /// Method internally used by convertDD4hepDetector
-/// @param [in] detElement the DD4hep::DetElement of the volume of which the
+/// @param [in] detElement the dd4hep::DetElement of the volume of which the
 /// layers should be collected
 /// @param [out] layers the DD4hep::DetElements of the layers contained by
 /// detElement
 void
-collectLayers(DD4hep::Geometry::DetElement&              detElement,
-              std::vector<DD4hep::Geometry::DetElement>& layers);
+collectLayers(dd4hep::DetElement&              detElement,
+              std::vector<dd4hep::DetElement>& layers);
 }
 
 #endif  // ACTS_DD4HEPPLUGIN_CONVERTDD4HEPDETECTOR_H

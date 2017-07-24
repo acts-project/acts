@@ -16,13 +16,13 @@
 #include "DD4hep/CartesianGridXY.h"
 
 Acts::DD4hepDetElement::DD4hepDetElement(
-    const DD4hep::Geometry::DetElement        detElement,
+    const dd4hep::DetElement                  detElement,
     const std::string&                        axes,
     double                                    scalor,
     bool                                      buildDigitizationModules,
     std::shared_ptr<const DigitizationModule> digiModule)
   : Acts::TGeoDetectorElement(Identifier(detElement.volumeID()),
-                              detElement.worldTransformation(),
+                              detElement.nominal().worldTransformation(),
                               detElement.placement().ptr(),
                               axes,
                               scalor)
@@ -34,16 +34,15 @@ Acts::DD4hepDetElement::DD4hepDetElement(
   // handed over
   if (buildDigitizationModules && m_detElement.volume().isSensitive()
       && !m_digiModule) {
-    DD4hep::Geometry::SensitiveDetector sensDet(
+    dd4hep::SensitiveDetector sensDet(
         m_detElement.volume().sensitiveDetector());
-    sensDet.verifyObject();
     // assign the segmentation
     m_segmentation = sensDet.readout().segmentation();
     // @todo when sensitive detector is component
 
     // Now create the DigitizationModule
     // get the grid from DD4hep
-    DD4hep::Geometry::CartesianGridXY cartesianGrid = m_segmentation;
+    dd4hep::CartesianGridXY cartesianGrid = m_segmentation;
     if (cartesianGrid.isValid()) {
       // the segmentation of the DigitizationModule
       std::shared_ptr<const CartesianSegmentation> segmentation = nullptr;

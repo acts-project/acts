@@ -66,7 +66,7 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
       // collect the sensitive detector elements possibly contained by the layer
       collectSensitive(detElement, layerSurfaces, axes);
       // access the global transformation matrix of the layer
-      auto transform = convertTransform(&(detElement.worldTransformation()));
+      auto transform = convertTransform(&(detElement.nominal().worldTransformation()));
       // get the shape of the layer
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
@@ -251,7 +251,7 @@ Acts::DD4hepLayerBuilder::centralLayers() const
       // collect the sensitive detector elements possibly contained by the layer
       collectSensitive(detElement, layerSurfaces, axes);
       // access the global transformation matrix of the layer
-      auto transform = convertTransform(&(detElement.worldTransformation()));
+      auto transform = convertTransform(&(detElement.nominal().worldTransformation()));
       // get the shape of the layer
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
@@ -404,7 +404,7 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
       // collect the sensitive detector elements possibly contained by the layer
       collectSensitive(detElement, layerSurfaces, axes);
       // access the global transformation matrix of the layer
-      auto transform = convertTransform(&(detElement.worldTransformation()));
+      auto transform = convertTransform(&(detElement.nominal().worldTransformation()));
       // get the shape of the layer
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
@@ -569,15 +569,15 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
 
 void
 Acts::DD4hepLayerBuilder::collectSensitive(
-    const DD4hep::Geometry::DetElement& detElement,
+    const dd4hep::DetElement& detElement,
     std::vector<const Acts::Surface*>&  surfaces,
     const std::string&                  axes) const
 {
-  const DD4hep::Geometry::DetElement::Children& children
+  const dd4hep::DetElement::Children& children
       = detElement.children();
   if (!children.empty()) {
     for (auto& child : children) {
-      DD4hep::Geometry::DetElement childDetElement = child.second;
+      dd4hep::DetElement childDetElement = child.second;
       if (childDetElement.volume().isSensitive()) {
         // access the possibly shared DigitizationModule
         std::shared_ptr<const DigitizationModule> digiModule   = nullptr;

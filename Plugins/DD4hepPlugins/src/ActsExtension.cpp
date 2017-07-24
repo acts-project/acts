@@ -20,7 +20,7 @@ std::shared_ptr<const Acts::DigitizationModule>
 Acts::rectangleDigiModule(double                                halflengthX,
                           double                                halflengthY,
                           double                                thickness,
-                          const DD4hep::Geometry::Segmentation& segmentation)
+                          const dd4hep::Segmentation& segmentation)
 {
   // convert to ACTS units
   double scalor = units::_cm;
@@ -30,7 +30,7 @@ Acts::rectangleDigiModule(double                                halflengthX,
 
   auto bounds
       = std::make_shared<const RectangleBounds>(halflengthX, halflengthY);
-  DD4hep::Geometry::CartesianGridXY cartesianGrid = segmentation;
+  dd4hep::CartesianGridXY cartesianGrid = segmentation;
   if (cartesianGrid.isValid()) {
     // the Acts segmentation of the DigitizationModule
     size_t bins0 = (cartesianGrid.gridSizeX() != 0)
@@ -55,7 +55,7 @@ Acts::trapezoidalDigiModule(double minHalflengthX,
                             double maxHalflengthX,
                             double halflengthY,
                             double thickness,
-                            const DD4hep::Geometry::Segmentation& segmentation)
+                            const dd4hep::Segmentation& segmentation)
 {
   // convert to ACTS units
   double scalor = units::_cm;
@@ -67,7 +67,7 @@ Acts::trapezoidalDigiModule(double minHalflengthX,
   auto bounds = std::make_shared<const TrapezoidBounds>(
       minHalflengthX, maxHalflengthX, halflengthY);
   ;
-  DD4hep::Geometry::CartesianGridXY cartesianGrid = segmentation;
+  dd4hep::CartesianGridXY cartesianGrid = segmentation;
   if (cartesianGrid.isValid()) {
     // the Acts segmentation of the DigitizationModule
     size_t bins0 = (cartesianGrid.gridSizeX() != 0)
@@ -100,7 +100,7 @@ Acts::ActsExtension::ActsExtension(
 }
 
 Acts::ActsExtension::ActsExtension(const ActsExtension& det,
-                                   const DD4hep::Geometry::DetElement&)
+                                   const dd4hep::DetElement&)
   : Acts::IActsExtension(), m_cfg(det.m_cfg), m_digiModule(det.m_digiModule)
 {
 }
