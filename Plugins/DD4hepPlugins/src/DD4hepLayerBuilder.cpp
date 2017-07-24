@@ -66,7 +66,8 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
       // collect the sensitive detector elements possibly contained by the layer
       collectSensitive(detElement, layerSurfaces, axes);
       // access the global transformation matrix of the layer
-      auto transform = convertTransform(&(detElement.nominal().worldTransformation()));
+      auto transform
+          = convertTransform(&(detElement.nominal().worldTransformation()));
       // get the shape of the layer
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
@@ -251,7 +252,8 @@ Acts::DD4hepLayerBuilder::centralLayers() const
       // collect the sensitive detector elements possibly contained by the layer
       collectSensitive(detElement, layerSurfaces, axes);
       // access the global transformation matrix of the layer
-      auto transform = convertTransform(&(detElement.nominal().worldTransformation()));
+      auto transform
+          = convertTransform(&(detElement.nominal().worldTransformation()));
       // get the shape of the layer
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
@@ -404,7 +406,8 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
       // collect the sensitive detector elements possibly contained by the layer
       collectSensitive(detElement, layerSurfaces, axes);
       // access the global transformation matrix of the layer
-      auto transform = convertTransform(&(detElement.nominal().worldTransformation()));
+      auto transform
+          = convertTransform(&(detElement.nominal().worldTransformation()));
       // get the shape of the layer
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
@@ -569,12 +572,11 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
 
 void
 Acts::DD4hepLayerBuilder::collectSensitive(
-    const dd4hep::DetElement& detElement,
-    std::vector<const Acts::Surface*>&  surfaces,
-    const std::string&                  axes) const
+    const dd4hep::DetElement&          detElement,
+    std::vector<const Acts::Surface*>& surfaces,
+    const std::string&                 axes) const
 {
-  const dd4hep::DetElement::Children& children
-      = detElement.children();
+  const dd4hep::DetElement::Children& children = detElement.children();
   if (!children.empty()) {
     for (auto& child : children) {
       dd4hep::DetElement childDetElement = child.second;

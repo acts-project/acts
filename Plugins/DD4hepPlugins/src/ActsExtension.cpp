@@ -17,9 +17,9 @@
 #include "DD4hep/CartesianGridXY.h"
 
 std::shared_ptr<const Acts::DigitizationModule>
-Acts::rectangleDigiModule(double                                halflengthX,
-                          double                                halflengthY,
-                          double                                thickness,
+Acts::rectangleDigiModule(double                      halflengthX,
+                          double                      halflengthY,
+                          double                      thickness,
                           const dd4hep::Segmentation& segmentation)
 {
   // convert to ACTS units
@@ -51,10 +51,10 @@ Acts::rectangleDigiModule(double                                halflengthX,
 }
 
 std::shared_ptr<const Acts::DigitizationModule>
-Acts::trapezoidalDigiModule(double minHalflengthX,
-                            double maxHalflengthX,
-                            double halflengthY,
-                            double thickness,
+Acts::trapezoidalDigiModule(double                      minHalflengthX,
+                            double                      maxHalflengthX,
+                            double                      halflengthY,
+                            double                      thickness,
                             const dd4hep::Segmentation& segmentation)
 {
   // convert to ACTS units

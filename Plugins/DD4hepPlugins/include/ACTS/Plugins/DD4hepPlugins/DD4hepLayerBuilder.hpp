@@ -18,7 +18,7 @@
 class TGeoMatrix;
 
 namespace dd4hep {
-  class DetElement;
+class DetElement;
 }
 
 namespace Acts {
@@ -136,9 +136,9 @@ private:
   /// sensitive detector elements
   /// @param axes the orientation of the modules to the ACTS frame
   void
-  collectSensitive(const dd4hep::DetElement& detElement,
-                   std::vector<const Acts::Surface*>&  surfaces,
-                   const std::string&                  axes = "XYZ") const;
+  collectSensitive(const dd4hep::DetElement&          detElement,
+                   std::vector<const Acts::Surface*>& surfaces,
+                   const std::string&                 axes = "XYZ") const;
 
   // Private helper function to convert the TGeo transformation matrix into a
   // ACTS transformation matrix

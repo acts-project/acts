@@ -33,9 +33,9 @@ namespace Acts {
 /// @param thickness The thickness of the detector module
 /// @param segmentation the DD4hep segmentation
 std::shared_ptr<const DigitizationModule>
-rectangleDigiModule(double                                halflengthX,
-                    double                                halflengthY,
-                    double                                thickness,
+rectangleDigiModule(double                      halflengthX,
+                    double                      halflengthY,
+                    double                      thickness,
                     const dd4hep::Segmentation& segmentation);
 
 /// Global method to build an Acts::DigitizationModule with trapezoidal
@@ -51,10 +51,10 @@ rectangleDigiModule(double                                halflengthX,
 /// @param thickness The thickness of the detector module
 /// @param segmentation the DD4hep segmentation
 std::shared_ptr<const DigitizationModule>
-trapezoidalDigiModule(double                                minHalflengthX,
-                      double                                maxHalflengthX,
-                      double                                halflengthY,
-                      double                                thickness,
+trapezoidalDigiModule(double                      minHalflengthX,
+                      double                      maxHalflengthX,
+                      double                      halflengthY,
+                      double                      thickness,
                       const dd4hep::Segmentation& segmentation);
 
 /// @class ActsExtension

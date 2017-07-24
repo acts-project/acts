@@ -80,13 +80,13 @@ namespace Acts {
 /// @return std::unique_ptr to the full Acts::TrackingGeometry
 std::unique_ptr<const Acts::TrackingGeometry>
 convertDD4hepDetector(dd4hep::DetElement worldDetElement,
-                      Logging::Level loggingLevel   = Logging::Level::INFO,
-                      BinningType    bTypePhi       = equidistant,
-                      BinningType    bTypeR         = equidistant,
-                      BinningType    bTypeZ         = equidistant,
-                      double         layerEnvelopeR = 0.,
-                      double         layerEnvelopeZ = 0.,
-                      bool           buildDigitizationModules = false);
+                      Logging::Level     loggingLevel   = Logging::Level::INFO,
+                      BinningType        bTypePhi       = equidistant,
+                      BinningType        bTypeR         = equidistant,
+                      BinningType        bTypeZ         = equidistant,
+                      double             layerEnvelopeR = 0.,
+                      double             layerEnvelopeZ = 0.,
+                      bool               buildDigitizationModules = false);
 
 /// Method internally used by convertDD4hepDetector
 /// @param [in] detElement the dd4hep::DetElement of the volume of which the

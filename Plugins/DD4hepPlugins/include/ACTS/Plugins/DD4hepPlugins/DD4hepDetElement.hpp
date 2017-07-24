@@ -72,9 +72,9 @@ public:
   /// @note For more information please see Acts::convertDD4hepDetector() &
   /// Acts::ActsExtension.
   DD4hepDetElement(const dd4hep::DetElement detElement,
-                   const std::string&                 axes   = "XYZ",
-                   double                             scalor = 1.,
-                   bool buildDigitizationModules             = false,
+                   const std::string&       axes                     = "XYZ",
+                   double                   scalor                   = 1.,
+                   bool                     buildDigitizationModules = false,
                    std::shared_ptr<const DigitizationModule> digiModule
                    = nullptr);
   /// Desctructor

@@ -23,13 +23,13 @@
 namespace Acts {
 std::unique_ptr<const TrackingGeometry>
 convertDD4hepDetector(dd4hep::DetElement worldDetElement,
-                      Logging::Level               loggingLevel,
-                      BinningType                  bTypePhi,
-                      BinningType                  bTypeR,
-                      BinningType                  bTypeZ,
-                      double                       layerEnvelopeR,
-                      double                       layerEnvelopeZ,
-                      bool                         buildDigitizationModules)
+                      Logging::Level     loggingLevel,
+                      BinningType        bTypePhi,
+                      BinningType        bTypeR,
+                      BinningType        bTypeZ,
+                      double             layerEnvelopeR,
+                      double             layerEnvelopeZ,
+                      bool               buildDigitizationModules)
 {
   // check if envelopes of the volume should be built automatically
   bool buildEnvelopes                                  = false;
@@ -69,8 +69,9 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
   // sort by id to build detector from bottom to top
   sort(subDetectors.begin(),
        subDetectors.end(),
-       [](const dd4hep::DetElement& a,
-          const dd4hep::DetElement& b) { return (a.id() < b.id()); });
+       [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
+         return (a.id() < b.id());
+       });
 
   // the volume builders of the subdetectors
   std::list<std::shared_ptr<const ITrackingVolumeBuilder>> volumeBuilders;
@@ -116,8 +117,7 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
         // if volumes have a shape
         bool hasShape = false;
         for (auto& subDetectorChild : subDetectorChildren) {
-          dd4hep::DetElement volumeDetElement
-              = subDetectorChild.second;
+          dd4hep::DetElement volumeDetElement = subDetectorChild.second;
           ACTS_VERBOSE(
               "[V] Volume : '"
               << subDetector.name()
@@ -247,7 +247,7 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
                 Acts::getDefaultLogger("DD4hepLayerBuilder", loggingLevel));
 
         // get the possible material of the surounding volume
-        dd4hep::Material ddmaterial = subDetector.volume().material();
+        dd4hep::Material           ddmaterial = subDetector.volume().material();
         auto                       volumeMaterial
             = std::make_shared<const Material>(ddmaterial.radLength(),
                                                ddmaterial.intLength(),
@@ -349,7 +349,7 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
                    << " )");
 
       // get the possible material of the surounding volume
-      dd4hep::Material ddmaterial = subDetector.volume().material();
+      dd4hep::Material           ddmaterial = subDetector.volume().material();
       auto                       volumeMaterial
           = std::make_shared<const Material>(ddmaterial.radLength(),
                                              ddmaterial.intLength(),
@@ -439,7 +439,7 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
                           "constructor!"));
 
       // get the possible material
-      dd4hep::Material ddmaterial = subDetector.volume().material();
+      dd4hep::Material           ddmaterial = subDetector.volume().material();
       auto                       volumeMaterial
           = std::make_shared<const Material>(ddmaterial.radLength(),
                                              ddmaterial.intLength(),
@@ -488,11 +488,10 @@ void
 collectLayers(dd4hep::DetElement&              detElement,
               std::vector<dd4hep::DetElement>& layers)
 {
-  const dd4hep::DetElement::Children& children
-      = detElement.children();
+  const dd4hep::DetElement::Children& children = detElement.children();
   if (!children.empty()) {
     for (auto& child : children) {
-      dd4hep::DetElement childDetElement = child.second;
+      dd4hep::DetElement           childDetElement = child.second;
       Acts::IActsExtension*        detExtension    = nullptr;
       try {
         detExtension = childDetElement.extension<Acts::IActsExtension>();
