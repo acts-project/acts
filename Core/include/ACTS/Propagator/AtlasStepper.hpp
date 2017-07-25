@@ -509,9 +509,8 @@ public:
       // Last point
       //
       if (!Helix) {
-        const Vector3D pos(R[0] + stepMax * A4,
-                           R[1] + stepMax * B4,
-                           R[2] + stepMax * C4);
+        const Vector3D pos(
+            R[0] + stepMax * A4, R[1] + stepMax * B4, R[2] + stepMax * C4);
         f = m_bField.getField(pos);
       } else {
         f = f0;
@@ -556,7 +555,7 @@ public:
       sA[1] = B6 * Sl;
       sA[2] = C6 * Sl;
 
-      cache.field = f;
+      cache.field    = f;
       cache.newfield = false;
 
       // stepMax *= 2;

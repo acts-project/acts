@@ -239,7 +239,7 @@ public:
     const double qop = 1. / units::Nat2SI<units::MOMENTUM>(1. / c.qop);
 
     // first point
-    const Vector3D B_first = m_bField.getField(c.pos);
+    const Vector3D  B_first = m_bField.getField(c.pos);
     const Vector3D& k1 = qop * c.dir.cross(B_first);
 
     while (h != 0.) {
@@ -247,7 +247,7 @@ public:
       const double& half_h = h / 2;
       // second point
       const Vector3D& pos1 = c.pos + half_h * c.dir + h2 / 8 * k1;
-      const Vector3D B_middle = m_bField.getField(pos1);
+      const Vector3D  B_middle = m_bField.getField(pos1);
       const Vector3D& k2 = qop * (c.dir + half_h * k1).cross(B_middle);
 
       // third point
@@ -255,7 +255,7 @@ public:
 
       // last point
       const Vector3D& pos2 = c.pos + h * c.dir + h2 / 2 * k3;
-      const Vector3D B_last = m_bField.getField(pos2);
+      const Vector3D  B_last = m_bField.getField(pos2);
       const Vector3D& k4 = qop * (c.dir + h * k3).cross(B_last);
 
       // local error estimate
