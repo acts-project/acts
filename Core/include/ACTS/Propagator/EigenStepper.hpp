@@ -105,6 +105,11 @@ private:
 
     /// Covariance matrix assocated with the initial error on track parameters
     const ActsSymMatrixD<5>* cov = nullptr;
+
+    /// Lazily initialized cache which contains an approximation of the
+    /// magnetic field at the current position. See step() code for details.
+    bool field_cache_ready = false;
+    Vector3D field_cache = Vector3D(0, 0, 0);
   };
 
   // This struct is a meta-function which normally maps to BoundParameters...
@@ -296,8 +301,14 @@ public:
     double   h2, half_h;
     Vector3D B_middle, B_last, k2, k3, k4;
 
+    // Initialize the magnetic field cache on the first run
+    if(!cache.field_cache_ready) {
+      cache.field_cache = m_bField.getField(cache.pos);
+      cache.field_cache_ready = true;
+    }
+
     // First Runge-Kutta point (at current position)
-    const Vector3D B_first = m_bField.getField(cache.pos);
+    const Vector3D B_first = cache.field_cache;
     const Vector3D k1      = qop * cache.dir.cross(B_first);
 
     // The following functor starts to perform a Runge-Kutta step of a certain
@@ -405,6 +416,10 @@ public:
     cache.dir /= cache.dir.norm();
     cache.derivative.template head<3>()     = cache.dir;
     cache.derivative.template segment<3>(3) = k4;
+
+    // We approximate the magnetic field at our new position as being equal to
+    // the last field measurement, thusly avoiding one field lookup per step.
+    cache.field_cache = B_last;
 
     // Return the updated step size
     return h;
