@@ -30,7 +30,7 @@ class AtlasStepper
     bool   needgradient;
     bool   newfield;
     // internal parameters to be used
-    double field[3] = {0., 0., 0.};
+    Vector3D field;
     double pVector[64];
     // result
     double parameters[NGlobalPars] = {0., 0., 0., 0., 0.};
@@ -57,6 +57,7 @@ class AtlasStepper
       , mcondition(false)
       , needgradient(false)
       , newfield(true)
+      , field(0., 0., 0.)
       , covariance(nullptr)
     {
       if (pars.covariance()) {
@@ -456,15 +457,14 @@ public:
     double Pi = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / cache.pVector[6]);
     //    double dltm = 0.0002 * .03;
 
-    double f0[3], f[3];
+    Vector3D f0, f;
 
     // if new field is required get it
-    if (cache.newfield)
-      m_bField.getField(R, f0);
-    else {
-      f0[0] = cache.field[0];
-      f0[1] = cache.field[1];
-      f0[2] = cache.field[2];
+    if (cache.newfield) {
+      const Vector3D pos(R[0], R[1], R[2]);
+      f0 = m_bField.getField(pos);
+    } else {
+      f0 = cache.field;
     }
 
     bool Helix = false;
@@ -489,12 +489,10 @@ public:
       // Second point
       //
       if (!Helix) {
-        double gP[3] = {R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4};
-        m_bField.getField(gP, f);
+        const Vector3D pos(R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4);
+        f = m_bField.getField(pos);
       } else {
-        f[0] = f0[0];
-        f[1] = f0[1];
-        f[2] = f0[2];
+        f = f0;
       }
 
       double H1[3] = {f[0] * PS2, f[1] * PS2, f[2] * PS2};
@@ -511,13 +509,12 @@ public:
       // Last point
       //
       if (!Helix) {
-        double gP[3]
-            = {R[0] + stepMax * A4, R[1] + stepMax * B4, R[2] + stepMax * C4};
-        m_bField.getField(gP, f);
+        const Vector3D pos(R[0] + stepMax * A4,
+                           R[1] + stepMax * B4,
+                           R[2] + stepMax * C4);
+        f = m_bField.getField(pos);
       } else {
-        f[0] = f0[0];
-        f[1] = f0[1];
-        f[2] = f0[2];
+        f = f0;
       }
 
       double H2[3] = {f[0] * PS2, f[1] * PS2, f[2] * PS2};
@@ -559,9 +556,7 @@ public:
       sA[1] = B6 * Sl;
       sA[2] = C6 * Sl;
 
-      cache.field[0] = f[0];
-      cache.field[1] = f[1];
-      cache.field[2] = f[2];
+      cache.field = f;
       cache.newfield = false;
 
       // stepMax *= 2;
