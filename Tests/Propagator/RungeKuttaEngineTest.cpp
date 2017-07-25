@@ -79,9 +79,10 @@ namespace Test {
     detail::EquidistantAxis r(0.0 * units::_m, 1.5 * units::_m, 4u);
     detail::EquidistantAxis z(-11. * units::_m, 11. * units::_m, 5u);
 
-    typedef detail::
-        Grid<Vector3D, detail::EquidistantAxis, detail::EquidistantAxis>
-            Grid_t;
+    typedef detail::Grid<Vector3D,
+                         detail::EquidistantAxis,
+                         detail::EquidistantAxis>
+        Grid_t;
 
     Grid_t g(std::make_tuple(std::move(r), std::move(z)));
 
