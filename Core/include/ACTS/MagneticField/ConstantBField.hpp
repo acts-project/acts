@@ -88,48 +88,6 @@ public:
 
   /// @brief retrieve magnetic field value
   ///
-  /// @param [in]  xyz   global position
-  /// @param [out] bxyz  magnetic field vector
-  ///
-  /// @note The position @p xyz is ignored and only kept as argument to provide
-  ///       a consistent interface with other magnetic field services.
-  void
-  getField(const double* xyz, double* bxyz) const
-  {
-    bxyz[0] = m_BField[0];
-    bxyz[1] = m_BField[1];
-    bxyz[2] = m_BField[2];
-  }
-
-  /// @brief retrieve magnetic field value
-  ///
-  /// @param [in]  xyz   global position
-  /// @param [out] bxyz  magnetic field vector
-  /// @param [out] deriv gradient of magnetic field vector as (3x3) matrix
-  ///
-  /// @note The position @p xyz is ignored and only kept as argument to provide
-  ///       a consistent interface with other magnetic field services. For the
-  ///       same reason the parameter @p deriv is accepted even though the
-  ///       gradient is always zero for a constant field.
-  void
-  getField(const double* xyz, double* bxyz, double* deriv) const
-  {
-    bxyz[0]  = m_BField[0];
-    bxyz[1]  = m_BField[1];
-    bxyz[2]  = m_BField[2];
-    deriv[0] = 0;
-    deriv[1] = 0;
-    deriv[2] = 0;
-    deriv[3] = 0;
-    deriv[4] = 0;
-    deriv[5] = 0;
-    deriv[6] = 0;
-    deriv[7] = 0;
-    deriv[8] = 0;
-  }
-
-  /// @brief retrieve magnetic field value
-  ///
   /// @param [in] position global position
   /// @return magnetic field vector
   ///
