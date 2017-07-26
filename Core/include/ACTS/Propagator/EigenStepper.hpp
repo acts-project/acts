@@ -59,7 +59,7 @@ private:
       const double theta = dir.theta();
 
       if (cov) {
-        const auto& transform = par.referenceSurface().transform().matrix();
+        const auto transform = par.referenceSurface().transform().matrix();
         jacobian(0, eLOC_0) = transform(0, eLOC_0);
         jacobian(0, eLOC_1) = transform(0, eLOC_1);
         jacobian(1, eLOC_0) = transform(1, eLOC_0);
@@ -244,7 +244,7 @@ public:
       const double theta = c.dir.theta();
 
       ActsMatrixD<5, 7> J = ActsMatrixD<5, 7>::Zero();
-      const auto& dLdG = dLocaldGlobal(surface, c.pos);
+      const auto dLdG = dLocaldGlobal(surface, c.pos);
       J.block<2, 3>(0, 0) = dLdG.template block<2, 3>(0, 0);
       J(2, 3) = -sin(phi) / sin(theta);
       J(2, 4) = cos(phi) / sin(theta);
@@ -281,7 +281,7 @@ public:
   static double
   distance(const Surface& s, const Vector3D& pos, const Vector3D& dir)
   {
-    const Intersection& i = s.intersectionEstimate(pos, dir);
+    const Intersection i = s.intersectionEstimate(pos, dir);
     return i.pathLength;
   }
 
@@ -302,28 +302,28 @@ public:
     const double qop = 1. / units::Nat2SI<units::MOMENTUM>(1. / c.qop);
 
     // First Runge-Kutta point (at current position)
-    const Vector3D  B_first = m_bField.getField(c.pos);
-    const Vector3D& k1 = qop * c.dir.cross(B_first);
+    const Vector3D B_first = m_bField.getField(c.pos);
+    const Vector3D k1 = qop * c.dir.cross(B_first);
 
     // Adaptive step selection, with an ugly trick for handling zero step sizes
     // (which should never happen if the Propagator and users are reasonable)
     while (h != 0.) {
       // Cache the square and half of the step size
-      const double& h2     = h * h;
-      const double& half_h = h / 2;
+      const double h2     = h * h;
+      const double half_h = h / 2;
 
       // Second Runge-Kutta point
-      const Vector3D& pos1 = c.pos + half_h * c.dir + h2 / 8 * k1;
-      const Vector3D  B_middle = m_bField.getField(pos1);
-      const Vector3D& k2 = qop * (c.dir + half_h * k1).cross(B_middle);
+      const Vector3D pos1 = c.pos + half_h * c.dir + h2 / 8 * k1;
+      const Vector3D B_middle = m_bField.getField(pos1);
+      const Vector3D k2 = qop * (c.dir + half_h * k1).cross(B_middle);
 
       // Third Runge-Kutta point
-      const Vector3D& k3 = qop * (c.dir + half_h * k2).cross(B_middle);
+      const Vector3D k3 = qop * (c.dir + half_h * k2).cross(B_middle);
 
       // Last Runge-Kutta point
-      const Vector3D& pos2 = c.pos + h * c.dir + h2 / 2 * k3;
-      const Vector3D  B_last = m_bField.getField(pos2);
-      const Vector3D& k4 = qop * (c.dir + h * k3).cross(B_last);
+      const Vector3D pos2 = c.pos + h * c.dir + h2 / 2 * k3;
+      const Vector3D B_last = m_bField.getField(pos2);
+      const Vector3D k4 = qop * (c.dir + h * k3).cross(B_last);
 
       // Estimate of the local integration error
       const double EST = h * (k1 - k2 - k3 + k4).template lpNorm<1>();
