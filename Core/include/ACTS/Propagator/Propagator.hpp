@@ -27,7 +27,6 @@ namespace propagation {
   /// Result status of track parameter propagation
   enum struct Status { SUCCESS, FAILURE, UNSET, INPROGRESS, WRONG_DIRECTION };
 
-
   /// @brief Simple class holding result of propagation call
   ///
   /// @tparam TrackParameters Type of final track parameters
@@ -47,7 +46,6 @@ namespace propagation {
     /// Accessor to additional propagation quantities
     using detail::Extendable<ExResult...>::get;
 
-
     /// Final track parameters
     std::unique_ptr<const TrackParameters> endParameters = nullptr;
 
@@ -60,7 +58,6 @@ namespace propagation {
     /// Signed distance over which the parameters were propagated
     double pathLength = 0.;
 
-
     /// @brief Check the validity of the propagation result
     ///
     /// @return @c true if the final parameters are set and propagation status
@@ -71,7 +68,6 @@ namespace propagation {
       return (endParameters && status == Status::SUCCESS);
     }
   };
-
 
   /// @brief Propagator for particles in a magnetic field
   ///
@@ -95,7 +91,6 @@ namespace propagation {
   class Propagator final
   {
   public:
-
     /// @brief Options for propagate() call
     ///
     /// @tparam ObserverList List of observer types called after each
@@ -132,13 +127,10 @@ namespace propagation {
       AbortList stop_conditions;
     };
 
-
     /// Constructor from implementation object
     explicit Propagator(Impl impl) : m_impl(std::move(impl)) {}
 
-
   private:
-
     /// @brief Helper struct determining the result's type
     ///
     /// @tparam TrackParameters Type of final track parameters
@@ -164,7 +156,6 @@ namespace propagation {
           type;
     };
 
-
     /// @brief Short-hand type definition for propagation result derived from
     ///        an observer list
     ///
@@ -174,9 +165,7 @@ namespace propagation {
     template <typename T, typename ObsList>
     using obs_list_result_t = typename result_type_helper<T, ObsList>::type;
 
-
   public:
-
     /// @brief Propagate track parameters
     ///
     /// This function performs the propagation of the track parameters using the
@@ -271,7 +260,6 @@ namespace propagation {
 
       return r;
     }
-
 
     /// @brief Propagate track parameters
     ///

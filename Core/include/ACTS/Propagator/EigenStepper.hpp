@@ -43,7 +43,6 @@ template <typename BField>
 class EigenStepper
 {
 private:
-
   /// Internal cache for track parameter propagation
   struct Cache
   {
@@ -108,7 +107,6 @@ private:
     const ActsSymMatrixD<5>* cov = nullptr;
   };
 
-
   // This struct is a meta-function which normally maps to BoundParameters...
   template <typename T, typename S>
   struct s
@@ -122,7 +120,6 @@ private:
   {
     typedef CurvilinearParameters type;
   };
-
 
   /// Rotation matrix going from global coordinates to local surface coordinates
   static ActsMatrixD<3, 3>
@@ -143,9 +140,7 @@ private:
     return j;
   }
 
-
 public:
-
   /// Always use the same propagation cache type, independently of the initial
   /// track parameter type and of the target surface
   template <typename T, typename S = int>
@@ -160,17 +155,15 @@ public:
   template <typename T, typename S = int>
   using return_parameter_type = typename s<T, S>::type;
 
-
   /// Constructor requires knowledge of the detector's magnetic field
   EigenStepper(BField bField = BField()) : m_bField(std::move(bField)){};
-
 
   /// Convert the propagation cache to curvilinear parameters
   static CurvilinearParameters
   convert(const Cache& c)
   {
-    double charge = c.qop > 0. ? 1. : -1.;
-    std::unique_ptr<const ActsSymMatrixD<5>> cov = nullptr;
+    double                                   charge = c.qop > 0. ? 1. : -1.;
+    std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
 
     // Perform error propagation if an initial covariance matrix was provided
     if (c.cov) {
@@ -229,14 +222,13 @@ public:
         std::move(cov), c.pos, c.dir / std::abs(c.qop), charge);
   }
 
-
   /// Convert the propagation cache to track parameters at a certain surface
   template <typename S>
   static BoundParameters
   convert(Cache& c, const S& surface)
   {
-    double charge = c.qop > 0. ? 1. : -1.;
-    std::unique_ptr<const ActsSymMatrixD<5>> cov = nullptr;
+    double                                  charge = c.qop > 0. ? 1. : -1.;
+    std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
 
     // Perform error propagation if an initial covariance matrix was provided
     if (c.cov) {
@@ -276,7 +268,6 @@ public:
         std::move(cov), c.pos, c.dir / std::abs(c.qop), charge, surface);
   }
 
-
   /// Estimate the (signed) distance to a certain surface
   static double
   distance(const Surface& s, const Vector3D& pos, const Vector3D& dir)
@@ -284,7 +275,6 @@ public:
     const Intersection i = s.intersectionEstimate(pos, dir);
     return i.pathLength;
   }
-
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///
@@ -302,12 +292,12 @@ public:
     const double qop = 1. / units::Nat2SI<units::MOMENTUM>(1. / c.qop);
 
     // Runge-Kutta integrator state
-    double h2, half_h;
+    double   h2, half_h;
     Vector3D B_middle, B_last, k2, k3, k4;
 
     // First Runge-Kutta point (at current position)
     const Vector3D B_first = m_bField.getField(c.pos);
-    const Vector3D k1 = qop * c.dir.cross(B_first);
+    const Vector3D k1      = qop * c.dir.cross(B_first);
 
     // The following functor starts to perform a Runge-Kutta step of a certain
     // size, going up to the point where it can return an estimate of the local
@@ -320,16 +310,16 @@ public:
 
       // Second Runge-Kutta point
       const Vector3D pos1 = c.pos + half_h * c.dir + h2 / 8 * k1;
-      B_middle = m_bField.getField(pos1);
-      k2 = qop * (c.dir + half_h * k1).cross(B_middle);
+      B_middle            = m_bField.getField(pos1);
+      k2                  = qop * (c.dir + half_h * k1).cross(B_middle);
 
       // Third Runge-Kutta point
       k3 = qop * (c.dir + half_h * k2).cross(B_middle);
 
       // Last Runge-Kutta point
       const Vector3D pos2 = c.pos + h * c.dir + h2 / 2 * k3;
-      B_last = m_bField.getField(pos2);
-      k4 = qop * (c.dir + h * k3).cross(B_last);
+      B_last              = m_bField.getField(pos2);
+      k4                  = qop * (c.dir + h * k3).cross(B_last);
 
       // Return an estimate of the local integration error
       return h * (k1 - k2 - k3 + k4).template lpNorm<1>();
@@ -337,7 +327,7 @@ public:
 
     // Select the appropriate Runge-Kutta step size
     double error_estimate = tryRungeKuttaStep(h);
-    while(error_estimate > 0.0002) {
+    while (error_estimate > 0.0002) {
       h *= 0.5;
       error_estimate = tryRungeKuttaStep(h);
     }
@@ -368,9 +358,9 @@ public:
 
       dk1dL = c.dir.cross(B_first);
       dk2dL = (c.dir + half_h * k1).cross(B_middle)
-                  + qop * half_h * dk1dL.cross(B_middle);
+          + qop * half_h * dk1dL.cross(B_middle);
       dk3dL = (c.dir + half_h * k2).cross(B_middle)
-                  + qop * half_h * dk2dL.cross(B_middle);
+          + qop * half_h * dk2dL.cross(B_middle);
       dk4dL = (c.dir + h * k3).cross(B_last) + qop * h * dk3dL.cross(B_last);
 
       dk1dT(0, 1) = B_first.z();
@@ -419,12 +409,9 @@ public:
     return h;
   }
 
-
 private:
-
   /// Magnetic field inside of the detector
   BField m_bField;
-
 };
 
 }  // namespace Acts
