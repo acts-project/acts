@@ -38,12 +38,16 @@ cross(const ActsMatrixD<3, 3>& m, const Vector3D& v)
 ///
 /// with s being the arc length of the track, q the charge of the particle,
 /// p its momentum and B the magnetic field
+///
 template <typename BField>
 class EigenStepper
 {
 private:
+
+  /// Internal cache for track parameter propagation
   struct Cache
   {
+    /// Constructor from the initial track parameters
     template <typename T>
     explicit Cache(const T& par)
       : pos(par.position())
@@ -71,40 +75,66 @@ private:
       }
     }
 
+    /// Global particle position accessor
     Vector3D
     position() const
     {
       return pos;
     }
+
+    /// Momentum direction accessor
     Vector3D
     direction() const
     {
       return dir;
     }
 
+    /// Global particle position
     Vector3D pos = Vector3D(0, 0, 0);
+
+    /// Momentum direction (normalized)
     Vector3D dir = Vector3D(1, 0, 0);
-    double   qop = 1;
+
+    /// Charge-momentum ratio, in natural units
+    double qop = 1;
+
+    /// Jacobian used to transport the covariance matrix
     ActsMatrixD<7, 5> jacobian = ActsMatrixD<7, 5>::Zero();
-    ActsVectorD<7>           derivative = ActsVectorD<7>::Zero();
-    const ActsSymMatrixD<5>* cov        = nullptr;
+
+    /// ???
+    ActsVectorD<7> derivative = ActsVectorD<7>::Zero();
+
+    /// Covariance matrix assocated with the initial error on track parameters
+    const ActsSymMatrixD<5>* cov = nullptr;
   };
 
+
+  // This struct is a meta-function which normally maps to BoundParameters...
   template <typename T, typename S>
   struct s
   {
     typedef BoundParameters type;
   };
 
+  // ...unless type S is int, in which case it maps to Curvilinear parameters
   template <typename T>
   struct s<T, int>
   {
     typedef CurvilinearParameters type;
   };
 
+
+  /// Rotation matrix going from global coordinates to local surface coordinates
   static ActsMatrixD<3, 3>
   dLocaldGlobal(const Surface& p, const Vector3D& gpos)
   {
+    // A surface's associated transform is a 4x4 affine transformation matrix,
+    // whose top-left corner is the 3x3 linear local-to-global rotation matrix,
+    // and whose right column is a translation vector, with a trailing 1.
+    //
+    // So to get the global-to-local rotation matrix, we only need to take the
+    // transpose of the top-left corner of the surface's associated transform.
+    //
     ActsMatrixD<3, 3> j = ActsMatrixD<3, 3>::Zero();
     j.block<1, 3>(0, 0) = p.transform().matrix().block<3, 1>(0, 0).transpose();
     j.block<1, 3>(1, 0) = p.transform().matrix().block<3, 1>(0, 1).transpose();
@@ -113,35 +143,51 @@ private:
     return j;
   }
 
+
 public:
+
+  /// Always use the same propagation cache type, independently of the initial
+  /// track parameter type and of the target surface
   template <typename T, typename S = int>
   using cache_type = Cache;
 
+  /// Intermediate track parameters are always in curvilinear parametrization
   template <typename T>
   using step_parameter_type = CurvilinearParameters;
 
+  /// Return parameter types depend on the propagation mode: when propagating to
+  /// a surface we return BoundParameters, otherwise CurvilinearParameters
   template <typename T, typename S = int>
   using return_parameter_type = typename s<T, S>::type;
 
+
+  /// Constructor requires knowledge of the detector's magnetic field
   EigenStepper(BField bField = BField()) : m_bField(std::move(bField)){};
 
+
+  /// Convert the propagation cache to curvilinear parameters
   static CurvilinearParameters
   convert(const Cache& c)
   {
-    double                                   charge = c.qop > 0. ? 1. : -1.;
-    std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
+    double charge = c.qop > 0. ? 1. : -1.;
+    std::unique_ptr<const ActsSymMatrixD<5>> cov = nullptr;
+
+    // Perform error propagation if an initial covariance matrix was provided
     if (c.cov) {
       const double phi   = c.dir.phi();
       const double theta = c.dir.theta();
 
       ActsMatrixD<5, 7> J = ActsMatrixD<5, 7>::Zero();
       if (std::abs(cos(theta)) < 0.99) {
+        // We normally operate in curvilinear coordinates defined as follows
         J(0, 0) = -sin(phi);
         J(0, 1) = cos(phi);
         J(1, 0) = -cos(phi) * cos(theta);
         J(1, 1) = -sin(phi) * cos(theta);
         J(1, 2) = sin(theta);
       } else {
+        // Under grazing incidence to z, the above coordinate system definition
+        // becomes numerically unstable, and we need to switch to another one
         const double c
             = sqrt(pow(cos(theta), 2) + pow(sin(phi) * sin(theta), 2));
         J(0, 1) = -cos(theta) / c;
@@ -183,12 +229,16 @@ public:
         std::move(cov), c.pos, c.dir / std::abs(c.qop), charge);
   }
 
+
+  /// Convert the propagation cache to track parameters at a certain surface
   template <typename S>
   static BoundParameters
   convert(Cache& c, const S& surface)
   {
-    double                             charge = c.qop > 0. ? 1. : -1.;
-    std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
+    double charge = c.qop > 0. ? 1. : -1.;
+    std::unique_ptr<const ActsSymMatrixD<5>> cov = nullptr;
+
+    // Perform error propagation if an initial covariance matrix was provided
     if (c.cov) {
       const double phi   = c.dir.phi();
       const double theta = c.dir.theta();
@@ -226,6 +276,8 @@ public:
         std::move(cov), c.pos, c.dir / std::abs(c.qop), charge, surface);
   }
 
+
+  /// Estimate the (signed) distance to a certain surface
   static double
   distance(const Surface& s, const Vector3D& pos, const Vector3D& dir)
   {
@@ -233,38 +285,56 @@ public:
     return i.pathLength;
   }
 
+
+  /// Perform a Runge-Kutta track parameter propagation step
+  ///
+  /// @param[in,out] c is the propagation cache associated with the track
+  ///                  parameters that are being propagated.
+  ///
+  /// @param[in,out] h is the desired step size. It can be negative during
+  ///                  backwards track propagation, and since we're using an
+  ///                  adaptive integrator, it can be modified by the stepper.
+  ///
   double
   step(Cache& c, double& h) const
   {
+    // Charge-momentum ratio, in SI units
     const double qop = 1. / units::Nat2SI<units::MOMENTUM>(1. / c.qop);
 
-    // first point
+    // First Runge-Kutta point (at current position)
     const Vector3D  B_first = m_bField.getField(c.pos);
     const Vector3D& k1 = qop * c.dir.cross(B_first);
 
+    // Adaptive step selection, with an ugly trick for handling zero step sizes
+    // (which should never happen if the Propagator and users are reasonable)
     while (h != 0.) {
+      // Cache the square and half of the step size
       const double& h2     = h * h;
       const double& half_h = h / 2;
-      // second point
+
+      // Second Runge-Kutta point
       const Vector3D& pos1 = c.pos + half_h * c.dir + h2 / 8 * k1;
       const Vector3D  B_middle = m_bField.getField(pos1);
       const Vector3D& k2 = qop * (c.dir + half_h * k1).cross(B_middle);
 
-      // third point
+      // Third Runge-Kutta point
       const Vector3D& k3 = qop * (c.dir + half_h * k2).cross(B_middle);
 
-      // last point
+      // Last Runge-Kutta point
       const Vector3D& pos2 = c.pos + h * c.dir + h2 / 2 * k3;
       const Vector3D  B_last = m_bField.getField(pos2);
       const Vector3D& k4 = qop * (c.dir + h * k3).cross(B_last);
 
-      // local error estimate
+      // Estimate of the local integration error
       const double EST = h * (k1 - k2 - k3 + k4).template lpNorm<1>();
+
+      // Reduce the step size and repeat until the estimated error is low enough
       if (EST > 0.0002) {
         h *= 0.5;
         continue;
       }
 
+      // When doing error propagation, update the associated Jacobian matrix
       if (c.cov) {
         ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Zero();
         D(6, 6)             = 1;
@@ -330,21 +400,30 @@ public:
         c.jacobian = D * c.jacobian;
       }
 
+      // Update the track parameters according to the equations of motion
       c.pos += h * c.dir + h2 / 6 * (k1 + k2 + k3);
       c.dir += h / 6 * (k1 + 2 * k2 + 2 * k3 + k4);
       c.dir /= c.dir.norm();
       c.derivative.template head<3>()     = c.dir;
       c.derivative.template segment<3>(3) = k4;
 
+      // Return the final step size
       return h;
     }
 
+    // This statement is only reachable if h = 0, and is used to exit the
+    // integrator early in that scenario
     return h;
   }
 
+
 private:
+
+  /// Magnetic field inside of the detector
   BField m_bField;
+
 };
 
 }  // namespace Acts
+
 #endif  // ACTS_EIGEN_STEPPER_HPP
