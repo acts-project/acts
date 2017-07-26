@@ -344,6 +344,11 @@ public:
   void
   setMotherVolume(const TrackingVolume* mvol);
 
+  /// @return a map of all contained detector elements and their corresponding
+  /// identifier
+  const std::map<Identifier, const DetectorElementBase*>&
+  detectorElements() const;
+
 protected:
   /// Default constructor
   TrackingVolume();
@@ -394,11 +399,6 @@ protected:
   TrackingVolume(const TrackingVolume& tvol,
                  const Transform3D&    shift,
                  const std::string&    volumeName = "undefined");
-
-  /// @return a map of all contained detector elements and their corresponding
-  /// identifier
-  const std::map<Identifier, const DetectorElementBase*>&
-  detectorElements() const;
 
 private:
   /// Create Boundary Surface
