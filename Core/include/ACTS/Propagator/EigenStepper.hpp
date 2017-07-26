@@ -132,12 +132,7 @@ private:
     // So to get the global-to-local rotation matrix, we only need to take the
     // transpose of the top-left corner of the surface's associated transform.
     //
-    ActsMatrixD<3, 3> j = ActsMatrixD<3, 3>::Zero();
-    j.block<1, 3>(0, 0) = p.transform().matrix().block<3, 1>(0, 0).transpose();
-    j.block<1, 3>(1, 0) = p.transform().matrix().block<3, 1>(0, 1).transpose();
-    j.block<1, 3>(2, 0) = p.transform().matrix().block<3, 1>(0, 2).transpose();
-
-    return j;
+    return p.transform().matrix().topLeftCorner<3, 3>().transpose();
   }
 
 public:
