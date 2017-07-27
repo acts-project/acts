@@ -101,7 +101,7 @@ protected:
              std::unique_ptr<ApproachDescriptor>  ad           = nullptr,
              LayerType                            laytyp       = Acts::active);
 
-  /// Private constructor for a PlaneLAyer, is called by create(arge*
+  /// Private constructor for a PlaneLayer, is called by create(arge*
   ///
   /// @param pla is the plain layer to be coped
   /// @param shift is the additional shift applied after copying

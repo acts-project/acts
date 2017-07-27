@@ -34,7 +34,7 @@ public:
   ///  Factory Constructor - the surface representation is given by pointer
   /// (ownership passed)
   ///
-  /// @param sRepresentation is the represenation for extrapolation
+  /// @param sRepresentation is the representation for extrapolation
   /// @param thickness is the thickness for the binning
   static LayerPtr
   create(std::unique_ptr<const Surface> sRepresentation, double thickness = 0.)
@@ -77,7 +77,7 @@ public:
   /// @param gpos is the global position for the check
   /// @param bcheck is the boundary check directive
   ///
-  /// @return boolean that indicates if the poisiton is on surface
+  /// @return boolean that indicates if the position is on surface
   bool
   isOnLayer(const Vector3D&      gpos,
             const BoundaryCheck& bcheck = true) const final override;

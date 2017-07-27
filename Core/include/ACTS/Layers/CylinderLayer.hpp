@@ -116,7 +116,7 @@ protected:
   /// @param cla is the source cylinder layer for the copy
   /// @param shift is the additional transform applied after cloning
   ///
-  /// @return The return object is a shared poiter to the layer.
+  /// @return The return object is a shared pointer to the layer.
   CylinderLayer(const CylinderLayer& cla, const Transform3D& shift);
 };
 

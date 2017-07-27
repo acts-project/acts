@@ -9,6 +9,7 @@
 #define ACTS_TEST_SURFACESTUB 1
 
 #include "ACTS/Surfaces/InfiniteBounds.hpp"  //to get s_noBounds
+#include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 

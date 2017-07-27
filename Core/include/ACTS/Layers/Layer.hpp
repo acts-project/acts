@@ -424,7 +424,7 @@ protected:
   const DetachedTrackingVolume* m_enclosingDetachedTrackingVolume;
 
   /// Representing Volume
-  /// can be used as appraoch surface sources
+  /// can be used as approach surface sources
   const AbstractVolume* m_representingVolume;
 
   /// make a passive/active either way
