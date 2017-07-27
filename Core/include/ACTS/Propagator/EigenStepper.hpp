@@ -108,8 +108,8 @@ private:
 
     /// Lazily initialized cache which contains an approximation of the
     /// magnetic field at the current position. See step() code for details.
-    bool field_cache_ready = false;
-    Vector3D field_cache = Vector3D(0, 0, 0);
+    bool     field_cache_ready = false;
+    Vector3D field_cache       = Vector3D(0, 0, 0);
   };
 
   // This struct is a meta-function which normally maps to BoundParameters...
@@ -162,7 +162,7 @@ public:
   static CurvilinearParameters
   convert(const Cache& cache)
   {
-    double                                   charge = cache.qop > 0. ? 1. : -1.;
+    double                                  charge = cache.qop > 0. ? 1. : -1.;
     std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
 
     // Perform error propagation if an initial covariance matrix was provided
@@ -227,7 +227,7 @@ public:
   static BoundParameters
   convert(Cache& cache, const S& surface)
   {
-    double                                   charge = cache.qop > 0. ? 1. : -1.;
+    double                                  charge = cache.qop > 0. ? 1. : -1.;
     std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
 
     // Perform error propagation if an initial covariance matrix was provided
@@ -302,8 +302,8 @@ public:
     Vector3D B_middle, B_last, k2, k3, k4;
 
     // Initialize the magnetic field cache on the first run
-    if(!cache.field_cache_ready) {
-      cache.field_cache = m_bField.getField(cache.pos);
+    if (!cache.field_cache_ready) {
+      cache.field_cache       = m_bField.getField(cache.pos);
       cache.field_cache_ready = true;
     }
 
@@ -373,7 +373,8 @@ public:
           + qop * half_h * dk1dL.cross(B_middle);
       dk3dL = (cache.dir + half_h * k2).cross(B_middle)
           + qop * half_h * dk2dL.cross(B_middle);
-      dk4dL = (cache.dir + h * k3).cross(B_last) + qop * h * dk3dL.cross(B_last);
+      dk4dL
+          = (cache.dir + h * k3).cross(B_last) + qop * h * dk3dL.cross(B_last);
 
       dk1dT(0, 1) = B_first.z();
       dk1dT(0, 2) = -B_first.y();
