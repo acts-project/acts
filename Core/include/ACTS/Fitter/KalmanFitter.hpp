@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ATS_KALMANFITTER_H
-#define ATS_KALMANFITTER_H 1
+#ifndef ACTS_KALMANFITTER_H
+#define ACTS_KALMANFITTER_H 1
 
 // STL include(s)
 #include <list>
@@ -217,4 +217,4 @@ public:
 
 }  // end of namespace Acts
 
-#endif  // ATS_KALMANFITTER_H
+#endif  // ACTS_KALMANFITTER_H

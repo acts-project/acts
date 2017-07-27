@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ATS_KALMANUPDATOR_H
-#define ATS_KALMANUPDATOR_H 1
+#ifndef ACTS_KALMANUPDATOR_H
+#define ACTS_KALMANUPDATOR_H 1
 
 // STL include(s)
 #include <memory>
@@ -81,4 +81,4 @@ private:
 
 }  // end of namespace Acts
 
-#endif  // ATS_KALMANUPDATOR_H
+#endif  // ACTS_KALMANUPDATOR_H
