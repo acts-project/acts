@@ -441,7 +441,7 @@ public:
   static double
   distance(const Surface& s, const Vector3D& pos, const Vector3D& dir)
   {
-    const Intersection& i = s.intersectionEstimate(pos, dir);
+    const Intersection i = s.intersectionEstimate(pos, dir);
     return i.pathLength;
   }
 

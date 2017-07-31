@@ -21,139 +21,168 @@ namespace Acts {
 
 namespace propagation {
 
-  /// propagation direction relative to momentum
+  /// Propagation direction, relative to momentum
   enum Direction : int { backward = -1, forward = 1 };
 
-  /// result status of track parameter propagation
+  /// Result status of track parameter propagation
   enum struct Status { SUCCESS, FAILURE, UNSET, INPROGRESS, WRONG_DIRECTION };
 
-  /// result of propagation call
+  /// @brief Simple class holding result of propagation call
+  ///
+  /// @tparam TrackParameters Type of final track parameters
+  ///
+  /// @tparam ExResult        Parameter pack for additional propagation
+  ///                         quantities
+  ///
   template <typename TrackParameters, typename... ExResult>
   struct Result : private detail::Extendable<ExResult...>
   {
+    /// Constructor from initial propagation status
     Result(Status s = Status::UNSET)
       : detail::Extendable<ExResult...>(), status(s)
     {
     }
 
+    /// Accessor to additional propagation quantities
     using detail::Extendable<ExResult...>::get;
 
+    /// Final track parameters
     std::unique_ptr<const TrackParameters> endParameters = nullptr;
-    Status                                 status        = Status::UNSET;
-    unsigned int                           steps         = 0;
-    double                                 pathLength    = 0.;
 
+    /// Propagation status
+    Status status = Status::UNSET;
+
+    /// Number of propagation steps that were carried out
+    unsigned int steps = 0;
+
+    /// Signed distance over which the parameters were propagated
+    double pathLength = 0.;
+
+    /// @brief Check the validity of the propagation result
+    ///
+    /// @return @c true if the final parameters are set and propagation status
+    ///         is SUCCESS, otherwise @c false
+    ///
     operator bool() const
     {
       return (endParameters && status == Status::SUCCESS);
     }
   };
 
-  /// @brief propagator for particles in a magnetic field
+  /// @brief Propagator for particles in a magnetic field
   ///
-  /// @tparam Impl implementation of the propagation algorithm
+  /// @tparam Impl Implementation of the propagation algorithm
+  ///
+  /// This Propagator class serves as high-level steering code for propagating
+  /// track parameters. The actual implementation of the propagation has to be
+  /// implemented in the Impl object, which has to provide the following:
+  ///
+  /// - a function for performing a single propagation step
+  /// - a type mapping for: initial track parameter type -> type of final track
+  ///   parameters
+  /// - a type mapping for: (initial track parameter type and destination
+  ///   surface type) -> type of final track parameters
+  /// - a type mapping for: initial track parameter type -> type of internal
+  ///   cache object
+  /// - a type mapping for: (initial track parameter type and destination
+  ///   surface type) -> type of internal cache object
+  ///
   template <typename Impl>
   class Propagator final
   {
   public:
-    /// @brief options for propagate() call
+    /// @brief Options for propagate() call
+    ///
+    /// @tparam ObserverList List of observer types called after each
+    ///                      propagation step with the current propagation
+    ///                      cache
+    ///
+    /// @tparam AbortList    List of abort conditions tested after each
+    ///                      propagation step using the current propagation
+    ///                      cache
+    ///
     template <typename ObserverList = ObserverList<>,
               typename AbortList    = AbortList<>>
     struct Options
     {
-      /// propagation direction
+      /// Propagation direction
       Direction direction = forward;
 
-      /// maximum number of steps for one propagate() call
+      /// Maximum number of steps for one propagate() call
       unsigned int max_steps = 1000;
 
-      /// minimum step size
+      /// Absolute minimum step size
       double min_step_size = 0.1 * units::_mm;
 
-      /// maximum step size
+      /// Absolute maximum step size
       double max_step_size = 1 * units::_m;
 
-      /// maximum step size
+      /// Absolute maximum path length
       double max_path_length = 5 * units::_m;
 
-      /// list of observers
+      /// List of observers
       ObserverList observer_list;
 
-      /// list of stop conditions
+      /// List of abort conditions
       AbortList stop_conditions;
     };
 
-    /// @brief copy implementation object
-    template <typename T = Impl>
-    explicit Propagator(
-        typename std::enable_if_t<std::is_copy_constructible<T>::value,
-                                  const T&> impl)
-      : m_impl(impl)
-    {
-    }
-
-    /// @brief move implementation object
-    template <typename T = Impl>
-    explicit Propagator(
-        typename std::enable_if_t<std::is_move_constructible<T>::value, T&&>
-            impl
-        = Impl())
-      : m_impl(std::move(impl))
-    {
-    }
-
-    /// @brief copy constructor
-    template <typename T = Impl>
-    Propagator(typename std::enable_if_t<std::is_copy_constructible<T>::value,
-                                         const Propagator<T>&> copy)
-      : m_impl(copy.m_impl)
-    {
-    }
-
-    /// @brief move constructor
-    template <typename T = Impl>
-    Propagator(typename std::enable_if_t<std::is_move_constructible<T>::value,
-                                         Propagator<T>&&> rhs)
-      : m_impl(std::move(rhs.m_impl))
-    {
-    }
-
-    /// @brief copy assignment operator
-    template <typename T = Impl>
-    typename std::enable_if_t<std::is_copy_constructible<T>::value,
-                              const Propagator<T>&>
-    operator=(const Propagator<T>& copy)
-    {
-      m_impl = copy.m_impl;
-      return *this;
-    }
-
-    /// @brief move assignment operator
-    template <typename T = Impl>
-    typename std::enable_if_t<std::is_move_constructible<T>::value,
-                              const Propagator<T>&>
-    operator=(Propagator<T>&& copy)
-    {
-      m_impl = std::move(copy.m_impl);
-      return *this;
-    }
+    /// Constructor from implementation object
+    explicit Propagator(Impl impl) : m_impl(std::move(impl)) {}
 
   private:
+    /// @brief Helper struct determining the result's type
+    ///
+    /// @tparam TrackParameters Type of final track parameters
+    /// @tparam ObserverList    List of propagation observer types
+    ///
+    /// This helper struct provides type definitions to extract the correct
+    /// propagation result type from a given TrackParameter type and an
+    /// ObserverList.
+    ///
     template <typename TrackParameters, typename ObserverList>
     struct result_type_helper
     {
+      /// @brief Propagation result type for an arbitrary list of additional
+      ///        propagation results
+      ///
+      /// @tparam args Parameter pack specifying additional propagation results
+      ///
       template <typename... args>
       using this_result_type = Result<TrackParameters, args...>;
 
+      /// @brief Propagation result type derived from a given observer list
       typedef typename ObserverList::template result_type<this_result_type>
           type;
     };
 
+    /// @brief Short-hand type definition for propagation result derived from
+    ///        an observer list
+    ///
+    /// @tparam T       Type of the final track parameters
+    /// @tparam ObsList List of propagation observer types
+    ///
     template <typename T, typename ObsList>
     using obs_list_result_t = typename result_type_helper<T, ObsList>::type;
 
   public:
-    /// @brief propagate track parameters
+    /// @brief Propagate track parameters
+    ///
+    /// This function performs the propagation of the track parameters using the
+    /// internal implementation object, until at least one abort condition is
+    /// fulfilled or the maximum number of steps/path length provided in the
+    /// propagation options is reached.
+    ///
+    /// @tparam TrackParameters Type of initial track parameters to propagate
+    /// @tparam ObserverList    Type list of observers
+    /// @tparam AbortList       Type list of abort conditions
+    ///
+    /// @param [in] start   Initial track parameters to propagate
+    /// @param [in] options Propagation options
+    ///
+    /// @return Propagation result containing the propagation status, final
+    ///         track parameters, and output of observers (if they produce any)
+    ///
     template <typename TrackParameters,
               typename ObserverList,
               typename AbortList>
@@ -163,43 +192,93 @@ namespace propagation {
     propagate(const TrackParameters& start,
               const Options<ObserverList, AbortList>& options) const
     {
+      // Type of internal cache object used by the propagation implementation
       typedef typename Impl::template cache_type<TrackParameters> cache_type;
+
+      // Type of track parameters produced by the propagation
       typedef typename Impl::template return_parameter_type<TrackParameters>
           return_parameter_type;
+
+      // Type of the full propagation result, including output from observers
       typedef obs_list_result_t<return_parameter_type, ObserverList>
           result_type;
 
       static_assert(std::is_copy_constructible<return_parameter_type>::value,
                     "return track parameter type must be copy-constructible");
 
+      // Initialize the propagation result object
       result_type  r(Status::INPROGRESS);
+
+      // Compute the signed path limit and maximum step size
       const double signed_pathLimit
           = options.direction * options.max_path_length;
-      double                stepMax = options.direction * options.max_step_size;
-      cache_type            propagation_cache(start);
+      double stepMax = options.direction * options.max_step_size;
+
+      // Initialize the internal propagation cache
+      cache_type propagation_cache(start);
+
+      // This step converts the cache to the full track parameter type (which
+      // should logically be identical to the initial track parameters)
+      //
+      // It is only required for the observers at the moment, and such
+      // conversions should be dropped once observers can work directly with
+      // the internal propagation cache.
+      //
       return_parameter_type previous = m_impl.convert(propagation_cache);
+
+      // Propagation loop
       for (; r.steps < options.max_steps; ++r.steps) {
+        // Perform a propagation step (which can alter the step size)
         r.pathLength += m_impl.step(propagation_cache, stepMax);
+
+        // Convert the propagation cache to the full track parameters (as above,
+        // this is only needed for the observers and should be dropped once they
+        // can work with internal propagation caches).
         return_parameter_type current = m_impl.convert(propagation_cache);
+
+        // Call the observers with the current and previous track parameters,
+        // and let them fill in some propagation results
         options.observer_list(current, previous, r);
+
+        // Is it time to stop the propagation?
         if (std::abs(r.pathLength) >= options.max_path_length
             || options.stop_conditions(r, current, stepMax)) {
+          // Compute the final results and mark the propagation as successful
           r.endParameters = std::make_unique<const return_parameter_type>(
               m_impl.convert(propagation_cache));
           r.status = Status::SUCCESS;
           break;
         }
 
+        // Adjust the step size so that we cannot go above the path limit
         if (std::abs(stepMax) > std::abs(signed_pathLimit - r.pathLength))
           stepMax = signed_pathLimit - r.pathLength;
 
+        // Keep track of the previous track parameters (for observers)
         previous = current;
       }
 
       return r;
     }
 
-    /// @brief propagate track parameters
+    /// @brief Propagate track parameters
+    ///
+    /// This function performs the propagation of the track parameters according
+    /// to the internal implementation object until at least one abort condition
+    /// is fulfilled, the destination surface is hit or the maximum number of
+    /// steps/path length as given in the propagation options is reached.
+    ///
+    /// @tparam TrackParameters Type of initial track parameters to propagate
+    /// @tparam Surface         Type of target surface
+    /// @tparam ObserverList    Type list of observers
+    /// @tparam AbortList       Type list of abort conditions
+    ///
+    /// @param [in] start   Initial track parameters to propagate
+    /// @param [in] options Propagation options
+    ///
+    /// @return Propagation result containing the propagation status, final
+    ///         track parameters, and output of observers (if they produce any)
+    ///
     template <typename TrackParameters,
               typename Surface,
               typename ObserverList,
@@ -211,54 +290,97 @@ namespace propagation {
               const Surface&         target,
               const Options<ObserverList, AbortList>& options) const
     {
+      // Type of internal cache object used by the propagation implementation
       typedef typename Impl::template cache_type<TrackParameters, Surface>
           cache_type;
+
+      // Type of track parameters produced during the propagation (independent
+      // of the target surface type)
       typedef typename Impl::template step_parameter_type<TrackParameters>
           step_parameter_type;
+
+      // Type of track parameters produced at the end of the propagation
       typedef typename Impl::template return_parameter_type<TrackParameters,
                                                             Surface>
           return_parameter_type;
+
+      // Type of the full propagation result, including output from observers
       typedef obs_list_result_t<return_parameter_type, ObserverList>
           result_type;
 
       static_assert(std::is_copy_constructible<return_parameter_type>::value,
                     "return track parameter type must be copy-constructible");
 
+      // Initialize the propagation result object
       result_type  r(Status::INPROGRESS);
+
+      // Compute the signed path limit and maximum step size
       const double signed_pathLimit
           = options.direction * options.max_path_length;
+      double stepMax = options.direction * options.max_step_size;
+
+      // Initialize the internal propagation cache
       cache_type          cache(start);
+
+      // This step converts the cache to the full track parameter type (which
+      // should logically be identical to the initial track parameters)
+      //
+      // It is only required for the observers at the moment, and such
+      // conversions should be dropped once observers can work directly with
+      // the internal propagation cache.
+      //
       step_parameter_type previous = m_impl.convert(cache);
-      double              distance
+
+      // Compute the distance to the target surface
+      double distance
           = m_impl.distance(target, cache.position(), cache.direction());
 
+      // Check that we are propagating towards the surface
       if (distance * options.direction < 0) {
         r.status = Status::WRONG_DIRECTION;
         return r;
       }
 
-      double stepMax = options.direction * options.max_step_size;
+      // Avoid going beyond the target surface on the first step
       if (std::abs(stepMax) > std::abs(distance)) stepMax = distance;
 
+      // Propagation loop
       for (; r.steps < options.max_steps; ++r.steps) {
+        // Perform a propagation step (which can alter the step size)
         r.pathLength += m_impl.step(cache, stepMax);
+
+        // Convert the propagation cache to the full track parameters (as above,
+        // this is only needed for the observers and should be dropped once they
+        // can work with internal propagation caches).
         step_parameter_type current = m_impl.convert(cache);
+
+        // Call the observers with the current and previous track parameters,
+        // and let them fill in some propagation results
         options.observer_list(current, previous, r);
+
+        // Update the distance to the target surface
         distance = m_impl.distance(target, cache.position(), cache.direction());
+
+        // Is it time to stop the propagation?
+        // (FIXME: Should the required distance to the surface be hardcoded?)
         if (std::abs(distance) < 1 * units::_um
             || std::abs(r.pathLength) >= options.max_path_length
             || options.stop_conditions(r, current, stepMax)) {
+          // Compute the final results and mark the propagation as successful
           r.endParameters = std::make_unique<const return_parameter_type>(
               m_impl.convert(cache, target));
           r.status = Status::SUCCESS;
           break;
         }
 
+        // Adjust the step size so that we cannot go above the path limit
         if (std::abs(stepMax) > std::abs(signed_pathLimit - r.pathLength))
           stepMax = signed_pathLimit - r.pathLength;
 
+        // Adjust the step size so that we cannot cross the target surface
         if (std::abs(stepMax) > std::abs(distance)) stepMax = distance;
 
+        // Keep track of the previous track parameters (for observers)
         previous = current;
       }
 
