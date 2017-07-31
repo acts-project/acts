@@ -50,7 +50,9 @@ std::vector<FitMeas_t> generateDummyMeasurements(BoundParameters theTrackParamet
 
 
   for (const auto& step : exCell.extrapolationSteps) {
+    if (id >= exCell.extrapolationSteps.size() - 1 ) continue; 
     const auto& tp = step.parameters;
+      
       double std1 = 0.01;
       double std2 = 0.01;
       double l1 = tp->get<eLOC_0>();
@@ -108,7 +110,6 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(kalman_filter)
   {
-
     auto geo = buildSimpleBarrel();
     const Surface* pSurf = geo->getBeamline();
     double x = 0;
