@@ -219,6 +219,10 @@ In addition, the following conventions are used in ACTS code:
     - existing objects (e.g. member variables) should be returned by<br />
       a) const reference for custom types with costly copy constructors<br />
       b) value in all other cases   
+- writing unit tests:      
+    - the naming of most unit test should be `{ClassName}`+`Tests.cpp`
+    - in case specific functionality of a single class is tested in different files, use `{ClassName}`+`{TestType}`+`Tests.cpp`
+    - in case the written tests concerns CPU profiling, use `{ClassName}`+`Profiles.cpp`
 - Doxygen documentation:
     - Put all documentation in the header files. 
     - Use `///` as block comment (instead of `/* ... */`).

@@ -194,5 +194,6 @@ namespace Test {
     // - check the OuterVolume
     check_vol(*ioVolumes[1], 5);
   }
+  
 }  //  end of namespace Test
 }  //  end of namespace Acts
