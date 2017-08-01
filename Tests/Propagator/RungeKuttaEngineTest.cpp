@@ -27,6 +27,8 @@
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Surfaces/PerigeeSurface.hpp"
 #include "ACTS/Utilities/Units.hpp"
+#include "ACTS/Utilities/detail/Axis.hpp"
+#include "ACTS/Utilities/detail/Grid.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -41,11 +43,6 @@ namespace Test {
   /// a magnetic field with 2 Tesla - at nominal incidence
   BOOST_AUTO_TEST_CASE(RungeKuttaEngineTests)
   {
-
-    // use as a test for constant versus interpolated field as well
-    // This needs Field.txt from ATLAS
-    bool cifTest = false;
-
     // set up the magnetic field
     // - this is a constant 2 Tesla manetic field
     auto constantField
@@ -59,22 +56,62 @@ namespace Test {
     rkEngineCF->setLogger(
         getDefaultLogger("RungeKuttaEngineCF", Logging::INFO));
 
+    // definition of dummy BField
+    struct BField
+    {
+      static Vector3D
+      value(const std::array<double, 2>& rz)
+      {
+        double r = rz.at(0);
+        double z = rz.at(1);
+
+        // linear in z so interpolation should be exact
+        return Vector3D(0., 0., z * -2. * units::_T);
+      }
+    };
+
+    // map (x,yz) -> (r,z)
+    auto transform = [](const Vector3D& pos) {
+      return ActsVectorD<2>(pos.perp(), pos.z());
+    };
+
+    // magnetic field known on grid in (r,z)
+    detail::EquidistantAxis r(0.0 * units::_m, 1.5 * units::_m, 4u);
+    detail::EquidistantAxis z(-11. * units::_m, 11. * units::_m, 5u);
+
+    typedef detail::Grid<Vector3D,
+                         detail::EquidistantAxis,
+                         detail::EquidistantAxis>
+        Grid_t;
+
+    Grid_t g(std::make_tuple(std::move(r), std::move(z)));
+
+    // set grid values
+    for (size_t i = 1; i <= g.getNBins<0u>() + 1; ++i) {
+      for (size_t j = 1; j <= g.getNBins<1u>() + 1; ++j) {
+        Grid_t::index_t indices  = {i, j};
+        const auto&     llCorner = g.getLowerLeftBinEdge(indices);
+        g.at(indices)            = BField::value(llCorner);
+      }
+    }
+
+    // create field mapping
+    InterpolatedBFieldMap::FieldMapper<2> mapper(transform, std::move(g));
+    InterpolatedBFieldMap::Config         config;
+    config.scale  = 1.;
+    config.mapper = std::move(mapper);
+
+    // create BField service
+    auto interpolatedField
+        = std::make_shared<InterpolatedBFieldMap>(std::move(config));
+
     // RungeKuttaEngine - set up the RungeKuttaEngine - for interpolated field
     using RungeKuttaEngineIF = Acts::RungeKuttaEngine<InterpolatedBFieldMap>;
-    std::shared_ptr<RungeKuttaEngineIF> rkEngineIF = nullptr;
-    if (cifTest) {
-      // - this is a non-constant field
-      InterpolatedBFieldMap::Config ncConfig;
-      ncConfig.fieldMapFile = "Field.txt";
-      auto interpolatedField
-          = std::make_shared<InterpolatedBFieldMap>(std::move(ncConfig));
-      // set up the engine now
-      typename RungeKuttaEngineIF::Config rkConfigIF{};
-      rkConfigIF.fieldService = interpolatedField;
-      rkEngineIF = std::make_shared<RungeKuttaEngineIF>(rkConfigIF);
-      rkEngineIF->setLogger(
-          getDefaultLogger("RungeKuttaEngineIF", Logging::INFO));
-    }
+    typename RungeKuttaEngineIF::Config rkConfigIF{};
+    rkConfigIF.fieldService = interpolatedField;
+    auto rkEngineIF         = std::make_shared<RungeKuttaEngineIF>(rkConfigIF);
+    rkEngineIF->setLogger(
+        getDefaultLogger("RungeKuttaEngineIF", Logging::INFO));
 
     // target surface at one meter radius, 10 meters long
     CylinderSurface tSurface(nullptr, 1. * units::_m, 10 * units::_m);
