@@ -72,7 +72,7 @@ namespace Test {
     std::vector<Vector2D> expectedVertices(vertices);
     BOOST_TEST_MESSAGE(
         "Following two tests fail because the triangle has six vertices");
-    BOOST_TEST(triangleBoundsObject.vertices().size() == 3);
+    BOOST_TEST(triangleBoundsObject.vertices().size() == (size_t)3);
     BOOST_TEST(triangleBoundsObject.vertices() == expectedVertices);
     // for (auto i: triangleBoundsObject.vertices()){
     //  std::cout<<i[0]<<", "<<i[1]<<std::endl;
