@@ -1,4 +1,4 @@
-add_executable (CylinderVolumeBuilder_tests CylinderVolumeBuilder_tests.cpp)
-target_link_libraries (CylinderVolumeBuilder_tests PRIVATE ACTSCore)
-add_test (NAME CylinderVolumeBuilder_tests COMMAND CylinderVolumeBuilder_tests)
-acts_add_test_to_cdash_project (PROJECT ACore TEST CylinderVolumeBuilder_tests TARGETS CylinderVolumeBuilder_tests)
+add_executable (CylinderVolumeBuilderTests CylinderVolumeBuilderTests.cpp)
+target_link_libraries (CylinderVolumeBuilderTests PRIVATE ACTSCore)
+add_test (NAME CylinderVolumeBuilderUnitTest COMMAND CylinderVolumeBuilderTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST CylinderVolumeBuilderUnitTest TARGETS CylinderVolumeBuilderTests)

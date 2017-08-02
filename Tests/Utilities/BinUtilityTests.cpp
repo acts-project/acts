@@ -28,7 +28,7 @@ namespace Test {
     BinUtility xUtil_eq(10, 0., 10., open, binX);
     BinUtility yUtil_eq(10, 0., 10., open, binY);
     BinUtility zUtil_eq(10, 0., 10., open, binZ);
-    BOOST_CHECK_EQUAL(xUtil_eq.bins(), 10);
+    BOOST_CHECK_EQUAL(xUtil_eq.bins(), (size_t)10);
     // make it 2-dim
     BinUtility xyUtil_eq(10, 0., 10., open, binX);
     xyUtil_eq += yUtil_eq;
