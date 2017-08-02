@@ -19,9 +19,9 @@
 #include "ACTS/Utilities/Definitions.hpp"
 
 namespace dd4hep {
-  class DetElement;
-  class Segmentation;
-  class Volume;
+class DetElement;
+class Segmentation;
+class Volume;
 }
 }
 
