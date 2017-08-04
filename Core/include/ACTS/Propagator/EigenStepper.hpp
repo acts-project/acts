@@ -38,12 +38,15 @@ cross(const ActsMatrixD<3, 3>& m, const Vector3D& v)
 ///
 /// with s being the arc length of the track, q the charge of the particle,
 /// p its momentum and B the magnetic field
+///
 template <typename BField>
 class EigenStepper
 {
 private:
+  /// Internal cache for track parameter propagation
   struct Cache
   {
+    /// Constructor from the initial track parameters
     template <typename T>
     explicit Cache(const T& par)
       : pos(par.position())
@@ -55,7 +58,7 @@ private:
       const double theta = dir.theta();
 
       if (cov) {
-        const auto& transform = par.referenceSurface().transform().matrix();
+        const auto transform = par.referenceSurface().transform().matrix();
         jacobian(0, eLOC_0) = transform(0, eLOC_0);
         jacobian(0, eLOC_1) = transform(0, eLOC_1);
         jacobian(1, eLOC_0) = transform(1, eLOC_0);
@@ -71,77 +74,108 @@ private:
       }
     }
 
+    /// Global particle position accessor
     Vector3D
     position() const
     {
       return pos;
     }
+
+    /// Momentum direction accessor
     Vector3D
     direction() const
     {
       return dir;
     }
 
+    /// Global particle position
     Vector3D pos = Vector3D(0, 0, 0);
+
+    /// Momentum direction (normalized)
     Vector3D dir = Vector3D(1, 0, 0);
-    double   qop = 1;
+
+    /// Charge-momentum ratio, in natural units
+    double qop = 1;
+
+    /// Jacobian used to transport the covariance matrix
     ActsMatrixD<7, 5> jacobian = ActsMatrixD<7, 5>::Zero();
-    ActsVectorD<7>           derivative = ActsVectorD<7>::Zero();
-    const ActsSymMatrixD<5>* cov        = nullptr;
+
+    /// ???
+    ActsVectorD<7> derivative = ActsVectorD<7>::Zero();
+
+    /// Covariance matrix assocated with the initial error on track parameters
+    const ActsSymMatrixD<5>* cov = nullptr;
   };
 
+  // This struct is a meta-function which normally maps to BoundParameters...
   template <typename T, typename S>
   struct s
   {
     typedef BoundParameters type;
   };
 
+  // ...unless type S is int, in which case it maps to Curvilinear parameters
   template <typename T>
   struct s<T, int>
   {
     typedef CurvilinearParameters type;
   };
 
+  /// Rotation matrix going from global coordinates to local surface coordinates
   static ActsMatrixD<3, 3>
   dLocaldGlobal(const Surface& p, const Vector3D& gpos)
   {
-    ActsMatrixD<3, 3> j = ActsMatrixD<3, 3>::Zero();
-    j.block<1, 3>(0, 0) = p.transform().matrix().block<3, 1>(0, 0).transpose();
-    j.block<1, 3>(1, 0) = p.transform().matrix().block<3, 1>(0, 1).transpose();
-    j.block<1, 3>(2, 0) = p.transform().matrix().block<3, 1>(0, 2).transpose();
-
-    return j;
+    // A surface's associated transform is a 4x4 affine transformation matrix,
+    // whose top-left corner is the 3x3 linear local-to-global rotation matrix,
+    // and whose right column is a translation vector, with a trailing 1.
+    //
+    // So to get the global-to-local rotation matrix, we only need to take the
+    // transpose of the top-left corner of the surface's associated transform.
+    //
+    return p.transform().matrix().topLeftCorner<3, 3>().transpose();
   }
 
 public:
+  /// Always use the same propagation cache type, independently of the initial
+  /// track parameter type and of the target surface
   template <typename T, typename S = int>
   using cache_type = Cache;
 
+  /// Intermediate track parameters are always in curvilinear parametrization
   template <typename T>
   using step_parameter_type = CurvilinearParameters;
 
+  /// Return parameter types depend on the propagation mode: when propagating to
+  /// a surface we return BoundParameters, otherwise CurvilinearParameters
   template <typename T, typename S = int>
   using return_parameter_type = typename s<T, S>::type;
 
+  /// Constructor requires knowledge of the detector's magnetic field
   EigenStepper(BField bField = BField()) : m_bField(std::move(bField)){};
 
+  /// Convert the propagation cache to curvilinear parameters
   static CurvilinearParameters
   convert(const Cache& c)
   {
     double                                   charge = c.qop > 0. ? 1. : -1.;
     std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
+
+    // Perform error propagation if an initial covariance matrix was provided
     if (c.cov) {
       const double phi   = c.dir.phi();
       const double theta = c.dir.theta();
 
       ActsMatrixD<5, 7> J = ActsMatrixD<5, 7>::Zero();
       if (std::abs(cos(theta)) < 0.99) {
+        // We normally operate in curvilinear coordinates defined as follows
         J(0, 0) = -sin(phi);
         J(0, 1) = cos(phi);
         J(1, 0) = -cos(phi) * cos(theta);
         J(1, 1) = -sin(phi) * cos(theta);
         J(1, 2) = sin(theta);
       } else {
+        // Under grazing incidence to z, the above coordinate system definition
+        // becomes numerically unstable, and we need to switch to another one
         const double c
             = sqrt(pow(cos(theta), 2) + pow(sin(phi) * sin(theta), 2));
         J(0, 1) = -cos(theta) / c;
@@ -183,18 +217,21 @@ public:
         std::move(cov), c.pos, c.dir / std::abs(c.qop), charge);
   }
 
+  /// Convert the propagation cache to track parameters at a certain surface
   template <typename S>
   static BoundParameters
   convert(Cache& c, const S& surface)
   {
-    double                             charge = c.qop > 0. ? 1. : -1.;
+    double                                  charge = c.qop > 0. ? 1. : -1.;
     std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
+
+    // Perform error propagation if an initial covariance matrix was provided
     if (c.cov) {
       const double phi   = c.dir.phi();
       const double theta = c.dir.theta();
 
       ActsMatrixD<5, 7> J = ActsMatrixD<5, 7>::Zero();
-      const auto& dLdG = dLocaldGlobal(surface, c.pos);
+      const auto dLdG = dLocaldGlobal(surface, c.pos);
       J.block<2, 3>(0, 0) = dLdG.template block<2, 3>(0, 0);
       J(2, 3) = -sin(phi) / sin(theta);
       J(2, 4) = cos(phi) / sin(theta);
@@ -226,125 +263,152 @@ public:
         std::move(cov), c.pos, c.dir / std::abs(c.qop), charge, surface);
   }
 
+  /// Estimate the (signed) distance to a certain surface
   static double
   distance(const Surface& s, const Vector3D& pos, const Vector3D& dir)
   {
-    const Intersection& i = s.intersectionEstimate(pos, dir);
+    const Intersection i = s.intersectionEstimate(pos, dir);
     return i.pathLength;
   }
 
+  /// Perform a Runge-Kutta track parameter propagation step
+  ///
+  /// @param[in,out] c is the propagation cache associated with the track
+  ///                  parameters that are being propagated.
+  ///
+  /// @param[in,out] h is the desired step size. It can be negative during
+  ///                  backwards track propagation, and since we're using an
+  ///                  adaptive integrator, it can be modified by the stepper.
+  ///
   double
   step(Cache& c, double& h) const
   {
+    // Charge-momentum ratio, in SI units
     const double qop = 1. / units::Nat2SI<units::MOMENTUM>(1. / c.qop);
 
-    // first point
-    const Vector3D  B_first = m_bField.getField(c.pos);
-    const Vector3D& k1 = qop * c.dir.cross(B_first);
+    // Runge-Kutta integrator state
+    double   h2, half_h;
+    Vector3D B_middle, B_last, k2, k3, k4;
 
-    while (h != 0.) {
-      const double& h2     = h * h;
-      const double& half_h = h / 2;
-      // second point
-      const Vector3D& pos1 = c.pos + half_h * c.dir + h2 / 8 * k1;
-      const Vector3D  B_middle = m_bField.getField(pos1);
-      const Vector3D& k2 = qop * (c.dir + half_h * k1).cross(B_middle);
+    // First Runge-Kutta point (at current position)
+    const Vector3D B_first = m_bField.getField(c.pos);
+    const Vector3D k1      = qop * c.dir.cross(B_first);
 
-      // third point
-      const Vector3D& k3 = qop * (c.dir + half_h * k2).cross(B_middle);
+    // The following functor starts to perform a Runge-Kutta step of a certain
+    // size, going up to the point where it can return an estimate of the local
+    // integration error. The results are cached in the local variables above,
+    // allowing integration to continue once the error is deemed satisfactory.
+    const auto tryRungeKuttaStep = [&](const double h) -> double {
+      // Cache the square and half of the step size
+      h2     = h * h;
+      half_h = h / 2;
 
-      // last point
-      const Vector3D& pos2 = c.pos + h * c.dir + h2 / 2 * k3;
-      const Vector3D  B_last = m_bField.getField(pos2);
-      const Vector3D& k4 = qop * (c.dir + h * k3).cross(B_last);
+      // Second Runge-Kutta point
+      const Vector3D pos1 = c.pos + half_h * c.dir + h2 / 8 * k1;
+      B_middle            = m_bField.getField(pos1);
+      k2                  = qop * (c.dir + half_h * k1).cross(B_middle);
 
-      // local error estimate
-      const double EST = h * (k1 - k2 - k3 + k4).template lpNorm<1>();
-      if (EST > 0.0002) {
-        h *= 0.5;
-        continue;
-      }
+      // Third Runge-Kutta point
+      k3 = qop * (c.dir + half_h * k2).cross(B_middle);
 
-      if (c.cov) {
-        ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Zero();
-        D(6, 6)             = 1;
+      // Last Runge-Kutta point
+      const Vector3D pos2 = c.pos + h * c.dir + h2 / 2 * k3;
+      B_last              = m_bField.getField(pos2);
+      k4                  = qop * (c.dir + h * k3).cross(B_last);
 
-        const double conv = units::SI2Nat<units::MOMENTUM>(1);
+      // Return an estimate of the local integration error
+      return h * (k1 - k2 - k3 + k4).template lpNorm<1>();
+    };
 
-        auto dFdx = D.block<3, 3>(0, 0);
-        auto dFdT = D.block<3, 3>(0, 3);
-        auto dFdL = D.block<3, 1>(0, 6);
-        auto dGdx = D.block<3, 3>(3, 0);
-        auto dGdT = D.block<3, 3>(3, 3);
-        auto dGdL = D.block<3, 1>(3, 6);
-
-        ActsMatrixD<3, 3> dk1dT = ActsMatrixD<3, 3>::Zero();
-        ActsMatrixD<3, 3> dk2dT = ActsMatrixD<3, 3>::Identity();
-        ActsMatrixD<3, 3> dk3dT = ActsMatrixD<3, 3>::Identity();
-        ActsMatrixD<3, 3> dk4dT = ActsMatrixD<3, 3>::Identity();
-
-        ActsVectorD<3> dk1dL = ActsVectorD<3>::Zero();
-        ActsVectorD<3> dk2dL = ActsVectorD<3>::Zero();
-        ActsVectorD<3> dk3dL = ActsVectorD<3>::Zero();
-        ActsVectorD<3> dk4dL = ActsVectorD<3>::Zero();
-
-        dk1dL = c.dir.cross(B_first);
-        dk2dL = (c.dir + half_h * k1).cross(B_middle)
-            + qop * half_h * dk1dL.cross(B_middle);
-        dk3dL = (c.dir + half_h * k2).cross(B_middle)
-            + qop * half_h * dk2dL.cross(B_middle);
-        dk4dL = (c.dir + h * k3).cross(B_last) + qop * h * dk3dL.cross(B_last);
-
-        dk1dT(0, 1) = B_first.z();
-        dk1dT(0, 2) = -B_first.y();
-        dk1dT(1, 0) = -B_first.z();
-        dk1dT(1, 2) = B_first.x();
-        dk1dT(2, 0) = B_first.y();
-        dk1dT(2, 1) = -B_first.x();
-        dk1dT *= qop;
-
-        dk2dT += h / 2 * dk1dT;
-        dk2dT = qop * cross(dk2dT, B_middle);
-
-        dk3dT += h / 2 * dk2dT;
-        dk3dT = qop * cross(dk3dT, B_middle);
-
-        dk4dT += h * dk3dT;
-        dk4dT = qop * cross(dk4dT, B_last);
-
-        dFdx.setIdentity();
-
-        dFdT.setIdentity();
-        dFdT += h / 6 * (dk1dT + dk2dT + dk3dT);
-        dFdT *= h;
-
-        dFdL = conv * h2 / 6 * (dk1dL + dk2dL + dk3dL);
-
-        dGdx.setZero();
-
-        dGdT.setIdentity();
-        dGdT += h / 6 * (dk1dT + 2 * (dk2dT + dk3dT) + dk4dT);
-
-        dGdL = conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
-
-        c.jacobian = D * c.jacobian;
-      }
-
-      c.pos += h * c.dir + h2 / 6 * (k1 + k2 + k3);
-      c.dir += h / 6 * (k1 + 2 * k2 + 2 * k3 + k4);
-      c.dir /= c.dir.norm();
-      c.derivative.template head<3>()     = c.dir;
-      c.derivative.template segment<3>(3) = k4;
-
-      return h;
+    // Select the appropriate Runge-Kutta step size
+    double error_estimate = tryRungeKuttaStep(h);
+    while (error_estimate > 0.0002) {
+      h *= 0.5;
+      error_estimate = tryRungeKuttaStep(h);
     }
 
+    // When doing error propagation, update the associated Jacobian matrix
+    if (c.cov) {
+      ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Zero();
+      D(6, 6)             = 1;
+
+      const double conv = units::SI2Nat<units::MOMENTUM>(1);
+
+      auto dFdx = D.block<3, 3>(0, 0);
+      auto dFdT = D.block<3, 3>(0, 3);
+      auto dFdL = D.block<3, 1>(0, 6);
+      auto dGdx = D.block<3, 3>(3, 0);
+      auto dGdT = D.block<3, 3>(3, 3);
+      auto dGdL = D.block<3, 1>(3, 6);
+
+      ActsMatrixD<3, 3> dk1dT = ActsMatrixD<3, 3>::Zero();
+      ActsMatrixD<3, 3> dk2dT = ActsMatrixD<3, 3>::Identity();
+      ActsMatrixD<3, 3> dk3dT = ActsMatrixD<3, 3>::Identity();
+      ActsMatrixD<3, 3> dk4dT = ActsMatrixD<3, 3>::Identity();
+
+      ActsVectorD<3> dk1dL = ActsVectorD<3>::Zero();
+      ActsVectorD<3> dk2dL = ActsVectorD<3>::Zero();
+      ActsVectorD<3> dk3dL = ActsVectorD<3>::Zero();
+      ActsVectorD<3> dk4dL = ActsVectorD<3>::Zero();
+
+      dk1dL = c.dir.cross(B_first);
+      dk2dL = (c.dir + half_h * k1).cross(B_middle)
+          + qop * half_h * dk1dL.cross(B_middle);
+      dk3dL = (c.dir + half_h * k2).cross(B_middle)
+          + qop * half_h * dk2dL.cross(B_middle);
+      dk4dL = (c.dir + h * k3).cross(B_last) + qop * h * dk3dL.cross(B_last);
+
+      dk1dT(0, 1) = B_first.z();
+      dk1dT(0, 2) = -B_first.y();
+      dk1dT(1, 0) = -B_first.z();
+      dk1dT(1, 2) = B_first.x();
+      dk1dT(2, 0) = B_first.y();
+      dk1dT(2, 1) = -B_first.x();
+      dk1dT *= qop;
+
+      dk2dT += h / 2 * dk1dT;
+      dk2dT = qop * cross(dk2dT, B_middle);
+
+      dk3dT += h / 2 * dk2dT;
+      dk3dT = qop * cross(dk3dT, B_middle);
+
+      dk4dT += h * dk3dT;
+      dk4dT = qop * cross(dk4dT, B_last);
+
+      dFdx.setIdentity();
+
+      dFdT.setIdentity();
+      dFdT += h / 6 * (dk1dT + dk2dT + dk3dT);
+      dFdT *= h;
+
+      dFdL = conv * h2 / 6 * (dk1dL + dk2dL + dk3dL);
+
+      dGdx.setZero();
+
+      dGdT.setIdentity();
+      dGdT += h / 6 * (dk1dT + 2 * (dk2dT + dk3dT) + dk4dT);
+
+      dGdL = conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
+
+      c.jacobian = D * c.jacobian;
+    }
+
+    // Update the track parameters according to the equations of motion
+    c.pos += h * c.dir + h2 / 6 * (k1 + k2 + k3);
+    c.dir += h / 6 * (k1 + 2 * k2 + 2 * k3 + k4);
+    c.dir /= c.dir.norm();
+    c.derivative.template head<3>()     = c.dir;
+    c.derivative.template segment<3>(3) = k4;
+
+    // Return the updated step size
     return h;
   }
 
 private:
+  /// Magnetic field inside of the detector
   BField m_bField;
 };
 
 }  // namespace Acts
+
 #endif  // ACTS_EIGEN_STEPPER_HPP

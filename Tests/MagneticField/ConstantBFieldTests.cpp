@@ -8,12 +8,14 @@
 
 /// @file ConstantBField_tests.cpp
 #define BOOST_TEST_MODULE Constant magnetic field tests
+
+// clang-format off
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
-
 #include "ACTS/MagneticField/ConstantBField.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
+// clang-format on
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -54,42 +56,6 @@ namespace Test {
       BOOST_TEST(Btrue == BField.getField(pos));
       BOOST_TEST(Btrue == BField.getField(Vector3D(0, 0, 0)));
       BOOST_TEST(Btrue == BField.getField(-2 * pos));
-    }
-
-    BOOST_TEST_CONTEXT("C-array interface")
-    {
-      const double         Btrue[3] = {bx, by, bz};
-      const double         pos[3]   = {x, y, z};
-      const ConstantBField BField(bx, by, bz);
-      double               Btest[3] = {0, 0, 0};
-
-      BField.getField(pos, Btest);
-      BOOST_TEST(Btrue[0] == Btest[0]);
-      BOOST_TEST(Btrue[1] == Btest[1]);
-      BOOST_TEST(Btrue[2] == Btest[2]);
-
-      BField.getField(0, Btest);
-      BOOST_TEST(Btrue[0] == Btest[0]);
-      BOOST_TEST(Btrue[1] == Btest[1]);
-      BOOST_TEST(Btrue[2] == Btest[2]);
-    }
-
-    BOOST_TEST_CONTEXT("Eigen initialised - C-array retrieved")
-    {
-      const Vector3D       Btrue(bx, by, bz);
-      const ConstantBField BField(Btrue);
-      const double         pos[3]   = {x, y, z};
-      double               Btest[3] = {0, 0, 0};
-
-      BField.getField(pos, Btest);
-      BOOST_TEST(Btrue(0) == Btest[0]);
-      BOOST_TEST(Btrue(1) == Btest[1]);
-      BOOST_TEST(Btrue(2) == Btest[2]);
-
-      BField.getField(0, Btest);
-      BOOST_TEST(Btrue(0) == Btest[0]);
-      BOOST_TEST(Btrue(1) == Btest[1]);
-      BOOST_TEST(Btrue(2) == Btest[2]);
     }
 
     BOOST_TEST_CONTEXT("C-array initialised - Eigen retrieved")
@@ -138,41 +104,6 @@ namespace Test {
       BOOST_TEST(Btrue == BField.getField(pos));
       BOOST_TEST(Btrue == BField.getField(Vector3D(0, 0, 0)));
       BOOST_TEST(Btrue == BField.getField(-2 * pos));
-    }
-
-    BOOST_TEST_CONTEXT("C-array interface")
-    {
-      const double pos[3]   = {x, y, z};
-      double       Btest[3] = {0, 0, 0};
-      BField.setField(bx, by, bz);
-
-      BField.getField(pos, Btest);
-      BOOST_TEST(bx == Btest[0]);
-      BOOST_TEST(by == Btest[1]);
-      BOOST_TEST(bz == Btest[2]);
-
-      BField.getField(0, Btest);
-      BOOST_TEST(bx == Btest[0]);
-      BOOST_TEST(by == Btest[1]);
-      BOOST_TEST(bz == Btest[2]);
-    }
-
-    BOOST_TEST_CONTEXT("Eigen initialised - C-array retrieved")
-    {
-      const Vector3D Btrue(bx, by, bz);
-      const double   pos[3]   = {x, y, z};
-      double         Btest[3] = {0, 0, 0};
-      BField.setField(Btrue);
-
-      BField.getField(pos, Btest);
-      BOOST_TEST(Btrue(0) == Btest[0]);
-      BOOST_TEST(Btrue(1) == Btest[1]);
-      BOOST_TEST(Btrue(2) == Btest[2]);
-
-      BField.getField(0, Btest);
-      BOOST_TEST(Btrue(0) == Btest[0]);
-      BOOST_TEST(Btrue(1) == Btest[1]);
-      BOOST_TEST(Btrue(2) == Btest[2]);
     }
 
     BOOST_TEST_CONTEXT("C-array initialised - Eigen retrieved")

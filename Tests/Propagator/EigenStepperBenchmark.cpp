@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ACTS/Propagator/EigenStepper.hpp"
 #include <boost/program_options.hpp>
 #include <iostream>
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/MagneticField/ConstantBField.hpp"
-#include "ACTS/Propagator/AtlasStepper.hpp"
 #include "ACTS/Propagator/Propagator.hpp"
 #include "ACTS/Utilities/Logger.hpp"
 #include "ACTS/Utilities/Units.hpp"
@@ -63,7 +63,7 @@ main(int argc, char* argv[])
                            << "T B-field");
 
   typedef ConstantBField            BField_type;
-  typedef AtlasStepper<BField_type> Stepper_type;
+  typedef EigenStepper<BField_type> Stepper_type;
   typedef Propagator<Stepper_type>  Propagator_type;
 
   BField_type     bField(0, 0, Bz * units::_T);
@@ -98,5 +98,6 @@ main(int argc, char* argv[])
 
   ACTS_INFO("average path length = " << totalPathLength / toys / units::_mm
                                      << "mm");
+
   return 0;
 }

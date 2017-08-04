@@ -1,6 +1,6 @@
-add_executable (ExtrapolationCell_step_tests ExtrapolationCell_step_tests.cpp)
-target_include_directories (ExtrapolationCell_step_tests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (ExtrapolationCell_step_tests PRIVATE ACTSCore)
-add_test (NAME ExtrapolationCell_step_tests COMMAND ExtrapolationCell_step_tests)
-acts_add_test_to_cdash_project (PROJECT ACore TEST ExtrapolationCell_step_tests TARGETS ExtrapolationCell_step_tests)
+add_executable (ExtrapolationCellTests ExtrapolationCellTests.cpp)
+target_include_directories (ExtrapolationCellTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (ExtrapolationCellTests PRIVATE ACTSCore)
+add_test (NAME ExtrapolationCellUnitTest COMMAND ExtrapolationCellTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST ExtrapolationCellUnitTest TARGETS ExtrapolationCellTests)
 

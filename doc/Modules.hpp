@@ -135,7 +135,10 @@
 
 /// @defgroup MagneticField Magnetic field
 /// @ingroup Core
-/// @brief Description of magnetic field properties
+/// @brief Description of magnetic field configurations
+///
+/// This module collects information about classes and typedefs useful for
+/// describing different magnetic field configurations.
 
 /// @defgroup Material Material
 /// @ingroup Core

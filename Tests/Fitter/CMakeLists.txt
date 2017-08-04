@@ -1,11 +1,11 @@
-add_executable (GainMatrixTest GainMatrixTests.cpp)
-target_include_directories (GainMatrixTest PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (GainMatrixTest PRIVATE ACTSCore)
-add_test (NAME GainMatrixUnitTest COMMAND GainMatrixTest)
-acts_add_test_to_cdash_project (PROJECT ACore TEST GainMatrixUnitTest TARGETS GainMatrixTest)
-
 add_executable (KalmanFilterTest KalmanFilterTests.cpp)
 target_include_directories (KalmanFilterTest PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (KalmanFilterTest PRIVATE ACTSCore)
 add_test (NAME KalmanFilterUnitTest COMMAND KalmanFilterTest)
 acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanFilterUnitTest TARGETS KalmanFilterTest)
+
+add_executable (GainMatrixTests GainMatrixTests.cpp)
+target_include_directories (GainMatrixTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (GainMatrixTests PRIVATE ACTSCore)
+add_test (NAME GainMatrixUnitTest COMMAND GainMatrixTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST GainMatrixUnitTest TARGETS GainMatrixTests)
