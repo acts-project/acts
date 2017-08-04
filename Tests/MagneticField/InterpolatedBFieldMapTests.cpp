@@ -9,8 +9,8 @@
 /// @file InterpolatedBFieldMap_tests.cpp
 
 #define BOOST_TEST_MODULE Mapped magnetic field tests
-#include "ACTS/MagneticField/InterpolatedBFieldMap.hpp"
 #include <boost/test/included/unit_test.hpp>
+#include "ACTS/MagneticField/InterpolatedBFieldMap.hpp"
 #include "ACTS/Utilities/detail/Axis.hpp"
 #include "ACTS/Utilities/detail/Grid.hpp"
 
@@ -36,19 +36,22 @@ namespace Test {
       }
     };
 
-    // map (x,yz) -> (r,z)
-    auto transform = [](const Vector3D& pos) {
+    // map (x,y,z) -> (r,z)
+    auto transformPos = [](const Vector3D& pos) {
       return ActsVectorD<2>(pos.perp(), pos.z());
     };
+
+    // map (Bx,By,Bz) -> (Bx,By,Bz)
+    auto transformBField
+        = [](const Vector3D& field, const Vector3D&) { return field; };
 
     // magnetic field known on grid in (r,z)
     detail::EquidistantAxis r(0.0, 4.0, 4u);
     detail::EquidistantAxis z(-5, 5, 5u);
 
-    typedef detail::Grid<Vector3D,
-                         detail::EquidistantAxis,
-                         detail::EquidistantAxis>
-        Grid_t;
+    typedef detail::
+        Grid<Vector3D, detail::EquidistantAxis, detail::EquidistantAxis>
+            Grid_t;
 
     Grid_t g(std::make_tuple(std::move(r), std::move(z)));
 
@@ -62,8 +65,9 @@ namespace Test {
     }
 
     // create field mapping
-    InterpolatedBFieldMap::FieldMapper<2> mapper(transform, std::move(g));
-    InterpolatedBFieldMap::Config         config;
+    InterpolatedBFieldMap::FieldMapper<3, 2> mapper(
+        transformPos, transformBField, std::move(g));
+    InterpolatedBFieldMap::Config config;
     config.scale  = 1.;
     config.mapper = std::move(mapper);
 
