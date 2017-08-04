@@ -28,9 +28,14 @@ class TrackingGeometry;
 ///
 /// The Acts::TrackingGeometry Builder for volumes that wrap around another
 ///
-/// It retrieves ITrackingVolumeBuilders as configured and builds one
-/// detector around the other one.
+/// It retrieves an array of ITrackingVolumeBuilder tools that are configured
+/// to be built in sequence, where the output of one volume builder is provided
+/// to the next volume volume builder and accordingly
+/// - contained (e.g. a final insertion of a beam pipe of longer extend)
+/// - wrapped (e.g. an outer detector wrapping an inner one)
+/// - attached (e.g. a neighbor detector attaching to the previous one)
 ///
+/// The returned volume of each step must be processable by the previous step
 class TrackingGeometryBuilder : public ITrackingGeometryBuilder
 {
 public:
@@ -38,7 +43,8 @@ public:
   /// Nested Configuration for the CylinderVolumeBuilder
   struct Config
   {
-    /// the list of trackign volume builders
+        
+    /// the list of tracking volume builders
     std::list<std::shared_ptr<const ITrackingVolumeBuilder>>
         trackingVolumeBuilders{};
 
@@ -48,8 +54,8 @@ public:
 
   /// Constructor
   ///
-  /// @param cgbConfig is the configuration struct for this builder
-  /// @param logger logging instance
+  /// @param [in] cgbConfig is the configuration struct for this builder
+  /// @param [in] logger logging instance
   TrackingGeometryBuilder(const Config&                 cgbConfig,
                           std::unique_ptr<const Logger> logger
                           = getDefaultLogger("TrackingGeometryBuilder",
