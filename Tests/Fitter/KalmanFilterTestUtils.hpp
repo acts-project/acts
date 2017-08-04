@@ -1,3 +1,12 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2017 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
 #ifndef ACTS_KALMANFITUTILS_H
 #define ACTS_KALMANFITUTILS_H
 
@@ -24,11 +33,14 @@
 #include <random>
 #include <vector>
 
+
+// shorthands
 using namespace Acts;
 typedef FittableMeasurement<long int> FitMeas_t;
 template <ParID_t... pars>
 using Meas_t = Measurement<long int, pars...>;
 
+/// fit cache
 struct MyCache {
   std::unique_ptr<const KF::Step<long int>::JacobianMatrix> jacobian;
   std::unique_ptr<const BoundParameters> parameters;
@@ -38,6 +50,7 @@ struct MyCache {
   MyCache(MyCache&&) = default;
 };
 
+/// extrapolation wrapper
 class MyExtrapolator {
 public:
   MyExtrapolator(std::shared_ptr<const IExtrapolationEngine> exEngine = nullptr);
@@ -48,6 +61,7 @@ private:
   std::shared_ptr<const IExtrapolationEngine> m_exEngine;
 };
 
+/// dummy class, returns measurement unchanged
 class NoCalibration {
 public:
   std::unique_ptr<const FitMeas_t> operator()(const FitMeas_t& m, const BoundParameters&) const;
@@ -58,10 +72,10 @@ public:
   std::unique_ptr<KF::Step<long int>> operator()(MyCache m) const;
 };
 
-std::shared_ptr<IExtrapolationEngine> initExtrapolator(const std::shared_ptr<const TrackingGeometry>& geo);
 MyExtrapolator::MyExtrapolator(std::shared_ptr<const IExtrapolationEngine> exEngine)
     : m_exEngine(std::move(exEngine)){};
 
+/// wrapper around extrapolate call to exEngine, setting the right flags
 MyCache MyExtrapolator::operator()(const FitMeas_t& m, const TrackParameters& tp) const {
   auto exCell = std::make_unique<ExtrapolationCell<TrackParameters>>(tp);
   exCell->addConfigurationMode(ExtrapolationMode::Destination);
@@ -92,6 +106,7 @@ std::unique_ptr<KF::Step<long int>> CacheGenerator::operator()(MyCache m) const 
   return step;
 };
 
+/// set up extrapolation
 std::shared_ptr<IExtrapolationEngine> initExtrapolator(const std::shared_ptr<const TrackingGeometry>& geo) {
   auto propConfig = RungeKuttaEngine<>::Config();
   propConfig.fieldService = std::make_shared<ConstantBField>(0, 0, 2 * Acts::units::_T);

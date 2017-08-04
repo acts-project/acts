@@ -1,4 +1,3 @@
-
 // This file is part of the ACTS project.
 //
 // Copyright (C) 2017 ACTS project team
@@ -33,6 +32,7 @@
 
 #include "KalmanFilterTestUtils.hpp"
 
+/// use extrapolation to generate some measurements 
 std::vector<FitMeas_t> generateDummyMeasurements(BoundParameters theTrackParameters,
                                                  std::shared_ptr<IExtrapolationEngine> theExtrapolationEngine,
                                                  std::shared_ptr<const Acts::TrackingGeometry> geo) {
@@ -50,6 +50,8 @@ std::vector<FitMeas_t> generateDummyMeasurements(BoundParameters theTrackParamet
 
 
   for (const auto& step : exCell.extrapolationSteps) {
+    /// @TODO: accessing the local coordinates on the last extrapolation
+    /// step seems to result in a segfault
     if (id >= exCell.extrapolationSteps.size() - 1 ) continue; 
     const auto& tp = step.parameters;
       
@@ -70,6 +72,7 @@ std::vector<FitMeas_t> generateDummyMeasurements(BoundParameters theTrackParamet
 
 namespace tt    = boost::test_tools;
 namespace Acts {
+/// simple cylinder geometry for test purposes
 std::shared_ptr<Acts::TrackingGeometry> buildSimpleBarrel() {
   // most placements are at the origin, without translations or rotations
   // create identity transformation to be used throughout
@@ -108,7 +111,8 @@ std::shared_ptr<Acts::TrackingGeometry> buildSimpleBarrel() {
 
 namespace Test {
 
-  BOOST_AUTO_TEST_CASE(kalman_filter)
+  /// test fit of a known track
+  BOOST_AUTO_TEST_CASE(KalmanFilterFromPerfectInitial)
   {
     auto geo = buildSimpleBarrel();
     const Surface* pSurf = geo->getBeamline();
@@ -146,6 +150,8 @@ namespace Test {
     for (const auto& p : track) {
       auto smoothedState = *p->getSmoothedState();
       auto filteredState = *p->getFilteredState();
+      /// Test that position obtained by smoothed and filtered state are the same (they should be
+      /// because the initial state describes the track perfectly)
       BOOST_TEST(smoothedState.position().norm() == filteredState.position().norm(), tt::tolerance(1e-7));
       ++trackCounter;
     }
