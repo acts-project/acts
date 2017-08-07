@@ -70,10 +70,13 @@ namespace Test {
       }
     };
 
-    // map (x,yz) -> (r,z)
-    auto transform = [](const Vector3D& pos) {
+    // map (x,y,z) -> (r,z)
+    auto transformPos = [](const Vector3D& pos) {
       return ActsVectorD<2>(pos.perp(), pos.z());
     };
+    // map (Bx,By,Bz) -> (Bx,By,Bz)
+    auto transformBField
+        = [](const Vector3D& field, const Vector3D&) { return field; };
 
     // magnetic field known on grid in (r,z)
     detail::EquidistantAxis r(0.0 * units::_m, 1.5 * units::_m, 4u);
@@ -96,8 +99,9 @@ namespace Test {
     }
 
     // create field mapping
-    InterpolatedBFieldMap::FieldMapper<2> mapper(transform, std::move(g));
-    InterpolatedBFieldMap::Config         config;
+    InterpolatedBFieldMap::FieldMapper<3, 2> mapper(
+        transformPos, transformBField, std::move(g));
+    InterpolatedBFieldMap::Config config;
     config.scale  = 1.;
     config.mapper = std::move(mapper);
 
