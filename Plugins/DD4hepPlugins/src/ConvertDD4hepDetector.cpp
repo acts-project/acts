@@ -22,14 +22,14 @@
 
 namespace Acts {
 std::unique_ptr<const TrackingGeometry>
-convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
-                      Logging::Level               loggingLevel,
-                      BinningType                  bTypePhi,
-                      BinningType                  bTypeR,
-                      BinningType                  bTypeZ,
-                      double                       layerEnvelopeR,
-                      double                       layerEnvelopeZ,
-                      bool                         buildDigitizationModules)
+convertDD4hepDetector(dd4hep::DetElement worldDetElement,
+                      Logging::Level     loggingLevel,
+                      BinningType        bTypePhi,
+                      BinningType        bTypeR,
+                      BinningType        bTypeZ,
+                      double             layerEnvelopeR,
+                      double             layerEnvelopeZ,
+                      bool               buildDigitizationModules)
 {
   // check if envelopes of the volume should be built automatically
   bool buildEnvelopes                                  = false;
@@ -60,8 +60,8 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
 
   // get the sub detectors of the world detector e.g. beampipe, pixel detector,
   // strip detector
-  std::vector<DD4hep::Geometry::DetElement>     subDetectors;
-  const DD4hep::Geometry::DetElement::Children& worldDetectorChildren
+  std::vector<dd4hep::DetElement>     subDetectors;
+  const dd4hep::DetElement::Children& worldDetectorChildren
       = worldDetElement.children();
   // go through the detector hierarchies
   for (auto& worldDetectorChild : worldDetectorChildren)
@@ -69,8 +69,9 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
   // sort by id to build detector from bottom to top
   sort(subDetectors.begin(),
        subDetectors.end(),
-       [](const DD4hep::Geometry::DetElement& a,
-          const DD4hep::Geometry::DetElement& b) { return (a.id() < b.id()); });
+       [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
+         return (a.id() < b.id());
+       });
 
   // the volume builders of the subdetectors
   std::list<std::shared_ptr<const ITrackingVolumeBuilder>> volumeBuilders;
@@ -91,15 +92,15 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                         "subvolumes...");
         // Now create the Layerbuilders and Volumebuilder
         // the layers
-        /// the DD4hep::DetElements of the layers of the negative volume
-        std::vector<DD4hep::Geometry::DetElement> negativeLayers;
-        /// the DD4hep::DetElements of the layers of the central volume
-        std::vector<DD4hep::Geometry::DetElement> centralLayers;
-        /// the DD4hep::DetElements of the layers of the positive volume
-        std::vector<DD4hep::Geometry::DetElement> positiveLayers;
+        /// the dd4hep::DetElements of the layers of the negative volume
+        std::vector<dd4hep::DetElement> negativeLayers;
+        /// the dd4hep::DetElements of the layers of the central volume
+        std::vector<dd4hep::DetElement> centralLayers;
+        /// the dd4hep::DetElements of the layers of the positive volume
+        std::vector<dd4hep::DetElement> positiveLayers;
 
         // go through sub volumes
-        const DD4hep::Geometry::DetElement::Children& subDetectorChildren
+        const dd4hep::DetElement::Children& subDetectorChildren
             = subDetector.children();
         // get rMin, rMax and zBoundaries of the sub Volumes
         double              endCapRmin = 0.;
@@ -116,8 +117,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
         // if volumes have a shape
         bool hasShape = false;
         for (auto& subDetectorChild : subDetectorChildren) {
-          DD4hep::Geometry::DetElement volumeDetElement
-              = subDetectorChild.second;
+          dd4hep::DetElement volumeDetElement = subDetectorChild.second;
           ACTS_VERBOSE(
               "[V] Volume : '"
               << subDetector.name()
@@ -247,7 +247,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                 Acts::getDefaultLogger("DD4hepLayerBuilder", loggingLevel));
 
         // get the possible material of the surounding volume
-        DD4hep::Geometry::Material ddmaterial = subDetector.volume().material();
+        dd4hep::Material           ddmaterial = subDetector.volume().material();
         auto                       volumeMaterial
             = std::make_shared<const Material>(ddmaterial.radLength(),
                                                ddmaterial.intLength(),
@@ -349,7 +349,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                    << " )");
 
       // get the possible material of the surounding volume
-      DD4hep::Geometry::Material ddmaterial = subDetector.volume().material();
+      dd4hep::Material           ddmaterial = subDetector.volume().material();
       auto                       volumeMaterial
           = std::make_shared<const Material>(ddmaterial.radLength(),
                                              ddmaterial.intLength(),
@@ -374,8 +374,8 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
       ACTS_VERBOSE("[D] Subdetector: "
                    << subDetector.name()
                    << " is a Barrel volume - building barrel.");
-      /// the DD4hep::DetElements of the layers of the central volume
-      std::vector<DD4hep::Geometry::DetElement> centralLayers;
+      /// the dd4hep::DetElements of the layers of the central volume
+      std::vector<dd4hep::DetElement> centralLayers;
       collectLayers(subDetector, centralLayers);
 
       // configure SurfaceArrayCreator
@@ -439,7 +439,7 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
                           "constructor!"));
 
       // get the possible material
-      DD4hep::Geometry::Material ddmaterial = subDetector.volume().material();
+      dd4hep::Material           ddmaterial = subDetector.volume().material();
       auto                       volumeMaterial
           = std::make_shared<const Material>(ddmaterial.radLength(),
                                              ddmaterial.intLength(),
@@ -485,14 +485,13 @@ convertDD4hepDetector(DD4hep::Geometry::DetElement worldDetElement,
 }
 
 void
-collectLayers(DD4hep::Geometry::DetElement&              detElement,
-              std::vector<DD4hep::Geometry::DetElement>& layers)
+collectLayers(dd4hep::DetElement&              detElement,
+              std::vector<dd4hep::DetElement>& layers)
 {
-  const DD4hep::Geometry::DetElement::Children& children
-      = detElement.children();
+  const dd4hep::DetElement::Children& children = detElement.children();
   if (!children.empty()) {
     for (auto& child : children) {
-      DD4hep::Geometry::DetElement childDetElement = child.second;
+      dd4hep::DetElement           childDetElement = child.second;
       Acts::IActsExtension*        detExtension    = nullptr;
       try {
         detExtension = childDetElement.extension<Acts::IActsExtension>();

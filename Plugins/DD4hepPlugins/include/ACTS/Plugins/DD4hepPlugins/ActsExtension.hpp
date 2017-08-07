@@ -33,10 +33,10 @@ namespace Acts {
 /// @param thickness The thickness of the detector module
 /// @param segmentation the DD4hep segmentation
 std::shared_ptr<const DigitizationModule>
-rectangleDigiModule(double                                halflengthX,
-                    double                                halflengthY,
-                    double                                thickness,
-                    const DD4hep::Geometry::Segmentation& segmentation);
+rectangleDigiModule(double                      halflengthX,
+                    double                      halflengthY,
+                    double                      thickness,
+                    const dd4hep::Segmentation& segmentation);
 
 /// Global method to build an Acts::DigitizationModule with trapezoidal
 /// segmentation.
@@ -51,11 +51,11 @@ rectangleDigiModule(double                                halflengthX,
 /// @param thickness The thickness of the detector module
 /// @param segmentation the DD4hep segmentation
 std::shared_ptr<const DigitizationModule>
-trapezoidalDigiModule(double                                minHalflengthX,
-                      double                                maxHalflengthX,
-                      double                                halflengthY,
-                      double                                thickness,
-                      const DD4hep::Geometry::Segmentation& segmentation);
+trapezoidalDigiModule(double                      minHalflengthX,
+                      double                      maxHalflengthX,
+                      double                      halflengthY,
+                      double                      thickness,
+                      const dd4hep::Segmentation& segmentation);
 
 /// @class ActsExtension
 ///
@@ -296,7 +296,7 @@ public:
   /// trapezoidalDigiModule().
   ActsExtension(std::shared_ptr<const DigitizationModule> digiModule);
   /// Copy constructor
-  ActsExtension(const ActsExtension&, const DD4hep::Geometry::DetElement&);
+  ActsExtension(const ActsExtension&, const dd4hep::DetElement&);
   /// Destructor
   ~ActsExtension() = default;
   /// Set configuration method

@@ -14,7 +14,7 @@
 #define ACTS_DD4HEPDETECTORELEMENT_DD4HEPDETELEMENT_H 1
 
 #include "ACTS/Plugins/TGeoPlugins/TGeoDetectorElement.hpp"
-#include "DD4hep/Detector.h"
+#include "DD4hep/DetElement.h"
 
 namespace Acts {
 
@@ -62,7 +62,7 @@ public:
   /// pointer to allow many DD4hepDetElements to hold the same
   /// Acts::DigitizationModule to reduce memory. In case it is not handed over
   /// and the
-  /// underlying DD4hep::Geometry::DetElement object is declared sensitive and
+  /// underlying dd4hep::Geometry::DetElement object is declared sensitive and
   /// has a readout segmentation, the Acts::DigitizaionModule will be created
   /// for this DD4hepDetElement.
   /// @param buildDigitizationModules Flag indicating if the
@@ -71,10 +71,10 @@ public:
   /// the DD4hep Segmentation.
   /// @note For more information please see Acts::convertDD4hepDetector() &
   /// Acts::ActsExtension.
-  DD4hepDetElement(const DD4hep::Geometry::DetElement detElement,
-                   const std::string&                 axes   = "XYZ",
-                   double                             scalor = 1.,
-                   bool buildDigitizationModules             = false,
+  DD4hepDetElement(const dd4hep::DetElement detElement,
+                   const std::string&       axes                     = "XYZ",
+                   double                   scalor                   = 1.,
+                   bool                     buildDigitizationModules = false,
                    std::shared_ptr<const DigitizationModule> digiModule
                    = nullptr);
   /// Desctructor
@@ -87,9 +87,9 @@ public:
 
 private:
   /// DD4hep detector element
-  DD4hep::Geometry::DetElement m_detElement;
+  dd4hep::DetElement m_detElement;
   /// DD4hep segmentation
-  DD4hep::Geometry::Segmentation m_segmentation;
+  dd4hep::Segmentation m_segmentation;
   /// The DigitizationModule
   std::shared_ptr<const DigitizationModule> m_digiModule;
 };

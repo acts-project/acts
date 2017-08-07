@@ -18,12 +18,10 @@
 #include <vector>
 #include "ACTS/Utilities/Definitions.hpp"
 
-namespace DD4hep {
-namespace Geometry {
-  class DetElement;
-  class Segmentation;
-  class Volume;
-}
+namespace dd4hep {
+class DetElement;
+class Segmentation;
+class Volume;
 }
 
 namespace Acts {
