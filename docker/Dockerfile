@@ -58,7 +58,7 @@ RUN export GOSU_VERSION="1.10" && \
     gosu nobody true
     
 # ROOT
-RUN export ROOT_VERSION="6.08.00" && \
+RUN export ROOT_VERSION="6.10.02" && \
     apt-get update && \
     apt-get -y upgrade && \
     apt-get -y --no-install-recommends install \
@@ -116,7 +116,7 @@ RUN export GEANT4_VERSION="4.10.02.p02" && \
     cd .. && rm -rf build/ && rm -rf geant${GEANT4_VERSION}/ && rm geant${GEANT4_VERSION}.tar.gz
 
 # DD4HEP
-RUN export DD4HEP_VERSION="00-20" && \
+RUN export DD4HEP_VERSION="01-01" && \
     wget http://github.com/AIDASoft/DD4hep/archive/v${DD4HEP_VERSION}.tar.gz && \
     tar xf v${DD4HEP_VERSION}.tar.gz && \
     mkdir -p build && cd build && \
