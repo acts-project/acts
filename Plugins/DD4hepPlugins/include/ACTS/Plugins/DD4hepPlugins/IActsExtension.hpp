@@ -23,7 +23,6 @@ class DetElement;
 class Segmentation;
 class Volume;
 }
-}
 
 namespace Acts {
 
