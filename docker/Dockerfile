@@ -59,7 +59,7 @@ RUN export GOSU_VERSION="1.10" && \
     
 # ROOT
 RUN export ROOT_VERSION="6.10.02" && \
-    apt-get update && \
+    apt-get -y update && \
     apt-get -y upgrade && \
     apt-get -y --no-install-recommends install \
       libfftw3-dev \
