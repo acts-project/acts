@@ -51,7 +51,7 @@ The following dependencies are optional and are only needed for some of the plug
 + [doxygen](http://doxygen.org) (>= 1.8.11) for the documentation
 + [graphviz](http://www.graphviz.org/) (>= 2.26.00) for the documentation
 + [ROOT](https://root.cern.ch/) (>= 6.08.00) for TGeo plugin & for DD4hep plugin
-+ [DD4Hep](https://github.com/AIDASoft/DD4hep) (>= 0.20) for DD4Hep plugin
++ [DD4Hep](https://github.com/AIDASoft/DD4hep) (>= 1.01) for DD4Hep plugin
 
 ### Using recent CMake releases from CVMFS
 
@@ -154,11 +154,11 @@ This command could, for instance, be used as custom build command in IDEs.
 On lxplus many of the dependencies are provided by the LCG releases. A possible setup is the following:
 
 > export actsbase=${PWD}<br />
-> export lcgversion=LCG_87<br />
+> export lcgversion=LCG_88<br />
 > export platform=x86_64-slc6-gcc62-opt<br />
 > export lcgdir=/cvmfs/sft.cern.ch/lcg/views/${lcgversion}/${platform}<br />
 > source /cvmfs/sft.cern.ch/lcg/views/${lcgversion}/${platform}/setup.sh<br />
-> cd /cvmfs/sft.cern.ch/lcg/releases/${lcgversion}/DD4hep/00-17/${platform} && source bin/thisdd4hep.sh && cd ${actsbase}<br />
+> cd /cvmfs/sft.cern.ch/lcg/releases/LCG_89/DD4hep/01-01/${platform} && source bin/thisdd4hep.sh && cd ${actsbase}<br />
 > <br />
 > mkdir build && cd build<br />
 > cmake .. -DCMAKE_INSTALL_PREFIX=<path you want> \<br />
