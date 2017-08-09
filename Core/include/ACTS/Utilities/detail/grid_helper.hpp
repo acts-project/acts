@@ -111,6 +111,7 @@ namespace detail {
     static size_t
     getNBins(const std::tuple<Axes...>& axes)
     {
+
       // by convention getNBins does not include under-/overflow bins
       size_t thisAxisNBins = std::get<N>(axes).getNBins() + 2;
       return thisAxisNBins * grid_helper_impl<N - 1>::getNBins(axes);
@@ -135,6 +136,24 @@ namespace detail {
       size_t thisAxisNBins = std::get<N>(axes).getNBins();
       localIndices.at(N)   = std::min(thisAxisNBins + 1, ++localIndices.at(N));
       grid_helper_impl<N - 1>::getUpperRightBinIndices(localIndices, axes);
+    }
+
+    template <class... Axes>
+    static void
+    getMin(const std::tuple<Axes...>& axes,
+           std::array<double, sizeof...(Axes)>& minArray)
+    {
+      minArray[N] = std::get<N>(axes).getMin();
+      grid_helper_impl<N - 1>::getMin(axes, minArray);
+    }
+
+    template <class... Axes>
+    static void
+    getMax(const std::tuple<Axes...>& axes,
+           std::array<double, sizeof...(Axes)>& maxArray)
+    {
+      maxArray[N] = std::get<N>(axes).getMax();
+      grid_helper_impl<N - 1>::getMax(axes, maxArray);
     }
 
     template <class Point, class... Axes>
@@ -262,6 +281,22 @@ namespace detail {
     {
       size_t thisAxisNBins = std::get<0u>(axes).getNBins();
       localIndices.at(0u)  = std::min(thisAxisNBins + 1, ++localIndices.at(0u));
+    }
+
+    template <class... Axes>
+    static void
+    getMin(const std::tuple<Axes...>& axes,
+           std::array<double, sizeof...(Axes)>& minArray)
+    {
+      minArray[0u] = std::get<0u>(axes).getMin();
+    }
+
+    template <class... Axes>
+    static void
+    getMax(const std::tuple<Axes...>& axes,
+           std::array<double, sizeof...(Axes)>& maxArray)
+    {
+      maxArray[0u] = std::get<0u>(axes).getMax();
     }
 
     template <class Point, class... Axes>
@@ -526,6 +561,34 @@ namespace detail {
       grid_helper_impl<MAX>::getUpperRightBinIndices(urIndices, axes);
 
       return urIndices;
+    }
+
+    /// @brief get the minimum value of all axes of one grid
+    ///
+    /// @tparam Axes parameter pack of axis types defining the grid
+    /// @param  [in] axes actual axis objects spanning the grid
+    /// @return array returning the minima of all given axes
+    template <class... Axes>
+    static std::array<double, sizeof...(Axes)>
+    getMin(const std::tuple<Axes...>& axes)
+    {
+      std::array<double, sizeof...(Axes)> minArray;
+      grid_helper_impl<sizeof...(Axes)-1>::getMin(axes, minArray);
+      return minArray;
+    }
+
+    /// @brief get the maximum value of all axes of one grid
+    ///
+    /// @tparam Axes parameter pack of axis types defining the grid
+    /// @param  [in] axes actual axis objects spanning the grid
+    /// @return array returning the maxima of all given axes
+    template <class... Axes>
+    static std::array<double, sizeof...(Axes)>
+    getMax(const std::tuple<Axes...>& axes)
+    {
+      std::array<double, sizeof...(Axes)> maxArray;
+      grid_helper_impl<sizeof...(Axes)-1>::getMax(axes, maxArray);
+      return maxArray;
     }
 
     /// @brief get global bin indices for bins in specified neighborhood

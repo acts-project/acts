@@ -264,6 +264,24 @@ namespace detail {
       return std::get<D>(m_axes).getNBins();
     }
 
+    /// @brief get the minimum value of all axes of one grid
+    ///
+    /// @return array returning the minima of all given axes
+    point_t
+    getMin() const
+    {
+      return grid_helper::getMin(m_axes);
+    }
+
+    /// @brief get the maximum value of all axes of one grid
+    ///
+    /// @return array returning the maxima of all given axes
+    point_t
+    getMax() const
+    {
+      return grid_helper::getMax(m_axes);
+    }
+
     /// @brief retrieve upper-right bin edge from set of local bin indices
     ///
     /// @param  [in] localBins local bin indices along each axis
