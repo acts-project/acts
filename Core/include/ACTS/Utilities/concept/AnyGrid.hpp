@@ -171,6 +171,12 @@ namespace concept {
   ///   // access global bin indices for neighboring bins
   ///   std::set<size_t> neighborHoodIndices(const std::array<size_t, DIM>&, size_t) const;
   ///
+  ///  // access the minimum value of all axes of the grid
+  ///   std::array<double, DIM> getMin() const;
+  ///
+  ///  // access the maximum value of all axes of the grid
+  ///   std::array<double, DIM> getMax() const;
+  ///
   /// };
   /// @endcode
   template <typename T, class Point, size_t DIM, typename U = bte::_self>
