@@ -278,6 +278,13 @@ public:
     return m_config.mapper.getField(position);
   }
 
+  /// @brief retrieve field cell for given position
+  ///
+  /// @param [in] position global 3D position
+  /// @return field cell containing the given global position
+  ///
+  /// @pre The given @c position must lie within the range of the underlying
+  ///      magnetic field map.
   concept::AnyFieldCell<>
   getFieldCell(const Vector3D& position) const
   {
@@ -317,6 +324,11 @@ public:
     return m_config.mapper;
   }
 
+  /// @brief check whether given 3D position is inside look-up domain
+  ///
+  /// @param [in] position global 3D position
+  /// @return @c true if position is inside the defined BField map,
+  ///         otherwise @c false
   bool
   isInside(const Vector3D& position) const
   {
