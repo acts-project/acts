@@ -308,6 +308,15 @@ public:
     return m_config.scale;
   }
 
+  /// @brief convenience method to access underlying field mapper
+  ///
+  /// @return the field mapper
+  concept::AnyFieldLookup<>
+  getMapper() const
+  {
+    return m_config.mapper;
+  }
+
   bool
   isInside(const Vector3D& position) const
   {
