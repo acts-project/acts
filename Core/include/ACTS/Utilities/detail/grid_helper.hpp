@@ -108,13 +108,13 @@ namespace detail {
     }
 
     template <class... Axes>
-    static size_t
-    getNBins(const std::tuple<Axes...>& axes)
+    static void
+    getNBins(const std::tuple<Axes...>& axes,
+             std::array<size_t, sizeof...(Axes)>& nBinsArray)
     {
-
       // by convention getNBins does not include under-/overflow bins
-      size_t thisAxisNBins = std::get<N>(axes).getNBins() + 2;
-      return thisAxisNBins * grid_helper_impl<N - 1>::getNBins(axes);
+      nBinsArray[N] = std::get<N>(axes).getNBins();
+      grid_helper_impl<N - 1>::getNBins(axes, nBinsArray);
     }
 
     template <class... Axes>
@@ -256,12 +256,12 @@ namespace detail {
     }
 
     template <class... Axes>
-    static size_t
-    getNBins(const std::tuple<Axes...>& axes)
+    static void
+    getNBins(const std::tuple<Axes...>& axes,
+             std::array<size_t, sizeof...(Axes)>& nBinsArray)
     {
       // by convention getNBins does not include under-/overflow bins
-      size_t thisAxisNBins = std::get<0u>(axes).getNBins() + 2;
-      return thisAxisNBins;
+      nBinsArray[0u] = std::get<0u>(axes).getNBins();
     }
 
     template <class... Axes>
@@ -499,20 +499,21 @@ namespace detail {
       return llIndices;
     }
 
-    /// @brief calculate total number of bins in a grid defined by a set of
-    /// axes
+    /// @brief calculate number of bins in a grid defined by a set of
+    /// axes for each axis
     ///
     /// @tparam Axes parameter pack of axis types defining the grid
     /// @param  [in] axes actual axis objects spanning the grid
-    /// @return total number of bins in the grid
+    /// @return array of number of bins for each axis of the grid
     ///
-    /// @note This includes under-/overflow bins along each axis.
+    /// @note This does not include under-/overflow bins along each axis.
     template <class... Axes>
-    static size_t
+    static std::array<size_t, sizeof...(Axes)>
     getNBins(const std::tuple<Axes...>& axes)
     {
-      constexpr size_t MAX = sizeof...(Axes)-1;
-      return grid_helper_impl<MAX>::getNBins(axes);
+      std::array<size_t, sizeof...(Axes)> nBinsArray;
+      grid_helper_impl<sizeof...(Axes)-1>::getNBins(axes, nBinsArray);
+      return nBinsArray;
     }
 
     /// @brief retrieve upper-right bin edge from set of local bin indices

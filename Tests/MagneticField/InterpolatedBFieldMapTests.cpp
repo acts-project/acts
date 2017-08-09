@@ -9,8 +9,8 @@
 /// @file InterpolatedBFieldMap_tests.cpp
 
 #define BOOST_TEST_MODULE Mapped magnetic field tests
-#include "ACTS/MagneticField/InterpolatedBFieldMap.hpp"
 #include <boost/test/included/unit_test.hpp>
+#include "ACTS/MagneticField/InterpolatedBFieldMap.hpp"
 #include "ACTS/Utilities/detail/Axis.hpp"
 #include "ACTS/Utilities/detail/Grid.hpp"
 
@@ -49,16 +49,15 @@ namespace Test {
     detail::EquidistantAxis r(0.0, 4.0, 4u);
     detail::EquidistantAxis z(-5, 5, 5u);
 
-    typedef detail::Grid<Vector3D,
-                         detail::EquidistantAxis,
-                         detail::EquidistantAxis>
-        Grid_t;
+    typedef detail::
+        Grid<Vector3D, detail::EquidistantAxis, detail::EquidistantAxis>
+            Grid_t;
 
     Grid_t g(std::make_tuple(std::move(r), std::move(z)));
 
     // set grid values
-    for (size_t i = 1; i <= g.getNBins<0u>() + 1; ++i) {
-      for (size_t j = 1; j <= g.getNBins<1u>() + 1; ++j) {
+    for (size_t i = 1; i <= g.getNBins().at(0) + 1; ++i) {
+      for (size_t j = 1; j <= g.getNBins().at(1) + 1; ++j) {
         Grid_t::index_t indices  = {i, j};
         const auto&     llCorner = g.getLowerLeftBinEdge(indices);
         g.at(indices)            = BField::value(llCorner);
