@@ -194,6 +194,24 @@ public:
           m_transformPos, lowerLeft, upperRight, std::move(neighbors));
     }
 
+    /// @brief get the minimum value of all axes of the field map
+    ///
+    /// @return array returning the minima of all field map axes
+    std::array<double, DIM_POS>
+    getMin() const
+    {
+      return m_grid.getMin();
+    }
+
+    /// @brief get the maximum value of all axes of the field map
+    ///
+    /// @return array returning the maxima of all field map axes
+    std::array<double, DIM_POS>
+    getMax() const
+    {
+      return m_grid.getMax();
+    }
+
     /// @brief check whether given 3D position is inside look-up domain
     ///
     /// @param [in] position global 3D position
