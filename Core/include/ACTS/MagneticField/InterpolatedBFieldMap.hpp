@@ -196,20 +196,22 @@ public:
 
     /// @brief get the minimum value of all axes of the field map
     ///
-    /// @return array returning the minima of all field map axes
-    std::array<double, DIM_POS>
+    /// @return vector returning the minima of all field map axes
+    std::vector<double>
     getMin() const
     {
-      return m_grid.getMin();
+      auto minArray = m_grid.getMin();
+      return std::vector<double>(minArray.begin(), minArray.end());
     }
 
     /// @brief get the maximum value of all axes of the field map
     ///
-    /// @return array returning the maxima of all field map axes
-    std::array<double, DIM_POS>
+    /// @return vector returning the maxima of all field map axes
+    std::vector<double>
     getMax() const
     {
-      return m_grid.getMax();
+      auto maxArray = m_grid.getMax();
+      return std::vector<double>(maxArray.begin(), maxArray.end());
     }
 
     /// @brief check whether given 3D position is inside look-up domain
