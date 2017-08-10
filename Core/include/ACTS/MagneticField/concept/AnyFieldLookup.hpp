@@ -20,6 +20,7 @@
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_getField), getField, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_getFieldCell), getFieldCell, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_isInside), isInside, 1);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_getNBins), getNBins, 0);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_getMin), getMin, 0);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_getMax), getMax, 0);
 // clang-format on
@@ -68,6 +69,7 @@ namespace concept {
         = mpl::vector<field_cell_concept,
                       has_getFieldCell<AnyFieldCell<>(const Vector3D&),
                                        const bte::_self>,
+                      has_getNBins<std::vector<size_t>(), const bte::_self>,
                       has_getMin<std::vector<double>(), const bte::_self>,
                       has_getMax<std::vector<double>(), const bte::_self>>;
   }  // namespace afl_detail
@@ -89,6 +91,9 @@ namespace concept {
   /// struct U {
   ///   // access the field cell at a given global position
   ///   Acts::concept::AnyFieldCell getFieldCell(const Acts::Vector3D&) const;
+  ///
+  ///  // access the number of bins of all axes of the grid
+  ///   std::array<size_t, DIM> getNBins() const;
   ///
   ///  // access the minimum value of all axes of the grid
   ///   std::array<double, DIM> getMin() const;
