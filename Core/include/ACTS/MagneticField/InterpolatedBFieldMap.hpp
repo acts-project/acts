@@ -194,6 +194,16 @@ public:
           m_transformPos, lowerLeft, upperRight, std::move(neighbors));
     }
 
+    /// @brief get the number of bins for all axes of the field map
+    ///
+    /// @return vector returning number of bins for all field map axes
+    std::vector<size_t>
+    getNBins() const
+    {
+      auto nBinsArray = m_grid.getNBins();
+      return std::vector<size_t>(nBinsArray.begin(), nBinsArray.end());
+    }
+
     /// @brief get the minimum value of all axes of the field map
     ///
     /// @return vector returning the minima of all field map axes
