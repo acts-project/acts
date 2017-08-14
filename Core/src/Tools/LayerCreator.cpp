@@ -72,8 +72,8 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
   // harmonize the phi boundaries (1st step)
   // @todo - allow for sectorally filled arrays
   double phiStep = (maxPhi - minPhi) / (binsPhi - 1);
-  minPhi = minPhi + 0.5*phiStep;
-  maxPhi = M_PI*2. + minPhi;
+  minPhi         = minPhi + 0.5 * phiStep;
+  maxPhi         = M_PI * 2. + minPhi;
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a cylindrical Layer:");
@@ -148,7 +148,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
           surfaces, bTypePhi, bTypeZ, transform);
-  
+
   checkBinning(sArray->objectGrid(), surfaces);
 
   // create the layer and push it back
@@ -211,7 +211,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
   std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
           surfaces, bTypePhi, bTypeZ, transform);
-  
+
   checkBinning(sArray->objectGrid(), surfaces);
 
   // create the layer and push it back
@@ -334,7 +334,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
           surfaces, bTypeR, bTypePhi, transform);
-  
+
   checkBinning(sArray->objectGrid(), surfaces);
 
   // create the shared disc bounds

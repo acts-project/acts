@@ -311,7 +311,7 @@ private:
                     double&                                  maxZ,
                     size_t                                   nBins) const;
 
-  /// Validates that all the sensitive surfaces are actually accessible through 
+  /// Validates that all the sensitive surfaces are actually accessible through
   /// the binning
   ///
   /// @param surfGrid is the object grid from the surface array
