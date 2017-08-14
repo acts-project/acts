@@ -12,6 +12,7 @@
 
 #include "ACTS/Tools/LayerCreator.hpp"
 #include <cmath>
+#include <set>
 #include "ACTS/Layers/CylinderLayer.hpp"
 #include "ACTS/Layers/DiscLayer.hpp"
 #include "ACTS/Surfaces/CylinderBounds.hpp"
@@ -69,10 +70,10 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
   double layerThickness = (maxR - minR) + 2 * envelopeR;
 
   // harmonize the phi boundaries (1st step)
-  // @todo - allow for sectorally filled arrrays
+  // @todo - allow for sectorally filled arrays
   double phiStep = (maxPhi - minPhi) / (binsPhi - 1);
-  minPhi -= 0.5 * phiStep;
-  maxPhi += 0.5 * phiStep;
+  minPhi = minPhi + 0.5*phiStep;
+  maxPhi = M_PI*2. + minPhi;
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a cylindrical Layer:");
@@ -98,6 +99,26 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
                                                           binsPhi,
                                                           binsZ,
                                                           transform);
+
+  // do consistency check: can we access all sensitive surfaces
+  // through the binning? If not, surfaces get lost and the binning does not work
+  auto surfGrid = sArray->objectGrid();
+  std::set<const Surface*> srfSet;
+  // iterate over object grid
+  for(unsigned int i=0;i<surfGrid.size();++i) {
+    auto jv = surfGrid.at(i);
+    for(unsigned int j=0;j<jv.size();++j) {
+      auto kv = jv.at(j);
+      for(unsigned int k=0;k<kv.size();++k) {
+        auto elem = kv.at(k);
+        srfSet.insert(elem);
+      } 
+    }
+  }
+
+  if(srfSet.size() != surfaces.size()) {
+    throw std::logic_error("Number of accessible surfaces through bins does not equal total number of surfaces.");
+  }
 
   // create the layer and push it back
   std::shared_ptr<const CylinderBounds> cBounds(
