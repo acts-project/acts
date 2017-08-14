@@ -311,6 +311,16 @@ private:
                     double&                                  maxZ,
                     size_t                                   nBins) const;
 
+  /// Validates that all the sensitive surfaces are actually accessible through 
+  /// the binning
+  ///
+  /// @param surfGrid is the object grid from the surface array
+  /// @para surfaces is the vector of sensitive surfaces
+  void
+  checkBinning(const std::vector<std::vector<std::vector<const Acts::Surface*>>>
+                                                        surfGrid,
+               const std::vector<const Acts::Surface*>& surfaces) const;
+
   /// configuration object
   Config m_cfg;
 
@@ -331,6 +341,6 @@ LayerCreator::getConfiguration() const
   return m_cfg;
 }
 
-}  // end of namespace
+}  // namespace Acts
 
 #endif  // ACTS_GEOMETRYTOOLS_LAYERCREATOR_H

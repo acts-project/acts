@@ -100,25 +100,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
                                                           binsZ,
                                                           transform);
 
-  // do consistency check: can we access all sensitive surfaces
-  // through the binning? If not, surfaces get lost and the binning does not work
-  auto surfGrid = sArray->objectGrid();
-  std::set<const Surface*> srfSet;
-  // iterate over object grid
-  for(unsigned int i=0;i<surfGrid.size();++i) {
-    auto jv = surfGrid.at(i);
-    for(unsigned int j=0;j<jv.size();++j) {
-      auto kv = jv.at(j);
-      for(unsigned int k=0;k<kv.size();++k) {
-        auto elem = kv.at(k);
-        srfSet.insert(elem);
-      } 
-    }
-  }
-
-  if(srfSet.size() != surfaces.size()) {
-    throw std::logic_error("Number of accessible surfaces through bins does not equal total number of surfaces.");
-  }
+  checkBinning(sArray->objectGrid(), surfaces);
 
   // create the layer and push it back
   std::shared_ptr<const CylinderBounds> cBounds(
@@ -166,6 +148,8 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
           surfaces, bTypePhi, bTypeZ, transform);
+  
+  checkBinning(sArray->objectGrid(), surfaces);
 
   // create the layer and push it back
   std::shared_ptr<const CylinderBounds> cBounds(
@@ -227,6 +211,8 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
   std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
           surfaces, bTypePhi, bTypeZ, transform);
+  
+  checkBinning(sArray->objectGrid(), surfaces);
 
   // create the layer and push it back
   std::shared_ptr<const CylinderBounds> cBounds(
@@ -296,6 +282,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
           surfaces, minR, maxR, minPhi, maxPhi, binsR, binsPhi, transform);
 
+  checkBinning(sArray->objectGrid(), surfaces);
+
   // create the share disc bounds
   auto dBounds = std::make_shared<const RadialBounds>(minR - envelopeMinR,
                                                       maxR + envelopeMaxR);
@@ -346,6 +334,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
           surfaces, bTypeR, bTypePhi, transform);
+  
+  checkBinning(sArray->objectGrid(), surfaces);
 
   // create the shared disc bounds
   auto dBounds = std::make_shared<const RadialBounds>(layerRmin, layerRmax);
@@ -409,6 +399,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
           surfaces, bTypeR, bTypePhi, transform);
+
+  checkBinning(sArray->objectGrid(), surfaces);
 
   // create the share disc bounds
   auto dBounds = std::make_shared<const RadialBounds>(minR - envelopeMinR,
@@ -527,5 +519,43 @@ Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const
   for (auto& surface : surfaces) {
     auto mutableSurface = const_cast<Surface*>(surface);
     mutableSurface->associateLayer(layer);
+  }
+}
+
+void
+Acts::LayerCreator::checkBinning(
+    const std::vector<std::vector<std::vector<const Acts::Surface*>>> surfGrid,
+    const std::vector<const Acts::Surface*>& surfaces) const
+{
+
+  // do consistency check: can we access all sensitive surfaces
+  // through the binning? If not, surfaces get lost and the binning does not
+  // work
+  std::set<const Surface*> sensitiveSurfaces(surfaces.begin(), surfaces.end());
+  std::set<const Surface*> accessibleSurfaces;
+  // iterate over object grid
+  for (unsigned int i = 0; i < surfGrid.size(); ++i) {
+    auto jv = surfGrid.at(i);
+    for (unsigned int j = 0; j < jv.size(); ++j) {
+      auto kv = jv.at(j);
+      for (unsigned int k = 0; k < kv.size(); ++k) {
+        auto elem = kv.at(k);
+        accessibleSurfaces.insert(elem);
+      }
+    }
+  }
+
+  std::vector<const Acts::Surface*> diff;
+  std::set_difference(sensitiveSurfaces.begin(),
+                      sensitiveSurfaces.end(),
+                      accessibleSurfaces.begin(),
+                      accessibleSurfaces.end(),
+                      std::inserter(diff, diff.begin()));
+
+  if (diff.size() != 0) {
+    throw std::logic_error(
+        "Not all sensitive surfaces are acessible through binning.");
+  } else {
+    ACTS_VERBOSE("All sensitive surfaces are accessible through binning.");
   }
 }
