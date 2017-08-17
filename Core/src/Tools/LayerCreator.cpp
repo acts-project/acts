@@ -524,7 +524,7 @@ Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const
 
 void
 Acts::LayerCreator::checkBinning(
-    const std::vector<std::vector<std::vector<const Acts::Surface*>>> surfGrid,
+    const std::vector<std::vector<std::vector<const Acts::Surface*>>>& surfGrid,
     const std::vector<const Acts::Surface*>& surfaces) const
 {
 

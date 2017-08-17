@@ -317,8 +317,8 @@ private:
   /// @param surfGrid is the object grid from the surface array
   /// @para surfaces is the vector of sensitive surfaces
   void
-  checkBinning(const std::vector<std::vector<std::vector<const Acts::Surface*>>>
-                                                        surfGrid,
+  checkBinning(const std::vector<
+                   std::vector<std::vector<const Acts::Surface*>>>& surfGrid,
                const std::vector<const Acts::Surface*>& surfaces) const;
 
   /// configuration object
