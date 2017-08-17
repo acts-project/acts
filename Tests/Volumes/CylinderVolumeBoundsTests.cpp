@@ -77,12 +77,13 @@ namespace Test {
     BOOST_TEST((centerPosZ < posDiscPosZ));
     BOOST_TEST((centerPosZ > negDiscPosZ));
     // check positions of disc boundarysurfaces
-    BOOST_TEST(negDiscPosZ + cylBounds.halflengthZ()
-                   == (transformPtr->inverse() * pos).z(),
-               tt::tolerance(10e-12));
-    BOOST_TEST(posDiscPosZ - cylBounds.halflengthZ()
-                   == (transformPtr->inverse() * pos).z(),
-               tt::tolerance(10e-12));
+    // checks for zero value. double precision value is not exact.
+    // boost's equality test does a relative tolerance check  which
+    // fails b/c relative diff is large: Perform only abs distance test here
+    BOOST_CHECK_SMALL(negDiscPosZ + cylBounds.halflengthZ() - centerPosZ,
+                      10e-12);
+    BOOST_CHECK_SMALL(posDiscPosZ - cylBounds.halflengthZ() - centerPosZ,
+                      10e-12);
     // orientation of disc surfaces
     // positive disc durface should point in positive direction in the frame of
     // the volume
