@@ -123,67 +123,12 @@ Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr existingVolume,
   //
   // (A) volume configuration 
   //  
-  if (m_cfg.subVolumeConfig) {
-    // done by configuration
-    if (!negativeLayers.empty()) {
-      if (m_cfg.subVolumeConfig.zBoundaries.size() < 4) {
-        ACTS_ERROR("Only " << m_cfg.subVolumeConfig.zBoundaries.size()
-                           << " zBoundaries are given for the subVolumeConfig, "
-                              "but negative Layers are present and 4 "
-                              "zBoundaries need to be given in this case - "
-                              "Please check the configuration!"
-                              "The negative Volume will not be built now.");
-        wConfig.nVolumeConfig.present = false;
-      } else {
-        // we have layers
-        wConfig.nVolumeConfig.present = true;
-        wConfig.nVolumeConfig.rMin    = m_cfg.subVolumeConfig.outerRmin;
-        wConfig.nVolumeConfig.rMax    = m_cfg.subVolumeConfig.rMax;
-        wConfig.nVolumeConfig.zMin    = m_cfg.subVolumeConfig.zBoundaries.at(0);
-        wConfig.nVolumeConfig.zMax    = m_cfg.subVolumeConfig.zBoundaries.at(1);
-        wConfig.nVolumeConfig.layers  = negativeLayers;
-      }
-    }
-    if (!centralLayers.empty()) {
-      // we have layers
-      wConfig.cVolumeConfig.present = true;
-      wConfig.cVolumeConfig.rMin    = m_cfg.subVolumeConfig.centralRmin;
-      wConfig.cVolumeConfig.rMax    = m_cfg.subVolumeConfig.rMax;
-      wConfig.cVolumeConfig.zMin    = (m_cfg.subVolumeConfig.zBoundaries.size() < 4)
-          ? m_cfg.subVolumeConfig.zBoundaries.at(0)
-          : m_cfg.subVolumeConfig.zBoundaries.at(1);
-      wConfig.cVolumeConfig.zMax = (m_cfg.subVolumeConfig.zBoundaries.size() < 4)
-          ? m_cfg.subVolumeConfig.zBoundaries.at(1)
-          : m_cfg.subVolumeConfig.zBoundaries.at(2);
-      wConfig.cVolumeConfig.layers = centralLayers;
-      wConfig.cVolumeConfig.layers = centralLayers;
-    }
-    if (!positiveLayers.empty()) {
-      if (m_cfg.subVolumeConfig.zBoundaries.size() < 4) {
-        ACTS_ERROR("Only " << m_cfg.subVolumeConfig.zBoundaries.size()
-                           << " zBoundaries are given for the subVolumeConfig, "
-                              "but positive Layers are present and 4 "
-                              "zBoundaries need to be given in this case - "
-                              "Please check the configuration!"
-                              "The positive Volume will not be built now.");
-        wConfig.pVolumeConfig.present = false;
-      } else {
-        // we have layers
-        wConfig.pVolumeConfig.present = true;
-        wConfig.pVolumeConfig.rMin    = m_cfg.subVolumeConfig.outerRmin;
-        wConfig.pVolumeConfig.rMax    = m_cfg.subVolumeConfig.rMax;
-        wConfig.pVolumeConfig.zMin    = m_cfg.subVolumeConfig.zBoundaries.at(2);
-        wConfig.pVolumeConfig.zMax    = m_cfg.subVolumeConfig.zBoundaries.at(3);
-        wConfig.pVolumeConfig.layers  = positiveLayers;
-      }
-    }
-  } else {
-    // Find out with Layer analysis
-    // analyze the layers
-    wConfig.nVolumeConfig = analyzeLayers(negativeLayers);
-    wConfig.cVolumeConfig = analyzeLayers(centralLayers);
-    wConfig.pVolumeConfig = analyzeLayers(positiveLayers);
-  }
+  
+  // Find out with Layer analysis
+  // analyze the layers
+  wConfig.nVolumeConfig = analyzeLayers(negativeLayers);
+  wConfig.cVolumeConfig = analyzeLayers(centralLayers);
+  wConfig.pVolumeConfig = analyzeLayers(positiveLayers);
   
   std::string layerConfiguration = "|";
   if (wConfig.nVolumeConfig) {
@@ -256,10 +201,11 @@ Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr existingVolume,
                                        wConfig.pVolumeConfig.zMax,
                                        m_cfg.volumeName + "::PositiveEndcap")
       : nullptr;
-
-
-  // prepare for the container volume if needed
-  if (wConfig.wCondition != Attaching){
+  
+  ACTS_DEBUG("Newly created volume(s) will be " << wConfig.wConditionScreen);
+  // standalone container, full wrapping, full insertion needs a bare triple
+  if (wConfig.wCondition == Wrapping || wConfig.wCondition == Inserting){
+    ACTS_VERBOSE("Combined new container  is being built.");
     // stuff into the container what you have
     std::vector< std::shared_ptr<const TrackingVolume> > volumesContainer;
     if (nEndcap) { volumesContainer.push_back(nEndcap); volume = nEndcap; }
@@ -272,8 +218,9 @@ Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr existingVolume,
     // the new volume is the only one present
     volume = nEndcap ? nEndcap : ( barrel ? barrel : pEndcap ); 
   }
-  
-  TrackingVolumePtr existingVolumeCp = existingVolume;    
+
+  // prepare the gap volumes first 
+  TrackingVolumePtr existingVolumeCp = existingVolume; 
   // check if further action is needed on existing volumes and gap volumes
   if (existingVolumeCp){
     // check if gaps are needed
@@ -306,24 +253,38 @@ Acts::CylinderVolumeBuilder::trackingVolume(TrackingVolumePtr existingVolume,
       existingContainer.push_back(sGap);
     } 
 
-    // and low lets create the new volume if that is needed
+    // and low lets create the new existing volume with gaps
     existingVolumeCp = existingContainer.size() > 1 ?
       tvHelper->createContainerTrackingVolume(existingContainer) :
       existingVolumeCp; 
     
+    // for central wrapping or inserting, we need to update once more
+    // clear the container
+    existingContainer.clear();
+    if (wConfig.wCondition == CentralWrapping){
+        existingContainer.push_back(existingVolumeCp);
+        existingContainer.push_back(barrel);
+    } else if (wConfig.wCondition == CentralInserting){
+        existingContainer.push_back(barrel);
+        existingContainer.push_back(existingVolumeCp);
+    }
+    // update
+    existingVolumeCp = existingContainer.size() ?  
+      tvHelper->createContainerTrackingVolume(existingContainer) :
+      existingVolumeCp; 
+      
     std::vector< std::shared_ptr<const TrackingVolume> > totalContainer;
     // check what to do with the existing 
-    if (wConfig.wCondition == Attaching){
-      ACTS_VERBOSE("Attaching new volumes to existing one(s).");
+    if (wConfig.wCondition == Attaching || 
+        wConfig.wCondition == CentralWrapping ||
+        wConfig.wCondition == CentralInserting){
       if (nEndcap) totalContainer.push_back(nEndcap);
       totalContainer.push_back(existingVolumeCp);
       if (pEndcap) totalContainer.push_back(pEndcap);
     } else if (wConfig.wCondition == Inserting && volume){
-      ACTS_VERBOSE("Inserting new volumes into existing one(s).");
       totalContainer.push_back(volume);
       totalContainer.push_back(existingVolumeCp);
     } else if (wConfig.wCondition == Wrapping && volume){
-      ACTS_VERBOSE("Wrapping new volumes into existing one(s).");
       totalContainer.push_back(existingVolumeCp);
       totalContainer.push_back(volume);
     } else {

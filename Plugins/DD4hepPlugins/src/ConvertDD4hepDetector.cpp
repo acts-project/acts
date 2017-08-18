@@ -18,6 +18,7 @@
 #include "ACTS/Tools/SurfaceArrayCreator.hpp"
 #include "ACTS/Tools/TrackingGeometryBuilder.hpp"
 #include "ACTS/Tools/TrackingVolumeArrayCreator.hpp"
+#include "ACTS/Tools/PassiveLayerBuilder.hpp"
 #include "TGeoManager.h"
 
 namespace Acts {
@@ -129,15 +130,15 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
           if (geoShape && !buildEnvelopes) {
             hasShape = true;
             // the dimensions should be taken from the volume dimensions
-            TGeoConeSeg* tube = dynamic_cast<TGeoConeSeg*>(geoShape);
+            TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
             if (!tube)
               throw std::logic_error(
                   std::string("Volume of DetElement: ")
                   + volumeDetElement.name()
-                  + std::string(" has wrong shape - needs to be TGeoConeSeg!"));
+                  + std::string(" has wrong shape - needs to be TGeoTubeSeg!"));
             // get the dimension of TGeo and convert lengths
-            rMin  = tube->GetRmin1() * units::_cm;
-            rMax  = std::max(rMax, tube->GetRmax1() * units::_cm);
+            rMin  = tube->GetRmin() * units::_cm;
+            rMax  = std::max(rMax, tube->GetRmax() * units::_cm);
             halfZ = tube->GetDz() * units::_cm;
             zPos  = volumeDetElement.placement()
                        .ptr()
@@ -259,8 +260,6 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
         Acts::CylinderVolumeBuilder::Config cvbConfig;
 
         // Create the sub volume setup if given
-        // sort the zBoundaries
-
         // check first if dimension should be accessed of if volume envelope
         // should be built automatically by adding a tolerance to the layer
         // setup
@@ -268,33 +267,13 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
           cvbConfig.layerEnvelopeR
               = std::make_pair(layerEnvelopeR, layerEnvelopeR);
           cvbConfig.layerEnvelopeZ = layerEnvelopeZ;
-        } else if (hasShape) {
-          std::sort(zBoundaries.begin(), zBoundaries.end());
-          std::vector<double> finalZBoundaries;
-          finalZBoundaries.push_back(zBoundaries.front());
-          finalZBoundaries.push_back(zBoundaries.back());
-          // check if endcaps are present
-          if (pEndCap && nEndCap) {
-            finalZBoundaries.push_back(
-                0.5 * (zBoundaries.at(1) + zBoundaries.at(2)));
-            finalZBoundaries.push_back(
-                0.5 * (zBoundaries.at(3) + zBoundaries.at(4)));
-          }
-          std::sort(finalZBoundaries.begin(), finalZBoundaries.end());
-          Acts::SubVolumeConfig subVolumeConfig;
-          subVolumeConfig.centralRmin = barrelRmin;
-          subVolumeConfig.outerRmin   = endCapRmin;
-          subVolumeConfig.rMax        = rMax;
-          subVolumeConfig.zBoundaries = finalZBoundaries;
-          cvbConfig.subVolumeConfig   = subVolumeConfig;
-        } else
+        } if (!hasShape) 
           throw std::logic_error(
               std::string("Subvolumes of DetElement: ") + subDetector.name()
               + std::string(
                     " have neither a shape nor tolerances added to it's "
                     "extension. Please check your detector "
                     "constructor!"));
-
         cvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
         cvbConfig.volumeSignature      = 0;
         cvbConfig.volumeName           = subDetector.name();
@@ -331,13 +310,13 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
       // get the dimensions of the volume
       TGeoShape* geoShape
           = subDetector.placement().ptr()->GetVolume()->GetShape();
-      TGeoConeSeg* tube = dynamic_cast<TGeoConeSeg*>(geoShape);
+      TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
       if (!tube)
         throw std::logic_error(
-            "Beampipe has wrong shape - needs to be TGeoConeSeg!");
+            "Beampipe has wrong shape - needs to be TGeoTubeSeg!");
       // get the dimension of TGeo and convert lengths
-      double rMin  = tube->GetRmin1() * units::_cm;
-      double rMax  = tube->GetRmax1() * units::_cm;
+      double rMin  = tube->GetRmin() * units::_cm;
+      double rMax  = tube->GetRmax() * units::_cm;
       double halfZ = tube->GetDz() * units::_cm;
       ACTS_VERBOSE("[V] Extracting cylindrical volume bounds ( rmin / rmax / "
                    "halfZ )=  ( "
@@ -349,25 +328,39 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
                    << " )");
 
       // get the possible material of the surounding volume
-      dd4hep::Material           ddmaterial = subDetector.volume().material();
-      auto                       volumeMaterial
-          = std::make_shared<const Material>(ddmaterial.radLength(),
-                                             ddmaterial.intLength(),
-                                             ddmaterial.A(),
-                                             ddmaterial.Z(),
-                                             ddmaterial.density());
+      dd4hep::Material   ddmaterial = subDetector.volume().material();
+      Acts::Material     bpMaterial(ddmaterial.radLength(),
+                                    ddmaterial.intLength(),
+                                    ddmaterial.A(),
+                                    ddmaterial.Z(),
+                                    ddmaterial.density());
+                                             
+      // configure the beam pipe layer builder
+      Acts::PassiveLayerBuilder::Config bplConfig;
+      bplConfig.layerIdentification     = subDetector.name();
+      bplConfig.centralLayerRadii       = std::vector<double>(1, 0.5*(rMax+rMin));
+      bplConfig.centralLayerHalflengthZ = std::vector<double>(1, halfZ);
+      bplConfig.centralLayerThickness   = std::vector<double>(1, rMax-rMin);
+      bplConfig.centralLayerMaterial    = { bpMaterial };
+      auto beamPipeBuilder              = std::make_shared<const Acts::PassiveLayerBuilder>(
+          bplConfig,
+          Acts::getDefaultLogger(subDetector.name(), loggingLevel));
+
       // the configuration object of the volume builder
       Acts::CylinderVolumeBuilder::Config cvbConfig;
       cvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
       cvbConfig.volumeSignature      = 0;
       cvbConfig.volumeName           = subDetector.name();
+      cvbConfig.layerBuilder         = beamPipeBuilder;
+      cvbConfig.layerEnvelopeR       = {1. * Acts::units::_mm, 1. * Acts::units::_mm};
       cvbConfig.buildToRadiusZero    = true;
-      cvbConfig.volumeMaterial       = volumeMaterial;
-      cvbConfig.volumeDimension      = {rMin, rMax, -halfZ, halfZ};
+      
+      // beam pipe volume builder 
       auto cylinderVolumeBuilder
           = std::make_shared<const Acts::CylinderVolumeBuilder>(
               cvbConfig,
-              Acts::getDefaultLogger("CylinderVolumeBuilder", loggingLevel));
+              Acts::getDefaultLogger(subDetector.name()+std::string("VolumdeBuilder"), 
+                                     loggingLevel));
       volumeBuilders.push_back(cylinderVolumeBuilder);
 
     } else if (subDetExtension && subDetExtension->isBarrel()) {
@@ -402,8 +395,6 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
 
       // the configuration object of the volume builder
       Acts::CylinderVolumeBuilder::Config cvbConfig;
-      // create the sub volume setup
-      Acts::SubVolumeConfig subVolumeConfig;
       // get the dimensions of the volume
       TGeoShape* geoShape
           = subDetector.placement().ptr()->GetVolume()->GetShape();
@@ -411,27 +402,7 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
         cvbConfig.layerEnvelopeR
             = std::make_pair(layerEnvelopeR, layerEnvelopeR);
         cvbConfig.layerEnvelopeZ = layerEnvelopeZ;
-      } else if (geoShape) {
-        TGeoConeSeg* tube = dynamic_cast<TGeoConeSeg*>(geoShape);
-        if (!tube)
-          throw std::logic_error(
-              std::string("Volume of DetElement: ") + subDetector.name()
-              + std::string(" has wrong shape - needs to be TGeoConeSeg!"));
-        // get the dimension of TGeo and convert lengths
-        std::vector<double> zBoundaries;
-        double              halfZ = tube->GetDz() * units::_cm;
-        double              zPos
-            = subDetector.placement().ptr()->GetMatrix()->GetTranslation()[2]
-            * units::_cm;
-        ;
-        zBoundaries.push_back(zPos - halfZ);
-        zBoundaries.push_back(zPos + halfZ);
-        std::sort(zBoundaries.begin(), zBoundaries.end());
-        subVolumeConfig.centralRmin = tube->GetRmin1() * units::_cm;
-        subVolumeConfig.rMax        = tube->GetRmax1() * units::_cm;
-        subVolumeConfig.zBoundaries = zBoundaries;
-        cvbConfig.subVolumeConfig   = subVolumeConfig;
-      } else
+      } else if (!geoShape) 
         throw std::logic_error(
             std::string("Volume of DetElement: ") + subDetector.name()
             + std::string(" has neither a shape nor tolerances added to it's "
@@ -451,7 +422,6 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
       cvbConfig.volumeName           = subDetector.name();
       cvbConfig.volumeMaterial       = volumeMaterial;
       cvbConfig.layerBuilder         = dd4hepLayerBuilder;
-      cvbConfig.subVolumeConfig      = subVolumeConfig;
       auto cylinderVolumeBuilder
           = std::make_shared<const Acts::CylinderVolumeBuilder>(
               cvbConfig,

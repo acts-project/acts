@@ -30,7 +30,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     size_t                             binsZ,
     std::shared_ptr<const Transform3D> transform) const
 {
-  ACTS_DEBUG("Creating a SurfaceArray on a cylinder");
+  ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with phi x z  = " << binsPhi << " x " << binsZ << " = " 
     << binsPhi * binsZ << " bins.");
@@ -104,7 +104,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   size_t bins1 = arrayUtility.bins(1);
   size_t bins0 = arrayUtility.bins(0);
   
-  ACTS_DEBUG("Creating a SurfaceArray on a cylinder");
+  ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with phi x z  = " << bins0 << " x " << bins1 << " = " 
     << bins0 * bins1 << " bins.");
@@ -164,7 +164,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     size_t                             binsPhi,
     std::shared_ptr<const Transform3D> transform) const
 {
-  ACTS_DEBUG("Creating a SurfaceArray on a disc.");
+  ACTS_VERBOSE("Creating a SurfaceArray on a disc");
 
   auto mutableArrayUtility
       = std::make_unique<Acts::BinUtility>(createBinUtility(
@@ -193,7 +193,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // average the z position
   z /= surfaces.size();
 
-  ACTS_DEBUG("- z-position of disk estimated as " << z);
+  ACTS_VERBOSE("- z-position of disk estimated as " << z);
 
   // get access to the binning data
   const std::vector<BinningData>& bdataSet = arrayUtility->binningData();
@@ -227,7 +227,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     BinningType                        bTypePhi,
     std::shared_ptr<const Transform3D> transform) const
 {
-  ACTS_DEBUG("Creating a SurfaceArray on a disc.");
+  ACTS_VERBOSE("Creating a SurfaceArray on a disc");
   Acts::BinUtility arrayUtility;
   if (bTypeR == equidistant)
     arrayUtility = createEquidistantBinUtility(surfaces, binR);
@@ -259,7 +259,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // average the z position
   z /= surfaces.size();
 
-  ACTS_DEBUG("- z-position of disk estimated as " << z);
+  ACTS_VERBOSE("- z-position of disk estimated as " << z);
 
   // get access to the binning data
   const std::vector<BinningData>& bdataSet = arrayUtility.binningData();
@@ -557,12 +557,12 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
     }
   }
   std::sort(bValues.begin(), bValues.end());
-  ACTS_DEBUG("Create BinUtility for BinnedSurfaceArray with arbitrary "
+  ACTS_VERBOSE("Create BinUtility for BinnedSurfaceArray with arbitrary "
              "BinningType");
-  ACTS_DEBUG("	BinningValue: " << bValue);
-  ACTS_DEBUG("	(binX = 0, binY = 1, binZ = 2, binR = 3, binPhi = 4, "
-             "binRPhi = 5, binH = 6, binEta = 7)");
-  ACTS_DEBUG("	Number of bins: " << bValues.size());
+  ACTS_VERBOSE("	BinningValue: " << bValue);
+  ACTS_VERBOSE("	(binX = 0, binY = 1, binZ = 2, binR = 3, binPhi = 4, "
+                  "binRPhi = 5, binH = 6, binEta = 7)");
+  ACTS_VERBOSE("	Number of bins: " << bValues.size());
   // create the BinUtility
   return (Acts::BinUtility(bValues, bOption, bValue));
 }
@@ -739,13 +739,13 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
   }
   // assign the bin size
   double binNumber = keys.size();
-  ACTS_DEBUG("Create BinUtility for BinnedSurfaceArray with equidistant1 "
+  ACTS_VERBOSE("Create BinUtility for BinnedSurfaceArray with equidistant1 "
              "BinningType");
-  ACTS_DEBUG("	BinningValue: " << bValue);
-  ACTS_DEBUG("	(binX = 0, binY = 1, binZ = 2, binR = 3, binPhi = 4, "
+  ACTS_VERBOSE("	BinningValue: " << bValue);
+  ACTS_VERBOSE("	(binX = 0, binY = 1, binZ = 2, binR = 3, binPhi = 4, "
              "binRPhi = 5, binH = 6, binEta = 7)");
-  ACTS_DEBUG("	Number of bins: " << binNumber);
-  ACTS_DEBUG("	(Min/Max) = (" << minimum << "/" << maximum << ")");
+  ACTS_VERBOSE("	Number of bins: " << binNumber);
+  ACTS_VERBOSE("	(Min/Max) = (" << minimum << "/" << maximum << ")");
   return (Acts::BinUtility(binNumber, minimum, maximum, bOption, bValue));
 }
 
@@ -767,13 +767,13 @@ Acts::SurfaceArrayCreator::createBinUtility(
   Acts::BinningOption               bOption    = open;
   // all the information already given
   if (bValue == Acts::binPhi) bOption = closed;
-  ACTS_DEBUG("Create BinUtility for BinnedSurfaceArray with equidistant "
+  ACTS_VERBOSE("Create BinUtility for BinnedSurfaceArray with equidistant "
              "BinningType");
-  ACTS_DEBUG("	BinningValue: " << bValue);
-  ACTS_DEBUG("	(binX = 0, binY = 1, binZ = 2, binR = 3, binPhi = 4, "
+  ACTS_VERBOSE("	BinningValue: " << bValue);
+  ACTS_VERBOSE("	(binX = 0, binY = 1, binZ = 2, binR = 3, binPhi = 4, "
              "binRPhi = 5, binH = 6, binEta = 7)");
-  ACTS_DEBUG("	Number of bins: " << bins);
-  ACTS_DEBUG("	(Min/Max) = (" << min << "/" << max << ")");
+  ACTS_VERBOSE("	Number of bins: " << bins);
+  ACTS_VERBOSE("	(Min/Max) = (" << min << "/" << max << ")");
   // create the BinUtility
   return (Acts::BinUtility(bins, min, max, bOption, bValue, transform));
 }
@@ -782,7 +782,7 @@ Acts::SurfaceArrayCreator::createBinUtility(
 void
 Acts::SurfaceArrayCreator::registerNeighbourHood(SurfaceArray& sArray) const
 {
-  ACTS_DEBUG("Register neighbours to the elements.");
+  ACTS_VERBOSE("Register neighbours to the elements.");
   // get the grid first
   auto objectGrid = sArray.objectGrid();
   // statistics
@@ -823,7 +823,7 @@ Acts::SurfaceArrayCreator::registerNeighbourHood(SurfaceArray& sArray) const
     }
     ++io2;
   }
-  ACTS_DEBUG("Neighbours set for this layer: " << neighboursSet);
+  ACTS_VERBOSE("Neighbours set for this layer: " << neighboursSet);
 }
 
 /// @todo implement nearest neighbour search - this is brute force attack
@@ -834,7 +834,7 @@ Acts::SurfaceArrayCreator::completeBinning(const BinUtility&    binUtility,
                                            const SurfaceVector& sVector,
                                            SurfaceGrid&         sGrid) const
 {
-  ACTS_DEBUG("Complete binning by filling closest neighbour surfaces into "
+  ACTS_VERBOSE("Complete binning by filling closest neighbour surfaces into "
              "empty bins.");
   // make a copy of the surface grid
   size_t nSurfaces   = sVector.size();
@@ -868,7 +868,7 @@ Acts::SurfaceArrayCreator::completeBinning(const BinUtility&    binUtility,
     }
   }
 
-  ACTS_DEBUG("       filled  : " << binCompleted);
+  ACTS_VERBOSE("       filled  : " << binCompleted);
 }
 
 std::vector<Acts::Vector3D>
