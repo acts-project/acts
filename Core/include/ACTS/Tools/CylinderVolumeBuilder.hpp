@@ -39,12 +39,12 @@ class VolumeBounds;
 
 /// @enum WrappingCondition
 enum WrappingCondition {
-  Undefined            = 0,  ///< inconsistency detected
-  Attaching            = 1,  ///< attach the volumes
-  Inserting            = 2,  ///< insert the new volume
-  Wrapping             = 3,  ///< wrap the new volume around
-  CentralInserting     = 4,  ///< insert the new one into the center
-  CentralWrapping      = 5   ///< wrap the new central volume around
+  Undefined        = 0,  ///< inconsistency detected
+  Attaching        = 1,  ///< attach the volumes
+  Inserting        = 2,  ///< insert the new volume
+  Wrapping         = 3,  ///< wrap the new volume around
+  CentralInserting = 4,  ///< insert the new one into the center
+  CentralWrapping  = 5   ///< wrap the new central volume around
 };
 
 /// VolumeConfig struct to understand the layer config
