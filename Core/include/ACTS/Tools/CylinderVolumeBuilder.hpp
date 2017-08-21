@@ -39,7 +39,6 @@ class VolumeBounds;
 
 /// @enum WrappingCondition
 enum WrappingCondition {
-  SynchronizationError = 0,  ///< inconsistency detected
   Undefined            = 0,  ///< inconsistency detected
   Attaching            = 1,  ///< attach the volumes
   Inserting            = 2,  ///< insert the new volume

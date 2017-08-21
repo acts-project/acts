@@ -165,13 +165,13 @@ Acts::CylinderVolumeBuilder::trackingVolume(
                                                      << wConfig.toString());
   // first let us arrange the new container volume
   wConfig.configureContainerVolume();
-  ACTS_VERBOSE("Configuration after contaienr synchronisation "
+  ACTS_VERBOSE("Configuration after container synchronisation "
                << '\n'
                << wConfig.toString());
   // now let's understand the wrapping if needed
   if (wConfig.existingVolumeConfig) {
     wConfig.wrapInsertAttach();
-    ACTS_VERBOSE("Configuration after wrapping, insertation, attachment "
+    ACTS_VERBOSE("Configuration after wrapping, insertion, attachment "
                  << '\n'
                  << wConfig.toString());
   }
