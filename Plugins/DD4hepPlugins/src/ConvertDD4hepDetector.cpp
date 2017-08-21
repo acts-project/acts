@@ -15,10 +15,10 @@
 #include "ACTS/Tools/CylinderVolumeHelper.hpp"
 #include "ACTS/Tools/LayerArrayCreator.hpp"
 #include "ACTS/Tools/LayerCreator.hpp"
+#include "ACTS/Tools/PassiveLayerBuilder.hpp"
 #include "ACTS/Tools/SurfaceArrayCreator.hpp"
 #include "ACTS/Tools/TrackingGeometryBuilder.hpp"
 #include "ACTS/Tools/TrackingVolumeArrayCreator.hpp"
-#include "ACTS/Tools/PassiveLayerBuilder.hpp"
 #include "TGeoManager.h"
 
 namespace Acts {
@@ -267,7 +267,8 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
           cvbConfig.layerEnvelopeR
               = std::make_pair(layerEnvelopeR, layerEnvelopeR);
           cvbConfig.layerEnvelopeZ = layerEnvelopeZ;
-        } if (!hasShape) 
+        }
+        if (!hasShape)
           throw std::logic_error(
               std::string("Subvolumes of DetElement: ") + subDetector.name()
               + std::string(
@@ -328,23 +329,22 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
                    << " )");
 
       // get the possible material of the surounding volume
-      dd4hep::Material   ddmaterial = subDetector.volume().material();
-      Acts::Material     bpMaterial(ddmaterial.radLength(),
-                                    ddmaterial.intLength(),
-                                    ddmaterial.A(),
-                                    ddmaterial.Z(),
-                                    ddmaterial.density());
-                                             
+      dd4hep::Material ddmaterial = subDetector.volume().material();
+      Acts::Material   bpMaterial(ddmaterial.radLength(),
+                                ddmaterial.intLength(),
+                                ddmaterial.A(),
+                                ddmaterial.Z(),
+                                ddmaterial.density());
+
       // configure the beam pipe layer builder
       Acts::PassiveLayerBuilder::Config bplConfig;
-      bplConfig.layerIdentification     = subDetector.name();
-      bplConfig.centralLayerRadii       = std::vector<double>(1, 0.5*(rMax+rMin));
+      bplConfig.layerIdentification = subDetector.name();
+      bplConfig.centralLayerRadii = std::vector<double>(1, 0.5 * (rMax + rMin));
       bplConfig.centralLayerHalflengthZ = std::vector<double>(1, halfZ);
-      bplConfig.centralLayerThickness   = std::vector<double>(1, rMax-rMin);
-      bplConfig.centralLayerMaterial    = { bpMaterial };
-      auto beamPipeBuilder              = std::make_shared<const Acts::PassiveLayerBuilder>(
-          bplConfig,
-          Acts::getDefaultLogger(subDetector.name(), loggingLevel));
+      bplConfig.centralLayerThickness   = std::vector<double>(1, rMax - rMin);
+      bplConfig.centralLayerMaterial    = {bpMaterial};
+      auto beamPipeBuilder = std::make_shared<const Acts::PassiveLayerBuilder>(
+          bplConfig, Acts::getDefaultLogger(subDetector.name(), loggingLevel));
 
       // the configuration object of the volume builder
       Acts::CylinderVolumeBuilder::Config cvbConfig;
@@ -352,14 +352,15 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
       cvbConfig.volumeSignature      = 0;
       cvbConfig.volumeName           = subDetector.name();
       cvbConfig.layerBuilder         = beamPipeBuilder;
-      cvbConfig.layerEnvelopeR       = {1. * Acts::units::_mm, 1. * Acts::units::_mm};
+      cvbConfig.layerEnvelopeR = {1. * Acts::units::_mm, 1. * Acts::units::_mm};
       cvbConfig.buildToRadiusZero    = true;
-      
-      // beam pipe volume builder 
+
+      // beam pipe volume builder
       auto cylinderVolumeBuilder
           = std::make_shared<const Acts::CylinderVolumeBuilder>(
               cvbConfig,
-              Acts::getDefaultLogger(subDetector.name()+std::string("VolumdeBuilder"), 
+              Acts::getDefaultLogger(subDetector.name()
+                                         + std::string("VolumdeBuilder"),
                                      loggingLevel));
       volumeBuilders.push_back(cylinderVolumeBuilder);
 
@@ -402,7 +403,7 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
         cvbConfig.layerEnvelopeR
             = std::make_pair(layerEnvelopeR, layerEnvelopeR);
         cvbConfig.layerEnvelopeZ = layerEnvelopeZ;
-      } else if (!geoShape) 
+      } else if (!geoShape)
         throw std::logic_error(
             std::string("Volume of DetElement: ") + subDetector.name()
             + std::string(" has neither a shape nor tolerances added to it's "

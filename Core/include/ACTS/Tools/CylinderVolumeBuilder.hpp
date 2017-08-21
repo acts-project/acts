@@ -13,8 +13,8 @@
 #ifndef ACTS_TOOLS_CYLINDERVOLUMEBUILDER_H
 #define ACTS_TOOLS_CYLINDERVOLUMEBUILDER_H
 
-#include <string>
 #include <limits>
+#include <string>
 #include "ACTS/Material/Material.hpp"
 #include "ACTS/Tools/ILayerBuilder.hpp"
 #include "ACTS/Tools/ITrackingVolumeBuilder.hpp"
@@ -39,13 +39,13 @@ class VolumeBounds;
 
 /// @enum WrappingCondition
 enum WrappingCondition {
-  SynchronizationError = 0, ///< inconsistency detected
-  Undefined            = 0, ///< inconsistency detected
-  Attaching            = 1, ///< attach the volumes
-  Inserting            = 2, ///< insert the new volume
-  Wrapping             = 3, ///< wrap the new volume around
-  CentralInserting     = 4, ///< insert the new one into the center
-  CentralWrapping      = 5  ///< wrap the new central volume around
+  SynchronizationError = 0,  ///< inconsistency detected
+  Undefined            = 0,  ///< inconsistency detected
+  Attaching            = 1,  ///< attach the volumes
+  Inserting            = 2,  ///< insert the new volume
+  Wrapping             = 3,  ///< wrap the new volume around
+  CentralInserting     = 4,  ///< insert the new one into the center
+  CentralWrapping      = 5   ///< wrap the new central volume around
 };
 
 /// VolumeConfig struct to understand the layer config
@@ -68,37 +68,37 @@ struct VolumeConfig
     , zMin(std::numeric_limits<double>::max())
     , zMax(std::numeric_limits<double>::lowest())
     , layers()
-  {}
+  {
+  }
 
   /// Adapt to the dimensions of another config in Z
-  /// it will take the maximum/minimum values and just overwrite them 
+  /// it will take the maximum/minimum values and just overwrite them
   ///
   /// @param [in] lConfig is the config to which it should be adapded
   void
   adaptZ(const VolumeConfig& lConfig)
   {
-    if (lConfig){
+    if (lConfig) {
       takeSmaller(zMin, lConfig.zMin);
       takeBigger(zMax, lConfig.zMax);
     }
   }
 
-
   /// Adapt to the dimensions of another config in R
-  /// it will take the maximum/minimum values and just overwrite them 
+  /// it will take the maximum/minimum values and just overwrite them
   ///
   /// @param [in] lConfig is the config to which it should be adapded
   void
   adaptR(const VolumeConfig& lConfig)
   {
-    if (lConfig){
+    if (lConfig) {
       takeSmaller(rMin, lConfig.rMin);
       takeBigger(rMax, lConfig.rMax);
     }
   }
 
   /// Adapt to the dimensions of another config
-  /// it will take the maximum/minimum values and just overwrite them 
+  /// it will take the maximum/minimum values and just overwrite them
   ///
   /// @param [in] lConfig is the config to which it should be adapded
   void
@@ -111,30 +111,34 @@ struct VolumeConfig
   /// Attach method - non-const
   /// it attaches the one volume config to the other one in Z
   /// this is the non-cost method, i.e. the mit point is is used
-  /// 
+  ///
   /// @param [in] lConfig is the config to which it should be attached
-  /// @note lConfig will be changed 
-  void midPointAttachZ(VolumeConfig& lConfig){
-    if (lConfig.zMin >= zMax){
-      double zMid = 0.5*(lConfig.zMin+zMax);
+  /// @note lConfig will be changed
+  void
+  midPointAttachZ(VolumeConfig& lConfig)
+  {
+    if (lConfig.zMin >= zMax) {
+      double zMid  = 0.5 * (lConfig.zMin + zMax);
       lConfig.zMin = zMid;
-      zMax = zMid;
+      zMax         = zMid;
     } else {
-      double zMid = 0.5*(zMin+lConfig.zMax);
+      double zMid  = 0.5 * (zMin + lConfig.zMax);
       lConfig.zMax = zMid;
-      zMin = zMid;  
+      zMin         = zMid;
     }
   }
 
   /// Attach method - const
   /// it attaches the one volume config to the other one
-  /// 
+  ///
   /// @param [in] lConfig is the confit to which it should be attached
-  void attachZ(const VolumeConfig& lConfig){
+  void
+  attachZ(const VolumeConfig& lConfig)
+  {
     if (lConfig.zMin >= zMax)
-       zMax = lConfig.zMin;
-     else 
-      zMin = lConfig.zMax;  
+      zMax = lConfig.zMin;
+    else
+      zMin = lConfig.zMax;
   }
 
   /// Overlap check radially
@@ -212,245 +216,249 @@ struct VolumeConfig
 };
 
 /// @brief The WrappingSetup that is happening here
-struct WrappingConfig 
+struct WrappingConfig
 {
-  public:
-    /// the new volumes 
-    VolumeConfig nVolumeConfig;
-    VolumeConfig cVolumeConfig;
-    VolumeConfig pVolumeConfig;
-      
-    /// the combined volume 
-    VolumeConfig containerVolumeConfig;
+public:
+  /// the new volumes
+  VolumeConfig nVolumeConfig;
+  VolumeConfig cVolumeConfig;
+  VolumeConfig pVolumeConfig;
 
-    /// existing volume config with potential gaps
-    VolumeConfig existingVolumeConfig;
-    VolumeConfig fGapVolumeConfig;
-    VolumeConfig sGapVolumeConfig;
-    
-    /// externally provided config, this can only change the 
-    /// the ncp volumes 
-    VolumeConfig externalVolumeConfig;
-    
-    // WrappingCondition
-    WrappingCondition wCondition = Undefined;
-    std::string wConditionScreen = "[left untouched]";
-    
-    /// constructor
-    WrappingConfig() {}
-    
-    /// configure the new Volume 
-    void configureContainerVolume() {
-      // set the container to be present
-      containerVolumeConfig.present = true;
-      std::string wConditionAddon = "";
-      // if we have more than one config present
-      if ((nVolumeConfig && cVolumeConfig) || 
-          (cVolumeConfig && pVolumeConfig) ||
-          (nVolumeConfig && pVolumeConfig)){
-          wConditionScreen = "grouped to ";
-      }
-      // adapt the new volume config to the existing configs
-      if (nVolumeConfig) {
-        containerVolumeConfig.adapt(nVolumeConfig);
-        wConditionScreen += "[n]";
-      }
-      if (cVolumeConfig){
-        containerVolumeConfig.adapt(cVolumeConfig);
-        wConditionScreen += "[c]";
-      } 
-      if (pVolumeConfig) {
-        containerVolumeConfig.adapt(pVolumeConfig);
-        wConditionScreen += "[p]";
-      }
-      // adapt the external one
-      if (externalVolumeConfig)
-         containerVolumeConfig.adapt(externalVolumeConfig);
-      // attach the volume configs 
-      if (nVolumeConfig && cVolumeConfig) 
-        nVolumeConfig.midPointAttachZ(cVolumeConfig);
-      if (cVolumeConfig && pVolumeConfig) 
-        cVolumeConfig.midPointAttachZ(pVolumeConfig);
-      // adapt r afterwards 
-      // - easy if no exisitng volume
-      // - possible if no central volume 
-      if (!existingVolumeConfig || !cVolumeConfig){
-        nVolumeConfig.adaptR(containerVolumeConfig);
-        cVolumeConfig.adaptR(containerVolumeConfig);
-        pVolumeConfig.adaptR(containerVolumeConfig);   
-      }  
+  /// the combined volume
+  VolumeConfig containerVolumeConfig;
+
+  /// existing volume config with potential gaps
+  VolumeConfig existingVolumeConfig;
+  VolumeConfig fGapVolumeConfig;
+  VolumeConfig sGapVolumeConfig;
+
+  /// externally provided config, this can only change the
+  /// the ncp volumes
+  VolumeConfig externalVolumeConfig;
+
+  // WrappingCondition
+  WrappingCondition wCondition       = Undefined;
+  std::string       wConditionScreen = "[left untouched]";
+
+  /// constructor
+  WrappingConfig() {}
+
+  /// configure the new Volume
+  void
+  configureContainerVolume()
+  {
+    // set the container to be present
+    containerVolumeConfig.present = true;
+    std::string wConditionAddon   = "";
+    // if we have more than one config present
+    if ((nVolumeConfig && cVolumeConfig) || (cVolumeConfig && pVolumeConfig)
+        || (nVolumeConfig && pVolumeConfig)) {
+      wConditionScreen = "grouped to ";
     }
-    
-    /// wrap, insert, attach
-    void wrapInsertAttach(){
-      // action is only needed if an existing volume
-      // is present
-      if (existingVolumeConfig){
-        // 0 - simple attachment case
-        if (!cVolumeConfig){
-          // check if it can be easily attached 
-          if (nVolumeConfig 
-              && nVolumeConfig.zMax < existingVolumeConfig.zMin){
-            nVolumeConfig.attachZ(existingVolumeConfig);         
-            // will attach the new volume(s)
-            wCondition = Attaching;
-            wConditionScreen = "[n attched]";
-          }  
-          if (pVolumeConfig 
-              && pVolumeConfig.zMin < existingVolumeConfig.zMax){
-            pVolumeConfig.attachZ(existingVolumeConfig);  
-            // will attach the new volume(s)
-            wCondition = Attaching;
-            wConditionScreen = "[p attched]";
-          }
-          // see if inner glue volumes are needed 
-          if (containerVolumeConfig.rMin > existingVolumeConfig.rMin){
-              nVolumeConfig.rMin = existingVolumeConfig.rMin;
-              pVolumeConfig.rMin = existingVolumeConfig.rMin;
-          } else {
-              fGapVolumeConfig.present = true;
-              // get the zMin/zMax boundaries
-              fGapVolumeConfig.adaptZ(existingVolumeConfig);
-              fGapVolumeConfig.rMin = containerVolumeConfig.rMin;
-              fGapVolumeConfig.rMax = existingVolumeConfig.rMin;
-          }
-          // see if outer glue volumes are needed
-          if (containerVolumeConfig.rMax < existingVolumeConfig.rMax){
-            nVolumeConfig.rMax = existingVolumeConfig.rMax;
-            pVolumeConfig.rMax = existingVolumeConfig.rMax;
-          } else {
-            sGapVolumeConfig.present = true;
-            // get the zMin/zMax boundaries
-            sGapVolumeConfig.adaptZ(existingVolumeConfig);
-            sGapVolumeConfig.rMin = existingVolumeConfig.rMax;
-            sGapVolumeConfig.rMax = containerVolumeConfig.rMax;
-          }
-        } else {  
-          // full wrapping or full insertion case 
-          if (existingVolumeConfig.rMax < containerVolumeConfig.rMin){
-            // full wrapping case 
-            // - set the rMin
-            nVolumeConfig.rMin = existingVolumeConfig.rMax;
-            cVolumeConfig.rMin = existingVolumeConfig.rMax;
-            pVolumeConfig.rMin = existingVolumeConfig.rMax;
-            // - set the rMax
-            nVolumeConfig.rMax = containerVolumeConfig.rMax;
-            cVolumeConfig.rMax = containerVolumeConfig.rMax;
-            pVolumeConfig.rMax = containerVolumeConfig.rMax;
-            // will wrap the new volume(s) around existing
-            wCondition = Wrapping;
-            wConditionScreen = "[fully wrapped]";
-          } else if (existingVolumeConfig.rMin > containerVolumeConfig.rMax){
-            // full insertion case
-            // set the rMax
-            nVolumeConfig.rMax = existingVolumeConfig.rMin;
-            cVolumeConfig.rMax = existingVolumeConfig.rMin;
-            pVolumeConfig.rMax = existingVolumeConfig.rMin;
-            // set the rMin
-            nVolumeConfig.rMin = containerVolumeConfig.rMin;
-            cVolumeConfig.rMin = containerVolumeConfig.rMin;
-            pVolumeConfig.rMin = containerVolumeConfig.rMin;
-            // will insert the new volume(s) into existing
-            wCondition = Inserting;
-            wConditionScreen = "[fully inserted]";
-          } else if (cVolumeConfig.wraps(existingVolumeConfig)) {
-            // central wrapping case
-            // set the rMax
-            nVolumeConfig.rMax = containerVolumeConfig.rMax;
-            cVolumeConfig.rMax = containerVolumeConfig.rMax;
-            pVolumeConfig.rMax = containerVolumeConfig.rMax;
-            // set the rMin
-            nVolumeConfig.rMin = existingVolumeConfig.rMin;
-            cVolumeConfig.rMin = existingVolumeConfig.rMax;
-            pVolumeConfig.rMin = existingVolumeConfig.rMin;
-            // set the Central Wrapping
-            wCondition = CentralWrapping;
-            wConditionScreen = "[centrally wrapped]";
-          } else if (existingVolumeConfig.wraps(cVolumeConfig)) {
-            // central insertion case
-            // set the rMax
-            nVolumeConfig.rMax = containerVolumeConfig.rMax;
-            cVolumeConfig.rMax = existingVolumeConfig.rMin;
-            pVolumeConfig.rMax = containerVolumeConfig.rMax;
-            // set the rMin
-            nVolumeConfig.rMin = containerVolumeConfig.rMin;
-            cVolumeConfig.rMin = containerVolumeConfig.rMin;
-            pVolumeConfig.rMin = containerVolumeConfig.rMin;
-            // set the Central Wrapping
-            wCondition = CentralWrapping;
-            wConditionScreen = "[centrally inserted]";
-          }
-            
-          // check if gaps are needed 
-          // 
-          // the gap reference is either the container for FULL wrapping, insertion
-          // or it is the centralVolume for central wrapping, insertion
-          VolumeConfig referenceVolume = 
-             ( wCondition == Wrapping || wCondition == Inserting ) ?
-               containerVolumeConfig : cVolumeConfig;
-          // - at the negative sector
-          if (existingVolumeConfig.zMin > referenceVolume.zMin){
-            fGapVolumeConfig.present = true;
-            fGapVolumeConfig.adaptR(existingVolumeConfig);
-            fGapVolumeConfig.zMin = referenceVolume.zMin;
-            fGapVolumeConfig.zMax = existingVolumeConfig.zMin;
-          } else {
-            // adapt lower z boundary
-            if (nVolumeConfig) nVolumeConfig.zMin = existingVolumeConfig.zMin;
-            else if (cVolumeConfig) cVolumeConfig.zMin = existingVolumeConfig.zMin;
-          }
-          // - at the positive sector
-          if (existingVolumeConfig.zMax < referenceVolume.zMax){
-            sGapVolumeConfig.present = true;
-            sGapVolumeConfig.adaptR(existingVolumeConfig);
-            sGapVolumeConfig.zMin = existingVolumeConfig.zMax;
-            sGapVolumeConfig.zMax = referenceVolume.zMax;
-          } else {
-            // adapt higher z boundary
-            if (pVolumeConfig) pVolumeConfig.zMax = existingVolumeConfig.zMax;
-            else if (cVolumeConfig) cVolumeConfig.zMax = existingVolumeConfig.zMax;
-          }
+    // adapt the new volume config to the existing configs
+    if (nVolumeConfig) {
+      containerVolumeConfig.adapt(nVolumeConfig);
+      wConditionScreen += "[n]";
+    }
+    if (cVolumeConfig) {
+      containerVolumeConfig.adapt(cVolumeConfig);
+      wConditionScreen += "[c]";
+    }
+    if (pVolumeConfig) {
+      containerVolumeConfig.adapt(pVolumeConfig);
+      wConditionScreen += "[p]";
+    }
+    // adapt the external one
+    if (externalVolumeConfig) containerVolumeConfig.adapt(externalVolumeConfig);
+    // attach the volume configs
+    if (nVolumeConfig && cVolumeConfig)
+      nVolumeConfig.midPointAttachZ(cVolumeConfig);
+    if (cVolumeConfig && pVolumeConfig)
+      cVolumeConfig.midPointAttachZ(pVolumeConfig);
+    // adapt r afterwards
+    // - easy if no exisitng volume
+    // - possible if no central volume
+    if (!existingVolumeConfig || !cVolumeConfig) {
+      nVolumeConfig.adaptR(containerVolumeConfig);
+      cVolumeConfig.adaptR(containerVolumeConfig);
+      pVolumeConfig.adaptR(containerVolumeConfig);
+    }
+  }
+
+  /// wrap, insert, attach
+  void
+  wrapInsertAttach()
+  {
+    // action is only needed if an existing volume
+    // is present
+    if (existingVolumeConfig) {
+      // 0 - simple attachment case
+      if (!cVolumeConfig) {
+        // check if it can be easily attached
+        if (nVolumeConfig && nVolumeConfig.zMax < existingVolumeConfig.zMin) {
+          nVolumeConfig.attachZ(existingVolumeConfig);
+          // will attach the new volume(s)
+          wCondition       = Attaching;
+          wConditionScreen = "[n attched]";
+        }
+        if (pVolumeConfig && pVolumeConfig.zMin < existingVolumeConfig.zMax) {
+          pVolumeConfig.attachZ(existingVolumeConfig);
+          // will attach the new volume(s)
+          wCondition       = Attaching;
+          wConditionScreen = "[p attched]";
+        }
+        // see if inner glue volumes are needed
+        if (containerVolumeConfig.rMin > existingVolumeConfig.rMin) {
+          nVolumeConfig.rMin = existingVolumeConfig.rMin;
+          pVolumeConfig.rMin = existingVolumeConfig.rMin;
+        } else {
+          fGapVolumeConfig.present = true;
+          // get the zMin/zMax boundaries
+          fGapVolumeConfig.adaptZ(existingVolumeConfig);
+          fGapVolumeConfig.rMin = containerVolumeConfig.rMin;
+          fGapVolumeConfig.rMax = existingVolumeConfig.rMin;
+        }
+        // see if outer glue volumes are needed
+        if (containerVolumeConfig.rMax < existingVolumeConfig.rMax) {
+          nVolumeConfig.rMax = existingVolumeConfig.rMax;
+          pVolumeConfig.rMax = existingVolumeConfig.rMax;
+        } else {
+          sGapVolumeConfig.present = true;
+          // get the zMin/zMax boundaries
+          sGapVolumeConfig.adaptZ(existingVolumeConfig);
+          sGapVolumeConfig.rMin = existingVolumeConfig.rMax;
+          sGapVolumeConfig.rMax = containerVolumeConfig.rMax;
+        }
+      } else {
+        // full wrapping or full insertion case
+        if (existingVolumeConfig.rMax < containerVolumeConfig.rMin) {
+          // full wrapping case
+          // - set the rMin
+          nVolumeConfig.rMin = existingVolumeConfig.rMax;
+          cVolumeConfig.rMin = existingVolumeConfig.rMax;
+          pVolumeConfig.rMin = existingVolumeConfig.rMax;
+          // - set the rMax
+          nVolumeConfig.rMax = containerVolumeConfig.rMax;
+          cVolumeConfig.rMax = containerVolumeConfig.rMax;
+          pVolumeConfig.rMax = containerVolumeConfig.rMax;
+          // will wrap the new volume(s) around existing
+          wCondition       = Wrapping;
+          wConditionScreen = "[fully wrapped]";
+        } else if (existingVolumeConfig.rMin > containerVolumeConfig.rMax) {
+          // full insertion case
+          // set the rMax
+          nVolumeConfig.rMax = existingVolumeConfig.rMin;
+          cVolumeConfig.rMax = existingVolumeConfig.rMin;
+          pVolumeConfig.rMax = existingVolumeConfig.rMin;
+          // set the rMin
+          nVolumeConfig.rMin = containerVolumeConfig.rMin;
+          cVolumeConfig.rMin = containerVolumeConfig.rMin;
+          pVolumeConfig.rMin = containerVolumeConfig.rMin;
+          // will insert the new volume(s) into existing
+          wCondition       = Inserting;
+          wConditionScreen = "[fully inserted]";
+        } else if (cVolumeConfig.wraps(existingVolumeConfig)) {
+          // central wrapping case
+          // set the rMax
+          nVolumeConfig.rMax = containerVolumeConfig.rMax;
+          cVolumeConfig.rMax = containerVolumeConfig.rMax;
+          pVolumeConfig.rMax = containerVolumeConfig.rMax;
+          // set the rMin
+          nVolumeConfig.rMin = existingVolumeConfig.rMin;
+          cVolumeConfig.rMin = existingVolumeConfig.rMax;
+          pVolumeConfig.rMin = existingVolumeConfig.rMin;
+          // set the Central Wrapping
+          wCondition       = CentralWrapping;
+          wConditionScreen = "[centrally wrapped]";
+        } else if (existingVolumeConfig.wraps(cVolumeConfig)) {
+          // central insertion case
+          // set the rMax
+          nVolumeConfig.rMax = containerVolumeConfig.rMax;
+          cVolumeConfig.rMax = existingVolumeConfig.rMin;
+          pVolumeConfig.rMax = containerVolumeConfig.rMax;
+          // set the rMin
+          nVolumeConfig.rMin = containerVolumeConfig.rMin;
+          cVolumeConfig.rMin = containerVolumeConfig.rMin;
+          pVolumeConfig.rMin = containerVolumeConfig.rMin;
+          // set the Central Wrapping
+          wCondition       = CentralWrapping;
+          wConditionScreen = "[centrally inserted]";
+        }
+
+        // check if gaps are needed
+        //
+        // the gap reference is either the container for FULL wrapping,
+        // insertion
+        // or it is the centralVolume for central wrapping, insertion
+        VolumeConfig referenceVolume
+            = (wCondition == Wrapping || wCondition == Inserting)
+            ? containerVolumeConfig
+            : cVolumeConfig;
+        // - at the negative sector
+        if (existingVolumeConfig.zMin > referenceVolume.zMin) {
+          fGapVolumeConfig.present = true;
+          fGapVolumeConfig.adaptR(existingVolumeConfig);
+          fGapVolumeConfig.zMin = referenceVolume.zMin;
+          fGapVolumeConfig.zMax = existingVolumeConfig.zMin;
+        } else {
+          // adapt lower z boundary
+          if (nVolumeConfig)
+            nVolumeConfig.zMin = existingVolumeConfig.zMin;
+          else if (cVolumeConfig)
+            cVolumeConfig.zMin = existingVolumeConfig.zMin;
+        }
+        // - at the positive sector
+        if (existingVolumeConfig.zMax < referenceVolume.zMax) {
+          sGapVolumeConfig.present = true;
+          sGapVolumeConfig.adaptR(existingVolumeConfig);
+          sGapVolumeConfig.zMin = existingVolumeConfig.zMax;
+          sGapVolumeConfig.zMax = referenceVolume.zMax;
+        } else {
+          // adapt higher z boundary
+          if (pVolumeConfig)
+            pVolumeConfig.zMax = existingVolumeConfig.zMax;
+          else if (cVolumeConfig)
+            cVolumeConfig.zMax = existingVolumeConfig.zMax;
         }
       }
-      return;
     }
-    
-    /// Method for output formatting
-    std::string
-    toString() const
-    {
-      // for screen output
-      std::stringstream sl;
-      if (containerVolumeConfig)
-         sl << "New contaienr built with       configuration: " 
-           << containerVolumeConfig.toString() << '\n';
-      // go throug the new new ones first
-      if (nVolumeConfig) 
-         sl << " - n: Negative Endcap, current configuration: "  
-            << nVolumeConfig.toString() << '\n';
-      if (cVolumeConfig) 
-         sl << " - c: Barrel, current          configuration: " 
-            << cVolumeConfig.toString() << '\n';
-      if (pVolumeConfig) 
-         sl << " - p: Negative Endcap, current configuration: " 
-            << pVolumeConfig.toString() << '\n';
-      if (existingVolumeConfig){
-         sl << "Existing volume with           configuration: " 
-           << existingVolumeConfig.toString() << '\n';
-        if (fGapVolumeConfig)
-          sl << " - g1: First gap volume,       configuration : " 
-            << fGapVolumeConfig.toString() << '\n';
-        if (sGapVolumeConfig)
-          sl << " - g2: Second gap volume,      configuration : " 
-            << sGapVolumeConfig.toString() << '\n';
-        if (wCondition != Undefined){
-          sl << "WrappingCondition = " << wCondition << '\n';
-          
-        }
-      }      
-      return sl.str();
+    return;
+  }
+
+  /// Method for output formatting
+  std::string
+  toString() const
+  {
+    // for screen output
+    std::stringstream sl;
+    if (containerVolumeConfig)
+      sl << "New contaienr built with       configuration: "
+         << containerVolumeConfig.toString() << '\n';
+    // go throug the new new ones first
+    if (nVolumeConfig)
+      sl << " - n: Negative Endcap, current configuration: "
+         << nVolumeConfig.toString() << '\n';
+    if (cVolumeConfig)
+      sl << " - c: Barrel, current          configuration: "
+         << cVolumeConfig.toString() << '\n';
+    if (pVolumeConfig)
+      sl << " - p: Negative Endcap, current configuration: "
+         << pVolumeConfig.toString() << '\n';
+    if (existingVolumeConfig) {
+      sl << "Existing volume with           configuration: "
+         << existingVolumeConfig.toString() << '\n';
+      if (fGapVolumeConfig)
+        sl << " - g1: First gap volume,       configuration : "
+           << fGapVolumeConfig.toString() << '\n';
+      if (sGapVolumeConfig)
+        sl << " - g2: Second gap volume,      configuration : "
+           << sGapVolumeConfig.toString() << '\n';
+      if (wCondition != Undefined) {
+        sl << "WrappingCondition = " << wCondition << '\n';
+      }
     }
-      
+    return sl.str();
+  }
 };
 
 /// @class CylinderVolumeBuilder
@@ -487,9 +495,9 @@ public:
     std::shared_ptr<const Material> volumeMaterial = nullptr;
     /// build the volume to the beam line
     bool buildToRadiusZero = false;
-    /// needed to build layers within the volume 
+    /// needed to build layers within the volume
     std::shared_ptr<const ILayerBuilder> layerBuilder = nullptr;
-    /// the envelope covering the potential layers rMin, rMax 
+    /// the envelope covering the potential layers rMin, rMax
     std::pair<double, double> layerEnvelopeR
         = {1. * Acts::units::_mm, 1. * Acts::units::_mm};
     /// the envelope covering the potential layers inner/outer
@@ -515,11 +523,11 @@ public:
   /// @param [in] existingVolume is an (optional) volume to be included
   /// @param [in] externalBounds are (optional) external confinement
   ///             constraints
-  /// @return a mutable pointer to a new TrackingVolume which includes the 
+  /// @return a mutable pointer to a new TrackingVolume which includes the
   ///         optionally provided exisitingVolume consistently for further
   ///         processing
   MutableTrackingVolumePtr
-  trackingVolume(TrackingVolumePtr existingVolume  = nullptr,
+  trackingVolume(TrackingVolumePtr existingVolume = nullptr,
                  VolumeBoundsPtr   externalBounds = nullptr) const override;
 
   /// Set configuration method
@@ -529,7 +537,7 @@ public:
   setConfiguration(const Config& cvbConfig);
 
   /// Get configuration method
-  /// 
+  ///
   /// @return a copy of the config object
   Config
   getConfiguration() const;

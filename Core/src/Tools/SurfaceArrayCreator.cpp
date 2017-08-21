@@ -103,7 +103,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   // get the number of bins
   size_t bins1 = arrayUtility.bins(1);
   size_t bins0 = arrayUtility.bins(0);
-  
+
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with phi x z  = " << bins0 << " x " << bins1 << " = " 
@@ -558,10 +558,10 @@ Acts::SurfaceArrayCreator::createArbitraryBinUtility(
   }
   std::sort(bValues.begin(), bValues.end());
   ACTS_VERBOSE("Create BinUtility for BinnedSurfaceArray with arbitrary "
-             "BinningType");
+               "BinningType");
   ACTS_VERBOSE("	BinningValue: " << bValue);
   ACTS_VERBOSE("	(binX = 0, binY = 1, binZ = 2, binR = 3, binPhi = 4, "
-                  "binRPhi = 5, binH = 6, binEta = 7)");
+               "binRPhi = 5, binH = 6, binEta = 7)");
   ACTS_VERBOSE("	Number of bins: " << bValues.size());
   // create the BinUtility
   return (Acts::BinUtility(bValues, bOption, bValue));
@@ -740,10 +740,10 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
   // assign the bin size
   double binNumber = keys.size();
   ACTS_VERBOSE("Create BinUtility for BinnedSurfaceArray with equidistant1 "
-             "BinningType");
+               "BinningType");
   ACTS_VERBOSE("	BinningValue: " << bValue);
   ACTS_VERBOSE("	(binX = 0, binY = 1, binZ = 2, binR = 3, binPhi = 4, "
-             "binRPhi = 5, binH = 6, binEta = 7)");
+               "binRPhi = 5, binH = 6, binEta = 7)");
   ACTS_VERBOSE("	Number of bins: " << binNumber);
   ACTS_VERBOSE("	(Min/Max) = (" << minimum << "/" << maximum << ")");
   return (Acts::BinUtility(binNumber, minimum, maximum, bOption, bValue));
@@ -768,10 +768,10 @@ Acts::SurfaceArrayCreator::createBinUtility(
   // all the information already given
   if (bValue == Acts::binPhi) bOption = closed;
   ACTS_VERBOSE("Create BinUtility for BinnedSurfaceArray with equidistant "
-             "BinningType");
+               "BinningType");
   ACTS_VERBOSE("	BinningValue: " << bValue);
   ACTS_VERBOSE("	(binX = 0, binY = 1, binZ = 2, binR = 3, binPhi = 4, "
-             "binRPhi = 5, binH = 6, binEta = 7)");
+               "binRPhi = 5, binH = 6, binEta = 7)");
   ACTS_VERBOSE("	Number of bins: " << bins);
   ACTS_VERBOSE("	(Min/Max) = (" << min << "/" << max << ")");
   // create the BinUtility
@@ -835,7 +835,7 @@ Acts::SurfaceArrayCreator::completeBinning(const BinUtility&    binUtility,
                                            SurfaceGrid&         sGrid) const
 {
   ACTS_VERBOSE("Complete binning by filling closest neighbour surfaces into "
-             "empty bins.");
+               "empty bins.");
   // make a copy of the surface grid
   size_t nSurfaces   = sVector.size();
   size_t nGridPoints = v3Matrix.size() * v3Matrix[0].size();

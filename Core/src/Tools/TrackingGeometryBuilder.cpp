@@ -57,7 +57,7 @@ Acts::TrackingGeometryBuilder::trackingGeometry() const
 
   // create the TrackingGeoemtry
   if (highestVolume)
-      trackingGeometry.reset(new TrackingGeometry(highestVolume));
+    trackingGeometry.reset(new TrackingGeometry(highestVolume));
   // return the geometry to the service
   return (trackingGeometry);
 }
