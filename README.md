@@ -154,16 +154,16 @@ This command could, for instance, be used as custom build command in IDEs.
 On lxplus many of the dependencies are provided by the LCG releases. A possible setup is the following:
 
 > export actsbase=${PWD}<br />
-> export lcgversion=LCG_88<br />
+> export lcgversion=LCG_90a<br />
 > export platform=x86_64-slc6-gcc62-opt<br />
 > export lcgdir=/cvmfs/sft.cern.ch/lcg/views/${lcgversion}/${platform}<br />
 > source /cvmfs/sft.cern.ch/lcg/views/${lcgversion}/${platform}/setup.sh<br />
-> cd /cvmfs/sft.cern.ch/lcg/releases/LCG_89/DD4hep/01-01/${platform} && source bin/thisdd4hep.sh && cd ${actsbase}<br />
+> cd /cvmfs/sft.cern.ch/lcg/releases/${lcgversion}/DD4hep/01-02/${platform} && source bin/thisdd4hep.sh && cd ${actsbase}<br />
 > <br />
 > mkdir build && cd build<br />
 > cmake .. -DCMAKE_INSTALL_PREFIX=<path you want> \<br />
 >	 -DEIGEN_INCLUDE_DIR=${lcgdir}/include/eigen3/ \<br />
->	-DBOOST_INCLUDEDIR=${lcgdir}/include/boost-1_62/ \<br />
+>	-DBOOST_INCLUDEDIR=${lcgdir}/include/boost/ \<br />
 >	-DBUILD_TGEO_PLUGIN=ON \<br />
 >	-DBUILD_DD4HEP_PLUGIN=ON<br />
 > make install
