@@ -540,7 +540,13 @@ Acts::LayerCreator::checkBinning(
       auto kv = jv.at(j);
       for (unsigned int k = 0; k < kv.size(); ++k) {
         auto elem = kv.at(k);
+        if(!elem) continue;
         accessibleSurfaces.insert(elem);
+        // check for bin members
+        const std::vector<const DetectorElementBase*> binmembers = elem->associatedDetectorElement()->binmembers();
+        for(const auto& bm : binmembers) {
+          accessibleSurfaces.insert(&bm->surface());
+        }
       }
     }
   }
