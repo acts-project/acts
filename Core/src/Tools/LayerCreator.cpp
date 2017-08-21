@@ -540,11 +540,12 @@ Acts::LayerCreator::checkBinning(
       auto kv = jv.at(j);
       for (unsigned int k = 0; k < kv.size(); ++k) {
         auto elem = kv.at(k);
-        if(!elem) continue;
+        if (!elem) continue;
         accessibleSurfaces.insert(elem);
         // check for bin members
-        const std::vector<const DetectorElementBase*> binmembers = elem->associatedDetectorElement()->binmembers();
-        for(const auto& bm : binmembers) {
+        const std::vector<const DetectorElementBase*> binmembers
+            = elem->associatedDetectorElement()->binmembers();
+        for (const auto& bm : binmembers) {
           accessibleSurfaces.insert(&bm->surface());
         }
       }
@@ -559,8 +560,10 @@ Acts::LayerCreator::checkBinning(
                       std::inserter(diff, diff.begin()));
 
   if (diff.size() != 0) {
-    throw std::logic_error(
-        "Not all sensitive surfaces are acessible through binning.");
+    ACTS_ERROR(
+        "Not all sensitive surfaces are acessible through binning. sensitive: "
+        << sensitiveSurfaces.size()
+        << " accessible: " << accessibleSurfaces.size());
   } else {
     ACTS_VERBOSE("All sensitive surfaces are accessible through binning.");
   }
