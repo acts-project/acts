@@ -83,15 +83,12 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
   // ----------------------------------------------------------------------------------------
   //
   // this is the global initialization, it only associated direct objects
-  // detailed navigation search needs to be done by the sub engines (since they
-  // know best)
+  // detailed navigation search needs to be done by the sub engines
+  // (since they know best)
   EX_MSG_DEBUG(++eCell.navigationStep,
                "navigation",
                "",
                "initialize the navigation stream.");
-  // initialization of the navigation requires that leadParameters to be the
-  // startParameters
-  eCell.leadParameters = &(eCell.startParameters);
   // now check the tracking geometry and retrieve it if not existing
   if (!m_cfg.trackingGeometry) {
     EX_MSG_WARNING(eCell.navigationStep,
@@ -113,20 +110,6 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
       ? eCell.startVolume
       : (eCell.startLayer ? eCell.startLayer->enclosingTrackingVolume()
                           : nullptr);
-  // check if you are at the volume boundary
-  //!< @todo do not use hard coded number of atVolumeBoundary, check with ST
-  if (!eCell.startVolume
-      || m_cfg.trackingGeometry->atVolumeBoundary(
-             eCell.startParameters.position(), eCell.startVolume, 0.001)) {
-    ExtrapolationCode ecVol
-        = m_cfg.navigationEngine->resolvePosition(eCell, dir, true);
-    if (!ecVol.isSuccessOrRecovered() && !ecVol.inProgress()) return ecVol;
-    // the volume is found and assigned as start volume
-    eCell.startVolume = eCell.leadVolume;
-  } else {
-    // we have a start volume, set is as lead volume also
-    eCell.leadVolume = eCell.startVolume;
-  }
   // bail out of the start volume can not be resolved
   if (!eCell.startVolume) return ExtrapolationCode::FailureNavigation;
   // screen output
@@ -172,7 +155,8 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
           "end volume needs to be determinded by surface intersection.");
       // use a propagation to find the endVolume and endLayer
       // @todo can be opmisied (straight line for high momentum - use directly )
-      ExtrapolationCell<T> navCell(*eCell.leadParameters, dir);
+      ExtrapolationCell<T> navCell(std::unique_ptr<const T>
+                                   (eCell.leadParameters->clone()), dir);
       // screen output
       ExtrapolationCode eCode
           = m_cfg.propagationEngine->propagate(navCell,

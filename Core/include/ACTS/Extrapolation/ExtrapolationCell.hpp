@@ -304,8 +304,8 @@ template <class T>
 class ExtrapolationCell
 {
 public:
-  /// The start parameters by reference - must exist
-  const T& startParameters;
+  /// The start parameters by reference 
+  std::unique_ptr<const T> startParameters;
   /// the start volume - needed for the volume-to-volume loop
   const TrackingVolume* startVolume;
   /// the start layer  - needed for layer-to-layer loop
@@ -389,28 +389,26 @@ public:
   float time;    ///< timing info
 
   /// Constructor of the Extrapolaton cell
-  /// start parameters are compulsory
   ///
   /// @param sParameters are the templated parameters
   /// @param pDir is the propagatio direction
   /// @param econfig is the extrapolation config as value
-  ExtrapolationCell(const T&      sParameters,
+  ExtrapolationCell(std::unique_ptr<const T> sParameters,
                     PropDirection pDir    = alongMomentum,
                     unsigned int  econfig = 1)
-    : startParameters(sParameters)
+    : startParameters(std::move(sParameters))
     , startVolume(nullptr)
     , startLayer(nullptr)
     , endParameters(nullptr)
     , endVolume(nullptr)
     , endLayer(nullptr)
     , endSurface(nullptr)
-    , leadParameters(&sParameters)
     , leadVolume(nullptr)
     , leadLayer(nullptr)
     , leadLayerSurface(nullptr)
     , lastBoundaryParameters(nullptr)
     , lastBoundarySurface(nullptr)
-    , lastLeadParameters(&sParameters)
+    , lastLeadParameters(startParameters.get())
     , propDirection(pDir)
     , radialDirection(1)
     , nextGeometrySignature(Acts::Unsigned)
@@ -430,8 +428,11 @@ public:
     , searchMode(0)
     , extrapolationConfiguration(econfig)
   {
-    // make a standard allocation of 50 possible steps
-    extrapolationSteps.reserve(50);
+    // set lead and last lead
+    leadParameters = startParameters.get();
+    lastLeadParameters = startParameters.get();
+    // make a standard allocation of 100 possible steps
+    extrapolationSteps.reserve(100);
   }
 
   ///  Add a configuration mode
