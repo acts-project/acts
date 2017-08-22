@@ -103,7 +103,7 @@ namespace Test {
     BOOST_TEST(outerConfig6.wraps(innerConfig));
   }
 
-  /// Unit test for testing the containes(), containesInR() and containesInZ()
+  /// Unit test for testing the contains(), containsInR() and containsInZ()
   /// function of the CylinderVolumeBuilder
   BOOST_DATA_TEST_CASE(CylinderVolumeBuilder_containes,
                        bdata::random(-11., -15.) ^ bdata::random(11., 15.)
@@ -177,25 +177,25 @@ namespace Test {
     innerConfig1.zMax = inner + 5.;
 
     // check if first volume wraps around the inner volume (wrapping in z)
-    BOOST_TEST(!outerConfig1.containes(innerConfig));
+    BOOST_TEST(!outerConfig1.contains(innerConfig));
     // check if second volume wraps around the inner volume (wrapping in z)
-    BOOST_TEST(!outerConfig2.containes(innerConfig));
+    BOOST_TEST(!outerConfig2.contains(innerConfig));
     // check if volume at inside the inner volume can not be wrapped
-    BOOST_TEST(!outerConfig4.containes(innerConfig));
+    BOOST_TEST(!outerConfig4.contains(innerConfig));
     // check if outside volume can not be wrapped around inside volume
-    BOOST_TEST(!innerConfig.containes(outerConfig3));
+    BOOST_TEST(!innerConfig.contains(outerConfig3));
     // check if outside volume containes inside volume
-    BOOST_TEST(outerConfig5.containes(innerConfig));
+    BOOST_TEST(outerConfig5.contains(innerConfig));
     // check if inside volume is not contained by outside volume
-    BOOST_TEST(!innerConfig.containes(outerConfig5));
+    BOOST_TEST(!innerConfig.contains(outerConfig5));
     // check if inside volume is not contained by outside volume
-    BOOST_TEST(!outerConfig6.containes(innerConfig));
+    BOOST_TEST(!outerConfig6.contains(innerConfig));
 
     // containment checks in r and z for volumes which either contain in r or z
-    BOOST_TEST(innerConfig.containesInZ(innerConfig1));
-    BOOST_TEST(!innerConfig.containesInR(innerConfig1));
-    BOOST_TEST(innerConfig1.containesInR(innerConfig));
-    BOOST_TEST(!innerConfig1.containesInZ(innerConfig));
+    BOOST_TEST(innerConfig.containsInZ(innerConfig1));
+    BOOST_TEST(!innerConfig.containsInR(innerConfig1));
+    BOOST_TEST(innerConfig1.containsInR(innerConfig));
+    BOOST_TEST(!innerConfig1.containsInZ(innerConfig));
   }
 
   /// Unit test for testing the coverlapsInR()

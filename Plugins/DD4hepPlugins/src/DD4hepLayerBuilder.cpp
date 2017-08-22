@@ -85,10 +85,10 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
                                           m_cfg.bTypePhi,
                                           transform));
       } else if (geoShape) {
-        TGeoConeSeg* tube = dynamic_cast<TGeoConeSeg*>(geoShape);
+        TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
         if (!tube)
           ACTS_ERROR(
-              "[L] Disc layer has wrong shape - needs to be TGeoConeSeg!");
+              "[L] Disc layer has wrong shape - needs to be TGeoTubeSeg!");
         // extract the boundaries
         double zMin
             = (transform->translation()
@@ -103,8 +103,8 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
             m_cfg.layerCreator->discLayer(layerSurfaces,
                                           zMin,
                                           zMax,
-                                          tube->GetRmin1() * units::_cm,
-                                          tube->GetRmax1() * units::_cm,
+                                          tube->GetRmin() * units::_cm,
+                                          tube->GetRmax() * units::_cm,
                                           m_cfg.bTypeR,
                                           m_cfg.bTypePhi,
                                           transform));
@@ -270,15 +270,15 @@ Acts::DD4hepLayerBuilder::centralLayers() const
                                               m_cfg.bTypeZ,
                                               transform));
       } else if (geoShape) {
-        TGeoConeSeg* tube = dynamic_cast<TGeoConeSeg*>(geoShape);
+        TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
         if (!tube)
           ACTS_ERROR(
-              "[L] Cylinder layer has wrong shape - needs to be TGeoConeSeg!");
+              "[L] Cylinder layer has wrong shape - needs to be TGeoTubeSeg!");
         // extract the boundaries
         layer = std::dynamic_pointer_cast<const CylinderLayer>(
             m_cfg.layerCreator->cylinderLayer(layerSurfaces,
-                                              tube->GetRmin1() * units::_cm,
-                                              tube->GetRmax1() * units::_cm,
+                                              tube->GetRmin() * units::_cm,
+                                              tube->GetRmax() * units::_cm,
                                               tube->GetDz() * units::_cm,
                                               m_cfg.bTypePhi,
                                               m_cfg.bTypeZ,
@@ -424,10 +424,10 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
                                           m_cfg.bTypePhi,
                                           transform));
       } else if (geoShape) {
-        TGeoConeSeg* tube = dynamic_cast<TGeoConeSeg*>(geoShape);
+        TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
         if (!tube)
           ACTS_ERROR(
-              "[L] Disc layer has wrong shape - needs to be TGeoConeSeg!");
+              "[L] Disc layer has wrong shape - needs to be TGeoTubeSeg!");
         // extract the boundaries
         double zMin
             = (transform->translation()
@@ -443,8 +443,8 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
             m_cfg.layerCreator->discLayer(layerSurfaces,
                                           zMin,
                                           zMax,
-                                          tube->GetRmin1() * units::_cm,
-                                          tube->GetRmax1() * units::_cm,
+                                          tube->GetRmin() * units::_cm,
+                                          tube->GetRmax() * units::_cm,
                                           m_cfg.bTypeR,
                                           m_cfg.bTypePhi,
                                           transform));

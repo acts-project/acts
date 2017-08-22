@@ -44,7 +44,7 @@ Acts::TrackingGeometryBuilder::setLogger(
 std::unique_ptr<const Acts::TrackingGeometry>
 Acts::TrackingGeometryBuilder::trackingGeometry() const
 {
-  // the return geometry -- and the highest volume
+  // the return geometry with the highest volume
   std::unique_ptr<const TrackingGeometry> trackingGeometry;
   MutableTrackingVolumePtr                highestVolume = nullptr;
   // loop over the builders and wrap one around the other
