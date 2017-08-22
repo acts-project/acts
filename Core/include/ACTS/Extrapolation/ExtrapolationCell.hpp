@@ -393,7 +393,7 @@ public:
   /// @param sParameters are the templated parameters
   /// @param pDir is the propagatio direction
   /// @param econfig is the extrapolation config as value
-  ExtrapolationCell(const T& sParameters,
+  ExtrapolationCell(const T&      sParameters,
                     PropDirection pDir    = alongMomentum,
                     unsigned int  econfig = 1)
     : startParameters(std::unique_ptr<const T>(sParameters.clone()))
@@ -403,7 +403,7 @@ public:
     , endVolume(nullptr)
     , endLayer(nullptr)
     , endSurface(nullptr)
-    , leadParameters(&sParameters)                  
+    , leadParameters(&sParameters)
     , leadVolume(nullptr)
     , leadLayer(nullptr)
     , leadLayerSurface(nullptr)
