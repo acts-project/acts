@@ -107,13 +107,12 @@ Acts::MaterialMapper::mapMaterialTrack(Cache&               mappingCache,
         cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));
     // create the beginning neutral parameters to extrapolate through the
     // geometry
-    std::unique_ptr<const NeutralParameters> startParameters 
-     (new NeutralCurvilinearParameters(nullptr, spos, direction));
+    NeutralCurvilinearParameters startParameters(nullptr, spos, direction);
     // create a neutral extrapolation cell and configure it:
     // - to collect surfaces with a SurfaceMaterialProxy
     // - to step at the detector boundary
     // - to run in a FATRAS type approach
-    ExtrapolationCell<NeutralParameters> ecc(std::move(startParameters));
+    ExtrapolationCell<NeutralParameters> ecc(startParameters);
     ecc.addConfigurationMode(ExtrapolationMode::StopAtBoundary);
     ecc.addConfigurationMode(ExtrapolationMode::FATRAS);
     ecc.addConfigurationMode(ExtrapolationMode::CollectSensitive);
