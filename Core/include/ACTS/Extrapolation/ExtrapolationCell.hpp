@@ -304,8 +304,8 @@ template <class T>
 class ExtrapolationCell
 {
 public:
-  /// The start parameters by reference - must exist
-  const T& startParameters;
+  /// The start parameters as unique parameters to have
+  std::unique_ptr<const T> startParameters;
   /// the start volume - needed for the volume-to-volume loop
   const TrackingVolume* startVolume;
   /// the start layer  - needed for layer-to-layer loop
@@ -389,7 +389,6 @@ public:
   float time;    ///< timing info
 
   /// Constructor of the Extrapolaton cell
-  /// start parameters are compulsory
   ///
   /// @param sParameters are the templated parameters
   /// @param pDir is the propagatio direction
@@ -397,7 +396,7 @@ public:
   ExtrapolationCell(const T&      sParameters,
                     PropDirection pDir    = alongMomentum,
                     unsigned int  econfig = 1)
-    : startParameters(sParameters)
+    : startParameters(std::unique_ptr<const T>(sParameters.clone()))
     , startVolume(nullptr)
     , startLayer(nullptr)
     , endParameters(nullptr)
@@ -430,8 +429,8 @@ public:
     , searchMode(0)
     , extrapolationConfiguration(econfig)
   {
-    // make a standard allocation of 50 possible steps
-    extrapolationSteps.reserve(50);
+    // make a standard allocation of 100 possible steps
+    extrapolationSteps.reserve(100);
   }
 
   ///  Add a configuration mode

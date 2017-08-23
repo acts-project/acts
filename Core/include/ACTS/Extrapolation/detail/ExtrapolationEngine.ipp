@@ -89,9 +89,6 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
                "navigation",
                "",
                "initialize the navigation stream.");
-  // initialization of the navigation requires that leadParameters to be the
-  // startParameters
-  eCell.leadParameters = &(eCell.startParameters);
   // now check the tracking geometry and retrieve it if not existing
   if (!m_cfg.trackingGeometry) {
     EX_MSG_WARNING(eCell.navigationStep,
@@ -114,12 +111,9 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
       : (eCell.startLayer ? eCell.startLayer->enclosingTrackingVolume()
                           : nullptr);
   // check if you are at the volume boundary
-  //!< @todo do not use hard coded number of atVolumeBoundary, check with ST
-  if (!eCell.startVolume
-      || m_cfg.trackingGeometry->atVolumeBoundary(
-             eCell.startParameters.position(), eCell.startVolume, 0.001)) {
-    ExtrapolationCode ecVol
-        = m_cfg.navigationEngine->resolvePosition(eCell, dir, true);
+  if (!eCell.startVolume) {
+    // get the start volume
+    auto ecVol = m_cfg.navigationEngine->resolvePosition(eCell, dir, true);
     if (!ecVol.isSuccessOrRecovered() && !ecVol.inProgress()) return ecVol;
     // the volume is found and assigned as start volume
     eCell.startVolume = eCell.leadVolume;
@@ -155,10 +149,7 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
     // stop at the end surface if configured
     eCell.endSurface = sf;
     // re-evaluate the radial direction if the end surface is given
-    // should not happen in FATRAS extrapolation mode, usually Fatras has no end
-    // surface though
-    if (!eCell.configurationMode(ExtrapolationMode::FATRAS))
-      eCell.setRadialDirection();
+    eCell.setRadialDirection();
     // trying association via the layer : associated layer of material layer
     eCell.endLayer = sf->associatedLayer();
     eCell.endVolume
