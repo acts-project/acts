@@ -349,7 +349,8 @@ namespace detail {
       // get values on grid points
       size_t i = 0;
       for (size_t index : closestIndices) {
-        neighbors.at(i++) = at(index);
+        // In case it is the last bin return the last value as neighbour
+        neighbors.at(i++) = (index < size()) ? at(index) : at(size() - 1);
       }
 
       return Acts::interpolate(point,

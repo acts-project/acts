@@ -977,6 +977,7 @@ namespace Test {
     BOOST_TEST(g.interpolate(Point({2., 3., 2.5})) == 60.);
     BOOST_TEST(g.interpolate(Point({1.5, 2., 2.5})) == 360. / 8);
     BOOST_TEST(g.interpolate(Point({1.3, 2.1, 1.6})) == 32.);
+    BOOST_TEST(g.interpolate(Point({2., 3., 4.})) == 80.);
   }
 
   BOOST_AUTO_TEST_CASE(neighborhood)
