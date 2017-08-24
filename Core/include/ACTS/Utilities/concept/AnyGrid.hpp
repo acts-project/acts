@@ -29,6 +29,9 @@ BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_interpolate), int
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_isInside), isInside, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_neighborHoodIndices), neighborHoodIndices, 2);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_size), size, 0);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getNBins), getNBins, 0);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getMin), getMin, 0);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getMax), getMax, 0);
 // clang-format on
 
 namespace Acts {
@@ -68,7 +71,10 @@ namespace concept {
                       has_getLocalBinIndices<std::array<size_t, DIM>(size_t), const bte::_self>,
                       has_getLowerLeftBinEdge<std::array<double, DIM>(const std::array<size_t, DIM>&), const bte::_self>,
                       has_getUpperRightBinEdge<std::array<double, DIM>(const std::array<size_t, DIM>&), const bte::_self>,
-                      has_neighborHoodIndices<std::set<size_t>(const std::array<size_t, DIM>&, size_t),const bte::_self>
+                      has_neighborHoodIndices<std::set<size_t>(const std::array<size_t, DIM>&, size_t),const bte::_self>,
+					  has_getNBins<std::array<size_t, DIM>(),const bte::_self>,
+					  has_getMin<std::array<double, DIM>(),const bte::_self>,
+					  has_getMax<std::array<double, DIM>(),const bte::_self>
                       >;
     // clang-format off
   }  // namespace any_grid_detail
@@ -166,6 +172,15 @@ namespace concept {
   ///
   ///   // access global bin indices for neighboring bins
   ///   std::set<size_t> neighborHoodIndices(const std::array<size_t, DIM>&, size_t) const;
+  ///
+  ///  // access the number of bins for all axes of the grid
+  ///   std::array<size_t, DIM> getNBins() const;
+  ///
+  ///  // access the minimum value of all axes of the grid
+  ///   std::array<double, DIM> getMin() const;
+  ///
+  ///  // access the maximum value of all axes of the grid
+  ///   std::array<double, DIM> getMax() const;
   ///
   /// };
   /// @endcode

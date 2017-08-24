@@ -194,6 +194,36 @@ public:
           m_transformPos, lowerLeft, upperRight, std::move(neighbors));
     }
 
+    /// @brief get the number of bins for all axes of the field map
+    ///
+    /// @return vector returning number of bins for all field map axes
+    std::vector<size_t>
+    getNBins() const
+    {
+      auto nBinsArray = m_grid.getNBins();
+      return std::vector<size_t>(nBinsArray.begin(), nBinsArray.end());
+    }
+
+    /// @brief get the minimum value of all axes of the field map
+    ///
+    /// @return vector returning the minima of all field map axes
+    std::vector<double>
+    getMin() const
+    {
+      auto minArray = m_grid.getMin();
+      return std::vector<double>(minArray.begin(), minArray.end());
+    }
+
+    /// @brief get the maximum value of all axes of the field map
+    ///
+    /// @return vector returning the maxima of all field map axes
+    std::vector<double>
+    getMax() const
+    {
+      auto maxArray = m_grid.getMax();
+      return std::vector<double>(maxArray.begin(), maxArray.end());
+    }
+
     /// @brief check whether given 3D position is inside look-up domain
     ///
     /// @param [in] position global 3D position
@@ -260,6 +290,13 @@ public:
     return m_config.mapper.getField(position);
   }
 
+  /// @brief retrieve field cell for given position
+  ///
+  /// @param [in] position global 3D position
+  /// @return field cell containing the given global position
+  ///
+  /// @pre The given @c position must lie within the range of the underlying
+  ///      magnetic field map.
   concept::AnyFieldCell<>
   getFieldCell(const Vector3D& position) const
   {
@@ -290,6 +327,20 @@ public:
     return m_config.scale;
   }
 
+  /// @brief convenience method to access underlying field mapper
+  ///
+  /// @return the field mapper
+  concept::AnyFieldLookup<>
+  getMapper() const
+  {
+    return m_config.mapper;
+  }
+
+  /// @brief check whether given 3D position is inside look-up domain
+  ///
+  /// @param [in] position global 3D position
+  /// @return @c true if position is inside the defined BField map,
+  ///         otherwise @c false
   bool
   isInside(const Vector3D& position) const
   {

@@ -57,8 +57,8 @@ namespace Test {
     Grid_t g(std::make_tuple(std::move(r), std::move(z)));
 
     // set grid values
-    for (size_t i = 1; i <= g.getNBins<0u>() + 1; ++i) {
-      for (size_t j = 1; j <= g.getNBins<1u>() + 1; ++j) {
+    for (size_t i = 1; i <= g.getNBins().at(0) + 1; ++i) {
+      for (size_t j = 1; j <= g.getNBins().at(1) + 1; ++j) {
         Grid_t::index_t indices  = {i, j};
         const auto&     llCorner = g.getLowerLeftBinEdge(indices);
         g.at(indices)            = BField::value(llCorner);

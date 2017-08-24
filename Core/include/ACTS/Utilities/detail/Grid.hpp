@@ -9,6 +9,7 @@
 #pragma once
 
 #include <array>
+#include <numeric>
 #include <set>
 #include <tuple>
 #include <type_traits>
@@ -250,18 +251,33 @@ namespace detail {
       return grid_helper::getLowerLeftBinEdge(localBins, m_axes);
     }
 
-    /// @brief get number of bins along a specific axis
+    /// @brief get number of bins along each specific axis
     ///
-    /// @tparam D index for axis of interest (must be less than the grid
-    ///           dimension)
-    /// @return number of bins along specified axis (excluding under- and
-    ///         overflow bins)
-    template <size_t D>
-    size_t
+    /// @return array giving the number of bins along all axes
+    ///
+    /// @note Not including under- and overflow bins
+    index_t
     getNBins() const
     {
-      static_assert(D < DIM, "requested number of bins for invalid axis index");
-      return std::get<D>(m_axes).getNBins();
+      return grid_helper::getNBins(m_axes);
+    }
+
+    /// @brief get the minimum value of all axes of one grid
+    ///
+    /// @return array returning the minima of all given axes
+    point_t
+    getMin() const
+    {
+      return grid_helper::getMin(m_axes);
+    }
+
+    /// @brief get the maximum value of all axes of one grid
+    ///
+    /// @return array returning the maxima of all given axes
+    point_t
+    getMax() const
+    {
+      return grid_helper::getMax(m_axes);
     }
 
     /// @brief retrieve upper-right bin edge from set of local bin indices
@@ -392,7 +408,13 @@ namespace detail {
     size_t
     size() const
     {
-      return grid_helper::getNBins(m_axes);
+      index_t nBinsArray = getNBins();
+      // add under-and overflow bins for each axis and mulitply all bins
+      return std::accumulate(
+          nBinsArray.begin(),
+          nBinsArray.end(),
+          1,
+          [](const size_t& a, const size_t& b) { return a * (b + 2); });
     }
 
   private:
