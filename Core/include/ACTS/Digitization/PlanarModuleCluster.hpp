@@ -48,7 +48,7 @@ public:
                                                     loc0,
                                                     loc1)
     , m_digitizationCells(dCells)
-    , m_truthVertices(barcodes)
+    , m_truthVertices(tVertices)
   {
   }
 
