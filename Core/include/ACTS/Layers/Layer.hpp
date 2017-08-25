@@ -519,8 +519,8 @@ Layer::resolve(bool collectSensitive,
 {
   if (collectPassive) return true;
   if (collectSensitive && m_surfaceArray) return true;
-  if (collectMaterial
-      && (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1))
+  if (collectMaterial && (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1
+                          || surfaceRepresentation().associatedMaterial()))
     return true;
   return false;
 }
