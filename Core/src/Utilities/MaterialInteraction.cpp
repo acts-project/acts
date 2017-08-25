@@ -27,8 +27,9 @@ Acts::ionizationEnergyLoss(InteractionType       interactionType,
   // and the electron mass in MeV
 
   double m     = particleMasses.mass[particle];
-  double E     = sqrt(p * p + m * m);
   double me    = particleMasses.mass[electron];
+  double mfrac = me / m;
+  double E     = sqrt(p * p + m * m);
   double beta  = p / E;
   double gamma = E / m;
 
@@ -83,7 +84,9 @@ Acts::ionizationEnergyLoss(InteractionType       interactionType,
                  - delta);
     // The landau width (FWHM) is 4.*kazL
     // The first factor is the conversion factor from FWHM to sigma
-    sigma = 1. / (2. * sqrt(2. * log2)) * 4. * kazL;
+    //  @todo Possibly add conversion factor 1. / (2. * sqrt(2. * log(2.))) from
+    //  FWHM to Gaussian sigma
+    sigma = 4. * kazL;
   }
 
   return dE;
