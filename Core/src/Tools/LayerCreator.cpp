@@ -90,15 +90,16 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
                                        << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray
-      = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(surfaces,
-                                                          layerR,
-                                                          minPhi,
-                                                          maxPhi,
-                                                          layerHalfZ,
-                                                          binsPhi,
-                                                          binsZ,
-                                                          transform);
+  std::unique_ptr<SurfaceArray> sArray = nullptr;
+  if (surfaces.size())
+    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(surfaces,
+                                                               layerR,
+                                                               minPhi,
+                                                               maxPhi,
+                                                               layerHalfZ,
+                                                               binsPhi,
+                                                               binsZ,
+                                                               transform);
 
   checkBinning(sArray->objectGrid(), surfaces);
 
@@ -145,9 +146,10 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray
-      = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-          surfaces, bTypePhi, bTypeZ, transform);
+  std::unique_ptr<SurfaceArray> sArray = nullptr;
+  if (surfaces.size())
+    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
+        surfaces, bTypePhi, bTypeZ, transform);
 
   checkBinning(sArray->objectGrid(), surfaces);
 
@@ -208,9 +210,10 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray
-      = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-          surfaces, bTypePhi, bTypeZ, transform);
+  std::unique_ptr<SurfaceArray> sArray = nullptr;
+  if (surfaces.size())
+    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
+        surfaces, bTypePhi, bTypeZ, transform);
 
   checkBinning(sArray->objectGrid(), surfaces);
 
@@ -278,9 +281,10 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                                        << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray
-      = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-          surfaces, minR, maxR, minPhi, maxPhi, binsR, binsPhi, transform);
+  std::unique_ptr<SurfaceArray> sArray = nullptr;
+  if (surfaces.size())
+    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
+        surfaces, minR, maxR, minPhi, maxPhi, binsR, binsPhi, transform);
 
   checkBinning(sArray->objectGrid(), surfaces);
 
@@ -331,9 +335,10 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray
-      = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-          surfaces, bTypeR, bTypePhi, transform);
+  std::unique_ptr<SurfaceArray> sArray = nullptr;
+  if (surfaces.size())
+    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
+        surfaces, bTypeR, bTypePhi, transform);
 
   checkBinning(sArray->objectGrid(), surfaces);
 
@@ -396,9 +401,10 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray
-      = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-          surfaces, bTypeR, bTypePhi, transform);
+  std::unique_ptr<SurfaceArray> sArray = nullptr;
+  if (surfaces.size())
+    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
+        surfaces, bTypeR, bTypePhi, transform);
 
   checkBinning(sArray->objectGrid(), surfaces);
 
@@ -514,11 +520,13 @@ Acts::LayerCreator::radialDistance(const Vector3D& pos1,
 void
 Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const
 {
-  auto surfaces = layer.surfaceArray()->arrayObjects();
+  if (layer.surfaceArray()) {
+    auto surfaces = layer.surfaceArray()->arrayObjects();
 
-  for (auto& surface : surfaces) {
-    auto mutableSurface = const_cast<Surface*>(surface);
-    mutableSurface->associateLayer(layer);
+    for (auto& surface : surfaces) {
+      auto mutableSurface = const_cast<Surface*>(surface);
+      mutableSurface->associateLayer(layer);
+    }
   }
 }
 
