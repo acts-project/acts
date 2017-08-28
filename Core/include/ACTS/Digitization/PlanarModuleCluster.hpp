@@ -58,11 +58,11 @@ public:
   const std::vector<DigitizationCell>&
   digitizationCells() const;
 
-  /// access to the contributing barcodes
+  /// access to the contributing truth vertices
   ///
-  /// @return the vector of the particle barcode
-  const std::vector<barcode_type>&
-  barcodes() const;
+  /// @return the vector of involved truth vertices 
+  const std::vector<ProcessVertex>&
+  truthVertices() const;
 
 private:
   std::vector<DigitizationCell> m_digitizationCells;  /// the digitization cells

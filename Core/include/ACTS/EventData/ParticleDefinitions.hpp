@@ -57,10 +57,10 @@ enum ParticleType {
 ///
 struct ParticleMasses
 {
-  /** the vector of masses - in MeV */
+  /// the vector of masses - in MeV 
   std::vector<double> mass;
 
-  /**Default constructor*/
+  /// Default constructor
   ParticleMasses()
   {
     mass.reserve(PARTICLETYPES);
@@ -213,6 +213,11 @@ public:
   /// destructor
   ~ProcessVertex() {}
 
+  /// shift the vertex
+  // @param [in] shit is an applied shift
+  void
+  shift(const Vector3D& shift);
+
   /// Add a particle to ingoing 
   void
   addIngoing(const ParticleProperties& pProperties);
@@ -220,6 +225,10 @@ public:
   /// Add a particle to outgoing
   void
   addOutgoing(const ParticleProperties& pProperties);
+
+  /// Return the actual position
+  const Vector3D&
+  position() const;
 
   /// Return the time of production
   double
@@ -256,6 +265,17 @@ private:
   std::vector<ParticleProperties> m_outgoing;
 };
 
+inline const Vector3D&
+ProcessVertex::position() const
+{ 
+  return m_vertex; 
+}
+
+inline void
+ProcessVertex::shift(const Vector3D& shift)
+{
+  m_vertex += shift;
+}
 
 inline void
 ProcessVertex::addIngoing(const ParticleProperties& pProperties)
