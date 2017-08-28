@@ -26,9 +26,10 @@ then
 fi
 
 # license template
-MPLv2="// This file is part of the ACTS project.
+MPLv2_BEGIN="// This file is part of the ACTS project.
 //
-// Copyright (C) 2016 ACTS project team
+// Copyright (C) 20"
+MPLv2_END=" ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -40,12 +41,13 @@ COUNT=0
 SRC_FILES=`find $ACTS_DIR -regextype egrep -regex ".*\.(hpp|cpp|ipp)"`
 for f in $SRC_FILES
 do
-    HEAD=`head -n 7 $f`
-    if [ "$HEAD" != "$MPLv2" ]
+    HEAD=`head -c 64 $f`
+    REST=`cat $f | dd skip=66 count=223 bs=1`
+    if [ "$HEAD" != "$MPLv2_BEGIN" ] || [ "$REST" != "$MPLv2_END" ]
     then
-	COUNT=$(($COUNT + 1))
-	f=${f##$ACTS_DIR/}
-	COMMENT="$COMMENT$f<br />";
+  COUNT=$(($COUNT + 1))
+  f=${f##$ACTS_DIR/}
+  COMMENT="$COMMENT$f<br />";
     fi
 done
 
@@ -55,3 +57,4 @@ then
     COMMENT="Found $COUNT files with missing MPLv2 license statement:<br />$COMMENT"
     ./comment_merge_request add "$COMMENT" --project $gitlabTargetNamespace/$gitlabTargetRepoName --merge-request-id $gitlabMergeRequestId --token $gitlabToken
 fi
+
