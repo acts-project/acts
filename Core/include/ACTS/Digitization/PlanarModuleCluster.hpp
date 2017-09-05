@@ -60,7 +60,7 @@ public:
 
   /// access to the contributing truth vertices
   ///
-  /// @return the vector of involved truth vertices 
+  /// @return the vector of involved truth vertices
   const std::vector<ProcessVertex>&
   truthVertices() const;
 

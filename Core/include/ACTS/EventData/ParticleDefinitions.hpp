@@ -57,7 +57,7 @@ enum ParticleType {
 ///
 struct ParticleMasses
 {
-  /// the vector of masses - in MeV 
+  /// the vector of masses - in MeV
   std::vector<double> mass;
 
   /// Default constructor
@@ -87,12 +87,12 @@ struct ParticleMasses
 class ParticleProperties
 {
 public:
-  /// constructor with arguments, describes the 
+  /// constructor with arguments, describes the
   /// particle properties at any given vertex
-  /// - needs to be attached to a vertex 
+  /// - needs to be attached to a vertex
   /// @param [in] momentum particle momentum at the vertex
   /// @param [in] mass the particle mass
-  /// @param [in] charge is the particle charge 
+  /// @param [in] charge is the particle charge
   /// @param [in] barcode is the unique particle identification
   ParticleProperties(const Vector3D& momentum,
                      double          mass    = 0.,
@@ -104,23 +104,25 @@ public:
     , m_charge(charge)
     , m_pdgID(pID)
     , m_barcode(barcode)
-  {}
+  {
+  }
 
   /// copy constructor
-  /// @param [in] pProperties are the source properties 
+  /// @param [in] pProperties are the source properties
   ParticleProperties(const ParticleProperties& pProperties)
     : m_momentum(pProperties.m_momentum)
     , m_mass(pProperties.m_mass)
     , m_charge(pProperties.m_charge)
     , m_pdgID(pProperties.m_pdgID)
     , m_barcode(pProperties.m_barcode)
-  {}
+  {
+  }
 
   /// destructor
   ~ParticleProperties() {}
 
   /// Assignment operator
-  /// @param [in] pProperties are the source properties 
+  /// @param [in] pProperties are the source properties
   ParticleProperties&
   operator=(const ParticleProperties& pProperties)
   {
@@ -135,7 +137,7 @@ public:
   }
 
   /// assign the barcode
-  /// @param barcode is the unique barcode 
+  /// @param barcode is the unique barcode
   void
   assign(barcode_type barcode)
   {
@@ -208,7 +210,8 @@ public:
     , m_type(pType)
     , m_ingoing(pIngoing)
     , m_outgoing(pOutgoing)
-  {}
+  {
+  }
 
   /// destructor
   ~ProcessVertex() {}
@@ -218,10 +221,10 @@ public:
   void
   shift(const Vector3D& shift);
 
-  /// Add a particle to ingoing 
+  /// Add a particle to ingoing
   void
   addIngoing(const ParticleProperties& pProperties);
-  
+
   /// Add a particle to outgoing
   void
   addOutgoing(const ParticleProperties& pProperties);
@@ -243,7 +246,7 @@ public:
   {
     return m_type;
   }
-  
+
   /// Return the outgoing particles
   const std::vector<ParticleProperties>&
   ingoingParticles() const
@@ -267,8 +270,8 @@ private:
 
 inline const Vector3D&
 ProcessVertex::position() const
-{ 
-  return m_vertex; 
+{
+  return m_vertex;
 }
 
 inline void
@@ -283,13 +286,11 @@ ProcessVertex::addIngoing(const ParticleProperties& pProperties)
   m_ingoing.push_back(pProperties);
 }
 
-
 inline void
 ProcessVertex::addOutgoing(const ParticleProperties& pProperties)
 {
   m_outgoing.push_back(pProperties);
 }
-
 }
 
 #endif  // ACTS_EVENTDATA_PARTICLEDEFINITIONS_H
