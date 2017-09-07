@@ -195,20 +195,20 @@ class ProcessVertex
 {
 public:
   /// constructor with arguments
-  /// @param pVertex is the process vertex
-  /// @param pTime is the associated time stamp
-  /// @param pType is the process type of this vertex
-  /// @param pIngoing is(are) the ingoing particles
-  /// @param pOutgoing is(are) the outgoing particles
+  /// @param [in] pVertex is the process vertex
+  /// @param [in] pTime is the associated time stamp
+  /// @param [in] pType is the process type of this vertex
+  /// @param [in] pIncoming is(are) the incoming particles
+  /// @param [in] pOutgoing is(are) the outgoing particles
   ProcessVertex(const Vector3D&                        pVertex,
                 double                                 pTime,
                 process_type                           pType,
-                const std::vector<ParticleProperties>& pIngoing,
+                const std::vector<ParticleProperties>& pIncoming,
                 const std::vector<ParticleProperties>& pOutgoing)
     : m_vertex(pVertex)
     , m_time(pTime)
     , m_type(pType)
-    , m_ingoing(pIngoing)
+    , m_incoming(pIncoming)
     , m_outgoing(pOutgoing)
   {
   }
@@ -221,9 +221,9 @@ public:
   void
   shift(const Vector3D& shift);
 
-  /// Add a particle to ingoing
+  /// Add a particle to incoming
   void
-  addIngoing(const ParticleProperties& pProperties);
+  addIncoming(const ParticleProperties& pProperties);
 
   /// Add a particle to outgoing
   void
@@ -247,11 +247,11 @@ public:
     return m_type;
   }
 
-  /// Return the outgoing particles
+  /// Return the incoming particles
   const std::vector<ParticleProperties>&
-  ingoingParticles() const
+  incomingParticles() const
   {
-    return m_ingoing;
+    return m_incoming;
   }
   /// Return the outgoing particles
   const std::vector<ParticleProperties>&
@@ -264,7 +264,7 @@ private:
   Vector3D                        m_vertex;
   double                          m_time;
   process_type                    m_type;
-  std::vector<ParticleProperties> m_ingoing;
+  std::vector<ParticleProperties> m_incoming;
   std::vector<ParticleProperties> m_outgoing;
 };
 
@@ -281,9 +281,9 @@ ProcessVertex::shift(const Vector3D& shift)
 }
 
 inline void
-ProcessVertex::addIngoing(const ParticleProperties& pProperties)
+ProcessVertex::addIncoming(const ParticleProperties& pProperties)
 {
-  m_ingoing.push_back(pProperties);
+  m_incoming.push_back(pProperties);
 }
 
 inline void
