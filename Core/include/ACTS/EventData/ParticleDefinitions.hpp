@@ -93,6 +93,7 @@ public:
   /// @param [in] momentum particle momentum at the vertex
   /// @param [in] mass the particle mass
   /// @param [in] charge is the particle charge
+  /// @param [in] pID is the PDG code 
   /// @param [in] barcode is the unique particle identification
   ParticleProperties(const Vector3D& momentum,
                      double          mass    = 0.,
