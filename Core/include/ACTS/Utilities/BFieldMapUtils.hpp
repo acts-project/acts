@@ -13,25 +13,29 @@
 #include "ACTS/MagneticField/InterpolatedBFieldMap.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
-/// Convenience function to ease creation of and Acts::InterpolatedBFieldMap and
-/// to avoid code duplication. Currently implemented for the two most common
+/// Convenience functions to ease creation of and Acts::InterpolatedBFieldMap
+/// and to avoid code duplication. Currently implemented for the two most common
 /// formats: rz and xyz.
 
 namespace Acts {
 /// Method to setup the FieldMapper
 /// @param localToGlobalBin Function mapping the local bins of r,z to the global
-/// bin of the map magnetic field value e.g.: we have small grid with the
-/// values: r={2,3}, z ={4,5}, the corresponding indices are i(r) and j(z), the
-/// globalIndex is M and the field map is:
-///|| r | i || z | j || |B(r,z)| ||  M ||
-///  -----------------------------------
-///|| 2 | 0 || 4 | 0 ||  2.323   ||  0 ||
-///|| 2 | 0 || 5 | 1 ||  2.334   ||  1 ||
-///|| 3 | 1 || 4 | 0 ||  2.325   ||  2 ||
-///|| 3 | 1 || 5 | 1 ||  2.331   ||  3 ||
+/// bin of the map magnetic field value
 ///
-/// @code
+/// e.g.: we have small grid with the
+/// values: r={2,3}, z ={4,5}, the corresponding indices are i (belonging to r)
+/// and j (belonging to z), the
+/// globalIndex is M (belonging to the value of the magnetic field B(r,z)) and
+/// the field map is:
+///|   r |    i |    z |    j |   B(r,z) |   M |
+///|----:|:----:|:----:|:----:|:--------:|:----|
+///|   2 |    0 |    4 |    0 |  2.323   |   0 |
+///|   2 |    0 |    5 |    1 |  2.334   |   1 |
+///|   3 |    1 |    4 |    0 |  2.325   |   2 |
+///|   3 |    1 |    5 |    1 |  2.331   |   3 |
+///
 /// In this case the function would look like:
+/// @code
 /// [](std::array<size_t, 2> binsRZ, std::array<size_t, 2> nBinsRZ) {
 ///    return (binsRZ.at(0) * nBinsRZ.at(1) + binsRZ.at(1));
 /// }
@@ -66,22 +70,27 @@ Acts::InterpolatedBFieldMap::FieldMapper<2, 2> fieldMapperRZ(
 
 /// Method to setup the FieldMapper
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
-/// global bin of the map magnetic field value e.g.: we have small grid with the
-/// values: x={2,3}, y={3,4}, z ={4,5}, the corresponding indices are i(x), j(y)
-/// and z(k), the globalIndex is M and the field map is:
-///|| x | i || y | j || z | k || |B(x,y,z)| ||  M ||
-///  --------------------------------------------
-///|| 2 | 0 || 3 | 0 || 4 | 0 ||  2.323   ||  0 ||
-///|| 2 | 0 || 3 | 0 || 5 | 1 ||  2.334   ||  1 ||
-///|| 2 | 0 || 4 | 1 || 4 | 0 ||  2.325   ||  2 ||
-///|| 2 | 0 || 4 | 1 || 5 | 1 ||  2.331   ||  3 ||
-///|| 3 | 1 || 3 | 0 || 4 | 0 ||  2.323   ||  4 ||
-///|| 3 | 1 || 3 | 0 || 5 | 1 ||  2.334   ||  5 ||
-///|| 3 | 1 || 4 | 1 || 4 | 0 ||  2.325   ||  6 ||
-///|| 3 | 1 || 4 | 1 || 5 | 1 ||  2.331   ||  7 ||
+/// global bin of the map magnetic field value
 ///
-/// @code
+/// e.g.: we have small grid with the
+/// values: x={2,3}, y={3,4}, z ={4,5}, the corresponding indices are i
+/// (belonging to x), j (belonging to y)
+/// and k (belonging to z), the globalIndex is M (belonging to the value of the
+/// magnetic field B(x,y,z)) and the field map is:
+///
+///| x   |    i |    y |    j |    z |    k | B(x,y,z) |   M |
+///|----:|:----:|:----:|:----:|:----:|:----:|:--------:|:----|
+///|   2 |    0 |    3 |    0 |    4 |    0 |  2.323   |   0 |
+///|   2 |    0 |    3 |    0 |    5 |    1 |  2.334   |   1 |
+///|   2 |    0 |    4 |    1 |    4 |    0 |  2.325   |   2 |
+///|   2 |    0 |    4 |    1 |    5 |    1 |  2.331   |   3 |
+///|   3 |    1 |    3 |    0 |    4 |    0 |  2.323   |   4 |
+///|   3 |    1 |    3 |    0 |    5 |    1 |  2.334   |   5 |
+///|   3 |    1 |    4 |    1 |    4 |    0 |  2.325   |   6 |
+///|   3 |    1 |    4 |    1 |    5 |    1 |  2.331   |   7 |
+///
 /// In this case the function would look like:
+/// @code
 /// [](std::array<size_t, 3> binsXYZ, std::array<size_t, 3> nBinsXYZ) {
 ///   return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2))
 ///        + binsXYZ.at(1) * nBinsXYZ.at(2)
