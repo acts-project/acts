@@ -27,28 +27,28 @@ class PlanarModuleCluster : public Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>
 public:
   /// Constructor from DigitizationCells
   ///
-  /// @param mSurface is the module surface
-  /// @param cIdentifier is the channel identifier of the local position
-  /// @param cov is the covariance matrix
-  /// @param loc0 is the local position in the first coordinate
-  /// @param loc1 is the local position in the second coordinate
-  /// @param dCells is the vector of digitization cells
+  /// @param [in] mSurface is the module surface
+  /// @param [in] cIdentifier is the channel identifier of the local position
+  /// @param [in] cov is the covariance matrix
+  /// @param [in] loc0 is the local position in the first coordinate
+  /// @param [in] loc1 is the local position in the second coordinate
+  /// @param [in] dCells is the vector of digitization cells
   /// - optional truth information
-  /// @param barcodes particle barcodes of simulated particles
+  /// @param [in] tVertices particle barcodes of simulated particles
   PlanarModuleCluster(const Surface&                mSurface,
                       const Identifier&             cIdentifier,
                       ActsSymMatrixD<2>             cov,
                       double                        loc0,
                       double                        loc1,
                       std::vector<DigitizationCell> dCells,
-                      std::vector<barcode_type>     barcodes = {})
+                      std::vector<ProcessVertex>    tVertices = {})
     : Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>(mSurface,
                                                     cIdentifier,
                                                     std::move(cov),
                                                     loc0,
                                                     loc1)
     , m_digitizationCells(dCells)
-    , m_barcodes(barcodes)
+    , m_truthVertices(tVertices)
   {
   }
 
@@ -58,15 +58,15 @@ public:
   const std::vector<DigitizationCell>&
   digitizationCells() const;
 
-  /// access to the contributing barcodes
+  /// access to the contributing truth vertices
   ///
-  /// @return the vector of the particle barcode
-  const std::vector<barcode_type>&
-  barcodes() const;
+  /// @return the vector of involved truth vertices
+  const std::vector<ProcessVertex>&
+  truthVertices() const;
 
 private:
   std::vector<DigitizationCell> m_digitizationCells;  /// the digitization cells
-  std::vector<barcode_type>     m_barcodes;           /// barcodes of particles
+  std::vector<ProcessVertex>    m_truthVertices;      /// truth vertices
 };
 
 inline const std::vector<DigitizationCell>&
@@ -75,10 +75,10 @@ PlanarModuleCluster::digitizationCells() const
   return m_digitizationCells;
 }
 
-inline const std::vector<barcode_type>&
-PlanarModuleCluster::barcodes() const
+inline const std::vector<ProcessVertex>&
+PlanarModuleCluster::truthVertices() const
 {
-  return m_barcodes;
+  return m_truthVertices;
 }
 }
 
