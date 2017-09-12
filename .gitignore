@@ -33,3 +33,8 @@ build*
 *.pyc
 /cmake_cmd
 /cleanup.sh
+
+# dont ignore hidden configs
+!.clang-format
+!.gitignore
+!.gitlab-ci.yml
