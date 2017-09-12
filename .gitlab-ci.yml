@@ -1,4 +1,4 @@
-image: gitlab-registry.cern.ch/acts/a-common-tracking-sw/slc6:latest
+image: gitlab-registry.cern.ch/acts/machines/slc6:latest
 
 stages:
     - build
