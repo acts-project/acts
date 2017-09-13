@@ -12,7 +12,7 @@ variables:
 before_script:
     # CI executor uses fail on error by default
     # setup scripts do not like that
-    - set +e && source CI/setup_lcg89_slc6.sh; set -e
+    - set +e && source CI/setup_lcg89.sh; set -e
 
 build_slc6_gcc:
     stage: build
@@ -21,22 +21,44 @@ build_slc6_gcc:
     script:
         - mkdir build_slc6_gcc
         - cd build_slc6_gcc
-        - cmake ${CMAKE_ARGS} -DCMAKE_CXX_COMPILER=g++ ..
+        - CXX=g++ cmake ${CMAKE_ARGS} ..
         - cmake --build .
     artifacts:
         paths:
             - build_slc6_gcc
 
-build_slc6_clang:
+build_slc6_llvm40:
     stage: build
-    # TODO clang via cvmfs does not play with the required gcc includes
-    allow_failure: true
     tags:
         - cvmfs
     script:
-        - mkdir build_slc6_clang
-        - cd build_slc6_clang
-        - cmake ${CMAKE_ARGS} -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="--gcc-toolchain=${GCC_TOOLCHAIN}" -DBoost_COMPILER=-gcc62 ..
+        - source CI/setup_llvm40.sh
+        - mkdir build_slc6_llvm40
+        - cd build_slc6_llvm40
+        - CXX=clang++ cmake ${CMAKE_ARGS} ..
+        - cmake --build .
+
+build_cc7_gcc:
+    image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+    stage: build
+    tags:
+        - cvmfs
+    script:
+        - mkdir build_cc7_gcc
+        - cd build_cc7_gcc
+        - CXX=g++ cmake ${CMAKE_ARGS} ..
+        - cmake --build .
+
+build_cc7_llvm40:
+    image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+    stage: build
+    tags:
+        - cvmfs
+    script:
+        - source CI/setup_llvm40.sh
+        - mkdir build_cc7_llvm40
+        - cd build_cc7_llvm40
+        - CXX=clang++ cmake ${CMAKE_ARGS} ..
         - cmake --build .
 
 build_doc:
