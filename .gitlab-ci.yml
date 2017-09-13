@@ -3,31 +3,16 @@ image: gitlab-registry.cern.ch/acts/machines/slc6:latest
 stages:
     - build
     - test
+    - check
 
 variables:
     CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_DD4HEP_PLUGIN=on -DBUILD_MATERIAL_PLUGIN=on -DBUILD_TGEO_PLUGIN=on
+    DEFAULT_BUILDDIR: build_slc6_gcc
 
 before_script:
     # CI executor uses fail on error by default
     # setup scripts do not like that
     - set +e && source CI/setup_lcg89_slc6.sh; set -e
-
-check_format:
-    stage: build
-    # TODO remove once all files have been reformatted
-    allow_failure: true
-    tags:
-        - cvmfs
-    script:
-        - CI/check_format .
-
-check_license:
-    stage: build
-    # TODO remove once the license check is fixed
-    allow_failure: true
-    before_script: []
-    script:
-        - CI/check_license_local .
 
 build_slc6_gcc:
     stage: build
@@ -72,4 +57,26 @@ unit_tests:
     tags:
         - cvmfs
     script:
-        - cmake --build build_slc6_gcc -- test
+        - cmake --build ${DEFAULT_BUILDDIR} -- test
+    artifacts:
+        paths:
+            - ${DEFAULT_BUILDDIR}
+
+format:
+    stage: check
+    # TODO remove once all files have been reformatted
+    allow_failure: true
+    tags:
+        - cvmfs
+    script:
+        - CI/check_format .
+
+license:
+    stage: check
+    # TODO remove once the license check is fixed
+    allow_failure: true
+    before_script: []
+    script:
+        - CI/check_license_local .
+
+# TODO coverage
