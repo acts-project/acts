@@ -190,3 +190,6 @@ Contributors to the ACTS project are listed in [AUTHORS](AUTHORS).
 
 The ACTS project is based on the ATLAS tracking software. A list of contributors
 to the ATLAS tracking repository can be found <a href="http://acts.web.cern.ch/ACTS/ATLAS_authors.html">here</a>.
+
+The ACTS project contains a copy of [gcovr](http://gcovr.com) licensed under
+the 3-Clause BSD license.
