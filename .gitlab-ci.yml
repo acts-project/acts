@@ -23,6 +23,8 @@ check_format:
 
 check_license:
     stage: build
+    # TODO remove once the license check is fixed
+    allow_failure: true
     before_script: []
     script:
         - CI/check_license_local .
