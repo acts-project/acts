@@ -139,6 +139,55 @@
 ///
 /// This module collects information about classes and typedefs useful for
 /// describing different magnetic field configurations.
+///
+/// Acts is independent of the magnetic field implementation used.
+/// Algorithms which need magnetic field information (e.g. Acts::RungeKuttaEngine,
+/// Acts::AtlasStepper, Acts::EigenStepper) are templated on the magnetic field.
+/// The requirements for the magnetic field implementation are the implementation of the following functions:
+/// @todo implement concept for magnetic field implementation
+/// @code
+/// // retrieve field at given position
+/// Acts::Vector3D getField(const Acts::Vector3D& position) const
+/// // retrieve magnetic field cell at given position
+/// Acts::concept::AnyFieldCell<> getFieldCell(const Acts::Vector3D& position) const
+/// // retrieve gradient of magnetic field value
+/// Acts::Vector3D getFieldGradient(const Acts::Vector3D& position, Acts::ActsMatrixD<3, 3>& derivative) const
+/// // check whether given 3D position is inside this field cell
+/// bool isInside(const Acts::Vector3D& position) const
+/// @endcode
+///
+/// Acts provides two possible magnetic field implementations:
+///
+/// <B>1. Constant magnetic field implementation</B>
+///
+/// Should be used to describe a constant magnetic field.
+/// The Acts::ConstantBField returns a given constant magnetic field value at every point and can be set by the
+/// user either at construction or with a set function.
+///
+/// <B>2. Interpolated magnetic field  implementation</B>
+///
+/// For more complex magnetic field implementations the Acts::InterpolatedBFieldMap should be used.
+///
+/// The Acts::InterpolatedBFieldMap internally uses a field mapper which follows
+/// the <a href="http://www.boost.org/doc/libs/1_55_0/doc/html/boost_typeerasure/basic.html">boost concept</a>
+/// Acts::concept::AnyFieldLookup. This allows users to provide their own field mapper implementation
+/// using the Acts::InterpolatedBFieldMap interface.
+///
+/// Acts provides a default field mapper implementation: Acts::InterpolatedBFieldMap::FieldMapper, which maps global cartesian 3D positions
+/// to magnetic field values. It uses an underlying grid which follows the <a href="http://www.boost.org/doc/libs/1_55_0/doc/html/boost_typeerasure/basic.html">boost concept</a>
+/// Acts::concept::AnyNDimGrid which can be a grid of any dimension and allows users to provide their own
+/// grid implementation. Furthermore users also need to provide two functions in order to use the Acts::InterpolatedBFieldMap::FieldMapper:
+/// 1. a function mapping cartesian global 3D coordinates onto the grid coordinates (of dimension N)
+/// 2. a function calculating cartesian global 3D coordinates of the magnetic field with the local N dimensional field and the global 3D position as an input
+///
+/// A default Acts::detail::Grid implementations is provided following the Acts::concept::AnyNDimGrid,
+/// which is flexible (using template parameters) on the dimension of the grid and the value stored in the grid.
+///
+/// Two convenience functions in order ease the creation of an Acts::InterpolatedBFieldMap::FieldMapper e.g. when reading in a field map from a file,
+/// are provided:
+/// 1. Acts::InterpolatedBFieldMap::FieldMapper<2, 2> fieldMapperRZ()
+/// 2. Acts::InterpolatedBFieldMap::FieldMapper<3, 3> fieldMapperXYZ()
+///
 
 /// @defgroup Material Material
 /// @ingroup Core

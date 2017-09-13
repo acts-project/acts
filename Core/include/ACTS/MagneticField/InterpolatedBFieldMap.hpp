@@ -131,8 +131,8 @@ public:
   public:
     /// @brief default constructor
     ///
-    /// @param [in] transformPos mapping of global 3D coordinates onto grid
-    /// space
+    /// @param [in] transformPos mapping of global 3D coordinates (cartesian)
+    /// onto grid space
     /// @param [in] transformBField calculating the global 3D coordinates
     /// (cartesian) of the magnetic field with the local n dimensional field and
     /// the global 3D position as input
@@ -303,7 +303,7 @@ public:
     return m_config.mapper.getFieldCell(position);
   }
 
-  /// @brief retrieve magnetic field value
+  /// @brief retrieve magnetic field value & its gradient
   ///
   /// @param [in]  position   global 3D position
   /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix

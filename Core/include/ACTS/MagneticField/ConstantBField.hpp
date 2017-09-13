@@ -99,13 +99,18 @@ public:
     return m_BField;
   }
 
+  /// @brief retrieve field cell for given position
+  ///
+  /// @param [in] position global 3D position
+  /// @return field cell containing the given global position
+  ///
   concept::AnyFieldCell<>
   getFieldCell(const Vector3D& position) const
   {
     return m_fieldCell;
   }
 
-  /// @brief retrieve magnetic field value
+  /// @brief retrieve magnetic field value & its gradient
   ///
   /// @param [in]  position   global position
   /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
