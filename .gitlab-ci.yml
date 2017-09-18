@@ -16,8 +16,7 @@ before_script:
 
 build_slc6_gcc:
     stage: build
-    tags:
-        - cvmfs
+    tags: [cvmfs]
     script:
         - mkdir build_slc6_gcc
         - cd build_slc6_gcc
@@ -27,67 +26,96 @@ build_slc6_gcc:
         paths:
             - build_slc6_gcc
 
+unit_tests_slc6_gcc:
+    stage: test
+    dependencies: [build_slc6_gcc]
+    tags: [cvmfs]
+    script:
+        - cmake --build build_slc6_gcc -- test
+    artifacts:
+        paths:
+            - build_slc6_gcc
+
 build_slc6_llvm40:
     stage: build
-    tags:
-        - cvmfs
+    tags: [cvmfs]
     script:
         - source CI/setup_llvm40.sh
         - mkdir build_slc6_llvm40
         - cd build_slc6_llvm40
         - CXX=clang++ cmake ${CMAKE_ARGS} ..
         - cmake --build .
+    artifacts:
+        paths:
+            - build_slc6_llvm40
+
+unit_tests_slc6_llvm40:
+    stage: test
+    dependencies: [build_slc6_llvm40]
+    tags: [cvmfs]
+    script:
+        - source CI/setup_llvm40.sh
+        - cmake --build build_slc6_llvm40 -- test
 
 build_cc7_gcc:
-    image: gitlab-registry.cern.ch/acts/machines/cc7:latest
     stage: build
-    tags:
-        - cvmfs
+    image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+    tags: [cvmfs]
     script:
         - mkdir build_cc7_gcc
         - cd build_cc7_gcc
         - CXX=g++ cmake ${CMAKE_ARGS} ..
         - cmake --build .
+    artifacts:
+        paths:
+            - build_cc7_gcc
+
+unit_tests_cc7_gcc:
+    stage: test
+    dependencies: [build_cc7_gcc]
+    image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+    tags: [cvmfs]
+    script:
+        - cmake --build build_cc7_gcc -- test
 
 build_cc7_llvm40:
-    image: gitlab-registry.cern.ch/acts/machines/cc7:latest
     stage: build
-    tags:
-        - cvmfs
+    image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+    tags: [cvmfs]
     script:
         - source CI/setup_llvm40.sh
         - mkdir build_cc7_llvm40
         - cd build_cc7_llvm40
         - CXX=clang++ cmake ${CMAKE_ARGS} ..
         - cmake --build .
+    artifacts:
+        paths:
+            - build_cc7_llvm40
 
-build_doc:
-    stage: build
-    tags:
-        - cvmfs
+unit_tests_cc7_llvm40:
+    stage: test
+    dependencies: [build_cc7_llvm40]
+    image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+    tags: [cvmfs]
     script:
-        - mkdir build_doc
-        - cd build_doc
+        - source CI/setup_llvm40.sh
+        - cmake --build build_cc7_llvm40 -- test
+
+doc:
+    stage: build
+    tags: [cvmfs]
+    script:
+        - mkdir build
+        - cd build
         - cmake -GNinja -DBUILD_DOC=on -DBUILD_TESTS=off ..
         - cmake --build . -- doc
     artifacts:
         paths:
-            - build_doc/doc/html
-
-unit_tests:
-    stage: test
-    tags:
-        - cvmfs
-    script:
-        - cmake --build ${DEFAULT_BUILDDIR} -- test
-    artifacts:
-        paths:
-            - ${DEFAULT_BUILDDIR}
+            - build/doc/html
 
 coverage:
     stage: check
-    tags:
-        - cvmfs
+    tags: [cvmfs]
     coverage: '/^TOTAL.*\s+(\d+\%)$/'
     script:
         - cmake --build ${DEFAULT_BUILDDIR} -- coverage
@@ -99,8 +127,7 @@ format:
     stage: check
     # TODO remove once all files have been reformatted
     allow_failure: true
-    tags:
-        - cvmfs
+    tags: [cvmfs]
     script:
         - CI/check_format .
 
