@@ -1,5 +1,8 @@
 # A Common Tracking Software (ACTS) Project {#mainpage}
 
+[![build status](https://gitlab.cern.ch/acts/acts-core/badges/master/build.svg)](https://gitlab.cern.ch/acts/acts-core/commits/master)
+[![coverage report](https://gitlab.cern.ch/acts/acts-core/badges/master/coverage.svg)](https://gitlab.cern.ch/acts/acts-core/commits/master)
+
 1. [Introduction](#intro)
 2. [Mailing list](#mailing-list)
 3. [Getting started](#getting-started)
