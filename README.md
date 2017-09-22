@@ -26,7 +26,7 @@ Key features of this project include:
 * performant and highly flexible algorithms for track propagation and fitting,
 * basic seed finding algorithms.
 
-The git repository for the ACTS project can be found at <a href="https://gitlab.cern.ch/acts/a-common-tracking-sw.git">https://gitlab.cern.ch/acts/a-common-tracking-sw.git</a>.
+The git repository for the ACTS project can be found at <a href="https://gitlab.cern.ch/acts/acts-core.git">https://gitlab.cern.ch/acts/acts-core.git</a>.
 
 # <a name="mailing-list">Mailing list</a>
 
