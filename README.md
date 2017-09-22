@@ -11,7 +11,6 @@
     3. [CMake build system](#cmake)
     4. [Build ACTS on lxplus](#build-lxplus)
     5. [Build ACTS on your local machine](#build-local)
-    4. [Using docker](#using-docker)
 4. [Using ACTS in your own cmake project](#using-acts)
 5. [Documentation](#documentation)
 6. [License and authors](#license-authors)
@@ -113,59 +112,6 @@ Building and running ACTS on your local machine is not offically supported.
 However, if you have the necessary prerequisites installed it should be
 possible to use it locally. ACTS developers regularly use different
 recent Linux distributions and MacOS to build and develop ACTS.
-
-## <a name="using-docker">Build ACTS using docker</a>
-
-The ACTS team provides you with a [docker](https://en.wikipedia.org/wiki/Docker_(software)) image with all required software already pre-installed. This is the very same image used in our continuous integration system. Hence, it is very well tested and should be the easiest way to get you started. In order to use it, you need to have docker installed. On Ubuntu systems one could achieve this by running
-
-> sudo apt-get install docker.io
-
-While the docker image provides you with the environment for building ACTS, it does not contain the source code itself. The reasoning behind this is that you can develop ACTS on your host machine using your preferred development tools/editors/GUIs and use the docker container only for compiling/testing. Therefore, you need to clone the ACTS repository first
-
-> git clone https://gitlab.cern.ch/acts/a-common-tracking-sw.git acts
-
-As a second step you need to pull the ACTS docker image
-
-> docker pull gitlab-registry.cern.ch/acts/a-common-tracking-sw
-
-Before starting the docker container, you can create a shorter tag for this image to avoid a lot of typing
-
-> docker tag gitlab-registry.cern.ch/acts/a-common-tracking-sw acts
-
-Now spin up the docker container with the mysterious command
-
-> docker run -d -t -i -v acts:/acts -e LOCAL_USER_ID=\`id -u\` -e LOCAL_GROUP_ID=\`id -g\` --name acts acts
-
-Here is what it means:
-
-- -d runs the container in the background (detached state)
-- -t gives you acces to a shell (bash)
-- -i stands for interactive and allows you to attach
-- -v maps the directory `acts` from your host machine to `/acts` inside the container
-- -e sets some environment variables which are used to map the current user to the user inside the container
-- --name gives a name to the container
-- the last argument is a reference to the docker image used for creating this container
-
-You can attach to the container using
-
-> docker attach acts
-
-You can then go ahead like you would on your host machine and start building ACTS using `cmake ... && make`. Remember that the ACTS source code is located under `/acts` inside the container. There is also a simple python wrapper script called `acts-build` in case you do not remember the longish cmake command. Running `acts-build --help` gives you a (short) list of available options.  
-
-For instance you could compile and install ACTS using
-
-> acts-build /acts/ /workdir/build --make-options "install" --cmake-options " -DCMAKE_INSTALL_PREFIX=/workdir/install"<br />
-> cd /workdir/build && make test<br />
-> cd /workdir/install/bin<br />
-> source setup.sh<br />
-> ./Examples/ACTSGenericDetector
-
-You can detach from the container again pressing the key sequence `CTRL+P CTRL+Q`.  
-If you just want to test the compilation non-interactively, you could also execute (from the host machine)
-
-> docker exec acts acts-start acts-build /acts /workdir/build
-
-This command could, for instance, be used as custom build command in IDEs.
 
 # <a name="using-acts">Using ACTS in your own cmake project</a>
 
