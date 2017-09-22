@@ -8,9 +8,10 @@
 3. [Getting started](#getting-started)
     1. [Prerequisites](#prerequisites)
     2. [Installation](#installation)
-    3. [cmake options](#cmake-options)
+    3. [CMake build system](#cmake)
+    4. [Build ACTS on lxplus](#build-lxplus)
+    5. [Build ACTS on your local machine](#build-local)
     4. [Using docker](#using-docker)
-    5. [Building on lxplus](#lxplus-build)
 4. [Using ACTS in your own cmake project](#using-acts)
 5. [Documentation](#documentation)
 6. [License and authors](#license-authors)
@@ -44,46 +45,40 @@ Only few dependencies are required to build the Core library of ACTS. A list of 
 
 The following dependencies are required:
 
-+ [clang](http://clang.llvm.org/) (>= 4.0) or [gcc](https://gcc.gnu.org/) (>= 6.2)
++ A C++14 compatible compiler, e.g. [gcc](https://gcc.gnu.org/) (>= 6.2) or [clang](http://clang.llvm.org/) (>= 4.0)
 + [cmake](https://cmake.org/) (>= 3.5)
 + [boost](http://boost.org/) (>= 1.62, with <tt>program_options</tt>)
 + [Eigen](http://eigen.tuxfamily.org/) (>= 3.2.9)
 
-The following dependencies are optional and are only needed for some of the plugins
+The following dependencies are optional and are only needed for some of the plugins:
 
 + [doxygen](http://doxygen.org) (>= 1.8.11) for the documentation
 + [graphviz](http://www.graphviz.org/) (>= 2.26.00) for the documentation
 + [ROOT](https://root.cern.ch/) (>= 6.08.00) for TGeo plugin & for DD4hep plugin
 + [DD4Hep](https://github.com/AIDASoft/DD4hep) (>= 1.02) for DD4Hep plugin
 
-### Using recent CMake releases from CVMFS
+Compatible versions of all dependencies are provided by the [LCG89
+Release](https://lcgsoft.web.cern.ch/lcgsoft/release/89/). This release is also
+used in the continous integration system to test the software. A setup script
+is provided that can be used to setup the environment on lxplus machines at
+CERN
 
-Recent releases of CMake can be found on CVMFS at `/cvmfs/sft.cern.ch/lcg/contrib/CMake/`. These builds are self-contained and intended to work even on non-Redhat linux distributions. In particular, they have been successfully used on Ubuntu 14.04.
-
-To use the CMake release x.y.z from this source, do...
-
-    export PATH=/cvmfs/sft.cern.ch/lcg/contrib/CMake/x.y.z/Linux-x86_64/bin:${PATH}
+    source CI/setup_lcg89.sh
 
 ## <a name="installation">Installation</a>
 
-The ACTS repository is hosted on the GitLab instance at CERN. For the time being you need to have a full CERN account in order to access the repository. We are working on a solution for non-CERN users. CMake is used as build system for compiling and installing ACTS libraries. For a complete description of the available cmake options please see below.
+The ACTS repository is hosted on the GitLab instance at CERN. For the time being
+you need to have a full CERN account in order to access the repository. We are
+working on a solution for non-CERN users. In order to aquire the latest version
+from the git repository you can follow the instructions below.
 
-In order to install the latest version, you can follow the instructions below where \<DIR\> refers to some directory which needs to be set depending on your local system configuration.
+    git clone https://gitlab.cern.ch/acts/acts-core.git <ACTS_DIR>
 
-    git clone https://gitlab.cern.ch/acts/acts-core.git \<ACTS_DIR\>
-    mkdir \<BUILD_DIR\>
-    cd \<BUILD_DIR\>
-    cmake \<ACTS_DIR\> -DCMAKE_INSTALL_PREFIX=\<INSTALL_DIR\>
-    make
-    make install
+## <a name="cmake">CMake build system</a>
 
-## <a name="cmake-options">cmake options</a>
-
-For a complete list of cmake options please refer to the [official documentation](https://cmake.org/cmake/help/v3.1/index.html) and this nice [list of general cmake options](https://cmake.org/Wiki/CMake_Useful_Variables). A full list of ACTS specific cmake options can be obtained by running the following command
-
-    cmake \<ACTS_DIR\> -DPRINT_OPTIONS=ON
-
-Important options relevant for the ACTS project are given below. They can be set by adding '-D\<OPTION\>=\<VALUE\>' to the cmake command.
+CMake is used as build system for compiling and installing ACTS.
+For a complete list of cmake options please refer to the [official documentation](https://cmake.org/cmake/help/v3.1/index.html) and this nice [list of general cmake options](https://cmake.org/Wiki/CMake_Useful_Variables).
+Important options relevant for the ACTS project are given below. They are set by adding '-D\<OPTION\>=\<VALUE\>' to the cmake command.
 
 |option|default|description|
 |------|-------|-----------|
@@ -98,7 +93,7 @@ Important options relevant for the ACTS project are given below. They can be set
 |CMAKE_BUILD_TYPE       | None                  | build type (e.g. Debug, Release) affects compiler flags |
 |DD4hep_DIR             | None                  | path to the DD4hep installation                         |
 
-## <a name="lxplus-build">Build ACTS on lxplus</a>
+## <a name="build-lxplus">Build ACTS on lxplus</a>
 
 On lxplus the dependencies are provided by a LCG release. You can use the
 following commands to build ACTS with all plugins using the same dependency
@@ -111,6 +106,13 @@ versions as in the continous integration system.
           -DBUILD_MATERIAL_PLUGIN=on \
           -DBUILD_TGEO_PLUGIN=ON ..
     make install
+
+## <a name="build-local">Build ACTS on your local machine</a>
+
+Building and running ACTS on your local machine is not offically supported.
+However, if you have the necessary prerequisites installed it should be
+possible to use it locally. ACTS developers regularly use different
+recent Linux distributions and MacOS to build and develop ACTS.
 
 ## <a name="using-docker">Build ACTS using docker</a>
 
@@ -169,7 +171,7 @@ This command could, for instance, be used as custom build command in IDEs.
 
 When using ACTS in your own cmake-based project, you need to include the following lines in your `CMakeLists.txt` file:
 
-> find_package (ACTS COMPONENTS comp1 comp2 ...)
+    find_package (ACTS COMPONENTS comp1 comp2 ...)
 
 where `compX` are the required components from the ACTS project. See the `cmake` output for more information about which components are available.
 
