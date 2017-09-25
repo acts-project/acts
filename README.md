@@ -1,13 +1,16 @@
 # A Common Tracking Software (ACTS) Project {#mainpage}
 
+[![build status](https://gitlab.cern.ch/acts/acts-core/badges/master/build.svg)](https://gitlab.cern.ch/acts/acts-core/commits/master)
+[![coverage report](https://gitlab.cern.ch/acts/acts-core/badges/master/coverage.svg)](https://gitlab.cern.ch/acts/acts-core/commits/master)
+
 1. [Introduction](#intro)
 2. [Mailing list](#mailing-list)
 3. [Getting started](#getting-started)
     1. [Prerequisites](#prerequisites)
     2. [Installation](#installation)
-    3. [cmake options](#cmake-options)
-    4. [Using docker](#using-docker)
-    5. [Building on lxplus](#lxplus-build)
+    3. [CMake build system](#cmake)
+    4. [Build ACTS on lxplus](#build-lxplus)
+    5. [Build ACTS on your local machine](#build-local)
 4. [Using ACTS in your own cmake project](#using-acts)
 5. [Documentation](#documentation)
 6. [License and authors](#license-authors)
@@ -22,7 +25,7 @@ Key features of this project include:
 * performant and highly flexible algorithms for track propagation and fitting,
 * basic seed finding algorithms.
 
-The git repository for the ACTS project can be found at <a href="https://gitlab.cern.ch/acts/a-common-tracking-sw.git">https://gitlab.cern.ch/acts/a-common-tracking-sw.git</a>.
+The git repository for the ACTS project can be found at <a href="https://gitlab.cern.ch/acts/acts-core.git">https://gitlab.cern.ch/acts/acts-core.git</a>.
 
 # <a name="mailing-list">Mailing list</a>
 
@@ -41,138 +44,80 @@ Only few dependencies are required to build the Core library of ACTS. A list of 
 
 The following dependencies are required:
 
-+ [clang](http://clang.llvm.org/) (>= 3.8.0) or [gcc](https://gcc.gnu.org/) (>= 6.2)
++ A C++14 compatible compiler, e.g. [gcc](https://gcc.gnu.org/) (>= 6.2) or [clang](http://clang.llvm.org/) (>= 4.0)
 + [cmake](https://cmake.org/) (>= 3.5)
 + [boost](http://boost.org/) (>= 1.62, with <tt>program_options</tt>)
-+ [Eigen](http://eigen.tuxfamily.org/) (>= 3.2.10)
++ [Eigen](http://eigen.tuxfamily.org/) (>= 3.2.9)
 
-The following dependencies are optional and are only needed for some of the plugins
+The following dependencies are optional and are only needed for some of the plugins:
 
 + [doxygen](http://doxygen.org) (>= 1.8.11) for the documentation
 + [graphviz](http://www.graphviz.org/) (>= 2.26.00) for the documentation
 + [ROOT](https://root.cern.ch/) (>= 6.08.00) for TGeo plugin & for DD4hep plugin
-+ [DD4Hep](https://github.com/AIDASoft/DD4hep) (>= 1.01) for DD4Hep plugin
++ [DD4Hep](https://github.com/AIDASoft/DD4hep) (>= 1.02) for DD4Hep plugin
 
-### Using recent CMake releases from CVMFS
+Compatible versions of all dependencies are provided by the [LCG89
+Release](https://lcgsoft.web.cern.ch/lcgsoft/release/89/). This release is also
+used in the continous integration system to test the software. A setup script
+is provided that can be used to setup the environment on lxplus machines at
+CERN
 
-Recent releases of CMake can be found on CVMFS at `/cvmfs/sft.cern.ch/lcg/contrib/CMake/`. These builds are self-contained and intended to work even on non-Redhat linux distributions. In particular, they have been successfully used on Ubuntu 14.04.
-
-To use the CMake release x.y.z from this source, do...
-
-    export PATH=/cvmfs/sft.cern.ch/lcg/contrib/CMake/x.y.z/Linux-x86_64/bin:${PATH}
+    source CI/setup_lcg89.sh
 
 ## <a name="installation">Installation</a>
 
-The ACTS repository is hosted on the GitLab instance at CERN. For the time being you need to have a full CERN account in order to access the repository. We are working on a solution for non-CERN users. Cmake is used as build system for compiling and installing ACTS libraries. For a complete description of the available cmake options please see below.
+The ACTS repository is hosted on the GitLab instance at CERN. For the time being
+you need to have a full CERN account in order to access the repository. We are
+working on a solution for non-CERN users. In order to aquire the latest version
+from the git repository you can follow the instructions below.
 
-In order to install the latest version, you can follow the instructions below where \<DIR\> refers to some directory which needs to be set depending on your local system configuration.
+    git clone https://gitlab.cern.ch/acts/acts-core.git <ACTS_DIR>
 
-> git clone https://gitlab.cern.ch/acts/a-common-tracking-sw.git \<ACTS_DIR\><br />
-> mkdir \<BUILD_DIR\><br />
-> cd \<BUILD_DIR\><br />
-> cmake \<ACTS_DIR\> -DEIGEN_INCLUDE_DIR=\<EIGEN_INSTALLATION\> -DBOOST_ROOT=\<BOOST_INSTALLATION\> -DCMAKE_INSTALL_PREFIX=\<INSTALL_DIR\><br />
-> make<br />
-> make install<br />
+## <a name="cmake">CMake build system</a>
 
-## <a name="cmake-options">cmake options</a>
-
-For a complete list of cmake options please refer to the [official documentation](https://cmake.org/cmake/help/v3.1/index.html) and this nice [list of general cmake options](https://cmake.org/Wiki/CMake_Useful_Variables). A full list of ACTS specific cmake options can be obtained by running the following command
-
-> cmake \<ACTS_DIR\> -DPRINT_OPTIONS=ON
-
-Important options relevant for the ACTS project are given below. They can be set by adding '-D\<OPTION\>=\<VALUE\>' to the cmake command.
+CMake is used as build system for compiling and installing ACTS.
+For a complete list of cmake options please refer to the [official documentation](https://cmake.org/cmake/help/v3.1/index.html) and this nice [list of general cmake options](https://cmake.org/Wiki/CMake_Useful_Variables).
+Important options relevant for the ACTS project are given below. They are set by adding '-D\<OPTION\>=\<VALUE\>' to the cmake command.
 
 |option|default|description|
 |------|-------|-----------|
-|BOOST_ROOT             | empty                 | path to the ROOT installation                           |
-|EIGEN_INCLUDE_DIR      | empty                 | path to the Eigen installation                          |
 |BUILD_DD4HEP_PLUGIN    | OFF                   | build DD4Hep plugin (requires TGeoPlugin, ROOT, DD4hep) |
 |BUILD_DOC              | OFF                   | build doxygen documentation (requires doxygen)          |
+|BUILD_MATERIAL_PLUGIN  | ON                    | build material mapping plugin                           |
 |BUILD_TESTS            | ON                    | build unit tests                                        |
 |BUILD_TGEO_PLUGIN      | OFF                   | build TGeo plugin (requires ROOT)                       |
-|BUILD_MATERIAL_PLUGIN  | OFF                   | build material mapping plugin                           |
 |CMAKE_INSTALL_PREFIX   | empty                 | target installation directory                           |
 |CMAKE_PREFIX_PATH      | empty                 | search path for external packages                       |
 |CMAKE_CXX_COMPILER     | empty                 | set C++ compiler (e.g. g++ or clang++)                  |
 |CMAKE_BUILD_TYPE       | None                  | build type (e.g. Debug, Release) affects compiler flags |
+|DD4hep_DIR             | None                  | path to the DD4hep installation                         |
 
-## <a name="using-docker">Build ACTS using docker</a>
+## <a name="build-lxplus">Build ACTS on lxplus</a>
 
-The ACTS team provides you with a [docker](https://en.wikipedia.org/wiki/Docker_(software)) image with all required software already pre-installed. This is the very same image used in our continuous integration system. Hence, it is very well tested and should be the easiest way to get you started. In order to use it, you need to have docker installed. On Ubuntu systems one could achieve this by running
+On lxplus the dependencies are provided by a LCG release. You can use the
+following commands to build ACTS with all plugins using the same dependency
+versions as in the continous integration system.
 
-> sudo apt-get install docker.io
+    source CI/setup_lcg89.sh
+    mkdir build && cd build
+    cmake -DCMAKE_INSTALL_PREFIX=<path you want> \
+          -DBUILD_DD4HEP_PLUGIN=ON \
+          -DBUILD_MATERIAL_PLUGIN=on \
+          -DBUILD_TGEO_PLUGIN=ON ..
+    make install
 
-While the docker image provides you with the environment for building ACTS, it does not contain the source code itself. The reasoning behind this is that you can develop ACTS on your host machine using your preferred development tools/editors/GUIs and use the docker container only for compiling/testing. Therefore, you need to clone the ACTS repository first
+## <a name="build-local">Build ACTS on your local machine</a>
 
-> git clone https://gitlab.cern.ch/acts/a-common-tracking-sw.git acts
-
-As a second step you need to pull the ACTS docker image
-
-> docker pull gitlab-registry.cern.ch/acts/a-common-tracking-sw
-
-Before starting the docker container, you can create a shorter tag for this image to avoid a lot of typing
-
-> docker tag gitlab-registry.cern.ch/acts/a-common-tracking-sw acts
-
-Now spin up the docker container with the mysterious command
-
-> docker run -d -t -i -v acts:/acts -e LOCAL_USER_ID=\`id -u\` -e LOCAL_GROUP_ID=\`id -g\` --name acts acts
-
-Here is what it means:
-
-- -d runs the container in the background (detached state)
-- -t gives you acces to a shell (bash)
-- -i stands for interactive and allows you to attach
-- -v maps the directory `acts` from your host machine to `/acts` inside the container
-- -e sets some environment variables which are used to map the current user to the user inside the container
-- --name gives a name to the container
-- the last argument is a reference to the docker image used for creating this container
-
-You can attach to the container using
-
-> docker attach acts
-
-You can then go ahead like you would on your host machine and start building ACTS using `cmake ... && make`. Remember that the ACTS source code is located under `/acts` inside the container. There is also a simple python wrapper script called `acts-build` in case you do not remember the longish cmake command. Running `acts-build --help` gives you a (short) list of available options.  
-
-For instance you could compile and install ACTS using
-
-> acts-build /acts/ /workdir/build --make-options "install" --cmake-options " -DCMAKE_INSTALL_PREFIX=/workdir/install"<br />
-> cd /workdir/build && make test<br />
-> cd /workdir/install/bin<br />
-> source setup.sh<br />
-> ./Examples/ACTSGenericDetector
-
-You can detach from the container again pressing the key sequence `CTRL+P CTRL+Q`.  
-If you just want to test the compilation non-interactively, you could also execute (from the host machine)
-
-> docker exec acts acts-start acts-build /acts /workdir/build
-
-This command could, for instance, be used as custom build command in IDEs.
-
-## <a name="lxplus-build">Build ACTS on lxplus</a>
-
-On lxplus many of the dependencies are provided by the LCG releases. A possible setup is the following:
-
-> export actsbase=${PWD}<br />
-> export lcgversion=LCG_90a<br />
-> export platform=x86_64-slc6-gcc62-opt<br />
-> export lcgdir=/cvmfs/sft.cern.ch/lcg/views/${lcgversion}/${platform}<br />
-> source /cvmfs/sft.cern.ch/lcg/views/${lcgversion}/${platform}/setup.sh<br />
-> cd /cvmfs/sft.cern.ch/lcg/releases/${lcgversion}/DD4hep/01-02/${platform} && source bin/thisdd4hep.sh && cd ${actsbase}<br />
-> <br />
-> mkdir build && cd build<br />
-> cmake .. -DCMAKE_INSTALL_PREFIX=<path you want> \<br />
->	 -DEIGEN_INCLUDE_DIR=${lcgdir}/include/eigen3/ \<br />
->	-DBOOST_INCLUDEDIR=${lcgdir}/include/boost/ \<br />
->	-DBUILD_TGEO_PLUGIN=ON \<br />
->	-DBUILD_DD4HEP_PLUGIN=ON<br />
-> make install
+Building and running ACTS on your local machine is not offically supported.
+However, if you have the necessary prerequisites installed it should be
+possible to use it locally. ACTS developers regularly use different
+recent Linux distributions and MacOS to build and develop ACTS.
 
 # <a name="using-acts">Using ACTS in your own cmake project</a>
 
 When using ACTS in your own cmake-based project, you need to include the following lines in your `CMakeLists.txt` file:
 
-> find_package (ACTS COMPONENTS comp1 comp2 ...)
+    find_package (ACTS COMPONENTS comp1 comp2 ...)
 
 where `compX` are the required components from the ACTS project. See the `cmake` output for more information about which components are available.
 
@@ -190,3 +135,6 @@ Contributors to the ACTS project are listed in [AUTHORS](AUTHORS).
 
 The ACTS project is based on the ATLAS tracking software. A list of contributors
 to the ATLAS tracking repository can be found <a href="http://acts.web.cern.ch/ACTS/ATLAS_authors.html">here</a>.
+
+The ACTS project contains a copy of [gcovr](http://gcovr.com) licensed under
+the 3-Clause BSD license.

@@ -28,3 +28,12 @@ if (BUILD_TESTS)
 else (BUILD_TESTS)
   message (STATUS "${Blue}disable ACTS unit tests${ColorReset}")
 endif (BUILD_TESTS)
+
+# generate coverage report via gcovr
+find_package(PythonInterp 2 EXACT REQUIRED)
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/coverage)
+add_custom_target(
+  coverage
+  COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/gcovr -r . -e '../Tests/' --html --html-details -o coverage/index.html
+  COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/gcovr -r . -e '../Tests/' --branches
+  WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
