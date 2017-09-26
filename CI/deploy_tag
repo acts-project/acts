@@ -51,7 +51,7 @@ Dear ACTS enthusiasts,
 
 a new tag "$VERSION" of the ACTS project has been released. You can get the source code from git using
 
-git clone https://gitlab.cern.ch/acts/a-common-tracking-sw.git acts
+git clone https://gitlab.cern.ch/acts/acts-core.git acts
 cd acts/
 git checkout $VERSION
 

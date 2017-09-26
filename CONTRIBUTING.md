@@ -27,7 +27,7 @@ Contributions to the ACTS project are very welcome and feedback on the documenta
     - a common place for asking any kind of questions.
 1. [acts-developers@cern.ch](https://e-groups.cern.ch/e-groups/Egroup.do?egroupName=acts-developers): Developers are encouraged to also subscribe to this list as it provides you with:
     - a developer role in the ACTS JIRA project (allows you to handle tickets),
-    - developer access to the [ACTS git repository](https://gitlab.cern.ch/acts/a-common-tracking-sw.git)
+    - developer access to the [ACTS git repository](https://gitlab.cern.ch/acts/acts-core)
     - information about developer meetings,
     - a common place for technical discussions.
 
@@ -80,7 +80,7 @@ As a first step, you need to clone the ACTS repository which gives you a local, 
 
     git clone <ACTS_URL> <DESTINATION>
 
-- &lt;ACTS_URL&gt; can be found on the project page of the [ACTS git repository](https://gitlab.cern.ch/acts/a-common-tracking-sw). There are different URLs for different authentication methods.
+- &lt;ACTS_URL&gt; can be found on the project page of the [ACTS git repository](https://gitlab.cern.ch/acts/acts-core). There are different URLs for different authentication methods.
 - &lt;DESTINATION&gt; is optional and gives the path on your local machine where the clone will be created.
 
 ### <a name="new-development">Starting a new development</a>
@@ -101,7 +101,7 @@ Let's go through the options one by one:
 
 ### <a name="creating-a-merge-request">Creating a merge request</a>
 
-Once your development is ready for integration, you should open a merge request at the [ACTS project](https://gitlab.cern.ch/acts/a-common-tracking-sw) ([GitLab Help: Create a merge request](https://gitlab.cern.ch/help/gitlab-basics/add-merge-request)). The target branch should usually be _master_ for feature requests and _releas-X,Y,Z_ for bugfixes. The ACTS projects accepts only fast-foward merges which means that your branch must have been rebased on the target branch. This can be achieved by fetching upstream changes and rebasing afterwards:
+Once your development is ready for integration, you should open a merge request at the [ACTS project](https://gitlab.cern.ch/acts/acts-core) ([GitLab Help: Create a merge request](https://gitlab.cern.ch/help/gitlab-basics/add-merge-request)). The target branch should usually be _master_ for feature requests and _releas-X,Y,Z_ for bugfixes. The ACTS projects accepts only fast-foward merges which means that your branch must have been rebased on the target branch. This can be achieved by fetching upstream changes and rebasing afterwards:
 
     git fetch origin
     git checkout <my_feature_branch>
@@ -122,7 +122,7 @@ end of this section.
 
 As a first step, you need to create your own fork of the ACTS project. For doing
 this, please go to the [ACTS GitLab
-page](https://gitlab.cern.ch/acts/a-common-tracking-sw), click on the fork
+page](https://gitlab.cern.ch/acts/acts-core), click on the fork
 button, and follow the instructions ([GitLab Help "How to fork a
 project"](https://gitlab.cern.ch/help/gitlab-basics/fork-project)). In a second
 step, you need to configure your fork to be compatible with the current CI
@@ -138,7 +138,7 @@ with hundreds of duplicates comments and you will likely receive an angry email
 from the development team ;-).
 
     # adding the central ACTS repository as remote
-    git remote add upstream ssh://git@gitlab.cern.ch:7999/acts/a-common-tracking-sw.git
+    git remote add upstream ssh://git@gitlab.cern.ch:7999/acts/acts-core.git
     # get latest upstream changes
     git fetch upstream
     # start a new development
@@ -307,7 +307,7 @@ Now, master is pointing to B, HEAD and &lt;new\_branch\_name&gt; are pointing to
 
 Writing new code is not the only way one can contribute to the ACTS project. Another greatly appreciated contribution is looking at other proposed contributions to the project. The more eyeballs look at a piece of code before it is merged into the ACTS repository, the smaller the chances that a bug or other unwanted behaviour is accidentally introduced into the ACTS codebase. This is why we require that every ACTS merge request receives at least one human review before being merged.
 
-You can help reviewing proposed contributions by going to [the "merge requests" section of the ACTS Gitlab repository](https://gitlab.cern.ch/acts/a-common-tracking-sw/merge_requests) and having a look at the proposals that are being made here. The present contribution guide should serve as a good indication of what we expect from code submissions. In addition, please look at the merge request itself:
+You can help reviewing proposed contributions by going to [the "merge requests" section of the ACTS Gitlab repository](https://gitlab.cern.ch/acts/acts-core/merge_requests) and having a look at the proposals that are being made here. The present contribution guide should serve as a good indication of what we expect from code submissions. In addition, please look at the merge request itself:
 
 * Does its title and description reflect its contents?
 * Is it associated with a JIRA ticket so that we can easily document it in the release notes?
