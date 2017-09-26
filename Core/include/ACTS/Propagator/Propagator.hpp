@@ -111,6 +111,9 @@ namespace propagation {
       /// Maximum number of steps for one propagate() call
       unsigned int max_steps = 1000;
 
+      /// Required distance to surface 
+      double distance_to_surface = 1 * units::_um;
+
       /// Absolute minimum step size
       double min_step_size = 0.1 * units::_mm;
 
@@ -217,48 +220,27 @@ namespace propagation {
       // Initialize the internal propagation cache
       cache_type propagation_cache(start);
 
-      // This step converts the cache to the full track parameter type (which
-      // should logically be identical to the initial track parameters)
-      //
-      // It is only required for the observers at the moment, and such
-      // conversions should be dropped once observers can work directly with
-      // the internal propagation cache.
-      //
-      return_parameter_type previous = m_impl.convert(propagation_cache);
-
       // Propagation loop
       for (; r.steps < options.max_steps; ++r.steps) {
         // Perform a propagation step (which can alter the step size)
         r.pathLength += m_impl.step(propagation_cache, stepMax);
-
-        // Convert the propagation cache to the full track parameters (as above,
-        // this is only needed for the observers and should be dropped once they
-        // can work with internal propagation caches).
-        return_parameter_type current = m_impl.convert(propagation_cache);
-
         // Call the observers with the current and previous track parameters,
         // and let them fill in some propagation results
-        options.observer_list(current, previous, r);
-
+        options.observer_list(propagation_cache, r);
         // Is it time to stop the propagation?
         if (std::abs(r.pathLength) >= options.max_path_length
-            || options.stop_conditions(r, current, stepMax)) {
+            || options.stop_conditions(r, propagation_cache, stepMax)) {
           // Compute the final results and mark the propagation as successful
           r.endParameters = std::make_unique<const return_parameter_type>(
               m_impl.convert(propagation_cache));
           r.status = Status::SUCCESS;
           break;
         }
-
         // Adjust the step size so that we cannot go above the path limit
         if (std::abs(stepMax) > std::abs(signed_pathLimit - r.pathLength))
           stepMax = signed_pathLimit - r.pathLength;
-
-        // Keep track of the previous track parameters (for observers)
-        previous = current;
       }
-
-      return r;
+      return r;      
     }
 
     /// @brief Propagate track parameters
@@ -294,11 +276,6 @@ namespace propagation {
       typedef typename Impl::template cache_type<TrackParameters, Surface>
           cache_type;
 
-      // Type of track parameters produced during the propagation (independent
-      // of the target surface type)
-      typedef typename Impl::template step_parameter_type<TrackParameters>
-          step_parameter_type;
-
       // Type of track parameters produced at the end of the propagation
       typedef typename Impl::template return_parameter_type<TrackParameters,
                                                             Surface>
@@ -320,16 +297,7 @@ namespace propagation {
       double stepMax = options.direction * options.max_step_size;
 
       // Initialize the internal propagation cache
-      cache_type          cache(start);
-
-      // This step converts the cache to the full track parameter type (which
-      // should logically be identical to the initial track parameters)
-      //
-      // It is only required for the observers at the moment, and such
-      // conversions should be dropped once observers can work directly with
-      // the internal propagation cache.
-      //
-      step_parameter_type previous = m_impl.convert(cache);
+      cache_type  cache(start);
 
       // Compute the distance to the target surface
       double distance
@@ -349,41 +317,29 @@ namespace propagation {
         // Perform a propagation step (which can alter the step size)
         r.pathLength += m_impl.step(cache, stepMax);
 
-        // Convert the propagation cache to the full track parameters (as above,
-        // this is only needed for the observers and should be dropped once they
-        // can work with internal propagation caches).
-        step_parameter_type current = m_impl.convert(cache);
-
         // Call the observers with the current and previous track parameters,
         // and let them fill in some propagation results
-        options.observer_list(current, previous, r);
+        options.observer_list(cache, r);
 
         // Update the distance to the target surface
         distance = m_impl.distance(target, cache.position(), cache.direction());
 
-        // Is it time to stop the propagation?
-        // (FIXME: Should the required distance to the surface be hardcoded?)
-        if (std::abs(distance) < 1 * units::_um
+        // Is it time to stop the propagation ?
+        if (std::abs(distance) < options.distance_to_surface 
             || std::abs(r.pathLength) >= options.max_path_length
-            || options.stop_conditions(r, current, stepMax)) {
+            || options.stop_conditions(r, cache, stepMax)) {
           // Compute the final results and mark the propagation as successful
           r.endParameters = std::make_unique<const return_parameter_type>(
               m_impl.convert(cache, target));
           r.status = Status::SUCCESS;
           break;
         }
-
         // Adjust the step size so that we cannot go above the path limit
         if (std::abs(stepMax) > std::abs(signed_pathLimit - r.pathLength))
           stepMax = signed_pathLimit - r.pathLength;
-
         // Adjust the step size so that we cannot cross the target surface
         if (std::abs(stepMax) > std::abs(distance)) stepMax = distance;
-
-        // Keep track of the previous track parameters (for observers)
-        previous = current;
       }
-
       return r;
     }
 

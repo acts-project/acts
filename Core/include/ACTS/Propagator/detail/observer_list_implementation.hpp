@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef ACTS_OBSERVER_LIST_IMPLEMENTATION_HPP
-#define ACTS_OBSERVER_LIST_IMPLEMENTATION_HPP 1
+#define ACTS_OBSERVER_LIST_IMPLEMENTATION_HPP
 
 #include "ACTS/Utilities/detail/MPL/type_collector.hpp"
 
@@ -22,12 +22,10 @@ namespace detail {
       template <typename observer, typename result, typename input>
       static void
       observe(const observer& obs,
-              const input&    current,
-              const input&    previous,
+              const input&    cache,
               result&         r)
       {
-        obs(current,
-            previous,
+        obs(cache,
             r.template get<detail::result_type_t<observer>>());
       }
     };
@@ -38,11 +36,10 @@ namespace detail {
       template <typename observer, typename result, typename input>
       static void
       observe(const observer& obs,
-              const input&    current,
-              const input&    previous,
+              const input&    cache,
               result&)
       {
-        obs(current, previous);
+        obs(cache);
       }
     };
   }  // end of anonymous namespace
@@ -56,14 +53,13 @@ namespace detail {
     template <typename T, typename result, typename input>
     static void
     observe(const T&     obs_tuple,
-            const input& current,
-            const input& previous,
+            const input& cache,
             result&      r)
     {
       constexpr bool has_result    = has_result_type_v<first>;
       const auto&    this_observer = std::get<first>(obs_tuple);
-      observer_caller<has_result>::observe(this_observer, current, previous, r);
-      observer_list_impl<others...>::observe(obs_tuple, current, previous, r);
+      observer_caller<has_result>::observe(this_observer, cache, r);
+      observer_list_impl<others...>::observe(obs_tuple, cache, r);
     }
   };
 
@@ -73,13 +69,12 @@ namespace detail {
     template <typename T, typename result, typename input>
     static void
     observe(const T&     obs_tuple,
-            const input& current,
-            const input& previous,
+            const input& cache,
             result&      r)
     {
       constexpr bool has_result    = has_result_type_v<last>;
       const auto&    this_observer = std::get<last>(obs_tuple);
-      observer_caller<has_result>::observe(this_observer, current, previous, r);
+      observer_caller<has_result>::observe(this_observer, cache, r);
     }
   };
 
@@ -88,7 +83,7 @@ namespace detail {
   {
     template <typename T, typename result, typename input>
     static void
-    observe(const T&, const input&, const input&, result&)
+    observe(const T&, const input&, result&)
     {
     }
   };

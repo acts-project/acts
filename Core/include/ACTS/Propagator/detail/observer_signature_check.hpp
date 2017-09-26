@@ -22,7 +22,6 @@ namespace detail {
               typename result,
               typename = decltype(std::declval<T>().
                                   operator()(std::declval<const input&>(),
-                                             std::declval<const input&>(),
                                              std::declval<result&>()))>
     std::true_type
     test_observer_with_result(int);
@@ -33,8 +32,7 @@ namespace detail {
     template <typename T,
               typename input,
               typename = decltype(std::declval<T>().
-                                  operator()(std::declval<const input&>(),
-                                             std::declval<const input&>()))>
+                                  operator()(std::declval<const input&>()))>
     std::true_type
     test_observer_without_result(int);
 

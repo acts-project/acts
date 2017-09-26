@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef ACTS_OBSERVER_LIST_HPP
-#define ACTS_OBSERVER_LIST_HPP 1
+#define ACTS_OBSERVER_LIST_HPP
 
 #include "ACTS/Propagator/detail/Extendable.hpp"
 #include "ACTS/Propagator/detail/observer_list_implementation.hpp"
@@ -39,8 +39,7 @@ public:
 
   template <typename input, typename result_t>
   void
-  operator()(const input& current,
-             const input& previous,
+  operator()(const input& cache,
              result_t&    result) const
   {
     // clang-format off
@@ -49,7 +48,7 @@ public:
     // clang-format on
 
     typedef detail::observer_list_impl<observers...> impl;
-    impl::observe(tuple(), current, previous, result);
+    impl::observe(tuple(), cache, result);
   }
 };
 
