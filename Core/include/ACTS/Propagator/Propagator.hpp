@@ -112,7 +112,7 @@ namespace propagation {
       unsigned int max_steps = 1000;
 
       /// Required distance to surface 
-      double distance_to_surface = 1 * units::_um;
+      double target_surface_distance = 1 * units::_um;
 
       /// Absolute minimum step size
       double min_step_size = 0.1 * units::_mm;
@@ -325,7 +325,7 @@ namespace propagation {
         distance = m_impl.distance(target, cache.position(), cache.direction());
 
         // Is it time to stop the propagation ?
-        if (std::abs(distance) < options.distance_to_surface 
+        if (std::abs(distance) < options.target_surface_distance 
             || std::abs(r.pathLength) >= options.max_path_length
             || options.stop_conditions(r, cache, stepMax)) {
           // Compute the final results and mark the propagation as successful
