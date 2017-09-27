@@ -6,7 +6,7 @@ stages:
     - check
 
 variables:
-    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_DD4HEP_PLUGIN=on -DBUILD_MATERIAL_PLUGIN=on -DBUILD_TGEO_PLUGIN=on
+    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_DD4HEP_PLUGIN=on -DBUILD_MATERIAL_PLUGIN=on -DBUILD_TGEO_PLUGIN=on -DBUILD_INTEGRATION_TESTS=on
     DEFAULT_BUILDDIR: build_slc6_gcc
 
 before_script:
@@ -36,6 +36,16 @@ unit_tests_slc6_gcc:
         paths:
             - build_slc6_gcc
 
+integration_tests_slc6_gcc:
+    stage: test
+    dependencies: [build_slc6_gcc]
+    tags: [cvmfs]
+    script:
+        - cmake --build build_slc6_gcc -- integration_tests
+    artifacts:
+        paths:
+            - build_slc6_gcc
+
 build_slc6_llvm40:
     stage: build
     tags: [cvmfs]
@@ -57,6 +67,14 @@ unit_tests_slc6_llvm40:
         - source CI/setup_llvm40.sh
         - cmake --build build_slc6_llvm40 -- test
 
+integration_tests_slc6_llvm40:
+    stage: test
+    dependencies: [build_slc6_llvm40]
+    tags: [cvmfs]
+    script:
+        - source CI/setup_llvm40.sh
+        - cmake --build build_slc6_llvm40 -- integration_tests
+
 build_cc7_gcc:
     stage: build
     image: gitlab-registry.cern.ch/acts/machines/cc7:latest
@@ -77,6 +95,14 @@ unit_tests_cc7_gcc:
     tags: [cvmfs]
     script:
         - cmake --build build_cc7_gcc -- test
+
+integration_tests_cc7_gcc:
+    stage: test
+    dependencies: [build_cc7_gcc]
+    image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+    tags: [cvmfs]
+    script:
+        - cmake --build build_cc7_gcc -- integration_tests
 
 build_cc7_llvm40:
     stage: build
@@ -100,6 +126,15 @@ unit_tests_cc7_llvm40:
     script:
         - source CI/setup_llvm40.sh
         - cmake --build build_cc7_llvm40 -- test
+
+integration_tests_cc7_llvm40:
+    stage: test
+    dependencies: [build_cc7_llvm40]
+    image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+    tags: [cvmfs]
+    script:
+        - source CI/setup_llvm40.sh
+        - cmake --build build_cc7_llvm40 -- integration_tests
 
 doc:
     stage: build

@@ -12,7 +12,7 @@
 #include <cmath>
 
 #include <boost/test/data/test_case.hpp>
-#include "../Propagator/covariance_validation_fixture.hpp"
+#include "covariance_validation_fixture.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/MagneticField/ConstantBField.hpp"
 #include "ACTS/Propagator/AtlasStepper.hpp"
@@ -28,7 +28,7 @@ namespace Acts {
 using units::Nat2SI;
 using namespace propagation;
 
-namespace Test {
+namespace IntegrationTest {
 
   /// test forward propagation in constant magnetic field
   BOOST_DATA_TEST_CASE(constant_bfield_forward_propagation,

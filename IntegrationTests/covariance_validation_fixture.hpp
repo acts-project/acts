@@ -15,7 +15,7 @@
 
 namespace Acts {
 
-namespace Test {
+namespace IntegrationTest {
 
   template <typename T>
   struct covariance_validation_fixture
