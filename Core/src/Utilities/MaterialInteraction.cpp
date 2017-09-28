@@ -142,7 +142,8 @@ Acts::sigmaMS(double dInX0, double p, double beta)
   if (dInX0 == 0. || p == 0. || beta == 0.) return 0.;
 
   // Highland formula - projected sigma_s
-  double sig_ms = 13.6 * sqrt(dInX0) / (beta * p)
+  // ATL-SOFT-PUB-2008-003 equation (15)
+  double sig_ms = 13.6 * Acts::units::_MeV * sqrt(dInX0) / (beta * p)
       * (1. + 0.038 * log(dInX0 / (beta * beta)));
   return sig_ms;
 }
