@@ -25,13 +25,13 @@ namespace detail {
       static bool
       check(const condition& c,
             const result&    r,
-            input&           current,
+            input&           cache,
             double&          stepMax)
       {
         typedef observer_type_t<condition>   observer_type;
         typedef result_type_t<observer_type> result_type;
 
-        return c(r.template get<result_type>(), current, stepMax);
+        return c(r.template get<result_type>(), cache, stepMax);
       }
     };
 
@@ -40,9 +40,9 @@ namespace detail {
     {
       template <typename condition, typename result, typename input>
       static bool
-      check(const condition& c, const result&, input& current, double& stepMax)
+      check(const condition& c, const result&, input& cache, double& stepMax)
       {
-        return c(current, stepMax);
+        return c(cache, stepMax);
       }
     };
   }  // end of anonymous namespace
@@ -57,14 +57,14 @@ namespace detail {
     static bool
     check(const T&      conditions_tuple,
           const result& r,
-          input&        current,
+          input&        cache,
           double&       stepMax)
     {
       // get the right helper for calling the abort condition
       constexpr bool has_result = condition_uses_result_type<first>::value;
       typedef condition_caller<has_result> caller_type;
 
-      // get the current abort condition
+      // get the cache abort condition
       const auto& this_condition = std::get<first>(conditions_tuple);
 
       // maximum step sizes from remaining abort conditions
@@ -73,9 +73,9 @@ namespace detail {
       // - check abort conditions recursively
       // - make use of short-circuit evaluation
       // -> skip remaining conditions if this abort condition evaluates to true
-      bool abort = caller_type::check(this_condition, r, current, stepMax)
+      bool abort = caller_type::check(this_condition, r, cache, stepMax)
           || abort_list_impl<others...>::check(
-                       conditions_tuple, r, current, other_stepMax);
+                       conditions_tuple, r, cache, other_stepMax);
 
       // set remaining step size
       stepMax = std::min(stepMax, other_stepMax);
@@ -91,7 +91,7 @@ namespace detail {
     static bool
     check(const T&      conditions_tuple,
           const result& r,
-          input&        current,
+          input&        cache,
           double&       stepMax)
     {
       // get the right helper for calling the abort condition
@@ -99,7 +99,7 @@ namespace detail {
       const auto&    this_condition = std::get<last>(conditions_tuple);
 
       return condition_caller<has_result>::check(
-          this_condition, r, current, stepMax);
+          this_condition, r, cache, stepMax);
     }
   };
 
