@@ -83,10 +83,9 @@ Acts::ionizationEnergyLoss(InteractionType       interactionType,
     dE = kazL * (log(2. * m * eta2 / I) + log(kazL / I) + 0.2 - (beta * beta)
                  - delta);
     // The landau width (FWHM) is 4.*kazL
-    // The first factor is the conversion factor from FWHM to sigma
-    //  @todo Possibly add conversion factor 1. / (2. * sqrt(2. * log(2.))) from
-    //  FWHM to Gaussian sigma
-    sigma = 4. * kazL;
+    // The factor is the conversion factor from FWHM to sigma for
+    // gaussian curve: 1. / (2. * sqrt(2. * log(2.))).
+    sigma = 2. * kazL * 1. / (sqrt(2. * log(2.)));
   }
 
   return dE;
