@@ -258,8 +258,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   // harmonize the phi boundaries @todo - allow for sectorally filled arrrays
   // later
   double phiStep = (maxPhi - minPhi) / (binsPhi - 1);
-  minPhi -= 0.5 * phiStep;
-  maxPhi += 0.5 * phiStep;
+  minPhi         = minPhi + 0.5 * phiStep;
+  maxPhi         = M_PI * 2. + minPhi;
   // layer parametres
   double layerZ         = 0.5 * (minZ + maxZ);
   double layerThickness = (maxZ - minZ) + 2 * envelopeZ;
