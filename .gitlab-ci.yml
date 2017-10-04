@@ -160,12 +160,15 @@ coverage:
 
 format:
     stage: check
-    # TODO remove once all files have been reformatted
-    allow_failure: true
-    tags: [cvmfs]
+    image: gitlab-registry.cern.ch/pagessin/machines/check:latest
+    before_script: []
     dependencies: []
     script:
         - CI/check_format .
+    artifacts:
+        paths:
+          - changed
+        when: on_failure
 
 license:
     image: python:alpine3.6
