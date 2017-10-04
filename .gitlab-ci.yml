@@ -163,13 +163,14 @@ format:
     # TODO remove once all files have been reformatted
     allow_failure: true
     tags: [cvmfs]
+    dependencies: []
     script:
         - CI/check_format .
 
 license:
+    image: python:alpine3.6
     stage: check
-    # TODO remove once the license check is fixed
-    allow_failure: true
     before_script: []
+    dependencies: []
     script:
-        - CI/check_license_local .
+        - CI/check_license.py .
