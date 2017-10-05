@@ -23,6 +23,7 @@ build_slc6_gcc:
         - cd build_slc6_gcc
         - CXX=g++ cmake ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Debug ..
         - cmake --build .
+        - find . -name "*.o" -delete
     artifacts:
         paths:
             - build_slc6_gcc
@@ -55,6 +56,7 @@ build_slc6_llvm40:
         - cd build_slc6_llvm40
         - CXX=clang++ cmake ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Release ..
         - cmake --build .
+        - find . -name "*.o" -delete
     artifacts:
         paths:
             - build_slc6_llvm40
@@ -85,6 +87,7 @@ build_cc7_gcc:
         - cd build_cc7_gcc
         - CXX=g++ cmake ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Release ..
         - cmake --build .
+        - find . -name "*.o" -delete
     artifacts:
         paths:
             - build_cc7_gcc
@@ -116,6 +119,7 @@ build_cc7_llvm40:
         - cd build_cc7_llvm40
         - CXX=clang++ cmake ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Release ..
         - cmake --build .
+        - find . -name "*.o" -delete
     artifacts:
         paths:
             - build_cc7_llvm40
