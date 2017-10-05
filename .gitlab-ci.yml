@@ -26,6 +26,7 @@ build_slc6_gcc:
     artifacts:
         paths:
             - build_slc6_gcc
+        expire_in: 6 hours
 
 unit_tests_slc6_gcc:
     stage: test
@@ -36,6 +37,7 @@ unit_tests_slc6_gcc:
     artifacts:
         paths:
             - build_slc6_gcc
+        expire_in: 6 hours
 
 integration_tests_slc6_gcc:
     stage: test
@@ -43,9 +45,6 @@ integration_tests_slc6_gcc:
     tags: [cvmfs]
     script:
         - cmake --build build_slc6_gcc -- integration_tests
-    artifacts:
-        paths:
-            - build_slc6_gcc
 
 build_slc6_llvm40:
     stage: build
@@ -59,6 +58,7 @@ build_slc6_llvm40:
     artifacts:
         paths:
             - build_slc6_llvm40
+        expire_in: 6 hours
 
 unit_tests_slc6_llvm40:
     stage: test
@@ -88,6 +88,7 @@ build_cc7_gcc:
     artifacts:
         paths:
             - build_cc7_gcc
+        expire_in: 6 hours
 
 unit_tests_cc7_gcc:
     stage: test
@@ -118,6 +119,7 @@ build_cc7_llvm40:
     artifacts:
         paths:
             - build_cc7_llvm40
+        expire_in: 6 hours
 
 unit_tests_cc7_llvm40:
     stage: test
@@ -153,6 +155,8 @@ coverage:
     stage: check
     tags: [cvmfs]
     coverage: '/^TOTAL.*\s+(\d+\%)$/'
+    dependencies:
+        - unit_tests_slc6_gcc
     script:
         - cmake --build ${DEFAULT_BUILDDIR} -- coverage
     artifacts:
