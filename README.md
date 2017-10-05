@@ -91,6 +91,7 @@ Important options relevant for the ACTS project are given below. They are set by
 |CMAKE_CXX_COMPILER     | empty                 | set C++ compiler (e.g. g++ or clang++)                  |
 |CMAKE_BUILD_TYPE       | None                  | build type (e.g. Debug, Release) affects compiler flags |
 |DD4hep_DIR             | None                  | path to the DD4hep installation                         |
+|SUPPRESS_LIBRARY_WARNINGS | OFF                | suppress warnings from Boost and Eigen libraries        |
 
 ## <a name="build-lxplus">Build ACTS on lxplus</a>
 
