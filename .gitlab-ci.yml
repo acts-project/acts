@@ -160,7 +160,7 @@ coverage:
 
 format:
     stage: check
-    image: gitlab-registry.cern.ch/pagessin/machines/check:latest
+    image: gitlab-registry.cern.ch/acts/machines/check:latest
     before_script: []
     dependencies: []
     script:
