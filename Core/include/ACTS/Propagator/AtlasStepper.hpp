@@ -294,6 +294,9 @@ public:
     return CurvilinearParameters(std::move(cov), gp, mom, charge);
   }
 
+  /// convert method into bound parameters
+  /// @param cache is the propagation cache to be converted
+  /// @param s the target surface
   static BoundParameters
   convert(Cache& cache, const Surface& s)
   {
