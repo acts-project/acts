@@ -14,6 +14,7 @@
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
+#include "ACTS/MagneticField/concept/AnyFieldLookup.hpp"
 
 namespace Acts {
 
@@ -54,10 +55,10 @@ private:
       , qop(par.charge() / par.momentum().norm())
       , cov(par.covariance())
     {
-      const double phi   = dir.phi();
-      const double theta = dir.theta();
-
       if (cov) {
+        const double phi   = dir.phi();
+        const double theta = dir.theta();
+        
         const auto transform = par.referenceSurface().transform().matrix();
         jacobian(0, eLOC_0) = transform(0, eLOC_0);
         jacobian(0, eLOC_1) = transform(0, eLOC_1);
@@ -100,16 +101,18 @@ private:
     /// Jacobian used to transport the covariance matrix
     ActsMatrixD<7, 5> jacobian = ActsMatrixD<7, 5>::Zero();
 
-    /// ???
+    /// The propagation derivative 
     ActsVectorD<7> derivative = ActsVectorD<7>::Zero();
 
     /// Covariance matrix assocated with the initial error on track parameters
     const ActsSymMatrixD<5>* cov = nullptr;
 
-    /// Lazily initialized cache which contains an approximation of the
-    /// magnetic field at the current position. See step() code for details.
+    /// Lazily initialized cache 
+    /// It caches the current magneticl field cell and stays interpolates within 
+    /// as long as this is valid. See step() code for details.
     bool     field_cache_ready = false;
-    Vector3D field_cache       = Vector3D(0, 0, 0);
+    concept::AnyFieldCell<> field_cache;
+    
   };
 
   // This struct is a meta-function which normally maps to BoundParameters...
@@ -223,6 +226,8 @@ public:
   }
 
   /// Convert the propagation cache to track parameters at a certain surface
+  /// @param [in] cache Propagation cache used 
+  /// @param [in] surface Destination surface to which the conversion is done
   template <typename S>
   static BoundParameters
   convert(Cache& cache, const S& surface)
@@ -281,6 +286,22 @@ public:
     return i.pathLength;
   }
 
+  /// Get the field for the stepping
+  /// It checks first if the access is still within the Cell,
+  /// and updates the cell if necessary, then it takes the field
+  /// from the cell
+  /// @param [in,out] cache is the propagation cache associated with the track
+  ///                 the magnetic field cell is used (and potentially updated)
+  /// @param [in] pos is the field position
+  Vector3D getField(Cache& cache, const Vector3D& pos) const
+  {
+    if (!cache.field_cache_ready || !cache.field_cache.isInside(pos)){
+      cache.field_cache = m_bField.getFieldCell(pos);
+    }
+    // get the field from the cell
+    return std::move(cache.field_cache.getField(pos));
+  }
+
   /// Perform a Runge-Kutta track parameter propagation step
   ///
   /// @param[in,out] cache is the propagation cache associated with the track
@@ -301,14 +322,8 @@ public:
     double   h2, half_h;
     Vector3D B_middle, B_last, k2, k3, k4;
 
-    // Initialize the magnetic field cache on the first run
-    if (!cache.field_cache_ready) {
-      cache.field_cache       = m_bField.getField(cache.pos);
-      cache.field_cache_ready = true;
-    }
-
     // First Runge-Kutta point (at current position)
-    const Vector3D B_first = cache.field_cache;
+    const Vector3D B_first = getField(cache, cache.pos);
     const Vector3D k1      = qop * cache.dir.cross(B_first);
 
     // The following functor starts to perform a Runge-Kutta step of a certain
@@ -322,7 +337,7 @@ public:
 
       // Second Runge-Kutta point
       const Vector3D pos1 = cache.pos + half_h * cache.dir + h2 / 8 * k1;
-      B_middle            = m_bField.getField(pos1);
+      B_middle            = getField(cache, pos1);;
       k2                  = qop * (cache.dir + half_h * k1).cross(B_middle);
 
       // Third Runge-Kutta point
@@ -330,7 +345,7 @@ public:
 
       // Last Runge-Kutta point
       const Vector3D pos2 = cache.pos + h * cache.dir + h2 / 2 * k3;
-      B_last              = m_bField.getField(pos2);
+      B_last              = getField(cache, pos2);
       k4                  = qop * (cache.dir + h * k3).cross(B_last);
 
       // Return an estimate of the local integration error
@@ -417,10 +432,6 @@ public:
     cache.dir /= cache.dir.norm();
     cache.derivative.template head<3>()     = cache.dir;
     cache.derivative.template segment<3>(3) = k4;
-
-    // We approximate the magnetic field at our new position as being equal to
-    // the last field measurement, thusly avoiding one field lookup per step.
-    cache.field_cache = B_last;
 
     // Return the updated step size
     return h;
