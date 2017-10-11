@@ -4,6 +4,7 @@ stages:
     - build
     - test
     - check
+    - deploy
 
 variables:
     CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_DD4HEP_PLUGIN=on -DBUILD_MATERIAL_PLUGIN=on -DBUILD_TGEO_PLUGIN=on -DBUILD_INTEGRATION_TESTS=on -DSUPPRESS_LIBRARY_WARNINGS=on
