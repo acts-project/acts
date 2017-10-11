@@ -252,6 +252,7 @@ public:
     // if we have more than one config present
     if ((nVolumeConfig && cVolumeConfig) || (cVolumeConfig && pVolumeConfig)
         || (nVolumeConfig && pVolumeConfig)) {
+      wCondition       = Wrapping;
       wConditionScreen = "grouped to ";
     }
     // adapt the new volume config to the existing configs
