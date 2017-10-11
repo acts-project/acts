@@ -60,7 +60,7 @@ public:
   /// Returns the object in the associated bin according the local position
   ///
   /// @param position is the global position for the object retrieval
-  /// @param bin is the bin triple filled 
+  /// @param bin is the bin triple filled
   ///
   /// @return the object according to the estimated bin
   virtual T

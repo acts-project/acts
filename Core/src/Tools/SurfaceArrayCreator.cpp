@@ -32,8 +32,9 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 {
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
-  ACTS_VERBOSE(" -- with phi x z  = " << binsPhi << " x " << binsZ << " = " 
-    << binsPhi * binsZ << " bins.");
+  ACTS_VERBOSE(" -- with phi x z  = " << binsPhi << " x " << binsZ << " = "
+                                      << binsPhi * binsZ
+                                      << " bins.");
   // create the 2D bin utility
   // create the (plain) binUtility - with the transform if given
   auto mutableArrayUtility
@@ -106,9 +107,10 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
-  ACTS_VERBOSE(" -- with phi x z  = " << bins0 << " x " << bins1 << " = " 
-    << bins0 * bins1 << " bins.");
-  
+  ACTS_VERBOSE(" -- with phi x z  = " << bins0 << " x " << bins1 << " = "
+                                      << bins0 * bins1
+                                      << " bins.");
+
   // prepare the surface matrix
   SurfaceGrid sGrid(1, SurfaceMatrix(bins1, SurfaceVector(bins0, nullptr)));
   V3Matrix    v3Matrix(bins1, V3Vector(bins0, Vector3D(0., 0., 0.)));
@@ -140,7 +142,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
       v3Matrix[iz][iphi] = Vector3D(R * cos(phi), R * sin(phi), z);
     }
   }
-  // complete the Binning 
+  // complete the Binning
   // @TODO switch on when we have a faster method for this
   completeBinning(arrayUtility, v3Matrix, surfaces, sGrid);
   // create the surfaceArray
@@ -764,7 +766,7 @@ Acts::SurfaceArrayCreator::createBinUtility(
     ACTS_ERROR("No surfaces given - can not create BinUtility for "
                "BinnedSurfaceArray!");
   // introduce BinUtility to hand back
-  Acts::BinningOption               bOption    = open;
+  Acts::BinningOption bOption = open;
   // all the information already given
   if (bValue == Acts::binPhi) bOption = closed;
   ACTS_VERBOSE("Create BinUtility for BinnedSurfaceArray with equidistant "

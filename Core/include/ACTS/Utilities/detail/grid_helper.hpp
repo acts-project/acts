@@ -347,7 +347,7 @@ namespace detail {
     static std::set<size_t>
     closestPointsIndices(size_t bin, const std::tuple<Axes...>& axes)
     {
-      constexpr size_t MAX = sizeof...(Axes)-1;
+      constexpr size_t MAX = sizeof...(Axes) - 1;
       std::set<size_t> closestPointsIndices;
 
       // get local bin indices for neighboring bins
@@ -374,7 +374,7 @@ namespace detail {
                  const std::tuple<Axes...>& axes)
     {
       std::array<double, sizeof...(Axes)> center;
-      constexpr size_t MAX = sizeof...(Axes)-1;
+      constexpr size_t MAX = sizeof...(Axes) - 1;
       grid_helper_impl<MAX>::getBinCenter(center, localIndices, axes);
 
       return center;
@@ -397,7 +397,7 @@ namespace detail {
     static size_t
     getGlobalBin(const Point& point, const std::tuple<Axes...>& axes)
     {
-      constexpr size_t MAX  = sizeof...(Axes)-1;
+      constexpr size_t MAX  = sizeof...(Axes) - 1;
       size_t           area = 1;
       size_t           bin  = 0;
 
@@ -421,7 +421,7 @@ namespace detail {
     getGlobalBin(const std::array<size_t, sizeof...(Axes)>& localBins,
                  const std::tuple<Axes...>& axes)
     {
-      constexpr size_t MAX  = sizeof...(Axes)-1;
+      constexpr size_t MAX  = sizeof...(Axes) - 1;
       size_t           area = 1;
       size_t           bin  = 0;
 
@@ -444,7 +444,7 @@ namespace detail {
     static std::array<size_t, sizeof...(Axes)>
     getLocalBinIndices(size_t bin, const std::tuple<Axes...>& axes)
     {
-      constexpr size_t MAX  = sizeof...(Axes)-1;
+      constexpr size_t MAX  = sizeof...(Axes) - 1;
       size_t           area = 1;
       std::array<size_t, sizeof...(Axes)> indices;
 
@@ -468,7 +468,7 @@ namespace detail {
                         const std::tuple<Axes...>& axes)
     {
       std::array<double, sizeof...(Axes)> llEdge;
-      constexpr size_t MAX = sizeof...(Axes)-1;
+      constexpr size_t MAX = sizeof...(Axes) - 1;
       grid_helper_impl<MAX>::getLowerLeftBinEdge(llEdge, localIndices, axes);
 
       return llEdge;
@@ -512,7 +512,7 @@ namespace detail {
     getNBins(const std::tuple<Axes...>& axes)
     {
       std::array<size_t, sizeof...(Axes)> nBinsArray;
-      grid_helper_impl<sizeof...(Axes)-1>::getNBins(axes, nBinsArray);
+      grid_helper_impl<sizeof...(Axes) - 1>::getNBins(axes, nBinsArray);
       return nBinsArray;
     }
 
@@ -532,7 +532,7 @@ namespace detail {
         const std::tuple<Axes...>& axes)
     {
       std::array<double, sizeof...(Axes)> urEdge;
-      constexpr size_t MAX = sizeof...(Axes)-1;
+      constexpr size_t MAX = sizeof...(Axes) - 1;
       grid_helper_impl<MAX>::getUpperRightBinEdge(urEdge, localIndices, axes);
 
       return urEdge;
@@ -557,7 +557,7 @@ namespace detail {
         const std::array<size_t, sizeof...(Axes)>& localIndices,
         const std::tuple<Axes...>& axes)
     {
-      constexpr size_t MAX       = sizeof...(Axes)-1;
+      constexpr size_t MAX       = sizeof...(Axes) - 1;
       auto             urIndices = localIndices;
       grid_helper_impl<MAX>::getUpperRightBinIndices(urIndices, axes);
 
@@ -574,7 +574,7 @@ namespace detail {
     getMin(const std::tuple<Axes...>& axes)
     {
       std::array<double, sizeof...(Axes)> minArray;
-      grid_helper_impl<sizeof...(Axes)-1>::getMin(axes, minArray);
+      grid_helper_impl<sizeof...(Axes) - 1>::getMin(axes, minArray);
       return minArray;
     }
 
@@ -588,7 +588,7 @@ namespace detail {
     getMax(const std::tuple<Axes...>& axes)
     {
       std::array<double, sizeof...(Axes)> maxArray;
-      grid_helper_impl<sizeof...(Axes)-1>::getMax(axes, maxArray);
+      grid_helper_impl<sizeof...(Axes) - 1>::getMax(axes, maxArray);
       return maxArray;
     }
 
@@ -623,7 +623,7 @@ namespace detail {
                         size_t                     size,
                         const std::tuple<Axes...>& axes)
     {
-      constexpr size_t MAX = sizeof...(Axes)-1;
+      constexpr size_t MAX = sizeof...(Axes) - 1;
       std::set<size_t> binIndices;
       std::set<std::array<size_t, sizeof...(Axes)>> neighborIndices;
 
@@ -656,7 +656,7 @@ namespace detail {
     static bool
     isInside(const Point& position, const std::tuple<Axes...>& axes)
     {
-      constexpr size_t MAX = sizeof...(Axes)-1;
+      constexpr size_t MAX = sizeof...(Axes) - 1;
       return grid_helper_impl<MAX>::isInside(position, axes);
     }
   };

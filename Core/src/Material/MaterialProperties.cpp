@@ -42,9 +42,7 @@ Acts::MaterialProperties::MaterialProperties(const Material& material,
 
 Acts::MaterialProperties::MaterialProperties(
     const Acts::MaterialProperties& mprop)
-  : m_material(mprop.m_material)
-  , m_dInX0(mprop.m_dInX0)
-  , m_dInL0(mprop.m_dInL0)
+  : m_material(mprop.m_material), m_dInX0(mprop.m_dInX0), m_dInL0(mprop.m_dInL0)
 {
 }
 

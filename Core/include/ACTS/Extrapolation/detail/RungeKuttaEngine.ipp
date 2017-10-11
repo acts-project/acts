@@ -42,7 +42,8 @@ Acts::RungeKuttaEngine<MagneticField>::propagateRungeKuttaT(
   // propagate with different surface types
   if (sType == Surface::Plane || sType == Surface::Disc) {
     // (i) planar surface types
-    double s[4], d = sTransform(0, 3) * sTransform(0, 2)
+    double s[4],
+        d = sTransform(0, 3) * sTransform(0, 2)
         + sTransform(1, 3) * sTransform(1, 2)
         + sTransform(2, 3) * sTransform(2, 2);
     if (d >= 0.) {
@@ -642,9 +643,9 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
 
   bool Jac = pCache.useJacobian;
 
-  double* R    = &(pCache.pVector[0]);  // Coordinates
-  double* A    = &(pCache.pVector[3]);  // Directions
-  double* sA   = &(pCache.pVector[42]);
+  double* R  = &(pCache.pVector[0]);  // Coordinates
+  double* A  = &(pCache.pVector[3]);  // Directions
+  double* sA = &(pCache.pVector[42]);
 
   // @todo bring the numbers into initialize
   double scaleM = 1e-3 / units::_T;
@@ -686,7 +687,7 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
     // Second point
     //
     if (!Helix) {
-      double gP[3] = {R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4};
+      double   gP[3] = {R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4};
       Vector3D bField
           = m_cfg.fieldService->getField(Vector3D(gP[0], gP[1], gP[2]));
       f[0] = scaleM * bField.x();
@@ -712,7 +713,7 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
     // Last point
     //
     if (!Helix) {
-      double gP[3] = {R[0] + S * A4, R[1] + S * B4, R[2] + S * C4};
+      double   gP[3] = {R[0] + S * A4, R[1] + S * B4, R[2] + S * C4};
       Vector3D bField
           = m_cfg.fieldService->getField(Vector3D(gP[0], gP[1], gP[2]));
       f[0] = scaleM * bField.x();
@@ -884,16 +885,16 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStepWithGradient(
   EX_MSG_VERBOSE(
       navigationStep, "propagate", "<T> ", "rungeKuttaStepWithGradient called");
 
-  const double C33  = 1. / 3.;
-  double*      R    = &(pCache.pVector[0]);  // Coordinates
-  double*      A    = &(pCache.pVector[3]);  // Directions
-  double*      sA   = &(pCache.pVector[42]);
+  const double C33 = 1. / 3.;
+  double*      R   = &(pCache.pVector[0]);  // Coordinates
+  double*      A   = &(pCache.pVector[3]);  // Directions
+  double*      sA  = &(pCache.pVector[42]);
   // express the conversion factor with units
   // @todo bring the conversion into initialize
   double scaleM = 1e-3 / units::_T;
   double Pi = 149.89626 * pCache.pVector[6] * units::_MeV;  // Invert mometum/2.
 
-  double       dltm = m_cfg.dlt * .03;
+  double dltm = m_cfg.dlt * .03;
 
   double f0[3], f1[3], f2[3], g0[9], g1[9], g2[9], H0[12], H1[12], H2[12];
 

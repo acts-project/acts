@@ -43,7 +43,7 @@ Acts::SurfaceMaterialRecord&
 Acts::SurfaceMaterialRecord::operator=(const SurfaceMaterialRecord& lmrecord)
 {
   if (this != &lmrecord) {
-    m_surface        = lmrecord.m_surface;
+    m_surface    = lmrecord.m_surface;
     m_binUtility = std::make_unique<const BinUtility>(*lmrecord.m_binUtility);
     m_mappedMaterial = lmrecord.m_mappedMaterial;
   }

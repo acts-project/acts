@@ -59,7 +59,7 @@ public:
   ///
   /// @param ecCell is the charged extrapolation cell
   /// @param dir is the additional direction prescription
-  /// @param noLoop is a loop protection                
+  /// @param noLoop is a loop protection
   /// @todo check with sharka where this is used
   ///
   /// @return is a extrapolation code indication
@@ -72,7 +72,7 @@ public:
   ///
   /// @param enCell is the neutral extrapolation cell
   /// @param dir is the additional direction prescription
-  /// @param noLoop is a loop protection                
+  /// @param noLoop is a loop protection
   /// @todo check with sharka where this is used
   ///
   /// @return is a extrapolation code indication

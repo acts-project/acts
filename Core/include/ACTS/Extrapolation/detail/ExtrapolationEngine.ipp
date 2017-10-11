@@ -63,7 +63,7 @@ Acts::ExtrapolationEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
                        << " and geoType:"
                        << geoType);
   }
-  // debug output to screen 
+  // debug output to screen
   EX_MSG_DEBUG(
       eCell.navigationStep,
       "extrapolate",

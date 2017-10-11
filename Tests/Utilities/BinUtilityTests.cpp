@@ -8,8 +8,8 @@
 
 // Boost include(s)
 #define BOOST_TEST_MODULE BinUtility Tests
-#include "ACTS/Utilities/BinUtility.hpp"
 #include <boost/test/included/unit_test.hpp>
+#include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/BinningData.hpp"
 #include "ACTS/Utilities/BinningType.hpp"
 

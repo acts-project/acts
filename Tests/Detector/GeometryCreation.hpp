@@ -20,14 +20,14 @@ namespace Acts {
 
 ///  helper function to create a cylinder
 TrackingVolumePtr
-constructCylinderVolume(double surfaceHalfLengthZ,
-                        double surfaceRadius,
-                        double surfaceRstagger,
-                        double surfaceZoverlap,
-                        double layerEnvelope,
-                        double volumeEnvelope,
-                        double innerVolumeR,
-                        double outerVolumeR,
+constructCylinderVolume(double             surfaceHalfLengthZ,
+                        double             surfaceRadius,
+                        double             surfaceRstagger,
+                        double             surfaceZoverlap,
+                        double             layerEnvelope,
+                        double             volumeEnvelope,
+                        double             innerVolumeR,
+                        double             outerVolumeR,
                         const std::string& name)
 {
   ///  the surface transforms

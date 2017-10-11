@@ -248,8 +248,8 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
                 Acts::getDefaultLogger("DD4hepLayerBuilder", loggingLevel));
 
         // get the possible material of the surounding volume
-        dd4hep::Material           ddmaterial = subDetector.volume().material();
-        auto                       volumeMaterial
+        dd4hep::Material ddmaterial = subDetector.volume().material();
+        auto             volumeMaterial
             = std::make_shared<const Material>(ddmaterial.radLength(),
                                                ddmaterial.intLength(),
                                                ddmaterial.A(),
@@ -353,7 +353,7 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
       cvbConfig.volumeName           = subDetector.name();
       cvbConfig.layerBuilder         = beamPipeBuilder;
       cvbConfig.layerEnvelopeR = {1. * Acts::units::_mm, 1. * Acts::units::_mm};
-      cvbConfig.buildToRadiusZero    = true;
+      cvbConfig.buildToRadiusZero = true;
 
       // beam pipe volume builder
       auto cylinderVolumeBuilder
@@ -411,8 +411,8 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
                           "constructor!"));
 
       // get the possible material
-      dd4hep::Material           ddmaterial = subDetector.volume().material();
-      auto                       volumeMaterial
+      dd4hep::Material ddmaterial = subDetector.volume().material();
+      auto             volumeMaterial
           = std::make_shared<const Material>(ddmaterial.radLength(),
                                              ddmaterial.intLength(),
                                              ddmaterial.A(),
@@ -462,8 +462,8 @@ collectLayers(dd4hep::DetElement&              detElement,
   const dd4hep::DetElement::Children& children = detElement.children();
   if (!children.empty()) {
     for (auto& child : children) {
-      dd4hep::DetElement           childDetElement = child.second;
-      Acts::IActsExtension*        detExtension    = nullptr;
+      dd4hep::DetElement    childDetElement = child.second;
+      Acts::IActsExtension* detExtension    = nullptr;
       try {
         detExtension = childDetElement.extension<Acts::IActsExtension>();
       } catch (std::runtime_error& e) {

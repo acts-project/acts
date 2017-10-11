@@ -137,7 +137,6 @@ NavigationLayer::isOnLayer(const Vector3D&      gp,
   return m_surfaceRepresentation->isOnSurface(gp, bcheck);
 }
 
-
 }  // end of namespace
 
 #endif  // ACTS_LAYERS_NAVIGATIONLAYER_H

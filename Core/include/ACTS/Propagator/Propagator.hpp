@@ -111,7 +111,7 @@ namespace propagation {
       /// Maximum number of steps for one propagate() call
       unsigned int max_steps = 1000;
 
-      /// Required distance to surface 
+      /// Required distance to surface
       double target_surface_distance = 1 * units::_um;
 
       /// Absolute minimum step size
@@ -210,7 +210,7 @@ namespace propagation {
                     "return track parameter type must be copy-constructible");
 
       // Initialize the propagation result object
-      result_type  r(Status::INPROGRESS);
+      result_type r(Status::INPROGRESS);
 
       // Compute the signed path limit and maximum step size
       const double signed_pathLimit
@@ -240,7 +240,7 @@ namespace propagation {
         if (std::abs(stepMax) > std::abs(signed_pathLimit - r.pathLength))
           stepMax = signed_pathLimit - r.pathLength;
       }
-      return r;      
+      return r;
     }
 
     /// @brief Propagate track parameters
@@ -289,7 +289,7 @@ namespace propagation {
                     "return track parameter type must be copy-constructible");
 
       // Initialize the propagation result object
-      result_type  r(Status::INPROGRESS);
+      result_type r(Status::INPROGRESS);
 
       // Compute the signed path limit and maximum step size
       const double signed_pathLimit
@@ -297,7 +297,7 @@ namespace propagation {
       double stepMax = options.direction * options.max_step_size;
 
       // Initialize the internal propagation cache
-      cache_type  cache(start);
+      cache_type cache(start);
 
       // Compute the distance to the target surface
       double distance
@@ -325,7 +325,7 @@ namespace propagation {
         distance = m_impl.distance(target, cache.position(), cache.direction());
 
         // Is it time to stop the propagation ?
-        if (std::abs(distance) < options.target_surface_distance 
+        if (std::abs(distance) < options.target_surface_distance
             || std::abs(r.pathLength) >= options.max_path_length
             || options.stop_conditions(r, cache, stepMax)) {
           // Compute the final results and mark the propagation as successful

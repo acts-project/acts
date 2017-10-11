@@ -510,9 +510,8 @@ namespace Test {
                  == loc0_qop_proj));
     BOOST_CHECK((ParameterSet<ParID_t::eLOC_1, ParID_t::eTHETA>::projector()
                  == loc1_theta_proj));
-    BOOST_CHECK((ParameterSet<ParID_t::eLOC_0,
-                              ParID_t::eLOC_1,
-                              ParID_t::ePHI>::projector()
+    BOOST_CHECK((ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI>::
+                     projector()
                  == loc0_loc1_phi_proj));
     BOOST_CHECK((ParameterSet<ParID_t::eLOC_0,
                               ParID_t::ePHI,

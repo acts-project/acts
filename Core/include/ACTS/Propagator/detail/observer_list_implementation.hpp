@@ -21,12 +21,9 @@ namespace detail {
     {
       template <typename observer, typename result, typename input>
       static void
-      observe(const observer& obs,
-              const input&    cache,
-              result&         r)
+      observe(const observer& obs, const input& cache, result& r)
       {
-        obs(cache,
-            r.template get<detail::result_type_t<observer>>());
+        obs(cache, r.template get<detail::result_type_t<observer>>());
       }
     };
 
@@ -35,9 +32,7 @@ namespace detail {
     {
       template <typename observer, typename result, typename input>
       static void
-      observe(const observer& obs,
-              const input&    cache,
-              result&)
+      observe(const observer& obs, const input& cache, result&)
       {
         obs(cache);
       }
@@ -52,9 +47,7 @@ namespace detail {
   {
     template <typename T, typename result, typename input>
     static void
-    observe(const T&     obs_tuple,
-            const input& cache,
-            result&      r)
+    observe(const T& obs_tuple, const input& cache, result& r)
     {
       constexpr bool has_result    = has_result_type_v<first>;
       const auto&    this_observer = std::get<first>(obs_tuple);
@@ -68,9 +61,7 @@ namespace detail {
   {
     template <typename T, typename result, typename input>
     static void
-    observe(const T&     obs_tuple,
-            const input& cache,
-            result&      r)
+    observe(const T& obs_tuple, const input& cache, result& r)
     {
       constexpr bool has_result    = has_result_type_v<last>;
       const auto&    this_observer = std::get<last>(obs_tuple);

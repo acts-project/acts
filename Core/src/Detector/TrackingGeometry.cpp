@@ -45,8 +45,8 @@ Acts::TrackingGeometry::lowestTrackingVolume(const Acts::Vector3D& gp) const
 const Acts::DetachedVolumeVector*
 Acts::TrackingGeometry::lowestDetachedTrackingVolumes(const Vector3D& gp) const
 {
-  double                      tol           = 0.001;
-  const TrackingVolume*       currentVolume = lowestStaticTrackingVolume(gp);
+  double                tol           = 0.001;
+  const TrackingVolume* currentVolume = lowestStaticTrackingVolume(gp);
   if (currentVolume) return currentVolume->detachedTrackingVolumes(gp, tol);
   return nullptr;
 }

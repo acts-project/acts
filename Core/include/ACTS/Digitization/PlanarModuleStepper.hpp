@@ -38,7 +38,7 @@ public:
 
   /// Constructor
   ///
-  /// @param pmsConfig is the configuration 
+  /// @param pmsConfig is the configuration
   /// @param logger is the logging istance
   PlanarModuleStepper(const Config&                 pmsConfig,
                       std::unique_ptr<const Logger> logger
@@ -48,7 +48,7 @@ public:
   ~PlanarModuleStepper() = default;
 
   /// Calculate the steps caused by this track - full simulation interface
-  /// 
+  ///
   /// @param dmodule is the digitization module
   /// @param startPosition is the starting position of the stepping
   /// @param endPosition is the end postion of the stepping
@@ -59,8 +59,8 @@ public:
             const Vector3D&           startPosition,
             const Vector3D&           endPosition) const;
 
-  /// Calculate the steps caused by this track - fast simulation interface 
-  /// 
+  /// Calculate the steps caused by this track - fast simulation interface
+  ///
   /// @param dmodule is the digitization module
   /// @param intersection is the 2d intersection at the module surface
   /// @param direction is the track direction at the instersection
