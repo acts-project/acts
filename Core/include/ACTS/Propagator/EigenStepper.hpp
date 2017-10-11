@@ -48,6 +48,7 @@ private:
   struct Cache
   {
     /// Constructor from the initial track parameters
+    /// @tparam [in] par are the track parameters
     template <typename T>
     explicit Cache(const T& par)
       : pos(par.position())
@@ -162,6 +163,8 @@ public:
   EigenStepper(BField bField = BField()) : m_bField(std::move(bField)){};
 
   /// Convert the propagation cache to curvilinear parameters
+  /// @param cache is the stepper cache 
+  /// @todo check: what if cache is already in courvilinear ? is this caught ?
   static CurvilinearParameters
   convert(const Cache& cache)
   {
