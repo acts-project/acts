@@ -177,3 +177,13 @@ license:
     dependencies: []
     script:
         - CI/check_license.py .
+
+deploy_to_website:
+    stage: deploy
+    dependencies: [doc]
+    script:
+       - unset PYTHONHOME
+       - echo "$ATSJENKINS_PASSWORD" | kinit atsjenkins@CERN.CH 2>&1 >/dev/null
+       - CI/deploy_tag . build/doc/html "acts-developers@cern.ch acts-users@cern.ch"
+    only:
+       - tags 
