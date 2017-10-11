@@ -105,6 +105,11 @@ private:
 
     /// Covariance matrix assocated with the initial error on track parameters
     const ActsSymMatrixD<5>* cov = nullptr;
+
+    /// Lazily initialized cache which contains an approximation of the
+    /// magnetic field at the current position. See step() code for details.
+    bool     field_cache_ready = false;
+    Vector3D field_cache       = Vector3D(0, 0, 0);
   };
 
   // This struct is a meta-function which normally maps to BoundParameters...
@@ -155,15 +160,15 @@ public:
 
   /// Convert the propagation cache to curvilinear parameters
   static CurvilinearParameters
-  convert(const Cache& c)
+  convert(const Cache& cache)
   {
-    double                                   charge = c.qop > 0. ? 1. : -1.;
+    double                                  charge = cache.qop > 0. ? 1. : -1.;
     std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
 
     // Perform error propagation if an initial covariance matrix was provided
-    if (c.cov) {
-      const double phi   = c.dir.phi();
-      const double theta = c.dir.theta();
+    if (cache.cov) {
+      const double phi   = cache.dir.phi();
+      const double theta = cache.dir.theta();
 
       ActsMatrixD<5, 7> J = ActsMatrixD<5, 7>::Zero();
       if (std::abs(cos(theta)) < 0.99) {
@@ -192,46 +197,46 @@ public:
       ActsRowVectorD<3> norm_vec(
           cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));
 
-      norm_vec /= (norm_vec * c.dir);
+      norm_vec /= (norm_vec * cache.dir);
       ActsRowVectorD<5> scale_factors
-          = (c.jacobian.template block<3, 5>(0, 0).array().colwise()
+          = (cache.jacobian.template block<3, 5>(0, 0).array().colwise()
              * norm_vec.transpose().array())
                 .colwise()
                 .sum();
       ActsMatrixD<7, 5> tmp;
-      tmp.col(0) = c.derivative;
-      tmp.col(1) = c.derivative;
-      tmp.col(2) = c.derivative;
-      tmp.col(3) = c.derivative;
-      tmp.col(4) = c.derivative;
+      tmp.col(0) = cache.derivative;
+      tmp.col(1) = cache.derivative;
+      tmp.col(2) = cache.derivative;
+      tmp.col(3) = cache.derivative;
+      tmp.col(4) = cache.derivative;
       tmp *= scale_factors.asDiagonal();
-      auto jacobian = c.jacobian;
+      auto jacobian = cache.jacobian;
       jacobian -= tmp;
       auto jac = J * jacobian;
 
-      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * (*c.cov)
+      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * (*cache.cov)
                                                       * jac.transpose());
     }
 
     return CurvilinearParameters(
-        std::move(cov), c.pos, c.dir / std::abs(c.qop), charge);
+        std::move(cov), cache.pos, cache.dir / std::abs(cache.qop), charge);
   }
 
   /// Convert the propagation cache to track parameters at a certain surface
   template <typename S>
   static BoundParameters
-  convert(Cache& c, const S& surface)
+  convert(Cache& cache, const S& surface)
   {
-    double                                  charge = c.qop > 0. ? 1. : -1.;
+    double                                  charge = cache.qop > 0. ? 1. : -1.;
     std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
 
     // Perform error propagation if an initial covariance matrix was provided
-    if (c.cov) {
-      const double phi   = c.dir.phi();
-      const double theta = c.dir.theta();
+    if (cache.cov) {
+      const double phi   = cache.dir.phi();
+      const double theta = cache.dir.theta();
 
       ActsMatrixD<5, 7> J = ActsMatrixD<5, 7>::Zero();
-      const auto dLdG = dLocaldGlobal(surface, c.pos);
+      const auto dLdG = dLocaldGlobal(surface, cache.pos);
       J.block<2, 3>(0, 0) = dLdG.template block<2, 3>(0, 0);
       J(2, 3) = -sin(phi) / sin(theta);
       J(2, 4) = cos(phi) / sin(theta);
@@ -239,28 +244,33 @@ public:
       J(4, 6) = 1;
 
       ActsRowVectorD<3> norm_vec = dLdG.template block<1, 3>(2, 0);
-      norm_vec /= (norm_vec * c.dir);
+      norm_vec /= (norm_vec * cache.dir);
       ActsRowVectorD<5> scale_factors
-          = (c.jacobian.template block<3, 5>(0, 0).array().colwise()
+          = (cache.jacobian.template block<3, 5>(0, 0).array().colwise()
              * norm_vec.transpose().array())
                 .colwise()
                 .sum();
       ActsMatrixD<7, 5> tmp;
-      tmp.col(0) = c.derivative;
-      tmp.col(1) = c.derivative;
-      tmp.col(2) = c.derivative;
-      tmp.col(3) = c.derivative;
-      tmp.col(4) = c.derivative;
+      tmp.col(0) = cache.derivative;
+      tmp.col(1) = cache.derivative;
+      tmp.col(2) = cache.derivative;
+      tmp.col(3) = cache.derivative;
+      tmp.col(4) = cache.derivative;
       tmp *= scale_factors.asDiagonal();
-      c.jacobian -= tmp;
-      auto jac = J * c.jacobian;
 
-      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * (*c.cov)
+      auto jacobian = cache.jacobian;
+      jacobian -= tmp;
+      auto jac = J * cache.jacobian;
+
+      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * (*cache.cov)
                                                       * jac.transpose());
     }
 
-    return BoundParameters(
-        std::move(cov), c.pos, c.dir / std::abs(c.qop), charge, surface);
+    return BoundParameters(std::move(cov),
+                           cache.pos,
+                           cache.dir / std::abs(cache.qop),
+                           charge,
+                           surface);
   }
 
   /// Estimate the (signed) distance to a certain surface
@@ -273,26 +283,33 @@ public:
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///
-  /// @param[in,out] c is the propagation cache associated with the track
-  ///                  parameters that are being propagated.
+  /// @param[in,out] cache is the propagation cache associated with the track
+  ///                      parameters that are being propagated.
   ///
-  /// @param[in,out] h is the desired step size. It can be negative during
-  ///                  backwards track propagation, and since we're using an
-  ///                  adaptive integrator, it can be modified by the stepper.
+  /// @param[in,out] h     is the desired step size. It can be negative during
+  ///                      backwards track propagation, and since we're using an
+  ///                      adaptive algorithm, it can also be modified by the
+  ///                      stepper class during propagation.
   ///
   double
-  step(Cache& c, double& h) const
+  step(Cache& cache, double& h) const
   {
     // Charge-momentum ratio, in SI units
-    const double qop = 1. / units::Nat2SI<units::MOMENTUM>(1. / c.qop);
+    const double qop = 1. / units::Nat2SI<units::MOMENTUM>(1. / cache.qop);
 
     // Runge-Kutta integrator state
     double   h2, half_h;
     Vector3D B_middle, B_last, k2, k3, k4;
 
+    // Initialize the magnetic field cache on the first run
+    if (!cache.field_cache_ready) {
+      cache.field_cache       = m_bField.getField(cache.pos);
+      cache.field_cache_ready = true;
+    }
+
     // First Runge-Kutta point (at current position)
-    const Vector3D B_first = m_bField.getField(c.pos);
-    const Vector3D k1      = qop * c.dir.cross(B_first);
+    const Vector3D B_first = cache.field_cache;
+    const Vector3D k1      = qop * cache.dir.cross(B_first);
 
     // The following functor starts to perform a Runge-Kutta step of a certain
     // size, going up to the point where it can return an estimate of the local
@@ -304,17 +321,17 @@ public:
       half_h = h / 2;
 
       // Second Runge-Kutta point
-      const Vector3D pos1 = c.pos + half_h * c.dir + h2 / 8 * k1;
+      const Vector3D pos1 = cache.pos + half_h * cache.dir + h2 / 8 * k1;
       B_middle            = m_bField.getField(pos1);
-      k2                  = qop * (c.dir + half_h * k1).cross(B_middle);
+      k2                  = qop * (cache.dir + half_h * k1).cross(B_middle);
 
       // Third Runge-Kutta point
-      k3 = qop * (c.dir + half_h * k2).cross(B_middle);
+      k3 = qop * (cache.dir + half_h * k2).cross(B_middle);
 
       // Last Runge-Kutta point
-      const Vector3D pos2 = c.pos + h * c.dir + h2 / 2 * k3;
+      const Vector3D pos2 = cache.pos + h * cache.dir + h2 / 2 * k3;
       B_last              = m_bField.getField(pos2);
-      k4                  = qop * (c.dir + h * k3).cross(B_last);
+      k4                  = qop * (cache.dir + h * k3).cross(B_last);
 
       // Return an estimate of the local integration error
       return h * (k1 - k2 - k3 + k4).template lpNorm<1>();
@@ -328,7 +345,7 @@ public:
     }
 
     // When doing error propagation, update the associated Jacobian matrix
-    if (c.cov) {
+    if (cache.cov) {
       ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Zero();
       D(6, 6)             = 1;
 
@@ -351,12 +368,13 @@ public:
       ActsVectorD<3> dk3dL = ActsVectorD<3>::Zero();
       ActsVectorD<3> dk4dL = ActsVectorD<3>::Zero();
 
-      dk1dL = c.dir.cross(B_first);
-      dk2dL = (c.dir + half_h * k1).cross(B_middle)
+      dk1dL = cache.dir.cross(B_first);
+      dk2dL = (cache.dir + half_h * k1).cross(B_middle)
           + qop * half_h * dk1dL.cross(B_middle);
-      dk3dL = (c.dir + half_h * k2).cross(B_middle)
+      dk3dL = (cache.dir + half_h * k2).cross(B_middle)
           + qop * half_h * dk2dL.cross(B_middle);
-      dk4dL = (c.dir + h * k3).cross(B_last) + qop * h * dk3dL.cross(B_last);
+      dk4dL
+          = (cache.dir + h * k3).cross(B_last) + qop * h * dk3dL.cross(B_last);
 
       dk1dT(0, 1) = B_first.z();
       dk1dT(0, 2) = -B_first.y();
@@ -390,15 +408,19 @@ public:
 
       dGdL = conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
 
-      c.jacobian = D * c.jacobian;
+      cache.jacobian = D * cache.jacobian;
     }
 
     // Update the track parameters according to the equations of motion
-    c.pos += h * c.dir + h2 / 6 * (k1 + k2 + k3);
-    c.dir += h / 6 * (k1 + 2 * k2 + 2 * k3 + k4);
-    c.dir /= c.dir.norm();
-    c.derivative.template head<3>()     = c.dir;
-    c.derivative.template segment<3>(3) = k4;
+    cache.pos += h * cache.dir + h2 / 6 * (k1 + k2 + k3);
+    cache.dir += h / 6 * (k1 + 2 * k2 + 2 * k3 + k4);
+    cache.dir /= cache.dir.norm();
+    cache.derivative.template head<3>()     = cache.dir;
+    cache.derivative.template segment<3>(3) = k4;
+
+    // We approximate the magnetic field at our new position as being equal to
+    // the last field measurement, thusly avoiding one field lookup per step.
+    cache.field_cache = B_last;
 
     // Return the updated step size
     return h;
