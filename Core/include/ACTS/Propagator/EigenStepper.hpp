@@ -299,6 +299,7 @@ public:
   Vector3D getField(Cache& cache, const Vector3D& pos) const
   {
     if (!cache.field_cache_ready || !cache.field_cache.isInside(pos)){
+      cache.field_cache_ready = true;
       cache.field_cache = m_bField.getFieldCell(pos);
     }
     // get the field from the cell
