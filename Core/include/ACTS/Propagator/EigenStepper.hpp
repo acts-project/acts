@@ -49,14 +49,19 @@ private:
   {
     /// Constructor from the initial track parameters
     /// @tparam [in] par are the track parameters
+    /// 
+    /// @note the covariance matrix is copied when needed
     template <typename T>
     explicit Cache(const T& par)
       : pos(par.position())
       , dir(par.momentum().normalized())
       , qop(par.charge() / par.momentum().norm())
-      , cov(par.covariance())
+      , cov_transport(false)
     {
-      if (cov) {
+      if (par.covariance()) {
+        cov_transport = true;
+        cov = ActsSymMatrixD<5>(*par.covariance());
+        
         const double phi   = dir.phi();
         const double theta = dir.theta();
         
@@ -105,8 +110,10 @@ private:
     /// The propagation derivative 
     ActsVectorD<7> derivative = ActsVectorD<7>::Zero();
 
-    /// Covariance matrix assocated with the initial error on track parameters
-    const ActsSymMatrixD<5>* cov = nullptr;
+    /// Covariance matrix (and indicator)
+    //// assocated with the initial error on track parameters
+    bool cov_transport = false;
+    ActsSymMatrixD<5> cov = ActsSymMatrixD<5>::Zero();
 
     /// Lazily initialized cache 
     /// It caches the current magneticl field cell and stays interpolates within 
@@ -172,7 +179,7 @@ public:
     std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
 
     // Perform error propagation if an initial covariance matrix was provided
-    if (cache.cov) {
+    if (cache.cov_transport) {
       const double phi   = cache.dir.phi();
       const double theta = cache.dir.theta();
 
@@ -220,7 +227,7 @@ public:
       jacobian -= tmp;
       auto jac = J * jacobian;
 
-      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * (*cache.cov)
+      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * cache.cov
                                                       * jac.transpose());
     }
 
@@ -239,7 +246,7 @@ public:
     std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
 
     // Perform error propagation if an initial covariance matrix was provided
-    if (cache.cov) {
+    if (cache.cov_transport) {
       const double phi   = cache.dir.phi();
       const double theta = cache.dir.theta();
 
@@ -270,7 +277,7 @@ public:
       jacobian -= tmp;
       auto jac = J * cache.jacobian;
 
-      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * (*cache.cov)
+      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * cache.cov
                                                       * jac.transpose());
     }
 
@@ -364,7 +371,7 @@ public:
     }
 
     // When doing error propagation, update the associated Jacobian matrix
-    if (cache.cov) {
+    if (cache.cov_transport) {
       ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Zero();
       D(6, 6)             = 1;
 
