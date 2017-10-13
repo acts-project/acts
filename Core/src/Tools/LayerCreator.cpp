@@ -533,14 +533,20 @@ Acts::LayerCreator::checkBinning(
   // work
   std::set<const Surface*> sensitiveSurfaces(surfaces.begin(), surfaces.end());
   std::set<const Surface*> accessibleSurfaces;
+  size_t nEmptyBins = 0;
+  size_t nBinsChecked = 0;
   // iterate over object grid
   for (unsigned int i = 0; i < surfGrid.size(); ++i) {
     auto jv = surfGrid.at(i);
     for (unsigned int j = 0; j < jv.size(); ++j) {
       auto kv = jv.at(j);
       for (unsigned int k = 0; k < kv.size(); ++k) {
+        nBinsChecked++;
         auto elem = kv.at(k);
-        if (!elem) continue;
+        if (!elem) {
+          nEmptyBins++;
+          continue;
+        }
         accessibleSurfaces.insert(elem);
         // check for bin members
         const std::vector<const DetectorElementBase*> binmembers
@@ -558,6 +564,14 @@ Acts::LayerCreator::checkBinning(
                       accessibleSurfaces.begin(),
                       accessibleSurfaces.end(),
                       std::inserter(diff, diff.begin()));
+
+
+  if (nEmptyBins > 0) {
+    ACTS_ERROR("Not all bins point to surface. " << nEmptyBins << " empty");
+  }
+  else {
+    ACTS_VERBOSE("All bins point to a surface");
+  }
 
   if (diff.size() != 0) {
     ACTS_ERROR(
