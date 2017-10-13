@@ -27,7 +27,6 @@ using Acts::detail::RealQuadraticEquation;
 
 // namespace bdata = boost::unit_test::data;
 namespace utf    = boost::unit_test;
-const double inf = std::numeric_limits<double>::infinity();
 const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
@@ -44,9 +43,9 @@ namespace Test {
     /// Test construction with parameters
     BOOST_REQUIRE_NO_THROW(RealQuadraticEquation(a, b, c));
     //
-    /// Copy constructor (implicit)
-    RealQuadraticEquation original(a, b, c);
-    BOOST_REQUIRE_NO_THROW(RealQuadraticEquation copied(original));
+    /// Copy constructor (implicit), void removes 'unused' compiler warning
+    RealQuadraticEquation orig(a, b, c);
+    BOOST_REQUIRE_NO_THROW(RealQuadraticEquation copied(orig);(void)copied);
   }
   /// Unit test for RealQuadraticEquation properties
   BOOST_AUTO_TEST_CASE(RealQuadraticEquationProperties)

@@ -55,15 +55,13 @@ Acts::InterpolatedBFieldMap::FieldMapper<2, 2> Acts::fieldMapperRZ(
          Grid_t;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
   // [2] Set the bField values
-  size_t nBinsPhi = 1000;
-
   for (size_t i = 0; i < nBinsR; ++i) {
     for (size_t j = 0; j < nBinsZ; ++j) {
       std::array<size_t, 2> nIndices = {{rPos.size(), zPos.size()}};
-      Grid_t::index_t indices = {i, j};
+      Grid_t::index_t indices = {{i, j}};
       if (firstQuadrant) {
         size_t          n = std::abs(int(j) - (int(zPos.size()) - 1));
-        Grid_t::index_t indicesFirstQuadrant = {i, n};
+        Grid_t::index_t indicesFirstQuadrant = {{i, n}};
         grid.at(indices)
             = bField.at(localToGlobalBin(indicesFirstQuadrant, nIndices))
             * BFieldUnit;
@@ -158,14 +156,14 @@ Acts::InterpolatedBFieldMap::FieldMapper<3, 3> Acts::fieldMapperXYZ(
   for (size_t i = 0; i < nBinsX; ++i) {
     for (size_t j = 0; j < nBinsY; ++j) {
       for (size_t k = 0; k < nBinsZ; ++k) {
-        Grid_t::index_t indices = {i, j, k};
+        Grid_t::index_t indices = {{i, j, k}};
         std::array<size_t, 3> nIndices
             = {{xPos.size(), yPos.size(), zPos.size()}};
         if (firstOctant) {
           size_t          m = std::abs(int(i) - (int(xPos.size()) - 1));
           size_t          n = std::abs(int(j) - (int(yPos.size()) - 1));
           size_t          l = std::abs(int(k) - (int(zPos.size()) - 1));
-          Grid_t::index_t indicesFirstOctant = {m, n, l};
+          Grid_t::index_t indicesFirstOctant = {{m, n, l}};
 
           grid.at(indices)
               = bField.at(localToGlobalBin(indicesFirstOctant, nIndices))

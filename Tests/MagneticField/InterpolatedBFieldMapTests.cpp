@@ -58,7 +58,7 @@ namespace Test {
     // set grid values
     for (size_t i = 1; i <= g.getNBins().at(0) + 1; ++i) {
       for (size_t j = 1; j <= g.getNBins().at(1) + 1; ++j) {
-        Grid_t::index_t indices  = {i, j};
+        Grid_t::index_t indices  = {{i, j}};
         const auto&     llCorner = g.getLowerLeftBinEdge(indices);
         g.at(indices)            = BField::value(llCorner);
       }
@@ -77,21 +77,21 @@ namespace Test {
     Vector3D pos;
     pos << -3, 2.5, 1.7;
     auto c = b.getFieldCell(pos);
-    BOOST_TEST(b.getField(pos).isApprox(BField::value({pos.perp(), pos.z()})));
+    BOOST_TEST(b.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
     BOOST_TEST(c.isInside(pos));
-    BOOST_TEST(c.getField(pos).isApprox(BField::value({pos.perp(), pos.z()})));
+    BOOST_TEST(c.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
 
     pos << 0, 1.5, -2.5;
     c = b.getFieldCell(pos);
-    BOOST_TEST(b.getField(pos).isApprox(BField::value({pos.perp(), pos.z()})));
-    BOOST_TEST(c.isInside(pos));
-    BOOST_TEST(c.getField(pos).isApprox(BField::value({pos.perp(), pos.z()})));
+    BOOST_TEST(b.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
+    BOOST_TEST(c.isInside(pos));                                           
+    BOOST_TEST(c.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
 
     pos << 2, 3, -4;
     c = b.getFieldCell(pos);
-    BOOST_TEST(b.getField(pos).isApprox(BField::value({pos.perp(), pos.z()})));
+    BOOST_TEST(b.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
     BOOST_TEST(c.isInside(pos));
-    BOOST_TEST(c.getField(pos).isApprox(BField::value({pos.perp(), pos.z()})));
+    BOOST_TEST(c.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
 
     // some field cell tests
     BOOST_TEST(c.isInside((pos << 3, 2, -3.7).finished()));

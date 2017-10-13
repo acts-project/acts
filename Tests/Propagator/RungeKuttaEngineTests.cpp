@@ -62,9 +62,7 @@ namespace Test {
       static Vector3D
       value(const std::array<double, 2>& rz)
       {
-        double r = rz.at(0);
         double z = rz.at(1);
-
         // linear in z so interpolation should be exact
         return Vector3D(0., 0., z * -2. * units::_T);
       }
@@ -91,7 +89,7 @@ namespace Test {
     // set grid values
     for (size_t i = 1; i <= g.getNBins().at(0) + 1; ++i) {
       for (size_t j = 1; j <= g.getNBins().at(1) + 1; ++j) {
-        Grid_t::index_t indices  = {i, j};
+        Grid_t::index_t indices  = {{i, j}};
         const auto&     llCorner = g.getLowerLeftBinEdge(indices);
         g.at(indices)            = BField::value(llCorner);
       }
