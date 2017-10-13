@@ -11,10 +11,10 @@
 
 #include <cmath>
 #include "ACTS/EventData/TrackParameters.hpp"
+#include "ACTS/MagneticField/concept/AnyFieldLookup.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
-#include "ACTS/MagneticField/concept/AnyFieldLookup.hpp"
 
 namespace Acts {
 
@@ -49,7 +49,7 @@ private:
   {
     /// Constructor from the initial track parameters
     /// @tparam [in] par are the track parameters
-    /// 
+    ///
     /// @note the covariance matrix is copied when needed
     template <typename T>
     explicit Cache(const T& par)
@@ -60,11 +60,11 @@ private:
     {
       if (par.covariance()) {
         cov_transport = true;
-        cov = ActsSymMatrixD<5>(*par.covariance());
-        
+        cov           = ActsSymMatrixD<5>(*par.covariance());
+
         const double phi   = dir.phi();
         const double theta = dir.theta();
-        
+
         const auto transform = par.referenceSurface().transform().matrix();
         jacobian(0, eLOC_0) = transform(0, eLOC_0);
         jacobian(0, eLOC_1) = transform(0, eLOC_1);
@@ -107,20 +107,19 @@ private:
     /// Jacobian used to transport the covariance matrix
     ActsMatrixD<7, 5> jacobian = ActsMatrixD<7, 5>::Zero();
 
-    /// The propagation derivative 
+    /// The propagation derivative
     ActsVectorD<7> derivative = ActsVectorD<7>::Zero();
 
     /// Covariance matrix (and indicator)
     //// assocated with the initial error on track parameters
-    bool cov_transport = false;
-    ActsSymMatrixD<5> cov = ActsSymMatrixD<5>::Zero();
+    bool              cov_transport = false;
+    ActsSymMatrixD<5> cov           = ActsSymMatrixD<5>::Zero();
 
-    /// Lazily initialized cache 
-    /// It caches the current magneticl field cell and stays interpolates within 
+    /// Lazily initialized cache
+    /// It caches the current magneticl field cell and stays interpolates within
     /// as long as this is valid. See step() code for details.
-    bool     field_cache_ready = false;
+    bool                    field_cache_ready = false;
     concept::AnyFieldCell<> field_cache;
-    
   };
 
   // This struct is a meta-function which normally maps to BoundParameters...
@@ -170,7 +169,7 @@ public:
   EigenStepper(BField bField = BField()) : m_bField(std::move(bField)){};
 
   /// Convert the propagation cache to curvilinear parameters
-  /// @param cache is the stepper cache 
+  /// @param cache is the stepper cache
   /// @todo check: what if cache is already in courvilinear ? is this caught ?
   static CurvilinearParameters
   convert(const Cache& cache)
@@ -236,7 +235,7 @@ public:
   }
 
   /// Convert the propagation cache to track parameters at a certain surface
-  /// @param [in] cache Propagation cache used 
+  /// @param [in] cache Propagation cache used
   /// @param [in] surface Destination surface to which the conversion is done
   template <typename S>
   static BoundParameters
@@ -303,11 +302,12 @@ public:
   /// @param [in,out] cache is the propagation cache associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
-  Vector3D getField(Cache& cache, const Vector3D& pos) const
+  Vector3D
+  getField(Cache& cache, const Vector3D& pos) const
   {
-    if (!cache.field_cache_ready || !cache.field_cache.isInside(pos)){
+    if (!cache.field_cache_ready || !cache.field_cache.isInside(pos)) {
       cache.field_cache_ready = true;
-      cache.field_cache = m_bField.getFieldCell(pos);
+      cache.field_cache       = m_bField.getFieldCell(pos);
     }
     // get the field from the cell
     return std::move(cache.field_cache.getField(pos));
@@ -348,8 +348,9 @@ public:
 
       // Second Runge-Kutta point
       const Vector3D pos1 = cache.pos + half_h * cache.dir + h2 / 8 * k1;
-      B_middle            = getField(cache, pos1);;
-      k2                  = qop * (cache.dir + half_h * k1).cross(B_middle);
+      B_middle            = getField(cache, pos1);
+      ;
+      k2 = qop * (cache.dir + half_h * k1).cross(B_middle);
 
       // Third Runge-Kutta point
       k3 = qop * (cache.dir + half_h * k2).cross(B_middle);

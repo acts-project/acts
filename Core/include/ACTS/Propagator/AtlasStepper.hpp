@@ -11,9 +11,9 @@
 
 #include <cmath>
 #include "ACTS/EventData/TrackParameters.hpp"
+#include "ACTS/MagneticField/concept/AnyFieldLookup.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Units.hpp"
-#include "ACTS/MagneticField/concept/AnyFieldLookup.hpp"
 
 namespace Acts {
 
@@ -37,11 +37,11 @@ class AtlasStepper
     double parameters[NGlobalPars] = {0., 0., 0., 0., 0.};
     const ActsSymMatrixD<NGlobalPars>* covariance;
     double                             jacobian[NGlobalPars * NGlobalPars];
-    
-    /// Lazily initialized cache 
-    /// It caches the current magneticl field cell and stays interpolates within 
+
+    /// Lazily initialized cache
+    /// It caches the current magneticl field cell and stays interpolates within
     /// as long as this is valid. See step() code for details.
-    bool     field_cache_ready = false;
+    bool                    field_cache_ready = false;
     concept::AnyFieldCell<> field_cache;
 
     Vector3D
@@ -463,17 +463,17 @@ public:
   /// @param [in,out] cache is the propagation cache associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
-  Vector3D getField(Cache& cache, const Vector3D& pos) const
+  Vector3D
+  getField(Cache& cache, const Vector3D& pos) const
   {
-    if (!cache.field_cache_ready || !cache.field_cache.isInside(pos)){
+    if (!cache.field_cache_ready || !cache.field_cache.isInside(pos)) {
       cache.field_cache_ready = true;
-      cache.field_cache = m_bField.getFieldCell(pos);
+      cache.field_cache       = m_bField.getFieldCell(pos);
     }
     // get the field from the cell
     cache.field = cache.field_cache.getField(pos);
     return cache.field;
   }
-
 
   double
   step(Cache& cache, double& h) const
