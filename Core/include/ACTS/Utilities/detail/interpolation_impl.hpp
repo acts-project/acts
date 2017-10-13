@@ -43,14 +43,16 @@ namespace detail {
                       + std::declval<double>() * std::declval<C>()),
                     std::true_type());
     template <typename C>
-    static std::false_type value_type_test(...);
+    static std::false_type
+    value_type_test(...);
 
     template <typename C>
     static auto
     point_type_test(C* c)
         -> decltype(double(std::declval<C>()[0]), std::true_type());
     template <typename C>
-    static std::false_type point_type_test(...);
+    static std::false_type
+    point_type_test(...);
 
     static const bool value
         = std::is_same<std::true_type,

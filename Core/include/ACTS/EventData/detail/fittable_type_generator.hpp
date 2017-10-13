@@ -89,8 +89,9 @@ namespace detail {
     {
       typedef typename generator_impl<container<next, others...>>::type
           others_combined;
-      typedef typename add_prepended<Measurement<ID, first>,
-                                     others_combined>::type prepended;
+      typedef
+          typename add_prepended<Measurement<ID, first>, others_combined>::type
+              prepended;
       typedef typename add_to_container<Measurement<ID, first>, prepended>::type
           type;
     };

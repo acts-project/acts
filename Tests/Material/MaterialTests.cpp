@@ -8,9 +8,9 @@
 
 ///  Boost include(s)
 #define BOOST_TEST_MODULE Material Tests
-#include "ACTS/Material/Material.hpp"
 #include <boost/test/included/unit_test.hpp>
 #include <climits>
+#include "ACTS/Material/Material.hpp"
 
 namespace Acts {
 

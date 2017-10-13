@@ -39,8 +39,7 @@ public:
 
   template <typename input, typename result_t>
   void
-  operator()(const input& cache,
-             result_t&    result) const
+  operator()(const input& cache, result_t& result) const
   {
     // clang-format off
     static_assert(detail::all_of_v<detail::observer_signature_check_v<observers, input>...>,

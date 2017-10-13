@@ -28,7 +28,7 @@
 #include "SurfaceStub.hpp"
 
 using boost::test_tools::output_test_stream;
-namespace utf    = boost::unit_test;
+namespace utf = boost::unit_test;
 
 namespace Acts {
 /// Mock track object with minimal methods implemented for compilation
@@ -88,10 +88,10 @@ namespace Test {
     Identifier                                identifier{1};
     std::shared_ptr<const Acts::PlanarBounds> pPlanarBound
         = std::make_shared<const RectangleBounds>(5., 10.);
-    Vector3D           reference{0., 1., 2.};
-    Translation3D      translation{0., 1., 2.};
-    auto pTransform = std::make_shared<const Transform3D>(translation);
-    auto               pLayer = PlaneLayer::create(pTransform, pPlanarBound);
+    Vector3D      reference{0., 1., 2.};
+    Translation3D translation{0., 1., 2.};
+    auto          pTransform = std::make_shared<const Transform3D>(translation);
+    auto          pLayer     = PlaneLayer::create(pTransform, pPlanarBound);
     MaterialProperties properties{0.2, 0.2, 0.2, 20., 10, 5.};
     auto               pMaterial
         = std::make_shared<const HomogeneousSurfaceMaterial>(properties);
@@ -175,7 +175,7 @@ namespace Test {
     Translation3D translation2{1., 1., 2.};
     auto pTransform1 = std::make_shared<const Transform3D>(translation1);
     auto pTransform2 = std::make_shared<const Transform3D>(translation2);
-    auto          pLayer      = PlaneLayer::create(pTransform1, pPlanarBound);
+    auto pLayer      = PlaneLayer::create(pTransform1, pPlanarBound);
     MaterialProperties properties{1., 1., 1., 20., 10, 5.};
     auto               pMaterial
         = std::make_shared<const HomogeneousSurfaceMaterial>(properties);

@@ -14,7 +14,18 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
+clang-format --version
+
 cd $1
 find . -iname '*.cpp' -or -iname '*.hpp' -or -iname '*.ipp' \
   | xargs clang-format -i -style=file
+
+
+if ! [ -z $CI ]; then
+  mkdir changed
+  for f in $(git diff --name-only); do
+    cp --parents $f changed
+  done
+fi
+
 exec git diff --exit-code --stat

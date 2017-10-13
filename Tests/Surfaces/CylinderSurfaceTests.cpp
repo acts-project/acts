@@ -171,9 +171,9 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(EqualityOperators)
   {
-    double          radius(1.0), halfZ(10.);
-    Translation3D   translation{0., 1., 2.};
-    auto pTransform = std::make_shared<const Transform3D>(translation);
+    double        radius(1.0), halfZ(10.);
+    Translation3D translation{0., 1., 2.};
+    auto          pTransform = std::make_shared<const Transform3D>(translation);
     CylinderSurface cylinderSurfaceObject(pTransform, radius, halfZ);
     //
     CylinderSurface cylinderSurfaceObject2(pTransform, radius, halfZ);

@@ -889,7 +889,7 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
       // it's not a concentric cylinder, so create a transform
       auto pTransform = std::make_shared<const Transform3D>(
           Translation3D(Vector3D(0., 0., 0.5 * (zMin + zMax))));
-      transform       = pTransform;
+      transform = pTransform;
     }
     // 2 cases: r-Binning and zBinning
     if (faceOne == cylinderCover || faceOne == tubeOuterCover) {

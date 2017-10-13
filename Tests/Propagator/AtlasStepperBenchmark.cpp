@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTS/Propagator/AtlasStepper.hpp"
 #include <boost/program_options.hpp>
 #include <iostream>
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/MagneticField/ConstantBField.hpp"
+#include "ACTS/Propagator/AtlasStepper.hpp"
 #include "ACTS/Propagator/Propagator.hpp"
 #include "ACTS/Utilities/Logger.hpp"
 #include "ACTS/Utilities/Units.hpp"

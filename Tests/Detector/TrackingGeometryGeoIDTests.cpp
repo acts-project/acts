@@ -8,8 +8,8 @@
 
 ///  Boost include(s)
 #define BOOST_TEST_MODULE GeometryID Tests
-#include "ACTS/Detector/TrackingGeometry.hpp"
 #include <boost/test/included/unit_test.hpp>
+#include "ACTS/Detector/TrackingGeometry.hpp"
 #include "ACTS/Utilities/Units.hpp"
 #include "GeometryCreation.hpp"
 

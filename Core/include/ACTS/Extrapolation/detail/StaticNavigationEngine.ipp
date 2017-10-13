@@ -281,19 +281,19 @@ Acts::StaticNavigationEngine::handleBoundaryT(
                      "No next volume found of '"
                          << eCell.leadVolume->volumeName()
                          << "'. End of known world ?");
-                     
+
       // move the last step parameters to endParameters
-      if (eCell.extrapolationSteps.size()){
+      if (eCell.extrapolationSteps.size()) {
         // verbose screen message
         EX_MSG_VERBOSE(eCell.navigationStep,
                        "navigation",
                        bSurface.geoID().value(GeometryID::boundary_mask),
                        "parameters on surface turn into end parameters.");
         // the last step is transformed into endParameters
-        auto& lStep = eCell.extrapolationSteps.back();
+        auto& lStep         = eCell.extrapolationSteps.back();
         eCell.endParameters = std::move(lStep.parameters);
       }
-      // return a successful reaching of the boundary               
+      // return a successful reaching of the boundary
       return ExtrapolationCode::SuccessBoundaryReached;
     }
     // check if it is a boundary reached case
@@ -343,13 +343,13 @@ Acts::StaticNavigationEngine::handleBoundaryT(
       // return the boundary reached : the navigation resolved already
       eCell.leadVolume = nextVolume;
       // move the last step parameters to endParameters
-      if (eCell.extrapolationSteps.size()){
+      if (eCell.extrapolationSteps.size()) {
         EX_MSG_VERBOSE(eCell.navigationStep,
                        "navigation",
                        bSurface.geoID().value(GeometryID::boundary_mask),
                        "parameters on surface turn into end parameters.");
         // the last step is transformed into endParameters
-        auto& lStep = eCell.extrapolationSteps.back();
+        auto& lStep         = eCell.extrapolationSteps.back();
         eCell.endParameters = std::move(lStep.parameters);
       }
       // give the return

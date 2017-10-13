@@ -93,7 +93,7 @@ public:
   /// @return extrapolation code to indicate outcome
   ExtrapolationCode
   extrapolate(ExCellCharged&       ecCharged,
-              const Surface*       sf   = nullptr,
+              const Surface*       sf     = nullptr,
               const BoundaryCheck& bcheck = true) const final;
 
   /// Neutral extrapolation - public interface
@@ -106,7 +106,7 @@ public:
   /// @return extrapolation code to indicate outcome
   ExtrapolationCode
   extrapolate(ExCellNeutral&       ecNeutral,
-              const Surface*       sf   = nullptr,
+              const Surface*       sf     = nullptr,
               const BoundaryCheck& bcheck = true) const final;
 
   /// define for which geometry type this extrapolator is valid

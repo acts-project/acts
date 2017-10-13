@@ -370,7 +370,6 @@ private:
   /// Test new propagation to cylinder boundary
   bool
   newCrossPoint(const CylinderSurface&, const double*, const double*) const;
-
 };
 }
 

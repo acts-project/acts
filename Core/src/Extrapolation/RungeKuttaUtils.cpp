@@ -43,7 +43,7 @@ Acts::RungeKuttaUtils::transformLocalToGlobal(bool useJac,
   if (!pTp) return false;
 
   const ActsVectorD<NGlobalPars> Vp = Tp.parameters();
-  double               p[5];
+  double                         p[5];
   p[0] = Vp[0];
   p[1] = Vp[1];
   p[2] = Vp[2];
@@ -68,7 +68,7 @@ Acts::RungeKuttaUtils::transformLocalToGlobal(bool useJac,
   if (!pTp) return false;
 
   const ActsVectorD<NGlobalPars> Vp = Tp.parameters();
-  double               p[5];
+  double                         p[5];
   p[0] = Vp[0];
   p[1] = Vp[1];
   p[2] = Vp[2];
@@ -1325,7 +1325,7 @@ Acts::RungeKuttaUtils::jacobianTransformCurvilinearToLocal(
     double*                      Jac)
 {
   const ActsVectorD<NGlobalPars>& Vp = Tp.parameters();
-  double                P[23];
+  double                          P[23];
   P[0] = Vp[0];
   P[1] = Vp[1];
   P[2] = Vp[2];

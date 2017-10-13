@@ -123,7 +123,7 @@ private:
   double m_halfThickness;     ///< half thickness of the module
   int    m_readoutDirection;  ///< readout is along (+1) / (-1) wrt local z axis
   double m_lorentzAngle;      ///< the lorentz angle
-  double m_tanLorentzAngle;  ///< and the tangent of it
+  double m_tanLorentzAngle;   ///< and the tangent of it
 
   std::shared_ptr<const Segmentation>
                    m_segmentation;           /// segmentation descriptor

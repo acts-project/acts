@@ -209,7 +209,7 @@ Layer::testCompatibleSurface(std::vector<SurfaceIntersection>& cSurfaces,
     PropDirection rDir
         = (sfIntersection.pathLength > 0 ? alongMomentum : oppositeMomentum);
     // and the surfaces & direction to push back - take all
-      cSurfaces.push_back(SurfaceIntersection(sfIntersection, &surface, rDir));
+    cSurfaces.push_back(SurfaceIntersection(sfIntersection, &surface, rDir));
   }
 }
 

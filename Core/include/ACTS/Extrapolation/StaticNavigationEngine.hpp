@@ -93,7 +93,7 @@ public:
   ///
   /// @param ecCell is the charged extrapolation cell
   /// @param dir is the additional direction prescription
-  /// @param noLoop is a loop protection @todo check with ST                
+  /// @param noLoop is a loop protection @todo check with ST
   ///
   /// @return is a extrapolation code indication
   ExtrapolationCode
@@ -105,7 +105,7 @@ public:
   ///
   /// @param enCell is the neutral extrapolation cell
   /// @param dir is the additional direction prescription
-  /// @param noLoop is a loop protection @todo check with ST                
+  /// @param noLoop is a loop protection @todo check with ST
   ///
   /// @return is a extrapolation code indication
   ExtrapolationCode
@@ -181,7 +181,7 @@ private:
   handleBoundaryT(ExtrapolationCell<T>&                   eCell,
                   const BoundarySurfaceT<TrackingVolume>& bSurfaceTV,
                   PropDirection                           dir = alongMomentum,
-                  bool stepout                             = false) const;
+                  bool stepout                                = false) const;
 };
 
 inline StaticNavigationEngine::Config

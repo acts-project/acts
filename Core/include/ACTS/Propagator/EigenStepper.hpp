@@ -162,7 +162,7 @@ public:
   static CurvilinearParameters
   convert(const Cache& cache)
   {
-    double                                  charge = cache.qop > 0. ? 1. : -1.;
+    double                                   charge = cache.qop > 0. ? 1. : -1.;
     std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
 
     // Perform error propagation if an initial covariance matrix was provided
@@ -227,7 +227,7 @@ public:
   static BoundParameters
   convert(Cache& cache, const S& surface)
   {
-    double                                  charge = cache.qop > 0. ? 1. : -1.;
+    double                                   charge = cache.qop > 0. ? 1. : -1.;
     std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
 
     // Perform error propagation if an initial covariance matrix was provided

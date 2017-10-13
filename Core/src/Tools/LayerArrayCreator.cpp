@@ -51,7 +51,7 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
   // needed for all cases
   std::shared_ptr<const Layer>      layer      = nullptr;
   std::unique_ptr<const BinUtility> binUtility = nullptr;
-  std::vector<LayerOrderPosition> layerOrderVector;
+  std::vector<LayerOrderPosition>   layerOrderVector;
 
   // switch the binning type
   switch (bType) {
@@ -197,7 +197,7 @@ Acts::LayerArrayCreator::createNavigationSurface(const Layer& layer,
   if (layerSurface.type() != Surface::Cylinder) {
     // create a transform that does the shift
     const Transform3D* shift = new Transform3D(Translation3D(translation));
-    navigationSurface  = layerSurface.clone(shift);
+    navigationSurface        = layerSurface.clone(shift);
     // delete the shift again
     delete shift;
   } else {

@@ -57,7 +57,7 @@ Acts::ExtrapolationCell<T>::stepMaterial(
 {
   // fast exit
   if (!mprop) return;
-  // if this is on a new surface, 
+  // if this is on a new surface,
   // so create a new extrapolation step
   if (extrapolationSteps.size()) {
     // let's check the last one
@@ -84,21 +84,20 @@ Acts::ExtrapolationCell<T>::stepMaterial(
     extrapolationSteps.push_back(ExtrapolationStep<T>());
   }
 
-  // we work with the last one it's either 
+  // we work with the last one it's either
   // - a nelwy created one
-  // - the last one 
+  // - the last one
   auto& cstep = extrapolationSteps.back();
 
   // if there's new stepParameters then change the lead
   if (stepParameters) {
     // store the old parameters if present
-    if (cstep.parameters) 
-        cstep.preparameters = std::move(cstep.parameters);
-    // bookkeeping    
+    if (cstep.parameters) cstep.preparameters = std::move(cstep.parameters);
+    // bookkeeping
     lastLeadParameters = leadParameters;
     leadParameters     = stepParameters.get();
     // setting
-    cstep.parameters   = std::move(stepParameters);
+    cstep.parameters = std::move(stepParameters);
   }
   // add material to the global counters
   if (mprop) {
@@ -113,5 +112,4 @@ Acts::ExtrapolationCell<T>::stepMaterial(
   cstep.material        = mprop;
   cstep.position        = stepPosition;
   cstep.materialScaling = stepFactor;
-
 }

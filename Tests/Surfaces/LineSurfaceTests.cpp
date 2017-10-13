@@ -27,7 +27,7 @@
 //
 #include <limits>
 
-namespace utf    = boost::unit_test;
+namespace utf = boost::unit_test;
 
 namespace Acts {
 
@@ -72,9 +72,9 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test)
   {
     // binningPosition()
-    Translation3D   translation{0., 1., 2.};
-    Transform3D     transform(translation);
-    auto pTransform = std::make_shared<const Transform3D>(translation);
+    Translation3D translation{0., 1., 2.};
+    Transform3D   transform(translation);
+    auto          pTransform = std::make_shared<const Transform3D>(translation);
     LineSurfaceStub line(pTransform, 2.0, 20.);
     Vector3D        referencePosition{0., 1., 2.};
     BOOST_TEST(referencePosition == line.binningPosition(binX));
@@ -155,9 +155,9 @@ namespace Test {
   /// Unit test for testing LineSurface assignment
   BOOST_AUTO_TEST_CASE(LineSurface_assignment_test)
   {
-    Translation3D   translation{0., 1., 2.};
-    Transform3D     transform(translation);
-    auto pTransform = std::make_shared<const Transform3D>(translation);
+    Translation3D translation{0., 1., 2.};
+    Transform3D   transform(translation);
+    auto          pTransform = std::make_shared<const Transform3D>(translation);
     LineSurfaceStub originalLine(pTransform, 2.0, 20.);
     LineSurfaceStub assignedLine(pTransform, 1.0, 1.0);
     BOOST_TEST(assignedLine != originalLine,

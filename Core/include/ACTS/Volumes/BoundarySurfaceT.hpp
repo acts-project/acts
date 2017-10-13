@@ -95,8 +95,10 @@ public:
   /// - usually used in a volume constructor
   ///
   /// @param surface is the unqiue surface the boundary represents
-  /// @param insideArray is the inside volume array the bounday surface points to
-  /// @param outsideArray is the outside volume array the boundary surface points to
+  /// @param insideArray is the inside volume array the bounday surface points
+  /// to
+  /// @param outsideArray is the outside volume array the boundary surface
+  /// points to
   BoundarySurfaceT(std::unique_ptr<const Surface>     surface,
                    std::shared_ptr<const VolumeArray> insideArray,
                    std::shared_ptr<const VolumeArray> outsideArray)
@@ -137,6 +139,7 @@ public:
 
   /// Virtual Destructor
   virtual ~BoundarySurfaceT() {}
+
 protected:
   /// Helper metho: attach a Volume to this BoundarySurfaceT
   /// this si done during the geometry construction and only called by

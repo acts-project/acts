@@ -69,9 +69,9 @@ namespace Test {
   /// Unit tests of all named methods
   BOOST_AUTO_TEST_CASE(DiscSurface_properties_test, *utf::expected_failures(2))
   {
-    Vector3D                     origin3D{0, 0, 0};
+    Vector3D                           origin3D{0, 0, 0};
     std::shared_ptr<const Transform3D> pTransform;  // nullptr
-    double                       rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
+    double      rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
     DiscSurface discSurfaceObject(pTransform, rMin, rMax, halfPhiSector);
     //
     /// Test type
@@ -190,9 +190,9 @@ namespace Test {
   /// Unit test for testing DiscSurface assignment and equality
   BOOST_AUTO_TEST_CASE(DiscSurface_assignment_test)
   {
-    Vector3D                     origin3D{0, 0, 0};
+    Vector3D                           origin3D{0, 0, 0};
     std::shared_ptr<const Transform3D> pTransform;  // nullptr
-    double                       rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
+    double      rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
     DiscSurface discSurfaceObject(pTransform, rMin, rMax, halfPhiSector);
     DiscSurface assignedDisc(nullptr, NaN, NaN, NaN);
     //

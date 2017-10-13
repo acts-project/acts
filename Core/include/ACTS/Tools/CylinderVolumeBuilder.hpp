@@ -587,7 +587,6 @@ private:
                         const VolumeConfig& insideConfig,
                         const VolumeConfig& volumeConfig,
                         int                 sign) const;
-
 };
 
 /// Return the configuration object

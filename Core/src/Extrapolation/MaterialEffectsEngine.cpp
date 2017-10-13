@@ -10,8 +10,8 @@
 // MaterialEffectsEngine.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include <sstream>
 #include "ACTS/Extrapolation/MaterialEffectsEngine.hpp"
+#include <sstream>
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Material/SurfaceMaterial.hpp"
 
@@ -209,7 +209,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
       double dE = thickness * pathCorrection * dEdl;
       sigmaP *= thickness * pathCorrection;
       // calcuate the new momentum
-      double newP        = sqrt((E + dE) * (E + dE) - m * m);
+      double newP = sqrt((E + dE) * (E + dE) - m * m);
       // and give some verbose output
       EX_MSG_VERBOSE(eCell.navigationStep,
                      surfaceType,

@@ -9,10 +9,10 @@
 /// @file Logger_tests.cpp
 
 #define BOOST_TEST_MODULE Logger Tests
-#include "ACTS/Utilities/Logger.hpp"
 #include <boost/test/included/unit_test.hpp>
 #include <fstream>
 #include <string>
+#include "ACTS/Utilities/Logger.hpp"
 
 namespace Acts {
 namespace Test {

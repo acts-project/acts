@@ -13,9 +13,9 @@
 #ifndef ACTS_MATERIAL_HOMOGENOUSLAYERMATERIAL_H
 #define ACTS_MATERIAL_HOMOGENOUSLAYERMATERIAL_H
 
+#include <vector>
 #include "ACTS/Material/MaterialProperties.hpp"
 #include "ACTS/Material/SurfaceMaterial.hpp"
-#include <vector>
 #include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {

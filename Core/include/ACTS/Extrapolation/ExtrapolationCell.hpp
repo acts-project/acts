@@ -41,20 +41,21 @@ class ExtrapolationMode
 {
 public:
   enum eMode {
-    Destination             = 1,   ///< try to hit the destination
-    Propagation             = 2,   ///< any propagation but destination
-    StopWithPathLimit       = 3,   ///< stop when the path limit is reached
-    StopWithMaterialLimitX0 = 4,   ///< stop when  material limit is reached in X0
-    StopWithMaterialLimitL0 = 5,   ///< stop when material limit is reached in L0
-    StopAtBoundary          = 6,   ///< stop at the next ID / Calo / MS boundary
-    CollectSensitive        = 7,   ///< collect parameters on sensitive elements
-    CollectPassive          = 8,   ///< collect parameters on passive layers
-    CollectBoundary         = 9,   ///< collect parameters on boundary parameters
+    Destination       = 1,  ///< try to hit the destination
+    Propagation       = 2,  ///< any propagation but destination
+    StopWithPathLimit = 3,  ///< stop when the path limit is reached
+    StopWithMaterialLimitX0
+    = 4,  ///< stop when  material limit is reached in X0
+    StopWithMaterialLimitL0 = 5,  ///< stop when material limit is reached in L0
+    StopAtBoundary          = 6,  ///< stop at the next ID / Calo / MS boundary
+    CollectSensitive        = 7,  ///< collect parameters on sensitive elements
+    CollectPassive          = 8,  ///< collect parameters on passive layers
+    CollectBoundary         = 9,  ///< collect parameters on boundary parameters
     CollectMaterial         = 10,  ///< collect all material on the way
     CollectJacobians        = 11,  ///< collect the transport jacobians
     CollectPathSteps        = 12,  ///< collect the single path steps
     AvoidFallback           = 13,  ///< don't fallback to propagation
-    FATRAS                  = 14  ///< force initial radialDirection to be outward
+    FATRAS = 14  ///< force initial radialDirection to be outward
   };
 };
 
@@ -111,6 +112,7 @@ public:
   /// int operator
   /// @return the value of the ExtrapolationConfig as integer
   operator int() const { return value; }
+
 private:
   unsigned int value;
 };
@@ -128,11 +130,11 @@ public:
     SuccessMaterialLimit   = 5,  // successful : material limit reached
     Recovered              = 6,  // successful : recovered
     FailureDestination     = 7,  // failure    : could not reach destination
-    FailureLoop            = 8,  // failure    : loop or oscillation between volumes
-    FailureNavigation      = 9,  // failure    : general navigation failure
-    FailureUpdateKill      = 10, // failure    : updated track under threshold
-    FailureConfiguration   = 11, // failure    : general configuration failure
-    LeftKnownWorld         = 12  // successful ? failure ? if we just knew ...
+    FailureLoop       = 8,   // failure    : loop or oscillation between volumes
+    FailureNavigation = 9,   // failure    : general navigation failure
+    FailureUpdateKill = 10,  // failure    : updated track under threshold
+    FailureConfiguration = 11,  // failure    : general configuration failure
+    LeftKnownWorld       = 12   // successful ? failure ? if we just knew ...
   };
 
   /// the actual code
@@ -252,7 +254,7 @@ public:
   /// the step position - incase parameters = nullptr
   Vector3D position;
   /// the surface for this step
-  const Surface*            surface;
+  const Surface* surface;
   /// the bitset configuration of this step
   ExtrapolationConfig configuration;
   /// the material properties found in this step
@@ -280,7 +282,7 @@ public:
                     std::unique_ptr<const TransportJacobian> tjac    = nullptr,
                     double                                   pLength = 0.)
     : parameters(std::move(pars))
-    , preparameters(nullptr)                  
+    , preparameters(nullptr)
     , position()
     , surface(sf)
     , configuration(eConfig)
@@ -386,7 +388,7 @@ public:
   /// @todo move to templated extension
   std::vector<ProcessVertex> interactionVertices;
 
-  float time;    ///< timing info
+  float time;  ///< timing info
 
   /// Constructor of the Extrapolaton cell
   ///

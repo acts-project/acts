@@ -31,7 +31,7 @@ class AtlasStepper
     bool   newfield;
     // internal parameters to be used
     Vector3D field;
-    double pVector[64];
+    double   pVector[64];
     // result
     double parameters[NGlobalPars] = {0., 0., 0., 0., 0.};
     const ActsSymMatrixD<NGlobalPars>* covariance;
@@ -65,7 +65,7 @@ class AtlasStepper
         useJacobian = true;
       }
 
-      const ActsVectorD<3> pos = pars.position();
+      const ActsVectorD<3>     pos = pars.position();
       ActsVectorD<NGlobalPars> Vp  = pars.parameters();
 
       double Sf, Cf, Ce, Se;
@@ -85,8 +85,8 @@ class AtlasStepper
       pVector[5] = Ce;       // Az
       pVector[6] = Vp[4];    // CM
       if (std::abs(pVector[6]) < .000000000000001) {
-        pVector[6] < 0. ? pVector[6] = -.000000000000001 : pVector[6]
-            = .000000000000001;
+        pVector[6] < 0. ? pVector[6] = -.000000000000001
+                        : pVector[6] = .000000000000001;
       }
       //   /dL1     |   /dL2       |    /dPhi     |    /dThe     |    /dCM     |
       //
@@ -370,7 +370,8 @@ public:
       cache.pVector[39] -= (s4 * cache.pVector[43]);
       cache.pVector[40] -= (s4 * cache.pVector[44]);
 
-      double P3, P4, C = cache.pVector[3] * cache.pVector[3]
+      double P3, P4,
+          C = cache.pVector[3] * cache.pVector[3]
           + cache.pVector[4] * cache.pVector[4];
       if (C > 1.e-20) {
         C  = 1. / C;

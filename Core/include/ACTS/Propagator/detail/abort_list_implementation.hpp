@@ -23,10 +23,7 @@ namespace detail {
     {
       template <typename condition, typename result, typename input>
       static bool
-      check(const condition& c,
-            const result&    r,
-            input&           cache,
-            double&          stepMax)
+      check(const condition& c, const result& r, input& cache, double& stepMax)
       {
         typedef observer_type_t<condition>   observer_type;
         typedef result_type_t<observer_type> result_type;

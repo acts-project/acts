@@ -35,16 +35,16 @@ namespace Acts {
 enum ParticleType {
 
   nonInteracting = 0,  //!< for non-interacting extrapolation
-  electron = 1,  //!< reconstruction + fatras : type as electron hypothesis
-  muon     = 2,  //!< reconstruction + fatras : type as muon hypothesis
-  pion     = 3,  //!< reconstruction + fatras : type as pion hypothesis
-  kaon     = 4,  //!< reconstruction + fatras : type as kaon hypothesis
-  proton   = 5,  //!< reconstruction + fatras : type as proton hypothesis
-  photon   = 6,  //!< for fatras usage
-  neutron  = 7,  //!< for fatras usage
-  pi0      = 8,  //!< for fatras usage
-  k0       = 9,  //!< for fatras usage
-  undefined    = 99
+  electron  = 1,  //!< reconstruction + fatras : type as electron hypothesis
+  muon      = 2,  //!< reconstruction + fatras : type as muon hypothesis
+  pion      = 3,  //!< reconstruction + fatras : type as pion hypothesis
+  kaon      = 4,  //!< reconstruction + fatras : type as kaon hypothesis
+  proton    = 5,  //!< reconstruction + fatras : type as proton hypothesis
+  photon    = 6,  //!< for fatras usage
+  neutron   = 7,  //!< for fatras usage
+  pi0       = 8,  //!< for fatras usage
+  k0        = 9,  //!< for fatras usage
+  undefined = 99
 };
 
 /// @struct ParticleMasses
@@ -128,11 +128,11 @@ public:
   operator=(const ParticleProperties& pProperties)
   {
     if (this != &pProperties) {
-      m_momentum     = pProperties.m_momentum;
-      m_mass         = pProperties.m_mass;
-      m_charge       = pProperties.m_charge;
-      m_pdgID        = pProperties.m_pdgID;
-      m_barcode      = pProperties.m_barcode;
+      m_momentum = pProperties.m_momentum;
+      m_mass     = pProperties.m_mass;
+      m_charge   = pProperties.m_charge;
+      m_pdgID    = pProperties.m_pdgID;
+      m_barcode  = pProperties.m_barcode;
     }
     return (*this);
   }

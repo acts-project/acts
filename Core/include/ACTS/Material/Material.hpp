@@ -313,7 +313,6 @@ private:
   /// optional composition parameter
   MaterialComposition m_composition;
 };
-
 }
 
 #endif

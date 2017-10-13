@@ -37,7 +37,7 @@ class IMaterialEffectsEngine
 public:
   /// Virtual destructor
   virtual ~IMaterialEffectsEngine() {}
-  
+
   /// Public charged material effects interface
   ///
   /// @param ecCharged is the charged extrapolaiton cell

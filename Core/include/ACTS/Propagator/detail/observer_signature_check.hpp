@@ -27,7 +27,8 @@ namespace detail {
     test_observer_with_result(int);
 
     template <typename, typename, typename>
-    std::false_type test_observer_with_result(...);
+    std::false_type
+    test_observer_with_result(...);
 
     template <typename T,
               typename input,
@@ -37,7 +38,8 @@ namespace detail {
     test_observer_without_result(int);
 
     template <typename, typename>
-    std::false_type test_observer_without_result(...);
+    std::false_type
+    test_observer_without_result(...);
 
     template <typename T, typename input, bool has_result = false>
     struct observer_signature_check_impl

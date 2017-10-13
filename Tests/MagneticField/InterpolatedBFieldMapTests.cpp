@@ -9,8 +9,8 @@
 /// @file InterpolatedBFieldMap_tests.cpp
 
 #define BOOST_TEST_MODULE Mapped magnetic field tests
-#include "ACTS/MagneticField/InterpolatedBFieldMap.hpp"
 #include <boost/test/included/unit_test.hpp>
+#include "ACTS/MagneticField/InterpolatedBFieldMap.hpp"
 #include "ACTS/Utilities/detail/Axis.hpp"
 #include "ACTS/Utilities/detail/Grid.hpp"
 
@@ -49,10 +49,9 @@ namespace Test {
     detail::EquidistantAxis r(0.0, 4.0, 4u);
     detail::EquidistantAxis z(-5, 5, 5u);
 
-    typedef detail::Grid<Vector3D,
-                         detail::EquidistantAxis,
-                         detail::EquidistantAxis>
-        Grid_t;
+    typedef detail::
+        Grid<Vector3D, detail::EquidistantAxis, detail::EquidistantAxis>
+            Grid_t;
 
     Grid_t g(std::make_tuple(std::move(r), std::move(z)));
 

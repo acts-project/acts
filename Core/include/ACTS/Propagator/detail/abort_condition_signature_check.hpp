@@ -29,7 +29,8 @@ namespace detail {
     test_condition_with_result(int);
 
     template <typename, typename, typename>
-    std::false_type test_condition_with_result(...);
+    std::false_type
+    test_condition_with_result(...);
 
     template <typename T,
               typename input,
@@ -40,7 +41,8 @@ namespace detail {
     test_condition_without_result(int);
 
     template <typename, typename>
-    std::false_type test_condition_without_result(...);
+    std::false_type
+    test_condition_without_result(...);
 
     // clang-format on
     template <typename T, typename input, bool has_result = false>
