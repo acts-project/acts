@@ -8,4 +8,4 @@ if [ $# -ne 1 ]; then
 fi
 
 WD="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
-docker run --rm -ti -v $WD:$WD:rw -w $WD gitlab-registry.cern.ch/pagessin/machines/check CI/check_format .
+docker run --rm -ti -v $WD:$WD:rw -w $WD gitlab-registry.cern.ch/acts/machines/check:latest CI/check_format .
