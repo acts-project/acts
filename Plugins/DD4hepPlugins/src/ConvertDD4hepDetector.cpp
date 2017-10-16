@@ -104,7 +104,6 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
         const dd4hep::DetElement::Children& subDetectorChildren
             = subDetector.children();
         // get rMin, rMax and zBoundaries of the sub Volumes
-        double              rMin  = 0.;
         double              rMax  = 10e-12;
         double              halfZ = 0.;
         double              zPos  = 0.;
@@ -135,7 +134,6 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
                   + volumeDetElement.name()
                   + std::string(" has wrong shape - needs to be TGeoTubeSeg!"));
             // get the dimension of TGeo and convert lengths
-            rMin  = tube->GetRmin() * units::_cm;
             rMax  = std::max(rMax, tube->GetRmax() * units::_cm);
             halfZ = tube->GetDz() * units::_cm;
             zPos  = volumeDetElement.placement()
