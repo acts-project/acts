@@ -4,6 +4,7 @@ stages:
     - build
     - test
     - check
+    - deploy
 
 variables:
     CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_DD4HEP_PLUGIN=on -DBUILD_MATERIAL_PLUGIN=on -DBUILD_TGEO_PLUGIN=on -DBUILD_INTEGRATION_TESTS=on -DSUPPRESS_LIBRARY_WARNINGS=on
@@ -177,3 +178,13 @@ license:
     dependencies: []
     script:
         - CI/check_license.py .
+
+deploy_to_website:
+    stage: deploy
+    dependencies: [doc]
+    script:
+       - unset PYTHONHOME
+       - echo "$ATSJENKINS_PASSWORD" | kinit atsjenkins@CERN.CH 2>&1 >/dev/null
+       - CI/deploy_tag . build/doc/html "acts-developers@cern.ch acts-users@cern.ch"
+    only:
+       - tags 
