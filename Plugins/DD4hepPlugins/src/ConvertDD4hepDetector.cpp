@@ -104,8 +104,6 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
         const dd4hep::DetElement::Children& subDetectorChildren
             = subDetector.children();
         // get rMin, rMax and zBoundaries of the sub Volumes
-        double              endCapRmin = 0.;
-        double              barrelRmin = 0.;
         double              rMin       = 0.;
         double              rMax       = 10e-12;
         double              halfZ      = 0.;
@@ -160,7 +158,6 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
           }
 
           if (volumeExtension->isEndcap()) {
-            endCapRmin = rMin;
             ACTS_VERBOSE(
                 std::string("[V] Subvolume : '") + volumeDetElement.name()
                 + std::string("' is a disc volume -> handling as an endcap"));
@@ -191,7 +188,6 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
               collectLayers(volumeDetElement, positiveLayers);
             }
           } else if (volumeExtension->isBarrel()) {
-            barrelRmin = rMin;
             // add the zBoundaries
             zBoundaries.push_back(zPos - halfZ);
             zBoundaries.push_back(zPos + halfZ);
