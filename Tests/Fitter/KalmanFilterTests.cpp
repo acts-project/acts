@@ -51,7 +51,7 @@ generateDummyMeasurements(
   for (const auto& step : exCell.extrapolationSteps) {
     /// @TODO: accessing the local coordinates on the last extrapolation
     /// step seems to result in a segfault
-    if (id+1 >= exCell.extrapolationSteps.size()) continue;
+    if (id + 1 >= exCell.extrapolationSteps.size()) continue;
     const auto& tp = step.parameters;
 
     double            std1 = 0.01;

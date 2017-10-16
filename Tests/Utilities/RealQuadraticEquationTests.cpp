@@ -45,7 +45,7 @@ namespace Test {
     //
     /// Copy constructor (implicit), void removes 'unused' compiler warning
     RealQuadraticEquation orig(a, b, c);
-    BOOST_REQUIRE_NO_THROW(RealQuadraticEquation copied(orig);(void)copied);
+    BOOST_REQUIRE_NO_THROW(RealQuadraticEquation copied(orig); (void)copied);
   }
   /// Unit test for RealQuadraticEquation properties
   BOOST_AUTO_TEST_CASE(RealQuadraticEquationProperties)

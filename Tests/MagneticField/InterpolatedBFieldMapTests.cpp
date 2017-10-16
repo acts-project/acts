@@ -77,21 +77,27 @@ namespace Test {
     Vector3D pos;
     pos << -3, 2.5, 1.7;
     auto c = b.getFieldCell(pos);
-    BOOST_TEST(b.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
+    BOOST_TEST(
+        b.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
     BOOST_TEST(c.isInside(pos));
-    BOOST_TEST(c.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
+    BOOST_TEST(
+        c.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
 
     pos << 0, 1.5, -2.5;
     c = b.getFieldCell(pos);
-    BOOST_TEST(b.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
-    BOOST_TEST(c.isInside(pos));                                           
-    BOOST_TEST(c.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
+    BOOST_TEST(
+        b.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
+    BOOST_TEST(c.isInside(pos));
+    BOOST_TEST(
+        c.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
 
     pos << 2, 3, -4;
     c = b.getFieldCell(pos);
-    BOOST_TEST(b.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
+    BOOST_TEST(
+        b.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
     BOOST_TEST(c.isInside(pos));
-    BOOST_TEST(c.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
+    BOOST_TEST(
+        c.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
 
     // some field cell tests
     BOOST_TEST(c.isInside((pos << 3, 2, -3.7).finished()));

@@ -377,8 +377,9 @@ namespace Test {
     BOOST_TEST(g.getGlobalBinIndex({{3, 4, 2}}) == 78u);
     BOOST_TEST(g.getGlobalBinIndex({{3, 4, 3}}) == 79u);
 
-    BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex(Point({{1.2, 0.7, 1.4}})))
-               == indices({{2, 1, 2}}));
+    BOOST_TEST(
+        g.getLocalBinIndices(g.getGlobalBinIndex(Point({{1.2, 0.7, 1.4}})))
+        == indices({{2, 1, 2}}));
 
     // inside checks
     BOOST_TEST(not g.isInside(Point({{-2., -1, -2}})));
@@ -690,8 +691,9 @@ namespace Test {
     BOOST_TEST(g.getGlobalBinIndex({{1, 3, 4}}) == 39u);
     BOOST_TEST(g.getGlobalBinIndex({{2, 3, 4}}) == 59u);
 
-    BOOST_TEST(g.getLocalBinIndices(g.getGlobalBinIndex(Point({{1.8, 0.7, 3.2}})))
-               == indices({{2, 2, 3}}));
+    BOOST_TEST(
+        g.getLocalBinIndices(g.getGlobalBinIndex(Point({{1.8, 0.7, 3.2}})))
+        == indices({{2, 2, 3}}));
 
     // inside checks
     BOOST_TEST(not g.isInside(Point({{-2., -1, -2}})));

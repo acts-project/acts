@@ -104,10 +104,10 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
         const dd4hep::DetElement::Children& subDetectorChildren
             = subDetector.children();
         // get rMin, rMax and zBoundaries of the sub Volumes
-        double              rMin       = 0.;
-        double              rMax       = 10e-12;
-        double              halfZ      = 0.;
-        double              zPos       = 0.;
+        double              rMin  = 0.;
+        double              rMax  = 10e-12;
+        double              halfZ = 0.;
+        double              zPos  = 0.;
         std::vector<double> zBoundaries;
         // flags to catch if sub volumes have been set already
         bool nEndCap = false;
