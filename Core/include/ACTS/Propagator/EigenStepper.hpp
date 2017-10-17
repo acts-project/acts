@@ -43,8 +43,41 @@ cross(const ActsMatrixD<3, 3>& m, const Vector3D& v)
 template <typename BField>
 class EigenStepper
 {
+  
 private:
-  /// Internal cache for track parameter propagation
+  // This struct is a meta-function which normally maps to BoundParameters...
+  template <typename T, typename S>
+  struct s
+  {
+    typedef BoundParameters type;
+  };
+
+  // ...unless type S is int, in which case it maps to Curvilinear parameters
+  template <typename T>
+  struct s<T, int>
+  {
+    typedef CurvilinearParameters type;
+  };
+
+  /// Rotation matrix going from global coordinates to local surface coordinates
+  static ActsMatrixD<3, 3>
+  dLocaldGlobal(const Surface& p, const Vector3D& gpos)
+  {
+    // A surface's associated transform is a 4x4 affine transformation matrix,
+    // whose top-left corner is the 3x3 linear local-to-global rotation matrix,
+    // and whose right column is a translation vector, with a trailing 1.
+    //
+    // So to get the global-to-local rotation matrix, we only need to take the
+    // transpose of the top-left corner of the surface's associated transform.
+    //
+    return p.transform().matrix().topLeftCorner<3, 3>().transpose();
+  }
+  
+public:
+  /// Cache for track parameter propagation
+  /// 
+  /// it is exposed to public for use of the expert-only
+  /// propagate_with_cache method of the propagator
   struct Cache
   {
     /// Constructor from the initial track parameters
@@ -121,36 +154,7 @@ private:
     bool                    field_cache_ready = false;
     concept::AnyFieldCell<> field_cache;
   };
-
-  // This struct is a meta-function which normally maps to BoundParameters...
-  template <typename T, typename S>
-  struct s
-  {
-    typedef BoundParameters type;
-  };
-
-  // ...unless type S is int, in which case it maps to Curvilinear parameters
-  template <typename T>
-  struct s<T, int>
-  {
-    typedef CurvilinearParameters type;
-  };
-
-  /// Rotation matrix going from global coordinates to local surface coordinates
-  static ActsMatrixD<3, 3>
-  dLocaldGlobal(const Surface& p, const Vector3D& gpos)
-  {
-    // A surface's associated transform is a 4x4 affine transformation matrix,
-    // whose top-left corner is the 3x3 linear local-to-global rotation matrix,
-    // and whose right column is a translation vector, with a trailing 1.
-    //
-    // So to get the global-to-local rotation matrix, we only need to take the
-    // transpose of the top-left corner of the surface's associated transform.
-    //
-    return p.transform().matrix().topLeftCorner<3, 3>().transpose();
-  }
-
-public:
+  
   /// Always use the same propagation cache type, independently of the initial
   /// track parameter type and of the target surface
   template <typename T, typename S = int>
@@ -448,6 +452,7 @@ public:
     // Return the updated step size
     return h;
   }
+
 
 private:
   /// Magnetic field inside of the detector
