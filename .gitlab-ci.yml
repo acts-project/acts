@@ -7,7 +7,7 @@ stages:
     - deploy
 
 variables:
-    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_DD4HEP_PLUGIN=on -DBUILD_MATERIAL_PLUGIN=on -DBUILD_TGEO_PLUGIN=on -DBUILD_INTEGRATION_TESTS=on -DSUPPRESS_LIBRARY_WARNINGS=on
+    CMAKE_ARGS: -GNinja -DBUILD_DD4HEP_PLUGIN=on -DBUILD_MATERIAL_PLUGIN=on -DBUILD_TGEO_PLUGIN=on -DBUILD_INTEGRATION_TESTS=on -DSUPPRESS_LIBRARY_WARNINGS=on
     DEFAULT_BUILDDIR: build_slc6_gcc
 
 before_script:
@@ -21,11 +21,13 @@ build_slc6_gcc:
     script:
         - mkdir build_slc6_gcc
         - cd build_slc6_gcc
-        - CXX=g++ cmake ${CMAKE_ARGS} ..
+        - CXX=g++ cmake ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Debug ..
         - cmake --build .
+        - find . -name "*.o" -delete
     artifacts:
         paths:
             - build_slc6_gcc
+        expire_in: 6 hours
 
 unit_tests_slc6_gcc:
     stage: test
@@ -36,6 +38,7 @@ unit_tests_slc6_gcc:
     artifacts:
         paths:
             - build_slc6_gcc
+        expire_in: 6 hours
 
 integration_tests_slc6_gcc:
     stage: test
@@ -43,9 +46,6 @@ integration_tests_slc6_gcc:
     tags: [cvmfs]
     script:
         - cmake --build build_slc6_gcc -- integration_tests
-    artifacts:
-        paths:
-            - build_slc6_gcc
 
 build_slc6_llvm40:
     stage: build
@@ -54,11 +54,13 @@ build_slc6_llvm40:
         - source CI/setup_llvm40.sh
         - mkdir build_slc6_llvm40
         - cd build_slc6_llvm40
-        - CXX=clang++ cmake ${CMAKE_ARGS} ..
+        - CXX=clang++ cmake ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Release ..
         - cmake --build .
+        - find . -name "*.o" -delete
     artifacts:
         paths:
             - build_slc6_llvm40
+        expire_in: 6 hours
 
 unit_tests_slc6_llvm40:
     stage: test
@@ -83,11 +85,13 @@ build_cc7_gcc:
     script:
         - mkdir build_cc7_gcc
         - cd build_cc7_gcc
-        - CXX=g++ cmake ${CMAKE_ARGS} ..
+        - CXX=g++ cmake ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Release ..
         - cmake --build .
+        - find . -name "*.o" -delete
     artifacts:
         paths:
             - build_cc7_gcc
+        expire_in: 6 hours
 
 unit_tests_cc7_gcc:
     stage: test
@@ -113,11 +117,13 @@ build_cc7_llvm40:
         - source CI/setup_llvm40.sh
         - mkdir build_cc7_llvm40
         - cd build_cc7_llvm40
-        - CXX=clang++ cmake ${CMAKE_ARGS} ..
+        - CXX=clang++ cmake ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Release ..
         - cmake --build .
+        - find . -name "*.o" -delete
     artifacts:
         paths:
             - build_cc7_llvm40
+        expire_in: 6 hours
 
 unit_tests_cc7_llvm40:
     stage: test
@@ -153,6 +159,8 @@ coverage:
     stage: check
     tags: [cvmfs]
     coverage: '/^TOTAL.*\s+(\d+\%)$/'
+    dependencies:
+        - unit_tests_slc6_gcc
     script:
         - cmake --build ${DEFAULT_BUILDDIR} -- coverage
     artifacts:
