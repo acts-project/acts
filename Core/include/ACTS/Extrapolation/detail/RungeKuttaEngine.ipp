@@ -502,7 +502,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
 
   // @todo the inverse momentum condition is hard-coded
   if (pCache.mcondition && std::abs(pCache.pVector[6]) > 100000.) return false;
-  
+
   // Step estimation until surface
   bool   Q;
   double S, step = m_rkUtils.stepEstimator(kind, Su, pCache.pVector, Q);
@@ -648,7 +648,7 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
   double* A  = &(pCache.pVector[3]);  // Directions
   double* sA = &(pCache.pVector[42]);
   // invert momentum in right units
-  double Pi = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / pCache.pVector[6]);
+  double Pi   = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / pCache.pVector[6]);
   double dltm = m_cfg.dlt * .03;
 
   double f0[3], f[3];
@@ -889,7 +889,7 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStepWithGradient(
   double*      A   = &(pCache.pVector[3]);  // Directions
   double*      sA  = &(pCache.pVector[42]);
   // express the conversion factor with units
-  double Pi = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / pCache.pVector[6]);      
+  double Pi   = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / pCache.pVector[6]);
   double dltm = m_cfg.dlt * .03;
 
   double f0[3], f1[3], f2[3], g0[9], g1[9], g2[9], H0[12], H1[12], H2[12];

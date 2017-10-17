@@ -43,7 +43,7 @@ cross(const ActsMatrixD<3, 3>& m, const Vector3D& v)
 template <typename BField>
 class EigenStepper
 {
-  
+
 private:
   // This struct is a meta-function which normally maps to BoundParameters...
   template <typename T, typename S>
@@ -72,16 +72,16 @@ private:
     //
     return p.transform().matrix().topLeftCorner<3, 3>().transpose();
   }
-  
+
 public:
   /// Cache for track parameter propagation
-  /// 
+  ///
   /// it is exposed to public for use of the expert-only
   /// propagate_with_cache method of the propagator
   struct Cache
   {
     /// Constructor from the initial track parameters
-    /// @tparam [in] par are the track parameters
+    /// @tparam [in] par The track parameters at start
     ///
     /// @note the covariance matrix is copied when needed
     template <typename T>
@@ -90,6 +90,30 @@ public:
       , dir(par.momentum().normalized())
       , qop(par.charge() / par.momentum().norm())
       , cov_transport(false)
+    {
+      update_covariance(par);
+    }
+
+    /// The cache update for optimal performance
+    /// @tparam [in] par The new track parameters at start
+    ///
+    /// @todo check to identify an reuse of start/cache
+    template <typename T>
+    void
+    update(const T& par)
+    {
+      pos           = par.position();
+      dir           = par.momentum().normalized();
+      qop           = (par.charge() / par.momentum().norm());
+      cov_transport = false;
+      update_covariance(par);
+    }
+
+    /// The covariance update
+    /// @tparam [in] par The (new) track parameters at start
+    template <typename T>
+    void
+    update_covariance(const T& par)
     {
       if (par.covariance()) {
         cov_transport = true;
@@ -154,7 +178,7 @@ public:
     bool                    field_cache_ready = false;
     concept::AnyFieldCell<> field_cache;
   };
-  
+
   /// Always use the same propagation cache type, independently of the initial
   /// track parameter type and of the target surface
   template <typename T, typename S = int>
@@ -452,7 +476,6 @@ public:
     // Return the updated step size
     return h;
   }
-
 
 private:
   /// Magnetic field inside of the detector

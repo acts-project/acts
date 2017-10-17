@@ -284,6 +284,9 @@ namespace propagation {
                                                             Surface>
           return_parameter_type;
 
+      // update the cache if necessary
+      cache.update(start);
+
       // Type of the full propagation result, including output from observers
       typedef obs_list_result_t<return_parameter_type, ObserverList>
           result_type;

@@ -576,7 +576,7 @@ Acts::RungeKuttaUtils::stepEstimator(int           kind,
   if (kind == 0) return stepEstimatorToStraw(Su, P, Q);
   if (kind == 2) return stepEstimatorToCylinder(Su, P, Q);
   if (kind == 3) return stepEstimatorToCone(Su, P, Q);
-  return 1000000.; // @todo maximum not hard-coded
+  return 1000000.;  // @todo maximum not hard-coded
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -594,7 +594,7 @@ Acts::RungeKuttaUtils::stepEstimatorToPlane(double*       S,
   double A = a[0] * S[0] + a[1] * S[1] + a[2] * S[2];
   if (A == 0.) {
     Q = false;
-    return 1000000.; // @todo maximum not hard-coded
+    return 1000000.;  // @todo maximum not hard-coded
   }
   double D = (S[3] - r[0] * S[0]) - (r[1] * S[1] + r[2] * S[2]);
   Q        = true;
