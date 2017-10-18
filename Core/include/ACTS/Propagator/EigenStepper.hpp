@@ -118,10 +118,9 @@ public:
       if (par.covariance()) {
         cov_transport = true;
         cov           = ActsSymMatrixD<5>(*par.covariance());
-
         const double phi   = dir.phi();
         const double theta = dir.theta();
-
+        // @todo - check this might have to be the measuremetn frame ... 
         const auto transform = par.referenceSurface().transform().matrix();
         jacobian(0, eLOC_0) = transform(0, eLOC_0);
         jacobian(0, eLOC_1) = transform(0, eLOC_1);
