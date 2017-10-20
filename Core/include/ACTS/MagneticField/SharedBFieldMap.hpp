@@ -24,8 +24,9 @@ class SharedBField
 {
 public:
   /// @brief the constructur with a shared pointer
+  /// @note since it is a shared field, we enforce it to be const
   /// @tparam bField is the shared BField to be stored
-  SharedBField(std::shared_ptr<BField> bField) : m_bField(bField) {}
+  SharedBField(std::shared_ptr<const BField> bField) : m_bField(bField) {}
 
   /// @brief retrieve magnetic field value
   ///
@@ -67,7 +68,7 @@ public:
   }
 
 private:
-  std::shared_ptr<BField> m_bField;
+  std::shared_ptr<const BField> m_bField;
 };
 
 }  // namespace Acts
