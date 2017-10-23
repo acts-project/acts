@@ -500,7 +500,8 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
   SA[0] = SA[1] = SA[2] = 0.;
   pCache.maxPathLimit   = false;
 
-  if (pCache.mcondition && std::abs(pCache.pVector[6]) > 100.) return false;
+  // @todo the inverse momentum condition is hard-coded
+  if (pCache.mcondition && std::abs(pCache.pVector[6]) > 100000.) return false;
 
   // Step estimation until surface
   bool   Q;
@@ -646,10 +647,8 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
   double* R  = &(pCache.pVector[0]);  // Coordinates
   double* A  = &(pCache.pVector[3]);  // Directions
   double* sA = &(pCache.pVector[42]);
-
-  // @todo bring the numbers into initialize
-  double scaleM = 1e-3 / units::_T;
-  double Pi = 149.89626 * pCache.pVector[6] * units::_MeV;  // Invert mometum/2.
+  // invert momentum in right units
+  double Pi   = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / pCache.pVector[6]);
   double dltm = m_cfg.dlt * .03;
 
   double f0[3], f[3];
@@ -657,9 +656,9 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
   // if new field is required get it
   if (pCache.newfield) {
     Vector3D bField = m_cfg.fieldService->getField(Vector3D(R[0], R[1], R[2]));
-    f0[0]           = scaleM * bField.x();
-    f0[1]           = scaleM * bField.y();
-    f0[2]           = scaleM * bField.z();
+    f0[0]           = bField.x();
+    f0[1]           = bField.y();
+    f0[2]           = bField.z();
   } else {
     f0[0] = pCache.field[0];
     f0[1] = pCache.field[1];
@@ -690,9 +689,9 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
       double   gP[3] = {R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4};
       Vector3D bField
           = m_cfg.fieldService->getField(Vector3D(gP[0], gP[1], gP[2]));
-      f[0] = scaleM * bField.x();
-      f[1] = scaleM * bField.y();
-      f[2] = scaleM * bField.z();
+      f[0] = bField.x();
+      f[1] = bField.y();
+      f[2] = bField.z();
     } else {
       f[0] = f0[0];
       f[1] = f0[1];
@@ -716,9 +715,9 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
       double   gP[3] = {R[0] + S * A4, R[1] + S * B4, R[2] + S * C4};
       Vector3D bField
           = m_cfg.fieldService->getField(Vector3D(gP[0], gP[1], gP[2]));
-      f[0] = scaleM * bField.x();
-      f[1] = scaleM * bField.y();
-      f[2] = scaleM * bField.z();
+      f[0] = bField.x();
+      f[1] = bField.y();
+      f[2] = bField.z();
     } else {
       f[0] = f0[0];
       f[1] = f0[1];
@@ -890,10 +889,7 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStepWithGradient(
   double*      A   = &(pCache.pVector[3]);  // Directions
   double*      sA  = &(pCache.pVector[42]);
   // express the conversion factor with units
-  // @todo bring the conversion into initialize
-  double scaleM = 1e-3 / units::_T;
-  double Pi = 149.89626 * pCache.pVector[6] * units::_MeV;  // Invert mometum/2.
-
+  double Pi   = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / pCache.pVector[6]);
   double dltm = m_cfg.dlt * .03;
 
   double f0[3], f1[3], f2[3], g0[9], g1[9], g2[9], H0[12], H1[12], H2[12];
@@ -902,18 +898,18 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStepWithGradient(
   deriv0 << 0., 0., 0., 0., 0., 0., 0., 0., 0.;
   Vector3D bField0 = m_cfg.fieldService->getFieldGradient(
       Vector3D(R[0], R[1], R[2]), deriv0);
-  f0[0] = scaleM * bField0.x();
-  f0[1] = scaleM * bField0.y();
-  f0[2] = scaleM * bField0.z();
-  g0[0] = scaleM * deriv0(0, 0);
-  g0[1] = scaleM * deriv0(0, 1);
-  g0[2] = scaleM * deriv0(0, 2);
-  g0[3] = scaleM * deriv0(1, 0);
-  g0[4] = scaleM * deriv0(1, 1);
-  g0[5] = scaleM * deriv0(1, 2);
-  g0[6] = scaleM * deriv0(2, 0);
-  g0[7] = scaleM * deriv0(2, 1);
-  g0[8] = scaleM * deriv0(2, 2);
+  f0[0] = bField0.x();
+  f0[1] = bField0.y();
+  f0[2] = bField0.z();
+  g0[0] = deriv0(0, 0);
+  g0[1] = deriv0(0, 1);
+  g0[2] = deriv0(0, 2);
+  g0[3] = deriv0(1, 0);
+  g0[4] = deriv0(1, 1);
+  g0[5] = deriv0(1, 2);
+  g0[6] = deriv0(2, 0);
+  g0[7] = deriv0(2, 1);
+  g0[8] = deriv0(2, 2);
 
   while (S != 0.) {
     double S3 = C33 * S, S4 = .25 * S, PS2 = Pi * S;
@@ -940,18 +936,18 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStepWithGradient(
     deriv1 << 0., 0., 0., 0., 0., 0., 0., 0., 0.;
     Vector3D bField1 = m_cfg.fieldService->getFieldGradient(
         Vector3D(gP1[0], gP1[1], gP1[2]), deriv1);
-    f1[0]     = scaleM * bField1.x();
-    f1[1]     = scaleM * bField1.y();
-    f1[2]     = scaleM * bField1.z();
-    g1[0]     = scaleM * deriv1(0, 0);
-    g1[1]     = scaleM * deriv1(0, 1);
-    g1[2]     = scaleM * deriv1(0, 2);
-    g1[3]     = scaleM * deriv1(1, 0);
-    g1[4]     = scaleM * deriv1(1, 1);
-    g1[5]     = scaleM * deriv1(1, 2);
-    g1[6]     = scaleM * deriv1(2, 0);
-    g1[7]     = scaleM * deriv1(2, 1);
-    g1[8]     = scaleM * deriv1(2, 2);
+    f1[0]     = bField1.x();
+    f1[1]     = bField1.y();
+    f1[2]     = bField1.z();
+    g1[0]     = deriv1(0, 0);
+    g1[1]     = deriv1(0, 1);
+    g1[2]     = deriv1(0, 2);
+    g1[3]     = deriv1(1, 0);
+    g1[4]     = deriv1(1, 1);
+    g1[5]     = deriv1(1, 2);
+    g1[6]     = deriv1(2, 0);
+    g1[7]     = deriv1(2, 1);
+    g1[8]     = deriv1(2, 2);
     H1[0]     = f1[0] * PS2;
     H1[1]     = f1[1] * PS2;
     H1[2]     = f1[2] * PS2;

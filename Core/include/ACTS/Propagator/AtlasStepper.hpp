@@ -11,6 +11,7 @@
 
 #include <cmath>
 #include "ACTS/EventData/TrackParameters.hpp"
+#include "ACTS/MagneticField/concept/AnyFieldLookup.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
@@ -36,6 +37,12 @@ class AtlasStepper
     double parameters[NGlobalPars] = {0., 0., 0., 0., 0.};
     const ActsSymMatrixD<NGlobalPars>* covariance;
     double                             jacobian[NGlobalPars * NGlobalPars];
+
+    /// Lazily initialized cache
+    /// It caches the current magneticl field cell and stays interpolates within
+    /// as long as this is valid. See step() code for details.
+    bool                    field_cache_ready = false;
+    concept::AnyFieldCell<> field_cache;
 
     Vector3D
     position() const
@@ -287,6 +294,9 @@ public:
     return CurvilinearParameters(std::move(cov), gp, mom, charge);
   }
 
+  /// convert method into bound parameters
+  /// @param cache is the propagation cache to be converted
+  /// @param s the target surface
   static BoundParameters
   convert(Cache& cache, const Surface& s)
   {
@@ -446,6 +456,25 @@ public:
     return i.pathLength;
   }
 
+  /// Get the field for the stepping
+  /// It checks first if the access is still within the Cell,
+  /// and updates the cell if necessary, then it takes the field
+  /// from the cell
+  /// @param [in,out] cache is the propagation cache associated with the track
+  ///                 the magnetic field cell is used (and potentially updated)
+  /// @param [in] pos is the field position
+  Vector3D
+  getField(Cache& cache, const Vector3D& pos) const
+  {
+    if (!cache.field_cache_ready || !cache.field_cache.isInside(pos)) {
+      cache.field_cache_ready = true;
+      cache.field_cache       = m_bField.getFieldCell(pos);
+    }
+    // get the field from the cell
+    cache.field = cache.field_cache.getField(pos);
+    return cache.field;
+  }
+
   double
   step(Cache& cache, double& h) const
   {
@@ -463,7 +492,7 @@ public:
     // if new field is required get it
     if (cache.newfield) {
       const Vector3D pos(R[0], R[1], R[2]);
-      f0 = m_bField.getField(pos);
+      f0 = getField(cache, pos);
     } else {
       f0 = cache.field;
     }
@@ -491,7 +520,7 @@ public:
       //
       if (!Helix) {
         const Vector3D pos(R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4);
-        f = m_bField.getField(pos);
+        f = getField(cache, pos);
       } else {
         f = f0;
       }
@@ -511,7 +540,7 @@ public:
       //
       if (!Helix) {
         const Vector3D pos(R[0] + h * A4, R[1] + h * B4, R[2] + h * C4);
-        f = m_bField.getField(pos);
+        f = getField(cache, pos);
       } else {
         f = f0;
       }

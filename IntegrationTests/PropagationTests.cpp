@@ -239,6 +239,7 @@ namespace IntegrationTest {
     if ((calculated_cov - *tp->covariance()).norm()
             / std::min(calculated_cov.norm(), tp->covariance()->norm())
         > 2e-7) {
+      std::cout << "initial parameters = " << tp->parameters() << std::endl;
       std::cout << "calculated = " << calculated_cov << std::endl << std::endl;
       std::cout << "obtained = " << *tp->covariance() << std::endl;
     }

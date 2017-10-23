@@ -26,6 +26,8 @@ namespace IntegrationTest {
     {
     }
 
+    /// Numerical transport of covariance using the ridder's algorithm
+    /// this is for covariance propagation validation
     template <typename U>
     ActsSymMatrixD<5>
     calculateCovariance(const CurvilinearParameters& trackPars,

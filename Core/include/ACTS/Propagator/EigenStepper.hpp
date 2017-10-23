@@ -11,6 +11,7 @@
 
 #include <cmath>
 #include "ACTS/EventData/TrackParameters.hpp"
+#include "ACTS/MagneticField/concept/AnyFieldLookup.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
@@ -42,22 +43,84 @@ cross(const ActsMatrixD<3, 3>& m, const Vector3D& v)
 template <typename BField>
 class EigenStepper
 {
+
 private:
-  /// Internal cache for track parameter propagation
+  // This struct is a meta-function which normally maps to BoundParameters...
+  template <typename T, typename S>
+  struct s
+  {
+    typedef BoundParameters type;
+  };
+
+  // ...unless type S is int, in which case it maps to Curvilinear parameters
+  template <typename T>
+  struct s<T, int>
+  {
+    typedef CurvilinearParameters type;
+  };
+
+  /// Rotation matrix going from global coordinates to local surface coordinates
+  static ActsMatrixD<3, 3>
+  dLocaldGlobal(const Surface& p, const Vector3D& gpos)
+  {
+    // A surface's associated transform is a 4x4 affine transformation matrix,
+    // whose top-left corner is the 3x3 linear local-to-global rotation matrix,
+    // and whose right column is a translation vector, with a trailing 1.
+    //
+    // So to get the global-to-local rotation matrix, we only need to take the
+    // transpose of the top-left corner of the surface's associated transform.
+    //
+    return p.transform().matrix().topLeftCorner<3, 3>().transpose();
+  }
+
+public:
+  /// Cache for track parameter propagation
+  ///
+  /// it is exposed to public for use of the expert-only
+  /// propagate_with_cache method of the propagator
   struct Cache
   {
     /// Constructor from the initial track parameters
+    /// @tparam [in] par The track parameters at start
+    ///
+    /// @note the covariance matrix is copied when needed
     template <typename T>
     explicit Cache(const T& par)
       : pos(par.position())
       , dir(par.momentum().normalized())
       , qop(par.charge() / par.momentum().norm())
-      , cov(par.covariance())
+      , cov_transport(false)
     {
-      const double phi   = dir.phi();
-      const double theta = dir.theta();
+      update_covariance(par);
+    }
 
-      if (cov) {
+    /// The cache update for optimal performance
+    /// @tparam [in] par The new track parameters at start
+    ///
+    /// @todo check to identify an reuse of start/cache
+    template <typename T>
+    void
+    update(const T& par)
+    {
+      pos           = par.position();
+      dir           = par.momentum().normalized();
+      qop           = (par.charge() / par.momentum().norm());
+      cov_transport = false;
+      update_covariance(par);
+    }
+
+    /// The covariance update
+    /// @tparam [in] par The (new) track parameters at start
+    template <typename T>
+    void
+    update_covariance(const T& par)
+    {
+      if (par.covariance()) {
+        cov_transport      = true;
+        cov                = ActsSymMatrixD<5>(*par.covariance());
+        const double phi   = dir.phi();
+        const double theta = dir.theta();
+        // @todo - check this might have to be the measuremetn frame ...
         const auto transform = par.referenceSurface().transform().matrix();
         jacobian(0, eLOC_0) = transform(0, eLOC_0);
         jacobian(0, eLOC_1) = transform(0, eLOC_1);
@@ -100,47 +163,21 @@ private:
     /// Jacobian used to transport the covariance matrix
     ActsMatrixD<7, 5> jacobian = ActsMatrixD<7, 5>::Zero();
 
-    /// ???
+    /// The propagation derivative
     ActsVectorD<7> derivative = ActsVectorD<7>::Zero();
 
-    /// Covariance matrix assocated with the initial error on track parameters
-    const ActsSymMatrixD<5>* cov = nullptr;
+    /// Covariance matrix (and indicator)
+    //// assocated with the initial error on track parameters
+    bool              cov_transport = false;
+    ActsSymMatrixD<5> cov           = ActsSymMatrixD<5>::Zero();
 
-    /// Lazily initialized cache which contains an approximation of the
-    /// magnetic field at the current position. See step() code for details.
-    bool     field_cache_ready = false;
-    Vector3D field_cache       = Vector3D(0, 0, 0);
+    /// Lazily initialized cache
+    /// It caches the current magneticl field cell and stays interpolates within
+    /// as long as this is valid. See step() code for details.
+    bool                    field_cache_ready = false;
+    concept::AnyFieldCell<> field_cache;
   };
 
-  // This struct is a meta-function which normally maps to BoundParameters...
-  template <typename T, typename S>
-  struct s
-  {
-    typedef BoundParameters type;
-  };
-
-  // ...unless type S is int, in which case it maps to Curvilinear parameters
-  template <typename T>
-  struct s<T, int>
-  {
-    typedef CurvilinearParameters type;
-  };
-
-  /// Rotation matrix going from global coordinates to local surface coordinates
-  static ActsMatrixD<3, 3>
-  dLocaldGlobal(const Surface& p, const Vector3D& gpos)
-  {
-    // A surface's associated transform is a 4x4 affine transformation matrix,
-    // whose top-left corner is the 3x3 linear local-to-global rotation matrix,
-    // and whose right column is a translation vector, with a trailing 1.
-    //
-    // So to get the global-to-local rotation matrix, we only need to take the
-    // transpose of the top-left corner of the surface's associated transform.
-    //
-    return p.transform().matrix().topLeftCorner<3, 3>().transpose();
-  }
-
-public:
   /// Always use the same propagation cache type, independently of the initial
   /// track parameter type and of the target surface
   template <typename T, typename S = int>
@@ -159,6 +196,8 @@ public:
   EigenStepper(BField bField = BField()) : m_bField(std::move(bField)){};
 
   /// Convert the propagation cache to curvilinear parameters
+  /// @param cache is the stepper cache
+  /// @todo check: what if cache is already in courvilinear ? is this caught ?
   static CurvilinearParameters
   convert(const Cache& cache)
   {
@@ -166,7 +205,7 @@ public:
     std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
 
     // Perform error propagation if an initial covariance matrix was provided
-    if (cache.cov) {
+    if (cache.cov_transport) {
       const double phi   = cache.dir.phi();
       const double theta = cache.dir.theta();
 
@@ -214,7 +253,7 @@ public:
       jacobian -= tmp;
       auto jac = J * jacobian;
 
-      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * (*cache.cov)
+      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * cache.cov
                                                       * jac.transpose());
     }
 
@@ -223,6 +262,8 @@ public:
   }
 
   /// Convert the propagation cache to track parameters at a certain surface
+  /// @param [in] cache Propagation cache used
+  /// @param [in] surface Destination surface to which the conversion is done
   template <typename S>
   static BoundParameters
   convert(Cache& cache, const S& surface)
@@ -231,7 +272,7 @@ public:
     std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
 
     // Perform error propagation if an initial covariance matrix was provided
-    if (cache.cov) {
+    if (cache.cov_transport) {
       const double phi   = cache.dir.phi();
       const double theta = cache.dir.theta();
 
@@ -262,7 +303,7 @@ public:
       jacobian -= tmp;
       auto jac = J * cache.jacobian;
 
-      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * (*cache.cov)
+      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * cache.cov
                                                       * jac.transpose());
     }
 
@@ -279,6 +320,24 @@ public:
   {
     const Intersection i = s.intersectionEstimate(pos, dir);
     return i.pathLength;
+  }
+
+  /// Get the field for the stepping
+  /// It checks first if the access is still within the Cell,
+  /// and updates the cell if necessary, then it takes the field
+  /// from the cell
+  /// @param [in,out] cache is the propagation cache associated with the track
+  ///                 the magnetic field cell is used (and potentially updated)
+  /// @param [in] pos is the field position
+  Vector3D
+  getField(Cache& cache, const Vector3D& pos) const
+  {
+    if (!cache.field_cache_ready || !cache.field_cache.isInside(pos)) {
+      cache.field_cache_ready = true;
+      cache.field_cache       = m_bField.getFieldCell(pos);
+    }
+    // get the field from the cell
+    return std::move(cache.field_cache.getField(pos));
   }
 
   /// Perform a Runge-Kutta track parameter propagation step
@@ -301,14 +360,8 @@ public:
     double   h2, half_h;
     Vector3D B_middle, B_last, k2, k3, k4;
 
-    // Initialize the magnetic field cache on the first run
-    if (!cache.field_cache_ready) {
-      cache.field_cache       = m_bField.getField(cache.pos);
-      cache.field_cache_ready = true;
-    }
-
     // First Runge-Kutta point (at current position)
-    const Vector3D B_first = cache.field_cache;
+    const Vector3D B_first = getField(cache, cache.pos);
     const Vector3D k1      = qop * cache.dir.cross(B_first);
 
     // The following functor starts to perform a Runge-Kutta step of a certain
@@ -322,15 +375,16 @@ public:
 
       // Second Runge-Kutta point
       const Vector3D pos1 = cache.pos + half_h * cache.dir + h2 / 8 * k1;
-      B_middle            = m_bField.getField(pos1);
-      k2                  = qop * (cache.dir + half_h * k1).cross(B_middle);
+      B_middle            = getField(cache, pos1);
+      ;
+      k2 = qop * (cache.dir + half_h * k1).cross(B_middle);
 
       // Third Runge-Kutta point
       k3 = qop * (cache.dir + half_h * k2).cross(B_middle);
 
       // Last Runge-Kutta point
       const Vector3D pos2 = cache.pos + h * cache.dir + h2 / 2 * k3;
-      B_last              = m_bField.getField(pos2);
+      B_last              = getField(cache, pos2);
       k4                  = qop * (cache.dir + h * k3).cross(B_last);
 
       // Return an estimate of the local integration error
@@ -345,7 +399,7 @@ public:
     }
 
     // When doing error propagation, update the associated Jacobian matrix
-    if (cache.cov) {
+    if (cache.cov_transport) {
       ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Zero();
       D(6, 6)             = 1;
 
@@ -417,10 +471,6 @@ public:
     cache.dir /= cache.dir.norm();
     cache.derivative.template head<3>()     = cache.dir;
     cache.derivative.template segment<3>(3) = k4;
-
-    // We approximate the magnetic field at our new position as being equal to
-    // the last field measurement, thusly avoiding one field lookup per step.
-    cache.field_cache = B_last;
 
     // Return the updated step size
     return h;
