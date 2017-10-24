@@ -459,10 +459,10 @@ Acts::TrackingVolume::closeGeometry(
     for (auto& volumesIter : m_confinedVolumes->arrayObjects()) {
       auto mutableVolumesIter
           = std::const_pointer_cast<TrackingVolume>(volumesIter);
+      mutableVolumesIter->closeGeometry(volumeMap, vol);
       // collect the detector elements for the contained volumes
       auto detElements = mutableVolumesIter->detectorElements();
       m_detectorElements.insert(detElements.begin(), detElements.end());
-      mutableVolumesIter->closeGeometry(volumeMap, vol);
     }
   }
 
