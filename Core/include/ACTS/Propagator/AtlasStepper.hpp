@@ -56,6 +56,8 @@ class AtlasStepper
       return Vector3D(pVector[3], pVector[4], pVector[5]);
     }
 
+    /// Constructor by curvilinera parameters
+    /// @todo update with TrackParameters !
     Cache(const CurvilinearParameters& pars)
       : dir(alongMomentum)
       , useJacobian(false)
@@ -66,6 +68,16 @@ class AtlasStepper
       , newfield(true)
       , field(0., 0., 0.)
       , covariance(nullptr)
+    {
+      update(pars);
+    }
+
+    /// The cache update for optimal performance
+    /// @param [in] pars The new track parameters at start
+    ///
+    /// @todo check to identify an reuse of start/cache
+    void
+    update(const CurvilinearParameters& pars)
     {
       if (pars.covariance()) {
         covariance  = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
