@@ -70,14 +70,12 @@ ionizationEnergyLoss(InteractionType       interactionType,
 ///
 /// @param[in] p The value of particle momentum
 /// @param[in] mat The material
-/// @param[out] sigma The addition to the energy noise
 /// @param[in] particleMasses The masses of the different particles
-/// @return dEdx from radiation
-double
+/// @return dEdx from radiation and associate sigma (straggling)
+std::pair<double, double>
 radiationEnergyLoss(double                p,
                     const Material&       mat,
                     ParticleType          particle,
-                    double&               sigma,
                     const ParticleMasses& particleMasses);
 
 /// multiple scattering as function of dInX0

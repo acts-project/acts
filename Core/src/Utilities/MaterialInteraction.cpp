@@ -92,15 +92,14 @@ Acts::ionizationEnergyLoss(InteractionType       interactionType,
   return dE;
 }
 
-double
+std::pair<double, double>
 Acts::radiationEnergyLoss(double                p,
                           const Material&       mat,
                           ParticleType          particle,
-                          double&               sigma,
                           const ParticleMasses& particleMasses)
 {
-  sigma = 0.;
-  if (!(mat)) return 0.;
+  double sigma = 0.;
+  if (!(mat)) return std::pair<double, double>(0., 0.);
 
   // preparation of kinetic constants
   double m     = particleMasses.mass[particle];
@@ -134,7 +133,7 @@ Acts::radiationEnergyLoss(double                p,
 
   sigma = sigma / mat.X0();
 
-  return Radiation / mat.X0();
+  return std::pair<double, double>(Radiation / mat.X0(), sigma);
 }
 
 double
