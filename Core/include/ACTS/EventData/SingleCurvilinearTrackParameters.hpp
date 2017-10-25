@@ -52,7 +52,7 @@ public:
                                                                 dCharge),
           position,
           momentum)
-    , m_upSurface(new PlaneSurface(position, momentum))
+    , m_upSurface(position, momentum)
   {
   }
 
@@ -75,7 +75,7 @@ public:
                                                                 0),
           position,
           momentum)
-    , m_upSurface(new PlaneSurface(position, momentum))
+    , m_upSurface(position, momentum)
   {
   }
 
@@ -84,7 +84,7 @@ public:
   SingleCurvilinearTrackParameters(
       const SingleCurvilinearTrackParameters<ChargePolicy>& copy)
     : SingleTrackParameters<ChargePolicy>(copy)
-    , m_upSurface(new PlaneSurface(this->position(), this->momentum()))
+    , m_upSurface(this->position(), this->momentum())
   {
   }
 
@@ -108,9 +108,8 @@ public:
     // check for self-assignment
     if (this != &rhs) {
       SingleTrackParameters<ChargePolicy>::operator=(rhs);
-      m_upSurface.reset(new PlaneSurface(this->position(), this->momentum()));
+      m_upSurface = PlaneSurface(this->position(), this->momentum());
     }
-
     return *this;
   }
 
@@ -124,7 +123,6 @@ public:
       SingleTrackParameters<ChargePolicy>::operator=(std::move(rhs));
       m_upSurface                                  = std::move(rhs.m_upSurface);
     }
-
     return *this;
   }
 
@@ -136,6 +134,9 @@ public:
     return new SingleCurvilinearTrackParameters<ChargePolicy>(*this);
   }
 
+  /// @brief update of the track parameterisation
+  /// only enabled is the parameter type set is the same
+  /// only possible on non-const objects
   template <ParID_t par,
             std::enable_if_t<not std::is_same<typename par_type<par>::type,
                                               local_parameter>::value,
@@ -147,14 +148,25 @@ public:
     this->updateGlobalCoordinates(typename par_type<par>::type());
   }
 
+  /// @brief access to the reference surface
   virtual const Surface&
   referenceSurface() const final override
   {
-    return *m_upSurface;
+    return m_upSurface;
+  }
+
+  /// @brief access to the reference frame
+  /// this is the logical frame where the covariance matrix
+  /// is bound to - for curvilinear (== planar) surfaces
+  /// this is given by the rotation matrix of the plane transform
+  virtual RotationMatrix3D
+  referenceFrame() const final override
+  {
+    return std::move(m_upSurface.transform().linear());
   }
 
 private:
-  std::unique_ptr<const PlaneSurface> m_upSurface;
+  PlaneSurface m_upSurface;
 };
 }  // end of namespace Acts
 

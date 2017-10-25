@@ -56,9 +56,9 @@ class AtlasStepper
       return Vector3D(pVector[3], pVector[4], pVector[5]);
     }
 
-    /// Constructor by curvilinera parameters
-    /// @todo update with TrackParameters !
-    Cache(const CurvilinearParameters& pars)
+    /// Constructor
+    template <typename Parameters>
+    Cache(const Parameters& pars)
       : dir(alongMomentum)
       , useJacobian(false)
       , step(0.)
@@ -72,18 +72,23 @@ class AtlasStepper
       update(pars);
     }
 
-    /// The cache update for optimal performance
-    /// @param [in] pars The new track parameters at start
+    /// The cache update method
     ///
     /// @todo check to identify an reuse of start/cache
+    template <typename Parameters>
     void
-    update(const CurvilinearParameters& pars)
+    update(const Parameters& pars)
     {
-      if (pars.covariance()) {
-        covariance  = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
-        useJacobian = true;
-      }
+      updateParameters(pars);
+      updateCovariance(pars);
+    }
 
+    /// The cache parameter update
+    /// @param [in] pars The new track parameters at start
+    template <typename Parameters>
+    void
+    updateParameters(const Parameters& pars)
+    {
       const ActsVectorD<3>     pos = pars.position();
       ActsVectorD<NGlobalPars> Vp  = pars.parameters();
 
@@ -147,6 +152,37 @@ class AtlasStepper
       pVector[42] = 0.;
       pVector[43] = 0.;
       pVector[44] = 0.;
+    }
+
+    /// The cache covariance update - bound parameters
+    /// @param [in] pars The new track parameters at start
+    ///
+    /// @todo check to identify an reuse of start/cache
+    void
+    updateCovariance(const BoundParameters& pars)
+    {
+      if (pars.covariance()) {
+        // translate bound parameters covariance to curvilinear
+
+        //
+        // covariance  = new ActsSymMatrixD<NGlobalPars>
+        //   (ActsSymMatrixD<NGlobalPars>::Zero());
+        useJacobian = true;
+      }
+    }
+
+    /// The cache covariance update  - bound parameters
+    /// @param [in] pars The new track parameters at start
+    ///
+    /// @todo check to identify an reuse of start/cache
+    void
+    updateCovariance(const CurvilinearParameters& pars)
+    {
+      if (pars.covariance()) {
+        // for curvilinear parameters - use covariance directly
+        covariance  = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
+        useJacobian = true;
+      }
     }
   };
 

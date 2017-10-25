@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef ACTS_TRACKPARAMETERS_H
-#define ACTS_TRACKPARAMETERS_H 1
+#define ACTS_TRACKPARAMETERS_H
 
 #include "ACTS/EventData/ChargePolicy.hpp"
 #include "ACTS/EventData/SingleBoundTrackParameters.hpp"

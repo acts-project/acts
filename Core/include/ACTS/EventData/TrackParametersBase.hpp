@@ -150,6 +150,12 @@ public:
   virtual const Surface&
   referenceSurface() const = 0;
 
+  /// @brief access to the measurement frame, i.e. the rotation matrix with
+  /// respect
+  /// to the global coordinate system, in which the local error is described
+  virtual RotationMatrix3D
+  referenceFrame() const = 0;
+
   /// @brief output stream operator
   ///
   /// Prints information about this object to the output stream using the

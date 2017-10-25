@@ -240,6 +240,17 @@ public:
     return *m_pSurface;
   }
 
+  /// @brief access to the reference frame
+  /// this is the logical frame where the covariance matrix
+  /// is bound to - for curvilinear (== planar) surfaces
+  /// this is given by the rotation matrix of the plane transform
+  virtual RotationMatrix3D
+  referenceFrame() const final override
+  {
+    /// @todo fix & update
+    return RotationMatrix3D::Zero();
+  }
+
 private:
   const Surface* m_pSurface;
 };
