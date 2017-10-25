@@ -215,7 +215,7 @@ public:
 
   /// Convert the propagation cache to curvilinear parameters
   /// @param cache is the stepper cache
-  /// @todo check: what if cache is already in courvilinear ? is this caught ?
+  /// @todo check: what if cache is already in curvilinear ? is this caught ?
   static CurvilinearParameters
   convert(const Cache& cache)
   {

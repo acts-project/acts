@@ -14,7 +14,7 @@
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 
 namespace Acts {
-  
+
 /// @brief Charged and Neutrial Curvilinear Track representation
 /// This is a single-component representation
 ///
@@ -34,7 +34,7 @@ public:
   /// @brief constructor for curvilienear representation
   /// This is the constructor from global parameters, enabled only
   /// for charged representations.
-  /// 
+  ///
   /// @param[in] cov The covariance matrix w.r.t. curvilinear frame
   /// @param[in] position The global position of this track parameterisation
   /// @param[in] momentum The global momentum of this track parameterisation
@@ -55,11 +55,11 @@ public:
     , m_upSurface(new PlaneSurface(position, momentum))
   {
   }
-  
+
   /// @brief constructor for curvilienear representation
   /// This is the constructor from global parameters, enabled only
   /// for charged representations.
-  /// 
+  ///
   /// @param[in] cov The covariance matrix w.r.t. curvilinear frame
   /// @param[in] position The global position of this track parameterisation
   /// @param[in] momentum The global momentum of this track parameterisation
@@ -88,7 +88,7 @@ public:
   {
   }
 
-  /// @brief move constructor - charged/neutral 
+  /// @brief move constructor - charged/neutral
   /// @param[in] copy The source parameters
   SingleCurvilinearTrackParameters(
       SingleCurvilinearTrackParameters<ChargePolicy>&& copy)
@@ -127,7 +127,7 @@ public:
 
     return *this;
   }
-  
+
   /// @brief clone - charged/netural
   /// virtual constructor for type creation without casting
   virtual SingleTrackParameters<ChargePolicy>*

@@ -7,36 +7,32 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef ACTS_SINGLETRACKPARAMETERS_H
-#define ACTS_SINGLETRACKPARAMETERS_H 1
+#define ACTS_SINGLETRACKPARAMETERS_H
 
-// STL include(s)
 #include <type_traits>
-
-// ACTS includes
 #include "ACTS/EventData/TrackParametersBase.hpp"
 #include "ACTS/EventData/detail/coordinate_transformations.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
-/**
- * @class SingleTrackParameters
- *
- * @brief base class for a single set of track parameters
- *
- * This class implements the interface for charged/neutral track parameters for
- * the case that it
- * represents a single set of track parameters (opposed to a list of different
- * sets of track
- * parameters as used by e.g. GSF or multi-track fitters).
- *
- * The track parameters and their uncertainty are defined in local reference
- * frame which depends on
- * the associated surface of the track parameters.
- *
- * @tparam ChargePolicy type for distinguishing charged and neutral
- * tracks/particles
- *         (must be either ChargedPolicy or NeutralPolicy)
- */
+
+/// @class SingleTrackParameters
+///
+/// @brief base class for a single set of track parameters
+///
+/// This class implements the interface for charged/neutral track parameters for
+/// the case that it
+/// represents a single set of track parameters (opposed to a list of different
+/// sets of track
+/// parameters as used by e.g. GSF or multi-track fitters).
+///
+/// The track parameters and their uncertainty are defined in local reference
+/// frame which depends on
+/// the associated surface of the track parameters.
+///
+/// @tparam ChargePolicy type for distinguishing charged and neutral
+/// tracks/particles
+///         (must be either ChargedPolicy or NeutralPolicy)
 template <class ChargePolicy>
 class SingleTrackParameters : public TrackParametersBase
 {
@@ -54,42 +50,31 @@ public:
   typedef std::unique_ptr<const CovMatrix_t>
       CovPtr_t;  ///< type for unique pointer to covariance matrix
 
-  /**
-   * @brief default virtual destructor
-   */
+  /// @brief default virtual destructor
   virtual ~SingleTrackParameters() = default;
 
-  /**
-   * @brief virtual constructor
-   */
+  /// @brief virtual constructor
   virtual SingleTrackParameters<ChargePolicy>*
   clone() const override = 0;
 
-  /**
-   * @copydoc TrackParametersBase::position
-   */
+  /// @copydoc TrackParametersBase::position
   virtual ActsVectorD<3>
   position() const final
   {
     return m_vPosition;
   }
 
-  /**
-   * @copydoc TrackParametersBase::momentum
-   */
+  /// @copydoc TrackParametersBase::momentum
   virtual ActsVectorD<3>
   momentum() const final
   {
     return m_vMomentum;
   }
 
-  /**
-   * @brief equality operator
-   *
-   * @return @c true of both objects have the same charge policy, parameter
-   * values,
-   *         position and momentum, otherwise @c false
-   */
+  /// @brief equality operator
+  ///
+  /// @return @c true of both objects have the same charge policy, parameter
+  /// values, position and momentum, otherwise @c false
   virtual bool
   operator==(const TrackParametersBase& rhs) const override
   {
@@ -102,18 +87,14 @@ public:
             && m_vMomentum == casted->m_vMomentum);
   }
 
-  /**
-   * @copydoc TrackParametersBase::charge
-   */
+  /// @copydoc TrackParametersBase::charge
   virtual double
   charge() const final
   {
     return m_oChargePolicy.getCharge();
   }
 
-  /**
-   * @copydoc TrackParametersBase::getParameterSet
-   */
+  /// @copydoc TrackParametersBase::getParameterSet
   virtual const FullParameterSet&
   getParameterSet() const final
   {
@@ -121,14 +102,12 @@ public:
   }
 
 protected:
-  /**
-   * @brief standard constructor for track parameters of charged particles
-   *
-   * @param cov unique pointer to covariance matrix (nullptr is accepted)
-   * @param parValues vector with parameter values
-   * @param position 3D vector with global position
-   * @param momentum 3D vector with global momentum
-   */
+  /// @brief standard constructor for track parameters of charged particles
+  ///
+  /// @param cov unique pointer to covariance matrix (nullptr is accepted)
+  /// @param parValues vector with parameter values
+  /// @param position 3D vector with global position
+  /// @param momentum 3D vector with global momentum
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleTrackParameters(CovPtr_t              cov,
@@ -144,14 +123,12 @@ protected:
   {
   }
 
-  /**
-   * @brief standard constructor for track parameters of neutral particles
-   *
-   * @param cov unique pointer to covariance matrix (nullptr is accepted)
-   * @param parValues vector with parameter values
-   * @param position 3D vector with global position
-   * @param momentum 3D vector with global momentum
-   */
+  /// @brief standard constructor for track parameters of neutral particles
+  ///
+  /// @param cov unique pointer to covariance matrix (nullptr is accepted)
+  /// @param parValues vector with parameter values
+  /// @param position 3D vector with global position
+  /// @param momentum 3D vector with global momentum
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleTrackParameters(CovPtr_t              cov,
@@ -166,22 +143,16 @@ protected:
   {
   }
 
-  /**
-   * @brief default copy constructor
-   */
+  /// @brief default copy constructor
   SingleTrackParameters(const SingleTrackParameters<ChargePolicy>& copy)
       = default;
 
-  /**
-   * @brief default move constructor
-   */
+  /// @brief default move constructor
   SingleTrackParameters(SingleTrackParameters<ChargePolicy>&& copy) = default;
 
-  /**
-   * @brief copy assignment operator
-   *
-   * @param rhs object to be copied
-   */
+  /// @brief copy assignment operator
+  ///
+  /// @param rhs object to be copied
   SingleTrackParameters<ChargePolicy>&
   operator=(const SingleTrackParameters<ChargePolicy>& rhs)
   {
@@ -196,11 +167,9 @@ protected:
     return *this;
   }
 
-  /**
-   * @brief move assignment operator
-   *
-   * @param rhs object to be movied into `*this`
-   */
+  /// @brief move assignment operator
+  ///
+  /// @param rhs object to be movied into `*this`
   SingleTrackParameters<ChargePolicy>&
   operator=(SingleTrackParameters<ChargePolicy>&& rhs)
   {
@@ -215,21 +184,17 @@ protected:
     return *this;
   }
 
-  /**
-   * @copydoc TrackParametersBase::getParameterSet
-   */
+  /// @copydoc TrackParametersBase::getParameterSet
   virtual FullParameterSet&
   getParameterSet() final
   {
     return m_oParameters;
   }
 
-  /**
-   * @brief update global momentum from current parameter values
-   *
-   * @note This function is triggered when called with an argument of a type
-   *       different from Acts::local_parameter
-   */
+  /// @brief update global momentum from current parameter values
+  ///
+  /// @note This function is triggered when called with an argument of a type
+  ///       different from Acts::local_parameter
   template <typename T>
   void
   updateGlobalCoordinates(const T&)
@@ -238,12 +203,10 @@ protected:
         getParameterSet().getParameters());
   }
 
-  /**
-   * @brief update global position from current parameter values
-   *
-   * @note This function is triggered when called with an argument of a type
-   * Acts::local_parameter
-   */
+  /// @brief update global position from current parameter values
+  ///
+  /// @note This function is triggered when called with an argument of a type
+  /// Acts::local_parameter
   void
   updateGlobalCoordinates(const local_parameter&)
   {

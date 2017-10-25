@@ -13,8 +13,8 @@
 #include "ACTS/Surfaces/Surface.hpp"
 
 namespace Acts {
-  
-/// @brief Charged and Neutrial Track Parameterisation classes bound to 
+
+/// @brief Charged and Neutrial Track Parameterisation classes bound to
 /// to a reference surface. This is a single-component representation
 ///
 /// @note surfaces are dealt as plain pointers as they might represent
@@ -24,7 +24,7 @@ namespace Acts {
 /// * surfaces with a lifetime longer than an event, i.e. detector elements,
 ///   or representing surfaces of the detector geometry are copied as plain
 ///   pointers and hence not deleted as their ownership staus with the geometry
-/// * (free) surfaces that have no registered ownership are cloned    
+/// * (free) surfaces that have no registered ownership are cloned
 template <class ChargePolicy>
 class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy>
 {
@@ -35,12 +35,12 @@ public:
   /// @brief Constructor of track parameters bound to a surface
   /// This is the constructor from global parameters, enabled only
   /// for charged representations.
-  /// 
+  ///
   /// The transformations declared int he coordinate_transformation
   /// yield the global parameters and momentum representation
   /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
-  ///            it is given in the measurement frame 
-  /// @param[in] parValues The parameter vector 
+  ///            it is given in the measurement frame
+  /// @param[in] parValues The parameter vector
   /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
@@ -62,17 +62,16 @@ public:
   /// @brief Constructor of track parameters bound to a surface
   /// This is the constructor from global parameters, enabled only
   /// for charged representations.
-  /// 
+  ///
   /// The transformations declared int he coordinate_transformation
-  /// yield the local parameters 
-  /// 
+  /// yield the local parameters
+  ///
   /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
-  ///            it is given in the measurement frame 
-  ///           (@todo should it be curvilnear ?)
+  ///            it is given in the curvilinear frame
   /// @param[in] position The global position of the track parameterisation
   /// @param[in] momentum The global momentum of the track parameterisation
   /// @param[in] dCharge The charge of the particle track parameterisation
-  /// @param[in] surface The reference surface the parameters are bound to 
+  /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleBoundTrackParameters(CovPtr_t              cov,
@@ -95,13 +94,13 @@ public:
   /// @brief Constructor of track parameters bound to a surface
   /// This is the constructor from global parameters, enabled only
   /// for neutral representations.
-  /// 
+  ///
   /// The transformations declared int he coordinate_transformation
   /// yield the global parameters and momentum representation
   /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
-  ///            it is given in the measurement frame 
-  /// @param[in] parValues The parameter vector 
-  /// @param[in] surface The reference surface the parameters are bound to 
+  ///            it is given in the measurement frame
+  /// @param[in] parValues The parameter vector
+  /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleBoundTrackParameters(CovPtr_t           cov,
@@ -122,17 +121,16 @@ public:
   /// @brief Constructor of track parameters bound to a surface
   /// This is the constructor from global parameters, enabled only
   /// for neutral representations.
-  /// 
+  ///
   /// The transformations declared int he coordinate_transformation
-  /// yield the local parameters 
-  /// 
+  /// yield the local parameters
+  ///
   /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
-  ///            it is given in the measurement frame 
-  ///           (@todo should it be curvilnear ?)
+  ///            it is given in the curvilinear frame
   /// @param[in] position The global position of the track parameterisation
   /// @param[in] momentum The global momentum of the track parameterisation
   /// @param[in] dCharge The charge of the particle track parameterisation
-  /// @param[in] surface The reference surface the parameters are bound to 
+  /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleBoundTrackParameters(CovPtr_t              cov,
@@ -221,13 +219,13 @@ public:
     return new SingleBoundTrackParameters<ChargePolicy>(*this);
   }
 
+  /// @brief set method for parameter updates
+  /// enabled only if the parameter set is the same
+  /// obviously only allowed on non-cost objects
   template <ParID_t par,
             std::enable_if_t<not std::is_same<typename par_type<par>::type,
                                               local_parameter>::value,
                              int> = 0>
-  
-  /// @brief set method for parameter updates
-  /// obviously only allowed on non-cost objects                                                           
   void
   set(ParValue_t newValue)
   {
