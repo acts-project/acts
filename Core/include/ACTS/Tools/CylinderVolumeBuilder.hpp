@@ -301,7 +301,7 @@ public:
           wCondition       = Attaching;
           wConditionScreen = "[n attched]";
         }
-        if (pVolumeConfig && pVolumeConfig.zMin < existingVolumeConfig.zMax) {
+        if (pVolumeConfig && pVolumeConfig.zMin > existingVolumeConfig.zMax) {
           pVolumeConfig.attachZ(existingVolumeConfig);
           // will attach the new volume(s)
           wCondition       = Attaching;
