@@ -77,6 +77,9 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
   // the volume builders of the subdetectors
   std::list<std::shared_ptr<const ITrackingVolumeBuilder>> volumeBuilders;
   bool                                                     beampipe = false;
+  // the beam pipe volume builder needs special treatment and needs to be added
+  // in the end (beampipe exceeds length of all other subdetectors)
+  std::shared_ptr<const ITrackingVolumeBuilder> beamPipeVolumeBuilder;
   // loop over the sub detectors
   for (auto& subDetector : subDetectors) {
     Acts::IActsExtension* subDetExtension = nullptr;
@@ -350,13 +353,12 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
       cvbConfig.buildToRadiusZero = true;
 
       // beam pipe volume builder
-      auto cylinderVolumeBuilder
+      auto beamPipeVolumeBuilder
           = std::make_shared<const Acts::CylinderVolumeBuilder>(
               cvbConfig,
               Acts::getDefaultLogger(subDetector.name()
                                          + std::string("VolumdeBuilder"),
                                      loggingLevel));
-      volumeBuilders.push_back(cylinderVolumeBuilder);
 
     } else if (subDetExtension && subDetExtension->isBarrel()) {
       ACTS_VERBOSE("[D] Subdetector: "
@@ -440,6 +442,8 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
       continue;
     }
   }
+  // Finally add the beam pipe
+  if (beamPipeVolumeBuilder) volumeBuilders.push_back(beamPipeVolumeBuilder);
   // hand over the collected volume builders
   Acts::TrackingGeometryBuilder::Config tgbConfig;
   tgbConfig.trackingVolumeHelper   = cylinderVolumeHelper;
