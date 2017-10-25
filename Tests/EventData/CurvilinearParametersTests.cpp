@@ -6,15 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-//
-// @file MeasurementTests.cpp
-//
-// Boost include(s)
-#define BOOST_TEST_MODULE Measurement Tests
+#define BOOST_TEST_MODULE CurvilinearParameters Tests
 #include <boost/test/included/unit_test.hpp>
 #include "ACTS/EventData/NeutralParameters.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ParametersTestHelper.hpp"
 
 namespace Acts {
 namespace Test {
@@ -40,38 +37,12 @@ namespace Test {
     const double oOp    = 1. / mom.mag();
 
     // check parameters
-    BOOST_CHECK_EQUAL(curvilinear_pos.parameters()[eLOC_0], 0.);
-    BOOST_CHECK_EQUAL(curvilinear_pos.parameters()[eLOC_1], 0.);
-    BOOST_CHECK_EQUAL(curvilinear_pos.parameters()[ePHI], fphi);
-    BOOST_CHECK_EQUAL(curvilinear_pos.parameters()[eTHETA], ftheta);
-    BOOST_CHECK_EQUAL(curvilinear_pos.parameters()[eQOP], oOp);
-
-    BOOST_CHECK_EQUAL(curvilinear_neg.parameters()[eLOC_0], 0.);
-    BOOST_CHECK_EQUAL(curvilinear_neg.parameters()[eLOC_1], 0.);
-    BOOST_CHECK_EQUAL(curvilinear_neg.parameters()[ePHI], fphi);
-    BOOST_CHECK_EQUAL(curvilinear_neg.parameters()[eTHETA], ftheta);
-    BOOST_CHECK_EQUAL(curvilinear_neg.parameters()[eQOP], -oOp);
-
-    BOOST_CHECK_EQUAL(curvilinear_neut.parameters()[eLOC_0], 0.);
-    BOOST_CHECK_EQUAL(curvilinear_neut.parameters()[eLOC_1], 0.);
-    BOOST_CHECK_EQUAL(curvilinear_neut.parameters()[ePHI], fphi);
-    BOOST_CHECK_EQUAL(curvilinear_neut.parameters()[eTHETA], ftheta);
-    BOOST_CHECK_EQUAL(curvilinear_neut.parameters()[eQOP], oOp);
-
-    // check position
-    BOOST_CHECK_EQUAL(curvilinear_pos.position(), pos);
-    BOOST_CHECK_EQUAL(curvilinear_neg.position(), pos);
-    BOOST_CHECK_EQUAL(curvilinear_neut.position(), pos);
-
-    // check momentum
-    BOOST_CHECK_EQUAL(curvilinear_pos.momentum(), mom);
-    BOOST_CHECK_EQUAL(curvilinear_neg.momentum(), mom);
-    BOOST_CHECK_EQUAL(curvilinear_neut.momentum(), mom);
-
-    // check charge
-    BOOST_CHECK_EQUAL(curvilinear_pos.charge(), 1.);
-    BOOST_CHECK_EQUAL(curvilinear_neg.charge(), -1.);
-    BOOST_CHECK_EQUAL(curvilinear_neut.charge(), 0.);
+    consistencyCheck(
+        curvilinear_pos, pos, mom, +1., {{0., 0., fphi, ftheta, oOp}});
+    consistencyCheck(
+        curvilinear_neg, pos, mom, -1., {{0., 0., fphi, ftheta, -oOp}});
+    consistencyCheck(
+        curvilinear_neut, pos, mom, 0., {{0., 0., fphi, ftheta, oOp}});
 
     // check that the created surface is at the position
     BOOST_CHECK_EQUAL(curvilinear_pos.referenceSurface().center(), pos);
@@ -95,6 +66,15 @@ namespace Test {
     BOOST_CHECK_EQUAL(mFrame, curvilinear_pos.referenceFrame());
     BOOST_CHECK_EQUAL(mFrame, curvilinear_neg.referenceFrame());
     BOOST_CHECK_EQUAL(mFrame, curvilinear_neut.referenceFrame());
+
+    /// copy construction test
+    CurvilinearParameters        curvilinear_pos_copy(curvilinear_pos);
+    CurvilinearParameters        curvilinear_neg_copy(curvilinear_neg);
+    NeutralCurvilinearParameters curvilinear_neut_copy(curvilinear_neut);
+
+    BOOST_CHECK_EQUAL(curvilinear_pos_copy, curvilinear_pos);
+    BOOST_CHECK_EQUAL(curvilinear_neg_copy, curvilinear_neg);
+    BOOST_CHECK_EQUAL(curvilinear_neut_copy, curvilinear_neut);
   }
 }  // end of namespace Test
 }  // end of namespace Acts

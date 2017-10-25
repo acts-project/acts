@@ -115,8 +115,8 @@ Acts::Surface::isOnSurface(const Acts::Vector3D& gpos,
 }
 
 const Acts::RotationMatrix3D
-Acts::Surface::measurementFrame(const Acts::Vector3D&,
-                                const Acts::Vector3D&) const
+Acts::Surface::referenceFrame(const Acts::Vector3D&,
+                              const Acts::Vector3D&) const
 {
   return transform().rotation();
 }

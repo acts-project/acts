@@ -117,7 +117,7 @@ Acts::LineSurface::name() const
 }
 
 const Acts::RotationMatrix3D
-Acts::LineSurface::measurementFrame(const Vector3D&, const Vector3D& mom) const
+Acts::LineSurface::referenceFrame(const Vector3D&, const Vector3D& mom) const
 {
   Acts::RotationMatrix3D mFrame;
   // construct the measurement frame

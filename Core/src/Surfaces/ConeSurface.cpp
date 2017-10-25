@@ -94,7 +94,7 @@ Acts::ConeSurface::rotSymmetryAxis() const
 }
 
 const Acts::RotationMatrix3D
-Acts::ConeSurface::measurementFrame(const Vector3D& pos, const Vector3D&) const
+Acts::ConeSurface::referenceFrame(const Vector3D& pos, const Vector3D&) const
 {
   RotationMatrix3D mFrame;
   // construct the measurement frame

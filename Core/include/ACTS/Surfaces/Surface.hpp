@@ -264,7 +264,7 @@ public:
                 const Vector3D& gmom,
                 Vector2D&       lpos) const = 0;
 
-  /// Return mehtod for the measurement frame
+  /// Return mehtod for the reference frame
   /// This is the frame in which the covariance matrix is defined (specialized
   /// by all surfaces)
   ///
@@ -274,7 +274,7 @@ public:
   /// @return RotationMatrix3D which defines the three axes of the measurement
   /// frame
   virtual const Acts::RotationMatrix3D
-  measurementFrame(const Vector3D& gpos, const Vector3D& gmom) const;
+  referenceFrame(const Vector3D& gpos, const Vector3D& gmom) const;
 
   /// Calucation of the path correction for incident
   ///

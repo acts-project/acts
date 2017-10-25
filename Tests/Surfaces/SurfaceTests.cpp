@@ -135,13 +135,13 @@ namespace Test {
     BOOST_CHECK(surface.isOnSurface(reference, false));
     BOOST_CHECK(
         surface.isOnSurface(reference, true));  // need to improve bounds()
-    // measurementFrame()
+    // referenceFrame()
     RotationMatrix3D unitary;
     unitary << 1, 0, 0, 0, 1, 0, 0, 0, 1;
-    auto measurementFrame = surface.measurementFrame(
+    auto referenceFrame = surface.referenceFrame(
         reference, mom);  // need more complex case to test
-    bool ok = (measurementFrame == unitary);
-    BOOST_TEST(ok, "measurementFrame() returns sensible answer");
+    bool ok = (referenceFrame == unitary);
+    BOOST_TEST(ok, "referenceFrame() returns sensible answer");
     // normal()
     auto normal = surface.Surface::normal(reference);  // needs more complex
                                                        // test

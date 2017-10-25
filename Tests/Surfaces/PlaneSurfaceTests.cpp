@@ -17,7 +17,6 @@
 #include <boost/test/output_test_stream.hpp>
 // leave blank line
 
-//
 #include <limits>
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
@@ -81,13 +80,13 @@ namespace Test {
     BOOST_TEST(PlaneSurfaceObject.binningPosition(BinningValue::binX)
                == binningPosition);
     //
-    /// Test measurementFrame
+    /// Test referenceFrame
     Vector3D         globalPosition{2.0, 2.0, 0.0};
     Vector3D         momentum{1.e6, 1.e6, 1.e6};
     RotationMatrix3D expectedFrame;
     expectedFrame << 1., 0., 0., 0., 1., 0., 0., 0., 1.;
 
-    BOOST_TEST(PlaneSurfaceObject.measurementFrame(globalPosition, momentum)
+    BOOST_TEST(PlaneSurfaceObject.referenceFrame(globalPosition, momentum)
                    .isApprox(expectedFrame));
     //
     /// Test normal, given 3D position

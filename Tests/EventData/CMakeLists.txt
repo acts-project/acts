@@ -15,3 +15,9 @@ target_include_directories (CurvilinearParametersTests PRIVATE ${Boost_INCLUDE_D
 target_link_libraries (CurvilinearParametersTests PRIVATE ACTSCore)
 add_test (NAME CurvilinearParametersUnitTests COMMAND CurvilinearParametersTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST CurvilinearParametersUnitTests TARGETS CurvilinearParametersTests)
+
+add_executable (BoundParametersTests BoundParametersTests.cpp)
+target_include_directories (BoundParametersTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (BoundParametersTests PRIVATE ACTSCore)
+add_test (NAME BoundParametersUnitTests COMMAND BoundParametersTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST BoundParametersUnitTests TARGETS BoundParametersTests)

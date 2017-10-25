@@ -89,8 +89,8 @@ Acts::CylinderSurface::binningPosition(BinningValue bValue) const
 
 // return the measurement frame: it's the tangential plane
 const Acts::RotationMatrix3D
-Acts::CylinderSurface::measurementFrame(const Vector3D& gpos,
-                                        const Vector3D&) const
+Acts::CylinderSurface::referenceFrame(const Vector3D& gpos,
+                                      const Vector3D&) const
 {
   Acts::RotationMatrix3D mFrame;
   // construct the measurement frame

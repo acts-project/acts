@@ -241,14 +241,13 @@ public:
   }
 
   /// @brief access to the reference frame
-  /// this is the logical frame where the covariance matrix
-  /// is bound to - for curvilinear (== planar) surfaces
-  /// this is given by the rotation matrix of the plane transform
+  /// This is the logical frame where the covariance matrix
+  /// The surface where you are bound to actually provides you with that
   virtual RotationMatrix3D
   referenceFrame() const final override
   {
-    /// @todo fix & update
-    return RotationMatrix3D::Zero();
+    return std::move(
+        m_pSurface->referenceFrame(this->position(), this->momentum()));
   }
 
 private:

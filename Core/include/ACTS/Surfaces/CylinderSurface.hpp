@@ -110,8 +110,8 @@ public:
   /// @param mom is the momentum vector (ignored)
   /// @return rotation matrix that defines the measurement frame
   virtual const RotationMatrix3D
-  measurementFrame(const Vector3D& gpos,
-                   const Vector3D& mom) const final override;
+  referenceFrame(const Vector3D& gpos,
+                 const Vector3D& mom) const final override;
 
   /// Return the surface type
   virtual SurfaceType

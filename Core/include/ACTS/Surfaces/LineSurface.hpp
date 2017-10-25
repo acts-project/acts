@@ -109,8 +109,8 @@ public:
   /// @param mom is the momentum used for the measurement frame construction
   /// @return is a rotation matrix that indicates the measurement frame
   virtual const RotationMatrix3D
-  measurementFrame(const Vector3D& gpos,
-                   const Vector3D& mom) const final override;
+  referenceFrame(const Vector3D& gpos,
+                 const Vector3D& mom) const final override;
 
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift

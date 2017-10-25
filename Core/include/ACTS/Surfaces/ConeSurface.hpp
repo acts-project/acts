@@ -110,7 +110,7 @@ public:
   /// @param mom is the momentum used for the measurement frame construction
   /// @return matrix that indicates the measurement frame
   const RotationMatrix3D
-  measurementFrame(const Vector3D& gpos, const Vector3D& mom) const final;
+  referenceFrame(const Vector3D& gpos, const Vector3D& mom) const final;
 
   /// Return method for surface normal information
   ///
