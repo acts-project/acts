@@ -7,16 +7,22 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef ACTS_SINGLECURVILINEARTRACKPARAMETERS_H
-#define ACTS_SINGLECURVILINEARTRACKPARAMETERS_H 1
+#define ACTS_SINGLECURVILINEARTRACKPARAMETERS_H
 
-// STL include(s)
 #include <memory>
-
-// ACTS includes
 #include "ACTS/EventData/SingleTrackParameters.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 
 namespace Acts {
+  
+/// @brief Charged and Neutrial Curvilinear Track representation
+/// This is a single-component representation
+///
+/// @note the curvilinear representation is bound to the curvilinear
+/// planar surface represenation. I.e. the local parameters are by
+/// construction (0,0), the curvilinear surface is characterised by
+/// being perpenticular to the track direction. It's internal frame
+/// is constructed with the help of the global z axis.
 template <typename ChargePolicy>
 class SingleCurvilinearTrackParameters
     : public SingleTrackParameters<ChargePolicy>
@@ -25,6 +31,14 @@ public:
   typedef typename SingleTrackParameters<ChargePolicy>::CovPtr_t
       CovPtr_t;  ///< type of covariance matrix
 
+  /// @brief constructor for curvilienear representation
+  /// This is the constructor from global parameters, enabled only
+  /// for charged representations.
+  /// 
+  /// @param[in] cov The covariance matrix w.r.t. curvilinear frame
+  /// @param[in] position The global position of this track parameterisation
+  /// @param[in] momentum The global momentum of this track parameterisation
+  /// @param[in] dCharge The charge of this track parameterisation
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleCurvilinearTrackParameters(CovPtr_t              cov,
@@ -41,7 +55,14 @@ public:
     , m_upSurface(new PlaneSurface(position, momentum))
   {
   }
-
+  
+  /// @brief constructor for curvilienear representation
+  /// This is the constructor from global parameters, enabled only
+  /// for charged representations.
+  /// 
+  /// @param[in] cov The covariance matrix w.r.t. curvilinear frame
+  /// @param[in] position The global position of this track parameterisation
+  /// @param[in] momentum The global momentum of this track parameterisation
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleCurvilinearTrackParameters(CovPtr_t              cov,
@@ -58,9 +79,8 @@ public:
   {
   }
 
-  /**
-   * @brief copy constructor
-   */
+  /// @brief copy constructor - charged/neutral
+  /// @param[in] copy The source parameters
   SingleCurvilinearTrackParameters(
       const SingleCurvilinearTrackParameters<ChargePolicy>& copy)
     : SingleTrackParameters<ChargePolicy>(copy)
@@ -68,9 +88,8 @@ public:
   {
   }
 
-  /**
-   * @brief move constructor
-   */
+  /// @brief move constructor - charged/neutral 
+  /// @param[in] copy The source parameters
   SingleCurvilinearTrackParameters(
       SingleCurvilinearTrackParameters<ChargePolicy>&& copy)
     : SingleTrackParameters<ChargePolicy>(std::move(copy))
@@ -78,11 +97,11 @@ public:
   {
   }
 
+  /// @brief desctructor
   virtual ~SingleCurvilinearTrackParameters() = default;
 
-  /**
-   * @brief copy assignment operator
-   */
+  /// @brief copy assignment operator - charged/netural
+  /// virtual constructor for type creation without casting
   SingleCurvilinearTrackParameters<ChargePolicy>&
   operator=(const SingleCurvilinearTrackParameters<ChargePolicy>& rhs)
   {
@@ -95,9 +114,8 @@ public:
     return *this;
   }
 
-  /**
-   * @brief move assignment operator
-   */
+  /// @brief move assignment operator - charged/netural
+  /// virtual constructor for type creation without casting
   SingleCurvilinearTrackParameters<ChargePolicy>&
   operator=(SingleCurvilinearTrackParameters<ChargePolicy>&& rhs)
   {
@@ -109,7 +127,9 @@ public:
 
     return *this;
   }
-
+  
+  /// @brief clone - charged/netural
+  /// virtual constructor for type creation without casting
   virtual SingleTrackParameters<ChargePolicy>*
   clone() const override
   {
