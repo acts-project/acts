@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef ACTS_ATLAS_STEPPER_HPP
-#define ACTS_ATLAS_STEPPER_HPP 1
+#define ACTS_ATLAS_STEPPER_HPP
 
 #include <cmath>
 #include "ACTS/EventData/TrackParameters.hpp"
