@@ -34,7 +34,6 @@ Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other,
 Acts::PlaneSurface::PlaneSurface(const Vector3D& center, const Vector3D& normal)
   : Surface(), m_bounds(nullptr)
 {
-  Translation3D curvilinearTranslation(center.x(), center.y(), center.z());
   /// the right-handed coordinate system is defined as
   /// T = normal
   /// U = Z x T if T not parallel to Z otherwise U = X x T

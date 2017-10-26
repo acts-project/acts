@@ -79,15 +79,15 @@ class AtlasStepper
     void
     update(const Parameters& pars)
     {
-      updateParameters(pars);
-      updateCovariance(pars);
+      update_parameters(pars);
+      update_covariance(pars);
     }
 
     /// The cache parameter update
     /// @param [in] pars The new track parameters at start
     template <typename Parameters>
     void
-    updateParameters(const Parameters& pars)
+    update_parameters(const Parameters& pars)
     {
       const ActsVectorD<3>     pos = pars.position();
       ActsVectorD<NGlobalPars> Vp  = pars.parameters();
@@ -158,25 +158,26 @@ class AtlasStepper
     /// @param [in] pars The new track parameters at start
     ///
     /// @todo check to identify an reuse of start/cache
-    void
-    updateCovariance(const BoundParameters& pars)
-    {
-      if (pars.covariance()) {
-        // translate bound parameters covariance to curvilinear
+    // void
+    // update_covariance(const BoundParameters& pars)
+    // {
+    //   if (pars.covariance()) {
+    //     // translate bound parameters covariance to curvilinear
+    //
+    //     //
+    //     // covariance  = new ActsSymMatrixD<NGlobalPars>
+    //     //   (ActsSymMatrixD<NGlobalPars>::Zero());
+    //     useJacobian = true;
+    //   }
+    // }
 
-        //
-        // covariance  = new ActsSymMatrixD<NGlobalPars>
-        //   (ActsSymMatrixD<NGlobalPars>::Zero());
-        useJacobian = true;
-      }
-    }
-
-    /// The cache covariance update  - bound parameters
+    /// The cache covariance update  - curvilinear parameters
     /// @param [in] pars The new track parameters at start
     ///
     /// @todo check to identify an reuse of start/cache
+    template <typename Parameters>
     void
-    updateCovariance(const CurvilinearParameters& pars)
+    update_covariance(const Parameters& pars)
     {
       if (pars.covariance()) {
         // for curvilinear parameters - use covariance directly
