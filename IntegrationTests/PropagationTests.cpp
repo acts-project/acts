@@ -32,10 +32,10 @@ namespace IntegrationTest {
 
   /// test forward propagation in constant magnetic field
   BOOST_DATA_TEST_CASE(constant_bfield_forward_propagation,
-                       bdata::random(0.4 * units::_GeV, 10. * units::_GeV)
-                           ^ bdata::random(0., 2 * M_PI)
-                           ^ bdata::random(0., M_PI)
-                           ^ bdata::random(-1, 1)
+                       bdata::random((bdata::seed = 0, bdata::distribution = std::uniform_real_distribution<>(0.4 * units::_GeV, 10. * units::_GeV)))
+                           ^ bdata::random((bdata::seed = 0, bdata::distribution = std::uniform_real_distribution<>(0., 2 * M_PI)))
+                           ^ bdata::random((bdata::seed = 0, bdata::distribution = std::uniform_real_distribution<>(0., M_PI)))
+                           ^ bdata::random((bdata::seed = 0, bdata::distribution = std::uniform_int_distribution<>(-1, 1)))
                            ^ bdata::xrange(1000),
                        pT,
                        phi,
@@ -124,10 +124,10 @@ namespace IntegrationTest {
 
   /// test consistency of forward-backward propagation in constant field
   BOOST_DATA_TEST_CASE(forward_backward_propagation,
-                       bdata::random(0.4 * units::_GeV, 10. * units::_GeV)
-                           ^ bdata::random(0., 2 * M_PI)
-                           ^ bdata::random(0., M_PI)
-                           ^ bdata::random(-1, 1)
+                       bdata::random((bdata::seed = 0, bdata::distribution = std::uniform_real_distribution<>(0.4 * units::_GeV, 10. * units::_GeV)))
+                           ^ bdata::random((bdata::seed = 0, bdata::distribution = std::uniform_real_distribution<>(0., 2 * M_PI)))
+                           ^ bdata::random((bdata::seed = 0, bdata::distribution = std::uniform_real_distribution<>(0., M_PI)))
+                           ^ bdata::random((bdata::seed = 0, bdata::distribution = std::uniform_int_distribution<>(-1, 1)))
                            ^ bdata::xrange(1000),
                        pT,
                        phi,
@@ -184,11 +184,11 @@ namespace IntegrationTest {
 
   /// test correct covariance transport for curvilinear parameters
   BOOST_DATA_TEST_CASE(covariance_transport_curvilinear,
-                       bdata::random(2. * units::_GeV, 10. * units::_GeV)
-                           ^ bdata::random(0., 2 * M_PI)
-                           ^ bdata::random(0., M_PI)
-                           ^ bdata::random(-1, 1)
-                           ^ bdata::xrange(100),
+                       bdata::random((bdata::seed = 0, bdata::distribution = std::uniform_real_distribution<>(2. * units::_GeV, 10. * units::_GeV)))
+                           ^ bdata::random((bdata::seed = 0, bdata::distribution = std::uniform_real_distribution<>(0., 2 * M_PI)))
+                           ^ bdata::random((bdata::seed = 0, bdata::distribution = std::uniform_real_distribution<>(0., M_PI)))
+                           ^ bdata::random((bdata::seed = 0, bdata::distribution = std::uniform_int_distribution<>(-1, 1)))
+                           ^ bdata::xrange(1000),
                        pT,
                        phi,
                        theta,
