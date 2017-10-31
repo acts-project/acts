@@ -93,6 +93,15 @@ public:
     return (*this);
   }
 
+  /// Equality operator
+  ///
+  /// @param tddID is the geometry ID that will be compared on equality
+  bool
+  operator==(const GeometryID& tddID) const
+  {
+    return (m_value == tddID.value());
+  }
+
   /// Add some stuff - a new
   void
   add(geo_id_value type_id, geo_id_value type_mask)
