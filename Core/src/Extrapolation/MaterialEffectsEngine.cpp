@@ -201,16 +201,12 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     double pScalor = 1.;
     // (A) - energy loss correction
     if (m_cfg.eLossCorrection) {
-      double sigmaP = 0.;
       // dE/dl ionization energy loss per path unit
-      double dEdl
-          = sign * dir * Acts::ionizationEnergyLoss(Acts::InteractionType::reco,
-                                                    sigmaP,
-                                                    p,
-                                                    material,
-                                                    eCell.particleType,
-                                                    m_particleMasses);
-      double dE = thickness * pathCorrection * dEdl;
+      auto eLoss = Acts::ionizationEnergyLoss_mean(
+          p, material, eCell.particleType, m_particleMasses);
+      double dEdl   = sign * dir * eLoss.first;
+      double sigmaP = eLoss.second;
+      double dE     = thickness * pathCorrection * dEdl;
       sigmaP *= thickness * pathCorrection;
       // calcuate the new momentum
       double newP = sqrt((E + dE) * (E + dE) - m * m);

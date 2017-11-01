@@ -8,14 +8,15 @@
 
 #include "ACTS/Utilities/MaterialInteraction.hpp"
 
-double
-Acts::ionizationEnergyLoss(InteractionType       interactionType,
-                           double&               sigma,
-                           double                p,
-                           const Material&       mat,
-                           ParticleType          particle,
-                           const ParticleMasses& particleMasses,
-                           double                path)
+namespace Acts {
+
+static std::pair<double, double>
+ionizationEnergyLoss(bool                  mop,
+                     double                p,
+                     const Material&       mat,
+                     ParticleType          particle,
+                     const ParticleMasses& particleMasses,
+                     double                path)
 {
   // the return value
   double dE = 0.;
@@ -32,12 +33,11 @@ Acts::ionizationEnergyLoss(InteractionType       interactionType,
   // Ionization - Bethe-Bloch
   // See ATL-SOFT-PUB-2008-003 equation (4)
   // 16 eV * Z**0.9 - bring to MeV
-  double I = 16 * Acts::units::_eV * std::pow(mat.Z(), 0.9);
+  double I = 16 * units::_eV * std::pow(mat.Z(), 0.9);
 
   // See (1) table 32.1
   // K/A*Z = 0.5 * 30.7075MeV/(g/mm2) * Z/A * rho[g/mm3]  / scale to mm by this
-  double kaz = 0.5 * 30.7075
-      * (Acts::units::_MeV * Acts::units::_mm * Acts::units::_mm)
+  double kaz = 0.5 * 30.7075 * (units::_MeV * units::_mm * units::_mm)
       * mat.zOverAtimesRho();
   double eta2 = beta * gamma;
   eta2 *= eta2;
@@ -46,8 +46,7 @@ Acts::ionizationEnergyLoss(InteractionType       interactionType,
   double delta = 0.;
   if (gamma > 10.) {
     // See (1) table 32.1
-    double eplasma
-        = 28.816 * Acts::units::_eV * sqrt(1000. * mat.zOverAtimesRho());
+    double eplasma = 28.816 * units::_eV * sqrt(1000. * mat.zOverAtimesRho());
     // See (1) formula 32.6
     delta = 2. * log(eplasma / I) + log(eta2) - 1.;
   }
@@ -61,9 +60,9 @@ Acts::ionizationEnergyLoss(InteractionType       interactionType,
   // The landau width (FWHM) is 4.*kazL
   // The factor is the conversion factor from FWHM to sigma for
   // gaussian curve: 1. / (2. * sqrt(2. * log(2.))).
-  sigma = 2. * kazL * 1. / (sqrt(2. * log(2.)));
+  double sigma = 2. * kazL * 1. / (sqrt(2. * log(2.)));
 
-  if (interactionType == Acts::InteractionType::reco) {
+  if (mop) {
     // Calculate the mean value for reconstruction
     // See ATL-SOFT-PUB-2008-003 equation (2)
     double tMax = 2. * eta2 * me / (1. + 2. * gamma * mfrac + mfrac * mfrac);
@@ -85,21 +84,41 @@ Acts::ionizationEnergyLoss(InteractionType       interactionType,
                  - delta);
   }
 
-  return dE;
+  return std::make_pair(dE, sigma);
 }
 
 std::pair<double, double>
-Acts::radiationEnergyLoss(double                p,
+ionizationEnergyLoss_mop(double                p,
+                         const Material&       mat,
+                         ParticleType          particle,
+                         const ParticleMasses& particleMasses,
+                         double                path)
+{
+  return ionizationEnergyLoss(true, p, mat, particle, particleMasses, path);
+}
+
+std::pair<double, double>
+ionizationEnergyLoss_mean(double                p,
                           const Material&       mat,
                           ParticleType          particle,
-                          const ParticleMasses& particleMasses)
+                          const ParticleMasses& particleMasses,
+                          double                path)
+{
+  return ionizationEnergyLoss(false, p, mat, particle, particleMasses, path);
+}
+
+std::pair<double, double>
+radiationEnergyLoss(double                p,
+                    const Material&       mat,
+                    ParticleType          particle,
+                    const ParticleMasses& particleMasses)
 {
   double sigma = 0.;
   if (!(mat)) return std::pair<double, double>(0., 0.);
 
   // preparation of kinetic constants
   double m     = particleMasses.mass[particle];
-  double me    = particleMasses.mass[Acts::electron];
+  double me    = particleMasses.mass[electron];
   double mfrac = me / m;
   double E     = sqrt(p * p + m * m);
 
@@ -116,7 +135,7 @@ Acts::radiationEnergyLoss(double                p,
   //    sigma the rms of steep exponential
   /// @todo Units?
   // See also ATL-SOFT-PUB-2008-003 equation (7)(8)
-  if ((particle == Acts::muon) && (E > 8000.)) {
+  if ((particle == muon) && (E > 8000.)) {
     if (E < 1.e6) {
       Radiation += 0.5345 - 6.803e-5 * E - 2.278e-11 * E * E
           + 9.899e-18 * E * E * E;                            // E below 1 TeV
@@ -133,13 +152,14 @@ Acts::radiationEnergyLoss(double                p,
 }
 
 double
-Acts::sigmaMS(double dInX0, double p, double beta)
+sigmaMS(double dInX0, double p, double beta)
 {
   if (dInX0 == 0. || p == 0. || beta == 0.) return 0.;
 
   // Highland formula - projected sigma_s
   // ATL-SOFT-PUB-2008-003 equation (15)
-  double sig_ms = 13.6 * Acts::units::_MeV * sqrt(dInX0) / (beta * p)
+  double sig_ms = 13.6 * units::_MeV * sqrt(dInX0) / (beta * p)
       * (1. + 0.038 * log(dInX0 / (beta * beta)));
   return sig_ms;
+}
 }
