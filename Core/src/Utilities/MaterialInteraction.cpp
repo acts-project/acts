@@ -11,7 +11,7 @@
 namespace Acts {
 
 static std::pair<double, double>
-ionizationEnergyLoss(bool                  mop,
+ionizationEnergyLoss(bool                  mean,
                      double                p,
                      const Material&       mat,
                      ParticleType          particle,
@@ -62,7 +62,7 @@ ionizationEnergyLoss(bool                  mop,
   // gaussian curve: 1. / (2. * sqrt(2. * log(2.))).
   double sigma = 2. * kazL * 1. / (sqrt(2. * log(2.)));
 
-  if (mop) {
+  if (mean) {
     // Calculate the mean value for reconstruction
     // See ATL-SOFT-PUB-2008-003 equation (2)
     double tMax = 2. * eta2 * me / (1. + 2. * gamma * mfrac + mfrac * mfrac);
@@ -88,21 +88,21 @@ ionizationEnergyLoss(bool                  mop,
 }
 
 std::pair<double, double>
-ionizationEnergyLoss_mop(double                p,
-                         const Material&       mat,
-                         ParticleType          particle,
-                         const ParticleMasses& particleMasses,
-                         double                path)
-{
-  return ionizationEnergyLoss(true, p, mat, particle, particleMasses, path);
-}
-
-std::pair<double, double>
 ionizationEnergyLoss_mean(double                p,
                           const Material&       mat,
                           ParticleType          particle,
                           const ParticleMasses& particleMasses,
                           double                path)
+{
+  return ionizationEnergyLoss(true, p, mat, particle, particleMasses, path);
+}
+
+std::pair<double, double>
+ionizationEnergyLoss_mop(double                p,
+                         const Material&       mat,
+                         ParticleType          particle,
+                         const ParticleMasses& particleMasses,
+                         double                path)
 {
   return ionizationEnergyLoss(false, p, mat, particle, particleMasses, path);
 }

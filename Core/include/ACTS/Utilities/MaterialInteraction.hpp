@@ -38,11 +38,11 @@ namespace Acts {
 /// ionization along a given path length. The second entry is the sigma of the
 /// distribution.
 std::pair<double, double>
-ionizationEnergyLoss_mop(double                p,
-                         const Material&       mat,
-                         ParticleType          particle,
-                         const ParticleMasses& particleMasses,
-                         double                path = 1.);
+ionizationEnergyLoss_mean(double                p,
+                          const Material&       mat,
+                          ParticleType          particle,
+                          const ParticleMasses& particleMasses,
+                          double                path = 1.);
 
 /// The most probable ionization energy loss along a given path length. The
 /// meost probable energy loss should be used for simulation (fatras).
@@ -61,11 +61,11 @@ ionizationEnergyLoss_mop(double                p,
 /// ionization along a given path length. The second entry is the sigma of the
 /// distribution.
 std::pair<double, double>
-ionizationEnergyLoss_mean(double                p,
-                          const Material&       mat,
-                          ParticleType          particle,
-                          const ParticleMasses& particleMasses,
-                          double                path = 1.);
+ionizationEnergyLoss_mop(double                p,
+                         const Material&       mat,
+                         ParticleType          particle,
+                         const ParticleMasses& particleMasses,
+                         double                path = 1.);
 
 /// @todo To be validated
 /// Radiation energy loss along a given path length
