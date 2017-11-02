@@ -72,8 +72,8 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
   // harmonize the phi boundaries (1st step)
   // @todo - allow for sectorally filled arrays
   double phiStep = (maxPhi - minPhi) / (binsPhi - 1);
-  minPhi         = minPhi + 0.5 * phiStep;
-  maxPhi         = M_PI * 2. + minPhi;
+  minPhi -= 0.5 * phiStep;
+  maxPhi += 0.5 * phiStep;
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a cylindrical Layer:");
@@ -258,8 +258,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   // harmonize the phi boundaries @todo - allow for sectorally filled arrrays
   // later
   double phiStep = (maxPhi - minPhi) / (binsPhi - 1);
-  minPhi         = minPhi + 0.5 * phiStep;
-  maxPhi         = M_PI * 2. + minPhi;
+  minPhi -= 0.5 * phiStep;
+  maxPhi += 0.5 * phiStep;
   // layer parametres
   double layerZ         = 0.5 * (minZ + maxZ);
   double layerThickness = (maxZ - minZ) + 2 * envelopeZ;
