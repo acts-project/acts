@@ -15,6 +15,7 @@
 #include "ACTS/Propagator/AbortList.hpp"
 #include "ACTS/Propagator/ObserverList.hpp"
 #include "ACTS/Propagator/detail/Extendable.hpp"
+#include "ACTS/Propagator/detail/standard_abort_conditions.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
 namespace Acts {
@@ -25,7 +26,7 @@ namespace propagation {
   enum Direction : int { backward = -1, forward = 1 };
 
   /// Result status of track parameter propagation
-  enum struct Status { SUCCESS, FAILURE, UNSET, INPROGRESS, WRONG_DIRECTION };
+  enum struct Status { SUCCESS, FAILURE, UNSET, IN_PROGRESS, WRONG_DIRECTION };
 
   /// @brief Simple class holding result of propagation call
   ///
@@ -112,6 +113,7 @@ namespace propagation {
       Direction direction = forward;
 
       /// Maximum number of steps for one propagate() call
+      /// @todo could also move to abort condition
       unsigned int max_steps = 1000;
 
       /// Required distance to surface
@@ -124,6 +126,7 @@ namespace propagation {
       double max_step_size = 1 * units::_m;
 
       /// Absolute maximum path length
+      // @todo should move to abort condition
       double max_path_length = 5 * units::_m;
 
       /// List of observers
@@ -171,6 +174,71 @@ namespace propagation {
     template <typename T, typename ObsList>
     using obs_list_result_t = typename result_type_helper<T, ObsList>::type;
 
+    /// @brief Propagate track parameters - Private method with propagation
+    /// cache
+    ///
+    /// This function performs the propagation of the track parameters according
+    /// to the internal implementation object until at least one abort condition
+    /// is fulfilled, the destination surface is hit or the maximum number of
+    /// steps/path length as given in the propagation options is reached.
+    ///
+    /// It does check/re-use the propgation cache as much as possible for
+    /// performance reasons
+    ///
+    /// @note Does not (yet) convert into  the return_type of the propagation
+    ///
+    /// @tparam Result the result type for this propagation
+    /// @tparam ObserverList    Type list of observers
+    /// @tparam AbortList       Type list of abort conditions
+    /// @tparam SurfaceAbort    Additional abort for Surfaces
+    ///
+    /// @param [in,out] Result of the propagation
+    /// @param [in,out] Cache Stepper cache built/updated from the start
+    /// parameters
+    /// @param [in] Target Target surface of to propagate to
+    /// @param [in] Options Propagation options
+    ///
+    /// @return Propagation Status
+    template <typename Result,
+              typename ObserverList,
+              typename AbortList,
+              typename SurfaceAbort>
+    Status
+    propagate_(Result&     result,
+               cache_type& cache,
+               const Options<ObserverList, AbortList>& options,
+               const SurfaceAbort& surface_abort) const
+    {
+      // Compute the signed path limit and maximum step size
+      /// const double signed_pathLimit
+      ///     = options.direction * options.max_path_length;
+
+      // check with surface_abort if it exists
+      if (surface_abort(result, cache, cache.step_size)) {
+        // todo - analyze the result
+
+        // return the in progress flag
+        return Status::FAILURE;
+      }
+
+      // Propagation loop
+      for (; result.steps < options.max_steps; ++result.steps) {
+        // Perform a propagation step
+        result.pathLength += m_impl.step(cache);
+
+        // Call the observers with the current and previous track parameters,
+        // and let them fill in some propagation results
+        options.observer_list(cache, result);
+
+        // Call the stop_conditions and the surface_abort condition
+        if (options.stop_conditions(result, cache)
+            || surface_abort(result, cache, cache.step_size))
+          break;
+      }
+      // return the in progress flag
+      return Status::IN_PROGRESS;
+    }
+
   public:
     /// @brief Propagate track parameters - User method
     ///
@@ -211,37 +279,96 @@ namespace propagation {
                     "return track parameter type must be copy-constructible");
 
       // Initialize the propagation result object
-      result_type r(Status::INPROGRESS);
-
-      // Compute the signed path limit and maximum step size
-      const double signed_pathLimit
-          = options.direction * options.max_path_length;
-      double stepMax = options.direction * options.max_step_size;
+      result_type result(Status::IN_PROGRESS);
 
       // Initialize the internal propagation cache
       cache_type cache(start);
+      cache.step_size = options.direction * options.max_step_size;
 
-      // Propagation loop
-      for (; r.steps < options.max_steps; ++r.steps) {
-        // Perform a propagation step (which can alter the step size)
-        r.pathLength += m_impl.step(cache, stepMax);
-        // Call the observers with the current and previous track parameters,
-        // and let them fill in some propagation results
-        options.observer_list(cache, r);
-        // Is it time to stop the propagation?
-        if (std::abs(r.pathLength) >= options.max_path_length
-            || options.stop_conditions(r, cache, stepMax)) {
-          // Compute the final results and mark the propagation as successful
-          r.endParameters = std::make_unique<const return_parameter_type>(
-              m_impl.convert(cache));
-          r.status = Status::SUCCESS;
-          break;
-        }
-        // Adjust the step size so that we cannot go above the path limit
-        if (std::abs(stepMax) > std::abs(signed_pathLimit - r.pathLength))
-          stepMax = signed_pathLimit - r.pathLength;
+      // There is no surface to abort, so let us just continue
+      detail::just_continue no_abort;
+
+      // Perform the actual propagation & check it's outcome
+      if (propagate_(result, cache, options, no_abort) != Status::IN_PROGRESS) {
+        /// @todo screen output
+      } else {
+        /// Convert into the return type
+        result.endParameters = std::make_unique<const return_parameter_type>(
+            m_impl.convert(cache));
+        result.status = Status::SUCCESS;
       }
-      return r;
+
+      return result;
+    }
+
+    /// @brief Propagate track parameters - Expert method with propagation cache
+    ///
+    /// This function performs the propagation of the track parameters according
+    /// to the internal implementation object until at least one abort condition
+    /// is fulfilled, the destination surface is hit or the maximum number of
+    /// steps/path length as given in the propagation options is reached.
+    ///
+    /// It does check/re-use the propgation cache as much as possible for
+    /// performance reasons
+    ///
+    /// @tparam TrackParameters Type of initial track parameters to propagate
+    /// @tparam Surface         Type of target surface
+    /// @tparam ObserverList    Type list of observers
+    /// @tparam AbortList       Type list of abort conditions
+    ///
+    /// @param [in] cache Stepper cache built/updated from the start parameters
+    /// @param [in] target Target surface of to propagate to
+    /// @param [in] options Propagation options
+    ///
+    /// @return Propagation result containing the propagation status, final
+    ///         track parameters, and output of observers (if they produce any)
+    ///
+    /// @note the return here is in CurvilinearParameters
+    template <typename TrackParameters,
+              typename Surface,
+              typename ObserverList,
+              typename AbortList>
+    obs_list_result_t<
+        typename Impl::template return_parameter_type<TrackParameters>,
+        ObserverList>
+    propagate_with_cache_c(
+        cache_type&            cache,
+        const TrackParameters& start,
+        const Surface&         target,
+        const Options<ObserverList, AbortList>& options) const
+    {
+
+      // Type of track parameters produced at the end of the propagation
+      typedef typename Impl::template return_parameter_type<TrackParameters>
+          return_parameter_type;
+
+      // Update the cache if necessary
+      cache.update(start);
+
+      // Type of the full propagation result, including output from observers
+      typedef obs_list_result_t<return_parameter_type, ObserverList>
+          result_type;
+
+      static_assert(std::is_copy_constructible<return_parameter_type>::value,
+                    "return track parameter type must be copy-constructible");
+
+      // Initialize the propagation result object
+      result_type result(Status::IN_PROGRESS);
+
+      // Target surface abort condition with tolerance
+      detail::surface_reached<Surface> sf_abort(
+          target, options.target_surface_distance);
+
+      // Perform the actual propagation
+      if (propagate_(result, cache, options, sf_abort) != Status::IN_PROGRESS) {
+        // analyze and screen output
+      } else {
+        // Compute the final results and mark the propagation as successful
+        result.endParameters = std::make_unique<const return_parameter_type>(
+            m_impl.convert(cache));
+        result.status = Status::SUCCESS;
+      }
+      return result;
     }
 
     /// @brief Propagate track parameters - Expert method with propagation cache
@@ -284,7 +411,7 @@ namespace propagation {
                                                             Surface>
           return_parameter_type;
 
-      // update the cache if necessary
+      // Update the cache if necessary
       cache.update(start);
 
       // Type of the full propagation result, including output from observers
@@ -295,55 +422,23 @@ namespace propagation {
                     "return track parameter type must be copy-constructible");
 
       // Initialize the propagation result object
-      result_type r(Status::INPROGRESS);
+      result_type result(Status::IN_PROGRESS);
 
-      // Compute the signed path limit and maximum step size
-      const double signed_pathLimit
-          = options.direction * options.max_path_length;
-      double stepMax = options.direction * options.max_step_size;
+      // Target surface abort condition with tolerance
+      detail::surface_reached<Surface> sf_abort(
+          target, options.target_surface_distance);
 
-      // Compute the distance to the target surface
-      double distance
-          = m_impl.distance(target, cache.position(), cache.direction());
-
-      // Check that we are propagating towards the surface
-      if (distance * options.direction < 0) {
-        r.status = Status::WRONG_DIRECTION;
-        return r;
+      // Perform the actual propagation
+      if (propagate_(result, cache, options, sf_abort) != Status::IN_PROGRESS) {
+        // analyse and screen output
+      } else {
+        // Compute the final results and mark the propagation as successful
+        result.endParameters = std::make_unique<const return_parameter_type>(
+            m_impl.convert(cache, target));
+        result.status = Status::SUCCESS;
       }
-
-      // Avoid going beyond the target surface on the first step
-      if (std::abs(stepMax) > std::abs(distance)) stepMax = distance;
-
-      // Propagation loop
-      for (; r.steps < options.max_steps; ++r.steps) {
-        // Perform a propagation step (which can alter the step size)
-        r.pathLength += m_impl.step(cache, stepMax);
-
-        // Call the observers with the current and previous track parameters,
-        // and let them fill in some propagation results
-        options.observer_list(cache, r);
-
-        // Update the distance to the target surface
-        distance = m_impl.distance(target, cache.position(), cache.direction());
-
-        // Is it time to stop the propagation ?
-        if (std::abs(distance) < options.target_surface_distance
-            || std::abs(r.pathLength) >= options.max_path_length
-            || options.stop_conditions(r, cache, stepMax)) {
-          // Compute the final results and mark the propagation as successful
-          r.endParameters = std::make_unique<const return_parameter_type>(
-              m_impl.convert(cache, target));
-          r.status = Status::SUCCESS;
-          break;
-        }
-        // Adjust the step size so that we cannot go above the path limit
-        if (std::abs(stepMax) > std::abs(signed_pathLimit - r.pathLength))
-          stepMax = signed_pathLimit - r.pathLength;
-        // Adjust the step size so that we cannot cross the target surface
-        if (std::abs(stepMax) > std::abs(distance)) stepMax = distance;
-      }
-      return r;
+      // return the result
+      return result;
     }
 
     /// @brief Propagate track parameters - User method
@@ -367,7 +462,6 @@ namespace propagation {
     ///
     /// @return Propagation result containing the propagation status, final
     ///         track parameters, and output of observers (if they produce any)
-    ///
     template <typename TrackParameters,
               typename Surface,
               typename ObserverList,

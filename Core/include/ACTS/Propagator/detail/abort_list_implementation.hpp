@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef ACTS_ABORT_LIST_IMPLEMENTATION_HPP
-#define ACTS_ABORT_LIST_IMPLEMENTATION_HPP 1
+#define ACTS_ABORT_LIST_IMPLEMENTATION_HPP
 
 #include <algorithm>
 #include "ACTS/Propagator/detail/condition_uses_result_type.hpp"
@@ -57,6 +57,7 @@ namespace detail {
           input&        cache,
           double&       stepMax)
     {
+
       // get the right helper for calling the abort condition
       constexpr bool has_result = condition_uses_result_type<first>::value;
       typedef condition_caller<has_result> caller_type;

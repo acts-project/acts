@@ -26,6 +26,7 @@ class AtlasStepper
     double dir;
     bool   useJacobian;
     double step;
+
     double maxPathLength;
     bool   mcondition;
     bool   needgradient;
@@ -38,11 +39,17 @@ class AtlasStepper
     const ActsSymMatrixD<NGlobalPars>* covariance;
     double                             jacobian[NGlobalPars * NGlobalPars];
 
-    /// Lazily initialized cache
+    /// Lazily initialized cache for the magneic field
     /// It caches the current magneticl field cell and stays interpolates within
     /// as long as this is valid. See step() code for details.
     bool                    field_cache_ready = false;
     concept::AnyFieldCell<> field_cache;
+
+    // accummulated path length cache
+    double accumulated_path = 0.;
+
+    // adaptive sep size of the runge-kutta integration
+    double step_size = std::numeric_limits<double>::max();
 
     Vector3D
     position() const
@@ -194,12 +201,14 @@ public:
   template <typename T>
   using step_parameter_type = CurvilinearParameters;
 
+  // This struct is a meta-function which normally maps to BoundParameters...
   template <typename T, typename S>
   struct s
   {
     typedef BoundParameters type;
   };
 
+  // Unless S is int, then it maps to CurvilinearParameters ...
   template <typename T>
   struct s<T, int>
   {
@@ -525,8 +534,12 @@ public:
   }
 
   double
-  step(Cache& cache, double& h) const
+  step(Cache& cache) const
   {
+
+    // we use h for keeping the nominclature with the original atlas code
+    double& h = cache.step_size;
+
     bool Jac = cache.useJacobian;
 
     double* R  = &(cache.pVector[0]);  // Coordinates
@@ -637,98 +650,98 @@ public:
       cache.field    = f;
       cache.newfield = false;
 
-      // h *= 2;
-      if (!Jac) return h;
+      if (Jac) {
+        // Jacobian calculation
+        //
+        double* d2A  = &cache.pVector[24];
+        double* d3A  = &cache.pVector[31];
+        double* d4A  = &cache.pVector[38];
+        double  d2A0 = H0[2] * d2A[1] - H0[1] * d2A[2];
+        double  d2B0 = H0[0] * d2A[2] - H0[2] * d2A[0];
+        double  d2C0 = H0[1] * d2A[0] - H0[0] * d2A[1];
+        double  d3A0 = H0[2] * d3A[1] - H0[1] * d3A[2];
+        double  d3B0 = H0[0] * d3A[2] - H0[2] * d3A[0];
+        double  d3C0 = H0[1] * d3A[0] - H0[0] * d3A[1];
+        double  d4A0 = (A0 + H0[2] * d4A[1]) - H0[1] * d4A[2];
+        double  d4B0 = (B0 + H0[0] * d4A[2]) - H0[2] * d4A[0];
+        double  d4C0 = (C0 + H0[1] * d4A[0]) - H0[0] * d4A[1];
+        double  d2A2 = d2A0 + d2A[0];
+        double  d2B2 = d2B0 + d2A[1];
+        double  d2C2 = d2C0 + d2A[2];
+        double  d3A2 = d3A0 + d3A[0];
+        double  d3B2 = d3B0 + d3A[1];
+        double  d3C2 = d3C0 + d3A[2];
+        double  d4A2 = d4A0 + d4A[0];
+        double  d4B2 = d4B0 + d4A[1];
+        double  d4C2 = d4C0 + d4A[2];
+        double  d0   = d4A[0] - A00;
+        double  d1   = d4A[1] - A11;
+        double  d2   = d4A[2] - A22;
+        double  d2A3 = (d2A[0] + d2B2 * H1[2]) - d2C2 * H1[1];
+        double  d2B3 = (d2A[1] + d2C2 * H1[0]) - d2A2 * H1[2];
+        double  d2C3 = (d2A[2] + d2A2 * H1[1]) - d2B2 * H1[0];
+        double  d3A3 = (d3A[0] + d3B2 * H1[2]) - d3C2 * H1[1];
+        double  d3B3 = (d3A[1] + d3C2 * H1[0]) - d3A2 * H1[2];
+        double  d3C3 = (d3A[2] + d3A2 * H1[1]) - d3B2 * H1[0];
+        double  d4A3 = ((A3 + d0) + d4B2 * H1[2]) - d4C2 * H1[1];
+        double  d4B3 = ((B3 + d1) + d4C2 * H1[0]) - d4A2 * H1[2];
+        double  d4C3 = ((C3 + d2) + d4A2 * H1[1]) - d4B2 * H1[0];
+        double  d2A4 = (d2A[0] + d2B3 * H1[2]) - d2C3 * H1[1];
+        double  d2B4 = (d2A[1] + d2C3 * H1[0]) - d2A3 * H1[2];
+        double  d2C4 = (d2A[2] + d2A3 * H1[1]) - d2B3 * H1[0];
+        double  d3A4 = (d3A[0] + d3B3 * H1[2]) - d3C3 * H1[1];
+        double  d3B4 = (d3A[1] + d3C3 * H1[0]) - d3A3 * H1[2];
+        double  d3C4 = (d3A[2] + d3A3 * H1[1]) - d3B3 * H1[0];
+        double  d4A4 = ((A4 + d0) + d4B3 * H1[2]) - d4C3 * H1[1];
+        double  d4B4 = ((B4 + d1) + d4C3 * H1[0]) - d4A3 * H1[2];
+        double  d4C4 = ((C4 + d2) + d4A3 * H1[1]) - d4B3 * H1[0];
+        double  d2A5 = 2. * d2A4 - d2A[0];
+        double  d2B5 = 2. * d2B4 - d2A[1];
+        double  d2C5 = 2. * d2C4 - d2A[2];
+        double  d3A5 = 2. * d3A4 - d3A[0];
+        double  d3B5 = 2. * d3B4 - d3A[1];
+        double  d3C5 = 2. * d3C4 - d3A[2];
+        double  d4A5 = 2. * d4A4 - d4A[0];
+        double  d4B5 = 2. * d4B4 - d4A[1];
+        double  d4C5 = 2. * d4C4 - d4A[2];
+        double  d2A6 = d2B5 * H2[2] - d2C5 * H2[1];
+        double  d2B6 = d2C5 * H2[0] - d2A5 * H2[2];
+        double  d2C6 = d2A5 * H2[1] - d2B5 * H2[0];
+        double  d3A6 = d3B5 * H2[2] - d3C5 * H2[1];
+        double  d3B6 = d3C5 * H2[0] - d3A5 * H2[2];
+        double  d3C6 = d3A5 * H2[1] - d3B5 * H2[0];
+        double  d4A6 = d4B5 * H2[2] - d4C5 * H2[1];
+        double  d4B6 = d4C5 * H2[0] - d4A5 * H2[2];
+        double  d4C6 = d4A5 * H2[1] - d4B5 * H2[0];
 
-      // Jacobian calculation
-      //
-      double* d2A  = &cache.pVector[24];
-      double* d3A  = &cache.pVector[31];
-      double* d4A  = &cache.pVector[38];
-      double  d2A0 = H0[2] * d2A[1] - H0[1] * d2A[2];
-      double  d2B0 = H0[0] * d2A[2] - H0[2] * d2A[0];
-      double  d2C0 = H0[1] * d2A[0] - H0[0] * d2A[1];
-      double  d3A0 = H0[2] * d3A[1] - H0[1] * d3A[2];
-      double  d3B0 = H0[0] * d3A[2] - H0[2] * d3A[0];
-      double  d3C0 = H0[1] * d3A[0] - H0[0] * d3A[1];
-      double  d4A0 = (A0 + H0[2] * d4A[1]) - H0[1] * d4A[2];
-      double  d4B0 = (B0 + H0[0] * d4A[2]) - H0[2] * d4A[0];
-      double  d4C0 = (C0 + H0[1] * d4A[0]) - H0[0] * d4A[1];
-      double  d2A2 = d2A0 + d2A[0];
-      double  d2B2 = d2B0 + d2A[1];
-      double  d2C2 = d2C0 + d2A[2];
-      double  d3A2 = d3A0 + d3A[0];
-      double  d3B2 = d3B0 + d3A[1];
-      double  d3C2 = d3C0 + d3A[2];
-      double  d4A2 = d4A0 + d4A[0];
-      double  d4B2 = d4B0 + d4A[1];
-      double  d4C2 = d4C0 + d4A[2];
-      double  d0   = d4A[0] - A00;
-      double  d1   = d4A[1] - A11;
-      double  d2   = d4A[2] - A22;
-      double  d2A3 = (d2A[0] + d2B2 * H1[2]) - d2C2 * H1[1];
-      double  d2B3 = (d2A[1] + d2C2 * H1[0]) - d2A2 * H1[2];
-      double  d2C3 = (d2A[2] + d2A2 * H1[1]) - d2B2 * H1[0];
-      double  d3A3 = (d3A[0] + d3B2 * H1[2]) - d3C2 * H1[1];
-      double  d3B3 = (d3A[1] + d3C2 * H1[0]) - d3A2 * H1[2];
-      double  d3C3 = (d3A[2] + d3A2 * H1[1]) - d3B2 * H1[0];
-      double  d4A3 = ((A3 + d0) + d4B2 * H1[2]) - d4C2 * H1[1];
-      double  d4B3 = ((B3 + d1) + d4C2 * H1[0]) - d4A2 * H1[2];
-      double  d4C3 = ((C3 + d2) + d4A2 * H1[1]) - d4B2 * H1[0];
-      double  d2A4 = (d2A[0] + d2B3 * H1[2]) - d2C3 * H1[1];
-      double  d2B4 = (d2A[1] + d2C3 * H1[0]) - d2A3 * H1[2];
-      double  d2C4 = (d2A[2] + d2A3 * H1[1]) - d2B3 * H1[0];
-      double  d3A4 = (d3A[0] + d3B3 * H1[2]) - d3C3 * H1[1];
-      double  d3B4 = (d3A[1] + d3C3 * H1[0]) - d3A3 * H1[2];
-      double  d3C4 = (d3A[2] + d3A3 * H1[1]) - d3B3 * H1[0];
-      double  d4A4 = ((A4 + d0) + d4B3 * H1[2]) - d4C3 * H1[1];
-      double  d4B4 = ((B4 + d1) + d4C3 * H1[0]) - d4A3 * H1[2];
-      double  d4C4 = ((C4 + d2) + d4A3 * H1[1]) - d4B3 * H1[0];
-      double  d2A5 = 2. * d2A4 - d2A[0];
-      double  d2B5 = 2. * d2B4 - d2A[1];
-      double  d2C5 = 2. * d2C4 - d2A[2];
-      double  d3A5 = 2. * d3A4 - d3A[0];
-      double  d3B5 = 2. * d3B4 - d3A[1];
-      double  d3C5 = 2. * d3C4 - d3A[2];
-      double  d4A5 = 2. * d4A4 - d4A[0];
-      double  d4B5 = 2. * d4B4 - d4A[1];
-      double  d4C5 = 2. * d4C4 - d4A[2];
-      double  d2A6 = d2B5 * H2[2] - d2C5 * H2[1];
-      double  d2B6 = d2C5 * H2[0] - d2A5 * H2[2];
-      double  d2C6 = d2A5 * H2[1] - d2B5 * H2[0];
-      double  d3A6 = d3B5 * H2[2] - d3C5 * H2[1];
-      double  d3B6 = d3C5 * H2[0] - d3A5 * H2[2];
-      double  d3C6 = d3A5 * H2[1] - d3B5 * H2[0];
-      double  d4A6 = d4B5 * H2[2] - d4C5 * H2[1];
-      double  d4B6 = d4C5 * H2[0] - d4A5 * H2[2];
-      double  d4C6 = d4A5 * H2[1] - d4B5 * H2[0];
+        double* dR = &cache.pVector[21];
+        dR[0] += (d2A2 + d2A3 + d2A4) * S3;
+        dR[1] += (d2B2 + d2B3 + d2B4) * S3;
+        dR[2] += (d2C2 + d2C3 + d2C4) * S3;
+        d2A[0] = ((d2A0 + 2. * d2A3) + (d2A5 + d2A6)) * (1. / 3.);
+        d2A[1] = ((d2B0 + 2. * d2B3) + (d2B5 + d2B6)) * (1. / 3.);
+        d2A[2] = ((d2C0 + 2. * d2C3) + (d2C5 + d2C6)) * (1. / 3.);
 
-      double* dR = &cache.pVector[21];
-      dR[0] += (d2A2 + d2A3 + d2A4) * S3;
-      dR[1] += (d2B2 + d2B3 + d2B4) * S3;
-      dR[2] += (d2C2 + d2C3 + d2C4) * S3;
-      d2A[0] = ((d2A0 + 2. * d2A3) + (d2A5 + d2A6)) * (1. / 3.);
-      d2A[1] = ((d2B0 + 2. * d2B3) + (d2B5 + d2B6)) * (1. / 3.);
-      d2A[2] = ((d2C0 + 2. * d2C3) + (d2C5 + d2C6)) * (1. / 3.);
+        dR = &cache.pVector[28];
+        dR[0] += (d3A2 + d3A3 + d3A4) * S3;
+        dR[1] += (d3B2 + d3B3 + d3B4) * S3;
+        dR[2] += (d3C2 + d3C3 + d3C4) * S3;
+        d3A[0] = ((d3A0 + 2. * d3A3) + (d3A5 + d3A6)) * (1. / 3.);
+        d3A[1] = ((d3B0 + 2. * d3B3) + (d3B5 + d3B6)) * (1. / 3.);
+        d3A[2] = ((d3C0 + 2. * d3C3) + (d3C5 + d3C6)) * (1. / 3.);
 
-      dR = &cache.pVector[28];
-      dR[0] += (d3A2 + d3A3 + d3A4) * S3;
-      dR[1] += (d3B2 + d3B3 + d3B4) * S3;
-      dR[2] += (d3C2 + d3C3 + d3C4) * S3;
-      d3A[0] = ((d3A0 + 2. * d3A3) + (d3A5 + d3A6)) * (1. / 3.);
-      d3A[1] = ((d3B0 + 2. * d3B3) + (d3B5 + d3B6)) * (1. / 3.);
-      d3A[2] = ((d3C0 + 2. * d3C3) + (d3C5 + d3C6)) * (1. / 3.);
-
-      dR = &cache.pVector[35];
-      dR[0] += (d4A2 + d4A3 + d4A4) * S3;
-      dR[1] += (d4B2 + d4B3 + d4B4) * S3;
-      dR[2] += (d4C2 + d4C3 + d4C4) * S3;
-      d4A[0] = ((d4A0 + 2. * d4A3) + (d4A5 + d4A6 + A6)) * (1. / 3.);
-      d4A[1] = ((d4B0 + 2. * d4B3) + (d4B5 + d4B6 + B6)) * (1. / 3.);
-      d4A[2] = ((d4C0 + 2. * d4C3) + (d4C5 + d4C6 + C6)) * (1. / 3.);
+        dR = &cache.pVector[35];
+        dR[0] += (d4A2 + d4A3 + d4A4) * S3;
+        dR[1] += (d4B2 + d4B3 + d4B4) * S3;
+        dR[2] += (d4C2 + d4C3 + d4C4) * S3;
+        d4A[0] = ((d4A0 + 2. * d4A3) + (d4A5 + d4A6 + A6)) * (1. / 3.);
+        d4A[1] = ((d4B0 + 2. * d4B3) + (d4B5 + d4B6 + B6)) * (1. / 3.);
+        d4A[2] = ((d4C0 + 2. * d4C3) + (d4C5 + d4C6 + C6)) * (1. / 3.);
+      }
+      cache.accumulated_path += h;
       return h;
     }
-
+    cache.accumulated_path += h;
     return h;
   }
 

@@ -90,6 +90,8 @@ public:
       , dir(par.momentum().normalized())
       , qop(par.charge() / par.momentum().norm())
       , cov_transport(false)
+      , accumulated_path(0.)
+      , step_size(std::numeric_limits<double>::max())
     {
       update_covariance(par);
     }
@@ -194,6 +196,12 @@ public:
     /// as long as this is valid. See step() code for details.
     bool                    field_cache_ready = false;
     concept::AnyFieldCell<> field_cache;
+
+    // accummulated path length cache
+    double accumulated_path = 0.;
+
+    // adaptive sep size of the runge-kutta integration
+    double step_size = std::numeric_limits<double>::max();
   };
 
   /// Always use the same propagation cache type, independently of the initial
@@ -205,8 +213,9 @@ public:
   template <typename T>
   using step_parameter_type = CurvilinearParameters;
 
-  /// Return parameter types depend on the propagation mode: when propagating to
-  /// a surface we return BoundParameters, otherwise CurvilinearParameters
+  /// Return parameter types depend on the propagation mode:
+  /// -  when propagating to a surface we usually return BoundParameters
+  /// - otherwise CurvilinearParameters
   template <typename T, typename S = int>
   using return_parameter_type = typename s<T, S>::type;
 
@@ -328,8 +337,7 @@ public:
   static double
   distance(const Surface& s, const Vector3D& pos, const Vector3D& dir)
   {
-    const Intersection i = s.intersectionEstimate(pos, dir);
-    return i.pathLength;
+    return s.intersectionEstimate(pos, dir).pathLength;
   }
 
   /// Get the field for the stepping
@@ -361,7 +369,7 @@ public:
   ///                      stepper class during propagation.
   ///
   double
-  step(Cache& cache, double& h) const
+  step(Cache& cache) const
   {
     // Charge-momentum ratio, in SI units
     const double qop = 1. / units::Nat2SI<units::MOMENTUM>(1. / cache.qop);
@@ -401,15 +409,19 @@ public:
       return h * (k1 - k2 - k3 + k4).template lpNorm<1>();
     };
 
-    // Select the appropriate Runge-Kutta step size
-    double error_estimate = tryRungeKuttaStep(h);
+    // Select and adjust the appropriate Runge-Kutta step size
+    double error_estimate = tryRungeKuttaStep(cache.step_size);
     while (error_estimate > 0.0002) {
-      h *= 0.5;
-      error_estimate = tryRungeKuttaStep(h);
+      cache.step_size *= 0.5;
+      error_estimate = tryRungeKuttaStep(cache.step_size);
     }
+
+    // use the adjusted step size
+    const double h = cache.step_size;
 
     // When doing error propagation, update the associated Jacobian matrix
     if (cache.cov_transport) {
+
       ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Zero();
       D(6, 6)             = 1;
 
@@ -483,6 +495,7 @@ public:
     cache.derivative.template segment<3>(3) = k4;
 
     // Return the updated step size
+    cache.accumulated_path += h;
     return h;
   }
 

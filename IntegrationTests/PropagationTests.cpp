@@ -18,6 +18,7 @@
 #include "ACTS/Propagator/AtlasStepper.hpp"
 #include "ACTS/Propagator/EigenStepper.hpp"
 #include "ACTS/Propagator/Propagator.hpp"
+#include "ACTS/Propagator/detail/standard_abort_conditions.hpp"
 #include "ACTS/Utilities/Units.hpp"
 #include "covariance_validation_fixture.hpp"
 
@@ -64,10 +65,20 @@ namespace IntegrationTest {
     Stepper_type    stepper(std::move(bField));
     Propagator_type propagator(std::move(stepper));
 
+    // set up the AbortList
+    detail::path_limit_reached            pathLimit(5 * units::_m);
+    AbortList<detail::path_limit_reached> abort_conditions{pathLimit};
+
+    typedef ObserverList<>                        obersvers;
+    typedef AbortList<detail::path_limit_reached> aborters;
+
     // setup propagation options
-    Propagator_type::Options<> options;
+    Propagator_type::Options<obersvers, aborters> options;
+    // @note @todo : shouldn't that be an abort condition ?
     options.max_path_length = 5 * units::_m;
-    options.max_step_size   = 1 * units::_cm;
+    options.stop_conditions = abort_conditions;
+
+    options.max_step_size = 1 * units::_cm;
 
     // define start parameters
     double                x  = 0;

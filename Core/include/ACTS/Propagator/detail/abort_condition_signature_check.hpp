@@ -15,6 +15,26 @@
 
 namespace Acts {
 
+/// The following operators have to be inplemented in order to satisfy
+/// as an abort condition
+///
+/// @code
+///
+/// template <typename input, typename result_t>
+/// bool
+/// operator()(const result_t& r, input& cache, double& step_max) const
+/// {
+///   return false;
+/// }
+///
+/// template <typename input>
+/// bool
+/// operator()(input& cache, double& step_ma) const
+/// {
+///   return false;
+/// }
+///
+/// @endcode
 namespace detail {
 
   namespace {

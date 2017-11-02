@@ -64,7 +64,7 @@ namespace Test {
                 != &(ataPlane_from_global.referenceSurface()));
 
     // check that the reference frame is the rotation matrix
-    BOOST_CHECK_EQUAL(ataPlane_from_pars.referenceFrame(), rotation);
+    BOOST_CHECK(ataPlane_from_pars.referenceFrame().isApprox(rotation));
   }
 
   /// @brief Unit test to disc

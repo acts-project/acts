@@ -29,6 +29,15 @@ namespace detail {
                   "all extensions must be move constructible");
     // clang-format on
 
+    /// default constructor
+    Extendable() = default;
+
+    /// constructor of the Extendable
+    Extendable(const std::tuple<Extensions...>& extensions)
+      : m_tExtensions(extensions)
+    {
+    }
+
     template <typename R>
     const R&
     get() const
