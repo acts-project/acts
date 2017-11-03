@@ -15,29 +15,6 @@ namespace Acts {
 
 namespace detail {
 
-  /// This is a default non-abort condition
-  struct just_continue
-  {
-
-    /// boolean operator for abort condition using the result
-    /// always return false
-    template <typename input, typename result_t>
-    bool
-    operator()(const result_t&, input&, double&) const
-    {
-      return false;
-    }
-
-    /// boolean operator for abort condition without using the result
-    /// always return false
-    template <typename input>
-    bool
-    operator()(input&, double&) const
-    {
-      return false;
-    }
-  };
-
   /// This is the condition that the pathLimit has been reached
   struct path_limit_reached
   {
@@ -71,9 +48,9 @@ namespace detail {
     /// boolean operator for abort condition using the result
     template <typename input, typename result_t>
     bool
-    operator()(const result_t& r, input& cache, double& stepMax) const
+    operator()(const result_t& r, input& cache) const
     {
-      return operator()(cache, stepMax);
+      return operator()(cache);
     }
 
     /// boolean operator for abort condition without using the result
@@ -82,12 +59,12 @@ namespace detail {
     ///        be adapted to the remainim path length
     template <typename input>
     bool
-    operator()(input& cache, double& stepMax) const
+    operator()(input& cache) const
     {
       // Check if the maximum allowed step size has to be updated
-      if (std::abs(stepMax)
+      if (std::abs(cache.step_size)
           > std::abs(singed_path_limit - cache.accumulated_path))
-        stepMax = singed_path_limit - cache.accumulated_path;
+        cache.step_size = singed_path_limit - cache.accumulated_path;
       // path limit check
       return (std::abs(singed_path_limit - cache.accumulated_path) < tolerance);
     }
@@ -111,6 +88,17 @@ namespace detail {
     ///
     /// @param tsurface The target surface
     /// @param ttolerance The tolerance to declare "reached"
+    surface_reached()
+      : surface(nullptr), tolerance(std::numeric_limits<double>::max())
+    {
+    }
+
+    /// constructor
+    ///
+    /// @tparam Surface Type of the surface
+    ///
+    /// @param tsurface The target surface
+    /// @param ttolerance The tolerance to declare "reached"
     surface_reached(const Surface& tsurface, double ttolerance = 0.)
       : surface(&tsurface), tolerance(ttolerance)
     {
@@ -119,9 +107,9 @@ namespace detail {
     /// boolean operator for abort condition using the result (ignored)
     template <typename input, typename result_t>
     bool
-    operator()(const result_t&, input& cache, double& stepMax) const
+    operator()(const result_t&, input& cache) const
     {
-      return operator()(cache, stepMax);
+      return operator()(cache);
     }
 
     /// boolean operator for abort condition without using the result
@@ -130,14 +118,17 @@ namespace detail {
     ///        be adapted to the remainim path length
     template <typename input>
     bool
-    operator()(input& cache, double& stepMax) const
+    operator()(input& cache) const
     {
+      if (!surface) return false;
       // calculate the distance to the surface
       const double distance
           = surface->intersectionEstimate(cache.position(), cache.direction())
                 .pathLength;
       // Adjust the step size so that we cannot cross the target surface
-      if (std::abs(stepMax) > std::abs(distance)) stepMax = distance;
+      if (std::abs(cache.step_size) > std::abs(distance))
+        cache.step_size = distance;
+      // return true if you fall below tolerance
       return (std::abs(distance) <= tolerance);
     }
   };

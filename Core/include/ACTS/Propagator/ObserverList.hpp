@@ -22,7 +22,7 @@ namespace Acts {
 /// to define a list of different observers that are each
 /// executed during the stepping procedure
 template <typename... observers>
-struct ObserverList : private detail::Extendable<observers...>
+struct ObserverList : public detail::Extendable<observers...>
 {
 private:
   static_assert(not detail::has_duplicates_v<observers...>,
@@ -35,12 +35,9 @@ private:
   using detail::Extendable<observers...>::tuple;
 
 public:
-  /// default constructor
-  ObserverList() = default;
-
   /// constructor of the Extendable
-  ObserverList(const std::tuple<observers...>& extensions)
-    : detail::Extendable<observers...>(extensions)
+  explicit ObserverList(observers... extensions)
+    : detail::Extendable<observers...>(extensions...)
   {
   }
 

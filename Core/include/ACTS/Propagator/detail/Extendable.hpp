@@ -18,7 +18,7 @@ namespace Acts {
 namespace detail {
 
   template <typename... Extensions>
-  struct Extendable
+  struct Extendable : private std::tuple<Extensions...>
   {
     // clang-format off
     static_assert(detail::all_of_v<std::is_default_constructible<Extensions>::value...>,
@@ -29,12 +29,9 @@ namespace detail {
                   "all extensions must be move constructible");
     // clang-format on
 
-    /// default constructor
-    Extendable() = default;
-
-    /// constructor of the Extendable
-    Extendable(const std::tuple<Extensions...>& extensions)
-      : m_tExtensions(extensions)
+    // Explicit constructor
+    explicit Extendable(const Extensions&... extensions)
+      : std::tuple<Extensions...>(extensions...)
     {
     }
 
@@ -42,30 +39,27 @@ namespace detail {
     const R&
     get() const
     {
-      return std::get<R>(m_tExtensions);
+      return std::get<R>(*this);
     }
 
     template <typename R>
     R&
     get()
     {
-      return std::get<R>(m_tExtensions);
+      return std::get<R>(*this);
     }
 
     const std::tuple<Extensions...>&
     tuple() const
     {
-      return m_tExtensions;
+      return (*this);
     }
 
     std::tuple<Extensions...>&
     tuple()
     {
-      return m_tExtensions;
+      return (*this);
     }
-
-  private:
-    std::tuple<Extensions...> m_tExtensions;
   };
 
 }  // namespace detail

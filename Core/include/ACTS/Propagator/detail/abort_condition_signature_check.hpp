@@ -43,8 +43,7 @@ namespace detail {
               typename result,
               typename = decltype(std::declval<const T>().
                                   operator()(std::declval<const result&>(),
-                                             std::declval<const input&>(),
-                                             std::declval<double&>()))>
+                                             std::declval<const input&>()))>
     std::true_type
     test_condition_with_result(int);
 
@@ -55,8 +54,7 @@ namespace detail {
     template <typename T,
               typename input,
               typename = decltype(std::declval<const T>().
-                                  operator()(std::declval<const input&>(),
-                                             std::declval<double&>()))>
+                                  operator()(std::declval<const input&>()))>
     std::true_type
     test_condition_without_result(int);
 

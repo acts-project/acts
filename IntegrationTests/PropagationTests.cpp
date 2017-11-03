@@ -7,47 +7,78 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // Boost include(s)
-#define BOOST_TEST_MODULE Propagation Tests
+#define BOOST_TEST_MODULE Propagator Tests
+
 #include <boost/test/included/unit_test.hpp>
+// leave blank
+#include <boost/test/data/test_case.hpp>
+
 #include <cmath>
 
 #include <boost/test/data/test_case.hpp>
 #include "ACTS/ACTSVersion.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
+#include "ACTS/Extrapolation/RungeKuttaEngine.hpp"
+#include "ACTS/Extrapolation/Wrapper.hpp"
 #include "ACTS/MagneticField/ConstantBField.hpp"
 #include "ACTS/Propagator/AtlasStepper.hpp"
 #include "ACTS/Propagator/EigenStepper.hpp"
 #include "ACTS/Propagator/Propagator.hpp"
-#include "ACTS/Propagator/detail/standard_abort_conditions.hpp"
+#include "ACTS/Surfaces/DiscSurface.hpp"
+#include "ACTS/Surfaces/PlaneSurface.hpp"
+#include "ACTS/Surfaces/StrawSurface.hpp"
 #include "ACTS/Utilities/Units.hpp"
-#include "covariance_validation_fixture.hpp"
+#include "PropagationTestHelper.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
 
 namespace Acts {
 
-using units::Nat2SI;
 using namespace propagation;
 
 namespace IntegrationTest {
 
+  typedef ConstantBField                BField_type;
+  typedef EigenStepper<BField_type>     EigenStepper_type;
+  typedef AtlasStepper<BField_type>     AtlasStepper_type;
+  typedef Propagator<EigenStepper_type> EigenPropagator_type;
+  typedef Propagator<AtlasStepper_type> AtlasPropagator_type;
+  typedef RungeKuttaEngine<BField_type> PropagationEngine_type;
+
+  typedef Wrapper<std::shared_ptr<PropagationEngine_type>>
+      WrappedPropagator_type;
+
+  // setup propagator with constant B-field
+  const double         Bz = 2 * units::_T;
+  BField_type          bField(0, 0, Bz);
+  EigenStepper_type    estepper(bField);
+  EigenPropagator_type epropagator(std::move(estepper));
+  AtlasStepper_type    astepper(bField);
+  AtlasPropagator_type apropagator(std::move(astepper));
+  auto                 bFieldPtr = std::make_shared<const BField_type>(bField);
+  auto                 wConfig   = PropagationEngine_type::Config(bFieldPtr);
+  auto                 wegine    = std::make_shared<PropagationEngine_type>(
+      wConfig,
+      Acts::getDefaultLogger("RungeKuttaEngine", Acts::Logging::INFO));
+  WrappedPropagator_type wpropagator(wegine);
+
   /// test forward propagation in constant magnetic field
   BOOST_DATA_TEST_CASE(
-      constant_bfield_forward_propagation,
+      constant_bfieldorward_propagation_,
       bdata::random((bdata::seed = 0,
                      bdata::distribution
                      = std::uniform_real_distribution<>(0.4 * units::_GeV,
                                                         10. * units::_GeV)))
-          ^ bdata::random((bdata::seed = 0,
+          ^ bdata::random((bdata::seed = 1,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(0., 2 * M_PI)))
-          ^ bdata::random((bdata::seed = 0,
+                           = std::uniform_real_distribution<>(-M_PI, M_PI)))
+          ^ bdata::random((bdata::seed = 2,
                            bdata::distribution
                            = std::uniform_real_distribution<>(0., M_PI)))
-          ^ bdata::random((bdata::seed = 0,
+          ^ bdata::random((bdata::seed = 3,
                            bdata::distribution
-                           = std::uniform_int_distribution<>(-1, 1)))
+                           = std::uniform_int_distribution<>(0, 1)))
           ^ bdata::xrange(1000),
       pT,
       phi,
@@ -55,243 +86,388 @@ namespace IntegrationTest {
       charge,
       index)
   {
-    typedef ConstantBField            BField_type;
-    typedef EigenStepper<BField_type> Stepper_type;
-    typedef Propagator<Stepper_type>  Propagator_type;
-
-    // setup propagator with constant B-field
-    const double    Bz = 2 * units::_T;
-    BField_type     bField(0, 0, Bz);
-    Stepper_type    stepper(std::move(bField));
-    Propagator_type propagator(std::move(stepper));
-
-    // set up the AbortList
-    detail::path_limit_reached            pathLimit(5 * units::_m);
-    AbortList<detail::path_limit_reached> abort_conditions{pathLimit};
-
-    typedef ObserverList<>                        obersvers;
-    typedef AbortList<detail::path_limit_reached> aborters;
-
-    // setup propagation options
-    Propagator_type::Options<obersvers, aborters> options;
-    // @note @todo : shouldn't that be an abort condition ?
-    options.max_path_length = 5 * units::_m;
-    options.stop_conditions = abort_conditions;
-
-    options.max_step_size = 1 * units::_cm;
-
-    // define start parameters
-    double                x  = 0;
-    double                y  = 0;
-    double                z  = 0;
-    double                px = pT * cos(phi);
-    double                py = pT * sin(phi);
-    double                pz = pT / tan(theta);
-    double                q  = (charge != 0) ? charge : +1;
-    Vector3D              pos(x, y, z);
-    Vector3D              mom(px, py, pz);
-    CurvilinearParameters pars(nullptr, pos, mom, q);
-
-    // do propagation
-    const auto& tp = propagator.propagate(pars, options).endParameters;
-
-    // test propagation invariants
-    // clang-format off
-    BOOST_TEST((pT - tp->momentum().perp()) == 0., tt::tolerance(1 * units::_keV));
-    BOOST_TEST((pz - tp->momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
-    BOOST_TEST((theta - tp->momentum().theta()) == 0., tt::tolerance(1e-4));
-    // clang-format on
-
-    // calculate bending radius
-    double r = std::abs(Nat2SI<units::MOMENTUM>(pT) / (q * Bz));
-    // calculate number of turns of helix
-    double turns = options.max_path_length / (2 * M_PI * r) * sin(theta);
-    // respect direction of curl
-    turns = (q * Bz < 0) ? turns : -turns;
-
-    // calculate expected final momentum direction in phi in [-pi,pi]
-    double exp_phi = std::fmod(phi + turns * 2 * M_PI, 2 * M_PI);
-    if (exp_phi < -M_PI) exp_phi += 2 * M_PI;
-    if (exp_phi > M_PI) exp_phi -= 2 * M_PI;
-
-    // calculate expected position
-    double exp_z = z + pz / pT * 2 * M_PI * r * std::abs(turns);
-
-    // calculate center of bending circle in transverse plane
-    double xc, yc;
-    // offset with respect to starting point
-    double dx = r * cos(M_PI / 2 - phi);
-    double dy = r * sin(M_PI / 2 - phi);
-    if (q * Bz < 0) {
-      xc = x - dx;
-      yc = y + dy;
-    } else {
-      xc = x + dx;
-      yc = y - dy;
-    }
-    // phi position of starting point in bending circle
-    double phi0 = std::atan2(y - yc, x - xc);
-
-    // calculated expected position in transverse plane
-    double exp_x = xc + r * cos(phi0 + turns * 2 * M_PI);
-    double exp_y = yc + r * sin(phi0 + turns * 2 * M_PI);
-
-    // clang-format off
-    BOOST_TEST((exp_phi - tp->momentum().phi()) == 0., tt::tolerance(1e-4));
-    BOOST_TEST((exp_x - tp->position()(0)) == 0., tt::tolerance(0.1 * units::_um));
-    BOOST_TEST((exp_y - tp->position()(1)) == 0., tt::tolerance(0.1 * units::_um));
-    BOOST_TEST((exp_z - tp->position()(2)) == 0., tt::tolerance(0.1 * units::_um));
-    // clang-format on
+    double dcharge = -1 + 2 * charge;
+    // constant field propagation atlas stepper
+    auto aposition = constant_field_propagation(
+        apropagator, pT, phi, theta, dcharge, index, Bz);
+    // constant field propagation eigen stepper
+    auto eposition = constant_field_propagation(
+        epropagator, pT, phi, theta, dcharge, index, Bz);
+    // constant field runge kutta engine - not yet at same accuracy
+    auto wposition = constant_field_propagation(
+        wpropagator, pT, phi, theta, dcharge, index, Bz, 10. * units::_um);
+    // check consistency
+    BOOST_CHECK(eposition.isApprox(aposition));
+    BOOST_CHECK(eposition.isApprox(wposition, 1e-3));
   }
-
   /// test consistency of forward-backward propagation in constant field
   BOOST_DATA_TEST_CASE(
-      forward_backward_propagation,
+      forward_backward_propagation_,
       bdata::random((bdata::seed = 0,
                      bdata::distribution
                      = std::uniform_real_distribution<>(0.4 * units::_GeV,
                                                         10. * units::_GeV)))
-          ^ bdata::random((bdata::seed = 0,
+          ^ bdata::random((bdata::seed = 1,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(0., 2 * M_PI)))
-          ^ bdata::random((bdata::seed = 0,
+                           = std::uniform_real_distribution<>(-M_PI, M_PI)))
+          ^ bdata::random((bdata::seed = 2,
                            bdata::distribution
                            = std::uniform_real_distribution<>(0., M_PI)))
-          ^ bdata::random((bdata::seed = 0,
+          ^ bdata::random((bdata::seed = 3,
                            bdata::distribution
-                           = std::uniform_int_distribution<>(-1, 1)))
+                           = std::uniform_int_distribution<>(0, 1)))
+          ^ bdata::random((bdata::seed = 4,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0,
+                                                              1. * units::_m)))
           ^ bdata::xrange(1000),
       pT,
       phi,
       theta,
       charge,
+      plimit,
       index)
   {
-    typedef ConstantBField            BField_type;
-    typedef EigenStepper<BField_type> Stepper_type;
-    typedef Propagator<Stepper_type>  Propagator_type;
+    double dcharge = -1 + 2 * charge;
+    // foward backward check atlas stepper
+    foward_backward(apropagator, pT, phi, theta, dcharge, plimit, index);
+    // foward backward check eigen stepper
+    foward_backward(epropagator, pT, phi, theta, dcharge, plimit, index);
+    // foward backward runge kutta engine
+    foward_backward(wpropagator, pT, phi, theta, dcharge, plimit, index, 1e-3);
+  }
 
-    // setup propagator with constant B-field
-    const double    Bz = 2 * units::_T;
-    BField_type     bField(0, 0, Bz);
-    Stepper_type    stepper(std::move(bField));
-    Propagator_type propagator(std::move(stepper));
+  /// test consistency of propgators when approaching a cylinder
+  BOOST_DATA_TEST_CASE(
+      propagation_to_cylinder_,
+      bdata::random((bdata::seed = 1010,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(0.4 * units::_GeV,
+                                                        10. * units::_GeV)))
+          ^ bdata::random((bdata::seed = 1111,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-M_PI, M_PI)))
+          ^ bdata::random((bdata::seed = 1212,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0.1, 0.9 * M_PI)))
+          ^ bdata::random((bdata::seed = 1313,
+                           bdata::distribution
+                           = std::uniform_int_distribution<>(0, 1)))
+          ^ bdata::random((bdata::seed = 1414,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0.5, 1.)))
+          ^ bdata::random((bdata::seed = 1515,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::random((bdata::seed = 1616,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::random((bdata::seed = 1717,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::xrange(100),
+      pT,
+      phi,
+      theta,
+      charge,
+      rfrac,
+      rand1,
+      rand2,
+      rand3,
+      index)
+  {
 
-    // setup propagation options
-    Propagator_type::Options<> fwd_options;
-    fwd_options.max_path_length = 5 * units::_m;
-    fwd_options.max_step_size   = 1 * units::_cm;
+    double dcharge = -1 + 2 * charge;
+    // just make sure we can reach it
+    double r = rfrac * std::abs(Nat2SI<units::MOMENTUM>(pT) / (1 * Bz));
+    r        = (r > 2.5 * units::_m) ? 2.5 * units::_m : r;
 
-    Propagator_type::Options<> back_options;
-    back_options.direction       = backward;
-    back_options.max_path_length = 5 * units::_m;
-    back_options.max_step_size   = 1 * units::_cm;
+    // foward backward check atlas stepper
+    auto a_at_cylinder = to_cylinder(
+        apropagator, pT, phi, theta, dcharge, r, rand1, rand2, rand3);
+    // foward backward check eigen stepper
+    auto e_at_cylinder = to_cylinder(
+        epropagator, pT, phi, theta, dcharge, r, rand1, rand2, rand3);
+    // foward backward runge kutta engine
+    // the runge kutta engine
+    auto w_at_cylinder = to_cylinder(
+        wpropagator, pT, phi, theta, dcharge, r, rand1, rand2, rand3);
 
-    // define start parameters
-    double                x  = 0;
-    double                y  = 0;
-    double                z  = 0;
-    double                px = pT * cos(phi);
-    double                py = pT * sin(phi);
-    double                pz = pT / tan(theta);
-    double                q  = (charge != 0) ? charge : +1;
-    Vector3D              pos(x, y, z);
-    Vector3D              mom(px, py, pz);
-    CurvilinearParameters start(nullptr, pos, mom, q);
+    BOOST_CHECK(
+        e_at_cylinder.first.isApprox(a_at_cylinder.first, 1 * units::_um));
+    BOOST_CHECK(
+        e_at_cylinder.first.isApprox(w_at_cylinder.first, 1 * units::_um));
+  }
 
-    // do forward-backward propagation
-    const auto& tp1 = propagator.propagate(start, fwd_options).endParameters;
-    const auto& tp2 = propagator.propagate(*tp1, back_options).endParameters;
+  /// test consistency of propagators to a plane
+  BOOST_DATA_TEST_CASE(
+      propagation_to_plane_,
+      bdata::random((bdata::seed = 0,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(0.4 * units::_GeV,
+                                                        10. * units::_GeV)))
+          ^ bdata::random((bdata::seed = 1,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-M_PI, M_PI)))
+          ^ bdata::random((bdata::seed = 2,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., M_PI)))
+          ^ bdata::random((bdata::seed = 3,
+                           bdata::distribution
+                           = std::uniform_int_distribution<>(0, 1)))
+          ^ bdata::random((bdata::seed = 4,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0.5, 1.)))
+          ^ bdata::random((bdata::seed = 5,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::random((bdata::seed = 6,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::random((bdata::seed = 7,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::xrange(100),
+      pT,
+      phi,
+      theta,
+      charge,
+      pfrac,
+      rand1,
+      rand2,
+      rand3,
+      index)
+  {
+    double dcharge = -1 + 2 * charge;
+    // to a plane with the atlas stepper
+    auto a_at_plane = to_surface<AtlasPropagator_type, PlaneSurface>(
+        apropagator, pT, phi, theta, dcharge, pfrac, rand1, rand2, rand3);
+    // to a plane with the eigen stepper
+    auto e_at_plane = to_surface<EigenPropagator_type, PlaneSurface>(
+        epropagator, pT, phi, theta, dcharge, pfrac, rand1, rand2, rand3);
+    // foward backward runge kutta engine
+    // to a plane with the runge kutta engine
+    auto w_at_plane = to_surface<WrappedPropagator_type, PlaneSurface>(
+        wpropagator, pT, phi, theta, dcharge, pfrac, rand1, rand2, rand3);
 
-    // test propagation invariants
-    // clang-format off
-    BOOST_TEST((x - tp2->position()(0)) == 0., tt::tolerance(0.1 * units::_um));
-    BOOST_TEST((y - tp2->position()(1)) == 0., tt::tolerance(0.1 * units::_um));
-    BOOST_TEST((z - tp2->position()(2)) == 0., tt::tolerance(0.1 * units::_um));
-    BOOST_TEST((px - tp2->momentum()(0)) == 0., tt::tolerance(1 * units::_keV));
-    BOOST_TEST((py - tp2->momentum()(1)) == 0., tt::tolerance(1 * units::_keV));
-    BOOST_TEST((pz - tp2->momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
-    // clang-format on
+    BOOST_CHECK(e_at_plane.first.isApprox(a_at_plane.first, 1 * units::_um));
+    BOOST_CHECK(e_at_plane.first.isApprox(w_at_plane.first, 1 * units::_um));
+  }
+
+  /// test consistency of propagators to a disc
+  BOOST_DATA_TEST_CASE(
+      propagation_to_disc_,
+      bdata::random((bdata::seed = 0,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(0.4 * units::_GeV,
+                                                        10. * units::_GeV)))
+          ^ bdata::random((bdata::seed = 1,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-M_PI, M_PI)))
+          ^ bdata::random((bdata::seed = 2,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., M_PI)))
+          ^ bdata::random((bdata::seed = 3,
+                           bdata::distribution
+                           = std::uniform_int_distribution<>(0, 1)))
+          ^ bdata::random((bdata::seed = 4,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0.5, 1.)))
+          ^ bdata::random((bdata::seed = 5,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::random((bdata::seed = 6,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::random((bdata::seed = 7,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::xrange(100),
+      pT,
+      phi,
+      theta,
+      charge,
+      pfrac,
+      rand1,
+      rand2,
+      rand3,
+      index)
+  {
+    double dcharge = -1 + 2 * charge;
+    // to a disc with the  atlas stepper
+    auto a_at_disc = to_surface<AtlasPropagator_type, DiscSurface>(
+        apropagator, pT, phi, theta, dcharge, pfrac, rand1, rand2, rand3);
+    // to a disc with the eigen stepper
+    auto e_at_disc = to_surface<EigenPropagator_type, DiscSurface>(
+        epropagator, pT, phi, theta, dcharge, pfrac, rand1, rand2, rand3);
+    // foward backward runge kutta engine
+    // to a disc with the runge kutta engine
+    auto w_at_disc = to_surface<WrappedPropagator_type, DiscSurface>(
+        wpropagator, pT, phi, theta, dcharge, pfrac, rand1, rand2, rand3);
+
+    BOOST_CHECK(e_at_disc.first.isApprox(a_at_disc.first, 1 * units::_um));
+    BOOST_CHECK(e_at_disc.first.isApprox(w_at_disc.first, 1 * units::_um));
+  }
+
+  /// test consistency of propagators to a line
+  BOOST_DATA_TEST_CASE(
+      propagation_to_line_,
+      bdata::random((bdata::seed = 0,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(0.4 * units::_GeV,
+                                                        10. * units::_GeV)))
+          ^ bdata::random((bdata::seed = 1,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-M_PI, M_PI)))
+          ^ bdata::random((bdata::seed = 2,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., M_PI)))
+          ^ bdata::random((bdata::seed = 3,
+                           bdata::distribution
+                           = std::uniform_int_distribution<>(0, 1)))
+          ^ bdata::random((bdata::seed = 4,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0.5, 1.)))
+          ^ bdata::random((bdata::seed = 5,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::random((bdata::seed = 6,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::random((bdata::seed = 7,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::xrange(5),
+      pT,
+      phi,
+      theta,
+      charge,
+      pfrac,
+      rand1,
+      rand2,
+      rand3,
+      index)
+  {
+    double dcharge = -1 + 2 * charge;
+    // to a line with the atlas stepper
+    auto a_at_line = to_surface<AtlasPropagator_type, StrawSurface>(apropagator,
+                                                                    pT,
+                                                                    phi,
+                                                                    theta,
+                                                                    dcharge,
+                                                                    pfrac,
+                                                                    rand1,
+                                                                    rand2,
+                                                                    rand3,
+                                                                    false);
+    // to a line with the eigen stepper
+    auto e_at_line = to_surface<EigenPropagator_type, StrawSurface>(epropagator,
+                                                                    pT,
+                                                                    phi,
+                                                                    theta,
+                                                                    dcharge,
+                                                                    pfrac,
+                                                                    rand1,
+                                                                    rand2,
+                                                                    rand3,
+                                                                    false);
+    // to a line with the runge kutta engine
+    auto w_at_line
+        = to_surface<WrappedPropagator_type, StrawSurface>(wpropagator,
+                                                           pT,
+                                                           phi,
+                                                           theta,
+                                                           dcharge,
+                                                           pfrac,
+                                                           rand1,
+                                                           rand2,
+                                                           rand3,
+                                                           false);
+
+    BOOST_CHECK(e_at_line.first.isApprox(a_at_line.first, 1 * units::_um));
+    BOOST_CHECK(e_at_line.first.isApprox(w_at_line.first, 1 * units::_um));
   }
 
   /// test correct covariance transport for curvilinear parameters
-  BOOST_DATA_TEST_CASE(
-      covariance_transport_curvilinear,
-      bdata::random((bdata::seed = 0,
-                     bdata::distribution
-                     = std::uniform_real_distribution<>(2. * units::_GeV,
-                                                        10. * units::_GeV)))
-          ^ bdata::random((bdata::seed = 0,
-                           bdata::distribution
-                           = std::uniform_real_distribution<>(0., 2 * M_PI)))
-          ^ bdata::random((bdata::seed = 0,
-                           bdata::distribution
-                           = std::uniform_real_distribution<>(0., M_PI)))
-          ^ bdata::random((bdata::seed = 0,
-                           bdata::distribution
-                           = std::uniform_int_distribution<>(-1, 1)))
-          ^ bdata::xrange(1000),
-      pT,
-      phi,
-      theta,
-      charge,
-      index)
+  BOOST_DATA_TEST_CASE(covariance_transport_curvilinear,
+                       bdata::random(2. * units::_GeV, 100. * units::_GeV)
+                           ^ bdata::random(-M_PI, M_PI)
+                           ^ bdata::random(0.1, M_PI - 0.1)
+                           ^ bdata::random(0, 1)
+                           ^ bdata::random(0.5, 5.)
+                           ^ bdata::xrange(100),
+                       pT,
+                       phi,
+                       theta,
+                       charge,
+                       plimit,
+                       index)
   {
-    typedef ConstantBField            BField_type;
-    typedef EigenStepper<BField_type> Stepper_type;
-    typedef Propagator<Stepper_type>  Propagator_type;
-
-    // setup propagator with constant B-field
-    const double    Bz = 2 * units::_T;
-    BField_type     bField(0, 0, Bz);
-    Stepper_type    stepper(std::move(bField));
-    Propagator_type propagator(std::move(stepper));
-
-    covariance_validation_fixture<Propagator_type> fixture(propagator);
-
-    // setup propagation options
-    Propagator_type::Options<> options;
-    options.max_path_length = 5 * units::_m;
-    options.max_step_size   = 1 * units::_cm;
-
-    // define start parameters
-    double            x  = 0;
-    double            y  = 0;
-    double            z  = 0;
-    double            px = pT * cos(phi);
-    double            py = pT * sin(phi);
-    double            pz = pT / tan(theta);
-    double            q  = (charge != 0) ? charge : +1;
-    Vector3D          pos(x, y, z);
-    Vector3D          mom(px, py, pz);
-    ActsSymMatrixD<5> cov;
-    cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 1, 0,
-        0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
-
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
-    CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
-
-    // do propagation
-    const auto& tp = propagator.propagate(start, options).endParameters;
-
-    // get numerically propagated covariance matrix
-    ActsSymMatrixD<5> calculated_cov
-        = fixture.calculateCovariance(start, options);
-
-    if ((calculated_cov - *tp->covariance()).norm()
-            / std::min(calculated_cov.norm(), tp->covariance()->norm())
-        > 2e-7) {
-      std::cout << "initial parameters = " << tp->parameters() << std::endl;
-      std::cout << "calculated = " << calculated_cov << std::endl << std::endl;
-      std::cout << "obtained = " << *tp->covariance() << std::endl;
-    }
-
-    BOOST_TEST(
-        (calculated_cov - *tp->covariance()).norm()
-                / std::min(calculated_cov.norm(), tp->covariance()->norm())
-            == 0.,
-        tt::tolerance(2e-7));
+    double dcharge = -1 + 2 * charge;
+    // covaraince check for atlas stepper
+    // covariance_curvilinear(apropagator, pT, phi, theta, dcharge, plimit,
+    // index);
+    // covariance check for eigen stepper
+    covariance_curvilinear(epropagator, pT, phi, theta, dcharge, plimit, index);
+    // covariance check fo the runge kutta engine
+    // covariance_curvilinear(wpropagator, pT, phi, theta, dcharge, plimit,
+    // index);
+    // covaraiance_check(wpropagator,
+    //                  pT, phi, theta, dcharge,
+    //                  plimit,
+    //                  startSf,
+    //                  endSf,
+    //                  sfRandomizer,
+    //                  index);
+    //
+    // covaraiance_check(wpropagator, pT, phi, theta, charge, index);
   }
+  /*
+  // test correct covariance transport for surfaces parameters
+  BOOST_DATA_TEST_CASE(covariance_transport_bound,
+                       bdata::random(2. * units::_GeV, 100. * units::_GeV)
+                           ^ bdata::random(-M_PI, M_PI)
+                           ^ bdata::random(0., M_PI)
+                           ^ bdata::random(0, 1)
+                           ^ bdata::random(0.5, 5.)
+                           ^ bdata::random(-1., 1.)
+                           ^ bdata::random(-1., 1.)
+                           ^ bdata::random(-1., 1.)
+                           ^ bdata::xrange(100),
+                       pT,
+                       phi,
+                       theta,
+                       charge,
+                       plimit,
+                       rand1,
+                       rand2,
+                       rand3,
+                       index)
+  {
+    double dcharge = -1 + 2 * charge;
+    // covaraince check for atlas stepper
+    // covaraiance_check(apropagator,
+    //                   pT, phi, theta, dcharge,
+    //                   plimit,
+    //                   startSf,
+    //                   endSf,
+    //                   sfRandomizer,
+    //                   index);
+    // covariance check for eigen stepper
+    covariance_bound(epropagator,
+                     pT, phi, theta, dcharge,
+                     plimit, rand1, rand2, rand3,
+                     index);
+    // covariance check fo the runge kutta engine
+    covariance_bound(wpropagator,
+                     pT, phi, theta, dcharge,
+                     plimit, rand1, rand2, rand3,
+                     index);
+    //
+    //
+    // covaraiance_check(wpropagator, pT, phi, theta, charge, index);
+  }
+  */
 }  // namespace Test
 
 }  // namespace Acts

@@ -19,7 +19,7 @@
 namespace Acts {
 
 template <typename... conditions>
-struct AbortList : private detail::Extendable<conditions...>
+struct AbortList : public detail::Extendable<conditions...>
 {
 private:
   static_assert(not detail::has_duplicates_v<conditions...>,
@@ -32,12 +32,9 @@ private:
   using detail::Extendable<conditions...>::tuple;
 
 public:
-  /// default constructor
-  AbortList() = default;
-
   /// constructor of the Extendable
-  AbortList(const std::tuple<conditions...>& extensions)
-    : detail::Extendable<conditions...>(extensions)
+  explicit AbortList(const conditions&... extensions)
+    : detail::Extendable<conditions...>(extensions...)
   {
   }
 
@@ -54,13 +51,7 @@ public:
                   "not all abort conditions support the specified input");
     // clang-format on
 
-    // the different
-    double conditions_stepMax = cache.step_size;
-    bool   abort              = detail::abort_list_impl<conditions...>::check(
-        tuple(), r, cache, conditions_stepMax);
-    cache.step_size = std::min(cache.step_size, conditions_stepMax);
-
-    return abort;
+    return detail::abort_list_impl<conditions...>::check(tuple(), r, cache);
   }
 };
 
