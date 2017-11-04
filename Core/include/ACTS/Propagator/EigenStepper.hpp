@@ -81,7 +81,7 @@ public:
   struct Cache
   {
     /// Constructor from the initial track parameters
-    /// @tparam [in] par The track parameters at start
+    /// @param [in] par The track parameters at start
     ///
     /// @note the covariance matrix is copied when needed
     template <typename T>
@@ -97,7 +97,7 @@ public:
     }
 
     /// The cache update for optimal performance
-    /// @tparam [in] par The new track parameters at start
+    /// @param [in] par The new track parameters at start
     ///
     /// @todo check to identify an reuse of start/cache
     template <typename T>
@@ -112,7 +112,7 @@ public:
     }
 
     /// The covariance update
-    /// @tparam [in] par The (new) track parameters at start
+    /// @param [in] par The (new) track parameters at start
     template <typename T>
     void
     update_covariance(const T& par)

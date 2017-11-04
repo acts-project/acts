@@ -33,8 +33,8 @@ namespace Test {
         pars.parameters()[eTHETA], values[3], s_onSurfaceTolerance);
     BOOST_CHECK_CLOSE(pars.parameters()[eQOP], values[4], s_onSurfaceTolerance);
     // check global parameters
-    BOOST_CHECK_EQUAL(pars.position(), position);
-    BOOST_CHECK_EQUAL(pars.momentum(), momentum);
+    BOOST_CHECK(pars.position().isApprox(position));
+    BOOST_CHECK(pars.momentum().isApprox(momentum));
     BOOST_CHECK_EQUAL(pars.charge(), charge);
   }
 }
