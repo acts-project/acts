@@ -39,7 +39,7 @@ namespace detail {
     /// @param direction_sign is the propagation direction
     /// @param abs_limit is the absolute path limit for this propagation
     /// @param ttolerance The tolerance to declare "reached"
-    path_limit_reached(int direction_sign, double abs_limit, double ttolerance)
+    path_limit_reached(double abs_limit, int direction_sign, double ttolerance)
       : singed_path_limit(direction_sign * std::abs(abs_limit))
       , tolerance(std::abs(ttolerance))
     {
@@ -79,6 +79,8 @@ namespace detail {
     /// the plain pointer to the surface
     /// - safe as the condition lives shorter than the surface
     const Surface* surface = nullptr;
+    /// the direction
+    int direction = 1;
     /// the tolerance to be defined on surface
     double tolerance = 0.;
 
@@ -99,8 +101,10 @@ namespace detail {
     ///
     /// @param tsurface The target surface
     /// @param ttolerance The tolerance to declare "reached"
-    surface_reached(const Surface& tsurface, double ttolerance = 0.)
-      : surface(&tsurface), tolerance(ttolerance)
+    surface_reached(const Surface& tsurface,
+                    int            tdirection,
+                    double         ttolerance = 0.)
+      : surface(&tsurface), direction(tdirection), tolerance(ttolerance)
     {
     }
 
@@ -125,6 +129,11 @@ namespace detail {
       const double distance
           = surface->intersectionEstimate(cache.position(), cache.direction())
                 .pathLength;
+      // Abort if wrong direction
+      if (distance * direction < 0) {
+        // @todo trigger wrong direction
+        return true;
+      }
       // Adjust the step size so that we cannot cross the target surface
       if (std::abs(cache.step_size) > std::abs(distance))
         cache.step_size = distance;

@@ -75,8 +75,7 @@ namespace Test {
     double z_position = 150.;
     auto   transform
         = std::make_shared<Transform3D>(Translation3D(0., 0., z_position));
-    auto        rotation = transform->linear();
-    auto        bounds   = std::make_shared<RadialBounds>(100., 1200.);
+    auto        bounds = std::make_shared<RadialBounds>(100., 1200.);
     DiscSurface dSurface(transform, bounds);
 
     // now create parameters on this surface

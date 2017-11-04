@@ -277,11 +277,11 @@ namespace propagation {
 
       // Initialize the internal propagation cache
       cache_type cache(start);
-      cache.step_size = options.max_step_size;
+      cache.step_size = options.direction * options.max_step_size;
 
       // The path limit aborter
-      path_limit_reached path_limit_abort(options.max_path_length,
-                                          options.target_tolerance);
+      path_limit_reached path_limit_abort(
+          options.max_path_length, options.direction, options.target_tolerance);
       AbortList<path_limit_reached> internal_aborters(path_limit_abort);
 
       // Perform the actual propagation & check it's outcome
@@ -352,11 +352,12 @@ namespace propagation {
 
       // Target surface abort condition with tolerance
       typedef detail::surface_reached<Surface> target_reached;
-      target_reached at_target_abort(target, options.target_tolerance);
+      target_reached                           at_target_abort(
+          target, options.direction, options.target_tolerance);
 
       // Path limit abort condition with tolerance
-      path_limit_reached path_limit_abort(options.max_path_length,
-                                          options.target_tolerance);
+      path_limit_reached path_limit_abort(
+          options.max_path_length, options.direction, options.target_tolerance);
 
       // Resulting Abort list
       AbortList<target_reached, path_limit_reached> internal_aborters(
@@ -429,11 +430,12 @@ namespace propagation {
 
       // Target surface abort condition with tolerance
       typedef detail::surface_reached<Surface> target_reached;
-      target_reached at_target_abort(target, options.target_tolerance);
+      target_reached                           at_target_abort(
+          target, options.direction, options.target_tolerance);
 
       // Path limit abort condition with tolerance
-      path_limit_reached path_limit_abort(options.max_path_length,
-                                          options.target_tolerance);
+      path_limit_reached path_limit_abort(
+          options.max_path_length, options.direction, options.target_tolerance);
 
       // Resulting Abort list
       AbortList<target_reached, path_limit_reached> internal_aborters(
@@ -486,7 +488,7 @@ namespace propagation {
     {
       // Initialize the internal propagation cache
       cache_type cache(start);
-      cache.step_size = options.max_step_size;
+      cache.step_size = options.direction * options.max_step_size;
       // Run with cache
       return propagate_with_cache(cache, start, target, options);
     }
