@@ -182,6 +182,12 @@ public:
     std::string prefix = "[RK] - ";
     /// screen output postfix
     std::string postfix = " - ";
+
+    // Constructor with magentic field
+    Config(std::shared_ptr<const MagneticField> fieldSvc = nullptr)
+      : fieldService(fieldSvc)
+    {
+    }
   };
 
   /// Constructor

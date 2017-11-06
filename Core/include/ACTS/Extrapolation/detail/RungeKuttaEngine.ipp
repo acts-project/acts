@@ -577,7 +577,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
     if (aS > aStep)
       S = step;
     else if (!iS && InS && aS * 2. < aStep)
-      S *= 2.;
+      S *= 2.;  // @todo check: magic step increase
 
     if (!dir && std::abs(pCache.step) > Wwrong) {
       EX_MSG_DEBUG(navigationStep,
@@ -610,8 +610,12 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
   // Output track parameteres
   pCache.step += step;
 
-  if (std::abs(step) < .001) return true;
+  // last step to surface not needed, within tolerance
+  // (this is currently adjusted to be within 0.1 um)
+  // @todo update to configuration
+  if (std::abs(step) < .0001) return true;
 
+  // do last step to survace
   A[0] += (SA[0] * step);
   A[1] += (SA[1] * step);
   A[2] += (SA[2] * step);

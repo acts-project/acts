@@ -7,8 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #define BOOST_TEST_MODULE BoundParameters Tests
-#include <boost/test/data/test_case.hpp>
+
 #include <boost/test/included/unit_test.hpp>
+// leave blank as
+#include <boost/test/data/test_case.hpp>
 
 #include "ACTS/EventData/NeutralParameters.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"

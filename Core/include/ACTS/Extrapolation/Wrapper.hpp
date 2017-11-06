@@ -1,0 +1,338 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#ifndef ACTS_EXTRAPOLATION_WRAPPER_H
+#define ACTS_EXTRAPOLATION_WRAPPER_H
+
+#include <cmath>
+#include <limits>
+#include <memory>
+#include "ACTS/EventData/NeutralParameters.hpp"
+#include "ACTS/EventData/TrackParameters.hpp"
+#include "ACTS/Extrapolation/ExtrapolationCell.hpp"
+#include "ACTS/Propagator/AbortList.hpp"
+#include "ACTS/Propagator/ObserverList.hpp"
+#include "ACTS/Propagator/Propagator.hpp"
+#include "ACTS/Surfaces/CylinderSurface.hpp"
+#include "ACTS/Utilities/Units.hpp"
+
+namespace Acts {
+
+namespace propagation {
+
+  /// @brief templated Simple class holding result of propagation call
+  ///
+  template <typename Parameters>
+  struct WrapperResult
+  {
+    /// Constructor from initial propagation status
+    WrapperResult(Status s = Status::UNSET) : status(s) {}
+
+    /// Final track parameters
+    std::unique_ptr<const Parameters> endParameters = nullptr;
+
+    /// Propagation status
+    Status status = Status::UNSET;
+
+    /// Number of propagation steps that were carried out
+    unsigned int steps = 0;
+
+    /// Signed distance over which the parameters were propagated
+    double pathLength = 0.;
+
+    /// @brief Check the validity of the propagation result
+    ///
+    /// @return @c true if the final parameters are set and propagation status
+    ///         is SUCCESS, otherwise @c false
+    ///
+    operator bool() const
+    {
+      return (endParameters && status == Status::SUCCESS);
+    }
+  };
+
+  /// @brief Wrapper for PropagationEngine to compare with the
+  /// the ACTS Propagator
+  ///
+  /// @tparam Impl Implementation of the propagation algorithm
+  template <typename Impl>
+  class Wrapper final
+  {
+  public:
+    /// @brief Options for propagate() call
+    ///
+    /// @tparam Observers List of observer types called after each
+    ///                   propagation step with the current propagation
+    ///                   cache
+    ///
+    /// @tparam Aborters  List of abort conditions tested after each
+    ///                   propagation step using the current propagation
+    ///                   cache
+    ///
+    template <typename Observers = ObserverList<>,
+              typename Aborters  = AbortList<>>
+    struct Options
+    {
+      /// Propagation direction
+      Direction direction = forward;
+
+      /// Maximum number of steps for one propagate() call
+      unsigned int max_steps = 1000;
+
+      /// Required tolerance to reach target (surface, pathlength)
+      double target_tolerance = 1 * units::_um;
+
+      /// Absolute minimum step size
+      double min_step_size = 0.1 * units::_mm;
+
+      /// Absolute maximum step size
+      double max_step_size = 1 * units::_m;
+
+      /// Absolute maximum path length
+      double max_path_length = std::numeric_limits<double>::max();
+
+      /// List of observers
+      Observers observer_list;
+
+      /// List of abort conditions
+      Aborters stop_conditions;
+    };
+
+    /// Constructor from implementation object
+    explicit Wrapper(Impl impl) : m_impl(impl) {}
+
+  public:
+    /// @brief Propagate track parameters - User method
+    ///
+    /// This function performs the propagation of the track parameters using the
+    /// internal implementation object, until at least one abort condition is
+    /// fulfilled or the maximum number of steps/path length provided in the
+    /// propagation options is reached.
+    ///
+    /// @tparam TrackParameters Type of initial track parameters to propagate
+    /// @tparam Observers       Type list of observers, type ObserverList<>
+    /// @tparam Aborters        Type list of abort conditions, type AbortList<>
+    ///
+    /// @param [in] start   Initial track parameters to propagate
+    /// @param [in] options Propagation options
+    ///
+    /// @return Propagation result containing the propagation status, final
+    ///         track parameters, and output of observers (if they produce any)
+    ///
+    /// neutral option
+    template <typename Observers, typename Aborters>
+    WrapperResult<NeutralCurvilinearParameters>
+    propagate(const NeutralCurvilinearParameters& start,
+              const Options<Observers, Aborters>& options) const
+    {
+      return propagate_<NeutralCurvilinearParameters,
+                        NeutralParameters,
+                        CylinderSurface,
+                        Observers,
+                        Aborters>(start, m_surface, options);
+    }
+    /// charged option
+    template <typename Observers, typename Aborters>
+    WrapperResult<CurvilinearParameters>
+    propagate(const CurvilinearParameters& start,
+              const Options<Observers, Aborters>& options) const
+    {
+      return propagate_<CurvilinearParameters,
+                        TrackParameters,
+                        CylinderSurface,
+                        Observers,
+                        Aborters>(start, m_surface, options);
+    }
+
+    /// @brief Propagate track parameters - Expert method with propagation cache
+    ///
+    /// This function performs the propagation of the track parameters according
+    /// to the internal implementation object until at least one abort condition
+    /// is fulfilled, the destination surface is hit or the maximum number of
+    /// steps/path length as given in the propagation options is reached.
+    ///
+    /// It does check/re-use the propgation cache as much as possible for
+    /// performance reasons
+    ///
+    /// @tparam TrackParameters Type of initial track parameters to propagate
+    /// @tparam Surface         Type of target surface
+    /// @tparam Observers       Type list of observers, type ObserverList<>
+    /// @tparam Aborters        Type list of abort conditions, type AbortList<>
+    ///
+    /// @param [in] cache Stepper cache built/updated from the start parameters
+    /// @param [in] target Target surface of to propagate to
+    /// @param [in] options Propagation options
+    ///
+    /// @return Propagation result containing the propagation status, final
+    ///         track parameters, and output of observers (if they produce any)
+    ///
+    /// @note the return here is in CurvilinearParameters
+    template <typename Cache,
+              typename Surface,
+              typename Observers,
+              typename Aborters>
+    WrapperResult<NeutralCurvilinearParameters>
+    propagate_with_cache_c(Cache&,
+                           const NeutralParameters& start,
+                           const Surface&           target,
+                           const Options<Observers, Aborters>& options) const
+    {
+      return propagate_<NeutralParameters,
+                        NeutralParameters,
+                        Surface,
+                        Observers,
+                        Aborters>(start, target, options);
+    }
+
+    template <typename Cache,
+              typename Surface,
+              typename Observers,
+              typename Aborters>
+    WrapperResult<CurvilinearParameters>
+    propagate_with_cache_c(Cache&,
+                           const TrackParameters& start,
+                           const Surface&         target,
+                           const Options<Observers, Aborters>& options) const
+    {
+      return propagate_<TrackParameters,
+                        TrackParameters,
+                        Surface,
+                        Observers,
+                        Aborters>(start, target, options);
+    }
+    /// @brief Propagate track parameters - Expert method with propagation cache
+    ///
+    /// This function performs the propagation of the track parameters according
+    /// to the internal implementation object until at least one abort condition
+    /// is fulfilled, the destination surface is hit or the maximum number of
+    /// steps/path length as given in the propagation options is reached.
+    ///
+    /// It does check/re-use the propgation cache as much as possible for
+    /// performance reasons
+    ///
+    /// @tparam TrackParameters Type of initial track parameters to propagate
+    /// @tparam Surface         Type of target surface
+    /// @tparam Observers       Type list of observers, type ObserverList<>
+    /// @tparam Aborters        Type list of abort conditions, type AbortList<>
+    ///
+    /// @param [in] cache Stepper cache built/updated from the start parameters
+    /// @param [in] target Target surface of to propagate to
+    /// @param [in] options Propagation options
+    ///
+    /// @return Propagation result containing the propagation status, final
+    ///         track parameters, and output of observers (if they produce any)
+    ///
+    template <typename Cache,
+              typename Surface,
+              typename Observers,
+              typename Aborters>
+    WrapperResult<TrackParameters>
+    propagate_with_cache(Cache&,
+                         const TrackParameters& start,
+                         const Surface&         target,
+                         const Options<Observers, Aborters>& options) const
+    {
+      return propagate(start, target, options);
+    }
+
+    /// @brief Propagate track parameters - User method
+    ///
+    /// This function performs the propagation of the track parameters according
+    /// to the internal implementation object until at least one abort condition
+    /// is fulfilled, the destination surface is hit or the maximum number of
+    /// steps/path length as given in the propagation options is reached.
+    ///
+    /// A stepper cache object is built internally for this call and the
+    /// Expert method with the cache call signature is called.
+    ///
+    /// @tparam TrackParameters Type of initial track parameters to propagate
+    /// @tparam Surface         Type of target surface
+    /// @tparam Observers       Type list of observers
+    /// @tparam Aborters        Type list of abort conditions
+    ///
+    /// @param [in] start Initial track parameters to propagate
+    /// @param [in] target Target surface of to propagate to
+    /// @param [in] options Propagation options
+    ///
+    /// @return Propagation result containing the propagation status, final
+    ///         track parameters, and output of observers (if they produce any)
+    /// neutral option
+    template <typename Surface, typename Observers, typename Aborters>
+    WrapperResult<NeutralParameters>
+    propagate(const NeutralParameters& start,
+              const Surface&           target,
+              const Options<Observers, Aborters>& options) const
+    {
+      return propagate_<NeutralParameters,
+                        NeutralParameters,
+                        Surface,
+                        Observers,
+                        Aborters>(start, target, options);
+    }
+    /// charged option
+    template <typename Surface, typename Observers, typename Aborters>
+    WrapperResult<TrackParameters>
+    propagate(const TrackParameters& start,
+              const Surface&         target,
+              const Options<Observers, Aborters>& options) const
+    {
+      return propagate_<TrackParameters,
+                        TrackParameters,
+                        Surface,
+                        Observers,
+                        Aborters>(start, target, options);
+    }
+
+  private:
+    /// Helper function for curvilinear transport
+    template <typename Parameters,
+              typename ParametersBase,
+              typename Surface,
+              typename Observers,
+              typename Aborters>
+    WrapperResult<Parameters>
+    propagate_(const Parameters& start,
+               const Surface&    surface,
+               const Options<Observers, Aborters>& options) const
+    {
+      // Initialize the propagation result object
+      WrapperResult<Parameters> r(Status::IN_PROGRESS);
+      // The extrapolation cell
+      Acts::ExtrapolationCell<ParametersBase> ec(start);
+      ec.pathLimit = options.max_path_length;
+
+      auto status = m_impl->propagate(
+          ec, surface, PropDirection(int(options.direction)));
+      std::cout << "- propagation done " << std::endl;
+      if (ec.endParameters) {
+        // std::cout << "There are endParameters " << ec.endParameters <<
+        // std::endl;
+        const Parameters* cParameters
+            = dynamic_cast<const Parameters*>(ec.endParameters.release());
+        r.endParameters = std::unique_ptr<const Parameters>(cParameters);
+        // std::cout << " --> " << r.endParameters << std::endl;
+        r.status = Status::SUCCESS;
+      }
+      return r;
+    }
+
+    /// implementation of propagation algorithm
+    Impl m_impl;
+
+    // The Surface in case none is provided
+    CylinderSurface m_surface
+        = CylinderSurface(nullptr,
+                          std::numeric_limits<double>::max(),
+                          std::numeric_limits<double>::max());
+  };
+
+}  // namespace wrapper
+
+}  // namespace Acts
+
+#endif  // ACTS_EXTRAPOLATION_WRAPPER_H
