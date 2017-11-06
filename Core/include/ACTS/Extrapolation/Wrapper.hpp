@@ -25,7 +25,7 @@ namespace Acts {
 
 namespace propagation {
 
-  /// @brief templated Simple class holding result of propagation call
+  /// @brief templated struct holding result of propagation call
   ///
   template <typename Parameters>
   struct WrapperResult
@@ -156,9 +156,6 @@ namespace propagation {
     /// is fulfilled, the destination surface is hit or the maximum number of
     /// steps/path length as given in the propagation options is reached.
     ///
-    /// It does check/re-use the propgation cache as much as possible for
-    /// performance reasons
-    ///
     /// @tparam TrackParameters Type of initial track parameters to propagate
     /// @tparam Surface         Type of target surface
     /// @tparam Observers       Type list of observers, type ObserverList<>
@@ -211,9 +208,6 @@ namespace propagation {
     /// to the internal implementation object until at least one abort condition
     /// is fulfilled, the destination surface is hit or the maximum number of
     /// steps/path length as given in the propagation options is reached.
-    ///
-    /// It does check/re-use the propgation cache as much as possible for
-    /// performance reasons
     ///
     /// @tparam TrackParameters Type of initial track parameters to propagate
     /// @tparam Surface         Type of target surface
@@ -290,6 +284,18 @@ namespace propagation {
 
   private:
     /// Helper function for curvilinear transport
+    ///
+    /// @tparam Parameters The parameters type at call and return
+    /// @tparam ParametrsBase The according neutral/charged base class
+    /// @tparam Surface The destination surface
+    /// @tparam Oversvers The list of propgation observers
+    /// @tparam Surface The list of propagation aborters
+    ///
+    /// @param[in] start The start Parameters
+    /// @param[in] surface The destination Surface
+    /// @param[in] options the combined list of observers and aborters
+    ///
+    /// @return a WrapperResult object templated to the right type
     template <typename Parameters,
               typename ParametersBase,
               typename Surface,
@@ -302,21 +308,21 @@ namespace propagation {
     {
       // Initialize the propagation result object
       WrapperResult<Parameters> r(Status::IN_PROGRESS);
+
       // The extrapolation cell
       Acts::ExtrapolationCell<ParametersBase> ec(start);
       ec.pathLimit = options.max_path_length;
 
+      // Call the wrapped propagator with the ExtrapolationCell
       auto status = m_impl->propagate(
           ec, surface, PropDirection(int(options.direction)));
-      std::cout << "- propagation done " << std::endl;
-      if (ec.endParameters) {
-        // std::cout << "There are endParameters " << ec.endParameters <<
-        // std::endl;
+
+      // Check and convert
+      if (!status.isFailure() && ec.endParameters) {
         const Parameters* cParameters
             = dynamic_cast<const Parameters*>(ec.endParameters.release());
         r.endParameters = std::unique_ptr<const Parameters>(cParameters);
-        // std::cout << " --> " << r.endParameters << std::endl;
-        r.status = Status::SUCCESS;
+        r.status        = Status::SUCCESS;
       }
       return r;
     }
@@ -331,7 +337,7 @@ namespace propagation {
                           std::numeric_limits<double>::max());
   };
 
-}  // namespace wrapper
+}  // namespace propagation
 
 }  // namespace Acts
 

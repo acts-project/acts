@@ -147,10 +147,12 @@ Acts::RungeKuttaEngine<MagneticField>::propagateRungeKuttaT(
   m_rkUtils.transformGlobalToLocal(
       &dSurface, uJ, pCache.pVector, pCache.parameters, pCache.jacobian);
 
-  if (pCache.boundaryCheck) {
+  if (pCache.boundaryCheck && !pCache.maxPathLimit) {
     // create a local position and check for inside
     Vector2D lPosition(pCache.parameters[0], pCache.parameters[1]);
-    if (!dSurface.insideBounds(lPosition, pCache.boundaryCheck)) return false;
+    if (!dSurface.insideBounds(lPosition, pCache.boundaryCheck)) {
+      return false;
+    }
   }
 
   // Transformation to curvilinear presentation

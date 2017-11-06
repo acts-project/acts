@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #ifndef INTEGRATIONTEST_PROPAGATION_HELPER_H
 #define INTEGRATIONTEST_PROPAGATION_HELPER_H
 
@@ -21,7 +29,8 @@ namespace IntegrationTest {
                              double                 theta,
                              double                 charge,
                              int                    index,
-                             double                 Bz)
+                             double                 Bz,
+                             double                 disttol = 0.1 * units::_um)
   {
 
     // setup propagation options
@@ -46,9 +55,9 @@ namespace IntegrationTest {
 
     // test propagation invariants
     // clang-format off
-  BOOST_TEST((pT - tp->momentum().perp()) == 0., tt::tolerance(1 * units::_keV));
-  BOOST_TEST((pz - tp->momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
-  BOOST_TEST((theta - tp->momentum().theta()) == 0., tt::tolerance(1e-4));
+    BOOST_TEST((pT - tp->momentum().perp()) == 0., tt::tolerance(1 * units::_keV));
+    BOOST_TEST((pz - tp->momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
+    BOOST_TEST((theta - tp->momentum().theta()) == 0., tt::tolerance(1e-4));
     // clang-format on
 
     // calculate bending radius
@@ -86,10 +95,10 @@ namespace IntegrationTest {
     double exp_y = yc + r * sin(phi0 + turns * 2 * M_PI);
 
     // clang-format off
-  BOOST_TEST((exp_phi - tp->momentum().phi()) == 0., tt::tolerance(1e-4));
-  BOOST_TEST((exp_x - tp->position()(0)) == 0., tt::tolerance(0.1 * units::_um));
-  BOOST_TEST((exp_y - tp->position()(1)) == 0., tt::tolerance(0.1 * units::_um));
-  BOOST_TEST((exp_z - tp->position()(2)) == 0., tt::tolerance(0.1 * units::_um));
+    BOOST_TEST((exp_phi - tp->momentum().phi()) == 0., tt::tolerance(1e-4));
+    BOOST_TEST((exp_x - tp->position()(0)) == 0., tt::tolerance(disttol));
+    BOOST_TEST((exp_y - tp->position()(1)) == 0., tt::tolerance(disttol));
+    BOOST_TEST((exp_z - tp->position()(2)) == 0., tt::tolerance(disttol));
     // clang-format on
   }
 
@@ -100,7 +109,9 @@ namespace IntegrationTest {
                   double                 phi,
                   double                 theta,
                   double                 charge,
-                  int                    index)
+                  int                    index,
+                  double                 disttol = 0.1 * units::_um,
+                  double                 momtol  = 1 * units::_keV)
   {
 
     // setup propagation options
@@ -131,12 +142,12 @@ namespace IntegrationTest {
 
     // test propagation invariants
     // clang-format off
-BOOST_TEST((x - tp2->position()(0)) == 0., tt::tolerance(0.1 * units::_um));
-BOOST_TEST((y - tp2->position()(1)) == 0., tt::tolerance(0.1 * units::_um));
-BOOST_TEST((z - tp2->position()(2)) == 0., tt::tolerance(0.1 * units::_um));
-BOOST_TEST((px - tp2->momentum()(0)) == 0., tt::tolerance(1 * units::_keV));
-BOOST_TEST((py - tp2->momentum()(1)) == 0., tt::tolerance(1 * units::_keV));
-BOOST_TEST((pz - tp2->momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
+    BOOST_TEST((x - tp2->position()(0)) == 0.,  tt::tolerance(disttol));
+    BOOST_TEST((y - tp2->position()(1)) == 0.,  tt::tolerance(disttol));
+    BOOST_TEST((z - tp2->position()(2)) == 0.,  tt::tolerance(disttol));
+    BOOST_TEST((px - tp2->momentum()(0)) == 0., tt::tolerance(momtol));
+    BOOST_TEST((py - tp2->momentum()(1)) == 0., tt::tolerance(momtol));
+    BOOST_TEST((pz - tp2->momentum()(2)) == 0., tt::tolerance(momtol));
     // clang-format on
   }
 
@@ -147,7 +158,8 @@ BOOST_TEST((pz - tp2->momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
                     double                 phi,
                     double                 theta,
                     double                 charge,
-                    int                    index)
+                    int                    index,
+                    double                 reltol = 2e-7)
   {
 
     covariance_validation_fixture<Propagator_type> fixture(propagator);
@@ -182,25 +194,11 @@ BOOST_TEST((pz - tp2->momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
     ActsSymMatrixD<5> calculated_cov
         = fixture.calculateCovariance(start, options);
 
-    if ((calculated_cov - *tp->covariance()).norm()
-            / std::min(calculated_cov.norm(), tp->covariance()->norm())
-        > 2e-7) {
-      std::cout << "final parameters    = " << tp->parameters() << std::endl;
-      std::cout << "steps taken         = " << result.steps << std::endl;
-      std::cout << "path length         = " << result.pathLength << std::endl;
-      std::cout << "at position         = " << tp->position().x() << ", "
-                << tp->position().y() << ", " << tp->position().z()
-                << std::endl;
-      std::cout << "calculated          = " << calculated_cov << std::endl
-                << std::endl;
-      std::cout << "obtained            = " << *tp->covariance() << std::endl;
-    }
-
     BOOST_TEST(
         (calculated_cov - *tp->covariance()).norm()
                 / std::min(calculated_cov.norm(), tp->covariance()->norm())
             == 0.,
-        tt::tolerance(2e-7));
+        tt::tolerance(reltol));
   }
 }
 }
