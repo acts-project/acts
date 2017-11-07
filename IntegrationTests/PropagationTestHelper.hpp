@@ -153,13 +153,13 @@ namespace IntegrationTest {
 
   template <typename Propagator_type>
   void
-  covaraiance_check(const Propagator_type& propagator,
-                    double                 pT,
-                    double                 phi,
-                    double                 theta,
-                    double                 charge,
-                    int                    index,
-                    double                 reltol = 2e-7)
+  covaraiance_check_curvilinear(const Propagator_type& propagator,
+                                double                 pT,
+                                double                 phi,
+                                double                 theta,
+                                double                 charge,
+                                int                    index,
+                                double                 reltol = 2e-7)
   {
 
     covariance_validation_fixture<Propagator_type> fixture(propagator);
@@ -180,8 +180,11 @@ namespace IntegrationTest {
     Vector3D          pos(x, y, z);
     Vector3D          mom(px, py, pz);
     ActsSymMatrixD<5> cov;
-    cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 1, 0,
-        0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
+
+    // take some major correlations (off-diagonals)
+    cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
+        0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
+        1. / (10 * units::_GeV);
 
     auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
     CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
@@ -191,8 +194,9 @@ namespace IntegrationTest {
     const auto& tp     = result.endParameters;
 
     // get numerically propagated covariance matrix
+
     ActsSymMatrixD<5> calculated_cov
-        = fixture.calculateCovariance(start, options);
+        = fixture.calculateCovariance(start, *tp, options);
 
     BOOST_TEST(
         (calculated_cov - *tp->covariance()).norm()
