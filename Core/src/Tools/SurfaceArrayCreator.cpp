@@ -61,6 +61,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
       v3Matrix[iz][iphi] = Vector3D(R * cos(phi), R * sin(phi), z);
     }
   }
+
+  size_t nOverwrite = 0;
   /// prefill the surfaces we have
   for (auto& sf : surfaces) {
     /// get the binning position
@@ -68,8 +70,19 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     // get the bins and fill
     std::array<size_t, 3> bTriple = arrayUtility->binTriple(bPosition);
     // and fill into the grid
+
+    if (sGrid[bTriple[2]][bTriple[1]][bTriple[0]] != nullptr) {
+      nOverwrite++;
+    }
+
     sGrid[bTriple[2]][bTriple[1]][bTriple[0]] = sf;
   }
+
+  if (nOverwrite > 0) {
+    ACTS_WARNING("- " << nOverwrite
+                      << " bins were overwritten during bin filling");
+  }
+
   // complete the Binning @todo switch on when we have a faster method for this
   completeBinning(*arrayUtility, v3Matrix, surfaces, sGrid);
   // create the surfaceArray
@@ -115,7 +128,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   SurfaceGrid sGrid(1, SurfaceMatrix(bins1, SurfaceVector(bins0, nullptr)));
   V3Matrix    v3Matrix(bins1, V3Vector(bins0, Vector3D(0., 0., 0.)));
   // get the average r
-  double R = 0;
+  double R          = 0;
+  size_t nOverwrite = 0;
   /// prefill the surfaces we have
   for (auto& sf : surfaces) {
     /// get the binning position
@@ -125,8 +139,17 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     // get the bins and fill
     std::array<size_t, 3> bTriple = arrayUtility.binTriple(bPosition);
     // and fill into the grid
+    if (sGrid[bTriple[2]][bTriple[1]][bTriple[0]] != nullptr) {
+      nOverwrite++;
+    }
     sGrid[bTriple.at(2)][bTriple.at(1)][bTriple.at(0)] = sf;
   }
+
+  if (nOverwrite > 0) {
+    ACTS_WARNING("- " << nOverwrite
+                      << " bins were overwritten during bin filling");
+  }
+
   // average the R position
   R /= surfaces.size();
   // get access to the binning data
@@ -180,7 +203,9 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   V3Matrix    v3Matrix(binsPhi, V3Vector(binsR, Vector3D(0., 0., 0.)));
 
   // get the average z
-  double z = 0;
+  double z          = 0;
+  size_t nOverwrite = 0;
+
   /// prefill the surfaces we have
   for (auto& sf : surfaces) {
     /// get the binning position
@@ -190,10 +215,19 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     // get the bins and fill
     std::array<size_t, 3> bTriple = arrayUtility->binTriple(bPosition);
     // and fill into the grid
+    if (sGrid[bTriple[2]][bTriple[1]][bTriple[0]] != nullptr) {
+      nOverwrite++;
+    }
+
     sGrid[bTriple[2]][bTriple[1]][bTriple[0]] = sf;
   }
   // average the z position
   z /= surfaces.size();
+
+  if (nOverwrite > 0) {
+    ACTS_WARNING("- " << nOverwrite
+                      << " bins were overwritten during bin filling");
+  }
 
   ACTS_VERBOSE("- z-position of disk estimated as " << z);
 
@@ -246,7 +280,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   SurfaceGrid sGrid(1, SurfaceMatrix(bins1, SurfaceVector(bins0, nullptr)));
   V3Matrix    v3Matrix(bins1, V3Vector(bins0, Vector3D(0., 0., 0.)));
   // get the average z
-  double z = 0;
+  double z          = 0;
+  size_t nOverwrite = 0;
   /// prefill the surfaces we have
   for (auto& sf : surfaces) {
     /// get the binning position
@@ -256,10 +291,19 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     // get the bins and fill
     std::array<size_t, 3> bTriple = arrayUtility.binTriple(bPosition);
     // and fill into the grid
+    if (sGrid[bTriple[2]][bTriple[1]][bTriple[0]] != nullptr) {
+      nOverwrite++;
+    }
+
     sGrid[bTriple[2]][bTriple[1]][bTriple[0]] = sf;
   }
   // average the z position
   z /= surfaces.size();
+
+  if (nOverwrite > 0) {
+    ACTS_WARNING("- " << nOverwrite
+                      << " bins were overwritten during bin filling");
+  }
 
   ACTS_VERBOSE("- z-position of disk estimated as " << z);
 
