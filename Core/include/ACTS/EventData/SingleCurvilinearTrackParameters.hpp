@@ -135,12 +135,8 @@ public:
   }
 
   /// @brief update of the track parameterisation
-  /// only enabled is the parameter type set is the same
   /// only possible on non-const objects
-  template <ParID_t par,
-            std::enable_if_t<not std::is_same<typename par_type<par>::type,
-                                              local_parameter>::value,
-                             int> = 0>
+  template <ParID_t par>
   void
   set(ParValue_t newValue)
   {

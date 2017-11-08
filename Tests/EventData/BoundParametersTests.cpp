@@ -98,6 +98,28 @@ namespace Test {
 
     // check that the reference frame is the rotation matrix
     BOOST_CHECK(ataPlane_from_pars.referenceFrame().isApprox(rot));
+
+    /// modification test via setter functions
+    ataPlane_from_pars.set<Acts::eLOC_X>(0.3);
+    ataPlane_from_pars.set<Acts::eLOC_Y>(0.4);
+    // we should have a new updated position
+    Vector3D lPosition3D(0.3, 0.4, 0.);
+    Vector3D uposition = rot * lPosition3D + center;
+    BOOST_CHECK_EQUAL(uposition, ataPlane_from_pars.position());
+
+    double uphi   = 1.2;
+    double utheta = 0.2;
+    double uqop   = 0.025;
+
+    ataPlane_from_pars.set<Acts::ePHI>(uphi);
+    ataPlane_from_pars.set<Acts::eTHETA>(utheta);
+    ataPlane_from_pars.set<Acts::eQOP>(uqop);
+    // we should have a new updated momentum
+    Vector3D umomentum = 40. * Vector3D(cos(uphi) * sin(utheta),
+                                        sin(uphi) * sin(utheta),
+                                        cos(utheta));
+
+    BOOST_CHECK(umomentum.isApprox(ataPlane_from_pars.momentum()));
   }
 
   /// @brief Unit test for parameters at a disc

@@ -29,7 +29,6 @@ namespace IntegrationTest {
     /// Numerical transport of covariance using the ridder's algorithm
     /// this is for covariance propagation validation
     /// it can either be used for curvilinear transport
-
     template <typename StartParameters, typename EndParameters, typename U>
     ActsSymMatrixD<5>
     calculateCovariance(const StartParameters& startPars,
@@ -50,12 +49,8 @@ namespace IntegrationTest {
       std::vector<ActsVectorD<5>> x_derivatives;
       x_derivatives.reserve(h_steps.size());
       for (double h : h_steps) {
-        Vector3D pos;
-        Vector2D loc_pos(h, 0);
-        startPars.referenceSurface().localToGlobal(
-            loc_pos, startPars.momentum(), pos);
-        StartParameters tp(
-            nullptr, pos, startPars.momentum(), startPars.charge());
+        StartParameters tp = startPars;
+        // tp.template set<Acts::eLOC_0>(tp.template get<Acts::eLOC_0>() + h);
         const auto& r = m_propagator.propagate(tp, dest, var_options);
         x_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
       }
@@ -64,12 +59,8 @@ namespace IntegrationTest {
       std::vector<ActsVectorD<5>> y_derivatives;
       y_derivatives.reserve(h_steps.size());
       for (double h : h_steps) {
-        Vector3D pos;
-        Vector2D loc_pos(0, h);
-        startPars.referenceSurface().localToGlobal(
-            loc_pos, startPars.momentum(), pos);
-        StartParameters tp(
-            nullptr, pos, startPars.momentum(), startPars.charge());
+        StartParameters tp = startPars;
+        // tp.template set<Acts::eLOC_1>(tp.template get<Acts::eLOC_1>() + h);
         const auto& r = m_propagator.propagate(tp, dest, var_options);
         y_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
       }

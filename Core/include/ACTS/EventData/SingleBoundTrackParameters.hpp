@@ -220,12 +220,8 @@ public:
   }
 
   /// @brief set method for parameter updates
-  /// enabled only if the parameter set is the same
   /// obviously only allowed on non-cost objects
-  template <ParID_t par,
-            std::enable_if_t<not std::is_same<typename par_type<par>::type,
-                                              local_parameter>::value,
-                             int> = 0>
+  template <ParID_t par>
   void
   set(ParValue_t newValue)
   {

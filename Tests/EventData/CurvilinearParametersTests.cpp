@@ -75,6 +75,21 @@ namespace Test {
     BOOST_CHECK_EQUAL(curvilinear_pos_copy, curvilinear_pos);
     BOOST_CHECK_EQUAL(curvilinear_neg_copy, curvilinear_neg);
     BOOST_CHECK_EQUAL(curvilinear_neut_copy, curvilinear_neut);
+
+    /// modification test with set methods
+    double uphi   = 1.2;
+    double utheta = 0.2;
+    double uqop   = 0.025;
+
+    curvilinear_pos_copy.set<Acts::ePHI>(uphi);
+    curvilinear_pos_copy.set<Acts::eTHETA>(utheta);
+    curvilinear_pos_copy.set<Acts::eQOP>(uqop);
+    // we should have a new updated momentum
+    Vector3D umomentum = 40. * Vector3D(cos(uphi) * sin(utheta),
+                                        sin(uphi) * sin(utheta),
+                                        cos(utheta));
+
+    BOOST_CHECK(umomentum.isApprox(curvilinear_pos_copy.momentum()));
   }
 }  // end of namespace Test
 }  // end of namespace Acts

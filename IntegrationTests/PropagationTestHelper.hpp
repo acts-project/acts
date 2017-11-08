@@ -24,19 +24,37 @@ using units::Nat2SI;
 
 namespace IntegrationTest {
 
-  /// Helper method
+  /// Helper method to create a transform for a plane
+  /// to mimic detector situations, the plane is roughtly
+  /// perpenticular to the track
+  ///
+  /// @param nnomal The nominal normal direction
+  /// @param angleT Rotation around the norminal normal
+  /// @param angleU Roation around the original U axis
   std::shared_ptr<Transform3D>
-  createTransform(const Vector3D& center, double a, double b, double c)
+  createPlaneTransform(const Vector3D& nposition,
+                       const Vector3D& nnormal,
+                       double          angleT,
+                       double          angleU)
   {
     // the rotation of the destination surface
-    auto transform = std::make_shared<Transform3D>();
-    transform->setIdentity();
-    RotationMatrix3D rot;
-    rot = AngleAxis3D(a, Vector3D::UnitX()) * AngleAxis3D(b, Vector3D::UnitY())
-        * AngleAxis3D(c, Vector3D::UnitZ());
-    transform->prerotate(rot);
-    transform->pretranslate(center);
-    return transform;
+    Vector3D T = nnormal.normalized();
+    Vector3D U = std::abs(T.dot(Vector3D::UnitZ())) < 0.99
+        ? Vector3D::UnitZ().cross(T).normalized()
+        : Vector3D::UnitX().cross(T).normalized();
+    Vector3D V = T.cross(U);
+    // that's the plane curinilear Rotation
+    RotationMatrix3D curvilinearRotation;
+    curvilinearRotation.col(0) = U;
+    curvilinearRotation.col(1) = V;
+    curvilinearRotation.col(2) = T;
+    // curvilinear surfaces are boundless
+    Transform3D ctransform{curvilinearRotation};
+    ctransform.pretranslate(nposition);
+    ctransform.prerotate(AngleAxis3D(angleT, T));
+    ctransform.prerotate(AngleAxis3D(angleU, U));
+    //
+    return std::make_shared<Transform3D>(ctransform);
   }
 
   template <typename Propagator_type>
@@ -127,7 +145,7 @@ namespace IntegrationTest {
                   double                 phi,
                   double                 theta,
                   double                 charge,
-                  double                 pathLength,
+                  double                 plimit,
                   int                    index,
                   double                 disttol = 0.1 * units::_um,
                   double                 momtol  = 1 * units::_keV)
@@ -135,12 +153,12 @@ namespace IntegrationTest {
 
     // setup propagation options
     typename Propagator_type::template Options<> fwd_options;
-    fwd_options.max_path_length = pathLength * units::_m;
+    fwd_options.max_path_length = plimit * units::_m;
     fwd_options.max_step_size   = 1 * units::_cm;
 
     typename Propagator_type::template Options<> back_options;
     back_options.direction       = backward;
-    back_options.max_path_length = pathLength * units::_m;
+    back_options.max_path_length = plimit * units::_m;
     back_options.max_step_size   = 1 * units::_cm;
 
     // define start parameters
@@ -172,25 +190,21 @@ namespace IntegrationTest {
 
   template <typename Propagator_type>
   void
-  covaraiance_check(const Propagator_type& propagator,
-                    double                 pT,
-                    double                 phi,
-                    double                 theta,
-                    double                 charge,
-                    double                 pathLength,
-                    int                    sSurfaceType,
-                    int                    eSurfaceType,
-                    double                 sfRandomizer,
-                    int                    index,
-                    double                 reltol = 2e-7)
+  covariance_curvilinear(const Propagator_type& propagator,
+                         double                 pT,
+                         double                 phi,
+                         double                 theta,
+                         double                 charge,
+                         double                 plimit,
+                         int                    index,
+                         double                 reltol = 1e-4)
   {
-
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
     options.max_step_size   = 1 * units::_cm;
-    options.max_path_length = pathLength * units::_m;
+    options.max_path_length = plimit * units::_m;
 
     // define start parameters
     double            x  = 0;
@@ -209,88 +223,84 @@ namespace IntegrationTest {
         0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
         1. / (10 * units::_GeV);
 
-    // - no start surface
-    if (!sSurfaceType) {
+    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 
-      auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    // do propagation of the start parameters
+    CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
+    const auto            result = propagator.propagate(start, options);
+    const auto&           tp     = result.endParameters;
+    // get numerically propagated covariance matrix
+    ActsSymMatrixD<5> calculated_cov
+        = fixture.calculateCovariance(start, *tp, options);
+    ActsSymMatrixD<5> obtained_cov = (*(tp->covariance()));
 
-      // curvilinear to curvilinear test
-      if (!eSurfaceType) {
-        // do propagation of the start parameters
-        CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
-        const auto            result = propagator.propagate(start, options);
-        const auto&           tp     = result.endParameters;
-        // get numerically propagated covariance matrix
-        ActsSymMatrixD<5> calculated_cov
-            = fixture.calculateCovariance(start, *tp, options);
-        //
-        BOOST_TEST(
-            (calculated_cov - *tp->covariance()).norm()
-                    / std::min(calculated_cov.norm(), tp->covariance()->norm())
-                == 0.,
-            tt::tolerance(reltol));
-        // curvilinear to surface test
-      } else {
+    BOOST_TEST(calculated_cov.isApprox(obtained_cov, reltol));
+  }
 
-        // create curvilinear start parameters
-        CurvilinearParameters start_c(nullptr, pos, mom, q);
-        const auto            result_c = propagator.propagate(start_c, options);
-        const auto&           tp_c     = result_c.endParameters;
-        // transform for the destination surface
-        double angle_a = sfRandomizer * 0.1;
-        double angle_b = sfRandomizer * 0.1;
-        double engle_c = sfRandomizer * 0.1;
-        // switch the end surface type
-        switch (eSurfaceType) {
-        // plane end surface - orientation is arbitrary
-        case 1: {
-          // create the arbitrary transform
-          auto transform
-              = createTransform((1 + 0.05 * sfRandomizer) * tp_c->position(),
-                                angle_a,
-                                angle_b,
-                                engle_c);
-          PlaneSurface pSurface(transform);
-          // create the start and result
-          CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
-          const auto  result = propagator.propagate(start, pSurface, options);
-          const auto& tp     = result.endParameters;
-          // get numerically propagated covariance matrix
-          ActsSymMatrixD<5> calculated_cov
-              = fixture.calculateCovariance(start, *tp, options);
+  template <typename Propagator_type>
+  void
+  covaraiance_bound(const Propagator_type& propagator,
+                    double                 pT,
+                    double                 phi,
+                    double                 theta,
+                    double                 charge,
+                    double                 plimit,
+                    double                 rand1,
+                    double                 rand2,
+                    double                 rand3,
+                    int                    index,
+                    double                 reltol = 2e-7)
+  {
 
-          BOOST_TEST((calculated_cov - *tp->covariance()).norm()
-                             / std::min(calculated_cov.norm(),
-                                        tp->covariance()->norm())
-                         == 0.,
-                     tt::tolerance(reltol));
-        }; break;
-        }
+    covariance_validation_fixture<Propagator_type> fixture(propagator);
+    // setup propagation options
+    typename Propagator_type::template Options<> options;
+    // setup propagation options
+    options.max_step_size   = 1 * units::_cm;
+    options.max_path_length = plimit * units::_m;
 
-      }  // end surface exists
-    }    // start surface exists
+    // define start parameters
+    double            x  = 0;
+    double            y  = 0;
+    double            z  = 0;
+    double            px = pT * cos(phi);
+    double            py = pT * sin(phi);
+    double            pz = pT / tan(theta);
+    double            q  = charge;
+    Vector3D          pos(x, y, z);
+    Vector3D          mom(px, py, pz);
+    ActsSymMatrixD<5> cov;
 
-    // else {
-    //
-    //
-    // }
-    // [2]
-    // this is the surface to curvilinear test
-    // } else if (sSurfaceType && !eSurfaceType ){
-    //
-    //
-    //
-    // // [3]
-    // // this is the surface to surface test
-    // } else {
-    //   // create curvilinear start parameters
-    //   CurvilinearParameters start_c(nullptr, pos, mom, q);
-    //   const auto result_c = propagator.propagate(start_c, options);
-    //   const auto& tp_c    = result_c.endParameters;
-    //
-    //
-    //
-    // }
+    // take some major correlations (off-diagonals)
+    cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
+        0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
+        1. / (10 * units::_GeV);
+
+    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+
+    // create curvilinear start parameters
+    CurvilinearParameters start_c(nullptr, pos, mom, q);
+    const auto            result_c = propagator.propagate(start_c, options);
+    const auto&           tp_c     = result_c.endParameters;
+
+    auto ssTransform = createPlaneTransform(pos, mom.unit(), rand1, rand2);
+    auto seTransform = createPlaneTransform(
+        tp_c->position(), tp_c->momentum().unit(), rand3, rand1);
+
+    PlaneSurface    startSurface(ssTransform);
+    BoundParameters start(std::move(cov_ptr), pos, mom, q, startSurface);
+
+    PlaneSurface endSurface(seTransform);
+    const auto   result = propagator.propagate(start, endSurface, options);
+    const auto&  tp     = result_c.endParameters;
+
+    // get numerically propagated covariance matrix
+    ActsSymMatrixD<5> calculated_cov
+        = fixture.calculateCovariance(start, *tp, options);
+    // get obtained covariance matrix
+    ActsSymMatrixD<5> obtained_cov = (*(tp->covariance()));
+
+    BOOST_TEST(calculated_cov.isApprox(obtained_cov, reltol));
   }
 }
 }

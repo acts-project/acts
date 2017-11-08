@@ -35,6 +35,7 @@ namespace Acts {
 class CylinderSurface : public Surface
 {
 public:
+  /// Deleted default constructor
   CylinderSurface() = delete;
 
   /// Constructor from Transform3D, radius and halflenght
@@ -63,8 +64,8 @@ public:
   ///
   /// @param htrans transform to position the surface, can be nullptr
   /// @note if htrans == nullptr, the cylinder is positioned around (0.,0.,0.)
-  /// @param cbounds is a shared pointer to a cylindeer bounds object, must
-  /// exist
+  /// @param cbounds is a shared pointer to a cylindeer bounds object,
+  /// it must exist (assert test)
   CylinderSurface(std::shared_ptr<const Transform3D>    htrans,
                   std::shared_ptr<const CylinderBounds> cbounds);
 
@@ -80,6 +81,7 @@ public:
   /// cylinder
   CylinderSurface(const CylinderSurface& other, const Transform3D& htrans);
 
+  /// Destructor
   virtual ~CylinderSurface();
 
   /// Assignment operator
