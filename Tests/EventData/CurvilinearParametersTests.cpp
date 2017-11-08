@@ -77,19 +77,37 @@ namespace Test {
     BOOST_CHECK_EQUAL(curvilinear_neut_copy, curvilinear_neut);
 
     /// modification test with set methods
+    double ux = 0.1;
+    double uy = 0.5;
+    curvilinear_pos_copy.set<eLOC_0>(ux);
+    curvilinear_pos_copy.set<eLOC_1>(uy);
+    // the local parameter should still be (0,0) for Curvilinear
+    BOOST_CHECK_EQUAL(curvilinear_pos_copy.parameters()[eLOC_0], 0);
+    BOOST_CHECK_EQUAL(curvilinear_pos_copy.parameters()[eLOC_1], 0);
+    // the position should be updated though
+    Vector3D uposition = curvilinear_neg_copy.referenceSurface().transform()
+        * Vector3D(ux, uy, 0.);
+    // the position should be updated
+    BOOST_CHECK(curvilinear_pos_copy.position().isApprox(uposition));
+    // it should be the position of the surface
+    BOOST_CHECK(
+        curvilinear_pos_copy.referenceSurface().center().isApprox(uposition));
+
     double uphi   = 1.2;
     double utheta = 0.2;
     double uqop   = 0.025;
 
-    curvilinear_pos_copy.set<Acts::ePHI>(uphi);
-    curvilinear_pos_copy.set<Acts::eTHETA>(utheta);
-    curvilinear_pos_copy.set<Acts::eQOP>(uqop);
+    curvilinear_pos_copy.set<ePHI>(uphi);
+    curvilinear_pos_copy.set<eTHETA>(utheta);
+    curvilinear_pos_copy.set<eQOP>(uqop);
     // we should have a new updated momentum
     Vector3D umomentum = 40. * Vector3D(cos(uphi) * sin(utheta),
                                         sin(uphi) * sin(utheta),
                                         cos(utheta));
-
     BOOST_CHECK(umomentum.isApprox(curvilinear_pos_copy.momentum()));
+    // the updated momentum should be the col(2) of the transform
+    BOOST_CHECK(umomentum.unit().isApprox(
+        curvilinear_pos_copy.referenceSurface().transform().rotation().col(2)));
   }
 }  // end of namespace Test
 }  // end of namespace Acts

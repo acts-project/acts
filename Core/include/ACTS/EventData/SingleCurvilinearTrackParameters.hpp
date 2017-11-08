@@ -135,13 +135,50 @@ public:
   }
 
   /// @brief update of the track parameterisation
+  /// only possible on non-const objects, enable for local parameters
+  ///
+  /// @tparam ParID_t The parameter type
+  ///
+  /// @param newValue The new updaed value
+  ///
+  /// For curvilinear parameters the local parameters are forced to be
+  /// (0,0), hence an update is an effective shift of the reference
+  template <ParID_t par,
+            std::enable_if_t<std::is_same<typename par_type<par>::type,
+                                          local_parameter>::value,
+                             int> = 0>
+  void
+  set(ParValue_t newValue)
+  {
+    // set the parameter & update the new global position
+    this->getParameterSet().template setParameter<par>(newValue);
+    this->updateGlobalCoordinates(typename par_type<par>::type());
+    // recreate the surface
+    m_upSurface = PlaneSurface(this->position(), this->momentum().unit());
+    // reset to (0,0)
+    this->getParameterSet().template setParameter<par>(0.);
+  }
+
+  /// @brief update of the track parameterisation
   /// only possible on non-const objects
-  template <ParID_t par>
+  /// enable for parameters that are not local parameters
+  /// @tparam ParID_t The parameter type
+  ///
+  /// @param newValue The new updaed value
+  ///
+  /// For curvilinear parameters the directional change of parameters
+  /// causes a recalculation of the surface
+  template <ParID_t par,
+            std::enable_if_t<not std::is_same<typename par_type<par>::type,
+                                              local_parameter>::value,
+                             int> = 0>
   void
   set(ParValue_t newValue)
   {
     this->getParameterSet().template setParameter<par>(newValue);
     this->updateGlobalCoordinates(typename par_type<par>::type());
+    // recreate the surface
+    m_upSurface = PlaneSurface(this->position(), this->momentum().unit());
   }
 
   /// @brief access to the reference surface

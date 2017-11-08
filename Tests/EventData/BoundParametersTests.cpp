@@ -100,10 +100,13 @@ namespace Test {
     BOOST_CHECK(ataPlane_from_pars.referenceFrame().isApprox(rot));
 
     /// modification test via setter functions
-    ataPlane_from_pars.set<Acts::eLOC_X>(0.3);
-    ataPlane_from_pars.set<Acts::eLOC_Y>(0.4);
+    double ux = 0.3;
+    double uy = 0.4;
+
+    ataPlane_from_pars.set<Acts::eLOC_X>(ux);
+    ataPlane_from_pars.set<Acts::eLOC_Y>(uy);
     // we should have a new updated position
-    Vector3D lPosition3D(0.3, 0.4, 0.);
+    Vector3D lPosition3D(ux, uy, 0.);
     Vector3D uposition = rot * lPosition3D + center;
     BOOST_CHECK_EQUAL(uposition, ataPlane_from_pars.position());
 

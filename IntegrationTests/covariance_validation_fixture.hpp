@@ -50,7 +50,7 @@ namespace IntegrationTest {
       x_derivatives.reserve(h_steps.size());
       for (double h : h_steps) {
         StartParameters tp = startPars;
-        // tp.template set<Acts::eLOC_0>(tp.template get<Acts::eLOC_0>() + h);
+        tp.template set<Acts::eLOC_0>(tp.template get<Acts::eLOC_0>() + h);
         const auto& r = m_propagator.propagate(tp, dest, var_options);
         x_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
       }
@@ -60,7 +60,7 @@ namespace IntegrationTest {
       y_derivatives.reserve(h_steps.size());
       for (double h : h_steps) {
         StartParameters tp = startPars;
-        // tp.template set<Acts::eLOC_1>(tp.template get<Acts::eLOC_1>() + h);
+        tp.template set<Acts::eLOC_1>(tp.template get<Acts::eLOC_1>() + h);
         const auto& r = m_propagator.propagate(tp, dest, var_options);
         y_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
       }
