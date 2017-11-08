@@ -69,10 +69,8 @@ public:
   ///
   /// @param htrans transform in 3D that positions this surface
   /// @param pbounds bounds object to describe the actual surface area
-  ///
-  /// @attention the pointer to pbounds must not be a nullptr
   PlaneSurface(std::shared_ptr<const Transform3D>  htrans,
-               std::shared_ptr<const PlanarBounds> pbounds);
+               std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
   virtual ~PlaneSurface();
 
@@ -197,8 +195,8 @@ public:
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      dir,
-                       bool                 forceDir,
-                       const BoundaryCheck& bcheck = true) const override;
+                       bool                 forceDir = true,
+                       const BoundaryCheck& bcheck   = true) const override;
 
   /// Return properly formatted class name for screen output
   virtual std::string

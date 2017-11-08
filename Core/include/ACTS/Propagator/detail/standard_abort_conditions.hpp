@@ -126,9 +126,12 @@ namespace detail {
     {
       if (!surface) return false;
       // calculate the distance to the surface
-      const double distance
-          = surface->intersectionEstimate(cache.position(), cache.direction())
-                .pathLength;
+      // @todo that might cause problems with a cylinder
+      const double distance = surface
+                                  ->intersectionEstimate(cache.position(),
+                                                         cache.direction(),
+                                                         false)
+                                  .pathLength;
       // Abort if wrong direction
       if (distance * direction < 0) {
         // @todo trigger wrong direction
