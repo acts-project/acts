@@ -73,7 +73,7 @@ public:
     , m_boundaries({{min, max}})
     , m_totalBins(1)
     , m_totalBoundaries(std::vector<float>())
-    , m_functionPtr(&searchEquidstantWithBoundary)
+    , m_functionPtr(&searchEquidistantWithBoundary)
   {
   }
 
@@ -111,7 +111,7 @@ public:
     , m_functionPtr(nullptr)
   {
     // set to equidistant search
-    m_functionPtr = &searchEquidstantWithBoundary;
+    m_functionPtr = &searchEquidistantWithBoundary;
     // fill the boundary vector for fast access to center & boundaries
     m_boundaries.reserve(m_bins + 1);
     for (size_t ib = 0; ib < m_bins + 1; ++ib)
@@ -182,7 +182,7 @@ public:
     // set the pointer depending on the type
     // set the correct function pointer
     if (type == equidistant)
-      m_functionPtr = &searchEquidstantWithBoundary;
+      m_functionPtr = &searchEquidistantWithBoundary;
     else
       m_functionPtr = m_bins < 50 ? &searchInVectorWithBoundary
                                   : &binarySearchWithBoundary;
@@ -212,7 +212,7 @@ public:
       m_totalBoundaries = bdata.m_totalBoundaries;
       // set the correct function pointer
       if (type == equidistant)
-        m_functionPtr = &searchEquidstantWithBoundary;
+        m_functionPtr = &searchEquidistantWithBoundary;
       else
         m_functionPtr = m_bins < 50 ? &searchInVectorWithBoundary
                                     : &binarySearchWithBoundary;
@@ -519,7 +519,7 @@ private:
   // Equidistant search
   // - fastest method
   static size_t
-  searchEquidstantWithBoundary(float value, const BinningData& bData)
+  searchEquidistantWithBoundary(float value, const BinningData& bData)
   {
 
     if (bData.option == open) {
