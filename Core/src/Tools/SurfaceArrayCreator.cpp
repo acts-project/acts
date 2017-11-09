@@ -885,23 +885,21 @@ Acts::SurfaceArrayCreator::completeBinning(const BinUtility& /*binUtility*/,
   // make a copy of the surface grid
   size_t nSurfaces   = sVector.size();
   size_t nGridPoints = v3Matrix.size() * v3Matrix[0].size();
-  // bail out as there is nothing to do
-  if (nGridPoints == nSurfaces) {
-    ACTS_VERBOSE(" - Nothing to do, no empty bins present.");
-    return;
-  }
+ 
   // VERBOSE screen output
   ACTS_VERBOSE("- Object count : " << nSurfaces << " number of surfaces");
   ACTS_VERBOSE("- Surface grid : " << nGridPoints << " number of bins");
-  ACTS_VERBOSE("       to fill : " << nGridPoints - nSurfaces);
 
   size_t binCompleted = 0;
   //
   for (size_t io1 = 0; io1 < v3Matrix.size(); ++io1) {
     for (size_t io0 = 0; io0 < v3Matrix[0].size(); ++io0) {
-      /// intersect
+      // only loop if the bin is empty, else skip
+      if (sGrid[0][io1][io0] != nullptr) continue;
+      
       Vector3D sposition = v3Matrix[io1][io0];
       double   minPath   = 10e10;
+
       for (auto& sf : sVector) {
         double testPath = (sposition - sf->binningPosition(binR)).mag();
         if (testPath < minPath) {
@@ -909,7 +907,8 @@ Acts::SurfaceArrayCreator::completeBinning(const BinUtility& /*binUtility*/,
           minPath            = testPath;
         }
       }
-      // increase the bin completion
+
+      // inc number of newly filled bins
       ++binCompleted;
     }
   }
