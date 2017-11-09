@@ -521,17 +521,27 @@ private:
   static size_t
   searchEquidstantWithBoundary(float value, const BinningData& bData)
   {
-    int bin = ((value - bData.min) / bData.step);
-    // special treatment of the 0 bin for closed
-    if (bData.option == closed) {
-      if (value < bData.min) return (bData.m_bins - 1);
-      if (value > bData.max) return 0;
+
+    if (bData.option == open) {
+      if (value < bData.min) return 0;
+      if (value > bData.max) return (bData.m_bins - 1);
+    } else /* closed */{
+      // wrap into bounds
+      double width = bData.max - bData.min;
+      double delta;
+      if (value > bData.max) {
+        delta = std::ceil((value - bData.max) / width) * width;
+        value -= delta;
+      }
+      if (value < bData.min) {
+        delta = std::ceil((bData.min - value) / width) * width;
+        value += delta;
+      }
     }
-    // if outside boundary : return boundary for open, opposite bin for closed
-    bin = bin < 0 ? ((bData.option == open) ? 0 : (bData.m_bins - 1)) : bin;
-    return size_t((bin <= int(bData.m_bins - 1))
-                      ? bin
-                      : ((bData.option == open) ? (bData.m_bins - 1) : 0));
+    
+    int bin = ((value - bData.min) / bData.step);
+
+    return bin;
   }
 
   // Linear search in arbitrary vector

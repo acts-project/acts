@@ -304,7 +304,18 @@ namespace Test {
 
     // closed values
     BOOST_CHECK_EQUAL(phiData_eq.search(-4.), size_t(4));
+    BOOST_CHECK_EQUAL(phiData_eq.search(-6.), size_t(2));
+    BOOST_CHECK_EQUAL(phiData_eq.search(-7.), size_t(1));
+    BOOST_CHECK_EQUAL(phiData_eq.search(-4.-2*M_PI), size_t(4));
+    BOOST_CHECK_EQUAL(phiData_eq.search(-6.-2*M_PI), size_t(2));
+    BOOST_CHECK_EQUAL(phiData_eq.search(-7.-2*M_PI), size_t(1));
     BOOST_CHECK_EQUAL(phiData_eq.search(4.), size_t(0));
+    BOOST_CHECK_EQUAL(phiData_eq.search(6.), size_t(2));
+    BOOST_CHECK_EQUAL(phiData_eq.search(7.), size_t(3));
+    BOOST_CHECK_EQUAL(phiData_eq.search(4.+2*M_PI), size_t(0));
+    BOOST_CHECK_EQUAL(phiData_eq.search(6.+2*M_PI), size_t(2));
+    BOOST_CHECK_EQUAL(phiData_eq.search(7.+2*M_PI), size_t(3));
+
     BOOST_CHECK_EQUAL(phiData_arb.search(-4.), size_t(4));
     BOOST_CHECK_EQUAL(phiData_arb.search(4.), size_t(0));
     BOOST_CHECK_EQUAL(phiData_arb_binary.search(-4.), (nBins_binary - 1));
