@@ -523,7 +523,7 @@ private:
   {
 
     // vanilla
-    
+
     int bin = ((value - bData.min) / bData.step);
     // special treatment of the 0 bin for closed
     if (bData.option == closed) {
@@ -535,7 +535,6 @@ private:
     return size_t((bin <= int(bData.m_bins - 1))
                       ? bin
                       : ((bData.option == open) ? (bData.m_bins - 1) : 0));
-    
 
     // wrap
     /*
@@ -555,10 +554,10 @@ private:
         value += delta;
       }
     }
-    
+
     int bin = ((value - bData.min) / bData.step);
     */
-    
+
     // wrap const
     /*
     if (bData.option == open) {
@@ -573,9 +572,9 @@ private:
     }
     int bin = ((value - bData.min) / bData.step);
     */
-   
+
     // wrap2
-    /* 
+    /*
     //static constexpr double itwopi = 1./(2.*M_PI);
     static constexpr double twopi = 2.*M_PI;
     if (bData.option == open) {
@@ -617,7 +616,7 @@ private:
         }
       }
     }
-    
+
     int bin = ((value - bData.min) / bData.step);
     */
 

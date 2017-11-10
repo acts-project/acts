@@ -660,17 +660,20 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
       minimum = -M_PI;
       maximum = M_PI;
 
-      double step = 2*M_PI / keys.size();
+      double step = 2 * M_PI / keys.size();
       // rotate to max phi module plus one half step
-      // this should make sure that phi wrapping at +- pi 
+      // this should make sure that phi wrapping at +- pi
       // never falls on a module center
-      double angle = M_PI - (max + 0.5*step); 
+      double angle = M_PI - (max + 0.5 * step);
 
       if (transform == nullptr) {
-        transform = std::make_shared<const Transform3D>(AngleAxis3D(angle, Eigen::Vector3d::UnitZ()));
+        transform = std::make_shared<const Transform3D>(
+            AngleAxis3D(angle, Eigen::Vector3d::UnitZ()));
       } else {
-        transform = std::make_shared<const Transform3D>((*transform) * AngleAxis3D(angle, Eigen::Vector3d::UnitZ()));
+        transform = std::make_shared<const Transform3D>(
+            (*transform) * AngleAxis3D(angle, Eigen::Vector3d::UnitZ()));
       }
+
     } else {
       // calculate minimum and maximum in case only one surface is given
       // first get the bounds
@@ -795,7 +798,8 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
   ACTS_VERBOSE("	Number of bins: " << binNumber);
   ACTS_VERBOSE("	(Min/Max) = (" << minimum << "/" << maximum << ")");
 
-  return (Acts::BinUtility(binNumber, minimum, maximum, bOption, bValue, transform));
+  return (Acts::BinUtility(
+      binNumber, minimum, maximum, bOption, bValue, transform));
 }
 
 Acts::BinUtility
@@ -888,7 +892,7 @@ Acts::SurfaceArrayCreator::completeBinning(const BinUtility& /*binUtility*/,
   // make a copy of the surface grid
   size_t nSurfaces   = sVector.size();
   size_t nGridPoints = v3Matrix.size() * v3Matrix[0].size();
- 
+
   // VERBOSE screen output
   ACTS_VERBOSE("- Object count : " << nSurfaces << " number of surfaces");
   ACTS_VERBOSE("- Surface grid : " << nGridPoints << " number of bins");
@@ -899,7 +903,7 @@ Acts::SurfaceArrayCreator::completeBinning(const BinUtility& /*binUtility*/,
     for (size_t io0 = 0; io0 < v3Matrix[0].size(); ++io0) {
       // only loop if the bin is empty, else skip
       if (sGrid[0][io1][io0] != nullptr) continue;
-      
+
       Vector3D sposition = v3Matrix[io1][io0];
       double   minPath   = 10e10;
 
