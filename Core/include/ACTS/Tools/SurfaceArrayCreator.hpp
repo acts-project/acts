@@ -19,6 +19,10 @@
 
 namespace Acts {
 
+namespace Test {
+  struct SurfaceArrayCreatorFixture;
+}
+
 class Surface;
 class BinUtility;
 
@@ -37,6 +41,8 @@ typedef std::vector<V3Vector> V3Matrix;
 class SurfaceArrayCreator : virtual public ISurfaceArrayCreator
 {
 public:
+  friend Acts::Test::SurfaceArrayCreatorFixture;
+
   /// Constructor
   ///
   /// @param logger logging instance
@@ -271,7 +277,7 @@ private:
   /// This is being called when you chose to use more bins thans surfaces
   /// I.e. to put a finer granularity binning onto your surface
   /// Neighbour bins are then filled to contain pointers as well
-  /// @param binUtility is the unitility class that describes the binning
+  /// @param binUtility is the utility class that describes the binning
   /// @param v3Matrix the corresponding 3D positions filled for every grid point
   /// @param sVector is the filled vector of Surface and binning position
   /// @param sGrid the surfaces filled for every grid point

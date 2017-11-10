@@ -652,22 +652,24 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                                < 10e-12);
                      });
     // set minimum and maximum
-    double min = keys.front()->center().phi();
     double max = keys.back()->center().phi();
 
     // if only one surface is given
     if (keys.size() > 1) {
-      double step = std::abs(max - min) / (keys.size() - 1);
-      minimum     = min - 0.5 * step;
-      maximum     = max + 0.5 * step;
-      // phi correction
-      if (minimum < -M_PI) {
-        minimum += step;
-        maximum += step;
-      }
-      if (maximum > M_PI) {
-        minimum -= step;
-        maximum -= step;
+
+      minimum = -M_PI;
+      maximum = M_PI;
+
+      double step = 2*M_PI / keys.size();
+      // rotate to max phi module plus one half step
+      // this should make sure that phi wrapping at +- pi 
+      // never falls on a module center
+      double angle = M_PI - (max + 0.5*step); 
+
+      if (transform == nullptr) {
+        transform = std::make_shared<const Transform3D>(AngleAxis3D(angle, Eigen::Vector3d::UnitZ()));
+      } else {
+        transform = std::make_shared<const Transform3D>((*transform) * AngleAxis3D(angle, Eigen::Vector3d::UnitZ()));
       }
     } else {
       // calculate minimum and maximum in case only one surface is given
@@ -785,14 +787,15 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
   }
   // assign the bin size
   double binNumber = keys.size();
-  ACTS_VERBOSE("Create BinUtility for BinnedSurfaceArray with equidistant1 "
+  ACTS_VERBOSE("Create BinUtility for BinnedSurfaceArray with equidistant "
                "BinningType");
   ACTS_VERBOSE("	BinningValue: " << bValue);
   ACTS_VERBOSE("	(binX = 0, binY = 1, binZ = 2, binR = 3, binPhi = 4, "
                "binRPhi = 5, binH = 6, binEta = 7)");
   ACTS_VERBOSE("	Number of bins: " << binNumber);
   ACTS_VERBOSE("	(Min/Max) = (" << minimum << "/" << maximum << ")");
-  return (Acts::BinUtility(binNumber, minimum, maximum, bOption, bValue));
+
+  return (Acts::BinUtility(binNumber, minimum, maximum, bOption, bValue, transform));
 }
 
 Acts::BinUtility

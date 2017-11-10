@@ -323,6 +323,15 @@ public:
     return (m_binningData[ba].bins());
   }
 
+  /// Transform applied to global positions before lookup
+  ///
+  /// @return Shared pointer to transform
+  std::shared_ptr<const Transform3D>
+  transform() const
+  {
+    return m_transform;
+  }
+
   /// The type/value of the binning
   ///
   /// @param ba is the binaccessor
