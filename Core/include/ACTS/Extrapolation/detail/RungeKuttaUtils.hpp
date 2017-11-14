@@ -15,6 +15,7 @@
 
 #include <map>
 #include <vector>
+#include <limits>
 #include "ACTS/EventData/NeutralParameters.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Surfaces/BoundaryCheck.hpp"
@@ -99,7 +100,8 @@ public:
   /////////////////////////////////////////////////////////////////////////////////
 
   double
-  stepEstimator(int, double*, const double*, bool&) const;
+  stepEstimator(int, double*, const double*, bool&, double maxStep 
+    = std::numeric_limits<double>::max()) const;
   double
   stepEstimatorToCone(double*, const double*, bool&) const;
   double

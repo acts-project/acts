@@ -88,7 +88,7 @@ namespace propagation {
       double target_tolerance = 1 * units::_um;
 
       /// Absolute minimum step size
-      double min_step_size = 0.1 * units::_mm;
+      double min_step_size = 10. * units::_mm;
 
       /// Absolute maximum step size
       double max_step_size = 1 * units::_m;
@@ -130,11 +130,17 @@ namespace propagation {
     propagate(const NeutralCurvilinearParameters& start,
               const Options<Observers, Aborters>& options) const
     {
-      return propagate_<NeutralCurvilinearParameters,
+      // The extrapolation cell
+      ExtrapolationCell<NeutralParameters> ec(start);
+      ec.pathLimit = options.max_path_length;
+      ec.destinationCurvilinear = true;
+      
+      return propagate_<ExtrapolationCell<NeutralParameters>,
+                        NeutralCurvilinearParameters,
                         NeutralParameters,
                         CylinderSurface,
                         Observers,
-                        Aborters>(start, m_surface, options);
+                        Aborters>(ec, start, m_surface, options);
     }
     /// charged option
     template <typename Observers, typename Aborters>
@@ -142,11 +148,17 @@ namespace propagation {
     propagate(const CurvilinearParameters& start,
               const Options<Observers, Aborters>& options) const
     {
-      return propagate_<CurvilinearParameters,
+      // The extrapolation cell
+      ExtrapolationCell<TrackParameters> ec(start);
+      ec.pathLimit = options.max_path_length;
+      ec.destinationCurvilinear = true;
+        
+      return propagate_< ExtrapolationCell<TrackParameters> ,
+                        CurvilinearParameters,
                         TrackParameters,
                         CylinderSurface,
                         Observers,
-                        Aborters>(start, m_surface, options);
+                        Aborters>(ec, start, m_surface, options);
     }
 
     /// @brief Propagate track parameters - Expert method with propagation cache
@@ -174,16 +186,17 @@ namespace propagation {
               typename Observers,
               typename Aborters>
     WrapperResult<NeutralCurvilinearParameters>
-    propagate_with_cache_c(Cache&,
+    propagate_with_cache_c(Cache& cache,
                            const NeutralParameters& start,
                            const Surface&           target,
                            const Options<Observers, Aborters>& options) const
     {
-      return propagate_<NeutralParameters,
+      return propagate_<Cache,
+                        NeutralParameters,
                         NeutralParameters,
                         Surface,
                         Observers,
-                        Aborters>(start, target, options);
+                        Aborters>(cache, start, target, options);
     }
 
     template <typename Cache,
@@ -191,16 +204,17 @@ namespace propagation {
               typename Observers,
               typename Aborters>
     WrapperResult<CurvilinearParameters>
-    propagate_with_cache_c(Cache&,
+    propagate_with_cache_c(Cache& cache,
                            const TrackParameters& start,
                            const Surface&         target,
                            const Options<Observers, Aborters>& options) const
     {
-      return propagate_<TrackParameters,
+      return propagate_<Cache,
+                        TrackParameters,
                         TrackParameters,
                         Surface,
                         Observers,
-                        Aborters>(start, target, options);
+                        Aborters>(cache, start, target, options);
     }
     /// @brief Propagate track parameters - Expert method with propagation cache
     ///
@@ -226,12 +240,12 @@ namespace propagation {
               typename Observers,
               typename Aborters>
     WrapperResult<TrackParameters>
-    propagate_with_cache(Cache&,
+    propagate_with_cache(Cache& cache,
                          const TrackParameters& start,
                          const Surface&         target,
                          const Options<Observers, Aborters>& options) const
     {
-      return propagate(start, target, options);
+      return propagate_(cache, start, target, options);
     }
 
     /// @brief Propagate track parameters - User method
@@ -262,11 +276,18 @@ namespace propagation {
               const Surface&           target,
               const Options<Observers, Aborters>& options) const
     {
-      return propagate_<NeutralParameters,
+      // The extrapolation cell
+      ExtrapolationCell<NeutralParameters> ec(start);
+      ec.pathLimit    = options.max_path_length;
+      ec.maxStepSize  = options.max_step_size; 
+      ec.destinationCurvilinear = false;
+      
+      return propagate_<ExtrapolationCell<NeutralParameters>,
+                        NeutralParameters,
                         NeutralParameters,
                         Surface,
                         Observers,
-                        Aborters>(start, target, options);
+                        Aborters>(ec, start, target, options);
     }
     /// charged option
     template <typename Surface, typename Observers, typename Aborters>
@@ -275,11 +296,18 @@ namespace propagation {
               const Surface&         target,
               const Options<Observers, Aborters>& options) const
     {
-      return propagate_<TrackParameters,
+      
+      // The extrapolation cell
+      ExtrapolationCell<TrackParameters> ec(start);
+      ec.pathLimit = options.max_path_length;
+      ec.destinationCurvilinear = false;
+      
+      return propagate_<ExtrapolationCell<TrackParameters>,
+                        TrackParameters,
                         TrackParameters,
                         Surface,
                         Observers,
-                        Aborters>(start, target, options);
+                        Aborters>(ec, start, target, options);
     }
 
   private:
@@ -296,34 +324,39 @@ namespace propagation {
     /// @param[in] options the combined list of observers and aborters
     ///
     /// @return a WrapperResult object templated to the right type
-    template <typename Parameters,
+    template <typename Cache,
+              typename Parameters,
               typename ParametersBase,
               typename Surface,
               typename Observers,
               typename Aborters>
     WrapperResult<Parameters>
-    propagate_(const Parameters& start,
+    propagate_(Cache& cache,
+               const Parameters& start,
                const Surface&    surface,
                const Options<Observers, Aborters>& options) const
     {
       // Initialize the propagation result object
       WrapperResult<Parameters> r(Status::IN_PROGRESS);
 
-      // The extrapolation cell
-      Acts::ExtrapolationCell<ParametersBase> ec(start);
-      ec.pathLimit = options.max_path_length;
-
       // Call the wrapped propagator with the ExtrapolationCell
-      auto status = m_impl->propagate(
-          ec, surface, PropDirection(int(options.direction)));
+      auto status = m_impl->propagate(cache, 
+                                      surface, 
+                                      PropDirection(int(options.direction)),
+                                      {ExtrapolationMode::Destination},
+                                      true,
+                                      cache.destinationCurvilinear);
 
       // Check and convert
-      if (!status.isFailure() && ec.endParameters) {
+      if (!status.isFailure() && cache.endParameters) {
         const Parameters* cParameters
-            = dynamic_cast<const Parameters*>(ec.endParameters.release());
+            = dynamic_cast<const Parameters*>(cache.endParameters.release());
         r.endParameters = std::unique_ptr<const Parameters>(cParameters);
+        r.pathLength    = cache.pathLength;
         r.status        = Status::SUCCESS;
-      }
+      } else {
+        std::cout << "Failure detected !" << std::endl;
+      } 
       return r;
     }
 
@@ -333,8 +366,8 @@ namespace propagation {
     // The Surface in case none is provided
     CylinderSurface m_surface
         = CylinderSurface(nullptr,
-                          std::numeric_limits<double>::max(),
-                          std::numeric_limits<double>::max());
+                          100.*units::_m,
+                          100.*units::_m);
   };
 
 }  // namespace propagation

@@ -222,7 +222,6 @@ namespace propagation {
       for (; result.steps < options.max_steps; ++result.steps) {
         // Perform a propagation step
         result.pathLength += m_impl.step(cache);
-
         // Call the observers with the current and previous track parameters,
         // and let them fill in some propagation results
         options.observer_list(cache, result);
