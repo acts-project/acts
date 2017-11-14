@@ -15,6 +15,7 @@
 
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Intersection.hpp"
+#include <vector>
 
 namespace Acts {
 
