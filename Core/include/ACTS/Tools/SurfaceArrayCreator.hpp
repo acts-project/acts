@@ -13,8 +13,11 @@
 #ifndef ACTS_TOOLS_SURFACERARRAYCREATOR_H
 #define ACTS_TOOLS_SURFACERARRAYCREATOR_H 1
 
+#include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
+#include "ACTS/Utilities/Units.hpp"
+
 
 namespace Acts {
 
@@ -22,7 +25,10 @@ namespace Test {
   struct SurfaceArrayCreatorFixture;
 }
 
-class Surface;
+typedef BinnedArray<const Surface*> SurfaceArray;
+using SurfaceMatcher = std::function<
+    bool(BinningValue, const Surface*, const Surface*)>;
+
 class BinUtility;
 
 typedef std::vector<const Surface*> SurfaceVector;
@@ -31,6 +37,7 @@ typedef std::vector<SurfaceMatrix>  SurfaceGrid;
 
 typedef std::vector<Vector3D> V3Vector;
 typedef std::vector<V3Vector> V3Matrix;
+
 
 /// @class SurfaceArrayCreator
 ///
@@ -80,7 +87,7 @@ public:
                          size_t                             binsPhi,
                          size_t                             binsZ,
                          std::shared_ptr<const Transform3D> transform
-                         = nullptr) const final;
+                         = nullptr) const;
 
   /// SurfaceArrayCreator interface method
   ///
@@ -101,7 +108,8 @@ public:
                          BinningType bTypePhi = equidistant,
                          BinningType bTypeZ   = equidistant,
                          std::shared_ptr<const Transform3D> transform
-                         = nullptr) const final;
+                         = nullptr,
+                         SurfaceMatcher _matcher = isSurfaceEquivalent) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a disc, binned in r, phi when extremas and
@@ -122,14 +130,14 @@ public:
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
-                     double                             rMin,
-                     double                             rMax,
+                     double                             minR,
+                     double                             maxR,
                      double                             minPhi,
                      double                             maxPhi,
                      size_t                             binsR,
                      size_t                             binsPhi,
                      std::shared_ptr<const Transform3D> transform
-                     = nullptr) const final;
+                     = nullptr) const;
 
   /// SurfaceArrayCreator interface method
   ///
@@ -150,7 +158,8 @@ public:
                      BinningType                        bTypeR,
                      BinningType                        bTypePhi,
                      std::shared_ptr<const Transform3D> transform
-                     = nullptr) const final;
+                     = nullptr,
+                     SurfaceMatcher _matcher = isSurfaceEquivalent) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
@@ -173,7 +182,7 @@ public:
                       size_t                             binsX,
                       size_t                             binsY,
                       std::shared_ptr<const Transform3D> transform
-                      = nullptr) const final;
+                      = nullptr) const;
 
   /// Set logging instance
   /// @param logger is the logging instance to be set
@@ -190,6 +199,12 @@ private:
   {
     return *m_logger;
   }
+
+  size_t
+  determineBinCount(const std::vector<const Surface*>& surfaces,
+                    BinningValue                       bValue,
+                    SurfaceMatcher _matcher) const;
+
   /// SurfaceArrayCreator internal method
   /// Creates an arbitrary BinUtility from a vector of (unsorted) surfaces with
   /// PlanarBounds
@@ -214,7 +229,7 @@ private:
                             = nullptr) const;
   /// SurfaceArrayCreator internal method
   /// Creates an equidistant BinUtility when the extremas and the bin number are
-  /// It loops through the surfaces and finds out the needed information
+  /// It loops through the surfaces ggand finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called
   /// "key" surfaces (surfaces with different positions in the binning
   /// direction) are extracted. The number of key surfaces euqals the number of
@@ -228,11 +243,38 @@ private:
   /// (currently possible: binPhi, binR, binZ)
   /// @param transform is the (optional) additional transform applied
   /// @return a unique pointer a one dimensional BinUtility
+  // Acts::BinUtility
+  // createEquidistantBinUtility(
+  // const std::vector<const Surface*>& surfaces,
+  // BinningValue                       bValue,
+  // std::shared_ptr<const Transform3D> transform = nullptr) const;
+
+  static bool
+  isSurfaceEquivalent(BinningValue bValue, const Surface* a, const Surface* b)
+  {
+
+    if (bValue == Acts::binPhi)
+      return (std::abs(a->center().phi() - b->center().phi()) < 10e-12);
+
+    if (bValue == Acts::binZ)
+      return (std::abs(a->center().z() - b->center().z()) < Acts::units::_um);
+
+    if (bValue == Acts::binR)
+      return (std::abs(a->center().perp() - b->center().perp())
+              < Acts::units::_um);
+
+    return false;
+  }
+
+  // overload with matcher lambda, since default value / noop can not be
+  // set
   Acts::BinUtility
   createEquidistantBinUtility(const std::vector<const Surface*>& surfaces,
                               BinningValue                       bValue,
                               std::shared_ptr<const Transform3D> transform
-                              = nullptr) const;
+                              = nullptr,
+                              SurfaceMatcher matcher = isSurfaceEquivalent) const;
+
   /// SurfaceArrayCreator internal method
   /// - create an equidistant BinUtility with all parameters given
   /// - if parameters are known this function is preferred
@@ -305,6 +347,6 @@ private:
                      const std::vector<Acts::Vector2D>& locVertices) const;
 };
 
-}  // end of namespace
+}  // namespace Acts
 
 #endif  // ACTS_TOOLS_SURFACERARRAYCREATOR_H

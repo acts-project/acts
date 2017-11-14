@@ -11,7 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Tools/SurfaceArrayCreator.hpp"
+#include <algorithm>
 #include <cmath>
+#include <functional>
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
@@ -33,8 +35,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with phi x z  = " << binsPhi << " x " << binsZ << " = "
-                                      << binsPhi * binsZ
-                                      << " bins.");
+                                      << binsPhi * binsZ << " bins.");
   // create the 2D bin utility
   // create the (plain) binUtility - with the transform if given
   auto mutableArrayUtility
@@ -100,17 +101,18 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const std::vector<const Surface*>& surfaces,
     BinningType                        bTypePhi,
     BinningType                        bTypeZ,
-    std::shared_ptr<const Transform3D> transform) const
+    std::shared_ptr<const Transform3D> transform,
+    SurfaceMatcher _matcher) const
 {
   // create the 2D bin utility
   // create the (plain) binUtility - with the transform if given
   Acts::BinUtility arrayUtility;
   if (bTypePhi == equidistant)
-    arrayUtility = createEquidistantBinUtility(surfaces, binPhi, transform);
+    arrayUtility = createEquidistantBinUtility(surfaces, binPhi, transform, _matcher);
   else
     arrayUtility = createArbitraryBinUtility(surfaces, binPhi, transform);
   if (bTypeZ == equidistant)
-    arrayUtility += createEquidistantBinUtility(surfaces, binZ);
+    arrayUtility += createEquidistantBinUtility(surfaces, binZ, nullptr, _matcher);
   else
     arrayUtility += createArbitraryBinUtility(surfaces, binZ);
 
@@ -121,8 +123,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with phi x z  = " << bins0 << " x " << bins1 << " = "
-                                      << bins0 * bins1
-                                      << " bins.");
+                                      << bins0 * bins1 << " bins.");
 
   // prepare the surface matrix
   SurfaceGrid sGrid(1, SurfaceMatrix(bins1, SurfaceVector(bins0, nullptr)));
@@ -261,16 +262,17 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     const std::vector<const Surface*>& surfaces,
     BinningType                        bTypeR,
     BinningType                        bTypePhi,
-    std::shared_ptr<const Transform3D> transform) const
+    std::shared_ptr<const Transform3D> transform,
+    SurfaceMatcher _matcher) const
 {
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
   Acts::BinUtility arrayUtility;
   if (bTypeR == equidistant)
-    arrayUtility = createEquidistantBinUtility(surfaces, binR);
+    arrayUtility = createEquidistantBinUtility(surfaces, binR, nullptr, _matcher);
   else
     arrayUtility = createArbitraryBinUtility(surfaces, binR);
   if (bTypePhi == equidistant)
-    arrayUtility += createEquidistantBinUtility(surfaces, binPhi, transform);
+    arrayUtility += createEquidistantBinUtility(surfaces, binPhi, transform, _matcher);
   else
     arrayUtility += createArbitraryBinUtility(surfaces, binPhi, transform);
   // get the number of bins
@@ -346,11 +348,50 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
   return nullptr;
 }
 
+size_t
+Acts::SurfaceArrayCreator::determineBinCount(
+    const std::vector<const Surface*>& surfaces,
+    BinningValue                       bValue,
+    SurfaceMatcher _matcher) const
+{
+
+  std::function<bool(const Acts::Surface*, const Acts::Surface*)> sorter;
+
+  // bind matcher with binning type
+  auto matcher = std::bind(_matcher, bValue, std::placeholders::_1, std::placeholders::_2);
+
+  if (bValue == Acts::binPhi) {
+    sorter = [](const Acts::Surface* a, const Acts::Surface* b) {
+      return (a->center().phi() < b->center().phi());
+    };
+  } else if (bValue == Acts::binZ) {
+    // Z binning
+    // sort first in z
+    sorter = [](const Acts::Surface* a, const Acts::Surface* b) {
+      return (a->center().z() < b->center().z());
+    };
+  } else {
+    // R binning
+    // sort first in r
+    sorter = [](const Acts::Surface* a, const Acts::Surface* b) {
+      return (a->center().perp() < b->center().perp());
+    };
+    };
+  }
+
+  std::vector<const Acts::Surface*> surf(surfaces);
+  std::stable_sort(surf.begin(), surf.end(), sorter);
+  // fill the key surfaces
+  std::vector<const Acts::Surface*> keys;
+  std::unique_copy(begin(surf), end(surf), back_inserter(keys), matcher);
+  return keys.size();
+}
+
 Acts::BinUtility
 Acts::SurfaceArrayCreator::createArbitraryBinUtility(
     const std::vector<const Surface*>& surfaces,
     Acts::BinningValue                 bValue,
-    std::shared_ptr<const Transform3D> /*transform*/) const
+    std::shared_ptr<const Transform3D> transform) const
 {
   if (!surfaces.size())
     throw std::logic_error(
@@ -617,7 +658,8 @@ Acts::BinUtility
 Acts::SurfaceArrayCreator::createEquidistantBinUtility(
     const std::vector<const Surface*>& surfaces,
     BinningValue                       bValue,
-    std::shared_ptr<const Transform3D> /*transform*/) const
+    std::shared_ptr<const Transform3D> transform,
+    SurfaceMatcher _matcher) const
 {
   if (!surfaces.size())
     throw std::logic_error(
@@ -632,38 +674,43 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
   // the key surfaces - placed in different bins in the given binning
   // direction
   std::vector<const Acts::Surface*> keys;
+
+  size_t binNumber = determineBinCount(surfaces, bValue);
+
+  // bind matcher with binning type
+  auto matcher = std::bind(_matcher, bValue, std::placeholders::_1, std::placeholders::_2);
+
   // now check the binning value
   if (bValue == Acts::binPhi) {
     // Phi binning
     // set the binning option for phi
-    bOption = Acts::closed;
     // sort first in phi
-    std::stable_sort(surf.begin(),
-                     surf.end(),
-                     [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (a->center().phi() < b->center().phi());
-                     });
+    const Acts::Surface* maxElem
+        = *std::max_element(surfaces.begin(),
+                            surfaces.end(),
+                            [](const Acts::Surface* a, const Acts::Surface* b) {
+                              return a->center().phi() < b->center().phi();
+                            });
+
     // fill the key surfaces at the different phi positions
     std::unique_copy(begin(surf),
                      end(surf),
                      back_inserter(keys),
-                     [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (std::abs(a->center().phi() - b->center().phi())
-                               < 10e-12);
-                     });
-    // set minimum and maximum
-    double max = keys.back()->center().phi();
+                     matcher);
 
-    // if only one surface is given
+    // multiple surfaces, we bin from -pi to pi closed
     if (keys.size() > 1) {
+      bOption = Acts::closed;
 
       minimum = -M_PI;
       maximum = M_PI;
 
-      double step = 2 * M_PI / keys.size();
+      // double step = 2 * M_PI / keys.size();
+      double step = 2 * M_PI / binNumber;
       // rotate to max phi module plus one half step
       // this should make sure that phi wrapping at +- pi
       // never falls on a module center
+      double max   = maxElem->center().phi();
       double angle = M_PI - (max + 0.5 * step);
 
       if (transform == nullptr) {
@@ -675,7 +722,12 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
       }
 
     } else {
+      // only one surface
       // calculate minimum and maximum in case only one surface is given
+
+      // binning is open if only one element in phi
+      bOption = Acts::open;
+
       // first get the bounds
       const Acts::PlanarBounds* planarBounds
           = dynamic_cast<const Acts::PlanarBounds*>(&(keys.front()->bounds()));
@@ -691,8 +743,11 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
           [](const Acts::Vector3D& a, const Acts::Vector3D& b) {
             return (a.phi() < b.phi());
           });
+
       minimum = minmax.first->phi();
       maximum = minmax.second->phi();
+
+      // we do not need a transform in this case
     }
 
   } else if (bValue == Acts::binZ) {
@@ -707,40 +762,30 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
     std::unique_copy(begin(surf),
                      end(surf),
                      back_inserter(keys),
-                     [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (std::abs(a->center().z() - b->center().z())
-                               < Acts::units::_um);
-                     });
+                     matcher);
     // set minimum and maximum
-    double min = keys.front()->center().z();
-    double max = keys.back()->center().z();
+    // double min = keys.front()->center().z();
+    // double max = keys.back()->center().z();
 
-    // if only one surface is given
-    if (keys.size() > 1) {
-      double step = fabs(max - min) / (keys.size() - 1);
-      minimum     = min - 0.5 * step;
-      maximum     = max + 0.5 * step;
+    maximum = std::numeric_limits<double>::min();
+    minimum = std::numeric_limits<double>::max();
 
-    } else {
-      // calculate minimum and maximum in case only one surface is given
-      // first get the bounds
+    // iterate over all vertices and calculate minz and maxz
+    for (const auto& key : keys) {
       const Acts::PlanarBounds* planarBounds
-          = dynamic_cast<const Acts::PlanarBounds*>(&(keys.front()->bounds()));
+          = dynamic_cast<const Acts::PlanarBounds*>(&(key->bounds()));
       if (!planarBounds)
         ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
                    "other bounds yet! ");
-      // get the vertices
+
       std::vector<Acts::Vector3D> globVertices
-          = makeGlobalVertices(*keys.front(), planarBounds->vertices());
-      auto minmax = std::minmax_element(
-          globVertices.begin(),
-          globVertices.end(),
-          [](const Acts::Vector3D& a, const Acts::Vector3D& b) {
-            return (a.z() < b.z());
-          });
-      minimum = minmax.first->z();
-      maximum = minmax.second->z();
+          = makeGlobalVertices(*key, planarBounds->vertices());
+      for (const auto& vtx : globVertices) {
+        maximum = std::max(maximum, vtx.z());
+        minimum = std::min(minimum, vtx.z());
+      }
     }
+
   } else {
     // R binning
     // sort first in r
@@ -753,43 +798,29 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
     std::unique_copy(begin(surf),
                      end(surf),
                      back_inserter(keys),
-                     [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (std::abs(a->center().perp() - b->center().perp())
-                               < Acts::units::_um);
-                     });
+                     matcher);
     // set the minimum and maximum
-    double min = keys.front()->center().perp();
-    double max = keys.back()->center().perp();
 
-    // if only one surface is given
-    if (keys.size() > 1) {
-      double step = std::abs(max - min) / (keys.size() - 1);
-      minimum     = min - 0.5 * step;
-      maximum     = max + 0.5 * step;
+    maximum = std::numeric_limits<double>::min();
+    minimum = std::numeric_limits<double>::max();
 
-    } else {
-      // calculate minimum and maximum in case only one surface is given
-      // first get the bounds
+    // iterate over all vertices and calculate minz and maxz
+    for (const auto& key : keys) {
       const Acts::PlanarBounds* planarBounds
-          = dynamic_cast<const Acts::PlanarBounds*>(&(keys.front()->bounds()));
+          = dynamic_cast<const Acts::PlanarBounds*>(&(key->bounds()));
       if (!planarBounds)
         ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
                    "other bounds yet! ");
-      // get the vertices
+
       std::vector<Acts::Vector3D> globVertices
-          = makeGlobalVertices(*keys.front(), planarBounds->vertices());
-      auto minmax = std::minmax_element(
-          globVertices.begin(),
-          globVertices.end(),
-          [](const Acts::Vector3D& a, const Acts::Vector3D& b) {
-            return (a.perp() < b.perp());
-          });
-      minimum = minmax.first->perp();
-      maximum = minmax.second->perp();
+          = makeGlobalVertices(*key, planarBounds->vertices());
+      for (const auto& vtx : globVertices) {
+        maximum = std::max(maximum, vtx.perp());
+        minimum = std::min(minimum, vtx.perp());
+      }
     }
   }
   // assign the bin size
-  double binNumber = keys.size();
   ACTS_VERBOSE("Create BinUtility for BinnedSurfaceArray with equidistant "
                "BinningType");
   ACTS_VERBOSE("	BinningValue: " << bValue);
@@ -806,7 +837,7 @@ Acts::BinUtility
 Acts::SurfaceArrayCreator::createBinUtility(
     const std::vector<const Surface*>& surfaces,
     BinningValue                       bValue,
-    BinningType /*bType*/,
+    BinningType                        bType,
     size_t                             bins,
     double                             min,
     double                             max,
@@ -882,7 +913,7 @@ Acts::SurfaceArrayCreator::registerNeighbourHood(SurfaceArray& sArray) const
 /// @todo implement nearest neighbour search - this is brute force attack
 /// - takes too long otherwise in initialization
 void
-Acts::SurfaceArrayCreator::completeBinning(const BinUtility& /*binUtility*/,
+Acts::SurfaceArrayCreator::completeBinning(const BinUtility&    binUtility,
                                            const V3Matrix&      v3Matrix,
                                            const SurfaceVector& sVector,
                                            SurfaceGrid&         sGrid) const
