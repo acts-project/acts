@@ -13,7 +13,6 @@
 #ifndef ACTS_TOOLS_SURFACERARRAYCREATOR_H
 #define ACTS_TOOLS_SURFACERARRAYCREATOR_H 1
 
-#include "ACTS/Tools/ISurfaceArrayCreator.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
 
@@ -38,7 +37,7 @@ typedef std::vector<V3Vector> V3Matrix;
 /// It is designed create sub surface arrays to be ordered on Surfaces
 ///
 /// @todo write more documentation on how this is done
-class SurfaceArrayCreator : virtual public ISurfaceArrayCreator
+class SurfaceArrayCreator 
 {
 public:
   friend Acts::Test::SurfaceArrayCreatorFixture;

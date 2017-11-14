@@ -13,9 +13,11 @@
 #ifndef ACTS_GEOMETRYTOOLS_LAYERCREATOR_H
 #define ACTS_GEOMETRYTOOLS_LAYERCREATOR_H 1
 
-#include "ACTS/Tools/ILayerCreator.hpp"
-#include "ACTS/Tools/ISurfaceArrayCreator.hpp"
 #include "ACTS/Utilities/Logger.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/ApproachDescriptor.hpp"
+#include "ACTS/Utilities/BinUtility.hpp"
+#include "ACTS/Tools/SurfaceArrayCreator.hpp"
 
 #ifndef ACTS_LAYERCREATOR_TAKESMALLERBIGGER
 #define ACTS_LAYERCREATOR_TAKESMALLERBIGGER
@@ -28,13 +30,16 @@
 
 namespace Acts {
 
-class ISurfaceArrayCreator;
+class Surface;
+class Layer;
+typedef std::shared_ptr<Layer>       MutableLayerPtr;
+
 /// @class LayerCreator
 ///
 /// The LayerCreator is able to build cylinde,r disc layers or plane layers from
 /// detector elements
 ///
-class LayerCreator : public ILayerCreator
+class LayerCreator
 {
 public:
   ///  @struct Config
@@ -43,7 +48,7 @@ public:
   struct Config
   {
     /// surface array helper
-    std::shared_ptr<const ISurfaceArrayCreator> surfaceArrayCreator = nullptr;
+    std::shared_ptr<const SurfaceArrayCreator> surfaceArrayCreator = nullptr;
     /// cylinder module z tolerance : it counts at same z, if ...
     double cylinderZtolerance;
     /// cylinder module phi tolerance : it counts at same phi, if ...
@@ -64,7 +69,7 @@ public:
   /// Destructor
   ~LayerCreator() = default;
 
-  /// ILayerCreator interface method - returning a cylindrical layer
+  /// returning a cylindrical layer
   ///
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
@@ -88,9 +93,9 @@ public:
                 size_t                              binsZ,
                 std::shared_ptr<const Transform3D>  transform = nullptr,
                 std::unique_ptr<ApproachDescriptor> ad
-                = nullptr) const override;
+                = nullptr) const;
 
-  /// ILayerCreator interface method - returning a cylindrical layer
+  /// returning a cylindrical layer
   ///
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
@@ -116,9 +121,9 @@ public:
                 BinningType                         bTypeZ,
                 std::shared_ptr<const Transform3D>  transform = nullptr,
                 std::unique_ptr<ApproachDescriptor> ad
-                = nullptr) const override;
+                = nullptr) const;
 
-  /// ILayerCreator interface method - returning a cylindrical layer
+  /// returning a cylindrical layer
   ///
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
@@ -144,9 +149,9 @@ public:
                 BinningType                         bTypeZ,
                 std::shared_ptr<const Transform3D>  transform = nullptr,
                 std::unique_ptr<ApproachDescriptor> ad
-                = nullptr) const override;
+                = nullptr) const;
 
-  /// ILayerCreator interface method - returning a cylindrical layer
+  /// returning a cylindrical layer
   ///
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
@@ -171,9 +176,9 @@ public:
             size_t                              binsR,
             size_t                              binsPhi,
             std::shared_ptr<const Transform3D>  transform = nullptr,
-            std::unique_ptr<ApproachDescriptor> ad = nullptr) const override;
+            std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
-  /// ILayerCreator interface method - returning a cylindrical layer
+  /// returning a cylindrical layer
   ///
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
@@ -200,9 +205,9 @@ public:
             BinningType                         bTypeR,
             BinningType                         bTypePhi,
             std::shared_ptr<const Transform3D>  transform = nullptr,
-            std::unique_ptr<ApproachDescriptor> ad = nullptr) const override;
+            std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
-  /// ILayerCreator interface method - returning a cylindrical layer
+  /// returning a cylindrical layer
   ///
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
@@ -227,9 +232,9 @@ public:
             BinningType                         bTypeR,
             BinningType                         bTypePhi,
             std::shared_ptr<const Transform3D>  transform = nullptr,
-            std::unique_ptr<ApproachDescriptor> ad = nullptr) const override;
+            std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
-  /// ILayerCreator interface method - returning a cylindrical layer
+  /// returning a cylindrical layer
   ///
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
@@ -252,7 +257,7 @@ public:
              size_t                              binsX,
              size_t                              binsY,
              std::shared_ptr<const Transform3D>  transform = nullptr,
-             std::unique_ptr<ApproachDescriptor> ad = nullptr) const override;
+             std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
   /// Set the configuration object
   /// @param lcConfig is the configuration struct
