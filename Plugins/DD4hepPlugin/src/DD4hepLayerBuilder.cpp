@@ -17,7 +17,7 @@
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Tools/ILayerCreator.hpp"
+#include "ACTS/Tools/LayerCreator.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/BinnedArrayXD.hpp"
 #include "ACTS/Utilities/Units.hpp"
