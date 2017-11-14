@@ -101,6 +101,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const std::vector<const Surface*>& surfaces,
     BinningType                        bTypePhi,
     BinningType                        bTypeZ,
+    double envelopePhi,
+    double envelopeZ,
     std::shared_ptr<const Transform3D> transform,
     SurfaceMatcher _matcher) const
 {
@@ -108,11 +110,11 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   // create the (plain) binUtility - with the transform if given
   Acts::BinUtility arrayUtility;
   if (bTypePhi == equidistant)
-    arrayUtility = createEquidistantBinUtility(surfaces, binPhi, transform, _matcher);
+    arrayUtility = createEquidistantBinUtility(surfaces, binPhi, envelopePhi, transform, _matcher);
   else
     arrayUtility = createArbitraryBinUtility(surfaces, binPhi, transform);
   if (bTypeZ == equidistant)
-    arrayUtility += createEquidistantBinUtility(surfaces, binZ, nullptr, _matcher);
+    arrayUtility += createEquidistantBinUtility(surfaces, binZ, envelopeZ, nullptr, _matcher);
   else
     arrayUtility += createArbitraryBinUtility(surfaces, binZ);
 
@@ -262,17 +264,19 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     const std::vector<const Surface*>& surfaces,
     BinningType                        bTypeR,
     BinningType                        bTypePhi,
+    double envelopeR,
+    double envelopePhi,
     std::shared_ptr<const Transform3D> transform,
     SurfaceMatcher _matcher) const
 {
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
   Acts::BinUtility arrayUtility;
   if (bTypeR == equidistant)
-    arrayUtility = createEquidistantBinUtility(surfaces, binR, nullptr, _matcher);
+    arrayUtility = createEquidistantBinUtility(surfaces, binR, envelopeR, nullptr, _matcher);
   else
     arrayUtility = createArbitraryBinUtility(surfaces, binR);
   if (bTypePhi == equidistant)
-    arrayUtility += createEquidistantBinUtility(surfaces, binPhi, transform, _matcher);
+    arrayUtility += createEquidistantBinUtility(surfaces, binPhi, envelopePhi, transform, _matcher);
   else
     arrayUtility += createArbitraryBinUtility(surfaces, binPhi, transform);
   // get the number of bins
@@ -375,7 +379,6 @@ Acts::SurfaceArrayCreator::determineBinCount(
     // sort first in r
     sorter = [](const Acts::Surface* a, const Acts::Surface* b) {
       return (a->center().perp() < b->center().perp());
-    };
     };
   }
 
@@ -658,6 +661,7 @@ Acts::BinUtility
 Acts::SurfaceArrayCreator::createEquidistantBinUtility(
     const std::vector<const Surface*>& surfaces,
     BinningValue                       bValue,
+    double envelope, 
     std::shared_ptr<const Transform3D> transform,
     SurfaceMatcher _matcher) const
 {
@@ -675,7 +679,7 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
   // direction
   std::vector<const Acts::Surface*> keys;
 
-  size_t binNumber = determineBinCount(surfaces, bValue);
+  size_t binNumber = determineBinCount(surfaces, bValue, _matcher);
 
   // bind matcher with binning type
   auto matcher = std::bind(_matcher, bValue, std::placeholders::_1, std::placeholders::_2);
@@ -744,8 +748,8 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
             return (a.phi() < b.phi());
           });
 
-      minimum = minmax.first->phi();
-      maximum = minmax.second->phi();
+      minimum = minmax.first->phi() - envelope;
+      maximum = minmax.second->phi() + envelope;
 
       // we do not need a transform in this case
     }
@@ -786,6 +790,9 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
       }
     }
 
+    maximum += envelope;
+    minimum -= envelope;
+
   } else {
     // R binning
     // sort first in r
@@ -819,6 +826,9 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
         minimum = std::min(minimum, vtx.perp());
       }
     }
+    
+    maximum += envelope;
+    minimum -= envelope;
   }
   // assign the bin size
   ACTS_VERBOSE("Create BinUtility for BinnedSurfaceArray with equidistant "
@@ -828,6 +838,7 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                "binRPhi = 5, binH = 6, binEta = 7)");
   ACTS_VERBOSE("	Number of bins: " << binNumber);
   ACTS_VERBOSE("	(Min/Max) = (" << minimum << "/" << maximum << ")");
+  ACTS_VERBOSE("  Envelope = " << envelope)
 
   return (Acts::BinUtility(
       binNumber, minimum, maximum, bOption, bValue, transform));

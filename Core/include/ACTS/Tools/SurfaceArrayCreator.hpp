@@ -26,8 +26,8 @@ namespace Test {
 }
 
 typedef BinnedArray<const Surface*> SurfaceArray;
-using SurfaceMatcher = std::function<
-    bool(BinningValue, const Surface*, const Surface*)>;
+using SurfaceMatcher
+    = std::function<bool(BinningValue, const Surface*, const Surface*)>;
 
 class BinUtility;
 
@@ -38,13 +38,12 @@ typedef std::vector<SurfaceMatrix>  SurfaceGrid;
 typedef std::vector<Vector3D> V3Vector;
 typedef std::vector<V3Vector> V3Matrix;
 
-
 /// @class SurfaceArrayCreator
 ///
 /// It is designed create sub surface arrays to be ordered on Surfaces
 ///
 /// @todo write more documentation on how this is done
-class SurfaceArrayCreator 
+class SurfaceArrayCreator
 {
 public:
   friend Acts::Test::SurfaceArrayCreatorFixture;
@@ -105,10 +104,11 @@ public:
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<Acts::SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
-                         BinningType bTypePhi = equidistant,
-                         BinningType bTypeZ   = equidistant,
-                         std::shared_ptr<const Transform3D> transform
-                         = nullptr,
+                         BinningType bTypePhi    = equidistant,
+                         BinningType bTypeZ      = equidistant,
+                         double      envelopePhi = 0,
+                         double      envelopeZ   = 0,
+                         std::shared_ptr<const Transform3D> transform = nullptr,
                          SurfaceMatcher _matcher = isSurfaceEquivalent) const;
 
   /// SurfaceArrayCreator interface method
@@ -157,8 +157,9 @@ public:
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
                      BinningType                        bTypeR,
                      BinningType                        bTypePhi,
-                     std::shared_ptr<const Transform3D> transform
-                     = nullptr,
+                     double                             envelopeR   = 0,
+                     double                             envelopePhi = 0,
+                     std::shared_ptr<const Transform3D> transform   = nullptr,
                      SurfaceMatcher _matcher = isSurfaceEquivalent) const;
 
   /// SurfaceArrayCreator interface method
@@ -203,7 +204,7 @@ private:
   size_t
   determineBinCount(const std::vector<const Surface*>& surfaces,
                     BinningValue                       bValue,
-                    SurfaceMatcher _matcher) const;
+                    SurfaceMatcher                     _matcher) const;
 
   /// SurfaceArrayCreator internal method
   /// Creates an arbitrary BinUtility from a vector of (unsorted) surfaces with
@@ -271,9 +272,11 @@ private:
   Acts::BinUtility
   createEquidistantBinUtility(const std::vector<const Surface*>& surfaces,
                               BinningValue                       bValue,
+                              double envelope = 0,
                               std::shared_ptr<const Transform3D> transform
                               = nullptr,
-                              SurfaceMatcher matcher = isSurfaceEquivalent) const;
+                              SurfaceMatcher matcher
+                              = isSurfaceEquivalent) const;
 
   /// SurfaceArrayCreator internal method
   /// - create an equidistant BinUtility with all parameters given

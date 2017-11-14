@@ -90,19 +90,18 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
                                        << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray = nullptr;
-  if (surfaces.size()) {
-    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(surfaces,
-                                                               layerR,
-                                                               minPhi,
-                                                               maxPhi,
-                                                               layerHalfZ,
-                                                               binsPhi,
-                                                               binsZ,
-                                                               transform);
+  std::unique_ptr<SurfaceArray> sArray
+      = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(surfaces,
+                                                          layerR,
+                                                          minPhi,
+                                                          maxPhi,
+                                                          layerHalfZ,
+                                                          binsPhi,
+                                                          binsZ,
+                                                          transform);
 
-    checkBinning(sArray->objectGrid(), surfaces);
-  }
+  checkBinning(sArray->objectGrid(), surfaces);
+
   // create the layer and push it back
   std::shared_ptr<const CylinderBounds> cBounds(
       new CylinderBounds(layerR, layerHalfZ + envelopeZ));
@@ -146,13 +145,12 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray = nullptr;
-  if (surfaces.size()) {
-    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        surfaces, bTypePhi, bTypeZ, transform);
+  std::unique_ptr<SurfaceArray> sArray
+      = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
+          surfaces, bTypePhi, bTypeZ, 0, 0, transform);
 
-    checkBinning(sArray->objectGrid(), surfaces);
-  }
+  checkBinning(sArray->objectGrid(), surfaces);
+
   // create the layer and push it back
   std::shared_ptr<const CylinderBounds> cBounds(
       new CylinderBounds(layerR, layerHalfZ));
@@ -210,13 +208,12 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray = nullptr;
-  if (surfaces.size()) {
-    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        surfaces, bTypePhi, bTypeZ, transform);
+  std::unique_ptr<SurfaceArray> sArray
+      = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
+          surfaces, bTypePhi, bTypeZ, 0, 0, transform);
 
-    checkBinning(sArray->objectGrid(), surfaces);
-  }
+  checkBinning(sArray->objectGrid(), surfaces);
+
   // create the layer and push it back
   std::shared_ptr<const CylinderBounds> cBounds(
       new CylinderBounds(layerR, layerHalfZ + envelopeZ));
@@ -281,13 +278,12 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                                        << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray = nullptr;
-  if (surfaces.size()) {
-    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        surfaces, minR, maxR, minPhi, maxPhi, binsR, binsPhi, transform);
+  std::unique_ptr<SurfaceArray> sArray
+      = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
+          surfaces, minR, maxR, minPhi, maxPhi, binsR, binsPhi, transform);
 
-    checkBinning(sArray->objectGrid(), surfaces);
-  }
+  checkBinning(sArray->objectGrid(), surfaces);
+
   // create the share disc bounds
   auto dBounds = std::make_shared<const RadialBounds>(minR - envelopeMinR,
                                                       maxR + envelopeMaxR);
@@ -335,13 +331,12 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray = nullptr;
-  if (surfaces.size()) {
-    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        surfaces, bTypeR, bTypePhi, transform);
+  std::unique_ptr<SurfaceArray> sArray
+      = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
+          surfaces, bTypeR, bTypePhi, 0, 0, transform);
 
-    checkBinning(sArray->objectGrid(), surfaces);
-  }
+  checkBinning(sArray->objectGrid(), surfaces);
+
   // create the shared disc bounds
   auto dBounds = std::make_shared<const RadialBounds>(layerRmin, layerRmax);
 
@@ -401,13 +396,12 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray = nullptr;
-  if (surfaces.size()) {
-    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        surfaces, bTypeR, bTypePhi, transform);
+  std::unique_ptr<SurfaceArray> sArray
+      = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
+          surfaces, bTypeR, bTypePhi, 0, 0, transform);
 
-    checkBinning(sArray->objectGrid(), surfaces);
-  }
+  checkBinning(sArray->objectGrid(), surfaces);
+
   // create the share disc bounds
   auto dBounds = std::make_shared<const RadialBounds>(minR - envelopeMinR,
                                                       maxR + envelopeMaxR);
@@ -520,13 +514,11 @@ Acts::LayerCreator::radialDistance(const Vector3D& pos1,
 void
 Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const
 {
-  if (layer.surfaceArray()) {
-    auto surfaces = layer.surfaceArray()->arrayObjects();
+  auto surfaces = layer.surfaceArray()->arrayObjects();
 
-    for (auto& surface : surfaces) {
-      auto mutableSurface = const_cast<Surface*>(surface);
-      mutableSurface->associateLayer(layer);
-    }
+  for (auto& surface : surfaces) {
+    auto mutableSurface = const_cast<Surface*>(surface);
+    mutableSurface->associateLayer(layer);
   }
 }
 
