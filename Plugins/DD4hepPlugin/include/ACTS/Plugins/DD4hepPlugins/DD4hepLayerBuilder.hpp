@@ -11,6 +11,7 @@
 
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Tools/ILayerBuilder.hpp"
+#include "ACTS/Tools/LayerCreator.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
