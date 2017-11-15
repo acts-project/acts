@@ -13,9 +13,9 @@
 #ifndef ACTS_UTILITIES_APPROACHDESCRIPTOR_H
 #define ACTS_UTILITIES_APPROACHDESCRIPTOR_H 1
 
+#include <vector>
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Intersection.hpp"
-#include <vector>
 
 namespace Acts {
 

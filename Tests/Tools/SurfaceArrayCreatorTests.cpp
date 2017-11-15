@@ -442,7 +442,6 @@ namespace Test {
     BOOST_CHECK_SMALL(bd.max - (Vector3D(20 + 2, 1, 0)).perp(), 1e-3);
     BOOST_CHECK_SMALL(bd.min - (Vector3D(10 - 2, 1, 0)).perp(), 1e-3);
   }
-    
 
   /*
   std::mt19937 gen(42);

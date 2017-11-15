@@ -24,7 +24,6 @@ class DetElement;
 
 namespace Acts {
 
-
 /// @brief build layers of one cylinder-endcap setup from DD4hep input
 ///
 /// This class is an implementation of the Acts::ILayerBuilder,

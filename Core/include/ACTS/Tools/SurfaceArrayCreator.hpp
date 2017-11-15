@@ -18,7 +18,6 @@
 #include "ACTS/Utilities/Logger.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
-
 namespace Acts {
 
 namespace Test {
@@ -272,7 +271,7 @@ private:
   Acts::BinUtility
   createEquidistantBinUtility(const std::vector<const Surface*>& surfaces,
                               BinningValue                       bValue,
-                              double envelope = 0,
+                              double                             envelope = 0,
                               std::shared_ptr<const Transform3D> transform
                               = nullptr,
                               SurfaceMatcher matcher

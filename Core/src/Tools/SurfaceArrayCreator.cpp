@@ -35,7 +35,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with phi x z  = " << binsPhi << " x " << binsZ << " = "
-                                      << binsPhi * binsZ << " bins.");
+                                      << binsPhi * binsZ
+                                      << " bins.");
   // create the 2D bin utility
   // create the (plain) binUtility - with the transform if given
   auto mutableArrayUtility
@@ -101,20 +102,22 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const std::vector<const Surface*>& surfaces,
     BinningType                        bTypePhi,
     BinningType                        bTypeZ,
-    double envelopePhi,
-    double envelopeZ,
+    double                             envelopePhi,
+    double                             envelopeZ,
     std::shared_ptr<const Transform3D> transform,
-    SurfaceMatcher _matcher) const
+    SurfaceMatcher                     _matcher) const
 {
   // create the 2D bin utility
   // create the (plain) binUtility - with the transform if given
   Acts::BinUtility arrayUtility;
   if (bTypePhi == equidistant)
-    arrayUtility = createEquidistantBinUtility(surfaces, binPhi, envelopePhi, transform, _matcher);
+    arrayUtility = createEquidistantBinUtility(
+        surfaces, binPhi, envelopePhi, transform, _matcher);
   else
     arrayUtility = createArbitraryBinUtility(surfaces, binPhi, transform);
   if (bTypeZ == equidistant)
-    arrayUtility += createEquidistantBinUtility(surfaces, binZ, envelopeZ, nullptr, _matcher);
+    arrayUtility += createEquidistantBinUtility(
+        surfaces, binZ, envelopeZ, nullptr, _matcher);
   else
     arrayUtility += createArbitraryBinUtility(surfaces, binZ);
 
@@ -125,7 +128,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with phi x z  = " << bins0 << " x " << bins1 << " = "
-                                      << bins0 * bins1 << " bins.");
+                                      << bins0 * bins1
+                                      << " bins.");
 
   // prepare the surface matrix
   SurfaceGrid sGrid(1, SurfaceMatrix(bins1, SurfaceVector(bins0, nullptr)));
@@ -264,19 +268,21 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     const std::vector<const Surface*>& surfaces,
     BinningType                        bTypeR,
     BinningType                        bTypePhi,
-    double envelopeR,
-    double envelopePhi,
+    double                             envelopeR,
+    double                             envelopePhi,
     std::shared_ptr<const Transform3D> transform,
-    SurfaceMatcher _matcher) const
+    SurfaceMatcher                     _matcher) const
 {
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
   Acts::BinUtility arrayUtility;
   if (bTypeR == equidistant)
-    arrayUtility = createEquidistantBinUtility(surfaces, binR, envelopeR, nullptr, _matcher);
+    arrayUtility = createEquidistantBinUtility(
+        surfaces, binR, envelopeR, nullptr, _matcher);
   else
     arrayUtility = createArbitraryBinUtility(surfaces, binR);
   if (bTypePhi == equidistant)
-    arrayUtility += createEquidistantBinUtility(surfaces, binPhi, envelopePhi, transform, _matcher);
+    arrayUtility += createEquidistantBinUtility(
+        surfaces, binPhi, envelopePhi, transform, _matcher);
   else
     arrayUtility += createArbitraryBinUtility(surfaces, binPhi, transform);
   // get the number of bins
@@ -356,13 +362,14 @@ size_t
 Acts::SurfaceArrayCreator::determineBinCount(
     const std::vector<const Surface*>& surfaces,
     BinningValue                       bValue,
-    SurfaceMatcher _matcher) const
+    SurfaceMatcher                     _matcher) const
 {
 
   std::function<bool(const Acts::Surface*, const Acts::Surface*)> sorter;
 
   // bind matcher with binning type
-  auto matcher = std::bind(_matcher, bValue, std::placeholders::_1, std::placeholders::_2);
+  auto matcher = std::bind(
+      _matcher, bValue, std::placeholders::_1, std::placeholders::_2);
 
   if (bValue == Acts::binPhi) {
     sorter = [](const Acts::Surface* a, const Acts::Surface* b) {
@@ -661,9 +668,9 @@ Acts::BinUtility
 Acts::SurfaceArrayCreator::createEquidistantBinUtility(
     const std::vector<const Surface*>& surfaces,
     BinningValue                       bValue,
-    double envelope, 
+    double                             envelope,
     std::shared_ptr<const Transform3D> transform,
-    SurfaceMatcher _matcher) const
+    SurfaceMatcher                     _matcher) const
 {
   if (!surfaces.size())
     throw std::logic_error(
@@ -682,7 +689,8 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
   size_t binNumber = determineBinCount(surfaces, bValue, _matcher);
 
   // bind matcher with binning type
-  auto matcher = std::bind(_matcher, bValue, std::placeholders::_1, std::placeholders::_2);
+  auto matcher = std::bind(
+      _matcher, bValue, std::placeholders::_1, std::placeholders::_2);
 
   // now check the binning value
   if (bValue == Acts::binPhi) {
@@ -697,10 +705,7 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                             });
 
     // fill the key surfaces at the different phi positions
-    std::unique_copy(begin(surf),
-                     end(surf),
-                     back_inserter(keys),
-                     matcher);
+    std::unique_copy(begin(surf), end(surf), back_inserter(keys), matcher);
 
     // multiple surfaces, we bin from -pi to pi closed
     if (keys.size() > 1) {
@@ -763,10 +768,7 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                        return (a->center().z() < b->center().z());
                      });
     // fill the key surfaces at the different z positions
-    std::unique_copy(begin(surf),
-                     end(surf),
-                     back_inserter(keys),
-                     matcher);
+    std::unique_copy(begin(surf), end(surf), back_inserter(keys), matcher);
     // set minimum and maximum
     // double min = keys.front()->center().z();
     // double max = keys.back()->center().z();
@@ -802,10 +804,7 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
                        return (a->center().perp() < b->center().perp());
                      });
     // fill the key surfaces at the different r positions
-    std::unique_copy(begin(surf),
-                     end(surf),
-                     back_inserter(keys),
-                     matcher);
+    std::unique_copy(begin(surf), end(surf), back_inserter(keys), matcher);
     // set the minimum and maximum
 
     maximum = std::numeric_limits<double>::min();
@@ -826,7 +825,7 @@ Acts::SurfaceArrayCreator::createEquidistantBinUtility(
         minimum = std::min(minimum, vtx.perp());
       }
     }
-    
+
     maximum += envelope;
     minimum -= envelope;
   }

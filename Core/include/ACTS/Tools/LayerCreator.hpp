@@ -13,11 +13,11 @@
 #ifndef ACTS_GEOMETRYTOOLS_LAYERCREATOR_H
 #define ACTS_GEOMETRYTOOLS_LAYERCREATOR_H 1
 
-#include "ACTS/Utilities/Logger.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Tools/SurfaceArrayCreator.hpp"
 #include "ACTS/Utilities/ApproachDescriptor.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
-#include "ACTS/Tools/SurfaceArrayCreator.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Logger.hpp"
 
 #ifndef ACTS_LAYERCREATOR_TAKESMALLERBIGGER
 #define ACTS_LAYERCREATOR_TAKESMALLERBIGGER
@@ -32,7 +32,7 @@ namespace Acts {
 
 class Surface;
 class Layer;
-typedef std::shared_ptr<Layer>       MutableLayerPtr;
+typedef std::shared_ptr<Layer> MutableLayerPtr;
 
 /// @class LayerCreator
 ///
@@ -92,8 +92,7 @@ public:
                 size_t                              binsPhi,
                 size_t                              binsZ,
                 std::shared_ptr<const Transform3D>  transform = nullptr,
-                std::unique_ptr<ApproachDescriptor> ad
-                = nullptr) const;
+                std::unique_ptr<ApproachDescriptor> ad        = nullptr) const;
 
   /// returning a cylindrical layer
   ///
@@ -120,8 +119,7 @@ public:
                 BinningType                         bTypePhi,
                 BinningType                         bTypeZ,
                 std::shared_ptr<const Transform3D>  transform = nullptr,
-                std::unique_ptr<ApproachDescriptor> ad
-                = nullptr) const;
+                std::unique_ptr<ApproachDescriptor> ad        = nullptr) const;
 
   /// returning a cylindrical layer
   ///
@@ -148,8 +146,7 @@ public:
                 BinningType                         bTypePhi,
                 BinningType                         bTypeZ,
                 std::shared_ptr<const Transform3D>  transform = nullptr,
-                std::unique_ptr<ApproachDescriptor> ad
-                = nullptr) const;
+                std::unique_ptr<ApproachDescriptor> ad        = nullptr) const;
 
   /// returning a cylindrical layer
   ///
@@ -176,7 +173,7 @@ public:
             size_t                              binsR,
             size_t                              binsPhi,
             std::shared_ptr<const Transform3D>  transform = nullptr,
-            std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+            std::unique_ptr<ApproachDescriptor> ad        = nullptr) const;
 
   /// returning a cylindrical layer
   ///
@@ -205,7 +202,7 @@ public:
             BinningType                         bTypeR,
             BinningType                         bTypePhi,
             std::shared_ptr<const Transform3D>  transform = nullptr,
-            std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+            std::unique_ptr<ApproachDescriptor> ad        = nullptr) const;
 
   /// returning a cylindrical layer
   ///
@@ -232,7 +229,7 @@ public:
             BinningType                         bTypeR,
             BinningType                         bTypePhi,
             std::shared_ptr<const Transform3D>  transform = nullptr,
-            std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+            std::unique_ptr<ApproachDescriptor> ad        = nullptr) const;
 
   /// returning a cylindrical layer
   ///
@@ -257,7 +254,7 @@ public:
              size_t                              binsX,
              size_t                              binsY,
              std::shared_ptr<const Transform3D>  transform = nullptr,
-             std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+             std::unique_ptr<ApproachDescriptor> ad        = nullptr) const;
 
   /// Set the configuration object
   /// @param lcConfig is the configuration struct
