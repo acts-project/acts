@@ -13,14 +13,14 @@
 #ifndef ACTS_TOOLS_SURFACERARRAYCREATOR_H
 #define ACTS_TOOLS_SURFACERARRAYCREATOR_H 1
 
+#include <boost/none.hpp>
+#include <boost/optional.hpp>
 #include "ACTS/Layers/ProtoLayer.hpp"
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
 #include "ACTS/Utilities/Units.hpp"
-#include <boost/optional.hpp>
-#include <boost/none.hpp>
 
 namespace Acts {
 
@@ -97,7 +97,7 @@ public:
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
                          size_t                             binsPhi,
                          size_t                             binsZ,
-                         boost::optional<ProtoLayer>        protoLayer = boost::none,
+                         boost::optional<ProtoLayer> protoLayer = boost::none,
                          std::shared_ptr<const Transform3D> transform
                          = nullptr) const;
 
@@ -118,9 +118,9 @@ public:
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<Acts::SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
-                         BinningType bTypePhi = equidistant,
-                         BinningType bTypeZ   = equidistant,
-                         boost::optional<ProtoLayer>        protoLayer = boost::none,
+                         BinningType                 bTypePhi   = equidistant,
+                         BinningType                 bTypeZ     = equidistant,
+                         boost::optional<ProtoLayer> protoLayer = boost::none,
                          std::shared_ptr<const Transform3D> transform
                          = nullptr) const;
 
@@ -142,7 +142,7 @@ public:
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
                      size_t                             binsR,
                      size_t                             binsPhi,
-                     boost::optional<ProtoLayer>        protoLayer = boost::none,
+                     boost::optional<ProtoLayer> protoLayer = boost::none,
                      std::shared_ptr<const Transform3D> transform
                      = nullptr) const;
 
@@ -165,7 +165,7 @@ public:
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
                      BinningType                        bTypeR,
                      BinningType                        bTypePhi,
-                     boost::optional<ProtoLayer>        protoLayer = boost::none,
+                     boost::optional<ProtoLayer> protoLayer = boost::none,
                      std::shared_ptr<const Transform3D> transform
                      = nullptr) const;
 

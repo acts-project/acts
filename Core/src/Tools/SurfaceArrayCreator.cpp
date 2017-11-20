@@ -98,7 +98,6 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   return sArray;
 }
 
-
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const std::vector<const Surface*>& surfaces,
