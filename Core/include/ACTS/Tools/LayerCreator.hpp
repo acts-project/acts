@@ -274,45 +274,6 @@ public:
   associateSurfacesToLayer(Layer& layer) const;
 
 private:
-  /// Method to get the global extends in space for the module
-  /// @todo shift to vertices of surfaces
-  ///
-  /// @param sf is the surface to be examinated
-  /// @param minR minimal R extend
-  /// @param maxR maximal R extend
-  /// @param minPhi minimal phi extend
-  /// @param maxPhi maximal phi extend
-  /// @param minZ minimal z extend
-  /// @param maxZ maximal z extend
-  void
-  moduleExtend(const Surface& sf,
-               double&        minR,
-               double&        maxR,
-               double&        minPhi,
-               double&        maxPhi,
-               double&        minZ,
-               double&        maxZ) const;
-
-  /// Calculates the closest radial distance of a line
-  ///
-  /// @param pos1 is the first position on the line
-  /// @param pos2 is the second position on the line
-  ///
-  /// @return is the closest distance
-  double
-  radialDistance(const Vector3D& pos1, const Vector3D& pos2) const;
-
-  void
-  binningParameters(const std::vector<const Acts::Surface*>& surfaces,
-                    Acts::BinningValue                       bValue,
-                    double&                                  minR,
-                    double&                                  maxR,
-                    double&                                  minPhi,
-                    double&                                  maxPhi,
-                    double&                                  minZ,
-                    double&                                  maxZ,
-                    size_t                                   nBins) const;
-
   /// Validates that all the sensitive surfaces are actually accessible through
   /// the binning
   ///
