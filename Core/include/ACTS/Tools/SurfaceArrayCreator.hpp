@@ -19,6 +19,8 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
 #include "ACTS/Utilities/Units.hpp"
+#include <boost/optional.hpp>
+#include <boost/none.hpp>
 
 namespace Acts {
 
@@ -93,17 +95,9 @@ public:
   /// @return a unique pointer to a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
-                         ProtoLayer                         protoLayer,
                          size_t                             binsPhi,
                          size_t                             binsZ,
-                         std::shared_ptr<const Transform3D> transform
-                         = nullptr) const;
-
-  // additional overload to be able to omit protoLayer parameter
-  std::unique_ptr<SurfaceArray>
-  surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
-                         size_t                             binsPhi,
-                         size_t                             binsZ,
+                         boost::optional<ProtoLayer>        protoLayer = boost::none,
                          std::shared_ptr<const Transform3D> transform
                          = nullptr) const;
 
@@ -124,17 +118,9 @@ public:
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<Acts::SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
-                         ProtoLayer                         protoLayer,
                          BinningType bTypePhi = equidistant,
                          BinningType bTypeZ   = equidistant,
-                         std::shared_ptr<const Transform3D> transform
-                         = nullptr) const;
-
-  // additional overload to be able to omit protoLayer parameter
-  std::unique_ptr<Acts::SurfaceArray>
-  surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
-                         BinningType bTypePhi = equidistant,
-                         BinningType bTypeZ   = equidistant,
+                         boost::optional<ProtoLayer>        protoLayer = boost::none,
                          std::shared_ptr<const Transform3D> transform
                          = nullptr) const;
 
@@ -154,17 +140,9 @@ public:
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
-                     ProtoLayer                         protoLayer,
                      size_t                             binsR,
                      size_t                             binsPhi,
-                     std::shared_ptr<const Transform3D> transform
-                     = nullptr) const;
-
-  // additional overload to be able to omit protoLayer parameter
-  std::unique_ptr<SurfaceArray>
-  surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
-                     size_t                             binsR,
-                     size_t                             binsPhi,
+                     boost::optional<ProtoLayer>        protoLayer = boost::none,
                      std::shared_ptr<const Transform3D> transform
                      = nullptr) const;
 
@@ -185,17 +163,9 @@ public:
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<Acts::SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
-                     ProtoLayer                         protoLayer,
                      BinningType                        bTypeR,
                      BinningType                        bTypePhi,
-                     std::shared_ptr<const Transform3D> transform
-                     = nullptr) const;
-
-  // additional overload to be able to omit protoLayer parameter
-  std::unique_ptr<Acts::SurfaceArray>
-  surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
-                     BinningType                        bTypeR,
-                     BinningType                        bTypePhi,
+                     boost::optional<ProtoLayer>        protoLayer = boost::none,
                      std::shared_ptr<const Transform3D> transform
                      = nullptr) const;
 

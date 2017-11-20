@@ -26,22 +26,12 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const std::vector<const Surface*>& surfaces,
     size_t                             binsPhi,
     size_t                             binsZ,
+    boost::optional<ProtoLayer>        _protoLayer,
     std::shared_ptr<const Transform3D> transform) const
 {
-  // overload which implements default parameter
-  ProtoLayer protoLayer(surfaces);
-  return surfaceArrayOnCylinder(
-      surfaces, protoLayer, binsPhi, binsZ, transform);
-}
+  // check if we have proto layer, else build it
+  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
 
-std::unique_ptr<Acts::SurfaceArray>
-Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
-    const std::vector<const Surface*>& surfaces,
-    ProtoLayer                         protoLayer,
-    size_t                             binsPhi,
-    size_t                             binsZ,
-    std::shared_ptr<const Transform3D> transform) const
-{
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with phi x z  = " << binsPhi << " x " << binsZ << " = "
@@ -108,27 +98,18 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   return sArray;
 }
 
-std::unique_ptr<Acts::SurfaceArray>
-Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
-    const std::vector<const Surface*>& surfaces,
-    BinningType                        bTypePhi,
-    BinningType                        bTypeZ,
-    std::shared_ptr<const Transform3D> transform) const
-{
-  // overload which implements default parameter
-  ProtoLayer protoLayer(surfaces);
-  return surfaceArrayOnCylinder(
-      surfaces, protoLayer, bTypePhi, bTypeZ, transform);
-}
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const std::vector<const Surface*>& surfaces,
-    ProtoLayer                         protoLayer,
     BinningType                        bTypePhi,
     BinningType                        bTypeZ,
+    boost::optional<ProtoLayer>        _protoLayer,
     std::shared_ptr<const Transform3D> transform) const
 {
+  // check if we have proto layer, else build it
+  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+
   // create the 2D bin utility
   // create the (plain) binUtility - with the transform if given
   Acts::BinUtility arrayUtility;
@@ -212,20 +193,12 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     const std::vector<const Surface*>& surfaces,
     size_t                             binsR,
     size_t                             binsPhi,
+    boost::optional<ProtoLayer>        _protoLayer,
     std::shared_ptr<const Transform3D> transform) const
 {
-  ProtoLayer protoLayer(surfaces);
-  return surfaceArrayOnDisc(surfaces, protoLayer, binsR, binsPhi, transform);
-}
+  // check if we have proto layer, else build it
+  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
 
-std::unique_ptr<Acts::SurfaceArray>
-Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
-    const std::vector<const Surface*>& surfaces,
-    ProtoLayer                         protoLayer,
-    size_t                             binsR,
-    size_t                             binsPhi,
-    std::shared_ptr<const Transform3D> transform) const
-{
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
 
   // is definitely equidistant
@@ -297,20 +270,12 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     const std::vector<const Surface*>& surfaces,
     BinningType                        bTypeR,
     BinningType                        bTypePhi,
+    boost::optional<ProtoLayer>        _protoLayer,
     std::shared_ptr<const Transform3D> transform) const
 {
-  ProtoLayer protoLayer(surfaces);
-  return surfaceArrayOnDisc(surfaces, protoLayer, bTypeR, bTypePhi, transform);
-}
+  // check if we have proto layer, else build it
+  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
 
-std::unique_ptr<Acts::SurfaceArray>
-Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
-    const std::vector<const Surface*>& surfaces,
-    ProtoLayer                         protoLayer,
-    BinningType                        bTypeR,
-    BinningType                        bTypePhi,
-    std::shared_ptr<const Transform3D> transform) const
-{
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
   Acts::BinUtility arrayUtility;
   if (bTypeR == equidistant)

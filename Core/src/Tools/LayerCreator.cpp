@@ -79,7 +79,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-          surfaces, protoLayer, binsPhi, binsZ, transform);
+          surfaces, binsPhi, binsZ, protoLayer, transform);
 
   checkBinning(sArray->objectGrid(), surfaces);
 
@@ -135,7 +135,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-          surfaces, protoLayer, bTypePhi, bTypeZ, transform);
+          surfaces, bTypePhi, bTypeZ, protoLayer, transform);
 
   checkBinning(sArray->objectGrid(), surfaces);
 
@@ -189,7 +189,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-          surfaces, protoLayer, bTypePhi, bTypeZ, transform);
+          surfaces, bTypePhi, bTypeZ, protoLayer, transform);
 
   checkBinning(sArray->objectGrid(), surfaces);
 
@@ -246,7 +246,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-          surfaces, protoLayer, binsR, binsPhi, transform);
+          surfaces, binsR, binsPhi, protoLayer, transform);
 
   checkBinning(sArray->objectGrid(), surfaces);
 
@@ -306,7 +306,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-          surfaces, protoLayer, bTypeR, bTypePhi, transform);
+          surfaces, bTypeR, bTypePhi, protoLayer, transform);
 
   checkBinning(sArray->objectGrid(), surfaces);
 
@@ -364,7 +364,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-          surfaces, protoLayer, bTypeR, bTypePhi, transform);
+          surfaces, bTypeR, bTypePhi, protoLayer, transform);
 
   checkBinning(sArray->objectGrid(), surfaces);
 
