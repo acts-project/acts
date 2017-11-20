@@ -30,6 +30,9 @@
 
 namespace Acts {
 
+namespace Test {
+  struct LayerCreatorFixture;
+}
 class Surface;
 class Layer;
 typedef std::shared_ptr<Layer> MutableLayerPtr;
@@ -42,6 +45,7 @@ typedef std::shared_ptr<Layer> MutableLayerPtr;
 class LayerCreator
 {
 public:
+  friend Acts::Test::LayerCreatorFixture;
   ///  @struct Config
   ///  Configuration for the LayerCreator
   ///  This is the nexted configuration struct for the LayerCreator class
@@ -279,7 +283,7 @@ private:
   ///
   /// @param surfGrid is the object grid from the surface array
   /// @para surfaces is the vector of sensitive surfaces
-  void
+  bool
   checkBinning(
       const std::vector<std::vector<std::vector<const Acts::Surface*>>>&
                                                surfGrid,
