@@ -177,11 +177,13 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
   // adjust the layer radius
   ACTS_VERBOSE("Creating a cylindrical Layer:");
   ACTS_VERBOSE(" - with layer R    = " << layerR);
-  ACTS_VERBOSE(" - from R min/max  = " << protoLayer.minR << " / " << protoLayer.maxR);
+  ACTS_VERBOSE(" - from R min/max  = " << protoLayer.minR << " / "
+                                       << protoLayer.maxR);
   ACTS_VERBOSE(" - with z min/max  = " << -layerHalfZ << " / " << layerHalfZ);
   ACTS_VERBOSE(" - with thickness  = " << (protoLayer.maxR - protoLayer.minR));
   ACTS_VERBOSE("   and tolerance   = " << envelopeR);
-  ACTS_VERBOSE(" - and phi min/max = " << protoLayer.minPhi << " / " << protoLayer.maxPhi);
+  ACTS_VERBOSE(" - and phi min/max = " << protoLayer.minPhi << " / "
+                                       << protoLayer.maxPhi);
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
@@ -402,8 +404,6 @@ Acts::LayerCreator::planeLayer(
   //@todo implement
   return nullptr;
 }
-
-
 
 void
 Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const

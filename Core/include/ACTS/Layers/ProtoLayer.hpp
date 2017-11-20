@@ -9,8 +9,8 @@
 #ifndef ACTS_LAYERS_PROTOLAYER_H
 #define ACTS_LAYERS_PROTOLAYER_H 1
 
-#include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Surfaces/PlanarBounds.hpp"
+#include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
