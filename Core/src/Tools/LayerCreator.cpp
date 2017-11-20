@@ -416,7 +416,7 @@ Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const
   }
 }
 
-void
+bool
 Acts::LayerCreator::checkBinning(
     const std::vector<std::vector<std::vector<const Acts::Surface*>>>& surfGrid,
     const std::vector<const Acts::Surface*>& surfaces) const
@@ -442,11 +442,13 @@ Acts::LayerCreator::checkBinning(
           continue;
         }
         accessibleSurfaces.insert(elem);
-        // check for bin members
-        const std::vector<const DetectorElementBase*> binmembers
-            = elem->associatedDetectorElement()->binmembers();
-        for (const auto& bm : binmembers) {
-          accessibleSurfaces.insert(&bm->surface());
+        // check for bin members if element is associated
+        if (elem->associatedDetectorElement()) {
+          const std::vector<const DetectorElementBase*> binmembers
+              = elem->associatedDetectorElement()->binmembers();
+          for (const auto& bm : binmembers) {
+            accessibleSurfaces.insert(&bm->surface());
+          }
         }
       }
     }
@@ -474,4 +476,6 @@ Acts::LayerCreator::checkBinning(
   } else {
     ACTS_VERBOSE("All sensitive surfaces are accessible through binning.");
   }
+
+  return nEmptyBins == 0 && diff.size() == 0;
 }
