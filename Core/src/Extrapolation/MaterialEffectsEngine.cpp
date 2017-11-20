@@ -14,6 +14,7 @@
 #include <sstream>
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Material/SurfaceMaterial.hpp"
+#include "ACTS/Utilities/MaterialInteraction.hpp"
 
 // constructor
 Acts::MaterialEffectsEngine::MaterialEffectsEngine(
@@ -200,13 +201,12 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     double pScalor = 1.;
     // (A) - energy loss correction
     if (m_cfg.eLossCorrection) {
-      double sigmaP = 0.;
-      double kazl   = 0.;
       // dE/dl ionization energy loss per path unit
-      double dEdl = sign * dir
-          * m_interactionFormulae.dEdl_ionization(
-                p, material, eCell.particleType, sigmaP, kazl);
-      double dE = thickness * pathCorrection * dEdl;
+      auto eLoss = Acts::ionizationEnergyLoss_mean(
+          p, material, eCell.particleType, m_particleMasses);
+      double dEdl   = sign * dir * eLoss.first;
+      double sigmaP = eLoss.second;
+      double dE     = thickness * pathCorrection * dEdl;
       sigmaP *= thickness * pathCorrection;
       // calcuate the new momentum
       double newP = sqrt((E + dE) * (E + dE) - m * m);
@@ -228,9 +228,8 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     // (B) - update the covariance if needed
     if (mutableUCovariance && m_cfg.mscCorrection) {
       // multiple scattering as function of dInX0
-      double sigmaMS = m_interactionFormulae.sigmaMS(
-          thicknessInX0 * pathCorrection, p, beta);
-      double sinTheta          = sin(mParameters.parameters()[eTHETA]);
+      double sigmaMS  = Acts::sigmaMS(thicknessInX0 * pathCorrection, p, beta);
+      double sinTheta = sin(mParameters.parameters()[eTHETA]);
       double sigmaDeltaPhiSq   = sigmaMS * sigmaMS / (sinTheta * sinTheta);
       double sigmaDeltaThetaSq = sigmaMS * sigmaMS;
       // add or remove @todo implement check for covariance matrix -> 0

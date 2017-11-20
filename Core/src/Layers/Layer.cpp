@@ -75,7 +75,8 @@ Acts::Layer::surfaceOnApproach(const Acts::Vector3D&      position,
   //   && either sensitive or approach surfaces have material
   bool collectPS = collectSensitive || collectPassive;
   bool collectMS = collectMaterial
-      && (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1);
+      && (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1
+          || surfaceRepresentation().associatedMaterial());
   // now of course this only counts when you have an approach descriptor
   if (m_approachDescriptor && (collectPS || collectMS)) {
     // that's the collect trigger for always collecting

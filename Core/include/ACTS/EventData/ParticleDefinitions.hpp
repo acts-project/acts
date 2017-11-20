@@ -47,6 +47,23 @@ enum ParticleType {
   undefined = 99
 };
 
+// Helper functions
+
+/// Convert to ParticleType from pdg
+/// @param[in] pdg The pdg type
+/// @param[out] stable Output if the particle is stable
+/// @param[out] exiting Output if the particle is exiting
+/// @param[in] charge The charge of the particle
+ParticleType
+convertToParticleType(pdg_type pdg, bool& stable, bool& exiting, double charge);
+
+/// convert to pdg from ParticleType
+/// @param[in] particleHypo The Acts particle type
+/// @param[in] charge The charge of the particle
+/// @param[in] dist @todo find out
+int
+convertToPdg(ParticleType particleHypo, double charge, bool dist);
+
 /// @struct ParticleMasses
 /// Mass declaration of particles covered
 /// in the ParticleType.
@@ -119,8 +136,8 @@ public:
   {
   }
 
-  /// destructor
-  ~ParticleProperties() {}
+  /// Destructor
+  ~ParticleProperties() = default;
 
   /// Assignment operator
   /// @param [in] pProperties are the source properties

@@ -19,7 +19,6 @@
 #include "ACTS/Extrapolation/IMaterialEffectsEngine.hpp"
 #include "ACTS/Extrapolation/MaterialUpdateMode.hpp"
 #include "ACTS/Extrapolation/detail/ExtrapolationMacros.hpp"
-#include "ACTS/Extrapolation/detail/MaterialInteraction.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
 
@@ -114,7 +113,8 @@ public:
   setLogger(std::unique_ptr<const Logger> logger);
 
 protected:
-  Config m_cfg;  ///< configuration struct
+  /// Configuration struct
+  Config m_cfg;
 
 private:
   const Logger&
@@ -144,8 +144,8 @@ private:
                         const std::string&  surfaceType,
                         size_t              surfaceID) const;
 
-  MaterialInteraction m_interactionFormulae;  //!< the formulas concentrated
-  ParticleMasses      m_particleMasses;       //!< struct of Particle masses
+  /// Struct of Particle masses
+  ParticleMasses m_particleMasses;
 };
 
 /// Return the configuration object
