@@ -56,7 +56,8 @@ namespace Test {
     std::vector<std::unique_ptr<const Surface>> m_surfaces;
 
     SurfaceArrayCreatorFixture()
-      : m_SAC(Acts::getDefaultLogger("SurfaceArrayCreator",
+      : m_SAC(SurfaceArrayCreator::Config(),
+              Acts::getDefaultLogger("SurfaceArrayCreator",
                                      Acts::Logging::VERBOSE))
     {
       BOOST_TEST_MESSAGE("setup fixture");
@@ -220,8 +221,10 @@ namespace Test {
                           SurfaceArrayCreatorFixture)
   {
     // fail on empty srf vector
+    SrfVec     empty;
+    ProtoLayer pl(empty);
     BOOST_CHECK_THROW(
-        createEquidistantBinUtility(SrfVec(), BinningValue::binPhi),
+        createEquidistantBinUtility(empty, BinningValue::binPhi, pl),
         std::logic_error);
 
     std::vector<float> bdExp = {
@@ -240,8 +243,9 @@ namespace Test {
       // case 1: one module sits at pi / -pi
       double angleShift = step / 2.;
       auto   surfaces   = fullPhiTestSurfacesEC(30, angleShift, z);
-      auto   bu = createEquidistantBinUtility(surfaces, BinningValue::binPhi);
-      auto   bd = bu.binningData().at(0);
+      pl                = ProtoLayer(surfaces);
+      auto bu = createEquidistantBinUtility(surfaces, BinningValue::binPhi, pl);
+      auto bd = bu.binningData().at(0);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantBinUtility_EC_1.obj");
       CHECK_CLOSE_COLLECTION(bdExp, bd.boundaries(), 0.001);
@@ -252,8 +256,9 @@ namespace Test {
       // case 2: two modules sit symmetrically around pi / -pi
       angleShift = 0.;
       surfaces   = fullPhiTestSurfacesEC(30, angleShift, z);
-      bu         = createEquidistantBinUtility(surfaces, BinningValue::binPhi);
-      bd         = bu.binningData().at(0);
+      pl         = ProtoLayer(surfaces);
+      bu = createEquidistantBinUtility(surfaces, BinningValue::binPhi, pl);
+      bd = bu.binningData().at(0);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantBinUtility_EC_2.obj");
       CHECK_CLOSE_COLLECTION(bdExp, bd.boundaries(), 0.001);
@@ -264,8 +269,9 @@ namespace Test {
       // case 3: two modules sit asymmetrically around pi / -pi shifted up
       angleShift = step / -4.;
       surfaces   = fullPhiTestSurfacesEC(30, angleShift, z);
-      bu         = createEquidistantBinUtility(surfaces, BinningValue::binPhi);
-      bd         = bu.binningData().at(0);
+      pl         = ProtoLayer(surfaces);
+      bu = createEquidistantBinUtility(surfaces, BinningValue::binPhi, pl);
+      bd = bu.binningData().at(0);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantBinUtility_EC_3.obj");
       CHECK_CLOSE_COLLECTION(bdExp, bd.boundaries(), 0.001);
@@ -276,8 +282,9 @@ namespace Test {
       // case 4: two modules sit asymmetrically around pi / -pi shifted down
       angleShift = step / 4.;
       surfaces   = fullPhiTestSurfacesEC(30, angleShift, z);
-      bu         = createEquidistantBinUtility(surfaces, BinningValue::binPhi);
-      bd         = bu.binningData().at(0);
+      pl         = ProtoLayer(surfaces);
+      bu = createEquidistantBinUtility(surfaces, BinningValue::binPhi, pl);
+      bd = bu.binningData().at(0);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantBinUtility_EC_4.obj");
       CHECK_CLOSE_COLLECTION(bdExp, bd.boundaries(), 0.001);
@@ -291,8 +298,9 @@ namespace Test {
       // case 1: one module sits at pi / -pi
       double angleShift = step / 2.;
       auto   surfaces   = fullPhiTestSurfacesBRL(30, angleShift, z);
-      auto   bu = createEquidistantBinUtility(surfaces, BinningValue::binPhi);
-      auto   bd = bu.binningData().at(0);
+      pl                = ProtoLayer(surfaces);
+      auto bu = createEquidistantBinUtility(surfaces, BinningValue::binPhi, pl);
+      auto bd = bu.binningData().at(0);
       draw_surfaces(
           surfaces,
           "SurfaceArrayCreator_createEquidistantBinUtility_BRL_1.obj");
@@ -304,8 +312,9 @@ namespace Test {
       // case 2: two modules sit symmetrically around pi / -pi
       angleShift = 0.;
       surfaces   = fullPhiTestSurfacesBRL(30, angleShift, z);
-      bu         = createEquidistantBinUtility(surfaces, BinningValue::binPhi);
-      bd         = bu.binningData().at(0);
+      pl         = ProtoLayer(surfaces);
+      bu = createEquidistantBinUtility(surfaces, BinningValue::binPhi, pl);
+      bd = bu.binningData().at(0);
       draw_surfaces(
           surfaces,
           "SurfaceArrayCreator_createEquidistantBinUtility_BRL_2.obj");
@@ -317,8 +326,9 @@ namespace Test {
       // case 3: two modules sit asymmetrically around pi / -pi shifted up
       angleShift = step / -4.;
       surfaces   = fullPhiTestSurfacesBRL(30, angleShift, z);
-      bu         = createEquidistantBinUtility(surfaces, BinningValue::binPhi);
-      bd         = bu.binningData().at(0);
+      pl         = ProtoLayer(surfaces);
+      bu = createEquidistantBinUtility(surfaces, BinningValue::binPhi, pl);
+      bd = bu.binningData().at(0);
       draw_surfaces(
           surfaces,
           "SurfaceArrayCreator_createEquidistantBinUtility_BRL_3.obj");
@@ -330,8 +340,9 @@ namespace Test {
       // case 4: two modules sit asymmetrically around pi / -pi shifted down
       angleShift = step / 4.;
       surfaces   = fullPhiTestSurfacesBRL(30, angleShift, z);
-      bu         = createEquidistantBinUtility(surfaces, BinningValue::binPhi);
-      bd         = bu.binningData().at(0);
+      pl         = ProtoLayer(surfaces);
+      bu = createEquidistantBinUtility(surfaces, BinningValue::binPhi, pl);
+      bd = bu.binningData().at(0);
       draw_surfaces(
           surfaces,
           "SurfaceArrayCreator_createEquidistantBinUtility_BRL_4.obj");
@@ -350,7 +361,8 @@ namespace Test {
         surfaces,
         "SurfaceArrayCreator_createEquidistantBinUtility_EC_Single.obj");
 
-    bu      = createEquidistantBinUtility(surfaces, BinningValue::binPhi);
+    pl      = ProtoLayer(surfaces);
+    bu      = createEquidistantBinUtility(surfaces, BinningValue::binPhi, pl);
     auto bd = bu.binningData().at(0);
     BOOST_TEST(bd.bins() == 1);
     BOOST_CHECK_SMALL(bd.max - (Vector3D(8, 1, 0).phi()), 1e-3);
@@ -364,9 +376,10 @@ namespace Test {
   {
 
     // single element in z
-    auto surfaces = straightLineSurfaces(1);
-    auto bu       = createEquidistantBinUtility(surfaces, BinningValue::binZ);
-    auto bd       = bu.binningData().at(0);
+    auto       surfaces = straightLineSurfaces(1);
+    ProtoLayer pl       = ProtoLayer(surfaces);
+    auto bu = createEquidistantBinUtility(surfaces, BinningValue::binZ, pl);
+    auto bd = bu.binningData().at(0);
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantBinUtility_Z_1.obj");
     BOOST_TEST(bd.bins() == 1);
@@ -379,7 +392,8 @@ namespace Test {
     for (size_t i = 0; i <= 20; i++) {
       double z0 = -10 + 1. * i;
       surfaces  = straightLineSurfaces(10, 3, Vector3D(0, 0, z0 + 1.5));
-      bu        = createEquidistantBinUtility(surfaces, BinningValue::binZ);
+      pl        = ProtoLayer(surfaces);
+      bu        = createEquidistantBinUtility(surfaces, BinningValue::binZ, pl);
       draw_surfaces(
           surfaces,
           (boost::format(
@@ -398,7 +412,8 @@ namespace Test {
     Transform3D tr = Transform3D::Identity();
     tr.rotate(AngleAxis3D(M_PI / 4., Vector3D(0, 0, 1)));
     surfaces = straightLineSurfaces(10, 3, Vector3D(0, 0, 0 + 1.5), tr);
-    bu       = createEquidistantBinUtility(surfaces, BinningValue::binZ);
+    pl       = ProtoLayer(surfaces);
+    bu       = createEquidistantBinUtility(surfaces, BinningValue::binZ, pl);
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantBinUtility_Z_3.obj");
     bd = bu.binningData().at(0);
@@ -417,7 +432,8 @@ namespace Test {
     auto surfaces = fullPhiTestSurfacesEC(1, 0, 0, 15);
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantBinUtility_R_1.obj");
-    auto bu = createEquidistantBinUtility(surfaces, BinningValue::binR);
+    ProtoLayer pl = ProtoLayer(surfaces);
+    auto bu = createEquidistantBinUtility(surfaces, BinningValue::binR, pl);
     auto bd = bu.binningData().at(0);
     BOOST_TEST(bd.bins() == 1);
     BOOST_CHECK_SMALL(bd.max - (Vector3D(17, 1, 0)).perp(), 1e-3);
@@ -435,12 +451,13 @@ namespace Test {
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantBinUtility_R_2.obj");
 
-    bu = createEquidistantBinUtility(surfaces, BinningValue::binR);
+    pl = ProtoLayer(surfaces);
+    bu = createEquidistantBinUtility(surfaces, BinningValue::binR, pl);
     bd = bu.binningData().at(0);
 
     BOOST_TEST(bd.bins() == 3);
-    BOOST_CHECK_SMALL(bd.max - (Vector3D(20 + 2, 1, 0)).perp(), 1e-3);
-    BOOST_CHECK_SMALL(bd.min - (Vector3D(10 - 2, 1, 0)).perp(), 1e-3);
+    BOOST_TEST(bd.max == (Vector3D(20 + 2, 1, 0)).perp(), tt::tolerance(1e-3));
+    BOOST_TEST(bd.min == 8, tt::tolerance(1e-3));
   }
 
   /*

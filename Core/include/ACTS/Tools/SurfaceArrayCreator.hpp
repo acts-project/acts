@@ -13,6 +13,8 @@
 #ifndef ACTS_TOOLS_SURFACERARRAYCREATOR_H
 #define ACTS_TOOLS_SURFACERARRAYCREATOR_H 1
 
+#include "ACTS/Layers/ProtoLayer.hpp"
+#include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
@@ -47,12 +49,28 @@ class SurfaceArrayCreator
 public:
   friend Acts::Test::SurfaceArrayCreatorFixture;
 
-  /// Constructor
+  // Configuration struct
+  struct Config
+  {
+    SurfaceMatcher surfaceMatcher = SurfaceArrayCreator::isSurfaceEquivalent;
+  };
+
+  /// Constructor with default config
   ///
   /// @param logger logging instance
   SurfaceArrayCreator(std::unique_ptr<const Logger> logger
                       = getDefaultLogger("SurfaceArrayCreator", Logging::INFO))
-    : m_logger(std::move(logger))
+    : m_cfg(Config()), m_logger(std::move(logger))
+  {
+  }
+  /// Constructor with explicit config
+  ///
+  /// @param cfg Explicit config struct
+  /// @param logger logging instance
+  SurfaceArrayCreator(const Config&                 cfg,
+                      std::unique_ptr<const Logger> logger
+                      = getDefaultLogger("SurfaceArrayCreator", Logging::INFO))
+    : m_cfg(cfg), m_logger(std::move(logger))
   {
   }
 
@@ -67,10 +85,7 @@ public:
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param R is the radius of the cylinder
-  /// @param minPhi is the minimal phi position of the surfaces
-  /// @param maxPhi is the maximal phi position of the surfaces
-  /// @param halfZ is the half length in z of the cylinder
+  /// @param protoLayer The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsZ is the number of bin in Z for the surfaces
   /// @param transform is the (optional) additional transform applied
@@ -78,10 +93,15 @@ public:
   /// @return a unique pointer to a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
-                         double                             R,
-                         double                             minPhi,
-                         double                             maxPhi,
-                         double                             halfZ,
+                         ProtoLayer                         protoLayer,
+                         size_t                             binsPhi,
+                         size_t                             binsZ,
+                         std::shared_ptr<const Transform3D> transform
+                         = nullptr) const;
+
+  // additional overload to be able to omit protoLayer parameter
+  std::unique_ptr<SurfaceArray>
+  surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
                          size_t                             binsPhi,
                          size_t                             binsZ,
                          std::shared_ptr<const Transform3D> transform
@@ -96,6 +116,7 @@ public:
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
+  /// @param protoLayer The proto layer containing the layer size
   /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
   /// @param bTypeZ the binning type in z direction (equidistant/aribtrary)
   /// @param transform is the (optional) additional transform applied
@@ -103,12 +124,19 @@ public:
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<Acts::SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
-                         BinningType bTypePhi    = equidistant,
-                         BinningType bTypeZ      = equidistant,
-                         double      envelopePhi = 0,
-                         double      envelopeZ   = 0,
-                         std::shared_ptr<const Transform3D> transform = nullptr,
-                         SurfaceMatcher _matcher = isSurfaceEquivalent) const;
+                         ProtoLayer                         protoLayer,
+                         BinningType bTypePhi = equidistant,
+                         BinningType bTypeZ   = equidistant,
+                         std::shared_ptr<const Transform3D> transform
+                         = nullptr) const;
+
+  // additional overload to be able to omit protoLayer parameter
+  std::unique_ptr<Acts::SurfaceArray>
+  surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
+                         BinningType bTypePhi = equidistant,
+                         BinningType bTypeZ   = equidistant,
+                         std::shared_ptr<const Transform3D> transform
+                         = nullptr) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a disc, binned in r, phi when extremas and
@@ -118,10 +146,7 @@ public:
   /// to be ordered on the disc
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param rMin is the minimimal radius of the disc
-  /// @param rMax is the maximal radius of the disc
-  /// @param minPhi is the minimal phi position of the surfaces
-  /// @param maxPhi is the maximal phi position of the surfaces
+  /// @param protoLayer The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsR is the number of bin in R for the surfaces
   /// @param transform is the (optional) additional transform applied
@@ -129,10 +154,15 @@ public:
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
-                     double                             minR,
-                     double                             maxR,
-                     double                             minPhi,
-                     double                             maxPhi,
+                     ProtoLayer                         protoLayer,
+                     size_t                             binsR,
+                     size_t                             binsPhi,
+                     std::shared_ptr<const Transform3D> transform
+                     = nullptr) const;
+
+  // additional overload to be able to omit protoLayer parameter
+  std::unique_ptr<SurfaceArray>
+  surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
                      size_t                             binsR,
                      size_t                             binsPhi,
                      std::shared_ptr<const Transform3D> transform
@@ -147,6 +177,7 @@ public:
   /// to be ordered on the disc
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
+  /// @param protoLayer The proto layer containing the layer size
   /// @param bTypeR the binning type in r direction (equidistant/aribtrary)
   /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
   /// @param transform is the (optional) additional transform applied
@@ -154,12 +185,19 @@ public:
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<Acts::SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
+                     ProtoLayer                         protoLayer,
                      BinningType                        bTypeR,
                      BinningType                        bTypePhi,
-                     double                             envelopeR   = 0,
-                     double                             envelopePhi = 0,
-                     std::shared_ptr<const Transform3D> transform   = nullptr,
-                     SurfaceMatcher _matcher = isSurfaceEquivalent) const;
+                     std::shared_ptr<const Transform3D> transform
+                     = nullptr) const;
+
+  // additional overload to be able to omit protoLayer parameter
+  std::unique_ptr<Acts::SurfaceArray>
+  surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
+                     BinningType                        bTypeR,
+                     BinningType                        bTypePhi,
+                     std::shared_ptr<const Transform3D> transform
+                     = nullptr) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
@@ -184,6 +222,23 @@ public:
                       std::shared_ptr<const Transform3D> transform
                       = nullptr) const;
 
+  static bool
+  isSurfaceEquivalent(BinningValue bValue, const Surface* a, const Surface* b)
+  {
+
+    if (bValue == Acts::binPhi)
+      return (std::abs(a->center().phi() - b->center().phi()) < 10e-12);
+
+    if (bValue == Acts::binZ)
+      return (std::abs(a->center().z() - b->center().z()) < Acts::units::_um);
+
+    if (bValue == Acts::binR)
+      return (std::abs(a->center().perp() - b->center().perp())
+              < Acts::units::_um);
+
+    return false;
+  }
+
   /// Set logging instance
   /// @param logger is the logging instance to be set
   void
@@ -193,6 +248,9 @@ public:
   }
 
 private:
+  /// configuration object
+  Config m_cfg;
+
   /// Private access to logger
   const Logger&
   logger() const
@@ -202,8 +260,7 @@ private:
 
   size_t
   determineBinCount(const std::vector<const Surface*>& surfaces,
-                    BinningValue                       bValue,
-                    SurfaceMatcher                     _matcher) const;
+                    BinningValue                       bValue) const;
 
   /// SurfaceArrayCreator internal method
   /// Creates an arbitrary BinUtility from a vector of (unsorted) surfaces with
@@ -249,33 +306,15 @@ private:
   // BinningValue                       bValue,
   // std::shared_ptr<const Transform3D> transform = nullptr) const;
 
-  static bool
-  isSurfaceEquivalent(BinningValue bValue, const Surface* a, const Surface* b)
-  {
-
-    if (bValue == Acts::binPhi)
-      return (std::abs(a->center().phi() - b->center().phi()) < 10e-12);
-
-    if (bValue == Acts::binZ)
-      return (std::abs(a->center().z() - b->center().z()) < Acts::units::_um);
-
-    if (bValue == Acts::binR)
-      return (std::abs(a->center().perp() - b->center().perp())
-              < Acts::units::_um);
-
-    return false;
-  }
-
   // overload with matcher lambda, since default value / noop can not be
   // set
   Acts::BinUtility
   createEquidistantBinUtility(const std::vector<const Surface*>& surfaces,
                               BinningValue                       bValue,
-                              double                             envelope = 0,
+                              ProtoLayer                         protoLayer,
                               std::shared_ptr<const Transform3D> transform
                               = nullptr,
-                              SurfaceMatcher matcher
-                              = isSurfaceEquivalent) const;
+                              size_t nBins = 0) const;
 
   /// SurfaceArrayCreator internal method
   /// - create an equidistant BinUtility with all parameters given
