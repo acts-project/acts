@@ -8,9 +8,12 @@
 
 #define BOOST_TEST_MODULE grid tests
 #include <boost/test/included/unit_test.hpp>
+#include <random>
+#include <chrono>
 
 #include "ACTS/Utilities/detail/Axis.hpp"
 #include "ACTS/Utilities/detail/Grid.hpp"
+#include "ACTS/Utilities/concept/AnyGrid.hpp"
 
 namespace Acts {
 
@@ -1057,6 +1060,81 @@ namespace Test {
     BOOST_TEST((g3.closestPointsIndices(Point({{0.52, 0.35, 0.71}})) == bins_t({223, 224, 228, 229, 258, 259, 263, 264})));
     // clang-format on
   }
+
+  BOOST_AUTO_TEST_CASE(performanceComparison)
+  {
+    typedef std::array<double, 1> Point;
+    typedef std::array<size_t, 1> indices;
+    EquidistantAxis a(0.0, 100.0, 100u);
+    Grid<double, EquidistantAxis> g(std::make_tuple(std::move(a)));
+    concept::AnyNDimGrid<double, Point, 1> anyG = g;
+    auto fg = make_grid_fast(g);
+
+    void * voidptr_g = &g;
+    
+    
+    // fill the grid
+    std::mt19937 gen(0);
+    std::uniform_real_distribution<> valueDis(0, 500.0);
+    std::uniform_real_distribution<> lookupDis(0, 100.0);
+
+    for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = valueDis(gen);
+  
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    size_t n = 1e8;
+
+    // reinit rng
+    gen = std::mt19937(42);
+
+    for (size_t i=0;i<n;i++) {
+      Point req({{lookupDis(gen)}});
+
+      double refres = g.at(req);
+      //double res = anyG.at(req);
+      //double res = fg.at(req);
+      
+      //auto deref_g = static_cast<Grid<double, EquidistantAxis>*>(voidptr_g);
+      double res = static_cast<Grid<double, EquidistantAxis>*>(voidptr_g)->at(req);
+
+      //assert(refres == anyG.at(req) 
+             //&& refres == fg.at(req) 
+             //&& refres == deref_g->at(req));
+
+      if(i%(n/20) == 0) {
+        std::cout << "\r" << std::setprecision(2) << ((i/double(n))*100) << std::setprecision(-1)  << "%" << std::flush;
+      }
+    }
+      
+    std::cout << "\r => done" << std::endl;
+
+    //std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
+    //double delta1 = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+    //std::cout << "Direct lookup took " << delta1 << "ms" << std::endl;
+    
+    //// restart clock
+    //begin = std::chrono::steady_clock::now();
+
+    //// reinit rng
+    //gen = std::mt19937(42);
+
+    //for (size_t i=0;i<n;i++) {
+      //Point req({{lookupDis(gen)}});
+      //double res = anyG.at(req);
+
+      //if(i%(n/20) == 0) {
+        //std::cout << "\r" << std::setprecision(2) << ((i/double(n))*100) << std::setprecision(-1)  << "%" << std::flush;
+      //}
+    //}
+    
+    //std::cout << "\r => done" << std::endl;
+
+    //end= std::chrono::steady_clock::now();
+    //double delta2 = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+    //std::cout << "Type-erased lookup took " << delta2 << "ms" << std::endl;
+
+    //std::cout << "TE: " << std::setprecision(2) << ((delta2 - delta1)/delta1 * 100.) << "%" << std::endl;
+  }
+
 }  // namespace Test
 
 }  // namespace Acts
