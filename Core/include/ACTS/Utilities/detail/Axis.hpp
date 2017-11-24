@@ -53,6 +53,18 @@ namespace detail {
       : m_min(xmin), m_max(xmax), m_width((xmax - xmin) / nBins), m_bins(nBins)
     {
     }
+    
+    static constexpr bool
+    isEquidistant()
+    {
+      return true;
+    }
+    
+    static constexpr bool
+    isVariable()
+    {
+      return false;
+    }
 
     /// @brief get corresponding bin index for given coordinate
     ///
@@ -162,6 +174,18 @@ namespace detail {
     {
       return (m_min <= x) && (x < m_max);
     }
+    
+    std::vector<double>
+    getBinEdges() const
+    {
+      std::vector<double> binEdges;
+      for (size_t i=1;i<=m_bins;i++) {
+        binEdges.push_back(getBinLowerBound(i));
+      }
+      binEdges.push_back(getBinUpperBound(m_bins));
+      return binEdges;
+    }
+
 
   private:
     /// minimum of binning range
@@ -192,6 +216,19 @@ namespace detail {
     /// given bin boundaries. @c nBins is given by the number of bin edges
     /// reduced by one.
     Axis(std::vector<double> binEdges) : m_binEdges(std::move(binEdges)) {}
+    
+    
+    static constexpr bool
+    isEquidistant()
+    {
+      return false;
+    }
+    
+    static constexpr bool
+    isVariable()
+    {
+      return true;
+    }
 
     /// @brief get corresponding bin index for given coordinate
     ///
@@ -310,6 +347,12 @@ namespace detail {
     isInside(double x) const
     {
       return (m_binEdges.front() <= x) && (x < m_binEdges.back());
+    }
+
+    std::vector<double>
+    getBinEdges() const
+    {
+      return m_binEdges;
     }
 
   private:

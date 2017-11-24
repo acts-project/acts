@@ -11,6 +11,7 @@
 #include <array>
 #include <tuple>
 #include <utility>
+#include "ACTS/Utilities/concept/AnyAxis.hpp"
 
 namespace Acts {
 
@@ -115,6 +116,14 @@ namespace detail {
       // by convention getNBins does not include under-/overflow bins
       nBinsArray[N] = std::get<N>(axes).getNBins();
       grid_helper_impl<N - 1>::getNBins(axes, nBinsArray);
+    }
+    
+    template <class... Axes>
+    static void
+    getAxes(const std::tuple<Axes...>& axes, std::array<concept::AnyAxis<>, sizeof...(Axes)>& axesArr)
+    {
+      axesArr[N] = std::get<N>(axes);
+      grid_helper_impl<N - 1>::getAxes(axes, axesArr);
     }
 
     template <class... Axes>
@@ -262,6 +271,13 @@ namespace detail {
     {
       // by convention getNBins does not include under-/overflow bins
       nBinsArray[0u] = std::get<0u>(axes).getNBins();
+    }
+
+    template <class... Axes>
+    static void
+    getAxes(const std::tuple<Axes...>& axes, std::array<concept::AnyAxis<>, sizeof...(Axes)>& axesArr)
+    {
+      axesArr[0u] = std::get<0u>(axes);
     }
 
     template <class... Axes>
@@ -515,6 +531,22 @@ namespace detail {
       grid_helper_impl<sizeof...(Axes) - 1>::getNBins(axes, nBinsArray);
       return nBinsArray;
     }
+
+    /// @brief return an array with copies of the axes, converted
+    /// to type AnyAxis
+    ///
+    /// @tparam Axes parameter pack of axis types defining the grid
+    /// @param [in] axes actual axis objects spanning the grid
+    /// @return array with copies of the axis
+    template <class... Axes>
+    static std::array<concept::AnyAxis<>, sizeof...(Axes)>
+    getAxes(const std::tuple<Axes...>& axes)
+    {
+      std::array<concept::AnyAxis<>, sizeof...(Axes)> arr;
+      grid_helper_impl<sizeof...(Axes) - 1>::getAxes(axes, arr);
+      return arr;
+    }
+    
 
     /// @brief retrieve upper-right bin edge from set of local bin indices
     ///

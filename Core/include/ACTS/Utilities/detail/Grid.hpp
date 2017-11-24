@@ -411,13 +411,20 @@ namespace detail {
     size() const
     {
       index_t nBinsArray = getNBins();
-      // add under-and overflow bins for each axis and mulitply all bins
+      // add under-and overflow bins for each axis and multiply all bins
       return std::accumulate(
           nBinsArray.begin(),
           nBinsArray.end(),
           1,
           [](const size_t& a, const size_t& b) { return a * (b + 2); });
     }
+
+    std::array<concept::AnyAxis<>, DIM>
+    getAxes() const
+    {
+      return grid_helper::getAxes(m_axes);
+    }
+
 
   private:
     /// set of axis defining the multi-dimensional grid
