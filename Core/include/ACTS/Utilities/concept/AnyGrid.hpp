@@ -38,6 +38,7 @@ namespace Acts {
 
 namespace concept {
 
+
   namespace bte = boost::type_erasure;
 
   /// @cond
@@ -54,7 +55,6 @@ namespace concept {
                                      has_closestPointsIndices<std::set<size_t> (const Point&), const bte::_self>,
                                      has_dimensions<size_t(), const bte::_self>,
                                      has_getGlobalBinIndex<size_t(const Point&), const bte::_self>,
-                                     has_interpolate<T(const Point&), const bte::_self>,
                                      has_isInside<bool(const Point&), const bte::_self>,
                                      has_size<size_t(), const bte::_self>,
                                      bte::copy_constructible<>,
@@ -71,11 +71,27 @@ namespace concept {
                       has_getLocalBinIndices<std::array<size_t, DIM>(size_t), const bte::_self>,
                       has_getLowerLeftBinEdge<std::array<double, DIM>(const std::array<size_t, DIM>&), const bte::_self>,
                       has_getUpperRightBinEdge<std::array<double, DIM>(const std::array<size_t, DIM>&), const bte::_self>,
-                      has_neighborHoodIndices<std::set<size_t>(const std::array<size_t, DIM>&, size_t),const bte::_self>,
-					  has_getNBins<std::array<size_t, DIM>(),const bte::_self>,
-					  has_getMin<std::array<double, DIM>(),const bte::_self>,
-					  has_getMax<std::array<double, DIM>(),const bte::_self>
+                      has_neighborHoodIndices<std::set<size_t>(const std::array<size_t, DIM>&, size_t), const bte::_self>,
+                      has_getNBins<std::array<size_t, DIM>(), const bte::_self>,
+                      has_getMin<std::array<double, DIM>(), const bte::_self>,
+                      has_getMax<std::array<double, DIM>(), const bte::_self>,
+                      has_getAxes<std::array<concept::AnyAxis<>, DIM>(), const bte::_self>
                       >;
+
+    template <typename T, class Point>
+    using interp_grid_concept
+        = mpl::vector<grid_concept<T, Point>,
+                      has_interpolate<T(const Point&), const bte::_self>
+                      >;
+    
+    template <typename T, class Point, size_t DIM>
+    using ndim_interp_grid_concept
+        = mpl::vector<ndim_grid_concept<T, Point, DIM>,
+                      has_interpolate<T(const Point&), const bte::_self>
+                      >;
+                      
+
+
     // clang-format off
   }  // namespace any_grid_detail
   /// @endcond
@@ -136,6 +152,11 @@ namespace concept {
   /// @endcode
   template <typename T, class Point, typename U = bte::_self>
   using AnyGrid = bte::any<any_grid_detail::grid_concept<T, Point>, U>;
+  
+  /// @ingroupd Utilities
+  /// @brief Same as AnyGrid but with an interpolate method
+  template <typename T, class Point, typename U = bte::_self>
+  using AnyInterpGrid = bte::any<any_grid_detail::interp_grid_concept<T, Point>, U>;
 
   /// @ingroup Utilities
   /// @brief any-type for grid container interface with specified dimension
@@ -186,5 +207,10 @@ namespace concept {
   /// @endcode
   template <typename T, class Point, size_t DIM, typename U = bte::_self>
   using AnyNDimGrid = bte::any<any_grid_detail::ndim_grid_concept<T, Point, DIM>, U>;
+
+  /// @ingroupd Utilities
+  /// @brief Same as AnyNDimGrid but with an interpolate method
+  template <typename T, class Point, size_t DIM, typename U = bte::_self>
+  using AnyNDimInterpGrid = bte::any<any_grid_detail::ndim_interp_grid_concept<T, Point, DIM>, U>;
 }  // namespace concept
 }  // namespace Acts
