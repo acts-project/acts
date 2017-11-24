@@ -21,30 +21,6 @@ namespace Acts {
 
 namespace detail {
 
-  template <class GridT>
-  class GridFast {
-    public:
-      GridFast(GridT grid) : m_grid(grid) {}
-
-      
-    template <class Point>
-    typename GridT::reference
-    at(const Point& point)
-    {
-      m_grid.at(point);
-      //return static_cast<GridT>(this)->at(point);
-    }
-    
-    
-    private:
-      GridT m_grid;
-
-  };
-
-  template <class GridT>
-    GridFast<GridT> make_grid_fast(GridT grid) {
-      return GridFast<GridT>(grid);
-    }
 
   /// @brief class for describing a regular multi-dimensional grid
   ///
