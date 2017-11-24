@@ -17,7 +17,6 @@
 #include <set>
 #include "ACTS/Utilities/concept/AnyAxis.hpp"
 
-
 // clang-format off
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_at), at, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_closestPointsIndices), closestPointsIndices, 1);
@@ -40,7 +39,6 @@ BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getAxes), getAxes
 namespace Acts {
 
 namespace concept {
-
 
   namespace bte = boost::type_erasure;
 

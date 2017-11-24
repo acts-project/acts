@@ -12,8 +12,8 @@
 #include <iostream>
 #include <type_traits>
 #include <vector>
-#include "ACTS/Utilities/concept/AnyGrid.hpp"
 #include "ACTS/Surfaces/concept/AnySurfaceGridLookup.hpp"
+#include "ACTS/Utilities/concept/AnyGrid.hpp"
 #include "ACTS/Utilities/detail/Axis.hpp"
 #include "ACTS/Utilities/detail/Grid.hpp"
 //#include <boost/any.hpp>
@@ -42,7 +42,7 @@ class SurfaceArray
 {
   using StoredType = SurfaceVector;
   template <class Point, size_t DIM>
-  using AnyGrid_t = concept::AnyNDimGrid<StoredType, Point, DIM>;
+  using AnyGrid_t              = concept::AnyNDimGrid<StoredType, Point, DIM>;
   using AnySurfaceGridLookup_t = concept::AnySurfaceGridLookup<StoredType>;
 
 public:
@@ -51,20 +51,19 @@ public:
   {
   public:
     SurfaceLookup(std::function<ActsVectorD<DIM>(const Vector3D&)> transformPos,
-                  AnyGrid_t<ActsVectorD<DIM>, DIM>                 grid)
+                  AnyGrid_t<ActsVectorD<DIM>, DIM> grid)
       : m_transformPos(std::move(transformPos)), m_grid(std::move(grid))
     {
-
     }
-    
+
     StoredType&
     lookup(const Vector3D& pos)
     {
-      //size_t bi = m_grid.getGlobalBinIndex(m_transformPos(pos));
-      //std::cout << " -> bin " << bi << std::endl;
+      // size_t bi = m_grid.getGlobalBinIndex(m_transformPos(pos));
+      // std::cout << " -> bin " << bi << std::endl;
       return m_grid.at(m_transformPos(pos));
     }
-    
+
     const StoredType&
     lookup(const Vector3D& pos) const
     {
@@ -77,7 +76,7 @@ public:
       auto arr = m_grid.getAxes();
       return std::vector<concept::AnyAxis<>>(arr.begin(), arr.end());
     }
-    
+
     static constexpr size_t
     dimensions()
     {
@@ -86,14 +85,11 @@ public:
 
   private:
     std::function<ActsVectorD<DIM>(const Vector3D&)> m_transformPos;
-    AnyGrid_t<ActsVectorD<DIM>, DIM>                 m_grid;
-
-
+    AnyGrid_t<ActsVectorD<DIM>, DIM> m_grid;
   };
 
   SurfaceArray(AnySurfaceGridLookup_t gridLookup, SurfaceVector surfaces)
-    : m_gridLookup(std::move(gridLookup))
-    , m_surfaces(surfaces)
+    : m_gridLookup(std::move(gridLookup)), m_surfaces(surfaces)
   {
 
     std::cout << "SurfaceArray go" << std::endl;
@@ -101,19 +97,22 @@ public:
     // let's fill the grid
     for (const auto& srf : m_surfaces) {
       Vector3D pos = srf->binningPosition(binR);
-      //std::cout << "fill" << std::endl;
+      // std::cout << "fill" << std::endl;
       m_gridLookup.lookup(pos).push_back(srf);
     }
   }
 
-  StoredType& at(const Vector3D& pos) {
-    return m_gridLookup.lookup(pos);
-  }
-  
-  const StoredType& at(const Vector3D& pos) const {
+  StoredType&
+  at(const Vector3D& pos)
+  {
     return m_gridLookup.lookup(pos);
   }
 
+  const StoredType&
+  at(const Vector3D& pos) const
+  {
+    return m_gridLookup.lookup(pos);
+  }
 
   std::ostream&
   dump(std::ostream& sl) const
@@ -124,14 +123,14 @@ public:
 
     auto axes = m_gridLookup.getAxes();
 
-    for (size_t j=0;j<axes.size();++j) {
-      //auto boundaries = axes.boundaries();
-      //std::cout << "axis is " << axis.isEquidistant() << std::endl;
-      std::cout << " - axis " << (j+1) << std::endl;
+    for (size_t j = 0; j < axes.size(); ++j) {
+      // auto boundaries = axes.boundaries();
+      // std::cout << "axis is " << axis.isEquidistant() << std::endl;
+      std::cout << " - axis " << (j + 1) << std::endl;
       std::cout << "   - bin edges: [ ";
       auto binEdges = axes.at(j).getBinEdges();
-      for (size_t i=0;i<binEdges.size();++i) {
-        if (i>0) std::cout << ", ";
+      for (size_t i = 0; i < binEdges.size(); ++i) {
+        if (i > 0) std::cout << ", ";
         std::cout << binEdges.at(i);
       }
       std::cout << " ]" << std::endl;

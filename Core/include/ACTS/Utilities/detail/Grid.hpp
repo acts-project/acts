@@ -21,7 +21,6 @@ namespace Acts {
 
 namespace detail {
 
-
   /// @brief class for describing a regular multi-dimensional grid
   ///
   /// @tparam T    type of values stored inside the bins of the grid
@@ -424,7 +423,6 @@ namespace detail {
     {
       return grid_helper::getAxes(m_axes);
     }
-
 
   private:
     /// set of axis defining the multi-dimensional grid

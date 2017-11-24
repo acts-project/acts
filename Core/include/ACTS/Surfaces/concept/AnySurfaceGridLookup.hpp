@@ -26,7 +26,6 @@ BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_dimensions), dimensio
 
 namespace Acts {
 
-
 namespace concept {
 
   namespace bte = boost::type_erasure;

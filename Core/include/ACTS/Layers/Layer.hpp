@@ -312,7 +312,7 @@ protected:
   /// @param thickness is the normal thickness of the Layer
   /// @param ad oapproach descriptor
   /// @param ltype is the layer type if active or passive
-  Layer(std::unique_ptr<SurfaceArray_old>       surfaceArray,
+  Layer(std::unique_ptr<SurfaceArray_old>   surfaceArray,
         double                              thickness = 0.,
         std::unique_ptr<ApproachDescriptor> ad        = nullptr,
         LayerType                           ltype     = passive);

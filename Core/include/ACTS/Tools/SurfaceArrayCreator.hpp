@@ -28,7 +28,7 @@ namespace Test {
   struct SurfaceArrayCreatorFixture;
 }
 
-//typedef BinnedArray<const Surface*> SurfaceArray_old;
+// typedef BinnedArray<const Surface*> SurfaceArray_old;
 using SurfaceMatcher
     = std::function<bool(BinningValue, const Surface*, const Surface*)>;
 
@@ -338,7 +338,7 @@ private:
   completeBinning(const BinUtility&    binUtility,
                   const V3Matrix&      v3Matrix,
                   const SurfaceVector& sVector,
-                  SurfaceGrid_old&         sGrid) const;
+                  SurfaceGrid_old&     sGrid) const;
 
   /// Private helper method to complete the binning
   ///

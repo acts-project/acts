@@ -50,7 +50,7 @@ public:
   static MutableLayerPtr
   create(std::shared_ptr<const Transform3D>  transform,
          std::shared_ptr<const DiscBounds>   dbounds,
-         std::unique_ptr<SurfaceArray_old>       surfaceArray = nullptr,
+         std::unique_ptr<SurfaceArray_old>   surfaceArray = nullptr,
          double                              thickness    = 0.,
          std::unique_ptr<ApproachDescriptor> ad           = nullptr,
          LayerType                           laytyp       = Acts::passive)
@@ -102,7 +102,7 @@ protected:
   /// @param laytyp is the layer taype
   DiscLayer(std::shared_ptr<const Transform3D>  transform,
             std::shared_ptr<const DiscBounds>   dbounds,
-            std::unique_ptr<SurfaceArray_old>       surfaceArray = nullptr,
+            std::unique_ptr<SurfaceArray_old>   surfaceArray = nullptr,
             double                              thickness    = 0.,
             std::unique_ptr<ApproachDescriptor> ad           = nullptr,
             LayerType                           laytyp       = Acts::active);

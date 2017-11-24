@@ -117,10 +117,11 @@ namespace detail {
       nBinsArray[N] = std::get<N>(axes).getNBins();
       grid_helper_impl<N - 1>::getNBins(axes, nBinsArray);
     }
-    
+
     template <class... Axes>
     static void
-    getAxes(const std::tuple<Axes...>& axes, std::array<concept::AnyAxis<>, sizeof...(Axes)>& axesArr)
+    getAxes(const std::tuple<Axes...>& axes,
+            std::array<concept::AnyAxis<>, sizeof...(Axes)>& axesArr)
     {
       axesArr[N] = std::get<N>(axes);
       grid_helper_impl<N - 1>::getAxes(axes, axesArr);
@@ -275,7 +276,8 @@ namespace detail {
 
     template <class... Axes>
     static void
-    getAxes(const std::tuple<Axes...>& axes, std::array<concept::AnyAxis<>, sizeof...(Axes)>& axesArr)
+    getAxes(const std::tuple<Axes...>& axes,
+            std::array<concept::AnyAxis<>, sizeof...(Axes)>& axesArr)
     {
       axesArr[0u] = std::get<0u>(axes);
     }
@@ -546,7 +548,6 @@ namespace detail {
       grid_helper_impl<sizeof...(Axes) - 1>::getAxes(axes, arr);
       return arr;
     }
-    
 
     /// @brief retrieve upper-right bin edge from set of local bin indices
     ///

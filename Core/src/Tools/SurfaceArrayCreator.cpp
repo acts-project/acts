@@ -47,10 +47,10 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   double R = protoLayer.maxR - protoLayer.minR;
 
   // prepare the surface matrix
-  size_t      bins1 = arrayUtility.bins(1);
-  size_t      bins0 = arrayUtility.bins(0);
+  size_t          bins1 = arrayUtility.bins(1);
+  size_t          bins0 = arrayUtility.bins(0);
   SurfaceGrid_old sGrid(1, SurfaceMatrix(bins1, SurfaceVector(bins0, nullptr)));
-  V3Matrix    v3Matrix(bins1, V3Vector(bins0, Vector3D(0., 0., 0.)));
+  V3Matrix        v3Matrix(bins1, V3Vector(bins0, Vector3D(0., 0., 0.)));
   // get access to the binning data
   const std::vector<BinningData>& bdataSet = arrayUtility.binningData();
   // create the position matrix first
@@ -135,7 +135,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 
   // prepare the surface matrix
   SurfaceGrid_old sGrid(1, SurfaceMatrix(bins1, SurfaceVector(bins0, nullptr)));
-  V3Matrix    v3Matrix(bins1, V3Vector(bins0, Vector3D(0., 0., 0.)));
+  V3Matrix        v3Matrix(bins1, V3Vector(bins0, Vector3D(0., 0., 0.)));
   // get the average r
   double R          = 0;
   size_t nOverwrite = 0;
@@ -207,8 +207,9 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
       surfaces, binPhi, protoLayer, transform, binsPhi);
 
   // prepare the surface matrix
-  SurfaceGrid_old sGrid(1, SurfaceMatrix(binsPhi, SurfaceVector(binsR, nullptr)));
-  V3Matrix    v3Matrix(binsPhi, V3Vector(binsR, Vector3D(0., 0., 0.)));
+  SurfaceGrid_old sGrid(1,
+                        SurfaceMatrix(binsPhi, SurfaceVector(binsR, nullptr)));
+  V3Matrix v3Matrix(binsPhi, V3Vector(binsR, Vector3D(0., 0., 0.)));
 
   // get the average z
   double z          = 0;
@@ -292,7 +293,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   size_t bins0 = arrayUtility.bins(0);
   // prepare the surface matrix
   SurfaceGrid_old sGrid(1, SurfaceMatrix(bins1, SurfaceVector(bins0, nullptr)));
-  V3Matrix    v3Matrix(bins1, V3Vector(bins0, Vector3D(0., 0., 0.)));
+  V3Matrix        v3Matrix(bins1, V3Vector(bins0, Vector3D(0., 0., 0.)));
   // get the average z
   double z          = 0;
   size_t nOverwrite = 0;
@@ -855,7 +856,7 @@ void
 Acts::SurfaceArrayCreator::completeBinning(const BinUtility&    binUtility,
                                            const V3Matrix&      v3Matrix,
                                            const SurfaceVector& sVector,
-                                           SurfaceGrid_old&         sGrid) const
+                                           SurfaceGrid_old&     sGrid) const
 {
   ACTS_VERBOSE("Complete binning by filling closest neighbour surfaces into "
                "empty bins.");

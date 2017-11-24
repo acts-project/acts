@@ -12,17 +12,16 @@
 #include <boost/format.hpp>
 #include <boost/test/data/test_case.hpp>
 
-#include "ACTS/Surfaces/SurfaceArray.hpp"
-#include "ACTS/Utilities/BinningType.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
+#include "ACTS/Surfaces/SurfaceArray.hpp"
 #include "ACTS/Tools/LayerCreator.hpp"
 #include "ACTS/Tools/SurfaceArrayCreator.hpp"
+#include "ACTS/Utilities/BinningType.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/detail/Grid.hpp"
-
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -30,16 +29,13 @@ namespace tt    = boost::test_tools;
 namespace Acts {
 
 namespace Test {
-  
+
   using SrfVec = std::vector<const Surface*>;
   struct SurfaceArrayFixture
   {
     std::vector<std::unique_ptr<const Surface>> m_surfaces;
 
-    SurfaceArrayFixture()
-    {
-      BOOST_TEST_MESSAGE("setup fixture");
-    }
+    SurfaceArrayFixture() { BOOST_TEST_MESSAGE("setup fixture"); }
     ~SurfaceArrayFixture() { BOOST_TEST_MESSAGE("teardown fixture"); }
 
     SrfVec
@@ -118,14 +114,14 @@ namespace Test {
 
       for (size_t i = 0; i < nZ; i++) {
         double z = i * w * 2 + z0;
-        //std::cout << "z=" << z << std::endl;
+        // std::cout << "z=" << z << std::endl;
         SrfVec ring = fullPhiTestSurfacesBRL(nPhi, 0, z, M_PI / 9., w, h);
         res.insert(res.end(), ring.begin(), ring.end());
       }
 
       return res;
     }
-  
+
     void
     draw_surfaces(SrfVec surfaces, std::string fname)
     {
@@ -169,28 +165,27 @@ namespace Test {
 
     detail::EquidistantAxis phiAxis(-M_PI, M_PI, 30u);
     detail::EquidistantAxis zAxis(-14, 14, 7u);
-    SurfaceGrid<detail::EquidistantAxis, detail::EquidistantAxis> grid(std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-    
-    
+    SurfaceGrid<detail::EquidistantAxis, detail::EquidistantAxis> grid(
+        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+
     auto transform = [](const Vector3D& pos) {
-      //std::cout << "lookup(phi=" << pos.phi() << " z=" << pos.z() << ")" << std::endl;
-      return Vector2D(pos.phi() + 2*M_PI/30/2, pos.z());
+      // std::cout << "lookup(phi=" << pos.phi() << " z=" << pos.z() << ")" <<
+      // std::endl;
+      return Vector2D(pos.phi() + 2 * M_PI / 30 / 2, pos.z());
     };
     SurfaceArray::SurfaceLookup<2> sl(transform, grid);
-    SurfaceArray sa(sl, brl);
+    SurfaceArray                   sa(sl, brl);
 
     // let's see if we can access all surfaces
     sa.dump(std::cout);
 
-    for(const auto &srf : brl) {
-      Vector3D ctr = srf->binningPosition(binR);
-      SrfVec binContent = sa.at(ctr);
+    for (const auto& srf : brl) {
+      Vector3D ctr        = srf->binningPosition(binR);
+      SrfVec   binContent = sa.at(ctr);
 
       BOOST_TEST(binContent.size() == 1);
       BOOST_TEST(srf == binContent.at(0));
     }
-
-    
   }
 
   BOOST_AUTO_TEST_SUITE_END();
