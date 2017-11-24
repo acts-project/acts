@@ -46,7 +46,7 @@ public:
   static MutableLayerPtr
   create(std::shared_ptr<const Transform3D>  transform,
          std::shared_ptr<const ConeBounds>   cbounds,
-         std::unique_ptr<SurfaceArray>       surfaceArray,
+         std::unique_ptr<SurfaceArray_old>       surfaceArray,
          double                              thickness = 0.,
          std::unique_ptr<ApproachDescriptor> ad        = nullptr,
          LayerType                           laytyp    = Acts::active)
@@ -94,7 +94,7 @@ protected:
   /// @todo chage od and ad to unique_ptr
   ConeLayer(std::shared_ptr<const Transform3D>  transform,
             std::shared_ptr<const ConeBounds>   cbounds,
-            std::unique_ptr<SurfaceArray>       surfaceArray,
+            std::unique_ptr<SurfaceArray_old>       surfaceArray,
             double                              thickness = 0.,
             std::unique_ptr<ApproachDescriptor> ad        = nullptr,
             LayerType                           laytyp    = Acts::active);

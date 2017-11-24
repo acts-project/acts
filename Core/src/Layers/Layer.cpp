@@ -18,7 +18,7 @@
 #include "ACTS/Utilities/ApproachDescriptor.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
 
-Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
+Acts::Layer::Layer(std::unique_ptr<SurfaceArray_old>       surfaceArray,
                    double                              thickness,
                    std::unique_ptr<ApproachDescriptor> ades,
                    LayerType                           laytyp)

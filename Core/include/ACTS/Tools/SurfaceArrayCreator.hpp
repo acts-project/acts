@@ -28,7 +28,7 @@ namespace Test {
   struct SurfaceArrayCreatorFixture;
 }
 
-typedef BinnedArray<const Surface*> SurfaceArray;
+//typedef BinnedArray<const Surface*> SurfaceArray_old;
 using SurfaceMatcher
     = std::function<bool(BinningValue, const Surface*, const Surface*)>;
 
@@ -36,7 +36,7 @@ class BinUtility;
 
 typedef std::vector<const Surface*> SurfaceVector;
 typedef std::vector<SurfaceVector>  SurfaceMatrix;
-typedef std::vector<SurfaceMatrix>  SurfaceGrid;
+typedef std::vector<SurfaceMatrix>  SurfaceGrid_old;
 
 typedef std::vector<Vector3D> V3Vector;
 typedef std::vector<V3Vector> V3Matrix;
@@ -93,7 +93,7 @@ public:
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer to a new SurfaceArray
-  std::unique_ptr<SurfaceArray>
+  std::unique_ptr<SurfaceArray_old>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
                          size_t                             binsPhi,
                          size_t                             binsZ,
@@ -116,7 +116,7 @@ public:
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<Acts::SurfaceArray>
+  std::unique_ptr<Acts::SurfaceArray_old>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
                          BinningType                 bTypePhi   = equidistant,
                          BinningType                 bTypeZ     = equidistant,
@@ -138,7 +138,7 @@ public:
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<SurfaceArray>
+  std::unique_ptr<SurfaceArray_old>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
                      size_t                             binsR,
                      size_t                             binsPhi,
@@ -161,7 +161,7 @@ public:
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<Acts::SurfaceArray>
+  std::unique_ptr<Acts::SurfaceArray_old>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
                      BinningType                        bTypeR,
                      BinningType                        bTypePhi,
@@ -183,7 +183,7 @@ public:
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<SurfaceArray>
+  std::unique_ptr<SurfaceArray_old>
   surfaceArrayOnPlane(const std::vector<const Surface*>& surfaces,
                       double                             halflengthX,
                       double                             halflengthY,
@@ -338,7 +338,7 @@ private:
   completeBinning(const BinUtility&    binUtility,
                   const V3Matrix&      v3Matrix,
                   const SurfaceVector& sVector,
-                  SurfaceGrid&         sGrid) const;
+                  SurfaceGrid_old&         sGrid) const;
 
   /// Private helper method to complete the binning
   ///
@@ -346,7 +346,7 @@ private:
   /// @todo write documentation
   ///
   void
-  registerNeighbourHood(SurfaceArray& sArray) const;
+  registerNeighbourHood(SurfaceArray_old& sArray) const;
 
   /// Private helper method to transform the  vertices of surface bounds into
   /// global coordinates

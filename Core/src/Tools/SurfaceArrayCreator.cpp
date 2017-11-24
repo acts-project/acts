@@ -21,7 +21,7 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
-std::unique_ptr<Acts::SurfaceArray>
+std::unique_ptr<Acts::SurfaceArray_old>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const std::vector<const Surface*>& surfaces,
     size_t                             binsPhi,
@@ -49,7 +49,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   // prepare the surface matrix
   size_t      bins1 = arrayUtility.bins(1);
   size_t      bins0 = arrayUtility.bins(0);
-  SurfaceGrid sGrid(1, SurfaceMatrix(bins1, SurfaceVector(bins0, nullptr)));
+  SurfaceGrid_old sGrid(1, SurfaceMatrix(bins1, SurfaceVector(bins0, nullptr)));
   V3Matrix    v3Matrix(bins1, V3Vector(bins0, Vector3D(0., 0., 0.)));
   // get access to the binning data
   const std::vector<BinningData>& bdataSet = arrayUtility.binningData();
@@ -89,7 +89,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   // complete the Binning @todo switch on when we have a faster method for this
   completeBinning(arrayUtility, v3Matrix, surfaces, sGrid);
   // create the surfaceArray
-  std::unique_ptr<Acts::SurfaceArray> sArray
+  std::unique_ptr<Acts::SurfaceArray_old> sArray
       = std::make_unique<BinnedArrayXD<const Surface*>>(
           sGrid, std::make_unique<const Acts::BinUtility>(arrayUtility));
   // define neigbourhood
@@ -98,7 +98,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   return sArray;
 }
 
-std::unique_ptr<Acts::SurfaceArray>
+std::unique_ptr<Acts::SurfaceArray_old>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const std::vector<const Surface*>& surfaces,
     BinningType                        bTypePhi,
@@ -134,7 +134,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
                                       << " bins.");
 
   // prepare the surface matrix
-  SurfaceGrid sGrid(1, SurfaceMatrix(bins1, SurfaceVector(bins0, nullptr)));
+  SurfaceGrid_old sGrid(1, SurfaceMatrix(bins1, SurfaceVector(bins0, nullptr)));
   V3Matrix    v3Matrix(bins1, V3Vector(bins0, Vector3D(0., 0., 0.)));
   // get the average r
   double R          = 0;
@@ -178,7 +178,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   // @TODO switch on when we have a faster method for this
   completeBinning(arrayUtility, v3Matrix, surfaces, sGrid);
   // create the surfaceArray
-  std::unique_ptr<Acts::SurfaceArray> sArray
+  std::unique_ptr<Acts::SurfaceArray_old> sArray
       = std::make_unique<BinnedArrayXD<const Surface*>>(
           sGrid, std::make_unique<const Acts::BinUtility>(arrayUtility));
   // define neigbourhood
@@ -187,7 +187,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   return sArray;
 }
 
-std::unique_ptr<Acts::SurfaceArray>
+std::unique_ptr<Acts::SurfaceArray_old>
 Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     const std::vector<const Surface*>& surfaces,
     size_t                             binsR,
@@ -207,7 +207,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
       surfaces, binPhi, protoLayer, transform, binsPhi);
 
   // prepare the surface matrix
-  SurfaceGrid sGrid(1, SurfaceMatrix(binsPhi, SurfaceVector(binsR, nullptr)));
+  SurfaceGrid_old sGrid(1, SurfaceMatrix(binsPhi, SurfaceVector(binsR, nullptr)));
   V3Matrix    v3Matrix(binsPhi, V3Vector(binsR, Vector3D(0., 0., 0.)));
 
   // get the average z
@@ -255,7 +255,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // complete the Binning
   completeBinning(arrayUtility, v3Matrix, surfaces, sGrid);
   // create the surfaceArray
-  std::unique_ptr<Acts::SurfaceArray> sArray
+  std::unique_ptr<Acts::SurfaceArray_old> sArray
       = std::make_unique<BinnedArrayXD<const Surface*>>(
           sGrid, std::make_unique<const BinUtility>(arrayUtility));
   // define neigbourhood
@@ -264,7 +264,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   return sArray;
 }
 
-std::unique_ptr<Acts::SurfaceArray>
+std::unique_ptr<Acts::SurfaceArray_old>
 Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     const std::vector<const Surface*>& surfaces,
     BinningType                        bTypeR,
@@ -291,7 +291,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   size_t bins1 = arrayUtility.bins(1);
   size_t bins0 = arrayUtility.bins(0);
   // prepare the surface matrix
-  SurfaceGrid sGrid(1, SurfaceMatrix(bins1, SurfaceVector(bins0, nullptr)));
+  SurfaceGrid_old sGrid(1, SurfaceMatrix(bins1, SurfaceVector(bins0, nullptr)));
   V3Matrix    v3Matrix(bins1, V3Vector(bins0, Vector3D(0., 0., 0.)));
   // get the average z
   double z          = 0;
@@ -337,7 +337,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // complete the Binning
   completeBinning(arrayUtility, v3Matrix, surfaces, sGrid);
   // create the surfaceArray
-  std::unique_ptr<Acts::SurfaceArray> sArray
+  std::unique_ptr<Acts::SurfaceArray_old> sArray
       = std::make_unique<BinnedArrayXD<const Surface*>>(
           sGrid, std::make_unique<const Acts::BinUtility>(arrayUtility));
   // define neigbourhood
@@ -347,7 +347,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 }
 
 /// SurfaceArrayCreator interface method - create an array on a plane
-std::unique_ptr<Acts::SurfaceArray>
+std::unique_ptr<Acts::SurfaceArray_old>
 Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
     const std::vector<const Surface*>& /*surfaces*/,
     double /*halflengthX*/,
@@ -803,7 +803,7 @@ Acts::SurfaceArrayCreator::createBinUtility(
 
 /// Register the neigbourhood
 void
-Acts::SurfaceArrayCreator::registerNeighbourHood(SurfaceArray& sArray) const
+Acts::SurfaceArrayCreator::registerNeighbourHood(SurfaceArray_old& sArray) const
 {
   ACTS_VERBOSE("Register neighbours to the elements.");
   // get the grid first
@@ -855,7 +855,7 @@ void
 Acts::SurfaceArrayCreator::completeBinning(const BinUtility&    binUtility,
                                            const V3Matrix&      v3Matrix,
                                            const SurfaceVector& sVector,
-                                           SurfaceGrid&         sGrid) const
+                                           SurfaceGrid_old&         sGrid) const
 {
   ACTS_VERBOSE("Complete binning by filling closest neighbour surfaces into "
                "empty bins.");

@@ -23,7 +23,7 @@
 Acts::CylinderLayer::CylinderLayer(
     std::shared_ptr<const Transform3D>    transform,
     std::shared_ptr<const CylinderBounds> cBounds,
-    std::unique_ptr<SurfaceArray>         surfaceArray,
+    std::unique_ptr<SurfaceArray_old>         surfaceArray,
     double                                thickness,
     std::unique_ptr<ApproachDescriptor>   ades,
     LayerType                             laytyp)

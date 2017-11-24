@@ -77,7 +77,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
                                        << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray
+  std::unique_ptr<SurfaceArray_old> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
           surfaces, binsPhi, binsZ, protoLayer, transform);
 
@@ -133,7 +133,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray
+  std::unique_ptr<SurfaceArray_old> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
           surfaces, bTypePhi, bTypeZ, protoLayer, transform);
 
@@ -187,7 +187,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray
+  std::unique_ptr<SurfaceArray_old> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
           surfaces, bTypePhi, bTypeZ, protoLayer, transform);
 
@@ -244,7 +244,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                                        << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray
+  std::unique_ptr<SurfaceArray_old> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
           surfaces, binsR, binsPhi, protoLayer, transform);
 
@@ -304,7 +304,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray
+  std::unique_ptr<SurfaceArray_old> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
           surfaces, bTypeR, bTypePhi, protoLayer, transform);
 
@@ -362,7 +362,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray
+  std::unique_ptr<SurfaceArray_old> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
           surfaces, bTypeR, bTypePhi, protoLayer, transform);
 
