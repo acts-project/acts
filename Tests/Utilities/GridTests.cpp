@@ -1061,6 +1061,7 @@ namespace Test {
     // clang-format on
   }
 
+  /*
   BOOST_AUTO_TEST_CASE(performanceComparison)
   {
     typedef std::array<double, 1> Point;
@@ -1068,9 +1069,9 @@ namespace Test {
     EquidistantAxis a(0.0, 100.0, 100u);
     Grid<double, EquidistantAxis> g(std::make_tuple(std::move(a)));
     concept::AnyNDimGrid<double, Point, 1> anyG = g;
-    auto fg = make_grid_fast(g);
+    //auto fg = make_grid_fast(g);
 
-    void * voidptr_g = &g;
+    //void * voidptr_g = &g;
     
     
     // fill the grid
@@ -1094,7 +1095,7 @@ namespace Test {
       //double res = fg.at(req);
       
       //auto deref_g = static_cast<Grid<double, EquidistantAxis>*>(voidptr_g);
-      double res = static_cast<Grid<double, EquidistantAxis>*>(voidptr_g)->at(req);
+      //double res = static_cast<Grid<double, EquidistantAxis>*>(voidptr_g)->at(req);
 
       //assert(refres == anyG.at(req) 
              //&& refres == fg.at(req) 
@@ -1134,6 +1135,7 @@ namespace Test {
 
     //std::cout << "TE: " << std::setprecision(2) << ((delta2 - delta1)/delta1 * 100.) << "%" << std::endl;
   }
+  */
 
 }  // namespace Test
 
