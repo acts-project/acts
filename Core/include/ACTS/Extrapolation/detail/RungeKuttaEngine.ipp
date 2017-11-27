@@ -139,7 +139,6 @@ Acts::RungeKuttaEngine<MagneticField>::propagateRungeKuttaT(
     pCache.pVector[40] *= p;
   }
 
-
   // return curvilinear when the path limit is met
   if (pCache.maxPathLimit) {
     pCache.returnCurvilinear = true;
@@ -151,7 +150,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateRungeKuttaT(
   // create the return track parameters from Global to Local
   m_rkUtils.transformGlobalToLocal(
       &dSurface, uJ, pCache.pVector, pCache.parameters, pCache.jacobian);
-  
+
   if (pCache.boundaryCheck && !pCache.maxPathLimit) {
     // create a local position and check for inside
     Vector2D lPosition(pCache.parameters[0], pCache.parameters[1]);
@@ -404,7 +403,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
 
   // propagate with templated helper function
   if (propagateRungeKuttaT<TrackParameters>(eCell, pCache, *sParameters, sf)) {
-    
+
     // create a new covariance matrix
     std::unique_ptr<const ActsSymMatrixD<5>> cov;
     if (pCache.covariance) cov.reset(new ActsSymMatrixD<5>(*pCache.covariance));
@@ -507,13 +506,12 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
   SA[0] = SA[1] = SA[2] = 0.;
   pCache.maxPathLimit   = false;
 
-  // @todo the inverse momentum condition is hard-coded 
+  // @todo the inverse momentum condition is hard-coded
   if (pCache.mcondition && std::abs(pCache.pVector[6]) > 100000.) return false;
 
   // Step estimation until surface
   bool   Q;
-  double S, 
-  step = stepEstimatorWithCurvature(pCache, kind, Su, Q);
+  double S, step = stepEstimatorWithCurvature(pCache, kind, Su, Q);
   if (!Q) return false;
 
   bool dir = true;
@@ -534,7 +532,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
 
   // whie loop over the steps
   while (std::abs(step) > m_cfg.straightStep) {
-    
+
     // maximum number of steps
     if (++pCache.niter > 10000) {
       //!< @todo make max number configurable
@@ -557,7 +555,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
     } else {  // or within straight line
       pCache.step += (S = straightLineStep(navigationStep, pCache, S));
     }
-      
+
     step = stepEstimatorWithCurvature(pCache, kind, Su, Q);
 
     if (!Q) {
@@ -619,9 +617,9 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
   // Output track parameteres
   pCache.step += step;
 
-  // last step to surface not needed, within tolerance  
+  // last step to surface not needed, within tolerance
   if (std::abs(step) < m_cfg.straightStep) return true;
-    
+
   // This is a last straight line approach
   A[0] += (SA[0] * step);
   A[1] += (SA[1] * step);
@@ -634,7 +632,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
   A[1] *= CBA;
   R[2] += step * (A[2] - .5 * step * SA[2]);
   A[2] *= CBA;
-  
+
   return true;
 }
 
@@ -1276,11 +1274,8 @@ Acts::RungeKuttaEngine<MagneticField>::stepEstimatorWithCurvature(
     bool&             Q) const
 {
   // Straight step estimation
-  double Step = m_rkUtils.stepEstimator(kind, 
-                                        Su, 
-                                        pCache.pVector, 
-                                        Q, 
-                                        pCache.maxStepSize);
+  double Step = m_rkUtils.stepEstimator(
+      kind, Su, pCache.pVector, Q, pCache.maxStepSize);
   if (!Q) return 0.;
   double AStep = std::abs(Step);
   if (kind || AStep < m_cfg.straightStep || !pCache.mcondition) return Step;

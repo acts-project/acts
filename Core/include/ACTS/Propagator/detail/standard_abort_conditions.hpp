@@ -65,7 +65,7 @@ namespace detail {
       if (std::abs(cache.step_size)
           > std::abs(singed_path_limit - cache.accumulated_path))
         cache.step_size = singed_path_limit - cache.accumulated_path;
-      
+
       // path limit check
       return (std::abs(singed_path_limit - cache.accumulated_path) < tolerance);
     }
@@ -128,14 +128,14 @@ namespace detail {
       if (!surface) return false;
       // calculate the distance to the surface
       // @todo that might cause problems with a cylinder
-      const double distance = surface
-                                  ->intersectionEstimate(cache.position(),
-                                                         direction*cache.direction(),
-                                                         true)
-                                  .pathLength;
+      const double distance
+          = surface
+                ->intersectionEstimate(
+                    cache.position(), direction * cache.direction(), true)
+                .pathLength;
       // Adjust the step size so that we cannot cross the target surface
       if (std::abs(cache.step_size) > std::abs(distance))
-          cache.step_size = distance;
+        cache.step_size = distance;
       // return true if you fall below tolerance
       return (std::abs(distance) <= tolerance);
     }

@@ -117,9 +117,9 @@ namespace IntegrationTest {
     BOOST_TEST((pz - tp->momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
     BOOST_TEST((theta - tp->momentum().theta()) == 0., tt::tolerance(1e-4));
     // clang-format on
-    
+
     double r = std::abs(Nat2SI<units::MOMENTUM>(pT) / (q * Bz));
-    
+
     // calculate number of turns of helix
     double turns = options.max_path_length / (2 * M_PI * r) * sin(theta);
     // respect direction of curl
@@ -211,7 +211,7 @@ namespace IntegrationTest {
     // clang-format on
   }
 
-  // test propagation to cylinder 
+  // test propagation to cylinder
   template <typename Propagator_type>
   std::pair<Vector3D, double>
   to_cylinder(const Propagator_type& propagator,
@@ -224,49 +224,49 @@ namespace IntegrationTest {
               double                 rand2,
               double                 rand3)
   {
-    
+
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.max_step_size   = 0.5*plimit; // 1 * units::_cm;
-    // 
+    options.max_step_size = 0.5 * plimit;  // 1 * units::_cm;
+    //
     options.max_path_length = plimit;
-        
+
     // define start parameters
-    double            x  = 0;
-    double            y  = 0;
-    double            z  = 0;
-    double            px = pT * cos(phi);
-    double            py = pT * sin(phi);
-    double            pz = pT / tan(theta);
-    double            q  = charge;
-    Vector3D          pos(x, y, z);
-    Vector3D          mom(px, py, pz);
+    double   x  = 0;
+    double   y  = 0;
+    double   z  = 0;
+    double   px = pT * cos(phi);
+    double   py = pT * sin(phi);
+    double   pz = pT / tan(theta);
+    double   q  = charge;
+    Vector3D pos(x, y, z);
+    Vector3D mom(px, py, pz);
 
     // Create curvilinear start parameters
     CurvilinearParameters start(nullptr, pos, mom, q);
     const auto            result_s = propagator.propagate(start, options);
     const auto&           tp_s     = result_s.endParameters;
-    
-    if (tp_s){
+
+    if (tp_s) {
       // The transform at the destination
-      auto seTransform = createCylindricTransform(Vector3D(0.,0.,0.),
-                                                  0.05*rand1, 0.05*rand2);
-      CylinderSurface endSurface(seTransform, 
+      auto seTransform = createCylindricTransform(
+          Vector3D(0., 0., 0.), 0.05 * rand1, 0.05 * rand2);
+      CylinderSurface endSurface(seTransform,
                                  tp_s->position().perp(),
                                  std::numeric_limits<double>::max());
 
-      // Increase the path limit - to be safe hitting the surface 
-      options.max_path_length *= 2;    
-      const auto   result = propagator.propagate(start, endSurface, options);  
-      const auto&  tp     = result.endParameters;
+      // Increase the path limit - to be safe hitting the surface
+      options.max_path_length *= 2;
+      const auto  result = propagator.propagate(start, endSurface, options);
+      const auto& tp     = result.endParameters;
 
-      // The position and path length 
-      return std::pair<Vector3D,double>(tp->position(), result.pathLength);   
+      // The position and path length
+      return std::pair<Vector3D, double>(tp->position(), result.pathLength);
     }
-    return std::pair<Vector3D,double>(Vector3D{0.,0.,0}, 0.);                                                                           
+    return std::pair<Vector3D, double>(Vector3D{0., 0., 0}, 0.);
   }
-  
+
   // test propagation to most surfaces
   template <typename Propagator_type, typename Surface_type>
   std::pair<Vector3D, double>
@@ -281,51 +281,49 @@ namespace IntegrationTest {
              double                 rand3,
              bool                   planar = true)
   {
-    
+
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.max_step_size   =  1 * units::_cm;
+    options.max_step_size   = 1 * units::_cm;
     options.max_path_length = plimit * units::_m;
-        
+
     // define start parameters
-    double            x  = 0;
-    double            y  = 0;
-    double            z  = 0;
-    double            px = pT * cos(phi);
-    double            py = pT * sin(phi);
-    double            pz = pT / tan(theta);
-    double            q  = charge;
-    Vector3D          pos(x, y, z);
-    Vector3D          mom(px, py, pz);
+    double   x  = 0;
+    double   y  = 0;
+    double   z  = 0;
+    double   px = pT * cos(phi);
+    double   py = pT * sin(phi);
+    double   pz = pT / tan(theta);
+    double   q  = charge;
+    Vector3D pos(x, y, z);
+    Vector3D mom(px, py, pz);
 
     // Create curvilinear start parameters
     CurvilinearParameters start(nullptr, pos, mom, q);
     const auto            result_s = propagator.propagate(start, options);
     const auto&           tp_s     = result_s.endParameters;
-    
-    
+
     // The transform at the destination
-    auto seTransform 
-      = planar ? createPlanarTransform(
-                             tp_s->position(), 
-                             tp_s->momentum().unit(), 
-                             0.1*rand3, 0.1*rand1) :
-                  createCylindricTransform(
-                             tp_s->position(), 
-                             0.05*rand1, 0.05*rand2);           
+    auto seTransform = planar ? createPlanarTransform(tp_s->position(),
+                                                      tp_s->momentum().unit(),
+                                                      0.1 * rand3,
+                                                      0.1 * rand1)
+                              : createCylindricTransform(tp_s->position(),
+                                                         0.05 * rand1,
+                                                         0.05 * rand2);
 
     Surface_type endSurface(seTransform);
 
-    // Increase the path limit - to be safe hitting the surface 
+    // Increase the path limit - to be safe hitting the surface
     options.max_path_length *= 2;
-    const auto   result = propagator.propagate(start, endSurface, options);  
-    const auto&  tp     = result.endParameters;
-    
-    // The position and path length 
-    return std::pair<Vector3D,double>(tp->position(), result.pathLength);    
+    const auto  result = propagator.propagate(start, endSurface, options);
+    const auto& tp     = result.endParameters;
+
+    // The position and path length
+    return std::pair<Vector3D, double>(tp->position(), result.pathLength);
   }
-  
+
   template <typename Propagator_type>
   void
   covariance_curvilinear(const Propagator_type& propagator,
@@ -367,14 +365,14 @@ namespace IntegrationTest {
     CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
     const auto            result = propagator.propagate(start, options);
     const auto&           tp     = result.endParameters;
-    
+
     // get numerically propagated covariance matrix
     ActsSymMatrixD<5> calculated_cov
         = fixture.calculateCovariance(start, *tp, options);
     ActsSymMatrixD<5> obtained_cov = (*(tp->covariance()));
     bool cov_similar = calculated_cov.isApprox(obtained_cov, reltol);
     BOOST_CHECK(cov_similar);
-    if (!cov_similar){
+    if (!cov_similar) {
       BOOST_CHECK_EQUAL(calculated_cov, obtained_cov);
     }
   }
@@ -414,13 +412,13 @@ namespace IntegrationTest {
     ActsSymMatrixD<5> cov;
 
     // take some major correlations (off-diagonals)
-    // cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
+    // cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162,
+    // 0,
     //     0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
     //     1. / (10 * units::_GeV);
 
-    cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0,
-        0, 0, 0.1, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0,
-        1. / (10 * units::_GeV);
+    cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1,
+        0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
 
     auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 
@@ -429,14 +427,15 @@ namespace IntegrationTest {
     const auto            result_c = propagator.propagate(start_c, options);
     const auto&           tp_c     = result_c.endParameters;
 
-    auto ssTransform = createPlanarTransform(pos, mom.unit(), 0.1*rand1, 0.1*rand2);
+    auto ssTransform
+        = createPlanarTransform(pos, mom.unit(), 0.1 * rand1, 0.1 * rand2);
     auto seTransform = createPlanarTransform(
-        tp_c->position(), tp_c->momentum().unit(), 0.1*rand3, 0.1*rand1);
+        tp_c->position(), tp_c->momentum().unit(), 0.1 * rand3, 0.1 * rand1);
 
     PlaneSurface    startSurface(ssTransform);
     BoundParameters start(std::move(cov_ptr), pos, mom, q, startSurface);
 
-    // increase the path limit - to be safe hitting the surface 
+    // increase the path limit - to be safe hitting the surface
     options.max_path_length *= 2;
 
     PlaneSurface endSurface(seTransform);
@@ -451,7 +450,7 @@ namespace IntegrationTest {
 
     bool cov_similar = calculated_cov.isApprox(obtained_cov, reltol);
     BOOST_CHECK(cov_similar);
-    //if (!cov_similar){
+    // if (!cov_similar){
     //  BOOST_CHECK_EQUAL(calculated_cov, obtained_cov);
     //}
   }

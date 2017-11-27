@@ -132,9 +132,9 @@ namespace propagation {
     {
       // The extrapolation cell
       ExtrapolationCell<NeutralParameters> ec(start);
-      ec.pathLimit = options.max_path_length;
+      ec.pathLimit              = options.max_path_length;
       ec.destinationCurvilinear = true;
-      
+
       return propagate_<ExtrapolationCell<NeutralParameters>,
                         NeutralCurvilinearParameters,
                         NeutralParameters,
@@ -150,10 +150,10 @@ namespace propagation {
     {
       // The extrapolation cell
       ExtrapolationCell<TrackParameters> ec(start);
-      ec.pathLimit = options.max_path_length;
+      ec.pathLimit              = options.max_path_length;
       ec.destinationCurvilinear = true;
-              
-      return propagate_< ExtrapolationCell<TrackParameters> ,
+
+      return propagate_<ExtrapolationCell<TrackParameters>,
                         CurvilinearParameters,
                         TrackParameters,
                         CylinderSurface,
@@ -186,7 +186,7 @@ namespace propagation {
               typename Observers,
               typename Aborters>
     WrapperResult<NeutralCurvilinearParameters>
-    propagate_with_cache_c(Cache& cache,
+    propagate_with_cache_c(Cache&                   cache,
                            const NeutralParameters& start,
                            const Surface&           target,
                            const Options<Observers, Aborters>& options) const
@@ -204,7 +204,7 @@ namespace propagation {
               typename Observers,
               typename Aborters>
     WrapperResult<CurvilinearParameters>
-    propagate_with_cache_c(Cache& cache,
+    propagate_with_cache_c(Cache&                 cache,
                            const TrackParameters& start,
                            const Surface&         target,
                            const Options<Observers, Aborters>& options) const
@@ -240,7 +240,7 @@ namespace propagation {
               typename Observers,
               typename Aborters>
     WrapperResult<TrackParameters>
-    propagate_with_cache(Cache& cache,
+    propagate_with_cache(Cache&                 cache,
                          const TrackParameters& start,
                          const Surface&         target,
                          const Options<Observers, Aborters>& options) const
@@ -278,10 +278,10 @@ namespace propagation {
     {
       // The extrapolation cell
       ExtrapolationCell<NeutralParameters> ec(start);
-      ec.pathLimit    = options.max_path_length;
-      ec.maxStepSize  = options.max_step_size; 
+      ec.pathLimit              = options.max_path_length;
+      ec.maxStepSize            = options.max_step_size;
       ec.destinationCurvilinear = false;
-      
+
       return propagate_<ExtrapolationCell<NeutralParameters>,
                         NeutralParameters,
                         NeutralParameters,
@@ -296,12 +296,12 @@ namespace propagation {
               const Surface&         target,
               const Options<Observers, Aborters>& options) const
     {
-      
+
       // The extrapolation cell
       ExtrapolationCell<TrackParameters> ec(start);
-      ec.pathLimit = options.max_path_length;
+      ec.pathLimit              = options.max_path_length;
       ec.destinationCurvilinear = false;
-      
+
       return propagate_<ExtrapolationCell<TrackParameters>,
                         TrackParameters,
                         TrackParameters,
@@ -331,7 +331,7 @@ namespace propagation {
               typename Observers,
               typename Aborters>
     WrapperResult<Parameters>
-    propagate_(Cache& cache,
+    propagate_(Cache&            cache,
                const Parameters& start,
                const Surface&    surface,
                const Options<Observers, Aborters>& options) const
@@ -339,8 +339,8 @@ namespace propagation {
       // Initialize the propagation result object
       WrapperResult<Parameters> r(Status::IN_PROGRESS);
       // Call the wrapped propagator with the ExtrapolationCell
-      auto status = m_impl->propagate(cache, 
-                                      surface, 
+      auto status = m_impl->propagate(cache,
+                                      surface,
                                       PropDirection(int(options.direction)),
                                       {ExtrapolationMode::Destination},
                                       true,
@@ -352,7 +352,7 @@ namespace propagation {
         r.endParameters = std::unique_ptr<const Parameters>(cParameters);
         r.pathLength    = cache.pathLength;
         r.status        = Status::SUCCESS;
-      } 
+      }
       return r;
     }
 
@@ -361,9 +361,7 @@ namespace propagation {
 
     // The Surface in case none is provided
     CylinderSurface m_surface
-        = CylinderSurface(nullptr,
-                          100.*units::_m,
-                          100.*units::_m);
+        = CylinderSurface(nullptr, 100. * units::_m, 100. * units::_m);
   };
 
 }  // namespace propagation

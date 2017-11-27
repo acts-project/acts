@@ -323,9 +323,10 @@ public:
 
   /// Distance to intersection
   template <class T>
-  double distance(const T&             pars,
-                  bool                 forceDir = false,
-                  const BoundaryCheck& bcheck   = false) const;
+  double
+  distance(const T&             pars,
+           bool                 forceDir = false,
+           const BoundaryCheck& bcheck   = false) const;
 
   /// Returns 'true' if this surface is 'free'
   /// i.e. it does not belong to a detector element, a layer or a tracking

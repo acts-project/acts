@@ -101,12 +101,11 @@ bool
 Acts::CylinderBounds::inside3D(const Acts::Vector3D&      pos,
                                const Acts::BoundaryCheck& bcheck) const
 {
-  
-  if (s_onSurfaceTolerance <= std::abs(pos.perp() - m_radius))
-    return false;
-  
+
+  if (s_onSurfaceTolerance <= std::abs(pos.perp() - m_radius)) return false;
+
   Vector2D lpos(detail::radian_sym(pos.phi() - m_avgPhi), pos.z());
-  return bcheck.transformed(jacobian()) 
+  return bcheck.transformed(jacobian())
       .isInside(lpos, -m_halfPhi, m_halfPhi, -m_halfZ, m_halfZ);
 }
 

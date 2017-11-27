@@ -178,8 +178,8 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
                                             bool                  forceDir,
                                             const BoundaryCheck&  bcheck) const
 {
-  bool needsTransform = 
-       (Acts::Surface::m_transform || m_associatedDetElement) ? true : false;
+  bool needsTransform
+      = (Acts::Surface::m_transform || m_associatedDetElement) ? true : false;
   // create the hep points
   Vector3D point1    = gpos;
   Vector3D direction = dir.unit();
@@ -257,7 +257,7 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
   isValid = bcheck ? (isValid && bounds().inside3D(solution, bcheck)) : isValid;
 
   // now return
-  return needsTransform ? Intersection((transform()*solution), path, isValid)
+  return needsTransform ? Intersection((transform() * solution), path, isValid)
                         : Intersection(solution, path, isValid);
 }
 

@@ -45,7 +45,7 @@ namespace IntegrationTest {
       // avoid stopping before the surface because of path length reached
       U var_options = options;
       var_options.max_path_length *= 2;
-            
+
       // variation in x
       std::vector<ActsVectorD<5>> x_derivatives;
       x_derivatives.reserve(h_steps.size());

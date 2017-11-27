@@ -142,7 +142,6 @@ Acts::RungeKuttaUtils::transformGlobalToLocal(const Acts::Surface* su,
   Jac[18] = C * P[33];                // dThe/dThe
   Jac[19] = C * P[40];                // dThe/dCM
   Jac[20] = P[41];                    // dCM /dCM
-  
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -226,7 +225,6 @@ Acts::RungeKuttaUtils::transformGlobalToPlane(const Acts::Surface* su,
   Jac[7] = Ay[0] * P[21] + Ay[1] * P[22] + Ay[2] * P[23];  // dL1/dPhi
   Jac[8] = Ay[0] * P[28] + Ay[1] * P[29] + Ay[2] * P[30];  // dL1/dThe
   Jac[9] = Ay[0] * P[35] + Ay[1] * P[36] + Ay[2] * P[37];  // dL1/dCM
-    
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -335,7 +333,7 @@ Acts::RungeKuttaUtils::transformGlobalToCylinder(const Acts::Surface* su,
                                                  double*              Jac) const
 {
   const Acts::Transform3D& T = su->transform();
-  
+
   double Ax[3] = {T(0, 0), T(1, 0), T(2, 0)};
   double Ay[3] = {T(0, 1), T(1, 1), T(2, 1)};
   double Az[3] = {T(0, 2), T(1, 2), T(2, 2)};
@@ -573,14 +571,18 @@ Acts::RungeKuttaUtils::stepEstimator(int           kind,
                                      double*       Su,
                                      const double* P,
                                      bool&         Q,
-                                     double maxStep) const
+                                     double        maxStep) const
 {
   double s = maxStep;
-  if (kind == 1) s = stepEstimatorToPlane(Su, P, Q);
-  else if (kind == 0) s = stepEstimatorToStraw(Su, P, Q);
-  else if (kind == 2) s = stepEstimatorToCylinder(Su, P, Q);
-  else if (kind == 3) s = stepEstimatorToCone(Su, P, Q);
-  return ( s > maxStep ? maxStep : s);
+  if (kind == 1)
+    s = stepEstimatorToPlane(Su, P, Q);
+  else if (kind == 0)
+    s = stepEstimatorToStraw(Su, P, Q);
+  else if (kind == 2)
+    s = stepEstimatorToCylinder(Su, P, Q);
+  else if (kind == 3)
+    s = stepEstimatorToCone(Su, P, Q);
+  return (s > maxStep ? maxStep : s);
   // return 1000000.;  // @todo maximum not hard-coded
 }
 
@@ -679,7 +681,10 @@ Acts::RungeKuttaUtils::stepEstimatorToCylinder(double*       S,
     return Smax;
   }
 
-  if(std::abs(Smin) < .001) {S[8]=-1.; return Smax;}
+  if (std::abs(Smin) < .001) {
+    S[8] = -1.;
+    return Smax;
+  }
 
   S[8] = 1.;
   return Smin;
@@ -930,7 +935,6 @@ Acts::RungeKuttaUtils::transformPlaneToGlobal(bool                 useJac,
   P[1] = p[0] * Ax[1] + p[1] * Ay[1] + T(1, 3);  // Y
   P[2] = p[0] * Ax[2] + p[1] * Ay[2] + T(2, 3);  // Z
 
-
   if (!useJac) return;
 
   //    /dL1   |     /dL2     |   /dPhi   |  /dThe    |
@@ -946,7 +950,6 @@ Acts::RungeKuttaUtils::transformPlaneToGlobal(bool                 useJac,
   P[16] = Ay[2];
   P[23] = 0.;
   P[30] = 0.;  // dZ/
-  
 }
 
 /////////////////////////////////////////////////////////////////////////////////
