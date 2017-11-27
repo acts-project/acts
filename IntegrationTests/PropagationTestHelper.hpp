@@ -11,6 +11,8 @@
 
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Propagator/Propagator.hpp"
+#include "ACTS/Surfaces/CylinderSurface.hpp"
+#include "ACTS/Surfaces/DiscSurface.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "covariance_validation_fixture.hpp"
@@ -32,10 +34,10 @@ namespace IntegrationTest {
   /// @param angleT Rotation around the norminal normal
   /// @param angleU Roation around the original U axis
   std::shared_ptr<Transform3D>
-  createPlaneTransform(const Vector3D& nposition,
-                       const Vector3D& nnormal,
-                       double          angleT,
-                       double          angleU)
+  createPlanarTransform(const Vector3D& nposition,
+                        const Vector3D& nnormal,
+                        double          angleT,
+                        double          angleU)
   {
     // the rotation of the destination surface
     Vector3D T = nnormal.normalized();
@@ -65,11 +67,13 @@ namespace IntegrationTest {
   /// @param angleT Rotation around the norminal normal
   /// @param angleU Roation around the original U axis
   std::shared_ptr<Transform3D>
-  createCylinderTransform(double          angleX,
-                          double          angleY)
+  createCylindricTransform(const Vector3D& nposition,
+                           double          angleX,
+                           double          angleY)
   {
     Transform3D ctransform;
     ctransform.setIdentity();
+    ctransform.pretranslate(nposition);
     ctransform.prerotate(AngleAxis3D(angleX, Vector3D::UnitX()));
     ctransform.prerotate(AngleAxis3D(angleY, Vector3D::UnitY()));
     return std::make_shared<Transform3D>(ctransform);
@@ -207,8 +211,6 @@ namespace IntegrationTest {
     // clang-format on
   }
 
-
-
   // test propagation to cylinder 
   template <typename Propagator_type>
   std::pair<Vector3D, double>
@@ -245,41 +247,39 @@ namespace IntegrationTest {
     CurvilinearParameters start(nullptr, pos, mom, q);
     const auto            result_s = propagator.propagate(start, options);
     const auto&           tp_s     = result_s.endParameters;
-         
-    // The transform at the destination
-    auto seTransform = createCylinderTransform(0.01,0.); //0.05*rand1, 0.05*rand2);
-    CylinderSurface endSurface(seTransform, 
-                               tp_s->position().perp(),
-                               std::numeric_limits<double>::max());
+    
+    if (tp_s){
+      // The transform at the destination
+      auto seTransform = createCylindricTransform(Vector3D(0.,0.,0.),
+                                                  0.05*rand1, 0.05*rand2);
+      CylinderSurface endSurface(seTransform, 
+                                 tp_s->position().perp(),
+                                 std::numeric_limits<double>::max());
 
-    // Increase the path limit - to be safe hitting the surface 
-    options.max_path_length *= 2;
-    std::cout << " the new max path limit is " << options.max_path_length << std::endl;
-    const auto   result = propagator.propagate(start, endSurface, options);  
-    const auto&  tp     = result.endParameters;
-    
-    //std::cout << "EndSurface = " << endSurface << std::endl;
-    std::cout << " is the position on the surface ? " << endSurface.isOnSurface(tp->position()) << std::endl;;
-    std::cout << " Distance to surface = " << endSurface.intersectionEstimate(tp->position(), 
-                                                                              tp->momentum().unit(),
-                                                                              true).pathLength << std::endl;
-    
-    // The position and path length 
-    return std::pair<Vector3D,double>(tp->position(), result.pathLength);    
+      // Increase the path limit - to be safe hitting the surface 
+      options.max_path_length *= 2;    
+      const auto   result = propagator.propagate(start, endSurface, options);  
+      const auto&  tp     = result.endParameters;
+
+      // The position and path length 
+      return std::pair<Vector3D,double>(tp->position(), result.pathLength);   
+    }
+    return std::pair<Vector3D,double>(Vector3D{0.,0.,0}, 0.);                                                                           
   }
   
-  // test propagation to planar surfaces
-  template <typename Propagator_type>
+  // test propagation to most surfaces
+  template <typename Propagator_type, typename Surface_type>
   std::pair<Vector3D, double>
-  to_plane(const Propagator_type& propagator,
-           double                 pT,
-           double                 phi,
-           double                 theta,
-           double                 charge,
-           double                 plimit,
-           double                 rand1,
-           double                 rand2,
-           double                 rand3)
+  to_surface(const Propagator_type& propagator,
+             double                 pT,
+             double                 phi,
+             double                 theta,
+             double                 charge,
+             double                 plimit,
+             double                 rand1,
+             double                 rand2,
+             double                 rand3,
+             bool                   planar = true)
   {
     
     // setup propagation options
@@ -307,24 +307,25 @@ namespace IntegrationTest {
     
     // The transform at the destination
     auto seTransform 
-      = createPlaneTransform(tp_s->position(), 
+      = planar ? createPlanarTransform(
+                             tp_s->position(), 
                              tp_s->momentum().unit(), 
-                             0.1*rand3, 0.1*rand1);
-    PlaneSurface endSurface(seTransform);
+                             0.1*rand3, 0.1*rand1) :
+                  createCylindricTransform(
+                             tp_s->position(), 
+                             0.05*rand1, 0.05*rand2);           
+
+    Surface_type endSurface(seTransform);
 
     // Increase the path limit - to be safe hitting the surface 
     options.max_path_length *= 2;
     const auto   result = propagator.propagate(start, endSurface, options);  
     const auto&  tp     = result.endParameters;
     
-    // std::cout << "EndSurface = " << endSurface << std::endl;
-    std::cout << " is the position on the surface ? " << endSurface.isOnSurface(tp->position()) << std::endl;;
-    
     // The position and path length 
     return std::pair<Vector3D,double>(tp->position(), result.pathLength);    
   }
   
-
   template <typename Propagator_type>
   void
   covariance_curvilinear(const Propagator_type& propagator,
@@ -428,8 +429,8 @@ namespace IntegrationTest {
     const auto            result_c = propagator.propagate(start_c, options);
     const auto&           tp_c     = result_c.endParameters;
 
-    auto ssTransform = createPlaneTransform(pos, mom.unit(), 0.1*rand1, 0.1*rand2);
-    auto seTransform = createPlaneTransform(
+    auto ssTransform = createPlanarTransform(pos, mom.unit(), 0.1*rand1, 0.1*rand2);
+    auto seTransform = createPlanarTransform(
         tp_c->position(), tp_c->momentum().unit(), 0.1*rand3, 0.1*rand1);
 
     PlaneSurface    startSurface(ssTransform);

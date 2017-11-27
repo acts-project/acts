@@ -159,7 +159,7 @@ Acts::LineSurface::intersectionEstimate(const Vector3D&      gpos,
     // return the result
     return Intersection(result, lambda0, isValid);
   }
-  return Intersection(gpos, 0., false);
+  return Intersection(gpos, std::numeric_limits<double>::max(), false);
 }
 
 double

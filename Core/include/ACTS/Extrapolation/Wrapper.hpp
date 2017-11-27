@@ -152,7 +152,7 @@ namespace propagation {
       ExtrapolationCell<TrackParameters> ec(start);
       ec.pathLimit = options.max_path_length;
       ec.destinationCurvilinear = true;
-        
+              
       return propagate_< ExtrapolationCell<TrackParameters> ,
                         CurvilinearParameters,
                         TrackParameters,
@@ -338,7 +338,6 @@ namespace propagation {
     {
       // Initialize the propagation result object
       WrapperResult<Parameters> r(Status::IN_PROGRESS);
-
       // Call the wrapped propagator with the ExtrapolationCell
       auto status = m_impl->propagate(cache, 
                                       surface, 
@@ -346,7 +345,6 @@ namespace propagation {
                                       {ExtrapolationMode::Destination},
                                       true,
                                       cache.destinationCurvilinear);
-
       // Check and convert
       if (!status.isFailure() && cache.endParameters) {
         const Parameters* cParameters
@@ -354,8 +352,6 @@ namespace propagation {
         r.endParameters = std::unique_ptr<const Parameters>(cParameters);
         r.pathLength    = cache.pathLength;
         r.status        = Status::SUCCESS;
-      } else {
-        std::cout << "Failure detected !" << std::endl;
       } 
       return r;
     }

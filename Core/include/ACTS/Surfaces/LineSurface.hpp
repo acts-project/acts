@@ -38,19 +38,17 @@ public:
 
   /// Constructor from Transform3D and bounds
   ///
-  /// @param htrans is the transform that positions the surface in the global
-  /// frame
-  /// @param radius is the straw radius
-  /// @param halez is the half length in z
+  /// @param htrans The transform that positions the surface in the global frame
+  /// @param radius The straw radius
+  /// @param halez The half length in z
   LineSurface(std::shared_ptr<const Transform3D> htrans,
               double                             radius,
               double                             halez);
 
   /// Constructor from Transform3D and a shared bounds object
   ///
-  /// @param htrans is the transform that positions the surface in the global
-  /// frame
-  /// @param lbounds are teh bounds describing the straw dimensions, can be
+  /// @param htrans The transform that positions the surface in the global frame
+  /// @param lbounds The bounds describing the straw dimensions, can be
   /// optionally nullptr
   LineSurface(std::shared_ptr<const Transform3D> htrans,
               std::shared_ptr<const LineBounds>  lbounds = nullptr);
@@ -67,13 +65,13 @@ public:
 
   /// Copy constructor
   ///
-  /// @param other is teh source surface for copying
+  /// @param other The source surface for copying
   LineSurface(const LineSurface& other);
 
   /// Copy constructor with shift
   ///
-  /// @param other is the source surface dor copying
-  /// @param transf is the additional transform applied after copying
+  /// @param other The source surface dor copying
+  /// @param transf The additional transform applied after copying
   LineSurface(const LineSurface& other, const Transform3D& transf);
 
   virtual ~LineSurface();

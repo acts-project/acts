@@ -133,17 +133,9 @@ namespace detail {
                                                          direction*cache.direction(),
                                                          true)
                                   .pathLength;
-      // Abort if wrong direction
-      if (distance * direction < 0) {
-        // @todo trigger wrong direction
-        std::cout << " Overstepped - so break ! " << std::endl;
-        return true;
-      }
       // Adjust the step size so that we cannot cross the target surface
-      if (std::abs(cache.step_size) > std::abs(distance)){
-        std::cout << " Updated to new distance = " << distance << std::endl;
+      if (std::abs(cache.step_size) > std::abs(distance))
           cache.step_size = distance;
-        }
       // return true if you fall below tolerance
       return (std::abs(distance) <= tolerance);
     }

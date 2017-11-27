@@ -23,8 +23,8 @@ namespace Acts {
 ///  intersection struct used for position
 struct Intersection
 {
-  Vector3D position;
-  double   pathLength;
+  Vector3D position;      // position of the intersection
+  double   pathLength;     
   double   distance;
   bool     valid;
 

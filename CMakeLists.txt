@@ -65,7 +65,6 @@ add_subdirectory_if(Tests ACTS_BUILD_TESTS)
 add_subdirectory_if(IntegrationTests ACTS_BUILD_INTEGRATION_TESTS)
 
 # documentation
-
 add_subdirectory_if (doc ACTS_BUILD_DOC)
 
 # setup script and cmake configuration files
