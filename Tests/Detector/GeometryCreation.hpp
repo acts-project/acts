@@ -58,8 +58,8 @@ constructCylinderVolume(double             surfaceHalfLengthZ,
   double bUmax    = sfpPosition.z() + surfaceHalfLengthZ;
   auto   bUtility = std::make_unique<const BinUtility>(
       surfaces.size(), bUmin, bUmax, open, binZ);
-  auto bArray
-      = std::make_unique<BinnedArrayXD<const Surface*>>(surfaces, std::move(bUtility));
+  auto bArray = std::make_unique<BinnedArrayXD<const Surface*>>(
+      surfaces, std::move(bUtility));
 
   ///  now create the Layer
   auto layer0bounds

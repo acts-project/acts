@@ -147,6 +147,58 @@ namespace Test {
     BOOST_TEST(not a.isInside(6.));
     BOOST_TEST(not a.isInside(12.));
   }
+
+  BOOST_AUTO_TEST_CASE(open_axis)
+  {
+    Axis<AxisType::Equidistant, AxisWrapping::Open> a(0, 10, 10);
+
+    // normal inside
+    BOOST_TEST(a.getBin(0.5) == 1u);
+    BOOST_TEST(a.getBin(9.5) == 10u);
+
+    // out of bounds, but is open
+    // -> should clamp
+    BOOST_TEST(a.getBin(-0.5) == 1u);
+    BOOST_TEST(a.getBin(10.5) == 10u);
+
+    Axis<AxisType::Variable, AxisWrapping::Open> b(
+        {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+
+    // normal inside
+    BOOST_TEST(b.getBin(0.5) == 1u);
+    BOOST_TEST(b.getBin(9.5) == 10u);
+
+    // out of bounds, but is open
+    // -> should clamp
+    BOOST_TEST(b.getBin(-0.5) == 1u);
+    BOOST_TEST(b.getBin(10.5) == 10u);
+  }
+
+  BOOST_AUTO_TEST_CASE(closed_axis)
+  {
+    Axis<AxisType::Equidistant, AxisWrapping::Closed> a(0, 10, 10);
+
+    // normal inside
+    BOOST_TEST(a.getBin(0.5) == 1u);
+    BOOST_TEST(a.getBin(9.5) == 10u);
+
+    // out of bounds, but is closed
+    // -> should wrap to opposite side bin
+    BOOST_TEST(a.getBin(-0.5) == 10u);
+    BOOST_TEST(a.getBin(10.5) == 1u);
+
+    Axis<AxisType::Variable, AxisWrapping::Closed> b(
+        {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+
+    // normal inside
+    BOOST_TEST(b.getBin(0.5) == 1u);
+    BOOST_TEST(b.getBin(9.5) == 10u);
+
+    // out of bounds, but is closed
+    // -> should wrap to opposite side bin
+    BOOST_TEST(b.getBin(-0.5) == 10u);
+    BOOST_TEST(b.getBin(10.5) == 1u);
+  }
 }  // namespace Test
 
 }  // namespace Acts

@@ -16,6 +16,19 @@ namespace Acts {
 
 namespace detail {
 
+  /// Enum which determines how the axis "wraps" (or does not)
+  /// wrap values
+  /// - UnderOverflow is the default behaviour: out of bounds
+  /// positions are filled into the over or underflow bins
+  /// - Open: out-of-bounds positions resolve to first/last bin
+  /// respectively
+  /// - Clodes: out-of-bounds positions resolve to the outermost
+  /// bin on the oppsite side
+  enum class AxisWrapping { UnderOverflow, Open, Closed };
+
+  /// Enum which determines the binning type of the axis
+  enum class AxisType { Equidistant, Variable };
+
   /// @brief calculate bin indices from a given binning structure
   ///
   /// This class provides some basic functionality for calculating bin indices
@@ -27,18 +40,18 @@ namespace detail {
   ///
   /// @tparam equidistant flag whether binning is equidistant (@c true)
   ///                     or not (@c false)
-  template <bool equidistant>
+  template <AxisType type, AxisWrapping wrap = AxisWrapping::UnderOverflow>
   class Axis;
 
-  typedef Axis<true>  EquidistantAxis;
-  typedef Axis<false> VariableAxis;
+  typedef Axis<AxisType::Equidistant> EquidistantAxis;
+  typedef Axis<AxisType::Variable>    VariableAxis;
 
   /// @brief calculate bin indices for an equidistant binning
   ///
   /// This class provides some basic functionality for calculating bin indices
   /// for a given equidistant binning.
-  template <>
-  class Axis<true> final
+  template <AxisWrapping wrap>
+  class Axis<AxisType::Equidistant, wrap> final
   {
   public:
     /// @brief default constructor
@@ -54,12 +67,18 @@ namespace detail {
     {
     }
 
+    /// @brief returns whether the axis is equidistant
+    ///
+    /// @return bool is equidistant
     static constexpr bool
     isEquidistant()
     {
       return true;
     }
 
+    /// @brief returns whether the axis is variable
+    ///
+    /// @return bool is variable
     static constexpr bool
     isVariable()
     {
@@ -67,6 +86,8 @@ namespace detail {
     }
 
     /// @brief get corresponding bin index for given coordinate
+    ///
+    /// This is the version for UnderOverflow mode
     ///
     /// @param  [in] x input coordinate
     /// @return index of bin containing the given value
@@ -76,11 +97,59 @@ namespace detail {
     ///       bin with lower bound @c l and upper bound @c u.
     /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
     ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::UnderOverflow, int> = 0>
     size_t
     getBin(double x) const
     {
       if (x < getMin()) return 0u;
       if (x >= getMax()) return getNBins() + 1;
+
+      return std::floor((x - getMin()) / getBinWidth()) + 1;
+    }
+
+    /// @brief get corresponding bin index for given coordinate
+    ///
+    /// This is the version for Closed mode
+    ///
+    /// @param  [in] x input coordinate
+    /// @return index of bin containing the given value
+    ///
+    /// @note Bin intervals are defined with closed lower bounds and open upper
+    ///       bounds, that is \f$l <= x < u\f$ if the value @c x lies within a
+    ///       bin with lower bound @c l and upper bound @c u.
+    /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
+    ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::Closed, int> = 0>
+    size_t
+    getBin(double x) const
+    {
+      if (x < getMin()) return getNBins();
+      if (x >= getMax()) return 1;
+
+      return std::floor((x - getMin()) / getBinWidth()) + 1;
+    }
+
+    /// @brief get corresponding bin index for given coordinate
+    ///
+    /// This is the version for Open mode
+    ///
+    /// @param  [in] x input coordinate
+    /// @return index of bin containing the given value
+    ///
+    /// @note Bin intervals are defined with closed lower bounds and open upper
+    ///       bounds, that is \f$l <= x < u\f$ if the value @c x lies within a
+    ///       bin with lower bound @c l and upper bound @c u.
+    /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
+    ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::Open, int> = 0>
+    size_t
+    getBin(double x) const
+    {
+      if (x < getMin()) return 1;
+      if (x >= getMax()) return getNBins();
 
       return std::floor((x - getMin()) / getBinWidth()) + 1;
     }
@@ -201,8 +270,8 @@ namespace detail {
   ///
   /// This class provides some basic functionality for calculating bin indices
   /// for a given binning with variable bin sizes.
-  template <>
-  class Axis<false> final
+  template <AxisWrapping wrap>
+  class Axis<AxisType::Variable, wrap> final
   {
   public:
     /// @brief default constructor
@@ -216,12 +285,18 @@ namespace detail {
     /// reduced by one.
     Axis(std::vector<double> binEdges) : m_binEdges(std::move(binEdges)) {}
 
+    /// @brief returns whether the axis is equidistante
+    ///
+    /// @return bool is equidistant
     static constexpr bool
     isEquidistant()
     {
       return false;
     }
 
+    /// @brief returns whether the axis is variable
+    ///
+    /// @return bool is variable
     static constexpr bool
     isVariable()
     {
@@ -229,6 +304,8 @@ namespace detail {
     }
 
     /// @brief get corresponding bin index for given coordinate
+    ///
+    /// This is the version for UnderOverflow
     ///
     /// @param  [in] x input coordinate
     /// @return index of bin containing the given value
@@ -238,11 +315,63 @@ namespace detail {
     ///       bin with lower bound @c l and upper bound @c u.
     /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
     ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::UnderOverflow, int> = 0>
     size_t
     getBin(double x) const
     {
       if (x < getMin()) return 0u;
       if (x >= getMax()) return getNBins() + 1;
+
+      const auto it
+          = std::upper_bound(std::begin(m_binEdges), std::end(m_binEdges), x);
+      return std::distance(std::begin(m_binEdges), it);
+    }
+
+    /// @brief get corresponding bin index for given coordinate
+    ///
+    /// This is the version for Closed
+    ///
+    /// @param  [in] x input coordinate
+    /// @return index of bin containing the given value
+    ///
+    /// @note Bin intervals are defined with closed lower bounds and open upper
+    ///       bounds, that is \f$l <= x < u\f$ if the value @c x lies within a
+    ///       bin with lower bound @c l and upper bound @c u.
+    /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
+    ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::Closed, int> = 0>
+    size_t
+    getBin(double x) const
+    {
+      if (x < getMin()) return getNBins();
+      if (x >= getMax()) return 1u;
+
+      const auto it
+          = std::upper_bound(std::begin(m_binEdges), std::end(m_binEdges), x);
+      return std::distance(std::begin(m_binEdges), it);
+    }
+
+    /// @brief get corresponding bin index for given coordinate
+    ///
+    /// This is the version for Open
+    ///
+    /// @param  [in] x input coordinate
+    /// @return index of bin containing the given value
+    ///
+    /// @note Bin intervals are defined with closed lower bounds and open upper
+    ///       bounds, that is \f$l <= x < u\f$ if the value @c x lies within a
+    ///       bin with lower bound @c l and upper bound @c u.
+    /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
+    ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::Open, int> = 0>
+    size_t
+    getBin(double x) const
+    {
+      if (x < getMin()) return 1u;
+      if (x >= getMax()) return getNBins();
 
       const auto it
           = std::upper_bound(std::begin(m_binEdges), std::end(m_binEdges), x);
