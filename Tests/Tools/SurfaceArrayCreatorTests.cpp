@@ -78,6 +78,20 @@ namespace Test {
       return m_SAC.createEquidistantBinUtility(std::forward<Args>(args)...);
     }
 
+    template <typename... Args>
+    SurfaceArrayCreator::ProtoAxis
+    createEquidistantAxis(Args&&... args)
+    {
+      return m_SAC.createEquidistantAxis(std::forward<Args>(args)...);
+    }
+
+    template <typename... Args>
+    void
+    completeBinning(Args&&... args)
+    {
+      return m_SAC.completeBinning(std::forward<Args>(args)...);
+    }
+
     SrfVec
     fullPhiTestSurfacesEC(size_t n     = 10,
                           double shift = 0,
@@ -114,7 +128,9 @@ namespace Test {
     fullPhiTestSurfacesBRL(size_t n     = 10,
                            double shift = 0,
                            double zbase = 0,
-                           double incl  = M_PI / 9.)
+                           double incl  = M_PI / 9.,
+                           double w     = 2,
+                           double h     = 1.5)
     {
 
       SrfVec res;
@@ -131,7 +147,7 @@ namespace Test {
         trans.rotate(Eigen::AngleAxisd(incl, Vector3D(0, 0, 1)));
         trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3D(0, 1, 0)));
 
-        auto bounds = std::make_shared<const RectangleBounds>(2, 1.5);
+        auto bounds = std::make_shared<const RectangleBounds>(w, h);
 
         auto transptr = std::make_shared<const Transform3D>(trans);
         auto srf      = std::make_unique<const PlaneSurface>(transptr, bounds);
@@ -168,6 +184,22 @@ namespace Test {
         res.push_back(srf.get());  // use raw pointer
         m_surfaces.push_back(
             std::move(srf));  // keep unique, will get destroyed at the end
+      }
+
+      return res;
+    }
+
+    SrfVec
+    makeBarrel(int nPhi, int nZ, double w, double h)
+    {
+      double z0 = -(nZ - 1) * w;
+      SrfVec res;
+
+      for (size_t i = 0; i < nZ; i++) {
+        double z = i * w * 2 + z0;
+        // std::cout << "z=" << z << std::endl;
+        SrfVec ring = fullPhiTestSurfacesBRL(nPhi, 0, z, M_PI / 9., w, h);
+        res.insert(res.end(), ring.begin(), ring.end());
       }
 
       return res;
@@ -460,33 +492,271 @@ namespace Test {
     BOOST_TEST(bd.min == 8, tt::tolerance(1e-3));
   }
 
-  /*
-  std::mt19937 gen(42);
-  std::uniform_real_distribution<> dis(-M_PI, M_PI);
+  BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
+                          SurfaceArrayCreatorFixture)
+  {
+    // fail on empty srf vector
+    SrfVec     empty;
+    ProtoLayer pl(empty);
+    auto       tr = Transform3D::Identity();
+    BOOST_CHECK_THROW(
+        createEquidistantAxis(empty, BinningValue::binPhi, pl, tr),
+        std::logic_error);
 
-  double lo = bd.boundaries().front();
-  double up = bd.boundaries().back();
+    std::vector<float> bdExp = {
+        -3.14159, -2.93215, -2.72271, -2.51327, -2.30383,  -2.0944,   -1.88496,
+        -1.67552, -1.46608, -1.25664, -1.0472,  -0.837758, -0.628319, -0.418879,
+        -0.20944, 0,        0.20944,  0.418879, 0.628319,  0.837758,  1.0472,
+        1.25664,  1.46608,  1.67552,  1.88496,  2.09439,   2.30383,   2.51327,
+        2.72271,  2.93215,  3.14159};
 
-  auto check = [&bu, &up, &lo](double phi) {
-    Vector3D pos( 10*std::cos(phi), 10*std::sin(phi), 0);
-    auto bt = bu.binTriple(pos);
+    double step = 2 * M_PI / 30.;
 
-    return bt;
-  };
+    // endcap style modules
 
-  size_t n = 1e7;
-  size_t n5 = n / 20;
-  for(size_t i=0;i<n;i++) {
-    double phi = dis(gen);
+    for (int i = -1; i <= 2; i += 2) {
+      double z = 10 * i;
+      // case 1: one module sits at pi / -pi
+      double angleShift = step / 2.;
+      auto   surfaces   = fullPhiTestSurfacesEC(30, angleShift, z);
+      pl                = ProtoLayer(surfaces);
+      auto tr           = Transform3D::Identity();
+      auto axis = createEquidistantAxis(surfaces, BinningValue::binPhi, pl, tr);
 
-    check(phi);
+      BOOST_TEST(axis.nBins == 30);
+      BOOST_TEST(axis.max == M_PI);
+      BOOST_TEST(axis.min == -M_PI);
+      BOOST_TEST(axis.bType == equidistant);
+      // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
+      BOOST_TEST((tr * Vector3D::UnitX()).phi() < 1e-3);
 
-    if(i%n5 == 0) {
-      std::cout << ( i / double(n) * 100. ) << "%" << std::endl;
+      // case 2: two modules sit symmetrically around pi / -pi
+      angleShift = 0.;
+      surfaces   = fullPhiTestSurfacesEC(30, angleShift, z);
+      pl         = ProtoLayer(surfaces);
+      tr         = Transform3D::Identity();
+      axis = createEquidistantAxis(surfaces, BinningValue::binPhi, pl, tr);
+      draw_surfaces(surfaces,
+                    "SurfaceArrayCreator_createEquidistantAxis_EC_2.obj");
+      BOOST_TEST(axis.nBins == 30);
+      BOOST_TEST(axis.max == M_PI);
+      BOOST_TEST(axis.min == -M_PI);
+      BOOST_TEST(axis.bType == equidistant);
+      // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
+      BOOST_TEST((tr * Vector3D::UnitX()).phi() == -0.5 * step,
+                 tt::tolerance(1e-3));
+      // case 3: two modules sit asymmetrically around pi / -pi shifted up
+      angleShift = step / -4.;
+      surfaces   = fullPhiTestSurfacesEC(30, angleShift, z);
+      pl         = ProtoLayer(surfaces);
+      tr         = Transform3D::Identity();
+      axis = createEquidistantAxis(surfaces, BinningValue::binPhi, pl, tr);
+      draw_surfaces(surfaces,
+                    "SurfaceArrayCreator_createEquidistantAxis_EC_3.obj");
+      BOOST_TEST(axis.nBins == 30);
+      BOOST_TEST(axis.max == M_PI);
+      BOOST_TEST(axis.min == -M_PI);
+      BOOST_TEST(axis.bType == equidistant);
+      // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
+      BOOST_TEST((tr * Vector3D::UnitX()).phi() == step / -4.,
+                 tt::tolerance(1e-3));
+
+      // case 4: two modules sit asymmetrically around pi / -pi shifted down
+      angleShift = step / 4.;
+      surfaces   = fullPhiTestSurfacesEC(30, angleShift, z);
+      pl         = ProtoLayer(surfaces);
+      tr         = Transform3D::Identity();
+      axis = createEquidistantAxis(surfaces, BinningValue::binPhi, pl, tr);
+      draw_surfaces(surfaces,
+                    "SurfaceArrayCreator_createEquidistantAxis_EC_4.obj");
+      BOOST_TEST(axis.nBins == 30);
+      BOOST_TEST(axis.max == M_PI);
+      BOOST_TEST(axis.min == -M_PI);
+      BOOST_TEST(axis.bType == equidistant);
+      // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
+      BOOST_TEST((tr * Vector3D::UnitX()).phi() == step / 4.,
+                 tt::tolerance(1e-3));
     }
 
+    for (int i = -1; i <= 2; i += 2) {
+      double z = 10 * i;
+      // case 1: one module sits at pi / -pi
+      double angleShift = step / 2.;
+      auto   surfaces   = fullPhiTestSurfacesBRL(30, angleShift, z);
+      pl                = ProtoLayer(surfaces);
+      auto tr           = Transform3D::Identity();
+      auto axis = createEquidistantAxis(surfaces, BinningValue::binPhi, pl, tr);
+      draw_surfaces(surfaces,
+                    "SurfaceArrayCreator_createEquidistantAxis_BRL_1.obj");
+      BOOST_TEST(axis.nBins == 30);
+      BOOST_TEST(axis.max == M_PI);
+      BOOST_TEST(axis.min == -M_PI);
+      BOOST_TEST(axis.bType == equidistant);
+      // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
+      BOOST_TEST((tr * Vector3D::UnitX()).phi() < 1e-3);
+
+      // case 2: two modules sit symmetrically around pi / -pi
+      angleShift = 0.;
+      surfaces   = fullPhiTestSurfacesBRL(30, angleShift, z);
+      pl         = ProtoLayer(surfaces);
+      tr         = Transform3D::Identity();
+      axis = createEquidistantAxis(surfaces, BinningValue::binPhi, pl, tr);
+      draw_surfaces(surfaces,
+                    "SurfaceArrayCreator_createEquidistantAxis_BRL_2.obj");
+      BOOST_TEST(axis.nBins == 30);
+      BOOST_TEST(axis.max == M_PI);
+      BOOST_TEST(axis.min == -M_PI);
+      BOOST_TEST(axis.bType == equidistant);
+      // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
+      BOOST_TEST((tr * Vector3D::UnitX()).phi() == -0.5 * step,
+                 tt::tolerance(1e-3));
+
+      // case 3: two modules sit asymmetrically around pi / -pi shifted up
+      angleShift = step / -4.;
+      surfaces   = fullPhiTestSurfacesBRL(30, angleShift, z);
+      pl         = ProtoLayer(surfaces);
+      tr         = Transform3D::Identity();
+      axis = createEquidistantAxis(surfaces, BinningValue::binPhi, pl, tr);
+      draw_surfaces(surfaces,
+                    "SurfaceArrayCreator_createEquidistantAxis_BRL_3.obj");
+      BOOST_TEST(axis.nBins == 30);
+      BOOST_TEST(axis.max == M_PI);
+      BOOST_TEST(axis.min == -M_PI);
+      BOOST_TEST(axis.bType == equidistant);
+      // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
+      BOOST_TEST((tr * Vector3D::UnitX()).phi() == step / -4.,
+                 tt::tolerance(1e-3));
+
+      // case 4: two modules sit asymmetrically around pi / -pi shifted down
+      angleShift = step / 4.;
+      surfaces   = fullPhiTestSurfacesBRL(30, angleShift, z);
+      pl         = ProtoLayer(surfaces);
+      tr         = Transform3D::Identity();
+      axis = createEquidistantAxis(surfaces, BinningValue::binPhi, pl, tr);
+      draw_surfaces(surfaces,
+                    "SurfaceArrayCreator_createEquidistantAxis_BRL_4.obj");
+      BOOST_TEST(axis.nBins == 30);
+      BOOST_TEST(axis.max == M_PI);
+      BOOST_TEST(axis.min == -M_PI);
+      BOOST_TEST(axis.bType == equidistant);
+      // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
+      BOOST_TEST((tr * Vector3D::UnitX()).phi() == step / 4.,
+                 tt::tolerance(1e-3));
+    }
+
+    SrfVec     surfaces;
+    BinUtility bu;
+
+    // single element in phi
+    surfaces = fullPhiTestSurfacesEC(1);
+    draw_surfaces(
+        surfaces,
+        "SurfaceArrayCreator_createEquidistantBinUtility_EC_Single.obj");
+
+    pl        = ProtoLayer(surfaces);
+    tr        = Transform3D::Identity();
+    auto axis = createEquidistantAxis(surfaces, BinningValue::binPhi, pl, tr);
+    BOOST_TEST(axis.nBins == 1);
+
+    BOOST_CHECK_SMALL(axis.max - (Vector3D(8, 1, 0).phi()), 1e-3);
+    BOOST_CHECK_SMALL(axis.min - (Vector3D(8, -1, 0).phi()), 1e-3);
+    BOOST_TEST(axis.bType == equidistant);
   }
-  */
+
+  BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
+                          SurfaceArrayCreatorFixture)
+  {
+
+    // single element in z
+    auto       surfaces = straightLineSurfaces(1);
+    ProtoLayer pl       = ProtoLayer(surfaces);
+    auto       trf      = Transform3D::Identity();
+    auto axis = createEquidistantAxis(surfaces, BinningValue::binZ, pl, trf);
+    draw_surfaces(surfaces,
+                  "SurfaceArrayCreator_createEquidistantAxis_Z_1.obj");
+    BOOST_TEST(axis.nBins == 1);
+    BOOST_TEST(axis.max == 3);
+    BOOST_TEST(axis.min == 0);
+    BOOST_TEST(axis.bType == equidistant);
+
+    // z rows with varying starting point
+    for (size_t i = 0; i <= 20; i++) {
+      double z0 = -10 + 1. * i;
+      surfaces  = straightLineSurfaces(10, 3, Vector3D(0, 0, z0 + 1.5));
+      pl        = ProtoLayer(surfaces);
+      auto trf  = Transform3D::Identity();
+      auto axis = createEquidistantAxis(surfaces, BinningValue::binZ, pl, trf);
+      draw_surfaces(
+          surfaces,
+          (boost::format(
+               "SurfaceArrayCreator_createEquidistantAxis_Z_2_%1%.obj")
+           % i)
+              .str());
+      BOOST_TEST(axis.nBins == 10);
+      BOOST_TEST(axis.max == 30 + z0);
+      BOOST_TEST(axis.min == z0);
+      BOOST_TEST(axis.bType == equidistant);
+    }
+
+    // z row where elements are rotated around y
+    Transform3D tr = Transform3D::Identity();
+    tr.rotate(AngleAxis3D(M_PI / 4., Vector3D(0, 0, 1)));
+    surfaces = straightLineSurfaces(10, 3, Vector3D(0, 0, 0 + 1.5), tr);
+    pl       = ProtoLayer(surfaces);
+    trf      = Transform3D::Identity();
+    axis     = createEquidistantAxis(surfaces, BinningValue::binZ, pl, trf);
+    draw_surfaces(surfaces,
+                  "SurfaceArrayCreator_createEquidistantAxis_Z_3.obj");
+    BOOST_TEST(axis.nBins == 10);
+    BOOST_CHECK_SMALL(axis.max - 30.9749, 1e-3);
+    BOOST_CHECK_SMALL(axis.min + 0.974873, 1e-3);
+    BOOST_TEST(axis.bType == equidistant);
+  }
+
+  BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
+                          SurfaceArrayCreatorFixture)
+  {
+    SrfVec brl = makeBarrel(30, 7, 2, 1);
+    draw_surfaces(brl, "SurfaceArrayCreator_completeBinning_BRL.obj");
+
+    detail::EquidistantAxis phiAxis(-M_PI, M_PI, 30u);
+    detail::EquidistantAxis zAxis(-14, 14, 7u);
+    SurfaceGrid<detail::EquidistantAxis, detail::EquidistantAxis> grid(
+        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+
+    double R           = 10.;
+    auto globalToLocal = [](const Vector3D& pos) {
+      return Vector2D(pos.phi() + 2 * M_PI / 30 / 2, pos.z());
+    };
+    auto localToGlobal = [R](const Vector2D& loc) {
+      double phi = loc[0] - 2 * M_PI / 30 / 2;
+      return Vector3D(R * std::cos(phi), R * std::sin(phi), loc[1]);
+    };
+
+    SurfaceArray::SurfaceGridLookup2D sl(globalToLocal, localToGlobal, grid);
+    sl.fill(brl);
+    SurfaceArray sa(sl, brl);
+
+    // actually filled SA
+    for (const auto& srf : brl) {
+      Vector3D ctr        = srf->binningPosition(binR);
+      SrfVec   binContent = sa.at(ctr);
+
+      BOOST_TEST(binContent.size() == 1);
+      BOOST_TEST(srf == binContent.at(0));
+    }
+
+    SurfaceArray::SurfaceGridLookup2D sl2(globalToLocal, localToGlobal, grid);
+    completeBinning(sl2, brl);
+    SurfaceArray sa2(sl2, brl);
+    for (const auto& srf : brl) {
+      Vector3D ctr        = srf->binningPosition(binR);
+      SrfVec   binContent = sa2.at(ctr);
+
+      BOOST_TEST(binContent.size() == 1);
+      BOOST_TEST(srf == binContent.at(0));
+    }
+  }
 
   BOOST_AUTO_TEST_SUITE_END();
 }  // end of namespace Test

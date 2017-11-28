@@ -102,7 +102,7 @@ Layer::getCompatibleSurfaces(const T&                       pars,
     std::vector<const Surface*> ctestSurfaces;
     if (searchType <= 0) {
       // take all the test surfaces & their bin mates
-      auto allTestSurfaces = m_surfaceArray->arrayObjects();
+      auto allTestSurfaces = m_surfaceArray->surfaces();
       // reserve twice the amount
       ctestSurfaces.reserve(allTestSurfaces.size());
       for (auto& atSurface : allTestSurfaces) {
@@ -129,7 +129,10 @@ Layer::getCompatibleSurfaces(const T&                       pars,
       }  // end loop over atSurface
     } else {
       // get the nominal test object
-      auto targetSurface = m_surfaceArray->object(pos);
+      auto           binContent = m_surfaceArray->at(pos);
+      const Surface* targetSurface
+          = binContent.size() > 0 ? binContent.at(0) : nullptr;
+
       if (targetSurface && targetSurface->associatedDetectorElement()) {
         // get the detector elements
         auto dElement = targetSurface->associatedDetectorElement();

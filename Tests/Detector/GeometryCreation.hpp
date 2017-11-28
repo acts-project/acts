@@ -54,12 +54,19 @@ constructCylinderVolume(double             surfaceHalfLengthZ,
                                {sfp, sfp->binningPosition(binZ)}};
 
   ///  make the binned array
-  double bUmin    = sfnPosition.z() - surfaceHalfLengthZ;
-  double bUmax    = sfpPosition.z() + surfaceHalfLengthZ;
-  auto   bUtility = std::make_unique<const BinUtility>(
-      surfaces.size(), bUmin, bUmax, open, binZ);
-  auto bArray = std::make_unique<BinnedArrayXD<const Surface*>>(
-      surfaces, std::move(bUtility));
+  double bUmin = sfnPosition.z() - surfaceHalfLengthZ;
+  double bUmax = sfpPosition.z() + surfaceHalfLengthZ;
+
+  std::vector<const Surface*> surfaces_only = {{sfn, sfc, sfp}};
+
+  detail::Axis<detail::AxisType::Equidistant, detail::AxisWrapping::Open> axis(
+      bUmin, bUmax, surfaces.size());
+  SurfaceGrid<decltype(axis)> grid(std::make_tuple(axis));
+  auto g2l = [](const Vector3D& glob) { return ActsVectorD<1>(glob.z()); };
+  auto l2g = [](const ActsVectorD<1>& loc) { return Vector3D(0, 0, loc[0]); };
+  SurfaceArray::SurfaceGridLookup1D   sl(g2l, l2g, grid);
+  sl.fill(surfaces_only);
+  auto bArray = std::make_unique<SurfaceArray>(sl, surfaces_only);
 
   ///  now create the Layer
   auto layer0bounds

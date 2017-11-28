@@ -18,7 +18,7 @@
 #include "ACTS/Utilities/ApproachDescriptor.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
 
-Acts::Layer::Layer(std::unique_ptr<SurfaceArray_old>   surfaceArray,
+Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
                    double                              thickness,
                    std::unique_ptr<ApproachDescriptor> ades,
                    LayerType                           laytyp)
@@ -182,7 +182,7 @@ Acts::Layer::closeGeometry(const GeometryID& layerID)
     m_ssSensitiveSurfaces = 1;
     // loop sensitive surfaces and assign unique GeometryID
     geo_id_value issurface = 0;
-    for (auto& sSurface : m_surfaceArray->arrayObjects()) {
+    for (auto& sSurface : m_surfaceArray->surfaces()) {
       GeometryID ssurfaceID = layerID;
       ssurfaceID.add(++issurface, GeometryID::sensitive_mask);
       auto mutableSSurface = const_cast<Surface*>(sSurface);

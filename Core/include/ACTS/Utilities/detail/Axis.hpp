@@ -85,6 +85,12 @@ namespace detail {
       return false;
     }
 
+    static constexpr AxisWrapping
+    getWrapping()
+    {
+      return wrap;
+    }
+
     /// @brief get corresponding bin index for given coordinate
     ///
     /// This is the version for UnderOverflow mode
@@ -301,6 +307,12 @@ namespace detail {
     isVariable()
     {
       return true;
+    }
+
+    static constexpr AxisWrapping
+    getWrapping()
+    {
+      return wrap;
     }
 
     /// @brief get corresponding bin index for given coordinate

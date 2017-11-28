@@ -168,13 +168,19 @@ namespace Test {
     SurfaceGrid<detail::EquidistantAxis, detail::EquidistantAxis> grid(
         std::make_tuple(std::move(phiAxis), std::move(zAxis)));
 
-    auto transform = [](const Vector3D& pos) {
-      // std::cout << "lookup(phi=" << pos.phi() << " z=" << pos.z() << ")" <<
-      // std::endl;
-      return Vector2D(pos.phi() + 2 * M_PI / 30 / 2, pos.z());
+    double angleShift = 2 * M_PI / 30. / 2.;
+    auto transform    = [angleShift](const Vector3D& pos) {
+      return Vector2D(pos.phi() + angleShift, pos.z());
     };
-    SurfaceArray::SurfaceLookup<2> sl(transform, grid);
-    SurfaceArray                   sa(sl, brl);
+    double R        = 10;
+    auto itransform = [angleShift, R](const Vector2D& loc) {
+      return Vector3D(R * std::cos(loc[0] - angleShift),
+                      R * std::sin(loc[0] - angleShift),
+                      loc[1]);
+    };
+    SurfaceArray::SurfaceGridLookup2D sl(transform, itransform, grid);
+    sl.fill(brl);
+    SurfaceArray sa(sl, brl);
 
     // let's see if we can access all surfaces
     sa.dump(std::cout);

@@ -370,7 +370,7 @@ Acts::MaterialMapper::collectMaterialSurfaces(
         // get the sensitive surface is present
         if (cLayer->surfaceArray()) {
           // sensitive surface loop
-          for (auto& sSurface : cLayer->surfaceArray()->arrayObjects())
+          for (auto& sSurface : cLayer->surfaceArray()->surfaces())
             if (sSurface) checkAndInsert(sMap, *sSurface);
         }
       }

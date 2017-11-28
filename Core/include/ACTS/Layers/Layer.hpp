@@ -17,6 +17,7 @@
 #include <map>
 #include "ACTS/EventData/NeutralParameters.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
+#include "ACTS/Surfaces/SurfaceArray.hpp"
 #include "ACTS/Utilities/ApproachDescriptor.hpp"
 #include "ACTS/Utilities/BinnedArray.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
@@ -109,11 +110,11 @@ public:
       = delete;
 
   /// Return the entire SurfaceArray, returns a nullptr if no SurfaceArray
-  const SurfaceArray_old*
+  const SurfaceArray*
   surfaceArray() const;
 
   /// Non-const version
-  SurfaceArray_old*
+  SurfaceArray*
   surfaceArray();
 
   /// Transforms the layer into a Surface representation for extrapolation
@@ -312,7 +313,7 @@ protected:
   /// @param thickness is the normal thickness of the Layer
   /// @param ad oapproach descriptor
   /// @param ltype is the layer type if active or passive
-  Layer(std::unique_ptr<SurfaceArray_old>   surfaceArray,
+  Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
         double                              thickness = 0.,
         std::unique_ptr<ApproachDescriptor> ad        = nullptr,
         LayerType                           ltype     = passive);
@@ -407,7 +408,7 @@ protected:
   /// This array will be modified during signature and constant afterwards, but
   /// the C++ type system unfortunately cannot cleanly express this.
   ///
-  std::unique_ptr<const SurfaceArray_old> m_surfaceArray;
+  std::unique_ptr<const SurfaceArray> m_surfaceArray;
   /// thickness of the Layer
   double m_layerThickness;
   /// descriptor for surface on approach
@@ -449,16 +450,16 @@ private:
   std::map<Identifier, const DetectorElementBase*> m_detectorElements;
 };
 
-inline const SurfaceArray_old*
+inline const SurfaceArray*
 Layer::surfaceArray() const
 {
   return m_surfaceArray.get();
 }
 
-inline SurfaceArray_old*
+inline SurfaceArray*
 Layer::surfaceArray()
 {
-  return const_cast<SurfaceArray_old*>(m_surfaceArray.get());
+  return const_cast<SurfaceArray*>(m_surfaceArray.get());
 }
 
 inline double

@@ -77,11 +77,11 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
                                        << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray_old> sArray
+  std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
           surfaces, binsPhi, binsZ, protoLayer, transform);
 
-  checkBinning(sArray->objectGrid(), surfaces);
+  // checkBinning(sArray->objectGrid(), surfaces);
 
   // create the layer and push it back
   std::shared_ptr<const CylinderBounds> cBounds(
@@ -133,11 +133,11 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray_old> sArray
+  std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
           surfaces, bTypePhi, bTypeZ, protoLayer, transform);
 
-  checkBinning(sArray->objectGrid(), surfaces);
+  // checkBinning(sArray->objectGrid(), surfaces);
 
   // create the layer and push it back
   std::shared_ptr<const CylinderBounds> cBounds(
@@ -187,11 +187,11 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray_old> sArray
+  std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
           surfaces, bTypePhi, bTypeZ, protoLayer, transform);
 
-  checkBinning(sArray->objectGrid(), surfaces);
+  // checkBinning(sArray->objectGrid(), surfaces);
 
   // create the layer and push it back
   std::shared_ptr<const CylinderBounds> cBounds(
@@ -244,11 +244,11 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                                        << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray_old> sArray
+  std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
           surfaces, binsR, binsPhi, protoLayer, transform);
 
-  checkBinning(sArray->objectGrid(), surfaces);
+  // checkBinning(sArray->objectGrid(), surfaces);
 
   // create the share disc bounds
   auto dBounds = std::make_shared<const RadialBounds>(
@@ -304,11 +304,11 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray_old> sArray
+  std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
           surfaces, bTypeR, bTypePhi, protoLayer, transform);
 
-  checkBinning(sArray->objectGrid(), surfaces);
+  // checkBinning(sArray->objectGrid(), surfaces);
 
   // create the shared disc bounds
   auto dBounds
@@ -362,11 +362,11 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray_old> sArray
+  std::unique_ptr<SurfaceArray> sArray
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
           surfaces, bTypeR, bTypePhi, protoLayer, transform);
 
-  checkBinning(sArray->objectGrid(), surfaces);
+  // checkBinning(sArray->objectGrid(), surfaces);
 
   // create the share disc bounds
   auto dBounds = std::make_shared<const RadialBounds>(
@@ -408,7 +408,7 @@ Acts::LayerCreator::planeLayer(
 void
 Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const
 {
-  auto surfaces = layer.surfaceArray()->arrayObjects();
+  auto surfaces = layer.surfaceArray()->surfaces();
 
   for (auto& surface : surfaces) {
     auto mutableSurface = const_cast<Surface*>(surface);

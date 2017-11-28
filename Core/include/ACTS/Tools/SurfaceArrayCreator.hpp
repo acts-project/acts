@@ -18,6 +18,7 @@
 #include "ACTS/Layers/ProtoLayer.hpp"
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
+#include "ACTS/Surfaces/SurfaceArray.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
 #include "ACTS/Utilities/Units.hpp"
@@ -50,6 +51,16 @@ class SurfaceArrayCreator
 {
 public:
   friend Acts::Test::SurfaceArrayCreatorFixture;
+
+  struct ProtoAxis
+  {
+    BinningType         bType;
+    BinningValue        bValue;
+    size_t              nBins;
+    double              min;
+    double              max;
+    std::vector<double> binEdges;
+  };
 
   // Configuration struct
   struct Config
@@ -93,7 +104,7 @@ public:
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer to a new SurfaceArray
-  std::unique_ptr<SurfaceArray_old>
+  std::unique_ptr<SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
                          size_t                             binsPhi,
                          size_t                             binsZ,
@@ -116,7 +127,7 @@ public:
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<Acts::SurfaceArray_old>
+  std::unique_ptr<Acts::SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
                          BinningType                 bTypePhi   = equidistant,
                          BinningType                 bTypeZ     = equidistant,
@@ -138,7 +149,7 @@ public:
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<SurfaceArray_old>
+  std::unique_ptr<SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
                      size_t                             binsR,
                      size_t                             binsPhi,
@@ -161,7 +172,7 @@ public:
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<Acts::SurfaceArray_old>
+  std::unique_ptr<Acts::SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
                      BinningType                        bTypeR,
                      BinningType                        bTypePhi,
@@ -183,7 +194,7 @@ public:
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<SurfaceArray_old>
+  std::unique_ptr<SurfaceArray>
   surfaceArrayOnPlane(const std::vector<const Surface*>& surfaces,
                       double                             halflengthX,
                       double                             halflengthY,
@@ -254,6 +265,11 @@ private:
                             BinningValue                       bValue,
                             std::shared_ptr<const Transform3D> transform
                             = nullptr) const;
+
+  ProtoAxis
+  createVariableAxis(const std::vector<const Surface*>& surfaces,
+                     BinningValue                       bValue,
+                     Transform3D&                       transform) const;
   /// SurfaceArrayCreator internal method
   /// Creates an equidistant BinUtility when the extremas and the bin number are
   /// It loops through the surfaces ggand finds out the needed information
@@ -285,6 +301,58 @@ private:
                               std::shared_ptr<const Transform3D> transform
                               = nullptr,
                               size_t nBins = 0) const;
+
+  ProtoAxis
+  createEquidistantAxis(const std::vector<const Surface*>& surfaces,
+                        BinningValue                       bValue,
+                        ProtoLayer                         protoLayer,
+                        Transform3D&                       transform,
+                        size_t                             nBins = 0) const;
+
+  template <detail::AxisWrapping wrapA,
+            detail::AxisWrapping wrapB,
+            typename F1,
+            typename F2>
+  SurfaceArray::SurfaceGridLookup2D
+  makeSurfaceGridLookup2D(std::vector<const Surface*> surfaces,
+                          F1                          globalToLocal,
+                          F2                          localToGlobal,
+                          ProtoAxis                   pAxisA,
+                          ProtoAxis                   pAxisB) const
+  {
+
+    // this becomes completely unreadable otherwise
+    // clang-format off
+    if (pAxisA.bType == equidistant && pAxisB.bType == equidistant) {
+
+      detail::Axis<detail::AxisType::Equidistant, wrapA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
+      detail::Axis<detail::AxisType::Equidistant, wrapB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
+      SurfaceGrid<decltype(axisA), decltype(axisB)> grid(std::make_tuple(axisA, axisB));
+      return SurfaceArray::SurfaceGridLookup2D(globalToLocal, localToGlobal, grid);
+
+    } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
+
+      detail::Axis<detail::AxisType::Equidistant, wrapA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
+      detail::Axis<detail::AxisType::Variable, wrapB> axisB(pAxisB.binEdges);
+      SurfaceGrid<decltype(axisA), decltype(axisB)> grid(std::make_tuple(axisA, axisB));
+      return SurfaceArray::SurfaceGridLookup2D(globalToLocal, localToGlobal, grid);
+
+    } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
+
+      detail::Axis<detail::AxisType::Variable, wrapA> axisA(pAxisA.binEdges);
+      detail::Axis<detail::AxisType::Equidistant, wrapB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
+      SurfaceGrid<decltype(axisA), decltype(axisB)> grid(std::make_tuple(axisA, axisB));
+      return SurfaceArray::SurfaceGridLookup2D(globalToLocal, localToGlobal, grid);
+
+    } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
+
+      detail::Axis<detail::AxisType::Variable, wrapA> axisA(pAxisA.binEdges);
+      detail::Axis<detail::AxisType::Variable, wrapB> axisB(pAxisB.binEdges);
+      SurfaceGrid<decltype(axisA), decltype(axisB)> grid(std::make_tuple(axisA, axisB));
+      return SurfaceArray::SurfaceGridLookup2D(globalToLocal, localToGlobal, grid);
+    }
+    // clang-format on
+  }
 
   /// SurfaceArrayCreator internal method
   /// - create an equidistant BinUtility with all parameters given
@@ -340,13 +408,49 @@ private:
                   const SurfaceVector& sVector,
                   SurfaceGrid_old&     sGrid) const;
 
+  template <class T>
+  void
+  completeBinning(T& sl, const std::vector<const Surface*>& surfaces) const
+  {
+    ACTS_VERBOSE("Complete binning by filling closest neighbour surfaces into "
+                 "empty bins.");
+
+    size_t         binCompleted = 0;
+    size_t         nBins        = sl.size();
+    double         minPath, curPath;
+    const Surface* minSrf;
+
+    for (size_t b = 0; b < nBins; ++b) {
+      std::vector<const Surface*>& binContent = sl.lookup(b);
+      // only complete if we have an empty bin
+      if (binContent.size() > 0) continue;
+
+      Vector3D binCtr = sl.getBinCenter(b);
+      minPath         = std::numeric_limits<double>::max();
+      for (const auto& srf : surfaces) {
+        curPath = (binCtr - srf->binningPosition(binR)).mag();
+
+        if (curPath < minPath) {
+          minPath = curPath;
+          minSrf  = srf;
+        }
+      }
+
+      binContent.push_back(minSrf);
+      ++binCompleted;
+    }
+
+    ACTS_VERBOSE("       filled  : " << binCompleted
+                                     << " (includes under/overflow)");
+  }
+
   /// Private helper method to complete the binning
   ///
   ///
   /// @todo write documentation
   ///
   void
-  registerNeighbourHood(SurfaceArray_old& sArray) const;
+  registerNeighbourHood(SurfaceArray& sArray) const;
 
   /// Private helper method to transform the  vertices of surface bounds into
   /// global coordinates

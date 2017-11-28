@@ -42,32 +42,69 @@ class SurfaceArray
 {
   using StoredType = SurfaceVector;
   template <class Point, size_t DIM>
-  using AnyGrid_t              = concept::AnyNDimGrid<StoredType, Point, DIM>;
-  using AnySurfaceGridLookup_t = concept::AnySurfaceGridLookup<StoredType>;
+  using AnyGrid_t = concept::AnyNDimGrid<StoredType, Point, DIM>;
 
 public:
+  using AnySurfaceGridLookup_t = concept::AnySurfaceGridLookup<StoredType>;
+
   template <size_t DIM>
-  struct SurfaceLookup
+  struct SurfaceGridLookup
   {
   public:
-    SurfaceLookup(std::function<ActsVectorD<DIM>(const Vector3D&)> transformPos,
-                  AnyGrid_t<ActsVectorD<DIM>, DIM> grid)
-      : m_transformPos(std::move(transformPos)), m_grid(std::move(grid))
+    SurfaceGridLookup(
+        std::function<ActsVectorD<DIM>(const Vector3D&)> globalToLocal,
+        std::function<Vector3D(const ActsVectorD<DIM>&)> localToGlobal,
+        AnyGrid_t<ActsVectorD<DIM>, DIM> grid)
+      : m_globalToLocal(std::move(globalToLocal))
+      , m_localToGlobal(std::move(localToGlobal))
+      , m_grid(std::move(grid))
     {
+    }
+
+    void
+    fill(const SurfaceVector surfaces)
+    {
+      for (const auto& srf : surfaces) {
+        Vector3D pos = srf->binningPosition(binR);
+        lookup(pos).push_back(srf);
+      }
     }
 
     StoredType&
     lookup(const Vector3D& pos)
     {
-      // size_t bi = m_grid.getGlobalBinIndex(m_transformPos(pos));
-      // std::cout << " -> bin " << bi << std::endl;
-      return m_grid.at(m_transformPos(pos));
+      return m_grid.at(m_globalToLocal(pos));
     }
 
     const StoredType&
     lookup(const Vector3D& pos) const
     {
-      return m_grid.at(m_transformPos(pos));
+      return m_grid.at(m_globalToLocal(pos));
+    }
+
+    StoredType&
+    lookup(size_t bin)
+    {
+      return m_grid.at(bin);
+    }
+
+    const StoredType&
+    lookup(size_t bin) const
+    {
+      return m_grid.at(bin);
+    }
+
+    size_t
+    size() const
+    {
+      return m_grid.size();
+    }
+
+    Vector3D
+    getBinCenter(size_t bin) const
+    {
+      return m_localToGlobal(ActsVectorD<DIM>(
+          m_grid.getBinCenter(m_grid.getLocalBinIndices(bin)).data()));
     }
 
     std::vector<concept::AnyAxis<>>
@@ -84,23 +121,71 @@ public:
     }
 
   private:
-    std::function<ActsVectorD<DIM>(const Vector3D&)> m_transformPos;
+    std::function<ActsVectorD<DIM>(const Vector3D&)> m_globalToLocal;
+    std::function<Vector3D(const ActsVectorD<DIM>&)> m_localToGlobal;
     AnyGrid_t<ActsVectorD<DIM>, DIM> m_grid;
   };
+
+  // Lookup implementation which wraps one element and always returns this
+  // element when lookup is called
+  struct SingleElementLookup
+  {
+
+    SingleElementLookup(StoredType::value_type element) : m_element({element})
+    {
+    }
+
+    StoredType&
+    lookup(const Vector3D&)
+    {
+      return m_element;
+    }
+
+    const StoredType&
+    lookup(const Vector3D&) const
+    {
+      return m_element;
+    }
+
+    StoredType& lookup(size_t) { return m_element; }
+
+    const StoredType& lookup(size_t) const { return m_element; }
+
+    size_t
+    size() const
+    {
+      return 1;
+    }
+
+    Vector3D getBinCenter(size_t) const { return Vector3D(0, 0, 0); }
+
+    std::vector<concept::AnyAxis<>>
+    getAxes() const
+    {
+      return {};
+    }
+
+    static constexpr size_t
+    dimensions()
+    {
+      return 1;
+    }
+
+  private:
+    StoredType m_element;
+  };
+
+  using SurfaceGridLookup1D = SurfaceGridLookup<1>;
+  using SurfaceGridLookup2D = SurfaceGridLookup<2>;
+  using SurfaceGridLookup3D = SurfaceGridLookup<3>;
 
   SurfaceArray(AnySurfaceGridLookup_t gridLookup, SurfaceVector surfaces)
     : m_gridLookup(std::move(gridLookup)), m_surfaces(surfaces)
   {
-
-    std::cout << "SurfaceArray go" << std::endl;
-
-    // let's fill the grid
-    for (const auto& srf : m_surfaces) {
-      Vector3D pos = srf->binningPosition(binR);
-      // std::cout << "fill" << std::endl;
-      m_gridLookup.lookup(pos).push_back(srf);
-    }
   }
+
+  // single element constructor
+  SurfaceArray(const Surface* srf) : m_gridLookup(SingleElementLookup(srf)) {}
 
   StoredType&
   at(const Vector3D& pos)
@@ -112,6 +197,42 @@ public:
   at(const Vector3D& pos) const
   {
     return m_gridLookup.lookup(pos);
+  }
+
+  StoredType&
+  at(size_t bin)
+  {
+    return m_gridLookup.lookup(bin);
+  }
+
+  const StoredType&
+  at(size_t bin) const
+  {
+    return m_gridLookup.lookup(bin);
+  }
+
+  size_t
+  size() const
+  {
+    return m_gridLookup.size();
+  }
+
+  Vector3D
+  getBinCenter(size_t bin)
+  {
+    return m_gridLookup.getBinCenter(bin);
+  }
+
+  const SurfaceVector&
+  surfaces() const
+  {
+    return m_surfaces;
+  }
+
+  std::vector<concept::AnyAxis<>>
+  getAxes() const
+  {
+    return m_gridLookup.getAxes();
   }
 
   std::ostream&
