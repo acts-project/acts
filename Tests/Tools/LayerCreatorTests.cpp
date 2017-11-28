@@ -207,9 +207,7 @@ namespace Test {
     const CylinderBounds* bounds = &layer->bounds();
     BOOST_TEST(bounds->r() == (rMax + rMin) / 2., tt::tolerance(1e-3));
     BOOST_TEST(bounds->halflengthZ() == 14 + envZ, tt::tolerance(1e-3));
-    // @TODO: re-enable consistency check
-    // BOOST_TEST(checkBinning(layer->surfaceArray()->objectGrid(), srf));
-    // auto bu = layer->surfaceArray()->binUtility();
+    BOOST_TEST(checkBinning(*layer->surfaceArray()));
     auto axes = layer->surfaceArray()->getAxes();
     BOOST_TEST(axes.at(0).getNBins() == 30);
     BOOST_TEST(axes.at(1).getNBins() == 7);
@@ -226,8 +224,7 @@ namespace Test {
     bounds = &layer->bounds();
     BOOST_TEST(bounds->r() == (rMax + rMin) / 2., tt::tolerance(1e-3));
     BOOST_TEST(bounds->halflengthZ() == 14 + envZ, tt::tolerance(1e-3));
-    // @TODO: re-enable consistency check
-    // BOOST_TEST(checkBinning(layer->surfaceArray()->objectGrid(), srf));
+    BOOST_TEST(checkBinning(*layer->surfaceArray()));
     axes = layer->surfaceArray()->getAxes();
     BOOST_TEST(axes.at(0).getNBins() == 30);
     BOOST_TEST(axes.at(1).getNBins() == 7);
@@ -237,17 +234,17 @@ namespace Test {
     BOOST_TEST(axes.at(1).getMax() == 14, tt::tolerance(1e-3));
 
     layer = std::dynamic_pointer_cast<CylinderLayer>(
-        p_LC->cylinderLayer(srf, envR, envZ, 42, 3));
+        p_LC->cylinderLayer(srf, envR, envZ, 13, 3));
     BOOST_TEST(layer->thickness() == (rMax - rMin) + 2 * envR,
                tt::tolerance(1e-3));
     bounds = &layer->bounds();
     BOOST_TEST(bounds->r() == (rMax + rMin) / 2., tt::tolerance(1e-3));
     BOOST_TEST(bounds->halflengthZ() == 14 + envZ, tt::tolerance(1e-3));
-    // @TODO: re-enable consistency check
-    // this should fail!
-    // BOOST_TEST(checkBinning(layer->surfaceArray()->objectGrid(), srf));
+    // this succeeds despite sub-optimal binning
+    // since we now have multientry bins
+    BOOST_TEST(checkBinning(*layer->surfaceArray()));
     axes = layer->surfaceArray()->getAxes();
-    BOOST_TEST(axes.at(0).getNBins() == 42);
+    BOOST_TEST(axes.at(0).getNBins() == 13);
     BOOST_TEST(axes.at(1).getNBins() == 3);
     BOOST_TEST(axes.at(0).getMin() == -M_PI, tt::tolerance(1e-3));
     BOOST_TEST(axes.at(0).getMax() == M_PI, tt::tolerance(1e-3));
@@ -263,8 +260,9 @@ namespace Test {
     BOOST_TEST(bounds->halflengthZ() == 25, tt::tolerance(1e-3));
 
     // this should fail, b/c it's a completely inconvenient binning
-    // @TODO: re-enable consistency check
-    // BOOST_TEST(!checkBinning(layer->surfaceArray()->objectGrid(), srf));
+    // but it succeeds despite sub-optimal binning
+    // since we now have multientry bins
+    BOOST_TEST(checkBinning(*layer->surfaceArray()));
 
     axes = layer->surfaceArray()->getAxes();
     BOOST_TEST(axes.at(0).getNBins() == 30);
@@ -293,8 +291,7 @@ namespace Test {
         = dynamic_cast<const RadialBounds*>(&layer->bounds());
     BOOST_TEST(bounds->rMin() == 5, tt::tolerance(1e-3));
     BOOST_TEST(bounds->rMax() == 25, tt::tolerance(1e-3));
-    // @TODO: re-enable consistency check
-    // BOOST_TEST(checkBinning(layer->surfaceArray()->objectGrid(), surfaces));
+    BOOST_TEST(checkBinning(*layer->surfaceArray()));
     auto axes = layer->surfaceArray()->getAxes();
     BOOST_TEST(axes.at(0).getNBins() == 3);
     BOOST_TEST(axes.at(1).getNBins() == 30);
@@ -319,8 +316,7 @@ namespace Test {
     bounds = dynamic_cast<const RadialBounds*>(&layer->bounds());
     BOOST_TEST(bounds->rMin() == rMin - envMinR, tt::tolerance(1e-3));
     BOOST_TEST(bounds->rMax() == rMax + envMaxR, tt::tolerance(1e-3));
-    // @TODO: re-enable consistency check
-    // BOOST_TEST(checkBinning(layer->surfaceArray()->objectGrid(), surfaces));
+    BOOST_TEST(checkBinning(*layer->surfaceArray()));
     axes = layer->surfaceArray()->getAxes();
     BOOST_TEST(axes.at(0).getNBins() == nBinsR);
     BOOST_TEST(axes.at(1).getNBins() == nBinsPhi);
@@ -341,8 +337,7 @@ namespace Test {
     bounds = dynamic_cast<const RadialBounds*>(&layer->bounds());
     BOOST_TEST(bounds->rMin() == rMin - envMinR, tt::tolerance(1e-3));
     BOOST_TEST(bounds->rMax() == rMax + envMaxR, tt::tolerance(1e-3));
-    // @TODO: re-enable consistency check
-    // BOOST_TEST(checkBinning(layer->surfaceArray()->objectGrid(), surfaces));
+    BOOST_TEST(checkBinning(*layer->surfaceArray()));
     BOOST_TEST(axes.at(0).getNBins() == nBinsR);
     BOOST_TEST(axes.at(1).getNBins() == nBinsPhi);
     BOOST_TEST(axes.at(0).getMin() == rMin, tt::tolerance(1e-3));

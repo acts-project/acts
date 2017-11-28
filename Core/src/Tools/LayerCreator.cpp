@@ -81,7 +81,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
       = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
           surfaces, binsPhi, binsZ, protoLayer, transform);
 
-  // checkBinning(sArray->objectGrid(), surfaces);
+  checkBinning(*sArray);
 
   // create the layer and push it back
   std::shared_ptr<const CylinderBounds> cBounds(
@@ -137,7 +137,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
       = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
           surfaces, bTypePhi, bTypeZ, protoLayer, transform);
 
-  // checkBinning(sArray->objectGrid(), surfaces);
+  checkBinning(*sArray);
 
   // create the layer and push it back
   std::shared_ptr<const CylinderBounds> cBounds(
@@ -191,7 +191,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
       = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
           surfaces, bTypePhi, bTypeZ, protoLayer, transform);
 
-  // checkBinning(sArray->objectGrid(), surfaces);
+  checkBinning(*sArray);
 
   // create the layer and push it back
   std::shared_ptr<const CylinderBounds> cBounds(
@@ -248,7 +248,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
           surfaces, binsR, binsPhi, protoLayer, transform);
 
-  // checkBinning(sArray->objectGrid(), surfaces);
+  checkBinning(*sArray);
 
   // create the share disc bounds
   auto dBounds = std::make_shared<const RadialBounds>(
@@ -308,7 +308,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
           surfaces, bTypeR, bTypePhi, protoLayer, transform);
 
-  // checkBinning(sArray->objectGrid(), surfaces);
+  checkBinning(*sArray);
 
   // create the shared disc bounds
   auto dBounds
@@ -366,7 +366,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
       = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
           surfaces, bTypeR, bTypePhi, protoLayer, transform);
 
-  // checkBinning(sArray->objectGrid(), surfaces);
+  checkBinning(*sArray);
 
   // create the share disc bounds
   auto dBounds = std::make_shared<const RadialBounds>(
@@ -417,41 +417,32 @@ Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const
 }
 
 bool
-Acts::LayerCreator::checkBinning(
-    const std::vector<std::vector<std::vector<const Acts::Surface*>>>& surfGrid,
-    const std::vector<const Acts::Surface*>& surfaces) const
+Acts::LayerCreator::checkBinning(SurfaceArray& sArray) const
 {
 
   // do consistency check: can we access all sensitive surfaces
   // through the binning? If not, surfaces get lost and the binning does not
   // work
+
+  ACTS_VERBOSE("Performing consistency check")
+
+  std::vector<const Surface*> surfaces = sArray.surfaces();
   std::set<const Surface*> sensitiveSurfaces(surfaces.begin(), surfaces.end());
   std::set<const Surface*> accessibleSurfaces;
   size_t                   nEmptyBins   = 0;
   size_t                   nBinsChecked = 0;
-  // iterate over object grid
-  for (unsigned int i = 0; i < surfGrid.size(); ++i) {
-    auto jv = surfGrid.at(i);
-    for (unsigned int j = 0; j < jv.size(); ++j) {
-      auto kv = jv.at(j);
-      for (unsigned int k = 0; k < kv.size(); ++k) {
-        nBinsChecked++;
-        auto elem = kv.at(k);
-        if (!elem) {
-          nEmptyBins++;
-          continue;
-        }
-        accessibleSurfaces.insert(elem);
-        // check for bin members if element is associated
-        if (elem->associatedDetectorElement()) {
-          const std::vector<const DetectorElementBase*> binmembers
-              = elem->associatedDetectorElement()->binmembers();
-          for (const auto& bm : binmembers) {
-            accessibleSurfaces.insert(&bm->surface());
-          }
-        }
-      }
+
+  // iterate over all bins
+  size_t size = sArray.size();
+  for (size_t b = 0; b < size; ++b) {
+    std::vector<const Surface*> binContent = sArray.at(b);
+    // we don't check under/overflow bins
+    if (!sArray.isValidBin(b)) continue;
+    for (const auto& srf : binContent) {
+      accessibleSurfaces.insert(srf);
     }
+    if (binContent.size() == 0) nEmptyBins++;
+    nBinsChecked++;
   }
 
   std::vector<const Acts::Surface*> diff;
@@ -461,20 +452,22 @@ Acts::LayerCreator::checkBinning(
                       accessibleSurfaces.end(),
                       std::inserter(diff, diff.begin()));
 
+  ACTS_VERBOSE(" - Checked " << nBinsChecked << " valid bins");
+
   if (nEmptyBins > 0) {
-    ACTS_ERROR("Not all bins point to surface. " << nEmptyBins << " empty");
+    ACTS_ERROR(" -- Not all bins point to surface. " << nEmptyBins << " empty");
   } else {
-    ACTS_VERBOSE("All bins point to a surface");
+    ACTS_VERBOSE(" -- All bins point to a surface");
   }
 
   if (diff.size() != 0) {
-    ACTS_ERROR(
-        "Not all sensitive surfaces are acessible through binning. sensitive: "
-        << sensitiveSurfaces.size()
-        << " accessible: "
-        << accessibleSurfaces.size());
+    ACTS_ERROR(" -- Not all sensitive surfaces are acessible through binning. "
+               "sensitive: "
+               << sensitiveSurfaces.size()
+               << "    accessible: "
+               << accessibleSurfaces.size());
   } else {
-    ACTS_VERBOSE("All sensitive surfaces are accessible through binning.");
+    ACTS_VERBOSE(" -- All sensitive surfaces are accessible through binning.");
   }
 
   return nEmptyBins == 0 && diff.size() == 0;

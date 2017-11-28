@@ -17,6 +17,7 @@ Layer::onLayer(const T& pars, const BoundaryCheck& bcheck) const
   return isOnLayer(pars.position(), bcheck);
 }
 
+// @TODO: Rewrite this with new SurfaceArray (multiple bins per surface)
 template <class T>
 std::vector<SurfaceIntersection>
 Layer::getCompatibleSurfaces(const T&                       pars,

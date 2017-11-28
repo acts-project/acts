@@ -43,7 +43,6 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 
   Transform3D transform
       = _transform != nullptr ? *_transform : Transform3D::Identity();
-  Transform3D itransform = transform.inverse();
 
   ProtoAxis pAxisPhi
       = createEquidistantAxis(surfaces, binPhi, protoLayer, transform, binsPhi);
@@ -52,6 +51,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 
   double R = protoLayer.maxR - protoLayer.minR;
 
+  Transform3D itransform = transform.inverse();
   // transform lambda captures the transform matrix
   auto globalToLocal = [transform](const Vector3D& pos) {
     Vector3D loc = transform * pos;
@@ -87,7 +87,6 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   double      R = protoLayer.maxR - protoLayer.minR;
   Transform3D transform
       = _transform != nullptr ? *_transform : Transform3D::Identity();
-  Transform3D itransform = transform.inverse();
 
   ProtoAxis pAxisPhi;
   ProtoAxis pAxisZ;
@@ -103,7 +102,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   else
     pAxisZ = createVariableAxis(surfaces, binZ, transform);
 
-  auto globalToLocal = [transform](const Vector3D& pos) {
+  Transform3D itransform = transform.inverse();
+  auto globalToLocal     = [transform](const Vector3D& pos) {
     Vector3D loc = transform * pos;
     return Vector2D(loc.phi(), loc.z());
   };
@@ -149,7 +149,6 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
   Transform3D transform
       = _transform != nullptr ? *_transform : Transform3D::Identity();
-  Transform3D itransform = transform.inverse();
 
   ProtoAxis pAxisR
       = createEquidistantAxis(surfaces, binR, protoLayer, transform, binsR);
@@ -159,6 +158,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   double Z = 0.5 * (protoLayer.minZ + protoLayer.maxZ);
   ACTS_VERBOSE("- z-position of disk estimated as " << Z);
 
+  Transform3D itransform = transform.inverse();
   // transform lambda captures the transform matrix
   auto globalToLocal = [transform](const Vector3D& pos) {
     Vector3D loc = transform * pos;
@@ -204,7 +204,6 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
   Transform3D transform
       = _transform != nullptr ? *_transform : Transform3D::Identity();
-  Transform3D itransform = transform.inverse();
 
   ProtoAxis pAxisPhi;
   ProtoAxis pAxisR;
@@ -223,6 +222,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   double Z = 0.5 * (protoLayer.minZ + protoLayer.maxZ);
   ACTS_VERBOSE("- z-position of disk estimated as " << Z);
 
+  Transform3D itransform = transform.inverse();
   // transform lambda captures the transform matrix
   auto globalToLocal = [transform](const Vector3D& pos) {
     Vector3D loc = transform * pos;
@@ -1040,7 +1040,7 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
     minimum = protoLayer.minR;
   }
   // assign the bin size
-  ACTS_VERBOSE("Create equidistant binning Axis for binnedS urfaceArray");
+  ACTS_VERBOSE("Create equidistant binning Axis for binned SurfaceArray");
   ACTS_VERBOSE("	BinningValue: " << bValue);
   ACTS_VERBOSE("	(binX = 0, binY = 1, binZ = 2, binR = 3, binPhi = 4, "
                "binRPhi = 5, binH = 6, binEta = 7)");
