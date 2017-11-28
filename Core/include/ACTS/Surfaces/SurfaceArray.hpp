@@ -120,6 +120,19 @@ public:
       return DIM;
     }
 
+    bool
+    isValidBin(size_t bin) const
+    {
+      std::array<size_t, DIM> indices = m_grid.getLocalBinIndices(bin);
+      std::array<size_t, DIM> nBins   = m_grid.getNBins();
+      for (size_t i = 0; i < indices.size(); ++i) {
+        size_t idx = indices.at(i);
+        if (idx == 0 || idx == nBins.at(i) + 1) return false;
+      }
+
+      return true;
+    }
+
   private:
     std::function<ActsVectorD<DIM>(const Vector3D&)> m_globalToLocal;
     std::function<Vector3D(const ActsVectorD<DIM>&)> m_localToGlobal;
@@ -169,6 +182,12 @@ public:
     dimensions()
     {
       return 1;
+    }
+
+    static constexpr bool
+    isValidBin(size_t bin)
+    {
+      return true;
     }
 
   private:
@@ -233,6 +252,12 @@ public:
   getAxes() const
   {
     return m_gridLookup.getAxes();
+  }
+
+  bool
+  isValidBin(size_t bin) const
+  {
+    return m_gridLookup.isValidBin(bin);
   }
 
   std::ostream&

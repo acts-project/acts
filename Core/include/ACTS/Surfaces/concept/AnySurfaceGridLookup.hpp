@@ -24,6 +24,7 @@ BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_getAxes), getAxes, 0)
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_dimensions), dimensions, 0);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_size), size, 0);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_getBinCenter), getBinCenter, 1);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_isValidBin), isValidBin, 1);
 // clang-format on
 
 namespace Acts {
@@ -47,6 +48,7 @@ namespace concept {
                                                    has_dimensions<size_t(), const bte::_self>,
                                                    has_size<size_t(), const bte::_self>,
                                                    has_getBinCenter<Vector3D(size_t), const bte::_self>,
+                                                   has_isValidBin<bool(size_t), const bte::_self>,
                                                    bte::copy_constructible<>,
                                                    bte::relaxed>;
 
