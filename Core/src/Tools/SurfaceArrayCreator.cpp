@@ -574,7 +574,6 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     throw std::logic_error(
         "No surfaces handed over for creating arbitrary bin utility!");
   // BinningOption is open for z and r, in case of phi binning reset later
-  Acts::BinningOption bOption = Acts::open;
   // the vector with the binning Values (boundaries for each bin)
 
   // bind matcher with binning type
@@ -586,7 +585,6 @@ Acts::SurfaceArrayCreator::createVariableAxis(
   std::vector<double> bValues;
   if (bValue == Acts::binPhi) {
     // set the BinningOption closed for binning in phi
-    bOption = closed;
     // copy the surface vector to a non constant vector
     std::vector<const Acts::Surface*> surf(surfaces);
     // the key surfaces - placed in different bins in the given binning

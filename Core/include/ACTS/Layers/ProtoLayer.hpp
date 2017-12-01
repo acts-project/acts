@@ -9,6 +9,7 @@
 #ifndef ACTS_LAYERS_PROTOLAYER_H
 #define ACTS_LAYERS_PROTOLAYER_H 1
 
+#include <iostream>
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
@@ -48,15 +49,15 @@ struct ProtoLayer
   {
 
     minR   = std::numeric_limits<double>::max();
-    maxR   = std::numeric_limits<double>::min();
+    maxR   = std::numeric_limits<double>::lowest();
     minX   = std::numeric_limits<double>::max();
-    maxX   = std::numeric_limits<double>::min();
+    maxX   = std::numeric_limits<double>::lowest();
     minY   = std::numeric_limits<double>::max();
-    maxY   = std::numeric_limits<double>::min();
+    maxY   = std::numeric_limits<double>::lowest();
     minZ   = std::numeric_limits<double>::max();
-    maxZ   = std::numeric_limits<double>::min();
+    maxZ   = std::numeric_limits<double>::lowest();
     minPhi = std::numeric_limits<double>::max();
-    maxPhi = std::numeric_limits<double>::min();
+    maxPhi = std::numeric_limits<double>::lowest();
 
     for (const auto& sf : surfaces) {
       // if the associated detector element exists, use
@@ -138,6 +139,18 @@ struct ProtoLayer
       return lambda0 < 0. ? pos1.perp() : pos2.perp();
     }
     return 10e101;
+  }
+  
+  std::ostream&
+  dump(std::ostream& sl) const
+  {
+    sl << "ProtoLayer with dimensions (min/max)" << std::endl;
+    sl << " - r : " << minR << "/" << maxR << std::endl;
+    sl << " - z : " << minZ << "/" << maxZ << std::endl;
+    sl << " - phi : " << minPhi << "/" << maxPhi << std::endl;
+
+    return sl;
+
   }
 };
 }
