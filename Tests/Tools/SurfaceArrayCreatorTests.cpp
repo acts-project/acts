@@ -204,6 +204,57 @@ namespace Test {
 
       return res;
     }
+
+    std::pair<SrfVec, std::vector<std::pair<const Surface*, const Surface*>>>
+    makeBarrelStagger(int    nPhi,
+                      int    nZ,
+                      double shift = 0,
+                      double incl  = M_PI / 9.,
+                      double w     = 2,
+                      double h     = 1.5)
+    {
+      double z0 = -(nZ - 1) * w;
+      SrfVec res;
+
+      std::vector<std::pair<const Surface*, const Surface*>> pairs;
+
+      for (size_t i = 0; i < nZ; i++) {
+        double z = i * w * 2 + z0;
+
+        double phiStep = 2 * M_PI / nPhi;
+        for (size_t j = 0; j < nPhi; ++j) {
+
+          Transform3D trans;
+          trans.setIdentity();
+          trans.rotate(
+              Eigen::AngleAxisd(j * phiStep + shift, Vector3D(0, 0, 1)));
+          trans.translate(Vector3D(10, 0, z));
+          trans.rotate(Eigen::AngleAxisd(incl, Vector3D(0, 0, 1)));
+          trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3D(0, 1, 0)));
+
+          auto bounds = std::make_shared<const RectangleBounds>(w, h);
+
+          auto transAptr = std::make_shared<const Transform3D>(trans);
+
+          auto srfA = std::make_unique<const PlaneSurface>(transAptr, bounds);
+
+          Vector3D    nrm    = srfA->normal({0, 0});
+          Transform3D transB = trans;
+          transB.pretranslate(nrm * 0.1);
+          auto transBptr = std::make_shared<const Transform3D>(transB);
+          auto srfB = std::make_unique<const PlaneSurface>(transBptr, bounds);
+
+          pairs.push_back(std::make_pair(srfA.get(), srfB.get()));
+
+          res.push_back(srfA.get());
+          res.push_back(srfB.get());
+          m_surfaces.push_back(std::move(srfA));
+          m_surfaces.push_back(std::move(srfB));
+        }
+      }
+
+      return std::make_pair(res, pairs);
+    }
   };
 
   void
@@ -747,6 +798,7 @@ namespace Test {
     }
 
     SurfaceArray::SurfaceGridLookup2D sl2(globalToLocal, localToGlobal, grid);
+    // do NOT fill, only completebinning
     completeBinning(sl2, brl);
     SurfaceArray sa2(sl2, brl);
     for (const auto& srf : brl) {
@@ -756,6 +808,57 @@ namespace Test {
       BOOST_TEST(binContent.size() == 1);
       BOOST_TEST(srf == binContent.at(0));
     }
+  }
+
+  BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
+                          SurfaceArrayCreatorFixture)
+  {
+
+    auto barrel = makeBarrelStagger(30, 7, 0, M_PI / 9.);
+    auto brl    = barrel.first;
+    draw_surfaces(brl, "SurfaceArrayCreator_barrelStagger.obj");
+
+    // SrfVec brl = makeBarrel(30, 7, 2, 1, true);
+    // draw_surfaces(brl, "SurfaceArrayCreator_barrelStagger.obj");
+
+    detail::EquidistantAxis phiAxis(-M_PI, M_PI, 30u);
+    detail::EquidistantAxis zAxis(-14, 14, 7u);
+    SurfaceGrid<detail::EquidistantAxis, detail::EquidistantAxis> grid(
+        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+
+    double      R  = 10.;
+    Transform3D tr = Transform3D::Identity();
+    tr.rotate(AngleAxis3D(2 * M_PI / 30. / 2., Vector3D::UnitZ()));
+    Transform3D itr    = tr.inverse();
+    auto globalToLocal = [tr](const Vector3D& pos) {
+      Vector3D rot = tr * pos;
+      return Vector2D(rot.phi(), rot.z());
+    };
+    auto localToGlobal = [R, itr](const Vector2D& loc) {
+      return itr * Vector3D(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
+    };
+
+    SurfaceArray::SurfaceGridLookup2D sl(globalToLocal, localToGlobal, grid);
+    sl.fill(brl);
+    SurfaceArray sa(sl, brl);
+
+    for (const auto& pr : barrel.second) {
+      auto A = pr.first;
+      auto B = pr.second;
+
+      Vector3D ctr        = A->binningPosition(binR);
+      SrfVec   binContent = sa.at(ctr);
+      BOOST_TEST(binContent.size() == 2);
+      std::set<const Surface*> act;
+      act.insert(binContent[0]);
+      act.insert(binContent[1]);
+
+      std::set<const Surface*> exp;
+      exp.insert(A);
+      exp.insert(B);
+    }
+
+    // checkBinning should also report everything is fine
   }
 
   BOOST_AUTO_TEST_SUITE_END();

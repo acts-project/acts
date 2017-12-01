@@ -417,7 +417,7 @@ Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const
 }
 
 bool
-Acts::LayerCreator::checkBinning(SurfaceArray& sArray) const
+Acts::LayerCreator::checkBinning(const SurfaceArray& sArray) const
 {
 
   // do consistency check: can we access all sensitive surfaces

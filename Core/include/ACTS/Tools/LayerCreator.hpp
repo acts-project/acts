@@ -284,7 +284,7 @@ private:
   /// @param surfGrid is the object grid from the surface array
   /// @para surfaces is the vector of sensitive surfaces
   bool
-  checkBinning(SurfaceArray& sArray) const;
+  checkBinning(const SurfaceArray& sArray) const;
 
   /// configuration object
   Config m_cfg;
