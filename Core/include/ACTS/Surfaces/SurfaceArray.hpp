@@ -272,7 +272,13 @@ public:
     for (size_t j = 0; j < axes.size(); ++j) {
       // auto boundaries = axes.boundaries();
       // std::cout << "axis is " << axis.isEquidistant() << std::endl;
+      detail::AxisWrapping wrap = axes.at(j).getWrapping();
       std::cout << " - axis " << (j + 1) << std::endl;
+      std::cout << " - wrapping: ";
+      if (wrap == detail::AxisWrapping::UnderOverflow) std::cout << "under/overflow";
+      if (wrap == detail::AxisWrapping::Open) std::cout << "open";
+      if (wrap == detail::AxisWrapping::Closed) std::cout << "closed";
+      std::cout << std::endl;
       std::cout << "   - bin edges: [ ";
       auto binEdges = axes.at(j).getBinEdges();
       for (size_t i = 0; i < binEdges.size(); ++i) {
