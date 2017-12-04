@@ -100,6 +100,21 @@ namespace Test {
       return p_LC->checkBinning(std::forward<Args>(args)...);
     }
 
+    bool checkBinContentSize(const SurfaceArray* sArray, size_t n)
+    {
+      size_t nBins = sArray->size();
+      bool result = true;
+      for (size_t i=0;i<nBins;++i) {
+        if (!sArray->isValidBin(i)) continue;
+        SrfVec binContent = sArray->at(i);
+        BOOST_TEST_INFO("Bin: " << i);
+        BOOST_TEST(binContent.size() == n);
+        result = result && binContent.size() == n;
+      }
+
+      return result;
+    }
+
     SrfVec
     fullPhiTestSurfacesEC(size_t n     = 10,
                           double shift = 0,
@@ -350,6 +365,7 @@ namespace Test {
     BOOST_TEST(axes.at(0).getMax() == 25, tt::tolerance(1e-3));
     BOOST_TEST(axes.at(1).getMin() == -M_PI, tt::tolerance(1e-3));
     BOOST_TEST(axes.at(1).getMax() == M_PI, tt::tolerance(1e-3));
+    checkBinContentSize(layer->surfaceArray(), 1);
 
     // check that it's applying a rotation transform to improve phi binning
     // BOOST_TEST(bu->transform() != nullptr);
@@ -375,6 +391,7 @@ namespace Test {
     BOOST_TEST(axes.at(0).getMax() == rMax, tt::tolerance(1e-3));
     BOOST_TEST(axes.at(1).getMin() == -M_PI, tt::tolerance(1e-3));
     BOOST_TEST(axes.at(1).getMax() == M_PI, tt::tolerance(1e-3));
+    checkBinContentSize(layer->surfaceArray(), 1);
 
     // check that it's applying a rotation transform to improve phi binning
     // BOOST_TEST(bu->transform() != nullptr);
@@ -395,6 +412,7 @@ namespace Test {
     BOOST_TEST(axes.at(0).getMax() == rMax, tt::tolerance(1e-3));
     BOOST_TEST(axes.at(1).getMin() == -M_PI, tt::tolerance(1e-3));
     BOOST_TEST(axes.at(1).getMax() == M_PI, tt::tolerance(1e-3));
+    checkBinContentSize(layer->surfaceArray(), 1);
 
     // check that it's applying a rotation transform to improve phi binning
     // BOOST_TEST(bu->transform() != nullptr);

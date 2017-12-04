@@ -162,7 +162,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // transform lambda captures the transform matrix
   auto globalToLocal = [transform](const Vector3D& pos) {
     Vector3D loc = transform * pos;
-    return Vector2D(loc.phi(), loc.perp());
+    return Vector2D(loc.perp(), loc.phi());
   };
   auto localToGlobal = [itransform, Z](const Vector2D& loc) {
     return itransform
@@ -226,7 +226,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // transform lambda captures the transform matrix
   auto globalToLocal = [transform](const Vector3D& pos) {
     Vector3D loc = transform * pos;
-    return Vector2D(loc.phi(), loc.perp());
+    return Vector2D(loc.perp(), loc.phi());
   };
   auto localToGlobal = [itransform, Z](const Vector2D& loc) {
     return itransform
