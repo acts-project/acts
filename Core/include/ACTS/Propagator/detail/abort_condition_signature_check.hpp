@@ -22,14 +22,14 @@ namespace Acts {
 ///
 /// template <typename input, typename result_t>
 /// bool
-/// operator()(const result_t& r, input& cache, double& step_max) const
+/// operator()(const result_t& r, input& cache) const
 /// {
 ///   return false;
 /// }
 ///
 /// template <typename input>
 /// bool
-/// operator()(input& cache, double& step_ma) const
+/// operator()(input& cache) const
 /// {
 ///   return false;
 /// }

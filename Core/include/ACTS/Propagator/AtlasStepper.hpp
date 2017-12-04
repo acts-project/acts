@@ -39,7 +39,7 @@ class AtlasStepper
     const ActsSymMatrixD<NGlobalPars>* covariance;
     double                             jacobian[NGlobalPars * NGlobalPars];
 
-    /// Lazily initialized cache for the magneic field
+    /// Lazily initialized cache for the magnetic field
     /// It caches the current magneticl field cell and stays interpolates within
     /// as long as this is valid. See step() code for details.
     bool                    field_cache_ready = false;

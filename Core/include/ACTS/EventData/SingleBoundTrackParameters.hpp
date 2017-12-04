@@ -18,12 +18,13 @@ namespace Acts {
 /// to a reference surface. This is a single-component representation
 ///
 /// @note surfaces are dealt as plain pointers as they might represent
-/// actual detector elements with their respective changeing alignment,
-/// this might be reviewed at later stage in the context of data locality.
+/// actual detector elements with their respective changeing alignment.
+/// This might be reviewed at later stage in the context of data locality.
+///
 /// Currently, the following strategy is implemented:
 /// * surfaces with a lifetime longer than an event, i.e. detector elements,
 ///   or representing surfaces of the detector geometry are copied as plain
-///   pointers and hence not deleted as their ownership staus with the geometry
+///   pointers and hence not deleted as the geometry keeps ownership of them
 /// * (free) surfaces that have no registered ownership are cloned
 template <class ChargePolicy>
 class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy>
@@ -36,7 +37,7 @@ public:
   /// This is the constructor from global parameters, enabled only
   /// for charged representations.
   ///
-  /// The transformations declared int he coordinate_transformation
+  /// The transformations declared in the coordinate_transformation
   /// yield the global parameters and momentum representation
   /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
   ///            it is given in the measurement frame
@@ -63,7 +64,7 @@ public:
   /// This is the constructor from global parameters, enabled only
   /// for charged representations.
   ///
-  /// The transformations declared int he coordinate_transformation
+  /// The transformations declared in the coordinate_transformation
   /// yield the local parameters
   ///
   /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
@@ -95,7 +96,7 @@ public:
   /// This is the constructor from global parameters, enabled only
   /// for neutral representations.
   ///
-  /// The transformations declared int he coordinate_transformation
+  /// The transformations declared in the coordinate_transformation
   /// yield the global parameters and momentum representation
   /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
   ///            it is given in the measurement frame
@@ -122,7 +123,7 @@ public:
   /// This is the constructor from global parameters, enabled only
   /// for neutral representations.
   ///
-  /// The transformations declared int he coordinate_transformation
+  /// The transformations declared in the coordinate_transformation
   /// yield the local parameters
   ///
   /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
@@ -220,7 +221,7 @@ public:
   }
 
   /// @brief set method for parameter updates
-  /// obviously only allowed on non-cost objects
+  /// obviously only allowed on non-const objects
   template <ParID_t par>
   void
   set(ParValue_t newValue)
@@ -236,9 +237,14 @@ public:
     return *m_pSurface;
   }
 
-  /// @brief access to the reference frame
-  /// This is the logical frame where the covariance matrix
-  /// The surface where you are bound to actually provides you with that
+  /// @brief access to the measurement frame, i.e. the rotation matrix with
+  /// respect to the global coordinate system, in which the local error
+  /// is described.
+  ///
+  /// For planar surface, this is identical to the rotation matrix of the
+  /// surface frame, for measurements with respect to a line this has to be
+  /// constructed by the point of clostest approach to the line, for
+  /// cylindrical surfaces this is (by convention) the tangential plane.
   virtual RotationMatrix3D
   referenceFrame() const final override
   {

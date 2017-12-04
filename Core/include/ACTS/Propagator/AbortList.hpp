@@ -19,7 +19,7 @@
 namespace Acts {
 
 template <typename... conditions>
-struct AbortList : public detail::Extendable<conditions...>
+struct AbortList : private detail::Extendable<conditions...>
 {
 private:
   static_assert(not detail::has_duplicates_v<conditions...>,

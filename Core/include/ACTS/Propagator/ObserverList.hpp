@@ -22,7 +22,7 @@ namespace Acts {
 /// to define a list of different observers that are each
 /// executed during the stepping procedure
 template <typename... observers>
-struct ObserverList : public detail::Extendable<observers...>
+struct ObserverList : private detail::Extendable<observers...>
 {
 private:
   static_assert(not detail::has_duplicates_v<observers...>,

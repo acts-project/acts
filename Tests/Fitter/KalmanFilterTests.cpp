@@ -164,8 +164,8 @@ namespace Test {
     for (const auto& p : track) {
       auto smoothedState = *p->getSmoothedState();
       auto filteredState = *p->getFilteredState();
-      // Test that position obtained by smoothed and filtered state are 
-      // identical: they should be because the initial state describes 
+      // Test that position obtained by smoothed and filtered state are
+      // identical: they should be because the initial state describes
       // the track perfectly
       BOOST_TEST(smoothedState.position().norm()
                      == filteredState.position().norm(),

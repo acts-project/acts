@@ -151,8 +151,13 @@ public:
   referenceSurface() const = 0;
 
   /// @brief access to the measurement frame, i.e. the rotation matrix with
-  /// respect
-  /// to the global coordinate system, in which the local error is described
+  /// respect to the global coordinate system, in which the local error
+  /// is described.
+  ///
+  /// For planar surface, this is identical to the rotation matrix of the
+  /// surface frame, for measurements with respect to a line this has to be
+  /// constructed by the point of clostest approach to the line, for
+  /// cylindrical surfaces this is (by convention) the tangential plane.
   virtual RotationMatrix3D
   referenceFrame() const = 0;
 

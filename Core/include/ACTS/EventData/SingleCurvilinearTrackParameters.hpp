@@ -188,10 +188,12 @@ public:
     return m_upSurface;
   }
 
-  /// @brief access to the reference frame
-  /// this is the logical frame where the covariance matrix
-  /// is bound to - for curvilinear (== planar) surfaces
-  /// this is given by the rotation matrix of the plane transform
+  /// @brief access to the measurement frame, i.e. the rotation matrix with
+  /// respect to the global coordinate system, in which the local error
+  /// is described.
+  ///
+  /// For a curvilinear track parameterisation this is identical to the
+  /// rotation matrix of the intrinsic planar surface.
   virtual RotationMatrix3D
   referenceFrame() const final override
   {
