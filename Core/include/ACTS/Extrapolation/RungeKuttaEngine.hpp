@@ -364,7 +364,8 @@ private:
   stepEstimatorWithCurvature(PropagationCache& pCache,
                              int               kind,
                              double*           Su,
-                             bool&             Q) const;
+                             bool&             Q,
+                             bool              istep = false) const;
 
   /// Build new track parameters without propagation
   std::unique_ptr<const TrackParameters>

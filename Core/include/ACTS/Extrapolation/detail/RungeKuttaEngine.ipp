@@ -64,12 +64,12 @@ Acts::RungeKuttaEngine<MagneticField>::propagateRungeKuttaT(
       return false;
   } else if (sType == Surface::Straw || sType == Surface::Perigee) {
     // (ii) line-type surfaces
-    double s[6] = {sTransform(0, 3),
-                   sTransform(1, 3),
-                   sTransform(2, 3),
-                   sTransform(0, 2),
-                   sTransform(1, 2),
-                   sTransform(2, 2)};
+    double s[6] = {sTransform(0, 3),   // position of the surface
+                   sTransform(1, 3),   // position of the surface
+                   sTransform(2, 3),   // position of the surface
+                   sTransform(0, 2),   // orientation of the surface
+                   sTransform(1, 2),   // orientation of the surface
+                   sTransform(2, 2)};  // orientation of the surface
     // check for propagation failure
     if (!propagateWithJacobian(eCell.navigationStep, pCache, 0, s))
       return false;
@@ -78,12 +78,12 @@ Acts::RungeKuttaEngine<MagneticField>::propagateRungeKuttaT(
     // - cast to CylinderSurface for checking the cross point
     const CylinderSurface* cyl = static_cast<const CylinderSurface*>(&dSurface);
     double r0[3] = {pCache.pVector[0], pCache.pVector[1], pCache.pVector[2]};
-    double s[9]  = {sTransform(0, 3),
-                   sTransform(1, 3),
-                   sTransform(2, 3),
-                   sTransform(0, 2),
-                   sTransform(1, 2),
-                   sTransform(2, 2),
+    double s[9]  = {sTransform(0, 3),  // position of the surface
+                   sTransform(1, 3),   // position of the surface
+                   sTransform(2, 3),   // position of the surface
+                   sTransform(0, 2),   // orientation of the surface
+                   sTransform(1, 2),   // orientation of the surface
+                   sTransform(2, 2),   // orientation of the surface
                    cyl->bounds().r(),
                    pCache.direction,
                    0.};
@@ -509,9 +509,10 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
   // @todo the inverse momentum condition is hard-coded
   if (pCache.mcondition && std::abs(pCache.pVector[6]) > 100000.) return false;
 
-  // Step estimation until surface
+  // Step estimation until surface - this is the initial step estimation
   bool   Q;
-  double S, step = stepEstimatorWithCurvature(pCache, kind, Su, Q);
+  double S, step = stepEstimatorWithCurvature(pCache, kind, Su, Q, true);
+
   if (!Q) return false;
 
   bool dir = true;
@@ -1271,11 +1272,13 @@ Acts::RungeKuttaEngine<MagneticField>::stepEstimatorWithCurvature(
     PropagationCache& pCache,
     int               kind,
     double*           Su,
-    bool&             Q) const
+    bool&             Q,
+    bool              istep) const
 {
   // Straight step estimation
   double Step = m_rkUtils.stepEstimator(
-      kind, Su, pCache.pVector, Q, pCache.maxStepSize);
+      kind, Su, pCache.pVector, Q, istep, pCache.maxStepSize);
+
   if (!Q) return 0.;
   double AStep = std::abs(Step);
   if (kind || AStep < m_cfg.straightStep || !pCache.mcondition) return Step;

@@ -565,25 +565,24 @@ Acts::RungeKuttaUtils::transformGlobalToCone(const Acts::Surface* su,
 /////////////////////////////////////////////////////////////////////////////////
 // Main program for step estimation to surfaces
 /////////////////////////////////////////////////////////////////////////////////
-
 double
 Acts::RungeKuttaUtils::stepEstimator(int           kind,
                                      double*       Su,
                                      const double* P,
                                      bool&         Q,
+                                     bool          istep,
                                      double        maxStep) const
 {
   double s = maxStep;
   if (kind == 1)
-    s = stepEstimatorToPlane(Su, P, Q);
+    s = stepEstimatorToPlane(Su, P, Q, istep);
   else if (kind == 0)
-    s = stepEstimatorToStraw(Su, P, Q);
+    s = stepEstimatorToStraw(Su, P, Q, istep);
   else if (kind == 2)
-    s = stepEstimatorToCylinder(Su, P, Q);
+    s = stepEstimatorToCylinder(Su, P, Q, istep);
   else if (kind == 3)
-    s = stepEstimatorToCone(Su, P, Q);
+    s = stepEstimatorToCone(Su, P, Q, istep);
   return (s > maxStep ? maxStep : s);
-  // return 1000000.;  // @todo maximum not hard-coded
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -593,7 +592,8 @@ Acts::RungeKuttaUtils::stepEstimator(int           kind,
 double
 Acts::RungeKuttaUtils::stepEstimatorToPlane(double*       S,
                                             const double* P,
-                                            bool&         Q) const
+                                            bool&         Q,
+                                            bool) const
 {
   const double* r = &P[0];  // Start coordinate
   const double* a = &P[3];  // Start direction
@@ -614,7 +614,8 @@ Acts::RungeKuttaUtils::stepEstimatorToPlane(double*       S,
 double
 Acts::RungeKuttaUtils::stepEstimatorToCylinder(double*       S,
                                                const double* P,
-                                               bool&         Q) const
+                                               bool&         Q,
+                                               bool) const
 {
   const double* r = &P[0];  // Start coordinate
   const double* a = &P[3];  // Start direction
@@ -696,12 +697,14 @@ Acts::RungeKuttaUtils::stepEstimatorToCylinder(double*       S,
 double
 Acts::RungeKuttaUtils::stepEstimatorToStraw(double*       S,
                                             const double* P,
-                                            bool&         Q) const
+                                            bool&         Q,
+                                            bool          istep) const
 {
   const double* r = &P[0];  // Start coordinate
   const double* a = &P[3];  // Start direction
 
   double D = a[0] * S[3] + a[1] * S[4] + a[2] * S[5];
+
   double A = (1. - D) * (1. + D);
   if (A == 0.) {
     Q = true;
@@ -719,7 +722,8 @@ Acts::RungeKuttaUtils::stepEstimatorToStraw(double*       S,
 double
 Acts::RungeKuttaUtils::stepEstimatorToCone(double*       S,
                                            const double* P,
-                                           bool&         Q) const
+                                           bool&         Q,
+                                           bool) const
 {
   const double* r = &P[0];  // Start coordinate
   const double* a = &P[3];  // Start direction

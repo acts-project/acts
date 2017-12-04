@@ -75,7 +75,7 @@ namespace IntegrationTest {
                            = std::uniform_real_distribution<>(-M_PI, M_PI)))
           ^ bdata::random((bdata::seed = 2,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(0., M_PI)))
+                           = std::uniform_real_distribution<>(0.1, M_PI - 0.1)))
           ^ bdata::random((bdata::seed = 3,
                            bdata::distribution
                            = std::uniform_int_distribution<>(0, 1)))
@@ -112,7 +112,7 @@ namespace IntegrationTest {
                            = std::uniform_real_distribution<>(-M_PI, M_PI)))
           ^ bdata::random((bdata::seed = 2,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(0., M_PI)))
+                           = std::uniform_real_distribution<>(0.1, M_PI - 0.1)))
           ^ bdata::random((bdata::seed = 3,
                            bdata::distribution
                            = std::uniform_int_distribution<>(0, 1)))
@@ -266,7 +266,7 @@ namespace IntegrationTest {
                            = std::uniform_real_distribution<>(-M_PI, M_PI)))
           ^ bdata::random((bdata::seed = 2,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(0., M_PI)))
+                           = std::uniform_real_distribution<>(0.1, M_PI - 0.1)))
           ^ bdata::random((bdata::seed = 3,
                            bdata::distribution
                            = std::uniform_int_distribution<>(0, 1)))
@@ -308,7 +308,6 @@ namespace IntegrationTest {
     BOOST_CHECK(e_at_disc.first.isApprox(a_at_disc.first, 1 * units::_um));
     BOOST_CHECK(e_at_disc.first.isApprox(w_at_disc.first, 1 * units::_um));
   }
-
   /// test consistency of propagators to a line
   BOOST_DATA_TEST_CASE(
       propagation_to_line_,
@@ -321,7 +320,7 @@ namespace IntegrationTest {
                            = std::uniform_real_distribution<>(-M_PI, M_PI)))
           ^ bdata::random((bdata::seed = 2,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(0., M_PI)))
+                           = std::uniform_real_distribution<>(0.1, M_PI - 0.1)))
           ^ bdata::random((bdata::seed = 3,
                            bdata::distribution
                            = std::uniform_int_distribution<>(0, 1)))
@@ -337,7 +336,7 @@ namespace IntegrationTest {
           ^ bdata::random((bdata::seed = 7,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-1., 1.)))
-          ^ bdata::xrange(5),
+          ^ bdata::xrange(100),
       pT,
       phi,
       theta,
@@ -410,7 +409,7 @@ namespace IntegrationTest {
     // covariance check for eigen stepper
     covariance_curvilinear(epropagator, pT, phi, theta, dcharge, plimit, index);
     // covariance check fo the runge kutta engine
-    // covariance_curvilinear(wpropagator, pT, phi, theta, dcharge, plimit,
+    // åcovariance_curvilinear(apropagator, pT, phi, theta, dcharge, plimit,
     // index);
     // covaraiance_check(wpropagator,
     //                  pT, phi, theta, dcharge,

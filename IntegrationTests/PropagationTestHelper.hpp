@@ -281,7 +281,6 @@ namespace IntegrationTest {
              double                 rand3,
              bool                   planar = true)
   {
-
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
