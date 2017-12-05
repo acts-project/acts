@@ -100,11 +100,12 @@ namespace Test {
       return p_LC->checkBinning(std::forward<Args>(args)...);
     }
 
-    bool checkBinContentSize(const SurfaceArray* sArray, size_t n)
+    bool
+    checkBinContentSize(const SurfaceArray* sArray, size_t n)
     {
-      size_t nBins = sArray->size();
-      bool result = true;
-      for (size_t i=0;i<nBins;++i) {
+      size_t nBins  = sArray->size();
+      bool   result = true;
+      for (size_t i = 0; i < nBins; ++i) {
         if (!sArray->isValidBin(i)) continue;
         SrfVec binContent = sArray->at(i);
         BOOST_TEST_INFO("Bin: " << i);

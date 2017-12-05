@@ -275,7 +275,8 @@ public:
       detail::AxisWrapping wrap = axes.at(j).getWrapping();
       std::cout << " - axis " << (j + 1) << std::endl;
       std::cout << " - wrapping: ";
-      if (wrap == detail::AxisWrapping::UnderOverflow) std::cout << "under/overflow";
+      if (wrap == detail::AxisWrapping::UnderOverflow)
+        std::cout << "under/overflow";
       if (wrap == detail::AxisWrapping::Open) std::cout << "open";
       if (wrap == detail::AxisWrapping::Closed) std::cout << "closed";
       std::cout << std::endl;
@@ -293,51 +294,6 @@ public:
 private:
   AnySurfaceGridLookup_t m_gridLookup;
   StoredType             m_surfaces;
-
-  // void *p_grid;
-  // GridType m_gridType;
-
-  // template <size_t DIM>
-  // void
-  //_completeBinning()
-  //{
-
-  //// Copy and cast, this is relatively expensive, but we only do
-  //// it once. Be sure to write to the original grid instead of the copyy!
-  // AnyNDimGridT<DIM> nDimGrid = m_grid; // <-- this creates a copy!
-
-  ////typename AnyNDimGridT<DIM>::index_t idx;
-  ////typename AnyNDimGridT<DIM>::point_t binCtr;
-  // std::array<size_t, DIM> idx;
-  // std::array<double, DIM> binCtr_;
-  // Vector3D binCtr;
-  // double minDist;
-  // double curDist;
-  // const Surface* minSrf;
-  // for (size_t i=0;i<m_grid.size();++i) {
-
-  //// check if empty first, if so, skip
-  // if (nDimGrid.at(i).size() > 0) continue;
-
-  // idx = nDimGrid.getLocalBinIndices(i);
-  // binCtr_ = nDimGrid.getBinCenter(idx);
-  // binCtr << binCtr_[0], binCtr_[1], binCtr_[2];
-  //// loop over all surfaces to find closest
-  // minDist = std::numeric_limits<double>::max();
-  // minSrf = nullptr;
-  // for(const auto &srf : m_surfaces) {
-  //// why does binningPosition take BinningValue?
-  // curDist = (binCtr - srf->binningPosition(binR)).mag();
-  // if (minDist < curDist) {
-  // minSrf = srf;
-  // minDist = curDist;
-  //}
-  //}
-
-  //// add to bin
-  // nDimGrid.at(i).push_back(minSrf);
-  //}
-  //}
 };
 
 }  // namespace Acts
