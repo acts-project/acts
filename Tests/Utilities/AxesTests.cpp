@@ -199,6 +199,94 @@ namespace Test {
     BOOST_TEST(b.getBin(-0.5) == 10u);
     BOOST_TEST(b.getBin(10.5) == 1u);
   }
+
+  BOOST_AUTO_TEST_CASE(neighborhood)
+  {
+    typedef std::set<size_t> bins_t;
+    Axis<AxisType::Equidistant, AxisWrapping::UnderOverflow> a1(0.0, 1.0, 10u);
+
+    BOOST_TEST(a1.neighborHoodIndices(0, 1) == bins_t({0, 1}));
+    BOOST_TEST(a1.neighborHoodIndices(1, 1) == bins_t({0, 1, 2}));
+    BOOST_TEST(a1.neighborHoodIndices(11, 1) == bins_t({10, 11}));
+    BOOST_TEST(a1.neighborHoodIndices(10, 1) == bins_t({9, 10, 11}));
+    BOOST_TEST(a1.neighborHoodIndices(5, 1) == bins_t({4, 5, 6}));
+
+    BOOST_TEST(a1.neighborHoodIndices(0, 2) == bins_t({0, 1, 2}));
+    BOOST_TEST(a1.neighborHoodIndices(1, 2) == bins_t({0, 1, 2, 3}));
+    BOOST_TEST(a1.neighborHoodIndices(11, 2) == bins_t({9, 10, 11}));
+    BOOST_TEST(a1.neighborHoodIndices(10, 2) == bins_t({8, 9, 10, 11}));
+    BOOST_TEST(a1.neighborHoodIndices(5, 2) == bins_t({3, 4, 5, 6, 7}));
+
+    Axis<AxisType::Variable, AxisWrapping::UnderOverflow> a2(
+        {0.0, 2.0, 4.0, 9.0, 10.0});
+    BOOST_TEST(a2.neighborHoodIndices(0, 1) == bins_t({0, 1}));
+    BOOST_TEST(a2.neighborHoodIndices(1, 1) == bins_t({0, 1, 2}));
+    BOOST_TEST(a2.neighborHoodIndices(5, 1) == bins_t({4, 5}));
+    BOOST_TEST(a2.neighborHoodIndices(4, 1) == bins_t({3, 4, 5}));
+    BOOST_TEST(a2.neighborHoodIndices(2, 1) == bins_t({1, 2, 3}));
+
+    BOOST_TEST(a2.neighborHoodIndices(0, 2) == bins_t({0, 1, 2}));
+    BOOST_TEST(a2.neighborHoodIndices(1, 2) == bins_t({0, 1, 2, 3}));
+    BOOST_TEST(a2.neighborHoodIndices(5, 2) == bins_t({3, 4, 5}));
+    BOOST_TEST(a2.neighborHoodIndices(4, 2) == bins_t({2, 3, 4, 5}));
+    BOOST_TEST(a2.neighborHoodIndices(3, 2) == bins_t({1, 2, 3, 4, 5}));
+
+    Axis<AxisType::Equidistant, AxisWrapping::Open> a3(0.0, 1.0, 10u);
+
+    BOOST_TEST(a3.neighborHoodIndices(0, 1) == bins_t({}));
+    BOOST_TEST(a3.neighborHoodIndices(1, 1) == bins_t({1, 2}));
+    BOOST_TEST(a3.neighborHoodIndices(11, 1) == bins_t({}));
+    BOOST_TEST(a3.neighborHoodIndices(10, 1) == bins_t({9, 10}));
+    BOOST_TEST(a3.neighborHoodIndices(5, 1) == bins_t({4, 5, 6}));
+
+    BOOST_TEST(a3.neighborHoodIndices(0, 2) == bins_t({}));
+    BOOST_TEST(a3.neighborHoodIndices(1, 2) == bins_t({1, 2, 3}));
+    BOOST_TEST(a3.neighborHoodIndices(11, 2) == bins_t({}));
+    BOOST_TEST(a3.neighborHoodIndices(10, 2) == bins_t({8, 9, 10}));
+    BOOST_TEST(a3.neighborHoodIndices(5, 2) == bins_t({3, 4, 5, 6, 7}));
+
+    Axis<AxisType::Equidistant, AxisWrapping::Closed> a4(0.0, 1.0, 10u);
+
+    BOOST_TEST(a4.neighborHoodIndices(0, 1) == bins_t({}));
+    BOOST_TEST(a4.neighborHoodIndices(1, 1) == bins_t({10, 1, 2}));
+    BOOST_TEST(a4.neighborHoodIndices(11, 1) == bins_t({}));
+    BOOST_TEST(a4.neighborHoodIndices(10, 1) == bins_t({9, 10, 1}));
+    BOOST_TEST(a4.neighborHoodIndices(5, 1) == bins_t({4, 5, 6}));
+
+    BOOST_TEST(a4.neighborHoodIndices(0, 2) == bins_t({}));
+    BOOST_TEST(a4.neighborHoodIndices(1, 2) == bins_t({9, 10, 1, 2, 3}));
+    BOOST_TEST(a4.neighborHoodIndices(11, 2) == bins_t({}));
+    BOOST_TEST(a4.neighborHoodIndices(10, 2) == bins_t({8, 9, 10, 1, 2}));
+    BOOST_TEST(a4.neighborHoodIndices(5, 2) == bins_t({3, 4, 5, 6, 7}));
+
+    Axis<AxisType::Variable, AxisWrapping::Open> a5(
+        {0.0, 2.0, 4.0, 9.0, 9.5, 10.0});
+    BOOST_TEST(a5.neighborHoodIndices(0, 1) == bins_t({}));
+    BOOST_TEST(a5.neighborHoodIndices(1, 1) == bins_t({1, 2}));
+    BOOST_TEST(a5.neighborHoodIndices(6, 1) == bins_t({}));
+    BOOST_TEST(a5.neighborHoodIndices(5, 1) == bins_t({4, 5}));
+    BOOST_TEST(a5.neighborHoodIndices(2, 1) == bins_t({1, 2, 3}));
+
+    BOOST_TEST(a5.neighborHoodIndices(0, 2) == bins_t({}));
+    BOOST_TEST(a5.neighborHoodIndices(1, 2) == bins_t({1, 2, 3}));
+    BOOST_TEST(a5.neighborHoodIndices(6, 2) == bins_t({}));
+    BOOST_TEST(a5.neighborHoodIndices(5, 2) == bins_t({3, 4, 5}));
+    BOOST_TEST(a5.neighborHoodIndices(3, 2) == bins_t({1, 2, 3, 4, 5}));
+
+    Axis<AxisType::Variable, AxisWrapping::Closed> a6(
+        {0.0, 2.0, 4.0, 9.0, 9.5, 10.0});
+    BOOST_TEST(a6.neighborHoodIndices(0, 1) == bins_t({}));
+    BOOST_TEST(a6.neighborHoodIndices(1, 1) == bins_t({5, 1, 2}));
+    BOOST_TEST(a6.neighborHoodIndices(6, 1) == bins_t({}));
+    BOOST_TEST(a6.neighborHoodIndices(5, 1) == bins_t({4, 5, 1}));
+    BOOST_TEST(a6.neighborHoodIndices(2, 1) == bins_t({1, 2, 3}));
+
+    BOOST_TEST(a6.neighborHoodIndices(0, 2) == bins_t({}));
+    BOOST_TEST(a6.neighborHoodIndices(1, 2) == bins_t({4, 5, 1, 2, 3}));
+    BOOST_TEST(a6.neighborHoodIndices(6, 2) == bins_t({}));
+    BOOST_TEST(a6.neighborHoodIndices(5, 2) == bins_t({3, 4, 5, 1, 2}));
+    BOOST_TEST(a6.neighborHoodIndices(3, 2) == bins_t({1, 2, 3, 4, 5}));
+  }
 }  // namespace Test
 
 }  // namespace Acts

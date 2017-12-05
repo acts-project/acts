@@ -140,7 +140,7 @@ struct ProtoLayer
     }
     return 10e101;
   }
-  
+
   std::ostream&
   dump(std::ostream& sl) const
   {
@@ -150,7 +150,6 @@ struct ProtoLayer
     sl << " - phi : " << minPhi << "/" << maxPhi << std::endl;
 
     return sl;
-
   }
 };
 }

@@ -91,6 +91,82 @@ namespace detail {
       return wrap;
     }
 
+    /// @brief Get #size bins which neighbor the one given
+    ///
+    /// This is the version for UnderOverflow
+    ///
+    /// @param [in] idx requested bin index
+    /// @param [in] size how many neighboring bins
+    /// @return std::set of neighboring bin indices (global)
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::UnderOverflow, int> = 0>
+    std::set<size_t>
+    neighborHoodIndices(size_t idx, size_t size = 1) const
+    {
+      std::set<size_t> result;
+      int              min   = 0;
+      int              max   = getNBins() + 1;
+      size_t           w     = max - min + 1;
+      int              itmin = std::max(min, int(idx - size));
+      int              itmax = std::min(max, int(idx + size));
+      for (int i = itmin; i <= itmax; i++) {
+        result.insert(min + (w + ((i - min) % w)) % w);
+      }
+      return result;
+    }
+
+    /// @brief Get #size bins which neighbor the one given
+    ///
+    /// This is the version for Open
+    ///
+    /// @param [in] idx requested bin index
+    /// @param [in] size how many neighboring bins
+    /// @return std::set of neighboring bin indices (global)
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::Open, int> = 0>
+    std::set<size_t>
+    neighborHoodIndices(size_t idx, size_t size = 1) const
+    {
+      std::set<size_t> result;
+      if (idx <= 0 || idx >= (getNBins() + 1)) return result;
+      int min = 1;
+      int max = getNBins();
+
+      size_t w     = max - min + 1;
+      int    itmin = std::max(min, int(idx - size));
+      int    itmax = std::min(max, int(idx + size));
+      for (int i = itmin; i <= itmax; i++) {
+        result.insert(min + (w + ((i - min) % w)) % w);
+      }
+      return result;
+    }
+
+    /// @brief Get #size bins which neighbor the one given
+    ///
+    /// This is the version for Closed
+    ///
+    /// @param [in] idx requested bin index
+    /// @param [in] size how many neighboring bins
+    /// @return std::set of neighboring bin indices (global)
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::Closed, int> = 0>
+    std::set<size_t>
+    neighborHoodIndices(size_t idx, size_t size = 1) const
+    {
+      std::set<size_t> result;
+      if (idx <= 0 || idx >= (getNBins() + 1)) return result;
+      int min = 1;
+      int max = getNBins();
+
+      int w     = max - min + 1;
+      int itmin = idx - size;
+      int itmax = idx + size;
+      for (int i = itmin; i <= itmax; i++) {
+        result.insert(min + (w + ((i - min) % w)) % w);
+      }
+      return result;
+    }
+
     /// @brief get corresponding bin index for given coordinate
     ///
     /// This is the version for UnderOverflow mode
@@ -313,6 +389,82 @@ namespace detail {
     getWrapping()
     {
       return wrap;
+    }
+
+    /// @brief Get #size bins which neighbor the one given
+    ///
+    /// This is the version for UnderOverflow
+    ///
+    /// @param [in] idx requested bin index
+    /// @param [in] size how many neighboring bins
+    /// @return std::set of neighboring bin indices (global)
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::UnderOverflow, int> = 0>
+    std::set<size_t>
+    neighborHoodIndices(size_t idx, size_t size = 1) const
+    {
+      std::set<size_t> result;
+      int              min   = 0;
+      int              max   = getNBins() + 1;
+      size_t           w     = max - min + 1;
+      int              itmin = std::max(min, int(idx - size));
+      int              itmax = std::min(max, int(idx + size));
+      for (int i = itmin; i <= itmax; i++) {
+        result.insert(min + (w + ((i - min) % w)) % w);
+      }
+      return result;
+    }
+
+    /// @brief Get #size bins which neighbor the one given
+    ///
+    /// This is the version for Open
+    ///
+    /// @param [in] idx requested bin index
+    /// @param [in] size how many neighboring bins
+    /// @return std::set of neighboring bin indices (global)
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::Open, int> = 0>
+    std::set<size_t>
+    neighborHoodIndices(size_t idx, size_t size = 1) const
+    {
+      std::set<size_t> result;
+      if (idx <= 0 || idx >= (getNBins() + 1)) return result;
+      int min = 1;
+      int max = getNBins();
+
+      size_t w     = max - min + 1;
+      int    itmin = std::max(min, int(idx - size));
+      int    itmax = std::min(max, int(idx + size));
+      for (int i = itmin; i <= itmax; i++) {
+        result.insert(min + (w + ((i - min) % w)) % w);
+      }
+      return result;
+    }
+
+    /// @brief Get #size bins which neighbor the one given
+    ///
+    /// This is the version for Closed
+    ///
+    /// @param [in] idx requested bin index
+    /// @param [in] size how many neighboring bins
+    /// @return std::set of neighboring bin indices (global)
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::Closed, int> = 0>
+    std::set<size_t>
+    neighborHoodIndices(size_t idx, size_t size = 1) const
+    {
+      std::set<size_t> result;
+      if (idx <= 0 || idx >= (getNBins() + 1)) return result;
+      int min = 1;
+      int max = getNBins();
+
+      int w     = max - min + 1;
+      int itmin = idx - size;
+      int itmax = idx + size;
+      for (int i = itmin; i <= itmax; i++) {
+        result.insert(min + (w + ((i - min) % w)) % w);
+      }
+      return result;
     }
 
     /// @brief get corresponding bin index for given coordinate
