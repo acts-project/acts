@@ -8,12 +8,12 @@
 
 #define BOOST_TEST_MODULE grid tests
 #include <boost/test/included/unit_test.hpp>
-#include <random>
 #include <chrono>
+#include <random>
 
+#include "ACTS/Utilities/concept/AnyGrid.hpp"
 #include "ACTS/Utilities/detail/Axis.hpp"
 #include "ACTS/Utilities/detail/Grid.hpp"
-#include "ACTS/Utilities/concept/AnyGrid.hpp"
 
 namespace Acts {
 
@@ -1028,6 +1028,66 @@ namespace Test {
     BOOST_TEST((g3.neighborHoodIndices({{1, 1, 1}}, 1) == bins_t({0, 1, 2, 12, 13, 14, 24, 25, 26, 144, 145, 146, 156, 157, 158, 168, 169, 170, 288, 289, 290, 300, 301, 302, 312, 313, 314})));
     BOOST_TEST((g3.neighborHoodIndices({{11, 10, 9}}, 1) == bins_t({1556, 1557, 1558, 1568, 1569, 1570, 1580, 1581, 1582, 1700, 1701, 1702, 1712, 1713, 1714, 1724, 1725, 1726})));
     // clang-format on
+
+    typedef Axis<AxisType::Equidistant, AxisWrapping::Closed> EAxisClosed;
+    typedef Grid<double, EAxisClosed>                         Grid1Closed_t;
+    EAxisClosed d(0.0, 1.0, 10u);
+
+    Grid1Closed_t g1Cl(std::make_tuple(std::move(d)));
+    BOOST_TEST((g1Cl.neighborHoodIndices({{0}}, 1)
+                == bins_t({})));  // underflow, makes no sense
+    BOOST_TEST((g1Cl.neighborHoodIndices({{11}}, 1)
+                == bins_t({})));  // overflow, makes no sense
+    BOOST_TEST((g1Cl.neighborHoodIndices({{1}}, 1)
+                == bins_t({10, 1, 2})));  // overflow, makes no sense
+    BOOST_TEST((g1Cl.neighborHoodIndices({{5}}, 1)
+                == bins_t({4, 5, 6})));  // overflow, makes no sense
+
+    typedef Grid<double, EAxisClosed, EAxisClosed> Grid2Closed_t;
+    typedef Grid<double, EAxisClosed, EAxisClosed, EAxisClosed> Grid3Closed_t;
+    EAxisClosed   e(0.0, 1.0, 5u);
+    EAxisClosed   f(0.0, 1.0, 5u);
+    EAxisClosed   g(0.0, 1.0, 5u);
+    Grid2Closed_t g2Cl(std::make_tuple(std::move(e), std::move(f)));
+    // auto act = g2Cl.neighborHoodIndices({{3, 3}}, 1);
+    // for (const auto &b : act) std::cout << " " << b;
+    // std::cout << std::endl;
+    BOOST_TEST(g2Cl.neighborHoodIndices({{3, 3}}, 1)
+               == bins_t({16, 17, 18, 23, 24, 25, 30, 31, 32}));
+    BOOST_TEST(g2Cl.neighborHoodIndices({{1, 1}}, 1)
+               == bins_t({8, 9, 15, 16, 12, 19, 36, 37, 40}));
+    BOOST_TEST(g2Cl.neighborHoodIndices({{1, 5}}, 1)
+               == bins_t({11, 12, 18, 19, 39, 40, 8, 15, 36}));
+    BOOST_TEST(g2Cl.neighborHoodIndices({{5, 1}}, 1)
+               == bins_t({36, 37, 29, 30, 33, 40, 8, 9, 12}));
+    BOOST_TEST(g2Cl.neighborHoodIndices({{5, 5}}, 1)
+               == bins_t({39, 40, 32, 33, 11, 12, 29, 36, 8}));
+
+    bins_t all({8,  9,  10, 11, 12, 15, 16, 17, 18, 19, 22, 23, 24,
+                25, 26, 29, 30, 31, 32, 33, 36, 37, 38, 39, 40});
+    BOOST_TEST(g2Cl.neighborHoodIndices({{3, 3}}, 2) == all);
+    BOOST_TEST(g2Cl.neighborHoodIndices({{1, 1}}, 2) == all);
+    BOOST_TEST(g2Cl.neighborHoodIndices({{1, 5}}, 2) == all);
+    BOOST_TEST(g2Cl.neighborHoodIndices({{5, 1}}, 2) == all);
+    BOOST_TEST(g2Cl.neighborHoodIndices({{5, 5}}, 2) == all);
+
+    // @TODO 3D test would be nice, but should essentially not be a problem if
+    // 2D works.
+
+    /*
+     *       1   2    3    4    5
+     *   |----|----|----|----|----|
+     * 1 |  8 |  9 | 10 | 11 | 12 |
+     *   |----|----|----|----|----|
+     * 2 | 15 | 16 | 17 | 18 | 19 |
+     *   |----|----|----|----|----|
+     * 3 | 22 | 23 | 24 | 25 | 26 |
+     *   |----|----|----|----|----|
+     * 4 | 29 | 30 | 31 | 32 | 33 |
+     *   |----|----|----|----|----|
+     * 5 | 36 | 37 | 38 | 39 | 40 |
+     *   |----|----|----|----|----|
+     */
   }
 
   BOOST_AUTO_TEST_CASE(closestPoints)
@@ -1072,16 +1132,17 @@ namespace Test {
     //auto fg = make_grid_fast(g);
 
     //void * voidptr_g = &g;
-    
-    
+
+
     // fill the grid
     std::mt19937 gen(0);
     std::uniform_real_distribution<> valueDis(0, 500.0);
     std::uniform_real_distribution<> lookupDis(0, 100.0);
 
     for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = valueDis(gen);
-  
-    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
+    std::chrono::steady_clock::time_point begin =
+  std::chrono::steady_clock::now();
     size_t n = 1e8;
 
     // reinit rng
@@ -1093,25 +1154,29 @@ namespace Test {
       double refres = g.at(req);
       //double res = anyG.at(req);
       //double res = fg.at(req);
-      
-      //auto deref_g = static_cast<Grid<double, EquidistantAxis>*>(voidptr_g);
-      //double res = static_cast<Grid<double, EquidistantAxis>*>(voidptr_g)->at(req);
 
-      //assert(refres == anyG.at(req) 
-             //&& refres == fg.at(req) 
+      //auto deref_g = static_cast<Grid<double, EquidistantAxis>*>(voidptr_g);
+      //double res = static_cast<Grid<double,
+  EquidistantAxis>*>(voidptr_g)->at(req);
+
+      //assert(refres == anyG.at(req)
+             //&& refres == fg.at(req)
              //&& refres == deref_g->at(req));
 
       if(i%(n/20) == 0) {
-        std::cout << "\r" << std::setprecision(2) << ((i/double(n))*100) << std::setprecision(-1)  << "%" << std::flush;
+        std::cout << "\r" << std::setprecision(2) << ((i/double(n))*100) <<
+  std::setprecision(-1)  << "%" << std::flush;
       }
     }
-      
+
     std::cout << "\r => done" << std::endl;
 
-    //std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
-    //double delta1 = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+    //std::chrono::steady_clock::time_point end=
+  std::chrono::steady_clock::now();
+    //double delta1 = std::chrono::duration_cast<std::chrono::milliseconds>(end
+  - begin).count();
     //std::cout << "Direct lookup took " << delta1 << "ms" << std::endl;
-    
+
     //// restart clock
     //begin = std::chrono::steady_clock::now();
 
@@ -1123,17 +1188,20 @@ namespace Test {
       //double res = anyG.at(req);
 
       //if(i%(n/20) == 0) {
-        //std::cout << "\r" << std::setprecision(2) << ((i/double(n))*100) << std::setprecision(-1)  << "%" << std::flush;
+        //std::cout << "\r" << std::setprecision(2) << ((i/double(n))*100) <<
+  std::setprecision(-1)  << "%" << std::flush;
       //}
     //}
-    
+
     //std::cout << "\r => done" << std::endl;
 
     //end= std::chrono::steady_clock::now();
-    //double delta2 = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+    //double delta2 = std::chrono::duration_cast<std::chrono::milliseconds>(end
+  - begin).count();
     //std::cout << "Type-erased lookup took " << delta2 << "ms" << std::endl;
 
-    //std::cout << "TE: " << std::setprecision(2) << ((delta2 - delta1)/delta1 * 100.) << "%" << std::endl;
+    //std::cout << "TE: " << std::setprecision(2) << ((delta2 - delta1)/delta1 *
+  100.) << "%" << std::endl;
   }
   */
 
