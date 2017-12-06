@@ -29,24 +29,6 @@ namespace detail {
   {
     template <class... Axes>
     static void
-    closestPointsIndices(size_t                     bin,
-                         size_t                     area,
-                         bool                       minimum,
-                         const std::tuple<Axes...>& axes,
-                         std::set<size_t>&          closestPointsIndices)
-    {
-      if (not minimum) bin += area;
-      closestPointsIndices.insert(bin);
-      area *= (std::get<N>(axes).getNBins() + 2);
-
-      grid_helper_impl<N - 1>::closestPointsIndices(
-          bin, area, false, axes, closestPointsIndices);
-      grid_helper_impl<N - 1>::closestPointsIndices(
-          bin, area, true, axes, closestPointsIndices);
-    }
-
-    template <class... Axes>
-    static void
     getBinCenter(std::array<double, sizeof...(Axes)>&       center,
                  const std::array<size_t, sizeof...(Axes)>& localIndices,
                  const std::tuple<Axes...>& axes)
@@ -219,18 +201,6 @@ namespace detail {
 
     template <class... Axes>
     static void
-    closestPointsIndices(size_t bin,
-                         size_t area,
-                         bool   minimum,
-                         const std::tuple<Axes...>& /*axes*/,
-                         std::set<size_t>& closestPointsIndices)
-    {
-      if (not minimum) bin += area;
-      closestPointsIndices.insert(bin);
-    }
-
-    template <class... Axes>
-    static void
     getBinCenter(std::array<double, sizeof...(Axes)>&       center,
                  const std::array<size_t, sizeof...(Axes)>& localIndices,
                  const std::tuple<Axes...>& axes)
@@ -252,18 +222,18 @@ namespace detail {
     template <class... Axes>
     static void
     getGlobalBin(const std::array<size_t, sizeof...(Axes)>& localBins,
-                 const std::tuple<Axes...>& /*axes*/,
-                 size_t& bin,
-                 size_t& area)
+                 const std::tuple<Axes...>& axes,
+                 size_t&                    bin,
+                 size_t&                    area)
     {
       bin += area * localBins.at(0u);
     }
 
     template <class... Axes>
     static void
-    getLocalBinIndices(size_t& bin,
-                       const std::tuple<Axes...>& /*axes*/,
-                       size_t& area,
+    getLocalBinIndices(size_t&                    bin,
+                       const std::tuple<Axes...>& axes,
+                       size_t&                    area,
                        std::array<size_t, sizeof...(Axes)>& indices)
     {
       // make sure to account for under-/overflow bins
@@ -394,16 +364,13 @@ namespace detail {
     static std::set<size_t>
     closestPointsIndices(size_t bin, const std::tuple<Axes...>& axes)
     {
-      constexpr size_t MAX = sizeof...(Axes) - 1;
-      std::set<size_t> closestPointsIndices;
-
-      // get local bin indices for neighboring bins
-      grid_helper_impl<MAX>::closestPointsIndices(
-          bin, 1u, false, axes, closestPointsIndices);
-      grid_helper_impl<MAX>::closestPointsIndices(
-          bin, 1u, true, axes, closestPointsIndices);
-
-      return closestPointsIndices;
+      std::array<size_t, sizeof...(Axes)> localIndices
+          = getLocalBinIndices(bin, axes);
+      // get neighboring bins, but only increment.
+      std::array<std::set<size_t>, sizeof...(Axes)> neighborIndices;
+      std::set<size_t> comb
+          = neighborHoodIndices(localIndices, std::make_pair(0, 1), axes);
+      return comb;
     }
 
     /// @brief retrieve bin center from set of local bin indices
@@ -538,7 +505,7 @@ namespace detail {
     static std::array<size_t, sizeof...(Axes)>
     getLowerLeftBinIndices(
         const std::array<size_t, sizeof...(Axes)>& localIndices,
-        const std::tuple<Axes...>& /*axes*/)
+        const std::tuple<Axes...>& axes)
     {
       auto llIndices = localIndices;
       for (size_t i = 0; i < sizeof...(Axes); ++i) --llIndices.at(i);
