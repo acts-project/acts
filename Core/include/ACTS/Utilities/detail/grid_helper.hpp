@@ -92,6 +92,15 @@ namespace detail {
 
     template <class... Axes>
     static void
+    getLowerLeftBinIndices(std::array<size_t, sizeof...(Axes)>& localIndices,
+                           const std::tuple<Axes...>& axes)
+    {
+      localIndices.at(N) = std::get<N>(axes).wrapBin(localIndices.at(N) - 1);
+      grid_helper_impl<N - 1>::getLowerLeftBinIndices(localIndices, axes);
+    }
+
+    template <class... Axes>
+    static void
     getNBins(const std::tuple<Axes...>& axes,
              std::array<size_t, sizeof...(Axes)>& nBinsArray)
     {
@@ -125,8 +134,7 @@ namespace detail {
     getUpperRightBinIndices(std::array<size_t, sizeof...(Axes)>& localIndices,
                             const std::tuple<Axes...>& axes)
     {
-      size_t thisAxisNBins = std::get<N>(axes).getNBins();
-      localIndices.at(N)   = std::min(thisAxisNBins + 1, ++localIndices.at(N));
+      localIndices.at(N) = std::get<N>(axes).wrapBin(localIndices.at(N) + 1);
       grid_helper_impl<N - 1>::getUpperRightBinIndices(localIndices, axes);
     }
 
@@ -252,6 +260,14 @@ namespace detail {
 
     template <class... Axes>
     static void
+    getLowerLeftBinIndices(std::array<size_t, sizeof...(Axes)>& localIndices,
+                           const std::tuple<Axes...>& axes)
+    {
+      localIndices.at(0u) = std::get<0u>(axes).wrapBin(localIndices.at(0u) - 1);
+    }
+
+    template <class... Axes>
+    static void
     getNBins(const std::tuple<Axes...>& axes,
              std::array<size_t, sizeof...(Axes)>& nBinsArray)
     {
@@ -282,8 +298,7 @@ namespace detail {
     getUpperRightBinIndices(std::array<size_t, sizeof...(Axes)>& localIndices,
                             const std::tuple<Axes...>& axes)
     {
-      size_t thisAxisNBins = std::get<0u>(axes).getNBins();
-      localIndices.at(0u)  = std::min(thisAxisNBins + 1, ++localIndices.at(0u));
+      localIndices.at(0u) = std::get<0u>(axes).wrapBin(localIndices.at(0u) + 1);
     }
 
     template <class... Axes>
@@ -507,8 +522,9 @@ namespace detail {
         const std::array<size_t, sizeof...(Axes)>& localIndices,
         const std::tuple<Axes...>& axes)
     {
-      auto llIndices = localIndices;
-      for (size_t i = 0; i < sizeof...(Axes); ++i) --llIndices.at(i);
+      constexpr size_t MAX       = sizeof...(Axes) - 1;
+      auto             llIndices = localIndices;
+      grid_helper_impl<MAX>::getLowerLeftBinIndices(llIndices, axes);
 
       return llIndices;
     }

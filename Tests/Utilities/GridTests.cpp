@@ -1192,10 +1192,8 @@ namespace Test {
      * 77   78   79   80   81   82   83
      */
 
-
     // clang-format on
   }
-
 
 }  // namespace Test
 
