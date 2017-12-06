@@ -362,12 +362,14 @@ namespace IntegrationTest {
 
     // do propagation of the start parameters
     CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
-    const auto            result = propagator.propagate(start, options);
-    const auto&           tp     = result.endParameters;
+    CurvilinearParameters start_wo_c(nullptr, pos, mom, q);
+
+    const auto  result = propagator.propagate(start, options);
+    const auto& tp     = result.endParameters;
 
     // get numerically propagated covariance matrix
-    ActsSymMatrixD<5> calculated_cov
-        = fixture.calculateCovariance(start, *tp, options);
+    ActsSymMatrixD<5> calculated_cov = fixture.calculateCovariance(
+        start_wo_c, *(start.covariance()), *tp, options);
     ActsSymMatrixD<5> obtained_cov = (*(tp->covariance()));
     bool cov_similar = calculated_cov.isApprox(obtained_cov, reltol);
     BOOST_CHECK(cov_similar);
@@ -376,7 +378,9 @@ namespace IntegrationTest {
     }
   }
 
-  template <typename Propagator_type>
+  template <typename Propagator_type,
+            typename StartSurface_type,
+            typename DestSurface_type>
   void
   covariance_bound(const Propagator_type& propagator,
                    double                 pT,
@@ -388,7 +392,9 @@ namespace IntegrationTest {
                    double                 rand2,
                    double                 rand3,
                    int                    index,
-                   double                 reltol = 2e-7)
+                   bool                   startPlanar = true,
+                   bool                   destPlanar  = true,
+                   double                 reltol      = 1e-3)
   {
 
     covariance_validation_fixture<Propagator_type> fixture(propagator);
@@ -426,32 +432,40 @@ namespace IntegrationTest {
     const auto            result_c = propagator.propagate(start_c, options);
     const auto&           tp_c     = result_c.endParameters;
 
-    auto ssTransform
-        = createPlanarTransform(pos, mom.unit(), 0.1 * rand1, 0.1 * rand2);
-    auto seTransform = createPlanarTransform(
-        tp_c->position(), tp_c->momentum().unit(), 0.1 * rand3, 0.1 * rand1);
+    auto ssTransform = startPlanar
+        ? createPlanarTransform(pos, mom.unit(), 0.1 * rand1, 0.1 * rand2)
+        : createCylindricTransform(pos, 0.05 * rand1, 0.05 * rand2);
+    auto seTransform = destPlanar
+        ? createPlanarTransform(tp_c->position(),
+                                tp_c->momentum().unit(),
+                                0.1 * rand3,
+                                0.1 * rand1)
+        : createCylindricTransform(
+              tp_c->position(), 0.05 * rand1, 0.05 * rand2);
 
-    PlaneSurface    startSurface(ssTransform);
-    BoundParameters start(std::move(cov_ptr), pos, mom, q, startSurface);
+    StartSurface_type startSurface(ssTransform);
+    BoundParameters   start(std::move(cov_ptr), pos, mom, q, startSurface);
+    BoundParameters   start_wo_c(nullptr, pos, mom, q, startSurface);
 
     // increase the path limit - to be safe hitting the surface
     options.max_path_length *= 2;
 
-    PlaneSurface endSurface(seTransform);
-    const auto   result = propagator.propagate(start, endSurface, options);
-    const auto&  tp     = result.endParameters;
+    DestSurface_type endSurface(seTransform);
+    const auto       result = propagator.propagate(start, endSurface, options);
+    const auto&      tp     = result.endParameters;
 
-    // get numerically propagated covariance matrix
-    ActsSymMatrixD<5> calculated_cov
-        = fixture.calculateCovariance(start, *tp, options);
     // get obtained covariance matrix
     ActsSymMatrixD<5> obtained_cov = (*(tp->covariance()));
 
+    // get numerically propagated covariance matrix
+    ActsSymMatrixD<5> calculated_cov = fixture.calculateCovariance(
+        start_wo_c, *(start.covariance()), *tp, options);
+
     bool cov_similar = calculated_cov.isApprox(obtained_cov, reltol);
     BOOST_CHECK(cov_similar);
-    // if (!cov_similar){
-    //  BOOST_CHECK_EQUAL(calculated_cov, obtained_cov);
-    //}
+    if (!cov_similar) {
+      BOOST_CHECK_EQUAL(calculated_cov, obtained_cov);
+    }
   }
 }
 }

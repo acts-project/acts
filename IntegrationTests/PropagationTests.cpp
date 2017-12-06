@@ -311,29 +311,29 @@ namespace IntegrationTest {
   /// test consistency of propagators to a line
   BOOST_DATA_TEST_CASE(
       propagation_to_line_,
-      bdata::random((bdata::seed = 0,
+      bdata::random((bdata::seed = 1000,
                      bdata::distribution
                      = std::uniform_real_distribution<>(0.4 * units::_GeV,
                                                         10. * units::_GeV)))
-          ^ bdata::random((bdata::seed = 1,
+          ^ bdata::random((bdata::seed = 1001,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-M_PI, M_PI)))
-          ^ bdata::random((bdata::seed = 2,
+          ^ bdata::random((bdata::seed = 1002,
                            bdata::distribution
                            = std::uniform_real_distribution<>(0.1, M_PI - 0.1)))
-          ^ bdata::random((bdata::seed = 3,
+          ^ bdata::random((bdata::seed = 1003,
                            bdata::distribution
                            = std::uniform_int_distribution<>(0, 1)))
-          ^ bdata::random((bdata::seed = 4,
+          ^ bdata::random((bdata::seed = 1004,
                            bdata::distribution
                            = std::uniform_real_distribution<>(0.5, 1.)))
-          ^ bdata::random((bdata::seed = 5,
+          ^ bdata::random((bdata::seed = 1005,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-1., 1.)))
-          ^ bdata::random((bdata::seed = 6,
+          ^ bdata::random((bdata::seed = 1006,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-1., 1.)))
-          ^ bdata::random((bdata::seed = 7,
+          ^ bdata::random((bdata::seed = 1007,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-1., 1.)))
           ^ bdata::xrange(100),
@@ -388,85 +388,142 @@ namespace IntegrationTest {
   }
 
   /// test correct covariance transport for curvilinear parameters
-  BOOST_DATA_TEST_CASE(covariance_transport_curvilinear,
-                       bdata::random(2. * units::_GeV, 100. * units::_GeV)
-                           ^ bdata::random(-M_PI, M_PI)
-                           ^ bdata::random(0.1, M_PI - 0.1)
-                           ^ bdata::random(0, 1)
-                           ^ bdata::random(0.5, 5.)
-                           ^ bdata::xrange(100),
-                       pT,
-                       phi,
-                       theta,
-                       charge,
-                       plimit,
-                       index)
+  /// this test only works within the
+  /// s_curvilinearProjTolerance (in: Definitions.hpp)
+  BOOST_DATA_TEST_CASE(
+      covariance_transport_curvilinear,
+      bdata::random((bdata::seed = 1000,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(0.4 * units::_GeV,
+                                                        10. * units::_GeV)))
+          ^ bdata::random((bdata::seed = 1001,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-M_PI, M_PI)))
+          ^ bdata::random((bdata::seed = 1002,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0.10,
+                                                              M_PI - 0.10)))
+          ^ bdata::random((bdata::seed = 1003,
+                           bdata::distribution
+                           = std::uniform_int_distribution<>(0, 1)))
+          ^ bdata::random((bdata::seed = 1004,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0.5, 1.)))
+          ^ bdata::xrange(100),
+      pT,
+      phi,
+      theta,
+      charge,
+      plimit,
+      index)
   {
     double dcharge = -1 + 2 * charge;
-    // covaraince check for atlas stepper
-    // covariance_curvilinear(apropagator, pT, phi, theta, dcharge, plimit,
-    // index);
     // covariance check for eigen stepper
     covariance_curvilinear(epropagator, pT, phi, theta, dcharge, plimit, index);
-    // covariance check fo the runge kutta engine
-    // åcovariance_curvilinear(apropagator, pT, phi, theta, dcharge, plimit,
-    // index);
-    // covaraiance_check(wpropagator,
-    //                  pT, phi, theta, dcharge,
-    //                  plimit,
-    //                  startSf,
-    //                  endSf,
-    //                  sfRandomizer,
-    //                  index);
-    //
-    // covaraiance_check(wpropagator, pT, phi, theta, charge, index);
+    // covariance check fo atlas stepper
+    covariance_curvilinear(apropagator, pT, phi, theta, dcharge, plimit, index);
+    // covariance check for wrapped engine
+    covariance_curvilinear(wpropagator, pT, phi, theta, dcharge, plimit, index);
   }
-  /*
+
   // test correct covariance transport for surfaces parameters
-  BOOST_DATA_TEST_CASE(covariance_transport_bound,
-                       bdata::random(2. * units::_GeV, 100. * units::_GeV)
-                           ^ bdata::random(-M_PI, M_PI)
-                           ^ bdata::random(0., M_PI)
-                           ^ bdata::random(0, 1)
-                           ^ bdata::random(0.5, 5.)
-                           ^ bdata::random(-1., 1.)
-                           ^ bdata::random(-1., 1.)
-                           ^ bdata::random(-1., 1.)
-                           ^ bdata::xrange(100),
-                       pT,
-                       phi,
-                       theta,
-                       charge,
-                       plimit,
-                       rand1,
-                       rand2,
-                       rand3,
-                       index)
+  BOOST_DATA_TEST_CASE(
+      covariance_transport_surface_surface_,
+      bdata::random((bdata::seed = 1000,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(0.4 * units::_GeV,
+                                                        10. * units::_GeV)))
+          ^ bdata::random((bdata::seed = 1001,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-M_PI, M_PI)))
+          ^ bdata::random((bdata::seed = 1002,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0.1, M_PI - 0.1)))
+          ^ bdata::random((bdata::seed = 1003,
+                           bdata::distribution
+                           = std::uniform_int_distribution<>(0, 1)))
+          ^ bdata::random((bdata::seed = 1004,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0.5, 1.)))
+          ^ bdata::random((bdata::seed = 1005,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::random((bdata::seed = 1006,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::random((bdata::seed = 1007,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::xrange(100),
+      pT,
+      phi,
+      theta,
+      charge,
+      plimit,
+      rand1,
+      rand2,
+      rand3,
+      index)
   {
     double dcharge = -1 + 2 * charge;
     // covaraince check for atlas stepper
-    // covaraiance_check(apropagator,
-    //                   pT, phi, theta, dcharge,
-    //                   plimit,
-    //                   startSf,
-    //                   endSf,
-    //                   sfRandomizer,
-    //                   index);
-    // covariance check for eigen stepper
-    covariance_bound(epropagator,
-                     pT, phi, theta, dcharge,
-                     plimit, rand1, rand2, rand3,
-                     index);
+    covariance_bound<AtlasPropagator_type, PlaneSurface, PlaneSurface>(
+        apropagator,
+        pT,
+        phi,
+        theta,
+        dcharge,
+        plimit,
+        rand1,
+        rand2,
+        rand3,
+        index);
+
+    // covaraince check for eigen stepper
+    covariance_bound<EigenPropagator_type, PlaneSurface, PlaneSurface>(
+        epropagator,
+        pT,
+        phi,
+        theta,
+        dcharge,
+        plimit,
+        rand1,
+        rand2,
+        rand3,
+        index);
+
     // covariance check fo the runge kutta engine
-    covariance_bound(wpropagator,
-                     pT, phi, theta, dcharge,
-                     plimit, rand1, rand2, rand3,
-                     index);
+    covariance_bound<WrappedPropagator_type, PlaneSurface, PlaneSurface>(
+        wpropagator,
+        pT,
+        phi,
+        theta,
+        dcharge,
+        plimit,
+        rand1,
+        rand2,
+        rand3,
+        index);
+
+    // covariance_bound<WrappedPropagator_type,
+    //                  PlaneSurface, DiscSurface>
+    //                  (wpropagator,
+    //                  pT, phi, theta, dcharge,
+    //                  plimit, rand1, rand2, rand3,
+    //                  index,
+    //                  true, true, 0.01);
+    // covariance_bound<WrappedPropagator_type,
+    //                  PlaneSurface, StrawSurface>
+    //                  (wpropagator,
+    //                  pT, phi, theta, dcharge,
+    //                  plimit, rand1, rand2, rand3,
+    //                  index,
+    //                  true, false, 0.01);
+    //
     //
     //
     // covaraiance_check(wpropagator, pT, phi, theta, charge, index);
   }
-  */
 }  // namespace Test
 
 }  // namespace Acts

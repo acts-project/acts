@@ -5,7 +5,8 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+//
+// This is based original stepper code from the ATLAS RungeKuttePropagagor
 #ifndef ACTS_ATLAS_STEPPER_HPP
 #define ACTS_ATLAS_STEPPER_HPP
 
@@ -22,11 +23,12 @@ class AtlasStepper
 {
   struct Cache
   {
+    // optimisation that init is not called twice
+    bool cache_ready = false;
     // configuration
     double dir;
     bool   useJacobian;
     double step;
-
     double maxPathLength;
     bool   mcondition;
     bool   needgradient;
@@ -66,7 +68,8 @@ class AtlasStepper
     /// Constructor
     template <typename Parameters>
     Cache(const Parameters& pars)
-      : dir(alongMomentum)
+      : cache_ready(false)
+      , dir(alongMomentum)
       , useJacobian(false)
       , step(0.)
       , maxPathLength(0.)
@@ -81,21 +84,16 @@ class AtlasStepper
 
     /// The cache update method
     ///
+    /// @param [in] pars The new track parameters at start
+    ///
     /// @todo check to identify an reuse of start/cache
     template <typename Parameters>
     void
     update(const Parameters& pars)
     {
-      update_parameters(pars);
-      update_covariance(pars);
-    }
+      // cache is ready - noting to do
+      if (cache_ready) return;
 
-    /// The cache parameter update
-    /// @param [in] pars The new track parameters at start
-    template <typename Parameters>
-    void
-    update_parameters(const Parameters& pars)
-    {
       const ActsVectorD<3>     pos = pars.position();
       ActsVectorD<NGlobalPars> Vp  = pars.parameters();
 
@@ -105,92 +103,75 @@ class AtlasStepper
       Se = sin(Vp(3));
       Ce = cos(Vp(3));
 
-      double Ax[3] = {-Sf, Cf, 0.};
-      double Ay[3] = {-Cf * Ce, -Sf * Ce, Se};
-
       pVector[0] = pos(0);
       pVector[1] = pos(1);
       pVector[2] = pos(2);
-      pVector[3] = Cf * Se;  // Ax
-      pVector[4] = Sf * Se;  // Ay
-      pVector[5] = Ce;       // Az
-      pVector[6] = Vp[4];    // CM
+      pVector[3] = Cf * Se;
+      pVector[4] = Sf * Se;
+      pVector[5] = Ce;
+      pVector[6] = Vp[4];
+
+      // @todo: remove magic numbers
       if (std::abs(pVector[6]) < .000000000000001) {
         pVector[6] < 0. ? pVector[6] = -.000000000000001
                         : pVector[6] = .000000000000001;
       }
-      //   /dL1     |   /dL2       |    /dPhi     |    /dThe     |    /dCM     |
-      //
-      pVector[7]  = Ax[0];
-      pVector[14] = Ay[0];
-      pVector[21] = 0.;
-      pVector[28] = 0.;
-      pVector[35] = 0.;  // dX /
-      pVector[8]  = Ax[1];
-      pVector[15] = Ay[1];
-      pVector[22] = 0.;
-      pVector[29] = 0.;
-      pVector[36] = 0.;  // dY /
-      pVector[9]  = Ax[2];
-      pVector[16] = Ay[2];
-      pVector[23] = 0.;
-      pVector[30] = 0.;
-      pVector[37] = 0.;  // dZ /
-      pVector[10] = 0.;
-      pVector[17] = 0.;
-      pVector[24] = -Sf * Se;
-      pVector[31] = -Ay[0];
-      pVector[38] = 0.;  // dAx/
-      pVector[11] = 0.;
-      pVector[18] = 0.;
-      pVector[25] = Cf * Se;
-      pVector[32] = -Ay[1];
-      pVector[39] = 0.;  // dAy/
-      pVector[12] = 0.;
-      pVector[19] = 0.;
-      pVector[26] = 0.;
-      pVector[33] = -Ay[2];
-      pVector[40] = 0.;  // dAz/
-      pVector[13] = 0.;
-      pVector[20] = 0.;
-      pVector[27] = 0.;
-      pVector[34] = 0.;
-      pVector[41] = 1.;  // dCM/
-      pVector[42] = 0.;
-      pVector[43] = 0.;
-      pVector[44] = 0.;
-    }
 
-    /// The cache covariance update - bound parameters
-    /// @param [in] pars The new track parameters at start
-    ///
-    /// @todo check to identify an reuse of start/cache
-    // void
-    // update_covariance(const BoundParameters& pars)
-    // {
-    //   if (pars.covariance()) {
-    //     // translate bound parameters covariance to curvilinear
-    //
-    //     //
-    //     // covariance  = new ActsSymMatrixD<NGlobalPars>
-    //     //   (ActsSymMatrixD<NGlobalPars>::Zero());
-    //     useJacobian = true;
-    //   }
-    // }
-
-    /// The cache covariance update  - curvilinear parameters
-    /// @param [in] pars The new track parameters at start
-    ///
-    /// @todo check to identify an reuse of start/cache
-    template <typename Parameters>
-    void
-    update_covariance(const Parameters& pars)
-    {
+      // prepare the jacobian if we have a covariance
       if (pars.covariance()) {
-        // for curvilinear parameters - use covariance directly
+        // copy the covariance matrix
         covariance  = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
         useJacobian = true;
+        const auto transform = pars.referenceFrame();
+
+        pVector[7]  = transform(0, eLOC_0);
+        pVector[14] = transform(0, eLOC_1);
+        pVector[21] = 0.;
+        pVector[28] = 0.;
+        pVector[35] = 0.;  // dX /
+
+        pVector[8]  = transform(1, eLOC_0);
+        pVector[15] = transform(1, eLOC_1);
+        pVector[22] = 0.;
+        pVector[29] = 0.;
+        pVector[36] = 0.;  // dY /
+
+        pVector[9]  = transform(2, eLOC_0);
+        pVector[16] = transform(2, eLOC_1);
+        pVector[23] = 0.;
+        pVector[30] = 0.;
+        pVector[37] = 0.;  // dZ /
+
+        pVector[10] = 0.;
+        pVector[17] = 0.;
+        pVector[24] = -Sf * Se;  // - sin(phi) * cos(theta)
+        pVector[31] = Cf * Ce;   // cos(phi) * cos(theta)
+        pVector[38] = 0.;        // dAx/
+
+        pVector[11] = 0.;
+        pVector[18] = 0.;
+        pVector[25] = Cf * Se;  // cos(phi) * sin(theta)
+        pVector[32] = Sf * Ce;  // sin(phi) * cos(theta)
+        pVector[39] = 0.;       // dAy/
+
+        pVector[12] = 0.;
+        pVector[19] = 0.;
+        pVector[26] = 0.;
+        pVector[33] = -Se;  // - sin(theta)
+        pVector[40] = 0.;   // dAz/
+
+        pVector[13] = 0.;
+        pVector[20] = 0.;
+        pVector[27] = 0.;
+        pVector[34] = 0.;
+        pVector[41] = 1.;  // dCM/
+
+        pVector[42] = 0.;
+        pVector[43] = 0.;
+        pVector[44] = 0.;
       }
+      // now declare the cache as ready
+      cache_ready = true;
     }
   };
 
@@ -221,6 +202,9 @@ public:
   static CurvilinearParameters
   convert(Cache& cache)
   {
+    // the convert method invalidates the cache (in case it's reused)
+    cache.cache_ready = false;
+    //
     double         charge = cache.pVector[6] > 0. ? 1. : -1.;
     Acts::Vector3D gp(cache.pVector[0], cache.pVector[1], cache.pVector[2]);
     Acts::Vector3D mom(cache.pVector[3], cache.pVector[4], cache.pVector[5]);
@@ -316,6 +300,7 @@ public:
       cache.jacobian[2] = Ax[0] * P[21] + Ax[1] * P[22];  // dL0/dPhi
       cache.jacobian[3] = Ax[0] * P[28] + Ax[1] * P[29];  // dL0/dThe
       cache.jacobian[4] = Ax[0] * P[35] + Ax[1] * P[36];  // dL0/dCM
+
       cache.jacobian[5]
           = Ay[0] * P[7] + Ay[1] * P[8] + Ay[2] * P[9];  // dL1/dL0
       cache.jacobian[6]
@@ -326,21 +311,25 @@ public:
           = Ay[0] * P[28] + Ay[1] * P[29] + Ay[2] * P[30];  // dL1/dThe
       cache.jacobian[9]
           = Ay[0] * P[35] + Ay[1] * P[36] + Ay[2] * P[37];  // dL1/dCM
-      cache.jacobian[10] = P3 * P[11] - P4 * P[10];         // dPhi/dL0
-      cache.jacobian[11] = P3 * P[18] - P4 * P[17];         // dPhi/dL1
-      cache.jacobian[12] = P3 * P[25] - P4 * P[24];         // dPhi/dPhi
-      cache.jacobian[13] = P3 * P[32] - P4 * P[31];         // dPhi/dThe
-      cache.jacobian[14] = P3 * P[39] - P4 * P[38];         // dPhi/dCM
-      cache.jacobian[15] = C * P[12];                       // dThe/dL0
-      cache.jacobian[16] = C * P[19];                       // dThe/dL1
-      cache.jacobian[17] = C * P[26];                       // dThe/dPhi
-      cache.jacobian[18] = C * P[33];                       // dThe/dThe
-      cache.jacobian[19] = C * P[40];                       // dThe/dCM
-      cache.jacobian[20] = 0;                               // dCM /dL0
-      cache.jacobian[21] = 0;                               // dCM /dL1
-      cache.jacobian[22] = 0;                               // dCM /dPhi
-      cache.jacobian[23] = 0;                               // dCM /dTheta
-      cache.jacobian[24] = P[41];                           // dCM /dCM
+
+      cache.jacobian[10] = P3 * P[11] - P4 * P[10];  // dPhi/dL0
+      cache.jacobian[11] = P3 * P[18] - P4 * P[17];  // dPhi/dL1
+      cache.jacobian[12] = P3 * P[25] - P4 * P[24];  // dPhi/dPhi
+      cache.jacobian[13] = P3 * P[32] - P4 * P[31];  // dPhi/dThe
+      cache.jacobian[14] = P3 * P[39] - P4 * P[38];  // dPhi/dCM
+
+      cache.jacobian[15] = C * P[12];  // dThe/dL0
+      cache.jacobian[16] = C * P[19];  // dThe/dL1
+      cache.jacobian[17] = C * P[26];  // dThe/dPhi
+      cache.jacobian[18] = C * P[33];  // dThe/dThe
+      cache.jacobian[19] = C * P[40];  // dThe/dCM
+
+      cache.jacobian[20] = 0.;     // dCM /dL0
+      cache.jacobian[21] = 0.;     // dCM /dL1
+      cache.jacobian[22] = 0.;     // dCM /dPhi
+      cache.jacobian[23] = 0.;     // dCM /dTheta
+      cache.jacobian[24] = P[41];  // dCM /dCM
+
       Eigen::
           Map<Eigen::Matrix<double, NGlobalPars, NGlobalPars, Eigen::RowMajor>>
               J(cache.jacobian);
@@ -358,6 +347,10 @@ public:
   static BoundParameters
   convert(Cache& cache, const Surface& s)
   {
+
+    // the convert method invalidates the cache (in case it's reused)
+    cache.cache_ready = false;
+
     double         charge = cache.pVector[6] > 0. ? 1. : -1.;
     Acts::Vector3D gp(cache.pVector[0], cache.pVector[1], cache.pVector[2]);
     Acts::Vector3D mom(cache.pVector[3], cache.pVector[4], cache.pVector[5]);
@@ -365,6 +358,7 @@ public:
 
     std::unique_ptr<const ActsSymMatrixD<5>> cov = nullptr;
     if (cache.covariance) {
+
       double p = 1. / cache.pVector[6];
       cache.pVector[35] *= p;
       cache.pVector[36] *= p;
@@ -373,24 +367,15 @@ public:
       cache.pVector[39] *= p;
       cache.pVector[40] *= p;
 
-      double An = sqrt(cache.pVector[3] * cache.pVector[3]
-                       + cache.pVector[4] * cache.pVector[4]);
-      double Ax[3];
-      if (An != 0.) {
-        Ax[0] = -cache.pVector[4] / An;
-        Ax[1] = cache.pVector[3] / An;
-        Ax[2] = 0.;
-      } else {
-        Ax[0] = 1.;
-        Ax[1] = 0.;
-        Ax[2] = 0.;
-      }
+      const auto fFrame = s.referenceFrame(gp, mom);
 
-      double Ay[3] = {-Ax[1] * cache.pVector[5], Ax[0] * cache.pVector[5], An};
-      double S[3]  = {cache.pVector[3], cache.pVector[4], cache.pVector[5]};
-
+      double Ax[3] = {fFrame(0, 0), fFrame(1, 0), fFrame(2, 0)};
+      double Ay[3] = {fFrame(0, 1), fFrame(1, 1), fFrame(2, 1)};
+      double S[3]  = {fFrame(0, 2), fFrame(1, 2), fFrame(2, 2)};
+      // this is the projection of direciton onto the local ca vector
       double A = cache.pVector[3] * S[0] + cache.pVector[4] * S[1]
           + cache.pVector[5] * S[2];
+
       if (A != 0.) A = 1. / A;
       S[0] *= A;
       S[1] *= A;
@@ -413,24 +398,28 @@ public:
       cache.pVector[10] -= (s0 * cache.pVector[42]);
       cache.pVector[11] -= (s0 * cache.pVector[43]);
       cache.pVector[12] -= (s0 * cache.pVector[44]);
+
       cache.pVector[14] -= (s1 * cache.pVector[3]);
       cache.pVector[15] -= (s1 * cache.pVector[4]);
       cache.pVector[16] -= (s1 * cache.pVector[5]);
       cache.pVector[17] -= (s1 * cache.pVector[42]);
       cache.pVector[18] -= (s1 * cache.pVector[43]);
       cache.pVector[19] -= (s1 * cache.pVector[44]);
+
       cache.pVector[21] -= (s2 * cache.pVector[3]);
       cache.pVector[22] -= (s2 * cache.pVector[4]);
       cache.pVector[23] -= (s2 * cache.pVector[5]);
       cache.pVector[24] -= (s2 * cache.pVector[42]);
       cache.pVector[25] -= (s2 * cache.pVector[43]);
       cache.pVector[26] -= (s2 * cache.pVector[44]);
+
       cache.pVector[28] -= (s3 * cache.pVector[3]);
       cache.pVector[29] -= (s3 * cache.pVector[4]);
       cache.pVector[30] -= (s3 * cache.pVector[5]);
       cache.pVector[31] -= (s3 * cache.pVector[42]);
       cache.pVector[32] -= (s3 * cache.pVector[43]);
       cache.pVector[33] -= (s3 * cache.pVector[44]);
+
       cache.pVector[35] -= (s4 * cache.pVector[3]);
       cache.pVector[36] -= (s4 * cache.pVector[4]);
       cache.pVector[37] -= (s4 * cache.pVector[5]);
@@ -452,18 +441,18 @@ public:
         P4 = 0.;
       }
 
-      // Jacobian production
-      //
-      cache.jacobian[0]
-          = Ax[0] * cache.pVector[7] + Ax[1] * cache.pVector[8];  // dL0/dL0
-      cache.jacobian[1]
-          = Ax[0] * cache.pVector[14] + Ax[1] * cache.pVector[15];  // dL0/dL1
-      cache.jacobian[2]
-          = Ax[0] * cache.pVector[21] + Ax[1] * cache.pVector[22];  // dL0/dPhi
-      cache.jacobian[3]
-          = Ax[0] * cache.pVector[28] + Ax[1] * cache.pVector[29];  // dL0/dThe
-      cache.jacobian[4]
-          = Ax[0] * cache.pVector[35] + Ax[1] * cache.pVector[36];  // dL0/dCM
+      // Jacobian production of transport and to_local
+      cache.jacobian[0] = Ax[0] * cache.pVector[7] + Ax[1] * cache.pVector[8]
+          + Ax[2] * cache.pVector[9];  // dL0/dL0
+      cache.jacobian[1] = Ax[0] * cache.pVector[14] + Ax[1] * cache.pVector[15]
+          + Ax[2] * cache.pVector[16];  // dL0/dL1
+      cache.jacobian[2] = Ax[0] * cache.pVector[21] + Ax[1] * cache.pVector[22]
+          + Ax[2] * cache.pVector[23];  // dL0/dPhi
+      cache.jacobian[3] = Ax[0] * cache.pVector[28] + Ax[1] * cache.pVector[29]
+          + Ax[2] * cache.pVector[30];  // dL0/dThe
+      cache.jacobian[4] = Ax[0] * cache.pVector[35] + Ax[1] * cache.pVector[36]
+          + Ax[2] * cache.pVector[37];  // dL0/dCM
+
       cache.jacobian[5] = Ay[0] * cache.pVector[7] + Ay[1] * cache.pVector[8]
           + Ay[2] * cache.pVector[9];  // dL1/dL0
       cache.jacobian[6] = Ay[0] * cache.pVector[14] + Ay[1] * cache.pVector[15]
@@ -474,6 +463,7 @@ public:
           + Ay[2] * cache.pVector[30];  // dL1/dThe
       cache.jacobian[9] = Ay[0] * cache.pVector[35] + Ay[1] * cache.pVector[36]
           + Ay[2] * cache.pVector[37];  // dL1/dCM
+
       cache.jacobian[10]
           = P3 * cache.pVector[11] - P4 * cache.pVector[10];  // dPhi/dL0
       cache.jacobian[11]
@@ -489,11 +479,12 @@ public:
       cache.jacobian[17] = C * cache.pVector[26];             // dThe/dPhi
       cache.jacobian[18] = C * cache.pVector[33];             // dThe/dThe
       cache.jacobian[19] = C * cache.pVector[40];             // dThe/dCM
-      cache.jacobian[20] = 0;                                 // dCM /dL0
-      cache.jacobian[21] = 0;                                 // dCM /dL1
-      cache.jacobian[22] = 0;                                 // dCM /dPhi
-      cache.jacobian[23] = 0;                                 // dCM /dTheta
+      cache.jacobian[20] = 0.;                                // dCM /dL0
+      cache.jacobian[21] = 0.;                                // dCM /dL1
+      cache.jacobian[22] = 0.;                                // dCM /dPhi
+      cache.jacobian[23] = 0.;                                // dCM /dTheta
       cache.jacobian[24] = cache.pVector[41];                 // dCM /dCM
+
       Eigen::
           Map<Eigen::Matrix<double, NGlobalPars, NGlobalPars, Eigen::RowMajor>>
               J(cache.jacobian);
@@ -538,9 +529,8 @@ public:
   {
 
     // we use h for keeping the nominclature with the original atlas code
-    double& h = cache.step_size;
-
-    bool Jac = cache.useJacobian;
+    double& h   = cache.step_size;
+    bool    Jac = cache.useJacobian;
 
     double* R  = &(cache.pVector[0]);  // Coordinates
     double* A  = &(cache.pVector[3]);  // Directions

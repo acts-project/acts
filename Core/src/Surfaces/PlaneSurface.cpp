@@ -39,7 +39,7 @@ Acts::PlaneSurface::PlaneSurface(const Vector3D& center, const Vector3D& normal)
   /// U = Z x T if T not parallel to Z otherwise U = X x T
   /// V = T x U
   Vector3D T = normal.normalized();
-  Vector3D U = std::abs(T.dot(Vector3D::UnitZ())) < 0.99
+  Vector3D U = std::abs(T.dot(Vector3D::UnitZ())) < s_curvilinearProjTolerance
       ? Vector3D::UnitZ().cross(T).normalized()
       : Vector3D::UnitX().cross(T).normalized();
   Vector3D         V = T.cross(U);

@@ -31,9 +31,10 @@ namespace IntegrationTest {
     /// it can either be used for curvilinear transport
     template <typename StartParameters, typename EndParameters, typename U>
     ActsSymMatrixD<5>
-    calculateCovariance(const StartParameters& startPars,
-                        const EndParameters&   endPars,
-                        const U&               options) const
+    calculateCovariance(const StartParameters&   startPars,
+                        const ActsSymMatrixD<5>& startCov,
+                        const EndParameters&     endPars,
+                        const U&                 options) const
     {
       // steps for estimating derivatives
       const std::array<double, 4> h_steps = {{-2e-4, -1e-4, 1e-4, 2e-4}};
@@ -110,7 +111,7 @@ namespace IntegrationTest {
       jacobian.col(Acts::eTHETA) = fitLinear(theta_derivatives, h_steps);
       jacobian.col(Acts::eQOP)   = fitLinear(qop_derivatives, h_steps);
 
-      return jacobian * (*startPars.covariance()) * jacobian.transpose();
+      return jacobian * startCov * jacobian.transpose();
     }
 
   private:
