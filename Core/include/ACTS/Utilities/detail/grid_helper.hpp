@@ -179,7 +179,7 @@ namespace detail {
     static void
     neighborHoodIndices(
         const std::array<size_t, sizeof...(Axes)>& localIndices,
-        size_t                     size,
+        std::pair<size_t, size_t>                  sizes,
         const std::tuple<Axes...>& axes,
         std::array<std::set<size_t>, sizeof...(Axes)>& neighborIndices)
     {
@@ -187,11 +187,11 @@ namespace detail {
       // ask n-th axis
       size_t           locIdx = localIndices.at(N);
       std::set<size_t> locNeighbors
-          = std::get<N>(axes).neighborHoodIndices(locIdx, size);
+          = std::get<N>(axes).neighborHoodIndices(locIdx, sizes);
       neighborIndices.at(N) = locNeighbors;
 
       grid_helper_impl<N - 1>::neighborHoodIndices(
-          localIndices, size, axes, neighborIndices);
+          localIndices, sizes, axes, neighborIndices);
     }
 
     template <class... Axes>
@@ -343,7 +343,7 @@ namespace detail {
     static void
     neighborHoodIndices(
         const std::array<size_t, sizeof...(Axes)>& localIndices,
-        size_t                     size,
+        std::pair<size_t, size_t>                  sizes,
         const std::tuple<Axes...>& axes,
         std::array<std::set<size_t>, sizeof...(Axes)>& neighborIndices)
     {
@@ -351,7 +351,7 @@ namespace detail {
       // ask 0-th axis
       size_t           locIdx = localIndices.at(0u);
       std::set<size_t> locNeighbors
-          = std::get<0u>(axes).neighborHoodIndices(locIdx, size);
+          = std::get<0u>(axes).neighborHoodIndices(locIdx, sizes);
       neighborIndices.at(0u) = locNeighbors;
     }
 
@@ -681,7 +681,7 @@ namespace detail {
     template <class... Axes>
     static std::set<size_t>
     neighborHoodIndices(const std::array<size_t, sizeof...(Axes)>& localIndices,
-                        size_t                     size,
+                        std::pair<size_t, size_t>                  sizes,
                         const std::tuple<Axes...>& axes)
     {
       constexpr size_t MAX = sizeof...(Axes) - 1;
@@ -690,7 +690,7 @@ namespace detail {
       std::array<std::set<size_t>, sizeof...(Axes)> neighborIndices;
       // get local bin indices for neighboring bins
       grid_helper_impl<MAX>::neighborHoodIndices(
-          localIndices, size, axes, neighborIndices);
+          localIndices, sizes, axes, neighborIndices);
 
       std::array<size_t, sizeof...(Axes)> idx;
       std::set<size_t> combinations;
@@ -698,6 +698,16 @@ namespace detail {
           idx, neighborIndices, combinations, axes);
 
       return combinations;
+    }
+
+    template <class... Axes>
+    static std::set<size_t>
+    neighborHoodIndices(const std::array<size_t, sizeof...(Axes)>& localIndices,
+                        size_t                     size,
+                        const std::tuple<Axes...>& axes)
+    {
+      return neighborHoodIndices(
+          localIndices, std::make_pair(size, size), axes);
     }
 
     /// @brief check whether given point is inside axes limits
