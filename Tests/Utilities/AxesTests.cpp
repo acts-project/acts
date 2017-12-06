@@ -304,6 +304,63 @@ namespace Test {
     BOOST_TEST(a6.neighborHoodIndices(3, 2) == bins_t({1, 2, 3, 4, 5}));
     BOOST_TEST(a6.neighborHoodIndices(3, {0, 2}) == bins_t({3, 4, 5}));
   }
+
+  BOOST_AUTO_TEST_CASE(wrapBin)
+  {
+    typedef std::set<size_t> bins_t;
+    Axis<AxisType::Equidistant, AxisWrapping::UnderOverflow> a1(0.0, 1.0, 10u);
+    BOOST_TEST(a1.wrapBin(0) == 0);
+    BOOST_TEST(a1.wrapBin(1) == 1);
+    BOOST_TEST(a1.wrapBin(-1) == 0);
+    BOOST_TEST(a1.wrapBin(10) == 10);
+    BOOST_TEST(a1.wrapBin(11) == 11);
+    BOOST_TEST(a1.wrapBin(12) == 11);
+
+    Axis<AxisType::Equidistant, AxisWrapping::Open> a2(0.0, 1.0, 10u);
+    BOOST_TEST(a2.wrapBin(0) == 1);
+    BOOST_TEST(a2.wrapBin(1) == 1);
+    BOOST_TEST(a2.wrapBin(-1) == 1);
+    BOOST_TEST(a2.wrapBin(10) == 10);
+    BOOST_TEST(a2.wrapBin(11) == 10);
+    BOOST_TEST(a2.wrapBin(12) == 10);
+
+    Axis<AxisType::Equidistant, AxisWrapping::Closed> a3(0.0, 1.0, 10u);
+    BOOST_TEST(a3.wrapBin(0) == 10);
+    BOOST_TEST(a3.wrapBin(1) == 1);
+    BOOST_TEST(a3.wrapBin(-1) == 9);
+    BOOST_TEST(a3.wrapBin(10) == 10);
+    BOOST_TEST(a3.wrapBin(11) == 1);
+    BOOST_TEST(a3.wrapBin(12) == 2);
+
+    Axis<AxisType::Variable, AxisWrapping::UnderOverflow> a4(
+        {0.0, 2.0, 4.0, 9.0, 10.0});
+    BOOST_TEST(a4.wrapBin(0) == 0);
+    BOOST_TEST(a4.wrapBin(1) == 1);
+    BOOST_TEST(a4.wrapBin(-1) == 0);
+    BOOST_TEST(a4.wrapBin(4) == 4);
+    BOOST_TEST(a4.wrapBin(5) == 5);
+    BOOST_TEST(a4.wrapBin(6) == 5);
+
+    Axis<AxisType::Variable, AxisWrapping::Open> a5(
+        {0.0, 2.0, 4.0, 9.0, 9.5, 10.0});
+    BOOST_TEST(a5.wrapBin(0) == 1);
+    BOOST_TEST(a5.wrapBin(1) == 1);
+    BOOST_TEST(a5.wrapBin(-1) == 1);
+    BOOST_TEST(a5.wrapBin(4) == 4);
+    BOOST_TEST(a5.wrapBin(5) == 5);
+    BOOST_TEST(a5.wrapBin(6) == 5);
+
+    Axis<AxisType::Variable, AxisWrapping::Closed> a6(
+        {0.0, 2.0, 4.0, 9.0, 9.5, 10.0});
+    BOOST_TEST(a6.wrapBin(0) == 5);
+    BOOST_TEST(a6.wrapBin(1) == 1);
+    BOOST_TEST(a6.wrapBin(-1) == 4);
+    BOOST_TEST(a6.wrapBin(4) == 4);
+    BOOST_TEST(a6.wrapBin(5) == 5);
+    BOOST_TEST(a6.wrapBin(6) == 1);
+    BOOST_TEST(a6.wrapBin(7) == 2);
+  }
+
 }  // namespace Test
 
 }  // namespace Acts

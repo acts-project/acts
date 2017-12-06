@@ -118,13 +118,12 @@ namespace detail {
                         std::pair<size_t, size_t> sizes = {1, 1}) const
     {
       std::set<size_t> result;
-      int              min   = 0;
-      int              max   = getNBins() + 1;
-      size_t           w     = max - min + 1;
-      int              itmin = std::max(min, int(idx - sizes.first));
-      int              itmax = std::min(max, int(idx + sizes.second));
+      constexpr int    min   = 0;
+      const int        max   = getNBins() + 1;
+      const int        itmin = std::max(min, int(idx - sizes.first));
+      const int        itmax = std::min(max, int(idx + sizes.second));
       for (int i = itmin; i <= itmax; i++) {
-        result.insert(min + (w + ((i - min) % w)) % w);
+        result.insert(i);
       }
       return result;
     }
@@ -144,14 +143,12 @@ namespace detail {
     {
       std::set<size_t> result;
       if (idx <= 0 || idx >= (getNBins() + 1)) return result;
-      int min = 1;
-      int max = getNBins();
-
-      size_t w     = max - min + 1;
-      int    itmin = std::max(min, int(idx - sizes.first));
-      int    itmax = std::min(max, int(idx + sizes.second));
+      constexpr int min   = 1;
+      const int     max   = getNBins();
+      const int     itmin = std::max(min, int(idx - sizes.first));
+      const int     itmax = std::min(max, int(idx + sizes.second));
       for (int i = itmin; i <= itmax; i++) {
-        result.insert(min + (w + ((i - min) % w)) % w);
+        result.insert(i);
       }
       return result;
     }
@@ -171,16 +168,55 @@ namespace detail {
     {
       std::set<size_t> result;
       if (idx <= 0 || idx >= (getNBins() + 1)) return result;
-      int min = 1;
-      int max = getNBins();
-
-      int w     = max - min + 1;
-      int itmin = idx - sizes.first;
-      int itmax = idx + sizes.second;
+      const int itmin = idx - sizes.first;
+      const int itmax = idx + sizes.second;
       for (int i = itmin; i <= itmax; i++) {
-        result.insert(min + (w + ((i - min) % w)) % w);
+        result.insert(wrapBin(i));
       }
       return result;
+    }
+
+    /// @brief Converts bin index into a valid one for this axis.
+    ///
+    /// UnderOverflow: bin index is clamped to [0, nBins+1]
+    ///
+    /// @param [in] bin The bin to wrap
+    /// @return valid bin index
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::UnderOverflow, int> = 0>
+    size_t
+    wrapBin(int bin) const
+    {
+      return std::max(std::min(bin, static_cast<int>(getNBins()) + 1), 0);
+    }
+
+    /// @brief Converts bin index into a valid one for this axis.
+    ///
+    /// Open: bin index is clamped to [1, nBins]
+    ///
+    /// @param [in] bin The bin to wrap
+    /// @return valid bin index
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::Open, int> = 0>
+    size_t
+    wrapBin(int bin) const
+    {
+      return std::max(std::min(bin, static_cast<int>(getNBins())), 1);
+    }
+
+    /// @brief Converts bin index into a valid one for this axis.
+    ///
+    /// Closed: bin index wraps around to other side
+    ///
+    /// @param [in] bin The bin to wrap
+    /// @return valid bin index
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::Closed, int> = 0>
+    size_t
+    wrapBin(int bin) const
+    {
+      const int w = getNBins();
+      return 1 + (w + ((bin - 1) % w)) % w;
     }
 
     /// @brief get corresponding bin index for given coordinate
@@ -434,13 +470,12 @@ namespace detail {
                         std::pair<size_t, size_t> sizes = {1, 1}) const
     {
       std::set<size_t> result;
-      int              min   = 0;
-      int              max   = getNBins() + 1;
-      size_t           w     = max - min + 1;
-      int              itmin = std::max(min, int(idx - sizes.first));
-      int              itmax = std::min(max, int(idx + sizes.second));
+      constexpr int    min   = 0;
+      const int        max   = getNBins() + 1;
+      const int        itmin = std::max(min, int(idx - sizes.first));
+      const int        itmax = std::min(max, int(idx + sizes.second));
       for (int i = itmin; i <= itmax; i++) {
-        result.insert(min + (w + ((i - min) % w)) % w);
+        result.insert(i);
       }
       return result;
     }
@@ -460,14 +495,12 @@ namespace detail {
     {
       std::set<size_t> result;
       if (idx <= 0 || idx >= (getNBins() + 1)) return result;
-      int min = 1;
-      int max = getNBins();
-
-      size_t w     = max - min + 1;
-      int    itmin = std::max(min, int(idx - sizes.first));
-      int    itmax = std::min(max, int(idx + sizes.second));
+      constexpr int min   = 1;
+      const int     max   = getNBins();
+      const int     itmin = std::max(min, int(idx - sizes.first));
+      const int     itmax = std::min(max, int(idx + sizes.second));
       for (int i = itmin; i <= itmax; i++) {
-        result.insert(min + (w + ((i - min) % w)) % w);
+        result.insert(i);
       }
       return result;
     }
@@ -487,16 +520,55 @@ namespace detail {
     {
       std::set<size_t> result;
       if (idx <= 0 || idx >= (getNBins() + 1)) return result;
-      int min = 1;
-      int max = getNBins();
-
-      int w     = max - min + 1;
-      int itmin = idx - sizes.first;
-      int itmax = idx + sizes.second;
+      const int itmin = idx - sizes.first;
+      const int itmax = idx + sizes.second;
       for (int i = itmin; i <= itmax; i++) {
-        result.insert(min + (w + ((i - min) % w)) % w);
+        result.insert(wrapBin(i));
       }
       return result;
+    }
+
+    /// @brief Converts bin index into a valid one for this axis.
+    ///
+    /// UnderOverflow: bin index is clamped to [0, nBins+1]
+    ///
+    /// @param [in] bin The bin to wrap
+    /// @return valid bin index
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::UnderOverflow, int> = 0>
+    size_t
+    wrapBin(int bin) const
+    {
+      return std::max(std::min(bin, static_cast<int>(getNBins()) + 1), 0);
+    }
+
+    /// @brief Converts bin index into a valid one for this axis.
+    ///
+    /// Open: bin index is clamped to [1, nBins]
+    ///
+    /// @param [in] bin The bin to wrap
+    /// @return valid bin index
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::Open, int> = 0>
+    size_t
+    wrapBin(int bin) const
+    {
+      return std::max(std::min(bin, static_cast<int>(getNBins())), 1);
+    }
+
+    /// @brief Converts bin index into a valid one for this axis.
+    ///
+    /// Closed: bin index wraps around to other side
+    ///
+    /// @param [in] bin The bin to wrap
+    /// @return valid bin index
+    template <AxisWrapping T = wrap,
+              std::enable_if_t<T == AxisWrapping::Closed, int> = 0>
+    size_t
+    wrapBin(int bin) const
+    {
+      const int w = getNBins();
+      return 1 + (w + ((bin - 1) % w)) % w;
     }
 
     /// @brief get corresponding bin index for given coordinate
