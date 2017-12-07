@@ -1060,7 +1060,7 @@ namespace Test {
                 == bins_t({4, 5, 6})));  // overflow, makes no sense
 
     typedef Grid<double, EAxisClosed, EAxisClosed> Grid2Closed_t;
-    typedef Grid<double, EAxisClosed, EAxisClosed, EAxisClosed> Grid3Closed_t;
+    //typedef Grid<double, EAxisClosed, EAxisClosed, EAxisClosed> Grid3Closed_t;
     EAxisClosed   e(0.0, 1.0, 5u);
     EAxisClosed   f(0.0, 1.0, 5u);
     EAxisClosed   g(0.0, 1.0, 5u);
@@ -1137,7 +1137,7 @@ namespace Test {
     typedef Axis<AxisType::Equidistant, AxisWrapping::Closed>  EAxisClosed;
     typedef Grid<double, EAxisClosed> Grid1Cl_t;
     typedef Grid<double, EAxisClosed, EAxisClosed> Grid2Cl_t;
-    typedef Grid<double, EAxisClosed, EAxisClosed, EAxisClosed> Grid3Cl_t;
+    //typedef Grid<double, EAxisClosed, EAxisClosed, EAxisClosed> Grid3Cl_t;
     EAxisClosed   aCl(0.0, 1.0, 10u);
     EAxisClosed   bCl(0.0, 1.0, 5u);
     EAxisClosed   cCl(0.0, 1.0, 3u);
@@ -1160,7 +1160,7 @@ namespace Test {
     typedef Axis<AxisType::Equidistant, AxisWrapping::Open>  EAxisOpen;
     typedef Grid<double, EAxisOpen> Grid1Op_t;
     typedef Grid<double, EAxisOpen, EAxisOpen> Grid2Op_t;
-    typedef Grid<double, EAxisOpen, EAxisOpen, EAxisOpen> Grid3Op_t;
+    //typedef Grid<double, EAxisOpen, EAxisOpen, EAxisOpen> Grid3Op_t;
 
     EAxisOpen  aOp(0.0, 1.0, 10u);
     EAxisOpen  bOp(0.0, 1.0, 5u);

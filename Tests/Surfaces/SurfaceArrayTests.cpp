@@ -82,7 +82,7 @@ namespace Test {
       SrfVec res;
 
       double phiStep = 2 * M_PI / n;
-      for (size_t i = 0; i < n; ++i) {
+      for (int i = 0; i < n; ++i) {
 
         double z = zbase;
 
@@ -112,7 +112,7 @@ namespace Test {
       double z0 = -(nZ - 1) * w;
       SrfVec res;
 
-      for (size_t i = 0; i < nZ; i++) {
+      for (int i = 0; i < nZ; i++) {
         double z = i * w * 2 + z0;
         // std::cout << "z=" << z << std::endl;
         SrfVec ring = fullPhiTestSurfacesBRL(nPhi, 0, z, M_PI / 9., w, h);

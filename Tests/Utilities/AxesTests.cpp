@@ -307,7 +307,6 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(wrapBin)
   {
-    typedef std::set<size_t> bins_t;
     Axis<AxisType::Equidistant, AxisWrapping::UnderOverflow> a1(0.0, 1.0, 10u);
     BOOST_TEST(a1.wrapBin(0) == 0);
     BOOST_TEST(a1.wrapBin(1) == 1);

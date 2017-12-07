@@ -195,7 +195,7 @@ namespace Test {
       double z0 = -(nZ - 1) * w;
       SrfVec res;
 
-      for (size_t i = 0; i < nZ; i++) {
+      for (int i = 0; i < nZ; i++) {
         double z = i * w * 2 + z0;
         // std::cout << "z=" << z << std::endl;
         SrfVec ring = fullPhiTestSurfacesBRL(nPhi, 0, z, M_PI / 9., w, h);
@@ -218,11 +218,11 @@ namespace Test {
 
       std::vector<std::pair<const Surface*, const Surface*>> pairs;
 
-      for (size_t i = 0; i < nZ; i++) {
+      for (int i = 0; i < nZ; i++) {
         double z = i * w * 2 + z0;
 
         double phiStep = 2 * M_PI / nPhi;
-        for (size_t j = 0; j < nPhi; ++j) {
+        for (int j = 0; j < nPhi; ++j) {
 
           Transform3D trans;
           trans.setIdentity();
