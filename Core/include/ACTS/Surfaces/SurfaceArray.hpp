@@ -39,10 +39,10 @@ template <class... Axes>
 using SurfaceGrid = detail::Grid<SurfaceVector, Axes...>;
 
 /// @brief Provides Surface binning in N dimensions
-/// 
+///
 /// Uses @c Grid under the hood to implement the storage and lookup
-/// Contains a type-erased lookup struct which talks to the @c Grid 
-/// and performs utility actions. This struct needs to be initialised 
+/// Contains a type-erased lookup struct which talks to the @c Grid
+/// and performs utility actions. This struct needs to be initialised
 /// externally and passed to @c SurfaceArray on construction.
 class SurfaceArray
 {
@@ -58,7 +58,6 @@ public:
   struct SurfaceGridLookup
   {
   public:
-
     /// @brief Default constructor
     ///
     /// @param globalToLocal Callable that converts from global to local
@@ -67,7 +66,7 @@ public:
     SurfaceGridLookup(
         std::function<ActsVectorD<DIM>(const Vector3D&)> globalToLocal,
         std::function<Vector3D(const ActsVectorD<DIM>&)> localToGlobal,
-        AnyGrid_t<ActsVectorD<DIM>, DIM>                 grid)
+        AnyGrid_t<ActsVectorD<DIM>, DIM> grid)
       : m_globalToLocal(std::move(globalToLocal))
       , m_localToGlobal(std::move(localToGlobal))
       , m_grid(std::move(grid))
@@ -78,7 +77,7 @@ public:
     ///
     /// This is done by iterating, accessing the binningPosition, lookup
     /// and append.
-    /// 
+    ///
     /// @param surfaces Input surface pointers
     void
     fill(const SurfaceVector surfaces)
@@ -98,7 +97,8 @@ public:
       return m_grid.at(m_globalToLocal(pos));
     }
 
-    /// @brief Performs lookup at @c pos and returns bin content as const reference
+    /// @brief Performs lookup at @c pos and returns bin content as const
+    /// reference
     /// @param pos Lookup position
     /// @return @c SurfaceVector at given bin
     const SurfaceVector&
@@ -107,7 +107,8 @@ public:
       return m_grid.at(m_globalToLocal(pos));
     }
 
-    /// @brief Performs lookup at global bin and returns bin content as reference
+    /// @brief Performs lookup at global bin and returns bin content as
+    /// reference
     /// @param bin Global lookup bin
     /// @return @c SurfaceVector at given bin
     SurfaceVector&
@@ -116,7 +117,8 @@ public:
       return m_grid.at(bin);
     }
 
-    /// @brief Performs lookup at global bin and returns bin content as const reference
+    /// @brief Performs lookup at global bin and returns bin content as const
+    /// reference
     /// @param bin Global lookup bin
     /// @return @c SurfaceVector at given bin
     const SurfaceVector&
@@ -131,13 +133,15 @@ public:
     /// @param size Optional number of neighbors, default is 1 (= next neighbor)
     /// @return @c SurfaceVector at given bin. Copy of all bins selected
     ///
-    /// @note The resulting SurfaceVectors for each bin will be merged. Sine @c std::vector
-    ///       cannot store references, the source bin content vector entries have to be copied.
+    /// @note The resulting SurfaceVectors for each bin will be merged. Sine @c
+    /// std::vector
+    ///       cannot store references, the source bin content vector entries
+    ///       have to be copied.
     ///       This should be fine for the pointer value type used here.
     std::vector<const Surface*>
     neighbors(const Vector3D& pos, size_t size = 1) const
     {
-      auto loc = m_globalToLocal(pos);
+      auto             loc          = m_globalToLocal(pos);
       std::set<size_t> neighborIdxs = m_grid.neighborHoodIndices(loc, size);
       std::vector<std::vector<const Surface*>> binContents
           = m_grid.atBins(neighborIdxs);
@@ -151,7 +155,8 @@ public:
       return out;
     }
 
-    /// @brief Returns the total size of the grid (including under/overflow bins)
+    /// @brief Returns the total size of the grid (including under/overflow
+    /// bins)
     /// @return Size of the grid data structure
     size_t
     size() const
@@ -190,7 +195,7 @@ public:
     /// @brief Checks if global bin is valid
     /// @param bin the global bin index
     /// @return bool if the bin is valid
-    /// @note Valid means that the index points to a bin which is not a under 
+    /// @note Valid means that the index points to a bin which is not a under
     ///       or overflow bin or out of range in any axis.
     bool
     isValidBin(size_t bin) const
@@ -208,17 +213,19 @@ public:
   private:
     std::function<ActsVectorD<DIM>(const Vector3D&)> m_globalToLocal;
     std::function<Vector3D(const ActsVectorD<DIM>&)> m_localToGlobal;
-    AnyGrid_t<ActsVectorD<DIM>, DIM>                 m_grid;
+    AnyGrid_t<ActsVectorD<DIM>, DIM> m_grid;
   };
 
-  /// @brief Lookup implementation which wraps one element and always returns this
+  /// @brief Lookup implementation which wraps one element and always returns
+  /// this
   ///        element when lookup is called
   struct SingleElementLookup
   {
 
     /// @brief Default constructor.
     /// @param element the one and only element.
-    SingleElementLookup(SurfaceVector::value_type element) : m_element({element})
+    SingleElementLookup(SurfaceVector::value_type element)
+      : m_element({element})
     {
     }
 
@@ -291,11 +298,7 @@ public:
     /// @brief Returns if the bin is valid (it is)
     /// @param bin is ignored
     /// @return always true
-    static constexpr bool
-    isValidBin(size_t)
-    {
-      return true;
-    }
+    static constexpr bool isValidBin(size_t) { return true; }
 
   private:
     SurfaceVector m_element;
@@ -306,16 +309,20 @@ public:
   using SurfaceGridLookup2D = SurfaceGridLookup<2>;
   using SurfaceGridLookup3D = SurfaceGridLookup<3>;
 
-  /// @brief Default constructor which takes a @c SurfaceLookup and a vector of surfaces
-  /// @param gridLookup The grid storage. @c SurfaceArray does not fill it on its own
-  /// @param surfaces The input vector of surfaces. This is only for bookkeeping, so we can ask
+  /// @brief Default constructor which takes a @c SurfaceLookup and a vector of
+  /// surfaces
+  /// @param gridLookup The grid storage. @c SurfaceArray does not fill it on
+  /// its own
+  /// @param surfaces The input vector of surfaces. This is only for
+  /// bookkeeping, so we can ask
   ///                 it for 'all contained surfaces'
   SurfaceArray(AnySurfaceGridLookup_t gridLookup, SurfaceVector surfaces)
     : m_gridLookup(std::move(gridLookup)), m_surfaces(surfaces)
   {
   }
 
-  /// @brief Convenience constructor for single element mode. Uses the @c SingleElementLookup
+  /// @brief Convenience constructor for single element mode. Uses the @c
+  /// SingleElementLookup
   /// @param srf The one and only surface
   SurfaceArray(const Surface* srf) : m_gridLookup(SingleElementLookup(srf)) {}
 
@@ -330,7 +337,8 @@ public:
 
   /// @brief Get all surfaces in bin given by position @p pos.
   /// @param pos the lookup position
-  /// @return const reference to @c SurfaceVector contained in bin at that position
+  /// @return const reference to @c SurfaceVector contained in bin at that
+  /// position
   const SurfaceVector&
   at(const Vector3D& pos) const
   {
@@ -359,8 +367,8 @@ public:
   /// @param pos The position to lookup as nominal
   /// @param size How many neighbors we want in each direction. (default: 1)
   /// @return Merged @c SurfaceVector of neighbors and nominal
-  /// @note The @c SurfaceVector will be combined. For technical reasons, the 
-  ///       different bin content vectors have to be copied, so the resulting 
+  /// @note The @c SurfaceVector will be combined. For technical reasons, the
+  ///       different bin content vectors have to be copied, so the resulting
   ///       vector contains copies.
   SurfaceVector
   neighbors(const Vector3D& pos, size_t size = 1) const
@@ -368,7 +376,8 @@ public:
     return m_gridLookup.neighbors(pos, size);
   }
 
-  /// @brief Get the size of the underlying grid structure including under/overflow bins
+  /// @brief Get the size of the underlying grid structure including
+  /// under/overflow bins
   /// @return the size
   size_t
   size() const
@@ -409,7 +418,7 @@ public:
   /// @brief Checks if global bin is valid
   /// @param bin the global bin index
   /// @return bool if the bin is valid
-  /// @note Valid means that the index points to a bin which is not a under 
+  /// @note Valid means that the index points to a bin which is not a under
   ///       or overflow bin or out of range in any axis.
   bool
   isValidBin(size_t bin) const
@@ -453,7 +462,7 @@ public:
 
 private:
   AnySurfaceGridLookup_t m_gridLookup;
-  SurfaceVector             m_surfaces;
+  SurfaceVector          m_surfaces;
 };
 
 }  // namespace Acts

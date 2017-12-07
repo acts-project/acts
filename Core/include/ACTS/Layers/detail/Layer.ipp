@@ -113,7 +113,10 @@ Layer::getCompatibleSurfaces(const T&                       pars,
       const std::vector<const Surface*>& allTestSurfaces
           = m_surfaceArray->surfaces();
       ctestSurfaces.reserve(allTestSurfaces.size());
-      std::copy_if(allTestSurfaces.begin(), allTestSurfaces.end(), std::back_inserter(ctestSurfaces), crit);
+      std::copy_if(allTestSurfaces.begin(),
+                   allTestSurfaces.end(),
+                   std::back_inserter(ctestSurfaces),
+                   crit);
 
     } else {
 
@@ -126,7 +129,6 @@ Layer::getCompatibleSurfaces(const T&                       pars,
                    std::make_move_iterator(neighbors.end()),
                    std::back_inserter(ctestSurfaces),
                    crit);
-
     }
     // sensitive surfaces and test them
     for (auto& ctSurface : ctestSurfaces)
