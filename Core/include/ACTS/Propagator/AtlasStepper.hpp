@@ -498,13 +498,6 @@ public:
 
   AtlasStepper(BField bField = BField()) : m_bField(std::move(bField)){};
 
-  static double
-  distance(const Surface& s, const Vector3D& pos, const Vector3D& dir)
-  {
-    const Intersection i = s.intersectionEstimate(pos, dir);
-    return i.pathLength;
-  }
-
   /// Get the field for the stepping
   /// It checks first if the access is still within the Cell,
   /// and updates the cell if necessary, then it takes the field

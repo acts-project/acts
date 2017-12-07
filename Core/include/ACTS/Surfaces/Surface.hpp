@@ -309,11 +309,13 @@ public:
   /// @todo include intersector
   ///
   /// @param gpos global 3D position - considered to be on surface but not
-  /// inside bounds (check is done)
+  ///         inside bounds (check is done)
   /// @param gdir global 3D direction representation
+  ///        @note has to be normalized
   /// @param forceDir boolean indication whether to force the direction given by
   /// the TrackParameters to hold
   /// @param bcheck boundary check directive for this operation
+  ///
   /// @return Intersection class
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
@@ -366,6 +368,12 @@ protected:
   /// Possibility to attach a material descrption
   std::shared_ptr<const SurfaceMaterial> m_associatedMaterial;
 };
+
+inline const RotationMatrix3D
+Surface::referenceFrame(const Acts::Vector3D&, const Acts::Vector3D&) const
+{
+  return transform().matrix().block<3, 3>(0, 0);
+}
 
 template <class T>
 bool

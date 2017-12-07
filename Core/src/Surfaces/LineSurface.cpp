@@ -134,14 +134,14 @@ Acts::LineSurface::referenceFrame(const Vector3D&, const Vector3D& mom) const
 
 Acts::Intersection
 Acts::LineSurface::intersectionEstimate(const Vector3D&      gpos,
-                                        const Vector3D&      dir,
+                                        const Vector3D&      gdir,
                                         bool                 forceDir,
                                         const BoundaryCheck& bcheck) const
 {
   // following nominclature found in header file and doxygen documentation
   // line one is the straight track
   const Vector3D& ma = gpos;
-  const Vector3D& ea = dir;
+  const Vector3D& ea = gdir;
   // line two is the line surface
   const Vector3D& mb = center();
   const Vector3D  eb = lineDirection();

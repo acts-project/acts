@@ -21,6 +21,7 @@ namespace detail {
 
     /// this is direction * absolute path limit
     double singed_path_limit = std::numeric_limits<double>::max();
+
     /// the tolerance used to defined "reached"
     double tolerance = 0.;
 
@@ -130,8 +131,10 @@ namespace detail {
       // @todo that might cause problems with a cylinder
       const double distance
           = surface
-                ->intersectionEstimate(
-                    cache.position(), direction * cache.direction(), true)
+                ->intersectionEstimate(cache.position(),
+                                       direction * cache.direction(),
+                                       true,
+                                       false)
                 .pathLength;
       // Adjust the step size so that we cannot cross the target surface
       if (std::abs(cache.step_size) > std::abs(distance))

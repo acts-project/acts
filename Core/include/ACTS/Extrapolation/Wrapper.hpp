@@ -351,6 +351,7 @@ namespace propagation {
             = dynamic_cast<const Parameters*>(cache.endParameters.release());
         r.endParameters = std::unique_ptr<const Parameters>(cParameters);
         r.pathLength    = cache.pathLength;
+        r.steps         = cache.nSteps;
         r.status        = Status::SUCCESS;
       }
       return r;

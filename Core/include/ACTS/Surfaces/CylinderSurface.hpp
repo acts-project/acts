@@ -181,7 +181,8 @@ public:
   ///  and (signed) path length
   ///
   /// @param gpos is the global position as a starting point
-  /// @param dir is the global direction at the starting point
+  /// @param gdir is the global direction at the starting point,
+  ///        @note has to be normalized
   /// @param forceDir is a boolean forcing a solution along direction
   /// @param bcheck is the boundary check
   ///
@@ -209,7 +210,7 @@ public:
   /// @return is the intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
-                       const Vector3D&      dir,
+                       const Vector3D&      gdir,
                        bool                 forceDir = false,
                        const BoundaryCheck& bcheck
                        = false) const final override;
@@ -230,6 +231,13 @@ public:
 protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
 };
+
+inline const Vector3D
+CylinderSurface::rotSymmetryAxis() const
+{
+  // fast access via tranform matrix (and not rotation())
+  return transform().matrix().block<3, 1>(0, 2);
+}
 
 }  // end of namespace
 

@@ -30,7 +30,6 @@ namespace Test {
       {
         double r = rz.at(0);
         double z = rz.at(1);
-
         // linear in r and z so interpolation should be exact
         return Vector3D(r * z, 3 * r, -2 * z);
       }

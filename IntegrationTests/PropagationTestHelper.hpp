@@ -9,12 +9,6 @@
 #ifndef INTEGRATIONTEST_PROPAGATION_HELPER_H
 #define INTEGRATIONTEST_PROPAGATION_HELPER_H
 
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Propagator/Propagator.hpp"
-#include "ACTS/Surfaces/CylinderSurface.hpp"
-#include "ACTS/Surfaces/DiscSurface.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
 #include "covariance_validation_fixture.hpp"
 
 namespace tt = boost::test_tools;
@@ -170,8 +164,8 @@ namespace IntegrationTest {
                   double                 charge,
                   double                 plimit,
                   int                    index,
-                  double                 disttol = 0.1 * units::_um,
-                  double                 momtol  = 1 * units::_keV)
+                  double                 disttol = 1. * units::_um,
+                  double                 momtol  = 10. * units::_keV)
   {
 
     // setup propagation options
@@ -228,9 +222,8 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.max_step_size = 0.5 * plimit;  // 1 * units::_cm;
-    //
-    options.max_path_length = plimit;
+    options.max_step_size   = plimit * units::_m;
+    options.max_path_length = plimit * units::_m;
 
     // define start parameters
     double   x  = 0;
@@ -284,7 +277,7 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.max_step_size   = 1 * units::_cm;
+    options.max_step_size   = plimit * units::_m;
     options.max_path_length = plimit * units::_m;
 
     // define start parameters
@@ -338,7 +331,7 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.max_step_size   = 1 * units::_cm;
+    options.max_step_size   = plimit * units::_m;
     options.max_path_length = plimit * units::_m;
 
     // define start parameters
@@ -401,7 +394,7 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.max_step_size   = 1 * units::_cm;
+    options.max_step_size   = plimit * units::_m;
     options.max_path_length = plimit * units::_m;
 
     // define start parameters

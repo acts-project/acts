@@ -166,25 +166,3 @@ Acts::PlaneSurface::pathCorrection(const Acts::Vector3D&,
   /// we can ignore the global position here
   return 1. / std::abs(normal().dot(mom.unit()));
 }
-
-Acts::Intersection
-Acts::PlaneSurface::intersectionEstimate(
-    const Acts::Vector3D&      gpos,
-    const Acts::Vector3D&      dir,
-    bool                       forceDir,
-    const Acts::BoundaryCheck& bcheck) const
-{
-  double denom = dir.dot(normal());
-  if (denom) {
-    double   u = (normal().dot((center() - gpos))) / (denom);
-    Vector3D intersectPoint(gpos + u * dir);
-    // evaluate the intersection in terms of direction
-    bool isValid = forceDir ? (u > 0.) : true;
-    // evaluate (if necessary in terms of boundaries)
-    isValid
-        = bcheck ? (isValid && isOnSurface(intersectPoint, bcheck)) : isValid;
-    // return the result
-    return Intersection(intersectPoint, u, isValid);
-  }
-  return Intersection(gpos, 0., false);
-}

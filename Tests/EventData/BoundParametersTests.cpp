@@ -190,7 +190,7 @@ namespace Test {
     // check that the reference frame is the
     // rotation matrix of the surface
     BOOST_CHECK(ataDisc_from_pars.referenceFrame().isApprox(
-        dSurface.transform().rotation()));
+        dSurface.transform().matrix().block<3, 3>(0, 0)));
   }
 
   /// @brief Unit test for parameters at a cylinder

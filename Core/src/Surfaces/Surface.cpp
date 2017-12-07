@@ -114,13 +114,6 @@ Acts::Surface::isOnSurface(const Acts::Vector3D& gpos,
   return false;
 }
 
-const Acts::RotationMatrix3D
-Acts::Surface::referenceFrame(const Acts::Vector3D&,
-                              const Acts::Vector3D&) const
-{
-  return transform().rotation();
-}
-
 // overload dump for stream operator
 std::ostream&
 Acts::Surface::dump(std::ostream& sl) const
@@ -130,7 +123,7 @@ Acts::Surface::dump(std::ostream& sl) const
   sl << name() << std::endl;
   sl << "     Center position  (x, y, z) = (" << center().x() << ", "
      << center().y() << ", " << center().z() << ")" << std::endl;
-  Acts::RotationMatrix3D rot(transform().rotation());
+  Acts::RotationMatrix3D rot(transform().matrix().block<3, 3>(0, 0));
   Acts::Vector3D         rotX(rot.col(0));
   Acts::Vector3D         rotY(rot.col(1));
   Acts::Vector3D         rotZ(rot.col(2));

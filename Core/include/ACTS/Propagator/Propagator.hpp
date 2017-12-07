@@ -227,9 +227,12 @@ namespace propagation {
         options.observer_list(cache, result);
 
         // Call the stop_conditions and the internal stop conditions
+        // break condition triggered, but still count the step
         if (options.stop_conditions(result, cache)
-            || internal_stop_conditions(result, cache))
+            || internal_stop_conditions(result, cache)) {
+          ++result.steps;
           break;
+        }
       }
       // return the in progress flag
       return Status::IN_PROGRESS;
