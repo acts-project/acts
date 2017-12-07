@@ -78,6 +78,8 @@ build_slc6_lcg88:
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   tags:
     - cvmfs
+  variables:
+      CTEST_OUTPUT_ON_FAILURE: 1
   script:
     - cmake --build build -- test
   artifacts:
@@ -90,6 +92,8 @@ build_slc6_lcg88:
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   tags:
     - cvmfs
+  variables:
+      CTEST_OUTPUT_ON_FAILURE: 1
   script:
     - cmake --build build -- integration_tests
 
