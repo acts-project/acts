@@ -70,6 +70,7 @@ namespace detail {
     ///
     /// @note The look-up considers under-/overflow bins along each axis.
     ///       Therefore, the look-up will never fail.
+    //
     template <class Point>
     reference
     at(const Point& point)
@@ -120,6 +121,23 @@ namespace detail {
       return m_values.at(bin);
     }
 
+    
+    /// @brief Get the contents of multiple bins at once
+    /// @param bins @c std::set of global bin indices
+    /// @return vector of bin contents. size is equal to that of @p bins
+    /// @note Since @c std::vector cannot contain references, copies of the
+    ///       bin contents are made and returned.
+    std::vector<value_type>
+    atBins(const std::set<size_t> bins) const
+    {
+      std::vector<value_type> out;
+      out.reserve(bins.size());
+      for(const auto &b : bins) {
+        out.push_back(m_values.at(b));
+      }
+      return out;
+    }
+
     /// @brief access value stored in bin with given local bin numbers
     ///
     /// @param  [in] localBins local bin indices along each axis
@@ -159,10 +177,6 @@ namespace detail {
     /// @pre The given @c Point type must represent a point in d (or higher)
     ///      dimensions where d is dimensionality of the grid. It must lie
     ///      within the grid range (i.e. not within a under-/overflow bin).
-    ///
-    /// @note The order of the global bin indices returned is optimal in the
-    ///       sense that sequential access in this order is considered optimal
-    ///       for the underlying memory layout of the grid values.
     template <class Point>
     std::set<size_t>
     closestPointsIndices(const Point& position) const
@@ -392,12 +406,22 @@ namespace detail {
     ///       Ignoring the truncation of the neighborhood size reaching beyond
     ///       over-/underflow bins, the neighborhood is of size \f$2 \times
     ///       \text{size}+1\f$ along each dimension.
-    /// @note The order of the global bin indices returned is optimal in the
-    ///       sense that sequential access in this order is considered optimal
-    ///       for the underlying memory layout of the grid values.
     std::set<size_t>
     neighborHoodIndices(const index_t& localBins, size_t size = 1u) const
     {
+      return grid_helper::neighborHoodIndices(localBins, size, m_axes);
+    }
+    
+    /// @brief get global bin indices for neighborhoof of bin identified by @p pos
+    /// @param pos position around which to look
+    /// @param size how many neighbors (defaul: 1)
+    /// @return set of global bin indices pointing to the neighbors
+    template <class Point>
+    std::set<size_t>
+    neighborHoodIndices(const Point& pos, size_t size = 1u) const
+    {
+      const size_t bin = getGlobalBinIndex(pos);
+      const index_t localBins = getLocalBinIndices(bin);
       return grid_helper::neighborHoodIndices(localBins, size, m_axes);
     }
 

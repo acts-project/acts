@@ -100,6 +100,11 @@ namespace Test {
 
     BOOST_TEST(g.at(point) == g.at(globalBin));
     BOOST_TEST(g.at(point) == g.at(localBins));
+
+    std::vector<double> act = g.atBins(std::set<size_t>({ 1, 2, 3, 4 }));
+    std::vector<double> exp{1, 2, 3, 4};
+    BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(),
+                              exp.begin(), exp.end());
   }
 
   BOOST_AUTO_TEST_CASE(grid_test_2d_equidistant)
@@ -988,6 +993,7 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(neighborhood)
   {
     typedef std::set<size_t> bins_t;
+    typedef std::array<double, 1> point_t;
     typedef EquidistantAxis  EAxis;
     typedef Grid<double, EAxis> Grid1_t;
     typedef Grid<double, EAxis, EAxis> Grid2_t;
@@ -1010,6 +1016,16 @@ namespace Test {
     BOOST_TEST((g1.neighborHoodIndices({{9}}, 2) == bins_t({7, 8, 9, 10, 11})));
     BOOST_TEST((g1.neighborHoodIndices({{10}}, 2) == bins_t({8, 9, 10, 11})));
     BOOST_TEST((g1.neighborHoodIndices({{11}}, 2) == bins_t({9, 10, 11})));
+
+    
+    BOOST_TEST((g1.neighborHoodIndices(point_t({{-0.05}}), 1) == bins_t({0, 1})));
+    BOOST_TEST((g1.neighborHoodIndices(point_t({{-0.05}}), 2) == bins_t({0, 1, 2})));
+    BOOST_TEST((g1.neighborHoodIndices(point_t({{0.05}}), 1) == bins_t({0, 1, 2})));
+    BOOST_TEST((g1.neighborHoodIndices(point_t({{0.05}}), 3) == bins_t({0, 1, 2, 3, 4})));
+    BOOST_TEST((g1.neighborHoodIndices(point_t({{0.35}}), 2) == bins_t({2, 3, 4, 5, 6})));
+    BOOST_TEST((g1.neighborHoodIndices(point_t({{0.85}}), 2) == bins_t({7, 8, 9, 10, 11})));
+    BOOST_TEST((g1.neighborHoodIndices(point_t({{0.95}}), 2) == bins_t({8, 9, 10, 11})));
+    BOOST_TEST((g1.neighborHoodIndices(point_t({{10.5}}), 2) == bins_t({9, 10, 11})));
 
     // 2D case
     BOOST_TEST((g2.neighborHoodIndices({{0, 0}}, 1) == bins_t({0, 1, 12, 13})));
