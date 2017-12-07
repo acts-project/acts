@@ -193,7 +193,8 @@ namespace Test {
       BOOST_TEST(srf == binContent.at(0));
     }
 
-    std::vector<const Surface*> neighbors = sa.neighbors(itransform(Vector2D(0, 0)));
+    std::vector<const Surface*> neighbors
+        = sa.neighbors(itransform(Vector2D(0, 0)));
     BOOST_TEST(neighbors.size() == 9);
   }
 
