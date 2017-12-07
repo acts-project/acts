@@ -259,9 +259,10 @@ public:
 
     /// @brief Lookup, always returns @c element
     /// @param pos is ignored
+    /// @param size is ignored
     /// @return reference to vector containing only @c element
     SurfaceVector
-    neighbors(const Vector3D&) const
+    neighbors(const Vector3D&, size_t) const
     {
       return m_element;
     }
