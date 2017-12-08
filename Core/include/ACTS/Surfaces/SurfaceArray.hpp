@@ -58,15 +58,23 @@ public:
   struct SurfaceGridLookup
   {
   public:
+    /// @brief Specifies the local coordinate type.
+    /// This resolves to @c ActsVector<DIM> for DIM > 1, else @c
+    /// std::array<double, 1>
+    using point_t
+        = std::conditional_t<DIM == 1, std::array<double, 1>, ActsVectorD<DIM>>;
+
     /// @brief Default constructor
     ///
     /// @param globalToLocal Callable that converts from global to local
     /// @param localToGlobal Callable that converts from local to global
     /// @param grid The grid data structur. Will be type-erased at this point
-    SurfaceGridLookup(
-        std::function<ActsVectorD<DIM>(const Vector3D&)> globalToLocal,
-        std::function<Vector3D(const ActsVectorD<DIM>&)> localToGlobal,
-        AnyGrid_t<ActsVectorD<DIM>, DIM> grid)
+    /// @note Signature of localToGlobal and globalToLocal depends on @c DIM.
+    ///       If DIM > 1, local coords are @c ActsVectorD<DIM> else
+    ///       @c std::array<double, 1>.
+    SurfaceGridLookup(std::function<point_t(const Vector3D&)> globalToLocal,
+                      std::function<Vector3D(const point_t&)> localToGlobal,
+                      AnyGrid_t<point_t, DIM> grid)
       : m_globalToLocal(std::move(globalToLocal))
       , m_localToGlobal(std::move(localToGlobal))
       , m_grid(std::move(grid))
@@ -164,15 +172,31 @@ public:
       return m_grid.size();
     }
 
+#ifdef DOXYGEN
     /// @brief Gets the center position of bin @c bin in global coordinates
     /// @param bin the global bin index
     /// @return The bin center
+    Vector3D
+    getBinCenter(size_t bin) const;
+#endif
+
+    /// @cond
+    template <size_t D = DIM, std::enable_if_t<D != 1, int> = 0>
     Vector3D
     getBinCenter(size_t bin) const
     {
       return m_localToGlobal(ActsVectorD<DIM>(
           m_grid.getBinCenter(m_grid.getLocalBinIndices(bin)).data()));
     }
+
+    template <size_t D = DIM, std::enable_if_t<D == 1, int> = 0>
+    Vector3D
+    getBinCenter(size_t bin) const
+    {
+      point_t pos = m_grid.getBinCenter(m_grid.getLocalBinIndices(bin));
+      return m_localToGlobal(pos);
+    }
+    /// @endcond
 
     /// @brief Returns copies of the axes used in the grid as @c AnyAxis
     /// @return The axes
@@ -211,9 +235,9 @@ public:
     }
 
   private:
-    std::function<ActsVectorD<DIM>(const Vector3D&)> m_globalToLocal;
-    std::function<Vector3D(const ActsVectorD<DIM>&)> m_localToGlobal;
-    AnyGrid_t<ActsVectorD<DIM>, DIM> m_grid;
+    std::function<point_t(const Vector3D&)> m_globalToLocal;
+    std::function<Vector3D(const point_t&)> m_localToGlobal;
+    AnyGrid_t<point_t, DIM> m_grid;
   };
 
   /// @brief Lookup implementation which wraps one element and always returns
