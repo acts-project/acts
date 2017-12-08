@@ -53,6 +53,8 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
                                   std::unique_ptr<ApproachDescriptor> ad) const
 {
 
+  if (surfaces.size() == 0) throw std::domain_error("This overload cannot be used without surfaces");
+
   ProtoLayer protoLayer(surfaces);
 
   // remaining layer parameters
@@ -133,11 +135,14 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray
-      = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-          surfaces, bTypePhi, bTypeZ, protoLayer, transform);
+  std::unique_ptr<SurfaceArray> sArray = nullptr;
+  if (surfaces.size() > 0) {
+    sArray
+        = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
+            surfaces, bTypePhi, bTypeZ, protoLayer, transform);
 
-  checkBinning(*sArray);
+    checkBinning(*sArray);
+  }
 
   // create the layer and push it back
   std::shared_ptr<const CylinderBounds> cBounds(
@@ -167,6 +172,9 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
                                   std::shared_ptr<const Transform3D>  transform,
                                   std::unique_ptr<ApproachDescriptor> ad) const
 {
+  
+  if (surfaces.size() == 0) throw std::domain_error("This overload cannot be used without surfaces");
+  
   ProtoLayer protoLayer(surfaces);
 
   // remaining layer parameters
@@ -222,6 +230,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                               std::shared_ptr<const Transform3D>  transform,
                               std::unique_ptr<ApproachDescriptor> ad) const
 {
+
+  if (surfaces.size() == 0) throw std::domain_error("This overload cannot be used without surfaces");
 
   ProtoLayer protoLayer(surfaces);
 
@@ -304,11 +314,14 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << ")");
 
   // create the surface array
-  std::unique_ptr<SurfaceArray> sArray
-      = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-          surfaces, bTypeR, bTypePhi, protoLayer, transform);
+  std::unique_ptr<SurfaceArray> sArray;
+  if (surfaces.size() > 0) {
+    sArray
+        = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
+            surfaces, bTypeR, bTypePhi, protoLayer, transform);
 
-  checkBinning(*sArray);
+    checkBinning(*sArray);
+  }
 
   // create the shared disc bounds
   auto dBounds
@@ -343,6 +356,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                               std::shared_ptr<const Transform3D>  transform,
                               std::unique_ptr<ApproachDescriptor> ad) const
 {
+
+  if (surfaces.size() == 0) throw std::domain_error("This overload cannot be used without surfaces");
 
   ProtoLayer protoLayer(surfaces);
 
