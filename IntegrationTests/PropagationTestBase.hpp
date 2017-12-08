@@ -13,6 +13,7 @@
 // leave blank
 #include <boost/test/data/test_case.hpp>
 #include <cmath>
+
 /// test consistency of forward-backward propagation
 BOOST_DATA_TEST_CASE(
     forward_backward_propagation_,
@@ -48,6 +49,7 @@ BOOST_DATA_TEST_CASE(
   // foward backward runge kutta engine
   foward_backward(wpropagator, pT, phi, theta, dcharge, plimit, index, 1e-3);
 }
+
 /// test consistency of propgators when approaching a cylinder
 BOOST_DATA_TEST_CASE(
     propagation_to_cylinder_,
@@ -76,7 +78,7 @@ BOOST_DATA_TEST_CASE(
         ^ bdata::random((bdata::seed = 1717,
                          bdata::distribution
                          = std::uniform_real_distribution<>(-1., 1.)))
-        ^ bdata::xrange(100),
+        ^ bdata::xrange(5),
     pT,
     phi,
     theta,
@@ -91,7 +93,7 @@ BOOST_DATA_TEST_CASE(
   double dcharge = -1 + 2 * charge;
   // just make sure we can reach it
   double r = rfrac * std::abs(Nat2SI<units::MOMENTUM>(pT) / (1 * Bz));
-  r        = (r > 2.5 * units::_m) ? 2.5 * units::_m : r;
+  r        = (r > 2.5 * units::_m) ? 2.5 : r;
 
   // foward backward check atlas stepper
   auto a_at_cylinder = to_cylinder(
@@ -109,6 +111,7 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK(
       e_at_cylinder.first.isApprox(w_at_cylinder.first, 1 * units::_um));
 }
+
 /// test consistency of propagators to a plane
 BOOST_DATA_TEST_CASE(
     propagation_to_plane_,

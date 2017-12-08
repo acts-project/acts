@@ -52,7 +52,7 @@ namespace IntegrationTest {
       WrappedPropagator_type;
 
   // setup propagator with constant B-field
-  const double         Bz = 2 * units::_T;
+  const double         Bz = 2. * units::_T;
   BField_type          bField(0, 0, Bz);
   EigenStepper_type    estepper(bField);
   EigenPropagator_type epropagator(std::move(estepper));
@@ -65,46 +65,46 @@ namespace IntegrationTest {
       Acts::getDefaultLogger("RungeKuttaEngine", Acts::Logging::INFO));
   WrappedPropagator_type wpropagator(wegine);
 
-// The constant field test
-/// test forward propagation in constant magnetic field
-/*
-BOOST_DATA_TEST_CASE(
-    constant_bfieldorward_propagation_,
-    bdata::random((bdata::seed = 0,
-                   bdata::distribution
-                   = std::uniform_real_distribution<>(0.4 * units::_GeV,
-                                                      10. * units::_GeV)))
-        ^ bdata::random((bdata::seed = 1,
-                         bdata::distribution
-                         = std::uniform_real_distribution<>(-M_PI, M_PI)))
-        ^ bdata::random((bdata::seed = 2,
-                         bdata::distribution
-                         = std::uniform_real_distribution<>(0.1, M_PI - 0.1)))
-        ^ bdata::random((bdata::seed = 3,
-                         bdata::distribution
-                         = std::uniform_int_distribution<>(0, 1)))
-        ^ bdata::xrange(1000),
-    pT,
-    phi,
-    theta,
-    charge,
-    index)
-{
-  double dcharge = -1 + 2 * charge;
-  // constant field propagation atlas stepper
-  auto aposition = constant_field_propagation(
-      apropagator, pT, phi, theta, dcharge, index, Bz);
-  // constant field propagation eigen stepper
-  auto eposition = constant_field_propagation(
-      epropagator, pT, phi, theta, dcharge, index, Bz);
-  // constant field runge kutta engine - not yet at same accuracy
-  auto wposition = constant_field_propagation(
-      wpropagator, pT, phi, theta, dcharge, index, Bz, 10. * units::_um);
-  // check consistency
-  BOOST_CHECK(eposition.isApprox(aposition));
-  BOOST_CHECK(eposition.isApprox(wposition, 1e-3));
-}
-*/
+  // The constant field test
+  /// test forward propagation in constant magnetic field
+
+  BOOST_DATA_TEST_CASE(
+      constant_bfieldorward_propagation_,
+      bdata::random((bdata::seed = 0,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(0.4 * units::_GeV,
+                                                        10. * units::_GeV)))
+          ^ bdata::random((bdata::seed = 1,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-M_PI, M_PI)))
+          ^ bdata::random((bdata::seed = 2,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0.1, M_PI - 0.1)))
+          ^ bdata::random((bdata::seed = 3,
+                           bdata::distribution
+                           = std::uniform_int_distribution<>(0, 1)))
+          ^ bdata::xrange(100),
+      pT,
+      phi,
+      theta,
+      charge,
+      index)
+  {
+    double dcharge = -1 + 2 * charge;
+    // constant field propagation atlas stepper
+    auto aposition = constant_field_propagation(
+        apropagator, pT, phi, theta, dcharge, index, Bz);
+    // constant field propagation eigen stepper
+    auto eposition = constant_field_propagation(
+        epropagator, pT, phi, theta, dcharge, index, Bz);
+    // constant field runge kutta engine - not yet at same accuracy
+    auto wposition = constant_field_propagation(
+        wpropagator, pT, phi, theta, dcharge, index, Bz, 10. * units::_um);
+    // check consistency
+    BOOST_CHECK(eposition.isApprox(aposition));
+    BOOST_CHECK(eposition.isApprox(wposition, 1e-3));
+  }
+
 // The actual test - needs to be included to avoid
 // template inside template definition through boost
 #include "PropagationTestBase.hpp"

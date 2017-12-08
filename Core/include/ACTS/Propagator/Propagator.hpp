@@ -209,11 +209,8 @@ namespace propagation {
                const Options<Observers, Aborters>& options,
                const InteralAborters& internal_stop_conditions) const
     {
-
       // check with surface_abort if it exists
       if (internal_stop_conditions(result, cache)) {
-        // todo - analyze the result
-
         // return the in progress flag
         return Status::FAILURE;
       }

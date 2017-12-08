@@ -177,9 +177,9 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
   Vector3D point1    = gpos;
   Vector3D direction = gdir;
   if (needsTransform) {
-    Acts::Transform3D invTrans = transform().inverse();
-    point1                     = invTrans * gpos;
-    direction                  = invTrans.linear() * gdir;
+    Transform3D invTrans = transform().inverse();
+    point1               = invTrans * gpos;
+    direction            = invTrans.linear() * gdir;
   }
   Acts::Vector3D point2 = point1 + direction;
   // the bounds radius

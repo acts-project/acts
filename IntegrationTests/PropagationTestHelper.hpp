@@ -218,7 +218,6 @@ namespace IntegrationTest {
               double                 rand2,
               double                 rand3)
   {
-
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
@@ -238,26 +237,20 @@ namespace IntegrationTest {
 
     // Create curvilinear start parameters
     CurvilinearParameters start(nullptr, pos, mom, q);
-    const auto            result_s = propagator.propagate(start, options);
-    const auto&           tp_s     = result_s.endParameters;
 
-    if (tp_s) {
-      // The transform at the destination
-      auto seTransform = createCylindricTransform(
-          Vector3D(0., 0., 0.), 0.05 * rand1, 0.05 * rand2);
-      CylinderSurface endSurface(seTransform,
-                                 tp_s->position().perp(),
-                                 std::numeric_limits<double>::max());
+    // The transform at the destination
+    auto seTransform = createCylindricTransform(
+        Vector3D(0., 0., 0.), 0.05 * rand1, 0.05 * rand2);
+    CylinderSurface endSurface(
+        seTransform, plimit * units::_m, std::numeric_limits<double>::max());
 
-      // Increase the path limit - to be safe hitting the surface
-      options.max_path_length *= 2;
-      const auto  result = propagator.propagate(start, endSurface, options);
-      const auto& tp     = result.endParameters;
+    // Increase the path limit - to be safe hitting the surface
+    options.max_path_length *= 2;
+    const auto  result = propagator.propagate(start, endSurface, options);
+    const auto& tp     = result.endParameters;
 
-      // The position and path length
-      return std::pair<Vector3D, double>(tp->position(), result.pathLength);
-    }
-    return std::pair<Vector3D, double>(Vector3D{0., 0., 0}, 0.);
+    // The position and path length
+    return std::pair<Vector3D, double>(tp->position(), result.pathLength);
   }
 
   // test propagation to most surfaces
