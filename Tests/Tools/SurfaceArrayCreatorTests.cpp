@@ -578,7 +578,8 @@ namespace Test {
       BOOST_TEST(axis.max == M_PI);
       BOOST_TEST(axis.min == -M_PI);
       BOOST_TEST(axis.bType == equidistant);
-      BOOST_TEST(((tr * Vector3D::UnitX()).phi() < std::numeric_limits<double>::epsilon()));
+      BOOST_TEST(((tr * Vector3D::UnitX()).phi()
+                  < std::numeric_limits<double>::epsilon()));
 
       // case 2: two modules sit symmetrically around pi / -pi
       angleShift = 0.;
@@ -640,7 +641,8 @@ namespace Test {
       BOOST_TEST(axis.max == M_PI);
       BOOST_TEST(axis.min == -M_PI);
       BOOST_TEST(axis.bType == equidistant);
-      BOOST_TEST(((tr * Vector3D::UnitX()).phi() < std::numeric_limits<double>::epsilon()));
+      BOOST_TEST(((tr * Vector3D::UnitX()).phi()
+                  < std::numeric_limits<double>::epsilon()));
 
       // case 2: two modules sit symmetrically around pi / -pi
       angleShift = 0.;

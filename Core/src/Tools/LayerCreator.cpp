@@ -53,7 +53,8 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
                                   std::unique_ptr<ApproachDescriptor> ad) const
 {
 
-  if (surfaces.size() == 0) throw std::domain_error("This overload cannot be used without surfaces");
+  if (surfaces.size() == 0)
+    throw std::domain_error("This overload cannot be used without surfaces");
 
   ProtoLayer protoLayer(surfaces);
 
@@ -137,9 +138,8 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray = nullptr;
   if (surfaces.size() > 0) {
-    sArray
-        = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-            surfaces, bTypePhi, bTypeZ, protoLayer, transform);
+    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
+        surfaces, bTypePhi, bTypeZ, protoLayer, transform);
 
     checkBinning(*sArray);
   }
@@ -172,9 +172,10 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>&  surfaces,
                                   std::shared_ptr<const Transform3D>  transform,
                                   std::unique_ptr<ApproachDescriptor> ad) const
 {
-  
-  if (surfaces.size() == 0) throw std::domain_error("This overload cannot be used without surfaces");
-  
+
+  if (surfaces.size() == 0)
+    throw std::domain_error("This overload cannot be used without surfaces");
+
   ProtoLayer protoLayer(surfaces);
 
   // remaining layer parameters
@@ -231,7 +232,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                               std::unique_ptr<ApproachDescriptor> ad) const
 {
 
-  if (surfaces.size() == 0) throw std::domain_error("This overload cannot be used without surfaces");
+  if (surfaces.size() == 0)
+    throw std::domain_error("This overload cannot be used without surfaces");
 
   ProtoLayer protoLayer(surfaces);
 
@@ -316,9 +318,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray;
   if (surfaces.size() > 0) {
-    sArray
-        = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-            surfaces, bTypeR, bTypePhi, protoLayer, transform);
+    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
+        surfaces, bTypeR, bTypePhi, protoLayer, transform);
 
     checkBinning(*sArray);
   }
@@ -357,7 +358,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                               std::unique_ptr<ApproachDescriptor> ad) const
 {
 
-  if (surfaces.size() == 0) throw std::domain_error("This overload cannot be used without surfaces");
+  if (surfaces.size() == 0)
+    throw std::domain_error("This overload cannot be used without surfaces");
 
   ProtoLayer protoLayer(surfaces);
 

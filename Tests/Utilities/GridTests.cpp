@@ -1060,7 +1060,8 @@ namespace Test {
                 == bins_t({4, 5, 6})));  // overflow, makes no sense
 
     typedef Grid<double, EAxisClosed, EAxisClosed> Grid2Closed_t;
-    //typedef Grid<double, EAxisClosed, EAxisClosed, EAxisClosed> Grid3Closed_t;
+    // typedef Grid<double, EAxisClosed, EAxisClosed, EAxisClosed>
+    // Grid3Closed_t;
     EAxisClosed   e(0.0, 1.0, 5u);
     EAxisClosed   f(0.0, 1.0, 5u);
     EAxisClosed   g(0.0, 1.0, 5u);
