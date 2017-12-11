@@ -60,12 +60,8 @@ namespace Acts {
 /// inner/outer
 /// @param layerEnvelopeR the tolerance added to the geometrical extension in r
 /// of the layers contained to build the volume envelope around
-/// @note this parameter only needs to be set if the volumes containing the
-/// layers (e.g. barrel, endcap volumes) have no specific shape (assemblies)
 /// @param layerEnvelopeZ the tolerance added to the geometrical extension in z
 /// of the layers contained to build the volume envelope around
-/// @note this parameter only needs to be set if the volumes containing the
-/// layers (e.g. barrel, endcap volumes) have no specific shape (assemblies)
 /// @param buildDigitizationModules Flag indicating if the
 /// Acts::DigitizationModule (needed for Acts geometric digitization) will be
 /// build for every single sensitive DD4hep DetElement translating directly the
@@ -84,8 +80,8 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
                       BinningType        bTypePhi       = equidistant,
                       BinningType        bTypeR         = equidistant,
                       BinningType        bTypeZ         = equidistant,
-                      double             layerEnvelopeR = 0.,
-                      double             layerEnvelopeZ = 0.,
+                      double             layerEnvelopeR = 1. * Acts::units::_mm,
+                      double             layerEnvelopeZ = 1. * Acts::units::_mm,
                       bool               buildDigitizationModules = false);
 
 /// Method internally used by convertDD4hepDetector

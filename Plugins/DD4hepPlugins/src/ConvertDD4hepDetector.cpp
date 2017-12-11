@@ -106,20 +106,12 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
         // go through sub volumes
         const dd4hep::DetElement::Children& subDetectorChildren
             = subDetector.children();
-        // get rMin, rMax and zBoundaries of the sub Volumes
-        double              endCapRmin = 0.;
-        double              barrelRmin = 0.;
-        double              rMin       = 0.;
-        double              rMax       = 10e-12;
-        double              halfZ      = 0.;
-        double              zPos       = 0.;
-        std::vector<double> zBoundaries;
+        // get z position to distinguish positive & negative endcap
+        double zPos = 0.;
         // flags to catch if sub volumes have been set already
         bool nEndCap = false;
         bool pEndCap = false;
         bool barrel  = false;
-        // if volumes have a shape
-        bool hasShape = false;
         for (auto& subDetectorChild : subDetectorChildren) {
           dd4hep::DetElement volumeDetElement = subDetectorChild.second;
           ACTS_VERBOSE(
@@ -130,25 +122,19 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
           // get the dimensions of the volume
           TGeoShape* geoShape
               = volumeDetElement.placement().ptr()->GetVolume()->GetShape();
-          if (geoShape && !buildEnvelopes) {
-            hasShape = true;
-            // the dimensions should be taken from the volume dimensions
-            TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
-            if (!tube)
-              throw std::logic_error(
-                  std::string("Volume of DetElement: ")
-                  + volumeDetElement.name()
-                  + std::string(" has wrong shape - needs to be TGeoTubeSeg!"));
-            // get the dimension of TGeo and convert lengths
-            rMin  = tube->GetRmin() * units::_cm;
-            rMax  = std::max(rMax, tube->GetRmax() * units::_cm);
-            halfZ = tube->GetDz() * units::_cm;
-            zPos  = volumeDetElement.placement()
+          // check if it has a shape (the other case should not happen)
+          if (geoShape) {
+            zPos = volumeDetElement.placement()
                        .ptr()
                        ->GetMatrix()
                        ->GetTranslation()[2]
                 * units::_cm;
-          }
+          } else
+            throw std::logic_error(std::string("Volume of DetElement: ")
+                                   + volumeDetElement.name()
+                                   + std::string(" has no shape!"));
+          // check if it has a volume extension telling if it is a barrel or an
+          // endcap
           IActsExtension* volumeExtension = nullptr;
           try {
             volumeExtension = volumeDetElement.extension<IActsExtension>();
@@ -163,14 +149,9 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
           }
 
           if (volumeExtension->isEndcap()) {
-            endCapRmin = rMin;
             ACTS_VERBOSE(
                 std::string("[V] Subvolume : '") + volumeDetElement.name()
                 + std::string("' is a disc volume -> handling as an endcap"));
-            // add the boundaries
-            zBoundaries.push_back(zPos - halfZ);
-            zBoundaries.push_back(zPos + halfZ);
-
             if (zPos < 0.) {
               if (nEndCap)
                 throw std::logic_error(
@@ -181,7 +162,6 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
               nEndCap = true;
               ACTS_VERBOSE("[V]       ->is negative endcap");
               collectLayers(volumeDetElement, negativeLayers);
-
             } else {
               if (pEndCap)
                 throw std::logic_error(
@@ -194,10 +174,6 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
               collectLayers(volumeDetElement, positiveLayers);
             }
           } else if (volumeExtension->isBarrel()) {
-            barrelRmin = rMin;
-            // add the zBoundaries
-            zBoundaries.push_back(zPos - halfZ);
-            zBoundaries.push_back(zPos + halfZ);
             if (barrel)
               throw std::logic_error("[V] Barrel was already given for this "
                                      "hierachy! Please create a new "
@@ -208,7 +184,6 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
                          << volumeDetElement.name()
                          << " is a cylinder volume -> handling as a barrel");
             collectLayers(volumeDetElement, centralLayers);
-
           } else {
             throw std::logic_error(
                 std::string("[V] Current DetElement: ")
@@ -251,8 +226,8 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
                 Acts::getDefaultLogger("DD4hepLayerBuilder", loggingLevel));
 
         // get the possible material of the surounding volume
-        dd4hep::Material           ddmaterial = subDetector.volume().material();
-        auto                       volumeMaterial
+        dd4hep::Material ddmaterial = subDetector.volume().material();
+        auto             volumeMaterial
             = std::make_shared<const Material>(ddmaterial.radLength(),
                                                ddmaterial.intLength(),
                                                ddmaterial.A(),
@@ -262,22 +237,12 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
         // the configuration object of the volume builder
         Acts::CylinderVolumeBuilder::Config cvbConfig;
 
-        // Create the sub volume setup if given
-        // check first if dimension should be accessed of if volume envelope
-        // should be built automatically by adding a tolerance to the layer
-        // setup
-        if (buildEnvelopes) {
-          cvbConfig.layerEnvelopeR
-              = std::make_pair(layerEnvelopeR, layerEnvelopeR);
-          cvbConfig.layerEnvelopeZ = layerEnvelopeZ;
-        }
-        if (!hasShape)
-          throw std::logic_error(
-              std::string("Subvolumes of DetElement: ") + subDetector.name()
-              + std::string(
-                    " have neither a shape nor tolerances added to it's "
-                    "extension. Please check your detector "
-                    "constructor!"));
+        // Create the sub volume
+        // Dimensions are created automatically by adding a tolerance to the
+        // layer setup
+        cvbConfig.layerEnvelopeR
+            = std::make_pair(layerEnvelopeR, layerEnvelopeR);
+        cvbConfig.layerEnvelopeZ       = layerEnvelopeZ;
         cvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
         cvbConfig.volumeSignature      = 0;
         cvbConfig.volumeName           = subDetector.name();
@@ -356,7 +321,7 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
       cvbConfig.volumeName           = subDetector.name();
       cvbConfig.layerBuilder         = beamPipeBuilder;
       cvbConfig.layerEnvelopeR = {1. * Acts::units::_mm, 1. * Acts::units::_mm};
-      cvbConfig.buildToRadiusZero    = true;
+      cvbConfig.buildToRadiusZero = true;
 
       // beam pipe volume builder
       auto beamPipeVolumeBuilder
@@ -401,25 +366,22 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
       // get the dimensions of the volume
       TGeoShape* geoShape
           = subDetector.placement().ptr()->GetVolume()->GetShape();
-      if (buildEnvelopes) {
-        cvbConfig.layerEnvelopeR
-            = std::make_pair(layerEnvelopeR, layerEnvelopeR);
-        cvbConfig.layerEnvelopeZ = layerEnvelopeZ;
-      } else if (!geoShape)
-        throw std::logic_error(
-            std::string("Volume of DetElement: ") + subDetector.name()
-            + std::string(" has neither a shape nor tolerances added to it's "
-                          "extension. Please check your detector "
-                          "constructor!"));
+      // this should not happen
+      if (!geoShape)
+        throw std::logic_error(std::string("Volume of DetElement: ")
+                               + subDetector.name()
+                               + std::string(" has no a shape!"));
 
       // get the possible material
-      dd4hep::Material           ddmaterial = subDetector.volume().material();
-      auto                       volumeMaterial
+      dd4hep::Material ddmaterial = subDetector.volume().material();
+      auto             volumeMaterial
           = std::make_shared<const Material>(ddmaterial.radLength(),
                                              ddmaterial.intLength(),
                                              ddmaterial.A(),
                                              ddmaterial.Z(),
                                              ddmaterial.density());
+      cvbConfig.layerEnvelopeR = std::make_pair(layerEnvelopeR, layerEnvelopeR);
+      cvbConfig.layerEnvelopeZ = layerEnvelopeZ;
       cvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
       cvbConfig.volumeSignature      = 0;
       cvbConfig.volumeName           = subDetector.name();
@@ -466,8 +428,8 @@ collectLayers(dd4hep::DetElement&              detElement,
   const dd4hep::DetElement::Children& children = detElement.children();
   if (!children.empty()) {
     for (auto& child : children) {
-      dd4hep::DetElement           childDetElement = child.second;
-      Acts::IActsExtension*        detExtension    = nullptr;
+      dd4hep::DetElement    childDetElement = child.second;
+      Acts::IActsExtension* detExtension    = nullptr;
       try {
         detExtension = childDetElement.extension<Acts::IActsExtension>();
       } catch (std::runtime_error& e) {
