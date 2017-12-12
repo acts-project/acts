@@ -17,9 +17,11 @@
 #include <vector>
 #include "ACTS/Digitization/CartesianSegmentation.hpp"
 #include "ACTS/Digitization/DigitizationModule.hpp"
+#include "ACTS/Material/SurfaceMaterial.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "DD4hep/CartesianGridXY.h"
 #include "DD4hep/Detector.h"
+#include "DD4hep/Objects.h"
 
 namespace Acts {
 
@@ -61,6 +63,9 @@ trapezoidalDigiModule(double                      minHalflengthX,
 ///
 /// @brief Extension of the \a %DD4hep \a DetElement needed for translation
 /// into the ACTS tracking geometry
+///
+/// @todo re-validate material mapping with new implementation + allow material
+/// mapping onto modules ++ allow handing over average material to layers(?)
 ///
 /// Implementation of the Acts::IActsExtension class, which uses the
 /// extension mechanism of DD4hep for the \a %DD4hep \a DetElement.
@@ -286,6 +291,17 @@ public:
   };
   /// Constructor
   ActsExtension(const Config& cfg);
+  /// Constructor for module with averaged material and possible segmentation
+  /// for digitization
+  /// In case several sensitive modules have the same segmentation the
+  /// Acts::DigitizationModule will be shared amongst these modules which saves
+  /// memory.
+  /// @param material A vector of dd4hep::Material which should be averaged (See
+  /// Acts::MaterialProperties::add()) and assigned as homgeous material to the
+  /// module
+  /// @param digiModule The Acts::DigitizationModule
+  ActsExtension(std::vector<std::pair<dd4hep::Material, double>>& materials,
+                std::shared_ptr<const DigitizationModule> digiModule = nullptr);
   /// Constructor for module with segmentation for digitization.
   /// In case several sensitive modules have the same segmentation the
   /// Acts::DigitizationModule will be shared amongst these modules which saves
@@ -339,12 +355,21 @@ public:
   /// @copydoc IActsExtension::digitizationModule()
   std::shared_ptr<const DigitizationModule>
   digitizationModule() const final;
+  /// @copydoc IActsExtension::setMaterial()
+  void
+  setMaterial(
+      std::vector<std::pair<dd4hep::Material, double>>& materials) final;
+  /// @copydoc IActsExtension::material()
+  std::shared_ptr<Acts::SurfaceMaterial>
+  material() const final;
 
 private:
   /// The configuration object
   Config m_cfg;
   // The Acts DigitizaionModule
   std::shared_ptr<const DigitizationModule> m_digiModule;
+  // The Acts SurfaceMaterial
+  std::shared_ptr<Acts::SurfaceMaterial> m_material;
 };
 
 inline bool
@@ -420,6 +445,12 @@ inline std::shared_ptr<const DigitizationModule>
 Acts::ActsExtension::digitizationModule() const
 {
   return (m_digiModule);
+}
+
+inline std::shared_ptr<Acts::SurfaceMaterial>
+Acts::ActsExtension::material() const
+{
+  return m_material;
 }
 }
 

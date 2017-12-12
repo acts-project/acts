@@ -22,6 +22,7 @@ namespace dd4hep {
 class DetElement;
 class Segmentation;
 class Volume;
+class Material;
 }
 
 namespace Acts {
@@ -70,8 +71,10 @@ namespace Acts {
 /// @note see Acts::ActsExtension for implementation.
 
 class DigitizationModule;
+class SurfaceMaterial;
 
-/// @enum LayerMaterialPos The LayerMaterialPos enumeration is foreseen to mark
+/// @enum LayerMaterialPos The LayerMaterialPos enumeration is foreseen to
+/// mark
 /// on which surface
 /// the two dimensional material of the layer sits. Either on the inner or
 /// the other boundary surface of the layer or at the representing (center)
@@ -99,7 +102,8 @@ public:
   /// Indicates that the DD4hep::DetElement is a layer
   virtual bool
   isLayer() const = 0;
-  /// Bool returning true if the layers should carry material
+  /// Bool returning true if the layers should carry material using material
+  /// mapping
   /// @note automatically set when the material bins are set
   virtual bool
   hasSupportMaterial() const = 0;
@@ -135,6 +139,18 @@ public:
   /// @return the Acts::DigitizationModule
   virtual std::shared_ptr<const DigitizationModule>
   digitizationModule() const = 0;
+  /// Possibility to set the material of a sensitive dd4hep::DetElement
+  /// (detector module). The average of the vector of materials will be
+  /// calculated using Acts::MaterialProperties::add().
+  /// @param material A vector of dd4hep::Material and their corresponding
+  /// thickness
+  virtual void
+  setMaterial(std::vector<std::pair<dd4hep::Material, double>>& materials)
+      = 0;
+
+  /// @returns The SurfaceMaterial
+  virtual std::shared_ptr<Acts::SurfaceMaterial>
+  material() const = 0;
 
 protected:
   /// Protected constructor

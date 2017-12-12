@@ -10,6 +10,7 @@
 #include <boost/algorithm/string.hpp>
 #include "ACTS/Digitization/CartesianSegmentation.hpp"
 #include "ACTS/Digitization/DigitizationModule.hpp"
+#include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
@@ -88,20 +89,31 @@ Acts::trapezoidalDigiModule(double                      minHalflengthX,
 }
 
 Acts::ActsExtension::ActsExtension(const Config& cfg)
-  : Acts::IActsExtension(), m_digiModule(nullptr)
+  : Acts::IActsExtension(), m_material(nullptr), m_digiModule(nullptr)
 {
   setConfiguration(cfg);
 }
 
 Acts::ActsExtension::ActsExtension(
+    std::vector<std::pair<dd4hep::Material, double>>& materials,
     std::shared_ptr<const DigitizationModule> digiModule)
-  : Acts::IActsExtension(), m_digiModule(digiModule)
+  : Acts::IActsExtension(), m_material(nullptr), m_digiModule(digiModule)
+{
+  setMaterial(materials);
+}
+
+Acts::ActsExtension::ActsExtension(
+    std::shared_ptr<const DigitizationModule> digiModule)
+  : Acts::IActsExtension(), m_material(nullptr), m_digiModule(digiModule)
 {
 }
 
 Acts::ActsExtension::ActsExtension(const ActsExtension& det,
                                    const dd4hep::DetElement&)
-  : Acts::IActsExtension(), m_cfg(det.m_cfg), m_digiModule(det.m_digiModule)
+  : Acts::IActsExtension()
+  , m_cfg(det.m_cfg)
+  , m_material(det.m_material)
+  , m_digiModule(det.m_digiModule)
 {
 }
 
@@ -111,4 +123,21 @@ Acts::ActsExtension::setConfiguration(const Acts::ActsExtension::Config& config)
   // @todo check consistency
   // copy the configuration
   m_cfg = config;
+}
+
+void
+Acts::ActsExtension::setMaterial(
+    std::vector<std::pair<dd4hep::Material, double>>& materials)
+{
+  Acts::MaterialProperties matprop;
+  for (auto& mat : materials) {
+    matprop.add(MaterialProperties(mat.first.radLength(),
+                                   mat.first.intLength(),
+                                   mat.first.A(),
+                                   mat.first.Z(),
+                                   mat.first.density(),
+                                   mat.second));
+  }
+  //  Create homogenous surface material with averaged material properties
+  m_material = std::make_shared<Acts::HomogeneousSurfaceMaterial>(matprop);
 }
