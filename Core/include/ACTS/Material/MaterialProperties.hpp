@@ -113,8 +113,8 @@ public:
   /// length, \f$\rho\f$...density, A...mass number, Z...atomic number
   ///
   /// @param mprop are the material properties to be added
-  MaterialProperties&
-  operator+=(const MaterialProperties& mprop);
+  void
+  add(const MaterialProperties& mprop);
 
   /// Boolean operator
   /// false indicates it's vacuum
