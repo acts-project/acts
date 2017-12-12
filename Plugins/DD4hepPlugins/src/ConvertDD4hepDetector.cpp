@@ -457,7 +457,7 @@ collectSubDetectors(dd4hep::DetElement&              detElement,
         }
       }
       if (detExtension
-          && (detExtension->isBarrel() || detExtension->isBeampipe()) {
+          && (detExtension->isBarrel() || detExtension->isBeampipe())) {
         subdetectors.push_back(childDetElement);
         continue;
       }
