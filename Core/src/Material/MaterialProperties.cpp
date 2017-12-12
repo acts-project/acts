@@ -72,6 +72,38 @@ Acts::MaterialProperties::operator*=(float scale)
   return (*this);
 }
 
+void
+Acts::MaterialProperties::add(const Acts::MaterialProperties& mprop)
+{
+  if (mprop && mprop.thickness() != 0) {
+    // create a new average material, which scales with the thickness
+    // scale the density with the thickness
+    float oldScaledRho = this->thickness() * this->averageRho();
+    float newScaledRho = mprop.thickness() * mprop.averageRho();
+    float updateRho    = oldScaledRho + newScaledRho;
+    // scale A and Z with the scaled density
+    float updateA
+        = oldScaledRho * this->averageA() + newScaledRho * mprop.averageA();
+    float updateZ
+        = oldScaledRho * this->averageZ() + newScaledRho * mprop.averageZ();
+    // Sum of thicknesses
+    float sumThickness = this->thickness() + mprop.thickness();
+    // divide sumA and sumZ by the sum of scaled rho
+    updateA /= updateRho;
+    updateZ /= updateRho;
+    // divide scaled rho by sum of thicknesses
+    updateRho /= sumThickness;
+    // dInX0 & and dInL0 are already scaled - just add the new properties
+    m_dInX0 += mprop.m_dInX0;
+    m_dInL0 += mprop.m_dInL0;
+    // calculate X0 and L0 to create new material
+    float updateX0 = sumThickness / m_dInX0;
+    float updateL0 = sumThickness / m_dInL0;
+    // create new material with the updated parameters
+    m_material = Material(updateX0, updateL0, updateA, updateZ, updateRho);
+  }
+}
+
 std::ostream&
 Acts::operator<<(std::ostream& sl, const MaterialProperties& mprop)
 {
