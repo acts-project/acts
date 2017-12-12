@@ -212,8 +212,10 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       : nullptr;
 
   ACTS_DEBUG("Newly created volume(s) will be " << wConfig.wConditionScreen);
-  // standalone container, full wrapping, full insertion needs a bare triple
-  if (wConfig.wCondition == Wrapping || wConfig.wCondition == Inserting) {
+  // standalone container, full wrapping, full insertion & if no existing volume
+  // is present needs a bare triple
+  if (wConfig.wCondition == Wrapping || wConfig.wCondition == Inserting
+      || wConfig.wCondition == Undefined) {
     ACTS_VERBOSE("Combined new container  is being built.");
     // stuff into the container what you have
     std::vector<std::shared_ptr<const TrackingVolume>> volumesContainer;
