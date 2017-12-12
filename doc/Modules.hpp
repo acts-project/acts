@@ -312,7 +312,7 @@
 ///
 /// Summing up the \a DetElement tree in \a %DD4hep should have the following
 /// structure:
-/// \image html DD4hepPlugin1.jpeg
+/// \image html DD4hepPlugin_DetElementStructure.jpg
 ///
 /// <B>Usage</B>
 ///
