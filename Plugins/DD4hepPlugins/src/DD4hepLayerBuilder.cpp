@@ -582,19 +582,24 @@ Acts::DD4hepLayerBuilder::collectSensitive(
       dd4hep::DetElement childDetElement = child.second;
       if (childDetElement.volume().isSensitive()) {
         // access the possibly shared DigitizationModule
-        std::shared_ptr<const DigitizationModule> digiModule   = nullptr;
-        Acts::IActsExtension*                     detExtension = nullptr;
+        std::shared_ptr<const Acts::SurfaceMaterial> material     = nullptr;
+        std::shared_ptr<const DigitizationModule>    digiModule   = nullptr;
+        Acts::IActsExtension*                        detExtension = nullptr;
         try {
           detExtension = childDetElement.extension<Acts::IActsExtension>();
         } catch (std::runtime_error& e) {
         }
-        if (detExtension) digiModule = detExtension->digitizationModule();
+        if (detExtension) {
+          material   = detExtension->material();
+          digiModule = detExtension->digitizationModule();
+        }
 
         // create the corresponding detector element
         Acts::DD4hepDetElement* dd4hepDetElement
             = new Acts::DD4hepDetElement(childDetElement,
                                          axes,
                                          units::_cm,
+                                         material,
                                          m_cfg.buildDigitizationModules,
                                          digiModule);
         // add surface to surface vector

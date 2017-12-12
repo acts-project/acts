@@ -20,6 +20,7 @@
 namespace Acts {
 
 class DigitizationModule;
+class SurfaceMaterial;
 
 /// @class TGeoDetectorElement
 ///
@@ -51,11 +52,14 @@ public:
   ///                            "XzY" -> negative node z axis is tracking y
   ///                            axis, etc.
   /// @param scalor is the scale factor for unit conversion if needed
+  /// @param material Possible material of detector element
   TGeoDetectorElement(const Identifier&  identifier,
                       TGeoNode*          tGeoDetElement,
                       const TGeoMatrix*  mtoglobal = nullptr,
                       const std::string& axes      = "XYZ",
-                      double             scalor    = 1.);
+                      double             scalor    = 1.,
+                      std::shared_ptr<const Acts::SurfaceMaterial> material
+                      = nullptr);
 
   /// Alternative Constructor
   /// when the localToGlobal transform is already known for the detector element
@@ -79,11 +83,14 @@ public:
   /// 	- "YZX" -> node y axis is tracking x axis, etc.
   ///		- "XzY" -> negative node z axis is tracking y axis, etc.
   /// @param scalor is the scale factor for unit conversion if needed
+  /// @param material Possible material of detector element
   TGeoDetectorElement(const Identifier&  identifier,
                       const TGeoMatrix&  transform,
                       TGeoNode*          tGeoDetElement,
                       const std::string& axes   = "XYZ",
-                      double             scalor = 1.);
+                      double             scalor = 1.,
+                      std::shared_ptr<const Acts::SurfaceMaterial> material
+                      = nullptr);
 
   ///  Destructor
   virtual ~TGeoDetectorElement();
@@ -134,7 +141,7 @@ private:
   ///  Thickness of this detector element
   double m_thickness;  //@todo implement thickness from TGeoMode
   /// Corresponding Surface
-  std::shared_ptr<const Surface> m_surface;
+  std::shared_ptr<Surface> m_surface;
   /// possible contained surfaces
   std::vector<std::shared_ptr<const Surface>> m_surfaces;
 };

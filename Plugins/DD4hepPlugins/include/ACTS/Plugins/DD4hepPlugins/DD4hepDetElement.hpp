@@ -57,6 +57,7 @@ public:
   /// 	- "YZX" -> node y axis is tracking x axis, etc.
   ///		- "XzY" -> negative node z axis is tracking y axis, etc.
   /// @param scalor is the scale factor for unit conversion if needed
+  /// @param material Possible material of detector element
   /// @param digiModule Possibility to hand over Acrs::DigitizationModule as a
   /// shared
   /// pointer to allow many DD4hepDetElements to hold the same
@@ -71,10 +72,12 @@ public:
   /// the DD4hep Segmentation.
   /// @note For more information please see Acts::convertDD4hepDetector() &
   /// Acts::ActsExtension.
-  DD4hepDetElement(const dd4hep::DetElement detElement,
-                   const std::string&       axes                     = "XYZ",
-                   double                   scalor                   = 1.,
-                   bool                     buildDigitizationModules = false,
+  DD4hepDetElement(const dd4hep::DetElement                     detElement,
+                   const std::string&                           axes   = "XYZ",
+                   double                                       scalor = 1.,
+                   std::shared_ptr<const Acts::SurfaceMaterial> material
+                   = nullptr,
+                   bool buildDigitizationModules = false,
                    std::shared_ptr<const DigitizationModule> digiModule
                    = nullptr);
   /// Desctructor
