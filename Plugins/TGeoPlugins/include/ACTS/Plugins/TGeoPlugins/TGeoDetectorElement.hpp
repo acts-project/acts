@@ -141,7 +141,7 @@ private:
   ///  Thickness of this detector element
   double m_thickness;  //@todo implement thickness from TGeoMode
   /// Corresponding Surface
-  std::shared_ptr<Surface> m_surface;
+  std::shared_ptr<const Surface> m_surface;
   /// possible contained surfaces
   std::vector<std::shared_ptr<const Surface>> m_surfaces;
 };
