@@ -256,9 +256,9 @@
 /// \a %DD4hep into Acts.
 /// The extensions are used to indicate certain volumes, e.g. if a \a DetElement is the
 /// beam pipe or if a \a DetElement is a layer carrying the sensitive modules. In addition
-/// the extensions are used in order to distinguish if a sub detector is a barrel or
-/// an endcap (which is described as a disc volume in Acts) which are both described
-/// with the underlying TGeo class \c TGeoConeSegment in \a %DD4hep. Furthermore the
+/// the extensions are used in order to distinguish if a sub detector is a barrel (described
+/// as a cylinder volume in ACTS) or an endcap (which is described as a disc volume in Acts).
+/// Furthermore the
 /// extensions are used to hand over specific information needed for tracking, e.g.
 /// paramters for material mapping.
 /// Please find further information in Acts::ActsExtension.
@@ -287,12 +287,13 @@
 /// * The detector needs to have a barrel-endcap structure:
 ///   Every hierarchy of subdetectors (e.g. PixelDetector,
 ///   StripDetector,..)
-///   needs to be decomposed of either a single barrel or of a barrel and two
-///   endcaps
+///   needs to be decomposed of
+///   1) {barrel}
+///   2) {barrel + 2 endcaps}
+///   3) {2 endcaps} - in case there us no barrel at this stage (e.g. forward end caps)
 ///
 /// * If a hierachy is not only a single barrel but is decomposed of a barrel
-/// and
-///   its corresponding endcaps they need to be grouped together in an assembly
+///   and its corresponding endcaps they need to be grouped together in an assembly
 ///   using the \c DD4hep_SubdetectorAssembly constructor which is provided by
 ///   \a %DD4hep.
 ///   Example of usage in xml file (where \c Barrel0, \c nEndCap0 and \c
@@ -314,6 +315,7 @@
 ///
 ///   If a user wants to create his/her own constructor to group these
 ///   volumes together the type needs to be set to "compound".
+///
 ///
 ///	* Since the translation walks trough the \a DetElement tree the following
 /// objects
@@ -359,7 +361,7 @@
 ///
 /// Summing up the \a DetElement tree in \a %DD4hep should have the following
 /// structure:
-/// \image html DD4hepPlugin1.jpeg
+/// \image html DD4hepPlugin_DetElementStructure.jpg
 ///
 /// <B>Usage</B>
 ///
