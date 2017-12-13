@@ -16,16 +16,18 @@
 #include "DD4hep/CartesianGridXY.h"
 
 Acts::DD4hepDetElement::DD4hepDetElement(
-    const dd4hep::DetElement                  detElement,
-    const std::string&                        axes,
-    double                                    scalor,
-    bool                                      buildDigitizationModules,
-    std::shared_ptr<const DigitizationModule> digiModule)
+    const dd4hep::DetElement                     detElement,
+    const std::string&                           axes,
+    double                                       scalor,
+    std::shared_ptr<const Acts::SurfaceMaterial> material,
+    bool                                         buildDigitizationModules,
+    std::shared_ptr<const DigitizationModule>    digiModule)
   : Acts::TGeoDetectorElement(Identifier(detElement.volumeID()),
                               detElement.nominal().worldTransformation(),
                               detElement.placement().ptr(),
                               axes,
-                              scalor)
+                              scalor,
+                              material)
   , m_detElement(std::move(detElement))
   , m_digiModule(digiModule)
 
