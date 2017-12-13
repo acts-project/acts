@@ -95,11 +95,21 @@ Acts::ActsExtension::ActsExtension(const Config& cfg)
 }
 
 Acts::ActsExtension::ActsExtension(
-    std::vector<std::pair<dd4hep::Material, double>>& materials,
+    const std::vector<std::pair<dd4hep::Material, double>>& materials,
     std::shared_ptr<const DigitizationModule> digiModule)
   : Acts::IActsExtension(), m_material(nullptr), m_digiModule(digiModule)
 {
-  setMaterial(materials);
+  Acts::MaterialProperties matprop;
+  for (auto& mat : materials) {
+    matprop.add(MaterialProperties(mat.first.radLength(),
+                                   mat.first.intLength(),
+                                   mat.first.A(),
+                                   mat.first.Z(),
+                                   mat.first.density(),
+                                   mat.second));
+  }
+  //  Create homogenous surface material with averaged material properties
+  m_material = std::make_shared<Acts::HomogeneousSurfaceMaterial>(matprop);
 }
 
 Acts::ActsExtension::ActsExtension(
@@ -123,21 +133,4 @@ Acts::ActsExtension::setConfiguration(const Acts::ActsExtension::Config& config)
   // @todo check consistency
   // copy the configuration
   m_cfg = config;
-}
-
-void
-Acts::ActsExtension::setMaterial(
-    std::vector<std::pair<dd4hep::Material, double>>& materials)
-{
-  Acts::MaterialProperties matprop;
-  for (auto& mat : materials) {
-    matprop.add(MaterialProperties(mat.first.radLength(),
-                                   mat.first.intLength(),
-                                   mat.first.A(),
-                                   mat.first.Z(),
-                                   mat.first.density(),
-                                   mat.second));
-  }
-  //  Create homogenous surface material with averaged material properties
-  m_material = std::make_shared<Acts::HomogeneousSurfaceMaterial>(matprop);
 }

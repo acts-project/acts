@@ -139,17 +139,8 @@ public:
   /// @return the Acts::DigitizationModule
   virtual std::shared_ptr<const DigitizationModule>
   digitizationModule() const = 0;
-  /// Possibility to set the material of a sensitive dd4hep::DetElement
-  /// (detector module). The average of the vector of materials will be
-  /// calculated using Acts::MaterialProperties::add().
-  /// @param material A vector of dd4hep::Material and their corresponding
-  /// thickness
-  virtual void
-  setMaterial(std::vector<std::pair<dd4hep::Material, double>>& materials)
-      = 0;
-
   /// @returns The SurfaceMaterial
-  virtual std::shared_ptr<Acts::SurfaceMaterial>
+  virtual std::shared_ptr<const Acts::SurfaceMaterial>
   material() const = 0;
 
 protected:

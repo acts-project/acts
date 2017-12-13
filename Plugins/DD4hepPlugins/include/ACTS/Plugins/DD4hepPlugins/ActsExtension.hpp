@@ -292,16 +292,19 @@ public:
   /// Constructor
   ActsExtension(const Config& cfg);
   /// Constructor for module with averaged material and possible segmentation
-  /// for digitization
+  /// for digitization.
+  /// Possibility to set the material of a sensitive dd4hep::DetElement
+  /// (detector module). The average of the vector of materials will be
+  /// calculated using Acts::MaterialProperties::add().
   /// In case several sensitive modules have the same segmentation the
   /// Acts::DigitizationModule will be shared amongst these modules which saves
   /// memory.
-  /// @param material A vector of dd4hep::Material which should be averaged (See
-  /// Acts::MaterialProperties::add()) and assigned as homgeous material to the
-  /// module
+  /// @param materials A vector of dd4hep::Material and their corresponding
+  /// thickness
   /// @param digiModule The Acts::DigitizationModule
-  ActsExtension(std::vector<std::pair<dd4hep::Material, double>>& materials,
-                std::shared_ptr<const DigitizationModule> digiModule = nullptr);
+  ActsExtension(
+      const std::vector<std::pair<dd4hep::Material, double>>& materials,
+      std::shared_ptr<const DigitizationModule> digiModule = nullptr);
   /// Constructor for module with segmentation for digitization.
   /// In case several sensitive modules have the same segmentation the
   /// Acts::DigitizationModule will be shared amongst these modules which saves
@@ -355,21 +358,17 @@ public:
   /// @copydoc IActsExtension::digitizationModule()
   std::shared_ptr<const DigitizationModule>
   digitizationModule() const final;
-  /// @copydoc IActsExtension::setMaterial()
-  void
-  setMaterial(
-      std::vector<std::pair<dd4hep::Material, double>>& materials) final;
   /// @copydoc IActsExtension::material()
-  std::shared_ptr<Acts::SurfaceMaterial>
+  std::shared_ptr<const Acts::SurfaceMaterial>
   material() const final;
 
 private:
   /// The configuration object
   Config m_cfg;
+  // The Acts SurfaceMaterial
+  std::shared_ptr<const Acts::SurfaceMaterial> m_material;
   // The Acts DigitizaionModule
   std::shared_ptr<const DigitizationModule> m_digiModule;
-  // The Acts SurfaceMaterial
-  std::shared_ptr<Acts::SurfaceMaterial> m_material;
 };
 
 inline bool
@@ -447,7 +446,7 @@ Acts::ActsExtension::digitizationModule() const
   return (m_digiModule);
 }
 
-inline std::shared_ptr<Acts::SurfaceMaterial>
+inline std::shared_ptr<const Acts::SurfaceMaterial>
 Acts::ActsExtension::material() const
 {
   return m_material;
