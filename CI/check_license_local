@@ -1,0 +1,38 @@
+#!/bin/sh
+#
+# check that all code files contain the correct license statement
+#
+# if all is well, return w/o error and do not print anything
+# otherwise, return an error and print offending files
+
+set -e # abort on error
+
+if [ $# -ne 1 ]; then
+    echo "wrong number of arguments"
+    echo ""
+    echo "usage: check_license <DIR>"
+    exit 1
+fi
+
+# license template
+MPLv2="// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/."
+
+cd $1
+
+srcs=$(find . -iname '*.cpp' -or -iname '*.hpp' -or -iname '*.ipp')
+invalid=0
+for f in $srcs; do
+    header=$(head -n 7 $f)
+    if [ "$header" != "$MPLv2" ]; then
+	     invalid=$((invalid + 1))
+       echo "missing/invalid license: ${f}"
+    fi
+done
+
+exec test "$invalid" -le 0

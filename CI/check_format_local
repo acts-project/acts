@@ -1,0 +1,11 @@
+#!/bin/sh
+
+if [ $# -ne 1 ]; then
+    echo "wrong number of arguments"
+    echo ""
+    echo "usage: check_format <DIR>"
+    exit 1
+fi
+
+WD="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
+docker run --rm -ti -v $WD:$WD:rw -w $WD gitlab-registry.cern.ch/acts/machines/check:latest CI/check_format .

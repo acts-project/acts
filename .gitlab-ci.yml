@@ -1,0 +1,198 @@
+image: gitlab-registry.cern.ch/acts/machines/slc6:latest
+
+stages:
+    - build
+    - test
+    - check
+    - deploy
+
+variables:
+    CMAKE_ARGS: -GNinja -DBUILD_DD4HEP_PLUGIN=on -DBUILD_MATERIAL_PLUGIN=on -DBUILD_TGEO_PLUGIN=on -DBUILD_INTEGRATION_TESTS=on -DSUPPRESS_LIBRARY_WARNINGS=on
+    DEFAULT_BUILDDIR: build_slc6_gcc
+
+before_script:
+    # CI executor uses fail on error by default
+    # setup scripts do not like that
+    - set +e && source CI/setup_lcg89.sh; set -e
+
+build_slc6_gcc:
+    stage: build
+    tags: [cvmfs]
+    script:
+        - mkdir build_slc6_gcc
+        - cd build_slc6_gcc
+        - CXX=g++ cmake ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Debug ..
+        - cmake --build .
+        - find . -name "*.o" -delete
+    artifacts:
+        paths:
+            - build_slc6_gcc
+        expire_in: 6 hours
+
+unit_tests_slc6_gcc:
+    stage: test
+    dependencies: [build_slc6_gcc]
+    tags: [cvmfs]
+    script:
+        - cmake --build build_slc6_gcc -- test
+    artifacts:
+        paths:
+            - build_slc6_gcc
+        expire_in: 6 hours
+
+integration_tests_slc6_gcc:
+    stage: test
+    dependencies: [build_slc6_gcc]
+    tags: [cvmfs]
+    script:
+        - cmake --build build_slc6_gcc -- integration_tests
+
+build_slc6_llvm40:
+    stage: build
+    tags: [cvmfs]
+    script:
+        - source CI/setup_llvm40.sh
+        - mkdir build_slc6_llvm40
+        - cd build_slc6_llvm40
+        - CXX=clang++ cmake ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Release ..
+        - cmake --build .
+        - find . -name "*.o" -delete
+    artifacts:
+        paths:
+            - build_slc6_llvm40
+        expire_in: 6 hours
+
+unit_tests_slc6_llvm40:
+    stage: test
+    dependencies: [build_slc6_llvm40]
+    tags: [cvmfs]
+    script:
+        - source CI/setup_llvm40.sh
+        - cmake --build build_slc6_llvm40 -- test
+
+integration_tests_slc6_llvm40:
+    stage: test
+    dependencies: [build_slc6_llvm40]
+    tags: [cvmfs]
+    script:
+        - source CI/setup_llvm40.sh
+        - cmake --build build_slc6_llvm40 -- integration_tests
+
+build_cc7_gcc:
+    stage: build
+    image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+    tags: [cvmfs]
+    script:
+        - mkdir build_cc7_gcc
+        - cd build_cc7_gcc
+        - CXX=g++ cmake ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Release ..
+        - cmake --build .
+        - find . -name "*.o" -delete
+    artifacts:
+        paths:
+            - build_cc7_gcc
+        expire_in: 6 hours
+
+unit_tests_cc7_gcc:
+    stage: test
+    dependencies: [build_cc7_gcc]
+    image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+    tags: [cvmfs]
+    script:
+        - cmake --build build_cc7_gcc -- test
+
+integration_tests_cc7_gcc:
+    stage: test
+    dependencies: [build_cc7_gcc]
+    image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+    tags: [cvmfs]
+    script:
+        - cmake --build build_cc7_gcc -- integration_tests
+
+build_cc7_llvm40:
+    stage: build
+    image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+    tags: [cvmfs]
+    script:
+        - source CI/setup_llvm40.sh
+        - mkdir build_cc7_llvm40
+        - cd build_cc7_llvm40
+        - CXX=clang++ cmake ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Release ..
+        - cmake --build .
+        - find . -name "*.o" -delete
+    artifacts:
+        paths:
+            - build_cc7_llvm40
+        expire_in: 6 hours
+
+unit_tests_cc7_llvm40:
+    stage: test
+    dependencies: [build_cc7_llvm40]
+    image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+    tags: [cvmfs]
+    script:
+        - source CI/setup_llvm40.sh
+        - cmake --build build_cc7_llvm40 -- test
+
+integration_tests_cc7_llvm40:
+    stage: test
+    dependencies: [build_cc7_llvm40]
+    image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+    tags: [cvmfs]
+    script:
+        - source CI/setup_llvm40.sh
+        - cmake --build build_cc7_llvm40 -- integration_tests
+
+doc:
+    stage: build
+    tags: [cvmfs]
+    script:
+        - mkdir build
+        - cd build
+        - cmake -GNinja -DBUILD_DOC=on -DBUILD_TESTS=off ..
+        - cmake --build . -- doc
+    artifacts:
+        paths:
+            - build/doc/html
+
+coverage:
+    stage: check
+    tags: [cvmfs]
+    coverage: '/^TOTAL.*\s+(\d+\%)$/'
+    dependencies:
+        - unit_tests_slc6_gcc
+    script:
+        - cmake --build ${DEFAULT_BUILDDIR} -- coverage
+    artifacts:
+        paths:
+            - ${DEFAULT_BUILDDIR}/coverage
+
+format:
+    stage: check
+    image: gitlab-registry.cern.ch/acts/machines/check:latest
+    before_script: []
+    dependencies: []
+    script:
+        - CI/check_format .
+    artifacts:
+        paths:
+          - changed
+        when: on_failure
+
+license:
+    image: python:alpine3.6
+    stage: check
+    before_script: []
+    dependencies: []
+    script:
+        - CI/check_license.py .
+
+deploy_to_website:
+    stage: deploy
+    dependencies: [doc]
+    script:
+       - unset PYTHONHOME
+       - echo "$ATSJENKINS_PASSWORD" | kinit atsjenkins@CERN.CH 2>&1 >/dev/null
+       - CI/deploy_tag . build/doc/html "acts-developers@cern.ch acts-users@cern.ch"
+    only:
+       - tags 
