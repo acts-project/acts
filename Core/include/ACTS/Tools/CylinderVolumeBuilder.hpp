@@ -44,7 +44,8 @@ enum WrappingCondition {
   Inserting        = 2,  ///< insert the new volume
   Wrapping         = 3,  ///< wrap the new volume around
   CentralInserting = 4,  ///< insert the new one into the center
-  CentralWrapping  = 5   ///< wrap the new central volume around
+  CentralWrapping  = 5,  ///< wrap the new central volume around
+  NoWrapping       = 6   ///< no inner volume present - no wrapping needed
 };
 
 /// VolumeConfig struct to understand the layer config
@@ -586,7 +587,6 @@ private:
                         const VolumeConfig& insideConfig,
                         const VolumeConfig& volumeConfig,
                         int                 sign) const;
-
 };
 
 /// Return the configuration object
