@@ -421,21 +421,19 @@ collectCompounds(dd4hep::DetElement&              detElement,
                  std::vector<dd4hep::DetElement>& compounds)
 {
   const dd4hep::DetElement::Children& children = detElement.children();
-  if (!children.empty()) {
-    for (auto& child : children) {
-      dd4hep::DetElement    childDetElement = child.second;
-      Acts::IActsExtension* detExtension    = nullptr;
-      try {
-        detExtension = childDetElement.extension<Acts::IActsExtension>();
-      } catch (std::runtime_error& e) {
-      }
-      if (detExtension
-          && (detExtension->isBarrel() || detExtension->isEndcap())) {
-        compounds.push_back(childDetElement);
-        continue;
-      }
-      collectCompounds(childDetElement, compounds);
+  for (auto& child : children) {
+    dd4hep::DetElement    childDetElement = child.second;
+    Acts::IActsExtension* detExtension    = nullptr;
+    try {
+      detExtension = childDetElement.extension<Acts::IActsExtension>();
+    } catch (std::runtime_error& e) {
     }
+    if (detExtension
+        && (detExtension->isBarrel() || detExtension->isEndcap())) {
+      compounds.push_back(childDetElement);
+      continue;
+    }
+    collectCompounds(childDetElement, compounds);
   }
 }
 
@@ -444,25 +442,23 @@ collectSubDetectors(dd4hep::DetElement&              detElement,
                     std::vector<dd4hep::DetElement>& subdetectors)
 {
   const dd4hep::DetElement::Children& children = detElement.children();
-  if (!children.empty()) {
-    for (auto& child : children) {
-      dd4hep::DetElement    childDetElement = child.second;
-      Acts::IActsExtension* detExtension    = nullptr;
-      try {
-        detExtension = childDetElement.extension<Acts::IActsExtension>();
-      } catch (std::runtime_error& e) {
-        if (childDetElement.type() == "compound") {
-          subdetectors.push_back(childDetElement);
-          continue;
-        }
-      }
-      if (detExtension
-          && (detExtension->isBarrel() || detExtension->isBeampipe())) {
+  for (auto& child : children) {
+    dd4hep::DetElement    childDetElement = child.second;
+    Acts::IActsExtension* detExtension    = nullptr;
+    try {
+      detExtension = childDetElement.extension<Acts::IActsExtension>();
+    } catch (std::runtime_error& e) {
+      if (childDetElement.type() == "compound") {
         subdetectors.push_back(childDetElement);
         continue;
       }
-      collectSubDetectors(childDetElement, subdetectors);
     }
+    if (detExtension
+        && (detExtension->isBarrel() || detExtension->isBeampipe())) {
+      subdetectors.push_back(childDetElement);
+      continue;
+    }
+    collectSubDetectors(childDetElement, subdetectors);
   }
 }
 
@@ -471,20 +467,18 @@ collectLayers(dd4hep::DetElement&              detElement,
               std::vector<dd4hep::DetElement>& layers)
 {
   const dd4hep::DetElement::Children& children = detElement.children();
-  if (!children.empty()) {
-    for (auto& child : children) {
-      dd4hep::DetElement    childDetElement = child.second;
-      Acts::IActsExtension* detExtension    = nullptr;
-      try {
-        detExtension = childDetElement.extension<Acts::IActsExtension>();
-      } catch (std::runtime_error& e) {
-      }
-      if (detExtension && detExtension->isLayer()) {
-        layers.push_back(childDetElement);
-        continue;
-      };
-      collectLayers(childDetElement, layers);
+  for (auto& child : children) {
+    dd4hep::DetElement    childDetElement = child.second;
+    Acts::IActsExtension* detExtension    = nullptr;
+    try {
+      detExtension = childDetElement.extension<Acts::IActsExtension>();
+    } catch (std::runtime_error& e) {
     }
+    if (detExtension && detExtension->isLayer()) {
+      layers.push_back(childDetElement);
+      continue;
+    };
+    collectLayers(childDetElement, layers);
   }
 }
 }  // End of namespace Acts
