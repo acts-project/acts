@@ -174,6 +174,11 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     ACTS_VERBOSE("Configuration after wrapping, insertion, attachment "
                  << '\n'
                  << wConfig.toString());
+  } else {
+    // no wrapping around inner volume needed
+    // however there could be central, positive & negative volume which will
+    // need to be put into a container volume
+    wConfig.wCondition = NoWrapping;
   }
 
   // (C) VOLUME CREATION ----------------------------------
@@ -215,7 +220,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   // standalone container, full wrapping, full insertion & if no existing volume
   // is present needs a bare triple
   if (wConfig.wCondition == Wrapping || wConfig.wCondition == Inserting
-      || wConfig.wCondition == Undefined) {
+      || wConfig.wCondition == NoWrapping) {
     ACTS_VERBOSE("Combined new container  is being built.");
     // stuff into the container what you have
     std::vector<std::shared_ptr<const TrackingVolume>> volumesContainer;
