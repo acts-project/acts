@@ -75,7 +75,11 @@ Acts::MaterialProperties::operator*=(float scale)
 void
 Acts::MaterialProperties::add(const Acts::MaterialProperties& mprop)
 {
-  if (mprop && mprop.thickness() != 0) {
+  if (!(*this)) {
+    m_material = mprop.m_material;
+    m_dInX0    = mprop.m_dInX0;
+    m_dInL0    = mprop.m_dInL0;
+  } else if (mprop && mprop.thickness() != 0) {
     // create a new average material, which scales with the thickness
     // scale the density with the thickness
     float oldScaledRho = this->thickness() * this->averageRho();
