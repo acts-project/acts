@@ -249,20 +249,7 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
               Acts::getDefaultLogger("CylinderVolumeBuilder", loggingLevel));
       volumeBuilders.push_back(cylinderVolumeBuilder);
 
-    } else {
-      ACTS_INFO(
-          "[D] Subdetector with name : '"
-          << subDetector.name()
-          << "' has no ActsExtension and is not of type 'compound'. If you "
-             "want to have this DetElement be translated into the tracking "
-             "geometry you need add the right ActsExtension (at this stage "
-             "the subvolume needs to be declared as beampipe or barrel) or "
-             "if it is a compound DetElement (containing a barrel-endcap "
-             "hierarchy), the type needs to be set 'compound'.");
-      continue;
-    }
-
-    if (subDetExtension && subDetExtension->isBeampipe()) {
+    } else if (subDetExtension && subDetExtension->isBeampipe()) {
       if (beampipe)
         throw std::logic_error("Beampipe has already been set! There can only "
                                "exist one beam pipe. Please check your "
@@ -389,19 +376,16 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
       volumeBuilders.push_back(cylinderVolumeBuilder);
 
     } else {
-      if (subDetector.type() != "compound") {
-        ACTS_INFO(
-            "[D] Subdetector with name : '"
-            << subDetector.name()
-            << "' has wrong ActsExtension for translation and is not of type "
-               "'compound'. If you want to have this DetElement be translated "
-               "into the tracking geometry you need add the right "
-               "ActsExtension (at this stage the subvolume needs to be "
-               "declared as beampipe or barrel) or if it is a compound "
-               "DetElement (containing a barrel-endcap hierarchy), the type "
-               "needs to be set to 'compound'.");
-        continue;
-      }
+      ACTS_INFO(
+          "[D] Subdetector with name : '"
+          << subDetector.name()
+          << "' has wrong ActsExtension for translation and is not of type "
+             "'compound'. If you want to have this DetElement be translated "
+             "into the tracking geometry you need add the right "
+             "ActsExtension (at this stage the subvolume needs to be "
+             "declared as beampipe or barrel) or if it is a compound "
+             "DetElement (containing a barrel-endcap hierarchy), the type "
+             "needs to be set to 'compound'.");
       continue;
     }
   }
