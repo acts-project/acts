@@ -5,6 +5,7 @@ project (ACTS VERSION 0.6.0 LANGUAGES CXX)
 # all options must be defined here to keep the list directly visible and
 # make the option variables available everywhere
 option (BUILD_DOC "Build documentation" OFF)
+option (BUILD_EXAMPLES "Build examples" ON)
 option (BUILD_TESTS "Build unit tests" ON)
 option (BUILD_INTEGRATION_TESTS "Build integration tests" OFF)
 option (BUILD_DD4HEP_PLUGIN "build DD4HEP plugins" OFF)
