@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.5)
 
-project (ACTS LANGUAGES CXX)
+project (ACTS VERSION 0.6.0 LANGUAGES CXX)
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -40,11 +40,8 @@ endif(CCACHE_FOUND)
 # silence warning about missing RPATH on Mac OSX
 set (CMAKE_MACOSX_RPATH 1)
 
-# set the current version of ACTS
-set (ACTS_VERSION dev)
-
 # convert the version into a plain number to be used in the version header file
-string (REPLACE "." "" ACTS_VERSION_NUMBER ${ACTS_VERSION})
+string (REPLACE "." "" ACTS_VERSION_NUMBER ${PROJECT_VERSION})
 
 # default parameter definitions
 set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "default track parameter definition")
@@ -64,9 +61,7 @@ add_subdirectory (Examples)
 # add unit tests
 include (CTest)
 add_subdirectory (Tests)
-
 add_subdirectory (IntegrationTests)
-
 
 # add version header
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/ACTSVersion.h.in ${CMAKE_CURRENT_BINARY_DIR}/ACTSVersion.h)
