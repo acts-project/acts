@@ -33,8 +33,6 @@ namespace Test {
 using SurfaceMatcher
     = std::function<bool(BinningValue, const Surface*, const Surface*)>;
 
-class BinUtility;
-
 typedef std::vector<const Surface*> SurfaceVector;
 typedef std::vector<SurfaceVector>  SurfaceMatrix;
 typedef std::vector<SurfaceMatrix>  SurfaceGrid_old;
@@ -244,7 +242,7 @@ private:
                     BinningValue                       bValue) const;
 
   /// SurfaceArrayCreator internal method
-  /// Creates an arbitrary BinUtility from a vector of (unsorted) surfaces with
+  /// Creates a variable @c ProtoAxis from a vector of (unsorted) surfaces with
   /// PlanarBounds
   /// It loops through the surfaces and finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called
@@ -259,20 +257,18 @@ private:
   /// @param bValue the BinningValue in which direction should be binned
   /// (currently possible: binPhi, binR, binZ)
   /// @param transform is the (optional) additional transform applied
-  /// @return a unique pointer a one dimensional BinUtility
-  Acts::BinUtility
-  createArbitraryBinUtility(const std::vector<const Surface*>& surfaces,
-                            BinningValue                       bValue,
-                            std::shared_ptr<const Transform3D> transform
-                            = nullptr) const;
-
+  /// @return Instance of @c ProtoAxis containing determined properties
+  /// @note This only creates the @c ProtoAxis, this needs to be turned
+  ///       into an actual @c Axis object to be used
   ProtoAxis
   createVariableAxis(const std::vector<const Surface*>& surfaces,
                      BinningValue                       bValue,
                      Transform3D&                       transform) const;
+
   /// SurfaceArrayCreator internal method
-  /// Creates an equidistant BinUtility when the extremas and the bin number are
-  /// It loops through the surfaces ggand finds out the needed information
+  /// Creates a equidistant @c ProtoAxis when the extremas and the bin number
+  /// are
+  /// It loops through the surfaces and finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called
   /// "key" surfaces (surfaces with different positions in the binning
   /// direction) are extracted. The number of key surfaces euqals the number of
@@ -284,24 +280,11 @@ private:
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the BinningValue in which direction should be binned
   /// (currently possible: binPhi, binR, binZ)
+  /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
   /// @param transform is the (optional) additional transform applied
-  /// @return a unique pointer a one dimensional BinUtility
-  // Acts::BinUtility
-  // createEquidistantBinUtility(
-  // const std::vector<const Surface*>& surfaces,
-  // BinningValue                       bValue,
-  // std::shared_ptr<const Transform3D> transform = nullptr) const;
-
-  // overload with matcher lambda, since default value / noop can not be
-  // set
-  Acts::BinUtility
-  createEquidistantBinUtility(const std::vector<const Surface*>& surfaces,
-                              BinningValue                       bValue,
-                              ProtoLayer                         protoLayer,
-                              std::shared_ptr<const Transform3D> transform
-                              = nullptr,
-                              size_t nBins = 0) const;
-
+  /// @return Instance of @c ProtoAxis containing determined properties
+  /// @note This only creates the @c ProtoAxis, this needs to be turned
+  ///       into an actual @c Axis object to be used
   ProtoAxis
   createEquidistantAxis(const std::vector<const Surface*>& surfaces,
                         BinningValue                       bValue,
@@ -369,38 +352,11 @@ private:
     // clang-format on
   }
 
-  /// SurfaceArrayCreator internal method
-  /// - create an equidistant BinUtility with all parameters given
-  /// - if parameters are known this function is preferred
-  /// currently implemented for phi, r and z bining
-  /// @todo implement for x,y binning
-  /// @param surfaces are the sensitive surfaces to be
-  /// @param bValue the BinningValue in which direction should be binned
-  /// (currently possible: binPhi, binR, binZ)
-  /// @param bType the BinningType (equidistant or arbitrary binning)
-  /// @param bins the number of bins
-  /// @param min is the minimal position of the surfaces in the binning
-  /// direction
-  /// @param max is the maximal position of the surfaces in the binning
-  /// direction
-  /// @param transform is the (optional) additional transform applied
-  /// @return a unique pointer a one dimensional BinUtility
-  Acts::BinUtility
-  createBinUtility(const std::vector<const Surface*>& surfaces,
-                   BinningValue                       bValue,
-                   BinningType                        bType,
-                   size_t                             bins,
-                   double                             min,
-                   double                             max,
-                   std::shared_ptr<const Transform3D> transform
-                   = nullptr) const;
-
   /// logging instance
   std::unique_ptr<const Logger> m_logger;
 
   /// Private helper method to complete the binning
   ///
-  /// @todo implement closest neighbour search
   ///
   ///  given a grid point o
   ///    |  0  |  1 |  2  |  3 |  4  |
@@ -427,14 +383,6 @@ private:
     ACTS_VERBOSE("       filled  : " << binCompleted
                                      << " (includes under/overflow)");
   }
-
-  /// Private helper method to complete the binning
-  ///
-  ///
-  /// @todo write documentation
-  ///
-  void
-  registerNeighbourHood(SurfaceArray& sArray) const;
 
   /// Private helper method to transform the  vertices of surface bounds into
   /// global coordinates
