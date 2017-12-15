@@ -89,6 +89,33 @@ public:
   MaterialProperties&
   operator*=(float scale);
 
+  /// Add material properties
+  ///
+  /// This method creates an averaged material properties out of the new and
+  /// the present material properties according to the following formulas:
+  ///
+  /// \f[
+  ///	\frac{t}{x_0} = \sum_{i=1}^n \frac{t_i}{x_i}
+  /// \f]
+  /// \f[
+  ///	\frac{t}{\Lambda_0} = \sum_{i=1}^n \frac{t_i}{\Lambda_i}
+  /// \f]
+  /// \f[
+  ///	\rho = \frac{\sum_{i=1}^n t_i \rho_i}{\sum_{i=1}^n t_i}
+  /// \f]
+  /// \f[
+  ///	A = \frac{\sum_{i=1}^n \rho_i A_i}{\sum_{i=1}^n \rho_i}
+  /// \f]
+  /// \f[
+  ///	Z = \frac{\sum_{i=1}^n \rho_i Z_i}{\sum_{i=1}^n \rho_i}
+  /// \f]
+  /// t...thickness, \f$x_0\f$...radiation length, \f$\Lambda_0\f$...interaction
+  /// length, \f$\rho\f$...density, A...mass number, Z...atomic number
+  ///
+  /// @param mprop are the material properties to be added
+  void
+  add(const MaterialProperties& mprop);
+
   /// Boolean operator
   /// false indicates it's vacuum
   operator bool() const { return bool(m_material); }
