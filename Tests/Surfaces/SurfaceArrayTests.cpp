@@ -165,8 +165,6 @@ namespace Test {
 
     detail::EquidistantAxis phiAxis(-M_PI, M_PI, 30u);
     detail::EquidistantAxis zAxis(-14, 14, 7u);
-    SurfaceGrid<detail::EquidistantAxis, detail::EquidistantAxis> grid(
-        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
 
     double angleShift = 2 * M_PI / 30. / 2.;
     auto transform    = [angleShift](const Vector3D& pos) {
@@ -178,7 +176,10 @@ namespace Test {
                       R * std::sin(loc[0] - angleShift),
                       loc[1]);
     };
-    SurfaceArray::SurfaceGridLookup2D sl(transform, itransform, grid);
+    SurfaceArray::SurfaceGridLookup2D<decltype(phiAxis), decltype(zAxis)> sl(
+        transform,
+        itransform,
+        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
     sl.fill(brl);
     SurfaceArray sa(sl, brl);
 
@@ -196,6 +197,21 @@ namespace Test {
     std::vector<const Surface*> neighbors
         = sa.neighbors(itransform(Vector2D(0, 0)));
     BOOST_TEST(neighbors.size() == 9);
+
+    SurfaceArray::SurfaceGridLookup2D<decltype(phiAxis), decltype(zAxis)> sl2(
+        transform,
+        itransform,
+        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+    // do NOT fill, only completebinning
+    sl2.completeBinning(brl);
+    SurfaceArray sa2(sl2, brl);
+    for (const auto& srf : brl) {
+      Vector3D ctr        = srf->binningPosition(binR);
+      SrfVec   binContent = sa2.at(ctr);
+
+      BOOST_TEST(binContent.size() == 1);
+      BOOST_TEST(srf == binContent.at(0));
+    }
   }
 
   BOOST_AUTO_TEST_SUITE_END();

@@ -309,16 +309,27 @@ private:
                         Transform3D&                       transform,
                         size_t                             nBins = 0) const;
 
+  /// SurfaceArrayCreator internal method
+  /// @brief Creates a SurfaceGridLookup instance within an any
+  /// This is essentially a factory which absorbs some if/else logic
+  /// that is required by the templating.
+  /// @tparam wrapA AxisWrapping of axis A
+  /// @tparam wrapB AxisWrapping of axis B
+  /// @tparam F1 type-deducted value of g2l lambda
+  /// @tparam F2 type-deducted value of l2g lambda
+  /// @param globalToLocal transform callable
+  /// @param localToGlobal transform callable
+  /// @param pAxisA ProtoAxis object for axis A
+  /// @param pAxisB ProtoAxis object for axis B
   template <detail::AxisWrapping wrapA,
             detail::AxisWrapping wrapB,
             typename F1,
             typename F2>
-  SurfaceArray::SurfaceGridLookup2D
-  makeSurfaceGridLookup2D(std::vector<const Surface*> surfaces,
-                          F1                          globalToLocal,
-                          F2                          localToGlobal,
-                          ProtoAxis                   pAxisA,
-                          ProtoAxis                   pAxisB) const
+  SurfaceArray::AnySurfaceGridLookup_t
+  makeSurfaceGridLookup2D(F1        globalToLocal,
+                          F2        localToGlobal,
+                          ProtoAxis pAxisA,
+                          ProtoAxis pAxisB) const
   {
 
     // this becomes completely unreadable otherwise
@@ -327,29 +338,33 @@ private:
 
       detail::Axis<detail::AxisType::Equidistant, wrapA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
       detail::Axis<detail::AxisType::Equidistant, wrapB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
-      SurfaceGrid<decltype(axisA), decltype(axisB)> grid(std::make_tuple(axisA, axisB));
-      return SurfaceArray::SurfaceGridLookup2D(globalToLocal, localToGlobal, grid);
+      return SurfaceArray::SurfaceGridLookup2D<decltype(axisA), decltype(axisB)>(globalToLocal,
+                                                                                 localToGlobal,
+                                                                                 std::make_tuple(axisA, axisB));
 
     } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
 
       detail::Axis<detail::AxisType::Equidistant, wrapA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
       detail::Axis<detail::AxisType::Variable, wrapB> axisB(pAxisB.binEdges);
-      SurfaceGrid<decltype(axisA), decltype(axisB)> grid(std::make_tuple(axisA, axisB));
-      return SurfaceArray::SurfaceGridLookup2D(globalToLocal, localToGlobal, grid);
+      return SurfaceArray::SurfaceGridLookup2D<decltype(axisA), decltype(axisB)>(globalToLocal,
+                                                                                 localToGlobal,
+                                                                                 std::make_tuple(axisA, axisB));
 
     } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
 
       detail::Axis<detail::AxisType::Variable, wrapA> axisA(pAxisA.binEdges);
       detail::Axis<detail::AxisType::Equidistant, wrapB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
-      SurfaceGrid<decltype(axisA), decltype(axisB)> grid(std::make_tuple(axisA, axisB));
-      return SurfaceArray::SurfaceGridLookup2D(globalToLocal, localToGlobal, grid);
+      return SurfaceArray::SurfaceGridLookup2D<decltype(axisA), decltype(axisB)>(globalToLocal,
+                                                                                 localToGlobal,
+                                                                                 std::make_tuple(axisA, axisB));
 
     } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
 
       detail::Axis<detail::AxisType::Variable, wrapA> axisA(pAxisA.binEdges);
       detail::Axis<detail::AxisType::Variable, wrapB> axisB(pAxisB.binEdges);
-      SurfaceGrid<decltype(axisA), decltype(axisB)> grid(std::make_tuple(axisA, axisB));
-      return SurfaceArray::SurfaceGridLookup2D(globalToLocal, localToGlobal, grid);
+      return SurfaceArray::SurfaceGridLookup2D<decltype(axisA), decltype(axisB)>(globalToLocal,
+                                                                                 localToGlobal,
+                                                                                 std::make_tuple(axisA, axisB));
     }
     // clang-format on
   }
@@ -397,17 +412,9 @@ private:
   /// This is being called when you chose to use more bins thans surfaces
   /// I.e. to put a finer granularity binning onto your surface
   /// Neighbour bins are then filled to contain pointers as well
-  /// @param binUtility is the utility class that describes the binning
-  /// @param v3Matrix the corresponding 3D positions filled for every grid point
-  /// @param sVector is the filled vector of Surface and binning position
-  /// @param sGrid the surfaces filled for every grid point
-  /// binSystem is the full system of bins
-  void
-  completeBinning(const BinUtility&    binUtility,
-                  const V3Matrix&      v3Matrix,
-                  const SurfaceVector& sVector,
-                  SurfaceGrid_old&     sGrid) const;
-
+  /// This method delegates to SurfaceGridLookup itself.
+  /// @param sl The @c SurfaceGridLookup
+  /// @param surfaces the surfaces
   template <class T>
   void
   completeBinning(T& sl, const std::vector<const Surface*>& surfaces) const
@@ -415,30 +422,7 @@ private:
     ACTS_VERBOSE("Complete binning by filling closest neighbour surfaces into "
                  "empty bins.");
 
-    size_t         binCompleted = 0;
-    size_t         nBins        = sl.size();
-    double         minPath, curPath;
-    const Surface* minSrf;
-
-    for (size_t b = 0; b < nBins; ++b) {
-      std::vector<const Surface*>& binContent = sl.lookup(b);
-      // only complete if we have an empty bin
-      if (binContent.size() > 0) continue;
-
-      Vector3D binCtr = sl.getBinCenter(b);
-      minPath         = std::numeric_limits<double>::max();
-      for (const auto& srf : surfaces) {
-        curPath = (binCtr - srf->binningPosition(binR)).mag();
-
-        if (curPath < minPath) {
-          minPath = curPath;
-          minSrf  = srf;
-        }
-      }
-
-      binContent.push_back(minSrf);
-      ++binCompleted;
-    }
+    size_t binCompleted = sl.completeBinning(surfaces);
 
     ACTS_VERBOSE("       filled  : " << binCompleted
                                      << " (includes under/overflow)");

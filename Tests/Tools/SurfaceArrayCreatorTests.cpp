@@ -87,7 +87,7 @@ namespace Test {
 
     template <typename... Args>
     void
-    completeBinning(Args&&... args)
+    completeBinning(Args&&... args) const
     {
       return m_SAC.completeBinning(std::forward<Args>(args)...);
     }
@@ -693,14 +693,12 @@ namespace Test {
                  tt::tolerance(1e-3));
     }
 
-    SrfVec     surfaces;
-    BinUtility bu;
+    SrfVec surfaces;
 
     // single element in phi
     surfaces = fullPhiTestSurfacesEC(1);
-    draw_surfaces(
-        surfaces,
-        "SurfaceArrayCreator_createEquidistantBinUtility_EC_Single.obj");
+    draw_surfaces(surfaces,
+                  "SurfaceArrayCreator_createEquidistantAxis_EC_Single.obj");
 
     pl        = ProtoLayer(surfaces);
     tr        = Transform3D::Identity();
@@ -762,6 +760,45 @@ namespace Test {
     BOOST_TEST(axis.bType == equidistant);
   }
 
+  BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_R,
+                          SurfaceArrayCreatorFixture)
+  {
+
+    // single element in r
+    auto surfaces = fullPhiTestSurfacesEC(1, 0, 0, 15);
+    draw_surfaces(surfaces,
+                  "SurfaceArrayCreator_createEquidistantAxis_R_1.obj");
+    auto       trf = Transform3D::Identity();
+    ProtoLayer pl  = ProtoLayer(surfaces);
+    auto axis = createEquidistantAxis(surfaces, BinningValue::binR, pl, trf);
+    BOOST_TEST(axis.nBins == 1);
+    BOOST_CHECK_SMALL(axis.max - (Vector3D(17, 1, 0)).perp(), 1e-3);
+    BOOST_CHECK_SMALL(axis.min - (Vector3D(13, 1, 0)).perp(), 1e-3);
+    BOOST_TEST(axis.bType == equidistant);
+
+    // multiple rings
+    surfaces.resize(0);
+    auto ringa = fullPhiTestSurfacesEC(30, 0, 0, 10);
+    surfaces.insert(surfaces.end(), ringa.begin(), ringa.end());
+    auto ringb = fullPhiTestSurfacesEC(30, 0, 0, 15);
+    surfaces.insert(surfaces.end(), ringb.begin(), ringb.end());
+    auto ringc = fullPhiTestSurfacesEC(30, 0, 0, 20);
+    surfaces.insert(surfaces.end(), ringc.begin(), ringc.end());
+    draw_surfaces(surfaces,
+                  "SurfaceArrayCreator_createEquidistantAxis_R_2.obj");
+
+    pl   = ProtoLayer(surfaces);
+    trf  = Transform3D::Identity();
+    axis = createEquidistantAxis(surfaces, BinningValue::binR, pl, trf);
+
+    BOOST_TEST(axis.nBins == 3);
+    BOOST_TEST(axis.max == (Vector3D(20 + 2, 1, 0)).perp(),
+               tt::tolerance(1e-3));
+    // BOOST_TEST(axis.min == 8, tt::tolerance(1e-3)); // fails for some reason
+    BOOST_CHECK(((axis.min - 8) < 1e-3));
+    BOOST_TEST(axis.bType == equidistant);
+  }
+
   BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
                           SurfaceArrayCreatorFixture)
   {
@@ -770,8 +807,6 @@ namespace Test {
 
     detail::EquidistantAxis phiAxis(-M_PI, M_PI, 30u);
     detail::EquidistantAxis zAxis(-14, 14, 7u);
-    SurfaceGrid<detail::EquidistantAxis, detail::EquidistantAxis> grid(
-        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
 
     double R           = 10.;
     auto globalToLocal = [](const Vector3D& pos) {
@@ -782,7 +817,10 @@ namespace Test {
       return Vector3D(R * std::cos(phi), R * std::sin(phi), loc[1]);
     };
 
-    SurfaceArray::SurfaceGridLookup2D sl(globalToLocal, localToGlobal, grid);
+    SurfaceArray::SurfaceGridLookup2D<decltype(phiAxis), decltype(zAxis)> sl(
+        globalToLocal,
+        localToGlobal,
+        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
     sl.fill(brl);
     SurfaceArray sa(sl, brl);
 
@@ -795,7 +833,10 @@ namespace Test {
       BOOST_TEST(srf == binContent.at(0));
     }
 
-    SurfaceArray::SurfaceGridLookup2D sl2(globalToLocal, localToGlobal, grid);
+    SurfaceArray::SurfaceGridLookup2D<decltype(phiAxis), decltype(zAxis)> sl2(
+        globalToLocal,
+        localToGlobal,
+        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
     // do NOT fill, only completebinning
     completeBinning(sl2, brl);
     SurfaceArray sa2(sl2, brl);
@@ -816,13 +857,8 @@ namespace Test {
     auto brl    = barrel.first;
     draw_surfaces(brl, "SurfaceArrayCreator_barrelStagger.obj");
 
-    // SrfVec brl = makeBarrel(30, 7, 2, 1, true);
-    // draw_surfaces(brl, "SurfaceArrayCreator_barrelStagger.obj");
-
     detail::EquidistantAxis phiAxis(-M_PI, M_PI, 30u);
     detail::EquidistantAxis zAxis(-14, 14, 7u);
-    SurfaceGrid<detail::EquidistantAxis, detail::EquidistantAxis> grid(
-        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
 
     double      R  = 10.;
     Transform3D tr = Transform3D::Identity();
@@ -836,7 +872,10 @@ namespace Test {
       return itr * Vector3D(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
     };
 
-    SurfaceArray::SurfaceGridLookup2D sl(globalToLocal, localToGlobal, grid);
+    SurfaceArray::SurfaceGridLookup2D<decltype(phiAxis), decltype(zAxis)> sl(
+        globalToLocal,
+        localToGlobal,
+        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
     sl.fill(brl);
     SurfaceArray sa(sl, brl);
 

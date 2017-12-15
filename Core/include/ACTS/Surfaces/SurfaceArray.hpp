@@ -54,7 +54,7 @@ public:
   using AnySurfaceGridLookup_t = concept::AnySurfaceGridLookup<SurfaceVector>;
 
   /// @brief Lookup helper which encapsulates a @c Grid
-  template <size_t DIM>
+  template <size_t DIM, class... Axes>
   struct SurfaceGridLookup
   {
   public:
@@ -63,6 +63,7 @@ public:
     /// std::array<double, 1>
     using point_t
         = std::conditional_t<DIM == 1, std::array<double, 1>, ActsVectorD<DIM>>;
+    using Grid_t = detail::Grid<SurfaceVector, Axes...>;
 
     /// @brief Default constructor
     ///
@@ -74,10 +75,10 @@ public:
     ///       @c std::array<double, 1>.
     SurfaceGridLookup(std::function<point_t(const Vector3D&)> globalToLocal,
                       std::function<Vector3D(const point_t&)> localToGlobal,
-                      AnyGrid_t<point_t, DIM> grid)
+                      std::tuple<Axes...>                     axes)
       : m_globalToLocal(std::move(globalToLocal))
       , m_localToGlobal(std::move(localToGlobal))
-      , m_grid(std::move(grid))
+      , m_grid(std::move(axes))
     {
     }
 
@@ -88,12 +89,43 @@ public:
     ///
     /// @param surfaces Input surface pointers
     void
-    fill(const SurfaceVector surfaces)
+    fill(const SurfaceVector& surfaces)
     {
       for (const auto& srf : surfaces) {
         Vector3D pos = srf->binningPosition(binR);
         lookup(pos).push_back(srf);
       }
+    }
+
+    size_t
+    completeBinning(const SurfaceVector& surfaces)
+    {
+      size_t         binCompleted = 0;
+      size_t         nBins        = size();
+      double         minPath, curPath;
+      const Surface* minSrf;
+
+      for (size_t b = 0; b < nBins; ++b) {
+        std::vector<const Surface*>& binContent = lookup(b);
+        // only complete if we have an empty bin
+        if (binContent.size() > 0) continue;
+
+        Vector3D binCtr = getBinCenter(b);
+        minPath         = std::numeric_limits<double>::max();
+        for (const auto& srf : surfaces) {
+          curPath = (binCtr - srf->binningPosition(binR)).mag();
+
+          if (curPath < minPath) {
+            minPath = curPath;
+            minSrf  = srf;
+          }
+        }
+
+        binContent.push_back(minSrf);
+        ++binCompleted;
+      }
+
+      return binCompleted;
     }
 
     /// @brief Performs lookup at @c pos and returns bin content as reference
@@ -237,7 +269,7 @@ public:
   private:
     std::function<point_t(const Vector3D&)> m_globalToLocal;
     std::function<Vector3D(const point_t&)> m_localToGlobal;
-    AnyGrid_t<point_t, DIM> m_grid;
+    Grid_t                                  m_grid;
   };
 
   /// @brief Lookup implementation which wraps one element and always returns
@@ -320,6 +352,21 @@ public:
       return 0;
     }
 
+    /// @brief Comply with concept and provide fill method
+    /// @note Does nothing
+    void
+    fill(const SurfaceVector&)
+    {
+    }
+
+    /// @brief Comply with concept and provide completeBinning method
+    /// @note Does nothing
+    size_t
+    completeBinning(const SurfaceVector&)
+    {
+      return 0;
+    }
+
     /// @brief Returns if the bin is valid (it is)
     /// @param bin is ignored
     /// @return always true
@@ -330,9 +377,12 @@ public:
   };
 
   // useful typedefs
-  using SurfaceGridLookup1D = SurfaceGridLookup<1>;
-  using SurfaceGridLookup2D = SurfaceGridLookup<2>;
-  using SurfaceGridLookup3D = SurfaceGridLookup<3>;
+  template <class... Axes>
+  using SurfaceGridLookup1D = SurfaceGridLookup<1, Axes...>;
+  template <class... Axes>
+  using SurfaceGridLookup2D = SurfaceGridLookup<2, Axes...>;
+  template <class... Axes>
+  using SurfaceGridLookup3D = SurfaceGridLookup<3, Axes...>;
 
   /// @brief Default constructor which takes a @c SurfaceLookup and a vector of
   /// surfaces

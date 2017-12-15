@@ -62,10 +62,10 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
         * Vector3D(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
   };
 
-  SurfaceArray::SurfaceGridLookup2D sl
+  SurfaceArray::AnySurfaceGridLookup_t sl
       = makeSurfaceGridLookup2D<detail::AxisWrapping::Closed,
                                 detail::AxisWrapping::Open>(
-          surfaces, globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
+          globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
   sl.fill(surfaces);
   completeBinning(sl, surfaces);
@@ -112,10 +112,10 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
         * Vector3D(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
   };
 
-  SurfaceArray::SurfaceGridLookup2D sl
+  SurfaceArray::AnySurfaceGridLookup_t sl
       = makeSurfaceGridLookup2D<detail::AxisWrapping::Closed,
                                 detail::AxisWrapping::Open>(
-          surfaces, globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
+          globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
   sl.fill(surfaces);
   completeBinning(sl, surfaces);
@@ -169,10 +169,10 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
         * Vector3D(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), Z);
   };
 
-  SurfaceArray::SurfaceGridLookup2D sl
+  SurfaceArray::AnySurfaceGridLookup_t sl
       = makeSurfaceGridLookup2D<detail::AxisWrapping::Open,
                                 detail::AxisWrapping::Closed>(
-          surfaces, globalToLocal, localToGlobal, pAxisR, pAxisPhi);
+          globalToLocal, localToGlobal, pAxisR, pAxisPhi);
 
   // get the number of bins
   auto   axes  = sl.getAxes();
@@ -233,10 +233,10 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
         * Vector3D(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), Z);
   };
 
-  SurfaceArray::SurfaceGridLookup2D sl
+  SurfaceArray::AnySurfaceGridLookup_t sl
       = makeSurfaceGridLookup2D<detail::AxisWrapping::Open,
                                 detail::AxisWrapping::Closed>(
-          surfaces, globalToLocal, localToGlobal, pAxisR, pAxisPhi);
+          globalToLocal, localToGlobal, pAxisR, pAxisPhi);
 
   // get the number of bins
   auto   axes  = sl.getAxes();
