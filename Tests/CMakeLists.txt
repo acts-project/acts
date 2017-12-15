@@ -1,6 +1,3 @@
-# allow to turn of unit tests manually
-option (BUILD_TESTS "build unit tests" ON)
-
 if (BUILD_TESTS)
    # we need boost
    find_package (Boost ${ACTS_BOOST_VERSION} REQUIRED)

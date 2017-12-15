@@ -1,6 +1,3 @@
-# manually trigger build of Material plugin
-option (BUILD_MATERIAL_PLUGIN "build Material plugins" ON)
-
 if (BUILD_MATERIAL_PLUGIN)
   # get list of all source files
   file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
@@ -15,7 +12,7 @@ if (BUILD_MATERIAL_PLUGIN)
   target_link_libraries (ACTSMaterialPlugin PUBLIC ACTSCore)
 
   # set installation directories
-  install (TARGETS ACTSMaterialPlugin 
+  install (TARGETS ACTSMaterialPlugin
            EXPORT ACTSMaterialPluginTargets
            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 

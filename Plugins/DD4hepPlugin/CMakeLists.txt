@@ -1,10 +1,4 @@
-# manually trigger build of DD4Hep plugin
-option (BUILD_DD4HEP_PLUGIN "build DD4HEP plugins" OFF)
-
 if (BUILD_DD4HEP_PLUGIN)
-  # we need the TGeoPlugin
-  set (BUILD_TGEO_PLUGIN ON PARENT_SCOPE)
-
   # we need DD4Hep
   find_package (DD4hep ${ACTS_FIND_QUIET_TEXT} COMPONENTS DDCore DDSegmentation)
 
@@ -25,7 +19,7 @@ if (BUILD_DD4HEP_PLUGIN)
     target_link_libraries (ACTSDD4hepPlugin PUBLIC ${DD4hep_DDCORE_LIBRARY} ${DD4hep_DDSEGMENTATION_LIBRARY})
 
     # set installation directories
-    install (TARGETS ACTSDD4hepPlugin 
+    install (TARGETS ACTSDD4hepPlugin
              EXPORT ACTSDD4hepPluginTargets
              LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
