@@ -80,6 +80,7 @@ public:
       , m_localToGlobal(std::move(localToGlobal))
       , m_grid(std::move(axes))
     {
+      m_neighborMap.resize(m_grid.size());
     }
 
     /// @brief Fill provided surfaces into the contained @c Grid.
@@ -94,6 +95,22 @@ public:
       for (const auto& srf : surfaces) {
         Vector3D pos = srf->binningPosition(binR);
         lookup(pos).push_back(srf);
+      }
+
+      // calculate neighbors for every bin and store in map
+      // auto             loc          = m_globalToLocal(pos);
+      for (size_t i = 0; i < m_grid.size(); i++) {
+        if (!isValidBin(i)) continue;
+        typename Grid_t::index_t loc  = m_grid.getLocalBinIndices(i);
+        std::set<size_t> neighborIdxs = m_grid.neighborHoodIndices(loc, 1u);
+        std::vector<const Surface*>& neighbors = m_neighborMap.at(i);
+
+        for (const auto& idx : neighborIdxs) {
+          const std::vector<const Surface*>& binContent = m_grid.at(idx);
+          std::copy(binContent.begin(),
+                    binContent.end(),
+                    std::back_inserter(neighbors));
+        }
       }
     }
 
@@ -178,21 +195,11 @@ public:
     ///       cannot store references, the source bin content vector entries
     ///       have to be copied.
     ///       This should be fine for the pointer value type used here.
-    std::vector<const Surface*>
+    const SurfaceVector&
     neighbors(const Vector3D& pos, size_t size = 1) const
     {
-      auto             loc          = m_globalToLocal(pos);
-      std::set<size_t> neighborIdxs = m_grid.neighborHoodIndices(loc, size);
-      std::vector<std::vector<const Surface*>> binContents
-          = m_grid.atBins(neighborIdxs);
-      std::vector<const Surface*> out;
-
-      for (const auto& binContent : binContents) {
-        // move b/c bincontents is already a copy and not needed after this
-        std::move(
-            binContent.begin(), binContent.end(), std::back_inserter(out));
-      }
-      return out;
+      auto loc = m_globalToLocal(pos);
+      return m_neighborMap.at(m_grid.getGlobalBinIndex(loc));
     }
 
     /// @brief Returns the total size of the grid (including under/overflow
@@ -270,6 +277,7 @@ public:
     std::function<point_t(const Vector3D&)> m_globalToLocal;
     std::function<Vector3D(const point_t&)> m_localToGlobal;
     Grid_t                                  m_grid;
+    std::vector<SurfaceVector>              m_neighborMap;
   };
 
   /// @brief Lookup implementation which wraps one element and always returns
@@ -317,7 +325,7 @@ public:
     /// @param pos is ignored
     /// @param size is ignored
     /// @return reference to vector containing only @c element
-    SurfaceVector
+    const SurfaceVector&
     neighbors(const Vector3D&, size_t) const
     {
       return m_element;

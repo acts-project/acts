@@ -52,7 +52,7 @@ namespace concept {
                                                    has_size<size_t(), const bte::_self>,
                                                    has_getBinCenter<Vector3D(size_t), const bte::_self>,
                                                    has_isValidBin<bool(size_t), const bte::_self>,
-                                                   has_neighbors<T(const Vector3D&, size_t), const bte::_self>,
+                                                   has_neighbors<const T&(const Vector3D&, size_t), const bte::_self>,
                                                    has_fill<void(const T&)>,
                                                    has_completeBinning<size_t(const T&)>,
                                                    bte::copy_constructible<>,

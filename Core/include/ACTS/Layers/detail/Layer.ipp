@@ -120,13 +120,14 @@ Layer::getCompatibleSurfaces(const T&                       pars,
 
     } else {
 
-      std::vector<const Surface*> neighbors = m_surfaceArray->neighbors(pos);
+      const std::vector<const Surface*>& neighbors
+          = m_surfaceArray->neighbors(pos);
 
       // Returned surfaces from SurfaceArray::neighbors() also includes
       // the nominal surface. So we can just copy (move) here
       // move from neighbors -> ctestSurfaces conditionally
-      std::copy_if(std::make_move_iterator(neighbors.begin()),
-                   std::make_move_iterator(neighbors.end()),
+      std::copy_if(neighbors.begin(),
+                   neighbors.end(),
                    std::back_inserter(ctestSurfaces),
                    crit);
     }
