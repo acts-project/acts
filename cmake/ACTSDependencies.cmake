@@ -1,5 +1,4 @@
 # let the user overwrite verbosity
-set (ACTS_FIND_QUIET OFF CACHE BOOL "find external packages quietly")
 if (${ACTS_FIND_QUIET})
   set (ACTS_FIND_QUIET_TEXT "QUIET")
 else ()

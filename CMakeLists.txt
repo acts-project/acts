@@ -4,14 +4,19 @@ project (ACTS VERSION 0.6.0 LANGUAGES CXX)
 
 # all options must be defined here to keep the list directly visible and
 # make the option variables available everywhere
+option (ACTS_FIND_QUIET "Find external packages quietly" OFF)
 option (BUILD_DOC "Build documentation" OFF)
 option (BUILD_EXAMPLES "Build examples" ON)
 option (BUILD_TESTS "Build unit tests" ON)
 option (BUILD_INTEGRATION_TESTS "Build integration tests" OFF)
-option (BUILD_DD4HEP_PLUGIN "build DD4HEP plugins" OFF)
-option (BUILD_MATERIAL_PLUGIN "build Material plugins" ON)
-option (BUILD_TGEO_PLUGIN "build TGeo plugins" OFF)
+option (BUILD_DD4HEP_PLUGIN "Build DD4HEP plugins" OFF)
+option (BUILD_MATERIAL_PLUGIN "Build Material plugins" ON)
+option (BUILD_TGEO_PLUGIN "Build TGeo plugins" OFF)
+option (PRINT_OPTIONS "Print all available options" OFF)
 option (SUPPRESS_LIBRARY_WARNINGS "Suppress warnings from Eigen and Boost libraries" OFF)
+# all other compile-time parameters must be defined here for clear visibility
+# and to avoid forgotten options somewhere deep in the hierarchy
+set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "default track parameter definition")
 
 # handle inter-plugin dependencies
 if (BUILD_DD4HEP_PLUGIN)
@@ -21,14 +26,11 @@ endif()
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # print all available options
-if (DEFINED PRINT_OPTIONS)
-  # silence cmake
-  set (_print_options ${PRINT_OPTIONS})
-  # include options file
+if (PRINT_OPTIONS)
   include (cmake/PrintOptions.cmake)
   unset (PRINT_OPTIONS CACHE)
   return ()
-endif (DEFINED PRINT_OPTIONS)
+endif ()
 
 # include support for colored output
 include (cmake/Colors.cmake)
@@ -48,7 +50,7 @@ include (cmake/ACTSDependencies.cmake)
 # Configure CCache if available
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
-  message (STATUS "${Yellow}use ccache${ColorReset}")
+  message(STATUS "Use ccache")
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
 endif(CCACHE_FOUND)
@@ -58,9 +60,6 @@ set (CMAKE_MACOSX_RPATH 1)
 
 # convert the version into a plain number to be used in the version header file
 string (REPLACE "." "" ACTS_VERSION_NUMBER ${PROJECT_VERSION})
-
-# default parameter definitions
-set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "default track parameter definition")
 
 # finding boost on lxplus does not work with standard boost-cmake look up
 set (Boost_NO_BOOST_CMAKE ON CACHE BOOL "disable boost-cmake find mechanism")
