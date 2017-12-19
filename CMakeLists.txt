@@ -78,7 +78,7 @@ if (BUILD_TESTS OR BUILD_INTEGRATION_TESTS)
 endif ()
 add_component (Examples)
 add_subdirectory (Tests)
-add_subdirectory (IntegrationTests)
+add_subdirectory_if (IntegrationTests BUILD_INTEGRATION_TESTS)
 
 # documentation
 add_subdirectory_if (doc BUILD_DOC)
