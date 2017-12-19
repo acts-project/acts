@@ -50,13 +50,22 @@ class SurfaceArray
   template <class Point, size_t DIM>
   using AnyGrid_t = concept::AnyNDimGrid<SurfaceVector, Point, DIM>;
 
+  friend std::ostream&
+  operator<<(std::ostream& sl, const SurfaceArray& sa)
+  {
+    return sa.dump(sl);
+  }
+
 public:
   using AnySurfaceGridLookup_t = concept::AnySurfaceGridLookup<SurfaceVector>;
 
   /// @brief Lookup helper which encapsulates a @c Grid
-  template <size_t DIM, class... Axes>
+  /// @tparam Axes The axes used for the grid
+  template <class... Axes>
   struct SurfaceGridLookup
   {
+    static constexpr size_t DIM = sizeof...(Axes);
+
   public:
     /// @brief Specifies the local coordinate type.
     /// This resolves to @c ActsVector<DIM> for DIM > 1, else @c
@@ -87,6 +96,8 @@ public:
     ///
     /// This is done by iterating, accessing the binningPosition, lookup
     /// and append.
+    /// Also populates the neighbor map by combining the filled bins of
+    /// all bins around a given one
     ///
     /// @param surfaces Input surface pointers
     void
@@ -98,7 +109,6 @@ public:
       }
 
       // calculate neighbors for every bin and store in map
-      // auto             loc          = m_globalToLocal(pos);
       for (size_t i = 0; i < m_grid.size(); i++) {
         if (!isValidBin(i)) continue;
         typename Grid_t::index_t loc  = m_grid.getLocalBinIndices(i);
@@ -378,14 +388,6 @@ public:
     SurfaceVector m_element;
   };
 
-  // useful typedefs
-  template <class... Axes>
-  using SurfaceGridLookup1D = SurfaceGridLookup<1, Axes...>;
-  template <class... Axes>
-  using SurfaceGridLookup2D = SurfaceGridLookup<2, Axes...>;
-  template <class... Axes>
-  using SurfaceGridLookup3D = SurfaceGridLookup<3, Axes...>;
-
   /// @brief Default constructor which takes a @c SurfaceLookup and a vector of
   /// surfaces
   /// @param gridLookup The grid storage. @c SurfaceArray does not fill it on
@@ -516,23 +518,24 @@ public:
     auto axes = m_gridLookup.getAxes();
 
     for (size_t j = 0; j < axes.size(); ++j) {
-      // auto boundaries = axes.boundaries();
-      // std::cout << "axis is " << axis.isEquidistant() << std::endl;
       detail::AxisWrapping wrap = axes.at(j).getWrapping();
-      std::cout << " - axis " << (j + 1) << std::endl;
-      std::cout << " - wrapping: ";
-      if (wrap == detail::AxisWrapping::UnderOverflow)
-        std::cout << "under/overflow";
-      if (wrap == detail::AxisWrapping::Open) std::cout << "open";
-      if (wrap == detail::AxisWrapping::Closed) std::cout << "closed";
-      std::cout << std::endl;
-      std::cout << "   - bin edges: [ ";
+      sl << " - axis " << (j + 1) << std::endl;
+      sl << "   - wrapping: ";
+      if (wrap == detail::AxisWrapping::UnderOverflow) sl << "under/overflow";
+      if (wrap == detail::AxisWrapping::Open) sl << "open";
+      if (wrap == detail::AxisWrapping::Closed) sl << "closed";
+      sl << std::endl;
+      sl << "   - type: "
+         << (axes.at(j).isEquidistant() ? "equidistant" : "variable")
+         << std::endl;
+      sl << "   - n bins: " << axes.at(j).getNBins() << std::endl;
+      sl << "   - bin edges: [ ";
       auto binEdges = axes.at(j).getBinEdges();
       for (size_t i = 0; i < binEdges.size(); ++i) {
-        if (i > 0) std::cout << ", ";
-        std::cout << binEdges.at(i);
+        if (i > 0) sl << ", ";
+        sl << binEdges.at(i);
       }
-      std::cout << " ]" << std::endl;
+      sl << " ]" << std::endl;
     }
     return sl;
   }

@@ -176,7 +176,7 @@ namespace Test {
                       R * std::sin(loc[0] - angleShift),
                       loc[1]);
     };
-    SurfaceArray::SurfaceGridLookup2D<decltype(phiAxis), decltype(zAxis)> sl(
+    SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)> sl(
         transform,
         itransform,
         std::make_tuple(std::move(phiAxis), std::move(zAxis)));
