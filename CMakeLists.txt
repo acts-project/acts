@@ -81,9 +81,7 @@ add_subdirectory (Tests)
 add_subdirectory (IntegrationTests)
 
 # documentation
-if (BUILD_DOC)
-  add_subdirectory (doc)
-endif ()
+add_subdirectory_if (doc BUILD_DOC)
 
 print_components ()
 
