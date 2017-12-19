@@ -77,7 +77,7 @@ if (BUILD_TESTS OR BUILD_INTEGRATION_TESTS)
   include (CTest) # must be included from the main CMakeLists.txt
 endif ()
 add_component (Examples)
-add_subdirectory (Tests)
+add_subdirectory_if (Tests BUILD_TESTS)
 add_subdirectory_if (IntegrationTests BUILD_INTEGRATION_TESTS)
 
 # documentation

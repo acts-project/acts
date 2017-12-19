@@ -25,5 +25,3 @@ target_link_libraries (AtlasPropagatorBenchmark PRIVATE ${Boost_LIBRARIES})
 
 install (TARGETS AtlasStepperBenchmark EigenStepperBenchmark AtlasPropagatorBenchmark
 	     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/Profiling)
-
-
