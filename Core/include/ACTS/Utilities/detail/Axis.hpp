@@ -217,6 +217,7 @@ namespace detail {
     {
       const int w = getNBins();
       return 1 + (w + ((bin - 1) % w)) % w;
+      // return int(bin<1)*w - int(bin>w)*w + bin;
     }
 
     /// @brief get corresponding bin index for given coordinate
@@ -569,6 +570,7 @@ namespace detail {
     {
       const int w = getNBins();
       return 1 + (w + ((bin - 1) % w)) % w;
+      // return int(bin<1)*w - int(bin>w)*w + bin;
     }
 
     /// @brief get corresponding bin index for given coordinate

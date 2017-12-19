@@ -27,13 +27,6 @@ namespace Acts {
 
 namespace bte = boost::type_erasure;
 
-template <typename T, typename U>
-constexpr bool
-eqTypes()
-{
-  return std::is_same<T, U>::value;
-}
-
 using SurfaceVector = std::vector<const Surface*>;
 template <class... Axes>
 using SurfaceGrid = detail::Grid<SurfaceVector, Axes...>;
@@ -197,7 +190,6 @@ public:
     /// @brief Performs a lookup at @c pos, but returns neighbors as well
     ///
     /// @param pos Lookup position
-    /// @param size Optional number of neighbors, default is 1 (= next neighbor)
     /// @return @c SurfaceVector at given bin. Copy of all bins selected
     const SurfaceVector&
     neighbors(const Vector3D& pos) const
@@ -327,7 +319,6 @@ public:
 
     /// @brief Lookup, always returns @c element
     /// @param pos is ignored
-    /// @param size is ignored
     /// @return reference to vector containing only @c element
     const SurfaceVector&
     neighbors(const Vector3D&) const
