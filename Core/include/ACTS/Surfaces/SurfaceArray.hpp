@@ -189,14 +189,8 @@ public:
     /// @param pos Lookup position
     /// @param size Optional number of neighbors, default is 1 (= next neighbor)
     /// @return @c SurfaceVector at given bin. Copy of all bins selected
-    ///
-    /// @note The resulting SurfaceVectors for each bin will be merged. Sine @c
-    /// std::vector
-    ///       cannot store references, the source bin content vector entries
-    ///       have to be copied.
-    ///       This should be fine for the pointer value type used here.
     const SurfaceVector&
-    neighbors(const Vector3D& pos, size_t size = 1) const
+    neighbors(const Vector3D& pos) const
     {
       auto loc = m_globalToLocal(pos);
       return m_neighborMap.at(m_grid.getGlobalBinIndex(loc));
@@ -326,7 +320,7 @@ public:
     /// @param size is ignored
     /// @return reference to vector containing only @c element
     const SurfaceVector&
-    neighbors(const Vector3D&, size_t) const
+    neighbors(const Vector3D&) const
     {
       return m_element;
     }
@@ -454,9 +448,9 @@ public:
   ///       different bin content vectors have to be copied, so the resulting
   ///       vector contains copies.
   SurfaceVector
-  neighbors(const Vector3D& pos, size_t size = 1) const
+  neighbors(const Vector3D& pos) const
   {
-    return m_gridLookup.neighbors(pos, size);
+    return m_gridLookup.neighbors(pos);
   }
 
   /// @brief Get the size of the underlying grid structure including
