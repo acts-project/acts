@@ -72,6 +72,23 @@ namespace Test {
     }
 
     template <typename... Args>
+    SurfaceArrayCreator::ProtoAxis
+    createVariableAxis(Args&&... args)
+    {
+      return m_SAC.createVariableAxis(std::forward<Args>(args)...);
+    }
+
+    template <detail::AxisWrapping wrapA,
+              detail::AxisWrapping wrapB,
+              typename... Args>
+    SurfaceArray::AnySurfaceGridLookup_t
+    makeSurfaceGridLookup2D(Args&&... args)
+    {
+      return m_SAC.makeSurfaceGridLookup2D<wrapA, wrapB>(
+          std::forward<Args>(args)...);
+    }
+
+    template <typename... Args>
     void
     completeBinning(Args&&... args) const
     {
@@ -552,7 +569,7 @@ namespace Test {
       return Vector3D(R * std::cos(phi), R * std::sin(phi), loc[1]);
     };
 
-    SurfaceArray::SurfaceGridLookup2D<decltype(phiAxis), decltype(zAxis)> sl(
+    SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)> sl(
         globalToLocal,
         localToGlobal,
         std::make_tuple(std::move(phiAxis), std::move(zAxis)));
@@ -568,7 +585,7 @@ namespace Test {
       BOOST_TEST(srf == binContent.at(0));
     }
 
-    SurfaceArray::SurfaceGridLookup2D<decltype(phiAxis), decltype(zAxis)> sl2(
+    SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)> sl2(
         globalToLocal,
         localToGlobal,
         std::make_tuple(std::move(phiAxis), std::move(zAxis)));
@@ -592,13 +609,17 @@ namespace Test {
     auto brl    = barrel.first;
     draw_surfaces(brl, "SurfaceArrayCreator_barrelStagger.obj");
 
-    detail::EquidistantAxis phiAxis(-M_PI, M_PI, 30u);
-    detail::EquidistantAxis zAxis(-14, 14, 7u);
+    ProtoLayer pl(brl);
 
-    double      R  = 10.;
+    // EQUIDISTANT
     Transform3D tr = Transform3D::Identity();
-    tr.rotate(AngleAxis3D(2 * M_PI / 30. / 2., Vector3D::UnitZ()));
-    Transform3D itr    = tr.inverse();
+
+    auto pAxisPhi = createEquidistantAxis(brl, BinningValue::binPhi, pl, tr);
+    auto pAxisZ   = createEquidistantAxis(brl, BinningValue::binZ, pl, tr);
+
+    double      R   = 10.;
+    Transform3D itr = tr.inverse();
+
     auto globalToLocal = [tr](const Vector3D& pos) {
       Vector3D rot = tr * pos;
       return Vector2D(rot.phi(), rot.z());
@@ -607,12 +628,13 @@ namespace Test {
       return itr * Vector3D(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
     };
 
-    SurfaceArray::SurfaceGridLookup2D<decltype(phiAxis), decltype(zAxis)> sl(
-        globalToLocal,
-        localToGlobal,
-        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+    auto sl = makeSurfaceGridLookup2D<detail::AxisWrapping::Closed,
+                                      detail::AxisWrapping::Open>(
+        globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
+
     sl.fill(brl);
     SurfaceArray sa(sl, brl);
+    std::cout << sa << std::endl;
 
     for (const auto& pr : barrel.second) {
       auto A = pr.first;
@@ -628,9 +650,51 @@ namespace Test {
       std::set<const Surface*> exp;
       exp.insert(A);
       exp.insert(B);
+
+      BOOST_TEST(act == exp);
     }
 
-    // checkBinning should also report everything is fine
+    // VARIABLE
+    tr = Transform3D::Identity();
+
+    auto pAxisPhiVar = createVariableAxis(brl, BinningValue::binPhi, tr);
+    auto pAxisZVar   = createVariableAxis(brl, BinningValue::binZ, tr);
+
+    itr = tr.inverse();
+
+    auto globalToLocalVar = [tr](const Vector3D& pos) {
+      Vector3D rot = tr * pos;
+      return Vector2D(rot.phi(), rot.z());
+    };
+    auto localToGlobalVar = [R, itr](const Vector2D& loc) {
+      return itr * Vector3D(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
+    };
+
+    auto sl2 = makeSurfaceGridLookup2D<detail::AxisWrapping::Closed,
+                                       detail::AxisWrapping::Open>(
+        globalToLocalVar, localToGlobalVar, pAxisPhiVar, pAxisZVar);
+
+    sl2.fill(brl);
+    SurfaceArray sa2(sl2, brl);
+    std::cout << sa2 << std::endl;
+
+    for (const auto& pr : barrel.second) {
+      auto A = pr.first;
+      auto B = pr.second;
+
+      Vector3D ctr        = A->binningPosition(binR);
+      SrfVec   binContent = sa2.at(ctr);
+      BOOST_TEST(binContent.size() == 2);
+      std::set<const Surface*> act;
+      act.insert(binContent[0]);
+      act.insert(binContent[1]);
+
+      std::set<const Surface*> exp;
+      exp.insert(A);
+      exp.insert(B);
+
+      BOOST_TEST(act == exp);
+    }
   }
 
   BOOST_AUTO_TEST_SUITE_END();

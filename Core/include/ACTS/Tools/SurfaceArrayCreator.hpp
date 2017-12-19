@@ -206,7 +206,8 @@ public:
   {
 
     if (bValue == Acts::binPhi)
-      return (std::abs(a->center().phi() - b->center().phi()) < 10e-12);
+      return (std::abs(a->center().phi() - b->center().phi())
+              < M_PI * 1 / 180.);
 
     if (bValue == Acts::binZ)
       return (std::abs(a->center().z() - b->center().z()) < Acts::units::_um);
@@ -321,7 +322,7 @@ private:
 
       detail::Axis<detail::AxisType::Equidistant, wrapA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
       detail::Axis<detail::AxisType::Equidistant, wrapB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
-      return SurfaceArray::SurfaceGridLookup2D<decltype(axisA), decltype(axisB)>(globalToLocal,
+      return SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>(globalToLocal,
                                                                                  localToGlobal,
                                                                                  std::make_tuple(axisA, axisB));
 
@@ -329,15 +330,15 @@ private:
 
       detail::Axis<detail::AxisType::Equidistant, wrapA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
       detail::Axis<detail::AxisType::Variable, wrapB> axisB(pAxisB.binEdges);
-      return SurfaceArray::SurfaceGridLookup2D<decltype(axisA), decltype(axisB)>(globalToLocal,
+      return SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>(globalToLocal,
                                                                                  localToGlobal,
                                                                                  std::make_tuple(axisA, axisB));
-
+      
     } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
 
       detail::Axis<detail::AxisType::Variable, wrapA> axisA(pAxisA.binEdges);
       detail::Axis<detail::AxisType::Equidistant, wrapB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
-      return SurfaceArray::SurfaceGridLookup2D<decltype(axisA), decltype(axisB)>(globalToLocal,
+      return SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>(globalToLocal,
                                                                                  localToGlobal,
                                                                                  std::make_tuple(axisA, axisB));
 
@@ -345,7 +346,7 @@ private:
 
       detail::Axis<detail::AxisType::Variable, wrapA> axisA(pAxisA.binEdges);
       detail::Axis<detail::AxisType::Variable, wrapB> axisB(pAxisB.binEdges);
-      return SurfaceArray::SurfaceGridLookup2D<decltype(axisA), decltype(axisB)>(globalToLocal,
+      return SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>(globalToLocal,
                                                                                  localToGlobal,
                                                                                  std::make_tuple(axisA, axisB));
     }

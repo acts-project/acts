@@ -343,39 +343,6 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     // fill the key surfaces at the different phi positions
     std::unique_copy(begin(surf), end(surf), back_inserter(keys), matcher);
 
-    // the phi-center position of the previous surface
-    bool phiCorrected = false;
-
-    // get minimum and maximum
-    // the first boundary (minimum) and the last boundary (maximum) need to
-    // be calculated separately with the vertices of the first and last
-    // surface in the binning direction
-
-    // get the bounds of the first surfaces
-    const Acts::Surface*      frontSurface = keys.front();
-    const Acts::PlanarBounds* frontBounds
-        = dynamic_cast<const Acts::PlanarBounds*>(&(frontSurface->bounds()));
-    if (!frontBounds)
-      ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
-                 "other bounds yet! ");
-    // get the global vertices
-    std::vector<Acts::Vector3D> frontVertices
-        = makeGlobalVertices(*frontSurface, frontBounds->vertices());
-    double minBValue = std::min_element(frontVertices.begin(),
-                                        frontVertices.end(),
-                                        [](const Acts::Vector3D& a,
-                                           const Acts::Vector3D& b) {
-                                          return a.phi() < b.phi();
-                                        })
-                           ->phi();
-    // phi correction
-    if (frontSurface->center().phi() < minBValue) {
-      bValues.push_back(-M_PI);
-      bValues.push_back(M_PI);
-      phiCorrected = true;
-    }
-    bValues.push_back(minBValue);
-
     // get the bounds of the last surfaces
     const Acts::Surface*      backSurface = keys.back();
     const Acts::PlanarBounds* backBounds
@@ -383,32 +350,32 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     if (!backBounds)
       ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
                  "other bounds yet! ");
-    // get the global vertices
-    std::vector<Acts::Vector3D> backVertices
-        = makeGlobalVertices(*backSurface, backBounds->vertices());
-    double maxBValue = std::max_element(backVertices.begin(),
-                                        backVertices.end(),
-                                        [](const Acts::Vector3D& a,
-                                           const Acts::Vector3D& b) {
-                                          return a.phi() < b.phi();
-                                        })
-                           ->phi();
-    // phi correction
-    if (backSurface->center().phi() > maxBValue && !phiCorrected) {
-      bValues.push_back(M_PI);
-      bValues.push_back(-M_PI);
-    }
-    bValues.push_back(maxBValue);
 
-    double previous = frontSurface->center().phi();
+    double maxPhi
+        = 0.5 * (keys.at(0)->center().phi() + keys.at(1)->center().phi());
+
+    // create rotation, so that maxPhi is +pi
+    double angle = -(M_PI + maxPhi);
+    transform    = (transform)*AngleAxis3D(angle, Vector3D::UnitZ());
+
+    // iterate over all key surfaces, and use their mean position as bValues,
+    // but
+    // rotate using transform from before
+    double previous = keys.at(0)->center().phi();
     // go through key surfaces
-    for (auto surface = keys.begin(); surface != keys.end(); surface++) {
+    for (size_t i = 1; i < keys.size(); i++) {
+      const Surface* surface = keys.at(i);
       // create central binning values which is the mean of the center
       // positions in the binning direction of the current and previous
       // surface
-      bValues.push_back(0.5 * (previous + (*surface)->center().phi()));
-      previous = (*surface)->center().phi();
+      double edge = 0.5 * (previous + surface->center().phi()) + angle;
+      bValues.push_back(edge);
+      previous = surface->center().phi();
     }
+
+    bValues.push_back(M_PI);
+    ;
+
   } else if (bValue == Acts::binZ) {
     // copy the surface vector to a non constant vector
     std::vector<const Acts::Surface*> surf(surfaces);
@@ -552,12 +519,11 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     }
   }
   std::sort(bValues.begin(), bValues.end());
-  ACTS_VERBOSE("Create BinUtility for BinnedSurfaceArray with arbitrary "
-               "BinningType");
+  ACTS_VERBOSE("Create variable binning Axis for binned SurfaceArray");
   ACTS_VERBOSE("	BinningValue: " << bValue);
   ACTS_VERBOSE("	(binX = 0, binY = 1, binZ = 2, binR = 3, binPhi = 4, "
                "binRPhi = 5, binH = 6, binEta = 7)");
-  ACTS_VERBOSE("	Number of bins: " << bValues.size());
+  ACTS_VERBOSE("	Number of bins: " << (bValues.size() - 1));
 
   ProtoAxis pAxis;
   pAxis.bType    = arbitrary;
@@ -577,7 +543,7 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
 {
   if (!surfaces.size())
     throw std::logic_error(
-        "No surfaces handed over for creating equidistant bin utility!");
+        "No surfaces handed over for creating equidistant axis!");
   // check the binning type first
 
   double minimum = 0.;

@@ -198,7 +198,7 @@ namespace Test {
         = sa.neighbors(itransform(Vector2D(0, 0)));
     BOOST_TEST(neighbors.size() == 9);
 
-    SurfaceArray::SurfaceGridLookup2D<decltype(phiAxis), decltype(zAxis)> sl2(
+    SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)> sl2(
         transform,
         itransform,
         std::make_tuple(std::move(phiAxis), std::move(zAxis)));
