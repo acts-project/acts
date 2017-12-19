@@ -65,15 +65,27 @@ set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDe
 # finding boost on lxplus does not work with standard boost-cmake look up
 set (Boost_NO_BOOST_CMAKE ON CACHE BOOL "disable boost-cmake find mechanism")
 
-add_subdirectory (Core)
-add_subdirectory (doc)
-add_subdirectory (Plugins)
-add_subdirectory (Examples)
+# handles component registration
+include (cmake/ACTSComponentsHelpers.cmake)
 
-# add unit tests
-include (CTest)
+# core library and plugins
+add_component (Core)
+add_subdirectory (Plugins)
+
+# examples and tests
+if (BUILD_TESTS OR BUILD_INTEGRATION_TESTS)
+  include (CTest) # must be included from the main CMakeLists.txt
+endif ()
+add_component (Examples)
 add_subdirectory (Tests)
 add_subdirectory (IntegrationTests)
+
+# documentation
+if (BUILD_DOC)
+  add_subdirectory (doc)
+endif ()
+
+print_components ()
 
 # add version header
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/ACTSVersion.h.in ${CMAKE_CURRENT_BINARY_DIR}/ACTSVersion.h)
@@ -82,12 +94,6 @@ install (FILES ${CMAKE_CURRENT_BINARY_DIR}/ACTSVersion.h DESTINATION ${CMAKE_INS
 # add setup scripts
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/setup.sh.in ${CMAKE_CURRENT_BINARY_DIR}/setup.sh)
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/setup.sh DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-# list components which are going to be installed
-message (STATUS "going to install the following components:")
-foreach (_scomp ${_supported_components})
-  message (STATUS "   - ${_scomp}")
-endforeach ()
 
 # add CMake infrastructure
 include (cmake/ACTSCreateConfig.cmake)

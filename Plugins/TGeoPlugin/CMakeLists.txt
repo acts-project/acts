@@ -28,10 +28,6 @@ if (BUILD_TGEO_PLUGIN)
 
     install (DIRECTORY include/ACTS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-    # add to list of supported components
-    list (APPEND _supported_components TGeoPlugin)
-    set (_supported_components "${_supported_components}" PARENT_SCOPE)
-    
     # add to CDash TGeoPlugin subproject
     acts_add_targets_to_cdash_project(PROJECT TGeoPlugin TARGETS ACTSTGeoPlugin)
   # do not fail if ROOT is not available, just inform and continue

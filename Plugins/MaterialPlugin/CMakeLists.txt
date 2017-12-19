@@ -18,10 +18,6 @@ if (BUILD_MATERIAL_PLUGIN)
 
   install (DIRECTORY include/ACTS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-  # add to list of supported components
-  list (APPEND _supported_components MaterialPlugin)
-  set (_supported_components "${_supported_components}" PARENT_SCOPE)
-
   # add to CDash MaterialPlugin subproject
   acts_add_targets_to_cdash_project(PROJECT MaterialPlugin TARGETS ACTSMaterialPlugin)
 else (BUILD_MATERIAL_PLUGIN)
