@@ -19,6 +19,7 @@
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Tools/ILayerCreator.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
+#include "ACTS/Utilities/BinnedArrayXD.hpp"
 #include "ACTS/Utilities/Units.hpp"
 #include "DD4hep/Detector.h"
 #include "TGeoManager.h"
@@ -226,17 +227,37 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
             = std::make_unique<Acts::GenericApproachDescriptor<Acts::Surface>>(
                 aSurfaces);
       }
+      std::shared_ptr<Layer> negativeLayer = nullptr;
+      // In case the layer is sensitive
+      if (detElement.volume().isSensitive()) {
+        // Create the sensitive surface
+        auto sensitiveSurf = createSensitiveSurface(detElement, true);
+        // Create the surfaceArray
+        std::unique_ptr<Acts::SurfaceArray> sArray
+            = std::make_unique<BinnedArrayXD<const Surface*>>(sensitiveSurf);
+        // create the share disc bounds
+        auto   dBounds   = std::make_shared<const RadialBounds>(rMin, rMax);
+        double thickness = std::fabs(zMax - zMin);
+        // Create the layer containing the sensitive surface
+        negativeLayer = DiscLayer::create(transform,
+                                          dBounds,
+                                          std::move(sArray),
+                                          thickness,
+                                          std::move(approachDescriptor),
+                                          Acts::active);
 
-      auto negativeLayer
-          = m_cfg.layerCreator->discLayer(layerSurfaces,
-                                          zMin,
-                                          zMax,
-                                          rMin,
-                                          rMax,
-                                          m_cfg.bTypeR,
-                                          m_cfg.bTypePhi,
-                                          transform,
-                                          std::move(approachDescriptor));
+      } else {
+        negativeLayer
+            = m_cfg.layerCreator->discLayer(layerSurfaces,
+                                            zMin,
+                                            zMax,
+                                            rMin,
+                                            rMax,
+                                            m_cfg.bTypeR,
+                                            m_cfg.bTypePhi,
+                                            transform,
+                                            std::move(approachDescriptor));
+      }
 
       // get the possible material if no surfaces are handed over
       if (layerSurfaces.empty()) {
@@ -267,6 +288,7 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
       layers.push_back(negativeLayer);
     }
   }
+
   return layers;
 }
 
@@ -426,15 +448,38 @@ Acts::DD4hepLayerBuilder::centralLayers() const
                 aSurfaces);
       }
 
-      auto centralLayer
-          = m_cfg.layerCreator->cylinderLayer(layerSurfaces,
-                                              rMin,
-                                              rMax,
-                                              halfZ,
-                                              m_cfg.bTypePhi,
-                                              m_cfg.bTypeZ,
-                                              transform,
-                                              std::move(approachDescriptor));
+      std::shared_ptr<Layer> centralLayer = nullptr;
+      // In case the layer is sensitive
+      if (detElement.volume().isSensitive()) {
+        // Create the sensitive surface
+        auto sensitiveSurf = createSensitiveSurface(detElement);
+        // Create the surfaceArray
+        std::unique_ptr<Acts::SurfaceArray> sArray
+            = std::make_unique<BinnedArrayXD<const Surface*>>(sensitiveSurf);
+        // create the layer
+        double layerR    = (rMin + rMax) * 0.5;
+        double thickness = std::fabs(rMax - rMin);
+        std::shared_ptr<const CylinderBounds> cBounds(
+            new CylinderBounds(layerR, halfZ));
+        // Create the layer containing the sensitive surface
+        centralLayer = CylinderLayer::create(transform,
+                                             cBounds,
+                                             std::move(sArray),
+                                             thickness,
+                                             std::move(approachDescriptor),
+                                             Acts::active);
+
+      } else {
+        centralLayer
+            = m_cfg.layerCreator->cylinderLayer(layerSurfaces,
+                                                rMin,
+                                                rMax,
+                                                halfZ,
+                                                m_cfg.bTypePhi,
+                                                m_cfg.bTypeZ,
+                                                transform,
+                                                std::move(approachDescriptor));
+      }
 
       // get the possible material if no surfaces are handed over
       if (layerSurfaces.empty()) {
@@ -650,16 +695,37 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
                 aSurfaces);
       }
 
-      auto positiveLayer
-          = m_cfg.layerCreator->discLayer(layerSurfaces,
-                                          zMin,
-                                          zMax,
-                                          rMin,
-                                          rMax,
-                                          m_cfg.bTypeR,
-                                          m_cfg.bTypePhi,
-                                          transform,
-                                          std::move(approachDescriptor));
+      std::shared_ptr<Layer> positiveLayer = nullptr;
+      // In case the layer is sensitive
+      if (detElement.volume().isSensitive()) {
+        // Create the sensitive surface
+        auto sensitiveSurf = createSensitiveSurface(detElement, true);
+        // Create the surfaceArray
+        std::unique_ptr<Acts::SurfaceArray> sArray
+            = std::make_unique<BinnedArrayXD<const Surface*>>(sensitiveSurf);
+        // create the share disc bounds
+        auto   dBounds   = std::make_shared<const RadialBounds>(rMin, rMax);
+        double thickness = std::fabs(zMax - zMin);
+        // Create the layer containing the sensitive surface
+        positiveLayer = DiscLayer::create(transform,
+                                          dBounds,
+                                          std::move(sArray),
+                                          thickness,
+                                          std::move(approachDescriptor),
+                                          Acts::active);
+
+      } else {
+        positiveLayer
+            = m_cfg.layerCreator->discLayer(layerSurfaces,
+                                            zMin,
+                                            zMax,
+                                            rMin,
+                                            rMax,
+                                            m_cfg.bTypeR,
+                                            m_cfg.bTypePhi,
+                                            transform,
+                                            std::move(approachDescriptor));
+      }
 
       // get the possible material if no surfaces are handed over
       if (layerSurfaces.empty()) {
@@ -705,33 +771,46 @@ Acts::DD4hepLayerBuilder::collectSensitive(
     for (auto& child : children) {
       dd4hep::DetElement childDetElement = child.second;
       if (childDetElement.volume().isSensitive()) {
-        // access the possibly shared DigitizationModule
-        std::shared_ptr<const Acts::SurfaceMaterial> material     = nullptr;
-        std::shared_ptr<const DigitizationModule>    digiModule   = nullptr;
-        Acts::IActsExtension*                        detExtension = nullptr;
-        try {
-          detExtension = childDetElement.extension<Acts::IActsExtension>();
-        } catch (std::runtime_error& e) {
-        }
-        if (detExtension) {
-          material   = detExtension->material();
-          digiModule = detExtension->digitizationModule();
-        }
-
-        // create the corresponding detector element
-        Acts::DD4hepDetElement* dd4hepDetElement
-            = new Acts::DD4hepDetElement(childDetElement,
-                                         axes,
-                                         units::_cm,
-                                         material,
-                                         m_cfg.buildDigitizationModules,
-                                         digiModule);
-        // add surface to surface vector
-        surfaces.push_back(&(dd4hepDetElement->surface()));
+        // create the surface
+        surfaces.push_back(
+            createSensitiveSurface(childDetElement, false, axes));
       }
       collectSensitive(childDetElement, surfaces, axes);
     }
   }
+}
+const Acts::Surface*
+Acts::DD4hepLayerBuilder::createSensitiveSurface(
+    const dd4hep::DetElement& detElement,
+    bool                      isDisc,
+    const std::string&        axes) const
+{
+  // access the possible material
+  std::shared_ptr<const Acts::SurfaceMaterial> material = nullptr;
+  // access the possibly shared DigitizationModule
+  std::shared_ptr<const DigitizationModule> digiModule = nullptr;
+  // flag indicating if the volume should be translated into a disc surface
+  Acts::IActsExtension* detExtension = nullptr;
+  try {
+    detExtension = detElement.extension<Acts::IActsExtension>();
+  } catch (std::runtime_error& e) {
+  }
+  if (detExtension) {
+    material   = detExtension->material();
+    digiModule = detExtension->digitizationModule();
+  }
+
+  // create the corresponding detector element
+  Acts::DD4hepDetElement* dd4hepDetElement
+      = new Acts::DD4hepDetElement(detElement,
+                                   axes,
+                                   units::_cm,
+                                   isDisc,
+                                   material,
+                                   m_cfg.buildDigitizationModules,
+                                   digiModule);
+  // return the surface
+  return (&(dd4hepDetElement->surface()));
 }
 
 std::shared_ptr<const Acts::Transform3D>

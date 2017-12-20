@@ -140,7 +140,13 @@ private:
                    std::vector<const Acts::Surface*>& surfaces,
                    const std::string&                 axes = "XYZ") const;
 
-  // Private helper function to convert the TGeo transformation matrix into a
+  const Acts::Surface*
+  createSensitiveSurface(const dd4hep::DetElement& detElement,
+                         bool                      isDisc = false,
+                         const std::string&        axes   = "XYZ") const;
+
+  // Private helper function to convert the TGeo transformation matrix into
+  // a
   // ACTS transformation matrix
   /// @param tGeoTrans TGeo transformation matrix which should be converted
   std::shared_ptr<const Acts::Transform3D>
