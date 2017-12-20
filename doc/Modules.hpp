@@ -328,7 +328,7 @@
 /// 	  default)
 /// 	- \b layers when containing sensitive material and/or the layer should
 /// carry
-/// 	  material (which will be mapped on the layer if indicated)
+/// 	  material (which will be mapped on the layer if indicated), or the layer is sensitive itself
 ///       @note the layer does not need to be a direct child of the volume (barrel or endcap), it can be nested in substructures
 ///
 ///	    - sensitive detector modules
@@ -362,6 +362,11 @@
 /// Summing up the \a DetElement tree in \a %DD4hep should have the following
 /// structure:
 /// \image html DD4hepPlugin_DetElementStructure.jpg
+///
+/// It is also possible to translate a very simple detector geometry, which just
+/// consists of cylindrical (for a barrel) or disc (for endcaps) layers which
+/// either have material, or, are declared sensitive in dd4hep themselves
+/// without containing any detector modules.
 ///
 /// <B>Usage</B>
 ///
