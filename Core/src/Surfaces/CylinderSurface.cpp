@@ -50,6 +50,16 @@ Acts::CylinderSurface::CylinderSurface(
 }
 
 Acts::CylinderSurface::CylinderSurface(
+    std::shared_ptr<const CylinderBounds> cbounds,
+    const Acts::DetectorElementBase&      detelement,
+    const Identifier&                     identifier)
+  : Surface(detelement, identifier), m_bounds(cbounds)
+{
+  /// surfaces representing a detector element must have bounds
+  assert(cbounds);
+}
+
+Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const Transform3D>    htrans,
     std::shared_ptr<const CylinderBounds> cbounds)
   : Surface(htrans), m_bounds(cbounds)
