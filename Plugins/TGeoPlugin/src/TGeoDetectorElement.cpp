@@ -74,9 +74,9 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
       = dynamic_cast<TGeoTubeSeg*>(m_detElement->GetVolume()->GetShape());
   if (tube) {
     m_transform  = std::make_shared<const Transform3D>(colX, colY, colZ, colT);
-    double rMin  = tube->GetRmin();
-    double rMax  = tube->GetRmax();
-    double halfZ = tube->GetDz();
+    double rMin  = tube->GetRmin() * scalor;
+    double rMax  = tube->GetRmax() * scalor;
+    double halfZ = tube->GetDz() * scalor;
 
     if (isDisc) {
       // create disc surface
@@ -385,9 +385,9 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
       = dynamic_cast<TGeoTubeSeg*>(m_detElement->GetVolume()->GetShape());
   if (tube) {
     m_transform  = std::make_shared<const Transform3D>(colX, colY, colZ, colT);
-    double rMin  = tube->GetRmin();
-    double rMax  = tube->GetRmax();
-    double halfZ = tube->GetDz();
+    double rMin  = tube->GetRmin() * scalor;
+    double rMax  = tube->GetRmax() * scalor;
+    double halfZ = tube->GetDz() * scalor;
 
     if (isDisc) {
       // create disc surface
