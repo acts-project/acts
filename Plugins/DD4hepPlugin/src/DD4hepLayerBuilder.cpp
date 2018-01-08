@@ -260,30 +260,25 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
       }
 
       // get the possible material if no surfaces are handed over
-      if (layerSurfaces.empty()) {
-        std::shared_ptr<const HomogeneousSurfaceMaterial> surfMaterial
-            = nullptr;
+      std::shared_ptr<const HomogeneousSurfaceMaterial> surfMaterial = nullptr;
 
-        dd4hep::Material ddmaterial = detElement.volume().material();
-        if (!boost::iequals(ddmaterial.name(), "vacuum")) {
-          Material layerMaterial(ddmaterial.radLength() * Acts::units::_cm,
-                                 ddmaterial.intLength() * Acts::units::_cm,
-                                 ddmaterial.A(),
-                                 ddmaterial.Z(),
-                                 ddmaterial.density()
-                                     / pow(Acts::units::_cm, 3));
+      dd4hep::Material ddmaterial = detElement.volume().material();
+      if (!boost::iequals(ddmaterial.name(), "vacuum")) {
+        Material layerMaterial(ddmaterial.radLength() * Acts::units::_cm,
+                               ddmaterial.intLength() * Acts::units::_cm,
+                               ddmaterial.A(),
+                               ddmaterial.Z(),
+                               ddmaterial.density() / pow(Acts::units::_cm, 3));
 
-          MaterialProperties materialProperties(layerMaterial,
-                                                fabs(rMax - rMin));
+        MaterialProperties materialProperties(layerMaterial, fabs(rMax - rMin));
 
-          surfMaterial = std::make_shared<const HomogeneousSurfaceMaterial>(
-              materialProperties);
+        surfMaterial = std::make_shared<const HomogeneousSurfaceMaterial>(
+            materialProperties);
 
-          //   innerBoundary->setAssociatedMaterial(surfMaterial);
-        }
-        negativeLayer->surfaceRepresentation().setAssociatedMaterial(
-            surfMaterial);
+        //   innerBoundary->setAssociatedMaterial(surfMaterial);
       }
+      negativeLayer->surfaceRepresentation().setAssociatedMaterial(
+          surfMaterial);
       // push back created layer
       layers.push_back(negativeLayer);
     }
@@ -482,30 +477,24 @@ Acts::DD4hepLayerBuilder::centralLayers() const
       }
 
       // get the possible material if no surfaces are handed over
-      if (layerSurfaces.empty()) {
-        std::shared_ptr<const HomogeneousSurfaceMaterial> surfMaterial
-            = nullptr;
+      std::shared_ptr<const HomogeneousSurfaceMaterial> surfMaterial = nullptr;
 
-        dd4hep::Material ddmaterial = detElement.volume().material();
-        if (!boost::iequals(ddmaterial.name(), "vacuum")) {
-          Material layerMaterial(ddmaterial.radLength() * Acts::units::_cm,
-                                 ddmaterial.intLength() * Acts::units::_cm,
-                                 ddmaterial.A(),
-                                 ddmaterial.Z(),
-                                 ddmaterial.density()
-                                     / pow(Acts::units::_cm, 3));
+      dd4hep::Material ddmaterial = detElement.volume().material();
+      if (!boost::iequals(ddmaterial.name(), "vacuum")) {
+        Material layerMaterial(ddmaterial.radLength() * Acts::units::_cm,
+                               ddmaterial.intLength() * Acts::units::_cm,
+                               ddmaterial.A(),
+                               ddmaterial.Z(),
+                               ddmaterial.density() / pow(Acts::units::_cm, 3));
 
-          MaterialProperties materialProperties(layerMaterial,
-                                                fabs(rMax - rMin));
+        MaterialProperties materialProperties(layerMaterial, fabs(rMax - rMin));
 
-          surfMaterial = std::make_shared<const HomogeneousSurfaceMaterial>(
-              materialProperties);
+        surfMaterial = std::make_shared<const HomogeneousSurfaceMaterial>(
+            materialProperties);
 
-          //   innerBoundary->setAssociatedMaterial(surfMaterial);
-        }
-        centralLayer->surfaceRepresentation().setAssociatedMaterial(
-            surfMaterial);
+        //   innerBoundary->setAssociatedMaterial(surfMaterial);
       }
+      centralLayer->surfaceRepresentation().setAssociatedMaterial(surfMaterial);
 
       // push back created layer
       layers.push_back(centralLayer);
@@ -728,30 +717,25 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
       }
 
       // get the possible material if no surfaces are handed over
-      if (layerSurfaces.empty()) {
-        std::shared_ptr<const HomogeneousSurfaceMaterial> surfMaterial
-            = nullptr;
+      std::shared_ptr<const HomogeneousSurfaceMaterial> surfMaterial = nullptr;
 
-        dd4hep::Material ddmaterial = detElement.volume().material();
-        if (!boost::iequals(ddmaterial.name(), "vacuum")) {
-          Material layerMaterial(ddmaterial.radLength() * Acts::units::_cm,
-                                 ddmaterial.intLength() * Acts::units::_cm,
-                                 ddmaterial.A(),
-                                 ddmaterial.Z(),
-                                 ddmaterial.density()
-                                     / pow(Acts::units::_cm, 3));
+      dd4hep::Material ddmaterial = detElement.volume().material();
+      if (!boost::iequals(ddmaterial.name(), "vacuum")) {
+        Material layerMaterial(ddmaterial.radLength() * Acts::units::_cm,
+                               ddmaterial.intLength() * Acts::units::_cm,
+                               ddmaterial.A(),
+                               ddmaterial.Z(),
+                               ddmaterial.density() / pow(Acts::units::_cm, 3));
 
-          MaterialProperties materialProperties(layerMaterial,
-                                                fabs(rMax - rMin));
+        MaterialProperties materialProperties(layerMaterial, fabs(rMax - rMin));
 
-          surfMaterial = std::make_shared<const HomogeneousSurfaceMaterial>(
-              materialProperties);
+        surfMaterial = std::make_shared<const HomogeneousSurfaceMaterial>(
+            materialProperties);
 
-          //   innerBoundary->setAssociatedMaterial(surfMaterial);
-        }
-        positiveLayer->surfaceRepresentation().setAssociatedMaterial(
-            surfMaterial);
+        //   innerBoundary->setAssociatedMaterial(surfMaterial);
       }
+      positiveLayer->surfaceRepresentation().setAssociatedMaterial(
+          surfMaterial);
 
       // push back created layer
       layers.push_back(positiveLayer);
