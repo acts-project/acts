@@ -16,7 +16,6 @@ option (BUILD_INTEGRATION_TESTS "Build integration tests" OFF)
 option (BUILD_DD4HEP_PLUGIN "Build DD4HEP plugins" OFF)
 option (BUILD_MATERIAL_PLUGIN "Build Material plugins" ON)
 option (BUILD_TGEO_PLUGIN "Build TGeo plugins" OFF)
-option (PRINT_OPTIONS "Print all available options" OFF)
 option (SUPPRESS_LIBRARY_WARNINGS "Suppress warnings from Eigen and Boost libraries" OFF)
 # all other compile-time parameters must be defined here for clear visibility
 # and to avoid forgotten options somewhere deep in the hierarchy
@@ -31,13 +30,6 @@ endif()
 
 find_package (Boost 1.62 REQUIRED)
 find_package (Eigen 3.2.9 REQUIRED)
-
-# print all available options
-if (PRINT_OPTIONS)
-  include (cmake/PrintOptions.cmake)
-  unset (PRINT_OPTIONS CACHE)
-  return ()
-endif ()
 
 # Use GNU-style hierarchy for installing build products
 include (GNUInstallDirs)
