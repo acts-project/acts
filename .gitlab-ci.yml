@@ -9,6 +9,7 @@ stages:
 variables:
     CMAKE_ARGS: -GNinja -DBUILD_DD4HEP_PLUGIN=on -DBUILD_MATERIAL_PLUGIN=on -DBUILD_TGEO_PLUGIN=on -DBUILD_INTEGRATION_TESTS=on -DSUPPRESS_LIBRARY_WARNINGS=on
     DEFAULT_BUILDDIR: build_slc6_gcc
+    CMAKE_BUILD_CMD: ninja -j2
 
 before_script:
     # CI executor uses fail on error by default
@@ -22,7 +23,7 @@ build_slc6_gcc:
         - mkdir build_slc6_gcc
         - cd build_slc6_gcc
         - CXX=g++ cmake ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Debug ..
-        - cmake --build .
+        - ${CMAKE_BUILD_CMD}
         - find . -name "*.o" -delete
     artifacts:
         paths:
@@ -55,7 +56,7 @@ build_slc6_llvm40:
         - mkdir build_slc6_llvm40
         - cd build_slc6_llvm40
         - CXX=clang++ cmake ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Release ..
-        - cmake --build .
+        - ${CMAKE_BUILD_CMD}
         - find . -name "*.o" -delete
     artifacts:
         paths:
@@ -86,7 +87,7 @@ build_cc7_gcc:
         - mkdir build_cc7_gcc
         - cd build_cc7_gcc
         - CXX=g++ cmake ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Release ..
-        - cmake --build .
+        - ${CMAKE_BUILD_CMD}
         - find . -name "*.o" -delete
     artifacts:
         paths:
@@ -118,7 +119,7 @@ build_cc7_llvm40:
         - mkdir build_cc7_llvm40
         - cd build_cc7_llvm40
         - CXX=clang++ cmake ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Release ..
-        - cmake --build .
+        - ${CMAKE_BUILD_CMD}
         - find . -name "*.o" -delete
     artifacts:
         paths:
