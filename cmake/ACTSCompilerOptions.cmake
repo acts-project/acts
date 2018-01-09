@@ -19,3 +19,14 @@ set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${ACTS_CXX_FLAGS_RELWITHDEBINFO}")
 # assign to linker flags
 set (CMAKE_EXE_LINKER_FLAGS_DEBUG "${ACTS_EXE_LINKER_FLAGS_DEBUG}")
 set (CMAKE_SHARED_LINKER_FLAGS_DEBUG "${ACTS_SHARED_LINKER_FLAGS_DEBUG}")
+
+# silence warning about missing RPATH on Mac OSX
+set (CMAKE_MACOSX_RPATH 1)
+
+# Use CCache if available
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+  message(STATUS "Use ccache")
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+endif(CCACHE_FOUND)

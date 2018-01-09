@@ -37,17 +37,6 @@ include (ACTSCompilerOptions) # default compile options
 include (ACTSFunctions) # ACTS-specific helper functions
 include (ACTSComponentsHelpers) # handle components via add_..._if commands
 
-# Configure CCache if available
-find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
-  message(STATUS "Use ccache")
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-endif(CCACHE_FOUND)
-
-# silence warning about missing RPATH on Mac OSX
-set (CMAKE_MACOSX_RPATH 1)
-
 # convert the version into a plain number to be used in the version header file
 string (REPLACE "." "" ACTS_VERSION_NUMBER ${PROJECT_VERSION})
 
