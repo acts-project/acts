@@ -2,6 +2,10 @@ cmake_minimum_required (VERSION 3.5)
 
 project (ACTS VERSION 0.6.0 LANGUAGES CXX)
 
+list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+# build options
+
 # all options must be defined here to keep the list directly visible and
 # make the option variables available everywhere
 option (ACTS_FIND_QUIET "Find external packages quietly" OFF)
@@ -16,14 +20,17 @@ option (PRINT_OPTIONS "Print all available options" OFF)
 option (SUPPRESS_LIBRARY_WARNINGS "Suppress warnings from Eigen and Boost libraries" OFF)
 # all other compile-time parameters must be defined here for clear visibility
 # and to avoid forgotten options somewhere deep in the hierarchy
-set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "default track parameter definition")
+set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "Default track parameter definition")
 
 # handle inter-plugin dependencies
 if (BUILD_DD4HEP_PLUGIN)
   set (BUILD_TGEO_PLUGIN ON)
 endif()
 
-list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+# required packages
+
+find_package (Boost 1.62 REQUIRED)
+find_package (Eigen 3.2.9 REQUIRED)
 
 # print all available options
 if (PRINT_OPTIONS)

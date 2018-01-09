@@ -1,4 +1,5 @@
-find_package (Boost ${ACTS_BOOST_VERSION} REQUIRED)
+# should reuse version defined in main CMakeLists.txt
+find_package (Boost REQUIRED COMPONENTS unit_test_framework)
 find_package (PythonInterp 2 EXACT REQUIRED)
 
 add_subdirectory (Detector)

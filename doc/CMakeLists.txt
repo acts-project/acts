@@ -1,4 +1,4 @@
-find_package (Doxygen ${ACTS_DOXYGEN_VERSION} ${ACTS_FIND_QUIET_TEXT} REQUIRED)
+find_package (Doxygen 1.8.11 ${ACTS_FIND_QUIET_TEXT} REQUIRED)
 
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/doxygen.config.in ${CMAKE_CURRENT_BINARY_DIR}/doxygen.config @ONLY)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/figures/ACTSlogo.gif ${CMAKE_CURRENT_BINARY_DIR}/ACTSlogo.gif COPYONLY)
