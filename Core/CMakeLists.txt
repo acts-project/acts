@@ -23,4 +23,11 @@ install (DIRECTORY include/ACTS
          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
          COMPONENT Core)
 
+# generate version header and make it available to the build
+configure_file(ACTSVersion.h.in ${CMAKE_CURRENT_BINARY_DIR}/ACTS/ACTSVersion.h)
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/ACTS/ACTSVersion.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ACTS)
+target_include_directories(ACTSCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
+
 acts_add_targets_to_cdash_project(PROJECT ACore TARGETS ACTSCore)

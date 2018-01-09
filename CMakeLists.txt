@@ -37,14 +37,13 @@ include (ACTSCompilerOptions) # default compile options
 include (ACTSFunctions) # ACTS-specific helper functions
 include (ACTSComponentsHelpers) # handle components via add_..._if commands
 
-# convert the version into a plain number to be used in the version header file
-string (REPLACE "." "" ACTS_VERSION_NUMBER ${PROJECT_VERSION})
-
 # core library and plugins
+
 add_component (Core)
 add_subdirectory (Plugins)
 
 # examples and tests
+
 if (BUILD_TESTS OR BUILD_INTEGRATION_TESTS)
   include (CTest) # must be included from the main CMakeLists.txt
 endif ()
@@ -53,15 +52,11 @@ add_subdirectory_if (Tests BUILD_TESTS)
 add_subdirectory_if (IntegrationTests BUILD_INTEGRATION_TESTS)
 
 # documentation
+
 add_subdirectory_if (doc BUILD_DOC)
 
-# add version header
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/ACTSVersion.h.in ${CMAKE_CURRENT_BINARY_DIR}/ACTSVersion.h)
-install (FILES ${CMAKE_CURRENT_BINARY_DIR}/ACTSVersion.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ACTS)
+# setup script and cmake configuration files
 
-# add setup scripts
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/setup.sh.in ${CMAKE_CURRENT_BINARY_DIR}/setup.sh)
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/setup.sh DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-# add CMake infrastructure
 include (ACTSCreateConfig)
