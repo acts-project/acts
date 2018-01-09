@@ -24,7 +24,9 @@ install (DIRECTORY include/ACTS
          COMPONENT Core)
 
 # generate version header and make it available to the build
-configure_file(ACTSVersion.h.in ${CMAKE_CURRENT_BINARY_DIR}/ACTS/ACTSVersion.h)
+configure_file(
+  ACTSVersion.hpp.in
+  ${CMAKE_CURRENT_BINARY_DIR}/ACTS/ACTSVersion.hpp)
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/ACTS/ACTSVersion.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ACTS)
