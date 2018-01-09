@@ -30,14 +30,12 @@ endif()
 find_package (Boost 1.62 REQUIRED)
 find_package (Eigen 3.2.9 REQUIRED)
 
-# Use GNU-style hierarchy for installing build products
-include (GNUInstallDirs)
+# additional configuration and tools
 
-# include ACTS specific compilation options
-include (cmake/ACTSCompilerOptions.cmake)
-
-# include ACTS specific macros
-include (cmake/ACTSFunctions.cmake)
+include (GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
+include (ACTSCompilerOptions) # default compile options
+include (ACTSFunctions) # ACTS-specific helper functions
+include (ACTSComponentsHelpers) # handle components via add_..._if commands
 
 # Configure CCache if available
 find_program(CCACHE_FOUND ccache)
@@ -55,9 +53,6 @@ string (REPLACE "." "" ACTS_VERSION_NUMBER ${PROJECT_VERSION})
 
 # finding boost on lxplus does not work with standard boost-cmake look up
 set (Boost_NO_BOOST_CMAKE ON CACHE BOOL "disable boost-cmake find mechanism")
-
-# handles component registration
-include (cmake/ACTSComponentsHelpers.cmake)
 
 # core library and plugins
 add_component (Core)
@@ -83,4 +78,4 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/setup.sh.in ${CMAKE_CURRENT_BINARY_D
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/setup.sh DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # add CMake infrastructure
-include (cmake/ACTSCreateConfig.cmake)
+include (ACTSCreateConfig)
