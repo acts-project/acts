@@ -41,14 +41,6 @@ macro(propagate_components_to_parent)
   set(_supported_components "${_supported_components}" PARENT_SCOPE)
 endmacro()
 
-# print a list of components that
-macro(print_components)
-  message(STATUS "The following components are being build:")
-  foreach(comp ${_supported_components})
-    message(STATUS "  ${comp}")
-  endforeach()
-endmacro()
-
 # add an optional subdirectory that is **not** registered as a component
 function(add_subdirectory_if path)
   file(RELATIVE_PATH _rel ${PROJECT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/${path}")

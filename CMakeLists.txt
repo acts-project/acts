@@ -86,8 +86,6 @@ add_subdirectory_if (IntegrationTests BUILD_INTEGRATION_TESTS)
 # documentation
 add_subdirectory_if (doc BUILD_DOC)
 
-print_components ()
-
 # add version header
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/ACTSVersion.h.in ${CMAKE_CURRENT_BINARY_DIR}/ACTSVersion.h)
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/ACTSVersion.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ACTS)
