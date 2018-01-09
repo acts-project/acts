@@ -51,9 +51,6 @@ set (CMAKE_MACOSX_RPATH 1)
 # convert the version into a plain number to be used in the version header file
 string (REPLACE "." "" ACTS_VERSION_NUMBER ${PROJECT_VERSION})
 
-# finding boost on lxplus does not work with standard boost-cmake look up
-set (Boost_NO_BOOST_CMAKE ON CACHE BOOL "disable boost-cmake find mechanism")
-
 # core library and plugins
 add_component (Core)
 add_subdirectory (Plugins)
