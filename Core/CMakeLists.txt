@@ -23,5 +23,4 @@ install (DIRECTORY include/ACTS
          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
          COMPONENT Core)
 
-# add to CDash ACore subproject
 acts_add_targets_to_cdash_project(PROJECT ACore TARGETS ACTSCore)

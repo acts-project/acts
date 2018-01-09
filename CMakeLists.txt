@@ -8,7 +8,6 @@ list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # all options must be defined here to keep the list directly visible and
 # make the option variables available everywhere
-option (ACTS_FIND_QUIET "Find external packages quietly" OFF)
 option (BUILD_DOC "Build documentation" OFF)
 option (BUILD_EXAMPLES "Build examples" ON)
 option (BUILD_TESTS "Build unit tests" ON)
@@ -39,9 +38,6 @@ include (cmake/ACTSCompilerOptions.cmake)
 
 # include ACTS specific macros
 include (cmake/ACTSFunctions.cmake)
-
-# include versions for dependencies of ACTS
-include (cmake/ACTSDependencies.cmake)
 
 # Configure CCache if available
 find_program(CCACHE_FOUND ccache)
