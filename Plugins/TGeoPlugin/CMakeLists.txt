@@ -1,4 +1,4 @@
-find_package (ROOT 6.08 REQUIRED COMPONENTS Geom)
+find_package(ROOT 6.10 REQUIRED COMPONENTS Geom)
 
 file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 

@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.5)
+cmake_minimum_required(VERSION 3.7)
 
 project (ACTS VERSION 0.6.0 LANGUAGES CXX)
 
@@ -26,8 +26,8 @@ endif()
 
 # required packages
 
-find_package (Boost 1.62 REQUIRED)
-find_package (Eigen 3.2.9 REQUIRED)
+find_package(Boost 1.64 REQUIRED)
+find_package(Eigen 3.2.9 REQUIRED)
 
 # additional configuration and tools
 

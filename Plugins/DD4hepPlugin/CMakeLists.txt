@@ -1,4 +1,4 @@
-find_package (DD4hep 1.1 REQUIRED COMPONENTS DDCore DDSegmentation)
+find_package(DD4hep 1.2 REQUIRED COMPONENTS DDCore DDSegmentation)
 
 file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 
