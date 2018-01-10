@@ -15,7 +15,6 @@ option (BUILD_INTEGRATION_TESTS "Build integration tests" OFF)
 option (BUILD_DD4HEP_PLUGIN "Build DD4HEP plugins" OFF)
 option (BUILD_MATERIAL_PLUGIN "Build Material plugins" ON)
 option (BUILD_TGEO_PLUGIN "Build TGeo plugins" OFF)
-option (SUPPRESS_LIBRARY_WARNINGS "Suppress warnings from Eigen and Boost libraries" OFF)
 # all other compile-time parameters must be defined here for clear visibility
 # and to avoid forgotten options somewhere deep in the hierarchy
 set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "Default track parameter definition")

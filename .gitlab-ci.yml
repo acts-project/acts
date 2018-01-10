@@ -7,9 +7,9 @@ stages:
     - deploy
 
 variables:
-    CMAKE_ARGS: -GNinja -DBUILD_DD4HEP_PLUGIN=on -DBUILD_MATERIAL_PLUGIN=on -DBUILD_TGEO_PLUGIN=on -DBUILD_INTEGRATION_TESTS=on -DSUPPRESS_LIBRARY_WARNINGS=on
-    DEFAULT_BUILDDIR: build_slc6_gcc
+    CMAKE_ARGS: -GNinja -DBUILD_DD4HEP_PLUGIN=on -DBUILD_MATERIAL_PLUGIN=on -DBUILD_TGEO_PLUGIN=on -DBUILD_INTEGRATION_TESTS=on
     CMAKE_BUILD_CMD: ninja -j2
+    DEFAULT_BUILDDIR: build_slc6_gcc
 
 before_script:
     # CI executor uses fail on error by default
@@ -196,4 +196,4 @@ deploy_to_website:
        - echo "$ATSJENKINS_PASSWORD" | kinit atsjenkins@CERN.CH 2>&1 >/dev/null
        - CI/deploy_tag . build/doc/html "acts-developers@cern.ch acts-users@cern.ch"
     only:
-       - tags 
+       - tags
