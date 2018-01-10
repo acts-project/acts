@@ -84,6 +84,25 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
                       double             layerEnvelopeZ = 1. * Acts::units::_mm,
                       bool               buildDigitizationModules = false);
 
+/// Method internally used by convertDD4hepDetector to collect all sub detectors
+/// @param [in] detElement the dd4hep::DetElement of the volume of which the sub
+/// detectors should be collected
+/// @param [out] subdetectors the DD4hep::DetElements of the sub detectors
+/// contained by detElement
+void
+collectSubDetectors(dd4hep::DetElement&              detElement,
+                    std::vector<dd4hep::DetElement>& subdetectors);
+
+/// Method internally used by convertDD4hepDetector to collect all volumes of a
+/// compound detector
+/// @param [in] detElement the dd4hep::DetElement of the volume of which the
+/// compounds should be collected
+/// @param [out] compounds the DD4hep::DetElements of the compounds contained by
+/// detElement
+void
+collectCompounds(dd4hep::DetElement&              detElement,
+                 std::vector<dd4hep::DetElement>& compounds);
+
 /// Method internally used by convertDD4hepDetector
 /// @param [in] detElement the dd4hep::DetElement of the volume of which the
 /// layers should be collected
