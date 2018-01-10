@@ -8,6 +8,7 @@
 
 #include "ACTS/Plugins/TGeoPlugins/TGeoLayerBuilder.hpp"
 #include <stdio.h>
+#include "ACTS/Layers/ProtoLayer.hpp"
 #include "ACTS/Plugins/TGeoPlugins/TGeoDetectorElement.hpp"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
@@ -111,20 +112,19 @@ Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type)
       ACTS_DEBUG(
           "- number of senstive sensors found : " << layerSurfaces.size());
       // create the layer  - either way
-      if (!type)
-        layers.push_back(
-            m_cfg.layerCreator->cylinderLayer(layerSurfaces,
-                                              layerCfg.envelope.first,
-                                              layerCfg.envelope.second,
-                                              layerCfg.binsLoc0,
-                                              layerCfg.binsLoc1));
-      else
-        layers.push_back(m_cfg.layerCreator->discLayer(layerSurfaces,
-                                                       layerCfg.envelope.first,
-                                                       layerCfg.envelope.first,
-                                                       layerCfg.envelope.second,
-                                                       layerCfg.binsLoc0,
-                                                       layerCfg.binsLoc1));
+      if (!type) {
+        ProtoLayer pl(layerSurfaces);
+        pl.envPhi = layerCfg.envelope.first;
+        pl.envZ   = layerCfg.envelope.second;
+        layers.push_back(m_cfg.layerCreator->cylinderLayer(
+            layerSurfaces, layerCfg.binsLoc0, layerCfg.binsLoc1, pl));
+      } else {
+        ProtoLayer pl(layerSurfaces);
+        pl.envR   = layerCfg.envelope.first;
+        pl.envPhi = layerCfg.envelope.second;
+        layers.push_back(m_cfg.layerCreator->discLayer(
+            layerSurfaces, layerCfg.binsLoc0, layerCfg.binsLoc1, pl));
+      }
     }
   }
 }
