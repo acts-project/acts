@@ -4,9 +4,6 @@ add_test(NAME RungeKuttaEngineUnitTest COMMAND RungeKuttaEngineTests)
 
 # Benchmark tests
 
-# we need boost
-find_package (Boost ${ACTS_BOOST_VERSION} REQUIRED COMPONENTS program_options)
-
 # define executables
 add_executable (AtlasStepperBenchmark AtlasStepperBenchmark.cpp)
 target_include_directories (AtlasStepperBenchmark PRIVATE ${Boost_INCLUDE_DIRS})

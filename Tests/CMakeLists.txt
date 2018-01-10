@@ -1,5 +1,5 @@
 # should reuse version defined in main CMakeLists.txt
-find_package (Boost REQUIRED COMPONENTS unit_test_framework)
+find_package (Boost REQUIRED COMPONENTS program_options unit_test_framework)
 find_package (PythonInterp 2 EXACT REQUIRED)
 
 add_subdirectory (Detector)
