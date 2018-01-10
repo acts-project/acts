@@ -114,14 +114,14 @@ Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type)
       // create the layer  - either way
       if (!type) {
         ProtoLayer pl(layerSurfaces);
-        pl.envPhi = layerCfg.envelope.first;
+        pl.envR = layerCfg.envelope.first;
         pl.envZ   = layerCfg.envelope.second;
         layers.push_back(m_cfg.layerCreator->cylinderLayer(
             layerSurfaces, layerCfg.binsLoc0, layerCfg.binsLoc1, pl));
       } else {
         ProtoLayer pl(layerSurfaces);
         pl.envR   = layerCfg.envelope.first;
-        pl.envPhi = layerCfg.envelope.second;
+        pl.envZ = layerCfg.envelope.second;
         layers.push_back(m_cfg.layerCreator->discLayer(
             layerSurfaces, layerCfg.binsLoc0, layerCfg.binsLoc1, pl));
       }
