@@ -157,18 +157,7 @@ integration_tests_cc7_lcg92:
   before_script:
     - set +e && source CI/setup_lcg92.sh; set -e
 
-doc:
-  stage: build
-  tags:
-    - cvmfs
-  script:
-    - mkdir build
-    - cd build
-    - cmake -GNinja -DACTS_BUILD_DOC=on -DACTS_BUILD_TESTS=off ..
-    - cmake --build . -- doc
-  artifacts:
-    paths:
-      - build/doc/html
+# post-test checks and analyzers
 
 coverage:
   stage: check
@@ -183,8 +172,10 @@ coverage:
     paths:
       - build/coverage
 
+# non-program builds
+
 format:
-  stage: check
+  stage: build
   image: gitlab-registry.cern.ch/acts/machines/check:latest
   before_script: []
   dependencies: []
@@ -196,14 +187,27 @@ format:
     when: on_failure
 
 license:
+  stage: build
   image: python:alpine3.6
-  stage: check
   before_script: []
   dependencies: []
   script:
     - CI/check_license.py .
 
-deploy_to_website:
+doc:
+  stage: build
+  tags:
+    - cvmfs
+  script:
+    - mkdir build
+    - cd build
+    - cmake -GNinja -DACTS_BUILD_DOC=on -DACTS_BUILD_TESTS=off ..
+    - cmake --build . -- doc
+  artifacts:
+    paths:
+      - build/doc/html
+
+website:
   stage: deploy
   dependencies:
     - doc
