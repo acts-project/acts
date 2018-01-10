@@ -1,6 +1,4 @@
-add_subdirectory (DD4hepPlugins)
-add_subdirectory (TGeoPlugins)
-add_subdirectory (MaterialPlugins)
-# propagate list of supported components
-set (_supported_components "${_supported_components}" PARENT_SCOPE)
-
+add_component_if (DD4hepPlugin ACTS_BUILD_DD4HEP_PLUGIN)
+add_component_if (MaterialPlugin ACTS_BUILD_MATERIAL_PLUGIN)
+add_component_if (TGeoPlugin ACTS_BUILD_TGEO_PLUGIN)
+propagate_components_to_parent()

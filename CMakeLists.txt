@@ -1,86 +1,61 @@
 cmake_minimum_required (VERSION 3.5)
 
-project (ACTS LANGUAGES CXX)
+project (ACTS VERSION 0.6.0 LANGUAGES CXX)
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-# print all available options
-if (DEFINED PRINT_OPTIONS)
-  # silence cmake
-  set (_print_options ${PRINT_OPTIONS})
-  # include options file
-  include (cmake/PrintOptions.cmake)
-  unset (PRINT_OPTIONS CACHE)
-  return ()
-endif (DEFINED PRINT_OPTIONS)
+# build options
 
-# include support for colored output
-include (cmake/Colors.cmake)
+# all options must be defined here to keep the list directly visible and
+# make the option variables available everywhere
+option (ACTS_BUILD_DOC "Build documentation" OFF)
+option (ACTS_BUILD_EXAMPLES "Build examples" ON)
+option (ACTS_BUILD_TESTS "Build unit tests" ON)
+option (ACTS_BUILD_INTEGRATION_TESTS "Build integration tests" OFF)
+option (ACTS_BUILD_DD4HEP_PLUGIN "Build DD4HEP plugins" OFF)
+option (ACTS_BUILD_MATERIAL_PLUGIN "Build Material plugins" ON)
+option (ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugins" OFF)
+# all other compile-time parameters must be defined here for clear visibility
+# and to avoid forgotten options somewhere deep in the hierarchy
+set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "Default track parameter definition")
 
-# Use GNU-style hierarchy for installing build products
-include (GNUInstallDirs)
+# handle inter-plugin dependencies
+if (ACTS_BUILD_DD4HEP_PLUGIN)
+  set (ACTS_BUILD_TGEO_PLUGIN ON)
+endif()
 
-# include ACTS specific compilation options
-include (cmake/ACTSCompilerOptions.cmake)
+# required packages
 
-# include ACTS specific macros
-include (cmake/ACTSFunctions.cmake)
+find_package (Boost 1.62 REQUIRED)
+find_package (Eigen 3.2.9 REQUIRED)
 
-# include versions for dependencies of ACTS
-include (cmake/ACTSDependencies.cmake)
+# additional configuration and tools
 
-# Configure CCache if available
-find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
-  message (STATUS "${Yellow}use ccache${ColorReset}")
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-endif(CCACHE_FOUND)
+include (GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
+include (ACTSCompilerOptions) # default compile options
+include (ACTSFunctions) # ACTS-specific helper functions
+include (ACTSComponentsHelpers) # handle components via add_..._if commands
 
-# silence warning about missing RPATH on Mac OSX
-set (CMAKE_MACOSX_RPATH 1)
+# core library and plugins
 
-# set the current version of ACTS
-set (ACTS_VERSION dev)
-
-# convert the version into a plain number to be used in the version header file
-string (REPLACE "." "" ACTS_VERSION_NUMBER ${ACTS_VERSION})
-
-# default parameter definitions
-set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "default track parameter definition")
-
-# finding boost on lxplus does not work with standard boost-cmake look up
-set (Boost_NO_BOOST_CMAKE ON CACHE BOOL "disable boost-cmake find mechanism")
-
-# initialize empty list of built components
-set (_supported_components)
-
-# delegate
-add_subdirectory (Core)
-add_subdirectory (doc)
+add_component (Core)
 add_subdirectory (Plugins)
-add_subdirectory (Examples)
 
-# add unit tests
-include (CTest)
-add_subdirectory (Tests)
+# examples and tests
 
-add_subdirectory (IntegrationTests)
+if (ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS)
+  include (CTest) # must be included from the main CMakeLists.txt
+endif ()
+add_component (Examples)
+add_subdirectory_if (Tests ACTS_BUILD_TESTS)
+add_subdirectory_if (IntegrationTests ACTS_BUILD_INTEGRATION_TESTS)
 
+# documentation
 
-# add version header
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/ACTSVersion.h.in ${CMAKE_CURRENT_BINARY_DIR}/ACTSVersion.h)
-install (FILES ${CMAKE_CURRENT_BINARY_DIR}/ACTSVersion.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ACTS)
+add_subdirectory_if (doc ACTS_BUILD_DOC)
 
-# add setup scripts
+# setup script and cmake configuration files
+
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/setup.sh.in ${CMAKE_CURRENT_BINARY_DIR}/setup.sh)
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/setup.sh DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-# list components which are going to be installed
-message (STATUS "going to install the following components:")
-foreach (_scomp ${_supported_components})
-  message (STATUS "   - ${_scomp}")
-endforeach ()
-
-# add CMake infrastructure
-include (cmake/ACTSCreateConfig.cmake)
+include (ACTSCreateConfig)

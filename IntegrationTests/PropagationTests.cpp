@@ -12,6 +12,7 @@
 #include <cmath>
 
 #include <boost/test/data/test_case.hpp>
+#include "ACTS/ACTSVersion.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/MagneticField/ConstantBField.hpp"
 #include "ACTS/Propagator/AtlasStepper.hpp"

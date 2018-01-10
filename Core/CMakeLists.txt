@@ -1,42 +1,27 @@
-find_package (Boost ${ACTS_BOOST_VERSION} REQUIRED)
-find_package (Eigen ${ACTS_EIGEN_VERSION} REQUIRED)
-
-# get list of all source files
 file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp" "include/*.ipp")
 
-# define library target
 add_library (ACTSCore SHARED ${src_files})
 
-option (SUPPRESS_LIBRARY_WARNINGS "suppress warnings from Eigen and Boost libraries" OFF)
-
-if (SUPPRESS_LIBRARY_WARNINGS)
-  target_include_directories (ACTSCore SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
-  target_include_directories (ACTSCore SYSTEM PUBLIC ${EIGEN_INCLUDE_DIRS})
-  message(STATUS "Suppressing warnings from libraries BOOST and EIGEN")
-else (SUPPRESS_LIBRARY_WARNINGS)
-  target_include_directories (ACTSCore PUBLIC ${Boost_INCLUDE_DIRS})
-  target_include_directories (ACTSCore PUBLIC ${EIGEN_INCLUDE_DIRS})
-endif (SUPPRESS_LIBRARY_WARNINGS)
-
-
+target_include_directories (ACTSCore SYSTEM PUBLIC ${Boost_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS})
 target_include_directories (ACTSCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
-
 target_compile_definitions (ACTSCore PUBLIC -DACTS_PARAMETER_DEFINITIONS_PLUGIN="${ACTS_PARAMETER_DEFINITIONS_PLUGIN}")
 
-# set installation directories
 install (TARGETS ACTSCore
          EXPORT ACTSCoreTargets
          LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
          RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
          COMPONENT Core)
-
 install (DIRECTORY include/ACTS
          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
          COMPONENT Core)
 
-# add to list of supported components
-list (APPEND _supported_components Core)
-set (_supported_components "${_supported_components}" PARENT_SCOPE)
+# generate version header and make it available to the build
+configure_file(
+  ACTSVersion.hpp.in
+  ${CMAKE_CURRENT_BINARY_DIR}/ACTS/ACTSVersion.hpp)
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/ACTS/ACTSVersion.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ACTS)
+target_include_directories(ACTSCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 
-# add to CDash ACore subproject
 acts_add_targets_to_cdash_project(PROJECT ACore TARGETS ACTSCore)
