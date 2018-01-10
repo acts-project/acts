@@ -81,16 +81,18 @@ Important options relevant for the ACTS project are given below. They are set by
 
 |option|default|description|
 |------|-------|-----------|
-|BUILD_DD4HEP_PLUGIN    | OFF                   | build DD4Hep plugin (requires TGeoPlugin, ROOT, DD4hep) |
-|BUILD_DOC              | OFF                   | build doxygen documentation (requires doxygen)          |
-|BUILD_MATERIAL_PLUGIN  | ON                    | build material mapping plugin                           |
-|BUILD_TESTS            | ON                    | build unit tests                                        |
-|BUILD_TGEO_PLUGIN      | OFF                   | build TGeo plugin (requires ROOT)                       |
-|CMAKE_INSTALL_PREFIX   | empty                 | target installation directory                           |
-|CMAKE_PREFIX_PATH      | empty                 | search path for external packages                       |
-|CMAKE_CXX_COMPILER     | empty                 | set C++ compiler (e.g. g++ or clang++)                  |
-|CMAKE_BUILD_TYPE       | None                  | build type (e.g. Debug, Release) affects compiler flags |
-|DD4hep_DIR             | None                  | path to the DD4hep installation                         |
+|ACTS_BUILD_DOC               | OFF | build documentation |
+|ACTS_BUILD_EXAMPLES          | ON  | build examples |
+|ACTS_BUILD_TESTS             | ON  | build unit tests |
+|ACTS_BUILD_INTEGRATION_TESTS | OFF | build integration tests |
+|ACTS_BUILD_DD4HEP_PLUGIN     | OFF | build DD4HEP plugins |
+|ACTS_BUILD_MATERIAL_PLUGIN   | ON  | build Material plugins |
+|ACTS_BUILD_TGEO_PLUGIN       | OFF | build TGeo plugins |
+|CMAKE_INSTALL_PREFIX         |     | target installation directory |
+|CMAKE_PREFIX_PATH            |     | search path for external packages |
+|CMAKE_CXX_COMPILER           |     | set C++ compiler (e.g. g++ or clang++) |
+|CMAKE_BUILD_TYPE             |     | build type (e.g. Debug, Release) affects compiler flags |
+|DD4hep_DIR                   |     | path to the DD4hep installation |
 
 ## <a name="build-lxplus">Build ACTS on lxplus</a>
 
@@ -101,9 +103,9 @@ versions as in the continous integration system.
     source CI/setup_lcg89.sh
     mkdir build && cd build
     cmake -DCMAKE_INSTALL_PREFIX=<path you want> \
-          -DBUILD_DD4HEP_PLUGIN=ON \
-          -DBUILD_MATERIAL_PLUGIN=on \
-          -DBUILD_TGEO_PLUGIN=ON ..
+          -DACTS_BUILD_DD4HEP_PLUGIN=ON \
+          -DACTS_BUILD_MATERIAL_PLUGIN=on \
+          -DACTS_BUILD_TGEO_PLUGIN=ON ..
     make install
 
 ## <a name="build-local">Build ACTS on your local machine</a>

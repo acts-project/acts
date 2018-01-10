@@ -7,7 +7,7 @@ stages:
     - deploy
 
 variables:
-    CMAKE_ARGS: -GNinja -DBUILD_DD4HEP_PLUGIN=on -DBUILD_MATERIAL_PLUGIN=on -DBUILD_TGEO_PLUGIN=on -DBUILD_INTEGRATION_TESTS=on
+    CMAKE_ARGS: -GNinja -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_MATERIAL_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on -DACTS_BUILD_INTEGRATION_TESTS=on
     CMAKE_BUILD_CMD: ninja -j2
     DEFAULT_BUILDDIR: build_slc6_gcc
 
@@ -150,7 +150,7 @@ doc:
     script:
         - mkdir build
         - cd build
-        - cmake -GNinja -DBUILD_DOC=on -DBUILD_TESTS=off ..
+        - cmake -GNinja -DACTS_BUILD_DOC=on -DACTS_BUILD_TESTS=off ..
         - cmake --build . -- doc
     artifacts:
         paths:

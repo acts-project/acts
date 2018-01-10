@@ -8,20 +8,20 @@ list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # all options must be defined here to keep the list directly visible and
 # make the option variables available everywhere
-option (BUILD_DOC "Build documentation" OFF)
-option (BUILD_EXAMPLES "Build examples" ON)
-option (BUILD_TESTS "Build unit tests" ON)
-option (BUILD_INTEGRATION_TESTS "Build integration tests" OFF)
-option (BUILD_DD4HEP_PLUGIN "Build DD4HEP plugins" OFF)
-option (BUILD_MATERIAL_PLUGIN "Build Material plugins" ON)
-option (BUILD_TGEO_PLUGIN "Build TGeo plugins" OFF)
+option (ACTS_BUILD_DOC "Build documentation" OFF)
+option (ACTS_BUILD_EXAMPLES "Build examples" ON)
+option (ACTS_BUILD_TESTS "Build unit tests" ON)
+option (ACTS_BUILD_INTEGRATION_TESTS "Build integration tests" OFF)
+option (ACTS_BUILD_DD4HEP_PLUGIN "Build DD4HEP plugins" OFF)
+option (ACTS_BUILD_MATERIAL_PLUGIN "Build Material plugins" ON)
+option (ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugins" OFF)
 # all other compile-time parameters must be defined here for clear visibility
 # and to avoid forgotten options somewhere deep in the hierarchy
 set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "Default track parameter definition")
 
 # handle inter-plugin dependencies
-if (BUILD_DD4HEP_PLUGIN)
-  set (BUILD_TGEO_PLUGIN ON)
+if (ACTS_BUILD_DD4HEP_PLUGIN)
+  set (ACTS_BUILD_TGEO_PLUGIN ON)
 endif()
 
 # required packages
@@ -43,16 +43,16 @@ add_subdirectory (Plugins)
 
 # examples and tests
 
-if (BUILD_TESTS OR BUILD_INTEGRATION_TESTS)
+if (ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS)
   include (CTest) # must be included from the main CMakeLists.txt
 endif ()
 add_component (Examples)
-add_subdirectory_if (Tests BUILD_TESTS)
-add_subdirectory_if (IntegrationTests BUILD_INTEGRATION_TESTS)
+add_subdirectory_if (Tests ACTS_BUILD_TESTS)
+add_subdirectory_if (IntegrationTests ACTS_BUILD_INTEGRATION_TESTS)
 
 # documentation
 
-add_subdirectory_if (doc BUILD_DOC)
+add_subdirectory_if (doc ACTS_BUILD_DOC)
 
 # setup script and cmake configuration files
 
