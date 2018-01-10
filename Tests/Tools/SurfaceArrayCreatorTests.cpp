@@ -634,6 +634,9 @@ namespace Test {
 
     sl.fill(brl);
     SurfaceArray sa(sl, brl);
+    auto         axes = sa.getAxes();
+    BOOST_TEST(axes.at(0).getNBins() == 30);
+    BOOST_TEST(axes.at(1).getNBins() == 7);
     std::cout << sa << std::endl;
 
     for (const auto& pr : barrel.second) {
@@ -655,45 +658,75 @@ namespace Test {
     }
 
     // VARIABLE
-    tr = Transform3D::Identity();
+    BOOST_TEST_CONTEXT("Barrel Stagger Variable binning")
+    {
+      tr = Transform3D::Identity();
 
-    auto pAxisPhiVar = createVariableAxis(brl, BinningValue::binPhi, tr);
-    auto pAxisZVar   = createVariableAxis(brl, BinningValue::binZ, tr);
+      auto pAxisPhiVar = createVariableAxis(brl, BinningValue::binPhi, tr);
+      auto pAxisZVar   = createVariableAxis(brl, BinningValue::binZ, tr);
 
-    itr = tr.inverse();
+      itr = tr.inverse();
 
-    auto globalToLocalVar = [tr](const Vector3D& pos) {
-      Vector3D rot = tr * pos;
-      return Vector2D(rot.phi(), rot.z());
-    };
-    auto localToGlobalVar = [R, itr](const Vector2D& loc) {
-      return itr * Vector3D(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
-    };
+      auto globalToLocalVar = [tr](const Vector3D& pos) {
+        Vector3D rot = tr * pos;
+        return Vector2D(rot.phi(), rot.z());
+      };
+      auto localToGlobalVar = [R, itr](const Vector2D& loc) {
+        return itr
+            * Vector3D(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
+      };
 
-    auto sl2 = makeSurfaceGridLookup2D<detail::AxisWrapping::Closed,
-                                       detail::AxisWrapping::Open>(
-        globalToLocalVar, localToGlobalVar, pAxisPhiVar, pAxisZVar);
+      auto sl2 = makeSurfaceGridLookup2D<detail::AxisWrapping::Closed,
+                                         detail::AxisWrapping::Open>(
+          globalToLocalVar, localToGlobalVar, pAxisPhiVar, pAxisZVar);
 
-    sl2.fill(brl);
-    SurfaceArray sa2(sl2, brl);
-    std::cout << sa2 << std::endl;
+      sl2.fill(brl);
+      SurfaceArray sa2(sl2, brl);
+      axes = sa2.getAxes();
+      BOOST_TEST(axes.at(0).getNBins() == 30);
+      BOOST_TEST(axes.at(1).getNBins() == 7);
 
-    for (const auto& pr : barrel.second) {
-      auto A = pr.first;
-      auto B = pr.second;
+      // check bin edges
+      std::vector<double> phiEdgesExp
+          = {-3.14159,  -2.93215,  -2.72271, -2.51327,    -2.30383, -2.0944,
+             -1.88496,  -1.67552,  -1.46608, -1.25664,    -1.0472,  -0.837758,
+             -0.628319, -0.418879, -0.20944, 4.44089e-16, 0.20944,  0.418879,
+             0.628319,  0.837758,  1.0472,   1.25664,     1.46608,  1.67552,
+             1.88496,   2.0944,    2.30383,  2.51327,     2.72271,  3.00831,
+             3.14159};
+      std::vector<double> zEdgesExp = {-14, -10, -6, -2, 2, 6, 10, 14};
+      size_t              i         = 0;
+      for (const auto& edge : axes.at(0).getBinEdges()) {
+        BOOST_TEST_INFO("phi edge index " << i);
+        BOOST_TEST(edge == phiEdgesExp.at(i), tt::tolerance(1e-3));
+        i++;
+      }
+      i = 0;
+      for (const auto& edge : axes.at(1).getBinEdges()) {
+        BOOST_TEST_INFO("z edge index " << i);
+        BOOST_TEST(edge == zEdgesExp.at(i), tt::tolerance(1e-3));
+        i++;
+      }
 
-      Vector3D ctr        = A->binningPosition(binR);
-      SrfVec   binContent = sa2.at(ctr);
-      BOOST_TEST(binContent.size() == 2);
-      std::set<const Surface*> act;
-      act.insert(binContent[0]);
-      act.insert(binContent[1]);
+      std::cout << sa2 << std::endl;
 
-      std::set<const Surface*> exp;
-      exp.insert(A);
-      exp.insert(B);
+      for (const auto& pr : barrel.second) {
+        auto A = pr.first;
+        auto B = pr.second;
 
-      BOOST_TEST(act == exp);
+        Vector3D ctr        = A->binningPosition(binR);
+        SrfVec   binContent = sa2.at(ctr);
+        BOOST_TEST(binContent.size() == 2);
+        std::set<const Surface*> act;
+        act.insert(binContent[0]);
+        act.insert(binContent[1]);
+
+        std::set<const Surface*> exp;
+        exp.insert(A);
+        exp.insert(B);
+
+        BOOST_TEST(act == exp);
+      }
     }
   }
 

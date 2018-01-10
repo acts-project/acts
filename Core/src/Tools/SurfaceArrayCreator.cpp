@@ -84,7 +84,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   // check if we have proto layer, else build it
   ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
 
-  double      R = protoLayer.maxR - protoLayer.minR;
+  double      R = 0.5 * (protoLayer.maxR - protoLayer.minR);
   Transform3D transform
       = _transform != nullptr ? *_transform : Transform3D::Identity();
 
@@ -268,43 +268,40 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
   return nullptr;
 }
 
+std::vector<const Acts::Surface*>
+Acts::SurfaceArrayCreator::findKeySurfaces(
+    const std::vector<const Surface*>& surfaces,
+    std::function<bool(const Surface*, const Surface*)> equal) const
+{
+  std::vector<const Surface*> keys;
+  for (const auto& srfA : surfaces) {
+    bool exists = false;
+    for (const auto& srfB : keys) {
+      if (equal(srfA, srfB)) {
+        exists = true;
+        break;
+      }
+    }
+    if (!exists) {
+      keys.push_back(srfA);
+    }
+  }
+
+  return keys;
+}
+
 size_t
 Acts::SurfaceArrayCreator::determineBinCount(
     const std::vector<const Surface*>& surfaces,
     BinningValue                       bValue) const
 {
 
-  std::function<bool(const Acts::Surface*, const Acts::Surface*)> sorter;
+  auto matcher = m_cfg.surfaceMatcher;
+  auto equal   = [&bValue, &matcher](const Surface* a, const Surface* b) {
+    return matcher(bValue, a, b);
+  };
+  std::vector<const Surface*> keys = findKeySurfaces(surfaces, equal);
 
-  // bind matcher with binning type
-  auto matcher = std::bind(m_cfg.surfaceMatcher,
-                           bValue,
-                           std::placeholders::_1,
-                           std::placeholders::_2);
-
-  if (bValue == Acts::binPhi) {
-    sorter = [](const Acts::Surface* a, const Acts::Surface* b) {
-      return (a->center().phi() < b->center().phi());
-    };
-  } else if (bValue == Acts::binZ) {
-    // Z binning
-    // sort first in z
-    sorter = [](const Acts::Surface* a, const Acts::Surface* b) {
-      return (a->center().z() < b->center().z());
-    };
-  } else {
-    // R binning
-    // sort first in r
-    sorter = [](const Acts::Surface* a, const Acts::Surface* b) {
-      return (a->center().perp() < b->center().perp());
-    };
-  }
-
-  std::vector<const Acts::Surface*> surf(surfaces);
-  std::stable_sort(surf.begin(), surf.end(), sorter);
-  // fill the key surfaces
-  std::vector<const Acts::Surface*> keys;
-  std::unique_copy(begin(surf), end(surf), back_inserter(keys), matcher);
   return keys.size();
 }
 
@@ -321,35 +318,20 @@ Acts::SurfaceArrayCreator::createVariableAxis(
   // the vector with the binning Values (boundaries for each bin)
 
   // bind matcher with binning type
-  auto matcher = std::bind(m_cfg.surfaceMatcher,
-                           bValue,
-                           std::placeholders::_1,
-                           std::placeholders::_2);
+  auto matcher = m_cfg.surfaceMatcher;
+  // find the key surfaces
+  auto equal = [&bValue, &matcher](const Surface* a, const Surface* b) {
+    return matcher(bValue, a, b);
+  };
+  std::vector<const Acts::Surface*> keys = findKeySurfaces(surfaces, equal);
 
   std::vector<double> bValues;
   if (bValue == Acts::binPhi) {
-    // set the BinningOption closed for binning in phi
-    // copy the surface vector to a non constant vector
-    std::vector<const Acts::Surface*> surf(surfaces);
-    // the key surfaces - placed in different bins in the given binning
-    // direction
-    std::vector<const Acts::Surface*> keys;
-    // sort first in phi
-    std::stable_sort(surf.begin(),
-                     surf.end(),
+    std::stable_sort(keys.begin(),
+                     keys.end(),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
                        return (a->center().phi() < b->center().phi());
                      });
-    // fill the key surfaces at the different phi positions
-    std::unique_copy(begin(surf), end(surf), back_inserter(keys), matcher);
-
-    // get the bounds of the last surfaces
-    const Acts::Surface*      backSurface = keys.back();
-    const Acts::PlanarBounds* backBounds
-        = dynamic_cast<const Acts::PlanarBounds*>(&(backSurface->bounds()));
-    if (!backBounds)
-      ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
-                 "other bounds yet! ");
 
     double maxPhi
         = 0.5 * (keys.at(0)->center().phi() + keys.at(1)->center().phi());
@@ -373,24 +355,34 @@ Acts::SurfaceArrayCreator::createVariableAxis(
       previous = surface->center().phi();
     }
 
+    // get the bounds of the last surfaces
+    const Acts::Surface*      backSurface = keys.back();
+    const Acts::PlanarBounds* backBounds
+        = dynamic_cast<const Acts::PlanarBounds*>(&(backSurface->bounds()));
+    if (!backBounds)
+      ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
+                 "other bounds yet! ");
+    // get the global vertices
+    std::vector<Acts::Vector3D> backVertices
+        = makeGlobalVertices(*backSurface, backBounds->vertices());
+    double maxBValue = std::max_element(backVertices.begin(),
+                                        backVertices.end(),
+                                        [](const Acts::Vector3D& a,
+                                           const Acts::Vector3D& b) {
+                                          return a.phi() < b.phi();
+                                        })
+                           ->phi();
+
+    bValues.push_back(maxBValue);
+
     bValues.push_back(M_PI);
-    ;
 
   } else if (bValue == Acts::binZ) {
-    // copy the surface vector to a non constant vector
-    std::vector<const Acts::Surface*> surf(surfaces);
-    // the key surfaces - placed in different bins in the given binning
-    // direction
-    std::vector<const Acts::Surface*> keys;
-    // sort first in z
-    std::stable_sort(surf.begin(),
-                     surf.end(),
+    std::stable_sort(keys.begin(),
+                     keys.end(),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
                        return (a->center().z() < b->center().z());
                      });
-    // fill the key surfaces at the different z positions
-    std::unique_copy(begin(surf), end(surf), back_inserter(keys), matcher);
-
     // get minimum and maximum
     // the first boundary (minimum) and the last boundary (maximum) need to
     // be calculated separately with the vertices of the first and last
@@ -439,7 +431,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     // the z-center position of the previous surface
     double previous = frontSurface->center().z();
     // go through key surfaces
-    for (auto surface = keys.begin(); surface != keys.end(); surface++) {
+    for (auto surface = keys.begin() + 1; surface != keys.end(); surface++) {
       // create central binning values which is the mean of the center
       // positions in the binning direction of the current and previous
       // surface
@@ -447,20 +439,11 @@ Acts::SurfaceArrayCreator::createVariableAxis(
       previous = (*surface)->center().z();
     }
   } else {  // binR
-    // copy the surface vector to a non constant vector
-    std::vector<const Acts::Surface*> surf(surfaces);
-    // the key surfaces - placed in different bins in the given binning
-    // direction
-    std::vector<const Acts::Surface*> keys;
-    // sort first in r
-    std::stable_sort(surf.begin(),
-                     surf.end(),
+    std::stable_sort(keys.begin(),
+                     keys.end(),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
                        return (a->center().perp() < b->center().perp());
                      });
-    // fill the key surfaces at the different r positions
-    std::unique_copy(begin(surf), end(surf), back_inserter(keys), matcher);
-
     // get minimum and maximum
     // the first boundary (minimum) and the last boundary (maximum) need to
     // be calculated separately with the vertices of the first and last
@@ -510,7 +493,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     double previous = frontSurface->center().perp();
 
     // go through key surfaces
-    for (auto surface = keys.begin(); surface != keys.end(); surface++) {
+    for (auto surface = keys.begin() + 1; surface != keys.end(); surface++) {
       // create central binning values which is the mean of the center
       // positions in the binning direction of the current and previous
       // surface
@@ -552,8 +535,6 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
   // binning option is open for z and r, in case of phi binning reset later
   // Acts::BinningOption bOption = Acts::open;
 
-  // copy the surface vector to a non constant vector
-  std::vector<const Acts::Surface*> surf(surfaces);
   // the key surfaces - placed in different bins in the given binning
   // direction
   std::vector<const Acts::Surface*> keys;
@@ -568,10 +549,7 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
   }
 
   // bind matcher with binning type
-  auto matcher = std::bind(m_cfg.surfaceMatcher,
-                           bValue,
-                           std::placeholders::_1,
-                           std::placeholders::_2);
+  auto matcher = m_cfg.surfaceMatcher;
 
   // now check the binning value
   if (bValue == Acts::binPhi) {
@@ -585,8 +563,11 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
                               return a->center().phi() < b->center().phi();
                             });
 
-    // fill the key surfaces at the different phi positions
-    std::unique_copy(begin(surf), end(surf), back_inserter(keys), matcher);
+    // get the key surfaces at the different phi positions
+    auto equal = [&bValue, &matcher](const Surface* a, const Surface* b) {
+      return matcher(bValue, a, b);
+    };
+    keys = findKeySurfaces(surfaces, equal);
 
     // multiple surfaces, we bin from -pi to pi closed
     if (keys.size() > 1) {

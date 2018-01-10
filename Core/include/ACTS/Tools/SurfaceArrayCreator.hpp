@@ -205,9 +205,13 @@ public:
   isSurfaceEquivalent(BinningValue bValue, const Surface* a, const Surface* b)
   {
 
-    if (bValue == Acts::binPhi)
-      return (std::abs(a->center().phi() - b->center().phi())
-              < M_PI * 1 / 180.);
+    if (bValue == Acts::binPhi) {
+      double dPhi = std::abs(a->center().phi() - b->center().phi());
+      dPhi        = std::abs(
+          dPhi - (dPhi > M_PI) * (2 * M_PI));  // subtract dPhi if over 2pi
+
+      return dPhi < M_PI * 3 / 180.;
+    }
 
     if (bValue == Acts::binZ)
       return (std::abs(a->center().z() - b->center().z()) < Acts::units::_um);
@@ -237,6 +241,11 @@ private:
   {
     return *m_logger;
   }
+
+  std::vector<const Surface*>
+  findKeySurfaces(
+      const std::vector<const Surface*>& surfaces,
+      std::function<bool(const Surface*, const Surface*)> equal) const;
 
   size_t
   determineBinCount(const std::vector<const Surface*>& surfaces,
