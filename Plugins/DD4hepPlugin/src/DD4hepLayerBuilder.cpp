@@ -259,7 +259,7 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
                                             std::move(approachDescriptor));
       }
 
-      // get the possible material if no surfaces are handed over
+      // translate possible material of the layer
       std::shared_ptr<const HomogeneousSurfaceMaterial> surfMaterial = nullptr;
 
       dd4hep::Material ddmaterial = detElement.volume().material();
@@ -476,7 +476,7 @@ Acts::DD4hepLayerBuilder::centralLayers() const
                                                 std::move(approachDescriptor));
       }
 
-      // get the possible material if no surfaces are handed over
+      // translate possible material of the layer
       std::shared_ptr<const HomogeneousSurfaceMaterial> surfMaterial = nullptr;
 
       dd4hep::Material ddmaterial = detElement.volume().material();
@@ -716,7 +716,7 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
                                             std::move(approachDescriptor));
       }
 
-      // get the possible material if no surfaces are handed over
+      // translate possible material of the layer
       std::shared_ptr<const HomogeneousSurfaceMaterial> surfMaterial = nullptr;
 
       dd4hep::Material ddmaterial = detElement.volume().material();
@@ -773,7 +773,7 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   std::shared_ptr<const Acts::SurfaceMaterial> material = nullptr;
   // access the possibly shared DigitizationModule
   std::shared_ptr<const DigitizationModule> digiModule = nullptr;
-  // flag indicating if the volume should be translated into a disc surface
+  // access the possible extension of the DetElement
   Acts::IActsExtension* detExtension = nullptr;
   try {
     detExtension = detElement.extension<Acts::IActsExtension>();
