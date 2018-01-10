@@ -14,6 +14,7 @@
 
 #include "ACTS/Layers/CylinderLayer.hpp"
 #include "ACTS/Layers/DiscLayer.hpp"
+#include "ACTS/Layers/ProtoLayer.hpp"
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
@@ -262,10 +263,13 @@ namespace Test {
     draw_surfaces(srf, "LayerCreator_createCylinderLayer_BRL_1.obj");
 
     // CASE I
-    double                         envR = 0.1, envZ = 0.5;
+    double     envR = 0.1, envZ = 0.5;
+    ProtoLayer pl(srf);
+    pl.envR = envR;
+    pl.envZ = envZ;
     std::shared_ptr<CylinderLayer> layer
         = std::dynamic_pointer_cast<CylinderLayer>(
-            p_LC->cylinderLayer(srf, envR, envZ, equidistant, equidistant));
+            p_LC->cylinderLayer(srf, equidistant, equidistant, pl));
 
     double rMax = 10.6071, rMin = 9.59111;  // empirical
     BOOST_TEST(layer->thickness() == (rMax - rMin) + 2 * envR,
@@ -284,8 +288,12 @@ namespace Test {
     BOOST_TEST(axes.at(1).getMax() == 14, tt::tolerance(1e-3));
 
     // CASE II
-    layer = std::dynamic_pointer_cast<CylinderLayer>(
-        p_LC->cylinderLayer(srf, envR, envZ, 30, 7));
+
+    ProtoLayer pl2(srf);
+    pl2.envR = envR;
+    pl2.envZ = envZ;
+    layer    = std::dynamic_pointer_cast<CylinderLayer>(
+        p_LC->cylinderLayer(srf, 30, 7, pl2));
     BOOST_TEST(layer->thickness() == (rMax - rMin) + 2 * envR,
                tt::tolerance(1e-3));
     bounds = &layer->bounds();
@@ -301,7 +309,7 @@ namespace Test {
     BOOST_TEST(axes.at(1).getMax() == 14, tt::tolerance(1e-3));
 
     layer = std::dynamic_pointer_cast<CylinderLayer>(
-        p_LC->cylinderLayer(srf, envR, envZ, 13, 3));
+        p_LC->cylinderLayer(srf, 13, 3, pl2));
     BOOST_TEST(layer->thickness() == (rMax - rMin) + 2 * envR,
                tt::tolerance(1e-3));
     bounds = &layer->bounds();
@@ -319,8 +327,13 @@ namespace Test {
     BOOST_TEST(axes.at(1).getMax() == 14, tt::tolerance(1e-3));
 
     // CASE III
-    layer = std::dynamic_pointer_cast<CylinderLayer>(
-        p_LC->cylinderLayer(srf, 1, 20, 25, equidistant, equidistant));
+    ProtoLayer pl3;
+    pl3.minR = 1;
+    pl3.maxR = 20;
+    pl3.minZ = -25;
+    pl3.maxZ = 25;
+    layer    = std::dynamic_pointer_cast<CylinderLayer>(
+        p_LC->cylinderLayer(srf, equidistant, equidistant, pl3));
     BOOST_TEST(layer->thickness() == 19, tt::tolerance(1e-3));
     bounds = &layer->bounds();
     BOOST_TEST(bounds->r() == 10.5, tt::tolerance(1e-3));
@@ -351,8 +364,13 @@ namespace Test {
     surfaces.insert(surfaces.end(), ringc.begin(), ringc.end());
     draw_surfaces(surfaces, "LayerCreator_createDiscLayer_EC_1.obj");
 
+    ProtoLayer pl(surfaces);
+    pl.minZ                          = -10;
+    pl.maxZ                          = 10;
+    pl.minR                          = 5;
+    pl.maxR                          = 25;
     std::shared_ptr<DiscLayer> layer = std::dynamic_pointer_cast<DiscLayer>(
-        p_LC->discLayer(surfaces, -10, 10, 5, 25, equidistant, equidistant));
+        p_LC->discLayer(surfaces, equidistant, equidistant, pl));
     BOOST_TEST(layer->thickness() == 20, tt::tolerance(1e-3));
     const RadialBounds* bounds
         = dynamic_cast<const RadialBounds*>(&layer->bounds());
@@ -374,10 +392,13 @@ namespace Test {
     // double expAngle = -2 * M_PI / 30 / 2.;
     // BOOST_TEST(actAngle == expAngle, tt::tolerance(1e-3));
 
-    double envMinR = 1, envMaxR = 2, envZ = 5;
-    size_t nBinsR = 3, nBinsPhi = 30;
-    layer = std::dynamic_pointer_cast<DiscLayer>(
-        p_LC->discLayer(surfaces, envMinR, envMaxR, envZ, nBinsR, nBinsPhi));
+    double     envMinR = 1, envMaxR = 1, envZ = 5;
+    size_t     nBinsR = 3, nBinsPhi = 30;
+    ProtoLayer pl2(surfaces);
+    pl2.envR = envMinR;
+    pl2.envZ = envZ;
+    layer    = std::dynamic_pointer_cast<DiscLayer>(
+        p_LC->discLayer(surfaces, nBinsR, nBinsPhi, pl2));
 
     double rMin = 8, rMax = 22.0227;
     BOOST_TEST(layer->thickness() == 0.4 + 2 * envZ, tt::tolerance(1e-3));
@@ -400,13 +421,14 @@ namespace Test {
     // expAngle = -2 * M_PI / 30 / 2.;
     // BOOST_TEST(actAngle == expAngle, tt::tolerance(1e-3));
 
-    layer = std::dynamic_pointer_cast<DiscLayer>(p_LC->discLayer(
-        surfaces, envMinR, envMaxR, envZ, equidistant, equidistant));
+    layer = std::dynamic_pointer_cast<DiscLayer>(
+        p_LC->discLayer(surfaces, equidistant, equidistant, pl2));
     BOOST_TEST(layer->thickness() == 0.4 + 2 * envZ, tt::tolerance(1e-3));
     bounds = dynamic_cast<const RadialBounds*>(&layer->bounds());
     BOOST_TEST(bounds->rMin() == rMin - envMinR, tt::tolerance(1e-3));
     BOOST_TEST(bounds->rMax() == rMax + envMaxR, tt::tolerance(1e-3));
     BOOST_TEST(checkBinning(*layer->surfaceArray()));
+    axes = layer->surfaceArray()->getAxes();
     BOOST_TEST(axes.at(0).getNBins() == nBinsR);
     BOOST_TEST(axes.at(1).getNBins() == nBinsPhi);
     BOOST_TEST(axes.at(0).getMin() == rMin, tt::tolerance(1e-3));
@@ -429,15 +451,28 @@ namespace Test {
     auto brl    = barrel.first;
     draw_surfaces(brl, "LayerCreator_barrelStagger.obj");
 
-    double                         envR = 0, envZ = 0;
+    double     envR = 0, envZ = 0;
+    ProtoLayer pl(brl);
+    pl.envR = envR;
+    pl.envZ = envZ;
     std::shared_ptr<CylinderLayer> layer
         = std::dynamic_pointer_cast<CylinderLayer>(
-            p_LC->cylinderLayer(brl, envR, envZ, equidistant, equidistant));
+            p_LC->cylinderLayer(brl, equidistant, equidistant, pl));
+
+    std::cout << (*layer->surfaceArray()) << std::endl;
+    auto axes = layer->surfaceArray()->getAxes();
+    BOOST_TEST(axes.at(0).getNBins() == 30);
+    BOOST_TEST(axes.at(1).getNBins() == 7);
 
     // check if binning is good!
     for (const auto& pr : barrel.second) {
       auto A = pr.first;
       auto B = pr.second;
+
+      // std::cout << A->center().phi() << " ";
+      // std::cout << B->center().phi() << std::endl;
+      // std::cout << "dPHi = " << A->center().phi() - B->center().phi() <<
+      // std::endl;
 
       Vector3D ctr        = A->binningPosition(binR);
       SrfVec   binContent = layer->surfaceArray()->at(ctr);
