@@ -26,7 +26,7 @@ endif()
 
 # required packages
 
-find_package(Boost 1.64 REQUIRED)
+find_package(Boost 1.64 REQUIRED COMPONENTS program_options unit_test_framework)
 find_package(Eigen 3.2.9 REQUIRED)
 
 # additional configuration and tools
