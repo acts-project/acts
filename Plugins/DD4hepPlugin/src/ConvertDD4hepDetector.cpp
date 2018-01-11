@@ -462,7 +462,7 @@ collectLayers(dd4hep::DetElement&              detElement,
     if (detExtension && detExtension->isLayer()) {
       layers.push_back(childDetElement);
       continue;
-    };
+    }
     collectLayers(childDetElement, layers);
   }
 }
