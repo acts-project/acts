@@ -43,12 +43,12 @@ add_subdirectory (Plugins)
 
 # examples and tests
 
-if (ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS)
-  include (CTest) # must be included from the main CMakeLists.txt
-endif ()
-add_component (Examples)
-add_subdirectory_if (Tests ACTS_BUILD_TESTS)
-add_subdirectory_if (IntegrationTests ACTS_BUILD_INTEGRATION_TESTS)
+if(ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS)
+  include(CTest) # must be included from the main CMakeLists.txt
+endif()
+add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
+add_subdirectory_if(Tests ACTS_BUILD_TESTS)
+add_subdirectory_if(IntegrationTests ACTS_BUILD_INTEGRATION_TESTS)
 
 # documentation
 
