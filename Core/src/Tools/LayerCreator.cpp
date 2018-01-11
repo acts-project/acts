@@ -59,7 +59,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   double layerZ = 0.5 * (protoLayer.minZ + protoLayer.maxZ);
   // this includes envelopes, but might be "wrong" if the envelopes are
   // asymmetric
-  double layerHalfZ = std::abs(protoLayer.maxZ - layerZ) + protoLayer.envZ;
+  double layerHalfZ = std::abs(protoLayer.maxZ - layerZ);
   double layerThickness
       = (protoLayer.maxR - protoLayer.minR) + 2 * protoLayer.envR;
 
@@ -74,6 +74,9 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
     protoLayer.minZ = -layerHalfZ;
     protoLayer.maxZ = +layerHalfZ;
   }
+
+  // add envelope to layerHalfZ
+  layerHalfZ += protoLayer.envZ;
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a cylindrical Layer:");
@@ -140,7 +143,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   // remaining layer parameters
   double layerR     = 0.5 * (protoLayer.minR + protoLayer.maxR);
   double layerZ     = 0.5 * (protoLayer.minZ + protoLayer.maxZ);
-  double layerHalfZ = std::abs(protoLayer.maxZ - layerZ) + protoLayer.envZ;
+  double layerHalfZ = std::abs(protoLayer.maxZ - layerZ);
   double layerThickness
       = (protoLayer.maxR - protoLayer.minR) + 2 * protoLayer.envR;
 
@@ -155,6 +158,9 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
     protoLayer.minZ = -layerHalfZ;
     protoLayer.maxZ = +layerHalfZ;
   }
+
+  // add envelope to layerHalfZ
+  layerHalfZ += protoLayer.envZ;
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a cylindrical Layer:");
