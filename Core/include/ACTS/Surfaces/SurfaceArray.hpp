@@ -101,20 +101,8 @@ public:
         lookup(pos).push_back(srf);
       }
 
-      // calculate neighbors for every bin and store in map
-      for (size_t i = 0; i < m_grid.size(); i++) {
-        if (!isValidBin(i)) continue;
-        typename Grid_t::index_t loc  = m_grid.getLocalBinIndices(i);
-        std::set<size_t> neighborIdxs = m_grid.neighborHoodIndices(loc, 1u);
-        std::vector<const Surface*>& neighbors = m_neighborMap.at(i);
+      populateNeighborCache();
 
-        for (const auto& idx : neighborIdxs) {
-          const std::vector<const Surface*>& binContent = m_grid.at(idx);
-          std::copy(binContent.begin(),
-                    binContent.end(),
-                    std::back_inserter(neighbors));
-        }
-      }
     }
 
     size_t
@@ -126,6 +114,7 @@ public:
       const Surface* minSrf;
 
       for (size_t b = 0; b < nBins; ++b) {
+        if (!isValidBin(b)) continue;
         std::vector<const Surface*>& binContent = lookup(b);
         // only complete if we have an empty bin
         if (binContent.size() > 0) continue;
@@ -145,6 +134,8 @@ public:
         ++binCompleted;
       }
 
+      // recreate neighborcache
+      populateNeighborCache();
       return binCompleted;
     }
 
@@ -270,6 +261,25 @@ public:
     }
 
   private:
+
+    void populateNeighborCache() {
+      // calculate neighbors for every bin and store in map
+      for (size_t i = 0; i < m_grid.size(); i++) {
+        if (!isValidBin(i)) continue;
+        typename Grid_t::index_t loc  = m_grid.getLocalBinIndices(i);
+        std::set<size_t> neighborIdxs = m_grid.neighborHoodIndices(loc, 1u);
+        std::vector<const Surface*>& neighbors = m_neighborMap.at(i);
+        neighbors.clear();
+
+        for (const auto& idx : neighborIdxs) {
+          const std::vector<const Surface*>& binContent = m_grid.at(idx);
+          std::copy(binContent.begin(),
+                    binContent.end(),
+                    std::back_inserter(neighbors));
+        }
+      }
+    }
+
     std::function<point_t(const Vector3D&)> m_globalToLocal;
     std::function<Vector3D(const point_t&)> m_localToGlobal;
     Grid_t                                  m_grid;

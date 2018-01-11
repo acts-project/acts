@@ -68,7 +68,11 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   // correctly defined using the halflength
   if (!transform) {
     transform
-        = std::make_shared<const Transform3D>(Translation3D(0., 0., layerZ));
+        = std::make_shared<const Transform3D>(Translation3D(0., 0., -layerZ));
+    // reset min / max Z
+    // if transform is set, we assume this to be correct
+    protoLayer.minZ = -layerHalfZ;
+    protoLayer.maxZ = +layerHalfZ;
   }
 
   // adjust the layer radius
@@ -85,6 +89,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
                                         << " (+"
                                         << protoLayer.envZ
                                         << ")");
+  ACTS_VERBOSE(" - z center         = " << layerZ);
   ACTS_VERBOSE(" - with phi min/max = " << protoLayer.minPhi << " / "
                                         << protoLayer.maxPhi);
   ACTS_VERBOSE(" - # of modules     = " << surfaces.size() << " ordered in ( "
@@ -142,9 +147,13 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   // create the layer transforms if not given
   // we need to transform in case layerZ != 0, so that the layer will be
   // correctly defined using the halflength
-  if (!transform) {
+  if (!transform && bTypeZ == equidistant) {
     transform
-        = std::make_shared<const Transform3D>(Translation3D(0., 0., layerZ));
+        = std::make_shared<const Transform3D>(Translation3D(0., 0., -layerZ));
+    // reset min / max Z
+    // if transform is set, we assume this to be correct
+    protoLayer.minZ = -layerHalfZ;
+    protoLayer.maxZ = +layerHalfZ;
   }
 
   // adjust the layer radius
@@ -161,6 +170,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
                                         << " (+"
                                         << protoLayer.envZ
                                         << ")");
+  ACTS_VERBOSE(" - z center         = " << layerZ);
   ACTS_VERBOSE(" - with phi min/max = " << protoLayer.minPhi << " / "
                                         << protoLayer.maxPhi);
   ACTS_VERBOSE(" - # of modules     = " << surfaces.size() << ")");
