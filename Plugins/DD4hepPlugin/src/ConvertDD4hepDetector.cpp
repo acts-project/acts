@@ -31,7 +31,7 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
                       double             layerEnvelopeR,
                       double             layerEnvelopeZ,
                       bool               buildDigitizationModules,
-                      double defaultLayerThickness = 10e-10 * Acts::units::_mm)
+                      double             defaultLayerThickness)
 {
   // check if envelopes of the volume should be built automatically
   // create local logger for conversion
