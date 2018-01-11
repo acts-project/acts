@@ -1,5 +1,3 @@
-find_package(DD4hep 1.2 REQUIRED COMPONENTS DDCore DDSegmentation)
-
 file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 
 add_library (ACTSDD4hepPlugin SHARED ${src_files})

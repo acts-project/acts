@@ -1,5 +1,3 @@
-find_package (PythonInterp 2 EXACT REQUIRED)
-
 add_subdirectory (Detector)
 add_subdirectory (EventData)
 add_subdirectory (Extrapolation)

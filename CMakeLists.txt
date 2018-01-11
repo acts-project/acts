@@ -29,6 +29,21 @@ endif()
 find_package(Boost 1.64 REQUIRED COMPONENTS program_options unit_test_framework)
 find_package(Eigen 3.2.9 REQUIRED)
 
+# optional packages
+
+if(ACTS_BUILD_DOC)
+  find_package(Doxygen 1.8.11 REQUIRED)
+endif()
+if(ACTS_BUILD_TESTS)
+  find_package(PythonInterp 2 EXACT REQUIRED)
+endif()
+if(ACTS_BUILD_DD4HEP_PLUGIN)
+  find_package(DD4hep 1.2 REQUIRED COMPONENTS DDCore DDSegmentation)
+endif()
+if(ACTS_BUILD_TGEO_PLUGIN)
+  find_package(ROOT 6.10 REQUIRED COMPONENTS Geom)
+endif()
+
 # additional configuration and tools
 
 include (GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
