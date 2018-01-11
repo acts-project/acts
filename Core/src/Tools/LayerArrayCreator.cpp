@@ -99,6 +99,13 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
                       "navigation. This should never happen. Please detach the "
                       "layers in your geometry description.");
       }
+      // if layers are overlapping bail out
+      if (navigationValue > (layerValue - 0.5 * layerThickness)) {
+        ACTS_ERROR("Layers are overlapping at: "
+                   << layerValue - 0.5 * layerThickness
+                   << ". This should never happen. "
+                      "Please check your geometry description.");
+      }
 
       // create the navigation layer surface from the layer
       std::unique_ptr<const Surface> navLayerSurface(createNavigationSurface(
