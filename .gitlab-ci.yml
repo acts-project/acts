@@ -75,7 +75,7 @@ license:
   script:
     - cmake --build build -- integration_tests
 
-# SLC6, LCG91 (Default build)
+# SLC6, LCG91 (default build)
 
 build_slc6_lcg91:
   <<: *template_build
@@ -86,6 +86,14 @@ unit_tests_slc6_lcg91:
   <<: *template_unit_tests
   dependencies:
     - build_slc6_lcg91
+  # replace script to also calculate code coverage
+  script:
+    - cmake --build build -- test
+    - cmake --build build -- coverage
+  coverage: '/^TOTAL.*\s+(\d+\%)$/'
+  artifacts:
+    paths:
+      - build/coverage
 
 integration_tests_slc6_lcg91:
   <<: *template_integration_tests
@@ -178,21 +186,6 @@ integration_tests_cc7_lcg92:
   image: gitlab-registry.cern.ch/acts/machines/cc7:latest
   before_script:
     - set +e && source CI/setup_lcg92.sh; set -e
-
-# post-test checks and analyzers
-
-coverage:
-  stage: check
-  tags:
-    - cvmfs
-  coverage: '/^TOTAL.*\s+(\d+\%)$/'
-  dependencies:
-    - unit_tests_slc6_lcg91
-  script:
-    - cmake --build build -- coverage
-  artifacts:
-    paths:
-      - build/coverage
 
 doc:
   stage: build
