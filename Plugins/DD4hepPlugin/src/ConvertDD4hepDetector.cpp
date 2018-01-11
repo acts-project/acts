@@ -293,9 +293,9 @@ volumeBuilder(dd4hep::DetElement subDetector,
       throw std::logic_error(
           "Beampipe has wrong shape - needs to be TGeoTubeSeg!");
     // get the dimension of TGeo and convert lengths
-    double rMin  = tube->GetRmin() * units::_cm;
-    double rMax  = tube->GetRmax() * units::_cm;
-    double halfZ = tube->GetDz() * units::_cm;
+    double rMin  = tube->GetRmin() * units::_cm + layerEnvelopeR;
+    double rMax  = tube->GetRmax() * units::_cm - layerEnvelopeR;
+    double halfZ = tube->GetDz() * units::_cm - layerEnvelopeZ;
     ACTS_VERBOSE("[V] Extracting cylindrical volume bounds ( rmin / rmax / "
                  "halfZ )=  ( "
                  << rMin
@@ -318,8 +318,8 @@ volumeBuilder(dd4hep::DetElement subDetector,
     bplConfig.layerIdentification = subDetector.name();
     bplConfig.centralLayerRadii   = std::vector<double>(1, 0.5 * (rMax + rMin));
     bplConfig.centralLayerHalflengthZ = std::vector<double>(1, halfZ);
-    bplConfig.centralLayerThickness   = std::vector<double>(1, rMax - rMin);
-    bplConfig.centralLayerMaterial    = {bpMaterial};
+    bplConfig.centralLayerThickness = std::vector<double>(1, fabs(rMax - rMin));
+    bplConfig.centralLayerMaterial  = {bpMaterial};
     auto beamPipeBuilder = std::make_shared<const Acts::PassiveLayerBuilder>(
         bplConfig, Acts::getDefaultLogger(subDetector.name(), loggingLevel));
 
