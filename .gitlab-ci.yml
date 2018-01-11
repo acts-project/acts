@@ -1,13 +1,35 @@
 stages:
-    - build
-    - test
-    - check
-    - deploy
+  - check
+  - build
+  - test
+  - deploy
 
 before_script:
   # CI executor uses fail on error by default
   # setup scripts do not like that
   - set +e && source CI/setup_lcg91.sh; set -e
+
+# pre-build checks
+
+format:
+  stage: check
+  image: gitlab-registry.cern.ch/acts/machines/check:latest
+  before_script: []
+  dependencies: []
+  script:
+    - CI/check_format .
+  artifacts:
+    paths:
+      - changed
+    when: on_failure
+
+license:
+  stage: check
+  image: python:alpine3.6
+  before_script: []
+  dependencies: []
+  script:
+    - CI/check_license.py .
 
 # job templates w/ default settings
 #
@@ -171,28 +193,6 @@ coverage:
   artifacts:
     paths:
       - build/coverage
-
-# non-program builds
-
-format:
-  stage: build
-  image: gitlab-registry.cern.ch/acts/machines/check:latest
-  before_script: []
-  dependencies: []
-  script:
-    - CI/check_format .
-  artifacts:
-    paths:
-      - changed
-    when: on_failure
-
-license:
-  stage: build
-  image: python:alpine3.6
-  before_script: []
-  dependencies: []
-  script:
-    - CI/check_license.py .
 
 doc:
   stage: build
