@@ -9,11 +9,11 @@ list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # all options must be defined here to keep the list directly visible and
 # make the option variables available everywhere
 option (ACTS_BUILD_DOC "Build documentation" OFF)
-option (ACTS_BUILD_EXAMPLES "Build examples" ON)
+option (ACTS_BUILD_EXAMPLES "Build examples" OFF)
 option (ACTS_BUILD_TESTS "Build unit tests" ON)
 option (ACTS_BUILD_INTEGRATION_TESTS "Build integration tests" OFF)
 option (ACTS_BUILD_DD4HEP_PLUGIN "Build DD4HEP plugins" OFF)
-option (ACTS_BUILD_MATERIAL_PLUGIN "Build Material plugins" ON)
+option (ACTS_BUILD_MATERIAL_PLUGIN "Build Material plugins" OFF)
 option (ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugins" OFF)
 # all other compile-time parameters must be defined here for clear visibility
 # and to avoid forgotten options somewhere deep in the hierarchy
