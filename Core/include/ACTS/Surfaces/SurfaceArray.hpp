@@ -102,7 +102,6 @@ public:
       }
 
       populateNeighborCache();
-
     }
 
     size_t
@@ -261,8 +260,9 @@ public:
     }
 
   private:
-
-    void populateNeighborCache() {
+    void
+    populateNeighborCache()
+    {
       // calculate neighbors for every bin and store in map
       for (size_t i = 0; i < m_grid.size(); i++) {
         if (!isValidBin(i)) continue;
