@@ -163,8 +163,10 @@ namespace Test {
     SrfVec brl = makeBarrel(30, 7, 2, 1);
     draw_surfaces(brl, "SurfaceArray_create_BRL_1.obj");
 
-    detail::EquidistantAxis phiAxis(-M_PI, M_PI, 30u);
-    detail::EquidistantAxis zAxis(-14, 14, 7u);
+    detail::Axis<detail::AxisType::Equidistant, detail::AxisWrapping::Closed>
+        phiAxis(-M_PI, M_PI, 30u);
+    detail::Axis<detail::AxisType::Equidistant, detail::AxisWrapping::Open>
+        zAxis(-14, 14, 7u);
 
     double angleShift = 2 * M_PI / 30. / 2.;
     auto transform    = [angleShift](const Vector3D& pos) {
@@ -205,6 +207,7 @@ namespace Test {
     // do NOT fill, only completebinning
     sl2.completeBinning(brl);
     SurfaceArray sa2(sl2, brl);
+    sa.dump(std::cout);
     for (const auto& srf : brl) {
       Vector3D ctr        = srf->binningPosition(binR);
       SrfVec   binContent = sa2.at(ctr);
