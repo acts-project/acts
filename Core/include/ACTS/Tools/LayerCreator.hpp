@@ -19,6 +19,7 @@
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
+#include "ACTS/Utilities/Units.hpp"
 
 #ifndef ACTS_LAYERCREATOR_TAKESMALLERBIGGER
 #define ACTS_LAYERCREATOR_TAKESMALLERBIGGER
@@ -58,6 +59,17 @@ public:
     double cylinderZtolerance;
     /// cylinder module phi tolerance : it counts at same phi, if ...
     double cylinderPhiTolerance;
+    /// In case no surfaces (to be contained by the layer) are handed over, the
+    /// layer thickness will be set to this value
+    /// @note Layers containing surfaces per default are not allowed to be
+    ///       attached to each other (navigation will fail at this point).
+    ///       However, to allow material layers (not containing surfaces) to be
+    ///       attached to each other, this default thickness is needed. In this
+    ///       way, the layer will be thin (with space to the next layer), but
+    ///       the material will have the'real' thickness.
+    /// @attention The default thickness should be set thin enough that no
+    ///            touching or overlapping with the next layer can happen.
+    double defaultThickness = 10e-10 * Acts::units::_mm;
 
     // standard constructor
     Config() : cylinderZtolerance(10.), cylinderPhiTolerance(0.1) {}

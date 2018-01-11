@@ -67,6 +67,8 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
       = std::abs(protoLayer.maxZ + protoLayer.envZ.second - layerZ);
   double layerThickness = (protoLayer.maxR - protoLayer.minR)
       + protoLayer.envR.first + protoLayer.envR.second;
+  // reset layer thickness in case no surfaces ar handed over
+  if (!surfaces.size()) layerThickness = m_cfg.defaultThickness;
 
   ACTS_VERBOSE("Creating a cylindrical Layer:");
   ACTS_VERBOSE(" - with layer R     = " << layerR);
@@ -156,6 +158,8 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
 
   double layerThickness = (protoLayer.maxR - protoLayer.minR)
       + protoLayer.envR.first + protoLayer.envR.second;
+  // reset layer thickness in case no surfaces ar handed over
+  if (!surfaces.size()) layerThickness = m_cfg.defaultThickness;
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a cylindrical Layer:");
@@ -223,7 +227,6 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                               std::shared_ptr<const Transform3D>  transform,
                               std::unique_ptr<ApproachDescriptor> ad) const
 {
-
   ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
 
   double layerZ
@@ -231,6 +234,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                + protoLayer.envZ.second);
   double layerThickness = (protoLayer.maxZ - protoLayer.minZ)
       + protoLayer.envZ.first + protoLayer.envZ.second;
+  // reset layer thickness in case no surfaces ar handed over
+  if (!surfaces.size()) layerThickness = m_cfg.defaultThickness;
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a disk Layer:");
@@ -260,7 +265,6 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
     transform
         = std::make_shared<const Transform3D>(Translation3D(0., 0., layerZ));
   }
-
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
@@ -306,6 +310,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                + protoLayer.envZ.second);
   double layerThickness = std::abs(protoLayer.maxZ - protoLayer.minZ)
       + protoLayer.envZ.first + protoLayer.envZ.second;
+  // reset layer thickness in case no surfaces ar handed over
+  if (!surfaces.size()) layerThickness = m_cfg.defaultThickness;
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a disk Layer:");
