@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.5)
+cmake_minimum_required(VERSION 3.7)
 
 project (ACTS VERSION 0.6.0 LANGUAGES CXX)
 
@@ -9,11 +9,11 @@ list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # all options must be defined here to keep the list directly visible and
 # make the option variables available everywhere
 option (ACTS_BUILD_DOC "Build documentation" OFF)
-option (ACTS_BUILD_EXAMPLES "Build examples" ON)
+option (ACTS_BUILD_EXAMPLES "Build examples" OFF)
 option (ACTS_BUILD_TESTS "Build unit tests" ON)
 option (ACTS_BUILD_INTEGRATION_TESTS "Build integration tests" OFF)
 option (ACTS_BUILD_DD4HEP_PLUGIN "Build DD4HEP plugins" OFF)
-option (ACTS_BUILD_MATERIAL_PLUGIN "Build Material plugins" ON)
+option (ACTS_BUILD_MATERIAL_PLUGIN "Build Material plugins" OFF)
 option (ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugins" OFF)
 # all other compile-time parameters must be defined here for clear visibility
 # and to avoid forgotten options somewhere deep in the hierarchy
@@ -26,8 +26,23 @@ endif()
 
 # required packages
 
-find_package (Boost 1.62 REQUIRED)
-find_package (Eigen 3.2.9 REQUIRED)
+find_package(Boost 1.64 REQUIRED COMPONENTS program_options unit_test_framework)
+find_package(Eigen 3.2.9 REQUIRED)
+
+# optional packages
+
+if(ACTS_BUILD_DOC)
+  find_package(Doxygen 1.8.11 REQUIRED)
+endif()
+if(ACTS_BUILD_TESTS)
+  find_package(PythonInterp 2 EXACT REQUIRED)
+endif()
+if(ACTS_BUILD_DD4HEP_PLUGIN)
+  find_package(DD4hep 1.2 REQUIRED COMPONENTS DDCore DDSegmentation)
+endif()
+if(ACTS_BUILD_TGEO_PLUGIN)
+  find_package(ROOT 6.10 REQUIRED COMPONENTS Geom)
+endif()
 
 # additional configuration and tools
 
@@ -43,12 +58,12 @@ add_subdirectory (Plugins)
 
 # examples and tests
 
-if (ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS)
-  include (CTest) # must be included from the main CMakeLists.txt
-endif ()
-add_component (Examples)
-add_subdirectory_if (Tests ACTS_BUILD_TESTS)
-add_subdirectory_if (IntegrationTests ACTS_BUILD_INTEGRATION_TESTS)
+if(ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS)
+  include(CTest) # must be included from the main CMakeLists.txt
+endif()
+add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
+add_subdirectory_if(Tests ACTS_BUILD_TESTS)
+add_subdirectory_if(IntegrationTests ACTS_BUILD_INTEGRATION_TESTS)
 
 # documentation
 

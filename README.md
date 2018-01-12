@@ -40,29 +40,33 @@ If you find a bug, have a feature request, or want to contribute to ACTS, please
 
 ## <a name="prerequisites">Prerequisites</a>
 
-Only few dependencies are required to build the Core library of ACTS. A list of prerequisites required is given below with the version numbers indicating which versions were tested. Older versions may or may not work, feedback is very welcome.
+Only few dependencies are required to build the Core library of ACTS. A list of
+prerequisites required is given below with the version numbers indicating which
+versions were tested. Older versions may or may not work, feedback is very
+welcome.
 
 The following dependencies are required:
 
-+ A C++14 compatible compiler, e.g. [gcc](https://gcc.gnu.org/) (>= 6.2) or [clang](http://clang.llvm.org/) (>= 4.0)
-+ [cmake](https://cmake.org/) (>= 3.5)
-+ [boost](http://boost.org/) (>= 1.62, with <tt>program_options</tt>)
-+ [Eigen](http://eigen.tuxfamily.org/) (>= 3.2.9)
+*   A C++14 compatible compiler, e.g. [gcc](https://gcc.gnu.org) (>= 6.2) or [clang](http://clang.llvm.org) (>= 4.0)
+*   [cmake](https://cmake.org) (>= 3.7)
+*   [boost](http://boost.org) (>= 1.64, with `program_options` and `unit_test_framework`)
+*   [Eigen](http://eigen.tuxfamily.org) (>= 3.2.9)
 
-The following dependencies are optional and are only needed for some of the plugins:
+The following dependencies are optional and are only needed for some of the
+components:
 
-+ [doxygen](http://doxygen.org) (>= 1.8.11) for the documentation
-+ [graphviz](http://www.graphviz.org/) (>= 2.26.00) for the documentation
-+ [ROOT](https://root.cern.ch/) (>= 6.08.00) for TGeo plugin & for DD4hep plugin
-+ [DD4Hep](https://github.com/AIDASoft/DD4hep) (>= 1.02) for DD4Hep plugin
+*   [DD4Hep](http://dd4hep.cern.ch) (>= 1.02) for the DD4Hep plugin
+*   [doxygen](http://doxygen.org) (>= 1.8.11) for the documentation
+*   [graphviz](http://www.graphviz.org) (>= 2.28.00) for the documentation
+*   [ROOT](https://root.cern.ch) (>= 6.10.00) for the TGeo plugin
 
-Compatible versions of all dependencies are provided by the [LCG89
-Release](https://lcgsoft.web.cern.ch/lcgsoft/release/89/). This release is also
+Compatible versions of all dependencies are provided by the [LCG91
+Release](http://lcginfo.cern.ch/release/91). This release is also
 used in the continous integration system to test the software. A setup script
 is provided that can be used to setup the environment on lxplus machines at
 CERN
 
-    source CI/setup_lcg89.sh
+    source CI/setup_lcg91.sh
 
 ## <a name="installation">Installation</a>
 

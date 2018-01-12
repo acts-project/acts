@@ -1,6 +1,4 @@
-#!/bin/sh -ex
-#
-# setup LCG release 89 via cvmfs
+# setup LCG release 91 via cvmfs
 
 # determine os release
 if [ "$(cat /etc/redhat-release | grep 'Scientific Linux CERN SLC release 6')" ]; then
@@ -14,7 +12,7 @@ else
   exit 1
 fi
 
-release=LCG_89
+release=LCG_91
 platform=x86_64-${os}-${compiler}
 lcg=/cvmfs/sft.cern.ch/lcg/views/${release}/${platform}
 

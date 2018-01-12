@@ -1,6 +1,3 @@
-# should reuse version defined in main CMakeLists.txt
-find_package (Boost REQUIRED COMPONENTS unit_test_framework)
-
 add_custom_target(integration_tests WORKING_DIRECTORY ${CMAKE_PROJECT_DIR})
 
 # macro to collect integration test binaries from subdirectories
