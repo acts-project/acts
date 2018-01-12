@@ -99,7 +99,9 @@ namespace Test {
     fullPhiTestSurfacesEC(size_t n     = 10,
                           double shift = 0,
                           double zbase = 0,
-                          double r     = 10)
+                          double r     = 10,
+                          double w     = 2,
+                          double h     = 1)
     {
 
       SrfVec res;
@@ -114,7 +116,7 @@ namespace Test {
         trans.rotate(Eigen::AngleAxisd(i * phiStep + shift, Vector3D(0, 0, 1)));
         trans.translate(Vector3D(r, 0, z));
 
-        auto bounds = std::make_shared<const RectangleBounds>(2, 1);
+        auto bounds = std::make_shared<const RectangleBounds>(w, h);
 
         auto transptr = std::make_shared<const Transform3D>(trans);
         auto srf      = std::make_unique<const PlaneSurface>(transptr, bounds);
@@ -549,6 +551,32 @@ namespace Test {
     // BOOST_TEST(axis.min == 8, tt::tolerance(1e-3)); // fails for some reason
     BOOST_CHECK(((axis.min - 8) < 1e-3));
     BOOST_TEST(axis.bType == equidistant);
+  }
+
+  // if there are concentring disc or barrel modules, the bin count might be off
+  // we want to create _as few bins_ as possible, meaning the r-ring with
+  // the lowest number of surfaces should be used for the bin count or
+  // as basis for the variable edge procedure
+  // double filling will make sure no surfaces are dropped
+  BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_dependentBinCounts,
+                          SurfaceArrayCreatorFixture)
+  {
+    auto ringA = fullPhiTestSurfacesEC(10, 0, 0, 10, 2, 3);
+    auto ringB = fullPhiTestSurfacesEC(15, 0, 0, 15, 2, 3.5);
+    auto ringC = fullPhiTestSurfacesEC(20, 0, 0, 20, 2, 3.8);
+
+    std::vector<const Surface*> surfaces;
+    std::copy(ringA.begin(), ringA.end(), std::back_inserter(surfaces));
+    std::copy(ringB.begin(), ringB.end(), std::back_inserter(surfaces));
+    std::copy(ringC.begin(), ringC.end(), std::back_inserter(surfaces));
+    draw_surfaces(surfaces, "SurfaceArrayCreator_dependentBinCounts.obj");
+
+    std::unique_ptr<SurfaceArray> sArray
+        = m_SAC.surfaceArrayOnDisc(surfaces, equidistant, equidistant);
+    std::cout << (*sArray) << std::endl;
+    auto axes = sArray->getAxes();
+    BOOST_TEST(axes.at(0).getNBins() == 3);
+    BOOST_TEST(axes.at(1).getNBins() == 10);
   }
 
   BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,

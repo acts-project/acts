@@ -58,6 +58,21 @@ public:
     double              min;
     double              max;
     std::vector<double> binEdges;
+
+    size_t
+    getBin(double x) const
+    {
+      if (binEdges.size() == 0) {
+        // equidistant
+        double w = (max - min) / nBins;
+        return std::floor((x - min) / w);
+      } else {
+        // variable
+        const auto it
+            = std::upper_bound(std::begin(binEdges), std::end(binEdges), x);
+        return std::distance(std::begin(binEdges), it);
+      }
+    }
   };
 
   // Configuration struct
@@ -170,6 +185,9 @@ public:
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
+  /// @note If there is more than on R-Ring, number of phi bins
+  ///       will be set to lowest number of surfaces of any R-ring.
+  ///       This ignores bTypePhi and produces equidistant binning in phi
   std::unique_ptr<Acts::SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
                      BinningType                        bTypeR,

@@ -208,16 +208,38 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   ProtoAxis pAxisPhi;
   ProtoAxis pAxisR;
 
-  if (bTypePhi == equidistant)
-    pAxisPhi
-        = createEquidistantAxis(surfaces, binPhi, protoLayer, transform, 0);
-  else
-    pAxisPhi = createVariableAxis(surfaces, binPhi, transform);
-
   if (bTypeR == equidistant)
     pAxisR = createEquidistantAxis(surfaces, binR, protoLayer, transform);
   else
     pAxisR = createVariableAxis(surfaces, binR, transform);
+
+  // if we have more than one R ring, we need to figure out
+  // the number of phi bins.
+  if (pAxisR.nBins > 1) {
+    // more than one R-Ring, we need to adjust
+    // this FORCES equidistant binning
+    std::vector<size_t> nPhiModules(pAxisR.nBins);
+    for (const auto& srf : surfaces) {
+      Vector3D bpos = srf->binningPosition(binR);
+      size_t   bin  = pAxisR.getBin(bpos.perp());
+      nPhiModules.at(bin)++;
+    }
+
+    size_t nBinsPhi
+        = (*std::min_element(nPhiModules.begin(), nPhiModules.end()));
+    pAxisPhi = createEquidistantAxis(
+        surfaces, binPhi, protoLayer, transform, nBinsPhi);
+
+  } else {
+    // use regular determination
+    if (bTypePhi == equidistant)
+      pAxisPhi
+          = createEquidistantAxis(surfaces, binPhi, protoLayer, transform, 0);
+    else
+      pAxisPhi = createVariableAxis(surfaces, binPhi, transform);
+  }
+
+  std::cout << transform.matrix() << std::endl;
 
   double Z = 0.5 * (protoLayer.minZ + protoLayer.maxZ);
   ACTS_VERBOSE("- z-position of disk estimated as " << Z);
@@ -512,6 +534,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
   pAxis.bType    = arbitrary;
   pAxis.bValue   = bValue;
   pAxis.binEdges = bValues;
+  pAxis.nBins    = pAxis.binEdges.size();
 
   return pAxis;
 }
