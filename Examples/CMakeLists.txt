@@ -1,5 +1,5 @@
 add_library (ACTSCustomLogger SHARED src/CustomDefaultLogger.cpp)
-target_include_directories (ACTSCustomLogger PRIVATE ${CMAKE_SOURCE_DIR}/Core/include)
+target_include_directories (ACTSCustomLogger PRIVATE ${PROJECT_SOURCE_DIR}/Core/include)
 
 install (TARGETS ACTSCustomLogger
          EXPORT ACTSExamplesTargets
