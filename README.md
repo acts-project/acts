@@ -49,7 +49,7 @@ The following dependencies are required:
 
 *   A C++14 compatible compiler, e.g. [gcc](https://gcc.gnu.org) (>= 6.2) or [clang](http://clang.llvm.org) (>= 4.0)
 *   [cmake](https://cmake.org) (>= 3.7)
-*   [boost](http://boost.org) (>= 1.64, with `program_options` and `unit_test_framework`)
+*   [boost](http://boost.org) (>= 1.62, with `program_options` and `unit_test_framework`)
 *   [Eigen](http://eigen.tuxfamily.org) (>= 3.2.9)
 
 The following dependencies are optional and are only needed for some of the
