@@ -265,8 +265,8 @@ namespace Test {
     // CASE I
     double     envR = 0.1, envZ = 0.5;
     ProtoLayer pl(srf);
-    pl.envR = envR;
-    pl.envZ = envZ;
+    pl.envR = {envR, envR};
+    pl.envZ = {envZ, envZ};
     std::shared_ptr<CylinderLayer> layer
         = std::dynamic_pointer_cast<CylinderLayer>(
             p_LC->cylinderLayer(srf, equidistant, equidistant, pl));
@@ -290,8 +290,8 @@ namespace Test {
     // CASE II
 
     ProtoLayer pl2(srf);
-    pl2.envR = envR;
-    pl2.envZ = envZ;
+    pl2.envR = {envR, envR};
+    pl2.envZ = {envZ, envZ};
     layer    = std::dynamic_pointer_cast<CylinderLayer>(
         p_LC->cylinderLayer(srf, 30, 7, pl2));
     BOOST_TEST(layer->thickness() == (rMax - rMin) + 2 * envR,
@@ -395,8 +395,8 @@ namespace Test {
     double     envMinR = 1, envMaxR = 1, envZ = 5;
     size_t     nBinsR = 3, nBinsPhi = 30;
     ProtoLayer pl2(surfaces);
-    pl2.envR = envMinR;
-    pl2.envZ = envZ;
+    pl2.envR = {envMinR, envMaxR};
+    pl2.envZ = {envZ, envZ};
     layer    = std::dynamic_pointer_cast<DiscLayer>(
         p_LC->discLayer(surfaces, nBinsR, nBinsPhi, pl2));
 
@@ -453,8 +453,8 @@ namespace Test {
 
     double     envR = 0, envZ = 0;
     ProtoLayer pl(brl);
-    pl.envR = envR;
-    pl.envZ = envZ;
+    pl.envR = {envR, envR};
+    pl.envZ = {envZ, envZ};
     std::shared_ptr<CylinderLayer> layer
         = std::dynamic_pointer_cast<CylinderLayer>(
             p_LC->cylinderLayer(brl, equidistant, equidistant, pl));

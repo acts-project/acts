@@ -40,11 +40,11 @@ public:
   double maxPhi;
   double minPhi;
 
-  double envX   = 0;
-  double envY   = 0;
-  double envZ   = 0;
-  double envR   = 0;
-  double envPhi = 0;
+  std::pair<double, double> envX   = {0, 0};
+  std::pair<double, double> envY   = {0, 0};
+  std::pair<double, double> envZ   = {0, 0};
+  std::pair<double, double> envR   = {0, 0};
+  std::pair<double, double> envPhi   = {0, 0};
 
   /// Constructor
   ///
