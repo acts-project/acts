@@ -236,12 +236,12 @@ Acts::BoundaryCheck::isInsidePolygon(const Vector2D&          point,
   // the polygon will always appear on the same side of each edge.
   // a point on the outside will switch sides at least once.
 
-  // returns which side of the connecting line between `l0` and `l1` the point
+  // returns which side of the connecting line between `ll0` and `ll1` the point
   // `p` is on. computes the sign of the z-component of the cross-product
-  // between the line normal vector and the vector from `l0` to `p`.
-  auto lineSide = [&](auto&& l0, auto&& l1) {
-    auto normal = l1 - l0;
-    auto delta  = point - l0;
+  // between the line normal vector and the vector from `ll0` to `p`.
+  auto lineSide = [&](auto&& ll0, auto&& ll1) {
+    auto normal = ll1 - ll0;
+    auto delta  = point - ll0;
     return std::signbit((normal[0] * delta[1]) - (normal[1] * delta[0]));
   };
 
@@ -338,15 +338,15 @@ Acts::BoundaryCheck::computeClosestPointOnPolygon(
     const Acts::Vector2D&    point,
     const Vector2DContainer& vertices) const
 {
-  // calculate the closest position on the segment between `l0` and `l1` to
+  // calculate the closest position on the segment between `ll0` and `ll1` to
   // the point as measured by the metric induced by the weight matrix
-  auto closestOnSegment = [&](auto&& l0, auto&& l1) {
+  auto closestOnSegment = [&](auto&& ll0, auto&& ll1) {
     // normal vector and position of the closest point along the normal
-    auto n = l1 - l0;
+    auto n = ll1 - ll0;
     auto f = (n.transpose() * m_weight * n).value();
-    auto u = -((l0 - point).transpose() * m_weight * n).value() / f;
+    auto u = -((ll0 - point).transpose() * m_weight * n).value() / f;
     // u must be in [0, 1] to still be on the polygon segment
-    return l0 + std::min(std::max(u, 0.0), 1.0) * n;
+    return ll0 + std::min(std::max(u, 0.0), 1.0) * n;
   };
 
   auto     iv      = std::begin(vertices);
