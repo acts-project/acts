@@ -239,7 +239,6 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
       pAxisPhi = createVariableAxis(surfaces, binPhi, transform);
   }
 
-
   double Z = 0.5 * (protoLayer.minZ + protoLayer.maxZ);
   ACTS_VERBOSE("- z-position of disk estimated as " << Z);
 
@@ -528,13 +527,14 @@ Acts::SurfaceArrayCreator::createVariableAxis(
   ACTS_VERBOSE("	(binX = 0, binY = 1, binZ = 2, binR = 3, binPhi = 4, "
                "binRPhi = 5, binH = 6, binEta = 7)");
   ACTS_VERBOSE("	Number of bins: " << (bValues.size() - 1));
-  ACTS_VERBOSE("	(Min/Max) = (" << bValues.front() << "/" << bValues.back() << ")");
+  ACTS_VERBOSE("	(Min/Max) = (" << bValues.front() << "/" << bValues.back()
+                                 << ")");
 
   ProtoAxis pAxis;
   pAxis.bType    = arbitrary;
   pAxis.bValue   = bValue;
   pAxis.binEdges = bValues;
-  pAxis.nBins    = bValues.size()-1;
+  pAxis.nBins    = bValues.size() - 1;
 
   return pAxis;
 }

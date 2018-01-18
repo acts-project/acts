@@ -70,7 +70,7 @@ public:
         // variable
         const auto it
             = std::upper_bound(std::begin(binEdges), std::end(binEdges), x);
-        return std::distance(std::begin(binEdges), it)-1;
+        return std::distance(std::begin(binEdges), it) - 1;
       }
     }
   };

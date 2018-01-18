@@ -55,22 +55,26 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
 
   // remaining layer parameters
-  double layerR = 0.5 * (protoLayer.minR - protoLayer.envR.first + protoLayer.maxR + protoLayer.envR.second);
+  double layerR
+      = 0.5 * (protoLayer.minR - protoLayer.envR.first + protoLayer.maxR
+               + protoLayer.envR.second);
   double binPosZ = 0.5 * (protoLayer.minZ + protoLayer.maxZ);
 
   double envZShift = 0.5 * (-protoLayer.envZ.first + protoLayer.envZ.second);
-  double layerZ = binPosZ + envZShift;
+  double layerZ    = binPosZ + envZShift;
 
-  double layerHalfZ = std::abs(protoLayer.maxZ + protoLayer.envZ.second - layerZ);
-  double layerThickness
-      = (protoLayer.maxR - protoLayer.minR) + protoLayer.envR.first + protoLayer.envR.second;
-  
+  double layerHalfZ
+      = std::abs(protoLayer.maxZ + protoLayer.envZ.second - layerZ);
+  double layerThickness = (protoLayer.maxR - protoLayer.minR)
+      + protoLayer.envR.first + protoLayer.envR.second;
+
   ACTS_VERBOSE("Creating a cylindrical Layer:");
   ACTS_VERBOSE(" - with layer R     = " << layerR);
   ACTS_VERBOSE(" - from R min/max   = " << protoLayer.minR << " / "
                                         << protoLayer.maxR);
   ACTS_VERBOSE(" - with R thickness = " << layerThickness);
-  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envR.first << " / " << protoLayer.envR.second);
+  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envR.first << " / "
+                                        << protoLayer.envR.second);
 
   ACTS_VERBOSE(" - with z min/max   = " << protoLayer.minZ << " (-"
                                         << protoLayer.envZ.first
@@ -86,12 +90,12 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   // we need to transform in case layerZ != 0, so that the layer will be
   // correctly defined using the halflength
   if (!transform) {
-    //double shift = -(layerZ + envZShift);
+    // double shift = -(layerZ + envZShift);
     transform
         = std::make_shared<const Transform3D>(Translation3D(0., 0., -layerZ));
     ACTS_VERBOSE(" - layer z shift  = " << -layerZ);
   }
-  
+
   ACTS_VERBOSE(" - with phi min/max = " << protoLayer.minPhi << " / "
                                         << protoLayer.maxPhi);
   ACTS_VERBOSE(" - # of modules     = " << surfaces.size() << " ordered in ( "
@@ -140,23 +144,27 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
 
   // remaining layer parameters
-  double layerR = 0.5 * (protoLayer.minR - protoLayer.envR.first + protoLayer.maxR + protoLayer.envR.second);
-  double binPosZ     = 0.5 * (protoLayer.minZ + protoLayer.maxZ);
+  double layerR
+      = 0.5 * (protoLayer.minR - protoLayer.envR.first + protoLayer.maxR
+               + protoLayer.envR.second);
+  double binPosZ   = 0.5 * (protoLayer.minZ + protoLayer.maxZ);
   double envZShift = 0.5 * (-protoLayer.envZ.first + protoLayer.envZ.second);
-  double layerZ = binPosZ + envZShift;
+  double layerZ    = binPosZ + envZShift;
 
-  double layerHalfZ = std::abs(protoLayer.maxZ + protoLayer.envZ.second - layerZ);
+  double layerHalfZ
+      = std::abs(protoLayer.maxZ + protoLayer.envZ.second - layerZ);
 
-  double layerThickness
-      = (protoLayer.maxR - protoLayer.minR) + protoLayer.envR.first + protoLayer.envR.second;
-  
+  double layerThickness = (protoLayer.maxR - protoLayer.minR)
+      + protoLayer.envR.first + protoLayer.envR.second;
+
   // adjust the layer radius
   ACTS_VERBOSE("Creating a cylindrical Layer:");
   ACTS_VERBOSE(" - with layer R     = " << layerR);
   ACTS_VERBOSE(" - from R min/max   = " << protoLayer.minR << " / "
                                         << protoLayer.maxR);
   ACTS_VERBOSE(" - with R thickness = " << layerThickness);
-  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envR.first << " / " << protoLayer.envR.second);
+  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envR.first << " / "
+                                        << protoLayer.envR.second);
   ACTS_VERBOSE(" - with z min/max   = " << protoLayer.minZ << " (-"
                                         << protoLayer.envZ.first
                                         << ") / "
@@ -174,7 +182,6 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
         = std::make_shared<const Transform3D>(Translation3D(0., 0., -layerZ));
     ACTS_VERBOSE(" - layer z shift    = " << -layerZ);
   }
-
 
   ACTS_VERBOSE(" - with phi min/max = " << protoLayer.minPhi << " / "
                                         << protoLayer.maxPhi);
@@ -219,9 +226,11 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
 
   ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
 
-  double layerZ = 0.5 * (protoLayer.minZ - protoLayer.envZ.first + protoLayer.maxZ + protoLayer.envZ.second);
-  double layerThickness
-      = (protoLayer.maxZ - protoLayer.minZ) + protoLayer.envZ.first + protoLayer.envZ.second;
+  double layerZ
+      = 0.5 * (protoLayer.minZ - protoLayer.envZ.first + protoLayer.maxZ
+               + protoLayer.envZ.second);
+  double layerThickness = (protoLayer.maxZ - protoLayer.minZ)
+      + protoLayer.envZ.first + protoLayer.envZ.second;
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a disk Layer:");
@@ -229,9 +238,15 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   ACTS_VERBOSE(" - from Z min/max   = " << protoLayer.minZ << " / "
                                         << protoLayer.maxZ);
   ACTS_VERBOSE(" - with Z thickness = " << layerThickness);
-  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envZ.first << " / " << protoLayer.envZ.second);
-  ACTS_VERBOSE(" - with R min/max   = " << protoLayer.minR << " (-" << protoLayer.envR.first << ") / "
-                                        << protoLayer.maxR << " (+" << protoLayer.envR.second << ")");
+  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envZ.first << " / "
+                                        << protoLayer.envZ.second);
+  ACTS_VERBOSE(" - with R min/max   = " << protoLayer.minR << " (-"
+                                        << protoLayer.envR.first
+                                        << ") / "
+                                        << protoLayer.maxR
+                                        << " (+"
+                                        << protoLayer.envR.second
+                                        << ")");
   ACTS_VERBOSE(" - with phi min/max = " << protoLayer.minPhi << " / "
                                         << protoLayer.maxPhi);
   ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << " ordered in ( "
@@ -257,7 +272,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
 
   // create the share disc bounds
   auto dBounds = std::make_shared<const RadialBounds>(
-      protoLayer.minR - protoLayer.envR.first, protoLayer.maxR + protoLayer.envR.second);
+      protoLayer.minR - protoLayer.envR.first,
+      protoLayer.maxR + protoLayer.envR.second);
 
   // create the layers
   // we use the same transform here as for the layer itself
@@ -285,9 +301,11 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
 {
   ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
 
-  double layerZ = 0.5 * (protoLayer.minZ - protoLayer.envZ.first + protoLayer.maxZ + protoLayer.envZ.second);
-  double layerThickness
-      = std::abs(protoLayer.maxZ - protoLayer.minZ) + protoLayer.envZ.first + protoLayer.envZ.second;
+  double layerZ
+      = 0.5 * (protoLayer.minZ - protoLayer.envZ.first + protoLayer.maxZ
+               + protoLayer.envZ.second);
+  double layerThickness = std::abs(protoLayer.maxZ - protoLayer.minZ)
+      + protoLayer.envZ.first + protoLayer.envZ.second;
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a disk Layer:");
@@ -295,9 +313,15 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   ACTS_VERBOSE(" - from Z min/max   = " << protoLayer.minZ << " / "
                                         << protoLayer.maxZ);
   ACTS_VERBOSE(" - with Z thickness = " << layerThickness);
-  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envZ.first << " / " << protoLayer.envZ.second);
-  ACTS_VERBOSE(" - with R min/max   = " << protoLayer.minR << " (-" << protoLayer.envR.first << ") / "
-                                        << protoLayer.maxR << " (+" << protoLayer.envR.second << ")");
+  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envZ.first << " / "
+                                        << protoLayer.envZ.second);
+  ACTS_VERBOSE(" - with R min/max   = " << protoLayer.minR << " (-"
+                                        << protoLayer.envR.first
+                                        << ") / "
+                                        << protoLayer.maxR
+                                        << " (+"
+                                        << protoLayer.envR.second
+                                        << ")");
   ACTS_VERBOSE(" - with phi min/max = " << protoLayer.minPhi << " / "
                                         << protoLayer.maxPhi);
   ACTS_VERBOSE(" - # of modules     = " << surfaces.size());
@@ -319,7 +343,8 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
 
   // create the shared disc bounds
   auto dBounds = std::make_shared<const RadialBounds>(
-      protoLayer.minR - protoLayer.envR.first, protoLayer.maxR + protoLayer.envR.second);
+      protoLayer.minR - protoLayer.envR.first,
+      protoLayer.maxR + protoLayer.envR.second);
 
   // create the layers
   MutableLayerPtr dLayer = DiscLayer::create(transform,
@@ -412,10 +437,15 @@ Acts::LayerCreator::checkBinning(const SurfaceArray& sArray) const
 
     // print all inaccessibles
     ACTS_ERROR(" -- Inaccessible surfaces: ");
-    for(const auto &srf : diff) {
+    for (const auto& srf : diff) {
       Vector3D ctr = srf->binningPosition(binR);
-      ACTS_ERROR(" Surface(x=" << ctr.x() << ", y=" << ctr.y() << ", z=" << ctr.z()
-                 << ", r=" << ctr.perp() << ", phi=" << ctr.phi() << ")");
+      ACTS_ERROR(" Surface(x=" << ctr.x() << ", y=" << ctr.y() << ", z="
+                               << ctr.z()
+                               << ", r="
+                               << ctr.perp()
+                               << ", phi="
+                               << ctr.phi()
+                               << ")");
     }
 
   } else {

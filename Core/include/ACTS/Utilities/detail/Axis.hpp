@@ -542,8 +542,6 @@ namespace detail {
       return wrapBin(std::distance(std::begin(m_binEdges), it));
     }
 
-
-
     /// @brief get bin width
     ///
     /// @param  [in] bin index of bin

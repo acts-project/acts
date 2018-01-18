@@ -44,7 +44,7 @@ public:
   std::pair<double, double> envY   = {0, 0};
   std::pair<double, double> envZ   = {0, 0};
   std::pair<double, double> envR   = {0, 0};
-  std::pair<double, double> envPhi   = {0, 0};
+  std::pair<double, double> envPhi = {0, 0};
 
   /// Constructor
   ///
