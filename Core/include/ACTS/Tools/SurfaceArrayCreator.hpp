@@ -70,7 +70,7 @@ public:
         // variable
         const auto it
             = std::upper_bound(std::begin(binEdges), std::end(binEdges), x);
-        return std::distance(std::begin(binEdges), it);
+        return std::distance(std::begin(binEdges), it)-1;
       }
     }
   };
@@ -228,7 +228,7 @@ public:
       dPhi        = std::abs(
           dPhi - (dPhi > M_PI) * (2 * M_PI));  // subtract dPhi if over 2pi
 
-      return dPhi < M_PI * 3 / 180.;
+      return dPhi < M_PI * 1 / 180.;
     }
 
     if (bValue == Acts::binZ)
