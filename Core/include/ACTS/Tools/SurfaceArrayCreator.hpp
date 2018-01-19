@@ -224,18 +224,22 @@ public:
   {
 
     if (bValue == Acts::binPhi) {
-      double dPhi = std::abs(a->center().phi() - b->center().phi());
-      dPhi        = std::abs(
+      double dPhi = std::abs(a->binningPosition(binR).phi()
+                             - b->binningPosition(binR).phi());
+      dPhi = std::abs(
           dPhi - (dPhi > M_PI) * (2 * M_PI));  // subtract dPhi if over 2pi
 
       return dPhi < M_PI * 1 / 180.;
     }
 
     if (bValue == Acts::binZ)
-      return (std::abs(a->center().z() - b->center().z()) < Acts::units::_um);
+      return (
+          std::abs(a->binningPosition(binR).z() - b->binningPosition(binR).z())
+          < Acts::units::_um);
 
     if (bValue == Acts::binR)
-      return (std::abs(a->center().perp() - b->center().perp())
+      return (std::abs(a->binningPosition(binR).perp()
+                       - b->binningPosition(binR).perp())
               < Acts::units::_um);
 
     return false;
