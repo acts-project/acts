@@ -265,13 +265,9 @@ public:
              * cache.dir.array())
                 .colwise()
                 .sum();
-      ActsMatrixD<7, 5> tmp;
-      tmp.col(0) = cache.derivative;
-      tmp.col(1) = cache.derivative;
-      tmp.col(2) = cache.derivative;
-      tmp.col(3) = cache.derivative;
-      tmp.col(4) = cache.derivative;
-      tmp *= scale_factors.asDiagonal();
+
+      ActsMatrixD<7, 5> tmp = cache.derivative * scale_factors;
+
       auto jacobian = cache.jacobian;
       jacobian -= tmp;
       auto jac = J * jacobian;
@@ -321,13 +317,8 @@ public:
              * norm_vec.transpose().array())
                 .colwise()
                 .sum();
-      ActsMatrixD<7, 5> tmp;
-      tmp.col(0) = cache.derivative;
-      tmp.col(1) = cache.derivative;
-      tmp.col(2) = cache.derivative;
-      tmp.col(3) = cache.derivative;
-      tmp.col(4) = cache.derivative;
-      tmp *= scale_factors.asDiagonal();
+
+      ActsMatrixD<7, 5> tmp = cache.derivative * scale_factors;
 
       auto jacobian = cache.jacobian;
       jacobian -= tmp;
