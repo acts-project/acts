@@ -260,12 +260,9 @@ public:
       J(3, 5) = - inv_sin_theta;
       J(4, 6) = 1;
 
-      ActsRowVectorD<3> norm_vec(x, y, z);
-
-      norm_vec /= (norm_vec * cache.dir);
       ActsRowVectorD<5> scale_factors
           = (cache.jacobian.template block<3, 5>(0, 0).array().colwise()
-             * norm_vec.transpose().array())
+             * cache.dir.array())
                 .colwise()
                 .sum();
       ActsMatrixD<7, 5> tmp;
