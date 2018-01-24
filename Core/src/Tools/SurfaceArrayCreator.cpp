@@ -95,12 +95,12 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     pAxisPhi
         = createEquidistantAxis(surfaces, binPhi, protoLayer, transform, 0);
   else
-    pAxisPhi = createVariableAxis(surfaces, binPhi, transform);
+    pAxisPhi = createVariableAxis(surfaces, binPhi, protoLayer, transform);
 
   if (bTypeZ == equidistant)
     pAxisZ = createEquidistantAxis(surfaces, binZ, protoLayer, transform);
   else
-    pAxisZ = createVariableAxis(surfaces, binZ, transform);
+    pAxisZ = createVariableAxis(surfaces, binZ, protoLayer, transform);
 
   Transform3D itransform = transform.inverse();
   auto globalToLocal     = [transform](const Vector3D& pos) {
@@ -211,7 +211,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   if (bTypeR == equidistant)
     pAxisR = createEquidistantAxis(surfaces, binR, protoLayer, transform);
   else
-    pAxisR = createVariableAxis(surfaces, binR, transform);
+    pAxisR = createVariableAxis(surfaces, binR, protoLayer, transform);
 
   // if we have more than one R ring, we need to figure out
   // the number of phi bins.
@@ -236,7 +236,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
       pAxisPhi
           = createEquidistantAxis(surfaces, binPhi, protoLayer, transform, 0);
     else
-      pAxisPhi = createVariableAxis(surfaces, binPhi, transform);
+      pAxisPhi = createVariableAxis(surfaces, binPhi, protoLayer, transform);
   }
 
   double Z = 0.5 * (protoLayer.minZ + protoLayer.maxZ);
@@ -329,6 +329,7 @@ Acts::SurfaceArrayCreator::ProtoAxis
 Acts::SurfaceArrayCreator::createVariableAxis(
     const std::vector<const Surface*>& surfaces,
     BinningValue                       bValue,
+    ProtoLayer                         protoLayer,
     Transform3D&                       transform) const
 {
   if (!surfaces.size())
@@ -406,53 +407,12 @@ Acts::SurfaceArrayCreator::createVariableAxis(
                        return (a->binningPosition(binR).z()
                                < b->binningPosition(binR).z());
                      });
-    // get minimum and maximum
-    // the first boundary (minimum) and the last boundary (maximum) need to
-    // be calculated separately with the vertices of the first and last
-    // surface in the binning direction
-
-    // get the bounds of the first surfaces
-    const Acts::Surface*      frontSurface = keys.front();
-    const Acts::PlanarBounds* frontBounds
-        = dynamic_cast<const Acts::PlanarBounds*>(&(frontSurface->bounds()));
-    if (!frontBounds)
-      ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
-                 "other bounds yet! ");
-    // get the global vertices
-    std::vector<Acts::Vector3D> frontVertices
-        = makeGlobalVertices(*frontSurface, frontBounds->vertices());
-    double minBValue = std::min_element(frontVertices.begin(),
-                                        frontVertices.end(),
-                                        [](const Acts::Vector3D& a,
-                                           const Acts::Vector3D& b) {
-                                          return a.z() < b.z();
-                                        })
-                           ->z();
-
-    bValues.push_back(minBValue);
-
-    // get the bounds of the last surfaces
-    const Acts::Surface*      backSurface = keys.back();
-    const Acts::PlanarBounds* backBounds
-        = dynamic_cast<const Acts::PlanarBounds*>(&(backSurface->bounds()));
-    if (!backBounds)
-      ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
-                 "other bounds yet! ");
-    // get the global vertices
-    std::vector<Acts::Vector3D> backVertices
-        = makeGlobalVertices(*backSurface, backBounds->vertices());
-    double maxBValue = std::max_element(backVertices.begin(),
-                                        backVertices.end(),
-                                        [](const Acts::Vector3D& a,
-                                           const Acts::Vector3D& b) {
-                                          return a.z() < b.z();
-                                        })
-                           ->z();
-
-    bValues.push_back(maxBValue);
+    
+    bValues.push_back(protoLayer.minZ);
+    bValues.push_back(protoLayer.maxZ);
 
     // the z-center position of the previous surface
-    double previous = frontSurface->binningPosition(binR).z();
+    double previous = keys.front()->binningPosition(binR).z();
     // go through key surfaces
     for (auto surface = keys.begin() + 1; surface != keys.end(); surface++) {
       // create central binning values which is the mean of the center
@@ -469,53 +429,12 @@ Acts::SurfaceArrayCreator::createVariableAxis(
                        return (a->binningPosition(binR).perp()
                                < b->binningPosition(binR).perp());
                      });
-    // get minimum and maximum
-    // the first boundary (minimum) and the last boundary (maximum) need to
-    // be calculated separately with the vertices of the first and last
-    // surface in the binning direction
 
-    // get the bounds of the first surfaces
-    const Acts::Surface*      frontSurface = keys.front();
-    const Acts::PlanarBounds* frontBounds
-        = dynamic_cast<const Acts::PlanarBounds*>(&(frontSurface->bounds()));
-    if (!frontBounds)
-      ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
-                 "other bounds yet! ");
-    // get the global vertices
-    std::vector<Acts::Vector3D> frontVertices
-        = makeGlobalVertices(*frontSurface, frontBounds->vertices());
-    double minBValue = std::min_element(frontVertices.begin(),
-                                        frontVertices.end(),
-                                        [](const Acts::Vector3D& a,
-                                           const Acts::Vector3D& b) {
-                                          return (a.perp() < b.perp());
-                                        })
-                           ->perp();
-
-    bValues.push_back(minBValue);
-
-    // get the bounds of the last surfaces
-    const Acts::Surface*      backSurface = keys.back();
-    const Acts::PlanarBounds* backBounds
-        = dynamic_cast<const Acts::PlanarBounds*>(&(backSurface->bounds()));
-    if (!backBounds)
-      ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
-                 "other bounds yet! ");
-    // get the global vertices
-    std::vector<Acts::Vector3D> backVertices
-        = makeGlobalVertices(*backSurface, backBounds->vertices());
-    double maxBValue = std::max_element(backVertices.begin(),
-                                        backVertices.end(),
-                                        [](const Acts::Vector3D& a,
-                                           const Acts::Vector3D& b) {
-                                          return (a.perp() < b.perp());
-                                        })
-                           ->perp();
-
-    bValues.push_back(maxBValue);
+    bValues.push_back(protoLayer.minR);
+    bValues.push_back(protoLayer.maxR);
 
     // the r-center position of the previous surface
-    double previous = frontSurface->binningPosition(binR).perp();
+    double previous = keys.front()->binningPosition(binR).perp();
 
     // go through key surfaces
     for (auto surface = keys.begin() + 1; surface != keys.end(); surface++) {

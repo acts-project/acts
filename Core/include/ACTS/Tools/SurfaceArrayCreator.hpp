@@ -295,6 +295,7 @@ private:
   ProtoAxis
   createVariableAxis(const std::vector<const Surface*>& surfaces,
                      BinningValue                       bValue,
+                     ProtoLayer                         protoLayer,
                      Transform3D&                       transform) const;
 
   /// SurfaceArrayCreator internal method
