@@ -261,10 +261,8 @@ public:
       J(4, 6) = 1;
 
       ActsRowVectorD<5> scale_factors
-          = (cache.jacobian.template block<3, 5>(0, 0).array().colwise()
-             * cache.dir.array())
-                .colwise()
-                .sum();
+          = cache.dir.transpose() *
+            cache.jacobian.template topLeftCorner<3, 5>();
 
       ActsMatrixD<7, 5> tmp = cache.derivative * scale_factors;
 
@@ -313,10 +311,7 @@ public:
       ActsRowVectorD<3> norm_vec = dLdG.template block<1, 3>(2, 0);
       norm_vec /= (norm_vec * cache.dir);
       ActsRowVectorD<5> scale_factors
-          = (cache.jacobian.template block<3, 5>(0, 0).array().colwise()
-             * norm_vec.transpose().array())
-                .colwise()
-                .sum();
+          = norm_vec * cache.jacobian.template topLeftCorner<3, 5>();
 
       ActsMatrixD<7, 5> tmp = cache.derivative * scale_factors;
 
