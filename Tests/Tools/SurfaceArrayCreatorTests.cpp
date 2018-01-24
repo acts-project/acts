@@ -78,13 +78,13 @@ namespace Test {
       return m_SAC.createVariableAxis(std::forward<Args>(args)...);
     }
 
-    template <detail::AxisWrapping wrapA,
-              detail::AxisWrapping wrapB,
+    template <detail::AxisBoundaryType bdtA,
+              detail::AxisBoundaryType bdtB,
               typename... Args>
     SurfaceArray::AnySurfaceGridLookup_t
     makeSurfaceGridLookup2D(Args&&... args)
     {
-      return m_SAC.makeSurfaceGridLookup2D<wrapA, wrapB>(
+      return m_SAC.makeSurfaceGridLookup2D<bdtA, bdtB>(
           std::forward<Args>(args)...);
     }
 
@@ -585,9 +585,10 @@ namespace Test {
     SrfVec brl = makeBarrel(30, 7, 2, 1);
     draw_surfaces(brl, "SurfaceArrayCreator_completeBinning_BRL.obj");
 
-    detail::Axis<detail::AxisType::Equidistant, detail::AxisWrapping::Closed>
+    detail::Axis<detail::AxisType::Equidistant,
+                 detail::AxisBoundaryType::Closed>
         phiAxis(-M_PI, M_PI, 30u);
-    detail::Axis<detail::AxisType::Equidistant, detail::AxisWrapping::Open>
+    detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>
         zAxis(-14, 14, 7u);
 
     double R           = 10.;
@@ -658,8 +659,8 @@ namespace Test {
       return itr * Vector3D(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
     };
 
-    auto sl = makeSurfaceGridLookup2D<detail::AxisWrapping::Closed,
-                                      detail::AxisWrapping::Open>(
+    auto sl = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
+                                      detail::AxisBoundaryType::Bound>(
         globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
     sl.fill(brl);
@@ -706,8 +707,8 @@ namespace Test {
             * Vector3D(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
       };
 
-      auto sl2 = makeSurfaceGridLookup2D<detail::AxisWrapping::Closed,
-                                         detail::AxisWrapping::Open>(
+      auto sl2 = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
+                                         detail::AxisBoundaryType::Bound>(
           globalToLocalVar, localToGlobalVar, pAxisPhiVar, pAxisZVar);
 
       sl2.fill(brl);

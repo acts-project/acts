@@ -24,7 +24,7 @@ BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_getBinEdges), get
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_getMin), getMin, 0);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_getMax), getMax, 0);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_getNBins), getNBins, 0);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_getWrapping), getWrapping, 0);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_getBoundaryType), getBoundaryType, 0);
 // clang-format on
 
 namespace Acts {
@@ -41,7 +41,7 @@ namespace concept {
     // clang-format off
     using axis_concept = mpl::vector<has_isEquidistant<bool (), const bte::_self>,
                                      has_isVariable<bool (), const bte::_self>,
-                                     has_getWrapping<detail::AxisWrapping (), const bte::_self>,
+                                     has_getBoundaryType<detail::AxisBoundaryType (), const bte::_self>,
                                      has_getBinEdges<std::vector<double> (), const bte::_self>,
                                      has_getMin<double (), const bte::_self>,
                                      has_getMax<double (), const bte::_self>,

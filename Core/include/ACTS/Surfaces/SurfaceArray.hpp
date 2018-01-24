@@ -519,12 +519,12 @@ public:
     auto axes = m_gridLookup.getAxes();
 
     for (size_t j = 0; j < axes.size(); ++j) {
-      detail::AxisWrapping wrap = axes.at(j).getWrapping();
+      detail::AxisBoundaryType bdt = axes.at(j).getBoundaryType();
       sl << " - axis " << (j + 1) << std::endl;
-      sl << "   - wrapping: ";
-      if (wrap == detail::AxisWrapping::UnderOverflow) sl << "under/overflow";
-      if (wrap == detail::AxisWrapping::Open) sl << "open";
-      if (wrap == detail::AxisWrapping::Closed) sl << "closed";
+      sl << "   - boundary type: ";
+      if (bdt == detail::AxisBoundaryType::Open) sl << "open";
+      if (bdt == detail::AxisBoundaryType::Bound) sl << "bound";
+      if (bdt == detail::AxisBoundaryType::Closed) sl << "closed";
       sl << std::endl;
       sl << "   - type: "
          << (axes.at(j).isEquidistant() ? "equidistant" : "variable")

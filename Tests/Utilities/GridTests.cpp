@@ -1045,8 +1045,8 @@ namespace Test {
     BOOST_TEST((g3.neighborHoodIndices({{11, 10, 9}}, 1) == bins_t({1556, 1557, 1558, 1568, 1569, 1570, 1580, 1581, 1582, 1700, 1701, 1702, 1712, 1713, 1714, 1724, 1725, 1726})));
     // clang-format on
 
-    typedef Axis<AxisType::Equidistant, AxisWrapping::Closed> EAxisClosed;
-    typedef Grid<double, EAxisClosed>                         Grid1Closed_t;
+    typedef Axis<AxisType::Equidistant, AxisBoundaryType::Closed> EAxisClosed;
+    typedef Grid<double, EAxisClosed>                             Grid1Closed_t;
     EAxisClosed d(0.0, 1.0, 10u);
 
     Grid1Closed_t g1Cl(std::make_tuple(std::move(d)));
@@ -1135,7 +1135,7 @@ namespace Test {
     BOOST_TEST((g3.closestPointsIndices(Point({{0.23, 0.13, 0.61}})) == bins_t({112, 113, 117, 118, 147, 148, 152, 153})));
     BOOST_TEST((g3.closestPointsIndices(Point({{0.52, 0.35, 0.71}})) == bins_t({223, 224, 228, 229, 258, 259, 263, 264})));
 
-    typedef Axis<AxisType::Equidistant, AxisWrapping::Closed>  EAxisClosed;
+    typedef Axis<AxisType::Equidistant, AxisBoundaryType::Closed>  EAxisClosed;
     typedef Grid<double, EAxisClosed> Grid1Cl_t;
     typedef Grid<double, EAxisClosed, EAxisClosed> Grid2Cl_t;
     //typedef Grid<double, EAxisClosed, EAxisClosed, EAxisClosed> Grid3Cl_t;
@@ -1158,7 +1158,7 @@ namespace Test {
 
     // @TODO: 3D checks would also be nice
 
-    typedef Axis<AxisType::Equidistant, AxisWrapping::Open>  EAxisOpen;
+    typedef Axis<AxisType::Equidistant, AxisBoundaryType::Bound>  EAxisOpen;
     typedef Grid<double, EAxisOpen> Grid1Op_t;
     typedef Grid<double, EAxisOpen, EAxisOpen> Grid2Op_t;
     //typedef Grid<double, EAxisOpen, EAxisOpen, EAxisOpen> Grid3Op_t;

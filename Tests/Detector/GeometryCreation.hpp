@@ -59,8 +59,8 @@ constructCylinderVolume(double             surfaceHalfLengthZ,
 
   std::vector<const Surface*> surfaces_only = {{sfn, sfc, sfp}};
 
-  detail::Axis<detail::AxisType::Equidistant, detail::AxisWrapping::Open> axis(
-      bUmin, bUmax, surfaces.size());
+  detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>
+       axis(bUmin, bUmax, surfaces.size());
   auto g2l = [](const Vector3D& glob) {
     return std::array<double, 1>({{glob.z()}});
   };

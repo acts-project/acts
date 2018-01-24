@@ -63,8 +63,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   };
 
   SurfaceArray::AnySurfaceGridLookup_t sl
-      = makeSurfaceGridLookup2D<detail::AxisWrapping::Closed,
-                                detail::AxisWrapping::Open>(
+      = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
+                                detail::AxisBoundaryType::Bound>(
           globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
   sl.fill(surfaces);
@@ -113,8 +113,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   };
 
   SurfaceArray::AnySurfaceGridLookup_t sl
-      = makeSurfaceGridLookup2D<detail::AxisWrapping::Closed,
-                                detail::AxisWrapping::Open>(
+      = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
+                                detail::AxisBoundaryType::Bound>(
           globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
   sl.fill(surfaces);
@@ -170,8 +170,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   };
 
   SurfaceArray::AnySurfaceGridLookup_t sl
-      = makeSurfaceGridLookup2D<detail::AxisWrapping::Open,
-                                detail::AxisWrapping::Closed>(
+      = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
+                                detail::AxisBoundaryType::Closed>(
           globalToLocal, localToGlobal, pAxisR, pAxisPhi);
 
   // get the number of bins
@@ -254,8 +254,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   };
 
   SurfaceArray::AnySurfaceGridLookup_t sl
-      = makeSurfaceGridLookup2D<detail::AxisWrapping::Open,
-                                detail::AxisWrapping::Closed>(
+      = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
+                                detail::AxisBoundaryType::Closed>(
           globalToLocal, localToGlobal, pAxisR, pAxisPhi);
 
   // get the number of bins

@@ -16,15 +16,15 @@ namespace Acts {
 
 namespace detail {
 
-  /// Enum which determines how the axis "wraps" (or does not)
-  /// wrap values
-  /// - UnderOverflow is the default behaviour: out of bounds
+  /// Enum which determines how the axis handle its outer boundaries
+  /// possible values values
+  /// - Open is the default behaviour: out of bounds
   /// positions are filled into the over or underflow bins
-  /// - Open: out-of-bounds positions resolve to first/last bin
+  /// - Bound: out-of-bounds positions resolve to first/last bin
   /// respectively
-  /// - Clodes: out-of-bounds positions resolve to the outermost
+  /// - Closed: out-of-bounds positions resolve to the outermost
   /// bin on the oppsite side
-  enum class AxisWrapping { UnderOverflow, Open, Closed };
+  enum class AxisBoundaryType { Open, Bound, Closed };
 
   /// Enum which determines the binning type of the axis
   enum class AxisType { Equidistant, Variable };
@@ -40,7 +40,7 @@ namespace detail {
   ///
   /// @tparam equidistant flag whether binning is equidistant (@c true)
   ///                     or not (@c false)
-  template <AxisType type, AxisWrapping wrap = AxisWrapping::UnderOverflow>
+  template <AxisType type, AxisBoundaryType bdt = AxisBoundaryType::Open>
   class Axis;
 
   typedef Axis<AxisType::Equidistant> EquidistantAxis;
@@ -50,8 +50,8 @@ namespace detail {
   ///
   /// This class provides some basic functionality for calculating bin indices
   /// for a given equidistant binning.
-  template <AxisWrapping wrap>
-  class Axis<AxisType::Equidistant, wrap> final
+  template <AxisBoundaryType bdt>
+  class Axis<AxisType::Equidistant, bdt> final
   {
   public:
     /// @brief default constructor
@@ -85,10 +85,10 @@ namespace detail {
       return false;
     }
 
-    static constexpr AxisWrapping
-    getWrapping()
+    static constexpr AxisBoundaryType
+    getBoundaryType()
     {
-      return wrap;
+      return bdt;
     }
 
     /// @brief Get #size bins which neighbor the one given
@@ -106,13 +106,13 @@ namespace detail {
 
     /// @brief Get #size bins which neighbor the one given
     ///
-    /// This is the version for UnderOverflow
+    /// This is the version for Open
     ///
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
     /// @return std::set of neighboring bin indices (global)
-    template <AxisWrapping T = wrap,
-              std::enable_if_t<T == AxisWrapping::UnderOverflow, int> = 0>
+    template <AxisBoundaryType T = bdt,
+              std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
     std::set<size_t>
     neighborHoodIndices(size_t idx,
                         std::pair<size_t, size_t> sizes = {1, 1}) const
@@ -130,13 +130,13 @@ namespace detail {
 
     /// @brief Get #size bins which neighbor the one given
     ///
-    /// This is the version for Open
+    /// This is the version for Bound
     ///
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
     /// @return std::set of neighboring bin indices (global)
-    template <AxisWrapping T = wrap,
-              std::enable_if_t<T == AxisWrapping::Open, int> = 0>
+    template <AxisBoundaryType T = bdt,
+              std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
     std::set<size_t>
     neighborHoodIndices(size_t idx,
                         std::pair<size_t, size_t> sizes = {1, 1}) const
@@ -160,8 +160,8 @@ namespace detail {
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
     /// @return std::set of neighboring bin indices (global)
-    template <AxisWrapping T = wrap,
-              std::enable_if_t<T == AxisWrapping::Closed, int> = 0>
+    template <AxisBoundaryType T = bdt,
+              std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
     std::set<size_t>
     neighborHoodIndices(size_t idx,
                         std::pair<size_t, size_t> sizes = {1, 1}) const
@@ -178,12 +178,12 @@ namespace detail {
 
     /// @brief Converts bin index into a valid one for this axis.
     ///
-    /// UnderOverflow: bin index is clamped to [0, nBins+1]
+    /// Open: bin index is clamped to [0, nBins+1]
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index
-    template <AxisWrapping T = wrap,
-              std::enable_if_t<T == AxisWrapping::UnderOverflow, int> = 0>
+    template <AxisBoundaryType T = bdt,
+              std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
     size_t
     wrapBin(int bin) const
     {
@@ -192,12 +192,12 @@ namespace detail {
 
     /// @brief Converts bin index into a valid one for this axis.
     ///
-    /// Open: bin index is clamped to [1, nBins]
+    /// Bound: bin index is clamped to [1, nBins]
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index
-    template <AxisWrapping T = wrap,
-              std::enable_if_t<T == AxisWrapping::Open, int> = 0>
+    template <AxisBoundaryType T = bdt,
+              std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
     size_t
     wrapBin(int bin) const
     {
@@ -210,8 +210,8 @@ namespace detail {
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index
-    template <AxisWrapping T = wrap,
-              std::enable_if_t<T == AxisWrapping::Closed, int> = 0>
+    template <AxisBoundaryType T = bdt,
+              std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
     size_t
     wrapBin(int bin) const
     {
@@ -221,8 +221,6 @@ namespace detail {
     }
 
     /// @brief get corresponding bin index for given coordinate
-    ///
-    /// This is the version for UnderOverflow mode
     ///
     /// @param  [in] x input coordinate
     /// @return index of bin containing the given value
@@ -354,8 +352,8 @@ namespace detail {
   ///
   /// This class provides some basic functionality for calculating bin indices
   /// for a given binning with variable bin sizes.
-  template <AxisWrapping wrap>
-  class Axis<AxisType::Variable, wrap> final
+  template <AxisBoundaryType bdt>
+  class Axis<AxisType::Variable, bdt> final
   {
   public:
     /// @brief default constructor
@@ -387,10 +385,10 @@ namespace detail {
       return true;
     }
 
-    static constexpr AxisWrapping
-    getWrapping()
+    static constexpr AxisBoundaryType
+    getBoundaryType()
     {
-      return wrap;
+      return bdt;
     }
 
     /// @brief Get #size bins which neighbor the one given
@@ -408,13 +406,13 @@ namespace detail {
 
     /// @brief Get #size bins which neighbor the one given
     ///
-    /// This is the version for UnderOverflow
+    /// This is the version for Open
     ///
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
     /// @return std::set of neighboring bin indices (global)
-    template <AxisWrapping T = wrap,
-              std::enable_if_t<T == AxisWrapping::UnderOverflow, int> = 0>
+    template <AxisBoundaryType T = bdt,
+              std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
     std::set<size_t>
     neighborHoodIndices(size_t idx,
                         std::pair<size_t, size_t> sizes = {1, 1}) const
@@ -432,13 +430,13 @@ namespace detail {
 
     /// @brief Get #size bins which neighbor the one given
     ///
-    /// This is the version for Open
+    /// This is the version for Bound
     ///
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
     /// @return std::set of neighboring bin indices (global)
-    template <AxisWrapping T = wrap,
-              std::enable_if_t<T == AxisWrapping::Open, int> = 0>
+    template <AxisBoundaryType T = bdt,
+              std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
     std::set<size_t>
     neighborHoodIndices(size_t idx,
                         std::pair<size_t, size_t> sizes = {1, 1}) const
@@ -462,8 +460,8 @@ namespace detail {
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
     /// @return std::set of neighboring bin indices (global)
-    template <AxisWrapping T = wrap,
-              std::enable_if_t<T == AxisWrapping::Closed, int> = 0>
+    template <AxisBoundaryType T = bdt,
+              std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
     std::set<size_t>
     neighborHoodIndices(size_t idx,
                         std::pair<size_t, size_t> sizes = {1, 1}) const
@@ -480,12 +478,12 @@ namespace detail {
 
     /// @brief Converts bin index into a valid one for this axis.
     ///
-    /// UnderOverflow: bin index is clamped to [0, nBins+1]
+    /// Open: bin index is clamped to [0, nBins+1]
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index
-    template <AxisWrapping T = wrap,
-              std::enable_if_t<T == AxisWrapping::UnderOverflow, int> = 0>
+    template <AxisBoundaryType T = bdt,
+              std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
     size_t
     wrapBin(int bin) const
     {
@@ -494,12 +492,12 @@ namespace detail {
 
     /// @brief Converts bin index into a valid one for this axis.
     ///
-    /// Open: bin index is clamped to [1, nBins]
+    /// Bound: bin index is clamped to [1, nBins]
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index
-    template <AxisWrapping T = wrap,
-              std::enable_if_t<T == AxisWrapping::Open, int> = 0>
+    template <AxisBoundaryType T = bdt,
+              std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
     size_t
     wrapBin(int bin) const
     {
@@ -512,8 +510,8 @@ namespace detail {
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index
-    template <AxisWrapping T = wrap,
-              std::enable_if_t<T == AxisWrapping::Closed, int> = 0>
+    template <AxisBoundaryType T = bdt,
+              std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
     size_t
     wrapBin(int bin) const
     {
@@ -523,8 +521,6 @@ namespace detail {
     }
 
     /// @brief get corresponding bin index for given coordinate
-    ///
-    /// This is the version for UnderOverflow
     ///
     /// @param  [in] x input coordinate
     /// @return index of bin containing the given value

@@ -163,9 +163,10 @@ namespace Test {
     SrfVec brl = makeBarrel(30, 7, 2, 1);
     draw_surfaces(brl, "SurfaceArray_create_BRL_1.obj");
 
-    detail::Axis<detail::AxisType::Equidistant, detail::AxisWrapping::Closed>
+    detail::Axis<detail::AxisType::Equidistant,
+                 detail::AxisBoundaryType::Closed>
         phiAxis(-M_PI, M_PI, 30u);
-    detail::Axis<detail::AxisType::Equidistant, detail::AxisWrapping::Open>
+    detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>
         zAxis(-14, 14, 7u);
 
     double angleShift = 2 * M_PI / 30. / 2.;

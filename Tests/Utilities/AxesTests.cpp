@@ -150,7 +150,7 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(open_axis)
   {
-    Axis<AxisType::Equidistant, AxisWrapping::Open> a(0, 10, 10);
+    Axis<AxisType::Equidistant, AxisBoundaryType::Bound> a(0, 10, 10);
 
     // normal inside
     BOOST_TEST(a.getBin(0.5) == 1u);
@@ -161,7 +161,7 @@ namespace Test {
     BOOST_TEST(a.getBin(-0.5) == 1u);
     BOOST_TEST(a.getBin(10.5) == 10u);
 
-    Axis<AxisType::Variable, AxisWrapping::Open> b(
+    Axis<AxisType::Variable, AxisBoundaryType::Bound> b(
         {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
 
     // normal inside
@@ -176,7 +176,7 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(closed_axis)
   {
-    Axis<AxisType::Equidistant, AxisWrapping::Closed> a(0, 10, 10);
+    Axis<AxisType::Equidistant, AxisBoundaryType::Closed> a(0, 10, 10);
 
     // normal inside
     BOOST_TEST(a.getBin(0.5) == 1u);
@@ -187,7 +187,7 @@ namespace Test {
     BOOST_TEST(a.getBin(-0.5) == 10u);
     BOOST_TEST(a.getBin(10.5) == 1u);
 
-    Axis<AxisType::Variable, AxisWrapping::Closed> b(
+    Axis<AxisType::Variable, AxisBoundaryType::Closed> b(
         {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
 
     // normal inside
@@ -203,7 +203,7 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(neighborhood)
   {
     typedef std::set<size_t> bins_t;
-    Axis<AxisType::Equidistant, AxisWrapping::UnderOverflow> a1(0.0, 1.0, 10u);
+    Axis<AxisType::Equidistant, AxisBoundaryType::Open> a1(0.0, 1.0, 10u);
 
     BOOST_TEST(a1.neighborHoodIndices(0, 1) == bins_t({0, 1}));
     BOOST_TEST(a1.neighborHoodIndices(1, 1) == bins_t({0, 1, 2}));
@@ -219,7 +219,7 @@ namespace Test {
     BOOST_TEST(a1.neighborHoodIndices(10, 2) == bins_t({8, 9, 10, 11}));
     BOOST_TEST(a1.neighborHoodIndices(5, 2) == bins_t({3, 4, 5, 6, 7}));
 
-    Axis<AxisType::Variable, AxisWrapping::UnderOverflow> a2(
+    Axis<AxisType::Variable, AxisBoundaryType::Open> a2(
         {0.0, 2.0, 4.0, 9.0, 10.0});
     BOOST_TEST(a2.neighborHoodIndices(0, 1) == bins_t({0, 1}));
     BOOST_TEST(a2.neighborHoodIndices(1, 1) == bins_t({0, 1, 2}));
@@ -235,7 +235,7 @@ namespace Test {
     BOOST_TEST(a2.neighborHoodIndices(4, 2) == bins_t({2, 3, 4, 5}));
     BOOST_TEST(a2.neighborHoodIndices(3, 2) == bins_t({1, 2, 3, 4, 5}));
 
-    Axis<AxisType::Equidistant, AxisWrapping::Open> a3(0.0, 1.0, 10u);
+    Axis<AxisType::Equidistant, AxisBoundaryType::Bound> a3(0.0, 1.0, 10u);
 
     BOOST_TEST(a3.neighborHoodIndices(0, 1) == bins_t({}));
     BOOST_TEST(a3.neighborHoodIndices(1, 1) == bins_t({1, 2}));
@@ -252,7 +252,7 @@ namespace Test {
     BOOST_TEST(a3.neighborHoodIndices(10, 2) == bins_t({8, 9, 10}));
     BOOST_TEST(a3.neighborHoodIndices(5, 2) == bins_t({3, 4, 5, 6, 7}));
 
-    Axis<AxisType::Equidistant, AxisWrapping::Closed> a4(0.0, 1.0, 10u);
+    Axis<AxisType::Equidistant, AxisBoundaryType::Closed> a4(0.0, 1.0, 10u);
 
     BOOST_TEST(a4.neighborHoodIndices(0, 1) == bins_t({}));
     BOOST_TEST(a4.neighborHoodIndices(1, 1) == bins_t({10, 1, 2}));
@@ -269,7 +269,7 @@ namespace Test {
     BOOST_TEST(a4.neighborHoodIndices(10, 2) == bins_t({8, 9, 10, 1, 2}));
     BOOST_TEST(a4.neighborHoodIndices(5, 2) == bins_t({3, 4, 5, 6, 7}));
 
-    Axis<AxisType::Variable, AxisWrapping::Open> a5(
+    Axis<AxisType::Variable, AxisBoundaryType::Bound> a5(
         {0.0, 2.0, 4.0, 9.0, 9.5, 10.0});
     BOOST_TEST(a5.neighborHoodIndices(0, 1) == bins_t({}));
     BOOST_TEST(a5.neighborHoodIndices(1, 1) == bins_t({1, 2}));
@@ -286,7 +286,7 @@ namespace Test {
     BOOST_TEST(a5.neighborHoodIndices(5, 2) == bins_t({3, 4, 5}));
     BOOST_TEST(a5.neighborHoodIndices(3, 2) == bins_t({1, 2, 3, 4, 5}));
 
-    Axis<AxisType::Variable, AxisWrapping::Closed> a6(
+    Axis<AxisType::Variable, AxisBoundaryType::Closed> a6(
         {0.0, 2.0, 4.0, 9.0, 9.5, 10.0});
     BOOST_TEST(a6.neighborHoodIndices(0, 1) == bins_t({}));
     BOOST_TEST(a6.neighborHoodIndices(1, 1) == bins_t({5, 1, 2}));
@@ -307,7 +307,7 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(wrapBin)
   {
-    Axis<AxisType::Equidistant, AxisWrapping::UnderOverflow> a1(0.0, 1.0, 10u);
+    Axis<AxisType::Equidistant, AxisBoundaryType::Open> a1(0.0, 1.0, 10u);
     BOOST_TEST(a1.wrapBin(0) == 0);
     BOOST_TEST(a1.wrapBin(1) == 1);
     BOOST_TEST(a1.wrapBin(-1) == 0);
@@ -315,7 +315,7 @@ namespace Test {
     BOOST_TEST(a1.wrapBin(11) == 11);
     BOOST_TEST(a1.wrapBin(12) == 11);
 
-    Axis<AxisType::Equidistant, AxisWrapping::Open> a2(0.0, 1.0, 10u);
+    Axis<AxisType::Equidistant, AxisBoundaryType::Bound> a2(0.0, 1.0, 10u);
     BOOST_TEST(a2.wrapBin(0) == 1);
     BOOST_TEST(a2.wrapBin(1) == 1);
     BOOST_TEST(a2.wrapBin(-1) == 1);
@@ -323,7 +323,7 @@ namespace Test {
     BOOST_TEST(a2.wrapBin(11) == 10);
     BOOST_TEST(a2.wrapBin(12) == 10);
 
-    Axis<AxisType::Equidistant, AxisWrapping::Closed> a3(0.0, 1.0, 10u);
+    Axis<AxisType::Equidistant, AxisBoundaryType::Closed> a3(0.0, 1.0, 10u);
     BOOST_TEST(a3.wrapBin(0) == 10);
     BOOST_TEST(a3.wrapBin(1) == 1);
     BOOST_TEST(a3.wrapBin(-1) == 9);
@@ -331,7 +331,7 @@ namespace Test {
     BOOST_TEST(a3.wrapBin(11) == 1);
     BOOST_TEST(a3.wrapBin(12) == 2);
 
-    Axis<AxisType::Variable, AxisWrapping::UnderOverflow> a4(
+    Axis<AxisType::Variable, AxisBoundaryType::Open> a4(
         {0.0, 2.0, 4.0, 9.0, 10.0});
     BOOST_TEST(a4.wrapBin(0) == 0);
     BOOST_TEST(a4.wrapBin(1) == 1);
@@ -340,7 +340,7 @@ namespace Test {
     BOOST_TEST(a4.wrapBin(5) == 5);
     BOOST_TEST(a4.wrapBin(6) == 5);
 
-    Axis<AxisType::Variable, AxisWrapping::Open> a5(
+    Axis<AxisType::Variable, AxisBoundaryType::Bound> a5(
         {0.0, 2.0, 4.0, 9.0, 9.5, 10.0});
     BOOST_TEST(a5.wrapBin(0) == 1);
     BOOST_TEST(a5.wrapBin(1) == 1);
@@ -349,7 +349,7 @@ namespace Test {
     BOOST_TEST(a5.wrapBin(5) == 5);
     BOOST_TEST(a5.wrapBin(6) == 5);
 
-    Axis<AxisType::Variable, AxisWrapping::Closed> a6(
+    Axis<AxisType::Variable, AxisBoundaryType::Closed> a6(
         {0.0, 2.0, 4.0, 9.0, 9.5, 10.0});
     BOOST_TEST(a6.wrapBin(0) == 5);
     BOOST_TEST(a6.wrapBin(1) == 1);

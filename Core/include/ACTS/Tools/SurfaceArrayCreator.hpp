@@ -328,16 +328,16 @@ private:
   /// @brief Creates a SurfaceGridLookup instance within an any
   /// This is essentially a factory which absorbs some if/else logic
   /// that is required by the templating.
-  /// @tparam wrapA AxisWrapping of axis A
-  /// @tparam wrapB AxisWrapping of axis B
+  /// @tparam bdtA AxisBoundaryType of axis A
+  /// @tparam bdtB AxisBoundaryType of axis B
   /// @tparam F1 type-deducted value of g2l lambda
   /// @tparam F2 type-deducted value of l2g lambda
   /// @param globalToLocal transform callable
   /// @param localToGlobal transform callable
   /// @param pAxisA ProtoAxis object for axis A
   /// @param pAxisB ProtoAxis object for axis B
-  template <detail::AxisWrapping wrapA,
-            detail::AxisWrapping wrapB,
+  template <detail::AxisBoundaryType bdtA,
+            detail::AxisBoundaryType bdtB,
             typename F1,
             typename F2>
   SurfaceArray::AnySurfaceGridLookup_t
@@ -351,32 +351,32 @@ private:
     // clang-format off
     if (pAxisA.bType == equidistant && pAxisB.bType == equidistant) {
 
-      detail::Axis<detail::AxisType::Equidistant, wrapA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
-      detail::Axis<detail::AxisType::Equidistant, wrapB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
+      detail::Axis<detail::AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
+      detail::Axis<detail::AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
       return SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>(globalToLocal,
                                                                                  localToGlobal,
                                                                                  std::make_tuple(axisA, axisB));
 
     } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
 
-      detail::Axis<detail::AxisType::Equidistant, wrapA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
-      detail::Axis<detail::AxisType::Variable, wrapB> axisB(pAxisB.binEdges);
+      detail::Axis<detail::AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
+      detail::Axis<detail::AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
       return SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>(globalToLocal,
                                                                                  localToGlobal,
                                                                                  std::make_tuple(axisA, axisB));
       
     } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
 
-      detail::Axis<detail::AxisType::Variable, wrapA> axisA(pAxisA.binEdges);
-      detail::Axis<detail::AxisType::Equidistant, wrapB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
+      detail::Axis<detail::AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
+      detail::Axis<detail::AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
       return SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>(globalToLocal,
                                                                                  localToGlobal,
                                                                                  std::make_tuple(axisA, axisB));
 
     } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
 
-      detail::Axis<detail::AxisType::Variable, wrapA> axisA(pAxisA.binEdges);
-      detail::Axis<detail::AxisType::Variable, wrapB> axisB(pAxisB.binEdges);
+      detail::Axis<detail::AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
+      detail::Axis<detail::AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
       return SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>(globalToLocal,
                                                                                  localToGlobal,
                                                                                  std::make_tuple(axisA, axisB));
