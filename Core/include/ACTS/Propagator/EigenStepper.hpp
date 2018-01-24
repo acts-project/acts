@@ -116,8 +116,8 @@ public:
     update_covariance(const T& par)
     {
       if (par.covariance()) {
-        cov_transport      = true;
-        cov                = ActsSymMatrixD<5>(*par.covariance());
+        cov_transport = true;
+        cov           = ActsSymMatrixD<5>(*par.covariance());
 
         // The trigonometry required to convert the direction to spherical
         // coordinates and then compute the sines and cosines again can be
@@ -126,17 +126,17 @@ public:
         // Here, we can avoid it because the direction is by definition a unit
         // vector, with the following coordinate conversions...
         //
-        const double x = dir(0); // == cos(phi) * sin(theta)
-        const double y = dir(1); // == sin(phi) * sin(theta)
-        const double z = dir(2); // == cos(theta)
+        const double x = dir(0);  // == cos(phi) * sin(theta)
+        const double y = dir(1);  // == sin(phi) * sin(theta)
+        const double z = dir(2);  // == cos(theta)
         //
         // ...which we can invert to directly get the sines and cosines we want:
         //
-        const double cos_theta = z;
-        const double sin_theta = sqrt(x*x + y*y);
+        const double cos_theta     = z;
+        const double sin_theta     = sqrt(x * x + y * y);
         const double inv_sin_theta = 1. / sin_theta;
-        const double cos_phi = x * inv_sin_theta;
-        const double sin_phi = y * inv_sin_theta;
+        const double cos_phi       = x * inv_sin_theta;
+        const double sin_phi       = y * inv_sin_theta;
 
         // @todo - check this might have to be the measurement frame ...
         const auto transform = par.referenceSurface().transform().matrix();
@@ -146,11 +146,11 @@ public:
         jacobian(1, eLOC_1) = transform(1, eLOC_1);
         jacobian(2, eLOC_0) = transform(2, eLOC_0);
         jacobian(2, eLOC_1) = transform(2, eLOC_1);
-        jacobian(3, ePHI)   = - sin_theta * sin_phi;
+        jacobian(3, ePHI)   = -sin_theta * sin_phi;
         jacobian(3, eTHETA) = cos_theta * cos_phi;
         jacobian(4, ePHI)   = sin_theta * cos_phi;
         jacobian(4, eTHETA) = cos_theta * sin_phi;
-        jacobian(5, eTHETA) = - sin_theta;
+        jacobian(5, eTHETA) = -sin_theta;
         jacobian(6, eQOP)   = 1;
       }
     }
@@ -226,43 +226,42 @@ public:
     if (cache.cov_transport) {
       // Optimized trigonometry on the propagation direction, see documentation
       // of Cache::update_covariance() for a longer mathematical discussion.
-      const double x = cache.dir(0); // == cos(phi) * sin(theta)
-      const double y = cache.dir(1); // == sin(phi) * sin(theta)
-      const double z = cache.dir(2); // == cos(theta)
+      const double x = cache.dir(0);  // == cos(phi) * sin(theta)
+      const double y = cache.dir(1);  // == sin(phi) * sin(theta)
+      const double z = cache.dir(2);  // == cos(theta)
       //
-      const double cos_theta = z;
-      const double sin_theta = sqrt(x*x + y*y);
+      const double cos_theta     = z;
+      const double sin_theta     = sqrt(x * x + y * y);
       const double inv_sin_theta = 1. / sin_theta;
-      const double cos_phi = x * inv_sin_theta;
-      const double sin_phi = y * inv_sin_theta;
+      const double cos_phi       = x * inv_sin_theta;
+      const double sin_phi       = y * inv_sin_theta;
 
       ActsMatrixD<5, 7> J = ActsMatrixD<5, 7>::Zero();
       if (std::abs(cos_theta) < 0.99) {
         // We normally operate in curvilinear coordinates defined as follows
-        J(0, 0) = - sin_phi;
+        J(0, 0) = -sin_phi;
         J(0, 1) = cos_phi;
-        J(1, 0) = - cos_phi * cos_theta;
-        J(1, 1) = - sin_phi * cos_theta;
+        J(1, 0) = -cos_phi * cos_theta;
+        J(1, 1) = -sin_phi * cos_theta;
         J(1, 2) = sin_theta;
       } else {
         // Under grazing incidence to z, the above coordinate system definition
         // becomes numerically unstable, and we need to switch to another one
-        const double c = sqrt(y*y + z*z);
+        const double c     = sqrt(y * y + z * z);
         const double inv_c = 1. / c;
-        J(0, 1) = - z * inv_c;
+        J(0, 1) = -z * inv_c;
         J(0, 2) = y * inv_c;
         J(1, 0) = c;
-        J(1, 1) = - x * y * inv_c;
-        J(1, 2) = - x * z * inv_c;
+        J(1, 1) = -x * y * inv_c;
+        J(1, 2) = -x * z * inv_c;
       }
-      J(2, 3) = - sin_phi  * inv_sin_theta;
+      J(2, 3) = -sin_phi * inv_sin_theta;
       J(2, 4) = cos_phi * inv_sin_theta;
-      J(3, 5) = - inv_sin_theta;
+      J(3, 5) = -inv_sin_theta;
       J(4, 6) = 1;
 
-      const ActsRowVectorD<5> scale_factors
-          = cache.dir.transpose() *
-            cache.jacobian.template topLeftCorner<3, 5>();
+      const ActsRowVectorD<5> scale_factors = cache.dir.transpose()
+          * cache.jacobian.template topLeftCorner<3, 5>();
 
       const ActsMatrixD<5, 5> jac
           = J * (cache.jacobian - cache.derivative * scale_factors);
@@ -289,21 +288,21 @@ public:
     if (cache.cov_transport) {
       // Optimized trigonometry on the propagation direction, see documentation
       // of Cache::update_covariance() for a longer mathematical discussion.
-      const double x = cache.dir(0); // == cos(phi) * sin(theta)
-      const double y = cache.dir(1); // == sin(phi) * sin(theta)
+      const double x = cache.dir(0);  // == cos(phi) * sin(theta)
+      const double y = cache.dir(1);  // == sin(phi) * sin(theta)
       //
-      const double inv_sin_theta_2 = 1. / (x*x + y*y);
+      const double inv_sin_theta_2        = 1. / (x * x + y * y);
       const double cos_phi_over_sin_theta = x * inv_sin_theta_2;
       const double sin_phi_over_sin_theta = y * inv_sin_theta_2;
-      const double inv_sin_theta = sqrt(inv_sin_theta_2);
+      const double inv_sin_theta          = sqrt(inv_sin_theta_2);
 
       ActsMatrixD<5, 7> J = ActsMatrixD<5, 7>::Zero();
       const auto dLdG = dLocaldGlobal(surface, cache.pos);
       J.topLeftCorner<2, 3>() = dLdG.template topLeftCorner<2, 3>();
-      J(2, 3) = - sin_phi_over_sin_theta;
-      J(2, 4) = cos_phi_over_sin_theta;
-      J(3, 5) = - inv_sin_theta;
-      J(4, 6) = 1;
+      J(2, 3)                 = -sin_phi_over_sin_theta;
+      J(2, 4)                 = cos_phi_over_sin_theta;
+      J(3, 5)                 = -inv_sin_theta;
+      J(4, 6)                 = 1;
 
       ActsRowVectorD<3> norm_vec = dLdG.template block<1, 3>(2, 0);
       norm_vec /= (norm_vec * cache.dir);
