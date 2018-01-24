@@ -247,22 +247,20 @@ public:
       } else {
         // Under grazing incidence to z, the above coordinate system definition
         // becomes numerically unstable, and we need to switch to another one
-        const double c
-            = sqrt(pow(cos_theta, 2) + pow(sin_phi * sin_theta, 2));
+        const double c = sqrt(y*y + z*z);
         const double inv_c = 1. / c;
-        J(0, 1) = - cos_theta * inv_c;
-        J(0, 2) = sin_phi * sin_theta * inv_c;
+        J(0, 1) = - z * inv_c;
+        J(0, 2) = y * inv_c;
         J(1, 0) = c;
-        J(1, 1) = - cos_phi * sin_phi * pow(sin_theta, 2) * inv_c;
-        J(1, 2) = - cos_phi * sin_theta * cos_theta * inv_c;
+        J(1, 1) = - x * y * inv_c;
+        J(1, 2) = - x * z * inv_c;
       }
       J(2, 3) = - sin_phi  * inv_sin_theta;
       J(2, 4) = cos_phi * inv_sin_theta;
       J(3, 5) = - inv_sin_theta;
       J(4, 6) = 1;
 
-      ActsRowVectorD<3> norm_vec(
-          cos_phi * sin_theta, sin_phi * sin_theta, cos_theta);
+      ActsRowVectorD<3> norm_vec(x, y, z);
 
       norm_vec /= (norm_vec * cache.dir);
       ActsRowVectorD<5> scale_factors
