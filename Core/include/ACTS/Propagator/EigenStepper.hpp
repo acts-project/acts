@@ -260,15 +260,12 @@ public:
       J(3, 5) = - inv_sin_theta;
       J(4, 6) = 1;
 
-      ActsRowVectorD<5> scale_factors
+      const ActsRowVectorD<5> scale_factors
           = cache.dir.transpose() *
             cache.jacobian.template topLeftCorner<3, 5>();
 
-      ActsMatrixD<7, 5> tmp = cache.derivative * scale_factors;
-
-      auto jacobian = cache.jacobian;
-      jacobian -= tmp;
-      auto jac = J * jacobian;
+      const ActsMatrixD<5, 5> jac
+          = J * (cache.jacobian - cache.derivative * scale_factors);
 
       cov = std::make_unique<const ActsSymMatrixD<5>>(jac * cache.cov
                                                       * jac.transpose());
@@ -302,7 +299,7 @@ public:
 
       ActsMatrixD<5, 7> J = ActsMatrixD<5, 7>::Zero();
       const auto dLdG = dLocaldGlobal(surface, cache.pos);
-      J.block<2, 3>(0, 0) = dLdG.template block<2, 3>(0, 0);
+      J.topLeftCorner<2, 3>() = dLdG.template topLeftCorner<2, 3>();
       J(2, 3) = - sin_phi_over_sin_theta;
       J(2, 4) = cos_phi_over_sin_theta;
       J(3, 5) = - inv_sin_theta;
@@ -310,14 +307,12 @@ public:
 
       ActsRowVectorD<3> norm_vec = dLdG.template block<1, 3>(2, 0);
       norm_vec /= (norm_vec * cache.dir);
-      ActsRowVectorD<5> scale_factors
+
+      const ActsRowVectorD<5> scale_factors
           = norm_vec * cache.jacobian.template topLeftCorner<3, 5>();
 
-      ActsMatrixD<7, 5> tmp = cache.derivative * scale_factors;
-
-      auto jacobian = cache.jacobian;
-      jacobian -= tmp;
-      auto jac = J * cache.jacobian;
+      const ActsMatrixD<5, 5> jac
+          = J * (cache.jacobian - cache.derivative * scale_factors);
 
       cov = std::make_unique<const ActsSymMatrixD<5>>(jac * cache.cov
                                                       * jac.transpose());
