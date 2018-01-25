@@ -88,13 +88,6 @@ namespace Test {
           std::forward<Args>(args)...);
     }
 
-    template <typename... Args>
-    void
-    completeBinning(Args&&... args) const
-    {
-      return m_SAC.completeBinning(std::forward<Args>(args)...);
-    }
-
     SrfVec
     fullPhiTestSurfacesEC(size_t n     = 10,
                           double shift = 0,
@@ -615,21 +608,6 @@ namespace Test {
       BOOST_TEST(binContent.size() == 1);
       BOOST_TEST(srf == binContent.at(0));
     }
-
-    SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)> sl2(
-        globalToLocal,
-        localToGlobal,
-        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-    // do NOT fill, only completebinning
-    completeBinning(sl2, brl);
-    SurfaceArray sa2(sl2, brl);
-    for (const auto& srf : brl) {
-      Vector3D ctr        = srf->binningPosition(binR);
-      SrfVec   binContent = sa2.at(ctr);
-
-      BOOST_TEST(binContent.size() == 1);
-      BOOST_TEST(srf == binContent.at(0));
-    }
   }
 
   BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
@@ -693,8 +671,8 @@ namespace Test {
     {
       tr = Transform3D::Identity();
 
-      auto pAxisPhiVar = createVariableAxis(brl, BinningValue::binPhi, tr);
-      auto pAxisZVar   = createVariableAxis(brl, BinningValue::binZ, tr);
+      auto pAxisPhiVar = createVariableAxis(brl, BinningValue::binPhi, pl, tr);
+      auto pAxisZVar   = createVariableAxis(brl, BinningValue::binZ, pl, tr);
 
       itr = tr.inverse();
 
