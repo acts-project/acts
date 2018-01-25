@@ -121,22 +121,6 @@ namespace detail {
       return m_values.at(bin);
     }
 
-    /// @brief Get the contents of multiple bins at once
-    /// @param bins @c std::set of global bin indices
-    /// @return vector of bin contents. size is equal to that of @p bins
-    /// @note Since @c std::vector cannot contain references, copies of the
-    ///       bin contents are made and returned.
-    std::vector<value_type>
-    atBins(const std::set<size_t> bins) const
-    {
-      std::vector<value_type> out;
-      out.reserve(bins.size());
-      for (const auto& b : bins) {
-        out.push_back(m_values.at(b));
-      }
-      return out;
-    }
-
     /// @brief access value stored in bin with given local bin numbers
     ///
     /// @param  [in] localBins local bin indices along each axis
@@ -411,7 +395,7 @@ namespace detail {
       return grid_helper::neighborHoodIndices(localBins, size, m_axes);
     }
 
-    /// @brief get global bin indices for neighborhoof of bin identified by @p
+    /// @brief get global bin indices for neighborhood of bin identified by @p
     /// pos
     /// @param pos position around which to look
     /// @param size how many neighbors (defaul: 1)

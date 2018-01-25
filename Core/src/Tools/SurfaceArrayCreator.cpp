@@ -13,7 +13,6 @@
 #include "ACTS/Tools/SurfaceArrayCreator.hpp"
 #include <algorithm>
 #include <cmath>
-#include <functional>
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Surfaces/SurfaceArray.hpp"

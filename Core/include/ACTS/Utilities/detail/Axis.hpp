@@ -85,6 +85,9 @@ namespace detail {
       return false;
     }
 
+    /// @brief returns the boundary type set in the template param
+    ///
+    /// @return @c AxisBoundaryType of this axis
     static constexpr AxisBoundaryType
     getBoundaryType()
     {
@@ -111,6 +114,9 @@ namespace detail {
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
     /// @return std::set of neighboring bin indices (global)
+    /// @note Open varies given bin and allows 0 and NBins+1 (underflow,
+    /// overflow)
+    ///       as neighbors
     template <AxisBoundaryType T = bdt,
               std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
     std::set<size_t>
@@ -135,6 +141,8 @@ namespace detail {
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
     /// @return std::set of neighboring bin indices (global)
+    /// @note Bound varies given bin and allows 1 and NBins (regular bins)
+    ///       as neighbors
     template <AxisBoundaryType T = bdt,
               std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
     std::set<size_t>
@@ -160,6 +168,8 @@ namespace detail {
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
     /// @return std::set of neighboring bin indices (global)
+    /// @note Closed varies given bin and allows bins on the opposite
+    ///       side of the axis as neighbors. (excludes underflow / overflow)
     template <AxisBoundaryType T = bdt,
               std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
     std::set<size_t>
@@ -178,7 +188,7 @@ namespace detail {
 
     /// @brief Converts bin index into a valid one for this axis.
     ///
-    /// Open: bin index is clamped to [0, nBins+1]
+    /// @note Open: bin index is clamped to [0, nBins+1]
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index
@@ -192,7 +202,7 @@ namespace detail {
 
     /// @brief Converts bin index into a valid one for this axis.
     ///
-    /// Bound: bin index is clamped to [1, nBins]
+    /// @note Bound: bin index is clamped to [1, nBins]
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index
@@ -206,7 +216,7 @@ namespace detail {
 
     /// @brief Converts bin index into a valid one for this axis.
     ///
-    /// Closed: bin index wraps around to other side
+    /// @note Closed: bin index wraps around to other side
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index
@@ -385,6 +395,9 @@ namespace detail {
       return true;
     }
 
+    /// @brief returns the boundary type set in the template param
+    ///
+    /// @return @c AxisBoundaryType of this axis
     static constexpr AxisBoundaryType
     getBoundaryType()
     {
@@ -411,6 +424,9 @@ namespace detail {
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
     /// @return std::set of neighboring bin indices (global)
+    /// @note Open varies given bin and allows 0 and NBins+1 (underflow,
+    /// overflow)
+    ///       as neighbors
     template <AxisBoundaryType T = bdt,
               std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
     std::set<size_t>
@@ -435,6 +451,8 @@ namespace detail {
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
     /// @return std::set of neighboring bin indices (global)
+    /// @note Bound varies given bin and allows 1 and NBins (regular bins)
+    ///       as neighbors
     template <AxisBoundaryType T = bdt,
               std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
     std::set<size_t>
@@ -460,6 +478,8 @@ namespace detail {
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
     /// @return std::set of neighboring bin indices (global)
+    /// @note Closed varies given bin and allows bins on the opposite
+    ///       side of the axis as neighbors. (excludes underflow / overflow)
     template <AxisBoundaryType T = bdt,
               std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
     std::set<size_t>
@@ -478,7 +498,7 @@ namespace detail {
 
     /// @brief Converts bin index into a valid one for this axis.
     ///
-    /// Open: bin index is clamped to [0, nBins+1]
+    /// @note Open: bin index is clamped to [0, nBins+1]
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index
@@ -492,7 +512,7 @@ namespace detail {
 
     /// @brief Converts bin index into a valid one for this axis.
     ///
-    /// Bound: bin index is clamped to [1, nBins]
+    /// @note Bound: bin index is clamped to [1, nBins]
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index
@@ -506,7 +526,7 @@ namespace detail {
 
     /// @brief Converts bin index into a valid one for this axis.
     ///
-    /// Closed: bin index wraps around to other side
+    /// @note Closed: bin index wraps around to other side
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index

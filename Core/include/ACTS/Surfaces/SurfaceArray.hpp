@@ -104,6 +104,11 @@ public:
       populateNeighborCache();
     }
 
+    /// @brief Attempts to fix sub-optimal binning by filling closest
+    ///        Surfaces into empty bins
+    ///
+    /// @param surfaces The surface pointers to fill
+    /// @return number of bins that were filled
     size_t
     completeBinning(const SurfaceVector& surfaces)
     {

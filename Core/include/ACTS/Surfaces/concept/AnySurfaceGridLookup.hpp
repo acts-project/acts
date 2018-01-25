@@ -58,8 +58,10 @@ namespace concept {
                                                    bte::copy_constructible<>,
                                                    bte::relaxed>;
 
+    // clang-format on
   }
   template <typename T, typename U = bte::_self>
-  using AnySurfaceGridLookup = bte::any<asgl_detail::surfacegrid_lookup_concept<T>, U>;
+  using AnySurfaceGridLookup
+      = bte::any<asgl_detail::surfacegrid_lookup_concept<T>, U>;
 }  // namespace concept
 }  // namespace Acts

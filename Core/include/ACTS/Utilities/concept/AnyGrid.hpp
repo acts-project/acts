@@ -19,7 +19,6 @@
 
 // clang-format off
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_at), at, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_atBins), atBins, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_closestPointsIndices), closestPointsIndices, 1);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_dimensions), dimensions, 0);
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getBinCenter), getBinCenter, 1);
@@ -54,7 +53,6 @@ namespace concept {
                                      has_at<T& (const Point&)>,
                                      has_at<const T& (size_t), const bte::_self>,
                                      has_at<T& (size_t)>,
-                                     has_atBins<std::vector<T> (std::set<size_t>), const bte::_self>,
                                      has_closestPointsIndices<std::set<size_t> (const Point&), const bte::_self>,
                                      has_dimensions<size_t(), const bte::_self>,
                                      has_getGlobalBinIndex<size_t(const Point&), const bte::_self>,

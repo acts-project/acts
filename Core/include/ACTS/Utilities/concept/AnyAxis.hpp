@@ -49,10 +49,11 @@ namespace concept {
                                      bte::copy_constructible<>,
                                      bte::relaxed>;
 
+    // clang-format on
   }
 
   /// Contains any axis type and exposes common methods
   template <typename U = bte::_self>
-  using AnyAxis = bte::any<any_axis_detail::axis_concept, U>;
+  using AnyAxis        = bte::any<any_axis_detail::axis_concept, U>;
 }  // namespace concept
 }  // namespace Acts

@@ -100,11 +100,6 @@ namespace Test {
 
     BOOST_TEST(g.at(point) == g.at(globalBin));
     BOOST_TEST(g.at(point) == g.at(localBins));
-
-    std::vector<double> act = g.atBins(std::set<size_t>({1, 2, 3, 4}));
-    std::vector<double> exp{1, 2, 3, 4};
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-        act.begin(), act.end(), exp.begin(), exp.end());
   }
 
   BOOST_AUTO_TEST_CASE(grid_test_2d_equidistant)
