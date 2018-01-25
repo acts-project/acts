@@ -407,7 +407,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
                        return (a->binningPosition(binR).z()
                                < b->binningPosition(binR).z());
                      });
-    
+
     bValues.push_back(protoLayer.minZ);
     bValues.push_back(protoLayer.maxZ);
 
