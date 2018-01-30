@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ACTS/Utilities/BFieldMapUtils.hpp"
+#include <iostream>
 #include "ACTS/Utilities/detail/Axis.hpp"
 #include "ACTS/Utilities/detail/Grid.hpp"
 
@@ -55,19 +56,27 @@ Acts::InterpolatedBFieldMap::FieldMapper<2, 2> Acts::fieldMapperRZ(
          Grid_t;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
   // [2] Set the bField values
-  for (size_t i = 0; i < nBinsR; ++i) {
-    for (size_t j = 0; j < nBinsZ; ++j) {
+  for (size_t i = 1; i <= nBinsR; ++i) {
+    for (size_t j = 1; j <= nBinsZ; ++j) {
       std::array<size_t, 2> nIndices = {{rPos.size(), zPos.size()}};
       Grid_t::index_t indices = {{i, j}};
       if (firstQuadrant) {
-        size_t          n = std::abs(int(j) - (int(zPos.size()) - 1));
-        Grid_t::index_t indicesFirstQuadrant = {{i, n}};
+        // std::vectors begin with 0 and we do not want the user needing to
+        // take underflow or overflow bins in account this is why we need to
+        // subtract by one
+        size_t          n = std::abs(int(j - 1) - (int(zPos.size()) - 1));
+        Grid_t::index_t indicesFirstQuadrant = {{i - 1, n}};
         grid.at(indices)
             = bField.at(localToGlobalBin(indicesFirstQuadrant, nIndices))
             * BFieldUnit;
-      } else
+      } else {
+        // std::vectors begin with 0 and we do not want the user needing to
+        // take underflow or overflow bins in account this is why we need to
+        // subtract by one
         grid.at(indices)
-            = bField.at(localToGlobalBin(indices, nIndices)) * BFieldUnit;
+            = bField.at(localToGlobalBin({{i - 1, j - 1}}, nIndices))
+            * BFieldUnit;
+      }
     }
   }
 
@@ -153,28 +162,36 @@ Acts::InterpolatedBFieldMap::FieldMapper<3, 3> Acts::fieldMapperXYZ(
       std::make_tuple(std::move(xAxis), std::move(yAxis), std::move(zAxis)));
 
   // [2] Set the bField values
-  for (size_t i = 0; i < nBinsX; ++i) {
-    for (size_t j = 0; j < nBinsY; ++j) {
-      for (size_t k = 0; k < nBinsZ; ++k) {
+  for (size_t i = 1; i <= nBinsX; ++i) {
+    for (size_t j = 1; j <= nBinsY; ++j) {
+      for (size_t k = 1; k <= nBinsZ; ++k) {
         Grid_t::index_t indices = {{i, j, k}};
         std::array<size_t, 3> nIndices
             = {{xPos.size(), yPos.size(), zPos.size()}};
         if (firstOctant) {
-          size_t          m = std::abs(int(i) - (int(xPos.size()) - 1));
-          size_t          n = std::abs(int(j) - (int(yPos.size()) - 1));
-          size_t          l = std::abs(int(k) - (int(zPos.size()) - 1));
+          // std::vectors begin with 0 and we do not want the user needing to
+          // take underflow or overflow bins in account this is why we need to
+          // subtract by one
+          size_t          m = std::abs(int(i - 1) - (int(xPos.size()) - 1));
+          size_t          n = std::abs(int(j - 1) - (int(yPos.size()) - 1));
+          size_t          l = std::abs(int(k - 1) - (int(zPos.size()) - 1));
           Grid_t::index_t indicesFirstOctant = {{m, n, l}};
 
           grid.at(indices)
               = bField.at(localToGlobalBin(indicesFirstOctant, nIndices))
               * BFieldUnit;
 
-        } else
+        } else {
+          // std::vectors begin with 0 and we do not want the user needing to
+          // take underflow or overflow bins in account this is why we need to
+          // subtract by one
           grid.at(indices)
-              = bField.at(localToGlobalBin(indices, nIndices)) * BFieldUnit;
+              = bField.at(localToGlobalBin({{i - 1, j - 1, k - 1}}, nIndices))
+              * BFieldUnit;
+        }
       }
     }
-  };
+  }
   // [3] Create the transformation for the position
   // map (x,y,z) -> (r,z)
   auto transformPos = [](const Acts::Vector3D& pos) { return pos; };
