@@ -219,13 +219,31 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   if (pAxisR.nBins > 1) {
     // more than one R-Ring, we need to adjust
     // this FORCES equidistant binning
-    std::vector<size_t> nPhiModules(pAxisR.nBins);
+    std::vector<std::vector<const Surface*>> phiModules(pAxisR.nBins);
     for (const auto& srf : surfaces) {
       Vector3D bpos = srf->binningPosition(binR);
       size_t   bin  = pAxisR.getBin(bpos.perp());
-      nPhiModules.at(bin)++;
+      phiModules.at(bin).push_back(srf);
     }
 
+    std::vector<size_t> nPhiModules;
+    auto matcher = m_cfg.surfaceMatcher;
+    auto equal   = [&matcher](const Surface* a, const Surface* b) {
+      return matcher(binPhi, a, b);
+    };
+
+    std::transform(
+        phiModules.begin(), phiModules.end(), std::back_inserter(nPhiModules), 
+        [&equal, this](std::vector<const Surface*> surfaces) -> size_t {
+          return this->findKeySurfaces(surfaces, equal).size();
+        });
+
+    // @FIXME: Problem: phi binning runs rotation to optimize
+    // for bin edges. This FAILS after this modification, since
+    // the bin count is the one from the lowest module-count bin,
+    // but the rotation is done considering all bins.
+    // This might be resolved through bin completion, but not sure.
+    // @TODO: check in extrapolation
     size_t nBinsPhi
         = (*std::min_element(nPhiModules.begin(), nPhiModules.end()));
     pAxisPhi = createEquidistantAxis(
