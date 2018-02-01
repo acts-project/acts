@@ -76,6 +76,7 @@ public:
   struct Config
   {
     SurfaceMatcher surfaceMatcher = SurfaceArrayCreator::isSurfaceEquivalent;
+    bool doPhiBinningOptimization = true;
   };
 
   /// Constructor with default config
