@@ -78,7 +78,7 @@ BOOST_DATA_TEST_CASE(
         ^ bdata::random((bdata::seed = 1717,
                          bdata::distribution
                          = std::uniform_real_distribution<>(-1., 1.)))
-        ^ bdata::xrange(5),
+        ^ bdata::xrange(100),
     pT,
     phi,
     theta,
