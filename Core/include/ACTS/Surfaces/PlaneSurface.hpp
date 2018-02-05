@@ -18,6 +18,7 @@
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
+#include <limits>
 
 namespace Acts {
 
@@ -226,7 +227,7 @@ PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
     // return the result
     return Intersection(intersectPoint, u, isValid);
   }
-  return Intersection(gpos, 0., false);
+  return Intersection(gpos, std::numeric_limits<double>::max(), false);
 }
 
 }  // end of namespace
