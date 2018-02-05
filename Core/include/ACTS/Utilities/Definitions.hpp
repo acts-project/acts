@@ -37,7 +37,7 @@ namespace Acts {
 static const double s_onSurfaceTolerance = 10e-5;
 
 /** Tolerance for not being within curvilinear projection */
-static const double s_curvilinearProjTolerance = 99;
+static const double s_curvilinearProjTolerance = 0.99;
 
 /** @enum PropDirection
   PropDirection, enum for direction of the propagation.
