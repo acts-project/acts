@@ -56,8 +56,10 @@ namespace Test {
 
       auto mask  = msr.first;
       auto range = msr.second;
-      /// test the full range of ids
-      for (geo_id_value idv = 0; idv < pow(2, range); ++idv) {
+      /// test range by [0, 1, 2^range]
+      std::vector<geo_id_value> range_values
+          = {0, 1, (geo_id_value)pow(2, range) - 1};
+      for (auto& idv : range_values) {
         // create the geometry ID
         GeometryID geoID(idv, mask);
         // encode - decode test
