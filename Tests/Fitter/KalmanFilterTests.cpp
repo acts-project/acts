@@ -127,12 +127,12 @@ namespace Test {
   {
     auto           geo   = buildSimpleBarrel();
     const Surface* pSurf = geo->getBeamline();
-    double         x     = 0;
-    double         y     = 0;
-    double         z     = 0;
-    double         px    = 100;
-    double         py    = 0;
-    double         pz    = 0;
+    double         x     = 0.;
+    double         y     = 0.;
+    double         z     = 0.;
+    double         px    = 100.;
+    double         py    = 0.;
+    double         pz    = 0.;
     double         q     = 1;
     Vector3D       pos(x, y, z);
     Vector3D       mom(px, py, pz);
@@ -164,12 +164,14 @@ namespace Test {
     for (const auto& p : track) {
       auto smoothedState = *p->getSmoothedState();
       auto filteredState = *p->getFilteredState();
+
       // Test that position obtained by smoothed and filtered state are
       // identical: they should be because the initial state describes
       // the track perfectly
       BOOST_TEST(smoothedState.position().norm()
                      == filteredState.position().norm(),
                  tt::tolerance(1e-7));
+
       ++trackCounter;
     }
   }
