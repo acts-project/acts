@@ -185,7 +185,7 @@ public:
     /// screen output postfix
     std::string postfix = " - ";
 
-    // Constructor with magentic field
+    // Constructor with magnetic field
     Config(std::shared_ptr<const MagneticField> fieldSvc = nullptr)
       : fieldService(fieldSvc)
     {
