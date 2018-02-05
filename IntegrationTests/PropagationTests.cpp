@@ -67,7 +67,6 @@ namespace IntegrationTest {
 
   // The constant field test
   /// test forward propagation in constant magnetic field
-
   BOOST_DATA_TEST_CASE(
       constant_bfieldorward_propagation_,
       bdata::random((bdata::seed = 0,
