@@ -13,12 +13,12 @@
 #ifndef ACTS_SURFACES_PLANESURFACE_H
 #define ACTS_SURFACES_PLANESURFACE_H 1
 
+#include <limits>
 #include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
-#include <limits>
 
 namespace Acts {
 
