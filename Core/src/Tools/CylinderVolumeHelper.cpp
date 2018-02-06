@@ -748,30 +748,30 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
     }
 
     ACTS_VERBOSE("[GV] Register " << glueVolumesNegativeFace.size()
-                                  << " volumes at face "
+                                  << " volumes at face negativeFaceXY ("
                                   << negativeFaceXY
-                                  << ":");
+                                  << "):");
     for (tVolIter = glueVolumesNegativeFace.begin();
          tVolIter != glueVolumesNegativeFace.end();
          ++tVolIter)
-      ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName());
+      ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName() << "'");
     ACTS_VERBOSE("[GV] Register " << glueVolumesPositiveFace.size()
-                                  << " volumes at face "
-                                  << positiveFaceXY);
+                                  << " volumes at face positiveFaceXY ("
+                                  << positiveFaceXY << ")");
     for (tVolIter = glueVolumesPositiveFace.begin();
          tVolIter != glueVolumesPositiveFace.end();
          ++tVolIter)
-      ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName());
+      ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName() << "'");
     ACTS_VERBOSE("[GV] Register " << glueVolumesInnerTube.size()
-                                  << " volumes at face "
-                                  << tubeInnerCover);
+                                  << " volumes at face tubeInnerCover ("
+                                  << tubeInnerCover << ")");
     for (tVolIter = glueVolumesInnerTube.begin();
          tVolIter != glueVolumesInnerTube.end();
          ++tVolIter)
-      ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName());
+      ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName() << "'");
     ACTS_VERBOSE("[GV] Register " << glueVolumesOuterTube.size()
-                                  << " volumes at face "
-                                  << tubeOuterCover);
+                                  << " volumes at face tubeOuterCover ("
+                                  << tubeOuterCover << ")");
     for (tVolIter = glueVolumesOuterTube.begin();
          tVolIter != glueVolumesOuterTube.end();
          ++tVolIter)
