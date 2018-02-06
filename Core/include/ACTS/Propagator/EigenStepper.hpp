@@ -242,11 +242,11 @@ public:
       ActsMatrixD<5, 7> jac_to_curv = ActsMatrixD<5, 7>::Zero();
       if (std::abs(cos_theta) < s_curvilinearProjTolerance) {
         // We normally operate in curvilinear coordinates defined as follows
-        jac_to_curv((0, 0) = -sin_phi;
-        jac_to_curv((0, 1) = cos_phi;
-        jac_to_curv((1, 0) = -cos_phi * cos_theta;
-        jac_to_curv((1, 1) = -sin_phi * cos_theta;
-        jac_to_curv((1, 2) = sin_theta;
+        jac_to_curv(0, 0) = -sin_phi;
+        jac_to_curv(0, 1) = cos_phi;
+        jac_to_curv(1, 0) = -cos_phi * cos_theta;
+        jac_to_curv(1, 1) = -sin_phi * cos_theta;
+        jac_to_curv(1, 2) = sin_theta;
       } else {
         // Under grazing incidence to z, the above coordinate system definition
         // becomes numerically unstable, and we need to switch to another one
@@ -487,32 +487,20 @@ private:
   /// @brief Convert the covariance matrix at the local frame
   ///
   /// @param cache The propagation cache
+  /// @parm jac_local The Jacobian to Local
   /// @param norm_vec The normal vector
-  /// @parm J The Jacobian to Local
   ///
   /// @return a 5x5 covariance matrix after transport
   static ActsSymMatrixD<5>
   transport_covariance(const Cache& cache,
                        const ActsMatrixD<5, 7>& jac_local,
                        const ActsRowVectorD<3>& norm_vec)
-  {
-    ActsRowVectorD<5> scale_factors
-        = (cache.jacobian.template block<3, 5>(0, 0).array().colwise()
-           * norm_vec.transpose().array())
-              .colwise()
-              .sum();
-
-    ActsMatrixD<7, 5> tmp;
-    tmp.col(0) = cache.derivative;
-    tmp.col(1) = cache.derivative;
-    tmp.col(2) = cache.derivative;
-    tmp.col(3) = cache.derivative;
-    tmp.col(4) = cache.derivative;
-    tmp *= scale_factors.asDiagonal();
-    auto jac_transport = cache.jacobian;
-    jac_transport -= tmp;
+  {    
+    const ActsRowVectorD<5> scale_factors = norm_vec
+              * cache.jacobian.template topLeftCorner<3, 5>();
     // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
-    auto jac = jac_local * jac_transport;
+    const ActsMatrixD<5, 5> jac
+        = jac_local * (cache.jacobian - cache.derivative * scale_factors);
     // return the transported and local covariance matrix
     return ActsSymMatrixD<5>(jac * cache.cov * jac.transpose());
   }
