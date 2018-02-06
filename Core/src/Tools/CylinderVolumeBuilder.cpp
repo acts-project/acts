@@ -221,7 +221,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   // is present needs a bare triple
   if (wConfig.wCondition == Wrapping || wConfig.wCondition == Inserting
       || wConfig.wCondition == NoWrapping) {
-    ACTS_VERBOSE("Combined new container  is being built.");
+    ACTS_VERBOSE("Combined new container is being built.");
     // stuff into the container what you have
     std::vector<std::shared_ptr<const TrackingVolume>> volumesContainer;
     if (nEndcap) {
