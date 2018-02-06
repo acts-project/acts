@@ -128,7 +128,7 @@ public:
         const double inv_sin_theta = 1. / sin_theta;
         const double cos_phi       = x * inv_sin_theta;
         const double sin_phi       = y * inv_sin_theta;
-        
+
         // the error is given on a planar-type surface
         // called the reference frame (@todo: catch disc surface!)
         const auto transform = par.referenceFrame();
@@ -229,16 +229,16 @@ public:
     if (cache.cov_transport) {
       // Optimized trigonometry on the propagation direction, see documentation
       // of Cache::init_jacobian() for a longer mathematical discussion.
-      const double x = cache.dir(0); // == cos(phi) * sin(theta)
-      const double y = cache.dir(1); // == sin(phi) * sin(theta)
-      const double z = cache.dir(2); // == cos(theta)
-      // can be turned into cosine/sine 
+      const double x = cache.dir(0);  // == cos(phi) * sin(theta)
+      const double y = cache.dir(1);  // == sin(phi) * sin(theta)
+      const double z = cache.dir(2);  // == cos(theta)
+      // can be turned into cosine/sine
       const double cos_theta     = z;
       const double sin_theta     = sqrt(x * x + y * y);
       const double inv_sin_theta = 1. / sin_theta;
       const double cos_phi       = x * inv_sin_theta;
       const double sin_phi       = y * inv_sin_theta;
-      // prepare the jacobian to curvilinear 
+      // prepare the jacobian to curvilinear
       ActsMatrixD<5, 7> jac_to_curv = ActsMatrixD<5, 7>::Zero();
       if (std::abs(cos_theta) < s_curvilinearProjTolerance) {
         // We normally operate in curvilinear coordinates defined as follows
@@ -292,7 +292,7 @@ public:
     // Perform error propagation if an initial covariance matrix was provided
     if (cache.cov_transport) {
       // Initialize the transport final frame jacobian
-      ActsMatrixD<5, 7> jac_to_local = ActsMatrixD<5, 7>::Zero();      
+      ActsMatrixD<5, 7> jac_to_local = ActsMatrixD<5, 7>::Zero();
       // Optimized trigonometry on the propagation direction, see documentation
       // of Cache::init_jacobian() for a longer mathematical discussion.
       const double x = cache.dir(0);  // == cos(phi) * sin(theta)
@@ -495,9 +495,9 @@ private:
   transport_covariance(const Cache& cache,
                        const ActsMatrixD<5, 7>& jac_local,
                        const ActsRowVectorD<3>& norm_vec)
-  {    
-    const ActsRowVectorD<5> scale_factors = norm_vec
-              * cache.jacobian.template topLeftCorner<3, 5>();
+  {
+    const ActsRowVectorD<5> scale_factors
+        = norm_vec * cache.jacobian.template topLeftCorner<3, 5>();
     // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
     const ActsMatrixD<5, 5> jac
         = jac_local * (cache.jacobian - cache.derivative * scale_factors);
