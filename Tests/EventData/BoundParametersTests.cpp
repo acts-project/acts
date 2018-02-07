@@ -35,21 +35,34 @@ namespace Test {
 
   /// @brief Unit test for parameters at a plane
   ///
-  BOOST_DATA_TEST_CASE(bound_to_plane_test,
-                       bdata::random(-1000., 1000.)
-                           ^ bdata::random(-1000., 1000.)
-                           ^ bdata::random(-1000., 1000.)
-                           ^ bdata::random(0., M_PI)
-                           ^ bdata::random(0., M_PI)
-                           ^ bdata::random(0., M_PI)
-                           ^ bdata::xrange(100),
-                       x,
-                       y,
-                       z,
-                       a,
-                       b,
-                       c,
-                       index)
+  BOOST_DATA_TEST_CASE(
+      bound_to_plane_test,
+      bdata::random((bdata::seed = 1240,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(-1000., 1000.)))
+          ^ bdata::random((bdata::seed = 2351,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1000., 1000.)))
+          ^ bdata::random((bdata::seed = 3412,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1000., 1000.)))
+          ^ bdata::random((bdata::seed = 5732,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., M_PI)))
+          ^ bdata::random((bdata::seed = 8941,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., M_PI)))
+          ^ bdata::random((bdata::seed = 1295,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., M_PI)))
+          ^ bdata::xrange(100),
+      x,
+      y,
+      z,
+      a,
+      b,
+      c,
+      index)
   {
     Vector3D center{x, y, z};
     auto     transform = std::make_shared<Transform3D>();
@@ -127,21 +140,34 @@ namespace Test {
 
   /// @brief Unit test for parameters at a disc
   ///
-  BOOST_DATA_TEST_CASE(bound_to_disc_test,
-                       bdata::random(-1000., 1000.)
-                           ^ bdata::random(-1000., 1000.)
-                           ^ bdata::random(-1000., 1000.)
-                           ^ bdata::random(0., M_PI)
-                           ^ bdata::random(0., M_PI)
-                           ^ bdata::random(0., M_PI)
-                           ^ bdata::xrange(100),
-                       x,
-                       y,
-                       z,
-                       a,
-                       b,
-                       c,
-                       index)
+  BOOST_DATA_TEST_CASE(
+      bound_to_disc_test,
+      bdata::random((bdata::seed = 9810,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(-1000., 1000.)))
+          ^ bdata::random((bdata::seed = 1221,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1000., 1000.)))
+          ^ bdata::random((bdata::seed = 12132,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1000., 1000.)))
+          ^ bdata::random((bdata::seed = 16783,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., M_PI)))
+          ^ bdata::random((bdata::seed = 13984,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., M_PI)))
+          ^ bdata::random((bdata::seed = 77615,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., M_PI)))
+          ^ bdata::xrange(100),
+      x,
+      y,
+      z,
+      a,
+      b,
+      c,
+      index)
   {
     Vector3D center{x, y, z};
     auto     transform = std::make_shared<Transform3D>();
@@ -195,21 +221,34 @@ namespace Test {
 
   /// @brief Unit test for parameters at a cylinder
   ///
-  BOOST_DATA_TEST_CASE(bound_to_cylinder_test,
-                       bdata::random(-1000., 1000.)
-                           ^ bdata::random(-1000., 1000.)
-                           ^ bdata::random(-1000., 1000.)
-                           ^ bdata::random(0., M_PI)
-                           ^ bdata::random(0., M_PI)
-                           ^ bdata::random(0., M_PI)
-                           ^ bdata::xrange(100),
-                       x,
-                       y,
-                       z,
-                       a,
-                       b,
-                       c,
-                       index)
+  BOOST_DATA_TEST_CASE(
+      bound_to_cylinder_test,
+      bdata::random((bdata::seed = 39810,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(-1000., 1000.)))
+          ^ bdata::random((bdata::seed = 21221,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1000., 1000.)))
+          ^ bdata::random((bdata::seed = 62132,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1000., 1000.)))
+          ^ bdata::random((bdata::seed = 91683,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., M_PI)))
+          ^ bdata::random((bdata::seed = 39847,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., M_PI)))
+          ^ bdata::random((bdata::seed = 72615,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., M_PI)))
+          ^ bdata::xrange(100),
+      x,
+      y,
+      z,
+      a,
+      b,
+      c,
+      index)
   {
 
     Vector3D center{x, y, z};
@@ -277,18 +316,30 @@ namespace Test {
 
   /// @brief Unit test for parameters at the perigee
   ///
-  BOOST_DATA_TEST_CASE(bound_to_perigee_test,
-                       bdata::random(-10., 10.) ^ bdata::random(-10., 10.)
-                           ^ bdata::random(-10., 10.)
-                           ^ bdata::random(0., 0.05 * M_PI)
-                           ^ bdata::random(0., 0.05 * M_PI)
-                           ^ bdata::xrange(100),
-                       x,
-                       y,
-                       z,
-                       a,
-                       b,
-                       index)
+  BOOST_DATA_TEST_CASE(
+      bound_to_perigee_test,
+      bdata::random((bdata::seed = 3980,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(-10., 10.)))
+          ^ bdata::random((bdata::seed = 2221,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-10., 10.)))
+          ^ bdata::random((bdata::seed = 2132,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-10., 10.)))
+          ^ bdata::random((bdata::seed = 9183,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., 0.05)))
+          ^ bdata::random((bdata::seed = 3947,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., 0.05)))
+          ^ bdata::xrange(100),
+      x,
+      y,
+      z,
+      a,
+      b,
+      index)
   {
     Vector3D center{x, y, z};
     auto     transform = std::make_shared<Transform3D>();
@@ -329,21 +380,34 @@ namespace Test {
 
   /// @brief Unit test for parameters at a line
   ///
-  BOOST_DATA_TEST_CASE(bound_to_line_test,
-                       bdata::random(-1000., 1000.)
-                           ^ bdata::random(-1000., 1000.)
-                           ^ bdata::random(-1000., 1000.)
-                           ^ bdata::random(0., M_PI)
-                           ^ bdata::random(0., M_PI)
-                           ^ bdata::random(0., M_PI)
-                           ^ bdata::xrange(100),
-                       x,
-                       y,
-                       z,
-                       a,
-                       b,
-                       c,
-                       index)
+  BOOST_DATA_TEST_CASE(
+      bound_to_line_test,
+      bdata::random((bdata::seed = 73980,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(-1000., 1000.)))
+          ^ bdata::random((bdata::seed = 21221,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1000., 1000.)))
+          ^ bdata::random((bdata::seed = 62992,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-1000., 1000.)))
+          ^ bdata::random((bdata::seed = 900683,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., M_PI)))
+          ^ bdata::random((bdata::seed = 5439847,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., M_PI)))
+          ^ bdata::random((bdata::seed = 1972615,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(0., M_PI)))
+          ^ bdata::xrange(100),
+      x,
+      y,
+      z,
+      a,
+      b,
+      c,
+      index)
   {
 
     Vector3D center{x, y, z};
