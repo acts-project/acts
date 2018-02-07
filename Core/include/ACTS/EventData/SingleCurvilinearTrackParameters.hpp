@@ -197,7 +197,7 @@ public:
   virtual RotationMatrix3D
   referenceFrame() const final override
   {
-    return std::move(m_upSurface.transform().linear());
+    return m_upSurface.transform().linear();
   }
 
 private:
