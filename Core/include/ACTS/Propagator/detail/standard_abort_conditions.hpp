@@ -20,7 +20,7 @@ namespace detail {
   {
 
     /// this is direction * absolute path limit
-    double singed_path_limit = std::numeric_limits<double>::max();
+    double signed_path_limit = std::numeric_limits<double>::max();
 
     /// the tolerance used to defined "reached"
     double tolerance = 0.;
@@ -31,7 +31,7 @@ namespace detail {
     /// @param ttolerance The tolerance to declare "reached"
     path_limit_reached(double tlimit     = std::numeric_limits<double>::max(),
                        double ttolerance = 0.001)
-      : singed_path_limit(tlimit), tolerance(std::abs(ttolerance))
+      : signed_path_limit(tlimit), tolerance(std::abs(ttolerance))
     {
     }
 
@@ -41,7 +41,7 @@ namespace detail {
     /// @param abs_limit is the absolute path limit for this propagation
     /// @param ttolerance The tolerance to declare "reached"
     path_limit_reached(double abs_limit, int direction_sign, double ttolerance)
-      : singed_path_limit(direction_sign * std::abs(abs_limit))
+      : signed_path_limit(direction_sign * std::abs(abs_limit))
       , tolerance(std::abs(ttolerance))
     {
     }
@@ -64,11 +64,11 @@ namespace detail {
     {
       // Check if the maximum allowed step size has to be updated
       if (std::abs(cache.step_size)
-          > std::abs(singed_path_limit - cache.accumulated_path))
-        cache.step_size = singed_path_limit - cache.accumulated_path;
+          > std::abs(signed_path_limit - cache.accumulated_path))
+        cache.step_size = signed_path_limit - cache.accumulated_path;
 
       // path limit check
-      return (std::abs(singed_path_limit - cache.accumulated_path) < tolerance);
+      return (std::abs(signed_path_limit - cache.accumulated_path) < tolerance);
     }
   };
 
