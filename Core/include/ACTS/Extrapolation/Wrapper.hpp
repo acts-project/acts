@@ -186,7 +186,7 @@ namespace propagation {
               typename Observers,
               typename Aborters>
     WrapperResult<NeutralCurvilinearParameters>
-    propagate_with_cache_c(Cache&                   cache,
+    propagate_with_cache_curvilinear(Cache&                   cache,
                            const NeutralParameters& start,
                            const Surface&           target,
                            const Options<Observers, Aborters>& options) const
@@ -204,7 +204,7 @@ namespace propagation {
               typename Observers,
               typename Aborters>
     WrapperResult<CurvilinearParameters>
-    propagate_with_cache_c(Cache&                 cache,
+    propagate_with_cache_curvilinear(Cache&                 cache,
                            const TrackParameters& start,
                            const Surface&         target,
                            const Options<Observers, Aborters>& options) const
