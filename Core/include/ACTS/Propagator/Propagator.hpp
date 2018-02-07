@@ -327,10 +327,11 @@ namespace propagation {
     obs_list_result_t<
         typename Impl::template return_parameter_type<TrackParameters>,
         Observers>
-    propagate_with_cache_curvilinear(cache_type&            cache,
-                           const TrackParameters& start,
-                           const Surface&         target,
-                           const Options<Observers, Aborters>& options) const
+    propagate_with_cache_curvilinear(
+        cache_type&            cache,
+        const TrackParameters& start,
+        const Surface&         target,
+        const Options<Observers, Aborters>& options) const
     {
 
       // Type of track parameters produced at the end of the propagation
