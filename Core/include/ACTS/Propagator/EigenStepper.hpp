@@ -187,7 +187,7 @@ public:
     ActsSymMatrixD<5> cov           = ActsSymMatrixD<5>::Zero();
 
     /// Lazily initialized cache
-    /// It caches the current magneticl field cell and stays interpolates within
+    /// It caches the current magnetic field cell and stays interpolates within
     /// as long as this is valid. See step() code for details.
     bool                    field_cache_ready = false;
     concept::AnyFieldCell<> field_cache;
