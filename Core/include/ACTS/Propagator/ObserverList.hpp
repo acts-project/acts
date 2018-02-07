@@ -46,7 +46,7 @@ public:
 
   using detail::Extendable<observers...>::get;
 
-  /// boolean operator that is called calling the obeserve method on each
+  /// function call operator that is called calling the obeserve method on each
   /// of the contained obersers in tthe list
   /// @tparam[in] cache The stepper cache during the propagtion
   /// @tparam[in,out] result is the result to be overwritten
