@@ -210,10 +210,8 @@ namespace propagation {
                const InteralAborters& internal_stop_conditions) const
     {
       // check with surface_abort if it exists
-      if (internal_stop_conditions(result, cache)) {
-        // return the in progress flag
+      if (internal_stop_conditions(result, cache))
         return Status::FAILURE;
-      }
 
       // Propagation loop
       for (; result.steps < options.max_steps; ++result.steps) {
@@ -231,7 +229,6 @@ namespace propagation {
           break;
         }
       }
-      // return the in progress flag
       return Status::IN_PROGRESS;
     }
 
