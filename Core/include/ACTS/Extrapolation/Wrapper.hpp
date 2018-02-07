@@ -316,7 +316,7 @@ namespace propagation {
     /// @tparam Parameters The parameters type at call and return
     /// @tparam ParametrsBase The according neutral/charged base class
     /// @tparam Surface The destination surface
-    /// @tparam Oversvers The list of propgation observers
+    /// @tparam Observers The list of propgation observers
     /// @tparam Surface The list of propagation aborters
     ///
     /// @param[in] start The start Parameters
