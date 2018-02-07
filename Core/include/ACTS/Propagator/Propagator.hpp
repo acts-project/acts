@@ -210,8 +210,7 @@ namespace propagation {
                const InteralAborters& internal_stop_conditions) const
     {
       // check with surface_abort if it exists
-      if (internal_stop_conditions(result, cache))
-        return Status::FAILURE;
+      if (internal_stop_conditions(result, cache)) return Status::FAILURE;
 
       // Propagation loop
       for (; result.steps < options.max_steps; ++result.steps) {
@@ -441,7 +440,7 @@ namespace propagation {
       // Perform the actual propagation
       if (propagate_(result, cache, options, internal_aborters)
           != Status::IN_PROGRESS) {
-        // analyse and screen output
+        // @todo: analyse and screen output
       } else {
         // Compute the final results and mark the propagation as successful
         result.endParameters = std::make_unique<const return_parameter_type>(
