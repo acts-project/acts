@@ -438,6 +438,7 @@ Acts::LayerCreator::checkBinning(const SurfaceArray& sArray) const
     // print all inaccessibles
     ACTS_ERROR(" -- Inaccessible surfaces: ");
     for (const auto& srf : diff) {
+      // have to choose BinningValue here
       Vector3D ctr = srf->binningPosition(binR);
       ACTS_ERROR(" Surface(x=" << ctr.x() << ", y=" << ctr.y() << ", z="
                                << ctr.z()

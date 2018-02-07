@@ -350,12 +350,12 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     std::stable_sort(keys.begin(),
                      keys.end(),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (a->binningPosition(binR).phi()
-                               < b->binningPosition(binR).phi());
+                       return (a->binningPosition(binPhi).phi()
+                               < b->binningPosition(binPhi).phi());
                      });
 
-    double maxPhi = 0.5 * (keys.at(0)->binningPosition(binR).phi()
-                           + keys.at(1)->binningPosition(binR).phi());
+    double maxPhi = 0.5 * (keys.at(0)->binningPosition(binPhi).phi()
+                           + keys.at(1)->binningPosition(binPhi).phi());
 
     // create rotation, so that maxPhi is +pi
     double angle = -(M_PI + maxPhi);
@@ -364,7 +364,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     // iterate over all key surfaces, and use their mean position as bValues,
     // but
     // rotate using transform from before
-    double previous = keys.at(0)->binningPosition(binR).phi();
+    double previous = keys.at(0)->binningPosition(binPhi).phi();
     // go through key surfaces
     for (size_t i = 1; i < keys.size(); i++) {
       const Surface* surface = keys.at(i);
@@ -372,9 +372,9 @@ Acts::SurfaceArrayCreator::createVariableAxis(
       // positions in the binning direction of the current and previous
       // surface
       double edge
-          = 0.5 * (previous + surface->binningPosition(binR).phi()) + angle;
+          = 0.5 * (previous + surface->binningPosition(binPhi).phi()) + angle;
       bValues.push_back(edge);
-      previous = surface->binningPosition(binR).phi();
+      previous = surface->binningPosition(binPhi).phi();
     }
 
     // get the bounds of the last surfaces
@@ -403,23 +403,23 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     std::stable_sort(keys.begin(),
                      keys.end(),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (a->binningPosition(binR).z()
-                               < b->binningPosition(binR).z());
+                       return (a->binningPosition(binZ).z()
+                               < b->binningPosition(binZ).z());
                      });
 
     bValues.push_back(protoLayer.minZ);
     bValues.push_back(protoLayer.maxZ);
 
     // the z-center position of the previous surface
-    double previous = keys.front()->binningPosition(binR).z();
+    double previous = keys.front()->binningPosition(binZ).z();
     // go through key surfaces
     for (auto surface = keys.begin() + 1; surface != keys.end(); surface++) {
       // create central binning values which is the mean of the center
       // positions in the binning direction of the current and previous
       // surface
       bValues.push_back(0.5
-                        * (previous + (*surface)->binningPosition(binR).z()));
-      previous = (*surface)->binningPosition(binR).z();
+                        * (previous + (*surface)->binningPosition(binZ).z()));
+      previous = (*surface)->binningPosition(binZ).z();
     }
   } else {  // binR
     std::stable_sort(keys.begin(),
@@ -507,8 +507,8 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
         = *std::max_element(surfaces.begin(),
                             surfaces.end(),
                             [](const Acts::Surface* a, const Acts::Surface* b) {
-                              return a->binningPosition(binR).phi()
-                                  < b->binningPosition(binR).phi();
+                              return a->binningPosition(binPhi).phi()
+                                  < b->binningPosition(binPhi).phi();
                             });
 
     // get the key surfaces at the different phi positions
@@ -529,7 +529,7 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
       // rotate to max phi module plus one half step
       // this should make sure that phi wrapping at +- pi
       // never falls on a module center
-      double max   = maxElem->binningPosition(binR).phi();
+      double max   = maxElem->binningPosition(binPhi).phi();
       double angle = M_PI - (max + 0.5 * step);
 
       // replace given transform ref
