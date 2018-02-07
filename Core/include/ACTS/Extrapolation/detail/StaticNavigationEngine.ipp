@@ -244,7 +244,7 @@ Acts::StaticNavigationEngine::handleBoundaryT(
                  "propagation with eCode " << eCode.toString());
   // check for progress
   if (eCode.inProgress()) {
-    // check if the boundary solution is compatible with the radial direciton of
+    // check if the boundary solution is compatible with the radial direction of
     // the extrapolation
     if (!eCell.checkRadialCompatibility()) {
       // screen output for the radial compatibility check

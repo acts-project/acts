@@ -372,7 +372,7 @@ public:
       double Ax[3] = {fFrame(0, 0), fFrame(1, 0), fFrame(2, 0)};
       double Ay[3] = {fFrame(0, 1), fFrame(1, 1), fFrame(2, 1)};
       double S[3]  = {fFrame(0, 2), fFrame(1, 2), fFrame(2, 2)};
-      // this is the projection of direciton onto the local ca vector
+      // this is the projection of direction onto the local ca vector
       double A = cache.pVector[3] * S[0] + cache.pVector[4] * S[1]
           + cache.pVector[5] * S[2];
 
