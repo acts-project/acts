@@ -96,9 +96,8 @@ Acts::CylinderSurface::referenceFrame(const Vector3D& gpos,
   // construct the measurement frame
   // measured Y is the z axis
   Vector3D measY = rotSymmetryAxis();
-  // measured z is the position transverse normalized
-  // @todo: check in another MR
-  Vector3D measDepth = Vector3D(gpos.x(), gpos.y(), 0.).unit();
+  // measured z is the position normalized transverse (in local)
+  Vector3D measDepth = normal(gpos);
   // measured X is what comoes out of it
   Vector3D measX(measY.cross(measDepth).unit());
   // assign the columnes
@@ -285,7 +284,8 @@ Acts::CylinderSurface::normal(const Acts::Vector3D& gpos) const
   }
   // set the z coordinate to 0
   pos3D.z() = 0.;
-  return pos3D.unit();
+  // take the unit vector of it and bring bac to global
+  return transform().linear() * pos3D.unit();
 }
 
 double

@@ -50,7 +50,6 @@ namespace Test {
     /// Constructor with transform pointer, radius, halfZ and halfPhiSector
     BOOST_TEST(CylinderSurface(pTransform, radius, halfPhiSector, halfZ).type()
                == Surface::Cylinder);
-    //
 
     /// Constructor with transform and CylinderBounds pointer
     auto pCylinderBounds
@@ -94,24 +93,41 @@ namespace Test {
                == binningPosition);
     //
     /// Test referenceFrame
-    Vector3D         globalPosition{2.0, 2.0, 2.0};
-    Vector3D         momentum{1.e6, 1.e6, 1.e6};
     double           rootHalf = std::sqrt(0.5);
+    Vector3D         globalPosition{rootHalf, 1. - rootHalf, 0.};
+    Vector3D         globalPositionZ{rootHalf, 1. - rootHalf, 2.0};
+    Vector3D         momentum{15., 15., 15.};
+    Vector3D         momentum2{6.6, -3., 2.};
     RotationMatrix3D expectedFrame;
-    expectedFrame << -rootHalf, 0., rootHalf, rootHalf, 0., rootHalf, 0., 1.,
+    expectedFrame << rootHalf, 0., rootHalf, rootHalf, 0., -rootHalf, 0., 1.,
         0.;
+    // check without shift
     BOOST_TEST(cylinderSurfaceObject.referenceFrame(globalPosition, momentum)
+                   .isApprox(expectedFrame));
+    // check with shift and different momentum
+    BOOST_TEST(cylinderSurfaceObject.referenceFrame(globalPositionZ, momentum2)
                    .isApprox(expectedFrame));
     //
     /// Test normal, given 3D position
     Vector3D origin{0., 0., 0.};
     Vector3D normal3D = {0., -1., 0.};
     BOOST_TEST(cylinderSurfaceObject.normal(origin) == normal3D);
+
+    Vector3D pos45deg    = {rootHalf, 1 + rootHalf, 0.};
+    Vector3D pos45degZ   = {rootHalf, 1 + rootHalf, 4.};
+    Vector3D normal45deg = {rootHalf, rootHalf, 0.};
+    // test the normal vector
+    BOOST_TEST(cylinderSurfaceObject.normal(pos45deg).isApprox(normal45deg)
+               == true);
+    // thest that the normal vector is independent of z coordinate
+    BOOST_TEST(cylinderSurfaceObject.normal(pos45degZ).isApprox(normal45deg)
+               == true);
     //
     /// Test normal given 2D rphi position
     Vector2D positionPiBy2(1.0, 0.);
     Vector3D normalAtPiBy2{std::cos(1.), std::sin(1.), 0.};
     BOOST_TEST(cylinderSurfaceObject.normal(positionPiBy2) == normalAtPiBy2);
+
     //
     /// Test rotational symmetry axis
     Vector3D symmetryAxis{0., 0., 1.};
