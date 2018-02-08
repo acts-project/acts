@@ -278,10 +278,9 @@ const Acts::Vector3D
 Acts::CylinderSurface::normal(const Acts::Vector3D& gpos) const
 {
   // get it into the cylinder frame if needed
-  Vector3D pos3D = gpos;
-  bool     needsTransform
-      = (m_transform || m_associatedDetElement) if (needsTransform)
-  {
+  Vector3D pos3D          = gpos;
+  bool     needsTransform = (m_transform || m_associatedDetElement);
+  if (needsTransform) {
     pos3D = transform().inverse() * gpos;
   }
   // set the z coordinate to 0
