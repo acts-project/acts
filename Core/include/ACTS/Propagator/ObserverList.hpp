@@ -18,6 +18,9 @@
 
 namespace Acts {
 
+/// This is the ObserverList struct that is used in the propagator
+/// to define a list of different observers that are each
+/// executed during the stepping procedure
 template <typename... observers>
 struct ObserverList : private detail::Extendable<observers...>
 {
@@ -32,11 +35,21 @@ private:
   using detail::Extendable<observers...>::tuple;
 
 public:
+  /// constructor of the Extendable
+  explicit ObserverList(observers... extensions)
+    : detail::Extendable<observers...>(extensions...)
+  {
+  }
+
   template <template <typename...> class R>
   using result_type = detail::boost_set_as_tparams_t<R, results>;
 
   using detail::Extendable<observers...>::get;
 
+  /// function call operator that is called calling the obeserve method on each
+  /// of the contained obersers in tthe list
+  /// @tparam[in] cache The stepper cache during the propagtion
+  /// @tparam[in,out] result is the result to be overwritten
   template <typename input, typename result_t>
   void
   operator()(const input& cache, result_t& result) const

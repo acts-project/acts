@@ -93,14 +93,14 @@ namespace Test {
     BOOST_TEST(cylinderSurfaceObject.binningPosition(BinningValue::binPhi)
                == binningPosition);
     //
-    /// Test measurementFrame
+    /// Test referenceFrame
     Vector3D         globalPosition{2.0, 2.0, 2.0};
     Vector3D         momentum{1.e6, 1.e6, 1.e6};
     double           rootHalf = std::sqrt(0.5);
     RotationMatrix3D expectedFrame;
     expectedFrame << -rootHalf, 0., rootHalf, rootHalf, 0., rootHalf, 0., 1.,
         0.;
-    BOOST_TEST(cylinderSurfaceObject.measurementFrame(globalPosition, momentum)
+    BOOST_TEST(cylinderSurfaceObject.referenceFrame(globalPosition, momentum)
                    .isApprox(expectedFrame));
     //
     /// Test normal, given 3D position

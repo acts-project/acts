@@ -90,6 +90,9 @@ namespace KF {
   };
 }
 
+/// KalmanFitter implementation
+/// Extrapolator, CacheGenerator, Calibrator and Updator are
+/// template arguments
 template <typename Extrapolator,
           typename CacheGenerator,
           typename Calibrator,
@@ -97,6 +100,12 @@ template <typename Extrapolator,
 class KalmanFitter
 {
 public:
+  /// Fit implementation of the foward filter, calls the
+  /// the forward filter and backward smoother
+  ///
+  /// @param vMeasurements are the fittable measurements
+  /// @param pInitialPars is the initial track parameters
+  /// @return cache a Cache object
   template <typename MeasurementContainer>
   auto
   fit(const MeasurementContainer&            vMeasurements,
@@ -115,6 +124,12 @@ public:
     return convertCacheToTrack(std::move(c));
   }
 
+  /// Forward filter implementation
+  ///
+  /// @tparam MeasurementContainer defines the measurements
+  /// @param vMeasurements are the fittable measurements
+  /// @param pInitialPars is the initial track parameters
+  /// @return cache a Cache object
   template <typename MeasurementContainer>
   auto
   forwardFilter(const MeasurementContainer&            vMeasurements,
@@ -128,6 +143,7 @@ public:
     typedef std::result_of_t<CacheGenerator(ExResult)> StepCache;
     typedef std::list<StepCache>                       Cache;
 
+    // create initial parameters if they are not provided
     if (not pInitialPars) {
       ActsSymMatrixD<Acts::NGlobalPars> cov;
       cov << 100, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 10, 0,
@@ -159,6 +175,10 @@ public:
     return c;
   }
 
+  /// Apply the smoothing
+  ///
+  /// @tparam StepCache uses the list of steps caches
+  /// @param cache is the list of step caches
   template <typename StepCache>
   void
   applySmoothing(std::list<StepCache>& cache) const

@@ -11,7 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #ifndef ACTS_EVENTDATA_PARTICLEDEFINITIONS_H
-#define ACTS_EVENTDATA_PARTICLEDEFINITIONS_H 1
+#define ACTS_EVENTDATA_PARTICLEDEFINITIONS_H
 
 #include <vector>
 #include "ACTS/Utilities/Definitions.hpp"

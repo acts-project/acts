@@ -127,12 +127,11 @@ namespace Test {
     const Vector3D expectedGlobalPosition{0, 1, 0};
     BOOST_TEST(returnedGlobalPosition == expectedGlobalPosition);
     //
-    // measurementFrame
+    // referenceFrame
     Vector3D globalPosition{0., 0., 0.};
-    auto     returnedRotationMatrix
-        = line.measurementFrame(globalPosition, momentum);
-    double           v0 = std::cos(std::atan(2. / 3.));
-    double           v1 = std::sin(std::atan(2. / 3.));
+    auto returnedRotationMatrix = line.referenceFrame(globalPosition, momentum);
+    double           v0         = std::cos(std::atan(2. / 3.));
+    double           v1         = std::sin(std::atan(2. / 3.));
     RotationMatrix3D expectedRotationMatrix;
     expectedRotationMatrix << -v1, 0., v0, v0, 0., v1, 0., 1., -0.;
     // std::cout<<returnedRotationMatrix<<std::endl;

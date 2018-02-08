@@ -7,16 +7,22 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef ACTS_SINGLECURVILINEARTRACKPARAMETERS_H
-#define ACTS_SINGLECURVILINEARTRACKPARAMETERS_H 1
+#define ACTS_SINGLECURVILINEARTRACKPARAMETERS_H
 
-// STL include(s)
 #include <memory>
-
-// ACTS includes
 #include "ACTS/EventData/SingleTrackParameters.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 
 namespace Acts {
+
+/// @brief Charged and Neutrial Curvilinear Track representation
+/// This is a single-component representation
+///
+/// @note the curvilinear representation is bound to the curvilinear
+/// planar surface represenation. I.e. the local parameters are by
+/// construction (0,0), the curvilinear surface is characterised by
+/// being perpenticular to the track direction. It's internal frame
+/// is constructed with the help of the global z axis.
 template <typename ChargePolicy>
 class SingleCurvilinearTrackParameters
     : public SingleTrackParameters<ChargePolicy>
@@ -25,6 +31,14 @@ public:
   typedef typename SingleTrackParameters<ChargePolicy>::CovPtr_t
       CovPtr_t;  ///< type of covariance matrix
 
+  /// @brief constructor for curvilienear representation
+  /// This is the constructor from global parameters, enabled only
+  /// for charged representations.
+  ///
+  /// @param[in] cov The covariance matrix w.r.t. curvilinear frame
+  /// @param[in] position The global position of this track parameterisation
+  /// @param[in] momentum The global momentum of this track parameterisation
+  /// @param[in] dCharge The charge of this track parameterisation
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleCurvilinearTrackParameters(CovPtr_t              cov,
@@ -38,10 +52,17 @@ public:
                                                                 dCharge),
           position,
           momentum)
-    , m_upSurface(new PlaneSurface(position, momentum))
+    , m_upSurface(position, momentum)
   {
   }
 
+  /// @brief constructor for curvilienear representation
+  /// This is the constructor from global parameters, enabled only
+  /// for charged representations.
+  ///
+  /// @param[in] cov The covariance matrix w.r.t. curvilinear frame
+  /// @param[in] position The global position of this track parameterisation
+  /// @param[in] momentum The global momentum of this track parameterisation
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleCurvilinearTrackParameters(CovPtr_t              cov,
@@ -54,23 +75,21 @@ public:
                                                                 0),
           position,
           momentum)
-    , m_upSurface(new PlaneSurface(position, momentum))
+    , m_upSurface(position, momentum)
   {
   }
 
-  /**
-   * @brief copy constructor
-   */
+  /// @brief copy constructor - charged/neutral
+  /// @param[in] copy The source parameters
   SingleCurvilinearTrackParameters(
       const SingleCurvilinearTrackParameters<ChargePolicy>& copy)
     : SingleTrackParameters<ChargePolicy>(copy)
-    , m_upSurface(new PlaneSurface(this->position(), this->momentum()))
+    , m_upSurface(this->position(), this->momentum())
   {
   }
 
-  /**
-   * @brief move constructor
-   */
+  /// @brief move constructor - charged/neutral
+  /// @param[in] copy The source parameters
   SingleCurvilinearTrackParameters(
       SingleCurvilinearTrackParameters<ChargePolicy>&& copy)
     : SingleTrackParameters<ChargePolicy>(std::move(copy))
@@ -78,26 +97,24 @@ public:
   {
   }
 
+  /// @brief desctructor
   virtual ~SingleCurvilinearTrackParameters() = default;
 
-  /**
-   * @brief copy assignment operator
-   */
+  /// @brief copy assignment operator - charged/netural
+  /// virtual constructor for type creation without casting
   SingleCurvilinearTrackParameters<ChargePolicy>&
   operator=(const SingleCurvilinearTrackParameters<ChargePolicy>& rhs)
   {
     // check for self-assignment
     if (this != &rhs) {
       SingleTrackParameters<ChargePolicy>::operator=(rhs);
-      m_upSurface.reset(new PlaneSurface(this->position(), this->momentum()));
+      m_upSurface = PlaneSurface(this->position(), this->momentum());
     }
-
     return *this;
   }
 
-  /**
-   * @brief move assignment operator
-   */
+  /// @brief move assignment operator - charged/netural
+  /// virtual constructor for type creation without casting
   SingleCurvilinearTrackParameters<ChargePolicy>&
   operator=(SingleCurvilinearTrackParameters<ChargePolicy>&& rhs)
   {
@@ -106,16 +123,51 @@ public:
       SingleTrackParameters<ChargePolicy>::operator=(std::move(rhs));
       m_upSurface                                  = std::move(rhs.m_upSurface);
     }
-
     return *this;
   }
 
+  /// @brief clone - charged/netural
+  /// virtual constructor for type creation without casting
   virtual SingleTrackParameters<ChargePolicy>*
   clone() const override
   {
     return new SingleCurvilinearTrackParameters<ChargePolicy>(*this);
   }
 
+  /// @brief update of the track parameterisation
+  /// only possible on non-const objects, enable for local parameters
+  ///
+  /// @tparam ParID_t The parameter type
+  ///
+  /// @param newValue The new updaed value
+  ///
+  /// For curvilinear parameters the local parameters are forced to be
+  /// (0,0), hence an update is an effective shift of the reference
+  template <ParID_t par,
+            std::enable_if_t<std::is_same<typename par_type<par>::type,
+                                          local_parameter>::value,
+                             int> = 0>
+  void
+  set(ParValue_t newValue)
+  {
+    // set the parameter & update the new global position
+    this->getParameterSet().template setParameter<par>(newValue);
+    this->updateGlobalCoordinates(typename par_type<par>::type());
+    // recreate the surface
+    m_upSurface = PlaneSurface(this->position(), this->momentum().unit());
+    // reset to (0,0)
+    this->getParameterSet().template setParameter<par>(0.);
+  }
+
+  /// @brief update of the track parameterisation
+  /// only possible on non-const objects
+  /// enable for parameters that are not local parameters
+  /// @tparam ParID_t The parameter type
+  ///
+  /// @param newValue The new updaed value
+  ///
+  /// For curvilinear parameters the directional change of parameters
+  /// causes a recalculation of the surface
   template <ParID_t par,
             std::enable_if_t<not std::is_same<typename par_type<par>::type,
                                               local_parameter>::value,
@@ -125,16 +177,31 @@ public:
   {
     this->getParameterSet().template setParameter<par>(newValue);
     this->updateGlobalCoordinates(typename par_type<par>::type());
+    // recreate the surface
+    m_upSurface = PlaneSurface(this->position(), this->momentum().unit());
   }
 
+  /// @brief access to the reference surface
   virtual const Surface&
   referenceSurface() const final override
   {
-    return *m_upSurface;
+    return m_upSurface;
+  }
+
+  /// @brief access to the measurement frame, i.e. the rotation matrix with
+  /// respect to the global coordinate system, in which the local error
+  /// is described.
+  ///
+  /// For a curvilinear track parameterisation this is identical to the
+  /// rotation matrix of the intrinsic planar surface.
+  virtual RotationMatrix3D
+  referenceFrame() const final override
+  {
+    return m_upSurface.transform().linear();
   }
 
 private:
-  std::unique_ptr<const PlaneSurface> m_upSurface;
+  PlaneSurface m_upSurface;
 };
 }  // end of namespace Acts
 

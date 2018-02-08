@@ -38,19 +38,17 @@ public:
 
   /// Constructor from Transform3D and bounds
   ///
-  /// @param htrans is the transform that positions the surface in the global
-  /// frame
-  /// @param radius is the straw radius
-  /// @param halez is the half length in z
+  /// @param htrans The transform that positions the surface in the global frame
+  /// @param radius The straw radius
+  /// @param halez The half length in z
   LineSurface(std::shared_ptr<const Transform3D> htrans,
               double                             radius,
               double                             halez);
 
   /// Constructor from Transform3D and a shared bounds object
   ///
-  /// @param htrans is the transform that positions the surface in the global
-  /// frame
-  /// @param lbounds are teh bounds describing the straw dimensions, can be
+  /// @param htrans The transform that positions the surface in the global frame
+  /// @param lbounds The bounds describing the straw dimensions, can be
   /// optionally nullptr
   LineSurface(std::shared_ptr<const Transform3D> htrans,
               std::shared_ptr<const LineBounds>  lbounds = nullptr);
@@ -67,13 +65,13 @@ public:
 
   /// Copy constructor
   ///
-  /// @param other is teh source surface for copying
+  /// @param other The source surface for copying
   LineSurface(const LineSurface& other);
 
   /// Copy constructor with shift
   ///
-  /// @param other is the source surface dor copying
-  /// @param transf is the additional transform applied after copying
+  /// @param other The source surface dor copying
+  /// @param transf The additional transform applied after copying
   LineSurface(const LineSurface& other, const Transform3D& transf);
 
   virtual ~LineSurface();
@@ -109,8 +107,8 @@ public:
   /// @param mom is the momentum used for the measurement frame construction
   /// @return is a rotation matrix that indicates the measurement frame
   virtual const RotationMatrix3D
-  measurementFrame(const Vector3D& gpos,
-                   const Vector3D& mom) const final override;
+  referenceFrame(const Vector3D& gpos,
+                 const Vector3D& mom) const final override;
 
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift
@@ -134,8 +132,9 @@ public:
   /// The calculation of the sign of the radius (or \f$ d_0 \f$) can be done as
   /// follows:<br>
   /// May \f$ \vec d = \vec m - \vec c \f$ denote the difference between the
-  /// center of the line and
-  /// the global position of the measurement/predicted state, then \f$ \vec d
+  /// center of the line and the global position of the measurement/predicted
+  /// state,
+  /// then \f$ \vec d
   /// \f$
   /// lies within the so
   /// called measurement plane.
@@ -174,7 +173,8 @@ public:
   ///   forceDir is to provide the closest forward solution
   ///
   /// @param gpos is the global position as a starting point
-  /// @param dir is the global direction at the starting point
+  /// @param gdir is the global direction at the starting point
+  ///        @note has to be normalized
   /// @param forceDir is a boolean forcing a solution along direction
   /// @param bcheck is the boundary check
   ///
@@ -208,7 +208,7 @@ public:
   /// @return is the intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
-                       const Vector3D&      dir,
+                       const Vector3D&      gdir,
                        bool                 forceDir,
                        const BoundaryCheck& bcheck = true) const final override;
 

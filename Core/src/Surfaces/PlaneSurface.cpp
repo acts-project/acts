@@ -34,13 +34,12 @@ Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other,
 Acts::PlaneSurface::PlaneSurface(const Vector3D& center, const Vector3D& normal)
   : Surface(), m_bounds(nullptr)
 {
-  Translation3D curvilinearTranslation(center.x(), center.y(), center.z());
   /// the right-handed coordinate system is defined as
   /// T = normal
   /// U = Z x T if T not parallel to Z otherwise U = X x T
   /// V = T x U
   Vector3D T = normal.normalized();
-  Vector3D U = std::abs(T.dot(Vector3D::UnitZ())) < 0.99
+  Vector3D U = std::abs(T.dot(Vector3D::UnitZ())) < s_curvilinearProjTolerance
       ? Vector3D::UnitZ().cross(T).normalized()
       : Vector3D::UnitX().cross(T).normalized();
   Vector3D         V = T.cross(U);
@@ -166,26 +165,4 @@ Acts::PlaneSurface::pathCorrection(const Acts::Vector3D&,
 {
   /// we can ignore the global position here
   return 1. / std::abs(normal().dot(mom.unit()));
-}
-
-Acts::Intersection
-Acts::PlaneSurface::intersectionEstimate(
-    const Acts::Vector3D&      gpos,
-    const Acts::Vector3D&      dir,
-    bool                       forceDir,
-    const Acts::BoundaryCheck& bcheck) const
-{
-  double denom = dir.dot(normal());
-  if (denom) {
-    double   u = (normal().dot((center() - gpos))) / (denom);
-    Vector3D intersectPoint(gpos + u * dir);
-    // evaluate the intersection in terms of direction
-    bool isValid = forceDir ? (u > 0.) : true;
-    // evaluate (if necessary in terms of boundaries)
-    isValid
-        = bcheck ? (isValid && isOnSurface(intersectPoint, bcheck)) : isValid;
-    // return the result
-    return Intersection(intersectPoint, u, isValid);
-  }
-  return Intersection(gpos, 0., false);
 }

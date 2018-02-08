@@ -57,7 +57,6 @@ add_component (Core)
 add_subdirectory (Plugins)
 
 # examples and tests
-
 if(ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS)
   include(CTest) # must be included from the main CMakeLists.txt
 endif()
@@ -66,7 +65,6 @@ add_subdirectory_if(Tests ACTS_BUILD_TESTS)
 add_subdirectory_if(IntegrationTests ACTS_BUILD_INTEGRATION_TESTS)
 
 # documentation
-
 add_subdirectory_if (doc ACTS_BUILD_DOC)
 
 # setup script and cmake configuration files

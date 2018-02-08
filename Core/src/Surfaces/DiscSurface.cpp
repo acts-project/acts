@@ -209,14 +209,14 @@ Acts::DiscSurface::pathCorrection(const Acts::Vector3D&,
 
 Acts::Intersection
 Acts::DiscSurface::intersectionEstimate(const Acts::Vector3D&      gpos,
-                                        const Acts::Vector3D&      dir,
+                                        const Acts::Vector3D&      gdir,
                                         bool                       forceDir,
                                         const Acts::BoundaryCheck& bcheck) const
 {
-  double denom = dir.dot(normal());
+  double denom = gdir.dot(normal());
   if (denom) {
     double   u = (normal().dot((center() - gpos))) / (denom);
-    Vector3D intersectPoint(gpos + u * dir);
+    Vector3D intersectPoint(gpos + u * gdir);
     // evaluate the intersection in terms of direction
     bool isValid = forceDir ? (u > 0.) : true;
     // evaluate (if necessary in terms of boundaries)

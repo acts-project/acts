@@ -59,20 +59,6 @@ private:
     typedef CurvilinearParameters type;
   };
 
-  /// Rotation matrix going from global coordinates to local surface coordinates
-  static ActsMatrixD<3, 3>
-  dLocaldGlobal(const Surface& p, const Vector3D& gpos)
-  {
-    // A surface's associated transform is a 4x4 affine transformation matrix,
-    // whose top-left corner is the 3x3 linear local-to-global rotation matrix,
-    // and whose right column is a translation vector, with a trailing 1.
-    //
-    // So to get the global-to-local rotation matrix, we only need to take the
-    // transpose of the top-left corner of the surface's associated transform.
-    //
-    return p.transform().matrix().topLeftCorner<3, 3>().transpose();
-  }
-
 public:
   /// Cache for track parameter propagation
   ///
@@ -81,71 +67,79 @@ public:
   struct Cache
   {
     /// Constructor from the initial track parameters
-    /// @tparam [in] par The track parameters at start
+    /// @param [in] par The track parameters at start
     ///
     /// @note the covariance matrix is copied when needed
     template <typename T>
     explicit Cache(const T& par)
-      : pos(par.position())
+      : cache_ready(false)
+      , pos(par.position())
       , dir(par.momentum().normalized())
       , qop(par.charge() / par.momentum().norm())
       , cov_transport(false)
+      , accumulated_path(0.)
+      , step_size(std::numeric_limits<double>::max())
     {
-      update_covariance(par);
+      init_jacobian(par);
+      // the cache is ready now
+      cache_ready = true;
     }
 
     /// The cache update for optimal performance
-    /// @tparam [in] par The new track parameters at start
+    /// @param [in] par The new track parameters at start
     ///
     /// @todo check to identify an reuse of start/cache
     template <typename T>
     void
     update(const T& par)
     {
-      pos           = par.position();
-      dir           = par.momentum().normalized();
-      qop           = (par.charge() / par.momentum().norm());
-      cov_transport = false;
-      update_covariance(par);
+      if (!cache_ready) {
+        pos           = par.position();
+        dir           = par.momentum().normalized();
+        qop           = (par.charge() / par.momentum().norm());
+        cov_transport = false;
+        init_jacobian(par);
+        cache_ready = true;
+      }
     }
 
-    /// The covariance update
-    /// @tparam [in] par The (new) track parameters at start
+    /// The jacobiann initialisation
+    /// @param [in] par The (new) track parameters at start
     template <typename T>
     void
-    update_covariance(const T& par)
+    init_jacobian(const T& par)
     {
-      if (par.covariance()) {
+      if (par.covariance() && !cache_ready) {
         cov_transport = true;
         cov           = ActsSymMatrixD<5>(*par.covariance());
-
         // The trigonometry required to convert the direction to spherical
         // coordinates and then compute the sines and cosines again can be
         // surprisingly expensive from a performance point of view.
         //
         // Here, we can avoid it because the direction is by definition a unit
         // vector, with the following coordinate conversions...
-        //
         const double x = dir(0);  // == cos(phi) * sin(theta)
         const double y = dir(1);  // == sin(phi) * sin(theta)
         const double z = dir(2);  // == cos(theta)
-        //
-        // ...which we can invert to directly get the sines and cosines we want:
-        //
+
+        // ...which we can invert to directly get the sines and cosines:
         const double cos_theta     = z;
         const double sin_theta     = sqrt(x * x + y * y);
         const double inv_sin_theta = 1. / sin_theta;
         const double cos_phi       = x * inv_sin_theta;
         const double sin_phi       = y * inv_sin_theta;
 
-        // @todo - check this might have to be the measurement frame ...
-        const auto transform = par.referenceSurface().transform().matrix();
+        // the error is given on a planar-type surface
+        // called the reference frame (@todo: catch disc surface!)
+        const auto transform = par.referenceFrame();
+        // the local error components
         jacobian(0, eLOC_0) = transform(0, eLOC_0);
         jacobian(0, eLOC_1) = transform(0, eLOC_1);
         jacobian(1, eLOC_0) = transform(1, eLOC_0);
         jacobian(1, eLOC_1) = transform(1, eLOC_1);
         jacobian(2, eLOC_0) = transform(2, eLOC_0);
         jacobian(2, eLOC_1) = transform(2, eLOC_1);
+        // the momentum components
         jacobian(3, ePHI)   = -sin_theta * sin_phi;
         jacobian(3, eTHETA) = cos_theta * cos_phi;
         jacobian(4, ePHI)   = sin_theta * cos_phi;
@@ -169,6 +163,9 @@ public:
       return dir;
     }
 
+    /// Cache ready flag, avoids double inialization
+    bool cache_ready = false;
+
     /// Global particle position
     Vector3D pos = Vector3D(0, 0, 0);
 
@@ -190,10 +187,16 @@ public:
     ActsSymMatrixD<5> cov           = ActsSymMatrixD<5>::Zero();
 
     /// Lazily initialized cache
-    /// It caches the current magneticl field cell and stays interpolates within
+    /// It caches the current magnetic field cell and stays interpolates within
     /// as long as this is valid. See step() code for details.
     bool                    field_cache_ready = false;
     concept::AnyFieldCell<> field_cache;
+
+    // accummulated path length cache
+    double accumulated_path = 0.;
+
+    // adaptive sep size of the runge-kutta integration
+    double step_size = std::numeric_limits<double>::max();
   };
 
   /// Always use the same propagation cache type, independently of the initial
@@ -205,89 +208,93 @@ public:
   template <typename T>
   using step_parameter_type = CurvilinearParameters;
 
-  /// Return parameter types depend on the propagation mode: when propagating to
-  /// a surface we return BoundParameters, otherwise CurvilinearParameters
+  /// Return parameter types depend on the propagation mode:
+  /// -  when propagating to a surface we usually return BoundParameters
+  /// - otherwise CurvilinearParameters
   template <typename T, typename S = int>
   using return_parameter_type = typename s<T, S>::type;
 
   /// Constructor requires knowledge of the detector's magnetic field
   EigenStepper(BField bField = BField()) : m_bField(std::move(bField)){};
 
-  /// Convert the propagation cache to curvilinear parameters
-  /// @param cache is the stepper cache
-  /// @todo check: what if cache is already in courvilinear ? is this caught ?
+  /// Convert the propagation cache (global) to curvilinear parameters
+  /// @param cache The stepper cache
+  /// @return curvilinear parameters
   static CurvilinearParameters
-  convert(const Cache& cache)
+  convert(Cache& cache)
   {
     double                                   charge = cache.qop > 0. ? 1. : -1.;
     std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
 
-    // Perform error propagation if an initial covariance matrix was provided
     if (cache.cov_transport) {
       // Optimized trigonometry on the propagation direction, see documentation
-      // of Cache::update_covariance() for a longer mathematical discussion.
+      // of Cache::init_jacobian() for a longer mathematical discussion.
       const double x = cache.dir(0);  // == cos(phi) * sin(theta)
       const double y = cache.dir(1);  // == sin(phi) * sin(theta)
       const double z = cache.dir(2);  // == cos(theta)
-      //
+      // can be turned into cosine/sine
       const double cos_theta     = z;
       const double sin_theta     = sqrt(x * x + y * y);
       const double inv_sin_theta = 1. / sin_theta;
       const double cos_phi       = x * inv_sin_theta;
       const double sin_phi       = y * inv_sin_theta;
-
-      ActsMatrixD<5, 7> J = ActsMatrixD<5, 7>::Zero();
-      if (std::abs(cos_theta) < 0.99) {
+      // prepare the jacobian to curvilinear
+      ActsMatrixD<5, 7> jac_to_curv = ActsMatrixD<5, 7>::Zero();
+      if (std::abs(cos_theta) < s_curvilinearProjTolerance) {
         // We normally operate in curvilinear coordinates defined as follows
-        J(0, 0) = -sin_phi;
-        J(0, 1) = cos_phi;
-        J(1, 0) = -cos_phi * cos_theta;
-        J(1, 1) = -sin_phi * cos_theta;
-        J(1, 2) = sin_theta;
+        jac_to_curv(0, 0) = -sin_phi;
+        jac_to_curv(0, 1) = cos_phi;
+        jac_to_curv(1, 0) = -cos_phi * cos_theta;
+        jac_to_curv(1, 1) = -sin_phi * cos_theta;
+        jac_to_curv(1, 2) = sin_theta;
       } else {
         // Under grazing incidence to z, the above coordinate system definition
         // becomes numerically unstable, and we need to switch to another one
         const double c     = sqrt(y * y + z * z);
         const double inv_c = 1. / c;
-        J(0, 1) = -z * inv_c;
-        J(0, 2) = y * inv_c;
-        J(1, 0) = c;
-        J(1, 1) = -x * y * inv_c;
-        J(1, 2) = -x * z * inv_c;
+        jac_to_curv(0, 1) = -z * inv_c;
+        jac_to_curv(0, 2) = y * inv_c;
+        jac_to_curv(1, 0) = c;
+        jac_to_curv(1, 1) = -x * y * inv_c;
+        jac_to_curv(1, 2) = -x * z * inv_c;
       }
-      J(2, 3) = -sin_phi * inv_sin_theta;
-      J(2, 4) = cos_phi * inv_sin_theta;
-      J(3, 5) = -inv_sin_theta;
-      J(4, 6) = 1;
+      // Directional and momentum parameters for curvilinear
+      jac_to_curv(2, 3) = -sin_phi * inv_sin_theta;
+      jac_to_curv(2, 4) = cos_phi * inv_sin_theta;
+      jac_to_curv(3, 5) = -inv_sin_theta;
+      jac_to_curv(4, 6) = 1;
 
-      const ActsRowVectorD<5> scale_factors = cache.dir.transpose()
-          * cache.jacobian.template topLeftCorner<3, 5>();
-
-      const ActsMatrixD<5, 5> jac
-          = J * (cache.jacobian - cache.derivative * scale_factors);
-
-      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * cache.cov
-                                                      * jac.transpose());
+      // transport the covariance
+      ActsRowVectorD<3> norm_vec(cache.dir);
+      auto cov_at_frame = transport_covariance(cache, jac_to_curv, norm_vec);
+      // create the new covariance matrix: curvilinear == measurement frame
+      cov = std::make_unique<const ActsSymMatrixD<5>>(std::move(cov_at_frame));
     }
-
+    // this invalidates the cache
+    cache.cache_ready = false;
+    // return the parameters
     return CurvilinearParameters(
         std::move(cov), cache.pos, cache.dir / std::abs(cache.qop), charge);
   }
 
   /// Convert the propagation cache to track parameters at a certain surface
+  ///
+  /// @tparam S The surface type
+  ///
   /// @param [in] cache Propagation cache used
   /// @param [in] surface Destination surface to which the conversion is done
   template <typename S>
   static BoundParameters
   convert(Cache& cache, const S& surface)
   {
-    double                                   charge = cache.qop > 0. ? 1. : -1.;
-    std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
+    std::unique_ptr<const ActsSymMatrixD<5>> cov = nullptr;
 
     // Perform error propagation if an initial covariance matrix was provided
     if (cache.cov_transport) {
+      // Initialize the transport final frame jacobian
+      ActsMatrixD<5, 7> jac_to_local = ActsMatrixD<5, 7>::Zero();
       // Optimized trigonometry on the propagation direction, see documentation
-      // of Cache::update_covariance() for a longer mathematical discussion.
+      // of Cache::init_jacobian() for a longer mathematical discussion.
       const double x = cache.dir(0);  // == cos(phi) * sin(theta)
       const double y = cache.dir(1);  // == sin(phi) * sin(theta)
       //
@@ -295,41 +302,32 @@ public:
       const double cos_phi_over_sin_theta = x * inv_sin_theta_2;
       const double sin_phi_over_sin_theta = y * inv_sin_theta_2;
       const double inv_sin_theta          = sqrt(inv_sin_theta_2);
-
-      ActsMatrixD<5, 7> J = ActsMatrixD<5, 7>::Zero();
-      const auto dLdG = dLocaldGlobal(surface, cache.pos);
-      J.topLeftCorner<2, 3>() = dLdG.template topLeftCorner<2, 3>();
-      J(2, 3)                 = -sin_phi_over_sin_theta;
-      J(2, 4)                 = cos_phi_over_sin_theta;
-      J(3, 5)                 = -inv_sin_theta;
-      J(4, 6)                 = 1;
-
-      ActsRowVectorD<3> norm_vec = dLdG.template block<1, 3>(2, 0);
+      // The measurement frame of the surface
+      // @todo deal with the disc surface
+      RotationMatrix3D rframeT
+          = surface.referenceFrame(cache.pos, cache.dir).transpose();
+      jac_to_local.block<2, 3>(0, 0) = rframeT.template block<2, 3>(0, 0);
+      // Directional and momentum elements for reference frame surface
+      jac_to_local(ePHI, 3)   = -sin_phi_over_sin_theta;
+      jac_to_local(ePHI, 4)   = cos_phi_over_sin_theta;
+      jac_to_local(eTHETA, 5) = -inv_sin_theta;
+      jac_to_local(eQOP, 6)   = 1;
+      // Create the normal and scale it with the projection onto the direction
+      ActsRowVectorD<3> norm_vec = rframeT.template block<1, 3>(2, 0);
       norm_vec /= (norm_vec * cache.dir);
-
-      const ActsRowVectorD<5> scale_factors
-          = norm_vec * cache.jacobian.template topLeftCorner<3, 5>();
-
-      const ActsMatrixD<5, 5> jac
-          = J * (cache.jacobian - cache.derivative * scale_factors);
-
-      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * cache.cov
-                                                      * jac.transpose());
+      // calculate the jacobian at the measurement frame
+      auto cov_at_frame = transport_covariance(cache, jac_to_local, norm_vec);
+      cov = std::make_unique<const ActsSymMatrixD<5>>(std::move(cov_at_frame));
     }
-
+    double charge = cache.qop > 0. ? 1. : -1.;
+    // this invalidates the cache
+    cache.cache_ready = false;
+    // return the bound parameters
     return BoundParameters(std::move(cov),
                            cache.pos,
                            cache.dir / std::abs(cache.qop),
                            charge,
                            surface);
-  }
-
-  /// Estimate the (signed) distance to a certain surface
-  static double
-  distance(const Surface& s, const Vector3D& pos, const Vector3D& dir)
-  {
-    const Intersection i = s.intersectionEstimate(pos, dir);
-    return i.pathLength;
   }
 
   /// Get the field for the stepping
@@ -355,13 +353,13 @@ public:
   /// @param[in,out] cache is the propagation cache associated with the track
   ///                      parameters that are being propagated.
   ///
-  /// @param[in,out] h     is the desired step size. It can be negative during
-  ///                      backwards track propagation, and since we're using an
-  ///                      adaptive algorithm, it can also be modified by the
-  ///                      stepper class during propagation.
-  ///
+  ///                      the cache contains the desired step size.
+  ///                      It can be negative during ackwards track propagation,
+  ///                      and since we're using an adaptive algorithm, it can
+  ///                      also
+  ///                      be modified by the stepper class during propagation.
   double
-  step(Cache& cache, double& h) const
+  step(Cache& cache) const
   {
     // Charge-momentum ratio, in SI units
     const double qop = 1. / units::Nat2SI<units::MOMENTUM>(1. / cache.qop);
@@ -386,8 +384,7 @@ public:
       // Second Runge-Kutta point
       const Vector3D pos1 = cache.pos + half_h * cache.dir + h2 / 8 * k1;
       B_middle            = getField(cache, pos1);
-      ;
-      k2 = qop * (cache.dir + half_h * k1).cross(B_middle);
+      k2                  = qop * (cache.dir + half_h * k1).cross(B_middle);
 
       // Third Runge-Kutta point
       k3 = qop * (cache.dir + half_h * k2).cross(B_middle);
@@ -401,24 +398,28 @@ public:
       return h * (k1 - k2 - k3 + k4).template lpNorm<1>();
     };
 
-    // Select the appropriate Runge-Kutta step size
-    double error_estimate = tryRungeKuttaStep(h);
+    // Select and adjust the appropriate Runge-Kutta step size
+    // @todo remove magic numbers
+    double error_estimate = tryRungeKuttaStep(cache.step_size);
     while (error_estimate > 0.0002) {
-      h *= 0.5;
-      error_estimate = tryRungeKuttaStep(h);
+      cache.step_size *= 0.5;
+      error_estimate = tryRungeKuttaStep(cache.step_size);
     }
+
+    // use the adjusted step size
+    const double h = cache.step_size;
 
     // When doing error propagation, update the associated Jacobian matrix
     if (cache.cov_transport) {
-      ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Zero();
-      D(6, 6)             = 1;
 
+      ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Identity();
       const double conv = units::SI2Nat<units::MOMENTUM>(1);
 
-      auto dFdx = D.block<3, 3>(0, 0);
+      // This sets the reference to the sub matrices
+      // dFdx is already initialised as (3x3) idendity
       auto dFdT = D.block<3, 3>(0, 3);
       auto dFdL = D.block<3, 1>(0, 6);
-      auto dGdx = D.block<3, 3>(3, 0);
+      // dGdx is already initialised as (3x3) zero
       auto dGdT = D.block<3, 3>(3, 3);
       auto dGdL = D.block<3, 1>(3, 6);
 
@@ -457,17 +458,12 @@ public:
       dk4dT += h * dk3dT;
       dk4dT = qop * cross(dk4dT, B_last);
 
-      dFdx.setIdentity();
-
       dFdT.setIdentity();
       dFdT += h / 6 * (dk1dT + dk2dT + dk3dT);
       dFdT *= h;
 
       dFdL = conv * h2 / 6 * (dk1dL + dk2dL + dk3dL);
 
-      dGdx.setZero();
-
-      dGdT.setIdentity();
       dGdT += h / 6 * (dk1dT + 2 * (dk2dT + dk3dT) + dk4dT);
 
       dGdL = conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
@@ -483,10 +479,32 @@ public:
     cache.derivative.template segment<3>(3) = k4;
 
     // Return the updated step size
+    cache.accumulated_path += h;
     return h;
   }
 
 private:
+  /// @brief Convert the covariance matrix at the local frame
+  ///
+  /// @param cache The propagation cache
+  /// @parm jac_local The Jacobian to Local
+  /// @param norm_vec The normal vector
+  ///
+  /// @return a 5x5 covariance matrix after transport
+  static ActsSymMatrixD<5>
+  transport_covariance(const Cache& cache,
+                       const ActsMatrixD<5, 7>& jac_local,
+                       const ActsRowVectorD<3>& norm_vec)
+  {
+    const ActsRowVectorD<5> scale_factors
+        = norm_vec * cache.jacobian.template topLeftCorner<3, 5>();
+    // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
+    const ActsMatrixD<5, 5> jac
+        = jac_local * (cache.jacobian - cache.derivative * scale_factors);
+    // return the transported and local covariance matrix
+    return ActsSymMatrixD<5>(jac * cache.cov * jac.transpose());
+  }
+
   /// Magnetic field inside of the detector
   BField m_bField;
 };

@@ -6,20 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///
-/// @file ParameterSetTests.cpp
-///
-
-// STL include(s)
 #include <cmath>
 #include <memory>
 #include <random>
 
-// Boost include(s)
 #define BOOST_TEST_MODULE ParameterSet Tests
 #include <boost/test/included/unit_test.hpp>
-
-// ACTS include(s)
 #include "ACTS/EventData/ParameterSet.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 using namespace Acts::detail;

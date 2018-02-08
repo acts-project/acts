@@ -90,16 +90,16 @@ Acts::ConeSurface::operator=(const ConeSurface& other)
 const Acts::Vector3D
 Acts::ConeSurface::rotSymmetryAxis() const
 {
-  return std::move(transform().rotation().col(2));
+  return std::move(transform().matrix().block<3, 1>(0, 2));
 }
 
 const Acts::RotationMatrix3D
-Acts::ConeSurface::measurementFrame(const Vector3D& pos, const Vector3D&) const
+Acts::ConeSurface::referenceFrame(const Vector3D& pos, const Vector3D&) const
 {
   RotationMatrix3D mFrame;
   // construct the measurement frame
-  // measured Y is the z axis
-  Vector3D measY(transform().rotation().col(2));
+  // measured Y is the local z axis
+  Vector3D measY = rotSymmetryAxis();
   // measured z is the position transverse normalized
   Vector3D measDepth = Vector3D(pos.x(), pos.y(), 0.).unit();
   // measured X is what comoes out of it
@@ -143,41 +143,40 @@ Acts::ConeSurface::globalToLocal(const Vector3D& gpos,
 
 Acts::Intersection
 Acts::ConeSurface::intersectionEstimate(const Vector3D&      gpos,
-                                        const Vector3D&      dir,
+                                        const Vector3D&      gdir,
                                         bool                 forceDir,
                                         const BoundaryCheck& bcheck) const
 {
   // transform to a frame with the cone along z, with the tip at 0
-  Acts::Vector3D tpos1 = m_transform ? transform().inverse() * gpos : gpos;
-  Acts::Vector3D tdir
-      = m_transform ? transform().inverse().linear() * dir : dir;
+  Vector3D tpos1 = m_transform ? transform().inverse() * gpos : gpos;
+  Vector3D tdir  = m_transform ? transform().inverse().linear() * gdir : gdir;
   // see the header for the formula derivation
   double tan2Alpha = bounds().tanAlpha() * bounds().tanAlpha(),
          A         = tdir.x() * tdir.x() + tdir.y() * tdir.y()
       - tan2Alpha * tdir.z() * tdir.z(),
          B = 2 * (tdir.x() * tpos1.x() + tdir.y() * tpos1.y()
-                  - tan2Alpha * dir.z() * tpos1.z()),
+                  - tan2Alpha * tdir.z() * tpos1.z()),
          C = tpos1.x() * tpos1.x() + tpos1.y() * tpos1.y()
       - tan2Alpha * tpos1.z() * tpos1.z();
   if (A == 0.) A += 1e-16;  // avoid div by zero
 
   // use Andreas' quad solver, much more stable than what I wrote
-  Acts::detail::RealQuadraticEquation solns(A, B, C);
+  detail::RealQuadraticEquation solns(A, B, C);
 
-  Acts::Vector3D solution(0., 0., 0.);
-  double         path    = 0.;
-  bool           isValid = false;
+  Vector3D solution(0., 0., 0.);
+  double   path    = 0.;
+  bool     isValid = false;
   if (solns.solutions != 0) {
     double         t1 = solns.first;
-    Acts::Vector3D soln1Loc(tpos1 + t1 * dir);
+    Acts::Vector3D soln1Loc(tpos1 + t1 * tdir);
     isValid = forceDir ? (t1 > 0.) : true;
     // there's only one solution
     if (solns.solutions == 1) {
       solution = soln1Loc;
       path     = t1;
     } else {
-      double         t2 = solns.second;
-      Acts::Vector3D soln2Loc(tpos1 + t2 * dir);
+      double   t2 = solns.second;
+      Vector3D soln2Loc(tpos1 + t2 * tdir);
       // both solutions have the same sign
       if (t1 * t2 > 0. || !forceDir) {
         if (t1 * t1 < t2 * t2) {

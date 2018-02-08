@@ -89,17 +89,18 @@ Acts::CylinderSurface::binningPosition(BinningValue bValue) const
 
 // return the measurement frame: it's the tangential plane
 const Acts::RotationMatrix3D
-Acts::CylinderSurface::measurementFrame(const Vector3D& gpos,
-                                        const Vector3D&) const
+Acts::CylinderSurface::referenceFrame(const Vector3D& gpos,
+                                      const Vector3D&) const
 {
-  Acts::RotationMatrix3D mFrame;
+  RotationMatrix3D mFrame;
   // construct the measurement frame
   // measured Y is the z axis
-  Acts::Vector3D measY(transform().rotation().col(2));
+  Vector3D measY = rotSymmetryAxis();
   // measured z is the position transverse normalized
-  Acts::Vector3D measDepth = Vector3D(gpos.x(), gpos.y(), 0.).unit();
+  // @todo: check in another MR
+  Vector3D measDepth = Vector3D(gpos.x(), gpos.y(), 0.).unit();
   // measured X is what comoes out of it
-  Acts::Vector3D measX(measY.cross(measDepth).unit());
+  Vector3D measX(measY.cross(measDepth).unit());
   // assign the columnes
   mFrame.col(0) = measX;
   mFrame.col(1) = measY;
@@ -112,14 +113,6 @@ Acts::Surface::SurfaceType
 Acts::CylinderSurface::type() const
 {
   return Surface::Cylinder;
-}
-
-const Acts::Vector3D
-Acts::CylinderSurface::rotSymmetryAxis() const
-{
-  // fast access via tranform matrix (and not rotation())
-  auto tMatrix = transform().matrix();
-  return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
 void
@@ -174,20 +167,21 @@ Acts::CylinderSurface::isOnSurface(const Acts::Vector3D& gpos,
 
 Acts::Intersection
 Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
-                                            const Acts::Vector3D& dir,
+                                            const Acts::Vector3D& gdir,
                                             bool                  forceDir,
                                             const BoundaryCheck&  bcheck) const
 {
-  bool needsTransform = (m_transform || m_associatedDetElement) ? true : false;
+  bool needsTransform
+      = (Acts::Surface::m_transform || m_associatedDetElement) ? true : false;
   // create the hep points
   Vector3D point1    = gpos;
-  Vector3D direction = dir;
+  Vector3D direction = gdir;
   if (needsTransform) {
-    Acts::Transform3D invTrans = transform().inverse();
-    point1                     = invTrans * gpos;
-    direction                  = invTrans.linear() * dir;
+    Transform3D invTrans = transform().inverse();
+    point1               = invTrans * gpos;
+    direction            = invTrans.linear() * gdir;
   }
-  Acts::Vector3D point2 = point1 + dir;
+  Acts::Vector3D point2 = point1 + direction;
   // the bounds radius
   double R  = bounds().r();
   double t1 = 0.;
@@ -256,7 +250,7 @@ Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
   isValid = bcheck ? (isValid && bounds().inside3D(solution, bcheck)) : isValid;
 
   // now return
-  return needsTransform ? Intersection(transform() * solution, path, isValid)
+  return needsTransform ? Intersection((transform() * solution), path, isValid)
                         : Intersection(solution, path, isValid);
 }
 
@@ -278,7 +272,7 @@ Acts::CylinderSurface::normal(const Acts::Vector2D& lpos) const
 {
   double   phi = lpos[Acts::eLOC_RPHI] / m_bounds->r();
   Vector3D localNormal(cos(phi), sin(phi), 0.);
-  return Vector3D(transform().rotation() * localNormal);
+  return Vector3D(transform().matrix().block<3, 3>(0, 0) * localNormal);
 }
 
 const Acts::Vector3D

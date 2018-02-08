@@ -40,6 +40,7 @@ struct PropagationCache
   bool          returnCurvilinear;
   bool          useJacobian;
   double        step;
+  double        maxStepSize;
   double        maxPathLength;
   bool          maxPathLimit;
   bool          mcondition;
@@ -60,6 +61,7 @@ struct PropagationCache
     , returnCurvilinear(false)
     , useJacobian(false)
     , step(0.)
+    , maxStepSize(1000.)
     , maxPathLength(0.)
     , maxPathLimit(false)
     , mcondition(false)
@@ -173,7 +175,7 @@ public:
     /// max step whith helix model
     double helixStep = 1.;
     /// max step whith srtaight line model
-    double straightStep = 0.01;
+    double straightStep = 0.001;
     /// max overal path length
     double maxPathLength = 25000.;
     /// use magnetif field gradient
@@ -182,6 +184,12 @@ public:
     std::string prefix = "[RK] - ";
     /// screen output postfix
     std::string postfix = " - ";
+
+    // Constructor with magnetic field
+    Config(std::shared_ptr<const MagneticField> fieldSvc = nullptr)
+      : fieldService(fieldSvc)
+    {
+    }
   };
 
   /// Constructor
@@ -356,7 +364,8 @@ private:
   stepEstimatorWithCurvature(PropagationCache& pCache,
                              int               kind,
                              double*           Su,
-                             bool&             Q) const;
+                             bool&             Q,
+                             bool              istep = false) const;
 
   /// Build new track parameters without propagation
   std::unique_ptr<const TrackParameters>

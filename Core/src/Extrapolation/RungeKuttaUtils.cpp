@@ -136,12 +136,13 @@ Acts::RungeKuttaUtils::transformGlobalToLocal(const Acts::Surface* su,
   Jac[12] = P3 * P[25] - P4 * P[24];  // dPhi/dPhi
   Jac[13] = P3 * P[32] - P4 * P[31];  // dPhi/dThe
   Jac[14] = P3 * P[39] - P4 * P[38];  // dPhi/dCM
-  Jac[15] = C * P[12];                // dThe/dL0
-  Jac[16] = C * P[19];                // dThe/dL1
-  Jac[17] = C * P[26];                // dThe/dPhi
-  Jac[18] = C * P[33];                // dThe/dThe
-  Jac[19] = C * P[40];                // dThe/dCM
-  Jac[20] = P[41];                    // dCM /dCM
+
+  Jac[15] = C * P[12];  // dThe/dL0
+  Jac[16] = C * P[19];  // dThe/dL1
+  Jac[17] = C * P[26];  // dThe/dPhi
+  Jac[18] = C * P[33];  // dThe/dThe
+  Jac[19] = C * P[40];  // dThe/dCM
+  Jac[20] = P[41];      // dCM /dCM
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -177,6 +178,7 @@ Acts::RungeKuttaUtils::transformGlobalToPlane(const Acts::Surface* su,
   S[2] *= A;
 
   double s0 = P[7] * S[0] + P[8] * S[1] + P[9] * S[2];
+
   double s1 = P[14] * S[0] + P[15] * S[1] + P[16] * S[2];
   double s2 = P[21] * S[0] + P[22] * S[1] + P[23] * S[2];
   double s3 = P[28] * S[0] + P[29] * S[1] + P[30] * S[2];
@@ -188,24 +190,28 @@ Acts::RungeKuttaUtils::transformGlobalToPlane(const Acts::Surface* su,
   P[10] -= (s0 * P[42]);
   P[11] -= (s0 * P[43]);
   P[12] -= (s0 * P[44]);
+
   P[14] -= (s1 * P[3]);
   P[15] -= (s1 * P[4]);
   P[16] -= (s1 * P[5]);
   P[17] -= (s1 * P[42]);
   P[18] -= (s1 * P[43]);
   P[19] -= (s1 * P[44]);
+
   P[21] -= (s2 * P[3]);
   P[22] -= (s2 * P[4]);
   P[23] -= (s2 * P[5]);
   P[24] -= (s2 * P[42]);
   P[25] -= (s2 * P[43]);
   P[26] -= (s2 * P[44]);
+
   P[28] -= (s3 * P[3]);
   P[29] -= (s3 * P[4]);
   P[30] -= (s3 * P[5]);
   P[31] -= (s3 * P[42]);
   P[32] -= (s3 * P[43]);
   P[33] -= (s3 * P[44]);
+
   P[35] -= (s4 * P[3]);
   P[36] -= (s4 * P[4]);
   P[37] -= (s4 * P[5]);
@@ -220,6 +226,7 @@ Acts::RungeKuttaUtils::transformGlobalToPlane(const Acts::Surface* su,
   Jac[2] = Ax[0] * P[21] + Ax[1] * P[22] + Ax[2] * P[23];  // dL0/dPhi
   Jac[3] = Ax[0] * P[28] + Ax[1] * P[29] + Ax[2] * P[30];  // dL0/dThe
   Jac[4] = Ax[0] * P[35] + Ax[1] * P[36] + Ax[2] * P[37];  // dL0/dCM
+
   Jac[5] = Ay[0] * P[7] + Ay[1] * P[8] + Ay[2] * P[9];     // dL1/dL0
   Jac[6] = Ay[0] * P[14] + Ay[1] * P[15] + Ay[2] * P[16];  // dL1/dL1
   Jac[7] = Ay[0] * P[21] + Ay[1] * P[22] + Ay[2] * P[23];  // dL1/dPhi
@@ -314,6 +321,7 @@ Acts::RungeKuttaUtils::transformGlobalToDisc(const Acts::Surface* su,
   Jac[2] = A0 * P[21] + A1 * P[22] + A2 * P[23];  // dL0/dPhi
   Jac[3] = A0 * P[28] + A1 * P[29] + A2 * P[30];  // dL0/dThe
   Jac[4] = A0 * P[35] + A1 * P[36] + A2 * P[37];  // dL0/dCM
+
   Jac[5] = B0 * P[7] + B1 * P[8] + B2 * P[9];     // dL1/dL0
   Jac[6] = B0 * P[14] + B1 * P[15] + B2 * P[16];  // dL1/dL1
   Jac[7] = B0 * P[21] + B1 * P[22] + B2 * P[23];  // dL1/dPhi
@@ -565,18 +573,24 @@ Acts::RungeKuttaUtils::transformGlobalToCone(const Acts::Surface* su,
 /////////////////////////////////////////////////////////////////////////////////
 // Main program for step estimation to surfaces
 /////////////////////////////////////////////////////////////////////////////////
-
 double
 Acts::RungeKuttaUtils::stepEstimator(int           kind,
                                      double*       Su,
                                      const double* P,
-                                     bool&         Q) const
+                                     bool&         Q,
+                                     bool          istep,
+                                     double        maxStep) const
 {
-  if (kind == 1) return stepEstimatorToPlane(Su, P, Q);
-  if (kind == 0) return stepEstimatorToStraw(Su, P, Q);
-  if (kind == 2) return stepEstimatorToCylinder(Su, P, Q);
-  if (kind == 3) return stepEstimatorToCone(Su, P, Q);
-  return 1000000.;  // @todo maximum not hard-coded
+  double s = maxStep;
+  if (kind == 1)
+    s = stepEstimatorToPlane(Su, P, Q, istep);
+  else if (kind == 0)
+    s = stepEstimatorToStraw(Su, P, Q, istep);
+  else if (kind == 2)
+    s = stepEstimatorToCylinder(Su, P, Q, istep);
+  else if (kind == 3)
+    s = stepEstimatorToCone(Su, P, Q, istep);
+  return (s > maxStep ? maxStep : s);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -586,7 +600,8 @@ Acts::RungeKuttaUtils::stepEstimator(int           kind,
 double
 Acts::RungeKuttaUtils::stepEstimatorToPlane(double*       S,
                                             const double* P,
-                                            bool&         Q) const
+                                            bool&         Q,
+                                            bool) const
 {
   const double* r = &P[0];  // Start coordinate
   const double* a = &P[3];  // Start direction
@@ -607,7 +622,8 @@ Acts::RungeKuttaUtils::stepEstimatorToPlane(double*       S,
 double
 Acts::RungeKuttaUtils::stepEstimatorToCylinder(double*       S,
                                                const double* P,
-                                               bool&         Q) const
+                                               bool&         Q,
+                                               bool) const
 {
   const double* r = &P[0];  // Start coordinate
   const double* a = &P[3];  // Start direction
@@ -674,7 +690,10 @@ Acts::RungeKuttaUtils::stepEstimatorToCylinder(double*       S,
     return Smax;
   }
 
-  // if(std::abs(Smin) < .001) {S[8]=-1.; return Smax;}
+  if (std::abs(Smin) < .001) {
+    S[8] = -1.;
+    return Smax;
+  }
 
   S[8] = 1.;
   return Smin;
@@ -686,12 +705,14 @@ Acts::RungeKuttaUtils::stepEstimatorToCylinder(double*       S,
 double
 Acts::RungeKuttaUtils::stepEstimatorToStraw(double*       S,
                                             const double* P,
-                                            bool&         Q) const
+                                            bool&         Q,
+                                            bool          istep) const
 {
   const double* r = &P[0];  // Start coordinate
   const double* a = &P[3];  // Start direction
 
   double D = a[0] * S[3] + a[1] * S[4] + a[2] * S[5];
+
   double A = (1. - D) * (1. + D);
   if (A == 0.) {
     Q = true;
@@ -709,7 +730,8 @@ Acts::RungeKuttaUtils::stepEstimatorToStraw(double*       S,
 double
 Acts::RungeKuttaUtils::stepEstimatorToCone(double*       S,
                                            const double* P,
-                                           bool&         Q) const
+                                           bool&         Q,
+                                           bool) const
 {
   const double* r = &P[0];  // Start coordinate
   const double* a = &P[3];  // Start direction
@@ -1148,6 +1170,7 @@ Acts::RungeKuttaUtils::transformLocalToGlobal(bool                 useJac,
     transformDiscToGlobal(useJac, su, p, P);
     return true;
   }
+
   return false;
 }
 

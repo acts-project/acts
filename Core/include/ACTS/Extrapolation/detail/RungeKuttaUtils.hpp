@@ -13,6 +13,7 @@
 #ifndef ACTS_EXTRAPOLATIONDETAILS_RUNGEKUTTAUTILS_H
 #define ACTS_EXTRAPOLATIONDETAILS_RUNGEKUTTAUTILS_H 1
 
+#include <limits>
 #include <map>
 #include <vector>
 #include "ACTS/EventData/NeutralParameters.hpp"
@@ -97,17 +98,30 @@ public:
   /////////////////////////////////////////////////////////////////////////////////
   // Step estimators to surface
   /////////////////////////////////////////////////////////////////////////////////
-
+  ///
+  /// @param [in] stype The surface type
+  /// @param [in] s The surface orientation
+  /// @param [in] pdir The position and direction
+  /// @param [in,out] q Quality flag
+  /// @param [in] istep Indicator if it's the initial step (direction!)
   double
-  stepEstimator(int, double*, const double*, bool&) const;
+  stepEstimator(int           stype,
+                double*       s,
+                const double* pdir,
+                bool&         q,
+                bool          istep = false,
+                double maxStep      = std::numeric_limits<double>::max()) const;
   double
-  stepEstimatorToCone(double*, const double*, bool&) const;
+  stepEstimatorToCone(double*, const double*, bool&, bool istep = false) const;
   double
-  stepEstimatorToPlane(double*, const double*, bool&) const;
+  stepEstimatorToPlane(double*, const double*, bool&, bool istep = false) const;
   double
-  stepEstimatorToCylinder(double*, const double*, bool&) const;
+  stepEstimatorToCylinder(double*,
+                          const double*,
+                          bool&,
+                          bool istep = false) const;
   double
-  stepEstimatorToStraw(double*, const double*, bool&) const;
+  stepEstimatorToStraw(double*, const double*, bool&, bool istep = false) const;
 
   /////////////////////////////////////////////////////////////////////////////////
   // Transformations from local to global system coordinates

@@ -264,7 +264,7 @@ public:
                 const Vector3D& gmom,
                 Vector2D&       lpos) const = 0;
 
-  /// Return mehtod for the measurement frame
+  /// Return mehtod for the reference frame
   /// This is the frame in which the covariance matrix is defined (specialized
   /// by all surfaces)
   ///
@@ -274,7 +274,7 @@ public:
   /// @return RotationMatrix3D which defines the three axes of the measurement
   /// frame
   virtual const Acts::RotationMatrix3D
-  measurementFrame(const Vector3D& gpos, const Vector3D& gmom) const;
+  referenceFrame(const Vector3D& gpos, const Vector3D& gmom) const;
 
   /// Calucation of the path correction for incident
   ///
@@ -309,17 +309,26 @@ public:
   /// @todo include intersector
   ///
   /// @param gpos global 3D position - considered to be on surface but not
-  /// inside bounds (check is done)
+  ///         inside bounds (check is done)
   /// @param gdir global 3D direction representation
+  ///        @note has to be normalized
   /// @param forceDir boolean indication whether to force the direction given by
   /// the TrackParameters to hold
   /// @param bcheck boundary check directive for this operation
+  ///
   /// @return Intersection class
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      gdir,
                        bool                 forceDir = false,
                        const BoundaryCheck& bcheck = false) const = 0;
+
+  /// Distance to intersection
+  template <class T>
+  double
+  distance(const T&             pars,
+           bool                 forceDir = false,
+           const BoundaryCheck& bcheck   = false) const;
 
   /// Returns 'true' if this surface is 'free'
   /// i.e. it does not belong to a detector element, a layer or a tracking
@@ -359,6 +368,12 @@ protected:
   /// Possibility to attach a material descrption
   std::shared_ptr<const SurfaceMaterial> m_associatedMaterial;
 };
+
+inline const RotationMatrix3D
+Surface::referenceFrame(const Acts::Vector3D&, const Acts::Vector3D&) const
+{
+  return transform().matrix().block<3, 3>(0, 0);
+}
 
 template <class T>
 bool

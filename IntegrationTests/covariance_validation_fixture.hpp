@@ -28,19 +28,22 @@ namespace IntegrationTest {
 
     /// Numerical transport of covariance using the ridder's algorithm
     /// this is for covariance propagation validation
-    template <typename U>
+    /// it can either be used for curvilinear transport
+    template <typename StartParameters, typename EndParameters, typename U>
     ActsSymMatrixD<5>
-    calculateCovariance(const CurvilinearParameters& trackPars,
-                        const U&                     options) const
+    calculateCovariance(const StartParameters&   startPars,
+                        const ActsSymMatrixD<5>& startCov,
+                        const EndParameters&     endPars,
+                        const U&                 options) const
     {
       // steps for estimating derivatives
       const std::array<double, 4> h_steps = {{-2e-4, -1e-4, 1e-4, 2e-4}};
 
       // nominal propagation
-      const auto&    r_nominal = m_propagator.propagate(trackPars, options);
-      const auto&    nominal   = r_nominal.endParameters->parameters();
-      const Surface& dest      = r_nominal.endParameters->referenceSurface();
+      const auto&    nominal = endPars.parameters();
+      const Surface& dest    = endPars.referenceSurface();
 
+      // avoid stopping before the surface because of path length reached
       U var_options = options;
       var_options.max_path_length *= 2;
 
@@ -48,12 +51,8 @@ namespace IntegrationTest {
       std::vector<ActsVectorD<5>> x_derivatives;
       x_derivatives.reserve(h_steps.size());
       for (double h : h_steps) {
-        Vector3D pos;
-        Vector2D loc_pos(h, 0);
-        trackPars.referenceSurface().localToGlobal(
-            loc_pos, trackPars.momentum(), pos);
-        CurvilinearParameters tp(
-            nullptr, pos, trackPars.momentum(), trackPars.charge());
+        StartParameters tp = startPars;
+        tp.template set<Acts::eLOC_0>(tp.template get<Acts::eLOC_0>() + h);
         const auto& r = m_propagator.propagate(tp, dest, var_options);
         x_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
       }
@@ -62,12 +61,8 @@ namespace IntegrationTest {
       std::vector<ActsVectorD<5>> y_derivatives;
       y_derivatives.reserve(h_steps.size());
       for (double h : h_steps) {
-        Vector3D pos;
-        Vector2D loc_pos(0, h);
-        trackPars.referenceSurface().localToGlobal(
-            loc_pos, trackPars.momentum(), pos);
-        CurvilinearParameters tp(
-            nullptr, pos, trackPars.momentum(), trackPars.charge());
+        StartParameters tp = startPars;
+        tp.template set<Acts::eLOC_1>(tp.template get<Acts::eLOC_1>() + h);
         const auto& r = m_propagator.propagate(tp, dest, var_options);
         y_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
       }
@@ -76,8 +71,8 @@ namespace IntegrationTest {
       std::vector<ActsVectorD<5>> phi_derivatives;
       phi_derivatives.reserve(h_steps.size());
       for (double h : h_steps) {
-        CurvilinearParameters tp = trackPars;
-        tp.set<Acts::ePHI>(tp.get<Acts::ePHI>() + h);
+        StartParameters tp = startPars;
+        tp.template set<Acts::ePHI>(tp.template get<Acts::ePHI>() + h);
         const auto& r = m_propagator.propagate(tp, dest, var_options);
         phi_derivatives.push_back((r.endParameters->parameters() - nominal)
                                   / h);
@@ -87,11 +82,11 @@ namespace IntegrationTest {
       std::vector<ActsVectorD<5>> theta_derivatives;
       theta_derivatives.reserve(h_steps.size());
       for (double h : h_steps) {
-        CurvilinearParameters tp            = trackPars;
-        const double          current_theta = tp.get<Acts::eTHETA>();
-        if (current_theta + h > M_PI) h     = M_PI - current_theta;
-        if (current_theta + h < 0) h        = -current_theta;
-        tp.set<Acts::eTHETA>(tp.get<Acts::eTHETA>() + h);
+        StartParameters tp              = startPars;
+        const double    current_theta   = tp.template get<Acts::eTHETA>();
+        if (current_theta + h > M_PI) h = M_PI - current_theta;
+        if (current_theta + h < 0) h    = -current_theta;
+        tp.template set<Acts::eTHETA>(tp.template get<Acts::eTHETA>() + h);
         const auto& r = m_propagator.propagate(tp, dest, var_options);
         theta_derivatives.push_back((r.endParameters->parameters() - nominal)
                                     / h);
@@ -101,8 +96,8 @@ namespace IntegrationTest {
       std::vector<ActsVectorD<5>> qop_derivatives;
       qop_derivatives.reserve(h_steps.size());
       for (double h : h_steps) {
-        CurvilinearParameters tp = trackPars;
-        tp.set<Acts::eQOP>(tp.get<Acts::eQOP>() + h);
+        StartParameters tp = startPars;
+        tp.template set<Acts::eQOP>(tp.template get<Acts::eQOP>() + h);
         const auto& r = m_propagator.propagate(tp, dest, var_options);
         qop_derivatives.push_back((r.endParameters->parameters() - nominal)
                                   / h);
@@ -116,7 +111,7 @@ namespace IntegrationTest {
       jacobian.col(Acts::eTHETA) = fitLinear(theta_derivatives, h_steps);
       jacobian.col(Acts::eQOP)   = fitLinear(qop_derivatives, h_steps);
 
-      return jacobian * (*trackPars.covariance()) * jacobian.transpose();
+      return jacobian * startCov * jacobian.transpose();
     }
 
   private:

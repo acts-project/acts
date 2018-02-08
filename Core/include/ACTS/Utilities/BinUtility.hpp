@@ -225,7 +225,7 @@ public:
     return neighbourRange;
   }
 
-  /// Return the oder direciton for fast interlinking
+  /// Return the oder direction for fast interlinking
   ///
   /// @param position is the global position for the next search
   /// @param direction is the global position for the next search

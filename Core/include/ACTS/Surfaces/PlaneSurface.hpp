@@ -13,6 +13,7 @@
 #ifndef ACTS_SURFACES_PLANESURFACE_H
 #define ACTS_SURFACES_PLANESURFACE_H 1
 
+#include <limits>
 #include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
@@ -69,10 +70,8 @@ public:
   ///
   /// @param htrans transform in 3D that positions this surface
   /// @param pbounds bounds object to describe the actual surface area
-  ///
-  /// @attention the pointer to pbounds must not be a nullptr
   PlaneSurface(std::shared_ptr<const Transform3D>  htrans,
-               std::shared_ptr<const PlanarBounds> pbounds);
+               std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
   virtual ~PlaneSurface();
 
@@ -173,7 +172,8 @@ public:
   ///  forceDir is to provide the closest forward solution
   ///
   ///  @param gpos is the start position of the intersection attempt
-  ///  @param dir is the direction of the interesection attempt
+  ///  @param gdir is the direction of the interesection attempt,
+  ///        @note has to be normalized
   ///  @param forceDir is the directive whether to force only foward solution
   ///  (w.r.t dir)
   ///  @param bcheck is the boundary check directive
@@ -196,9 +196,9 @@ public:
   ///  - perpenticular to the normal of the plane
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
-                       const Vector3D&      dir,
-                       bool                 forceDir,
-                       const BoundaryCheck& bcheck = true) const override;
+                       const Vector3D&      gdir,
+                       bool                 forceDir = true,
+                       const BoundaryCheck& bcheck   = true) const override;
 
   /// Return properly formatted class name for screen output
   virtual std::string
@@ -208,6 +208,27 @@ protected:
   /// the bounds of this surface
   std::shared_ptr<const PlanarBounds> m_bounds;
 };
+
+inline Intersection
+PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
+                                   const Vector3D&      gdir,
+                                   bool                 forceDir,
+                                   const BoundaryCheck& bcheck) const
+{
+  double denom = gdir.dot(normal());
+  if (denom) {
+    double   u = (normal().dot((center() - gpos))) / (denom);
+    Vector3D intersectPoint(gpos + u * gdir);
+    // evaluate the intersection in terms of direction
+    bool isValid = forceDir ? (u > 0.) : true;
+    // evaluate (if necessary in terms of boundaries)
+    isValid
+        = bcheck ? (isValid && isOnSurface(intersectPoint, bcheck)) : isValid;
+    // return the result
+    return Intersection(intersectPoint, u, isValid);
+  }
+  return Intersection(gpos, std::numeric_limits<double>::max(), false);
+}
 
 }  // end of namespace
 

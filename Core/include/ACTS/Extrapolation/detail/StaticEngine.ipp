@@ -228,10 +228,10 @@ Acts::StaticEngine::initNavigationT(Acts::ExtrapolationCell<T>& eCell,
       return ExtrapolationCode::InProgress;
     } else {
       // make a straight line intersection
-      Acts::Intersection sfI
-          = sf->intersectionEstimate(eCell.leadParameters->position(),
-                                     pDir * eCell.leadParameters->momentum(),
-                                     true);
+      Acts::Intersection sfI = sf->intersectionEstimate(
+          eCell.leadParameters->position(),
+          pDir * eCell.leadParameters->momentum().unit(),
+          true);
       // use this to find endVolume and endLayer
       eCell.endLayer = eCell.leadVolume->associatedLayer(sfI.position);
       // if you have a surface you need to require an end layer for the

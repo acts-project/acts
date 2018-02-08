@@ -377,6 +377,8 @@ public:
   /// stay with curvilinear parameters for destination
   /// default is false (loses layer binding)
   bool destinationCurvilinear;
+  // the maximum step size
+  double maxStepSize;
   /// depth of search applied
   /// @todo docu : write documetnation
   int searchMode;
@@ -428,6 +430,7 @@ public:
     , navigationCurvilinear(true)
     , sensitiveCurvilinear(false)
     , destinationCurvilinear(false)
+    , maxStepSize(10.)
     , searchMode(0)
     , extrapolationConfiguration(econfig)
   {

@@ -32,25 +32,26 @@ private:
   using detail::Extendable<conditions...>::tuple;
 
 public:
+  /// constructor of the Extendable
+  explicit AbortList(const conditions&... extensions)
+    : detail::Extendable<conditions...>(extensions...)
+  {
+  }
+
   typedef detail::boost_set_as_tparams_t<ObserverList, observers>
       observer_list_type;
   using detail::Extendable<conditions...>::get;
 
   template <typename input, typename result_t>
   bool
-  operator()(const result_t& r, input& current, double& stepMax) const
+  operator()(const result_t& r, input& cache) const
   {
     // clang-format off
     static_assert(detail::all_of_v<detail::abort_condition_signature_check_v<conditions, input>...>,
                   "not all abort conditions support the specified input");
     // clang-format on
 
-    double conditions_stepMax = stepMax;
-    bool   abort              = detail::abort_list_impl<conditions...>::check(
-        tuple(), r, current, conditions_stepMax);
-    stepMax = std::min(stepMax, conditions_stepMax);
-
-    return abort;
+    return detail::abort_list_impl<conditions...>::check(tuple(), r, cache);
   }
 };
 

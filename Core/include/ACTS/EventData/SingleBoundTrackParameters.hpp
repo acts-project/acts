@@ -7,13 +7,25 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef ACTS_SINGLEBOUNDTRACKPARAMETERS_H
-#define ACTS_SINGLEBOUNDTRACKPARAMETERS_H 1
+#define ACTS_SINGLEBOUNDTRACKPARAMETERS_H
 
-// ACTS includes
 #include "ACTS/EventData/SingleTrackParameters.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 
 namespace Acts {
+
+/// @brief Charged and Neutrial Track Parameterisation classes bound to
+/// to a reference surface. This is a single-component representation
+///
+/// @note surfaces are dealt as plain pointers as they might represent
+/// actual detector elements with their respective changeing alignment.
+/// This might be reviewed at later stage in the context of data locality.
+///
+/// Currently, the following strategy is implemented:
+/// * surfaces with a lifetime longer than an event, i.e. detector elements,
+///   or representing surfaces of the detector geometry are copied as plain
+///   pointers and hence not deleted as the geometry keeps ownership of them
+/// * (free) surfaces that have no registered ownership are cloned
 template <class ChargePolicy>
 class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy>
 {
@@ -21,6 +33,16 @@ public:
   typedef typename SingleTrackParameters<ChargePolicy>::ParVector_t ParVector_t;
   typedef typename SingleTrackParameters<ChargePolicy>::CovPtr_t    CovPtr_t;
 
+  /// @brief Constructor of track parameters bound to a surface
+  /// This is the constructor from global parameters, enabled only
+  /// for charged representations.
+  ///
+  /// The transformations declared in the coordinate_transformation
+  /// yield the global parameters and momentum representation
+  /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
+  ///            it is given in the measurement frame
+  /// @param[in] parValues The parameter vector
+  /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleBoundTrackParameters(CovPtr_t           cov,
@@ -38,6 +60,19 @@ public:
   {
   }
 
+  /// @brief Constructor of track parameters bound to a surface
+  /// This is the constructor from global parameters, enabled only
+  /// for charged representations.
+  ///
+  /// The transformations declared in the coordinate_transformation
+  /// yield the local parameters
+  ///
+  /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
+  ///            it is given in the curvilinear frame
+  /// @param[in] position The global position of the track parameterisation
+  /// @param[in] momentum The global momentum of the track parameterisation
+  /// @param[in] dCharge The charge of the particle track parameterisation
+  /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleBoundTrackParameters(CovPtr_t              cov,
@@ -57,6 +92,16 @@ public:
   {
   }
 
+  /// @brief Constructor of track parameters bound to a surface
+  /// This is the constructor from global parameters, enabled only
+  /// for neutral representations.
+  ///
+  /// The transformations declared in the coordinate_transformation
+  /// yield the global parameters and momentum representation
+  /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
+  ///            it is given in the measurement frame
+  /// @param[in] parValues The parameter vector
+  /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleBoundTrackParameters(CovPtr_t           cov,
@@ -74,6 +119,19 @@ public:
   {
   }
 
+  /// @brief Constructor of track parameters bound to a surface
+  /// This is the constructor from global parameters, enabled only
+  /// for neutral representations.
+  ///
+  /// The transformations declared in the coordinate_transformation
+  /// yield the local parameters
+  ///
+  /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
+  ///            it is given in the curvilinear frame
+  /// @param[in] position The global position of the track parameterisation
+  /// @param[in] momentum The global momentum of the track parameterisation
+  /// @param[in] dCharge The charge of the particle track parameterisation
+  /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleBoundTrackParameters(CovPtr_t              cov,
@@ -92,9 +150,8 @@ public:
   {
   }
 
-  /**
-   * @brief copy constructor
-   */
+  /// @brief copy constructor  - charged/neutral
+  /// @param[in] copy The source parameters
   SingleBoundTrackParameters(
       const SingleBoundTrackParameters<ChargePolicy>& copy)
     : SingleTrackParameters<ChargePolicy>(copy)
@@ -103,9 +160,8 @@ public:
   {
   }
 
-  /**
-   * @brief move constructor
-   */
+  /// @brief move constructor - charged/neutral
+  /// @param[in] copy The source parameters
   SingleBoundTrackParameters(SingleBoundTrackParameters<ChargePolicy>&& copy)
     : SingleTrackParameters<ChargePolicy>(std::move(copy))
     , m_pSurface(copy.m_pSurface)
@@ -113,14 +169,15 @@ public:
     copy.m_pSurface = 0;
   }
 
+  /// @brief desctructor - charged/neutral
+  /// checks if the surface is free and in such a case deletes it
   virtual ~SingleBoundTrackParameters()
   {
     if (m_pSurface && m_pSurface->isFree()) delete m_pSurface;
   }
 
-  /**
-   * @brief copy assignment operator
-   */
+  /// @brief copy assignment operator - charged/neutral
+  /// checks if the surface is free and in such a case delete-clones it
   SingleBoundTrackParameters<ChargePolicy>&
   operator=(const SingleBoundTrackParameters<ChargePolicy>& rhs)
   {
@@ -137,9 +194,8 @@ public:
     return *this;
   }
 
-  /**
-   * @brief move assignment operator
-   */
+  /// @brief move assignment operator - charged/neutral
+  /// checks if the surface is free and in such a case delete-clones it
   SingleBoundTrackParameters<ChargePolicy>&
   operator=(SingleBoundTrackParameters<ChargePolicy>&& rhs)
   {
@@ -156,16 +212,17 @@ public:
     return *this;
   }
 
+  /// @brief clone - charged/netural
+  /// virtual constructor for type creation without casting
   virtual SingleBoundTrackParameters<ChargePolicy>*
   clone() const override
   {
     return new SingleBoundTrackParameters<ChargePolicy>(*this);
   }
 
-  template <ParID_t par,
-            std::enable_if_t<not std::is_same<typename par_type<par>::type,
-                                              local_parameter>::value,
-                             int> = 0>
+  /// @brief set method for parameter updates
+  /// obviously only allowed on non-const objects
+  template <ParID_t par>
   void
   set(ParValue_t newValue)
   {
@@ -173,10 +230,26 @@ public:
     this->updateGlobalCoordinates(typename par_type<par>::type());
   }
 
+  /// @brief access method to the reference surface
   virtual const Surface&
   referenceSurface() const final override
   {
     return *m_pSurface;
+  }
+
+  /// @brief access to the measurement frame, i.e. the rotation matrix with
+  /// respect to the global coordinate system, in which the local error
+  /// is described.
+  ///
+  /// For planar surface, this is identical to the rotation matrix of the
+  /// surface frame, for measurements with respect to a line this has to be
+  /// constructed by the point of clostest approach to the line, for
+  /// cylindrical surfaces this is (by convention) the tangential plane.
+  virtual RotationMatrix3D
+  referenceFrame() const final override
+  {
+    return std::move(
+        m_pSurface->referenceFrame(this->position(), this->momentum()));
   }
 
 private:

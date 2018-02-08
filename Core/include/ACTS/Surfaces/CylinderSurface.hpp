@@ -35,6 +35,7 @@ namespace Acts {
 class CylinderSurface : public Surface
 {
 public:
+  /// Deleted default constructor
   CylinderSurface() = delete;
 
   /// Constructor from Transform3D, radius and halflenght
@@ -63,8 +64,8 @@ public:
   ///
   /// @param htrans transform to position the surface, can be nullptr
   /// @note if htrans == nullptr, the cylinder is positioned around (0.,0.,0.)
-  /// @param cbounds is a shared pointer to a cylindeer bounds object, must
-  /// exist
+  /// @param cbounds is a shared pointer to a cylindeer bounds object,
+  /// it must exist (assert test)
   CylinderSurface(std::shared_ptr<const Transform3D>    htrans,
                   std::shared_ptr<const CylinderBounds> cbounds);
 
@@ -80,6 +81,7 @@ public:
   /// cylinder
   CylinderSurface(const CylinderSurface& other, const Transform3D& htrans);
 
+  /// Destructor
   virtual ~CylinderSurface();
 
   /// Assignment operator
@@ -110,8 +112,8 @@ public:
   /// @param mom is the momentum vector (ignored)
   /// @return rotation matrix that defines the measurement frame
   virtual const RotationMatrix3D
-  measurementFrame(const Vector3D& gpos,
-                   const Vector3D& mom) const final override;
+  referenceFrame(const Vector3D& gpos,
+                 const Vector3D& mom) const final override;
 
   /// Return the surface type
   virtual SurfaceType
@@ -179,7 +181,8 @@ public:
   ///  and (signed) path length
   ///
   /// @param gpos is the global position as a starting point
-  /// @param dir is the global direction at the starting point
+  /// @param gdir is the global direction at the starting point,
+  ///        @note has to be normalized
   /// @param forceDir is a boolean forcing a solution along direction
   /// @param bcheck is the boundary check
   ///
@@ -207,7 +210,7 @@ public:
   /// @return is the intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
-                       const Vector3D&      dir,
+                       const Vector3D&      gdir,
                        bool                 forceDir = false,
                        const BoundaryCheck& bcheck
                        = false) const final override;
@@ -228,6 +231,13 @@ public:
 protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
 };
+
+inline const Vector3D
+CylinderSurface::rotSymmetryAxis() const
+{
+  // fast access via tranform matrix (and not rotation())
+  return transform().matrix().block<3, 1>(0, 2);
+}
 
 }  // end of namespace
 

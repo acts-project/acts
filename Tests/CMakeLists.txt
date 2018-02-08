@@ -1,7 +1,7 @@
 add_subdirectory (Detector)
 add_subdirectory (EventData)
 add_subdirectory (Extrapolation)
-add_subdirectory (Fitter)
+#add_subdirectory (Fitter)
 add_subdirectory (Layers)
 add_subdirectory (MagneticField)
 add_subdirectory (Material)

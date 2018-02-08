@@ -110,7 +110,7 @@ public:
   /// @param mom is the momentum used for the measurement frame construction
   /// @return matrix that indicates the measurement frame
   const RotationMatrix3D
-  measurementFrame(const Vector3D& gpos, const Vector3D& mom) const final;
+  referenceFrame(const Vector3D& gpos, const Vector3D& mom) const final;
 
   /// Return method for surface normal information
   ///
@@ -163,7 +163,8 @@ public:
   /// (signed) path length
   ///
   /// @param gpos is the start position for the intersection
-  /// @param dir is the start direction for the intersection
+  /// @param gir is the start direction for the intersection,
+  ///        @note has to be normalized
   /// @param forceDir is the flag to force to go along the forward direction
   /// @param bcheck is the boundary check to be used in this directive
   ///
@@ -202,7 +203,7 @@ public:
   /// @return is the Intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
-                       const Vector3D&      dir,
+                       const Vector3D&      gdir,
                        bool                 forceDir = false,
                        const BoundaryCheck& bcheck
                        = false) const final override;
