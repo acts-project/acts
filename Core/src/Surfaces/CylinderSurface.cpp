@@ -279,13 +279,15 @@ Acts::CylinderSurface::normal(const Acts::Vector3D& gpos) const
 {
   // get it into the cylinder frame if needed
   Vector3D pos3D = gpos;
-  if (m_transform || m_associatedDetElement) {
+  bool     needsTransform
+      = (m_transform || m_associatedDetElement) if (needsTransform)
+  {
     pos3D = transform().inverse() * gpos;
   }
   // set the z coordinate to 0
   pos3D.z() = 0.;
-  // take the unit vector of it and bring bac to global
-  return transform().linear() * pos3D.unit();
+  // normalize and rotate back into global if needed
+  return needsTransform ? transform().linear() * pos3D.unit() : pos3D.unit();
 }
 
 double
