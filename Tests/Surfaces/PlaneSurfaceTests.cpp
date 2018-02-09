@@ -21,6 +21,7 @@
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "DetectorElementStub.hpp"
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
@@ -29,7 +30,7 @@ namespace utf = boost::unit_test;
 namespace Acts {
 
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(PlaneSurfaces);
+  BOOST_AUTO_TEST_SUITE(PlaneSurfaces)
   /// Unit test for creating compliant/non-compliant PlaneSurface object
   BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction)
   {
@@ -54,6 +55,12 @@ namespace Test {
     /// Copied and transformed
     PlaneSurface copiedTransformedPlaneSurface(PlaneSurfaceObject, *pTransform);
     BOOST_TEST(copiedTransformedPlaneSurface.type() == Surface::Plane);
+
+    /// Construct with nullptr bounds
+    Identifier          id;
+    DetectorElementStub detElem;
+    BOOST_CHECK_THROW(PlaneSurface nullBounds(nullptr, detElem, id),
+                      AssertionFailureException);
   }
   //
   /// Unit test for testing PlaneSurface properties
@@ -171,7 +178,7 @@ namespace Test {
     /// Test equality of assigned to original
     BOOST_TEST(assignedPlaneSurface == PlaneSurfaceObject);
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 

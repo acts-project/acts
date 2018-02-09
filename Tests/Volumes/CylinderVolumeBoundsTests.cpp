@@ -37,6 +37,7 @@ namespace Test {
                        posZ,
                        index)
   {
+    (void)index;
     // position of volume
     const Vector3D pos(posX, posY, posZ);
     // rotation around x axis

@@ -31,7 +31,7 @@ namespace Acts {
 
 namespace Test {
   namespace Layers {
-    BOOST_AUTO_TEST_SUITE(Layers);
+    BOOST_AUTO_TEST_SUITE(Layers)
 
     /// Unit test for creating compliant/non-compliant NavigationLayer object
     BOOST_AUTO_TEST_CASE(NavigationLayerConstruction)
@@ -71,7 +71,7 @@ namespace Test {
       BOOST_CHECK(pNavigationLayer->resolve(true, true, true) == false);
     }
 
-    BOOST_AUTO_TEST_SUITE_END();
+    BOOST_AUTO_TEST_SUITE_END()
   }  // end of namespace Layers
 }  // end of namespace Test
 

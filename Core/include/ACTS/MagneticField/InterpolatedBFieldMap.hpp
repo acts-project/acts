@@ -313,7 +313,7 @@ public:
   /// @todo return derivative
   Vector3D
   getFieldGradient(const Vector3D& position,
-                   ActsMatrixD<3, 3>& derivative) const
+                   ActsMatrixD<3, 3>& /*derivative*/) const
   {
     return m_config.mapper.getField(position);
   }

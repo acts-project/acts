@@ -28,7 +28,7 @@ const double NaN = std::numeric_limits<double>::quiet_NaN();
 namespace Acts {
 
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(Surfaces);
+  BOOST_AUTO_TEST_SUITE(Surfaces)
   /// Unit test for creating compliant/non-compliant EllipseBounds object
   BOOST_AUTO_TEST_CASE(EllipseBoundsConstruction)
   {
@@ -51,7 +51,7 @@ namespace Test {
   }
 
   /// Unit tests for EllipseBounds properties
-  BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(CylinderBoundsProperties, 1);
+  BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(CylinderBoundsProperties, 1)
   BOOST_AUTO_TEST_CASE(EllipseBoundsProperties)
   {
     double minRad1(10.), minRad2(15.), maxRad1(15.), maxRad2(20.),
@@ -137,7 +137,7 @@ namespace Test {
     assignedEllipseBoundsObject = ellipseBoundsObject;
     BOOST_TEST(assignedEllipseBoundsObject == ellipseBoundsObject);
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 

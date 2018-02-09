@@ -32,7 +32,7 @@ const double NaN = std::numeric_limits<double>::quiet_NaN();
 namespace Acts {
 
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(StrawSurfaces);
+  BOOST_AUTO_TEST_SUITE(StrawSurfaces)
   /// Unit test for creating compliant/non-compliant StrawSurface object
   BOOST_AUTO_TEST_CASE(StrawSurfaceConstruction)
   {
@@ -122,7 +122,7 @@ namespace Test {
     /// Test equality of assigned to original
     BOOST_TEST(assignedStrawSurface == strawSurfaceObject);
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 

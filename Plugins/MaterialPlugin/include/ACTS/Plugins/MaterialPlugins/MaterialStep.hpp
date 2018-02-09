@@ -55,7 +55,7 @@ public:
     Position() : x(0.), y(0.), z(0.) {}
 
     /// Constructor to set the three coordinates
-    Position(double x, double y, double z) : x(x), y(y), z(z) {}
+    Position(double x_, double y_, double z_) : x(x_), y(y_), z(z_) {}
 
     /// Copy Constructor
     Position(const Position& pos) : x(pos.x), y(pos.y), z(pos.z) {}

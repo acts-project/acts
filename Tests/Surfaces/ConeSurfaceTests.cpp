@@ -31,7 +31,7 @@ const double NaN = std::numeric_limits<double>::quiet_NaN();
 namespace Acts {
 
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(ConeSurfaces);
+  BOOST_AUTO_TEST_SUITE(ConeSurfaces)
   /// Unit test for creating compliant/non-compliant ConeSurface object
   BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction)
   {
@@ -71,6 +71,10 @@ namespace Test {
     /// Copied and transformed
     ConeSurface copiedTransformedConeSurface(coneSurfaceObject, *pTransform);
     BOOST_TEST(copiedTransformedConeSurface.type() == Surface::Cone);
+
+    /// Construct with nullptr bounds
+    BOOST_CHECK_THROW(ConeSurface nullBounds(nullptr, nullptr),
+                      AssertionFailureException);
   }
   //
   /// Unit test for testing ConeSurface properties
@@ -200,7 +204,7 @@ namespace Test {
     /// Test equality of assigned to original
     BOOST_TEST(assignedConeSurface == coneSurfaceObject);
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 

@@ -34,7 +34,7 @@ namespace Acts {
 namespace Test {
   // using boost::test_tools::output_test_stream;
 
-  BOOST_AUTO_TEST_SUITE(Surfaces);
+  BOOST_AUTO_TEST_SUITE(Surfaces)
   /// Unit test for creating compliant/non-compliant LineSurface object
   BOOST_AUTO_TEST_CASE(LineSurface_Constructors_test)
   {
@@ -65,6 +65,13 @@ namespace Test {
     BOOST_CHECK(LineSurfaceStub(lineToCopy).constructedOk());
     // Copied and transformed ctor
     BOOST_CHECK(LineSurfaceStub(lineToCopy, transform).constructedOk());
+
+    /// Construct with nullptr bounds
+    Identifier          id;
+    DetectorElementStub detElem;
+    BOOST_CHECK_THROW(LineSurfaceStub nullBounds(nullptr, detElem, id),
+                      AssertionFailureException);
+
     BOOST_TEST_MESSAGE(
         "All LineSurface constructors are callable without problem");
   }
@@ -167,7 +174,7 @@ namespace Test {
                "LineSurfaces are equal value after assignment");  // operator ==
                                                                   // from base
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 

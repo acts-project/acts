@@ -64,6 +64,7 @@ namespace Test {
       c,
       index)
   {
+    (void)index;
     Vector3D center{x, y, z};
     auto     transform = std::make_shared<Transform3D>();
     transform->setIdentity();
@@ -169,6 +170,7 @@ namespace Test {
       c,
       index)
   {
+    (void)index;
     Vector3D center{x, y, z};
     auto     transform = std::make_shared<Transform3D>();
     transform->setIdentity();
@@ -250,6 +252,7 @@ namespace Test {
       c,
       index)
   {
+    (void)index;
 
     Vector3D center{x, y, z};
     auto     transform = std::make_shared<Transform3D>();
@@ -341,6 +344,7 @@ namespace Test {
       b,
       index)
   {
+    (void)index;
     Vector3D center{x, y, z};
     auto     transform = std::make_shared<Transform3D>();
     transform->setIdentity();
@@ -409,6 +413,7 @@ namespace Test {
       c,
       index)
   {
+    (void)index;
 
     Vector3D center{x, y, z};
     auto     transform = std::make_shared<Transform3D>();

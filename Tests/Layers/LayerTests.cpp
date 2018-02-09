@@ -33,7 +33,7 @@ namespace Acts {
 
 namespace Test {
   namespace Layers {
-    BOOST_AUTO_TEST_SUITE(Layers);
+    BOOST_AUTO_TEST_SUITE(Layers)
 
     /// Unit test for creating compliant/non-compliant Layer object
     BOOST_AUTO_TEST_CASE(LayerConstruction)
@@ -141,7 +141,7 @@ namespace Test {
       BOOST_TEST(layerStub.detectorElements().size() == 0u);
     }
 
-    BOOST_AUTO_TEST_SUITE_END();
+    BOOST_AUTO_TEST_SUITE_END()
   }  // end of namespace Layers
 }  // end of namespace Test
 

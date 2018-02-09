@@ -35,7 +35,7 @@ namespace Acts {
 namespace Test {
   // using boost::test_tools::output_test_stream;
 
-  BOOST_AUTO_TEST_SUITE(Surfaces);
+  BOOST_AUTO_TEST_SUITE(Surfaces)
   /// Unit tests for creating DiscSurface object
   BOOST_AUTO_TEST_CASE(DiscSurface_constructors_test)
   {
@@ -64,6 +64,12 @@ namespace Test {
     //
     /// Copied and transformed DiscSurface
     BOOST_CHECK_NO_THROW(DiscSurface(anotherDiscSurface, *pTransform));
+
+    /// Construct with nullptr bounds
+    Identifier          id;
+    DetectorElementStub detElem;
+    BOOST_CHECK_THROW(DiscSurface nullBounds(nullptr, detElem, id),
+                      AssertionFailureException);
   }
 
   /// Unit tests of all named methods
@@ -199,7 +205,7 @@ namespace Test {
     BOOST_CHECK_NO_THROW(assignedDisc = discSurfaceObject);
     BOOST_CHECK(assignedDisc == discSurfaceObject);
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 

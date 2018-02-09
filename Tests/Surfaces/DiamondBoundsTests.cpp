@@ -20,13 +20,14 @@
 //
 #include "ACTS/Surfaces/DiamondBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/ThrowAssert.hpp"
 //
 #include <limits>
 
 namespace Acts {
 
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(Surfaces);
+  BOOST_AUTO_TEST_SUITE(Surfaces)
   /// Unit test for creating compliant/non-compliant DiamondBounds object
   BOOST_AUTO_TEST_CASE(DiamondBoundsConstruction)
   {
@@ -44,6 +45,14 @@ namespace Test {
     DiamondBounds original(minHalfX, midHalfX, maxHalfX, halfY1, halfY2);
     DiamondBounds copied(original);
     BOOST_TEST(copied.type() == SurfaceBounds::Diamond);
+
+    // invalid inputs
+    BOOST_CHECK_THROW(
+        DiamondBounds db(midHalfX, minHalfX, maxHalfX, halfY1, halfY2),
+        AssertionFailureException);
+    BOOST_CHECK_THROW(
+        DiamondBounds db(minHalfX, maxHalfX, midHalfX, halfY1, halfY2),
+        AssertionFailureException);
   }
   /// Unit tests for DiamondBounds properties
   BOOST_AUTO_TEST_CASE(DiamondBoundsProperties)
@@ -135,7 +144,7 @@ namespace Test {
     assignedDiamondBoundsObject = diamondBoundsObject;
     BOOST_TEST(assignedDiamondBoundsObject == diamondBoundsObject);
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 

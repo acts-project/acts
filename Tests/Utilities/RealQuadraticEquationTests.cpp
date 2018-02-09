@@ -32,7 +32,7 @@ const double NaN = std::numeric_limits<double>::quiet_NaN();
 namespace Acts {
 
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(Surfaces);
+  BOOST_AUTO_TEST_SUITE(Surfaces)
   /// Unit test for creating RealQuadraticEquation object
   BOOST_AUTO_TEST_CASE(RealQuadraticEquationConstruction)
   {
@@ -79,7 +79,7 @@ namespace Test {
     // BOOST_TEST(assignedRealQuadraticEquationObject ==
     // realQuadraticEquationObject);
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 

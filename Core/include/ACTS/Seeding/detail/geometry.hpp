@@ -74,7 +74,7 @@ namespace detail {
   /// Estimate the z position at vanishing transverse radius.
   template <typename P0>
   inline double
-  estimateZHelixZ0(const P0& p0, double theta, double kappa)
+  estimateZHelixZ0(const P0& p0, double theta, double /*kappa*/)
   {
     return p0.z() - std::hypot(p0.x(), p0.y()) * std::tan(M_PI_2 - theta);
   }

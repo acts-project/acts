@@ -46,7 +46,7 @@ public:
     ///
     /// @note The field is the same everywhere for a constant B-Field
     Vector3D
-    getField(const Vector3D& position) const
+    getField(const Vector3D& /*position*/) const
     {
       return m_BField;
     }
@@ -58,7 +58,7 @@ public:
     ///         otherwise @c false
     /// @note The method will always return true for the constant B-Field
     bool
-    isInside(const Vector3D& position) const
+    isInside(const Vector3D& /*position*/) const
     {
       return true;
     }
@@ -94,7 +94,7 @@ public:
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
   Vector3D
-  getField(const Vector3D& position) const
+  getField(const Vector3D& /*position*/) const
   {
     return m_BField;
   }
@@ -105,7 +105,7 @@ public:
   /// @return field cell containing the given global position
   ///
   concept::AnyFieldCell<>
-  getFieldCell(const Vector3D& position) const
+  getFieldCell(const Vector3D& /*position*/) const
   {
     return m_fieldCell;
   }
@@ -121,8 +121,8 @@ public:
   /// @note currently the derivative is not calculated
   /// @todo return derivative
   Vector3D
-  getFieldGradient(const Vector3D& position,
-                   ActsMatrixD<3, 3>& derivative) const
+  getFieldGradient(const Vector3D& /*position*/,
+                   ActsMatrixD<3, 3>& /*derivative*/) const
   {
     return m_BField;
   }

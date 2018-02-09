@@ -17,16 +17,17 @@
 #include <iomanip>
 #include <iostream>
 
+#include "ACTS/Utilities/ThrowAssert.hpp"
 #include "ACTS/Utilities/detail/RealQuadraticEquation.hpp"
 
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
-  : Surface(other), m_bounds(other.m_bounds)
+  : GeometryObject(), Surface(other), m_bounds(other.m_bounds)
 {
 }
 
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other,
                                        const Transform3D&     transf)
-  : Surface(other, transf), m_bounds(other.m_bounds)
+  : GeometryObject(), Surface(other, transf), m_bounds(other.m_bounds)
 {
 }
 
@@ -34,7 +35,8 @@ Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const Transform3D> htrans,
     double                             radius,
     double                             hlength)
-  : Surface(htrans)
+  : GeometryObject()
+  , Surface(htrans)
   , m_bounds(std::make_shared<const CylinderBounds>(radius, hlength))
 {
 }
@@ -44,7 +46,8 @@ Acts::CylinderSurface::CylinderSurface(
     double                             radius,
     double                             hphi,
     double                             hlength)
-  : Surface(htrans)
+  : GeometryObject()
+  , Surface(htrans)
   , m_bounds(std::make_shared<const CylinderBounds>(radius, hphi, hlength))
 {
 }
@@ -64,7 +67,7 @@ Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const CylinderBounds> cbounds)
   : Surface(htrans), m_bounds(cbounds)
 {
-  assert(cbounds);
+  throw_assert(cbounds, "CylinderBounds must not be nullptr");
 }
 
 Acts::CylinderSurface::~CylinderSurface()

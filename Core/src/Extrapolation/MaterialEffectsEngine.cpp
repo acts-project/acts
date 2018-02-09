@@ -54,10 +54,10 @@ Acts::MaterialEffectsEngine::setLogger(std::unique_ptr<const Logger> newLogger)
 // neutral extrapolation - just collect material /
 Acts::ExtrapolationCode
 Acts::MaterialEffectsEngine::handleMaterial(
-    ExCellNeutral&      eCell,
-    const Surface*      surface,
-    PropDirection       dir,
-    MaterialUpdateStage matupstage) const
+    ExCellNeutral& eCell,
+    const Surface* surface,
+    PropDirection /*dir*/,
+    MaterialUpdateStage /*matupstage*/) const
 {
   // parameters are the lead parameters
   // by definition the material surface is the one the parametrs are on
@@ -144,12 +144,12 @@ Acts::MaterialEffectsEngine::handleMaterial(
 // update method for charged extrapolation
 void
 Acts::MaterialEffectsEngine::updateTrackParameters(
-    ExCellCharged&      eCell,
-    const Surface&      mSurface,
-    PropDirection       dir,
-    MaterialUpdateStage matupstage,
-    const std::string&  surfaceType,
-    size_t              surfaceID) const
+    ExCellCharged& eCell,
+    const Surface& mSurface,
+    PropDirection  dir,
+    MaterialUpdateStage /*matupstage*/,
+    const std::string& surfaceType,
+    size_t             surfaceID) const
 {
   // return if you have nothing to do
   if (!mSurface.associatedMaterial()) return;

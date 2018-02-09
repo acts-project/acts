@@ -306,7 +306,7 @@ Acts::BinUtility
 Acts::SurfaceArrayCreator::createArbitraryBinUtility(
     const std::vector<const Surface*>& surfaces,
     Acts::BinningValue                 bValue,
-    std::shared_ptr<const Transform3D> transform) const
+    std::shared_ptr<const Transform3D> /*transform*/) const
 {
   if (!surfaces.size())
     throw std::logic_error(
@@ -573,7 +573,7 @@ Acts::BinUtility
 Acts::SurfaceArrayCreator::createEquidistantBinUtility(
     const std::vector<const Surface*>& surfaces,
     BinningValue                       bValue,
-    std::shared_ptr<const Transform3D> transform) const
+    std::shared_ptr<const Transform3D> /*transform*/) const
 {
   if (!surfaces.size())
     throw std::logic_error(
@@ -755,7 +755,7 @@ Acts::BinUtility
 Acts::SurfaceArrayCreator::createBinUtility(
     const std::vector<const Surface*>& surfaces,
     BinningValue                       bValue,
-    BinningType                        bType,
+    BinningType /*bType*/,
     size_t                             bins,
     double                             min,
     double                             max,
@@ -831,7 +831,7 @@ Acts::SurfaceArrayCreator::registerNeighbourHood(SurfaceArray& sArray) const
 /// @todo implement nearest neighbour search - this is brute force attack
 /// - takes too long otherwise in initialization
 void
-Acts::SurfaceArrayCreator::completeBinning(const BinUtility&    binUtility,
+Acts::SurfaceArrayCreator::completeBinning(const BinUtility& /*binUtility*/,
                                            const V3Matrix&      v3Matrix,
                                            const SurfaceVector& sVector,
                                            SurfaceGrid&         sGrid) const

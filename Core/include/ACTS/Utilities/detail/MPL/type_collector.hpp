@@ -43,7 +43,7 @@ namespace detail {
       };
 
     public:
-      HAS_TYPE(result_type);
+      HAS_TYPE(result_type)
 
       template <typename T>
       using type = typename extractor<T>::type;
@@ -59,7 +59,7 @@ namespace detail {
       };
 
     public:
-      HAS_TYPE(observer_type);
+      HAS_TYPE(observer_type)
 
       template <typename T>
       using type = typename extractor<T>::type;

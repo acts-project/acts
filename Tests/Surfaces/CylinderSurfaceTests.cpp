@@ -22,6 +22,7 @@
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "DetectorElementStub.hpp"
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
@@ -31,7 +32,7 @@ const double NaN = std::numeric_limits<double>::quiet_NaN();
 namespace Acts {
 
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(CylinderSurfaces);
+  BOOST_AUTO_TEST_SUITE(CylinderSurfaces)
   /// Unit test for creating compliant/non-compliant CylinderSurface object
   BOOST_AUTO_TEST_CASE(CylinderSurfaceConstruction)
   {
@@ -68,6 +69,10 @@ namespace Test {
     CylinderSurface copiedTransformedCylinderSurface(cylinderSurfaceObject,
                                                      *pTransform);
     BOOST_TEST(copiedTransformedCylinderSurface.type() == Surface::Cylinder);
+
+    /// Construct with nullptr bounds
+    BOOST_CHECK_THROW(CylinderSurface nullBounds(nullptr, nullptr),
+                      AssertionFailureException);
   }
   //
   /// Unit test for testing CylinderSurface properties
@@ -205,7 +210,7 @@ namespace Test {
     /// Test equality of assigned to original
     BOOST_TEST(assignedCylinderSurface == cylinderSurfaceObject);
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 

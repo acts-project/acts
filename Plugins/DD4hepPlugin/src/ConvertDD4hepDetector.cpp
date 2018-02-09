@@ -33,8 +33,6 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
                       bool               buildDigitizationModules)
 {
   // check if envelopes of the volume should be built automatically
-  bool buildEnvelopes                                  = false;
-  if (layerEnvelopeR && layerEnvelopeZ) buildEnvelopes = true;
   // create local logger for conversion
   auto DD4hepConverterlogger
       = Acts::getDefaultLogger("DD4hepConversion", loggingLevel);
@@ -306,7 +304,7 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
       cvbConfig.buildToRadiusZero = true;
 
       // beam pipe volume builder
-      auto beamPipeVolumeBuilder
+      beamPipeVolumeBuilder
           = std::make_shared<const Acts::CylinderVolumeBuilder>(
               cvbConfig,
               Acts::getDefaultLogger(subDetector.name()

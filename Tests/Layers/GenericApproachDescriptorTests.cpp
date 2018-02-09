@@ -29,7 +29,7 @@ namespace Acts {
 
 namespace Test {
   namespace Layers {
-    BOOST_AUTO_TEST_SUITE(Layers);
+    BOOST_AUTO_TEST_SUITE(Layers)
 
     /// Unit test for creating compliant/non-compliant GenericApproachDescriptor
     /// object
@@ -76,7 +76,7 @@ namespace Test {
       BOOST_CHECK(&(approachDescriptor.containedSurfaces()) == &someSurfaces);
     }
 
-    BOOST_AUTO_TEST_SUITE_END();
+    BOOST_AUTO_TEST_SUITE_END()
   }  // end of namespace Layers
 }  // end of namespace Test
 

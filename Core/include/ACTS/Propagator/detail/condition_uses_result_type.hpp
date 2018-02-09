@@ -16,18 +16,16 @@ namespace Acts {
 
 namespace detail {
 
-  namespace {
-    template <typename T, bool has_observer = true>
-    struct condition_uses_result_type_impl
-    {
-      static constexpr bool value = has_result_type_v<observer_type_t<T>>;
-    };
+  template <typename T, bool has_observer = true>
+  struct condition_uses_result_type_impl
+  {
+    static constexpr bool value = has_result_type_v<observer_type_t<T>>;
+  };
 
-    template <typename T>
-    struct condition_uses_result_type_impl<T, false> : std::false_type
-    {
-    };
-  }  // end of anonymous namespace
+  template <typename T>
+  struct condition_uses_result_type_impl<T, false> : std::false_type
+  {
+  };
 
   template <typename T>
   struct condition_uses_result_type

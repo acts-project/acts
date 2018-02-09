@@ -24,7 +24,7 @@
 namespace Acts {
 
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(Surfaces);
+  BOOST_AUTO_TEST_SUITE(Surfaces)
   /// Unit test for creating compliant/non-compliant InfiniteBounds object
   BOOST_AUTO_TEST_CASE(InfiniteBoundsConstruction)
   {
@@ -66,7 +66,7 @@ namespace Test {
         dumpOuput.is_equal("Acts::InfiniteBounds ... boundless surface\n"));
   }
 
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 

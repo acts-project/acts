@@ -47,6 +47,7 @@ namespace Test {
                        bz,
                        index)
   {
+    (void)index;
     BOOST_TEST_CONTEXT("Eigen interface")
     {
       const Vector3D       Btrue(bx, by, bz);
@@ -93,6 +94,7 @@ namespace Test {
                        bz,
                        index)
   {
+    (void)index;
     ConstantBField BField(0, 0, 0);
 
     BOOST_TEST_CONTEXT("Eigen interface")

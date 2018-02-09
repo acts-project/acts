@@ -51,12 +51,12 @@ public:
     return m_values;
   }
   bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final
+  inside(const Vector2D& /*lpos*/, const BoundaryCheck& /*bcheck*/) const final
   {
     return true;
   }
   double
-  distanceToBoundary(const Vector2D& lpos) const final
+  distanceToBoundary(const Vector2D& /*lpos*/) const final
   {
     return 10.;
   }
@@ -72,7 +72,7 @@ private:
 };
 
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(Surfaces);
+  BOOST_AUTO_TEST_SUITE(Surfaces)
   /// Unit test for creating compliant/non-compliant SurfaceBounds object
   BOOST_AUTO_TEST_CASE(SurfaceBoundsConstruction)
   {
@@ -100,7 +100,7 @@ namespace Test {
     BOOST_TEST(surface == assignedSurface);
     BOOST_TEST(surface.valueStore() == assignedSurface.valueStore());
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 

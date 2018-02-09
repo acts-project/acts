@@ -28,7 +28,7 @@ const double NaN = std::numeric_limits<double>::quiet_NaN();
 namespace Acts {
 
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(Surfaces);
+  BOOST_AUTO_TEST_SUITE(Surfaces)
   /// Unit tests for RadialBounds constrcuctors
   BOOST_AUTO_TEST_CASE(RadialBoundsConstruction)
   {
@@ -109,7 +109,7 @@ namespace Test {
     assignedRadialBoundsObject = radialBoundsObject;
     BOOST_TEST(assignedRadialBoundsObject == radialBoundsObject);
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 

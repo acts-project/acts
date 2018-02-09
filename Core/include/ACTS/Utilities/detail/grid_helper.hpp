@@ -194,11 +194,11 @@ namespace detail {
   {
     template <class... Axes>
     static void
-    closestPointsIndices(size_t                     bin,
-                         size_t                     area,
-                         bool                       minimum,
-                         const std::tuple<Axes...>& axes,
-                         std::set<size_t>&          closestPointsIndices)
+    closestPointsIndices(size_t bin,
+                         size_t area,
+                         bool   minimum,
+                         const std::tuple<Axes...>& /*axes*/,
+                         std::set<size_t>& closestPointsIndices)
     {
       if (not minimum) bin += area;
       closestPointsIndices.insert(bin);
@@ -227,18 +227,18 @@ namespace detail {
     template <class... Axes>
     static void
     getGlobalBin(const std::array<size_t, sizeof...(Axes)>& localBins,
-                 const std::tuple<Axes...>& axes,
-                 size_t&                    bin,
-                 size_t&                    area)
+                 const std::tuple<Axes...>& /*axes*/,
+                 size_t& bin,
+                 size_t& area)
     {
       bin += area * localBins.at(0u);
     }
 
     template <class... Axes>
     static void
-    getLocalBinIndices(size_t&                    bin,
-                       const std::tuple<Axes...>& axes,
-                       size_t&                    area,
+    getLocalBinIndices(size_t& bin,
+                       const std::tuple<Axes...>& /*axes*/,
+                       size_t& area,
                        std::array<size_t, sizeof...(Axes)>& indices)
     {
       // make sure to account for under-/overflow bins
@@ -491,7 +491,7 @@ namespace detail {
     static std::array<size_t, sizeof...(Axes)>
     getLowerLeftBinIndices(
         const std::array<size_t, sizeof...(Axes)>& localIndices,
-        const std::tuple<Axes...>& axes)
+        const std::tuple<Axes...>& /*axes*/)
     {
       auto llIndices = localIndices;
       for (size_t i = 0; i < sizeof...(Axes); ++i) --llIndices.at(i);

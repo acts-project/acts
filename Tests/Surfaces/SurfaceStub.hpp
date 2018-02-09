@@ -19,16 +19,16 @@ class SurfaceStub : public Surface
 {
 public:
   SurfaceStub(std::shared_ptr<const Transform3D> htrans = nullptr)
-    : Surface(htrans)
+    : GeometryObject(), Surface(htrans)
   {
   }
   SurfaceStub(const SurfaceStub& sf, const Transform3D& transf)
-    : Surface(sf, transf)
+    : GeometryObject(), Surface(sf, transf)
   {
   }
   SurfaceStub(const DetectorElementBase& detelement,
               const Identifier&          id = Identifier())
-    : Surface(detelement, id)
+    : GeometryObject(), Surface(detelement, id)
   {
   }
 
@@ -36,7 +36,7 @@ public:
 
   /// Implicit constructor
   Surface*
-  clone(const Transform3D* shift = nullptr) const final
+  clone(const Transform3D* /*shift = nullptr*/) const final
   {
     return nullptr;
   }
@@ -50,7 +50,7 @@ public:
 
   /// Return method for the normal vector of the surface
   const Vector3D
-  normal(const Vector2D& lpos) const final
+  normal(const Vector2D& /*lpos*/) const final
   {
     return Vector3D{0., 0., 0.};
   }
@@ -64,18 +64,18 @@ public:
 
   /// Local to global transformation
   void
-  localToGlobal(const Vector2D& lpos,
-                const Vector3D& gmom,
-                Vector3D&       gpos) const final
+  localToGlobal(const Vector2D& /*lpos*/,
+                const Vector3D& /*gmom*/,
+                Vector3D& /*gpos*/) const final
   {
     // nop
   }
 
   /// Global to local transformation
   bool
-  globalToLocal(const Vector3D& gpos,
-                const Vector3D& gmom,
-                Vector2D&       lpos) const final
+  globalToLocal(const Vector3D& /*gpos*/,
+                const Vector3D& /*gmom*/,
+                Vector2D& lpos) const final
   {
     lpos = Vector2D{20., 20.};
     return true;
@@ -83,25 +83,24 @@ public:
 
   /// Calculation of the path correction for incident
   double
-  pathCorrection(const Vector3D& gpos, const Vector3D& gmom) const final
+  pathCorrection(const Vector3D& /*gpos*/, const Vector3D& /*gmom*/) const final
   {
     return 0.0;
   }
 
   /// Straight line intersection schema from parameters
   Intersection
-  intersectionEstimate(const Vector3D&      gpos,
-                       const Vector3D&      gdir,
-                       bool                 forceDir = false,
-                       const BoundaryCheck& bcheck   = false) const final
+  intersectionEstimate(const Vector3D& /*gpos*/,
+                       const Vector3D& /*gdir*/,
+                       bool /*forceDir = false*/,
+                       const BoundaryCheck& /*bcheck   = false*/) const final
   {
     const Intersection is{Vector3D{1, 1, 1}, 20., true};
     return is;
   }
 
   /// Inherited from GeometryObject base
-  const Vector3D
-  binningPosition(BinningValue bValue) const final
+  const Vector3D binningPosition(BinningValue /*bValue*/) const final
   {
     const Vector3D v{0.0, 0.0, 0.0};
     return v;

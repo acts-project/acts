@@ -19,6 +19,7 @@
 #include <vector>
 #include "ACTS/Utilities/BinningType.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/ThrowAssert.hpp"
 
 namespace Acts {
 
@@ -145,7 +146,7 @@ public:
     , m_functionPtr(nullptr)
   {
     // assert a no-size case
-    assert(m_boundaries.size() > 1);
+    throw_assert(m_boundaries.size() > 1, "Must have more than one boundary");
     min = m_boundaries[0];
     max = m_boundaries[m_boundaries.size() - 1];
     // set to equidistant search

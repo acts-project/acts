@@ -17,23 +17,25 @@
 #include <iomanip>
 #include <iostream>
 
+#include "ACTS/Utilities/ThrowAssert.hpp"
 #include "ACTS/Utilities/detail/RealQuadraticEquation.hpp"
 
 Acts::ConeSurface::ConeSurface(const ConeSurface& other)
-  : Surface(other), m_bounds(other.m_bounds)
+  : GeometryObject(), Surface(other), m_bounds(other.m_bounds)
 {
 }
 
 Acts::ConeSurface::ConeSurface(const ConeSurface& other,
                                const Transform3D& transf)
-  : Surface(other, transf), m_bounds(other.m_bounds)
+  : GeometryObject(), Surface(other, transf), m_bounds(other.m_bounds)
 {
 }
 
 Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             alpha,
                                bool                               symmetric)
-  : Surface(htrans)
+  : GeometryObject()
+  , Surface(htrans)
   , m_bounds(std::make_shared<const ConeBounds>(alpha, symmetric))
 {
 }
@@ -43,16 +45,17 @@ Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             zmin,
                                double                             zmax,
                                double                             halfPhi)
-  : Surface(htrans)
+  : GeometryObject()
+  , Surface(htrans)
   , m_bounds(std::make_shared<const ConeBounds>(alpha, zmin, zmax, halfPhi))
 {
 }
 
 Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
                                std::shared_ptr<const ConeBounds>  cbounds)
-  : Surface(htrans), m_bounds(cbounds)
+  : GeometryObject(), Surface(htrans), m_bounds(cbounds)
 {
-  assert(cbounds);
+  throw_assert(cbounds, "ConeBounds must not be nullptr");
 }
 
 Acts::ConeSurface::~ConeSurface()

@@ -62,7 +62,7 @@ public:
   /// ignores input parameter
   /// @return always 0. (should be -NaN)
   virtual double
-  distanceToBoundary(const Vector2D& pos) const final override
+  distanceToBoundary(const Vector2D& /*pos*/) const final override
   {
     return 0;
   }

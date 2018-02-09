@@ -23,18 +23,18 @@ Acts::PerigeeSurface::PerigeeSurface(const Vector3D& gp) : LineSurface(nullptr)
 
 Acts::PerigeeSurface::PerigeeSurface(
     std::shared_ptr<const Transform3D> tTransform)
-  : LineSurface(tTransform)
+  : GeometryObject(), LineSurface(tTransform)
 {
 }
 
 Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& other)
-  : LineSurface(other)
+  : GeometryObject(), LineSurface(other)
 {
 }
 
 Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& other,
                                      const Transform3D&    shift)
-  : LineSurface(other, shift)
+  : GeometryObject(), LineSurface(other, shift)
 {
 }
 
