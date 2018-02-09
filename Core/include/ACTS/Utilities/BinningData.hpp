@@ -374,8 +374,7 @@ public:
   search(float value) const
   {
     if (zdim) return 0;
-    throw_assert(m_functionPtr != nullptr,
-                 "Search function pointer is nullptr");
+    assert(m_functionPtr != nullptr);
     return (!subBinningData) ? (*m_functionPtr)(value, *this)
                              : searchWithSubStructure(value);
   }
