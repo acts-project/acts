@@ -36,6 +36,7 @@ namespace Test {
                        length,
                        index)
   {
+    (void)index;
     // inner volume
     VolumeConfig innerConfig;
     innerConfig.rMin = 0.;
@@ -120,6 +121,7 @@ namespace Test {
                        length,
                        index)
   {
+    (void)index;
     // inner volume
     VolumeConfig innerConfig;
     innerConfig.rMin = 0.;
@@ -207,6 +209,7 @@ namespace Test {
                        outer,
                        index)
   {
+    (void)index;
     // reference volume
     VolumeConfig Config0;
     Config0.rMin    = 5.;
@@ -273,6 +276,7 @@ namespace Test {
                        inner,
                        index)
   {
+    (void)index;
     // inner volume
     VolumeConfig Config0;
     Config0.rMin    = 0.;

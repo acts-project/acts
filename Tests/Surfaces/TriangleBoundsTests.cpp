@@ -28,7 +28,7 @@ const double NaN = std::numeric_limits<double>::quiet_NaN();
 namespace Acts {
 
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(Surfaces);
+  BOOST_AUTO_TEST_SUITE(Surfaces)
   /// Unit test for creating compliant/non-compliant TriangleBounds object
   BOOST_AUTO_TEST_CASE(TriangleBoundsConstruction)
   {
@@ -112,7 +112,7 @@ namespace Test {
     assignedTriangleBoundsObject = triangleBoundsObject;
     BOOST_TEST(assignedTriangleBoundsObject == triangleBoundsObject);
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 

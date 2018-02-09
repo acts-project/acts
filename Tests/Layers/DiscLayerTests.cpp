@@ -34,7 +34,7 @@ namespace Acts {
 
 namespace Test {
   namespace Layers {
-    BOOST_AUTO_TEST_SUITE(Layers);
+    BOOST_AUTO_TEST_SUITE(Layers)
 
     /// Unit test for creating compliant/non-compliant DiscLayer object
     BOOST_AUTO_TEST_CASE(DiscLayerConstruction)
@@ -98,7 +98,7 @@ namespace Test {
                  == std::string("Acts::DiscSurface"));
     }
 
-    BOOST_AUTO_TEST_SUITE_END();
+    BOOST_AUTO_TEST_SUITE_END()
   }  // end of namespace Layers
 }  // end of namespace Test
 

@@ -21,25 +21,25 @@
 Acts::StrawSurface::StrawSurface(std::shared_ptr<const Transform3D> htrans,
                                  double                             radius,
                                  double                             halez)
-  : LineSurface(htrans, radius, halez)
+  : GeometryObject(), LineSurface(htrans, radius, halez)
 {
 }
 
 Acts::StrawSurface::StrawSurface(std::shared_ptr<const Transform3D> htrans,
                                  std::shared_ptr<const LineBounds>  lbounds)
-  : LineSurface(htrans, lbounds)
+  : GeometryObject(), LineSurface(htrans, lbounds)
 {
 }
 
 Acts::StrawSurface::StrawSurface(std::shared_ptr<const LineBounds> lbounds,
                                  const DetectorElementBase&        detelement,
                                  const Identifier&                 id)
-  : LineSurface(lbounds, detelement, id)
+  : GeometryObject(), LineSurface(lbounds, detelement, id)
 {
 }
 
 Acts::StrawSurface::StrawSurface(const Acts::StrawSurface& other)
-  : LineSurface(other)
+  : GeometryObject(), LineSurface(other)
 {
 }
 

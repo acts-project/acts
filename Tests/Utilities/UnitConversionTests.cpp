@@ -15,7 +15,7 @@ using namespace Acts::units;
 namespace utf = boost::unit_test;
 namespace tt  = boost::test_tools;
 
-BOOST_AUTO_TEST_SUITE(unit_conversion, *utf::tolerance(1e-15));
+BOOST_AUTO_TEST_SUITE(unit_conversion, *utf::tolerance(1e-15))
 
 BOOST_AUTO_TEST_CASE(length_conversions)
 {
@@ -79,4 +79,4 @@ BOOST_AUTO_TEST_CASE(si_nat_conversions, *utf::tolerance(1e-8))
 }
 // clang-format on
 
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END()

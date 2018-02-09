@@ -58,7 +58,7 @@ private:
 };
 
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(Surfaces);
+  BOOST_AUTO_TEST_SUITE(Surfaces)
 
   /// todo: make test fixture; separate out different cases
 
@@ -208,7 +208,7 @@ namespace Test {
     BOOST_TEST(unequalSurface,
                "Different transform surfaces should be unequal");
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 

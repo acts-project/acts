@@ -17,12 +17,12 @@
 #include "ACTS/Utilities/Definitions.hpp"
 
 // clang-format off
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_getField), getField, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_getFieldCell), getFieldCell, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_isInside), isInside, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_getNBins), getNBins, 0);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_getMin), getMin, 0);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_getMax), getMax, 0);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_getField), getField, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_getFieldCell), getFieldCell, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_isInside), isInside, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_getNBins), getNBins, 0)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_getMin), getMin, 0)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(afl_detail)(has_getMax), getMax, 0)
 // clang-format on
 
 namespace Acts {

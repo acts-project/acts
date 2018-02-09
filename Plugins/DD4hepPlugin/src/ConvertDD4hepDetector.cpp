@@ -33,8 +33,6 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
                       bool               buildDigitizationModules)
 {
   // check if envelopes of the volume should be built automatically
-  bool buildEnvelopes                                  = false;
-  if (layerEnvelopeR && layerEnvelopeZ) buildEnvelopes = true;
   // create local logger for conversion
   auto DD4hepConverterlogger
       = Acts::getDefaultLogger("DD4hepConversion", loggingLevel);

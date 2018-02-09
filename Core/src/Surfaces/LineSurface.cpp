@@ -21,32 +21,34 @@
 Acts::LineSurface::LineSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             radius,
                                double                             halez)
-  : Surface(htrans), m_bounds(std::make_shared<const LineBounds>(radius, halez))
+  : GeometryObject()
+  , Surface(htrans)
+  , m_bounds(std::make_shared<const LineBounds>(radius, halez))
 {
 }
 
 Acts::LineSurface::LineSurface(std::shared_ptr<const Transform3D> htrans,
                                std::shared_ptr<const LineBounds>  lbounds)
-  : Surface(htrans), m_bounds(lbounds)
+  : GeometryObject(), Surface(htrans), m_bounds(lbounds)
 {
 }
 
 Acts::LineSurface::LineSurface(std::shared_ptr<const LineBounds> lbounds,
                                const DetectorElementBase&        detelement,
                                const Identifier&                 id)
-  : Surface(detelement, id), m_bounds(lbounds)
+  : GeometryObject(), Surface(detelement, id), m_bounds(lbounds)
 {
   throw_assert(lbounds, "LineBounds must not be nullptr");
 }
 
 Acts::LineSurface::LineSurface(const LineSurface& other)
-  : Surface(other), m_bounds(other.m_bounds)
+  : GeometryObject(), Surface(other), m_bounds(other.m_bounds)
 {
 }
 
 Acts::LineSurface::LineSurface(const LineSurface& other,
                                const Transform3D& transf)
-  : Surface(other, transf), m_bounds(other.m_bounds)
+  : GeometryObject(), Surface(other, transf), m_bounds(other.m_bounds)
 {
 }
 
@@ -172,13 +174,13 @@ Acts::LineSurface::pathCorrection(const Acts::Vector3D&,
 }
 
 const Acts::Vector3D
-Acts::LineSurface::binningPosition(Acts::BinningValue bValue) const
+    Acts::LineSurface::binningPosition(Acts::BinningValue /*bValue*/) const
 {
   return center();
 }
 
 const Acts::Vector3D
-Acts::LineSurface::normal(const Acts::Vector2D& lpos) const
+Acts::LineSurface::normal(const Acts::Vector2D& /*lpos*/) const
 {
   // the normal is conceptionally closest to the line direction
   return lineDirection();

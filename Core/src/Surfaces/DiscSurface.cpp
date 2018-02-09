@@ -23,13 +23,13 @@
 #include "ACTS/Utilities/ThrowAssert.hpp"
 
 Acts::DiscSurface::DiscSurface(const DiscSurface& other)
-  : Surface(other), m_bounds(other.m_bounds)
+  : GeometryObject(), Surface(other), m_bounds(other.m_bounds)
 {
 }
 
 Acts::DiscSurface::DiscSurface(const DiscSurface& other,
                                const Transform3D& transf)
-  : Surface(other, transf), m_bounds(other.m_bounds)
+  : GeometryObject(), Surface(other, transf), m_bounds(other.m_bounds)
 {
 }
 
@@ -37,7 +37,8 @@ Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             rmin,
                                double                             rmax,
                                double                             hphisec)
-  : Surface(htrans)
+  : GeometryObject()
+  , Surface(htrans)
   , m_bounds(std::make_shared<const RadialBounds>(rmin, rmax, hphisec))
 {
 }
@@ -49,7 +50,8 @@ Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             minR,
                                double                             avephi,
                                double                             stereo)
-  : Surface(htrans)
+  : GeometryObject()
+  , Surface(htrans)
   , m_bounds(std::make_shared<const DiscTrapezoidalBounds>(minhalfx,
                                                            maxhalfx,
                                                            maxR,
@@ -61,14 +63,14 @@ Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
 
 Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
                                std::shared_ptr<const DiscBounds>  dbounds)
-  : Surface(htrans), m_bounds(dbounds)
+  : GeometryObject(), Surface(htrans), m_bounds(dbounds)
 {
 }
 
 Acts::DiscSurface::DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
                                const DetectorElementBase&        detelement,
                                const Identifier&                 identifier)
-  : Surface(detelement, identifier), m_bounds(nullptr)
+  : GeometryObject(), Surface(detelement, identifier), m_bounds(nullptr)
 {
   throw_assert(dbounds, "nullptr as DiscBounds");
 }

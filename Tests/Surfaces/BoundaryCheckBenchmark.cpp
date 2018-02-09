@@ -92,7 +92,7 @@ struct StopWatch
 };
 
 int
-main(int argc, char* argv[])
+main(int /*argc*/, char** /*argv[]*/)
 {
   using std::cout;
 

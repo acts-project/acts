@@ -24,7 +24,7 @@
 namespace Acts {
 
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(Surfaces);
+  BOOST_AUTO_TEST_SUITE(Surfaces)
   /// Unit test for creating compliant/non-compliant LineBounds object
   BOOST_AUTO_TEST_CASE(LineBoundsConstruction)
   {
@@ -45,7 +45,7 @@ namespace Test {
   }
 
   /// Unit tests for LineBounds properties
-  BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(LineBoundsProperties, 1);
+  BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(LineBoundsProperties, 1)
   BOOST_AUTO_TEST_CASE(LineBoundsProperties)
   {
     // LineBounds object of radius 0.5 and halfz 20
@@ -98,7 +98,7 @@ namespace Test {
     BOOST_TEST(assignedLineBounds.halflengthZ()
                == lineBoundsObject.halflengthZ());
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 

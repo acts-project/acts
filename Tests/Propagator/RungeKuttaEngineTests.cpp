@@ -37,7 +37,7 @@ namespace Acts {
 
 namespace Test {
 
-  BOOST_AUTO_TEST_SUITE(RungeKuttaEngine);
+  BOOST_AUTO_TEST_SUITE(RungeKuttaEngine)
 
   /// This tests does a propagation through
   /// a magnetic field with 2 Tesla - at nominal incidence
@@ -188,7 +188,7 @@ namespace Test {
       BOOST_TEST_MESSAGE("Propagations failed !");
   }
 
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 }  // end of namespace Acts

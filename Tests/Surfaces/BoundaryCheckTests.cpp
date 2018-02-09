@@ -23,7 +23,7 @@
 
 namespace Acts {
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(Surfaces);
+  BOOST_AUTO_TEST_SUITE(Surfaces)
   // See: https://en.wikipedia.org/wiki/Bounding_volume
   //
   // Aligned box w/ simple check
@@ -81,6 +81,6 @@ namespace Test {
     BOOST_TEST(check.isInside({0, 4}, vertices) == true);
     BOOST_TEST(check.isInside({0, 5}, vertices) == false);
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 }  // end of namespace Test
 }  // end of namespace Acts

@@ -22,13 +22,13 @@
 #include "ACTS/Utilities/ThrowAssert.hpp"
 
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
-  : Surface(other), m_bounds(other.m_bounds)
+  : GeometryObject(), Surface(other), m_bounds(other.m_bounds)
 {
 }
 
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other,
                                  const Transform3D&  transf)
-  : Surface(other, transf), m_bounds(other.m_bounds)
+  : GeometryObject(), Surface(other, transf), m_bounds(other.m_bounds)
 {
 }
 

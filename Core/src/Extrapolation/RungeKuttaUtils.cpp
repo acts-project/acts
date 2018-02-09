@@ -706,7 +706,7 @@ double
 Acts::RungeKuttaUtils::stepEstimatorToStraw(double*       S,
                                             const double* P,
                                             bool&         Q,
-                                            bool          istep) const
+                                            bool /*istep*/) const
 {
   const double* r = &P[0];  // Start coordinate
   const double* a = &P[3];  // Start direction

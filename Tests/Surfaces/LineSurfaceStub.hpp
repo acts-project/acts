@@ -24,32 +24,34 @@ public:
   LineSurfaceStub(std::shared_ptr<const Transform3D> htrans,
                   double                             radius,
                   double                             halfz)
-    : LineSurface(htrans, radius, halfz)
+    : GeometryObject(), LineSurface(htrans, radius, halfz)
   { /* nop */
   }
   //
   LineSurfaceStub(std::shared_ptr<const Transform3D> htrans,
                   std::shared_ptr<const LineBounds>  lbounds = nullptr)
-    : LineSurface(htrans, lbounds)
+    : GeometryObject(), LineSurface(htrans, lbounds)
   { /*nop */
   }
   //
   LineSurfaceStub(std::shared_ptr<const LineBounds> lbounds,
                   const DetectorElementBase&        detelement,
                   const Identifier&                 identifier = Identifier())
-    : LineSurface(lbounds, detelement, identifier)
+    : GeometryObject(), LineSurface(lbounds, detelement, identifier)
   { /* nop */
   }
   //
-  LineSurfaceStub(const LineSurfaceStub& ls) : LineSurface(ls) { /* nop */}
+  LineSurfaceStub(const LineSurfaceStub& ls) : GeometryObject(), LineSurface(ls)
+  { /* nop */
+  }
   //
   LineSurfaceStub(const LineSurfaceStub& ls, const Transform3D& t)
-    : LineSurface(ls, t)
+    : GeometryObject(), LineSurface(ls, t)
   { /* nop */
   }
   /// pure virtual functions of baseclass implemented here
   Surface*
-  clone(const Transform3D* shift = nullptr) const final
+  clone(const Transform3D* /*shift = nullptr*/) const final
   {
     return nullptr;
   }

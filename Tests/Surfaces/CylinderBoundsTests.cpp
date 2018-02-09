@@ -28,7 +28,7 @@ const double NaN = std::numeric_limits<double>::quiet_NaN();
 namespace Acts {
 
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(Surfaces);
+  BOOST_AUTO_TEST_SUITE(Surfaces)
   /// Unit test for creating compliant/non-compliant CylinderBounds object
   BOOST_AUTO_TEST_CASE(CylinderBoundsConstruction)
   {
@@ -49,7 +49,7 @@ namespace Test {
   }
 
   /// Unit tests for CylinderBounds properties
-  BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(CylinderBoundsProperties, 4);
+  BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(CylinderBoundsProperties, 4)
   BOOST_AUTO_TEST_CASE(CylinderBoundsProperties)
   {
     // CylinderBounds object of radius 0.5 and halfz 20
@@ -132,7 +132,7 @@ namespace Test {
     BOOST_TEST(assignedCylinderBounds.r() == cylinderBoundsObject.r());
     BOOST_TEST(assignedCylinderBounds == cylinderBoundsObject);
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 

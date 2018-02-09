@@ -89,6 +89,7 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
+  (void)index;
 
   double dcharge = -1 + 2 * charge;
   // just make sure we can reach it
@@ -149,6 +150,7 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
+  (void)index;
   double dcharge = -1 + 2 * charge;
   // to a plane with the atlas stepper
   auto a_at_plane
@@ -227,6 +229,7 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
+  (void)index;
   double dcharge = -1 + 2 * charge;
   // to a disc with the  atlas stepper
   auto a_at_disc
@@ -305,6 +308,7 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
+  (void)index;
   double dcharge = -1 + 2 * charge;
   // to a line with the atlas stepper
   auto a_at_line

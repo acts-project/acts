@@ -198,7 +198,7 @@ Acts::InterpolatedBFieldMap::FieldMapper<3, 3> Acts::fieldMapperXYZ(
   // [4] Create the transformation for the bfield
   // map (Bx,By,Bz) -> (Bx,By,Bz)
   auto transformBField = [](const Acts::Vector3D& field,
-                            const Acts::Vector3D& pos) { return field; };
+                            const Acts::Vector3D& /*pos*/) { return field; };
 
   // [5] Create the mapper & BField Service
   // create field mapping

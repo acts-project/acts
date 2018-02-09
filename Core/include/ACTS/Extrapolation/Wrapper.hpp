@@ -333,9 +333,9 @@ namespace propagation {
               typename Observers,
               typename Aborters>
     WrapperResult<Parameters>
-    propagate_(Cache&            cache,
-               const Parameters& start,
-               const Surface&    surface,
+    propagate_(Cache& cache,
+               const Parameters& /*start*/,
+               const Surface& surface,
                const Options<Observers, Aborters>& options) const
     {
       // Initialize the propagation result object

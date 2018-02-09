@@ -80,9 +80,9 @@ namespace IntegrationTest {
                              double                 phi,
                              double                 theta,
                              double                 charge,
-                             int                    index,
-                             double                 Bz,
-                             double                 disttol = 0.1 * units::_um)
+                             int /*index*/,
+                             double Bz,
+                             double disttol = 0.1 * units::_um)
   {
 
     // setup propagation options
@@ -163,9 +163,9 @@ namespace IntegrationTest {
                   double                 theta,
                   double                 charge,
                   double                 plimit,
-                  int                    index,
-                  double                 disttol = 1. * units::_um,
-                  double                 momtol  = 10. * units::_keV)
+                  int /*index*/,
+                  double disttol = 1. * units::_um,
+                  double momtol  = 10. * units::_keV)
   {
 
     // setup propagation options
@@ -216,7 +216,7 @@ namespace IntegrationTest {
               double                 plimit,
               double                 rand1,
               double                 rand2,
-              double                 rand3)
+              double /*rand3*/)
   {
     // setup propagation options
     typename Propagator_type::template Options<> options;
@@ -319,8 +319,8 @@ namespace IntegrationTest {
                          double                 theta,
                          double                 charge,
                          double                 plimit,
-                         int                    index,
-                         double                 reltol = 1e-4)
+                         int /*index*/,
+                         double reltol = 1e-4)
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
@@ -379,10 +379,10 @@ namespace IntegrationTest {
                    double                 rand1,
                    double                 rand2,
                    double                 rand3,
-                   int                    index,
-                   bool                   startPlanar = true,
-                   bool                   destPlanar  = true,
-                   double                 reltol      = 1e-3)
+                   int /*index*/,
+                   bool   startPlanar = true,
+                   bool   destPlanar  = true,
+                   double reltol      = 1e-3)
   {
 
     covariance_validation_fixture<Propagator_type> fixture(propagator);

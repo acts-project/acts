@@ -34,7 +34,7 @@ namespace Acts {
 namespace Test {
   // using boost::test_tools::output_test_stream;
 
-  BOOST_AUTO_TEST_SUITE(Surfaces);
+  BOOST_AUTO_TEST_SUITE(Surfaces)
   /// Unit test for creating compliant/non-compliant LineSurface object
   BOOST_AUTO_TEST_CASE(LineSurface_Constructors_test)
   {
@@ -174,7 +174,7 @@ namespace Test {
                "LineSurfaces are equal value after assignment");  // operator ==
                                                                   // from base
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 

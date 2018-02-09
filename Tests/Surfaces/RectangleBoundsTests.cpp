@@ -45,7 +45,7 @@ namespace Test {
     const double tol  = 1e-9;
     return ((dif0 < tol) and (dif1 < tol));
   }
-  BOOST_AUTO_TEST_SUITE(Surfaces);
+  BOOST_AUTO_TEST_SUITE(Surfaces)
   /// Unit test for creating compliant/non-compliant RectangleBounds object
   BOOST_AUTO_TEST_CASE(RectangleBoundsConstruction)
   {
@@ -121,7 +121,7 @@ namespace Test {
     BOOST_TEST(originalVertices == clonedVertices);
     delete rectB;
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 }  // end of namespace Test
 
 }  // end of namespace Acts

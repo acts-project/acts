@@ -33,7 +33,7 @@ const double NaN = std::numeric_limits<double>::quiet_NaN();
 namespace Acts {
 
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(PerigeeSurfaces);
+  BOOST_AUTO_TEST_SUITE(PerigeeSurfaces)
   /// Unit test for creating compliant/non-compliant PerigeeSurface object
   BOOST_AUTO_TEST_CASE(PerigeeSurfaceConstruction)
   {
@@ -100,7 +100,7 @@ namespace Test {
     /// Test equality of assigned to original
     BOOST_TEST(assignedPerigeeSurface == perigeeSurfaceObject);
   }
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test
 
