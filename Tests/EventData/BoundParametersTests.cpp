@@ -300,18 +300,18 @@ namespace Test {
     BOOST_CHECK(&(ataCylinder_from_pars.referenceSurface())
                 != &(ataCylinder_from_global.referenceSurface()));
 
+    auto pPosition = ataCylinder_from_pars.position();
     // the reference frame is
-    // transverse plane to the cylinder
-    //    Vector3D normal_at_intersect = cSurface.normal(pos);
-    //    Vector3D transverse_y = rot.col(2);
-    //    Vectr3D transverse_x = transverse_y.cross(normal_at_intersect);
-    //    RotationMatrix3D refframe;
-    //    refframe.col(0) = transverse_x;
-    //    refframe.col(1) = transverse_y;
-    //    refframe.col(2) = normal_at_intersect;
-    //
-    //    BOOST_CHECK(ataCylinder_from_pars.referenceFrame().isApprox(
-    //     refframe));
+    // transverse plane to the cylinder at the intersect
+    Vector3D         normal_at_intersect = cSurface.normal(pPosition);
+    Vector3D         transverse_y        = rot.col(2);
+    Vector3D         transverse_x = transverse_y.cross(normal_at_intersect);
+    RotationMatrix3D refframe;
+    refframe.col(0) = transverse_x;
+    refframe.col(1) = transverse_y;
+    refframe.col(2) = normal_at_intersect;
+    // check if the manually constructed reference frame is the provided one
+    BOOST_CHECK(ataCylinder_from_pars.referenceFrame().isApprox(refframe));
   }
 
   /// @brief Unit test for parameters at the perigee
