@@ -19,6 +19,7 @@ Acts::DD4hepDetElement::DD4hepDetElement(
     const dd4hep::DetElement                     detElement,
     const std::string&                           axes,
     double                                       scalor,
+    bool                                         isDisc,
     std::shared_ptr<const Acts::SurfaceMaterial> material,
     bool                                         buildDigitizationModules,
     std::shared_ptr<const DigitizationModule>    digiModule)
@@ -27,6 +28,7 @@ Acts::DD4hepDetElement::DD4hepDetElement(
                               detElement.placement().ptr(),
                               axes,
                               scalor,
+                              isDisc,
                               material)
   , m_detElement(std::move(detElement))
   , m_digiModule(digiModule)

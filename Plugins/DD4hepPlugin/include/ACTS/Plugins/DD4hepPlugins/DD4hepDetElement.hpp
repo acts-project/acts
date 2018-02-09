@@ -57,6 +57,16 @@ public:
   /// 	- "YZX" -> node y axis is tracking x axis, etc.
   ///		- "XzY" -> negative node z axis is tracking y axis, etc.
   /// @param scalor is the scale factor for unit conversion if needed
+  /// @param isDisc in case the sensitive detector module should be translated
+  ///        as disc (e.g. for endcaps) this flag should be set to true
+  /// @note In the translation from a 3D geometry (TGeo) which only knows tubes
+  ///       to a 2D geometry (Tracking geometry) a distinction if the module
+  ///       should be described as a cylinder or a disc surface needs to be
+  ///       done. Since this information can not be taken just from the geometry
+  ///       description (both can be described as TGeoTubeSeg), one needs to
+  ///       set the flag 'isDisc' in case a volume with shape \c TGeoTubeSeg
+  ///       should be translated to a disc surface. Per default it will be
+  ///       translated into a cylindrical surface.
   /// @param material Possible material of detector element
   /// @param digiModule Possibility to hand over Acrs::DigitizationModule as a
   /// shared
@@ -75,6 +85,7 @@ public:
   DD4hepDetElement(const dd4hep::DetElement                     detElement,
                    const std::string&                           axes   = "XYZ",
                    double                                       scalor = 1.,
+                   bool                                         isDisc = false,
                    std::shared_ptr<const Acts::SurfaceMaterial> material
                    = nullptr,
                    bool buildDigitizationModules = false,

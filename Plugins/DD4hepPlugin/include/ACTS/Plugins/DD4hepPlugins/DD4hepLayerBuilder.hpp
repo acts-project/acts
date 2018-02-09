@@ -140,7 +140,20 @@ private:
                    std::vector<const Acts::Surface*>& surfaces,
                    const std::string&                 axes = "XYZ") const;
 
-  // Private helper function to convert the TGeo transformation matrix into a
+  /// Private helper function to create a sensitive surface from a given
+  /// detector element
+  /// @param detElement the DD4hep::DetElement of sensitive surface to be
+  /// created
+  /// @param isDisc in case the sensitive detector module should be translated
+  ///        as disc (e.g. for endcaps) this flag should be set to true
+  /// @param axes the orientation of the modules to the ACTS frame
+  const Acts::Surface*
+  createSensitiveSurface(const dd4hep::DetElement& detElement,
+                         bool                      isDisc = false,
+                         const std::string&        axes   = "XYZ") const;
+
+  // Private helper function to convert the TGeo transformation matrix into
+  // a
   // ACTS transformation matrix
   /// @param tGeoTrans TGeo transformation matrix which should be converted
   std::shared_ptr<const Acts::Transform3D>
