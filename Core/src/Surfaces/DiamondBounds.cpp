@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/DiamondBounds.hpp"
+#include "ACTS/Utilities/ThrowAssert.hpp"
 
 #include <cmath>
 #include <iomanip>
@@ -29,8 +30,8 @@ Acts::DiamondBounds::DiamondBounds(double minhalex,
   , m_boundingBox(std::max(std::max(minhalex, medhalex), maxhalex),
                   std::max(haley1, haley2))
 {
-  assert((minhalex <= medhalex) && "Hexagon must be a convex polygon");
-  assert((maxhalex <= medhalex) && "Hexagon must be a convex polygon");
+  throw_assert((minhalex <= medhalex), "Hexagon must be a convex polygon");
+  throw_assert((maxhalex <= medhalex), "Hexagon must be a convex polygon");
 }
 
 Acts::DiamondBounds::~DiamondBounds()

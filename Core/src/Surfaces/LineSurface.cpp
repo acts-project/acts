@@ -16,6 +16,8 @@
 #include <iomanip>
 #include <iostream>
 
+#include "ACTS/Utilities/ThrowAssert.hpp"
+
 Acts::LineSurface::LineSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             radius,
                                double                             halez)
@@ -34,7 +36,7 @@ Acts::LineSurface::LineSurface(std::shared_ptr<const LineBounds> lbounds,
                                const Identifier&                 id)
   : Surface(detelement, id), m_bounds(lbounds)
 {
-  assert(lbounds);
+  throw_assert(lbounds, "LineBounds must not be nullptr");
 }
 
 Acts::LineSurface::LineSurface(const LineSurface& other)

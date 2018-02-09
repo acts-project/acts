@@ -17,6 +17,7 @@
 #include <iomanip>
 #include <iostream>
 
+#include "ACTS/Utilities/ThrowAssert.hpp"
 #include "ACTS/Utilities/detail/RealQuadraticEquation.hpp"
 
 Acts::ConeSurface::ConeSurface(const ConeSurface& other)
@@ -52,7 +53,7 @@ Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
                                std::shared_ptr<const ConeBounds>  cbounds)
   : Surface(htrans), m_bounds(cbounds)
 {
-  assert(cbounds);
+  throw_assert(cbounds, "ConeBounds must not be nullptr");
 }
 
 Acts::ConeSurface::~ConeSurface()

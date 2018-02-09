@@ -20,6 +20,7 @@
 #include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/ThrowAssert.hpp"
 
 Acts::DiscSurface::DiscSurface(const DiscSurface& other)
   : Surface(other), m_bounds(other.m_bounds)
@@ -69,7 +70,7 @@ Acts::DiscSurface::DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
                                const Identifier&                 identifier)
   : Surface(detelement, identifier), m_bounds(nullptr)
 {
-  assert(dbounds);
+  throw_assert(dbounds, "nullptr as DiscBounds");
 }
 
 Acts::DiscSurface::~DiscSurface()

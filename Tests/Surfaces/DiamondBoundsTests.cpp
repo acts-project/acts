@@ -44,6 +44,14 @@ namespace Test {
     DiamondBounds original(minHalfX, midHalfX, maxHalfX, halfY1, halfY2);
     DiamondBounds copied(original);
     BOOST_TEST(copied.type() == SurfaceBounds::Diamond);
+
+    // invalid inputs
+    BOOST_CHECK_THROW(
+        DiamondBounds db(midHalfX, minHalfX, maxHalfX, halfY1, halfY2),
+        AssertionFailureException);
+    BOOST_CHECK_THROW(
+        DiamondBounds db(minHalfX, maxHalfX, midHalfX, halfY1, halfY2),
+        AssertionFailureException);
   }
   /// Unit tests for DiamondBounds properties
   BOOST_AUTO_TEST_CASE(DiamondBoundsProperties)

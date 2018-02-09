@@ -68,6 +68,10 @@ namespace Test {
     CylinderSurface copiedTransformedCylinderSurface(cylinderSurfaceObject,
                                                      *pTransform);
     BOOST_TEST(copiedTransformedCylinderSurface.type() == Surface::Cylinder);
+
+    /// Construct with nullptr bounds
+    BOOST_CHECK_THROW(CylinderSurface nullBounds(nullptr, nullptr),
+                      AssertionFailureException);
   }
   //
   /// Unit test for testing CylinderSurface properties

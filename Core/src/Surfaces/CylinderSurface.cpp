@@ -17,6 +17,7 @@
 #include <iomanip>
 #include <iostream>
 
+#include "ACTS/Utilities/ThrowAssert.hpp"
 #include "ACTS/Utilities/detail/RealQuadraticEquation.hpp"
 
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
@@ -64,7 +65,7 @@ Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const CylinderBounds> cbounds)
   : Surface(htrans), m_bounds(cbounds)
 {
-  assert(cbounds);
+  throw_assert(cbounds, "CylinderBounds must not be nullptr");
 }
 
 Acts::CylinderSurface::~CylinderSurface()

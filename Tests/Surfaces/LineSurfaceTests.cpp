@@ -65,6 +65,13 @@ namespace Test {
     BOOST_CHECK(LineSurfaceStub(lineToCopy).constructedOk());
     // Copied and transformed ctor
     BOOST_CHECK(LineSurfaceStub(lineToCopy, transform).constructedOk());
+
+    /// Construct with nullptr bounds
+    Identifier          id;
+    DetectorElementStub detElem;
+    BOOST_CHECK_THROW(LineSurfaceStub nullBounds(nullptr, detElem, id),
+                      AssertionFailureException);
+
     BOOST_TEST_MESSAGE(
         "All LineSurface constructors are callable without problem");
   }

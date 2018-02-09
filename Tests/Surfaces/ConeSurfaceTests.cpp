@@ -71,6 +71,10 @@ namespace Test {
     /// Copied and transformed
     ConeSurface copiedTransformedConeSurface(coneSurfaceObject, *pTransform);
     BOOST_TEST(copiedTransformedConeSurface.type() == Surface::Cone);
+
+    /// Construct with nullptr bounds
+    BOOST_CHECK_THROW(ConeSurface nullBounds(nullptr, nullptr),
+                      AssertionFailureException);
   }
   //
   /// Unit test for testing ConeSurface properties

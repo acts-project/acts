@@ -38,6 +38,8 @@ class LineBounds;
 class DetectorElementStub : public DetectorElementBase
 {
 public:
+  DetectorElementStub() : DetectorElementBase() {}
+
   /// Constructor for single sided detector element
   /// - bound to a Plane Surface
   ///
