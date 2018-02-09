@@ -129,10 +129,10 @@ Layer::getCompatibleSurfaces(const T&                       pars,
       }  // end loop over atSurface
     } else {
       // get the nominal test object
-      auto tSurface = m_surfaceArray->object(pos);
-      if (tSurface && tSurface->associatedDetectorElement()) {
+      auto targetSurface = m_surfaceArray->object(pos);
+      if (targetSurface && targetSurface->associatedDetectorElement()) {
         // get the detector elements
-        auto dElement = tSurface->associatedDetectorElement();
+        auto dElement = targetSurface->associatedDetectorElement();
         std::vector<const DetectorElementBase*> dElements = {dElement};
         // get the neighbours
         dElements.insert(dElements.begin(),

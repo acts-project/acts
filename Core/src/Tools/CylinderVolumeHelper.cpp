@@ -541,7 +541,6 @@ Acts::CylinderVolumeHelper::estimateAndCheckDimension(
         Translation3D(0., 0., zEstFromLayerEnv));
   } else if (transform && !cylinderVolumeBounds) {
     // create the CylinderBounds from parsed layer inputs
-    double halflengthFromLayer = 0.5 * std::abs((layerZmax) - (layerZmin));
     cylinderVolumeBounds
         = new CylinderVolumeBounds(layerRmin, layerRmax, halflengthFromLayer);
   }
