@@ -304,7 +304,7 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
       cvbConfig.buildToRadiusZero = true;
 
       // beam pipe volume builder
-      auto beamPipeVolumeBuilder
+      beamPipeVolumeBuilder
           = std::make_shared<const Acts::CylinderVolumeBuilder>(
               cvbConfig,
               Acts::getDefaultLogger(subDetector.name()

@@ -491,7 +491,7 @@ namespace detail {
     static std::array<size_t, sizeof...(Axes)>
     getLowerLeftBinIndices(
         const std::array<size_t, sizeof...(Axes)>& localIndices,
-        const std::tuple<Axes...>& axes)
+        const std::tuple<Axes...>& /*axes*/)
     {
       auto llIndices = localIndices;
       for (size_t i = 0; i < sizeof...(Axes); ++i) --llIndices.at(i);

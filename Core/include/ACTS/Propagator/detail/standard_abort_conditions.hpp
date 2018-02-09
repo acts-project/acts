@@ -49,7 +49,7 @@ namespace detail {
     /// boolean operator for abort condition using the result
     template <typename input, typename result_t>
     bool
-    operator()(const result_t& r, input& cache) const
+    operator()(const result_t& /*r*/, input& cache) const
     {
       return operator()(cache);
     }
