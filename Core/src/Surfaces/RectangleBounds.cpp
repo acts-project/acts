@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/RectangleBounds.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
 #include <cmath>
 #include <iomanip>
@@ -71,6 +72,8 @@ Acts::RectangleBounds::boundingBox() const
   return (*this);
 }
 
+
+
 // ostream operator overload
 std::ostream&
 Acts::RectangleBounds::dump(std::ostream& sl) const
@@ -81,4 +84,22 @@ Acts::RectangleBounds::dump(std::ostream& sl) const
      << "(" << halflengthX() << ", " << halflengthY() << ")";
   sl << std::setprecision(-1);
   return sl;
+}
+
+Acts::variant_data
+Acts::RectangleBounds::toVariantData() const
+{
+  using namespace std::string_literals;
+
+  variant_map payload;
+  payload["halflengthX"] = m_halfX;
+  payload["halflengthY"] = m_halfY;
+
+  variant_map data({
+    {"type", "RectangleBounds"s},
+    {"payload", payload}
+  });
+
+  
+  return data;
 }

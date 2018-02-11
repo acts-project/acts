@@ -19,6 +19,7 @@
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -145,6 +146,9 @@ public:
   /// (second coordinate of local surface frame)
   double
   halflengthY() const;
+  
+  variant_data
+  toVariantData() const override;
 
 private:
   double          m_minHalfX;

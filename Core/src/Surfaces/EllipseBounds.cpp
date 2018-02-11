@@ -17,6 +17,7 @@
 #include <iostream>
 
 #include "ACTS/Utilities/detail/periodic.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
 Acts::EllipseBounds::EllipseBounds(double minRadius0,
                                    double minRadius1,
@@ -179,4 +180,24 @@ Acts::EllipseBounds::dump(std::ostream& sl) const
      << ", " << averagePhi() << ", " << halfPhiSector() << ")";
   sl << std::setprecision(-1);
   return sl;
+}
+
+Acts::variant_data
+Acts::EllipseBounds::toVariantData() const {
+  using namespace std::string_literals;
+
+  variant_map payload;
+  payload["rMinX"] = m_rMinX;
+  payload["rMinY"] = m_rMinY;
+  payload["rMaxX"] = m_rMaxX;
+  payload["rMaxY"] = m_rMaxY;
+  payload["avgPhi"] = m_avgPhi;
+  payload["halfPhi"] = m_halfPhi;
+  
+  variant_map data;
+  data["type"] = "EllipseBounds"s;
+  data["payload"] = payload;
+
+  return data;
+
 }

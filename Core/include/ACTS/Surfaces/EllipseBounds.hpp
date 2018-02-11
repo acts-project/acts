@@ -19,6 +19,7 @@
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -126,6 +127,9 @@ public:
   /// This method returns the halfPhiSector which is covered by the disc
   double
   halfPhiSector() const;
+  
+  variant_data
+  toVariantData() const override;
 
 private:
   double          m_rMinX, m_rMinY, m_rMaxX, m_rMaxY, m_avgPhi, m_halfPhi;

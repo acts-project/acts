@@ -20,8 +20,10 @@
 #include <limits>
 #include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
+#include "ACTS/Surfaces/TriangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "DetectorElementStub.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
@@ -193,6 +195,29 @@ namespace Test {
     /// Test equality of assigned to original
     BOOST_TEST(assignedPlaneSurface == PlaneSurfaceObject);
   }
+
+  BOOST_AUTO_TEST_CASE(PlaneSurface_Serialization)
+  {
+    // build
+    auto rectBounds = std::make_shared<const RectangleBounds>(5, 10);
+    auto idTrf = std::make_shared<const Transform3D>(Transform3D::Identity());
+    PlaneSurface rectSrf(idTrf, rectBounds);
+    variant_data rectVariant = rectSrf.toVariantData();
+    std::cout << rectVariant << std::endl;
+
+    // rebuild from variant
+    PlaneSurface rectSrfRec(rectVariant);
+
+
+    std::array<Vector2D, 3> vertices = {{Vector2D(1,1), Vector2D(1, -1), Vector2D(-1, 1)}};
+    auto triangleBounds = std::make_shared<const TriangleBounds>(vertices);
+    PlaneSurface triangleSrf(idTrf, triangleBounds);
+    variant_data triangleVariant = triangleSrf.toVariantData();
+    std::cout << triangleVariant << std::endl;
+
+  }
+  
+
   BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test

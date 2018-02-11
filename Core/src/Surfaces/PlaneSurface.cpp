@@ -19,6 +19,7 @@
 #include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 #include "ACTS/Utilities/ThrowAssert.hpp"
 
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
@@ -70,9 +71,18 @@ Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const Transform3D>  htrans,
 {
 }
 
-Acts::PlaneSurface::~PlaneSurface()
+Acts::PlaneSurface::PlaneSurface(const variant_data& data_)
 {
+  // we need to figure out which way the PS was constructed before
+  throw_assert(data_.which() == 5, "Variant data must be map");
+  variant_map data = boost::get<variant_map>(data_);
+  throw_assert(data.count("type") && data["type"] == "PlaneSurface",
+               "Variant data must have type and type must be PlaneSurface");
+
+  std::cout << "go unpack" << std::endl;
 }
+
+Acts::PlaneSurface::~PlaneSurface() {}
 
 Acts::PlaneSurface&
 Acts::PlaneSurface::operator=(const PlaneSurface& other)
@@ -166,4 +176,20 @@ Acts::PlaneSurface::pathCorrection(const Acts::Vector3D&,
 {
   /// we can ignore the global position here
   return 1. / std::abs(normal().dot(mom.unit()));
+}
+
+Acts::variant_data
+Acts::PlaneSurface::toVariantData() const
+{
+  using namespace std::string_literals;
+  variant_map payload;
+
+  variant_data bounds = m_bounds->toVariantData();
+  payload["bounds"]   = bounds;
+
+  variant_map data;
+  data["type"]    = "PlaneSurface"s;
+  data["payload"] = payload;
+
+  return data;
 }

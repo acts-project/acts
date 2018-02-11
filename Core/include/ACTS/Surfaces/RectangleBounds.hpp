@@ -15,8 +15,10 @@
 
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
+
 
 /// @class RectangleBounds
 ///
@@ -92,6 +94,9 @@ public:
   /// Return method for the half length in Y
   double
   halflengthY() const;
+  
+  variant_data
+  toVariantData() const override;
 
 private:
   double m_halfX, m_halfY;

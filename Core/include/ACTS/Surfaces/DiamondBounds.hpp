@@ -19,6 +19,7 @@
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -118,6 +119,9 @@ public:
   /// This method returns the halflength in Y of trapezoid at positive Y
   double
   halflengthY2() const;
+  
+  variant_data
+  toVariantData() const override;
 
 private:
   double          m_minHalfX, m_medHalfX, m_maxHalfX;

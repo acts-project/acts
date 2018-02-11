@@ -12,6 +12,7 @@
 
 #include "ACTS/Surfaces/DiamondBounds.hpp"
 #include "ACTS/Utilities/ThrowAssert.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
 #include <cmath>
 #include <iomanip>
@@ -106,4 +107,22 @@ Acts::DiamondBounds::dump(std::ostream& sl) const
      << ")";
   sl << std::setprecision(-1);
   return sl;
+}
+
+Acts::variant_data
+Acts::DiamondBounds::toVariantData() const {
+  using namespace std::string_literals;
+
+  variant_map payload;
+  payload["minHalfX"] = m_minHalfX;
+  payload["medHalfX"] = m_medHalfX;
+  payload["maxHalfX"] = m_maxHalfX;
+  payload["minY"] = m_minY;
+  payload["maxY"] = m_maxY;
+  
+  variant_map data;
+  data["type"] = "DiamondBounds";
+  data["payload"] = payload;
+
+  return data;
 }

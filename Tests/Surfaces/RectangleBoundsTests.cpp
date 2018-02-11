@@ -21,6 +21,7 @@
 #include <limits>
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
 namespace utf    = boost::unit_test;
 const double inf = std::numeric_limits<double>::infinity();
@@ -121,6 +122,14 @@ namespace Test {
     BOOST_TEST(originalVertices == clonedVertices);
     delete rectB;
   }
+
+  BOOST_AUTO_TEST_CASE(RectangleBounds_toVariantData) {
+    RectangleBounds rect(10, 10);
+    variant_data var_rect = rect.toVariantData();
+
+    std::cout << var_rect << std::endl;
+  }
+
   BOOST_AUTO_TEST_SUITE_END()
 }  // end of namespace Test
 

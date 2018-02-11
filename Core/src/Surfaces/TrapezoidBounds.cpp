@@ -15,6 +15,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include "ACTS/Utilities/VariantData.hpp"
 
 Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
                                        double maxhalex,
@@ -91,4 +92,20 @@ Acts::TrapezoidBounds::dump(std::ostream& sl) const
      << halflengthY() << ")";
   sl << std::setprecision(-1);
   return sl;
+}
+
+Acts::variant_data
+Acts::TrapezoidBounds::toVariantData() const {
+  using namespace std::string_literals;
+
+  variant_map payload;
+  payload["minHalfX"] = m_minHalfX;
+  payload["maxHalfX"] = m_maxHalfX;
+  payload["halfY"]    = m_halfY;
+  
+  variant_map data;
+  data["type"] = "TrapezoidBounds";
+  data["payload"] = payload;
+
+  return data;
 }

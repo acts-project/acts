@@ -11,12 +11,13 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/TriangleBounds.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
 #include <iomanip>
 #include <iostream>
 
-Acts::TriangleBounds::TriangleBounds(const std::vector<Vector2D>& vertices)
-  : m_vertices{vertices[0], vertices[1], vertices[2]}, m_boundingBox(0, 0)
+Acts::TriangleBounds::TriangleBounds(const std::array<Vector2D, 3>& vertices)
+  : m_vertices(vertices), m_boundingBox(0, 0)
 {
   double mx = 0;
   double my = 0;
@@ -93,4 +94,23 @@ Acts::TriangleBounds::dump(std::ostream& sl) const
   sl << "(" << m_vertices[2].x() << " , " << m_vertices[2].y() << ") ";
   sl << std::setprecision(-1);
   return sl;
+}
+
+Acts::variant_data
+Acts::TriangleBounds::toVariantData() const {
+  using namespace std::string_literals;
+
+  variant_map payload;
+  
+  variant_vector vertices;
+  for(const auto &vtx : m_vertices) {
+    vertices.push_back(to_variant(vtx));
+  }
+
+  variant_map data;
+  data["type"] = "TriangleBounds"s;
+  data["payload"] = variant_map({{"vertices", vertices}});
+
+  return data;
+
 }
