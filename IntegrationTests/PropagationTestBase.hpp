@@ -14,6 +14,7 @@
 #include <boost/test/data/test_case.hpp>
 #include <cmath>
 
+/*
 /// test consistency of forward-backward propagation
 BOOST_DATA_TEST_CASE(
     forward_backward_propagation_,
@@ -391,7 +392,7 @@ BOOST_DATA_TEST_CASE(
       wpropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, index);
 }
 
-// test correct covariance transport for surfaces parameters
+// test correct covariance transport from plane to plane
 BOOST_DATA_TEST_CASE(
     covariance_transport_plane_plane_,
     bdata::random((bdata::seed = 1000,
@@ -469,4 +470,97 @@ BOOST_DATA_TEST_CASE(
       rand2,
       rand3,
       index);
+}
+
+*/
+
+// test correct covariance transport from straw to straw
+// for straw surfaces the numerical fixture is actually more difficult
+// to calculate
+BOOST_DATA_TEST_CASE(
+    covariance_transport_line_line_,
+    bdata::random((bdata::seed = 1000,
+                   bdata::distribution
+                   = std::uniform_real_distribution<>(0.4 * units::_GeV,
+                                                      10. * units::_GeV)))
+        ^ bdata::random((bdata::seed = 2001,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(-M_PI, M_PI)))
+        ^ bdata::random((bdata::seed = 2002,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(0.1, M_PI - 0.1)))
+        ^ bdata::random((bdata::seed = 2003,
+                         bdata::distribution
+                         = std::uniform_int_distribution<>(0, 1)))
+        ^ bdata::random((bdata::seed = 2004,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(0.1, 0.2)))
+        ^ bdata::random((bdata::seed = 3005,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(-1., 1.)))
+        ^ bdata::random((bdata::seed = 3006,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(-1., 1.)))
+        ^ bdata::random((bdata::seed = 3007,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(-1., 1.)))
+        ^ bdata::xrange(3),
+    pT,
+    phi,
+    theta,
+    charge,
+    plimit,
+    rand1,
+    rand2,
+    rand3,
+    index)
+{
+  double dcharge = -1 + 2 * charge;
+  // covaraince check for atlas stepper
+  covariance_bound<AtlasPropagator_type, StrawSurface, StrawSurface>(
+      apropagator,
+      pT,
+      phi,
+      theta,
+      dcharge,
+      plimit * Acts::units::_m,
+      rand1,
+      rand2,
+      rand3,
+      index,
+      false,
+      false,
+      1e-2);
+
+  // covaraince check for eigen stepper
+  // covariance_bound<EigenPropagator_type, StrawSurface, StrawSurface>(
+  //     epropagator,
+  //     pT,
+  //     phi,
+  //     theta,
+  //     dcharge,
+  //     plimit * Acts::units::_m,
+  //     rand1,
+  //     rand2,
+  //     rand3,
+  //     index,
+  //     false,
+  //     false,
+  //     1e-2);
+  //
+  // covariance check fo the runge kutta engine
+  covariance_bound<WrappedPropagator_type, StrawSurface, StrawSurface>(
+      wpropagator,
+      pT,
+      phi,
+      theta,
+      dcharge,
+      plimit * Acts::units::_m,
+      rand1,
+      rand2,
+      rand3,
+      index,
+      false,
+      false,
+      1e-2);
 }
