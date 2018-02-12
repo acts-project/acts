@@ -69,15 +69,3 @@ Acts::StrawSurface::clone(const Transform3D* shift) const
   if (shift) new StrawSurface(*this, *shift);
   return new StrawSurface(*this);
 }
-
-Acts::Surface::SurfaceType
-Acts::StrawSurface::type() const
-{
-  return Surface::Straw;
-}
-
-std::string
-Acts::StrawSurface::name() const
-{
-  return "Acts::StrawSurface";
-}
