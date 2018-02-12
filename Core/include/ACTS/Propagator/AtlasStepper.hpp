@@ -21,6 +21,8 @@ namespace Acts {
 template <typename BField>
 class AtlasStepper
 {
+
+public:
   struct Cache
   {
     // optimisation that init is not called twice
@@ -94,8 +96,8 @@ class AtlasStepper
       // cache is ready - noting to do
       if (cache_ready) return;
 
-      const ActsVectorD<3>     pos = pars.position();
-      ActsVectorD<NGlobalPars> Vp  = pars.parameters();
+      const ActsVectorD<3> pos = pars.position();
+      const auto           Vp  = pars.parameters();
 
       double Sf, Cf, Ce, Se;
       Sf = sin(Vp(2));
@@ -111,7 +113,7 @@ class AtlasStepper
       pVector[5] = Ce;
       pVector[6] = Vp[4];
 
-      // @todo: remove magic numbers
+      // @todo: remove magic numbers - is that the charge ?
       if (std::abs(pVector[6]) < .000000000000001) {
         pVector[6] < 0. ? pVector[6] = -.000000000000001
                         : pVector[6] = .000000000000001;
@@ -169,13 +171,53 @@ class AtlasStepper
         pVector[42] = 0.;
         pVector[43] = 0.;
         pVector[44] = 0.;
+
+        // line and perigee need components
+        // that relate momentum direction change to local coordiante change
+        const auto& surface = pars.referenceSurface();
+        if (surface.type() == Surface::Perigee
+            || surface.type() == Surface::Straw) {
+
+          // we stick to the nomenclature of the original RkPropagator
+          double A[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
+
+          double Bx = A[1] * pVector[5] - A[2] * pVector[4];
+          double By = A[2] * pVector[3] - A[0] * pVector[5];
+          double Bz = A[0] * pVector[4] - A[1] * pVector[3];
+          double Bn = 1. / sqrt(Bx * Bx + By * By + Bz * Bz);
+          Bx *= Bn;
+          By *= Bn;
+          Bz *= Bn;
+
+          double Bx2 = -A[2] * pVector[25];
+          double Bx3 = A[1] * pVector[33] - A[2] * pVector[32];
+          double By2 = A[2] * pVector[24];
+          double By3 = A[2] * pVector[31] - A[0] * pVector[33];
+          double Bz2 = A[0] * pVector[25] - A[1] * pVector[24];
+          double Bz3 = A[0] * pVector[32] - A[1] * pVector[31];
+          double B2  = Bx * Bx2 + By * By2 + Bz * Bz2,
+                 B3  = Bx * Bx3 + By * By3 + Bz * Bz3;
+          Bx2        = (Bx2 - Bx * B2) * Bn;
+          Bx3        = (Bx3 - Bx * B3) * Bn;
+          By2        = (By2 - By * B2) * Bn;
+          By3        = (By3 - By * B3) * Bn;
+          Bz2        = (Bz2 - Bz * B2) * Bn;
+          Bz3        = (Bz3 - Bz * B3) * Bn;
+
+          //  /dL1  |     /dL2    |      /dPhi      |     /dThe       |
+          pVector[21] = Bx2 * Vp[0];
+          pVector[28] = Bx3 * Vp[0];  // dX/
+          pVector[22] = By2 * Vp[0];
+          pVector[29] = By3 * Vp[0];  // dY/
+          pVector[23] = Bz2 * Vp[0];
+          pVector[30] = Bz3 * Vp[0];  // dZ/
+        }
       }
       // now declare the cache as ready
       cache_ready = true;
     }
   };
 
-public:
   template <typename T, typename S = int>
   using cache_type = Cache;
 
@@ -372,11 +414,13 @@ public:
       double Ax[3] = {fFrame(0, 0), fFrame(1, 0), fFrame(2, 0)};
       double Ay[3] = {fFrame(0, 1), fFrame(1, 1), fFrame(2, 1)};
       double S[3]  = {fFrame(0, 2), fFrame(1, 2), fFrame(2, 2)};
-      // this is the projection of direction onto the local ca vector
+
+      // this is the projection of direction onto the local normal vector
       double A = cache.pVector[3] * S[0] + cache.pVector[4] * S[1]
           + cache.pVector[5] * S[2];
 
       if (A != 0.) A = 1. / A;
+
       S[0] *= A;
       S[1] *= A;
       S[2] *= A;
@@ -391,6 +435,77 @@ public:
           + cache.pVector[30] * S[2];
       double s4 = cache.pVector[35] * S[0] + cache.pVector[36] * S[1]
           + cache.pVector[37] * S[2];
+
+      // in case of lienar surfaces - we need to take into account that
+      // the reference frame changes with variations of all local
+      // parameters
+      if (s.type() == Surface::Straw || s.type() == Surface::Perigee) {
+        // vector from position to center
+        double x = cache.pVector[0] - s.center().x();
+        double y = cache.pVector[1] - s.center().y();
+        double z = cache.pVector[2] - s.center().z();
+
+        // this is the projection of the direction onto the local y axis
+        double d = cache.pVector[3] * Ay[0] + cache.pVector[4] * Ay[1]
+            + cache.pVector[5] * Ay[2];
+        // this is cos(beta)
+        //
+        double a       = (1. - d) * (1. + d);
+        if (a != 0.) a = 1. / a;  // i.e. 1./(1-d^2) -> 1./(1-cos^2(beta))
+        // understand
+        double X = d * Ay[0] - cache.pVector[3];  //
+        double Y = d * Ay[1]
+            - cache.pVector[4];  // this is 1./(1-cos^2(beta)*l_y - dir)
+        double Z = d * Ay[2] - cache.pVector[5];  //
+        //
+        double d0 = cache.pVector[10] * Ay[0] + cache.pVector[11] * Ay[1]
+            + cache.pVector[12] * Ay[2];
+        double d1 = cache.pVector[17] * Ay[0] + cache.pVector[18] * Ay[1]
+            + cache.pVector[19] * Ay[2];
+        double d2 = cache.pVector[24] * Ay[0] + cache.pVector[25] * Ay[1]
+            + cache.pVector[26] * Ay[2];
+        double d3 = cache.pVector[31] * Ay[0] + cache.pVector[32] * Ay[1]
+            + cache.pVector[33] * Ay[2];
+        double d4 = cache.pVector[38] * Ay[0] + cache.pVector[39] * Ay[1]
+            + cache.pVector[40] * Ay[2];
+
+        s0 = (((cache.pVector[7] * X + cache.pVector[8] * Y
+                + cache.pVector[9] * Z)
+               + x * (d0 * Ay[0] - cache.pVector[10]))
+              + (y * (d0 * Ay[1] - cache.pVector[11])
+                 + z * (d0 * Ay[2] - cache.pVector[12])))
+            * a;
+        s1 = (((cache.pVector[14] * X + cache.pVector[15] * Y
+                + cache.pVector[16] * Z)
+               + x * (d1 * Ay[0] - cache.pVector[17]))
+              + (y * (d1 * Ay[1] - cache.pVector[18])
+                 + z * (d1 * Ay[2] - cache.pVector[19])))
+            * a;
+        s2 = (((cache.pVector[21] * X + cache.pVector[22] * Y
+                + cache.pVector[23] * Z)
+               + x * (d2 * Ay[0] - cache.pVector[24]))
+              + (y * (d2 * Ay[1] - cache.pVector[25])
+                 + z * (d2 * Ay[2] - cache.pVector[26])))
+            * a;
+        s3 = (((cache.pVector[28] * X + cache.pVector[29] * Y
+                + cache.pVector[30] * Z)
+               + x * (d3 * Ay[0] - cache.pVector[31]))
+              + (y * (d3 * Ay[1] - cache.pVector[32])
+                 + z * (d3 * Ay[2] - cache.pVector[33])))
+            * a;
+        s4 = (((cache.pVector[35] * X + cache.pVector[36] * Y
+                + cache.pVector[37] * Z)
+               + x * (d4 * Ay[0] - cache.pVector[38]))
+              + (y * (d4 * Ay[1] - cache.pVector[39])
+                 + z * (d4 * Ay[2] - cache.pVector[40])))
+            * a;
+      }
+
+      std::cout << "s0' = " << s0 << std::endl;
+      std::cout << "s1' = " << s1 << std::endl;
+      std::cout << "s2' = " << s2 << std::endl;
+      std::cout << "s3' = " << s3 << std::endl;
+      std::cout << "s4' = " << s4 << std::endl;
 
       cache.pVector[7] -= (s0 * cache.pVector[3]);
       cache.pVector[8] -= (s0 * cache.pVector[4]);
@@ -441,6 +556,22 @@ public:
         P4 = 0.;
       }
 
+      std::cout << "dL0/dL0  = " << Ax[0] << " * " << cache.pVector[7] << " + "
+                << Ax[1] << " * " << cache.pVector[8] << " + " << Ax[2] << " * "
+                << cache.pVector[9] << std::endl;
+      std::cout << "dL0/dL1  = " << Ax[0] << " * " << cache.pVector[14] << " + "
+                << Ax[1] << " * " << cache.pVector[15] << " + " << Ax[2]
+                << " * " << cache.pVector[16] << std::endl;
+      std::cout << "dL0/dPhi = " << Ax[0] << " * " << cache.pVector[21] << " + "
+                << Ax[1] << " * " << cache.pVector[22] << " + " << Ax[2]
+                << " * " << cache.pVector[23] << std::endl;
+      std::cout << "dL0/dThe = " << Ax[0] << " * " << cache.pVector[28] << " + "
+                << Ax[1] << " * " << cache.pVector[29] << " + " << Ax[2]
+                << " * " << cache.pVector[30] << std::endl;
+      std::cout << "dL0/dCM  = " << Ax[0] << " * " << cache.pVector[35] << " + "
+                << Ax[1] << " * " << cache.pVector[36] << " + " << Ax[2]
+                << " * " << cache.pVector[37] << std::endl;
+
       // Jacobian production of transport and to_local
       cache.jacobian[0] = Ax[0] * cache.pVector[7] + Ax[1] * cache.pVector[8]
           + Ax[2] * cache.pVector[9];  // dL0/dL0
@@ -452,6 +583,22 @@ public:
           + Ax[2] * cache.pVector[30];  // dL0/dThe
       cache.jacobian[4] = Ax[0] * cache.pVector[35] + Ax[1] * cache.pVector[36]
           + Ax[2] * cache.pVector[37];  // dL0/dCM
+
+      std::cout << "dL1/dL0  = " << Ay[0] << " * " << cache.pVector[7] << " + "
+                << Ay[1] << " * " << cache.pVector[8] << " + " << Ay[2] << " * "
+                << cache.pVector[9] << std::endl;
+      std::cout << "dL1/dL1  = " << Ay[0] << " * " << cache.pVector[14] << " + "
+                << Ay[1] << " * " << cache.pVector[15] << " + " << Ay[2]
+                << " * " << cache.pVector[16] << std::endl;
+      std::cout << "dL1/dPhi = " << Ay[0] << " * " << cache.pVector[21] << " + "
+                << Ay[1] << " * " << cache.pVector[22] << " + " << Ay[2]
+                << " * " << cache.pVector[23] << std::endl;
+      std::cout << "dL1/dThe = " << Ay[0] << " * " << cache.pVector[28] << " + "
+                << Ay[1] << " * " << cache.pVector[29] << " + " << Ay[2]
+                << " * " << cache.pVector[30] << std::endl;
+      std::cout << "dL1/dCM  = " << Ay[0] << " * " << cache.pVector[35] << " + "
+                << Ay[1] << " * " << cache.pVector[36] << " + " << Ay[2]
+                << " * " << cache.pVector[37] << std::endl;
 
       cache.jacobian[5] = Ay[0] * cache.pVector[7] + Ay[1] * cache.pVector[8]
           + Ay[2] * cache.pVector[9];  // dL1/dL0
