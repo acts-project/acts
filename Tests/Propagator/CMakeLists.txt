@@ -6,6 +6,10 @@ add_executable (RungeKuttaEngineTests RungeKuttaEngineTests.cpp)
 target_link_libraries (RungeKuttaEngineTests PRIVATE ACTSCore)
 add_test(NAME RungeKuttaEngineUnitTest COMMAND RungeKuttaEngineTests)
 
+add_executable (JacobianTests JacobianTests.cpp)
+target_link_libraries (JacobianTests PRIVATE ACTSCore)
+add_test(NAME JacobianUnitTests COMMAND JacobianTests)
+
 # Benchmark tests
 
 # define executables
