@@ -11,6 +11,7 @@
 
 #include <array>
 #include "ACTS/EventData/TrackParameters.hpp"
+#include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 
 namespace Acts {
@@ -42,6 +43,15 @@ namespace IntegrationTest {
       // nominal propagation
       const auto&    nominal = endPars.parameters();
       const Surface& dest    = endPars.referenceSurface();
+
+      // - for planar surfaces the dest surface is a perfect destination
+      // surface for the numerical propagation, as reference frame
+      // aligns with the referenceSurface.transform().rotation() at
+      // at any given time
+      //
+      // - for straw & cylinder, where the error is given
+      // in the reference frame that re-aligns with a slightly different
+      // intersection solution
 
       // avoid stopping before the surface because of path length reached
       U var_options = options;
