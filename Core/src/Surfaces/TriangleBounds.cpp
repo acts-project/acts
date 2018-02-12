@@ -28,6 +28,30 @@ Acts::TriangleBounds::TriangleBounds(const std::array<Vector2D, 3>& vertices)
   m_boundingBox = RectangleBounds(mx, my);
 }
 
+Acts::TriangleBounds::TriangleBounds(const variant_data& data_)
+  : m_vertices(), m_boundingBox(0, 0)
+{
+  throw_assert(data_.which() == 4, "Variant data must be map");
+  const variant_map &data = boost::get<variant_map>(data_);
+  std::string type = data.get<std::string>("type");
+  throw_assert(type == "TriangleBounds", "Type must be TriangleBounds");
+
+  const variant_map &payload = data.get<variant_map>("payload");
+  const variant_vector &vertices = payload.get<variant_vector>("vertices");
+  throw_assert(vertices.size() == 3, "Vertices for triangle must be exactly 3.");
+
+  double mx = 0, my = 0;
+  for(size_t i=0;i<3;i++) {
+    Vector2D vtx = from_variant<Vector2D>(vertices.at(i));
+    mx = std::max(mx, std::abs(vtx.x()));
+    my = std::max(my, std::abs(vtx.y()));
+    m_vertices.at(i) = vtx;
+  }
+
+  m_boundingBox = RectangleBounds(mx, my);
+}
+
+
 Acts::TriangleBounds::~TriangleBounds()
 {
 }

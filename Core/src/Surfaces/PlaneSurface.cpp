@@ -19,8 +19,10 @@
 #include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
 #include "ACTS/Utilities/ThrowAssert.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
+
+#include "ACTS/Utilities/InstanceFactory.hpp"
 
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
   : GeometryObject(), Surface(other), m_bounds(other.m_bounds)
@@ -74,12 +76,30 @@ Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const Transform3D>  htrans,
 Acts::PlaneSurface::PlaneSurface(const variant_data& data_)
 {
   // we need to figure out which way the PS was constructed before
-  throw_assert(data_.which() == 5, "Variant data must be map");
+  throw_assert(data_.which() == 4, "Variant data must be map");
   variant_map data = boost::get<variant_map>(data_);
-  throw_assert(data.count("type") && data["type"] == "PlaneSurface",
-               "Variant data must have type and type must be PlaneSurface");
+  throw_assert(data.count("type"), "Variant data must have type.");
+  // std::string type = boost::get<std::string>(data["type"]);
+  std::string type = data.get<std::string>("type");
+  throw_assert(type == "PlaneSurface",
+               "Variant data type must be PlaneSurface");
 
-  std::cout << "go unpack" << std::endl;
+  variant_map payload    = data.get<variant_map>("payload");
+  variant_map bounds     = payload.get<variant_map>("bounds");
+  std::string boundsType = bounds.get<std::string>("type");
+
+  InstanceFactory                     factory;
+  std::shared_ptr<const PlanarBounds> pbounds
+      = factory.planarBounds(boundsType, bounds);
+
+  m_bounds = pbounds;
+
+  if (payload.count("transform")) {
+    // we have a transform
+    auto trf = std::make_shared<const Transform3D>(
+        from_variant<Transform3D>(payload.get<variant_map>("transform")));
+    m_transform = trf;
+  }
 }
 
 Acts::PlaneSurface::~PlaneSurface() {}
@@ -186,6 +206,10 @@ Acts::PlaneSurface::toVariantData() const
 
   variant_data bounds = m_bounds->toVariantData();
   payload["bounds"]   = bounds;
+
+  if (m_transform) {
+    payload["transform"] = to_variant(*m_transform);
+  }
 
   variant_map data;
   data["type"]    = "PlaneSurface"s;

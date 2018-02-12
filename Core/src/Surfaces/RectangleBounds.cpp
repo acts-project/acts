@@ -12,6 +12,7 @@
 
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/VariantData.hpp"
+#include "ACTS/Utilities/ThrowAssert.hpp"
 
 #include <cmath>
 #include <iomanip>
@@ -20,6 +21,19 @@
 Acts::RectangleBounds::RectangleBounds(double halex, double haley)
   : m_halfX(std::abs(halex)), m_halfY(std::abs(haley))
 {
+}
+
+Acts::RectangleBounds::RectangleBounds(const variant_data& data_)
+{
+  throw_assert(data_.which() == 4, "Variant data must be map");
+  const variant_map &data = boost::get<variant_map>(data_);
+  std::string type = data.get<std::string>("type");
+  throw_assert(type == "RectangleBounds", "Type must be RectangleBounds");
+
+  const variant_map &payload = data.get<variant_map>("payload");
+
+  m_halfX = payload.get<double>("halflengthX");
+  m_halfY = payload.get<double>("halflengthY");
 }
 
 Acts::RectangleBounds::~RectangleBounds()

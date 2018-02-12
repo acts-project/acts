@@ -44,6 +44,8 @@ public:
   /// @param halfY halflength in Y
   RectangleBounds(double halfX, double halfY);
 
+  RectangleBounds(const variant_data& data);
+
   virtual ~RectangleBounds();
 
   virtual RectangleBounds*

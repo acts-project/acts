@@ -51,6 +51,8 @@ public:
   /// @param vertices is the vector of vertices
   TriangleBounds(const std::array<Vector2D, 3>& vertices);
 
+  TriangleBounds(const variant_data &data);
+
   virtual ~TriangleBounds();
 
   virtual TriangleBounds*
