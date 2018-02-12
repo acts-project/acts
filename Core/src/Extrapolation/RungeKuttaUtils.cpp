@@ -440,29 +440,34 @@ Acts::RungeKuttaUtils::transformGlobalToLine(const Acts::Surface* su,
                                              double*              Jac) const
 {
   const Acts::Transform3D& T = su->transform();
-
+  // that is the local z axis
   double A[3] = {T(0, 2), T(1, 2), T(2, 2)};
-
+  // that is the local x axis
   double Bx = A[1] * P[5] - A[2] * P[4];
   double By = A[2] * P[3] - A[0] * P[5];
   double Bz = A[0] * P[4] - A[1] * P[3];
+  // this is the global to local transformation
   double Bn = 1. / sqrt(Bx * Bx + By * By + Bz * Bz);
   Bx *= Bn;
   By *= Bn;
   Bz *= Bn;
+  // that's the distance vector between the position and the
+  // surface center
   double x = P[0] - T(0, 3);
   double y = P[1] - T(1, 3);
   double z = P[2] - T(2, 3);
   par[0]   = x * Bx + y * By + z * Bz;
   par[1]   = x * A[0] + y * A[1] + z * A[2];
-
+  // return here if you have no jacobian transport to do
   if (!useJac) return;
 
   // Condition trajectory on surface
   //
+  // this is the projection of the direction onto the local y axis
   double d       = P[3] * A[0] + P[4] * A[1] + P[5] * A[2];
   double a       = (1. - d) * (1. + d);
   if (a != 0.) a = 1. / a;
+
   double X = d * A[0] - P[3], Y = d * A[1] - P[4], Z = d * A[2] - P[5];
 
   double d1 = P[10] * A[0] + P[11] * A[1] + P[12] * A[2];
@@ -470,6 +475,7 @@ Acts::RungeKuttaUtils::transformGlobalToLine(const Acts::Surface* su,
   double d3 = P[24] * A[0] + P[25] * A[1] + P[26] * A[2];
   double d4 = P[31] * A[0] + P[32] * A[1] + P[33] * A[2];
   double d5 = P[38] * A[0] + P[39] * A[1] + P[40] * A[2];
+
   double s1 = (((P[7] * X + P[8] * Y + P[9] * Z) + x * (d1 * A[0] - P[10]))
                + (y * (d1 * A[1] - P[11]) + z * (d1 * A[2] - P[12])))
       * a;
@@ -492,24 +498,28 @@ Acts::RungeKuttaUtils::transformGlobalToLine(const Acts::Surface* su,
   P[10] += (s1 * P[42]);
   P[11] += (s1 * P[43]);
   P[12] += (s1 * P[44]);
+
   P[14] += (s2 * P[3]);
   P[15] += (s2 * P[4]);
   P[16] += (s2 * P[5]);
   P[17] += (s2 * P[42]);
   P[18] += (s2 * P[43]);
   P[19] += (s2 * P[44]);
+
   P[21] += (s3 * P[3]);
   P[22] += (s3 * P[4]);
   P[23] += (s3 * P[5]);
   P[24] += (s3 * P[42]);
   P[25] += (s3 * P[43]);
   P[26] += (s3 * P[44]);
+
   P[28] += (s4 * P[3]);
   P[29] += (s4 * P[4]);
   P[30] += (s4 * P[5]);
   P[31] += (s4 * P[42]);
   P[32] += (s4 * P[43]);
   P[33] += (s4 * P[44]);
+
   P[35] += (s5 * P[3]);
   P[36] += (s5 * P[4]);
   P[37] += (s5 * P[5]);
@@ -519,11 +529,12 @@ Acts::RungeKuttaUtils::transformGlobalToLine(const Acts::Surface* su,
 
   // Jacobian production
   //
-  Jac[0] = Bx * P[7] + By * P[8] + Bz * P[9];           // dL0/dL0
-  Jac[1] = Bx * P[14] + By * P[15] + Bz * P[16];        // dL0/dL1
-  Jac[2] = Bx * P[21] + By * P[22] + Bz * P[23];        // dL0/dPhi
-  Jac[3] = Bx * P[28] + By * P[29] + Bz * P[30];        // dL0/dThe
-  Jac[4] = Bx * P[35] + By * P[36] + Bz * P[37];        // dL0/dCM
+  Jac[0] = Bx * P[7] + By * P[8] + Bz * P[9];     // dL0/dL0
+  Jac[1] = Bx * P[14] + By * P[15] + Bz * P[16];  // dL0/dL1
+  Jac[2] = Bx * P[21] + By * P[22] + Bz * P[23];  // dL0/dPhi
+  Jac[3] = Bx * P[28] + By * P[29] + Bz * P[30];  // dL0/dThe
+  Jac[4] = Bx * P[35] + By * P[36] + Bz * P[37];  // dL0/dCM
+
   Jac[5] = A[0] * P[7] + A[1] * P[8] + A[2] * P[9];     // dL1/dL0
   Jac[6] = A[0] * P[14] + A[1] * P[15] + A[2] * P[16];  // dL1/dL1
   Jac[7] = A[0] * P[21] + A[1] * P[22] + A[2] * P[23];  // dL1/dPhi
@@ -1072,14 +1083,15 @@ Acts::RungeKuttaUtils::transformLineToGlobal(bool                 useJac,
   double Bx2 = -A[2] * P[25], Bx3 = A[1] * P[33] - A[2] * P[32];
   double By2 = A[2] * P[24], By3 = A[2] * P[31] - A[0] * P[33];
   double Bz2 = A[0] * P[25] - A[1] * P[24], Bz3 = A[0] * P[32] - A[1] * P[31];
-  double B2 = Bx * Bx2 + By * By2 + Bz * Bz2,
-         B3 = Bx * Bx3 + By * By3 + Bz * Bz3;
-  Bx2       = (Bx2 - Bx * B2) * Bn;
-  Bx3       = (Bx3 - Bx * B3) * Bn;
-  By2       = (By2 - By * B2) * Bn;
-  By3       = (By3 - By * B3) * Bn;
-  Bz2       = (Bz2 - Bz * B2) * Bn;
-  Bz3       = (Bz3 - Bz * B3) * Bn;
+  double B2 = Bx * Bx2 + By * By2 + Bz * Bz2;
+  double B3 = Bx * Bx3 + By * By3 + Bz * Bz3;
+
+  Bx2 = (Bx2 - Bx * B2) * Bn;
+  Bx3 = (Bx3 - Bx * B3) * Bn;
+  By2 = (By2 - By * B2) * Bn;
+  By3 = (By3 - By * B3) * Bn;
+  Bz2 = (Bz2 - Bz * B2) * Bn;
+  Bz3 = (Bz3 - Bz * B3) * Bn;
 
   //  /dL1  |     /dL2    |      /dPhi      |     /dThe       |
   P[7]  = Bx;
@@ -1596,6 +1608,7 @@ void
 Acts::RungeKuttaUtils::jacobianTransformCurvilinearToLine(double* P,
                                                           double* Jac) const
 {
+
   double* p  = &P[0];
   double* At = &P[4];
   double* Au = &P[7];
