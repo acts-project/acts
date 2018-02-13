@@ -6,12 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#define BOOST_TEST_MODULE Layer Tests
+#define BOOST_TEST_MODULE ProtoLayerTests
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/included/unit_test.hpp>
-#include <boost/test/output_test_stream.hpp>
-// leave blank line
 
 #include <cmath>
 #include "ACTS/Layers/ProtoLayer.hpp"
