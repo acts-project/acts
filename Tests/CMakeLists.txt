@@ -12,7 +12,11 @@ add_subdirectory (Surfaces)
 add_subdirectory (Utilities)
 add_subdirectory (Volumes)
 add_subdirectory (Tools)
+add_subdirectory (Digitization)
 add_subdirectory_if (Json ACTS_BUILD_JSON_PLUGIN)
+
+
+
 
 # generate coverage report via gcovr
 file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/coverage)

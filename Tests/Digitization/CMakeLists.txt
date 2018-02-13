@@ -1,0 +1,5 @@
+add_executable (CreateClustersTests CreateClustersTests.cpp)
+target_include_directories (CreateClustersTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (CreateClustersTests PRIVATE ACTSCore)
+add_test (NAME CreateClustersUnitTest COMMAND CreateClustersTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST CreateClustersUnitTest TARGETS CreateClustersTests)
