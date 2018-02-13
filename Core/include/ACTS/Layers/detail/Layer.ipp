@@ -100,8 +100,10 @@ Layer::getCompatibleSurfaces(const T&                       pars,
 
   auto crit
       = [&collectPS, &startSurface, &endSurface](const Surface* srf) -> bool {
-    return (collectPS || srf->associatedMaterial())
-        && (srf != startSurface && srf != endSurface);
+    bool doCollect         = collectPS || srf->associatedMaterial();
+    bool startOrEndSurface = srf == startSurface || srf == endSurface;
+
+    return doCollect && !startOrEndSurface;
   };
 
   if (m_surfaceArray
