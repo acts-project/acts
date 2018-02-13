@@ -288,7 +288,7 @@ namespace Test {
     os.close();
   }
 
-  BOOST_AUTO_TEST_SUITE(Tools);
+  BOOST_AUTO_TEST_SUITE(Tools)
 
   BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
                           SurfaceArrayCreatorFixture)
@@ -318,7 +318,7 @@ namespace Test {
       double angleShift = step / 2.;
       auto   surfaces   = fullPhiTestSurfacesEC(30, angleShift, z);
       pl                = ProtoLayer(surfaces);
-      auto tr           = Transform3D::Identity();
+      tr                = Transform3D::Identity();
       auto axis = createEquidistantAxis(surfaces, BinningValue::binPhi, pl, tr);
 
       BOOST_TEST(axis.nBins == 30);
@@ -380,7 +380,7 @@ namespace Test {
       double angleShift = step / 2.;
       auto   surfaces   = fullPhiTestSurfacesBRL(30, angleShift, z);
       pl                = ProtoLayer(surfaces);
-      auto tr           = Transform3D::Identity();
+      tr                = Transform3D::Identity();
       auto axis = createEquidistantAxis(surfaces, BinningValue::binPhi, pl, tr);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_BRL_1.obj");
@@ -478,8 +478,8 @@ namespace Test {
       double z0 = -10 + 1. * i;
       surfaces  = straightLineSurfaces(10, 3, Vector3D(0, 0, z0 + 1.5));
       pl        = ProtoLayer(surfaces);
-      auto trf  = Transform3D::Identity();
-      auto axis = createEquidistantAxis(surfaces, BinningValue::binZ, pl, trf);
+      trf       = Transform3D::Identity();
+      axis      = createEquidistantAxis(surfaces, BinningValue::binZ, pl, trf);
       draw_surfaces(
           surfaces,
           (boost::format(
@@ -739,7 +739,7 @@ namespace Test {
     }
   }
 
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 }  // end of namespace Test
 
 }  // end of namespace Acts

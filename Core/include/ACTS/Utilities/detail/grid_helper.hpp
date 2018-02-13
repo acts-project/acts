@@ -230,18 +230,18 @@ namespace detail {
     template <class... Axes>
     static void
     getGlobalBin(const std::array<size_t, sizeof...(Axes)>& localBins,
-                 const std::tuple<Axes...>& axes,
-                 size_t&                    bin,
-                 size_t&                    area)
+                 const std::tuple<Axes...>& /*axes*/,
+                 size_t& bin,
+                 size_t& area)
     {
       bin += area * localBins.at(0u);
     }
 
     template <class... Axes>
     static void
-    getLocalBinIndices(size_t&                    bin,
-                       const std::tuple<Axes...>& axes,
-                       size_t&                    area,
+    getLocalBinIndices(size_t& bin,
+                       const std::tuple<Axes...>& /*axes*/,
+                       size_t& area,
                        std::array<size_t, sizeof...(Axes)>& indices)
     {
       // make sure to account for under-/overflow bins

@@ -156,7 +156,7 @@ namespace Test {
     }
   };
 
-  BOOST_AUTO_TEST_SUITE(Surfaces);
+  BOOST_AUTO_TEST_SUITE(Surfaces)
 
   BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture)
   {
@@ -218,7 +218,7 @@ namespace Test {
     }
   }
 
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 }  // end of namespace Test
 
 }  // end of namespace Acts

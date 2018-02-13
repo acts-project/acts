@@ -18,22 +18,22 @@
 #include "ACTS/Utilities/concept/AnyAxis.hpp"
 
 // clang-format off
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_at), at, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_closestPointsIndices), closestPointsIndices, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_dimensions), dimensions, 0);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getBinCenter), getBinCenter, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getGlobalBinIndex), getGlobalBinIndex, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getLocalBinIndices), getLocalBinIndices, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getLowerLeftBinEdge), getLowerLeftBinEdge, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getUpperRightBinEdge), getUpperRightBinEdge, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_interpolate), interpolate, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_isInside), isInside, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_neighborHoodIndices), neighborHoodIndices, 2);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_size), size, 0);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getNBins), getNBins, 0);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getMin), getMin, 0);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getMax), getMax, 0);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getAxes), getAxes, 0);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_at), at, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_closestPointsIndices), closestPointsIndices, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_dimensions), dimensions, 0)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getBinCenter), getBinCenter, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getGlobalBinIndex), getGlobalBinIndex, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getLocalBinIndices), getLocalBinIndices, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getLowerLeftBinEdge), getLowerLeftBinEdge, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getUpperRightBinEdge), getUpperRightBinEdge, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_interpolate), interpolate, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_isInside), isInside, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_neighborHoodIndices), neighborHoodIndices, 2)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_size), size, 0)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getNBins), getNBins, 0)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getMin), getMin, 0)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getMax), getMax, 0)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getAxes), getAxes, 0)
 // clang-format on
 
 namespace Acts {

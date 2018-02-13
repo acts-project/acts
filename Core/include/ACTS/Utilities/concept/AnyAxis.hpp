@@ -18,13 +18,13 @@
 #include "ACTS/Utilities/detail/Axis.hpp"
 
 // clang-format off
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_isEquidistant), isEquidistant, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_isVariable), isVariable, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_getBinEdges), getBinEdges, 0);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_getMin), getMin, 0);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_getMax), getMax, 0);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_getNBins), getNBins, 0);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_getBoundaryType), getBoundaryType, 0);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_isEquidistant), isEquidistant, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_isVariable), isVariable, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_getBinEdges), getBinEdges, 0)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_getMin), getMin, 0)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_getMax), getMax, 0)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_getNBins), getNBins, 0)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_axis_detail)(has_getBoundaryType), getBoundaryType, 0)
 // clang-format on
 
 namespace Acts {

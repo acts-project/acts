@@ -253,7 +253,7 @@ namespace Test {
     }
   };
 
-  BOOST_AUTO_TEST_SUITE(Tools);
+  BOOST_AUTO_TEST_SUITE(Tools)
 
   BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture)
   {
@@ -490,7 +490,7 @@ namespace Test {
     checkBinning(*layer->surfaceArray());
   }
 
-  BOOST_AUTO_TEST_SUITE_END();
+  BOOST_AUTO_TEST_SUITE_END()
 }  // end of namespace Test
 
 }  // end of namespace Acts

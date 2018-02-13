@@ -19,15 +19,15 @@
 #include "ACTS/Utilities/concept/AnyAxis.hpp"
 
 // clang-format off
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_lookup), lookup, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_getAxes), getAxes, 0);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_dimensions), dimensions, 0);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_size), size, 0);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_getBinCenter), getBinCenter, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_isValidBin), isValidBin, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_neighbors), neighbors, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_fill), fill, 1);
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_completeBinning), completeBinning, 1);
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_lookup), lookup, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_getAxes), getAxes, 0)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_dimensions), dimensions, 0)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_size), size, 0)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_getBinCenter), getBinCenter, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_isValidBin), isValidBin, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_neighbors), neighbors, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_fill), fill, 1)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(asgl_detail)(has_completeBinning), completeBinning, 1)
 // clang-format on
 
 namespace Acts {
