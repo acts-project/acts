@@ -520,7 +520,7 @@ namespace Test {
     auto axis = createEquidistantAxis(surfaces, BinningValue::binR, pl, trf);
     BOOST_TEST(axis.nBins == 1);
     BOOST_CHECK_SMALL(axis.max - (Vector3D(17, 1, 0)).perp(), 1e-3);
-    BOOST_CHECK_SMALL(axis.min - (Vector3D(13, 1, 0)).perp(), 1e-3);
+    BOOST_CHECK_SMALL(axis.min - 13, 1e-3);
     BOOST_TEST(axis.bType == equidistant);
 
     // multiple rings

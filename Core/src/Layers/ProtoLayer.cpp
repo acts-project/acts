@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ACTS/Layers/ProtoLayer.hpp"
+#include <algorithm>
 
 namespace Acts {
 
@@ -78,26 +79,27 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
 }
 
 double
-ProtoLayer::radialDistance(const Vector3D& pos1, const Vector3D& pos2)
+ProtoLayer::radialDistance(const Vector3D& pos1, const Vector3D& pos2) const
 {
-  // following nominclature found in header file and doxygen documentation
-  // line one is the straight track
-  const Vector3D& ma = pos1;
-  const Vector3D  ea = (pos2 - pos1).unit();
-  // line two is the line surface
-  Vector3D mb(0., 0., 0);
-  Vector3D eb(0., 0., 1.);
-  // now go ahead and solve for the closest approach
-  Vector3D mab(mb - ma);
-  double   eaTeb = ea.dot(eb);
-  double   denom = 1 - eaTeb * eaTeb;
-  if (std::abs(denom) > 10e-7) {
-    double lambda0 = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
-    // evaluate validaty in terms of bounds
-    if (lambda0 < 1. && lambda0 > 0.) return (ma + lambda0 * ea).perp();
-    return lambda0 < 0. ? pos1.perp() : pos2.perp();
-  }
-  return 10e101;
+  Vector2D p1(pos1.x(), pos1.y());
+  Vector2D p2(pos2.x(), pos2.y());
+
+  Vector2D O(0, 0);
+  Vector2D p1p2 = (p2 - p1);
+  double   L    = p1p2.norm();
+  Vector2D p1O  = (O - p1);
+
+  // don't do division if L is very small
+  if (L < 1e-7) return std::numeric_limits<double>::max();
+  double f = p1p2.dot(p1O) / L;
+
+  // clamp to [0, |p1p2|]
+  f = std::min(L, std::max(0., f));
+
+  Vector2D closest = f * p1p2.unit() + p1;
+  double   dist    = (closest - O).norm();
+
+  return dist;
 }
 
 std::ostream&

@@ -60,7 +60,6 @@ public:
   std::ostream&
   dump(std::ostream& sl) const;
 
-private:
   /// Calculates the closest radial distance of a line
   ///
   /// @param pos1 is the first position on the line
@@ -68,7 +67,7 @@ private:
   ///
   /// @return is the closest distance
   double
-  radialDistance(const Vector3D& pos1, const Vector3D& pos2);
+  radialDistance(const Vector3D& pos1, const Vector3D& pos2) const;
 };
 }  // namespace Acts
 

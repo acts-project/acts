@@ -29,13 +29,11 @@ namespace Test {
   struct SurfaceArrayCreatorFixture;
 }
 
-// typedef BinnedArray<const Surface*> SurfaceArray_old;
 using SurfaceMatcher
     = std::function<bool(BinningValue, const Surface*, const Surface*)>;
 
 typedef std::vector<const Surface*> SurfaceVector;
 typedef std::vector<SurfaceVector>  SurfaceMatrix;
-typedef std::vector<SurfaceMatrix>  SurfaceGrid_old;
 
 typedef std::vector<Vector3D> V3Vector;
 typedef std::vector<V3Vector> V3Matrix;
