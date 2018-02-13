@@ -24,8 +24,10 @@
 #include "ACTS/Propagator/AtlasStepper.hpp"
 #include "ACTS/Propagator/EigenStepper.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
+#include "ACTS/Surfaces/DiscSurface.hpp"
 #include "ACTS/Surfaces/PerigeeSurface.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
+#include "ACTS/Surfaces/StrawSurface.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -95,7 +97,18 @@ namespace Test {
   /// It takes the double array from AtlasStepper and RungeKuttaUtils
   /// and transforms it into an ActsMatrixD
   ///
-  /// @param P is the pointer to the array
+  /// @param P is the pointer to the array 
+  ///
+  /// Translation is (for lookup)
+  ///                   /dL0    /dL1    /dPhi   /dThe   /dCM
+  /// X  ->P[0]  dX /   P[ 7]   P[14]   P[21]   P[28]   P[35]
+  /// Y  ->P[1]  dY /   P[ 8]   P[15]   P[22]   P[29]   P[36]
+  /// Z  ->P[2]  dZ /   P[ 9]   P[16]   P[23]   P[30]   P[37]
+  /// Ax ->P[3]  dAx/   P[10]   P[17]   P[24]   P[31]   P[38]
+  /// Ay ->P[4]  dAy/   P[11]   P[18]   P[25]   P[32]   P[39]
+  /// Az ->P[5]  dAz/   P[12]   P[19]   P[26]   P[33]   P[40]
+  /// CM ->P[6]  dCM/   P[13]   P[20]   P[27]   P[34]   P[41]
+  
   ActsMatrixD<7, 5>
   convertToMatrix(const double* P)
   {
@@ -118,7 +131,6 @@ namespace Test {
   void
   testJacobianToGlobal(const Parameters& pars)
   {
-
     // Jacobian creation for Propagator/Steppers
     //
     // a) Original ATLAS code - using RungeKuttaUtils
@@ -137,16 +149,26 @@ namespace Test {
     auto rkMatrix = convertToMatrix(P);
     auto asMatrix = convertToMatrix(asCache.pVector);
 
+    bool rkas = rkMatrix.isApprox(asMatrix);
+    bool rkes = rkMatrix.isApprox(esCache.jacobian);
+    bool ases = asMatrix.isApprox(esCache.jacobian);
     // cross comparison checks
-    BOOST_CHECK(rkMatrix.isApprox(asMatrix));
-    BOOST_CHECK(rkMatrix.isApprox(esCache.jacobian));
-    BOOST_CHECK(asMatrix.isApprox(esCache.jacobian));
+    BOOST_CHECK(rkas);
+    BOOST_CHECK(rkes);
+    BOOST_CHECK(ases);
+    if (!(rkas && rkes && ases)){
+      std::cout << " -- Jacobian (rK) ------------------------------- " << std::endl;
+      std::cout << rkMatrix << std::endl;
+      std::cout << " -- Jacobian (aS) ------------------------------- " << std::endl;
+      std::cout << asMatrix << std::endl;
+      std::cout << " -- Jacobian (eS) ------------------------------- " << std::endl;
+      std::cout << esCache.jacobian << std::endl;
+    }
   }
 
   /// This tests the jacobian of local curvilinear -> global
   BOOST_AUTO_TEST_CASE(JacobianCurvilinearToGlobalTest)
   {
-
     ActsSymMatrixD<NGlobalPars> cov;
     cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1,
         0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
@@ -167,7 +189,6 @@ namespace Test {
   /// This tests the jacobian of local cylinder -> global
   BOOST_AUTO_TEST_CASE(JacobianCylinderToGlobalTest)
   {
-
     // the cylinder transform and surface
     auto cTransform = createCylindricTransform({10., -5., 0.}, 0.004, 0.03);
     CylinderSurface cSurface(cTransform, 200., 1000.);
@@ -186,6 +207,31 @@ namespace Test {
     testJacobianToGlobal(atCylinder);
   }
 
+
+  /// This tests the jacobian of local disc -> global
+  BOOST_AUTO_TEST_CASE(JacobianDiscToGlobalTest)
+  {
+
+    // the disc transform and surface
+    auto dTransform = createPlanarTransform({10., -5., 0.},
+                                            Vector3D(0.23,0.07,1.).unit(), 
+                                            0.004, 0.03);
+    DiscSurface dSurface(dTransform, 200., 1000.);
+
+    ActsSymMatrixD<NGlobalPars> cov;
+    cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1,
+        0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
+    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+
+    ActsVectorD<NGlobalPars> pars;
+    pars << 192.34, 1.823, 0.734, 0.235, 1. / (100 * units::_GeV);
+
+    BoundParameters atDisc(std::move(cov_ptr), std::move(pars), dSurface);
+
+    // run the test
+    testJacobianToGlobal(atDisc);
+  }
+  
   /// This tests the jacobian of local plane -> global
   BOOST_AUTO_TEST_CASE(JacobianPlaneToGlobalTest)
   {
@@ -210,7 +256,7 @@ namespace Test {
     testJacobianToGlobal(atPlane);
   }
 
-  /// This tests the jacobian of local line -> global
+  /// This tests the jacobian of local perigee -> global
   BOOST_AUTO_TEST_CASE(JacobianPerigeeToGlobalTest)
   {
 
@@ -229,6 +275,27 @@ namespace Test {
 
     // run the test
     testJacobianToGlobal(perigee);
+  }
+
+  /// This tests the jacobian of local straw -> global
+  BOOST_AUTO_TEST_CASE(JacobianStrawToGlobalTest)
+  {
+    // Create a surface & parameters with covariance on the surface
+    auto sTransform = createCylindricTransform({1019., -52., 382.}, 0.4, -0.3);
+    StrawSurface sSurface(sTransform, 10., 1000.);
+
+    ActsSymMatrixD<NGlobalPars> cov;
+    cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1,
+        0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
+    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+
+    ActsVectorD<NGlobalPars> pars;
+    pars << -8.34, 812., 0.734, 0.25, 1. / (100 * units::_GeV);
+
+    BoundParameters atStraw(std::move(cov_ptr), std::move(pars), sSurface);
+
+    // run the test
+    testJacobianToGlobal(atStraw);
   }
 
 }  // namespace Test

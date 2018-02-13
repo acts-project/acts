@@ -1049,7 +1049,7 @@ Acts::RungeKuttaUtils::transformCylinderToGlobal(bool                 useJac,
   P[15] = Az[1];
   P[22] = 0.;
   P[29] = 0.;  // dY/
-  P[9]  = Cf * Ay[2] - Sf * Ax[2];
+  P[9]  = Cf * Ay[2] - Sf * Ax[2];  
   P[16] = Az[2];
   P[23] = 0.;
   P[30] = 0.;  // dZ/
@@ -1067,22 +1067,32 @@ Acts::RungeKuttaUtils::transformLineToGlobal(bool                 useJac,
   const Acts::Transform3D& T    = Su->transform();
   double                   A[3] = {T(0, 2), T(1, 2), T(2, 2)};
 
+  // the cross product of the z-axis and the direction 
+  // (== new x-axis), direction of transverse d 
   double Bx = A[1] * P[5] - A[2] * P[4];
   double By = A[2] * P[3] - A[0] * P[5];
   double Bz = A[0] * P[4] - A[1] * P[3];
+  
+  // 1./projection of normal vector onto direction
   double Bn = 1. / sqrt(Bx * Bx + By * By + Bz * Bz);
   Bx *= Bn;
   By *= Bn;
   Bz *= Bn;
+  // global position     
   P[0] = p[1] * A[0] + Bx * p[0] + T(0, 3);  // X
   P[1] = p[1] * A[1] + By * p[0] + T(1, 3);  // Y
   P[2] = p[1] * A[2] + Bz * p[0] + T(2, 3);  // Z
 
   if (!useJac) return;
 
-  double Bx2 = -A[2] * P[25], Bx3 = A[1] * P[33] - A[2] * P[32];
-  double By2 = A[2] * P[24], By3 = A[2] * P[31] - A[0] * P[33];
-  double Bz2 = A[0] * P[25] - A[1] * P[24], Bz3 = A[0] * P[32] - A[1] * P[31];
+  // 
+  double Bx2 = -A[2] * P[25];
+  double Bx3 = A[1] * P[33] - A[2] * P[32];
+  double By2 = A[2] * P[24];
+  double By3 = A[2] * P[31] - A[0] * P[33];
+  double Bz2 = A[0] * P[25] - A[1] * P[24];
+  double Bz3 = A[0] * P[32] - A[1] * P[31];
+  
   double B2 = Bx * Bx2 + By * By2 + Bz * Bz2;
   double B3 = Bx * Bx3 + By * By3 + Bz * Bz3;
 

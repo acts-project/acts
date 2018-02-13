@@ -137,7 +137,7 @@ public:
         pVector[22] = 0.;
         pVector[29] = 0.;
         pVector[36] = 0.;  // dY /
-
+        
         pVector[9]  = transform(2, eLOC_0);
         pVector[16] = transform(2, eLOC_1);
         pVector[23] = 0.;
@@ -172,39 +172,64 @@ public:
         pVector[43] = 0.;
         pVector[44] = 0.;
 
-        // line and perigee need components
-        // that relate momentum direction change to local coordiante change
+        // special treatment for surface types
         const auto& surface = pars.referenceSurface();
+        // the disc needs polar coordinate adaptions
+        if (surface.type() == Surface::Disc){
+          double lCf = cos(Vp[1]);
+          double lSf = sin(Vp[1]);
+          double Ax[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
+          double Ay[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
+          double d0 = lCf * Ax[0] + lSf * Ay[0];
+          double d1 = lCf * Ax[1] + lSf * Ay[1];
+          double d2 = lCf * Ax[2] + lSf * Ay[2];
+          pVector[7]  = d0;
+          pVector[8]  = d1;
+          pVector[9]  = d2;
+          pVector[14] = Vp[0] * (lCf * Ay[0] - lSf * Ax[0]);
+          pVector[15] = Vp[0] * (lCf * Ay[1] - lSf * Ax[1]);
+          pVector[16] = Vp[0] * (lCf * Ay[2] - lSf * Ax[2]);                    
+        }
+        // the line needs components that relate direction change
+        // with global frame change 
         if (surface.type() == Surface::Perigee
             || surface.type() == Surface::Straw) {
 
-          // we stick to the nomenclature of the original RkPropagator
+          // sticking to the nomenclature of the original RkPropagator
+          // - axis pointing along the drift/transverse direction
+          double B[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};    
+          // - axis along the straw
           double A[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
+          // - normal vector of the reference frame 
+          double C[3] = {transform(0, 2), transform(1, 2), transform(2, 2)};
+          
+          // projection of direction onto normal vector of reference frame 
+          double PC = pVector[3] * C[0]
+                    + pVector[4] * C[1]
+                    + pVector[5] * C[2];
+          double Bn = 1./PC;
 
-          double Bx = A[1] * pVector[5] - A[2] * pVector[4];
-          double By = A[2] * pVector[3] - A[0] * pVector[5];
-          double Bz = A[0] * pVector[4] - A[1] * pVector[3];
-          double Bn = 1. / sqrt(Bx * Bx + By * By + Bz * Bz);
-          Bx *= Bn;
-          By *= Bn;
-          Bz *= Bn;
-
-          double Bx2 = -A[2] * pVector[25];
+          double Bx2 =  - A[2] * pVector[25];
           double Bx3 = A[1] * pVector[33] - A[2] * pVector[32];
-          double By2 = A[2] * pVector[24];
+          
+          double By2 = A[2] * pVector[24];   
           double By3 = A[2] * pVector[31] - A[0] * pVector[33];
+          
           double Bz2 = A[0] * pVector[25] - A[1] * pVector[24];
           double Bz3 = A[0] * pVector[32] - A[1] * pVector[31];
-          double B2  = Bx * Bx2 + By * By2 + Bz * Bz2,
-                 B3  = Bx * Bx3 + By * By3 + Bz * Bz3;
-          Bx2        = (Bx2 - Bx * B2) * Bn;
-          Bx3        = (Bx3 - Bx * B3) * Bn;
-          By2        = (By2 - By * B2) * Bn;
-          By3        = (By3 - By * B3) * Bn;
-          Bz2        = (Bz2 - Bz * B2) * Bn;
-          Bz3        = (Bz3 - Bz * B3) * Bn;
+          
+          double B2  = B[0] * Bx2 + B[1] * By2 + B[2] * Bz2;
+          double B3  = B[0] * Bx3 + B[1] * By3 + B[2] * Bz3;
+          
+          // 
+          Bx2        = (Bx2 - B[0] * B2) * Bn;
+          Bx3        = (Bx3 - B[0] * B3) * Bn;
+          By2        = (By2 - B[1] * B2) * Bn;
+          By3        = (By3 - B[1] * B3) * Bn;
+          Bz2        = (Bz2 - B[2] * B2) * Bn;
+          Bz3        = (Bz3 - B[2] * B3) * Bn;
 
-          //  /dL1  |     /dL2    |      /dPhi      |     /dThe       |
+          //  /dPhi      |     /dThe       |
           pVector[21] = Bx2 * Vp[0];
           pVector[28] = Bx3 * Vp[0];  // dX/
           pVector[22] = By2 * Vp[0];
@@ -556,22 +581,6 @@ public:
         P4 = 0.;
       }
 
-      std::cout << "dL0/dL0  = " << Ax[0] << " * " << cache.pVector[7] << " + "
-                << Ax[1] << " * " << cache.pVector[8] << " + " << Ax[2] << " * "
-                << cache.pVector[9] << std::endl;
-      std::cout << "dL0/dL1  = " << Ax[0] << " * " << cache.pVector[14] << " + "
-                << Ax[1] << " * " << cache.pVector[15] << " + " << Ax[2]
-                << " * " << cache.pVector[16] << std::endl;
-      std::cout << "dL0/dPhi = " << Ax[0] << " * " << cache.pVector[21] << " + "
-                << Ax[1] << " * " << cache.pVector[22] << " + " << Ax[2]
-                << " * " << cache.pVector[23] << std::endl;
-      std::cout << "dL0/dThe = " << Ax[0] << " * " << cache.pVector[28] << " + "
-                << Ax[1] << " * " << cache.pVector[29] << " + " << Ax[2]
-                << " * " << cache.pVector[30] << std::endl;
-      std::cout << "dL0/dCM  = " << Ax[0] << " * " << cache.pVector[35] << " + "
-                << Ax[1] << " * " << cache.pVector[36] << " + " << Ax[2]
-                << " * " << cache.pVector[37] << std::endl;
-
       // Jacobian production of transport and to_local
       cache.jacobian[0] = Ax[0] * cache.pVector[7] + Ax[1] * cache.pVector[8]
           + Ax[2] * cache.pVector[9];  // dL0/dL0
@@ -583,22 +592,6 @@ public:
           + Ax[2] * cache.pVector[30];  // dL0/dThe
       cache.jacobian[4] = Ax[0] * cache.pVector[35] + Ax[1] * cache.pVector[36]
           + Ax[2] * cache.pVector[37];  // dL0/dCM
-
-      std::cout << "dL1/dL0  = " << Ay[0] << " * " << cache.pVector[7] << " + "
-                << Ay[1] << " * " << cache.pVector[8] << " + " << Ay[2] << " * "
-                << cache.pVector[9] << std::endl;
-      std::cout << "dL1/dL1  = " << Ay[0] << " * " << cache.pVector[14] << " + "
-                << Ay[1] << " * " << cache.pVector[15] << " + " << Ay[2]
-                << " * " << cache.pVector[16] << std::endl;
-      std::cout << "dL1/dPhi = " << Ay[0] << " * " << cache.pVector[21] << " + "
-                << Ay[1] << " * " << cache.pVector[22] << " + " << Ay[2]
-                << " * " << cache.pVector[23] << std::endl;
-      std::cout << "dL1/dThe = " << Ay[0] << " * " << cache.pVector[28] << " + "
-                << Ay[1] << " * " << cache.pVector[29] << " + " << Ay[2]
-                << " * " << cache.pVector[30] << std::endl;
-      std::cout << "dL1/dCM  = " << Ay[0] << " * " << cache.pVector[35] << " + "
-                << Ay[1] << " * " << cache.pVector[36] << " + " << Ay[2]
-                << " * " << cache.pVector[37] << std::endl;
 
       cache.jacobian[5] = Ay[0] * cache.pVector[7] + Ay[1] * cache.pVector[8]
           + Ay[2] * cache.pVector[9];  // dL1/dL0
