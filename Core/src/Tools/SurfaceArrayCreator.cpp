@@ -234,8 +234,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
     std::transform(
         phiModules.begin(), phiModules.end(), std::back_inserter(nPhiModules), 
-        [&equal, this](std::vector<const Surface*> surfaces) -> size_t {
-          return this->findKeySurfaces(surfaces, equal).size();
+        [&equal, this](std::vector<const Surface*> surfaces_) -> size_t {
+          return this->findKeySurfaces(surfaces_, equal).size();
         });
 
     // @FIXME: Problem: phi binning runs rotation to optimize

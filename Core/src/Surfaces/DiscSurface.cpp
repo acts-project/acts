@@ -228,6 +228,18 @@ Acts::DiscSurface::normal(const Acts::Vector2D&) const
 }
 
 const Acts::Vector3D
+Acts::DiscSurface::normal(const Acts::Vector3D&) const
+{
+  return normal(s_origin2D);
+}
+
+const Acts::Vector3D
+Acts::DiscSurface::normal() const
+{
+  return normal(s_origin2D);
+}
+
+const Acts::Vector3D
     Acts::DiscSurface::binningPosition(Acts::BinningValue) const
 {
   return center();

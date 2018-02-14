@@ -207,7 +207,21 @@ const Acts::Vector3D
 }
 
 const Acts::Vector3D
+Acts::LineSurface::normal(const Acts::Vector3D& /*lpos*/) const
+{
+  // the normal is conceptionally closest to the line direction
+  return lineDirection();
+}
+
+const Acts::Vector3D
 Acts::LineSurface::normal(const Acts::Vector2D& /*lpos*/) const
+{
+  // the normal is conceptionally closest to the line direction
+  return lineDirection();
+}
+
+const Acts::Vector3D
+Acts::LineSurface::normal() const
 {
   // the normal is conceptionally closest to the line direction
   return lineDirection();

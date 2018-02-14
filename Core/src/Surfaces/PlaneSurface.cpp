@@ -179,11 +179,25 @@ Acts::PlaneSurface::bounds() const
 }
 
 const Acts::Vector3D
+Acts::PlaneSurface::normal(const Acts::Vector3D&) const
+{
+  // fast access via tranform matrix (and not rotation())
+  auto tMatrix = transform().matrix();
+  return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
+}
+
+const Acts::Vector3D
 Acts::PlaneSurface::normal(const Acts::Vector2D&) const
 {
   // fast access via tranform matrix (and not rotation())
   auto tMatrix = transform().matrix();
   return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
+}
+
+const Acts::Vector3D
+Acts::PlaneSurface::normal() const
+{
+  return normal(Vector2D(0, 0));
 }
 
 const Acts::Vector3D
