@@ -11,12 +11,14 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Identifier.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
+#include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 
 namespace Acts {
 
@@ -314,6 +316,10 @@ public:
   /// Return properly formatted class name for screen output
   virtual std::string
   name() const override;
+  
+  virtual 
+  PolyhedronRepresentation
+  polyhedronRepresentation(size_t l0div = 10, size_t l1div = 1) const;
 
   /// Produce a @c variant_data representation of this object
   /// @return The representation
