@@ -110,6 +110,22 @@ public:
   referenceFrame(const Vector3D& gpos,
                  const Vector3D& mom) const final override;
 
+  /// Calculate the form factors for the derivatives
+  /// the calculation is identical for all surfaces where the
+  /// reference frame does not depend on the direction
+  ///
+  /// @param gpos is the position of the paramters in global
+  /// @param dir is the direction of the track
+  /// @param rft is the transposed reference frame (avoids recalculation)
+  /// @param jac is the transport jacobian
+  ///
+  /// @return a five-dim vector
+  virtual const ActsRowVectorD<5>
+  derivativeFactors(const Vector3D&         gpos,
+                    const Vector3D&         dir,
+                    const RotationMatrix3D& rft,
+                    const ActsMatrixD<6, 5>& jac) const final override;
+
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift
   /// radius
@@ -262,6 +278,34 @@ LineSurface::lineDirection() const
   // fast access via tranform matrix (and not rotation())
   auto tMatrix = transform().matrix();
   return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
+}
+
+inline const ActsRowVectorD<5>
+LineSurface::derivativeFactors(const Vector3D&         pos,
+                               const Vector3D&         dir,
+                               const RotationMatrix3D& rft,
+                               const ActsMatrixD<6, 5>& jac) const
+{
+  // the vector between position and center
+  ActsRowVectorD<3> pc = (pos - center()).transpose();
+  // the longitudinal component vector (alogn local z)
+  ActsRowVectorD<3> locz = rft.block<1, 3>(1, 0);
+  // build the norm vector comonent by subtracting the longitudinal one
+  double            long_c   = locz * dir;
+  ActsRowVectorD<3> norm_vec = dir.transpose() - long_c * locz;
+  // calculate the s factors for the dependency on X
+  const ActsRowVectorD<5> s_vec = norm_vec * jac.topLeftCorner<3, 5>();
+  // calculate the d factors for the dependency on Tx
+  const ActsRowVectorD<5> d_vec = locz * jac.block<3, 5>(3, 0);
+  // normalisation of normal & longitudinal components
+  double norm = 1. / (1. - long_c * long_c);
+  // create a matrix representation
+  ActsMatrixD<3, 5> long_mat = ActsMatrixD<3, 5>::Zero();
+  long_mat.colwise() += locz.transpose();
+  // build the combined normal & longitudinal components
+  return (
+      norm
+      * (s_vec - pc * (long_mat * d_vec.asDiagonal() - jac.block<3, 5>(3, 0))));
 }
 
 }  // end of namespace

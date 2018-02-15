@@ -276,6 +276,22 @@ public:
   virtual const Acts::RotationMatrix3D
   referenceFrame(const Vector3D& gpos, const Vector3D& gmom) const;
 
+  /// Calculate the form factors for the derivatives
+  /// the calculation is identical for all surfaces where the
+  /// reference frame does not depend on the direction
+  ///
+  /// @param gpos is the position of the paramters in global
+  /// @param dir is the direction of the track
+  /// @param rft is the transposed reference frame (avoids recalculation)
+  /// @param jac is the transport jacobian
+  ///
+  /// @return a five-dim vector
+  virtual const ActsRowVectorD<5>
+  derivativeFactors(const Vector3D&         gpos,
+                    const Vector3D&         dir,
+                    const RotationMatrix3D& rft,
+                    const ActsMatrixD<6, 5>& jac) const;
+
   /// Calucation of the path correction for incident
   ///
   /// @param gpos global 3D position - considered to be on surface but not
@@ -370,9 +386,22 @@ protected:
 };
 
 inline const RotationMatrix3D
-Surface::referenceFrame(const Acts::Vector3D&, const Acts::Vector3D&) const
+Surface::referenceFrame(const Vector3D&, const Vector3D&) const
 {
   return transform().matrix().block<3, 3>(0, 0);
+}
+
+inline const ActsRowVectorD<5>
+Surface::derivativeFactors(const Vector3D&,
+                           const Vector3D&         dir,
+                           const RotationMatrix3D& rft,
+                           const ActsMatrixD<6, 5>& jac) const
+{
+  // Create the normal and scale it with the projection onto the direction
+  ActsRowVectorD<3> norm_vec = rft.template block<1, 3>(2, 0);
+  norm_vec /= (norm_vec * dir);
+  // calculate the s factors
+  return (norm_vec * jac.topLeftCorner<3, 5>());
 }
 
 template <class T>

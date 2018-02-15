@@ -361,52 +361,18 @@ public:
       jac_to_local(ePHI, 4)   = cos_phi_over_sin_theta;
       jac_to_local(eTHETA, 5) = -inv_sin_theta;
       jac_to_local(eQOP, 6)   = 1;
-      // for all surface except straw and perigee
-      if (surface.type() != Surface::Perigee
-          && surface.type() != Surface::Straw) {
-        // Create the normal and scale it with the projection onto the direction
-        ActsRowVectorD<3> norm_vec = rframeT.template block<1, 3>(2, 0);
-        norm_vec /= (norm_vec * cache.dir);
-        // calculate the s factors
-        const ActsRowVectorD<5> s_vec
-            = norm_vec * cache.jacobian.template topLeftCorner<3, 5>();
-        // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
-        const ActsMatrixD<5, 5> jac
-            = jac_to_local * (cache.jacobian - cache.derivative * s_vec);
-        // calculate the jacobian at the measurement frame
-        cov = std::make_unique<const ActsSymMatrixD<5>>(jac * cache.cov
-                                                        * jac.transpose());
-      } else {
-        // the vector between position and center
-        ActsRowVectorD<3> pc = (cache.pos - surface.center()).transpose();
-        // the longitudinal component vector (alogn local z)
-        ActsRowVectorD<3> locz = rframeT.template block<1, 3>(1, 0);
-        // build the norm vector comonent by subtracting the longitudinal one
-        double            long_c   = locz * cache.dir;
-        ActsRowVectorD<3> norm_vec = cache.dir.transpose() - long_c * locz;
-        // calculate the s factors for the dependency on X
-        const ActsRowVectorD<5> s_vec
-            = norm_vec * cache.jacobian.template topLeftCorner<3, 5>();
-        // calculate the d factors for the dependency on Tx
-        const ActsRowVectorD<5> d_vec
-            = locz * cache.jacobian.template block<3, 5>(3, 0);
-        // normalisation of normal & longitudinal components
-        double norm = 1. / (1. - long_c * long_c);
-        // create a matrix representation
-        ActsMatrixD<3, 5> long_mat = ActsMatrixD<3, 5>::Zero();
-        long_mat.colwise() += locz.transpose();
-        // build the combined normal & longitudinal components
-        const ActsRowVectorD<5> sd_vec
-            = norm * (s_vec
-                      - pc * (long_mat * d_vec.asDiagonal()
-                              - cache.jacobian.template block<3, 5>(3, 0)));
-        // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
-        const ActsMatrixD<5, 5> jac
-            = jac_to_local * (cache.jacobian - cache.derivative * sd_vec);
-        // calculate the jacobian at the measurement frame
-        cov = std::make_unique<const ActsSymMatrixD<5>>(jac * cache.cov
-                                                        * jac.transpose());
-      }
+      // calculate the form factors for the derivatives
+      const ActsRowVectorD<5> s_vec = surface.derivativeFactors(
+          cache.pos,
+          cache.dir,
+          rframeT,
+          cache.jacobian.template topLeftCorner<6, 5>());
+      // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
+      const ActsMatrixD<5, 5> jac
+          = jac_to_local * (cache.jacobian - cache.derivative * s_vec);
+      // calculate the jacobian at the final (measurement) frame
+      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * cache.cov
+                                                      * jac.transpose());
     }
     double charge = cache.qop > 0. ? 1. : -1.;
     // this invalidates the cache
