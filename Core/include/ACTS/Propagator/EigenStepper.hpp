@@ -169,7 +169,10 @@ public:
         jacobian(tD1, eTHETA) = cos_theta * sin_phi;
         jacobian(tD2, eTHETA) = (-sin_theta);
         jacobian(tQOP, eQOP)  = 1;
-        // special components for line and straw
+        // special components for line and straw :
+        // - the measurement frame depends on global
+        //   phi and theta, hence we need the
+        //   according derivatives
         if (surface.type() == Surface::Perigee
             || surface.type() == Surface::Straw) {
           // get the parameter vector
@@ -340,30 +343,70 @@ public:
       // Initialize the transport final frame jacobian
       ActsMatrixD<5, 7> jac_to_local = ActsMatrixD<5, 7>::Zero();
       // Optimized trigonometry on the propagation direction, see documentation
-      // of Cache::init_jacobian() for a longer mathematical discussion.
+      // of Cache::update_jacobian() for a longer mathematical discussion.
       const double x = cache.dir(0);  // == cos(phi) * sin(theta)
       const double y = cache.dir(1);  // == sin(phi) * sin(theta)
-      //
+      // component expressions
       const double inv_sin_theta_2        = 1. / (x * x + y * y);
       const double cos_phi_over_sin_theta = x * inv_sin_theta_2;
       const double sin_phi_over_sin_theta = y * inv_sin_theta_2;
       const double inv_sin_theta          = sqrt(inv_sin_theta_2);
       // The measurement frame of the surface
-      // @todo deal with the disc surface
       RotationMatrix3D rframeT
           = surface.referenceFrame(cache.pos, cache.dir).transpose();
+      // @todo deal with the disc surface
       jac_to_local.block<2, 3>(0, 0) = rframeT.template block<2, 3>(0, 0);
       // Directional and momentum elements for reference frame surface
       jac_to_local(ePHI, 3)   = -sin_phi_over_sin_theta;
       jac_to_local(ePHI, 4)   = cos_phi_over_sin_theta;
       jac_to_local(eTHETA, 5) = -inv_sin_theta;
       jac_to_local(eQOP, 6)   = 1;
-      // Create the normal and scale it with the projection onto the direction
-      ActsRowVectorD<3> norm_vec = rframeT.template block<1, 3>(2, 0);
-      norm_vec /= (norm_vec * cache.dir);
-      // calculate the jacobian at the measurement frame
-      auto cov_at_frame = transport_covariance(cache, jac_to_local, norm_vec);
-      cov = std::make_unique<const ActsSymMatrixD<5>>(std::move(cov_at_frame));
+      // for all surface except straw and perigee
+      if (surface.type() != Surface::Perigee
+          && surface.type() != Surface::Straw) {
+        // Create the normal and scale it with the projection onto the direction
+        ActsRowVectorD<3> norm_vec = rframeT.template block<1, 3>(2, 0);
+        norm_vec /= (norm_vec * cache.dir);
+        // calculate the s factors
+        const ActsRowVectorD<5> s_vec
+            = norm_vec * cache.jacobian.template topLeftCorner<3, 5>();
+        // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
+        const ActsMatrixD<5, 5> jac
+            = jac_to_local * (cache.jacobian - cache.derivative * s_vec);
+        // calculate the jacobian at the measurement frame
+        cov = std::make_unique<const ActsSymMatrixD<5>>(jac * cache.cov
+                                                        * jac.transpose());
+      } else {
+        // the vector between position and center
+        ActsRowVectorD<3> pc = (cache.pos - surface.center()).transpose();
+        // the longitudinal component vector (alogn local z)
+        ActsRowVectorD<3> locz = rframeT.template block<1, 3>(1, 0);
+        // build the norm vector comonent by subtracting the longitudinal one
+        double            long_c   = locz * cache.dir;
+        ActsRowVectorD<3> norm_vec = cache.dir.transpose() - long_c * locz;
+        // calculate the s factors for the dependency on X
+        const ActsRowVectorD<5> s_vec
+            = norm_vec * cache.jacobian.template topLeftCorner<3, 5>();
+        // calculate the d factors for the dependency on Tx
+        const ActsRowVectorD<5> d_vec
+            = locz * cache.jacobian.template block<3, 5>(3, 0);
+        // normalisation of normal & longitudinal components
+        double norm = 1. / (1. - long_c * long_c);
+        // create a matrix representation
+        ActsMatrixD<3, 5> long_mat = ActsMatrixD<3, 5>::Zero();
+        long_mat.colwise() += locz.transpose();
+        // build the combined normal & longitudinal components
+        const ActsRowVectorD<5> sd_vec
+            = norm * (s_vec
+                      - pc * (long_mat * d_vec.asDiagonal()
+                              - cache.jacobian.template block<3, 5>(3, 0)));
+        // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
+        const ActsMatrixD<5, 5> jac
+            = jac_to_local * (cache.jacobian - cache.derivative * sd_vec);
+        // calculate the jacobian at the measurement frame
+        cov = std::make_unique<const ActsSymMatrixD<5>>(jac * cache.cov
+                                                        * jac.transpose());
+      }
     }
     double charge = cache.qop > 0. ? 1. : -1.;
     // this invalidates the cache
@@ -533,20 +576,20 @@ private:
   /// @brief Convert the covariance matrix at the local frame
   ///
   /// @param cache The propagation cache
-  /// @parm jac_local The Jacobian to Local
+  /// @parm jac_to_local The Jacobian to Local
   /// @param norm_vec The normal vector
   ///
   /// @return a 5x5 covariance matrix after transport
   static ActsSymMatrixD<5>
   transport_covariance(const Cache& cache,
-                       const ActsMatrixD<5, 7>& jac_local,
+                       const ActsMatrixD<5, 7>& jac_to_local,
                        const ActsRowVectorD<3>& norm_vec)
   {
-    const ActsRowVectorD<5> scale_factors
+    const ActsRowVectorD<5> sfactors
         = norm_vec * cache.jacobian.template topLeftCorner<3, 5>();
     // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
     const ActsMatrixD<5, 5> jac
-        = jac_local * (cache.jacobian - cache.derivative * scale_factors);
+        = jac_to_local * (cache.jacobian - cache.derivative * sfactors);
     // return the transported and local covariance matrix
     return ActsSymMatrixD<5>(jac * cache.cov * jac.transpose());
   }

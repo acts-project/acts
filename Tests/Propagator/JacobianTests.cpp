@@ -156,17 +156,6 @@ namespace Test {
     BOOST_CHECK(rkas);
     BOOST_CHECK(rkes);
     BOOST_CHECK(ases);
-    if (!(rkas && rkes && ases)) {
-      std::cout << " -- Jacobian (rK) ------------------------------- "
-                << std::endl;
-      std::cout << rkMatrix << std::endl;
-      std::cout << " -- Jacobian (aS) ------------------------------- "
-                << std::endl;
-      std::cout << asMatrix << std::endl;
-      std::cout << " -- Jacobian (eS) ------------------------------- "
-                << std::endl;
-      std::cout << esCache.jacobian << std::endl;
-    }
   }
 
   /// This tests the jacobian of local curvilinear -> global

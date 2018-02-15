@@ -384,9 +384,6 @@ namespace IntegrationTest {
                    bool   destPlanar  = true,
                    double reltol      = 1e-3)
   {
-    std::cout << "------------------------------------------------------"
-              << std::endl;
-
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
     typename Propagator_type::template Options<> options;
@@ -451,17 +448,12 @@ namespace IntegrationTest {
     ActsSymMatrixD<5> calculated_cov = fixture.calculateCovariance(
         start_wo_c, *(start.covariance()), *tp, options);
 
-    // bool cov_similar = calculated_cov.isApprox(obtained_cov, reltol);
-    std::cout << "Numerical  = " << std::endl;
-    std::cout << calculated_cov << std::endl;
-    std::cout << "Obtained   = " << std::endl;
-    std::cout << obtained_cov << std::endl;
-
-    // BOOST_CHECK(cov_similar);
-    // if (!cov_similar) {
-    //   // the second check is for screen output
-    //   BOOST_CHECK_EQUAL(calculated_cov, obtained_cov);
-    // }
+    bool cov_similar = calculated_cov.isApprox(obtained_cov, reltol);
+    BOOST_CHECK(cov_similar);
+    if (!cov_similar) {
+      // the second check is for screen output
+      BOOST_CHECK_EQUAL(calculated_cov, obtained_cov);
+    }
   }
 }
 }

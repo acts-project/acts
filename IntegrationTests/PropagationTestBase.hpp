@@ -14,7 +14,6 @@
 #include <boost/test/data/test_case.hpp>
 #include <cmath>
 
-/*
 /// test consistency of forward-backward propagation
 BOOST_DATA_TEST_CASE(
     forward_backward_propagation_,
@@ -472,8 +471,6 @@ BOOST_DATA_TEST_CASE(
       index);
 }
 
-*/
-
 // test correct covariance transport from straw to straw
 // for straw surfaces the numerical fixture is actually more difficult
 // to calculate
@@ -504,7 +501,7 @@ BOOST_DATA_TEST_CASE(
         ^ bdata::random((bdata::seed = 3007,
                          bdata::distribution
                          = std::uniform_real_distribution<>(-1., 1.)))
-        ^ bdata::xrange(3),
+        ^ bdata::xrange(100),
     pT,
     phi,
     theta,
@@ -516,6 +513,7 @@ BOOST_DATA_TEST_CASE(
     index)
 {
   double dcharge = -1 + 2 * charge;
+
   // covaraince check for atlas stepper
   covariance_bound<AtlasPropagator_type, StrawSurface, StrawSurface>(
       apropagator,
@@ -533,21 +531,21 @@ BOOST_DATA_TEST_CASE(
       1e-2);
 
   // covaraince check for eigen stepper
-  // covariance_bound<EigenPropagator_type, StrawSurface, StrawSurface>(
-  //     epropagator,
-  //     pT,
-  //     phi,
-  //     theta,
-  //     dcharge,
-  //     plimit * Acts::units::_m,
-  //     rand1,
-  //     rand2,
-  //     rand3,
-  //     index,
-  //     false,
-  //     false,
-  //     1e-2);
-  //
+  covariance_bound<EigenPropagator_type, StrawSurface, StrawSurface>(
+      epropagator,
+      pT,
+      phi,
+      theta,
+      dcharge,
+      plimit * Acts::units::_m,
+      rand1,
+      rand2,
+      rand3,
+      index,
+      false,
+      false,
+      1e-2);
+
   // covariance check fo the runge kutta engine
   covariance_bound<WrappedPropagator_type, StrawSurface, StrawSurface>(
       wpropagator,

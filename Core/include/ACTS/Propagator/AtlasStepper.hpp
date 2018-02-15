@@ -471,16 +471,17 @@ public:
         // this is the projection of the direction onto the local y axis
         double d = cache.pVector[3] * Ay[0] + cache.pVector[4] * Ay[1]
             + cache.pVector[5] * Ay[2];
+
         // this is cos(beta)
-        //
         double a       = (1. - d) * (1. + d);
-        if (a != 0.) a = 1. / a;  // i.e. 1./(1-d^2) -> 1./(1-cos^2(beta))
-        // understand
+        if (a != 0.) a = 1. / a;  // i.e. 1./(1-d^2)
+
+        // that's the modified norm vector
         double X = d * Ay[0] - cache.pVector[3];  //
-        double Y = d * Ay[1]
-            - cache.pVector[4];  // this is 1./(1-cos^2(beta)*l_y - dir)
+        double Y = d * Ay[1] - cache.pVector[4];  //
         double Z = d * Ay[2] - cache.pVector[5];  //
-        //
+
+        // d0 to d1
         double d0 = cache.pVector[10] * Ay[0] + cache.pVector[11] * Ay[1]
             + cache.pVector[12] * Ay[2];
         double d1 = cache.pVector[17] * Ay[0] + cache.pVector[18] * Ay[1]
@@ -497,38 +498,33 @@ public:
                + x * (d0 * Ay[0] - cache.pVector[10]))
               + (y * (d0 * Ay[1] - cache.pVector[11])
                  + z * (d0 * Ay[2] - cache.pVector[12])))
-            * a;
+            * (-a);
+
         s1 = (((cache.pVector[14] * X + cache.pVector[15] * Y
                 + cache.pVector[16] * Z)
                + x * (d1 * Ay[0] - cache.pVector[17]))
               + (y * (d1 * Ay[1] - cache.pVector[18])
                  + z * (d1 * Ay[2] - cache.pVector[19])))
-            * a;
+            * (-a);
         s2 = (((cache.pVector[21] * X + cache.pVector[22] * Y
                 + cache.pVector[23] * Z)
                + x * (d2 * Ay[0] - cache.pVector[24]))
               + (y * (d2 * Ay[1] - cache.pVector[25])
                  + z * (d2 * Ay[2] - cache.pVector[26])))
-            * a;
+            * (-a);
         s3 = (((cache.pVector[28] * X + cache.pVector[29] * Y
                 + cache.pVector[30] * Z)
                + x * (d3 * Ay[0] - cache.pVector[31]))
               + (y * (d3 * Ay[1] - cache.pVector[32])
                  + z * (d3 * Ay[2] - cache.pVector[33])))
-            * a;
+            * (-a);
         s4 = (((cache.pVector[35] * X + cache.pVector[36] * Y
                 + cache.pVector[37] * Z)
                + x * (d4 * Ay[0] - cache.pVector[38]))
               + (y * (d4 * Ay[1] - cache.pVector[39])
                  + z * (d4 * Ay[2] - cache.pVector[40])))
-            * a;
+            * (-a);
       }
-
-      std::cout << "s0' = " << s0 << std::endl;
-      std::cout << "s1' = " << s1 << std::endl;
-      std::cout << "s2' = " << s2 << std::endl;
-      std::cout << "s3' = " << s3 << std::endl;
-      std::cout << "s4' = " << s4 << std::endl;
 
       cache.pVector[7] -= (s0 * cache.pVector[3]);
       cache.pVector[8] -= (s0 * cache.pVector[4]);

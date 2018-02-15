@@ -446,7 +446,7 @@ Acts::RungeKuttaUtils::transformGlobalToLine(const Acts::Surface* su,
   double Bx = A[1] * P[5] - A[2] * P[4];
   double By = A[2] * P[3] - A[0] * P[5];
   double Bz = A[0] * P[4] - A[1] * P[3];
-  // this is the global to local transformation
+  // this is part of the global to local transformation
   double Bn = 1. / sqrt(Bx * Bx + By * By + Bz * Bz);
   Bx *= Bn;
   By *= Bn;
@@ -463,12 +463,14 @@ Acts::RungeKuttaUtils::transformGlobalToLine(const Acts::Surface* su,
 
   // Condition trajectory on surface
   //
-  // this is the projection of the direction onto the local y axis
+  // this is the projection of the direction onto the y axis of ref frame
   double d       = P[3] * A[0] + P[4] * A[1] + P[5] * A[2];
   double a       = (1. - d) * (1. + d);
   if (a != 0.) a = 1. / a;
 
-  double X = d * A[0] - P[3], Y = d * A[1] - P[4], Z = d * A[2] - P[5];
+  double X = d * A[0] - P[3];
+  double Y = d * A[1] - P[4];
+  double Z = d * A[2] - P[5];
 
   double d1 = P[10] * A[0] + P[11] * A[1] + P[12] * A[2];
   double d2 = P[17] * A[0] + P[18] * A[1] + P[19] * A[2];
@@ -479,6 +481,7 @@ Acts::RungeKuttaUtils::transformGlobalToLine(const Acts::Surface* su,
   double s1 = (((P[7] * X + P[8] * Y + P[9] * Z) + x * (d1 * A[0] - P[10]))
                + (y * (d1 * A[1] - P[11]) + z * (d1 * A[2] - P[12])))
       * a;
+
   double s2 = (((P[14] * X + P[15] * Y + P[16] * Z) + x * (d2 * A[0] - P[17]))
                + (y * (d2 * A[1] - P[18]) + z * (d2 * A[2] - P[19])))
       * a;
