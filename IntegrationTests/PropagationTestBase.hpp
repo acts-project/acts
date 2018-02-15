@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016 ACTS project team
+// Copyright (C) 2017-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -33,7 +33,7 @@ BOOST_DATA_TEST_CASE(
         ^ bdata::random((bdata::seed = 4,
                          bdata::distribution
                          = std::uniform_real_distribution<>(0, 1. * units::_m)))
-        ^ bdata::xrange(100),
+        ^ bdata::xrange(ntests),
     pT,
     phi,
     theta,
@@ -78,7 +78,7 @@ BOOST_DATA_TEST_CASE(
         ^ bdata::random((bdata::seed = 1717,
                          bdata::distribution
                          = std::uniform_real_distribution<>(-1., 1.)))
-        ^ bdata::xrange(100),
+        ^ bdata::xrange(ntests),
     pT,
     phi,
     theta,
@@ -139,7 +139,7 @@ BOOST_DATA_TEST_CASE(
         ^ bdata::random((bdata::seed = 7,
                          bdata::distribution
                          = std::uniform_real_distribution<>(-1., 1.)))
-        ^ bdata::xrange(100),
+        ^ bdata::xrange(ntests),
     pT,
     phi,
     theta,
@@ -297,7 +297,7 @@ BOOST_DATA_TEST_CASE(
         ^ bdata::random((bdata::seed = 1007,
                          bdata::distribution
                          = std::uniform_real_distribution<>(-1., 1.)))
-        ^ bdata::xrange(100),
+        ^ bdata::xrange(ntests),
     pT,
     phi,
     theta,
@@ -355,23 +355,23 @@ BOOST_DATA_TEST_CASE(
 /// s_curvilinearProjTolerance (in: Definitions.hpp)
 BOOST_DATA_TEST_CASE(
     covariance_transport_curvilinear_curvilinear_,
-    bdata::random((bdata::seed = 1000,
+    bdata::random((bdata::seed = 2000,
                    bdata::distribution
                    = std::uniform_real_distribution<>(0.4 * units::_GeV,
                                                       10. * units::_GeV)))
-        ^ bdata::random((bdata::seed = 1001,
+        ^ bdata::random((bdata::seed = 2001,
                          bdata::distribution
                          = std::uniform_real_distribution<>(-M_PI, M_PI)))
-        ^ bdata::random((bdata::seed = 1002,
+        ^ bdata::random((bdata::seed = 2002,
                          bdata::distribution
                          = std::uniform_real_distribution<>(0.10, M_PI - 0.10)))
-        ^ bdata::random((bdata::seed = 1003,
+        ^ bdata::random((bdata::seed = 2003,
                          bdata::distribution
                          = std::uniform_int_distribution<>(0, 1)))
-        ^ bdata::random((bdata::seed = 1004,
+        ^ bdata::random((bdata::seed = 2004,
                          bdata::distribution
                          = std::uniform_real_distribution<>(0.5, 1.)))
-        ^ bdata::xrange(100),
+        ^ bdata::xrange(ntests),
     pT,
     phi,
     theta,
@@ -391,35 +391,118 @@ BOOST_DATA_TEST_CASE(
       wpropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, index);
 }
 
-// test correct covariance transport from plane to plane
+// test correct covariance transport from disc to disc
 BOOST_DATA_TEST_CASE(
-    covariance_transport_plane_plane_,
-    bdata::random((bdata::seed = 1000,
+    covariance_transport_disc_disc_,
+    bdata::random((bdata::seed = 3000,
                    bdata::distribution
                    = std::uniform_real_distribution<>(0.4 * units::_GeV,
                                                       10. * units::_GeV)))
-        ^ bdata::random((bdata::seed = 1001,
+        ^ bdata::random((bdata::seed = 3001,
                          bdata::distribution
                          = std::uniform_real_distribution<>(-M_PI, M_PI)))
-        ^ bdata::random((bdata::seed = 1002,
+        ^ bdata::random((bdata::seed = 3002,
                          bdata::distribution
                          = std::uniform_real_distribution<>(0.1, M_PI - 0.1)))
-        ^ bdata::random((bdata::seed = 1003,
+        ^ bdata::random((bdata::seed = 3003,
                          bdata::distribution
                          = std::uniform_int_distribution<>(0, 1)))
-        ^ bdata::random((bdata::seed = 1004,
+        ^ bdata::random((bdata::seed = 3004,
                          bdata::distribution
                          = std::uniform_real_distribution<>(0.5, 1.)))
-        ^ bdata::random((bdata::seed = 1005,
+        ^ bdata::random((bdata::seed = 3005,
                          bdata::distribution
                          = std::uniform_real_distribution<>(-1., 1.)))
-        ^ bdata::random((bdata::seed = 1006,
+        ^ bdata::random((bdata::seed = 3006,
                          bdata::distribution
                          = std::uniform_real_distribution<>(-1., 1.)))
-        ^ bdata::random((bdata::seed = 1007,
+        ^ bdata::random((bdata::seed = 3007,
                          bdata::distribution
                          = std::uniform_real_distribution<>(-1., 1.)))
-        ^ bdata::xrange(100),
+        ^ bdata::xrange(ntests),
+    pT,
+    phi,
+    theta,
+    charge,
+    plimit,
+    rand1,
+    rand2,
+    rand3,
+    index)
+{
+  double dcharge = -1 + 2 * charge;
+  // covaraince check for atlas stepper
+  covariance_bound<AtlasPropagator_type, DiscSurface, DiscSurface>(
+      apropagator,
+      pT,
+      phi,
+      theta,
+      dcharge,
+      plimit * Acts::units::_m,
+      rand1,
+      rand2,
+      rand3,
+      index,
+      1e-2);
+
+  // covaraince check for eigen stepper
+  covariance_bound<EigenPropagator_type, DiscSurface, DiscSurface>(
+      epropagator,
+      pT,
+      phi,
+      theta,
+      dcharge,
+      plimit * Acts::units::_m,
+      rand1,
+      rand2,
+      rand3,
+      index,
+      1e-2);
+
+  // covariance check fo the runge kutta engine
+  covariance_bound<WrappedPropagator_type, DiscSurface, DiscSurface>(
+      wpropagator,
+      pT,
+      phi,
+      theta,
+      dcharge,
+      plimit * Acts::units::_m,
+      rand1,
+      rand2,
+      rand3,
+      index,
+      1e-2);
+}
+
+// test correct covariance transport from plane to plane
+BOOST_DATA_TEST_CASE(
+    covariance_transport_plane_plane_,
+    bdata::random((bdata::seed = 4000,
+                   bdata::distribution
+                   = std::uniform_real_distribution<>(0.4 * units::_GeV,
+                                                      10. * units::_GeV)))
+        ^ bdata::random((bdata::seed = 4001,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(-M_PI, M_PI)))
+        ^ bdata::random((bdata::seed = 4002,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(0.1, M_PI - 0.1)))
+        ^ bdata::random((bdata::seed = 4003,
+                         bdata::distribution
+                         = std::uniform_int_distribution<>(0, 1)))
+        ^ bdata::random((bdata::seed = 4004,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(0.5, 1.)))
+        ^ bdata::random((bdata::seed = 4005,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(-1., 1.)))
+        ^ bdata::random((bdata::seed = 4006,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(-1., 1.)))
+        ^ bdata::random((bdata::seed = 4007,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(-1., 1.)))
+        ^ bdata::xrange(ntests),
     pT,
     phi,
     theta,
@@ -480,28 +563,28 @@ BOOST_DATA_TEST_CASE(
                    bdata::distribution
                    = std::uniform_real_distribution<>(0.4 * units::_GeV,
                                                       10. * units::_GeV)))
-        ^ bdata::random((bdata::seed = 2001,
+        ^ bdata::random((bdata::seed = 1001,
                          bdata::distribution
                          = std::uniform_real_distribution<>(-M_PI, M_PI)))
-        ^ bdata::random((bdata::seed = 2002,
+        ^ bdata::random((bdata::seed = 1002,
                          bdata::distribution
-                         = std::uniform_real_distribution<>(0.1, M_PI - 0.1)))
-        ^ bdata::random((bdata::seed = 2003,
+                         = std::uniform_real_distribution<>(0.15, M_PI - 0.15)))
+        ^ bdata::random((bdata::seed = 1003,
                          bdata::distribution
                          = std::uniform_int_distribution<>(0, 1)))
-        ^ bdata::random((bdata::seed = 2004,
+        ^ bdata::random((bdata::seed = 1004,
                          bdata::distribution
                          = std::uniform_real_distribution<>(0.1, 0.2)))
-        ^ bdata::random((bdata::seed = 3005,
+        ^ bdata::random((bdata::seed = 1005,
                          bdata::distribution
-                         = std::uniform_real_distribution<>(-1., 1.)))
-        ^ bdata::random((bdata::seed = 3006,
+                         = std::uniform_real_distribution<>(-0.25, 0.25)))
+        ^ bdata::random((bdata::seed = 1006,
                          bdata::distribution
-                         = std::uniform_real_distribution<>(-1., 1.)))
-        ^ bdata::random((bdata::seed = 3007,
+                         = std::uniform_real_distribution<>(-0.25, 0.25)))
+        ^ bdata::random((bdata::seed = 1007,
                          bdata::distribution
-                         = std::uniform_real_distribution<>(-1., 1.)))
-        ^ bdata::xrange(100),
+                         = std::uniform_real_distribution<>(-0.25, 0.25)))
+        ^ bdata::xrange(ntests),
     pT,
     phi,
     theta,

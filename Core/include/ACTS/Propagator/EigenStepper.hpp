@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016 ACTS project team
+// Copyright (C) 2016-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -118,9 +118,7 @@ public:
         cov           = ActsSymMatrixD<5>(*par.covariance());
         // get the reference surface
         const auto& surface = par.referenceSurface();
-        surface.initJacobianToGlobal(jacobian,
-                                     pos, dir,
-                                     par.parameters());
+        surface.initJacobianToGlobal(jacobian, pos, dir, par.parameters());
       }
     }
 
@@ -268,25 +266,9 @@ public:
     if (cache.cov_transport) {
       // Initialize the transport final frame jacobian
       ActsMatrixD<5, 7> jac_to_local = ActsMatrixD<5, 7>::Zero();
-      // Optimized trigonometry on the propagation direction, see documentation
-      // of Cache::update_jacobian() for a longer mathematical discussion.
-      const double x = cache.dir(0);  // == cos(phi) * sin(theta)
-      const double y = cache.dir(1);  // == sin(phi) * sin(theta)
-      // component expressions
-      const double inv_sin_theta_2        = 1. / (x * x + y * y);
-      const double cos_phi_over_sin_theta = x * inv_sin_theta_2;
-      const double sin_phi_over_sin_theta = y * inv_sin_theta_2;
-      const double inv_sin_theta          = sqrt(inv_sin_theta_2);
-      // The measurement frame of the surface
-      RotationMatrix3D rframeT
-          = surface.referenceFrame(cache.pos, cache.dir).transpose();
-      // @todo deal with the disc surface
-      jac_to_local.block<2, 3>(0, 0) = rframeT.template block<2, 3>(0, 0);
-      // Directional and momentum elements for reference frame surface
-      jac_to_local(ePHI, 3)   = -sin_phi_over_sin_theta;
-      jac_to_local(ePHI, 4)   = cos_phi_over_sin_theta;
-      jac_to_local(eTHETA, 5) = -inv_sin_theta;
-      jac_to_local(eQOP, 6)   = 1;
+      // initalize the jacobian to local, returns the transposed ref frame
+      auto rframeT
+          = surface.initJacobianToLocal(jac_to_local, cache.pos, cache.dir);
       // calculate the form factors for the derivatives
       const ActsRowVectorD<5> s_vec = surface.derivativeFactors(
           cache.pos, cache.dir, rframeT, cache.jacobian);

@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016 ACTS project team
+// Copyright (C) 2016-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -114,17 +114,17 @@ public:
   /// the surface knows best, hence the calculation is done here.
   /// The jacobian is usually aready initialised, so only the
   /// relevant entries are filled
-  /// 
+  ///
   /// @param jac is the jacobian to be initialized
   /// @param pos is the global position of the parameters
   /// @param dir is the direction at of the parameters
   /// @param pars is the paranmeters vector
-  virtual void 
-  initJacobianToGlobal(ActsMatrixD<7, 5>& jac,
-                       const Vector3D& gpos,
-                       const Vector3D& dir,
-                       const ActsVectorD<5>& pars) const final override;
-  
+  virtual void
+      initJacobianToGlobal(ActsMatrixD<7, 5>& jac,
+                           const Vector3D&       gpos,
+                           const Vector3D&       dir,
+                           const ActsVectorD<5>& pars) const final override;
+
   /// Calculate the form factors for the derivatives
   /// the calculation is identical for all surfaces where the
   /// reference frame does not depend on the direction
@@ -295,11 +295,10 @@ LineSurface::lineDirection() const
   return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
-inline void
-LineSurface::initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
-                                  const Vector3D& gpos,
-                                  const Vector3D& dir,
-                                  const ActsVectorD<5>& pars) const
+inline void LineSurface::initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
+                                              const Vector3D&       gpos,
+                                              const Vector3D&       dir,
+                                              const ActsVectorD<5>& pars) const
 {
   // The trigonometry required to convert the direction to spherical
   // coordinates and then compute the sines and cosines again can be
@@ -318,30 +317,31 @@ LineSurface::initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
   const double cos_phi       = x * inv_sin_theta;
   const double sin_phi       = y * inv_sin_theta;
   // retrieve the reverence frame
-  const auto rframe = referenceFrame(gpos,dir);
+  const auto rframe = referenceFrame(gpos, dir);
   // the local error components - given by the reference frame
-  jacobian.topLeftCorner<3,2>() = rframe.topLeftCorner<3,2>();
+  jacobian.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
   // the momentum components
   jacobian(3, ePHI)   = (-sin_theta) * sin_phi;
   jacobian(3, eTHETA) = cos_theta * cos_phi;
   jacobian(4, ePHI)   = sin_theta * cos_phi;
   jacobian(4, eTHETA) = cos_theta * sin_phi;
   jacobian(5, eTHETA) = (-sin_theta);
-  jacobian(6, eQOP)  = 1;
-    
+  jacobian(6, eQOP)   = 1;
+
   // the projection of direction onto ref frame normal
   double ipdn = 1. / dir.dot(rframe.col(2));
   // build the cross product of d(D)/d(ePHI) components with y axis
   auto dDPhiY = rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(3, ePHI));
   // and the same for the d(D)/d(eTheta) components
-  auto dDThetaY = rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(3, eTHETA));
+  auto dDThetaY
+      = rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(3, eTHETA));
   // and correct for the x axis components
-  dDPhiY -= rframe.block<3, 1>(0, 0)*(rframe.block<3, 1>(0, 0).dot(dDPhiY));
-  dDThetaY -= rframe.block<3, 1>(0, 0)*(rframe.block<3, 1>(0, 0).dot(dDThetaY));
+  dDPhiY -= rframe.block<3, 1>(0, 0) * (rframe.block<3, 1>(0, 0).dot(dDPhiY));
+  dDThetaY
+      -= rframe.block<3, 1>(0, 0) * (rframe.block<3, 1>(0, 0).dot(dDThetaY));
   // set the jacobian components for global d/ phi/Theta
-  jacobian.block<3, 1>(0, ePHI) = dDPhiY * pars[eLOC_0] * ipdn;
+  jacobian.block<3, 1>(0, ePHI)   = dDPhiY * pars[eLOC_0] * ipdn;
   jacobian.block<3, 1>(0, eTHETA) = dDThetaY * pars[eLOC_0] * ipdn;
-
 }
 
 inline const ActsRowVectorD<5>

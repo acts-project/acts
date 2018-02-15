@@ -51,6 +51,9 @@ namespace IntegrationTest {
   typedef Wrapper<std::shared_ptr<PropagationEngine_type>>
       WrappedPropagator_type;
 
+  // number of tests
+  const int ntests = 10;
+
   // setup propagator with constant B-field
   const double         Bz = 2. * units::_T;
   BField_type          bField(0, 0, Bz);

@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016 ACTS project team
+// Copyright (C) 2016-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -280,17 +280,30 @@ public:
   /// the surface knows best, hence the calculation is done here.
   /// The jacobian is usually aready initialised, so only the
   /// relevant entries are filled
-  /// 
+  ///
   /// @param jac is the jacobian to be initialized
   /// @param pos is the global position of the parameters
   /// @param dir is the direction at of the parameters
   /// @param pars is the parameter vector
-  virtual void 
-  initJacobianToGlobal(ActsMatrixD<7, 5>& jac,
-                       const Vector3D& gpos,
-                       const Vector3D& dir,
-                       const ActsVectorD<5>& pars) const;
-  
+  virtual void initJacobianToGlobal(ActsMatrixD<7, 5>& jac,
+                                    const Vector3D&       gpos,
+                                    const Vector3D&       dir,
+                                    const ActsVectorD<5>& pars) const;
+
+  /// Initialize the jacobian from global to local
+  /// the surface knows best, hence the calculation is done here.
+  /// The jacobian is usually aready initialised, so only the
+  /// relevant entries are filled
+  ///
+  /// @param jac is the jacobian to be initialized
+  /// @param pos is the global position of the parameters
+  /// @param dir is the direction at of the parameters
+  /// @param pars is the parameter vector
+  ///
+  /// @return the transposed reference frame (avoids reclaculation)
+  virtual const RotationMatrix3D initJacobianToLocal(ActsMatrixD<5, 7>& jac,
+                                                     const Vector3D& gpos,
+                                                     const Vector3D& dir) const;
 
   /// Calculate the form factors for the derivatives
   /// the calculation is identical for all surfaces where the
@@ -407,11 +420,10 @@ Surface::referenceFrame(const Vector3D&, const Vector3D&) const
   return transform().matrix().block<3, 3>(0, 0);
 }
 
-inline void
-Surface::initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
-                              const Vector3D& gpos,
-                              const Vector3D& dir,
-                              const ActsVectorD<5>&) const
+inline void Surface::initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
+                                          const Vector3D& gpos,
+                                          const Vector3D& dir,
+                                          const ActsVectorD<5>&) const
 {
   // The trigonometry required to convert the direction to spherical
   // coordinates and then compute the sines and cosines again can be
@@ -429,17 +441,43 @@ Surface::initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
   const double inv_sin_theta = 1. / sin_theta;
   const double cos_phi       = x * inv_sin_theta;
   const double sin_phi       = y * inv_sin_theta;
-  // retrieve the referce frame 
+  // retrieve the referce frame
   const auto rframe = referenceFrame(gpos, dir);
   // the local error components - given by reference frame
-  jacobian.topLeftCorner<3,2>() = rframe.topLeftCorner<3,2>();
+  jacobian.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
   // the momentum components
   jacobian(3, ePHI)   = (-sin_theta) * sin_phi;
   jacobian(3, eTHETA) = cos_theta * cos_phi;
   jacobian(4, ePHI)   = sin_theta * cos_phi;
   jacobian(4, eTHETA) = cos_theta * sin_phi;
   jacobian(5, eTHETA) = (-sin_theta);
-  jacobian(6, eQOP)  = 1;
+  jacobian(6, eQOP)   = 1;
+}
+
+inline const RotationMatrix3D
+    Surface::initJacobianToLocal(ActsMatrixD<5, 7>& jacobian,
+                                 const Vector3D& gpos,
+                                 const Vector3D& dir) const
+{
+  // Optimized trigonometry on the propagation direction
+  const double x = dir(0);  // == cos(phi) * sin(theta)
+  const double y = dir(1);  // == sin(phi) * sin(theta)
+  // component expressions
+  const double inv_sin_theta_2        = 1. / (x * x + y * y);
+  const double cos_phi_over_sin_theta = x * inv_sin_theta_2;
+  const double sin_phi_over_sin_theta = y * inv_sin_theta_2;
+  const double inv_sin_theta          = sqrt(inv_sin_theta_2);
+  // The measurement frame of the surface
+  RotationMatrix3D rframeT = referenceFrame(gpos, dir).transpose();
+  // given by the refernece frame
+  jacobian.block<2, 3>(0, 0) = rframeT.block<2, 3>(0, 0);
+  // Directional and momentum elements for reference frame surface
+  jacobian(ePHI, 3)   = -sin_phi_over_sin_theta;
+  jacobian(ePHI, 4)   = cos_phi_over_sin_theta;
+  jacobian(eTHETA, 5) = -inv_sin_theta;
+  jacobian(eQOP, 6)   = 1;
+  // return the frame where this happened
+  return rframeT;
 }
 
 inline const ActsRowVectorD<5>

@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016 ACTS project team
+// Copyright (C) 2016-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -575,28 +575,51 @@ public:
         P4 = 0.;
       }
 
+      double MA[3] = {Ax[0], Ax[1], Ax[2]};
+      double MB[3] = {Ay[0], Ay[1], Ay[2]};
       // Jacobian production of transport and to_local
-      cache.jacobian[0] = Ax[0] * cache.pVector[7] + Ax[1] * cache.pVector[8]
-          + Ax[2] * cache.pVector[9];  // dL0/dL0
-      cache.jacobian[1] = Ax[0] * cache.pVector[14] + Ax[1] * cache.pVector[15]
-          + Ax[2] * cache.pVector[16];  // dL0/dL1
-      cache.jacobian[2] = Ax[0] * cache.pVector[21] + Ax[1] * cache.pVector[22]
-          + Ax[2] * cache.pVector[23];  // dL0/dPhi
-      cache.jacobian[3] = Ax[0] * cache.pVector[28] + Ax[1] * cache.pVector[29]
-          + Ax[2] * cache.pVector[30];  // dL0/dThe
-      cache.jacobian[4] = Ax[0] * cache.pVector[35] + Ax[1] * cache.pVector[36]
-          + Ax[2] * cache.pVector[37];  // dL0/dCM
+      if (s.type() == Surface::Disc) {
+        // the vector from the disc surface to the p
+        const auto& sfc  = s.center();
+        double      d[3] = {cache.pVector[0] - sfc(0),
+                       cache.pVector[1] - sfc(1),
+                       cache.pVector[2] - sfc(2)};
+        // this needs the transformation to polar coorinates
+        double RC = d[0] * Ax[0] + d[1] * Ax[1] + d[2] * Ax[2];
+        double RS = d[0] * Ay[0] + d[1] * Ay[1] + d[2] * Ay[2];
+        double R2 = RC * RC + RS * RS;
 
-      cache.jacobian[5] = Ay[0] * cache.pVector[7] + Ay[1] * cache.pVector[8]
-          + Ay[2] * cache.pVector[9];  // dL1/dL0
-      cache.jacobian[6] = Ay[0] * cache.pVector[14] + Ay[1] * cache.pVector[15]
-          + Ay[2] * cache.pVector[16];  // dL1/dL1
-      cache.jacobian[7] = Ay[0] * cache.pVector[21] + Ay[1] * cache.pVector[22]
-          + Ay[2] * cache.pVector[23];  // dL1/dPhi
-      cache.jacobian[8] = Ay[0] * cache.pVector[28] + Ay[1] * cache.pVector[29]
-          + Ay[2] * cache.pVector[30];  // dL1/dThe
-      cache.jacobian[9] = Ay[0] * cache.pVector[35] + Ay[1] * cache.pVector[36]
-          + Ay[2] * cache.pVector[37];  // dL1/dCM
+        // inverse radius
+        double Ri = 1. / sqrt(R2);
+        MA[0]     = (RC * Ax[0] + RS * Ay[0]) * Ri;
+        MA[1]     = (RC * Ax[1] + RS * Ay[1]) * Ri;
+        MA[2]     = (RC * Ax[2] + RS * Ay[2]) * Ri;
+        MB[0] = (RC * Ay[0] - RS * Ax[0]) * (Ri = 1. / R2);
+        MB[1] = (RC * Ay[1] - RS * Ax[1]) * Ri;
+        MB[2] = (RC * Ay[2] - RS * Ax[2]) * Ri;
+      }
+
+      cache.jacobian[0] = MA[0] * cache.pVector[7] + MA[1] * cache.pVector[8]
+          + MA[2] * cache.pVector[9];  // dL0/dL0
+      cache.jacobian[1] = MA[0] * cache.pVector[14] + MA[1] * cache.pVector[15]
+          + MA[2] * cache.pVector[16];  // dL0/dL1
+      cache.jacobian[2] = MA[0] * cache.pVector[21] + MA[1] * cache.pVector[22]
+          + MA[2] * cache.pVector[23];  // dL0/dPhi
+      cache.jacobian[3] = MA[0] * cache.pVector[28] + MA[1] * cache.pVector[29]
+          + MA[2] * cache.pVector[30];  // dL0/dThe
+      cache.jacobian[4] = MA[0] * cache.pVector[35] + MA[1] * cache.pVector[36]
+          + MA[2] * cache.pVector[37];  // dL0/dCM
+
+      cache.jacobian[5] = MB[0] * cache.pVector[7] + MB[1] * cache.pVector[8]
+          + MB[2] * cache.pVector[9];  // dL1/dL0
+      cache.jacobian[6] = MB[0] * cache.pVector[14] + MB[1] * cache.pVector[15]
+          + MB[2] * cache.pVector[16];  // dL1/dL1
+      cache.jacobian[7] = MB[0] * cache.pVector[21] + MB[1] * cache.pVector[22]
+          + MB[2] * cache.pVector[23];  // dL1/dPhi
+      cache.jacobian[8] = MB[0] * cache.pVector[28] + MB[1] * cache.pVector[29]
+          + MB[2] * cache.pVector[30];  // dL1/dThe
+      cache.jacobian[9] = MB[0] * cache.pVector[35] + MB[1] * cache.pVector[36]
+          + MB[2] * cache.pVector[37];  // dL1/dCM
 
       cache.jacobian[10]
           = P3 * cache.pVector[11] - P4 * cache.pVector[10];  // dPhi/dL0
