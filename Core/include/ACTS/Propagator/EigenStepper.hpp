@@ -116,85 +116,11 @@ public:
       if (par.covariance() && !cache_ready) {
         cov_transport = true;
         cov           = ActsSymMatrixD<5>(*par.covariance());
-        // The trigonometry required to convert the direction to spherical
-        // coordinates and then compute the sines and cosines again can be
-        // surprisingly expensive from a performance point of view.
-        //
-        // Here, we can avoid it because the direction is by definition a unit
-        // vector, with the following coordinate conversions...
-        const double x = dir(0);  // == cos(phi) * sin(theta)
-        const double y = dir(1);  // == sin(phi) * sin(theta)
-        const double z = dir(2);  // == cos(theta)
-
-        // ...which we can invert to directly get the sines and cosines:
-        const double cos_theta     = z;
-        const double sin_theta     = sqrt(x * x + y * y);
-        const double inv_sin_theta = 1. / sin_theta;
-        const double cos_phi       = x * inv_sin_theta;
-        const double sin_phi       = y * inv_sin_theta;
-
         // get the reference surface
         const auto& surface = par.referenceSurface();
-        // the error is (usually) given on a planar-type surface
-        // called the reference frame
-        const auto& transform = par.referenceFrame();
-        // the local error components - it's given by the reference
-        // frame for all surfaces but a Disc surface
-        if (surface.type() != Surface::Disc) {
-          jacobian(tX0, eLOC_0) = transform(0, 0);
-          jacobian(tX0, eLOC_1) = transform(0, 1);
-          jacobian(tX1, eLOC_0) = transform(1, 0);
-          jacobian(tX1, eLOC_1) = transform(1, 1);
-          jacobian(tX2, eLOC_0) = transform(2, 0);
-          jacobian(tX2, eLOC_1) = transform(2, 1);
-        } else {
-          // special polar coordinates for the Disc
-          const auto& parameters = par.parameters();
-          double      lrad       = parameters[eLOC_0];
-          double      lphi       = parameters[eLOC_1];
-          double      lcos_phi   = cos(lphi);
-          double      lsin_phi   = sin(lphi);
-          // fill the jacobian entries in block form
-          jacobian.template block<3, 1>(tX0, eLOC_0)
-              = lcos_phi * transform.template block<3, 1>(0, 0)
-              + lsin_phi * transform.template block<3, 1>(0, 1);
-          jacobian.template block<3, 1>(tX0, eLOC_1)
-              = lrad * (lcos_phi * transform.template block<3, 1>(0, 1)
-                        - lsin_phi * transform.template block<3, 1>(0, 0));
-        }
-        // the momentum components
-        jacobian(tD0, ePHI)   = (-sin_theta) * sin_phi;
-        jacobian(tD0, eTHETA) = cos_theta * cos_phi;
-        jacobian(tD1, ePHI)   = sin_theta * cos_phi;
-        jacobian(tD1, eTHETA) = cos_theta * sin_phi;
-        jacobian(tD2, eTHETA) = (-sin_theta);
-        jacobian(tQOP, eQOP)  = 1;
-        // special components for line and straw :
-        // - the measurement frame depends on global
-        //   phi and theta, hence we need the
-        //   according derivatives
-        if (surface.type() == Surface::Perigee
-            || surface.type() == Surface::Straw) {
-          // get the parameter vector
-          const auto& pv = par.parameters();
-          // the projection of direction onto ref frame normal
-          double ipdn = 1. / dir.dot(transform.col(2));
-          // build the cross product of d(D)/d(ePHI) components with y axis
-          auto dDPhiY = transform.template block<3, 1>(0, 1).template cross(
-              jacobian.template block<3, 1>(tD0, ePHI));
-          // and the same for the d(D)/d(eTheta) components
-          auto dDThetaY = transform.template block<3, 1>(0, 1).template cross(
-              jacobian.template block<3, 1>(tD0, eTHETA));
-          // and correct for the x axis components
-          dDPhiY -= transform.template block<3, 1>(0, 0)
-              * (transform.template block<3, 1>(0, 0).template dot(dDPhiY));
-          dDThetaY -= transform.template block<3, 1>(0, 0)
-              * (transform.template block<3, 1>(0, 0).template dot(dDThetaY));
-          // set the jacobian components
-          jacobian.template block<3, 1>(tX0, ePHI) = dDPhiY * pv[eLOC_0] * ipdn;
-          jacobian.template block<3, 1>(tX0, eTHETA)
-              = dDThetaY * pv[eLOC_0] * ipdn;
-        }
+        surface.initJacobianToGlobal(jacobian,
+                                     pos, dir,
+                                     par.parameters());
       }
     }
 
@@ -363,10 +289,7 @@ public:
       jac_to_local(eQOP, 6)   = 1;
       // calculate the form factors for the derivatives
       const ActsRowVectorD<5> s_vec = surface.derivativeFactors(
-          cache.pos,
-          cache.dir,
-          rframeT,
-          cache.jacobian.template topLeftCorner<6, 5>());
+          cache.pos, cache.dir, rframeT, cache.jacobian);
       // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
       const ActsMatrixD<5, 5> jac
           = jac_to_local * (cache.jacobian - cache.derivative * s_vec);

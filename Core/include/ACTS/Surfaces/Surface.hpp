@@ -276,6 +276,22 @@ public:
   virtual const Acts::RotationMatrix3D
   referenceFrame(const Vector3D& gpos, const Vector3D& gmom) const;
 
+  /// Initialize the jacobian from local to global
+  /// the surface knows best, hence the calculation is done here.
+  /// The jacobian is usually aready initialised, so only the
+  /// relevant entries are filled
+  /// 
+  /// @param jac is the jacobian to be initialized
+  /// @param pos is the global position of the parameters
+  /// @param dir is the direction at of the parameters
+  /// @param pars is the parameter vector
+  virtual void 
+  initJacobianToGlobal(ActsMatrixD<7, 5>& jac,
+                       const Vector3D& gpos,
+                       const Vector3D& dir,
+                       const ActsVectorD<5>& pars) const;
+  
+
   /// Calculate the form factors for the derivatives
   /// the calculation is identical for all surfaces where the
   /// reference frame does not depend on the direction
@@ -290,7 +306,7 @@ public:
   derivativeFactors(const Vector3D&         gpos,
                     const Vector3D&         dir,
                     const RotationMatrix3D& rft,
-                    const ActsMatrixD<6, 5>& jac) const;
+                    const ActsMatrixD<7, 5>& jac) const;
 
   /// Calucation of the path correction for incident
   ///
@@ -391,11 +407,46 @@ Surface::referenceFrame(const Vector3D&, const Vector3D&) const
   return transform().matrix().block<3, 3>(0, 0);
 }
 
+inline void
+Surface::initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
+                              const Vector3D& gpos,
+                              const Vector3D& dir,
+                              const ActsVectorD<5>&) const
+{
+  // The trigonometry required to convert the direction to spherical
+  // coordinates and then compute the sines and cosines again can be
+  // surprisingly expensive from a performance point of view.
+  //
+  // Here, we can avoid it because the direction is by definition a unit
+  // vector, with the following coordinate conversions...
+  const double x = dir(0);  // == cos(phi) * sin(theta)
+  const double y = dir(1);  // == sin(phi) * sin(theta)
+  const double z = dir(2);  // == cos(theta)
+
+  // ...which we can invert to directly get the sines and cosines:
+  const double cos_theta     = z;
+  const double sin_theta     = sqrt(x * x + y * y);
+  const double inv_sin_theta = 1. / sin_theta;
+  const double cos_phi       = x * inv_sin_theta;
+  const double sin_phi       = y * inv_sin_theta;
+  // retrieve the referce frame 
+  const auto rframe = referenceFrame(gpos, dir);
+  // the local error components - given by reference frame
+  jacobian.topLeftCorner<3,2>() = rframe.topLeftCorner<3,2>();
+  // the momentum components
+  jacobian(3, ePHI)   = (-sin_theta) * sin_phi;
+  jacobian(3, eTHETA) = cos_theta * cos_phi;
+  jacobian(4, ePHI)   = sin_theta * cos_phi;
+  jacobian(4, eTHETA) = cos_theta * sin_phi;
+  jacobian(5, eTHETA) = (-sin_theta);
+  jacobian(6, eQOP)  = 1;
+}
+
 inline const ActsRowVectorD<5>
 Surface::derivativeFactors(const Vector3D&,
                            const Vector3D&         dir,
                            const RotationMatrix3D& rft,
-                           const ActsMatrixD<6, 5>& jac) const
+                           const ActsMatrixD<7, 5>& jac) const
 {
   // Create the normal and scale it with the projection onto the direction
   ActsRowVectorD<3> norm_vec = rft.template block<1, 3>(2, 0);
