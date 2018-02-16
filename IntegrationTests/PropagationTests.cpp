@@ -52,7 +52,8 @@ namespace IntegrationTest {
       WrappedPropagator_type;
 
   // number of tests
-  const int ntests = 10;
+  const int ntests  = 100000;
+  const bool covtpr = true;
 
   // setup propagator with constant B-field
   const double         Bz = 2. * units::_T;
@@ -85,7 +86,7 @@ namespace IntegrationTest {
           ^ bdata::random((bdata::seed = 3,
                            bdata::distribution
                            = std::uniform_int_distribution<>(0, 1)))
-          ^ bdata::xrange(100),
+          ^ bdata::xrange(ntests),
       pT,
       phi,
       theta,
@@ -109,7 +110,7 @@ namespace IntegrationTest {
 
 // The actual test - needs to be included to avoid
 // template inside template definition through boost
-#include "PropagationTestBase.hpp"
+// #include "PropagationTestBase.hpp"
 
 }  // namespace Test
 

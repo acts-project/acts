@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016 ACTS project team
+// Copyright (C) 2016-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -216,7 +216,8 @@ namespace IntegrationTest {
               double                 plimit,
               double                 rand1,
               double                 rand2,
-              double /*rand3*/)
+              double /*rand3*/,
+              bool                   covtransport = false)
   {
     // setup propagation options
     typename Propagator_type::template Options<> options;
@@ -235,9 +236,18 @@ namespace IntegrationTest {
     Vector3D pos(x, y, z);
     Vector3D mom(px, py, pz);
 
-    // Create curvilinear start parameters
-    CurvilinearParameters start(nullptr, pos, mom, q);
-
+    std::unique_ptr<const ActsSymMatrixD<5>> cov_ptr = nullptr;
+    if (covtransport){    
+      ActsSymMatrixD<5> cov;
+      // take some major correlations (off-diagonals)
+      cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
+          0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
+          1. / (10 * units::_GeV);      
+      cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    }
+    // do propagation of the start parameters
+    CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
+    
     // The transform at the destination
     auto seTransform = createCylindricTransform(
         Vector3D(0., 0., 0.), 0.05 * rand1, 0.05 * rand2);
@@ -266,7 +276,8 @@ namespace IntegrationTest {
              double                 rand1,
              double                 rand2,
              double                 rand3,
-             bool                   planar = true)
+             bool                   planar = true,
+             bool                   covtransport = false)
   {
     // setup propagation options
     typename Propagator_type::template Options<> options;
@@ -285,8 +296,17 @@ namespace IntegrationTest {
     Vector3D pos(x, y, z);
     Vector3D mom(px, py, pz);
 
+    std::unique_ptr<const ActsSymMatrixD<5>> cov_ptr = nullptr;
+    if (covtransport){    
+      ActsSymMatrixD<5> cov;
+      // take some major correlations (off-diagonals)
+      cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
+          0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
+          1. / (10 * units::_GeV);      
+      cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    }
     // Create curvilinear start parameters
-    CurvilinearParameters start(nullptr, pos, mom, q);
+    CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
     const auto            result_s = propagator.propagate(start, options);
     const auto&           tp_s     = result_s.endParameters;
 
@@ -300,7 +320,6 @@ namespace IntegrationTest {
                                                          0.05 * rand2);
 
     Surface_type endSurface(seTransform);
-
     // Increase the path limit - to be safe hitting the surface
     options.max_path_length *= 2;
     const auto  result = propagator.propagate(start, endSurface, options);
@@ -339,14 +358,13 @@ namespace IntegrationTest {
     double            q  = charge;
     Vector3D          pos(x, y, z);
     Vector3D          mom(px, py, pz);
+    
     ActsSymMatrixD<5> cov;
-
     // take some major correlations (off-diagonals)
     cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
         0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
-        1. / (10 * units::_GeV);
-
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+        1. / (10 * units::_GeV);      
+      auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 
     // do propagation of the start parameters
     CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
