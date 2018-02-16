@@ -181,17 +181,17 @@ BOOST_DATA_TEST_CASE(
   // foward backward runge kutta engine
   // to a plane with the runge kutta engine
   auto w_at_plane = to_surface<WrappedPropagator_type, PlaneSurface>(
-                                                       wpropagator,
-                                                       pT,
-                                                       phi,
-                                                       theta,
-                                                       dcharge,
-                                                       pfrac * Acts::units::_m,
-                                                       rand1,
-                                                       rand2,
-                                                       rand3,
-                                                       true,
-                                                       covtpr);
+      wpropagator,
+      pT,
+      phi,
+      theta,
+      dcharge,
+      pfrac * Acts::units::_m,
+      rand1,
+      rand2,
+      rand3,
+      true,
+      covtpr);
 
   BOOST_CHECK(e_at_plane.first.isApprox(a_at_plane.first, 1 * units::_um));
   BOOST_CHECK(e_at_plane.first.isApprox(w_at_plane.first, 1 * units::_um));
@@ -350,17 +350,17 @@ BOOST_DATA_TEST_CASE(
                                                        covtpr);
   // to a line with the runge kutta engine
   auto w_at_line = to_surface<WrappedPropagator_type, StrawSurface>(
-                                                       wpropagator,
-                                                       pT,
-                                                       phi,
-                                                       theta,
-                                                       dcharge,
-                                                       pfrac * Acts::units::_m,
-                                                       rand1,
-                                                       rand2,
-                                                       rand3,
-                                                       false,
-                                                       covtpr);
+      wpropagator,
+      pT,
+      phi,
+      theta,
+      dcharge,
+      pfrac * Acts::units::_m,
+      rand1,
+      rand2,
+      rand3,
+      false,
+      covtpr);
 
   BOOST_CHECK(e_at_line.first.isApprox(a_at_line.first, 1 * units::_um));
   BOOST_CHECK(e_at_line.first.isApprox(w_at_line.first, 1 * units::_um));
