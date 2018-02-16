@@ -632,7 +632,7 @@ BOOST_DATA_TEST_CASE(
       index,
       false,
       false,
-      1e-2);
+      1e-1);
 
   // covaraince check for eigen stepper
   covariance_bound<EigenPropagator_type, StrawSurface, StrawSurface>(
@@ -648,7 +648,7 @@ BOOST_DATA_TEST_CASE(
       index,
       false,
       false,
-      1e-2);
+      1e-1);
 
   // covariance check fo the runge kutta engine
   covariance_bound<WrappedPropagator_type, StrawSurface, StrawSurface>(
@@ -664,5 +664,5 @@ BOOST_DATA_TEST_CASE(
       index,
       false,
       false,
-      1e-2);
+      1e-1);
 }
