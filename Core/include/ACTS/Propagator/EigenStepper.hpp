@@ -60,10 +60,6 @@ private:
   };
 
 public:
-  /// enumeration definition of transport parameters
-  /// this aims to make the jacobian be read more easily
-  enum tPAR { tX0 = 0, tX1 = 1, tX2 = 2, tD0 = 3, tD1 = 4, tD2 = 5, tQOP = 6 };
-
   /// Cache for track parameter propagation
   ///
   /// it is exposed to public for use of the expert-only

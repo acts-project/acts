@@ -460,7 +460,7 @@ BOOST_DATA_TEST_CASE(
       index,
       true,
       true,
-      1e-2);
+      1e-1);
 
   // covaraince check for eigen stepper
   covariance_bound<EigenPropagator_type, DiscSurface, DiscSurface>(
@@ -476,7 +476,7 @@ BOOST_DATA_TEST_CASE(
       index,
       true,
       true,
-      1e-2);
+      1e-1);
 
   // covariance check fo the runge kutta engine
   covariance_bound<WrappedPropagator_type, DiscSurface, DiscSurface>(
@@ -492,7 +492,7 @@ BOOST_DATA_TEST_CASE(
       index,
       true,
       true,
-      1e-2);
+      1e-1);
 }
 
 // test correct covariance transport from plane to plane

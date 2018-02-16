@@ -52,7 +52,7 @@ namespace IntegrationTest {
       WrappedPropagator_type;
 
   // number of tests
-  const int  ntests = 100000;
+  const int  ntests = 100;
   const bool covtpr = true;
 
   // setup propagator with constant B-field
@@ -108,9 +108,9 @@ namespace IntegrationTest {
     BOOST_CHECK(eposition.isApprox(wposition, 1e-3));
   }
 
-  // The actual test - needs to be included to avoid
-  // template inside template definition through boost
-  // #include "PropagationTestBase.hpp"
+// The actual test - needs to be included to avoid
+// template inside template definition through boost
+#include "PropagationTestBase.hpp"
 
 }  // namespace Test
 
