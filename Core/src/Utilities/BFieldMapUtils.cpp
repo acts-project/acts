@@ -33,22 +33,31 @@ Acts::InterpolatedBFieldMap::FieldMapper<2, 2> Acts::fieldMapperRZ(
   // get the number of bins
   size_t nBinsR = rPos.size();
   size_t nBinsZ = zPos.size();
-  if (firstQuadrant) {
-    nBinsZ = 2. * nBinsZ - 1;
-  }
+
   // get the minimum and maximum
   auto   minMaxR = std::minmax_element(rPos.begin(), rPos.end());
   auto   minMaxZ = std::minmax_element(zPos.begin(), zPos.end());
   double rMin    = *minMaxR.first;
   double zMin    = *minMaxZ.first;
+  double rMax    = *minMaxR.second;
+  double zMax    = *minMaxZ.second;
+  // calculate maxima (add one last bin, because bin value always corresponds to
+  // left boundary)
+  double stepZ = std::fabs(zMax - zMin) / (nBinsZ - 1);
+  double stepR = std::fabs(rMax - rMin) / (nBinsR - 1);
+  rMax += stepR;
+  zMax += stepZ;
   if (firstQuadrant) {
-    zMin = -(*minMaxZ.second);
+    zMin   = -(*minMaxZ.second);
+    nBinsZ = 2. * nBinsZ - 1;
   }
+
   // Create the axis for the grid
   Acts::detail::EquidistantAxis rAxis(
-      rMin * lengthUnit, (*minMaxR.second) * lengthUnit, nBinsR);
+      rMin * lengthUnit, rMax * lengthUnit, nBinsR);
   Acts::detail::EquidistantAxis zAxis(
-      zMin * lengthUnit, (*minMaxZ.second) * lengthUnit, nBinsZ);
+      zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
+
   // Create the grid
   typedef Acts::detail::Grid<Acts::Vector2D,
                              Acts::detail::EquidistantAxis,
@@ -56,6 +65,7 @@ Acts::InterpolatedBFieldMap::FieldMapper<2, 2> Acts::fieldMapperRZ(
          Grid_t;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
   // [2] Set the bField values
+
   for (size_t i = 1; i <= nBinsR; ++i) {
     for (size_t j = 1; j <= nBinsZ; ++j) {
       std::array<size_t, 2> nIndices = {{rPos.size(), zPos.size()}};
@@ -64,8 +74,9 @@ Acts::InterpolatedBFieldMap::FieldMapper<2, 2> Acts::fieldMapperRZ(
         // std::vectors begin with 0 and we do not want the user needing to
         // take underflow or overflow bins in account this is why we need to
         // subtract by one
-        size_t          n = std::abs(int(j - 1) - (int(zPos.size()) - 1));
+        size_t          n = std::abs(int(j) - int(zPos.size()));
         Grid_t::index_t indicesFirstQuadrant = {{i - 1, n}};
+
         grid.at(indices)
             = bField.at(localToGlobalBin(indicesFirstQuadrant, nIndices))
             * BFieldUnit;
@@ -79,7 +90,6 @@ Acts::InterpolatedBFieldMap::FieldMapper<2, 2> Acts::fieldMapperRZ(
       }
     }
   }
-
   // [3] Create the transformation for the position
   // map (x,y,z) -> (r,z)
   auto transformPos = [](const Acts::Vector3D& pos) {
@@ -127,31 +137,44 @@ Acts::InterpolatedBFieldMap::FieldMapper<3, 3> Acts::fieldMapperXYZ(
   size_t nBinsX = xPos.size();
   size_t nBinsY = yPos.size();
   size_t nBinsZ = zPos.size();
-  if (firstOctant) {
-    nBinsX = 2 * nBinsX - 1;
-    nBinsY = 2 * nBinsY - 1;
-    nBinsZ = 2 * nBinsZ - 1;
-  }
+
   // get the minimum and maximum
   auto minMaxX = std::minmax_element(xPos.begin(), xPos.end());
   auto minMaxY = std::minmax_element(yPos.begin(), yPos.end());
   auto minMaxZ = std::minmax_element(zPos.begin(), zPos.end());
   // Create the axis for the grid
+  // get minima
   double xMin = *minMaxX.first;
   double yMin = *minMaxY.first;
   double zMin = *minMaxZ.first;
+  // get maxima
+  double xMax = *minMaxX.second;
+  double yMax = *minMaxY.second;
+  double zMax = *minMaxZ.second;
+  // calculate maxima (add one last bin, because bin value always corresponds to
+  // left boundary)
+  double stepZ = std::fabs(zMax - zMin) / (nBinsZ - 1);
+  double stepY = std::fabs(yMax - yMin) / (nBinsY - 1);
+  double stepX = std::fabs(xMax - xMin) / (nBinsX - 1);
+  xMax += stepX;
+  yMax += stepY;
+  zMax += stepZ;
+
   // If only the first octant is given
   if (firstOctant) {
-    xMin = -*minMaxX.second;
-    yMin = -*minMaxY.second;
-    zMin = -*minMaxZ.second;
+    xMin   = -*minMaxX.second;
+    yMin   = -*minMaxY.second;
+    zMin   = -*minMaxZ.second;
+    nBinsX = 2 * nBinsX - 1;
+    nBinsY = 2 * nBinsY - 1;
+    nBinsZ = 2 * nBinsZ - 1;
   }
   Acts::detail::EquidistantAxis xAxis(
-      xMin * lengthUnit, *minMaxX.second * lengthUnit, nBinsX);
+      xMin * lengthUnit, xMax * lengthUnit, nBinsX);
   Acts::detail::EquidistantAxis yAxis(
-      yMin * lengthUnit, *minMaxY.second * lengthUnit, nBinsY);
+      yMin * lengthUnit, yMax * lengthUnit, nBinsY);
   Acts::detail::EquidistantAxis zAxis(
-      zMin * lengthUnit, *minMaxZ.second * lengthUnit, nBinsZ);
+      zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
   // Create the grid
   typedef Acts::detail::Grid<Acts::Vector3D,
                              Acts::detail::EquidistantAxis,
@@ -172,9 +195,9 @@ Acts::InterpolatedBFieldMap::FieldMapper<3, 3> Acts::fieldMapperXYZ(
           // std::vectors begin with 0 and we do not want the user needing to
           // take underflow or overflow bins in account this is why we need to
           // subtract by one
-          size_t          m = std::abs(int(i - 1) - (int(xPos.size()) - 1));
-          size_t          n = std::abs(int(j - 1) - (int(yPos.size()) - 1));
-          size_t          l = std::abs(int(k - 1) - (int(zPos.size()) - 1));
+          size_t          m = std::abs(int(i) - (int(xPos.size())));
+          size_t          n = std::abs(int(j) - (int(yPos.size())));
+          size_t          l = std::abs(int(k) - (int(zPos.size())));
           Grid_t::index_t indicesFirstOctant = {{m, n, l}};
 
           grid.at(indices)
