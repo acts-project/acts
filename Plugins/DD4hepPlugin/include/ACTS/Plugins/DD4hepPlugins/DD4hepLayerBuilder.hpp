@@ -11,6 +11,7 @@
 
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Tools/ILayerBuilder.hpp"
+#include "ACTS/Tools/LayerCreator.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
@@ -22,8 +23,6 @@ class DetElement;
 }
 
 namespace Acts {
-
-class ILayerCreator;
 
 /// @brief build layers of one cylinder-endcap setup from DD4hep input
 ///
@@ -42,7 +41,7 @@ public:
     /// string based identification
     std::string configurationName = "undefined";
     /// layer creator which is internally used to build layers
-    std::shared_ptr<const ILayerCreator> layerCreator = nullptr;
+    std::shared_ptr<const LayerCreator> layerCreator = nullptr;
     /// the binning type of the contained surfaces in phi
     /// (equidistant/arbitrary)
     BinningType bTypePhi = equidistant;

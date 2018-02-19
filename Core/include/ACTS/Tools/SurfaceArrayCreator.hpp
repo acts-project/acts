@@ -13,18 +13,27 @@
 #ifndef ACTS_TOOLS_SURFACERARRAYCREATOR_H
 #define ACTS_TOOLS_SURFACERARRAYCREATOR_H 1
 
-#include "ACTS/Tools/ISurfaceArrayCreator.hpp"
+#include <boost/none.hpp>
+#include <boost/optional.hpp>
+#include "ACTS/Layers/ProtoLayer.hpp"
+#include "ACTS/Surfaces/PlanarBounds.hpp"
+#include "ACTS/Surfaces/Surface.hpp"
+#include "ACTS/Surfaces/SurfaceArray.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
+#include "ACTS/Utilities/Units.hpp"
 
 namespace Acts {
 
-class Surface;
-class BinUtility;
+namespace Test {
+  struct SurfaceArrayCreatorFixture;
+}
+
+using SurfaceMatcher
+    = std::function<bool(BinningValue, const Surface*, const Surface*)>;
 
 typedef std::vector<const Surface*> SurfaceVector;
 typedef std::vector<SurfaceVector>  SurfaceMatrix;
-typedef std::vector<SurfaceMatrix>  SurfaceGrid;
 
 typedef std::vector<Vector3D> V3Vector;
 typedef std::vector<V3Vector> V3Matrix;
@@ -34,15 +43,58 @@ typedef std::vector<V3Vector> V3Matrix;
 /// It is designed create sub surface arrays to be ordered on Surfaces
 ///
 /// @todo write more documentation on how this is done
-class SurfaceArrayCreator : virtual public ISurfaceArrayCreator
+class SurfaceArrayCreator
 {
 public:
-  /// Constructor
+  friend Acts::Test::SurfaceArrayCreatorFixture;
+
+  struct ProtoAxis
+  {
+    BinningType         bType;
+    BinningValue        bValue;
+    size_t              nBins;
+    double              min;
+    double              max;
+    std::vector<double> binEdges;
+
+    size_t
+    getBin(double x) const
+    {
+      if (binEdges.size() == 0) {
+        // equidistant
+        double w = (max - min) / nBins;
+        return std::floor((x - min) / w);
+      } else {
+        // variable
+        const auto it
+            = std::upper_bound(std::begin(binEdges), std::end(binEdges), x);
+        return std::distance(std::begin(binEdges), it) - 1;
+      }
+    }
+  };
+
+  // Configuration struct
+  struct Config
+  {
+    SurfaceMatcher surfaceMatcher = SurfaceArrayCreator::isSurfaceEquivalent;
+  };
+
+  /// Constructor with default config
   ///
   /// @param logger logging instance
   SurfaceArrayCreator(std::unique_ptr<const Logger> logger
                       = getDefaultLogger("SurfaceArrayCreator", Logging::INFO))
-    : m_logger(std::move(logger))
+    : m_cfg(Config()), m_logger(std::move(logger))
+  {
+  }
+  /// Constructor with explicit config
+  ///
+  /// @param cfg Explicit config struct
+  /// @param logger logging instance
+  SurfaceArrayCreator(const Config&                 cfg,
+                      std::unique_ptr<const Logger> logger
+                      = getDefaultLogger("SurfaceArrayCreator", Logging::INFO))
+    : m_cfg(cfg), m_logger(std::move(logger))
   {
   }
 
@@ -57,10 +109,7 @@ public:
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param R is the radius of the cylinder
-  /// @param minPhi is the minimal phi position of the surfaces
-  /// @param maxPhi is the maximal phi position of the surfaces
-  /// @param halfZ is the half length in z of the cylinder
+  /// @param protoLayer The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsZ is the number of bin in Z for the surfaces
   /// @param transform is the (optional) additional transform applied
@@ -68,14 +117,11 @@ public:
   /// @return a unique pointer to a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
-                         double                             R,
-                         double                             minPhi,
-                         double                             maxPhi,
-                         double                             halfZ,
                          size_t                             binsPhi,
                          size_t                             binsZ,
+                         boost::optional<ProtoLayer> protoLayer = boost::none,
                          std::shared_ptr<const Transform3D> transform
-                         = nullptr) const final;
+                         = nullptr) const;
 
   /// SurfaceArrayCreator interface method
   ///
@@ -86,6 +132,7 @@ public:
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
+  /// @param protoLayer The proto layer containing the layer size
   /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
   /// @param bTypeZ the binning type in z direction (equidistant/aribtrary)
   /// @param transform is the (optional) additional transform applied
@@ -93,10 +140,11 @@ public:
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<Acts::SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
-                         BinningType bTypePhi = equidistant,
-                         BinningType bTypeZ   = equidistant,
+                         BinningType                 bTypePhi   = equidistant,
+                         BinningType                 bTypeZ     = equidistant,
+                         boost::optional<ProtoLayer> protoLayer = boost::none,
                          std::shared_ptr<const Transform3D> transform
-                         = nullptr) const final;
+                         = nullptr) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a disc, binned in r, phi when extremas and
@@ -106,10 +154,7 @@ public:
   /// to be ordered on the disc
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param rMin is the minimimal radius of the disc
-  /// @param rMax is the maximal radius of the disc
-  /// @param minPhi is the minimal phi position of the surfaces
-  /// @param maxPhi is the maximal phi position of the surfaces
+  /// @param protoLayer The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsR is the number of bin in R for the surfaces
   /// @param transform is the (optional) additional transform applied
@@ -117,14 +162,11 @@ public:
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
-                     double                             rMin,
-                     double                             rMax,
-                     double                             minPhi,
-                     double                             maxPhi,
                      size_t                             binsR,
                      size_t                             binsPhi,
+                     boost::optional<ProtoLayer> protoLayer = boost::none,
                      std::shared_ptr<const Transform3D> transform
-                     = nullptr) const final;
+                     = nullptr) const;
 
   /// SurfaceArrayCreator interface method
   ///
@@ -135,17 +177,22 @@ public:
   /// to be ordered on the disc
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
+  /// @param protoLayer The proto layer containing the layer size
   /// @param bTypeR the binning type in r direction (equidistant/aribtrary)
   /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
+  /// @note If there is more than on R-Ring, number of phi bins
+  ///       will be set to lowest number of surfaces of any R-ring.
+  ///       This ignores bTypePhi and produces equidistant binning in phi
   std::unique_ptr<Acts::SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
                      BinningType                        bTypeR,
                      BinningType                        bTypePhi,
+                     boost::optional<ProtoLayer> protoLayer = boost::none,
                      std::shared_ptr<const Transform3D> transform
-                     = nullptr) const final;
+                     = nullptr) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
@@ -168,7 +215,33 @@ public:
                       size_t                             binsX,
                       size_t                             binsY,
                       std::shared_ptr<const Transform3D> transform
-                      = nullptr) const final;
+                      = nullptr) const;
+
+  static bool
+  isSurfaceEquivalent(BinningValue bValue, const Surface* a, const Surface* b)
+  {
+
+    if (bValue == Acts::binPhi) {
+      double dPhi = std::abs(a->binningPosition(binR).phi()
+                             - b->binningPosition(binR).phi());
+      dPhi = std::abs(
+          dPhi - (dPhi > M_PI) * (2 * M_PI));  // subtract dPhi if over 2pi
+
+      return dPhi < M_PI * 1 / 180.;
+    }
+
+    if (bValue == Acts::binZ)
+      return (
+          std::abs(a->binningPosition(binR).z() - b->binningPosition(binR).z())
+          < Acts::units::_um);
+
+    if (bValue == Acts::binR)
+      return (std::abs(a->binningPosition(binR).perp()
+                       - b->binningPosition(binR).perp())
+              < Acts::units::_um);
+
+    return false;
+  }
 
   /// Set logging instance
   /// @param logger is the logging instance to be set
@@ -179,14 +252,27 @@ public:
   }
 
 private:
+  /// configuration object
+  Config m_cfg;
+
   /// Private access to logger
   const Logger&
   logger() const
   {
     return *m_logger;
   }
+
+  std::vector<const Surface*>
+  findKeySurfaces(
+      const std::vector<const Surface*>& surfaces,
+      std::function<bool(const Surface*, const Surface*)> equal) const;
+
+  size_t
+  determineBinCount(const std::vector<const Surface*>& surfaces,
+                    BinningValue                       bValue) const;
+
   /// SurfaceArrayCreator internal method
-  /// Creates an arbitrary BinUtility from a vector of (unsorted) surfaces with
+  /// Creates a variable @c ProtoAxis from a vector of (unsorted) surfaces with
   /// PlanarBounds
   /// It loops through the surfaces and finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called
@@ -201,14 +287,18 @@ private:
   /// @param bValue the BinningValue in which direction should be binned
   /// (currently possible: binPhi, binR, binZ)
   /// @param transform is the (optional) additional transform applied
-  /// @return a unique pointer a one dimensional BinUtility
-  Acts::BinUtility
-  createArbitraryBinUtility(const std::vector<const Surface*>& surfaces,
-                            BinningValue                       bValue,
-                            std::shared_ptr<const Transform3D> transform
-                            = nullptr) const;
+  /// @return Instance of @c ProtoAxis containing determined properties
+  /// @note This only creates the @c ProtoAxis, this needs to be turned
+  ///       into an actual @c Axis object to be used
+  ProtoAxis
+  createVariableAxis(const std::vector<const Surface*>& surfaces,
+                     BinningValue                       bValue,
+                     ProtoLayer                         protoLayer,
+                     Transform3D&                       transform) const;
+
   /// SurfaceArrayCreator internal method
-  /// Creates an equidistant BinUtility when the extremas and the bin number are
+  /// Creates a equidistant @c ProtoAxis when the extremas and the bin number
+  /// are
   /// It loops through the surfaces and finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called
   /// "key" surfaces (surfaces with different positions in the binning
@@ -221,45 +311,83 @@ private:
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the BinningValue in which direction should be binned
   /// (currently possible: binPhi, binR, binZ)
+  /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
   /// @param transform is the (optional) additional transform applied
-  /// @return a unique pointer a one dimensional BinUtility
-  Acts::BinUtility
-  createEquidistantBinUtility(const std::vector<const Surface*>& surfaces,
-                              BinningValue                       bValue,
-                              std::shared_ptr<const Transform3D> transform
-                              = nullptr) const;
+  /// @return Instance of @c ProtoAxis containing determined properties
+  /// @note This only creates the @c ProtoAxis, this needs to be turned
+  ///       into an actual @c Axis object to be used
+  ProtoAxis
+  createEquidistantAxis(const std::vector<const Surface*>& surfaces,
+                        BinningValue                       bValue,
+                        ProtoLayer                         protoLayer,
+                        Transform3D&                       transform,
+                        size_t                             nBins = 0) const;
+
   /// SurfaceArrayCreator internal method
-  /// - create an equidistant BinUtility with all parameters given
-  /// - if parameters are known this function is preferred
-  /// currently implemented for phi, r and z bining
-  /// @todo implement for x,y binning
-  /// @param surfaces are the sensitive surfaces to be
-  /// @param bValue the BinningValue in which direction should be binned
-  /// (currently possible: binPhi, binR, binZ)
-  /// @param bType the BinningType (equidistant or arbitrary binning)
-  /// @param bins the number of bins
-  /// @param min is the minimal position of the surfaces in the binning
-  /// direction
-  /// @param max is the maximal position of the surfaces in the binning
-  /// direction
-  /// @param transform is the (optional) additional transform applied
-  /// @return a unique pointer a one dimensional BinUtility
-  Acts::BinUtility
-  createBinUtility(const std::vector<const Surface*>& surfaces,
-                   BinningValue                       bValue,
-                   BinningType                        bType,
-                   size_t                             bins,
-                   double                             min,
-                   double                             max,
-                   std::shared_ptr<const Transform3D> transform
-                   = nullptr) const;
+  /// @brief Creates a SurfaceGridLookup instance within an any
+  /// This is essentially a factory which absorbs some if/else logic
+  /// that is required by the templating.
+  /// @tparam bdtA AxisBoundaryType of axis A
+  /// @tparam bdtB AxisBoundaryType of axis B
+  /// @tparam F1 type-deducted value of g2l lambda
+  /// @tparam F2 type-deducted value of l2g lambda
+  /// @param globalToLocal transform callable
+  /// @param localToGlobal transform callable
+  /// @param pAxisA ProtoAxis object for axis A
+  /// @param pAxisB ProtoAxis object for axis B
+  template <detail::AxisBoundaryType bdtA,
+            detail::AxisBoundaryType bdtB,
+            typename F1,
+            typename F2>
+  SurfaceArray::AnySurfaceGridLookup_t
+  makeSurfaceGridLookup2D(F1        globalToLocal,
+                          F2        localToGlobal,
+                          ProtoAxis pAxisA,
+                          ProtoAxis pAxisB) const
+  {
+
+    // this becomes completely unreadable otherwise
+    // clang-format off
+    if (pAxisA.bType == equidistant && pAxisB.bType == equidistant) {
+
+      detail::Axis<detail::AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
+      detail::Axis<detail::AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
+      return SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>(globalToLocal,
+                                                                                 localToGlobal,
+                                                                                 std::make_tuple(axisA, axisB));
+
+    } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
+
+      detail::Axis<detail::AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
+      detail::Axis<detail::AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
+      return SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>(globalToLocal,
+                                                                                 localToGlobal,
+                                                                                 std::make_tuple(axisA, axisB));
+      
+    } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
+
+      detail::Axis<detail::AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
+      detail::Axis<detail::AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
+      return SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>(globalToLocal,
+                                                                                 localToGlobal,
+                                                                                 std::make_tuple(axisA, axisB));
+
+    } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
+
+      detail::Axis<detail::AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
+      detail::Axis<detail::AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
+      return SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>(globalToLocal,
+                                                                                 localToGlobal,
+                                                                                 std::make_tuple(axisA, axisB));
+    }
+    // clang-format on
+  }
 
   /// logging instance
   std::unique_ptr<const Logger> m_logger;
 
   /// Private helper method to complete the binning
   ///
-  /// @todo implement closest neighbour search
   ///
   ///  given a grid point o
   ///    |  0  |  1 |  2  |  3 |  4  |
@@ -271,24 +399,21 @@ private:
   /// This is being called when you chose to use more bins thans surfaces
   /// I.e. to put a finer granularity binning onto your surface
   /// Neighbour bins are then filled to contain pointers as well
-  /// @param binUtility is the unitility class that describes the binning
-  /// @param v3Matrix the corresponding 3D positions filled for every grid point
-  /// @param sVector is the filled vector of Surface and binning position
-  /// @param sGrid the surfaces filled for every grid point
-  /// binSystem is the full system of bins
+  /// This method delegates to SurfaceGridLookup itself.
+  /// @param sl The @c SurfaceGridLookup
+  /// @param surfaces the surfaces
+  template <class T>
   void
-  completeBinning(const BinUtility&    binUtility,
-                  const V3Matrix&      v3Matrix,
-                  const SurfaceVector& sVector,
-                  SurfaceGrid&         sGrid) const;
+  completeBinning(T& sl, const std::vector<const Surface*>& surfaces) const
+  {
+    ACTS_VERBOSE("Complete binning by filling closest neighbour surfaces into "
+                 "empty bins.");
 
-  /// Private helper method to complete the binning
-  ///
-  ///
-  /// @todo write documentation
-  ///
-  void
-  registerNeighbourHood(SurfaceArray& sArray) const;
+    size_t binCompleted = sl.completeBinning(surfaces);
+
+    ACTS_VERBOSE("       filled  : " << binCompleted
+                                     << " (includes under/overflow)");
+  }
 
   /// Private helper method to transform the  vertices of surface bounds into
   /// global coordinates
@@ -300,6 +425,6 @@ private:
                      const std::vector<Acts::Vector2D>& locVertices) const;
 };
 
-}  // end of namespace
+}  // namespace Acts
 
 #endif  // ACTS_TOOLS_SURFACERARRAYCREATOR_H

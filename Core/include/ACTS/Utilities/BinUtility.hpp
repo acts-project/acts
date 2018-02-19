@@ -131,6 +131,24 @@ public:
   operator+=(const BinUtility& gbu)
   {
     const std::vector<BinningData>& bData = gbu.binningData();
+
+    if (m_transform == nullptr && gbu.transform() != nullptr) {
+      // use other transform
+      m_transform = gbu.transform();
+      m_itransform
+          = std::make_unique<const Transform3D>(m_transform->inverse());
+    } else if (m_transform != nullptr && gbu.transform() != nullptr) {
+      // combine two existing transform
+      // note that this might lead to undesired behaviour of the combined
+      // BinUtility
+      m_transform = std::make_shared<const Transform3D>((*m_transform)
+                                                        * (*gbu.transform()));
+      m_itransform
+          = std::make_unique<const Transform3D>(m_transform->inverse());
+    }  // else {
+    // only this BU has transform, just keep it.
+    //}
+
     if (m_binningData.size() + bData.size() > 3)
       throw "BinUtility does not support dim > 3";
     m_binningData.insert(m_binningData.end(), bData.begin(), bData.end());
@@ -321,6 +339,15 @@ public:
   {
     if (ba >= m_binningData.size()) return 1;
     return (m_binningData[ba].bins());
+  }
+
+  /// Transform applied to global positions before lookup
+  ///
+  /// @return Shared pointer to transform
+  std::shared_ptr<const Transform3D>
+  transform() const
+  {
+    return m_transform;
   }
 
   /// The type/value of the binning

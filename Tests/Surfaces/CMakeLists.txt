@@ -86,3 +86,7 @@ add_test (NAME RadialBoundsUnitTest COMMAND RadialBoundsTests)
 add_executable (DiscTrapezoidalBoundsTests DiscTrapezoidalBoundsTests.cpp)
 target_link_libraries (DiscTrapezoidalBoundsTests PRIVATE ACTSCore)
 add_test (NAME DiscTrapezoidalBoundsUnitTest COMMAND DiscTrapezoidalBoundsTests)
+
+add_executable (SurfaceArrayTests SurfaceArrayTests.cpp)
+target_link_libraries (SurfaceArrayTests PRIVATE ACTSCore)
+add_test (NAME SurfaceArrayUnitTest COMMAND SurfaceArrayTests)

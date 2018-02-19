@@ -8,7 +8,10 @@
 
 #define BOOST_TEST_MODULE grid tests
 #include <boost/test/included/unit_test.hpp>
+#include <chrono>
+#include <random>
 
+#include "ACTS/Utilities/concept/AnyGrid.hpp"
 #include "ACTS/Utilities/detail/Axis.hpp"
 #include "ACTS/Utilities/detail/Grid.hpp"
 
@@ -985,7 +988,8 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(neighborhood)
   {
     typedef std::set<size_t> bins_t;
-    typedef EquidistantAxis  EAxis;
+    typedef std::array<double, 1> point_t;
+    typedef EquidistantAxis EAxis;
     typedef Grid<double, EAxis> Grid1_t;
     typedef Grid<double, EAxis, EAxis> Grid2_t;
     typedef Grid<double, EAxis, EAxis, EAxis> Grid3_t;
@@ -1008,6 +1012,16 @@ namespace Test {
     BOOST_TEST((g1.neighborHoodIndices({{10}}, 2) == bins_t({8, 9, 10, 11})));
     BOOST_TEST((g1.neighborHoodIndices({{11}}, 2) == bins_t({9, 10, 11})));
 
+    
+    BOOST_TEST((g1.neighborHoodIndices(point_t({{-0.05}}), 1) == bins_t({0, 1})));
+    BOOST_TEST((g1.neighborHoodIndices(point_t({{-0.05}}), 2) == bins_t({0, 1, 2})));
+    BOOST_TEST((g1.neighborHoodIndices(point_t({{0.05}}), 1) == bins_t({0, 1, 2})));
+    BOOST_TEST((g1.neighborHoodIndices(point_t({{0.05}}), 3) == bins_t({0, 1, 2, 3, 4})));
+    BOOST_TEST((g1.neighborHoodIndices(point_t({{0.35}}), 2) == bins_t({2, 3, 4, 5, 6})));
+    BOOST_TEST((g1.neighborHoodIndices(point_t({{0.85}}), 2) == bins_t({7, 8, 9, 10, 11})));
+    BOOST_TEST((g1.neighborHoodIndices(point_t({{0.95}}), 2) == bins_t({8, 9, 10, 11})));
+    BOOST_TEST((g1.neighborHoodIndices(point_t({{10.5}}), 2) == bins_t({9, 10, 11})));
+
     // 2D case
     BOOST_TEST((g2.neighborHoodIndices({{0, 0}}, 1) == bins_t({0, 1, 12, 13})));
     BOOST_TEST((g2.neighborHoodIndices({{0, 1}}, 1) == bins_t({0, 1, 2, 12, 13, 14})));
@@ -1024,6 +1038,66 @@ namespace Test {
     BOOST_TEST((g3.neighborHoodIndices({{0, 1, 1}}, 1) == bins_t({0, 1, 2, 12, 13, 14, 24, 25, 26, 144, 145, 146, 156, 157, 158, 168, 169, 170})));
     BOOST_TEST((g3.neighborHoodIndices({{1, 1, 1}}, 1) == bins_t({0, 1, 2, 12, 13, 14, 24, 25, 26, 144, 145, 146, 156, 157, 158, 168, 169, 170, 288, 289, 290, 300, 301, 302, 312, 313, 314})));
     BOOST_TEST((g3.neighborHoodIndices({{11, 10, 9}}, 1) == bins_t({1556, 1557, 1558, 1568, 1569, 1570, 1580, 1581, 1582, 1700, 1701, 1702, 1712, 1713, 1714, 1724, 1725, 1726})));
+    // clang-format on
+
+    typedef Axis<AxisType::Equidistant, AxisBoundaryType::Closed> EAxisClosed;
+    typedef Grid<double, EAxisClosed>                             Grid1Closed_t;
+    EAxisClosed d(0.0, 1.0, 10u);
+
+    Grid1Closed_t g1Cl(std::make_tuple(std::move(d)));
+    BOOST_TEST((g1Cl.neighborHoodIndices({{0}}, 1)
+                == bins_t({})));  // underflow, makes no sense
+    BOOST_TEST((g1Cl.neighborHoodIndices({{11}}, 1)
+                == bins_t({})));  // overflow, makes no sense
+    BOOST_TEST((g1Cl.neighborHoodIndices({{1}}, 1)
+                == bins_t({10, 1, 2})));  // overflow, makes no sense
+    BOOST_TEST((g1Cl.neighborHoodIndices({{5}}, 1)
+                == bins_t({4, 5, 6})));  // overflow, makes no sense
+
+    typedef Grid<double, EAxisClosed, EAxisClosed> Grid2Closed_t;
+    // typedef Grid<double, EAxisClosed, EAxisClosed, EAxisClosed>
+    // Grid3Closed_t;
+    EAxisClosed   e(0.0, 1.0, 5u);
+    EAxisClosed   f(0.0, 1.0, 5u);
+    EAxisClosed   g(0.0, 1.0, 5u);
+    Grid2Closed_t g2Cl(std::make_tuple(std::move(e), std::move(f)));
+    BOOST_TEST(g2Cl.neighborHoodIndices({{3, 3}}, 1)
+               == bins_t({16, 17, 18, 23, 24, 25, 30, 31, 32}));
+    BOOST_TEST(g2Cl.neighborHoodIndices({{1, 1}}, 1)
+               == bins_t({8, 9, 15, 16, 12, 19, 36, 37, 40}));
+    BOOST_TEST(g2Cl.neighborHoodIndices({{1, 5}}, 1)
+               == bins_t({11, 12, 18, 19, 39, 40, 8, 15, 36}));
+    BOOST_TEST(g2Cl.neighborHoodIndices({{5, 1}}, 1)
+               == bins_t({36, 37, 29, 30, 33, 40, 8, 9, 12}));
+    BOOST_TEST(g2Cl.neighborHoodIndices({{5, 5}}, 1)
+               == bins_t({39, 40, 32, 33, 11, 12, 29, 36, 8}));
+
+    bins_t all({8,  9,  10, 11, 12, 15, 16, 17, 18, 19, 22, 23, 24,
+                25, 26, 29, 30, 31, 32, 33, 36, 37, 38, 39, 40});
+    BOOST_TEST(g2Cl.neighborHoodIndices({{3, 3}}, 2) == all);
+    BOOST_TEST(g2Cl.neighborHoodIndices({{1, 1}}, 2) == all);
+    BOOST_TEST(g2Cl.neighborHoodIndices({{1, 5}}, 2) == all);
+    BOOST_TEST(g2Cl.neighborHoodIndices({{5, 1}}, 2) == all);
+    BOOST_TEST(g2Cl.neighborHoodIndices({{5, 5}}, 2) == all);
+
+    // @TODO 3D test would be nice, but should essentially not be a problem if
+    // 2D works.
+
+    // clang-format off
+    /*
+     *       1   2    3    4    5
+     *   |------------------------|
+     * 1 |  8 |  9 | 10 | 11 | 12 |
+     *   |----|----|----|----|----|
+     * 2 | 15 | 16 | 17 | 18 | 19 |
+     *   |----|----|----|----|----|
+     * 3 | 22 | 23 | 24 | 25 | 26 |
+     *   |----|----|----|----|----|
+     * 4 | 29 | 30 | 31 | 32 | 33 |
+     *   |----|----|----|----|----|
+     * 5 | 36 | 37 | 38 | 39 | 40 |
+     *   |------------------------|
+     */
     // clang-format on
   }
 
@@ -1055,8 +1129,84 @@ namespace Test {
     // 3D case
     BOOST_TEST((g3.closestPointsIndices(Point({{0.23, 0.13, 0.61}})) == bins_t({112, 113, 117, 118, 147, 148, 152, 153})));
     BOOST_TEST((g3.closestPointsIndices(Point({{0.52, 0.35, 0.71}})) == bins_t({223, 224, 228, 229, 258, 259, 263, 264})));
+
+    typedef Axis<AxisType::Equidistant, AxisBoundaryType::Closed>  EAxisClosed;
+    typedef Grid<double, EAxisClosed> Grid1Cl_t;
+    typedef Grid<double, EAxisClosed, EAxisClosed> Grid2Cl_t;
+    //typedef Grid<double, EAxisClosed, EAxisClosed, EAxisClosed> Grid3Cl_t;
+    EAxisClosed   aCl(0.0, 1.0, 10u);
+    EAxisClosed   bCl(0.0, 1.0, 5u);
+    EAxisClosed   cCl(0.0, 1.0, 3u);
+    Grid1Cl_t g1Cl(std::make_tuple(std::move(aCl)));
+    Grid2Cl_t g2Cl(std::make_tuple(std::move(aCl), std::move(bCl)));
+
+    // 1D case
+    BOOST_TEST((g1Cl.closestPointsIndices(Point({{0.52}})) == bins_t({6, 7})));
+    BOOST_TEST((g1Cl.closestPointsIndices(Point({{0.98}})) == bins_t({10, 1})));
+
+    // 2D case
+    BOOST_TEST((g2Cl.closestPointsIndices(Point({{0.52, 0.08}})) == bins_t({43, 44, 50, 51})));
+    BOOST_TEST((g2Cl.closestPointsIndices(Point({{0.52, 0.68}})) == bins_t({46, 47, 53, 54})));
+    BOOST_TEST((g2Cl.closestPointsIndices(Point({{0.52, 0.88}})) == bins_t({47, 43, 54, 50})));
+    BOOST_TEST((g2Cl.closestPointsIndices(Point({{0.05, 0.08}})) == bins_t({8, 9, 15, 16})));
+    BOOST_TEST((g2Cl.closestPointsIndices(Point({{0.9, 0.95}})) == bins_t({75, 71, 12, 8})));
+
+    // @TODO: 3D checks would also be nice
+
+    typedef Axis<AxisType::Equidistant, AxisBoundaryType::Bound>  EAxisOpen;
+    typedef Grid<double, EAxisOpen> Grid1Op_t;
+    typedef Grid<double, EAxisOpen, EAxisOpen> Grid2Op_t;
+    //typedef Grid<double, EAxisOpen, EAxisOpen, EAxisOpen> Grid3Op_t;
+
+    EAxisOpen  aOp(0.0, 1.0, 10u);
+    EAxisOpen  bOp(0.0, 1.0, 5u);
+    EAxisOpen  cOp(0.0, 1.0, 3u);
+    Grid1Op_t g1Op(std::make_tuple(std::move(aOp)));
+    Grid2Op_t g2Op(std::make_tuple(std::move(aOp), std::move(bOp)));
+
+    // 1D case
+    BOOST_TEST((g1Op.closestPointsIndices(Point({{0.52}})) == bins_t({6, 7})));
+    BOOST_TEST((g1Op.closestPointsIndices(Point({{0.98}})) == bins_t({10})));
+    BOOST_TEST((g1Op.closestPointsIndices(Point({{0.88}})) == bins_t({9, 10})));
+
+    // 2D case
+    BOOST_TEST((g2Op.closestPointsIndices(Point({{0.52, 0.08}})) == bins_t({43, 44, 50, 51})));
+    BOOST_TEST((g2Op.closestPointsIndices(Point({{0.52, 0.68}})) == bins_t({46, 47, 53, 54})));
+    BOOST_TEST((g2Op.closestPointsIndices(Point({{0.52, 0.88}})) == bins_t({47, 54})));
+    BOOST_TEST((g2Op.closestPointsIndices(Point({{0.05, 0.1}})) == bins_t({8, 9, 15, 16})));
+    BOOST_TEST((g2Op.closestPointsIndices(Point({{0.95, 0.95}})) == bins_t({75})));
+    
+    // @TODO: 3D checks would also be nice
+
+    /*
+     *       1    2    3    4    5
+     *    |------------------------|
+     *  1 |  8 |  9 | 10 | 11 | 12 |
+     *    |----|----|----|----|----|
+     *  2 | 15 | 16 | 17 | 18 | 19 |
+     *    |----|----|----|----|----|
+     *  3 | 22 | 23 | 24 | 25 | 26 |
+     *    |----|----|----|----|----|
+     *  4 | 29 | 30 | 31 | 32 | 33 |
+     *    |----|----|----|----|----|
+     *  5 | 36 | 37 | 38 | 39 | 40 |
+     *    |------------------------|
+     *  6 | 43 | 44 | 45 | 46 | 47 |
+     *    |------------------------|
+     *  7 | 50 | 51 | 52 | 53 | 54 |
+     *    |------------------------|
+     *  8 | 57 | 58 | 59 | 60 | 61 |
+     *    |------------------------|
+     *  9 | 64 | 65 | 66 | 67 | 68 |
+     *    |------------------------|
+     * 10 | 71 | 72 | 73 | 74 | 75 |
+     *    |------------------------|
+     * 77   78   79   80   81   82   83
+     */
+
     // clang-format on
   }
+
 }  // namespace Test
 
 }  // namespace Acts

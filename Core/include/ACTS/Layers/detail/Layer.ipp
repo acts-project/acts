@@ -17,6 +17,7 @@ Layer::onLayer(const T& pars, const BoundaryCheck& bcheck) const
   return isOnLayer(pars.position(), bcheck);
 }
 
+// @TODO: Rewrite this with new SurfaceArray (multiple bins per surface)
 template <class T>
 std::vector<SurfaceIntersection>
 Layer::getCompatibleSurfaces(const T&                       pars,
@@ -96,70 +97,40 @@ Layer::getCompatibleSurfaces(const T&                       pars,
   // - collectPassive is set true : records everything
   // - collectSensitive is set true : direct request
   // - collectMaterial is set true and sensitive structure >1
+
+  auto crit
+      = [&collectPS, &startSurface, &endSurface](const Surface* srf) -> bool {
+    bool doCollect         = collectPS || srf->associatedMaterial();
+    bool startOrEndSurface = srf == startSurface || srf == endSurface;
+
+    return doCollect && !startOrEndSurface;
+  };
+
   if (m_surfaceArray
       && (collectPS || (collectMaterial && m_ssSensitiveSurfaces > 1))) {
     // compatible test surfaces
     std::vector<const Surface*> ctestSurfaces;
     if (searchType <= 0) {
-      // take all the test surfaces & their bin mates
-      auto allTestSurfaces = m_surfaceArray->arrayObjects();
-      // reserve twice the amount
+
+      const std::vector<const Surface*>& allTestSurfaces
+          = m_surfaceArray->surfaces();
       ctestSurfaces.reserve(allTestSurfaces.size());
-      for (auto& atSurface : allTestSurfaces) {
-        // skip start and end surface overlaps
-        if (atSurface == startSurface || atSurface == endSurface) continue;
-        // get the bin mates if they exist
-        if (atSurface && atSurface->associatedDetectorElement()) {
-          // get the bin mates
-          auto bmElements
-              = atSurface->associatedDetectorElement()->binmembers();
-          for (auto& bmElement : bmElements) {
-            // access the pain surface pointer
-            const Surface* sSurface = &(bmElement->surface());
-            // skip start and end surface overlaps
-            if (sSurface == startSurface || sSurface == endSurface) continue;
-            // only fill when really needed
-            if (collectPS || sSurface->associatedMaterial())
-              ctestSurfaces.push_back(sSurface);
-          }
-        }
-        // only fill when really needed for checking
-        if (collectPS || atSurface->associatedMaterial())
-          ctestSurfaces.push_back(atSurface);
-      }  // end loop over atSurface
+      std::copy_if(allTestSurfaces.begin(),
+                   allTestSurfaces.end(),
+                   std::back_inserter(ctestSurfaces),
+                   crit);
+
     } else {
-      // get the nominal test object
-      auto targetSurface = m_surfaceArray->object(pos);
-      if (targetSurface && targetSurface->associatedDetectorElement()) {
-        // get the detector elements
-        auto dElement = targetSurface->associatedDetectorElement();
-        std::vector<const DetectorElementBase*> dElements = {dElement};
-        // get the neighbours
-        dElements.insert(dElements.begin(),
-                         dElement->neighbours().begin(),
-                         dElement->neighbours().end());
-        // loop over all detector elements and add their surfaces and binmember
-        // surfaces
-        for (auto& ade : dElements) {
-          // insert the surface
-          const Surface* sSurface = &(ade->surface());
-          // skip start and end surface overlaps
-          if (sSurface == startSurface || sSurface == endSurface) continue;
-          // same proecure as before
-          if (collectPS || sSurface->associatedMaterial())
-            ctestSurfaces.push_back(&(ade->surface()));
-          // insert the bin members and the neighbors
-          for (auto& abm : ade->binmembers()) {
-            // and again for the bin members
-            const Surface* bSurface = &(abm->surface());
-            // skip start and end surface overlaps
-            if (bSurface == startSurface || bSurface == endSurface) continue;
-            // insert only when needed
-            if (collectPS || bSurface->associatedMaterial())
-              ctestSurfaces.push_back(bSurface);
-          }
-        }
-      }
+
+      const std::vector<const Surface*>& neighbors
+          = m_surfaceArray->neighbors(pos);
+
+      // Returned surfaces from SurfaceArray::neighbors() also includes
+      // the nominal surface. So we can just copy here
+      std::copy_if(neighbors.begin(),
+                   neighbors.end(),
+                   std::back_inserter(ctestSurfaces),
+                   crit);
     }
     // sensitive surfaces and test them
     for (auto& ctSurface : ctestSurfaces)

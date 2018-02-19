@@ -155,7 +155,7 @@ namespace Test {
           if (lay->surfaceArray()) {
             // sensitive surfaces are counted from 1 - n
             geo_id_value ssurface_id = 0;
-            for (auto ssf : lay->surfaceArray()->arrayObjects()) {
+            for (auto ssf : lay->surfaceArray()->surfaces()) {
               // check the approach volume id, approach layer id, approach
               // approach
               // id

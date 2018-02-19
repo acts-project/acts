@@ -61,7 +61,7 @@ namespace Test {
         for (auto asf : lay->approachDescriptor()->containedSurfaces())
           BOOST_CHECK_EQUAL(0ul, asf->geoID().value());
         // check the layer surface array
-        for (auto ssf : lay->surfaceArray()->arrayObjects())
+        for (auto ssf : lay->surfaceArray()->surfaces())
           BOOST_CHECK_EQUAL(0ul, ssf->geoID().value());
       }
     }
@@ -90,7 +90,7 @@ namespace Test {
         for (auto asf : lay->approachDescriptor()->containedSurfaces())
           BOOST_CHECK_EQUAL(0ul, asf->geoID().value());
         // check the layer surface array
-        for (auto ssf : lay->surfaceArray()->arrayObjects())
+        for (auto ssf : lay->surfaceArray()->surfaces())
           BOOST_CHECK_EQUAL(0ul, ssf->geoID().value());
       }
     }
@@ -127,7 +127,7 @@ namespace Test {
         for (auto asf : lay->approachDescriptor()->containedSurfaces())
           BOOST_CHECK_EQUAL(0ul, asf->geoID().value());
         // check the layer surface array
-        for (auto ssf : lay->surfaceArray()->arrayObjects())
+        for (auto ssf : lay->surfaceArray()->surfaces())
           BOOST_CHECK_EQUAL(0ul, ssf->geoID().value());
       }
     }

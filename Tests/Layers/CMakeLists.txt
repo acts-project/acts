@@ -25,3 +25,7 @@ add_test (NAME ConeLayerUnitTest COMMAND ConeLayerTests)
 add_executable (NavigationLayerTests NavigationLayerTests.cpp)
 target_link_libraries (NavigationLayerTests PRIVATE ACTSCore)
 add_test (NAME NavigationLayerUnitTest COMMAND NavigationLayerTests)
+
+add_executable (ProtoLayerTests ProtoLayerTests.cpp)
+target_link_libraries (ProtoLayerTests PRIVATE ACTSCore)
+add_test (NAME ProtoLayerUnitTest COMMAND ProtoLayerTests)

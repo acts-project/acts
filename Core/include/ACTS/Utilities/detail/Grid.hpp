@@ -70,6 +70,7 @@ namespace detail {
     ///
     /// @note The look-up considers under-/overflow bins along each axis.
     ///       Therefore, the look-up will never fail.
+    //
     template <class Point>
     reference
     at(const Point& point)
@@ -159,10 +160,6 @@ namespace detail {
     /// @pre The given @c Point type must represent a point in d (or higher)
     ///      dimensions where d is dimensionality of the grid. It must lie
     ///      within the grid range (i.e. not within a under-/overflow bin).
-    ///
-    /// @note The order of the global bin indices returned is optimal in the
-    ///       sense that sequential access in this order is considered optimal
-    ///       for the underlying memory layout of the grid values.
     template <class Point>
     std::set<size_t>
     closestPointsIndices(const Point& position) const
@@ -392,12 +389,23 @@ namespace detail {
     ///       Ignoring the truncation of the neighborhood size reaching beyond
     ///       over-/underflow bins, the neighborhood is of size \f$2 \times
     ///       \text{size}+1\f$ along each dimension.
-    /// @note The order of the global bin indices returned is optimal in the
-    ///       sense that sequential access in this order is considered optimal
-    ///       for the underlying memory layout of the grid values.
     std::set<size_t>
     neighborHoodIndices(const index_t& localBins, size_t size = 1u) const
     {
+      return grid_helper::neighborHoodIndices(localBins, size, m_axes);
+    }
+
+    /// @brief get global bin indices for neighborhood of bin identified by @p
+    /// pos
+    /// @param pos position around which to look
+    /// @param size how many neighbors (defaul: 1)
+    /// @return set of global bin indices pointing to the neighbors
+    template <class Point>
+    std::set<size_t>
+    neighborHoodIndices(const Point& pos, size_t size = 1u) const
+    {
+      const size_t  bin       = getGlobalBinIndex(pos);
+      const index_t localBins = getLocalBinIndices(bin);
       return grid_helper::neighborHoodIndices(localBins, size, m_axes);
     }
 
@@ -410,12 +418,18 @@ namespace detail {
     size() const
     {
       index_t nBinsArray = getNBins();
-      // add under-and overflow bins for each axis and mulitply all bins
+      // add under-and overflow bins for each axis and multiply all bins
       return std::accumulate(
           nBinsArray.begin(),
           nBinsArray.end(),
           1,
           [](const size_t& a, const size_t& b) { return a * (b + 2); });
+    }
+
+    std::array<concept::AnyAxis<>, DIM>
+    getAxes() const
+    {
+      return grid_helper::getAxes(m_axes);
     }
 
   private:

@@ -14,6 +14,7 @@
 #define ACTS_TGEOPLUGINS_TGEOLAYERBUILDER_H
 
 #include "ACTS/Tools/ILayerBuilder.hpp"
+#include "ACTS/Tools/LayerCreator.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
 
@@ -23,7 +24,6 @@ class TGeoNode;
 
 namespace Acts {
 
-class ILayerCreator;
 class TGeoDetectorElement;
 class Surface;
 
@@ -73,7 +73,7 @@ public:
     // set visibility flag
     bool setVisibility;
     // layer creator
-    std::shared_ptr<const ILayerCreator> layerCreator = nullptr;
+    std::shared_ptr<const LayerCreator> layerCreator = nullptr;
     // configurations
     std::vector<LayerConfig> negativeLayerConfigs;
     std::vector<LayerConfig> centralLayerConfigs;

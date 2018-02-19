@@ -13,8 +13,11 @@
 #ifndef ACTS_GEOMETRYTOOLS_LAYERCREATOR_H
 #define ACTS_GEOMETRYTOOLS_LAYERCREATOR_H 1
 
-#include "ACTS/Tools/ILayerCreator.hpp"
-#include "ACTS/Tools/ISurfaceArrayCreator.hpp"
+#include <boost/optional.hpp>
+#include "ACTS/Tools/SurfaceArrayCreator.hpp"
+#include "ACTS/Utilities/ApproachDescriptor.hpp"
+#include "ACTS/Utilities/BinUtility.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
 
 #ifndef ACTS_LAYERCREATOR_TAKESMALLERBIGGER
@@ -28,22 +31,29 @@
 
 namespace Acts {
 
-class ISurfaceArrayCreator;
+namespace Test {
+  struct LayerCreatorFixture;
+}
+class Surface;
+class Layer;
+typedef std::shared_ptr<Layer> MutableLayerPtr;
+
 /// @class LayerCreator
 ///
 /// The LayerCreator is able to build cylinde,r disc layers or plane layers from
 /// detector elements
 ///
-class LayerCreator : public ILayerCreator
+class LayerCreator
 {
 public:
+  friend Acts::Test::LayerCreatorFixture;
   ///  @struct Config
   ///  Configuration for the LayerCreator
   ///  This is the nexted configuration struct for the LayerCreator class
   struct Config
   {
     /// surface array helper
-    std::shared_ptr<const ISurfaceArrayCreator> surfaceArrayCreator = nullptr;
+    std::shared_ptr<const SurfaceArrayCreator> surfaceArrayCreator = nullptr;
     /// cylinder module z tolerance : it counts at same z, if ...
     double cylinderZtolerance;
     /// cylinder module phi tolerance : it counts at same phi, if ...
@@ -64,16 +74,16 @@ public:
   /// Destructor
   ~LayerCreator() = default;
 
-  /// ILayerCreator interface method - returning a cylindrical layer
+  /// returning a cylindrical layer
   ///
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param envelopeR is the additional envelope applied in R
-  /// @param envelopeZ is the additional envelope applied in z
   /// @param binsPhi is number of bins the sensitive surfaces are ordered in phi
   /// @param binsZ is number of bins the sensitive surfaces are ordered in Z
+  /// @param _protoLayer (optional) proto layer specifying the dimensions and
+  /// envelopes
   /// @param transform is the (optional) transform of the layer
   /// @param ad possibility to hand over a specific ApproachDescriptor, which is
   /// needed for material mapping. Otherwise the default ApproachDescriptor will
@@ -82,25 +92,22 @@ public:
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
   cylinderLayer(const std::vector<const Surface*>&  surfaces,
-                double                              envelopeR,
-                double                              envelopeZ,
                 size_t                              binsPhi,
                 size_t                              binsZ,
-                std::shared_ptr<const Transform3D>  transform = nullptr,
-                std::unique_ptr<ApproachDescriptor> ad
-                = nullptr) const override;
+                boost::optional<ProtoLayer>         _protoLayer = boost::none,
+                std::shared_ptr<const Transform3D>  transform   = nullptr,
+                std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
-  /// ILayerCreator interface method - returning a cylindrical layer
+  /// returning a cylindrical layer
   ///
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param layerRmin is the inner radius of the layer
-  /// @param layerRmax is the outer radius of the layer
-  /// @param layerHalfZ is the half length in z of the layer
   /// @param bTypePhi binning type in phi (equidistant/arbitrary)
   /// @param bTypeZ binning type in z (equidistant/arbitrary)
+  /// @param _protoLayer (optional) proto layer specifying the dimensions and
+  /// envelopes
   /// @param transform is the (optional) transform of the layer
   /// @param ad possibility to hand over a specific ApproachDescriptor, which is
   /// needed for material mapping. Otherwise the default ApproachDescriptor will
@@ -109,55 +116,23 @@ public:
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
   cylinderLayer(const std::vector<const Surface*>&  surfaces,
-                double                              layerRmin,
-                double                              layerRmax,
-                double                              layerHalfZ,
                 BinningType                         bTypePhi,
                 BinningType                         bTypeZ,
-                std::shared_ptr<const Transform3D>  transform = nullptr,
-                std::unique_ptr<ApproachDescriptor> ad
-                = nullptr) const override;
+                boost::optional<ProtoLayer>         _protoLayer = boost::none,
+                std::shared_ptr<const Transform3D>  transform   = nullptr,
+                std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
-  /// ILayerCreator interface method - returning a cylindrical layer
+  /// returning a disc layer
   ///
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param surfaces is the vector of sensitive surfaces represented by this
-  /// layer
-  /// @param envelopeR is the additional envelope applied in R
-  /// @param envelopeZ is the additional envelope applied in z
-  /// @param bTypePhi binning type in phi (equidistant/arbitrary)
-  /// @param bTypeZ binning type in z (equidistant/arbitrary)
-  /// @param transform is the (optional) transform of the layer
-  /// @param ad possibility to hand over a specific ApproachDescriptor, which is
-  /// needed for material mapping. Otherwise the default ApproachDescriptor will
-  /// be taken used for this layer
-  ///
-  /// @return shared pointer to a newly created layer
-  MutableLayerPtr
-  cylinderLayer(const std::vector<const Surface*>&  surfaces,
-                double                              envelopeR,
-                double                              envelopeZ,
-                BinningType                         bTypePhi,
-                BinningType                         bTypeZ,
-                std::shared_ptr<const Transform3D>  transform = nullptr,
-                std::unique_ptr<ApproachDescriptor> ad
-                = nullptr) const override;
-
-  /// ILayerCreator interface method - returning a cylindrical layer
-  ///
-  /// @param surfaces is the vector of pointers to sensitive surfaces
-  /// represented by this layer
-  /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
-  /// need to be valid, since no check is performed
-  /// @param envelopeMinR is the additional envelope applied in R at Rmin
-  /// @param envelopeMaxR is the additional envelope applied in R in Rmax
-  /// @param envelopeZ is the additional envelope applied in z
   /// @param binsR is number of bins the sensitive surfaces are ordered in R
   /// @param binsPhi is number of bins the sensitive surfaces are ordered in Phi
   /// @param transform is the (optional) transform of the layer
+  /// @param _protoLayer (optional) proto layer specifying the dimensions and
+  /// envelopes
   /// @param ad possibility to hand over a specific ApproachDescriptor, which is
   /// needed for material mapping. Otherwise the default ApproachDescriptor will
   /// be taken used for this layer
@@ -165,27 +140,23 @@ public:
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
   discLayer(const std::vector<const Surface*>&  surfaces,
-            double                              envelopeMinR,
-            double                              envelopeMaxR,
-            double                              envelopeZ,
             size_t                              binsR,
             size_t                              binsPhi,
-            std::shared_ptr<const Transform3D>  transform = nullptr,
-            std::unique_ptr<ApproachDescriptor> ad = nullptr) const override;
+            boost::optional<ProtoLayer>         _protoLayer = boost::none,
+            std::shared_ptr<const Transform3D>  transform   = nullptr,
+            std::unique_ptr<ApproachDescriptor> ad          = nullptr) const;
 
-  /// ILayerCreator interface method - returning a cylindrical layer
+  /// returning a disc layer
   ///
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param layerRmin is the inner radius of the layer
-  /// @param layerRmax is the outer radius of the layer
-  /// @param layerZmin is the minimum in z of the layer
-  /// @param layerZmax is the maximum in z of the layer
   /// @param bTypeR binning type in r (equidistant/arbitrary)
   /// @param bTypePhi binning type in phi (equidistant/arbitrary)
   /// @param transform is the (optional) transform of the layer
+  /// @param _protoLayer (optional) proto layer specifying the dimensions and
+  /// envelopes
   /// @param ad possibility to hand over a specific ApproachDescriptor, which is
   /// needed for material mapping. Otherwise the default ApproachDescriptor will
   /// be taken used for this layer
@@ -193,43 +164,13 @@ public:
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
   discLayer(const std::vector<const Surface*>&  surfaces,
-            double                              layerZmin,
-            double                              layerZmax,
-            double                              layerRmin,
-            double                              layerRmax,
             BinningType                         bTypeR,
             BinningType                         bTypePhi,
-            std::shared_ptr<const Transform3D>  transform = nullptr,
-            std::unique_ptr<ApproachDescriptor> ad = nullptr) const override;
+            boost::optional<ProtoLayer>         _protoLayer = boost::none,
+            std::shared_ptr<const Transform3D>  transform   = nullptr,
+            std::unique_ptr<ApproachDescriptor> ad          = nullptr) const;
 
-  /// ILayerCreator interface method - returning a cylindrical layer
-  ///
-  /// @param surfaces is the vector of pointers to sensitive surfaces
-  /// represented by this layer
-  /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
-  /// need to be valid, since no check is performed
-  /// @param envelopeMinR is the additional envelope applied in R at Rmin
-  /// @param envelopeMaxR is the additional envelope applied in R in Rmax
-  /// @param envelopeZ is the additional envelope applied in z
-  /// @param bTypeR binning type in r (equidistant/arbitrary)
-  /// @param bTypePhi binning type in phi (equidistant/arbitrary)
-  /// @param transform is the (optional) transform of the layer
-  /// @param ad possibility to hand over a specific ApproachDescriptor, which is
-  /// needed for material mapping. Otherwise the default ApproachDescriptor will
-  /// be taken used for this layer
-  ///
-  /// @return shared pointer to a newly created layer
-  MutableLayerPtr
-  discLayer(const std::vector<const Surface*>&  surfaces,
-            double                              envelopeMinR,
-            double                              envelopeMaxR,
-            double                              envelopeZ,
-            BinningType                         bTypeR,
-            BinningType                         bTypePhi,
-            std::shared_ptr<const Transform3D>  transform = nullptr,
-            std::unique_ptr<ApproachDescriptor> ad = nullptr) const override;
-
-  /// ILayerCreator interface method - returning a cylindrical layer
+  /// returning a plane layer
   ///
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
@@ -252,7 +193,7 @@ public:
              size_t                              binsX,
              size_t                              binsY,
              std::shared_ptr<const Transform3D>  transform = nullptr,
-             std::unique_ptr<ApproachDescriptor> ad = nullptr) const override;
+             std::unique_ptr<ApproachDescriptor> ad        = nullptr) const;
 
   /// Set the configuration object
   /// @param lcConfig is the configuration struct
@@ -272,55 +213,13 @@ public:
   associateSurfacesToLayer(Layer& layer) const;
 
 private:
-  /// Method to get the global extends in space for the module
-  /// @todo shift to vertices of surfaces
-  ///
-  /// @param sf is the surface to be examinated
-  /// @param minR minimal R extend
-  /// @param maxR maximal R extend
-  /// @param minPhi minimal phi extend
-  /// @param maxPhi maximal phi extend
-  /// @param minZ minimal z extend
-  /// @param maxZ maximal z extend
-  void
-  moduleExtend(const Surface& sf,
-               double&        minR,
-               double&        maxR,
-               double&        minPhi,
-               double&        maxPhi,
-               double&        minZ,
-               double&        maxZ) const;
-
-  /// Calculates the closest radial distance of a line
-  ///
-  /// @param pos1 is the first position on the line
-  /// @param pos2 is the second position on the line
-  ///
-  /// @return is the closest distance
-  double
-  radialDistance(const Vector3D& pos1, const Vector3D& pos2) const;
-
-  void
-  binningParameters(const std::vector<const Acts::Surface*>& surfaces,
-                    Acts::BinningValue                       bValue,
-                    double&                                  minR,
-                    double&                                  maxR,
-                    double&                                  minPhi,
-                    double&                                  maxPhi,
-                    double&                                  minZ,
-                    double&                                  maxZ,
-                    size_t                                   nBins) const;
-
   /// Validates that all the sensitive surfaces are actually accessible through
   /// the binning
   ///
   /// @param surfGrid is the object grid from the surface array
   /// @para surfaces is the vector of sensitive surfaces
-  void
-  checkBinning(
-      const std::vector<std::vector<std::vector<const Acts::Surface*>>>&
-                                               surfGrid,
-      const std::vector<const Acts::Surface*>& surfaces) const;
+  bool
+  checkBinning(const SurfaceArray& sArray) const;
 
   /// configuration object
   Config m_cfg;

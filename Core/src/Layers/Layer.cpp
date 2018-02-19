@@ -182,7 +182,7 @@ Acts::Layer::closeGeometry(const GeometryID& layerID)
     m_ssSensitiveSurfaces = 1;
     // loop sensitive surfaces and assign unique GeometryID
     geo_id_value issurface = 0;
-    for (auto& sSurface : m_surfaceArray->arrayObjects()) {
+    for (auto& sSurface : m_surfaceArray->surfaces()) {
       GeometryID ssurfaceID = layerID;
       ssurfaceID.add(++issurface, GeometryID::sensitive_mask);
       auto mutableSSurface = const_cast<Surface*>(sSurface);

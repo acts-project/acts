@@ -92,7 +92,7 @@ buildSimpleBarrel()
         = std::make_shared<Acts::CylinderBounds>(r, 1000.);
     const Acts::Surface* cylinderSurface
         = new Acts::CylinderSurface(identityTransform, r, 500);
-    auto bp = std::make_unique<BinnedArrayXD<const Surface*>>(cylinderSurface);
+    auto           bp = std::make_unique<SurfaceArray>(cylinderSurface);
     Acts::LayerPtr cylinderLayer = Acts::CylinderLayer::create(
         transform, radialBounds, std::move(bp), 0, nullptr, Acts::passive);
     layerVector.push_back(cylinderLayer);

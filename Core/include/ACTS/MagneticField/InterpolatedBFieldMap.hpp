@@ -33,6 +33,10 @@ namespace Acts {
 /// - doing a linear interpolation of these magnetic field values.
 class InterpolatedBFieldMap final
 {
+
+  template <typename T, class Point, size_t DIM>
+  using AnyGrid_t = concept::AnyNDimInterpGrid<T, Point, DIM>;
+
 public:
   /// @brief struct representing smallest grid unit in magnetic field grid
   ///
@@ -141,9 +145,7 @@ public:
         std::function<ActsVectorD<DIM_POS>(const Vector3D&)> transformPos,
         std::function<Vector3D(const ActsVectorD<DIM_BFIELD>&, const Vector3D&)>
             transformBField,
-        concept::AnyNDimGrid<ActsVectorD<DIM_BFIELD>,
-                             ActsVectorD<DIM_POS>,
-                             DIM_POS> grid)
+        AnyGrid_t<ActsVectorD<DIM_BFIELD>, ActsVectorD<DIM_POS>, DIM_POS> grid)
       : m_transformPos(std::move(transformPos))
       , m_transformBField(std::move(transformBField))
       , m_grid(std::move(grid))
@@ -244,8 +246,7 @@ public:
     std::function<Vector3D(const ActsVectorD<DIM_BFIELD>&, const Vector3D&)>
         m_transformBField;
     /// grid storing magnetic field values
-    concept::AnyNDimGrid<ActsVectorD<DIM_BFIELD>, ActsVectorD<DIM_POS>, DIM_POS>
-        m_grid;
+    AnyGrid_t<ActsVectorD<DIM_BFIELD>, ActsVectorD<DIM_POS>, DIM_POS> m_grid;
   };
 
   /// @brief configuration object for magnetic field interpolation
