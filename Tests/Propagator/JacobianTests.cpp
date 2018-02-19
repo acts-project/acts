@@ -171,7 +171,7 @@ namespace Test {
     Vector3D     mom(1.2, 8.3, 0.45);
     const double q = 1;
 
-    // Create curilinear parameters
+    // Create curvilinear parameters
     CurvilinearParameters curvilinear(std::move(cov_ptr), pos, mom, q);
 
     // run the test
