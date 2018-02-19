@@ -41,7 +41,7 @@ mag2() const
   return (*this).squaredNorm();
 }
 
-/** perp method - perpenticular length */
+/** perp method - perpendicular length */
 inline Scalar
 perp() const
 {

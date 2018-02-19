@@ -193,7 +193,7 @@ public:
   ///  @f$ u = \frac{\vec n (\vec p - \vec l_{1})}{\vec n \vec v}@f$ <br>
   ///  If the denominator is 0 then the line lies:
   ///  - either in the plane
-  ///  - perpenticular to the normal of the plane
+  ///  - perpendicular to the normal of the plane
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      gdir,

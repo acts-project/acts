@@ -1088,7 +1088,6 @@ Acts::RungeKuttaUtils::transformLineToGlobal(bool                 useJac,
 
   if (!useJac) return;
 
-  //
   double Bx2 = -A[2] * P[25];
   double Bx3 = A[1] * P[33] - A[2] * P[32];
   double By2 = A[2] * P[24];

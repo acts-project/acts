@@ -174,7 +174,7 @@ public:
 
         // special treatment for surface types
         const auto& surface = pars.referenceSurface();
-        // the disc needs polar coordinate adaptions
+        // the disc needs polar coordinate adaptations
         if (surface.type() == Surface::Disc) {
           double lCf   = cos(Vp[1]);
           double lSf   = sin(Vp[1]);
@@ -219,7 +219,6 @@ public:
           double B2 = B[0] * Bx2 + B[1] * By2 + B[2] * Bz2;
           double B3 = B[0] * Bx3 + B[1] * By3 + B[2] * Bz3;
 
-          //
           Bx2 = (Bx2 - B[0] * B2) * Bn;
           Bx3 = (Bx3 - B[0] * B3) * Bn;
           By2 = (By2 - B[1] * B2) * Bn;
@@ -459,7 +458,7 @@ public:
       double s4 = cache.pVector[35] * S[0] + cache.pVector[36] * S[1]
           + cache.pVector[37] * S[2];
 
-      // in case of lienar surfaces - we need to take into account that
+      // in case of line-type surfaces - we need to take into account that
       // the reference frame changes with variations of all local
       // parameters
       if (s.type() == Surface::Straw || s.type() == Surface::Perigee) {
@@ -584,7 +583,7 @@ public:
         double      d[3] = {cache.pVector[0] - sfc(0),
                        cache.pVector[1] - sfc(1),
                        cache.pVector[2] - sfc(2)};
-        // this needs the transformation to polar coorinates
+        // this needs the transformation to polar coordinates
         double RC = d[0] * Ax[0] + d[1] * Ax[1] + d[2] * Ax[2];
         double RS = d[0] * Ay[0] + d[1] * Ay[1] + d[2] * Ay[2];
         double R2 = RC * RC + RS * RS;

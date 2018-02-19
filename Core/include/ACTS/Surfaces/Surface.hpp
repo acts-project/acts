@@ -278,7 +278,7 @@ public:
 
   /// Initialize the jacobian from local to global
   /// the surface knows best, hence the calculation is done here.
-  /// The jacobian is usually aready initialised, so only the
+  /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
   /// @param jac is the jacobian to be initialized
@@ -292,7 +292,7 @@ public:
 
   /// Initialize the jacobian from global to local
   /// the surface knows best, hence the calculation is done here.
-  /// The jacobian is usually aready initialised, so only the
+  /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
   /// @param jac is the jacobian to be initialized
@@ -300,7 +300,7 @@ public:
   /// @param dir is the direction at of the parameters
   /// @param pars is the parameter vector
   ///
-  /// @return the transposed reference frame (avoids reclaculation)
+  /// @return the transposed reference frame (avoids recalculation)
   virtual const RotationMatrix3D initJacobianToLocal(ActsMatrixD<5, 7>& jac,
                                                      const Vector3D& gpos,
                                                      const Vector3D& dir) const;
@@ -441,7 +441,7 @@ inline void Surface::initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
   const double inv_sin_theta = 1. / sin_theta;
   const double cos_phi       = x * inv_sin_theta;
   const double sin_phi       = y * inv_sin_theta;
-  // retrieve the referce frame
+  // retrieve the reference frame
   const auto rframe = referenceFrame(gpos, dir);
   // the local error components - given by reference frame
   jacobian.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();

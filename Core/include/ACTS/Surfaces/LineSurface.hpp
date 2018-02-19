@@ -112,7 +112,7 @@ public:
 
   /// Initialize the jacobian from local to global
   /// the surface knows best, hence the calculation is done here.
-  /// The jacobian is usually aready initialised, so only the
+  /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
   /// @param jac is the jacobian to be initialized
@@ -222,7 +222,7 @@ public:
   ///  closest points <br>
   ///   @f$ \vec l_{a,0} = l_{a}(\lambda_0) @f$ and @f$ \vec l_{b,0} =
   ///  l_{b}(\mu_0) @f$ <br>
-  ///   and is perpenticular to both, @f$ \vec e_{a} @f$ and @f$ \vec e_{b} @f$.
+  ///   and is perpendicular to both, @f$ \vec e_{a} @f$ and @f$ \vec e_{b} @f$.
   ///
   ///   This results in a system of two linear equations:<br>
   ///   - (i) @f$ 0 = \vec s(\lambda_0, \mu_0) \cdot \vec e_a = \vec m_ab \cdot
@@ -316,7 +316,7 @@ inline void LineSurface::initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
   const double inv_sin_theta = 1. / sin_theta;
   const double cos_phi       = x * inv_sin_theta;
   const double sin_phi       = y * inv_sin_theta;
-  // retrieve the reverence frame
+  // retrieve the reference frame
   const auto rframe = referenceFrame(gpos, dir);
   // the local error components - given by the reference frame
   jacobian.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();

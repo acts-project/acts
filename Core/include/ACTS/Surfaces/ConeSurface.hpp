@@ -172,7 +172,7 @@ public:
   ///
   ///   The calculation will be done in the 3-dim frame of the cone,
   ///   i.e. the symmetry axis of the cone is the z-axis, x- and y-axis are
-  /// perpenticular
+  /// perpendicular
   ///   to the the z-axis. In this frame the cone is centered around the origin.
   ///   Therefore the two points describing the line have to be first
   ///   recalculated

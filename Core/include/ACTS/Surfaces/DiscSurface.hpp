@@ -32,14 +32,14 @@ class DetectorElementBase;
 ///
 /// The surface transform positions the disc such, that the origin
 /// is at r=0, independent of the provided DiscBounds. The z-axis
-/// is the normal vector of the Disc, being perpenticular to the
+/// is the normal vector of the Disc, being perpendicular to the
 /// radial direction.
 ///
 /// The disc surface is the only surface type for which the
-/// covarance matrix is NOT given in the reference frame.
-/// A conversion from polar to carthesian coordinates needs
+/// cavairance matrix is NOT given in the reference frame.
+/// A conversion from polar to cartesian coordinates needs
 /// to happen to transfer the local coordinates onto the
-/// carthesian reference frame coordinates.
+/// cartesian reference frame coordinates.
 ///
 /// @image html DiscSurface.png
 ///
@@ -196,14 +196,14 @@ public:
   /// cartesian
   ///
   /// @param lpolar is a local position in polar coordinates
-  /// @return values is local 2D position in carthesian coordinates  @todo check
+  /// @return values is local 2D position in cartesian coordinates  @todo check
   const Vector2D
   localPolarToCartesian(const Vector2D& lpolar) const;
 
   /// Special method for Disc surface : local<->local transformations polar <->
   /// cartesian
   ///
-  /// @param lcart is local 2D position in carthesian coordinates
+  /// @param lcart is local 2D position in cartesian coordinates
   /// @return value is a local position in polar coordinates
   const Vector2D
   localCartesianToPolar(const Vector2D& lcart) const;
@@ -212,21 +212,21 @@ public:
   /// cartesian
   ///
   /// @param lpolar is a local position in polar coordinates
-  /// @return values is local 2D position in carthesian coordinates
+  /// @return values is local 2D position in cartesian coordinates
   const Vector2D
   localPolarToLocalCartesian(const Vector2D& lpolar) const;
 
   /// Special method for DiscSurface :  local<->global transformation when
   /// provided cartesian coordinates
   ///
-  /// @param lcart is local 2D position in carthesian coordinates
-  /// @return value is a global carthesian 3D position
+  /// @param lcart is local 2D position in cartesian coordinates
+  /// @return value is a global cartesian 3D position
   const Vector3D
   localCartesianToGlobal(const Vector2D& lcart) const;
 
   /// Special method for DiscSurface : global<->local from cartesian coordinates
   ///
-  /// @param gpos is a global carthesian 3D position
+  /// @param gpos is a global cartesian 3D position
   /// @param tol is the absoltue tolerance parameter
   /// @return value is a local polar
   const Vector2D
@@ -234,7 +234,7 @@ public:
 
   /// Initialize the jacobian from local to global
   /// the surface knows best, hence the calculation is done here.
-  /// The jacobian is usually aready initialised, so only the
+  /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
   /// @param jac is the jacobian to be initialized
@@ -249,7 +249,7 @@ public:
 
   /// Initialize the jacobian from global to local
   /// the surface knows best, hence the calculation is done here.
-  /// The jacobian is usually aready initialised, so only the
+  /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
   /// @param jac is the jacobian to be initialized
@@ -257,7 +257,7 @@ public:
   /// @param dir is the direction at of the parameters
   /// @param pars is the parameter vector
   ///
-  /// @return the transposed reference frame (avoids reclaculation)
+  /// @return the transposed reference frame (avoids recalculation)
   virtual const RotationMatrix3D
       initJacobianToLocal(ActsMatrixD<5, 7>& jac,
                           const Vector3D& gpos,
@@ -297,7 +297,7 @@ public:
   ///  @f$ u = \frac{\vec n (\vec p - \vec l_{1})}{\vec n \vec v}@f$ <br>
   ///  If the denominator is 0 then the line lies:
   ///  - either in the plane
-  ///  - perpenticular to the normal of the plane
+  ///  - perpendicular to the normal of the plane
   ///
   /// @return is the intersection object
   virtual Intersection
@@ -351,7 +351,7 @@ inline void DiscSurface::initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
   const double inv_sin_theta = 1. / sin_theta;
   const double cos_phi       = x * inv_sin_theta;
   const double sin_phi       = y * inv_sin_theta;
-  // retrieve the referce frame
+  // retrieve the reference frame
   const auto rframe = referenceFrame(gpos, dir);
 
   // special polar coordinates for the Disc

@@ -21,7 +21,7 @@ namespace Acts {
 /// @note the curvilinear representation is bound to the curvilinear
 /// planar surface represenation. I.e. the local parameters are by
 /// construction (0,0), the curvilinear surface is characterised by
-/// being perpenticular to the track direction. It's internal frame
+/// being perpendicular to the track direction. It's internal frame
 /// is constructed with the help of the global z axis.
 template <typename ChargePolicy>
 class SingleCurvilinearTrackParameters

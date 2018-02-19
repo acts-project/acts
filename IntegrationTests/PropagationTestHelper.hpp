@@ -21,8 +21,8 @@ using units::Nat2SI;
 namespace IntegrationTest {
 
   /// Helper method to create a transform for a plane
-  /// to mimic detector situations, the plane is roughtly
-  /// perpenticular to the track
+  /// to mimic detector situations, the plane is roughly
+  /// perpendicular to the track
   ///
   /// @param nnomal The nominal normal direction
   /// @param angleT Rotation around the norminal normal
@@ -39,7 +39,7 @@ namespace IntegrationTest {
         ? Vector3D::UnitZ().cross(T).normalized()
         : Vector3D::UnitX().cross(T).normalized();
     Vector3D V = T.cross(U);
-    // that's the plane curinilear Rotation
+    // that's the plane curvilinear Rotation
     RotationMatrix3D curvilinearRotation;
     curvilinearRotation.col(0) = U;
     curvilinearRotation.col(1) = V;
@@ -54,8 +54,8 @@ namespace IntegrationTest {
   }
 
   /// Helper method to create a transform for a plane
-  /// to mimic detector situations, the plane is roughtly
-  /// perpenticular to the track
+  /// to mimic detector situations, the plane is roughly
+  /// perpendicular to the track
   ///
   /// @param nnomal The nominal normal direction
   /// @param angleT Rotation around the norminal normal
