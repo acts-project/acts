@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016 ACTS project team
+// Copyright (C) 2016-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -112,40 +112,9 @@ public:
       if (par.covariance() && !cache_ready) {
         cov_transport = true;
         cov           = ActsSymMatrixD<5>(*par.covariance());
-        // The trigonometry required to convert the direction to spherical
-        // coordinates and then compute the sines and cosines again can be
-        // surprisingly expensive from a performance point of view.
-        //
-        // Here, we can avoid it because the direction is by definition a unit
-        // vector, with the following coordinate conversions...
-        const double x = dir(0);  // == cos(phi) * sin(theta)
-        const double y = dir(1);  // == sin(phi) * sin(theta)
-        const double z = dir(2);  // == cos(theta)
-
-        // ...which we can invert to directly get the sines and cosines:
-        const double cos_theta     = z;
-        const double sin_theta     = sqrt(x * x + y * y);
-        const double inv_sin_theta = 1. / sin_theta;
-        const double cos_phi       = x * inv_sin_theta;
-        const double sin_phi       = y * inv_sin_theta;
-
-        // the error is given on a planar-type surface
-        // called the reference frame (@todo: catch disc surface!)
-        const auto transform = par.referenceFrame();
-        // the local error components
-        jacobian(0, eLOC_0) = transform(0, eLOC_0);
-        jacobian(0, eLOC_1) = transform(0, eLOC_1);
-        jacobian(1, eLOC_0) = transform(1, eLOC_0);
-        jacobian(1, eLOC_1) = transform(1, eLOC_1);
-        jacobian(2, eLOC_0) = transform(2, eLOC_0);
-        jacobian(2, eLOC_1) = transform(2, eLOC_1);
-        // the momentum components
-        jacobian(3, ePHI)   = -sin_theta * sin_phi;
-        jacobian(3, eTHETA) = cos_theta * cos_phi;
-        jacobian(4, ePHI)   = sin_theta * cos_phi;
-        jacobian(4, eTHETA) = cos_theta * sin_phi;
-        jacobian(5, eTHETA) = -sin_theta;
-        jacobian(6, eQOP)   = 1;
+        // get the reference surface
+        const auto& surface = par.referenceSurface();
+        surface.initJacobianToGlobal(jacobian, pos, dir, par.parameters());
       }
     }
 
@@ -293,31 +262,18 @@ public:
     if (cache.cov_transport) {
       // Initialize the transport final frame jacobian
       ActsMatrixD<5, 7> jac_to_local = ActsMatrixD<5, 7>::Zero();
-      // Optimized trigonometry on the propagation direction, see documentation
-      // of Cache::init_jacobian() for a longer mathematical discussion.
-      const double x = cache.dir(0);  // == cos(phi) * sin(theta)
-      const double y = cache.dir(1);  // == sin(phi) * sin(theta)
-      //
-      const double inv_sin_theta_2        = 1. / (x * x + y * y);
-      const double cos_phi_over_sin_theta = x * inv_sin_theta_2;
-      const double sin_phi_over_sin_theta = y * inv_sin_theta_2;
-      const double inv_sin_theta          = sqrt(inv_sin_theta_2);
-      // The measurement frame of the surface
-      // @todo deal with the disc surface
-      RotationMatrix3D rframeT
-          = surface.referenceFrame(cache.pos, cache.dir).transpose();
-      jac_to_local.block<2, 3>(0, 0) = rframeT.template block<2, 3>(0, 0);
-      // Directional and momentum elements for reference frame surface
-      jac_to_local(ePHI, 3)   = -sin_phi_over_sin_theta;
-      jac_to_local(ePHI, 4)   = cos_phi_over_sin_theta;
-      jac_to_local(eTHETA, 5) = -inv_sin_theta;
-      jac_to_local(eQOP, 6)   = 1;
-      // Create the normal and scale it with the projection onto the direction
-      ActsRowVectorD<3> norm_vec = rframeT.template block<1, 3>(2, 0);
-      norm_vec /= (norm_vec * cache.dir);
-      // calculate the jacobian at the measurement frame
-      auto cov_at_frame = transport_covariance(cache, jac_to_local, norm_vec);
-      cov = std::make_unique<const ActsSymMatrixD<5>>(std::move(cov_at_frame));
+      // initalize the jacobian to local, returns the transposed ref frame
+      auto rframeT
+          = surface.initJacobianToLocal(jac_to_local, cache.pos, cache.dir);
+      // calculate the form factors for the derivatives
+      const ActsRowVectorD<5> s_vec = surface.derivativeFactors(
+          cache.pos, cache.dir, rframeT, cache.jacobian);
+      // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
+      const ActsMatrixD<5, 5> jac
+          = jac_to_local * (cache.jacobian - cache.derivative * s_vec);
+      // calculate the jacobian at the final (measurement) frame
+      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * cache.cov
+                                                      * jac.transpose());
     }
     double charge = cache.qop > 0. ? 1. : -1.;
     // this invalidates the cache
@@ -487,20 +443,20 @@ private:
   /// @brief Convert the covariance matrix at the local frame
   ///
   /// @param cache The propagation cache
-  /// @parm jac_local The Jacobian to Local
+  /// @parm jac_to_local The Jacobian to Local
   /// @param norm_vec The normal vector
   ///
   /// @return a 5x5 covariance matrix after transport
   static ActsSymMatrixD<5>
   transport_covariance(const Cache& cache,
-                       const ActsMatrixD<5, 7>& jac_local,
+                       const ActsMatrixD<5, 7>& jac_to_local,
                        const ActsRowVectorD<3>& norm_vec)
   {
-    const ActsRowVectorD<5> scale_factors
+    const ActsRowVectorD<5> sfactors
         = norm_vec * cache.jacobian.template topLeftCorner<3, 5>();
     // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
     const ActsMatrixD<5, 5> jac
-        = jac_local * (cache.jacobian - cache.derivative * scale_factors);
+        = jac_to_local * (cache.jacobian - cache.derivative * sfactors);
     // return the transported and local covariance matrix
     return ActsSymMatrixD<5>(jac * cache.cov * jac.transpose());
   }

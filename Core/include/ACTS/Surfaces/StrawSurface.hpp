@@ -97,6 +97,18 @@ public:
   name() const final override;
 };
 
+inline Surface::SurfaceType
+StrawSurface::type() const
+{
+  return Surface::Straw;
+}
+
+inline std::string
+Acts::StrawSurface::name() const
+{
+  return "Acts::StrawSurface";
+}
+
 }  // end of namespace
 
 #endif  // ACTS_SURFACESSTRAIGHTLINESURFACE_H

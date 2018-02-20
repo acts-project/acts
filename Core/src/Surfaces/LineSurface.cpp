@@ -71,7 +71,7 @@ Acts::LineSurface::localToGlobal(const Vector2D& lpos,
                                  const Vector3D& mom,
                                  Vector3D&       gpos) const
 {
-  // get the vector perpenticular to the momentum and the straw axis
+  // get the vector perpendicular to the momentum and the straw axis
   Vector3D radiusAxisGlobal(lineDirection().cross(mom));
   Vector3D locZinGlobal(0., 0., lpos[Acts::eLOC_Z]);
   // apply a transform if needed

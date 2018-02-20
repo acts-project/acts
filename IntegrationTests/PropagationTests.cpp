@@ -51,6 +51,10 @@ namespace IntegrationTest {
   typedef Wrapper<std::shared_ptr<PropagationEngine_type>>
       WrappedPropagator_type;
 
+  // number of tests
+  const int  ntests = 100;
+  const bool covtpr = true;
+
   // setup propagator with constant B-field
   const double         Bz = 2. * units::_T;
   BField_type          bField(0, 0, Bz);
@@ -82,7 +86,7 @@ namespace IntegrationTest {
           ^ bdata::random((bdata::seed = 3,
                            bdata::distribution
                            = std::uniform_int_distribution<>(0, 1)))
-          ^ bdata::xrange(100),
+          ^ bdata::xrange(ntests),
       pT,
       phi,
       theta,

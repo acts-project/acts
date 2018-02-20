@@ -199,7 +199,7 @@ public:
   ///
   ///  The calculation will be done in the 3-dim frame of the cylinder,
   ///  i.e. the symmetry axis of the cylinder is the z-axis, x- and y-axis are
-  /// perpenticular
+  /// perpendicular
   ///  to the the z-axis. In this frame the cylinder is centered around the
   /// origin.
   ///  Therefore the two points describing the line have to be first

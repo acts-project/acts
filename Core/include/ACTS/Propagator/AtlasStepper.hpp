@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016 ACTS project team
+// Copyright (C) 2016-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,6 +21,8 @@ namespace Acts {
 template <typename BField>
 class AtlasStepper
 {
+
+public:
   struct Cache
   {
     // optimisation that init is not called twice
@@ -94,8 +96,8 @@ class AtlasStepper
       // cache is ready - noting to do
       if (cache_ready) return;
 
-      const ActsVectorD<3>     pos = pars.position();
-      ActsVectorD<NGlobalPars> Vp  = pars.parameters();
+      const ActsVectorD<3> pos = pars.position();
+      const auto           Vp  = pars.parameters();
 
       double Sf, Cf, Ce, Se;
       Sf = sin(Vp(2));
@@ -111,7 +113,7 @@ class AtlasStepper
       pVector[5] = Ce;
       pVector[6] = Vp[4];
 
-      // @todo: remove magic numbers
+      // @todo: remove magic numbers - is that the charge ?
       if (std::abs(pVector[6]) < .000000000000001) {
         pVector[6] < 0. ? pVector[6] = -.000000000000001
                         : pVector[6] = .000000000000001;
@@ -169,13 +171,75 @@ class AtlasStepper
         pVector[42] = 0.;
         pVector[43] = 0.;
         pVector[44] = 0.;
+
+        // special treatment for surface types
+        const auto& surface = pars.referenceSurface();
+        // the disc needs polar coordinate adaptations
+        if (surface.type() == Surface::Disc) {
+          double lCf   = cos(Vp[1]);
+          double lSf   = sin(Vp[1]);
+          double Ax[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
+          double Ay[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
+          double d0    = lCf * Ax[0] + lSf * Ay[0];
+          double d1    = lCf * Ax[1] + lSf * Ay[1];
+          double d2    = lCf * Ax[2] + lSf * Ay[2];
+          pVector[7]   = d0;
+          pVector[8]   = d1;
+          pVector[9]   = d2;
+          pVector[14]  = Vp[0] * (lCf * Ay[0] - lSf * Ax[0]);
+          pVector[15]  = Vp[0] * (lCf * Ay[1] - lSf * Ax[1]);
+          pVector[16]  = Vp[0] * (lCf * Ay[2] - lSf * Ax[2]);
+        }
+        // the line needs components that relate direction change
+        // with global frame change
+        if (surface.type() == Surface::Perigee
+            || surface.type() == Surface::Straw) {
+
+          // sticking to the nomenclature of the original RkPropagator
+          // - axis pointing along the drift/transverse direction
+          double B[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
+          // - axis along the straw
+          double A[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
+          // - normal vector of the reference frame
+          double C[3] = {transform(0, 2), transform(1, 2), transform(2, 2)};
+
+          // projection of direction onto normal vector of reference frame
+          double PC = pVector[3] * C[0] + pVector[4] * C[1] + pVector[5] * C[2];
+          double Bn = 1. / PC;
+
+          double Bx2 = -A[2] * pVector[25];
+          double Bx3 = A[1] * pVector[33] - A[2] * pVector[32];
+
+          double By2 = A[2] * pVector[24];
+          double By3 = A[2] * pVector[31] - A[0] * pVector[33];
+
+          double Bz2 = A[0] * pVector[25] - A[1] * pVector[24];
+          double Bz3 = A[0] * pVector[32] - A[1] * pVector[31];
+
+          double B2 = B[0] * Bx2 + B[1] * By2 + B[2] * Bz2;
+          double B3 = B[0] * Bx3 + B[1] * By3 + B[2] * Bz3;
+
+          Bx2 = (Bx2 - B[0] * B2) * Bn;
+          Bx3 = (Bx3 - B[0] * B3) * Bn;
+          By2 = (By2 - B[1] * B2) * Bn;
+          By3 = (By3 - B[1] * B3) * Bn;
+          Bz2 = (Bz2 - B[2] * B2) * Bn;
+          Bz3 = (Bz3 - B[2] * B3) * Bn;
+
+          //  /dPhi      |     /dThe       |
+          pVector[21] = Bx2 * Vp[0];
+          pVector[28] = Bx3 * Vp[0];  // dX/
+          pVector[22] = By2 * Vp[0];
+          pVector[29] = By3 * Vp[0];  // dY/
+          pVector[23] = Bz2 * Vp[0];
+          pVector[30] = Bz3 * Vp[0];  // dZ/
+        }
       }
       // now declare the cache as ready
       cache_ready = true;
     }
   };
 
-public:
   template <typename T, typename S = int>
   using cache_type = Cache;
 
@@ -372,11 +436,13 @@ public:
       double Ax[3] = {fFrame(0, 0), fFrame(1, 0), fFrame(2, 0)};
       double Ay[3] = {fFrame(0, 1), fFrame(1, 1), fFrame(2, 1)};
       double S[3]  = {fFrame(0, 2), fFrame(1, 2), fFrame(2, 2)};
-      // this is the projection of direction onto the local ca vector
+
+      // this is the projection of direction onto the local normal vector
       double A = cache.pVector[3] * S[0] + cache.pVector[4] * S[1]
           + cache.pVector[5] * S[2];
 
       if (A != 0.) A = 1. / A;
+
       S[0] *= A;
       S[1] *= A;
       S[2] *= A;
@@ -391,6 +457,73 @@ public:
           + cache.pVector[30] * S[2];
       double s4 = cache.pVector[35] * S[0] + cache.pVector[36] * S[1]
           + cache.pVector[37] * S[2];
+
+      // in case of line-type surfaces - we need to take into account that
+      // the reference frame changes with variations of all local
+      // parameters
+      if (s.type() == Surface::Straw || s.type() == Surface::Perigee) {
+        // vector from position to center
+        double x = cache.pVector[0] - s.center().x();
+        double y = cache.pVector[1] - s.center().y();
+        double z = cache.pVector[2] - s.center().z();
+
+        // this is the projection of the direction onto the local y axis
+        double d = cache.pVector[3] * Ay[0] + cache.pVector[4] * Ay[1]
+            + cache.pVector[5] * Ay[2];
+
+        // this is cos(beta)
+        double a       = (1. - d) * (1. + d);
+        if (a != 0.) a = 1. / a;  // i.e. 1./(1-d^2)
+
+        // that's the modified norm vector
+        double X = d * Ay[0] - cache.pVector[3];  //
+        double Y = d * Ay[1] - cache.pVector[4];  //
+        double Z = d * Ay[2] - cache.pVector[5];  //
+
+        // d0 to d1
+        double d0 = cache.pVector[10] * Ay[0] + cache.pVector[11] * Ay[1]
+            + cache.pVector[12] * Ay[2];
+        double d1 = cache.pVector[17] * Ay[0] + cache.pVector[18] * Ay[1]
+            + cache.pVector[19] * Ay[2];
+        double d2 = cache.pVector[24] * Ay[0] + cache.pVector[25] * Ay[1]
+            + cache.pVector[26] * Ay[2];
+        double d3 = cache.pVector[31] * Ay[0] + cache.pVector[32] * Ay[1]
+            + cache.pVector[33] * Ay[2];
+        double d4 = cache.pVector[38] * Ay[0] + cache.pVector[39] * Ay[1]
+            + cache.pVector[40] * Ay[2];
+
+        s0 = (((cache.pVector[7] * X + cache.pVector[8] * Y
+                + cache.pVector[9] * Z)
+               + x * (d0 * Ay[0] - cache.pVector[10]))
+              + (y * (d0 * Ay[1] - cache.pVector[11])
+                 + z * (d0 * Ay[2] - cache.pVector[12])))
+            * (-a);
+
+        s1 = (((cache.pVector[14] * X + cache.pVector[15] * Y
+                + cache.pVector[16] * Z)
+               + x * (d1 * Ay[0] - cache.pVector[17]))
+              + (y * (d1 * Ay[1] - cache.pVector[18])
+                 + z * (d1 * Ay[2] - cache.pVector[19])))
+            * (-a);
+        s2 = (((cache.pVector[21] * X + cache.pVector[22] * Y
+                + cache.pVector[23] * Z)
+               + x * (d2 * Ay[0] - cache.pVector[24]))
+              + (y * (d2 * Ay[1] - cache.pVector[25])
+                 + z * (d2 * Ay[2] - cache.pVector[26])))
+            * (-a);
+        s3 = (((cache.pVector[28] * X + cache.pVector[29] * Y
+                + cache.pVector[30] * Z)
+               + x * (d3 * Ay[0] - cache.pVector[31]))
+              + (y * (d3 * Ay[1] - cache.pVector[32])
+                 + z * (d3 * Ay[2] - cache.pVector[33])))
+            * (-a);
+        s4 = (((cache.pVector[35] * X + cache.pVector[36] * Y
+                + cache.pVector[37] * Z)
+               + x * (d4 * Ay[0] - cache.pVector[38]))
+              + (y * (d4 * Ay[1] - cache.pVector[39])
+                 + z * (d4 * Ay[2] - cache.pVector[40])))
+            * (-a);
+      }
 
       cache.pVector[7] -= (s0 * cache.pVector[3]);
       cache.pVector[8] -= (s0 * cache.pVector[4]);
@@ -441,28 +574,51 @@ public:
         P4 = 0.;
       }
 
+      double MA[3] = {Ax[0], Ax[1], Ax[2]};
+      double MB[3] = {Ay[0], Ay[1], Ay[2]};
       // Jacobian production of transport and to_local
-      cache.jacobian[0] = Ax[0] * cache.pVector[7] + Ax[1] * cache.pVector[8]
-          + Ax[2] * cache.pVector[9];  // dL0/dL0
-      cache.jacobian[1] = Ax[0] * cache.pVector[14] + Ax[1] * cache.pVector[15]
-          + Ax[2] * cache.pVector[16];  // dL0/dL1
-      cache.jacobian[2] = Ax[0] * cache.pVector[21] + Ax[1] * cache.pVector[22]
-          + Ax[2] * cache.pVector[23];  // dL0/dPhi
-      cache.jacobian[3] = Ax[0] * cache.pVector[28] + Ax[1] * cache.pVector[29]
-          + Ax[2] * cache.pVector[30];  // dL0/dThe
-      cache.jacobian[4] = Ax[0] * cache.pVector[35] + Ax[1] * cache.pVector[36]
-          + Ax[2] * cache.pVector[37];  // dL0/dCM
+      if (s.type() == Surface::Disc) {
+        // the vector from the disc surface to the p
+        const auto& sfc  = s.center();
+        double      d[3] = {cache.pVector[0] - sfc(0),
+                       cache.pVector[1] - sfc(1),
+                       cache.pVector[2] - sfc(2)};
+        // this needs the transformation to polar coordinates
+        double RC = d[0] * Ax[0] + d[1] * Ax[1] + d[2] * Ax[2];
+        double RS = d[0] * Ay[0] + d[1] * Ay[1] + d[2] * Ay[2];
+        double R2 = RC * RC + RS * RS;
 
-      cache.jacobian[5] = Ay[0] * cache.pVector[7] + Ay[1] * cache.pVector[8]
-          + Ay[2] * cache.pVector[9];  // dL1/dL0
-      cache.jacobian[6] = Ay[0] * cache.pVector[14] + Ay[1] * cache.pVector[15]
-          + Ay[2] * cache.pVector[16];  // dL1/dL1
-      cache.jacobian[7] = Ay[0] * cache.pVector[21] + Ay[1] * cache.pVector[22]
-          + Ay[2] * cache.pVector[23];  // dL1/dPhi
-      cache.jacobian[8] = Ay[0] * cache.pVector[28] + Ay[1] * cache.pVector[29]
-          + Ay[2] * cache.pVector[30];  // dL1/dThe
-      cache.jacobian[9] = Ay[0] * cache.pVector[35] + Ay[1] * cache.pVector[36]
-          + Ay[2] * cache.pVector[37];  // dL1/dCM
+        // inverse radius
+        double Ri = 1. / sqrt(R2);
+        MA[0]     = (RC * Ax[0] + RS * Ay[0]) * Ri;
+        MA[1]     = (RC * Ax[1] + RS * Ay[1]) * Ri;
+        MA[2]     = (RC * Ax[2] + RS * Ay[2]) * Ri;
+        MB[0] = (RC * Ay[0] - RS * Ax[0]) * (Ri = 1. / R2);
+        MB[1] = (RC * Ay[1] - RS * Ax[1]) * Ri;
+        MB[2] = (RC * Ay[2] - RS * Ax[2]) * Ri;
+      }
+
+      cache.jacobian[0] = MA[0] * cache.pVector[7] + MA[1] * cache.pVector[8]
+          + MA[2] * cache.pVector[9];  // dL0/dL0
+      cache.jacobian[1] = MA[0] * cache.pVector[14] + MA[1] * cache.pVector[15]
+          + MA[2] * cache.pVector[16];  // dL0/dL1
+      cache.jacobian[2] = MA[0] * cache.pVector[21] + MA[1] * cache.pVector[22]
+          + MA[2] * cache.pVector[23];  // dL0/dPhi
+      cache.jacobian[3] = MA[0] * cache.pVector[28] + MA[1] * cache.pVector[29]
+          + MA[2] * cache.pVector[30];  // dL0/dThe
+      cache.jacobian[4] = MA[0] * cache.pVector[35] + MA[1] * cache.pVector[36]
+          + MA[2] * cache.pVector[37];  // dL0/dCM
+
+      cache.jacobian[5] = MB[0] * cache.pVector[7] + MB[1] * cache.pVector[8]
+          + MB[2] * cache.pVector[9];  // dL1/dL0
+      cache.jacobian[6] = MB[0] * cache.pVector[14] + MB[1] * cache.pVector[15]
+          + MB[2] * cache.pVector[16];  // dL1/dL1
+      cache.jacobian[7] = MB[0] * cache.pVector[21] + MB[1] * cache.pVector[22]
+          + MB[2] * cache.pVector[23];  // dL1/dPhi
+      cache.jacobian[8] = MB[0] * cache.pVector[28] + MB[1] * cache.pVector[29]
+          + MB[2] * cache.pVector[30];  // dL1/dThe
+      cache.jacobian[9] = MB[0] * cache.pVector[35] + MB[1] * cache.pVector[36]
+          + MB[2] * cache.pVector[37];  // dL1/dCM
 
       cache.jacobian[10]
           = P3 * cache.pVector[11] - P4 * cache.pVector[10];  // dPhi/dL0
