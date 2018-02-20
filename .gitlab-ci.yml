@@ -29,7 +29,8 @@ license:
   before_script: []
   dependencies: []
   script:
-    - CI/check_license.py .
+    - apk add --no-cache git
+    - CI/check_license.py . --check-years
 
 # SLC6, LCG88 (legacy build)
 #
