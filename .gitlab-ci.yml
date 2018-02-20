@@ -41,13 +41,14 @@ build_slc6_lcg88:
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   tags:
     - cvmfs
+    - acts
   before_script:
     - set +e && source CI/setup_lcg88.sh; set -e
   script:
     - mkdir build
     - cd build
     - cmake -GNinja -DACTS_BUILD_EXAMPLES=on -DACTS_BUILD_TESTS=on -DACTS_BUILD_INTEGRATION_TESTS=on -DACTS_BUILD_MATERIAL_PLUGIN=on -DCMAKE_BUILD_TYPE=Release ..
-    - cmake --build . -- -j2
+    - cmake --build . -- -j8
 
 # job templates w/ default settings
 #
@@ -60,13 +61,14 @@ build_slc6_lcg88:
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   tags:
     - cvmfs
+    - acts
   variables:
     BUILD_TYPE: Release
   script:
     - mkdir build
     - cd build
     - cmake -GNinja -DACTS_BUILD_EXAMPLES=on -DACTS_BUILD_TESTS=on -DACTS_BUILD_INTEGRATION_TESTS=on -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_MATERIAL_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ..
-    - cmake --build . -- -j2
+    - cmake --build . -- -j8
     - find . -name "*.o" -delete
   artifacts:
     paths:
