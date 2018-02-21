@@ -255,20 +255,16 @@ namespace Test {
 
   /// Unit test for testing the decomposeToSurfaces() function
   BOOST_DATA_TEST_CASE(bfield_symmetry_random,
-                       bdata::random(-10., 10.) ^ bdata::random(-10., 10.)
-                           ^ bdata::random(-20., 20.)
-                           ^ bdata::random(11., 20.)
-                           ^ bdata::random(21., 30.)
-                           ^ bdata::random(0., 4.)
-                           ^ bdata::random(0., 4.)
-                           ^ bdata::xrange(10),
+                       bdata::random((bdata::seed = 0,                                                             
+                                      bdata::distribution= std::uniform_real_distribution<>(-10.,10.)))
+                       ^bdata::random((bdata::seed = 0,                                                             
+                                      bdata::distribution= std::uniform_real_distribution<>(-10.,10.)))
+                       ^bdata::random((bdata::seed = 0,                                                             
+                                      bdata::distribution= std::uniform_real_distribution<>(-20.,20.)))
+                        ^ bdata::xrange(10),
                        x,
                        y,
                        z,
-                       maxR,
-                       maxZ,
-                       maxBr,
-                       maxBz,
                        index)
   {
 
@@ -276,6 +272,10 @@ namespace Test {
     std::vector<double> xPos;
     std::vector<double> yPos;
     std::vector<double> zPos;
+    double maxR = 20.;
+    double maxZ = 30.;
+    double maxBr = 10.;
+    double maxBz = 20.;
     size_t              nBins  = 10;
     double              stepR  = maxR / nBins;
     double              stepZ  = maxZ / nBins;
