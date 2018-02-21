@@ -267,6 +267,7 @@ namespace Test {
                        z,
                        index)
   {
+    (void)index;
 
     std::vector<double> rPos;
     std::vector<double> xPos;
