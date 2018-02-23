@@ -49,3 +49,8 @@ target_include_directories (InterpolationTests PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (InterpolationTests PRIVATE ACTSCore)
 add_test (NAME InterpolationUnitTest COMMAND InterpolationTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST InterpolationUnitTest TARGETS InterpolationTests)
+
+add_executable (BFieldMapUtilsTests BFieldMapUtilsTests.cpp)
+target_link_libraries (BFieldMapUtilsTests PRIVATE ACTSCore)
+add_test (NAME BFieldMapUtilsTest COMMAND BFieldMapUtilsTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST BFieldMapUtilsTest TARGETS BFieldMapUtilsTests)
