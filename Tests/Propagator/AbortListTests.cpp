@@ -19,10 +19,10 @@
 // leave blank line
 
 #include "ACTS/Propagator/AbortList.hpp"
+#include "ACTS/Propagator/detail/Extendable.hpp"
 #include "ACTS/Propagator/detail/standard_abort_conditions.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
-#include "ACTS/Propagator/detail/Extendable.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -56,7 +56,7 @@ namespace Test {
   // and the standard aborters
   BOOST_AUTO_TEST_CASE(AbortListTest_PathLimit)
   {
-    Cache cache;
+    Cache  cache;
     Result result;
 
     // That the path limit with tolerance
