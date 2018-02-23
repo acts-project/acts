@@ -2,6 +2,10 @@ add_executable (AbortListTests AbortListTests.cpp)
 target_link_libraries (AbortListTests PRIVATE ACTSCore)
 add_test(NAME AbortListUnitTest COMMAND AbortListTests)
 
+add_executable (ObserverListTests ObserverListTests.cpp)
+target_link_libraries (ObserverListTests PRIVATE ACTSCore)
+add_test(NAME ObserverListUnitTests COMMAND ObserverListTests)
+
 add_executable (RungeKuttaEngineTests RungeKuttaEngineTests.cpp)
 target_link_libraries (RungeKuttaEngineTests PRIVATE ACTSCore)
 add_test(NAME RungeKuttaEngineUnitTest COMMAND RungeKuttaEngineTests)

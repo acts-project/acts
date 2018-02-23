@@ -18,6 +18,8 @@ namespace Acts {
 namespace detail {
 
   namespace {
+    /// This is the caller used if the condition uses the result
+    /// - and that result type exists
     template <bool has_result = true>
     struct condition_caller
     {
@@ -32,6 +34,8 @@ namespace detail {
       }
     };
 
+    /// This is the caller used if the condition only uses the cache
+    /// it has no access to the result
     template <>
     struct condition_caller<false>
     {

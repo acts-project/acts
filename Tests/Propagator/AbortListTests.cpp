@@ -22,6 +22,7 @@
 #include "ACTS/Propagator/detail/standard_abort_conditions.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
+#include "ACTS/Propagator/detail/Extendable.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -56,7 +57,6 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(AbortListTest_PathLimit)
   {
     Cache cache;
-
     Result result;
 
     // That the path limit with tolerance
