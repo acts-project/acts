@@ -76,6 +76,32 @@ namespace Test {
     }
   };
 
+  struct CallCounter
+  {
+
+    struct this_result
+    {
+      size_t calls = 0;
+    };
+
+    typedef this_result result_type;
+
+    CallCounter() {}
+
+    template <typename input_t>
+    void
+    operator()(const input_t&, result_type& r) const
+    {
+      ++r.calls;
+    }
+
+    template <typename input_t>
+    void
+    operator()(const input_t&) const
+    {
+    }
+  };
+
   // This tests teh implementation of the ObserverList
   // and the standard aborters
   BOOST_AUTO_TEST_CASE(ObserverListTest_Distance)
@@ -88,8 +114,8 @@ namespace Test {
     distance_result                                dr;
     detail::Extendable<distance_result>            result(dr);
 
-    DistanceObserver d100(100. * units::_mm);
-    auto             observer_list = ObserverList<DistanceObserver>({d100});
+    DistanceObserver               d100(100. * units::_mm);
+    ObserverList<DistanceObserver> observer_list({d100});
 
     // observe and check
     observer_list(cache, result);
@@ -100,6 +126,39 @@ namespace Test {
     cache.accumulated_path = 50. * units::_mm;
     observer_list(cache, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
+  }
+
+  // This tests teh implementation of the ObserverList
+  // and the standard aborters
+  BOOST_AUTO_TEST_CASE(ObserverListTest_TwoObservers)
+  {
+    // construct the cache and result
+    Cache cache;
+
+    // Type of track parameters produced at the end of the propagation
+    typedef typename DistanceObserver::result_type distance_result;
+    typedef typename CallCounter::result_type      caller_result;
+
+    distance_result dr;
+    caller_result   cr;
+    detail::Extendable<distance_result, caller_result> result(dr, cr);
+
+    DistanceObserver d100(100. * units::_mm);
+    CallCounter      cc;
+
+    ObserverList<DistanceObserver, CallCounter> observer_list(d100, cc);
+    //
+    //// observe and check
+    observer_list(cache, result);
+    BOOST_CHECK_EQUAL(result.get<distance_result>().distance,
+                      100. * units::_mm);
+    BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 1);
+
+    // now move the cache and check again
+    cache.accumulated_path = 50. * units::_mm;
+    observer_list(cache, result);
+    BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
+    BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 2);
   }
 
 }  // namespace Test
