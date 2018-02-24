@@ -479,7 +479,7 @@ Acts::StaticEngine::handleLayerT(ExtrapolationCell<T>& eCell,
                    "attempt to hit destination surface resulted in "
                        << eCode.toString());
     // check for a potential preUpdate
-    // - in case teh destination surface has material and the surface was hit
+    // - in case the destination surface has material and the surface was hit
     if (sf->associatedMaterial() && eCode.isSuccess()) {
       // finally do the material update, but even as this is the final call
       //  - still check for SuccessMaterialLimit

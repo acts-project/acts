@@ -35,21 +35,19 @@ private:
   using detail::Extendable<observers...>::tuple;
 
 public:
-  /// constructor of the Extendable
-  explicit ObserverList(observers... extensions)
-    : detail::Extendable<observers...>(extensions...)
-  {
-  }
-
   template <template <typename...> class R>
   using result_type = detail::boost_set_as_tparams_t<R, results>;
 
   using detail::Extendable<observers...>::get;
 
-  /// function call operator that is called calling the obeserve method on each
-  /// of the contained obersers in tthe list
-  /// @tparam[in] cache The stepper cache during the propagtion
-  /// @tparam[in,out] result is the result to be overwritten
+  /// Call operator that is that broadcasts the call to the tuple()
+  /// members of the list
+  ///
+  /// @tparam input is the cache type from the propagator
+  /// @tparam result_t is the result type from observers
+  ///
+  /// @param cache[in] is the cache object from the propagator
+  /// @param result[in,out] is the result object from observers
   template <typename input, typename result_t>
   void
   operator()(const input& cache, result_t& result) const

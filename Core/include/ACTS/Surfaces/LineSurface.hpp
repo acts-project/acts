@@ -55,7 +55,7 @@ public:
 
   /// Constructor from DetectorElementBase and Element identifier
   ///
-  /// @param lbounds are teh bounds describing the straw dimensions, they must
+  /// @param lbounds are the bounds describing the straw dimensions, they must
   /// not be nullptr
   /// @param detelement for which this surface is (at least) one representation
   /// @param identifier is the identifier associated with this surface

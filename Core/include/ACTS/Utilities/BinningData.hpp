@@ -124,7 +124,7 @@ public:
   ///
   /// @param bOption is the binning option : open / closed
   /// @param bValue is the binning value : binX, binY, etc.
-  /// @param bBoundaries are teh bin boundaries
+  /// @param bBoundaries are the bin boundaries
   /// @param sBinData is (optional) sub structure
   BinningData(BinningOption                      bOption,
               BinningValue                       bValue,

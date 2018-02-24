@@ -52,17 +52,19 @@ namespace Test {
   {
   };
 
-  // This tests teh implementation of the AbortList
+  // This tests the implementation of the AbortList
   // and the standard aborters
   BOOST_AUTO_TEST_CASE(AbortListTest_PathLimit)
   {
     Cache  cache;
     Result result;
 
-    // That the path limit with tolerance
-    path_limit limit(1. * units::_m, 1. * units::_um);
+    AbortList<path_limit> abort_list;
 
-    auto abort_list = AbortList<path_limit>({limit});
+    // Configure path limit with tolerance
+    auto& limit             = abort_list.get<path_limit>();
+    limit.signed_path_limit = 1. * units::_m;
+    limit.tolerance         = 1. * units::_um;
 
     // It should not abort yet
     BOOST_CHECK(!abort_list(result, cache));

@@ -102,7 +102,7 @@ namespace Test {
     }
   };
 
-  // This tests teh implementation of the ObserverList
+  // This tests the implementation of the ObserverList
   // and the standard aborters
   BOOST_AUTO_TEST_CASE(ObserverListTest_Distance)
   {
@@ -111,11 +111,10 @@ namespace Test {
 
     // Type of track parameters produced at the end of the propagation
     typedef typename DistanceObserver::result_type distance_result;
-    distance_result                                dr;
-    detail::Extendable<distance_result>            result(dr);
+    detail::Extendable<distance_result>            result;
 
-    DistanceObserver               d100(100. * units::_mm);
-    ObserverList<DistanceObserver> observer_list({d100});
+    ObserverList<DistanceObserver> observer_list;
+    observer_list.get<DistanceObserver>().path_to_go = 100. * units::_mm;
 
     // observe and check
     observer_list(cache, result);
@@ -128,7 +127,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
   }
 
-  // This tests teh implementation of the ObserverList
+  // This tests the implementation of the ObserverList
   // and the standard aborters
   BOOST_AUTO_TEST_CASE(ObserverListTest_TwoObservers)
   {
@@ -138,16 +137,11 @@ namespace Test {
     // Type of track parameters produced at the end of the propagation
     typedef typename DistanceObserver::result_type distance_result;
     typedef typename CallCounter::result_type      caller_result;
+    ObserverList<DistanceObserver, CallCounter> observer_list;
+    observer_list.get<DistanceObserver>().path_to_go = 100. * units::_mm;
 
-    distance_result dr;
-    caller_result   cr;
-    detail::Extendable<distance_result, caller_result> result(dr, cr);
+    detail::Extendable<distance_result, caller_result> result;
 
-    DistanceObserver d100(100. * units::_mm);
-    CallCounter      cc;
-
-    ObserverList<DistanceObserver, CallCounter> observer_list(d100, cc);
-    //
     //// observe and check
     observer_list(cache, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance,

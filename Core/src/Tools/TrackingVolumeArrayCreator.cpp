@@ -55,7 +55,7 @@ Acts::TrackingVolumeArrayCreator::trackingVolumeArray(
         TrackingVolumeOrderPosition(tVolume, binningPosition));
   }
 
-  // now create teh bin utility
+  // now create the bin utility
   auto binUtility
       = std::make_unique<const BinUtility>(boundaries, open, bValue);
 

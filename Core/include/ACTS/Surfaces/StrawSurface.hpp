@@ -49,14 +49,14 @@ public:
   ///
   /// @param htrans is the transform that positions the surface in the global
   /// frame
-  /// @param lbounds are teh bounds describing the straw dimensions, can be
+  /// @param lbounds are the bounds describing the straw dimensions, can be
   /// optionally nullptr
   StrawSurface(std::shared_ptr<const Transform3D> htrans,
                std::shared_ptr<const LineBounds>  lbounds = nullptr);
 
   /// Constructor from DetectorElementBase and Element identifier
   ///
-  /// @param lbounds are teh bounds describing the straw dimensions, they must
+  /// @param lbounds are the bounds describing the straw dimensions, they must
   /// not be nullptr
   /// @param detelement for which this surface is (at least) one representation
   /// @param identifier
