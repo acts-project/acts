@@ -133,28 +133,34 @@ namespace Test {
     typedef AbortList<>                        AbortConditions_type;
 
     //   // setup propagation options
-    // typename EigenPropagator_type::template
-    // Options<ObsList_type,AbortConditions_type>
-    //   options(observers,abl);
-    // options.max_path_length = 20 * units::_m;
-    // options.max_step_size   = 1 * units::_cm;
-    // // define start parameters
-    // double                x  = 0;
-    // double                y  = 0;
-    // double                z  = 0;
-    // double                px = pT * cos(phi);
-    // double                py = pT * sin(phi);
-    // double                pz = pT / tan(theta);
-    // double                q  = dcharge;
-    // Vector3D              pos(x, y, z);
-    // Vector3D              mom(px, py, pz);
-    // CurvilinearParameters start(nullptr, pos, mom, q);
-    //   // do forward-backward propagation
-    // const auto& destp = epropagator.propagate(start, cSurface,
-    // options).endParameters;
-    //
-    // // @TODO correlate with options
-    // BOOST_TEST(std::abs(destp->position().perp()-150.) < 10e-4);
+    typename EigenPropagator_type::template Options<ObsList_type,
+                                                    AbortConditions_type>
+        options;
+
+    options.max_path_length = 20 * units::_m;
+    options.max_step_size   = 1 * units::_cm;
+
+    typedef typename PerpendicularMeasure::result_type pm_result;
+
+    // define start parameters
+    double                x  = 0;
+    double                y  = 0;
+    double                z  = 0;
+    double                px = pT * cos(phi);
+    double                py = pT * sin(phi);
+    double                pz = pT / tan(theta);
+    double                q  = dcharge;
+    Vector3D              pos(x, y, z);
+    Vector3D              mom(px, py, pz);
+    CurvilinearParameters start(nullptr, pos, mom, q);
+    // propagate to the cylinder surface
+    const auto& result = epropagator.propagate(start, cSurface, options);
+    auto&       pmr    = result.get<pm_result>();
+
+    // Test the end position
+    BOOST_TEST(std::abs(result.endParameters->position().perp() - 150.)
+               < 10e-4);
+    BOOST_TEST(std::abs(pmr.distance - 150.) < 10e-4);
   }
 
 }  // namespace Test

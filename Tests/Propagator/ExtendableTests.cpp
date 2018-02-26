@@ -41,17 +41,20 @@ namespace Test {
     };
 
     detail::Extendable<> nullist;
+    BOOST_TEST(std::tuple_size<std::tuple<>>::value == 0);
 
     detail::Extendable<type_a> alist;
     auto&                      a0_object = alist.get<type_a>();
     a0_object.va_a                       = 1.;
+    BOOST_TEST(alist.get<type_a>().va_a == 1.);
 
     detail::Extendable<type_a, type_b> ablist;
     auto& a1_object = ablist.get<type_a>();
     a1_object.va_a  = 2.;
-
     auto& b1_object = ablist.get<type_b>();
     b1_object.va_b  = 3.;
+    BOOST_TEST(ablist.get<type_a>().va_a == 2.);
+    BOOST_TEST(ablist.get<type_b>().va_b == 3.);
   }
 
 }  // namespace Test
