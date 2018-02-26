@@ -98,9 +98,7 @@ namespace Test {
             options_type;
 
     options_type options;
-    // typename EigenPropagator_type::template
-    // Options<ObsList_type,AbortConditions_type>
-    //   options(observers,abl);
+
   }
 
   BOOST_DATA_TEST_CASE(
