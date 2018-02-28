@@ -18,11 +18,11 @@ namespace detail {
 
   namespace {
     template <typename T,
-              typename input,
-              typename result,
+              typename cache_t,
+              typename result_t,
               typename = decltype(std::declval<T>().
-                                  operator()(std::declval<const input&>(),
-                                             std::declval<result&>()))>
+                                  operator()(std::declval<cache_t&>(),
+                                             std::declval<result_t&>()))>
     std::true_type
     test_observer_with_result(int);
 
@@ -31,9 +31,9 @@ namespace detail {
     test_observer_with_result(...);
 
     template <typename T,
-              typename input,
+              typename cache_t,
               typename = decltype(std::declval<T>().
-                                  operator()(std::declval<const input&>()))>
+                                  operator()(std::declval<cache_t&>()))>
     std::true_type
     test_observer_without_result(int);
 
@@ -41,29 +41,32 @@ namespace detail {
     std::false_type
     test_observer_without_result(...);
 
-    template <typename T, typename input, bool has_result = false>
+    template <typename T, typename cache_t, bool has_result = false>
     struct observer_signature_check_impl
-        : decltype(test_observer_without_result<T, input>(0))
+        : decltype(test_observer_without_result<T, cache_t>(0))
     {
     };
 
-    template <typename T, typename input>
-    struct observer_signature_check_impl<T, input, true>
+    template <typename T, typename cache_t>
+    struct observer_signature_check_impl<T, cache_t, true>
         : decltype(
-              test_observer_with_result<T, input, detail::result_type_t<T>>(0))
+              test_observer_with_result<T, cache_t, detail::result_type_t<T>>(
+                  0))
     {
     };
 
-    template <typename T, typename input>
+    template <typename T, typename cache_t>
     struct observer_signature_check
-        : observer_signature_check_impl<T, input, detail::has_result_type_v<T>>
+        : observer_signature_check_impl<T,
+                                        cache_t,
+                                        detail::has_result_type_v<T>>
     {
     };
   }  // end of anonymous namespace
 
-  template <typename T, typename input>
+  template <typename T, typename cache_t>
   constexpr bool observer_signature_check_v
-      = observer_signature_check<T, input>::value;
+      = observer_signature_check<T, cache_t>::value;
 }  // namespace detail
 
 }  // namespace Acts

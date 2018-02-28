@@ -61,16 +61,16 @@ namespace Test {
 
     DistanceObserver(double ptg = 0.) : path_to_go(ptg) {}
 
-    template <typename input_t>
+    template <typename cache_t>
     void
-    operator()(const input_t& cache, result_type& result) const
+    operator()(cache_t& cache, result_type& result) const
     {
       result.distance = path_to_go - cache.accumulated_path;
     }
 
-    template <typename input_t>
+    template <typename cache_t>
     void
-    operator()(const input_t& cache) const
+    operator()(cache_t& cache) const
     {
       (void)cache;
     }
@@ -88,16 +88,16 @@ namespace Test {
 
     CallCounter() {}
 
-    template <typename input_t>
+    template <typename cache_t>
     void
-    operator()(const input_t&, result_type& r) const
+    operator()(cache_t&, result_type& r) const
     {
       ++r.calls;
     }
 
-    template <typename input_t>
+    template <typename cache_t>
     void
-    operator()(const input_t&) const
+    operator()(cache_t&) const
     {
     }
   };

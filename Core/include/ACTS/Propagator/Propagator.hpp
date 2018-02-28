@@ -232,10 +232,10 @@ namespace propagation {
     }
 
   public:
-    /// @brief Propagate track parameters - User method
+    /// @brief Propagate track parameters
     ///
     /// This function performs the propagation of the track parameters using the
-    /// internal implementation object, until at least one abort condition is
+    /// internal stepper implementation, until at least one abort condition is
     /// fulfilled or the maximum number of steps/path length provided in the
     /// propagation options is reached.
     ///
@@ -297,111 +297,24 @@ namespace propagation {
       return result;
     }
 
-    /// @brief Propagate track parameters - Expert method with propagation cache
+    /// @brief Propagate track parameters - User method
     ///
     /// This function performs the propagation of the track parameters according
     /// to the internal implementation object until at least one abort condition
     /// is fulfilled, the destination surface is hit or the maximum number of
     /// steps/path length as given in the propagation options is reached.
     ///
-    /// It does check/re-use the propgation cache as much as possible for
-    /// performance reasons
-    ///
     /// @tparam TrackParameters Type of initial track parameters to propagate
     /// @tparam Surface         Type of target surface
-    /// @tparam Observers       Type list of observers, type ObserverList<>
-    /// @tparam Aborters        Type list of abort conditions, type AbortList<>
+    /// @tparam Observers       Type list of observers
+    /// @tparam Aborters        Type list of abort conditions
     ///
-    /// @param [in] cache Stepper cache built/updated from the start parameters
+    /// @param [in] start Initial track parameters to propagate
     /// @param [in] target Target surface of to propagate to
     /// @param [in] options Propagation options
     ///
     /// @return Propagation result containing the propagation status, final
     ///         track parameters, and output of observers (if they produce any)
-    ///
-    /// @note the return here is in CurvilinearParameters
-    template <typename TrackParameters,
-              typename Surface,
-              typename Observers,
-              typename Aborters>
-    obs_list_result_t<
-        typename Impl::template return_parameter_type<TrackParameters>,
-        Observers>
-    propagate_with_cache_curvilinear(
-        cache_type&            cache,
-        const TrackParameters& start,
-        const Surface&         target,
-        const Options<Observers, Aborters>& options) const
-    {
-
-      // Type of track parameters produced at the end of the propagation
-      typedef typename Impl::template return_parameter_type<TrackParameters>
-          return_parameter_type;
-
-      // Update the cache if necessary
-      cache.update(start);
-
-      // Type of the full propagation result, including output from observers
-      typedef obs_list_result_t<return_parameter_type, Observers> result_type;
-
-      static_assert(std::is_copy_constructible<return_parameter_type>::value,
-                    "return track parameter type must be copy-constructible");
-
-      // Initialize the propagation result object
-      result_type result(Status::IN_PROGRESS);
-
-      // Target surface abort condition with tolerance
-      typedef detail::surface_reached<Surface> target_reached;
-
-      // Internal Abort list
-      AbortList<target_reached, path_limit_reached> internal_aborters;
-      // configure the aborters
-      auto& at_target_abort = internal_aborters.template get<target_reached>();
-      at_target_abort.surface   = &target;
-      at_target_abort.direction = options.direction;
-      at_target_abort.tolerance = options.target_tolerance;
-
-      auto& path_limit_abort
-          = internal_aborters.template get<path_limit_reached>();
-      path_limit_abort.signed_path_limit
-          = std::abs(options.max_path_length) * options.direction;
-      path_limit_abort.tolerance = options.target_tolerance;
-
-      // Perform the actual propagation
-      if (propagate_(result, cache, options, internal_aborters)
-          != Status::IN_PROGRESS) {
-        // analyze and screen output
-      } else {
-        // Compute the final results and mark the propagation as successful
-        result.endParameters = std::make_unique<const return_parameter_type>(
-            m_impl.convert(cache));
-        result.status = Status::SUCCESS;
-      }
-      return result;
-    }
-
-    /// @brief Propagate track parameters - Expert method with propagation cache
-    ///
-    /// This function performs the propagation of the track parameters according
-    /// to the internal implementation object until at least one abort condition
-    /// is fulfilled, the destination surface is hit or the maximum number of
-    /// steps/path length as given in the propagation options is reached.
-    ///
-    /// It does check/re-use the propgation cache as much as possible for
-    /// performance reasons
-    ///
-    /// @tparam TrackParameters Type of initial track parameters to propagate
-    /// @tparam Surface         Type of target surface
-    /// @tparam Observers       Type list of observers, type ObserverList<>
-    /// @tparam Aborters        Type list of abort conditions, type AbortList<>
-    ///
-    /// @param [in] cache Stepper cache built/updated from the start parameters
-    /// @param [in] target Target surface of to propagate to
-    /// @param [in] options Propagation options
-    ///
-    /// @return Propagation result containing the propagation status, final
-    ///         track parameters, and output of observers (if they produce any)
-    ///
     template <typename TrackParameters,
               typename Surface,
               typename Observers,
@@ -409,10 +322,9 @@ namespace propagation {
     obs_list_result_t<
         typename Impl::template return_parameter_type<TrackParameters, Surface>,
         Observers>
-    propagate_with_cache(cache_type&            cache,
-                         const TrackParameters& start,
-                         const Surface&         target,
-                         const Options<Observers, Aborters>& options) const
+    propagate(const TrackParameters& start,
+              const Surface&         target,
+              const Options<Observers, Aborters>& options) const
     {
 
       // Type of track parameters produced at the end of the propagation
@@ -420,8 +332,9 @@ namespace propagation {
                                                             Surface>
           return_parameter_type;
 
-      // Update the cache if necessary
-      cache.update(start);
+      // Initialize the internal propagation cache
+      cache_type cache(start);
+      cache.step_size = options.direction * options.max_step_size;
 
       // Type of the full propagation result, including output from observers
       typedef obs_list_result_t<return_parameter_type, Observers> result_type;
@@ -460,45 +373,6 @@ namespace propagation {
         result.status = Status::SUCCESS;
       }
       return result;
-    }
-
-    /// @brief Propagate track parameters - User method
-    ///
-    /// This function performs the propagation of the track parameters according
-    /// to the internal implementation object until at least one abort condition
-    /// is fulfilled, the destination surface is hit or the maximum number of
-    /// steps/path length as given in the propagation options is reached.
-    ///
-    /// A stepper cache object is built internally for this call and the
-    /// Expert method with the cache call signature is called.
-    ///
-    /// @tparam TrackParameters Type of initial track parameters to propagate
-    /// @tparam Surface         Type of target surface
-    /// @tparam Observers       Type list of observers
-    /// @tparam Aborters        Type list of abort conditions
-    ///
-    /// @param [in] start Initial track parameters to propagate
-    /// @param [in] target Target surface of to propagate to
-    /// @param [in] options Propagation options
-    ///
-    /// @return Propagation result containing the propagation status, final
-    ///         track parameters, and output of observers (if they produce any)
-    template <typename TrackParameters,
-              typename Surface,
-              typename Observers,
-              typename Aborters>
-    obs_list_result_t<
-        typename Impl::template return_parameter_type<TrackParameters, Surface>,
-        Observers>
-    propagate(const TrackParameters& start,
-              const Surface&         target,
-              const Options<Observers, Aborters>& options) const
-    {
-      // Initialize the internal propagation cache
-      cache_type cache(start);
-      cache.step_size = options.direction * options.max_step_size;
-      // Run with cache
-      return propagate_with_cache(cache, start, target, options);
     }
 
   private:

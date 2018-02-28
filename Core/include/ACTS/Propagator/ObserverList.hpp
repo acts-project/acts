@@ -19,7 +19,7 @@
 namespace Acts {
 
 /// This is the ObserverList struct that is used in the propagator
-/// to define a list of different observers that are each
+/// to define a list of different observers that are eacch
 /// executed during the stepping procedure
 template <typename... observers>
 struct ObserverList : private detail::Extendable<observers...>
@@ -43,18 +43,18 @@ public:
   /// Call operator that is that broadcasts the call to the tuple()
   /// members of the list
   ///
-  /// @tparam input is the cache type from the propagator
+  /// @tparam cache_t is the cache type from the propagator
   /// @tparam result_t is the result type from observers
   ///
-  /// @param cache[in] is the cache object from the propagator
+  /// @param cache[in,out] is the cache object from the propagator
   /// @param result[in,out] is the result object from observers
-  template <typename input, typename result_t>
+  template <typename cache_t, typename result_t>
   void
-  operator()(const input& cache, result_t& result) const
+  operator()(cache_t& cache, result_t& result) const
   {
     // clang-format off
-    static_assert(detail::all_of_v<detail::observer_signature_check_v<observers, input>...>,
-                  "not all observers support the specified input");
+    static_assert(detail::all_of_v<detail::observer_signature_check_v<observers, cache_t>...>,
+                  "not all observers support the specified cache_t");
     // clang-format on
 
     typedef detail::observer_list_impl<observers...> impl;

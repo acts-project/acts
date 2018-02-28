@@ -20,9 +20,9 @@ namespace detail {
     template <bool has_result = true>
     struct observer_caller
     {
-      template <typename observer, typename result, typename input>
+      template <typename observer, typename result_t, typename cache_t>
       static void
-      observe(const observer& obs, const input& cache, result& r)
+      observe(const observer& obs, cache_t& cache, result_t& r)
       {
         obs(cache, r.template get<detail::result_type_t<observer>>());
       }
@@ -31,9 +31,9 @@ namespace detail {
     template <>
     struct observer_caller<false>
     {
-      template <typename observer, typename result, typename input>
+      template <typename observer, typename result_t, typename cache_t>
       static void
-      observe(const observer& obs, const input& cache, result&)
+      observe(const observer& obs, cache_t& cache, result_t&)
       {
         obs(cache);
       }
@@ -46,9 +46,9 @@ namespace detail {
   template <typename first, typename... others>
   struct observer_list_impl<first, others...>
   {
-    template <typename T, typename result, typename input>
+    template <typename T, typename result_t, typename cache_t>
     static void
-    observe(const T& obs_tuple, const input& cache, result& r)
+    observe(const T& obs_tuple, cache_t& cache, result_t& r)
     {
       constexpr bool has_result    = has_result_type_v<first>;
       const auto&    this_observer = std::get<first>(obs_tuple);
@@ -60,9 +60,9 @@ namespace detail {
   template <typename last>
   struct observer_list_impl<last>
   {
-    template <typename T, typename result, typename input>
+    template <typename T, typename result_t, typename cache_t>
     static void
-    observe(const T& obs_tuple, const input& cache, result& r)
+    observe(const T& obs_tuple, cache_t& cache, result_t& r)
     {
       constexpr bool has_result    = has_result_type_v<last>;
       const auto&    this_observer = std::get<last>(obs_tuple);
@@ -73,9 +73,9 @@ namespace detail {
   template <>
   struct observer_list_impl<>
   {
-    template <typename T, typename result, typename input>
+    template <typename T, typename result_t, typename cache_t>
     static void
-    observe(const T&, const input&, result&)
+    observe(const T&, cache_t&, result_t&)
     {
     }
   };

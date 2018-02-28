@@ -150,8 +150,8 @@ namespace Test {
     auto asMatrix = convertToMatrix(asCache.pVector);
 
     bool rkas = rkMatrix.isApprox(asMatrix);
-    bool rkes = rkMatrix.isApprox(esCache.jacobian);
-    bool ases = asMatrix.isApprox(esCache.jacobian);
+    bool rkes = rkMatrix.isApprox(esCache.jac_to_global);
+    bool ases = asMatrix.isApprox(esCache.jac_to_global);
     // cross comparison checks
     BOOST_CHECK(rkas);
     BOOST_CHECK(rkes);

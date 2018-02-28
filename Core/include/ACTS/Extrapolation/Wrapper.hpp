@@ -107,7 +107,7 @@ namespace propagation {
     explicit Wrapper(Impl impl) : m_impl(impl) {}
 
   public:
-    /// @brief Propagate track parameters - User method
+    /// @brief Propagate track parameters
     ///
     /// This function performs the propagation of the track parameters using the
     /// internal implementation object, until at least one abort condition is
@@ -161,96 +161,7 @@ namespace propagation {
                         Aborters>(ec, start, m_surface, options);
     }
 
-    /// @brief Propagate track parameters - Expert method with propagation cache
-    ///
-    /// This function performs the propagation of the track parameters according
-    /// to the internal implementation object until at least one abort condition
-    /// is fulfilled, the destination surface is hit or the maximum number of
-    /// steps/path length as given in the propagation options is reached.
-    ///
-    /// @tparam TrackParameters Type of initial track parameters to propagate
-    /// @tparam Surface         Type of target surface
-    /// @tparam Observers       Type list of observers, type ObserverList<>
-    /// @tparam Aborters        Type list of abort conditions, type AbortList<>
-    ///
-    /// @param [in] cache Stepper cache built/updated from the start parameters
-    /// @param [in] target Target surface of to propagate to
-    /// @param [in] options Propagation options
-    ///
-    /// @return Propagation result containing the propagation status, final
-    ///         track parameters, and output of observers (if they produce any)
-    ///
-    /// @note the return here is in CurvilinearParameters
-    template <typename Cache,
-              typename Surface,
-              typename Observers,
-              typename Aborters>
-    WrapperResult<NeutralCurvilinearParameters>
-    propagate_with_cache_curvilinear(
-        Cache&                   cache,
-        const NeutralParameters& start,
-        const Surface&           target,
-        const Options<Observers, Aborters>& options) const
-    {
-      return propagate_<Cache,
-                        NeutralParameters,
-                        NeutralParameters,
-                        Surface,
-                        Observers,
-                        Aborters>(cache, start, target, options);
-    }
-
-    template <typename Cache,
-              typename Surface,
-              typename Observers,
-              typename Aborters>
-    WrapperResult<CurvilinearParameters>
-    propagate_with_cache_curvilinear(
-        Cache&                 cache,
-        const TrackParameters& start,
-        const Surface&         target,
-        const Options<Observers, Aborters>& options) const
-    {
-      return propagate_<Cache,
-                        TrackParameters,
-                        TrackParameters,
-                        Surface,
-                        Observers,
-                        Aborters>(cache, start, target, options);
-    }
-    /// @brief Propagate track parameters - Expert method with propagation cache
-    ///
-    /// This function performs the propagation of the track parameters according
-    /// to the internal implementation object until at least one abort condition
-    /// is fulfilled, the destination surface is hit or the maximum number of
-    /// steps/path length as given in the propagation options is reached.
-    ///
-    /// @tparam TrackParameters Type of initial track parameters to propagate
-    /// @tparam Surface         Type of target surface
-    /// @tparam Observers       Type list of observers, type ObserverList<>
-    /// @tparam Aborters        Type list of abort conditions, type AbortList<>
-    ///
-    /// @param [in] cache Stepper cache built/updated from the start parameters
-    /// @param [in] target Target surface of to propagate to
-    /// @param [in] options Propagation options
-    ///
-    /// @return Propagation result containing the propagation status, final
-    ///         track parameters, and output of observers (if they produce any)
-    ///
-    template <typename Cache,
-              typename Surface,
-              typename Observers,
-              typename Aborters>
-    WrapperResult<TrackParameters>
-    propagate_with_cache(Cache&                 cache,
-                         const TrackParameters& start,
-                         const Surface&         target,
-                         const Options<Observers, Aborters>& options) const
-    {
-      return propagate_(cache, start, target, options);
-    }
-
-    /// @brief Propagate track parameters - User method
+    /// @brief Propagate track parameters
     ///
     /// This function performs the propagation of the track parameters according
     /// to the internal implementation object until at least one abort condition
@@ -291,6 +202,7 @@ namespace propagation {
                         Observers,
                         Aborters>(ec, start, target, options);
     }
+
     /// charged option
     template <typename Surface, typename Observers, typename Aborters>
     WrapperResult<TrackParameters>

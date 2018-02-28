@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2018s ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,16 +20,16 @@ namespace Acts {
 ///
 /// @code
 ///
-/// template <typename input, typename result_t>
+/// template <typename cache_t, typename result_t>
 /// bool
-/// operator()(const result_t& r, input& cache) const
+/// operator()(const result_t& r, cache_t& cache) const
 /// {
 ///   return false;
 /// }
 ///
-/// template <typename input>
+/// template <typename cache_t>
 /// bool
-/// operator()(input& cache) const
+/// operator()(cache_t& cache) const
 /// {
 ///   return false;
 /// }
@@ -39,11 +39,11 @@ namespace detail {
 
   namespace {
     template <typename T,
-              typename input,
-              typename result,
+              typename cache_t,
+              typename result_t,
               typename = decltype(std::declval<const T>().
-                                  operator()(std::declval<const result&>(),
-                                             std::declval<const input&>()))>
+                                  operator()(std::declval<const result_t&>(),
+                                             std::declval<const cache_t&>()))>
     std::true_type
     test_condition_with_result(int);
 
@@ -52,9 +52,9 @@ namespace detail {
     test_condition_with_result(...);
 
     template <typename T,
-              typename input,
+              typename cache_t,
               typename = decltype(std::declval<const T>().
-                                  operator()(std::declval<const input&>()))>
+                                  operator()(std::declval<const cache_t&>()))>
     std::true_type
     test_condition_without_result(int);
 
@@ -63,34 +63,34 @@ namespace detail {
     test_condition_without_result(...);
 
     // clang-format on
-    template <typename T, typename input, bool has_result = false>
+    template <typename T, typename cache_t, bool has_result = false>
     struct condition_signature_check_impl
-        : decltype(test_condition_without_result<T, input>(0))
+        : decltype(test_condition_without_result<T, cache_t>(0))
     {
     };
 
-    template <typename T, typename input>
-    struct condition_signature_check_impl<T, input, true>
+    template <typename T, typename cache_t>
+    struct condition_signature_check_impl<T, cache_t, true>
         : decltype(
               test_condition_with_result<T,
-                                         input,
+                                         cache_t,
                                          result_type_t<observer_type_t<T>>>(0))
     {
     };
 
-    template <typename T, typename input>
+    template <typename T, typename cache_t>
     struct abort_condition_signature_check
         : condition_signature_check_impl<T,
-                                         input,
+                                         cache_t,
                                          condition_uses_result_type<T>::value>
     {
     };
     // clang-format on
   }  // end of anonymous namespace
 
-  template <typename T, typename input>
+  template <typename T, typename cache_t>
   constexpr bool abort_condition_signature_check_v
-      = abort_condition_signature_check<T, input>::value;
+      = abort_condition_signature_check<T, cache_t>::value;
 }  // namespace detail
 
 }  // namespace Acts
