@@ -238,7 +238,7 @@ namespace Test {
   CylinderSurface mSurface(nullptr, 10., 1000. * units::_mm);
   CylinderSurface cSurface(nullptr, 150., 1000. * units::_mm);
 
-  const int ntests = 100;
+  const int ntests = 10;
 
   // This tests the Options
   BOOST_AUTO_TEST_CASE(PropgatorOptions_)

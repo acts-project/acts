@@ -109,7 +109,7 @@ public:
     ///        cache should be reinitialized at the new
     ///        position
     ///
-    /// @return the full transport jacobian for an eveutal observer
+    /// @return the full transport jacobian
     const ActsMatrixD<5, 5>
     apply_cov_transport(bool reinitialize = false)
     {
@@ -178,7 +178,7 @@ public:
         jac_to_global(5, eTHETA) = -sin_theta;
         jac_to_global(6, eQOP)   = 1;
       }
-      // return the full transport jacobian (for an observer)
+      // return the full transport jacobian
       return jac_full;
     }
 
@@ -195,7 +195,7 @@ public:
     ///        position
     /// @note no check is done if the position is actually on the surface
     ///
-    /// @return the full transport jacobian for an eveutal observer
+    /// @return the full transport jacobian
     template <typename S>
     const ActsMatrixD<5, 5>
     apply_cov_transport(const S& surface, bool reinitialize = false)
@@ -229,7 +229,7 @@ public:
         pars << loc[eLOC_0], loc[eLOC_1], dir.phi(), dir.theta(), qop;
         surface.initJacobianToGlobal(jac_to_global, pos, dir, pars);
       }
-      // return the full transport jacobian (for an observer)
+      // return the full transport jacobian
       return jac_full;
     }
 

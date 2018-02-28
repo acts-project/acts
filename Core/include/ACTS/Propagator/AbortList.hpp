@@ -26,23 +26,22 @@ private:
                 "same abort conditions type specified several times");
 
   // clang-format off
-  typedef detail::type_collector_t<detail::action_type_extractor, conditions...> observers;
+  typedef detail::type_collector_t<detail::action_type_extractor, conditions...> actions;
   // clang-format on
 
   using detail::Extendable<conditions...>::tuple;
 
 public:
-  typedef detail::boost_set_as_tparams_t<ActionList, observers>
-      action_list_type;
+  typedef detail::boost_set_as_tparams_t<ActionList, actions> action_list_type;
   using detail::Extendable<conditions...>::get;
 
   /// This is the call signature for the abort list, it broadcasts the call
   /// to the tuple() memembers of the list
   ///
   /// @tparam input is the cache type from the propagator
-  /// @tparam result_t is the result type from observers
+  /// @tparam result_t is the result type from a certain action
   ///
-  /// @param r[in] is the result object from observers
+  /// @param r[in] is the result object from a certin action
   /// @param cache[in,out] is the cache object from the propagator
   template <typename input, typename result_t>
   bool

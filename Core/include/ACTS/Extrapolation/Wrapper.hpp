@@ -66,7 +66,7 @@ namespace propagation {
   public:
     /// @brief Options for propagate() call
     ///
-    /// @tparam Actions List of observer types called after each
+    /// @tparam Actions List of action types called after each
     ///                   propagation step with the current propagation
     ///                   cache
     ///

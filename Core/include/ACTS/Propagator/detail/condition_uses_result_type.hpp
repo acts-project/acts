@@ -16,7 +16,7 @@ namespace Acts {
 
 namespace detail {
 
-  template <typename T, bool has_observer = true>
+  template <typename T, bool has_action = true>
   struct condition_uses_result_type_impl
   {
     static constexpr bool value = has_result_type_v<action_type_t<T>>;
