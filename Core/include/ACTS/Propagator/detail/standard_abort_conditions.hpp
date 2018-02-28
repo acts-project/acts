@@ -35,17 +35,6 @@ namespace detail {
     {
     }
 
-    /// constructor
-    ///
-    /// @param direction_sign is the propagation direction
-    /// @param abs_limit is the absolute path limit for this propagation
-    /// @param ttolerance The tolerance to declare "reached"
-    path_limit_reached(double abs_limit, int direction_sign, double ttolerance)
-      : signed_path_limit(direction_sign * std::abs(abs_limit))
-      , tolerance(std::abs(ttolerance))
-    {
-    }
-
     /// boolean operator for abort condition using the result
     template <typename input, typename result_t>
     bool
@@ -94,19 +83,6 @@ namespace detail {
     /// @param ttolerance The tolerance to declare "reached"
     surface_reached()
       : surface(nullptr), tolerance(std::numeric_limits<double>::max())
-    {
-    }
-
-    /// constructor
-    ///
-    /// @tparam Surface Type of the surface
-    ///
-    /// @param tsurface The target surface
-    /// @param ttolerance The tolerance to declare "reached"
-    surface_reached(const Surface& tsurface,
-                    int            tdirection,
-                    double         ttolerance = 0.)
-      : surface(&tsurface), direction(tdirection), tolerance(ttolerance)
     {
     }
 

@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -32,16 +32,20 @@ private:
   using detail::Extendable<conditions...>::tuple;
 
 public:
-  /// constructor of the Extendable
-  explicit AbortList(const conditions&... extensions)
-    : detail::Extendable<conditions...>(extensions...)
-  {
-  }
-
   typedef detail::boost_set_as_tparams_t<ObserverList, observers>
       observer_list_type;
   using detail::Extendable<conditions...>::get;
 
+  /// This is the call signature for the abort list, it broadcasts the call
+  /// to the tuple() memembers of the list
+  ///
+  /// @tparam input is the cache type from the propagator
+  /// @tparam result_t is the result type from observers
+  ///
+  /// @param r[in] is the result object from observers
+  /// @param cache[in,out] is the cache object from the propagator
+  ///
+  /// @return a boolean indication whether an abort has been triggered
   template <typename input, typename result_t>
   bool
   operator()(const result_t& r, input& cache) const

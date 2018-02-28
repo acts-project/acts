@@ -1,13 +1,13 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef ACTS_EXTENDABLE_HPP
-#define ACTS_EXTENDABLE_HPP 1
+#define ACTS_EXTENDABLE_HPP
 
 #include <tuple>
 #include <type_traits>
@@ -17,8 +17,16 @@ namespace Acts {
 
 namespace detail {
 
+  /// This sctruct defines an extendable std::tuple
+  ///
+  /// all Extensions have to :
+  ///   - default constructible
+  ///   - copy constructible
+  ///   - move constructible
+  ///
+  /// This is needed in order to allow custom construction of objects
   template <typename... Extensions>
-  struct Extendable : private std::tuple<Extensions...>
+  struct Extendable
   {
     // clang-format off
     static_assert(detail::all_of_v<std::is_default_constructible<Extensions>::value...>,
@@ -29,37 +37,34 @@ namespace detail {
                   "all extensions must be move constructible");
     // clang-format on
 
-    // Explicit constructor
-    explicit Extendable(const Extensions&... extensions)
-      : std::tuple<Extensions...>(extensions...)
-    {
-    }
-
     template <typename R>
     const R&
     get() const
     {
-      return std::get<R>(*this);
+      return std::get<R>(m_tExtensions);
     }
 
     template <typename R>
     R&
     get()
     {
-      return std::get<R>(*this);
+      return std::get<R>(m_tExtensions);
     }
 
     const std::tuple<Extensions...>&
     tuple() const
     {
-      return (*this);
+      return m_tExtensions;
     }
 
     std::tuple<Extensions...>&
     tuple()
     {
-      return (*this);
+      return m_tExtensions;
     }
+
+  private:
+    std::tuple<Extensions...> m_tExtensions;
   };
 
 }  // namespace detail

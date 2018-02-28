@@ -126,7 +126,7 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
       m_activeBounds->boundingBox().halflengthY(), halfThickness));
   // now, let's create the shared bounds of all surfaces marking lorentz planes
   double lorentzPlaneHalfX = std::abs(halfThickness / cos(lorentzAngle));
-  // teh bounds of the lorentz plane
+  // the bounds of the lorentz plane
   std::shared_ptr<const PlanarBounds> lorentzPlaneBounds = (lorentzAngle == 0.)
       ? xBinBounds
       : std::shared_ptr<const PlanarBounds>(new RectangleBounds(

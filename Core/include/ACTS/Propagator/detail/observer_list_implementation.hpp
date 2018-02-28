@@ -16,6 +16,7 @@ namespace Acts {
 namespace detail {
 
   namespace {
+
     template <bool has_result = true>
     struct observer_caller
     {

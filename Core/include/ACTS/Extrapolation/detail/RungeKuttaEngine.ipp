@@ -365,7 +365,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
       }
   }
 
-  // the start and teh result
+  // the start and the result
   std::unique_ptr<const TrackParameters> pParameters = nullptr;
   const TrackParameters*                 sParameters = eCell.leadParameters;
 

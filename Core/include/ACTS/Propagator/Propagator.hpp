@@ -14,7 +14,6 @@
 #include <type_traits>
 #include "ACTS/Propagator/AbortList.hpp"
 #include "ACTS/Propagator/ObserverList.hpp"
-#include "ACTS/Propagator/detail/Extendable.hpp"
 #include "ACTS/Propagator/detail/standard_abort_conditions.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
@@ -112,6 +111,7 @@ namespace propagation {
               typename Aborters  = AbortList<>>
     struct Options
     {
+
       /// Propagation direction
       Direction direction = forward;
 
@@ -274,10 +274,14 @@ namespace propagation {
       cache_type cache(start);
       cache.step_size = options.direction * options.max_step_size;
 
-      // The path limit aborter
-      path_limit_reached path_limit_abort(
-          options.max_path_length, options.direction, options.target_tolerance);
-      AbortList<path_limit_reached> internal_aborters(path_limit_abort);
+      // Internal Abort list
+      AbortList<path_limit_reached> internal_aborters;
+      // configure the aborter
+      auto& path_limit_abort
+          = internal_aborters.template get<path_limit_reached>();
+      path_limit_abort.signed_path_limit
+          = std::abs(options.max_path_length) * options.direction;
+      path_limit_abort.tolerance = options.target_tolerance;
 
       // Perform the actual propagation & check it's outcome
       if (propagate_(result, cache, options, internal_aborters)
@@ -348,16 +352,20 @@ namespace propagation {
 
       // Target surface abort condition with tolerance
       typedef detail::surface_reached<Surface> target_reached;
-      target_reached                           at_target_abort(
-          target, options.direction, options.target_tolerance);
 
-      // Path limit abort condition with tolerance
-      path_limit_reached path_limit_abort(
-          options.max_path_length, options.direction, options.target_tolerance);
+      // Internal Abort list
+      AbortList<target_reached, path_limit_reached> internal_aborters;
+      // configure the aborters
+      auto& at_target_abort = internal_aborters.template get<target_reached>();
+      at_target_abort.surface   = &target;
+      at_target_abort.direction = options.direction;
+      at_target_abort.tolerance = options.target_tolerance;
 
-      // Resulting Abort list
-      AbortList<target_reached, path_limit_reached> internal_aborters(
-          at_target_abort, path_limit_abort);
+      auto& path_limit_abort
+          = internal_aborters.template get<path_limit_reached>();
+      path_limit_abort.signed_path_limit
+          = std::abs(options.max_path_length) * options.direction;
+      path_limit_abort.tolerance = options.target_tolerance;
 
       // Perform the actual propagation
       if (propagate_(result, cache, options, internal_aborters)
@@ -426,16 +434,20 @@ namespace propagation {
 
       // Target surface abort condition with tolerance
       typedef detail::surface_reached<Surface> target_reached;
-      target_reached                           at_target_abort(
-          target, options.direction, options.target_tolerance);
 
-      // Path limit abort condition with tolerance
-      path_limit_reached path_limit_abort(
-          options.max_path_length, options.direction, options.target_tolerance);
+      // Internal Abort list
+      AbortList<target_reached, path_limit_reached> internal_aborters;
+      // configure the aborters
+      auto& at_target_abort = internal_aborters.template get<target_reached>();
+      at_target_abort.surface   = &target;
+      at_target_abort.direction = options.direction;
+      at_target_abort.tolerance = options.target_tolerance;
 
-      // Resulting Abort list
-      AbortList<target_reached, path_limit_reached> internal_aborters(
-          at_target_abort, path_limit_abort);
+      auto& path_limit_abort
+          = internal_aborters.template get<path_limit_reached>();
+      path_limit_abort.signed_path_limit
+          = std::abs(options.max_path_length) * options.direction;
+      path_limit_abort.tolerance = options.target_tolerance;
 
       // Perform the actual propagation
       if (propagate_(result, cache, options, internal_aborters)

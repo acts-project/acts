@@ -65,7 +65,7 @@ Acts::CylinderLayer::buildApproachDescriptor()
   // delete the surfaces
   // take the boundary surfaces of the representving volume if they exist
   if (m_representingVolume) {
-    // get teh boundary surfaces
+    // get the boundary surfaces
     const std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>&
         bSurfaces
         = m_representingVolume->boundarySurfaces();

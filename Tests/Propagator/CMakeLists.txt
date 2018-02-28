@@ -1,14 +1,26 @@
+add_executable (ExtendableTests ExtendableTests.cpp)
+target_link_libraries (ExtendableTests PRIVATE ACTSCore)
+add_test(NAME ExtendableUnitTests COMMAND ExtendableTests)
+
 add_executable (AbortListTests AbortListTests.cpp)
 target_link_libraries (AbortListTests PRIVATE ACTSCore)
 add_test(NAME AbortListUnitTest COMMAND AbortListTests)
 
-add_executable (RungeKuttaEngineTests RungeKuttaEngineTests.cpp)
-target_link_libraries (RungeKuttaEngineTests PRIVATE ACTSCore)
-add_test(NAME RungeKuttaEngineUnitTest COMMAND RungeKuttaEngineTests)
+add_executable (ObserverListTests ObserverListTests.cpp)
+target_link_libraries (ObserverListTests PRIVATE ACTSCore)
+add_test(NAME ObserverListUnitTests COMMAND ObserverListTests)
 
 add_executable (JacobianTests JacobianTests.cpp)
 target_link_libraries (JacobianTests PRIVATE ACTSCore)
 add_test(NAME JacobianUnitTests COMMAND JacobianTests)
+
+add_executable (PropagatorTests PropagatorTests.cpp)
+target_link_libraries (PropagatorTests PRIVATE ACTSCore)
+add_test(NAME PropagatorUnitTests COMMAND PropagatorTests)
+
+add_executable (RungeKuttaEngineTests RungeKuttaEngineTests.cpp)
+target_link_libraries (RungeKuttaEngineTests PRIVATE ACTSCore)
+add_test(NAME RungeKuttaEngineUnitTest COMMAND RungeKuttaEngineTests)
 
 # Benchmark tests
 

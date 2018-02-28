@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,6 +19,7 @@
 // leave blank line
 
 #include "ACTS/Propagator/AbortList.hpp"
+#include "ACTS/Propagator/detail/Extendable.hpp"
 #include "ACTS/Propagator/detail/standard_abort_conditions.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
@@ -51,18 +52,19 @@ namespace Test {
   {
   };
 
-  // This tests teh implementation of the AbortList
+  // This tests the implementation of the AbortList
   // and the standard aborters
   BOOST_AUTO_TEST_CASE(AbortListTest_PathLimit)
   {
-    Cache cache;
-
+    Cache  cache;
     Result result;
 
-    // That the path limit with tolerance
-    path_limit limit(1. * units::_m, 1. * units::_um);
+    AbortList<path_limit> abort_list;
 
-    auto abort_list = AbortList<path_limit>({limit});
+    // Configure path limit with tolerance
+    auto& limit             = abort_list.get<path_limit>();
+    limit.signed_path_limit = 1. * units::_m;
+    limit.tolerance         = 1. * units::_um;
 
     // It should not abort yet
     BOOST_CHECK(!abort_list(result, cache));
