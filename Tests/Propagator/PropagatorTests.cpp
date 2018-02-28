@@ -180,8 +180,7 @@ namespace Test {
     /// Simple result struct to be returned
     struct this_result
     {
-      size_t surfaces_passed  = 0;
-      double surface_passed_r = std::numeric_limits<double>::max();
+      bool surfaces_passed = false;
     };
 
     typedef this_result result_type;
@@ -204,8 +203,13 @@ namespace Test {
           cache.step_size = distance;
         // return true if you fall below tolerance
         if (std::abs(distance) <= tolerance) {
-          ++result.surfaces_passed;
-          result.surface_passed_r = cache.position().perp();
+          result.surfaces_passed = true;
+          // do the update and reinitialize the jacobians
+          cache.apply_cov_transport(*surface, true);
+          cache.cov(ePHI, ePHI) += sigma_phi * sigma_phi;
+          cache.cov(eTHETA, eTHETA) += sigma_theta * sigma_theta;
+          // @HACK - release the step size - this should be triggered
+          cache.step_size = 10. * units::_mm;
         }
       }
     }
@@ -233,6 +237,8 @@ namespace Test {
 
   CylinderSurface mSurface(nullptr, 10., 1000. * units::_mm);
   CylinderSurface cSurface(nullptr, 150., 1000. * units::_mm);
+
+  const int ntests = 100;
 
   // This tests the Options
   BOOST_AUTO_TEST_CASE(PropgatorOptions_)
@@ -268,7 +274,7 @@ namespace Test {
           ^ bdata::random((bdata::seed = 3,
                            bdata::distribution
                            = std::uniform_int_distribution<>(0, 1)))
-          ^ bdata::xrange(100),
+          ^ bdata::xrange(ntests),
       pT,
       phi,
       theta,
@@ -327,7 +333,7 @@ namespace Test {
           ^ bdata::random((bdata::seed = 3,
                            bdata::distribution
                            = std::uniform_int_distribution<>(0, 1)))
-          ^ bdata::xrange(100),
+          ^ bdata::xrange(ntests),
       pT,
       phi,
       theta,
@@ -388,7 +394,7 @@ namespace Test {
           ^ bdata::random((bdata::seed = 3,
                            bdata::distribution
                            = std::uniform_int_distribution<>(0, 1)))
-          ^ bdata::xrange(100),
+          ^ bdata::xrange(ntests),
       pT,
       phi,
       theta,
@@ -466,7 +472,7 @@ namespace Test {
           ^ bdata::random((bdata::seed = 5,
                            bdata::distribution
                            = std::normal_distribution<>(0, 0.05)))
-          ^ bdata::xrange(100),
+          ^ bdata::xrange(ntests),
       pT,
       phi,
       theta,
@@ -512,11 +518,11 @@ namespace Test {
     auto mid_pos     = mid_parameters->position();
     auto mid_mom     = mid_parameters->momentum();
     auto mid_cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(mid_cov);
-    CurvilinearParameters mid_pararameter_s(
+    CurvilinearParameters mid_pararameters_s(
         std::move(mid_cov_ptr), mid_pos, mid_mom, q);
     // the two step parameters now include the scattering ad the mid point
     const auto& end_parameters_2s_s
-        = epropagator.propagate(mid_pararameter_s, options_2s).endParameters;
+        = epropagator.propagate(mid_pararameters_s, options_2s).endParameters;
 
     // setup propagation options - the one step options
     typename EigenPropagator_type::template Options<> options_1s;
@@ -539,16 +545,17 @@ namespace Test {
 
     // to get the covariances agree, we need an Observer that does the
     // scattering
-    typedef SurfaceObserver<CylinderSurface> CylinderObserver;
-    typedef ObserverList<PathScatterer>      ObsList_type;
-    typedef AbortList<>                      AbortConditions_type;
+    typedef ObserverList<PathScatterer> ObsList_type;
+    typedef AbortList<>                 AbortConditions_type;
 
     // setup propagation options - the 1 step with scattering optios
     typename EigenPropagator_type::template Options<ObsList_type,
                                                     AbortConditions_type>
           options_1s_s;
-    auto& _s      = options_1s_s.observer_list.get<PathScatterer>();
-    _s.path_limit = 50. * units::_cm;
+    auto& _s       = options_1s_s.observer_list.get<PathScatterer>();
+    _s.path_limit  = 50. * units::_cm;
+    _s.sigma_phi   = sigma_phi;
+    _s.sigma_theta = sigma_theta;
 
     options_1s_s.max_path_length = 100 * units::_cm;
     options_1s_s.max_step_size   = 1 * units::_cm;
@@ -558,7 +565,7 @@ namespace Test {
 
     const auto& cov_1s_s = *(end_parameters_1s_s->covariance());
 
-    // now it should be the same again
+    // now it should be the same again, the PathScatter did the trick
     BOOST_TEST(cov_1s_s.isApprox(cov_2s_s));
   }
 
@@ -577,7 +584,7 @@ namespace Test {
           ^ bdata::random((bdata::seed = 3,
                            bdata::distribution
                            = std::uniform_int_distribution<>(0, 1)))
-          ^ bdata::xrange(100),
+          ^ bdata::xrange(ntests),
       pT,
       phi,
       theta,
@@ -613,6 +620,7 @@ namespace Test {
     // propagate to a final surface with one stop in between
     const auto& mid_parameters
         = epropagator.propagate(start, mSurface, options_2s).endParameters;
+
     const auto& end_parameters_2s
         = epropagator.propagate(*mid_parameters, cSurface, options_2s)
               .endParameters;
@@ -633,6 +641,127 @@ namespace Test {
     const auto& cov_2s = *(end_parameters_2s->covariance());
 
     BOOST_TEST(cov_1s.isApprox(cov_2s, 0.001));
+  }
+
+  BOOST_DATA_TEST_CASE(
+      cylinder_scattering_,
+      bdata::random((bdata::seed = 0,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(0.4 * units::_GeV,
+                                                        10. * units::_GeV)))
+          ^ bdata::random((bdata::seed = 1,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-M_PI, M_PI)))
+          ^ bdata::random((bdata::seed = 2,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(1.0, M_PI - 1.0)))
+          ^ bdata::random((bdata::seed = 3,
+                           bdata::distribution
+                           = std::uniform_int_distribution<>(0, 1)))
+          ^ bdata::random((bdata::seed = 4,
+                           bdata::distribution
+                           = std::normal_distribution<>(0, 0.05)))
+          ^ bdata::random((bdata::seed = 5,
+                           bdata::distribution
+                           = std::normal_distribution<>(0, 0.05)))
+          ^ bdata::xrange(ntests),
+      pT,
+      phi,
+      theta,
+      charge,
+      sigma_phi,
+      sigma_theta,
+      index)
+  {
+    double dcharge = -1 + 2 * charge;
+    (void)index;
+
+    // setup propagation options - 2 setp options
+    typename EigenPropagator_type::template Options<> options_2s;
+    options_2s.max_path_length = 10 * units::_m;
+    options_2s.max_step_size   = 1 * units::_cm;
+
+    // define start parameters
+    double   x  = 0;
+    double   y  = 0;
+    double   z  = 0;
+    double   px = pT * cos(phi);
+    double   py = pT * sin(phi);
+    double   pz = pT / tan(theta);
+    double   q  = dcharge;
+    Vector3D pos(x, y, z);
+    Vector3D mom(px, py, pz);
+    /// a covariance matrix to transport
+    ActsSymMatrixD<5> cov;
+    // take some major correlations (off-diagonals)
+    cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
+        0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
+        1. / (10 * units::_GeV);
+    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
+
+    // propagate to a final surface with one stop in between
+    const auto& mid_parameters
+        = epropagator.propagate(start, mSurface, options_2s).endParameters;
+    // now 'scatter' on the mid surface
+    ActsSymMatrixD<5> mid_cov(*(mid_parameters->covariance()));
+    mid_cov(ePHI, ePHI) += sigma_phi * sigma_phi;
+    mid_cov(eTHETA, eTHETA) += sigma_theta * sigma_theta;
+
+    auto mid_pos     = mid_parameters->position();
+    auto mid_mom     = mid_parameters->momentum();
+    auto mid_cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(mid_cov);
+    BoundParameters mid_pararameters_s(
+        std::move(mid_cov_ptr), mid_pos, mid_mom, q, mSurface);
+    // the end parameters now carry the scattring of the mid surface
+    const auto& end_parameters_2s_s
+        = epropagator.propagate(mid_pararameters_s, cSurface, options_2s)
+              .endParameters;
+
+    // setup propagation options - one step options
+    typename EigenPropagator_type::template Options<> options_1s;
+    options_1s.max_path_length = 10 * units::_m;
+    options_1s.max_step_size   = 1 * units::_cm;
+    // propagate to a final surface in one stop
+    const auto& end_parameters_1s
+        = epropagator.propagate(start, cSurface, options_1s).endParameters;
+
+    // test that the propagation is additive
+    BOOST_TEST(end_parameters_1s->position().isApprox(
+        end_parameters_2s_s->position(), 0.001));
+
+    const auto& cov_1s   = *(end_parameters_1s->covariance());
+    const auto& cov_2s_s = *(end_parameters_2s_s->covariance());
+
+    BOOST_TEST(!cov_1s.isApprox(cov_2s_s, 0.001));
+
+    // Cylinder Surface Scatterer
+    typedef SurfaceScatterer<CylinderSurface> CylinderScatterer;
+
+    // to get the covariances agree, we need an Observer that does the
+    // scattering
+    typedef ObserverList<CylinderScatterer> ObsList_type;
+    typedef AbortList<>                     AbortConditions_type;
+
+    // setup propagation options - the 1 step with scattering optios
+    typename EigenPropagator_type::template Options<ObsList_type,
+                                                    AbortConditions_type>
+        options_1s_s;
+    options_1s_s.max_step_size = 1 * units::_cm;
+
+    auto& _s       = options_1s_s.observer_list.get<CylinderScatterer>();
+    _s.surface     = &mSurface;
+    _s.sigma_phi   = sigma_phi;
+    _s.sigma_theta = sigma_theta;
+    // propagate to a path length of 100 in one step
+    const auto& end_parameters_1s_s
+        = epropagator.propagate(start, cSurface, options_1s_s).endParameters;
+
+    const auto& cov_1s_s = *(end_parameters_1s_s->covariance());
+
+    // now it should be the same again, the PathScatter did the trick
+    bool cov_s_approx = cov_1s_s.isApprox(cov_2s_s, 0.01);
+    BOOST_TEST(cov_s_approx);
   }
 
 }  // namespace Test

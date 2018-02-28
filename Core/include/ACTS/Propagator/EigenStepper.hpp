@@ -148,7 +148,6 @@ public:
       jac_to_curv(2, 4) = cos_phi * inv_sin_theta;
       jac_to_curv(3, 5) = -inv_sin_theta;
       jac_to_curv(4, 6) = 1;
-
       // Apply the transport from the steps on the jacobian
       jac_to_global = jac_transport * jac_to_global;
       // Transport the covariance
@@ -160,7 +159,6 @@ public:
           = jac_to_curv * (jac_to_global - derivative * sfactors);
       // Apply the actual covariance transport
       cov = (jac_full * cov * jac_full.transpose());
-
       // Reinitialize if asked to do so
       // this is useful for interruption calls
       if (reinitialize) {
@@ -216,13 +214,14 @@ public:
           = jac_to_local * (jac_to_global - derivative * s_vec);
       // Apply the actual covariance transport
       cov = (jac_full * cov * jac_full.transpose());
-
       // Reinitialize if asked to do so
       // this is useful for interruption calls
       if (reinitialize) {
         // reset the jacobians
         jac_to_global = ActsMatrixD<7, 5>::Zero();
         jac_transport = ActsMatrixD<7, 7>::Identity();
+        // reset the derivative
+        derivative = ActsVectorD<7>::Zero();
         // fill the jacobian to global for next transport
         Vector2D loc{0., 0.};
         surface.globalToLocal(pos, dir, loc);
@@ -401,7 +400,7 @@ public:
     };
 
     // Select and adjust the appropriate Runge-Kutta step size
-    // @todo remove magic numbers and implement better stepping
+    // @todo remove magic numbers and implement better step estimation
     double error_estimate = tryRungeKuttaStep(cache.step_size);
     while (error_estimate > 0.0002) {
       cache.step_size *= 0.5;
@@ -469,6 +468,7 @@ public:
       dGdT += h / 6 * (dk1dT + 2 * (dk2dT + dk3dT) + dk4dT);
 
       dGdL = conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
+
       // for moment, only update the transport part
       cache.jac_transport = D * cache.jac_transport;
     }
