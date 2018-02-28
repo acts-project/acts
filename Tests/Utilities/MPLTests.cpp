@@ -73,7 +73,7 @@ namespace Test {
     struct traits1
     {
       typedef int  result_type;
-      typedef char observer_type;
+      typedef char action_type;
     };
 
     template <bool>
@@ -83,13 +83,13 @@ namespace Test {
     struct traits2<false>
     {
       typedef bool  result_type;
-      typedef float observer_type;
+      typedef float action_type;
     };
 
     template <>
     struct traits2<true>
     {
-      typedef float observer_type;
+      typedef float action_type;
     };
   }
 
@@ -101,7 +101,7 @@ namespace Test {
                                      traits2<false>>
         found_results;
 
-    typedef detail::type_collector_t<detail::observer_type_extractor,
+    typedef detail::type_collector_t<detail::action_type_extractor,
                                      traits1,
                                      traits2<true>,
                                      traits2<false>>

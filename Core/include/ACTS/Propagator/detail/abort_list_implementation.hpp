@@ -27,8 +27,8 @@ namespace detail {
       static bool
       check(const condition& c, const result_t& r, cache_t& cache)
       {
-        typedef observer_type_t<condition>   observer_type;
-        typedef result_type_t<observer_type> result_type;
+        typedef action_type_t<condition>   action_type;
+        typedef result_type_t<action_type> result_type;
 
         return c(r.template get<result_type>(), cache);
       }

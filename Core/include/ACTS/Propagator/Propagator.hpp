@@ -13,7 +13,7 @@
 #include <memory>
 #include <type_traits>
 #include "ACTS/Propagator/AbortList.hpp"
-#include "ACTS/Propagator/ObserverList.hpp"
+#include "ACTS/Propagator/ActionList.hpp"
 #include "ACTS/Propagator/detail/standard_abort_conditions.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
@@ -99,7 +99,7 @@ namespace propagation {
 
     /// @brief Options for propagate() call
     ///
-    /// @tparam Observers List of observer types called after each
+    /// @tparam Actions List of action types called after each
     ///                   propagation step with the current propagation
     ///                   cache
     ///
@@ -107,8 +107,7 @@ namespace propagation {
     ///                   propagation step using the current propagation
     ///                   cache
     ///
-    template <typename Observers = ObserverList<>,
-              typename Aborters  = AbortList<>>
+    template <typename Actions = ActionList<>, typename Aborters = AbortList<>>
     struct Options
     {
 
@@ -130,8 +129,8 @@ namespace propagation {
       /// Absolute maximum path length
       double max_path_length = std::numeric_limits<double>::max();
 
-      /// List of observers
-      Observers observer_list;
+      /// List of actions
+      Actions action_list;
 
       /// List of abort conditions
       Aborters stop_conditions;
@@ -144,13 +143,13 @@ namespace propagation {
     /// @brief Helper struct determining the result's type
     ///
     /// @tparam TrackParameters Type of final track parameters
-    /// @tparam Observers    List of propagation observer types
+    /// @tparam Actions    List of propagation action types
     ///
     /// This helper struct provides type definitions to extract the correct
     /// propagation result type from a given TrackParameter type and an
-    /// ObserverList.
+    /// ActionList.
     ///
-    template <typename TrackParameters, typename Observers>
+    template <typename TrackParameters, typename Actions>
     struct result_type_helper
     {
       /// @brief Propagation result type for an arbitrary list of additional
@@ -161,34 +160,30 @@ namespace propagation {
       template <typename... args>
       using this_result_type = Result<TrackParameters, args...>;
 
-      /// @brief Propagation result type derived from a given observer list
-      typedef typename Observers::template result_type<this_result_type> type;
+      /// @brief Propagation result type derived from a given action list
+      typedef typename Actions::template result_type<this_result_type> type;
     };
 
     /// @brief Short-hand type definition for propagation result derived from
-    ///        an observer list
+    ///        an action list
     ///
     /// @tparam T       Type of the final track parameters
-    /// @tparam ObsList List of propagation observer types
+    /// @tparam Actions List of propagation action types
     ///
-    template <typename T, typename Observers>
-    using obs_list_result_t = typename result_type_helper<T, Observers>::type;
+    template <typename T, typename Actions>
+    using action_list_result_t = typename result_type_helper<T, Actions>::type;
 
-    /// @brief Propagate track parameters - Private method with propagation
-    /// cache
+    /// @brief Propagate track parameters - Private method with cache
     ///
     /// This function performs the propagation of the track parameters according
     /// to the internal implementation object until at least one abort condition
     /// is fulfilled, the destination surface is hit or the maximum number of
     /// steps/path length as given in the propagation options is reached.
     ///
-    /// It does check/re-use the propgation cache as much as possible for
-    /// performance reasons
-    ///
     /// @note Does not (yet) convert into  the return_type of the propagation
     ///
     /// @tparam Result the result type for this propagation
-    /// @tparam Observers       Type list of observers, type ObserverList<>
+    /// @tparam Actions       Type list of actions, type ActionList<>
     /// @tparam Aborters        Type list of abort conditions, type AbortList<>
     /// @tparam InteralAborter  additional internal aborters
     ///
@@ -200,13 +195,13 @@ namespace propagation {
     ///
     /// @return Propagation Status
     template <typename Result,
-              typename Observers,
+              typename Actions,
               typename Aborters,
               typename InteralAborters>
     Status
     propagate_(Result&     result,
                cache_type& cache,
-               const Options<Observers, Aborters>& options,
+               const Options<Actions, Aborters>& options,
                const InteralAborters& internal_stop_conditions) const
     {
       // check with surface_abort if it exists
@@ -216,9 +211,8 @@ namespace propagation {
       for (; result.steps < options.max_steps; ++result.steps) {
         // Perform a propagation step
         result.pathLength += m_impl.step(cache);
-        // Call the observers with the current and previous track parameters,
-        // and let them fill in some propagation results
-        options.observer_list(cache, result);
+        // Call the actions, can (& will likely) modify cache
+        options.action_list(cache, result);
 
         // Call the stop_conditions and the internal stop conditions
         // break condition triggered, but still count the step
@@ -240,29 +234,29 @@ namespace propagation {
     /// propagation options is reached.
     ///
     /// @tparam TrackParameters Type of initial track parameters to propagate
-    /// @tparam Observers       Type list of observers, type ObserverList<>
+    /// @tparam Actions       Type list of actions, type ActionList<>
     /// @tparam Aborters        Type list of abort conditions, type AbortList<>
     ///
     /// @param [in] start   Initial track parameters to propagate
     /// @param [in] options Propagation options
     ///
     /// @return Propagation result containing the propagation status, final
-    ///         track parameters, and output of observers (if they produce any)
+    ///         track parameters, and output of actions (if they produce any)
     ///
-    template <typename TrackParameters, typename Observers, typename Aborters>
-    obs_list_result_t<
+    template <typename TrackParameters, typename Actions, typename Aborters>
+    action_list_result_t<
         typename Impl::template return_parameter_type<TrackParameters>,
-        Observers>
+        Actions>
     propagate(const TrackParameters& start,
-              const Options<Observers, Aborters>& options) const
+              const Options<Actions, Aborters>& options) const
     {
 
       // Type of track parameters produced by the propagation
       typedef typename Impl::template return_parameter_type<TrackParameters>
           return_parameter_type;
 
-      // Type of the full propagation result, including output from observers
-      typedef obs_list_result_t<return_parameter_type, Observers> result_type;
+      // Type of the full propagation result, including output from actions
+      typedef action_list_result_t<return_parameter_type, Actions> result_type;
 
       static_assert(std::is_copy_constructible<return_parameter_type>::value,
                     "return track parameter type must be copy-constructible");
@@ -306,7 +300,7 @@ namespace propagation {
     ///
     /// @tparam TrackParameters Type of initial track parameters to propagate
     /// @tparam Surface         Type of target surface
-    /// @tparam Observers       Type list of observers
+    /// @tparam Actions       Type list of actions
     /// @tparam Aborters        Type list of abort conditions
     ///
     /// @param [in] start Initial track parameters to propagate
@@ -314,17 +308,17 @@ namespace propagation {
     /// @param [in] options Propagation options
     ///
     /// @return Propagation result containing the propagation status, final
-    ///         track parameters, and output of observers (if they produce any)
+    ///         track parameters, and output of actions (if they produce any)
     template <typename TrackParameters,
               typename Surface,
-              typename Observers,
+              typename Actions,
               typename Aborters>
-    obs_list_result_t<
+    action_list_result_t<
         typename Impl::template return_parameter_type<TrackParameters, Surface>,
-        Observers>
+        Actions>
     propagate(const TrackParameters& start,
               const Surface&         target,
-              const Options<Observers, Aborters>& options) const
+              const Options<Actions, Aborters>& options) const
     {
 
       // Type of track parameters produced at the end of the propagation
@@ -336,8 +330,8 @@ namespace propagation {
       cache_type cache(start);
       cache.step_size = options.direction * options.max_step_size;
 
-      // Type of the full propagation result, including output from observers
-      typedef obs_list_result_t<return_parameter_type, Observers> result_type;
+      // Type of the full propagation result, including output from actions
+      typedef action_list_result_t<return_parameter_type, Actions> result_type;
 
       static_assert(std::is_copy_constructible<return_parameter_type>::value,
                     "return track parameter type must be copy-constructible");

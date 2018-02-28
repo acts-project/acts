@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///  Boost include(s)
-#define BOOST_TEST_MODULE ObserverList Tests
+#define BOOST_TEST_MODULE ActionList Tests
 
 #include <boost/test/included/unit_test.hpp>
 // leave blank line
@@ -20,8 +20,8 @@
 
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/MagneticField/ConstantBField.hpp"
+#include "ACTS/Propagator/ActionList.hpp"
 #include "ACTS/Propagator/EigenStepper.hpp"
-#include "ACTS/Propagator/ObserverList.hpp"
 #include "ACTS/Propagator/Propagator.hpp"
 #include "ACTS/Propagator/detail/standard_abort_conditions.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
@@ -102,9 +102,9 @@ namespace Test {
     }
   };
 
-  // This tests the implementation of the ObserverList
+  // This tests the implementation of the ActionList
   // and the standard aborters
-  BOOST_AUTO_TEST_CASE(ObserverListTest_Distance)
+  BOOST_AUTO_TEST_CASE(ActionListTest_Distance)
   {
     // construct the cache and result
     Cache cache;
@@ -113,23 +113,23 @@ namespace Test {
     typedef typename DistanceObserver::result_type distance_result;
     detail::Extendable<distance_result>            result;
 
-    ObserverList<DistanceObserver> observer_list;
-    observer_list.get<DistanceObserver>().path_to_go = 100. * units::_mm;
+    ActionList<DistanceObserver> action_list;
+    action_list.get<DistanceObserver>().path_to_go = 100. * units::_mm;
 
     // observe and check
-    observer_list(cache, result);
+    action_list(cache, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance,
                       100. * units::_mm);
 
     // now move the cache and check again
     cache.accumulated_path = 50. * units::_mm;
-    observer_list(cache, result);
+    action_list(cache, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
   }
 
-  // This tests the implementation of the ObserverList
+  // This tests the implementation of the ActionList
   // and the standard aborters
-  BOOST_AUTO_TEST_CASE(ObserverListTest_TwoObservers)
+  BOOST_AUTO_TEST_CASE(ActionListTest_TwoActions)
   {
     // construct the cache and result
     Cache cache;
@@ -137,20 +137,20 @@ namespace Test {
     // Type of track parameters produced at the end of the propagation
     typedef typename DistanceObserver::result_type distance_result;
     typedef typename CallCounter::result_type      caller_result;
-    ObserverList<DistanceObserver, CallCounter> observer_list;
-    observer_list.get<DistanceObserver>().path_to_go = 100. * units::_mm;
+    ActionList<DistanceObserver, CallCounter> action_list;
+    action_list.get<DistanceObserver>().path_to_go = 100. * units::_mm;
 
     detail::Extendable<distance_result, caller_result> result;
 
     //// observe and check
-    observer_list(cache, result);
+    action_list(cache, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance,
                       100. * units::_mm);
     BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 1);
 
     // now move the cache and check again
     cache.accumulated_path = 50. * units::_mm;
-    observer_list(cache, result);
+    action_list(cache, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
     BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 2);
   }

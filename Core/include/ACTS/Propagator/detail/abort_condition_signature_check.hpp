@@ -74,7 +74,7 @@ namespace detail {
         : decltype(
               test_condition_with_result<T,
                                          cache_t,
-                                         result_type_t<observer_type_t<T>>>(0))
+                                         result_type_t<action_type_t<T>>>(0))
     {
     };
 

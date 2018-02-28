@@ -9,7 +9,7 @@
 #ifndef ACTS_ABORT_LIST_HPP
 #define ACTS_ABORT_LIST_HPP 1
 
-#include "ACTS/Propagator/ObserverList.hpp"
+#include "ACTS/Propagator/ActionList.hpp"
 #include "ACTS/Propagator/detail/Extendable.hpp"
 #include "ACTS/Propagator/detail/abort_condition_signature_check.hpp"
 #include "ACTS/Propagator/detail/abort_list_implementation.hpp"
@@ -26,14 +26,14 @@ private:
                 "same abort conditions type specified several times");
 
   // clang-format off
-  typedef detail::type_collector_t<detail::observer_type_extractor, conditions...> observers;
+  typedef detail::type_collector_t<detail::action_type_extractor, conditions...> observers;
   // clang-format on
 
   using detail::Extendable<conditions...>::tuple;
 
 public:
-  typedef detail::boost_set_as_tparams_t<ObserverList, observers>
-      observer_list_type;
+  typedef detail::boost_set_as_tparams_t<ActionList, observers>
+      action_list_type;
   using detail::Extendable<conditions...>::get;
 
   /// This is the call signature for the abort list, it broadcasts the call
@@ -44,8 +44,6 @@ public:
   ///
   /// @param r[in] is the result object from observers
   /// @param cache[in,out] is the cache object from the propagator
-  ///
-  /// @return a boolean indication whether an abort has been triggered
   template <typename input, typename result_t>
   bool
   operator()(const result_t& r, input& cache) const

@@ -19,7 +19,7 @@ namespace detail {
   template <typename T, bool has_observer = true>
   struct condition_uses_result_type_impl
   {
-    static constexpr bool value = has_result_type_v<observer_type_t<T>>;
+    static constexpr bool value = has_result_type_v<action_type_t<T>>;
   };
 
   template <typename T>
@@ -29,7 +29,7 @@ namespace detail {
 
   template <typename T>
   struct condition_uses_result_type
-      : condition_uses_result_type_impl<T, has_observer_type_v<T>>
+      : condition_uses_result_type_impl<T, has_action_type_v<T>>
   {
   };
 

@@ -20,8 +20,8 @@
 
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/MagneticField/ConstantBField.hpp"
+#include "ACTS/Propagator/ActionList.hpp"
 #include "ACTS/Propagator/EigenStepper.hpp"
-#include "ACTS/Propagator/ObserverList.hpp"
 #include "ACTS/Propagator/Propagator.hpp"
 #include "ACTS/Propagator/detail/standard_abort_conditions.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
@@ -249,8 +249,8 @@ namespace Test {
     null_options_type null_options;
     // todo write null options test
 
-    typedef ObserverList<PerpendicularMeasure> ObsList_type;
-    typedef AbortList<>                        AbortConditions_type;
+    typedef ActionList<PerpendicularMeasure> ObsList_type;
+    typedef AbortList<>                      AbortConditions_type;
 
     typedef typename Propagator<EigenStepper_type>::
         template Options<ObsList_type, AbortConditions_type>
@@ -284,8 +284,8 @@ namespace Test {
     double dcharge = -1 + 2 * charge;
     (void)index;
 
-    typedef ObserverList<PerpendicularMeasure> ObsList_type;
-    typedef AbortList<>                        AbortConditions_type;
+    typedef ActionList<PerpendicularMeasure> ObsList_type;
+    typedef AbortList<>                      AbortConditions_type;
 
     // setup propagation options
     typename EigenPropagator_type::template Options<ObsList_type,
@@ -344,7 +344,7 @@ namespace Test {
     (void)index;
 
     typedef SurfaceObserver<CylinderSurface> CylinderObserver;
-    typedef ObserverList<CylinderObserver>   ObsList_type;
+    typedef ActionList<CylinderObserver>     ObsList_type;
     typedef AbortList<>                      AbortConditions_type;
 
     // setup propagation options
@@ -356,7 +356,7 @@ namespace Test {
     options.max_step_size   = 1 * units::_cm;
 
     // set the surface to be passed by
-    options.observer_list.get<CylinderObserver>().surface = &mSurface;
+    options.action_list.get<CylinderObserver>().surface = &mSurface;
 
     typedef typename CylinderObserver::result_type so_result;
 
@@ -545,14 +545,14 @@ namespace Test {
 
     // to get the covariances agree, we need an Observer that does the
     // scattering
-    typedef ObserverList<PathScatterer> ObsList_type;
-    typedef AbortList<>                 AbortConditions_type;
+    typedef ActionList<PathScatterer> ObsList_type;
+    typedef AbortList<>               AbortConditions_type;
 
     // setup propagation options - the 1 step with scattering optios
     typename EigenPropagator_type::template Options<ObsList_type,
                                                     AbortConditions_type>
           options_1s_s;
-    auto& _s       = options_1s_s.observer_list.get<PathScatterer>();
+    auto& _s       = options_1s_s.action_list.get<PathScatterer>();
     _s.path_limit  = 50. * units::_cm;
     _s.sigma_phi   = sigma_phi;
     _s.sigma_theta = sigma_theta;
@@ -740,8 +740,8 @@ namespace Test {
 
     // to get the covariances agree, we need an Observer that does the
     // scattering
-    typedef ObserverList<CylinderScatterer> ObsList_type;
-    typedef AbortList<>                     AbortConditions_type;
+    typedef ActionList<CylinderScatterer> ObsList_type;
+    typedef AbortList<>                   AbortConditions_type;
 
     // setup propagation options - the 1 step with scattering optios
     typename EigenPropagator_type::template Options<ObsList_type,
@@ -749,7 +749,7 @@ namespace Test {
         options_1s_s;
     options_1s_s.max_step_size = 1 * units::_cm;
 
-    auto& _s       = options_1s_s.observer_list.get<CylinderScatterer>();
+    auto& _s       = options_1s_s.action_list.get<CylinderScatterer>();
     _s.surface     = &mSurface;
     _s.sigma_phi   = sigma_phi;
     _s.sigma_theta = sigma_theta;
