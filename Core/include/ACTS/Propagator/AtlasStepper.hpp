@@ -72,8 +72,8 @@ public:
 
     /// Constructor
     template <typename Parameters>
-    Cache(const Parameters& pars, 
-          double ssize = std::numeric_limits<double>::max())
+    Cache(const Parameters& pars,
+          double            ssize = std::numeric_limits<double>::max())
       : cache_ready(false)
       , dir(alongMomentum)
       , useJacobian(false)

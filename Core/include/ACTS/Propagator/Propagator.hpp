@@ -56,7 +56,7 @@ namespace propagation {
     unsigned int steps = 0;
 
     /// Signed distance over which the parameters were propagated
-    double pathLength  = 0.;
+    double pathLength = 0.;
 
     /// @brief Check the validity of the propagation result
     ///

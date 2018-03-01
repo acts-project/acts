@@ -105,7 +105,7 @@ namespace Test {
         if (std::abs(distance) <= tolerance) {
           ++result.surfaces_passed;
           result.surface_passed_r = cache.position().perp();
-          // release the step size, will be re-adjusted 
+          // release the step size, will be re-adjusted
           cache.step_size = cache.max_step_size;
         }
       }
@@ -210,7 +210,7 @@ namespace Test {
           cache.apply_cov_transport(*surface, true);
           cache.cov(ePHI, ePHI) += sigma_phi * sigma_phi;
           cache.cov(eTHETA, eTHETA) += sigma_theta * sigma_theta;
-          // release the step size, will be re-adjusted 
+          // release the step size, will be re-adjusted
           cache.step_size = cache.max_step_size;
         }
       }
