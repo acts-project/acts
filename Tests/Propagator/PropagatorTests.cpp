@@ -105,6 +105,8 @@ namespace Test {
         if (std::abs(distance) <= tolerance) {
           ++result.surfaces_passed;
           result.surface_passed_r = cache.position().perp();
+          // release the step size, will be re-adjusted 
+          cache.step_size = cache.max_step_size;
         }
       }
     }
@@ -208,8 +210,8 @@ namespace Test {
           cache.apply_cov_transport(*surface, true);
           cache.cov(ePHI, ePHI) += sigma_phi * sigma_phi;
           cache.cov(eTHETA, eTHETA) += sigma_theta * sigma_theta;
-          // @HACK - release the step size - this should be triggered
-          cache.step_size = 10. * units::_mm;
+          // release the step size, will be re-adjusted 
+          cache.step_size = cache.max_step_size;
         }
       }
     }
@@ -238,7 +240,7 @@ namespace Test {
   CylinderSurface mSurface(nullptr, 10., 1000. * units::_mm);
   CylinderSurface cSurface(nullptr, 150., 1000. * units::_mm);
 
-  const int ntests = 10;
+  const int ntests = 5;
 
   // This tests the Options
   BOOST_AUTO_TEST_CASE(PropgatorOptions_)

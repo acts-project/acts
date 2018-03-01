@@ -69,13 +69,14 @@ public:
     ///
     /// @note the covariance matrix is copied when needed
     template <typename T>
-    explicit Cache(const T& par)
+    explicit Cache(const T& par, double ssize = std::numeric_limits<double>::max())
       : pos(par.position())
       , dir(par.momentum().normalized())
       , qop(par.charge() / par.momentum().norm())
       , cov_transport(false)
       , accumulated_path(0.)
-      , step_size(std::numeric_limits<double>::max())
+      , step_size(ssize)
+      , max_step_size(ssize)
     {
       // Init the jacobian matrix if needed
       if (par.covariance()) {
@@ -265,8 +266,12 @@ public:
     // accummulated path length cache
     double accumulated_path = 0.;
 
-    // adaptive sep size of the runge-kutta integration
+    // adaptive step size of the runge-kutta integration
     double step_size = std::numeric_limits<double>::max();
+
+    // maximal step size of the runge-kutta integration
+    double max_step_size = std::numeric_limits<double>::max();
+    
   };
 
   /// Always use the same propagation cache type, independently of the initial

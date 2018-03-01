@@ -86,9 +86,6 @@ namespace propagation {
       /// Required tolerance to reach target (surface, pathlength)
       double target_tolerance = 1 * units::_um;
 
-      /// Absolute minimum step size
-      double min_step_size = 10. * units::_mm;
-
       /// Absolute maximum step size
       double max_step_size = 1 * units::_m;
 

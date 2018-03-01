@@ -56,7 +56,7 @@ namespace propagation {
     unsigned int steps = 0;
 
     /// Signed distance over which the parameters were propagated
-    double pathLength = 0.;
+    double pathLength  = 0.;
 
     /// @brief Check the validity of the propagation result
     ///
@@ -119,9 +119,6 @@ namespace propagation {
 
       /// Required tolerance to reach target (surface, pathlength)
       double target_tolerance = 1 * units::_um;
-
-      /// Absolute minimum step size
-      double min_step_size = 0.1 * units::_mm;
 
       /// Absolute maximum step size
       double max_step_size = 1 * units::_m;
@@ -213,7 +210,6 @@ namespace propagation {
         result.pathLength += m_impl.step(cache);
         // Call the actions, can (& will likely) modify cache
         options.action_list(cache, result);
-
         // Call the stop_conditions and the internal stop conditions
         // break condition triggered, but still count the step
         if (options.stop_conditions(result, cache)
@@ -327,8 +323,7 @@ namespace propagation {
           return_parameter_type;
 
       // Initialize the internal propagation cache
-      cache_type cache(start);
-      cache.step_size = options.direction * options.max_step_size;
+      cache_type cache(start, options.direction * options.max_step_size);
 
       // Type of the full propagation result, including output from actions
       typedef action_list_result_t<return_parameter_type, Actions> result_type;
