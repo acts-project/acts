@@ -36,9 +36,9 @@ namespace detail {
     }
 
     /// boolean operator for abort condition using the result
-    template <typename input, typename result_t>
+    template <typename cache_t, typename result_t>
     bool
-    operator()(const result_t& /*r*/, input& cache) const
+    operator()(const result_t& /*r*/, cache_t& cache) const
     {
       return operator()(cache);
     }
@@ -47,9 +47,9 @@ namespace detail {
     /// @param cache The propagation cache
     /// @param stepMax Maximum step for the propagation cache it might
     ///        be adapted to the remainim path length
-    template <typename input>
+    template <typename cache_t>
     bool
-    operator()(input& cache) const
+    operator()(cache_t& cache) const
     {
       // Check if the maximum allowed step size has to be updated
       if (std::abs(cache.step_size)
@@ -87,9 +87,9 @@ namespace detail {
     }
 
     /// boolean operator for abort condition using the result (ignored)
-    template <typename input, typename result_t>
+    template <typename cache_t, typename result_t>
     bool
-    operator()(const result_t&, input& cache) const
+    operator()(const result_t&, cache_t& cache) const
     {
       return operator()(cache);
     }
@@ -98,9 +98,9 @@ namespace detail {
     /// @param cache The propagation cache
     /// @param stepMax Maximum step for the propagation cache it might
     ///        be adapted to the remainim path length
-    template <typename input>
+    template <typename cache_t>
     bool
-    operator()(input& cache) const
+    operator()(cache_t& cache) const
     {
       if (!surface) return false;
       // calculate the distance to the surface

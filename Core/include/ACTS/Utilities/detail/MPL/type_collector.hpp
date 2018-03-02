@@ -49,17 +49,17 @@ namespace detail {
       using type = typename extractor<T>::type;
     };
 
-    struct observer_type_extractor
+    struct action_type_extractor
     {
     private:
       template <typename T>
       struct extractor
       {
-        typedef typename T::observer_type type;
+        typedef typename T::action_type type;
       };
 
     public:
-      HAS_TYPE(observer_type)
+      HAS_TYPE(action_type)
 
       template <typename T>
       using type = typename extractor<T>::type;
@@ -128,11 +128,10 @@ namespace detail {
   using result_type_t = typename result_type_extractor::type<T>;
 
   template <typename T>
-  constexpr bool has_observer_type_v
-      = observer_type_extractor::has_type<T>::value;
+  constexpr bool has_action_type_v = action_type_extractor::has_type<T>::value;
 
   template <typename T>
-  using observer_type_t = typename observer_type_extractor::type<T>;
+  using action_type_t = typename action_type_extractor::type<T>;
 
   template <typename extractor, typename... traits>
   using type_collector_t = typename type_collector<extractor, traits...>::type;

@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,12 +23,12 @@ namespace detail {
     template <bool has_result = true>
     struct condition_caller
     {
-      template <typename condition, typename result, typename input>
+      template <typename condition, typename result_t, typename cache_t>
       static bool
-      check(const condition& c, const result& r, input& cache)
+      check(const condition& c, const result_t& r, cache_t& cache)
       {
-        typedef observer_type_t<condition>   observer_type;
-        typedef result_type_t<observer_type> result_type;
+        typedef action_type_t<condition>   action_type;
+        typedef result_type_t<action_type> result_type;
 
         return c(r.template get<result_type>(), cache);
       }
@@ -39,9 +39,9 @@ namespace detail {
     template <>
     struct condition_caller<false>
     {
-      template <typename condition, typename result, typename input>
+      template <typename condition, typename result_t, typename cache_t>
       static bool
-      check(const condition& c, const result&, input& cache)
+      check(const condition& c, const result_t&, cache_t& cache)
       {
         return c(cache);
       }
@@ -54,9 +54,9 @@ namespace detail {
   template <typename first, typename... others>
   struct abort_list_impl<first, others...>
   {
-    template <typename T, typename result, typename input>
+    template <typename T, typename result_t, typename cache_t>
     static bool
-    check(const T& conditions_tuple, const result& r, input& cache)
+    check(const T& conditions_tuple, const result_t& r, cache_t& cache)
     {
 
       // get the right helper for calling the abort condition
@@ -79,9 +79,9 @@ namespace detail {
   template <typename last>
   struct abort_list_impl<last>
   {
-    template <typename T, typename result, typename input>
+    template <typename T, typename result_t, typename cache_t>
     static bool
-    check(const T& conditions_tuple, const result& r, input& cache)
+    check(const T& conditions_tuple, const result_t& r, cache_t& cache)
     {
       // get the right helper for calling the abort condition
       constexpr bool has_result     = condition_uses_result_type<last>::value;
@@ -94,9 +94,9 @@ namespace detail {
   template <>
   struct abort_list_impl<>
   {
-    template <typename T, typename result, typename input>
+    template <typename T, typename result_t, typename cache_t>
     static bool
-    check(const T&, const result&, input&)
+    check(const T&, const result_t&, cache_t&)
     {
       return false;
     }

@@ -52,8 +52,11 @@ public:
     // accummulated path length cache
     double accumulated_path = 0.;
 
-    // adaptive sep size of the runge-kutta integration
+    // adaptive step size of the runge-kutta integration
     double step_size = std::numeric_limits<double>::max();
+
+    // maximal step size of the runge-kutta integration
+    double max_step_size = std::numeric_limits<double>::max();
 
     Vector3D
     position() const
@@ -69,7 +72,8 @@ public:
 
     /// Constructor
     template <typename Parameters>
-    Cache(const Parameters& pars)
+    Cache(const Parameters& pars,
+          double            ssize = std::numeric_limits<double>::max())
       : cache_ready(false)
       , dir(alongMomentum)
       , useJacobian(false)
@@ -80,6 +84,8 @@ public:
       , newfield(true)
       , field(0., 0., 0.)
       , covariance(nullptr)
+      , step_size(ssize)
+      , max_step_size(ssize)
     {
       update(pars);
     }

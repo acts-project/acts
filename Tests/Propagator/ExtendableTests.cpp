@@ -27,7 +27,7 @@ namespace Acts {
 
 namespace Test {
 
-  // This tests the implementation of the ObserverList
+  // This tests the implementation of the ActionList
   // and the standard aborters
   BOOST_AUTO_TEST_CASE(Extendable_)
   {

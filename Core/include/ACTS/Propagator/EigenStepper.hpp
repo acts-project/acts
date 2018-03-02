@@ -62,8 +62,6 @@ private:
 public:
   /// Cache for track parameter propagation
   ///
-  /// it is exposed to public for use of the expert-only
-  /// propagate_with_cache method of the propagator
   struct Cache
   {
     /// Constructor from the initial track parameters
@@ -71,50 +69,23 @@ public:
     ///
     /// @note the covariance matrix is copied when needed
     template <typename T>
-    explicit Cache(const T& par)
-      : cache_ready(false)
-      , pos(par.position())
+    explicit Cache(const T& par,
+                   double   ssize = std::numeric_limits<double>::max())
+      : pos(par.position())
       , dir(par.momentum().normalized())
       , qop(par.charge() / par.momentum().norm())
       , cov_transport(false)
       , accumulated_path(0.)
-      , step_size(std::numeric_limits<double>::max())
+      , step_size(ssize)
+      , max_step_size(ssize)
     {
-      init_jacobian(par);
-      // the cache is ready now
-      cache_ready = true;
-    }
-
-    /// The cache update for optimal performance
-    /// @param [in] par The new track parameters at start
-    ///
-    /// @todo check to identify an reuse of start/cache
-    template <typename T>
-    void
-    update(const T& par)
-    {
-      if (!cache_ready) {
-        pos           = par.position();
-        dir           = par.momentum().normalized();
-        qop           = (par.charge() / par.momentum().norm());
-        cov_transport = false;
-        init_jacobian(par);
-        cache_ready = true;
-      }
-    }
-
-    /// The jacobiann initialisation
-    /// @param [in] par The (new) track parameters at start
-    template <typename T>
-    void
-    init_jacobian(const T& par)
-    {
-      if (par.covariance() && !cache_ready) {
+      // Init the jacobian matrix if needed
+      if (par.covariance()) {
         cov_transport = true;
         cov           = ActsSymMatrixD<5>(*par.covariance());
-        // get the reference surface
+        // Get the reference surface
         const auto& surface = par.referenceSurface();
-        surface.initJacobianToGlobal(jacobian, pos, dir, par.parameters());
+        surface.initJacobianToGlobal(jac_to_global, pos, dir, par.parameters());
       }
     }
 
@@ -132,75 +103,22 @@ public:
       return dir;
     }
 
-    /// Cache ready flag, avoids double inialization
-    bool cache_ready = false;
-
-    /// Global particle position
-    Vector3D pos = Vector3D(0, 0, 0);
-
-    /// Momentum direction (normalized)
-    Vector3D dir = Vector3D(1, 0, 0);
-
-    /// Charge-momentum ratio, in natural units
-    double qop = 1;
-
-    /// Jacobian used to transport the covariance matrix
-    ActsMatrixD<7, 5> jacobian = ActsMatrixD<7, 5>::Zero();
-
-    /// The propagation derivative
-    ActsVectorD<7> derivative = ActsVectorD<7>::Zero();
-
-    /// Covariance matrix (and indicator)
-    //// assocated with the initial error on track parameters
-    bool              cov_transport = false;
-    ActsSymMatrixD<5> cov           = ActsSymMatrixD<5>::Zero();
-
-    /// Lazily initialized cache
-    /// It caches the current magnetic field cell and stays interpolates within
-    /// as long as this is valid. See step() code for details.
-    bool                    field_cache_ready = false;
-    concept::AnyFieldCell<> field_cache;
-
-    // accummulated path length cache
-    double accumulated_path = 0.;
-
-    // adaptive sep size of the runge-kutta integration
-    double step_size = std::numeric_limits<double>::max();
-  };
-
-  /// Always use the same propagation cache type, independently of the initial
-  /// track parameter type and of the target surface
-  template <typename T, typename S = int>
-  using cache_type = Cache;
-
-  /// Intermediate track parameters are always in curvilinear parametrization
-  template <typename T>
-  using step_parameter_type = CurvilinearParameters;
-
-  /// Return parameter types depend on the propagation mode:
-  /// -  when propagating to a surface we usually return BoundParameters
-  /// - otherwise CurvilinearParameters
-  template <typename T, typename S = int>
-  using return_parameter_type = typename s<T, S>::type;
-
-  /// Constructor requires knowledge of the detector's magnetic field
-  EigenStepper(BField bField = BField()) : m_bField(std::move(bField)){};
-
-  /// Convert the propagation cache (global) to curvilinear parameters
-  /// @param cache The stepper cache
-  /// @return curvilinear parameters
-  static CurvilinearParameters
-  convert(Cache& cache)
-  {
-    double                                   charge = cache.qop > 0. ? 1. : -1.;
-    std::unique_ptr<const ActsSymMatrixD<5>> cov    = nullptr;
-
-    if (cache.cov_transport) {
-      // Optimized trigonometry on the propagation direction, see documentation
-      // of Cache::init_jacobian() for a longer mathematical discussion.
-      const double x = cache.dir(0);  // == cos(phi) * sin(theta)
-      const double y = cache.dir(1);  // == sin(phi) * sin(theta)
-      const double z = cache.dir(2);  // == cos(theta)
+    /// Method for on-demand transport of the covariance
+    /// to a new curvilinear frame at current  position,
+    /// or direction of the cache
+    ///
+    /// @param reinitialize is a flag to steer whether the
+    ///        cache should be reinitialized at the new
+    ///        position
+    ///
+    /// @return the full transport jacobian
+    const ActsMatrixD<5, 5>
+    apply_cov_transport(bool reinitialize = false)
+    {
+      // Optimized trigonometry on the propagation direction
+      const double x = dir(0);  // == cos(phi) * sin(theta)
+      const double y = dir(1);  // == sin(phi) * sin(theta)
+      const double z = dir(2);  // == cos(theta)
       // can be turned into cosine/sine
       const double cos_theta     = z;
       const double sin_theta     = sqrt(x * x + y * y);
@@ -232,18 +150,166 @@ public:
       jac_to_curv(2, 4) = cos_phi * inv_sin_theta;
       jac_to_curv(3, 5) = -inv_sin_theta;
       jac_to_curv(4, 6) = 1;
-
-      // transport the covariance
-      ActsRowVectorD<3> norm_vec(cache.dir);
-      auto cov_at_frame = transport_covariance(cache, jac_to_curv, norm_vec);
-      // create the new covariance matrix: curvilinear == measurement frame
-      cov = std::make_unique<const ActsSymMatrixD<5>>(std::move(cov_at_frame));
+      // Apply the transport from the steps on the jacobian
+      jac_to_global = jac_transport * jac_to_global;
+      // Transport the covariance
+      ActsRowVectorD<3>       norm_vec(dir);
+      const ActsRowVectorD<5> sfactors
+          = norm_vec * jac_to_global.topLeftCorner<3, 5>();
+      // The full jacobian is ([to local] jacobian) * ([transport] jacobian)
+      const ActsMatrixD<5, 5> jac_full
+          = jac_to_curv * (jac_to_global - derivative * sfactors);
+      // Apply the actual covariance transport
+      cov = (jac_full * cov * jac_full.transpose());
+      // Reinitialize if asked to do so
+      // this is useful for interruption calls
+      if (reinitialize) {
+        // reset the jacobians
+        jac_to_global = ActsMatrixD<7, 5>::Zero();
+        jac_transport = ActsMatrixD<7, 7>::Identity();
+        // fill the jacobian to global for next transport
+        jac_to_global(0, eLOC_0) = -sin_phi;
+        jac_to_global(0, eLOC_1) = -cos_phi * cos_theta;
+        jac_to_global(1, eLOC_0) = cos_phi;
+        jac_to_global(1, eLOC_1) = -sin_phi * cos_theta;
+        jac_to_global(2, eLOC_1) = sin_theta;
+        jac_to_global(3, ePHI)   = -sin_theta * sin_phi;
+        jac_to_global(3, eTHETA) = cos_theta * cos_phi;
+        jac_to_global(4, ePHI)   = sin_theta * cos_phi;
+        jac_to_global(4, eTHETA) = cos_theta * sin_phi;
+        jac_to_global(5, eTHETA) = -sin_theta;
+        jac_to_global(6, eQOP)   = 1;
+      }
+      // return the full transport jacobian
+      return jac_full;
     }
-    // this invalidates the cache
-    cache.cache_ready = false;
+
+    /// Method for on-demand transport of the covariance
+    /// to a new curvilinear frame at current  position,
+    /// or direction of the cache
+    ///
+    /// @tparam S the Surfac type
+    ///
+    /// @param surface is the surface to which the covariance is
+    ///        forwarded to
+    /// @param reinitialize is a flag to steer whether the
+    ///        cache should be reinitialized at the new
+    ///        position
+    /// @note no check is done if the position is actually on the surface
+    ///
+    /// @return the full transport jacobian
+    template <typename S>
+    const ActsMatrixD<5, 5>
+    apply_cov_transport(const S& surface, bool reinitialize = false)
+    {
+      // Initialize the transport final frame jacobian
+      ActsMatrixD<5, 7> jac_to_local = ActsMatrixD<5, 7>::Zero();
+      // initalize the jacobian to local, returns the transposed ref frame
+      auto rframeT = surface.initJacobianToLocal(jac_to_local, pos, dir);
+      // Update the jacobian with the transport from the steps
+      jac_to_global = jac_transport * jac_to_global;
+      // calculate the form factors for the derivatives
+      const ActsRowVectorD<5> s_vec
+          = surface.derivativeFactors(pos, dir, rframeT, jac_to_global);
+      // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
+      const ActsMatrixD<5, 5> jac_full
+          = jac_to_local * (jac_to_global - derivative * s_vec);
+      // Apply the actual covariance transport
+      cov = (jac_full * cov * jac_full.transpose());
+      // Reinitialize if asked to do so
+      // this is useful for interruption calls
+      if (reinitialize) {
+        // reset the jacobians
+        jac_to_global = ActsMatrixD<7, 5>::Zero();
+        jac_transport = ActsMatrixD<7, 7>::Identity();
+        // reset the derivative
+        derivative = ActsVectorD<7>::Zero();
+        // fill the jacobian to global for next transport
+        Vector2D loc{0., 0.};
+        surface.globalToLocal(pos, dir, loc);
+        ActsVectorD<5> pars;
+        pars << loc[eLOC_0], loc[eLOC_1], dir.phi(), dir.theta(), qop;
+        surface.initJacobianToGlobal(jac_to_global, pos, dir, pars);
+      }
+      // return the full transport jacobian
+      return jac_full;
+    }
+
+    /// Global particle position
+    Vector3D pos = Vector3D(0, 0, 0);
+
+    /// Momentum direction (normalized)
+    Vector3D dir = Vector3D(1, 0, 0);
+
+    /// Charge-momentum ratio, in natural units
+    double qop = 1;
+
+    /// Jacobian from local to the global frame
+    ActsMatrixD<7, 5> jac_to_global = ActsMatrixD<7, 5>::Zero();
+
+    /// Pure transport jacobian part from runge kutta integration
+    ActsMatrixD<7, 7> jac_transport = ActsMatrixD<7, 7>::Identity();
+
+    /// The propagation derivative
+    ActsVectorD<7> derivative = ActsVectorD<7>::Zero();
+
+    /// Covariance matrix (and indicator)
+    //// assocated with the initial error on track parameters
+    bool              cov_transport = false;
+    ActsSymMatrixD<5> cov           = ActsSymMatrixD<5>::Zero();
+
+    /// Lazily initialized cache
+    /// It caches the current magnetic field cell and stays interpolates within
+    /// as long as this is valid. See step() code for details.
+    bool                    field_cache_ready = false;
+    concept::AnyFieldCell<> field_cache;
+
+    // accummulated path length cache
+    double accumulated_path = 0.;
+
+    // adaptive step size of the runge-kutta integration
+    double step_size = std::numeric_limits<double>::max();
+
+    // maximal step size of the runge-kutta integration
+    double max_step_size = std::numeric_limits<double>::max();
+  };
+
+  /// Always use the same propagation cache type, independently of the initial
+  /// track parameter type and of the target surface
+  template <typename T, typename S = int>
+  using cache_type = Cache;
+
+  /// Intermediate track parameters are always in curvilinear parametrization
+  template <typename T>
+  using step_parameter_type = CurvilinearParameters;
+
+  /// Return parameter types depend on the propagation mode:
+  /// - when propagating to a surface we usually return BoundParameters
+  /// - otherwise CurvilinearParameters
+  template <typename T, typename S = int>
+  using return_parameter_type = typename s<T, S>::type;
+
+  /// Constructor requires knowledge of the detector's magnetic field
+  EigenStepper(BField bField = BField()) : m_bField(std::move(bField)){};
+
+  /// Convert the propagation cache (global) to curvilinear parameters
+  /// @param cache The stepper cache
+  /// @param reinitialize is a flag to (optionally) reinitialse the cache
+  /// @return curvilinear parameters
+  static CurvilinearParameters
+  convert(Cache& cache, bool reinitialize = false)
+  {
+    double                                   charge = cache.qop > 0. ? 1. : -1.;
+    std::unique_ptr<const ActsSymMatrixD<5>> cov_ptr = nullptr;
+    // only do the covariance transport if needed
+    if (cache.cov_transport) {
+      // transport the covariance forward
+      cache.apply_cov_transport(reinitialize);
+      cov_ptr = std::make_unique<const ActsMatrixD<5, 5>>(cache.cov);
+    }
     // return the parameters
     return CurvilinearParameters(
-        std::move(cov), cache.pos, cache.dir / std::abs(cache.qop), charge);
+        std::move(cov_ptr), cache.pos, cache.dir / std::abs(cache.qop), charge);
   }
 
   /// Convert the propagation cache to track parameters at a certain surface
@@ -254,42 +320,27 @@ public:
   /// @param [in] surface Destination surface to which the conversion is done
   template <typename S>
   static BoundParameters
-  convert(Cache& cache, const S& surface)
+  convert(Cache& cache, const S& surface, bool reinitialize = false)
   {
-    std::unique_ptr<const ActsSymMatrixD<5>> cov = nullptr;
-
+    std::unique_ptr<const ActsSymMatrixD<5>> cov_ptr = nullptr;
     // Perform error propagation if an initial covariance matrix was provided
     if (cache.cov_transport) {
-      // Initialize the transport final frame jacobian
-      ActsMatrixD<5, 7> jac_to_local = ActsMatrixD<5, 7>::Zero();
-      // initalize the jacobian to local, returns the transposed ref frame
-      auto rframeT
-          = surface.initJacobianToLocal(jac_to_local, cache.pos, cache.dir);
-      // calculate the form factors for the derivatives
-      const ActsRowVectorD<5> s_vec = surface.derivativeFactors(
-          cache.pos, cache.dir, rframeT, cache.jacobian);
-      // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
-      const ActsMatrixD<5, 5> jac
-          = jac_to_local * (cache.jacobian - cache.derivative * s_vec);
-      // calculate the jacobian at the final (measurement) frame
-      cov = std::make_unique<const ActsSymMatrixD<5>>(jac * cache.cov
-                                                      * jac.transpose());
+      // transport the covariance forward
+      cache.apply_cov_transport(surface, reinitialize);
+      cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cache.cov);
     }
     double charge = cache.qop > 0. ? 1. : -1.;
-    // this invalidates the cache
-    cache.cache_ready = false;
     // return the bound parameters
-    return BoundParameters(std::move(cov),
+    return BoundParameters(std::move(cov_ptr),
                            cache.pos,
                            cache.dir / std::abs(cache.qop),
                            charge,
                            surface);
   }
 
-  /// Get the field for the stepping
-  /// It checks first if the access is still within the Cell,
-  /// and updates the cell if necessary, then it takes the field
-  /// from the cell
+  /// Get the field for the stepping, it checks first if the access is still
+  /// within the Cell, and updates the cell if necessary.
+  ///
   /// @param [in,out] cache is the propagation cache associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
@@ -312,7 +363,6 @@ public:
   ///                      the cache contains the desired step size.
   ///                      It can be negative during ackwards track propagation,
   ///                      and since we're using an adaptive algorithm, it can
-  ///                      also
   ///                      be modified by the stepper class during propagation.
   double
   step(Cache& cache) const
@@ -331,7 +381,7 @@ public:
     // The following functor starts to perform a Runge-Kutta step of a certain
     // size, going up to the point where it can return an estimate of the local
     // integration error. The results are cached in the local variables above,
-    // allowing integration to continue once the error is deemed satisfactory.
+    // allowing integration to continue once the error is deemed satisfactory
     const auto tryRungeKuttaStep = [&](const double h) -> double {
       // Cache the square and half of the step size
       h2     = h * h;
@@ -355,7 +405,7 @@ public:
     };
 
     // Select and adjust the appropriate Runge-Kutta step size
-    // @todo remove magic numbers
+    // @todo remove magic numbers and implement better step estimation
     double error_estimate = tryRungeKuttaStep(cache.step_size);
     while (error_estimate > 0.0002) {
       cache.step_size *= 0.5;
@@ -367,7 +417,7 @@ public:
 
     // When doing error propagation, update the associated Jacobian matrix
     if (cache.cov_transport) {
-
+      // The step transport matrix in global coordinates
       ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Identity();
       const double conv = units::SI2Nat<units::MOMENTUM>(1);
 
@@ -424,7 +474,8 @@ public:
 
       dGdL = conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
 
-      cache.jacobian = D * cache.jacobian;
+      // for moment, only update the transport part
+      cache.jac_transport = D * cache.jac_transport;
     }
 
     // Update the track parameters according to the equations of motion
@@ -440,27 +491,6 @@ public:
   }
 
 private:
-  /// @brief Convert the covariance matrix at the local frame
-  ///
-  /// @param cache The propagation cache
-  /// @parm jac_to_local The Jacobian to Local
-  /// @param norm_vec The normal vector
-  ///
-  /// @return a 5x5 covariance matrix after transport
-  static ActsSymMatrixD<5>
-  transport_covariance(const Cache& cache,
-                       const ActsMatrixD<5, 7>& jac_to_local,
-                       const ActsRowVectorD<3>& norm_vec)
-  {
-    const ActsRowVectorD<5> sfactors
-        = norm_vec * cache.jacobian.template topLeftCorner<3, 5>();
-    // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
-    const ActsMatrixD<5, 5> jac
-        = jac_to_local * (cache.jacobian - cache.derivative * sfactors);
-    // return the transported and local covariance matrix
-    return ActsSymMatrixD<5>(jac * cache.cov * jac.transpose());
-  }
-
   /// Magnetic field inside of the detector
   BField m_bField;
 };

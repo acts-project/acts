@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -73,7 +73,7 @@ namespace Test {
     struct traits1
     {
       typedef int  result_type;
-      typedef char observer_type;
+      typedef char action_type;
     };
 
     template <bool>
@@ -83,13 +83,13 @@ namespace Test {
     struct traits2<false>
     {
       typedef bool  result_type;
-      typedef float observer_type;
+      typedef float action_type;
     };
 
     template <>
     struct traits2<true>
     {
-      typedef float observer_type;
+      typedef float action_type;
     };
   }
 
@@ -101,19 +101,19 @@ namespace Test {
                                      traits2<false>>
         found_results;
 
-    typedef detail::type_collector_t<detail::observer_type_extractor,
+    typedef detail::type_collector_t<detail::action_type_extractor,
                                      traits1,
                                      traits2<true>,
                                      traits2<false>>
-        found_observers;
+        found_actions;
 
     typedef typename bm::set<int, bool>::type   expected_results;
-    typedef typename bm::set<char, float>::type expected_observers;
+    typedef typename bm::set<char, float>::type expected_actions;
 
     static_assert(std::is_same<found_results, expected_results>::value,
                   "collecting result types failed");
-    static_assert(std::is_same<found_observers, expected_observers>::value,
-                  "collecting observer types failed");
+    static_assert(std::is_same<found_actions, expected_actions>::value,
+                  "collecting action types failed");
   }
 
   BOOST_AUTO_TEST_CASE(has_duplicates_test)

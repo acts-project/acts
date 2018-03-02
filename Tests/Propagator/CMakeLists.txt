@@ -6,9 +6,9 @@ add_executable (AbortListTests AbortListTests.cpp)
 target_link_libraries (AbortListTests PRIVATE ACTSCore)
 add_test(NAME AbortListUnitTest COMMAND AbortListTests)
 
-add_executable (ObserverListTests ObserverListTests.cpp)
-target_link_libraries (ObserverListTests PRIVATE ACTSCore)
-add_test(NAME ObserverListUnitTests COMMAND ObserverListTests)
+add_executable (ActionListTests ActionListTests.cpp)
+target_link_libraries (ActionListTests PRIVATE ACTSCore)
+add_test(NAME ActionListUnitTests COMMAND ActionListTests)
 
 add_executable (JacobianTests JacobianTests.cpp)
 target_link_libraries (JacobianTests PRIVATE ACTSCore)

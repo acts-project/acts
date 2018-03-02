@@ -16,7 +16,7 @@
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/Extrapolation/ExtrapolationCell.hpp"
 #include "ACTS/Propagator/AbortList.hpp"
-#include "ACTS/Propagator/ObserverList.hpp"
+#include "ACTS/Propagator/ActionList.hpp"
 #include "ACTS/Propagator/Propagator.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Utilities/Units.hpp"
@@ -66,7 +66,7 @@ namespace propagation {
   public:
     /// @brief Options for propagate() call
     ///
-    /// @tparam Observers List of observer types called after each
+    /// @tparam Actions List of action types called after each
     ///                   propagation step with the current propagation
     ///                   cache
     ///
@@ -74,8 +74,7 @@ namespace propagation {
     ///                   propagation step using the current propagation
     ///                   cache
     ///
-    template <typename Observers = ObserverList<>,
-              typename Aborters  = AbortList<>>
+    template <typename Actions = ActionList<>, typename Aborters = AbortList<>>
     struct Options
     {
       /// Propagation direction
@@ -87,17 +86,14 @@ namespace propagation {
       /// Required tolerance to reach target (surface, pathlength)
       double target_tolerance = 1 * units::_um;
 
-      /// Absolute minimum step size
-      double min_step_size = 10. * units::_mm;
-
       /// Absolute maximum step size
       double max_step_size = 1 * units::_m;
 
       /// Absolute maximum path length
       double max_path_length = std::numeric_limits<double>::max();
 
-      /// List of observers
-      Observers observer_list;
+      /// List of actions
+      Actions action_list;
 
       /// List of abort conditions
       Aborters stop_conditions;
@@ -107,7 +103,7 @@ namespace propagation {
     explicit Wrapper(Impl impl) : m_impl(impl) {}
 
   public:
-    /// @brief Propagate track parameters - User method
+    /// @brief Propagate track parameters
     ///
     /// This function performs the propagation of the track parameters using the
     /// internal implementation object, until at least one abort condition is
@@ -115,20 +111,20 @@ namespace propagation {
     /// propagation options is reached.
     ///
     /// @tparam TrackParameters Type of initial track parameters to propagate
-    /// @tparam Observers       Type list of observers, type ObserverList<>
+    /// @tparam Actions       Type list of actions, type ActionList<>
     /// @tparam Aborters        Type list of abort conditions, type AbortList<>
     ///
     /// @param [in] start   Initial track parameters to propagate
     /// @param [in] options Propagation options
     ///
     /// @return Propagation result containing the propagation status, final
-    ///         track parameters, and output of observers (if they produce any)
+    ///         track parameters, and output of actions (if they produce any)
     ///
     /// neutral option
-    template <typename Observers, typename Aborters>
+    template <typename Actions, typename Aborters>
     WrapperResult<NeutralCurvilinearParameters>
     propagate(const NeutralCurvilinearParameters& start,
-              const Options<Observers, Aborters>& options) const
+              const Options<Actions, Aborters>& options) const
     {
       // The extrapolation cell
       ExtrapolationCell<NeutralParameters> ec(start);
@@ -139,14 +135,14 @@ namespace propagation {
                         NeutralCurvilinearParameters,
                         NeutralParameters,
                         CylinderSurface,
-                        Observers,
+                        Actions,
                         Aborters>(ec, start, m_surface, options);
     }
     /// charged option
-    template <typename Observers, typename Aborters>
+    template <typename Actions, typename Aborters>
     WrapperResult<CurvilinearParameters>
     propagate(const CurvilinearParameters& start,
-              const Options<Observers, Aborters>& options) const
+              const Options<Actions, Aborters>& options) const
     {
       // The extrapolation cell
       ExtrapolationCell<TrackParameters> ec(start);
@@ -157,100 +153,11 @@ namespace propagation {
                         CurvilinearParameters,
                         TrackParameters,
                         CylinderSurface,
-                        Observers,
+                        Actions,
                         Aborters>(ec, start, m_surface, options);
     }
 
-    /// @brief Propagate track parameters - Expert method with propagation cache
-    ///
-    /// This function performs the propagation of the track parameters according
-    /// to the internal implementation object until at least one abort condition
-    /// is fulfilled, the destination surface is hit or the maximum number of
-    /// steps/path length as given in the propagation options is reached.
-    ///
-    /// @tparam TrackParameters Type of initial track parameters to propagate
-    /// @tparam Surface         Type of target surface
-    /// @tparam Observers       Type list of observers, type ObserverList<>
-    /// @tparam Aborters        Type list of abort conditions, type AbortList<>
-    ///
-    /// @param [in] cache Stepper cache built/updated from the start parameters
-    /// @param [in] target Target surface of to propagate to
-    /// @param [in] options Propagation options
-    ///
-    /// @return Propagation result containing the propagation status, final
-    ///         track parameters, and output of observers (if they produce any)
-    ///
-    /// @note the return here is in CurvilinearParameters
-    template <typename Cache,
-              typename Surface,
-              typename Observers,
-              typename Aborters>
-    WrapperResult<NeutralCurvilinearParameters>
-    propagate_with_cache_curvilinear(
-        Cache&                   cache,
-        const NeutralParameters& start,
-        const Surface&           target,
-        const Options<Observers, Aborters>& options) const
-    {
-      return propagate_<Cache,
-                        NeutralParameters,
-                        NeutralParameters,
-                        Surface,
-                        Observers,
-                        Aborters>(cache, start, target, options);
-    }
-
-    template <typename Cache,
-              typename Surface,
-              typename Observers,
-              typename Aborters>
-    WrapperResult<CurvilinearParameters>
-    propagate_with_cache_curvilinear(
-        Cache&                 cache,
-        const TrackParameters& start,
-        const Surface&         target,
-        const Options<Observers, Aborters>& options) const
-    {
-      return propagate_<Cache,
-                        TrackParameters,
-                        TrackParameters,
-                        Surface,
-                        Observers,
-                        Aborters>(cache, start, target, options);
-    }
-    /// @brief Propagate track parameters - Expert method with propagation cache
-    ///
-    /// This function performs the propagation of the track parameters according
-    /// to the internal implementation object until at least one abort condition
-    /// is fulfilled, the destination surface is hit or the maximum number of
-    /// steps/path length as given in the propagation options is reached.
-    ///
-    /// @tparam TrackParameters Type of initial track parameters to propagate
-    /// @tparam Surface         Type of target surface
-    /// @tparam Observers       Type list of observers, type ObserverList<>
-    /// @tparam Aborters        Type list of abort conditions, type AbortList<>
-    ///
-    /// @param [in] cache Stepper cache built/updated from the start parameters
-    /// @param [in] target Target surface of to propagate to
-    /// @param [in] options Propagation options
-    ///
-    /// @return Propagation result containing the propagation status, final
-    ///         track parameters, and output of observers (if they produce any)
-    ///
-    template <typename Cache,
-              typename Surface,
-              typename Observers,
-              typename Aborters>
-    WrapperResult<TrackParameters>
-    propagate_with_cache(Cache&                 cache,
-                         const TrackParameters& start,
-                         const Surface&         target,
-                         const Options<Observers, Aborters>& options) const
-    {
-      return propagate_(cache, start, target, options);
-    }
-
-    /// @brief Propagate track parameters - User method
+    /// @brief Propagate track parameters
     ///
     /// This function performs the propagation of the track parameters according
     /// to the internal implementation object until at least one abort condition
@@ -262,7 +169,7 @@ namespace propagation {
     ///
     /// @tparam TrackParameters Type of initial track parameters to propagate
     /// @tparam Surface         Type of target surface
-    /// @tparam Observers       Type list of observers
+    /// @tparam Actions       Type list of actions
     /// @tparam Aborters        Type list of abort conditions
     ///
     /// @param [in] start Initial track parameters to propagate
@@ -270,13 +177,13 @@ namespace propagation {
     /// @param [in] options Propagation options
     ///
     /// @return Propagation result containing the propagation status, final
-    ///         track parameters, and output of observers (if they produce any)
+    ///         track parameters, and output of actions (if they produce any)
     /// neutral option
-    template <typename Surface, typename Observers, typename Aborters>
+    template <typename Surface, typename Actions, typename Aborters>
     WrapperResult<NeutralParameters>
     propagate(const NeutralParameters& start,
               const Surface&           target,
-              const Options<Observers, Aborters>& options) const
+              const Options<Actions, Aborters>& options) const
     {
       // The extrapolation cell
       ExtrapolationCell<NeutralParameters> ec(start);
@@ -288,15 +195,16 @@ namespace propagation {
                         NeutralParameters,
                         NeutralParameters,
                         Surface,
-                        Observers,
+                        Actions,
                         Aborters>(ec, start, target, options);
     }
+
     /// charged option
-    template <typename Surface, typename Observers, typename Aborters>
+    template <typename Surface, typename Actions, typename Aborters>
     WrapperResult<TrackParameters>
     propagate(const TrackParameters& start,
               const Surface&         target,
-              const Options<Observers, Aborters>& options) const
+              const Options<Actions, Aborters>& options) const
     {
 
       // The extrapolation cell
@@ -308,7 +216,7 @@ namespace propagation {
                         TrackParameters,
                         TrackParameters,
                         Surface,
-                        Observers,
+                        Actions,
                         Aborters>(ec, start, target, options);
     }
 
@@ -318,25 +226,25 @@ namespace propagation {
     /// @tparam Parameters The parameters type at call and return
     /// @tparam ParametrsBase The according neutral/charged base class
     /// @tparam Surface The destination surface
-    /// @tparam Observers The list of propgation observers
+    /// @tparam Actions The list of propgation actions
     /// @tparam Surface The list of propagation aborters
     ///
     /// @param[in] start The start Parameters
     /// @param[in] surface The destination Surface
-    /// @param[in] options the combined list of observers and aborters
+    /// @param[in] options the combined list of actions and aborters
     ///
     /// @return a WrapperResult object templated to the right type
     template <typename Cache,
               typename Parameters,
               typename ParametersBase,
               typename Surface,
-              typename Observers,
+              typename Actions,
               typename Aborters>
     WrapperResult<Parameters>
     propagate_(Cache& cache,
                const Parameters& /*start*/,
                const Surface& surface,
-               const Options<Observers, Aborters>& options) const
+               const Options<Actions, Aborters>& options) const
     {
       // Initialize the propagation result object
       WrapperResult<Parameters> r(Status::IN_PROGRESS);
