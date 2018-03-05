@@ -85,6 +85,7 @@ Important options relevant for the ACTS project are given below. They are set by
 
 |option|default|description|
 |------|-------|-----------|
+|ACTS_BUILD_LEGACY            | ON  | build Legacy package |
 |ACTS_BUILD_DOC               | OFF | build documentation |
 |ACTS_BUILD_EXAMPLES          | ON  | build examples |
 |ACTS_BUILD_TESTS             | ON  | build unit tests |

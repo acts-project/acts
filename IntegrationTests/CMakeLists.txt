@@ -10,5 +10,5 @@ macro(add_integration_test)
 endmacro()
 
 add_executable (PropagationTests PropagationTests.cpp)
-target_link_libraries (PropagationTests PRIVATE ACTSCore)
+target_link_libraries (PropagationTests PRIVATE ACTSCore ACTSLegacy)
 add_integration_test(PropagationTests)
