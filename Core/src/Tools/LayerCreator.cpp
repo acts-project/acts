@@ -371,11 +371,13 @@ Acts::LayerCreator::planeLayer(
 void
 Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const
 {
-  auto surfaces = layer.surfaceArray()->surfaces();
+  if (layer.surfaceArray()) {
+    auto surfaces = layer.surfaceArray()->surfaces();
 
-  for (auto& surface : surfaces) {
-    auto mutableSurface = const_cast<Surface*>(surface);
-    mutableSurface->associateLayer(layer);
+    for (auto& surface : surfaces) {
+      auto mutableSurface = const_cast<Surface*>(surface);
+      mutableSurface->associateLayer(layer);
+    }
   }
 }
 
