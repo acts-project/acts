@@ -202,7 +202,6 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
       // configure LayerCreator
       Acts::LayerCreator::Config lcConfig;
       lcConfig.surfaceArrayCreator = surfaceArrayCreator;
-      lcConfig.defaultThickness    = defaultLayerThickness;
       auto layerCreator            = std::make_shared<const Acts::LayerCreator>(
           lcConfig, Acts::getDefaultLogger("LayerCreator", loggingLevel));
       // configure DD4hepLayerBuilder
@@ -216,6 +215,7 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
       lbConfig.bTypeR                   = bTypeR;
       lbConfig.bTypeZ                   = bTypeZ;
       lbConfig.buildDigitizationModules = buildDigitizationModules;
+      lbConfig.defaultThickness         = defaultLayerThickness;
       auto dd4hepLayerBuilder
           = std::make_shared<const Acts::DD4hepLayerBuilder>(
               lbConfig,
@@ -328,7 +328,6 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
       // configure LayerCreator
       Acts::LayerCreator::Config lcConfig;
       lcConfig.surfaceArrayCreator = surfaceArrayCreator;
-      lcConfig.defaultThickness    = defaultLayerThickness;
       auto layerCreator            = std::make_shared<const Acts::LayerCreator>(
           lcConfig, Acts::getDefaultLogger("LayerCreator", loggingLevel));
       // configure DD4hepLayerBuilder
@@ -339,6 +338,7 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
       lbConfig.bTypePhi                 = bTypePhi;
       lbConfig.bTypeZ                   = bTypeZ;
       lbConfig.buildDigitizationModules = buildDigitizationModules;
+      lbConfig.defaultThickness         = defaultLayerThickness;
       auto dd4hepLayerBuilder
           = std::make_shared<const Acts::DD4hepLayerBuilder>(
               lbConfig,

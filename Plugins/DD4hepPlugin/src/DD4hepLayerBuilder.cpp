@@ -103,12 +103,15 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
 
         // check if layer has surfaces
         if (layerSurfaces.empty()) {
+          // in case no surfaces are handed over the layer thickness will be set
+          // to a default value to allow attaching material layers
+          double z = (zMin + zMax) * 0.5;
           // create layer without surfaces
           // manually create a proto layer
+          pl.minZ = (z != 0.) ? z - m_cfg.defaultThickness : 0.;
+          pl.maxZ = (z != 0.) ? z + m_cfg.defaultThickness : 0.;
           pl.minR = rMin;
           pl.maxR = rMax;
-          pl.minZ = zMin;
-          pl.maxZ = zMax;
           pl.envR = {0., 0.};
           pl.envZ = {0., 0.};
         } else {
@@ -313,10 +316,13 @@ Acts::DD4hepLayerBuilder::centralLayers() const
         double dz   = tube->GetDz() * units::_cm;
         // check if layer has surfaces
         if (layerSurfaces.empty()) {
+          // in case no surfaces are handed over the layer thickness will be set
+          // to a default value to allow attaching material layers
+          double r = (rMin + rMax) * 0.5;
           // create layer without surfaces
           // manually create a proto layer
-          pl.minR = rMin;
-          pl.maxR = rMax;
+          pl.minR = (r != 0.) ? r - m_cfg.defaultThickness : 0.;
+          pl.maxR = (r != 0.) ? r + m_cfg.defaultThickness : 0.;
           pl.minZ = -dz;
           pl.maxZ = dz;
           pl.envR = {0., 0.};
@@ -525,11 +531,15 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
 
         // check if layer has surfaces
         if (layerSurfaces.empty()) {
+          // in case no surfaces are handed over the layer thickness will be set
+          // to a default value to allow attaching material layers
+          double z = (zMin + zMax) * 0.5;
           // create layer without surfaces
+          // manually create protolayer
+          pl.minZ = (z != 0.) ? z - m_cfg.defaultThickness : 0.;
+          pl.maxZ = (z != 0.) ? z + m_cfg.defaultThickness : 0.;
           pl.minR = rMin;
           pl.maxR = rMax;
-          pl.minZ = zMin;
-          pl.maxZ = zMax;
           pl.envR = {0., 0.};
           pl.envZ = {0., 0.};
         } else {
