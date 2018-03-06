@@ -52,6 +52,8 @@ public:
   /// @param haley half length Y - defined at x=0
   TrapezoidBounds(double minhalex, double maxhalex, double haley);
 
+  TrapezoidBounds(const variant_data &data);
+
   virtual ~TrapezoidBounds();
 
   virtual TrapezoidBounds*

@@ -124,10 +124,19 @@ namespace Test {
   }
 
   BOOST_AUTO_TEST_CASE(RectangleBounds_toVariantData) {
-    RectangleBounds rect(10, 10);
-    variant_data var_rect = rect.toVariantData();
+    RectangleBounds rect(10, 15);
+    variant_data var_data = rect.toVariantData();
 
-    std::cout << var_rect << std::endl;
+    std::cout << var_data << std::endl;
+    variant_map var_map = boost::get<variant_map>(var_data);
+    BOOST_TEST(var_map.get<std::string>("type") == "RectangleBounds");
+    variant_map pl = var_map.get<variant_map>("payload");
+    BOOST_TEST(pl.get<double>("halflengthX") == 10);
+    BOOST_TEST(pl.get<double>("halflengthY") == 15);
+
+    RectangleBounds rect2(var_data);
+    BOOST_TEST(rect.halflengthX() == rect2.halflengthX());
+    BOOST_TEST(rect.halflengthY() == rect2.halflengthY());
   }
 
   BOOST_AUTO_TEST_SUITE_END()

@@ -78,6 +78,12 @@ public:
     return boost::get<T>(m_map.at(key));
   }
 
+  const variant_data&
+  at(const std::string& key) const
+  {
+    return m_map.at(key);
+  }
+
   iterator
   begin()
   {

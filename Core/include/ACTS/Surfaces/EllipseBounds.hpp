@@ -63,6 +63,8 @@ public:
                 double averagePhi = 0.,
                 double halfPhi    = M_PI);
 
+  EllipseBounds(const variant_data &data);
+
   virtual ~EllipseBounds();
 
   virtual EllipseBounds*

@@ -54,6 +54,8 @@ public:
                 double haley1,
                 double haley2);
 
+  DiamondBounds(const variant_data &data);
+
   virtual ~DiamondBounds();
 
   DiamondBounds*

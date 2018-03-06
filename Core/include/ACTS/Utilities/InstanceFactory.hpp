@@ -16,11 +16,16 @@
 
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Surfaces/TriangleBounds.hpp"
+#include "ACTS/Surfaces/DiamondBounds.hpp"
+#include "ACTS/Surfaces/EllipseBounds.hpp"
+#include "ACTS/Surfaces/CylinderBounds.hpp"
+#include "ACTS/Surfaces/TrapezoidBounds.hpp"
 
 namespace Acts {
 
+using SurfaceBoundsPtr     = std::shared_ptr<const SurfaceBounds>;
 using PlanarBoundsPtr     = std::shared_ptr<const PlanarBounds>;
-using PlanarBoundsFactory = std::function<PlanarBoundsPtr(const variant_data&)>;
+using SurfaceBoundsFactory = std::function<SurfaceBoundsPtr(const variant_data&)>;
 
 class InstanceFactory
 {
@@ -28,23 +33,45 @@ public:
   InstanceFactory()
   {
     // set up map to store factories
-    m_planarBounds["RectangleBounds"] = [](auto const& data) {
+    m_surfaceBounds["RectangleBounds"] = [](auto const& data) {
       return std::make_shared<const RectangleBounds>(data);
     };
-    m_planarBounds["TriangleBounds"] = [](auto const& data) {
+    m_surfaceBounds["TriangleBounds"] = [](auto const& data) {
       return std::make_shared<const TriangleBounds>(data);
     };
+    m_surfaceBounds["DiamondBounds"] = [](auto const& data) {
+      return std::make_shared<const DiamondBounds>(data);
+    };
+    m_surfaceBounds["EllipseBounds"] = [](auto const& data) {
+      return std::make_shared<const EllipseBounds>(data);
+    };
+    m_surfaceBounds["TrapezoidBounds"] = [](auto const& data) {
+      return std::make_shared<const TrapezoidBounds>(data);
+    };
+    m_surfaceBounds["CylinderBounds"] = [](auto const& data) {
+      return std::make_shared<const CylinderBounds>(data);
+    };
+
   }
 
   PlanarBoundsPtr
   planarBounds(const std::string& cname, const variant_data& data)
   {
-    throw_assert(m_planarBounds.count(cname), "No factory found for class "+cname);
-    return m_planarBounds.at(cname)(data);
+    SurfaceBoundsPtr srfBnd_ptr = surfaceBounds(cname, data);
+    PlanarBoundsPtr plnBnd_ptr = std::dynamic_pointer_cast<const PlanarBounds>(srfBnd_ptr);
+    throw_assert(plnBnd_ptr, "Conversion to PlanarBounds failed");
+    return plnBnd_ptr;
+  }
+
+  SurfaceBoundsPtr
+  surfaceBounds(const std::string& cname, const variant_data& data)
+  {
+    throw_assert(m_surfaceBounds.count(cname), "No factory found for class "+cname);
+    return m_surfaceBounds.at(cname)(data);
   }
 
 private:
-  std::map<std::string, PlanarBoundsFactory> m_planarBounds;
+  std::map<std::string, SurfaceBoundsFactory> m_surfaceBounds;
 };
 
 }  // namespace Acts

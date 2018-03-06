@@ -21,6 +21,7 @@
 
 #include "ACTS/Surfaces/TriangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
 namespace utf    = boost::unit_test;
 //const double NaN = std::numeric_limits<double>::quiet_NaN();
@@ -112,6 +113,37 @@ namespace Test {
     assignedTriangleBoundsObject = triangleBoundsObject;
     BOOST_TEST(assignedTriangleBoundsObject.vertices() == triangleBoundsObject.vertices());
   }
+
+  BOOST_AUTO_TEST_CASE(TriangleBounds_toVariantData) {
+    std::array<Vector2D, 3> vertices({{
+        Vector2D(1., 1.), Vector2D(4., 1.), Vector2D(4., 5.)}});  // 3-4-5 triangle
+    TriangleBounds triangle(vertices);
+    variant_data var_data = triangle.toVariantData();
+
+    std::cout << var_data << std::endl;
+
+    variant_map var_map = boost::get<variant_map>(var_data);
+    BOOST_TEST(var_map.get<std::string>("type") == "TriangleBounds");
+    variant_map pl = var_map.get<variant_map>("payload");
+
+    variant_vector var_vertices = pl.get<variant_vector>("vertices");
+    BOOST_TEST(var_vertices.size() == 3);
+    
+    for(size_t i=0;i<3;i++) {
+      Vector2D exp = vertices.at(i);
+      variant_map var = var_vertices.get<variant_map>(i);
+      BOOST_TEST(var.get<std::string>("type") == "Vector2D");
+      variant_vector coords = var.get<variant_vector>("payload");
+
+      BOOST_TEST(exp.x() == coords.get<double>(0));
+      BOOST_TEST(exp.y() == coords.get<double>(1));
+    }
+
+    TriangleBounds triangle2(var_data);
+    BOOST_TEST(triangle2.vertices().size() == 3);
+  }
+
+
   BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test

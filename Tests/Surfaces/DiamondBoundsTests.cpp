@@ -21,6 +21,7 @@
 #include "ACTS/Surfaces/DiamondBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ThrowAssert.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 //
 #include <limits>
 
@@ -144,6 +145,34 @@ namespace Test {
     assignedDiamondBoundsObject = diamondBoundsObject;
     BOOST_TEST(assignedDiamondBoundsObject == diamondBoundsObject);
   }
+
+
+  BOOST_AUTO_TEST_CASE(DiamondBounds_toVariantData) {
+    double minHalfX(10.), midHalfX(50.), maxHalfX(30.), halfY1(10.),
+        halfY2(20.);
+    DiamondBounds diam(minHalfX, midHalfX, maxHalfX, halfY1, halfY2);
+    variant_data var_data = diam.toVariantData();
+
+    std::cout << var_data << std::endl;
+
+    variant_map var_map = boost::get<variant_map>(var_data);
+    BOOST_TEST(var_map.get<std::string>("type") == "DiamondBounds");
+    variant_map pl = var_map.get<variant_map>("payload");
+    BOOST_TEST(pl.get<double>("minHalfX") == minHalfX);
+    BOOST_TEST(pl.get<double>("medHalfX") == midHalfX);
+    BOOST_TEST(pl.get<double>("maxHalfX") == maxHalfX);
+    BOOST_TEST(pl.get<double>("minY") == halfY1);
+    BOOST_TEST(pl.get<double>("maxY") == halfY2);
+
+    DiamondBounds diam2(var_data);
+    BOOST_TEST(diam.minHalflengthX() == diam2.minHalflengthX());
+    BOOST_TEST(diam.medHalflengthX() == diam2.medHalflengthX());
+    BOOST_TEST(diam.maxHalflengthX() == diam2.maxHalflengthX());
+    BOOST_TEST(diam.halflengthY1() == diam2.halflengthY1());
+    BOOST_TEST(diam.halflengthY2() == diam2.halflengthY2());
+  }
+
+
   BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test

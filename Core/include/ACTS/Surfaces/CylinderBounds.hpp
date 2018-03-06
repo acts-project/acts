@@ -77,6 +77,8 @@ public:
                  double halfPhi,
                  double halfZ);
 
+  CylinderBounds(const variant_data& data);
+
   virtual ~CylinderBounds();
 
   virtual CylinderBounds*
@@ -134,6 +136,9 @@ public:
   /// This method returns the halflengthZ
   double
   halflengthZ() const;
+  
+  variant_data
+  toVariantData() const;
 
 private:
   double m_radius, m_avgPhi, m_halfPhi, m_halfZ;

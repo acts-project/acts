@@ -20,6 +20,7 @@
 //
 #include "ACTS/Surfaces/EllipseBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 //
 #include <limits>
 
@@ -137,6 +138,35 @@ namespace Test {
     assignedEllipseBoundsObject = ellipseBoundsObject;
     BOOST_TEST(assignedEllipseBoundsObject == ellipseBoundsObject);
   }
+
+  BOOST_AUTO_TEST_CASE(EllipseBounds_toVariantData) {
+    double minRad1(10.), minRad2(15.), maxRad1(15.), maxRad2(20.),
+        averagePhi(0.), phiSector(M_PI / 2.);
+    EllipseBounds ell(minRad1, minRad2, maxRad1, maxRad2, averagePhi, phiSector);
+    variant_data var_data = ell.toVariantData();
+
+    std::cout << var_data << std::endl;
+
+    variant_map var_map = boost::get<variant_map>(var_data);
+    BOOST_TEST(var_map.get<std::string>("type") == "EllipseBounds");
+    variant_map pl = var_map.get<variant_map>("payload");
+    BOOST_TEST(pl.get<double>("rMinX") == minRad1);
+    BOOST_TEST(pl.get<double>("rMinY") == minRad2);
+    BOOST_TEST(pl.get<double>("rMaxX") == maxRad1);
+    BOOST_TEST(pl.get<double>("rMaxY") == maxRad2);
+    BOOST_TEST(pl.get<double>("avgPhi") == averagePhi);
+    BOOST_TEST(pl.get<double>("halfPhi") == phiSector);
+
+    EllipseBounds ell2(var_data);
+    BOOST_TEST(ell.rMinX() == ell2.rMinX());
+    BOOST_TEST(ell.rMinY() == ell2.rMinY());
+    BOOST_TEST(ell.rMaxX() == ell2.rMaxX());
+    BOOST_TEST(ell.rMaxY() == ell2.rMaxY());
+    BOOST_TEST(ell.averagePhi() == ell2.averagePhi());
+    BOOST_TEST(ell.halfPhiSector() == ell2.halfPhiSector());
+  }
+
+
   BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test

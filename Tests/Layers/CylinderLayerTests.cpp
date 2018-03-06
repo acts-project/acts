@@ -51,10 +51,10 @@ namespace Test {
       // next level: need an array of Surfaces;
       const std::vector<const Surface*> aSurfaces{new SurfaceStub(),
                                                   new SurfaceStub()};
-      const double        thickness(1.0);
-      SurfaceArrayCreator sac;
-      size_t              binsX(2), binsY(4);
-      auto                pSurfaceArray
+      const double                      thickness(1.0);
+      SurfaceArrayCreator               sac;
+      size_t                            binsX(2), binsY(4);
+      auto                              pSurfaceArray
           = sac.surfaceArrayOnPlane(aSurfaces, 10, 20, binsX, binsY);
       auto pCylinderLayerFromSurfaces = CylinderLayer::create(
           pTransform, pCylinder, std::move(pSurfaceArray));
@@ -99,6 +99,46 @@ namespace Test {
       // auto planeSurface = pCylinderLayer->surfaceRepresentation();
       BOOST_TEST(pCylinderLayer->surfaceRepresentation().name()
                  == std::string("Acts::CylinderSurface"));
+    }
+
+    BOOST_AUTO_TEST_CASE(CylinderLayer_toVariantData)
+    {
+      Translation3D translation{0., 1., 2.};
+      Transform3D   rot;
+      rot = AngleAxis3D(M_PI / 4, Vector3D::UnitZ());
+
+      auto pTransform = std::make_shared<const Transform3D>(translation * rot);
+      double radius(0.5), halfz(10.);
+      auto   pCylinder = std::make_shared<const CylinderBounds>(radius, halfz);
+      auto   pCylinderLayer = std::dynamic_pointer_cast<CylinderLayer>(
+          CylinderLayer::create(pTransform, pCylinder, nullptr, 0.4));
+
+      variant_data var_data = pCylinderLayer->toVariantData();
+      std::cout << var_data << std::endl;
+
+      variant_map var_map = boost::get<variant_map>(var_data);
+      variant_map pl      = var_map.get<variant_map>("payload");
+      BOOST_TEST(pl.get<double>("thickness") == 0.4);
+      Transform3D act = from_variant<Transform3D>(pl.at("transform"));
+      BOOST_TEST(pTransform->isApprox(act));
+
+      auto pCylinderLayer2 = std::dynamic_pointer_cast<CylinderLayer>(
+          CylinderLayer::create(var_data));
+
+      BOOST_TEST(pCylinderLayer->thickness() == pCylinderLayer2->thickness());
+      BOOST_TEST(
+          pCylinderLayer->transform().isApprox(pCylinderLayer2->transform()));
+
+      auto cvBoundsExp = dynamic_cast<const CylinderVolumeBounds*>(
+          &(pCylinderLayer->representingVolume()->volumeBounds()));
+      auto cvBoundsAct = dynamic_cast<const CylinderVolumeBounds*>(
+          &(pCylinderLayer2->representingVolume()->volumeBounds()));
+
+      BOOST_TEST(cvBoundsExp->innerRadius() == cvBoundsAct->innerRadius());
+      BOOST_TEST(cvBoundsExp->outerRadius() == cvBoundsAct->outerRadius());
+      BOOST_TEST(cvBoundsExp->halfPhiSector() == cvBoundsAct->halfPhiSector());
+      BOOST_TEST(cvBoundsExp->halflengthZ() == cvBoundsAct->halflengthZ());
+
     }
 
     BOOST_AUTO_TEST_SUITE_END()

@@ -16,8 +16,8 @@
 #include <iomanip>
 #include <iostream>
 
-#include "ACTS/Utilities/detail/periodic.hpp"
 #include "ACTS/Utilities/VariantData.hpp"
+#include "ACTS/Utilities/detail/periodic.hpp"
 
 Acts::EllipseBounds::EllipseBounds(double minRadius0,
                                    double minRadius1,
@@ -36,9 +36,28 @@ Acts::EllipseBounds::EllipseBounds(double minRadius0,
 {
 }
 
-Acts::EllipseBounds::~EllipseBounds()
+Acts::EllipseBounds::EllipseBounds(const variant_data& data_)
+  : m_boundingBox(0, 0)
 {
+  throw_assert(data_.which() == 4, "Variant data must be map");
+  const variant_map& data = boost::get<variant_map>(data_);
+  std::string        type = data.get<std::string>("type");
+  throw_assert(type == "EllipseBounds", "Type must be EllipseBounds");
+
+  const variant_map& payload = data.get<variant_map>("payload");
+
+  m_rMinX   = payload.get<double>("rMinX");
+  m_rMinY   = payload.get<double>("rMinY");
+  m_rMaxX   = payload.get<double>("rMaxX");
+  m_rMaxY   = payload.get<double>("rMaxY");
+  m_avgPhi  = payload.get<double>("avgPhi");
+  m_halfPhi = payload.get<double>("halfPhi");
+
+  m_boundingBox
+      = RectangleBounds(std::max(m_rMinX, m_rMaxX), std::max(m_rMinY, m_rMaxY));
 }
+
+Acts::EllipseBounds::~EllipseBounds() {}
 
 Acts::EllipseBounds*
 Acts::EllipseBounds::clone() const
@@ -183,21 +202,21 @@ Acts::EllipseBounds::dump(std::ostream& sl) const
 }
 
 Acts::variant_data
-Acts::EllipseBounds::toVariantData() const {
+Acts::EllipseBounds::toVariantData() const
+{
   using namespace std::string_literals;
 
   variant_map payload;
-  payload["rMinX"] = m_rMinX;
-  payload["rMinY"] = m_rMinY;
-  payload["rMaxX"] = m_rMaxX;
-  payload["rMaxY"] = m_rMaxY;
-  payload["avgPhi"] = m_avgPhi;
+  payload["rMinX"]   = m_rMinX;
+  payload["rMinY"]   = m_rMinY;
+  payload["rMaxX"]   = m_rMaxX;
+  payload["rMaxY"]   = m_rMaxY;
+  payload["avgPhi"]  = m_avgPhi;
   payload["halfPhi"] = m_halfPhi;
-  
+
   variant_map data;
-  data["type"] = "EllipseBounds"s;
+  data["type"]    = "EllipseBounds"s;
   data["payload"] = payload;
 
   return data;
-
 }

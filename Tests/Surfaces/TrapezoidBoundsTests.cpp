@@ -21,6 +21,7 @@
 
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
 namespace utf    = boost::unit_test;
 const double NaN = std::numeric_limits<double>::quiet_NaN();
@@ -118,6 +119,30 @@ namespace Test {
     assignedTrapezoidBoundsObject = trapezoidBoundsObject;
     BOOST_TEST(assignedTrapezoidBoundsObject == trapezoidBoundsObject);
   }
+
+
+  BOOST_AUTO_TEST_CASE(TrapezoidBounds_toVariantData) {
+    double minHlX = 10;
+    double maxHlX = 15;
+    double hlY = 5;
+    TrapezoidBounds trap(minHlX, maxHlX, hlY);
+    variant_data var_data = trap.toVariantData();
+
+    std::cout << var_data << std::endl;
+
+    variant_map var_map = boost::get<variant_map>(var_data);
+    BOOST_TEST(var_map.get<std::string>("type") == "TrapezoidBounds");
+    variant_map pl = var_map.get<variant_map>("payload");
+    BOOST_TEST(pl.get<double>("minHalfX") == minHlX);
+    BOOST_TEST(pl.get<double>("maxHalfX") == maxHlX);
+    BOOST_TEST(pl.get<double>("halfY") == hlY);
+
+    TrapezoidBounds trap2(var_data);
+    BOOST_TEST(trap.minHalflengthX() == trap2.minHalflengthX());
+    BOOST_TEST(trap.maxHalflengthX() == trap2.maxHalflengthX());
+    BOOST_TEST(trap.halflengthY() == trap2.halflengthY());
+  }
+
   BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test

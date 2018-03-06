@@ -27,6 +27,23 @@ Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
 {
 }
 
+Acts::TrapezoidBounds::TrapezoidBounds(const variant_data& data_)
+  : m_boundingBox(0, 0)
+{
+  throw_assert(data_.which() == 4, "Variant data must be map");
+  const variant_map &data = boost::get<variant_map>(data_);
+  std::string type = data.get<std::string>("type");
+  throw_assert(type == "TrapezoidBounds", "Type must be TrapezoidBounds");
+
+  const variant_map &payload = data.get<variant_map>("payload");
+
+  m_minHalfX = payload.get<double>("minHalfX");
+  m_maxHalfX = payload.get<double>("maxHalfX");
+  m_halfY = payload.get<double>("halfY");
+
+  m_boundingBox = RectangleBounds(m_maxHalfX, m_halfY);
+}
+
 Acts::TrapezoidBounds::~TrapezoidBounds()
 {
 }
@@ -104,7 +121,7 @@ Acts::TrapezoidBounds::toVariantData() const {
   payload["halfY"]    = m_halfY;
   
   variant_map data;
-  data["type"] = "TrapezoidBounds";
+  data["type"] = "TrapezoidBounds"s;
   data["payload"] = payload;
 
   return data;
