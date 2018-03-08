@@ -17,6 +17,7 @@
 #include "ACTS/Surfaces/LineBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -73,6 +74,8 @@ public:
   /// @param other The source surface dor copying
   /// @param transf The additional transform applied after copying
   LineSurface(const LineSurface& other, const Transform3D& transf);
+
+  LineSurface(const variant_data& data);
 
   virtual ~LineSurface();
 
@@ -271,6 +274,9 @@ public:
   /// Return properly formatted class name for screen output */
   virtual std::string
   name() const override;
+
+  virtual variant_data
+  toVariantData() const override;
 
 protected:
   std::shared_ptr<const LineBounds> m_bounds;  ///< bounds (shared)

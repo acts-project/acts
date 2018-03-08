@@ -40,8 +40,7 @@ public:
   virtual const RectangleBounds&
   boundingBox() const = 0;
 
-  virtual 
-  variant_data
+  virtual variant_data
   toVariantData() const = 0;
 };
 

@@ -146,12 +146,12 @@ namespace Test {
     BOOST_TEST(assignedDiamondBoundsObject == diamondBoundsObject);
   }
 
-
-  BOOST_AUTO_TEST_CASE(DiamondBounds_toVariantData) {
+  BOOST_AUTO_TEST_CASE(DiamondBounds_toVariantData)
+  {
     double minHalfX(10.), midHalfX(50.), maxHalfX(30.), halfY1(10.),
         halfY2(20.);
     DiamondBounds diam(minHalfX, midHalfX, maxHalfX, halfY1, halfY2);
-    variant_data var_data = diam.toVariantData();
+    variant_data  var_data = diam.toVariantData();
 
     std::cout << var_data << std::endl;
 
@@ -171,7 +171,6 @@ namespace Test {
     BOOST_TEST(diam.halflengthY1() == diam2.halflengthY1());
     BOOST_TEST(diam.halflengthY2() == diam2.halflengthY2());
   }
-
 
   BOOST_AUTO_TEST_SUITE_END()
 

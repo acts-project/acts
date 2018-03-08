@@ -136,7 +136,7 @@ public:
   /// This method returns the halflengthZ
   double
   halflengthZ() const;
-  
+
   variant_data
   toVariantData() const;
 

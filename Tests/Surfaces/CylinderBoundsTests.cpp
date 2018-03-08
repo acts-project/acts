@@ -134,9 +134,9 @@ namespace Test {
     BOOST_TEST(assignedCylinderBounds == cylinderBoundsObject);
   }
 
-
-  BOOST_AUTO_TEST_CASE(RectangleBounds_toVariantData) {
-    double radius = 10, avgPhi = 0, halfPhi = M_PI, halfZ = 15;
+  BOOST_AUTO_TEST_CASE(RectangleBounds_toVariantData)
+  {
+    double         radius = 10, avgPhi = 0, halfPhi = M_PI, halfZ = 15;
     CylinderBounds cylBounds(radius, avgPhi, halfPhi, halfZ);
 
     variant_data var_data = cylBounds.toVariantData();
@@ -157,8 +157,6 @@ namespace Test {
     BOOST_TEST(cylBounds.halfPhiSector() == cylBounds2.halfPhiSector());
     BOOST_TEST(cylBounds.halflengthZ() == cylBounds2.halflengthZ());
   }
-
-
 
   BOOST_AUTO_TEST_SUITE_END()
 

@@ -68,35 +68,7 @@ public:
   }
 
   static MutableLayerPtr
-  create(const variant_data& data_)
-  {
-    throw_assert(data_.which() == 4, "Variant data must be map");
-    const variant_map& data = boost::get<variant_map>(data_);
-    std::string        type = data.get<std::string>("type");
-    throw_assert(type == "CylinderLayer", "Type must be CylinderLayer");
-
-    variant_map payload = data.get<variant_map>("payload");
-
-    auto trf = std::make_shared<const Transform3D>(
-        from_variant<Transform3D>(payload.get<variant_map>("transform")));
-
-    LayerType laytyp = passive;
-
-    double thickness = payload.get<double>("thickness");
-
-    InstanceFactory    factory;
-    const variant_map& var_bounds = payload.get<variant_map>("cylinder_bounds");
-
-    auto cbounds = std::dynamic_pointer_cast<const CylinderBounds>(
-        factory.surfaceBounds(var_bounds.get<std::string>("type"), var_bounds));
-
-    return MutableLayerPtr(new CylinderLayer(trf,
-                                             cbounds,
-                                             nullptr,  // SurfaceArray
-                                             thickness,
-                                             nullptr,  // std::move(ad),
-                                             laytyp));
-  }
+  create(const variant_data& data_);
 
   /// Copy constructor - deleted
   CylinderLayer(const CylinderLayer& cla) = delete;
@@ -122,37 +94,7 @@ public:
   surfaceRepresentation() override;
 
   variant_data
-  toVariantData() const
-  {
-    using namespace std::string_literals;
-    variant_map payload;
-
-    payload["transform"] = to_variant(*m_transform);
-
-    // we need to recover the bounds
-    const AbstractVolume* absVol = representingVolume();
-    auto                  cvBounds
-        = dynamic_cast<const CylinderVolumeBounds*>(&absVol->volumeBounds());
-
-    double cylR = cvBounds->innerRadius() + 0.5 * thickness();
-    double hlZ  = cvBounds->halflengthZ();
-
-    CylinderBounds cylBounds(cylR, hlZ);
-
-    const variant_data bounds  = cylBounds.toVariantData();
-    payload["cylinder_bounds"] = bounds;
-
-    payload["thickness"] = thickness();
-
-    // payload["surface_array"] = m_surfaceArray->toVariantData();
-    payload["surface_array"] = 0;
-
-    variant_map data;
-    data["type"]    = "CylinderLayer"s;
-    data["payload"] = payload;
-
-    return data;
-  }
+  toVariantData() const override;
 
 private:
   /// build approach surfaces */

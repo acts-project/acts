@@ -18,6 +18,7 @@
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -310,6 +311,9 @@ public:
   /// Return properly formatted class name for screen output
   virtual std::string
   name() const override;
+
+  virtual variant_data
+  toVariantData() const override;
 
 protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)

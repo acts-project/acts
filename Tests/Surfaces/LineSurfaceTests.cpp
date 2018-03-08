@@ -21,6 +21,7 @@
 #include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
 #include "ACTS/Surfaces/LineSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 //
 #include "DetectorElementStub.hpp"
 #include "LineSurfaceStub.hpp"
@@ -174,6 +175,30 @@ namespace Test {
                "LineSurfaces are equal value after assignment");  // operator ==
                                                                   // from base
   }
+
+  BOOST_AUTO_TEST_CASE(LineSurface_toVariantData)
+  {
+    double        radius = 2.0, hlZ = 20;
+    Translation3D translation{0., 1., 2.};
+    Transform3D   transform(translation);
+    auto          pTransform = std::make_shared<const Transform3D>(translation);
+    LineSurfaceStub line(pTransform, radius, hlZ);
+    variant_data    var_line = line.toVariantData();
+    std::cout << var_line << std::endl;
+
+    const variant_map& pl
+        = boost::get<variant_map>(var_line).get<variant_map>("payload");
+    const variant_map& bounds_pl
+        = pl.get<variant_map>("bounds").get<variant_map>("payload");
+    BOOST_TEST(bounds_pl.get<double>("radius") == radius);
+    BOOST_TEST(bounds_pl.get<double>("halfZ") == hlZ);
+
+    LineSurfaceStub line2(var_line);
+    auto            lbounds = dynamic_cast<const LineBounds*>(&line2.bounds());
+    BOOST_TEST(lbounds->r() == radius);
+    BOOST_TEST(lbounds->halflengthZ() == hlZ);
+  }
+
   BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test

@@ -54,7 +54,7 @@ public:
                 double haley1,
                 double haley2);
 
-  DiamondBounds(const variant_data &data);
+  DiamondBounds(const variant_data& data);
 
   virtual ~DiamondBounds();
 
@@ -121,7 +121,7 @@ public:
   /// This method returns the halflength in Y of trapezoid at positive Y
   double
   halflengthY2() const;
-  
+
   variant_data
   toVariantData() const override;
 

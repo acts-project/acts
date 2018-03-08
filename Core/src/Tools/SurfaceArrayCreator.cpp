@@ -36,8 +36,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with phi x z  = " << binsPhi << " x " << binsZ << " = "
-                                      << binsPhi * binsZ
-                                      << " bins.");
+                                      << binsPhi * binsZ << " bins.");
 
   Transform3D transform
       = _transform != nullptr ? *_transform : Transform3D::Identity();
@@ -68,7 +67,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   sl->fill(surfaces);
   completeBinning(*sl, surfaces);
 
-  return std::make_unique<SurfaceArray>(std::move(sl), surfaces);
+  return std::make_unique<SurfaceArray>(
+      std::move(sl), surfaces, std::make_shared<const Transform3D>(transform));
 }
 
 std::unique_ptr<Acts::SurfaceArray>
@@ -100,8 +100,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   else
     pAxisZ = createVariableAxis(surfaces, binZ, protoLayer, transform);
 
-  Transform3D itransform = transform.inverse();
-  auto globalToLocal     = [transform](const Vector3D& pos) {
+  Transform3D itransform    = transform.inverse();
+  auto        globalToLocal = [transform](const Vector3D& pos) {
     Vector3D loc = transform * pos;
     return Vector2D(loc.phi(), loc.z());
   };
@@ -126,10 +126,10 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with phi x z  = " << bins0 << " x " << bins1 << " = "
-                                      << bins0 * bins1
-                                      << " bins.");
+                                      << bins0 * bins1 << " bins.");
 
-  return std::make_unique<SurfaceArray>(std::move(sl), surfaces);
+  return std::make_unique<SurfaceArray>(
+      std::move(sl), surfaces, std::make_shared<const Transform3D>(transform));
 }
 
 std::unique_ptr<Acts::SurfaceArray>
@@ -179,12 +179,12 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
-                                      << bins0 * bins1
-                                      << " bins.");
+                                      << bins0 * bins1 << " bins.");
   sl->fill(surfaces);
   completeBinning(*sl, surfaces);
 
-  return std::make_unique<SurfaceArray>(std::move(sl), surfaces);
+  return std::make_unique<SurfaceArray>(
+      std::move(sl), surfaces, std::make_shared<const Transform3D>(transform));
 }
 
 std::unique_ptr<Acts::SurfaceArray>
@@ -263,13 +263,13 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
-                                      << bins0 * bins1
-                                      << " bins.");
+                                      << bins0 * bins1 << " bins.");
 
   sl->fill(surfaces);
   completeBinning(*sl, surfaces);
 
-  return std::make_unique<SurfaceArray>(std::move(sl), surfaces);
+  return std::make_unique<SurfaceArray>(
+      std::move(sl), surfaces, std::make_shared<const Transform3D>(transform));
 }
 
 /// SurfaceArrayCreator interface method - create an array on a plane
@@ -288,7 +288,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
 
 std::vector<const Acts::Surface*>
 Acts::SurfaceArrayCreator::findKeySurfaces(
-    const std::vector<const Surface*>& surfaces,
+    const std::vector<const Surface*>&                  surfaces,
     std::function<bool(const Surface*, const Surface*)> equal) const
 {
   std::vector<const Surface*> keys;
@@ -353,8 +353,9 @@ Acts::SurfaceArrayCreator::createVariableAxis(
                                < b->binningPosition(binPhi).phi());
                      });
 
-    double maxPhi = 0.5 * (keys.at(0)->binningPosition(binPhi).phi()
-                           + keys.at(1)->binningPosition(binPhi).phi());
+    double maxPhi = 0.5
+        * (keys.at(0)->binningPosition(binPhi).phi()
+           + keys.at(1)->binningPosition(binPhi).phi());
 
     // create rotation, so that maxPhi is +pi
     double angle = -(M_PI + maxPhi);

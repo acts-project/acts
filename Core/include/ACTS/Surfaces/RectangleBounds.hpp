@@ -19,7 +19,6 @@
 
 namespace Acts {
 
-
 /// @class RectangleBounds
 ///
 /// Bounds for a rectangular, planar surface.
@@ -96,7 +95,7 @@ public:
   /// Return method for the half length in Y
   double
   halflengthY() const;
-  
+
   variant_data
   toVariantData() const override;
 

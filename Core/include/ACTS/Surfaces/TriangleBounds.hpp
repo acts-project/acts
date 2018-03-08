@@ -13,8 +13,8 @@
 #ifndef ACTS_SURFACESTRIANGLEBOUNDS_H
 #define ACTS_SURFACESTRIANGLEBOUNDS_H
 
-#include <utility>
 #include <array>
+#include <utility>
 
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
@@ -51,7 +51,7 @@ public:
   /// @param vertices is the vector of vertices
   TriangleBounds(const std::array<Vector2D, 3>& vertices);
 
-  TriangleBounds(const variant_data &data);
+  TriangleBounds(const variant_data& data);
 
   virtual ~TriangleBounds();
 
@@ -94,12 +94,12 @@ public:
   /// @param sl is the ostream to be dumped into
   virtual std::ostream&
   dump(std::ostream& sl) const final override;
-  
+
   variant_data
   toVariantData() const override;
 
 private:
-  std::array<Vector2D, 3>       m_vertices;
+  std::array<Vector2D, 3> m_vertices;
   RectangleBounds m_boundingBox;  ///< internal bounding box cache
 };
 

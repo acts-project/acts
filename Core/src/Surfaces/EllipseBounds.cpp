@@ -57,7 +57,9 @@ Acts::EllipseBounds::EllipseBounds(const variant_data& data_)
       = RectangleBounds(std::max(m_rMinX, m_rMaxX), std::max(m_rMinY, m_rMaxY));
 }
 
-Acts::EllipseBounds::~EllipseBounds() {}
+Acts::EllipseBounds::~EllipseBounds()
+{
+}
 
 Acts::EllipseBounds*
 Acts::EllipseBounds::clone() const

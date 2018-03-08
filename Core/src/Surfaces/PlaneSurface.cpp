@@ -102,7 +102,9 @@ Acts::PlaneSurface::PlaneSurface(const variant_data& data_)
   }
 }
 
-Acts::PlaneSurface::~PlaneSurface() {}
+Acts::PlaneSurface::~PlaneSurface()
+{
+}
 
 Acts::PlaneSurface&
 Acts::PlaneSurface::operator=(const PlaneSurface& other)

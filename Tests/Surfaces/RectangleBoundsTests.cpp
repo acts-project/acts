@@ -123,9 +123,10 @@ namespace Test {
     delete rectB;
   }
 
-  BOOST_AUTO_TEST_CASE(RectangleBounds_toVariantData) {
+  BOOST_AUTO_TEST_CASE(RectangleBounds_toVariantData)
+  {
     RectangleBounds rect(10, 15);
-    variant_data var_data = rect.toVariantData();
+    variant_data    var_data = rect.toVariantData();
 
     std::cout << var_data << std::endl;
     variant_map var_map = boost::get<variant_map>(var_data);

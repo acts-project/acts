@@ -120,13 +120,13 @@ namespace Test {
     BOOST_TEST(assignedTrapezoidBoundsObject == trapezoidBoundsObject);
   }
 
-
-  BOOST_AUTO_TEST_CASE(TrapezoidBounds_toVariantData) {
-    double minHlX = 10;
-    double maxHlX = 15;
-    double hlY = 5;
+  BOOST_AUTO_TEST_CASE(TrapezoidBounds_toVariantData)
+  {
+    double          minHlX = 10;
+    double          maxHlX = 15;
+    double          hlY    = 5;
     TrapezoidBounds trap(minHlX, maxHlX, hlY);
-    variant_data var_data = trap.toVariantData();
+    variant_data    var_data = trap.toVariantData();
 
     std::cout << var_data << std::endl;
 

@@ -74,7 +74,7 @@ public:
   PlaneSurface(std::shared_ptr<const Transform3D>  htrans,
                std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
-  PlaneSurface(const variant_data &data);
+  PlaneSurface(const variant_data& data);
 
   virtual ~PlaneSurface();
 
@@ -207,8 +207,8 @@ public:
   virtual std::string
   name() const override;
 
-  variant_data
-  toVariantData() const;
+  virtual variant_data
+  toVariantData() const override;
 
 protected:
   /// the bounds of this surface

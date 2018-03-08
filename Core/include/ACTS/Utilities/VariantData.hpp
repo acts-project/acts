@@ -68,6 +68,8 @@ public:
   T&
   get(const std::string& key)
   {
+    if (!m_map.count(key))
+      throw std::out_of_range("variant_map key " + key + " not found");
     return boost::get<T>(m_map.at(key));
   }
 
@@ -75,6 +77,8 @@ public:
   const T&
   get(const std::string& key) const
   {
+    if (!m_map.count(key))
+      throw std::out_of_range("variant_map key " + key + " not found");
     return boost::get<T>(m_map.at(key));
   }
 
@@ -142,7 +146,7 @@ public:
   {
     m_vector.push_back(data);
   }
-  
+
   template <class T>
   T&
   get(const size_t& idx)
@@ -359,11 +363,11 @@ to_variant(const ActsMatrixD<4, 4>& matrix)
   return data;
 }
 
-template<typename T>
+template <typename T>
 inline T
 from_variant(const variant_data& data_);
 
-template<>
+template <>
 inline Transform3D
 from_variant<Transform3D>(const variant_data& data_)
 {
@@ -372,14 +376,14 @@ from_variant<Transform3D>(const variant_data& data_)
   throw_assert(data.get<std::string>("type") == "Transform3D",
                "Must be type Transform3D");
 
-  const variant_map &payload = data.get<variant_map>("payload");
+  const variant_map& payload = data.get<variant_map>("payload");
 
-  const variant_vector &matrix_data = payload.get<variant_vector>("data");
-  Transform3D trf;
-  for(size_t i=0;i<4;i++) {
-    for(size_t j=0;j<4;j++) {
+  const variant_vector& matrix_data = payload.get<variant_vector>("data");
+  Transform3D           trf;
+  for (size_t i = 0; i < 4; i++) {
+    for (size_t j = 0; j < 4; j++) {
 
-      size_t k = i*4+j;
+      size_t k     = i * 4 + j;
       double value = matrix_data.get<double>(k);
       trf(i, j) = value;
     }
@@ -388,7 +392,7 @@ from_variant<Transform3D>(const variant_data& data_)
   return trf;
 }
 
-template<>
+template <>
 inline Vector2D
 from_variant<Vector2D>(const variant_data& data_)
 {
@@ -397,10 +401,10 @@ from_variant<Vector2D>(const variant_data& data_)
   throw_assert(data.get<std::string>("type") == "Vector2D",
                "Must be type Vector2D");
 
-  const variant_vector &vector_data = data.get<variant_vector>("payload");
+  const variant_vector& vector_data = data.get<variant_vector>("payload");
 
   Vector2D vec;
-  for(size_t i=0;i<2;i++) {
+  for (size_t i = 0; i < 2; i++) {
     vec[i] = vector_data.get<double>(i);
   }
 

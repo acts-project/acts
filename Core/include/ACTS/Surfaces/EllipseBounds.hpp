@@ -63,7 +63,7 @@ public:
                 double averagePhi = 0.,
                 double halfPhi    = M_PI);
 
-  EllipseBounds(const variant_data &data);
+  EllipseBounds(const variant_data& data);
 
   virtual ~EllipseBounds();
 
@@ -129,7 +129,7 @@ public:
   /// This method returns the halfPhiSector which is covered by the disc
   double
   halfPhiSector() const;
-  
+
   variant_data
   toVariantData() const override;
 

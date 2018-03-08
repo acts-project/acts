@@ -52,7 +52,7 @@ public:
   /// @param haley half length Y - defined at x=0
   TrapezoidBounds(double minhalex, double maxhalex, double haley);
 
-  TrapezoidBounds(const variant_data &data);
+  TrapezoidBounds(const variant_data& data);
 
   virtual ~TrapezoidBounds();
 
@@ -148,7 +148,7 @@ public:
   /// (second coordinate of local surface frame)
   double
   halflengthY() const;
-  
+
   variant_data
   toVariantData() const override;
 

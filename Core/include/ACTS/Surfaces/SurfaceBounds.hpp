@@ -19,7 +19,6 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/VariantDataFwd.hpp"
 
-
 namespace Acts {
 
 /// @class SurfaceBounds
@@ -98,10 +97,10 @@ public:
   /// @param sl is the outstream in which the string dump is done
   virtual std::ostream&
   dump(std::ostream& os) const = 0;
-  
-  //virtual 
-  //variant_data
-  //toVariantData() const = 0;
+
+  // virtual
+  // variant_data
+  // toVariantData() const = 0;
 };
 
 inline bool

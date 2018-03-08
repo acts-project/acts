@@ -17,6 +17,7 @@
 #include "ACTS/Surfaces/LineSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/GeometryStatics.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -53,6 +54,8 @@ public:
   /// @param transf is the transformed applied after copying
   PerigeeSurface(const PerigeeSurface& other, const Transform3D& transf);
 
+  PerigeeSurface(const variant_data& data);
+
   virtual ~PerigeeSurface();
 
   /// Virtual constructor
@@ -80,6 +83,9 @@ public:
   /// @param sl is the ostream to be dumped into
   virtual std::ostream&
   dump(std::ostream& sl) const final override;
+
+  virtual variant_data
+  toVariantData() const override;
 };
 
 }  // end of namespace

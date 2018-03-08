@@ -24,6 +24,7 @@
 #include "ACTS/EventData/SingleTrackParameters.hpp"
 #include "ACTS/Layers/GenericApproachDescriptor.hpp"
 #include "ACTS/Tools/SurfaceArrayCreator.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 #include "ACTS/Volumes/CuboidVolumeBounds.hpp"
 #include "LayerStub.hpp"
 
@@ -51,10 +52,10 @@ namespace Test {
       // next level: need an array of Surfaces;
       const std::vector<const Surface*> aSurfaces{new SurfaceStub(),
                                                   new SurfaceStub()};
-      const double                      thickness(1.0);
-      SurfaceArrayCreator               sac;
-      size_t                            binsX(2), binsY(4);
-      auto                              pSurfaceArray
+      const double        thickness(1.0);
+      SurfaceArrayCreator sac;
+      size_t              binsX(2), binsY(4);
+      auto                pSurfaceArray
           = sac.surfaceArrayOnPlane(aSurfaces, 10, 20, binsX, binsY);
       auto pCylinderLayerFromSurfaces = CylinderLayer::create(
           pTransform, pCylinder, std::move(pSurfaceArray));
@@ -138,7 +139,6 @@ namespace Test {
       BOOST_TEST(cvBoundsExp->outerRadius() == cvBoundsAct->outerRadius());
       BOOST_TEST(cvBoundsExp->halfPhiSector() == cvBoundsAct->halfPhiSector());
       BOOST_TEST(cvBoundsExp->halflengthZ() == cvBoundsAct->halflengthZ());
-
     }
 
     BOOST_AUTO_TEST_SUITE_END()

@@ -23,8 +23,8 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/VariantData.hpp"
 
-namespace utf    = boost::unit_test;
-//const double NaN = std::numeric_limits<double>::quiet_NaN();
+namespace utf = boost::unit_test;
+// const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
 
@@ -33,7 +33,9 @@ namespace Test {
   /// Unit test for creating compliant/non-compliant TriangleBounds object
   BOOST_AUTO_TEST_CASE(TriangleBoundsConstruction)
   {
-    std::array<Vector2D, 3> vertices({{Vector2D(1., 1.), Vector2D(4., 1.), Vector2D(4., 5.)}});  // 3-4-5 triangle
+    std::array<Vector2D, 3> vertices({{Vector2D(1., 1.),
+                                       Vector2D(4., 1.),
+                                       Vector2D(4., 5.)}});  // 3-4-5 triangle
     // test default construction
     // TriangleBounds defaultConstructedTriangleBounds;  //deleted
     //
@@ -49,8 +51,9 @@ namespace Test {
   /// Unit tests for TriangleBounds properties
   BOOST_AUTO_TEST_CASE(TriangleBoundsProperties)
   {
-    std::array<Vector2D, 3> vertices({{
-        Vector2D(1., 1.), Vector2D(4., 1.), Vector2D(4., 5.)}});  // 3-4-5 triangle
+    std::array<Vector2D, 3> vertices({{Vector2D(1., 1.),
+                                       Vector2D(4., 1.),
+                                       Vector2D(4., 5.)}});  // 3-4-5 triangle
     /// Test clone
     TriangleBounds triangleBoundsObject(vertices);
     auto           pClonedTriangleBounds = triangleBoundsObject.clone();
@@ -73,7 +76,7 @@ namespace Test {
     BOOST_TEST_MESSAGE(
         "Following two tests fail because the triangle has six vertices");
     BOOST_TEST(triangleBoundsObject.vertices().size() == (size_t)3);
-    for(size_t i=0;i<3;i++) {
+    for (size_t i = 0; i < 3; i++) {
       Vector2D act = triangleBoundsObject.vertices().at(i);
       Vector2D exp = expectedVertices.at(i);
       BOOST_CHECK_CLOSE(act[0], exp[0], 1e-6);
@@ -101,24 +104,29 @@ namespace Test {
   /// Unit test for testing TriangleBounds assignment
   BOOST_AUTO_TEST_CASE(TriangleBoundsAssignment)
   {
-    std::array<Vector2D, 3> vertices({{
-        Vector2D(1., 1.), Vector2D(4., 1.), Vector2D(4., 5)}});  // 3-4-5 triangle
-    std::array<Vector2D, 3> invalid({{Vector2D(-1, -1), Vector2D(-1, -1), Vector2D(-1, -1)}});
-    TriangleBounds        triangleBoundsObject(vertices);
+    std::array<Vector2D, 3> vertices({{Vector2D(1., 1.),
+                                       Vector2D(4., 1.),
+                                       Vector2D(4., 5)}});  // 3-4-5 triangle
+    std::array<Vector2D, 3> invalid(
+        {{Vector2D(-1, -1), Vector2D(-1, -1), Vector2D(-1, -1)}});
+    TriangleBounds triangleBoundsObject(vertices);
     // operator == not implemented in this class
     //
     /// Test assignment
     TriangleBounds assignedTriangleBoundsObject(
         invalid);  // invalid object, in some sense
     assignedTriangleBoundsObject = triangleBoundsObject;
-    BOOST_TEST(assignedTriangleBoundsObject.vertices() == triangleBoundsObject.vertices());
+    BOOST_TEST(assignedTriangleBoundsObject.vertices()
+               == triangleBoundsObject.vertices());
   }
 
-  BOOST_AUTO_TEST_CASE(TriangleBounds_toVariantData) {
-    std::array<Vector2D, 3> vertices({{
-        Vector2D(1., 1.), Vector2D(4., 1.), Vector2D(4., 5.)}});  // 3-4-5 triangle
+  BOOST_AUTO_TEST_CASE(TriangleBounds_toVariantData)
+  {
+    std::array<Vector2D, 3> vertices({{Vector2D(1., 1.),
+                                       Vector2D(4., 1.),
+                                       Vector2D(4., 5.)}});  // 3-4-5 triangle
     TriangleBounds triangle(vertices);
-    variant_data var_data = triangle.toVariantData();
+    variant_data   var_data = triangle.toVariantData();
 
     std::cout << var_data << std::endl;
 
@@ -128,9 +136,9 @@ namespace Test {
 
     variant_vector var_vertices = pl.get<variant_vector>("vertices");
     BOOST_TEST(var_vertices.size() == 3);
-    
-    for(size_t i=0;i<3;i++) {
-      Vector2D exp = vertices.at(i);
+
+    for (size_t i = 0; i < 3; i++) {
+      Vector2D    exp = vertices.at(i);
       variant_map var = var_vertices.get<variant_map>(i);
       BOOST_TEST(var.get<std::string>("type") == "Vector2D");
       variant_vector coords = var.get<variant_vector>("payload");
@@ -142,7 +150,6 @@ namespace Test {
     TriangleBounds triangle2(var_data);
     BOOST_TEST(triangle2.vertices().size() == 3);
   }
-
 
   BOOST_AUTO_TEST_SUITE_END()
 

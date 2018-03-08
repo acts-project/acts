@@ -17,6 +17,7 @@
 #include "ACTS/Surfaces/LineSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -95,6 +96,9 @@ public:
   /// Return properly formatted class name for screen output */
   virtual std::string
   name() const final override;
+
+  virtual variant_data
+  toVariantData() const override;
 };
 
 inline Surface::SurfaceType

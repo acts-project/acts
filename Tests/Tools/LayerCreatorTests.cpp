@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#define BOOST_TEST_MODULE SurfaceArrayCreator
+#define BOOST_TEST_MODULE LayerCreator
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/format.hpp>
@@ -22,6 +22,7 @@
 #include "ACTS/Tools/LayerCreator.hpp"
 #include "ACTS/Tools/SurfaceArrayCreator.hpp"
 #include "ACTS/Utilities/BinningType.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
 #include "ACTS/Utilities/Definitions.hpp"
 
@@ -488,6 +489,107 @@ namespace Test {
 
     // checkBinning should also report everything is fine
     checkBinning(*layer->surfaceArray());
+  }
+
+  BOOST_FIXTURE_TEST_CASE(LayerCreator_Cylinder_toVariantData,
+                          LayerCreatorFixture)
+  {
+
+    auto barrel = makeBarrelStagger(30, 7, 0, M_PI / 9.);
+    auto brl    = barrel.first;
+    draw_surfaces(brl, "LayerCreator_barrelStagger.obj");
+
+    ProtoLayer                     pl(brl);
+    std::shared_ptr<CylinderLayer> layer
+        = std::dynamic_pointer_cast<CylinderLayer>(
+            p_LC->cylinderLayer(brl, equidistant, equidistant, pl));
+
+    std::cout << (*layer->surfaceArray()) << std::endl;
+
+    const variant_data var_layer = layer->toVariantData();
+    // std::cout << var_layer << std::endl;
+
+    auto layer2 = std::dynamic_pointer_cast<CylinderLayer>(
+        CylinderLayer::create(var_layer));
+    std::cout << (*layer2->surfaceArray()) << std::endl;
+
+    auto sa  = layer->surfaceArray();
+    auto sa2 = layer2->surfaceArray();
+
+    BOOST_TEST(sa);
+    BOOST_TEST(sa2);
+
+    BOOST_TEST(sa->transform().isApprox(sa2->transform()));
+
+    // let's make sure the binning is really ok
+    // we check that lookup at center of input surface centers
+    // gives the same number of bin content surfaces
+    // which also have compatible transforms.
+    // This is as close to "ok" as we can get I think.
+    for (const auto& pr : barrel.second) {
+      auto A = pr.first;
+
+      Vector3D ctr = A->binningPosition(binR);
+
+      std::vector<const Surface*> bc1 = sa->at(ctr);
+      std::vector<const Surface*> bc2 = sa2->at(ctr);
+
+      BOOST_TEST(bc1.size() == bc2.size());
+
+      for (size_t i = 0; i < bc1.size(); i++) {
+        auto srf1 = bc1.at(i);
+        auto srf2 = bc2.at(i);
+
+        BOOST_TEST(srf1->transform().isApprox(srf2->transform()));
+      }
+    }
+  }
+
+  BOOST_FIXTURE_TEST_CASE(LayerCreator_Disc_toVariantData, LayerCreatorFixture)
+  {
+    std::vector<const Surface*> surfaces;
+    auto                        ringa = fullPhiTestSurfacesEC(30, 0, 0, 10);
+    surfaces.insert(surfaces.end(), ringa.begin(), ringa.end());
+    auto ringb = fullPhiTestSurfacesEC(30, 0, 0, 15);
+    surfaces.insert(surfaces.end(), ringb.begin(), ringb.end());
+    auto ringc = fullPhiTestSurfacesEC(30, 0, 0, 20);
+    surfaces.insert(surfaces.end(), ringc.begin(), ringc.end());
+
+    ProtoLayer                 pl(surfaces);
+    std::shared_ptr<DiscLayer> layer = std::dynamic_pointer_cast<DiscLayer>(
+        p_LC->discLayer(surfaces, equidistant, equidistant, pl));
+
+    const variant_data var_layer = layer->toVariantData();
+
+    std::cout << (*layer->surfaceArray()) << std::endl;
+    auto layer2
+        = std::dynamic_pointer_cast<DiscLayer>(DiscLayer::create(var_layer));
+    std::cout << (*layer2->surfaceArray()) << std::endl;
+
+    auto sa  = layer->surfaceArray();
+    auto sa2 = layer2->surfaceArray();
+
+    BOOST_TEST(sa);
+    BOOST_TEST(sa2);
+
+    BOOST_TEST(sa->transform().isApprox(sa2->transform()));
+
+    for (const auto& srfRef : surfaces) {
+
+      Vector3D ctr = srfRef->binningPosition(binR);
+
+      std::vector<const Surface*> bc1 = sa->at(ctr);
+      std::vector<const Surface*> bc2 = sa2->at(ctr);
+
+      BOOST_TEST(bc1.size() == bc2.size());
+
+      for (size_t i = 0; i < bc1.size(); i++) {
+        auto srf1 = bc1.at(i);
+        auto srf2 = bc2.at(i);
+
+        BOOST_TEST(srf1->transform().isApprox(srf2->transform()));
+      }
+    }
   }
 
   BOOST_AUTO_TEST_SUITE_END()

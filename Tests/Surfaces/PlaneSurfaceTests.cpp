@@ -22,8 +22,8 @@
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Surfaces/TriangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include "DetectorElementStub.hpp"
 #include "ACTS/Utilities/VariantData.hpp"
+#include "DetectorElementStub.hpp"
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
@@ -201,20 +201,24 @@ namespace Test {
     // build
     auto rectBounds = std::make_shared<const RectangleBounds>(5, 10);
     auto idTrf = std::make_shared<const Transform3D>(Transform3D::Identity());
-    auto rot = std::make_shared<const Transform3D>(AngleAxis3D(M_PI/4., Vector3D::UnitZ()));
+    auto rot   = std::make_shared<const Transform3D>(
+        AngleAxis3D(M_PI / 4., Vector3D::UnitZ()));
     PlaneSurface rectSrf(rot, rectBounds);
     variant_data rectVariant = rectSrf.toVariantData();
     std::cout << rectVariant << std::endl;
 
     // rebuild from variant
     PlaneSurface rectSrfRec(rectVariant);
-    auto rectBoundsRec = dynamic_cast<const RectangleBounds*>(&rectSrfRec.bounds());
-    BOOST_CHECK_CLOSE(rectBounds->halflengthX(), rectBoundsRec->halflengthX(), 1e-4);
-    BOOST_CHECK_CLOSE(rectBounds->halflengthY(), rectBoundsRec->halflengthY(), 1e-4);
+    auto         rectBoundsRec
+        = dynamic_cast<const RectangleBounds*>(&rectSrfRec.bounds());
+    BOOST_CHECK_CLOSE(
+        rectBounds->halflengthX(), rectBoundsRec->halflengthX(), 1e-4);
+    BOOST_CHECK_CLOSE(
+        rectBounds->halflengthY(), rectBoundsRec->halflengthY(), 1e-4);
     BOOST_TEST(rot->isApprox(rectSrfRec.transform(), 1e-4));
 
-
-    std::array<Vector2D, 3> vertices = {{Vector2D(1,1), Vector2D(1, -1), Vector2D(-1, 1)}};
+    std::array<Vector2D, 3> vertices
+        = {{Vector2D(1, 1), Vector2D(1, -1), Vector2D(-1, 1)}};
     auto triangleBounds = std::make_shared<const TriangleBounds>(vertices);
     PlaneSurface triangleSrf(rot, triangleBounds);
     variant_data triangleVariant = triangleSrf.toVariantData();
@@ -222,17 +226,16 @@ namespace Test {
 
     // rebuild
     PlaneSurface triangleSrfRec(triangleVariant);
-    auto triangleBoundsRec = dynamic_cast<const TriangleBounds*>(&triangleSrfRec.bounds());
-    for(size_t i=0;i<3;i++) {
+    auto         triangleBoundsRec
+        = dynamic_cast<const TriangleBounds*>(&triangleSrfRec.bounds());
+    for (size_t i = 0; i < 3; i++) {
       Vector2D exp = triangleBounds->vertices().at(i);
       Vector2D act = triangleBoundsRec->vertices().at(i);
       BOOST_CHECK_CLOSE(exp.x(), act.x(), 1e-4);
       BOOST_CHECK_CLOSE(exp.y(), act.y(), 1e-4);
     }
     BOOST_TEST(rot->isApprox(triangleSrfRec.transform(), 1e-4));
-
   }
-  
 
   BOOST_AUTO_TEST_SUITE_END()
 

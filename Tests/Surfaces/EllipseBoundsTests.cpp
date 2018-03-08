@@ -139,10 +139,12 @@ namespace Test {
     BOOST_TEST(assignedEllipseBoundsObject == ellipseBoundsObject);
   }
 
-  BOOST_AUTO_TEST_CASE(EllipseBounds_toVariantData) {
+  BOOST_AUTO_TEST_CASE(EllipseBounds_toVariantData)
+  {
     double minRad1(10.), minRad2(15.), maxRad1(15.), maxRad2(20.),
         averagePhi(0.), phiSector(M_PI / 2.);
-    EllipseBounds ell(minRad1, minRad2, maxRad1, maxRad2, averagePhi, phiSector);
+    EllipseBounds ell(
+        minRad1, minRad2, maxRad1, maxRad2, averagePhi, phiSector);
     variant_data var_data = ell.toVariantData();
 
     std::cout << var_data << std::endl;
@@ -165,7 +167,6 @@ namespace Test {
     BOOST_TEST(ell.averagePhi() == ell2.averagePhi());
     BOOST_TEST(ell.halfPhiSector() == ell2.halfPhiSector());
   }
-
 
   BOOST_AUTO_TEST_SUITE_END()
 
