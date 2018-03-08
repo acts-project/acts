@@ -75,6 +75,8 @@ public:
   /// @param htrans is the additional transform applied after copying
   StrawSurface(const StrawSurface& other, const Transform3D& htrans);
 
+  StrawSurface(const variant_data& data);
+
   virtual ~StrawSurface();
 
   /// Assignment operator

@@ -15,6 +15,7 @@
 
 #include "ACTS/Surfaces/SurfaceBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
 namespace Acts {
 
@@ -74,10 +75,17 @@ public:
     os << "Acts::InfiniteBounds ... boundless surface" << std::endl;
     return os;
   }
+
+  variant_data
+  toVariantData() const override
+  {
+    using namespace std::string_literals;
+    return variant_map({{"type", "InfiniteBounds"s}});
+  }
 };
 
 static const InfiniteBounds s_noBounds{};
 
-}  // end of namespace
+}  // namespace Acts
 
 #endif  // ACTS_INFINITE_BOUNDS_H

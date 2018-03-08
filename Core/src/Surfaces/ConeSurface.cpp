@@ -18,6 +18,7 @@
 #include <iostream>
 
 #include "ACTS/Utilities/ThrowAssert.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 #include "ACTS/Utilities/detail/RealQuadraticEquation.hpp"
 
 Acts::ConeSurface::ConeSurface(const ConeSurface& other)
@@ -56,6 +57,27 @@ Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
   : GeometryObject(), Surface(htrans), m_bounds(cbounds)
 {
   throw_assert(cbounds, "ConeBounds must not be nullptr");
+}
+
+Acts::ConeSurface::ConeSurface(const variant_data& data_)
+{
+  throw_assert(data_.which() == 4, "Variant data must be map");
+  variant_map data = boost::get<variant_map>(data_);
+  throw_assert(data.count("type"), "Variant data must have type.");
+  std::string type = data.get<std::string>("type");
+  throw_assert(type == "ConeSurface", "Variant data type must be ConeSurface");
+
+  variant_map payload    = data.get<variant_map>("payload");
+  variant_map var_bounds = payload.get<variant_map>("bounds");
+
+  m_bounds = std::make_shared<const ConeBounds>(var_bounds);
+
+  if (payload.count("transform")) {
+    // we have a transform
+    auto trf = std::make_shared<const Transform3D>(
+        from_variant<Transform3D>(payload.get<variant_map>("transform")));
+    m_transform = trf;
+  }
 }
 
 Acts::ConeSurface::~ConeSurface()
@@ -267,4 +289,22 @@ Acts::ConeSurface::bounds() const
 {
   // is safe because no constructor w/o bounds exists
   return (*m_bounds.get());
+}
+
+Acts::variant_data
+Acts::ConeSurface::toVariantData() const
+{
+  using namespace std::string_literals;
+
+  variant_map payload;
+  payload["bounds"] = m_bounds->toVariantData();
+
+  if (m_transform) {
+    payload["transform"] = to_variant(*m_transform);
+  }
+
+  variant_map data;
+  data["type"]    = "ConeSurface"s;
+  data["payload"] = payload;
+  return data;
 }

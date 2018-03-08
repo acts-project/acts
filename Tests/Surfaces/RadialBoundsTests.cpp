@@ -20,6 +20,7 @@
 //
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 //
 #include <limits>
 
@@ -109,6 +110,31 @@ namespace Test {
     assignedRadialBoundsObject = radialBoundsObject;
     BOOST_TEST(assignedRadialBoundsObject == radialBoundsObject);
   }
+
+  BOOST_AUTO_TEST_CASE(RadialBounds_toVariantData)
+  {
+    double       rMin = 1, rMax = 5, avgPhi = M_PI / 3., halfPhi = M_PI;
+    RadialBounds rad(rMin, rMax, avgPhi, halfPhi);
+
+    variant_data var_rad = rad.toVariantData();
+    std::cout << var_rad << std::endl;
+
+    variant_map var_rad_map = boost::get<variant_map>(var_rad);
+    BOOST_TEST(var_rad_map.get<std::string>("type") == "RadialBounds");
+    variant_map pl = var_rad_map.get<variant_map>("payload");
+    BOOST_TEST(pl.get<double>("rMin") == rMin);
+    BOOST_TEST(pl.get<double>("rMax") == rMax);
+    BOOST_TEST(pl.get<double>("avgPhi") == avgPhi);
+    BOOST_TEST(pl.get<double>("halfPhi") == halfPhi);
+
+    RadialBounds rad2(var_rad);
+
+    BOOST_TEST(rad.rMin() == rad2.rMin());
+    BOOST_TEST(rad.rMax() == rad2.rMax());
+    BOOST_TEST(rad.averagePhi() == rad2.averagePhi());
+    BOOST_TEST(rad.halfPhiSector() == rad2.halfPhiSector());
+  }
+
   BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test

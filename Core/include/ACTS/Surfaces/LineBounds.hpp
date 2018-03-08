@@ -85,7 +85,7 @@ public:
   dump(std::ostream& sl) const final override;
 
   virtual variant_data
-  toVariantData() const;
+  toVariantData() const override;
 
 private:
   double m_radius, m_halfZ;

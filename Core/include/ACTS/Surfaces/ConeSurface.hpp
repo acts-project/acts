@@ -17,6 +17,7 @@
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -75,6 +76,8 @@ public:
   /// @param other is the source cone surface
   /// @param htrans is the additional transfrom applied after copying
   ConeSurface(const ConeSurface& other, const Transform3D& htrans);
+
+  ConeSurface(const variant_data& data);
 
   virtual ~ConeSurface();
 
@@ -220,6 +223,9 @@ public:
   /// Return properly formatted class name for screen output
   virtual std::string
   name() const override;
+
+  virtual variant_data
+  toVariantData() const override;
 
 protected:
   std::shared_ptr<const ConeBounds> m_bounds;  ///< bounds (shared)

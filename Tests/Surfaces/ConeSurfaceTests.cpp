@@ -22,6 +22,7 @@
 #include "ACTS/Surfaces/ConeSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
@@ -204,6 +205,34 @@ namespace Test {
     /// Test equality of assigned to original
     BOOST_TEST(assignedConeSurface == coneSurfaceObject);
   }
+
+  BOOST_AUTO_TEST_CASE(ConeSurface_toVariantData)
+  {
+    double        alpha = M_PI / 2., zMin = 1, zMax = 5, halfPhi = M_PI;
+    Translation3D translation{0., 1., 2.};
+    auto          pTransform = std::make_shared<const Transform3D>(translation);
+    ConeSurface   cone(pTransform, alpha, zMin, zMax, halfPhi);
+
+    variant_data var_cone = cone.toVariantData();
+    std::cout << var_cone << std::endl;
+
+    const variant_map& pl
+        = boost::get<variant_map>(var_cone).get<variant_map>("payload");
+    const variant_map& bounds_pl
+        = pl.get<variant_map>("bounds").get<variant_map>("payload");
+    BOOST_TEST(bounds_pl.get<double>("alpha") == alpha);
+    BOOST_TEST(bounds_pl.get<double>("zMin") == zMin);
+    BOOST_TEST(bounds_pl.get<double>("zMax") == zMax);
+    BOOST_TEST(bounds_pl.get<double>("halfPhi") == halfPhi);
+
+    ConeSurface cone2(var_cone);
+    auto        conebounds = dynamic_cast<const ConeBounds*>(&cone2.bounds());
+    BOOST_TEST(conebounds->alpha() == alpha);
+    BOOST_TEST(conebounds->halfPhiSector() == halfPhi);
+    BOOST_TEST(conebounds->minZ() == zMin);
+    BOOST_TEST(conebounds->maxZ() == zMax);
+  }
+
   BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test

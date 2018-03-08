@@ -23,6 +23,7 @@
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Surfaces/StrawSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 #include "DetectorElementStub.hpp"
 
 using boost::test_tools::output_test_stream;
@@ -121,6 +122,29 @@ namespace Test {
     assignedStrawSurface = strawSurfaceObject;
     /// Test equality of assigned to original
     BOOST_TEST(assignedStrawSurface == strawSurfaceObject);
+  }
+
+  BOOST_AUTO_TEST_CASE(StrawSurface_toVariantData)
+  {
+    double        radius = 2.0, hlZ = 20;
+    Translation3D translation{0., 1., 2.};
+    Transform3D   transform(translation);
+    auto          pTransform = std::make_shared<const Transform3D>(translation);
+    StrawSurface  straw(pTransform, radius, hlZ);
+    variant_data  var_straw = straw.toVariantData();
+    std::cout << var_straw << std::endl;
+
+    const variant_map& pl
+        = boost::get<variant_map>(var_straw).get<variant_map>("payload");
+    const variant_map& bounds_pl
+        = pl.get<variant_map>("bounds").get<variant_map>("payload");
+    BOOST_TEST(bounds_pl.get<double>("radius") == radius);
+    BOOST_TEST(bounds_pl.get<double>("halfZ") == hlZ);
+
+    StrawSurface straw2(var_straw);
+    auto         lbounds = dynamic_cast<const LineBounds*>(&straw2.bounds());
+    BOOST_TEST(lbounds->r() == radius);
+    BOOST_TEST(lbounds->halflengthZ() == hlZ);
   }
   BOOST_AUTO_TEST_SUITE_END()
 

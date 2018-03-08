@@ -17,6 +17,7 @@
 
 #include "ACTS/Surfaces/SurfaceBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -70,6 +71,8 @@ public:
              double zmax,
              double halfphi = M_PI,
              double avphi   = 0.);
+
+  ConeBounds(const variant_data& data);
 
   virtual ~ConeBounds();
 
@@ -147,6 +150,9 @@ public:
   /// (so that averagePhi +/- halfPhiSector gives the phi bounds of the cone)
   double
   halfPhiSector() const;
+
+  variant_data
+  toVariantData() const override;
 
 private:
   double m_alpha, m_tanAlpha;

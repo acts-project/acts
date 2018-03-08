@@ -115,6 +115,8 @@ public:
   /// @param transf is the additional transform applied to the surface
   DiscSurface(const DiscSurface& other, const Transform3D& transf);
 
+  DiscSurface(const variant_data& data);
+
   virtual ~DiscSurface();
 
   /// Assignement operator

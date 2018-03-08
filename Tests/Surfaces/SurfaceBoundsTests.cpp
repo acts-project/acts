@@ -20,6 +20,7 @@
 //
 #include "ACTS/Surfaces/SurfaceBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
 namespace Acts {
 
@@ -65,6 +66,12 @@ public:
   {
     sl << "SurfaceBoundsStub";
     return sl;
+  }
+
+  variant_data
+  toVariantData() const
+  {
+    return variant_data();
   }
 
 private:

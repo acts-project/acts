@@ -17,6 +17,7 @@
 
 #include "ACTS/Surfaces/SurfaceBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 #include "ACTS/Utilities/detail/periodic.hpp"
 
 namespace Acts {
@@ -138,7 +139,7 @@ public:
   halflengthZ() const;
 
   variant_data
-  toVariantData() const;
+  toVariantData() const override;
 
 private:
   double m_radius, m_avgPhi, m_halfPhi, m_halfZ;

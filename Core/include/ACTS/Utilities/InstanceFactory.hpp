@@ -16,8 +16,11 @@
 
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Surfaces/DiamondBounds.hpp"
+#include "ACTS/Surfaces/DiscBounds.hpp"
+#include "ACTS/Surfaces/DiscTrapezoidalBounds.hpp"
 #include "ACTS/Surfaces/EllipseBounds.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
+#include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Surfaces/TrapezoidBounds.hpp"
 #include "ACTS/Surfaces/TriangleBounds.hpp"
@@ -54,23 +57,41 @@ public:
     m_surfaceBounds["CylinderBounds"] = [](auto const& data) {
       return std::make_shared<const CylinderBounds>(data);
     };
+    m_surfaceBounds["RadialBounds"] = [](auto const& data) {
+      return std::make_shared<const RadialBounds>(data);
+    };
+    m_surfaceBounds["DiscTrapezoidalBounds"] = [](auto const& data) {
+      return std::make_shared<const DiscTrapezoidalBounds>(data);
+    };
 
     m_surfaces["PlaneSurface"]
         = [](auto const& data) { return new PlaneSurface(data); };
   }
 
   PlanarBoundsPtr
-  planarBounds(const std::string& cname, const variant_data& data)
+  planarBounds(const std::string& cname, const variant_data& data) const
   {
     SurfaceBoundsPtr srfBnd_ptr = surfaceBounds(cname, data);
     PlanarBoundsPtr  plnBnd_ptr
         = std::dynamic_pointer_cast<const PlanarBounds>(srfBnd_ptr);
-    throw_assert(plnBnd_ptr, "Conversion to PlanarBounds failed");
+    throw_assert(plnBnd_ptr,
+                 "Conversion to PlanarBounds failed for name " + cname);
     return plnBnd_ptr;
   }
 
+  std::shared_ptr<const DiscBounds>
+  discBounds(const std::string& cname, const variant_data& data) const
+  {
+    SurfaceBoundsPtr                  srfBnd_ptr = surfaceBounds(cname, data);
+    std::shared_ptr<const DiscBounds> discBnd_ptr
+        = std::dynamic_pointer_cast<const DiscBounds>(srfBnd_ptr);
+    throw_assert(discBnd_ptr,
+                 "Conversion to DiscBounds failed for name " + cname);
+    return discBnd_ptr;
+  }
+
   SurfaceBoundsPtr
-  surfaceBounds(const std::string& cname, const variant_data& data)
+  surfaceBounds(const std::string& cname, const variant_data& data) const
   {
     throw_assert(m_surfaceBounds.count(cname),
                  "No factory found for class " + cname);
@@ -78,7 +99,7 @@ public:
   }
 
   const Surface*
-  surface(const std::string& cname, const variant_data& data)
+  surface(const std::string& cname, const variant_data& data) const
   {
     throw_assert(m_surfaces.count(cname),
                  "No factory found for class " + cname);

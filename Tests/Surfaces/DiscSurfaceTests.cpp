@@ -20,7 +20,10 @@
 //
 #include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
 #include "ACTS/Surfaces/DiscSurface.hpp"
+#include "ACTS/Surfaces/DiscTrapezoidalBounds.hpp"
+#include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 //
 #include "DetectorElementStub.hpp"
 //
@@ -205,6 +208,56 @@ namespace Test {
     BOOST_CHECK_NO_THROW(assignedDisc = discSurfaceObject);
     BOOST_CHECK(assignedDisc == discSurfaceObject);
   }
+
+  BOOST_AUTO_TEST_CASE(DiscSurface_toVariantData)
+  {
+    double minR = 1, maxR = 4, avgPhi = M_PI / 3, phiSec = M_PI;
+    auto   rbounds
+        = std::make_shared<const RadialBounds>(minR, maxR, avgPhi, phiSec);
+
+    Transform3D rot(AngleAxis3D(M_PI / 4., Vector3D::UnitZ()));
+    auto        trf
+        = std::make_shared<const Transform3D>(Translation3D(0, 0, 2) * rot);
+
+    DiscSurface rdisc(trf, rbounds);
+
+    variant_data var_rdisc = rdisc.toVariantData();
+    std::cout << var_rdisc << std::endl;
+
+    DiscSurface rdisc2(var_rdisc);
+    BOOST_TEST(rdisc.transform().isApprox(rdisc2.transform()));
+    BOOST_TEST(rdisc2.transform().isApprox(*trf));
+
+    const RadialBounds* rbounds_act
+        = dynamic_cast<const RadialBounds*>(&rdisc2.bounds());
+    BOOST_TEST(rbounds->rMin() == rbounds_act->rMin());
+    BOOST_TEST(rbounds->rMax() == rbounds_act->rMax());
+    BOOST_TEST(rbounds->averagePhi() == rbounds_act->averagePhi());
+    BOOST_TEST(rbounds->halfPhiSector() == rbounds_act->halfPhiSector());
+
+    double rMin = 1, rMax = 5, minHalfX = 2, maxHalfX = 4, stereo = M_PI / 8.;
+    auto   dtbounds = std::make_shared<const DiscTrapezoidalBounds>(
+        minHalfX, maxHalfX, rMin, rMax, avgPhi, stereo);
+
+    DiscSurface  dtdisc(trf, dtbounds);
+    variant_data var_dtdisc = dtdisc.toVariantData();
+    std::cout << var_dtdisc;
+
+    DiscSurface dtdisc2(var_dtdisc);
+    ;
+
+    BOOST_TEST(dtdisc.transform().isApprox(dtdisc2.transform()));
+    BOOST_TEST(dtdisc2.transform().isApprox(*trf));
+
+    const DiscTrapezoidalBounds* dtbounds_act
+        = dynamic_cast<const DiscTrapezoidalBounds*>(&dtdisc2.bounds());
+    BOOST_TEST(dtbounds->rMin() == dtbounds_act->rMin());
+    BOOST_TEST(dtbounds->rMax() == dtbounds_act->rMax());
+    BOOST_TEST(dtbounds->minHalflengthX() == dtbounds_act->minHalflengthX());
+    BOOST_TEST(dtbounds->maxHalflengthX() == dtbounds_act->maxHalflengthX());
+    BOOST_TEST(dtbounds->stereo() == dtbounds_act->stereo());
+  }
+
   BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test

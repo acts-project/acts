@@ -20,7 +20,9 @@
 #include "ACTS/Surfaces/InfiniteBounds.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/InstanceFactory.hpp"
 #include "ACTS/Utilities/ThrowAssert.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
 Acts::DiscSurface::DiscSurface(const DiscSurface& other)
   : GeometryObject(), Surface(other), m_bounds(other.m_bounds)
@@ -73,6 +75,34 @@ Acts::DiscSurface::DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
   : GeometryObject(), Surface(detelement, identifier), m_bounds(nullptr)
 {
   throw_assert(dbounds, "nullptr as DiscBounds");
+}
+
+Acts::DiscSurface::DiscSurface(const variant_data& data_) : GeometryObject()
+{
+
+  throw_assert(data_.which() == 4, "Variant data must be map");
+  variant_map data = boost::get<variant_map>(data_);
+  throw_assert(data.count("type"), "Variant data must have type.");
+  // std::string type = boost::get<std::string>(data["type"]);
+  std::string type = data.get<std::string>("type");
+  throw_assert(type == "DiscSurface", "Variant data type must be StrawSurface");
+
+  variant_map payload    = data.get<variant_map>("payload");
+  variant_map var_bounds = payload.get<variant_map>("bounds");
+  std::string boundsType = var_bounds.get<std::string>("type");
+
+  InstanceFactory factory;
+
+  std::shared_ptr<const DiscBounds> bounds
+      = factory.discBounds(boundsType, var_bounds);
+  m_bounds = bounds;
+
+  if (payload.count("transform")) {
+    // we have a transform
+    auto trf = std::make_shared<const Transform3D>(
+        from_variant<Transform3D>(payload.get<variant_map>("transform")));
+    m_transform = trf;
+  }
 }
 
 Acts::DiscSurface::~DiscSurface()
@@ -229,4 +259,22 @@ Acts::DiscSurface::intersectionEstimate(const Acts::Vector3D&      gpos,
     return Intersection(intersectPoint, u, isValid);
   }
   return Intersection(gpos, 0., false);
+}
+
+Acts::variant_data
+Acts::DiscSurface::toVariantData() const
+{
+  using namespace std::string_literals;
+
+  variant_data bounds = m_bounds->toVariantData();
+  variant_map  payload;
+  payload["bounds"] = bounds;
+  if (m_transform) {
+    payload["transform"] = to_variant(*m_transform);
+  }
+
+  variant_map data;
+  data["type"]    = "DiscSurface"s;
+  data["payload"] = payload;
+  return data;
 }

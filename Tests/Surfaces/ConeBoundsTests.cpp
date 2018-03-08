@@ -20,6 +20,7 @@
 //
 #include "ACTS/Surfaces/ConeBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 //
 #include <limits>
 
@@ -126,6 +127,34 @@ namespace Test {
     assignedConeBounds = originalConeBounds;
     BOOST_TEST(assignedConeBounds == originalConeBounds);
   }
+
+  BOOST_AUTO_TEST_CASE(ConeBounds_toVariantData)
+  {
+    double alpha = M_PI / 2., zMin = 1, zMax = 5, avgPhi = M_PI / 3.,
+           halfPhi = M_PI;
+    ConeBounds cone(alpha, zMin, zMax, halfPhi, avgPhi);
+
+    variant_data var_cone = cone.toVariantData();
+    std::cout << var_cone << std::endl;
+
+    variant_map var_cone_map = boost::get<variant_map>(var_cone);
+    BOOST_TEST(var_cone_map.get<std::string>("type") == "ConeBounds");
+    variant_map pl = var_cone_map.get<variant_map>("payload");
+    BOOST_TEST(pl.get<double>("alpha") == alpha);
+    BOOST_TEST(pl.get<double>("zMin") == zMin);
+    BOOST_TEST(pl.get<double>("zMax") == zMax);
+    BOOST_TEST(pl.get<double>("avgPhi") == avgPhi);
+    BOOST_TEST(pl.get<double>("halfPhi") == halfPhi);
+
+    ConeBounds cone2(var_cone);
+
+    BOOST_TEST(cone.alpha() == cone2.alpha());
+    BOOST_TEST(cone.minZ() == cone2.minZ());
+    BOOST_TEST(cone.maxZ() == cone2.maxZ());
+    BOOST_TEST(cone.averagePhi() == cone2.averagePhi());
+    BOOST_TEST(cone.halfPhiSector() == cone2.halfPhiSector());
+  }
+
   BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test

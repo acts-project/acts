@@ -98,9 +98,8 @@ public:
   virtual std::ostream&
   dump(std::ostream& os) const = 0;
 
-  // virtual
-  // variant_data
-  // toVariantData() const = 0;
+  virtual variant_data
+  toVariantData() const = 0;
 };
 
 inline bool
