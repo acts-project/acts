@@ -19,7 +19,6 @@
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Logger.hpp"
-#include "ACTS/Utilities/Units.hpp"
 
 #ifndef ACTS_LAYERCREATOR_TAKESMALLERBIGGER
 #define ACTS_LAYERCREATOR_TAKESMALLERBIGGER
