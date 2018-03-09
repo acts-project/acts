@@ -67,7 +67,6 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
       = std::abs(protoLayer.maxZ + protoLayer.envZ.second - layerZ);
   double layerThickness = (protoLayer.maxR - protoLayer.minR)
       + protoLayer.envR.first + protoLayer.envR.second;
-  // reset layer thickness in case no surfaces ar handed over
 
   ACTS_VERBOSE("Creating a cylindrical Layer:");
   ACTS_VERBOSE(" - with layer R     = " << layerR);
