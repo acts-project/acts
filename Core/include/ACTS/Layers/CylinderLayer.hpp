@@ -19,7 +19,7 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/InstanceFactory.hpp"
 #include "ACTS/Utilities/ThrowAssert.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
 
 namespace Acts {

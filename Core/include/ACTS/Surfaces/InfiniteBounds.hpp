@@ -15,7 +15,7 @@
 
 #include "ACTS/Surfaces/SurfaceBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -77,11 +77,7 @@ public:
   }
 
   variant_data
-  toVariantData() const override
-  {
-    using namespace std::string_literals;
-    return variant_map({{"type", "InfiniteBounds"s}});
-  }
+  toVariantData() const override;
 };
 
 static const InfiniteBounds s_noBounds{};

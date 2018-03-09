@@ -19,7 +19,7 @@ class MsgStream;
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Surfaces/DiscSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
