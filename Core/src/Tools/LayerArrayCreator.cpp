@@ -90,22 +90,37 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
       // calculate the layer value for the offset
       double navigationValue = 0.5 * ((layerValue - 0.5 * layerThickness)
                                       + boundaries.at(boundaries.size() - 3));
-      // if layers are attached to each other, no navigation layer needed
-      if (navigationValue != (layerValue - 0.5 * layerThickness)) {
-        // create the navigation layer surface from the layer
-        std::unique_ptr<const Surface> navLayerSurface(createNavigationSurface(
-            *layIter, bValue, -std::abs(layerValue - navigationValue)));
-        ACTS_VERBOSE("arbitrary : creating a  NavigationLayer at "
-                     << (navLayerSurface->binningPosition(bValue)).x()
-                     << ", "
-                     << (navLayerSurface->binningPosition(bValue)).y()
-                     << ", "
-                     << (navLayerSurface->binningPosition(bValue)).z());
-        navLayer = NavigationLayer::create(std::move(navLayerSurface));
-        // push the navigation layer in
-        layerOrderVector.push_back(
-            LayerOrderPosition(navLayer, navLayer->binningPosition(bValue)));
+      // if layers are attached to each other bail out - navigation will not
+      // work anymore
+      if (navigationValue == (layerValue - 0.5 * layerThickness)) {
+        ACTS_ERROR("Layers are attached to each other at: "
+                   << layerValue - 0.5 * layerThickness
+                   << ", which corrupts "
+                      "navigation. This should never happen. Please detach the "
+                      "layers in your geometry description.");
       }
+      // if layers are overlapping bail out
+      if (navigationValue > (layerValue - 0.5 * layerThickness)) {
+        ACTS_ERROR("Layers are overlapping at: "
+                   << layerValue - 0.5 * layerThickness
+                   << ". This should never happen. "
+                      "Please check your geometry description.");
+      }
+
+      // create the navigation layer surface from the layer
+      std::unique_ptr<const Surface> navLayerSurface(createNavigationSurface(
+          *layIter, bValue, -std::abs(layerValue - navigationValue)));
+      ACTS_VERBOSE("arbitrary : creating a  NavigationLayer at "
+                   << (navLayerSurface->binningPosition(bValue)).x()
+                   << ", "
+                   << (navLayerSurface->binningPosition(bValue)).y()
+                   << ", "
+                   << (navLayerSurface->binningPosition(bValue)).z());
+      navLayer = NavigationLayer::create(std::move(navLayerSurface));
+      // push the navigation layer in
+      layerOrderVector.push_back(
+          LayerOrderPosition(navLayer, navLayer->binningPosition(bValue)));
+
       // push the original layer in
       layerOrderVector.push_back(
           LayerOrderPosition(layIter, layIter->binningPosition(bValue)));

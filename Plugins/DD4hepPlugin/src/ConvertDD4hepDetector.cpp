@@ -30,7 +30,8 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
                       BinningType        bTypeZ,
                       double             layerEnvelopeR,
                       double             layerEnvelopeZ,
-                      bool               buildDigitizationModules)
+                      bool               buildDigitizationModules,
+                      double             defaultLayerThickness)
 {
   // check if envelopes of the volume should be built automatically
   // create local logger for conversion
@@ -214,6 +215,7 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
       lbConfig.bTypeR                   = bTypeR;
       lbConfig.bTypeZ                   = bTypeZ;
       lbConfig.buildDigitizationModules = buildDigitizationModules;
+      lbConfig.defaultThickness         = defaultLayerThickness;
       auto dd4hepLayerBuilder
           = std::make_shared<const Acts::DD4hepLayerBuilder>(
               lbConfig,
@@ -336,6 +338,7 @@ convertDD4hepDetector(dd4hep::DetElement worldDetElement,
       lbConfig.bTypePhi                 = bTypePhi;
       lbConfig.bTypeZ                   = bTypeZ;
       lbConfig.buildDigitizationModules = buildDigitizationModules;
+      lbConfig.defaultThickness         = defaultLayerThickness;
       auto dd4hepLayerBuilder
           = std::make_shared<const Acts::DD4hepLayerBuilder>(
               lbConfig,

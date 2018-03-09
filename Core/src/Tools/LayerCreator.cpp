@@ -223,7 +223,6 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
                               std::shared_ptr<const Transform3D>  transform,
                               std::unique_ptr<ApproachDescriptor> ad) const
 {
-
   ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
 
   double layerZ
@@ -260,7 +259,6 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
     transform
         = std::make_shared<const Transform3D>(Translation3D(0., 0., layerZ));
   }
-
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
