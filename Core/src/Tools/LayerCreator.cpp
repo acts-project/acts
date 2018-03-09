@@ -62,14 +62,13 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   // calculate thickness only if surfaces are present
   double layerThickness = (protoLayer.maxR - protoLayer.minR)
       + protoLayer.envR.first + protoLayer.envR.second;
-  // reset layer thickness in case no surfaces ar handed over
-   if (!surfaces.size()) layerThickness = m_cfg.defaultThickness;
+  if (!surfaces.size()) layerThickness = m_cfg.defaultThickness;
   double envZShift = 0.5 * (-protoLayer.envZ.first + protoLayer.envZ.second);
   double layerZ    = binPosZ + envZShift;
   double layerHalfZ
       = std::abs(protoLayer.maxZ + protoLayer.envZ.second - layerZ);
-  layerThickness = (protoLayer.maxR - protoLayer.minR)
-      + protoLayer.envR.first + protoLayer.envR.second;
+  layerThickness = (protoLayer.maxR - protoLayer.minR) + protoLayer.envR.first
+      + protoLayer.envR.second;
 
   ACTS_VERBOSE("Creating a cylindrical Layer:");
   ACTS_VERBOSE(" - with layer R     = " << layerR);
