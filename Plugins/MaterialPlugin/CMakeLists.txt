@@ -3,7 +3,7 @@ file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 add_library (ACTSMaterialPlugin SHARED ${src_files})
 
 target_include_directories (ACTSMaterialPlugin PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
-target_link_libraries (ACTSMaterialPlugin PUBLIC ACTSCore)
+target_link_libraries (ACTSMaterialPlugin PUBLIC ACTSCore ACTSLegacy)
 
 install (TARGETS ACTSMaterialPlugin
          EXPORT ACTSMaterialPluginTargets

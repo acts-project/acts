@@ -8,6 +8,7 @@ list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # all options must be defined here to keep the list directly visible and
 # make the option variables available everywhere
+option (ACTS_BUILD_LEGACY "Build legacy package" ON)
 option (ACTS_BUILD_DOC "Build documentation" OFF)
 option (ACTS_BUILD_EXAMPLES "Build examples" OFF)
 option (ACTS_BUILD_TESTS "Build unit tests" ON)
@@ -54,6 +55,7 @@ include (ACTSComponentsHelpers) # handle components via add_..._if commands
 # core library and plugins
 
 add_component (Core)
+add_component_if(Legacy ACTS_BUILD_LEGACY)
 add_subdirectory (Plugins)
 
 # examples and tests
@@ -62,7 +64,7 @@ if(ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS)
 endif()
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
 add_subdirectory_if(Tests ACTS_BUILD_TESTS)
-add_subdirectory_if(IntegrationTests ACTS_BUILD_INTEGRATION_TESTS)
+add_subdirectory_if(IntegrationTests ACTS_BUILD_INTEGRATION_TESTS AND ACTS_BUILD_LEGACY)
 
 # documentation
 add_subdirectory_if (doc ACTS_BUILD_DOC)
