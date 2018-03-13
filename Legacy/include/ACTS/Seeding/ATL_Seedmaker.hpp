@@ -1,330 +1,368 @@
-#ifndef ATL_Seedmaker_H
-#define ATL_Seedmaker_H
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2018 ACTS project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+///////////////////////////////////////////////////////////////////
+// ATL_Seedmaker.hpp ACTS project
+///////////////////////////////////////////////////////////////////
+
+#ifndef ATL_Seedmaker_hpp
+#define ATL_Seedmaker_hpp
 
 #include <list>
-#include <string>
 #include <map>
 #include <set>
-#include <vector>
+#include <string>
 #include <utility>
+#include <vector>
 
-#include "ACTS/Seeding/SPForSeed.hpp"
 #include "ACTS/Seeding/InternalSeed.hpp"
+#include "ACTS/Seeding/SPForSeed.hpp"
 
-struct Config {
-  //UNIT AS RETURNED BY m_fieldService->getField() default value in ATLAS was 5. Unit is kilo-Tesla
-//  double bFieldInZ = 5.;
+struct Config
+{
+  // UNIT AS RETURNED BY m_fieldService->getField() default value in ATLAS was
+  // 5. Unit is kilo-Tesla
+  //  double bFieldInZ = 5.;
   double bFieldInZ = 0.00208;
 
   double SCT_rMin = 200.;
 
-  double beamPosX = 0;
-  double beamPosY = 0;
-  double beamPosZ = 0;
+  double beamPosX  = 0;
+  double beamPosY  = 0;
+  double beamPosZ  = 0;
   double beamTiltX = 0;
   double beamTiltY = 0;
-
 };
 
-
 namespace Acts {
-  template <typename SpacePoint>
-  class ATL_Seedmaker 
-    {
-      ///////////////////////////////////////////////////////////////////
-      // Public methods:
-      ///////////////////////////////////////////////////////////////////
-      
-    public:
-      
-      ///////////////////////////////////////////////////////////////////
-      // Standard tool methods
-      ///////////////////////////////////////////////////////////////////
+template <typename SpacePoint>
+class ATL_Seedmaker
+{
+  ///////////////////////////////////////////////////////////////////
+  // Public methods:
+  ///////////////////////////////////////////////////////////////////
 
-      ATL_Seedmaker ();
-      virtual ~ATL_Seedmaker();
+public:
+  ///////////////////////////////////////////////////////////////////
+  // Standard tool methods
+  ///////////////////////////////////////////////////////////////////
 
-      ///////////////////////////////////////////////////////////////////
-      // Methods to initialize tool for new event or region
-      ///////////////////////////////////////////////////////////////////
+  ATL_Seedmaker();
+  virtual ~ATL_Seedmaker();
 
-      template<class RandIter>
-      void newEvent (int, RandIter, RandIter);
+  ///////////////////////////////////////////////////////////////////
+  // Methods to initialize tool for new event or region
+  ///////////////////////////////////////////////////////////////////
 
-      //////////////////////////////////////////////////////////////////
-      // Method to initialize seeds production
-      //////////////////////////////////////////////////////////////////
-      void find3Sp(); 
+  template <class RandIter>
+  void
+  newEvent(int, RandIter, RandIter);
 
-      ///////////////////////////////////////////////////////////////////
-      // Iterator through seeds pseudo collection produced accordingly
-      // methods find    
-      ///////////////////////////////////////////////////////////////////
-      
-      const Seed<SpacePoint>* next();
+  //////////////////////////////////////////////////////////////////
+  // Method to initialize seeds production
+  //////////////////////////////////////////////////////////////////
+  void
+  find3Sp();
 
-      ///////////////////////////////////////////////////////////////////
-      // Configuration
-      ///////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////
+  // Iterator through seeds pseudo collection produced accordingly
+  // methods find
+  ///////////////////////////////////////////////////////////////////
 
-      Config m_config;
+  const Seed<SpacePoint>*
+  next();
 
-      
+  ///////////////////////////////////////////////////////////////////
+  // Configuration
+  ///////////////////////////////////////////////////////////////////
 
-    protected:
-              /**    @name Disallow default instantiation, copy, assignment */
+  Config m_config;
+
+protected:
+  /**    @name Disallow default instantiation, copy, assignment */
   //@{
   ATL_Seedmaker(const ATL_Seedmaker<SpacePoint>&) = delete;
-  ATL_Seedmaker<SpacePoint> &operator=(const ATL_Seedmaker<SpacePoint>&) = delete;
+  ATL_Seedmaker<SpacePoint>&
+  operator=(const ATL_Seedmaker<SpacePoint>&)
+      = delete;
   //@}
-      ///////////////////////////////////////////////////////////////////
-      // Protected data and methods
-      ///////////////////////////////////////////////////////////////////
-  
-      bool                        m_endlist                       ;
-      bool                        m_checketa                      ;
-      bool                        m_isvertex                      ;
-      int                         m_nprint                        ;
-      int                         m_nlist                         ;
-      int                         m_maxsize                       ;
-      int                         m_state                         ;
-      // event number since tool init
-      int                         m_iteration                     ;
-      unsigned int                m_maxNumberVertices             ;
-      float                       m_etamin, m_etamax              ;
-      float                       m_drmin, m_drminv               ;
-      float                       m_drmax                         ;
-      float                       m_dzdrmin0                      ;
-      float                       m_dzdrmax0                      ;
-      float                       m_dzdrmin                       ;
-      float                       m_dzdrmax                       ;
-      float                       m_zmin                          ;
-      float                       m_zmax                          ;
-      float                       m_zminU                         ;
-      float                       m_zmaxU                         ;
-      float                       m_zminB                         ;
-      float                       m_zmaxB                         ;
-      float                       m_ftrig                         ;
-      float                       m_ftrigW                        ;
-      // maximum radius of outermost detector element
-      float                       r_rmax                          ;
-      // size of one r-slice
-      float                       r_rstep                         ;
-
-      float                       m_dzver                         ;
-      float                       m_dzdrver                       ;
-      float                       m_diver                         ;
-      float                       m_diverpps                      ;
-      float                       m_diversss                      ;
-      float                       m_divermax                      ;
-      float                       m_dazmax                        ;
-      float                       m_ptmin                         ;
-      float                       m_ipt                           ;
-      float                       m_ipt2                          ;
-      float                       m_COF                           ;
-      float                       m_K                             ;
-      float                       m_ipt2K                         ;
-      float                       m_ipt2C                         ;
-      float                       m_COFK                          ;  
-      float                       m_umax                          ;
-      // number of r-slices
-      int r_size                                                  ;
-      int r_first                                                 ;
-      int rf_size                                                 ;
-      int rfz_size                                                ;
-      std::list<SPForSeed<SpacePoint>*>* r_Sorted            ;
-      std::list<SPForSeed<SpacePoint>*>  rfz_Sorted [   583] ;
-      std::list<SPForSeed<SpacePoint>*>  rfzv_Sorted[   300] ;
-      std::list<SPForSeed<SpacePoint>*>  l_spforseed         ;
-      typename std::list<SPForSeed<SpacePoint>*>::iterator i_spforseed; 
-      typename std::list<SPForSeed<SpacePoint>*>::iterator m_rMin     ;
-
-      int m_nsaz,m_nsazv                                     ;
-      int m_fNmax,m_fvNmax                                        ;
-      int m_fNmin,m_fvNmin                                        ;
-      int m_zMin                                                  ;
-      // m_nr: number of bins used in r_Sorted; r_index: index of all used bins in r_Sorted; r_map is number of SP in each bin in r_Sorted
-      int  m_nr     ; int* r_index   ; int* r_map                 ;
-      int  m_nrfz   , rfz_index  [583], rfz_map  [583]            ;
-      int  m_nrfzv  , rfzv_index [300], rfzv_map [300]            ;
-      int rfz_b[583],rfz_t[593],rfz_ib[583][9],rfz_it[583][9]     ;
-      int rfzv_n[300],rfzv_i[300][6]                              ;
-      float m_sF                                                  ;
-      float m_sFv                                                 ;
-
-      ///////////////////////////////////////////////////////////////////
-      // Tables for 3 space points seeds search
-      ///////////////////////////////////////////////////////////////////
-     
-      int    m_maxsizeSP                                          ;                    
-      SPForSeed<SpacePoint>** m_SP                           ;
-      float               *  m_Zo                                 ; 
-      float               *  m_Tz                                 ;
-      float               *  m_R                                  ;
-      float               *  m_U                                  ;
-      float               *  m_V                                  ;
-      float               *  m_Er                                 ;
-
-      Seed<SpacePoint>* m_seedOutput                        ;
-
-      std::list<InternalSeed<SpacePoint>*>           l_seeds   ;
-      typename std::list<InternalSeed<SpacePoint>*>::iterator i_seed    ; 
-      typename std::list<InternalSeed<SpacePoint>*>::iterator i_seede   ;
-
-      std::multimap<float,InternalSeed<SpacePoint>*> m_seeds          ;
-      typename std::multimap<float,InternalSeed<SpacePoint>*>::iterator m_seed ;
-
-      std::multimap<float,InternalSeed<SpacePoint>*> m_mapOneSeeds;
-      InternalSeed<SpacePoint>*                         m_OneSeeds   ;
-      int                                               m_maxOneSize ;
-      int                                               m_nOneSeeds  ;
-      int                                               m_fillOneSeeds;
-      std::set<float>                                   l_vertex     ;
-      std::vector<std::pair<float,SPForSeed<SpacePoint>*>> m_CmSp; 
-
-      ///////////////////////////////////////////////////////////////////
-      // Beam geometry
-      ///////////////////////////////////////////////////////////////////
- 
-      float m_xbeam;    // x-center of beam-axis 
-      float m_ybeam;    // y-center of beam-axis 
-      float m_zbeam;    // z-center of beam-axis 
-
-      ///////////////////////////////////////////////////////////////////
-      // Protected methods
-      ///////////////////////////////////////////////////////////////////
-
-      void buildFrameWork()                                          ;
-      void buildBeamFrameWork()                                          ;
-
-      
-      SPForSeed<SpacePoint>* newSpacePoint(SpacePoint*const&)     ;
-
-      void newSeed(SPForSeed<SpacePoint>*&,SPForSeed<SpacePoint>*&,float); 
-
-      void newOneSeed
-      (SPForSeed<SpacePoint>*&,SPForSeed<SpacePoint>*&,
-      SPForSeed<SpacePoint>*&,float,float)                             ;
-
-      void newOneSeedWithCurvaturesComparison
-    (SPForSeed<SpacePoint>*&,SPForSeed<SpacePoint>*&,float)              ;
-
-      void fillSeeds()                                               ;
-      void fillLists     ()                                          ;
-      void erase         ()                                          ;
-      void production3Sp ()                                          ;
-      void production3Sp
-    (typename std::list<SPForSeed<SpacePoint>*>::iterator*,
-     typename std::list<SPForSeed<SpacePoint>*>::iterator*,
-     typename std::list<SPForSeed<SpacePoint>*>::iterator*,
-     typename std::list<SPForSeed<SpacePoint>*>::iterator*,
-     int,int,int&);
-
-      void findNext()                                             ;
-      bool isZCompatible     (float&,float&,float&)               ;
-      void convertToBeamFrameWork(SpacePoint*const&,float*)  ;
-   };
-
   ///////////////////////////////////////////////////////////////////
-  // Inline methods
+  // Protected data and methods
   ///////////////////////////////////////////////////////////////////
 
-  template <typename SpacePoint>
-  inline const Seed<SpacePoint>* ATL_Seedmaker<SpacePoint>::next()
-  {
-    do {
-      if(i_seed==i_seede) {
-        findNext(); 
-        if(i_seed==i_seede) {
-          return 0;
-        }
+  bool m_endlist;
+  bool m_checketa;
+  bool m_isvertex;
+  int  m_nprint;
+  int  m_nlist;
+  int  m_maxsize;
+  int  m_state;
+  // event number since tool init
+  int          m_iteration;
+  unsigned int m_maxNumberVertices;
+  float        m_etamin, m_etamax;
+  float        m_drmin, m_drminv;
+  float        m_drmax;
+  float        m_dzdrmin0;
+  float        m_dzdrmax0;
+  float        m_dzdrmin;
+  float        m_dzdrmax;
+  float        m_zmin;
+  float        m_zmax;
+  float        m_zminU;
+  float        m_zmaxU;
+  float        m_zminB;
+  float        m_zmaxB;
+  float        m_ftrig;
+  float        m_ftrigW;
+  // maximum radius of outermost detector element
+  float r_rmax;
+  // size of one r-slice
+  float r_rstep;
+
+  float m_dzver;
+  float m_dzdrver;
+  float m_diver;
+  float m_diverpps;
+  float m_diversss;
+  float m_divermax;
+  float m_dazmax;
+  float m_ptmin;
+  float m_ipt;
+  float m_ipt2;
+  float m_COF;
+  float m_K;
+  float m_ipt2K;
+  float m_ipt2C;
+  float m_COFK;
+  float m_umax;
+  // number of r-slices
+  int                                                  r_size;
+  int                                                  r_first;
+  int                                                  rf_size;
+  int                                                  rfz_size;
+  std::list<SPForSeed<SpacePoint>*>*                   r_Sorted;
+  std::list<SPForSeed<SpacePoint>*>                    rfz_Sorted[583];
+  std::list<SPForSeed<SpacePoint>*>                    rfzv_Sorted[300];
+  std::list<SPForSeed<SpacePoint>*>                    l_spforseed;
+  typename std::list<SPForSeed<SpacePoint>*>::iterator i_spforseed;
+  typename std::list<SPForSeed<SpacePoint>*>::iterator m_rMin;
+
+  int m_nsaz, m_nsazv;
+  int m_fNmax, m_fvNmax;
+  int m_fNmin, m_fvNmin;
+  int m_zMin;
+  // m_nr: number of bins used in r_Sorted; r_index: index of all used bins in
+  // r_Sorted; r_map is number of SP in each bin in r_Sorted
+  int   m_nr;
+  int*  r_index;
+  int*  r_map;
+  int   m_nrfz, rfz_index[583], rfz_map[583];
+  int   m_nrfzv, rfzv_index[300], rfzv_map[300];
+  int   rfz_b[583], rfz_t[593], rfz_ib[583][9], rfz_it[583][9];
+  int   rfzv_n[300], rfzv_i[300][6];
+  float m_sF;
+  float m_sFv;
+
+  ///////////////////////////////////////////////////////////////////
+  // Tables for 3 space points seeds search
+  ///////////////////////////////////////////////////////////////////
+
+  int                     m_maxsizeSP;
+  SPForSeed<SpacePoint>** m_SP;
+  float*                  m_Zo;
+  float*                  m_Tz;
+  float*                  m_R;
+  float*                  m_U;
+  float*                  m_V;
+  float*                  m_Er;
+
+  Seed<SpacePoint>* m_seedOutput;
+
+  std::list<InternalSeed<SpacePoint>*>                    l_seeds;
+  typename std::list<InternalSeed<SpacePoint>*>::iterator i_seed;
+  typename std::list<InternalSeed<SpacePoint>*>::iterator i_seede;
+
+  std::multimap<float, InternalSeed<SpacePoint>*>                    m_seeds;
+  typename std::multimap<float, InternalSeed<SpacePoint>*>::iterator m_seed;
+
+  std::multimap<float, InternalSeed<SpacePoint>*> m_mapOneSeeds;
+  InternalSeed<SpacePoint>* m_OneSeeds;
+  int                       m_maxOneSize;
+  int                       m_nOneSeeds;
+  int                       m_fillOneSeeds;
+  std::set<float>           l_vertex;
+  std::vector<std::pair<float, SPForSeed<SpacePoint>*>> m_CmSp;
+
+  ///////////////////////////////////////////////////////////////////
+  // Beam geometry
+  ///////////////////////////////////////////////////////////////////
+
+  float m_xbeam;  // x-center of beam-axis
+  float m_ybeam;  // y-center of beam-axis
+  float m_zbeam;  // z-center of beam-axis
+
+  ///////////////////////////////////////////////////////////////////
+  // Protected methods
+  ///////////////////////////////////////////////////////////////////
+
+  void
+  buildFrameWork();
+  void
+  buildBeamFrameWork();
+
+  SPForSeed<SpacePoint>*
+  newSpacePoint(SpacePoint* const&);
+
+  void
+  newSeed(SPForSeed<SpacePoint>*&, SPForSeed<SpacePoint>*&, float);
+
+  void
+  newOneSeed(SPForSeed<SpacePoint>*&,
+             SPForSeed<SpacePoint>*&,
+             SPForSeed<SpacePoint>*&,
+             float,
+             float);
+
+  void
+  newOneSeedWithCurvaturesComparison(SPForSeed<SpacePoint>*&,
+                                     SPForSeed<SpacePoint>*&,
+                                     float);
+
+  void
+  fillSeeds();
+  void
+  fillLists();
+  void
+  erase();
+  void
+  production3Sp();
+  void
+  production3Sp(typename std::list<SPForSeed<SpacePoint>*>::iterator*,
+                typename std::list<SPForSeed<SpacePoint>*>::iterator*,
+                typename std::list<SPForSeed<SpacePoint>*>::iterator*,
+                typename std::list<SPForSeed<SpacePoint>*>::iterator*,
+                int,
+                int,
+                int&);
+
+  void
+  findNext();
+  bool
+  isZCompatible(float&, float&, float&);
+  void
+  convertToBeamFrameWork(SpacePoint* const&, float*);
+};
+
+///////////////////////////////////////////////////////////////////
+// Inline methods
+///////////////////////////////////////////////////////////////////
+
+template <typename SpacePoint>
+inline const Seed<SpacePoint>*
+ATL_Seedmaker<SpacePoint>::next()
+{
+  do {
+    if (i_seed == i_seede) {
+      findNext();
+      if (i_seed == i_seede) {
+        return 0;
       }
-      ++i_seed;
-    } 
-    while(!(*m_seed++).second->set3(*m_seedOutput));
-    return(m_seedOutput);   
+    }
+    ++i_seed;
+  } while (!(*m_seed++).second->set3(*m_seedOutput));
+  return (m_seedOutput);
+}
+
+template <typename SpacePoint>
+inline bool
+ATL_Seedmaker<SpacePoint>::isZCompatible(float& Zv, float& R, float& T)
+{
+  if (Zv < m_zminU || Zv > m_zmaxU) return false;
+  if (!m_isvertex) return true;
+
+  std::set<float>::iterator v = l_vertex.begin(), ve = l_vertex.end();
+
+  float dZmin = fabs((*v) - Zv);
+  for (++v; v != ve; ++v) {
+    float dZ = fabs((*v) - Zv);
+    if (dZ >= dZmin) break;
+    dZmin = dZ;
   }
-  
+  return dZmin < (m_dzver + m_dzdrver * R) * sqrt(1. + T * T);
+}
 
-  template <typename SpacePoint>
-  inline bool ATL_Seedmaker<SpacePoint>::isZCompatible  
-    (float& Zv,float& R,float& T)
-    {
-      if(Zv < m_zminU || Zv > m_zmaxU) return false;
-      if(!m_isvertex) return true;
+///////////////////////////////////////////////////////////////////
+// New space point for seeds
+///////////////////////////////////////////////////////////////////
 
-      std::set<float>::iterator v=l_vertex.begin(),ve=l_vertex.end(); 
+template <typename SpacePoint>
+inline SPForSeed<SpacePoint>*
+ATL_Seedmaker<SpacePoint>::newSpacePoint(SpacePoint* const& sp)
+{
+  SPForSeed<SpacePoint>* sps;
 
-      float dZmin = fabs((*v)-Zv); 
-      for(++v; v!=ve; ++v) {
-    float dZ = fabs((*v)-Zv); if(dZ >= dZmin) break; dZmin=dZ;
-      }
-      return dZmin < (m_dzver+m_dzdrver*R)*sqrt(1.+T*T);
-    }
+  float r[3];
+  convertToBeamFrameWork(sp, r);
 
-  ///////////////////////////////////////////////////////////////////
-  // New space point for seeds 
-  ///////////////////////////////////////////////////////////////////
+  if (m_checketa) {
+    // filter SP outside of eta-range
+    float z = (fabs(r[2]) + m_zmax);
+    float x = r[0] * m_dzdrmin;
+    float y = r[1] * m_dzdrmin;
+    if ((z * z) < (x * x + y * y)) return 0;
+  }
 
-  template <typename SpacePoint>
-  inline SPForSeed<SpacePoint>* ATL_Seedmaker<SpacePoint>::newSpacePoint
-    (SpacePoint*const& sp) 
-    {
-      SPForSeed<SpacePoint>* sps;
+  if (i_spforseed != l_spforseed.end()) {
+    sps = (*i_spforseed++);
+    sps->set(sp, r);
+  } else {
+    l_spforseed.push_back((sps = new SPForSeed<SpacePoint>(sp, r)));
+    i_spforseed = l_spforseed.end();
+  }
 
-      float r[3]; convertToBeamFrameWork(sp,r);
+  return sps;
+}
 
-      if(m_checketa) {
-// filter SP outside of eta-range
-    float z = (fabs(r[2])+m_zmax);
-    float x = r[0]*m_dzdrmin     ;
-    float y = r[1]*m_dzdrmin     ;
-    if((z*z )<(x*x+y*y)) return 0;
-      }
+///////////////////////////////////////////////////////////////////
+// New 2 space points seeds
+///////////////////////////////////////////////////////////////////
 
-      if(i_spforseed!=l_spforseed.end()) {
-    sps = (*i_spforseed++); sps->set(sp,r); 
-      }
-      else                               {
-    l_spforseed.push_back((sps=new SPForSeed<SpacePoint>(sp,r)));
-    i_spforseed = l_spforseed.end();    
-      }
-      
-      return sps;
-    }
+template <typename SpacePoint>
+inline void
+ATL_Seedmaker<SpacePoint>::newSeed(SPForSeed<SpacePoint>*& p1,
+                                   SPForSeed<SpacePoint>*& p2,
+                                   float                   z)
+{
+  SPForSeed<SpacePoint>* p3 = 0;
 
-  ///////////////////////////////////////////////////////////////////
-  // New 2 space points seeds 
-  ///////////////////////////////////////////////////////////////////
-
-  template <typename SpacePoint>
-  inline void ATL_Seedmaker<SpacePoint>::newSeed
-    (SPForSeed<SpacePoint>*& p1,SPForSeed<SpacePoint>*& p2, float z) 
-    {
-      SPForSeed<SpacePoint>* p3 = 0;
-
-      if(i_seede!=l_seeds.end()) {
+  if (i_seede != l_seeds.end()) {
     InternalSeed<SpacePoint>* s = (*i_seede++);
-    s->set(p1,p2,p3,z);
-      }
-      else                  {
-    l_seeds.push_back(new InternalSeed<SpacePoint>(p1,p2,p3,z));
-    i_seede = l_seeds.end(); 
-      }
-    }
-  
-} // end of name space
+    s->set(p1, p2, p3, z);
+  } else {
+    l_seeds.push_back(new InternalSeed<SpacePoint>(p1, p2, p3, z));
+    i_seede = l_seeds.end();
+  }
+}
+
+}  // end of name space
 
 ///////////////////////////////////////////////////////////////////
 // Object-function for curvature seeds comparison
 ///////////////////////////////////////////////////////////////////
 
-class comCurvature  {
+class comCurvature
+{
 public:
-  template<typename SpacePoint>
-  bool operator ()
-  (const std::pair<float,Acts::SPForSeed<SpacePoint>*>& i1, 
-   const std::pair<float,Acts::SPForSeed<SpacePoint>*>& i2)
+  template <typename SpacePoint>
+  bool
+  operator()(const std::pair<float, Acts::SPForSeed<SpacePoint>*>& i1,
+             const std::pair<float, Acts::SPForSeed<SpacePoint>*>& i2)
   {
     return i1.first < i2.first;
   }
@@ -332,4 +370,4 @@ public:
 
 #include "ACTS/Seeding/ATL_Seedmaker.ipp"
 
-#endif // ATL_Seedmaker_H
+#endif  // ATL_Seedmaker_hpp
