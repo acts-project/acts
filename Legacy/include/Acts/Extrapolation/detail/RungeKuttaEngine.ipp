@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <cmath>
+
 #include "Acts/EventData/TransportJacobian.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"

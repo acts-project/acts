@@ -10,6 +10,7 @@
 #define ACTS_NAVIGATOR_H
 
 #include "ACTS/Detector/TrackingGeometry.hpp"
+#include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Volumes/BoundarySurfaceT.hpp"
@@ -20,12 +21,11 @@
 #define NAVIGATOROUTPUTS
 #define VLOG(result, dump)                                                     \
   if (debug) {                                                                 \
-    std::string volumeName = result.current_volume                             \
-        ? result.current_volume->volumeName()                                  \
-        : "No Volume";                                                         \
+    std::string vName                = "No Volume";                            \
+    if (result.current_volume) vName = result.current_volume->volumeName();    \
     std::stringstream dstream;                                                 \
-    dstream << "[ " << std::setw(30) << result.current_volume->volumeName()    \
-            << " ] " << std::setw(50) << dump << '\n';                         \
+    dstream << "[ " << std::setw(30) << vName << " ] ";                        \
+    dstream << std::setw(50) << dump << '\n';                                  \
     std::cout << dstream.str();                                                \
     result.debug_string += dstream.str();                                      \
   }

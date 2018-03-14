@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include "Acts/EventData/ParticleDefinitions.hpp"
 #include "Acts/EventData/TransportJacobian.hpp"
 #include "Acts/Extrapolation/MaterialUpdateMode.hpp"
