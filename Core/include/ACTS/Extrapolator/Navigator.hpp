@@ -390,8 +390,9 @@ namespace extrapolation {
           ++result.nav_boundary_iter;
           // if there is no more boundary to leave, we're done
           if (result.nav_boundary_iter == result.nav_boundaries.end()) {
-            VLOG(result, "No more boundary surfaces to leave this volume. "
-                         "Navigation break.");
+            VLOG(result,
+                 "No more boundary surfaces to leave this volume. "
+                 "Navigation break.");
             result.navigation_break = true;
             return;
           }
