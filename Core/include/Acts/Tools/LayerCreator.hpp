@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include <boost/optional.hpp>
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/ApproachDescriptor.hpp"

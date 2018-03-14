@@ -81,9 +81,11 @@ public:
       if (par.covariance()) {
         cov_transport = true;
         cov           = ActsSymMatrixD<5>(*par.covariance());
-        // Get the reference surface
+        // Get the reference surface for the jacobian 
         const auto& surface = par.referenceSurface();
         surface.initJacobianToGlobal(jac_to_global, pos, dir, par.parameters());
+        // cache the surface for navigation 
+        start_surface = &surface;
       }
     }
 
@@ -262,14 +264,24 @@ public:
     bool                    field_cache_ready = false;
     concept::AnyFieldCell<> field_cache;
 
-    // accummulated path length cache
+    /// accummulated path length cache
     double accumulated_path = 0.;
 
-    // adaptive step size of the runge-kutta integration
+    /// adaptive step size of the runge-kutta integration
     double step_size = std::numeric_limits<double>::max();
 
-    // maximal step size of the runge-kutta integration
+    /// maximal step size of the runge-kutta integration
     double max_step_size = std::numeric_limits<double>::max();
+    
+    /// Navigation cache: the start surface
+    const Surface* start_surface   = nullptr;
+    
+    /// Navigation cache: the current surface
+    const Surface* current_surface = nullptr;
+    
+    /// Navigation cache: the target surface
+    const Surface* target_surface  = nullptr;
+    
   };
 
   /// Always use the same propagation cache type, independently of the initial

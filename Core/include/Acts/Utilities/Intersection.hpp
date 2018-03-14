@@ -40,12 +40,19 @@ struct Intersection
   {
   }
 
+  /// Default constructor 
   Intersection()
     : position(Vector3D(0., 0., 0.))
     , pathLength(std::numeric_limits<double>::infinity())
     , distance(0.)
     , valid(false)
   {
+  }
+
+  /// Bool() operator for validity checking
+  explicit operator bool() const
+  {
+      return valid; 
   }
 
   /// Smaller operator for sorting
@@ -79,6 +86,12 @@ public:
   {
   }
 
+  /// Bool() operator for validity checking
+  explicit operator bool() const
+  {
+      return intersection.valid; 
+  }
+  
   /// smaller operator for ordering & sorting
   ///
   /// @param oi is the source intersection for comparison
@@ -122,6 +135,12 @@ public:
   {
   }
 
+  /// Bool() operator for validity checking
+  explicit operator bool() const
+  {
+      return intersection.valid; 
+  }
+  
   /// Smaller operator for ordering & sorting
   ///
   /// @param fi is the full intersection to be tested

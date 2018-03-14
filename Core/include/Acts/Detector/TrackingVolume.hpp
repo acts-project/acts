@@ -84,7 +84,7 @@ public:
   /// Factory constructor for a conatiner TrackingVolume
   /// - by definition a Vacuum volume
   ///
-  /// @param htrans is the global 3D transform to position the volume ins pace
+  /// @param htrans is the global 3D transform to position the volume in space
   /// @param volumeBounds is the description of the volume boundaries
   /// @param containedVolumes are the static volumes that fill this volume
   /// @param volumeName is a string identifier
@@ -103,7 +103,7 @@ public:
   /// Factory constructor for Tracking Volumes with content
   /// - can not be a container volume
   ///
-  /// @param htrans is the global 3D transform to position the volume ins pace
+  /// @param htrans is the global 3D transform to position the volume in space
   /// @param volumeBounds is the description of the volume boundaries
   /// @param matprop is are materials of the tracking volume
   /// @param cLayerArray is the confined layer array (optional)
@@ -175,18 +175,6 @@ public:
   /// @return plain pointer to associated with the position
   const TrackingVolume*
   trackingVolume(const Vector3D& gpos) const;
-
-  /// Return the next volume along the navigation stream
-  ///
-  /// @param pos is the glboal position associated with that search
-  /// @param dir is the direction for this search
-  /// @param pDir is an additional direction prescription
-  ///
-  /// @return the next associated tracking volume, nullptr if it does not exist
-  const TrackingVolume*
-  nextVolume(const Vector3D& pos,
-             const Vector3D& dir,
-             PropDirection   pDir = alongMomentum) const;
 
   /// Return the dynamically created vector of detached sub volumes
   ///
@@ -354,7 +342,7 @@ protected:
   /// Constructor for a container Volume
   /// - vacuum filled volume either as a for other tracking volumes
   ///
-  /// @param htrans is the global 3D transform to position the volume ins pace
+  /// @param htrans is the global 3D transform to position the volume in space
   /// @param volumeBounds is the description of the volume boundaries
   /// @param containedVolumes are the static volumes that fill this volume
   /// @param volumeName is a string identifier
@@ -367,7 +355,7 @@ protected:
 
   /// Constructor for a full equipped Tracking Volume
   ///
-  /// @param htrans is the global 3D transform to position the volume ins pace
+  /// @param htrans is the global 3D transform to position the volume in space
   /// @param volumeBounds is the description of the volume boundaries
   /// @param matprop is are materials of the tracking volume
   /// @param cLayerArray is the confined layer array (optional)

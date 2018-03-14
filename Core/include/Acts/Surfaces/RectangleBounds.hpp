@@ -106,6 +106,21 @@ private:
   double m_halfX, m_halfY;
 };
 
+inline bool
+RectangleBounds::inside(const Vector2D&      lpos,
+                        const BoundaryCheck& bcheck) const
+{
+  // fast check for Rectangle bounds & absolulte check 
+  if (bcheck.m_type == BoundaryCheck::Type::eAbsolute){
+    double tx = bcheck.m_tolerance.x();
+    double ty = bcheck.m_tolerance.y();
+    bool ilx = ((lpos.x()+tx)*(lpos.x()+tx))<(m_halfX*m_halfX);
+    return (ilx && ((lpos.y()+ty)*(lpos.y()+ty))<(m_halfY*m_halfY));
+  }
+  return bcheck.isInside(
+      lpos, -halflengthX(), halflengthX(), -halflengthY(), halflengthY());
+}
+
 inline double
 RectangleBounds::halflengthX() const
 {

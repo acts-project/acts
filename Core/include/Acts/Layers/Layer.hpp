@@ -262,6 +262,36 @@ public:
                      const Surface*                 endSurface   = nullptr,
                      const ICompatibilityEstimator* ice = nullptr) const;
 
+
+  /// get compatible surfaces starting from the parameters
+  ///
+  /// @param pars are the (charged) track parameters for the search
+  /// @param pdir is the propagation direction prescription
+  /// @param bcheck is the boundary check directive
+  /// @param collectSensitive is the prescription to find the sensitive surfaces
+  /// @param collectMaterial is the prescription to find surfaces with material
+  /// @param collectPassive is the prescription to find all passive surfaces
+  /// @param searchType is the level of depth for the search
+  /// @param startSurface is optional for the search: excluded in return
+  /// @param endSurface is optional for the search: excluded in return
+  /// @param ice is a (future) compatibility estimator that could be used to
+  /// modify the straight line approach
+  ///
+  /// @return the possible surface intersections
+  template <class T>
+  std::vector<SurfaceIntersection>
+  getCompatibleSurfaces(const T&                       pars,
+                        PropDirection                  pdir,
+                        const BoundaryCheck&           bcheck,
+                        bool                           collectSensitive,
+                        bool                           collectMaterial,
+                        bool                           collectPassive,
+                        int                            searchType,
+                        const Surface*                 startSurface = nullptr,
+                        const Surface*                 endSurface   = nullptr,
+                        const ICompatibilityEstimator* ice = nullptr) const;
+  
+
   /// Fast navigation to next layer
   ///
   /// @param pos is the start position for the search
@@ -315,34 +345,6 @@ protected:
         double                              thickness = 0.,
         std::unique_ptr<ApproachDescriptor> ad        = nullptr,
         LayerType                           ltype     = passive);
-
-  /// get compatible surfaces starting from the parameters
-  ///
-  /// @param pars are the (charged) track parameters for the search
-  /// @param pdir is the propagation direction prescription
-  /// @param bcheck is the boundary check directive
-  /// @param collectSensitive is the prescription to find the sensitive surfaces
-  /// @param collectMaterial is the prescription to find surfaces with material
-  /// @param collectPassive is the prescription to find all passive surfaces
-  /// @param searchType is the level of depth for the search
-  /// @param startSurface is optional for the search: excluded in return
-  /// @param endSurface is optional for the search: excluded in return
-  /// @param ice is a (future) compatibility estimator that could be used to
-  /// modify the straight line approach
-  ///
-  /// @return the possible surface intersections
-  template <class T>
-  std::vector<SurfaceIntersection>
-  getCompatibleSurfaces(const T&                       pars,
-                        PropDirection                  pdir,
-                        const BoundaryCheck&           bcheck,
-                        bool                           collectSensitive,
-                        bool                           collectMaterial,
-                        bool                           collectPassive,
-                        int                            searchType,
-                        const Surface*                 startSurface = nullptr,
-                        const Surface*                 endSurface   = nullptr,
-                        const ICompatibilityEstimator* ice = nullptr) const;
 
   /// test compatible surface - checking directly for intersection & collection
   ///

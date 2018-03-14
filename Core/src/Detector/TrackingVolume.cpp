@@ -134,36 +134,6 @@ Acts::TrackingVolume::trackingVolume(const Vector3D& gp) const
   return this;
 }
 
-const Acts::TrackingVolume*
-Acts::TrackingVolume::nextVolume(const Vector3D& gp,
-                                 const Vector3D& dir,
-                                 PropDirection   pDir) const
-{
-  // get the boundary surfaces & intersect them
-  const TrackingVolume* nVolume = 0;
-  // fix the direction once
-  bool     forceDir   = (pDir == alongMomentum || pDir == oppositeMomentum);
-  double   dirScalor  = (pDir == oppositeMomentum) ? -1. : 1.;
-  Vector3D cDir       = dirScalor * dir;
-  double   pathLength = 10e10;
-  // now loop through the and find the closest
-  auto bSurfaces = boundarySurfaces();
-  for (auto& bSurfIter : bSurfaces) {
-    // get the intersection soltuion
-    Intersection sfI = bSurfIter->surfaceRepresentation().intersectionEstimate(
-        gp, cDir, forceDir, true);
-    if (sfI.valid
-        && (sfI.pathLength * sfI.pathLength) < (pathLength * pathLength)) {
-      // assign the next Volume
-      PropDirection attachedDir
-          = sfI.pathLength > 0. ? alongMomentum : oppositeMomentum;
-      pathLength = sfI.pathLength;
-      nVolume    = bSurfIter->attachedVolume(gp, cDir, attachedDir);
-    }
-  }
-  return nVolume;
-}
-
 const Acts::DetachedVolumeVector*
 Acts::TrackingVolume::detachedTrackingVolumes(const Vector3D& gp,
                                               double          tol) const

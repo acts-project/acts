@@ -123,6 +123,7 @@ public:
            const Vector2D& upperRight) const;
 
 private:
+
   enum class Type {
     eNone,      ///< disable boundary check
     eAbsolute,  ///< absolute cut
@@ -175,6 +176,8 @@ private:
   Vector2D m_tolerance;
   Type     m_type;
 
+  // To acces the m_type
+  friend class RectangleBounds;
   // To be able to use `transformed`
   friend class CylinderBounds;
   friend class DiscTrapezoidalBounds;

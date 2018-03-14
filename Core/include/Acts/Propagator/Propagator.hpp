@@ -201,8 +201,11 @@ namespace propagation {
     {
       // check with surface_abort if it exists
       if (internal_stop_conditions(result, cache)) return Status::FAILURE;
+      
+      // Pre-stepping call to the action list
+      options.action_list(cache, result);
 
-      // Propagation loop
+      // Propagation loop : stepping 
       for (; result.steps < options.max_steps; ++result.steps) {
         // Perform a propagation step
         result.pathLength += m_impl.step(cache);
@@ -322,6 +325,7 @@ namespace propagation {
 
       // Initialize the internal propagation cache
       cache_type cache(start, options.direction * options.max_step_size);
+      cache.target_surface = &target;
 
       // Type of the full propagation result, including output from actions
       typedef action_list_result_t<return_parameter_type, Actions> result_type;

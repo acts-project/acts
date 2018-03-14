@@ -20,7 +20,6 @@
 
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/VariantData.hpp"
-#include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
   : GeometryObject(), Surface(other), m_bounds(other.m_bounds)
@@ -190,104 +189,6 @@ Acts::CylinderSurface::globalToLocal(const Vector3D& gpos,
   }
   // return true or false
   return ((std::abs(radius - bounds().r()) > inttol) ? false : true);
-}
-
-bool
-Acts::CylinderSurface::isOnSurface(const Acts::Vector3D& gpos,
-                                   const BoundaryCheck&  bcheck) const
-{
-  Acts::Vector3D loc3Dframe
-      = Acts::Surface::m_transform ? (transform().inverse()) * gpos : gpos;
-  return (bcheck ? bounds().inside3D(loc3Dframe, bcheck) : true);
-}
-
-Acts::Intersection
-Acts::CylinderSurface::intersectionEstimate(const Acts::Vector3D& gpos,
-                                            const Acts::Vector3D& gdir,
-                                            bool                  forceDir,
-                                            const BoundaryCheck&  bcheck) const
-{
-  bool needsTransform
-      = (Acts::Surface::m_transform || m_associatedDetElement) ? true : false;
-  // create the hep points
-  Vector3D point1    = gpos;
-  Vector3D direction = gdir;
-  if (needsTransform) {
-    Transform3D invTrans = transform().inverse();
-    point1               = invTrans * gpos;
-    direction            = invTrans.linear() * gdir;
-  }
-  Acts::Vector3D point2 = point1 + direction;
-  // the bounds radius
-  double R  = bounds().r();
-  double t1 = 0.;
-  double t2 = 0.;
-  if (direction.x()) {
-    // get line and circle constants
-    double k = (direction.y()) / (direction.x());
-    double d = (point2.x() * point1.y() - point1.x() * point2.y())
-        / (point2.x() - point1.x());
-    // and solve the qaudratic equation
-    detail::RealQuadraticEquation pquad(1 + k * k, 2 * k * d, d * d - R * R);
-    if (pquad.solutions == 2) {
-      // the solutions in the 3D frame of the cylinder
-      t1 = (pquad.first - point1.x()) / direction.x();
-      t2 = (pquad.second - point1.x()) / direction.x();
-    } else {  // bail out if no solution exists
-      return Intersection(gpos, 0., false);
-    }
-  } else {
-    // bail out if no solution exists
-    if (!direction.y()) return Intersection(gpos, 0., false);
-    // x value ise th one of point1
-    // x^2 + y^2 = R^2
-    // y = sqrt(R^2-x^2)
-    double x     = point1.x();
-    double r2mx2 = R * R - x * x;
-    // bail out if no solution
-    if (r2mx2 < 0.) return Intersection(gpos, 0., false);
-    double y = sqrt(r2mx2);
-    // assign parameters and solutions
-    t1 = (y - point1.y()) / direction.y();
-    t2 = (-y - point1.y()) / direction.y();
-  }
-  Vector3D sol1raw(point1 + t1 * direction);
-  Vector3D sol2raw(point1 + t2 * direction);
-  // now reorder and return
-  Vector3D solution(0, 0, 0);
-  double   path = 0.;
-
-  // first check the validity of the direction
-  bool isValid = true;
-
-  // both solutions are of same sign, take the smaller, but flag as false if not
-  // forward
-  if (t1 * t2 > 0 || !forceDir) {
-    // asign validity
-    isValid = forceDir ? (t1 > 0.) : true;
-    // assign the right solution
-    if (t1 * t1 < t2 * t2) {
-      solution = sol1raw;
-      path     = t1;
-    } else {
-      solution = sol2raw;
-      path     = t2;
-    }
-  } else {
-    if (t1 > 0.) {
-      solution = sol1raw;
-      path     = t1;
-    } else {
-      solution = sol2raw;
-      path     = t2;
-    }
-  }
-  // the solution is still in the local 3D frame, direct check
-  isValid = bcheck ? (isValid && bounds().inside3D(solution, bcheck)) : isValid;
-
-  // now return
-  return needsTransform ? Intersection((transform() * solution), path, isValid)
-                        : Intersection(solution, path, isValid);
 }
 
 std::string

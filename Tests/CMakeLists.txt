@@ -1,6 +1,7 @@
 add_subdirectory (Detector)
 add_subdirectory (EventData)
 add_subdirectory_if (Extrapolation ACTS_BUILD_LEGACY)
+add_subdirectory (Extrapolator)
 #add_subdirectory (Fitter)
 add_subdirectory (Layers)
 add_subdirectory (MagneticField)

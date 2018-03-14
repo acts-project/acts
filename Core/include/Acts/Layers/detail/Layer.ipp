@@ -34,6 +34,7 @@ Layer::getCompatibleSurfaces(const T&                       pars,
 
   // prepare the surface intersections for return
   std::vector<SurfaceIntersection> cSurfaces;
+  cSurfaces.reserve(20); 
 
   // fast exit - there is nothing to do nothing to do
   if (!m_surfaceArray || !m_approachDescriptor) return cSurfaces;
@@ -42,7 +43,7 @@ Layer::getCompatibleSurfaces(const T&                       pars,
   BoundaryCheck tCheck = searchType % 2 ? BoundaryCheck(false) : bcheck;
 
   // check if the parameter surface is already on the Layer
-  const Surface* tSurface = &(pars.referenceSurface());
+  // const Surface* tSurface = &(pars.referenceSurface());
 
   // position and momentum/dir
   const Vector3D& pos = pars.position();
@@ -144,7 +145,7 @@ Layer::getCompatibleSurfaces(const T&                       pars,
   // the layer surface itself is a testSurface
   const Surface* layerSurface = &surfaceRepresentation();
   // veto if it is the surface of the track parameter already
-  if (tSurface != layerSurface && layerSurface != startSurface
+  if (layerSurface != startSurface
       && layerSurface != endSurface
       && (collectPassive
           || (collectMaterial && layerSurface->associatedMaterial()))) {
@@ -183,5 +184,99 @@ Layer::testCompatibleSurface(std::vector<SurfaceIntersection>& cSurfaces,
     cSurfaces.push_back(SurfaceIntersection(sfIntersection, &surface, rDir));
   }
 }
+
+inline
+const SurfaceIntersection
+Layer::surfaceOnApproach(const Vector3D&            position,
+                         const Vector3D&            momentum,
+                         PropDirection              pDir,
+                         const BoundaryCheck&       bcheck,
+                         bool                       collectSensitive,
+                         bool                       collectMaterial,
+                         bool                       collectPassive,
+                         const ICompatibilityEstimator*) const
+{
+  // we need the approach surface when
+  // - collectPassive is on -> always
+  // - collectSensitive is on -> always
+  // - collectMaterial is on
+  //   && either sensitive or approach surfaces have material
+  bool collectPS = collectSensitive || collectPassive;
+  bool collectMS = collectMaterial
+      && (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1
+          || surfaceRepresentation().associatedMaterial());
+  // now of course this only counts when you have an approach descriptor
+  if (m_approachDescriptor && (collectPS || collectMS)) {
+    // that's the collect trigger for always collecting
+    // let's find the approach surface
+    SurfaceIntersection aSurface = m_approachDescriptor->approachSurface(
+        position, pDir * momentum.unit(), bcheck);
+    if (aSurface.intersection.valid) return (aSurface);
+  }
+  // create the intersection with the surface reprensentation
+  auto rIntersection = surfaceRepresentation().intersectionEstimate(
+      position, pDir * momentum.unit(), true, bcheck);
+  // return the result
+  return SurfaceIntersection(rIntersection, &surfaceRepresentation(), pDir);
+}
+
+inline
+bool
+Layer::isOnLayer(const Vector3D& gp,
+                       const BoundaryCheck&  bcheck) const
+{
+  return (surfaceRepresentation()).isOnSurface(gp, bcheck);
+}
+
+inline
+std::vector<SurfaceIntersection>
+Layer::compatibleSurfaces(const TrackParameters& pars,
+                          PropDirection          pdir,
+                          const BoundaryCheck&   bcheck,
+                          bool                   collectSensitive,
+                          bool                   collectMaterial,
+                          bool                   collectPassive,
+                          int                    searchType,
+                          const Surface*         startSurface,
+                          const Surface*         endSurface,
+                          const ICompatibilityEstimator* ice) const
+{
+  return getCompatibleSurfaces(pars,
+                               pdir,
+                               bcheck,
+                               collectSensitive,
+                               collectMaterial,
+                               collectPassive,
+                               searchType,
+                               startSurface,
+                               endSurface,
+                               ice);
+}
+
+inline
+std::vector<SurfaceIntersection>
+Layer::compatibleSurfaces(const NeutralParameters& pars,
+                          PropDirection            pdir,
+                          const BoundaryCheck&     bcheck,
+                          bool                     collectSensitive,
+                          bool                     collectMaterial,
+                          bool                     collectPassive,
+                          int                      searchType,
+                          const Surface*           startSurface,
+                          const Surface*           endSurface,
+                          const ICompatibilityEstimator* ice) const
+{
+  return getCompatibleSurfaces(pars,
+                               pdir,
+                               bcheck,
+                               collectSensitive,
+                               collectMaterial,
+                               collectPassive,
+                               searchType,
+                               startSurface,
+                               endSurface,
+                               ice);
+}
+
 
 }  // end of namespace Acts

@@ -251,11 +251,11 @@ namespace Test {
     null_options_type null_options;
     // todo write null options test
 
-    typedef ActionList<PerpendicularMeasure> ObsList_type;
+    typedef ActionList<PerpendicularMeasure> ActionList_type;
     typedef AbortList<>                      AbortConditions_type;
 
     typedef typename Propagator<EigenStepper_type>::
-        template Options<ObsList_type, AbortConditions_type>
+        template Options<ActionList_type, AbortConditions_type>
             options_type;
 
     options_type options;
@@ -286,11 +286,11 @@ namespace Test {
     double dcharge = -1 + 2 * charge;
     (void)index;
 
-    typedef ActionList<PerpendicularMeasure> ObsList_type;
+    typedef ActionList<PerpendicularMeasure> ActionList_type;
     typedef AbortList<>                      AbortConditions_type;
 
     // setup propagation options
-    typename EigenPropagator_type::template Options<ObsList_type,
+    typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
         options;
 
@@ -346,11 +346,11 @@ namespace Test {
     (void)index;
 
     typedef SurfaceObserver<CylinderSurface> CylinderObserver;
-    typedef ActionList<CylinderObserver>     ObsList_type;
+    typedef ActionList<CylinderObserver>     ActionList_type;
     typedef AbortList<>                      AbortConditions_type;
 
     // setup propagation options
-    typename EigenPropagator_type::template Options<ObsList_type,
+    typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
         options;
 
@@ -547,11 +547,11 @@ namespace Test {
 
     // to get the covariances agree, we need an Observer that does the
     // scattering
-    typedef ActionList<PathScatterer> ObsList_type;
+    typedef ActionList<PathScatterer> ActionList_type;
     typedef AbortList<>               AbortConditions_type;
 
     // setup propagation options - the 1 step with scattering optios
-    typename EigenPropagator_type::template Options<ObsList_type,
+    typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
           options_1s_s;
     auto& _s       = options_1s_s.action_list.get<PathScatterer>();
@@ -742,11 +742,11 @@ namespace Test {
 
     // to get the covariances agree, we need an Observer that does the
     // scattering
-    typedef ActionList<CylinderScatterer> ObsList_type;
+    typedef ActionList<CylinderScatterer> ActionList_type;
     typedef AbortList<>                   AbortConditions_type;
 
     // setup propagation options - the 1 step with scattering optios
-    typename EigenPropagator_type::template Options<ObsList_type,
+    typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
         options_1s_s;
     options_1s_s.max_step_size = 1 * units::_cm;

@@ -56,6 +56,15 @@ public:
     // maximal step size of the runge-kutta integration
     double max_step_size = std::numeric_limits<double>::max();
 
+    /// Navigation cache: the start surface
+    const Surface* start_surface       = nullptr;
+    
+    /// Navigation cache: the current surface
+    const Surface* current_surface     = nullptr;
+    
+    /// Navigation cache: the target surface
+    const Surface* target_surface      = nullptr;
+
     Vector3D
     position() const
     {

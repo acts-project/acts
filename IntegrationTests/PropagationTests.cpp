@@ -47,7 +47,6 @@ namespace IntegrationTest {
   typedef Propagator<EigenStepper_type> EigenPropagator_type;
   typedef Propagator<AtlasStepper_type> AtlasPropagator_type;
   typedef RungeKuttaEngine<BField_type> PropagationEngine_type;
-
   typedef Wrapper<std::shared_ptr<PropagationEngine_type>>
       WrappedPropagator_type;
 
