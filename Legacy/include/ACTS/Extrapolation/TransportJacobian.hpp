@@ -1,17 +1,19 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2017 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// TransportJacobian.h, Acts project
+// TransportJacobian.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#pragma once
-#include "Acts/Utilities/Definitions.hpp"
+#ifndef ACTS_EXTRAPOLATIONUTILS_TRANSPORTJACOBIAN_H
+#define ACTS_EXTRAPOLATIONUTILS_TRANSPORTJACOBIAN_H 1
+
+#include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -63,3 +65,5 @@ std::ostream&
 operator<<(std::ostream& sl, const TransportJacobian& jac);
 
 }  // end of namespace
+
+#endif  // ACTS_EXTRAPOLATIONUTILS_TRANSPORTJACOBIAN_H
