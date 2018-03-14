@@ -34,7 +34,7 @@ Layer::getCompatibleSurfaces(const T&                       pars,
 
   // prepare the surface intersections for return
   std::vector<SurfaceIntersection> cSurfaces;
-  cSurfaces.reserve(20); 
+  cSurfaces.reserve(20);
 
   // fast exit - there is nothing to do nothing to do
   if (!m_surfaceArray || !m_approachDescriptor) return cSurfaces;
@@ -145,8 +145,7 @@ Layer::getCompatibleSurfaces(const T&                       pars,
   // the layer surface itself is a testSurface
   const Surface* layerSurface = &surfaceRepresentation();
   // veto if it is the surface of the track parameter already
-  if (layerSurface != startSurface
-      && layerSurface != endSurface
+  if (layerSurface != startSurface && layerSurface != endSurface
       && (collectPassive
           || (collectMaterial && layerSurface->associatedMaterial()))) {
     testCompatibleSurface(
@@ -185,15 +184,14 @@ Layer::testCompatibleSurface(std::vector<SurfaceIntersection>& cSurfaces,
   }
 }
 
-inline
-const SurfaceIntersection
-Layer::surfaceOnApproach(const Vector3D&            position,
-                         const Vector3D&            momentum,
-                         PropDirection              pDir,
-                         const BoundaryCheck&       bcheck,
-                         bool                       collectSensitive,
-                         bool                       collectMaterial,
-                         bool                       collectPassive,
+inline const SurfaceIntersection
+Layer::surfaceOnApproach(const Vector3D&      position,
+                         const Vector3D&      momentum,
+                         PropDirection        pDir,
+                         const BoundaryCheck& bcheck,
+                         bool                 collectSensitive,
+                         bool                 collectMaterial,
+                         bool                 collectPassive,
                          const ICompatibilityEstimator*) const
 {
   // we need the approach surface when
@@ -220,25 +218,22 @@ Layer::surfaceOnApproach(const Vector3D&            position,
   return SurfaceIntersection(rIntersection, &surfaceRepresentation(), pDir);
 }
 
-inline
-bool
-Layer::isOnLayer(const Vector3D& gp,
-                       const BoundaryCheck&  bcheck) const
+inline bool
+Layer::isOnLayer(const Vector3D& gp, const BoundaryCheck& bcheck) const
 {
   return (surfaceRepresentation()).isOnSurface(gp, bcheck);
 }
 
-inline
-std::vector<SurfaceIntersection>
-Layer::compatibleSurfaces(const TrackParameters& pars,
-                          PropDirection          pdir,
-                          const BoundaryCheck&   bcheck,
-                          bool                   collectSensitive,
-                          bool                   collectMaterial,
-                          bool                   collectPassive,
-                          int                    searchType,
-                          const Surface*         startSurface,
-                          const Surface*         endSurface,
+inline std::vector<SurfaceIntersection>
+Layer::compatibleSurfaces(const TrackParameters&         pars,
+                          PropDirection                  pdir,
+                          const BoundaryCheck&           bcheck,
+                          bool                           collectSensitive,
+                          bool                           collectMaterial,
+                          bool                           collectPassive,
+                          int                            searchType,
+                          const Surface*                 startSurface,
+                          const Surface*                 endSurface,
                           const ICompatibilityEstimator* ice) const
 {
   return getCompatibleSurfaces(pars,
@@ -253,17 +248,16 @@ Layer::compatibleSurfaces(const TrackParameters& pars,
                                ice);
 }
 
-inline
-std::vector<SurfaceIntersection>
-Layer::compatibleSurfaces(const NeutralParameters& pars,
-                          PropDirection            pdir,
-                          const BoundaryCheck&     bcheck,
-                          bool                     collectSensitive,
-                          bool                     collectMaterial,
-                          bool                     collectPassive,
-                          int                      searchType,
-                          const Surface*           startSurface,
-                          const Surface*           endSurface,
+inline std::vector<SurfaceIntersection>
+Layer::compatibleSurfaces(const NeutralParameters&       pars,
+                          PropDirection                  pdir,
+                          const BoundaryCheck&           bcheck,
+                          bool                           collectSensitive,
+                          bool                           collectMaterial,
+                          bool                           collectPassive,
+                          int                            searchType,
+                          const Surface*                 startSurface,
+                          const Surface*                 endSurface,
                           const ICompatibilityEstimator* ice) const
 {
   return getCompatibleSurfaces(pars,
@@ -277,6 +271,5 @@ Layer::compatibleSurfaces(const NeutralParameters& pars,
                                endSurface,
                                ice);
 }
-
 
 }  // end of namespace Acts

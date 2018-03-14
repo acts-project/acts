@@ -262,7 +262,6 @@ public:
                      const Surface*                 endSurface   = nullptr,
                      const ICompatibilityEstimator* ice = nullptr) const;
 
-
   /// get compatible surfaces starting from the parameters
   ///
   /// @param pars are the (charged) track parameters for the search
@@ -290,7 +289,6 @@ public:
                         const Surface*                 startSurface = nullptr,
                         const Surface*                 endSurface   = nullptr,
                         const ICompatibilityEstimator* ice = nullptr) const;
-  
 
   /// Fast navigation to next layer
   ///

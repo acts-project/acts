@@ -266,22 +266,20 @@ CylinderSurface::rotSymmetryAxis() const
   return transform().matrix().block<3, 1>(0, 2);
 }
 
-inline
-bool
-CylinderSurface::isOnSurface(const Vector3D& gpos,
-                                   const BoundaryCheck&  bcheck) const
+inline bool
+CylinderSurface::isOnSurface(const Vector3D&      gpos,
+                             const BoundaryCheck& bcheck) const
 {
   Vector3D loc3Dframe
       = Surface::m_transform ? (transform().inverse()) * gpos : gpos;
   return (bcheck ? bounds().inside3D(loc3Dframe, bcheck) : true);
 }
 
-inline
-Intersection
-CylinderSurface::intersectionEstimate(const Vector3D& gpos,
-                                            const Vector3D& gdir,
-                                            bool                  forceDir,
-                                            const BoundaryCheck&  bcheck) const
+inline Intersection
+CylinderSurface::intersectionEstimate(const Vector3D&      gpos,
+                                      const Vector3D&      gdir,
+                                      bool                 forceDir,
+                                      const BoundaryCheck& bcheck) const
 {
   bool needsTransform
       = (Surface::m_transform || m_associatedDetElement) ? true : false;

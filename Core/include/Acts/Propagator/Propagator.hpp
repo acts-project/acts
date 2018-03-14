@@ -201,11 +201,11 @@ namespace propagation {
     {
       // check with surface_abort if it exists
       if (internal_stop_conditions(result, cache)) return Status::FAILURE;
-      
+
       // Pre-stepping call to the action list
       options.action_list(cache, result);
 
-      // Propagation loop : stepping 
+      // Propagation loop : stepping
       for (; result.steps < options.max_steps; ++result.steps) {
         // Perform a propagation step
         result.pathLength += m_impl.step(cache);

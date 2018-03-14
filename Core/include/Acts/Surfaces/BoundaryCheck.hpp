@@ -123,7 +123,6 @@ public:
            const Vector2D& upperRight) const;
 
 private:
-
   enum class Type {
     eNone,      ///< disable boundary check
     eAbsolute,  ///< absolute cut

@@ -18,8 +18,8 @@
 #include <boost/test/output_test_stream.hpp>
 // leave blank line
 
-#include "ExtrapolatorTestGeometry.hpp"
 #include "ACTS/EventData/TrackParameters.hpp"
+#include "ACTS/Extrapolator/Navigator.hpp"
 #include "ACTS/MagneticField/ConstantBField.hpp"
 #include "ACTS/Propagator/ActionList.hpp"
 #include "ACTS/Propagator/EigenStepper.hpp"
@@ -27,7 +27,7 @@
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
-#include "ACTS/Extrapolator/Navigator.hpp"
+#include "ExtrapolatorTestGeometry.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -52,11 +52,11 @@ namespace Test {
   EigenStepper_type    estepper(bField);
   EigenPropagator_type epropagator(std::move(estepper));
 
-  std::vector< std::unique_ptr<const Surface > > sCache;
-  auto tGeometry = testGeometry(sCache);
+  std::vector<std::unique_ptr<const Surface>> sCache;
+  auto                                        tGeometry = testGeometry(sCache);
 
-  const int ntests = 10000;
-  bool debug_mode  = false;
+  const int ntests     = 10000;
+  bool      debug_mode = false;
 
   // This test case checks that no segmentation fault appears
   BOOST_DATA_TEST_CASE(
@@ -84,7 +84,7 @@ namespace Test {
 
     double dcharge = -1 + 2 * charge;
     (void)index;
-    
+
     // define start parameters
     double   x  = 0;
     double   y  = 0;
@@ -103,34 +103,32 @@ namespace Test {
         1. / (10 * units::_GeV);
     auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
     CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
-    
+
     // Action list and abort list
     typedef ActionList<Navigator> ActionList_type;
     typedef AbortList<>           AbortConditions_type;
-    
+
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
-    navigator_options;
-    navigator_options.max_step_size   = 10. * units::_cm;
+        navigator_options;
+    navigator_options.max_step_size = 10. * units::_cm;
 
     navigator_options.max_path_length = 25 * units::_cm;
-    
+
     // get the navigator and provide the TrackingGeometry
-    auto& navigator = navigator_options.action_list.get<Navigator>();
+    auto& navigator            = navigator_options.action_list.get<Navigator>();
     navigator.trackingGeometry = tGeometry;
-    navigator.debug = debug_mode;
-    navigator.collectSensitive = true; 
+    navigator.debug            = debug_mode;
+    navigator.collectSensitive = true;
     navigator.collectMaterial  = true;
     navigator.collectPassive   = false;
-    
-    const auto& result
-        = epropagator.propagate(start, navigator_options);
+
+    const auto& result = epropagator.propagate(start, navigator_options);
 
     auto navigator_result = result.get<Navigator::result_type>();
-    if (debug_mode){
+    if (debug_mode) {
       std::cout << navigator_result.debug_string << std::endl;
     }
-
   }
 
 }  // namespace Test
