@@ -74,10 +74,22 @@ namespace extrapolation {
   /// This is an Actor to be added to the ActorList in order to navigate
   /// through the static tracking geometry setup.
   ///
-  /// The current navigation stage is cached in the result
-  /// and updated when ever necessary. If any surface in the extrapolation
-  /// flow is hit, it is set to the cache, such that other actors can
-  /// deal wit it.
+  /// The current navigation stage is cached in the result / and updated when
+  /// ever necessary. If any surface in the extrapolation / flow is hit, it is
+  /// set to the cache, such that other actors can / deal wit it.  / This actor
+  /// always needs to run first!  / It does two things: it figures out the order
+  /// of volumes, layers and / surfaces.  / For each propagation step, the
+  /// operator() runs, which checks if the / current / surface (or layer or
+  /// volume boundary) is reached via isOnSurface.  / The current target surface
+  /// is the surface pointed to by of the iterators / for the surfaces, layers
+  /// or
+  /// volume boundaries.  / If a surface is found, the cache.current_surface
+  /// pointer is set. This / enables subsequent actors to react. Secondly, this
+  /// actor uses the ordered / iterators / to figure out which surface, layer or
+  /// volume boundary is _supposed_ to be / hit / next. It then sets the maximum
+  /// step size to the path length found out by / straight line intersection. If
+  /// the isOnSurface call fails, it also / re-computes / the step size, to make
+  /// sure we end up at the desired surface.
   struct Navigator
   {
     /// Tracking Geometry for this Navigator
@@ -159,7 +171,11 @@ namespace extrapolation {
 
       // Navigation initialisation
       // -------------------------------------------------
-      // check for navigation initialisation & do it if necessary
+      // Vheck for navigation initialisation & do it if necessary.  This means
+      // we do not have an active volume yet (since we just started).  We get
+      // the innermost volume, and set up an ordered layer iterator and step
+      // size toward the first layer.  The return prevent execution of the
+      // subsequent logic, we want to make a step first.
       if (!result.current_volume) {
         result.current_volume
             = trackingGeometry->lowestTrackingVolume(cache.pos);
@@ -190,12 +206,17 @@ namespace extrapolation {
 
       // Navigation through surfaces
       // -----------------------------------------------
-      // check if there are surfaces to be processed
+      // If we are currently iterating over surfaces, we get the current one
+      // pointed at by the iterator here.  This is the main routine that
+      // advances through the surfaces in order.
       if (result.nav_surface_iter != result.nav_surfaces.end()) {
         auto surface = result.nav_surface_iter->object;
         // @todo : we should have a good idea if this check is already to be
         // done
         // @todo : add tolerance
+        // If we are on the surface pointed at by the iterator, we can make
+        // it the current one to pass it to the other actors.
+        // Also make iterator point to the next one.
         if (surface->isOnSurface(cache.pos, true)) {
           VLOG(result, "Surface successfully, storing it.");
           // the surface will only appear due to correct
@@ -204,7 +225,12 @@ namespace extrapolation {
           // swith to the next candidate
           ++result.nav_surface_iter;
         }
-        // check if we still have a candidate here
+
+        // Check if we still have a candidate here. If we previously found a
+        // surface and advanced the iterator, we want to check here if there is
+        // another one, and if so update the step size accordingly. If there is
+        // a next surface but we don't intersect, we skip it.  If we intersect,
+        // we terminate this call by returning.
         if (result.nav_surface_iter != result.nav_surfaces.end()) {
           // update to the new surface
           /// @todo: in straight line case, we can re-use
@@ -224,6 +250,8 @@ namespace extrapolation {
         }
 
         // the surface iterator may have been updated
+        // If we skipped and are now out of surfaces, we
+        // switch to the next layer, and set the step size accordingly
         if (result.nav_surface_iter == result.nav_surfaces.end()) {
           result.nav_surfaces.clear();
           result.nav_surface_iter = result.nav_surfaces.end();
@@ -246,7 +274,14 @@ namespace extrapolation {
 
       // Navigation through layers
       // -------------------------------------------------
-      // check if there are layers to be processed
+      // We are now trying to advance to the next layer (with surfaces)
+      // Check if we are on the representing surface of the layer pointed
+      // at by nav_layer_iter. If so, we unpack the compatible surfaces
+      // (determined by straight line intersect), and set up the iterator
+      // so that the next call to operator() will enter the surface
+      // check mode above. If no surfaces are found, we skip the layer.
+      // If we unpack a surface, the step size is set to the path length
+      // to the first surface, as determined by straight line intersect.
       if (result.nav_layer_iter != result.nav_layers.end()) {
         auto layer_surface = result.nav_layer_iter->representation;
         // check if we are on already on surface: we should have a good idea
@@ -255,6 +290,8 @@ namespace extrapolation {
         if (layer_surface->isOnSurface(cache.pos, true)) {
           VLOG(result, "Layer reached, prepare surfaces to be processed.");
           // collect if configured to do so
+          // if we don't set this here, the rest of the actors
+          // will not process this surface
           if ((layer_surface->associatedMaterial() && collectMaterial)
               || collectPassive)
             cache.current_surface = layer_surface;
@@ -293,7 +330,10 @@ namespace extrapolation {
             }
           }
         }
-        // run the step estimation for the (next) layer
+
+        // If we skipped the layer above, and we have a next one,
+        // we check if straight line intersects, and if so, set the
+        // max step size. If not, we skip the layer.
         if (result.nav_layer_iter != result.nav_layers.end()) {
           layer_surface        = result.nav_layer_iter->representation;
           auto layer_intersect = layer_surface->intersectionEstimate(
@@ -309,7 +349,13 @@ namespace extrapolation {
                  "Step size towards layer updated to " << cache.step_size);
           }
         }
-        // the layer may have chagned, check if we are at the end of it
+
+        // If we skipped above and the layer pointed at by the iterator
+        // is the last one, we are done with this volume. We clear the
+        // layer and surface iterators, and get the current volumes boundaries
+        // to determine which one is the next volume.
+        // We set up the boundary iterator and initialize the step size
+        // to the straigh line path length to the first boundary surface
         if (result.nav_layer_iter == result.nav_layers.end()) {
           // clear the navigation layers of the last volume
           result.nav_layers.clear();
@@ -330,8 +376,23 @@ namespace extrapolation {
         }
       }
 
-      // Navigation through volumes ---------------------------------------
-      // navigation boundaries to work off
+      // Navigation through volumes
+      // -------------------------------------------------
+      // This is the boundary check routine. If the code above set up the
+      // boundary surface iterator, we advance through them here. If we are on
+      // the boundary surface, we set the current surface to the boundary
+      // surface, and get the volume pointed at by the boundary surface.  Next
+      // we unpack the layers from that volume. If the volume contains layers
+      // we set the step size to the straight line path length to the first
+      // layer.  If we don't find a next volume, the navigation_break indicator
+      // is set.  This ends the navigation. Finally, the boundary iterator is
+      // cleared, so that the subsequent call goes back to the layer iteration
+      // logic.
+      //
+      // If we are not on the current boundary surface, we try the next one.
+      // The iterator is advanced and the step size is set. If no straight line
+      // intersect if found, the boundary surface is skipped.  If we are out of
+      // boundary surfaces, the navigation is terminated.
       if (result.nav_boundary_iter != result.nav_boundaries.end()) {
         auto boundary_surface = result.nav_boundary_iter->representation;
         // check if we are on already in this step @todo add tolerance
@@ -342,6 +403,7 @@ namespace extrapolation {
           result.current_volume
               = boundary->attachedVolume(cache.pos, cache.dir, nav_dir);
           // store the boundary if configured to do so
+          // If we don't set it here, it wont be processed by the other actors.
           if ((boundary_surface->associatedMaterial() && collectMaterial)
               || collectPassive)
             cache.current_surface = boundary_surface;
