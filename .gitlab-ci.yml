@@ -248,3 +248,14 @@ website:
     - CI/deploy_tag . build/doc/html "acts-developers@cern.ch acts-users@cern.ch"
   only:
     - tags
+
+coverage_deploy:
+  stage: deploy
+  dependencies:
+    - unit_tests_slc6_lcg91
+  script:
+    - unset PYTHONHOME
+    - echo "$ATSJENKINS_PASSWORD" | kinit atsjenkins@CERN.CH 2>&1 >/dev/null
+    - CI/publish_coverage.py
+    - kdestroy
+
