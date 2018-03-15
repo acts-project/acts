@@ -171,7 +171,7 @@ namespace extrapolation {
 
       // Navigation initialisation
       // -------------------------------------------------
-      // Vheck for navigation initialisation & do it if necessary.  This means
+      // Check for navigation initialisation & do it if necessary.  This means
       // we do not have an active volume yet (since we just started).  We get
       // the innermost volume, and set up an ordered layer iterator and step
       // size toward the first layer.  The return prevent execution of the
