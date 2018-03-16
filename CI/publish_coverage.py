@@ -6,6 +6,8 @@ import argparse
 import subprocess as sp
 import requests
 from urllib import quote_plus
+from urlparse import urljoin
+import tempfile
 
 p = argparse.ArgumentParser()
 p.add_argument("--commit-hash", default=os.environ["CI_COMMIT_SHA"])
@@ -23,6 +25,8 @@ commit_slug = COMMIT_HASH[:7]
 coverage_base = os.path.join(WEBSITE_ROOT, "coverage")
 coverage_dest = os.path.join(coverage_base, commit_slug)
 coverage_src = os.path.join(os.getcwd(), "build/coverage/")
+base_public_url = "https://acts.web.cern.ch/ACTS/coverage/"
+latest_coverage_url = urljoin(base_public_url, commit_slug)
 
 print("Going to deploy coverage for", COMMIT_HASH, "to", coverage_dest)
 
@@ -38,6 +42,26 @@ print(sp.check_output(mkdir_cmd, shell=True))
 copy_cmd = "rsync -e \"ssh -F {}\" -ruv {} atsjenkins@lxplus.cern.ch:{}".format(ssh_config_file, coverage_src, coverage_dest)
 print(copy_cmd)
 print(sp.check_output(copy_cmd, shell=True))
+
+with tempfile.NamedTemporaryFile(mode="w+") as f:
+    print(f.name)
+    content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta http-equiv="refresh" content="0; url={0}" />
+    </head>
+    <body>
+    Redirecting to <a href"{0}">{0}</a>
+    </body>
+    </html>
+    """
+    f.write(content.format(latest_coverage_url))
+    f.flush()
+    index_dest = os.path.join(coverage_base, "index.html")
+    scp_cmd = "scp -F {} {} atsjenkins@lxplus.cern.ch:{}".format(ssh_config_file, f.name, index_dest)
+    print(scp_cmd)
+    print(sp.check_output(scp_cmd, shell=True))
 
 
 # figure out what's deployed right now
