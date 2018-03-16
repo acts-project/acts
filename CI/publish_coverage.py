@@ -9,8 +9,17 @@ from urllib import quote_plus
 from urlparse import urljoin
 import tempfile
 
+def env_or_val(key, default):
+    if key in os.environ:
+        return os.environ[key]
+    else:
+        return default
+
 p = argparse.ArgumentParser()
 p.add_argument("--commit-hash", default=os.environ["CI_COMMIT_SHA"])
+p.add_argument("--coverage-commit-limit", default=int(env_or_val("COVERAGE_COMMIT_LIMIT", 10)), type=int)
+p.add_argument("--website-root", default=env_or_val("COVERAGE_WEBSITE_ROOT", "/eos/user/a/atsjenkins/www/ACTS"))
+p.add_argument("--website-public-url", default=env_or_val("COVERAGE_WEBSITE_URL", "https://acts.web.cern.ch/ACTS/coverage/"))
 
 args = p.parse_args()
 
@@ -18,17 +27,18 @@ def ssh_cmd(cmd):
     return "ssh atsjenkins@lxplus.cern.ch -F {} \"{}\"".format(ssh_config_file, cmd)
 
 COMMIT_HASH = args.commit_hash
-coverage_commit_limit = 10
-WEBSITE_ROOT = "/eos/user/a/atsjenkins/www/ACTS"
+coverage_commit_limit = args.coverage_commit_limit
+WEBSITE_ROOT = args.website_root
 ssh_config_file = os.path.join(os.path.dirname(__file__), "ssh_config")
 commit_slug = COMMIT_HASH[:7]
 coverage_base = os.path.join(WEBSITE_ROOT, "coverage")
 coverage_dest = os.path.join(coverage_base, commit_slug)
 coverage_src = os.path.join(os.getcwd(), "build/coverage/")
-base_public_url = "https://acts.web.cern.ch/ACTS/coverage/"
+base_public_url = args.website_public_url
 latest_coverage_url = urljoin(base_public_url, commit_slug)
 
 print("Going to deploy coverage for", COMMIT_HASH, "to", coverage_dest)
+print("Will be publicly available under", latest_coverage_url)
 
 if not os.path.exists(coverage_src):
     print("Coverage path does not exist")
