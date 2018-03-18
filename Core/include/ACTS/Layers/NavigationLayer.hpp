@@ -16,6 +16,7 @@
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Utilities/BinnedArray.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -41,6 +42,9 @@ public:
   {
     return LayerPtr(new NavigationLayer(std::move(sRepresentation), thickness));
   }
+
+  static LayerPtr
+  create(const variant_data& data);
 
   /// Destructor
   virtual ~NavigationLayer();
@@ -93,6 +97,9 @@ public:
   /// @return a boolean whether the layer is accepted for processing
   bool
   resolve(bool, bool, bool) const final override;
+
+  variant_data
+  toVariantData() const;
 
 protected:
   /// Private Constructor

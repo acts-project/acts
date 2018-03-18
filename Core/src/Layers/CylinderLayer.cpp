@@ -19,6 +19,8 @@
 #include "ACTS/Volumes/AbstractVolume.hpp"
 #include "ACTS/Volumes/BoundarySurfaceFace.hpp"
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
+#include "ACTS/Utilities/InstanceFactory.hpp"
 
 Acts::CylinderLayer::CylinderLayer(
     std::shared_ptr<const Transform3D>    transform,
@@ -177,29 +179,42 @@ Acts::CylinderLayer::toVariantData() const
   using namespace std::string_literals;
   variant_map payload;
 
-  payload["transform"] = to_variant(*m_transform);
+  if(m_transform == nullptr) {
+    payload["transform"] = to_variant(Transform3D::Identity());
+  }
+  else {
+    payload["transform"] = to_variant(*m_transform);
+  }
 
   // we need to recover the bounds
   const AbstractVolume* absVol = representingVolume();
+  std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
   auto                  cvBounds
       = dynamic_cast<const CylinderVolumeBounds*>(&absVol->volumeBounds());
 
+  std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
   double cylR = cvBounds->innerRadius() + 0.5 * thickness();
   double hlZ  = cvBounds->halflengthZ();
 
+  std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
   CylinderBounds cylBounds(cylR, hlZ);
 
+  std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
   const variant_data bounds  = cylBounds.toVariantData();
+  std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
   payload["cylinder_bounds"] = bounds;
 
   payload["thickness"] = thickness();
 
+  std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
   if (layerType() == active)
     payload["layer_type"] = "active"s;
   else if (layerType() == passive)
     payload["layer_type"] = "passive"s;
   else /*layerType() == navigation*/
     payload["layer_type"] = "navigation"s;
+
+  std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
 
   // this lacks localToGlobal and globalToLocal
   if (m_surfaceArray) {

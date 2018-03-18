@@ -23,6 +23,9 @@
 #include "ACTS/Tools/SurfaceArrayCreator.hpp"
 #include "ACTS/Volumes/CuboidVolumeBounds.hpp"
 #include "LayerStub.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
+#include "ACTS/Surfaces/RectangleBounds.hpp"
+#include "ACTS/Surfaces/PlaneSurface.hpp"
 
 using boost::test_tools::output_test_stream;
 namespace utf = boost::unit_test;
@@ -70,6 +73,29 @@ namespace Test {
       // resolve()
       BOOST_CHECK(pNavigationLayer->resolve(true, true, true) == false);
     }
+
+    BOOST_AUTO_TEST_CASE(NavigationLayer_toVariantData)
+    {
+      const double thickness = 0.1;
+      double w = 5, h = 10;
+      auto rbounds = std::make_shared<const RectangleBounds>(w, h);
+      auto trf = std::make_shared<const Transform3D>(Translation3D(0, 0, 5));
+      auto pSurface = std::make_unique<const PlaneSurface>(trf, rbounds);
+      auto         pNavigationLayer
+          = std::dynamic_pointer_cast<const NavigationLayer>(NavigationLayer::create(std::move(pSurface), thickness));
+
+      variant_data var_data = pNavigationLayer->toVariantData();
+      std::cout << var_data << std::endl;
+
+      auto pNavigationLayer2 = std::dynamic_pointer_cast<const NavigationLayer>(NavigationLayer::create(var_data));
+      std::cout << pNavigationLayer2->toVariantData() << std::endl;
+      
+      auto rbounds2 = dynamic_cast<const RectangleBounds*>(&pNavigationLayer2->surfaceRepresentation().bounds());
+      BOOST_TEST(trf->isApprox(pNavigationLayer2->surfaceRepresentation().transform()));
+      BOOST_TEST(rbounds2->halflengthX() == w);
+      BOOST_TEST(rbounds2->halflengthY() == h);
+    }
+      
 
     BOOST_AUTO_TEST_SUITE_END()
   }  // end of namespace Layers

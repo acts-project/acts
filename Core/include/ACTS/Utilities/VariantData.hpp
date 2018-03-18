@@ -142,7 +142,7 @@ public:
   }
 
   void
-  push_back(variant_data&& data)
+  push_back(const variant_data& data)
   {
     m_vector.push_back(data);
   }
