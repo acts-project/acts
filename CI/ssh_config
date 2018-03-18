@@ -1,0 +1,4 @@
+GSSAPIAuthentication yes
+GSSAPITrustDNS yes
+StrictHostKeyChecking no
+GSSAPIDelegateCredentials yes
