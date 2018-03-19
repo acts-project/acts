@@ -49,7 +49,9 @@ Acts::NavigationLayer::create(const variant_data& data_)
   return NavigationLayer::create(std::move(surface), thickness);
 }
 
-Acts::NavigationLayer::~NavigationLayer() {}
+Acts::NavigationLayer::~NavigationLayer()
+{
+}
 
 bool
 Acts::NavigationLayer::resolve(bool, bool, bool) const
@@ -64,7 +66,7 @@ Acts::NavigationLayer::toVariantData() const
   variant_map payload;
 
   payload["surface_representation"] = m_surfaceRepresentation->toVariantData();
-  payload["thickness"] = thickness();
+  payload["thickness"]              = thickness();
 
   variant_map data;
   data["type"]    = "NavigationLayer"s;

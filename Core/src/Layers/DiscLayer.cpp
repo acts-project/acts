@@ -180,7 +180,9 @@ Acts::DiscLayer::toVariantData() const
   using namespace std::string_literals;
   variant_map payload;
 
-  payload["transform"] = to_variant(*m_transform);
+  if (m_transform) {
+    payload["transform"] = to_variant(*m_transform);
+  }
 
   // we need to recover the bounds
   const AbstractVolume* absVol = representingVolume();

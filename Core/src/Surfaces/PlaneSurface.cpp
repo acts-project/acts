@@ -211,6 +211,8 @@ Acts::PlaneSurface::toVariantData() const
 
   if (m_transform) {
     payload["transform"] = to_variant(*m_transform);
+  } else if (m_associatedDetElement) {
+    payload["transform"] = to_variant(m_associatedDetElement->transform());
   }
 
   variant_map data;

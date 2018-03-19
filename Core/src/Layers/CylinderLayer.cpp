@@ -16,11 +16,11 @@
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/InstanceFactory.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 #include "ACTS/Volumes/AbstractVolume.hpp"
 #include "ACTS/Volumes/BoundarySurfaceFace.hpp"
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
-#include "ACTS/Utilities/InstanceFactory.hpp"
 
 Acts::CylinderLayer::CylinderLayer(
     std::shared_ptr<const Transform3D>    transform,
@@ -179,17 +179,16 @@ Acts::CylinderLayer::toVariantData() const
   using namespace std::string_literals;
   variant_map payload;
 
-  if(m_transform == nullptr) {
+  if (m_transform == nullptr) {
     payload["transform"] = to_variant(Transform3D::Identity());
-  }
-  else {
+  } else {
     payload["transform"] = to_variant(*m_transform);
   }
 
   // we need to recover the bounds
   const AbstractVolume* absVol = representingVolume();
   std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
-  auto                  cvBounds
+  auto cvBounds
       = dynamic_cast<const CylinderVolumeBounds*>(&absVol->volumeBounds());
 
   std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
@@ -200,7 +199,7 @@ Acts::CylinderLayer::toVariantData() const
   CylinderBounds cylBounds(cylR, hlZ);
 
   std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
-  const variant_data bounds  = cylBounds.toVariantData();
+  const variant_data bounds = cylBounds.toVariantData();
   std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
   payload["cylinder_bounds"] = bounds;
 
