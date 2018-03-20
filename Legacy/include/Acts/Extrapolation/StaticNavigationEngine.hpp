@@ -1,6 +1,7 @@
 // This file is part of the Acts project.
 //
 // Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,7 +36,7 @@ class StaticNavigationEngine : virtual public INavigationEngine
 {
 public:
   /// @struct Config
-  /// NEsted configuration struct for the StaticNavigationEngine
+  /// Nested configuration struct for the StaticNavigationEngine
   struct Config
   {
     /// the used propagation engine
