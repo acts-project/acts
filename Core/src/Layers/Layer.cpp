@@ -27,7 +27,7 @@ Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
   , m_surfaceArray(surfaceArray.release())
   , m_layerThickness(thickness)
   , m_approachDescriptor(nullptr)
-  , m_enclosingTrackingVolume(nullptr)
+  , m_trackingVolume(nullptr)
   , m_enclosingDetachedTrackingVolume(nullptr)
   , m_representingVolume(nullptr)
   , m_layerType(laytyp)

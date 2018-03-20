@@ -80,7 +80,8 @@ radiationEnergyLoss(double                p,
 
 /// multiple scattering as function of dInX0
 ///
-///
+/// @param dInX0 is the passed thickness in d0
+/// @param p is the momentum
 double
 sigmaMS(double dInX0, double p, double beta);
 

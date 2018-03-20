@@ -108,8 +108,7 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
       : eCell.leadParameters->referenceSurface().associatedLayer();
   eCell.startVolume = eCell.startVolume
       ? eCell.startVolume
-      : (eCell.startLayer ? eCell.startLayer->enclosingTrackingVolume()
-                          : nullptr);
+      : (eCell.startLayer ? eCell.startLayer->trackingVolume() : nullptr);
   // check if you are at the volume boundary
   if (!eCell.startVolume) {
     // get the start volume
@@ -153,7 +152,7 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
     // trying association via the layer : associated layer of material layer
     eCell.endLayer = sf->associatedLayer();
     eCell.endVolume
-        = eCell.endLayer ? eCell.endLayer->enclosingTrackingVolume() : nullptr;
+        = eCell.endLayer ? eCell.endLayer->trackingVolume() : nullptr;
     // check if you found layer and volume
     if (!eCell.endVolume) {
       EX_MSG_VERBOSE(

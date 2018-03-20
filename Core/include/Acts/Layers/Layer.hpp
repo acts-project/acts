@@ -303,7 +303,7 @@ public:
   ///
   /// @return the pointer to the enclosing volume
   const TrackingVolume*
-  enclosingTrackingVolume() const;
+  trackingVolume() const;
 
   /// get the confining DetachedTrackingVolume
   ///
@@ -417,7 +417,7 @@ protected:
   std::unique_ptr<const ApproachDescriptor> m_approachDescriptor;
 
   /// the enclosing TrackingVolume
-  const TrackingVolume* m_enclosingTrackingVolume;
+  const TrackingVolume* m_trackingVolume;
 
   /// the eventual enclosing detached Tracking volume
   const DetachedTrackingVolume* m_enclosingDetachedTrackingVolume;
@@ -473,15 +473,15 @@ Layer::layerType() const
 }
 
 inline const TrackingVolume*
-Layer::enclosingTrackingVolume() const
+Layer::trackingVolume() const
 {
-  return m_enclosingTrackingVolume;
+  return m_trackingVolume;
 }
 
 inline void
 Layer::encloseTrackingVolume(const TrackingVolume& tvol)
 {
-  m_enclosingTrackingVolume = &(tvol);
+  m_trackingVolume = &(tvol);
 }
 
 inline const DetachedTrackingVolume*

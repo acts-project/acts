@@ -120,8 +120,8 @@ namespace Test {
       BOOST_TEST(compatibleSurfaces.size() == 0u);
       /// nextLayer()
       BOOST_TEST(!(layerStub.nextLayer(gpos, direction)));
-      /// enclosingTrackingVolume()
-      BOOST_TEST(!layerStub.enclosingTrackingVolume());
+      /// trackingVolume()
+      BOOST_TEST(!layerStub.trackingVolume());
       /// enclosingDetachedTrackingVolume()
       BOOST_TEST(!layerStub.enclosingDetachedTrackingVolume());
       /// registerRepresentingVolume(const AbstractVolume* avol)
