@@ -9,7 +9,7 @@ from datetime import datetime
 from fnmatch import fnmatch
 
 EXCLUDE = [
-    "./Core/include/lib*"
+    "./Plugins/JsonPlugin/include/ACTS/Plugins/JsonPlugin/lib/*"
 ]
 
 class CommitInfo:

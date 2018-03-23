@@ -11,6 +11,7 @@
 
 // This file is a "Hello, world!" in C++ language by GCC for wandbox.
 #include <boost/variant.hpp>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -192,6 +193,7 @@ public:
   variant_json_visitor(bool pretty_ = false)
     : json_str(std::stringstream()), pretty(pretty_)
   {
+    json_str << std::fixed << std::setprecision(30);
   }
 
   void

@@ -19,7 +19,7 @@ clang-format --version
 cd $1
 find . \( -iname '*.cpp' -or -iname '*.hpp' -or -iname '*.ipp' \) \
        -and -not -path "./*build*/*" \
-       -and -not -path "./Core/include/lib/*" \
+       -and -not -path "./Plugins/JsonPlugin/include/ACTS/Plugins/JsonPlugin/lib/*" \
   | xargs clang-format -i -style=file
 
 

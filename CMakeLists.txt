@@ -16,6 +16,7 @@ option (ACTS_BUILD_INTEGRATION_TESTS "Build integration tests" OFF)
 option (ACTS_BUILD_DD4HEP_PLUGIN "Build DD4HEP plugins" OFF)
 option (ACTS_BUILD_MATERIAL_PLUGIN "Build Material plugins" OFF)
 option (ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugins" OFF)
+option (ACTS_BUILD_JSON_PLUGIN "Build Json plugin" OFF)
 # all other compile-time parameters must be defined here for clear visibility
 # and to avoid forgotten options somewhere deep in the hierarchy
 set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "Default track parameter definition")
