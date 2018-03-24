@@ -43,6 +43,8 @@ public:
     return LayerPtr(new NavigationLayer(std::move(sRepresentation), thickness));
   }
 
+  /// Factory for shared Layer pointer, that accepts @c variant_data
+  /// @param data The data to build from
   static LayerPtr
   create(const variant_data& data);
 
@@ -98,6 +100,8 @@ public:
   bool
   resolve(bool, bool, bool) const final override;
 
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
   variant_data
   toVariantData() const;
 

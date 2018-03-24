@@ -72,6 +72,8 @@ public:
              double halfphi = M_PI,
              double avphi   = 0.);
 
+  /// Constructor which accepts @c variant_data
+  /// @param data The data to build from
   ConeBounds(const variant_data& data);
 
   virtual ~ConeBounds();
@@ -151,6 +153,8 @@ public:
   double
   halfPhiSector() const;
 
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
   variant_data
   toVariantData() const override;
 

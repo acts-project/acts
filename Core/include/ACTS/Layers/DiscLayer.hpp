@@ -64,6 +64,8 @@ public:
                                          laytyp));
   }
 
+  /// Factory for shared Layer pointer, that accepts @c variant_data
+  /// @param data The data to build from
   static MutableLayerPtr
   create(const variant_data& data);
 
@@ -90,6 +92,8 @@ public:
   DiscSurface&
   surfaceRepresentation() override;
 
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
   variant_data
   toVariantData() const override;
 
