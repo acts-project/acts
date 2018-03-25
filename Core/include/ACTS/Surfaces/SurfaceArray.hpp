@@ -22,13 +22,11 @@
 namespace Acts {
 
 using SurfaceVector = std::vector<const Surface*>;
-template <class... Axes>
-using SurfaceGrid = detail::Grid<SurfaceVector, Axes...>;
 
 /// @brief Provides Surface binning in N dimensions
 ///
 /// Uses @c Grid under the hood to implement the storage and lookup
-/// Contains a type-erased lookup struct which talks to the @c Grid
+/// Contains a lookup struct which talks to the @c Grid
 /// and performs utility actions. This struct needs to be initialised
 /// externally and passed to @c SurfaceArray on construction.
 class SurfaceArray
@@ -41,45 +39,87 @@ class SurfaceArray
   }
 
 public:
+  /// @brief Base interface for all surface lookups.
   struct ISurfaceGridLookup
   {
+    /// @brief Fill provided surfaces into the contained @c Grid.
+    /// @param surfaces Input surface pointers
     virtual void
     fill(const SurfaceVector& surfaces)
         = 0;
 
+    /// @brief Attempts to fix sub-optimal binning by filling closest
+    ///        Surfaces into empty bins
+    /// @param surfaces The surface pointers to fill
+    /// @return number of bins that were filled
     virtual size_t
     completeBinning(const SurfaceVector& surfaces)
         = 0;
 
+    /// @brief Performs lookup at @c pos and returns bin content as reference
+    /// @param pos Lookup position
+    /// @return @c SurfaceVector at given bin
     virtual SurfaceVector&
     lookup(const Vector3D& pos)
         = 0;
 
+    /// @brief Performs lookup at @c pos and returns bin content as const
+    /// reference
+    /// @param pos Lookup position
+    /// @return @c SurfaceVector at given bin
     virtual const SurfaceVector&
     lookup(const Vector3D& pos) const = 0;
 
+    /// @brief Performs lookup at global bin and returns bin content as
+    /// reference
+    /// @param bin Global lookup bin
+    /// @return @c SurfaceVector at given bin
     virtual SurfaceVector&
     lookup(size_t bin)
         = 0;
 
+    /// @brief Performs lookup at global bin and returns bin content as const
+    /// reference
+    /// @param bin Global lookup bin
+    /// @return @c SurfaceVector at given bin
     virtual const SurfaceVector&
     lookup(size_t bin) const = 0;
 
+    /// @brief Performs a lookup at @c pos, but returns neighbors as well
+    ///
+    /// @param pos Lookup position
+    /// @return @c SurfaceVector at given bin. Copy of all bins selected
     virtual const SurfaceVector&
     neighbors(const Vector3D& pos) const = 0;
 
+    /// @brief Returns the total size of the grid (including under/overflow
+    /// bins)
+    /// @return Size of the grid data structure
     virtual size_t
     size() const = 0;
 
+    /// @brief Gets the center position of bin @c bin in global coordinates
+    /// @param bin the global bin index
+    /// @return The bin center
     virtual Vector3D
     getBinCenter(size_t bin) const = 0;
 
+    /// @brief Returns copies of the axes used in the grid as @c AnyAxis
+    /// @return The axes
+    /// @note This returns copies. Use for introspection and querying.
     virtual std::vector<const IAxis*>
     getAxes() const = 0;
 
+    /// @brief Get the number of dimensions of the grid.
+    /// @return number of dimensions
     virtual size_t
     dimensions() const = 0;
 
+    /// @brief Checks if global bin is valid
+    /// @param bin the global bin index
+    /// @return bool if the bin is valid
+    /// @note Valid means that the index points to a bin which is not a under
+    ///       or overflow bin or out of range in any axis.
     virtual bool
     isValidBin(size_t bin) const = 0;
   };
@@ -103,7 +143,7 @@ public:
     ///
     /// @param globalToLocal Callable that converts from global to local
     /// @param localToGlobal Callable that converts from local to global
-    /// @param grid The grid data structur. Will be type-erased at this point
+    /// @param grid The grid data structure.
     /// @note Signature of localToGlobal and globalToLocal depends on @c DIM.
     ///       If DIM > 1, local coords are @c ActsVectorD<DIM> else
     ///       @c std::array<double, 1>.
@@ -122,7 +162,7 @@ public:
     /// This is done by iterating, accessing the binningPosition, lookup
     /// and append.
     /// Also populates the neighbor map by combining the filled bins of
-    /// all bins around a given one
+    /// all bins around a given one.
     ///
     /// @param surfaces Input surface pointers
     virtual void
@@ -138,6 +178,7 @@ public:
 
     /// @brief Attempts to fix sub-optimal binning by filling closest
     ///        Surfaces into empty bins
+    /// @note This does not always do what you want.
     ///
     /// @param surfaces The surface pointers to fill
     /// @return number of bins that were filled
@@ -247,8 +288,7 @@ public:
     /// @return The axes
     /// @note This returns copies. Use for introspection and querying.
     virtual std::vector<const IAxis*>
-        /// @endcond
-        getAxes() const override
+    getAxes() const override
     {
       auto arr = m_grid.getAxes();
       return std::vector<const IAxis*>(arr.begin(), arr.end());
@@ -324,8 +364,7 @@ public:
   };
 
   /// @brief Lookup implementation which wraps one element and always returns
-  /// this
-  ///        element when lookup is called
+  ///        this element when lookup is called
   struct SingleElementLookup : ISurfaceGridLookup
   {
 
@@ -438,16 +477,19 @@ public:
   /// its own
   /// @param surfaces The input vector of surfaces. This is only for
   /// bookkeeping, so we can ask
-  ///                 it for 'all contained surfaces'
   SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
                SurfaceVector                       surfaces)
-    : m_gridLookup(std::move(gridLookup)), m_surfaces(surfaces)
+    : p_gridLookup(std::move(gridLookup)), m_surfaces(surfaces)
   {
   }
 
+  /// @brief Constructor which takes concrete type SurfaceGridLookup
+  /// @param gridLookup The grid storage. Is static casted to ISurfaceGridLookup
+  /// @param surfaces The input vector of surfaces. This is only for
+  /// bookkeeping, so we can ask
   template <class SGL>
   SurfaceArray(std::unique_ptr<SGL> gridLookup, SurfaceVector surfaces)
-    : m_gridLookup(static_cast<ISurfaceGridLookup*>(gridLookup.release()))
+    : p_gridLookup(static_cast<ISurfaceGridLookup*>(gridLookup.release()))
     , m_surfaces(surfaces)
   {
   }
@@ -456,7 +498,7 @@ public:
   /// SingleElementLookup
   /// @param srf The one and only surface
   SurfaceArray(const Surface* srf)
-    : m_gridLookup(std::make_unique<SingleElementLookup>(srf))
+    : p_gridLookup(std::make_unique<SingleElementLookup>(srf))
   {
   }
 
@@ -466,7 +508,7 @@ public:
   SurfaceVector&
   at(const Vector3D& pos)
   {
-    return m_gridLookup->lookup(pos);
+    return p_gridLookup->lookup(pos);
   }
 
   /// @brief Get all surfaces in bin given by position @p pos.
@@ -476,7 +518,7 @@ public:
   const SurfaceVector&
   at(const Vector3D& pos) const
   {
-    return m_gridLookup->lookup(pos);
+    return p_gridLookup->lookup(pos);
   }
 
   /// @brief Get all surfaces in bin given by global bin index @p bin.
@@ -485,7 +527,7 @@ public:
   SurfaceVector&
   at(size_t bin)
   {
-    return m_gridLookup->lookup(bin);
+    return p_gridLookup->lookup(bin);
   }
 
   /// @brief Get all surfaces in bin given by global bin index.
@@ -494,7 +536,7 @@ public:
   const SurfaceVector&
   at(size_t bin) const
   {
-    return m_gridLookup->lookup(bin);
+    return p_gridLookup->lookup(bin);
   }
 
   /// @brief Get all surfaces in bin at @p pos and its neighbors
@@ -507,7 +549,7 @@ public:
   SurfaceVector
   neighbors(const Vector3D& pos) const
   {
-    return m_gridLookup->neighbors(pos);
+    return p_gridLookup->neighbors(pos);
   }
 
   /// @brief Get the size of the underlying grid structure including
@@ -516,7 +558,7 @@ public:
   size_t
   size() const
   {
-    return m_gridLookup->size();
+    return p_gridLookup->size();
   }
 
   /// @brief Get the center of the bin identified by global bin index @p bin
@@ -525,7 +567,7 @@ public:
   Vector3D
   getBinCenter(size_t bin)
   {
-    return m_gridLookup->getBinCenter(bin);
+    return p_gridLookup->getBinCenter(bin);
   }
 
   /// @brief Get all surfaces attached to this @c SurfaceArray
@@ -546,7 +588,7 @@ public:
   std::vector<const IAxis*>
   getAxes() const
   {
-    return m_gridLookup->getAxes();
+    return p_gridLookup->getAxes();
   }
 
   /// @brief Checks if global bin is valid
@@ -557,7 +599,7 @@ public:
   bool
   isValidBin(size_t bin) const
   {
-    return m_gridLookup->isValidBin(bin);
+    return p_gridLookup->isValidBin(bin);
   }
 
   /// @brief String representation of this @c SurfaceArray
@@ -568,9 +610,9 @@ public:
   {
     sl << "SurfaceArray:" << std::endl;
     sl << " - no surfaces: " << m_surfaces.size() << std::endl;
-    sl << " - grid dim:    " << m_gridLookup->dimensions() << std::endl;
+    sl << " - grid dim:    " << p_gridLookup->dimensions() << std::endl;
 
-    auto axes = m_gridLookup->getAxes();
+    auto axes = p_gridLookup->getAxes();
 
     for (size_t j = 0; j < axes.size(); ++j) {
       detail::AxisBoundaryType bdt = axes.at(j)->getBoundaryType();
@@ -596,7 +638,7 @@ public:
   }
 
 private:
-  std::unique_ptr<ISurfaceGridLookup> m_gridLookup;
+  std::unique_ptr<ISurfaceGridLookup> p_gridLookup;
   SurfaceVector                       m_surfaces;
 };
 
