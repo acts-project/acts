@@ -216,10 +216,8 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
         auto sensitiveSurf = createSensitiveSurface(detElement, true);
         // Create the surfaceArray
 
-        Acts::SurfaceArray::SingleElementLookup gl(sensitiveSurf);
-        std::unique_ptr<Acts::SurfaceArray>     sArray
-            = std::make_unique<SurfaceArray>(
-                gl, std::vector<const Surface*>({sensitiveSurf}));
+        std::unique_ptr<Acts::SurfaceArray> sArray
+            = std::make_unique<SurfaceArray>(sensitiveSurf);
 
         // create the share disc bounds
         auto   dBounds = std::make_shared<const RadialBounds>(pl.minR, pl.maxR);
@@ -420,10 +418,8 @@ Acts::DD4hepLayerBuilder::centralLayers() const
         // Create the sensitive surface
         auto sensitiveSurf = createSensitiveSurface(detElement);
         // Create the surfaceArray
-        Acts::SurfaceArray::SingleElementLookup gl(sensitiveSurf);
-        std::unique_ptr<Acts::SurfaceArray>     sArray
-            = std::make_unique<SurfaceArray>(
-                gl, std::vector<const Surface*>({sensitiveSurf}));
+        std::unique_ptr<Acts::SurfaceArray> sArray
+            = std::make_unique<SurfaceArray>(sensitiveSurf);
 
         // create the layer
         double layerR    = (pl.minR + pl.maxR) * 0.5;
@@ -643,10 +639,8 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
         // Create the sensitive surface
         auto sensitiveSurf = createSensitiveSurface(detElement, true);
         // Create the surfaceArray
-        Acts::SurfaceArray::SingleElementLookup gl(sensitiveSurf);
-        std::unique_ptr<Acts::SurfaceArray>     sArray
-            = std::make_unique<SurfaceArray>(
-                gl, std::vector<const Surface*>({sensitiveSurf}));
+        std::unique_ptr<Acts::SurfaceArray> sArray
+            = std::make_unique<SurfaceArray>(sensitiveSurf);
 
         // create the share disc bounds
         auto   dBounds = std::make_shared<const RadialBounds>(pl.minR, pl.maxR);
