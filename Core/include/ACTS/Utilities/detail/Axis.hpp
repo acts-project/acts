@@ -338,6 +338,8 @@ namespace detail {
       return (m_min <= x) && (x < m_max);
     }
 
+    /// @brief Return a vector of bin edges
+    /// @return Vector which contains the bin edges
     virtual std::vector<double>
     getBinEdges() const override
     {
@@ -658,6 +660,8 @@ namespace detail {
       return (m_binEdges.front() <= x) && (x < m_binEdges.back());
     }
 
+    /// @brief Return a vector of bin edges
+    /// @return Vector which contains the bin edges
     virtual std::vector<double>
     getBinEdges() const override
     {
