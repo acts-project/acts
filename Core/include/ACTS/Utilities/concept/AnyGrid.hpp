@@ -15,7 +15,6 @@
 #include <boost/type_erasure/member.hpp>
 #include <boost/type_erasure/relaxed.hpp>
 #include <set>
-#include "ACTS/Utilities/concept/AnyAxis.hpp"
 
 // clang-format off
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_at), at, 1)
@@ -37,6 +36,8 @@ BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(any_grid_detail)(has_getAxes), getAxes
 // clang-format on
 
 namespace Acts {
+
+class IAxis;
 
 namespace concept {
 
@@ -77,7 +78,7 @@ namespace concept {
                       has_getNBins<std::array<size_t, DIM>(), const bte::_self>,
                       has_getMin<std::array<double, DIM>(), const bte::_self>,
                       has_getMax<std::array<double, DIM>(), const bte::_self>,
-                      has_getAxes<std::array<concept::AnyAxis<>, DIM>(), const bte::_self>
+                      has_getAxes<std::array<const IAxis*, DIM>(), const bte::_self>
                       >;
 
     template <typename T, class Point>

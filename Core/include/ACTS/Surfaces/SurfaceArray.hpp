@@ -15,6 +15,7 @@
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/BinningType.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/IAxis.hpp"
 #include "ACTS/Utilities/detail/Axis.hpp"
 #include "ACTS/Utilities/detail/Grid.hpp"
 
@@ -73,7 +74,7 @@ public:
     virtual Vector3D
     getBinCenter(size_t bin) const = 0;
 
-    virtual std::vector<concept::AnyAxis<>>
+    virtual std::vector<const IAxis*>
     getAxes() const = 0;
 
     virtual size_t
@@ -245,12 +246,12 @@ public:
     /// @brief Returns copies of the axes used in the grid as @c AnyAxis
     /// @return The axes
     /// @note This returns copies. Use for introspection and querying.
-    virtual std::vector<concept::AnyAxis<>>
+    virtual std::vector<const IAxis*>
         /// @endcond
         getAxes() const override
     {
       auto arr = m_grid.getAxes();
-      return std::vector<concept::AnyAxis<>>(arr.begin(), arr.end());
+      return std::vector<const IAxis*>(arr.begin(), arr.end());
     }
 
     /// @brief Get the number of dimensions of the grid.
@@ -393,7 +394,7 @@ public:
 
     /// @brief Returns an empty vector of @c AnyAxis
     /// @return empty vector
-    virtual std::vector<concept::AnyAxis<>>
+    virtual std::vector<const IAxis*>
     getAxes() const override
     {
       return {};
@@ -542,7 +543,7 @@ public:
   /// @return vector of @c AnyAxis
   /// @note The axes in the vector are copies. Only use for introspection and
   ///       querying.
-  std::vector<concept::AnyAxis<>>
+  std::vector<const IAxis*>
   getAxes() const
   {
     return m_gridLookup->getAxes();
@@ -572,7 +573,7 @@ public:
     auto axes = m_gridLookup->getAxes();
 
     for (size_t j = 0; j < axes.size(); ++j) {
-      detail::AxisBoundaryType bdt = axes.at(j).getBoundaryType();
+      detail::AxisBoundaryType bdt = axes.at(j)->getBoundaryType();
       sl << " - axis " << (j + 1) << std::endl;
       sl << "   - boundary type: ";
       if (bdt == detail::AxisBoundaryType::Open) sl << "open";
@@ -580,11 +581,11 @@ public:
       if (bdt == detail::AxisBoundaryType::Closed) sl << "closed";
       sl << std::endl;
       sl << "   - type: "
-         << (axes.at(j).isEquidistant() ? "equidistant" : "variable")
+         << (axes.at(j)->isEquidistant() ? "equidistant" : "variable")
          << std::endl;
-      sl << "   - n bins: " << axes.at(j).getNBins() << std::endl;
+      sl << "   - n bins: " << axes.at(j)->getNBins() << std::endl;
       sl << "   - bin edges: [ ";
-      auto binEdges = axes.at(j).getBinEdges();
+      auto binEdges = axes.at(j)->getBinEdges();
       for (size_t i = 0; i < binEdges.size(); ++i) {
         if (i > 0) sl << ", ";
         sl << binEdges.at(i);

@@ -568,8 +568,8 @@ namespace Test {
         = m_SAC.surfaceArrayOnDisc(surfaces, equidistant, equidistant);
     std::cout << (*sArray) << std::endl;
     auto axes = sArray->getAxes();
-    BOOST_TEST(axes.at(0).getNBins() == 3);
-    BOOST_TEST(axes.at(1).getNBins() == 10);
+    BOOST_TEST(axes.at(0)->getNBins() == 3);
+    BOOST_TEST(axes.at(1)->getNBins() == 10);
   }
 
   BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
@@ -646,8 +646,8 @@ namespace Test {
     sl->fill(brl);
     SurfaceArray sa(std::move(sl), brl);
     auto         axes = sa.getAxes();
-    BOOST_TEST(axes.at(0).getNBins() == 30);
-    BOOST_TEST(axes.at(1).getNBins() == 7);
+    BOOST_TEST(axes.at(0)->getNBins() == 30);
+    BOOST_TEST(axes.at(1)->getNBins() == 7);
     std::cout << sa << std::endl;
 
     for (const auto& pr : barrel.second) {
@@ -694,8 +694,8 @@ namespace Test {
       sl2->fill(brl);
       SurfaceArray sa2(std::move(sl2), brl);
       axes = sa2.getAxes();
-      BOOST_TEST(axes.at(0).getNBins() == 30);
-      BOOST_TEST(axes.at(1).getNBins() == 7);
+      BOOST_TEST(axes.at(0)->getNBins() == 30);
+      BOOST_TEST(axes.at(1)->getNBins() == 7);
 
       // check bin edges
       std::vector<double> phiEdgesExp
@@ -707,13 +707,13 @@ namespace Test {
              3.14159};
       std::vector<double> zEdgesExp = {-14, -10, -6, -2, 2, 6, 10, 14};
       size_t              i         = 0;
-      for (const auto& edge : axes.at(0).getBinEdges()) {
+      for (const auto& edge : axes.at(0)->getBinEdges()) {
         BOOST_TEST_INFO("phi edge index " << i);
         BOOST_TEST(edge == phiEdgesExp.at(i), tt::tolerance(1e-3));
         i++;
       }
       i = 0;
-      for (const auto& edge : axes.at(1).getBinEdges()) {
+      for (const auto& edge : axes.at(1)->getBinEdges()) {
         BOOST_TEST_INFO("z edge index " << i);
         BOOST_TEST(edge == zEdgesExp.at(i), tt::tolerance(1e-3));
         i++;

@@ -10,7 +10,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <set>
 #include <vector>
+#include "ACTS/Utilities/IAxis.hpp"
 
 namespace Acts {
 
@@ -51,7 +53,7 @@ namespace detail {
   /// This class provides some basic functionality for calculating bin indices
   /// for a given equidistant binning.
   template <AxisBoundaryType bdt>
-  class Axis<AxisType::Equidistant, bdt> final
+  class Axis<AxisType::Equidistant, bdt> final : public IAxis
   {
   public:
     /// @brief default constructor
@@ -70,8 +72,8 @@ namespace detail {
     /// @brief returns whether the axis is equidistant
     ///
     /// @return bool is equidistant
-    static constexpr bool
-    isEquidistant()
+    virtual bool
+    isEquidistant() const override
     {
       return true;
     }
@@ -79,8 +81,8 @@ namespace detail {
     /// @brief returns whether the axis is variable
     ///
     /// @return bool is variable
-    static constexpr bool
-    isVariable()
+    virtual bool
+    isVariable() const override
     {
       return false;
     }
@@ -88,8 +90,8 @@ namespace detail {
     /// @brief returns the boundary type set in the template param
     ///
     /// @return @c AxisBoundaryType of this axis
-    static constexpr AxisBoundaryType
-    getBoundaryType()
+    virtual AxisBoundaryType
+    getBoundaryType() const override
     {
       return bdt;
     }
@@ -299,8 +301,8 @@ namespace detail {
     /// @brief get maximum of binning range
     ///
     /// @return maximum of binning range
-    double
-    getMax() const
+    virtual double
+    getMax() const override
     {
       return m_max;
     }
@@ -308,8 +310,8 @@ namespace detail {
     /// @brief get minimum of binning range
     ///
     /// @return minimum of binning range
-    double
-    getMin() const
+    virtual double
+    getMin() const override
     {
       return m_min;
     }
@@ -317,8 +319,8 @@ namespace detail {
     /// @brief get total number of bins
     ///
     /// @return total number of bins (excluding under-/overflow bins)
-    size_t
-    getNBins() const
+    virtual size_t
+    getNBins() const override
     {
       return m_bins;
     }
@@ -336,8 +338,8 @@ namespace detail {
       return (m_min <= x) && (x < m_max);
     }
 
-    std::vector<double>
-    getBinEdges() const
+    virtual std::vector<double>
+    getBinEdges() const override
     {
       std::vector<double> binEdges;
       for (size_t i = 1; i <= m_bins; i++) {
@@ -363,7 +365,7 @@ namespace detail {
   /// This class provides some basic functionality for calculating bin indices
   /// for a given binning with variable bin sizes.
   template <AxisBoundaryType bdt>
-  class Axis<AxisType::Variable, bdt> final
+  class Axis<AxisType::Variable, bdt> final : public IAxis
   {
   public:
     /// @brief default constructor
@@ -380,8 +382,8 @@ namespace detail {
     /// @brief returns whether the axis is equidistante
     ///
     /// @return bool is equidistant
-    static constexpr bool
-    isEquidistant()
+    virtual bool
+    isEquidistant() const override
     {
       return false;
     }
@@ -389,8 +391,8 @@ namespace detail {
     /// @brief returns whether the axis is variable
     ///
     /// @return bool is variable
-    static constexpr bool
-    isVariable()
+    virtual bool
+    isVariable() const override
     {
       return true;
     }
@@ -398,8 +400,8 @@ namespace detail {
     /// @brief returns the boundary type set in the template param
     ///
     /// @return @c AxisBoundaryType of this axis
-    static constexpr AxisBoundaryType
-    getBoundaryType()
+    virtual AxisBoundaryType
+    getBoundaryType() const override
     {
       return bdt;
     }
@@ -619,8 +621,8 @@ namespace detail {
     /// @brief get maximum of binning range
     ///
     /// @return maximum of binning range
-    double
-    getMax() const
+    virtual double
+    getMax() const override
     {
       return m_binEdges.back();
     }
@@ -628,8 +630,8 @@ namespace detail {
     /// @brief get minimum of binning range
     ///
     /// @return minimum of binning range
-    double
-    getMin() const
+    virtual double
+    getMin() const override
     {
       return m_binEdges.front();
     }
@@ -637,8 +639,8 @@ namespace detail {
     /// @brief get total number of bins
     ///
     /// @return total number of bins (excluding under-/overflow bins)
-    size_t
-    getNBins() const
+    virtual size_t
+    getNBins() const override
     {
       return m_binEdges.size() - 1;
     }
@@ -656,8 +658,8 @@ namespace detail {
       return (m_binEdges.front() <= x) && (x < m_binEdges.back());
     }
 
-    std::vector<double>
-    getBinEdges() const
+    virtual std::vector<double>
+    getBinEdges() const override
     {
       return m_binEdges;
     }

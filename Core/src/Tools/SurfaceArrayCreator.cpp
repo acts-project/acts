@@ -16,7 +16,6 @@
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Surfaces/SurfaceArray.hpp"
-#include "ACTS/Surfaces/concept/AnySurfaceGridLookup.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/BinnedArrayXD.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
@@ -121,8 +120,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 
   // get the number of bins
   auto   axes  = sl->getAxes();
-  size_t bins0 = axes.at(0).getNBins();
-  size_t bins1 = axes.at(1).getNBins();
+  size_t bins0 = axes.at(0)->getNBins();
+  size_t bins1 = axes.at(1)->getNBins();
 
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
@@ -175,8 +174,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
   // get the number of bins
   auto   axes  = sl->getAxes();
-  size_t bins0 = axes.at(0).getNBins();
-  size_t bins1 = axes.at(1).getNBins();
+  size_t bins0 = axes.at(0)->getNBins();
+  size_t bins1 = axes.at(1)->getNBins();
 
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
@@ -259,8 +258,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
   // get the number of bins
   auto   axes  = sl->getAxes();
-  size_t bins0 = axes.at(0).getNBins();
-  size_t bins1 = axes.at(1).getNBins();
+  size_t bins0 = axes.at(0)->getNBins();
+  size_t bins1 = axes.at(1)->getNBins();
 
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
