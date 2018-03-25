@@ -339,12 +339,15 @@ private:
             detail::AxisBoundaryType bdtB,
             typename F1,
             typename F2>
-  SurfaceArray::AnySurfaceGridLookup_t
+  std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
   makeSurfaceGridLookup2D(F1        globalToLocal,
                           F2        localToGlobal,
                           ProtoAxis pAxisA,
                           ProtoAxis pAxisB) const
   {
+
+    using ISGL = SurfaceArray::ISurfaceGridLookup;
+    std::unique_ptr<ISGL> ptr;
 
     // this becomes completely unreadable otherwise
     // clang-format off
@@ -352,35 +355,41 @@ private:
 
       detail::Axis<detail::AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
       detail::Axis<detail::AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
-      return SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>(globalToLocal,
-                                                                                 localToGlobal,
-                                                                                 std::make_tuple(axisA, axisB));
+
+      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
+      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
+            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB))));
 
     } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
 
       detail::Axis<detail::AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
       detail::Axis<detail::AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
-      return SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>(globalToLocal,
-                                                                                 localToGlobal,
-                                                                                 std::make_tuple(axisA, axisB));
+
+      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
+      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
+            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB))));
       
     } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
 
       detail::Axis<detail::AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
       detail::Axis<detail::AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
-      return SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>(globalToLocal,
-                                                                                 localToGlobal,
-                                                                                 std::make_tuple(axisA, axisB));
+
+      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
+      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
+            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB))));
 
     } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
 
       detail::Axis<detail::AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
       detail::Axis<detail::AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
-      return SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>(globalToLocal,
-                                                                                 localToGlobal,
-                                                                                 std::make_tuple(axisA, axisB));
+
+      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
+      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
+            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB))));
     }
     // clang-format on
+
+    return ptr;
   }
 
   /// logging instance
@@ -402,9 +411,10 @@ private:
   /// This method delegates to SurfaceGridLookup itself.
   /// @param sl The @c SurfaceGridLookup
   /// @param surfaces the surfaces
-  template <class T>
+  // template <class T>
   void
-  completeBinning(T& sl, const std::vector<const Surface*>& surfaces) const
+  completeBinning(SurfaceArray::ISurfaceGridLookup&  sl,
+                  const std::vector<const Surface*>& surfaces) const
   {
     ACTS_VERBOSE("Complete binning by filling closest neighbour surfaces into "
                  "empty bins.");

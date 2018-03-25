@@ -81,7 +81,7 @@ namespace Test {
     template <detail::AxisBoundaryType bdtA,
               detail::AxisBoundaryType bdtB,
               typename... Args>
-    SurfaceArray::AnySurfaceGridLookup_t
+    std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
     makeSurfaceGridLookup2D(Args&&... args)
     {
       return m_SAC.makeSurfaceGridLookup2D<bdtA, bdtB>(
@@ -593,12 +593,14 @@ namespace Test {
       return Vector3D(R * std::cos(phi), R * std::sin(phi), loc[1]);
     };
 
-    SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)> sl(
-        globalToLocal,
-        localToGlobal,
-        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-    sl.fill(brl);
-    SurfaceArray sa(sl, brl);
+    auto sl
+        = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(phiAxis),
+                                                           decltype(zAxis)>>(
+            globalToLocal,
+            localToGlobal,
+            std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+    sl->fill(brl);
+    SurfaceArray sa(std::move(sl), brl);
 
     // actually filled SA
     for (const auto& srf : brl) {
@@ -641,8 +643,8 @@ namespace Test {
                                       detail::AxisBoundaryType::Bound>(
         globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
-    sl.fill(brl);
-    SurfaceArray sa(sl, brl);
+    sl->fill(brl);
+    SurfaceArray sa(std::move(sl), brl);
     auto         axes = sa.getAxes();
     BOOST_TEST(axes.at(0).getNBins() == 30);
     BOOST_TEST(axes.at(1).getNBins() == 7);
@@ -689,8 +691,8 @@ namespace Test {
                                          detail::AxisBoundaryType::Bound>(
           globalToLocalVar, localToGlobalVar, pAxisPhiVar, pAxisZVar);
 
-      sl2.fill(brl);
-      SurfaceArray sa2(sl2, brl);
+      sl2->fill(brl);
+      SurfaceArray sa2(std::move(sl2), brl);
       axes = sa2.getAxes();
       BOOST_TEST(axes.at(0).getNBins() == 30);
       BOOST_TEST(axes.at(1).getNBins() == 7);

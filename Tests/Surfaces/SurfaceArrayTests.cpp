@@ -179,12 +179,15 @@ namespace Test {
                       R * std::sin(loc[0] - angleShift),
                       loc[1]);
     };
-    SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)> sl(
-        transform,
-        itransform,
-        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-    sl.fill(brl);
-    SurfaceArray sa(sl, brl);
+
+    auto sl
+        = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(phiAxis),
+                                                           decltype(zAxis)>>(
+            transform,
+            itransform,
+            std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+    sl->fill(brl);
+    SurfaceArray sa(std::move(sl), brl);
 
     // let's see if we can access all surfaces
     sa.dump(std::cout);
@@ -201,13 +204,15 @@ namespace Test {
         = sa.neighbors(itransform(Vector2D(0, 0)));
     BOOST_TEST(neighbors.size() == 9);
 
-    SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)> sl2(
-        transform,
-        itransform,
-        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+    auto sl2
+        = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(phiAxis),
+                                                           decltype(zAxis)>>(
+            transform,
+            itransform,
+            std::make_tuple(std::move(phiAxis), std::move(zAxis)));
     // do NOT fill, only completebinning
-    sl2.completeBinning(brl);
-    SurfaceArray sa2(sl2, brl);
+    sl2->completeBinning(brl);
+    SurfaceArray sa2(std::move(sl2), brl);
     sa.dump(std::cout);
     for (const auto& srf : brl) {
       Vector3D ctr        = srf->binningPosition(binR);
