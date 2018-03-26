@@ -634,7 +634,8 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
     // final check for compatibility of the start layer in order to avoid
     // punch-through
     if (sLayer && sLayerIntersection.valid
-        && sLayerIntersection.pathLength < validPathLength)
+        && sLayerIntersection.pathLength < validPathLength
+        && sLayer->resolve(collectSensitive, collectMaterial, collectPassive))
       lIntersections.push_back(LayerIntersection<T>(
           sLayerIntersection, sLayer, sLayerSurface, 0, pDir));
   }
