@@ -135,7 +135,7 @@ Acts::PlaneSurface::isOnSurface(const Vector3D&      glopo,
 Acts::PlaneSurface*
 Acts::PlaneSurface::clone(const Transform3D* shift) const
 {
-  if (shift) new PlaneSurface(*this, *shift);
+  if (shift) return new PlaneSurface(*this, *shift);
   return new PlaneSurface(*this);
 }
 
