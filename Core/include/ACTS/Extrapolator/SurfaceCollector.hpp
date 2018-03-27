@@ -32,7 +32,7 @@ struct SurfaceCollector
   Selector this_selector;
 
   /// Simple result struct to be returned
-  /// It has all the SurfaceHit objects that 
+  /// It has all the SurfaceHit objects that
   /// are collected (and thus have been selected)
   struct this_result
   {

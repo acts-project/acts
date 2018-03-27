@@ -109,7 +109,7 @@ public:
     Vector3D
     momentum() const
     {
-      return (1./qop)*dir;
+      return (1. / qop) * dir;
     }
 
     /// Method for on-demand transport of the covariance

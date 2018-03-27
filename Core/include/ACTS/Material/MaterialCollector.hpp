@@ -11,10 +11,10 @@
 #define ACTS_MATERIALCOLLECTOR_H
 
 #include <sstream>
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Material/SurfaceMaterial.hpp"
 #include "ACTS/Material/Material.hpp"
 #include "ACTS/Material/MaterialProperties.hpp"
+#include "ACTS/Material/SurfaceMaterial.hpp"
+#include "ACTS/Surfaces/Surface.hpp"
 
 namespace Acts {
 
@@ -31,19 +31,19 @@ struct MaterialHit
 /// A Material Collector struct struct
 struct MaterialCollector
 {
-  
+
   /// In the detailed collection mode the material
   /// per surface is collected, otherwise only the total
   /// pathlength in X0 or L0 are recorded
   bool detailedCollection = false;
 
   /// Simple result struct to be returned
-  /// It collects the indivdual 
+  /// It collects the indivdual
   struct this_result
   {
-    std::vector<const MaterialHit> collected = {};
-    double materialInX0 = 0.;
-    double materialInL0 = 0.;
+    std::vector<const MaterialHit> collected    = {};
+    double                         materialInX0 = 0.;
+    double                         materialInL0 = 0.;
   };
 
   typedef this_result result_type;
@@ -62,27 +62,27 @@ struct MaterialCollector
   operator()(cache_t& cache, result_type& result) const
   {
     // a current surface has been already assigned by the navigator
-    if (cache.current_surface && cache.current_surface->associatedMaterial()){
+    if (cache.current_surface && cache.current_surface->associatedMaterial()) {
       // get the material propertices and only continue
-      const MaterialProperties* mProperties =
-      cache.current_surface->associatedMaterial()->material(cache.position()); 
-      if (mProperties){
+      const MaterialProperties* mProperties
+          = cache.current_surface->associatedMaterial()->material(
+              cache.position());
+      if (mProperties) {
         // the path correction from the surface intersection
-        double pCorrection = 
-          cache.current_surface->pathCorrection(cache.position(),
-                                                cache.direction());
+        double pCorrection = cache.current_surface->pathCorrection(
+            cache.position(), cache.direction());
         // the full material
-        materialInX0 += pCorrection*thicknessInX0();
-        materialInL0 += pCorrection*thicknessInL0();
+        materialInX0 += pCorrection * thicknessInX0();
+        materialInL0 += pCorrection * thicknessInL0();
         // if configured, record the individual material hits
-        if (detailedCollection){
+        if (detailedCollection) {
           // create for recording
           MaterialHit material_hit;
           material_hit.surface   = cache.current_surface;
           material_hit.position  = cache.position();
           material_hit.direction = cache.direction();
           // get the material & path length
-          material_hit.material = mProperties->material();
+          material_hit.material   = mProperties->material();
           material_hit.pathLength = pCorrection * mProperties->thickness();
           // save if in the result
           result.collected.push_back(material_hit);
